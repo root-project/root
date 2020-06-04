@@ -17,7 +17,9 @@
 
 #include "Math/Math.h"
 
-//#include "TF1.h"
+#include <string>
+#include <vector>
+
 class TGraphErrors;
 class TF1;
 

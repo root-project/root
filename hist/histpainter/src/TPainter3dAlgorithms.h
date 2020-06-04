@@ -12,8 +12,6 @@
 #ifndef ROOT_TPainter3dAlgorithms
 #define ROOT_TPainter3dAlgorithms
 
-#include "TObject.h"
-
 #include "TAttLine.h"
 
 #include "TAttFill.h"
