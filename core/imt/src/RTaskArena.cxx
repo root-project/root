@@ -3,7 +3,6 @@
 #include "TROOT.h"
 #include "TThread.h"
 #include <fstream>
-#include <sys/stat.h>
 #include <thread>
 #include "tbb/task_arena.h"
 
@@ -53,18 +52,13 @@ static Int_t LogicalCPUBandwithControl()
 {
 #ifdef R__LINUX
    // Check for CFS bandwith control
-   std::ifstream f;
-   std::string quotaFile("/sys/fs/cgroup/cpuacct/cpu.cfs_quota_us");
-   struct stat buffer;
-   // Does the file exist?
-   if(stat(quotaFile.c_str(), &buffer) == 0) {
-      f.open(quotaFile);
+   std::ifstream f("/sys/fs/cgroup/cpuacct/cpu.cfs_quota_us"); // quota file
+   if(f) {
       float cfs_quota;
       f>>cfs_quota;
       f.close();
       if(cfs_quota > 0) {
-         std::string periodFile("/sys/fs/cgroup/cpuacct/cpu.cfs_period_us");
-         f.open(periodFile);
+         f.open("/sys/fs/cgroup/cpuacct/cpu.cfs_period_us"); // period file
          float cfs_period;
          f>>cfs_period;
          f.close();
