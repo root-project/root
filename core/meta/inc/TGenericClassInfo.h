@@ -10,6 +10,8 @@
  *************************************************************************/
 
 #ifndef ROOT_Rtypes
+// Include Rtypes.h outside of the code guard to insure the intended
+// ordering of Rtypes.h and TGenericClassInfo.h
 #include "Rtypes.h"
 #endif
 
