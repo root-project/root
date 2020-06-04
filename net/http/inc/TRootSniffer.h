@@ -15,6 +15,7 @@
 #include "TNamed.h"
 #include "TList.h"
 #include <memory>
+#include <string>
 
 class TFolder;
 class TKey;

@@ -22,6 +22,7 @@
 #include <memory>
 #include <queue>
 #include <thread>
+#include <vector>
 
 class THttpEngine;
 class THttpTimer;
