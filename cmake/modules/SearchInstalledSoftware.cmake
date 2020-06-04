@@ -1556,6 +1556,10 @@ endif()
 
 #---Check for PyROOT legacy---------------------------------------------------------------
 if(pyroot_legacy)
+  if(NOT pyroot)
+    message(FATAL_ERROR "pyroot_legacy is ON but pyroot is OFF. Please reconfigure with -Dpyroot=ON")
+  endif()
+
   if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND))
     message(FATAL_ERROR "PyROOT: Python development package not found and pyroot legacy component required"
                         " (python executable: ${PYTHON_EXECUTABLE})")
