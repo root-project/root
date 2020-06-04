@@ -13,14 +13,12 @@
 #ifndef ROOFUNCTORBINDING
 #define ROOFUNCTORBINDING
 
-#include "TString.h"
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooListProxy.h"
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 #include "RooMsgService.h"
-#include <string>
 #include "Math/IFunction.h"
 
 namespace RooFit {

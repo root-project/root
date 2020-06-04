@@ -18,6 +18,9 @@
 
 #include "RooAbsCategory.h"
 #include "RooAbsLValue.h"
+#include <list>
+#include <string>
+#include <utility>
 
 class RooAbsCategoryLValue : public RooAbsCategory, public RooAbsLValue {
 public:

@@ -19,12 +19,16 @@
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRealProxy.h"
-class RooVectorDataStore ;
+
+#include <list>
+#include <string>
+
+class RooVectorDataStore;
 
 class RooErrorVar : public RooAbsRealLValue {
 public:
   // Constructors, assignment etc.
-  inline RooErrorVar() { 
+  inline RooErrorVar() {
     // Default constructor
   }
   RooErrorVar(const char *name, const char *title, const RooRealVar& input) ;

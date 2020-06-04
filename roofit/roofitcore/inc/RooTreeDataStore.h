@@ -16,8 +16,10 @@
 #ifndef ROO_TREE_DATA_STORE
 #define ROO_TREE_DATA_STORE
 
-#include "RooAbsDataStore.h" 
-#include "TString.h"
+#include "RooAbsDataStore.h"
+#include <vector>
+#include <list>
+#include <string>
 
 class RooAbsArg ;
 class RooArgList ;

@@ -20,6 +20,8 @@
 #include "TIterator.h"
 #include "RooAbsCategory.h"
 #include <map>
+#include <vector>
+#include <string>
 
 #include "RooFitLegacy/RooCatTypeLegacy.h"
 

@@ -28,7 +28,7 @@
 #include <set>
 #include <deque>
 #include <stack>
-
+#include <string>
 #include <iostream>
 
 #ifndef R__LESS_INCLUDES

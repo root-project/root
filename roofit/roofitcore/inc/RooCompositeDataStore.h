@@ -16,9 +16,12 @@
 #ifndef ROO_COMPOSITE_DATA_STORE
 #define ROO_COMPOSITE_DATA_STORE
 
-#include "RooAbsDataStore.h" 
+#include "RooAbsDataStore.h"
+
 #include <map>
 #include <string>
+#include <vector>
+#include <list>
 
 class RooAbsArg ;
 class RooArgList ;
