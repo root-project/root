@@ -23,16 +23,16 @@ TEST(RNTupleDescriptor, FieldIterator)
 
     printf("-- printing top-level fields\n");
     const auto& ntuple_desc = ntuple.GetDescriptor();
-    for (auto f: ntuple_desc.GetTopLevelFields()) {
-       printf("top level field id: %lu\n", f);
-       printf("\tname: %s\n", ntuple_desc.GetFieldDescriptor(f).GetFieldName().c_str());
+    for (auto& f: ntuple_desc.GetTopLevelFields()) {
+       printf("top level field id: %lu\n", f.GetId());
+       printf("\tname: %s\n", f.GetFieldName().c_str());
     }
 
     printf("\n-- printing first two levels\n");
-    for (auto f: ntuple_desc.GetTopLevelFields()) {
-       printf("top level field id: %lu\n", f);
-       for (auto child_field: ntuple_desc.GetFieldRange(f)) {
-          printf("\tsecond level field id: %lu\n", child_field);
+    for (auto& f: ntuple_desc.GetTopLevelFields()) {
+       printf("top level field id: %lu\n", f.GetId());
+       for (auto& child_field: ntuple_desc.GetFieldRange(f)) {
+          printf("\tsecond level field id: %lu\n", child_field.GetId());
        }
     }
 

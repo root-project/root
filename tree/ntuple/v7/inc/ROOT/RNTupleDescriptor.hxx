@@ -303,39 +303,42 @@ private:
 public:
    class RFieldDescriptorRange {
    private:
+      const RNTupleDescriptor& fNTuple;
       const RFieldDescriptor& fField;
    public:
       class RIterator {
       private:
+         const RNTupleDescriptor& fNTuple;
          const std::vector<DescriptorId_t>& fFieldChildren;
          std::size_t fIndex = kInvalidNTupleIndex;
       public:
          using iterator_category = std::forward_iterator_tag;
          using iterator = RIterator;
-         using value_type = DescriptorId_t;
+         using value_type = RFieldDescriptor;
          using difference_type = std::ptrdiff_t;
-         using pointer = DescriptorId_t*;
-         using reference = const DescriptorId_t&;
+         using pointer = RFieldDescriptor*;
+         using reference = const RFieldDescriptor&;
 
          RIterator() = delete;
-         RIterator(const RFieldDescriptor& fieldDesc, DescriptorId_t index)
-            : fFieldChildren(fieldDesc.GetLinkIds()), fIndex(index) {}
+         RIterator(const RNTupleDescriptor& ntuple, const RFieldDescriptor& fieldDesc,
+            std::size_t index) : fNTuple(ntuple), fFieldChildren(fieldDesc.GetLinkIds()), fIndex(index) {}
          ~RIterator() = default;
 
          iterator operator++() { ++fIndex; return *this; }
-         reference operator*() { return fFieldChildren.at(fIndex); }
+         reference operator*() { return fNTuple.GetFieldDescriptor(fFieldChildren.at(fIndex)); }
          bool operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
       };
 
       RFieldDescriptorRange() = delete;
       /// An iterator over a field's child fields.
-      RFieldDescriptorRange(const RFieldDescriptor& field) : fField(field) {}
+      RFieldDescriptorRange(const RNTupleDescriptor& ntuple, const RFieldDescriptor& field)
+         : fNTuple(ntuple), fField(field) {}
       ~RFieldDescriptorRange() = default;
       RIterator begin() {
-         return RIterator(fField, 0);
+         return RIterator(fNTuple, fField, 0);
       }
       RIterator end() {
-         return RIterator(fField, fField.GetLinkIds().size());
+         return RIterator(fNTuple, fField, fField.GetLinkIds().size());
       }
    };
 
@@ -374,7 +377,7 @@ public:
       return fClusterDescriptors.at(clusterId);
    }
    RFieldDescriptorRange GetFieldRange(const RFieldDescriptor& fieldDesc) const {
-       return RFieldDescriptorRange(fieldDesc);
+       return RFieldDescriptorRange(*this, fieldDesc);
    }
    RFieldDescriptorRange GetFieldRange(DescriptorId_t fieldId) const {
        return GetFieldRange(GetFieldDescriptor(fieldId));

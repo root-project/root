@@ -721,10 +721,9 @@ ROOT::Experimental::RNTupleDescriptor::IsMergeable(const RNTupleDescriptor &othe
 
    auto getMergeCriteria = [=](const RNTupleDescriptor& ntuple) -> MergeCriteria {
       MergeCriteria info;
-      for (auto f: ntuple.GetTopLevelFields()) {
-         const auto& fd = ntuple.GetFieldDescriptor(f);
-         info.names.push_back(fd.GetFieldName());
-         info.structures.push_back(fd.GetStructure());
+      for (auto& f: ntuple.GetTopLevelFields()) {
+         info.names.push_back(f.GetFieldName());
+         info.structures.push_back(f.GetStructure());
       }
       return info;
    };
@@ -732,7 +731,6 @@ ROOT::Experimental::RNTupleDescriptor::IsMergeable(const RNTupleDescriptor &othe
    auto ntuple_info = getMergeCriteria(*this);
    auto other_ntuple_info = getMergeCriteria(other);
 
-   using ENTupleMergeable = RNTupleDescriptor::ENTupleMergeable;
    if (ntuple_info.structures != other_ntuple_info.structures) {
       return ENTupleMergeable::StructureMismatch;
    }
