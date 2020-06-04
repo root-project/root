@@ -8,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// ---------------------------------- TFormula.h
 #ifndef ROOT_TFormula
 #define ROOT_TFormula
 
@@ -20,6 +19,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <string>
 #include <Math/Types.h>
 
 class TMethodCall;

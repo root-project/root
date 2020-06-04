@@ -24,6 +24,8 @@
 #include "RConfigure.h"
 #include <functional>
 #include <cassert>
+#include <string>
+#include <vector>
 #include "TFormula.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
