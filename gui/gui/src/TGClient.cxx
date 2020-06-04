@@ -48,6 +48,7 @@
 #include "TGIdleHandler.h"
 #include "TError.h"
 #include "TGlobal.h"
+#include "snprintf.h"
 
 // Global pointer to the TGClient object
 static TGClient *gClientGlobal = nullptr;

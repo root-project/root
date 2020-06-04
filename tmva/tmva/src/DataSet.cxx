@@ -50,6 +50,7 @@ Class that contains all the data information
 #include "TMVA/VariableInfo.h"
 
 #include "TRandom3.h"
+#include "strlcpy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

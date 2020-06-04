@@ -17,6 +17,7 @@
 #include "TVirtualMonitoring.h"
 #include "TSemaphore.h"
 #include "TFPBlock.h"
+#include "strlcpy.h"
 
 #include <string>
 #include <sstream>

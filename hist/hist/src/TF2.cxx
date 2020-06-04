@@ -20,6 +20,7 @@
 #include "TColor.h"
 #include "TVirtualFitter.h"
 #include "Math/IntegratorOptions.h"
+#include "snprintf.h"
 
 ClassImp(TF2);
 

@@ -76,6 +76,8 @@ extra libraries (Histogram, display, etc).
 #include "TTreeCache.h"
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include "HFitInterface.h"
 #include "Fit/BinData.h"
@@ -83,10 +85,9 @@ extra libraries (Histogram, display, etc).
 #include "Math/MinimizerOptions.h"
 
 
-
 R__EXTERN Foption_t Foption;
 
-TVirtualFitter *tFitter=0;
+TVirtualFitter *tFitter = nullptr;
 
 ClassImp(TTreePlayer);
 

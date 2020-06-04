@@ -66,6 +66,7 @@
 #include "TSelector.h"
 #include "TFileCollection.h"
 #include "TVirtualX.h"
+#include "snprintf.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif

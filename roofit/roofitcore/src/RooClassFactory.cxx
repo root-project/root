@@ -38,6 +38,7 @@ instantiate objects.
 #include "RooWorkspace.h"
 #include "RooGlobalFunc.h"
 #include "RooAbsPdf.h"
+#include "strlcpy.h"
 #include <fstream>
 
 using namespace std;

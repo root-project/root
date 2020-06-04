@@ -84,6 +84,8 @@
 #include "TGToolTip.h"
 #include "TMath.h"
 #include "TVirtualX.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include <cctype>
 #include <iostream>

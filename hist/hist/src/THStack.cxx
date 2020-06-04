@@ -19,11 +19,13 @@
 #include "TH3.h"
 #include "TList.h"
 #include "TStyle.h"
-#include "Riostream.h"
 #include "TBrowser.h"
 #include "TMath.h"
 #include "TObjString.h"
 #include "TVirtualMutex.h"
+#include "strlcpy.h"
+
+#include <iostream>
 
 ClassImp(THStack);
 

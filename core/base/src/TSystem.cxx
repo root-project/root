@@ -22,6 +22,7 @@ allows a simple partial implementation for new OS'es.
 */
 
 #include <ROOT/FoundationUtils.hxx>
+#include "strlcpy.h"
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TException.h"

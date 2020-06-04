@@ -52,6 +52,8 @@
 #include "TGProgressBar.h"
 #include "TGScrollBar.h"
 #include "TVirtualX.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #undef DEBUG_LOCAL
 

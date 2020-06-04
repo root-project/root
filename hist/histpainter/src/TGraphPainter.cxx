@@ -35,13 +35,15 @@
 #include "TVirtualPadEditor.h"
 #include "TVirtualX.h"
 #include "TRegexp.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 Int_t TGraphPainter::fgMaxPointsPerLine = 50;
 
-static Int_t    gHighlightPoint  = -1;   // highlight point of graph
-static TGraph  *gHighlightGraph  = 0;    // pointer to graph with highlight point
-static TMarker *gHighlightMarker = 0;    // highlight marker
+static Int_t    gHighlightPoint  = -1;         // highlight point of graph
+static TGraph  *gHighlightGraph  = nullptr;    // pointer to graph with highlight point
+static TMarker *gHighlightMarker = nullptr;    // highlight marker
 
 ClassImp(TGraphPainter);
 

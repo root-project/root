@@ -27,6 +27,7 @@
 #include "TBuffer.h"
 #include "TROOT.h"
 #include "TMath.h"
+#include "snprintf.h"
 #include <climits>
 
 Int_t gMatrixCheck = 1;

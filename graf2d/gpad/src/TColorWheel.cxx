@@ -18,6 +18,7 @@
 #include "TLine.h"
 #include "TColor.h"
 #include "TMath.h"
+#include "snprintf.h"
 
 ClassImp(TColorWheel);
 

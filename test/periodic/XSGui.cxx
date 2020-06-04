@@ -13,6 +13,7 @@
 
 #include <TFrame.h>
 #include <TApplication.h>
+#include <snprintf.h>
 
 #include "XSGui.h"
 #include "XSVarious.h"

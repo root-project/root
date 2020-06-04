@@ -156,6 +156,7 @@
 #include "TTreeInput.h"
 #include "TAdvancedGraphicsDialog.h"
 #include "TVirtualX.h"
+#include "strlcpy.h"
 
 #include "RConfigure.h"
 #include "TPluginManager.h"

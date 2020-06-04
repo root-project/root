@@ -26,6 +26,7 @@
 #include "TROOT.h"
 #include "TList.h"
 #include "TBase64.h"
+#include "snprintf.h"
 
 #include <sstream>
 #include <fstream>

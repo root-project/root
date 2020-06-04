@@ -34,12 +34,11 @@ setting/clearing/testing named attributes.
 */
 
 #include "RooFit.h"
-#include "Riostream.h"
 
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TVirtualStreamerInfo.h"
-// #include "TGraphStruct.h"
+#include "strlcpy.h"
 
 #include "RooSecondMoment.h"
 #include "RooNameSet.h"
@@ -64,11 +63,13 @@ setting/clearing/testing named attributes.
 #include "RooTreeDataStore.h"
 #include "ROOT/RMakeUnique.hxx"
 
+#include <iostream>
+#include <fstream>
 #include <sstream>
-#include <string.h>
+#include <cstring>
 #include <algorithm>
 
-using namespace std ;
+using namespace std;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );

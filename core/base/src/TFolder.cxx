@@ -84,6 +84,7 @@ if this pointer is used frequently or inside loops.
 
 #include <iostream>
 #include "Strlen.h"
+#include "strlcpy.h"
 #include "TFolder.h"
 #include "TBrowser.h"
 #include "TList.h"

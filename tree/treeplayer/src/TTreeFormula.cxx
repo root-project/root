@@ -41,7 +41,8 @@
 #include "TFormLeafInfo.h"
 #include "TMethod.h"
 #include "TFormLeafInfoReference.h"
-
+#include "strlcpy.h"
+#include "snprintf.h"
 #include "TEntryList.h"
 
 #include <cctype>

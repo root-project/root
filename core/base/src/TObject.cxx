@@ -36,6 +36,7 @@ class hierarchies (watch out for overlaps).
 #include <iostream>
 
 #include "Varargs.h"
+#include "snprintf.h"
 #include "TObject.h"
 #include "TBuffer.h"
 #include "TClass.h"

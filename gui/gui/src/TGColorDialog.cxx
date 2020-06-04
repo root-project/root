@@ -63,6 +63,7 @@
 #include "TROOT.h"
 #include "TMath.h"
 #include "TVirtualX.h"
+#include "snprintf.h"
 
 ClassImp(TGColorPalette);
 ClassImp(TGColorPick);

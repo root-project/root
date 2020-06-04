@@ -63,9 +63,10 @@ object onto a one-dimensional plot.
 #include "TAttText.h"
 #include "TDirectoryFile.h"
 #include "TLegend.h"
+#include "strlcpy.h"
 
-#include "Riostream.h"
-#include <string.h>
+#include <iostream>
+#include <cstring>
 
 using namespace std;
 

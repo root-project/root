@@ -42,6 +42,7 @@ Pysica Slovaca Vol. 54/ 4 (2004), pp. 385-400.
 #include "TGaxis.h"
 #include "THLimitsFinder.h"
 #include "TSpectrum2Painter.h"
+#include "strlcpy.h"
 
 ClassImp (TSpectrum2Painter)
 

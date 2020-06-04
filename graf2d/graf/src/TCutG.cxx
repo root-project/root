@@ -89,6 +89,7 @@ A Graphical cut may be saved to a file via TCutG::Write.
 #include "TVirtualPad.h"
 #include "TPaveText.h"
 #include "TH2.h"
+#include "strlcpy.h"
 
 ClassImp(TCutG);
 

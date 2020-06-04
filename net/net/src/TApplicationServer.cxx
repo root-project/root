@@ -20,15 +20,16 @@
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
-#include "Riostream.h"
+#include "snprintf.h"
+#include <iostream>
 
 #ifdef WIN32
    #include <io.h>
    typedef long off_t;
 #endif
-#include <stdlib.h>
-#include <errno.h>
-#include <time.h>
+#include <cstdlib>
+#include <cerrno>
+#include <ctime>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>

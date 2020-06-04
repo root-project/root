@@ -31,7 +31,8 @@ It is called by a pull down menu item of TASImage.
 #include "TMath.h"
 #include "RConfigure.h"
 #include "TVirtualX.h"
-
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #ifdef R__HAS_COCOA
 #   define X_DISPLAY_MISSING 1

@@ -39,22 +39,23 @@
 #include "ThreadLocalStorage.h"
 #include "TThreadSlots.h"
 #include "TRWMutexImp.h"
+#include "snprintf.h"
 
-TThreadImp     *TThread::fgThreadImp = 0;
+TThreadImp     *TThread::fgThreadImp = nullptr;
 Long_t          TThread::fgMainId = 0;
-TThread        *TThread::fgMain = 0;
+TThread        *TThread::fgMain = nullptr;
 TMutex         *TThread::fgMainMutex;
-char  *volatile TThread::fgXAct = 0;
-TMutex         *TThread::fgXActMutex = 0;
+char  *volatile TThread::fgXAct = nullptr;
+TMutex         *TThread::fgXActMutex = nullptr;
 TCondition     *TThread::fgXActCondi = 0;
-void **volatile TThread::fgXArr = 0;
+void **volatile TThread::fgXArr = nullptr;
 volatile Int_t  TThread::fgXAnb = 0;
 volatile Int_t  TThread::fgXArt = 0;
 
 static void CINT_alloc_lock()   { gGlobalMutex->Lock(); }
 static void CINT_alloc_unlock() { gGlobalMutex->UnLock(); }
 
-static TMutex  *gMainInternalMutex = 0;
+static TMutex  *gMainInternalMutex = nullptr;
 
 static void ThreadInternalLock() { if (gMainInternalMutex) gMainInternalMutex->Lock(); }
 static void ThreadInternalUnLock() { if (gMainInternalMutex) gMainInternalMutex->UnLock(); }

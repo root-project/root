@@ -39,6 +39,8 @@
 #include "TVirtualMutex.h"
 #include "TTimer.h"
 #include "TBase64.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include "rsafun.h"
 

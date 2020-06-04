@@ -43,6 +43,7 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 #include "RooAbsPdf.h"
 #include <fstream>
 #include "strtok.h"
+#include "strlcpy.h"
 #include "RooGlobalFunc.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"

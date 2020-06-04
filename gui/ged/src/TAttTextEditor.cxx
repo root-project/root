@@ -34,6 +34,7 @@
 #include "TGNumberEntry.h"
 #include "TCanvas.h"
 #include "TROOT.h"
+#include "snprintf.h"
 
 ClassImp(TAttTextEditor);
 
