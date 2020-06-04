@@ -16,6 +16,7 @@
 #include "TList.h"
 #include "TString.h"
 #include "TStopwatch.h"
+#include <string>
 
 class TFile;
 class TDirectory;

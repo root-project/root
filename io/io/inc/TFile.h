@@ -22,6 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <atomic>
+#include <string>
 
 #include "Compression.h"
 #include "TDirectoryFile.h"

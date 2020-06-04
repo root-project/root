@@ -13,6 +13,8 @@
 
 #include "TGenCollectionProxy.h"
 
+#include <vector>
+
 class TEmulatedCollectionProxy : public TGenCollectionProxy  {
 
    // Friend declaration
