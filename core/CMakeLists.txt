@@ -31,6 +31,8 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RConfigure.h
     ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
 )
 
+add_custom_target(rconfigure ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RConfigure.h)
+
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
   COMMAND
     ${CMAKE_COMMAND} -E copy_if_different
