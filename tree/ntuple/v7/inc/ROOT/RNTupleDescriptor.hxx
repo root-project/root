@@ -317,7 +317,7 @@ public:
          using pointer = DescriptorId_t*;
          using reference = const DescriptorId_t&;
 
-         RIterator() = default;
+         RIterator() = delete;
          RIterator(const RFieldDescriptor& fieldDesc, DescriptorId_t index)
             : fFieldChildren(fieldDesc.GetLinkIds()), fIndex(index) {}
          ~RIterator() = default;
