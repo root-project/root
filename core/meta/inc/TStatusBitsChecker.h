@@ -15,7 +15,7 @@
 #include <map>
 #include <list>
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 class TClass;
 
