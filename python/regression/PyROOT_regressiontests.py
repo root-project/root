@@ -71,7 +71,10 @@ class Regression02PyException( MyTestCase ):
       if FIXCLING:
          return
 
-      gROOT.LoadMacro( "Scott.C+" )
+      if legacy_pyroot:
+         gROOT.LoadMacro( "Scott.C+" )
+      else:
+         gROOT.LoadMacro( "ScottCppyy.C+" )
 
     # test of not overloaded global function
       self.assertRaises( SyntaxError, ThrowPyException )
@@ -402,7 +405,7 @@ class Regression12WriteTGraph( MyTestCase ):
          ff.grname
          # (2) Get pythonisation
          ff.Get("grname")
-      else:  
+      else:
          gr2 = TGraph()
          ff.GetObject( "grname", gr2 )
       os.remove( "test.root" )
