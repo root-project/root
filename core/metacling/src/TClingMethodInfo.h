@@ -30,6 +30,7 @@
 
 #include "TString.h"
 #include "TDictionary.h"
+#include <string>
 
 #include "clang/AST/DeclBase.h"
 #include "llvm/ADT/SmallVector.h"

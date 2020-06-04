@@ -19,10 +19,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 #include "TError.h"
 #include <vector>
 #include <forward_list>
+#include <utility>
 
 #if defined(_WIN32)
    #if _MSC_VER<1300
@@ -34,6 +35,8 @@
 #else
    #define TYPENAME typename
 #endif
+
+class TVirtualCollectionProxy;
 
 namespace ROOT {
 

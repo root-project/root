@@ -20,12 +20,10 @@
 
 #include "TSchemaHelper.h"
 #include <vector>
+#include <string>
 
 // Forward declarations
 class TVirtualIsAProxy;
-//class TClass;
-//class TClassStreamer;
-//class TVirtualCollectionProxy;
 
 
 namespace ROOT {

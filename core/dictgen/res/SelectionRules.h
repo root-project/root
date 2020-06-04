@@ -13,6 +13,10 @@
 #define R__SELECTIONRULES_H
 
 #include <list>
+#include <string>
+#include <vector>
+#include <utility>
+
 #include "BaseSelectionRule.h"
 #include "ClassSelectionRule.h"
 #include "VariableSelectionRule.h"

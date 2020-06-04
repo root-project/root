@@ -27,11 +27,12 @@
 #include "RtypesCore.h"
 
 #include <string>
+#include <utility>
 
 class TInterpreterValue {
 private:
-   TInterpreterValue(const TInterpreterValue &);   // not implemented
-   TInterpreterValue& operator=(TInterpreterValue &);  // not implemented
+   TInterpreterValue(const TInterpreterValue &) = delete;
+   TInterpreterValue& operator=(TInterpreterValue &) = delete;
 public:
    TInterpreterValue() { }
    virtual ~TInterpreterValue() { }

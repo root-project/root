@@ -33,6 +33,8 @@
 
 #include <vector>
 #include <string>
+#include <utility>
+
 #include "llvm/ADT/DenseMap.h"
 
 namespace cling {

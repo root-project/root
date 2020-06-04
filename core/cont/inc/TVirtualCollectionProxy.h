@@ -22,7 +22,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TObject.h"
 #include "TClassRef.h"
 #include "TDataType.h"
 

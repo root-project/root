@@ -33,6 +33,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <string>
+#include <utility>
 
 #ifndef WIN32
 #define TWin32SendClass char

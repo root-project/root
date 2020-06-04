@@ -24,8 +24,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <vector>
-
 #include "TNamed.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
@@ -33,6 +31,8 @@
 #include "TAttMarker.h"
 #include "GuiTypes.h"
 
+#include <vector>
+#include <utility>
 
 // WM Atoms are initialized in TGClient
 R__EXTERN Atom_t gWM_DELETE_WINDOW;
