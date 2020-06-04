@@ -19,6 +19,8 @@
 
 #include "Math/IFunctionfwd.h"
 
+#include <vector>
+#include <string>
 
 
 namespace ROOT {

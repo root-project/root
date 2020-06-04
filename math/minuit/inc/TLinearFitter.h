@@ -148,6 +148,8 @@
 #include "TFormula.h"
 #include "TVirtualFitter.h"
 
+#include <map>
+
 class TLinearFitter: public TVirtualFitter {
 
 private:

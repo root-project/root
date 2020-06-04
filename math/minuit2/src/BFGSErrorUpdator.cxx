@@ -12,6 +12,8 @@
 #include "Minuit2/LaSum.h"
 #include "Minuit2/LaProd.h"
 
+#include <vector>
+
 //#define DEBUG
 
 #if defined(DEBUG) || defined(WARNINGMSG)

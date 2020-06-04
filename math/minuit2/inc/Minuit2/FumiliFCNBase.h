@@ -12,6 +12,7 @@
 
 #include "Minuit2/FCNBase.h"
 #include <cassert>
+#include <vector>
 
 namespace ROOT {
 

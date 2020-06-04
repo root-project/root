@@ -16,6 +16,8 @@
 #include "Minuit2/MnFcn.h"
 #include "Minuit2/FunctionMinimum.h"
 
+#include <vector>
+
 namespace ROOT {
 
    namespace Minuit2 {

@@ -14,6 +14,8 @@
 #include "Minuit2/MnSeedGenerator.h"
 #include "Minuit2/FumiliBuilder.h"
 
+#include <vector>
+
 namespace ROOT {
 
    namespace Minuit2 {

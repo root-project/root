@@ -17,9 +17,10 @@
 
 #include "Rtypes.h"
 
+#include <vector>
+#include <string>
+
 class TMinuit;
-
-
 
 namespace ROOT {
 

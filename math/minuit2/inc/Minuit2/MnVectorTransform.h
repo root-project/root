@@ -12,6 +12,8 @@
 
 #include "Minuit2/MnMatrix.h"
 
+#include <vector>
+
 namespace ROOT {
 
    namespace Minuit2 {

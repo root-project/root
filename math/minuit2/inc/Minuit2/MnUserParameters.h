@@ -12,8 +12,8 @@
 
 #include "Minuit2/MnUserTransformation.h"
 
-
 #include <vector>
+#include <string>
 
 namespace ROOT {
 

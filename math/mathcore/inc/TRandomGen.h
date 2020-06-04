@@ -28,7 +28,7 @@
 //       can be created for different state N.                          //
 //    * ROOT::MATH::StdEngine to create genersators based on engines    //
 //      provided by the C++ standard libraries
-//    
+//
 //  Convenient typedef are defines to define the different types of
 //  generators. These typedef are
 //   * TRandomMixMax for the MixMaxEngine<240,0>  (MIXMAX with state N=240)
@@ -36,11 +36,13 @@
 //   * TRandomMixMax256 for the MixMaxEngine<256,2> (MIXMAX with state N=256 )
 //   * TRandomMT64 for the  StdEngine<std::mt19937_64> ( MersenneTwister 64 bits)
 //   * TRandomRanlux48 for the  StdEngine<std::ranlux48> (Ranlux 48 bits)
-//       
+//
 //                                                                     //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TRandom.h"
+
+#include <string>
 
 template<class Engine>
 class TRandomGen : public TRandom {
