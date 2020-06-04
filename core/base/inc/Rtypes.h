@@ -23,19 +23,16 @@
 #include "RtypesCore.h"
 // #include "DllImport.h" // included via RtypesCore.h, not used here
 
-#ifdef R__LESS_INCLUDES
-#include <cstring>      // keep <cstring> here to not brake compilation yet
-#else
+#ifndef R__LESS_INCLUDES
+#include <cstdio>
 #include "strtok.h"     // provides R__STRTOK_R with <cstring> include
+#include "strlcpy.h"    // part of string.h on systems that have it
+#include "snprintf.h"   // part of stdio.h on systems that have it
+#include <type_traits>
 #endif
 
-#include "snprintf.h"   // part of stdio.h on systems that have it
-#include "strlcpy.h"    // part of string.h on systems that have it
-
-#include <atomic>
-#include <stdio.h>
 #include <typeinfo>
-#include <type_traits>
+#include <atomic>
 
 #ifndef __CLING__
 // __attribute__ is not supported on Windows, but it is internally needed by Cling
@@ -324,28 +321,28 @@ public: \
    static TClass *Class() { return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); } \
    virtual_keyword void Streamer(TBuffer &R__b) overrd { ::ROOT::Internal::DefaultStreamer(R__b, name::Class(), this); }
 
-#define ClassDef(name,id) \
-   _ClassDefOutline_(name,id,virtual,)   \
+#define ClassDef(name,id)                            \
+   _ClassDefOutline_(name,id,virtual,)               \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefOverride(name,id) \
-   _ClassDefOutline_(name,id,,override)   \
+#define ClassDefOverride(name,id)                    \
+   _ClassDefOutline_(name,id,,override)              \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefNV(name,id) \
-   _ClassDefOutline_(name,id,,) \
+#define ClassDefNV(name,id)                          \
+   _ClassDefOutline_(name,id,,)                      \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefInline(name,id) \
-   _ClassDefInline_(name,id,virtual,)                   \
+#define ClassDefInline(name,id)                      \
+   _ClassDefInline_(name,id,virtual,)                \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefInlineOverride(name,id)                       \
-   _ClassDefInline_(name,id,,override)                        \
+#define ClassDefInlineOverride(name,id)              \
+   _ClassDefInline_(name,id,,override)               \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefInlineNV(name,id) \
-   _ClassDefInline_(name,id,,)                         \
+#define ClassDefInlineNV(name,id)                    \
+   _ClassDefInline_(name,id,,)                       \
    static int DeclFileLine() { return __LINE__; }
 
 //#define _ClassDefInterp_(name,id) ClassDefInline(name,id)
@@ -390,12 +387,12 @@ public: \
 // This ClassDefT is stricly redundant and is kept only for
 // backward compatibility.
 
-#define ClassDefT(name,id) \
-   _ClassDefOutline_(name,id,virtual,) \
+#define ClassDefT(name,id)                          \
+   _ClassDefOutline_(name,id,virtual,)              \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefTNV(name,id) \
-   _ClassDefOutline_(name,id,virtual,) \
+#define ClassDefTNV(name,id)                        \
+   _ClassDefOutline_(name,id,virtual,)              \
    static int DeclFileLine() { return __LINE__; }
 
 
