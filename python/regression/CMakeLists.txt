@@ -24,8 +24,7 @@ if(ROOT_pyroot_FOUND)
   ROOTTEST_ADD_TEST(root_6023
                     MACRO exec_root_6023.py
                     COPY_TO_BUILDDIR root_6023.h
-                    PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARIES}\"\)
-                                                     -e .L\ root_6023.h+
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ root_6023.h+
                     ENVIRONMENT CLING_STANDARD_PCH=none
                     CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING}.so)
 
