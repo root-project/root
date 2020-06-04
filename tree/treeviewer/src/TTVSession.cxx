@@ -17,6 +17,7 @@
 #include "TTVLVContainer.h"
 #include "TClonesArray.h"
 #include "TInterpreter.h"
+#include "snprintf.h"
 
 
 ClassImp(TTVRecord);

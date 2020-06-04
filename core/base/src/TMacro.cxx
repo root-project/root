@@ -51,6 +51,7 @@ Examples:
 #include "TObjString.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "strlcpy.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>

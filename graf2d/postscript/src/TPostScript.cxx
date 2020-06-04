@@ -235,6 +235,8 @@ To change the color model use `gStyle->SetColorModelPS(c)`.
 #include <cwchar>
 #include <fstream>
 
+#include "strlcpy.h"
+#include "snprintf.h"
 #include "Byteswap.h"
 #include "TROOT.h"
 #include "TDatime.h"

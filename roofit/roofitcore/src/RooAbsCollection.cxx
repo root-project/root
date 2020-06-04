@@ -28,7 +28,6 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 
 #include "RooAbsCollection.h"
 
-#include "Riostream.h"
 #include "TClass.h"
 #include "TStopwatch.h"
 #include "TRegexp.h"
@@ -45,9 +44,12 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
 #include <ROOT/RMakeUnique.hxx>
+#include "strlcpy.h"
 
 #include <algorithm>
 #include <iomanip>
+#include <iostream>
+#include <fstream>
 
 using std::endl;
 using std::vector;

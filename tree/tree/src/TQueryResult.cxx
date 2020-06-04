@@ -15,8 +15,9 @@
 A container class for query results.
 */
 
-#include <string.h>
+#include <cstring>
 
+#include "strlcpy.h"
 #include "TBrowser.h"
 #include "TEventList.h"
 #include "TQueryResult.h"

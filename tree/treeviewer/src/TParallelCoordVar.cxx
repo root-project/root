@@ -28,6 +28,7 @@
 #include "TFrame.h"
 #include "TCanvas.h"
 #include "TMarker.h"
+#include "snprintf.h"
 
 ClassImp(TParallelCoordVar);
 

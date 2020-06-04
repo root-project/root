@@ -19,6 +19,8 @@
 */
 
 #include "strtok.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 #include "TClass.h"
 #include "TList.h"
 #include "TMethod.h"

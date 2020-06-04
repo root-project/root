@@ -40,6 +40,7 @@
 #include "TRemoteObject.h"
 #include "TBufferFile.h"
 #include "TImage.h"
+#include "snprintf.h"
 
 #include <ctime>
 #include <cstdlib>

@@ -17,6 +17,7 @@ TVirtualPS is an abstract interface to Postscript, PDF, SVG. TeX etc... drivers
 */
 
 #include <fstream>
+#include "strlcpy.h"
 #include "TVirtualPS.h"
 
 TVirtualPS *gVirtualPS = nullptr;

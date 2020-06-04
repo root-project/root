@@ -39,15 +39,14 @@ arguments and dependencies between arguments
 #include "RooAbsData.h"
 #include "TObjString.h"
 #include "RooMsgService.h"
+#include "strlcpy.h"
 
-#include "Riostream.h"
+#include <iostream>
 
 
 using namespace std;
 
-ClassImp(RooCmdConfig); 
-  ;
-
+ClassImp(RooCmdConfig);
 
 
 ////////////////////////////////////////////////////////////////////////////////

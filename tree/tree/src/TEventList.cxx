@@ -50,6 +50,8 @@ the TEventList object created in the above commands:
 #include "TDirectory.h"
 #include "TList.h"
 #include "TMath.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 ClassImp(TEventList);
 

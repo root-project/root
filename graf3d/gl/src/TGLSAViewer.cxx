@@ -24,6 +24,7 @@
 #include "TGMenu.h"
 #include "TGSplitter.h"
 #include "TGButton.h"
+#include "snprintf.h"
 
 #include "TVirtualPad.h"
 #include "TGedEditor.h"

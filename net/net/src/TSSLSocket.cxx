@@ -19,6 +19,7 @@
 
 #include <openssl/ssl.h>
 #include <cstdio>
+#include "strlcpy.h"
 #include "TSSLSocket.h"
 #include "TSystem.h"
 

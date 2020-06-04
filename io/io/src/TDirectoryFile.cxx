@@ -25,6 +25,7 @@ End_Macro
 
 #include <iostream>
 #include "Strlen.h"
+#include "strlcpy.h"
 #include "TDirectoryFile.h"
 #include "TFile.h"
 #include "TBufferFile.h"

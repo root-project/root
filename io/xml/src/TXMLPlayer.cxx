@@ -115,6 +115,7 @@
 #include "TMethodCall.h"
 #include "TVirtualCollectionProxy.h"
 #include "TClassEdit.h"
+#include "strlcpy.h"
 #include <iostream>
 #include <fstream>
 #include <string>

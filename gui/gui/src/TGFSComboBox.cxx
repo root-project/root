@@ -36,6 +36,7 @@
 #include "TGPicture.h"
 #include "TSystem.h"
 #include "TVirtualX.h"
+#include "strlcpy.h"
 
 #include <cstdlib>
 #include <iostream>

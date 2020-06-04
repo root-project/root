@@ -11,6 +11,7 @@
 #include <cstdlib>
 
 #include "Strlen.h"
+#include "strlcpy.h"
 #include "TDirectory.h"
 #include "TBuffer.h"
 #include "TClassTable.h"

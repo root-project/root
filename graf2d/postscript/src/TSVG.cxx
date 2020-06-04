@@ -28,6 +28,7 @@
 #include "TMath.h"
 #include "TObjString.h"
 #include "TObjArray.h"
+#include "snprintf.h"
 
 Int_t TSVG::fgLineJoin = 0;
 Int_t TSVG::fgLineCap  = 0;

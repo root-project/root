@@ -16,6 +16,7 @@
 #include "TLeaf.h"
 #include "TBrowser.h"
 #include "TreeUtils.h"
+#include "strlcpy.h"
 
 #include <string>
 

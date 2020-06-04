@@ -36,6 +36,8 @@
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 #include "TObjArray.h"
+#include "snprintf.h"
+#include "strlcpy.h"
 #include <iostream>
 #include <fstream>
 #include <map>

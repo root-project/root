@@ -27,6 +27,7 @@
 
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"
+#include "snprintf.h"
 
 #include <iosfwd>
 #include <cstdarg>

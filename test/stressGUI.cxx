@@ -16,9 +16,10 @@
 //    stressGUI -help
 //
 
-#include <stdlib.h>
-#include <time.h>
-#include <Riostream.h>
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <snprintf.h>
 #include <TString.h>
 #include <TROOT.h>
 #include <TClass.h>

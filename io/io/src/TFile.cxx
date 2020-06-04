@@ -94,6 +94,8 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "Compression.h"
 #include "RConfigure.h"
 #include "Strlen.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 #include "TArrayC.h"
 #include "TBuffer.h"
 #include "TClass.h"

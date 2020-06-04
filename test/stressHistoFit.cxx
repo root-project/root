@@ -80,6 +80,7 @@
 #include "TTree.h"
 #include "TF1.h"
 #include "TF2.h"
+#include "snprintf.h"
 
 #include "Math/IFunction.h"
 #include "Math/IParamFunction.h"

@@ -20,6 +20,8 @@
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TRealData.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 ClassImp(TInspectCanvas);
 

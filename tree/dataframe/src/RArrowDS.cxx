@@ -30,6 +30,7 @@ arrow::Schema.
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RArrowDS.hxx>
 #include <ROOT/RMakeUnique.hxx>
+#include <snprintf.h>
 
 #include <algorithm>
 #include <sstream>

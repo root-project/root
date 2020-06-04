@@ -28,11 +28,12 @@
 #include "TMethodArg.h"
 #include "TError.h"
 #include "TInterpreter.h"
+#include "snprintf.h"
 
 // Standard
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 #include <algorithm>
 #include <list>
 #include <mutex>

@@ -18,6 +18,7 @@
 #include "TError.h"
 #include "TMathBase.h"
 #include "TApplication.h"
+#include "snprintf.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>

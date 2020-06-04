@@ -16,6 +16,8 @@
 #include "TBrowser.h"
 #include "TBuffer.h"
 #include "TreeUtils.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 ClassImp(TNtupleD);
 

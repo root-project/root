@@ -25,13 +25,14 @@
 
 // Routines used to compute the style and size of individual elements.
 
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
+#include <cstring>
+#include <cstdlib>
+#include <cctype>
 
 #include "TGHtml.h"
 #include "TImage.h"
 #include "TVirtualX.h"
+#include "snprintf.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the current rendering style. In other words, get the style

@@ -23,6 +23,7 @@
 #include "TVirtualX.h"
 #include "TBrowser.h"
 #include "TStyle.h"
+#include "strlcpy.h"
 
 /** \class TAxis3D
 \ingroup g3d

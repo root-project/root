@@ -46,6 +46,8 @@
 #include "TGComboBox.h"
 #include "TGListBox.h"
 #include "TVirtualX.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 //_____________________________________________________________________________
 //

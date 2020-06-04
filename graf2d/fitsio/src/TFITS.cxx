@@ -81,6 +81,7 @@ several methods to manage them.
 #include "TObjString.h"
 #include "TCanvas.h"
 #include "TMath.h"
+#include "strlcpy.h"
 
 #include "fitsio.h"
 #include <cstdlib>

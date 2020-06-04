@@ -37,6 +37,7 @@
 #include "TImage.h"
 #include "TMath.h"
 #include "TVirtualX.h"
+#include "snprintf.h"
 
 #include "TGSpeedo.h"
 

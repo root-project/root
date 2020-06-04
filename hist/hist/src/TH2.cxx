@@ -26,7 +26,7 @@
 #include "TObjString.h"
 #include "TObjArray.h"
 #include "TVirtualHistPainter.h"
-
+#include "snprintf.h"
 
 ClassImp(TH2);
 

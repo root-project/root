@@ -38,6 +38,7 @@
 #include "TBox.h"
 #include "TPaveLabel.h"
 #include "TVirtualX.h"
+#include "snprintf.h"
 
 ClassImp(TPieEditor);
 

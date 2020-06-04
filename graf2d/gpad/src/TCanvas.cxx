@@ -44,6 +44,8 @@
 #include "TGraph.h"
 #include "TMath.h"
 #include "TView.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include "TVirtualMutex.h"
 

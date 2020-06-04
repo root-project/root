@@ -23,6 +23,8 @@
 #include "TClass.h"
 #include "TBuffer.h"
 #include "TROOT.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 ClassImp(TLinearFitter);
 

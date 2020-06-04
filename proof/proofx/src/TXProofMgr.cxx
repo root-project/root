@@ -31,6 +31,7 @@ Implementation of the functionality provided by TProofMgr in the case of a xproo
 #endif
 
 #include "Getline.h"
+#include "snprintf.h"
 #include "TList.h"
 #include "TObjArray.h"
 #include "TObjString.h"

@@ -121,8 +121,8 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <assert.h>
+#include <cstdio>
+#include <cassert>
 #include <set>
 
 #include "RConfigure.h"
@@ -146,6 +146,7 @@
 #include "TInterpreter.h"
 #include "Riostream.h"
 #include "Rstrstream.h"
+#include "strlcpy.h"
 
 #define BUF_SIZE 1024 // must be smaller than/equal to fgLineBufSize in Getline.cxx and
                       // lineBufSize in cppcompleter.py

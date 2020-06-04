@@ -59,6 +59,8 @@
 #include "TBufferFile.h"
 #include "TVirtualX.h"
 #include "RConfigure.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 Pixel_t          TGListTree::fgGrayPixel = 0;
 const TGFont    *TGListTree::fgDefaultFont = nullptr;

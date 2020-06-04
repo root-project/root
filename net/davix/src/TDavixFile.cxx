@@ -40,9 +40,10 @@
 #include "TBase64.h"
 #include "TVirtualPerfStats.h"
 #include "TDavixFileInternal.h"
+#include "snprintf.h"
 
-#include <errno.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstdlib>
 #include <unistd.h>
 #include <fcntl.h>
 #include <davix.hpp>

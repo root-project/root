@@ -22,8 +22,10 @@
 #include "TDatime.h"
 #include "TTimeStamp.h"
 #include "TMath.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #define pgsql_success(x) (((x) == PGRES_EMPTY_QUERY) \
                         || ((x) == PGRES_COMMAND_OK) \

@@ -16,6 +16,8 @@
 #include "TCanvas.h"
 #include "TText.h"
 #include "TInterpreter.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include <cstring>
 #include <iostream>

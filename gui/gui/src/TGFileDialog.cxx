@@ -38,6 +38,7 @@
 #include "TGInputDialog.h"
 #include "TSystem.h"
 #include "TObjString.h"
+#include "strlcpy.h"
 
 #include <sys/stat.h>
 

@@ -33,6 +33,7 @@ the network structure.
 #include "TVirtualPad.h"
 #include "TRegexp.h"
 #include "TMath.h"
+#include "snprintf.h"
 #include <iostream>
 #include <cstdlib>
 

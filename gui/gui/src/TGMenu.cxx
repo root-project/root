@@ -72,6 +72,7 @@
 #include "TParameter.h"
 #include "RConfigure.h"
 #include "TVirtualX.h"
+#include "snprintf.h"
 
 #include <iostream>
 

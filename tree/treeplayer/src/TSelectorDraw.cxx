@@ -35,6 +35,7 @@ A specialized TSelector for TTree::Draw.
 #include "TStyle.h"
 #include "TClass.h"
 #include "TColor.h"
+#include "strlcpy.h"
 
 ClassImp(TSelectorDraw);
 

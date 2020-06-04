@@ -72,16 +72,19 @@
 #include "Compression.h"
 #include <ROOT/RConfig.hxx>
 #include "ROOT/TIOFeatures.hxx"
-#include <string>
 #include "TFile.h"
 #include "THashList.h"
 #include "TKey.h"
-#include "Riostream.h"
 #include "TClass.h"
 #include "TSystem.h"
 #include "TUUID.h"
 #include "ROOT/StringConv.hxx"
-#include <stdlib.h>
+#include "snprintf.h"
+
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
 #include <climits>
 #include <sstream>
 #include "haddCommandLineOptionsHelp.h"

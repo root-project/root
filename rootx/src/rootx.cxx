@@ -17,17 +17,18 @@
 
 #include "RConfigure.h"
 #include "Rtypes.h"
-
+#include "strlcpy.h"
+#include "snprintf.h"
 #include "rootCommandLineOptionsHelp.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <unistd.h>
-#include <string.h>
+#include <cstring>
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-#include <errno.h>
+#include <cerrno>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <string>

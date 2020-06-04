@@ -72,15 +72,17 @@ and try reading again.
 #include "TROOT.h"
 #include "TFile.h"
 #include "TH1.h"
+#include "TClass.h"
+#include "strlcpy.h"
+
 #include <map>
 #include <sstream>
 #include <string>
+#include <iostream>
+#include <fstream>
+#include <cstring>
 
-using namespace std ;
-
-#include "TClass.h"
-#include "Riostream.h"
-#include <string.h>
+using namespace std;
 
 ClassImp(RooWorkspace);
 

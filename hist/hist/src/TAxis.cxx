@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TAxis.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
@@ -23,7 +22,11 @@
 #include "TTimeStamp.h"
 #include "TBuffer.h"
 #include "TMath.h"
-#include <time.h>
+#include "strlcpy.h"
+#include "snprintf.h"
+
+#include <iostream>
+#include <ctime>
 #include <cassert>
 
 ClassImp(TAxis);

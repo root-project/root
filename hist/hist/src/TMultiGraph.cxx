@@ -21,6 +21,7 @@
 #include "TPluginManager.h"
 #include "TMath.h"
 #include "TF1.h"
+#include "strlcpy.h"
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"

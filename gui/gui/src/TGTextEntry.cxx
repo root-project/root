@@ -216,6 +216,7 @@ All other keys with valid ASCII codes insert themselves into the line.
 #include "KeySymbols.h"
 #include "TClass.h"
 #include "TVirtualX.h"
+#include "strlcpy.h"
 
 #include <iostream>
 

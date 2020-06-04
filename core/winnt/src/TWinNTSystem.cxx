@@ -38,6 +38,8 @@
 #include "TVirtualX.h"
 #include "TUrl.h"
 #include "ThreadLocalStorage.h"
+#include "snprintf.h"
+#include "strlcpy.h"
 
 #include <sys/utime.h>
 #include <sys/timeb.h>

@@ -24,6 +24,8 @@
 #include "TString.h"
 #include "TNamed.h"
 #include "TObjArray.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include <fstream>
 #include <cstdlib>

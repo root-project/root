@@ -24,6 +24,7 @@
 #include "TPluginManager.h"
 #include "TSystem.h"
 #include "strtok.h"
+#include "snprintf.h"
 
 #include <cstdlib>
 #include <cassert>

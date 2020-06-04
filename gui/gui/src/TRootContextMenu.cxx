@@ -50,6 +50,8 @@
 #include "TObjectSpy.h"
 #include "KeySymbols.h"
 #include "RConfigure.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 enum EContextMenu {
    kToggleStart       = 1000, // first id of toggle menu items
