@@ -29,8 +29,9 @@
 #include "ROOT/TypeTraits.hxx"
 
 #include <iosfwd>
-#include <stdarg.h>
-#include <stdio.h>
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
 #include <string>
 
 class TRegexp;
@@ -39,6 +40,8 @@ class TString;
 class TSubString;
 class TObjArray;
 class TVirtualMutex;
+class TBuffer;
+class TClass;
 class TBufferFile;
 
 TString operator+(const TString &s1, const TString &s2);
