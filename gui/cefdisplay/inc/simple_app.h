@@ -24,6 +24,7 @@
 
 #include "gui_handler.h"
 #include "osr_handler.h"
+#include <string>
 
 class THttpServer;
 

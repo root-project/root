@@ -17,6 +17,7 @@
 #include "TAttFill.h"
 #include "TAttText.h"
 #include "TAttMarker.h"
+#include <string>
 
 #include "TWebPainting.h"
 

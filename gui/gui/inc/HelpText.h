@@ -12,7 +12,7 @@
 #ifndef ROOT_HelpText
 #define ROOT_HelpText
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 R__EXTERN const char gHelpAbout[];
 R__EXTERN const char gHelpBrowser[];
