@@ -12,7 +12,7 @@
 #ifndef ROOT_HelpSMText
 #define ROOT_HelpSMText
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 R__EXTERN const char gHelpSMTopLevel[];
 R__EXTERN const char gHelpSMGeneral[];

@@ -136,6 +136,7 @@
 #include "KeySymbols.h"
 #include "TVirtualX.h"
 
+#include <iomanip>
 
 // Names of ROOT GUI events. Used for listing event logs.
 const char *kRecEventNames[] = {
