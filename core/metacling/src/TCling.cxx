@@ -1217,6 +1217,7 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
                                            "ROOT_Rtypes",
                                            "ROOT_Foundation_Stage1_NoRTTI",
                                            "Core",
+                                           "Rint",
                                            "RIO"};
 
    LoadModules(CoreModules, clingInterp);
