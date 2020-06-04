@@ -13,6 +13,7 @@
 #define ROOT_TRootSnifferFull
 
 #include "TRootSniffer.h"
+#include <string>
 
 class TMemFile;
 
