@@ -16,8 +16,7 @@
 #include "Fit/FitData.h"
 #include "Math/Error.h"
 #include <cmath>
-
-
+#include <vector>
 
 namespace ROOT {
 

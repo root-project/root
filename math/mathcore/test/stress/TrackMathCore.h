@@ -6,7 +6,7 @@
 #include "Math/Point3D.h"
 #include "Math/Vector4D.h"
 #include "Math/SMatrix.h"
-#include "Rtypes.h" // for Double32_t
+#include "RtypesCore.h" // for Double32_t
 #include "TError.h"
 
 #include <vector>

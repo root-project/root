@@ -14,6 +14,9 @@
 #include "Minuit2/MnUserCovariance.h"
 #include "Minuit2/MnGlobalCorrelationCoeff.h"
 
+#include <vector>
+#include <string>
+
 namespace ROOT {
 
    namespace Minuit2 {

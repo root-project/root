@@ -44,7 +44,7 @@ namespace Internal {
 
 // We do not have explicit vectorisation support enabled. Fall back to regular ROOT types.
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 namespace ROOT {
    using Float_v  = Float_t;

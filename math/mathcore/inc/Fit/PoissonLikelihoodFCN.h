@@ -21,8 +21,8 @@
 
 #include "Fit/FitUtil.h"
 
-
 #include <memory>
+#include <vector>
 
 //#define PARALLEL
 // #ifdef PARALLEL

@@ -22,10 +22,10 @@
 
 #include "Fit/BinData.h"
 
-
 #include "Fit/FitUtil.h"
 
 #include <memory>
+#include <vector>
 
 /**
 @defgroup FitMethodFunc Fit Method Classes

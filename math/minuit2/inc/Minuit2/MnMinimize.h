@@ -13,6 +13,8 @@
 #include "Minuit2/MnApplication.h"
 #include "Minuit2/CombinedMinimizer.h"
 
+#include <vector>
+
 namespace ROOT {
 
    namespace Minuit2 {

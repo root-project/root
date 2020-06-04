@@ -12,7 +12,6 @@
 #ifndef ROOT_TMath
 #define ROOT_TMath
 
-#include "Rtypes.h"
 #include "TMathBase.h"
 
 #include "TError.h"

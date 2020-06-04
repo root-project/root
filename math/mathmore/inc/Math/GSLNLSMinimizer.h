@@ -40,7 +40,6 @@
 #include "Math/MinimTransformVariable.h"
 
 #include <vector>
-#include <string>
 
 namespace ROOT {
 

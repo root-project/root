@@ -36,10 +36,6 @@
 
 #include "Math/BasicMinimizer.h"
 
-#include <vector>
-#include <string>
-
-
 
 namespace ROOT {
 
