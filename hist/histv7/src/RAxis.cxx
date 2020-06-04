@@ -130,20 +130,23 @@ ROOT::Experimental::RAxisBase::CheckFixedNumericBinningCompat(
          ++sourceBin;
       }
 
-      // If any source bin mapped into the target underflow bin like this, the
-      // source->target bin mapping isn't trivial and the merge is lossy as some
-      // source regular bins will map into the infinite target underflow bin.
+      // If any source bin mapped into the target underflow bin like this...
       if (sourceBin != source.GetFirstBin()) {
+         // Then those bins don't map into identically numbered target bin
          trivialRegularBinMapping = false;
+
+         // And they map into a larger bin, the infinitely large underflow bin
          mergingIsLossy = true;
       }
 
-      // If the selected source bin partially maps into the target underflow
-      // bin, then it covers both target underflow and regular/overflow range,
-      // and this source bin must be empty for a merge to be possible.
+      // If the selected bin partially maps into the target underflow bin...
       if (ComparePosToBinBorder(source.GetBinFrom(sourceBin),
                                 GetFirstBin(),
                                 BinSide::kFrom) < 0) {
+         // Then the first bin it maps to is the target underflow bin
+         trivialRegularBinMapping = false;
+
+         // And it maps into two bins, underflow and first regular or overflow
          regularBinAliasing = true;
       }
       // At this point, we have taken care of mappings from the first source
@@ -197,8 +200,8 @@ ROOT::Experimental::RAxisBase::CheckFixedNumericBinningCompat(
          const double sourceTo = source.GetBinTo(sourceBin);
 
          // Does the source->target bin mapping remain trivial so far?
-         if (targetBin == sourceBin) {
-            trivialRegularBinMapping = true;
+         if (targetBin != sourceBin) {
+            trivialRegularBinMapping = false;
          }
 
          // Does the first target bin cover nontrivial extra range on the left
