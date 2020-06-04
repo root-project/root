@@ -127,6 +127,14 @@ else()
 endif()
 
 #----------------------------------------------------------------------------------------------------
+# Execute pre packaging script
+#
+# We want to defer markdown to html conversion; CPACK_INSTALL_SCRIPTS allows this
+# but only takes a .cmake file as argument
+#
+set(CPACK_INSTALL_SCRIPTS ${CMAKE_SOURCE_DIR}/cmake/modules/CPackREADME.cmake)
+
+#----------------------------------------------------------------------------------------------------
 # Finally, generate the CPack per-generator options file and include the
 # base CPack configuration.
 #
