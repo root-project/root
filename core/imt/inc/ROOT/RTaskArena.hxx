@@ -55,7 +55,7 @@ public:
    RTaskArenaWrapper(unsigned maxConcurrency = 0);
    ~RTaskArenaWrapper(); // necessary to set size back to zero
    static unsigned TaskArenaSize();
-   std::unique_ptr<tbb::task_arena> &Access();
+   tbb::task_arena &Access();
 private:
    std::unique_ptr<tbb::task_arena> fTBBArena;
    static unsigned fNWorkers;
