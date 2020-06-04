@@ -18,6 +18,7 @@ The following people have contributed to this new version:
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
+ Surya Dwivedi, GSOC/SFT, \
  Massimiliano Galli, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Hadrien Grasland, IJCLab/LAL,\
@@ -73,8 +74,21 @@ The following people have contributed to this new version:
 
 ## Histogram Libraries
 
+- When fitting an histogram using the fit option `W` (set all bin errors to be equal to 1),  renormalize the obtained fit  parameter errors using the obtained chi2 fit value. This is the same procedure performed already when fitting a `TGraph`.
+- Applying some fixes when performing histogram fits using bin integral in multi-thread mode. 
 
 ## Math Libraries
+
+### Minuit2
+
+- Fix the case when a new better minimum is found while running MINOS
+- add some fixed in handling the message printing
+- use std::numeric_limits<double> for the default value of the internal precision
+
+### Matrix
+
+- Improve `TDecompQRH` , QR decomposition in an orthogonal matrix Q. Add a function `TDecompQR::GetOrthogonalMatrix()` returning the
+Q matrix found by the decomposition. 
 
 
 ## RooFit Libraries
@@ -206,7 +220,24 @@ The verbosity can therefore be adjusted using
 `hist2workspace` is also much less verbose. The verbosity can be restored with `hist2workspace -v` for intermediate verbosity
 or `-vv` for what it printed previously.
 
+## TMVA
 
+### Deep Learning module
+
+- Extend Deep Learning module by adding support for *LSTM* and *GRU* Recurrent layers.
+- Add implementation for all recurrent layers (*LSTM*, *GRU*, and simple RNN) for GPU using the CUDA *cuDNN* library
+- Add support for Batch Normalization implemented in both CPU and GPU
+- Deprecate `MethodDNN` , defined by the `TMVA::kDNN` enumeration for building neural networks with fully connected dense layers.  It is replaced by `MethodDL` (`TMVA::kDL`)
+- Deprecate also the option `Architecture=Standard` for `MethodDL`. Have only `CPU` or `GPU` architecture options. When a BLAS implementation is not found use the CPU architecture with matrix
+operations provided by the ROOT TMatrix classes.
+- Add new tutorials showing usage new Deep Learning functionalities
+- All these new updates are documented in the new version of the **TMVA Users Guide**, available in github
+[here](https://github.com/root-project/root/blob/master/documentation/tmva/UsersGuide/TMVAUsersGuide.pdf).
+
+### PyMVA
+
+- Add support for Tensorflow version 2 as backend for Keras in `MethodPyKeras`. Note that it requires still an independent Keras installation with a Keras version >= 2.3
+- Add also some fixes needed when using Python  version 3. 
 
 ## 2D Graphics Libraries
 
@@ -256,6 +287,10 @@ Not all features of TGeoPainter are supported - only plain drawing of selected T
 
 ## Tutorials
 
+- Add 3 new TMVA tutorials:
+   - ``TMVA_Higgs_Classification.C`` showing the usage of the TMVA deep neural network in a typical classification problem,
+   - ``TMVA_CNN_Classification.C`` showing the usage of CNN in TMVA with `MethodDL` and in PyMVA using `MethodPyKeras`,
+   - ``TMVA_RNN_Classification.C`` showing the usage of RNN in both TMVA and Keras. 
 
 ## Class Reference Guide
 
