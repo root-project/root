@@ -23,6 +23,7 @@
 #include <ostream>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "ROOT/RAxisConfig.hxx"
@@ -777,37 +778,35 @@ public:
          *this = std::move(other);
       }
       BinningCompatibility& operator=(const BinningCompatibility& other) {
-         this->~BinningCompatibility();
          switch (other.fKind) {
             case CompatKind::kIncompatible:
-               new(this) BinningCompatibility();
+               rebuild();
                break;
 
             case CompatKind::kNumeric:
-               new(this) BinningCompatibility(other.fNumeric);
+               rebuild(other.fNumeric);
                break;
 
             case CompatKind::kLabeled:
-               new(this) BinningCompatibility(other.fLabeled);
+               rebuild(other.fLabeled);
                break;
-         };
+         }
          return *this;
       }
       BinningCompatibility& operator=(BinningCompatibility&& other) {
-         this->~BinningCompatibility();
          switch (other.fKind) {
             case CompatKind::kIncompatible:
-               new(this) BinningCompatibility();
+               rebuild();
                break;
 
             case CompatKind::kNumeric:
-               new(this) BinningCompatibility(std::move(other.fNumeric));
+               rebuild(std::move(other.fNumeric));
                break;
 
             case CompatKind::kLabeled:
-               new(this) BinningCompatibility(std::move(other.fLabeled));
+               rebuild(std::move(other.fLabeled));
                break;
-         };
+         }
          return *this;
       }
 
@@ -890,6 +889,14 @@ public:
          // Valid if fKind is CompatKind::kLabeled
          LabeledBinningCompatibility fLabeled;
       };
+
+      /// Replace with another instance of BinningCompatibility, constructed
+      /// using the provided arguments.
+      template <typename... Args>
+      void rebuild(Args&&... args) {
+         this->~BinningCompatibility();
+         new(this) BinningCompatibility(std::forward<Args>(args)...);
+      }
    };
 
    /// Compare the binning of this axis with that of another axis for the
