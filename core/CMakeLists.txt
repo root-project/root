@@ -51,7 +51,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
     ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 )
 
-add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h ${CMAKE_BINARY_DIR}/include/RGitCommit.h ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h ${CMAKE_BINARY_DIR}/include/RConfigure.h)
+add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RGitCommit.h)
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
   PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
@@ -140,7 +140,7 @@ target_include_directories(BaseTROOT PRIVATE
    ${CMAKE_BINARY_DIR}/ginclude
 )
 
-add_dependencies(BaseTROOT gitcommit)
+add_dependencies(BaseTROOT gitcommit rconfigure)
 #----------------------------------------------------------------------------------------
 
 if(WIN32)
