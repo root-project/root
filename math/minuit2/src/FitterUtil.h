@@ -10,6 +10,9 @@
 #ifndef ROOT_FitterUtil_H_
 #define ROOT_FitterUtil_H_
 
+#include <vector>
+
+class TF1;
 
 /// utility functions to be used in the fitter classes
 

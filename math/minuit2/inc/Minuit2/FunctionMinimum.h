@@ -12,6 +12,8 @@
 
 #include "Minuit2/BasicFunctionMinimum.h"
 
+#include <vector>
+
 #ifdef G__DICTIONARY
 typedef ROOT::Minuit2::MinimumState MinimumState;
 #endif

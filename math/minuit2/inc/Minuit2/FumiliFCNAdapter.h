@@ -21,6 +21,7 @@
 // #endif
 
 #include <cmath>
+#include <vector>
 
 namespace ROOT {
 

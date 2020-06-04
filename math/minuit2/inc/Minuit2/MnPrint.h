@@ -16,6 +16,7 @@
 //#define WARNINGMSG
 
 #include <iostream>
+#include <string>
 
 #ifdef DEBUG
 #ifndef WARNINGMSG

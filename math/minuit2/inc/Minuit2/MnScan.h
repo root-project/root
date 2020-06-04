@@ -13,6 +13,9 @@
 #include "Minuit2/MnApplication.h"
 #include "Minuit2/ScanMinimizer.h"
 
+#include <vector>
+#include <utility>
+
 namespace ROOT {
 
    namespace Minuit2 {

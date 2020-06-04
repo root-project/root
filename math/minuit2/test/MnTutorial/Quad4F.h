@@ -9,6 +9,8 @@
 
 #include "Minuit2/FCNGradientBase.h"
 
+#include <vector>
+
 namespace ROOT {
 
    namespace Minuit2 {

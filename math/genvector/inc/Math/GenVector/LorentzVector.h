@@ -25,6 +25,7 @@
 #include "Math/GenVector/GenVectorIO.h"
 
 #include <cmath>
+#include <string>
 
 namespace ROOT {
 

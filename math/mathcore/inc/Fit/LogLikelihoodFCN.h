@@ -22,6 +22,7 @@
 #include "Fit/FitUtil.h"
 
 #include <memory>
+#include <vector>
 
 namespace ROOT {
 

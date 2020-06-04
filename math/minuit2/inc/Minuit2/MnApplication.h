@@ -13,10 +13,11 @@
 #include "Minuit2/MnUserParameterState.h"
 #include "Minuit2/MnStrategy.h"
 
+#include <vector>
+
 namespace ROOT {
 
    namespace Minuit2 {
-
 
 
 class FunctionMinimum;

@@ -15,8 +15,6 @@
 #include "Minuit2/ScanBuilder.h"
 #include "Minuit2/SimplexSeedGenerator.h"
 
-#include <vector>
-
 namespace ROOT {
 
    namespace Minuit2 {
