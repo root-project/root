@@ -19,6 +19,7 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <string>
 
 #include "../Utility.h"
 #include "Math/Functor.h"

@@ -5,7 +5,10 @@
 #include <iostream>
 #include <sstream>
 #include <type_traits>
-#include "stdlib.h"
+#include <cstdlib>
+#include <vector>
+#include <string>
+
 #include "TRandom.h"
 //#include "TMVA/DNN/Architectures/Reference.h"
 #include "TMVA/DNN/Functions.h"

@@ -21,9 +21,9 @@
 #ifndef ROOT_TMVA_VarTransformHandler
 #define ROOT_TMVA_VarTransformHandler
 
-#include "TString.h"
 #include "TMVA/Types.h"
 #include "TMVA/DataSetInfo.h"
+#include <vector>
 
 class TTree;
 class TFile;

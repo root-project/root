@@ -17,7 +17,7 @@
 #define TMVA_TEST_DNN_TEST_LSTM_TEST_LSTM_FWDPASS_H
 
 #include <iostream>
-#include <vector>
+#include <string>
 
 #include "../Utility.h"
 #include "TMVA/DNN/Functions.h"

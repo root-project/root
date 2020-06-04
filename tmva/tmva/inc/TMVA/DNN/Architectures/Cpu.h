@@ -32,7 +32,7 @@
 #include "TMVA/DNN/Architectures/Cpu/CpuTensor.h"
 
 #include <vector>
-
+#include <string>
 
 class TRandom;
 
