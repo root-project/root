@@ -6,6 +6,7 @@
 
 #include "TBufferText.h"
 #include "TString.h"
+#include <string>
 
 class TMap;
 class TExMap;

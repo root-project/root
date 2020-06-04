@@ -18,6 +18,7 @@
 #include <list>
 #include <map>
 #include <vector>
+#include <fstream>
 
 #include <TRegexp.h>
 

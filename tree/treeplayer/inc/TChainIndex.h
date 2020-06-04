@@ -31,6 +31,7 @@
 #include "TVirtualIndex.h"
 
 #include <vector>
+#include <utility>
 
 class TTreeFormula;
 class TTreeIndex;

@@ -20,7 +20,8 @@
 #include <atomic>
 #include <string>
 #include <map>
-#include <stdlib.h>
+#include <cstdlib>
+#include <vector>
 
 class TObjArray;
 class TCollectionProxyFactory;

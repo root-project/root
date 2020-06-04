@@ -13,6 +13,7 @@
 #define ROOT_TStreamerInfo
 
 #include <atomic>
+#include <vector>
 
 #include "TVirtualStreamerInfo.h"
 
