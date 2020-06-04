@@ -23,8 +23,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
-#include <stdio.h>
-#include <ctype.h>
+#include <cstdio>
+#include <cctype>
 #include <fcntl.h>
 #ifndef _WIN32
 #include <unistd.h>
@@ -34,6 +34,7 @@
 #include "TNamed.h"
 #include "TInetAddress.h"
 #include "TTimer.h"
+#include <string>
 
 class TSeqCollection;
 class TFdSet;

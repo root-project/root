@@ -12,6 +12,7 @@
 #include "cling/Interpreter/InterpreterCallbacks.h"
 
 #include <stack>
+#include <string>
 
 namespace clang {
    class Decl;

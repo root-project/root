@@ -31,6 +31,8 @@
 #include <map>
 #include <typeinfo>
 #include <vector>
+#include <string>
+#include <utility>
 
 class TClass;
 class TEnv;

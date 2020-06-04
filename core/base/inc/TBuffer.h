@@ -27,6 +27,7 @@
 #include "Bytes.h"
 
 #include <vector>
+#include <string>
 
 class TVirtualStreamerInfo;
 class TStreamerElement;

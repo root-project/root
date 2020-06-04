@@ -8,8 +8,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <string>
-
 namespace cling {
    class Interpreter;
 }
