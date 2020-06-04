@@ -149,7 +149,7 @@
 
 #include "RooCustomizer.h"
 
-#include "RooAbsCategoryLValue.h" 
+#include "RooAbsCategoryLValue.h"
 #include "RooAbsCategory.h"
 #include "RooAbsArg.h"
 #include "RooAbsPdf.h"
@@ -158,7 +158,9 @@
 #include "RooMsgService.h"
 #include "RooHelpers.h"
 
-#include "Riostream.h"
+#include <iostream>
+#include "strtok.h"
+
 #include "RooWorkspace.h"
 #include "RooGlobalFunc.h"
 #include "RooConstVar.h"

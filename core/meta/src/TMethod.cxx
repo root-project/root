@@ -18,6 +18,7 @@
  TTree class.
 */
 
+#include "strtok.h"
 #include "TClass.h"
 #include "TList.h"
 #include "TMethod.h"

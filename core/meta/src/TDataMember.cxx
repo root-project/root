@@ -138,6 +138,7 @@ but also in Dump() and Inspect() methods and by the THtml class.
 #include "TDataMember.h"
 
 #include "Strlen.h"
+#include "strtok.h"
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TClassEdit.h"
@@ -157,7 +158,7 @@ but also in Dump() and Inspect() methods and by the THtml class.
 
 #include <cassert>
 #include <cctype>
-#include <stdlib.h>
+#include <cstdlib>
 
 
 ClassImp(TDataMember);

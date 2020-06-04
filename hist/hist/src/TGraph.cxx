@@ -9,9 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <string.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TEnv.h"
@@ -30,9 +28,14 @@
 #include "TBrowser.h"
 #include "TSystem.h"
 #include "TPluginManager.h"
-#include <stdlib.h>
+#include "strtok.h"
+
+#include <cstdlib>
 #include <string>
 #include <cassert>
+#include <iostream>
+#include <fstream>
+#include <cstring>
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
