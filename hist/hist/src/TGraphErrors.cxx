@@ -9,9 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <string.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TGraphErrors.h"
@@ -22,6 +20,11 @@
 #include "TF1.h"
 #include "TVectorD.h"
 #include "TSystem.h"
+#include "strtok.h"
+
+#include <iostream>
+#include <fstream>
+#include <cstring>
 #include <string>
 
 ClassImp(TGraphErrors);

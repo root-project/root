@@ -416,7 +416,8 @@
 
 #include "RooFit.h"
 
-#include <string.h>
+#include <cstring>
+#include "strtok.h"
 
 #ifndef _WIN32
 #include <strings.h>
