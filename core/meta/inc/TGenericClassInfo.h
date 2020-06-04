@@ -9,12 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef ROOT_Rtypes
+// Include Rtypes.h outside of the code guard to insure the intended
+// ordering of Rtypes.h and TGenericClassInfo.h
+#include "Rtypes.h"
+#endif
+
 #ifndef ROOT_TGenericClassInfo
 #define ROOT_TGenericClassInfo
 
 #include <vector>
 #include "TSchemaHelper.h"
-#include "Rtypes.h"
 
 // Forward declarations
 class TVirtualIsAProxy;
