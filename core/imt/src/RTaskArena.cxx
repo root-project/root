@@ -123,17 +123,14 @@ tbb::task_arena &RTaskArenaWrapper::Access()
    return *fTBBArena;
 }
 
-
 std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency)
 {
    static std::weak_ptr<ROOT::Internal::RTaskArenaWrapper> weak_GTAWrapper;
-   if (weak_GTAWrapper.expired()) {
-      std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> shared_GTAWrapper(new ROOT::Internal::RTaskArenaWrapper(maxConcurrency));
-      weak_GTAWrapper = shared_GTAWrapper;
-      return weak_GTAWrapper.lock();
-   }
-
-   return weak_GTAWrapper.lock();
+   if (auto sp = weak_GTAWrapper.lock())
+      return sp;
+   auto sp = std::make_shared<ROOT::Internal::RTaskArenaWrapper>(maxConcurrency);
+   weak_GTAWrapper = sp;
+   return sp;
 }
 
 } // namespace Internal
