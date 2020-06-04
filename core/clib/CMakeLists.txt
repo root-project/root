@@ -9,7 +9,8 @@
 ############################################################################
 
 set(Clib_dict_headers strlcpy.h
-                      snprintf.h PARENT_SCOPE)
+                      snprintf.h
+                      strtok.h PARENT_SCOPE)
 
 ROOT_OBJECT_LIBRARY(Clib
   src/Demangle.c

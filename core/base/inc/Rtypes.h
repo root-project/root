@@ -25,10 +25,10 @@
 
 #include "snprintf.h"   // part of stdio.h on systems that have it
 #include "strlcpy.h"    // part of string.h on systems that have it
+#include "strtok.h"     // provides R__STRTOK_R with <cstring> include
 
 #include <atomic>
 #include <stdio.h>
-#include <string.h>
 #include <typeinfo>
 #include <type_traits>
 
@@ -477,15 +477,5 @@ namespace ROOT {                                                     \
 #else
 # define R__CLING_PTRCHECK(ONOFF)
 #endif
-
-// On Windows strtok_r does not exist: the function is called strtok_s.
-inline char *R__STRTOK_R(char *str, const char *delim, char **saveptr)
-{
-#if defined(R__WIN32)
-   return strtok_s(str, delim, saveptr);
-#else
-   return strtok_r(str, delim, saveptr);
-#endif
-}
 
 #endif
