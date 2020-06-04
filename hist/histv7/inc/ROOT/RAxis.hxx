@@ -824,7 +824,23 @@ public:
             case CompatKind::kLabeled:
                fLabeled.~LabeledBinningCompatibility();
                break;
-         };
+         }
+      }
+
+      /// Check if two comparisons led to the same result
+      bool operator==(const BinningCompatibility& other) const {
+         if (other.fKind != fKind) return false;
+         switch (fKind) {
+            case CompatKind::kIncompatible:
+               return true;
+
+            case CompatKind::kNumeric:
+               return fNumeric == other.fNumeric;
+
+            case CompatKind::kLabeled:
+               return fLabeled == other.fLabeled;
+         }
+         return false;
       }
 
       /// Broad classification of possible axis comparisons
