@@ -139,6 +139,7 @@ but also in Dump() and Inspect() methods and by the THtml class.
 
 #include "Strlen.h"
 #include "strtok.h"
+#include "strlcpy.h"
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TClassEdit.h"

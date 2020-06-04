@@ -21,6 +21,7 @@
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TLatex.h"
+#include "strlcpy.h"
 
 ClassImp(TPaveStats);
 

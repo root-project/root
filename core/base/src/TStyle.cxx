@@ -16,6 +16,7 @@
 #include <iostream>
 #include <fstream>
 
+#include "strlcpy.h"
 #include "TApplication.h"
 #include "TColor.h"
 #include "TDatime.h"

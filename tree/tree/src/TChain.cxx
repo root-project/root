@@ -58,6 +58,8 @@ the trees in the chain.
 #include "TFileStager.h"
 #include "TFilePrefetch.h"
 #include "TVirtualMutex.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 ClassImp(TChain);
 

@@ -26,6 +26,8 @@
 #include "TArrow.h"
 #include "TSystem.h"
 #include "TObjString.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include <fstream>
 #include <algorithm>

@@ -63,6 +63,7 @@
 #include "TPoint.h"
 #include "TImage.h"
 #include "TCandle.h"
+#include "strlcpy.h"
 
 /*! \class THistPainter
 \ingroup Histpainter

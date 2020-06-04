@@ -16,6 +16,7 @@
 #include "TVirtualPad.h"
 #include "TH2D.h"
 #include "TRandom2.h"
+#include "strlcpy.h"
 
 Double_t TCandle::fWhiskerRange  = 1.0;
 Double_t TCandle::fBoxRange      = 0.5;

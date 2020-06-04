@@ -160,6 +160,7 @@
 
 #include <iostream>
 #include "strtok.h"
+#include "strlcpy.h"
 
 #include "RooWorkspace.h"
 #include "RooGlobalFunc.h"

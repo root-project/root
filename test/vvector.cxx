@@ -23,7 +23,8 @@
 #ifndef __CINT__
 
 #include "TFile.h"
-#include "Riostream.h"
+#include <iostream>
+#include "snprintf.h"
 #include "TVectorD.h"
 #include "TMath.h"
 

@@ -43,6 +43,8 @@
 #include <algorithm>
 
 #include "Getline.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #ifdef R__UNIX
 #include <signal.h>

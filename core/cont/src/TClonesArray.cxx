@@ -131,8 +131,9 @@ When investigating misuse of TClonesArray, please make sure of the following:
 #include "TClass.h"
 #include "TObject.h"
 #include "TObjectTable.h"
+#include "snprintf.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 ClassImp(TClonesArray);
 

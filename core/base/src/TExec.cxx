@@ -12,6 +12,7 @@
 #include <iostream>
 #include "TROOT.h"
 #include "TExec.h"
+#include "snprintf.h"
 
 ClassImp(TExec);
 

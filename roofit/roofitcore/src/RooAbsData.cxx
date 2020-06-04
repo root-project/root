@@ -34,6 +34,7 @@ points for its contents and provides an iterator over its elements
 #include "TClass.h"
 #include "TMath.h"
 #include "TTree.h"
+#include "strlcpy.h"
 
 #include "RooFormulaVar.h"
 #include "RooCmdConfig.h"

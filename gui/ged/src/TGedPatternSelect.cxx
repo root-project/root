@@ -45,6 +45,7 @@
 #include "TGButton.h"
 #include "RStipples.h"
 #include "TVirtualX.h"
+#include "snprintf.h"
 
 #include <iostream>
 

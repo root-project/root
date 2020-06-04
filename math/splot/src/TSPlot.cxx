@@ -17,6 +17,7 @@
 #include "TBrowser.h"
 #include "TClass.h"
 #include "TMath.h"
+#include "snprintf.h"
 
 extern void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t iflag);
 

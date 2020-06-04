@@ -28,6 +28,7 @@
 #include "TGText.h"
 #include "TError.h"
 #include "TVirtualX.h"
+#include "snprintf.h"
 #ifdef R__SSL
 #include "TSSLSocket.h"
 #endif
@@ -35,7 +36,7 @@
 #include "TWin32SplashThread.h"
 #endif
 
-#include <stdlib.h>
+#include <cstdlib>
 
 //_____________________________________________________________________________
 //

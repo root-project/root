@@ -52,6 +52,7 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TError.h"
+#include "snprintf.h"
 
 Int_t stressEntryList(Int_t nentries = 10000, Int_t nfiles = 10);
 void MakeTrees(Int_t nentries, Int_t nfiles);

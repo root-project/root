@@ -14,13 +14,14 @@
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/FoundationUtils.hxx>
+#include "snprintf.h"
 
 #include <iostream>
 #include <iomanip>
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include <stdio.h>
+#include <cstdio>
 
 #include <errno.h>
 #include <string>

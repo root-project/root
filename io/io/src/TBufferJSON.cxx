@@ -94,7 +94,7 @@ class Container {
 
 #include <typeinfo>
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <locale.h>
 #include <cmath>
 #include <memory>
@@ -127,6 +127,7 @@ class Container {
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
 #include "TEmulatedCollectionProxy.h"
+#include "snprintf.h"
 
 #include "json.hpp"
 

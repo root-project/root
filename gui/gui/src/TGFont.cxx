@@ -42,6 +42,8 @@
 #include "TROOT.h"
 #include "TError.h"
 #include "TMath.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include <cerrno>
 #include <cstdlib>

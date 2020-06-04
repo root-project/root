@@ -223,6 +223,8 @@ or :
 #include "TGFileDialog.h"
 #include "TGProgressBar.h"
 #include "TSpider.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"

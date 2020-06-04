@@ -87,6 +87,7 @@ ROOT tutorials: `$ROOTSYS/tutorials/image/`
 #include "TText.h"
 #include "RConfigure.h"
 #include "TVirtualPadPainter.h"
+#include "snprintf.h"
 
 #ifndef WIN32
 #ifndef R__HAS_COCOA

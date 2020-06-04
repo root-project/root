@@ -41,7 +41,6 @@
 
 #include "RooArgSet.h"
 
-#include "Riostream.h"
 #include "TClass.h"
 #include "RooErrorHandler.h"
 #include "RooStreamParser.h"
@@ -54,7 +53,10 @@
 #include "RooSentinel.h"
 #include "RooMsgService.h"
 #include "ROOT/RMakeUnique.hxx"
+#include "strlcpy.h"
 
+#include <iostream>
+#include <fstream>
 #include <iomanip>
 
 using namespace std ;

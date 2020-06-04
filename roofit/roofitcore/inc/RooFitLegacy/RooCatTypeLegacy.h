@@ -18,6 +18,7 @@
 
 #include "TObject.h"
 #include "RooPrintable.h"
+#include "strlcpy.h"
 
 class RooCatType : public TObject, public RooPrintable {
 public:

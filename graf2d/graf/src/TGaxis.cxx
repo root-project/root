@@ -32,6 +32,8 @@
 #include "THLimitsFinder.h"
 #include "TColor.h"
 #include "TTimeStamp.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
 Float_t TGaxis::fXAxisExpXOffset = 0.; //Exponent X offset for the X axis

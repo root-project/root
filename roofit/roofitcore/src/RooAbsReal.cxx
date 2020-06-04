@@ -84,8 +84,6 @@
 #include "RooCachedReal.h"
 #include "RooHelpers.h"
 
-#include "Riostream.h"
-
 #include "Compression.h"
 #include "Math/IFunction.h"
 #include "TMath.h"
@@ -103,8 +101,11 @@
 #include "TMatrixD.h"
 #include "TVector.h"
 #include "ROOT/RMakeUnique.hxx"
+#include "strlcpy.h"
 
 #include <sstream>
+#include <iostream>
+#include <iomanip>
 
 using namespace std ;
 

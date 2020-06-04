@@ -45,6 +45,8 @@
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
 #include "TVirtualPerfStats.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #include "TBranchIMTHelper.h"
 
@@ -52,8 +54,8 @@
 
 #include <atomic>
 #include <cstddef>
-#include <string.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdio>
 
 
 Int_t TBranch::fgCount = 0;

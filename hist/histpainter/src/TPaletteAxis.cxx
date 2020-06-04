@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TPaletteAxis.h"
 #include "TVirtualPad.h"
@@ -20,6 +19,9 @@
 #include "TH1.h"
 #include "TGaxis.h"
 #include "TLatex.h"
+#include "snprintf.h"
+
+#include <iostream>
 
 ClassImp(TPaletteAxis);
 

@@ -71,6 +71,7 @@ then all keys with names = "uv*" in a second pass, etc.
 #include "TKey.h"
 #include "TRegexp.h"
 #include "TSystem.h"
+#include "strlcpy.h"
 
 ClassImp(TFileDrawMap);
 

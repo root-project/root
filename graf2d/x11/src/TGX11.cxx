@@ -44,6 +44,7 @@ by Olivier Couet (package X11INT).
 #include "TObjString.h"
 #include "TObjArray.h"
 #include "RStipples.h"
+#include "strlcpy.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -52,10 +53,10 @@ by Olivier Couet (package X11INT).
 #include <X11/keysym.h>
 #include <X11/xpm.h>
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cctype>
 #include <unistd.h>
 #ifdef R__AIX
 #   include <sys/socket.h>

@@ -67,11 +67,12 @@ into the local file by default.
 
 #include "RConfigure.h"
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <cctype>
 
+#include "strlcpy.h"
 #include "TEnv.h"
 #include "TROOT.h"
 #include "TSystem.h"

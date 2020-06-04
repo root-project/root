@@ -31,7 +31,7 @@ with name GetXXX, IsXXX or HasXXX for given object.
 #include "TMethodCall.h"
 #include "TToggle.h"
 #include "TDataMember.h"
-
+#include "snprintf.h"
 
 ClassImp(TToggle);
 
