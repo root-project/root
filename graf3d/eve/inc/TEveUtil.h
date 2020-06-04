@@ -19,7 +19,7 @@
 #include "GuiTypes.h"
 
 #include <map>
-#include <set>
+#include <string>
 #include <exception>
 
 class TVirtualPad;
