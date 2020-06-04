@@ -33,8 +33,8 @@ class TAtomicCount {
 private:
    Long_t fCnt;   // counter
 
-   TAtomicCount(const TAtomicCount &);             // not implemented
-   TAtomicCount &operator=(const TAtomicCount &);  // not implemented
+   TAtomicCount(const TAtomicCount &) = delete;
+   TAtomicCount &operator=(const TAtomicCount &) = delete;
 
 public:
    explicit TAtomicCount(Long_t v) : fCnt(v) { }
