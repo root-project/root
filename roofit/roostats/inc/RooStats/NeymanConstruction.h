@@ -25,6 +25,8 @@
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
 
+#include <map>
+
 class RooAbsData;
 
 namespace RooStats {

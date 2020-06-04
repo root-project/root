@@ -24,6 +24,8 @@
 #include "RooObjCacheManager.h"
 #include "RooCmdArg.h"
 #include <vector>
+#include <list>
+#include <string>
 
 typedef RooArgList* pRooArgList ;
 typedef RooLinkedList* pRooLinkedList ;

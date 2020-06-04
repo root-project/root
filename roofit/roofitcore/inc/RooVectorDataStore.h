@@ -18,10 +18,8 @@
 
 #include <list>
 #include <vector>
-#include <string>
 #include <algorithm>
-#include "RooAbsDataStore.h" 
-#include "TString.h"
+#include "RooAbsDataStore.h"
 #include "RooAbsCategory.h"
 #include "RooAbsReal.h"
 #include "RooChangeTracker.h"

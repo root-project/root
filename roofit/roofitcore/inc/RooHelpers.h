@@ -22,6 +22,8 @@
 #include "RooAbsReal.h"
 
 #include <sstream>
+#include <vector>
+#include <string>
 
 namespace RooHelpers {
 

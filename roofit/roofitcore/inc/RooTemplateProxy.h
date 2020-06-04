@@ -21,6 +21,7 @@
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategory.h"
 #include "RooMsgService.h"
+#include <string>
 
 /**
 \class RooTemplateProxy

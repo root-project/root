@@ -20,7 +20,9 @@
 #include "RooSpan.h"
 #include <map>
 #include <tuple>
-#include <assert.h>
+#include <cassert>
+#include <vector>
+#include <string>
 
 class RooArgSet;
 

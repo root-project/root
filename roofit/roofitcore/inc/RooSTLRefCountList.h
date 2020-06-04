@@ -15,11 +15,13 @@
 
 #ifndef ROOFIT_ROOFITCORE_INC_ROOSTLREFCOUNTLIST_H_
 #define ROOFIT_ROOFITCORE_INC_ROOSTLREFCOUNTLIST_H_
+
 #include "Rtypes.h"
 
 #include <vector>
+#include <string>
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 
 
 /**

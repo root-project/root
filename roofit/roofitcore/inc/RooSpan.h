@@ -18,6 +18,7 @@
 #define ROOFIT_ROOFITCORE_INC_ROOSPAN_H_
 
 #include "ROOT/RSpan.hxx"
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////
 /// A simple container to hold a batch of data values.

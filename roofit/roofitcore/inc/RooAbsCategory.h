@@ -22,6 +22,7 @@
 #include <string>
 #include <map>
 #include <functional>
+#include <vector>
 
 #ifdef R__LESS_INCLUDES
 class RooCatType;

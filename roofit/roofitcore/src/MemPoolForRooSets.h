@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <set>
 
 template <class RooSet_t, std::size_t POOLSIZE>
 class MemPoolForRooSets {

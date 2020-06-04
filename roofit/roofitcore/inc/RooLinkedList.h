@@ -18,7 +18,7 @@
 
 #include <vector>
 
-#include "TNamed.h"
+#include "TObject.h"
 #include "RooLinkedListElem.h"
 #include "RooHashTable.h"
 

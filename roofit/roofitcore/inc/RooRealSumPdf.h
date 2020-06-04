@@ -20,6 +20,7 @@
 #include "RooListProxy.h"
 #include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
+#include <list>
 
 class RooRealSumPdf : public RooAbsPdf {
 public:
