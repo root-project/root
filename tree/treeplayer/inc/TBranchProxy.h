@@ -18,12 +18,13 @@
 #include "TLeaf.h"
 #include "TClonesArray.h"
 #include "TString.h"
-#include "Riostream.h"
 #include "TError.h"
 #include "TVirtualCollectionProxy.h"
 #include "TNotifyLink.h"
 
 #include <algorithm>
+#include <string>
+#include <iostream>
 
 class TBranch;
 class TStreamerElement;

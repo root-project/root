@@ -26,6 +26,8 @@
 #include "TBranchProxy.h"
 
 #include <type_traits>
+#include <vector>
+#include <string>
 
 class TBranch;
 class TBranchElement;

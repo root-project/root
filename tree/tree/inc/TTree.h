@@ -50,7 +50,8 @@ class TList;
 
 #include <array>
 #include <atomic>
-
+#include <vector>
+#include <utility>
 
 class TBuffer;
 class TBrowser;

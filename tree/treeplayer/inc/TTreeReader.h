@@ -29,6 +29,7 @@
 #include <deque>
 #include <iterator>
 #include <unordered_map>
+#include <string>
 
 class TDictionary;
 class TDirectory;

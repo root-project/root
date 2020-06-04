@@ -43,6 +43,8 @@
 
 #include "TNamed.h"
 
+#include <vector>
+
 #ifdef R__LESS_INCLUDES
 class TBranch;
 #else
