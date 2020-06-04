@@ -769,6 +769,48 @@ public:
          , fLabeled(labeled)
       {}
 
+      // Handle copies and moves
+      BinningCompatibility(const BinningCompatibility& other) {
+         *this = other;
+      }
+      BinningCompatibility(BinningCompatibility&& other) {
+         *this = std::move(other);
+      }
+      BinningCompatibility& operator=(const BinningCompatibility& other) {
+         this->~BinningCompatibility();
+         switch (other.fKind) {
+            case CompatKind::kIncompatible:
+               new(this) BinningCompatibility();
+               break;
+
+            case CompatKind::kNumeric:
+               new(this) BinningCompatibility(other.fNumeric);
+               break;
+
+            case CompatKind::kLabeled:
+               new(this) BinningCompatibility(other.fLabeled);
+               break;
+         };
+         return *this;
+      }
+      BinningCompatibility& operator=(BinningCompatibility&& other) {
+         this->~BinningCompatibility();
+         switch (other.fKind) {
+            case CompatKind::kIncompatible:
+               new(this) BinningCompatibility();
+               break;
+
+            case CompatKind::kNumeric:
+               new(this) BinningCompatibility(std::move(other.fNumeric));
+               break;
+
+            case CompatKind::kLabeled:
+               new(this) BinningCompatibility(std::move(other.fLabeled));
+               break;
+         };
+         return *this;
+      }
+
       /// Destroy any inner data on destruction
       ~BinningCompatibility() {
          switch (fKind) {
