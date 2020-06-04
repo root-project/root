@@ -9,10 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
 #ifndef ROOT_TGenericClassInfo
 #define ROOT_TGenericClassInfo
 
-#include "Rtypes.h"
 #include "TSchemaHelper.h"
 #include <vector>
 
