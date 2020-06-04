@@ -35,7 +35,7 @@
 /// root[] gTA->InitGlobalTaskArena(nWorkers) // Initialize the global arena and enable Thread Safety in ROOT
 /// root[] gTA->TaskArenaSize() // Get the current size of the arena (number of worker threads)
 /// root[] gTA->Access() //std::unique_ptr to the internal tbb::task_arena for interacting directly with it (needed to call operations such as execute)
-/// root[] root[] gTA->Access()->max_concurrency() // call to tbb::task_arena::max_concurrency()
+/// root[] root[] gTA->Access().max_concurrency() // call to tbb::task_arena::max_concurrency()
 /// ~~~
 ///
 //////////////////////////////////////////////////////////////////////////
@@ -124,9 +124,9 @@ unsigned RTaskArenaWrapper::TaskArenaSize()
 ////////////////////////////////////////////////////////////////////////////////
 /// Provides access to the wrapped tbb::task_arena
 ////////////////////////////////////////////////////////////////////////////////
-std::unique_ptr<tbb::task_arena> &RTaskArenaWrapper::Access()
+tbb::task_arena &RTaskArenaWrapper::Access()
 {
-   return fTBBArena;
+   return *fTBBArena;
 }
 
 

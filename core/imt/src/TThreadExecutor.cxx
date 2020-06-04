@@ -142,7 +142,7 @@ namespace ROOT {
 
    void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step, const std::function<void(unsigned int i)> &f)
    {
-      fTaskArenaW->Access()->execute([&]{
+      fTaskArenaW->Access().execute([&]{
          tbb::this_task_arena::isolate([&]{
             tbb::parallel_for(start, end, step, f);
          });
@@ -151,14 +151,14 @@ namespace ROOT {
 
    double TThreadExecutor::ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc)
    {
-      return fTaskArenaW->Access()->execute([&]{
+      return fTaskArenaW->Access().execute([&]{
                return ROOT::Internal::ParallelReduceHelper<double>(objs, redfunc);
       });
    }
 
    float TThreadExecutor::ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc)
    {
-      return fTaskArenaW->Access()->execute([&]{
+      return fTaskArenaW->Access().execute([&]{
                return ROOT::Internal::ParallelReduceHelper<float>(objs, redfunc);
       });
    }
