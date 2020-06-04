@@ -182,10 +182,16 @@ public:
          // TODO Move check to `MakeProxy` once Axel implements this kind of check in TTreeReaderArray using
          // TBranchProxy
 
-         if (EStorageType::kUnknown == fStorageType && readerArray.GetSize() > 1) {
+         const auto arrSize = readerArray.GetSize();
+         if (EStorageType::kUnknown == fStorageType && arrSize > 1) {
             // We can decide since the array is long enough
-            fStorageType =
-               (1 == (&readerArray[1] - &readerArray[0])) ? EStorageType::kContiguous : EStorageType::kSparse;
+            fStorageType = EStorageType::kContiguous;
+            for (auto i = 0u; i < arrSize - 1; ++i) {
+               if ((char *)&readerArray[i + 1] - (char *)&readerArray[i] != sizeof(T)) {
+                  fStorageType = EStorageType::kSparse;
+                  break;
+               }
+            }
          }
 
          const auto readerArraySize = readerArray.GetSize();
