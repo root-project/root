@@ -5211,6 +5211,9 @@ TBranch* TTree::GetBranch(const char* name)
             if (!strcmp(b2->GetName(), name)) {
                return b2;
             }
+            if (!strcmp(b2->GetFullName(), name)) {
+               return b2;
+            }
          }
       }
    }
