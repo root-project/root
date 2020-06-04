@@ -29,8 +29,6 @@
 #ifndef TMVA_DNN_DEEPNET
 #define TMVA_DNN_DEEPNET
 
-#include "TString.h"
-
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/TensorDataLoader.h"
 

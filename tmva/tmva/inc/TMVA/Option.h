@@ -40,6 +40,7 @@
 #include <iomanip>
 #include <sstream>
 #include <vector>
+#include <string>
 
 #include "TObject.h"
 #include "TString.h"
@@ -57,7 +58,7 @@ namespace TMVA {
 
       OptionBase( const TString& name, const TString& desc );
       virtual ~OptionBase() {}
-         
+
       virtual const char* GetName() const { return fNameAllLower.Data(); }
       virtual const char* TheName() const { return fName.Data(); }
       virtual TString     GetValue(Int_t i=-1) const = 0;

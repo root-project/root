@@ -29,6 +29,7 @@
 
 #include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/DeepNet.h"
+#include <vector>
 
 namespace TMVA {
 namespace DNN {

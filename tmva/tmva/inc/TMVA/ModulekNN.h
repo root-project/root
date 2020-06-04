@@ -39,9 +39,10 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <list>
 
 // ROOT
-#include "Rtypes.h"
+#include "RtypesCore.h"
 #include "TRandom3.h"
 #include "ThreadLocalStorage.h"
 #include "TMVA/NodekNN.h"

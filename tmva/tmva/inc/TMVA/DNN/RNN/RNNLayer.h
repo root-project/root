@@ -31,7 +31,8 @@
 
 #include <cmath>
 #include <iostream>
-
+#include <vector>
+#include <string>
 
 #include "TMatrix.h"
 #include "TMVA/DNN/Functions.h"

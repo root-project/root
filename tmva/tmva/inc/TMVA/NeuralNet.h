@@ -38,6 +38,8 @@
 #include <thread>
 #include <future>
 #include <type_traits>
+#include <string>
+#include <utility>
 
 #include "Pattern.h"
 #include "Monitoring.h"

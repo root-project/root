@@ -33,6 +33,7 @@
 
 #include <limits>
 #include <iostream>
+#include <vector>
 
 namespace TMVA {
 namespace DNN {

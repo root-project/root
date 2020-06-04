@@ -1,19 +1,18 @@
 #ifndef BDT__HH
 #define BDT__HH
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <vector>
 
 #include "tmvaglob.h"
 
 #include "RQ_OBJECT.h"
 
-#include "TROOT.h"
 #include "TStyle.h"
 #include "TPad.h"
 #include "TCanvas.h"
-#include "TLine.h"
-#include "TFile.h"
 #include "TColor.h"
 #include "TPaveText.h"
 #include "TControlBar.h"
