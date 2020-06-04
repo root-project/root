@@ -110,12 +110,12 @@ ROOTTEST_ADD_TEST(execautoloadts
                  MACRO  execautoloadts.C
                  OUTREF execautoloadts.ref)
 
-ROOTTEST_GENERATE_EXECUTABLE(tclass_methods tclass_methods.cpp LIBRARIES Core Thread)
+ROOTTEST_GENERATE_EXECUTABLE(tclass_methods_test tclass_methods_test.cpp LIBRARIES Core Thread)
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(tclass_methods tclass_methods.h  SELECTION tclass_methods_selection.xml)
 
 ROOTTEST_ADD_TEST(tclass_methods
-                  EXEC ${CMAKE_CURRENT_BINARY_DIR}/tclass_methods
+                  EXEC ${CMAKE_CURRENT_BINARY_DIR}/tclass_methods_test
                   DEPENDS ${GENERATE_EXECUTABLE_TEST} ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_GENERATE_EXECUTABLE(ttree_write ttree_write.cpp LIBRARIES Core Hist RIO Thread Tree)
