@@ -5171,8 +5171,35 @@ const char* TTree::GetAlias(const char* aliasName) const
    return 0;
 }
 
+namespace {
+/// Do a breadth first search through the implied hierarchy
+/// of branches.
+/// To avoid scanning through the list multiple time
+/// we also remember the 'depth-first' match.
+TBranch *R__GetBranch(const TObjArray &branches, const char *name)
+{
+   TBranch *result = nullptr;
+   Int_t nb = branches.GetEntriesFast();
+   for (Int_t i = 0; i < nb; i++) {
+      TBranch* b = (TBranch*)branches.UncheckedAt(i);
+      if (!b)
+          continue;
+      if (!strcmp(b->GetName(), name)) {
+         return b;
+      }
+      if (!strcmp(b->GetFullName(), name)) {
+         return b;
+      }
+      if (!result)
+         result = R__GetBranch(*(b->GetListOfBranches()), name);
+   }
+   return result;
+}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the branch with the given name in this tree or its friends.
+/// The search is done breadth first.
 
 TBranch* TTree::GetBranch(const char* name)
 {
@@ -5184,39 +5211,10 @@ TBranch* TTree::GetBranch(const char* name)
       return 0;
    }
 
-   // Search using branches.
-   Int_t nb = fBranches.GetEntriesFast();
-   for (Int_t i = 0; i < nb; i++) {
-      TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
-      if (!branch) {
-         continue;
-      }
-      if (!strcmp(branch->GetName(), name)) {
-         return branch;
-      }
-      TObjArray* lb = branch->GetListOfBranches();
-      Int_t nb1 = lb->GetEntriesFast();
-      for (Int_t j = 0; j < nb1; j++) {
-         TBranch* b1 = (TBranch*) lb->UncheckedAt(j);
-         if (!strcmp(b1->GetName(), name)) {
-            return b1;
-         }
-         if (!strcmp(b1->GetFullName(), name)) {
-            return b1;
-         }
-         TObjArray* lb1 = b1->GetListOfBranches();
-         Int_t nb2 = lb1->GetEntriesFast();
-         for (Int_t k = 0; k < nb2; k++) {
-            TBranch* b2 = (TBranch*) lb1->UncheckedAt(k);
-            if (!strcmp(b2->GetName(), name)) {
-               return b2;
-            }
-            if (!strcmp(b2->GetFullName(), name)) {
-               return b2;
-            }
-         }
-      }
-   }
+   // Search using branches, breadth first.
+   TBranch *result = R__GetBranch(fBranches, name);
+   if (result)
+     return result;
 
    // Search using leaves.
    TObjArray* leaves = GetListOfLeaves();
