@@ -41,7 +41,8 @@
 
 #include "TFitResultPtr.h"
 
-#include <float.h>
+#include <cfloat>
+#include <string>
 
 class TF1;
 class TH1D;
