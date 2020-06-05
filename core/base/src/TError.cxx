@@ -39,6 +39,7 @@ errorhandler function. By default DefaultErrorHandler() is used.
 
 // Mutex for error and error format protection
 // (exported to be used for similar cases in other classes)
+// TESTING
 
 TVirtualMutex *gErrorMutex = 0;
 
