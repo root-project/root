@@ -26,6 +26,6 @@ if(ROOT_pyroot_FOUND)
                     COPY_TO_BUILDDIR root_6023.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ root_6023.h+
                     ENVIRONMENT CLING_STANDARD_PCH=none
-                    CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING}.so)
+                    CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING_Development_Main}.so)
 
 endif()
