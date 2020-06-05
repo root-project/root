@@ -89,6 +89,14 @@ public:
    ENTupleStructure GetStructure() const { return fStructure; }
    DescriptorId_t GetParentId() const { return fParentId; }
    const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
+
+   enum class EFieldMergeable {
+      kStructureMismatch,
+      kNameMismatch,
+      kNChildrenMismatch,
+      kMatch
+   };
+   EFieldMergeable IsMergeable(const RFieldDescriptor& other) const;
 };
 
 
@@ -340,6 +348,29 @@ public:
       RIterator end() {
          return RIterator(fNTuple, fField, fField.GetLinkIds().size());
       }
+      std::size_t GetNChildren() const {
+         return fField.GetLinkIds().size();
+      }
+      RFieldDescriptorRange GetChildRange(std::size_t index) const {
+          return RFieldDescriptorRange(fNTuple, fNTuple.GetFieldDescriptor(fField.GetLinkIds().at(index)));
+      }
+      using EFieldMergeable = ROOT::Experimental::RFieldDescriptor::EFieldMergeable;
+      EFieldMergeable IsMergeable(const RFieldDescriptorRange& other) const {
+         auto mergeInfo = fField.IsMergeable(other.fField);
+         if (mergeInfo != EFieldMergeable::kMatch) {
+            return mergeInfo;
+         }
+         // ^ NChildren match up there
+         for (std::size_t i = 0; i < GetNChildren(); ++i) {
+            auto childRange = GetChildRange(i);
+            auto otherChildRange = other.GetChildRange(i);
+            mergeInfo = childRange.IsMergeable(otherChildRange);
+            if (mergeInfo != EFieldMergeable::kMatch) {
+               return mergeInfo;
+            }
+         }
+         return EFieldMergeable::kMatch;
+      }
    };
 
    /// In order to handle changes to the serialization routine in future ntuple versions
@@ -419,10 +450,10 @@ public:
    std::unique_ptr<RNTupleModel> GenerateModel() const;
    void PrintInfo(std::ostream &output) const;
 
-   enum class ENTupleMergeable { StructureMismatch, NamesMismatch, Mergeable };
    /// Check whether this NTuple can be merged with another NTuple.
-   ENTupleMergeable IsMergeable(const RNTupleDescriptor &other) const;
+   RFieldDescriptor::EFieldMergeable IsMergeable(const RNTupleDescriptor &other) const;
 };
+
 
 
 // clang-format off

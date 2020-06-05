@@ -484,6 +484,20 @@ bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &ot
           fLinkIds == other.fLinkIds;
 }
 
+ROOT::Experimental::RFieldDescriptor::EFieldMergeable
+ROOT::Experimental::RFieldDescriptor::IsMergeable(const RFieldDescriptor& other) const {
+   if (GetStructure() != other.GetStructure()) {
+      return EFieldMergeable::kStructureMismatch;
+   }
+   if (GetFieldName() != other.GetFieldName()) {
+      return EFieldMergeable::kNameMismatch;
+   }
+   if (GetLinkIds().size() != other.GetLinkIds().size()) {
+      return EFieldMergeable::kNChildrenMismatch;
+   }
+   return EFieldMergeable::kMatch;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -710,32 +724,9 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
    return model;
 }
 
-ROOT::Experimental::RNTupleDescriptor::ENTupleMergeable
+ROOT::Experimental::RFieldDescriptor::EFieldMergeable
 ROOT::Experimental::RNTupleDescriptor::IsMergeable(const RNTupleDescriptor &other) const {
-   struct MergeCriteria {
-      std::vector<std::string> names = std::vector<std::string>();
-      std::vector<ENTupleStructure> structures = std::vector<ENTupleStructure>();
-   };
-
-   auto getMergeCriteria = [=](const RNTupleDescriptor& ntuple) -> MergeCriteria {
-      MergeCriteria info;
-      for (auto& f: ntuple.GetTopLevelFields()) {
-         info.names.push_back(f.GetFieldName());
-         info.structures.push_back(f.GetStructure());
-      }
-      return info;
-   };
-
-   auto ntuple_info = getMergeCriteria(*this);
-   auto other_ntuple_info = getMergeCriteria(other);
-
-   if (ntuple_info.structures != other_ntuple_info.structures) {
-      return ENTupleMergeable::StructureMismatch;
-   }
-   if (ntuple_info.names != other_ntuple_info.names) {
-      return ENTupleMergeable::NamesMismatch;
-   }
-   return ENTupleMergeable::Mergeable;
+   return GetTopLevelFields().IsMergeable(other.GetTopLevelFields());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
