@@ -40,9 +40,7 @@ ROOT::Experimental::Detail::ROnDiskPageMap::operator =(ROnDiskPageMap &&other)
 }
 
 
-ROOT::Experimental::Detail::ROnDiskPageMap::~ROnDiskPageMap()
-{
-}
+ROOT::Experimental::Detail::ROnDiskPageMap::~ROnDiskPageMap() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
