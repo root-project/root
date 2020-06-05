@@ -1163,10 +1163,6 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
 
    LoadModules(CoreModules, clingInterp);
 
-   // FIXME: Reducing those will let us be less dependent on rootmap files
-   static constexpr std::array<const char *, 3> ExcludeModules = {
-      {"Rtools", "RSQLite", "RInterface"}};
-
    // Take this branch only from ROOT because we don't need to preload modules in rootcling
    if (!IsFromRootCling()) {
       std::vector<std::string> CommonModules = {"MathCore"};
@@ -1215,9 +1211,6 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
             // checks if a module was alredy loaded.
             if (std::find(CoreModules.begin(), CoreModules.end(), M->Name) != CoreModules.end())
                continue; // This is a core module which was already loaded.
-
-            if (std::find(ExcludeModules.begin(), ExcludeModules.end(), M->Name) != ExcludeModules.end())
-               continue;
 
             // Load system modules now and delay the other modules after we have
             // loaded all system ones.
