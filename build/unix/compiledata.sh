@@ -75,11 +75,11 @@ COMPILERVERS="$BXX"
 case $BXX in
 g++* | c++*)
    cxxTemp=`$CXX -dumpversion`
-   COMPILERVERSSTR=`$CXX --version 2>&1 | grep -i gcc`
+   COMPILERVERSSTR="`$CXX --version 2>&1 | grep -i gcc | sed -n '1p'`"
    COMPILERVERS="gcc"
    if [ `uname` == "Darwin" ]; then
       if [ "x$COMPILERVERSSTR" == "x" ]; then
-         COMPILERVERSSTR=`$CXX --version 2>&1 | grep -i clang`
+         COMPILERVERSSTR="`$CXX --version 2>&1 | grep -i clang | sed -n '1p'`"
          COMPILERVERS="clang"
       fi
    fi
@@ -91,7 +91,7 @@ icc)
    ;;
 clang++*)
    cxxTemp=`$CXX -dumpversion`
-   COMPILERVERSSTR=`$CXX --version 2>&1 | grep -i clang`
+   COMPILERVERSSTR="`$CXX --version 2>&1 | grep -i clang | sed -n '1p'`"
    COMPILERVERS="clang"
    ;;
 esac
