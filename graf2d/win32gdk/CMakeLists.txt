@@ -114,7 +114,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
     Glu32.lib
     Opengl32.lib
   DEPENDENCIES
-    Cling
     Core
     Graf
   BUILTINS
