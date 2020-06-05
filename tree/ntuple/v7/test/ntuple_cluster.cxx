@@ -81,7 +81,7 @@ public:
          pageMap.Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
          cluster->SetColumnAvailable(colId);
       }
-      cluster->MergePageMap(std::move(pageMap));
+      cluster->Adopt(std::move(pageMap));
       return cluster;
    }
 };
@@ -107,7 +107,7 @@ TEST(Cluster, Basics)
    pageMap.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&memory[0], 1));
    pageMap.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&memory[1], 2));
    auto cluster = std::make_unique<RCluster>(0);
-   cluster->MergePageMap(std::move(pageMap));
+   cluster->Adopt(std::move(pageMap));
    cluster->SetColumnAvailable(5);
 
    EXPECT_EQ(nullptr, cluster->GetOnDiskPage(ROnDiskPage::Key(5, 2)));
@@ -120,7 +120,7 @@ TEST(Cluster, Basics)
    EXPECT_EQ(2U, onDiskPage->GetSize());
 }
 
-TEST(Cluster, MergePageMaps)
+TEST(Cluster, AdoptPageMaps)
 {
    auto mem1 = new char[3];
    ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap1(mem1);
@@ -134,8 +134,8 @@ TEST(Cluster, MergePageMaps)
    pageMap2.Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
 
    auto cluster = std::make_unique<RCluster>(0);
-   cluster->MergePageMap(std::move(pageMap1));
-   cluster->MergePageMap(std::move(pageMap2));
+   cluster->Adopt(std::move(pageMap1));
+   cluster->Adopt(std::move(pageMap2));
    cluster->SetColumnAvailable(5);
    cluster->SetColumnAvailable(6);
 
@@ -156,14 +156,14 @@ TEST(Cluster, MergePageMaps)
 }
 
 
-TEST(Cluster, MergeClusters)
+TEST(Cluster, AdoptClusters)
 {
    auto mem1 = new char[3];
    ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap1(mem1);
    pageMap1.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem1[0], 1));
    pageMap1.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem1[1], 2));
    auto cluster1 = std::make_unique<RCluster>(0);
-   cluster1->MergePageMap(std::move(pageMap1));
+   cluster1->Adopt(std::move(pageMap1));
    cluster1->SetColumnAvailable(5);
 
    // Column 5 is in both clusters but that should not hurt
@@ -173,11 +173,11 @@ TEST(Cluster, MergeClusters)
    pageMap2.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem2[1], 2));
    pageMap2.Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
    auto cluster2 = std::make_unique<RCluster>(0);
-   cluster2->MergePageMap(std::move(pageMap2));
+   cluster2->Adopt(std::move(pageMap2));
    cluster2->SetColumnAvailable(5);
    cluster2->SetColumnAvailable(6);
 
-   cluster2->MergeCluster(std::move(*cluster1));
+   cluster2->Adopt(std::move(*cluster1));
 
    EXPECT_EQ(3U, cluster2->GetNOnDiskPages());
    EXPECT_TRUE(cluster2->ContainsColumn(5));

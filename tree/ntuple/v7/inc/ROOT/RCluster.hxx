@@ -166,13 +166,15 @@ public:
    /// Move the given page map into this cluster; on-disk pages that are present in both the cluster at hand and
    /// pageMap are gracefully handled such that a following lookup will return the page from either of the
    /// memory regions
-   void MergePageMap(ROnDiskPageMap &&pageMap);
-   /// Marks the column as complete; must be done for all columns, even empty ones without associated pages
-   void SetColumnAvailable(DescriptorId_t columnId);
+   void Adopt(ROnDiskPageMap &&pageMap);
    /// Move the contents of other into this cluster; on-disk pages that are present in both the cluster at hand and
    /// the "other" cluster are gracefully handled such that a following lookup will return the page from
    /// either of the clusters
-   void MergeCluster(RCluster &&other);
+   void Adopt(RCluster &&other);
+   /// Marks the column as complete; must be done for all columns, even empty ones without associated pages,
+   /// before the cluster is given from the page storage to the cluster pool.  Marking the available columns is
+   /// typically the last step of RPageSouce::LoadCluster().
+   void SetColumnAvailable(DescriptorId_t columnId);
    const ROnDiskPage *GetOnDiskPage(const ROnDiskPage::Key &key) const;
 
    DescriptorId_t GetId() const { return fClusterId; }

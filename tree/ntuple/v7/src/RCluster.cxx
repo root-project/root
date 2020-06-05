@@ -64,7 +64,7 @@ ROOT::Experimental::Detail::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key)
    return nullptr;
 }
 
-void ROOT::Experimental::Detail::RCluster::MergePageMap(ROnDiskPageMap &&pageMap)
+void ROOT::Experimental::Detail::RCluster::Adopt(ROnDiskPageMap &&pageMap)
 {
    for (const auto &entry : pageMap.fOnDiskPages) {
       fOnDiskPages.emplace(entry.first, entry.second);
@@ -74,13 +74,7 @@ void ROOT::Experimental::Detail::RCluster::MergePageMap(ROnDiskPageMap &&pageMap
 }
 
 
-void ROOT::Experimental::Detail::RCluster::SetColumnAvailable(DescriptorId_t columnId)
-{
-   fAvailColumns.insert(columnId);
-}
-
-
-void ROOT::Experimental::Detail::RCluster::MergeCluster(RCluster &&other)
+void ROOT::Experimental::Detail::RCluster::Adopt(RCluster &&other)
 {
    R__ASSERT(fClusterId == other.fClusterId);
 
@@ -93,4 +87,10 @@ void ROOT::Experimental::Detail::RCluster::MergeCluster(RCluster &&other)
    other.fAvailColumns.clear();
    std::move(other.fPageMaps.begin(), other.fPageMaps.end(), std::back_inserter(fPageMaps));
    other.fPageMaps.clear();
+}
+
+
+void ROOT::Experimental::Detail::RCluster::SetColumnAvailable(DescriptorId_t columnId)
+{
+   fAvailColumns.insert(columnId);
 }
