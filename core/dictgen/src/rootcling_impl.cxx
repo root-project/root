@@ -2514,7 +2514,7 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
             classesListForRootmap.push_back(outerMostClassName);
          } else {
             classesListForRootmap.push_back(normalizedName);
-            if (reqName != nullptr && 0 != strcmp(reqName, "") && reqName != normalizedName) {
+            if (reqName && reqName[0] && reqName != normalizedName) {
                classesListForRootmap.push_back(reqName);
             }
 
