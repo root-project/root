@@ -24,7 +24,9 @@
 
 #include "DllImport.h"
 
-#include <stddef.h> // size_t, NULL
+#ifndef R__LESS_INCLUDES
+#include <cstddef> // size_t, NULL
+#endif
 
 //---- Tag used by rootcling to determine constructor used for I/O.
 
@@ -86,8 +88,8 @@ typedef float          Size_t;      //Attribute size (float)
 
 //---- constants ---------------------------------------------------------------
 
-const Bool_t kTRUE  = true;
-const Bool_t kFALSE = false;
+const Bool_t    kTRUE        = true;
+const Bool_t    kFALSE       = false;
 
 const Int_t     kMaxUChar    = 256;
 const Int_t     kMaxChar     = kMaxUChar >> 1;
@@ -109,7 +111,7 @@ const ULong64_t kMaxULong64  = ULong64_t(~0LL);
 const Long64_t  kMaxLong64   = Long64_t(kMaxULong64 >> 1);
 const Long64_t  kMinLong64   = -kMaxLong64 - 1;
 
-const size_t    kBitsPerByte = 8;
+const ULong_t   kBitsPerByte = 8;
 const Ssiz_t    kNPOS        = ~(Ssiz_t)0;
 
 //---- debug global ------------------------------------------------------------
