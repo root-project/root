@@ -110,8 +110,10 @@ protected:
 public:
    explicit ROnDiskPageMap(void *memory) : fMemory(memory) {}
    ROnDiskPageMap(const ROnDiskPageMap &other) = delete;
+   /// The default move constructor does not reset fMemory
    ROnDiskPageMap(ROnDiskPageMap &&other);
    ROnDiskPageMap &operator =(const ROnDiskPageMap &other) = delete;
+   /// The default move assignment does not reset fMemory
    ROnDiskPageMap &operator =(ROnDiskPageMap &&other);
    virtual ~ROnDiskPageMap();
 
