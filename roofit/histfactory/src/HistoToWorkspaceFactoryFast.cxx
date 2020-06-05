@@ -351,16 +351,16 @@ namespace HistFactory{
     std::vector<std::string>::iterator itr = fObsNameVec.begin();
     for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
       if ( !proto->var(itr->c_str()) ) {
-	const TAxis* axis(0);
-	if (idx==0) { axis = hist->GetXaxis(); }
-	if (idx==1) { axis = hist->GetYaxis(); }
-	if (idx==2) { axis = hist->GetZaxis(); }
-	Int_t nbins = axis->GetNbins();	
-	Double_t xmin = axis->GetXmin();
-	Double_t xmax = axis->GetXmax(); 	
-	// create observable
-	proto->factory(Form("%s[%f,%f]",itr->c_str(),xmin,xmax));
-	proto->var(itr->c_str())->setBins(nbins);
+        const TAxis* axis(0);
+        if (idx==0) { axis = hist->GetXaxis(); }
+        if (idx==1) { axis = hist->GetYaxis(); }
+        if (idx==2) { axis = hist->GetZaxis(); }
+        Int_t nbins = axis->GetNbins();
+        Double_t xmin = axis->GetXmin();
+        Double_t xmax = axis->GetXmax();
+        // create observable
+        proto->factory(Form("%s[%f,%f]",itr->c_str(),xmin,xmax));
+        proto->var(itr->c_str())->setBins(nbins);
       }
       observables.add( *proto->var(itr->c_str()) );
     }
