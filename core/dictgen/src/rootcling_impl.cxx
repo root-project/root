@@ -65,7 +65,6 @@
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Value.h"
 #include "clang/AST/CXXInheritance.h"
-#include "clang/AST/Mangle.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/MemoryBufferCache.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -2519,57 +2518,19 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
                classesListForRootmap.push_back(reqName);
             }
 
-            // Also register typeinfo::name(), unless we have pseudo-strong typedefs:
-            if (normalizedName.find("Double32_t") == std::string::npos
-                && normalizedName.find("Float16_t") == std::string::npos) {
-               std::unique_ptr<clang::MangleContext> mangleCtx(rDecl->getASTContext().createMangleContext());
-               std::string mangledName;
-               {
-                  llvm::raw_string_ostream sstr(mangledName);
-                  if (const clang::TypeDecl* TD = llvm::dyn_cast<clang::TypeDecl>(rDecl)) {
-                     mangleCtx->mangleCXXRTTI(clang::QualType(TD->getTypeForDecl(), 0), sstr);
-                  }
-               }
-               if (!mangledName.empty()) {
-                  int errDemangle = 0;
-#ifdef WIN32
-                  if (mangledName[0] == '\01')
-                     mangledName.erase(0, 1);
-                  char *demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
-                  if (!errDemangle && demangledTIName) {
-                     static const char typeinfoNameFor[] = " `RTTI Type Descriptor'";
-                     if (strstr(demangledTIName, typeinfoNameFor)) {
-                        std::string demangledName = demangledTIName;
-                        demangledName.erase(demangledName.end() - strlen(typeinfoNameFor), demangledName.end());
-#else
-                  char* demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
-                  if (!errDemangle && demangledTIName) {
-                     static const char typeinfoNameFor[] = "typeinfo for ";
-                     if (!strncmp(demangledTIName, typeinfoNameFor, strlen(typeinfoNameFor))) {
-                        std::string demangledName = demangledTIName + strlen(typeinfoNameFor);
-#endif
-                        // See the operations in TCling::AutoLoad(type_info)
-                        TClassEdit::TSplitType splitname( demangledName.c_str(), (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
-                        splitname.ShortType(demangledName, TClassEdit::kDropStlDefault | TClassEdit::kDropStd);
+            // Also register typeinfo::name(), unless we have pseudo-strong typedefs.
+            // GetDemangledTypeInfo() checks for Double32_t etc already and returns an empty string.
+            std::string demangledName = selClass.GetDemangledTypeInfo();
+            if (!demangledName.empty()) {
+               // See the operations in TCling::AutoLoad(type_info)
+               TClassEdit::TSplitType splitname( demangledName.c_str(), (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
+               splitname.ShortType(demangledName, TClassEdit::kDropStlDefault | TClassEdit::kDropStd);
 
-                        if (demangledName != normalizedName && (!reqName || demangledName != reqName)) {
-                           classesListForRootmap.push_back(demangledName);
-                        } // if demangledName != other name
-                     } else {
-#ifdef WIN32
-                        ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
-                                                "Demangled typeinfo name '%s' does not contain `RTTI Type Descriptor'\n",
-                                                demangledTIName);
-#else
-                        ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
-                                                "Demangled typeinfo name '%s' does not start with 'typeinfo for'\n",
-                                                demangledTIName);
-#endif
-                     } // if demangled type_info starts with "typeinfo for "
-                  } // if demangling worked
-                  free(demangledTIName);
-               } // if mangling worked
-            } // if no pseudo-strong typedef involved
+               if (demangledName != normalizedName && (!reqName || demangledName != reqName)) {
+                  // if demangledName != other name
+                  classesListForRootmap.push_back(demangledName);
+               }
+            }
          }
       }
    }
