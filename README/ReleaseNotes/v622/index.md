@@ -547,3 +547,12 @@ def main():
 if __name__ == '__main__':
     main()
 ~~~
+
+- Inheritance of Python classes from C++ classes is not working in some cases. This is described
+in [ROOT-10789](https://sft.its.cern.ch/jira/browse/ROOT-10789) and
+[ROOT-10582](https://sft.its.cern.ch/jira/browse/ROOT-10582).
+This affects the creation of GUIs from Python, e.g. in the
+[Python GUI tutorial](https://root.cern.ch/doc/master/gui__ex_8py.html), where the inheritance
+from `TGMainFrame` is not working at the moment. Future releases of ROOT will fix these
+issues and provide a way to program GUIs from Python, including a replacement for TPyDispatcher,
+which is no longer provided.
