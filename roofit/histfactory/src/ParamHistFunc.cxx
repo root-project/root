@@ -660,34 +660,17 @@ Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*
   // Simply loop over bins, 
   // get the height, and
   // multiply by the bind width
-  
-  RooFIter paramIter = _paramSet.fwdIterator();
-  RooRealVar* param = NULL;
-  Int_t nominalItr = 0;
-  while((param = (RooRealVar*) paramIter.next())) {
+  auto binVolumes = _dataSet.binVolumes(0, _dataSet.numEntries());
+
+  for (unsigned int i=0; i < _paramSet.size(); ++i) {
+    const auto& param = static_cast<const RooRealVar&>(_paramSet[i]);
+    assert(static_cast<Int_t>(i) == _dataSet.getIndex(param)); // We assume that each parameter i belongs to bin i
 
     // Get the gamma's value
-    Double_t paramVal  = (*param).getVal();
-    
-    // Get the bin volume
-    _dataSet.get( nominalItr );
-    Double_t binVolumeDS  = _dataSet.binVolume(); //_binning->binWidth( nominalItr );
+    const double paramVal = param.getVal();
     
     // Finally, get the subtotal
-    value += paramVal*binVolumeDS;
-
-    ++nominalItr;
-
-    /*
-    std::cout << "Integrating : "
-	      << " bin: "  << nomValue
-	      << " binVolume:  "  << binVolumeDS
-	      << " paramValue:  "  << paramVal
-	      << " nomValue:  "  << nomValue
-	      << " subTotal:  "  << value
-	      << std::endl;
-    */
-
+    value += paramVal * binVolumes[i];
   }
 
   return value;

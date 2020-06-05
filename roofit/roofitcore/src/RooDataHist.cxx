@@ -2140,8 +2140,7 @@ void RooDataHist::Streamer(TBuffer &R__b) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return event weights of all events in range [first, first+len).
-/// If no contiguous structure of weights is stored, an empty batch is be returned.
-/// In this case, the single-value weight() needs to be used to retrieve it.
+/// If cacheValidEntries() has been called, out-of-range events will have a weight of 0.
 RooSpan<const double> RooDataHist::getWeightBatch(std::size_t first, std::size_t len) const {
   return _maskedWeights.empty() ?
       RooSpan<const double>{_wgt + first, len} :
