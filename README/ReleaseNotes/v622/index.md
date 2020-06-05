@@ -294,7 +294,12 @@ Such `dev` builds can be used to verify that ROOT-based code really includes all
 ### Multi-Python PyROOT
 
 In 6.22, the new (experimental) PyROOT is built by default. In order to build with the old PyROOT instead, the option
-`-Dpyroot_legacy=ON` can be used.
+`-Dpyroot_legacy=ON` can be used. This is a summary of the PyROOT options:
+* `pyroot`: by default `ON`, it enables the build of PyROOT.
+* `pyroot_legacy`: by default `OFF`, it allows the user to select the old PyROOT (legacy) to be built instead
+of the new one.
+* `pyroot_experimental`: this option is **deprecated** in 6.22 and should no longer be used. If used, it triggers
+a warning.
 
 This new PyROOT also introduces the possibility of building its libraries for both Python2 and Python3 in a single
 ROOT build (CMake >= 3.14 is required). If no option is specified, PyROOT will be built for the most recent
