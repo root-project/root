@@ -369,7 +369,9 @@ public:
    /// Given kNBytesPostscript bytes, extract the header and footer lengths in bytes
    static void LocateMetadata(const void *postscript, std::uint32_t &szHeader, std::uint32_t &szFooter);
 
-   const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const { return fFieldDescriptors.at(fieldId); }
+   const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const {
+       return fFieldDescriptors.at(fieldId);
+   }
    const RColumnDescriptor& GetColumnDescriptor(DescriptorId_t columnId) const {
       return fColumnDescriptors.at(columnId);
    }
