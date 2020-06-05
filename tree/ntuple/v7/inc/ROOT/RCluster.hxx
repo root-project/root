@@ -13,14 +13,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef ROOT7_RCluster
+#define ROOT7_RCluster
+
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#ifndef ROOT7_RCluster
-#define ROOT7_RCluster
 
 namespace ROOT {
 namespace Experimental {
@@ -29,7 +29,7 @@ namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::ROnDiskPage
+\class ROnDiskPage
 \ingroup NTuple
 \brief A page as being stored on disk, that is packed and compressed
 
@@ -45,14 +45,14 @@ private:
    std::size_t fSize = 0;
 
 public:
-   /// On disk pages within a page source are identified by the column and page number. The key is used for
-   /// associative collections of on disk pages.
+   /// On-disk pages within a page source are identified by the column and page number. The key is used for
+   /// associative collections of on-disk pages.
    struct Key {
       DescriptorId_t fColumnId;
       NTupleSize_t fPageNo;
       Key(DescriptorId_t columnId, NTupleSize_t pageNo) : fColumnId(columnId), fPageNo(pageNo) {}
-      bool operator ==(const Key &other) const {
-         return fColumnId == other.fColumnId && fPageNo == other.fPageNo;
+      friend bool operator ==(const Key &lhs, const Key &rhs) {
+         return lhs.fColumnId == rhs.fColumnId && lhs.fPageNo == rhs.fPageNo;
       }
    };
 
@@ -95,7 +95,7 @@ namespace Detail {
 \ingroup NTuple
 \brief A memory region that contains packed and compressed pages
 
-Derived classes implement how the on disk pages are stored in memory, e.g. mmap'd or in a special area.
+Derived classes implement how the on-disk pages are stored in memory, e.g. mmap'd or in a special area.
 */
 // clang-format on
 class ROnDiskPageMap {
@@ -150,7 +150,7 @@ protected:
    DescriptorId_t fClusterId;
    /// Multiple page maps can be combined in a single RCluster
    std::vector<ROnDiskPageMap> fPageMaps;
-   /// List of the (complete) columns represented by the RCluster
+   /// Set of the (complete) columns represented by the RCluster
    std::unordered_set<DescriptorId_t> fAvailColumns;
    /// Lookup table for the on-disk pages
    std::unordered_map<ROnDiskPage::Key, ROnDiskPage> fOnDiskPages;
