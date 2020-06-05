@@ -241,7 +241,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
          // We either put a fresh cluster into a free slot or we merge the cluster with an existing one
          auto existingCluster = FindInPool(cptr->GetId());
          if (existingCluster) {
-            existingCluster->MergeCluster(std::move(*cptr));
+            existingCluster->Adopt(std::move(*cptr));
          } else {
             auto idxFreeSlot = FindFreeSlot();
             fPool[idxFreeSlot] = std::move(cptr);
@@ -316,7 +316,7 @@ ROOT::Experimental::Detail::RClusterPool::WaitFor(
 
       auto cptr = itr->fFuture.get();
       if (result) {
-         result->MergeCluster(std::move(*cptr));
+         result->Adopt(std::move(*cptr));
       } else {
          auto idxFreeSlot = FindFreeSlot();
          fPool[idxFreeSlot] = std::move(cptr);
