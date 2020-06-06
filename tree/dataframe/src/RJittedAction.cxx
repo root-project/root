@@ -90,7 +90,10 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::Get
    return fConcreteAction->GetGraph();
 }
 
-// Helper for RMergeableValue
+/**
+   Retrieve a wrapper to the result of the action that knows how to merge
+   with others of the same type.
+*/
 std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> RJittedAction::GetMergeableValue() const
 {
    R__ASSERT(fConcreteAction != nullptr);

@@ -1,4 +1,12 @@
-// Author: Enrico Guiraud, Danilo Piparo CERN  12/2016, Vincenzo Eduardo Padulano 05/2020
+/**
+ \file ROOT/RDF/ActionHelpers.hxx
+ \ingroup dataframe
+ \author Enrico Guiraud, CERN
+ \author Danilo Piparo, CERN
+ \date 2016-12
+ \author Vincenzo Eduardo Padulano
+ \date 2020-06
+*/
 
 /*************************************************************************
  * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *

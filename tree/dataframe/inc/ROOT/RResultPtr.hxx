@@ -356,6 +356,26 @@ MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &lm, std::shared_ptr<RDF
    return RResultPtr<T>(r, &lm, std::move(actionPtr));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Retrieve a mergeable value from an RDataFrame action.
+/// \param[in] rptr lvalue reference of an RResultPtr object.
+/// \returns An RMergeableValue holding the result of the action, wrapped in an
+///          `std::unique_ptr`.
+///
+/// This function triggers the execution of the RDataFrame computation graph.
+/// Then retrieves an RMergeableValue object created with the result wrapped by
+/// the RResultPtr argument. The user obtains ownership of the mergeable, which
+/// in turn holds a copy of the result of the action. The RResultPtr is not
+/// destroyed in the process and will still retain (shared) ownership of the
+/// original result.
+///
+/// Example usage:
+/// ~~~{.cpp}
+/// using namespace ROOT::Detail::RDF;
+/// ROOT::RDataFrame d("myTree", "file_*.root");
+/// auto h = d.Histo1D("Branch_A");
+/// auto mergeablehisto = GetMergeableValue(h);
+/// ~~~
 template <typename T>
 std::unique_ptr<RMergeableValue<T>> GetMergeableValue(RResultPtr<T> &rptr)
 {

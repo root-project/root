@@ -82,7 +82,10 @@ public:
 
    virtual std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph() = 0;
 
-   // Helper for RMergeableValue
+   /**
+      Retrieve a wrapper to the result of the action that knows how to merge
+      with others of the same type.
+   */
    virtual std::unique_ptr<RMergeableValueBase> GetMergeableValue() const = 0;
 };
 } // namespace RDF

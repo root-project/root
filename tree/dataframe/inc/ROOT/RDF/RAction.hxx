@@ -132,7 +132,10 @@ public:
 
    Helper &GetHelper() { return fHelper; }
 
-   // Helper for RMergeableValue
+   /**
+      Retrieve a wrapper to the result of the action that knows how to merge
+      with others of the same type.
+   */
    std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
       return fHelper.GetMergeableValue();
