@@ -187,7 +187,7 @@ public:
             // We can decide since the array is long enough
             fStorageType = EStorageType::kContiguous;
             for (auto i = 0u; i < arrSize - 1; ++i) {
-               if ((char *)&readerArray[i + 1] - (char *)&readerArray[i] != sizeof(T)) {
+               if ((char *)&readerArray[i + 1] - (char *)&readerArray[i] != sizeof(typename U::value_type)) {
                   fStorageType = EStorageType::kSparse;
                   break;
                }
