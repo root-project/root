@@ -409,12 +409,11 @@ public:
 
       char *curr = fCurrent;
 
-      do {
-         curr++;
+      while(true) {
          while (curr + len > fMaxAddr)
             if (!ExpandStream(curr))
                return -1;
-         char *chk0 = curr;
+         const char *chk0 = curr;
          const char *chk = str;
          Bool_t find = kTRUE;
          while (*chk != 0)
@@ -425,7 +424,8 @@ public:
          // if string found, shift to the next symbol after string
          if (find)
             return curr - fCurrent;
-      } while (curr < fMaxAddr);
+         curr++;
+      }
       return -1;
    }
 
@@ -1786,7 +1786,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
    // process comments before we start to analyse any node symbols
    while (inp->CheckFor("<!--")) {
       Int_t commentlen = inp->SearchFor("-->");
-      if (commentlen <= 0) {
+      if (commentlen < 0) {
          resvalue = -10;
          return 0;
       }
