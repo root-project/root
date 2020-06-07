@@ -81,19 +81,6 @@
 #pragma link C++ class THnBase+;
 #pragma link C++ class THnIter+;
 #pragma link C++ class TNDArray+;
-#pragma link C++ class TNDArrayT<Float_t>+;
-//#pragma link C++ class TNDArrayT<Float16_t>+;
-#pragma link C++ class TNDArrayT<Double_t>+;
-//#pragma link C++ class TNDArrayT<Double32_t>+;
-#pragma link C++ class TNDArrayT<Long64_t>+;
-#pragma link C++ class TNDArrayT<Long_t>+;
-#pragma link C++ class TNDArrayT<Int_t>+;
-#pragma link C++ class TNDArrayT<Short_t>+;
-#pragma link C++ class TNDArrayT<Char_t>+;
-#pragma link C++ class TNDArrayT<ULong64_t>+;
-#pragma link C++ class TNDArrayT<ULong_t>+;
-#pragma link C++ class TNDArrayT<UInt_t>+;
-#pragma link C++ class TNDArrayT<UShort_t>+;
 #pragma link C++ class TNDArrayRef<Float_t>+;
 //#pragma link C++ class TNDArrayRef<Float16_t>+;
 #pragma link C++ class TNDArrayRef<Double_t>+;
@@ -107,21 +94,6 @@
 #pragma link C++ class TNDArrayRef<ULong_t>+;
 #pragma link C++ class TNDArrayRef<UInt_t>+;
 #pragma link C++ class TNDArrayRef<UShort_t>+;
-/*
-#pragma link C++ class TNDArrayRef<const Float_t>+;
-//#pragma link C++ class TNDArrayRef<const Float16_t>+;
-#pragma link C++ class TNDArrayRef<const Double_t>+;
-//#pragma link C++ class TNDArrayRef<const Double32_t>+;
-#pragma link C++ class TNDArrayRef<const Long64_t>+;
-#pragma link C++ class TNDArrayRef<const Long_t>+;
-#pragma link C++ class TNDArrayRef<const Int_t>+;
-#pragma link C++ class TNDArrayRef<const Short_t>+;
-#pragma link C++ class TNDArrayRef<const Char_t>+;
-#pragma link C++ class TNDArrayRef<const ULong64_t>+;
-#pragma link C++ class TNDArrayRef<const ULong_t>+;
-#pragma link C++ class TNDArrayRef<const UInt_t>+;
-#pragma link C++ class TNDArrayRef<const UShort_t>+;
-*/
 #pragma link C++ class THn+;
 #pragma link C++ class THnChain+;
 #pragma link C++ class THnT<Float_t>+;
