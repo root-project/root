@@ -113,14 +113,14 @@ static std::string GetFriendBranchName(TTree* directorTree, TBranch* branch, con
    // ROOT-10046: Here we need to ask for the tree with GetTree otherwise, if directorTree
    // is a chain, this check is bogus and a bug can occour (ROOT-10046)
    if (directorTree->GetTree() == branch->GetTree())
-      return branch->GetName();
+      return branch->GetFullName().Data();
 
    // Friend case:
    std::string sFullBranchName = fullBranchName;
-   std::string::size_type pos = sFullBranchName.rfind(branch->GetName());
+   std::string::size_type pos = sFullBranchName.rfind(branch->GetFullName());
    if (pos != std::string::npos) {
       sFullBranchName.erase(pos);
-      sFullBranchName += branch->GetName();
+      sFullBranchName += branch->GetFullName();
    }
    return sFullBranchName;
 }
