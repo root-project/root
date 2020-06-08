@@ -176,7 +176,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
          items.emplace_back(Create("variant" + std::to_string(i), innerTypes[i]));
       }
-      return new RFieldVariant(fieldName, items);
+      return new RVariantField(fieldName, items);
    }
 #endif
    // TODO: create an RFieldCollection?
@@ -877,7 +877,7 @@ void ROOT::Experimental::RFieldArray::AcceptVisitor(Detail::RFieldVisitor &visit
 //------------------------------------------------------------------------------
 
 #if __cplusplus >= 201703L
-std::string ROOT::Experimental::RFieldVariant::GetTypeList(const std::vector<Detail::RFieldBase *> &itemFields)
+std::string ROOT::Experimental::RVariantField::GetTypeList(const std::vector<Detail::RFieldBase *> &itemFields)
 {
    std::string result;
    for (size_t i = 0; i < itemFields.size(); ++i) {
@@ -888,7 +888,7 @@ std::string ROOT::Experimental::RFieldVariant::GetTypeList(const std::vector<Det
    return result;
 }
 
-ROOT::Experimental::RFieldVariant::RFieldVariant(
+ROOT::Experimental::RVariantField::RVariantField(
    std::string_view fieldName, const std::vector<Detail::RFieldBase *> &itemFields)
    : ROOT::Experimental::Detail::RFieldBase(fieldName,
       "std::variant<" + GetTypeList(itemFields) + ">", ENTupleStructure::kVariant, false /* isSimple */)
@@ -904,29 +904,29 @@ ROOT::Experimental::RFieldVariant::RFieldVariant(
    fTagOffset = (fMaxItemSize < fMaxAlignment) ? fMaxAlignment : fMaxItemSize;
 }
 
-ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RFieldVariant::Clone(std::string_view newName)
+ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RVariantField::Clone(std::string_view newName)
 {
    auto nFields = fSubFields.size();
    std::vector<Detail::RFieldBase *> itemFields;
    for (unsigned i = 0; i < nFields; ++i) {
       itemFields.emplace_back(fSubFields[i]->Clone(fSubFields[i]->GetName()));
    }
-   return new RFieldVariant(newName, itemFields);
+   return new RVariantField(newName, itemFields);
 }
 
-std::uint32_t ROOT::Experimental::RFieldVariant::GetTag(void *variantPtr) const
+std::uint32_t ROOT::Experimental::RVariantField::GetTag(void *variantPtr) const
 {
    auto index = *(reinterpret_cast<char *>(variantPtr) + fTagOffset);
    return (index < 0) ? 0 : index + 1;
 }
 
-void ROOT::Experimental::RFieldVariant::SetTag(void *variantPtr, std::uint32_t tag) const
+void ROOT::Experimental::RVariantField::SetTag(void *variantPtr, std::uint32_t tag) const
 {
    auto index = reinterpret_cast<char *>(variantPtr) + fTagOffset;
    *index = static_cast<char>(tag - 1);
 }
 
-void ROOT::Experimental::RFieldVariant::AppendImpl(const Detail::RFieldValue& value)
+void ROOT::Experimental::RVariantField::AppendImpl(const Detail::RFieldValue& value)
 {
    auto tag = GetTag(value.GetRawPtr());
    auto index = 0;
@@ -940,7 +940,7 @@ void ROOT::Experimental::RFieldVariant::AppendImpl(const Detail::RFieldValue& va
    fColumns[0]->Append(elemSwitch);
 }
 
-void ROOT::Experimental::RFieldVariant::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
    RClusterIndex variantIndex;
    std::uint32_t tag;
@@ -952,7 +952,7 @@ void ROOT::Experimental::RFieldVariant::ReadGlobalImpl(NTupleSize_t globalIndex,
    SetTag(value->GetRawPtr(), tag);
 }
 
-void ROOT::Experimental::RFieldVariant::GenerateColumnsImpl()
+void ROOT::Experimental::RVariantField::GenerateColumnsImpl()
 {
    RColumnModel modelSwitch(EColumnType::kSwitch, false);
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
@@ -960,7 +960,7 @@ void ROOT::Experimental::RFieldVariant::GenerateColumnsImpl()
    fPrincipalColumn = fColumns[0].get();
 }
 
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldVariant::GenerateValue(void *where)
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RVariantField::GenerateValue(void *where)
 {
    memset(where, 0, GetValueSize());
    fSubFields[0]->GenerateValue(where);
@@ -968,7 +968,7 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldVariant::Gener
    return Detail::RFieldValue(this, reinterpret_cast<unsigned char *>(where));
 }
 
-void ROOT::Experimental::RFieldVariant::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RVariantField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
 {
    auto variantPtr = value.GetRawPtr();
    auto tag = GetTag(variantPtr);
@@ -980,17 +980,17 @@ void ROOT::Experimental::RFieldVariant::DestroyValue(const Detail::RFieldValue& 
       free(variantPtr);
 }
 
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldVariant::CaptureValue(void *where)
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RVariantField::CaptureValue(void *where)
 {
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
-size_t ROOT::Experimental::RFieldVariant::GetValueSize() const
+size_t ROOT::Experimental::RVariantField::GetValueSize() const
 {
    return fMaxItemSize + fMaxAlignment;  // TODO: fix for more than 255 items
 }
 
-void ROOT::Experimental::RFieldVariant::CommitCluster()
+void ROOT::Experimental::RVariantField::CommitCluster()
 {
    std::fill(fNWritten.begin(), fNWritten.end(), 0);
 }
