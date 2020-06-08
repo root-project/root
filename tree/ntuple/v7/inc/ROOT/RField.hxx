@@ -265,7 +265,7 @@ public:
 };
 
 /// The field for a class with dictionary
-class RFieldClass : public Detail::RFieldBase {
+class RClassField : public Detail::RFieldBase {
 private:
    TClass* fClass;
    std::size_t fMaxAlignment = 1;
@@ -276,10 +276,10 @@ protected:
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
 
 public:
-   RFieldClass(std::string_view fieldName, std::string_view className);
-   RFieldClass(RFieldClass&& other) = default;
-   RFieldClass& operator =(RFieldClass&& other) = default;
-   ~RFieldClass() = default;
+   RClassField(std::string_view fieldName, std::string_view className);
+   RClassField(RClassField&& other) = default;
+   RClassField& operator =(RClassField&& other) = default;
+   ~RClassField() = default;
    RFieldBase* Clone(std::string_view newName) final;
 
    void GenerateColumnsImpl() final;
@@ -400,10 +400,10 @@ public:
 
 /// Classes with dictionaries that can be inspected by TClass
 template <typename T, typename=void>
-class RField : public RFieldClass {
+class RField : public RClassField {
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
-   RField(std::string_view name) : RFieldClass(name, TypeName()) {
+   RField(std::string_view name) : RClassField(name, TypeName()) {
       static_assert(std::is_class<T>::value, "no I/O support for this basic C++ type");
    }
    RField(RField&& other) = default;

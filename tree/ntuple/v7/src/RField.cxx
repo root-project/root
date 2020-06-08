@@ -183,7 +183,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == ":Collection:") return new RField<ClusterSize_t>(fieldName);
    auto cl = TClass::GetClass(normalizedType.c_str());
    if (cl != nullptr) {
-      return new RFieldClass(fieldName, normalizedType);
+      return new RClassField(fieldName, normalizedType);
    }
    R__ERROR_HERE("NTuple") << "Field " << fieldName << " has unknown type " << normalizedType;
    R__ASSERT(false);
@@ -499,7 +499,7 @@ void ROOT::Experimental::RField<std::string>::AcceptVisitor(Detail::RFieldVisito
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::RFieldClass::RFieldClass(std::string_view fieldName, std::string_view className)
+ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::string_view className)
    : ROOT::Experimental::Detail::RFieldBase(fieldName, className, ENTupleStructure::kRecord, false /* isSimple */)
    , fClass(TClass::GetClass(std::string(className).c_str()))
 {
@@ -515,12 +515,12 @@ ROOT::Experimental::RFieldClass::RFieldClass(std::string_view fieldName, std::st
    }
 }
 
-ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldClass::Clone(std::string_view newName)
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RClassField::Clone(std::string_view newName)
 {
-   return new RFieldClass(newName, GetType());
+   return new RClassField(newName, GetType());
 }
 
-void ROOT::Experimental::RFieldClass::AppendImpl(const Detail::RFieldValue& value) {
+void ROOT::Experimental::RClassField::AppendImpl(const Detail::RFieldValue& value) {
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
    while (auto dataMember = static_cast<TDataMember *>(next())) {
@@ -530,7 +530,7 @@ void ROOT::Experimental::RFieldClass::AppendImpl(const Detail::RFieldValue& valu
    }
 }
 
-void ROOT::Experimental::RFieldClass::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RClassField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
@@ -541,7 +541,7 @@ void ROOT::Experimental::RFieldClass::ReadGlobalImpl(NTupleSize_t globalIndex, D
    }
 }
 
-void ROOT::Experimental::RFieldClass::ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RClassField::ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value)
 {
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
@@ -552,30 +552,30 @@ void ROOT::Experimental::RFieldClass::ReadInClusterImpl(const RClusterIndex &clu
    }
 }
 
-void ROOT::Experimental::RFieldClass::GenerateColumnsImpl()
+void ROOT::Experimental::RClassField::GenerateColumnsImpl()
 {
 }
 
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldClass::GenerateValue(void* where)
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RClassField::GenerateValue(void* where)
 {
    return Detail::RFieldValue(true /* captureFlag */, this, fClass->New(where));
 }
 
-void ROOT::Experimental::RFieldClass::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RClassField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
 {
    fClass->Destructor(value.GetRawPtr(), true /* dtorOnly */);
    if (!dtorOnly)
       free(value.GetRawPtr());
 }
 
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldClass::CaptureValue(void* where)
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RClassField::CaptureValue(void* where)
 {
    return Detail::RFieldValue(true /* captureFlat */, this, where);
 }
 
 
 std::vector<ROOT::Experimental::Detail::RFieldValue>
-ROOT::Experimental::RFieldClass::SplitValue(const Detail::RFieldValue &value) const
+ROOT::Experimental::RClassField::SplitValue(const Detail::RFieldValue &value) const
 {
    TIter next(fClass->GetListOfDataMembers());
    unsigned i = 0;
@@ -589,12 +589,12 @@ ROOT::Experimental::RFieldClass::SplitValue(const Detail::RFieldValue &value) co
 }
 
 
-size_t ROOT::Experimental::RFieldClass::GetValueSize() const
+size_t ROOT::Experimental::RClassField::GetValueSize() const
 {
    return fClass->GetClassSize();
 }
 
-void ROOT::Experimental::RFieldClass::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClassField(*this);
 }
