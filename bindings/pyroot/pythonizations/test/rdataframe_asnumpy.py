@@ -156,6 +156,11 @@ class RDataFrameAsNumpy(unittest.TestCase):
         """
         Testing reading a TLorentzVector
         """
+
+        # The global module index does not have it preloaded and
+        # gInterpreter.Declare is not allowed to load libPhysics for
+        # TLorentzVector. Preload the library now.
+        ROOT.gSystem.Load("libPhysics")
         ROOT.gInterpreter.Declare("""
         TLorentzVector create_tlorentzvector() {
             auto v = TLorentzVector();

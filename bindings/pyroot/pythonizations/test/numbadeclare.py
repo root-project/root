@@ -312,6 +312,11 @@ class NumbaDeclareArray(unittest.TestCase):
 
     test_inputs = [default_test_inputs]
 
+    # The global module index does not have RVec entities preloaded and
+    # gInterpreter.Declare is not allowed to load libROOTVecOps for RVec.
+    # Preload the library now.
+    ROOT.gSystem.Load("libROOTVecOps")
+
     @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_vecf(self):
         """
