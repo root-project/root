@@ -167,7 +167,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       R__ASSERT(arrayDef.size() == 2);
       auto arrayLength = std::stoi(arrayDef[1]);
       auto itemField = Create(GetNormalizedType(arrayDef[0]), arrayDef[0]);
-      return new RFieldArray(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField), arrayLength);
+      return new RArrayField(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField), arrayLength);
    }
 #if __cplusplus >= 201703L
    if (normalizedType.substr(0, 13) == "std::variant<") {
@@ -785,7 +785,7 @@ void ROOT::Experimental::RField<std::vector<bool>>::AcceptVisitor(Detail::RField
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::RFieldArray::RFieldArray(
+ROOT::Experimental::RArrayField::RArrayField(
    std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField, std::size_t arrayLength)
    : ROOT::Experimental::Detail::RFieldBase(
       fieldName, "std::array<" + itemField->GetType() + "," + std::to_string(arrayLength) + ">",
@@ -795,13 +795,13 @@ ROOT::Experimental::RFieldArray::RFieldArray(
    Attach(std::move(itemField));
 }
 
-ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RFieldArray::Clone(std::string_view newName)
+ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RArrayField::Clone(std::string_view newName)
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return new RFieldArray(newName, std::unique_ptr<Detail::RFieldBase>(newItemField), fArrayLength);
+   return new RArrayField(newName, std::unique_ptr<Detail::RFieldBase>(newItemField), fArrayLength);
 }
 
-void ROOT::Experimental::RFieldArray::AppendImpl(const Detail::RFieldValue& value) {
+void ROOT::Experimental::RArrayField::AppendImpl(const Detail::RFieldValue& value) {
    auto arrayPtr = value.Get<unsigned char>();
    for (unsigned i = 0; i < fArrayLength; ++i) {
       auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
@@ -809,7 +809,7 @@ void ROOT::Experimental::RFieldArray::AppendImpl(const Detail::RFieldValue& valu
    }
 }
 
-void ROOT::Experimental::RFieldArray::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RArrayField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
    auto arrayPtr = value->Get<unsigned char>();
    for (unsigned i = 0; i < fArrayLength; ++i) {
@@ -818,7 +818,7 @@ void ROOT::Experimental::RFieldArray::ReadGlobalImpl(NTupleSize_t globalIndex, D
    }
 }
 
-void ROOT::Experimental::RFieldArray::ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RArrayField::ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value)
 {
    auto arrayPtr = value->Get<unsigned char>();
    for (unsigned i = 0; i < fArrayLength; ++i) {
@@ -828,11 +828,11 @@ void ROOT::Experimental::RFieldArray::ReadInClusterImpl(const RClusterIndex &clu
    }
 }
 
-void ROOT::Experimental::RFieldArray::GenerateColumnsImpl()
+void ROOT::Experimental::RArrayField::GenerateColumnsImpl()
 {
 }
 
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldArray::GenerateValue(void *where)
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RArrayField::GenerateValue(void *where)
 {
    auto arrayPtr = reinterpret_cast<unsigned char *>(where);
    for (unsigned i = 0; i < fArrayLength; ++i) {
@@ -841,7 +841,7 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldArray::Generat
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
-void ROOT::Experimental::RFieldArray::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RArrayField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
 {
    auto arrayPtr = value.Get<unsigned char>();
    for (unsigned i = 0; i < fArrayLength; ++i) {
@@ -852,13 +852,13 @@ void ROOT::Experimental::RFieldArray::DestroyValue(const Detail::RFieldValue& va
       free(arrayPtr);
 }
 
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldArray::CaptureValue(void *where)
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RArrayField::CaptureValue(void *where)
 {
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldValue>
-ROOT::Experimental::RFieldArray::SplitValue(const Detail::RFieldValue &value) const
+ROOT::Experimental::RArrayField::SplitValue(const Detail::RFieldValue &value) const
 {
    auto arrayPtr = value.Get<unsigned char>();
    std::vector<Detail::RFieldValue> result;
@@ -869,7 +869,7 @@ ROOT::Experimental::RFieldArray::SplitValue(const Detail::RFieldValue &value) co
    return result;
 }
 
-void ROOT::Experimental::RFieldArray::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RArrayField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitArrayField(*this);
 }

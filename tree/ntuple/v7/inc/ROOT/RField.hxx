@@ -330,7 +330,7 @@ public:
 
 
 /// The generic field for fixed size arrays, which do not need an offset column
-class RFieldArray : public Detail::RFieldBase {
+class RArrayField : public Detail::RFieldBase {
 private:
    std::size_t fItemSize;
    std::size_t fArrayLength;
@@ -341,10 +341,10 @@ protected:
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
 
 public:
-   RFieldArray(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField, std::size_t arrayLength);
-   RFieldArray(RFieldArray &&other) = default;
-   RFieldArray& operator =(RFieldArray &&other) = default;
-   ~RFieldArray() = default;
+   RArrayField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField, std::size_t arrayLength);
+   RArrayField(RArrayField &&other) = default;
+   RArrayField& operator =(RArrayField &&other) = default;
+   ~RArrayField() = default;
    RFieldBase *Clone(std::string_view newName) final;
 
    void GenerateColumnsImpl() final;
@@ -807,14 +807,14 @@ public:
 
 
 template <typename ItemT, std::size_t N>
-class RField<std::array<ItemT, N>> : public RFieldArray {
+class RField<std::array<ItemT, N>> : public RArrayField {
    using ContainerT = typename std::array<ItemT, N>;
 public:
    static std::string TypeName() {
       return "std::array<" + RField<ItemT>::TypeName() + "," + std::to_string(N) + ">";
    }
    explicit RField(std::string_view name)
-      : RFieldArray(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()), N)
+      : RArrayField(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()), N)
    {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
