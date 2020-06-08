@@ -176,7 +176,7 @@ public:
   /// \param[in] proxyOwnsArg Proxy will delete the payload if owning.
   RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner, T& ref,
       Bool_t valueServer=true, Bool_t shapeServer=false, Bool_t proxyOwnsArg=false) :
-        RooArgProxy(theName, desc, owner, ref, valueServer, shapeServer, proxyOwnsArg) { }
+        RooArgProxy(theName, desc, owner, const_cast<typename std::remove_const<T>::type&>(ref), valueServer, shapeServer, proxyOwnsArg) { }
 
 
   ////////////////////////////////////////////////////////////////////////////////
