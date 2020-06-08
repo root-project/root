@@ -6954,23 +6954,23 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
             continue;
 
          if (BinObjFile->isELF()) {
-          // Skip the symbols which are part of the C/C++ runtime and have a
-          // fixed library version. See binutils ld VERSION. Those reside in
-          // 'system' libraries, which we avoid in FindLibraryForSymbol.
-          if (SymName.contains("@@GLIBCXX") || SymName.contains("@@CXXABI") ||
-              SymName.contains("@@GLIBC") || SymName.contains("@@GCC"))
-            continue;
+            // Skip the symbols which are part of the C/C++ runtime and have a
+            // fixed library version. See binutils ld VERSION. Those reside in
+            // 'system' libraries, which we avoid in FindLibraryForSymbol.
+            if (SymName.contains("@@GLIBCXX") || SymName.contains("@@CXXABI") ||
+               SymName.contains("@@GLIBC") || SymName.contains("@@GCC"))
+               continue;
 
-          // Those are 'weak undefined' symbols produced by gcc. We can
-          // ignore them.
-          // FIXME: It is unclear whether we can ignore all weak undefined
-          // symbols:
-          // http://lists.llvm.org/pipermail/llvm-dev/2017-October/118177.html
-          if (SymName == "_Jv_RegisterClasses" ||
-              SymName == "_ITM_deregisterTMCloneTable" ||
-              SymName == "_ITM_registerTMCloneTable")
-            continue;
-      }
+            // Those are 'weak undefined' symbols produced by gcc. We can
+            // ignore them.
+            // FIXME: It is unclear whether we can ignore all weak undefined
+            // symbols:
+            // http://lists.llvm.org/pipermail/llvm-dev/2017-October/118177.html
+            if (SymName == "_Jv_RegisterClasses" ||
+               SymName == "_ITM_deregisterTMCloneTable" ||
+               SymName == "_ITM_registerTMCloneTable")
+               continue;
+         }
 
 // FIXME: this might really depend on MachO library format instead of R__MACOSX.
 #ifdef R__MACOSX
