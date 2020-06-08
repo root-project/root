@@ -26,8 +26,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 
+#include <ROOT/RConfig.hxx>
 #include "RtypesCore.h"
-#include <stdarg.h>
+#include <cstdarg>
 
 
 class TVirtualMutex;
