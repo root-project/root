@@ -50,7 +50,7 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTuple> ROOT::Experimental::RNTup
    std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
 {
    auto collectionNTuple = std::make_shared<RCollectionNTuple>(std::move(collectionModel->fDefaultEntry));
-   auto field = std::make_unique<RFieldCollection>(fieldName, collectionNTuple, std::move(collectionModel));
+   auto field = std::make_unique<RCollectionField>(fieldName, collectionNTuple, std::move(collectionModel));
    fDefaultEntry->CaptureValue(field->CaptureValue(collectionNTuple->GetOffsetPtr()));
    fRootField->Attach(std::move(field));
    return collectionNTuple;
