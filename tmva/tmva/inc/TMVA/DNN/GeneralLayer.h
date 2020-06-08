@@ -27,7 +27,7 @@
 #ifndef TMVA_DNN_GENERALLAYER
 #define TMVA_DNN_GENERALLAYER
 
-#include <iostream>
+#include <sstream>
 #include <limits>
 #include <vector>
 #include <string>

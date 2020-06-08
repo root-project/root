@@ -40,6 +40,7 @@
 #include <iosfwd>
 #include <vector>
 #include <string>
+#include <sstream>
 #include "Rtypes.h"
 
 #include "TMVA/Node.h"

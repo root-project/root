@@ -41,6 +41,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <sstream>
 
 #include "TString.h"
 #include "TTree.h"

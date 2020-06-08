@@ -53,6 +53,7 @@ J Friedman's RuleFit method
 #include "TMatrix.h"
 
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <list>
 #include <random>
