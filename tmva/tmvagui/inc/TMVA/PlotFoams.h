@@ -10,7 +10,6 @@
 #include "TMVA/PDEFoamKernelBase.h"
 #include "TMVA/PDEFoamKernelTrivial.h"
 
-#include <sstream>
 #include <cfloat>
 
 #include "TMVA/PDEFoam.h"

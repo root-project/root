@@ -38,8 +38,9 @@
 
 #include <iosfwd>
 #include <string>
-#include "Rtypes.h"
+#include <sstream>
 
+#include "Rtypes.h"
 #include "TMVA/Version.h"
 
 namespace TMVA {

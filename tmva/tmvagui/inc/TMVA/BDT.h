@@ -1,9 +1,6 @@
 #ifndef BDT__HH
 #define BDT__HH
 
-#include <iostream>
-#include <iomanip>
-#include <fstream>
 #include <vector>
 
 #include "tmvaglob.h"
