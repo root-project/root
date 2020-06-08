@@ -398,6 +398,7 @@ std::string AnnotatedRecordDecl::BuildDemangledTypeInfo(const clang::RecordDecl 
          if (!strncmp(demangledTIName, typeinfoNameFor, strlen(typeinfoNameFor))) {
             std::string demangledName = demangledTIName + strlen(typeinfoNameFor);
 #endif
+            free(demangledTIName);
             return demangledName;
          } else {
 #ifdef WIN32
