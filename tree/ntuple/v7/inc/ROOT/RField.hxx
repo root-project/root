@@ -361,7 +361,7 @@ public:
 
 #if __cplusplus >= 201703L
 /// The generic field for std::variant types
-class RFieldVariant : public Detail::RFieldBase {
+class RVariantField : public Detail::RFieldBase {
 private:
    size_t fMaxItemSize = 0;
    size_t fMaxAlignment = 1;
@@ -380,10 +380,10 @@ protected:
 
 public:
    // TODO(jblomer): use std::span in signature
-   RFieldVariant(std::string_view fieldName, const std::vector<Detail::RFieldBase *> &itemFields);
-   RFieldVariant(RFieldVariant &&other) = default;
-   RFieldVariant& operator =(RFieldVariant &&other) = default;
-   ~RFieldVariant() = default;
+   RVariantField(std::string_view fieldName, const std::vector<Detail::RFieldBase *> &itemFields);
+   RVariantField(RVariantField &&other) = default;
+   RVariantField& operator =(RVariantField &&other) = default;
+   ~RVariantField() = default;
    RFieldBase *Clone(std::string_view newName) final;
 
    void GenerateColumnsImpl() final;
@@ -834,7 +834,7 @@ public:
 
 #if __cplusplus >= 201703L
 template <typename... ItemTs>
-class RField<std::variant<ItemTs...>> : public RFieldVariant {
+class RField<std::variant<ItemTs...>> : public RVariantField {
    using ContainerT = typename std::variant<ItemTs...>;
 private:
    template <typename HeadT, typename... TailTs>
@@ -860,7 +860,7 @@ private:
 
 public:
    static std::string TypeName() { return "std::variant<" + BuildItemTypes<ItemTs...>() + ">"; }
-   explicit RField(std::string_view name) : RFieldVariant(name, BuildItemFields<ItemTs...>()) {}
+   explicit RField(std::string_view name) : RVariantField(name, BuildItemFields<ItemTs...>()) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
