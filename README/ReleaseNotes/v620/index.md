@@ -658,4 +658,72 @@ Released on June 10, 2020
 
 These changes will be part of a future 6.20/08.
 
-* None so far.
+### TTree
+
+- `TTree::GetBranch` has been updated to execute its search trough the set of branches breadth first instead of depth first.  In some cases this changes the branch that is returned.  For example with:
+
+```
+    struct FloatInt {
+       float f;
+       int x;
+    };
+```
+and
+
+```q
+   int x = 1;
+   FloatInt s{2.1, 3};
+   TTree t("t", "t");
+   t.Branch("i", &i); // Create a top level branch named "i" and a sub-branch name "x"
+   t.Branch("x", &x);
+```
+the old version of `t.GetBranch("x")` was return the `i.x` sub-branch while the new version return the `x` top level branch.
+
+- `TTree::GetBranch` was also upgraded to properly handle being give a full branch name.  In prior version, with the example above, `GetBranch("i.x")` would return nullptr.  With the new version it returns the address of the branch `i.x`.
+
+- `TChain` now properly carries from `TTree` to `TTree`, each TBranch `MakeClass` (also known as `DecomposedObj[ect]` mode, if it was set (implicitly or explicitly).
+
+- `TTree::SetBranchAddress` and `TChain::SetBranchAddress` now automatically detect when a branch needs to be switched to MakeClass` (also known as `DecomposedObj[ect]` mode).
+
+-  `TChain` now always checks the branch address; even in the case the address is set before any TTree is loaded. Specifically in addition to checking the address type in the case:
+
+```
+chain->LoadTree(0);
+chain->SetBranchAdress(branch_name, &address);
+```
+
+now `TChain` will also check the addresses in the case:
+
+```
+chain->SetBranchAdress(branch_name, &address);
+chain->LoadTree(0);
+```
+
+- `TTree` and `TChain` no longet override user provided sub-branch addresses.
+Prior to this release doing:
+
+```
+// Not setting the top level branch address.
+chain->SetBranchAdress(sub_branch_name, &address);
+chain->GetEntry(0);
+```
+
+Resulted in the address set to be forgotten.  Note that a work-around was:
+
+```
+// Not setting the top level branch address.
+chain->GetEntry(0);
+chain->SetBranchAdress(sub_branch_name, &address);
+```
+
+But also the address needed to (in most cases) also be set again after each new tree was loaded.
+
+Note that, the following:
+
+```
+chain->SetBranchAdress(sub_branch_name, &address);
+chain->SetBranchAdress(top_level_branch_name, &other_address);
+chain->GetEntry(0);
+```
+
+will result (as one would expect) with the first SetBranchAddress being ignored/over-ridden.
