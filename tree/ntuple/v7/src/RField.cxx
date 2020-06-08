@@ -179,7 +179,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       return new RVariantField(fieldName, items);
    }
 #endif
-   // TODO: create an RFieldCollection?
+   // TODO: create an RCollectionField?
    if (normalizedType == ":Collection:") return new RField<ClusterSize_t>(fieldName);
    auto cl = TClass::GetClass(normalizedType.c_str());
    if (cl != nullptr) {
@@ -1000,7 +1000,7 @@ void ROOT::Experimental::RVariantField::CommitCluster()
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::RFieldCollection::RFieldCollection(
+ROOT::Experimental::RCollectionField::RCollectionField(
    std::string_view name,
    std::shared_ptr<RCollectionNTuple> collectionNTuple,
    std::unique_ptr<RNTupleModel> collectionModel)
@@ -1014,7 +1014,7 @@ ROOT::Experimental::RFieldCollection::RFieldCollection(
 }
 
 
-void ROOT::Experimental::RFieldCollection::GenerateColumnsImpl()
+void ROOT::Experimental::RCollectionField::GenerateColumnsImpl()
 {
    RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
@@ -1023,11 +1023,11 @@ void ROOT::Experimental::RFieldCollection::GenerateColumnsImpl()
 }
 
 
-ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldCollection::Clone(std::string_view /*newName*/)
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RCollectionField::Clone(std::string_view /*newName*/)
 {
    // TODO(jblomer)
    return nullptr;
-   //auto result = new RFieldCollection(newName, fCollectionNTuple, RNTupleModel::Create());
+   //auto result = new RCollectionField(newName, fCollectionNTuple, RNTupleModel::Create());
    //for (auto& f : fSubFields) {
    //   // switch the name prefix for the new parent name
    //   std::string cloneName = std::string(newName) + f->GetName().substr(GetName().length());
@@ -1037,7 +1037,7 @@ ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldCollection::Cl
    //return result;
 }
 
-void ROOT::Experimental::RFieldCollection::CommitCluster() {
+void ROOT::Experimental::RCollectionField::CommitCluster() {
    *fCollectionNTuple->GetOffsetPtr() = 0;
 }
 

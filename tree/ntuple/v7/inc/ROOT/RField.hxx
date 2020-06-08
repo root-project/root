@@ -50,7 +50,7 @@ namespace Experimental {
 
 class RCollectionNTuple;
 class REntry;
-class RFieldCollection;
+class RCollectionField;
 class RNTupleModel;
 
 namespace Detail {
@@ -73,7 +73,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 // clang-format on
 class RFieldBase {
    friend class ROOT::Experimental::Detail::RFieldFuse; // to connect the columns to a page storage
-   friend class ROOT::Experimental::RFieldCollection; // to change the field names when collections are attached
+   friend class ROOT::Experimental::RCollectionField; // to change the field names when collections are attached
 
 private:
    /// The field name relative to its parent field
@@ -420,18 +420,18 @@ public:
 };
 
 
-class RFieldCollection : public ROOT::Experimental::Detail::RFieldBase {
+class RCollectionField : public ROOT::Experimental::Detail::RFieldBase {
 private:
    /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
    std::shared_ptr<RCollectionNTuple> fCollectionNTuple;
 public:
-   static std::string TypeName() { return ":RFieldCollection:"; }
-   RFieldCollection(std::string_view name,
+   static std::string TypeName() { return ":RCollectionField:"; }
+   RCollectionField(std::string_view name,
                     std::shared_ptr<RCollectionNTuple> collectionNTuple,
                     std::unique_ptr<RNTupleModel> collectionModel);
-   RFieldCollection(RFieldCollection&& other) = default;
-   RFieldCollection& operator =(RFieldCollection&& other) = default;
-   ~RFieldCollection() = default;
+   RCollectionField(RCollectionField&& other) = default;
+   RCollectionField& operator =(RCollectionField&& other) = default;
+   ~RCollectionField() = default;
    RFieldBase* Clone(std::string_view newName) final;
 
    void GenerateColumnsImpl() final;
