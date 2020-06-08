@@ -227,7 +227,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitArrayField(const RFieldArray &
 }
 
 
-void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RFieldClass &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RClassField &field)
 {
    PrintIndent();
    PrintName(field);
