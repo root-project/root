@@ -153,14 +153,14 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType.substr(0, 12) == "std::vector<") {
       std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
       auto itemField = Create(GetNormalizedType(itemTypeName), itemTypeName);
-      return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
+      return new RVectorField(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
    // For the time being, we silently read RVec fields as std::vector
    if (normalizedType == "ROOT::VecOps::RVec<bool>") return new RField<ROOT::VecOps::RVec<bool>>(fieldName);
    if (normalizedType.substr(0, 19) == "ROOT::VecOps::RVec<") {
       std::string itemTypeName = normalizedType.substr(19, normalizedType.length() - 20);
       auto itemField = Create(GetNormalizedType(itemTypeName), itemTypeName);
-      return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
+      return new RVectorField(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
    if (normalizedType.substr(0, 11) == "std::array<") {
       auto arrayDef = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
@@ -602,7 +602,7 @@ void ROOT::Experimental::RFieldClass::AcceptVisitor(Detail::RFieldVisitor &visit
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::RFieldVector::RFieldVector(
+ROOT::Experimental::RVectorField::RVectorField(
    std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
    : ROOT::Experimental::Detail::RFieldBase(
       fieldName, "std::vector<" + itemField->GetType() + ">", ENTupleStructure::kCollection, false /* isSimple */)
@@ -611,13 +611,13 @@ ROOT::Experimental::RFieldVector::RFieldVector(
    Attach(std::move(itemField));
 }
 
-ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldVector::Clone(std::string_view newName)
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RVectorField::Clone(std::string_view newName)
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return new RFieldVector(newName, std::unique_ptr<Detail::RFieldBase>(newItemField));
+   return new RVectorField(newName, std::unique_ptr<Detail::RFieldBase>(newItemField));
 }
 
-void ROOT::Experimental::RFieldVector::AppendImpl(const Detail::RFieldValue& value) {
+void ROOT::Experimental::RVectorField::AppendImpl(const Detail::RFieldValue& value) {
    auto typedValue = value.Get<std::vector<char>>();
    R__ASSERT((typedValue->size() % fItemSize) == 0);
    auto count = typedValue->size() / fItemSize;
@@ -630,7 +630,7 @@ void ROOT::Experimental::RFieldVector::AppendImpl(const Detail::RFieldValue& val
    fColumns[0]->Append(elemIndex);
 }
 
-void ROOT::Experimental::RFieldVector::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
    auto typedValue = value->Get<std::vector<char>>();
 
@@ -645,7 +645,7 @@ void ROOT::Experimental::RFieldVector::ReadGlobalImpl(NTupleSize_t globalIndex, 
    }
 }
 
-void ROOT::Experimental::RFieldVector::GenerateColumnsImpl()
+void ROOT::Experimental::RVectorField::GenerateColumnsImpl()
 {
    RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
@@ -653,12 +653,12 @@ void ROOT::Experimental::RFieldVector::GenerateColumnsImpl()
    fPrincipalColumn = fColumns[0].get();
 }
 
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldVector::GenerateValue(void* where)
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RVectorField::GenerateValue(void* where)
 {
    return Detail::RFieldValue(this, reinterpret_cast<std::vector<char>*>(where));
 }
 
-void ROOT::Experimental::RFieldVector::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RVectorField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
 {
    auto vec = static_cast<std::vector<char>*>(value.GetRawPtr());
    R__ASSERT((vec->size() % fItemSize) == 0);
@@ -672,13 +672,13 @@ void ROOT::Experimental::RFieldVector::DestroyValue(const Detail::RFieldValue& v
       free(vec);
 }
 
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldVector::CaptureValue(void* where)
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RVectorField::CaptureValue(void* where)
 {
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldValue>
-ROOT::Experimental::RFieldVector::SplitValue(const Detail::RFieldValue &value) const
+ROOT::Experimental::RVectorField::SplitValue(const Detail::RFieldValue &value) const
 {
    auto vec = static_cast<std::vector<char>*>(value.GetRawPtr());
    R__ASSERT((vec->size() % fItemSize) == 0);
@@ -690,12 +690,12 @@ ROOT::Experimental::RFieldVector::SplitValue(const Detail::RFieldValue &value) c
    return result;
 }
 
-void ROOT::Experimental::RFieldVector::CommitCluster()
+void ROOT::Experimental::RVectorField::CommitCluster()
 {
    fNWritten = 0;
 }
 
-void ROOT::Experimental::RFieldVector::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RVectorField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitVectorField(*this);
 }
