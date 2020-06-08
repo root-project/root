@@ -43,6 +43,7 @@ Class that contains all the data information.
 #include "TMVA/Configurable.h"
 
 #include <vector>
+#include <fstream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

@@ -32,7 +32,6 @@
 #include "TMVA/DNN/DeepNet.h"
 
 #include <limits>
-#include <iostream>
 #include <vector>
 
 namespace TMVA {

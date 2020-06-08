@@ -12,7 +12,6 @@
 #define ROOT_TMVA_OptionMap
 
 #include <sstream>
-#include <iostream>
 #include <map>
 #include <string>
 

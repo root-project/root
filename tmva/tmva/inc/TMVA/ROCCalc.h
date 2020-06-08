@@ -3,10 +3,6 @@
 
 #include "RtypesCore.h"
 
-#include <sstream>
-#include <iostream>
-#include <iomanip>
-
 class TList;
 class TTree;
 class TString;

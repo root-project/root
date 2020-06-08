@@ -11,11 +11,10 @@
 #ifndef ROOT_TMVA_Envelope
 #define ROOT_TMVA_Envelope
 
-#include <sstream>
-#include <iostream>
 #include <memory>
 #include <vector>
 
+#include <TString.h>
 #include <TROOT.h>
 #include <TStopwatch.h>
 
