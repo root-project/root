@@ -45,7 +45,7 @@ class RFieldVisitor {
 public:
    virtual void VisitField(const Detail::RFieldBase &field) = 0;
    virtual void VisitRootField(const RFieldRoot &field) { VisitField(field); }
-   virtual void VisitArrayField(const RFieldArray &field) { VisitField(field); }
+   virtual void VisitArrayField(const RArrayField &field) { VisitField(field); }
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
    virtual void VisitClassField(const RClassField &field) { VisitField(field); }
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
@@ -194,7 +194,7 @@ public:
    void VisitUInt32Field(const RField<std::uint32_t> &field) final;
    void VisitUInt64Field(const RField<std::uint64_t> &field) final;
 
-   void VisitArrayField(const RFieldArray &field) final;
+   void VisitArrayField(const RArrayField &field) final;
    void VisitClassField(const RClassField &field) final;
    void VisitVectorField(const RVectorField &field) final;
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
