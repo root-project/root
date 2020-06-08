@@ -118,3 +118,4 @@ else()
   target_include_directories(Unuran SYSTEM PRIVATE ${UNURAN_INCLUDE_DIRS})
 endif()
 
+ROOT_ADD_TEST_SUBDIRECTORY(test)
