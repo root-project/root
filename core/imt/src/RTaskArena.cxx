@@ -3,6 +3,7 @@
 #include "TROOT.h"
 #include "TThread.h"
 #include <fstream>
+#include <mutex>
 #include <thread>
 #include "tbb/task_arena.h"
 
@@ -126,6 +127,9 @@ tbb::task_arena &RTaskArenaWrapper::Access()
 std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency)
 {
    static std::weak_ptr<ROOT::Internal::RTaskArenaWrapper> weak_GTAWrapper;
+
+   static std::mutex m;
+   const std::lock_guard<std::mutex> lock{m};
    if (auto sp = weak_GTAWrapper.lock())
       return sp;
    auto sp = std::make_shared<ROOT::Internal::RTaskArenaWrapper>(maxConcurrency);
