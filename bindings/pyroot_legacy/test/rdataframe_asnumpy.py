@@ -118,6 +118,10 @@ class RDataFrameAsNumpy(unittest.TestCase):
         self.assertIn("ROOT.vector<unsigned int>", str(type(npy["x"][0])))
 
     def test_read_tlorentzvector(self):
+        # The global module index does not have it preloaded and
+        # gInterpreter.Declare is not allowed to load libPhysics for
+        # TLorentzVector. Preload the library now.
+        ROOT.gSystem.Load("libPhysics")
         ROOT.gInterpreter.Declare("""
         TLorentzVector create_tlorentzvector() {
             auto v = TLorentzVector();
