@@ -221,7 +221,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitUInt64Field(const RField<std::
 }
 
 
-void ROOT::Experimental::RPrintValueVisitor::VisitArrayField(const RFieldArray &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitArrayField(const RArrayField &field)
 {
    PrintCollection(field);
 }
