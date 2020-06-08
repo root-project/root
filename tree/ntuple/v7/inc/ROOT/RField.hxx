@@ -294,7 +294,7 @@ public:
 };
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
-class RFieldVector : public Detail::RFieldBase {
+class RVectorField : public Detail::RFieldBase {
 private:
    std::size_t fItemSize;
    ClusterSize_t fNWritten;
@@ -304,10 +304,10 @@ protected:
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
 
 public:
-   RFieldVector(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
-   RFieldVector(RFieldVector&& other) = default;
-   RFieldVector& operator =(RFieldVector&& other) = default;
-   ~RFieldVector() = default;
+   RVectorField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
+   RVectorField(RVectorField&& other) = default;
+   RVectorField& operator =(RVectorField&& other) = default;
+   ~RVectorField() = default;
    RFieldBase* Clone(std::string_view newName) final;
 
    void GenerateColumnsImpl() final;
@@ -878,12 +878,12 @@ public:
 #endif
 
 template <typename ItemT>
-class RField<std::vector<ItemT>> : public RFieldVector {
+class RField<std::vector<ItemT>> : public RVectorField {
    using ContainerT = typename std::vector<ItemT>;
 public:
    static std::string TypeName() { return "std::vector<" + RField<ItemT>::TypeName() + ">"; }
    explicit RField(std::string_view name)
-      : RFieldVector(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()))
+      : RVectorField(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()))
    {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;

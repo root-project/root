@@ -257,7 +257,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RFieldClass &
 }
 
 
-void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RFieldVector &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RVectorField &field)
 {
    PrintCollection(field);
 }

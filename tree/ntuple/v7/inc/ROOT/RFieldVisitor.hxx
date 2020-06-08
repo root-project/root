@@ -56,7 +56,7 @@ public:
    virtual void VisitUInt32Field(const RField<std::uint32_t> &field) { VisitField(field); }
    virtual void VisitUInt64Field(const RField<std::uint64_t> &field) { VisitField(field); }
    virtual void VisitUInt8Field(const RField<std::uint8_t> &field) { VisitField(field); }
-   virtual void VisitVectorField(const RFieldVector &field) { VisitField(field); }
+   virtual void VisitVectorField(const RVectorField &field) { VisitField(field); }
    virtual void VisitVectorBoolField(const RField<std::vector<bool>> &field) { VisitField(field); }
 }; // class RFieldVisitor
 
@@ -196,7 +196,7 @@ public:
 
    void VisitArrayField(const RFieldArray &field) final;
    void VisitClassField(const RFieldClass &field) final;
-   void VisitVectorField(const RFieldVector &field) final;
+   void VisitVectorField(const RVectorField &field) final;
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
 };
 
