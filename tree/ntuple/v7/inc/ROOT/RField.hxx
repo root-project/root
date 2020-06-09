@@ -248,9 +248,9 @@ public:
 
 
 /// The container field for an ntuple model, which itself has no physical representation
-class RFieldRoot : public Detail::RFieldBase {
+class RFieldZero : public Detail::RFieldBase {
 public:
-   RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { }
+   RFieldZero() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { }
    RFieldBase* Clone(std::string_view newName);
 
    void GenerateColumnsImpl() final {}

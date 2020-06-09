@@ -44,7 +44,7 @@ by the RPrintSchemaVisitor class. The RFieldBase class and classes which inherit
 class RFieldVisitor {
 public:
    virtual void VisitField(const Detail::RFieldBase &field) = 0;
-   virtual void VisitRootField(const RFieldRoot &field) { VisitField(field); }
+   virtual void VisitFieldZero(const RFieldZero &field) { VisitField(field); }
    virtual void VisitArrayField(const RArrayField &field) { VisitField(field); }
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
    virtual void VisitClassField(const RClassField &field) { VisitField(field); }
@@ -80,7 +80,7 @@ private:
 public:
    RPrepareVisitor() = default;
    void VisitField(const Detail::RFieldBase &field) final;
-   void VisitRootField(const RFieldRoot &field) final;
+   void VisitFieldZero(const RFieldZero &field) final;
 
    unsigned int GetDeepestLevel() const { return fDeepestLevel; }
    unsigned int GetNumFields() const { return fNumFields; }
@@ -121,7 +121,7 @@ public:
    }
    /// Prints summary of Field
    void VisitField(const Detail::RFieldBase &field) final;
-   void VisitRootField(const RFieldRoot &rootField) final;
+   void VisitFieldZero(const RFieldZero &fieldZero) final;
    void SetFrameSymbol(char s) { fFrameSymbol = s; }
    void SetWidth(int w) { fWidth = w; }
    void SetDeepestLevel(int d);

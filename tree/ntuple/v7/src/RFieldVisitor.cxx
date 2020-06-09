@@ -42,7 +42,7 @@ void ROOT::Experimental::RPrepareVisitor::VisitField(const Detail::RFieldBase &f
 }
 
 
-void ROOT::Experimental::RPrepareVisitor::VisitRootField(const RFieldRoot &field)
+void ROOT::Experimental::RPrepareVisitor::VisitFieldZero(const RFieldZero &field)
 {
    VisitField(field);
    fNumFields--;
@@ -93,10 +93,10 @@ void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const Detail::RFieldBas
 }
 
 
-void ROOT::Experimental::RPrintSchemaVisitor::VisitRootField(const RFieldRoot &rootField)
+void ROOT::Experimental::RPrintSchemaVisitor::VisitFieldZero(const RFieldZero &fieldZero)
 {
    auto fieldNo = 1;
-   for (auto f : rootField.GetSubFields()) {
+   for (auto f : fieldZero.GetSubFields()) {
       RPrintSchemaVisitor visitor(*this);
       visitor.fFieldNo = fieldNo++;
       f->AcceptVisitor(visitor);
