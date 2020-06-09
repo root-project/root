@@ -1626,7 +1626,7 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   // New experimental plotOn() with varargs...
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooTreeData::plotOn(%s)",GetName())) ;
+  RooCmdConfig pc(Form("RooAbsData::plotOn(%s)",GetName())) ;
   pc.defineString("drawOption","DrawOption",0,"P") ;
   pc.defineString("cutRange","CutRange",0,"",kTRUE) ;
   pc.defineString("cutString","CutSpec",0,"") ;
@@ -1769,11 +1769,14 @@ RooPlot *RooAbsData::plotOn(RooPlot *frame, PlotOpt o) const
   TString histName(GetName());
   histName.Append("_plot");
   TH1F *hist ;
-    if (o.bins) {
+  if (o.bins) {
     hist= static_cast<TH1F*>(var->createHistogram(histName.Data(), RooFit::AxisLabel("Events"), RooFit::Binning(*o.bins))) ;
+  } else if (!frame->getPlotVar()->getBinning().isUniform()) {
+    hist = static_cast<TH1F*>(var->createHistogram(histName.Data(), RooFit::AxisLabel("Events"),
+        RooFit::Binning(frame->getPlotVar()->getBinning())));
   } else {
     hist= var->createHistogram(histName.Data(), "Events",
-                frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(), frame->GetNbinsX());
+        frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(), frame->GetNbinsX());
   }
 
   // Keep track of sum-of-weights error
