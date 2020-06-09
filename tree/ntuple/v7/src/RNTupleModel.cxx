@@ -25,16 +25,16 @@
 
 
 ROOT::Experimental::RNTupleModel::RNTupleModel()
-  : fRootField(std::make_unique<RFieldRoot>())
+  : fFieldZero(std::make_unique<RFieldZero>())
   , fDefaultEntry(std::make_unique<REntry>())
 {}
 
 ROOT::Experimental::RNTupleModel* ROOT::Experimental::RNTupleModel::Clone()
 {
    auto cloneModel = new RNTupleModel();
-   auto cloneRootField = static_cast<RFieldRoot*>(fRootField->Clone(""));
-   cloneModel->fRootField = std::unique_ptr<RFieldRoot>(cloneRootField);
-   cloneModel->fDefaultEntry = std::unique_ptr<REntry>(cloneRootField->GenerateEntry());
+   auto cloneFieldZero = static_cast<RFieldZero*>(fFieldZero->Clone(""));
+   cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(cloneFieldZero);
+   cloneModel->fDefaultEntry = std::unique_ptr<REntry>(cloneFieldZero->GenerateEntry());
    return cloneModel;
 }
 
@@ -42,7 +42,7 @@ ROOT::Experimental::RNTupleModel* ROOT::Experimental::RNTupleModel::Clone()
 void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBase> field)
 {
    fDefaultEntry->AddValue(field->GenerateValue());
-   fRootField->Attach(std::move(field));
+   fFieldZero->Attach(std::move(field));
 }
 
 
@@ -52,15 +52,15 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTuple> ROOT::Experimental::RNTup
    auto collectionNTuple = std::make_shared<RCollectionNTuple>(std::move(collectionModel->fDefaultEntry));
    auto field = std::make_unique<RCollectionField>(fieldName, collectionNTuple, std::move(collectionModel));
    fDefaultEntry->CaptureValue(field->CaptureValue(collectionNTuple->GetOffsetPtr()));
-   fRootField->Attach(std::move(field));
+   fFieldZero->Attach(std::move(field));
    return collectionNTuple;
 }
 
 std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry()
 {
    auto entry = std::make_unique<REntry>();
-   for (auto& f : *fRootField) {
-      if (f.GetParent() != GetRootField())
+   for (auto& f : *fFieldZero) {
+      if (f.GetParent() != GetFieldZero())
          continue;
       entry->AddValue(f.GenerateValue());
    }

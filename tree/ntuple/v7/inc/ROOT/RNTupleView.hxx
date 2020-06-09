@@ -130,7 +130,7 @@ public:
 \brief An RNTupleView provides read-only access to a single field of the ntuple
 
 The view owns a field and its underlying columns in order to fill an ntuple value object with data. Data can be
-accessed by index. For top level fields, the index refers to the entry number. Fields that are part of
+accessed by index. For top-level fields, the index refers to the entry number. Fields that are part of
 nested collections have global index numbers that are derived from their parent indexes.
 
 Fields of simple types with a Map() method will use that and thus expose zero-copy access.

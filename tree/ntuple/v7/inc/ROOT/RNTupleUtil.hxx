@@ -26,7 +26,7 @@ namespace Experimental {
 
 /**
  * The fields in the ntuple model tree can carry different structural information about the type system.
- * Leaf fields contain just data, collection fields resolve to offset columns, record root fields have no
+ * Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
  * materialization on the primitive column layer.
  */
 enum ENTupleStructure {

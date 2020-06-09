@@ -33,8 +33,8 @@
 
 void ROOT::Experimental::RNTupleReader::ConnectModel() {
    std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> fieldPtr2Id;
-   fieldPtr2Id[fModel->GetRootField()] = fSource->GetDescriptor().FindFieldId("", kInvalidDescriptorId);
-   for (auto &field : *fModel->GetRootField()) {
+   fieldPtr2Id[fModel->GetFieldZero()] = fSource->GetDescriptor().FindFieldId("", kInvalidDescriptorId);
+   for (auto &field : *fModel->GetFieldZero()) {
       auto parentId = fieldPtr2Id[field.GetParent()];
       auto fieldId = fSource->GetDescriptor().FindFieldId(field.GetName(), parentId);
       R__ASSERT(fieldId != kInvalidDescriptorId);
@@ -112,7 +112,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       // FitString defined in RFieldVisitor.cxx
       output << frameSymbol << " N-Tuple : " << RNTupleFormatter::FitString(name, width-13) << frameSymbol << std::endl; // prints line with name of ntuple
       output << frameSymbol << " Entries : " << RNTupleFormatter::FitString(std::to_string(GetNEntries()), width - 13) << frameSymbol << std::endl;  // prints line with number of entries
-      GetModel()->GetRootField()->AcceptVisitor(prepVisitor);
+      GetModel()->GetFieldZero()->AcceptVisitor(prepVisitor);
 
       printVisitor.SetFrameSymbol(frameSymbol);
       printVisitor.SetWidth(width);
@@ -122,7 +122,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;
-      GetModel()->GetRootField()->AcceptVisitor(printVisitor);
+      GetModel()->GetFieldZero()->AcceptVisitor(printVisitor);
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;
@@ -204,7 +204,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWr
 void ROOT::Experimental::RNTupleWriter::CommitCluster()
 {
    if (fNEntries == fLastCommitted) return;
-   for (auto& field : *fModel->GetRootField()) {
+   for (auto& field : *fModel->GetFieldZero()) {
       field.Flush();
       field.CommitCluster();
    }

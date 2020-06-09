@@ -295,9 +295,9 @@ void ROOT::Experimental::Detail::RFieldBase::RSchemaIterator::Advance()
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RFieldRoot::Clone(std::string_view /*newName*/)
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldZero::Clone(std::string_view /*newName*/)
 {
-   Detail::RFieldBase* result = new RFieldRoot();
+   Detail::RFieldBase* result = new RFieldZero();
    for (auto &f : fSubFields) {
       auto clone = f->Clone(f->GetName());
       result->Attach(std::unique_ptr<RFieldBase>(clone));
@@ -306,7 +306,7 @@ ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RFieldRoot::Clone(st
 }
 
 
-ROOT::Experimental::REntry* ROOT::Experimental::RFieldRoot::GenerateEntry()
+ROOT::Experimental::REntry* ROOT::Experimental::RFieldZero::GenerateEntry()
 {
    auto entry = new REntry();
    for (auto& f : fSubFields) {
@@ -315,9 +315,9 @@ ROOT::Experimental::REntry* ROOT::Experimental::RFieldRoot::GenerateEntry()
    return entry;
 }
 
-void ROOT::Experimental::RFieldRoot::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RFieldZero::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitRootField(*this);
+   visitor.VisitFieldZero(*this);
 }
 
 
@@ -1007,8 +1007,8 @@ ROOT::Experimental::RCollectionField::RCollectionField(
    : RFieldBase(name, ":Collection:", ENTupleStructure::kCollection, true /* isSimple */)
    , fCollectionNTuple(collectionNTuple)
 {
-   for (unsigned i = 0; i < collectionModel->GetRootField()->fSubFields.size(); ++i) {
-      auto& subField = collectionModel->GetRootField()->fSubFields[i];
+   for (unsigned i = 0; i < collectionModel->GetFieldZero()->fSubFields.size(); ++i) {
+      auto& subField = collectionModel->GetFieldZero()->fSubFields[i];
       Attach(std::move(subField));
    }
 }
