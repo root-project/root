@@ -1,5 +1,6 @@
 /****** Run RDataFrame tests both with and without IMT enabled *******/
 #include <gtest/gtest.h>
+#include <ROOTUnitTestSupport.h>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TChain.h>
@@ -836,7 +837,7 @@ TEST_P(RDFSimpleTests, NonExistingFile)
    ROOT::RDataFrame r("myTree", "nonexistingfile.root");
 
    // We try to use the tree for jitting: an exception is thrown
-   EXPECT_ANY_THROW(r.Filter("inventedVar > 0"));
+   ROOT_EXPECT_ERROR(EXPECT_ANY_THROW(r.Filter("inventedVar > 0")), "TFile::TFile", "file nonexistingfile.root does not exist");
 }
 
 // ROOT-10549: check we throw if a file is unreadable
@@ -847,9 +848,11 @@ TEST_P(RDFSimpleTests, NonExistingFileInChain)
 
    ROOT::RDataFrame df("t", {filename, "doesnotexist.root"});
 
+   const auto errmsg ="file doesnotexist.root does not exist";
+
    bool exceptionCaught = false;
    try {
-      df.Count().GetValue();
+      ROOT_EXPECT_ERROR(df.Count().GetValue(), "TFile::TFile", errmsg);
    } catch (const std::runtime_error &e) {
       const std::string expected_msg =
          ROOT::IsImplicitMTEnabled()
