@@ -291,7 +291,7 @@ void RLoopManager::RunEmptySourceMT()
       } catch (...) {
          CleanUpTask(slot);
          // Error might throw in experiment frameworks like CMSSW
-         std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+         std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
       CleanUpTask(slot);
@@ -314,7 +314,7 @@ void RLoopManager::RunEmptySource()
       }
    } catch (...) {
       CleanUpTask(0u);
-      std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+      std::cerr << "RDataFrame::Run: event loop was interrupted\n";
       throw;
    }
    CleanUpTask(0u);
@@ -344,7 +344,7 @@ void RLoopManager::RunTreeProcessorMT()
          }
       } catch (...) {
          CleanUpTask(slot);
-         std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+         std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
       CleanUpTask(slot);
@@ -370,7 +370,7 @@ void RLoopManager::RunTreeReader()
       }
    } catch (...) {
       CleanUpTask(0u);
-      std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+      std::cerr << "RDataFrame::Run: event loop was interrupted\n";
       throw;
    }
    if (r.GetEntryStatus() != TTreeReader::kEntryNotFound && fNStopsReceived < fNChildren) {
@@ -401,7 +401,7 @@ void RLoopManager::RunDataSource()
          }
       } catch (...) {
          CleanUpTask(0u);
-         std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+         std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
       CleanUpTask(0u);
@@ -433,7 +433,7 @@ void RLoopManager::RunDataSourceMT()
          }
       } catch (...) {
          CleanUpTask(slot);
-         std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+         std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
       CleanUpTask(slot);
