@@ -7,7 +7,6 @@
 #include <thread>
 #include "tbb/task_arena.h"
 
-
 //////////////////////////////////////////////////////////////////////////
 ///
 /// \class ROOT::Internal::RTaskArenaWrapper
@@ -31,11 +30,12 @@
 ///
 /// #### Examples:
 /// ~~~{.cpp}
-/// root[] auto gTA = ROOT::Internal::GetGlobalTaskArena() //get a shared_ptr to the global arena
-/// root[] gTA->InitGlobalTaskArena(nWorkers) // Initialize the global arena and enable Thread Safety in ROOT
+/// root[] auto gTA = ROOT::Internal::GetGlobalTaskArena(nWorkers) //get a shared_ptr to the global arena and initialize
+///                                                                //it with nWorkers. Enable thread safety in ROOT
 /// root[] gTA->TaskArenaSize() // Get the current size of the arena (number of worker threads)
-/// root[] gTA->Access() //std::unique_ptr to the internal tbb::task_arena for interacting directly with it (needed to call operations such as execute)
-/// root[] root[] gTA->Access().max_concurrency() // call to tbb::task_arena::max_concurrency()
+/// root[] gTA->Access() //std::unique_ptr to the internal tbb::task_arena for interacting directly with it (needed to
+///                      //call operations such as execute)
+/// root[] gTA->Access().max_concurrency() // call to tbb::task_arena::max_concurrency()
 /// ~~~
 ///
 //////////////////////////////////////////////////////////////////////////
@@ -64,9 +64,8 @@ int LogicalCPUBandwithControl()
    return std::thread::hardware_concurrency();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Initializes the tbb::task_arena within RTaskArenaWrapper
+/// Initializes the tbb::task_arena within RTaskArenaWrapper.
 ///
 /// * Can't be reinitialized
 /// * Checks for CPU bandwidth control and avoids oversubscribing
@@ -100,7 +99,7 @@ unsigned RTaskArenaWrapper::TaskArenaSize()
    return fNWorkers;
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// Provides access to the wrapped tbb::task_arena
+/// Provides access to the wrapped tbb::task_arena.
 ////////////////////////////////////////////////////////////////////////////////
 tbb::task_arena &RTaskArenaWrapper::Access()
 {
