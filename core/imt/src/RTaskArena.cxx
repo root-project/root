@@ -84,25 +84,17 @@ namespace Internal {
 ////////////////////////////////////////////////////////////////////////////////
 RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency): fTBBArena(new tbb::task_arena{})
 {
-   if (!fTBBArena->is_active()) {
-      const unsigned tbbDefaultNumberThreads = fTBBArena->max_concurrency(); // not initialized, automatic state
-      maxConcurrency = maxConcurrency > 0 ? std::min(maxConcurrency, tbbDefaultNumberThreads) : tbbDefaultNumberThreads;
-      const unsigned bcCpus = LogicalCPUBandwithControl();
-      if (maxConcurrency>bcCpus) {
-         Warning("RTaskArenaWrapper", "CPU Bandwith Control Active. Proceeding with %d threads accordingly",
-            bcCpus);
-         maxConcurrency = bcCpus;
-      }
-      fTBBArena->initialize(maxConcurrency);
-      fNWorkers = maxConcurrency;
-      ROOT::EnableThreadSafety();
-   } else {
-      const unsigned current = fTBBArena->max_concurrency();
-      if (maxConcurrency && (current != maxConcurrency)) {
-         Warning("RTaskArenaWrapper", "There's already an active task arena. Proceeding with the current %d threads",
-            current);
-      }
+   const unsigned tbbDefaultNumberThreads = fTBBArena->max_concurrency(); // not initialized, automatic state
+   maxConcurrency = maxConcurrency > 0 ? std::min(maxConcurrency, tbbDefaultNumberThreads) : tbbDefaultNumberThreads;
+   const unsigned bcCpus = LogicalCPUBandwithControl();
+   if (maxConcurrency>bcCpus) {
+      Warning("RTaskArenaWrapper", "CPU Bandwith Control Active. Proceeding with %d threads accordingly",
+         bcCpus);
+      maxConcurrency = bcCpus;
    }
+   fTBBArena->initialize(maxConcurrency);
+   fNWorkers = maxConcurrency;
+   ROOT::EnableThreadSafety();
 }
 
 RTaskArenaWrapper::~RTaskArenaWrapper()
@@ -130,8 +122,13 @@ std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned m
 
    static std::mutex m;
    const std::lock_guard<std::mutex> lock{m};
-   if (auto sp = weak_GTAWrapper.lock())
+   if (auto sp = weak_GTAWrapper.lock()) {
+      if (maxConcurrency && (sp->TaskArenaSize() != maxConcurrency)) {
+         Warning("RTaskArenaWrapper", "There's already an active task arena. Proceeding with the current %d threads",
+            sp->TaskArenaSize());
+      }
       return sp;
+   }
    auto sp = std::make_shared<ROOT::Internal::RTaskArenaWrapper>(maxConcurrency);
    weak_GTAWrapper = sp;
    return sp;
