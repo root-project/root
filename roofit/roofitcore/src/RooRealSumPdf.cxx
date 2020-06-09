@@ -508,11 +508,9 @@ std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_
 
 
 
-//_____________________________________________________________________________B
+/// Check if all components that depend on `obs` are binned.
 Bool_t RooRealSumPdf::isBinnedDistribution(const RooArgSet& obs) const 
 {
-  // If all components that depend on obs are binned that so is the product
-  
   for (const auto elm : _funcList) {
     auto func = static_cast<RooAbsReal*>(elm);
 
