@@ -487,10 +487,10 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
 
    // Register the on disk pages in a page map
    auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
-   ROnDiskPageMapHeap pageMap(buffer);
+   auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char []>(buffer));
    for (const auto &s : onDiskPages) {
       ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
-      pageMap.Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
+      pageMap->Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
    }
    fCtrNPageLoaded->Add(onDiskPages.size());
    for (auto &r : readRequests) {

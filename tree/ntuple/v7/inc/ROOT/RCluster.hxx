@@ -18,8 +18,10 @@
 
 #include <ROOT/RNTupleUtil.hxx>
 
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace ROOT {
@@ -101,20 +103,15 @@ Derived classes implement how the on-disk pages are stored in memory, e.g. mmap'
 class ROnDiskPageMap {
    friend class RCluster;
 
-protected:
-   /// The memory region containing the on-disk pages. Ownership of the memory region is passed to the page map.
-   /// Therefore, the region needs to be allocated in a way that fits the derived class and its destructor.
-   void *fMemory;
+private:
    std::unordered_map<ROnDiskPage::Key, ROnDiskPage> fOnDiskPages;
 
 public:
-   explicit ROnDiskPageMap(void *memory) : fMemory(memory) {}
+   ROnDiskPageMap() = default;
    ROnDiskPageMap(const ROnDiskPageMap &other) = delete;
-   /// The default move constructor does not reset fMemory
-   ROnDiskPageMap(ROnDiskPageMap &&other);
+   ROnDiskPageMap(ROnDiskPageMap &&other) = default;
    ROnDiskPageMap &operator =(const ROnDiskPageMap &other) = delete;
-   /// The default move assignment does not reset fMemory
-   ROnDiskPageMap &operator =(ROnDiskPageMap &&other);
+   ROnDiskPageMap &operator =(ROnDiskPageMap &&other) = default;
    virtual ~ROnDiskPageMap();
 
    /// Inserts information about a page stored in fMemory.  Therefore, the address referenced by onDiskPage
@@ -132,8 +129,15 @@ public:
 */
 // clang-format on
 class ROnDiskPageMapHeap : public ROnDiskPageMap {
+private:
+   /// The memory region containing the on-disk pages.
+   std::unique_ptr<unsigned char []> fMemory;
 public:
-   explicit ROnDiskPageMapHeap(void *memory) : ROnDiskPageMap(memory) {}
+   explicit ROnDiskPageMapHeap(std::unique_ptr<unsigned char []> memory) : fMemory(std::move(memory)) {}
+   ROnDiskPageMapHeap(const ROnDiskPageMapHeap &other) = delete;
+   ROnDiskPageMapHeap(ROnDiskPageMapHeap &&other) = default;
+   ROnDiskPageMapHeap &operator =(const ROnDiskPageMapHeap &other) = delete;
+   ROnDiskPageMapHeap &operator =(ROnDiskPageMapHeap &&other) = default;
    ~ROnDiskPageMapHeap();
 };
 
@@ -151,7 +155,7 @@ protected:
    /// References the cluster identifier in the page source that created the cluster
    DescriptorId_t fClusterId;
    /// Multiple page maps can be combined in a single RCluster
-   std::vector<ROnDiskPageMap> fPageMaps;
+   std::vector<std::unique_ptr<ROnDiskPageMap>> fPageMaps;
    /// Set of the (complete) columns represented by the RCluster
    std::unordered_set<DescriptorId_t> fAvailColumns;
    /// Lookup table for the on-disk pages
@@ -168,7 +172,7 @@ public:
    /// Move the given page map into this cluster; on-disk pages that are present in both the cluster at hand and
    /// pageMap are gracefully handled such that a following lookup will return the page from either of the
    /// memory regions
-   void Adopt(ROnDiskPageMap &&pageMap);
+   void Adopt(std::unique_ptr<ROnDiskPageMap> pageMap);
    /// Move the contents of other into this cluster; on-disk pages that are present in both the cluster at hand and
    /// the "other" cluster are gracefully handled such that a following lookup will return the page from
    /// either of the clusters
