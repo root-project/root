@@ -38,6 +38,6 @@ void df025_RNode()
    for (auto i = 0; i < 3; ++i)
       with_columns = with_columns.Define("x" + std::to_string(i), "42");
 
-   // RNode's can be used exactly like any other RDF object
+   // RNodes can be used exactly like any other RDF object
    std::cout << "Entries passing the selection: " << with_columns.Count().GetValue() << std::endl;
 }
