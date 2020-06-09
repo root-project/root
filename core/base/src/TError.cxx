@@ -101,7 +101,7 @@ again:
    va_end(ap);
 
    // Serialize the actual printing.
-   std::lock_guard<std::mutex> guard(GetErrorMutex());
+   //std::lock_guard<std::mutex> guard(GetErrorMutex());
    R__LOCKGUARD2(gErrorMutex);
 
    const char *toprint = buf; // Work around for older platform where we use TThreadTLSWrapper
@@ -137,7 +137,7 @@ ErrorHandlerFunc_t GetErrorHandler()
 void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    if (gErrorIgnoreLevel == kUnset) {
-      std::lock_guard<std::mutex> guard(GetErrorMutex());
+      //std::lock_guard<std::mutex> guard(GetErrorMutex());
       R__LOCKGUARD2(gErrorMutex);
 
       gErrorIgnoreLevel = 0;
