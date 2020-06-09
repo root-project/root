@@ -37,7 +37,7 @@ class RLoopManager;
 
 /// Base class for non-leaf nodes of the computational graph.
 /// It only exposes the bare minimum interface required to work as a generic part of the computation graph.
-/// RDataFrames and results of transformations can be cast to this type via ROOT::RDF::ToCommonNodeType.
+/// RDataFrames and results of transformations can be cast to this type via ROOT::RDF::RNode (or ROOT.RDF.AsRNode in PyROOT).
 class RNodeBase {
 protected:
    RLoopManager *fLoopManager;
