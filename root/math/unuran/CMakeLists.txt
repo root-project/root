@@ -1,4 +1,5 @@
-if(ROOT_unuran_FOUND)
+# if(ROOT_unuran_FOUND)
+if(OFF)
         ROOTTEST_ADD_TEST(unuranDiscrete
                 MACRO ${CMAKE_CURRENT_SOURCE_DIR}/unuranDiscrete.cxx+
                 LABELS longtest)
