@@ -23,8 +23,6 @@ errorhandler function. By default DefaultErrorHandler() is used.
 #include <windows.h>
 #endif
 
-#include <cstdio>
-#include <cstdlib>
 #include "snprintf.h"
 #include "Varargs.h"
 #include "TError.h"
@@ -33,8 +31,11 @@ errorhandler function. By default DefaultErrorHandler() is used.
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 
+#include <cstdio>
+#include <cstdlib>
 #include <cctype> // for tolower
 #include <cstring>
+#include <mutex>
 #include <string>
 
 // Mutex for error and error format protection
@@ -59,6 +60,13 @@ asm(".desc ___crashreporter_info__, 0x10");
 #endif
 
 static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
+
+/// Mutex for error and error format protection
+static std::mutex &GetErrorMutex()
+{
+   static std::mutex m;
+   return m;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,6 +101,7 @@ again:
    va_end(ap);
 
    // Serialize the actual printing.
+   std::lock_guard<std::mutex> guard(GetErrorMutex());
    R__LOCKGUARD2(gErrorMutex);
 
    const char *toprint = buf; // Work around for older platform where we use TThreadTLSWrapper
@@ -128,6 +137,7 @@ ErrorHandlerFunc_t GetErrorHandler()
 void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    if (gErrorIgnoreLevel == kUnset) {
+      std::lock_guard<std::mutex> guard(GetErrorMutex());
       R__LOCKGUARD2(gErrorMutex);
 
       gErrorIgnoreLevel = 0;
