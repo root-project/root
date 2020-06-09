@@ -30,9 +30,9 @@ namespace Experimental {
 ROOT::Experimental::RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> ntuple)
 {
    fReaders.emplace_back(std::move(ntuple));
-   auto rootField = fReaders[0]->GetModel()->GetRootField();
-   for (auto &f : *rootField) {
-      if (f.GetParent() != rootField)
+   auto fieldZero = fReaders[0]->GetModel()->GetFieldZero();
+   for (auto &f : *fieldZero) {
+      if (f.GetParent() != fieldZero)
          continue;
       fColumnNames.push_back(f.GetName());
       fColumnTypes.push_back(f.GetType());

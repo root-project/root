@@ -46,7 +46,7 @@ A model needs to be frozen before it can be used to create a live ntuple.
 // clang-format on
 class RNTupleModel {
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
-   std::unique_ptr<RFieldRoot> fRootField;
+   std::unique_ptr<RFieldZero> fFieldZero;
    /// Contains field values corresponding to the created top-level fields
    std::unique_ptr<REntry> fDefaultEntry;
 
@@ -64,7 +64,7 @@ public:
    std::shared_ptr<T> MakeField(std::string_view fieldName, ArgsT&&... args) {
       auto field = std::make_unique<RField<T>>(fieldName);
       auto ptr = fDefaultEntry->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
-      fRootField->Attach(std::move(field));
+      fFieldZero->Attach(std::move(field));
       return ptr;
    }
 
@@ -75,7 +75,7 @@ public:
    void AddField(std::string_view fieldName, T* fromWhere) {
       auto field = std::make_unique<RField<T>>(fieldName);
       fDefaultEntry->CaptureValue(field->CaptureValue(fromWhere));
-      fRootField->Attach(std::move(field));
+      fFieldZero->Attach(std::move(field));
    }
 
    template <typename T>
@@ -88,7 +88,7 @@ public:
       std::string_view fieldName,
       std::unique_ptr<RNTupleModel> collectionModel);
 
-   RFieldRoot *GetRootField() const { return fRootField.get(); }
+   RFieldZero* GetFieldZero() const { return fFieldZero.get(); }
    REntry* GetDefaultEntry() { return fDefaultEntry.get(); }
    std::unique_ptr<REntry> CreateEntry();
    RNTupleVersion GetVersion() const { return RNTupleVersion(); }

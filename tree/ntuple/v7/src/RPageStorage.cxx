@@ -115,11 +115,11 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
                                 model.GetVersion(), model.GetUuid());
 
    std::unordered_map<const RFieldBase *, DescriptorId_t> fieldPtr2Id; // necessary to find parent field ids
-   const auto &rootField = *model.GetRootField();
-   fDescriptorBuilder.AddField(fLastFieldId, rootField.GetFieldVersion(), rootField.GetTypeVersion(),
-      rootField.GetName(), rootField.GetType(), rootField.GetNRepetitions(), rootField.GetStructure());
-   fieldPtr2Id[&rootField] = fLastFieldId++;
-   for (auto& f : *model.GetRootField()) {
+   const auto &fieldZero = *model.GetFieldZero();
+   fDescriptorBuilder.AddField(fLastFieldId, fieldZero.GetFieldVersion(), fieldZero.GetTypeVersion(),
+      fieldZero.GetName(), fieldZero.GetType(), fieldZero.GetNRepetitions(), fieldZero.GetStructure());
+   fieldPtr2Id[&fieldZero] = fLastFieldId++;
+   for (auto& f : *model.GetFieldZero()) {
       fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(), f.GetName(), f.GetType(),
                                   f.GetNRepetitions(), f.GetStructure());
       fDescriptorBuilder.AddFieldLink(fieldPtr2Id[f.GetParent()], fLastFieldId);
