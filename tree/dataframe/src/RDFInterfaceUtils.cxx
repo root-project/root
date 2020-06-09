@@ -348,7 +348,10 @@ HeadNode_t CreateSnapshotRDF(const ColumnNames_t &validCols,
 std::string DemangleTypeIdName(const std::type_info &typeInfo)
 {
    int dummy(0);
-   return TClassEdit::DemangleTypeIdName(typeInfo, dummy);
+   char *tn = TClassEdit::DemangleTypeIdName(typeInfo, dummy);
+   std::string tname(tn);
+   free(tn);
+   return tname;
 }
 
 ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedCustomColumns & customColumns,
