@@ -13,7 +13,7 @@
 /// \author Danilo Piparo
 /// \author Enrico Guiraud
 
-/// A generic function that takes an RDF and applies a string filter
+/// A generic function that takes an RDF object and applies a string filter
 ROOT::RDF::RNode AddFilter(ROOT::RDF::RNode node, string_view filterStr)
 {
    return node.Filter(filterStr);
