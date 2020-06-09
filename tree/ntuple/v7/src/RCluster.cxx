@@ -21,35 +21,13 @@
 #include <utility>
 
 
-ROOT::Experimental::Detail::ROnDiskPageMap::ROnDiskPageMap(ROnDiskPageMap &&other)
-   : fMemory(other.fMemory), fOnDiskPages(std::move(other.fOnDiskPages))
-{
-   other.fMemory = nullptr;
-   other.fOnDiskPages.clear();
-}
-
-
-ROOT::Experimental::Detail::ROnDiskPageMap &
-ROOT::Experimental::Detail::ROnDiskPageMap::operator =(ROnDiskPageMap &&other)
-{
-   fMemory = other.fMemory;
-   other.fMemory = nullptr;
-   fOnDiskPages = std::move(other.fOnDiskPages);
-   other.fOnDiskPages.clear();
-   return *this;
-}
-
-
 ROOT::Experimental::Detail::ROnDiskPageMap::~ROnDiskPageMap() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::Detail::ROnDiskPageMapHeap::~ROnDiskPageMapHeap()
-{
-   delete[] static_cast<unsigned char *>(fMemory);
-}
+ROOT::Experimental::Detail::ROnDiskPageMapHeap::~ROnDiskPageMapHeap() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,12 +42,12 @@ ROOT::Experimental::Detail::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key)
    return nullptr;
 }
 
-void ROOT::Experimental::Detail::RCluster::Adopt(ROnDiskPageMap &&pageMap)
+void ROOT::Experimental::Detail::RCluster::Adopt(std::unique_ptr<ROnDiskPageMap> pageMap)
 {
-   for (const auto &entry : pageMap.fOnDiskPages) {
+   for (const auto &entry : pageMap->fOnDiskPages) {
       fOnDiskPages.emplace(entry.first, entry.second);
    }
-   pageMap.fOnDiskPages.clear();
+   pageMap->fOnDiskPages.clear();
    fPageMaps.emplace_back(std::move(pageMap));
 }
 

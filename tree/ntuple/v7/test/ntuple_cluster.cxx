@@ -76,9 +76,9 @@ public:
       fReqsClusterIds.emplace_back(clusterId);
       fReqsColumns.emplace_back(columns);
       auto cluster = std::make_unique<RCluster>(clusterId);
-      ROOT::Experimental::Detail::ROnDiskPageMap pageMap(nullptr);
+      auto pageMap = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMap>();
       for (auto colId : columns) {
-         pageMap.Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
+         pageMap->Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
          cluster->SetColumnAvailable(colId);
       }
       cluster->Adopt(std::move(pageMap));
@@ -94,18 +94,18 @@ TEST(Cluster, Allocate)
    auto cluster = new ROOT::Experimental::Detail::ROnDiskPageMapHeap(nullptr);
    delete cluster;
 
-   auto memory = new char[1];
-   cluster = new ROOT::Experimental::Detail::ROnDiskPageMapHeap(memory);
+   cluster = new ROOT::Experimental::Detail::ROnDiskPageMapHeap(std::make_unique<unsigned char []>(1));
    delete cluster;
 }
 
 
 TEST(Cluster, Basics)
 {
-   auto memory = new char[3];
-   ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap(memory);
-   pageMap.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&memory[0], 1));
-   pageMap.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&memory[1], 2));
+   auto memory = new unsigned char[3];
+   auto pageMap = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMapHeap>(
+      std::unique_ptr<unsigned char []>(memory));
+   pageMap->Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&memory[0], 1));
+   pageMap->Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&memory[1], 2));
    auto cluster = std::make_unique<RCluster>(0);
    cluster->Adopt(std::move(pageMap));
    cluster->SetColumnAvailable(5);
@@ -122,16 +122,18 @@ TEST(Cluster, Basics)
 
 TEST(Cluster, AdoptPageMaps)
 {
-   auto mem1 = new char[3];
-   ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap1(mem1);
-   pageMap1.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem1[0], 1));
-   pageMap1.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem1[1], 2));
+   auto mem1 = new unsigned char[3];
+   auto pageMap1 = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMapHeap>(
+      std::unique_ptr<unsigned char []>(mem1));
+   pageMap1->Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem1[0], 1));
+   pageMap1->Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem1[1], 2));
    // Column 5 is in both mem1 and mem2 but that should not hurt
-   auto mem2 = new char[4];
-   ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap2(mem2);
-   pageMap2.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem2[0], 1));
-   pageMap2.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem2[1], 2));
-   pageMap2.Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
+   auto mem2 = new unsigned char[4];
+   auto pageMap2 = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMapHeap>(
+      std::unique_ptr<unsigned char []>(mem2));
+   pageMap2->Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem2[0], 1));
+   pageMap2->Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem2[1], 2));
+   pageMap2->Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
 
    auto cluster = std::make_unique<RCluster>(0);
    cluster->Adopt(std::move(pageMap1));
@@ -158,20 +160,22 @@ TEST(Cluster, AdoptPageMaps)
 
 TEST(Cluster, AdoptClusters)
 {
-   auto mem1 = new char[3];
-   ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap1(mem1);
-   pageMap1.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem1[0], 1));
-   pageMap1.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem1[1], 2));
+   auto mem1 = new unsigned char[3];
+   auto pageMap1 = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMapHeap>(
+      std::unique_ptr<unsigned char []>(mem1));
+   pageMap1->Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem1[0], 1));
+   pageMap1->Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem1[1], 2));
    auto cluster1 = std::make_unique<RCluster>(0);
    cluster1->Adopt(std::move(pageMap1));
    cluster1->SetColumnAvailable(5);
 
    // Column 5 is in both clusters but that should not hurt
-   auto mem2 = new char[4];
-   ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap2(mem2);
-   pageMap2.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem2[0], 1));
-   pageMap2.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem2[1], 2));
-   pageMap2.Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
+   auto mem2 = new unsigned char[4];
+   auto pageMap2 = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMapHeap>(
+      std::unique_ptr<unsigned char []>(mem2));
+   pageMap2->Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem2[0], 1));
+   pageMap2->Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem2[1], 2));
+   pageMap2->Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
    auto cluster2 = std::make_unique<RCluster>(0);
    cluster2->Adopt(std::move(pageMap2));
    cluster2->SetColumnAvailable(5);
