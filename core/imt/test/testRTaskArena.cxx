@@ -10,28 +10,7 @@
 
 #ifdef R__USE_IMT
 
-unsigned LogicalCPUBandwithControl()
-{
-#ifdef R__LINUX
-   // Check for CFS bandwith control
-   std::ifstream f("/sys/fs/cgroup/cpuacct/cpu.cfs_quota_us"); // quota file
-   if(f) {
-      float cfs_quota;
-      f>>cfs_quota;
-      f.close();
-      if(cfs_quota > 0) {
-         f.open("/sys/fs/cgroup/cpuacct/cpu.cfs_period_us"); // period file
-         float cfs_period;
-         f>>cfs_period;
-         f.close();
-         return static_cast<int>(std::ceil(cfs_quota/cfs_period));
-      }
-   }
-#endif
-   return std::thread::hardware_concurrency();
-}
-
-const unsigned maxConcurrency = LogicalCPUBandwithControl();
+const unsigned maxConcurrency = ROOT::Internal::LogicalCPUBandwithControl();
 std::mt19937 randGenerator(0); // seed the generator
 std::uniform_int_distribution<> plausibleNCores(1, maxConcurrency); // define the range
 
