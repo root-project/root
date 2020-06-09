@@ -591,3 +591,24 @@ This affects the creation of GUIs from Python, e.g. in the
 from `TGMainFrame` is not working at the moment. Future releases of ROOT will fix these
 issues and provide a way to program GUIs from Python, including a replacement for TPyDispatcher,
 which is no longer provided.
+
+- When iterating over an `std::vector<std::string>` from Python, the elements returned by
+the iterator are no longer of type Python `str`, but `cppyy.gbl.std.string`. This is an
+optimization to make the iteration faster (copies are avoided) and it allows to call
+modifier methods on the `std::string` objects.
+~~~ {.python}
+> import cppyy
+
+> cppyy.cppdef('std::vector<std::string> foo() { return std::vector<std::string>{"foo","bar"};}')
+
+> v = cppyy.gbl.foo()
+
+> type(v)
+<class cppyy.gbl.std.vector<string> at 0x4ad8220>
+
+> for s in v:
+...   print(type(s))  # s is no longer a Python string, but an std::string
+...
+<class cppyy.gbl.std.string at 0x4cd41b0>
+<class cppyy.gbl.std.string at 0x4cd41b0>
+~~~
