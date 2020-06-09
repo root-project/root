@@ -30,7 +30,7 @@
 #ifndef R__USE_IMT
 // No need to error out for dictionaries.
 # if !defined(__ROOTCLING__) && !defined(G__DICTIONARY)
-#  error "Cannot use ROOT::Internal::RTaskArenaWrapper without defining R__USE_IMT."
+#  error "Cannot use ROOT::Internal::RTaskArenaWrapper if build option imt=OFF."
 # endif
 #else
 
@@ -65,7 +65,7 @@ class RTaskArenaWrapper {
 public:
    RTaskArenaWrapper(unsigned maxConcurrency = 0);
    ~RTaskArenaWrapper(); // necessary to set size back to zero
-   static unsigned TaskArenaSize();
+   static unsigned TaskArenaSize(); // A static getter lets us check for RTaskArenaWrapper's existence
    tbb::task_arena &Access();
 private:
    std::unique_ptr<tbb::task_arena> fTBBArena;
@@ -74,12 +74,11 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Factory function returning a shared pointer to the instance of the global
-// RTaskArenaWrapper. The task arena still needs to be initialized with a
-// call to RTaskArena::Initialize(maxConcurrency)
-//
-// Allows for reinstantiation of the global RTaskArenaWrapper once all the
-// references to the previous one are gone and the object destroyed.
+/// Factory function returning a shared pointer to the instance of the global
+/// RTaskArenaWrapper.
+///
+/// Allows for reinstantiation of the global RTaskArenaWrapper once all the
+/// references to the previous one are gone and the object destroyed.
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency = 0);
 
