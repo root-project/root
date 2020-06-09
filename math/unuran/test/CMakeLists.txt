@@ -19,8 +19,9 @@ set(TestUnuranSource
        unuranMultiDim.cxx
 )
 
-# One can provide special labels for some tests like
-# set(unuranMultiDim_LABELS longtest)
+# Configure some tests as longtest
+set(unuranMultiDim_LABELS longtest)
+set(unuranDiscrete_LABELS longtest)
 
 #---Build and add all the defined test in the list---------------
 foreach(file ${TestUnuranSource})
