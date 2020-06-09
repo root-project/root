@@ -10,7 +10,7 @@ if(ROOT_pyroot_FOUND)
                     LABELS longtest
                     COPY_TO_BUILDDIR ${scott_file} Scott2.C Scott3.C MuonTileID.C LoKiNamespace.C ULongLong.C
                                      Till.C CoralAttributeList.C NestedNamespace.h Marco.C
-                                     PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->Load\(\"${PYTHON_LIBRARIES}\"\)
+                                     PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->Load\(\"libROOTTPython\"\)
                                          -e .L\ ${scott_file}+
                                          -e .L\ Scott2.C+
                                          -e .L\ Scott3.C+
