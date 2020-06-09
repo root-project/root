@@ -45,6 +45,17 @@ namespace ROOT {
 namespace Internal {
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the available number of logical cores.
+///
+///  - Checks if there is CFS bandwidth control in place (linux, via cgroups,
+///    assuming standard paths)
+///  - Otherwise, returns the number of logical cores provided by
+///    std::thread::hardware_concurrency()
+////////////////////////////////////////////////////////////////////////////////
+int LogicalCPUBandwithControl();
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Wrapper for tbb::task_arena.
 ///
 /// Necessary in order to keep tbb away from ROOT headers.

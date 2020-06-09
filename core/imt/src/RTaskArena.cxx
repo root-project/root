@@ -40,16 +40,10 @@
 ///
 //////////////////////////////////////////////////////////////////////////
 
+namespace ROOT{
+namespace Internal {
 
-////////////////////////////////////////////////////////////////////////////////
-/// Returns the available number of logical cores.
-///
-///  - Checks if there is CFS bandwidth control in place (linux, via cgroups,
-///    assuming standard paths)
-///  - Otherwise, returns the number of logical cores provided by
-///    std::thread::hardware_concurrency()
-////////////////////////////////////////////////////////////////////////////////
-static Int_t LogicalCPUBandwithControl()
+int LogicalCPUBandwithControl()
 {
 #ifdef R__LINUX
    // Check for CFS bandwith control
@@ -69,9 +63,6 @@ static Int_t LogicalCPUBandwithControl()
 #endif
    return std::thread::hardware_concurrency();
 }
-
-namespace ROOT{
-namespace Internal {
 
 
 ////////////////////////////////////////////////////////////////////////////////
