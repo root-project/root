@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <algorithm>
 #include <chrono>
 #include <memory>
 #include <ostream>
@@ -305,11 +306,13 @@ public:
    private:
       const RNTupleDescriptor& fNTuple;
       const RFieldDescriptor& fField;
+      std::vector<std::size_t> fOrdering = {};
    public:
       class RIterator {
       private:
          const RNTupleDescriptor& fNTuple;
          const std::vector<DescriptorId_t>& fFieldChildren;
+         const std::vector<std::size_t>& fOrdering;
          std::size_t fIndex = 0;
       public:
          using iterator_category = std::forward_iterator_tag;
@@ -319,23 +322,36 @@ public:
          using pointer = RFieldDescriptor*;
          using reference = const RFieldDescriptor&;
 
-         RIterator(const RNTupleDescriptor& ntuple, const RFieldDescriptor& fieldDesc, std::size_t index)
-            : fNTuple(ntuple), fFieldChildren(fieldDesc.GetLinkIds()), fIndex(index) {}
-
+         RIterator(const RNTupleDescriptor& ntuple, const RFieldDescriptor& fieldDesc,
+            const std::vector<std::size_t>& ordering, std::size_t index)
+            : fNTuple(ntuple), fFieldChildren(fieldDesc.GetLinkIds()), fOrdering(ordering), fIndex(index) {}
          iterator operator++() { ++fIndex; return *this; }
          reference operator*() {
-            return fNTuple.GetFieldDescriptor(fFieldChildren.at(fIndex));
+            return fNTuple.GetFieldDescriptor(
+               fFieldChildren.at(fOrdering.at(fIndex))
+            );
          }
          bool operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
       };
       /// An iterator over a field's children.
       RFieldDescriptorRange(const RNTupleDescriptor& ntuple, const RFieldDescriptor& field)
-         : fNTuple(ntuple), fField(field) {}
+         : fNTuple(ntuple), fField(field), fOrdering(std::vector<std::size_t>(field.GetLinkIds().size()))
+      {
+         std::iota(fOrdering.begin(), fOrdering.end(), 0);
+      }
+      RFieldDescriptorRange SortByNames() {
+         RFieldDescriptorRange range(fNTuple, fField);
+         std::sort(range.fOrdering.begin(), range.fOrdering.end(), [this](auto left, auto right) {
+            return fNTuple.GetFieldDescriptor(fField.GetLinkIds().at(left)).GetFieldName()
+               < fNTuple.GetFieldDescriptor(fField.GetLinkIds().at(right)).GetFieldName();
+         });
+         return range;
+      }
       RIterator begin() {
-         return RIterator(fNTuple, fField, 0);
+         return RIterator(fNTuple, fField, fOrdering, 0);
       }
       RIterator end() {
-         return RIterator(fNTuple, fField, fField.GetLinkIds().size());
+         return RIterator(fNTuple, fField, fOrdering, fField.GetLinkIds().size());
       }
    };
 
