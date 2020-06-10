@@ -735,6 +735,7 @@ root/tree/addresses/converterIssues/ExtHit/ExtHitProjectDict.cxx
 /root/tree/branches/copy.root
 /root/tree/branches/temp.root
 /root/tree/branches/blah.root
+/root/tree/branches/execGetBranch.root
 
 # /root/tree/cache/
 /root/tree/cache/multi.root
