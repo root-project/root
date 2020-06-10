@@ -428,6 +428,7 @@ End_Macro
 #include <cstdio>
 #include <climits>
 #include <algorithm>
+#include <set>
 
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
@@ -3295,6 +3296,7 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
    // Copy branch addresses starting from leaves.
    TObjArray* tleaves = tree->GetListOfLeaves();
    Int_t ntleaves = tleaves->GetEntriesFast();
+   std::set<TLeaf*> updatedLeafCount;
    for (Int_t i = 0; i < ntleaves; ++i) {
       TLeaf* tleaf = (TLeaf*) tleaves->UncheckedAt(i);
       TBranch* tbranch = tleaf->GetBranch();
@@ -3314,19 +3316,24 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
          tree->ResetBranchAddress(tbranch);
       } else {
          TBranchElement *mother = dynamic_cast<TBranchElement*>(leaf->GetBranch()->GetMother());
+         bool needAddressReset = false;
          if (leaf->GetLeafCount() && (leaf->TestBit(TLeaf::kNewValue) || !leaf->GetValuePointer() || (mother && mother->IsObjectOwner())) && tleaf->GetLeafCount())
          {
             // If it is an array and it was allocated by the leaf itself,
             // let's make sure it is large enough for the incoming data.
             if (leaf->GetLeafCount()->GetMaximum() < tleaf->GetLeafCount()->GetMaximum()) {
                leaf->GetLeafCount()->IncludeRange( tleaf->GetLeafCount() );
-               if (leaf->GetValuePointer()) {
-                  if (leaf->IsA() == TLeafElement::Class() && mother)
-                     mother->ResetAddress();
-                  else
-                     leaf->SetAddress(nullptr);
-               }
-            }
+               updatedLeafCount.insert(leaf->GetLeafCount());
+               needAddressReset = true;
+             } else {
+               needAddressReset = (updatedLeafCount.find(leaf->GetLeafCount()) != updatedLeafCount.end());
+             }
+         }
+         if (needAddressReset && leaf->GetValuePointer()) {
+            if (leaf->IsA() == TLeafElement::Class() && mother)
+               mother->ResetAddress();
+            else
+               leaf->SetAddress(nullptr);
          }
          if (!branch->GetAddress() && !leaf->GetValuePointer()) {
             // We should attempts to set the address of the branch.
