@@ -662,19 +662,19 @@ TEST(AxisTest, NumericBinningCompatibility) {
   using CompatFlags = NumericCompat::Flags;
 
   // Check numerix axis binning compatibility with minimal boilerplate
-  auto checkNumericCompat = [](const auto& target,
-                               const auto& source,
-                               int expectedCompatFlags) {
+  const auto checkNumericCompat = [](const auto& target,
+                                     const auto& source,
+                                     int expectedCompatFlags) {
       const NumericCompat expected{CompatFlags(expectedCompatFlags)};
       EXPECT_EQ(target.CheckBinningCompat(source), BinningCompat(expected));
     };
 
   // Syntaxically lightweight alternative to templates for code which doesn't
   // care whether an equidistant axis is growable or not.
-  auto makeEquidistant = [](int numBins, float min, float max) {
+  const auto makeEquidistant = [](int numBins, float min, float max) {
     return RAxisEquidistant(numBins, min, max);
   };
-  auto makeGrowable = [](int numBins, float min, float max) {
+  const auto makeGrowable = [](int numBins, float min, float max) {
     return RAxisGrow(numBins, min, max);
   };
 
@@ -683,9 +683,9 @@ TEST(AxisTest, NumericBinningCompatibility) {
     const RAxisEquidistant target(4, 1.2, 3.2);  // Bin width: 0.5
 
     // Deduplicated test for fixed-sized and growable equidistant sources
-    auto testEqOrGrowSource = [&](const auto& makeSource)
+    const auto testEqOrGrowSource = [&](const auto& makeSource)
     {
-      bool fixedSource = !(makeSource(4, 1.2, 3.2).CanGrow());
+      const bool fixedSource = !(makeSource(4, 1.2, 3.2).CanGrow());
       {
         SCOPED_TRACE("Source axis has the same binning");
         checkNumericCompat(target,
