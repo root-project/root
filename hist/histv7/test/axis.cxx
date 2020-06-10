@@ -929,7 +929,8 @@ TEST(AxisTest, NumericBinningCompatibility) {
       SCOPED_TRACE("Source axis is irregular");
       testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeEqBinnedIrregular);
       testEqBinnedToIrregular(makeEqBinnedIrregular);
-      // FIXME: Tests which are specific to the irr<-irr scenario
+      // NOTE: There are Irr<-Irr specific scenarios, but I did not find one
+      //       which is _qualitatively_ different from the Irr<->EqBinned ones
     }
   }
 
