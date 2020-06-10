@@ -126,18 +126,18 @@ static T ParallelReduceHelper(const std::vector<T> &objs, const std::function<T(
 
 namespace ROOT {
 
-   //////////////////////////////////////////////////////////////////////////
-   /// Class constructor.
-   /// If the scheduler is active (e.g. because another TThreadExecutor is in flight, or ROOT::EnableImplicitMT() was
-   /// called), work with the current pool of threads.
-   /// If not, initialize the pool of threads, spawning nThreads. nThreads' default value, 0, initializes the
-   /// pool with as many logical threads as are available in the system (see NLogicalCores in RTaskArenaWrapper.cxx).
-   ///
-   /// At construction time, TThreadExecutor automatically enables ROOT's thread-safety locks as per calling
-   /// ROOT::EnableThreadSafety().
-   TThreadExecutor::TThreadExecutor(UInt_t nThreads)
-   {
-      fTaskArenaW = ROOT::Internal::GetGlobalTaskArena(nThreads);
+//////////////////////////////////////////////////////////////////////////
+/// Class constructor.
+/// If the scheduler is active (e.g. because another TThreadExecutor is in flight, or ROOT::EnableImplicitMT() was
+/// called), work with the current pool of threads.
+/// If not, initialize the pool of threads, spawning nThreads. nThreads' default value, 0, initializes the
+/// pool with as many logical threads as are available in the system (see NLogicalCores in RTaskArenaWrapper.cxx).
+///
+/// At construction time, TThreadExecutor automatically enables ROOT's thread-safety locks as per calling
+/// ROOT::EnableThreadSafety().
+TThreadExecutor::TThreadExecutor(UInt_t nThreads)
+{
+   fTaskArenaW = ROOT::Internal::GetGlobalTaskArena(nThreads);
    }
 
    void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step, const std::function<void(unsigned int i)> &f)
@@ -151,20 +151,16 @@ namespace ROOT {
 
    double TThreadExecutor::ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc)
    {
-      return fTaskArenaW->Access().execute([&]{
-               return ROOT::Internal::ParallelReduceHelper<double>(objs, redfunc);
-      });
+      return fTaskArenaW->Access().execute([&] { return ROOT::Internal::ParallelReduceHelper<double>(objs, redfunc); });
    }
 
    float TThreadExecutor::ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc)
    {
-      return fTaskArenaW->Access().execute([&]{
-               return ROOT::Internal::ParallelReduceHelper<float>(objs, redfunc);
-      });
+      return fTaskArenaW->Access().execute([&] { return ROOT::Internal::ParallelReduceHelper<float>(objs, redfunc); });
    }
 
    unsigned TThreadExecutor::GetPoolSize(){
-      return  fTaskArenaW->TaskArenaSize();
+      return fTaskArenaW->TaskArenaSize();
    }
 
 }
