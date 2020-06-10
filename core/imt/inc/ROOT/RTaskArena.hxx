@@ -63,11 +63,12 @@ int LogicalCPUBandwithControl();
 ////////////////////////////////////////////////////////////////////////////////
 class RTaskArenaWrapper {
 public:
-   RTaskArenaWrapper(unsigned maxConcurrency = 0);
    ~RTaskArenaWrapper(); // necessary to set size back to zero
    static unsigned TaskArenaSize(); // A static getter lets us check for RTaskArenaWrapper's existence
    tbb::task_arena &Access();
 private:
+   RTaskArenaWrapper(unsigned maxConcurrency = 0);
+   friend std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency);
    std::unique_ptr<tbb::task_arena> fTBBArena;
    static unsigned fNWorkers;
 };
