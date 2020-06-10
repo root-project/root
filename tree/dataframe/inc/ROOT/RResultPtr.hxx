@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  03/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,6 +12,7 @@
 #define ROOT_RRESULTPTR
 
 #include "ROOT/RDF/RActionBase.hxx"
+#include "RtypesCore.h"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "TError.h" // Warning
@@ -24,16 +25,15 @@ namespace Internal {
 namespace RDF {
 class GraphCreatorHelper;
 }
-}
-}
+} // namespace Internal
+} // namespace ROOT
 
 namespace ROOT {
 namespace RDF {
 // Fwd decl for MakeResultPtr
 template <typename T>
 class RResultPtr;
-
-} // ns RDF
+} // namespace RDF
 
 namespace Detail {
 namespace RDF {
@@ -42,8 +42,15 @@ using ROOT::RDF::RResultPtr;
 template <typename T>
 RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &df,
                             std::shared_ptr<ROOT::Internal::RDF::RActionBase> actionPtr);
-} // ns RDF
-} // ns Detail
+
+// Fwd decl for GetMergeableValue
+template <typename T>
+class RMergeableValue;
+
+template <typename T>
+std::unique_ptr<RMergeableValue<T>> GetMergeableValue(RResultPtr<T> &rptr);
+} // namespace RDF
+} // namespace Detail
 namespace RDF {
 namespace RDFInternal = ROOT::Internal::RDF;
 namespace RDFDetail = ROOT::Detail::RDF;
@@ -92,6 +99,7 @@ class RResultPtr {
    friend bool operator!=(const RResultPtr<T1> &lhs, std::nullptr_t rhs);
    template <class T1>
    friend bool operator!=(std::nullptr_t lhs, const RResultPtr<T1> &rhs);
+   friend std::unique_ptr<RDFDetail::RMergeableValue<T>> RDFDetail::GetMergeableValue<T>(RResultPtr<T> &rptr);
 
    friend class ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper;
 
@@ -148,7 +156,7 @@ public:
    RResultPtr &operator=(const RResultPtr &) = default;
    RResultPtr &operator=(RResultPtr &&) = default;
    explicit operator bool() const { return bool(fObjPtr); }
-   template<typename TO,  typename std::enable_if<std::is_convertible<T, TO>::value, int>::type = 0  >
+   template <typename TO, typename std::enable_if<std::is_convertible<T, TO>::value, int>::type = 0>
    operator RResultPtr<TO>() const
    {
       RResultPtr<TO> rp;
@@ -335,7 +343,7 @@ bool operator!=(std::nullptr_t lhs, const RResultPtr<T1> &rhs)
    return lhs != rhs.fObjPtr;
 }
 
-} // end NS RDF
+} // namespace RDF
 
 namespace Detail {
 namespace RDF {
@@ -347,8 +355,38 @@ MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &lm, std::shared_ptr<RDF
 {
    return RResultPtr<T>(r, &lm, std::move(actionPtr));
 }
-} // end NS RDF
-} // end NS Detail
-} // end NS ROOT
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Retrieve a mergeable value from an RDataFrame action.
+/// \param[in] rptr lvalue reference of an RResultPtr object.
+/// \returns An RMergeableValue holding the result of the action, wrapped in an
+///          `std::unique_ptr`.
+///
+/// This function triggers the execution of the RDataFrame computation graph.
+/// Then retrieves an RMergeableValue object created with the result wrapped by
+/// the RResultPtr argument. The user obtains ownership of the mergeable, which
+/// in turn holds a copy of the result of the action. The RResultPtr is not
+/// destroyed in the process and will still retain (shared) ownership of the
+/// original result.
+///
+/// Example usage:
+/// ~~~{.cpp}
+/// using namespace ROOT::Detail::RDF;
+/// ROOT::RDataFrame d("myTree", "file_*.root");
+/// auto h = d.Histo1D("Branch_A");
+/// auto mergeablehisto = GetMergeableValue(h);
+/// ~~~
+template <typename T>
+std::unique_ptr<RMergeableValue<T>> GetMergeableValue(RResultPtr<T> &rptr)
+{
+
+   if (!rptr.fActionPtr->HasRun())
+      rptr.TriggerRun(); // Prevents from using `const` specifier in parameter
+   return std::unique_ptr<RMergeableValue<T>>{
+      static_cast<RMergeableValue<T> *>(rptr.fActionPtr->GetMergeableValue().release())};
+}
+} // namespace RDF
+} // namespace Detail
+} // namespace ROOT
 
 #endif // ROOT_TRESULTPROXY

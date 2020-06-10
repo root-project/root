@@ -64,6 +64,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RJittedFilter.hxx
     ROOT/RDF/RLazyDSImpl.hxx
     ROOT/RDF/RLoopManager.hxx
+    ROOT/RDF/RMergeableValue.hxx
     ROOT/RDF/RNodeBase.hxx
     ROOT/RDF/RRangeBase.hxx
     ROOT/RDF/RRange.hxx

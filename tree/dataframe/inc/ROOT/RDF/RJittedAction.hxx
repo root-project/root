@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  09/2018
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,6 +18,14 @@
 #include <memory>
 
 class TTreeReader;
+
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RMergeableValueBase;
+} // namespace RDF
+} // namespace Detail
+} // namespace ROOT
 
 namespace ROOT {
 namespace Internal {
@@ -50,6 +58,9 @@ public:
    void ClearValueReaders(unsigned int slot) final;
 
    std::shared_ptr<GraphDrawing::GraphNode> GetGraph();
+
+   // Helper for RMergeableValue
+   std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> GetMergeableValue() const final;
 };
 
 } // ns RDF
