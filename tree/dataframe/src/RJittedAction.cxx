@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  09/2018
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,6 +11,8 @@
 #include "ROOT/RDF/RBookedCustomColumns.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RJittedAction.hxx"
+// Avoid error: invalid application of ‘sizeof’ to incomplete type in RJittedAction::GetMergeableValue
+#include "ROOT/RDF/RMergeableValue.hxx"
 #include "TError.h"
 
 using ROOT::Internal::RDF::RJittedAction;
@@ -86,4 +88,14 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::Get
 {
    R__ASSERT(fConcreteAction != nullptr);
    return fConcreteAction->GetGraph();
+}
+
+/**
+   Retrieve a wrapper to the result of the action that knows how to merge
+   with others of the same type.
+*/
+std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> RJittedAction::GetMergeableValue() const
+{
+   R__ASSERT(fConcreteAction != nullptr);
+   return fConcreteAction->GetMergeableValue();
 }
