@@ -123,7 +123,7 @@ public:
   // Plot the distribution of a real valued arg
   virtual Roo1DTable* table(const RooArgSet& catSet, const char* cuts="", const char* opts="") const ;
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
-  /// Calls RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const ;
+  /// \see RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const
   virtual RooPlot* plotOn(RooPlot* frame, 
 			  const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
 			  const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),

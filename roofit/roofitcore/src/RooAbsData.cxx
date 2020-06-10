@@ -1558,10 +1558,13 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Plot dataset on specified frame. By default an unbinned dataset will use the default binning of
-/// the target frame. A binned dataset will by default retain its intrinsic binning.
+/// Plot dataset on specified frame.
 ///
-/// The following optional named arguments can be used to modify the default behavior
+/// By default:
+/// - An unbinned dataset will use the default binning of the target frame.
+/// - A binned dataset will retain its intrinsic binning.
+///
+/// The following optional named arguments can be used to modify the behaviour:
 ///
 /// <table>
 /// <tr><th> <th> Data representation options
@@ -1571,7 +1574,7 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
 /// <tr><td> `DataError(RooAbsData::EType)`   <td> Select the type of error drawn:
 ///    - `Auto(default)` results in Poisson for unweighted data and SumW2 for weighted data
 ///    - `Poisson` draws asymmetric Poisson confidence intervals.
-///    - `SumW2` draws symmetric sum-of-weights error ( sum(w)^2/sum(w^2) )
+///    - `SumW2` draws symmetric sum-of-weights error ( \f$ \left( \sum w \right)^2 / \sum\left(w^2\right) \f$ )
 ///    - `None` draws no error bars
 /// <tr><td> `Binning(int nbins, double xlo, double xhi)`   <td> Use specified binning to draw dataset
 /// <tr><td> `Binning(const RooAbsBinning&)`   <td>  Use specified binning to draw dataset
@@ -1736,13 +1739,13 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
 /// The frame variable must be one of the data sets dimensions.
 ///
 /// The plot range and the number of plot bins is determined by the parameters
-/// of the plot variable of the frame (RooAbsReal::setPlotRange(), RooAbsReal::setPlotBins())
+/// of the plot variable of the frame (RooAbsReal::setPlotRange(), RooAbsReal::setPlotBins()).
 ///
 /// The optional cut string expression can be used to select the events to be plotted.
-/// The cut specification may refer to any variable contained in the data set
+/// The cut specification may refer to any variable contained in the data set.
 ///
-/// The drawOptions are passed to the TH1::Draw() method
-
+/// The drawOptions are passed to the TH1::Draw() method.
+/// \see RooAbsData::plotOn(RooPlot*,const RooLinkedList&) const
 RooPlot *RooAbsData::plotOn(RooPlot *frame, PlotOpt o) const
 {
   if(0 == frame) {
