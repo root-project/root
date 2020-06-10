@@ -608,15 +608,54 @@ Released on April 1, 2020
 
 ### Bugs and Issues fixed in this release
 
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9556'>ROOT-9556</a>] -         [DF] Users might silently get wrong results when they process two trees as friends, one of which has been produced by a multi-thread Snapshot of the other
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10624'>ROOT-10624</a>] -         [Graphics][JSROOT] Broken histogram fill color with `%jsroot` on
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10630'>ROOT-10630</a>] -         Failed to run python code: `copy_string=history.history.keys()[0]`
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10631'>ROOT-10631</a>] -         Glew includes are not properly found on Mac OS X Catalina
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10647'>ROOT-10647</a>] -         Missing implementation of "section" in `RooArgSet::writeToStream`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9556'>ROOT-9556</a>] - [DF] Users might silently get wrong results when they process two trees as friends, one of which has been produced by a multi-thread Snapshot of the other
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10624'>ROOT-10624</a>] - [Graphics][JSROOT] Broken histogram fill color with `%jsroot` on
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10630'>ROOT-10630</a>] - Failed to run python code: `copy_string=history.history.keys()[0]`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10631'>ROOT-10631</a>] - Glew includes are not properly found on Mac OS X Catalina
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10647'>ROOT-10647</a>] - Missing implementation of "section" in `RooArgSet::writeToStream`
 * Fix build configuration for CUDA in non-standard directory.
+
+
+## Release 6.20/06
+
+Released on June 10, 2020
+
+### Bugs and Issues fixed in this release
+
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-7435'>ROOT-7435</a>] - Histogram titles with latex appear tiny in `TCanvas` if `gROOT.IsBatch()` is `True`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-7986'>ROOT-7986</a>] - Severe memory leak reading `RooFitResult` and `HypoTestInverterResult` from disk
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9535'>ROOT-9535</a>] - Unexpected crash when cloning `TH2` histogram
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10178'>ROOT-10178</a>] - `TTreeProcessorMT` can't deal with trees with different names in the same `TChain`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10209'>ROOT-10209</a>] - ROOT 6.18/00 does not compile with CUDA available in C++17 mode
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10626'>ROOT-10626</a>] - Build Fails when python3-numpy not present (Fedora 31)
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10648'>ROOT-10648</a>] - Occasional streamer type mismatch in multi-thread `TTree` writing
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10658'>ROOT-10658</a>] - wrong `-I` flags provided for dictionary compilation
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10663'>ROOT-10663</a>] - ROOT dictionary for ATLAS persistent class can't load correctly
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10668'>ROOT-10668</a>] - RooFit with Asymptotically Correct approach will segfault if `RooRealVar` Name != Title
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10670'>ROOT-10670</a>] - `hesse` does not know which minimizer to use
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10673'>ROOT-10673</a>] - `TPad::logX` broken for histograms with Sumw2 errors
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10676'>ROOT-10676</a>] - Constructing a `RooDataSet` from `TTree` with cuts causes warnings
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10682'>ROOT-10682</a>] - Some histograms with custom axes and error bars not displayed on log-log canvas
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10696'>ROOT-10696</a>] - `TDirectory::GetObject()` with wrong type leaks memory
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10712'>ROOT-10712</a>] - Failing template instantiation during tear down.
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10719'>ROOT-10719</a>] - Some `TH1`-s Display Incorrectly in root 6.20.04
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10725'>ROOT-10725</a>] - cmake fails to detect python's "Development" component
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10732'>ROOT-10732</a>] - hadd broken
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10734'>ROOT-10734</a>] - pymva tutorials not disable when pymva not available
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10754'>ROOT-10754</a>] - [cling] Miscompilation with `make_shared`/`shared_ptr`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10766'>ROOT-10766</a>] - Missing overload in LHCb's `FuncOps__::__le__`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10774'>ROOT-10774</a>] - rootbrowse freezes after startup
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10777'>ROOT-10777</a>] - Cannot py-import Gaudi: assert "partial specialization scope specifier in SFINAE context"
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10784'>ROOT-10784</a>] - Mistake in what is reported in documentation
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10792'>ROOT-10792</a>] - [DF] Snapshot of `TClonesArrays` read via `TTreeReaderArray` is broken
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10798'>ROOT-10798</a>] - ROOT 6.20/02 can't generate a dictionary for ATLAS's EventLoop package
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10804'>ROOT-10804</a>] - assertion in `clang::Sema::LookupSpecialMember`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10810'>ROOT-10810</a>] - Segmentation fault in pickling of weighted RooFit datasets 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10822'>ROOT-10822</a>] - [DF] `RVec`s of non-split branches can read from invalid addresses
+
 
 ## HEAD of the v6-20-00-patches branch
 
-These changes will be part of a future 6.20/04.
+These changes will be part of a future 6.20/08.
 
 * None so far.
