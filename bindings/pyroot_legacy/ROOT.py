@@ -20,7 +20,15 @@ __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
 ### system and interpreter setup ------------------------------------------------
-import os, sys, types
+import os, subprocess, sys, types
+
+_libdir = subprocess.check_output(['root-config', '--libdir']).decode().strip()
+
+if os.path.exists(_libdir):
+   sys.path.append(_libdir)
+
+del _libdir
+
 import cppyy
 
 ## there's no version_info in 1.5.2
