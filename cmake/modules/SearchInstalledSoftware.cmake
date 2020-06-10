@@ -1130,8 +1130,8 @@ if(imt AND NOT builtin_tbb)
 endif()
 
 if(builtin_tbb)
-  set(tbb_builtin_version 2019_U9)
-  set(tbb_sha256 15652f5328cf00c576f065e5cd3eaf3317422fe82afb67a9bcec0dc065bd2abe)
+  set(tbb_builtin_version 2020_U1)
+  set(tbb_sha256 48d51c63b16787af54e1ee4aaf30042087f20564b4eecf9a032d5568bc2f0bf8)
   if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
     set(_tbb_compiler compiler=clang)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
@@ -1144,7 +1144,7 @@ if(builtin_tbb)
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
     ExternalProject_Add(
       TBB
-      URL ${lcgpackages}/tbb-${tbb_builtin_version}.tar.gz
+      URL ${lcgpackages}/tbb${tbb_builtin_version}.tar.gz
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
@@ -1176,7 +1176,7 @@ if(builtin_tbb)
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       TBB
-      URL ${lcgpackages}/tbb-${tbb_builtin_version}.tar.gz
+      URL ${lcgpackages}/tbb${tbb_builtin_version}.tar.gz
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       PATCH_COMMAND sed -i -e "/clang -v/s@-v@--version@" build/macos.inc
