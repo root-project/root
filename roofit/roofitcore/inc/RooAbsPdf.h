@@ -219,9 +219,9 @@ public:
 
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
+  /// Shows if a PDF is self-normalized, which means that no attempt is made to add a normalization term.
+  /// Always returns false, unless a PDF overrides this function.
   virtual Bool_t selfNormalized() const { 
-    // If true, p.d.f is taken as self-normalized and no attempt is made to add a normalization term
-    // This default implementation return false
     return kFALSE ; 
   }
 

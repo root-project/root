@@ -1606,13 +1606,13 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot (project) PDF on specified frame. If a PDF is plotted in an empty frame, it
 /// will show a unit normalized curve in the frame variable, taken at the present value
-/// of other observables defined for this PDF
+/// of other observables defined for this PDF.
 ///
 /// If a PDF is plotted in a frame in which a dataset has already been plotted, it will
 /// show a projected curve integrated over all variables that were present in the shown
 /// dataset except for the one on the x-axis. The normalization of the curve will also
 /// be adjusted to the event count of the plotted dataset. An informational message
-/// will be printed for each projection step that is performed
+/// will be printed for each projection step that is performed.
 ///
 /// This function takes the following named arguments
 /// <table>
@@ -1628,7 +1628,7 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 ///                                    in multiple observables
 ///
 /// <tr><td> `Project(const RooArgSet& set)`   <td> Override default projection behaviour by projecting over observables
-///                                    given in set and complete ignoring the default projection behavior. Advanced use only.
+///                                    given in the set, ignoring the default projection behavior. Advanced use only.
 ///
 /// <tr><td> `ProjWData(const RooAbsData& d)`  <td> Override default projection _technique_ (integration). For observables present in given dataset
 ///                                    projection of PDF is achieved by constructing an average over all observable values in given set.
@@ -1647,7 +1647,7 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 ///                                    value suppress output completely, a zero value will only print the error count per p.d.f component,
 ///                                    a positive value is will print details of each error up to numErr messages per p.d.f component.
 ///
-/// <tr><td> `EvalErrorValue(Double_t value)`  <td> Set curve points at which (pdf) evaluation error occur to specified value. By default the
+/// <tr><td> `EvalErrorValue(Double_t value)`  <td> Set curve points at which (pdf) evaluation errors occur to specified value. By default the
 ///                                    function value is plotted.
 ///
 /// <tr><td> `Normalization(Double_t scale, ScaleType code)`   <td> Adjust normalization by given scale factor. Interpretation of number depends on code:

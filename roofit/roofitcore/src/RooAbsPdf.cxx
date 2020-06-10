@@ -2696,17 +2696,18 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Plot (project) PDF on specified frame.
 /// - If a PDF is plotted in an empty frame, it
-/// will show a unit-normalized curve in the frame variable. When projecting, other
-/// parameters are taken at their current value.
+/// will show a unit-normalized curve in the frame variable. When projecting a multi-
+/// dimensional PDF onto the frame axis, hidden parameters are taken are taken at
+/// their current value.
 /// - If a PDF is plotted in a frame in which a dataset has already been plotted, it will
 /// show a projection integrated over all variables that were present in the shown
 /// dataset (except for the one on the x-axis). The normalization of the curve will
 /// be adjusted to the event count of the plotted dataset. An informational message
 /// will be printed for each projection step that is performed.
-/// - If a PDF is plotted in a frame with showing a dataset *after* a fit, the above happens,
-/// but if the fit was carried out in a sub range of what is shown, the PDF will be drawn and
-/// normalised only in the fit range. If this is not desired, plotting and normalisation range
-/// can be overridden using Range() and NormRange() as documented in the table.
+/// - If a PDF is plotted in a frame showing a dataset *after* a fit, the above happens,
+/// but the PDF will be drawn and normalised only in the fit range. If this is not desired,
+/// plotting and normalisation range can be overridden using Range() and NormRange() as
+/// documented in the table below.
 ///
 /// This function takes the following named arguments (for more arguments, see also
 /// RooAbsReal::plotOn(RooPlot*,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,
@@ -2743,8 +2744,8 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 ///
 /// <tr><th> Type of argument                 <th> Projection control
 /// <tr><td> `Slice(const RooArgSet& set)`      <td>  Override default projection behaviour by omitting
-///               observables listed in set from the projection, resulting a 'slice' plot. Slicing is usually
-///               only sensible in discrete observables
+///               observables listed in set from the projection, resulting in a 'slice' plot. Slicing is mostly
+///               needed in discrete observables such as categories.
 /// <tr><td> `Project(const RooArgSet& set)`    <td>  Override default projection behaviour by projecting
 ///               over observables given in set and complete ignoring the default projection behavior. Advanced use only.
 /// <tr><td> `ProjWData(const RooAbsData& d)`   <td>  Override default projection _technique_ (integration). For observables
@@ -2752,8 +2753,10 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 ///               values in given set. Consult RooFit plotting tutorial for further explanation of meaning & use of this technique
 /// <tr><td> `ProjWData(const RooArgSet& s, const RooAbsData& d)`   <td>  As above but only consider subset 's' of
 ///               observables in dataset 'd' for projection through data averaging
-/// <tr><td> `ProjectionRange(const char* rn)`  <td>  Override default range of projection integrals to a different
-///               range specified by given range name. This technique allows you to project a finite width slice in a real-valued observable
+/// <tr><td> `ProjectionRange(const char* rn)`  <td>  When projecting the PDF onto the plot axis, it is usually integrated
+///               over the full range of the invisible variables. The ProjectionRange overrides this.
+///               This is useful if the PDF was fitted in a limited range in y, but it is now projected onto x. If
+///               `ProjectionRange("<name of fit range>")` is passed, the projection is normalised correctly.
 ///
 /// <tr><th> Type of argument <th> Plotting control
 /// <tr><td> `LineStyle(Int_t style)`           <td>  Select line style by ROOT line style code, default is solid

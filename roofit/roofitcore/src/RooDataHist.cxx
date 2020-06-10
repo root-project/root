@@ -953,7 +953,12 @@ RooDataHist::~RooDataHist()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Calculate bin number of the given coordinates. If only a subset of the internal
+/// coordinates are passed, the missing coordinates are taken at their current value.
+/// \param[in] coord Variables that are representing the coordinates.
+/// \param[in] fast If the variables in `coord` and the ones of the data hist have the
+/// same size and layout, see RooAbsCollection::hasSameLayout(), fast can be set to skip
+/// checking that all variables are present in `coord`.
 Int_t RooDataHist::getIndex(const RooArgSet& coord, Bool_t fast)
 {
   checkInit() ;
@@ -1004,7 +1009,7 @@ void RooDataHist::dump2()
 /// frame in mode specified by plot options 'o'. The main purpose of
 /// this function is to match the specified binning on 'o' to the
 /// internal binning of the plot observable in this RooDataHist.
-
+/// \see RooAbsData::plotOn() for plotting options.
 RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const 
 {
   checkInit() ;

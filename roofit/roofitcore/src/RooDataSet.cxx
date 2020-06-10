@@ -19,10 +19,31 @@
 \class RooDataSet
 \ingroup Roofitcore
 
-RooDataSet is a container class to hold unbinned data. Each data point
-in N-dimensional space is represented by a RooArgSet of RooRealVar, RooCategory 
-or RooStringVar objects.
+RooDataSet is a container class to hold unbinned data. The binned equivalent is
+RooDataHist. In RooDataSet, each data point in N-dimensional space is represented
+by a RooArgSet of RooRealVar, RooCategory or RooStringVar objects, which can be
+retrieved using get().
 
+Since RooDataSet saves every event, it allows for fits with highest precision. With a large
+amount of data, however, it could be beneficial to represent them in binned form,
+i.e., RooDataHist. Binning the data will incur a loss of information, though.
+RooDataHist on the other hand may suffer from the curse of dimensionality if a high-dimensional
+problem with a lot of bins on each axis is tackled.
+
+### Inspecting a dataset
+Inspect a dataset using Print() with the "verbose" option:
+```
+dataset->Print("V");
+dataset->get(0)->Print("V");
+dataset->get(1)->Print("V");
+...
+```
+
+### Plotting data.
+See RooAbsData::plotOn().
+
+
+### Storage strategy
 There are two storage backends:
 - RooVectorDataStore (default): std::vectors in memory. They are fast, but they
 cannot be serialised if the dataset exceeds a size of 1 Gb
@@ -1501,7 +1522,10 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Special plot method for 'X-Y' datasets used in \f$ \chi^2 \f$ fitting. These datasets
+/// Special plot method for 'X-Y' datasets used in \f$ \chi^2 \f$ fitting.
+/// For general plotting, see RooAbsData::plotOn().
+///
+/// These datasets
 /// have one observable (X) and have weights (Y) and associated errors.
 /// <table>
 /// <tr><th> Contents options       <th> Effect
