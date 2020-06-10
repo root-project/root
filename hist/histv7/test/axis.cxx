@@ -669,22 +669,29 @@ TEST(AxisTest, NumericBinningCompatibility) {
       EXPECT_EQ(target.CheckBinningCompat(source), BinningCompat(expected));
     };
 
-  // Syntaxically lightweight alternative to templates for code which doesn't
-  // care whether an equidistant axis is growable or not.
+  // Make an equidistantly binned axis using various RAxis types
   const auto makeEquidistant = [](int numBins, float min, float max) {
     return RAxisEquidistant(numBins, min, max);
   };
   const auto makeGrowable = [](int numBins, float min, float max) {
     return RAxisGrow(numBins, min, max);
   };
+  const auto makeEqBinnedIrregular = [](int numBins, float min, float max) {
+    std::vector<double> binBorders(numBins+1);
+    for (int i = 0; i <= numBins; ++i) {
+      binBorders[i] = min + static_cast<double>(i) / numBins * (max - min);
+    }
+    return RAxisIrregular(std::move(binBorders));
+  };
 
+  // Test compatibility when merging into an equidistant axis
   {
     SCOPED_TRACE("Target axis is equidistant");
     const RAxisEquidistant target(6, 1.2, 4.2);  // Bin width: 0.5
 
-    // Deduplicated test for fixed-sized and growable equidistant sources
-    const auto testEqOrGrowSource = [&](const auto& makeSource)
-    {
+    // Deduplicated test for any source axis type (i.e. restricted to
+    // equidistant binning scenarios)
+    const auto testEqBinnedSource = [&](const auto& makeSource) {
       const bool fixedSource = !(makeSource(6, 1.2, 4.2).CanGrow());
       {
         SCOPED_TRACE("Source axis has the same binning");
@@ -767,48 +774,16 @@ TEST(AxisTest, NumericBinningCompatibility) {
     };
     {
       SCOPED_TRACE("Source axis is equidistant");
-      testEqOrGrowSource(makeEquidistant);
+      testEqBinnedSource(makeEquidistant);
     }
     {
       SCOPED_TRACE("Source axis is growable");
-      testEqOrGrowSource(makeGrowable);
+      testEqBinnedSource(makeGrowable);
     }
-
     {
       SCOPED_TRACE("Source axis is irregular");
-     {
-        SCOPED_TRACE("Source axis has the same binning");
-        checkNumericCompat(target,
-                           RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                           CompatFlags::kTrivialRegularBinMapping
-                           + CompatFlags::kRegularBinBijection
-                           + CompatFlags::kFullBinBijection);
-      }
-      {
-        SCOPED_TRACE("Source axis has one more bin on the left");
-        checkNumericCompat(target,
-                           RAxisIrregular({0.4, 1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                           CompatFlags::kMergingIsLossy);
-      }
-      {
-        SCOPED_TRACE("Source axis has one more bin on the right");
-        checkNumericCompat(target,
-                           RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2, 5.9}),
-                           CompatFlags::kMergingIsLossy);
-      }
-      {
-        SCOPED_TRACE("Source axis has one less bin on the left");
-        checkNumericCompat(target,
-                           RAxisIrregular({1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                           CompatFlags::kNeedEmptyUnderflow);
-      }
-      {
-        SCOPED_TRACE("Source axis has one less bin on the right");
-        checkNumericCompat(target,
-                           RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7}),
-                           CompatFlags::kTrivialRegularBinMapping
-                           + CompatFlags::kNeedEmptyOverflow);
-      }
+      testEqBinnedSource(makeEqBinnedIrregular);
+      // Extra scenarios enabled by irregular binning
       {
         SCOPED_TRACE("First source border is shifted forward");
         checkNumericCompat(target,
@@ -867,12 +842,12 @@ TEST(AxisTest, NumericBinningCompatibility) {
   }
 
   // TODO: Grow<-Eq
-  // TODO: Grow<-Irr
   // TODO: Grow<-Grow
+  // TODO: Grow<-Irr
   // TODO: Consider deduplicating Eq<-Xyz and Grow<-Xyz?
   // TODO: Irr<-Eq
-  // TODO: Irr<-Irr
   // TODO: Irr<-Grow
+  // TODO: Irr<-Irr
 }
 
 TEST(AxisTest, ReverseBinLimits) {
