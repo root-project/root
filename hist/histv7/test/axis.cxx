@@ -458,7 +458,7 @@ TEST(AxisTest, Irregular) {
 
 // Test that an RAxisLabels has the expected properties
 //
-// This function was extracted from the Labels test to reduce nesting. It
+// This function was extracted from the Labels test to reduce lambda nesting. It
 // assumes that the input axis was constructed as RAxisLabels(expected_title,
 // labels), and received some number of operations that may have inserted new
 // labels from that point, ultimately leading to the expected_labels set.
@@ -800,6 +800,18 @@ TEST(AxisTest, NumericBinningCompatibility) {
       // Extra scenarios enabled by irregular source axis binning
       const RAxisEquidistant target(6, 1.2, 4.2);
       {
+        SCOPED_TRACE("Source axis has an extra inner bin border");
+        checkNumericCompat(target,
+                           RAxisIrregular({1.2, 1.4, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                           CompatFlags::kMergingIsLossy);
+      }
+      {
+        SCOPED_TRACE("Source axis has one less inner bin border");
+        checkNumericCompat(target,
+                           RAxisIrregular({1.2, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                           CompatFlags::kRegularBinAliasing);
+      }
+      {
         SCOPED_TRACE("First source border is shifted forward");
         checkNumericCompat(target,
                            RAxisIrregular({1.3, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
@@ -872,6 +884,18 @@ TEST(AxisTest, NumericBinningCompatibility) {
         const auto source = makeSource(6, 1.2, 4.2);
         const bool fixedSource = !source.CanGrow();
         {
+          SCOPED_TRACE("Target axis has an extra inner bin border");
+          checkNumericCompat(RAxisIrregular({1.2, 1.4, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                             source,
+                             CompatFlags::kRegularBinAliasing);
+        }
+        {
+          SCOPED_TRACE("Target axis has one less inner bin border");
+          checkNumericCompat(RAxisIrregular({1.2, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                             source,
+                             CompatFlags::kMergingIsLossy);
+        }
+        {
           SCOPED_TRACE("First target border is shifted forward");
           checkNumericCompat(RAxisIrregular({1.3, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
                              source,
@@ -941,7 +965,7 @@ TEST(AxisTest, NumericBinningCompatibility) {
       SCOPED_TRACE("Source axis is irregular");
       testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeEqBinnedIrregular);
       testEqBinnedToIrregular(makeEqBinnedIrregular);
-      // NOTE: There are Irr<-Irr specific scenarios, but I did not find one
+      // NOTE: There are Irr<->Irr specific scenarios, but I did not find one
       //       which is _qualitatively_ different from the Irr<->EqBinned ones.
       //       Please add some here as needed.
     }
