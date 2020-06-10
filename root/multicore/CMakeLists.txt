@@ -76,14 +76,6 @@ if(ROOT_imt_FOUND)
   ROOTTEST_ADD_TEST(threadExecutor
                     EXEC ${CMAKE_CURRENT_BINARY_DIR}/threadExecutor
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
-  if(NOT TBB_LIBRARIES)
-    set(TBB_LIBRARIES tbb)
-  endif()
-
-  ROOTTEST_GENERATE_EXECUTABLE(poolManager testPoolManager.cpp LIBRARIES Core Imt ${TBB_LIBRARIES})
-  ROOTTEST_ADD_TEST(poolManager
-                    EXEC ${CMAKE_CURRENT_BINARY_DIR}/poolManager
-                    DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
 
 ROOTTEST_GENERATE_EXECUTABLE(current_dir current_dir.cpp LIBRARIES Core RIO Thread)
