@@ -662,8 +662,8 @@ TEST(AxisTest, NumericBinningCompatibility) {
   using CompatFlags = NumericCompat::Flags;
 
   // Check numerix axis binning compatibility with minimal boilerplate
-  const auto checkNumericCompat = [](const auto& target,
-                                     const auto& source,
+  const auto checkNumericCompat = [](const RAxisBase& target,
+                                     const RAxisBase& source,
                                      int expectedCompatFlags) {
       const NumericCompat expected{CompatFlags(expectedCompatFlags)};
       EXPECT_EQ(target.CheckBinningCompat(source), BinningCompat(expected));
