@@ -15,6 +15,7 @@
  *************************************************************************/
 
 #include "ROOTUnitTestSupport.h"
+#include <ROOT/RConfig.hxx>
 
 #include "TTabCom.h"
 
@@ -25,7 +26,7 @@ TEST(TTabComTests, Sanity)
    ASSERT_FALSE(gTabCom);
 }
 
-static std::string SortCompletions(std::string result)
+static std::string SortCompletions(std::string result, std::set<std::string> ignore)
 {
    std::replace(result.begin(), result.end(), '\n', ' ');
    std::istringstream iss(result);
@@ -34,6 +35,8 @@ static std::string SortCompletions(std::string result)
    std::sort(completions.begin(), completions.end());
    result = "";
    for (size_t i = 0, e = completions.size(); i < e; ++i) {
+      if (ignore.count(completions[i]))
+         continue;
       result += completions[i];
       if (i != e-1)
          result += ' ';
@@ -42,7 +45,7 @@ static std::string SortCompletions(std::string result)
    return result;
 }
 
-static std::string GetCompletions(const std::string& pattern)
+static std::string GetCompletions(const std::string& pattern, std::set<std::string> ignore = {})
 {
    static auto ttc = new TTabCom;
    const size_t lineBufSize = 2*1024;  // must be equal to/larger than BUF_SIZE in TTabCom.cxx
@@ -52,14 +55,47 @@ static std::string GetCompletions(const std::string& pattern)
    int pLoc = strlen(completed.get());
    std::ostringstream oss;
    ttc->Hook(completed.get(), &pLoc, oss);
-   return SortCompletions(oss.str());
+   return SortCompletions(oss.str(), ignore);
 }
 
-TEST(TTabComTests, Completion)
+TEST(TTabComTests, CompleteTH1)
 {
    // FIXME: The first call is unsuccessful due to a bug in the TTabCom::Hook
    // on some systems.
    GetCompletions("TH1");
+   std::string expected = "TH1 TH1C TH1D"
+#if defined(R__USE_CXXMODULES) && defined(R__HAS_DATAFRAME)
+      // FIXME: See ROOT-10989
+      " TH1DModel"
+#endif
+      " TH1Editor TH1F TH1I TH1K TH1S";
 
-   ASSERT_STREQ("TH1 TH1C TH1D TH1Editor TH1F TH1I TH1K TH1S", GetCompletions("TH1").c_str());
+   ASSERT_STREQ(expected.c_str(), GetCompletions("TH1").c_str());
+}
+
+TEST(TTabComTests, CompleteTProfile)
+{
+   std::string expected = "TProfile"
+#if defined(R__USE_CXXMODULES) && defined(R__HAS_DATAFRAME)
+      // FIXME: See ROOT-10989
+      " TProfile1DModel"
+#endif
+      " TProfile2D"
+#if defined(R__USE_CXXMODULES) && defined(R__HAS_DATAFRAME)
+      // FIXME: See ROOT-10989
+      " TProfile2DModel"
+#endif
+      " TProfile2Poly TProfile2PolyBin TProfile3D";
+
+   ASSERT_STREQ(expected.c_str(), GetCompletions("TProfile").c_str());
+}
+
+TEST(TTabComTests, CompleteTObj)
+{
+   std::string expected = "TObjArray TObjArrayIter TObjLink TObjOptLink TObjString"
+      " TObject TObjectRefSpy TObjectSpy TObjectTable";
+   // FIXME: See ROOT-10989
+   ASSERT_STREQ(expected.c_str(), GetCompletions("TObj",
+                                                 /*ignore=*/{"TObjectHolder",
+                                                             "TObjectItem"}).c_str());
 }

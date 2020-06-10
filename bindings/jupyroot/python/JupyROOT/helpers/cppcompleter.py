@@ -44,23 +44,11 @@ class CppCompleter(object):
 
     >>> comp = CppCompleter()
     >>> comp.activate()
-    >>> for suggestion in comp._completeImpl("TH1"):
+    >>> for suggestion in comp._completeImpl("TTreeF"):
     ...     print(suggestion)
-    TH1
-    TH1C
-    TH1D
-    TH1Editor
-    TH1F
-    TH1I
-    TH1K
-    TH1S
-    >>> for suggestion in comp._completeImpl("TProfile"):
-    ...     print(suggestion)
-    TProfile
-    TProfile2D
-    TProfile2Poly
-    TProfile2PolyBin
-    TProfile3D
+    TTreeFormula
+    TTreeFormulaManager
+    TTreeFriendLeafIter
     >>> garbage = ROOT.gInterpreter.ProcessLine("TH1F* h")
     >>> for suggestion in comp._completeImpl("h->GetA"):
     ...     print(suggestion)

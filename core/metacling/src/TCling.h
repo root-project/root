@@ -51,6 +51,7 @@ namespace clang {
    class DeclContext;
    class EnumDecl;
    class FunctionDecl;
+   class IdentifierIterator;
    class NamedDecl;
    class NamespaceDecl;
    class TagDecl;
@@ -245,6 +246,7 @@ public: // Public Interface
                           const char** classesHeaders,
                           Bool_t lateRegistration = false,
                           Bool_t hasCxxModule = false);
+   virtual void AddAvailableIndentifiers(TSeqCollection& Idents);
    void    RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict);
    void    UnRegisterTClassUpdate(const TClass *oldcl);
 

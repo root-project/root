@@ -1118,6 +1118,8 @@ static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling
             bool VisitNamedDecl(NamedDecl *ND) {
                if (!ND->isFromASTFile())
                   return true;
+               if (!ND->getIdentifier())
+                  return true;
 
                if (ND->getAccess() == AS_protected || ND->getAccess() == AS_private)
                   return true;
@@ -1152,6 +1154,7 @@ static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling
 
                Module *OwningModule = ND->getOwningModule()->getTopLevelModule();
                assert(OwningModule);
+               assert(!ND->getName().empty() && "Empty name");
                if (AddSingleEntry && DefinitionIDs.count(ND->getName()))
                   return;
                // FIXME: The FileEntry in not stable to serialize.
@@ -2346,6 +2349,27 @@ void TCling::RegisterModule(const char* modulename,
       dlclose(dyLibHandle);
    }
 }
+
+void TCling::AddAvailableIndentifiers(TSeqCollection& Idents) {
+   clang::CompilerInstance& CI = *GetInterpreterImpl()->getCI();
+   ASTContext &C = CI.getASTContext();
+
+   // Do not do anything if we have no global module index.
+   // FIXME: This is mostly to real with false positives in the TTabCom
+   // interface for non-modules.
+   if (!fCxxModulesEnabled)
+      return;
+
+   if (IdentifierInfoLookup *External = C.Idents.getExternalIdentifierLookup()) {
+      std::unique_ptr<IdentifierIterator> Iter(External->getIdentifiers());
+      for (llvm::StringRef Ident = Iter->Next(); !Ident.empty(); Ident = Iter->Next()) {
+         std::string I = Ident.str();
+         if (!Idents.Contains(I.data()))
+            Idents.Add(new TObjString(I.c_str()));
+      }
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register classes that already existed prior to their dictionary loading
