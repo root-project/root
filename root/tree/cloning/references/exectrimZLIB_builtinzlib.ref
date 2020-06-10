@@ -39,7 +39,7 @@ Warning in <TClass::Init>: no dictionary for class Belle2::ModuleStatistics is a
 Warning in <TClass::Init>: no dictionary for class Belle2::CalcMeanCov<2,double> is available
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :       10 : Total =            8907 bytes  File  Size =       1360 *
+*Entries :       10 : Total =            8907 bytes  File  Size =       1361 *
 *        :          : Tree compression factor =   1.25                       *
 ******************************************************************************
 *Br    0 :StrSimHits : Int_t StrSimHits_                                     *
