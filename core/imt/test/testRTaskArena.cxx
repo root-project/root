@@ -7,14 +7,11 @@
 #include "gtest/gtest.h"
 #include "tbb/task_arena.h"
 
-
 #ifdef R__USE_IMT
 
 const unsigned maxConcurrency = ROOT::Internal::LogicalCPUBandwithControl();
-std::mt19937 randGenerator(0); // seed the generator
+std::mt19937 randGenerator(0);                                      // seed the generator
 std::uniform_int_distribution<> plausibleNCores(1, maxConcurrency); // define the range
-
-
 
 TEST(RTaskArena, Size0WhenNoInstance)
 {
@@ -23,7 +20,7 @@ TEST(RTaskArena, Size0WhenNoInstance)
 
 TEST(RTaskArena, Construction)
 {
-   const unsigned nCores  = plausibleNCores(randGenerator);
+   const unsigned nCores = plausibleNCores(randGenerator);
    auto gTAInstance = ROOT::Internal::GetGlobalTaskArena(nCores);
    ASSERT_EQ(ROOT::Internal::RTaskArenaWrapper::TaskArenaSize(), nCores);
 }
@@ -52,7 +49,7 @@ TEST(RTaskArena, Reconstruction)
 
 TEST(RTaskArena, SingleInstance)
 {
-   const unsigned nCores  = plausibleNCores(randGenerator);
+   const unsigned nCores = plausibleNCores(randGenerator);
    auto gTAInstance1 = ROOT::Internal::GetGlobalTaskArena(nCores);
    auto gTAInstance2 = ROOT::Internal::GetGlobalTaskArena(plausibleNCores(randGenerator));
    ASSERT_EQ(&(*gTAInstance1), &(*gTAInstance2));
@@ -60,7 +57,7 @@ TEST(RTaskArena, SingleInstance)
 
 TEST(RTaskArena, AccessWorkingTBBtaskArena)
 {
-   const unsigned nCores  = plausibleNCores(randGenerator);
+   const unsigned nCores = plausibleNCores(randGenerator);
    auto gTAInstance = ROOT::Internal::GetGlobalTaskArena(nCores);
    auto tbbTACores = gTAInstance->Access().max_concurrency();
    ASSERT_EQ(nCores, tbbTACores);
@@ -68,7 +65,7 @@ TEST(RTaskArena, AccessWorkingTBBtaskArena)
 
 TEST(RTaskArena, KeepSize)
 {
-   const unsigned nCores  = plausibleNCores(randGenerator);
+   const unsigned nCores = plausibleNCores(randGenerator);
    auto gTAInstance1 = ROOT::Internal::GetGlobalTaskArena(nCores);
    auto gTAInstance2 = ROOT::Internal::GetGlobalTaskArena(plausibleNCores(randGenerator));
    ASSERT_EQ(ROOT::Internal::RTaskArenaWrapper::TaskArenaSize(), nCores);
@@ -87,7 +84,7 @@ TEST(RTaskArena, CorrectSizeIMT)
 
 TEST(RTaskArena, KeepSizeTThreadExecutor)
 {
-   const unsigned nCores  = plausibleNCores(randGenerator);
+   const unsigned nCores = plausibleNCores(randGenerator);
    auto gTAInstance = ROOT::Internal::GetGlobalTaskArena(nCores);
    ROOT::TThreadExecutor threadExecutor(plausibleNCores(randGenerator));
    ASSERT_EQ(ROOT::Internal::RTaskArenaWrapper::TaskArenaSize(), nCores);
@@ -134,10 +131,10 @@ TEST(RTaskArena, InterleaveAndNest)
    // Nested TThreadExecutor
    {
       ROOT::TThreadExecutor threadExecutor{};
-      auto fcn = [](){
+      auto fcn = []() {
          ROOT::TThreadExecutor te(plausibleNCores(randGenerator));
          EXPECT_EQ(ROOT::Internal::RTaskArenaWrapper::TaskArenaSize(), maxConcurrency);
-         };
+      };
       threadExecutor.Foreach(fcn, 2);
       EXPECT_EQ(ROOT::Internal::RTaskArenaWrapper::TaskArenaSize(), maxConcurrency);
    }
