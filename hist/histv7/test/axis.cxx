@@ -1158,10 +1158,73 @@ TEST(AxisTest, NumericBinningCompatibility) {
       SCOPED_TRACE("Source axis is irregular");
       testEqBinnedToGrowable(makeEqBinnedIrregular);
       testIrregularToEqBinned(makeGrowable);
-      // TODO: Test adding a new bin of various widths on the left/right side,
-      //       and shifting the left/right bin borders outwards by various
-      //       amounts. For growable axes, 0.2 vs 1 vs 1.2 vs 2 makes a
-      //       difference.
+
+      // Outcomes which are specific to the Grow<-Irr scenario
+      const RAxisGrow target(6, 1.2, 4.2);
+      {
+        SCOPED_TRACE("Creating a left source border at -0.2 bins");
+        checkNumericCompat(target,
+                           RAxisIrregular({1.1, 1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                           CompatFlags::kTrivialRegularBinMapping
+                           + CompatFlags::kRegularBinBijection
+                           + CompatFlags::kMergingIsLossy
+                           + CompatFlags::kNeedEmptyUnderflow
+                           + CompatFlags::kNeedEmptyOverflow
+                           + CompatFlags::kTargetMustGrow);
+      }
+      {
+        SCOPED_TRACE("Creating a left source border at -1.2 bin");
+        checkNumericCompat(target,
+                           RAxisIrregular({0.6, 1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                           CompatFlags::kMergingIsLossy
+                           + CompatFlags::kRegularBinAliasing
+                           + CompatFlags::kNeedEmptyUnderflow
+                           + CompatFlags::kNeedEmptyOverflow
+                           + CompatFlags::kTargetMustGrow);
+      }
+      {
+        SCOPED_TRACE("Creating a right source border at +0.2 bins");
+        checkNumericCompat(target,
+                           RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2, 4.3}),
+                           CompatFlags::kTrivialRegularBinMapping
+                           + CompatFlags::kRegularBinBijection
+                           + CompatFlags::kMergingIsLossy
+                           + CompatFlags::kNeedEmptyUnderflow
+                           + CompatFlags::kNeedEmptyOverflow
+                           + CompatFlags::kTargetMustGrow);
+      }
+      {
+        SCOPED_TRACE("Creating a right source border at +1.2 bin");
+        checkNumericCompat(target,
+                           RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2, 4.8}),
+                           CompatFlags::kTrivialRegularBinMapping
+                           + CompatFlags::kMergingIsLossy
+                           + CompatFlags::kRegularBinAliasing
+                           + CompatFlags::kNeedEmptyUnderflow
+                           + CompatFlags::kNeedEmptyOverflow
+                           + CompatFlags::kTargetMustGrow);
+      }
+      {
+        SCOPED_TRACE("Shifting the left source border by -0.2 bins");
+        checkNumericCompat(target,
+                           RAxisIrregular({1.1, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                           CompatFlags::kMergingIsLossy
+                           + CompatFlags::kRegularBinAliasing
+                           + CompatFlags::kNeedEmptyUnderflow
+                           + CompatFlags::kNeedEmptyOverflow
+                           + CompatFlags::kTargetMustGrow);
+      }
+      {
+        SCOPED_TRACE("Shifting the right source border by +0.2 bins");
+        checkNumericCompat(target,
+                           RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.3}),
+                           CompatFlags::kTrivialRegularBinMapping
+                           + CompatFlags::kMergingIsLossy
+                           + CompatFlags::kRegularBinAliasing
+                           + CompatFlags::kNeedEmptyUnderflow
+                           + CompatFlags::kNeedEmptyOverflow
+                           + CompatFlags::kTargetMustGrow);
+      }
     }
   }
 }
