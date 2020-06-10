@@ -417,7 +417,7 @@ ROOT::Experimental::RAxisGrow::CheckNumericBinningCompat(
    const bool growLeft =
       (ComparePosToBinBorder(sourceMin, GetFirstBin(), BinSide::kFrom) < 0);
    const bool growRight =
-      (ComparePosToBinBorder(sourceMin, GetLastBin(), BinSide::kTo) < 0);
+      (ComparePosToBinBorder(sourceMax, GetLastBin(), BinSide::kTo) > 0);
    const bool mustGrow = growLeft || growRight;
    if (mustGrow) {
       // Simulate axis growth on the left-hand side

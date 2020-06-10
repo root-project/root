@@ -696,91 +696,114 @@ TEST(AxisTest, NumericBinningCompatibility) {
   };
 
   // Test scenarios where an equidistantly binned axis is merged into another
+  // equidistantly binned axis, growable or not.
+  const auto testEqBinnedToEqBinned = [&](const auto& makeTarget,
+                                          const auto& makeSource) {
+    const auto target = makeTarget(6, 1.2, 4.2);
+    const bool fixedSource = !(makeSource(6, 1.2, 4.2).CanGrow());
+    const bool needEmptyUnderOver = fixedSource && target.CanGrow();
+    {
+      SCOPED_TRACE("Source axis has the same binning");
+      const auto source = makeSource(6, 1.2, 4.2);
+      const bool sameGrowability = source.CanGrow() == target.CanGrow();
+      checkNumericCompat(target,
+                         source,
+                         CompatFlags::kTrivialRegularBinMapping
+                         + CompatFlags::kRegularBinBijection
+                         + sameGrowability * CompatFlags::kFullBinBijection
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyUnderflow
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyOverflow);
+    }
+    {
+      SCOPED_TRACE("Source axis has one less bin on the left");
+      checkNumericCompat(target,
+                         makeSource(5, 1.7, 4.2),
+                         fixedSource * CompatFlags::kNeedEmptyUnderflow
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyOverflow);
+    }
+    {
+      SCOPED_TRACE("Source axis has one less bin on the right");
+      checkNumericCompat(target,
+                         makeSource(5, 1.2, 3.7),
+                         CompatFlags::kTrivialRegularBinMapping
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyUnderflow
+                         + fixedSource * CompatFlags::kNeedEmptyOverflow);
+    }
+    {
+      SCOPED_TRACE("Source axis bins are larger by an integer factor");
+      checkNumericCompat(target,
+                         makeSource(3, 1.2, 4.2),
+                         CompatFlags::kRegularBinAliasing
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyUnderflow
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyOverflow);
+    }
+    {
+      SCOPED_TRACE("Source axis bins are larger by a non-integer factor");
+      checkNumericCompat(target,
+                         makeSource(4, 1.2, 4.2),
+                         CompatFlags::kMergingIsLossy
+                         + CompatFlags::kRegularBinAliasing
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyUnderflow
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyOverflow);
+    }
+    {
+      SCOPED_TRACE("Source axis bins are smaller by an integer factor");
+      checkNumericCompat(target,
+                         makeSource(12, 1.2, 4.2),
+                         CompatFlags::kMergingIsLossy
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyUnderflow
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyOverflow);
+    }
+    {
+      SCOPED_TRACE("Source axis bins are smaller by a non-integer factor");
+      checkNumericCompat(target,
+                         makeSource(11, 1.2, 4.2),
+                         CompatFlags::kMergingIsLossy
+                         + CompatFlags::kRegularBinAliasing
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyUnderflow
+                         + needEmptyUnderOver * CompatFlags::kNeedEmptyOverflow);
+    }
+  };
+
+  // Test scenarios where an equidistantly binned axis is merged into another
   // non-growable, equidistantly binned axis.
-  const auto testEqBinnedToNonGrowable =
-    [&checkNumericCompat](const auto& makeTarget,
-                          const auto& makeSource) {
-      const auto target = makeTarget(6, 1.2, 4.2);  // Bin width: 0.5
-      const bool fixedSource = !(makeSource(6, 1.2, 4.2).CanGrow());
-      {
-        SCOPED_TRACE("Source axis has the same binning");
-        checkNumericCompat(target,
-                           makeSource(6, 1.2, 4.2),
-                           CompatFlags::kTrivialRegularBinMapping
-                           + CompatFlags::kRegularBinBijection
-                           + fixedSource * CompatFlags::kFullBinBijection);
-      }
-      {
-        SCOPED_TRACE("Source axis has one more bin on the left");
-        checkNumericCompat(target,
-                           makeSource(7, 0.7, 4.2),
-                           CompatFlags::kMergingIsLossy);
-      }
-      {
-        SCOPED_TRACE("Source axis has one more bin on the right");
-        checkNumericCompat(target,
-                           makeSource(7, 1.2, 4.7),
-                           CompatFlags::kMergingIsLossy);
-      }
-      {
-        SCOPED_TRACE("Source axis has one less bin on the left");
-        checkNumericCompat(target,
-                           makeSource(5, 1.7, 4.2),
-                           fixedSource * CompatFlags::kNeedEmptyUnderflow);
-      }
-      {
-        SCOPED_TRACE("Source axis has one less bin on the right");
-        checkNumericCompat(target,
-                           makeSource(5, 1.2, 3.7),
-                           CompatFlags::kTrivialRegularBinMapping
-                           + fixedSource * CompatFlags::kNeedEmptyOverflow);
-      }
-      {
-        SCOPED_TRACE("Source axis bins are larger by an integer factor");
-        checkNumericCompat(target,
-                           makeSource(3, 1.2, 4.2),
-                           CompatFlags::kRegularBinAliasing);
-      }
-      {
-        SCOPED_TRACE("Source axis bins are larger by a non-integer factor");
-        checkNumericCompat(target,
-                           makeSource(4, 1.2, 4.2),
-                           CompatFlags::kMergingIsLossy
-                           + CompatFlags::kRegularBinAliasing);
-      }
-      {
-        SCOPED_TRACE("Source axis bins are smaller by an integer factor");
-        checkNumericCompat(target,
-                           makeSource(12, 1.2, 4.2),
-                           CompatFlags::kMergingIsLossy);
-      }
-      {
-        SCOPED_TRACE("Source axis bins are smaller by a non-integer factor");
-        checkNumericCompat(target,
-                           makeSource(11, 1.2, 4.2),
-                           CompatFlags::kMergingIsLossy
-                           + CompatFlags::kRegularBinAliasing);
-      }
-      {
-        SCOPED_TRACE("Source axis is shifted forward");
-        checkNumericCompat(target,
-                           makeSource(6, 1.3, 4.3),
-                           CompatFlags::kTrivialRegularBinMapping
-                           + CompatFlags::kRegularBinBijection
-                           + fixedSource * CompatFlags::kFullBinBijection
-                           + CompatFlags::kMergingIsLossy
-                           + CompatFlags::kRegularBinAliasing
-                           + fixedSource * CompatFlags::kNeedEmptyUnderflow);
-      }
-      {
-        SCOPED_TRACE("Source axis is shifted backward");
-        checkNumericCompat(target,
-                           makeSource(6, 1.1, 4.1),
-                           CompatFlags::kMergingIsLossy
-                           + CompatFlags::kRegularBinAliasing
-                           + fixedSource * CompatFlags::kNeedEmptyOverflow);
-      }
-    };
+  const auto testEqBinnedToNonGrowable = [&](const auto& makeTarget,
+                                             const auto& makeSource) {
+    testEqBinnedToEqBinned(makeTarget, makeSource);
+    const auto target = makeTarget(6, 1.2, 4.2);
+    const bool fixedSource = !(makeSource(6, 1.2, 4.2).CanGrow());
+    {
+      SCOPED_TRACE("Source axis has one more bin on the left");
+      checkNumericCompat(target,
+                         makeSource(7, 0.7, 4.2),
+                         CompatFlags::kMergingIsLossy);
+    }
+    {
+      SCOPED_TRACE("Source axis has one more bin on the right");
+      checkNumericCompat(target,
+                         makeSource(7, 1.2, 4.7),
+                         CompatFlags::kMergingIsLossy);
+    }
+    {
+      SCOPED_TRACE("Source axis is shifted forward");
+      checkNumericCompat(target,
+                         makeSource(6, 1.3, 4.3),
+                         CompatFlags::kTrivialRegularBinMapping
+                         + CompatFlags::kRegularBinBijection
+                         + fixedSource * CompatFlags::kFullBinBijection
+                         + CompatFlags::kMergingIsLossy
+                         + CompatFlags::kRegularBinAliasing
+                         + fixedSource * CompatFlags::kNeedEmptyUnderflow);
+    }
+    {
+      SCOPED_TRACE("Source axis is shifted backward");
+      checkNumericCompat(target,
+                         makeSource(6, 1.1, 4.1),
+                         CompatFlags::kMergingIsLossy
+                         + CompatFlags::kRegularBinAliasing
+                         + fixedSource * CompatFlags::kNeedEmptyOverflow);
+    }
+  };
 
   // Test binning compatibility when merging into an equidistant axis
   {
@@ -879,77 +902,76 @@ TEST(AxisTest, NumericBinningCompatibility) {
     // source into an equidistantly binned target, but I didn't find a good way
     // to deduplicate it without sacrificing code quality yet...
     //
-    const auto testEqBinnedToIrregular =
-      [&checkNumericCompat](const auto& makeSource) {
-        const auto source = makeSource(6, 1.2, 4.2);
-        const bool fixedSource = !source.CanGrow();
-        {
-          SCOPED_TRACE("Target axis has an extra inner bin border");
-          checkNumericCompat(RAxisIrregular({1.2, 1.4, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                             source,
-                             CompatFlags::kRegularBinAliasing);
-        }
-        {
-          SCOPED_TRACE("Target axis has one less inner bin border");
-          checkNumericCompat(RAxisIrregular({1.2, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                             source,
-                             CompatFlags::kMergingIsLossy);
-        }
-        {
-          SCOPED_TRACE("First target border is shifted forward");
-          checkNumericCompat(RAxisIrregular({1.3, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                             source,
-                             fixedSource * CompatFlags::kMergingIsLossy
-                             + CompatFlags::kRegularBinAliasing);
-        }
-        {
-          SCOPED_TRACE("First target border is shifted backward");
-          checkNumericCompat(RAxisIrregular({1.1, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                             source,
-                             CompatFlags::kTrivialRegularBinMapping
-                             + CompatFlags::kRegularBinBijection
-                             + fixedSource * CompatFlags::kFullBinBijection
-                             + CompatFlags::kMergingIsLossy
-                             + fixedSource * CompatFlags::kNeedEmptyUnderflow);
-        }
-        {
-          SCOPED_TRACE("Second target border is shifted forward");
-          checkNumericCompat(RAxisIrregular({1.2, 1.8, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                             source,
-                             CompatFlags::kMergingIsLossy
-                             + CompatFlags::kRegularBinAliasing);
-        }
-        {
-          SCOPED_TRACE("Second target border is shifted backward");
-          checkNumericCompat(RAxisIrregular({1.2, 1.6, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                             source,
-                             CompatFlags::kTrivialRegularBinMapping
-                             + CompatFlags::kRegularBinBijection
-                             + fixedSource * CompatFlags::kFullBinBijection
-                             + CompatFlags::kMergingIsLossy
-                             + CompatFlags::kRegularBinAliasing);
-        }
-        {
-          SCOPED_TRACE("Last target border is shifted forward");
-          checkNumericCompat(RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.3}),
-                             source,
-                             CompatFlags::kTrivialRegularBinMapping
-                             + CompatFlags::kRegularBinBijection
-                             + fixedSource * CompatFlags::kFullBinBijection
-                             + CompatFlags::kMergingIsLossy
-                             + fixedSource * CompatFlags::kNeedEmptyOverflow);
-        }
-        {
-          SCOPED_TRACE("Last target border is shifted backward");
-          checkNumericCompat(RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.1}),
-                             source,
-                             CompatFlags::kTrivialRegularBinMapping
-                             + CompatFlags::kRegularBinBijection
-                             + fixedSource * CompatFlags::kFullBinBijection
-                             + CompatFlags::kMergingIsLossy
-                             + CompatFlags::kRegularBinAliasing);
-        }
-      };
+    const auto testEqBinnedToIrregular = [&](const auto& makeSource) {
+      const auto source = makeSource(6, 1.2, 4.2);
+      const bool fixedSource = !source.CanGrow();
+      {
+        SCOPED_TRACE("Target axis has an extra inner bin border");
+        checkNumericCompat(RAxisIrregular({1.2, 1.4, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                           source,
+                           CompatFlags::kRegularBinAliasing);
+      }
+      {
+        SCOPED_TRACE("Target axis has one less inner bin border");
+        checkNumericCompat(RAxisIrregular({1.2, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                           source,
+                           CompatFlags::kMergingIsLossy);
+      }
+      {
+        SCOPED_TRACE("First target border is shifted forward");
+        checkNumericCompat(RAxisIrregular({1.3, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                           source,
+                           fixedSource * CompatFlags::kMergingIsLossy
+                           + CompatFlags::kRegularBinAliasing);
+      }
+      {
+        SCOPED_TRACE("First target border is shifted backward");
+        checkNumericCompat(RAxisIrregular({1.1, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                           source,
+                           CompatFlags::kTrivialRegularBinMapping
+                           + CompatFlags::kRegularBinBijection
+                           + fixedSource * CompatFlags::kFullBinBijection
+                           + CompatFlags::kMergingIsLossy
+                           + fixedSource * CompatFlags::kNeedEmptyUnderflow);
+      }
+      {
+        SCOPED_TRACE("Second target border is shifted forward");
+        checkNumericCompat(RAxisIrregular({1.2, 1.8, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                           source,
+                           CompatFlags::kMergingIsLossy
+                           + CompatFlags::kRegularBinAliasing);
+      }
+      {
+        SCOPED_TRACE("Second target border is shifted backward");
+        checkNumericCompat(RAxisIrregular({1.2, 1.6, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                           source,
+                           CompatFlags::kTrivialRegularBinMapping
+                           + CompatFlags::kRegularBinBijection
+                           + fixedSource * CompatFlags::kFullBinBijection
+                           + CompatFlags::kMergingIsLossy
+                           + CompatFlags::kRegularBinAliasing);
+      }
+      {
+        SCOPED_TRACE("Last target border is shifted forward");
+        checkNumericCompat(RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.3}),
+                           source,
+                           CompatFlags::kTrivialRegularBinMapping
+                           + CompatFlags::kRegularBinBijection
+                           + fixedSource * CompatFlags::kFullBinBijection
+                           + CompatFlags::kMergingIsLossy
+                           + fixedSource * CompatFlags::kNeedEmptyOverflow);
+      }
+      {
+        SCOPED_TRACE("Last target border is shifted backward");
+        checkNumericCompat(RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.1}),
+                           source,
+                           CompatFlags::kTrivialRegularBinMapping
+                           + CompatFlags::kRegularBinBijection
+                           + fixedSource * CompatFlags::kFullBinBijection
+                           + CompatFlags::kMergingIsLossy
+                           + CompatFlags::kRegularBinAliasing);
+      }
+    };
 
     {
       SCOPED_TRACE("Source axis is equidistant");
@@ -971,10 +993,27 @@ TEST(AxisTest, NumericBinningCompatibility) {
     }
   }
 
-  // TODO: Grow<-Eq
-  // TODO: Grow<-Grow
-  // TODO: Grow<-Irr
-  // TODO: Consider deduplicating Eq<-Xyz and Grow<-Xyz?
+  // Test binning compatibility when merging into a growable axis
+  {
+    SCOPED_TRACE("Target axis is growable");
+    // TODO: Make a growable axis version of the testEqBinnedToNonGrowable tests
+    {
+      SCOPED_TRACE("Source axis is equidistant");
+      testEqBinnedToEqBinned(makeGrowable, makeEquidistant);
+      // TODO: Test axis growth + deduplicate
+    }
+    {
+      SCOPED_TRACE("Source axis is growable");
+      testEqBinnedToEqBinned(makeGrowable, makeGrowable);
+      // TODO: Test axis growth + deduplicate
+    }
+    {
+      SCOPED_TRACE("Source axis is irregular");
+      testEqBinnedToEqBinned(makeGrowable, makeEqBinnedIrregular);
+      // TODO: Test axis growth + deduplicate
+      // TODO: Extract + reuse Eq<-Irr tests here
+    }
+  }
 }
 
 TEST(AxisTest, ReverseBinLimits) {
