@@ -785,6 +785,7 @@ TEST(AxisTest, NumericBinningCompatibility) {
     {
       SCOPED_TRACE("Source axis is irregular");
       testEqBinnedToNonGrowable(makeEquidistant, makeEqBinnedIrregular);
+
       // Extra scenarios enabled by irregular source axis binning
       const RAxisEquidistant target(6, 1.2, 4.2);
       {
