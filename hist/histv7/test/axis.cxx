@@ -720,17 +720,19 @@ TEST(AxisTest, NumericBinningCompatibility) {
                            + fixedSource * CompatFlags::kNeedEmptyOverflow);
       }
       {
-        SCOPED_TRACE("Source axis has larger bins");
+        SCOPED_TRACE("Source axis bins are larger by an integer factor");
         checkNumericCompat(target,
                            makeSource(2, 1.2, 3.2),
                            CompatFlags::kRegularBinAliasing);
       }
+      // FIXME: Explore non-integer factors too
       {
-        SCOPED_TRACE("Source axis has smaller bins");
+        SCOPED_TRACE("Source axis bins are smaller by an integer factor");
         checkNumericCompat(target,
                            makeSource(8, 1.2, 3.2),
                            CompatFlags::kMergingIsLossy);
       }
+      // FIXME: Explore non-integer factors too
       {
         SCOPED_TRACE("Source axis is shifted forward");
         checkNumericCompat(target,
