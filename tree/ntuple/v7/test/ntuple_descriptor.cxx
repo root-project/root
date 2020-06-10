@@ -186,3 +186,36 @@ TEST(RFieldDescriptorRange, IterateOverFieldNames)
    EXPECT_EQ(child_names.size(), 1);
    EXPECT_EQ(child_names[0], std::string("std::vector<bool>"));
 }
+
+TEST(RFieldDescriptorRange, SortByFieldNames)
+{
+   auto model = RNTupleModel::Create();
+   auto floats = model->MakeField<std::vector<float>>("jets");
+   auto floats2 = model->MakeField<std::vector<float>>("jets");
+   auto bools = model->MakeField<std::vector<bool>>("bools");
+   auto bool_vec_vec = model->MakeField<std::vector<std::vector<bool>>>("bool_vec_vec");
+   auto ints = model->MakeField<std::int32_t>("ints");
+
+   FileRaii fileGuard("test_field_iterator.root");
+   auto modelRead = std::unique_ptr<RNTupleModel>(model->Clone());
+   {
+       RNTupleWriter ntuple(std::move(model),
+          std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+       ntuple.Fill();
+   }
+
+   RNTupleReader ntuple(std::move(modelRead),
+      std::make_unique<RPageSourceFile>("ntuple", fileGuard.GetPath(), RNTupleReadOptions()));
+
+   std::vector<std::string> sorted_names{};
+   for (auto& f: ntuple.GetDescriptor().GetTopLevelFields().SortByNames()) {
+      sorted_names.push_back(f.GetFieldName());
+   }
+
+   EXPECT_EQ(sorted_names.size(), 5);
+   EXPECT_EQ(sorted_names[0], std::string("bool_vec_vec"));
+   EXPECT_EQ(sorted_names[1], std::string("bools"));
+   EXPECT_EQ(sorted_names[2], std::string("ints"));
+   EXPECT_EQ(sorted_names[3], std::string("jets"));
+   EXPECT_EQ(sorted_names[4], std::string("jets"));
+}
