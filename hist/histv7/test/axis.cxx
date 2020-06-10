@@ -847,20 +847,89 @@ TEST(AxisTest, NumericBinningCompatibility) {
   // Test binning compatibility when merging into an irregular axis
   {
     SCOPED_TRACE("Target axis is irregular");
+
+    // Deduplicated tests for merging an equidistantly binned source into an
+    // irregularly binned target.
+    //
+    // This is highly symmetrical to the case of merging an irregularly binned
+    // source into an equidistantly binned target, but I didn't find a good way
+    // to deduplicate it without sacrificing code quality yet...
+    //
+    const auto testEqBinnedToIrregular =
+      [&checkNumericCompat](const auto& makeSource) {
+        const auto source = makeSource(6, 1.2, 4.2);
+        const bool fixedSource = !source.CanGrow();
+        {
+          SCOPED_TRACE("First target border is shifted forward");
+          checkNumericCompat(RAxisIrregular({1.3, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                             source,
+                             fixedSource * CompatFlags::kMergingIsLossy
+                             + CompatFlags::kRegularBinAliasing);
+        }
+        {
+          SCOPED_TRACE("First target border is shifted backward");
+          checkNumericCompat(RAxisIrregular({1.1, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                             source,
+                             CompatFlags::kTrivialRegularBinMapping
+                             + CompatFlags::kRegularBinBijection
+                             + fixedSource * CompatFlags::kFullBinBijection
+                             + CompatFlags::kMergingIsLossy
+                             + fixedSource * CompatFlags::kNeedEmptyUnderflow);
+        }
+        {
+          SCOPED_TRACE("Second target border is shifted forward");
+          checkNumericCompat(RAxisIrregular({1.2, 1.8, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                             source,
+                             CompatFlags::kMergingIsLossy
+                             + CompatFlags::kRegularBinAliasing);
+        }
+        {
+          SCOPED_TRACE("Second target border is shifted backward");
+          checkNumericCompat(RAxisIrregular({1.2, 1.6, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                             source,
+                             CompatFlags::kTrivialRegularBinMapping
+                             + CompatFlags::kRegularBinBijection
+                             + fixedSource * CompatFlags::kFullBinBijection
+                             + CompatFlags::kMergingIsLossy
+                             + CompatFlags::kRegularBinAliasing);
+        }
+        {
+          SCOPED_TRACE("Last target border is shifted forward");
+          checkNumericCompat(RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.3}),
+                             source,
+                             CompatFlags::kTrivialRegularBinMapping
+                             + CompatFlags::kRegularBinBijection
+                             + fixedSource * CompatFlags::kFullBinBijection
+                             + CompatFlags::kMergingIsLossy
+                             + fixedSource * CompatFlags::kNeedEmptyOverflow);
+        }
+        {
+          SCOPED_TRACE("Last target border is shifted backward");
+          checkNumericCompat(RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.1}),
+                             source,
+                             CompatFlags::kTrivialRegularBinMapping
+                             + CompatFlags::kRegularBinBijection
+                             + fixedSource * CompatFlags::kFullBinBijection
+                             + CompatFlags::kMergingIsLossy
+                             + CompatFlags::kRegularBinAliasing);
+        }
+      };
+
     {
       SCOPED_TRACE("Source axis is equidistant");
       testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeEquidistant);
-      // TODO: Try shifting target borders + deduplicate vs equidistant target
+      testEqBinnedToIrregular(makeEquidistant);
     }
     {
       SCOPED_TRACE("Source axis is growable");
       testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeGrowable);
-      // TODO: Try shifting target borders + deduplicate vs above
+      testEqBinnedToIrregular(makeGrowable);
     }
     {
       SCOPED_TRACE("Source axis is irregular");
       testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeEqBinnedIrregular);
-      // TODO: Try shifting target borders + deduplicate vs above
+      testEqBinnedToIrregular(makeEqBinnedIrregular);
+      // FIXME: Tests which are specific to the irr<-irr scenario
     }
   }
 
