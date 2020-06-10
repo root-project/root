@@ -684,14 +684,12 @@ TEST(AxisTest, NumericBinningCompatibility) {
     return RAxisIrregular(std::move(binBorders));
   };
 
-  // Test compatibility when merging into an equidistant axis
-  {
-    SCOPED_TRACE("Target axis is equidistant");
-    const RAxisEquidistant target(6, 1.2, 4.2);  // Bin width: 0.5
-
-    // Deduplicated test for any source axis type (i.e. restricted to
-    // equidistant binning scenarios)
-    const auto testEqBinnedSource = [&](const auto& makeSource) {
+  // Test scenarios where an equidistantly binned axis is merged into another
+  // non-growable, equidistantly binned axis.
+  const auto testEqBinnedToNonGrowable =
+    [&checkNumericCompat](const auto& makeTarget,
+                          const auto& makeSource) {
+      const auto target = makeTarget(6, 1.2, 4.2);  // Bin width: 0.5
       const bool fixedSource = !(makeSource(6, 1.2, 4.2).CanGrow());
       {
         SCOPED_TRACE("Source axis has the same binning");
@@ -772,18 +770,23 @@ TEST(AxisTest, NumericBinningCompatibility) {
                            + fixedSource * CompatFlags::kNeedEmptyOverflow);
       }
     };
+
+  // Test binning compatibility when merging into an equidistant axis
+  {
+    SCOPED_TRACE("Target axis is equidistant");
     {
       SCOPED_TRACE("Source axis is equidistant");
-      testEqBinnedSource(makeEquidistant);
+      testEqBinnedToNonGrowable(makeEquidistant, makeEquidistant);
     }
     {
       SCOPED_TRACE("Source axis is growable");
-      testEqBinnedSource(makeGrowable);
+      testEqBinnedToNonGrowable(makeEquidistant, makeGrowable);
     }
     {
       SCOPED_TRACE("Source axis is irregular");
-      testEqBinnedSource(makeEqBinnedIrregular);
-      // Extra scenarios enabled by irregular binning
+      testEqBinnedToNonGrowable(makeEquidistant, makeEqBinnedIrregular);
+      // Extra scenarios enabled by irregular source axis binning
+      const RAxisEquidistant target(6, 1.2, 4.2);
       {
         SCOPED_TRACE("First source border is shifted forward");
         checkNumericCompat(target,
@@ -841,13 +844,30 @@ TEST(AxisTest, NumericBinningCompatibility) {
     }
   }
 
+  // Test binning compatibility when merging into an irregular axis
+  {
+    SCOPED_TRACE("Target axis is irregular");
+    {
+      SCOPED_TRACE("Source axis is equidistant");
+      testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeEquidistant);
+      // TODO: Try shifting target borders + deduplicate vs equidistant target
+    }
+    {
+      SCOPED_TRACE("Source axis is growable");
+      testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeGrowable);
+      // TODO: Try shifting target borders + deduplicate vs above
+    }
+    {
+      SCOPED_TRACE("Source axis is irregular");
+      testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeEqBinnedIrregular);
+      // TODO: Try shifting target borders + deduplicate vs above
+    }
+  }
+
   // TODO: Grow<-Eq
   // TODO: Grow<-Grow
   // TODO: Grow<-Irr
   // TODO: Consider deduplicating Eq<-Xyz and Grow<-Xyz?
-  // TODO: Irr<-Eq
-  // TODO: Irr<-Grow
-  // TODO: Irr<-Irr
 }
 
 TEST(AxisTest, ReverseBinLimits) {
