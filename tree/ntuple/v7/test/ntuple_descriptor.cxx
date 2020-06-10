@@ -123,3 +123,66 @@ TEST(RNTuple, Descriptor)
    delete[] footerBuffer;
    delete[] headerBuffer;
 }
+
+TEST(RFieldDescriptorRange, IterateOverFieldNames)
+{
+   auto model = RNTupleModel::Create();
+   auto floats = model->MakeField<std::vector<float>>("jets");
+   auto floats2 = model->MakeField<std::vector<float>>("jets");
+   auto bools = model->MakeField<std::vector<bool>>("bools");
+   auto bool_vec_vec = model->MakeField<std::vector<std::vector<bool>>>("bool_vec_vec");
+   auto ints = model->MakeField<std::int32_t>("ints");
+
+   FileRaii fileGuard("test_field_iterator.root");
+   auto modelRead = std::unique_ptr<RNTupleModel>(model->Clone());
+   {
+       RNTupleWriter ntuple(std::move(model),
+          std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+       ntuple.Fill();
+   }
+
+   RNTupleReader ntuple(std::move(modelRead),
+      std::make_unique<RPageSourceFile>("ntuple", fileGuard.GetPath(), RNTupleReadOptions()));
+
+   // iterate over top-level fields
+   std::vector<std::string> names{};
+   for (auto& f: ntuple.GetDescriptor().GetTopLevelFields()) {
+      names.push_back(f.GetFieldName());
+   }
+   EXPECT_EQ(names.size(), 5);
+   EXPECT_EQ(names[0], std::string("jets"));
+   EXPECT_EQ(names[1], std::string("jets"));
+   EXPECT_EQ(names[2], std::string("bools"));
+   EXPECT_EQ(names[3], std::string("bool_vec_vec"));
+   EXPECT_EQ(names[4], std::string("ints"));
+
+   const auto& ntuple_desc = ntuple.GetDescriptor();
+   auto top_level_fields = ntuple_desc.GetTopLevelFields();
+
+   // iterate over child field ranges
+   const auto& float_vec_desc = *top_level_fields.begin();
+   EXPECT_EQ(float_vec_desc.GetFieldName(), std::string("jets"));
+   auto float_vec_child_range = ntuple_desc.GetFieldRange(float_vec_desc);
+   std::vector<std::string> child_names{};
+   for (auto& child_field: float_vec_child_range) {
+      child_names.push_back(child_field.GetFieldName());
+      // check the empty range
+      auto float_child_range = ntuple_desc.GetFieldRange(child_field);
+      EXPECT_FALSE(float_child_range.begin() != float_child_range.end());
+   }
+   EXPECT_EQ(child_names.size(), 1);
+   EXPECT_EQ(child_names[0], std::string("float"));
+
+   // check if canonical iterator methods work
+   auto iter = top_level_fields.begin();
+   std::advance(iter, 3);
+   const auto& bool_vec_vec_desc = *iter;
+   EXPECT_EQ(bool_vec_vec_desc.GetFieldName(), std::string("bool_vec_vec"));
+
+   child_names.clear();
+   for (auto& child_field: ntuple_desc.GetFieldRange(bool_vec_vec_desc)) {
+      child_names.push_back(child_field.GetFieldName());
+   }
+   EXPECT_EQ(child_names.size(), 1);
+   EXPECT_EQ(child_names[0], std::string("std::vector<bool>"));
+}
