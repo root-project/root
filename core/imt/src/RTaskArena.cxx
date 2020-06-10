@@ -118,7 +118,7 @@ std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned m
       }
       return sp;
    }
-   auto sp = std::make_shared<ROOT::Internal::RTaskArenaWrapper>(maxConcurrency);
+   std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> sp(new ROOT::Internal::RTaskArenaWrapper(maxConcurrency));
    weak_GTAWrapper = sp;
    return sp;
 }
