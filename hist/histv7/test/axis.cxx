@@ -456,151 +456,152 @@ TEST(AxisTest, Irregular) {
   }
 }
 
-// Test that an RAxisLabels has the expected properties
-//
-// This function was extracted from the Labels test to reduce lambda nesting. It
-// assumes that the input axis was constructed as RAxisLabels(expected_title,
-// labels), and received some number of operations that may have inserted new
-// labels from that point, ultimately leading to the expected_labels set.
-//
-void check_labeled_axis(const RAxisLabels& axis,
-                        std::string_view expected_title,
-                        const std::vector<std::string_view>& expected_labels) {
-  // Notice that the RAxisBase configuration is _not_ updated when new
-  // labels are added. This is by design, according to the RAxisLabels docs.
-  // The configuration would be updated on Grow(), but we can't test Grow()
-  // right now since it isn't implemented yet...
-  test_axis_equidistant(axis,
-                        expected_title,
-                        true,
-                        labels.size(),
-                        0.0,
-                        static_cast<double>(labels.size()));
-
-  EXPECT_EQ(axis.GetBinLabels().size(), expected_labels.size());
-  for (size_t i = 0; i < expected_labels.size(); ++i) {
-    EXPECT_EQ(axis.GetBinLabels()[i], expected_labels[i]);
-  }
-
-  // Compare the RAxisLabels with various variations of itself
-  using BinningCompat = RAxisBase::BinningCompatibility;
-  using LabeledCompat = RAxisBase::LabeledBinningCompatibility;
-  using CompatFlags = LabeledCompat::Flags;
-  auto checkLabeledCompat =
-    [&axis](const auto& sourceLabels,
-            int expectedCompatFlags,
-            auto&& expectedExtraSourceLabels) {
-      const RAxisLabels source(sourceLabels);
-      const LabeledCompat expected(CompatFlags(expectedCompatFlags),
-                                   std::move(expectedExtraSourceLabels));
-      EXPECT_EQ(axis.CheckLabeledBinningCompat(source), expected);
-      EXPECT_EQ(axis.CheckBinningCompat(source), BinningCompat(expected));
-    };
-  const int uncommittedTargetLabels =
-    (expected_labels.size() - axis.GetNBinsNoOver());
-  {
-    SCOPED_TRACE("Compare with newly created axis, same labels");
-    checkLabeledCompat(
-      expected_labels,
-      (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow,
-      std::vector<std::string_view>{}
-    );
-  }
-  {
-    const std::vector<std::string_view> missing_last_label(
-      expected_labels.cbegin(), expected_labels.cend() - 1);
-    SCOPED_TRACE("Compare with newly created axis, missing last label");
-    checkLabeledCompat(
-      missing_last_label,
-      (uncommittedTargetLabels > 1) * CompatFlags::kTargetMustGrow
-      + (uncommittedTargetLabels == 0) * CompatFlags::kExtraTargetBins,
-      std::vector<std::string_view>{}
-    );
-  }
-  {
-    auto one_extra_label = expected_labels;
-    one_extra_label.push_back("I AM ROOT");
-    SCOPED_TRACE("Compare with newly created axis, one extra label");
-    checkLabeledCompat(
-      one_extra_label,
-      CompatFlags::kTargetMustGrow,
-      std::vector<std::string_view>{"I AM ROOT"}
-    );
-  }
-  auto swapped_labels = expected_labels;
-  std::swap(swapped_labels[0], swapped_labels[expected_labels.size()-1]);
-  {
-    SCOPED_TRACE("Compare with newly created axis, swapped label");
-    checkLabeledCompat(
-      swapped_labels,
-      (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow
-      + CompatFlags::kLabelOrderDiffers,
-      std::vector<std::string_view>{}
-    );
-  }
-  {
-    auto changed_one_label = expected_labels;
-    changed_one_label[0] = "I AM ROOT";
-    SCOPED_TRACE("Compare with newly created axis, changed one label");
-    checkLabeledCompat(
-      changed_one_label,
-      CompatFlags::kTargetMustGrow
-      + CompatFlags::kLabelOrderDiffers
-      + CompatFlags::kExtraTargetBins,
-      std::vector<std::string_view>{"I AM ROOT"}
-    );
-  }
-  {
-    auto missing_first_label = expected_labels;
-    missing_first_label.erase(missing_first_label.cbegin());
-    SCOPED_TRACE("Compare with newly created axis, missing first label");
-    checkLabeledCompat(
-      missing_first_label,
-      (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow
-      + CompatFlags::kLabelOrderDiffers
-      + CompatFlags::kExtraTargetBins,
-      std::vector<std::string_view>{}
-    );
-  }
-  swapped_labels.push_back("I AM ROOT");
-  {
-    SCOPED_TRACE("Compare with newly created axis, swapped label + one extra");
-    checkLabeledCompat(
-      swapped_labels,
-      CompatFlags::kTargetMustGrow
-      + CompatFlags::kLabelOrderDiffers,
-      std::vector<std::string_view>{"I AM ROOT"}
-    );
-  }
-
-  // RAxisLabels's labeled binning scheme is not considered compatible with
-  // any sort of numerical binning
-  EXPECT_EQ(axis.CheckBinningCompat(RAxisEquidistant(4, 0.1, 2.3)),
-            BinningCompat());
-  EXPECT_EQ(RAxisEquidistant(4, 0.1, 2.3).CheckBinningCompat(axis),
-            BinningCompat());
-  EXPECT_EQ(axis.CheckBinningCompat(RAxisIrregular({1.2, 3.5, 7.9})),
-            BinningCompat());
-  EXPECT_EQ(RAxisIrregular({1.2, 3.5, 7.9}).CheckBinningCompat(axis),
-            BinningCompat());
-  EXPECT_EQ(axis.CheckBinningCompat(RAxisGrow(4, 0.1, 2.3)),
-            BinningCompat());
-  EXPECT_EQ(RAxisGrow(4, 0.1, 2.3).CheckBinningCompat(axis),
-            BinningCompat());
-
-  RAxisConfig cfg(axis);
-  EXPECT_EQ(cfg.GetTitle(), expected_title);
-  EXPECT_EQ(cfg.GetNBinsNoOver(), static_cast<int>(expected_labels.size()));
-  EXPECT_EQ(cfg.GetKind(), RAxisConfig::kLabels);
-  EXPECT_EQ(cfg.GetBinBorders().size(), 0u);
-  EXPECT_EQ(cfg.GetBinLabels().size(), expected_labels.size());
-  for (size_t i = 0; i < expected_labels.size(); ++i) {
-    EXPECT_EQ(cfg.GetBinLabels()[i], expected_labels[i]);
-  }
-}
-
 TEST(AxisTest, Labels) {
-  auto test = [](RAxisLabels& axis, std::string_view title) {
+  // Test that an RAxisLabels has the expected properties
+  //
+  // This function was extracted from the test lambda to reduce nesting. It
+  // assumes that the input axis was constructed as RAxisLabels(expected_title,
+  // labels), and received some number of operations that may have inserted new
+  // labels from that point, ultimately leading to the expected_labels set.
+  //
+  const auto check_labeled_axis =
+    [](const RAxisLabels& axis,
+       std::string_view expected_title,
+       const std::vector<std::string_view>& expected_labels) {
+    // Notice that the RAxisBase configuration is _not_ updated when new
+    // labels are added. This is by design, according to the RAxisLabels docs.
+    // The configuration would be updated on Grow(), but we can't test Grow()
+    // right now since it isn't implemented yet...
+    test_axis_equidistant(axis,
+                          expected_title,
+                          true,
+                          labels.size(),
+                          0.0,
+                          static_cast<double>(labels.size()));
+
+    EXPECT_EQ(axis.GetBinLabels().size(), expected_labels.size());
+    for (size_t i = 0; i < expected_labels.size(); ++i) {
+      EXPECT_EQ(axis.GetBinLabels()[i], expected_labels[i]);
+    }
+
+    // Compare the RAxisLabels with various variations of itself
+    using BinningCompat = RAxisBase::BinningCompatibility;
+    using LabeledCompat = RAxisBase::LabeledBinningCompatibility;
+    using CompatFlags = LabeledCompat::Flags;
+    auto checkLabeledCompat =
+      [&axis](const auto& sourceLabels,
+              int expectedCompatFlags,
+              auto&& expectedExtraSourceLabels) {
+        const RAxisLabels source(sourceLabels);
+        const LabeledCompat expected(CompatFlags(expectedCompatFlags),
+                                     std::move(expectedExtraSourceLabels));
+        EXPECT_EQ(axis.CheckLabeledBinningCompat(source), expected);
+        EXPECT_EQ(axis.CheckBinningCompat(source), BinningCompat(expected));
+      };
+    const int uncommittedTargetLabels =
+      (expected_labels.size() - axis.GetNBinsNoOver());
+    {
+      SCOPED_TRACE("Compare with newly created axis, same labels");
+      checkLabeledCompat(
+        expected_labels,
+        (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow,
+        std::vector<std::string_view>{}
+      );
+    }
+    {
+      const std::vector<std::string_view> missing_last_label(
+        expected_labels.cbegin(), expected_labels.cend() - 1);
+      SCOPED_TRACE("Compare with newly created axis, missing last label");
+      checkLabeledCompat(
+        missing_last_label,
+        (uncommittedTargetLabels > 1) * CompatFlags::kTargetMustGrow
+        + (uncommittedTargetLabels == 0) * CompatFlags::kExtraTargetBins,
+        std::vector<std::string_view>{}
+      );
+    }
+    {
+      auto one_extra_label = expected_labels;
+      one_extra_label.push_back("I AM ROOT");
+      SCOPED_TRACE("Compare with newly created axis, one extra label");
+      checkLabeledCompat(
+        one_extra_label,
+        CompatFlags::kTargetMustGrow,
+        std::vector<std::string_view>{"I AM ROOT"}
+      );
+    }
+    auto swapped_labels = expected_labels;
+    std::swap(swapped_labels[0], swapped_labels[expected_labels.size()-1]);
+    {
+      SCOPED_TRACE("Compare with newly created axis, swapped label");
+      checkLabeledCompat(
+        swapped_labels,
+        (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow
+        + CompatFlags::kLabelOrderDiffers,
+        std::vector<std::string_view>{}
+      );
+    }
+    {
+      auto changed_one_label = expected_labels;
+      changed_one_label[0] = "I AM ROOT";
+      SCOPED_TRACE("Compare with newly created axis, changed one label");
+      checkLabeledCompat(
+        changed_one_label,
+        CompatFlags::kTargetMustGrow
+        + CompatFlags::kLabelOrderDiffers
+        + CompatFlags::kExtraTargetBins,
+        std::vector<std::string_view>{"I AM ROOT"}
+      );
+    }
+    {
+      auto missing_first_label = expected_labels;
+      missing_first_label.erase(missing_first_label.cbegin());
+      SCOPED_TRACE("Compare with newly created axis, missing first label");
+      checkLabeledCompat(
+        missing_first_label,
+        (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow
+        + CompatFlags::kLabelOrderDiffers
+        + CompatFlags::kExtraTargetBins,
+        std::vector<std::string_view>{}
+      );
+    }
+    swapped_labels.push_back("I AM ROOT");
+    {
+      SCOPED_TRACE("Compare with newly created axis, swapped label + one extra");
+      checkLabeledCompat(
+        swapped_labels,
+        CompatFlags::kTargetMustGrow
+        + CompatFlags::kLabelOrderDiffers,
+        std::vector<std::string_view>{"I AM ROOT"}
+      );
+    }
+
+    // RAxisLabels's labeled binning scheme is not considered compatible with
+    // any sort of numerical binning
+    EXPECT_EQ(axis.CheckBinningCompat(RAxisEquidistant(4, 0.1, 2.3)),
+              BinningCompat());
+    EXPECT_EQ(RAxisEquidistant(4, 0.1, 2.3).CheckBinningCompat(axis),
+              BinningCompat());
+    EXPECT_EQ(axis.CheckBinningCompat(RAxisIrregular({1.2, 3.5, 7.9})),
+              BinningCompat());
+    EXPECT_EQ(RAxisIrregular({1.2, 3.5, 7.9}).CheckBinningCompat(axis),
+              BinningCompat());
+    EXPECT_EQ(axis.CheckBinningCompat(RAxisGrow(4, 0.1, 2.3)),
+              BinningCompat());
+    EXPECT_EQ(RAxisGrow(4, 0.1, 2.3).CheckBinningCompat(axis),
+              BinningCompat());
+
+    RAxisConfig cfg(axis);
+    EXPECT_EQ(cfg.GetTitle(), expected_title);
+    EXPECT_EQ(cfg.GetNBinsNoOver(), static_cast<int>(expected_labels.size()));
+    EXPECT_EQ(cfg.GetKind(), RAxisConfig::kLabels);
+    EXPECT_EQ(cfg.GetBinBorders().size(), 0u);
+    EXPECT_EQ(cfg.GetBinLabels().size(), expected_labels.size());
+    for (size_t i = 0; i < expected_labels.size(); ++i) {
+      EXPECT_EQ(cfg.GetBinLabels()[i], expected_labels[i]);
+    }
+  };
+
+  auto test = [&](RAxisLabels& axis, std::string_view title) {
     {
       SCOPED_TRACE("Original labels configuration");
       check_labeled_axis(axis, title, labels);
