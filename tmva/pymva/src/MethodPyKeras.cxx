@@ -167,8 +167,11 @@ void MethodPyKeras::ProcessOptions() {
    // check first if using tensorflow backend
    if (GetKerasBackend() == kTensorFlow) {
       Log() << kINFO << "Using TensorFlow backend - setting special configuration options "  << Endl;
-      PyRunString("import tensorflow as tf");
+      PyRunString("import tensorflow as tf","Error importing tensorflow");
       PyRunString("from keras.backend import tensorflow_backend as K");
+      // run these above lines also in global namespace to make them visible overall
+      PyRun_String("import tensorflow as tf", Py_single_input, fGlobalNS, fGlobalNS);
+      PyRun_String("from keras.backend import tensorflow_backend as K", Py_single_input, fGlobalNS, fGlobalNS);
 
       // check tensorflow version
       PyRunString("tf_major_version = int(tf.__version__.split('.')[0])");
@@ -234,15 +237,22 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
    PyRunString("load_model_custom_objects=None");
 
 
-   // run some python code provided by user for model initialization if needed
+
+
    if (!fUserCodeName.IsNull()) {
       Log() << kINFO << " Executing user initialization code from  " << fUserCodeName << Endl;
 
-      PyRunString("exec(open('" + fUserCodeName + "').read())");
+
+        // run some python code provided by user for model initialization if needed
+      TString cmd = "exec(open('" + fUserCodeName + "').read())";
+      TString errmsg = "Error executing the provided user code";
+      PyRunString(cmd, errmsg);
+
+      PyRunString("print('custom objects for loading model : ',load_model_custom_objects)");
    }
 
-   ///PyRunString("print('custom objects for loading model : ',load_model_custom_objects)");
-   //PyRunString("print(K)");
+
+
 
    // Load initial model or already trained model
    TString filenameLoadModel;
@@ -298,6 +308,10 @@ void MethodPyKeras::Init() {
    // NOTE: sys.argv has to be cleared because otherwise TensorFlow breaks
    PyRunString("import sys; sys.argv = ['']", "Set sys.argv failed");
    PyRunString("import keras", "Import Keras failed");
+   // do import also in global namespace
+   auto ret = PyRun_String("import keras", Py_single_input, fGlobalNS, fGlobalNS);
+   if (!ret)
+      Log() << kFATAL << "Import Keras in global namespace fsailed " << Endl;
 
    // Set flag that model is not setup
    fModelIsSetup = false;
