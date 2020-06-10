@@ -903,6 +903,7 @@ TEST(AxisTest, NumericBinningCompatibility) {
     // to deduplicate it without sacrificing code quality yet...
     //
     const auto testEqBinnedToIrregular = [&](const auto& makeSource) {
+      testEqBinnedToEqBinned(makeEqBinnedIrregular, makeSource);
       const auto source = makeSource(6, 1.2, 4.2);
       const bool fixedSource = !source.CanGrow();
       {
@@ -975,17 +976,14 @@ TEST(AxisTest, NumericBinningCompatibility) {
 
     {
       SCOPED_TRACE("Source axis is equidistant");
-      testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeEquidistant);
       testEqBinnedToIrregular(makeEquidistant);
     }
     {
       SCOPED_TRACE("Source axis is growable");
-      testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeGrowable);
       testEqBinnedToIrregular(makeGrowable);
     }
     {
       SCOPED_TRACE("Source axis is irregular");
-      testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeEqBinnedIrregular);
       testEqBinnedToIrregular(makeEqBinnedIrregular);
       // NOTE: There are Irr<->Irr specific scenarios, but I did not find one
       //       which is _qualitatively_ different from the Irr<->EqBinned ones.
