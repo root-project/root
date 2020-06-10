@@ -1202,6 +1202,10 @@ void UpdateBoolArray(BoolArrayMap &, T&, const std::string &, TTree &) {}
 // RVec<bool> overload, update boolArrays if needed
 inline void UpdateBoolArray(BoolArrayMap &boolArrays, RVec<bool> &v, const std::string &outName, TTree &t)
 {
+   // in case the RVec<bool> does not correspond to a bool C-array
+   if (boolArrays.find(outName) == boolArrays.end())
+      return;
+
    if (v.size() > boolArrays[outName].Size()) {
       boolArrays[outName] = BoolArray(v); // resize and copy
       t.SetBranchAddress(outName.c_str(), boolArrays[outName].Data());
