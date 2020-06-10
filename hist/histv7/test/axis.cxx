@@ -931,7 +931,8 @@ TEST(AxisTest, NumericBinningCompatibility) {
       testEqBinnedToNonGrowable(makeEqBinnedIrregular, makeEqBinnedIrregular);
       testEqBinnedToIrregular(makeEqBinnedIrregular);
       // NOTE: There are Irr<-Irr specific scenarios, but I did not find one
-      //       which is _qualitatively_ different from the Irr<->EqBinned ones
+      //       which is _qualitatively_ different from the Irr<->EqBinned ones.
+      //       Please add some here as needed.
     }
   }
 
