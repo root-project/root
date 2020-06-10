@@ -453,6 +453,11 @@ const TSeqCollection *TTabCom::GetListOfClasses()
             fpClasses->Add(new TObjString(className));
          }
       }
+
+      // Add possible identifiers coming from the global module index.
+      // FIXME: Consolidate all this -- we have ultimate source of information
+      // clang's identifier table and the ASTIndentifiers.
+      gInterpreter->AddAvailableIndentifiers(*fpClasses);
    }
 
    if (fPrevInterpMarker != gInterpreter->GetInterpreterStateMarker()) {
