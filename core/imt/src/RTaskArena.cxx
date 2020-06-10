@@ -40,7 +40,7 @@
 ///
 //////////////////////////////////////////////////////////////////////////
 
-namespace ROOT{
+namespace ROOT {
 namespace Internal {
 
 int LogicalCPUBandwithControl()
@@ -48,16 +48,16 @@ int LogicalCPUBandwithControl()
 #ifdef R__LINUX
    // Check for CFS bandwith control
    std::ifstream f("/sys/fs/cgroup/cpuacct/cpu.cfs_quota_us"); // quota file
-   if(f) {
+   if (f) {
       float cfs_quota;
-      f>>cfs_quota;
+      f >> cfs_quota;
       f.close();
-      if(cfs_quota > 0) {
+      if (cfs_quota > 0) {
          f.open("/sys/fs/cgroup/cpuacct/cpu.cfs_period_us"); // period file
          float cfs_period;
-         f>>cfs_period;
+         f >> cfs_period;
          f.close();
-         return static_cast<int>(std::ceil(cfs_quota/cfs_period));
+         return static_cast<int>(std::ceil(cfs_quota / cfs_period));
       }
    }
 #endif
@@ -72,14 +72,13 @@ int LogicalCPUBandwithControl()
 /// * If no BC in place and maxConcurrency<1, defaults to the default tbb number of threads,
 /// which is CPU affinity aware
 ////////////////////////////////////////////////////////////////////////////////
-RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency): fTBBArena(new tbb::task_arena{})
+RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency) : fTBBArena(new tbb::task_arena{})
 {
    const unsigned tbbDefaultNumberThreads = fTBBArena->max_concurrency(); // not initialized, automatic state
    maxConcurrency = maxConcurrency > 0 ? std::min(maxConcurrency, tbbDefaultNumberThreads) : tbbDefaultNumberThreads;
    const unsigned bcCpus = LogicalCPUBandwithControl();
-   if (maxConcurrency>bcCpus) {
-      Warning("RTaskArenaWrapper", "CPU Bandwith Control Active. Proceeding with %d threads accordingly",
-         bcCpus);
+   if (maxConcurrency > bcCpus) {
+      Warning("RTaskArenaWrapper", "CPU Bandwith Control Active. Proceeding with %d threads accordingly", bcCpus);
       maxConcurrency = bcCpus;
    }
    fTBBArena->initialize(maxConcurrency);
@@ -115,7 +114,7 @@ std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned m
    if (auto sp = weak_GTAWrapper.lock()) {
       if (maxConcurrency && (sp->TaskArenaSize() != maxConcurrency)) {
          Warning("RTaskArenaWrapper", "There's already an active task arena. Proceeding with the current %d threads",
-            sp->TaskArenaSize());
+                 sp->TaskArenaSize());
       }
       return sp;
    }
