@@ -705,10 +705,7 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NT
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
 {
    auto model = std::make_unique<RNTupleModel>();
-   auto rootId = FindFieldId("", kInvalidDescriptorId);
-   const auto &rootDesc = GetFieldDescriptor(rootId);
-   for (const auto id : rootDesc.GetLinkIds()) {
-      const auto &topDesc = GetFieldDescriptor(id);
+   for (const auto &topDesc : GetTopLevelFields()) {
       auto field = Detail::RFieldBase::Create(topDesc.GetFieldName(), topDesc.GetTypeName());
       model->AddField(std::unique_ptr<Detail::RFieldBase>(field));
    }
