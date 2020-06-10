@@ -697,7 +697,7 @@ TEST(AxisTest, NumericBinningCompatibility) {
   };
 
   // Test scenarios where an equidistantly binned axis is merged into another
-  // equidistantly binned axis, growable or not.
+  // equidistantly binned axis, which may be growable or not.
   const auto testEqBinnedToEqBinned = [&](const auto& makeTarget,
                                           const auto& makeSource) {
     const auto target = makeTarget(6, 1.2, 4.2);
@@ -836,6 +836,75 @@ TEST(AxisTest, NumericBinningCompatibility) {
     }
   };
 
+  // Test scenarios where an irregularly binned axis is merged into an
+  // equidistantly binned axis, which may be growable or not.
+  const auto testIrregularToEqBinned = [&](const auto& makeTarget) {
+    const auto target = makeTarget(6, 1.2, 4.2);
+    const bool growableTarget = target.CanGrow();
+    const bool fixedTarget = !growableTarget;
+    // NOTE: No need to test removing the first or last bin border, that's
+    //       morally equivalent to removing a bin which we test separately.
+    {
+      SCOPED_TRACE("Source axis has an extra inner bin border");
+      checkNumericCompat(target,
+                         RAxisIrregular({1.2, 1.4, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                         CompatFlags::kMergingIsLossy
+                         + growableTarget * CompatFlags::kNeedEmptyUnderflow
+                         + growableTarget * CompatFlags::kNeedEmptyOverflow);
+    }
+    {
+      SCOPED_TRACE("Source axis has one less inner bin border");
+      checkNumericCompat(target,
+                         RAxisIrregular({1.2, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                         CompatFlags::kRegularBinAliasing
+                         + growableTarget * CompatFlags::kNeedEmptyUnderflow
+                         + growableTarget * CompatFlags::kNeedEmptyOverflow);
+    }
+    {
+      SCOPED_TRACE("First source border is shifted forward");
+      checkNumericCompat(target,
+                         RAxisIrregular({1.3, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                         CompatFlags::kTrivialRegularBinMapping
+                         + CompatFlags::kRegularBinBijection
+                         + fixedTarget * CompatFlags::kFullBinBijection
+                         + CompatFlags::kMergingIsLossy
+                         + CompatFlags::kNeedEmptyUnderflow
+                         + growableTarget * CompatFlags::kNeedEmptyOverflow);
+    }
+    {
+      SCOPED_TRACE("Second source border is shifted forward");
+      checkNumericCompat(target,
+                         RAxisIrregular({1.2, 1.8, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                         CompatFlags::kTrivialRegularBinMapping
+                         + CompatFlags::kRegularBinBijection
+                         + fixedTarget * CompatFlags::kFullBinBijection
+                         + CompatFlags::kMergingIsLossy
+                         + CompatFlags::kRegularBinAliasing
+                         + growableTarget * CompatFlags::kNeedEmptyUnderflow
+                         + growableTarget * CompatFlags::kNeedEmptyOverflow);
+    }
+    {
+      SCOPED_TRACE("Second source border is shifted backward");
+      checkNumericCompat(target,
+                         RAxisIrregular({1.2, 1.6, 2.2, 2.7, 3.2, 3.7, 4.2}),
+                         CompatFlags::kMergingIsLossy
+                         + CompatFlags::kRegularBinAliasing
+                         + growableTarget * CompatFlags::kNeedEmptyUnderflow
+                         + growableTarget * CompatFlags::kNeedEmptyOverflow);
+    }
+    {
+      SCOPED_TRACE("Last source border is shifted backward");
+      checkNumericCompat(target,
+                         RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.1}),
+                         CompatFlags::kTrivialRegularBinMapping
+                         + CompatFlags::kRegularBinBijection
+                         + fixedTarget * CompatFlags::kFullBinBijection
+                         + CompatFlags::kMergingIsLossy
+                         + growableTarget * CompatFlags::kNeedEmptyUnderflow
+                         + CompatFlags::kNeedEmptyOverflow);
+    }
+  };
+
   // Test binning compatibility when merging into an equidistant axis
   {
     SCOPED_TRACE("Target axis is equidistant");
@@ -850,52 +919,22 @@ TEST(AxisTest, NumericBinningCompatibility) {
     {
       SCOPED_TRACE("Source axis is irregular");
       testEqBinnedToNonGrowable(makeEquidistant, makeEqBinnedIrregular);
+      testIrregularToEqBinned(makeEquidistant);
 
-      // Extra scenarios enabled by irregular source axis binning
+      // Outcomes which are specific to the Eq<-Irr scenario
+      //
+      // If the target axis is not growable, the distance by which we shift
+      // extremal bin borders, or the size of the bins that we add on the sides,
+      // do not matter. It's all underflow and overflow range anyway. So we do
+      // not need to test creating bins on non-standard width on the sides of
+      // the source axis, or to test shifting the first/last borders by
+      // different amounts, as we'll need to do for growable axes.
+      //
       const RAxisEquidistant target(6, 1.2, 4.2);
-      {
-        SCOPED_TRACE("Source axis has an extra inner bin border");
-        checkNumericCompat(target,
-                           RAxisIrregular({1.2, 1.4, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                           CompatFlags::kMergingIsLossy);
-      }
-      {
-        SCOPED_TRACE("Source axis has one less inner bin border");
-        checkNumericCompat(target,
-                           RAxisIrregular({1.2, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                           CompatFlags::kRegularBinAliasing);
-      }
-      {
-        SCOPED_TRACE("First source border is shifted forward");
-        checkNumericCompat(target,
-                           RAxisIrregular({1.3, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                           CompatFlags::kTrivialRegularBinMapping
-                           + CompatFlags::kRegularBinBijection
-                           + CompatFlags::kFullBinBijection
-                           + CompatFlags::kMergingIsLossy
-                           + CompatFlags::kNeedEmptyUnderflow);
-      }
       {
         SCOPED_TRACE("First source border is shifted backward");
         checkNumericCompat(target,
                            RAxisIrregular({1.1, 1.7, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                           CompatFlags::kMergingIsLossy
-                           + CompatFlags::kRegularBinAliasing);
-      }
-      {
-        SCOPED_TRACE("Second source border is shifted forward");
-        checkNumericCompat(target,
-                           RAxisIrregular({1.2, 1.8, 2.2, 2.7, 3.2, 3.7, 4.2}),
-                           CompatFlags::kTrivialRegularBinMapping
-                           + CompatFlags::kRegularBinBijection
-                           + CompatFlags::kFullBinBijection
-                           + CompatFlags::kMergingIsLossy
-                           + CompatFlags::kRegularBinAliasing);
-      }
-      {
-        SCOPED_TRACE("Second source border is shifted backward");
-        checkNumericCompat(target,
-                           RAxisIrregular({1.2, 1.6, 2.2, 2.7, 3.2, 3.7, 4.2}),
                            CompatFlags::kMergingIsLossy
                            + CompatFlags::kRegularBinAliasing);
       }
@@ -908,16 +947,6 @@ TEST(AxisTest, NumericBinningCompatibility) {
                            + CompatFlags::kFullBinBijection
                            + CompatFlags::kMergingIsLossy
                            + CompatFlags::kRegularBinAliasing);
-      }
-      {
-        SCOPED_TRACE("Last source border is shifted backward");
-        checkNumericCompat(target,
-                           RAxisIrregular({1.2, 1.7, 2.2, 2.7, 3.2, 3.7, 4.1}),
-                           CompatFlags::kTrivialRegularBinMapping
-                           + CompatFlags::kRegularBinBijection
-                           + CompatFlags::kFullBinBijection
-                           + CompatFlags::kMergingIsLossy
-                           + CompatFlags::kNeedEmptyOverflow);
       }
     }
   }
@@ -1128,9 +1157,11 @@ TEST(AxisTest, NumericBinningCompatibility) {
     {
       SCOPED_TRACE("Source axis is irregular");
       testEqBinnedToGrowable(makeEqBinnedIrregular);
-      // TODO: Extract + reuse Eq<-Irr tests here, will need to extend extremal
-      //       border shifting to handle shifts of >= 2 bins as they have
-      //       pretty unique behavior.
+      testIrregularToEqBinned(makeGrowable);
+      // TODO: Test adding a new bin of various widths on the left/right side,
+      //       and shifting the left/right bin borders outwards by various
+      //       amounts. For growable axes, 0.2 vs 1 vs 1.2 vs 2 makes a
+      //       difference.
     }
   }
 }
