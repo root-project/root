@@ -56,8 +56,13 @@ asm(".desc ___crashreporter_info__, 0x10");
 
 static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
 
-namespace {
-std::mutex gErrorPrintMutex;
+static std::mutex &GetErrorMutex() {
+   // FIXME(jblomer): we leak the mutex on purpose to prevent the mutex from being destructed before other
+   // global statics that might still use error printing get destructed.  We will stop leaking once TError has been
+   // moved to the foundation library, which is always destructed last (and doesn't/shouldn't use TError printing in
+   // any of its global statics).
+   static std::mutex *m = new std::mutex();
+   return *m;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +97,7 @@ again:
    va_end(ap);
 
    // Serialize the actual printing.
-   std::lock_guard<std::mutex> guard(gErrorPrintMutex);
+   std::lock_guard<std::mutex> guard(GetErrorMutex());
 
    const char *toprint = buf; // Work around for older platform where we use TThreadTLSWrapper
    fprintf(stderr, "%s", toprint);
@@ -127,7 +132,7 @@ ErrorHandlerFunc_t GetErrorHandler()
 void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    if (gErrorIgnoreLevel == kUnset) {
-      std::lock_guard<std::mutex> guard(gErrorPrintMutex);
+      std::lock_guard<std::mutex> guard(GetErrorMutex());
 
       gErrorIgnoreLevel = 0;
       if (gEnv) {
