@@ -720,7 +720,7 @@ class ModuleFacade( types.ModuleType ):
 
     # python side pythonizations (should live in their own file, if we get many)
       def set_size(self, buf):
-         buf.SetSize(self.GetN())
+         buf.reshape((self.GetN(),))
          return buf
 
     # TODO: add pythonization API to pypy-c
