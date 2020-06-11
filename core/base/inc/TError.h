@@ -28,6 +28,7 @@
 
 #include "RtypesCore.h"
 #include <stdarg.h>
+#include <functional>
 
 
 class TVirtualMutex;
@@ -42,6 +43,36 @@ const Int_t kSysError =   5000;
 const Int_t kFatal    =   6000;
 
 R__EXTERN TVirtualMutex *gErrorMutex;
+
+// TROOT sets the error ignore level handler, the system error message handler, and the error abort handler on
+// construction such that the "Root.ErrorIgnoreLevel" environment variable is used for the ignore level
+// and gSystem is used to generate a stack trace on abort.
+namespace ROOT {
+namespace Internal {
+
+/// If gErrorIgnoreLevel == kUnset, called in order to find the level as of
+/// which errors are handled in the default handler.  Calling this function is
+/// serialized.
+using ErrorIgnoreLevelHandlerFunc_t = std::function<Int_t ()>;
+/// Retrieves the error string associated with the last system error.
+using ErrorSystemMsgHandlerFunc_t = std::function<const char *()>;
+/// Called in order to terminate the application in the default handler.
+using ErrorAbortHandlerFunc_t = std::function<void ()>;
+
+ErrorIgnoreLevelHandlerFunc_t GetErrorIgnoreLevelHandler();
+/// Returns the previous handler for getting the ignore level
+ErrorIgnoreLevelHandlerFunc_t SetErrorIgnoreLevelHandler(ErrorIgnoreLevelHandlerFunc_t h);
+
+ErrorSystemMsgHandlerFunc_t GetErrorSystemMsgHandler();
+/// Returns the previous system error message handler
+ErrorSystemMsgHandlerFunc_t SetErrorSystemMsgHandler(ErrorSystemMsgHandlerFunc_t h);
+
+ErrorAbortHandlerFunc_t GetErrorAbortHandler();
+/// Returns the previous abort handler
+ErrorAbortHandlerFunc_t SetErrorAbortHandler(ErrorAbortHandlerFunc_t h);
+
+} // namespace Internal
+} // namespace ROOT
 
 typedef void (*ErrorHandlerFunc_t)(int level, Bool_t abort, const char *location,
               const char *msg);
