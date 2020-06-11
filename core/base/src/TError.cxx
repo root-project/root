@@ -28,12 +28,11 @@ errorhandler function. By default DefaultErrorHandler() is used.
 #include "snprintf.h"
 #include "Varargs.h"
 #include "TError.h"
-#include "TSystem.h"
-#include "TEnv.h"
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 
 #include <cctype> // for tolower
+#include <cerrno>
 #include <cstring>
 #include <string>
 
@@ -58,6 +57,55 @@ asm(".desc ___crashreporter_info__, 0x10");
 #endif
 
 static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
+
+namespace {
+ROOT::Internal::ErrorIgnoreLevelHandlerFunc_t gGetErrorIgnoreLevelHandler;
+ROOT::Internal::ErrorSystemMsgHandlerFunc_t gGetErrorSystemMsgHandler;
+ROOT::Internal::ErrorAbortHandlerFunc_t gErrorAbortHandler;
+} // anonymous namespace
+
+
+namespace ROOT {
+namespace Internal {
+
+ErrorIgnoreLevelHandlerFunc_t GetErrorIgnoreLevelHandler()
+{
+   return gGetErrorIgnoreLevelHandler;
+}
+
+ErrorIgnoreLevelHandlerFunc_t SetErrorIgnoreLevelHandler(ErrorIgnoreLevelHandlerFunc_t h)
+{
+   auto oldHandler = gGetErrorIgnoreLevelHandler;
+   gGetErrorIgnoreLevelHandler = h;
+   return oldHandler;
+}
+
+ErrorSystemMsgHandlerFunc_t GetErrorSystemMsgHandler()
+{
+   return gGetErrorSystemMsgHandler;
+}
+
+ErrorSystemMsgHandlerFunc_t SetErrorSystemMsgHandler(ErrorSystemMsgHandlerFunc_t h)
+{
+   auto oldHandler = gGetErrorSystemMsgHandler;
+   gGetErrorSystemMsgHandler = h;
+   return oldHandler;
+}
+
+ErrorAbortHandlerFunc_t GetErrorAbortHandler()
+{
+   return gErrorAbortHandler;
+}
+
+ErrorAbortHandlerFunc_t SetErrorAbortHandler(ErrorAbortHandlerFunc_t h)
+{
+   auto oldHandler = gErrorAbortHandler;
+   gErrorAbortHandler = h;
+   return oldHandler;
+}
+
+} // namespace Internal
+} // namespace ROOT
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,29 +178,8 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
       R__LOCKGUARD2(gErrorMutex);
 
       gErrorIgnoreLevel = 0;
-      if (gEnv) {
-         std::string slevel;
-         auto cstrlevel = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
-         while (cstrlevel && *cstrlevel) {
-            slevel.push_back(tolower(*cstrlevel));
-            cstrlevel++;
-         }
-
-         if (slevel == "print")
-            gErrorIgnoreLevel = kPrint;
-         else if (slevel == "info")
-            gErrorIgnoreLevel = kInfo;
-         else if (slevel == "warning")
-            gErrorIgnoreLevel = kWarning;
-         else if (slevel == "error")
-            gErrorIgnoreLevel = kError;
-         else if (slevel == "break")
-            gErrorIgnoreLevel = kBreak;
-         else if (slevel == "syserror")
-            gErrorIgnoreLevel = kSysError;
-         else if (slevel == "fatal")
-            gErrorIgnoreLevel = kFatal;
-      }
+      if (gGetErrorIgnoreLevelHandler)
+         gErrorIgnoreLevel = gGetErrorIgnoreLevelHandler();
    }
 
    if (level < gErrorIgnoreLevel)
@@ -196,10 +223,9 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
 
       DebugPrint("aborting\n");
       fflush(stderr);
-      if (gSystem) {
-         gSystem->StackTrace();
-         gSystem->Abort();
-      } else
+      if (gErrorAbortHandler)
+         gErrorAbortHandler();
+      else
          abort();
    }
 }
@@ -246,17 +272,19 @@ again:
    if (vc)
       va_end(ap);
 
-   char *bp;
+   std::string bp = buf;
    if (level >= kSysError && level < kFatal) {
-      const char *toprint = buf; // Work around for older platform where we use TThreadTLSWrapper
-      bp = Form("%s (%s)", toprint, gSystem->GetError());
-   } else
-      bp = buf;
+      bp.push_back(' ');
+      if (gGetErrorSystemMsgHandler)
+         bp += gGetErrorSystemMsgHandler();
+      else
+         bp += std::to_string(errno);
+   }
 
    if (level != kFatal)
-      gErrorHandler(level, level >= gErrorAbortLevel, location, bp);
+      gErrorHandler(level, level >= gErrorAbortLevel, location, bp.c_str());
    else
-      gErrorHandler(level, kTRUE, location, bp);
+      gErrorHandler(level, kTRUE, location, bp.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

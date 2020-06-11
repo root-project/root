@@ -586,6 +586,32 @@ TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
 // ROOTDEBUG, or via the debugger.
 Int_t gDebug;
 
+/// Installed as TError handler after gEnv is constructed
+static Int_t DefaultGetErrorIgnoreLevelHandler() {
+   std::string slevel;
+   auto cstrlevel = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
+   while (cstrlevel && *cstrlevel) {
+      slevel.push_back(tolower(*cstrlevel));
+      cstrlevel++;
+   }
+
+   if (slevel == "print")
+      return kPrint;
+   else if (slevel == "info")
+      return kInfo;
+   else if (slevel == "warning")
+      return kWarning;
+   else if (slevel == "error")
+      return kError;
+   else if (slevel == "break")
+      return kBreak;
+   else if (slevel == "syserror")
+      return kSysError;
+   else if (slevel == "fatal")
+      return kFatal;
+   return 0;
+}
+
 
 ClassImp(TROOT);
 
@@ -922,6 +948,7 @@ TROOT::~TROOT()
       fCleanups->Clear();
       delete fPluginManager; gPluginMgr = fPluginManager = 0;
       delete gClassTable;  gClassTable = 0;
+      ROOT::Internal::SetErrorIgnoreLevelHandler(ROOT::Internal::ErrorIgnoreLevelHandlerFunc_t());
       delete gEnv; gEnv = 0;
 
       if (fTypes) fTypes->Delete();
@@ -940,6 +967,8 @@ TROOT::~TROOT()
       gSystem->CleanCompiledMacros();
 
       // Cleanup system class
+      ROOT::Internal::SetErrorSystemMsgHandler(ROOT::Internal::ErrorSystemMsgHandlerFunc_t());
+      ROOT::Internal::SetErrorAbortHandler(ROOT::Internal::ErrorAbortHandlerFunc_t());
       delete gSystem;
 
       // ROOT-6022:
@@ -1927,8 +1956,12 @@ void TROOT::InitSystem()
          fprintf(stderr, "Fix this by defining the HOME shell variable\n");
       }
 
+      ROOT::Internal::SetErrorSystemMsgHandler([](){ return gSystem->GetError(); });
+      ROOT::Internal::SetErrorAbortHandler([](){ gSystem->StackTrace(); gSystem->Abort(); });
+
       // read default files
       gEnv = new TEnv(".rootrc");
+      ROOT::Internal::SetErrorIgnoreLevelHandler(DefaultGetErrorIgnoreLevelHandler);
 
       gDebug = gEnv->GetValue("Root.Debug", 0);
 
