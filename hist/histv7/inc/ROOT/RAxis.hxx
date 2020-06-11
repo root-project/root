@@ -171,7 +171,7 @@ protected:
       }
 
       // Get regular bin border comparison parameters
-      double borderPos, leftBinWidth, rightBinWidth;
+      double borderPos = 0., leftBinWidth = 0., rightBinWidth = 0.;
       switch (side) {
          case BinSide::kFrom:
             borderPos = GetBinFrom(bin);
