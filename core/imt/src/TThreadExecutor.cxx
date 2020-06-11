@@ -115,16 +115,13 @@ static T ParallelReduceHelper(const std::vector<T> &objs, const std::function<T(
 
    BRange_t objRange(objs.begin(), objs.end());
 
-   return tbb::this_task_arena::isolate([&]{
+   return tbb::this_task_arena::isolate([&] {
       return tbb::parallel_reduce(objRange, T{}, pred, redfunc);
    });
 
 }
 
 } // End NS Internal
-} // End NS ROOT
-
-namespace ROOT {
 
 //////////////////////////////////////////////////////////////////////////
 /// Class constructor.
@@ -138,29 +135,33 @@ namespace ROOT {
 TThreadExecutor::TThreadExecutor(UInt_t nThreads)
 {
    fTaskArenaW = ROOT::Internal::GetGlobalTaskArena(nThreads);
-   }
-
-   void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step, const std::function<void(unsigned int i)> &f)
-   {
-      fTaskArenaW->Access().execute([&]{
-         tbb::this_task_arena::isolate([&]{
-            tbb::parallel_for(start, end, step, f);
-         });
-      });
-   }
-
-   double TThreadExecutor::ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc)
-   {
-      return fTaskArenaW->Access().execute([&] { return ROOT::Internal::ParallelReduceHelper<double>(objs, redfunc); });
-   }
-
-   float TThreadExecutor::ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc)
-   {
-      return fTaskArenaW->Access().execute([&] { return ROOT::Internal::ParallelReduceHelper<float>(objs, redfunc); });
-   }
-
-   unsigned TThreadExecutor::GetPoolSize(){
-      return fTaskArenaW->TaskArenaSize();
-   }
-
 }
+
+void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step,
+                                  const std::function<void(unsigned int i)> &f)
+{
+   fTaskArenaW->Access().execute([&] {
+      tbb::this_task_arena::isolate([&] {
+         tbb::parallel_for(start, end, step, f);
+      });
+   });
+}
+
+double TThreadExecutor::ParallelReduce(const std::vector<double> &objs,
+                                       const std::function<double(double a, double b)> &redfunc)
+{
+   return fTaskArenaW->Access().execute([&] { return ROOT::Internal::ParallelReduceHelper<double>(objs, redfunc); });
+}
+
+float TThreadExecutor::ParallelReduce(const std::vector<float> &objs,
+                                      const std::function<float(float a, float b)> &redfunc)
+{
+   return fTaskArenaW->Access().execute([&] { return ROOT::Internal::ParallelReduceHelper<float>(objs, redfunc); });
+}
+
+unsigned TThreadExecutor::GetPoolSize()
+{
+   return fTaskArenaW->TaskArenaSize();
+}
+
+} // namespace ROOT
