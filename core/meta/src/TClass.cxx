@@ -1987,6 +1987,11 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       return;
    }
 
+   static const bool debugInfo = nullptr != gSystem->Getenv("JENKINS_SERVER_COOKIE") && (nullptr != strstr(gInterpreter->GetTopLevelMacroName(), "StandardHypoTestDemo.C"));
+   if (debugInfo) {
+      Info("BuildRealData","Building the real data for %s", GetName());
+   }
+
    if (fClassVersion == 0) {
       isTransient = kTRUE;
    }
