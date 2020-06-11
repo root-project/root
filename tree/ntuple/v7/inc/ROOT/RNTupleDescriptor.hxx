@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <chrono>
 #include <memory>
+#include <numeric>
 #include <ostream>
 #include <vector>
 #include <string>
