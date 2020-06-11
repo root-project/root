@@ -14,19 +14,13 @@
 /// \brief Wrapper over tbb::task_arena
 ///
 /// This class is a wrapper over tbb::task_arena, in order to keep
-/// TBB away from ROOT's headers. We keep a single global instance,
-/// obtained with `ROOT::Internal::GetGlobalTaskArena()`, to be used by any
-/// parallel ROOT class with TBB as a backend. This has several advantages:
+/// TBB away from ROOT's headers. We keep a single global instance to be
+/// used by any parallel ROOT class with TBB as a backend.
 ///
-///   - Provides a unique interface to the TBB scheduler: TThreadExecutor,
-///     IMT and any class relying on TBB will get a pointer to the scheduler
-///     through `ROOT::Internal::GetGlobalTaskArena()`, which will return a
-///     reference to the only pointer to the TBB scheduler that will be
-///     active in any ROOT Process
-///   - Solves multiple undefined behaviors. Guaranteeing that all classes
-///    use the same task arena avoids interferences and undefined behavior
-///    by providing a single instance of the tbb::task_arena and automated
-///    bookkeeping, instantiation and destruction.
+/// TThreadExecutor, IMT and any class relying on TBB will get a pointer
+/// to the scheduler through `ROOT::Internal::GetGlobalTaskArena()`, which
+/// will return areference to the only pointer to the TBB scheduler that
+/// will be active in any ROOT Process.
 ///
 /// #### Examples:
 /// ~~~{.cpp}
