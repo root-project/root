@@ -58,11 +58,23 @@ asm(".desc ___crashreporter_info__, 0x10");
 
 static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
 
-namespace {
-ROOT::Internal::ErrorIgnoreLevelHandlerFunc_t gGetErrorIgnoreLevelHandler;
-ROOT::Internal::ErrorSystemMsgHandlerFunc_t gGetErrorSystemMsgHandler;
-ROOT::Internal::ErrorAbortHandlerFunc_t gErrorAbortHandler;
-} // anonymous namespace
+static ROOT::Internal::ErrorIgnoreLevelHandlerFunc_t &GetErrorIgnoreLevelHandlerRef()
+{
+   static ROOT::Internal::ErrorIgnoreLevelHandlerFunc_t h;
+   return h;
+}
+
+static ROOT::Internal::ErrorSystemMsgHandlerFunc_t &GetErrorSystemMsgHandlerRef()
+{
+   static ROOT::Internal::ErrorSystemMsgHandlerFunc_t h;
+   return h;
+}
+
+static ROOT::Internal::ErrorAbortHandlerFunc_t &GetErrorAbortHandlerRef()
+{
+   static ROOT::Internal::ErrorAbortHandlerFunc_t h;
+   return h;
+}
 
 
 namespace ROOT {
@@ -70,37 +82,37 @@ namespace Internal {
 
 ErrorIgnoreLevelHandlerFunc_t GetErrorIgnoreLevelHandler()
 {
-   return gGetErrorIgnoreLevelHandler;
+   return GetErrorIgnoreLevelHandlerRef();
 }
 
 ErrorIgnoreLevelHandlerFunc_t SetErrorIgnoreLevelHandler(ErrorIgnoreLevelHandlerFunc_t h)
 {
-   auto oldHandler = gGetErrorIgnoreLevelHandler;
-   gGetErrorIgnoreLevelHandler = h;
+   auto oldHandler = GetErrorIgnoreLevelHandlerRef();
+   GetErrorIgnoreLevelHandlerRef() = h;
    return oldHandler;
 }
 
 ErrorSystemMsgHandlerFunc_t GetErrorSystemMsgHandler()
 {
-   return gGetErrorSystemMsgHandler;
+   return GetErrorSystemMsgHandlerRef();
 }
 
 ErrorSystemMsgHandlerFunc_t SetErrorSystemMsgHandler(ErrorSystemMsgHandlerFunc_t h)
 {
-   auto oldHandler = gGetErrorSystemMsgHandler;
-   gGetErrorSystemMsgHandler = h;
+   auto oldHandler = GetErrorSystemMsgHandlerRef();
+   GetErrorSystemMsgHandlerRef() = h;
    return oldHandler;
 }
 
 ErrorAbortHandlerFunc_t GetErrorAbortHandler()
 {
-   return gErrorAbortHandler;
+   return GetErrorAbortHandlerRef();
 }
 
 ErrorAbortHandlerFunc_t SetErrorAbortHandler(ErrorAbortHandlerFunc_t h)
 {
-   auto oldHandler = gErrorAbortHandler;
-   gErrorAbortHandler = h;
+   auto oldHandler = GetErrorAbortHandlerRef();
+   GetErrorAbortHandlerRef() = h;
    return oldHandler;
 }
 
@@ -178,8 +190,8 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
       R__LOCKGUARD2(gErrorMutex);
 
       gErrorIgnoreLevel = 0;
-      if (gGetErrorIgnoreLevelHandler)
-         gErrorIgnoreLevel = gGetErrorIgnoreLevelHandler();
+      if (GetErrorIgnoreLevelHandlerRef())
+         gErrorIgnoreLevel = GetErrorIgnoreLevelHandlerRef()();
    }
 
    if (level < gErrorIgnoreLevel)
@@ -223,8 +235,8 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
 
       DebugPrint("aborting\n");
       fflush(stderr);
-      if (gErrorAbortHandler)
-         gErrorAbortHandler();
+      if (GetErrorAbortHandlerRef())
+         GetErrorAbortHandlerRef()();
       else
          abort();
    }
@@ -275,10 +287,10 @@ again:
    std::string bp = buf;
    if (level >= kSysError && level < kFatal) {
       bp.push_back(' ');
-      if (gGetErrorSystemMsgHandler)
-         bp += gGetErrorSystemMsgHandler();
+      if (GetErrorSystemMsgHandlerRef())
+         bp += GetErrorSystemMsgHandlerRef()();
       else
-         bp += std::to_string(errno);
+         bp += std::string("(errno: ") + std::to_string(errno) + ")";
    }
 
    if (level != kFatal)

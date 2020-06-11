@@ -938,6 +938,7 @@ TROOT::~TROOT()
 
       fMessageHandlers->Delete(); SafeDelete(fMessageHandlers);
 
+      ROOT::Internal::SetErrorIgnoreLevelHandler(ROOT::Internal::ErrorIgnoreLevelHandlerFunc_t());
 #ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fCanvases);
       SafeDelete(fTasks);
@@ -948,7 +949,6 @@ TROOT::~TROOT()
       fCleanups->Clear();
       delete fPluginManager; gPluginMgr = fPluginManager = 0;
       delete gClassTable;  gClassTable = 0;
-      ROOT::Internal::SetErrorIgnoreLevelHandler(ROOT::Internal::ErrorIgnoreLevelHandlerFunc_t());
       delete gEnv; gEnv = 0;
 
       if (fTypes) fTypes->Delete();
