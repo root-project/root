@@ -196,6 +196,8 @@
 #pragma read sourceClass="RooCategoryProxy" targetClass="RooTemplateProxy<RooMultiCategory>";
 #pragma link C++ class RooTemplateProxy<RooAbsCategoryLValue>+;
 #pragma read sourceClass="RooCategoryProxy" targetClass="RooTemplateProxy<RooAbsCategoryLValue>";
+#pragma link C++ class RooTemplateProxy<RooHistFunc>+;
+#pragma link C++ class RooTemplateProxy<const RooHistFunc>+;
 #pragma link C++ class RooRealVar- ;
 #pragma link C++ class RooRealVarSharedProperties+ ;
 #pragma read sourceClass="RooRealVarSharedProperties" targetClass="RooRealVarSharedProperties" version="[1]" \
@@ -356,4 +358,5 @@
 #pragma link C++ options=nomap class std::map<string,TH1*>+ ;
 #pragma link off class RooErrorHandler+ ;
 #endif 
-#pragma link C++ class RooBinSamplingPdf+; 
+#pragma link C++ class RooBinSamplingPdf+;
+#pragma link C++ class RooBinWidthFunction+;
