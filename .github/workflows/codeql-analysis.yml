@@ -25,7 +25,7 @@ jobs:
       if: ${{ github.event_name == 'pull_request' }}
       
     - name: Install Dependencies
-      run: apt install libxpm-devel
+      run: sudo apt install libxpm-devel
       
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
