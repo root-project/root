@@ -91,6 +91,15 @@ public:
       SetAlpha(alpha);
    }
 
+   /** Set r/g/b/a components of color */
+   void SetRGBA(uint8_t r, uint8_t g, uint8_t b, float alpha)
+   {
+      fName.clear();
+      fRGBA.resize(4);
+      SetRGB(r,g,b);
+      SetAlphaFloat(alpha);
+   }
+
    /** Set alpha as float value from range 0..1 */
    void SetAlphaFloat(float alpha)
    {
