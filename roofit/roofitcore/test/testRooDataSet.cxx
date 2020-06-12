@@ -181,3 +181,11 @@ TEST(RooDataSet, ReducingData) {
   }
 }
 
+/// ROOT-10845 IsOnHeap() always returned false.
+TEST(RooDataSet, IsOnHeap) {
+  auto setp = new RooDataSet();
+  EXPECT_TRUE(setp->IsOnHeap());
+
+  RooDataSet setStack;
+  EXPECT_FALSE(setStack.IsOnHeap());
+}
