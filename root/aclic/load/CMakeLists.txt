@@ -13,7 +13,9 @@ ROOTTEST_ADD_TEST(linktest
                   MACRO execlinktest.C
                   OUTREF execlinktest.ref)
 
-ROOTTEST_ADD_TEST(autoloadNamespace
-                  MACRO execautoloadNamespace.C
-                  OUTREF execautoloadNamespace.ref
-                  DEPENDS MyClass.cxx autoload)
+if(NOT MSVC OR win_broken_tests)
+    ROOTTEST_ADD_TEST(autoloadNamespace
+                      MACRO execautoloadNamespace.C
+                      OUTREF execautoloadNamespace.ref
+                      DEPENDS MyClass.cxx autoload)
+endif()
