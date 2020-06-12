@@ -1977,6 +1977,8 @@ void TClass::Browse(TBrowser *b)
 /// TRealData object in the list fRealData.
 ///
 
+bool DEBUG_CRASH_AXEL = false;
+
 void TClass::BuildRealData(void* pointer, Bool_t isTransient)
 {
 
@@ -1987,8 +1989,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       return;
    }
 
-   static const bool debugInfo = nullptr != gSystem->Getenv("JENKINS_SERVER_COOKIE") && gInterpreter->GetTopLevelMacroName() && (nullptr != strstr(gInterpreter->GetTopLevelMacroName(), "StandardHypoTestDemo.C"));
-   if (debugInfo) {
+   if (DEBUG_CRASH_AXEL) {
       Info("BuildRealData","Building the real data for %s", GetName());
    }
 

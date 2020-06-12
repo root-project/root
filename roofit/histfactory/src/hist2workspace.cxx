@@ -58,6 +58,7 @@ namespace RooStats {
   } // namespace RooStats
 } // namespace HistFactory
 
+extern bool DEBUG_CRASH_AXEL;
 /**
  * \ingroup HistFactory
  * main function of the hist2workspace executable.
@@ -78,6 +79,7 @@ int main(int argc, char** argv) {
 
   //Switch off ROOT histogram memory management
   gROOT->SetMustClean(false);
+  DEBUG_CRASH_AXEL = true;
   TDirectory::AddDirectory(false);
   cxcoutIHF << "hist2workspace is less verbose now. Use -v and -vv for more details." << std::endl;
   RooMsgService::instance().getStream(1).minLevel = RooFit::PROGRESS;
