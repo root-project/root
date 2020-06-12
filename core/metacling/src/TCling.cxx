@@ -2541,9 +2541,10 @@ void TCling::AddIncludePath(const char *path)
 void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                             const TClass* cl, Bool_t isTransient)
 {
-   static const bool debugInfo = nullptr != gSystem->Getenv("JENKINS_SERVER_COOKIE") && GetTopLevelMacroName() && (nullptr != strstr(GetTopLevelMacroName(), "StandardHypoTestDemo.C"));
+   static const bool debugInfo = nullptr != gSystem->Getenv("JENKINS_SERVER_COOKIE") && GetTopLevelMacroName()
+   && (strstr(GetTopLevelMacroName(), "StandardHypoTestDemo.C") || strstr(GetTopLevelMacroName(), "makeExample.C"));
    if (debugInfo) {
-      Info("InspectMembers","Inspecting members for %s/%s", cl ? cl->GetName() : "<TOP>", GetName());
+      Info("InspectMembers","In %s, inspecting members for %s", GetTopLevelMacroName(), cl->GetName());
    }
 
    if (insp.GetObjectValidity() == TMemberInspector::kUnset) {
