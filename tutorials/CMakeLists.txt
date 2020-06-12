@@ -155,7 +155,8 @@ if(NOT ROOT_mathmore_FOUND)
       math/Legendre.C
       math/mathmoreIntegration.C
       math/tStudent.C
-      math/normalDist.C)
+      math/normalDist.C
+      roostats/TestNonCentral.C )
 endif()
 
 if(NOT ROOT_fftw3_FOUND)
