@@ -34,4 +34,5 @@ ROOTTEST_ADD_TEST(unhappy
                   MACRO unhappy.C
                   ERRREF unhappy.eref
                   PASSRC 1
+                  ${MIGHT_FAIL}
                   LABELS roottest regression cling)

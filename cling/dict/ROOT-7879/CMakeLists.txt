@@ -1,12 +1,19 @@
 # ROOT-7879
 ROOTTEST_ADD_TEST(skipLinkDefDict
-                  COMMAND ${ROOT_rootcling_CMD} -f libSkippingDict.cxx -rmf libSkipping.rootmap -rml libSkipping.so  ${CMAKE_CURRENT_SOURCE_DIR}/skippingHeader.h ${CMAKE_CURRENT_SOURCE_DIR}/skipLinkDef.h
+                  COMMAND ${ROOT_rootcling_CMD} -f libSkippingDict.cxx -rmf libSkipping.rootmap -rml libSkipping${libsuffix} ${CMAKE_CURRENT_SOURCE_DIR}/skippingHeader.h ${CMAKE_CURRENT_SOURCE_DIR}/skipLinkDef.h
                   OUTREF skipLinkDefDict.ref)
 
+if(MSVC)
+    set(grep_cmd "findstr")
+    set(OUTREF_FILE skippingDict_win32.ref)
+else()
+    set(grep_cmd grep)
+    set(OUTREF_FILE skippingDict.ref)
+endif()
 
 ROOTTEST_ADD_TEST(skipLinkDef
-                  COMMAND grep clingAutoload libSkippingDict.cxx
+                  COMMAND ${grep_cmd} clingAutoload libSkippingDict.cxx
                   DEPENDS skipLinkDefDict
-                  OUTREF skippingDict.ref)
+                  OUTREF ${OUTREF_FILE})
 
 ROOTTEST_ADD_TESTDIRS()
