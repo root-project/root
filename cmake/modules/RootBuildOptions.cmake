@@ -387,7 +387,7 @@ endif()
 
 #---Removed options------------------------------------------------------------
 foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus hdfs ios
-            krb5 ldap qt qtgsi rfio ruby sapdb srp table)
+            krb5 ldap qt qtgsi rfio ruby sapdb srp table python)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
   endif()
@@ -402,8 +402,7 @@ endforeach()
 
 #---Replaced options--------------------------------------------------------------------------
 if(python)
-  message(DEPRECATION ">>> Please use the equivalent option 'pyroot' instead of 'python'; the latter will be removed in v6.22.")
-  set(pyroot ON CACHE BOOL "" FORCE)
+  message(STATUS ">>> INFO: 'python' option was removed. Instead, please check, that it was enabled a 'pyroot' option (by default it is ON).")
 endif()
 
 #---Avoid creating dependencies to 'non-standard' header files -------------------------------
