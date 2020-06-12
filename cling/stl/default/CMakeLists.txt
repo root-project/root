@@ -16,4 +16,5 @@ ROOTTEST_ADD_TEST(VectorSort
                   MACRO VectorSort.C
                   ${testcint} VectorSort.ref
                   # OUTCNV VectorSort_convert.sh
+                  ${MIGHT_FAIL}
                   LABELS roottest regression cling)

@@ -30,6 +30,9 @@ if(MSVC)
 
   option(win_broken_tests "Enable broken tests on Windows" FALSE)
 
+  if(NOT win_broken_tests)
+    set(MIGHT_FAIL WILLFAIL)
+  endif()
   if (NOT PYTHON_EXECUTABLE)
     find_package(PythonInterp)
     set(ROOTTEST_ENVIRONMENT
