@@ -95,7 +95,9 @@ if(NOT TARGET gtest)
 endif(NOT TARGET gtest)
 
 #---Find timeout binary---------------------------------------------------------
-find_program(TIMEOUT_BINARY timeout)
+if(NOT MSVC)
+  find_program(TIMEOUT_BINARY timeout)
+endif()
 
 #---Check for MPI---------------------------------------------------------------
 if(ROOT_mpi_FOUND)
