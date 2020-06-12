@@ -40,6 +40,7 @@ if(MSVC)
         PATH=$ENV{PATH}
         PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH}:$ENV{PYTHONPATH})
   endif()
+  set(PYTHON_EXECUTABLE_Development_Main ${PYTHON_EXECUTABLE})
   include(${ROOT_USE_FILE})
   set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
   file(READ "${ROOTSYS}/bin/root-config" root_config)
@@ -200,6 +201,7 @@ if(ROOT_pyroot_FOUND)
     endif()
   endif()
 endif()
+message("PYTHON_EXECUTABLE_Development_Main = ${PYTHON_EXECUTABLE_Development_Main}")
 
 #---Set flag for PyROOT tests that are expected to fail
 if(ROOT_pyroot_FOUND)
