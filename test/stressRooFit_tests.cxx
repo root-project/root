@@ -427,7 +427,9 @@ public:
     // -----------------------------------------------------------------------
 
     // Bind pdf ROOT::Math::Beta with three variables as RooAbsPdf function
-    RooRealVar x2("x2","x2",0,0.999) ;
+    // exclude x=0 and x=1 points from range since beta_pdf diverges at x=0 and x=1
+    // when a < 1 and/or b <1
+    RooRealVar x2("x2","x2",0.001,0.999) ;
     RooRealVar a("a","a",5,0,10) ;
     RooRealVar b("b","b",2,0,10) ;
     RooAbsPdf* beta = bindPdf("beta",ROOT::Math::beta_pdf,x2,a,b) ;
