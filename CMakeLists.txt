@@ -201,7 +201,6 @@ if(ROOT_pyroot_FOUND)
     endif()
   endif()
 endif()
-message("PYTHON_EXECUTABLE_Development_Main = ${PYTHON_EXECUTABLE_Development_Main}")
 
 #---Set flag for PyROOT tests that are expected to fail
 if(ROOT_pyroot_FOUND)
