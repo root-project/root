@@ -1,3 +1,6 @@
+#disable until JupyROOT works on Windows
+if(NOT MSVC OR win_broken_tests)
+
 # Do not run with classic build or if tests are vetoed
 if (ROOT_pyroot_FOUND AND
     NOT ROOT_CLASSIC_BUILD AND
@@ -44,6 +47,8 @@ if(ROOT_imt_FOUND)
                     COPY_TO_BUILDDIR ${IMT_NB}
                     COMMAND ${PYTHON_EXECUTABLE_Development_Main} ${NBDIFFUTIL} ${IMT_NB} "OFF"
                     RUN_SERIAL)
+endif()
+
 endif()
 
 endif()

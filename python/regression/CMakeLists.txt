@@ -5,6 +5,7 @@ if(ROOT_pyroot_FOUND)
     set(scott_file ScottCppyy.C) # Uses Cppyy header
   endif()
 
+if(NOT MSVC OR win_broken_tests)
   ROOTTEST_ADD_TEST(regression
                     MACRO PyROOT_regressiontests.py OPTS -b
                     LABELS longtest
@@ -20,6 +21,7 @@ if(ROOT_pyroot_FOUND)
                                          -e .L\ Till.C+
                                          -e .L\ CoralAttributeList.C+
                     ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
+endif()
 
   ROOTTEST_ADD_TEST(root_6023
                     MACRO exec_root_6023.py
