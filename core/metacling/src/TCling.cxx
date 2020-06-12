@@ -1177,6 +1177,7 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
                                                "Proof", "Geom"};
       LoadModules(FIXMEModules, clingInterp);
 
+
       clang::CompilerInstance &CI = *clingInterp.getCI();
       GlobalModuleIndex *GlobalIndex = nullptr;
       if (gSystem->Getenv("ROOT_EXPERIMENTAL_GMI")) {
@@ -1186,6 +1187,12 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       llvm::StringSet<> KnownModuleFileNames;
       if (GlobalIndex)
          GlobalIndex->getKnownModuleFileNames(KnownModuleFileNames);
+
+#ifdef R__LINUX
+const static bool isrstandardscaler = (0 == strcmp("rstandardscaler", program_invocation_short_name)); 
+#else
+const static bool isrstandardscaler = false;
+#endif
 
       clang::Preprocessor &PP = CI.getPreprocessor();
       std::vector<std::string> PendingModules;
@@ -1197,14 +1204,20 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
 
          // We want to load only already created modules.
          std::string FullASTFilePath;
-         if (!HasASTFileOnDisk(M, PP, &FullASTFilePath))
+         if (!HasASTFileOnDisk(M, PP, &FullASTFilePath)) {
+            if (isrstandardscaler) fprintf(stderr, "DEBUG pcm: false returned by HasASTFileOnDisk %s %s\n", M->Name.c_str(), FullASTFilePath.c_str());
             continue;
+         }
 
          if (GlobalIndex && KnownModuleFileNames.count(FullASTFilePath))
             continue;
 
-         if (M->IsMissingRequirement)
+         if (M->IsMissingRequirement) {
+            if (isrstandardscaler) fprintf(stderr, "DEBUG pcm: true returned by M->IsMissingRequirement %s %s\n", M->Name.c_str(), FullASTFilePath.c_str());
             continue;
+         }
+
+         if (isrstandardscaler) fprintf(stderr, "DEBUG pcm: should be loading: %s %s\n", M->Name.c_str(), FullASTFilePath.c_str());
 
          if (GlobalIndex)
             LoadModule(M->Name, clingInterp);
