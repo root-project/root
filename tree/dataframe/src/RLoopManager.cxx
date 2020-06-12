@@ -119,8 +119,13 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
    // We check if a tree has been successfully read, otherwise we throw (see ROOT-9984) to avoid further
    // operations
    if (!t.GetTree()) {
-      std::string err("GetBranchNames: error in opening the tree ");
+      std::string err("GetBranchNames: error in opening the tree '");
       err += t.GetName();
+      auto *f = t.GetCurrentFile();
+      if (f != nullptr)
+         err += std::string("' in file ") + f->GetTitle();
+      else
+         err += "' with no connected file";
       throw std::runtime_error(err);
    }
    if (branches) {
@@ -154,8 +159,11 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
 
             bool dotIsImplied = false;
             auto be = dynamic_cast<TBranchElement *>(b);
-            if (!be)
-               throw std::runtime_error("GetBranchNames: unsupported branch type");
+            if (!be) {
+               const auto msg =
+                  std::string("GetBranchNames: branch '") + b->GetName() + "' has an unsupported branch type";
+               throw std::runtime_error(msg);
+            }
             // TClonesArray (3) and STL collection (4)
             if (be->GetType() == 3 || be->GetType() == 4)
                dotIsImplied = true;
