@@ -1,4 +1,5 @@
 if(ROOT_pyroot_FOUND)
+if(NOT MSVC OR win_broken_tests)
   ROOTTEST_ADD_TEST(cpp
                     MACRO PyROOT_cpptests.py
                     COPY_TO_BUILDDIR Namespace.C PointerPassing.C  Namespace2.C
@@ -13,6 +14,7 @@ if(ROOT_pyroot_FOUND)
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ AdvancedCpp.C+
                                                      -e .L\ Template.C+
                     ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
+endif()
 
   ROOTTEST_ADD_TEST(cpp11
                     MACRO PyROOT_cpp11tests.py
