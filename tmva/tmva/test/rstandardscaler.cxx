@@ -3,8 +3,6 @@
 #include <TMVA/RStandardScaler.hxx>
 #include <TMVA/RTensorUtils.hxx>
 
-#include "TSystem.h"
-
 #include <cmath>
 
 using namespace TMVA::Experimental;
@@ -120,16 +118,6 @@ TEST(RStandardScaler, SaveLoad)
    RStandardScaler<float> scaler;
    scaler.Fit(x);
    scaler.Save("foo", "RStandardScalerSaveLoad.root");
-
-   fprintf(stderr, "Done with scaler.Save(\"foo\", \"RStandardScalerSaveLoad.root\");\n ");
-   TClass *cltypeinfo = TClass::GetClass<RStandardScaler<float>>();
-   fprintf(stderr, "TClass::GetClass<RStandardScaler<float>>() == %p\n", cltypeinfo);
-
-   TClass *cl = TClass::GetClass("TMVA::Experimental::RStandardScaler<float>");
-   fprintf(stderr, "TClass::GetClass(\"RStandardScaler<float>\") == %p\n", cl);
-   if (cl) 
-      fprintf(stderr, "and that has isloaded=%d hasinterpreterinfo=%d\n", cl->IsLoaded(), cl->HasInterpreterInfo());
-   gSystem->Exec(TString::Format("lsof -p %d", gSystem->GetPid()));
 
    RStandardScaler<float> scaler2("foo", "RStandardScalerSaveLoad.root");
    auto y1 = scaler.Compute({1.0, 2.0, 3.0, 4.0});
