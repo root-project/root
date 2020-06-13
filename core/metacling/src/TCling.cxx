@@ -1207,10 +1207,14 @@ const static bool isrstandardscaler = false;
          if (!HasASTFileOnDisk(M, PP, &FullASTFilePath)) {
             if (isrstandardscaler) fprintf(stderr, "DEBUG pcm: false returned by HasASTFileOnDisk %s %s\n", M->Name.c_str(), FullASTFilePath.c_str());
             continue;
+         } else {
+            if (isrstandardscaler) fprintf(stderr, "DEBUG pcm: true returned by HasASTFileOnDisk %s %s\n", M->Name.c_str(), FullASTFilePath.c_str());
          }
 
-         if (GlobalIndex && KnownModuleFileNames.count(FullASTFilePath))
+         if (GlobalIndex && KnownModuleFileNames.count(FullASTFilePath)) {
+            if (isrstandardscaler) fprintf(stderr, "DEBUG pcm: continue because GlobalIndex && KnownModuleFileNames %s %s\n", M->Name.c_str(), FullASTFilePath.c_str());
             continue;
+         }
 
          if (M->IsMissingRequirement) {
             if (isrstandardscaler) fprintf(stderr, "DEBUG pcm: true returned by M->IsMissingRequirement %s %s\n", M->Name.c_str(), FullASTFilePath.c_str());
