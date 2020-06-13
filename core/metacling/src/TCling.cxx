@@ -1180,7 +1180,8 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
 
       clang::CompilerInstance &CI = *clingInterp.getCI();
       GlobalModuleIndex *GlobalIndex = nullptr;
-      if (gSystem->Getenv("ROOT_EXPERIMENTAL_GMI")) {
+      const char *experimentalGMI = gSystem->Getenv("ROOT_EXPERIMENTAL_GMI");
+      if (experimentalGMI && strcmp(experimentalGMI,"false") == nullptr) {
          loadGlobalModuleIndex(SourceLocation(), clingInterp);
          GlobalIndex = CI.getModuleManager()->getGlobalIndex();
       }
