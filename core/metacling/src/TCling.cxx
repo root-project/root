@@ -2539,12 +2539,12 @@ void TCling::AddIncludePath(const char *path)
 ////////////////////////////////////////////////////////////////////////////////
 /// Visit all members over members, recursing over base classes.
 
-extern bool DEBUG_CRASH_AXEL;
-
 void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                             const TClass* cl, Bool_t isTransient)
 {
-   if (DEBUG_CRASH_AXEL) {
+   static const bool debugInfo = nullptr != gSystem->Getenv("JENKINS_SERVER_COOKIE") && GetTopLevelMacroName()
+   && (strstr(GetTopLevelMacroName(), "StandardHypoTestDemo.C") || strstr(GetTopLevelMacroName(), "makeExample.C"));
+   if (debugInfo) {
       Info("InspectMembers","In %s, inspecting members for %s", GetTopLevelMacroName(), cl->GetName());
    }
 
