@@ -5109,13 +5109,7 @@ Long_t TCling::ExecuteMacro(const char* filename, EErrorCode* error)
 
 const char* TCling::GetTopLevelMacroName() const
 {
-#if defined(R__MUST_REVISIT)
-#if R__MUST_REVISIT(6,0)
    Warning("GetTopLevelMacroName", "Must change return type!");
-#endif
-#endif
-   if (fCurExecutingMacros.empty())
-      return nullptr;
    return fCurExecutingMacros.back();
 }
 
