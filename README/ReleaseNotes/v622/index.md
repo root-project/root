@@ -61,9 +61,6 @@ The following people have contributed to this new version:
 - `TTreeProcessorMT` now has a constructor argument to set the number of threads for its thread-pool
 
 
-## I/O Libraries
-
-
 ## TTree Libraries
 
 - A new status bit was added to `TTree`: `kEntriesReshuffled`, which indicates a `TTree` that is the output of the
@@ -319,9 +316,6 @@ operations provided by the ROOT TMatrix classes.
     shown in real aspect.
   - New graphics style "BELLE2" from Martin Ritter.
 
-## 3D Graphics Libraries
-
-
 ## Geometry Libraries
 
 ### Geometry drawing in web browser
@@ -329,21 +323,6 @@ operations provided by the ROOT TMatrix classes.
 When ROOT compiled with -Droot7=ON flag, one can enable geometry drawing in web browser.
 Just apply --web option when starting root like: `root --web tutorials/geom/rootgeom.C`
 Not all features of TGeoPainter are supported - only plain drawing of selected TGeoVolume
-
-
-## Database Libraries
-
-
-## Networking Libraries
-
-
-## GUI Libraries
-
-
-## Montecarlo Libraries
-
-
-## PROOF Libraries
 
 
 ## Language Bindings
