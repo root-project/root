@@ -66,7 +66,7 @@ endif()
 
 #--- CPU tests. ----------------------------
 if ((BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
-  include_directories(${TBB_INCLUDE_DIRS})
+  include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 
   # DNN - Forward CPU
   ROOT_EXECUTABLE(testRecurrentForwardPassCpu TestRecurrentForwardPassCpu.cxx LIBRARIES ${Libraries})

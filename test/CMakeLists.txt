@@ -352,7 +352,7 @@ ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error i
 
 #--TBB basic test----------------------------------------------------------------------------------
 if(ROOT_imt_FOUND)
-  include_directories(${TBB_INCLUDE_DIRS})
+  include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
   ROOT_EXECUTABLE(testTBB testTBB.cxx LIBRARIES ${TBB_LIBRARIES} BUILTINS TBB)
   set_target_properties(testTBB PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
   ROOT_ADD_TEST(test-TBB COMMAND testTBB FAILREGEX "FAILED|Error in")
