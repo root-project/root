@@ -21,17 +21,25 @@
 // Warning(), Error(), SysError() and Fatal(). They all take a          //
 // location string (where the error happened) and a printf style format //
 // string plus vararg's. In the end these functions call an             //
-// errorhanlder function. By default DefaultErrorHandler() is used.     //
+// errorhanlder function. Initially, a minimal, non thread-safe handler //
+// is installed that is supposed to be replaced by the                  //
+// DefaultErrorHandler(), which needs to be implemented and installed   //
+// by the user of TError.  Normally, the default error handler is set   //
+// during gROOT initialization.                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 
+#include <ROOT/RConfig.hxx> // for R__DEPRECATED
+#include <DllImport.h> // for R__EXTERN
 #include "RtypesCore.h"
-#include <stdarg.h>
+
+#include <cstdarg>
 #include <functional>
 
 
 class TVirtualMutex;
+R__EXTERN TVirtualMutex *gErrorMutex R__DEPRECATED(6,26, "ROOT stopped exporting gErrorMutex.");
 
 const Int_t kUnset    =  -1;
 const Int_t kPrint    =   0;
@@ -42,7 +50,6 @@ const Int_t kBreak    =   4000;
 const Int_t kSysError =   5000;
 const Int_t kFatal    =   6000;
 
-R__EXTERN TVirtualMutex *gErrorMutex;
 
 // TROOT sets the error ignore level handler, the system error message handler, and the error abort handler on
 // construction such that the "Root.ErrorIgnoreLevel" environment variable is used for the ignore level
@@ -50,26 +57,14 @@ R__EXTERN TVirtualMutex *gErrorMutex;
 namespace ROOT {
 namespace Internal {
 
-/// If gErrorIgnoreLevel == kUnset, called in order to find the level as of
-/// which errors are handled in the default handler.  Calling this function is
-/// serialized.
-using ErrorIgnoreLevelHandlerFunc_t = std::function<Int_t ()>;
 /// Retrieves the error string associated with the last system error.
 using ErrorSystemMsgHandlerFunc_t = std::function<const char *()>;
-/// Called in order to terminate the application in the default handler.
-using ErrorAbortHandlerFunc_t = std::function<void ()>;
-
-ErrorIgnoreLevelHandlerFunc_t GetErrorIgnoreLevelHandler();
-/// Returns the previous handler for getting the ignore level
-ErrorIgnoreLevelHandlerFunc_t SetErrorIgnoreLevelHandler(ErrorIgnoreLevelHandlerFunc_t h);
 
 ErrorSystemMsgHandlerFunc_t GetErrorSystemMsgHandler();
 /// Returns the previous system error message handler
 ErrorSystemMsgHandlerFunc_t SetErrorSystemMsgHandler(ErrorSystemMsgHandlerFunc_t h);
 
-ErrorAbortHandlerFunc_t GetErrorAbortHandler();
-/// Returns the previous abort handler
-ErrorAbortHandlerFunc_t SetErrorAbortHandler(ErrorAbortHandlerFunc_t h);
+void MinimalErrorHandler(int level, Bool_t abort, const char *location, const char *msg);
 
 } // namespace Internal
 } // namespace ROOT

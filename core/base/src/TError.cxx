@@ -16,30 +16,22 @@ This file defines a number of global error handling routines:
 Warning(), Error(), SysError() and Fatal(). They all take a
 location string (where the error happened) and a printf style format
 string plus vararg's. In the end these functions call an
-errorhandler function. By default DefaultErrorHandler() is used.
+errorhandler function. Initially the MinimalErrorHandler, which is supposed
+to be replaced by the proper DefaultErrorHandler()
 */
 
-#ifdef WIN32
-#include <windows.h>
-#endif
-
-#include <cstdio>
-#include <cstdlib>
 #include "snprintf.h"
 #include "Varargs.h"
 #include "TError.h"
-#include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 
-#include <cctype> // for tolower
+#include <cstdio>
+#include <cstdlib>
 #include <cerrno>
-#include <cstring>
 #include <string>
 
-// Mutex for error and error format protection
-// (exported to be used for similar cases in other classes)
-
-TVirtualMutex *gErrorMutex = 0;
+// Deprecated
+TVirtualMutex *gErrorMutex = nullptr;
 
 Int_t  gErrorIgnoreLevel     = kUnset;
 Int_t  gErrorAbortLevel      = kSysError+1;
@@ -56,13 +48,8 @@ asm(".desc ___crashreporter_info__, 0x10");
 }
 #endif
 
-static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
+static ErrorHandlerFunc_t gErrorHandler = ROOT::Internal::MinimalErrorHandler;
 
-static ROOT::Internal::ErrorIgnoreLevelHandlerFunc_t &GetErrorIgnoreLevelHandlerRef()
-{
-   static ROOT::Internal::ErrorIgnoreLevelHandlerFunc_t h;
-   return h;
-}
 
 static ROOT::Internal::ErrorSystemMsgHandlerFunc_t &GetErrorSystemMsgHandlerRef()
 {
@@ -70,27 +57,9 @@ static ROOT::Internal::ErrorSystemMsgHandlerFunc_t &GetErrorSystemMsgHandlerRef(
    return h;
 }
 
-static ROOT::Internal::ErrorAbortHandlerFunc_t &GetErrorAbortHandlerRef()
-{
-   static ROOT::Internal::ErrorAbortHandlerFunc_t h;
-   return h;
-}
-
 
 namespace ROOT {
 namespace Internal {
-
-ErrorIgnoreLevelHandlerFunc_t GetErrorIgnoreLevelHandler()
-{
-   return GetErrorIgnoreLevelHandlerRef();
-}
-
-ErrorIgnoreLevelHandlerFunc_t SetErrorIgnoreLevelHandler(ErrorIgnoreLevelHandlerFunc_t h)
-{
-   auto oldHandler = GetErrorIgnoreLevelHandlerRef();
-   GetErrorIgnoreLevelHandlerRef() = h;
-   return oldHandler;
-}
 
 ErrorSystemMsgHandlerFunc_t GetErrorSystemMsgHandler()
 {
@@ -104,63 +73,28 @@ ErrorSystemMsgHandlerFunc_t SetErrorSystemMsgHandler(ErrorSystemMsgHandlerFunc_t
    return oldHandler;
 }
 
-ErrorAbortHandlerFunc_t GetErrorAbortHandler()
+/// A very simple error handler that is usually replaced by the TROOT default error handler.
+/// The minimal error handler is not serialized across threads, so that output of multi-threaded programs
+/// can get scrambled
+void MinimalErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
-   return GetErrorAbortHandlerRef();
-}
+   if (level < gErrorIgnoreLevel)
+      return;
 
-ErrorAbortHandlerFunc_t SetErrorAbortHandler(ErrorAbortHandlerFunc_t h)
-{
-   auto oldHandler = GetErrorAbortHandlerRef();
-   GetErrorAbortHandlerRef() = h;
-   return oldHandler;
+   if (level >= kBreak)
+      fprintf(stderr, "\n *** Break *** ");
+   fprintf(stderr, "<%s>: %s\n", location ? location : "unspecified location", msg);
+   fflush(stderr);
+   if (abort_bool) {
+      fprintf(stderr, "aborting\n");
+      fflush(stderr);
+      abort();
+   }
 }
 
 } // namespace Internal
 } // namespace ROOT
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print debugging message to stderr and, on Windows, to the system debugger.
-
-static void DebugPrint(const char *fmt, ...)
-{
-   TTHREAD_TLS(Int_t) buf_size = 2048;
-   TTHREAD_TLS(char*) buf = 0;
-
-   va_list ap;
-   va_start(ap, fmt);
-
-again:
-   if (!buf)
-      buf = new char[buf_size];
-
-   Int_t n = vsnprintf(buf, buf_size, fmt, ap);
-   // old vsnprintf's return -1 if string is truncated new ones return
-   // total number of characters that would have been written
-   if (n == -1 || n >= buf_size) {
-      if (n == -1)
-         buf_size *= 2;
-      else
-         buf_size = n+1;
-      delete [] buf;
-      buf = 0;
-      va_end(ap);
-      va_start(ap, fmt);
-      goto again;
-   }
-   va_end(ap);
-
-   // Serialize the actual printing.
-   R__LOCKGUARD2(gErrorMutex);
-
-   const char *toprint = buf; // Work around for older platform where we use TThreadTLSWrapper
-   fprintf(stderr, "%s", toprint);
-
-#ifdef WIN32
-   ::OutputDebugString(buf);
-#endif
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set an errorhandler function. Returns the old handler.
@@ -180,67 +114,6 @@ ErrorHandlerFunc_t GetErrorHandler()
    return gErrorHandler;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// The default error handler function. It prints the message on stderr and
-/// if abort is set it aborts the application.
-
-void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
-{
-   if (gErrorIgnoreLevel == kUnset) {
-      R__LOCKGUARD2(gErrorMutex);
-
-      gErrorIgnoreLevel = 0;
-      if (GetErrorIgnoreLevelHandlerRef())
-         gErrorIgnoreLevel = GetErrorIgnoreLevelHandlerRef()();
-   }
-
-   if (level < gErrorIgnoreLevel)
-      return;
-
-   const char *type = 0;
-
-   if (level >= kInfo)
-      type = "Info";
-   if (level >= kWarning)
-      type = "Warning";
-   if (level >= kError)
-      type = "Error";
-   if (level >= kBreak)
-      type = "\n *** Break ***";
-   if (level >= kSysError)
-      type = "SysError";
-   if (level >= kFatal)
-      type = "Fatal";
-
-   std::string smsg;
-   if (level >= kPrint && level < kInfo)
-      smsg = msg;
-   else if (level >= kBreak && level < kSysError)
-      smsg = std::string(type) + " " + msg;
-   else if (!location || !location[0])
-      smsg = std::string(type) + ": " + msg;
-   else
-      smsg = std::string(type) + " in <" + location + ">: " + msg;
-
-   DebugPrint("%s\n", smsg.c_str());
-
-   fflush(stderr);
-   if (abort_bool) {
-
-#ifdef __APPLE__
-      if (__crashreporter_info__)
-         delete [] __crashreporter_info__;
-      __crashreporter_info__ = strdup(smsg.c_str());
-#endif
-
-      DebugPrint("aborting\n");
-      fflush(stderr);
-      if (GetErrorAbortHandlerRef())
-         GetErrorAbortHandlerRef()();
-      else
-         abort();
-   }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// General error handler function. It calls the user set error handler.

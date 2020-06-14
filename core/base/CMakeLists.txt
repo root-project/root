@@ -138,6 +138,7 @@ set(BASE_SOURCES
   src/TDirectory.cxx
   src/TEnv.cxx
   src/TError.cxx
+  src/TErrorDefaultHandler.cxx
   src/TException.cxx
   src/TExec.cxx
   src/TFileCollection.cxx
