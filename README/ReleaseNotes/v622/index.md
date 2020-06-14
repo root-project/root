@@ -659,6 +659,137 @@ Regarding `TPython`, its library is built only for the highest Python version th
 Therefore, in a Python3-Python2 ROOT build, the Python code executed with `TPython` must be Python3-compliant.
 
 
+### Bugs and Issues fixed in this release
+
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-8799'>ROOT-8799</a>] - Automatically convert Python iterables into C++ collections
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10346'>ROOT-10346</a>] - [DF] Warn on mismatch between slot pool size and effective number of slots
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-2566'>ROOT-2566</a>] - `RooNDKeysPdf` has no default constructor which causes a crash when reading it from a workspace
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-2936'>ROOT-2936</a>] - Problem plotting slices of `RooSimultaneous`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-3579'>ROOT-3579</a>] - `RooTreeDataStore` not Cloning the tree properly (and const correctness)
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-4060'>ROOT-4060</a>] - histfactory - print error and exit if channel name begins with numeric char
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-4312'>ROOT-4312</a>] - NLL problem using setData
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-4580'>ROOT-4580</a>] - `RooDataSet` `reduce(Cut(mycut))` and `Draw(myvar,mycut)` give different results
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-7485'>ROOT-7485</a>] - Incorrect normalization when using named ranges in fitTo() and fitting several times
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-7520'>ROOT-7520</a>] - Segmentation fault when loading a `RooLinearVar` from a `RooWorkspace`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-7578'>ROOT-7578</a>] - HistFactory: invalid Sample names cause segfault
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-7921'>ROOT-7921</a>] - component(s) ... already in the workspace when using PROD after EDIT
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-7983'>ROOT-7983</a>] - Missing `RooDataSet::createHistogram` methods
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-7986'>ROOT-7986</a>] - Severe memory leak reading `RooFitResult` and `HypoTestInverterResult` from disk
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9535'>ROOT-9535</a>] - Unexpected crash when cloning `TH2` histogram
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9556'>ROOT-9556</a>] - [DF] Users might silently get wrong results when they process two trees as friends, one of which has been produced by a multi-thread Snapshot of the other
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9768'>ROOT-9768</a>] - Char array branches not correctly retrieved as Python strings
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9966'>ROOT-9966</a>] - Thread-safety problem in `TFile` from use of `TSystem`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10109'>ROOT-10109</a>] - Wrong overload resolution for `GetBinErrorUp` in `TH2D`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10146'>ROOT-10146</a>] - `TH2` `FitSlicesX()` and `TH3` `FitSlicesZ()` don't use the axis range set by user
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10159'>ROOT-10159</a>] - from ROOT import <something> on python cmd line fails if IPython is already imported
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10175'>ROOT-10175</a>] - Notebook `jsmva on` package util not found
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10178'>ROOT-10178</a>] - `TTreeProcessorMT` can't deal with trees with different names in the same `TChain`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10209'>ROOT-10209</a>] - ROOT 6.18/00 does not compile with CUDA available in C++17 mode
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10277'>ROOT-10277</a>] - Crash when generating a large number of datasets
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10397'>ROOT-10397</a>] - [TTreeReaderArray] Segfault when accessing data from leaflist
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10417'>ROOT-10417</a>] - TMVA test bug: rtensor.cxx:303
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10458'>ROOT-10458</a>] - `RDataFrame`: sub-par diagnostics for interpreted types
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10488'>ROOT-10488</a>] - `TClass::GetListOfMethods` does not include constructor for `std::hash`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10494'>ROOT-10494</a>] - `TChain::Add` and `TChain::AddFile` broken with URL that contains double slashes
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10503'>ROOT-10503</a>] - `RooAbsPdf::chi2FitTo` overloads get lost in PyROOT
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10508'>ROOT-10508</a>] - `RDataFrame` created from `TChain` after calling `TChain::AddFriend()` crashes when trying to plot a variable if MultiThread is enabled
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10517'>ROOT-10517</a>] - `RooFit::CutRange` is buggy with multiple range
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10518'>ROOT-10518</a>] - `chi2FitTo` and `fitTo` are not working properly with multiple ranges
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10524'>ROOT-10524</a>] - Performance anomaly when running `TChain::AddFriend()`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10527'>ROOT-10527</a>] - `RDataFrame` `Display()` crashes with column of `std::string`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10529'>ROOT-10529</a>] - `Error in <TClass::ReadRules()>: Cannot find rules etc/class.rules`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10533'>ROOT-10533</a>] - [TTreeProcessorMT] Support friend chains with differently named trees
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10545'>ROOT-10545</a>] - `.qqqqqq` does not exit root 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10549'>ROOT-10549</a>] - `RDataFrame` warns but does not throw when skipping files after network glitch
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10550'>ROOT-10550</a>] - `plotOn` normalization crazy and error message when doing loops of toys
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10561'>ROOT-10561</a>] - [TTreeProcessorMT] Breaks without `EnableImplicitMT` on
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10563'>ROOT-10563</a>] - `RDataFrame::Cache` fails when used with `RDataFrame::Alias`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10568'>ROOT-10568</a>] - Wrong version in master branch
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10572'>ROOT-10572</a>] - roofit `plotOn` reproducibly crashes when having done many toys before, in a specific configuration
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10573'>ROOT-10573</a>] - `Snapshot` fails to update `TTree` if Multithreading enabled
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10575'>ROOT-10575</a>] - Issues with enabling `pyroot_experimental`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10576'>ROOT-10576</a>] - Error getting list of methods of std in cxx17
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10578'>ROOT-10578</a>] - `TMVA::Experimental` Intel compiler support
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10583'>ROOT-10583</a>] - Incorrect OpenGL rendering
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10587'>ROOT-10587</a>] - [Doc] Python RDF tutorials not shown correctly in doxygen
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10595'>ROOT-10595</a>] - Bias obtained in `TH1::KolmogorovTest` when using option X
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10596'>ROOT-10596</a>] - [DF] Deprecate/hide `ROOT::MakeRootDataFrame`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10597'>ROOT-10597</a>] - ROOT 6.20.0 fails to compile with `-Dcuda=yes` when cudnn not installed
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10599'>ROOT-10599</a>] - `rootls -t` doesn't work with multiple cycles for a tree
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10601'>ROOT-10601</a>] - Problem Drawing Histograms after `TH2::FitSlicesX`/`Y`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10605'>ROOT-10605</a>] - wrong slice in plotting simultaneous pdf built with `RooSimWSTool`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10606'>ROOT-10606</a>] - current master fails basic `RooFit` functionality due to cppyy changes
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10619'>ROOT-10619</a>] - [DF] Crash with unused jitted filters
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10624'>ROOT-10624</a>] - [Graphics][JSROOT] Broken histogram fill color with `%jsroot on`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10629'>ROOT-10629</a>] - clang CodeGen assertion "popping exception stack when not empty"
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10630'>ROOT-10630</a>] - Failed to run python code: `copy_string=history.history.keys()[0]`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10647'>ROOT-10647</a>] - Missing implementation of "section" in `RooArgSet::writeToStream`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10648'>ROOT-10648</a>] - Occasional streamer type mismatch in multi-thread `TTree` writing
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10654'>ROOT-10654</a>] - `rootmv` doesn't work with multiple cycles `TTrees` in `TFiles`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10656'>ROOT-10656</a>] - `TTreeProcessorMT` leaves implicit multi-threading enabled after a call to `Process`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10658'>ROOT-10658</a>] - wrong `-I` flags provided for dictionary compilation
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10661'>ROOT-10661</a>] - `rootcling` produces uncompilable dictionary if class depends on boost headers
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10663'>ROOT-10663</a>] - ROOT dictionary for ATLAS persistent class can't load correctly
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10668'>ROOT-10668</a>] - `RooFit` with Asymptotically Correct approach will segfault if `RooRealVar` `Name != Title`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10670'>ROOT-10670</a>] - `hesse` does not know which minimizer to use
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10672'>ROOT-10672</a>] - segfault when retrieving `TTreeCache` from `TChain`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10676'>ROOT-10676</a>] - Constructing a `RooDataSet` from `TTree` with cuts causes warnings
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10680'>ROOT-10680</a>] - [PyROOT] numpy vs `RVec<bool>` comparison results in infinite loop
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10681'>ROOT-10681</a>] - New `cppyy` only provides `addressof`, not `AddressOf`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10689'>ROOT-10689</a>] - cling misidentifies called lambda
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10693'>ROOT-10693</a>] - [PyROOT] Infinite iteration over `RVec`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10696'>ROOT-10696</a>] - `TDirectory::GetObject()` with wrong type leaks memory
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10702'>ROOT-10702</a>] - [TTree] Wrong data could be silently written if data-member of object has same name as another branch
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10706'>ROOT-10706</a>] - Fit to `TMultiGraph` with single `TGraphAsymErrors` different from single graph fit
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10709'>ROOT-10709</a>] - RooFit depends from MathMore when ROOT compiled with `-Dmathmore=ON`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10711'>ROOT-10711</a>] - X, Y axis scale changes during allinging X,Y axis title as centered in `TMultiGraph`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10712'>ROOT-10712</a>] - Failing template instantiation during tear down.
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10713'>ROOT-10713</a>] - Several memory leaks when reading `RooStats::HypoTestInverterResult`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10718'>ROOT-10718</a>] - `TMath::Poisson(n,mu)` for `n = 0` and `mu < 0` returns wrong value !
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10721'>ROOT-10721</a>] - Python tutorials are not compatible with Python 3
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10723'>ROOT-10723</a>] - [TChain] Potential access to invalid `fTree` in `TChain` destructor
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10731'>ROOT-10731</a>] - [PyROOT] Broken conversion from boolean numpy array to `bool*`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10732'>ROOT-10732</a>] - `hadd` broken
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10733'>ROOT-10733</a>] - gtest-tree-treeplayer-test-treeprocessormt fails without xrootd
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10734'>ROOT-10734</a>] - pymva tutorials not disable when pymva not available
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10736'>ROOT-10736</a>] - roofit tutorials failing without PyRoot-experimental.
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10737'>ROOT-10737</a>] - `RooAbsPdf` is distorted outside its "Range" used previously with `fitTo`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10751'>ROOT-10751</a>] - ROOT Fails to find C++ standard library path on non-standard locale
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10753'>ROOT-10753</a>] - [TTreeReader] Wrong entries are loaded in case of `TChain`+`TEntryList`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10754'>ROOT-10754</a>] - [cling] Miscompilation with `make_shared`/`shared_ptr`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10764'>ROOT-10764</a>] - `RooAbsAnaConvPdf` crashes when being imported and retrieved from `RooWorkspace`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10765'>ROOT-10765</a>] - C++14 now requires root7
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10766'>ROOT-10766</a>] - Missing overload in LHCb's `FuncOps__::__le__`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10768'>ROOT-10768</a>] - Document backwards incompatible changes & new features in the new PyROOT
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10774'>ROOT-10774</a>] - `rootbrowse` freezes after startup
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10777'>ROOT-10777</a>] - Cannot py-import Gaudi: assert "partial specialization scope specifier in SFINAE context"
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10779'>ROOT-10779</a>] - HistFactory models that are written to a file, then retrieved with updated histograms find only old histograms
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10782'>ROOT-10782</a>] - With gcc10 STL headers don't include implicitly `stdexcept`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10784'>ROOT-10784</a>] - Mistake in what is reported in documentation
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10788'>ROOT-10788</a>] - PyROOT failed to load cmssw libraires
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10790'>ROOT-10790</a>] - [DF] Single-thread `Snapshot` into a directory also creates a spurious `TTree` outside of it 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10792'>ROOT-10792</a>] - [DF] `Snapshot` of `TClonesArrays` read via `TTreeReaderArray` is broken
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10798'>ROOT-10798</a>] - ROOT 6.20/02 can't generate a dictionary for ATLAS's `EventLoop` package
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10804'>ROOT-10804</a>] - assertion in `clang::Sema::LookupSpecialMember`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10810'>ROOT-10810</a>] - Segmentation fault in pickling of weighted RooFit datasets 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10820'>ROOT-10820</a>] - Circular includes `Rtypes.h` and `TGenericClassInfo.h`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10822'>ROOT-10822</a>] - [DF] `RVec`s of non-split branches can read from invalid addresses
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10833'>ROOT-10833</a>] - PyROOT FutureWarning in `ROOT.py`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10837'>ROOT-10837</a>] - `hadd` crashes when slow merging file with multiple array with same index
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10839'>ROOT-10839</a>] - Missing lock guard in `THashTable`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-6882'>ROOT-6882</a>] - RooFit doesn't support `ULong64_t`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10341'>ROOT-10341</a>] - Support I/O for `RooNDKeysPDF`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10534'>ROOT-10534</a>] - [RDataFrame] Provide report about number of event loops run
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-2558'>ROOT-2558</a>] - `SPlot` crashes when yields are not the top level fitparameters
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-5311'>ROOT-5311</a>] - `HistFactory` output is too verbose and cannot be controlled
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-8033'>ROOT-8033</a>] - Poisson constraint for statistical error in `HistFactory`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9365'>ROOT-9365</a>] - Member functions' definition locations missing in Class `HistoToWorkspaceFactoryFast`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10513'>ROOT-10513</a>] - [PyROOT exp] Use consistent names for interoperability functions
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10521'>ROOT-10521</a>] - `RooAbsData::getRange()` argument var should be const
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10657'>ROOT-10657</a>] - [DF] Speed up jitting
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10665'>ROOT-10665</a>] - Make `TFile::ReadProcessID` thread safe
+
+
 ## HEAD of the v6-22-00-patches branch
 
 These changes will be part of a future 6.22/02.
