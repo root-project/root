@@ -1836,6 +1836,7 @@ void TCling::LoadPCM(std::string pcmFileNameFullPath)
       std::string RDictFileOpts = pcmFileNameFullPath + "?filetype=pcm";
       TMemFile pcmMemFile(RDictFileOpts.c_str(), range);
 
+      cling::Interpreter::PushTransactionRAII deserRAII(GetInterpreterImpl());
       LoadPCMImpl(pcmMemFile);
       fPendingRdicts.erase(pendingRdict);
 
