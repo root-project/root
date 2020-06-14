@@ -1628,7 +1628,6 @@ int64_t bshuf_untrans_bit_elem_AVX(const void* in, void* out, const size_t size,
 
 int64_t bshuf_trans_bit_elem(const void* in, void* out, const size_t size,
         const size_t elem_size) {
-
     int64_t count;
 #ifdef USEAVX2
     count = bshuf_trans_bit_elem_AVX(in, out, size, elem_size);
@@ -1703,7 +1702,6 @@ int64_t bshuf_blocked_wrap_fun(bshufBlockFunDef fun, const void* in, void* out, 
     if (err < 0) return err;
 
     leftover_bytes = size % BSHUF_BLOCKED_MULT * elem_size;
-    //this_iter;
     last_in = (char *) ioc_get_in(&C, &this_iter);
     ioc_set_next_in(&C, &this_iter, (void *) (last_in + leftover_bytes));
     last_out = (char *) ioc_get_out(&C, &this_iter);

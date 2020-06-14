@@ -91,7 +91,6 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
 {
    // NOTE: We don't check that srcsize / tgtsize is reasonable or within the ROOT-imposed limits.
    // This is assumed to be handled by the upper layers.
-   printf("Uncompress, CompressedSize=%d, UncompressedSize=%d\n", (int)*srcsize, (int)*tgtsize);
 
    int LZ4_version = LZ4_versionNumber() / (100 * 100);
    *irep = 0;
@@ -132,7 +131,6 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
    }
 
    *irep = returnStatus;
-   printf("irep=%d\n", *irep);
 }
 
 void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
@@ -141,42 +139,47 @@ void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, 
       R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
       return;
    }
+   uint64_t out_size; /* compressed size */
+   uint64_t in_size = (unsigned)(*srcsize);
 
    size_t elem_count = *srcsize / sizeof(float);
-   printf("Compress, UnCompressedSize=%d, CompressedSize=%d\n", (int)*srcsize, (int)*tgtsize);
-   char *temp_buffer = (char *)malloc(*srcsize);
-   printf("Calling bshuf_bitshuffle, nmElements=%ld, elemSize=%d, blockSize=%d\n",
-                  elem_count, (int)sizeof(float), 0);
-   int64_t result = bshuf_bitshuffle(src, temp_buffer, elem_count, sizeof(float), 0);
-   if (result != *srcsize) {
-      fprintf(stderr, "Bitshuffle failed: %ld\n", result);
-      free(temp_buffer);
+   int64_t returnStatus = bshuf_compress_lz4(src, &tgt[kHeaderSize], elem_count, sizeof(float), 0);
+
+   if (returnStatus > *tgtsize) {
+      fprintf(stderr, "Bitshuffle failed: too small tgtsize %d\n", *tgtsize);
+      return;
+   } else if (returnStatus < 0) {
+      fprintf(stderr, "Bitshuffle failed: got negative returnStatus %ld\n", returnStatus);
       return;
    }
-   R__zipLZ4(cxlevel, srcsize, temp_buffer, tgtsize, tgt, irep);
-   if (*irep <= 0) {
-      free(temp_buffer);
-     return;
-   }
-   int bs_variant = *irep;
-   R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
-   if (*irep > 0) {
-       if (bs_variant < *irep) {
-         R__zipLZ4(cxlevel, srcsize, temp_buffer, tgtsize, tgt, irep);
-         tgt[2] = 'B';
-       } else {
-         R__zipLZ4(cxlevel, srcsize, temp_buffer, tgtsize, tgt, irep);
-         tgt[2] = 'B';
-       }
-   }
-   free(temp_buffer);
+   XXH64_hash_t checksumResult = XXH64(tgt + kHeaderSize, returnStatus, 0);
+
+   tgt[0] = 'L';
+   tgt[1] = '4';
+   tgt[2] = 'B';
+
+   out_size = returnStatus + kChecksumSize;
+
+   // NOTE: these next 6 bytes are required from the ROOT compressed buffer format;
+   // upper layers will assume they are laid out in a specific manner.
+   tgt[3] = (char)(out_size & 0xff);
+   tgt[4] = (char)((out_size >> 8) & 0xff);
+   tgt[5] = (char)((out_size >> 16) & 0xff);
+
+   tgt[6] = (char)(in_size & 0xff); /* decompressed size */
+   tgt[7] = (char)((in_size >> 8) & 0xff);
+   tgt[8] = (char)((in_size >> 16) & 0xff);
+
+   // Write out checksum.
+   XXH64_canonicalFromHash(reinterpret_cast<XXH64_canonical_t *>(tgt + kChecksumOffset), checksumResult);
+
+   *irep = (int)returnStatus + kHeaderSize;
 }
 
 void R__unzipLZ4BS(int * srcsize, unsigned char * src, int * tgtsize, unsigned char * tgt, int * irep)
 {
      // NOTE: We don't check that srcsize / tgtsize is reasonable or within the ROOT-imposed limits.
      // This is assumed to be handled by the upper layers.
-      printf("Uncompress, CompressedSize=%d, UncompressedSize=%d\n", (int)*srcsize, (int)*tgtsize);
 
      *irep = 0;
 
@@ -203,19 +206,18 @@ void R__unzipLZ4BS(int * srcsize, unsigned char * src, int * tgtsize, unsigned c
            checksumResult, checksumFromFile);
         return;
      } 
-     size_t elem_count = *srcsize / sizeof(float);
-     printf("Calling bshuf_decompress_lz4, nmElements=%ld, elemSize=%d, blockSize=%d\n",
-               elem_count, (int)sizeof(float), 0);
+     size_t elem_count = *tgtsize / sizeof(float);
+
      int returnStatus = bshuf_decompress_lz4(&src[kHeaderSize], tgt, elem_count, sizeof(float), 0);
-     printf("Printing ReturnStatus for unzip_LZ4BS %d\n", returnStatus);
+     // bshuf_decompress_lz4 returns the number of bytes consumed in src buffer
+     // so change returnStatus to mean number of bytes consumed in tgt buffer
+     returnStatus = *tgtsize;
    
      if (R__unlikely(returnStatus < 0)) {
-        fprintf(stderr, "R__unzipLZ4: error in decompression around byte %d out of maximum %d.\n", -returnStatus,
+        fprintf(stderr, "R__unzipLZ4BS: error in decompression around byte %d out of maximum %d.\n", -returnStatus,
                 *tgtsize);
         return;
      }
 
      *irep = returnStatus;
-     printf("irep=%d\n", *irep);
-
 }
