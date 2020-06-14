@@ -34,6 +34,8 @@ TEST(TError, Basics) {
    EXPECT_STRNE("message", gTestLastMsg.c_str());
 
    ROOT::Internal::gROOTLocal->~TROOT();
+   // The TROOT destructor re-installed the minimal error handler
+   SetErrorHandler(TestErrorHandler);
 
    errno = 42;
    SysError("location", "message");
