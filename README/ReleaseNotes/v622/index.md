@@ -1,16 +1,16 @@
 % ROOT Version 6.22 Release Notes
-% 2020-05-19
+% 2020-06-14
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.22/00 is scheduled for release in May, 2020.
+ROOT version 6.22/00 was released on June 14, 2020.
 
 For more information, see:
 
 [http://root.cern](http://root.cern)
 
-The following people have contributed to this new version:
+The following people have contributed to this version:
 
  Guilherme Amadio, CERN/SFT,\
  Bertrand Bellenot, CERN/SFT,\
@@ -657,3 +657,10 @@ will be able to use PyROOT from any of the Python versions it has been built for
 
 Regarding `TPython`, its library is built only for the highest Python version that PyROOT is built with.
 Therefore, in a Python3-Python2 ROOT build, the Python code executed with `TPython` must be Python3-compliant.
+
+
+## HEAD of the v6-22-00-patches branch
+
+These changes will be part of a future 6.22/02.
+
+* None so far.
