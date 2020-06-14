@@ -443,7 +443,7 @@ if(vdt OR builtin_vdt)
 endif()
 
 if(tmva-cpu)
-  target_include_directories(TMVA PRIVATE ${TBB_INCLUDE_DIRS})
+  target_include_directories(TMVA SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
   target_link_libraries(TMVA PRIVATE ${TBB_LIBRARIES})
   set_target_properties(TMVA PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
 
