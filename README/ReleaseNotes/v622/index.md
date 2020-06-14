@@ -136,6 +136,22 @@ chain->GetEntry(0);
 will result (as one would expect) with the first SetBranchAddress being ignored/over-ridden.
 
 
+## RDataFrame
+
+- Starting from this version, when `RSnapshotOptions.fMode` is `"UPDATE"` (i.e. the output file is opened in "UPDATE"
+  mode), Snapshot will refuse to write out a TTree if one with the same name is already present in the output file.
+  Users can set the new flag `RSnapshotOption::fOverwriteIfExists` to `true` to force the deletion of the TTree that is
+  already present and the writing of a new TTree with the same name. See
+  [ROOT-10573](https://sft.its.cern.ch/jira/browse/ROOT-10573) for more details.
+- RDataFrame changed its error handling strategy in case of unreadable input files. Instead of simply logging an error
+  and skipping the file, it now throws an exception if any of the input files is unreadable (this could also happen in
+  the middle of an event loop). See [ROOT-10549](https://sft.its.cern.ch/jira/browse/ROOT-10549) for more details.
+- New analysis examples based on the recent ATLAS Open Data release ([`Higgs to two photons`](https://root.cern/doc/master/df104__HiggsToTwoPhotons_8py.html), [`W boson analysis`](https://root.cern/doc/master/df105__WBosonAnalysis_8py.html), [`Higgs to four leptons`](https://root.cern/doc/master/df106__HiggsToFourLeptons_8py.html))
+- An exception is now thrown in case the size of ROOT's thread-pool changes between RDataFrame construction time and the time the event loop begins.
+- Just-in-time compilation of large portions of the computation graph has been optimized, and it is now much faster. Please report any regressions you might encounter on [our issue tracker](https://sft.its.cern.ch/jira/projects/ROOT).
+- `MakeRootDataFrame` is now a safe way to construct RDFs. It used to return RDFs with more limited functionality.
+
+
 ## Histogram Libraries
 
 - When fitting an histogram using the fit option `W` (set all bin errors to be equal to 1),  renormalize the obtained fit  parameter errors using the obtained chi2 fit value. This is the same procedure performed already when fitting a `TGraph`.
@@ -327,100 +343,7 @@ Not all features of TGeoPainter are supported - only plain drawing of selected T
 
 ## Language Bindings
 
-
-## JavaScript ROOT
-
-
-## Tutorials
-
-- Add 3 new TMVA tutorials:
-   - ``TMVA_Higgs_Classification.C`` showing the usage of the TMVA deep neural network in a typical classification problem,
-   - ``TMVA_CNN_Classification.C`` showing the usage of CNN in TMVA with `MethodDL` and in PyMVA using `MethodPyKeras`,
-   - ``TMVA_RNN_Classification.C`` showing the usage of RNN in both TMVA and Keras. 
-
-## Class Reference Guide
-
-
-## Build, Configuration and Testing Infrastructure
-
-- By default, ROOT now falls back to the built-in version of xrootd if it can't find it in the system.
-This means that passing `-Dbuiltin_xrootd=ON` is not necessary anymore to build ROOT with xrootd support.
-Note that built-in xrootd requires a working network connection.
-- Glew library was moved from ROOT graf3d sources to the proper ROOT builtins mechanism (GLEW library and headers are still installed together with ROOT for backward compatibility)
-- ROOT uses header files from source directories to build own ROOT libraries; header files from $ROOTSYS/include directory only required to compile users code.
-- Updated version of Glew used as buitin mechanism in ROOT: 2.1.0 (http://glew.sourceforge.net/)
-- Updated version of googletest library: 1.10.0
-
-### Experimental address sanitizer build configuration
-Added a build flag `asan` that switches on address sanitizer. It's experimental, so expect problems. For example, when building with gcc,
-manipulations in global variables in llvm will abort the build. Such checks can be disabled using environment variables. Check the address
-sanitizer documentation or the link below for details. In clang, which allows to blacklist functions, the build will continue.
-
-See [core/sanitizer](https://github.com/root-project/root/tree/master/core/sanitizer) for information.
-
-
-### Optimization of ROOT header files
-
-Many (but intentionally not all) unused includes were removed from ROOT header files. For instance, `#include "TObjString.h"` and
-`#include "ThreadLocalStorage.h"` were removed from `TClass.h`. Or `#include "TDatime.h"` was removed from
-`TDirectory.h` header file . Or `#include "TDatime.h"` was removed from `TFile.h`.
-This change may cause errors during compilation of ROOT-based code. To fix it, provide missing the includes
-where they are really required.
-This improves compile times and reduces code inter-dependency; see https://github.com/include-what-you-use/include-what-you-use/blob/master/docs/WhyIWYU.md for a good overview of the motivation.
-
-Even more includes will be "hidden" when ROOT configured with `-Ddev=ON` build option.
-In that case ROOT uses `#ifdef R__LESS_INCLUDES` to replace unused includes by class forward declarations.
-Such `dev` builds can be used to verify that ROOT-based code really includes all necessary ROOT headers.
-
-### Multi-Python PyROOT
-
-In 6.22, the new (experimental) PyROOT is built by default. In order to build with the old PyROOT instead, the option
-`-Dpyroot_legacy=ON` can be used. This is a summary of the PyROOT options:
-* `pyroot`: by default `ON`, it enables the build of PyROOT.
-* `pyroot_legacy`: by default `OFF`, it allows the user to select the old PyROOT (legacy) to be built instead
-of the new one.
-* `pyroot_experimental`: this option is **deprecated** in 6.22 and should no longer be used. If used, it triggers
-a warning.
-
-This new PyROOT also introduces the possibility of building its libraries for both Python2 and Python3 in a single
-ROOT build (CMake >= 3.14 is required). If no option is specified, PyROOT will be built for the most recent
-Python3 and Python2 versions that CMake can find. If only one version can be found, PyROOT will be built for only
-that version. Moreover, for a given Python installation to be considered, it must provide both the Python interpreter
-(binary) and the development package.
-
-The user can also choose to build ROOT only for a given Python version, even if multiple installations exist in
-the system. For that purpose, the option `-DPYTHON_EXECUTABLE=/path/to/python_exec` can be used to point to the
-desired Python installation.
-
-If the user wants to build PyROOT for both Python2 and Python3, but not necessarily with the highest versions that
-are available on the system, they can provide hints to CMake by using `-DPython2_ROOT_DIR=python2_dir` and/or
-`-DPython3_ROOT_DIR=python3_dir` to point to the root directory of some desired Python installation. Similarly,
-`Python2_EXECUTABLE` and/or `Python3_EXECUTABLE` can be used to point to particular Python executables.
-
-When executing a Python script, the Python version used will determine which version of the PyROOT libraries will
-be loaded. Therefore, once the ROOT environment has been set (e.g. via `source $ROOTSYS/bin/thisroot.sh`), the user
-will be able to use PyROOT from any of the Python versions it has been built for.
-
-Regarding `TPython`, its library is built only for the highest Python version that PyROOT is built with.
-Therefore, in a Python3-Python2 ROOT build, the Python code executed with `TPython` must be Python3-compliant.
-
-## RDataFrame
-
-- Starting from this version, when `RSnapshotOptions.fMode` is `"UPDATE"` (i.e. the output file is opened in "UPDATE"
-  mode), Snapshot will refuse to write out a TTree if one with the same name is already present in the output file.
-  Users can set the new flag `RSnapshotOption::fOverwriteIfExists` to `true` to force the deletion of the TTree that is
-  already present and the writing of a new TTree with the same name. See
-  [ROOT-10573](https://sft.its.cern.ch/jira/browse/ROOT-10573) for more details.
-- RDataFrame changed its error handling strategy in case of unreadable input files. Instead of simply logging an error
-  and skipping the file, it now throws an exception if any of the input files is unreadable (this could also happen in
-  the middle of an event loop). See [ROOT-10549](https://sft.its.cern.ch/jira/browse/ROOT-10549) for more details.
-- New analysis examples based on the recent ATLAS Open Data release ([`Higgs to two photons`](https://root.cern/doc/master/df104__HiggsToTwoPhotons_8py.html), [`W boson analysis`](https://root.cern/doc/master/df105__WBosonAnalysis_8py.html), [`Higgs to four leptons`](https://root.cern/doc/master/df106__HiggsToFourLeptons_8py.html))
-- An exception is now thrown in case the size of ROOT's thread-pool changes between RDataFrame construction time and the time the event loop begins.
-- Just-in-time compilation of large portions of the computation graph has been optimized, and it is now much faster. Please report any regressions you might encounter on [our issue tracker](https://sft.its.cern.ch/jira/projects/ROOT).
-- `MakeRootDataFrame` is now a safe way to construct RDFs. It used to return RDFs with more limited functionality.
-
-
-## PyROOT
+### PyROOT
 
 ROOT 6.22 makes the new (experimental) PyROOT its default. This new PyROOT is designed on top of the new cppyy, which
 provides more and better support for modern C++. The documentation for cppyy and the new features it provides can be
@@ -658,3 +581,79 @@ modifier methods on the `std::string` objects.
 <class cppyy.gbl.std.string at 0x4cd41b0>
 <class cppyy.gbl.std.string at 0x4cd41b0>
 ~~~
+
+
+## Tutorials
+
+- Add 3 new TMVA tutorials:
+   - ``TMVA_Higgs_Classification.C`` showing the usage of the TMVA deep neural network in a typical classification problem,
+   - ``TMVA_CNN_Classification.C`` showing the usage of CNN in TMVA with `MethodDL` and in PyMVA using `MethodPyKeras`,
+   - ``TMVA_RNN_Classification.C`` showing the usage of RNN in both TMVA and Keras.
+
+## Class Reference Guide
+
+- A new version switching mechanism has been introduced; see https://github.com/root-project/doxyvers
+
+
+## Build, Configuration and Testing Infrastructure
+
+- By default, ROOT now falls back to the built-in version of xrootd if it can't find it in the system.
+This means that passing `-Dbuiltin_xrootd=ON` is not necessary anymore to build ROOT with xrootd support.
+Note that built-in xrootd requires a working network connection.
+- Glew library was moved from ROOT graf3d sources to the proper ROOT builtins mechanism (GLEW library and headers are still installed together with ROOT for backward compatibility)
+- ROOT uses header files from source directories to build own ROOT libraries; header files from $ROOTSYS/include directory only required to compile users code.
+- Updated version of Glew used as buitin mechanism in ROOT: 2.1.0 (http://glew.sourceforge.net/)
+- Updated version of googletest library: 1.10.0
+
+### Experimental address sanitizer build configuration
+Added a build flag `asan` that switches on address sanitizer. It's experimental, so expect problems. For example, when building with gcc,
+manipulations in global variables in llvm will abort the build. Such checks can be disabled using environment variables. Check the address
+sanitizer documentation or the link below for details. In clang, which allows to blacklist functions, the build will continue.
+
+See [core/sanitizer](https://github.com/root-project/root/tree/master/core/sanitizer) for information.
+
+
+### Optimization of ROOT header files
+
+Many (but intentionally not all) unused includes were removed from ROOT header files. For instance, `#include "TObjString.h"` and
+`#include "ThreadLocalStorage.h"` were removed from `TClass.h`. Or `#include "TDatime.h"` was removed from
+`TDirectory.h` header file . Or `#include "TDatime.h"` was removed from `TFile.h`.
+This change may cause errors during compilation of ROOT-based code. To fix it, provide missing the includes
+where they are really required.
+This improves compile times and reduces code inter-dependency; see https://github.com/include-what-you-use/include-what-you-use/blob/master/docs/WhyIWYU.md for a good overview of the motivation.
+
+Even more includes will be "hidden" when ROOT configured with `-Ddev=ON` build option.
+In that case ROOT uses `#ifdef R__LESS_INCLUDES` to replace unused includes by class forward declarations.
+Such `dev` builds can be used to verify that ROOT-based code really includes all necessary ROOT headers.
+
+### Multi-Python PyROOT
+
+In 6.22, the new (experimental) PyROOT is built by default. In order to build with the old PyROOT instead, the option
+`-Dpyroot_legacy=ON` can be used. This is a summary of the PyROOT options:
+* `pyroot`: by default `ON`, it enables the build of PyROOT.
+* `pyroot_legacy`: by default `OFF`, it allows the user to select the old PyROOT (legacy) to be built instead
+of the new one.
+* `pyroot_experimental`: this option is **deprecated** in 6.22 and should no longer be used. If used, it triggers
+a warning.
+
+This new PyROOT also introduces the possibility of building its libraries for both Python2 and Python3 in a single
+ROOT build (CMake >= 3.14 is required). If no option is specified, PyROOT will be built for the most recent
+Python3 and Python2 versions that CMake can find. If only one version can be found, PyROOT will be built for only
+that version. Moreover, for a given Python installation to be considered, it must provide both the Python interpreter
+(binary) and the development package.
+
+The user can also choose to build ROOT only for a given Python version, even if multiple installations exist in
+the system. For that purpose, the option `-DPYTHON_EXECUTABLE=/path/to/python_exec` can be used to point to the
+desired Python installation.
+
+If the user wants to build PyROOT for both Python2 and Python3, but not necessarily with the highest versions that
+are available on the system, they can provide hints to CMake by using `-DPython2_ROOT_DIR=python2_dir` and/or
+`-DPython3_ROOT_DIR=python3_dir` to point to the root directory of some desired Python installation. Similarly,
+`Python2_EXECUTABLE` and/or `Python3_EXECUTABLE` can be used to point to particular Python executables.
+
+When executing a Python script, the Python version used will determine which version of the PyROOT libraries will
+be loaded. Therefore, once the ROOT environment has been set (e.g. via `source $ROOTSYS/bin/thisroot.sh`), the user
+will be able to use PyROOT from any of the Python versions it has been built for.
+
+Regarding `TPython`, its library is built only for the highest Python version that PyROOT is built with.
+Therefore, in a Python3-Python2 ROOT build, the Python code executed with `TPython` must be Python3-compliant.
