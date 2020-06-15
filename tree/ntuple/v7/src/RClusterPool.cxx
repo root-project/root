@@ -99,7 +99,7 @@ void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
          // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
          bool discard = false;
          {
-            std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockInFlightClusters);
+            std::unique_lock<std::mutex> lock(fLockWorkQueue);
             for (auto &inFlight : fInFlightClusters) {
                if (inFlight.fClusterId != item.fClusterId)
                   continue;
@@ -116,7 +116,7 @@ void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
 }
 
 std::shared_ptr<ROOT::Experimental::Detail::RCluster>
-ROOT::Experimental::Detail::RClusterPool::FindInPool(DescriptorId_t clusterId)
+ROOT::Experimental::Detail::RClusterPool::FindInPool(DescriptorId_t clusterId) const
 {
    for (const auto &cptr : fPool) {
       if (cptr && (cptr->GetId() == clusterId))
@@ -125,7 +125,8 @@ ROOT::Experimental::Detail::RClusterPool::FindInPool(DescriptorId_t clusterId)
    return nullptr;
 }
 
-size_t ROOT::Experimental::Detail::RClusterPool::FindFreeSlot() {
+size_t ROOT::Experimental::Detail::RClusterPool::FindFreeSlot() const
+{
    auto N = fPool.size();
    for (unsigned i = 0; i < N; ++i) {
       if (!fPool[i])
@@ -218,7 +219,8 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
 
    // Move clusters that meanwhile arrived into cache pool
    {
-      std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockInFlightClusters);
+      std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockWorkQueue);
+
       for (auto itr = fInFlightClusters.begin(); itr != fInFlightClusters.end(); ) {
          R__ASSERT(itr->fFuture.valid());
          itr->fIsExpired = !provide.Contains(itr->fClusterId) && (keep.count(itr->fClusterId) == 0);
@@ -256,13 +258,10 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
          provide.Erase(cptr->GetId(), cptr->GetAvailColumns());
       }
 
-      // Update the work queue and the in-flight cluster list with new requests
-      // The work queue lock is taken while we hold the in flight clusters lock.  There is no other
-      // spot where both locks are held concurrently.  In particular, the locks are never taken in reversed order
-      // and there is no risk of a deadlock.
+      // Update the work queue and the in-flight cluster list with new requests. We already hold the work queue
+      // mutex
       // TODO(jblomer): we should ensure that clusterId is given first to the I/O thread.  That is usually the
       // case but it's not ensured by the code
-      std::unique_lock<std::mutex> lockWorkQueue(fLockWorkQueue);
       for (const auto &kv : provide) {
          R__ASSERT(!kv.second.empty());
 
@@ -280,7 +279,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
       }
       if (fWorkQueue.size() > 0)
          fCvHasWork.notify_one();
-   } // work queue and in-flight clusters lock guards
+   } // work queue lock guard
 
    return WaitFor(clusterId, columns);
 }
@@ -307,12 +306,16 @@ ROOT::Experimental::Detail::RClusterPool::WaitFor(
       }
 
       // Otherwise the missing data must have been triggered for loading by now, so block and wait
-      auto itr = fInFlightClusters.begin();
-      for (; itr != fInFlightClusters.end(); ++itr) {
-         if (itr->fClusterId == clusterId)
-            break;
+      decltype(fInFlightClusters)::iterator itr;
+      {
+         std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockWorkQueue);
+         itr = fInFlightClusters.begin();
+         for (; itr != fInFlightClusters.end(); ++itr) {
+            if (itr->fClusterId == clusterId)
+               break;
+         }
+         R__ASSERT(itr != fInFlightClusters.end());
       }
-      R__ASSERT(itr != fInFlightClusters.end());
 
       auto cptr = itr->fFuture.get();
       if (result) {
@@ -322,7 +325,7 @@ ROOT::Experimental::Detail::RClusterPool::WaitFor(
          fPool[idxFreeSlot] = std::move(cptr);
       }
 
-      std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockInFlightClusters);
+      std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockWorkQueue);
       fInFlightClusters.erase(itr);
    }
 }
