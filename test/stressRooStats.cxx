@@ -37,7 +37,7 @@
 #include "RooMath.h"
 
 // Tests file
-#include "stressRooStats_tests.cxx"
+#include "stressRooStats_tests.h"
 
 using namespace std ;
 using namespace RooFit ;
