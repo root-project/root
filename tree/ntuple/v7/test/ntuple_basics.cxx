@@ -211,3 +211,19 @@ TEST(RNTuple, Clusters)
    EXPECT_EQ(42.0, (*rdNnlo)[0][0]);
    EXPECT_EQ(24.0, (*rdFourVec)[1]);
 }
+
+TEST(RNTupleModel, EnforceUniqueFieldNames)
+{
+   auto model = RNTupleModel::Create();
+   auto field = model->MakeField<float>("pt", 42.0);
+   try {
+      auto field2 = model->MakeField<float>("pt", 42.0);
+      FAIL() << "repeated field names should throw";
+   } catch (const std::runtime_error& err) {
+     EXPECT_STREQ(err.what(), "RNTupleModel::MakeField: field name 'pt' already exists");
+   }
+   auto field2 = model->MakeField<float>("pt2", 42.0);
+
+   // corner case -- doesn't apply to NTuple's FieldZero
+   auto field3 = model->MakeField<float>("", 42.0);
+}
