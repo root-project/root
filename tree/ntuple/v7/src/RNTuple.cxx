@@ -31,10 +31,10 @@
 #include <TError.h>
 
 
-void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel *model) {
+void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model) {
    std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> fieldPtr2Id;
-   fieldPtr2Id[fModel->GetFieldZero()] = fSource->GetDescriptor().GetFieldZeroId();
-   for (auto &field : *fModel->GetFieldZero()) {
+   fieldPtr2Id[model.GetFieldZero()] = fSource->GetDescriptor().GetFieldZeroId();
+   for (auto &field : *model.GetFieldZero()) {
       auto parentId = fieldPtr2Id[field.GetParent()];
       auto fieldId = fSource->GetDescriptor().FindFieldId(field.GetName(), parentId);
       R__ASSERT(fieldId != kInvalidDescriptorId);
@@ -51,7 +51,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(
    , fMetrics("RNTupleReader")
 {
    fSource->Attach();
-   ConnectModel(fModel.get());
+   ConnectModel(*fModel);
    fMetrics.ObserveMetrics(fSource->GetMetrics());
 }
 
@@ -89,7 +89,7 @@ ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
 {
    if (!fModel) {
       fModel = fSource->GetDescriptor().GenerateModel();
-      ConnectModel(fModel.get());
+      ConnectModel(*fModel);
    }
    return fModel.get();
 }

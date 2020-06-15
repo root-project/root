@@ -26,7 +26,6 @@
 #include <atomic>
 #include <cstddef>
 #include <memory>
-#include <stack>
 #include <unordered_set>
 
 namespace ROOT {

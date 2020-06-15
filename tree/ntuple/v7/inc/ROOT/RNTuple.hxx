@@ -77,13 +77,13 @@ private:
    std::unique_ptr<Detail::RPageSource> fSource;
    /// Needs to be destructed before fSource
    std::unique_ptr<RNTupleModel> fModel;
-   /// We use a separate on-demand reader for Show() and Scan(). Printing data uses all the fields
+   /// We use a dedicated on-demand reader for Show() and Scan(). Printing data uses all the fields
    /// from the full model even if the analysis code uses only a subset of fields. The display reader
    /// is a clone of the original reader.
    std::unique_ptr<RNTupleReader> fDisplayReader;
    Detail::RNTupleMetrics fMetrics;
 
-   void ConnectModel(RNTupleModel *model);
+   void ConnectModel(RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
 
 public:
@@ -148,7 +148,7 @@ public:
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
          fModel = fSource->GetDescriptor().GenerateModel();
-         ConnectModel(fModel.get());
+         ConnectModel(*fModel);
       }
 
       for (auto& value : *entry) {
