@@ -25,6 +25,14 @@
 #include <cstring> // for strdup
 #include <mutex>
 
+// Integrate with macOS crash reporter.
+#ifdef __APPLE__
+extern "C" {
+static const char *__crashreporter_info__ = 0;
+asm(".desc ___crashreporter_info__, 0x10");
+}
+#endif
+
 
 /// Serializes error output, destructed when libCore is unloaded
 static std::mutex &GetErrorMutex() {
