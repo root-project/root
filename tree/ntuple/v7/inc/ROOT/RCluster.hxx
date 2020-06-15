@@ -18,6 +18,7 @@
 
 #include <ROOT/RNTupleUtil.hxx>
 
+#include <cstdint>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -51,8 +52,8 @@ public:
    /// associative collections of on-disk pages.
    struct Key {
       DescriptorId_t fColumnId;
-      NTupleSize_t fPageNo;
-      Key(DescriptorId_t columnId, NTupleSize_t pageNo) : fColumnId(columnId), fPageNo(pageNo) {}
+      std::uint64_t fPageNo;
+      Key(DescriptorId_t columnId, std::uint64_t pageNo) : fColumnId(columnId), fPageNo(pageNo) {}
       friend bool operator ==(const Key &lhs, const Key &rhs) {
          return lhs.fColumnId == rhs.fColumnId && lhs.fPageNo == rhs.fPageNo;
       }
@@ -169,13 +170,15 @@ public:
    RCluster &operator =(RCluster &&other) = default;
    ~RCluster() = default;
 
-   /// Move the given page map into this cluster; on-disk pages that are present in both the cluster at hand and
-   /// pageMap are gracefully handled such that a following lookup will return the page from either of the
-   /// memory regions
+   /// Move the given page map into this cluster; for on-disk pages that are present in both the cluster at hand and
+   /// pageMap, GetOnDiskPage() may return the page from either of the memory regions (left to the implementation).
+   /// Their content is supposed to be the same.
+   /// Page maps cannot be physically merged them because they have potentially used different allocation mechanisms
+   /// (e.g. mmap vs. malloc).
    void Adopt(std::unique_ptr<ROnDiskPageMap> pageMap);
-   /// Move the contents of other into this cluster; on-disk pages that are present in both the cluster at hand and
-   /// the "other" cluster are gracefully handled such that a following lookup will return the page from
-   /// either of the clusters
+   /// Move the contents of other into this cluster; for on-disk pages that are present in both the cluster at hand and
+   /// the "other" cluster, GetOnDiskPage() may return the page from either of the memory regions
+   /// (left to the implementation).
    void Adopt(RCluster &&other);
    /// Marks the column as complete; must be done for all columns, even empty ones without associated pages,
    /// before the cluster is given from the page storage to the cluster pool.  Marking the available columns is
