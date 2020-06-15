@@ -352,6 +352,8 @@ public:
    NTupleSize_t GetNEntries() const;
    NTupleSize_t GetNElements(DescriptorId_t columnId) const;
 
+   /// Returns the logical parent of all top-level NTuple data fields.
+   DescriptorId_t GetFieldZeroId() const;
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
    /// Searches for a top-level field
    DescriptorId_t FindFieldId(std::string_view fieldName) const;
