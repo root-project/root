@@ -20,7 +20,7 @@
 // Support for auto-loading in the RNTuple tutorials
 #pragma link C++ class ROOT::Experimental::Detail::RFieldBase-;
 #pragma link C++ class ROOT::Experimental::Detail::RFieldBase::RSchemaIterator-;
-#pragma link C++ class ROOT::Experimental::RFieldVector-;
+#pragma link C++ class ROOT::Experimental::RVectorField-;
 #pragma link C++ class ROOT::Experimental::RNTupleReader-;
 #pragma link C++ class ROOT::Experimental::RNTupleWriter-;
 #pragma link C++ class ROOT::Experimental::RNTupleModel-;
