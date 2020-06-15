@@ -200,13 +200,13 @@ to state index, this is now reflected in the interface. Among others, this is no
 | `cat["electron"] = 1;`                         | `cat.defineType("electron", 1);`                               |
 | `cat["muon"] = 2;`                             | `cat.defineType("muon", 2);`                                   |
 
-See also the [Category reference guide](https://root.cern.ch/doc/master/classRooCategory.html) or different
-[RooFit tutorials](https://root.cern.ch/doc/master/group__tutorial__roofit.html),
-specifically [rf404_categories](https://root.cern.ch/doc/master/rf404__categories_8C.html).
+See also the [Category reference guide](https://root.cern.ch/doc/v622/classRooCategory.html) or different
+[RooFit tutorials](https://root.cern.ch/doc/v622/group__tutorial__roofit.html),
+specifically [rf404_categories](https://root.cern.ch/doc/v622/rf404__categories_8C.html).
 
 
 ### Type-safe proxies for RooFit objects
-RooFit's proxy classes have been modernised. The class [RooTemplateProxy](https://root.cern.ch/doc/master/classRooTemplateProxy.html)
+RooFit's proxy classes have been modernised. The class [RooTemplateProxy](https://root.cern.ch/doc/v622/classRooTemplateProxy.html)
 allows for access to other RooFit objects
 similarly to a smart pointer. In older versions of RooFit, the objects held by *e.g.* `RooRealProxy` had to be
 accessed like this:
@@ -228,43 +228,43 @@ the above code can be simplified to
   pdfProxy->fitTo(...);
 ```
 
-Check the [doxygen reference guide](https://root.cern.ch/doc/master/classRooTemplateProxy.html) for `RooTemplateProxy` for
+Check the [doxygen reference guide](https://root.cern.ch/doc/v622/classRooTemplateProxy.html) for `RooTemplateProxy` for
 more information on how to modernise old code.
 
 ### Documentation updates
 - The documentation is now structured better. The functional parts like roofitcore, roofit, roostats, histfactory
-can now be found in [doxygen](https://root.cern.ch/doc/master/group__Roofitmain.html) with a similar structure as
+can now be found in [doxygen](https://root.cern.ch/doc/v622/group__Roofitmain.html) with a similar structure as
 the [directory structure in git](https://github.com/root-project/root/tree/master/roofit).
 - Especially the hard-to-find command arguments that can be passed to various functions in RooFit now have
-[their own doxygen page](https://root.cern.ch/doc/master/group__CmdArgs.html).
+[their own doxygen page](https://root.cern.ch/doc/v622/group__CmdArgs.html).
 - Clarified and extended documentation for plotting PDFs:
   - Since plotting PDFs can be tricky when special normalisation is required (e.g. because of blinding or fitting in side bands),
-    the documentation of [RooAbsPdf::plotOn()](https://root.cern.ch/doc/master/classRooAbsPdf.html#a7f01ccfb4f3bc3ad3b2bc1e3f30af535)
+    the documentation of [RooAbsPdf::plotOn()](https://root.cern.ch/doc/v622/classRooAbsPdf.html#a7f01ccfb4f3bc3ad3b2bc1e3f30af535)
     and the arguments it accepts was updated and clarified.
-  - The new tutorial [rf212_plottingInRanges_blinding](https://root.cern.ch/doc/master/rf212__plottingInRanges__blinding_8C.html)
+  - The new tutorial [rf212_plottingInRanges_blinding](https://root.cern.ch/doc/v622/rf212__plottingInRanges__blinding_8C.html)
     shows how to normalise a PDF if it has been fit only in a part of the plotting range.
 - Started grouping of interfaces that are public but not necessarily useful for "normal" in doxygen.
-Examples are [RooCategory](https://root.cern.ch/doc/master/classRooCategory.html) or the very broad public interface of
-[RooAbsArg](https://root.cern.ch/doc/master/classRooAbsArg.html),
+Examples are [RooCategory](https://root.cern.ch/doc/v622/classRooCategory.html) or the very broad public interface of
+[RooAbsArg](https://root.cern.ch/doc/v622/classRooAbsArg.html),
 where the client-server interface that's only relevant for RooFit or the legacy interfaces are now split off.
-- Completely overhaul the documentation of [RooWorkspace's factory syntax](https://root.cern.ch/doc/master/classRooWorkspace.html#a0ddded1d65f5c6c4732a7a3daa8d16b0).
-- Make [SPlot](https://root.cern.ch/doc/master/classRooStats_1_1SPlot.html) documentation understandable.
-- Clarify different constructors of [RooRealVars](https://root.cern.ch/doc/master/classRooRealVar.html#aa1483bd1c3e7b5792765043f6ac0a50f),
+- Completely overhaul the documentation of [RooWorkspace's factory syntax](https://root.cern.ch/doc/v622/classRooWorkspace.html#a0ddded1d65f5c6c4732a7a3daa8d16b0).
+- Make [SPlot](https://root.cern.ch/doc/v622/classRooStats_1_1SPlot.html) documentation understandable.
+- Clarify different constructors of [RooRealVars](https://root.cern.ch/doc/v622/classRooRealVar.html#aa1483bd1c3e7b5792765043f6ac0a50f),
   and how to make them constant or initialise them.
-- Add a tutorial about plotting with limited ranges [rf212_plottingInRanges_blinding](https://root.cern.ch/doc/master/rf212__plottingInRanges__blinding_8C.html)
-- Improve the tutorial for weighted fits, [rf611_weightedfits](https://root.cern.ch/doc/master/rf611__weightedfits_8C.html).
+- Add a tutorial about plotting with limited ranges [rf212_plottingInRanges_blinding](https://root.cern.ch/doc/v622/rf212__plottingInRanges__blinding_8C.html)
+- Improve the tutorial for weighted fits, [rf611_weightedfits](https://root.cern.ch/doc/v622/rf611__weightedfits_8C.html).
 
 ### Etc.
 - Warn and fail better. Convert things that silently give the wrong results into things that fail noisily.
   - When RooDataSet is read from a file, and there's a read error, the function now returns `nullptr` instead of an incomplete dataset.
   - Better checking of invalid formulae in RooGenericPdf / RooFormulaVar. Using e.g. `RooFormulaVar(... "x+y", x);` silently
     assumed that `y` is zero and constant.
-  - Ensure that the right number of coefficients is given for [RooAddPdf](https://root.cern.ch/doc/master/classRooAddPdf.html) (depends on
+  - Ensure that the right number of coefficients is given for [RooAddPdf](https://root.cern.ch/doc/v622/classRooAddPdf.html) (depends on
     recursive/non-recursive fractions), and complain if that's not the case.
 - Add automatic conversions when reading values for variables from Trees. New are e.g. `ULong64_t, Long64_t, Short_t, UShort_t`.
-- [RooResolutionModel](https://root.cern.ch/doc/master/classRooResolutionModel.html) now also takes [RooLinearVar](https://root.cern.ch/doc/master/classRooLinearVar.html) as observables. With this, it is possible to easily scale and shift the observable used in the convolutions.
-- Add a [helper](https://root.cern.ch/doc/master/classRooHelpers_1_1LocalChangeMsgLevel.html) to locally/temporarily change RooFit's message
-level. This also includes an [object that can hijack](https://root.cern.ch/doc/master/classRooHelpers_1_1HijackMessageStream.html)
+- [RooResolutionModel](https://root.cern.ch/doc/v622/classRooResolutionModel.html) now also takes [RooLinearVar](https://root.cern.ch/doc/v622/classRooLinearVar.html) as observables. With this, it is possible to easily scale and shift the observable used in the convolutions.
+- Add a [helper](https://root.cern.ch/doc/v622/classRooHelpers_1_1LocalChangeMsgLevel.html) to locally/temporarily change RooFit's message
+level. This also includes an [object that can hijack](https://root.cern.ch/doc/v622/classRooHelpers_1_1HijackMessageStream.html)
 all messages sent by a specific object or with specific topics.
 
 ### HistFactory
@@ -291,7 +291,7 @@ This can be reverted as follows:
 
 #### Less verbose HistFactory
 HistFactory was very verbose, writing to the terminal with lots of `cout`. Now, many HistFactory messages are going
-into [RooFit's message stream](https://root.cern.ch/doc/master/classRooMsgService.html) number 2.
+into [RooFit's message stream](https://root.cern.ch/doc/v622/classRooMsgService.html) number 2.
 The verbosity can therefore be adjusted using
 ```
   RooMsgService::instance().getStream(2).minLevel = RooFit::PROGRESS;
