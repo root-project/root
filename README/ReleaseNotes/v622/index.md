@@ -194,11 +194,14 @@ per category entry in a dataset, and paves the way for faster computations that 
 
 The interface to define or manipulate category states was also updated. Since categories are mappings from state names
 to state index, this is now reflected in the interface. Among others, this is now possible:
-| ROOT 6.22                                      | Before (still supported)                                       |
-|------------------------------------------------|----------------------------------------------------------------|
-| `RooCategory cat("cat", "Lepton flavour");`    | `RooCategory cat("cat", "Lepton flavour");`                    |
-| `cat["electron"] = 1;`                         | `cat.defineType("electron", 1);`                               |
-| `cat["muon"] = 2;`                             | `cat.defineType("muon", 2);`                                   |
+
++---------------------------------------------------+-------------------------------------------------------------------+
+| ROOT 6.22                                         | Before (still supported)                                          |
++===================================================+===================================================================+
+|     RooCategory cat("cat", "Lepton flavour");     |     RooCategory cat("cat", "Lepton flavour");                     |
+|     cat["electron"] = 1;                          |     cat.defineType("electron", 1);                                |
+|     cat["muon"] = 2;                              |     cat.defineType("muon", 2);                                    |
++---------------------------------------------------+-------------------------------------------------------------------+
 
 See also the [Category reference guide](https://root.cern.ch/doc/v622/classRooCategory.html) or different
 [RooFit tutorials](https://root.cern.ch/doc/v622/group__tutorial__roofit.html),
@@ -208,25 +211,35 @@ specifically [rf404_categories](https://root.cern.ch/doc/v622/rf404__categories_
 ### Type-safe proxies for RooFit objects
 RooFit's proxy classes have been modernised. The class [RooTemplateProxy](https://root.cern.ch/doc/v622/classRooTemplateProxy.html)
 allows for access to other RooFit objects
-similarly to a smart pointer. In older versions of RooFit, the objects held by *e.g.* `RooRealProxy` had to be
-accessed like this:
-```
-  RooAbsArg* absArg = realProxy.absArg();
-  RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(absArg);
-  assert(pdf); // This *should* work, but the proxy doesn't have a way to check
-  pdf->fitTo(...);
-```
-That is, because the old `RooRealProxy` stored a pointer to a `RooAbsArg`, and this pointer had to be cast. There was no type
-safety, *i.e.*, any object deriving from RooAbsArg could be stored in that proxy, and the user had to take care
-of ensuring that types are correct.
-Now, if one uses
-```
-  RooTemplateProxy<RooAbsPdf> pdfProxy; // instead of "RooRealProxy realProxy;"
-```
-the above code can be simplified to
-```
-  pdfProxy->fitTo(...);
-```
+similarly to a smart pointer. In older versions of RooFit, proxies would always hold pointers to
+very abstract classes, e.g. RooAbsReal, although one wanted to work with a PDF. Therefore, casting was
+frequently necessary. Further, one could provoke runtime errors by storing an incompatible object in
+a proxy. For example, one could store a variable `RooRealVar` in a proxy that was meant to store PDFs.
+
+Now, RooFit classes that use proxies can be simplified as follows:
+
++------------------+----------------------------------+----------------------------------------------------+
+|                  | ROOT 6.22                        | Before (still supported)                           |
++==================+==================================+====================================================+
+| Class definition |                                  |                                                    |
+|                  | ~~~                              | ~~~                                                |
+|                  | RooTemplateProxy<RooAbsPdf> pdf; | RooRealProxy realProxy;                            |
+|                  | ~~~                              | ~~~                                                |
+|                  |                                  |                                                    |
++------------------+----------------------------------+----------------------------------------------------+
+| Implementation   |                                  |                                                    |
+|                  | ~~~                              | ~~~                                                |
+|                  | pdf->fitTo(...);                 | RooAbsArg* absArg = realProxy.absArg();            |
+|                  | ~~~                              | RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(absArg); |
+|                  |                                  | // Should work, but maybe someone stored wrong     |
+|                  |                                  | // object. Add some checking code.                 |
+|                  |                                  | if (pdf != nullptr) {                              |
+|                  |                                  | ...                                                |
+|                  |                                  | }                                                  |
+|                  |                                  | pdf->fitTo(...);                                   |
+|                  |                                  | ~~~                                                |
+|                  |                                  |                                                    |
++------------------+----------------------------------+----------------------------------------------------+
 
 Check the [doxygen reference guide](https://root.cern.ch/doc/v622/classRooTemplateProxy.html) for `RooTemplateProxy` for
 more information on how to modernise old code.
