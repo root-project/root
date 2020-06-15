@@ -15,12 +15,12 @@ TEST(RNTupleShow, Empty)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
+   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
    std::string fString{"{}\n"};
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
+   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os1);
    std::string fString1{"{}\n"};
    EXPECT_EQ(fString1, os1.str());
 }
@@ -67,7 +67,7 @@ TEST(RNTupleShow, BasicTypes)
    auto ntuple2 = RNTupleReader::Open(ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSONFull, os);
+   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os);
    std::string fString{ std::string("")
       + "{\n"
       + "  \"pt\": 5,\n"
@@ -82,7 +82,7 @@ TEST(RNTupleShow, BasicTypes)
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSONFull, os1);
+   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os1);
    std::string fString1{ std::string("")
       + "{\n"
       + "  \"pt\": 8.5,\n"
@@ -97,7 +97,7 @@ TEST(RNTupleShow, BasicTypes)
    EXPECT_EQ(fString1, os1.str());
 
    // TODO(jblomer): this should fail to an exception instead
-   EXPECT_DEATH(ntuple2->Show(2, ROOT::Experimental::ENTupleFormat::kJSONFull), ".*");
+   EXPECT_DEATH(ntuple2->Show(2, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON), ".*");
 }
 
 TEST(RNTupleShow, Vectors)
@@ -129,7 +129,7 @@ TEST(RNTupleShow, Vectors)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
+   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
    std::string fString{ std::string("")
       + "{\n"
       + "  \"intVec\": [4, 5, 6],\n"
@@ -139,7 +139,7 @@ TEST(RNTupleShow, Vectors)
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
+   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os1);
    std::string fString1{ std::string("")
       + "{\n"
       + "  \"intVec\": [4, 5, 6, 7],\n"
@@ -190,7 +190,7 @@ TEST(RNTupleShow, Arrays)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
+   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
    std::string fString{ std::string("")
       + "{\n"
       + "  \"IntArray\": [1, 3],\n"
@@ -203,7 +203,7 @@ TEST(RNTupleShow, Arrays)
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
+   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os1);
    std::string fString1{ std::string("")
       + "{\n"
       + "  \"IntArray\": [2, 5],\n"
@@ -247,7 +247,7 @@ TEST(RNTupleShow, Objects)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
+   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
    std::string fString{ std::string("")
       + "{\n"
       + "  \"CustomStruct\": {\n"
