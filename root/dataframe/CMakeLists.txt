@@ -1,4 +1,4 @@
-if(NOT dataframe)
+if(NOT ROOT_dataframe_FOUND)
   return()
 endif()
 
