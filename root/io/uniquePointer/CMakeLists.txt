@@ -35,6 +35,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes3 classes3.h  SELECTION sel3.xml)
 
 ROOTTEST_ADD_TEST(checkDictionaries
                   MACRO  checkDictionaries.C
+                  ${MIGHT_FAIL}
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_ADD_TEST(aclicDataMemberSelection
