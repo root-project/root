@@ -793,7 +793,6 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = . \
-                         ../../bindings/pyroot/ \
                          ../../core/base/ \
                          ../../core/dictgen/ \
                          ../../core/cont/ \
@@ -861,6 +860,8 @@ INPUT                  = . \
                          ../../tree/ \
                          ../../sql/ \
                          ../../tutorials/ \
+                         ../../bindings/tpython/ \
+                         ../../bindings/pyroot/ \
                          ../../bindings/r/
 #                         ../../core/clib/
 #                         ../../core/lzma/
