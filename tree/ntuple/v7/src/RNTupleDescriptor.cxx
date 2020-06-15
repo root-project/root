@@ -645,6 +645,7 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNElem
    return result;
 }
 
+
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const
 {
@@ -663,10 +664,17 @@ ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, D
 }
 
 
-ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
+ROOT::Experimental::DescriptorId_t
+ROOT::Experimental::RNTupleDescriptor::GetFieldZeroId() const
 {
-   auto rootId = FindFieldId("", kInvalidDescriptorId);
-   return FindFieldId(fieldName, rootId);
+   return FindFieldId("", kInvalidDescriptorId);
+}
+
+
+ROOT::Experimental::DescriptorId_t
+ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
+{
+   return FindFieldId(fieldName, GetFieldZeroId());
 }
 
 

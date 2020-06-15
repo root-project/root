@@ -102,7 +102,7 @@ TEST(RNTuple, Descriptor)
    EXPECT_EQ(NTupleSize_t(1100), reference.GetNElements(3));
    EXPECT_EQ(NTupleSize_t(3300), reference.GetNElements(4));
 
-   EXPECT_EQ(DescriptorId_t(0), reference.FindFieldId("", ROOT::Experimental::kInvalidDescriptorId));
+   EXPECT_EQ(DescriptorId_t(0), reference.GetFieldZeroId());
    EXPECT_EQ(DescriptorId_t(1), reference.FindFieldId("list", 0));
    EXPECT_EQ(DescriptorId_t(1), reference.FindFieldId("list"));
    EXPECT_EQ(DescriptorId_t(2), reference.FindFieldId("list", 1));
