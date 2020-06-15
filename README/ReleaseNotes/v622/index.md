@@ -350,6 +350,7 @@ provides more and better support for modern C++. The documentation for cppyy and
 found [here](https://cppyy.readthedocs.io).
 
 For what concerns new additions to PyROOT, this is the list:
+
 - The `ROOT.Numba.Declare` decorator provides a simple way to call Python callables from C++. The Python callables are
   just-in-time compiled with [numba](http://numba.pydata.org/), which ensures a runtime performance similar to a C++ implementation.
   The feature is targeted to improve the performance of Python based analyses, e.g., allows seamless integration into `RDataFrame` workflows.
@@ -360,14 +361,17 @@ For what concerns new additions to PyROOT, this is the list:
   and thus the C++ interpreter will be shut down. The hard mode is the default, but if the application just runs a PyROOT script as part of
   a longer process and it would like ROOT to still be usable after the script finishes, the soft mode can be activated by adding this to the
   PyROOT script:
+
 ~~~ {.python}
 import ROOT
 ROOT.PyConfig.ShutDown = False
 ~~~
 
 On the other hand, there are some backwards-incompatible changes of the new PyROOT with respect to the new one, listed next:
+
 - Instantiation of function templates must be done using square brackets instead of parentheses. For example, if we consider the following
   code snippet:
+
 ~~~ {.python}
 > import ROOT
 
@@ -383,6 +387,7 @@ template<typename T> T foo(T arg) { return arg; }
 ~~~
 
 Note that the above does not affect class templates, which can be instantiated either with parenthesis or square brackets:
+
 ~~~ {.python}
 > ROOT.std.vector['int'] # instantiation
 <class cppyy.gbl.std.vector<int> at 0x5528378>
@@ -393,14 +398,17 @@ Note that the above does not affect class templates, which can be instantiated e
 
 - Overload resolution in new cppyy has been significantly rewritten, which sometimes can lead to a different overload choice
 (but still a compatible one!). For example, for the following overloads of `std::string`:
+
 ~~~ {.cpp}
 string (const char* s, size_t n)                           (1)
 string (const string& str, size_t pos, size_t len = npos)  (2)
 ~~~
+
 when invoking `ROOT.std.string(s, len(s))`, where `s` is a Python string, the new PyROOT will pick (2) whereas the old
 would pick (1).
 
 - The conversion between `None` and C++ pointer types is not allowed anymore. Instead, `ROOT.nullptr` should be used:
+
 ~~~ {.python}
 > ROOT.gInterpreter.Declare("""
 class A {};
@@ -416,6 +424,7 @@ TypeError: could not convert argument 1
 
 - Old PyROOT has `ROOT.Long` and `ROOT.Double` to pass integer and floating point numbers by reference. In the new
 PyROOT, `ctypes` must be used instead.
+
 ~~~ {.python}
 > ROOT.gInterpreter.Declare("""
 void foo(int& i) { ++i; }
@@ -436,6 +445,7 @@ c_double(2.0)
 
 - When a character array is converted to a Python string, the new PyROOT only considers the characters before the
 end-of-string character:
+
 ~~~ {.python}
 > ROOT.gInterpreter.Declare('char MyWord[] = "Hello";')
 
@@ -449,6 +459,7 @@ end-of-string character:
 ~~~
 
 - Any Python class derived from a base C++ class now requires the base class to define a virtual destructor:
+
 ~~~ {.python}
 > ROOT.gInterpreter.Declare("class CppBase {};")
  True
@@ -481,6 +492,7 @@ TypeError: CppBase not an acceptable base: no virtual destructor
 `python my_script.py -b`, the `-b` argument will not be parsed by PyROOT, and therefore the
 batch mode will not be activated. If the user wants to enable the PyROOT argument parsing again,
 they can do so by starting their Python script with:
+
 ~~~ {.python}
 import ROOT
 ROOT.PyConfig.IgnoreCommandLineOptions = False
@@ -488,6 +500,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = False
 
 - In new PyROOT, `addressof` should be used to retrieve the address of fields in a struct,
 for example:
+
 ~~~ {.python}
 > ROOT.gInterpreter.Declare("""
 struct MyStruct {
@@ -507,6 +520,7 @@ struct MyStruct {
 > ROOT.addressof(s)
 94015521402096L
 ~~~
+
 In old PyROOT, `AddressOf` could be used for that purpose too, but its behaviour was inconsistent.
 `AddressOf(o)` returned a buffer whose first position contained the address of object `o`, but
 `Address(o, 'field')` returned a buffer whose address was the address of the field, instead
@@ -524,6 +538,7 @@ functionality is automatically provided by new cppyy: when a Python class inheri
 a wrapper C++ class is automatically generated. That wrapper class will redirect any call from C++
 to the methods implemented by the Python class. Therefore, the user can make their Python function
 classes inherit directly from the ROOT::Math C++ classes, for example:
+
 ~~~ {.python}
 import ROOT
 
@@ -565,6 +580,7 @@ which is no longer provided.
 the iterator are no longer of type Python `str`, but `cppyy.gbl.std.string`. This is an
 optimization to make the iteration faster (copies are avoided) and it allows to call
 modifier methods on the `std::string` objects.
+
 ~~~ {.python}
 > import cppyy
 
@@ -630,10 +646,11 @@ Such `dev` builds can be used to verify that ROOT-based code really includes all
 
 In 6.22, the new (experimental) PyROOT is built by default. In order to build with the old PyROOT instead, the option
 `-Dpyroot_legacy=ON` can be used. This is a summary of the PyROOT options:
-* `pyroot`: by default `ON`, it enables the build of PyROOT.
-* `pyroot_legacy`: by default `OFF`, it allows the user to select the old PyROOT (legacy) to be built instead
+
+- `pyroot`: by default `ON`, it enables the build of PyROOT.
+- `pyroot_legacy`: by default `OFF`, it allows the user to select the old PyROOT (legacy) to be built instead
 of the new one.
-* `pyroot_experimental`: this option is **deprecated** in 6.22 and should no longer be used. If used, it triggers
+- `pyroot_experimental`: this option is **deprecated** in 6.22 and should no longer be used. If used, it triggers
 a warning.
 
 This new PyROOT also introduces the possibility of building its libraries for both Python2 and Python3 in a single
