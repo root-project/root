@@ -55,23 +55,24 @@ private:
       std::promise<std::unique_ptr<RCluster>> fPromise;
       DescriptorId_t fClusterId = kInvalidDescriptorId;
       RPageSource::ColumnSet_t fColumns;
-      RWorkItem() = default;
    };
 
-   /// Clusters that are currently being processed by the I/O thread.  Every in flight cluster has a corresponding
+   /// Clusters that are currently being processed by the I/O thread.  Every in-flight cluster has a corresponding
    /// work item.
    struct RInFlightCluster {
       std::future<std::unique_ptr<RCluster>> fFuture;
       DescriptorId_t fClusterId = kInvalidDescriptorId;
       RPageSource::ColumnSet_t fColumns;
-      /// By the time a cluster has been loaded, it might not be necessary anymore.
+      /// By the time a cluster has been loaded, this cluster might not be necessary anymore. This can happen if
+      /// there are jumps in the access pattern (i.e. the access pattern deviates from linear access).
       bool fIsExpired = false;
-      RInFlightCluster() = default;
+
       bool operator== (const RInFlightCluster &other) const { return fClusterId == other.fClusterId && fColumns == other.fColumns; }
       bool operator!= (const RInFlightCluster &other) const { return !(*this == other); }
       /// First order by cluster id, then by number of columns, than by the column ids in fColumns
       bool operator< (const RInFlightCluster &other) const;
    };
+
 
    RPageSource *fPageSource;
    /// The number of clusters before the currently active cluster that should stay in the pool if present
@@ -81,22 +82,27 @@ private:
    /// The cache of clusters around the currently active cluster
    std::vector<std::shared_ptr<RCluster>> fPool;
 
-   std::mutex fLockInFlightClusters;
+   /// Protects the shared state between the main thread and the I/O thread, namely the work queue and the
+   /// in-flight clusters vector
+   std::mutex fLockWorkQueue;
    /// The clusters that were handed off to the I/O thread
    std::vector<RInFlightCluster> fInFlightClusters;
-
-   std::mutex fLockWorkQueue;
+   /// Signals a non-empty work queue
    std::condition_variable fCvHasWork;
    /// The communication channel to the I/O thread
    std::queue<RWorkItem> fWorkQueue;
 
+   /// The I/O thread calls RPageSource::LoadCluster() asynchronously.  The thread is mostly waiting for the
+   /// data to arrive (blocked by the kernel) and therefore can safely run in addition to the application
+   /// main threads.
    std::thread fThreadIo;
 
    /// Every cluster id has at most one corresponding RCluster pointer in the pool
-   std::shared_ptr<RCluster> FindInPool(DescriptorId_t clusterId);
-   /// Returns an index of an unused element in fPool; caller has to ensure that a free slot exists
-   size_t FindFreeSlot();
-   /// The I/O thread routine, there is exactly one I/O thread in flight for every cluster pool
+   std::shared_ptr<RCluster> FindInPool(DescriptorId_t clusterId) const;
+   /// Returns an index of an unused element in fPool; callers of this function (GetCluster() and WaitFor())
+   /// make sure that a free slot actually exists
+   size_t FindFreeSlot() const;
+   /// The I/O thread routine, there is exactly one I/O thread in-flight for every cluster pool
    void ExecLoadClusters();
    /// Returns the given cluster from the pool, which needs to contain at least the columns `columns`.
    /// Executed at the end of GetCluster when all missing data pieces have been sent to the load queue.
@@ -104,10 +110,10 @@ private:
    std::shared_ptr<RCluster> WaitFor(DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns);
 
 public:
-   static const unsigned int kDefaultPoolSize = 4;
+   static constexpr unsigned int kDefaultPoolSize = 4;
    RClusterPool(RPageSource *pageSource, unsigned int size);
    explicit RClusterPool(RPageSource *pageSource) : RClusterPool(pageSource, kDefaultPoolSize) {}
-   explicit RClusterPool(const RClusterPool &other) = delete;
+   RClusterPool(const RClusterPool &other) = delete;
    RClusterPool &operator =(const RClusterPool &other) = delete;
    ~RClusterPool();
 
@@ -115,9 +121,9 @@ public:
    unsigned int GetWindowPost() const { return fWindowPost; }
 
    /// Returns the requested cluster either from the pool or, in case of a cache miss, lets the I/O thread load
-   /// the cluster in the pool and returns it.  Triggers along the way the background loading of the following
-   /// fWindowPost number of clusters.  The returned cluster has at least all the pages of `columns` and possibly
-   /// pages of other columns, too.
+   /// the cluster in the pool, blocks until done, and then returns it.  Triggers along the way the background loading
+   /// of the following fWindowPost number of clusters.  The returned cluster has at least all the pages of `columns`
+   /// and possibly pages of other columns, too.
    std::shared_ptr<RCluster> GetCluster(DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns);
 }; // class RClusterPool
 
