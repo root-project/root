@@ -1101,13 +1101,14 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          // should also check that function is not something else (e.g. exponential - parse the expo)
          Int_t lastFunPos = funPos + funName.Length();
 
-         // check that first and last character is not alphanumeric
+         // check that first and last character is not a special character
          Int_t iposBefore = funPos - 1;
          // std::cout << "looping on  funpos is " << funPos << " formula is " << formula << " function " << funName <<
          // std::endl;
          if (iposBefore >= 0) {
             assert(iposBefore < formula.Length());
-            if (isalpha(formula[iposBefore])) {
+            //if (isalpha(formula[iposBefore])) {
+            if (IsFunctionNameChar(formula[iposBefore])) {
                // std::cout << "previous character for function " << funName << " is " << formula[iposBefore] << "- skip
                // " << std::endl;
                funPos = formula.Index(funName, lastFunPos);
