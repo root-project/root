@@ -162,7 +162,7 @@ ROOT::Experimental::RNTupleReader *ROOT::Experimental::RNTupleReader::GetDisplay
 }
 
 
-void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFormat format, std::ostream &output)
+void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleShowFormat format, std::ostream &output)
 {
    RNTupleReader *reader = this;
    REntry *entry = nullptr;
@@ -171,11 +171,11 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFo
       entry = fModel->GetDefaultEntry();
 
    switch(format) {
-   case ENTupleFormat::kJSONFull:
+   case ENTupleShowFormat::kCompleteJSON:
       reader = GetDisplayReader();
       entry = reader->GetModel()->GetDefaultEntry();
       // Fall through
-   case ENTupleFormat::kJSON:
+   case ENTupleShowFormat::kCurrentModelJSON:
       if (!entry) {
          output << "{}" << std::endl;
          break;
