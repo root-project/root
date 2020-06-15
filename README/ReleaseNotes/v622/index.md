@@ -267,7 +267,7 @@ where the client-server interface that's only relevant for RooFit or the legacy 
 - Add a tutorial about plotting with limited ranges [rf212_plottingInRanges_blinding](https://root.cern.ch/doc/v622/rf212__plottingInRanges__blinding_8C.html)
 - Improve the tutorial for weighted fits, [rf611_weightedfits](https://root.cern.ch/doc/v622/rf611__weightedfits_8C.html).
 
-### Etc.
+### Miscellaneous
 - Warn and fail better. Convert things that silently give the wrong results into things that fail noisily.
   - When RooDataSet is read from a file, and there's a read error, the function now returns `nullptr` instead of an incomplete dataset.
   - Better checking of invalid formulae in RooGenericPdf / RooFormulaVar. Using e.g. `RooFormulaVar(... "x+y", x);` silently
