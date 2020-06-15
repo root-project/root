@@ -60,6 +60,7 @@ class ImportLoadLibs(unittest.TestCase):
             'binascii',
             'libbz2',
             'libexpat',
+            'ISO8859-1',
             # System libraries and others
             'libnss_.*',
             'ld.*',
