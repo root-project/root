@@ -25,6 +25,7 @@
 #include <TError.h>
 
 #include <memory>
+#include <unordered_set>
 #include <utility>
 
 namespace ROOT {
@@ -49,6 +50,10 @@ class RNTupleModel {
    std::unique_ptr<RFieldZero> fFieldZero;
    /// Contains field values corresponding to the created top-level fields
    std::unique_ptr<REntry> fDefaultEntry;
+   /// Keeps track of which field names are taken.
+   std::unordered_set<std::string> fFieldNames;
+
+   void EnsureUniqueFieldName(const std::string& fieldName);
 
 public:
    RNTupleModel();
@@ -62,6 +67,7 @@ public:
    /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> MakeField(std::string_view fieldName, ArgsT&&... args) {
+      EnsureUniqueFieldName(std::string(fieldName));
       auto field = std::make_unique<RField<T>>(fieldName);
       auto ptr = fDefaultEntry->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
       fFieldZero->Attach(std::move(field));
@@ -73,6 +79,7 @@ public:
 
    template <typename T>
    void AddField(std::string_view fieldName, T* fromWhere) {
+      EnsureUniqueFieldName(std::string(fieldName));
       auto field = std::make_unique<RField<T>>(fieldName);
       fDefaultEntry->CaptureValue(field->CaptureValue(fromWhere));
       fFieldZero->Attach(std::move(field));
