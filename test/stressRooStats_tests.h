@@ -17,7 +17,7 @@
 #include "RooStats/TestStatistic.h"
 #include "RooStats/HypoTestCalculatorGeneric.h"
 
-#include "stressRooStats_models.cxx" // Global functions that build complex RooStats models
+#include "stressRooStats_models.h" // Global functions that build complex RooStats models
 
 #include <cassert>
 

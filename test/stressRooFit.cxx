@@ -54,8 +54,7 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 }
 
 
-//#include "stressRooFit_tests_direct.cxx"
-#include "stressRooFit_tests.cxx"
+#include "stressRooFit_tests.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
