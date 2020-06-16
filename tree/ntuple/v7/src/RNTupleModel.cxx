@@ -23,11 +23,13 @@
 #include <utility>
 
 
-void ROOT::Experimental::RNTupleModel::EnsureUniqueFieldName(std::string_view fieldName)
+void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
 {
    auto fieldNameStr = std::string(fieldName);
    if (fFieldNames.insert(fieldNameStr).second == false) {
       throw RException(R__FAIL("field name '" + fieldNameStr + "' already exists"));
+   } else if (fieldNameStr == "") {
+      throw RException(R__FAIL("field name cannot be empty string \"\""));
    }
 }
 
@@ -48,7 +50,7 @@ ROOT::Experimental::RNTupleModel* ROOT::Experimental::RNTupleModel::Clone()
 
 void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBase> field)
 {
-   EnsureUniqueFieldName(field->GetName());
+   EnsureValidFieldName(field->GetName());
    fDefaultEntry->AddValue(field->GenerateValue());
    fFieldZero->Attach(std::move(field));
 }
@@ -57,7 +59,7 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
 std::shared_ptr<ROOT::Experimental::RCollectionNTuple> ROOT::Experimental::RNTupleModel::MakeCollection(
    std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
 {
-   EnsureUniqueFieldName(fieldName);
+   EnsureValidFieldName(fieldName);
    auto collectionNTuple = std::make_shared<RCollectionNTuple>(std::move(collectionModel->fDefaultEntry));
    auto field = std::make_unique<RCollectionField>(fieldName, collectionNTuple, std::move(collectionModel));
    fDefaultEntry->CaptureValue(field->CaptureValue(collectionNTuple->GetOffsetPtr()));

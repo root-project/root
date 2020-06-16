@@ -53,7 +53,9 @@ class RNTupleModel {
    /// Keeps track of which field names are taken.
    std::unordered_set<std::string> fFieldNames;
 
-   void EnsureUniqueFieldName(std::string_view fieldName);
+   /// Checks that user-provided field names are valid. Throws an RException
+   /// for invalid names.
+   void EnsureValidFieldName(std::string_view fieldName);
 
 public:
    RNTupleModel();
@@ -67,7 +69,7 @@ public:
    /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> MakeField(std::string_view fieldName, ArgsT&&... args) {
-      EnsureUniqueFieldName(fieldName);
+      EnsureValidFieldName(fieldName);
       auto field = std::make_unique<RField<T>>(fieldName);
       auto ptr = fDefaultEntry->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
       fFieldZero->Attach(std::move(field));
@@ -79,7 +81,7 @@ public:
 
    template <typename T>
    void AddField(std::string_view fieldName, T* fromWhere) {
-      EnsureUniqueFieldName(fieldName);
+      EnsureValidFieldName(fieldName);
       auto field = std::make_unique<RField<T>>(fieldName);
       fDefaultEntry->CaptureValue(field->CaptureValue(fromWhere));
       fFieldZero->Attach(std::move(field));
