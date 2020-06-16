@@ -83,7 +83,7 @@ private:
    std::unique_ptr<RNTupleReader> fDisplayReader;
    Detail::RNTupleMetrics fMetrics;
 
-   void ConnectModel(RNTupleModel &model);
+   void ConnectModel(const RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
 
 public:

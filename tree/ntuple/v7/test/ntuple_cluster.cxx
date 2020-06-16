@@ -202,32 +202,34 @@ TEST(Cluster, AdoptClusters)
 
 TEST(ClusterPool, Windows)
 {
-   EXPECT_DEATH(RClusterPool(nullptr, 0), ".*");
-   RClusterPool c1(nullptr, 1);
+   RPageSourceMock ps;
+
+   EXPECT_DEATH(RClusterPool(ps, 0), ".*");
+   RClusterPool c1(ps, 1);
    EXPECT_EQ(0U, c1.GetWindowPre());
    EXPECT_EQ(1U, c1.GetWindowPost());
-   RClusterPool c2(nullptr, 2);
+   RClusterPool c2(ps, 2);
    EXPECT_EQ(0U, c2.GetWindowPre());
    EXPECT_EQ(2U, c2.GetWindowPost());
-   RClusterPool c3(nullptr, 3);
+   RClusterPool c3(ps, 3);
    EXPECT_EQ(1U, c3.GetWindowPre());
    EXPECT_EQ(2U, c3.GetWindowPost());
-   RClusterPool c5(nullptr, 5);
+   RClusterPool c5(ps, 5);
    EXPECT_EQ(1U, c5.GetWindowPre());
    EXPECT_EQ(4U, c5.GetWindowPost());
-   RClusterPool c6(nullptr, 6);
+   RClusterPool c6(ps, 6);
    EXPECT_EQ(2U, c6.GetWindowPre());
    EXPECT_EQ(4U, c6.GetWindowPost());
-   RClusterPool c9(nullptr, 9);
+   RClusterPool c9(ps, 9);
    EXPECT_EQ(2U, c9.GetWindowPre());
    EXPECT_EQ(7U, c9.GetWindowPost());
-   RClusterPool c10(nullptr, 10);
+   RClusterPool c10(ps, 10);
    EXPECT_EQ(3U, c10.GetWindowPre());
    EXPECT_EQ(7U, c10.GetWindowPost());
-   RClusterPool c15(nullptr, 15);
+   RClusterPool c15(ps, 15);
    EXPECT_EQ(3U,  c15.GetWindowPre());
    EXPECT_EQ(12U, c15.GetWindowPost());
-   RClusterPool c16(nullptr, 16);
+   RClusterPool c16(ps, 16);
    EXPECT_EQ(4U,  c16.GetWindowPre());
    EXPECT_EQ(12U, c16.GetWindowPost());
 }
@@ -235,7 +237,7 @@ TEST(ClusterPool, Windows)
 TEST(ClusterPool, GetClusterBasics)
 {
    RPageSourceMock p1;
-   RClusterPool c1(&p1, 1);
+   RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
    ASSERT_EQ(1U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
@@ -243,7 +245,7 @@ TEST(ClusterPool, GetClusterBasics)
 
    RPageSourceMock p2;
    {
-      RClusterPool c2(&p2, 2);
+      RClusterPool c2(p2, 2);
       c2.GetCluster(0, {0});
    }
    ASSERT_EQ(2U, p2.fReqsClusterIds.size());
@@ -254,7 +256,7 @@ TEST(ClusterPool, GetClusterBasics)
 
    RPageSourceMock p3;
    {
-      RClusterPool c3(&p3, 4);
+      RClusterPool c3(p3, 4);
       c3.GetCluster(2, {0});
    }
    ASSERT_EQ(3U, p3.fReqsClusterIds.size());
@@ -270,7 +272,7 @@ TEST(ClusterPool, GetClusterBasics)
 TEST(ClusterPool, GetClusterIncrementally)
 {
    RPageSourceMock p1;
-   RClusterPool c1(&p1, 1);
+   RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
    ASSERT_EQ(1U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
