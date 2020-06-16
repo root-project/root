@@ -799,16 +799,16 @@ void THStack::Paint(Option_t *choptin)
    }
 
    TString loption = opt;
-   char *nostack  = (char *)strstr(loption.Data(),"nostack");
-   char *nostackb = (char *)strstr(loption.Data(),"nostackb");
-   char *candle   = (char *)strstr(loption.Data(),"candle");
-   char *violin   = (char *)strstr(loption.Data(),"violin");
+   Bool_t nostack  = loption.Contains("nostack");
+   Bool_t nostackb = loption.Contains("nostackb");
+   Bool_t candle   = loption.Contains("candle");
+   Bool_t violin   = loption.Contains("violin");
 
    // do not delete the stack. Another pad may contain the same object
    // drawn in stack mode!
    //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
 
-   if (!opt.Contains("nostack") && (!opt.Contains("candle")) && (!opt.Contains("violin"))) BuildStack();
+   if (!nostack && !candle && !violin) BuildStack();
 
    Double_t themax,themin;
    if (fMaximum == -1111) themax = GetMaximum(option);
@@ -831,7 +831,7 @@ void THStack::Paint(Option_t *choptin)
       TAxis *yaxis = h->GetYaxis();
       const TArrayD *xbins = xaxis->GetXbins();
       if (h->GetDimension() > 1) {
-         if (loption.Length()<=0) loption.Form("%s","lego1");
+         if (loption.IsNull()) loption = "lego1";
          const TArrayD *ybins = yaxis->GetXbins();
          if (xbins->fN != 0 && ybins->fN != 0) {
             fHistogram = new TH2F(GetName(),GetTitle(),
@@ -864,9 +864,12 @@ void THStack::Paint(Option_t *choptin)
       fHistogram->SetTitle(GetTitle());
    }
 
-   if (nostack)  {*nostack  = 0; strncat(nostack,nostack+7,7);}
-   if (nostackb) {*nostackb = 0; strncat(nostackb,nostackb+8,8);}
-   else fHistogram->GetPainter()->SetStack(fHists);
+   if (nostackb) {
+      loption.ReplaceAll("nostackb","");
+   } else {
+      if (nostack) loption.ReplaceAll("nostack","");
+      fHistogram->GetPainter()->SetStack(fHists);
+   }
 
    if (!fHistogram->TestBit(TH1::kIsZoomed)) {
       if (nostack && fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
