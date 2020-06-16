@@ -51,7 +51,7 @@ bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(cons
 
 ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource, unsigned int size)
    : fPageSource(pageSource)
-   , fPool(size, nullptr)
+   , fPool(size)
    , fThreadIo(&RClusterPool::ExecLoadClusters, this)
 {
    R__ASSERT(size > 0);
@@ -115,12 +115,12 @@ void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
    } // while (true)
 }
 
-std::shared_ptr<ROOT::Experimental::Detail::RCluster>
+ROOT::Experimental::Detail::RCluster *
 ROOT::Experimental::Detail::RClusterPool::FindInPool(DescriptorId_t clusterId) const
 {
    for (const auto &cptr : fPool) {
       if (cptr && (cptr->GetId() == clusterId))
-         return cptr;
+         return cptr.get();
    }
    return nullptr;
 }
@@ -179,7 +179,7 @@ public:
 
 } // anonymous namespace
 
-std::shared_ptr<ROOT::Experimental::Detail::RCluster>
+ROOT::Experimental::Detail::RCluster *
 ROOT::Experimental::Detail::RClusterPool::GetCluster(
    DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns)
 {
@@ -285,7 +285,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
 }
 
 
-std::shared_ptr<ROOT::Experimental::Detail::RCluster>
+ROOT::Experimental::Detail::RCluster *
 ROOT::Experimental::Detail::RClusterPool::WaitFor(
    DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns)
 {

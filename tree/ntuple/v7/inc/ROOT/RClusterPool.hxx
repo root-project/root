@@ -82,7 +82,7 @@ private:
    /// The number of desired clusters in the pool, including the currently active cluster
    unsigned int fWindowPost;
    /// The cache of clusters around the currently active cluster
-   std::vector<std::shared_ptr<RCluster>> fPool;
+   std::vector<std::unique_ptr<RCluster>> fPool;
 
    /// Protects the shared state between the main thread and the I/O thread, namely the work queue and the
    /// in-flight clusters vector
@@ -100,7 +100,7 @@ private:
    std::thread fThreadIo;
 
    /// Every cluster id has at most one corresponding RCluster pointer in the pool
-   std::shared_ptr<RCluster> FindInPool(DescriptorId_t clusterId) const;
+   RCluster *FindInPool(DescriptorId_t clusterId) const;
    /// Returns an index of an unused element in fPool; callers of this function (GetCluster() and WaitFor())
    /// make sure that a free slot actually exists
    size_t FindFreeSlot() const;
@@ -109,7 +109,7 @@ private:
    /// Returns the given cluster from the pool, which needs to contain at least the columns `columns`.
    /// Executed at the end of GetCluster when all missing data pieces have been sent to the load queue.
    /// Ideally, the function returns without blocking if the cluster is already in the pool.
-   std::shared_ptr<RCluster> WaitFor(DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns);
+   RCluster *WaitFor(DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns);
 
 public:
    static constexpr unsigned int kDefaultPoolSize = 4;
@@ -125,8 +125,9 @@ public:
    /// Returns the requested cluster either from the pool or, in case of a cache miss, lets the I/O thread load
    /// the cluster in the pool, blocks until done, and then returns it.  Triggers along the way the background loading
    /// of the following fWindowPost number of clusters.  The returned cluster has at least all the pages of `columns`
-   /// and possibly pages of other columns, too.
-   std::shared_ptr<RCluster> GetCluster(DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns);
+   /// and possibly pages of other columns, too.  The returned cluster remains valid until the next call to
+   /// GetCluster().
+   RCluster *GetCluster(DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns);
 }; // class RClusterPool
 
 } // namespace Detail
