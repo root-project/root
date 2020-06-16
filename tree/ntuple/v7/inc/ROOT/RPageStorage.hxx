@@ -71,13 +71,11 @@ public:
    virtual EPageStorageType GetType() = 0;
 
    struct RColumnHandle {
-      int fId = -1;
+      DescriptorId_t fId = kInvalidDescriptorId;
       const RColumn *fColumn = nullptr;
 
-      RColumnHandle() = default;
-      RColumnHandle(int id, const RColumn *column) : fId(id), fColumn(column) {}
       /// Returns true for a valid column handle
-      operator bool() const { return fId >= 0; }
+      operator bool() const { return fId != kInvalidDescriptorId; }
    };
    /// The column handle identifies a column with the current open page storage
    using ColumnHandle_t = RColumnHandle;

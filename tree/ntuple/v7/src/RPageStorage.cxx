@@ -70,7 +70,7 @@ ROOT::Experimental::Detail::RPageSource::AddColumn(DescriptorId_t fieldId, const
    auto columnId = fDescriptor.FindColumnId(fieldId, column.GetIndex());
    R__ASSERT(columnId != kInvalidDescriptorId);
    fActiveColumns.emplace(columnId);
-   return ColumnHandle_t(columnId, &column);
+   return ColumnHandle_t{columnId, &column};
 }
 
 void ROOT::Experimental::Detail::RPageSource::DropColumn(ColumnHandle_t columnHandle)
@@ -118,7 +118,7 @@ ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const R
 {
    auto columnId = fLastColumnId++;
    fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
-   return ColumnHandle_t(columnId, &column);
+   return ColumnHandle_t{columnId, &column};
 }
 
 
