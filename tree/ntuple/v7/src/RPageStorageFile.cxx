@@ -206,26 +206,22 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    , fPagePool(std::make_shared<RPagePool>())
    , fClusterPool(std::make_unique<RClusterPool>(*this))
 {
-   fCtrNReadV = fMetrics.MakeCounter<decltype(fCtrNReadV)>("nReadV", "", "number of vector read requests");
-   fCtrNRead = fMetrics.MakeCounter<decltype(fCtrNRead)>("nRead", "", "number of byte ranges read");
-   fCtrSzReadPayload = fMetrics.MakeCounter<decltype(fCtrSzReadPayload)>("szReadPayload", "B",
-      "volume read from file (required)");
-   fCtrSzReadOverhead = fMetrics.MakeCounter<decltype(fCtrSzReadOverhead)>("szReadOverhead", "B",
-      "volume read from file (overhead)");
-   fCtrSzUnzip = fMetrics.MakeCounter<decltype(fCtrSzUnzip)>("szUnzip", "B", "volume after unzipping");
-   fCtrNClusterLoaded = fMetrics.MakeCounter<decltype(fCtrNClusterLoaded)>(
-      "nClusterLoaded", "", "number of partial clusters preloaded from storage");
-   fCtrNPageLoaded = fMetrics.MakeCounter<decltype(fCtrNPageLoaded)>(
-      "nPageLoaded", "", "number of pages loaded from storage");
-   fCtrNPagePopulated = fMetrics.MakeCounter<decltype(fCtrNPagePopulated)>(
-      "nPagePopulated", "", "number of populated pages");
-   fCtrTimeWallRead = fMetrics.MakeCounter<decltype(fCtrTimeWallRead)>(
-      "timeWallRead", "ns", "wall clock time spent reading");
-   fCtrTimeCpuRead = fMetrics.MakeCounter<decltype(fCtrTimeCpuRead)>("timeCpuRead", "ns", "CPU time spent reading");
-   fCtrTimeWallUnzip = fMetrics.MakeCounter<decltype(fCtrTimeWallUnzip)>(
-      "timeWallUnzip", "ns", "wall clock time spent decompressing");
-   fCtrTimeCpuUnzip = fMetrics.MakeCounter<decltype(fCtrTimeCpuUnzip)>(
-      "timeCpuUnzip", "ns", "CPU time spent decompressing");
+   fCounters = std::unique_ptr<RCounters>(new RCounters{
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nReadV", "", "number of vector read requests"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nRead", "", "number of byte ranges read"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szReadPayload", "B", "volume read from file (required)"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szReadOverhead", "B", "volume read from file (overhead)"),
+      *fMetrics.MakeCounter<RNTuplePlainCounter*> ("szUnzip", "B", "volume after unzipping"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nClusterLoaded", "",
+                                                   "number of partial clusters preloaded from storage"),
+      *fMetrics.MakeCounter<RNTuplePlainCounter*> ("nPageLoaded", "", "number of pages loaded from storage"),
+      *fMetrics.MakeCounter<RNTuplePlainCounter*> ("nPagePopulated", "", "number of populated pages"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallRead", "ns", "wall clock time spent reading"),
+      *fMetrics.MakeCounter<RNTuplePlainCounter*> ("timeWallUnzip", "ns", "wall clock time spent decompressing"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuRead", "ns", "CPU time spent reading"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTuplePlainCounter>*> ("timeCpuUnzip", "ns",
+                                                                       "CPU time spent decompressing")
+   });
 }
 
 
@@ -276,7 +272,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    const auto clusterId = clusterDescriptor.GetId();
    const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
 
-   fCtrNPagePopulated->Inc();
+   fCounters->fNPagePopulated.Inc();
 
    // TODO(jblomer): binary search
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
@@ -303,7 +299,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    auto pageBuffer = new unsigned char[bytesPacked];
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       fReader.ReadBuffer(pageBuffer, bytesOnStorage, pageInfo.fLocator.fPosition);
-      fCtrNPageLoaded->Inc();
+      fCounters->fNPageLoaded.Inc();
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns);
@@ -316,9 +312,9 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    }
 
    if (bytesOnStorage != bytesPacked) {
-      RNTuplePlainTimer timer(*fCtrTimeWallUnzip, *fCtrTimeCpuUnzip);
+      RNTuplePlainTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
       fDecompressor(pageBuffer, bytesOnStorage, bytesPacked);
-      fCtrSzUnzip->Add(bytesPacked);
+      fCounters->fSzUnzip.Add(bytesPacked);
    }
 
    if (!element->IsMappable()) {
@@ -388,7 +384,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
 std::unique_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns)
 {
-   fCtrNClusterLoaded->Inc();
+   fCounters->fNClusterLoaded.Inc();
 
    const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
    auto clusterLocator = clusterDesc.GetLocator();
@@ -482,8 +478,8 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
       req.fSize = s.fSize;
    }
    readRequests.emplace_back(req);
-   fCtrSzReadPayload->Add(szPayload);
-   fCtrSzReadOverhead->Add(szOverhead);
+   fCounters->fSzReadPayload.Add(szPayload);
+   fCounters->fSzReadOverhead.Add(szOverhead);
 
    // Register the on disk pages in a page map
    auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
@@ -492,18 +488,18 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
       ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
       pageMap->Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
    }
-   fCtrNPageLoaded->Add(onDiskPages.size());
+   fCounters->fNPageLoaded.Add(onDiskPages.size());
    for (auto &r : readRequests) {
       r.fBuffer = buffer + reinterpret_cast<intptr_t>(r.fBuffer);
    }
 
    auto nReqs = readRequests.size();
    {
-      RNTupleAtomicTimer timer(*fCtrTimeWallRead, *fCtrTimeCpuRead);
+      RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
       fFile->ReadV(&readRequests[0], nReqs);
    }
-   fCtrNReadV->Inc();
-   fCtrNRead->Add(nReqs);
+   fCounters->fNReadV.Inc();
+   fCounters->fNRead.Add(nReqs);
 
    auto cluster = std::make_unique<RCluster>(clusterId);
    cluster->Adopt(std::move(pageMap));

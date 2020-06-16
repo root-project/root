@@ -258,6 +258,7 @@ public:
    RNTupleMetrics & operator=(const RNTupleMetrics &other) = delete;
    ~RNTupleMetrics() = default;
 
+   // TODO(jblomer): return a reference
    template <typename CounterPtrT>
    CounterPtrT MakeCounter(const std::string &name, const std::string &unit, const std::string &desc)
    {

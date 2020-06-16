@@ -116,20 +116,24 @@ public:
    static constexpr std::size_t kMaxPageSize = 1024 * 1024;
 
 private:
-   /// Wraps the I/O counters
+   /// I/O performance counters that get registered in fMetrics
+   struct RCounters {
+      RNTupleAtomicCounter &fNReadV;
+      RNTupleAtomicCounter &fNRead;
+      RNTupleAtomicCounter &fSzReadPayload ;
+      RNTupleAtomicCounter &fSzReadOverhead;
+      RNTuplePlainCounter  &fSzUnzip;
+      RNTupleAtomicCounter &fNClusterLoaded;
+      RNTuplePlainCounter  &fNPageLoaded;
+      RNTuplePlainCounter  &fNPagePopulated;
+      RNTupleAtomicCounter &fTimeWallRead;
+      RNTuplePlainCounter  &fTimeWallUnzip;
+      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuRead;
+      RNTupleTickCounter<RNTuplePlainCounter>  &fTimeCpuUnzip;
+   };
+   std::unique_ptr<RCounters> fCounters;
+   /// Wraps the I/O counters and is observed by the RNTupleReader metrics
    RNTupleMetrics fMetrics;
-   RNTupleAtomicCounter *fCtrNReadV = nullptr;
-   RNTupleAtomicCounter *fCtrNRead = nullptr;
-   RNTupleAtomicCounter *fCtrSzReadPayload = nullptr;
-   RNTupleAtomicCounter *fCtrSzReadOverhead = nullptr;
-   RNTuplePlainCounter *fCtrSzUnzip = nullptr;
-   RNTupleAtomicCounter *fCtrNClusterLoaded = nullptr;
-   RNTuplePlainCounter *fCtrNPageLoaded = nullptr;
-   RNTuplePlainCounter *fCtrNPagePopulated = nullptr;
-   RNTupleAtomicCounter *fCtrTimeWallRead = nullptr;
-   RNTuplePlainCounter *fCtrTimeWallUnzip = nullptr;
-   RNTupleTickCounter<RNTupleAtomicCounter> *fCtrTimeCpuRead = nullptr;
-   RNTupleTickCounter<RNTuplePlainCounter> *fCtrTimeCpuUnzip = nullptr;
 
    /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
