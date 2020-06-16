@@ -135,8 +135,8 @@ private:
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
    /// The page pool might, at some point, be used by multiple page sources
    std::shared_ptr<RPagePool> fPagePool;
-   /// The last cluster from which a page got populated
-   std::shared_ptr<RCluster> fCurrentCluster;
+   /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
+   RCluster *fCurrentCluster = nullptr;
    /// Helper to unzip pages and header/footer; comprises a 16MB unzip buffer
    RNTupleDecompressor fDecompressor;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
