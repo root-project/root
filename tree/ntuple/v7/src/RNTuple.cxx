@@ -31,7 +31,7 @@
 #include <TError.h>
 
 
-void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model) {
+void ROOT::Experimental::RNTupleReader::ConnectModel(const RNTupleModel &model) {
    std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> fieldPtr2Id;
    fieldPtr2Id[model.GetFieldZero()] = fSource->GetDescriptor().GetFieldZeroId();
    for (auto &field : *model.GetFieldZero()) {

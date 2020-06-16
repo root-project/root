@@ -74,7 +74,9 @@ private:
    };
 
 
-   RPageSource *fPageSource;
+   /// Every cluster pool is responsible for exactly one page source that triggers loading of the clusters
+   /// (GetCluster()) and is used for implementating the I/O and cluster memory allocation (PageSource::LoadCluster()).
+   RPageSource &fPageSource;
    /// The number of clusters before the currently active cluster that should stay in the pool if present
    unsigned int fWindowPre;
    /// The number of desired clusters in the pool, including the currently active cluster
@@ -111,8 +113,8 @@ private:
 
 public:
    static constexpr unsigned int kDefaultPoolSize = 4;
-   RClusterPool(RPageSource *pageSource, unsigned int size);
-   explicit RClusterPool(RPageSource *pageSource) : RClusterPool(pageSource, kDefaultPoolSize) {}
+   RClusterPool(RPageSource &pageSource, unsigned int size);
+   explicit RClusterPool(RPageSource &pageSource) : RClusterPool(pageSource, kDefaultPoolSize) {}
    RClusterPool(const RClusterPool &other) = delete;
    RClusterPool &operator =(const RClusterPool &other) = delete;
    ~RClusterPool();

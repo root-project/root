@@ -204,7 +204,7 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    , fMetrics("RPageSourceFile")
    , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
-   , fClusterPool(std::make_unique<RClusterPool>(this))
+   , fClusterPool(std::make_unique<RClusterPool>(*this))
 {
    fCtrNReadV = fMetrics.MakeCounter<decltype(fCtrNReadV)>("nReadV", "", "number of vector read requests");
    fCtrNRead = fMetrics.MakeCounter<decltype(fCtrNRead)>("nRead", "", "number of byte ranges read");
