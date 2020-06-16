@@ -116,8 +116,8 @@ public:
    virtual ~ROnDiskPageMap();
 
    /// Inserts information about a page stored in fMemory.  Therefore, the address referenced by onDiskPage
-   /// needs to be owned by the fMemory block.  If a page map contains a page of a given column, it is expected
-   /// that _all_ the pages of that column in that cluster are part of the page map.
+   /// needs to be owned by the page map (see derived classes).  If a page map contains a page of a given column,
+   /// it is expected that _all_ the pages of that column in that cluster are part of the page map.
    void Register(const ROnDiskPage::Key &key, const ROnDiskPage &onDiskPage) { fOnDiskPages.emplace(key, onDiskPage); }
 };
 
