@@ -1,4 +1,4 @@
-const char* content = "[libMyClass_v1_dictrflx.so]\nclass MyClass";
+const char* content = "[libMyClass_v1_dictrflx]\nclass MyClass";
 
 #include <fstream>
 

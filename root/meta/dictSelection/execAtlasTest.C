@@ -9,7 +9,7 @@ int execAtlasTest(){
    printNames("std::vector<std::string>");
 
    // Load the atlas lib and check some names
-   if (0!=gSystem->Load("libAtlasTest_dictrflx.so"))
+   if (0!=gSystem->Load("libAtlasTest_dictrflx"))
       std::cerr << "Error loading dictionary library.\n";
 
 #ifdef ClingWorkAroundAutoParseRecurse

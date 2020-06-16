@@ -2,7 +2,7 @@
 int execLibLoad()
 {
      
-   gSystem->Load("libclasses_dictrflx.so");
+   gSystem->Load("libclasses_dictrflx");
 
    if (NULL != TClass::GetDict("A")){
       std::cout << "Dictionary found for A\n";

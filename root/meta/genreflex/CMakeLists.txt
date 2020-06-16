@@ -48,11 +48,13 @@ ROOTTEST_ADD_TEST(conflictingSelections
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/conflictingNameRule.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/conflictingNameRule_selection.xml
                   OUTREF conflictingNameRule.eref
+                  ${MIGHT_FAIL}
                   PASSRC 1)
 
 ROOTTEST_ADD_TEST(equivalentSelections
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/equivalentSelections.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/equivalentSelections_selection.xml
+                  ${MIGHT_FAIL}
                   OUTREF equivalentSelections.eref)
 
 #ROOT-7676
@@ -128,15 +130,18 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(MyClass_v2 MyClass_v2.h SELECTION MyClass_v2
 ROOTTEST_ADD_TEST(escapedQuotesWriteTree
                   MACRO execwriteTree.C
                   OUTREF execwriteTree.ref
+                  ${MIGHT_FAIL}
                   DEPENDS ${GENERATE_REFLEX_TEST} escapedQuotesRootmapGen)
 
 ROOTTEST_ADD_TEST(escapedQuotesreadTree
                   MACRO execreadTree.C
                   OUTREF execreadTree.ref
+                  ${MIGHT_FAIL}
                   DEPENDS escapedQuotesWriteTree)
 
 ROOTTEST_ADD_TEST(classSelectedTwice
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice.h --verbose --select=${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice_selection.xml
+                  ${MIGHT_FAIL}
                   OUTREF classSelectedTwice.ref)
 
 ROOTTEST_ADD_TEST(virtualInheritance

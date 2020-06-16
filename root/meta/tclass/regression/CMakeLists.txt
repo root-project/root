@@ -6,11 +6,13 @@ ROOTTEST_ADD_TEST(execNormalizationInf
                   MACRO execNormalizationInf.C
                   OUTREF execNormalizationInf.ref)
 
-ROOTTEST_ADD_TEST(execNormalizationInfPy
+if(ROOT_pyroot_FOUND)
+    ROOTTEST_ADD_TEST(execNormalizationInfPy
                   MACRO execNormalizationInf.py
                   OUTREF execNormalizationInf.py.ref
-		  ENVIRONMENT CLING_STANDARD_PCH=none
+                  ENVIRONMENT CLING_STANDARD_PCH=none
                   CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING_Development_Main}.so)
+endif()
 
 ROOTTEST_ADD_TEST(execROOT_6038
                   MACRO execROOT_6038.C
@@ -22,4 +24,5 @@ ROOTTEST_ADD_TEST(execROOT_6019
 
 ROOTTEST_ADD_TEST(execROOT_6277
                   MACRO execROOT_6277.cxx+
-                  OUTREF execROOT_6277.ref)
+                  OUTREF execROOT_6277.ref
+                  ${MIGHT_FAIL})

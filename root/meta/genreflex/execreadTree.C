@@ -13,7 +13,7 @@ void execreadTree(const char *filename = "ofile.root")
    myobj->Print(nullptr);
 
    // Now, re-write the rootmap.
-   const char* content = "[libMyClass_v1_dictrflx.so]\nclass MyClass";
+   const char* content = "[libMyClass_v1_dictrflx]\nclass MyClass";
    std::ofstream of ("al.rootmap");
    of << content << std::endl;
 

@@ -3,7 +3,7 @@
 #include "Math/GenVector/PositionVector3D.h"
 #include "Math/Point3Dfwd.h"
 
-#if defined(R__MACOSX)
+#if defined(R__MACOSX) || defined(_MSC_VER)
 #include <map>
 #else
 #include "hash_map"
@@ -84,7 +84,7 @@ namespace reco {
 // This is something that on linux produced invalid payloads. pair was for example
 // fwd declared within the __gnu_cxx namespace rather than std. And it was fwd declared,
 // strangely enough.
-#if defined(R__MACOSX)
+#if defined(R__MACOSX) || defined(_MSC_VER)
 typedef std::map<int,int> MyMap;
 #else
 typedef __gnu_cxx::hash_map<int,int> MyMap;

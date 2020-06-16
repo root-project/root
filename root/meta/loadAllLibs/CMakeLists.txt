@@ -4,5 +4,5 @@ if(OPENGL_gl_LIBRARY AND ROOTTEST_OS_ID MATCHES Scientific|CentOS|Ubuntu|Fedora)
 endif()
 
 foreach( t LoadAllLibs LoadAllLibsAZ LoadAllLibsZA)
-  ROOTTEST_ADD_TEST(${t} MACRO assert${t}.C FAILREGEX "Error in|rc = -1")
+  ROOTTEST_ADD_TEST(${t} MACRO assert${t}.C FAILREGEX "Error in|rc = -1" ${MIGHT_FAIL})
 endforeach()

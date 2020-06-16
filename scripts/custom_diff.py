@@ -28,6 +28,8 @@ def filter(lines):
         continue
       if 'rootcint -v1 -f ' in line:
         continue
+      if 'No precompiled header available' in line:
+        continue
       #if line in ['\n', '\r\n']:
       #  continue
     #---Processing line from interpreter (root.exe)------------------------------

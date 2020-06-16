@@ -1,4 +1,4 @@
-R__LOAD_LIBRARY(stltest/stltest.so)
+R__LOAD_LIBRARY(stltest/stltest)
 
 #include "stltest/SillyStlEvent.h"
 #include "TTree.h"

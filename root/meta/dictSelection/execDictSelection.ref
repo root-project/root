@@ -1,7 +1,7 @@
 
 Processing execDictSelection.C...
 *** Stress TClass with DictSelection ***
-Loading library libclassesDictSelection_dictrflx.so
+Loading library libclassesDictSelection_dictrflx
 
 --- Class classVanilla
 Class category: foreign.

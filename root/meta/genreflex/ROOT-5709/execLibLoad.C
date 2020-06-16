@@ -2,7 +2,7 @@
 int execLibLoad()
 {
      
-   gSystem->Load("libTau_dictrflx.so");
+   gSystem->Load("libTau_dictrflx");
 
    if (NULL != TClass::GetDict("pat::Tau")){
       std::cout << "Dictionary found for pat::Tau!\n";

@@ -6,7 +6,7 @@ int execbasic()
 
    std::cout << "*** Stress TClass ***\n";
 
-   loadLib("libbasic_allClasses_dictrflx.so");
+   loadLib("libbasic_allClasses_dictrflx");
 
    // Start the tests
    propertiesNames emptyProp;

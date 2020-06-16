@@ -21,8 +21,14 @@ ROOTTEST_ADD_TEST(customStreamer
 #   generated streamer
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(noStreamer_false_rflx foo.h SELECTION noStreamer_false_selection.xml)
 
+file(TO_NATIVE_PATH "${CMAKE_CURRENT_BINARY_DIR}/noStreamer_false_rflx.cxx" NOSTREAMER_FALSE_RFLX)
+if(MSVC)
+    set(grep_cmd "findstr")
+else()
+    set(grep_cmd grep)
+endif()
 ROOTTEST_ADD_TEST(noStreamerFalseDict
-                  COMMAND grep "void Foo::Streamer(TBuffer &R__b)" ${CMAKE_CURRENT_BINARY_DIR}/noStreamer_false_rflx.cxx
+                  COMMAND ${grep_cmd} "void Foo::Streamer(TBuffer &R__b)" ${NOSTREAMER_FALSE_RFLX}
                   WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
