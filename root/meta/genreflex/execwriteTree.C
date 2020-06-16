@@ -16,7 +16,7 @@ void execwriteTree(const char *filename = "ofile.root")
    file.Write();
 
    // Now, re-write the rootmap.
-   const char* content = "[libMyClass_v2_dictrflx.so]\nclass MyClass";
+   const char* content = "[libMyClass_v2_dictrflx]\nclass MyClass";
    std::ofstream of ("al.rootmap");
    of << content << std::endl;
 

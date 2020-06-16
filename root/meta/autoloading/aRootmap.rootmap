@@ -1,4 +1,4 @@
 { decls }
 
-[ libHist.so ]
+[ libHist ]
 header aHeader.h

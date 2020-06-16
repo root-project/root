@@ -2,5 +2,5 @@
 
 {
    
-   gSystem->Load("libclasses_dictrflx.so");
+   gSystem->Load("libclasses_dictrflx");
 }

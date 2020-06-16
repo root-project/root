@@ -1,6 +1,6 @@
 void execCheckComplicatedAllocator()
 {
-#if defined(R__MACOSX)
+#if defined(R__MACOSX) || defined(_MSC_VER)
    auto vName ="vector<int>";
 #else
    auto vName ="vector<int,__gnu_cxx::__mt_alloc<int,__gnu_cxx::__common_pool_policy<__gnu_cxx::__pool,true> > >";

@@ -70,7 +70,7 @@ int execEnumsTest(){
 
    std::list<std::string> tclassNames = {"testClass","EcalSeverityLevel"};
 
-   gSystem->Load("libenumsTestClasses_dictrflx.so");
+   gSystem->Load("libenumsTestClasses_dictrflx");
 
    std::cout << "Begin test\n";
    retCode+=checkEnums(tclassNames,false,true);

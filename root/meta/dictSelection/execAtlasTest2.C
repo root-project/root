@@ -56,7 +56,7 @@ void printDictionary() {
 
 int execAtlasTest2() {
 
-   if (0!=gSystem->Load("libAtlasTest2_dictrflx.so"))
+   if (0!=gSystem->Load("libAtlasTest2_dictrflx"))
       std::cerr << "Error loading dictionary library.\n";   
    
    // Print the properties of all interesting types:

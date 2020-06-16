@@ -10,6 +10,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(AtlasTest2 AtlasTest2.h SELECTION AtlasTest2
 ROOTTEST_ADD_TEST(execAtlasTest2
                   MACRO execAtlasTest2.C
                   OUTREF execAtlasTest2.ref
+                  ${MIGHT_FAIL}
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(classesDictSelection classesDictSelection.h SELECTION classesDictSelection_selection.xml NO_ROOTMAP)
@@ -17,6 +18,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(classesDictSelection classesDictSelection.h 
 ROOTTEST_ADD_TEST(classesDictSelection
                   MACRO execDictSelection.C
                   OUTREF execDictSelection.ref
+                  ${MIGHT_FAIL}
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(Dict_ex2 Dict_ex2.h SELECTION Dict_ex2_selection.xml NO_ROOTMAP)

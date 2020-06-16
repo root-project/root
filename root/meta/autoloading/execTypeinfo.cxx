@@ -6,7 +6,7 @@
 
 int execTypeinfo()
 {
-  if (gInterpreter->IsLoaded("libsetDict.so")) {
+  if (gInterpreter->IsLoaded("libsetDict")) {
      Error("execTypeinfo","libsetDict.so is already loaded");
      return 1;
   }
@@ -15,7 +15,7 @@ int execTypeinfo()
      Error("execTypeinfo","The TClass for set<int> did not properly load from a typeinfo.");
      return 2;
   }
-  if (!gInterpreter->IsLoaded("libsetDict.so")) {
+  if (!gInterpreter->IsLoaded("libsetDict")) {
      Error("execTypeinfo","The library libsetDict.so did not load.");
      return 3;
   }

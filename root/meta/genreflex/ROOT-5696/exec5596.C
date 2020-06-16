@@ -1,3 +1,3 @@
 {
-   gSystem->Load("libwarnMe_dictrflx.so");
+   gSystem->Load("libwarnMe_dictrflx");
 }

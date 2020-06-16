@@ -29,6 +29,7 @@ ROOTTEST_ADD_TEST(execCheckComplexTypedefs
                   COPY_TO_BUILDDIR complexTypedefs.rootmap
                   MACRO execCheckComplexTypedefs.C
                   OUTREF execCheckComplexTypedefs.ref
+                  ${MIGHT_FAIL}
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_ADD_TEST(execLDAPAttribute
