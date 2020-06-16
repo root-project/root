@@ -49,7 +49,7 @@ bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(cons
    return false;
 }
 
-ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource *pageSource, unsigned int size)
+ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource, unsigned int size)
    : fPageSource(pageSource)
    , fPool(size, nullptr)
    , fThreadIo(&RClusterPool::ExecLoadClusters, this)
@@ -93,7 +93,7 @@ void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
             return;
 
          // TODO(jblomer): the page source needs to be capable of loading multiple clusters in one go
-         auto cluster = fPageSource->LoadCluster(item.fClusterId, item.fColumns);
+         auto cluster = fPageSource.LoadCluster(item.fClusterId, item.fColumns);
 
          // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
          // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
@@ -183,7 +183,7 @@ std::shared_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RClusterPool::GetCluster(
    DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns)
 {
-   const auto &desc = fPageSource->GetDescriptor();
+   const auto &desc = fPageSource.GetDescriptor();
 
    // Determine previous cluster ids that we keep if they happen to be in the pool
    std::set<DescriptorId_t> keep;
