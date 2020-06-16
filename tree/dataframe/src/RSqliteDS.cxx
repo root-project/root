@@ -162,6 +162,29 @@ int VfsRdOnlyDeviceCharacteristics(sqlite3_file * /*pFile*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////
+/// Set the function pointers of the custom VFS implementation
+static sqlite3_io_methods GetSqlite3IoMethods()
+{
+   // The C style initialization is compatible with version 1 and version 2 of this struct.
+   sqlite3_io_methods io_methods;
+   memset(&io_methods, 0, sizeof(io_methods));
+   io_methods.iVersion               = 1;
+   io_methods.xClose                 = VfsRdOnlyClose;
+   io_methods.xRead                  = VfsRdOnlyRead;
+   io_methods.xWrite                 = VfsRdOnlyWrite;
+   io_methods.xTruncate              = VfsRdOnlyTruncate;
+   io_methods.xSync                  = VfsRdOnlySync;
+   io_methods.xFileSize              = VfsRdOnlyFileSize;
+   io_methods.xLock                  = VfsRdOnlyLock;
+   io_methods.xUnlock                = VfsRdOnlyUnlock;
+   io_methods.xCheckReservedLock     = VfsRdOnlyCheckReservedLock;
+   io_methods.xFileControl           = VfsRdOnlyFileControl;
+   io_methods.xSectorSize            = VfsRdOnlySectorSize;
+   io_methods.xDeviceCharacteristics = VfsRdOnlyDeviceCharacteristics;
+   return io_methods;
+}
+
+////////////////////////////////////////////////////////////////////////////
 /// Fills a new VfsRootFile struct enclosing a Davix file
 int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file *pFile, int flags, int * /*pOutFlags*/)
 {
@@ -171,28 +194,7 @@ int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file *pFile,
 
    // This global struct contains the function pointers to all the callback operations that act on an open database.
    // It is passed via the pFile struct back to sqlite so that it can call back to the functions provided above.
-   static const sqlite3_io_methods io_methods = {
-      1, // version
-      VfsRdOnlyClose,
-      VfsRdOnlyRead,
-      VfsRdOnlyWrite,
-      VfsRdOnlyTruncate,
-      VfsRdOnlySync,
-      VfsRdOnlyFileSize,
-      VfsRdOnlyLock,
-      VfsRdOnlyUnlock,
-      VfsRdOnlyCheckReservedLock,
-      VfsRdOnlyFileControl,
-      VfsRdOnlySectorSize,
-      VfsRdOnlyDeviceCharacteristics,
-      // Version 2 and later callbacks
-      nullptr, // xShmMap
-      nullptr, // xShmLock
-      nullptr, // xShmBarrier
-      nullptr, // xShmUnmap
-      nullptr, // xFetch
-      nullptr  // xUnfetch
-   };
+   static const sqlite3_io_methods io_methods = GetSqlite3IoMethods();
 
    if (flags & (SQLITE_OPEN_READWRITE | SQLITE_OPEN_DELETEONCLOSE | SQLITE_OPEN_EXCLUSIVE))
       return SQLITE_IOERR;
