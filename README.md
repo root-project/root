@@ -38,7 +38,7 @@ acquisition, simulation and data analysis systems.
 
 ## Cite
 
-When citing ROOT, please use both the reference reported below and the the DOI specific to your ROOT version available [on Zenodo](https://zenodo.org/badge/latestdoi/10994345). For example, you can copy-paste and fill in the following citation:
+When citing ROOT, please use both the reference reported below and the DOI specific to your ROOT version available [on Zenodo](https://zenodo.org/badge/latestdoi/10994345). For example, you can copy-paste and fill in the following citation:
 
     Rene Brun and Fons Rademakers, ROOT - An Object Oriented Data Analysis Framework,
     Proceedings AIHENP'96 Workshop, Lausanne, Sep. 1996,
