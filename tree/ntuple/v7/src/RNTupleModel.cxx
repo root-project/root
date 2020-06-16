@@ -13,14 +13,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTuple.hxx>
 
-#include <TError.h>
-
 #include <cstdlib>
-#include <exception>
 #include <memory>
 #include <utility>
 
@@ -28,7 +26,7 @@
 void ROOT::Experimental::RNTupleModel::EnsureUniqueFieldName(const std::string& fieldName)
 {
    if (fFieldNames.insert(fieldName).second == false) {
-      throw std::runtime_error("RNTupleModel::MakeField: field name '" + fieldName + "' already exists");
+      throw RException(R__FAIL("field name '" + fieldName + "' already exists"));
    }
 }
 

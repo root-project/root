@@ -3,6 +3,7 @@
 
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RDataFrame.hxx>
+#include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RFieldVisitor.hxx>
@@ -26,6 +27,7 @@
 #include <TFile.h>
 #include <TRandom3.h>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 #include "CustomStruct.hxx"
@@ -50,6 +52,7 @@ using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
 using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
 using RColumnModel = ROOT::Experimental::RColumnModel;
+using RException = ROOT::Experimental::RException;
 template <class T>
 using RField = ROOT::Experimental::RField<T>;
 using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
