@@ -441,6 +441,12 @@ if(macos_native)
     foreach(_prefix /sw /opt/local /usr/local) # Fink installs in /sw, and MacPort in /opt/local and Brew in /usr/local
       list(APPEND CMAKE_IGNORE_PATH ${_prefix}/bin ${_prefix}/include ${_prefix}/lib)
     endforeach()
+    if(CMAKE_VERSION VERSION_GREATER 3.15)
+      # Bug was reported on newer version of CMake on Mac OS X:
+      # https://gitlab.kitware.com/cmake/cmake/-/issues/19662
+      # https://github.com/microsoft/vcpkg/pull/7967
+      set(builtin_glew_defvalue ON)
+    endif()
   else()
     message(STATUS "Option 'macos_native' is only for MacOS systems. Ignoring it.")
   endif()
