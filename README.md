@@ -37,9 +37,8 @@ acquisition, simulation and data analysis systems.
 | v6-18-00-patches | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-v6-18-00-patches)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-v6-18-00-patches/) |
 
 ## Cite
-We are [![DOI](https://zenodo.org/badge/10994345.svg)](https://zenodo.org/badge/latestdoi/10994345)
 
-Please cite us as
+When citing ROOT, please use both the reference reported below and the the DOI specific to your ROOT version available [on Zenodo](https://zenodo.org/badge/latestdoi/10994345). For example, you can copy-paste and fill in the following citation:
 
     Rene Brun and Fons Rademakers, ROOT - An Object Oriented Data Analysis Framework,
     Proceedings AIHENP'96 Workshop, Lausanne, Sep. 1996,
