@@ -8,7 +8,7 @@ int execDictSelection()
    
    std::cout << "*** Stress TClass with DictSelection ***\n";
    
-   loadLib("libclassesDictSelection_dictrflx.so");
+   loadLib("libclassesDictSelection_dictrflx");
 
    propertiesNames Nullproperties;
    propertiesNames properties;
