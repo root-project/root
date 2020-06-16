@@ -58,7 +58,7 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view name
 
 bool RNTupleDS::SetEntry(unsigned int slot, ULong64_t entryIndex)
 {
-   fReaders[slot]->LoadEntry(entryIndex, fEntries[slot].get());
+   fReaders[slot]->LoadEntry(entryIndex, *fEntries[slot]);
    return true;
 }
 

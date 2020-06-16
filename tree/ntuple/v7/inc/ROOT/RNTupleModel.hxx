@@ -97,8 +97,8 @@ public:
       std::string_view fieldName,
       std::unique_ptr<RNTupleModel> collectionModel);
 
-   RFieldZero* GetFieldZero() const { return fFieldZero.get(); }
-   REntry* GetDefaultEntry() { return fDefaultEntry.get(); }
+   RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
+   REntry *GetDefaultEntry() { return fDefaultEntry.get(); }
    std::unique_ptr<REntry> CreateEntry();
    RNTupleVersion GetVersion() const { return RNTupleVersion(); }
    std::string GetDescription() const { return ""; /* TODO */ }

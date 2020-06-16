@@ -142,16 +142,16 @@ public:
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an expection.
-   void LoadEntry(NTupleSize_t index) { LoadEntry(index, fModel->GetDefaultEntry()); }
+   void LoadEntry(NTupleSize_t index) { LoadEntry(index, *fModel->GetDefaultEntry()); }
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
-   void LoadEntry(NTupleSize_t index, REntry* entry) {
+   void LoadEntry(NTupleSize_t index, REntry &entry) {
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
          fModel = fSource->GetDescriptor().GenerateModel();
          ConnectModel(*fModel);
       }
 
-      for (auto& value : *entry) {
+      for (auto& value : entry) {
          value.GetField()->Read(index, &value);
       }
    }
@@ -211,11 +211,11 @@ public:
    ~RNTupleWriter();
 
    /// The simplest user interface if the default entry that comes with the ntuple model is used
-   void Fill() { Fill(fModel->GetDefaultEntry()); }
+   void Fill() { Fill(*fModel->GetDefaultEntry()); }
    /// Multiple entries can have been instantiated from the tnuple model.  This method will perform
    /// a light check whether the entry comes from the ntuple's own model
-   void Fill(REntry *entry) {
-      for (auto& value : *entry) {
+   void Fill(REntry &entry) {
+      for (auto& value : entry) {
          value.GetField()->Append(value);
       }
       fNEntries++;
