@@ -30,6 +30,8 @@ void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fie
       throw RException(R__FAIL("field name '" + fieldNameStr + "' already exists"));
    } else if (fieldNameStr == "") {
       throw RException(R__FAIL("field name cannot be empty string \"\""));
+   } else if (fieldNameStr.find(".") != std::string::npos) {
+      throw RException(R__FAIL("field name '" + fieldNameStr + "' cannot contain periods '.'"));
    }
 }
 
