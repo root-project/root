@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     threads.emplace_back([&canStart,&classWasGotten,&firstMethodGotten]() {
         ++classWasGotten;
         ++firstMethodGotten;
-        while(not canStart) {}
+        while(!canStart) {}
         auto thingClass = TClass::GetClass("edmtest::Simple");
         --classWasGotten;
         while(classWasGotten !=0) {}

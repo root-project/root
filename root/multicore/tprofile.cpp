@@ -28,7 +28,7 @@ int main()
     profiles.back()->SetCanExtend(TH1::kAllAxes);
     auto profile = profiles.back().get();
     threads.emplace_back([profile,&canStart]() {
-        while(not canStart) {}
+        while(!canStart) {}
         for(int x=10; x>0; --x) {
           for(int y=0; y<20; ++y) {
             profile->Fill(double(x), double(y),1.);

@@ -1,6 +1,8 @@
 #include "TSystem.h"
 #include "TInterpreter.h"
+#ifndef _MSC_VER
 #include <dlfcn.h>
+#endif
 
 // Reproducer for ROOT-8850
 
