@@ -219,8 +219,8 @@ TEST(RNTupleModel, EnforceUniqueFieldNames)
    try {
       auto field2 = model->MakeField<float>("pt", 42.0);
       FAIL() << "repeated field names should throw";
-   } catch (const std::runtime_error& err) {
-     EXPECT_STREQ(err.what(), "RNTupleModel::MakeField: field name 'pt' already exists");
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
    }
    auto field2 = model->MakeField<float>("pt2", 42.0);
 
