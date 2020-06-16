@@ -143,7 +143,7 @@ private:
    std::unique_ptr<ROOT::Internal::RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
    Internal::RMiniFileReader fReader;
-   /// The cluster pool asynchronoulsy preloads the next few clusters
+   /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);

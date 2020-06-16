@@ -67,10 +67,10 @@ private:
       /// there are jumps in the access pattern (i.e. the access pattern deviates from linear access).
       bool fIsExpired = false;
 
-      bool operator== (const RInFlightCluster &other) const { return fClusterId == other.fClusterId && fColumns == other.fColumns; }
-      bool operator!= (const RInFlightCluster &other) const { return !(*this == other); }
+      bool operator ==(const RInFlightCluster &other) const { return fClusterId == other.fClusterId && fColumns == other.fColumns; }
+      bool operator !=(const RInFlightCluster &other) const { return !(*this == other); }
       /// First order by cluster id, then by number of columns, than by the column ids in fColumns
-      bool operator< (const RInFlightCluster &other) const;
+      bool operator <(const RInFlightCluster &other) const;
    };
 
 

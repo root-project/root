@@ -83,7 +83,7 @@ public:
    /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the meta-data.
    /// When writing, every column can only be attached once.
    virtual ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) = 0;
-   /// Unregisteres a column.  A page source decreases the reference counter for the corresponding active column.
+   /// Unregisters a column.  A page source decreases the reference counter for the corresponding active column.
    /// For a page sink, dropping columns is currently a no-op.
    virtual void DropColumn(ColumnHandle_t columnHandle) = 0;
 
