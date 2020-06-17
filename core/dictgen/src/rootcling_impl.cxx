@@ -4332,6 +4332,8 @@ int RootClingMain(int argc,
                                       GetModuleNameFromRdictName(DepMod).str().data());
          }
          DepMod = GetModuleNameFromRdictName(DepMod);
+         // We might deserialize.
+         cling::Interpreter::PushTransactionRAII RAII(&interp);
          if (!interp.loadModule(DepMod, /*complain*/false)) {
             ROOT::TMetaUtils::Error(0, "Module '%s' failed to load.\n",
                                     DepMod.data());
