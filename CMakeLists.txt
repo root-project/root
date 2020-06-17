@@ -35,12 +35,7 @@ if(MSVC)
   endif()
   if (NOT PYTHON_EXECUTABLE)
     find_package(PythonInterp)
-    set(ROOTTEST_ENVIRONMENT
-        ROOTSYS=${ROOTSYS}
-        PATH=$ENV{PATH}
-        PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH}:$ENV{PYTHONPATH})
   endif()
-  set(PYTHON_EXECUTABLE_Development_Main ${PYTHON_EXECUTABLE})
   include(${ROOT_USE_FILE})
   set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
   file(READ "${ROOTSYS}/bin/root-config" root_config)
@@ -165,7 +160,15 @@ endif()
 
 # Setup environment.
 set(ROOTTEST_ENV_PATH ${ROOT_BINDIR})
-set(ROOTTEST_ENV_PYTHONPATH ${ROOT_LIBRARY_DIR})
+if(MSVC)
+  if(NOT PYTHON_EXECUTABLE_Development_Main) # Should not happen!
+    # FIXME: Temporary workaround until standalone roottest is properly fixed
+    set(PYTHON_EXECUTABLE_Development_Main ${PYTHON_EXECUTABLE})
+  endif()
+  set(ROOTTEST_ENV_PYTHONPATH ${ROOT_BINDIR})
+else()
+  set(ROOTTEST_ENV_PYTHONPATH ${ROOT_LIBRARY_DIR})
+endif()
 set(ROOTTEST_ENV_LIBRARYPATH ${ROOT_LIBRARY_DIR})
 set(ROOTTEST_ENV_EXTRA)
 
