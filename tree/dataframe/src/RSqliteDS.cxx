@@ -165,7 +165,8 @@ int VfsRdOnlyDeviceCharacteristics(sqlite3_file * /*pFile*/)
 /// Set the function pointers of the custom VFS implementation
 static sqlite3_io_methods GetSqlite3IoMethods()
 {
-   // The C style initialization is compatible with version 1 and version 2 of this struct.
+   // The C style initialization is compatible with version 1 and later versions of the struct.
+   // Version 1 was introduced with sqlite 3.6, version 2 with sqlite 3.7.8, version 3 with sqlite 3.7.17
    sqlite3_io_methods io_methods;
    memset(&io_methods, 0, sizeof(io_methods));
    io_methods.iVersion               = 1;
