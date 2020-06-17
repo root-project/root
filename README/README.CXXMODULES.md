@@ -309,10 +309,6 @@ different. There are several differences which can be noticed:
   * rootcling -cxxmodule creates a single artifact *Name.pcm* after the library
   name. At a final stage, ROOT might be able to integrate the Name.pcm with the
   shared library itself.
-  * Preloads all \*pcm files at start up time -- this currently is the only
-  remaining bottleneck which introduces a relatively small performance overhead
-  at startup time and is described bellow. It will be negligible for third-
-  party code (dominated by header parsing).
   * Improved correctness in number of cases -- in a few cases ROOT is more
   correct. In particular, when resolving global variables and function
   declarations which are not part of the ROOT PCH.
@@ -323,6 +319,21 @@ different. There are several differences which can be noticed:
   the LD_LIBRARY_PATH descending to the system libraries. The algorithm is very
   efficient because it uses bloom filters[[5]]. This in turn allows ROOT symbol
   to be extended to system libraries.
+
+### Module Registration Approaches
+
+  The C++ modules system supports /*preloading*/ of all modules at startup time.
+  The current implementation of loading of C++ modules in clang has an overhead
+  and is between 40-60 MB depending on the ROOT configuration while there might
+  be 2x slowdown depending on the workflow. These issues are very likely to be
+  addressed by the LLVM community in midterm.
+
+  Preloading of all C++ modules is semantically the closest to C++ behavior.
+  However, in order to achieve performance ROOT loads them on demand using
+  a global module index file. It has sufficient information to map a looked up
+  identifier to the module which contains the corresponding definition. Switching
+  back to preloading of all C++ modules is done by setting the `ROOT_USE_GMI`
+  environment variable to false.
   
 ### Supported Platforms
 
@@ -349,14 +360,15 @@ different. There are several differences which can be noticed:
 
 ## State of the union
 
-C++ Modules-aware ROOT preloads all modules at start up time. Our motivating
-example:
+Preloading all modules at start up time turn our motivating example into:
 
 ```cpp
 // ROOT prompt
 root [] S *s;           // #1: does not require a definition.
 root [] foo::bar *baz1; // #2: does not require a definition.
 root [] foo::bar baz2;  // #3: requires a definition.
+root [] TCanvas* c = new TCanvas(); // #4 requires a definition
+
 ```
 
 becomes equivalent to
@@ -368,11 +380,28 @@ root [] import Foo.*;
 root [] S *s;           // #1: does not require a definition.
 root [] foo::bar *baz1; // #2: does not require a definition.
 root [] foo::bar baz2;  // #3: requires a definition.
+root [] TCanvas* c = new TCanvas(); // #4 requires a definition
 ```
 
 The implementation avoids recursive actions and relies on a well-defined (by
 the C++ standard) behavior. Currently, this comes with a constant performance
 overhead which we go in details bellow.
+
+ROOT uses the global module index (GMI) to avoid the performance overhead. ROOT
+only preloads the set of C++ modules which are not present in the GMI. The
+example becomes equivalent to:
+
+```cpp
+// ROOT prompt
+root [] import Foo.*;   // Preload Foo if it is not in the GMI.
+root [] S *s;           // #1: does not require a definition.
+root [] foo::bar *baz1; // #2: does not require a definition.
+root [] foo::bar baz2;  // #3: requires a definition.
+root [] TCanvas* c = new TCanvas(); // #4 requires a definition
+```
+
+Line #4 forces cling to send ROOT a callback that TCanvas in unknown but
+the GMI resolves it to module Gpad, loads it and returns the control to cling.
 
 
 ### Performance
@@ -385,16 +414,9 @@ is not available.
 The comparisons are to give a good metric when we are ready to switch ROOT to use
 C++ Modules by default. However, since it is essentially the same technology,
 optimizations of C++ Modules also affect the PCH. We have a few tricks up in
-the slaves to but they come with given trade-offs. For example, we can avoid
-preloading of all modules at the cost of introducing recursive behavior in
-loading. This requires to build a global module index which is an on-disk
-hash table. It will contain information about the mapping between an
-identifier and a module name. Upon failed identifier lookup we will use the
-map to decide which set of modules should be loaded. Another optimization
-includes building some of the modules without `-fmodules-local-submodule-visibility`.
-In turn, this would flatten the C++ modules structure and give us performance
-comparable to the ROOT PCH. The trade-off is that we will decrease the
-encapsulation and leak information about implementation-specific header files.
+the sleeves to but they come with given trade-offs.
+
+#### Preloading of C++ Modules
 
 The main focus for the technology preview was not in performance until recently.
 We have invested some resources in optimizations and we would like to show you
@@ -412,6 +434,14 @@ We have invested some resources in optimizations and we would like to show you
 The performance is dependent on many factors such as configuration of ROOT and
 workflow. You can read more at our Intel IPCC-ROOT Showcase presentation
 here (pp 25-33)[[8]].
+
+#### Loading C++ Modules on Demand
+
+In long term, we should optimize the preloading of modules to be a no-op and
+avoid recursive behavior based on identifier lookup callbacks. Unfortunately,
+at the moment the loading of C++ modules on demand shows significantly better
+performance results.
+
 
 You can visit our continuous performance monitoring tool where we compare
 the performance of ROOT against ROOT with a PCH [[9]].

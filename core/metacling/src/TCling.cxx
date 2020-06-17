@@ -1041,6 +1041,7 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
       ::Info("TCling::__LoadModule", "Preloading module %s. \n",
              ModuleName.c_str());
 
+   cling::Interpreter::PushTransactionRAII deserRAII(&interp);
    return interp.loadModule(ModuleName, /*Complain=*/true);
 }
 
@@ -1115,23 +1116,23 @@ static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling
                TraverseDecl(TU);
             }
             bool VisitNamedDecl(NamedDecl *ND) {
-               for (auto R : ND->redecls()) {
-                  if (!R->isFromASTFile())
-                     continue;
-                  if (TagDecl *TD = llvm::dyn_cast<TagDecl>(R)) {
-                     if (TD->isCompleteDefinition())
-                        Register(TD);
-                  } else if (NamespaceDecl *NSD = llvm::dyn_cast<NamespaceDecl>(R))
-                     Register(NSD, /*AddSingleEntry=*/ false);
-                  else if (TypedefNameDecl *TND = dyn_cast<TypedefNameDecl>(R))
-                     Register(TND);
-                  // FIXME: Add the rest...
+               if (!ND->isFromASTFile())
+                  return true;
+
+               if (TagDecl *TD = llvm::dyn_cast<TagDecl>(ND)) {
+                  if (TD->isCompleteDefinition())
+                     Register(TD);
+               } else if (NamespaceDecl *NSD = llvm::dyn_cast<NamespaceDecl>(ND)) {
+                  Register(NSD, /*AddSingleEntry=*/ false);
                }
+               else if (TypedefNameDecl *TND = dyn_cast<TypedefNameDecl>(ND))
+                  Register(TND);
+               // FIXME: Add the rest...
                return true; // continue decending
             }
          private:
             clang::GlobalModuleIndex::UserDefinedInterestingIDs &DefinitionIDs;
-            void Register(NamedDecl* ND, bool AddSingleEntry = true) {
+            void Register(const NamedDecl* ND, bool AddSingleEntry = true) {
                assert(ND->isFromASTFile());
                // FIXME: All decls should have an owning module once rootcling
                // updates its generated decls from within the LookupHelper & co.
@@ -1220,18 +1221,32 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       clang::CompilerInstance &CI = *clingInterp.getCI();
       GlobalModuleIndex *GlobalIndex = nullptr;
       // Conservatively enable platform by platform.
-      bool supportedPlatform = false;
-      // Allow forcefully enabling the GMI.
-      llvm::Optional<std::string> EnvEnGMI = llvm::sys::Process::GetEnv("ROOT_EXPERIMENTAL_GMI");
-      if (EnvEnGMI.hasValue() && ROOT::FoundationUtils::ConvertEnvValueToBool(*EnvEnGMI))
-         supportedPlatform = true;
+      bool supportedPlatform =
+#ifdef R__LINUX
+         true
+#elif defined(R__MACOSX)
+         true
+#else // Windows
+         false
+#endif
+         ;
+      // Allow forcefully enabling/disabling the GMI.
+      llvm::Optional<std::string> envUseGMI = llvm::sys::Process::GetEnv("ROOT_USE_GMI");
+      if (envUseGMI.hasValue()) {
+         if (!envUseGMI->empty() && !ROOT::FoundationUtils::CanConvertEnvValueToBool(*envUseGMI))
+            ::Warning("TCling__RegisterCxxModules",
+                      "Cannot convert '%s' to bool, setting to false!",
+                      envUseGMI->c_str());
 
-      llvm::Optional<std::string> EnvDisGMI = llvm::sys::Process::GetEnv("ROOT_DISABLE_GMI");
-      if (EnvDisGMI.hasValue() && EnvEnGMI.hasValue())
-         ::Error("TCling__RegisterCxxModules",
-                 "Both ROOT_EXPERIMENTAL_GMI and ROOT_DISABLE_GMI env vars are set!");
+         bool value = envUseGMI->empty() || ROOT::FoundationUtils::ConvertEnvValueToBool(*envUseGMI);
 
-      if (supportedPlatform && EnvDisGMI.hasValue() && ROOT::FoundationUtils::ConvertEnvValueToBool(*EnvDisGMI)) {
+         if (supportedPlatform == value)
+            ::Warning("TCling__RegisterCxxModules", "Global module index is%sused already!",
+                     (value) ? " " :" not ");
+         supportedPlatform = value;
+      }
+
+      if (supportedPlatform) {
          loadGlobalModuleIndex(SourceLocation(), clingInterp);
          // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
          // We should investigate how to suppress it completely.
