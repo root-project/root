@@ -91,7 +91,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
         set(PYTHON_LIBRARIES "${Python${PYTHON_PREFER_VERSION}_LIBRARIES}")
         set(PYTHON_LIBRARY_DIR "${Python${PYTHON_PREFER_VERSION}_LIBRARY_DIRS}")
         # Set PyROOT variables
-        set(Python${PYTHON_PREFER_VERSION}_Interpreter_Development_FOUND ON) # This means we have both Interpreter and Development, hence we can build PyROOT with Python3
+        set(Python${PYTHON_PREFER_VERSION}_Interpreter_Development_FOUND ON) # This means we have both Interpreter and Development, hence we can build PyROOT with this Python
         set(PYTHON_EXECUTABLE_Development_Main "${Python${PYTHON_PREFER_VERSION}_EXECUTABLE}")
         set(PYTHON_VERSION_STRING_Development_Main "${Python${PYTHON_PREFER_VERSION}_VERSION}")
         set(PYTHON_VERSION_MAJOR_Development_Main "${Python${PYTHON_PREFER_VERSION}_VERSION_MAJOR}")
