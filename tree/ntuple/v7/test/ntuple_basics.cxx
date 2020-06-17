@@ -216,26 +216,41 @@ TEST(RNTuple, Clusters)
 TEST(RNTupleModel, EnforceValidFieldNames)
 {
    auto model = RNTupleModel::Create();
+
    auto field = model->MakeField<float>("pt", 42.0);
 
+   // MakeField
    try {
       auto field2 = model->MakeField<float>("pt", 42.0);
       FAIL() << "repeated field names should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
    }
-
    try {
       auto field3 = model->MakeField<float>("", 42.0);
       FAIL() << "empty string as field name should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name cannot be empty string"));
    }
-
    try {
       auto field3 = model->MakeField<float>("pt.pt", 42.0);
       FAIL() << "field name with periods should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt.pt' cannot contain periods '.'"));
+   }
+
+   // AddField
+   try {
+      model->AddField(std::make_unique<RField<float>>(RField<float>("pt")));
+      FAIL() << "repeated field names should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
+   }
+   try {
+      float num = 10.0;
+      model->AddField("pt", &num);
+      FAIL() << "repeated field names should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
    }
 }
