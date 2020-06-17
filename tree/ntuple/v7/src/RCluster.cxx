@@ -44,9 +44,8 @@ ROOT::Experimental::Detail::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key)
 
 void ROOT::Experimental::Detail::RCluster::Adopt(std::unique_ptr<ROnDiskPageMap> pageMap)
 {
-   using IterPages_t = decltype(ROnDiskPageMap::fOnDiskPages)::iterator;
-   fOnDiskPages.insert(std::move_iterator<IterPages_t>(pageMap->fOnDiskPages.begin()),
-                       std::move_iterator<IterPages_t>(pageMap->fOnDiskPages.end()));
+   auto &pages = pageMap->fOnDiskPages;
+   fOnDiskPages.insert(std::make_move_iterator(pages.begin()), std::make_move_iterator(pages.end()));
    pageMap->fOnDiskPages.clear();
    fPageMaps.emplace_back(std::move(pageMap));
 }
@@ -56,14 +55,12 @@ void ROOT::Experimental::Detail::RCluster::Adopt(RCluster &&other)
 {
    R__ASSERT(fClusterId == other.fClusterId);
 
-   using IterPages_t = decltype(fOnDiskPages)::iterator;
-   fOnDiskPages.insert(std::move_iterator<IterPages_t>(other.fOnDiskPages.begin()),
-                       std::move_iterator<IterPages_t>(other.fOnDiskPages.end()));
+   auto &pages = other.fOnDiskPages;
+   fOnDiskPages.insert(std::make_move_iterator(pages.begin()), std::make_move_iterator(pages.end()));
    other.fOnDiskPages.clear();
 
-   using IterColumns_t = decltype(fAvailColumns)::iterator;
-   fAvailColumns.insert(std::move_iterator<IterColumns_t>(other.fAvailColumns.begin()),
-                        std::move_iterator<IterColumns_t>(other.fAvailColumns.end()));
+   auto &columns = other.fAvailColumns;
+   fAvailColumns.insert(std::make_move_iterator(columns.begin()), std::make_move_iterator(columns.end()));
    other.fAvailColumns.clear();
    std::move(other.fPageMaps.begin(), other.fPageMaps.end(), std::back_inserter(fPageMaps));
    other.fPageMaps.clear();
