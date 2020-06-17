@@ -1041,6 +1041,7 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
       ::Info("TCling::__LoadModule", "Preloading module %s. \n",
              ModuleName.c_str());
 
+   cling::Interpreter::PushTransactionRAII deserRAII(&interp);
    return interp.loadModule(ModuleName, /*Complain=*/true);
 }
 
@@ -1220,18 +1221,27 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       clang::CompilerInstance &CI = *clingInterp.getCI();
       GlobalModuleIndex *GlobalIndex = nullptr;
       // Conservatively enable platform by platform.
-      bool supportedPlatform = false;
-      // Allow forcefully enabling the GMI.
-      llvm::Optional<std::string> EnvEnGMI = llvm::sys::Process::GetEnv("ROOT_EXPERIMENTAL_GMI");
-      if (EnvEnGMI.hasValue() && ROOT::FoundationUtils::ConvertEnvValueToBool(*EnvEnGMI))
-         supportedPlatform = true;
+      bool supportedPlatform =
+#ifdef R__LINUX
+         true
+#elif defined(R__MACOSX)
+         true
+#else // Windows
+         false
+#endif
+         ;
+      // Allow forcefully enabling/disabling the GMI.
+      llvm::Optional<std::string> envUseGMI = llvm::sys::Process::GetEnv("ROOT_USE_GMI");
+      if (envUseGMI.hasValue()) {
+         bool value = envUseGMI->empty() || ROOT::FoundationUtils::ConvertEnvValueToBool(*envUseGMI);
 
-      llvm::Optional<std::string> EnvDisGMI = llvm::sys::Process::GetEnv("ROOT_DISABLE_GMI");
-      if (EnvDisGMI.hasValue() && EnvEnGMI.hasValue())
-         ::Error("TCling__RegisterCxxModules",
-                 "Both ROOT_EXPERIMENTAL_GMI and ROOT_DISABLE_GMI env vars are set!");
+         if (supportedPlatform == value)
+            ::Warning("TCling__RegisterCxxModules", "Global module index is%sused already!",
+                     (value) ? " " :" not ");
+         supportedPlatform = value;
+      }
 
-      if (supportedPlatform && EnvDisGMI.hasValue() && ROOT::FoundationUtils::ConvertEnvValueToBool(*EnvDisGMI)) {
+      if (supportedPlatform) {
          loadGlobalModuleIndex(SourceLocation(), clingInterp);
          // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
          // We should investigate how to suppress it completely.

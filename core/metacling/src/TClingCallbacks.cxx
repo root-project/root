@@ -11,6 +11,8 @@
 
 #include "TClingCallbacks.h"
 
+#include <ROOT/FoundationUtils.hxx>
+
 #include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
@@ -38,6 +40,7 @@
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/Process.h"
 
 #include "TClingUtils.h"
 #include "ClingRAII.h"
@@ -288,8 +291,10 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
 bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFirstMatchOnly /*=true*/)
 {
-   if (::getenv("ROOT_DISABLE_GMI"))
-      return false;
+   llvm::Optional<std::string> envUseGMI = llvm::sys::Process::GetEnv("ROOT_USE_GMI");
+   if (envUseGMI.hasValue())
+      if (!envUseGMI->empty() && !ROOT::FoundationUtils::ConvertEnvValueToBool(*envUseGMI))
+         return false;
 
    const CompilerInstance *CI = m_Interpreter->getCI();
    const LangOptions &LangOpts = CI->getPreprocessor().getLangOpts();
