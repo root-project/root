@@ -667,6 +667,10 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
 
       if (nestedLoc) narg = nestedLoc;
 
+      // Treat the trailing stars the same as nested loc (i.e. ends up, properly, tacking them up back at the end of the name)
+      if (!inside[narg-1].empty() && inside[narg-1][0] == '*')
+         narg = narg - 1;
+
       // Remove default allocator if any.
       static const char* allocPrefix = "std::allocator<";
       static const unsigned int allocPrefixLen (strlen(allocPrefix));
