@@ -162,7 +162,8 @@ int VfsRdOnlyDeviceCharacteristics(sqlite3_file * /*pFile*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// Set the function pointers of the custom VFS implementation
+/// Set the function pointers of the custom VFS I/O operations in a
+/// forward-compatible way
 static sqlite3_io_methods GetSqlite3IoMethods()
 {
    // The C style initialization is compatible with version 1 and later versions of the struct.
@@ -294,32 +295,32 @@ int VfsRdOnlyCurrentTime(sqlite3_vfs *vfs, double *prNow)
 }
 
 ////////////////////////////////////////////////////////////////////////////
+/// Set the function pointers of the VFS implementation in a
+/// forward-compatible way
+static sqlite3_vfs GetSqlite3Vfs()
+{
+   // The C style initialization is compatible with version 1 and later versions of the struct.
+   // Version 1 was introduced with sqlite 3.5, version 2 with sqlite 3.7, version 3 with sqlite 3.7.6
+   sqlite3_vfs vfs;
+   memset(&vfs, 0, sizeof(vfs));
+   vfs.iVersion      = 1;
+   vfs.szOsFile      = sizeof(VfsRootFile);
+   vfs.mxPathname    = 2000;
+   vfs.zName         = gSQliteVfsName;
+   vfs.xOpen         = VfsRdOnlyOpen;
+   vfs.xDelete       = VfsRdOnlyDelete;
+   vfs.xAccess       = VfsRdOnlyAccess;
+   vfs.xFullPathname = VfsRdOnlyFullPathname;
+   vfs.xRandomness   = VfsRdOnlyRandomness;
+   vfs.xSleep        = VfsRdOnlySleep;
+   vfs.xCurrentTime  = VfsRdOnlyCurrentTime;
+   vfs.xGetLastError = VfsRdOnlyGetLastError;
+   return vfs;
+}
+
+////////////////////////////////////////////////////////////////////////////
 /// A global struct of function pointers and details on the VfsRootFile class that together constitue a VFS module
-static struct sqlite3_vfs kSqlite3Vfs = {
-   1, // version of the struct
-   sizeof(VfsRootFile),
-   2000,    // maximum URL length
-   nullptr, // pNext, maintained by sqlite
-   gSQliteVfsName,
-   nullptr, // pAppData
-   VfsRdOnlyOpen,
-   VfsRdOnlyDelete,
-   VfsRdOnlyAccess,
-   VfsRdOnlyFullPathname,
-   nullptr, // xDlOpen
-   nullptr, // xDlError
-   nullptr, // xDlSym
-   nullptr, // xDlClose
-   VfsRdOnlyRandomness,
-   VfsRdOnlySleep,
-   VfsRdOnlyCurrentTime,
-   VfsRdOnlyGetLastError,
-   VfsRdOnlyCurrentTimeInt64,
-   // Version 3 and later callbacks
-   nullptr, // xSetSystemCall
-   nullptr, // xGetSystemCall
-   nullptr, // xNextSystemCall
-};
+static struct sqlite3_vfs kSqlite3Vfs = GetSqlite3Vfs();
 
 static bool RegisterSqliteVfs()
 {
