@@ -599,7 +599,11 @@ void RSqliteDS::SetNSlots(unsigned int nSlots)
 void RSqliteDS::SqliteError(int errcode)
 {
    std::string errmsg = "SQlite error: ";
+#if SQLITE_VERSION_NUMBER < 3007015
+   errmsg += std::to_string(errcode);
+#else
    errmsg += sqlite3_errstr(errcode);
+#endif
    throw std::runtime_error(errmsg);
 }
 
