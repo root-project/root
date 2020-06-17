@@ -1676,10 +1676,15 @@ function(ROOT_ADD_UNITTEST_DIR)
 endfunction()
 
 #----------------------------------------------------------------------------
-# function ROOT_ADD_GTEST(<testsuite> source1 source2... COPY_TO_BUILDDIR file1 file2 LIBRARIES)
-#
+# function ROOT_ADD_GTEST(<testsuite> source1 source2...
+#                        [WILLFAIL]
+#                        [COPY_TO_BUILDDIR file1 file2...] -- files to copy in the build directory
+#                        [LIBRARIES lib1 lib2...] -- Libraries to link against
+#                        [LABELS label1 label2...]) -- Labels to annotate the test
+#                        [INCLUDE_DIRS label1 label2...]) -- Extra target include directories
+
 function(ROOT_ADD_GTEST test_suite)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;LIBRARIES;LABELS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
 
   # ROOTUnitTestSupport
   if(NOT TARGET ROOTUnitTestSupport)
@@ -1696,6 +1701,10 @@ function(ROOT_ADD_GTEST test_suite)
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main ROOTUnitTestSupport)
   target_include_directories(${test_suite} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+  if (ARG_INCLUDE_DIRS)
+    target_include_directories(${test_suite} PRIVATE ${ARG_INCLUDE_DIRS})
+  endif(ARG_INCLUDE_DIRS)
+
   if(MSVC)
     set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
         /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
