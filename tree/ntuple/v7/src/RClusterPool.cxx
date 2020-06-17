@@ -32,21 +32,19 @@
 
 bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(const RInFlightCluster &other) const
 {
-   if (fClusterId < other.fClusterId)
-      return true;
-   if (fClusterId > other.fClusterId)
-      return false;
-   if (fColumns.size() < other.fColumns.size())
-      return true;
-   if (fColumns.size() > other.fColumns.size())
-      return false;
-   for (auto itr1 = fColumns.begin(), itr2 = other.fColumns.begin(); itr1 != fColumns.end(); ++itr1, ++itr2) {
-      if (*itr1 == *itr2)
-         continue;
-      return *itr1 < *itr2;
+   if (fClusterId == other.fClusterId) {
+      if (fColumns.size() == other.fColumns.size()) {
+         for (auto itr1 = fColumns.begin(), itr2 = other.fColumns.begin(); itr1 != fColumns.end(); ++itr1, ++itr2) {
+            if (*itr1 == *itr2)
+               continue;
+            return *itr1 < *itr2;
+         }
+         // *this == other
+         return false;
+      }
+      return fColumns.size() < other.fColumns.size();
    }
-   // *this == other
-   return false;
+   return fClusterId < other.fClusterId;
 }
 
 ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource, unsigned int size)
