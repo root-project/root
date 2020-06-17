@@ -81,11 +81,17 @@ private:
 
 public:
    // Browse through the entries
-   class RIterator : public std::iterator<std::forward_iterator_tag, NTupleSize_t> {
+   class RIterator {
    private:
-      using iterator = RIterator;
       NTupleSize_t fIndex = kInvalidNTupleIndex;
    public:
+      using iterator = RIterator;
+      using iterator_category = std::forward_iterator_tag;
+      using value_type = NTupleSize_t;
+      using difference_type = NTupleSize_t;
+      using pointer = NTupleSize_t*;
+      using reference = NTupleSize_t&;
+
       RIterator() = default;
       explicit RIterator(NTupleSize_t index) : fIndex(index) {}
       ~RIterator() = default;

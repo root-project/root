@@ -112,18 +112,24 @@ protected:
 
 public:
    /// Iterates over the sub tree of fields in depth-first search order
-   class RSchemaIterator : public std::iterator<std::forward_iterator_tag, Detail::RFieldBase> {
+   class RSchemaIterator {
    private:
-      using iterator = RSchemaIterator;
       struct Position {
          Position() : fFieldPtr(nullptr), fIdxInParent(-1) { }
-         Position(pointer fieldPtr, int idxInParent) : fFieldPtr(fieldPtr), fIdxInParent(idxInParent) { }
-         pointer fFieldPtr;
+         Position(RFieldBase *fieldPtr, int idxInParent) : fFieldPtr(fieldPtr), fIdxInParent(idxInParent) { }
+         RFieldBase *fFieldPtr;
          int fIdxInParent;
       };
       /// The stack of nodes visited when walking down the tree of fields
       std::vector<Position> fStack;
    public:
+      using iterator = RSchemaIterator;
+      using iterator_category = std::forward_iterator_tag;
+      using value_type = RFieldBase;
+      using difference_type = std::ptrdiff_t;
+      using pointer = RFieldBase*;
+      using reference = RFieldBase&;
+
       RSchemaIterator() { fStack.emplace_back(Position()); }
       RSchemaIterator(pointer val, int idxInParent) { fStack.emplace_back(Position(val, idxInParent)); }
       ~RSchemaIterator() {}
