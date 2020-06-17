@@ -1222,11 +1222,16 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       // Conservatively enable platform by platform.
       bool supportedPlatform = false;
       // Allow forcefully enabling the GMI.
-      const char *experimentalGMI = gSystem->Getenv("ROOT_EXPERIMENTAL_GMI");
-      if (experimentalGMI && strcmp(experimentalGMI,"false") != 0)
+      llvm::Optional<std::string> EnvEnGMI = llvm::sys::Process::GetEnv("ROOT_EXPERIMENTAL_GMI");
+      if (EnvEnGMI.hasValue() && ROOT::FoundationUtils::ConvertEnvValueToBool(*EnvEnGMI))
          supportedPlatform = true;
 
-      if (supportedPlatform && !gSystem->Getenv("ROOT_DISABLE_GMI")) {
+      llvm::Optional<std::string> EnvDisGMI = llvm::sys::Process::GetEnv("ROOT_DISABLE_GMI");
+      if (EnvDisGMI.hasValue() && EnvEnGMI.hasValue())
+         ::Error("TCling__RegisterCxxModules",
+                 "Both ROOT_EXPERIMENTAL_GMI and ROOT_DISABLE_GMI env vars are set!");
+
+      if (supportedPlatform && EnvDisGMI.hasValue() && ROOT::FoundationUtils::ConvertEnvValueToBool(*EnvDisGMI)) {
          loadGlobalModuleIndex(SourceLocation(), clingInterp);
          // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
          // We should investigate how to suppress it completely.
