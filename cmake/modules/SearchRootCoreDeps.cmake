@@ -238,6 +238,7 @@ else()
   find_package(NumPy)
 
   if (PYTHONLIBS_FOUND)
+    set(Python${PYTHON_VERSION_MAJOR}_Interpreter_Development_FOUND ON) # This means we have both Interpreter and Development, hence we can build PyROOT with this Python
     set(PYTHON_EXECUTABLE_Development_Main "${PYTHON_EXECUTABLE}")
     set(PYTHON_VERSION_STRING_Development_Main "${PYTHON_VERSION_STRING}")
     set(PYTHON_VERSION_MAJOR_Development_Main "${PYTHON_VERSION_MAJOR}")
