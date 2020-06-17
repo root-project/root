@@ -23,7 +23,7 @@ ROOTTEST_ADD_TEST(SimplePattern3
 if(MSVC)
     # the command line tools works fine in the Windows command prompt but
     # not from CTest, so let's add Python.exe and the .py file extension
-    set(TOOLS_PREFIX ${PYTHON_EXECUTABLE} ${ROOTSYS}/bin)
+    set(TOOLS_PREFIX ${PYTHON_EXECUTABLE_Development_Main} ${ROOTSYS}/bin)
     set(pyext .py)
 else()
     set(TOOLS_PREFIX ${ROOTSYS}/bin)
