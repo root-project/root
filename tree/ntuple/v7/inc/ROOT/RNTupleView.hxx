@@ -42,11 +42,17 @@ private:
    const NTupleSize_t fStart;
    const NTupleSize_t fEnd;
 public:
-   class RIterator : public std::iterator<std::forward_iterator_tag, NTupleSize_t> {
+   class RIterator {
    private:
-      using iterator = RIterator;
       NTupleSize_t fIndex = kInvalidNTupleIndex;
    public:
+      using iterator = RIterator;
+      using iterator_category = std::forward_iterator_tag;
+      using value_type = NTupleSize_t;
+      using difference_type = NTupleSize_t;
+      using pointer = NTupleSize_t*;
+      using reference = NTupleSize_t&;
+
       RIterator() = default;
       explicit RIterator(NTupleSize_t index) : fIndex(index) {}
       ~RIterator() = default;
@@ -78,11 +84,17 @@ private:
    const ClusterSize_t::ValueType fStart;
    const ClusterSize_t::ValueType fEnd;
 public:
-   class RIterator : public std::iterator<std::forward_iterator_tag, RClusterIndex> {
+   class RIterator {
    private:
-      using iterator = RIterator;
       RClusterIndex fIndex;
    public:
+      using iterator = RIterator;
+      using iterator_category = std::forward_iterator_tag;
+      using value_type = RClusterIndex;
+      using difference_type = RClusterIndex;
+      using pointer = RClusterIndex*;
+      using reference = RClusterIndex&;
+
       RIterator() = default;
       explicit RIterator(const RClusterIndex &index) : fIndex(index) {}
       ~RIterator() = default;
