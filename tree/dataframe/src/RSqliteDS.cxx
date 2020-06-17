@@ -447,7 +447,7 @@ RSqliteDS::~RSqliteDS()
    sqlite3_finalize(fDataSet->fQuery);
    // Closing can possibly fail with SQLITE_BUSY, in which case resources are leaked. This should not happen
    // the way it is used in this class because we cleanup the prepared statement before.
-   sqlite3_close_v2(fDataSet->fDb);
+   sqlite3_close(fDataSet->fDb);
 }
 
 ////////////////////////////////////////////////////////////////////////////
