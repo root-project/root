@@ -253,4 +253,18 @@ TEST(RNTupleModel, EnforceValidFieldNames)
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
    }
+
+   // MakeCollection
+   try {
+      auto otherModel = RNTupleModel::Create();
+      auto collection = model->MakeCollection("pt", std::move(otherModel));
+      FAIL() << "repeated field names should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
+   }
+
+   // subfield names don't throw because full name differs (otherModel.pt)
+   auto otherModel = RNTupleModel::Create();
+   auto otherField = otherModel->MakeField<float>("pt", 42.0);
+   auto collection = model->MakeCollection("otherModel", std::move(otherModel));
 }
