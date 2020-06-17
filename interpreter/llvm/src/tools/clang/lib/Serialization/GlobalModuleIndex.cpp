@@ -339,7 +339,7 @@ bool GlobalModuleIndex::lookupIdentifier(StringRef Name, FileNameHitSet &Hits) {
   SmallVector<unsigned, 2> ModuleIDs = *Known;
   for (unsigned I = 0, N = ModuleIDs.size(); I != N; ++I) {
     assert(!Modules[ModuleIDs[I]].FileName.empty());
-    Hits.insert(&Modules[ModuleIDs[I]].FileName);
+    Hits.insert(Modules[ModuleIDs[I]].FileName);
   }
 
   ++NumIdentifierLookupHits;

@@ -442,6 +442,8 @@ long TClingDataMemberInfo::Property() const
    property = TClingDeclInfo::Property(property, qt);
    const clang::TagType *tt = qt->getAs<clang::TagType>();
    if (tt) {
+      // tt->getDecl() might deserialize.
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
       const clang::TagDecl *td = tt->getDecl();
       if (td->isClass()) {
          property |= kIsClass;

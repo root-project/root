@@ -22,6 +22,7 @@ using namespace ROOT::FoundationUtils;
 
 TEST(FoundationUtilsTests, CanConvertEnvValueToBool)
 {
+  ASSERT_FALSE(CanConvertEnvValueToBool(""));
   ASSERT_TRUE(CanConvertEnvValueToBool("0"));
   ASSERT_TRUE(CanConvertEnvValueToBool("false"));
   ASSERT_TRUE(CanConvertEnvValueToBool("False"));
