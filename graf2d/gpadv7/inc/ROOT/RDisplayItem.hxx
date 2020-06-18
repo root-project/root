@@ -77,6 +77,10 @@ public:
       fDrawable = &dr;
    }
 
+   const RDrawable *GetDrawable() const { return fDrawable; }
+
+   virtual ~RDrawableDisplayItem();
+
 };
 
 

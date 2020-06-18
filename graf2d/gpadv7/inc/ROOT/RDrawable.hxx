@@ -23,6 +23,7 @@ class RMenuItems;
 class RPadBase;
 class RAttrBase;
 class RDisplayItem;
+class RDrawableDisplayItem;
 class RIndirectDisplayItem;
 class RLegend;
 class RCanvas;
@@ -56,9 +57,9 @@ class RIOShared final : public RIOSharedBase {
    T* fIO{nullptr};              ///<    plain pointer for IO
 public:
    const void *GetIOPtr() const final { return fIO; }
-   virtual bool HasShared() const final { return fShared.get() != nullptr; }
-   virtual void *MakeShared() final { fShared.reset(fIO); return &fShared; }
-   virtual void SetShared(void *shared) final { fShared = *((std::shared_ptr<T> *) shared); }
+   bool HasShared() const final { return fShared.get() != nullptr; }
+   void *MakeShared() final { fShared.reset(fIO); return &fShared; }
+   void SetShared(void *shared) final { fShared = *((std::shared_ptr<T> *) shared); }
 
    RIOShared() = default;
 
@@ -86,6 +87,12 @@ public:
    std::shared_ptr<T> get_shared() const { return fShared; }
 
    void reset() { fShared.reset(); fIO = nullptr; }
+
+   // reset IO pointer, object will not be stored in normal output operation
+   void reset_io() { fIO = nullptr; }
+
+   // restore IO pointer, object will be stored in normal output operation
+   void restore_io() { fIO = fShared.get(); }
 };
 
 } // namespace Internal
@@ -105,6 +112,7 @@ friend class RPadBase; // to access Display method and IsFrameRequired
 friend class RAttrBase;
 friend class RStyle;
 friend class RLegend; // to access CollectShared method
+friend class RDrawableDisplayItem;  // to call OnDisplayItemDestroyed
 friend class RIndirectDisplayItem;  // to access attributes and other members
 friend class RChangeAttrRequest; // access SetDrawableVersion and AttrMap
 friend class RDrawableMenuRequest; // access PopulateMenu method
@@ -180,6 +188,8 @@ protected:
    bool MatchSelector(const std::string &selector) const;
 
    virtual std::unique_ptr<RDisplayItem> Display(const RDisplayContext &);
+
+   virtual void OnDisplayItemDestroyed(RDisplayItem *) const {}
 
    virtual void SetDrawableVersion(Version_t vers) { fVersion = vers; }
    Version_t GetVersion() const { return fVersion; }
