@@ -537,7 +537,8 @@ if(ROOT_pyroot_FOUND)
   if(NOT dataframe
      OR ${PYTHON_VERSION_STRING_Development_Main} VERSION_LESS_EQUAL 2.7.5
      OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2)
-     OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
+     OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3)
+     OR (MSVC AND NOT win_broken_tests))
     list(REMOVE_ITEM pytutorials
         pyroot/pyroot004_NumbaDeclare.py)
   endif()

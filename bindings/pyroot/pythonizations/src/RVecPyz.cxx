@@ -68,7 +68,11 @@ PyObject *PyROOT::AsRVec(PyObject * /*self*/, PyObject * obj)
 
    // Construct an RVec of the correct data-type
    const std::string klassname = "ROOT::VecOps::RVec<" + cppdtype + ">";
-   auto address = (void*) gInterpreter->Calc("new " + klassname + "(reinterpret_cast<" + cppdtype + "*>(" + data + ")," + size + ")");
+   std::stringstream prefix;
+#ifdef _MSC_VER
+   prefix << "0x";
+#endif
+   auto address = (void*) gInterpreter->Calc("new " + klassname + "(reinterpret_cast<" + cppdtype + "*>(" + prefix.str() + data + ")," + size + ")");
 
    // Bind the object to a Python-side proxy
    auto klass = (Cppyy::TCppType_t)Cppyy::GetScope(klassname);

@@ -244,3 +244,16 @@ PyObject* CPyCppyy::MemoryRegulator::RetrievePyObject(Cppyy::TCppObject_t cppobj
 
     return nullptr;
 }
+
+
+//-----------------------------------------------------------------------------
+void CPyCppyy::MemoryRegulator::SetRegisterHook(MemHook_t h) {
+// Set custom register hook; called when a regulated object is to be tracked
+    registerHook = h;
+}
+
+//-----------------------------------------------------------------------------
+void CPyCppyy::MemoryRegulator::SetUnregisterHook(MemHook_t h) {
+// Set custom unregister hook; called when a regulated object is to be untracked
+    unregisterHook = h;
+}
