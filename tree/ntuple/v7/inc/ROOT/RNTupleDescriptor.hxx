@@ -22,8 +22,8 @@
 
 #include <algorithm>
 #include <chrono>
+#include <functional>
 #include <memory>
-#include <numeric>
 #include <ostream>
 #include <vector>
 #include <string>
@@ -306,14 +306,12 @@ public:
    class RFieldDescriptorRange {
    private:
       const RNTupleDescriptor& fNTuple;
-      const RFieldDescriptor& fField;
-      std::vector<std::size_t> fOrdering = {};
+      std::vector<DescriptorId_t> fFieldChildren = {};
    public:
       class RIterator {
       private:
          const RNTupleDescriptor& fNTuple;
          const std::vector<DescriptorId_t>& fFieldChildren;
-         const std::vector<std::size_t>& fOrdering;
          std::size_t fIndex = 0;
       public:
          using iterator_category = std::forward_iterator_tag;
@@ -323,36 +321,31 @@ public:
          using pointer = RFieldDescriptor*;
          using reference = const RFieldDescriptor&;
 
-         RIterator(const RNTupleDescriptor& ntuple, const RFieldDescriptor& fieldDesc,
-            const std::vector<std::size_t>& ordering, std::size_t index)
-            : fNTuple(ntuple), fFieldChildren(fieldDesc.GetLinkIds()), fOrdering(ordering), fIndex(index) {}
+         RIterator(const RNTupleDescriptor& ntuple, const std::vector<DescriptorId_t>& fieldChildren,
+            std::size_t index) : fNTuple(ntuple), fFieldChildren(fieldChildren), fIndex(index) {}
          iterator operator++() { ++fIndex; return *this; }
          reference operator*() {
             return fNTuple.GetFieldDescriptor(
-               fFieldChildren.at(fOrdering.at(fIndex))
+               fFieldChildren.at(fIndex)
             );
          }
          bool operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
       };
       /// An iterator over a field's children.
       RFieldDescriptorRange(const RNTupleDescriptor& ntuple, const RFieldDescriptor& field)
-         : fNTuple(ntuple), fField(field), fOrdering(std::vector<std::size_t>(field.GetLinkIds().size()))
+         : fNTuple(ntuple), fFieldChildren(field.GetLinkIds()) {}
+      /// An iterator over a field's children sorted by a given comparison function.
+      RFieldDescriptorRange(const RNTupleDescriptor& ntuple, const RFieldDescriptor& field,
+         const std::function<bool(DescriptorId_t, DescriptorId_t)>& comparator)
+         : fNTuple(ntuple), fFieldChildren(field.GetLinkIds())
       {
-         std::iota(fOrdering.begin(), fOrdering.end(), 0);
-      }
-      RFieldDescriptorRange SortByNames() {
-         RFieldDescriptorRange range(fNTuple, fField);
-         std::sort(range.fOrdering.begin(), range.fOrdering.end(), [this](auto left, auto right) {
-            return fNTuple.GetFieldDescriptor(fField.GetLinkIds().at(left)).GetFieldName()
-               < fNTuple.GetFieldDescriptor(fField.GetLinkIds().at(right)).GetFieldName();
-         });
-         return range;
+         std::sort(fFieldChildren.begin(), fFieldChildren.end(), comparator);
       }
       RIterator begin() {
-         return RIterator(fNTuple, fField, fOrdering, 0);
+         return RIterator(fNTuple, fFieldChildren, 0);
       }
       RIterator end() {
-         return RIterator(fNTuple, fField, fOrdering, fField.GetLinkIds().size());
+         return RIterator(fNTuple, fFieldChildren, fFieldChildren.size());
       }
    };
 
@@ -393,12 +386,28 @@ public:
    RFieldDescriptorRange GetFieldRange(const RFieldDescriptor& fieldDesc) const {
        return RFieldDescriptorRange(*this, fieldDesc);
    }
+   RFieldDescriptorRange GetFieldRange(const RFieldDescriptor& fieldDesc,
+      const std::function<bool(DescriptorId_t, DescriptorId_t)>& comparator) const
+   {
+      return RFieldDescriptorRange(*this, fieldDesc, comparator);
+   }
    RFieldDescriptorRange GetFieldRange(DescriptorId_t fieldId) const {
        return GetFieldRange(GetFieldDescriptor(fieldId));
+   }
+   RFieldDescriptorRange GetFieldRange(DescriptorId_t fieldId,
+      const std::function<bool(DescriptorId_t, DescriptorId_t)>& comparator) const
+   {
+      return GetFieldRange(GetFieldDescriptor(fieldId), comparator);
    }
    RFieldDescriptorRange GetTopLevelFields() const {
        return GetFieldRange(GetFieldDescriptor(0));
    }
+   RFieldDescriptorRange GetTopLevelFields(
+      const std::function<bool(DescriptorId_t, DescriptorId_t)>& comparator) const
+   {
+      return GetFieldRange(GetFieldDescriptor(0), comparator);
+   }
+
    std::string GetName() const { return fName; }
    std::string GetDescription() const { return fDescription; }
    std::string GetAuthor() const { return fAuthor; }
