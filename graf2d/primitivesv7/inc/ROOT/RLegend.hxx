@@ -9,9 +9,7 @@
 #ifndef ROOT7_RLegend
 #define ROOT7_RLegend
 
-#include <ROOT/RBox.hxx>
-
-#include <ROOT/RAttrText.hxx>
+#include <ROOT/RPave.hxx>
 
 #include <initializer_list>
 #include <memory>
@@ -76,13 +74,11 @@ public:
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RLegend : public RBox {
+class RLegend : public RPave {
 
    std::string fTitle;                  ///< legend title
 
    std::vector<Internal::RLegendEntry> fEntries; ///< list of entries which should be displayed
-
-   RAttrText  fAttrTitle{this, "title_"};    ///<! title attributes
 
 protected:
 
@@ -97,21 +93,15 @@ protected:
 
 public:
 
-   RLegend() : RBox("legend") {}
+   RLegend() : RPave("legend") {}
 
-   RLegend(const RPadPos &p1, const RPadPos &p2, const std::string &title = "") : RLegend()
+   RLegend(const std::string &title) : RLegend()
    {
-      SetP1(p1);
-      SetP2(p2);
       SetTitle(title);
    }
 
    RLegend &SetTitle(const std::string &title) { fTitle = title; return *this; }
    const std::string &GetTitle() const { return fTitle; }
-
-   const RAttrText &GetAttrTitle() const { return fAttrTitle; }
-   RLegend &SetAttrTitle(const RAttrText &attr) { fAttrTitle = attr; return *this; }
-   RAttrText &AttrTitle() { return fAttrTitle; }
 
    Internal::RLegendEntry &AddEntry(std::shared_ptr<RDrawable> drawable, const std::string &lbl = "")
    {
@@ -120,7 +110,6 @@ public:
    }
 
    auto NumEntries() const { return fEntries.size(); }
-
 
 };
 

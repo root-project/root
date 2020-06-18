@@ -111,9 +111,9 @@ TEST(Primitives, RLegend)
    line2->AttrLine().SetColor(RColor::kGreen);
    line3->AttrLine().SetColor(RColor::kBlue);
 
-   auto legend = canv.Draw<RLegend>(RPadPos(0.5_normal, 0.6_normal), RPadPos(0.9_normal,0.9_normal), "Legend title");
-   legend->AttrBox().AttrFill().SetStyle(5).SetColor(RColor::kWhite);
-   legend->AttrBox().AttrBorder().SetWidth(2).SetColor(RColor::kRed);
+   auto legend = canv.Draw<RLegend>("Legend title");
+   legend->AttrFill().SetStyle(5).SetColor(RColor::kWhite);
+   legend->AttrBorder().SetWidth(2).SetColor(RColor::kRed);
    legend->AddEntry(line1, "RLine 1").SetLine("line_");
    legend->AddEntry(line2, "RLine 2").SetLine("line_");
    legend->AddEntry(line3, "RLine 3").SetLine("line_");
@@ -122,6 +122,6 @@ TEST(Primitives, RLegend)
 
    EXPECT_EQ(legend->NumEntries(), 3u);
    EXPECT_EQ(legend->GetTitle(), "Legend title");
-   EXPECT_EQ(legend->GetAttrBox().GetAttrFill().GetColor(), RColor::kWhite);
+   EXPECT_EQ(legend->GetAttrFill().GetColor(), RColor::kWhite);
 }
 
