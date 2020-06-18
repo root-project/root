@@ -208,7 +208,12 @@ TEST(RFieldDescriptorRange, SortByFieldNames)
       std::make_unique<RPageSourceFile>("ntuple", fileGuard.GetPath(), RNTupleReadOptions()));
 
    std::vector<std::string> sorted_names{};
-   for (auto& f: ntuple.GetDescriptor().GetTopLevelFields().SortByNames()) {
+   const auto& ntuple_desc = ntuple.GetDescriptor();
+   for (auto& f: ntuple_desc.GetTopLevelFields(
+      [&](DescriptorId_t lhs, DescriptorId_t rhs) -> bool {
+         return ntuple_desc.GetFieldDescriptor(lhs).GetFieldName()
+            < ntuple_desc.GetFieldDescriptor(rhs).GetFieldName();}))
+   {
       sorted_names.push_back(f.GetFieldName());
    }
 
