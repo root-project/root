@@ -3448,11 +3448,10 @@
 
 
    function RHistStatsPainter(palette, opt) {
-      JSROOT.TObjectPainter.call(this, palette, opt);
-      this.csstype = "stats";
+      JSROOT.v7.RPavePainter.call(this, palette, opt, "stats");
    }
 
-   RHistStatsPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+   RHistStatsPainter.prototype = Object.create(JSROOT.v7.RPavePainter.prototype);
 
    RHistStatsPainter.prototype.ClearStat = function() {
       this.stats_lines = [];
@@ -3508,97 +3507,8 @@
       return res;
    }
 
-   RHistStatsPainter.prototype.DrawStats = function() {
-
-      var framep = this.frame_painter();
-
-      // frame painter must  be there
-      if (!framep)
-         return console.log('no frame painter - no palette');
-
-      var fx            = this.frame_x(),
-          fy            = this.frame_y(),
-          fw            = this.frame_width(),
-          fh            = this.frame_height(),
-          pw            = this.pad_width(),
-          ph            = this.pad_height(),
-          visible       = this.v7EvalAttr("visible", true),
-          stats_cornerx = this.v7EvalLength("cornerx", pw, 0.02),
-          stats_cornery = this.v7EvalLength("cornery", ph, 0.02),
-          stats_width   = this.v7EvalLength("width", pw, 0.3),
-          stats_height  = this.v7EvalLength("height", ph, 0.3),
-          line_width    = this.v7EvalAttr("border_width", 1),
-          line_style    = this.v7EvalAttr("border_style", 1),
-          line_color    = this.v7EvalColor("border_color", "black"),
-          fill_color    = this.v7EvalColor("fill_color", "white"),
-          fill_style    = this.v7EvalAttr("fill_style", 1);
-
-      this.CreateG(false);
-
-      if (!visible) return;
-
-      if (fill_style == 0) fill_color = "none";
-
-      var stats_x = Math.round(fx + fw + stats_cornerx - stats_width),
-          stats_y = Math.round(fy - stats_cornery);
-
-      // x,y,width,height attributes used for drag functionality
-      this.draw_g.attr("transform", "translate(" + stats_x + "," + stats_y + ")")
-                 .attr("x", stats_x).attr("y", stats_y)
-                 .attr("width", stats_width).attr("height", stats_height);
-
-      this.draw_g.append("svg:rect")
-                 .attr("x", 0)
-                 .attr("width", stats_width)
-                 .attr("y", 0)
-                 .attr("height", stats_height)
-                 .style("stroke", line_color)
-                 .attr("stroke-width", line_width)
-                 .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style])
-                 .attr("fill", fill_color);
-
-      this.draw_g.append("svg:g").attr("class","statlines");
-
-      this.stats_width = stats_width;
-      this.stats_height = stats_height;
-
+   RHistStatsPainter.prototype.DrawContent = function() {
       if (this.FillStatistic())
-         this.DrawStatistic(this.stats_lines);
-
-      if (JSROOT.BatchMode) return;
-
-      if (JSROOT.gStyle.ContextMenu)
-         this.draw_g.on("contextmenu", this.ShowContextMenu.bind(this));
-
-      this.AddDrag({ minwidth: 20, minheight: 20, redraw: this.SizeChanged.bind(this) });
-   }
-
-   /** Process interactive moving of the stats box */
-   RHistStatsPainter.prototype.SizeChanged = function() {
-      this.stats_width = parseInt(this.draw_g.attr("width"));
-      this.stats_height = parseInt(this.draw_g.attr("height"));
-
-      var stats_x = parseInt(this.draw_g.attr("x")),
-          stats_y = parseInt(this.draw_g.attr("y")),
-          fx      = this.frame_x(),
-          fy      = this.frame_y(),
-          fw      = this.frame_width(),
-          fh      = this.frame_height(),
-          pw      = this.pad_width(),
-          ph      = this.pad_height();
-
-      var changes = {};
-      this.v7AttrChange(changes, "cornerx", (stats_x + this.stats_width - fx - fw) / pw);
-      this.v7AttrChange(changes, "cornery", (fy - stats_y) / ph);
-      this.v7AttrChange(changes, "width", this.stats_width / pw);
-      this.v7AttrChange(changes, "height", this.stats_height / ph);
-      this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
-
-      this.draw_g.select("rect")
-                 .attr("width", this.stats_width)
-                 .attr("height", this.stats_height);
-
-      if (this.stats_lines)
          this.DrawStatistic(this.stats_lines);
    }
 
@@ -3637,7 +3547,8 @@
           text_align = this.v7EvalAttr("stats_text_align", 22),
           text_font  = this.v7EvalAttr("stats_text_font", 41),
           first_stat = 0, num_cols = 0, maxlen = 0,
-          width = this.stats_width, height = this.stats_height;
+          width = this.pave_width,
+          height = this.pave_height;
 
       if (!lines) return;
 
@@ -3657,7 +3568,10 @@
       var stepy = height / nlines, has_head = false, margin_x = 0.02 * width;
 
       var text_g = this.draw_g.select(".statlines");
-      text_g.selectAll("*").remove();
+      if (text_g.empty())
+         text_g = this.draw_g.append("svg:g").attr("class", "statlines");
+      else
+         text_g.selectAll("*").remove();
 
       this.StartTextDrawing(text_font, height/(nlines * 1.2), text_g);
 
@@ -3716,7 +3630,7 @@
          this.v7SubmitRequest("stat", req, this.UpdateStatistic.bind(this));
       }
 
-      this.DrawStats();
+      this.DrawPave();
    }
 
    function drawHistStats(divid, stats, opt) {
@@ -3724,11 +3638,7 @@
 
       painter.SetDivId(divid);
 
-      painter.CreateG(false);
-
-      painter.draw_g.classed("most_upper_primitives", true); // this primitive will remain on top of list
-
-      painter.DrawStats();
+      painter.DrawPave();
 
       return painter.DrawingReady();
    }

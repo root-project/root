@@ -9,17 +9,13 @@
 #ifndef ROOT7_RHistStatBox
 #define ROOT7_RHistStatBox
 
-#include <ROOT/RDrawable.hxx>
+#include <ROOT/RPave.hxx>
 #include <ROOT/RDrawableRequest.hxx>
-#include <ROOT/RAttrText.hxx>
-#include <ROOT/RAttrLine.hxx>
-#include <ROOT/RAttrFill.hxx>
-#include <ROOT/RPadPos.hxx>
-#include "ROOT/RPadBase.hxx"
+#include <ROOT/RPadBase.hxx>
 #include <ROOT/RDisplayItem.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistImpl.hxx>
-#include "ROOT/RFrame.hxx"
+#include <ROOT/RFrame.hxx>
 
 #include <memory>
 #include <string>
@@ -59,26 +55,14 @@ public:
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RHistStatBoxBase : public RDrawable {
-
-   class RHistStatBoxAttrs : public RAttrBase {
-      friend class RHistStatBoxBase;
-      R__ATTR_CLASS(RHistStatBoxAttrs, "", AddPadLength("cornerx",0.02).AddPadLength("cornery",0.02).AddPadLength("width",0.5).AddPadLength("height",0.2));
-   };
+class RHistStatBoxBase : public RPave {
 
    std::string fTitle;                       ///< stat box title
    unsigned fShowMask{0xff};                 ///< show stat box lines
 
-   RAttrText fAttrText{this, "text_"};       ///<! text attributes
-   RAttrLine fAttrBorder{this, "border_"};   ///<! border attributes
-   RAttrFill fAttrFill{this, "fill_"};       ///<! line attributes
-   RHistStatBoxAttrs fAttr{this, ""};        ///<! stat box direct attributes
-
 protected:
 
    enum EShowBits { kShowTitle = 0x1, kShowEntries = 0x2, kShowMean = 0x4, kShowDev = 0x8, kShowRange = 0x10 };
-
-   bool IsFrameRequired() const final { return true; }
 
    virtual void FillStatistic(unsigned, const RFrame::RUserRanges &, std::vector<std::string> &) const {}
 
@@ -97,7 +81,6 @@ public:
       // virtual destructor - required to pin vtable
       virtual ~RReply() = default;
    };
-
 
    class RRequest : public RDrawableRequest {
       unsigned mask{0xff};      // mask of items to show
@@ -128,66 +111,10 @@ public:
       }
    };
 
-   RHistStatBoxBase() : RDrawable("stats") {}
+   RHistStatBoxBase() : RPave("stats") {}
 
    void SetTitle(const std::string &title) { fTitle = title; }
    const std::string &GetTitle() const { return fTitle; }
-
-   RHistStatBoxBase &SetCornerX(const RPadLength &pos)
-   {
-      fAttr.SetValue("cornerx", pos);
-      return *this;
-   }
-
-   RPadLength GetCornerX() const
-   {
-      return fAttr.template GetValue<RPadLength>("cornerx");
-   }
-
-   RHistStatBoxBase &SetCornerY(const RPadLength &pos)
-   {
-      fAttr.SetValue("cornery", pos);
-      return *this;
-   }
-
-   RPadLength GetCornerY() const
-   {
-      return fAttr.template GetValue<RPadLength>("cornery");
-   }
-
-   RHistStatBoxBase &SetWidth(const RPadLength &width)
-   {
-      fAttr.SetValue("width", width);
-      return *this;
-   }
-
-   RPadLength GetWidth() const
-   {
-      return fAttr.template GetValue<RPadLength>("width");
-   }
-
-   RHistStatBoxBase &SetHeight(const RPadLength &height)
-   {
-      fAttr.SetValue("height", height);
-      return *this;
-   }
-
-   RPadLength GetHeight() const
-   {
-      return fAttr.template GetValue<RPadLength>("height");
-   }
-
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RHistStatBoxBase &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
-   RAttrText &AttrText() { return fAttrText; }
-
-   const RAttrLine &GetAttrBorder() const { return fAttrBorder; }
-   RHistStatBoxBase &SetAttrBorder(const RAttrLine &border) { fAttrBorder = border; return *this; }
-   RAttrLine &AttrBorder() { return fAttrBorder; }
-
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RHistStatBoxBase &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
-   RAttrFill &AttrFill() { return fAttrFill; }
 };
 
 
