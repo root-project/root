@@ -4758,8 +4758,8 @@
 
       if (JSROOT.BatchMode) return;
 
-      //if (JSROOT.gStyle.ContextMenu)
-      //   this.draw_g.on("contextmenu", this.ShowContextMenu.bind(this));
+      if (JSROOT.gStyle.ContextMenu && this.ShowContextMenu)
+         this.draw_g.on("contextmenu", this.ShowContextMenu.bind(this));
 
       this.AddDrag({ minwidth: 20, minheight: 20, redraw: this.SizeChanged.bind(this) });
    }
