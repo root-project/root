@@ -166,7 +166,7 @@ TEST(RFieldDescriptorRange, IterateOverFieldNames)
       child_names.push_back(child_field.GetFieldName());
       // check the empty range
       auto float_child_range = ntuple_desc.GetFieldRange(child_field);
-      EXPECT_FALSE(float_child_range.begin() != float_child_range.end());
+      EXPECT_EQ(float_child_range.begin(), float_child_range.end());
    }
    EXPECT_EQ(child_names.size(), 1);
    EXPECT_EQ(child_names[0], std::string("float"));

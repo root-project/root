@@ -330,6 +330,7 @@ public:
             );
          }
          bool operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
+         bool operator==(const iterator& rh) const { return fIndex == rh.fIndex; }
       };
       /// An iterator over a field's children.
       RFieldDescriptorRange(const RNTupleDescriptor& ntuple, const RFieldDescriptor& field)
