@@ -311,6 +311,7 @@ private:
 
    unsigned int fDim;       // dimension of the function to be minimized
    bool fUseFumili;
+   unsigned int fCountNewMinMinos = 0;  // count number of times a new minimum is found in minos
 
    ROOT::Minuit2::MnUserParameterState fState;
    // std::vector<ROOT::Minuit2::MinosError> fMinosErrors;
