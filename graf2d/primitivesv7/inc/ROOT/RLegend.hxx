@@ -18,57 +18,6 @@
 namespace ROOT {
 namespace Experimental {
 
-class RLegend;
-
-namespace Internal {
-
-/** \class RLegendEntry
-\ingroup GrafROOT7
-\brief An entry in RLegend, references RDrawable and its attributes
-\author Sergey Linev <S.Linev@gsi.de>
-\date 2019-10-09
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-*/
-
-
-class RLegendEntry {
-
-   friend class ROOT::Experimental::RLegend;
-
-   std::string fLabel;    ///< label shown for the entry
-
-   std::string fLine, fFill, fMarker;  ///< prefixes for line, fill, marker attributes
-
-   RIOShared<RDrawable> fDrawable;  ///< reference to RDrawable
-
-   std::string fDrawableId;        ///< drawable id, used only when display item
-
-public:
-
-   RLegendEntry() = default;
-
-   RLegendEntry(std::shared_ptr<RDrawable> drawable, const std::string &lbl = "")
-   {
-      fDrawable = drawable;
-      fLabel = lbl;
-   }
-
-   RLegendEntry &SetLabel(const std::string &lbl) { fLabel = lbl; return *this; }
-   const std::string &GetLabel() const { return fLabel; }
-
-   RLegendEntry &SetLine(const std::string &lbl) { fLine = lbl; return *this; }
-   const std::string &GetLine() const { return fLine; }
-
-   RLegendEntry &SetFill(const std::string &lbl) { fFill = lbl; return *this; }
-   const std::string &GetFill() const { return fFill; }
-
-   RLegendEntry &SetMarker(const std::string &lbl) { fMarker = lbl; return *this; }
-   const std::string &GetMarker() const { return fMarker; }
-
-};
-
-}
-
 /** \class RLegend
 \ingroup GrafROOT7
 \brief A legend for several drawables
@@ -79,11 +28,56 @@ public:
 
 class RLegend : public RPave {
 
-   friend class RDisplayLegend;
+public:
+
+   /** \class REntry
+   \ingroup GrafROOT7
+   \brief An entry in RLegend, references RDrawable and its attributes
+   \author Sergey Linev <S.Linev@gsi.de>
+   \date 2019-10-09
+   \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+   */
+
+   class REntry {
+
+      friend class RLegend;
+
+      std::string fLabel;    ///< label shown for the entry
+
+      std::string fLine, fFill, fMarker;  ///< prefixes for line, fill, marker attributes
+
+      Internal::RIOShared<RDrawable> fDrawable;  ///< reference to RDrawable
+
+      std::string fDrawableId;        ///< drawable id, used only when display item
+
+   public:
+
+      REntry() = default;
+
+      REntry(std::shared_ptr<RDrawable> drawable, const std::string &lbl = "")
+      {
+         fDrawable = drawable;
+         fLabel = lbl;
+      }
+
+      REntry &SetLabel(const std::string &lbl) { fLabel = lbl; return *this; }
+      const std::string &GetLabel() const { return fLabel; }
+
+      REntry &SetLine(const std::string &lbl) { fLine = lbl; return *this; }
+      const std::string &GetLine() const { return fLine; }
+
+      REntry &SetFill(const std::string &lbl) { fFill = lbl; return *this; }
+      const std::string &GetFill() const { return fFill; }
+
+      REntry &SetMarker(const std::string &lbl) { fMarker = lbl; return *this; }
+      const std::string &GetMarker() const { return fMarker; }
+   };
+
+private:
 
    std::string fTitle;                  ///< legend title
 
-   std::vector<Internal::RLegendEntry> fEntries; ///< list of entries which should be displayed
+   std::vector<REntry> fEntries; ///< list of entries which should be displayed
 
 protected:
 
@@ -111,7 +105,7 @@ protected:
    void OnDisplayItemDestroyed(RDisplayItem *) const override
    {
       for (auto &centry : fEntries) {
-         auto entry = const_cast<Internal::RLegendEntry *>(&centry);
+         auto entry = const_cast<REntry *>(&centry);
          entry->fDrawable.restore_io();
          entry->fDrawableId.clear();
       }
@@ -129,7 +123,7 @@ public:
    RLegend &SetTitle(const std::string &title) { fTitle = title; return *this; }
    const std::string &GetTitle() const { return fTitle; }
 
-   Internal::RLegendEntry &AddEntry(std::shared_ptr<RDrawable> drawable, const std::string &lbl = "")
+   REntry &AddEntry(std::shared_ptr<RDrawable> drawable, const std::string &lbl = "")
    {
       fEntries.emplace_back(drawable, lbl);
       return fEntries.back();
