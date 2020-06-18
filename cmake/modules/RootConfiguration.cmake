@@ -620,7 +620,9 @@ get_filename_component(altcxx ${CMAKE_CXX_COMPILER} NAME)
 get_filename_component(altf77 "${CMAKE_Fortran_COMPILER}" NAME)
 get_filename_component(altld ${CMAKE_CXX_COMPILER} NAME)
 
-set(pythonvers ${PYTHON_VERSION_STRING})
+set(pythonvers ${PYTHON_VERSION_STRING_Development_Main})
+set(python${PYTHON_VERSION_MAJOR_Development_Main}vers ${PYTHON_VERSION_STRING_Development_Main})
+set(python${PYTHON_VERSION_MAJOR_Development_Other}vers ${PYTHON_VERSION_STRING_Development_Other})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in ginclude/RConfigure.h NEWLINE_STYLE UNIX)
