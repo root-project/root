@@ -20,7 +20,6 @@ PyROOT extension module.
 #include "CPyCppyy.h"
 #include "CPPInstance.h"
 #include "CPPOverload.h"
-#include "PyStrings.h"
 
 #include "PyROOTPythonize.h"
 
@@ -28,6 +27,12 @@ PyROOT extension module.
 #include "TInterpreter.h"
 
 #include <sstream>
+
+namespace CPyCppyy {
+   namespace PyStrings {
+      R__EXTERN PyObject *gMRO;
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Get size of C++ data-type
@@ -43,9 +48,9 @@ PyObject *PyROOT::GetSizeOfType(PyObject * /*self*/, PyObject *args)
    std::string dtype = CPyCppyy_PyText_AsString(pydtype);
 
    // Call interpreter to get size of data-type using `sizeof`
-   long size = 0;
+   size_t size = 0;
    std::stringstream code;
-   code << "*((long*)" << &size << ") = (long)sizeof(" << dtype << ")";
+   code << "*((size_t*)" << std::showbase << (uintptr_t)&size << ") = (size_t)sizeof(" << dtype << ")";
    gInterpreter->Calc(code.str().c_str());
 
    // Return size of data-type as integer
@@ -78,10 +83,10 @@ PyObject *PyROOT::GetDataPointer(PyObject * /*self*/, PyObject *args)
    std::string methodname = CPyCppyy_PyText_AsString(pymethodname);
 
    // Call interpreter to get pointer to data
-   unsigned long long pointer = 0;
+   uintptr_t pointer = 0;
    std::stringstream code;
-   code << "*((long*)" << &pointer << ") = reinterpret_cast<long>(reinterpret_cast<"
-        << cppname << "*>(" << cppobj << ")->" << methodname << "())";
+   code << "*((intptr_t*)" << std::showbase << (uintptr_t)&pointer << ") = reinterpret_cast<uintptr_t>(reinterpret_cast<"
+        << cppname << "*>(" << std::showbase << (uintptr_t)cppobj << ")->" << methodname << "())";
    gInterpreter->Calc(code.str().c_str());
 
    // Return pointer as integer

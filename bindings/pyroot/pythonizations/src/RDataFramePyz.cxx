@@ -49,6 +49,9 @@ PyObject *PyROOT::MakeNumpyDataFrame(PyObject * /*self*/, PyObject * pydata)
    code << "ROOT::Internal::RDF::MakeNumpyDataFrame(";
    std::stringstream pyaddress;
    auto pyvecs = PyDict_New();
+#ifdef _MSC_VER
+   pyaddress << "0x";
+#endif
    pyaddress << pyvecs;
    code << "reinterpret_cast<PyObject*>(" << pyaddress.str() << "), ";
 
@@ -78,6 +81,9 @@ PyObject *PyROOT::MakeNumpyDataFrame(PyObject * /*self*/, PyObject * pydata)
       // Add pairs of column name and associated RVec to signature
       std::string vectype = Cppyy::GetScopedFinalName(((CPyCppyy::CPPInstance*)pyvec)->ObjectIsA());
       std::stringstream vecaddress;
+#ifdef _MSC_VER
+      vecaddress << "0x";
+#endif
       vecaddress << ((CPyCppyy::CPPInstance*)pyvec)->GetObject();
       code << "std::pair<std::string, " << vectype <<  "*>(\"" + keystr
            << "\", reinterpret_cast<" << vectype+ "*>(" << vecaddress.str() << "))";

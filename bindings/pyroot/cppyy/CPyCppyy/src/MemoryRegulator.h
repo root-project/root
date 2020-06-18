@@ -31,8 +31,8 @@ public:
     static PyObject* RetrievePyObject(Cppyy::TCppObject_t cppobj, PyObject* pyclass);
 
 // set hooks for custom memory regulation
-    static void SetRegisterHook(MemHook_t h) { registerHook = h; }
-    static void SetUnregisterHook(MemHook_t h) { unregisterHook = h; }
+    static void SetRegisterHook(MemHook_t h);
+    static void SetUnregisterHook(MemHook_t h);
 };
 
 } // namespace CPyCppyy

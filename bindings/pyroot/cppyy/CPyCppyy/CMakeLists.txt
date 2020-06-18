@@ -60,13 +60,18 @@ foreach(val RANGE ${how_many_pythons})
     target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup cppyy_backend${python_under_version_string})
   elseif(NOT MSVC)
     target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all cppyy_backend${python_under_version_string})
+  else()
+    target_link_libraries(${libname} PUBLIC cppyy_backend${python_under_version_string} ${PYTHON_LIBRARIES_Development_Main})
+    set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    set_target_properties(${libname} PROPERTIES PREFIX "lib")
+    set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
   endif()
 
   if(NOT MSVC)
     target_compile_options(${libname} PRIVATE
       -Wno-shadow -Wno-strict-aliasing)
   endif()
-  if(NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+  if(NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND NOT MSVC)
     target_compile_options(${libname} PRIVATE
       -Wno-unused-but-set-parameter)
   endif()
@@ -93,6 +98,7 @@ foreach(val RANGE ${how_many_pythons})
   target_include_directories(${libname}
      PRIVATE
         ${CMAKE_SOURCE_DIR}/core/foundation/inc   # needed for string_view backport
+        ${CMAKE_BINARY_DIR}/ginclude
      PUBLIC
         ${python_include_dir}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
