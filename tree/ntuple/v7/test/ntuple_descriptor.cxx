@@ -128,7 +128,6 @@ TEST(RFieldDescriptorRange, IterateOverFieldNames)
 {
    auto model = RNTupleModel::Create();
    auto floats = model->MakeField<std::vector<float>>("jets");
-   auto floats2 = model->MakeField<std::vector<float>>("jets");
    auto bools = model->MakeField<std::vector<bool>>("bools");
    auto bool_vec_vec = model->MakeField<std::vector<std::vector<bool>>>("bool_vec_vec");
    auto ints = model->MakeField<std::int32_t>("ints");
@@ -149,12 +148,11 @@ TEST(RFieldDescriptorRange, IterateOverFieldNames)
    for (auto& f: ntuple.GetDescriptor().GetTopLevelFields()) {
       names.push_back(f.GetFieldName());
    }
-   EXPECT_EQ(names.size(), 5);
+   EXPECT_EQ(names.size(), 4);
    EXPECT_EQ(names[0], std::string("jets"));
-   EXPECT_EQ(names[1], std::string("jets"));
-   EXPECT_EQ(names[2], std::string("bools"));
-   EXPECT_EQ(names[3], std::string("bool_vec_vec"));
-   EXPECT_EQ(names[4], std::string("ints"));
+   EXPECT_EQ(names[1], std::string("bools"));
+   EXPECT_EQ(names[2], std::string("bool_vec_vec"));
+   EXPECT_EQ(names[3], std::string("ints"));
 
    const auto& ntuple_desc = ntuple.GetDescriptor();
    auto top_level_fields = ntuple_desc.GetTopLevelFields();
@@ -175,7 +173,7 @@ TEST(RFieldDescriptorRange, IterateOverFieldNames)
 
    // check if canonical iterator methods work
    auto iter = top_level_fields.begin();
-   std::advance(iter, 3);
+   std::advance(iter, 2);
    const auto& bool_vec_vec_desc = *iter;
    EXPECT_EQ(bool_vec_vec_desc.GetFieldName(), std::string("bool_vec_vec"));
 
@@ -187,11 +185,10 @@ TEST(RFieldDescriptorRange, IterateOverFieldNames)
    EXPECT_EQ(child_names[0], std::string("std::vector<bool>"));
 }
 
-TEST(RFieldDescriptorRange, SortByFieldNames)
+TEST(RFieldDescriptorRange, SortByLambda)
 {
    auto model = RNTupleModel::Create();
    auto floats = model->MakeField<std::vector<float>>("jets");
-   auto floats2 = model->MakeField<std::vector<float>>("jets");
    auto bools = model->MakeField<std::vector<bool>>("bools");
    auto bool_vec_vec = model->MakeField<std::vector<std::vector<bool>>>("bool_vec_vec");
    auto ints = model->MakeField<std::int32_t>("ints");
@@ -207,20 +204,48 @@ TEST(RFieldDescriptorRange, SortByFieldNames)
    RNTupleReader ntuple(std::move(modelRead),
       std::make_unique<RPageSourceFile>("ntuple", fileGuard.GetPath(), RNTupleReadOptions()));
 
-   std::vector<std::string> sorted_names{};
    const auto& ntuple_desc = ntuple.GetDescriptor();
-   for (auto& f: ntuple_desc.GetTopLevelFields(
-      [&](DescriptorId_t lhs, DescriptorId_t rhs) -> bool {
-         return ntuple_desc.GetFieldDescriptor(lhs).GetFieldName()
-            < ntuple_desc.GetFieldDescriptor(rhs).GetFieldName();}))
-   {
+   auto alpha_order = [&](auto lhs, auto rhs) {
+      return ntuple_desc.GetFieldDescriptor(lhs).GetFieldName()
+         < ntuple_desc.GetFieldDescriptor(rhs).GetFieldName();
+   };
+
+   std::vector<std::string> sorted_names = {};
+   for (auto& f: ntuple_desc.GetTopLevelFields(alpha_order)) {
       sorted_names.push_back(f.GetFieldName());
    }
-
-   EXPECT_EQ(sorted_names.size(), 5);
+   EXPECT_EQ(sorted_names.size(), 4);
    EXPECT_EQ(sorted_names[0], std::string("bool_vec_vec"));
    EXPECT_EQ(sorted_names[1], std::string("bools"));
    EXPECT_EQ(sorted_names[2], std::string("ints"));
    EXPECT_EQ(sorted_names[3], std::string("jets"));
-   EXPECT_EQ(sorted_names[4], std::string("jets"));
+
+   // reverse alphabetical
+   sorted_names.clear();
+   for (auto& f: ntuple_desc.GetTopLevelFields(
+      [&](auto lhs, auto rhs) { return !alpha_order(lhs, rhs); }))
+   {
+      sorted_names.push_back(f.GetFieldName());
+   }
+   EXPECT_EQ(sorted_names.size(), 4);
+   EXPECT_EQ(sorted_names[0], std::string("jets"));
+   EXPECT_EQ(sorted_names[1], std::string("ints"));
+   EXPECT_EQ(sorted_names[2], std::string("bools"));
+   EXPECT_EQ(sorted_names[3], std::string("bool_vec_vec"));
+
+   // alphabetical by type name
+   std::vector<std::string> sorted_by_typename = {};
+   for (auto& f: ntuple_desc.GetTopLevelFields(
+      [&](auto lhs, auto rhs) {
+         return ntuple_desc.GetFieldDescriptor(lhs).GetTypeName()
+            < ntuple_desc.GetFieldDescriptor(rhs).GetTypeName(); }))
+   {
+      sorted_by_typename.push_back(f.GetFieldName());
+   }
+   // int32_t, vector<bool>, vector<float>, vector<vector<bool>
+   EXPECT_EQ(sorted_by_typename.size(), 4);
+   EXPECT_EQ(sorted_by_typename[0], std::string("ints"));
+   EXPECT_EQ(sorted_by_typename[1], std::string("bools"));
+   EXPECT_EQ(sorted_by_typename[2], std::string("jets"));
+   EXPECT_EQ(sorted_by_typename[3], std::string("bool_vec_vec"));
 }

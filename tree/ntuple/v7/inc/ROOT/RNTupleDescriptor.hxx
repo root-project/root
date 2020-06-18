@@ -403,12 +403,12 @@ public:
       return GetFieldRange(GetFieldDescriptor(fieldId), comparator);
    }
    RFieldDescriptorRange GetTopLevelFields() const {
-      return GetFieldRange(GetFieldDescriptor(0));
+      return GetFieldRange(GetFieldZeroId());
    }
    RFieldDescriptorRange GetTopLevelFields(
       const std::function<bool(DescriptorId_t, DescriptorId_t)>& comparator) const
    {
-      return GetFieldRange(GetFieldDescriptor(0), comparator);
+      return GetFieldRange(GetFieldZeroId(), comparator);
    }
 
    std::string GetName() const { return fName; }
