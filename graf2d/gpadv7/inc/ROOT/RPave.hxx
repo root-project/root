@@ -45,7 +45,7 @@ protected:
 
 public:
 
-   RPave() : RDrawable("pave") {}
+   RPave(const std::string &csstype = "pave") : RDrawable(csstype) {}
 
    RPave &SetCornerX(const RPadLength &pos)
    {
