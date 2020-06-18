@@ -3539,17 +3539,27 @@
       }
    }
 
-   RPadPainter.prototype.FindSnap = function(snapid) {
+   /** Search painter with specified snapid, also sub-pads are checked */
+   RPadPainter.prototype.FindSnap = function(snapid, onlyid) {
 
-      if (this.snapid === snapid) return this;
+      function check(checkid) {
+         if (!checkid || (typeof checkid != 'string')) return false;
+         if (checkid == snapid) return true;
+         return onlyid && (checkid.length > snapid.length) &&
+                (checkid.indexOf(snapid) == (checkid.length - snapid.length));
+      }
+
+      if (check(this.snapid)) return this;
 
       if (!this.painters) return null;
 
       for (var k=0;k<this.painters.length;++k) {
          var sub = this.painters[k];
 
-         if (typeof sub.FindSnap === 'function') sub = sub.FindSnap(snapid);
-         else if (sub.snapid !== snapid) sub = null;
+         if (!onlyid && (typeof sub.FindSnap === 'function'))
+            sub = sub.FindSnap(snapid);
+         else if (!check(sub.snapid))
+            sub = null;
 
          if (sub) return sub;
       }

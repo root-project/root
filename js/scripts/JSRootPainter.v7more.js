@@ -141,11 +141,12 @@
           text_font  = this.v7EvalAttr( "legend_text_font", 41),
           width      = this.pave_width,
           height     = this.pave_height,
-          nlines     = legend.fEntries.length;
+          nlines     = legend.fEntries.length,
+          pp         = this.pad_painter();
 
       if (legend.fTitle) nlines++;
 
-      if (!nlines) return;
+      if (!nlines || !pp) return;
 
       var arg = { align: text_align, rotate: text_angle, color: text_color, latex: 1 },
           stepy = height / nlines, posy = 0, margin_x = 0.02 * width;
@@ -164,9 +165,7 @@
          this.DrawText({ align: text_align, rotate: text_angle, color: text_color, latex: 1,
                          width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + width*0.25, y: posy, text: entry.fLabel });
 
-         var objp = this.FindPainterFor(entry.fDrawable.fIO);
-
-         console.log('Found painter ', i, !!objp);
+         var objp = pp.FindSnap(entry.fDrawableId, true);
 
          if (objp && objp.lineatt)
             this.draw_g
