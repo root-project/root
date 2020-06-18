@@ -28,14 +28,6 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RHistStatReply
-\ingroup GrafROOT7
-\brief Reply of stat box on RHistStatRequest, contains text lines to display
-\author Sergey Linev <s.linev@gsi.de>
-\date 2020-04-17
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-*/
-
 /** \class ROOT::Experimental::RDisplayHistStat
 \ingroup GrafROOT7
 \brief Object send to client for display of RHistStat, required to avoid sending histogram to the client
