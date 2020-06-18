@@ -3447,8 +3447,8 @@
    // =============================================================
 
 
-   function RHistStatsPainter(palette) {
-      JSROOT.TObjectPainter.call(this, palette);
+   function RHistStatsPainter(palette, opt) {
+      JSROOT.TObjectPainter.call(this, palette, opt);
       this.csstype = "stats";
    }
 

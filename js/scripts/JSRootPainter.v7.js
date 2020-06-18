@@ -4685,7 +4685,127 @@
       return painter;
    }
 
-   // =================================================================================
+   // ======================================================================================
+
+
+
+   function RPavePainter(pave, opt) {
+      JSROOT.TObjectPainter.call(this, pave, opt);
+      this.csstype = "pave";
+   }
+
+   RPavePainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+
+   RPavePainter.prototype.DrawPave = function() {
+
+      var framep = this.frame_painter();
+
+      // frame painter must  be there
+      if (!framep)
+         return console.log('no frame painter - no palette');
+
+      var fx            = this.frame_x(),
+          fy            = this.frame_y(),
+          fw            = this.frame_width(),
+          fh            = this.frame_height(),
+          pw            = this.pad_width(),
+          ph            = this.pad_height(),
+          visible       = this.v7EvalAttr("visible", true),
+          pave_cornerx = this.v7EvalLength("cornerx", pw, 0.02),
+          pave_cornery = this.v7EvalLength("cornery", ph, 0.02),
+          pave_width   = this.v7EvalLength("width", pw, 0.3),
+          pave_height  = this.v7EvalLength("height", ph, 0.3),
+          line_width    = this.v7EvalAttr("border_width", 1),
+          line_style    = this.v7EvalAttr("border_style", 1),
+          line_color    = this.v7EvalColor("border_color", "black"),
+          fill_color    = this.v7EvalColor("fill_color", "white"),
+          fill_style    = this.v7EvalAttr("fill_style", 1);
+
+      this.CreateG(false);
+
+      if (!visible) return;
+
+      if (fill_style == 0) fill_color = "none";
+
+      var pave_x = Math.round(fx + fw + pave_cornerx - pave_width),
+          pave_y = Math.round(fy - pave_cornery);
+
+      // x,y,width,height attributes used for drag functionality
+      this.draw_g.attr("transform", "translate(" + pave_x + "," + pave_y + ")")
+                 .attr("x", pave_x).attr("y", pave_y)
+                 .attr("width", pave_width).attr("height", pave_height);
+
+      this.draw_g.append("svg:rect")
+                 .attr("x", 0)
+                 .attr("width", pave_width)
+                 .attr("y", 0)
+                 .attr("height", pave_height)
+                 .style("stroke", line_color)
+                 .attr("stroke-width", line_width)
+                 .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style])
+                 .attr("fill", fill_color);
+
+      this.pave_width = pave_width;
+      this.pave_height = pave_height;
+
+      // here should be fill and draw of text
+
+      if (JSROOT.BatchMode) return;
+
+      //if (JSROOT.gStyle.ContextMenu)
+      //   this.draw_g.on("contextmenu", this.ShowContextMenu.bind(this));
+
+      this.AddDrag({ minwidth: 20, minheight: 20, redraw: this.SizeChanged.bind(this) });
+   }
+
+   /** Process interactive moving of the stats box */
+   RPavePainter.prototype.SizeChanged = function() {
+      this.pave_width = parseInt(this.draw_g.attr("width"));
+      this.pave_height = parseInt(this.draw_g.attr("height"));
+
+      var pave_x = parseInt(this.draw_g.attr("x")),
+          pave_y = parseInt(this.draw_g.attr("y")),
+          fx     = this.frame_x(),
+          fy     = this.frame_y(),
+          fw     = this.frame_width(),
+          fh     = this.frame_height(),
+          pw     = this.pad_width(),
+          ph     = this.pad_height();
+
+      var changes = {};
+      this.v7AttrChange(changes, "cornerx", (pave_x + this.pave_width - fx - fw) / pw);
+      this.v7AttrChange(changes, "cornery", (fy - pave_y) / ph);
+      this.v7AttrChange(changes, "width", this.pave_width / pw);
+      this.v7AttrChange(changes, "height", this.pave_height / ph);
+      this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
+
+      this.draw_g.select("rect")
+                 .attr("width", this.pave_width)
+                 .attr("height", this.pave_height);
+
+      // here should be draw of context
+   }
+
+   RPavePainter.prototype.Redraw = function(reason) {
+      this.DrawPave();
+   }
+
+   function drawPave(divid, pave, opt) {
+      var painter = new RPavePainter(pave, opt);
+
+      painter.SetDivId(divid);
+
+      painter.CreateG(false);
+
+      painter.draw_g.classed("most_upper_primitives", true); // this primitive will remain on top of list
+
+      painter.DrawPave();
+
+      return painter.DrawingReady();
+   }
+
+   // =======================================================================================
+
 
    function drawFrameTitle(reason) {
       var fp = this.frame_painter();
@@ -5085,6 +5205,7 @@
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true, csstype: "line" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RBox", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawBox", opt: "", direct: true, csstype: "box" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true, csstype: "marker" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPave", icon: "img_pavetext", func: drawPave, opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLegend", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLegend", opt: "", direct: true, csstype: "legend" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RFrame", icon: "img_frame", func: "JSROOT.v7.drawFrame", opt: "" });
 
@@ -5098,6 +5219,7 @@
    JSROOT.v7.drawPad = drawPad;
    JSROOT.v7.drawCanvas = drawCanvas;
    JSROOT.v7.drawPadSnapshot = drawPadSnapshot;
+   JSROOT.v7.drawPave = drawPave;
    JSROOT.v7.drawFrameTitle = drawFrameTitle;
 
    return JSROOT;
