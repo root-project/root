@@ -17,7 +17,78 @@ if(NOT WIN32)
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore)
   ROOT_EXECUTABLE(xpdtest xpdtest.cxx LIBRARIES Proof Tree Hist RIO Net Thread Matrix MathCore)
 endif()
-ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
+ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES
+  Core RIO freetype
+  -Wl,--whole-archive
+  Rint
+  Tree
+  Hist
+  HistPainter
+  MathCore
+  Gpad
+  -Wl,--no-whole-archive
+  EG
+  FitPanel
+  Foam
+  Fumili
+  Ged
+  GenVector
+  Geom
+  GeomBuilder
+  GeomPainter
+  Gpad
+  Graf
+  Graf3d
+  Gui
+  GuiBld
+  GuiHtml
+  Hist
+  HistPainter
+  Html
+  Imt
+  MathCore
+  Matrix
+  Minuit
+  MultiProc
+  Net
+  New
+  Physics
+  Postscript
+  Proof
+  ProofBench
+  ProofDraw
+  ProofPlayer
+  Quadp
+  RCsg
+  ROOTVecOps
+  Recorder
+  RootAuth
+  SPlot
+  SQLIO
+  SessionViewer
+  Smatrix
+  Tree
+  TreePlayer
+  TreeViewer
+  XMLIO
+  complexDict
+  dequeDict
+  forward_listDict
+  listDict
+  map2Dict
+  mapDict
+  mathtext
+  multimap2Dict
+  multimapDict
+  multisetDict
+  setDict
+  unordered_mapDict
+  unordered_multimapDict
+  unordered_multisetDict
+  unordered_setDict
+  valarrayDict
+  vectorDict
+)
 if(MSVC)
   set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index

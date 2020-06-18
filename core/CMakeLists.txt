@@ -156,7 +156,7 @@ endif()
 add_subdirectory(rootcling_stage1)
 
 #-------------------------------------------------------------------------------
-ROOT_LINKER_LIBRARY(Core $<TARGET_OBJECTS:BaseTROOT> ${objectlibs} BUILTINS LZMA)
+ROOT_LINKER_LIBRARY(Core SHARED $<TARGET_OBJECTS:BaseTROOT> ${objectlibs} BUILTINS LZMA)
 
 if (libcxx AND NOT APPLE)
   # In case we use libcxx and glibc together there is a mismatch of the
@@ -243,9 +243,10 @@ target_link_libraries(Core
     LZ4::LZ4
     ZLIB::ZLIB
     ${ZSTD_LIBRARIES}
-    ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}
     ${corelinklibs}
+  PUBLIC
+    ${CMAKE_DL_LIBS}
 )
 
 add_dependencies(Core CLING)

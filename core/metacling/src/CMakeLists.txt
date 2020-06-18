@@ -108,7 +108,7 @@ if (clad)
   endif()
 endif()
 
-ROOT_LINKER_LIBRARY(Cling
+ROOT_LINKER_LIBRARY(Cling SHARED
         $<TARGET_OBJECTS:ClingUtils>
         $<TARGET_OBJECTS:Dictgen>
         $<TARGET_OBJECTS:MetaCling>

@@ -16,7 +16,7 @@ else ()
   set(rawfile_local_sources src/RRawFileUnix.cxx)
 endif ()
 
-ROOT_LINKER_LIBRARY(RIO
+ROOT_LINKER_LIBRARY(RIO SHARED
   src/RRawFile.cxx
   ${rawfile_local_sources}
   src/TArchiveFile.cxx

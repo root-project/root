@@ -32,4 +32,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RootAuth
     RIO
 )
 
-target_link_libraries(RootAuth PRIVATE rsa $<$<PLATFORM_ID:Linux>:crypt>)
+target_link_libraries(RootAuth PRIVATE $<LINK_ONLY:rsa> $<$<PLATFORM_ID:Linux>:crypt>)
