@@ -39,6 +39,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RPadLength.hxx
     ROOT/RPadPos.hxx
     ROOT/RPadUserAxis.hxx
+    ROOT/RPave.hxx
     ROOT/RVirtualCanvasPainter.hxx
   SOURCES
     src/RCanvas.cxx
