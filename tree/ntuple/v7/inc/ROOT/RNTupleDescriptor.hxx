@@ -376,15 +376,18 @@ public:
    /// Given kNBytesPostscript bytes, extract the header and footer lengths in bytes
    static void LocateMetadata(const void *postscript, std::uint32_t &szHeader, std::uint32_t &szFooter);
 
-   const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const { return fFieldDescriptors.at(fieldId); }
+   const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const {
+      return fFieldDescriptors.at(fieldId);
+   }
    const RColumnDescriptor& GetColumnDescriptor(DescriptorId_t columnId) const {
       return fColumnDescriptors.at(columnId);
    }
    const RClusterDescriptor& GetClusterDescriptor(DescriptorId_t clusterId) const {
       return fClusterDescriptors.at(clusterId);
    }
+
    RFieldDescriptorRange GetFieldRange(const RFieldDescriptor& fieldDesc) const {
-       return RFieldDescriptorRange(*this, fieldDesc);
+      return RFieldDescriptorRange(*this, fieldDesc);
    }
    RFieldDescriptorRange GetFieldRange(const RFieldDescriptor& fieldDesc,
       const std::function<bool(DescriptorId_t, DescriptorId_t)>& comparator) const
@@ -392,7 +395,7 @@ public:
       return RFieldDescriptorRange(*this, fieldDesc, comparator);
    }
    RFieldDescriptorRange GetFieldRange(DescriptorId_t fieldId) const {
-       return GetFieldRange(GetFieldDescriptor(fieldId));
+      return GetFieldRange(GetFieldDescriptor(fieldId));
    }
    RFieldDescriptorRange GetFieldRange(DescriptorId_t fieldId,
       const std::function<bool(DescriptorId_t, DescriptorId_t)>& comparator) const
@@ -400,7 +403,7 @@ public:
       return GetFieldRange(GetFieldDescriptor(fieldId), comparator);
    }
    RFieldDescriptorRange GetTopLevelFields() const {
-       return GetFieldRange(GetFieldDescriptor(0));
+      return GetFieldRange(GetFieldDescriptor(0));
    }
    RFieldDescriptorRange GetTopLevelFields(
       const std::function<bool(DescriptorId_t, DescriptorId_t)>& comparator) const
