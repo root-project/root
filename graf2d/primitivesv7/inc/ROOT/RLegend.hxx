@@ -10,6 +10,7 @@
 #define ROOT7_RLegend
 
 #include <ROOT/RPave.hxx>
+#include <ROOT/RDisplayItem.hxx>
 
 #include <initializer_list>
 #include <memory>
@@ -39,6 +40,8 @@ class RLegendEntry {
    std::string fLine, fFill, fMarker;  ///< prefixes for line, fill, marker attributes
 
    RIOShared<RDrawable> fDrawable;  ///< reference to RDrawable
+
+   std::string fDrawableId;        ///< drawable id, used only when display item
 
 public:
 
@@ -76,6 +79,8 @@ public:
 
 class RLegend : public RPave {
 
+   friend class RDisplayLegend;
+
    std::string fTitle;                  ///< legend title
 
    std::vector<Internal::RLegendEntry> fEntries; ///< list of entries which should be displayed
@@ -88,6 +93,27 @@ protected:
          vect.emplace_back(&entry.fDrawable);
          if (entry.fDrawable)
             entry.fDrawable->CollectShared(vect);
+      }
+   }
+
+   /** hide I/O pointers when creating display item */
+   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) override
+   {
+      for (auto &entry : fEntries) {
+         entry.fDrawableId = RDisplayItem::ObjectIDFromPtr(entry.fDrawable.get());
+         entry.fDrawable.reset_io();
+      }
+
+      return std::make_unique<RDrawableDisplayItem>(*this);
+   }
+
+   /** when display item destroyed - restore I/O pointers */
+   void OnDisplayItemDestroyed(RDisplayItem *) const override
+   {
+      for (auto &centry : fEntries) {
+         auto entry = const_cast<Internal::RLegendEntry *>(&centry);
+         entry->fDrawable.restore_io();
+         entry->fDrawableId.clear();
       }
    }
 
