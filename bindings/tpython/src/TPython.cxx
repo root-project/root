@@ -13,7 +13,6 @@
 // CPyCppyy.h must be go first, since it includes Python.h, which must be
 // included before any standard header
 #include "CPyCppyy.h"
-#include "PyStrings.h"
 #include "TPython.h"
 #include "CPPInstance.h"
 #include "CPPOverload.h"
@@ -97,7 +96,13 @@ ClassImp(TPython);
 static PyObject *gMainDict = 0;
 
 namespace CPyCppyy {
-    extern PyObject *gThisModule;
+   R__EXTERN PyObject *gThisModule;
+   namespace PyStrings {
+      R__EXTERN PyObject *gBases;
+      R__EXTERN PyObject *gCppName;
+      R__EXTERN PyObject *gModule;
+      R__EXTERN PyObject *gName;
+   }
 }
 
 //- static public members ----------------------------------------------------

@@ -13,10 +13,8 @@
 // CPyCppyy.h must be go first, since it includes Python.h, which must be
 // included before any standard header
 #include "CPyCppyy.h"
-#include "PyStrings.h"
 #include "TPyClassGenerator.h"
 #include "TPyReturn.h"
-#include "Utility.h"
 
 // ROOT
 #include "TClass.h"
@@ -28,6 +26,13 @@
 #include <sstream>
 #include <string>
 #include <typeinfo>
+
+namespace CPyCppyy {
+   R__EXTERN bool gDictLookupActive;
+   namespace PyStrings {
+      R__EXTERN PyObject *gBases;
+   }
+}
 
 namespace {
    class PyGILRAII {
@@ -116,7 +121,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
                nsCode << "  v.push_back(a" << ivar << ");\n";
 
             // call dispatch (method or class pointer hard-wired)
-            nsCode << "  return TPyReturn(TPyArg::CallMethod((PyObject*)" << (void *)attr << ", v)); }\n";
+            nsCode << "  return TPyReturn(TPyArg::CallMethod((PyObject*)" << std::showbase << (uintptr_t)attr << ", v)); }\n";
          }
 
          Py_DECREF(attr);
@@ -252,9 +257,9 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
 
          // call dispatch (method or class pointer hard-wired)
          if (!isConstructor)
-            proxyCode << "  return TPyReturn(TPyArg::CallMethod((PyObject*)" << (void *)attr << ", v))";
+            proxyCode << "  return TPyReturn(TPyArg::CallMethod((PyObject*)" << std::showbase << (uintptr_t)attr << ", v))";
          else
-            proxyCode << "  TPyArg::CallConstructor(fPyObject, (PyObject*)" << (void *)pyclass << ", v)";
+            proxyCode << "  TPyArg::CallConstructor(fPyObject, (PyObject*)" << std::showbase << (uintptr_t)pyclass << ", v)";
          proxyCode << ";\n }\n";
       }
 
@@ -264,7 +269,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
 
    // special case if no constructor or destructor
    if (!hasConstructor)
-      proxyCode << " " << clName << "() {\n TPyArg::CallConstructor(fPyObject, (PyObject*)" << (void *)pyclass
+      proxyCode << " " << clName << "() {\n TPyArg::CallConstructor(fPyObject, (PyObject*)" << std::showbase << (uintptr_t)pyclass
                 << "); }\n";
 
    if (!hasDestructor)
