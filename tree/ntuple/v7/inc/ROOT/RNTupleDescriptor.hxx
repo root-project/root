@@ -32,7 +32,6 @@
 namespace ROOT {
 namespace Experimental {
 
-class RFieldDescriptorRange;
 class RNTupleDescriptorBuilder;
 class RNTupleModel;
 
@@ -303,14 +302,26 @@ private:
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
 
 public:
+   // clang-format off
+   /**
+   \class ROOT::Experimental::RNTupleDescriptor::RFieldDescriptorRange
+   \ingroup NTuple
+   \brief Used to loop over a field's child fields
+   */
+   // clang-format on
    class RFieldDescriptorRange {
    private:
+      /// The associated NTuple for this range.
       const RNTupleDescriptor& fNTuple;
+      /// The descriptor ids of the child fields. These may be sorted using
+      /// a comparison function.
       std::vector<DescriptorId_t> fFieldChildren = {};
    public:
       class RIterator {
       private:
+         /// The enclosing range's NTuple.
          const RNTupleDescriptor& fNTuple;
+         /// The enclosing range's descriptor id list.
          const std::vector<DescriptorId_t>& fFieldChildren;
          std::size_t fIndex = 0;
       public:
@@ -332,10 +343,9 @@ public:
          bool operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
          bool operator==(const iterator& rh) const { return fIndex == rh.fIndex; }
       };
-      /// An iterator over a field's children.
       RFieldDescriptorRange(const RNTupleDescriptor& ntuple, const RFieldDescriptor& field)
          : fNTuple(ntuple), fFieldChildren(field.GetLinkIds()) {}
-      /// An iterator over a field's children sorted by a given comparison function.
+      /// Sort the range using an arbitrary comparison function.
       RFieldDescriptorRange(const RNTupleDescriptor& ntuple, const RFieldDescriptor& field,
          const std::function<bool(DescriptorId_t, DescriptorId_t)>& comparator)
          : fNTuple(ntuple), fFieldChildren(field.GetLinkIds())
