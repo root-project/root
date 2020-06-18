@@ -4687,14 +4687,16 @@
 
    // ======================================================================================
 
-
-
-   function RPavePainter(pave, opt) {
+   function RPavePainter(pave, opt, csstype) {
       JSROOT.TObjectPainter.call(this, pave, opt);
-      this.csstype = "pave";
+      this.csstype = csstype || "pave";
    }
 
    RPavePainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+
+   RPavePainter.prototype.DrawContent = function() {
+      // do nothing, will be reimplemented in derived classes
+   }
 
    RPavePainter.prototype.DrawPave = function() {
 
@@ -4723,6 +4725,8 @@
 
       this.CreateG(false);
 
+      this.draw_g.classed("most_upper_primitives", true); // this primitive will remain on top of list
+
       if (!visible) return;
 
       if (fill_style == 0) fill_color = "none";
@@ -4749,6 +4753,8 @@
       this.pave_height = pave_height;
 
       // here should be fill and draw of text
+
+      this.DrawContent();
 
       if (JSROOT.BatchMode) return;
 
@@ -4783,7 +4789,7 @@
                  .attr("width", this.pave_width)
                  .attr("height", this.pave_height);
 
-      // here should be draw of context
+      this.DrawContent();
    }
 
    RPavePainter.prototype.Redraw = function(reason) {
@@ -4794,10 +4800,6 @@
       var painter = new RPavePainter(pave, opt);
 
       painter.SetDivId(divid);
-
-      painter.CreateG(false);
-
-      painter.draw_g.classed("most_upper_primitives", true); // this primitive will remain on top of list
 
       painter.DrawPave();
 
@@ -5206,7 +5208,7 @@
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RBox", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawBox", opt: "", direct: true, csstype: "box" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true, csstype: "marker" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPave", icon: "img_pavetext", func: drawPave, opt: "" });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLegend", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLegend", opt: "", direct: true, csstype: "legend" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLegend", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLegend", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RFrame", icon: "img_frame", func: "JSROOT.v7.drawFrame", opt: "" });
 
    JSROOT.v7.RAxisPainter = RAxisPainter;
@@ -5215,6 +5217,7 @@
    JSROOT.v7.RPadPainter = RPadPainter;
    JSROOT.v7.RCanvasPainter = RCanvasPainter;
    JSROOT.v7.TCanvasPainter = RCanvasPainter; // temporary, fix in ROOT soon
+   JSROOT.v7.RPavePainter = RPavePainter;
    JSROOT.v7.drawFrame = drawFrame;
    JSROOT.v7.drawPad = drawPad;
    JSROOT.v7.drawCanvas = drawCanvas;

@@ -132,91 +132,71 @@
 
    // =================================================================================
 
-   function drawLegend(arg) {
-
-      var legend       = this.GetObject(),
-          pp           = this.pad_painter(),
-          p1           = pp.GetCoordinate(legend.fP1),
-          p2           = pp.GetCoordinate(legend.fP2),
-          line_width   = this.v7EvalAttr( "box_border_width", 1),
-          line_style   = this.v7EvalAttr( "box_border_style", 1),
-          line_color   = this.v7EvalColor( "box_border_color", "black"),
-          fill_color   = this.v7EvalColor( "box_fill_color", "white"),
-          fill_style   = this.v7EvalAttr( "box_fill_style", 1),
-          text_size    = this.v7EvalAttr( "title_size", 20),
-          text_angle   = -1 * this.v7EvalAttr( "title_angle", 0),
-          text_align   = this.v7EvalAttr( "title_align", 22),
-          text_color   = this.v7EvalColor( "title_color", "black"),
-          text_font    = this.v7EvalAttr( "title_font", 41);
-
-      //if (arg=="drag_resize") {
-      //   p1.x = parseInt(this.draw_g.attr("x"));
-      //   p2.y = parseInt(this.draw_g.attr("y"));
-      //   p2.x = p1.x + parseInt(this.draw_g.attr("width"));
-      //   p1.y = p2.y + parseInt(this.draw_g.attr("height"));
-      //}
-
-      this.CreateG();
-
-      if (fill_style == 0) fill_color = "none";
-
-      // position and size required only for drag functions
-      // this.draw_g.attr("transfrom", "translate(" + p1.x + "," + p2.y + ")")
-      //           .attr("x", p1.x)
-      //           .attr("y", p2.y)
-      //           .attr("width", p2.x-p1.x)
-      //           .attr("height", p1.y-p2.y);
-
-      this.draw_g
-         .append("svg:rect")
-         .attr("x", p1.x)
-         .attr("width", p2.x-p1.x)
-         .attr("y", p2.y)
-         .attr("height", p1.y-p2.y)
-         .style("stroke", line_color)
-         .attr("stroke-width", line_width)
-         .attr("fill", fill_color)
-         .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style]);
-
-      var nlines = legend.fEntries.length;
+   function drawLegendContent() {
+      var legend     = this.GetObject(),
+          text_size  = this.v7EvalAttr( "legend_text_size", 20),
+          text_angle = -1 * this.v7EvalAttr( "legend_text_angle", 0),
+          text_align = this.v7EvalAttr( "legend_text_align", 22),
+          text_color = this.v7EvalColor( "legend_text_color", "black"),
+          text_font  = this.v7EvalAttr( "legend_text_font", 41),
+          width      = this.pave_width,
+          height     = this.pave_height,
+          nlines     = legend.fEntries.length;
 
       if (legend.fTitle) nlines++;
 
-      var arg = { align: text_align,  rotate: text_angle, color: text_color, latex: 1 };
+      if (!nlines) return;
 
-      this.StartTextDrawing(text_font, text_size);
+      var arg = { align: text_align, rotate: text_angle, color: text_color, latex: 1 },
+          stepy = height / nlines, posy = 0, margin_x = 0.02 * width;
 
-      var cnt = 0;
+      this.StartTextDrawing(text_font, height/(nlines * 1.2));
+
       if (legend.fTitle) {
-         this.DrawText(JSROOT.extend({ x: p1.x + (p2.x-p1.x)/2, y: p2.y - 0.5*(p2.y-p1.y)/(nlines+1), text: legend.fTitle }, arg));
-         cnt++;
+         this.DrawText({ align: text_align, rotate: text_angle, color: text_color, latex: 1,
+                         width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: legend.fTitle });
+         posy += stepy;
       }
 
       for (var i=0; i<legend.fEntries.length; ++i) {
-         var entry = legend.fEntries[i],
-             ypos = p2.y - (cnt+0.5)*(p2.y-p1.y)/(nlines+1);
-         this.DrawText(JSROOT.extend({ x: p1.x + (p2.x-p1.x)/4, y: ypos, text: entry.fLabel }, arg));
+         var entry = legend.fEntries[i];
+
+         this.DrawText({ align: text_align, rotate: text_angle, color: text_color, latex: 1,
+                         width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + width*0.25, y: posy, text: entry.fLabel });
 
          var objp = this.FindPainterFor(entry.fDrawable.fIO);
+
+         console.log('Found painter ', i, !!objp);
 
          if (objp && objp.lineatt)
             this.draw_g
               .append("svg:line")
-              .attr("x1", p1.x + (p2.x-p1.x)*0.5)
-              .attr("y1", ypos)
-              .attr("x2", p1.x + (p2.x-p1.x)*0.8)
-              .attr("y2", ypos)
+              .attr("x1", Math.round(margin_x))
+              .attr("y1", Math.round(posy + stepy/2))
+              .attr("x2", Math.round(margin_x + width/4))
+              .attr("y2", Math.round(posy + stepy/2))
               .call(objp.lineatt.func);
 
-         cnt++;
+         posy += stepy;
       }
 
       this.FinishTextDrawing();
+   }
 
-   //   this.AddDrag({ minwidth: 10, minheight: 20, canselect: false,
-   //      redraw: this.Redraw.bind(this, "drag_resize"),
-   //      ctxmenu: false /*JSROOT.touches && JSROOT.gStyle.ContextMenu && this.UseContextMenu */ });
-  }
+   function drawLegend(divid, legend, opt) {
+      var painter = new JSROOT.v7.RPavePainter(legend, opt, "legend");
+
+      painter.SetDivId(divid);
+
+      painter.DrawContent = drawLegendContent;
+
+      painter.DrawPave();
+
+      return painter.DrawingReady();
+   }
+
+
+
 
    // ================================================================================
 
