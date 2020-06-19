@@ -27,6 +27,7 @@
 #include <string>
 #include <typeinfo>
 
+// needed to properly resolve (dllimport) symbols on Windows
 namespace CPyCppyy {
    R__EXTERN bool gDictLookupActive;
    namespace PyStrings {
