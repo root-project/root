@@ -136,7 +136,7 @@
       var legend     = this.GetObject(),
           text_size  = this.v7EvalAttr( "legend_text_size", 20),
           text_angle = -1 * this.v7EvalAttr( "legend_text_angle", 0),
-          text_align = this.v7EvalAttr( "legend_text_align", 22),
+          text_align = this.v7EvalAttr( "legend_text_align", 12),
           text_color = this.v7EvalColor( "legend_text_color", "black"),
           text_font  = this.v7EvalAttr( "legend_text_font", 41),
           width      = this.pave_width,
@@ -154,20 +154,36 @@
       this.StartTextDrawing(text_font, height/(nlines * 1.2));
 
       if (legend.fTitle) {
-         this.DrawText({ align: text_align, rotate: text_angle, color: text_color, latex: 1,
+         this.DrawText({ align: 22, rotate: text_angle, color: text_color, latex: 1,
                          width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: legend.fTitle });
          posy += stepy;
       }
 
       for (var i=0; i<legend.fEntries.length; ++i) {
-         var entry = legend.fEntries[i];
+         var objp = null, entry = legend.fEntries[i];
 
          this.DrawText({ align: text_align, rotate: text_angle, color: text_color, latex: 1,
                          width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + width*0.25, y: posy, text: entry.fLabel });
 
-         var objp = pp.FindSnap(entry.fDrawableId, true);
+         if (entry.fDrawableId != "custom") {
+            objp = pp.FindSnap(entry.fDrawableId, true);
+         } else if (entry.fDrawable.fIO) {
+            objp = new JSROOT.TObjectPainter(entry.fDrawable.fIO);
+            if (entry.fLine) objp.createv7AttLine();
+            if (entry.fFill) objp.createv7AttFill();
+            if (entry.fMarker) objp.createv7AttMarker();
+         }
 
-         if (objp && objp.lineatt)
+         if (objp && entry.fFill && objp.fillatt)
+            this.draw_g
+              .append("svg:rect")
+              .attr("x", Math.round(margin_x))
+              .attr("y", Math.round(posy + stepy*0.1))
+              .attr("width", Math.round(width/4))
+              .attr("height", Math.round(stepy*0.8))
+              .call(objp.fillatt.func);
+
+         if (objp && entry.fLine && objp.lineatt)
             this.draw_g
               .append("svg:line")
               .attr("x1", Math.round(margin_x))
@@ -175,6 +191,11 @@
               .attr("x2", Math.round(margin_x + width/4))
               .attr("y2", Math.round(posy + stepy/2))
               .call(objp.lineatt.func);
+
+         if (objp && entry.fMarker && objp.markeratt)
+            this.draw_g.append("svg:path")
+                .attr("d", objp.markeratt.create(margin_x + width/8, posy + stepy/2))
+                .call(objp.markeratt.func);
 
          posy += stepy;
       }
