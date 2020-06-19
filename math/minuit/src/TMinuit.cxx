@@ -5556,7 +5556,9 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
       fU[ilax-1] = TMath::Max(fU[ilax-1],fAlim[ilax-1]);
       delu = fU[ilax-1] - ut;
 //        stop if already at limit with negligible step size
-      if (TMath::Abs(delu) / (TMath::Abs(ut) + TMath::Abs(fU[ilax-1])) < fEpsmac) goto L440;
+//        add also a check if both numerator and denominarot are not zero (ROOT-10835)(LM)
+      if ( (delu == 0 && ut == 0) ||
+         (TMath::Abs(delu) / (TMath::Abs(ut) + TMath::Abs(fU[ilax-1])) < fEpsmac)) goto L440;
       fac = delu / fMNOTw[it-1];
       for (i = 1; i <= fNpar; ++i) {
          fX[i-1] = fXt[i-1] + fac*fMNOTxdev[i-1];
