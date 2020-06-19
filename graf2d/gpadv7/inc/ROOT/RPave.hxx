@@ -39,10 +39,6 @@ class RPave : public RDrawable {
    RAttrFill fAttrFill{this, "fill_"};       ///<! line attributes
    RPaveAttrs fAttr{this, ""};               ///<! pave direct attributes
 
-protected:
-
-   bool IsFrameRequired() const final { return true; }
-
 public:
 
    RPave(const std::string &csstype = "pave") : RDrawable(csstype) {}

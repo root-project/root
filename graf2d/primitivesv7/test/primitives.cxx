@@ -119,7 +119,7 @@ TEST(Primitives, RLegend)
    legend->AddEntry(line2, "RLine 2");
    legend->AddEntry(line3, "RLine 3");
 
-   EXPECT_EQ(canv.NumPrimitives(), 5u);
+   EXPECT_EQ(canv.NumPrimitives(), 4u);
 
    EXPECT_EQ(legend->NumEntries(), 3u);
    EXPECT_EQ(legend->GetTitle(), "Legend title");
@@ -141,7 +141,7 @@ TEST(Primitives, RPaveText)
    text->AddLine("Second line");
    text->AddLine("Third line");
 
-   EXPECT_EQ(canv.NumPrimitives(), 2u);
+   EXPECT_EQ(canv.NumPrimitives(), 1u);
 
    EXPECT_EQ(text->NumLines(), 3u);
    EXPECT_EQ(text->GetLine(0), "First line");
