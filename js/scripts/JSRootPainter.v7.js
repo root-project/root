@@ -4734,7 +4734,7 @@
           ph            = this.pad_height(),
           visible       = this.v7EvalAttr("visible", true),
           pave_cornerx = this.v7EvalLength("cornerx", pw, 0.02),
-          pave_cornery = this.v7EvalLength("cornery", ph, 0.02),
+          pave_cornery = this.v7EvalLength("cornery", ph, -0.02),
           pave_width   = this.v7EvalLength("width", pw, 0.3),
           pave_height  = this.v7EvalLength("height", ph, 0.3),
           line_width    = this.v7EvalAttr("border_width", 1),
@@ -4752,7 +4752,7 @@
       if (fill_style == 0) fill_color = "none";
 
       var pave_x = Math.round(fx + fw + pave_cornerx - pave_width),
-          pave_y = Math.round(fy - pave_cornery);
+          pave_y = Math.round(fy + pave_cornery);
 
       // x,y,width,height attributes used for drag functionality
       this.draw_g.attr("transform", "translate(" + pave_x + "," + pave_y + ")")
@@ -4800,7 +4800,7 @@
 
       var changes = {};
       this.v7AttrChange(changes, "cornerx", (pave_x + this.pave_width - fx - fw) / pw);
-      this.v7AttrChange(changes, "cornery", (fy - pave_y) / ph);
+      this.v7AttrChange(changes, "cornery", (pave_y - fy) / ph);
       this.v7AttrChange(changes, "width", this.pave_width / pw);
       this.v7AttrChange(changes, "height", this.pave_height / ph);
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
@@ -5229,6 +5229,7 @@
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true, csstype: "marker" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPave", icon: "img_pavetext", func: drawPave, opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLegend", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLegend", opt: "" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPaveText", icon: "img_pavetext", prereq: "v7more", func: "JSROOT.v7.drawPaveText", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RFrame", icon: "img_frame", func: "JSROOT.v7.drawFrame", opt: "" });
 
    JSROOT.v7.RAxisPainter = RAxisPainter;

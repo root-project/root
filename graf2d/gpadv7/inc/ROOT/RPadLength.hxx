@@ -18,6 +18,7 @@
 
 #include <vector>
 #include <string>
+#include <cmath>
 
 namespace ROOT {
 namespace Experimental {
@@ -225,7 +226,7 @@ public:
       if (HasNormal() || rhs.HasNormal())
          SetNormal(GetNormal() + rhs.GetNormal());
       return *this;
-   };
+   }
 
    /// Subtract a `RPadLength`.
    RPadLength &operator-=(const RPadLength &rhs)
@@ -237,7 +238,7 @@ public:
       if (HasNormal() || rhs.HasNormal())
          SetNormal(GetNormal() - rhs.GetNormal());
       return *this;
-   };
+   }
 
    /// Multiply a `RPadLength`.
    RPadLength &operator*=(double scale)
@@ -247,6 +248,19 @@ public:
       if (HasNormal()) SetNormal(scale*GetNormal());
       return *this;
    }
+
+   /// Compare a `RPadLength`.
+   bool operator==(const RPadLength &rhs) const
+   {
+      if ((HasUser() != rhs.HasUser()) ||
+          (HasUser() && std::fabs(GetUser() - rhs.GetUser()) > 1e-30)) return false;
+
+      if(std::fabs(GetPixel() - rhs.GetPixel()) > 1e-4) return false;
+
+      if (std::fabs(GetNormal() - rhs.GetNormal()) > 1e-6) return false;
+
+      return true;
+   };
 
    std::string AsString() const;
 

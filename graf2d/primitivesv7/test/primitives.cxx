@@ -4,6 +4,7 @@
 #include "ROOT/RLine.hxx"
 #include "ROOT/RMarker.hxx"
 #include "ROOT/RText.hxx"
+#include "ROOT/RPaveText.hxx"
 #include "ROOT/RLegend.hxx"
 #include "ROOT/RCanvas.hxx"
 
@@ -118,10 +119,44 @@ TEST(Primitives, RLegend)
    legend->AddEntry(line2, "RLine 2");
    legend->AddEntry(line3, "RLine 3");
 
-   EXPECT_EQ(canv.NumPrimitives(), 4u);
+   EXPECT_EQ(canv.NumPrimitives(), 5u);
 
    EXPECT_EQ(legend->NumEntries(), 3u);
    EXPECT_EQ(legend->GetTitle(), "Legend title");
    EXPECT_EQ(legend->GetAttrFill().GetColor(), RColor::kWhite);
+}
+
+// Test RPaveText API
+TEST(Primitives, RPaveText)
+{
+   RCanvas canv;
+
+   auto text = canv.Draw<RPaveText>();
+
+   text->AttrText().SetColor(RColor::kBlack).SetSize(12).SetAlign(13).SetFont(42);
+   text->AttrBorder().SetColor(RColor::kRed).SetWidth(3);
+   text->AttrFill().SetColor(RColor::kBlue).SetStyle(3003);
+
+   text->AddLine("First line");
+   text->AddLine("Second line");
+   text->AddLine("Third line");
+
+   EXPECT_EQ(canv.NumPrimitives(), 2u);
+
+   EXPECT_EQ(text->NumLines(), 3u);
+   EXPECT_EQ(text->GetLine(0), "First line");
+   EXPECT_EQ(text->GetLine(1), "Second line");
+   EXPECT_EQ(text->GetLine(2), "Third line");
+
+   EXPECT_EQ(text->GetAttrText().GetColor(), RColor::kBlack);
+   EXPECT_DOUBLE_EQ(text->GetAttrText().GetSize(), 12);
+   EXPECT_EQ(text->GetAttrText().GetAlign(), 13);
+   EXPECT_EQ(text->GetAttrText().GetFont(), 42);
+
+   EXPECT_EQ(text->GetAttrBorder().GetColor(), RColor::kRed);
+   EXPECT_EQ(text->GetAttrBorder().GetWidth(), 3);
+
+   EXPECT_EQ(text->GetAttrFill().GetColor(), RColor::kBlue);
+   EXPECT_EQ(text->GetAttrFill().GetStyle(), 3003);
 }
 
