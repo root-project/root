@@ -25,7 +25,7 @@ namespace Experimental {
 
 class RAttrFill : public RAttrBase {
 
-   RAttrColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
+   RAttrColor fColor{this, "color_"}; ///<! fill color, will access container from fill attributes
 
    R__ATTR_CLASS(RAttrFill, "fill_", AddInt("style", 1).AddDefaults(fColor));
 

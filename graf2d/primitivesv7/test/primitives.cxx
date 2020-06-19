@@ -114,9 +114,9 @@ TEST(Primitives, RLegend)
    auto legend = canv.Draw<RLegend>("Legend title");
    legend->AttrFill().SetStyle(5).SetColor(RColor::kWhite);
    legend->AttrBorder().SetWidth(2).SetColor(RColor::kRed);
-   legend->AddEntry(line1, "RLine 1").SetLine("line_");
-   legend->AddEntry(line2, "RLine 2").SetLine("line_");
-   legend->AddEntry(line3, "RLine 3").SetLine("line_");
+   legend->AddEntry(line1, "RLine 1");
+   legend->AddEntry(line2, "RLine 2");
+   legend->AddEntry(line3, "RLine 3");
 
    EXPECT_EQ(canv.NumPrimitives(), 4u);
 

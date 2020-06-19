@@ -152,6 +152,16 @@
       this.createAttLine({ color: line_color, width: line_width, style: line_style });
    }
 
+   JSROOT.TObjectPainter.prototype.createv7AttMarker = function(prefix) {
+      if (!prefix || (typeof prefix != "string")) prefix = "marker_";
+
+      var marker_color = this.v7EvalColor(prefix + "color", "black"),
+          marker_size = this.v7EvalAttr(prefix + "size", 1),
+          marker_style = this.v7EvalAttr(prefix + "style", 1);
+
+      this.createAttMarker({ color: marker_color, size: marker_size, style: marker_style });
+   }
+
    /** Create RChangeAttr, which can be applied on the server side */
    JSROOT.TObjectPainter.prototype.v7AttrChange = function(req,name,value,kind) {
       if (!this.snapid)
