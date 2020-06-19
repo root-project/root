@@ -1082,6 +1082,8 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckIOConstructor(const cla
    if (!expectedArgType)
       return EIOCtorCategory::kAbsent;
 
+   // FIXME: We should not iterate here. That costs memory!
+   cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
    for (auto iter = cl->ctor_begin(), end = cl->ctor_end(); iter != end; ++iter)
       {
          if ((iter->getAccess() != clang::AS_public) || (iter->getNumParams() != 1))
