@@ -215,16 +215,57 @@
       return painter.DrawingReady();
    }
 
+   // =================================================================================
 
+   function drawPaveTextContent() {
+      var pavetext   = this.GetObject(),
+          text_size  = this.v7EvalAttr( "pavetext_text_size", 20),
+          text_angle = -1 * this.v7EvalAttr( "pavetext_text_angle", 0),
+          text_align = this.v7EvalAttr( "pavetext_text_align", 12),
+          text_color = this.v7EvalColor( "pavetext_text_color", "black"),
+          text_font  = this.v7EvalAttr( "pavetext_text_font", 41),
+          width      = this.pave_width,
+          height     = this.pave_height,
+          nlines     = pavetext.fText.length;
+
+      if (!nlines) return;
+
+      var stepy = height / nlines, posy = 0, margin_x = 0.02 * width;
+
+      this.StartTextDrawing(text_font, height/(nlines * 1.2));
+
+      for (var i=0; i < pavetext.fText.length; ++i) {
+         var line = pavetext.fText[i];
+
+         this.DrawText({ align: text_align, rotate: text_angle, color: text_color, latex: 1,
+                         width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: line });
+         posy += stepy;
+      }
+
+      this.FinishTextDrawing();
+   }
+
+   function drawPaveText(divid, pave, opt) {
+      var painter = new JSROOT.v7.RPavePainter(pave, opt, "pavetext");
+
+      painter.SetDivId(divid);
+
+      painter.DrawContent = drawPaveTextContent;
+
+      painter.DrawPave();
+
+      return painter.DrawingReady();
+   }
 
 
    // ================================================================================
 
-   JSROOT.v7.drawText   = drawText;
-   JSROOT.v7.drawLine   = drawLine;
-   JSROOT.v7.drawBox    = drawBox;
-   JSROOT.v7.drawMarker = drawMarker;
-   JSROOT.v7.drawLegend = drawLegend;
+   JSROOT.v7.drawText     = drawText;
+   JSROOT.v7.drawLine     = drawLine;
+   JSROOT.v7.drawBox      = drawBox;
+   JSROOT.v7.drawMarker   = drawMarker;
+   JSROOT.v7.drawLegend   = drawLegend;
+   JSROOT.v7.drawPaveText = drawPaveText;
 
    return JSROOT;
 

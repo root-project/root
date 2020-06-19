@@ -20,6 +20,7 @@
 
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RPave.hxx"
+#include "ROOT/RPaveText.hxx"
 
 // macro must be here while cling is not capable to load
 // library automatically for outlined function see ROOT-10336
@@ -36,6 +37,16 @@ void draw_pave()
    auto pave = canvas->Draw<RPave>();
    pave->AttrFill().SetColor(RColor::kBlue);
    pave->AttrBorder().SetColor(RColor::kGreen).SetWidth(3);
+   pave->SetCornerY(-0.03_normal);
+   pave->SetHeight(0.2_normal);
+
+   auto text = canvas->Draw<RPaveText>();
+   text->AddLine("This is RTextPave");
+   text->AddLine("It can have several lines");
+   text->AddLine("It should be positioned below RPave");
+   text->AttrFill().SetColor(RColor::kYellow);
+   text->SetCornerY(0.25_normal);
+   text->SetHeight(0.3_normal);
 
    canvas->SetSize(1000, 700);
    canvas->Show();
