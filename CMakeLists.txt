@@ -27,6 +27,7 @@ if(MSVC)
   set(libsuffix .dll)
   set(exesuffix .exe)
   set(CMAKE_CXX_FLAGS "/nologo /Zc:__cplusplus /MD /GR /EHsc- /W3 /D_WIN32")
+  set(grep_cmd "findstr")
 
   option(win_broken_tests "Enable broken tests on Windows" FALSE)
 
@@ -60,6 +61,7 @@ else()
 
   # We can not use CMAKE_SHARED_LIBRARY_SUFFIX as on macos it uses the standard dylib rather than the .so
   set(libsuffix .so)
+  set(grep_cmd grep)
 
   # If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
   # If ROOT_SOURCE_DIR is not set, search for an installation.
