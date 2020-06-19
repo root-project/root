@@ -4,10 +4,8 @@ ROOTTEST_ADD_TEST(skipLinkDefDict
                   OUTREF skipLinkDefDict.ref)
 
 if(MSVC)
-    set(grep_cmd "findstr")
     set(OUTREF_FILE skippingDict_win32.ref)
 else()
-    set(grep_cmd grep)
     set(OUTREF_FILE skippingDict.ref)
 endif()
 
