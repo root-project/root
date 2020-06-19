@@ -95,6 +95,7 @@
 ClassImp(TPython);
 static PyObject *gMainDict = 0;
 
+// needed to properly resolve (dllimport) symbols on Windows
 namespace CPyCppyy {
    R__EXTERN PyObject *gThisModule;
    namespace PyStrings {

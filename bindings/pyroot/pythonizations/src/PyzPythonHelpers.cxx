@@ -28,6 +28,7 @@ PyROOT extension module.
 
 #include <sstream>
 
+// needed to properly resolve (dllimport) symbols on Windows
 namespace CPyCppyy {
    namespace PyStrings {
       R__EXTERN PyObject *gMRO;
