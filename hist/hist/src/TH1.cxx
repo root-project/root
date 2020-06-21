@@ -623,7 +623,7 @@ TH1::~TH1()
 /// \param[in] title histogram title.
 ///            If title is of the form stringt;stringx;stringy;stringz`
 ///            the histogram title is set to `stringt`,
-///            the x axis title to `stringy`, the y axis title to `stringy`, etc.
+///            the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xlow low edge of first bin
 /// \param[in] xup upper edge of last bin (not included in last bin)
@@ -653,7 +653,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 /// \param[in] title histogram title.
 ///            If title is of the form `stringt;stringx;stringy;stringz`
 ///            the histogram title is set to `stringt`,
-///            the x axis title to `stringy`, the y axis title to `stringy`, etc.
+///            the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
 ///            This is an array of size nbins+1
@@ -675,7 +675,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 /// \param[in] title histogram title.
 ///        If title is of the form `stringt;stringx;stringy;stringz`
 ///        the histogram title is set to `stringt`,
-///        the x axis title to `stringy`, the y axis title to `stringy`, etc.
+///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
 ///        This is an array of size nbins+1
