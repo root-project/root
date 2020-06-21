@@ -34,11 +34,23 @@ asm(".desc ___crashreporter_info__, 0x10");
 #endif
 
 
-/// Serializes error output, destructed when libCore is unloaded
-static std::mutex &GetErrorMutex() {
-   static std::mutex m;
+/// Serializes error output, destructed by the gROOT destructor via ReleaseDefaultErrorHandler()
+static std::mutex *GetErrorMutex() {
+   static std::mutex *m = new std::mutex();
    return m;
 }
+
+
+namespace ROOT {
+namespace Internal {
+
+void ReleaseDefaultErrorHandler()
+{
+   delete GetErrorMutex();
+}
+
+} // Internal namespace
+} // ROOT namespace
 
 
 /// Print debugging message to stderr and, on Windows, to the system debugger.
@@ -71,7 +83,7 @@ again:
    va_end(ap);
 
    // Serialize the actual printing.
-   std::lock_guard<std::mutex> guard(GetErrorMutex());
+   std::lock_guard<std::mutex> guard(*GetErrorMutex());
 
    const char *toprint = buf; // Work around for older platform where we use TThreadTLSWrapper
    fprintf(stderr, "%s", toprint);
@@ -89,7 +101,7 @@ again:
 void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    if (gErrorIgnoreLevel == kUnset) {
-      std::lock_guard<std::mutex> guard(GetErrorMutex());
+      std::lock_guard<std::mutex> guard(*GetErrorMutex());
 
       gErrorIgnoreLevel = 0;
       if (gEnv) {

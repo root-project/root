@@ -67,6 +67,7 @@ of a main program creating an interactive version is shown below:
 */
 
 #include <ROOT/RConfig.hxx>
+#include <ROOT/TErrorDefaultHandler.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
 #include "RVersion.h"
@@ -942,6 +943,7 @@ TROOT::~TROOT()
       // Cleanup system class
       ROOT::Internal::SetErrorSystemMsgHandler(ROOT::Internal::ErrorSystemMsgHandlerFunc_t());
       SetErrorHandler(ROOT::Internal::MinimalErrorHandler);
+      ROOT::Internal::ReleaseDefaultErrorHandler();
       delete gSystem;
 
       // ROOT-6022:
