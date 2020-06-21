@@ -16,9 +16,10 @@ if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925)
 endif()
 
 set(BASE_HEADERS
-  ROOT/StringConv.hxx
+  ROOT/TErrorDefaultHandler.hxx
   ROOT/TExecutor.hxx
   ROOT/TSequentialExecutor.hxx
+  ROOT/StringConv.hxx
   Buttons.h
   Bytes.h
   Byteswap.h
