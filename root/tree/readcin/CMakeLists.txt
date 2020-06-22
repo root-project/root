@@ -1,8 +1,4 @@
-if(MSVC)
-    ROOTTEST_GENERATE_EXECUTABLE(readFromCin readFromCin.cxx LIBRARIES Core Hist RIO Net Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread)
-else()
-    ROOTTEST_GENERATE_EXECUTABLE(readFromCin readFromCin.cxx LIBRARIES Core Hist RIO Net Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc)
-endif()
+ROOTTEST_GENERATE_EXECUTABLE(readFromCin readFromCin.cxx LIBRARIES Core Hist RIO Net Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread ${OptionalMultiProc})
 
 ROOTTEST_ADD_TEST(readFromCin
                   COMMAND ./readFromCin ${CMAKE_CURRENT_SOURCE_DIR}/test.csv

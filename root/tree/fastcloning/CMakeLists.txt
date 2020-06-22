@@ -26,16 +26,10 @@ ROOTTEST_ADD_TEST(runabstract-datageneration
                   COPY_TO_BUILDDIR abstract.C
                   COMMAND ${ROOT_root_CMD} -b -q -l "${CMAKE_CURRENT_BINARY_DIR}/abstract.C+(0)")
 
-if(MSVC)
-   set(ABSTRACT_OUTREF references/abstract_win32.ref)
-else()
-   set(ABSTRACT_OUTREF references/abstract.ref)
-endif()
-
 ROOTTEST_ADD_TEST(runabstract-copy
                   MACRO runabstract.C
                   PRECMD ${ROOT_root_CMD} -b -q -l "${CMAKE_CURRENT_BINARY_DIR}/abstract.C+(1)"
-                  OUTREF ${ABSTRACT_OUTREF}
+                  OUTREF references/abstract${ref_suffix}
                   DEPENDS runabstract-datageneration)
 
 ROOTTEST_ADD_TEST(runfilemergererror
