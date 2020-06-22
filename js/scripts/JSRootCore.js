@@ -1084,7 +1084,7 @@
 
    /** @summary Load JSROOT functionality.
     *
-    * @desc As first argument, required components should be specifed:
+    * @desc As first argument, required components should be specified:
     *
     *    - 'io'     TFile functionality
     *    - 'tree'   TTree support
@@ -1106,7 +1106,7 @@
     *    - 'simple'  for basic user interface
     *    - 'load:<path/script.js>' list of user-specific scripts at the end of kind string
     *
-    * One could combine several compopnents, separating them by semicolon.
+    * One could combine several components, separating them by semicolon.
     * Depending of available components, either require.js or plain script loading will be used
     *
     * @param {string} kind - modules to load
@@ -1192,7 +1192,7 @@
             mainfiles += '$$$scripts/JSRootPainter' + ext + ".js;";
             extrafiles += '$$$style/JSRootPainter' + ext + '.css;';
          }
-         if ((jsroot.sources.indexOf("v6") < 0) && (kind.indexOf('v7;') < 0)) {
+         if ((jsroot.sources.indexOf("v6") < 0) && (kind.indexOf('v7') < 0)) {
             mainfiles += '$$$scripts/JSRootPainter.v6' + ext + ".js;";
             modules.push('JSRootPainter.v6');
          }
