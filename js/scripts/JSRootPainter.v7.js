@@ -4933,7 +4933,7 @@
             return l;
          }
 
-         // last color in pallette starts from level cntr[r-1]
+         // last color in palette starts from level cntr[r-1]
          return Math.floor((zc-cntr[0]) / (cntr[r-1] - cntr[0]) * (r-1));
       },
 

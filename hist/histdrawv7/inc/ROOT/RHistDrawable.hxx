@@ -93,12 +93,29 @@ public:
 
 
 class RHist2Drawable final : public RHistDrawable<2> {
+   enum EDrawKind { kColor = 1, kLego = 2 };
+
+   int fDrawKind{kColor};        ///< histogram drawing kind
+
 public:
    RHist2Drawable() = default;
 
    template <class HIST>
    RHist2Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<2>(hist) {}
+
+   RHist2Drawable &Color() { fDrawKind = kColor; return *this; }
+   RHist2Drawable &Lego() { fDrawKind = kLego; return *this; }
 };
+
+
+class RHist3Drawable final : public RHistDrawable<3> {
+public:
+   RHist3Drawable() = default;
+
+   template <class HIST>
+   RHist3Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<3>(hist) {}
+};
+
 
 
 
@@ -129,37 +146,37 @@ inline auto GetDrawable(const std::shared_ptr<RH2D> &histimpl)
 
 inline auto GetDrawable(const std::shared_ptr<RH2I> &histimpl)
 {
-   return std::make_shared<RHistDrawable<2>>(histimpl);
+   return std::make_shared<RHist2Drawable>(histimpl);
 }
 
 inline auto GetDrawable(const std::shared_ptr<RH2C> &histimpl)
 {
-   return std::make_shared<RHistDrawable<2>>(histimpl);
+   return std::make_shared<RHist2Drawable>(histimpl);
 }
 
 inline auto GetDrawable(const std::shared_ptr<RH2F> &histimpl)
 {
-   return std::make_shared<RHistDrawable<2>>(histimpl);
+   return std::make_shared<RHist2Drawable>(histimpl);
 }
 
 inline auto GetDrawable(const std::shared_ptr<RH3D> &histimpl)
 {
-   return std::make_shared<RHistDrawable<3>>(histimpl);
+   return std::make_shared<RHist3Drawable>(histimpl);
 }
 
 inline auto GetDrawable(const std::shared_ptr<RH3I> &histimpl)
 {
-   return std::make_shared<RHistDrawable<3>>(histimpl);
+   return std::make_shared<RHist3Drawable>(histimpl);
 }
 
 inline auto GetDrawable(const std::shared_ptr<RH3C> &histimpl)
 {
-   return std::make_shared<RHistDrawable<3>>(histimpl);
+   return std::make_shared<RHist3Drawable>(histimpl);
 }
 
 inline auto GetDrawable(const std::shared_ptr<RH3F> &histimpl)
 {
-   return std::make_shared<RHistDrawable<3>>(histimpl);
+   return std::make_shared<RHist3Drawable>(histimpl);
 }
 
 } // namespace Experimental

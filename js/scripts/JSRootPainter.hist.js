@@ -6540,7 +6540,7 @@
 
          // if there is auto colors assignment, try to provide it
          if (this.options._pfc || this.options._plc || this.options._pmc) {
-            if (!this.pallette && JSROOT.Painter.GetColorPalette)
+            if (!this.palette && JSROOT.Painter.GetColorPalette)
                this.palette = JSROOT.Painter.GetColorPalette();
             if (this.palette) {
                var color = this.palette.calcColor(rindx, nhists+1);
