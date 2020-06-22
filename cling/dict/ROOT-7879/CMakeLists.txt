@@ -3,15 +3,9 @@ ROOTTEST_ADD_TEST(skipLinkDefDict
                   COMMAND ${ROOT_rootcling_CMD} -f libSkippingDict.cxx -rmf libSkipping.rootmap -rml libSkipping${libsuffix} ${CMAKE_CURRENT_SOURCE_DIR}/skippingHeader.h ${CMAKE_CURRENT_SOURCE_DIR}/skipLinkDef.h
                   OUTREF skipLinkDefDict.ref)
 
-if(MSVC)
-    set(OUTREF_FILE skippingDict_win32.ref)
-else()
-    set(OUTREF_FILE skippingDict.ref)
-endif()
-
 ROOTTEST_ADD_TEST(skipLinkDef
                   COMMAND ${grep_cmd} clingAutoload libSkippingDict.cxx
                   DEPENDS skipLinkDefDict
-                  OUTREF ${OUTREF_FILE})
+                  OUTREF skippingDict${ref_suffix})
 
 ROOTTEST_ADD_TESTDIRS()

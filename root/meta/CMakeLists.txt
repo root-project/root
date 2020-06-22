@@ -42,14 +42,9 @@ configure_file(typelist_win32.v6.txt . COPYONLY)
 ROOTTEST_ADD_AUTOMACROS(DEPENDS ANSTmpltInt.C TmpltInt0.C TmpltInt1.C TmpltFloat.C
                                 TmpltNoSpec.C Event.cxx ${COMPILE_MACRO_TEST}
                                 EXCLUDE runMemberComments runautoload)
-if(MSVC)
-    set(MEMBERCOMMENTS_OUTREF MemberComments_win32.ref)
-else()
-    set(MEMBERCOMMENTS_OUTREF MemberComments.ref)
-endif()
 ROOTTEST_ADD_TEST(runMemberComments
                   MACRO runMemberComments.C
-                  OUTREF ${MEMBERCOMMENTS_OUTREF})
+                  OUTREF MemberComments${ref_suffix})
 
 if(NOT MSVC OR win_broken_tests)
     ROOTTEST_ADD_TEST(drawing
@@ -63,14 +58,9 @@ endif()
 ROOTTEST_ADD_TEST(namespaceconflict
                   MACRO execnamespaceconflict.C+)
 
-if(MSVC)
-    set(AUTOLOAD_OUTREF autoload_win32.ref)
-else()
-    set(AUTOLOAD_OUTREF autoload.ref)
-endif()
 ROOTTEST_ADD_TEST(runautoload
                   MACRO runautoload.C
                   DEPENDS ${COMPILE_MACRO_TEST}
-                  OUTREF ${AUTOLOAD_OUTREF})
+                  OUTREF autoload${ref_suffix})
 
 ROOTTEST_ADD_TESTDIRS()

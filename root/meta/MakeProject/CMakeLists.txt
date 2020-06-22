@@ -90,15 +90,9 @@ else()
                   OUTREF create_makeproject_examples.ref
                   DEPENDS ${GENERATE_DICTIONARY_TEST} stl_makeproject_test-build)
 
-    if(MSVC)
-      set(STLTEST_OUTREF teststlCTEST_win32.ref)
-    else()
-      set(STLTEST_OUTREF teststlCTEST.ref)
-    endif()
-
     ROOTTEST_ADD_TEST(stltest
                   MACRO runstltest.C
-                  OUTREF ${STLTEST_OUTREF}
+                  OUTREF teststlCTEST${ref_suffix}
                   DEPENDS examples)
                   
     ROOTTEST_ADD_TEST(stltest2

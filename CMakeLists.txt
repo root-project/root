@@ -63,6 +63,9 @@ else()
   set(libsuffix .so)
   set(grep_cmd grep)
 
+  # only for non-Windows platforms
+  set(OptionalMultiProc MultiProc)
+
   # If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
   # If ROOT_SOURCE_DIR is not set, search for an installation.
   if(DEFINED ROOT_SOURCE_DIR)
@@ -153,11 +156,15 @@ endif()
 if (MSVC)
   if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
     set(64BIT 1)
+    set(ref_suffix "_win64.ref")
     message(STATUS "-- Check for generator architecture: Found 64 bit architecture.")
   else()
     set(32BIT 1)
+    set(ref_suffix "_win32.ref")
     message(STATUS "-- Check for generator architecture: Found 32 bit architecture.")
   endif()
+else()
+  set(ref_suffix ".ref")
 endif()
 
 # Setup environment.

@@ -16,12 +16,7 @@ ROOTTEST_ADD_TEST(nestedTemplate
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(nestedClasses
                                     nestedClasses.h
                                     SELECTION nestedClasses_selection.xml)
-if(MSVC)
-    set(NESTEDCLASSES_OUTREF execNestedClasses_win32.ref)
-else()
-    set(NESTEDCLASSES_OUTREF execNestedClasses.ref)
-endif()
 ROOTTEST_ADD_TEST(nestedClasses
                   MACRO execNestedClasses.C
-                  OUTREF ${NESTEDCLASSES_OUTREF}
+                  OUTREF execNestedClasses${ref_suffix}
                   DEPENDS ${GENERATE_REFLEX_TEST})

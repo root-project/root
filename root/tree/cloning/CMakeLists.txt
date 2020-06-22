@@ -138,11 +138,6 @@ elseif(${compression_default} STREQUAL "zlib")
 		  OUTREF references/exectrimZLIB_builtinzlib_i686.ref)
       endif()
   else()
-      if(MSVC)
-            set(TRIMZLIB_I686_OUTREF references/exectrimZLIB_i686_win32.ref)
-      else()
-            set(TRIMZLIB_I686_OUTREF references/exectrimZLIB_i686.ref)
-      endif()
       if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
             ROOTTEST_ADD_TEST(exectrim
                   MACRO exectrim.C
@@ -152,7 +147,7 @@ elseif(${compression_default} STREQUAL "zlib")
            ROOTTEST_ADD_TEST(exectrim
                   MACRO exectrim.C
                   COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root
-                  OUTREF ${TRIMZLIB_I686_OUTREF})
+                  OUTREF references/exectrimZLIB_i686${ref_suffix})
       endif()
   endif()      
 endif()
