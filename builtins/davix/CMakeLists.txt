@@ -21,7 +21,7 @@ foreach(lib davix neon)
   list(APPEND DAVIX_LIBRARIES ${DAVIX_PREFIX}/lib/${libname})
 endforeach()
 
-string(REPLACE "-Werror" "" DAVIX_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+string(REPLACE "-Werror " "" DAVIX_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
 ExternalProject_Add(DAVIX
   URL ${DAVIX_URL}/davix-${DAVIX_VERSION}.tar.gz
