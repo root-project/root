@@ -60,8 +60,7 @@
             histo.getBin = function(x, y) { return (x-1)  + this.fAxes._0.GetNumBins() * (y-1); }
             // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no undeflow/overflow bins now
             histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; }
-            histo.getBinError = function(x,y) {
-               var bin = this.getBin(x,y);
+            histo.getBinError = function(bin) {
                if (this.fStatistics.fSumWeightsSquared)
                   return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin]);
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
@@ -392,9 +391,7 @@
       if (main.zoom_zmin !== main.zoom_zmax) {
          zmin = main.zoom_zmin;
          zmax = main.zoom_zmax;
-      }
-
-      if (args && args.full_z_range) {
+      } else if (args && args.full_z_range) {
          zmin = main.zmin;
          zmax = main.zmax;
       }
@@ -481,12 +478,15 @@
    }
 
    RHistPainter.prototype.UpdatePaletteDraw = function() {
-      var pp = this.FindPainterFor(undefined, undefined, "ROOT::Experimental::RPaletteDrawable");
-      if (pp) pp.DrawPalette();
+      if (this.is_main_painter()) {
+         var pp = this.FindPainterFor(undefined, undefined, "ROOT::Experimental::RPaletteDrawable");
+         if (pp) pp.DrawPalette();
+      }
    }
 
    RHistPainter.prototype.FillPaletteMenu = function(menu) {
 
+      // TODO: rewrite for RPalette functionality
       var curr = this.options.Palette, hpainter = this;
       if ((curr===null) || (curr===0)) curr = JSROOT.gStyle.Palette;
 
@@ -1593,10 +1593,8 @@
 
       var main = this.frame_painter();
 
-      if (main && (main.mode3d !== this.options.Mode3D)) {
-         // that to do with that case
+      if (main && (main.mode3d !== this.options.Mode3D) && !this.is_main_painter())
          this.options.Mode3D = main.mode3d;
-      }
 
       var funcname = this.options.Mode3D ? "Draw3D" : "Draw2D";
 
@@ -2069,8 +2067,7 @@
                .attr("fill", handle.palette.getColor(colindx))
                .attr("d", colPaths[colindx]);
 
-      if (this.is_main_painter())
-         this.UpdatePaletteDraw();
+      this.UpdatePaletteDraw();
 
       return handle;
    }
@@ -3402,9 +3399,8 @@
 
       var main = this.frame_painter();
 
-      //if (this.options.Mode3D !== main.mode3d) {
-      //   this.options.Mode3D = main.mode3d;
-      //}
+      if (main && (main.mode3d !== this.options.Mode3D) && !this.is_main_painter())
+         this.options.Mode3D = main.mode3d;
 
       var funcname = this.options.Mode3D ? "Draw3D" : "Draw2D";
 
@@ -3428,22 +3424,27 @@
                           Color: false, Scat: false, ScatCoef: 1, Candle: "", Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0,
                           minimum: -1111, maximum: -1111 };
 
-      var EDrawKind = { kColor: 1, kLego: 2 };
+      var kind = painter.v7EvalAttr("kind", "col"),
+          sub = painter.v7EvalAttr("sub", 0),
+          o = painter.options;
 
-      if (obj.fDrawKind == EDrawKind.kLego) {
-         painter.options.Lego = 12; // force for the moment
-         painter.options.Mode3D = true; // enable 3D
-      } else {
-         painter.options.Color = true;
+      o.Text = painter.v7EvalAttr("text", false);
+
+      switch(kind) {
+         case "lego": o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;
+         case "surf": o.Surf = sub > 0 ? 10+sub : 1; o.Mode3D = true; break;
+         case "err": o.Error = true; o.Mode3D = true; break;
+         case "cont": o.Contour = sub > 0 ? 10+sub : 1; break;
+         default: o.Color = true;
       }
 
       // here we deciding how histogram will look like and how will be shown
       // painter.DecodeOptions(opt);
 
-      //if (painter.IsTH2Poly()) {
-      //   if (painter.options.Mode3D) painter.options.Lego = 12; // lego always 12
-      //   else if (!painter.options.Color) painter.options.Color = true; // default is color
-      //}
+      if (painter.IsTH2Poly()) {
+         if (o.Mode3D) o.Lego = 12;
+                  else o.Color = true;
+      }
 
       painter._show_empty_bins = false;
 

@@ -78,6 +78,7 @@ template <int DIMENSIONS> inline RHistDrawable<DIMENSIONS>::RHistDrawable() : RD
 
 class RHist1Drawable final : public RHistDrawable<1> {
 private:
+
    RAttrLine  fAttrLine{this, "line_"};        ///<! line attributes
 
 public:
@@ -87,15 +88,19 @@ public:
    RHist1Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<1>(hist) {}
 
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RHistDrawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
+   RHist1Drawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
    RAttrLine &AttrLine() { return fAttrLine; }
 };
 
 
 class RHist2Drawable final : public RHistDrawable<2> {
-   enum EDrawKind { kColor = 1, kLego = 2 };
+   class RHist2Attrs final : public RAttrBase {
+      friend class RHist2Drawable;
+      R__ATTR_CLASS(RHist2Attrs, "", AddString("kind","").AddInt("sub",0).AddBool("text", false));
+   };
 
-   int fDrawKind{kColor};        ///< histogram drawing kind
+   RHist2Attrs fAttr{this, ""};           ///<! hist2 direct attributes
+   RAttrLine   fAttrLine{this, "line_"};  ///<! line attributes, used for error or some lego plots
 
 public:
    RHist2Drawable() = default;
@@ -103,8 +108,16 @@ public:
    template <class HIST>
    RHist2Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<2>(hist) {}
 
-   RHist2Drawable &Color() { fDrawKind = kColor; return *this; }
-   RHist2Drawable &Lego() { fDrawKind = kLego; return *this; }
+   RHist2Drawable &Color() { fAttr.SetValue("kind", std::string("col")); fAttr.ClearValue("sub"); return *this; }
+   RHist2Drawable &Lego(int kind = 0) { fAttr.SetValue("kind", std::string("lego")); fAttr.SetValue("sub", kind); return *this; }
+   RHist2Drawable &Surf(int kind = 0) { fAttr.SetValue("kind", std::string("surf")); fAttr.SetValue("sub", kind); return *this; }
+   RHist2Drawable &Error() { fAttr.SetValue("kind", std::string("err")); fAttr.ClearValue("sub"); return *this; }
+   RHist2Drawable &Contour(int kind = 0) { fAttr.SetValue("kind", std::string("cont")); fAttr.SetValue("sub", kind); return *this; }
+   RHist2Drawable &Text(bool on = true) { fAttr.SetValue("text", on); return *this; }
+
+   const RAttrLine &GetAttrLine() const { return fAttrLine; }
+   RHist2Drawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
+   RAttrLine &AttrLine() { return fAttrLine; }
 };
 
 
