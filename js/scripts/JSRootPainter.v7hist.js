@@ -3378,7 +3378,7 @@
 
    RH2Painter.prototype.Draw3D = function(call_back, reason) {
       this.mode3d = true;
-      JSROOT.AssertPrerequisites('hist3d', function() {
+      JSROOT.AssertPrerequisites('v7hist3d', function() {
          this.Draw3D(call_back, reason);
       }.bind(this));
    }
@@ -3387,9 +3387,9 @@
 
       var main = this.frame_painter();
 
-      if (this.options.Mode3D !== main.mode3d) {
-         this.options.Mode3D = main.mode3d;
-      }
+      //if (this.options.Mode3D !== main.mode3d) {
+      //   this.options.Mode3D = main.mode3d;
+      //}
 
       var funcname = this.options.Mode3D ? "Draw3D" : "Draw2D";
 
@@ -3410,20 +3410,25 @@
                           Line: false, Fill: false, Lego: 0, Surf: 0,
                           Text: true, TextAngle: 0, TextKind: "",
                           fBarOffset: 0, fBarWidth: 1000, BaseLine: false, Mode3D: false, AutoColor: 0,
-                          Color: false, Scat: false, ScatCoef: 1, Candle: "", Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0 };
+                          Color: false, Scat: false, ScatCoef: 1, Candle: "", Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0,
+                          minimum: -1111, maximum: -1111 };
 
-      // FIXME: options are changed now in ROOT7 part, need to adjust here;
-      //if (obj.fOpts.fStyle.fIdx == 1) painter.options.Box = true;
-      //                           else painter.options.Color = true;
-      painter.options.Color = true;
+      var EDrawKind = { kColor: 1, kLego: 2 };
+
+      if (obj.fDrawKind == EDrawKind.kLego) {
+         painter.options.Lego = 12; // force for the moment
+         painter.options.Mode3D = true; // enable 3D
+      } else {
+         painter.options.Color = true;
+      }
 
       // here we deciding how histogram will look like and how will be shown
-      painter.DecodeOptions(opt);
+      // painter.DecodeOptions(opt);
 
-      if (painter.IsTH2Poly()) {
-         if (painter.options.Mode3D) painter.options.Lego = 12; // lego always 12
-         else if (!painter.options.Color) painter.options.Color = true; // default is color
-      }
+      //if (painter.IsTH2Poly()) {
+      //   if (painter.options.Mode3D) painter.options.Lego = 12; // lego always 12
+      //   else if (!painter.options.Color) painter.options.Color = true; // default is color
+      //}
 
       painter._show_empty_bins = false;
 

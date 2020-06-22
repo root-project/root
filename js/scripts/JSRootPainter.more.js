@@ -3309,7 +3309,7 @@
 
       // if there is auto colors assignment, try to provide it
       if (this._pfc || this._plc || this._pmc) {
-         if (!this.pallette && JSROOT.Painter.GetColorPalette)
+         if (!this.palette && JSROOT.Painter.GetColorPalette)
             this.palette = JSROOT.Painter.GetColorPalette();
          if (this.palette) {
             var color = this.palette.calcColor(indx, graphs.arr.length+1);
