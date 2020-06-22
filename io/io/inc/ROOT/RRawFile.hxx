@@ -160,6 +160,8 @@ public:
    void Seek(std::uint64_t offset);
    /// Returns the size of the file
    std::uint64_t GetSize();
+   /// Returns the url of the file
+   std::string GetUrl() const;
 
    /// Opens the file if necessary and calls ReadVImpl
    void ReadV(RIOVec *ioVec, unsigned int nReq);

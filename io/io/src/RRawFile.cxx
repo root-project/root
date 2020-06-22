@@ -129,6 +129,10 @@ std::uint64_t ROOT::Internal::RRawFile::GetSize()
    return fFileSize;
 }
 
+std::string ROOT::Internal::RRawFile::GetUrl() const {
+   return fUrl;
+}
+
 std::string ROOT::Internal::RRawFile::GetTransport(std::string_view url)
 {
    auto idx = url.find(kTransportSeparator);

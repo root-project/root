@@ -16,7 +16,7 @@ TEST(MiniFile, Raw)
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
-   auto ntuple = reader.GetNTuple("MyNTuple");
+   auto ntuple = reader.GetNTuple("MyNTuple").Get();
    EXPECT_EQ(offHeader, ntuple.fSeekHeader);
    EXPECT_EQ(offFooter, ntuple.fSeekFooter);
 
@@ -46,7 +46,7 @@ TEST(MiniFile, Stream)
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
-   auto ntuple = reader.GetNTuple("MyNTuple");
+   auto ntuple = reader.GetNTuple("MyNTuple").Get();
    EXPECT_EQ(offHeader, ntuple.fSeekHeader);
    EXPECT_EQ(offFooter, ntuple.fSeekFooter);
 
@@ -82,7 +82,7 @@ TEST(MiniFile, Proper)
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
-   auto ntuple = reader.GetNTuple("MyNTuple");
+   auto ntuple = reader.GetNTuple("MyNTuple").Get();
    EXPECT_EQ(offHeader, ntuple.fSeekHeader);
    EXPECT_EQ(offFooter, ntuple.fSeekFooter);
 
@@ -122,10 +122,10 @@ TEST(MiniFile, Multi)
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
-   auto ntuple1 = reader.GetNTuple("FirstNTuple");
+   auto ntuple1 = reader.GetNTuple("FirstNTuple").Get();
    EXPECT_EQ(offHeader1, ntuple1.fSeekHeader);
    EXPECT_EQ(offFooter1, ntuple1.fSeekFooter);
-   auto ntuple2 = reader.GetNTuple("SecondNTuple");
+   auto ntuple2 = reader.GetNTuple("SecondNTuple").Get();
    EXPECT_EQ(offHeader2, ntuple2.fSeekHeader);
    EXPECT_EQ(offFooter2, ntuple2.fSeekFooter);
 
@@ -164,5 +164,11 @@ TEST(MiniFile, Failures)
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
-   EXPECT_DEATH(reader.GetNTuple("No such NTiple"), ".*");
+   RNTuple ntuple;
+   try {
+      ntuple = reader.GetNTuple("No such NTuple").Get();
+      FAIL() << "bad ntuple names should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("no NTuple named 'No such NTuple' in file '" + fileGuard.GetPath()));
+   }
 }

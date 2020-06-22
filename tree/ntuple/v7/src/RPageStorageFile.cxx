@@ -224,7 +224,11 @@ ROOT::Experimental::Detail::RPageSourceFile::~RPageSourceFile()
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::AttachImpl()
 {
    RNTupleDescriptorBuilder descBuilder;
-   const auto fNTuple = fReader.GetNTuple(fNTupleName);
+   auto ntplRes = fReader.GetNTuple(fNTupleName);
+   if (!ntplRes) {
+      ntplRes.Throw();
+   }
+   const auto fNTuple = ntplRes.Get();
 
    auto buffer = std::unique_ptr<unsigned char[]>(new unsigned char[fNTuple.fLenHeader]);
    auto zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[fNTuple.fNBytesHeader]);

@@ -901,7 +901,8 @@ ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(ROOT::Internal::R
 {
 }
 
-ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntupleName)
+ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
+ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntupleName)
 {
    char ident[4];
    ReadBuffer(ident, 4, 0);
@@ -912,7 +913,8 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
 }
 
 
-ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntupleName)
+ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
+ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntupleName)
 {
    RTFHeader fileHeader;
    ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
@@ -950,7 +952,10 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
       }
       offset = offsetNextKey;
    }
-   R__ASSERT(found);
+   if (!found) {
+      return R__FAIL("no NTuple named '" + std::string(ntupleName)
+         + "' in file '" + fRawFile->GetUrl() + "'");
+   }
 
    ReadBuffer(&key, sizeof(key), key.GetSeekKey());
    offset = key.GetSeekKey() + key.fKeyLen;
@@ -959,7 +964,8 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
    return ntuple.ToRNTuple();
 }
 
-ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view ntupleName)
+ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
+ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view ntupleName)
 {
    RBareFileHeader fileHeader;
    ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
@@ -967,7 +973,12 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
    auto offset = sizeof(fileHeader);
    ReadBuffer(&name, 1, offset);
    ReadBuffer(&name, name.GetSize(), offset);
-   R__ASSERT(std::string_view(name.fData, name.fLName) == ntupleName);
+   std::string_view foundName(name.fData, name.fLName);
+   if (foundName != ntupleName) {
+      return R__FAIL("expected NTuple named '" + std::string(ntupleName)
+         + "' but instead found NTuple named '" + std::string(foundName)
+         + "' in file '" + fRawFile->GetUrl() + "'");
+   }
    offset += name.GetSize();
 
    RTFNTuple ntuple;
