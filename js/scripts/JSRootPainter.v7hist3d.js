@@ -1056,23 +1056,10 @@
       }
    }
 
-   /** Draw 1D/2D histograms in 3D mode @private */
-   JSROOT.v7.RHistPainter.prototype.Draw3DBins = function() {
+   /** Draw 1D/2D histograms in Lego mode @private */
+   JSROOT.v7.RHistPainter.prototype.DrawLego = function() {
 
       if (!this.draw_content) return;
-
-/*      if (this.IsTH2Poly() && this.DrawPolyLego)
-         return this.DrawPolyLego();
-
-      if ((this.Dimension()==2) && this.options.Contour && this.DrawContour3D)
-         return this.DrawContour3D(true);
-
-      if ((this.Dimension()==2) && this.options.Surf && this.DrawSurf)
-         return this.DrawSurf();
-
-      if ((this.Dimension()==2) && this.options.Error && this.DrawError)
-         return this.DrawError();
-*/
 
       // Perform RH1/RH2 lego plot with BufferGeometry
 
@@ -1135,9 +1122,8 @@
          palette = main.GetPalette();
          this.CreateContour(main, palette, { full_z_range: true });
          levels = palette.GetContour();
-         // levels = this.CreateContour(histo.fContour ? histo.fContour.length : 20, main.lego_zmin, main.lego_zmax);
-         //axis_zmin = levels[0];
-         //axis_zmax = levels[levels.length-1];
+         axis_zmin = levels[0];
+         axis_zmax = levels[levels.length-1];
       }
 
       for (var nlevel=0; nlevel<levels.length-1;++nlevel) {
@@ -1390,12 +1376,10 @@
 
             if (uselineindx) {
                // array of indicies for the lines, to avoid duplication of points
-               for (k=0; k < seg.length; ++k) {
-//                  intersect_index[ii] = bin_index;
+               for (k = 0; k < seg.length; ++k)
                   lindicies[ii++] = ll/3 + seg[k];
-               }
 
-               for (k=0; k < vvv.length; ++k) {
+               for (k = 0; k < vvv.length; ++k) {
                   vert = vvv[k];
                   lpositions[ll]   = x1 + vert.x * (x2 - x1);
                   lpositions[ll+1] = y1 + vert.y * (y2 - y1);
@@ -1404,12 +1388,11 @@
                }
             } else {
                // copy only vertex positions
-               for (k=0; k < seg.length; ++k) {
+               for (k = 0; k < seg.length; ++k) {
                   vert = vvv[seg[k]];
                   lpositions[ll]   = x1 + vert.x * (x2 - x1);
                   lpositions[ll+1] = y1 + vert.y * (y2 - y1);
                   lpositions[ll+2] = z1 + vert.z * (z2 - z1);
-//                  intersect_index[ll/3] = bin_index;
                   ll+=3;
                }
             }
@@ -1417,9 +1400,9 @@
       }
 
       // create boxes
-      var lcolor = this.get_color(7/*histo.fLineColor*/);
+      var lcolor = this.v7EvalColor("line_color", "lightblue");
       material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) });
-      if (!JSROOT.browser.isIE) material.linewidth = 1; // histo.fLineWidth;
+      if (!JSROOT.browser.isIE) material.linewidth = this.v7EvalAttr("line_width", 1);
 
       var line = JSROOT.Painter.createLineSegments(lpositions, material, uselineindx ? lindicies : null );
 
@@ -1502,7 +1485,8 @@
          }
 
          if (main.mode3d) {
-            this.Draw3DBins();
+            this.DrawLego();
+            this.UpdatePaletteDraw();
             main.Render3D();
             this.UpdateStatWebCanvas();
             main.AddKeysHandler();
@@ -1571,14 +1555,61 @@
       JSROOT.CallBack(call_back);
    }
 
+   /** Draw histogram bins in 3D, using provided draw options @private */
+   JSROOT.v7.RH2Painter.prototype.Draw3DBins = function() {
+
+      if (!this.draw_content) return;
+
+      if (this.IsTH2Poly())
+         return this.DrawPolyLego();
+
+      if (this.options.Surf)
+         return this.DrawSurf();
+
+      if (this.options.Error)
+         return this.DrawError();
+
+      if (this.options.Contour)
+         return this.DrawContour3D(true);
+
+      this.DrawLego();
+      this.UpdatePaletteDraw();
+   }
+
+   // ==============================================================================
+
+   function v7Create3DLineMaterial(painter, prefix) {
+      if (!painter) return null;
+      if (!prefix) prefix = "line_"
+
+      var lcolor = painter.v7EvalColor(prefix+"color", "black"),
+          lstyle = painter.v7EvalAttr(prefix+"style", 0),
+          lwidth = painter.v7EvalAttr(prefix+"width", 1),
+          material = null,
+          style = lstyle ? JSROOT.Painter.root_line_styles[parseInt(lstyle)] : "",
+          dash = style ? style.split(",") : [];
+
+      if (dash && dash.length>=2)
+         material = new THREE.LineDashedMaterial({ color: lcolor, dashSize: parseInt(dash[0]), gapSize: parseInt(dash[1]) });
+      else
+         material = new THREE.LineBasicMaterial({ color: lcolor });
+
+      if (lwidth && (lwidth>1) && !JSROOT.browser.isIE) material.linewidth = parseInt(lwidth);
+
+      return material;
+   }
+
    JSROOT.v7.RH2Painter.prototype.DrawContour3D = function(realz) {
       // for contour plots one requires handle with full range
       var main = this.frame_painter(),
           handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 }),
           histo = this.GetHisto(), // get levels
-          levels = this.GetContour(), // init contour if not exists
-          palette = this.GetPalette(),
+          palette = main.GetPalette(),
           layerz = 2*main.size_z3d, pnts = [];
+
+      this.CreateContour(main, palette, { full_z_range: true });
+
+      var levels = palette.GetContour();
 
       this.BuildContour(handle, levels, palette,
          function(colindx,xp,yp,iminus,iplus,ilevel) {
@@ -1595,9 +1626,9 @@
                 pnts.push(xp[i+1], yp[i+1], layerz);
              }
          }
-      );
+      )
 
-      var lines = JSROOT.Painter.createLineSegments(pnts, JSROOT.Painter.Create3DLineMaterial(this, histo));
+      var lines = JSROOT.Painter.createLineSegments(pnts, v7Create3DLineMaterial(this));
       main.toplevel.add(lines);
    }
 
@@ -1616,16 +1647,23 @@
       if ((handle.i2 - handle.i1 < 2) || (handle.j2 - handle.j1 < 2)) return;
 
       var ilevels = null, levels = null, dolines = true, dogrid = false,
-          donormals = false, palette = null;
+          donormals = false, palette = null, need_palette = 0;
 
       switch(this.options.Surf) {
-         case 11: ilevels = this.GetContour(); palette = this.GetPalette(); break;
+         case 11: need_palette = 2; break;
          case 12:
          case 15: // make surf5 same as surf2
-         case 17: ilevels = this.GetContour(); palette = this.GetPalette(); dolines = false; break;
+         case 17: need_palette = 2; dolines = false; break;
          case 14: dolines = false; donormals = true; break;
-         case 16: ilevels = this.GetContour(); dogrid = true; dolines = false; break;
+         case 16: need_palette = 1; dogrid = true; dolines = false; break;
          default: ilevels = main.z_handle.CreateTicks(true); dogrid = true; break;
+      }
+
+      if (need_palette > 0) {
+         palette = main.GetPalette();
+         if (need_palette == 2)
+            this.CreateContour(main, palette, { full_z_range: true });
+         ilevels = palette.GetContour();
       }
 
       if (ilevels) {
@@ -1887,7 +1925,7 @@
 
             var fcolor, material;
             if (palette) {
-               fcolor = palette.calcColor(lvl, levels.length);
+               fcolor = palette.getColor(lvl);
             } else {
                fcolor = 5 /*histo.fFillColor*/ > 1 ? this.get_color(5/*histo.fFillColor*/) : 'white';
                if ((this.options.Surf === 14) && (5/*histo.fFillColor*/<2)) fcolor = this.get_color(48);
@@ -1911,7 +1949,7 @@
 
          var lcolor = this.get_color(7),
              material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) });
-         if (!JSROOT.browser.isIE) material.linewidth = 1; // histo.fLineWidth;
+         if (!JSROOT.browser.isIE) material.linewidth = this.v7EvalAttr("line_width", 1);
          var line = JSROOT.Painter.createLineSegments(lpos, material);
          line.painter = this;
          main.toplevel.add(line);
@@ -1926,7 +1964,7 @@
          if (this.options.Surf === 1)
             material = new THREE.LineDashedMaterial( { color: 0x0, dashSize: 2, gapSize: 2 } );
          else
-            material = new THREE.LineBasicMaterial({ color: new THREE.Color(this.get_color(7/*histo.fLineColor*/)) });
+            material = new THREE.LineBasicMaterial({ color: new THREE.Color(this.v7EvalColor("line_color", "lightblue")) });
 
          var line = JSROOT.Painter.createLineSegments(grid, material);
          line.painter = this;
@@ -2001,6 +2039,8 @@
             }
          );
       }
+
+      this.UpdatePaletteDraw();
    }
 
    JSROOT.v7.RH2Painter.prototype.DrawError = function() {
@@ -2068,17 +2108,17 @@
        }
 
        // create lines
-       var lcolor = this.get_color(7 /*this.GetObject().fLineColor*/),
-           material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) }),
+       var lcolor = new THREE.Color(this.v7EvalColor("line_color", "lightblue")),
+           material = new THREE.LineBasicMaterial({ color: lcolor }),
            line = JSROOT.Painter.createLineSegments(lpos, material);
 
-       if (!JSROOT.browser.isIE) material.linewidth = this.GetObject().fLineWidth;
+       if (!JSROOT.browser.isIE) material.linewidth = this.v7EvalAttr("line_width", 1);
 
        line.painter = this;
        line.intersect_index = binindx;
        line.zmin = zmin;
        line.zmax = zmax;
-       line.tip_color = (/*this.GetObject().fLineColor*/ 7 === 3) ? 0xFF0000 : 0x00FF00;
+       line.tip_color = (lcolor.g < 0.5) ? 0x00FF00 : 0xFF0000;
 
        line.tooltip = function(intersect) {
           if (isNaN(intersect.index)) {
@@ -2889,7 +2929,7 @@
          main.toplevel.add(combined_bins);
 
          if (helper_kind[nseq] > 0) {
-            var lcolor = this.get_color(7 /*this.GetObject().fLineColor*/),
+            var lcolor = this.v7EvalColor("line_color", "lightblue"),
                 helper_material = new THREE.LineBasicMaterial( { color: lcolor } ),
                 lines = null;
 

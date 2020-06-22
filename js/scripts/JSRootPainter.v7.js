@@ -23,7 +23,7 @@
 
    JSROOT.v7 = {}; // placeholder for v7-relevant code
 
-   /** Evalue attributes using fAttr storage and configured RStyle */
+   /** Evaluate attributes using fAttr storage and configured RStyle */
    JSROOT.TObjectPainter.prototype.v7EvalAttr = function(name, dflt) {
       var obj = this.GetObject();
       if (!obj) return dflt;
@@ -120,7 +120,7 @@
       return Math.round(norm*sizepx + px);
    }
 
-   /** Evalue RColor using attribute storage and configured RStyle */
+   /** Evaluate RColor using attribute storage and configured RStyle */
    JSROOT.TObjectPainter.prototype.v7EvalColor = function(name, dflt) {
       var rgb = this.v7EvalAttr(name + "_rgb", "");
 
