@@ -68,7 +68,7 @@
             }
 
          } else {
-            histo.getBin = function(bin) { return bin; }
+            histo.getBin = function(bin) { return bin-1; }
             // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no undeflow/overflow bins now
             histo.getBinContent = function(bin) { return this.fStatistics.fBinContent[bin-1]; }
             histo.getBinError = function(bin) {
@@ -350,22 +350,22 @@
           tip = { bin: indx, name: histo.fName || "histo", title: histo.fTitle };
       switch (this.Dimension()) {
          case 1:
-            tip.ix = indx; tip.iy = 1;
+            tip.ix = indx + 1; tip.iy = 1;
             tip.value = histo.getBinContent(tip.ix);
             tip.error = histo.getBinError(indx);
             tip.lines = this.GetBinTips(indx-1);
             break;
          case 2:
-            tip.ix = indx % (this.nbinsx + 2);
-            tip.iy = (indx - tip.ix) / (this.nbinsx + 2);
+            tip.ix = (indx % this.nbinsx) + 1;
+            tip.iy = (indx - (tip.ix - 1)) / this.nbinsx + 1;
             tip.value = histo.getBinContent(tip.ix, tip.iy);
             tip.error = histo.getBinError(indx);
             tip.lines = this.GetBinTips(tip.ix-1, tip.iy-1);
             break;
          case 3:
-            tip.ix = indx % (this.nbinsx+2);
-            tip.iy = ((indx - tip.ix) / (this.nbinsx+2)) % (this.nbinsy+2);
-            tip.iz = (indx - tip.ix - tip.iy * (this.nbinsx+2)) / (this.nbinsx+2) / (this.nbinsy+2);
+            tip.ix = indx % this.nbinsx + 1;
+            tip.iy = ((indx - (tip.ix - 1)) / this.nbinsx) % this.nbinsy + 1;
+            tip.iz = (indx - (tip.ix - 1) - (tip.iy - 1) * this.nbinsx) / this.nbinsx / this.nbinsy + 1;
             tip.value = this.GetObject().getBinContent(tip.ix, tip.iy, tip.iz);
             tip.error = histo.getBinError(indx);
             tip.lines = this.GetBinTips(tip.ix-1, tip.iy-1, tip.iz-1);
@@ -376,13 +376,13 @@
    }
 
    /** Create contour levels for currently selected Z range @private */
-   RHistPainter.prototype.CreateContour = function(main, palette, scatter_plot) {
+   RHistPainter.prototype.CreateContour = function(main, palette, args) {
       if (!main || !palette) return;
 
       var nlevels = JSROOT.gStyle.fNumberContours,
           zmin = this.minbin, zmax = this.maxbin, zminpos = this.minposbin;
 
-      if (scatter_plot) {
+      if (args && args.scatter_plot) {
          if (nlevels > 50) nlevels = 50;
          zmin = this.minposbin;
       }
@@ -392,6 +392,11 @@
       if (main.zoom_zmin !== main.zoom_zmax) {
          zmin = main.zoom_zmin;
          zmax = main.zoom_zmax;
+      }
+
+      if (args && args.full_z_range) {
+         zmin = main.zmin;
+         zmax = main.zmax;
       }
 
       palette.CreateContour(main.logz, nlevels, zmin, zmax, zminpos);
@@ -569,13 +574,13 @@
              j2: (hdim===1) ? 1 : this.GetSelectIndex("y", "right", 1 + args.extra),
              min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1
           };
-      res.grx = new Float32Array(res.i2+1);
-      res.gry = new Float32Array(res.j2+1);
+      res.grx = new Array(res.i2+1); // no need for Float32Array, plain Array is 10% faster
+      res.gry = new Array(res.j2+1);
 
       if (args.original) {
          res.original = true;
-         res.origx = new Float32Array(res.i2+1);
-         res.origy = new Float32Array(res.j2+1);
+         res.origx = new Array(res.i2+1);
+         res.origy = new Array(res.j2+1);
       }
 
       if (args.pixel_density) args.rounding = true;
@@ -594,6 +599,11 @@
          }
       }
 
+      if (args.use3d) {
+         if ((res.i1 < res.i2-2) && (res.grx[res.i1] == res.grx[res.i1+1])) res.i1++;
+         if ((res.i1 < res.i2-2) && (res.grx[res.i2-1] == res.grx[res.i2])) res.i2--;
+      }
+
       if (hdim===1) {
          res.gry[0] = pmain.gry(0);
          res.gry[1] = pmain.gry(1);
@@ -609,6 +619,11 @@
             if (res.gry[j] < -pmain.size_xy3d) { res.j1 = j; res.gry[j] = -pmain.size_xy3d; }
             if (res.gry[j] > pmain.size_xy3d) { res.j2 = j; res.gry[j] = pmain.size_xy3d; }
          }
+      }
+
+      if (args.use3d && (hdim > 1)) {
+         if ((res.j1 < res.j2-2) && (res.gry[res.j1] == res.gry[res.j1+1])) res.j1++;
+         if ((res.j1 < res.j2-2) && (res.gry[res.j2-1] == res.gry[res.j2])) res.j2--;
       }
 
       //  find min/max values in selected range
@@ -642,7 +657,7 @@
       res.palette = pmain.GetPalette();
 
       if (res.palette)
-         this.CreateContour(pmain, res.palette, args.scatter_plot);
+         this.CreateContour(pmain, res.palette, args);
 
       return res;
    }

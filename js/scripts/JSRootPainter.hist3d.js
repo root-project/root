@@ -28,7 +28,7 @@
    if (typeof JSROOT.THistPainter === 'undefined')
       throw new Error('JSROOT.THistPainter is not defined', 'JSRootPainter.hist3d.js');
 
-   JSROOT.TFramePainter.prototype.SetCameraPosition = function(pad, first_time) {
+   JSROOT.TFramePainter.prototype.SetCameraPosition = function(first_time, pad) {
       var max3d = Math.max(0.75*this.size_xy3d, this.size_z3d);
 
       if (first_time)
@@ -108,7 +108,7 @@
 
          this.Resize3D(); // set actual sizes
 
-         this.SetCameraPosition(this.root_pad(), false);
+         this.SetCameraPosition(false, this.root_pad());
 
          return;
       }
@@ -142,7 +142,7 @@
       this.camera.up = new THREE.Vector3(0,0,1);
       this.scene.add( this.camera );
 
-      this.SetCameraPosition(this.root_pad(), true);
+      this.SetCameraPosition(true, this.root_pad());
 
       var res = JSROOT.Painter.Create3DRenderer(this.scene_width, this.scene_height, this.usesvg, (sz.can3d == 4));
 
@@ -1299,7 +1299,7 @@
 
          mesh.tooltip = function(intersect) {
             if (isNaN(intersect.faceIndex)) {
-               console.error('faceIndex not provided, check three.js version', THREE.REVISION, 'expected r97');
+               console.error('faceIndex not provided, check three.js version', THREE.REVISION, 'expected r102');
                return null;
             }
 
@@ -2104,7 +2104,7 @@
 
        line.tooltip = function(intersect) {
           if (isNaN(intersect.index)) {
-             console.error('segment index not provided, check three.js version', THREE.REVISION, 'expected r97');
+             console.error('segment index not provided, check three.js version', THREE.REVISION, 'expected r102');
              return null;
           }
 
@@ -2589,7 +2589,7 @@
 
       mesh.tooltip = function(intersect) {
          if (isNaN(intersect.index)) {
-            console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r97');
+            console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r102');
             return null;
          }
 
@@ -2884,7 +2884,7 @@
 
          combined_bins.tooltip = function(intersect) {
             if (isNaN(intersect.faceIndex)) {
-               console.error('intersect.faceIndex not provided, check three.js version', THREE.REVISION, 'expected r97');
+               console.error('intersect.faceIndex not provided, check three.js version', THREE.REVISION, 'expected r102');
                return null;
             }
             var indx = Math.floor(intersect.faceIndex / this.bins_faces);
@@ -3153,7 +3153,7 @@
 
    TGraph2DPainter.prototype.Graph2DTooltip = function(intersect) {
       if (isNaN(intersect.index)) {
-         console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r97');
+         console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r102');
          return null;
       }
 
@@ -3509,7 +3509,7 @@
 
             mesh.tooltip = function(intersect) {
                if (isNaN(intersect.index)) {
-                  console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r97');
+                  console.error('intersect.index not provided, check three.js version', THREE.REVISION, 'expected r102');
                   return null;
                }
                var indx = Math.floor(intersect.index / this.nvertex);
