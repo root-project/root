@@ -3497,6 +3497,10 @@ gOptModuleByproducts("mByproduct", llvm::cl::ZeroOrMore,
                      llvm::cl::Hidden,
                      llvm::cl::desc("The list of the expected implicit modules build as part of building the current module."),
                      llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<std::string>
+gOptDictionaryFileName(llvm::cl::Positional, llvm::cl::Required,
+                      llvm::cl::desc("<output dictionary file>"),
+                      llvm::cl::cat(gRootclingOptions));
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom diag client for clang that verifies that each implicitly build module
@@ -3569,9 +3573,10 @@ public:
       if (ID == remark_module_build && !isByproductModule) {
          ROOT::TMetaUtils::Error(0,
                                  "Building module '%s' implicitly. If '%s' requires a \n"
-                                 "dictionary please fix the build dependencies.\n"
-                                 "Otherwise, specify -mByproduct %s to disable this diagnostic.\n",
-                                 moduleName.c_str(), moduleName.c_str(), moduleName.c_str());
+                                 "dictionary please specify build dependency: '%s' depends on '%s'.\n"
+                                 "Otherwise, specify '-mByproduct %s' to disable this diagnostic.\n",
+                                 moduleName.c_str(), moduleName.c_str(), gOptDictionaryFileName.c_str(),
+                                 moduleName.c_str(), moduleName.c_str());
       }
    }
 
@@ -3667,10 +3672,6 @@ gOptGeneratePCH("generate-pch",
                llvm::cl::desc("Generates a pch file from a predefined set of headers. See makepch.py."),
                llvm::cl::Hidden,
                llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<std::string>
-gOptDictionaryFileName(llvm::cl::Positional, llvm::cl::Required,
-                      llvm::cl::desc("<output dictionary file>"),
-                      llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<bool>
 gOptC("c", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
      llvm::cl::cat(gRootclingOptions));
