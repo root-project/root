@@ -953,7 +953,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
       offset = offsetNextKey;
    }
    if (!found) {
-      return R__FAIL("no NTuple named '" + std::string(ntupleName)
+      return R__FAIL("no RNTuple named '" + std::string(ntupleName)
          + "' in file '" + fRawFile->GetUrl() + "'");
    }
 
@@ -975,8 +975,8 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view nt
    ReadBuffer(&name, name.GetSize(), offset);
    std::string_view foundName(name.fData, name.fLName);
    if (foundName != ntupleName) {
-      return R__FAIL("expected NTuple named '" + std::string(ntupleName)
-         + "' but instead found NTuple named '" + std::string(foundName)
+      return R__FAIL("expected RNTuple named '" + std::string(ntupleName)
+         + "' but instead found '" + std::string(foundName)
          + "' in file '" + fRawFile->GetUrl() + "'");
    }
    offset += name.GetSize();
