@@ -4320,7 +4320,7 @@ int RootClingMain(int argc,
    if (gOptCxxModule) {
       for (llvm::StringRef DepMod : gOptModuleDependencies) {
          if (DepMod.endswith("_rdict.pcm")) {
-            ROOT::TMetaUtils::Warning(0, "'%s' value is deprecated. Please use [<fullpat>]%s.pcm\n",
+            ROOT::TMetaUtils::Warning(0, "'%s' value is deprecated. Please use [<fullpath>]%s.pcm\n",
                                       DepMod.data(),
                                       GetModuleNameFromRdictName(DepMod).str().data());
          }
