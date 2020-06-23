@@ -109,6 +109,5 @@ ROOTTEST_ADD_TEST(execMissingCheckSum
 ROOTTEST_ADD_TEST(runforeign
                   MACRO runforeign.C
                   OUTREF  foreign.ref
-                  ${MIGHT_FAIL}
                   DEPENDS data1 data2 data3 data4)
 ROOTTEST_ADD_TESTDIRS()
