@@ -14,7 +14,7 @@
 
 #include "TSQLServer.h"
 
-#include <sqlite3.h>
+class sqlite3;
 
 class TSQLiteServer : public TSQLServer {
 
