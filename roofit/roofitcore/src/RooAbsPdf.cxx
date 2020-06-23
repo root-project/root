@@ -3136,7 +3136,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
 ///   | `const char* what`     |  Controls what is shown. "N" adds name, "E" adds error, "A" shows asymmetric error, "U" shows unit, "H" hides the value
 ///   | `FixedPrecision(int n)`|  Controls precision, set fixed number of digits
 ///   | `AutoPrecision(int n)` |  Controls precision. Number of shown digits is calculated from error + n specified additional digits (1 is sensible default)
-/// <tr><td> `Label(const chat* label)`           <td>  Add header label to parameter box
+/// <tr><td> `Label(const chat* label)`           <td>  Add label to parameter box. Use `\n` for multi-line labels.
 /// <tr><td> `Layout(Double_t xmin, Double_t xmax, Double_t ymax)` <td>  Specify relative position of left/right side of box and top of box.
 ///                                                                      Coordinates are given as position on the pad between 0 and 1.
 ///                                                                      The lower end of the box is calculated automatically from the number of lines in the box.
@@ -3239,9 +3239,10 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
 /// Add a text box with the current parameter values and their errors to the frame.
 /// Observables of this PDF appearing in the 'data' dataset will be omitted.
 ///
-/// Optional label will be inserted as first line of the text box. Use 'sigDigits'
+/// An optional label will be inserted if passed. Multi-line labels can be generated
+/// by adding `\n` to the label string. Use 'sigDigits'
 /// to modify the default number of significant digits printed. The 'xmin,xmax,ymax'
-/// values specify the initial relative position of the text box in the plot frame
+/// values specify the initial relative position of the text box in the plot frame.
 
 RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t showConstants, const char *label,
 			    Int_t sigDigits, Option_t *options, Double_t xmin,
@@ -3254,15 +3255,16 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
   Bool_t showLabel= (label != 0 && strlen(label) > 0);
 
   // calculate the box's size, adjusting for constant parameters
-  TIterator* pIter = params.createIterator() ;
 
   Double_t ymin(ymax), dy(0.06);
-  RooRealVar *var = 0;
-  while((var=(RooRealVar*)pIter->Next())) {
+  for (const auto param : params) {
+    auto var = static_cast<RooRealVar*>(param);
     if(showConstants || !var->isConstant()) ymin-= dy;
   }
 
-  if(showLabel) ymin-= dy;
+  std::string labelString = label;
+  unsigned int numLines = std::count(labelString.begin(), labelString.end(), '\n') + 1;
+  if (showLabel) ymin -= numLines * dy;
 
   // create the box and set its options
   TPaveText *box= new TPaveText(xmin,ymax,xmax,ymin,"BRNDC");
@@ -3274,22 +3276,26 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
   box->SetTextSize(0.04F);
   box->SetFillStyle(1001);
   box->SetFillColor(0);
-  //char buffer[512];
-  pIter->Reset() ;
-  while((var=(RooRealVar*)pIter->Next())) {
+
+  for (const auto param : params) {
+    auto var = static_cast<const RooRealVar*>(param);
     if(var->isConstant() && !showConstants) continue;
 
     TString *formatted= options ? var->format(sigDigits, options) : var->format(*formatCmd) ;
     box->AddText(formatted->Data());
     delete formatted;
   }
+
   // add the optional label if specified
-  if(showLabel) box->AddText(label);
+  if (showLabel) {
+    for (const auto& line : RooHelpers::tokenise(label, "\n")) {
+      box->AddText(line.c_str());
+    }
+  }
 
   // Add box to frame
   frame->addObject(box) ;
 
-  delete pIter ;
   return frame ;
 }
 
