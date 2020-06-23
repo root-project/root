@@ -2,7 +2,7 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Addition and convolution: fitting and plotting in sub ranges
+/// Fitting and plotting in sub ranges.
 ///
 /// \macro_image
 /// \macro_output
