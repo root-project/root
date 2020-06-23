@@ -166,9 +166,9 @@ TEST(MiniFile, Failures)
    RMiniFileReader reader(rawFile.get());
    RNTuple ntuple;
    try {
-      ntuple = reader.GetNTuple("No such NTuple").Get();
-      FAIL() << "bad ntuple names should throw";
+      ntuple = reader.GetNTuple("No such RNTuple").Get();
+      FAIL() << "bad RNTuple names should throw";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("no NTuple named 'No such NTuple' in file '" + fileGuard.GetPath()));
+      EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named 'No such RNTuple' in file '" + fileGuard.GetPath()));
    }
 }
