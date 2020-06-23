@@ -113,6 +113,7 @@ public:
    RHist2Drawable &Surf(int kind = 0) { fAttr.SetValue("kind", std::string("surf")); fAttr.SetValue("sub", kind); return *this; }
    RHist2Drawable &Error() { fAttr.SetValue("kind", std::string("err")); fAttr.ClearValue("sub"); return *this; }
    RHist2Drawable &Contour(int kind = 0) { fAttr.SetValue("kind", std::string("cont")); fAttr.SetValue("sub", kind); return *this; }
+   RHist2Drawable &Scatter() { fAttr.SetValue("kind", std::string("scat")); fAttr.ClearValue("sub"); return *this; }
    RHist2Drawable &Text(bool on = true) { fAttr.SetValue("text", on); return *this; }
 
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
@@ -122,11 +123,35 @@ public:
 
 
 class RHist3Drawable final : public RHistDrawable<3> {
+   class RHist3Attrs final : public RAttrBase {
+      friend class RHist3Drawable;
+      R__ATTR_CLASS(RHist3Attrs, "", AddString("kind","").AddInt("sub",0));
+   };
+
+   RHist3Attrs fAttr{this, ""};           ///<! hist2 direct attributes
+   RAttrColor fColor{this, "color_"};     ///<! bin color, used which box option
+   RAttrColor fLineColor{this, "line_color_"};     ///<! bin color, used which box option
+
 public:
    RHist3Drawable() = default;
 
    template <class HIST>
    RHist3Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<3>(hist) {}
+
+   RHist3Drawable &Color() { fAttr.SetValue("kind", std::string("col")); fAttr.ClearValue("sub"); return *this; }
+   RHist3Drawable &Box(int kind = 0) { fAttr.SetValue("kind", std::string("box")); fAttr.SetValue("sub", kind); return *this; }
+   RHist3Drawable &Sphere(int kind = 0) { fAttr.SetValue("kind", std::string("sphere")); fAttr.SetValue("sub", kind); return *this; }
+   RHist3Drawable &Scatter() { fAttr.SetValue("kind", std::string("scat")); fAttr.ClearValue("sub"); return *this; }
+
+   /// The color when box option is used
+   RHist3Drawable &SetColor(const RColor &color) { fColor = color; return *this; }
+   RColor GetColor() const { return fColor.GetColor(); }
+   RAttrColor &AttrColor() { return fColor; }
+
+   /// The line color when box option is used
+   RHist3Drawable &SetLineColor(const RColor &color) { fLineColor = color; return *this; }
+   RColor GetLineColor() const { return fLineColor.GetColor(); }
+   RAttrColor &AttrLineColor() { return fLineColor; }
 };
 
 
