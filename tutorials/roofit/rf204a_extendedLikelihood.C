@@ -2,8 +2,6 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #204a
-///
 ///  Extended maximum likelihood fit in multiple ranges.
 ///  When an extended pdf and multiple ranges are used, the
 ///  RooExtendPdf cannot correctly interpret the coefficients
@@ -30,7 +28,7 @@
 using namespace RooFit ;
 
 
-void rf204a_extrangefit_RooAddPdf()
+void rf204a_extendedLikelihood()
 {
 
 
