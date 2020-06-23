@@ -14,7 +14,7 @@
 
 #include "TSQLRow.h"
 
-#include <sqlite3.h>
+class sqlite3_stmt;
 
 class TSQLiteRow : public TSQLRow {
 
