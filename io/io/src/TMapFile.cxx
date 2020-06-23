@@ -1233,9 +1233,12 @@ void TMapFile::operator delete(void *ptr)
 
 TMapFile *TMapFile::WhichMapFile(void *addr)
 {
-   if (!gROOT || !gROOT->GetListOfMappedFiles()) return 0;
+   // Don't use gROOT so that this routine does not trigger TROOT's initialization
+   // This is essentially since this routine is called via operator delete
+   // which is used during RegisterModule (i.e. during library loading).
+   if (!ROOT::Internal::gROOTLocal || !ROOT::Internal::gROOTLocal->GetListOfMappedFiles()) return 0;
 
-   TObjLink *lnk = ((TList *)gROOT->GetListOfMappedFiles())->LastLink();
+   TObjLink *lnk = ((TList *)ROOT::Internal::gROOTLocal->GetListOfMappedFiles())->LastLink();
    while (lnk) {
       TMapFile *mf = (TMapFile*)lnk->GetObject();
       if (!mf) return 0;
