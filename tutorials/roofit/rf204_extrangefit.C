@@ -2,8 +2,6 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #204
-///
 ///  Extended maximum likelihood fit with alternate range definition
 ///  for observed number of events.
 ///  If multiple ranges are used, or only a part of the data is fitted,
