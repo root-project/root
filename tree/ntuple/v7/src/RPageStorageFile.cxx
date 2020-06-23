@@ -228,18 +228,18 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    if (!ntplRes) {
       ntplRes.Throw();
    }
-   const auto fNTuple = ntplRes.Get();
+   const auto ntpl = ntplRes.Get();
 
-   auto buffer = std::unique_ptr<unsigned char[]>(new unsigned char[fNTuple.fLenHeader]);
-   auto zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[fNTuple.fNBytesHeader]);
-   fReader.ReadBuffer(zipBuffer.get(), fNTuple.fNBytesHeader, fNTuple.fSeekHeader);
-   fDecompressor(zipBuffer.get(), fNTuple.fNBytesHeader, fNTuple.fLenHeader, buffer.get());
+   auto buffer = std::unique_ptr<unsigned char[]>(new unsigned char[ntpl.fLenHeader]);
+   auto zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[ntpl.fNBytesHeader]);
+   fReader.ReadBuffer(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fSeekHeader);
+   fDecompressor(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fLenHeader, buffer.get());
    descBuilder.SetFromHeader(buffer.get());
 
-   buffer = std::unique_ptr<unsigned char[]>(new unsigned char[fNTuple.fLenFooter]);
-   zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[fNTuple.fNBytesFooter]);
-   fReader.ReadBuffer(zipBuffer.get(), fNTuple.fNBytesFooter, fNTuple.fSeekFooter);
-   fDecompressor(zipBuffer.get(), fNTuple.fNBytesFooter, fNTuple.fLenFooter, buffer.get());
+   buffer = std::unique_ptr<unsigned char[]>(new unsigned char[ntpl.fLenFooter]);
+   zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[ntpl.fNBytesFooter]);
+   fReader.ReadBuffer(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fSeekFooter);
+   fDecompressor(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fLenFooter, buffer.get());
    descBuilder.AddClustersFromFooter(buffer.get());
 
    return descBuilder.MoveDescriptor();
