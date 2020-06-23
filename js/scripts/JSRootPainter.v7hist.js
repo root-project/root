@@ -1059,7 +1059,7 @@
 
       if (show_markers) {
          // draw markers also when e2 option was specified
-         this.createAttMarker({ attr: histo, style: this.options.MarkStyle });
+         this.createv7AttMarker();
          if (this.markeratt.size > 0) {
             // simply use relative move from point, can optimize in the future
             path_marker = "";
@@ -1070,12 +1070,9 @@
       }
 
       if (show_text) {
-         text_col = this.get_color(histo.fMarkerColor);
-         text_angle = -1*options.TextAngle;
-         text_size = 20;
-
-         if ((options.fMarkerSize!==1) && text_angle)
-            text_size = 0.02 * height * options.fMarkerSize;
+         text_col = this.v7EvalColor("text_color", "black");
+         text_angle = -1*this.v7EvalAttr("text_angle", 0);
+         text_size = this.v7EvalAttr("text_size", 20);
 
          if (!text_angle && !options.TextKind) {
              var space = width / (right - left + 1);
@@ -1659,7 +1656,7 @@
       painter.options = { Hist: true, Bar: false, Error: false, ErrorKind: -1, errorX: 0, Zero: false, Mark: false,
                           Line: false, Fill: false, Lego: 0, Surf: 0,
                           Text: false, TextAngle: 0, TextKind: "", AutoColor: 0,
-                          fBarOffset: 0, fBarWidth: 1000, fMarkerSize: 1, BaseLine: false, Mode3D: false };
+                          fBarOffset: 0, fBarWidth: 1000, BaseLine: false, Mode3D: false };
 
       // here we deciding how histogram will look like and how will be shown
       // painter.DecodeOptions(opt);
@@ -2500,13 +2497,10 @@
          }
 
       if (textbins.length > 0) {
-         var text_col = this.get_color(histo.fMarkerColor),
-             text_angle = -1*this.options.TextAngle,
-             text_g = this.draw_g.append("svg:g").attr("class","th2poly_text"),
-             text_size = 12;
-
-         if ((histo.fMarkerSize!==1) && text_angle)
-             text_size = Math.round(0.02*h*histo.fMarkerSize);
+         var text_col = this.v7EvalColor("text_color", "black"),
+             text_angle = -1*this.v7EvalAttr("text_angle", 0),
+             text_size = this.v7EvalAttr("text_size", 12),
+             text_g = this.draw_g.append("svg:g").attr("class","th2poly_text");
 
          this.StartTextDrawing(42, text_size, text_g, text_size);
 
@@ -2539,15 +2533,13 @@
 
       if (handle===null) handle = this.PrepareColorDraw({ rounding: false });
 
-      var text_col = this.get_color(histo.fMarkerColor),
-          text_angle = -1*this.options.TextAngle,
+      var text_col = this.v7EvalColor("text_color", "black"),
+          text_angle = -1*this.v7EvalAttr("text_angle", 0),
+          text_size = this.v7EvalAttr("text_size", 20),
+          text_offset = 0,
           text_g = this.draw_g.append("svg:g").attr("class","th2_text"),
-          text_size = 20, text_offset = 0,
           profile2d = (this.options.TextKind == "E") &&
                       this.MatchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function');
-
-      if ((histo.fMarkerSize!==1) && text_angle)
-         text_size = Math.round(0.02*h*histo.fMarkerSize);
 
       if (this.options.fBarOffset!==0) text_offset = this.options.fBarOffset*1e-3;
 
@@ -2567,7 +2559,7 @@
             lbl = (binz === Math.round(binz)) ? binz.toString() :
                       JSROOT.FFormat(binz, JSROOT.gStyle.fPaintTextFormat);
 
-            if (text_angle /*|| (histo.fMarkerSize!==1)*/) {
+            if (text_angle) {
                posx = Math.round(handle.grx[i] + binw*0.5);
                posy = Math.round(handle.gry[j+1] + binh*(0.5 + text_offset));
                sizex = 0;
@@ -2775,8 +2767,7 @@
           bars = "", markers = "", posy;
 
       // create attribute only when necessary
-      if (histo.fMarkerColor === 1) histo.fMarkerColor = histo.fLineColor;
-      this.createAttMarker({ attr: histo, style: 5 });
+      this.createv7AttMarker();
 
       // reset absolution position for markers
       this.markeratt.reset_pos();
@@ -2890,7 +2881,7 @@
       if (scale*handle.sumz < 1e5) {
          // one can use direct drawing of scatter plot without any patterns
 
-         this.createAttMarker({ attr: histo });
+         this.createv7AttMarker();
 
          this.markeratt.reset_pos();
 
@@ -2902,9 +2893,9 @@
                binz = histo.getBinContent(i + 1, j + 1);
 
                npix = Math.round(scale*binz);
-               if (npix<=0) continue;
+               if (npix <= 0) continue;
 
-               for (k=0;k<npix;++k)
+               for (k = 0; k < npix; ++k)
                   path += this.markeratt.create(
                             Math.round(handle.grx[i] + cw * JSROOT.random()),
                             Math.round(handle.gry[j+1] + ch * JSROOT.random()));
@@ -2961,7 +2952,7 @@
       if (defs.empty() && (colPaths.length>0))
          defs = layer.insert("svg:defs",":first-child");
 
-      this.createAttMarker({ attr: histo });
+      this.createv7AttMarker();
 
       var cntr = handle.palette.GetCountour();
 
@@ -3452,6 +3443,7 @@
          case "surf": o.Surf = sub > 0 ? 10+sub : 1; o.Mode3D = true; break;
          case "err": o.Error = true; o.Mode3D = true; break;
          case "cont": o.Contour = sub > 0 ? 10+sub : 1; break;
+         case "scat": o.Scat = true; break;
          default: o.Color = true;
       }
 

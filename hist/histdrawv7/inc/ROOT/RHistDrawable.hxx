@@ -18,6 +18,7 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrLine.hxx>
+#include <ROOT/RAttrText.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistImpl.hxx>
 #include <ROOT/RMenuItems.hxx>
@@ -101,6 +102,7 @@ class RHist2Drawable final : public RHistDrawable<2> {
 
    RHist2Attrs fAttr{this, ""};           ///<! hist2 direct attributes
    RAttrLine   fAttrLine{this, "line_"};  ///<! line attributes, used for error or some lego plots
+   RAttrText   fAttrText{this, "text_"};  ///<! text attributes, used with Text drawing
 
 public:
    RHist2Drawable() = default;
@@ -119,6 +121,11 @@ public:
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
    RHist2Drawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
    RAttrLine &AttrLine() { return fAttrLine; }
+
+   const RAttrText &GetAttrText() const { return fAttrText; }
+   RHist2Drawable &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
+   RAttrText &AttrText() { return fAttrText; }
+
 };
 
 
