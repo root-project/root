@@ -96,6 +96,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & 
 ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
+   // printf("**ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl**\n");
    unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
    bool isAdoptedBuffer = true;
    auto packedBytes = page.GetSize();
@@ -111,7 +112,11 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnH
    auto zippedBytes = packedBytes;
 
    if (fOptions.GetCompression() != 0) {
-      zippedBytes = fCompressor(buffer, packedBytes, fOptions.GetCompression());
+      if (GetCompressionAlgorithm() == 6 && columnHandle.fColumn->GetModel().GetType() != ROOT::Experimental::EColumnType::kIndex){
+         zippedBytes = fCompressor(buffer, packedBytes, 404);
+      }else{
+         zippedBytes = fCompressor(buffer, packedBytes, fOptions.GetCompression());
+      }
       if (!isAdoptedBuffer)
          delete[] buffer;
       buffer = const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(fCompressor.GetZipBuffer()));

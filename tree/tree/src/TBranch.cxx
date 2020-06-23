@@ -2629,7 +2629,7 @@ void TBranch::SetCompressionSettings(Int_t settings)
 {
    fCompress = settings;
    TObjArray *leaves = GetListOfLeaves();
-   if (((GetCompressionAlgorithm() == 2) || GetCompressionAlgorithm() == 4) && (leaves->GetEntriesFast() == 1)) {
+   if (GetCompressionAlgorithm() == 6 && leaves->GetEntriesFast() == 1) {
        TLeaf* leaf = (TLeaf*) GetListOfLeaves()->At(0);
        const char *leaf_type = leaf->GetTypeName();
        bool result = !strcmp(leaf_type, "UChar_t") ||
@@ -2645,9 +2645,9 @@ void TBranch::SetCompressionSettings(Int_t settings)
                      !strcmp(leaf_type, "UInt_t") ||
                      !strcmp(leaf_type, "Long64_t") ||
                      !strcmp(leaf_type, "ULong64_t");
-      if (result) {
+      if (!result) { // if leaf_type is not primitive, then switch from LZ4BS to LZ4
           //printf("Converting compression algorithm to use BitShuffle.\n");
-          fCompress += (GetCompressionAlgorithm() == 4) ? 504 : 101;
+          fCompress = 404;
           settings = fCompress;
       }
    }
