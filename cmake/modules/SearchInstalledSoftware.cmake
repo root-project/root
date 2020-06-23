@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -1128,6 +1128,18 @@ if (jemalloc)
   find_package(jemalloc)
   if(NOT JEMALLOC_FOUND)
     message(STATUS "JEMalloc not found.")
+  endif()
+endif()
+
+#---Check for liburing----------------------------------------------------------------
+if (liburing)
+  if(NOT CMAKE_SYSTEM_NAME MATCHES Linux)
+    message(FATAL_ERROR "liburing is only available on Linux")
+  endif()
+  message(STATUS "Looking for liburing")
+  find_package(liburing)
+  if(NOT LIBURING_FOUND)
+    message(STATUS "liburing not found.")
   endif()
 endif()
 
