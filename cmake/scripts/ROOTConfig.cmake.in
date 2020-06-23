@@ -63,7 +63,7 @@ get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 @ROOT_BINARY_DIR_SETUP@
 
 # Python version used to build ROOT
-set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING@)
+set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING_Development_Main@)
 
 #----------------------------------------------------------------------------
 # Include RootMacros.cmake to get ROOT's CMake macros
