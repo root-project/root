@@ -11,7 +11,12 @@ void writefile(int version = 1) {
 
    TFile *f = new TFile(Form("data%d.root",version),"RECREATE");
 #if defined(ClingWorkAroundMissingDynamicScope)
-   gROOT->ProcessLine(TString::Format("TFile *f = (TFile*)%p;\n",f));
+#if _MSC_VER
+#define Ox "0x"
+#else
+#define Ox ""
+#endif
+   gROOT->ProcessLine(TString::Format("TFile *f = (TFile*)%s%p;\n", Ox, f));
    gROOT->ProcessLine("::data *a = new ::data; f->WriteObject(a,\"myobj\");");
    gROOT->ProcessLine("Tdata *b = new Tdata;  f->WriteObject(b,\"myTobj\");");
 #else

@@ -1,3 +1,5 @@
+R__LOAD_LIBRARY(libROOTDataFrame);
+
 const auto treeName = "TotemNtuple";
 const auto fileName = "bigFile.root";
 const auto branchName = "track_rp_3.y";
