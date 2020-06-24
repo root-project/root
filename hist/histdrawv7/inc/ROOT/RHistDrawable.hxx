@@ -21,6 +21,7 @@
 #include <ROOT/RAttrText.hxx>
 #include <ROOT/RAttrMarker.hxx>
 #include <ROOT/RAttrFill.hxx>
+#include <ROOT/RAttrValue.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistImpl.hxx>
 
@@ -37,12 +38,8 @@ public:
 private:
    Internal::RIOShared<HistImpl_t> fHistImpl;  ///< I/O capable reference on histogram
 
-   class RHistAttrs final : public RAttrBase {
-      friend class RHistDrawable;
-      R__ATTR_CLASS(RHistAttrs, "", AddString("kind","").AddInt("sub",0).AddBool("text", false));
-   };
-
-   RHistAttrs  fAttr{this, ""};           ///<! hist direct attributes
+   RAttrValue<std::string> fKind{this, "kind", ""};  ///<! hist draw kind
+   RAttrValue<int>  fSub{this, "sub", -1};     ///<! hist draw sub kind
    RAttrLine   fAttrLine{this, "line_"};  ///<! hist line attributes
    RAttrFill   fAttrFill{this, "fill_"};  ///<! hist fill attributes
    RAttrText   fAttrText{this, "text_"};  ///<! hist text attributes
@@ -61,14 +58,12 @@ protected:
 
    void SetDrawKind(const std::string &kind, int sub = -1)
    {
-      fAttr.SetValue("kind", kind);
-      if (sub>=0)
-         fAttr.SetValue("sub", sub);
+      fKind = kind;
+      if (sub >= 0)
+         fSub = sub;
       else
-         fAttr.ClearValue("sub");
+         fSub.Clear();
    }
-
-   void SetDrawText(bool on) { fAttr.SetValue("text", on); }
 
 public:
    RHistDrawable() : RDrawable("hist") {}
@@ -103,24 +98,34 @@ public:
 
 
 class RHist1Drawable final : public RHistDrawable<1> {
+   RAttrValue<double> fBarOffset{this, "bar_offset", 0.}; ///<!  bar offset
+   RAttrValue<double> fBarWidth{this, "bar_width", 1.};   ///<!  bar width
+   RAttrValue<bool> fText{this, "text", false};           ///<! draw text
+
 public:
    RHist1Drawable() = default;
 
    template <class HIST>
    RHist1Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<1>(hist) {}
 
-   RHist1Drawable &Bar() { SetDrawKind("bar", 0); return *this; }
-   RHist1Drawable &Bar3D() { SetDrawKind("bar", 1); return *this; }
+   RHist1Drawable &Bar() { SetDrawKind("bar", 0); fBarOffset.Clear(); fBarWidth.Clear(); return *this; }
+   RHist1Drawable &Bar(double offset, double width) { SetDrawKind("bar", 0); fBarOffset = offset; fBarWidth = width; return *this; }
+   RHist1Drawable &Bar3D() { SetDrawKind("bar", 1); fBarOffset.Clear(); fBarWidth.Clear(); return *this; }
+   RHist1Drawable &Bar3D(double offset, double width) { SetDrawKind("bar", 1); fBarOffset = offset; fBarWidth = width; return *this; }
    RHist1Drawable &Error(int kind = 0) { SetDrawKind("err", kind); return *this; }
    RHist1Drawable &Marker() { SetDrawKind("p"); return *this; }
    RHist1Drawable &Star() { AttrMarker().SetStyle(3); return Marker(); }
    RHist1Drawable &Hist() { SetDrawKind("hist"); return *this; }
    RHist1Drawable &Lego(int kind = 0) { SetDrawKind("lego", kind); return *this; }
-   RHist1Drawable &Text(bool on = true) { SetDrawText(on); return *this; }
+   RHist1Drawable &Text(bool on = true) { fText = on; return *this; }
+
+   double GetBarOffset() const { return fBarOffset; }
+   double GetBarWidth() const { return fBarWidth; }
 };
 
 
 class RHist2Drawable final : public RHistDrawable<2> {
+   RAttrValue<bool> fText{this, "text", false};           ///<! draw text
 
 public:
    RHist2Drawable() = default;
@@ -135,7 +140,7 @@ public:
    RHist2Drawable &Contour(int kind = 0) { SetDrawKind("cont", kind); return *this; }
    RHist2Drawable &Scatter() { SetDrawKind("scat"); return *this; }
    RHist2Drawable &Arrow() { SetDrawKind("arr"); return *this; }
-   RHist2Drawable &Text(bool on = true) { SetDrawText(on); return *this; }
+   RHist2Drawable &Text(bool on = true) { fText = on; return *this; }
 };
 
 
