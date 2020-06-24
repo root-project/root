@@ -669,11 +669,11 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
       Int_t stlkind =  TMath::Abs(TClassEdit::STLKind(inside[0]));
 
       for(unsigned int i = 1; i<narg; ++i) {
-         // Treat the trailing stars the same as nested loc.
          inside[i] = UpdateAssociativeToVector( inside[i].c_str() );
       }
       if (nestedLoc) narg = nestedLoc;
 
+      // Treat the trailing stars the same as nested loc (i.e. ends up, properly, tacking them up back at the end of the name)
       if (!inside[narg-1].empty() && inside[narg-1][0] == '*')
          narg = narg - 1;
 
