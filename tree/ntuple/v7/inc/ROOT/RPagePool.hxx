@@ -21,6 +21,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <cstddef>
+#include <mutex>
 #include <vector>
 
 namespace ROOT {
@@ -53,6 +54,7 @@ private:
    std::vector<RPage> fPages;
    std::vector<std::int32_t> fReferences;
    std::vector<RPageDeleter> fDeleters;
+   std::mutex fLock;
 
 public:
    RPagePool() = default;
