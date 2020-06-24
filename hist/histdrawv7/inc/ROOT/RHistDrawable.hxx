@@ -116,6 +116,7 @@ public:
    RHist1Drawable &Marker() { SetDrawKind("p"); return *this; }
    RHist1Drawable &Star() { AttrMarker().SetStyle(3); return Marker(); }
    RHist1Drawable &Hist() { SetDrawKind("hist"); return *this; }
+   RHist1Drawable &Line() { SetDrawKind("l"); return *this; }
    RHist1Drawable &Lego(int kind = 0) { SetDrawKind("lego", kind); return *this; }
    RHist1Drawable &Text(bool on = true) { fText = on; return *this; }
 

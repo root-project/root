@@ -70,6 +70,15 @@ void draw_rh1()
    subpads[1][1]->Draw(pHist1)->Bar(0,0.5).AttrFill().SetColor(col1);
    subpads[1][1]->Draw(pHist2)->Bar3D(0.5,0.5).AttrFill().SetColor(col2);
 
+   // line draw option
+   subpads[0][2]->Draw<RFrameTitle>("Line() draw option");
+   subpads[0][2]->Draw(pHist1)->Line().AttrLine().SetColor(col1);
+   subpads[0][2]->Draw(pHist2)->Line().AttrLine().SetColor(col2);
+
+   // lego draw option
+   subpads[1][2]->Draw<RFrameTitle>("Lego() draw option");
+   subpads[1][2]->Draw(pHist1)->Lego().AttrFill().SetColor(col1);
+
    canvas->SetSize(1000, 700);
    canvas->Show();
 }
