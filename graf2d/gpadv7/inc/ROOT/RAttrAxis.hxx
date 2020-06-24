@@ -12,6 +12,7 @@
 #include <ROOT/RAttrBase.hxx>
 #include <ROOT/RAttrLine.hxx>
 #include <ROOT/RAttrText.hxx>
+#include <ROOT/RAttrValue.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -26,13 +27,19 @@ namespace Experimental {
 
 class RAttrAxis : public RAttrBase {
 
-   RAttrLine fAttrLine{this, "line_"};   ///<!  axis line attributes
-   RAttrText fAttrText{this, "text_"};   ///<!  axis text attributes
+   RAttrLine fAttrLine{this, "line_"};               ///<! line attributes
+   RAttrText fAttrText{this, "text_"};               ///<! text attributes
+   RAttrValue<double> fMin{this, "min", 0.};         ///<! axis min
+   RAttrValue<double> fMax{this, "max", 1.};         ///<! axis max
+   RAttrValue<double> fZoomMin{this, "zoommin", 0.}; ///<! axis zoom min
+   RAttrValue<double> fZoomMax{this, "zoommax", 0.}; ///<! axis zoom max
+   RAttrValue<bool> fLog{this, "log", false};        ///<! log scale
+   RAttrValue<bool> fInvert{this, "invert", false};  ///<! invert scale
 
    R__ATTR_CLASS(RAttrAxis, "axis_", AddDefaults(fAttrLine).AddDefaults(fAttrText)
-                                   .AddDouble("min", 0.).AddDouble("max", 1.)
-                                   .AddDouble("zoommin", 0.).AddDouble("zoommax", 0.)
-                                   .AddBool("log", false).AddBool("invert", false));
+                                    .AddDefaults(fMin).AddDefaults(fMax)
+                                    .AddDefaults(fZoomMin).AddDefaults(fZoomMax)
+                                    .AddDefaults(fLog).AddDefaults(fInvert));
 
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
    RAttrAxis &SetAttrLine(const RAttrLine &line) { fAttrLine = line; return *this; }
@@ -43,32 +50,31 @@ class RAttrAxis : public RAttrBase {
    RAttrText &AttrText() { return fAttrText; }
 
    // min range, graphics will not show value less then this
-   RAttrAxis &SetMin(double min) { SetValue("min", min); return *this; }
-   RAttrAxis &SetMax(double max) { SetValue("max", max); return *this; }
-   double GetMin() const { return GetValue<double>("min"); }
-   double GetMax() const { return GetValue<double>("max"); }
-   bool HasMin() const { return HasValue<double>("min"); }
-   bool HasMax() const { return HasValue<double>("max"); }
+   RAttrAxis &SetMin(double min) { fMin = min; return *this; }
+   RAttrAxis &SetMax(double max) { fMax = max; return *this; }
+   double GetMin() const { return fMin; }
+   double GetMax() const { return fMax; }
+   bool HasMin() const { return fMin.Has(); }
+   bool HasMax() const { return fMax.Has(); }
 
    RAttrAxis &SetMinMax(double min, double max) { SetMin(min); SetMax(max); return *this; }
-   void ClearMinMax() { ClearValue("min"); ClearValue("max"); }
+   void ClearMinMax() { fMin.Clear(); fMax.Clear(); }
 
-   RAttrAxis &SetZoomMin(double min) { SetValue("zoommin", min); return *this; }
-   RAttrAxis &SetZoomMax(double max) { SetValue("zoommax", max); return *this; }
-   double GetZoomMin() const { return GetValue<double>("zoommin"); }
-   double GetZoomMax() const { return GetValue<double>("zoommax"); }
-   bool HasZoomMin() const { return HasValue<double>("zoommin"); }
-   bool HasZoomMax() const { return HasValue<double>("zoommax"); }
+   RAttrAxis &SetZoomMin(double min) { fZoomMin = min; return *this; }
+   RAttrAxis &SetZoomMax(double max) { fZoomMax = max; return *this; }
+   double GetZoomMin() const { return fZoomMin; }
+   double GetZoomMax() const { return fZoomMax; }
+   bool HasZoomMin() const { return fZoomMin.Has(); }
+   bool HasZoomMax() const { return fZoomMax.Has(); }
 
    RAttrAxis &SetZoomMinMax(double min, double max) { SetZoomMin(min); SetZoomMax(max); return *this; }
-   void ClearZoomMinMax() { ClearValue("zoommin"); ClearValue("zoommax"); }
+   void ClearZoomMinMax() { fZoomMin.Clear(); fZoomMax.Clear(); }
 
-   RAttrAxis &SetLog(bool on = true) { SetValue("log", on); return *this; }
-   bool GetLog() const { return GetValue<bool>("log"); }
+   RAttrAxis &SetLog(bool on = true) { fLog = on; return *this; }
+   bool GetLog() const { return fLog; }
 
-   RAttrAxis &SetInvert(bool on = true) { SetValue("invert", on); return *this; }
-   bool GetInvert() const { return GetValue<bool>("invert"); }
-
+   RAttrAxis &SetInvert(bool on = true) { fInvert = on; return *this; }
+   bool GetInvert() const { return fInvert; }
 };
 
 } // namespace Experimental

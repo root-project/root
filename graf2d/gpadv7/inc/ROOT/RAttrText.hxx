@@ -10,6 +10,7 @@
 #define ROOT7_RAttrText
 
 #include <ROOT/RAttrBase.hxx>
+#include <ROOT/RAttrValue.hxx>
 #include <ROOT/RAttrColor.hxx>
 
 #include <string>

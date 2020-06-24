@@ -10,6 +10,7 @@
 #define ROOT7_RAttrMargins
 
 #include <ROOT/RAttrBase.hxx>
+#include <ROOT/RAttrValue.hxx>
 #include <ROOT/RPadLength.hxx>
 
 namespace ROOT {
@@ -24,45 +25,27 @@ namespace Experimental {
 */
 
 class RAttrMargins : public RAttrBase {
-
-   R__ATTR_CLASS(RAttrMargins, "margin_", AddString("left","").AddString("right","").AddString("top","").AddString("bottom",""));
-
-   RAttrMargins &SetLeft(const RPadLength &pos) { return SetMargin("left", pos); }
-   RPadLength GetLeft() const { return GetMargin("left"); }
-
-   RAttrMargins &SetRight(const RPadLength &pos) { return SetMargin("right", pos); }
-   RPadLength GetRight() const { return GetMargin("right"); }
-
-   RAttrMargins &SetTop(const RPadLength &pos) { return SetMargin("top", pos); }
-   RPadLength GetTop() const { return GetMargin("top"); }
-
-   RAttrMargins &SetBottom(const RPadLength &pos) { return SetMargin("bottom", pos); }
-   RPadLength GetBottom() const { return GetMargin("bottom"); }
+   R__ATTR_CLASS(RAttrMargins, "margin_", AddNothing());
 
 protected:
+   RAttrValue<RPadLength> fLeft{this, "left", 0._normal};
+   RAttrValue<RPadLength> fRight{this, "right", 0._normal};
+   RAttrValue<RPadLength> fTop{this, "top", 0._normal};
+   RAttrValue<RPadLength> fBottom{this, "bottom", 0._normal};
 
-   RAttrMargins &SetMargin(const std::string &name, const RPadLength &pos)
-   {
-      if (pos.Empty())
-         ClearValue(name);
-      else
-         SetValue(name, pos.AsString());
+public:
 
-      return *this;
-   }
+   RAttrMargins &SetLeft(const RPadLength &len) { fLeft = len; return *this; }
+   RPadLength GetLeft() const { return fLeft; }
 
-   RPadLength GetMargin(const std::string &name) const
-   {
-      RPadLength res;
+   RAttrMargins &SetRight(const RPadLength &len) { fRight = len; return *this; }
+   RPadLength GetRight() const { return fRight; }
 
-      auto value = GetValue<std::string>(name);
+   RAttrMargins &SetTop(const RPadLength &len) { fTop = len; return *this; }
+   RPadLength GetTop() const { return fTop; }
 
-      if (!value.empty())
-         res.ParseString(value);
-
-      return res;
-   }
-
+   RAttrMargins &SetBottom(const RPadLength &len) { fBottom = len; return *this; }
+   RPadLength GetBottom() const { return fBottom; }
 };
 
 } // namespace Experimental
