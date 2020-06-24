@@ -1666,7 +1666,7 @@
       if (d.check('E', true)) {
          this.Error = true;
          if (hdim == 1) {
-            this.Zero = false; // do not draw empty bins with erros
+            this.Zero = false; // do not draw empty bins with errors
             this.Hist = false;
             if (!isNaN(parseInt(d.part[0]))) this.ErrorKind = parseInt(d.part[0]);
             if ((this.ErrorKind === 3) || (this.ErrorKind === 4)) this.need_fillcol = true;

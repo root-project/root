@@ -33,24 +33,32 @@ void draw_rh1()
 {
    // Create the histogram.
    RAxisConfig xaxis(25, 0., 10.);
-   auto pHist = std::make_shared<RH1D>(xaxis);
+   auto pHist1 = std::make_shared<RH1D>(xaxis);
    auto pHist2 = std::make_shared<RH1D>(xaxis);
 
    for (int n=0;n<1000;n++) {
-      pHist->Fill(gRandom->Gaus(3,0.8));
+      pHist1->Fill(gRandom->Gaus(3,0.8));
       pHist2->Fill(gRandom->Gaus(7,1.2));
    }
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
 
-   canvas->Draw<RFrameTitle>("Default \"hist\" draw option");
+   // histograms colors
+   auto col1 = RColor::kRed, col2 = RColor::kBlue;
 
-   auto draw1 = canvas->Draw(pHist);
-   draw1->AttrLine().SetColor(RColor::kRed).SetWidth(2);
+   // Divide canvas on 2x3 sub-pads to show different draw options
+   auto subpads = canvas->Divide(2,3);
 
-   auto draw2 = canvas->Draw(pHist2);
-   draw2->AttrLine().SetColor(RColor::kBlue).SetWidth(4);
+   // default draw option
+   subpads[0][0]->Draw<RFrameTitle>("Default \"hist\" draw options");
+   subpads[0][0]->Draw(pHist1)->AttrLine().SetColor(col1).SetWidth(2);
+   subpads[0][0]->Draw(pHist2)->AttrLine().SetColor(col2).SetWidth(4);
+
+   // errors draw options
+   subpads[1][0]->Draw<RFrameTitle>("Errors draw options");
+   subpads[1][0]->Draw(pHist1)->Error(1).AttrLine().SetColor(col1);
+   subpads[1][0]->Draw(pHist2)->Error(4).AttrFill().SetColor(col2).SetStyle(3003);
 
    canvas->SetSize(1000, 700);
    canvas->Show();

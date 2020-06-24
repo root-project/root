@@ -20,22 +20,14 @@
 #include <ROOT/RAttrLine.hxx>
 #include <ROOT/RAttrText.hxx>
 #include <ROOT/RAttrMarker.hxx>
+#include <ROOT/RAttrFill.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistImpl.hxx>
-#include <ROOT/RMenuItems.hxx>
 
 #include <memory>
 
 namespace ROOT {
 namespace Experimental {
-
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
-class RHist;
-
-namespace Detail {
-template <int DIMENSIONS>
-class RHistImplPrecisionAgnosticBase;
-}
 
 template <int DIMENSIONS>
 class RHistDrawable : public RDrawable {
@@ -52,6 +44,7 @@ private:
 
    RHistAttrs  fAttr{this, ""};           ///<! hist direct attributes
    RAttrLine   fAttrLine{this, "line_"};  ///<! hist line attributes
+   RAttrFill   fAttrFill{this, "fill_"};  ///<! hist fill attributes
    RAttrText   fAttrText{this, "text_"};  ///<! hist text attributes
    RAttrMarker fMarkerAttr{this, "marker_"}; ///<! hist marker attributes
 
@@ -92,6 +85,10 @@ public:
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
    RHistDrawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
    RAttrLine &AttrLine() { return fAttrLine; }
+
+   const RAttrFill &GetAttrFill() const { return fAttrFill; }
+   RHistDrawable &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
+   RAttrFill &AttrFill() { return fAttrFill; }
 
    const RAttrText &GetAttrText() const { return fAttrText; }
    RHistDrawable &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
