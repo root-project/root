@@ -65,6 +65,11 @@ void draw_rh1()
    subpads[0][1]->Draw(pHist1)->Text(true).AttrText().SetColor(col1);
    subpads[0][1]->Draw(pHist2)->Marker().AttrMarker().SetColor(col2).SetStyle(30).SetSize(1.5);
 
+   // text and marker draw options
+   subpads[1][1]->Draw<RFrameTitle>("Bar draw options");
+   subpads[1][1]->Draw(pHist1)->Bar().AttrFill().SetColor(col1);
+   subpads[1][1]->Draw(pHist2)->Bar3D().AttrFill().SetColor(col2);
+
 
    canvas->SetSize(1000, 700);
    canvas->Show();
