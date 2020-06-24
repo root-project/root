@@ -362,6 +362,11 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
                                           const clang::CXXRecordDecl *Dst,
                                           cling::Interpreter* interp)
 {
+   // If the path contains a virtual base class we can't give any hint.
+   // -1: no hint.
+   if (Dst->getNumVBases())
+     return clang::CharUnits::fromQuantity(-1);
+
    clang::CXXBasePaths Paths(/*FindAmbiguities=*/true, /*RecordPaths=*/true,
                       /*DetectVirtual=*/false);
 
@@ -380,10 +385,7 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
      ++NumPublicPaths;
 
      for (clang::CXXBasePath::iterator J = I->begin(), JE = I->end(); J != JE; ++J) {
-       // If the path contains a virtual base class we can't give any hint.
-       // -1: no hint.
-       if (J->Base->isVirtual())
-         return clang::CharUnits::fromQuantity(-1);
+       assert(!J->Base->isVirtual() && "We should have returned -1 already.");
 
        if (NumPublicPaths > 1) // Won't use offsets, skip computation.
          continue;
