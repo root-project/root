@@ -109,7 +109,8 @@ public:
    template <class HIST>
    RHist1Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<1>(hist) {}
 
-   RHist1Drawable &Bar(int kind = 0) { SetDrawKind("bar", kind); return *this; }
+   RHist1Drawable &Bar() { SetDrawKind("bar", 0); return *this; }
+   RHist1Drawable &Bar3D() { SetDrawKind("bar", 1); return *this; }
    RHist1Drawable &Error(int kind = 0) { SetDrawKind("err", kind); return *this; }
    RHist1Drawable &Marker() { SetDrawKind("p"); return *this; }
    RHist1Drawable &Star() { AttrMarker().SetStyle(3); return Marker(); }
