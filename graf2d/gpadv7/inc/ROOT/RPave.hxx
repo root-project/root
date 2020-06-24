@@ -13,6 +13,7 @@
 #include <ROOT/RAttrText.hxx>
 #include <ROOT/RAttrLine.hxx>
 #include <ROOT/RAttrFill.hxx>
+#include <ROOT/RAttrValue.hxx>
 #include <ROOT/RPadPos.hxx>
 
 namespace ROOT {
@@ -29,63 +30,29 @@ namespace Experimental {
 
 class RPave : public RDrawable {
 
-   class RPaveAttrs : public RAttrBase {
-      friend class RPave;
-      R__ATTR_CLASS(RPaveAttrs, "", AddPadLength("cornerx",0.02).AddPadLength("cornery",0.02).AddPadLength("width",0.5).AddPadLength("height",0.2));
-   };
-
    RAttrText fAttrText{this, "text_"};       ///<! text attributes
    RAttrLine fAttrBorder{this, "border_"};   ///<! border attributes
    RAttrFill fAttrFill{this, "fill_"};       ///<! line attributes
-   RPaveAttrs fAttr{this, ""};               ///<! pave direct attributes
+   RAttrValue<RPadLength> fCornerX{this, "cornerx", 0.02}; ///<! X corner
+   RAttrValue<RPadLength> fCornerY{this, "cornery", 0.02}; ///<! Y corner
+   RAttrValue<RPadLength> fWidth{this, "width", 0.4}; ///<! pave width
+   RAttrValue<RPadLength> fHeight{this, "height", 0.2}; ///<! pave height
 
 public:
 
    RPave(const std::string &csstype = "pave") : RDrawable(csstype) {}
 
-   RPave &SetCornerX(const RPadLength &pos)
-   {
-      fAttr.SetValue("cornerx", pos);
-      return *this;
-   }
+   RPave &SetCornerX(const RPadLength &pos) { fCornerX = pos; return *this; }
+   RPadLength GetCornerX() const { return fCornerX; }
 
-   RPadLength GetCornerX() const
-   {
-      return fAttr.template GetValue<RPadLength>("cornerx");
-   }
+   RPave &SetCornerY(const RPadLength &pos) { fCornerY = pos; return *this; }
+   RPadLength GetCornerY() const { return fCornerY; }
 
-   RPave &SetCornerY(const RPadLength &pos)
-   {
-      fAttr.SetValue("cornery", pos);
-      return *this;
-   }
+   RPave &SetWidth(const RPadLength &width) { fWidth = width; return *this; }
+   RPadLength GetWidth() const { return fWidth; }
 
-   RPadLength GetCornerY() const
-   {
-      return fAttr.template GetValue<RPadLength>("cornery");
-   }
-
-   RPave &SetWidth(const RPadLength &width)
-   {
-      fAttr.SetValue("width", width);
-      return *this;
-   }
-
-   RPadLength GetWidth() const
-   {
-      return fAttr.template GetValue<RPadLength>("width");
-   }
-
-   RPave &SetHeight(const RPadLength &height)
-   {
-      fAttr.SetValue("height", height);
-      return *this;
-   }
-
-   RPadLength GetHeight() const
-   {
-      return fAttr.template GetValue<RPadLength>("height");
-   }
+   RPave &SetHeight(const RPadLength &height) { fHeight = height; return *this; }
+   RPadLength GetHeight() const { return fHeight; }
 
    const RAttrText &GetAttrText() const { return fAttrText; }
    RPave &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }

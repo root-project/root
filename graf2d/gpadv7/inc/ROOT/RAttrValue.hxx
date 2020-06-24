@@ -49,6 +49,7 @@ public:
    void Set(const T &v) { SetValue("", v); }
    T Get() const { return GetValue<T>(""); }
    void Clear() { ClearValue(""); }
+   bool Has() const { return HasValue<T>(""); }
 
    RAttrValue &operator=(const T &v) { Set(v); return *this; }
 
