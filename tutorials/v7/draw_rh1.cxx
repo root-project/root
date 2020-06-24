@@ -51,25 +51,24 @@ void draw_rh1()
    auto subpads = canvas->Divide(2,3);
 
    // default draw option
-   subpads[0][0]->Draw<RFrameTitle>("Default \"hist\" draw options");
+   subpads[0][0]->Draw<RFrameTitle>("Default RH1 drawing");
    subpads[0][0]->Draw(pHist1)->AttrLine().SetColor(col1).SetWidth(2);
    subpads[0][0]->Draw(pHist2)->AttrLine().SetColor(col2).SetWidth(4);
 
    // errors draw options
-   subpads[1][0]->Draw<RFrameTitle>("Errors draw options");
+   subpads[1][0]->Draw<RFrameTitle>("Error() draw options");
    subpads[1][0]->Draw(pHist1)->Error(1).AttrLine().SetColor(col1);
    subpads[1][0]->Draw(pHist2)->Error(4).AttrFill().SetColor(col2).SetStyle(3003);
 
    // text and marker draw options
-   subpads[0][1]->Draw<RFrameTitle>("Text and marker draw options");
+   subpads[0][1]->Draw<RFrameTitle>("Text() and Marker() draw options");
    subpads[0][1]->Draw(pHist1)->Text(true).AttrText().SetColor(col1);
    subpads[0][1]->Draw(pHist2)->Marker().AttrMarker().SetColor(col2).SetStyle(30).SetSize(1.5);
 
    // text and marker draw options
-   subpads[1][1]->Draw<RFrameTitle>("Bar draw options");
-   subpads[1][1]->Draw(pHist1)->Bar().AttrFill().SetColor(col1);
-   subpads[1][1]->Draw(pHist2)->Bar3D().AttrFill().SetColor(col2);
-
+   subpads[1][1]->Draw<RFrameTitle>("Bar() and Bar3D() draw options");
+   subpads[1][1]->Draw(pHist1)->Bar(0,0.5).AttrFill().SetColor(col1);
+   subpads[1][1]->Draw(pHist2)->Bar3D(0.5,0.5).AttrFill().SetColor(col2);
 
    canvas->SetSize(1000, 700);
    canvas->Show();

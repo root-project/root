@@ -908,8 +908,8 @@
          gry1 = Math.round(pmain.gry(y));
 
          w = grx2 - grx1;
-         grx1 += Math.round(this.options.fBarOffset/1000*w);
-         w = Math.round(this.options.fBarWidth/1000*w);
+         grx1 += Math.round(this.options.BarOffset*w);
+         w = Math.round(this.options.BarWidth*w);
 
          if (pmain.swap_xy)
             bars += "M"+gry2+","+grx1 + "h"+(gry1-gry2) + "v"+w + "h"+(gry2-gry1) + "z";
@@ -1368,8 +1368,8 @@
 
       if (this.options.Bar) {
          var w = grx2 - grx1;
-         grx1 += Math.round(this.options.fBarOffset/1000*w);
-         grx2 = grx1 + Math.round(this.options.fBarWidth/1000*w);
+         grx1 += Math.round(this.options.BarOffset*w);
+         grx2 = grx1 + Math.round(this.options.BarWidth*w);
       }
 
       if (grx1 > grx2) { var d = grx1; grx1 = grx2; grx2 = d; }
@@ -1634,13 +1634,15 @@
                           Zero: false, Mark: false,
                           Line: false, Fill: false, Lego: 0, Surf: 0,
                           Text: false, TextAngle: 0, TextKind: "", AutoColor: 0,
-                          fBarOffset: 0, fBarWidth: 1000, BaseLine: false, Mode3D: false };
+                          BarOffset: 0., BarWidth: 1., BaseLine: false, Mode3D: false };
 
       var kind = painter.v7EvalAttr("kind", "hist"),
           sub = painter.v7EvalAttr("sub", 0),
           o = painter.options;
 
       o.Text = painter.v7EvalAttr("text", false);
+      o.BarOffset = painter.v7EvalAttr("bar_offset", 0.);
+      o.BarWidth = painter.v7EvalAttr("bar_width", 1.);
 
       switch(kind) {
          case "bar": o.Bar = true; o.BarStyle = sub; break;
@@ -2528,7 +2530,7 @@
           profile2d = (this.options.TextKind == "E") &&
                       this.MatchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function');
 
-      if (this.options.fBarOffset!==0) text_offset = this.options.fBarOffset*1e-3;
+      if (this.options.BarOffset) text_offset = this.options.BarOffset;
 
       this.StartTextDrawing(42, text_size, text_g, text_size);
 
@@ -2802,8 +2804,8 @@
 
          w = handle.grx[i+1] - handle.grx[i];
          w *= 0.66;
-         center = (handle.grx[i+1] + handle.grx[i]) / 2 + this.options.fBarOffset/1000*w;
-         if (this.options.fBarWidth >0) w = w * this.options.fBarWidth / 1000;
+         center = (handle.grx[i+1] + handle.grx[i]) / 2 + this.options.BarOffset*w;
+         if (this.options.BarWidth > 0) w = w * this.options.BarWidth;
 
          pnt.x1 = Math.round(center - w/2);
          pnt.x2 = Math.round(center + w/2);
@@ -3416,7 +3418,7 @@
                           Text: true, TextAngle: 0, TextKind: "",
                           BaseLine: false, Mode3D: false, AutoColor: 0,
                           Color: false, Scat: false, ScatCoef: 1, Candle: "", Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0,
-                          minimum: -1111, maximum: -1111 };
+                          BarOffset: 0., BarWidth: 1., minimum: -1111, maximum: -1111 };
 
       var kind = painter.v7EvalAttr("kind", "col"),
           sub = painter.v7EvalAttr("sub", 0),
