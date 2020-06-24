@@ -111,6 +111,8 @@ public:
 
    RHist1Drawable &Bar(int kind = 0) { SetDrawKind("bar", kind); return *this; }
    RHist1Drawable &Error(int kind = 0) { SetDrawKind("err", kind); return *this; }
+   RHist1Drawable &Marker() { SetDrawKind("p"); return *this; }
+   RHist1Drawable &Star() { AttrMarker().SetStyle(3); return Marker(); }
    RHist1Drawable &Hist() { SetDrawKind("hist"); return *this; }
    RHist1Drawable &Lego(int kind = 0) { SetDrawKind("lego", kind); return *this; }
    RHist1Drawable &Text(bool on = true) { SetDrawText(on); return *this; }
