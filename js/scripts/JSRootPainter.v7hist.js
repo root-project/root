@@ -148,13 +148,8 @@
    }
 
    RHistPainter.prototype.CheckHistDrawAttributes = function() {
-
-      this.createAttFill( { pattern: 0, color: 0 });
-
-      var lcol = this.v7EvalColor( "line_color", "black"),
-          lwidth = this.v7EvalAttr( "line_width", 1);
-
-      this.createAttLine({ color: lcol || 'black', width : parseInt(lwidth) || 1 });
+      this.createv7AttFill();
+      this.createv7AttLine();
    }
 
    RHistPainter.prototype.UpdateObject = function(obj, opt) {
@@ -1636,7 +1631,9 @@
 
       if (!painter.PrepareFrame(divid)) return null;
 
-      painter.options = { Hist: false, Bar: false, Error: false, ErrorKind: -1, errorX: 0, Zero: false, Mark: false,
+      painter.options = { Hist: false, Bar: false,
+                          Error: false, ErrorKind: -1, errorX: JSROOT.gStyle.fErrorX,
+                          Zero: false, Mark: false,
                           Line: false, Fill: false, Lego: 0, Surf: 0,
                           Text: false, TextAngle: 0, TextKind: "", AutoColor: 0,
                           fBarOffset: 0, fBarWidth: 1000, BaseLine: false, Mode3D: false };
@@ -1649,7 +1646,7 @@
 
       switch(kind) {
          case "bar": o.Bar = true; o.BarStyle = sub; break;
-         case "err": o.Error = true; o.ErrorKind = sub > 0 ? sub : 1; break;
+         case "err": o.Error = true; o.ErrorKind = sub; break;
          case "lego": o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;
          default: o.Hist = true;
       }
@@ -3415,7 +3412,7 @@
 
       if (!painter.PrepareFrame(divid)) return null;
 
-      painter.options = { Hist: false, Bar: false, Error: false, errorX: 0, Zero: false, Mark: false,
+      painter.options = { Hist: false, Bar: false, Error: false, Zero: false, Mark: false,
                           Line: false, Fill: false, Lego: 0, Surf: 0,
                           Text: true, TextAngle: 0, TextKind: "",
                           fBarOffset: 0, fBarWidth: 1000, BaseLine: false, Mode3D: false, AutoColor: 0,
