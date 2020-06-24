@@ -1236,9 +1236,10 @@ TMapFile *TMapFile::WhichMapFile(void *addr)
    // Don't use gROOT so that this routine does not trigger TROOT's initialization
    // This is essential since this routine is called via operator delete
    // which is used during RegisterModule (i.e. during library loading, including the initial
-   // start up).  Using gROOT leads to recursive call to RegisterModule and initiliaztion of
+   // start up).  Using gROOT leads to recursive call to RegisterModule and initialization of
    // the interpreter in the middle of the execution of RegisterModule (i.e. undefined behavior).
-   if (!ROOT::Internal::gROOTLocal || !ROOT::Internal::gROOTLocal->GetListOfMappedFiles()) return 0;
+   if (!ROOT::Internal::gROOTLocal || !ROOT::Internal::gROOTLocal->GetListOfMappedFiles())
+      return 0;
 
    TObjLink *lnk = ((TList *)ROOT::Internal::gROOTLocal->GetListOfMappedFiles())->LastLink();
    while (lnk) {
