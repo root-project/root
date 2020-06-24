@@ -1,7 +1,7 @@
 ROOTTEST_ADD_TEST(runrelpath
                   MACRO runrelpath.C
                   OUTREF relpath.ref
-                  ${MIGHT_FAIL}
+                  ${WILLFAIL_ON_WIN32}
                   DEPENDS ${COMPILE_MACRO_TEST})
 
 ROOTTEST_ADD_TEST(assertmyfun

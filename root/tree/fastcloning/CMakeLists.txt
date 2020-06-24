@@ -60,7 +60,7 @@ ROOTTEST_ADD_TEST(runbadmix
 ROOTTEST_ADD_TEST(runSplitMismatch
                   COPY_TO_BUILDDIR runSplitMismatch.C
                   MACRO ${CMAKE_CURRENT_BINARY_DIR}/runSplitMismatch.C+
-                  ${MIGHT_FAIL}
+                  ${WILLFAIL_ON_WIN32}
                   OUTREF references/runSplitMismatch.ref)
 
 ROOTTEST_ADD_TEST(make_CloneTree

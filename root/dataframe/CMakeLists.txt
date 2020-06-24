@@ -24,14 +24,14 @@ ROOTTEST_ADD_TEST(test_trainCache
 # ROOT-9628
 ROOTTEST_ADD_TEST(test_chainZombieFile
                   COPY_TO_BUILDDIR input1.root input2.root
-                  ${MIGHT_FAIL}
+                  ${WILLFAIL_ON_WIN32}
                   MACRO test_chainZombieFile.C)
 
 # ROOT-9366
 # We use this to write something like the FCC data model, dictionaries done with aclic
 ROOTTEST_ADD_TEST(writeFcc
                   MACRO writeFcc.C+
-                  ${MIGHT_FAIL})
+                  ${WILLFAIL_ON_WIN32})
 
 # We build and run an executable that reads the file created above without dictionaries
 ROOTTEST_GENERATE_EXECUTABLE(test_readFcc readFcc.C LIBRARIES ${DFLIBRARIES})
@@ -39,7 +39,7 @@ ROOTTEST_GENERATE_EXECUTABLE(test_readFcc readFcc.C LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_readFcc
                   EXEC ./test_readFcc
                   COPY_TO_BUILDDIR fccSkim.root
-                  ${MIGHT_FAIL}
+                  ${WILLFAIL_ON_WIN32}
                   DEPENDS ${GENERATE_EXECUTABLE_TEST} writeFcc)
 
 # ROOT-9116
@@ -54,7 +54,7 @@ ROOTTEST_ADD_TEST(templateRecursionLimit
 ROOTTEST_ADD_TEST(missingBranches
                   MACRO test_missingBranches.C
                   ERRREF test_missingBranches.eref
-                  ${MIGHT_FAIL})
+                  ${WILLFAIL_ON_WIN32})
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
 ROOTTEST_GENERATE_EXECUTABLE(test_hugeRDF test_hugeRDF.cxx
@@ -96,7 +96,7 @@ ROOTTEST_ADD_TEST(emptysource
 
 ROOTTEST_ADD_TEST(regression_snapshot
                   MACRO regression_snapshot.C+
-                  ${MIGHT_FAIL}
+                  ${WILLFAIL_ON_WIN32}
                   OUTREF regression_snapshot.ref)
 
 ROOTTEST_GENERATE_EXECUTABLE(test_inference test_inference.cxx LIBRARIES ${DFLIBRARIES})
@@ -107,7 +107,7 @@ ROOTTEST_ADD_TEST(test_inference
 
 ROOTTEST_ADD_TEST(test_snapshot
                   MACRO test_snapshot.C+
-                  ${MIGHT_FAIL}
+                  ${WILLFAIL_ON_WIN32}
                   OUTREF test_snapshot.ref)
 
 ROOTTEST_ADD_TEST(test_stringfiltercolumn
@@ -120,7 +120,7 @@ ROOTTEST_ADD_TEST(test_glob
 
 ROOTTEST_ADD_TEST(test_reduce
                   MACRO test_reduce.C+
-                  ${MIGHT_FAIL}
+                  ${WILLFAIL_ON_WIN32}
                   OUTREF test_reduce.ref)
 
 ROOTTEST_GENERATE_EXECUTABLE(test_callables test_callables.cxx LIBRARIES ${DFLIBRARIES})
@@ -156,7 +156,7 @@ ROOTTEST_ADD_TEST(misc
 ROOTTEST_ADD_TEST(ctors
                   MACRO test_ctors.C+
                   OUTREF test_ctors.ref
-                  ${MIGHT_FAIL})
+                  ${WILLFAIL_ON_WIN32})
 
 ROOTTEST_GENERATE_EXECUTABLE(branchoverwrite test_branchoverwrite.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(branchoverwrite
