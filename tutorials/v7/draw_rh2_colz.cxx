@@ -66,6 +66,7 @@ void draw_rh2_colz()
    // draw->Lego(2); // configure lego2 draw option
    // draw->Contour(); // configure cont draw option
    // draw->Scatter(); // configure color draw option (default)
+   // draw->Arrow(); // configure arrow draw option
    draw->Color(); // configure color draw option (default)
    draw->Text(true); // configure text drawing (can be enabled with most 2d options)
 
