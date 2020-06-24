@@ -223,6 +223,8 @@ public:
    /// LoadCluster() is typically called from the I/O thread of a cluster pool, i.e. the method runs
    /// concurrently to other methods of the page source.
    virtual std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) = 0;
+
+   virtual void UnzipCluster(RCluster * /*cluster*/) {}
 };
 
 } // namespace Detail

@@ -99,6 +99,8 @@ void ROOT::Experimental::Detail::RClusterPool::ExecUnzipClusters()
          if (!item.fCluster)
             return;
 
+         fPageSource.UnzipCluster(item.fCluster.get());
+
          item.fPromise.set_value(std::move(item.fCluster));
       }
    } // while (true)
