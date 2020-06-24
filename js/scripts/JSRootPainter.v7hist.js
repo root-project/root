@@ -1647,6 +1647,7 @@
       switch(kind) {
          case "bar": o.Bar = true; o.BarStyle = sub; break;
          case "err": o.Error = true; o.ErrorKind = sub; break;
+         case "p": o.Mark = true; break;
          case "lego": o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;
          default: o.Hist = true;
       }
