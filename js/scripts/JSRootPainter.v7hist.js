@@ -887,10 +887,8 @@
           pthis = this,
           histo = this.GetHisto(), xaxis = this.GetAxis("x"),
           i, x1, x2, grx1, grx2, y, gry1, gry2, w,
-          bars = "", barsl = "", barsr = "",
-          side = (this.options.BarStyle > 10) ? this.options.BarStyle % 10 : 0;
+          bars = "", barsl = "", barsr = "";
 
-      if (side>4) side = 4;
       gry2 = pmain.swap_xy ? 0 : height;
       if ((this.options.BaseLine !== false) && !isNaN(this.options.BaseLine))
          if (this.options.BaseLine >= pmain.scale_ymin)
@@ -918,9 +916,9 @@
          else
             bars += "M"+grx1+","+gry1 + "h"+w + "v"+(gry2-gry1) + "h"+(-w)+ "z";
 
-         if (side > 0) {
+         if (this.options.BarStyle > 0) {
             grx2 = grx1 + w;
-            w = Math.round(w * side / 10);
+            w = Math.round(w / 10);
             if (pmain.swap_xy) {
                barsl += "M"+gry2+","+grx1 + "h"+(gry1-gry2) + "v" + w + "h"+(gry2-gry1) + "z";
                barsr += "M"+gry2+","+grx2 + "h"+(gry1-gry2) + "v" + (-w) + "h"+(gry2-gry1) + "z";
@@ -1631,7 +1629,7 @@
 
       if (!painter.PrepareFrame(divid)) return null;
 
-      painter.options = { Hist: false, Bar: false,
+      painter.options = { Hist: false, Bar: false, BarStyle: 0,
                           Error: false, ErrorKind: -1, errorX: JSROOT.gStyle.fErrorX,
                           Zero: false, Mark: false,
                           Line: false, Fill: false, Lego: 0, Surf: 0,
@@ -3413,10 +3411,10 @@
 
       if (!painter.PrepareFrame(divid)) return null;
 
-      painter.options = { Hist: false, Bar: false, Error: false, Zero: false, Mark: false,
+      painter.options = { Hist: false, Error: false, Zero: false, Mark: false,
                           Line: false, Fill: false, Lego: 0, Surf: 0,
                           Text: true, TextAngle: 0, TextKind: "",
-                          fBarOffset: 0, fBarWidth: 1000, BaseLine: false, Mode3D: false, AutoColor: 0,
+                          BaseLine: false, Mode3D: false, AutoColor: 0,
                           Color: false, Scat: false, ScatCoef: 1, Candle: "", Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0,
                           minimum: -1111, maximum: -1111 };
 
