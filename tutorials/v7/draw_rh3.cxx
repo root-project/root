@@ -47,7 +47,7 @@ void draw_rh3()
 
    auto draw = canvas->Draw(pHist);
    draw->SetColor(RColor::kBlue); // use color in some draw options
-   draw->SetLineColor(RColor::kRed);
+   draw->AttrLine().SetColor(RColor::kRed);
    draw->Scatter(); // scatter plot
    draw->Sphere(1); // draw spheres 0 - default, 1 - with colors
    draw->Color(); // draw colored boxes
