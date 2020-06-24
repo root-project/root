@@ -1,4 +1,6 @@
+#ifdef R__WIN32
 R__LOAD_LIBRARY(libROOTDataFrame);
+#endif
 
 const auto treeName = "TotemNtuple";
 const auto fileName = "bigFile.root";
