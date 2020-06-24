@@ -1614,7 +1614,7 @@
 
    RH1Painter.prototype.Draw3D = function(call_back, reason) {
       this.mode3d = true;
-      JSROOT.AssertPrerequisites('hist3d', function() {
+      JSROOT.AssertPrerequisites('v7hist3d', function() {
          this.Draw3D(call_back, reason);
       }.bind(this));
    }
@@ -1648,6 +1648,7 @@
          case "bar": o.Bar = true; o.BarStyle = sub; break;
          case "err": o.Error = true; o.ErrorKind = sub; break;
          case "p": o.Mark = true; break;
+         case "l": o.Line = true; break;
          case "lego": o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;
          default: o.Hist = true;
       }
