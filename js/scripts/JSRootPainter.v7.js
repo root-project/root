@@ -4865,7 +4865,7 @@
           title_margin = this.v7EvalLength("margin", ph, 0.02),
           title_width  = fw,
           title_height = this.v7EvalLength("height", ph, 0.05),
-          text_size    = this.v7EvalAttr("text_size", 16),
+          text_size    = this.v7EvalAttr("text_size", 24),
           text_angle   = -1 * this.v7EvalAttr("text_angle", 0),
           text_align   = this.v7EvalAttr("text_align", 22),
           text_color   = this.v7EvalColor("text_color", "black"),
