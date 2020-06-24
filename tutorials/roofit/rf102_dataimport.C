@@ -1,7 +1,6 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
 /// Basic functionality: importing data from ROOT TTrees and THx histograms.
 ///
 /// \macro_image
@@ -166,10 +165,9 @@ void rf102_dataimport()
    frame5->Draw();
 }
 
+// Create ROOT TH1 filled with a Gaussian distribution
 TH1 *makeTH1()
 {
-   // Create ROOT TH1 filled with a Gaussian distribution
-
    TH1D *hh = new TH1D("hh", "hh", 25, -10, 10);
    for (int i = 0; i < 100; i++) {
       hh->Fill(gRandom->Gaus(0, 3));
@@ -177,10 +175,9 @@ TH1 *makeTH1()
    return hh;
 }
 
+// Create ROOT TTree filled with a Gaussian distribution in x and a uniform distribution in y
 TTree *makeTTree()
 {
-   // Create ROOT TTree filled with a Gaussian distribution in x and a uniform distribution in y
-
    TTree *tree = new TTree("tree", "tree");
    Double_t *px = new Double_t;
    Double_t *py = new Double_t;
