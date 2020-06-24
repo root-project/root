@@ -51,6 +51,7 @@ ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource, 
    : fPageSource(pageSource)
    , fPool(size)
    , fThreadIo(&RClusterPool::ExecLoadClusters, this)
+   , fThreadUnzip(&RClusterPool::ExecUnzipClusters, this)
 {
    R__ASSERT(size > 0);
    fWindowPre = 0;
@@ -71,6 +72,36 @@ ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
       fCvHasWork.notify_one();
    }
    fThreadIo.join();
+
+   {
+      // Controlled shutdown of the unzip thread
+      std::unique_lock<std::mutex> lock(fLockUnzipQueue);
+      fUnzipQueue.emplace(RUnzipItem());
+      fCvHasUnzipWork.notify_one();
+   }
+   fThreadUnzip.join();
+}
+
+void ROOT::Experimental::Detail::RClusterPool::ExecUnzipClusters()
+{
+   while (true) {
+      std::vector<RUnzipItem> unzipItems;
+      {
+         std::unique_lock<std::mutex> lock(fLockUnzipQueue);
+         fCvHasUnzipWork.wait(lock, [&]{ return !fUnzipQueue.empty(); });
+         while (!fUnzipQueue.empty()) {
+            unzipItems.emplace_back(std::move(fUnzipQueue.front()));
+            fUnzipQueue.pop();
+         }
+      }
+
+      for (auto &item : unzipItems) {
+         if (!item.fCluster)
+            return;
+
+         item.fPromise.set_value(std::move(item.fCluster));
+      }
+   } // while (true)
 }
 
 void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
@@ -105,10 +136,14 @@ void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
                break;
             }
          }
-         if (discard)
+         if (discard) {
             cluster.reset();
-
-         item.fPromise.set_value(std::move(cluster));
+            item.fPromise.set_value(std::move(cluster));
+         } else {
+            std::unique_lock<std::mutex> lock(fLockUnzipQueue);
+            fUnzipQueue.emplace(RUnzipItem{std::move(cluster), std::move(item.fPromise)});
+            fCvHasUnzipWork.notify_one();
+         }
       }
    } // while (true)
 }
