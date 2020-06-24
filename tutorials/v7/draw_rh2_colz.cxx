@@ -56,7 +56,7 @@ void draw_rh2_colz()
 
    frame->AttrY().SetZoomMinMax(2.,8.);
 
-   canvas->Draw<RFrameTitle>("2D histogram with color palette");
+   canvas->Draw<RFrameTitle>("2D histogram with color palette")->SetMargin(0.01_normal).SetHeight(0.09_normal);
 
    canvas->Draw<RPaletteDrawable>(RPalette::GetPalette(), true);
 

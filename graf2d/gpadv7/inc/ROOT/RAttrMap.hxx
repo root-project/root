@@ -144,8 +144,16 @@ public:
    RAttrMap &AddInt(const std::string &name, int value) { m[name] = std::make_unique<IntValue_t>(value); return *this; }
    RAttrMap &AddDouble(const std::string &name, double value) { m[name] = std::make_unique<DoubleValue_t>(value); return *this; }
    RAttrMap &AddString(const std::string &name, const std::string &value) { m[name] = std::make_unique<StringValue_t>(value); return *this; }
-   RAttrMap &AddPadLength(const std::string &name, const RPadLength &value) { m[name] = std::make_unique<StringValue_t>(value.AsString()); return *this; }
+   RAttrMap &AddPadLength(const std::string &name, const RPadLength &value)
+   {
+      if (value.Empty())
+         Clear(name);
+      else
+         m[name] = std::make_unique<StringValue_t>(value.AsString());
+      return *this;
+   }
    RAttrMap &AddDefaults(const RAttrBase &vis);
+   RAttrMap &AddNothing() { return *this; }
 
    RAttrMap &AddValue(const std::string &name, bool value) { return AddBool(name, value); }
    RAttrMap &AddValue(const std::string &name, int value) { return AddInt(name, value); }

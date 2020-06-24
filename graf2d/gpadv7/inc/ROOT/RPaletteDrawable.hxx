@@ -11,6 +11,7 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrAxis.hxx>
+#include <ROOT/RAttrValue.hxx>
 #include <ROOT/RPadPos.hxx>
 #include <ROOT/RPalette.hxx>
 
@@ -31,14 +32,11 @@ namespace Experimental {
 
 class RPaletteDrawable final : public RDrawable {
 
-   class ROwnAttrs : public RAttrBase {
-      friend class RPaletteDrawable;
-      R__ATTR_CLASS(ROwnAttrs, "", AddBool("visible", true).AddPadLength("margin",0.02).AddPadLength("size",0.05));
-   };
-
    RPalette   fPalette;                     ///  color palette to draw
    RAttrAxis  fAttrAxis{this, "axis_"};     ///<! axis attributes
-   ROwnAttrs  fAttr{this,""};               ///<! own attributes
+   RAttrValue<bool> fVisible{this, "visible", true}; ///<! visibility flag
+   RAttrValue<RPadLength> fMargin{this, "margin", 0.02_normal}; ///<! margin
+   RAttrValue<RPadLength> fSize{this, "size", 0.05_normal}; ///<! margin
 
 protected:
 
@@ -52,30 +50,14 @@ public:
    RPaletteDrawable(const RPalette &palette, bool visible) : RPaletteDrawable() { fPalette = palette; SetVisible(visible); }
    const RPalette &GetPalette() const { return fPalette; }
 
-   RPaletteDrawable &SetVisible(bool on = true) { fAttr.SetValue("visible", on); return *this; }
-   bool GetVisible() const { return fAttr.GetValue<bool>("visible"); }
+   RPaletteDrawable &SetVisible(bool on = true) { fVisible = on; return *this; }
+   bool GetVisible() const { return fVisible; }
 
-   RPaletteDrawable &SetMargin(const RPadLength &pos)
-   {
-      fAttr.SetValue("margin", pos);
-      return *this;
-   }
+   RPaletteDrawable &SetMargin(const RPadLength &pos) { fMargin = pos; return *this; }
+   RPadLength GetMargin() const { return fMargin; }
 
-   RPadLength GetMargin() const
-   {
-      return fAttr.GetValue<RPadLength>("margin");
-   }
-
-   RPaletteDrawable &SetSize(const RPadLength &sz)
-   {
-      fAttr.SetValue("size", sz);
-      return *this;
-   }
-
-   RPadLength GetSize() const
-   {
-      return fAttr.GetValue<RPadLength>("size");
-   }
+   RPaletteDrawable &SetSize(const RPadLength &sz) { fSize = sz; return *this; }
+   RPadLength GetSize() const { return fSize; }
 
    const RAttrAxis &GetAttrAxis() const { return fAttrAxis; }
    RPaletteDrawable &SetAttrAxis(const RAttrAxis &attr) { fAttrAxis = attr; return *this; }

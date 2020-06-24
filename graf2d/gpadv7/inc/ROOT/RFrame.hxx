@@ -16,7 +16,7 @@
 #include "ROOT/RAttrFill.hxx"
 #include "ROOT/RAttrMargins.hxx"
 #include "ROOT/RAttrAxis.hxx"
-
+#include "ROOT/RAttrValue.hxx"
 #include "ROOT/RPadUserAxis.hxx"
 
 #include <memory>
@@ -120,18 +120,14 @@ public:
 
 private:
 
-   class RFrameAttrs : public RAttrBase {
-      friend class RFrame;
-      R__ATTR_CLASS(RFrameAttrs, "", AddBool("gridx", false).AddBool("gridy",false));
-   };
-
    RAttrMargins fMargins{this, "margin_"};     ///<!
    RAttrLine fAttrBorder{this, "border_"};     ///<!
    RAttrFill fAttrFill{this, "fill_"};         ///<!
    RAttrAxis fAttrX{this, "x_"};               ///<!
    RAttrAxis fAttrY{this, "y_"};               ///<!
    RAttrAxis fAttrZ{this, "z_"};               ///<!
-   RFrameAttrs fAttr{this,""};                 ///<! own frame attributes
+   RAttrValue<bool> fGridX{this, "gridx", false}; ///<!
+   RAttrValue<bool> fGridY{this, "gridy", false}; ///<!
    std::map<unsigned, RUserRanges> fClientRanges; ///<! individual client ranges
 
    /// Mapping of user coordinates to normal coordinates, one entry per dimension.
@@ -199,11 +195,11 @@ public:
    RFrame &SetAttrZ(const RAttrAxis &axis) { fAttrZ = axis; return *this; }
    RAttrAxis &AttrZ() { return fAttrZ; }
 
-   RFrame &SetGridX(bool on = true) { fAttr.SetValue("gridx", on); return *this; }
-   bool GetGridX() const { return fAttr.GetValue<bool>("gridx"); }
+   RFrame &SetGridX(bool on = true) { fGridX = on; return *this; }
+   bool GetGridX() const { return fGridX; }
 
-   RFrame &SetGridY(bool on = true) { fAttr.SetValue("gridy", on); return *this; }
-   bool GetGridY() const { return fAttr.GetValue<bool>("gridy"); }
+   RFrame &SetGridY(bool on = true) { fGridY = on; return *this; }
+   bool GetGridY() const { return fGridY; }
 
    void GetClientRanges(unsigned connid, RUserRanges &ranges);
 
