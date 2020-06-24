@@ -57,6 +57,11 @@ private:
       RPageSource::ColumnSet_t fColumns;
    };
 
+   struct RUnzipItem {
+      std::unique_ptr<RCluster> fCluster;
+      std::promise<std::unique_ptr<RCluster>> fPromise;
+   };
+
    /// Clusters that are currently being processed by the I/O thread.  Every in-flight cluster has a corresponding
    /// work item.
    struct RInFlightCluster {
@@ -94,10 +99,15 @@ private:
    /// The communication channel to the I/O thread
    std::queue<RWorkItem> fWorkQueue;
 
+   std::mutex fLockUnzipQueue;
+   std::condition_variable fCvHasUnzipWork;
+   std::queue<RUnzipItem> fUnzipQueue;
+
    /// The I/O thread calls RPageSource::LoadCluster() asynchronously.  The thread is mostly waiting for the
    /// data to arrive (blocked by the kernel) and therefore can safely run in addition to the application
    /// main threads.
    std::thread fThreadIo;
+   std::thread fThreadUnzip;
 
    /// Every cluster id has at most one corresponding RCluster pointer in the pool
    RCluster *FindInPool(DescriptorId_t clusterId) const;
@@ -106,6 +116,7 @@ private:
    size_t FindFreeSlot() const;
    /// The I/O thread routine, there is exactly one I/O thread in-flight for every cluster pool
    void ExecLoadClusters();
+   void ExecUnzipClusters();
    /// Returns the given cluster from the pool, which needs to contain at least the columns `columns`.
    /// Executed at the end of GetCluster when all missing data pieces have been sent to the load queue.
    /// Ideally, the function returns without blocking if the cluster is already in the pool.
