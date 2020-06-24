@@ -20,9 +20,9 @@ errorhandler function. Initially the MinimalErrorHandler, which is supposed
 to be replaced by the proper DefaultErrorHandler()
 */
 
-#include "Varargs.h"
 #include "TError.h"
 
+#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cerrno>
@@ -108,7 +108,7 @@ ErrorHandlerFunc_t GetErrorHandler()
 ////////////////////////////////////////////////////////////////////////////////
 /// General error handler function. It calls the user set error handler.
 
-void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap)
+void ErrorHandler(Int_t level, const char *location, const char *fmt, std::va_list ap)
 {
    thread_local Int_t buf_size(256);
    thread_local char* buf_storage(0);
@@ -117,8 +117,8 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap
    char *buf = buf_storage ? buf_storage : small_buf;
 
    int vc = 0;
-   va_list sap;
-   R__VA_COPY(sap, ap);
+   std::va_list sap;
+   va_copy(sap, ap);
 
 again:
    if (!buf) {
@@ -134,7 +134,7 @@ again:
       if (buf != &(small_buf[0])) delete [] buf;
       buf = 0;
       va_end(ap);
-      R__VA_COPY(ap, sap);
+      va_copy(ap, sap);
       vc = 1;
       goto again;
    }
@@ -189,55 +189,55 @@ void Obsolete(const char *function, const char *asOfVers, const char *removedFro
 ////////////////////////////////////////////////////////////////////////////////
 /// Use this function in case an error occurred.
 
-void Error(const char *location, const char *va_(fmt), ...)
+void Error(const char *location, const char *fmt, ...)
 {
-   va_list ap;
-   va_start(ap,va_(fmt));
-   ErrorHandler(kError, location, va_(fmt), ap);
+   std::va_list ap;
+   va_start(ap, fmt);
+   ErrorHandler(kError, location, fmt, ap);
    va_end(ap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Use this function in case a system (OS or GUI) related error occurred.
 
-void SysError(const char *location, const char *va_(fmt), ...)
+void SysError(const char *location, const char *fmt, ...)
 {
-   va_list ap;
-   va_start(ap, va_(fmt));
-   ErrorHandler(kSysError, location, va_(fmt), ap);
+   std::va_list ap;
+   va_start(ap, fmt);
+   ErrorHandler(kSysError, location, fmt, ap);
    va_end(ap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Use this function in case an error occurred.
 
-void Break(const char *location, const char *va_(fmt), ...)
+void Break(const char *location, const char *fmt, ...)
 {
-   va_list ap;
-   va_start(ap,va_(fmt));
-   ErrorHandler(kBreak, location, va_(fmt), ap);
+   std::va_list ap;
+   va_start(ap, fmt);
+   ErrorHandler(kBreak, location, fmt, ap);
    va_end(ap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Use this function for informational messages.
 
-void Info(const char *location, const char *va_(fmt), ...)
+void Info(const char *location, const char *fmt, ...)
 {
-   va_list ap;
-   va_start(ap,va_(fmt));
-   ErrorHandler(kInfo, location, va_(fmt), ap);
+   std::va_list ap;
+   va_start(ap, fmt);
+   ErrorHandler(kInfo, location, fmt, ap);
    va_end(ap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Use this function in warning situations.
 
-void Warning(const char *location, const char *va_(fmt), ...)
+void Warning(const char *location, const char *fmt, ...)
 {
-   va_list ap;
-   va_start(ap,va_(fmt));
-   ErrorHandler(kWarning, location, va_(fmt), ap);
+   std::va_list ap;
+   va_start(ap, fmt);
+   ErrorHandler(kWarning, location, fmt, ap);
    va_end(ap);
 }
 
@@ -247,10 +247,10 @@ void Warning(const char *location, const char *va_(fmt), ...)
 // Fatal() *might* not abort the program (if gAbortLevel > kFatal) - but for all
 // reasonable settings it *will* abort. So let's be reasonable wrt Coverity:
 // coverity[+kill]
-void Fatal(const char *location, const char *va_(fmt), ...)
+void Fatal(const char *location, const char *fmt, ...)
 {
-   va_list ap;
-   va_start(ap,va_(fmt));
-   ErrorHandler(kFatal, location, va_(fmt), ap);
+   std::va_list ap;
+   va_start(ap, fmt);
+   ErrorHandler(kFatal, location, fmt, ap);
    va_end(ap);
 }
