@@ -2586,8 +2586,8 @@
           i,j,binz,colindx,binw,binh,lbl, loop, dn = 1e-30, dx, dy, xc,yc,
           dxn,dyn,x1,x2,y1,y2, anr,si,co,
           handle = this.PrepareColorDraw({ rounding: false }),
-          scale_x  = (handle.grx[handle.i2] - handle.grx[handle.i1])/(handle.i2 - handle.i1 + 1-0.03)/2,
-          scale_y  = (handle.gry[handle.j2] - handle.gry[handle.j1])/(handle.j2 - handle.j1 + 1-0.03)/2;
+          scale_x = (handle.grx[handle.i2] - handle.grx[handle.i1])/(handle.i2 - handle.i1 + 1-0.03)/2,
+          scale_y = (handle.gry[handle.j2] - handle.gry[handle.j1])/(handle.j2 - handle.j1 + 1-0.03)/2;
 
       for (var loop=0;loop<2;++loop)
          for (i = handle.i1; i < handle.i2; ++i)
@@ -3443,6 +3443,7 @@
          case "surf": o.Surf = sub > 0 ? 10+sub : 1; o.Mode3D = true; break;
          case "err": o.Error = true; o.Mode3D = true; break;
          case "cont": o.Contour = sub > 0 ? 10+sub : 1; break;
+         case "arr": o.Arrow = true; break;
          case "scat": o.Scat = true; break;
          default: o.Color = true;
       }

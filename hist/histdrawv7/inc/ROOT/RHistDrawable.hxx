@@ -116,6 +116,7 @@ public:
    RHist2Drawable &Error() { fAttr.SetValue("kind", std::string("err")); fAttr.ClearValue("sub"); return *this; }
    RHist2Drawable &Contour(int kind = 0) { fAttr.SetValue("kind", std::string("cont")); fAttr.SetValue("sub", kind); return *this; }
    RHist2Drawable &Scatter() { fAttr.SetValue("kind", std::string("scat")); fAttr.ClearValue("sub"); return *this; }
+   RHist2Drawable &Arrow() { fAttr.SetValue("kind", std::string("arr")); fAttr.ClearValue("sub"); return *this; }
    RHist2Drawable &Text(bool on = true) { fAttr.SetValue("text", on); return *this; }
 
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
