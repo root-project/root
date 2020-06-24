@@ -89,11 +89,7 @@
       return histo;
    }
 
-   RHistPainter.prototype.IsTProfile = function() {
-      return false;
-   }
-
-   RHistPainter.prototype.IsTH1K = function() {
+   RHistPainter.prototype.IsRProfile = function() {
       return false;
    }
 
@@ -177,7 +173,7 @@
          // make it easy - copy statistics without axes
          horigin.fStatistics = hobj.fStatistics;
 
-         // special tratement for webcanvas - also name can be changed
+         // special treatment for webcanvas - also name can be changed
          // if (this.snapid !== undefined)
          //   histo.fName = obj.fName;
 
@@ -688,19 +684,6 @@
 
    RH1Painter.prototype = Object.create(RHistPainter.prototype);
 
-   RH1Painter.prototype.ConvertTH1K = function() {
-      var histo = this.GetObject();
-
-      if (histo.fReady) return;
-
-      var arr = histo.fArray; // array of values
-      histo.fNcells = histo.fXaxis.fNbins + 2;
-      histo.fArray = new Float64Array(histo.fNcells);
-      for (var n=0;n<histo.fNcells;++n) histo.fArray[n] = 0;
-      for (var n=0;n<histo.fNIn;++n) histo.Fill(arr[n]);
-      histo.fReady = true;
-   }
-
    RH1Painter.prototype.ScanContent = function(when_axis_changed) {
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
 
@@ -777,7 +760,7 @@
    }
 
    RH1Painter.prototype.CountStat = function(cond) {
-      var profile = this.IsTProfile(),
+      var profile = this.IsRProfile(),
           histo = this.GetHisto(), xaxis = this.GetAxis("x"),
           left = this.GetSelectIndex("x", "left"),
           right = this.GetSelectIndex("x", "right"),
@@ -852,7 +835,7 @@
       if (print_name > 0)
          stat.AddText(data.name);
 
-      if (this.IsTProfile()) {
+      if (this.IsRProfile()) {
 
          if (print_entries > 0)
             stat.AddText("Entries = " + stat.Format(data.entries,"entries"));
@@ -1041,19 +1024,20 @@
           show_markers = options.Mark,
           show_line = options.Line,
           show_text = options.Text,
-          text_profile = show_text && (this.options.TextKind == "E") && this.IsTProfile() && histo.fBinEntries,
+          text_profile = show_text && (this.options.TextKind == "E") && this.IsRProfile(),
           path_fill = null, path_err = null, path_marker = null, path_line = null,
           endx = "", endy = "", dend = 0, my, yerr1, yerr2, bincont, binerr, mx1, mx2, midx,
           mpath = "", text_col, text_angle, text_size;
 
-      //if (show_errors && !show_markers && (histo.fMarkerStyle > 1))
-      //   show_markers = true;
+      if (show_errors && !show_markers && (this.v7EvalAttr("marker_style",1) > 1))
+         show_markers = true;
 
       if (options.ErrorKind === 2) {
          if (this.fillatt.empty()) show_markers = true;
                                else path_fill = "";
-      } else
-      if (options.Error) path_err = "";
+      } else if (options.Error) {
+         path_err = "";
+      }
 
       if (show_line) path_line = "";
 
@@ -1427,7 +1411,7 @@
             gry1 = Math.round(pmain.gry(cont + binerr)); // up
             gry2 = Math.round(pmain.gry(cont - binerr)); // down
 
-            if ((cont==0) && this.IsTProfile()) findbin = null;
+            if ((cont==0) && this.IsRProfile()) findbin = null;
 
             var dx = (grx2-grx1)*this.options.errorX;
             grx1 = Math.round(midx - dx);
@@ -1604,7 +1588,6 @@
    }
 
    RH1Painter.prototype.CallDrawFunc = function(callback, reason) {
-
       var main = this.frame_painter();
 
       if (main && (main.mode3d !== this.options.Mode3D) && !this.is_main_painter())
@@ -1653,17 +1636,25 @@
 
       if (!painter.PrepareFrame(divid)) return null;
 
-      painter.options = { Hist: true, Bar: false, Error: false, ErrorKind: -1, errorX: 0, Zero: false, Mark: false,
+      painter.options = { Hist: false, Bar: false, Error: false, ErrorKind: -1, errorX: 0, Zero: false, Mark: false,
                           Line: false, Fill: false, Lego: 0, Surf: 0,
                           Text: false, TextAngle: 0, TextKind: "", AutoColor: 0,
                           fBarOffset: 0, fBarWidth: 1000, BaseLine: false, Mode3D: false };
 
-      // here we deciding how histogram will look like and how will be shown
-      // painter.DecodeOptions(opt);
+      var kind = painter.v7EvalAttr("kind", "hist"),
+          sub = painter.v7EvalAttr("sub", 0),
+          o = painter.options;
+
+      o.Text = painter.v7EvalAttr("text", false);
+
+      switch(kind) {
+         case "bar": o.Bar = true; o.BarStyle = sub; break;
+         case "err": o.Error = true; o.ErrorKind = sub > 0 ? sub : 1; break;
+         case "lego": o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;
+         default: o.Hist = true;
+      }
 
       painter.ScanContent();
-
-      // painter.CreateStat(); // only when required
 
       painter.CallDrawFunc(function() {
          // if (!painter.options.Mode3D && painter.options.AutoZoom) painter.AutoZoom();
@@ -3213,7 +3204,7 @@
          }
 
          if (res.changed)
-            res.user_info = { obj: histo,  name: histo.fName || "histo",
+            res.user_info = { obj: histo,  name: "histo",
                               bin: foundindx,
                               cont: bin.fContent,
                               grx: pnt.x, gry: pnt.y };
@@ -3237,7 +3228,7 @@
             return null;
          }
 
-         var res = { name: histo.fName || "histo", title: histo.fTitle || "title",
+         var res = { name: "histo", title: histo.fTitle || "title",
                      x: pnt.x, y: pnt.y,
                      color1: this.lineatt ? this.lineatt.color : 'green',
                      color2: this.fillatt ? this.fillatt.fillcoloralt('blue') : 'blue',
@@ -3265,7 +3256,7 @@
          }
 
          if (res.changed)
-            res.user_info = { obj: histo,  name: histo.fName || "histo",
+            res.user_info = { obj: histo,  name: "histo",
                               bin: i+1, cont: p.median, binx: i+1, biny: 1,
                               grx: pnt.x, gry: pnt.y };
 
@@ -3298,7 +3289,7 @@
          return null;
       }
 
-      var res = { name: histo.fName || "histo", title: histo.fTitle || "title",
+      var res = { name: "histo", title: histo.fTitle || "title",
                   x: pnt.x, y: pnt.y,
                   color1: this.lineatt ? this.lineatt.color : 'green',
                   color2: this.fillatt ? this.fillatt.fillcoloralt('blue') : 'blue',
@@ -3356,7 +3347,7 @@
       }
 
       if (res.changed)
-         res.user_info = { obj: histo, name: histo.fName || "histo",
+         res.user_info = { obj: histo, name: "histo",
                            bin: histo.getBin(i+1, j+1), cont: binz, binx: i+1, biny: j+1,
                            grx: pnt.x, gry: pnt.y };
 
@@ -3404,7 +3395,6 @@
    }
 
    RH2Painter.prototype.CallDrawFunc = function(callback, reason) {
-
       var main = this.frame_painter();
 
       if (main && (main.mode3d !== this.options.Mode3D) && !this.is_main_painter())
@@ -3425,7 +3415,7 @@
 
       if (!painter.PrepareFrame(divid)) return null;
 
-      painter.options = { Hist: false, Bar: false, Error: false, ErrorKind: -1, errorX: 0, Zero: false, Mark: false,
+      painter.options = { Hist: false, Bar: false, Error: false, errorX: 0, Zero: false, Mark: false,
                           Line: false, Fill: false, Lego: 0, Surf: 0,
                           Text: true, TextAngle: 0, TextKind: "",
                           fBarOffset: 0, fBarWidth: 1000, BaseLine: false, Mode3D: false, AutoColor: 0,
