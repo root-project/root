@@ -60,6 +60,12 @@ void draw_rh1()
    subpads[1][0]->Draw(pHist1)->Error(1).AttrLine().SetColor(col1);
    subpads[1][0]->Draw(pHist2)->Error(4).AttrFill().SetColor(col2).SetStyle(3003);
 
+   // text and marker draw options
+   subpads[0][1]->Draw<RFrameTitle>("Text and marker draw options");
+   subpads[0][1]->Draw(pHist1)->Text(true).AttrText().SetColor(col1);
+   subpads[0][1]->Draw(pHist2)->Marker().AttrMarker().SetColor(col2).SetStyle(30).SetSize(1.5);
+
+
    canvas->SetSize(1000, 700);
    canvas->Show();
 }
