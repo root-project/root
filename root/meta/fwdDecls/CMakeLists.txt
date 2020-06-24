@@ -13,7 +13,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(fwdDeclarations fwdDeclarations.h SELECTION 
 ROOTTEST_ADD_TEST(fwdDeclarations
                   MACRO execfwdDeclarations.C
                   OUTREF execfwdDeclarations.ref
-                  ${MIGHT_FAIL}
+                  ${WILLFAIL_ON_WIN32}
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_ADD_TESTDIRS()

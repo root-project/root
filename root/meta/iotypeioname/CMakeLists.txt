@@ -10,4 +10,4 @@ ROOTTEST_ADD_TEST(execionameiotype
                   MACRO execionameiotype.C
                   DEPENDS ${GENERATE_REFLEX_TEST}
                   OUTREF execionameiotype.ref
-                  ${MIGHT_FAIL})
+                  ${WILLFAIL_ON_WIN32})

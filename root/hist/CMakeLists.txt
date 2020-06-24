@@ -1,6 +1,6 @@
 ROOTTEST_ADD_TEST(mergeTH2Poly
                   MACRO th2PolyMerge.C
-                  ${MIGHT_FAIL})
+                  ${WILLFAIL_ON_WIN32})
 
 ROOTTEST_ADD_TEST(assertSparseToTHn
                   MACRO assertSparseToTHn.C

@@ -32,7 +32,7 @@ if(MSVC)
   option(win_broken_tests "Enable broken tests on Windows" FALSE)
 
   if(NOT win_broken_tests)
-    set(MIGHT_FAIL WILLFAIL)
+    set(WILLFAIL_ON_WIN32 WILLFAIL)
   endif()
   if (NOT PYTHON_EXECUTABLE)
     find_package(PythonInterp)

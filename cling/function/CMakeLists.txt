@@ -26,7 +26,7 @@ ROOTTEST_ADD_TEST(runstaticfunc
                   MACRO runstaticfunc.C
                   OUTREF_CINTSPECIFIC staticfunc.ref
                   # OUTCNV staticfunc_convert.sh
-                  ${MIGHT_FAIL}
+                  ${WILLFAIL_ON_WIN32}
                   LABELS roottest regression cling)
 
 ROOTTEST_COMPILE_MACRO(refFunction.C)

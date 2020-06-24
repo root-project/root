@@ -15,7 +15,7 @@ ROOTTEST_ADD_TEST(runsavannah54662
 ROOTTEST_ADD_TEST(runsprintfselect
                   MACRO runsprintfselect.C
                   OUTREF sprintfselect.ref
-                  ${MIGHT_FAIL}
+                  ${WILLFAIL_ON_WIN32}
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(staticConstTest
