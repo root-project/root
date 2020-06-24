@@ -575,3 +575,8 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
       cluster->SetColumnAvailable(colId);
    return cluster;
 }
+
+void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster)
+{
+
+}

@@ -184,6 +184,7 @@ public:
    void ReleasePage(RPage &page) final;
 
    std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) final;
+   void UnzipCluster(RCluster *cluster) final;
 
    RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
