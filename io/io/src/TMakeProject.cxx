@@ -671,6 +671,7 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
       for(unsigned int i = 1; i<narg; ++i) {
          inside[i] = UpdateAssociativeToVector( inside[i].c_str() );
       }
+
       if (nestedLoc) narg = nestedLoc;
 
       // Treat the trailing stars the same as nested loc (i.e. ends up, properly, tacking them up back at the end of the name)
