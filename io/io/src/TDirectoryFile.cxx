@@ -1164,13 +1164,23 @@ void TDirectoryFile::ls(Option_t *option) const
       }
    }
 
-   if (diskobj) {
-      TKey *key;
-      TIter next(GetListOfKeys());
-      while ((key = (TKey *) next())) {
+   if (diskobj && fKeys) {
+      //*-* Loop on all the keys
+      TObjLink *lnk = fKeys->FirstLink();
+      while (lnk) {
+         TKey *key = (TKey*)lnk->GetObject();
          TString s = key->GetName();
          if (s.Index(re) == kNPOS) continue;
-         key->ls();                 //*-* Loop on all the keys
+         bool first = (lnk->Prev() == nullptr) || (s != lnk->Prev()->GetObject()->GetName());
+         bool hasbackup = (lnk->Next() != nullptr) && (s == lnk->Next()->GetObject()->GetName());
+         if (first)
+            if (hasbackup)
+               key->ls(true);
+            else
+               key->ls();
+         else
+            key->ls(false);
+         lnk = lnk->Next();
       }
    }
    TROOT::DecreaseDirLevel();

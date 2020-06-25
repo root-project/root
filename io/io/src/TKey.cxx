@@ -689,6 +689,18 @@ void TKey::Keep()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// List Key contents.
+/// Add indicator of whether it is the current item or a backup copy.
+
+void TKey::ls(Bool_t current) const
+{
+   TROOT::IndentLevel();
+   std::cout <<"KEY: "<<fClassName<<"\t"<<GetName()<<";"<<GetCycle()<<"\t"<<GetTitle();
+   std::cout << (current ? " [current cycle]" : " [backup cycle]");
+   std::cout <<std::endl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// List Key contents.
 
 void TKey::ls(Option_t *) const
 {
