@@ -16,5 +16,7 @@
 namespace RooFit {
 namespace TestStatistics {
 
+// TODO: initialize RooListProxy _vars
+
 }
 }

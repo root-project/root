@@ -340,19 +340,6 @@ RooAbsMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &param
 }
 
 
-//Double_t RooAbsMinimizerFcn::GetPdfParamVal(Int_t index)
-//{
-//   // Access PDF parameter value by ordinal index (needed by MINUIT)
-//
-//   return ((RooRealVar *)_floatParamList->at(index))->getVal();
-//}
-//
-//Double_t RooAbsMinimizerFcn::GetPdfParamErr(Int_t index)
-//{
-//   // Access PDF parameter error by ordinal index (needed by MINUIT)
-//   return ((RooRealVar *)_floatParamList->at(index))->getError();
-//}
-
 void RooAbsMinimizerFcn::SetPdfParamErr(Int_t index, Double_t value)
 {
    // Modify PDF parameter error by ordinal index (needed by MINUIT)
@@ -502,6 +489,54 @@ void RooAbsMinimizerFcn::zeroEvalCount()
 void RooAbsMinimizerFcn::SetVerbose(Bool_t flag)
 {
    _verbose = flag;
+}
+
+bool RooAbsMinimizerFcn::getOptConst()
+{
+   return _optConst;
+}
+
+
+//Double_t RooAbsMinimizerFcn::GetPdfParamVal(Int_t index)
+//{
+//   // Access PDF parameter value by ordinal index (needed by MINUIT)
+//
+//   return ((RooRealVar *)_floatParamList->at(index))->getVal();
+//}
+//
+//Double_t RooAbsMinimizerFcn::GetPdfParamErr(Int_t index)
+//{
+//   // Access PDF parameter error by ordinal index (needed by MINUIT)
+//   return ((RooRealVar *)_floatParamList->at(index))->getError();
+//}
+
+std::vector<double> RooAbsMinimizerFcn::get_parameter_values() const
+{
+   // TODO: make a cache for this somewhere so it doesn't have to be recreated on each call
+   std::vector<double> values;
+   values.reserve(_nDim);
+
+   for (std::size_t index = 0; index < _nDim; ++index) {
+      RooRealVar *par = (RooRealVar *)_floatParamVec[index];
+      values.push_back(par->getVal());
+   }
+
+   return values;
+}
+
+Bool_t RooAbsMinimizerFcn::SetPdfParamVal(const Int_t &index, const Double_t &value) const
+{
+   RooRealVar *par = (RooRealVar *)_floatParamVec[index];
+
+   if (par->getVal() != value) {
+      if (_verbose)
+         std::cout << par->GetName() << "=" << value << ", ";
+
+      par->setVal(value);
+      return kTRUE;
+   }
+
+   return kFALSE;
 }
 
 

@@ -18,6 +18,9 @@
 #include <Fit/ParameterSettings.h>
 #include "Math/MinimizerOptions.h"
 
+// forward declaration
+class RooMinimizer;
+
 namespace RooFit {
 namespace TestStatistics {
 
@@ -26,20 +29,21 @@ class RooAbsL;
 
 class LikelihoodGradientWrapper {
 public:
-   explicit LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood);
+   LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood, RooMinimizer* minimizer);
    virtual ~LikelihoodGradientWrapper() = default;
    virtual LikelihoodGradientWrapper* clone() const = 0;
 
-   virtual void fill_gradient(const double *x, double *grad) = 0;
-   virtual void fill_second_derivative(const double *x, double *g2) = 0;
-   virtual void fill_step_size(const double *x, double *gstep) = 0;
+   virtual void fill_gradient(double *grad) = 0;
+   virtual void fill_second_derivative(double *g2) = 0;
+   virtual void fill_step_size(double *gstep) = 0;
 
    // synchronize minimizer settings with calculators in child classes
    virtual void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions &options);
    virtual void synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) = 0;
 
-private:
+protected:
    std::shared_ptr<RooAbsL> likelihood;
+   RooMinimizer* _minimizer;
 };
 
 } // namespace TestStatistics

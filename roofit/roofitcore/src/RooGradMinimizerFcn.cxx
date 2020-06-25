@@ -48,7 +48,7 @@
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose)
    : RooAbsMinimizerFcn(RooArgList(*funct->getParameters(RooArgSet())), context, verbose),
-     _grad(get_nDim()), _funct(funct), _grad_params(get_nDim()), _gradf(nullptr, _grad),
+     _grad(get_nDim()), _grad_params(get_nDim()), _gradf(nullptr, _grad), _funct(funct),
      has_been_calculated(get_nDim())
 {
    // TODO: added "parameters" after rewrite in april 2020, check if correct
@@ -60,7 +60,7 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *contex
 }
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(const RooGradMinimizerFcn &other)
-   : RooAbsMinimizerFcn(other), _grad(other._grad), _funct(other._funct), _grad_params(other._grad_params), _gradf(other._gradf, _grad),
+   : RooAbsMinimizerFcn(other), _grad(other._grad), _grad_params(other._grad_params), _gradf(other._gradf, _grad), _funct(other._funct),
      has_been_calculated(other.has_been_calculated), none_have_been_calculated(other.none_have_been_calculated)
 {
 }
@@ -289,12 +289,12 @@ void RooGradMinimizerFcn::optimizeConstantTerms(bool constStatChange, bool const
       oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
          << "RooGradMinimizerFcn::::synchronize: set of constant parameters changed, rerunning const optimizer"
          << std::endl;
-      _funct->constOptimizeTestStatistic(RooAbsArg::ConfigChange);
+      _funct->constOptimizeTestStatistic(RooAbsArg::ConfigChange, true);
    } else if (constValChange) {
       oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
          << "RooGradMinimizerFcn::::synchronize: constant parameter values changed, rerunning const optimizer"
          << std::endl;
-      _funct->constOptimizeTestStatistic(RooAbsArg::ValueChange);
+      _funct->constOptimizeTestStatistic(RooAbsArg::ValueChange, true);
    }
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
@@ -328,6 +328,41 @@ ROOT::Minuit2::MnAlgebraicVector &RooGradMinimizerFcn::mutable_g2() const
 ROOT::Minuit2::MnAlgebraicVector &RooGradMinimizerFcn::mutable_gstep() const
 {
    return const_cast<ROOT::Minuit2::MnAlgebraicVector &>(_grad.Gstep());
+}
+
+std::string RooGradMinimizerFcn::getFunctionName() const
+{
+   return _funct->GetName();
+}
+
+std::string RooGradMinimizerFcn::getFunctionTitle() const
+{
+   return _funct->GetTitle();
+}
+
+void RooGradMinimizerFcn::setOptimizeConst(Int_t flag)
+{
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
+
+   if (_optConst && !flag) {
+      if (_context->getPrintLevel() > -1)
+         oocoutI(_context, Minimization) << "RooGradMinimizerFcn::setOptimizeConst: deactivating const optimization" << std::endl;
+      _funct->constOptimizeTestStatistic(RooAbsArg::DeActivate, true);
+      _optConst = flag;
+   } else if (!_optConst && flag) {
+      if (_context->getPrintLevel() > -1)
+         oocoutI(_context, Minimization) << "RooGradMinimizerFcn::setOptimizeConst: activating const optimization" << std::endl;
+      _funct->constOptimizeTestStatistic(RooAbsArg::Activate, flag > 1);
+      _optConst = flag;
+   } else if (_optConst && flag) {
+      if (_context->getPrintLevel() > -1)
+         oocoutI(_context, Minimization) << "RooGradMinimizerFcn::setOptimizeConst: const optimization already active" << std::endl;
+   } else {
+      if (_context->getPrintLevel() > -1)
+         oocoutI(_context, Minimization) << "RooGradMinimizerFcn::setOptimizeConst: const optimization wasn't active" << std::endl;
+   }
+
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
 }
 
 #endif

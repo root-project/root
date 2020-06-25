@@ -23,11 +23,9 @@
 #include "TestStatistics/LikelihoodGradientWrapper.h"
 #include "TestStatistics/LikelihoodJob.h"
 #include "TestStatistics/LikelihoodGradientJob.h"
-#include "TestStatistics/RooAbsL.h"
 #include "RooAbsMinimizerFcn.h"
 
 // forward declaration
-class RooAbsL;
 class RooAbsReal;
 class RooMinimizer;
 
@@ -42,11 +40,12 @@ public:
    ROOT::Math::IMultiGradFunction *Clone() const override;
 
    // override to include gradient strategy synchronization:
-   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, Bool_t optConst = kTRUE,
-                      Bool_t verbose = kFALSE) override;
+   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, Bool_t optConst, Bool_t verbose = kFALSE) override;
 
    // used inside Minuit:
    bool returnsInMinuit2ParameterSpace() const override;
+
+   void setOptimizeConst(Int_t flag) override;
 
 private:
    // IMultiGradFunction overrides necessary for Minuit: DoEval, Gradient, (has)G2ndDerivative and (has)GStepSize
@@ -62,6 +61,9 @@ public:
    // part of IMultiGradFunction interface, used widely both in Minuit and in RooFit:
    unsigned int NDim() const override;
 
+   std::string getFunctionName() const override;
+   std::string getFunctionTitle() const override;
+
 private:
    // The following three overrides will not actually be used in this class, so they will throw:
    double DoDerivative(const double *x, unsigned int icoord) const override;
@@ -69,6 +71,8 @@ private:
    double DoStepSize(const double * /*x*/, unsigned int /*icoord*/) const override;
 
    void optimizeConstantTerms(bool constStatChange, bool constValChange) override;
+
+   bool set_roofit_parameter_values(const double *x) const;
 
    // members
    std::unique_ptr<LikelihoodWrapper> likelihood;

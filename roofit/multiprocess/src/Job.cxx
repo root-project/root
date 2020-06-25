@@ -22,13 +22,13 @@
 namespace RooFit {
 namespace MultiProcess {
 
-Job::Job(std::size_t _N_workers) : N_workers(_N_workers)
+Job::Job()
 {
    id = JobManager::add_job_object(this);
 }
 
 Job::Job(const Job &other)
-   : N_workers(other.N_workers), _manager(other._manager)
+   : _manager(other._manager)
 {
    id = JobManager::add_job_object(this);
 }
@@ -43,7 +43,7 @@ Job::~Job()
 JobManager *Job::get_manager()
 {
    if (!_manager) {
-      _manager = JobManager::instance(N_workers);
+      _manager = JobManager::instance();
    }
 
    if (!_manager->is_activated()) {

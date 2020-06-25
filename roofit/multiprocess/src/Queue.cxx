@@ -104,6 +104,15 @@ bool Queue::process_master_message(M2Q message)
 //      std::cout << "update_real on queue: " << (t2 - t1) / 1.e9 << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
       break;
    }
+
+   case M2Q::update_bool: {
+      auto job_id = JobManager::instance()->messenger().receive_from_master_on_queue<std::size_t>();
+      auto ix = JobManager::instance()->messenger().receive_from_master_on_queue<std::size_t>();
+      auto value = JobManager::instance()->messenger().receive_from_master_on_queue<bool>();
+      for (std::size_t worker_ix = 0; worker_ix < JobManager::instance()->process_manager().N_workers(); ++worker_ix) {
+         JobManager::instance()->messenger().send_from_queue_to_worker(worker_ix, Q2W::update_bool, job_id, ix, value);
+      }
+   }
    }
 
    return carry_on;

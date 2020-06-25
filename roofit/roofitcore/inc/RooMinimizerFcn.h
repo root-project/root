@@ -43,6 +43,11 @@ public:
    ROOT::Math::IBaseFunctionMultiDim *Clone() const override;
    unsigned int NDim() const override { return get_nDim(); }
 
+   std::string getFunctionName() const override;
+   std::string getFunctionTitle() const override;
+
+   void setOptimizeConst(Int_t flag) override;
+
 private:
    double DoEval(const double *x) const override;
    void optimizeConstantTerms(bool constStatChange, bool constValChange) override;

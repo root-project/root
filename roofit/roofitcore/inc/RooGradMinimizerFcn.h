@@ -39,7 +39,7 @@ public:
    double get_error_def() const;
    void set_strategy(int istrat);
 
-   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, Bool_t optConst = kTRUE,
+   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, Bool_t optConst,
                       Bool_t verbose = kFALSE) override;
 
    void synchronize_gradient_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) const;
@@ -52,6 +52,11 @@ public:
    void set_grad_tolerance(double grad_tolerance) const;
    void set_ncycles(unsigned int ncycles) const;
    void set_error_level(double error_level) const;
+
+   std::string getFunctionName() const override;
+   std::string getFunctionTitle() const override;
+
+   void setOptimizeConst(Int_t flag) override;
 
 private:
    void run_derivator(unsigned int i_component) const;

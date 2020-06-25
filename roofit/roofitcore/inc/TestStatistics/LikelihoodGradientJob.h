@@ -14,22 +14,24 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientJob
 #define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientJob
 
+#include <vector>
 #include "Math/MinimizerOptions.h"
 #include <Minuit2/FunctionGradient.h>
 #include <RooFit/MultiProcess/Job.h>
 #include <TestStatistics/LikelihoodGradientWrapper.h>
 #include <NumericalDerivatorMinuit2.h>
+#include "Minuit2/MnMatrix.h"
 
 namespace RooFit {
 namespace TestStatistics {
 
-class LikelihoodGradientJob : MultiProcess::Job, LikelihoodGradientWrapper {
+class LikelihoodGradientJob : public MultiProcess::Job, public LikelihoodGradientWrapper {
 public:
    LikelihoodGradientJob* clone() const override;
 
-   void fill_gradient(const double *x, double *grad) override;
-   void fill_second_derivative(const double *x, double *g2) override;
-   void fill_step_size(const double *x, double *gstep) override;
+   void fill_gradient(double *grad) override;
+   void fill_second_derivative(double *g2) override;
+   void fill_step_size(double *gstep) override;
 
    // ----- BEGIN PASTE UIT RooGradientFunction.h -----
    // ----- BEGIN PASTE UIT RooGradientFunction.h -----
@@ -57,22 +59,7 @@ private:
    // CAUTION: do not move _gradf above _function and _grad, as they are needed for _gradf construction
    mutable RooFit::NumericalDerivatorMinuit2 _gradf;
 
-   mutable std::vector<double> _grad_params;
-
-   mutable std::vector<bool> has_been_calculated;
-   mutable bool none_have_been_calculated = false;
-
-   //  void run_derivator(const double *x) const;
    void run_derivator(unsigned int i_component) const;
-
-   bool sync_parameter(double x, std::size_t ix) const;
-   bool sync_parameters(const double *x) const;
-
-#ifndef NDEBUG
-private:
-   mutable Int_t _evalCounter_derivator = 0; //!
-   mutable std::size_t _derivatorCounter = 0; //!
-#endif  // not NDEBUG
 
    // ----- END PASTE UIT RooGradientFunction.h -----
    // ----- END PASTE UIT RooGradientFunction.h -----
@@ -88,6 +75,23 @@ private:
    void set_grad_tolerance(double grad_tolerance) const;
    void set_ncycles(unsigned int ncycles) const;
    void set_error_level(double error_level) const;
+
+   // Job overrides:
+   void evaluate_task(std::size_t task) override;
+   void update_real(std::size_t ix, double val, bool is_constant) override;
+   void update_bool(std::size_t ix, bool value) override;
+   void send_back_task_result_from_worker(std::size_t task) override;
+   void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) override;
+   void send_back_results_from_queue_to_master() override;
+   void clear_results() override;
+   void receive_results_on_master() override;
+
+   void update_workers_state();
+   void calculate_all();
+
+   // members
+   std::size_t N_tasks = 0;
+   std::vector<std::size_t> completed_task_ids;
 };
 
 }

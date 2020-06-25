@@ -42,11 +42,14 @@ class Job;
  * This may be useful in some cases, but in general, one will probably want to always
  * use the JobManager in its full capacity, including the queue and worker loops.
  * This is the way the Job class uses this class, see
+ *
+ * The default number of processes is set using std::thread::hardware_concurrency().
+ * To change it, simply set JobManager::default_N_workers to a different value
+ * before creation of a new instance.
  */
 
 class JobManager {
 public:
-   static JobManager *instance(std::size_t N_workers);
    static JobManager *instance();
    static bool is_instantiated();
 
@@ -77,6 +80,9 @@ private:
    static std::map<std::size_t, Job *> job_objects;
    static std::size_t job_counter;
    static std::unique_ptr <JobManager> _instance;
+
+public:
+   static unsigned int default_N_workers;  // no need for getters/setters, just public
 };
 
 } // namespace MultiProcess

@@ -336,6 +336,7 @@ std::ostream& operator<<(std::ostream& out, const M2Q value){
    PROCESS_VAL(M2Q::enqueue);
    PROCESS_VAL(M2Q::retrieve);
    PROCESS_VAL(M2Q::update_real);
+   PROCESS_VAL(M2Q::update_bool);
    }
    return out << s;
 }
@@ -367,6 +368,7 @@ std::ostream& operator<<(std::ostream& out, const Q2W value){
    PROCESS_VAL(Q2W::dequeue_accepted);
    PROCESS_VAL(Q2W::update_real);
    PROCESS_VAL(Q2W::result_received);
+   PROCESS_VAL(Q2W::update_bool);
    }
    return out << s;
 }

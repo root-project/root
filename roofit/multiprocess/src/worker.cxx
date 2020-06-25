@@ -142,6 +142,15 @@ void worker_loop()
             break;
          }
 
+         case Q2W::update_bool: {
+            job_id = JobManager::instance()->messenger().receive_from_queue_on_worker<std::size_t>();
+            auto ix = JobManager::instance()->messenger().receive_from_queue_on_worker<std::size_t>();
+            auto value = JobManager::instance()->messenger().receive_from_queue_on_worker<bool>();
+            JobManager::get_job_object(job_id)->update_bool(ix, value);
+
+            break;
+         }
+
          case Q2W::result_received: {
             std::cerr << "In worker_loop: " << message_q2w
                       << " message received, but should only be received as handshake!" << std::endl;

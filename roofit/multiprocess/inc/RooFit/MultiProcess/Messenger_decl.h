@@ -126,6 +126,7 @@ enum class M2Q : int {
    retrieve = 11,
    update_real = 12,
    //      update_cat = 13,
+   update_bool = 14,
 };
 
 // Messages from queue to master
@@ -142,6 +143,7 @@ enum class Q2W : int {
    result_received = 43,
    update_real = 44,
    //      update_cat = 45
+   update_bool = 46,
 };
 
 // stream output operators for debugging

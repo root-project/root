@@ -62,17 +62,41 @@ ROOT::Math::IBaseFunctionMultiDim* RooMinimizerFcn::Clone() const
   return new RooMinimizerFcn(*this) ;
 }
 
+void RooMinimizerFcn::setOptimizeConst(Int_t flag)
+{
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
+
+   if (_optConst && !flag) {
+      if (_context->getPrintLevel() > -1)
+         oocoutI(_context, Minimization) << "RooMinimizerFcn::setOptimizeConst: deactivating const optimization" << endl;
+      _funct->constOptimizeTestStatistic(RooAbsArg::DeActivate, true);
+      _optConst = flag;
+   } else if (!_optConst && flag) {
+      if (_context->getPrintLevel() > -1)
+         oocoutI(_context, Minimization) << "RooMinimizerFcn::setOptimizeConst: activating const optimization" << endl;
+      _funct->constOptimizeTestStatistic(RooAbsArg::Activate, flag > 1);
+      _optConst = flag;
+   } else if (_optConst && flag) {
+      if (_context->getPrintLevel() > -1)
+         oocoutI(_context, Minimization) << "RooMinimizerFcn::setOptimizeConst: const optimization already active" << endl;
+   } else {
+      if (_context->getPrintLevel() > -1)
+         oocoutI(_context, Minimization) << "RooMinimizerFcn::setOptimizeConst: const optimization wasn't active" << endl;
+   }
+
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+}
 
 void RooMinimizerFcn::optimizeConstantTerms(bool constStatChange, bool constValChange) {
    if (constStatChange) {
 
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
 
-      oocoutI(_context,Minimization) << "RooMinimizerFcn::synchronize: set of constant parameters changed, rerunning const optimizer" << endl ;
-      _funct->constOptimizeTestStatistic(RooAbsArg::ConfigChange) ;
+      oocoutI(_context,Minimization) << "RooMinimizerFcn::optimizeConstantTerms: set of constant parameters changed, rerunning const optimizer" << endl ;
+      _funct->constOptimizeTestStatistic(RooAbsArg::ConfigChange, true) ;
    } else if (constValChange) {
-      oocoutI(_context,Minimization) << "RooMinimizerFcn::synchronize: constant parameter values changed, rerunning const optimizer" << endl ;
-      _funct->constOptimizeTestStatistic(RooAbsArg::ValueChange) ;
+      oocoutI(_context,Minimization) << "RooMinimizerFcn::optimizeConstantTerms: constant parameter values changed, rerunning const optimizer" << endl ;
+      _funct->constOptimizeTestStatistic(RooAbsArg::ValueChange, true) ;
    }
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
@@ -83,7 +107,7 @@ double RooMinimizerFcn::DoEval(const double *x) const
 {
 
   // Set the parameter values for this iteration
-  for (int index = 0; index < _nDim; index++) {
+  for (unsigned index = 0; index < _nDim; index++) {
     if (_logfile) (*_logfile) << x[index] << " " ;
     SetPdfParamVal(index,x[index]);
   }
@@ -143,6 +167,16 @@ double RooMinimizerFcn::DoEval(const double *x) const
   _evalCounter++ ;
 
   return fvalue;
+}
+
+std::string RooMinimizerFcn::getFunctionName() const
+{
+   return _funct->GetName();
+}
+
+std::string RooMinimizerFcn::getFunctionTitle() const
+{
+   return _funct->GetTitle();
 }
 
 #endif

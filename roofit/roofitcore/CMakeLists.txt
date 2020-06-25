@@ -3,7 +3,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-#find_package(ZeroMQ REQUIRED)
+find_package(ZeroMQ REQUIRED)
 
 # this should really be used as a dependency for the RooFitCore target, but since the ROOT macros do some custom variable mangling, instead of just using target_link_libraries, defining this library as INTERFACE gives an error like this: https://gitlab.kitware.com/cmake/cmake/issues/18194 when trying to call get_property(dep_include_dirs... in RootNewMacros.cmake.
 #add_library(ZeroMQ INTERFACE)
@@ -262,6 +262,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         TestStatistics/RooMultiL.h
         TestStatistics/RooRealL.h
         TestStatistics/RooUnbinnedL.h
+        TestStatistics/kahan_sum.h
         RooAbsMinimizerFcn.h
   SOURCES
     src/Roo1DTable.cxx
@@ -517,14 +518,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RIO
     MathCore
     Foam
-#        RooFitZMQ
+        RooFitZMQ  # necessary for ppoll and zmqSvc that are necessary via MultiProcess includes
+        RooFitMultiProcess
 #        ZeroMQ # as noted above, this doesn't work here, so we instead list it as a library below
   LIBRARIES
         ${RT_LIBRARY}
-#        ${ZeroMQ_LIBRARY}
+        ${ZeroMQ_LIBRARY}
 )
 
-#target_include_directories(RooFitCore PRIVATE ${ZeroMQ_INCLUDE_DIR})
+target_include_directories(RooFitCore PRIVATE ${ZeroMQ_INCLUDE_DIR})
 
 if(testing)
     ROOT_ADD_TEST_SUBDIRECTORY(test)

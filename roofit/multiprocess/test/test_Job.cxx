@@ -51,8 +51,8 @@ public:
 
 class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Job {
 public:
-   xSquaredPlusBVectorParallel(std::size_t NumCPU, xSquaredPlusBVectorSerial* serial)
-      : RooFit::MultiProcess::Job(NumCPU), serial(serial)
+   xSquaredPlusBVectorParallel(xSquaredPlusBVectorSerial* serial)
+      : serial(serial)
    {
    }
 
@@ -80,6 +80,10 @@ public:
       if (get_manager()->process_manager().is_worker()) {
          serial->_b = val;
       }
+   }
+
+   void update_bool(std::size_t /*ix*/, bool /*value*/) override {
+      // pass
    }
 
    // -- BEGIN plumbing --
@@ -156,7 +160,8 @@ TEST_P(TestMPJob, singleJobGetResult)
 
    // start parallel test
 
-   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, &x_sq_plus_b);
+   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(&x_sq_plus_b);
+   RooFit::MultiProcess::JobManager::default_N_workers = NumCPU;
 
    auto y_parallel = x_sq_plus_b_parallel.get_result();
 
@@ -182,8 +187,9 @@ TEST_P(TestMPJob, multiJobGetResult)
    // define jobs
    xSquaredPlusBVectorSerial x_sq_plus_b(b_initial, x);
    xSquaredPlusBVectorSerial x_sq_plus_b2(b_initial + 1, x);
-   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, &x_sq_plus_b);
-   xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, &x_sq_plus_b2);
+   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(&x_sq_plus_b);
+   xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(&x_sq_plus_b2);
+   RooFit::MultiProcess::JobManager::default_N_workers = NumCPU;
 
    // do stuff
    auto y_parallel = x_sq_plus_b_parallel.get_result();

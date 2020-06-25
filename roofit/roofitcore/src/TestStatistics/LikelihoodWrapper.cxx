@@ -17,20 +17,46 @@
 namespace RooFit {
 namespace TestStatistics {
 
-LikelihoodWrapper::LikelihoodWrapper(std::shared_ptr<RooAbsL> _likelihood) : likelihood(std::move(_likelihood)) {}
-
-void LikelihoodWrapper::synchronize_with_minimizer(const ROOT::Math::MinimizerOptions &/*options*/) {}
-
-void LikelihoodWrapper::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode)
+LikelihoodWrapper::LikelihoodWrapper(std::shared_ptr<RooAbsL> _likelihood, RooMinimizer *minimizer)
+   : likelihood(std::move(_likelihood)), _minimizer(minimizer)
 {
-   likelihood->constOptimizeTestStatistic(opcode);
 }
 
-void LikelihoodWrapper::synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &/*parameter_settings*/) {}
+void LikelihoodWrapper::synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & /*options*/) {}
+
+void LikelihoodWrapper::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
+{
+   likelihood->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
+}
+
+void LikelihoodWrapper::synchronize_parameter_settings(
+   const std::vector<ROOT::Fit::ParameterSettings> & /*parameter_settings*/)
+{
+}
 
 RooArgSet *LikelihoodWrapper::getParameters()
 {
    return likelihood->getParameters();
+}
+
+std::string LikelihoodWrapper::GetName() const
+{
+   return likelihood->GetName();
+}
+std::string LikelihoodWrapper::GetTitle() const
+{
+   return likelihood->GetTitle();
+}
+double LikelihoodWrapper::defaultErrorLevel() const
+{
+   return likelihood->defaultErrorLevel();
+}
+bool LikelihoodWrapper::is_offsetting() const
+{
+   return likelihood->is_offsetting();
+}
+void LikelihoodWrapper::enable_offsetting(bool flag) {
+   likelihood->enable_offsetting(flag);
 }
 
 } // namespace TestStatistics

@@ -28,6 +28,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
 
 // forward declaration
 class RooMinimizer;
@@ -62,6 +63,10 @@ public:
    // put Minuit results back into RooFit objects:
    void BackProp(const ROOT::Fit::FitResult &results);
 
+   // used in several Minimizer functions:
+   virtual std::string getFunctionName() const = 0;
+   virtual std::string getFunctionTitle() const = 0;
+
    // set different external covariance matrix
    void ApplyCovarianceMatrix(TMatrixDSym &V);
 
@@ -70,34 +75,25 @@ public:
 
    unsigned int get_nDim() const { return _nDim; }
 
+   virtual void setOptimizeConst(Int_t flag) = 0;
+
+   bool getOptConst();
+   Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const;
+   std::vector<double> get_parameter_values() const;
+
 protected:
+   virtual void optimizeConstantTerms(bool constStatChange, bool constValChange) = 0;
+
    // used in BackProp (Minuit results -> RooFit) and ApplyCovarianceMatrix
    void SetPdfParamErr(Int_t index, Double_t value);
    void ClearPdfParamAsymErr(Int_t index);
    void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
-
-   inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const
-   {
-      RooRealVar *par = (RooRealVar *)_floatParamVec[index];
-
-      if (par->getVal() != value) {
-         if (_verbose)
-            std::cout << par->GetName() << "=" << value << ", ";
-
-         par->setVal(value);
-         return kTRUE;
-      }
-
-      return kFALSE;
-   }
 
    // doesn't seem to be used, TODO: make sure
 //   Double_t GetPdfParamVal(Int_t index);
 //   Double_t GetPdfParamErr(Int_t index);
 
    void updateFloatVec();
-
-   virtual void optimizeConstantTerms(bool constStatChange, bool constValChange) = 0;
 
    // members
    RooMinimizer *_context;
@@ -111,6 +107,8 @@ protected:
 
    Bool_t _doEvalErrorWall = kTRUE;
    unsigned int _nDim = 0;
+
+   Bool_t _optConst = kFALSE;
 
    std::ofstream *_logfile = nullptr;
    bool _verbose;

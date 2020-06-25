@@ -14,6 +14,8 @@
  */
 #include <unistd.h>  // getpid
 
+#include <thread>  // std::thread::hardware_concurrency()
+
 #include "ROOT/RMakeUnique.hxx"  // make_unique in C++11
 
 #include "RooFit/MultiProcess/ProcessManager.h"
@@ -28,10 +30,10 @@ namespace RooFit {
 namespace MultiProcess {
 
 // static function
-JobManager* JobManager::instance(std::size_t N_workers) {
+JobManager* JobManager::instance() {
    if (!JobManager::is_instantiated()) {
-      assert(N_workers != 0);
-      _instance.reset(new JobManager(N_workers));  // can't use make_unique, because ctor is private
+      assert(default_N_workers != 0);
+      _instance.reset(new JobManager(default_N_workers));  // can't use make_unique, because ctor is private
       _instance->messenger().test_connections(_instance->process_manager());
       // set send to non blocking on all processes after checking the connections are working:
       _instance->messenger().set_send_flag(ZMQ_DONTWAIT);
@@ -39,13 +41,6 @@ JobManager* JobManager::instance(std::size_t N_workers) {
    return _instance.get();
 }
 
-// static function
-JobManager* JobManager::instance() {
-   if (!JobManager::is_instantiated()) {
-      throw std::runtime_error("in JobManager::instance(): no instance was created yet! Call JobManager::instance(std::size_t N_workers) first.");
-   }
-   return _instance.get();
-}
 
 // static function
 bool JobManager::is_instantiated() {
@@ -221,6 +216,7 @@ bool JobManager::is_activated() const
 std::map<std::size_t, Job *> JobManager::job_objects;
 std::size_t JobManager::job_counter = 0;
 std::unique_ptr<JobManager> JobManager::_instance {nullptr};
+unsigned int JobManager::default_N_workers = std::thread::hardware_concurrency();
 
 } // namespace MultiProcess
 } // namespace RooFit

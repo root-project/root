@@ -16,6 +16,7 @@
 
 #include <memory>  // shared_ptr
 #include <RooAbsReal.h>
+#include "RooListProxy.h"
 
 namespace RooFit {
 namespace TestStatistics {
@@ -26,6 +27,9 @@ class RooAbsL;
 class RooRealL : RooAbsReal {
 private:
    std::shared_ptr<RooAbsL> likelihood;
+
+   // TODO: we need to track the clean/dirty state in this wrapper. See the old RooRealMPFE implementation for how that can be done automatically using the RooListProxy.
+   RooListProxy _vars;    // Variables
 };
 
 }

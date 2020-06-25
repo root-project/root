@@ -15,10 +15,14 @@
 #define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodWrapper
 
 #include <memory>  // shared_ptr
+#include <string>
 #include <Fit/ParameterSettings.h>
 #include "Math/MinimizerOptions.h"
 #include "RooArgSet.h"
 #include "RooAbsArg.h"  // enum ConstOpCode
+
+// forward declaration
+class RooMinimizer;
 
 namespace RooFit {
 namespace TestStatistics {
@@ -28,11 +32,12 @@ class RooAbsL;
 
 class LikelihoodWrapper {
 public:
-   explicit LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood);
+   LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood, RooMinimizer* minimizer);
    virtual ~LikelihoodWrapper() = default;
    virtual LikelihoodWrapper* clone() const = 0;
 
-   virtual double get_value(const double *x) = 0 ;
+   virtual void evaluate() = 0;
+   virtual double return_result() const = 0;
 
    // synchronize minimizer settings with calculators in child classes
    virtual void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options);
@@ -40,9 +45,19 @@ public:
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
    RooArgSet* getParameters();
-   void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode);
-private:
+   void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt);
+
+   double defaultErrorLevel() const;
+
+   virtual std::string GetName() const;
+   virtual std::string GetTitle() const;
+
+   virtual bool is_offsetting() const;
+   virtual void enable_offsetting(bool flag);
+
+protected:
    std::shared_ptr<RooAbsL> likelihood;
+   RooMinimizer* _minimizer;
 };
 
 }

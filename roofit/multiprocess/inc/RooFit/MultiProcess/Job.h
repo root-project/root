@@ -33,6 +33,7 @@ class JobManager;
  * Classes inheriting from Job must implement the pure virtual methods:
  * - void evaluate_task(std::size_t task)
  * - void update_real(std::size_t ix, double val, bool is_constant)
+ * - void update_bool(std::size_t ix, bool value)
  * - void receive_task_result_on_queue(std::size_t task, std::size_t worker_id)
  * - void send_back_results_from_queue_to_master()
  * - void clear_results()
@@ -41,7 +42,13 @@ class JobManager;
  *
  * The latter five deal with sending results back from workers to master.
  * update_real is used to sync parameters that changed on master to the workers
- * before the next set of tasks is queued.
+ * before the next set of tasks is queued; it must have a part that updates the
+ * actual parameters on the worker process, but can optionally also be used to
+ * send them from the master to the queue (Q2W is handled by the Queue::loop).
+ * An example implementation:
+
+
+
  *
  * The type of result from each task is strongly dependent on the Job at hand
  * and so Job does not provide a default results vector or anything like this.
@@ -84,13 +91,14 @@ return_type CertainJob::evaluate() {
  */
 class Job {
 public:
-   explicit Job(std::size_t _N_workers);
+   explicit Job();
    Job(const Job &other);
 
    ~Job();
 
    virtual void evaluate_task(std::size_t task) = 0;
    virtual void update_real(std::size_t ix, double val, bool is_constant) = 0;
+   virtual void update_bool(std::size_t ix, bool value) = 0;
 
    virtual void send_back_task_result_from_worker(std::size_t task) = 0;
    virtual void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) = 0;
@@ -106,7 +114,6 @@ public:
 protected:
    JobManager *get_manager();
 
-   std::size_t N_workers;
    std::size_t id;
 
 private:
