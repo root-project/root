@@ -32,6 +32,7 @@
 namespace ROOT {
 namespace Experimental {
 
+class RFieldDescriptorBuilder;
 class RNTupleDescriptorBuilder;
 class RNTupleModel;
 
@@ -44,6 +45,7 @@ class RNTupleModel;
 // clang-format on
 class RFieldDescriptor {
    friend class RNTupleDescriptorBuilder;
+   friend class RFieldDescriptorBuilder;
 
 private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
@@ -449,6 +451,56 @@ public:
    void PrintInfo(std::ostream &output) const;
 };
 
+// clang-format off
+/**
+\class ROOT::Experimental::RFieldDescriptorBuilder
+\ingroup NTuple
+\brief A helper class for piece-wise construction of an RFieldDescriptor
+*/
+// clang-format on
+class RFieldDescriptorBuilder {
+private:
+   RFieldDescriptor fField = RFieldDescriptor();
+public:
+   RFieldDescriptorBuilder() = default;
+   /// Make an RFieldDescriptorBuilder based off of an existing field descriptor.
+   explicit RFieldDescriptorBuilder(const RFieldDescriptor& fieldDesc) : fField(fieldDesc) {}
+   RFieldDescriptorBuilder& FieldId(DescriptorId_t fieldId) {
+      fField.fFieldId = fieldId;
+      return *this;
+   }
+   RFieldDescriptorBuilder& FieldVersion(const RNTupleVersion& fieldVersion) {
+      fField.fFieldVersion = fieldVersion;
+      return *this;
+   }
+   RFieldDescriptorBuilder& TypeVersion(const RNTupleVersion& typeVersion) {
+      fField.fTypeVersion = typeVersion;
+      return *this;
+   }
+   RFieldDescriptorBuilder& FieldName(const std::string& fieldName) {
+      fField.fFieldName = fieldName;
+      return *this;
+   }
+   RFieldDescriptorBuilder& FieldDescription(const std::string& fieldDescription) {
+      fField.fFieldDescription = fieldDescription;
+      return *this;
+   }
+   RFieldDescriptorBuilder& TypeName(const std::string& typeName) {
+      fField.fTypeName = typeName;
+      return *this;
+   }
+   RFieldDescriptorBuilder& NRepetitions(std::uint64_t nRepetitions) {
+      fField.fNRepetitions = nRepetitions;
+      return *this;
+   }
+   RFieldDescriptorBuilder& Structure(const ENTupleStructure& structure) {
+      fField.fStructure = structure;
+      return *this;
+   }
+   RFieldDescriptor GetDescriptor() const {
+      return fField;
+   }
+};
 
 // clang-format off
 /**
@@ -471,6 +523,8 @@ public:
    void SetNTuple(const std::string_view name, const std::string_view description, const std::string_view author,
                   const RNTupleVersion &version, const RNTupleUuid &uuid);
 
+   void AddField(const RFieldDescriptor& fieldDesc);
+   void AddField(const RFieldDescriptorBuilder& fieldBuilder);
    void AddField(DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
                  std::string_view fieldName, std::string_view typeName, std::uint64_t nRepetitions,
                  ENTupleStructure structure);

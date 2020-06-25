@@ -45,7 +45,7 @@
 #if __cplusplus >= 201703L
 #include <variant>
 #endif
-#include <vector> 
+#include <vector>
 
 using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using EColumnType = ROOT::Experimental::EColumnType;
@@ -60,8 +60,9 @@ using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
 using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
 using RFieldMerger = ROOT::Experimental::RFieldMerger;
 using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
+using RFieldDescriptorBuilder = ROOT::Experimental::RFieldDescriptorBuilder;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
-using RNTuple = ROOT::Experimental::RNTuple; 
+using RNTuple = ROOT::Experimental::RNTuple;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using RNTupleAtomicTimer = ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using RNTupleCompressor = ROOT::Experimental::Detail::RNTupleCompressor;
