@@ -275,6 +275,7 @@ set(gvizincdir ${GVIZ_INCLUDE_DIR})
 set(gvizcflags)
 
 set(buildpython ${value${pyroot}})
+set(pyrootexp ${pyroot_experimental})
 set(pythonlibdir ${PYTHON_LIBRARY_DIR})
 set(pythonlib ${PYTHON_LIBRARIES})
 set(pythonincdir ${PYTHON_INCLUDE_DIRS})
