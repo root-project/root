@@ -3421,7 +3421,7 @@
                           Color: false, Scat: false, ScatCoef: 1, Candle: "", Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0,
                           BarOffset: 0., BarWidth: 1., minimum: -1111, maximum: -1111 };
 
-      var kind = painter.v7EvalAttr("kind", "col"),
+      var kind = painter.v7EvalAttr("kind", ""),
           sub = painter.v7EvalAttr("sub", 0),
           o = painter.options;
 
@@ -3434,7 +3434,8 @@
          case "cont": o.Contour = sub > 0 ? 10+sub : 1; break;
          case "arr": o.Arrow = true; break;
          case "scat": o.Scat = true; break;
-         default: o.Color = true;
+         case "col": o.Color = true; break;
+         default: if (!o.Text) o.Color = true;
       }
 
       // here we deciding how histogram will look like and how will be shown

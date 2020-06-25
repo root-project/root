@@ -146,8 +146,6 @@ public:
 
 
 class RHist3Drawable final : public RHistDrawable<3> {
-   RAttrColor fColor{this, "color_"};     ///<! bin color, used which box option
-
 public:
    RHist3Drawable() = default;
 
@@ -158,11 +156,6 @@ public:
    RHist3Drawable &Box(int kind = 0) { SetDrawKind("box", kind); return *this; }
    RHist3Drawable &Sphere(int kind = 0) { SetDrawKind("sphere", kind); return *this; }
    RHist3Drawable &Scatter() { SetDrawKind("scat"); return *this; }
-
-   /// The color when box option is used
-   RHist3Drawable &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor.GetColor(); }
-   RAttrColor &AttrColor() { return fColor; }
 };
 
 
