@@ -308,18 +308,10 @@ else
    fi
 fi
 
-
-# Check if the directory created in PyROOT experimental exists
-if [ -d "@libdir@/python${ROOT_PYTHON_VERSION}" ]; then
+# Check if experimental PyROOT is ON
+if [ @pyrootexp@ = ON ]; then
    exp_pyroot=true
 fi
-# Check if an option EXP_PYROOT=true is passed by command line
-# this covers the case of installation directory that would not be
-# covered with the previous check
-if [ "$EXP_PYROOT" = true ]; then
-    exp_pyroot=true
-fi
-
 
 # Check if we are in build or installation directory
 if [ ! -d "$ROOTSYS/CMakeFiles" ]; then
