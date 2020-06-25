@@ -1594,8 +1594,6 @@
       var pp = this.pad_painter();
       if (pp) pp.frame_painter_ref = this; // keep direct reference to the frame painter
 
-      if (this.mode3d) return; // no need to create any elements in 3d mode
-
       // first update all attributes from objects
       this.UpdateAttributes();
 
@@ -1605,12 +1603,24 @@
           w = Math.round(width * (this.fX2NDC - this.fX1NDC)),
           tm = Math.round(height * (1 - this.fY2NDC)),
           h = Math.round(height * (this.fY2NDC - this.fY1NDC)),
-          rotate = false, fixpos = false;
+          rotate = false, fixpos = false, trans = "translate(" + lm + "," + tm + ")";
 
       if (pp && pp.options) {
          if (pp.options.RotateFrame) rotate = true;
          if (pp.options.FixFrame) fixpos = true;
       }
+
+      if (rotate) {
+         trans += " rotate(-90) " + "translate(" + -h + ",0)";
+         var d = w; w = h; h = d;
+      }
+
+      this._frame_x = lm;
+      this._frame_y = tm;
+      this._frame_width = w;
+      this._frame_height = h;
+
+      if (this.mode3d) return; // no need to create any elements in 3d mode
 
       // this is svg:g object - container for every other items belonging to frame
       this.draw_g = this.svg_layer("primitives_layer").select(".root_frame");
@@ -1644,17 +1654,6 @@
       }
 
       this.axes_drawn = false;
-
-      var trans = "translate(" + lm + "," + tm + ")";
-      if (rotate) {
-         trans += " rotate(-90) " + "translate(" + -h + ",0)";
-         var d = w; w = h; h = d;
-      }
-
-      this._frame_x = lm;
-      this._frame_y = tm;
-      this._frame_width = w;
-      this._frame_height = h;
 
       this.draw_g.attr("transform", trans);
 

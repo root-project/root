@@ -2723,7 +2723,7 @@
          for (j = j1; j < j2; ++j) {
             for (k = k1; k < k2; ++k) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
-               if ((bin_content===0) || (bin_content < this.gminbin)) continue;
+               if (!this.options.GLColor && ((bin_content===0) || (bin_content < this.gminbin))) continue;
                wei = use_scale ? Math.pow(Math.abs(bin_content*use_scale), 0.3333) : 1;
                if (wei < 1e-3) continue; // do not draw empty or very small bins
 
@@ -2793,7 +2793,7 @@
             biny = histo.fYaxis.GetBinCenter(j+1); gry = main.gry(biny);
             for (k = k1; k < k2; ++k) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
-               if ((bin_content===0) || (bin_content < this.gminbin)) continue;
+               if (!this.options.GLColor && ((bin_content===0) || (bin_content < this.gminbin))) continue;
 
                wei = use_scale ? Math.pow(Math.abs(bin_content*use_scale), 0.3333) : 1;
                if (wei < 1e-3) continue; // do not show very small bins

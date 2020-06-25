@@ -2599,7 +2599,7 @@
          }
       }
 
-      var color = this.v7EvalColor("color", "red");
+      var color = this.v7EvalColor("fill_color", "red");
       var mesh = pnts.CreatePoints(color);
       main.toplevel.add(mesh);
 
@@ -2642,7 +2642,7 @@
       if (this.options.Scatter)
          if (this.Draw3DScatter()) return;
 
-      var fillcolor = this.v7EvalColor("color", "red"),
+      var fillcolor = this.v7EvalColor("fill_color", "red"),
           main = this.frame_painter(),
           buffer_size = 0, use_lambert = false,
           use_helper = false, use_colors = false, use_opacity = 1, use_scale = true,
@@ -2747,7 +2747,7 @@
          for (j = j1; j < j2; ++j) {
             for (k = k1; k < k2; ++k) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
-               if ((bin_content===0) || (bin_content < this.gminbin)) continue;
+               if (!this.options.Color && ((bin_content===0) || (bin_content < this.gminbin))) continue;
                wei = use_scale ? Math.pow(Math.abs(bin_content*use_scale), 0.3333) : 1;
                if (wei < 1e-3) continue; // do not draw empty or very small bins
 
@@ -2820,7 +2820,7 @@
             biny = yaxis.GetBinCenter(j+1); gry = main.gry(biny);
             for (k = k1; k < k2; ++k) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
-               if ((bin_content===0) || (bin_content < this.gminbin)) continue;
+               if (!this.options.Color && ((bin_content===0) || (bin_content < this.gminbin))) continue;
 
                wei = use_scale ? Math.pow(Math.abs(bin_content*use_scale), 0.3333) : 1;
                if (wei < 1e-3) continue; // do not show very small bins
@@ -3081,7 +3081,7 @@
 
       painter.options = { Box: 0, Scatter: false, Sphere: 0, Color: false, minimum: -1111, maximum: -1111 };
 
-      var kind = painter.v7EvalAttr("kind", "col"),
+      var kind = painter.v7EvalAttr("kind", ""),
           sub = painter.v7EvalAttr("sub", 0),
           o = painter.options;
 
