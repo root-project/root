@@ -48,24 +48,24 @@ class RFieldDescriptor {
 private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
    /// The version of the C++-type-to-column translation mechanics
-   RNTupleVersion fFieldVersion;
+   RNTupleVersion fFieldVersion = RNTupleVersion();
    /// The version of the C++ type itself
-   RNTupleVersion fTypeVersion;
+   RNTupleVersion fTypeVersion = RNTupleVersion();
    /// The leaf name, not including parent fields
-   std::string fFieldName;
+   std::string fFieldName = "";
    /// Free text set by the user
-   std::string fFieldDescription;
+   std::string fFieldDescription = "";
    /// The C++ type that was used when writing the field
-   std::string fTypeName;
+   std::string fTypeName = "";
    /// The number of elements per entry for fixed-size arrays
-   std::uint64_t fNRepetitions;
+   std::uint64_t fNRepetitions = 0;
    /// The structural information carried by this field in the data model tree
-   ENTupleStructure fStructure;
+   ENTupleStructure fStructure = ENTupleStructure::kInvalid;
    /// Establishes sub field relationships, such as classes and collections
    DescriptorId_t fParentId = kInvalidDescriptorId;
    /// The pointers in the other direction from parent to children. They are serialized, too, to keep the
    /// order of sub fields.
-   std::vector<DescriptorId_t> fLinkIds;
+   std::vector<DescriptorId_t> fLinkIds = {};
 
 public:
    /// In order to handle changes to the serialization routine in future ntuple versions
