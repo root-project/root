@@ -25,13 +25,13 @@ namespace Experimental {
 */
 
 class RAttrMargins : public RAttrBase {
-   R__ATTR_CLASS(RAttrMargins, "margin_", AddNothing());
 
-protected:
-   RAttrValue<RPadLength> fLeft{this, "left", 0._normal};
-   RAttrValue<RPadLength> fRight{this, "right", 0._normal};
-   RAttrValue<RPadLength> fTop{this, "top", 0._normal};
-   RAttrValue<RPadLength> fBottom{this, "bottom", 0._normal};
+   RAttrValue<RPadLength>   fLeft{this, "left", 0._normal};
+   RAttrValue<RPadLength>   fRight{this, "right", 0._normal};
+   RAttrValue<RPadLength>   fTop{this, "top", 0._normal};
+   RAttrValue<RPadLength>   fBottom{this, "bottom", 0._normal};
+
+   R__ATTR_CLASS(RAttrMargins, "margin_", AddDefaults(fLeft).AddDefaults(fRight).AddDefaults(fTop).AddDefaults(fBottom));
 
 public:
 

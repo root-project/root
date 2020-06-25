@@ -32,11 +32,11 @@ namespace Experimental {
 
 class RPaletteDrawable final : public RDrawable {
 
-   RPalette   fPalette;                     ///  color palette to draw
-   RAttrAxis  fAttrAxis{this, "axis_"};     ///<! axis attributes
-   RAttrValue<bool> fVisible{this, "visible", true}; ///<! visibility flag
-   RAttrValue<RPadLength> fMargin{this, "margin", 0.02_normal}; ///<! margin
-   RAttrValue<RPadLength> fSize{this, "size", 0.05_normal}; ///<! margin
+   RPalette                fPalette;                              ///<  color palette to draw
+   RAttrAxis               fAttrAxis{this, "axis_"};              ///<! axis attributes
+   RAttrValue<bool>        fVisible{this, "visible", true};       ///<! visibility flag
+   RAttrValue<RPadLength>  fMargin{this, "margin", 0.02_normal};  ///<! margin
+   RAttrValue<RPadLength>  fSize{this, "size", 0.05_normal};      ///<! margin
 
 protected:
 

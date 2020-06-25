@@ -36,14 +36,14 @@ public:
    using HistImpl_t = Detail::RHistImplPrecisionAgnosticBase<DIMENSIONS>;
 
 private:
-   Internal::RIOShared<HistImpl_t> fHistImpl;  ///< I/O capable reference on histogram
+   Internal::RIOShared<HistImpl_t> fHistImpl;             ///< I/O capable reference on histogram
 
-   RAttrValue<std::string> fKind{this, "kind", ""};  ///<! hist draw kind
-   RAttrValue<int>  fSub{this, "sub", -1};     ///<! hist draw sub kind
-   RAttrLine   fAttrLine{this, "line_"};  ///<! hist line attributes
-   RAttrFill   fAttrFill{this, "fill_"};  ///<! hist fill attributes
-   RAttrText   fAttrText{this, "text_"};  ///<! hist text attributes
-   RAttrMarker fMarkerAttr{this, "marker_"}; ///<! hist marker attributes
+   RAttrValue<std::string>  fKind{this, "kind", ""};      ///<! hist draw kind
+   RAttrValue<int>          fSub{this, "sub", -1};        ///<! hist draw sub kind
+   RAttrLine                fAttrLine{this, "line_"};     ///<! hist line attributes
+   RAttrFill                fAttrFill{this, "fill_"};     ///<! hist fill attributes
+   RAttrText                fAttrText{this, "text_"};     ///<! hist text attributes
+   RAttrMarker              fMarkerAttr{this, "marker_"}; ///<! hist marker attributes
 
 protected:
 

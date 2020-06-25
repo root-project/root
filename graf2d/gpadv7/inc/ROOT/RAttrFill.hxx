@@ -11,6 +11,7 @@
 
 #include <ROOT/RAttrBase.hxx>
 #include <ROOT/RAttrColor.hxx>
+#include <ROOT/RAttrValue.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -25,13 +26,14 @@ namespace Experimental {
 
 class RAttrFill : public RAttrBase {
 
-   RAttrColor fColor{this, "color_"}; ///<! fill color, will access container from fill attributes
+   RAttrColor       fColor{this, "color_"};    ///<! fill color
+   RAttrValue<int>  fStyle{this, "style", 1};  ///<! fill style
 
-   R__ATTR_CLASS(RAttrFill, "fill_", AddInt("style", 1).AddDefaults(fColor));
+   R__ATTR_CLASS(RAttrFill, "fill_", AddDefaults(fColor).AddDefaults(fStyle));
 
    ///The fill style
-   RAttrFill &SetStyle(int style) { SetValue("style", style); return *this; }
-   int GetStyle() const { return GetValue<int>("style"); }
+   RAttrFill &SetStyle(int style) { fStyle = style; return *this; }
+   int GetStyle() const { return fStyle; }
 
    ///The fill color
    RAttrFill &SetColor(const RColor &color) { fColor = color; return *this; }

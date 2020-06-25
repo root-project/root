@@ -88,7 +88,6 @@ public:
       }
 
       return *this;
-
    }
 
    /** Extract RColor for given attribute */
