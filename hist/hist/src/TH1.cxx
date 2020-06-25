@@ -621,7 +621,7 @@ TH1::~TH1()
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
-///            If title is of the form stringt;stringx;stringy;stringz`
+///            If title is of the form `stringt;stringx;stringy;stringz`,
 ///            the histogram title is set to `stringt`,
 ///            the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
