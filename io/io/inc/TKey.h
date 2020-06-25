@@ -92,6 +92,7 @@ protected:
    virtual void        IncrementPidOffset(UShort_t offset);
            Bool_t      IsFolder() const;
    virtual void        Keep();
+   virtual void        ls(Bool_t current) const;
    virtual void        ls(Option_t *option="") const;
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       Read(TObject *obj);
