@@ -30,13 +30,13 @@ namespace Experimental {
 
 class RPave : public RDrawable {
 
-   RAttrText fAttrText{this, "text_"};       ///<! text attributes
-   RAttrLine fAttrBorder{this, "border_"};   ///<! border attributes
-   RAttrFill fAttrFill{this, "fill_"};       ///<! line attributes
-   RAttrValue<RPadLength> fCornerX{this, "cornerx", 0.02}; ///<! X corner
-   RAttrValue<RPadLength> fCornerY{this, "cornery", 0.02}; ///<! Y corner
-   RAttrValue<RPadLength> fWidth{this, "width", 0.4}; ///<! pave width
-   RAttrValue<RPadLength> fHeight{this, "height", 0.2}; ///<! pave height
+   RAttrText                fAttrText{this, "text_"};        ///<! text attributes
+   RAttrLine                fAttrBorder{this, "border_"};    ///<! border attributes
+   RAttrFill                fAttrFill{this, "fill_"};        ///<! line attributes
+   RAttrValue<RPadLength>  fCornerX{this, "cornerx", 0.02};  ///<! X corner
+   RAttrValue<RPadLength>  fCornerY{this, "cornery", 0.02};  ///<! Y corner
+   RAttrValue<RPadLength>  fWidth{this, "width", 0.4};       ///<! pave width
+   RAttrValue<RPadLength>  fHeight{this, "height", 0.2};     ///<! pave height
 
 public:
 

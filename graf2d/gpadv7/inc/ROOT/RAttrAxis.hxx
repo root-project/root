@@ -27,14 +27,14 @@ namespace Experimental {
 
 class RAttrAxis : public RAttrBase {
 
-   RAttrLine fAttrLine{this, "line_"};               ///<! line attributes
-   RAttrText fAttrText{this, "text_"};               ///<! text attributes
-   RAttrValue<double> fMin{this, "min", 0.};         ///<! axis min
-   RAttrValue<double> fMax{this, "max", 1.};         ///<! axis max
-   RAttrValue<double> fZoomMin{this, "zoommin", 0.}; ///<! axis zoom min
-   RAttrValue<double> fZoomMax{this, "zoommax", 0.}; ///<! axis zoom max
-   RAttrValue<bool> fLog{this, "log", false};        ///<! log scale
-   RAttrValue<bool> fInvert{this, "invert", false};  ///<! invert scale
+   RAttrLine            fAttrLine{this, "line_"};        ///<! line attributes
+   RAttrText            fAttrText{this, "text_"};        ///<! text attributes
+   RAttrValue<double>   fMin{this, "min", 0.};           ///<! axis min
+   RAttrValue<double>   fMax{this, "max", 1.};           ///<! axis max
+   RAttrValue<double>   fZoomMin{this, "zoommin", 0.};   ///<! axis zoom min
+   RAttrValue<double>   fZoomMax{this, "zoommax", 0.};   ///<! axis zoom max
+   RAttrValue<bool>     fLog{this, "log", false};        ///<! log scale
+   RAttrValue<bool>     fInvert{this, "invert", false};  ///<! invert scale
 
    R__ATTR_CLASS(RAttrAxis, "axis_", AddDefaults(fAttrLine).AddDefaults(fAttrText)
                                     .AddDefaults(fMin).AddDefaults(fMax)

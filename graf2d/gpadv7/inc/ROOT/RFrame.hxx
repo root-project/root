@@ -120,15 +120,15 @@ public:
 
 private:
 
-   RAttrMargins fMargins{this, "margin_"};     ///<!
-   RAttrLine fAttrBorder{this, "border_"};     ///<!
-   RAttrFill fAttrFill{this, "fill_"};         ///<!
-   RAttrAxis fAttrX{this, "x_"};               ///<!
-   RAttrAxis fAttrY{this, "y_"};               ///<!
-   RAttrAxis fAttrZ{this, "z_"};               ///<!
-   RAttrValue<bool> fGridX{this, "gridx", false}; ///<!
-   RAttrValue<bool> fGridY{this, "gridy", false}; ///<!
-   std::map<unsigned, RUserRanges> fClientRanges; ///<! individual client ranges
+   RAttrMargins                     fMargins{this, "margin_"};        ///<!
+   RAttrLine                        fAttrBorder{this, "border_"};     ///<!
+   RAttrFill                        fAttrFill{this, "fill_"};         ///<!
+   RAttrAxis                        fAttrX{this, "x_"};               ///<!
+   RAttrAxis                        fAttrY{this, "y_"};               ///<!
+   RAttrAxis                        fAttrZ{this, "z_"};               ///<!
+   RAttrValue<bool>                 fGridX{this, "gridx", false};     ///<!
+   RAttrValue<bool>                 fGridY{this, "gridy", false};     ///<!
+   std::map<unsigned, RUserRanges>  fClientRanges;                    ///<! individual client ranges
 
    /// Mapping of user coordinates to normal coordinates, one entry per dimension.
    std::vector<std::unique_ptr<RPadUserAxisBase>> fUserCoord;

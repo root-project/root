@@ -26,6 +26,7 @@ namespace Experimental {
 template<typename T>
 class RAttrValue : public RAttrBase {
 protected:
+
    RAttrMap  fDefaults;    ///<!    map with default values
 
    const RAttrMap &GetDefaults() const override { return fDefaults; }
