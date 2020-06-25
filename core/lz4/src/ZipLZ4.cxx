@@ -35,7 +35,6 @@ static const int kHeaderSize = kChecksumOffset + kChecksumSize;
 
 void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
-   printf("Use R__zipLZ4\n");
    int LZ4_version = LZ4_versionNumber();
    uint64_t out_size; /* compressed size */
    uint64_t in_size = (unsigned)(*srcsize);
@@ -84,8 +83,6 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
 
    // Write out checksum.
    XXH64_canonicalFromHash(reinterpret_cast<XXH64_canonical_t *>(tgt + kChecksumOffset), checksumResult);
-
-   // printf("returnStatus of LZ4: %d\n", returnStatus);
 
    *irep = (int)returnStatus + kHeaderSize;
 }
@@ -145,7 +142,6 @@ void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, 
    char *temp_tgt = (char *)malloc(*srcsize * 2);
    char *temp_src = (char *)malloc(*srcsize);
    memcpy((void*)temp_src, (void*)src, *srcsize);
-   // printf("Use R__zipLZ4BS\n");
    uint64_t out_size; /* compressed size */
    uint64_t in_size = (unsigned)(*srcsize);
 
@@ -163,7 +159,6 @@ void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, 
       fprintf(stderr, "Bitshuffle failed: got negative returnStatus %ld\n", returnStatus);
       return;
    }
-   printf("Use R__zipLZ4BS\n");
    returnStatus = bshuf_compress_lz4(src, &tgt[kHeaderSize], elem_count, sizeof(float), 0);
    XXH64_hash_t checksumResult = XXH64(tgt + kHeaderSize, returnStatus, 0);
 
