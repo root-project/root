@@ -1,14 +1,14 @@
 /// \file
 /// \ingroup tutorial_v7
 ///
-/// This macro generates a small V7 TH1D, fills it and draw it in a V7 canvas.
+/// This macro generates two RH1D, fills them and draw with different options in RCanvas.
 /// The canvas is display in the web browser
 ///
 /// \macro_code
 ///
 /// \date 2015-03-22
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-/// \author Axel Naumann <axel@cern.ch>
+/// \authors Axel Naumann <axel@cern.ch> Sergey Linev <s.linev@gsi.de>
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -18,6 +18,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "ROOT/RHist.hxx"
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RFrameTitle.hxx"
 #include "ROOT/RCanvas.hxx"
@@ -42,7 +43,7 @@ void draw_rh1()
    }
 
    // Create a canvas to be displayed.
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("RH1 drawing options");
 
    // histograms colors
    auto col1 = RColor::kRed, col2 = RColor::kBlue;
