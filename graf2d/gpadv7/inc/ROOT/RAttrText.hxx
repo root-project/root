@@ -13,41 +13,42 @@
 #include <ROOT/RAttrValue.hxx>
 #include <ROOT/RAttrColor.hxx>
 
-#include <string>
-
 namespace ROOT {
 namespace Experimental {
 
 /** \class RAttrText
 \ingroup GpadROOT7
 \brief A text.attributes.
-\author Axel Naumann <axel@cern.ch>
+\authors Axel Naumann <axel@cern.ch> Sergey Linev <s.linev@gsi.de>
 \date 2018-10-12
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-
 class RAttrText : public RAttrBase {
 
-   RAttrColor fColor{this, "color_"}; ///<! text color, will access container from text attributes
+   RAttrColor           fColor{this, "color_"};       ///<! text color
+   RAttrValue<double>   fSize{this, "size", 12.};     ///<! text size
+   RAttrValue<double>   fAngle{this, "angle", 0.};    ///<! text angle
+   RAttrValue<int>      fAlign{this, "align", 22};    ///<! text align
+   RAttrValue<int>      fFont{this, "font", 41};      ///<! text font
 
-   R__ATTR_CLASS(RAttrText, "text_", AddDouble("size", 12.).AddDouble("angle", 0.).AddInt("align", 22).AddInt("font", 41).AddDefaults(fColor));
+   R__ATTR_CLASS(RAttrText, "text_", AddDefaults(fColor).AddDefaults(fSize).AddDefaults(fAngle).AddDefaults(fAlign).AddDefaults(fFont));
 
    ///The text size
-   RAttrText &SetSize(double width) { SetValue("size", width); return *this; }
-   double GetSize() const { return GetValue<double>("size"); }
+   RAttrText &SetSize(double sz) { fSize = sz; return *this; }
+   double GetSize() const { return fSize; }
 
    ///The text angle
-   RAttrText &SetAngle(double angle) { SetValue("angle", angle); return *this; }
-   double GetAngle() const { return GetValue<double>("angle"); }
+   RAttrText &SetAngle(double angle) { fAngle = angle; return *this; }
+   double GetAngle() const { return fAngle; }
 
    ///The text alignment
-   RAttrText &SetAlign(int align) { SetValue("align", align); return *this; }
-   int GetAlign() const { return GetValue<int>("align"); }
+   RAttrText &SetAlign(int align) { fAlign = align; return *this; }
+   int GetAlign() const { return fAlign; }
 
    ///The text font
-   RAttrText &SetFont(int font) { SetValue("font", font); return *this; }
-   int GetFont() const { return GetValue<int>("font"); }
+   RAttrText &SetFont(int font) { fFont = font; return *this; }
+   int GetFont() const { return fFont; }
 
    ///The color of the text.
    RAttrText &SetColor(const RColor &color) { fColor = color; return *this; }

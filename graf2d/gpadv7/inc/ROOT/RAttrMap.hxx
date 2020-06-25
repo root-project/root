@@ -153,7 +153,6 @@ public:
       return *this;
    }
    RAttrMap &AddDefaults(const RAttrBase &vis);
-   RAttrMap &AddNothing() { return *this; }
 
    RAttrMap &AddValue(const std::string &name, bool value) { return AddBool(name, value); }
    RAttrMap &AddValue(const std::string &name, int value) { return AddInt(name, value); }
