@@ -1,12 +1,12 @@
 /// \file
 /// \ingroup tutorial_v7
 ///
-/// This macro generates a small V7 TH2D, fills it with random values and
-/// draw it in a V7 canvas, using configured web browser
+/// This macro generates a small RH3D, fills it with random values and
+/// draw it in RCanvas, using configured web browser
 ///
 /// \macro_code
 ///
-/// \date 2020-03-04
+/// \date 2020-06-18
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 /// \author Sergey Linev <s.linev@gsi.de>
 
@@ -18,6 +18,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "ROOT/RHist.hxx"
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RFrameTitle.hxx"
@@ -41,17 +42,26 @@ void draw_rh3()
       pHist->Fill({gRandom->Gaus(0.,2.), gRandom->Gaus(0.,2.), gRandom->Gaus(0.,2.)});
 
    // Create a canvas to be displayed.
-   auto canvas = RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("RH3D drawing options");
 
-   canvas->Draw<RFrameTitle>("3D histogram drawing");
+   // Divide canvas on 2x2 sub-pads to show different draw options
+   auto subpads = canvas->Divide(2,2);
 
-   auto draw = canvas->Draw(pHist);
-   draw->SetColor(RColor::kBlue); // use color in some draw options
-   draw->AttrLine().SetColor(RColor::kRed);
-   draw->Scatter(); // scatter plot
-   draw->Sphere(1); // draw spheres 0 - default, 1 - with colors
-   draw->Color(); // draw colored boxes
-   draw->Box(0); // draw boxes 0 - default, 1 - with colors, 2 - without lines
+   // default draw option
+   subpads[0][0]->Draw<RFrameTitle>("Box(0) default draw option");
+   subpads[0][0]->Draw(pHist)->Box(0).AttrFill().SetColor(RColor::kBlue);
+
+   // sphere draw options
+   subpads[1][0]->Draw<RFrameTitle>("Sphere(1) draw option");
+   subpads[1][0]->Draw(pHist)->Sphere(1);
+
+   // text draw options
+   subpads[0][1]->Draw<RFrameTitle>("Color() draw option");
+   subpads[0][1]->Draw(pHist)->Color();
+
+   // arrow draw options
+   subpads[1][1]->Draw<RFrameTitle>("Scatter() draw option");
+   subpads[1][1]->Draw(pHist)->Scatter().AttrFill().SetColor(RColor::kBlack);
 
    canvas->SetSize(1000, 700);
    canvas->Show();
