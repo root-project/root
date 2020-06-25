@@ -482,6 +482,10 @@ long TClingMethodInfo::Property() const
    long property = 0L;
    property |= kIsCompiled;
    const clang::FunctionDecl *fd = GetMethodDecl();
+
+   if (fd->isDeleted())
+      return 0L;
+
    if (fd->isConstexpr())
       property |= kIsConstexpr;
    switch (fd->getAccess()) {
@@ -545,6 +549,8 @@ long TClingMethodInfo::ExtraProperty() const
    }
    long property = 0;
    const clang::FunctionDecl *fd = GetMethodDecl();
+   if (fd->isDeleted())
+      return 0L;
    if (fd->isOverloadedOperator())
       property |= kIsOperator;
    if (llvm::isa<clang::CXXConversionDecl>(fd))
