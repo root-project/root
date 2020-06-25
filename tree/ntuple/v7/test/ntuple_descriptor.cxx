@@ -4,14 +4,33 @@ TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetNTuple("MyTuple", "Description", "Me", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
-   descBuilder.AddField(0, RNTupleVersion(), RNTupleVersion(), "", "", 0, ENTupleStructure::kRecord);
-   descBuilder.AddField(1, RNTupleVersion(), RNTupleVersion(), "list", "std::vector<std::int32_t>",
-                        0, ENTupleStructure::kCollection);
+   descBuilder.AddField(RFieldDescriptorBuilder()
+      .FieldId(0)
+      .FieldName("")
+      .Structure(ENTupleStructure::kRecord)
+   );
+   descBuilder.AddField(RFieldDescriptorBuilder()
+      .FieldId(1)
+      .FieldName("list")
+      .TypeName("std::vector<std::int32_t>")
+      .Structure(ENTupleStructure::kCollection)
+   );
    descBuilder.AddFieldLink(0, 1);
-   descBuilder.AddField(2, RNTupleVersion(), RNTupleVersion(), "list", "std::int32_t", 0, ENTupleStructure::kLeaf);
+
+   descBuilder.AddField(RFieldDescriptorBuilder()
+      .FieldId(2)
+      .FieldName("list") // at different levels, duplicate names are fine
+      .TypeName("std::int32_t")
+      .Structure(ENTupleStructure::kLeaf));
    descBuilder.AddFieldLink(1, 2);
-   descBuilder.AddField(42, RNTupleVersion(), RNTupleVersion(), "x", "std::string", 0, ENTupleStructure::kLeaf);
+
+   descBuilder.AddField(RFieldDescriptorBuilder()
+      .FieldId(42)
+      .FieldName("x")
+      .TypeName("std::string")
+      .Structure(ENTupleStructure::kLeaf));
    descBuilder.AddFieldLink(0, 42);
+
    descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);
    descBuilder.AddColumn(4, 42, RNTupleVersion(), RColumnModel(EColumnType::kByte, true), 1);
 

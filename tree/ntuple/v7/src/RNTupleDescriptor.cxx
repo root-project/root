@@ -890,6 +890,17 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
    fDescriptor.fGroupUuid = uuid;
 }
 
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor& fieldDesc) {
+   auto fieldCopy = fieldDesc;
+   fieldCopy.fParentId = kInvalidDescriptorId;
+   fieldCopy.fLinkIds = {};
+   fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldCopy);
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescriptorBuilder& builder) {
+   AddField(builder.GetDescriptor());
+}
+
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(
    DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
    std::string_view fieldName, std::string_view typeName, std::uint64_t nRepetitions, ENTupleStructure structure)
