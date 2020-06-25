@@ -3441,6 +3441,8 @@ void TGCocoa::SetDoubleBufferON()
 
    NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
 
+   if (!window) return;
+
    assert(window.fIsPixmap == NO &&
           "SetDoubleBufferON, selected drawable is a pixmap, can not attach pixmap to pixmap");
 
