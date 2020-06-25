@@ -72,12 +72,6 @@ public:
    static constexpr std::uint16_t kFrameVersionCurrent = 0;
    static constexpr std::uint16_t kFrameVersionMin = 0;
 
-   RFieldDescriptor() = default;
-   RFieldDescriptor(const RFieldDescriptor &other) = delete;
-   RFieldDescriptor &operator =(const RFieldDescriptor &other) = delete;
-   RFieldDescriptor(RFieldDescriptor &&other) = default;
-   RFieldDescriptor &operator =(RFieldDescriptor &&other) = default;
-
    bool operator==(const RFieldDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fFieldId; }
