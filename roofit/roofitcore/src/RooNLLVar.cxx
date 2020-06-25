@@ -22,10 +22,10 @@
 Class RooNLLVar implements a -log(likelihood) calculation from a dataset
 and a PDF. The NLL is calculated as
 \f[
- \sum_\mathrm{data} -\log( \mathrmp{pdf}(x_\mathrm{data})
+ \sum_\mathrm{data} -\log( \mathrm{pdf}(x_\mathrm{data}))
 \f]
 In extended mode, a
-\f$ N_mathrm{expect} - N_mathrm{observed}*log(N_mathrm{expect}) \f$ term is added.
+\f$ N_\mathrm{expect} - N_\mathrm{observed}*log(N_\mathrm{expect}) \f$ term is added.
 **/
 
 #include "RooNLLVar.h"
@@ -63,7 +63,7 @@ RooArgSet RooNLLVar::_emptySet ;
 ///  NumCPU()                 | Activate parallel processing feature
 ///  Range()                  | Fit only selected region
 ///  SumCoefRange()           | Set the range in which to interpret the coefficients of RooAddPdf components
-///  SplitRange()             | Fit range is split by index catory of simultaneous PDF
+///  SplitRange()             | Fit range is split by index category of simultaneous PDF
 ///  ConditionalObservables() | Define conditional observables
 ///  Verbose()                | Verbose output of GOF framework classes
 ///  CloneData()              | Clone input dataset for internal use (default is kTRUE)
@@ -123,7 +123,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
   // for a binned likelihood calculation
   _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
 
-  // Retrieve and cache bin widths needed to convert unnormalized binnedPdf values back to yields
+  // Retrieve and cache bin widths needed to convert un-normalized binnedPdf values back to yields
   if (_binnedPdf) {
 
     // The Active label will disable pdf integral calculations
@@ -168,7 +168,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
   // for a binned likelihood calculation
   _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
 
-  // Retrieve and cache bin widths needed to convert unnormalized binnedPdf values back to yields
+  // Retrieve and cache bin widths needed to convert un-normalized binnedPdf values back to yields
   if (_binnedPdf) {
 
     RooArgSet* obs = _funcClone->getObservables(_dataClone) ;
