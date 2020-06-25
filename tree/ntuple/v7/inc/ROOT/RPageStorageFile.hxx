@@ -16,10 +16,10 @@
 #ifndef ROOT7_RPageStorageFile
 #define ROOT7_RPageStorageFile
 
-#include <ROOT/RPageStorage.hxx>
 #include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleZip.hxx>
+#include <ROOT/RPageStorage.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <array>
@@ -39,7 +39,6 @@ class RRawFile;
 namespace Experimental {
 namespace Detail {
 
-class RCluster;
 class RClusterPool;
 class RPageAllocatorHeap;
 class RPagePool;
@@ -127,14 +126,14 @@ private:
       RNTupleAtomicCounter &fNRead;
       RNTupleAtomicCounter &fSzReadPayload ;
       RNTupleAtomicCounter &fSzReadOverhead;
-      RNTuplePlainCounter  &fSzUnzip;
+      RNTupleAtomicCounter &fSzUnzip;
       RNTupleAtomicCounter &fNClusterLoaded;
-      RNTuplePlainCounter  &fNPageLoaded;
-      RNTuplePlainCounter  &fNPagePopulated;
+      RNTupleAtomicCounter &fNPageLoaded;
+      RNTupleAtomicCounter &fNPagePopulated;
       RNTupleAtomicCounter &fTimeWallRead;
-      RNTuplePlainCounter  &fTimeWallUnzip;
+      RNTupleAtomicCounter &fTimeWallUnzip;
       RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuRead;
-      RNTupleTickCounter<RNTuplePlainCounter>  &fTimeCpuUnzip;
+      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuUnzip;
       RNTupleCalcPerf &fBandwidthReadUncompressed;
       RNTupleCalcPerf &fBandwidthReadCompressed;
       RNTupleCalcPerf &fBandwidthUnzip;
@@ -163,6 +162,10 @@ private:
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
                                  ClusterSize_t::ValueType clusterIndex);
+   //RPage UnwrapPage(DescriptorId_t clusterId,
+   //                 const ROnDiskPage::Key &key,
+   //                 const ROnDiskPage &onDiskPage,
+   //                 const RColumnElement &element);
 
 protected:
    RNTupleDescriptor AttachImpl() final;
