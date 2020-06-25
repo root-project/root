@@ -41,8 +41,8 @@ enum ENTupleStructure {
   kCollection,
   kRecord,
   kVariant,
-  // unimplemented so far
-  kReference,
+  kReference, // unimplemented so far
+  kInvalid,
 };
 
 /// Integer type long enough to hold the maximum number of entries in a column
