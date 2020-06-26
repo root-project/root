@@ -73,13 +73,12 @@ void rf903_numintcache(Int_t mode = 0)
    w1->pdf("model")->plotOn(framex);
 
    // Draw x projection on canvas
-   new TCanvas("rf903_numintcache", "rf903_numintcache", 600, 600);
+   auto canv = new TCanvas("rf903_numintcache", "rf903_numintcache", 600, 600);
    framex->Draw();
+   canv->Draw();
 
    // Make workspace available on command line after macro finishes
    gDirectory->Add(w1);
-
-   return;
 }
 
 RooWorkspace *getWorkspace(Int_t mode)
