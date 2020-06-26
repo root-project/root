@@ -221,7 +221,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
    // Move clusters that meanwhile arrived into cache pool
    {
       // This lock is held during iteration over several data structures: the collection of in-flight clusters,
-      // the current pool of cached clusters, and the set of set of cluster ids to be preloaded.
+      // the current pool of cached clusters, and the set of cluster ids to be preloaded.
       // All three collections are expected to be small (certainly < 100, probably more likely < 10).  All operations
       // are non-blocking and moving around small items (pointers, ids, etc).  Thus the overall locking time should
       // still be reasonably small and the lock is rarely taken (usually once per cluster)
