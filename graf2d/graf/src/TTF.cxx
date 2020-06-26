@@ -42,7 +42,7 @@ Int_t          TTF::fgSymbItaFontIdx = -1;
 Int_t          TTF::fgFontCount      = 0;
 Int_t          TTF::fgNumGlyphs      = 0;
 char          *TTF::fgFontName[kTTMaxFonts];
-FT_Matrix     *TTF::fgRotMatrix;
+FT_Matrix     *TTF::fgRotMatrix      = nullptr;
 FT_Library     TTF::fgLibrary;
 FT_BBox        TTF::fgCBox;
 FT_Face        TTF::fgFace[kTTMaxFonts];
