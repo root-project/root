@@ -29,6 +29,8 @@
 #pragma link C++ class ROOT::Experimental::RHist2Drawable+;
 #pragma link C++ class ROOT::Experimental::RHist3Drawable+;
 
+#pragma link C++ class ROOT::Experimental::RHistDisplayItem+;
+
 #pragma link C++ class ROOT::Experimental::RDisplayHistStat+;
 
 #pragma link C++ class ROOT::Experimental::RHistStatBoxBase+;
