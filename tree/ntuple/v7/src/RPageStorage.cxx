@@ -17,6 +17,7 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPagePool.hxx>
@@ -129,14 +130,11 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
 
    std::unordered_map<const RFieldBase *, DescriptorId_t> fieldPtr2Id; // necessary to find parent field ids
    const auto &fieldZero = *model.GetFieldZero();
-   fDescriptorBuilder.AddField(fLastFieldId, fieldZero.GetFieldVersion(), fieldZero.GetTypeVersion(),
-      fieldZero.GetName(), fieldZero.GetType(), fieldZero.GetNRepetitions(), fieldZero.GetStructure());
+   fDescriptorBuilder.AddField(RFieldDescriptorBuilder(fieldZero).FieldId(fLastFieldId));
    fieldPtr2Id[&fieldZero] = fLastFieldId++;
    for (auto& f : *model.GetFieldZero()) {
-      fDescriptorBuilder.AddField(fLastFieldId, f.GetFieldVersion(), f.GetTypeVersion(), f.GetName(), f.GetType(),
-                                  f.GetNRepetitions(), f.GetStructure());
+      fDescriptorBuilder.AddField(RFieldDescriptorBuilder(f).FieldId(fLastFieldId));
       fDescriptorBuilder.AddFieldLink(fieldPtr2Id[f.GetParent()], fLastFieldId);
-
       Detail::RFieldFuse::Connect(fLastFieldId, *this, f); // issues in turn one or several calls to AddColumn()
       fieldPtr2Id[&f] = fLastFieldId++;
    }
