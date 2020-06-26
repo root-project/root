@@ -41,3 +41,13 @@ TEST(TError, Basics) {
    SysError("location", "message");
    EXPECT_STREQ("message (errno: 42)", gTestLastMsg.c_str());
 }
+
+
+TEST(TError, LongMessage) {
+   SetErrorHandler(TestErrorHandler);
+   std::string longMessage(10000, 'X');
+   EXPECT_EQ(10000U, longMessage.length());
+
+   Info("location", longMessage.c_str());
+   EXPECT_EQ(longMessage, gTestLastMsg);
+}
