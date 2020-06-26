@@ -1132,7 +1132,7 @@ if (jemalloc)
 endif()
 
 #---Check for liburing----------------------------------------------------------------
-if (liburing)
+if (uring)
   if(NOT CMAKE_SYSTEM_NAME MATCHES Linux)
     message(FATAL_ERROR "liburing is only available on Linux")
   endif()
