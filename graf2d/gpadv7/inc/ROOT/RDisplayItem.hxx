@@ -84,11 +84,11 @@ public:
 };
 
 
-/** \class RDrawableDisplayItem
+/** \class RIndirectDisplayItem
 \ingroup GpadROOT7
-\brief Generic display item for RDrawable, just reference drawable itself
+\brief Extract (reference) only basic attributes from drawable, but not drawable itself
 \author Sergey Linev <s.linev@gsi.de>
-\date 2017-05-31
+\date 2020-04-02
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 

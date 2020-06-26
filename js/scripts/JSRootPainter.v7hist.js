@@ -57,8 +57,11 @@
 
       if (histo && !histo.getBinContent) {
          if (histo.fAxes._2) {
+            this.ProvideAxisMethods(histo.fAxes._0);
+            this.ProvideAxisMethods(histo.fAxes._1);
+            this.ProvideAxisMethods(histo.fAxes._2);
             histo.getBin = function(x, y, z) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1) + this.fAxes._0.GetNumBins()*this.fAxes._1.GetNumBins()*(z-1); }
-            // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no undeflow/overflow bins now
+            // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x, y, z) { return this.fStatistics.fBinContent[this.getBin(x, y, z)]; }
             histo.getBinError = function(bin) {
                if (this.fStatistics.fSumWeightsSquared)
@@ -66,8 +69,10 @@
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
             }
          } else if (histo.fAxes._1) {
+            this.ProvideAxisMethods(histo.fAxes._0);
+            this.ProvideAxisMethods(histo.fAxes._1);
             histo.getBin = function(x, y) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1); }
-            // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no undeflow/overflow bins now
+            // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; }
             histo.getBinError = function(bin) {
                if (this.fStatistics.fSumWeightsSquared)
@@ -75,17 +80,38 @@
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
             }
          } else {
-            histo.getBin = function(bin) { return bin-1; }
-            // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no undeflow/overflow bins now
-            histo.getBinContent = function(bin) { return this.fStatistics.fBinContent[bin-1]; }
+            this.ProvideAxisMethods(histo.fAxes._0);
+            histo.getBin = function(x) { return x-1; }
+            // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
+            histo.getBinContent = function(x) { return this.fStatistics.fBinContent[x-1]; }
             histo.getBinError = function(bin) {
                if (this.fStatistics.fSumWeightsSquared)
-                  return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin-1]);
-               return Math.sqrt(Math.abs(this.getBinContent(bin)));
+                  return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin]);
+               return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
+            }
+         }
+      } else if (!histo && obj && obj.fAxes) {
+         // case of RHistDisplayItem
+
+         histo = obj;
+
+         if (!obj.getBinContent) {
+            if (histo.fAxes.length == 2) {
+               this.ProvideAxisMethods(histo.fAxes[0]);
+               this.ProvideAxisMethods(histo.fAxes[1]);
+               histo.getBin = function(x, y) { return (x-1) + this.fAxes[0].GetNumBins()*(y-1); }
+               // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
+               histo.getBinContent = function(x, y) { return this.fBinContent[this.getBin(x, y)]; }
+               histo.getBinError = function(bin) { return Math.sqrt(Math.abs(this.fBinContent[bin])); }
+            } else {
+               this.ProvideAxisMethods(histo.fAxes[0]);
+               histo.getBin = function(x) { return x-1; }
+               // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
+               histo.getBinContent = function(x) { return this.fBinContent[x-1]; }
+               histo.getBinError = function(bin) { return Math.sqrt(Math.abs(this.fBinContent[bin])); }
             }
          }
       }
-
       return histo;
    }
 
@@ -183,17 +209,31 @@
    }
 
    RHistPainter.prototype.GetAxis = function(name) {
-      var histo = this.GetHisto();
-      if (!histo || !histo.fAxes) return null;
+      var histo = this.GetHisto(), obj = this.GetObject(), axis = null;
 
-      var axis = histo.fAxes._0;
-
-      switch(name) {
-         case "x": axis = histo.fAxes._0; break;
-         case "y": axis = histo.fAxes._1; break;
-         case "z": axis = histo.fAxes._2; break;
+      if (obj && obj.fAxes) {
+         switch(name) {
+            case "x": axis = obj.fAxes[0]; break;
+            case "y": axis = obj.fAxes[1]; break;
+            case "z": axis = obj.fAxes[2]; break;
+            default: axis = obj.fAxes[0]; break;
+         }
+      } else if (histo && histo.fAxes) {
+         switch(name) {
+            case "x": axis = histo.fAxes._0; break;
+            case "y": axis = histo.fAxes._1; break;
+            case "z": axis = histo.fAxes._2; break;
+            default: axis = histo.fAxes._0; break;
+         }
       }
-      if (!axis || axis.GetBinCoord) return axis;
+
+      if (axis && !axis.GetBinCoord)
+         this.ProvideAxisMethods(axis);
+
+      return axis;
+   }
+
+   RHistPainter.prototype.ProvideAxisMethods = function(axis) {
 
       if (axis._typename == "ROOT::Experimental::RAxisEquidistant") {
          axis.min = axis.fLow;
@@ -225,8 +265,6 @@
 
       axis.GetBinCenter = function(bin) { return this.GetBinCoord(bin-0.5); }
       axis.GetBinLowEdge = function(bin) { return this.GetBinCoord(bin-1); }
-
-      return axis;
    }
 
    RHistPainter.prototype.CreateAxisFuncs = function(with_y_axis, with_z_axis) {
@@ -234,16 +272,22 @@
       // introduced to support non-equidistant bins
 
       var histo = this.GetHisto();
+      console.log('GetHisto', histo);
+
       if (!histo) return;
 
       var axis = this.GetAxis("x");
       this.xmin = axis.min;
       this.xmax = axis.max;
 
+      console.log('draw axes', this.xmin, this.xmax, this.ymin, this.ymax);
+
       if (!with_y_axis || !this.nbinsy) return;
       axis = this.GetAxis("y");
       this.ymin = axis.min;
       this.ymax = axis.max;
+
+      console.log('draw axes', this.xmin, this.xmax, this.ymin, this.ymax);
 
       if (!with_z_axis || !this.nbinsz) return;
       axis = this.GetAxis("z");
@@ -3465,6 +3509,16 @@
       return painter;
    }
 
+   function drawHistDisplayItem(divid, obj, opt) {
+      if (!obj || (obj.fAxes.length < 2))
+         return drawHist1(divid, obj, opt);
+
+      if (obj.fAxes.length == 2)
+         return drawHist2(divid, obj, opt);
+
+      return null; // support of RH3 object
+   }
+
    // =============================================================
 
 
@@ -3670,6 +3724,7 @@
 
    JSROOT.v7.drawHist1 = drawHist1;
    JSROOT.v7.drawHist2 = drawHist2;
+   JSROOT.v7.drawHistDisplayItem = drawHistDisplayItem;
    JSROOT.v7.drawHistStats = drawHistStats;
 
    return JSROOT;
