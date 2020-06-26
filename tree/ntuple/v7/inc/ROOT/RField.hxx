@@ -19,7 +19,6 @@
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RColumnElement.hxx>
-#include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
@@ -48,9 +47,10 @@ class TClass;
 namespace ROOT {
 namespace Experimental {
 
+class RCollectionField;
 class RCollectionNTuple;
 class REntry;
-class RCollectionField;
+class RFieldDescriptor;
 class RNTupleModel;
 
 namespace Detail {
@@ -229,6 +229,8 @@ public:
    virtual RNTupleVersion GetFieldVersion() const { return RNTupleVersion(); }
    /// Indicates an evolution of the C++ type itself
    virtual RNTupleVersion GetTypeVersion() const { return RNTupleVersion(); }
+   /// View this field as an RFieldDescriptor
+   RFieldDescriptor AsFieldDescriptor() const;
 
    RSchemaIterator begin();
    RSchemaIterator end();

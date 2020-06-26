@@ -901,21 +901,6 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescript
    AddField(builder.GetDescriptor());
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(
-   DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
-   std::string_view fieldName, std::string_view typeName, std::uint64_t nRepetitions, ENTupleStructure structure)
-{
-   RFieldDescriptor f;
-   f.fFieldId = fieldId;
-   f.fFieldVersion = fieldVersion;
-   f.fTypeVersion = typeVersion;
-   f.fFieldName = std::string(fieldName);
-   f.fTypeName = std::string(typeName);
-   f.fNRepetitions = nRepetitions;
-   f.fStructure = structure;
-   fDescriptor.fFieldDescriptors.emplace(fieldId, std::move(f));
-}
-
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
 {
    R__ASSERT(fDescriptor.fFieldDescriptors[linkId].fParentId == kInvalidDescriptorId);

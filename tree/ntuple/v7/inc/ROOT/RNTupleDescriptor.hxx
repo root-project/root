@@ -465,6 +465,10 @@ public:
    RFieldDescriptorBuilder() = default;
    /// Make an RFieldDescriptorBuilder based off of an existing field descriptor.
    explicit RFieldDescriptorBuilder(const RFieldDescriptor& fieldDesc) : fField(fieldDesc) {}
+   template<typename AsFieldDescriptor>
+   explicit RFieldDescriptorBuilder(const AsFieldDescriptor& field)
+      : RFieldDescriptorBuilder(field.AsFieldDescriptor()) {}
+
    RFieldDescriptorBuilder& FieldId(DescriptorId_t fieldId) {
       fField.fFieldId = fieldId;
       return *this;
@@ -525,9 +529,6 @@ public:
 
    void AddField(const RFieldDescriptor& fieldDesc);
    void AddField(const RFieldDescriptorBuilder& fieldBuilder);
-   void AddField(DescriptorId_t fieldId, const RNTupleVersion &fieldVersion, const RNTupleVersion &typeVersion,
-                 std::string_view fieldName, std::string_view typeName, std::uint64_t nRepetitions,
-                 ENTupleStructure structure);
    void AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
    void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId,

@@ -22,6 +22,7 @@
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 
 #include <TClass.h>
@@ -264,6 +265,17 @@ void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(Detail::RFieldVisitor
    visitor.VisitField(*this);
 }
 
+ROOT::Experimental::RFieldDescriptor
+ROOT::Experimental::Detail::RFieldBase::AsFieldDescriptor() const {
+   return RFieldDescriptorBuilder()
+      .FieldVersion(GetFieldVersion())
+      .TypeVersion(GetTypeVersion())
+      .FieldName(fName)
+      .TypeName(fType)
+      .Structure(fStructure)
+      .NRepetitions(fNRepetitions)
+      .GetDescriptor();
+}
 
 ROOT::Experimental::Detail::RFieldBase::RSchemaIterator ROOT::Experimental::Detail::RFieldBase::begin()
 {
