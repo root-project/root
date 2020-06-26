@@ -2093,8 +2093,7 @@
       } else {
          switch (kind) {
             case 1:
-               var fp = this.frame_painter();
-               if (fp) fp.ProcessFrameClick(pnt);
+               this.ProcessFrameClick(pnt);
                break;
             case 2:
                var pp = this.pad_painter();
@@ -2502,7 +2501,7 @@
 
          var diff = now.getTime() - this.last_touch.getTime();
 
-         if ((diff > 500) && (diff<2000) && !this.frame_painter().IsTooltipShown()) {
+         if ((diff > 500) && (diff < 2000) && !this.IsTooltipShown()) {
             this.ShowContextMenu('main', { clientX: this.zoom_curr[0], clientY: this.zoom_curr[1] });
             this.last_touch = new Date(0);
          } else {

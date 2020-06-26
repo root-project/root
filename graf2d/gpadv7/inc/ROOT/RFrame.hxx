@@ -31,8 +31,7 @@ namespace Experimental {
 /** \class RFrame
 \ingroup GpadROOT7
 \brief Holds an area where drawing on user coordinate-system can be performed.
-\author Axel Naumann <axel@cern.ch>
-\author Sergey Linev <s.linev@gsi.de>
+\authors Axel Naumann <axel@cern.ch> Sergey Linev <s.linev@gsi.de>
 \date 2017-09-26
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */

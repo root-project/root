@@ -2050,7 +2050,7 @@
           handle = this.PrepareColorDraw({ rounding: false, use3d: true, extra: 1 }),
           zmin = main.grz.domain()[0],
           zmax = main.grz.domain()[1],
-          i, j, bin, binz, binerr, x1, y1, x2, y2, z1, z2,
+          i, j, binz, binerr, x1, y1, x2, y2, z1, z2,
           nsegments = 0, lpos = null, binindx = null, lindx = 0;
 
        function check_skip_min() {
@@ -2073,9 +2073,8 @@
                 // just count number of segments
                 if (loop===0) { nsegments+=3; continue; }
 
-                bin = histo.getBin(i+1,j+1);
-                binerr = histo.getBinError(bin);
-                binindx[lindx/18] = bin;
+                binerr = histo.getBinError(i+1,j+1);
+                binindx[lindx/18] = histo.getBin(i+1,j+1);
 
                 y1 = handle.gry[j];
                 y2 = handle.gry[j+1];

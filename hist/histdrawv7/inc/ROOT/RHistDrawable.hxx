@@ -25,17 +25,16 @@
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistImpl.hxx>
 
+// TODO: move to separate file
+#include <ROOT/RDrawableRequest.hxx>
+#include <ROOT/RDisplayItem.hxx>
+
 #include <memory>
 
 namespace ROOT {
 namespace Experimental {
 
-template <int DIMENSIONS>
-class RHistDrawable : public RDrawable {
-public:
-   using HistImpl_t = Detail::RHistImplPrecisionAgnosticBase<DIMENSIONS>;
-
-private:
+class RHistDrawableBase : public RDrawable {
    RAttrValue<std::string>  fKind{this, "kind", ""};      ///<! hist draw kind
    RAttrValue<int>          fSub{this, "sub", -1};        ///<! hist draw sub kind
    RAttrLine                fAttrLine{this, "line_"};     ///<! hist line attributes
@@ -45,16 +44,9 @@ private:
 
 protected:
 
-   Internal::RIOShared<HistImpl_t> fHistImpl;             ///< I/O capable reference on histogram
-
-   void CollectShared(Internal::RIOSharedVector_t &vect) override { vect.emplace_back(&fHistImpl); }
-
    bool IsFrameRequired() const final { return true; }
 
-   void PopulateMenu(RMenuItems &) override
-   {
-      // populate menu
-   }
+   void PopulateMenu(RMenuItems &) override { }
 
    void SetDrawKind(const std::string &kind, int sub = -1)
    {
@@ -66,35 +58,49 @@ protected:
    }
 
 public:
-   RHistDrawable() : RDrawable("hist") {}
+   RHistDrawableBase() : RDrawable("hist") {}
+
+   const RAttrLine &GetAttrLine() const { return fAttrLine; }
+   RHistDrawableBase &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
+   RAttrLine &AttrLine() { return fAttrLine; }
+
+   const RAttrFill &GetAttrFill() const { return fAttrFill; }
+   RHistDrawableBase &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
+   RAttrFill &AttrFill() { return fAttrFill; }
+
+   const RAttrText &GetAttrText() const { return fAttrText; }
+   RHistDrawableBase &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
+   RAttrText &AttrText() { return fAttrText; }
+
+   const RAttrMarker &GetAttrMarker() const { return fMarkerAttr; }
+   RHistDrawableBase &SetAttrMarker(const RAttrMarker &attr) { fMarkerAttr = attr; return *this; }
+   RAttrMarker &AttrMarker() { return fMarkerAttr; }
+};
+
+
+template <int DIMENSIONS>
+class RHistDrawable : public RHistDrawableBase {
+public:
+   using HistImpl_t = Detail::RHistImplPrecisionAgnosticBase<DIMENSIONS>;
+
+protected:
+
+   Internal::RIOShared<HistImpl_t> fHistImpl;             ///< I/O capable reference on histogram
+
+   void CollectShared(Internal::RIOSharedVector_t &vect) override { vect.emplace_back(&fHistImpl); }
+
+public:
+   RHistDrawable() = default;
    virtual ~RHistDrawable() = default;
 
    template <class HIST>
-   RHistDrawable(const std::shared_ptr<HIST> &hist) : RHistDrawable()
+   RHistDrawable(const std::shared_ptr<HIST> &hist) : RHistDrawableBase()
    {
       fHistImpl = std::shared_ptr<HistImpl_t>(hist, hist->GetImpl());
    }
 
    std::shared_ptr<HistImpl_t> GetHist() const { return fHistImpl.get_shared(); }
-
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RHistDrawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
-   RAttrLine &AttrLine() { return fAttrLine; }
-
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RHistDrawable &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
-   RAttrFill &AttrFill() { return fAttrFill; }
-
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RHistDrawable &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
-   RAttrText &AttrText() { return fAttrText; }
-
-   const RAttrMarker &GetAttrMarker() const { return fMarkerAttr; }
-   RHistDrawable &SetAttrMarker(const RAttrMarker &attr) { fMarkerAttr = attr; return *this; }
-   RAttrMarker &AttrMarker() { return fMarkerAttr; }
 };
-
-// template <int DIMENSIONS> inline RHistDrawable<DIMENSIONS>::RHistDrawable() : RDrawable("hist") {}
 
 
 class RHist1Drawable final : public RHistDrawable<1> {
@@ -131,10 +137,39 @@ class RHist2Drawable final : public RHistDrawable<2> {
 
 protected:
 
-   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) override;
+   std::unique_ptr<RDisplayItem> CreateHistDisplay(const RDisplayContext &);
+
+   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &ctxt) override
+   {
+      if (fOptimize)
+         return CreateHistDisplay(ctxt);
+
+      return RHistDrawable<2>::Display(ctxt);
+   }
 
 public:
    RHist2Drawable() = default;
+
+   class RReply : public RDrawableReply {
+   public:
+      std::unique_ptr<RDisplayItem> item;
+   };
+
+   class RRequest : public RDrawableRequest {
+   public:
+      std::unique_ptr<RDrawableReply> Process() override
+      {
+         auto h2draw = dynamic_cast<RHist2Drawable *>(GetContext().GetDrawable());
+
+         auto reply = std::make_unique<RReply>();
+         if (h2draw)
+            reply->item = h2draw->CreateHistDisplay(GetContext());
+         return reply;
+      }
+   };
+
+   friend class RRequest;
+
 
    template <class HIST>
    RHist2Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<2>(hist) {}

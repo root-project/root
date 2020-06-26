@@ -26,9 +26,12 @@ namespace Experimental {
 class RAxisBase;
 
 class RHistDisplayItem : public RIndirectDisplayItem {
-   std::vector<const RAxisBase *> fAxes;   ///< histogram axes, temporary pointer
+   std::vector<const RAxisBase *> fAxes;   ///< histogram axes, only temporary pointers
    std::vector<int> fIndicies;             ///< [left,right,step] for each axes
    std::vector<double> fBinContent;        ///< extracted bins values
+   double fContMin{0.};                    ///< minimum content value
+   double fContMinPos{0.};                 ///< minimum positive value
+   double fContMax{0.};                    ///< maximum content value
 
 public:
    RHistDisplayItem() = default;
@@ -44,6 +47,13 @@ public:
    }
 
    auto &GetBinContent() { return fBinContent; }
+
+   void SetContentMinMax(double min, double minpos, double max)
+   {
+      fContMin = min;
+      fContMinPos = minpos;
+      fContMax = max;
+   }
 };
 
 } // namespace Experimental
