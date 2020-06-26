@@ -36,8 +36,6 @@ public:
    using HistImpl_t = Detail::RHistImplPrecisionAgnosticBase<DIMENSIONS>;
 
 private:
-   Internal::RIOShared<HistImpl_t> fHistImpl;             ///< I/O capable reference on histogram
-
    RAttrValue<std::string>  fKind{this, "kind", ""};      ///<! hist draw kind
    RAttrValue<int>          fSub{this, "sub", -1};        ///<! hist draw sub kind
    RAttrLine                fAttrLine{this, "line_"};     ///<! hist line attributes
@@ -46,6 +44,8 @@ private:
    RAttrMarker              fMarkerAttr{this, "marker_"}; ///<! hist marker attributes
 
 protected:
+
+   Internal::RIOShared<HistImpl_t> fHistImpl;             ///< I/O capable reference on histogram
 
    void CollectShared(Internal::RIOSharedVector_t &vect) override { vect.emplace_back(&fHistImpl); }
 
@@ -126,7 +126,12 @@ public:
 
 
 class RHist2Drawable final : public RHistDrawable<2> {
-   RAttrValue<bool> fText{this, "text", false};           ///<! draw text
+   RAttrValue<bool> fText{this, "text", false};               ///<! draw text
+   RAttrValue<bool> fOptimize{this, "optimize", false};       ///<! optimize drawing
+
+protected:
+
+   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) override;
 
 public:
    RHist2Drawable() = default;
@@ -142,6 +147,9 @@ public:
    RHist2Drawable &Scatter() { SetDrawKind("scat"); return *this; }
    RHist2Drawable &Arrow() { SetDrawKind("arr"); return *this; }
    RHist2Drawable &Text(bool on = true) { fText = on; return *this; }
+
+   RHist2Drawable &Optimize(bool on = true) { fOptimize = on; return *this; }
+
 };
 
 
