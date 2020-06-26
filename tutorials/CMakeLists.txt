@@ -77,7 +77,7 @@ endif()
 
 if (NOT dataframe)
     # RDataFrame
-    list(APPEND dataframe_veto dataframe/*.C)
+    list(APPEND dataframe_veto dataframe/*.C dataframe/*.py)
     # RDataFrame tutorial in graphs
     list(APPEND dataframe_veto graphs/timeSeriesFromCSV_TDF.C)
     # TMVA tutorials dependent on RDataFrame
@@ -130,7 +130,12 @@ if(NOT xrootd)
   set(xrootd_veto dataframe/df101_h1Analysis.C
                   dataframe/df102_NanoAODDimuonAnalysis.C
                   dataframe/df103_NanoAODHiggsAnalysis.C
-                  tmva/tmva103_Application.C)
+                  tmva/tmva103_Application.C
+                  dataframe/df102_NanoAODDimuonAnalysis.py
+                  dataframe/df103_NanoAODHiggsAnalysis.py
+                  dataframe/df104_HiggsToTwoPhotons.py
+                  dataframe/df105_WBosonAnalysis.py
+                  dataframe/df106_HiggsToFourLeptons.py)
 endif()
 
 # variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
@@ -160,7 +165,10 @@ if(NOT ROOT_mathmore_FOUND)
       math/mathmoreIntegration.C
       math/tStudent.C
       math/normalDist.C
-      roostats/TestNonCentral.C )
+      roostats/TestNonCentral.C
+      math/Legendre.py
+      math/Bessel.py
+      math/tStudent.py)
 endif()
 
 if(NOT ROOT_fftw3_FOUND)
@@ -251,16 +259,12 @@ if(root7)
   if(MSVC AND NOT win_broken_tests)
     list(APPEND root7_veto v7/box.cxx v7/draw*.cxx )
   endif()
-endif()
-
-if(NOT root7)
-  set(root7_veto v7/ntuple/ntpl001_staff.C
-                 v7/ntuple/ntpl002_vector.C
-                 v7/ntuple/ntpl003_lhcbOpenData.C
-                 v7/ntuple/ntpl004_dimuon.C
-                 v7/ntuple/ntpl005_introspection.C)
-elseif(NOT dataframe)
-  set(root7_veto v7/ntuple/ntpl004_dimuon.C)
+  if(NOT dataframe)
+    set(root7_veto v7/ntuple/ntpl004_dimuon.C)
+  endif()
+else()
+  file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ v7/*.cxx v7/*/*.cxx v7/*.C v7/*/*.C)
+  list(APPEND root7_veto ${v7_veto_files})
 endif()
 
 if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
@@ -333,11 +337,11 @@ if(root7 AND webgui)
 endif()
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
 
-list(LENGTH tutorials total)
-list(LENGTH tutorials_veto veto)
-message(STATUS "${veto}/${total} tutorials have been vetoed for various reasons")
-
+list(LENGTH tutorials nTotal)
 list(REMOVE_ITEM tutorials ${tutorials_veto})
+list(LENGTH tutorials nAfterVeto)
+message(STATUS "${nAfterVeto}/${nTotal} C++ tutorials have been activated.")
+
 
 if(mpi)
   set (temp_list ${tutorials})
@@ -497,7 +501,9 @@ endforeach()
 #---Python tutorials-----------------------------------------------------
 if(ROOT_pyroot_FOUND)
 
-  file(GLOB pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} */*.py)
+  file(GLOB_RECURSE pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
+
+  # Now python-specific vetos:
   set(pyveto pyroot/demo.py         # requires GUI
              pyroot/fit1_py.py      # not a tutorial
              pyroot/gui_ex.py       # requires GUI
@@ -506,12 +512,14 @@ if(ROOT_pyroot_FOUND)
              pyroot/na49visible.py  # ????
              pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
              pyroot/numberEntry.py  # requires GUI
+             legacy/pyroot/*py      # legacy ...
              histfactory/example.py # not a tutorial
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
              sql/sqlcreatedb.py     # same as the C++ case
              sql/sqlfilldb.py       # same as the C++ case
              sql/sqlselect.py       # same as the C++ case
+             launcher.py            # Not a tutorial
              )
 
   if(pyroot_legacy)
@@ -523,29 +531,8 @@ if(ROOT_pyroot_FOUND)
         roofit/rf511_wsfactory_basic.py)
   endif()
 
-  if(NOT ROOT_mathmore_FOUND)
-    list(APPEND pyveto math/Legendre.py)
-    list(APPEND pyveto math/Bessel.py)
-    list(APPEND pyveto math/tStudent.py)
-  endif()
-
- if(NOT XROOTD_FOUND)
-   list(APPEND pyveto
-       dataframe/df102_NanoAODDimuonAnalysis.py
-       dataframe/df103_NanoAODHiggsAnalysis.py
-       dataframe/df104_HiggsToTwoPhotons.py
-       dataframe/df105_WBosonAnalysis.py
-       dataframe/df106_HiggsToFourLeptons.py)
- endif()
-
-  list(REMOVE_ITEM pytutorials ${pyveto})
-
   if(NOT dataframe)
-    set(dataframe_veto_py dataframe/*.py)
-    file(GLOB dataframe_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva*.py)
-    list(REMOVE_ITEM pytutorials ${dataframe_veto_py})
-    list(REMOVE_ITEM pytutorials
-        pyroot/pyroot002_TTreeAsMatrix.py)
+    list(APPEND pyveto pyroot/pyroot002_TTreeAsMatrix.py)
   endif()
 
   if(NOT dataframe
@@ -553,15 +540,31 @@ if(ROOT_pyroot_FOUND)
      OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2)
      OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3)
      OR (MSVC AND NOT win_broken_tests))
-    list(REMOVE_ITEM pytutorials
-        pyroot/pyroot004_NumbaDeclare.py)
+    list(APPEND pyveto pyroot/pyroot004_NumbaDeclare.py)
   endif()
 
   find_python_module(xgboost QUIET)
-  if (NOT PY_XGBOOST_FOUND OR NOT dataframe)
-    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva10*.py)
-    list(REMOVE_ITEM pytutorials ${tmva_veto_py})
+  if(NOT PY_XGBOOST_FOUND OR NOT dataframe)
+    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/tmva10*.py)
+    list(APPEND pyveto ${tmva_veto_py})
   endif()
+
+  find_python_module(keras QUIET)
+  if(NOT PY_KERAS_FOUND)
+    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
+    list(APPEND pyveto ${tmva_veto_py})
+  endif()
+
+  # Now glob all vetos for pyroot
+  file(GLOB pyveto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${pyveto})
+
+  list(LENGTH pytutorials nTotal)
+  # Apply global .C/.py veto from above:
+  list(REMOVE_ITEM pytutorials ${tutorials_veto})
+  list(REMOVE_ITEM pytutorials ${pyveto})
+  list(LENGTH pytutorials nAfterVeto)
+
+  message(STATUS "${nAfterVeto}/${nTotal} python tutorials have been activated.")
 
   #---Python tutorials dependencies--------------------------------------
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple-py)
@@ -576,11 +579,10 @@ if(ROOT_pyroot_FOUND)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
 
   foreach(t ${pytutorials})
-    list(FIND returncode_1 ${t} index)
-    if(index EQUAL -1)
-      set(rc 0)
-    else()
+    if (${t} IN_LIST returncode_1)
       set(rc 255)
+    else()
+      set(rc 0)
     endif()
 
     set(labels tutorial)
@@ -607,5 +609,9 @@ if(ROOT_pyroot_FOUND)
                 DEPENDS ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ}
                 ${py_will_fail})
+
+    if(${t} IN_LIST pydisable)
+      set_property(TEST ${tutorial_name} PROPERTY DISABLED ON)
+    endif()
   endforeach()
 endif()
