@@ -87,8 +87,6 @@ void MethodPyKeras::DeclareOptions() {
    DeclareOptionRef(fLearningRateSchedule, "LearningRateSchedule", "Set new learning rate during training at specific epochs, e.g., \"50,0.01;70,0.005\"");
    DeclareOptionRef(fTensorBoard, "TensorBoard",
                     "Write a log during training to visualize and monitor the training performance with TensorBoard");
-   DeclareOptionRef(fTensorBoard, "TensorBoard",
-                    "Write a log during training to visualize and monitor the training performance with TensorBoard");
 
    DeclareOptionRef(fNumValidationString = "20%", "ValidationSize", "Part of the training data to use for validation. "
                     "Specify as 0.2 or 20% to use a fifth of the data set as validation set. "
