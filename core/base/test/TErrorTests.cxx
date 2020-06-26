@@ -48,6 +48,6 @@ TEST(TError, LongMessage) {
    std::string longMessage(10000, 'X');
    EXPECT_EQ(10000U, longMessage.length());
 
-   Info("location", longMessage.c_str());
+   Info("location", "%s", longMessage.c_str());
    EXPECT_EQ(longMessage, gTestLastMsg);
 }
