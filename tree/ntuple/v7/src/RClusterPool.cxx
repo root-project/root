@@ -222,9 +222,9 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
    {
       // This lock is held during iteration over several data structures: the collection of in-flight clusters,
       // the current pool of cached clusters, and the set of cluster ids to be preloaded.
-      // All three collections are expected to be small (certainly < 100, probably more likely < 10).  All operations
+      // All three collections are expected to be small (certainly < 100, more likely < 10).  All operations
       // are non-blocking and moving around small items (pointers, ids, etc).  Thus the overall locking time should
-      // still be reasonably small and the lock is rarely taken (usually once per cluster)
+      // still be reasonably small and the lock is rarely taken (usually once per cluster).
       std::lock_guard<std::mutex> lockGuard(fLockWorkQueue);
 
       for (auto itr = fInFlightClusters.begin(); itr != fInFlightClusters.end(); ) {
