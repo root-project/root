@@ -22,12 +22,16 @@
 #pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<2>>+;
 #pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::Detail::RHistImplPrecisionAgnosticBase<3>>+;
 
+#pragma link C++ class ROOT::Experimental::RHistDrawableBase+;
 #pragma link C++ class ROOT::Experimental::RHistDrawable<1>+;
 #pragma link C++ class ROOT::Experimental::RHistDrawable<2>+;
 #pragma link C++ class ROOT::Experimental::RHistDrawable<3>+;
 #pragma link C++ class ROOT::Experimental::RHist1Drawable+;
 #pragma link C++ class ROOT::Experimental::RHist2Drawable+;
 #pragma link C++ class ROOT::Experimental::RHist3Drawable+;
+
+#pragma link C++ class ROOT::Experimental::RHist2Drawable::RRequest+;
+#pragma link C++ class ROOT::Experimental::RHist2Drawable::RReply+;
 
 #pragma link C++ class ROOT::Experimental::RHistDisplayItem+;
 

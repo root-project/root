@@ -52,6 +52,12 @@
       return null;
    }
 
+   /** Returns true if RHistDisplayItem is used */
+   RHistPainter.prototype.IsDisplayItem = function() {
+      var obj = this.GetObject();
+      return obj && obj.fAxes ? true : false;
+   }
+
    RHistPainter.prototype.GetHisto = function() {
       var obj = this.GetObject(), histo = this.GetHImpl(obj);
 
@@ -63,7 +69,8 @@
             histo.getBin = function(x, y, z) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1) + this.fAxes._0.GetNumBins()*this.fAxes._1.GetNumBins()*(z-1); }
             // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x, y, z) { return this.fStatistics.fBinContent[this.getBin(x, y, z)]; }
-            histo.getBinError = function(bin) {
+            histo.getBinError = function(x, y, z) {
+               var bin = this.getBin(x, y, z);
                if (this.fStatistics.fSumWeightsSquared)
                   return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin]);
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
@@ -74,7 +81,8 @@
             histo.getBin = function(x, y) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1); }
             // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; }
-            histo.getBinError = function(bin) {
+            histo.getBinError = function(x, y) {
+               var bin = this.getBin(x, y);
                if (this.fStatistics.fSumWeightsSquared)
                   return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin]);
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
@@ -84,10 +92,10 @@
             histo.getBin = function(x) { return x-1; }
             // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x) { return this.fStatistics.fBinContent[x-1]; }
-            histo.getBinError = function(bin) {
+            histo.getBinError = function(x) {
                if (this.fStatistics.fSumWeightsSquared)
-                  return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin]);
-               return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
+                  return Math.sqrt(this.fStatistics.fSumWeightsSquared[x-1]);
+               return Math.sqrt(Math.abs(this.fStatistics.fBinContent[x-1]));
             }
          }
       } else if (!histo && obj && obj.fAxes) {
@@ -95,20 +103,33 @@
 
          histo = obj;
 
-         if (!obj.getBinContent) {
+         if (!histo.getBinContent) {
             if (histo.fAxes.length == 2) {
                this.ProvideAxisMethods(histo.fAxes[0]);
                this.ProvideAxisMethods(histo.fAxes[1]);
+
+               histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
+               histo.dx = histo.fIndicies[0] + 1;
+
+               histo.ny = histo.fIndicies[4] - histo.fIndicies[3];
+               histo.dy = histo.fIndicies[3] + 1;
+
+               // this is index in original histogram
                histo.getBin = function(x, y) { return (x-1) + this.fAxes[0].GetNumBins()*(y-1); }
-               // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
-               histo.getBinContent = function(x, y) { return this.fBinContent[this.getBin(x, y)]; }
-               histo.getBinError = function(bin) { return Math.sqrt(Math.abs(this.fBinContent[bin])); }
+
+               // this is index in current available data
+               histo.getBin0 = function(x, y) { return (x-this.dx) + this.nx*(y-this.dy); }
+
+               histo.getBinContent = function(x, y) { return this.fBinContent[this.getBin0(x, y)]; }
+               histo.getBinError = function(x, y) { return Math.sqrt(Math.abs(this.getBinContent(x, y))); }
             } else {
                this.ProvideAxisMethods(histo.fAxes[0]);
+               histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
+               histo.dx = histo.fIndicies[0] + 1;
                histo.getBin = function(x) { return x-1; }
-               // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
-               histo.getBinContent = function(x) { return this.fBinContent[x-1]; }
-               histo.getBinError = function(bin) { return Math.sqrt(Math.abs(this.fBinContent[bin])); }
+               histo.getBin0 = function(x) { return x-this.dx; }
+               histo.getBinContent = function(x) { return this.fBinContent[x-this.dx]; }
+               histo.getBinError = function(x) { return Math.sqrt(Math.abs(this.fBinContent[x-this.dx])); }
             }
          }
       }
@@ -272,22 +293,16 @@
       // introduced to support non-equidistant bins
 
       var histo = this.GetHisto();
-      console.log('GetHisto', histo);
-
       if (!histo) return;
 
       var axis = this.GetAxis("x");
       this.xmin = axis.min;
       this.xmax = axis.max;
 
-      console.log('draw axes', this.xmin, this.xmax, this.ymin, this.ymax);
-
       if (!with_y_axis || !this.nbinsy) return;
       axis = this.GetAxis("y");
       this.ymin = axis.min;
       this.ymax = axis.max;
-
-      console.log('draw axes', this.xmin, this.xmax, this.ymin, this.ymax);
 
       if (!with_z_axis || !this.nbinsz) return;
       axis = this.GetAxis("z");
@@ -399,14 +414,14 @@
          case 1:
             tip.ix = indx + 1; tip.iy = 1;
             tip.value = histo.getBinContent(tip.ix);
-            tip.error = histo.getBinError(indx);
+            tip.error = histo.getBinError(tip.ix);
             tip.lines = this.GetBinTips(indx-1);
             break;
          case 2:
             tip.ix = (indx % this.nbinsx) + 1;
             tip.iy = (indx - (tip.ix - 1)) / this.nbinsx + 1;
             tip.value = histo.getBinContent(tip.ix, tip.iy);
-            tip.error = histo.getBinError(indx);
+            tip.error = histo.getBinError(tip.ix, tip.iy);
             tip.lines = this.GetBinTips(tip.ix-1, tip.iy-1);
             break;
          case 3:
@@ -414,7 +429,7 @@
             tip.iy = ((indx - (tip.ix - 1)) / this.nbinsx) % this.nbinsy + 1;
             tip.iz = (indx - (tip.ix - 1) - (tip.iy - 1) * this.nbinsx) / this.nbinsx / this.nbinsy + 1;
             tip.value = histo.getBinContent(tip.ix, tip.iy, tip.iz);
-            tip.error = histo.getBinError(indx);
+            tip.error = histo.getBinError(tip.ix, tip.iy, tip.iz);
             tip.lines = this.GetBinTips(tip.ix-1, tip.iy-1, tip.iz-1);
             break;
       }
@@ -626,6 +641,16 @@
              j2: (hdim===1) ? 1 : this.GetSelectIndex("y", "right", 1 + args.extra),
              min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1
           };
+
+      if (this.IsDisplayItem() && histo.fIndicies) {
+         if (res.i1 < histo.fIndicies[0]) res.i1 = histo.fIndicies[0];
+         if (res.i2 > histo.fIndicies[1]) res.i2 = histo.fIndicies[1];
+         if ((hdim > 1) && (histo.fIndicies.length > 4)) {
+            if (res.j1 < histo.fIndicies[3]) res.j1 = histo.fIndicies[3];
+            if (res.j2 > histo.fIndicies[4]) res.j2 = histo.fIndicies[4];
+         }
+      }
+
       res.grx = new Array(res.i2+1); // no need for Float32Array, plain Array is 10% faster
       res.gry = new Array(res.j2+1);
 
@@ -1925,6 +1950,11 @@
             if (bin_content > 0)
                if ((this.gminposbin===null) || (this.gminposbin > bin_content)) this.gminposbin = bin_content;
          }
+      } else if (this.IsDisplayItem()) {
+         // take min/max values from the display item
+         this.gminbin = histo.fContMin;
+         this.gminposbin = histo.fContMinPos > 0 ? histo.fContMinPos : null;
+         this.gmaxbin = histo.fContMax;
       } else {
          // global min/max, used at the moment in 3D drawing
          this.gminbin = this.gmaxbin = histo.getBinContent(1, 1);
@@ -3407,6 +3437,10 @@
       return (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
+   RH2Painter.prototype.UpdateDisplayItem = function(reply) {
+      console.log('GET REPLY!!!');
+   }
+
    RH2Painter.prototype.Draw2D = function(call_back, reason) {
 
       this.mode3d = false;
@@ -3414,6 +3448,15 @@
 
       // draw new palette, resize frame if required
       // var pp = this.DrawColorPalette(this.options.Zscale && (this.options.Color || this.options.Contour), true);
+
+
+      if (this.IsDisplayItem() && (reason == "zoom") && (this.v7CommMode() == JSROOT.v7.CommMode.kNormal)) {
+         var req = {
+            _typename: "ROOT::Experimental::RHist2Drawable::RRequest"
+         };
+
+         this.v7SubmitRequest("hist", req, this.UpdateDisplayItem.bind(this));
+      }
 
       if (this.DrawAxes())
          this.DrawBins();
