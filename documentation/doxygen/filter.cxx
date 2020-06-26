@@ -196,10 +196,11 @@ void FilterClass()
             if (m) {
                fclose(m);
                m = 0;
-               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false)\""
-                                              , StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str()
-                                              , StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()).c_str()
-                                              , gOutDir.c_str()));
+               ExecuteCommand(
+                  StringFormat("root -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"",
+                               StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str(),
+                               StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()).c_str(),
+                               gOutDir.c_str()));
                ExecuteCommand(StringFormat("rm %s_%3.3d.C", gClassName.c_str(), gMacroID));
             }
             int ImageSize = 300;
@@ -359,8 +360,9 @@ void FilterTutorial()
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat("root -l -b -q --web=batch \"MakeRCanvasJS.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
-                                          gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));
+            ExecuteCommand(StringFormat(
+               "root -l -b -q --web=batch \"MakeRCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
+               gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else {
             if (gPython) {
@@ -375,11 +377,13 @@ void FilterTutorial()
                }
             } else {
                if (nobatch) {
-                  ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+                  ExecuteCommand(
+                     StringFormat("root -l -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                  gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
                } else {
-                  ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+                  ExecuteCommand(
+                     StringFormat("root -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                  gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
                }
             }
             ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
@@ -487,7 +491,7 @@ void ExecuteMacro()
    gMacroName = gLineString.substr(i1,i2-i1+1);
 
    // Build the ROOT command to be executed.
-   gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C(\\\""));
+   gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C+O(\\\""));
    size_t l = gLineString.length();
    gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"", gImageName.c_str(), gOutDir.c_str()));
 
