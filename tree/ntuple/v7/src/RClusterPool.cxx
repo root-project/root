@@ -197,6 +197,9 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
    RProvides provide;
    provide.Insert(clusterId, columns);
    auto next = clusterId;
+   // TODO(jblomer): instead of a fixed-sized window, eventually we should determine the window size based on
+   // a user-defined memory limit.  The size of the preloaded data can be determined at the beginning of
+   // GetCluster from the descriptor and the current contents of fPool.
    for (unsigned int i = 1; i < fWindowPost; ++i) {
       next = desc.FindNextClusterId(next);
       if (next == kInvalidDescriptorId)
@@ -217,7 +220,12 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
 
    // Move clusters that meanwhile arrived into cache pool
    {
-      std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockWorkQueue);
+      // This lock is held during iteration over several data structures: the collection of in-flight clusters,
+      // the current pool of cached clusters, and the set of set of cluster ids to be preloaded.
+      // All three collections are expected to be small (certainly < 100, probably more likely < 10).  All operations
+      // are non-blocking and moving around small items (pointers, ids, etc).  Thus the overall locking time should
+      // still be reasonably small and the lock is rarely taken (usually once per cluster)
+      std::lock_guard<std::mutex> lockGuard(fLockWorkQueue);
 
       for (auto itr = fInFlightClusters.begin(); itr != fInFlightClusters.end(); ) {
          R__ASSERT(itr->fFuture.valid());
@@ -313,6 +321,10 @@ ROOT::Experimental::Detail::RClusterPool::WaitFor(
                break;
          }
          R__ASSERT(itr != fInFlightClusters.end());
+         // Note that the fInFlightClusters is accessed concurrently only by the I/O thread.  The I/O thread
+         // never changes the structure of the in-flight clusters array (it does not add, remove, or swap elements).
+         // Therefore, it is safe to access the element pointed to by itr here even after fLockWorkQueue
+         // is released.
       }
 
       auto cptr = itr->fFuture.get();
