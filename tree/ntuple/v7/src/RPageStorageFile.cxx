@@ -426,6 +426,8 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    // The size of the cutoff is given by the fraction of extra bytes we are willing to read in order to reduce
    // the number of read requests.  We thus schedule the lowest number of requests given a tolerable fraction
    // of extra bytes.
+   // TODO(jblomer): Eventually we may want to select the parameter at runtime according to link latency and speed,
+   // memory consumption, device block size.
    float maxOverhead = 0.25 * float(activeSize);
    std::vector<std::size_t> gaps;
    for (unsigned i = 1; i < onDiskPages.size(); ++i) {
