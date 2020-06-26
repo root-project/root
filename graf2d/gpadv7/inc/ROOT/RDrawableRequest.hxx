@@ -80,7 +80,7 @@ public:
 
 /** \class RDrawableExecRequest
 \ingroup GpadROOT7
-\brief Base class for requests which can be submitted from the clients
+\brief Request execution of method of referenced drawable, no reply
 \author Sergey Linev <s.linev@gsi.de>
 \date 2020-04-14
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
@@ -88,13 +88,9 @@ public:
 
 class RDrawableExecRequest : public RDrawableRequest {
    std::string exec; ///< that to execute
-
 public:
-
    std::unique_ptr<RDrawableReply> Process() override;
-
 };
-
 
 } // namespace Experimental
 } // namespace ROOT
