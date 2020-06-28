@@ -35,6 +35,12 @@
 #include <iostream>
 #include <utility>
 
+#include <atomic>
+#include <condition_variable>
+#include <functional>
+#include <mutex>
+#include <thread>
+#include <queue>
 
 ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, std::string_view path,
    const RNTupleWriteOptions &options)
@@ -365,12 +371,12 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
       fReader.ReadBuffer(pageBuffer, bytesOnStorage, pageInfo.fLocator.fPosition);
       fCounters->fNPageLoaded.Inc();
    } else {
-      printf("GETTING CLUSTER %ld\n", clusterId);
+      //printf("GETTING CLUSTER %ld\n", clusterId);
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns);
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
       ROnDiskPage::Key key(columnId, pageNo);
-      printf("POPULATE cluster %ld column %ld page %ld\n", clusterId, columnId, pageNo);
+      //printf("POPULATE cluster %ld column %ld page %ld\n", clusterId, columnId, pageNo);
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
       R__ASSERT(onDiskPage);
       R__ASSERT(bytesOnStorage == onDiskPage->GetSize());
@@ -578,11 +584,116 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
 }
 
 
+namespace {
+
+class RTask;
+
+class RTaskScheduler {
+private:
+   static constexpr int kNumThreads = 12;
+   std::mutex fLock;
+   std::condition_variable fCvHasWork;
+   std::condition_variable fCvIsDone;
+   std::queue<std::unique_ptr<RTask>> fWaitingTasks;
+   int fNumRunning = 0;
+   std::vector<std::thread> fThreads;
+
+   void ExecTaskRunner();
+
+public:
+   ~RTaskScheduler() {
+      for (int i = 0; i < kNumThreads; ++i) {
+         ScheduleTask(nullptr);
+      }
+      for (int i = 0; i < kNumThreads; ++i) {
+         fThreads[i].join();
+      }
+   }
+
+   void ScheduleTask(std::unique_ptr<RTask> task) {
+      std::unique_lock<std::mutex> lock(fLock);
+      fWaitingTasks.emplace(std::move(task));
+      fCvHasWork.notify_one();
+   }
+
+   void Run() {
+      for (int i = 0; i < kNumThreads; ++i) {
+         fThreads.emplace_back(std::thread(&RTaskScheduler::ExecTaskRunner, this));
+      }
+   }
+
+   void WaitFor() {
+      std::unique_lock<std::mutex> lock(fLock);
+      fCvIsDone.wait(lock, [&]{ return (fNumRunning == 0) && fWaitingTasks.empty(); });
+   }
+};
+
+class RTask {
+private:
+   RTaskScheduler &fScheduler;
+   RTask *fAndThen = nullptr;
+public:
+   explicit RTask(RTaskScheduler &scheduler) : fScheduler(scheduler) {}
+   virtual void Run() = 0;
+   void SetAndThen(RTask *andThen) { fAndThen = andThen; }
+   RTask *GetAndThen() { return fAndThen; }
+};
+
+
+void RTaskScheduler::ExecTaskRunner()
+{
+   std::unique_ptr<RTask> task;
+   while (true) {
+      {
+         std::unique_lock<std::mutex> lock(fLock);
+         fCvHasWork.wait(lock, [&]{ return !fWaitingTasks.empty(); });
+         task = std::move(fWaitingTasks.front());
+         fWaitingTasks.pop();
+         if (!task)
+            return;
+         fNumRunning++;
+      }
+
+      task->Run();
+
+      {
+         std::unique_lock<std::mutex> lock(fLock);
+         fNumRunning--;
+         if (task->GetAndThen()) {
+            fWaitingTasks.emplace(std::unique_ptr<RTask>(task->GetAndThen()));
+            fCvHasWork.notify_one();
+         }
+         if ((fNumRunning == 0) && fWaitingTasks.empty())
+            fCvIsDone.notify_one();
+      }
+   }
+}
+
+
+class RUnzipTask : public RTask {
+public:
+   std::function<void()> fRunFunc;
+
+   RUnzipTask(RTaskScheduler &scheduler) : RTask(scheduler) {}
+
+   void Run() final { fRunFunc(); }
+};
+
+
+} // anonymous namespace
+
+
 void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster)
 {
+   RTaskScheduler scheduler;
+   scheduler.Run();
+
    const auto clusterId = cluster->GetId();
    //printf("UNZIP cluster %ld\n", clusterId);
    const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+
+   std::vector<std::unique_ptr<RColumnElementBase>> allElements;
+
 
    const auto &columnsInCluster = cluster->GetAvailColumns();
    for (const auto columnId : columnsInCluster) {
@@ -591,7 +702,7 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster
       //const auto &fieldDesc = fDescriptor.GetFieldDescriptor(columnDesc.GetFieldId());
       //printf("   UNZIP cluster %ld column %ld %s\n", clusterId, columnId, fieldDesc.GetFieldName().c_str());
 
-      const auto element = RColumnElementBase::Generate(columnDesc.GetModel().GetType());
+      allElements.emplace_back(RColumnElementBase::Generate(columnDesc.GetModel().GetType()));
 
       const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
       std::uint64_t pageNo = 0;
@@ -603,40 +714,51 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster
          R__ASSERT(onDiskPage);
          R__ASSERT(onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage);
 
-         const auto bytesPacked = (element->GetBitsOnStorage() * pi.fNElements + 7) / 8;
-         const auto pageSize = element->GetSize() * pi.fNElements;
+         auto unzipTask = std::make_unique<RUnzipTask>(scheduler);
+         unzipTask->fRunFunc =
+            [this, columnId, clusterId, firstInPage, onDiskPage,
+             element = allElements.back().get(),
+             nElements = pi.fNElements,
+             indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex
+            ] () {
+               const auto bytesPacked = (element->GetBitsOnStorage() * nElements + 7) / 8;
+               const auto pageSize = element->GetSize() * nElements;
 
-         auto pageBufferPacked = new unsigned char[bytesPacked];
-         if (onDiskPage->GetSize() != bytesPacked) {
-            RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
-            fDecompressor(onDiskPage->GetAddress(), onDiskPage->GetSize(), bytesPacked, pageBufferPacked);
-            fCounters->fSzUnzip.Add(bytesPacked);
-         } else {
-            // We cannot simply map the onDiskPage because the cluster pool and the page pool have different
-            // life times
-            memcpy(pageBufferPacked, onDiskPage->GetAddress(), bytesPacked);
-         }
+               auto pageBufferPacked = new unsigned char[bytesPacked];
+               if (onDiskPage->GetSize() != bytesPacked) {
+                  RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
+                  fDecompressor(onDiskPage->GetAddress(), onDiskPage->GetSize(), bytesPacked, pageBufferPacked);
+                  fCounters->fSzUnzip.Add(bytesPacked);
+               } else {
+                  // We cannot simply map the onDiskPage because the cluster pool and the page pool have different
+                  // life times
+                  memcpy(pageBufferPacked, onDiskPage->GetAddress(), bytesPacked);
+               }
 
-         auto pageBuffer = pageBufferPacked;
-         if (!element->IsMappable()) {
-            pageBuffer = new unsigned char[pageSize];
-            element->Unpack(pageBuffer, pageBufferPacked, pi.fNElements);
-            delete[] pageBufferPacked;
-         }
+               auto pageBuffer = pageBufferPacked;
+               if (!element->IsMappable()) {
+                  pageBuffer = new unsigned char[pageSize];
+                  element->Unpack(pageBuffer, pageBufferPacked, nElements);
+                  delete[] pageBufferPacked;
+               }
 
-         const auto indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
-         auto newPage = fPageAllocator->NewPage(columnId, pageBuffer, element->GetSize(), pi.fNElements);
-         newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
-         fPagePool->PreloadPage(newPage,
-             RPageDeleter([](const RPage &page, void * /*userData*/)
-             {
-                RPageAllocatorFile::DeletePage(page);
-             }, nullptr));
+               auto newPage = fPageAllocator->NewPage(columnId, pageBuffer, element->GetSize(), nElements);
+               newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
+               fPagePool->PreloadPage(newPage,
+                  RPageDeleter([](const RPage &page, void * /*userData*/)
+                  {
+                     RPageAllocatorFile::DeletePage(page);
+                  }, nullptr));
+            };
+
+         scheduler.ScheduleTask(std::move(unzipTask));
+         //unzipTask->Run();
 
          firstInPage += pi.fNElements;
          pageNo++;
       } // for all pages in column
    } // for all columns in cluster
 
+   scheduler.WaitFor();
    fCounters->fNPagePopulated.Add(cluster->GetNOnDiskPages());
 }
