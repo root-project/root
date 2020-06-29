@@ -32,7 +32,7 @@ def _NumbaDeclareDecorator(input_types, return_type, name=None):
         import cffi
     except:
         raise Exception('Failed to import cffi')
-    import re
+    import re, sys
 
     # Normalize input types by stripping ROOT and VecOps namespaces from input types
     def normalize_typename(t):
@@ -195,7 +195,11 @@ def pywrapper({SIGNATURE}):
         if 'RVec' in return_type:
             glob['dtype_r'] = get_numba_type(get_inner_type(return_type))
 
-        exec(pywrappercode, glob, locals())
+        if sys.version_info[0] >= 3:
+            exec(pywrappercode, glob, locals()) in {}
+        else:
+            exec(pywrappercode) in glob, locals()
+
         if not 'pywrapper' in locals():
             raise Exception('Failed to create Python wrapper function:\n{}'.format(pywrappercode))
 
