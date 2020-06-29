@@ -324,7 +324,7 @@ ROOT::Experimental::Detail::RClusterPool::WaitFor(
          // Note that the fInFlightClusters is accessed concurrently only by the I/O thread.  The I/O thread
          // never changes the structure of the in-flight clusters array (it does not add, remove, or swap elements).
          // Therefore, it is safe to access the element pointed to by itr here even after fLockWorkQueue
-         // is released.
+         // is released.  We need to release the lock before potentially blocking on the cluster future.
       }
 
       auto cptr = itr->fFuture.get();
