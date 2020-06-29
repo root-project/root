@@ -72,9 +72,8 @@ Define now input data file and signal and background trees
    if (!inputFile) {
       // download file from Cernbox location
       Info("TMVA_Higgs_Classification","Download Higgs_data.root file");
+      TFile::SetCacheFileDir(".");
       inputFile = TFile::Open(inputFileLink, "CACHEREAD");
-      //gSystem->Exec( TString::Format("wget -O %s %s",inputFileName.Data(), downloadLinkFile.Data() ) );
-      //inputFile = TFile::Open( inputFileName);
       if (!inputFile) {
          Error("TMVA_Higgs_Classification","Input file cannot be downloaded - exit");
          return;
