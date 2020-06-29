@@ -32,7 +32,7 @@ using namespace ROOT::Experimental;
 
 void draw_rh2_large()
 {
-   const int nbins = 100;
+   const int nbins = 1000;
 
    // Create the histogram.
    RAxisConfig xaxis("x", nbins, 0., nbins);

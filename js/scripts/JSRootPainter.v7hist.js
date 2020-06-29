@@ -58,10 +58,10 @@
       return obj && obj.fAxes ? true : false;
    }
 
-   RHistPainter.prototype.GetHisto = function() {
+   RHistPainter.prototype.GetHisto = function(force) {
       var obj = this.GetObject(), histo = this.GetHImpl(obj);
 
-      if (histo && !histo.getBinContent) {
+      if (histo && (!histo.getBinContent || force)) {
          if (histo.fAxes._2) {
             this.ProvideAxisMethods(histo.fAxes._0);
             this.ProvideAxisMethods(histo.fAxes._1);
@@ -103,22 +103,27 @@
 
          histo = obj;
 
-         if (!histo.getBinContent) {
+         if (!histo.getBinContent || force) {
             if (histo.fAxes.length == 2) {
                this.ProvideAxisMethods(histo.fAxes[0]);
                this.ProvideAxisMethods(histo.fAxes[1]);
 
                histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
                histo.dx = histo.fIndicies[0] + 1;
+               histo.stepx = histo.fIndicies[2];
 
                histo.ny = histo.fIndicies[4] - histo.fIndicies[3];
                histo.dy = histo.fIndicies[3] + 1;
+               histo.stepy = histo.fIndicies[5];
 
                // this is index in original histogram
                histo.getBin = function(x, y) { return (x-1) + this.fAxes[0].GetNumBins()*(y-1); }
 
                // this is index in current available data
-               histo.getBin0 = function(x, y) { return (x-this.dx) + this.nx*(y-this.dy); }
+               if ((histo.stepx > 1) || (histo.stepy > 1))
+                  histo.getBin0 = function(x, y) { return Math.floor((x-this.dx)/this.stepx) + this.nx/this.stepx*Math.floor((y-this.dy)/this.stepy); }
+               else
+                  histo.getBin0 = function(x, y) { return (x-this.dx) + this.nx*(y-this.dy); }
 
                histo.getBinContent = function(x, y) { return this.fBinContent[this.getBin0(x, y)]; }
                histo.getBinError = function(x, y) { return Math.sqrt(Math.abs(this.getBinContent(x, y))); }
@@ -126,10 +131,14 @@
                this.ProvideAxisMethods(histo.fAxes[0]);
                histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
                histo.dx = histo.fIndicies[0] + 1;
+               histo.stepx = histo.fIndicies[2];
                histo.getBin = function(x) { return x-1; }
-               histo.getBin0 = function(x) { return x-this.dx; }
-               histo.getBinContent = function(x) { return this.fBinContent[x-this.dx]; }
-               histo.getBinError = function(x) { return Math.sqrt(Math.abs(this.fBinContent[x-this.dx])); }
+               if (histo.stepx > 1)
+                  histo.getBin0 = function(x) { return Math.floor((x-this.dx)/this.stepx); }
+               else
+                  histo.getBin0 = function(x) { return x-this.dx; }
+               histo.getBinContent = function(x) { return this.fBinContent[this.getBin0(x)]; }
+               histo.getBinError = function(x) { return Math.sqrt(Math.abs(this.getBinContent(x))); }
             }
          }
       }
@@ -639,20 +648,30 @@
              i2: this.GetSelectIndex("x", "right", 1 + args.extra),
              j1: (hdim===1) ? 0 : this.GetSelectIndex("y", "left", 0 - args.extra),
              j2: (hdim===1) ? 1 : this.GetSelectIndex("y", "right", 1 + args.extra),
+             stepi: 1, stepj: 1,
              min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1
           };
 
       if (this.IsDisplayItem() && histo.fIndicies) {
-         if (res.i1 < histo.fIndicies[0]) res.i1 = histo.fIndicies[0];
-         if (res.i2 > histo.fIndicies[1]) res.i2 = histo.fIndicies[1];
+         if (res.i1 < histo.fIndicies[0]) { res.i1 = histo.fIndicies[0]; res.incomplete = true; }
+         if (res.i2 > histo.fIndicies[1]) { res.i2 = histo.fIndicies[1]; res.incomplete = true; }
+         res.stepi = histo.fIndicies[2];
+         if (res.stepi > 1) res.incomplete = true;
          if ((hdim > 1) && (histo.fIndicies.length > 4)) {
-            if (res.j1 < histo.fIndicies[3]) res.j1 = histo.fIndicies[3];
-            if (res.j2 > histo.fIndicies[4]) res.j2 = histo.fIndicies[4];
+            if (res.j1 < histo.fIndicies[3]) { res.j1 = histo.fIndicies[3]; res.incomplete = true; }
+            if (res.j2 > histo.fIndicies[4]) { res.j2 = histo.fIndicies[4]; res.incomplete = true; }
+            res.stepj = histo.fIndicies[5];
+            if (res.stepj > 1) res.incomplete = true;
          }
       }
 
-      res.grx = new Array(res.i2+1); // no need for Float32Array, plain Array is 10% faster
-      res.gry = new Array(res.j2+1);
+      if (args.only_indexes) return res;
+
+      // no need for Float32Array, plain Array is 10% faster
+      // reserve more places to avoid complex boundary checks
+
+      res.grx = new Array(res.i2+res.stepi+1);
+      res.gry = new Array(res.j2+res.stepj+1);
 
       if (args.original) {
          res.original = true;
@@ -681,6 +700,10 @@
          if ((res.i1 < res.i2-2) && (res.grx[res.i2-1] == res.grx[res.i2])) res.i2--;
       }
 
+      // copy last valid value to higher indicies
+      while (i < res.i2 + res.stepi + 1)
+         res.grx[i++] = res.grx[res.i2];
+
       if (hdim===1) {
          res.gry[0] = pmain.gry(0);
          res.gry[1] = pmain.gry(1);
@@ -703,18 +726,21 @@
          if ((res.j1 < res.j2-2) && (res.gry[res.j2-1] == res.gry[res.j2])) res.j2--;
       }
 
-      //  find min/max values in selected range
+      // copy last valid value to higher indicies
+      while ((hdim > 1) && (j < res.j2 + res.stepj + 1))
+         res.gry[j++] = res.gry[res.j2];
 
+      //  find min/max values in selected range
       binz = histo.getBinContent(res.i1 + 1, res.j1 + 1);
       this.maxbin = this.minbin = this.minposbin = null;
 
-      for (i = res.i1; i < res.i2; ++i) {
-         for (j = res.j1; j < res.j2; ++j) {
+      for (i = res.i1; i < res.i2; i += res.stepi) {
+         for (j = res.j1; j < res.j2; j += res.stepj) {
             binz = histo.getBinContent(i + 1, j + 1);
             if (isNaN(binz)) continue;
             res.sumz += binz;
             if (args.pixel_density) {
-               binarea = (res.grx[i+1]-res.grx[i])*(res.gry[j]-res.gry[j+1]);
+               binarea = (res.grx[i+res.stepi]-res.grx[i])*(res.gry[j]-res.gry[j+res.stepj]);
                if (binarea <= 0) continue;
                res.max = Math.max(res.max, binz);
                if ((binz>0) && ((binz<res.min) || (res.min===0))) res.min = binz;
@@ -2107,11 +2133,11 @@
       var histo = this.GetHisto(),
           handle = this.PrepareColorDraw(),
           colPaths = [], currx = [], curry = [],
-          colindx, cmd1, cmd2, i, j, binz;
+          colindx, cmd1, cmd2, i, j, binz, di = handle.stepi, dj = handle.stepj;
 
       // now start build
-      for (i = handle.i1; i < handle.i2; ++i) {
-         for (j = handle.j1; j < handle.j2; ++j) {
+      for (i = handle.i1; i < handle.i2; i += di) {
+         for (j = handle.j1; j < handle.j2; j += dj) {
             binz = histo.getBinContent(i + 1, j + 1);
             colindx = handle.palette.getContourIndex(binz);
             if (binz===0) {
@@ -2120,20 +2146,20 @@
             }
             if (colindx === null) continue;
 
-            cmd1 = "M"+handle.grx[i]+","+handle.gry[j+1];
+            cmd1 = "M"+handle.grx[i]+","+handle.gry[j+dj];
             if (colPaths[colindx] === undefined) {
                colPaths[colindx] = cmd1;
             } else{
-               cmd2 = "m" + (handle.grx[i]-currx[colindx]) + "," + (handle.gry[j+1]-curry[colindx]);
+               cmd2 = "m" + (handle.grx[i]-currx[colindx]) + "," + (handle.gry[j+dj]-curry[colindx]);
                colPaths[colindx] += (cmd2.length < cmd1.length) ? cmd2 : cmd1;
             }
 
             currx[colindx] = handle.grx[i];
-            curry[colindx] = handle.gry[j+1];
+            curry[colindx] = handle.gry[j+dj];
 
-            colPaths[colindx] += "v" + (handle.gry[j] - handle.gry[j+1]) +
-                                 "h" + (handle.grx[i+1] - handle.grx[i]) +
-                                 "v" + (handle.gry[j+1] - handle.gry[j]) + "z";
+            colPaths[colindx] += "v" + (handle.gry[j] - handle.gry[j+dj]) +
+                                 "h" + (handle.grx[i+di] - handle.grx[i]) +
+                                 "v" + (handle.gry[j+dj] - handle.gry[j]) + "z";
          }
       }
 
@@ -3437,8 +3463,31 @@
       return (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
-   RH2Painter.prototype.UpdateDisplayItem = function(reply) {
-      console.log('GET REPLY!!!');
+   RH2Painter.prototype.UpdateDisplayItem = function(src) {
+      var obj = this.GetObject();
+      if (!obj || !src) return false;
+
+      obj.fAxes = src.fAxes;
+      obj.fIndicies = src.fIndicies;
+      obj.fBinContent = src.fBinContent;
+      obj.fContMin = src.fContMin;
+      obj.fContMinPos = src.fContMinPos;
+      obj.fContMax = src.fContMax;
+
+      this.GetHisto(true);
+
+      return true;
+   }
+
+   RH2Painter.prototype.ProcessItemReply = function(reply) {
+      if (!this.IsDisplayItem()) {
+         console.error('Get item when display normal histogram');
+         return;
+      }
+
+      this.UpdateDisplayItem(reply.item);
+
+      this.DrawBins();
    }
 
    RH2Painter.prototype.Draw2D = function(call_back, reason) {
@@ -3451,11 +3500,13 @@
 
 
       if (this.IsDisplayItem() && (reason == "zoom") && (this.v7CommMode() == JSROOT.v7.CommMode.kNormal)) {
-         var req = {
-            _typename: "ROOT::Experimental::RHist2Drawable::RRequest"
-         };
 
-         this.v7SubmitRequest("hist", req, this.UpdateDisplayItem.bind(this));
+         var handle = this.PrepareColorDraw({ only_indexes: true }),
+             req = { _typename: "ROOT::Experimental::RHist2Drawable::RRequest" };
+
+         // submit request if histogram data not enough for display
+         if (handle.incomplete)
+            this.v7SubmitRequest("hist", req, this.ProcessItemReply.bind(this));
       }
 
       if (this.DrawAxes())
