@@ -1767,79 +1767,6 @@ int64_t bshuf_blocked_wrap_fun(bshufBlockFunDef fun, const void* in, void* out, 
 }
 
 
-/* Bitshuffle a single block. */
-int64_t bshuf_bitshuffle_block(ioc_chain *C_ptr, \
-        const size_t size, const size_t elem_size) {
-
-    size_t this_iter;
-    const void *in;
-    void *out;
-    int64_t count;
-
-
-
-    in = ioc_get_in(C_ptr, &this_iter);
-    ioc_set_next_in(C_ptr, &this_iter,
-            (void*) ((char*) in + size * elem_size));
-    out = ioc_get_out(C_ptr, &this_iter);
-    ioc_set_next_out(C_ptr, &this_iter,
-            (void *) ((char *) out + size * elem_size));
-
-    count = bshuf_trans_bit_elem(in, out, size, elem_size);
-    return count;
-}
-
-
-/* Bitunshuffle a single block. */
-int64_t bshuf_bitunshuffle_block(ioc_chain* C_ptr, \
-        const size_t size, const size_t elem_size) {
-
-
-    size_t this_iter;
-    const void *in;
-    void *out;
-    int64_t count;
-
-
-
-
-    in = ioc_get_in(C_ptr, &this_iter);
-    ioc_set_next_in(C_ptr, &this_iter,
-            (void*) ((char*) in + size * elem_size));
-    out = ioc_get_out(C_ptr, &this_iter);
-    ioc_set_next_out(C_ptr, &this_iter,
-            (void *) ((char *) out + size * elem_size));
-
-    count = bshuf_untrans_bit_elem(in, out, size, elem_size);
-    return count;
-}
-
-
-/* Write a 64 bit unsigned integer to a buffer in big endian order. */
-void bshuf_write_uint64_BE(void* buf, uint64_t num) {
-    int ii;
-    uint8_t* b = (uint8_t*) buf;
-    uint64_t pow28 = 1 << 8;
-    for (ii = 7; ii >= 0; ii--) {
-        b[ii] = num % pow28;
-        num = num / pow28;
-    }
-}
-
-
-/* Read a 64 bit unsigned integer from a buffer big endian order. */
-uint64_t bshuf_read_uint64_BE(void* buf) {
-    int ii;
-    uint8_t* b = (uint8_t*) buf;
-    uint64_t num = 0, pow28 = 1 << 8, cp = 1;
-    for (ii = 7; ii >= 0; ii--) {
-        num += b[ii] * cp;
-        cp *= pow28;
-    }
-    return num;
-}
-
-
 /* Write a 32 bit unsigned integer to a buffer in big endian order. */
 void bshuf_write_uint32_BE(void* buf, uint32_t num) {
     int ii;
@@ -1879,22 +1806,6 @@ size_t bshuf_default_block_size(const size_t elem_size) {
     // Ensure it is a required multiple.
     block_size = (block_size / BSHUF_BLOCKED_MULT) * BSHUF_BLOCKED_MULT;
     return MAX(block_size, BSHUF_MIN_RECOMMEND_BLOCK);
-}
-
-
-int64_t bshuf_bitshuffle(const void* in, void* out, const size_t size,
-        const size_t elem_size, size_t block_size) {
-
-    return bshuf_blocked_wrap_fun(&bshuf_bitshuffle_block, in, out, size,
-            elem_size, block_size);
-}
-
-
-int64_t bshuf_bitunshuffle(const void* in, void* out, const size_t size,
-        const size_t elem_size, size_t block_size) {
-
-    return bshuf_blocked_wrap_fun(&bshuf_bitunshuffle_block, in, out, size,
-            elem_size, block_size);
 }
 
 

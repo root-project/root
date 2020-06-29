@@ -98,58 +98,6 @@ int bshuf_using_AVX2(void);
 size_t bshuf_default_block_size(const size_t elem_size);
 
 
-/* ---- bshuf_bitshuffle ----
- *
- * Bitshuffle the data.
- *
- * Transpose the bits within elements, in blocks of *block_size*
- * elements.
- *
- * Parameters
- * ----------
- *  in : input buffer, must be of size * elem_size bytes
- *  out : output buffer, must be of size * elem_size bytes
- *  size : number of elements in input
- *  elem_size : element size of typed data
- *  block_size : Do transpose in blocks of this many elements. Pass 0 to
- *  select automatically (recommended).
- *
- * Returns
- * -------
- *  number of bytes processed, negative error-code if failed.
- *
- */
-int64_t bshuf_bitshuffle(const void* in, void* out, const size_t size,
-        const size_t elem_size, size_t block_size);
-
-
-/* ---- bshuf_bitunshuffle ----
- *
- * Unshuffle bitshuffled data.
- *
- * Untranspose the bits within elements, in blocks of *block_size*
- * elements.
- *
- * To properly unshuffle bitshuffled data, *size*, *elem_size* and *block_size*
- * must match the parameters used to shuffle the data.
- *
- * Parameters
- * ----------
- *  in : input buffer, must be of size * elem_size bytes
- *  out : output buffer, must be of size * elem_size bytes
- *  size : number of elements in input
- *  elem_size : element size of typed data
- *  block_size : Do transpose in blocks of this many elements. Pass 0 to
- *  select automatically (recommended).
- *
- * Returns
- * -------
- *  number of bytes processed, negative error-code if failed.
- *
- */
-int64_t bshuf_bitunshuffle(const void* in, void* out, const size_t size,
-        const size_t elem_size, size_t block_size);
-
 #ifdef __cplusplus
 } // extern "C"
 #endif
