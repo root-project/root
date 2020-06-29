@@ -158,9 +158,9 @@ public:
    /// Get the uncertainty on the content of the bin at `x`.
    double GetBinUncertainty(const CoordArray_t &x) const { return fImpl->GetBinUncertainty(x); }
 
-   const_iterator begin() const { return const_iterator(*fImpl); }
+   const_iterator begin() const { return const_iterator(*fImpl, 1); }
 
-   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBinsNoOver()); }
+   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBinsNoOver() + 1); }
 
    /// Swap *this and other.
    ///
