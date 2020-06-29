@@ -45,7 +45,7 @@ TEST(BinIterNBins, BinRef) {
   double founduncert = -1.;
   RH2F::CoordArray_t foundcoord{};
 
-  int nBins = 0;
+  int nBins = 1;
   for (auto bin: h) {
     auto binCenter = bin.GetCenter();
     if (std::fabs(binCenter[0] - x) < 0.1 && std::fabs(binCenter[1] - y) < 0.1) {
