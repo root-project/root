@@ -380,6 +380,8 @@ int64_t bshuf_untrans_bit_elem_scal(const void* in, void* out, const size_t size
 
 /* Transpose bytes within elements for 16 bit elements. */
 int64_t bshuf_trans_byte_elem_NEON_16(const void* in, void* out, const size_t size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEARMNEON
     size_t ii;
     const char *in_b = (const char*) in;
@@ -419,6 +421,8 @@ int64_t bshuf_trans_byte_elem_NEON_16(const void* in, void* out, const size_t si
 
 /* Transpose bytes within elements for 32 bit elements. */
 int64_t bshuf_trans_byte_elem_NEON_32(const void* in, void* out, const size_t size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEARMNEON
     size_t ii;
     const char *in_b;
@@ -473,6 +477,8 @@ int64_t bshuf_trans_byte_elem_NEON_32(const void* in, void* out, const size_t si
 
 /* Transpose bytes within elements for 64 bit elements. */
 int64_t bshuf_trans_byte_elem_NEON_64(const void* in, void* out, const size_t size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEARMNEON
     size_t ii;
     const char* in_b = (const char*) in;
@@ -550,6 +556,8 @@ int64_t bshuf_trans_byte_elem_NEON_64(const void* in, void* out, const size_t si
 /* Transpose bytes within elements using best NEON algorithm available. */
 int64_t bshuf_trans_byte_elem_NEON(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEARMNEON
     int64_t count;
 
@@ -633,6 +641,8 @@ int32_t move_byte_mask_neon(uint8x16_t input) {
 /* Transpose bits within bytes. */
 int64_t bshuf_trans_bit_byte_NEON(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEARMNEON
     size_t ii, kk;
     const char* in_b = (const char*) in;
@@ -673,6 +683,8 @@ int64_t bshuf_trans_bit_byte_NEON(const void* in, void* out, const size_t size,
 /* Transpose bits within elements. */
 int64_t bshuf_trans_bit_elem_NEON(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEARMNEON
     int64_t count;
 
@@ -704,6 +716,8 @@ int64_t bshuf_trans_bit_elem_NEON(const void* in, void* out, const size_t size,
  * the bytes. */
 int64_t bshuf_trans_byte_bitrow_NEON(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEARMNEON
     size_t ii, jj;
     const char* in_b = (const char*) in;
@@ -807,6 +821,8 @@ int64_t bshuf_trans_byte_bitrow_NEON(const void* in, void* out, const size_t siz
 /* Shuffle bits within the bytes of eight element blocks. */
 int64_t bshuf_shuffle_bit_eightelem_NEON(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEARMNEON
     CHECK_MULT_EIGHT(size);
 
@@ -851,6 +867,8 @@ int64_t bshuf_shuffle_bit_eightelem_NEON(const void* in, void* out, const size_t
 /* Untranspose bits within elements. */
 int64_t bshuf_untrans_bit_elem_NEON(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEARMNEON
     int64_t count;
 
@@ -888,6 +906,8 @@ int64_t bshuf_untrans_bit_elem_NEON(const void* in, void* out, const size_t size
 
 /* Transpose bytes within elements for 16 bit elements. */
 int64_t bshuf_trans_byte_elem_SSE_16(const void* in, void* out, const size_t size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USESSE2
     size_t ii;
     const char *in_b = (const char*) in;
@@ -926,6 +946,8 @@ int64_t bshuf_trans_byte_elem_SSE_16(const void* in, void* out, const size_t siz
 
 /* Transpose bytes within elements for 32 bit elements. */
 int64_t bshuf_trans_byte_elem_SSE_32(const void* in, void* out, const size_t size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USESSE2
     size_t ii;
     const char *in_b;
@@ -978,6 +1000,8 @@ int64_t bshuf_trans_byte_elem_SSE_32(const void* in, void* out, const size_t siz
 
 /* Transpose bytes within elements for 64 bit elements. */
 int64_t bshuf_trans_byte_elem_SSE_64(const void* in, void* out, const size_t size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USESSE2
     size_t ii;
     const char* in_b = (const char*) in;
@@ -1054,6 +1078,8 @@ int64_t bshuf_trans_byte_elem_SSE_64(const void* in, void* out, const size_t siz
 /* Transpose bytes within elements using best SSE algorithm available. */
 int64_t bshuf_trans_byte_elem_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USESSE2
     int64_t count;
 
@@ -1123,6 +1149,8 @@ int64_t bshuf_trans_byte_elem_SSE(const void* in, void* out, const size_t size,
 /* Transpose bits within bytes. */
 int64_t bshuf_trans_bit_byte_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USESSE2
     size_t ii, kk;
     const char* in_b = (const char*) in;
@@ -1163,6 +1191,8 @@ int64_t bshuf_trans_bit_byte_SSE(const void* in, void* out, const size_t size,
 /* Transpose bits within elements. */
 int64_t bshuf_trans_bit_elem_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USESSE2
     int64_t count;
 
@@ -1194,6 +1224,8 @@ int64_t bshuf_trans_bit_elem_SSE(const void* in, void* out, const size_t size,
  * the bytes. */
 int64_t bshuf_trans_byte_bitrow_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USESSE2
     size_t ii, jj;
     const char* in_b = (const char*) in;
@@ -1307,6 +1339,8 @@ int64_t bshuf_trans_byte_bitrow_SSE(const void* in, void* out, const size_t size
 /* Shuffle bits within the bytes of eight element blocks. */
 int64_t bshuf_shuffle_bit_eightelem_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USESSE2
     CHECK_MULT_EIGHT(size);
 
@@ -1351,6 +1385,8 @@ int64_t bshuf_shuffle_bit_eightelem_SSE(const void* in, void* out, const size_t 
 /* Untranspose bits within elements. */
 int64_t bshuf_untrans_bit_elem_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USESSE2
     int64_t count;
 
@@ -1391,6 +1427,8 @@ int64_t bshuf_untrans_bit_elem_SSE(const void* in, void* out, const size_t size,
 /* Transpose bits within bytes. */
 int64_t bshuf_trans_bit_byte_AVX(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEAVX2
     size_t ii, kk;
     const char* in_b = (const char*) in;
@@ -1429,6 +1467,8 @@ int64_t bshuf_trans_bit_byte_AVX(const void* in, void* out, const size_t size,
 /* Transpose bits within elements. */
 int64_t bshuf_trans_bit_elem_AVX(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEAVX2
     int64_t count;
 
@@ -1460,6 +1500,8 @@ int64_t bshuf_trans_bit_elem_AVX(const void* in, void* out, const size_t size,
  * the bytes. */
 int64_t bshuf_trans_byte_bitrow_AVX(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEAVX2
     size_t hh, ii, jj, kk, mm;
     const char* in_b = (const char*) in;
@@ -1562,6 +1604,8 @@ int64_t bshuf_trans_byte_bitrow_AVX(const void* in, void* out, const size_t size
 /* Shuffle bits within the bytes of eight element blocks. */
 int64_t bshuf_shuffle_bit_eightelem_AVX(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEAVX2
     CHECK_MULT_EIGHT(size);
 
@@ -1606,6 +1650,8 @@ int64_t bshuf_shuffle_bit_eightelem_AVX(const void* in, void* out, const size_t 
 /* Untranspose bits within elements. */
 int64_t bshuf_untrans_bit_elem_AVX(const void* in, void* out, const size_t size,
          const size_t elem_size) {
+    // This function has been modified from original bitshuffle source code
+    // in order to avoid duplicated declaration.
 #ifdef USEAVX2
     int64_t count;
 
