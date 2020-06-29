@@ -93,6 +93,10 @@ if (NOT dataframe)
     list(APPEND dataframe_veto tmva/tmva*.C)
 endif()
 
+if(MACOSX_VERSION VERSION_EQUAL 10.13)
+   list(APPEND dataframe_veto dataframe/df103_NanoAODHiggsAnalysis.*)
+endif()
+
 if(NOT ROOT_mlp_FOUND)
    set(mlp_veto legacy/mlp/*.C)
 endif()
