@@ -135,6 +135,26 @@ private:
    }
 
    ////////////////////////////////////////////////////////////////////////////
+   /// AddInterpreterString overload for arrays of chars.
+   ///
+   /// \tparam T the type of the event to convert
+   /// \param[in] charArr The character array to convert to string representation
+   /// \param[in] index To which column the event belongs
+   /// \return false, the event is not a collection
+   ///
+   /// This specialization for arrays of characters skips the cling::printValue
+   /// (i.e. appends nothing to the stream) and directly writes to fCollectionsRepresentations the
+   /// string representation of the array of chars.
+   bool AddInterpreterString(std::stringstream &, ROOT::RVec<char> &charArr, const int &index)
+   {
+      // if null-terminated char array, do not copy the null terminator into std::string, it makes columns misaligned.
+      const auto length = charArr[charArr.size()-1] == '\0' ? charArr.size() - 1 : charArr.size();
+      const std::string arrAsStr(charArr.data(), length); // also works for non-null-terminated strings
+      fRepresentations[index] = arrAsStr;
+      return false; // do not treat this as a collection
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
    /// Adds a single element to the next slot in the table
    void AddToRow(const std::string &stringEle);
 
@@ -166,7 +186,9 @@ private:
       fIsCollection = {AddInterpreterString(calc, columns, columnIndex++)...};
 
       // Let cling::printValue handle the conversion. This can be done only through cling-compiled code.
-      ROOT::Internal::RDF::InterpreterCalc(calc.str(), "Display");
+      const std::string toJit = calc.str();
+      if (!toJit.empty())
+         ROOT::Internal::RDF::InterpreterCalc(calc.str(), "Display");
 
       // Populate the fTable using the results of the JITted code.
       for (size_t i = 0; i < fNColumns; ++i) {
