@@ -890,14 +890,26 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
    fDescriptor.fGroupUuid = uuid;
 }
 
-ROOT::Experimental::RDanglingFieldDescriptor::RDanglingFieldDescriptor(const Detail::RFieldBase& field)
-   : RDanglingFieldDescriptor(field.AsDanglingFieldDescriptor()) {}
+ROOT::Experimental::RDanglingFieldDescriptor::RDanglingFieldDescriptor(
+   const RFieldDescriptor& fieldDesc) : fField(fieldDesc)
+{
+   fField.fParentId = kInvalidDescriptorId;
+   fField.fLinkIds = {};
+}
+
+ROOT::Experimental::RDanglingFieldDescriptor
+ROOT::Experimental::RDanglingFieldDescriptor::FromField(const Detail::RFieldBase& field) {
+   return RDanglingFieldDescriptor()
+      .FieldVersion(field.GetFieldVersion())
+      .TypeVersion(field.GetTypeVersion())
+      .FieldName(field.GetName())
+      .TypeName(field.GetType())
+      .Structure(field.GetStructure())
+      .NRepetitions(field.GetNRepetitions());
+}
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor& fieldDesc) {
-   auto fieldCopy = fieldDesc;
-   fieldCopy.fParentId = kInvalidDescriptorId;
-   fieldCopy.fLinkIds = {};
-   fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldCopy);
+   fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc);
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RDanglingFieldDescriptor& builder) {
