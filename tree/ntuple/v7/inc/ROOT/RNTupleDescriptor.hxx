@@ -462,18 +462,31 @@ namespace Detail {
 \brief A helper class for piece-wise construction of an RFieldDescriptor
 
 Dangling field descriptors describe a single field in isolation. They are
-missing the relationship information (parent field, any child fields) required for
-a real field descriptor.
+missing the necessary relationship information (parent field, any child fields)
+required to describe a real NTuple field.
+
+Dangling field descriptors can only become actual descriptors when added to an
+RNTupleDescriptorBuilder instance and then linked to other fields.
 */
 // clang-format on
 class RDanglingFieldDescriptor {
+   friend class RNTupleDescriptorBuilder;
 private:
    RFieldDescriptor fField = RFieldDescriptor();
 public:
+   /// Make an empty dangling field descriptor.
    RDanglingFieldDescriptor() = default;
-   /// Make an RDanglingFieldDescriptor based off of an existing field descriptor.
-   explicit RDanglingFieldDescriptor(const RFieldDescriptor& fieldDesc) : fField(fieldDesc) {}
-   explicit RDanglingFieldDescriptor(const Detail::RFieldBase& field);
+   /// Make a new RDanglingFieldDescriptor based off an existing descriptor.
+   /// Relationship information is lost during the conversion to a
+   /// dangling descriptor:
+   /// * Parent id is reset to an invalid id.
+   /// * Field children ids are forgotten.
+   ///
+   /// These properties must be set using RNTupleDescriptorBuilder::AddFieldLink().
+   explicit RDanglingFieldDescriptor(const RFieldDescriptor& fieldDesc);
+
+   /// Make a new RDanglingFieldDescriptor based off a live NTuple field.
+   static RDanglingFieldDescriptor FromField(const Detail::RFieldBase& field);
 
    RDanglingFieldDescriptor& FieldId(DescriptorId_t fieldId) {
       fField.fFieldId = fieldId;
