@@ -43,7 +43,7 @@ public:
    RRawFileUnix(std::string_view url, RRawFile::ROptions options);
    ~RRawFileUnix();
    std::unique_ptr<RRawFile> Clone() const final;
-   int GetFeatures() const final { return kFeatureHasSize | kFeatureHasMmap; }
+   int GetFeatures() const final;
 };
 
 } // namespace Internal
