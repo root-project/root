@@ -265,16 +265,6 @@ void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(Detail::RFieldVisitor
    visitor.VisitField(*this);
 }
 
-ROOT::Experimental::RDanglingFieldDescriptor
-ROOT::Experimental::Detail::RFieldBase::AsDanglingFieldDescriptor() const {
-   return RDanglingFieldDescriptor()
-      .FieldVersion(GetFieldVersion())
-      .TypeVersion(GetTypeVersion())
-      .FieldName(fName)
-      .TypeName(fType)
-      .Structure(fStructure)
-      .NRepetitions(fNRepetitions);
-}
 
 ROOT::Experimental::Detail::RFieldBase::RSchemaIterator ROOT::Experimental::Detail::RFieldBase::begin()
 {
