@@ -890,6 +890,9 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
    fDescriptor.fGroupUuid = uuid;
 }
 
+ROOT::Experimental::RDanglingFieldDescriptor::RDanglingFieldDescriptor(const Detail::RFieldBase& field)
+   : RDanglingFieldDescriptor(field.AsDanglingFieldDescriptor()) {}
+
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor& fieldDesc) {
    auto fieldCopy = fieldDesc;
    fieldCopy.fParentId = kInvalidDescriptorId;
@@ -897,7 +900,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescript
    fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldCopy);
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescriptorBuilder& builder) {
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RDanglingFieldDescriptor& builder) {
    AddField(builder.GetDescriptor());
 }
 

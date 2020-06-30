@@ -4,12 +4,12 @@ TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetNTuple("MyTuple", "Description", "Me", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
-   descBuilder.AddField(RFieldDescriptorBuilder()
+   descBuilder.AddField(RDanglingFieldDescriptor()
       .FieldId(0)
       .FieldName("")
       .Structure(ENTupleStructure::kRecord)
    );
-   descBuilder.AddField(RFieldDescriptorBuilder()
+   descBuilder.AddField(RDanglingFieldDescriptor()
       .FieldId(1)
       .FieldName("list")
       .TypeName("std::vector<std::int32_t>")
@@ -17,14 +17,14 @@ TEST(RNTuple, Descriptor)
    );
    descBuilder.AddFieldLink(0, 1);
 
-   descBuilder.AddField(RFieldDescriptorBuilder()
+   descBuilder.AddField(RDanglingFieldDescriptor()
       .FieldId(2)
       .FieldName("list") // at different levels, duplicate names are fine
       .TypeName("std::int32_t")
       .Structure(ENTupleStructure::kLeaf));
    descBuilder.AddFieldLink(1, 2);
 
-   descBuilder.AddField(RFieldDescriptorBuilder()
+   descBuilder.AddField(RDanglingFieldDescriptor()
       .FieldId(42)
       .FieldName("x")
       .TypeName("std::string")
