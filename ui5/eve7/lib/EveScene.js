@@ -274,7 +274,7 @@ sap.ui.define([
 
       // other change bits
       if (el.render_data) {
-         if ((el.changeBit & this.mgr.EChangeBits.kCBObjProp) || (el.changeBit & this.mgr.EChangeBits.kCBColorSelection))
+         if ((el.changeBit & this.mgr.EChangeBits.kCBObjProps) || (el.changeBit & this.mgr.EChangeBits.kCBColorSelection))
          {
             this.replaceElement(el);
          }
@@ -308,7 +308,8 @@ sap.ui.define([
 
    /** interactive handler */
    EveScene.prototype.processElementHighlighted = function(obj3d, indx, evnt)
-   {
+    {
+        return;
       if (this.mgr.MatchSelection(this.mgr.global_selection_id, obj3d.eve_el, indx))
          return true;
 
