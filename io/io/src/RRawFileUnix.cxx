@@ -14,6 +14,10 @@
 #include "ROOT/RRawFileUnix.hxx"
 #include "ROOT/RMakeUnique.hxx"
 
+#ifdef HAS_LIBURING
+  #include "ROOT/RIoUring.hxx"
+#endif
+
 #include "TError.h"
 
 #include <cerrno>
@@ -106,6 +110,20 @@ void ROOT::Internal::RRawFileUnix::OpenImpl()
    } else {
       fOptions.fBlockSize = kDefaultBlockSize;
    }
+}
+
+void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
+{
+#ifdef HAS_LIBURING
+   if (!IoUring::io_uring_available()) {
+      RRawFile::ReadVImpl(ioVec, nReq);
+      return;
+   }
+   printf("io_uring ReadV unimplemented!");
+   exit(1);
+#else
+   RRawFile::ReadVImpl(ioVec, nReq);
+#endif
 }
 
 size_t ROOT::Internal::RRawFileUnix::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
