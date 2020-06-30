@@ -41,7 +41,9 @@
 #include "TH1D.h"
 #include "TLatex.h"
 #include "TLegend.h"
-#include "Math/Vector4Dfwd.h"
+#include <Math/Vector4Dfwd.h>
+#include <Math/GenVector/LorentzVector.h>
+#include <Math/GenVector/PtEtaPhiM4D.h>
 #include "TStyle.h"
 #include <string>
 
