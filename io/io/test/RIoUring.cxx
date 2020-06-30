@@ -1,9 +1,15 @@
-#include "liburing.h"
-#include "liburing/io_uring.h"
+#include "ROOT/RIoUring.hxx"
+using RIoUring = ROOT::Internal::RIoUring; 
 
 #include "gtest/gtest.h"
 
-TEST(Liburing, NopRoundTrip)
+TEST(RIoUring, Basics)
+{
+   // successfully construct a ring with queue depth 4
+   RIoUring ring(4);
+}
+
+TEST(RawUring, NopRoundTrip)
 {
    struct io_uring ring;
    int ret = io_uring_queue_init(
