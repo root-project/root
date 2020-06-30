@@ -105,10 +105,10 @@ private:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// Appends collection.size() cling::printValue call to the stringstream.
+   /// Appends collection.size() cling::printValue calls to the stringstream.
    /// \tparam T the type of the event to convert
    /// \param[in] stream Where the conversion function call will be chained.
-   /// \param[in] element The event to convert to its string representation
+   /// \param[in] collection The event to convert to its string representation
    /// \param[in] index To which column the event belongs to
    /// \return true, the event is a collection
    /// This function chains a sequence of call to cling::printValue, one for each element of the collection.
@@ -128,7 +128,8 @@ private:
       // For each element, append a call and feed the proper type returned by GetSplit
       for (size_t i = 0; i < collectionSize; ++i) {
          stream << "*((std::string*)" << ROOT::Internal::RDF::PrettyPrintAddr(&(fCollectionsRepresentations[index][i]))
-                << ") = cling::printValue((" << output[1] << "*)" << ROOT::Internal::RDF::PrettyPrintAddr(&(collection[i])) << ");";
+                << ") = cling::printValue((" << output[1] << "*)"
+                << ROOT::Internal::RDF::PrettyPrintAddr(&(collection[i])) << ");";
       }
       return true;
    }
@@ -197,7 +198,7 @@ public:
    /// Prints the representation to the standard output
    ///
    /// Collections are shortened to the first and last element. The overall width
-   /// is shortened to a fixed size of TODO
+   /// is shortened to a fixed number of columns that should fit the screen width.
    void Print() const;
 
    ////////////////////////////////////////////////////////////////////////////
