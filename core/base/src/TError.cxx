@@ -22,6 +22,7 @@ to be replaced by the proper DefaultErrorHandler()
 
 #include "Varargs.h"
 #include "TError.h"
+#include "ThreadLocalStorage.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -110,8 +111,8 @@ ErrorHandlerFunc_t GetErrorHandler()
 
 void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap)
 {
-   thread_local Int_t buf_size(256);
-   thread_local char* buf_storage(0);
+   TTHREAD_TLS(Int_t) buf_size(256);
+   TTHREAD_TLS(char*) buf_storage(0);
 
    char small_buf[256];
    char *buf = buf_storage ? buf_storage : small_buf;
