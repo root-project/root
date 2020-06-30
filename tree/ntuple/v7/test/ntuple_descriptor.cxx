@@ -8,27 +8,29 @@ TEST(RNTuple, Descriptor)
       .FieldId(0)
       .FieldName("")
       .Structure(ENTupleStructure::kRecord)
-   );
+      .UnwrapDescriptor());
    descBuilder.AddField(RDanglingFieldDescriptor()
       .FieldId(1)
       .FieldName("list")
       .TypeName("std::vector<std::int32_t>")
       .Structure(ENTupleStructure::kCollection)
-   );
+      .UnwrapDescriptor());
    descBuilder.AddFieldLink(0, 1);
 
    descBuilder.AddField(RDanglingFieldDescriptor()
       .FieldId(2)
       .FieldName("list") // at different levels, duplicate names are fine
       .TypeName("std::int32_t")
-      .Structure(ENTupleStructure::kLeaf));
+      .Structure(ENTupleStructure::kLeaf)
+      .UnwrapDescriptor());
    descBuilder.AddFieldLink(1, 2);
 
    descBuilder.AddField(RDanglingFieldDescriptor()
       .FieldId(42)
       .FieldName("x")
       .TypeName("std::string")
-      .Structure(ENTupleStructure::kLeaf));
+      .Structure(ENTupleStructure::kLeaf)
+      .UnwrapDescriptor());
    descBuilder.AddFieldLink(0, 42);
 
    descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);

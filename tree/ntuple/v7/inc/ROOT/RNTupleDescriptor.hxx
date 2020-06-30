@@ -17,6 +17,7 @@
 #define ROOT7_RNTupleDescriptor
 
 #include <ROOT/RColumnModel.hxx>
+#include <ROOT/RError.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
@@ -470,7 +471,6 @@ RNTupleDescriptorBuilder instance and then linked to other fields.
 */
 // clang-format on
 class RDanglingFieldDescriptor {
-   friend class RNTupleDescriptorBuilder;
 private:
    RFieldDescriptor fField = RFieldDescriptor();
 public:
@@ -520,8 +520,24 @@ public:
       fField.fStructure = structure;
       return *this;
    }
-   RFieldDescriptor GetDescriptor() const {
+   /// Attempt to make a field descriptor. This may fail if the dangling field
+   /// was not given enough information to make a proper descriptor.
+   RResult<RFieldDescriptor> GetDescriptor() const {
+      if (fField.GetId() == kInvalidDescriptorId) {
+         return R__FAIL("invalid descriptor id");
+      }
+      if (fField.GetStructure() == ENTupleStructure::kInvalid) {
+         return R__FAIL("invalid structure");
+      }
+      if (fField.GetFieldName() == "" && fField.GetId() != DescriptorId_t(0)) {
+         return R__FAIL("invalid name");
+      }
       return fField;
+   }
+   /// Shorthand method for GetDescriptor().Get()
+   /// Will throw an RException if an RFieldDescriptor cannot be constructed.
+   RFieldDescriptor UnwrapDescriptor() const {
+       return GetDescriptor().Get();
    }
 };
 
@@ -547,7 +563,6 @@ public:
                   const RNTupleVersion &version, const RNTupleUuid &uuid);
 
    void AddField(const RFieldDescriptor& fieldDesc);
-   void AddField(const RDanglingFieldDescriptor& fieldDesc);
    void AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
    void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId,

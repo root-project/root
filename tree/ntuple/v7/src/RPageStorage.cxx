@@ -131,11 +131,17 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    std::unordered_map<const RFieldBase *, DescriptorId_t> fieldPtr2Id; // necessary to find parent field ids
    const auto &fieldZero = *model.GetFieldZero();
    fDescriptorBuilder.AddField(
-      RDanglingFieldDescriptor::FromField(fieldZero).FieldId(fLastFieldId));
+      RDanglingFieldDescriptor::FromField(fieldZero)
+         .FieldId(fLastFieldId)
+         .UnwrapDescriptor()
+   );
    fieldPtr2Id[&fieldZero] = fLastFieldId++;
    for (auto& f : *model.GetFieldZero()) {
       fDescriptorBuilder.AddField(
-         RDanglingFieldDescriptor::FromField(f).FieldId(fLastFieldId));
+         RDanglingFieldDescriptor::FromField(f)
+            .FieldId(fLastFieldId)
+            .UnwrapDescriptor()
+      );
       fDescriptorBuilder.AddFieldLink(fieldPtr2Id[f.GetParent()], fLastFieldId);
       Detail::RFieldFuse::Connect(fLastFieldId, *this, f); // issues in turn one or several calls to AddColumn()
       fieldPtr2Id[&f] = fLastFieldId++;
