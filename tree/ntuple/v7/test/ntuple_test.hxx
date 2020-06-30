@@ -53,6 +53,7 @@ using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
 using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
 using RColumnModel = ROOT::Experimental::RColumnModel;
+using RDanglingFieldDescriptor = ROOT::Experimental::RDanglingFieldDescriptor;
 using RException = ROOT::Experimental::RException;
 template <class T>
 using RField = ROOT::Experimental::RField<T>;
@@ -60,7 +61,6 @@ using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
 using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
 using RFieldMerger = ROOT::Experimental::RFieldMerger;
 using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
-using RFieldDescriptorBuilder = ROOT::Experimental::RFieldDescriptorBuilder;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
 using RNTuple = ROOT::Experimental::RNTuple;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
