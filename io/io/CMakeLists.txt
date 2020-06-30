@@ -70,6 +70,10 @@ if(root7)
   target_sources(RIO PRIVATE v7/src/RFile.cxx)
 endif()
 
+if(uring)
+  target_compile_definitions(RIO PRIVATE HAVE_LIBURING)
+endif()
+
 ROOT_GENERATE_DICTIONARY(G__RIO
   ROOT/RRawFile.hxx
   ${rawfile_local_headers}

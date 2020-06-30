@@ -9,8 +9,6 @@
 #ifndef ROOT_RIoUring
 #define ROOT_RIoUring
 
-#define HAS_LIBURING
-
 #include <liburing.h>
 #include <liburing/io_uring.h>
 

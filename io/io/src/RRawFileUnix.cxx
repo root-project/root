@@ -14,7 +14,7 @@
 #include "ROOT/RRawFileUnix.hxx"
 #include "ROOT/RMakeUnique.hxx"
 
-#ifdef HAS_LIBURING
+#ifdef HAVE_LIBURING
   #include "ROOT/RIoUring.hxx"
 #endif
 
@@ -114,13 +114,14 @@ void ROOT::Internal::RRawFileUnix::OpenImpl()
 
 void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
-#ifdef HAS_LIBURING
-   if (!IoUring::io_uring_available()) {
+#ifdef HAVE_LIBURING
+   if (!RIoUring::IsAvailable()) {
       RRawFile::ReadVImpl(ioVec, nReq);
       return;
    }
-   printf("io_uring ReadV unimplemented!");
-   exit(1);
+   // check we can construct the ring
+   RIoUring ring(8);
+   throw std::runtime_error("io_uring ReadV unimplemented!");
 #else
    RRawFile::ReadVImpl(ioVec, nReq);
 #endif
