@@ -45,6 +45,10 @@ std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileUnix::Clone() 
    return std::make_unique<RRawFileUnix>(fUrl, fOptions);
 }
 
+int ROOT::Internal::RRawFileUnix::GetFeatures() const {
+   return kFeatureHasSize | kFeatureHasMmap;
+}
+
 std::uint64_t ROOT::Internal::RRawFileUnix::GetSizeImpl()
 {
    struct stat info;

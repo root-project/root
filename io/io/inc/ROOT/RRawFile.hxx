@@ -49,6 +49,8 @@ public:
    static constexpr int kFeatureHasSize = 0x01;
    /// Map() and Unmap() are implemented
    static constexpr int kFeatureHasMmap = 0x02;
+   /// File supports async IO
+   static constexpr int kFeatureHasAsyncIo = 0x04;
 
    /// On construction, an ROptions parameter can customize the RRawFile behavior
    struct ROptions {
