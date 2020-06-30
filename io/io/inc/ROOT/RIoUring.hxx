@@ -19,21 +19,21 @@
 namespace ROOT {
 namespace Internal {
 
-class IoUring {
+class RIoUring {
 private:
    struct io_uring fRing;
 public:
-   explicit IoUring(size_t size) {
+   explicit RIoUring(size_t size) {
       int ret = io_uring_queue_init(size, &fRing, 0 /* no flags */);
       if (ret) {
          throw R__FAIL("couldn't open ring");
       }
    }
-   ~IoUring() {
+   ~RIoUring() {
       io_uring_queue_exit(&fRing);
    }
    // todo try opening a ring and check the error code
-   static bool io_uring_available() {
+   static bool IsAvailable() {
       return false; 
    }
 }; 
