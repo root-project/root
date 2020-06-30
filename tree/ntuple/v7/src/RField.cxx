@@ -22,7 +22,6 @@
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTuple.hxx>
-#include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 
 #include <TClass.h>
