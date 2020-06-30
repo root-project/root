@@ -510,12 +510,21 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
       {
          if (rec)
          {
-            if (secondary || rec->is_secondary()) // ??? should actually be && ???
+            assert(secondary == rec->is_secondary());
+            if (secondary || rec->is_secondary())
             {
-               // XXXX union or difference:
-               // - if all secondary_idcs are already in the record, toggle
-               //   - if final result is empty set, remove element from selection
-               // - otherwise union
+               std::set<int> dup;
+               for (auto &ns :  secondary_idcs)
+               {
+                  int nsi = ns;
+                  auto ir = rec->f_sec_idcs.insert(nsi);
+                  if (!ir.second)
+                     dup.insert(nsi);
+               }
+
+               // erase duplicates
+               for (auto &dit :  dup)
+                  rec->f_sec_idcs.erase(dit);
             }
             else
             {
@@ -525,6 +534,9 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
          else
          {
             AddNiece(el);
+            rec = find_record(el);
+            rec->f_is_sec   = true;
+            rec->f_sec_idcs = secondary_idcs;
          }
       }
       else
