@@ -174,3 +174,21 @@ TEST(RDFDisplayTests, DisplayPrintString)
    // Testing the string returned
    EXPECT_EQ(dd->AsString(), DisplayAsStringString);
 }
+
+TEST(RDFDisplayTests, CharArray)
+{
+   {
+      TFile f("f.root", "recreate");
+      TTree t("t", "t");
+      char str[4] = "asd";
+      t.Branch("str", str, "str[4]/C");
+      t.Fill();
+      char otherstr[4] = "bar";
+      std::copy(otherstr, otherstr + 4, str);
+      t.Fill();
+      f.Write();
+   }
+
+   const auto str = ROOT::RDataFrame("t", "f.root").Display()->AsString();
+   EXPECT_EQ(str, "str | \nasd | \nbar | \n    | \n");
+}
