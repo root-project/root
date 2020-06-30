@@ -10,6 +10,7 @@ if len(sys.argv) < 2:
 
 # Get path to the tutorial file
 file_path = os.path.expanduser(sys.argv[1])
+sys.argv.remove(sys.argv[1])
 
 if os.path.exists(file_path):
     # Module needs to run as main.
