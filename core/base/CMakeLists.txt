@@ -47,7 +47,6 @@ set(BASE_HEADERS
   TDatime.h
   TDirectory.h
   TEnv.h
-  TError.h
   TException.h
   TExec.h
   TFileCollection.h
@@ -138,7 +137,6 @@ set(BASE_SOURCES
   src/TDatime.cxx
   src/TDirectory.cxx
   src/TEnv.cxx
-  src/TError.cxx
   src/TErrorDefaultHandler.cxx
   src/TException.cxx
   src/TExec.cxx

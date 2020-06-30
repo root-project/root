@@ -12,6 +12,7 @@ set(Foundation_dict_headers
   ESTLType.h
   RStringView.h
   TClassEdit.h
+  TError.h
   ROOT/RIntegerSequence.hxx
   ROOT/RMakeUnique.hxx
   ROOT/RNotFn.hxx
@@ -26,6 +27,7 @@ set(sources
   src/FoundationUtils.cxx
   src/RConversionRuleParser.cxx
   src/TClassEdit.cxx
+  src/TError.cxx
 )
 
 ROOT_OBJECT_LIBRARY(Foundation ${sources})

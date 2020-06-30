@@ -32,12 +32,13 @@ add_library(rpdutil STATIC
 )
 
 target_include_directories(rpdutil PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/clib/inc    # for snprintf.h
-   ${CMAKE_SOURCE_DIR}/core/base/inc    # for RConfig.hxx
-   ${CMAKE_SOURCE_DIR}/core/meta/inc    # for TGenericClassInfo.h
-   ${CMAKE_SOURCE_DIR}/net/net/inc      # for NetErrors.h
-   ${CMAKE_SOURCE_DIR}/net/auth/inc     # for NetErrors.h
-   ${CMAKE_BINARY_DIR}/ginclude         # for RConfigure.h
+   ${CMAKE_SOURCE_DIR}/core/clib/inc         # for snprintf.h
+   ${CMAKE_SOURCE_DIR}/core/base/inc         # for RConfig.hxx
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc   # for TError.hxx
+   ${CMAKE_SOURCE_DIR}/core/meta/inc         # for TGenericClassInfo.h
+   ${CMAKE_SOURCE_DIR}/net/net/inc           # for NetErrors.h
+   ${CMAKE_SOURCE_DIR}/net/auth/inc          # for NetErrors.h
+   ${CMAKE_BINARY_DIR}/ginclude              # for RConfigure.h
 )
 
 target_link_libraries(rpdutil INTERFACE $<$<PLATFORM_ID:Linux>:crypt>)
