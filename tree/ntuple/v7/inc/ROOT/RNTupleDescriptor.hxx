@@ -32,7 +32,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class RFieldDescriptorBuilder;
+class RDanglingFieldDescriptor;
 class RNTupleDescriptorBuilder;
 class RNTupleModel;
 
@@ -45,7 +45,7 @@ class RNTupleModel;
 // clang-format on
 class RFieldDescriptor {
    friend class RNTupleDescriptorBuilder;
-   friend class RFieldDescriptorBuilder;
+   friend class RDanglingFieldDescriptor;
 
 private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
@@ -451,53 +451,59 @@ public:
    void PrintInfo(std::ostream &output) const;
 };
 
+namespace Detail {
+   class RFieldBase;
+}
+
 // clang-format off
 /**
-\class ROOT::Experimental::RFieldDescriptorBuilder
+\class ROOT::Experimental::RDanglingFieldDescriptor
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RFieldDescriptor
+
+Dangling field descriptors describe a single field in isolation. They are
+missing the relationship information (parent field, any child fields) required for
+a real field descriptor.
 */
 // clang-format on
-class RFieldDescriptorBuilder {
+class RDanglingFieldDescriptor {
 private:
    RFieldDescriptor fField = RFieldDescriptor();
 public:
-   RFieldDescriptorBuilder() = default;
-   /// Make an RFieldDescriptorBuilder based off of an existing field descriptor.
-   explicit RFieldDescriptorBuilder(const RFieldDescriptor& fieldDesc) : fField(fieldDesc) {}
-   template<typename AsFieldDescriptor>
-   explicit RFieldDescriptorBuilder(const AsFieldDescriptor& field)
-      : RFieldDescriptorBuilder(field.AsFieldDescriptor()) {}
+   RDanglingFieldDescriptor() = default;
+   /// Make an RDanglingFieldDescriptor based off of an existing field descriptor.
+   explicit RDanglingFieldDescriptor(const RFieldDescriptor& fieldDesc) : fField(fieldDesc) {}
+   explicit RDanglingFieldDescriptor(const Detail::RFieldBase& field);
 
-   RFieldDescriptorBuilder& FieldId(DescriptorId_t fieldId) {
+   RDanglingFieldDescriptor& FieldId(DescriptorId_t fieldId) {
       fField.fFieldId = fieldId;
       return *this;
    }
-   RFieldDescriptorBuilder& FieldVersion(const RNTupleVersion& fieldVersion) {
+   RDanglingFieldDescriptor& FieldVersion(const RNTupleVersion& fieldVersion) {
       fField.fFieldVersion = fieldVersion;
       return *this;
    }
-   RFieldDescriptorBuilder& TypeVersion(const RNTupleVersion& typeVersion) {
+   RDanglingFieldDescriptor& TypeVersion(const RNTupleVersion& typeVersion) {
       fField.fTypeVersion = typeVersion;
       return *this;
    }
-   RFieldDescriptorBuilder& FieldName(const std::string& fieldName) {
+   RDanglingFieldDescriptor& FieldName(const std::string& fieldName) {
       fField.fFieldName = fieldName;
       return *this;
    }
-   RFieldDescriptorBuilder& FieldDescription(const std::string& fieldDescription) {
+   RDanglingFieldDescriptor& FieldDescription(const std::string& fieldDescription) {
       fField.fFieldDescription = fieldDescription;
       return *this;
    }
-   RFieldDescriptorBuilder& TypeName(const std::string& typeName) {
+   RDanglingFieldDescriptor& TypeName(const std::string& typeName) {
       fField.fTypeName = typeName;
       return *this;
    }
-   RFieldDescriptorBuilder& NRepetitions(std::uint64_t nRepetitions) {
+   RDanglingFieldDescriptor& NRepetitions(std::uint64_t nRepetitions) {
       fField.fNRepetitions = nRepetitions;
       return *this;
    }
-   RFieldDescriptorBuilder& Structure(const ENTupleStructure& structure) {
+   RDanglingFieldDescriptor& Structure(const ENTupleStructure& structure) {
       fField.fStructure = structure;
       return *this;
    }
@@ -528,7 +534,7 @@ public:
                   const RNTupleVersion &version, const RNTupleUuid &uuid);
 
    void AddField(const RFieldDescriptor& fieldDesc);
-   void AddField(const RFieldDescriptorBuilder& fieldBuilder);
+   void AddField(const RDanglingFieldDescriptor& fieldDesc);
    void AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
    void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId,

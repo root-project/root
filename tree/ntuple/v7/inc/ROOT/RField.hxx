@@ -49,8 +49,8 @@ namespace Experimental {
 
 class RCollectionField;
 class RCollectionNTuple;
+class RDanglingFieldDescriptor;
 class REntry;
-class RFieldDescriptor;
 class RNTupleModel;
 
 namespace Detail {
@@ -229,8 +229,8 @@ public:
    virtual RNTupleVersion GetFieldVersion() const { return RNTupleVersion(); }
    /// Indicates an evolution of the C++ type itself
    virtual RNTupleVersion GetTypeVersion() const { return RNTupleVersion(); }
-   /// View this field as an RFieldDescriptor
-   RFieldDescriptor AsFieldDescriptor() const;
+   /// View the field as an RDanglingFieldDescriptor
+   RDanglingFieldDescriptor AsDanglingFieldDescriptor() const;
 
    RSchemaIterator begin();
    RSchemaIterator end();
