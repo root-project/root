@@ -20,12 +20,6 @@ if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
   )
 endif()
 
-if (builtin_clang)
-  set(Clang_DIR ${LLVM_BINARY_DIR}/tools/clang/)
-else()
-  set(Clang_DIR ${LLVM_BINARY_DIR}/lib/cmake/clang/)
-endif()
-
 if(MSVC)
   if (winrtdebug)
     set(_clad_build_type Debug)

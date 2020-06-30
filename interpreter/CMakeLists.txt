@@ -417,6 +417,9 @@ if (builtin_clang)
     ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
     ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include
     CACHE STRING "Clang include directories.")
+  set(Clang_DIR ${LLVM_BINARY_DIR}/tools/clang/)
+else()
+  set(Clang_DIR ${LLVM_BINARY_DIR}/lib/cmake/clang/)
 endif()
 
 if(builtin_llvm)
