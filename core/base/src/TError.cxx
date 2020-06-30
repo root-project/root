@@ -20,6 +20,7 @@ errorhandler function. Initially the MinimalErrorHandler, which is supposed
 to be replaced by the proper DefaultErrorHandler()
 */
 
+#include "snprintf.h"
 #include "Varargs.h"
 #include "TError.h"
 #include "ThreadLocalStorage.h"
@@ -130,8 +131,13 @@ again:
       fmt = "no error message provided";
 
    Int_t n = vsnprintf(buf, buf_size, fmt, ap);
-   if (n >= buf_size) {
-      buf_size = n+1;
+   // old vsnprintf's return -1 if string is truncated new ones return
+   // total number of characters that would have been written
+   if (n == -1 || n >= buf_size) {
+      if (n == -1)
+         buf_size *= 2;
+      else
+         buf_size = n+1;
       if (buf != &(small_buf[0])) delete [] buf;
       buf = 0;
       va_end(ap);
