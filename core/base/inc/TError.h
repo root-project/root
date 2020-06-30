@@ -73,7 +73,7 @@ typedef void (*ErrorHandlerFunc_t)(int level, Bool_t abort, const char *location
               const char *msg);
 
 extern "C" void ErrorHandler(int level, const char *location, const char *fmt,
-                             std::va_list va);
+                             va_list va);
 
 extern void DefaultErrorHandler(int level, Bool_t abort, const char *location,
                                 const char *msg);
