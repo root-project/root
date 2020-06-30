@@ -912,10 +912,6 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescript
    fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc);
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RDanglingFieldDescriptor& builder) {
-   AddField(builder.GetDescriptor());
-}
-
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
 {
    R__ASSERT(fDescriptor.fFieldDescriptors[linkId].fParentId == kInvalidDescriptorId);
