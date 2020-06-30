@@ -35,6 +35,7 @@ private:
 protected:
    void OpenImpl() final;
    size_t ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset) final;
+   void ReadVImpl(RIOVec *ioVec, unsigned int nReq) final;
    std::uint64_t GetSizeImpl() final;
    void *MapImpl(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset) final;
    void UnmapImpl(void *region, size_t nbytes) final;
