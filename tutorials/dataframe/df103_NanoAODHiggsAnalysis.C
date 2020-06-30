@@ -406,28 +406,26 @@ void df103_NanoAODHiggsAnalysis(const bool run_fast = true)
 
    // In fast mode, take samples from */cms_opendata_2012_nanoaod_skimmed/*, which has
    // the preselections from the selection_* functions already applied.
-   std::string path = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod";
-   if (run_fast) path += "_skimmed";
+   std::string path = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/";
+   if (run_fast) path = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod_skimmed/";
 
    // Create dataframes for signal, background and data samples
 
    // Signal: Higgs -> 4 leptons
-   ROOT::RDataFrame df_sig_4l("Events", path + "/SMHiggsToZZTo4L.root");
+   ROOT::RDataFrame df_sig_4l("Events", path + "SMHiggsToZZTo4L.root");
 
    // Background: ZZ -> 4 leptons
    // Note that additional background processes from the original paper with minor contribution were left out for this
    // tutorial.
-   ROOT::RDataFrame df_bkg_4mu("Events", path + "/ZZTo4mu.root");
-   ROOT::RDataFrame df_bkg_4el("Events", path + "/ZZTo4e.root");
-   ROOT::RDataFrame df_bkg_2el2mu("Events", path + "/ZZTo2e2mu.root");
+   ROOT::RDataFrame df_bkg_4mu("Events", path + "ZZTo4mu.root");
+   ROOT::RDataFrame df_bkg_4el("Events", path + "ZZTo4e.root");
+   ROOT::RDataFrame df_bkg_2el2mu("Events", path + "ZZTo2e2mu.root");
 
    // CMS data taken in 2012 (11.6 fb^-1 integrated luminosity)
    ROOT::RDataFrame df_data_doublemu(
-      "Events", {path + "/Run2012B_DoubleMuParked.root",
-                 path + "/Run2012C_DoubleMuParked.root"});
+      "Events", {path + "Run2012B_DoubleMuParked.root", path + "Run2012C_DoubleMuParked.root"});
    ROOT::RDataFrame df_data_doubleel(
-      "Events", {path + "/Run2012B_DoubleElectron.root",
-                 path + "/Run2012C_DoubleElectron.root"});
+      "Events", {path + "Run2012B_DoubleElectron.root", path + "Run2012C_DoubleElectron.root"});
 
    // Reconstruct Higgs to 4 muons
    auto df_sig_4mu_reco = reco_higgs_to_4mu(df_sig_4l);
@@ -506,6 +504,5 @@ void df103_NanoAODHiggsAnalysis(const bool run_fast = true)
 
 int main()
 {
-   const auto run_fast = true;
-   df103_NanoAODHiggsAnalysis(run_fast);
+   df103_NanoAODHiggsAnalysis(/*fast=*/true);
 }
