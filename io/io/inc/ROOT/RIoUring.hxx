@@ -11,10 +11,8 @@
 
 #define HAS_LIBURING
 
-extern "C" {
-  #include <liburing.h>
-  #include <liburing/io_uring.h>
-}
+#include <liburing.h>
+#include <liburing/io_uring.h>
 
 #include <ROOT/RError.hxx>
 
