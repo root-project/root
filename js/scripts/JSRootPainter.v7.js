@@ -1858,6 +1858,7 @@
       }
 
       if (this.v7CommMode() == JSROOT.v7.CommMode.kNormal) {
+         console.log('Send zoom ', req);
          this.v7SubmitRequest("zoom", { _typename: "ROOT::Experimental::RFrame::RZoomRequest", ranges: req });
       }
 

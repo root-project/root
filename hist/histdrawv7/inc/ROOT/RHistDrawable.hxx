@@ -41,7 +41,7 @@ class RHistDrawableBase : public RDrawable {
    RAttrFill                fAttrFill{this, "fill_"};     ///<! hist fill attributes
    RAttrText                fAttrText{this, "text_"};     ///<! hist text attributes
    RAttrMarker              fMarkerAttr{this, "marker_"}; ///<! hist marker attributes
-   RAttrValue<bool>         fOptimize{this, "optimize", true};  ///<! optimize drawing
+   RAttrValue<bool>         fOptimize{this, "optimize", false}; ///<! optimize drawing
 
 protected:
 
@@ -180,7 +180,7 @@ protected:
 
    std::unique_ptr<RDisplayItem> CreateHistDisplay(const RDisplayContext &) override;
 
-   bool Is3D() const final { return (GetDrawKind() == "lego") || (GetDrawKind() == "surf"); }
+   bool Is3D() const final { return (GetDrawKind() == "lego") || (GetDrawKind() == "surf") || (GetDrawKind() == "err"); }
 
 public:
    RHist2Drawable() = default;

@@ -118,9 +118,6 @@ std::unique_ptr<RDisplayItem> RHist2Drawable::CreateHistDisplay(const RDisplayCo
    RFrame::RUserRanges ranges;
    if (frame) frame->GetClientRanges(ctxt.GetConnId(), ranges);
 
-   printf("Frame X min %5.3f max %5.3f\n", ranges.GetMin(0), ranges.GetMax(0));
-   printf("Frame Y min %5.3f max %5.3f\n", ranges.GetMin(1), ranges.GetMax(1));
-
    auto himpl = fHistImpl.get();
 
    if (himpl) {
@@ -169,8 +166,6 @@ std::unique_ptr<RDisplayItem> RHist2Drawable::CreateHistDisplay(const RDisplayCo
          if (j2 % stepj > 0) j2 = (j2/stepj + 1) * stepj;
          needrebin = true;
       }
-
-      printf("Get indicies X: %d %d %d Y: %d %d %d\n", i1, i2, stepi, j1, j2, stepj);
 
       // be aware, right indicies i2 or j2 can be larger then axes index range.
       // In this case axis rebin is special

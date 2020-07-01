@@ -32,7 +32,7 @@ using namespace ROOT::Experimental;
 
 void draw_rh2_large()
 {
-   const int nbins = 1000;
+   const int nbins = 50;
 
    // Create the histogram.
    RAxisConfig xaxis("x", nbins, 0., nbins);
@@ -59,19 +59,21 @@ void draw_rh2_large()
 
    auto draw = canvas->Draw(pHist);
 
-   // draw->AttrLine().SetColor(RColor::kLime);
-   // draw->Surf(2); // configure surf4 draw option
-   // draw->Lego(2); // configure lego2 draw option
+   draw->AttrLine().SetColor(RColor::kLime);
    // draw->Contour(); // configure cont draw option
    // draw->Scatter(); // configure color draw option (default)
    // draw->Arrow(); // configure arrow draw option
-   // draw->Color(); // configure color draw option (default)
+   draw->Color(); // configure color draw option (default)
    // draw->Text(true); // configure text drawing (can be enabled with most 2d options)
+   // draw->Box(1); // configure box1 draw option
+   // draw->Surf(2); // configure surf4 draw option, 3d
+   // draw->Lego(2); // configure lego2 draw option, 3d
+   // draw->Error(); // configure error drawing, 3d
 
-   draw->Optimize(); // enable draw optimization, reduced data set will be send to clients
+   draw->Optimize(true); // enable draw optimization, reduced data set will be send to clients
 
-   auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist2");
-   stat->AttrFill().SetColor(RColor::kRed);
+   auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist");
+   stat->AttrFill().SetColor(RColor::kBlue);
 
    canvas->SetSize(1000, 700);
    canvas->Show();
