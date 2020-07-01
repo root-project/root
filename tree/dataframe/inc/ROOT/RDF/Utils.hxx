@@ -54,7 +54,10 @@ using namespace ROOT::RDF;
 
 /// Check for container traits.
 ///
-/// Note that we don't recognize std::string as a container.
+/// Note that for all uses in RDF we don't want to classify std::string as a container.
+/// Template specializations of IsDataContainer make it return `true` for std::span<T>, std::vector<bool> and
+/// RVec<bool>, which we do want to count as containers even though they don not satisty all the traits tested by the
+/// generic IsDataContainer<T>.
 template <typename T>
 struct IsDataContainer {
    using Test_t = typename std::decay<T>::type;
@@ -68,11 +71,10 @@ struct IsDataContainer {
       using It_t = typename A::iterator;
       using CIt_t = typename A::const_iterator;
       using V_t = typename A::value_type;
-      return std::is_same<Test_t, std::vector<bool>>::value ||
-             (std::is_same<decltype(pt->begin()), It_t>::value && std::is_same<decltype(pt->end()), It_t>::value &&
-              std::is_same<decltype(cpt->begin()), CIt_t>::value && std::is_same<decltype(cpt->end()), CIt_t>::value &&
-              std::is_same<decltype(**pi), V_t &>::value && std::is_same<decltype(**pci), V_t const &>::value &&
-              !std::is_same<T, std::string>::value);
+      return std::is_same<decltype(pt->begin()), It_t>::value && std::is_same<decltype(pt->end()), It_t>::value &&
+             std::is_same<decltype(cpt->begin()), CIt_t>::value && std::is_same<decltype(cpt->end()), CIt_t>::value &&
+             std::is_same<decltype(**pi), V_t &>::value && std::is_same<decltype(**pci), V_t const &>::value &&
+             !std::is_same<T, std::string>::value;
    }
 
    template <typename A>
@@ -82,6 +84,16 @@ struct IsDataContainer {
    }
 
    static constexpr bool value = Test<Test_t>(nullptr);
+};
+
+template<>
+struct IsDataContainer<std::vector<bool>> {
+   static constexpr bool value = true;
+};
+
+template<>
+struct IsDataContainer<ROOT::VecOps::RVec<bool>> {
+   static constexpr bool value = true;
 };
 
 template<typename T>
