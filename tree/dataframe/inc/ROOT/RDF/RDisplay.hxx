@@ -154,6 +154,26 @@ private:
    }
 
    ////////////////////////////////////////////////////////////////////////////
+   /// AddInterpreterString overload for arrays of booleans.
+   ///
+   /// \param[in] boolArr The character array to convert to string representation
+   /// \param[in] index To which column the event belongs
+   /// \return true, the event is not a collection
+   ///
+   /// This specialization for arrays of booleans skips the cling::printValue
+   /// (i.e. appends nothing to the stream) and directly writes to fCollectionsRepresentations the
+   /// string representation of the array of chars.
+   bool AddInterpreterString(std::stringstream &, ROOT::RVec<bool> &boolArr, const int &index)
+   {
+      fCollectionsRepresentations[index].reserve(boolArr.size());
+      for (bool b : boolArr)
+         fCollectionsRepresentations[index].push_back(b ? "true" : "false");
+
+      return true; // treat this as a collection
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////
    /// Adds a single element to the next slot in the table
    void AddToRow(const std::string &stringEle);
 
