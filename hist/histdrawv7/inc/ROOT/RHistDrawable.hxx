@@ -189,6 +189,7 @@ public:
    RHist2Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<2>(hist) {}
 
    RHist2Drawable &Color() { SetDrawKind("col"); return *this; }
+   RHist2Drawable &Box(int kind = 0) { SetDrawKind("box", kind); return *this; }
    RHist2Drawable &Lego(int kind = 0) { SetDrawKind("lego", kind); return *this; }
    RHist2Drawable &Surf(int kind = 0) { SetDrawKind("surf", kind); return *this; }
    RHist2Drawable &Error() { SetDrawKind("err"); return *this; }
