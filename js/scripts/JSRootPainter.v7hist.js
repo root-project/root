@@ -1412,8 +1412,7 @@
          tips.push("bin = " + bin);
          tips.push("x = " + xlbl);
          if (histo['$baseh']) cont -= histo['$baseh'].getBinContent(bin+1);
-         var lbl = "entries = ";
-         if (d1>1) lbl += "~";
+         var lbl = "entries = " + (di > 1 ? "~" : "");
          if (cont === Math.round(cont))
             tips.push(lbl + cont);
          else
@@ -2223,7 +2222,8 @@
           lj = 0, ipoly, poly, polys = [], np, npmax = 0,
           x = [0.,0.,0.,0.], y = [0.,0.,0.,0.], zc = [0.,0.,0.,0.], ir = [0,0,0,0],
           i, j, k, n, m, ix, ljfill, count,
-          xsave, ysave, itars, ix, jx;
+          xsave, ysave, itars, ix, jx,
+          di = handle.stepi, dj = handle.stepj;
 
       function BinarySearch(zc) {
          for (var kk=0;kk<levels.length;++kk)
@@ -2265,17 +2265,17 @@
       var arrx = handle.original ? handle.origx : handle.grx,
           arry = handle.original ? handle.origy : handle.gry;
 
-      for (j = handle.j1; j < handle.j2-1; ++j) {
+      for (j = handle.j1; j < handle.j2-dj; j += dj) {
 
-         y[1] = y[0] = (arry[j] + arry[j+1])/2;
-         y[3] = y[2] = (arry[j+1] + arry[j+2])/2;
+         y[1] = y[0] = (arry[j] + arry[j+dj])/2;
+         y[3] = y[2] = (arry[j+dj] + arry[j+2*dj])/2;
 
-         for (i = handle.i1; i < handle.i2-1; ++i) {
+         for (i = handle.i1; i < handle.i2-di; i += di) {
 
             zc[0] = histo.getBinContent(i+1, j+1);
-            zc[1] = histo.getBinContent(i+2, j+1);
-            zc[2] = histo.getBinContent(i+2, j+2);
-            zc[3] = histo.getBinContent(i+1, j+2);
+            zc[1] = histo.getBinContent(i+1+di, j+1);
+            zc[2] = histo.getBinContent(i+1+di, j+1+dj);
+            zc[3] = histo.getBinContent(i+1, j+1+dj);
 
             for (k=0;k<4;k++)
                ir[k] = BinarySearch(zc[k]);
@@ -2463,12 +2463,13 @@
       if (this.options.Contour===14) {
          var dd = "M0,0h"+frame_w+"v"+frame_h+"h-"+frame_w;
          if (this.options.Proj) {
-            var sz = handle.j2 - handle.j1, xd = new Float32Array(sz*2), yd = new Float32Array(sz*2);
+            var dj = handle.stepj, sz = parseInt((handle.j2 - handle.j1)/dj),
+                xd = new Float32Array(sz*2), yd = new Float32Array(sz*2);
             for (var i=0;i<sz;++i) {
                xd[i] = handle.origx[handle.i1];
-               yd[i] = (handle.origy[handle.j1]*(i+0.5) + handle.origy[handle.j2]*(sz-0.5-i))/sz;
+               yd[i] = (handle.origy[handle.j1]*(i*dj+0.5) + handle.origy[handle.j2]*(sz-0.5-i*dj))/sz;
                xd[i+sz] = handle.origx[handle.i2];
-               yd[i+sz] = (handle.origy[handle.j2]*(i+0.5) + handle.origy[handle.j1]*(sz-0.5-i))/sz;
+               yd[i+sz] = (handle.origy[handle.j2]*(i*dj+0.5) + handle.origy[handle.j1]*(sz-0.5-i*dj))/sz;
             }
             dd = BuildPath(xd,yd,0,2*sz-1);
          }
@@ -2663,6 +2664,7 @@
           text_size = this.v7EvalAttr("text_size", 20),
           text_offset = 0,
           text_g = this.draw_g.append("svg:g").attr("class","th2_text"),
+          di = handle.stepi, dj = handle.stepj,
           profile2d = (this.options.TextKind == "E") &&
                       this.MatchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function');
 
@@ -2670,13 +2672,13 @@
 
       this.StartTextDrawing(42, text_size, text_g, text_size);
 
-      for (i = handle.i1; i < handle.i2; ++i)
-         for (j = handle.j1; j < handle.j2; ++j) {
+      for (i = handle.i1; i < handle.i2; i += di)
+         for (j = handle.j1; j < handle.j2; j += dj) {
             binz = histo.getBinContent(i+1, j+1);
             if ((binz === 0) && !this._show_empty_bins) continue;
 
-            binw = handle.grx[i+1] - handle.grx[i];
-            binh = handle.gry[j] - handle.gry[j+1];
+            binw = handle.grx[i+di] - handle.grx[i];
+            binh = handle.gry[j] - handle.gry[j+dj];
 
             if (profile2d)
                binz = histo.getBinEntries(i+1, j+1);
@@ -2686,12 +2688,12 @@
 
             if (text_angle) {
                posx = Math.round(handle.grx[i] + binw*0.5);
-               posy = Math.round(handle.gry[j+1] + binh*(0.5 + text_offset));
+               posy = Math.round(handle.gry[j+dj] + binh*(0.5 + text_offset));
                sizex = 0;
                sizey = 0;
             } else {
                posx = Math.round(handle.grx[i] + binw*0.1);
-               posy = Math.round(handle.gry[j+1] + binh*(0.1 + text_offset));
+               posy = Math.round(handle.gry[j+dj] + binh*(0.1 + text_offset));
                sizex = Math.round(binw*0.8);
                sizey = Math.round(binh*0.8);
             }
@@ -2712,32 +2714,33 @@
           dxn,dyn,x1,x2,y1,y2, anr,si,co,
           handle = this.PrepareColorDraw({ rounding: false }),
           scale_x = (handle.grx[handle.i2] - handle.grx[handle.i1])/(handle.i2 - handle.i1 + 1-0.03)/2,
-          scale_y = (handle.gry[handle.j2] - handle.gry[handle.j1])/(handle.j2 - handle.j1 + 1-0.03)/2;
+          scale_y = (handle.gry[handle.j2] - handle.gry[handle.j1])/(handle.j2 - handle.j1 + 1-0.03)/2,
+          di = handle.stepi, dj = handle.stepj;
 
       for (var loop=0;loop<2;++loop)
-         for (i = handle.i1; i < handle.i2; ++i)
-            for (j = handle.j1; j < handle.j2; ++j) {
+         for (i = handle.i1; i < handle.i2; i += di)
+            for (j = handle.j1; j < handle.j2; j += dj) {
 
                if (i === handle.i1) {
-                  dx = histo.getBinContent(i+2, j+1) - histo.getBinContent(i+1, j+1);
-               } else if (i === handle.i2-1) {
-                  dx = histo.getBinContent(i+1, j+1) - histo.getBinContent(i, j+1);
+                  dx = histo.getBinContent(i+1+di, j+1) - histo.getBinContent(i+1, j+1);
+               } else if (i >= handle.i2-di) {
+                  dx = histo.getBinContent(i+1, j+1) - histo.getBinContent(i+1-di, j+1);
                } else {
-                  dx = 0.5*(histo.getBinContent(i+2, j+1) - histo.getBinContent(i, j+1));
+                  dx = 0.5*(histo.getBinContent(i+1+di, j+1) - histo.getBinContent(i+1-di, j+1));
                }
                if (j === handle.j1) {
-                  dy = histo.getBinContent(i+1, j+2) - histo.getBinContent(i+1, j+1);
-               } else if (j === handle.j2-1) {
-                  dy = histo.getBinContent(i+1, j+1) - histo.getBinContent(i+1, j);
+                  dy = histo.getBinContent(i+1, j+1+dj) - histo.getBinContent(i+1, j+1);
+               } else if (j >= handle.j2-dj) {
+                  dy = histo.getBinContent(i+1, j+1) - histo.getBinContent(i+1, j+1-dj);
                } else {
-                  dy = 0.5*(histo.getBinContent(i+1, j+2) - histo.getBinContent(i+1, j));
+                  dy = 0.5*(histo.getBinContent(i+1, j+1+dj) - histo.getBinContent(i+1, j+1-dj));
                }
 
                if (loop===0) {
                   dn = Math.max(dn, Math.abs(dx), Math.abs(dy));
                } else {
-                  xc = (handle.grx[i] + handle.grx[i+1])/2;
-                  yc = (handle.gry[j] + handle.gry[j+1])/2;
+                  xc = (handle.grx[i] + handle.grx[i+di])/2;
+                  yc = (handle.gry[j] + handle.gry[j+dj])/2;
                   dxn = scale_x*dx/dn;
                   dyn = scale_y*dy/dn;
                   x1  = xc - dxn;
@@ -3002,7 +3005,8 @@
           handle = this.PrepareColorDraw({ rounding: true, pixel_density: true, scatter_plot: true }),
           colPaths = [], currx = [], curry = [], cell_w = [], cell_h = [],
           colindx, cmd1, cmd2, i, j, binz, cw, ch, factor = 1.,
-          scale = this.options.ScatCoef * ((this.gmaxbin) > 2000 ? 2000. / this.gmaxbin : 1.);
+          scale = this.options.ScatCoef * ((this.gmaxbin) > 2000 ? 2000. / this.gmaxbin : 1.),
+          di = handle.stepi, dj = handle.stepj;
 
       JSROOT.seed(handle.sumz);
 
@@ -3014,10 +3018,10 @@
          this.markeratt.reset_pos();
 
          var path = "", k, npix;
-         for (i = handle.i1; i < handle.i2; ++i) {
-            cw = handle.grx[i+1] - handle.grx[i];
-            for (j = handle.j1; j < handle.j2; ++j) {
-               ch = handle.gry[j] - handle.gry[j+1];
+         for (i = handle.i1; i < handle.i2; i += di) {
+            cw = handle.grx[i+di] - handle.grx[i];
+            for (j = handle.j1; j < handle.j2; j += dj) {
+               ch = handle.gry[j] - handle.gry[j+dj];
                binz = histo.getBinContent(i + 1, j + 1);
 
                npix = Math.round(scale*binz);
@@ -3044,32 +3048,32 @@
       var nlevels = Math.round(handle.max - handle.min);
 
       // now start build
-      for (i = handle.i1; i < handle.i2; ++i) {
-         for (j = handle.j1; j < handle.j2; ++j) {
+      for (i = handle.i1; i < handle.i2; i += di) {
+         for (j = handle.j1; j < handle.j2; j += dj) {
             binz = histo.getBinContent(i + 1, j + 1);
             if ((binz <= 0) || (binz < this.minbin)) continue;
 
-            cw = handle.grx[i+1] - handle.grx[i];
-            ch = handle.gry[j] - handle.gry[j+1];
+            cw = handle.grx[i+di] - handle.grx[i];
+            ch = handle.gry[j] - handle.gry[j+dj];
             if (cw*ch <= 0) continue;
 
             colindx = handle.palette.getContourIndex(binz/cw/ch);
             if (colindx < 0) continue;
 
-            cmd1 = "M"+handle.grx[i]+","+handle.gry[j+1];
+            cmd1 = "M"+handle.grx[i]+","+handle.gry[j+dj];
             if (colPaths[colindx] === undefined) {
                colPaths[colindx] = cmd1;
                cell_w[colindx] = cw;
                cell_h[colindx] = ch;
             } else{
-               cmd2 = "m" + (handle.grx[i]-currx[colindx]) + "," + (handle.gry[j+1] - curry[colindx]);
+               cmd2 = "m" + (handle.grx[i]-currx[colindx]) + "," + (handle.gry[j+dj] - curry[colindx]);
                colPaths[colindx] += (cmd2.length < cmd1.length) ? cmd2 : cmd1;
                cell_w[colindx] = Math.max(cell_w[colindx], cw);
                cell_h[colindx] = Math.max(cell_h[colindx], ch);
             }
 
             currx[colindx] = handle.grx[i];
-            curry[colindx] = handle.gry[j+1];
+            curry[colindx] = handle.gry[j+dj];
 
             colPaths[colindx] += "v"+ch+"h"+cw+"v-"+ch+"z";
          }
@@ -3082,7 +3086,7 @@
 
       this.createv7AttMarker();
 
-      var cntr = handle.palette.GetCountour();
+      var cntr = handle.palette.GetContour();
 
       for (colindx=0;colindx<colPaths.length;++colindx)
         if ((colPaths[colindx] !== undefined) && (colindx<cntr.length)) {
@@ -3170,7 +3174,7 @@
             handle = this.DrawBinsText(w, h, handle);
 
          if (!handle)
-            handle = this.DrawBinsScatter(w, h);
+            handle = this.DrawBinsColor(w, h);
       }
 
       this.tt_handle = handle;
@@ -3204,10 +3208,12 @@
 
       if (histo.$baseh) binz -= histo.$baseh.getBinContent(i+1,j+1);
 
+      var lbl = "entries = " + ((di>1) || (dj>1) ? "~" : "");
+
       if (binz === Math.round(binz))
-         lines.push("entries = " + binz);
+         lines.push(lbl + binz);
       else
-         lines.push("entries = " + JSROOT.FFormat(binz, JSROOT.gStyle.fStatFormat));
+         lines.push(lbl + JSROOT.FFormat(binz, JSROOT.gStyle.fStatFormat));
 
       return lines;
    }
