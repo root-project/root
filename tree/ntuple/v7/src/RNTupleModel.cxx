@@ -25,13 +25,13 @@
 
 void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
 {
+   RResult<void> nameValid = Detail::RFieldBase::EnsureValidFieldName(fieldName);
+   if (!nameValid) {
+      nameValid.Throw();
+   }
    auto fieldNameStr = std::string(fieldName);
    if (fFieldNames.insert(fieldNameStr).second == false) {
-      throw RException(R__FAIL("field name '" + fieldNameStr + "' already exists"));
-   } else if (fieldNameStr == "") {
-      throw RException(R__FAIL("field name cannot be empty string \"\""));
-   } else if (fieldNameStr.find(".") != std::string::npos) {
-      throw RException(R__FAIL("field name '" + fieldNameStr + "' cannot contain dot characters '.'"));
+      throw RException(R__FAIL("field name '" + fieldNameStr + "' already exists in NTuple model"));
    }
 }
 

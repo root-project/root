@@ -22,8 +22,6 @@
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RStringView.hxx>
 
-#include <TError.h>
-
 #include <memory>
 #include <unordered_set>
 #include <utility>
@@ -53,8 +51,8 @@ class RNTupleModel {
    /// Keeps track of which field names are taken.
    std::unordered_set<std::string> fFieldNames;
 
-   /// Checks that user-provided field names are valid. Throws an RException
-   /// for invalid names.
+   /// Checks that user-provided field names are valid in the context
+   /// of this NTuple model. Throws an RException for invalid names.
    void EnsureValidFieldName(std::string_view fieldName);
 
 public:
