@@ -16,6 +16,7 @@
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/REntry.hxx>
+#include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RFieldVisitor.hxx>
@@ -188,6 +189,17 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    R__ERROR_HERE("NTuple") << "Field " << fieldName << " has unknown type " << normalizedType;
    R__ASSERT(false);
    return nullptr;
+}
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::Detail::RFieldBase::EnsureValidFieldName(std::string_view fieldName)
+{
+   if (fieldName == "") {
+      return R__FAIL("field name cannot be empty string \"\"");
+   } else if (fieldName.find(".") != std::string::npos) {
+      return R__FAIL("field name '" + std::string(fieldName) + "' cannot contain dot characters '.'");
+   }
+   return RResult<void>::Success();
 }
 
 void ROOT::Experimental::Detail::RFieldBase::AppendImpl(const ROOT::Experimental::Detail::RFieldValue& /*value*/) {

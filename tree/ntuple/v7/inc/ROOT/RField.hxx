@@ -17,6 +17,7 @@
 #define ROOT7_RField
 
 #include <ROOT/RColumn.hxx>
+#include <ROOT/RError.hxx>
 #include <ROOT/RColumnElement.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
@@ -27,7 +28,6 @@
 #include <ROOT/TypeTraits.hxx>
 
 #include <TGenericClassInfo.h>
-#include <TError.h>
 
 #include <algorithm>
 #include <array>
@@ -159,6 +159,8 @@ public:
 
    /// Factory method to resurrect a field from the stored on-disk type information
    static RFieldBase *Create(const std::string &fieldName, const std::string &typeName);
+   /// Check whether a given string is a valid field name
+   static RResult<void> EnsureValidFieldName(std::string_view fieldName);
 
    /// Generates an object of the field type and allocates new initialized memory according to the type.
    RFieldValue GenerateValue();
