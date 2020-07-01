@@ -71,11 +71,19 @@ private:
    std::vector<DescriptorId_t> fLinkIds = {};
 
 public:
+   RFieldDescriptor() = default;
+   RFieldDescriptor(const RFieldDescriptor &other) = delete;
+   RFieldDescriptor &operator =(const RFieldDescriptor &other) = delete;
+   RFieldDescriptor(RFieldDescriptor &&other) = default;
+   RFieldDescriptor &operator =(RFieldDescriptor &&other) = default;
+
    /// In order to handle changes to the serialization routine in future ntuple versions
    static constexpr std::uint16_t kFrameVersionCurrent = 0;
    static constexpr std::uint16_t kFrameVersionMin = 0;
 
    bool operator==(const RFieldDescriptor &other) const;
+   /// Get a copy of the descriptor
+   RFieldDescriptor Clone() const;
 
    DescriptorId_t GetId() const { return fFieldId; }
    RNTupleVersion GetFieldVersion() const { return fFieldVersion; }
@@ -532,7 +540,7 @@ public:
       if (fField.GetFieldName() == "" && fField.GetId() != DescriptorId_t(0)) {
          return R__FAIL("invalid field name");
       }
-      return fField;
+      return fField.Clone();
    }
    /// Shorthand method for GetDescriptor().Get()
    /// Will throw an RException if an RFieldDescriptor cannot be constructed.

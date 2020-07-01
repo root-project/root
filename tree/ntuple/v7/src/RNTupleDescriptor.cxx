@@ -484,6 +484,22 @@ bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &ot
           fLinkIds == other.fLinkIds;
 }
 
+ROOT::Experimental::RFieldDescriptor
+ROOT::Experimental::RFieldDescriptor::Clone() const {
+   RFieldDescriptor clone;
+   clone.fFieldId = fFieldId;
+   clone.fFieldVersion = fFieldVersion;
+   clone.fTypeVersion = fTypeVersion;
+   clone.fFieldName = fFieldName;
+   clone.fFieldDescription = fFieldDescription;
+   clone.fTypeName = fTypeName;
+   clone.fNRepetitions = fNRepetitions;
+   clone.fStructure = fStructure;
+   clone.fParentId = fParentId;
+   clone.fLinkIds = fLinkIds;
+   return std::move(clone);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -891,7 +907,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
 }
 
 ROOT::Experimental::RDanglingFieldDescriptor::RDanglingFieldDescriptor(
-   const RFieldDescriptor& fieldDesc) : fField(fieldDesc)
+   const RFieldDescriptor& fieldDesc) : fField(fieldDesc.Clone())
 {
    fField.fParentId = kInvalidDescriptorId;
    fField.fLinkIds = {};
@@ -899,17 +915,17 @@ ROOT::Experimental::RDanglingFieldDescriptor::RDanglingFieldDescriptor(
 
 ROOT::Experimental::RDanglingFieldDescriptor
 ROOT::Experimental::RDanglingFieldDescriptor::FromField(const Detail::RFieldBase& field) {
-   return RDanglingFieldDescriptor()
+   return std::move(RDanglingFieldDescriptor()
       .FieldVersion(field.GetFieldVersion())
       .TypeVersion(field.GetTypeVersion())
       .FieldName(field.GetName())
       .TypeName(field.GetType())
       .Structure(field.GetStructure())
-      .NRepetitions(field.GetNRepetitions());
+      .NRepetitions(field.GetNRepetitions()));
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor& fieldDesc) {
-   fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc);
+   fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc.Clone());
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
