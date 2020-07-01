@@ -1075,7 +1075,7 @@
           axis_zmin = main.grz.domain()[0],
           axis_zmax = main.grz.domain()[1],
           handle = this.PrepareColorDraw({ rounding: false, use3d: true, extra: 1 }),
-          i1 = handle.i1, i2 = handle.i2, j1 = handle.j1, j2 = handle.j2,
+          i1 = handle.i1, i2 = handle.i2, j1 = handle.j1, j2 = handle.j2, di = handle.stepi, dj = handle.stepj,
           i, j, x1, x2, y1, y2, binz1, binz2, reduced, nobottom, notop,
           pthis = this,
           histo = this.GetHisto(),
@@ -1138,8 +1138,8 @@
 
          // now calculate size of buffer geometry for boxes
 
-         for (i = i1; i < i2; ++i)
-            for (j = j1; j < j2; ++j) {
+         for (i = i1; i < i2; i += di)
+            for (j = j1; j < j2; j += dj) {
 
                if (!GetBinContent(i,j,nlevel)) continue;
 
@@ -1170,18 +1170,18 @@
             face_to_bins_indx2 = use16indx ? new Uint16Array(num2vertices/3) : new Uint32Array(num2vertices/3);
          }
 
-         for (i = i1; i < i2; ++i) {
-            x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1]-handle.grx[i]);
-            x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1]-handle.grx[i]);
-            for (j = j1; j < j2; ++j) {
+         for (i = i1; i < i2; i += di) {
+            x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+di]-handle.grx[i]);
+            x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+di]-handle.grx[i]);
+            for (j = j1; j < j2; j += dj) {
 
                if (!GetBinContent(i,j,nlevel)) continue;
 
                nobottom = !reduced && (nlevel>0);
                notop = !reduced && (binz2 > zmax) && (nlevel < levels.length-2);
 
-               y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]);
-               y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]);
+               y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+dj] - handle.gry[j]);
+               y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+dj] - handle.gry[j]);
 
                z1 = (binz1 <= zmin) ? grzmin : main.grz(binz1);
                z2 = (binz2 > zmax) ? grzmax : main.grz(binz2);
@@ -1276,16 +1276,18 @@
                 handle = this.handle,
                 main = p.frame_painter(),
                 histo = p.GetHisto(),
-                tip = p.Get3DToolTip( this.face_to_bins_index[intersect.faceIndex] );
+                tip = p.Get3DToolTip( this.face_to_bins_index[intersect.faceIndex] ),
+                i1 = tip.ix - 1, i2 = i1 + handle.stepi,
+                j1 = tip.iy - 1, j2 = j1 + handle.stepj;
 
-            tip.x1 = Math.max(-main.size_xy3d, handle.grx[tip.ix-1] + handle.xbar1*(handle.grx[tip.ix]-handle.grx[tip.ix-1]));
-            tip.x2 = Math.min(main.size_xy3d, handle.grx[tip.ix-1] + handle.xbar2*(handle.grx[tip.ix]-handle.grx[tip.ix-1]));
+            tip.x1 = Math.max(-main.size_xy3d, handle.grx[i1] + handle.xbar1*(handle.grx[i2]-handle.grx[i1]));
+            tip.x2 = Math.min(main.size_xy3d, handle.grx[i1] + handle.xbar2*(handle.grx[i2]-handle.grx[i1]));
 
-            tip.y1 = Math.max(-main.size_xy3d, handle.gry[tip.iy-1] + handle.ybar1*(handle.gry[tip.iy] - handle.gry[tip.iy-1]));
-            tip.y2 = Math.min(main.size_xy3d, handle.gry[tip.iy-1] + handle.ybar2*(handle.gry[tip.iy] - handle.gry[tip.iy-1]));
+            tip.y1 = Math.max(-main.size_xy3d, handle.gry[j1] + handle.ybar1*(handle.gry[j2] - handle.gry[j1]));
+            tip.y2 = Math.min(main.size_xy3d, handle.gry[j1] + handle.ybar2*(handle.gry[j2] - handle.gry[j1]));
 
             var binz1 = this.baseline, binz2 = tip.value;
-            if (histo['$baseh']) binz1 = histo['$baseh'].getBinContent(tip.ix, tip.iy);
+            if (histo['$baseh']) binz1 = histo['$baseh'].getBinContent(i1+1, j1+1);
             if (binz2<binz1) { var v = binz1; binz1 = binz2; binz2 = v; }
 
             tip.z1 = main.grz(Math.max(this.zmin,binz1));
@@ -1336,8 +1338,8 @@
 
       zmax = axis_zmax; zmin = axis_zmin;
 
-      for (i = i1; i < i2; ++i)
-         for (j = j1; j < j2; ++j) {
+      for (i = i1; i < i2; i += di)
+         for (j = j1; j < j2; j += dj) {
             if (!GetBinContent(i,j,0)) { nskip++; continue; }
 
             // calculate required buffer size for line segments
@@ -1358,15 +1360,15 @@
           grzmax = main.grz(axis_zmax),
           z1 = 0, z2 = 0, ll = 0, ii = 0;
 
-      for (i=i1;i<i2;++i) {
-         x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1]-handle.grx[i]);
-         x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1]-handle.grx[i]);
-         for (j=j1;j<j2;++j) {
+      for (i = i1; i < i2; i += di) {
+         x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+di]-handle.grx[i]);
+         x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+di]-handle.grx[i]);
+         for (j = j1; j < j2; j += dj) {
 
             if (!GetBinContent(i,j,0)) continue;
 
-            y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]);
-            y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]);
+            y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+dj] - handle.gry[j]);
+            y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+dj] - handle.gry[j]);
 
             z1 = (binz1 <= axis_zmin) ? grzmin : main.grz(binz1);
             z2 = (binz2 > axis_zmax) ? grzmax : main.grz(binz2);
@@ -1514,45 +1516,40 @@
           histo = this.GetHisto();
 
       if (reason == "resize") {
-
          if (is_main && main.Resize3D()) main.Render3D();
 
-      } else {
-
-         var zmult = 1.1;
-
-         this.zmin = main.logz ? this.gminposbin * 0.3 : this.gminbin;
-         this.zmax = this.gmaxbin;
-         if (this.options.minimum !== -1111) this.zmin = this.options.minimum;
-         if (this.options.maximum !== -1111) { this.zmax = this.options.maximum; zmult = 1; }
-         if (main.logz && (this.zmin<=0)) this.zmin = this.zmax * 1e-5;
-
-         this.DeleteAtt();
-
-         if (is_main) {
-            main.Create3DScene();
-            main.SetAxesRanges(this.xmin, this.xmax, this.ymin, this.ymax, this.zmin, this.zmax);
-            main.Set3DOptions(this.options);
-            main.DrawXYZ(main.toplevel, { zmult: zmult, zoom: JSROOT.gStyle.Zooming, ndim: 2 });
-         }
-
-         if (main.mode3d) {
-            this.Draw3DBins();
-            main.Render3D();
-            this.UpdateStatWebCanvas();
-            main.AddKeysHandler();
-         }
+         return JSROOT.CallBack(call_back);
       }
+
+      var zmult = 1.1;
+
+      this.zmin = main.logz ? this.gminposbin * 0.3 : this.gminbin;
+      this.zmax = this.gmaxbin;
+      if (this.options.minimum !== -1111) this.zmin = this.options.minimum;
+      if (this.options.maximum !== -1111) { this.zmax = this.options.maximum; zmult = 1; }
+      if (main.logz && (this.zmin<=0)) this.zmin = this.zmax * 1e-5;
+
+      this.DeleteAtt();
 
       if (is_main) {
-
-         //  (re)draw palette by resize while canvas may change dimension
-         //this.DrawColorPalette(this.options.Zscale && ((this.options.Lego===12) || (this.options.Lego===14) ||
-         //                      (this.options.Surf===11) || (this.options.Surf===12)));
-         // this.DrawTitle();
+         main.Create3DScene();
+         main.SetAxesRanges(this.xmin, this.xmax, this.ymin, this.ymax, this.zmin, this.zmax);
+         main.Set3DOptions(this.options);
+         main.DrawXYZ(main.toplevel, { zmult: zmult, zoom: JSROOT.gStyle.Zooming, ndim: 2 });
       }
 
-      JSROOT.CallBack(call_back);
+      if (!main.mode3d)
+         return JSROOT.CallBack(call_back);
+
+      this.DrawingBins(call_back, reason, function(){
+         // called when bins received from server, must be reentrant
+         var main = this.frame_painter();
+
+         this.Draw3DBins();
+         main.Render3D();
+         this.UpdateStatWebCanvas();
+         main.AddKeysHandler();
+      });
    }
 
    /** Draw histogram bins in 3D, using provided draw options @private */
@@ -2508,30 +2505,39 @@
 
    RH3Painter.prototype.GetBinTips = function (ix, iy, iz) {
       var lines = [], pmain = this.frame_painter(), histo = this.GetHisto(),
-          xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y"), zaxis = this.GetAxis("z");
+          xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y"), zaxis = this.GetAxis("z"),
+          dx = 1, dy = 1, dz = 1;
+
+      if (this.IsDisplayItem()) {
+         dx = histo.stepx || 1;
+         dy = histo.stepy || 1;
+         dz = histo.stepz || 1;
+      }
 
       lines.push(this.GetTipName());
 
       if (pmain.x_kind == 'labels')
-         lines.push("x = " + pmain.AxisAsText("x", xaxis.GetBinLowEdge(ix+1)) + "  xbin=" + (ix+1));
+         lines.push("x = " + pmain.AxisAsText("x", xaxis.GetBinCoord(ix)) + "  xbin=" + ix);
       else
-         lines.push("x = [" + pmain.AxisAsText("x", xaxis.GetBinLowEdge(ix+1)) + ", " + pmain.AxisAsText("x", xaxis.GetBinLowEdge(ix+2)) + ")   xbin=" + (ix+1));
+         lines.push("x = [" + pmain.AxisAsText("x", xaxis.GetBinCoord(ix)) + ", " + pmain.AxisAsText("x", xaxis.GetBinCoord(ix+dx)) + ")   xbin=" + ix);
 
       if (pmain.y_kind == 'labels')
-         lines.push("y = " + pmain.AxisAsText("y", yaxis.GetBinLowEdge(iy+1))  + "  ybin=" + (iy+1));
+         lines.push("y = " + pmain.AxisAsText("y", yaxis.GetBinCoord(iy))  + "  ybin=" + iy);
       else
-         lines.push("y = [" + pmain.AxisAsText("y", yaxis.GetBinLowEdge(iy+1)) + ", " + pmain.AxisAsText("y", yaxis.GetBinLowEdge(iy+2)) + ")  ybin=" + (iy+1));
+         lines.push("y = [" + pmain.AxisAsText("y", yaxis.GetBinCoord(iy)) + ", " + pmain.AxisAsText("y", yaxis.GetBinCoord(iy+dy)) + ")  ybin=" + iy);
 
       if (pmain.z_kind == 'labels')
-         lines.push("z = " + pmain.AxisAsText("z", zaxis.GetBinLowEdge(iz+1))  + "  zbin=" + (iz+1));
+         lines.push("z = " + pmain.AxisAsText("z", zaxis.GetBinCoord(iz))  + "  zbin=" + iz);
       else
-         lines.push("z = [" + pmain.AxisAsText("z", zaxis.GetBinLowEdge(iz+1)) + ", " + pmain.AxisAsText("z", zaxis.GetBinLowEdge(iz+2)) + ")  zbin=" + (iz+1));
+         lines.push("z = [" + pmain.AxisAsText("z", zaxis.GetBinCoord(iz)) + ", " + pmain.AxisAsText("z", zaxis.GetBinCoord(iz+dz)) + ")  zbin=" + iz);
 
       var binz = histo.getBinContent(ix+1, iy+1, iz+1);
+      var lbl = "entries = ";
+      if ((dx>1) || (dy>1) || (dz>1)) lbl += "~";
       if (binz === Math.round(binz))
-         lines.push("entries = " + binz);
+         lines.push(lbl + binz);
       else
-         lines.push("entries = " + JSROOT.FFormat(binz, JSROOT.gStyle.fStatFormat));
+         lines.push(lbl + JSROOT.FFormat(binz, JSROOT.gStyle.fStatFormat));
 
       return lines;
    }

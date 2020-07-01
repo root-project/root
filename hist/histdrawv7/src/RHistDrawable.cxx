@@ -24,6 +24,92 @@
 
 using namespace ROOT::Experimental;
 
+
+std::unique_ptr<RDisplayItem> RHist1Drawable::CreateHistDisplay(const RDisplayContext &ctxt)
+{
+   auto item = std::make_unique<RHistDisplayItem>(*this);
+
+   auto frame = ctxt.GetPad()->GetFrame();
+   RFrame::RUserRanges ranges;
+   if (frame) frame->GetClientRanges(ctxt.GetConnId(), ranges);
+
+   auto himpl = fHistImpl.get();
+
+   if (himpl) {
+
+      int nbinsx = himpl->GetAxis(0).GetNBinsNoOver();
+
+      int i1 = 0, i2 = nbinsx, stepi = 1;
+
+      if (ranges.HasMin(0) && ranges.HasMax(0) && (ranges.GetMin(0) != ranges.GetMax(0))) {
+         i1 = himpl->GetAxis(0).FindBin(ranges.GetMin(0));
+         i2 = himpl->GetAxis(0).FindBin(ranges.GetMax(0));
+         if (i1 <= 1) i1 = 0; else i1--; // include extra left bin
+         if ((i2 <= 0) || (i2 >= nbinsx)) i2 = nbinsx; else i2++; // include extra right bin
+      }
+
+      if (i1 >= i2) {
+         i1 = 0; i2 = nbinsx;
+      }
+
+      // make approx 200 bins visible in each direction
+      static const int NumVisibleBins = 5000;
+
+      bool needrebin = false;
+
+      if (i2 - i1 > NumVisibleBins) {
+         stepi = (i2 - i1) / NumVisibleBins;
+         if (stepi < 2) stepi = 2;
+         i1 = (i1 / stepi) * stepi;
+         if (i2 % stepi > 0) i2 = (i2/stepi + 1) * stepi;
+         needrebin = true;
+      }
+
+      printf("RH1 Get indicies X: %d %d %d\n", i1, i2, stepi);
+
+      // be aware, right indicies i2 or j2 can be larger then axes index range.
+      // In this case axis rebin is special
+
+      auto &bins = item->GetBinContent();
+      bins.resize((i2 - i1) / stepi);
+
+      double min{0}, minpos{0}, max{0};
+
+      min = max = himpl->GetBinContentAsDouble(1);
+      if (max > 0) minpos = max;
+
+      /// found histogram min/max values
+      for (int i = 0; i < nbinsx; ++i) {
+         double val = himpl->GetBinContentAsDouble(i + 1);
+         if (val < min) min = val; else
+         if (val > max) max = val;
+         if ((val > 0.) && (val < minpos)) minpos = val;
+         if (!needrebin && (i>=i1) && (i<i2)) {
+            int indx = (i-i1);
+            bins[indx] = val;
+         }
+      }
+
+      // provide simple rebin with average values
+      // TODO: provide methods in histogram classes
+      if (needrebin)
+         for (int i = i1; i < i2; i += stepi) {
+            double sum = 0.;
+            int ir = std::min(i+stepi, nbinsx);
+            for(int ii = i; ii < ir; ++ii)
+               sum += himpl->GetBinContentAsDouble(ii + 1);
+            int indx = (i-i1)/stepi;
+            bins[indx] = sum/(ir-i);
+         }
+
+      item->SetContentMinMax(min, minpos, max);
+      item->AddAxis(&himpl->GetAxis(0), i1, i2, stepi);
+   }
+
+   return item;
+}
+
+
 std::unique_ptr<RDisplayItem> RHist2Drawable::CreateHistDisplay(const RDisplayContext &ctxt)
 {
    auto item = std::make_unique<RHistDisplayItem>(*this);
@@ -58,7 +144,7 @@ std::unique_ptr<RDisplayItem> RHist2Drawable::CreateHistDisplay(const RDisplayCo
          if ((j2 <= 0) || (j2 >= nbinsy)) j2 = nbinsy; else j2++; // include extra right bin
       }
 
-      if ((i1>=i2) || (j1>=j2)) {
+      if ((i1 >= i2) || (j1 >= j2)) {
          printf("FATAL, fallback to full content\n");
          i1 = 0; i2 = nbinsx; j1 = 0; j2 = nbinsy;
       }
@@ -136,4 +222,13 @@ std::unique_ptr<RDisplayItem> RHist2Drawable::CreateHistDisplay(const RDisplayCo
    }
 
    return item;
+}
+
+
+std::unique_ptr<RDisplayItem> RHist3Drawable::CreateHistDisplay(const RDisplayContext & /*ctxt*/)
+{
+   auto item = std::make_unique<RHistDisplayItem>(*this);
+
+   return item;
+
 }

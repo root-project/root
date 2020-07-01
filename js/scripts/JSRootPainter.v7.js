@@ -210,17 +210,17 @@
    /** @brief Submit request to server-side drawable
     * @param kind defines request kind, only single request a time can be submitted
     * @param req is object derived from DrawableRequest, including correct _typename
-    * @param method is method of painter object
+    * @param method is method of painter object which will be called when getting reply
     * @private */
    JSROOT.TObjectPainter.prototype.v7SubmitRequest = function(kind, req, method) {
       var canp = this.canv_painter();
-      if (!canp || !canp.SubmitDrawableRequest) return false;
+      if (!canp || !canp.SubmitDrawableRequest) return null;
 
       // special situation when snapid not yet assigned - just keep ref until snapid is there
       // maybe keep full list - for now not clear if really needed
       if (!this.snapid) {
-         this._pending_request = { _kind: kind, _req: req, _method: method};
-         return false;
+         this._pending_request = { _kind: kind, _req: req, _method: method };
+         return req;
       }
 
       return canp.SubmitDrawableRequest(kind, req, this, method);
@@ -4532,7 +4532,8 @@
    /** Submit request to RDrawable object on server side */
    RCanvasPainter.prototype.SubmitDrawableRequest = function(kind, req, painter, method) {
 
-      if (!this._websocket || !req || !req._typename || !painter.snapid || (typeof painter.snapid != "string")) return false;
+      if (!this._websocket || !req || !req._typename ||
+          !painter.snapid || (typeof painter.snapid != "string")) return null;
 
       if (kind && method) {
          // if kind specified - check if such request already was submitted
@@ -4576,7 +4577,7 @@
       // console.log('Sending request ', msg.substr(0,60));
 
       this.SendWebsocket("REQ:" + msg);
-      return true;
+      return req;
    }
 
    RCanvasPainter.prototype.SubmitMenuRequest = function(painter, menukind, reqid, call_back) {
@@ -4617,7 +4618,7 @@
             delete req._painter._requests[req._kind];
 
       if (req._method)
-         req._method(reply);
+         req._method(reply, req);
 
       // resubmit last request of that kind
       if (req._nextreq && !req._painter._requests[req._kind])

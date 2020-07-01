@@ -32,6 +32,9 @@
       this.accept_drops = true; // indicate that one can drop other objects like doing Draw("same")
       this.mode3d = false;
       this.zoom_changed_interactive = 0;
+
+      // initialize histogram methods
+      this.GetHisto(true);
    }
 
    RHistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -116,6 +119,10 @@
                histo.dy = histo.fIndicies[3] + 1;
                histo.stepy = histo.fIndicies[5];
 
+               // does display item covers full range?
+               // histo._full_range = (histo.dx == 1) && (histo.nx >= histo.fAxes[0].GetNumBins()) &&
+               //                     (histo.dy == 1) && (histo.ny >= histo.fAxes[1].GetNumBins());
+
                // this is index in original histogram
                histo.getBin = function(x, y) { return (x-1) + this.fAxes[0].GetNumBins()*(y-1); }
 
@@ -132,6 +139,10 @@
                histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
                histo.dx = histo.fIndicies[0] + 1;
                histo.stepx = histo.fIndicies[2];
+
+               // does display item covers full range?
+               // histo._full_range = (histo.dx == 1) && (histo.nx >= histo.fAxes[0].GetNumBins());
+
                histo.getBin = function(x) { return x-1; }
                if (histo.stepx > 1)
                   histo.getBin0 = function(x) { return Math.floor((x-this.dx)/this.stepx); }
@@ -208,6 +219,22 @@
       this.createv7AttLine();
    }
 
+   RHistPainter.prototype.UpdateDisplayItem = function(obj, src) {
+      if (!obj || !src) return false;
+
+      obj.fAxes = src.fAxes;
+      obj.fIndicies = src.fIndicies;
+      obj.fBinContent = src.fBinContent;
+      obj.fContMin = src.fContMin;
+      obj.fContMinPos = src.fContMinPos;
+      obj.fContMax = src.fContMax;
+
+      // update histogram attributes
+      this.GetHisto(true);
+
+      return true;
+   }
+
    RHistPainter.prototype.UpdateObject = function(obj, opt) {
 
       var origin = this.GetObject();
@@ -216,19 +243,23 @@
 
          if (!this.MatchObjectType(obj)) return false;
 
-         var horigin = this.GetHImpl(origin),
-             hobj = this.GetHImpl(obj);
+         if (this.IsDisplayItem()) {
 
-         if (!horigin || !hobj) return false;
+            this.UpdateDisplayItem(origin, obj);
 
-         // make it easy - copy statistics without axes
-         horigin.fStatistics = hobj.fStatistics;
+         } else {
 
-         // special treatment for webcanvas - also name can be changed
-         // if (this.snapid !== undefined)
-         //   histo.fName = obj.fName;
+            var horigin = this.GetHImpl(origin),
+                hobj = this.GetHImpl(obj);
 
-         // histo.fTitle = obj.fTitle;
+            if (!horigin || !hobj) return false;
+
+            // make it easy - copy statistics without axes
+            horigin.fStatistics = hobj.fStatistics;
+
+
+            histo.fTitle = obj.fTitle;
+         }
       }
 
       this.ScanContent();
@@ -1356,9 +1387,11 @@
       var tips = [],
           name = this.GetTipName(),
           pmain = this.frame_painter(),
-          histo = this.GetHisto(), xaxis = this.GetAxis("x"),
+          histo = this.GetHisto(),
+          xaxis = this.GetAxis("x"),
+          di = this.IsDisplayItem() ? histo.stepx : 1,
           x1 = xaxis.GetBinCoord(bin),
-          x2 = xaxis.GetBinCoord(bin+1),
+          x2 = xaxis.GetBinCoord(bin+di),
           cont = histo.getBinContent(bin+1),
           xlbl = "", xnormal = false;
 
@@ -1376,13 +1409,15 @@
             tips.push("error y = " + histo.getBinError(bin + 1).toPrecision(4));
          }
       } else {
-         tips.push("bin = " + (bin+1));
+         tips.push("bin = " + bin);
          tips.push("x = " + xlbl);
          if (histo['$baseh']) cont -= histo['$baseh'].getBinContent(bin+1);
+         var lbl = "entries = ";
+         if (d1>1) lbl += "~";
          if (cont === Math.round(cont))
-            tips.push("entries = " + cont);
+            tips.push(lbl + cont);
          else
-            tips.push("entries = " + JSROOT.FFormat(cont, JSROOT.gStyle.fStatFormat));
+            tips.push(lbl + JSROOT.FFormat(cont, JSROOT.gStyle.fStatFormat));
       }
 
       return tips;
@@ -3142,19 +3177,25 @@
       var lines = [], pmain = this.frame_painter(),
            xaxis = this.GetAxis("y"), yaxis = this.GetAxis("y"),
            histo = this.GetHisto(),
-           binz = histo.getBinContent(i+1,j+1);
+           binz = histo.getBinContent(i+1,j+1),
+           di = 1, dj = 1;
+
+      if (this.IsDisplayItem()) {
+         di = histo.stepx || 1;
+         dj = histo.stepy || 1;
+      }
 
       lines.push(this.GetTipName() || "histo<2>");
 
       if (pmain.x_kind == 'labels')
          lines.push("x = " + pmain.AxisAsText("x", xaxis.GetBinCoord(i)));
       else
-         lines.push("x = [" + pmain.AxisAsText("x", xaxis.GetBinCoord(i)) + ", " + pmain.AxisAsText("x", xaxis.GetBinCoord(i+1)) + ")");
+         lines.push("x = [" + pmain.AxisAsText("x", xaxis.GetBinCoord(i)) + ", " + pmain.AxisAsText("x", xaxis.GetBinCoord(i+di)) + ")");
 
       if (pmain.y_kind == 'labels')
          lines.push("y = " + pmain.AxisAsText("y", yaxis.GetBinCoord(j)));
       else
-         lines.push("y = [" + pmain.AxisAsText("y", yaxis.GetBinCoord(j)) + ", " + pmain.AxisAsText("y", yaxis.GetBinCoord(j+1)) + ")");
+         lines.push("y = [" + pmain.AxisAsText("y", yaxis.GetBinCoord(j)) + ", " + pmain.AxisAsText("y", yaxis.GetBinCoord(j+dj)) + ")");
 
       lines.push("bin = " + i + ", " + j);
 
@@ -3463,31 +3504,52 @@
       return (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
-   RH2Painter.prototype.UpdateDisplayItem = function(src) {
-      var obj = this.GetObject();
-      if (!obj || !src) return false;
+   RH2Painter.prototype.ProcessItemReply = function(reply, req) {
+      if (!this.IsDisplayItem())
+         return console.error('Get item when display normal histogram');
 
-      obj.fAxes = src.fAxes;
-      obj.fIndicies = src.fIndicies;
-      obj.fBinContent = src.fBinContent;
-      obj.fContMin = src.fContMin;
-      obj.fContMinPos = src.fContMinPos;
-      obj.fContMax = src.fContMax;
+      if (req.reqid === this.current_item_reqid) {
 
-      this.GetHisto(true);
+         if (reply !== null)
+            this.UpdateDisplayItem(this.GetObject(), reply.item);
+         else if (req._draw_call_back === undefined) {
+            return; // timeout can be ignored
+         }
 
-      return true;
-   }
-
-   RH2Painter.prototype.ProcessItemReply = function(reply) {
-      if (!this.IsDisplayItem()) {
-         console.error('Get item when display normal histogram');
-         return;
+         req.method();
       }
 
-      this.UpdateDisplayItem(reply.item);
+      var cb = req._draw_call_back;
+      delete req._draw_call_back;
+      JSROOT.CallBack(cb);
+   }
 
-      this.DrawBins();
+   RH2Painter.prototype.DrawingBins = function(call_back, reason, method) {
+
+      method = method.bind(this);
+
+      if (this.IsDisplayItem() && (reason == "zoom") && (this.v7CommMode() == JSROOT.v7.CommMode.kNormal)) {
+
+         var handle = this.PrepareColorDraw({ only_indexes: true });
+
+         // submit request if histogram data not enough for display
+         if (handle.incomplete) {
+            // use empty kind to always submit request
+            var req = this.v7SubmitRequest("", { _typename: "ROOT::Experimental::RHistDrawableBase::RRequest" },
+                                           this.ProcessItemReply.bind(this));
+            if (req) {
+               this.current_item_reqid = req.reqid; // ignore all previous requests, only this one will be processed
+               req._draw_call_back = call_back;
+               req.method = method;
+               setTimeout(this.ProcessItemReply.bind(this, null, req), 1000); // after 1 s draw something that we can
+               return;
+            }
+         }
+      }
+
+      method();
+
+      JSROOT.CallBack(call_back);
    }
 
    RH2Painter.prototype.Draw2D = function(call_back, reason) {
@@ -3498,30 +3560,15 @@
       // draw new palette, resize frame if required
       // var pp = this.DrawColorPalette(this.options.Zscale && (this.options.Color || this.options.Contour), true);
 
+      if (!this.DrawAxes())
+         return JSROOT.CallBack(call_back);
 
-      if (this.IsDisplayItem() && (reason == "zoom") && (this.v7CommMode() == JSROOT.v7.CommMode.kNormal)) {
-
-         var handle = this.PrepareColorDraw({ only_indexes: true }),
-             req = { _typename: "ROOT::Experimental::RHist2Drawable::RRequest" };
-
-         // submit request if histogram data not enough for display
-         if (handle.incomplete)
-            this.v7SubmitRequest("hist", req, this.ProcessItemReply.bind(this));
-      }
-
-      if (this.DrawAxes())
+      this.DrawingBins(call_back, reason, function(){
+         // called when bins received from server, must be reentrant
          this.DrawBins();
-
-      // redraw palette till the end when contours are available
-      // if (pp) pp.DrawPave();
-
-      // this.DrawTitle();
-
-      // this.UpdateStatWebCanvas();
-
-      this.AddInteractive();
-
-      JSROOT.CallBack(call_back);
+         this.UpdateStatWebCanvas();
+         this.AddInteractive();
+      });
    }
 
    RH2Painter.prototype.Draw3D = function(call_back, reason) {
