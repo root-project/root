@@ -40,9 +40,7 @@ public:
   Double_t getValV(const RooArgSet* nset=0) const ;
   virtual RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const ;
   /// Return the convolution variable of the resolution model.
-  const RooAbsRealLValue& convVar() const {return *x;}
-  /// Return the convolution variable of the resolution model.
-  RooAbsRealLValue& convVar() {return *x;}
+  RooAbsRealLValue& convVar() const {return *x;}
   const RooRealVar& basisConvVar() const ;
 
   inline Bool_t isBasisSupported(const char* name) const { return basisCode(name)?kTRUE:kFALSE ; }
