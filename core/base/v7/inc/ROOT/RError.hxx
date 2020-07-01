@@ -206,7 +206,9 @@ public:
       return result;
    }
 
-   const T &Get() {
+   /// If the operation was successful, returns the inner value and consumes the RResult.
+   /// If there was an error, Get() instead throws an exception.
+   T Get() {
       if (R__unlikely(fError)) {
          // Get() can be wrapped in a try-catch block, so throwing the exception here is akin to checking the error.
          // Setting fIsChecked to true also avoids a spurious warning in the RResult destructor
@@ -215,7 +217,7 @@ public:
          fError->AppendToMessage(" (unchecked RResult access!)");
          throw RException(*fError);
       }
-      return fValue;
+      return std::move(fValue);
    }
 
    explicit operator bool() { return Check(); }
