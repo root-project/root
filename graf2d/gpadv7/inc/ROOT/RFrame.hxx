@@ -45,6 +45,19 @@ public:
    class RUserRanges {
       std::vector<double> values;  ///< min/max values for all dimensions
       std::vector<bool> flags;     ///< flag if values available
+
+      void UpdateDim(unsigned ndim, const RUserRanges &src)
+      {
+         if (src.IsUnzoom(ndim)) {
+            ClearMinMax(ndim);
+         } else {
+            if (src.HasMin(ndim))
+               AssignMin(ndim, src.GetMin(ndim));
+            if (src.HasMax(ndim))
+               AssignMax(ndim, src.GetMax(ndim));
+         }
+      }
+
    public:
       // Default constructor - for I/O
       RUserRanges() = default;
@@ -78,26 +91,31 @@ public:
       double GetMin(unsigned ndim) const { return (ndim*2 < values.size()) ? values[ndim*2] : 0.; }
 
       // Assign minimum for specified dimension
-      void AssignMin(unsigned ndim, double value, bool force = false)
+      void AssignMin(unsigned ndim, double value)
       {
-         if (!HasMin(ndim) || force) {
-            Extend(ndim+1);
-            values[ndim*2] = value;
-            flags[ndim*2] = true;
-         }
+          Extend(ndim+1);
+          values[ndim*2] = value;
+          flags[ndim*2] = true;
       }
 
       bool HasMax(unsigned ndim) const { return (ndim*2+1 < flags.size()) && flags[ndim*2+1]; }
       double GetMax(unsigned ndim) const { return (ndim*2+1 < values.size()) ? values[ndim*2+1] : 0.; }
 
       // Assign maximum for specified dimension
-      void AssignMax(unsigned ndim, double value, bool force = false)
+      void AssignMax(unsigned ndim, double value)
       {
-         if (!HasMax(ndim) || force) {
-            Extend(ndim+1);
-            values[ndim*2+1] = value;
-            flags[ndim*2+1] = true;
-         }
+          Extend(ndim+1);
+          values[ndim*2+1] = value;
+          flags[ndim*2+1] = true;
+      }
+
+      void ClearMinMax(unsigned ndim)
+      {
+         if (ndim*2+1 < flags.size())
+            flags[ndim*2] = flags[ndim*2+1] = false;
+
+         if (ndim*2+1 < values.size())
+            values[ndim*2] = values[ndim*2+1] = 0.;
       }
 
       /** Returns true if axis configured as unzoomed, can be specified from client */
@@ -115,6 +133,14 @@ public:
             if (fl) return true;
          return false;
       }
+
+      void Update(const RUserRanges &src)
+      {
+         UpdateDim(0, src);
+         UpdateDim(1, src);
+         UpdateDim(2, src);
+      }
+
    };
 
 private:
