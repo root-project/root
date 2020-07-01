@@ -4002,6 +4002,11 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
       return;
    }
 
+   if (strncmp(fName, "unique_ptr<", 11) == 0 || strncmp(fName, "array<", 6) == 0) {
+      GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
+      return;
+   }
+
    if (!HasDictionary()) {
       result.Add(this);
    }
