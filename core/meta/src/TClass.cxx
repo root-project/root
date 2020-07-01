@@ -4002,7 +4002,7 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
       return;
    }
 
-   if (strncmp(fName, "unique_ptr<", 11) == 0 || strncmp(fName, "array<", 6) == 0) {
+   if (strncmp(fName, "unique_ptr<", 11) == 0 || strncmp(fName, "array<", 6) == 0 || strncmp(fName, "tuple<", 6) == 0) {
       GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
       return;
    }
