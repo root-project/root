@@ -39,10 +39,10 @@ void RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ra
       ranges.AssignMax(ndim, axis.GetMax());
 
    if (axis.HasZoomMin())
-      ranges.AssignMin(ndim, axis.GetZoomMin(), true);
+      ranges.AssignMin(ndim, axis.GetZoomMin());
 
    if (axis.HasZoomMax())
-      ranges.AssignMax(ndim, axis.GetZoomMax(), true);
+      ranges.AssignMax(ndim, axis.GetZoomMax());
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -94,13 +94,19 @@ void RFrame::PopulateMenu(RMenuItems &items)
 
 void RFrame::SetClientRanges(unsigned connid, const RUserRanges &ranges, bool ismainconn)
 {
-   fClientRanges[connid] = ranges;
-
    if (ismainconn) {
       AssignZoomRange(0, AttrX(), ranges);
       AssignZoomRange(1, AttrY(), ranges);
       AssignZoomRange(2, AttrZ(), ranges);
    }
+
+   if (fClientRanges.find(connid) == fClientRanges.end()) {
+      RUserRanges ranges0;
+      GetClientRanges(connid, ranges0);
+      fClientRanges[connid] = ranges0;
+   }
+
+   fClientRanges[connid].Update(ranges);
 }
 
 ////////////////////////////////////////////////////////////////////////////
