@@ -134,11 +134,12 @@
    JSROOT.TObjectPainter.prototype.createv7AttFill = function(prefix) {
       if (!prefix || (typeof prefix != "string")) prefix = "fill_";
 
-      var fill_color = this.v7EvalColor(prefix + "color", "white");
+      var fill_color = this.v7EvalColor(prefix + "color", ""),
+          fill_style = this.v7EvalAttr(prefix + "style", 1001);
 
-      this.createAttFill({ pattern: 1001, color: 0 });
+      this.createAttFill({ pattern: fill_style, color: 0 });
 
-      this.fillatt.SetSolidColor(fill_color);
+      this.fillatt.SetSolidColor(fill_color || "none");
    }
 
    /** Create this.lineatt object based on v7 line attributes */
