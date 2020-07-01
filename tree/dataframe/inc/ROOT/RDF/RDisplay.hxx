@@ -137,13 +137,12 @@ private:
    ////////////////////////////////////////////////////////////////////////////
    /// AddInterpreterString overload for arrays of chars.
    ///
-   /// \tparam T the type of the event to convert
    /// \param[in] charArr The character array to convert to string representation
    /// \param[in] index To which column the event belongs
    /// \return false, the event is not a collection
    ///
    /// This specialization for arrays of characters skips the cling::printValue
-   /// (i.e. appends nothing to the stream) and directly writes to fCollectionsRepresentations the
+   /// (i.e. appends nothing to the stream) and directly writes to fRepresentations the
    /// string representation of the array of chars.
    bool AddInterpreterString(std::stringstream &, ROOT::RVec<char> &charArr, const int &index)
    {
