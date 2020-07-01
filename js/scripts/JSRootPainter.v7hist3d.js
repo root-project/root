@@ -1633,7 +1633,8 @@
       var histo = this.GetHisto(),
           main = this.frame_painter(),
           handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 1, middle: 0.5 }),
-          i,j, x1, y1, x2, y2, z11, z12, z21, z22,
+          i, j, x1, y1, x2, y2, z11, z12, z21, z22,
+          di = handle.stepi, dj = handle.stepj,
           axis_zmin = main.grz.domain()[0],
           axis_zmax = main.grz.domain()[1];
 
@@ -1738,7 +1739,7 @@
       }
 
       function RememberVertex(indx, ii,jj) {
-         var bin = ((ii-handle.i1) * (handle.j2-handle.j1) + (jj-handle.j1))*8;
+         var bin = ((ii-handle.i1)/di * (handle.j2-handle.j1)/dj + (jj-handle.j1)/dj)*8;
 
          if (normindx[bin]>=0)
             return console.error('More than 8 vertexes for the bin');
@@ -1749,9 +1750,9 @@
       }
 
       function RecalculateNormals(arr) {
-         for (var ii=handle.i1;ii<handle.i2;++ii) {
-            for (var jj=handle.j1;jj<handle.j2;++jj) {
-               var bin = ((ii-handle.i1) * (handle.j2-handle.j1) + (jj-handle.j1)) * 8;
+         for (var ii=handle.i1; ii<handle.i2; ii += di) {
+            for (var jj=handle.j1; jj<handle.j2; jj += dj) {
+               var bin = ((ii-handle.i1)/di * (handle.j2-handle.j1)/dj + (jj-handle.j1)/dj) * 8;
 
                if (normindx[bin] === -1) continue; // nothing there
 
@@ -1855,8 +1856,8 @@
             var buf = pos[lvl], s = indx[lvl];
             if (donormals && (k===9)) {
                RememberVertex(s, i, j);
-               RememberVertex(s+3, i+1, is_first ? j+1 : j);
-               RememberVertex(s+6, is_first ? i : i+1, j+1);
+               RememberVertex(s+3, i+1, is_first ? j+dj : j);
+               RememberVertex(s+6, is_first ? i : i+di, j+dj);
             }
 
             for (var k1=3;k1<k-3;k1+=3) {
@@ -1871,7 +1872,7 @@
 
       if (donormals) {
          // for each bin maximal 8 points reserved
-         normindx = new Int32Array((handle.i2-handle.i1)*(handle.j2-handle.j1)*8);
+         normindx = new Int32Array((handle.i2-handle.i1)/di*(handle.j2-handle.j1)/dj*8);
          for (var n=0;n<normindx.length;++n) normindx[n] = -1;
       }
 
@@ -1887,16 +1888,16 @@
             if (dogrid && (ngridsegments>0))
                grid = new Float32Array(ngridsegments * 6);
          }
-         for (i=handle.i1;i<handle.i2-1;++i) {
+         for (i = handle.i1;i < handle.i2-di; i += di) {
             x1 = handle.grx[i];
-            x2 = handle.grx[i+1];
-            for (j=handle.j1;j<handle.j2-1;++j) {
+            x2 = handle.grx[i+di];
+            for (j = handle.j1; j < handle.j2-dj; j += dj) {
                y1 = handle.gry[j];
-               y2 = handle.gry[j+1];
+               y2 = handle.gry[j+dj];
                z11 = main_grz(histo.getBinContent(i+1, j+1));
-               z12 = main_grz(histo.getBinContent(i+1, j+2));
-               z21 = main_grz(histo.getBinContent(i+2, j+1));
-               z22 = main_grz(histo.getBinContent(i+2, j+2));
+               z12 = main_grz(histo.getBinContent(i+1, j+1+dj));
+               z21 = main_grz(histo.getBinContent(i+1+dj, j+1));
+               z22 = main_grz(histo.getBinContent(i+1+dj, j+1+dj));
 
                AddMainTriangle(x1,y1,z11, x2,y2,z22, x1,y2,z12, true);
 
@@ -2048,7 +2049,8 @@
           zmin = main.grz.domain()[0],
           zmax = main.grz.domain()[1],
           i, j, binz, binerr, x1, y1, x2, y2, z1, z2,
-          nsegments = 0, lpos = null, binindx = null, lindx = 0;
+          nsegments = 0, lpos = null, binindx = null, lindx = 0,
+          di = handle.stepi, dj = handle.stepj;
 
        function check_skip_min() {
           // return true if minimal histogram value should be skipped
@@ -2059,10 +2061,10 @@
        // loop over the points - first loop counts points, second fill arrays
        for (var loop=0;loop<2;++loop) {
 
-          for (i=handle.i1;i<handle.i2;++i) {
+          for (i = handle.i1; i < handle.i2; i += di) {
              x1 = handle.grx[i];
-             x2 = handle.grx[i+1];
-             for (j=handle.j1;j<handle.j2;++j) {
+             x2 = handle.grx[i+di];
+             for (j = handle.j1; j < handle.j2; j += dj) {
                 binz = histo.getBinContent(i+1, j+1);
                 if ((binz < zmin) || (binz > zmax)) continue;
                 if ((binz===zmin) && check_skip_min()) continue;
@@ -2074,7 +2076,7 @@
                 binindx[lindx/18] = histo.getBin(i+1,j+1);
 
                 y1 = handle.gry[j];
-                y2 = handle.gry[j+1];
+                y2 = handle.gry[j+dj];
 
                 z1 = main.grz((binz - binerr < zmin) ? zmin : binz-binerr);
                 z2 = main.grz((binz + binerr > zmax) ? zmax : binz+binerr);
@@ -2115,6 +2117,7 @@
        line.zmin = zmin;
        line.zmax = zmax;
        line.tip_color = (lcolor.g < 0.5) ? 0x00FF00 : 0xFF0000;
+       line.handle = handle;
 
        line.tooltip = function(intersect) {
           if (isNaN(intersect.index)) {
@@ -2127,12 +2130,16 @@
           var p = this.painter,
               histo = p.GetHisto(),
               main = p.frame_painter(),
-              tip = p.Get3DToolTip(this.intersect_index[pos]);
+              tip = p.Get3DToolTip(this.intersect_index[pos]),
+              handle = this.handle,
+              i1 = tip.ix - 1, i2 = i1 + handle.stepi,
+              j1 = tip.iy - 1, j2 = j1 + handle.stepj;
 
-          tip.x1 = Math.max(-main.size_xy3d, main.grx(p.GetAxis("x").GetBinLowEdge(tip.ix)));
-          tip.x2 = Math.min(main.size_xy3d, main.grx(p.GetAxis("x").GetBinLowEdge(tip.ix+1)));
-          tip.y1 = Math.max(-main.size_xy3d, main.gry(p.GetAxis("y").GetBinLowEdge(tip.iy)));
-          tip.y2 = Math.min(main.size_xy3d, main.gry(p.GetAxis("y").GetBinLowEdge(tip.iy+1)));
+
+          tip.x1 = Math.max(-main.size_xy3d, handle.grx[i1]);
+          tip.x2 = Math.min(main.size_xy3d, handle.grx[i2]);
+          tip.y1 = Math.max(-main.size_xy3d, handle.gry[j1]);
+          tip.y2 = Math.min(main.size_xy3d, handle.gry[j2]);
 
           tip.z1 = main.grz(tip.value-tip.error < this.zmin ? this.zmin : tip.value-tip.error);
           tip.z2 = main.grz(tip.value+tip.error > this.zmax ? this.zmax : tip.value+tip.error);
@@ -2531,9 +2538,8 @@
       else
          lines.push("z = [" + pmain.AxisAsText("z", zaxis.GetBinCoord(iz)) + ", " + pmain.AxisAsText("z", zaxis.GetBinCoord(iz+dz)) + ")  zbin=" + iz);
 
-      var binz = histo.getBinContent(ix+1, iy+1, iz+1);
-      var lbl = "entries = ";
-      if ((dx>1) || (dy>1) || (dz>1)) lbl += "~";
+      var binz = histo.getBinContent(ix+1, iy+1, iz+1),
+          lbl = "entries = "+ ((dx>1) || (dy>1) || (dz>1) ? "~" : "");
       if (binz === Math.round(binz))
          lines.push(lbl + binz);
       else
