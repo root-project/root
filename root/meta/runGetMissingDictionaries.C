@@ -60,7 +60,7 @@ struct MemberHidden: public Base {
 
 class Member: public TNamed {
 public:
-   virtual ~Member();
+   virtual ~Member() {};
 };
 
 typedef Member Member_t;
@@ -80,15 +80,10 @@ class Tmplt {
    T* fPtrT;
 
 };
-class TmpParam;
-class TmpTmpParam;
-class ExtraTmp;
 
-#ifndef __ROOTCLING__
 class TmpParam {};
 class TmpTmpParam {};
 class ExtraTmp {};
-#endif
 
 class ParamL1;
 class ParamL2;
@@ -241,6 +236,168 @@ int runGetMissingDictionaries()
    } else {
       Error("TClass::GetMissingClassDictionaries", "The set of missing classes is not created");
    }
+
+   expectedResult.Clear();
+   missingDictClassesNoRecursion.Clear();
+   missingDictClassesRecursion.Clear();
+
+   TClass *uq = TClass::GetClass("std::unique_ptr<TObject>");
+   uq->GetMissingDictionaries(missingDictClassesNoRecursion, false);
+   if (!missingDictClassesNoRecursion.Empty()) {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly some missing dictionaries without recursion", uq->GetName());
+      missingDictClassesNoRecursion.ls();
+   }
+   uq->GetMissingDictionaries(missingDictClassesRecursion, true);
+   if (!missingDictClassesRecursion.Empty()) {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly some missing dictionaries", uq->GetName());
+      missingDictClassesRecursion.ls();
+   }
+
+   expectedResult.Clear();
+   missingDictClassesNoRecursion.Clear();
+   missingDictClassesRecursion.Clear();
+
+   uq = TClass::GetClass("std::unique_ptr<NoDictClass>");
+   expectedResult.Add(TClass::GetClass("NoDictClass"));
+   uq->GetMissingDictionaries(missingDictClassesNoRecursion, false);
+   if (!missingDictClassesNoRecursion.Empty()) {
+      if (missingDictClassesNoRecursion.GetEntries() != expectedResult.GetEntries()) {
+         Error("TClass::GetMissingClassDictionaries", "The set of classes with missing dictionaries does not contain the correct number of elements (expected: %d got %d).",expectedResult.GetEntries(),missingDictClassesNoRecursion.GetEntries());
+         //         expectedResult.ls();
+         //         missingDictClassesRecursion.ls();
+      }
+      TIterator* it = missingDictClassesNoRecursion.MakeIterator();
+      TClass* cl = 0;
+      while ((cl = (TClass*)it->Next())) {
+         if (!expectedResult.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s is not in the expected set.", cl->GetName());
+         }
+      }
+      it = expectedResult.MakeIterator();
+      while ((cl = (TClass*)it->Next())) {
+         if (!missingDictClassesNoRecursion.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s with no dictionaries is not in the set.", cl->GetName());
+         }
+      }
+   } else {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly empty without recursion", uq->GetName());
+      missingDictClassesNoRecursion.ls();
+   }
+   uq->GetMissingDictionaries(missingDictClassesRecursion, true);
+   expectedResult.Add(TClass::GetClass("NoA"));
+   if (!missingDictClassesRecursion.Empty()) {
+      if (missingDictClassesRecursion.GetEntries() != expectedResult.GetEntries()) {
+         Error("TClass::GetMissingClassDictionaries", "The set of classes with missing dictionaries does not contain the correct number of elements (expected: %d got %d).",expectedResult.GetEntries(),missingDictClassesRecursion.GetEntries());
+         //         expectedResult.ls();
+         //         missingDictClassesRecursion.ls();
+      }
+      TIterator* it = missingDictClassesRecursion.MakeIterator();
+      TClass* cl = 0;
+      while ((cl = (TClass*)it->Next())) {
+         if (!expectedResult.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s is not in the expected set.", cl->GetName());
+         }
+      }
+      it = expectedResult.MakeIterator();
+      while ((cl = (TClass*)it->Next())) {
+         if (!missingDictClassesRecursion.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s with no dictionaries is not in the set.", cl->GetName());
+         }
+      }
+   } else {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly empty ", uq->GetName());
+      missingDictClassesRecursion.ls();
+   }
+
+   expectedResult.Clear();
+   missingDictClassesNoRecursion.Clear();
+   missingDictClassesRecursion.Clear();
+
+   TClass *ar = TClass::GetClass("std::array<TObject, 4>");
+   ar->GetMissingDictionaries(missingDictClassesNoRecursion, false);
+   if (!missingDictClassesNoRecursion.Empty()) {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly some missing dictionaries without recursion", ar->GetName());
+      missingDictClassesNoRecursion.ls();
+   }
+   ar->GetMissingDictionaries(missingDictClassesRecursion, true);
+   if (!missingDictClassesRecursion.Empty()) {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly some missing dictionaries", ar->GetName());
+      missingDictClassesRecursion.ls();
+   }
+
+   expectedResult.Clear();
+   missingDictClassesNoRecursion.Clear();
+   missingDictClassesRecursion.Clear();
+
+   ar = TClass::GetClass("std::array<long, 4>");
+   ar->GetMissingDictionaries(missingDictClassesNoRecursion, false);
+   if (!missingDictClassesNoRecursion.Empty()) {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly some missing dictionaries without recursion", ar->GetName());
+      missingDictClassesNoRecursion.ls();
+   }
+   ar->GetMissingDictionaries(missingDictClassesRecursion, true);
+   if (!missingDictClassesRecursion.Empty()) {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly some missing dictionaries", ar->GetName());
+      missingDictClassesRecursion.ls();
+   }
+
+
+   expectedResult.Clear();
+   missingDictClassesNoRecursion.Clear();
+   missingDictClassesRecursion.Clear();
+
+   ar = TClass::GetClass("std::array<NoDictClass, 4>");
+   expectedResult.Add(TClass::GetClass("NoDictClass"));
+   ar->GetMissingDictionaries(missingDictClassesNoRecursion, false);
+   if (!missingDictClassesNoRecursion.Empty()) {
+      if (missingDictClassesNoRecursion.GetEntries() != expectedResult.GetEntries()) {
+         Error("TClass::GetMissingClassDictionaries", "The set of classes with missing dictionaries does not contain the correct number of elements (expected: %d got %d).",expectedResult.GetEntries(),missingDictClassesNoRecursion.GetEntries());
+         //         expectedResult.ls();
+         //         missingDictClassesRecursion.ls();
+      }
+      TIterator* it = missingDictClassesNoRecursion.MakeIterator();
+      TClass* cl = 0;
+      while ((cl = (TClass*)it->Next())) {
+         if (!expectedResult.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s is not in the expected set.", cl->GetName());
+         }
+      }
+      it = expectedResult.MakeIterator();
+      while ((cl = (TClass*)it->Next())) {
+         if (!missingDictClassesNoRecursion.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s with no dictionaries is not in the set.", cl->GetName());
+         }
+      }
+   } else {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly empty without recursion", ar->GetName());
+      missingDictClassesNoRecursion.ls();
+   }
+   expectedResult.Add(TClass::GetClass("NoA"));
+   ar->GetMissingDictionaries(missingDictClassesRecursion, true);
+   if (!missingDictClassesRecursion.Empty()) {
+      if (missingDictClassesRecursion.GetEntries() != expectedResult.GetEntries()) {
+         Error("TClass::GetMissingClassDictionaries", "The set of classes with missing dictionaries does not contain the correct number of elements (expected: %d got %d).",expectedResult.GetEntries(),missingDictClassesRecursion.GetEntries());
+         //         expectedResult.ls();
+         //         missingDictClassesRecursion.ls();
+      }
+      TIterator* it = missingDictClassesRecursion.MakeIterator();
+      TClass* cl = 0;
+      while ((cl = (TClass*)it->Next())) {
+         if (!expectedResult.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s is not in the expected set.", cl->GetName());
+         }
+      }
+      it = expectedResult.MakeIterator();
+      while ((cl = (TClass*)it->Next())) {
+         if (!missingDictClassesRecursion.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s with no dictionaries is not in the set.", cl->GetName());
+         }
+      }
+   } else {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly empty ", ar->GetName());
+      missingDictClassesRecursion.ls();
+   }
+
 
    return 0;
 }
