@@ -205,20 +205,12 @@ public:
  
 
   /// Return reference to the proxied object.
-  const T& operator*() const {
-    return static_cast<T&>(*_arg);
-  }
-  /// Return reference to the proxied object.
-  T& operator*() {
+  T& operator*() const {
     return static_cast<T&>(*_arg);
   }
 
   /// Member access operator to proxied object.
-  const T* operator->() const {
-    return static_cast<const T*>(_arg);
-  }
-  /// Member access operator to proxied object.
-  T* operator->() {
+  T* operator->() const {
     return static_cast<T*>(_arg);
   }
 
