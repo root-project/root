@@ -203,7 +203,7 @@ private:
    /// Wall clock time
    Clock_t::time_point fStartTime;
    /// CPU time
-   clock_t fStartTicks;
+   clock_t fStartTicks = 0;
 
 public:
    RNTupleTimer(WallTimeT &ctrWallTime, CpuTimeT &ctrCpuTicks)
