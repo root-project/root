@@ -41,6 +41,7 @@ class RHistDrawableBase : public RDrawable {
    RAttrFill                fAttrFill{this, "fill_"};     ///<! hist fill attributes
    RAttrText                fAttrText{this, "text_"};     ///<! hist text attributes
    RAttrMarker              fMarkerAttr{this, "marker_"}; ///<! hist marker attributes
+   RAttrValue<bool>         fOptimize{this, "optimize", true};  ///<! optimize drawing
 
 protected:
 
@@ -57,7 +58,41 @@ protected:
          fSub.Clear();
    }
 
+   std::string GetDrawKind() const { return fKind; }
+
+   virtual std::unique_ptr<RDisplayItem> CreateHistDisplay(const RDisplayContext &) = 0;
+
+   virtual bool Is3D() const { return false; }
+
+   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &ctxt) override
+   {
+      if (fOptimize)
+         return CreateHistDisplay(ctxt);
+
+      return RDrawable::Display(ctxt);
+   }
+
 public:
+
+   class RReply : public RDrawableReply {
+   public:
+      std::unique_ptr<RDisplayItem> item;
+   };
+
+   class RRequest : public RDrawableRequest {
+      std::unique_ptr<RDrawableReply> Process() override
+      {
+         auto hdraw = dynamic_cast<RHistDrawableBase *>(GetContext().GetDrawable());
+
+         auto reply = std::make_unique<RReply>();
+         if (hdraw)
+            reply->item = hdraw->CreateHistDisplay(GetContext());
+         return reply;
+      }
+   };
+
+   friend class RRequest;
+
    RHistDrawableBase() : RDrawable("hist") {}
 
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
@@ -75,6 +110,8 @@ public:
    const RAttrMarker &GetAttrMarker() const { return fMarkerAttr; }
    RHistDrawableBase &SetAttrMarker(const RAttrMarker &attr) { fMarkerAttr = attr; return *this; }
    RAttrMarker &AttrMarker() { return fMarkerAttr; }
+
+   RHistDrawableBase &Optimize(bool on = true) { fOptimize = on; return *this; }
 };
 
 
@@ -108,6 +145,11 @@ class RHist1Drawable final : public RHistDrawable<1> {
    RAttrValue<double> fBarWidth{this, "bar_width", 1.};   ///<!  bar width
    RAttrValue<bool> fText{this, "text", false};           ///<! draw text
 
+protected:
+   std::unique_ptr<RDisplayItem> CreateHistDisplay(const RDisplayContext &) override;
+
+   bool Is3D() const final { return GetDrawKind() == "lego"; }
+
 public:
    RHist1Drawable() = default;
 
@@ -133,43 +175,15 @@ public:
 
 class RHist2Drawable final : public RHistDrawable<2> {
    RAttrValue<bool> fText{this, "text", false};               ///<! draw text
-   RAttrValue<bool> fOptimize{this, "optimize", false};       ///<! optimize drawing
 
 protected:
 
-   std::unique_ptr<RDisplayItem> CreateHistDisplay(const RDisplayContext &);
+   std::unique_ptr<RDisplayItem> CreateHistDisplay(const RDisplayContext &) override;
 
-   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &ctxt) override
-   {
-      if (fOptimize)
-         return CreateHistDisplay(ctxt);
-
-      return RHistDrawable<2>::Display(ctxt);
-   }
+   bool Is3D() const final { return (GetDrawKind() == "lego") || (GetDrawKind() == "surf"); }
 
 public:
    RHist2Drawable() = default;
-
-   class RReply : public RDrawableReply {
-   public:
-      std::unique_ptr<RDisplayItem> item;
-   };
-
-   class RRequest : public RDrawableRequest {
-   public:
-      std::unique_ptr<RDrawableReply> Process() override
-      {
-         auto h2draw = dynamic_cast<RHist2Drawable *>(GetContext().GetDrawable());
-
-         auto reply = std::make_unique<RReply>();
-         if (h2draw)
-            reply->item = h2draw->CreateHistDisplay(GetContext());
-         return reply;
-      }
-   };
-
-   friend class RRequest;
-
 
    template <class HIST>
    RHist2Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<2>(hist) {}
@@ -182,13 +196,15 @@ public:
    RHist2Drawable &Scatter() { SetDrawKind("scat"); return *this; }
    RHist2Drawable &Arrow() { SetDrawKind("arr"); return *this; }
    RHist2Drawable &Text(bool on = true) { fText = on; return *this; }
-
-   RHist2Drawable &Optimize(bool on = true) { fOptimize = on; return *this; }
-
 };
 
 
 class RHist3Drawable final : public RHistDrawable<3> {
+protected:
+   std::unique_ptr<RDisplayItem> CreateHistDisplay(const RDisplayContext &) override;
+
+   bool Is3D() const final { return true; }
+
 public:
    RHist3Drawable() = default;
 
