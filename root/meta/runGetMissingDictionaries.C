@@ -9,58 +9,58 @@
 using namespace std;
 
 namespace BasicTests {
-  struct NoDict {};
-  typedef NoDict NoDict_t;
-  typedef NoDict_t NoDict1_t;
-  typedef NoDict1_t NoDict2_t;
-  typedef NoDict2_t NoDict3_t;
-  struct NoDictTypdefs {
-    NoDict fPlain;
-    NoDict_t fTD0;
-    NoDict1_t fTD1;
-    NoDict2_t fTD2;
-    NoDict3_t fTD3;
-  };
+struct NoDict {};
+typedef NoDict NoDict_t;
+typedef NoDict_t NoDict1_t;
+typedef NoDict1_t NoDict2_t;
+typedef NoDict2_t NoDict3_t;
+struct NoDictTypdefs {
+   NoDict fPlain;
+   NoDict_t fTD0;
+   NoDict1_t fTD1;
+   NoDict2_t fTD2;
+   NoDict3_t fTD3;
+};
 
-  struct HasVecDouble32 {
-    std::map<UShort_t, Double32_t> fMem;
-    //std::vector<Double32_t> vDo32;
-  };
+struct HasVecDouble32 {
+   std::map<UShort_t, Double32_t> fMem;
+   //std::vector<Double32_t> vDo32;
+};
 
-  typedef std::map<UShort_t, Double32_t> Vec32_t;
-  typedef Double32_t Double32_too_t;
-  struct HasVecDoubleTD32 {
-    Vec32_t fMem;
-    std::map<UShort_t, Double32_too_t> fMem2;
-  };
+typedef std::map<UShort_t, Double32_t> Vec32_t;
+typedef Double32_t Double32_too_t;
+struct HasVecDoubleTD32 {
+   Vec32_t fMem;
+   std::map<UShort_t, Double32_too_t> fMem2;
+};
 
-  struct TestAll {
-    NoDictTypdefs fOne;
-    HasVecDouble32 fTwo;
-    HasVecDoubleTD32 fThree;
-  };
+struct TestAll {
+   NoDictTypdefs fOne;
+   HasVecDouble32 fTwo;
+   HasVecDoubleTD32 fThree;
+};
 }
 
 class NoA;
 struct NoDictClass {
-  NoA* fa;
+   NoA* fa;
 };
 class ArrayTry;
 struct Base;
 struct MemberHidden;
 #ifndef __ROOTCLING__
 struct Base {
-  float Member;
+   float Member;
 };
 struct MemberHidden: public Base {
-  float Member;
+   float Member;
 };
 #endif
 
 
 class Member: public TNamed {
-  public:
-  virtual ~Member();
+public:
+   virtual ~Member();
 };
 
 typedef Member Member_t;
@@ -75,9 +75,9 @@ typedef TypedefExample_t TypedefExample_t_t;
 
 template <typename T>
 class Tmplt {
-  ArrayTry* fT[12];
-  std::vector<T> fVecT;
-  T* fPtrT;
+   ArrayTry* fT[12];
+   std::vector<T> fVecT;
+   T* fPtrT;
 
 };
 class TmpParam;
@@ -97,37 +97,37 @@ template <class T> class Inner { std::vector<T> fValues; };
 template <class T> class Outer { Inner<T> fValues; };
 
 template <class T, class S> class ParamList {
-  T* fparmT[10];
-  std::vector<S*> fparmS;
-  S* sPtr;
+   T* fparmT[10];
+   std::vector<S*> fparmS;
+   S* sPtr;
 };
 
 struct TestClass {
    TestClass(): fMemCArray() {}
-  BasicTests::TestAll fBasicTests;
-  NoDictClass* fNoDict;
-  TNamed* fNamedPtr;
-  TNamed fNamed;
-  int fPOD;
-  TestClass* fInfiniteRecursion;
-  Member_t fMember;
-  MemArray_t fMemArray;
-  MemArray_t* fMemArray_Ptr;
-  MemArrayP_t fMemArrayP;
-  MemArrayP_t* fMemArrayP_Ptr;
-  MemCArray_t fMemCArray;
-  MemCArrayP_t fMemCCArray;
-  const MemCArrayP_t* fMemCCArray_CPtr;
-  Tmplt<int> fTmpltInt;
-  Tmplt<Tmplt<NoDictClass*> > fTmpltTmpltNoDict;
-  Tmplt<Member> fTmpltMember;
-  MemberHidden* fMemberHidden;
-  Outer<Double32_t> obj;
-  Tmplt<TmpParam> templateParam;
-  Tmplt<Tmplt<TmpTmpParam> > tempWithTempParam;
-  Tmplt<Tmplt<Tmplt<ExtraTmp> > > extraTmp;
-  ParamList<ParamL1, ParamL2> pramList;
-  TypedefExample_t ftypedefsCheck;
+   BasicTests::TestAll fBasicTests;
+   NoDictClass* fNoDict;
+   TNamed* fNamedPtr;
+   TNamed fNamed;
+   int fPOD;
+   TestClass* fInfiniteRecursion;
+   Member_t fMember;
+   MemArray_t fMemArray;
+   MemArray_t* fMemArray_Ptr;
+   MemArrayP_t fMemArrayP;
+   MemArrayP_t* fMemArrayP_Ptr;
+   MemCArray_t fMemCArray;
+   MemCArrayP_t fMemCCArray;
+   const MemCArrayP_t* fMemCCArray_CPtr;
+   Tmplt<int> fTmpltInt;
+   Tmplt<Tmplt<NoDictClass*> > fTmpltTmpltNoDict;
+   Tmplt<Member> fTmpltMember;
+   MemberHidden* fMemberHidden;
+   Outer<Double32_t> obj;
+   Tmplt<TmpParam> templateParam;
+   Tmplt<Tmplt<TmpTmpParam> > tempWithTempParam;
+   Tmplt<Tmplt<Tmplt<ExtraTmp> > > extraTmp;
+   ParamList<ParamL1, ParamL2> pramList;
+   TypedefExample_t ftypedefsCheck;
 };
 
 
@@ -222,8 +222,8 @@ int runGetMissingDictionaries()
    if (!missingDictClassesRecursion.IsEmpty()) {
       if (missingDictClassesRecursion.GetEntries() != expectedResult.GetEntries()) {
          Error("TClass::GetMissingClassDictionaries", "The set of classes with missing dictionaries does not contain the correct number of elements (expected: %d got %d).",expectedResult.GetEntries(),missingDictClassesRecursion.GetEntries());
-//         expectedResult.ls();
-//         missingDictClassesRecursion.ls();
+         //         expectedResult.ls();
+         //         missingDictClassesRecursion.ls();
       }
       TIterator* it = missingDictClassesRecursion.MakeIterator();
       TClass* cl = 0;
@@ -242,5 +242,5 @@ int runGetMissingDictionaries()
       Error("TClass::GetMissingClassDictionaries", "The set of missing classes is not created");
    }
 
-  return 0;
+   return 0;
 }
