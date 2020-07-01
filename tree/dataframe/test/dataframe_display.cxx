@@ -192,3 +192,13 @@ TEST(RDFDisplayTests, CharArray)
    const auto str = ROOT::RDataFrame("t", "f.root").Display()->AsString();
    EXPECT_EQ(str, "str | \nasd | \nbar | \n    | \n");
 }
+
+TEST(RDFDisplayTests, BoolArray)
+{
+   auto r = ROOT::RDataFrame(3)
+      .Define("v", [] { return ROOT::RVec<bool>{true,false}; })
+      .Display<ROOT::RVec<bool>>({"v"});
+   const auto expected = "v     | \ntrue  | \nfalse | \ntrue  | \nfalse | \ntrue  | \nfalse | \ntrue  | \nfalse | "
+                         "\ntrue  | \nfalse | \ntrue  | \nfalse | \n      | \n";
+   EXPECT_EQ(r->AsString(), expected);
+}
