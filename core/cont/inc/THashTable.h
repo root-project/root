@@ -63,6 +63,7 @@ public:
    Int_t         Collisions(const char *name) const;
    Int_t         Collisions(TObject *obj) const;
    void          Delete(Option_t *option="");
+   Bool_t        Empty() const { return fEntries == 0; }
    TObject      *FindObject(const char *name) const;
    TObject      *FindObject(const TObject *obj) const;
    const TList  *GetListForObject(const char *name) const;
