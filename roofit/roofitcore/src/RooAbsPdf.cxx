@@ -2074,6 +2074,16 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 ///
 /// </table>
 ///
+/// #### Accessing the underlying event generator
+/// Depending on the fit model (if it is difficult to sample), it may be necessary to change generator settings.
+/// For the default generator (RooFoamGenerator), the number of samples or cells could be increased by e.g. using
+///     myPdf->specialGeneratorConfig()->getConfigSection("RooFoamGenerator").setRealValue("nSample",1e4);
+///
+/// The foam generator e.g. has the following config options:
+/// - nCell[123N]D
+/// - nSample
+/// - chatLevel
+/// \see rf902_numgenconfig.C
 
 RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1,const RooCmdArg& arg2,
 				const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6)

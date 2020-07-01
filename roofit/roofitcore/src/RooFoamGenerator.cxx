@@ -23,7 +23,16 @@ Class RooFoamGenerator is a generic toy monte carlo generator that implement
 the TFOAM sampling technique on any positively valued function.
 The RooFoamGenerator generator is used by the various generator context
 classes to take care of generation of observables for which p.d.fs
-do not define internal methods
+do not define internal methods.
+
+The foam generator reacts to the following config options:
+- nCell[123N]D
+- nSample
+- chatLevel
+Access those using:
+    myPdf->specialGeneratorConfig()->getConfigSection("RooFoamGenerator").setRealValue("nSample",1e4);
+
+\see rf902_numgenconfig.C
 **/
 
 
