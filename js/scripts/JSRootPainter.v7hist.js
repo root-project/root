@@ -2790,9 +2790,10 @@
           absmin = Math.max(0, main.minbin),
           i, j, binz, absz, res = "", cross = "", btn1 = "", btn2 = "",
           colindx, zdiff, dgrx, dgry, xx, yy, ww, hh, cmd1, cmd2,
-          xyfactor = 1, uselogz = false, logmin = 0, logmax = 1;
+          xyfactor = 1, uselogz = false, logmin = 0, logmax = 1,
+          di = handle.stepi, dj = handle.stepj;
 
-      if (this.root_pad().fLogz && (absmax>0)) {
+      if (main.logz && (absmax>0)) {
          uselogz = true;
          logmax = Math.log(absmax);
          if (absmin>0) logmin = Math.log(absmin); else
@@ -2805,8 +2806,8 @@
       }
 
       // now start build
-      for (i = handle.i1; i < handle.i2; ++i) {
-         for (j = handle.j1; j < handle.j2; ++j) {
+      for (i = handle.i1; i < handle.i2; i += di) {
+         for (j = handle.j1; j < handle.j2; j += dj) {
             binz = histo.getBinContent(i + 1, j + 1);
             absz = Math.abs(binz);
             if ((absz === 0) || (absz < absmin)) continue;
@@ -2817,14 +2818,14 @@
             // avoid oversized bins
             if (zdiff < 0) zdiff = 0;
 
-            ww = handle.grx[i+1] - handle.grx[i];
-            hh = handle.gry[j] - handle.gry[j+1];
+            ww = handle.grx[i+di] - handle.grx[i];
+            hh = handle.gry[j] - handle.gry[j+dj];
 
             dgrx = zdiff * ww;
             dgry = zdiff * hh;
 
             xx = Math.round(handle.grx[i] + dgrx);
-            yy = Math.round(handle.gry[j+1] + dgry);
+            yy = Math.round(handle.gry[j+dj] + dgry);
 
             ww = Math.max(Math.round(ww - 2*dgrx), 1);
             hh = Math.max(Math.round(hh - 2*dgry), 1);
@@ -2846,6 +2847,8 @@
             }
          }
       }
+
+      console.log('LINE COLOR', this.lineatt.color, "FILL COLOR", this.fillatt.color);
 
       if (res.length > 0) {
          var elem = this.draw_g.append("svg:path")
@@ -3615,6 +3618,7 @@
       switch(kind) {
          case "lego": o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;
          case "surf": o.Surf = sub > 0 ? 10+sub : 1; o.Mode3D = true; break;
+         case "box": o.Box = true; o.BoxStyle = 10 + sub; break;
          case "err": o.Error = true; o.Mode3D = true; break;
          case "cont": o.Contour = sub > 0 ? 10+sub : 1; break;
          case "arr": o.Arrow = true; break;
