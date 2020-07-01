@@ -398,6 +398,62 @@ int runGetMissingDictionaries()
       missingDictClassesRecursion.ls();
    }
 
+   expectedResult.Clear();
+   missingDictClassesNoRecursion.Clear();
+   missingDictClassesRecursion.Clear();
+
+   TClass *tp = TClass::GetClass("std::tuple<NoDictClass, int, TObject>");
+   expectedResult.Add(TClass::GetClass("NoDictClass"));
+   tp->GetMissingDictionaries(missingDictClassesNoRecursion, false);
+   if (!missingDictClassesNoRecursion.Empty()) {
+      if (missingDictClassesNoRecursion.GetEntries() != expectedResult.GetEntries()) {
+         Error("TClass::GetMissingClassDictionaries", "The set of classes with missing dictionaries does not contain the correct number of elements (expected: %d got %d).",expectedResult.GetEntries(),missingDictClassesNoRecursion.GetEntries());
+         //         expectedResult.ls();
+         //         missingDictClassesRecursion.ls();
+      }
+      TIterator* it = missingDictClassesNoRecursion.MakeIterator();
+      TClass* cl = 0;
+      while ((cl = (TClass*)it->Next())) {
+         if (!expectedResult.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s is not in the expected set.", cl->GetName());
+         }
+      }
+      it = expectedResult.MakeIterator();
+      while ((cl = (TClass*)it->Next())) {
+         if (!missingDictClassesNoRecursion.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s with no dictionaries is not in the set.", cl->GetName());
+         }
+      }
+   } else {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly empty without recursion", tp->GetName());
+      missingDictClassesNoRecursion.ls();
+   }
+   expectedResult.Add(TClass::GetClass("NoA"));
+   tp->GetMissingDictionaries(missingDictClassesRecursion, true);
+   if (!missingDictClassesRecursion.Empty()) {
+      if (missingDictClassesRecursion.GetEntries() != expectedResult.GetEntries()) {
+         Error("TClass::GetMissingClassDictionaries", "The set of classes with missing dictionaries does not contain the correct number of elements (expected: %d got %d).",expectedResult.GetEntries(),missingDictClassesRecursion.GetEntries());
+         //         expectedResult.ls();
+         //         missingDictClassesRecursion.ls();
+      }
+      TIterator* it = missingDictClassesRecursion.MakeIterator();
+      TClass* cl = 0;
+      while ((cl = (TClass*)it->Next())) {
+         if (!expectedResult.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s is not in the expected set.", cl->GetName());
+         }
+      }
+      it = expectedResult.MakeIterator();
+      while ((cl = (TClass*)it->Next())) {
+         if (!missingDictClassesRecursion.FindObject(cl)) {
+            Error("TCling::GetMissingDictionaries", "Class %s with no dictionaries is not in the set.", cl->GetName());
+         }
+      }
+   } else {
+      Error("TClass::GetMissingClassDictionaries", "For %s found unexpectedly empty ", ar->GetName());
+      missingDictClassesRecursion.ls();
+   }
+
 
    return 0;
 }
