@@ -201,6 +201,16 @@
 // #pragma link C++ class ROOT::Experimental::REveGeoNode+;
 // #pragma link C++ class ROOT::Experimental::REveGeoTopNode+;
 
+// REveCalo
+#pragma link C++ class REveCaloData+;
+#pragma link C++ class REveCaloData::SliceInfo_t+;
+#pragma link C++ class REveCaloDataVec;
+#pragma link C++ class REveCaloDataHist+;
+#pragma link C++ class REveCaloViz+;
+#pragma link C++ class REveCalo3D+;
+#pragma link C++ class REveCalo2D+;
+#pragma link C++ class REveCaloLego+;
+
 // REveJetCone
 #pragma link C++ class ROOT::Experimental::REveJetCone+;
 #pragma link C++ class ROOT::Experimental::REveJetConeProjected+;
@@ -244,7 +254,5 @@
 #pragma link C++ class ROOT::Experimental::REveGeomRequest+;
 #pragma link C++ class ROOT::Experimental::REveGeomNodeInfo+;
 #pragma link C++ class ROOT::Experimental::REveGeomConfig+;
-#pragma link C++ class ROOT::Experimental::REveGeomViewer+;
-#pragma link C++ class ROOT::Experimental::REveGeoPainter+;
 
 #endif
