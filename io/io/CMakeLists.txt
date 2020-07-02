@@ -72,6 +72,7 @@ endif()
 
 if(uring)
   target_compile_definitions(RIO PRIVATE HAVE_LIBURING)
+  target_link_libraries(RIO PRIVATE uring)
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__RIO
