@@ -497,7 +497,7 @@ ROOT::Experimental::RFieldDescriptor::Clone() const {
    clone.fStructure = fStructure;
    clone.fParentId = fParentId;
    clone.fLinkIds = fLinkIds;
-   return std::move(clone);
+   return clone;
 }
 
 
@@ -915,13 +915,14 @@ ROOT::Experimental::RDanglingFieldDescriptor::RDanglingFieldDescriptor(
 
 ROOT::Experimental::RDanglingFieldDescriptor
 ROOT::Experimental::RDanglingFieldDescriptor::FromField(const Detail::RFieldBase& field) {
-   return std::move(RDanglingFieldDescriptor()
-      .FieldVersion(field.GetFieldVersion())
+   RDanglingFieldDescriptor fieldDesc;
+   fieldDesc.FieldVersion(field.GetFieldVersion())
       .TypeVersion(field.GetTypeVersion())
       .FieldName(field.GetName())
       .TypeName(field.GetType())
       .Structure(field.GetStructure())
-      .NRepetitions(field.GetNRepetitions()));
+      .NRepetitions(field.GetNRepetitions());
+   return fieldDesc;
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor& fieldDesc) {
