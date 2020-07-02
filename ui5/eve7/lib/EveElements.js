@@ -276,7 +276,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          idxBuff[nt*3] = idxBegin;
          idxBuff[nt*3+1] = i + 1 ;
          idxBuff[nt*3+2] = i + 2;
-         console.log("set index ", nt,":", idxBuff[nt*3], idxBuff[nt*3+1],idxBuff[nt*3+2]);
+         // console.log("set index ", nt,":", idxBuff[nt*3], idxBuff[nt*3+1],idxBuff[nt*3+2]);
          nt++;
       }
       var idcs = new THREE.BufferAttribute(idxBuff,1);
@@ -474,7 +474,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    BoxSetControl.prototype = Object.create(EveElemControl.prototype);
 
-   BoxSetControl.prototype.DrawForSelection = function(sec_idcs, dest)
+   BoxSetControl.prototype.DrawForSelection = function(sec_idcs, res)
    {
       var geobox = new THREE.BufferGeometry();
       geobox.addAttribute( 'position', this.obj3d.geometry.getAttribute("position") );
@@ -488,7 +488,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       let material = new THREE.MeshPhongMaterial({color:"purple", flatShading: true});
       let mesh     = new THREE.Mesh(geobox, material);
-      dest.push(mesh);
+      res.geom.push(mesh);
    }
 
    BoxSetControl.prototype.extractIndex = function(intersect)
@@ -521,6 +521,413 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       return true; // means index is different
    }
+
+    //==============================================================================
+    EveElements.prototype.makeCalo2D = function(calo2D, rnrData)
+    {
+        var nSquares =  rnrData.vtxBuff.length / 12;
+        var nTriang = 2* nSquares;
+
+        let idxBuff =  new Uint16Array(nTriang * 3);
+        for (var s = 0; s < nSquares; ++s)
+        {
+            let boff = s * 6;
+            let ioff = s * 4;
+
+            // first triangle
+            idxBuff[boff    ] = ioff;
+            idxBuff[boff + 1] = ioff + 1 ;
+            idxBuff[boff + 2] = ioff + 2;
+
+            // second triangle
+            idxBuff[boff + 3] = ioff + 2;
+            idxBuff[boff + 4] = ioff + 3;
+            idxBuff[boff + 5] = ioff;
+        }
+        var idcs = new THREE.BufferAttribute(idxBuff,1);
+
+        var body = new THREE.BufferGeometry();
+        body.addAttribute('position', new THREE.BufferAttribute( rnrData.vtxBuff, 3 ));
+        body.setIndex(new THREE.BufferAttribute(idxBuff,1));
+        body.computeVertexNormals();
+
+
+        var ci = rnrData.idxBuff;
+        var colBuff = new Float32Array( nSquares * 4 *3 );
+        let off = 0;
+        for (let x = 0; x < ci.length; ++x)
+        {
+            var slice = ci[x*2];
+            var sliceColor =  calo2D.sliceColors[slice];
+            var tc = new THREE.Color(JSROOT.Painter.root_colors[sliceColor]);
+            for (var i = 0; i < 4; ++i)
+            {
+                colBuff[off    ] = tc.r;
+                colBuff[off + 1] = tc.g;
+                colBuff[off + 2] = tc.b;
+                off += 3;
+            }
+        }
+        body.addAttribute( 'color', new THREE.BufferAttribute( colBuff, 3 ) );
+
+        let material = new THREE.MeshPhongMaterial( {
+	    color: 0xffffff,
+	    flatShading: true,
+	    vertexColors: THREE.VertexColors,
+	    shininess: 0
+        } );
+        var mesh = new THREE.Mesh(body, material);
+
+        mesh.get_ctrl = function() { return new Calo2DControl(mesh); };
+        return mesh;
+    }
+
+    function Calo2DControl(mesh)
+    {
+        EveElemControl.call(this, mesh);
+    }
+
+    Calo2DControl.prototype = Object.create(EveElemControl.prototype);
+
+    Calo2DControl.prototype.DrawForSelection = function(sec_idcs, res)
+    {
+        var s = this.obj3d.scene;
+        var caloData = s.mgr.GetElement(this.obj3d.eve_el.dataId);
+        let dataSelection = res.sel_type ?  caloData.highlight : caloData.select;
+        let cells;
+        for (let i = 0; i < dataSelection.length; i++) {
+            if (dataSelection[i].caloVizId ==  this.obj3d.eve_el.fElementId) {
+                cells = dataSelection[i].cells;
+                break;
+            }
+        }
+
+        let ibuff = this.obj3d.eve_el.render_data.idxBuff;
+        let nbox = ibuff.length/2;
+        let nBoxSelected = cells.length;
+        let boxIdcs = new Array;
+        for (let i = 0; i < cells.length; i++)
+        {
+            let bin = cells[i].b;
+            let slice = cells[i].s;
+            let fraction =  cells[i].f;
+            for (let r = 0; r < nbox; r++) {
+                if (ibuff[r*2] == slice && ibuff[r*2+1] == bin) {
+                    boxIdcs.push(r);
+                    break;
+                }
+            }
+        }
+        var idxBuff = [];
+        let vtxBuff =  new Float32Array(nBoxSelected * 4 * 3 );
+        let protoIdcs = [0, 1, 2, 2, 3, 0];
+        let rnr_data = this.obj3d.eve_el.render_data;
+        for (let i = 0; i < nBoxSelected; ++i)
+        {
+            let BoxIdcs =  boxIdcs[i];
+            for (let v = 0; v < 4; v++) {
+                let off = i  * 12 + v * 3;
+                let pos = BoxIdcs  * 12 + v *3;
+                vtxBuff[off  ] = rnr_data.vtxBuff[pos  ];
+                vtxBuff[off+1] = rnr_data.vtxBuff[pos+1];
+                vtxBuff[off+2] = rnr_data.vtxBuff[pos+2];
+            }
+            {
+                // fix vertex 1
+                let pos = BoxIdcs  * 12;
+                let v1x = rnr_data.vtxBuff[pos  ];
+                let v1y = rnr_data.vtxBuff[pos + 1];
+                pos += 3;
+                let v2x = rnr_data.vtxBuff[pos  ];
+                let v2y = rnr_data.vtxBuff[pos + 1];
+                let off = i  * 12 + 3;
+                vtxBuff[off  ] = v1x + cells[i].f * (v2x - v1x);
+                vtxBuff[off+1] = v1y + cells[i].f * (v2y - v1y);
+            }
+
+            {
+                // fix vertex 2
+                let pos = BoxIdcs  * 12 + 3 * 3;
+                let v1x = rnr_data.vtxBuff[pos  ];
+                let v1y = rnr_data.vtxBuff[pos + 1];
+                pos -= 3;
+                let v2x = rnr_data.vtxBuff[pos  ];
+                let v2y = rnr_data.vtxBuff[pos + 1];
+                let off = i  * 12 + 3 * 2;
+                vtxBuff[off  ] = v1x + cells[i].f * (v2x - v1x);
+                vtxBuff[off+1] = v1y + cells[i].f * (v2y - v1y);
+            }
+            for (let c = 0; c < 6; c++) {
+                let off = i * 4;
+                idxBuff.push(protoIdcs[c] + off);
+            }
+        }
+
+        let body = new THREE.BufferGeometry();
+        body.addAttribute('position', new THREE.BufferAttribute( vtxBuff, 3 ));
+        body.setIndex( idxBuff );
+
+        var mesh = new THREE.Mesh(body);
+        res.geom.push(mesh);
+    }
+
+   Calo2DControl.prototype.extractIndex = function(intersect)
+   {
+      let idx  = Math.floor(intersect.faceIndex/2);
+      return idx;ls
+   }
+
+   Calo2DControl.prototype.getTooltipText = function(intersect)
+    {
+        var idx = this.extractIndex(intersect);
+        let idxBuff = this.obj3d.eve_el.render_data.idxBuff;
+        let bin =  idxBuff[idx*2 + 1];
+        let val = this.obj3d.eve_el.render_data.nrmBuff[idx];
+        let caloData =  this.obj3d.scene.mgr.GetElement(this.obj3d.eve_el.dataId);
+        let slice = idxBuff[idx*2];
+        let sname = caloData.sliceInfos[slice].name;
+
+        let vbuff =  this.obj3d.eve_el.render_data.vtxBuff;
+        let p = idx*12;
+        let x = vbuff[p];
+        let y = vbuff[p+1];
+        let z = vbuff[p+2];
+
+        if (this.obj3d.eve_el.isRPhi) {
+            let phi =  Math.acos(x/Math.sqrt(x*x+y*y));
+            phi *= Math.sign(y);
+            return  sname + " " + Math.floor(val*100)/100 +
+                " ("+  Math.floor(phi*100)/100 + ")";
+
+        }
+        else
+        {
+            let cosTheta = x/Math.sqrt(x*x + y*y);
+            let eta = 0;
+            if (cosTheta*cosTheta < 1)
+            {
+                eta = -0.5* Math.log( (1.0-cosTheta)/(1.0+cosTheta) );
+            }
+
+            return  sname + " " + Math.floor(val*100)/100 +
+                " ("+  Math.floor(eta*100)/100 + ")";
+        }
+
+   }
+
+    Calo2DControl.prototype.elementSelected = function(pidx)
+    {
+        let idx = pidx;
+        let calo =  this.obj3d.eve_el;
+        let idxBuff = calo.render_data.idxBuff;
+        let scene = this.obj3d.scene;
+        let selectionId = scene.mgr.global_selection_id;
+        let multi = event && event.ctrlKey ? true : false;
+        let fcall = "NewBinPicked((Int_t)" +  idxBuff[idx*2 + 1] + ", " +  idxBuff[idx*2] + ", " + selectionId + ", " + multi + ")"
+        scene.mgr.SendMIR(fcall, calo.fElementId, "ROOT::Experimental::REveCalo2D");
+        return true;
+    }
+
+   Calo2DControl.prototype.elementHighlighted = function(pidx)
+    {
+        console.log("calo2d control element highlighted idx = ", pidx);
+        let idx = pidx;
+        let calo =  this.obj3d.eve_el;
+        let idxBuff = calo.render_data.idxBuff;
+        var scene = this.obj3d.scene;
+        var selectionId = scene.mgr.global_highlight_id;
+        let fcall = "NewBinPicked((Int_t)" +  idxBuff[idx*2 + 1] + ", " +  idxBuff[idx*2] + ", " + selectionId + ", false)"
+        scene.mgr.SendMIR(fcall, calo.fElementId, "ROOT::Experimental::REveCalo2D");
+        return true;
+   }
+
+   Calo2DControl.prototype.checkHighlightIndex = function(indx)
+   {
+      if (this.obj3d && this.obj3d.scene)
+         return this.invokeSceneMethod("processCheckHighlight", indx);
+
+      return true; // means index is different
+   }
+
+    //==============================================================================
+
+    EveElements.prototype.makeCalo3D = function(calo3D, rnr_data)
+    {
+        var vBuff = rnr_data.vtxBuff;
+        let protoSize = 6 * 2 * 3;
+        let protoIdcs = [0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0, 1, 2, 3, 1, 3, 0, 4, 7, 6, 4, 6, 5];
+        var nBox = vBuff.length / 24;
+        var idxBuff = [];
+        for (let i = 0; i < nBox; ++i)
+        {
+            for (let c = 0; c < protoSize; c++) {
+                let off = i * 8;
+                idxBuff.push(protoIdcs[c] + off);
+            }
+        }
+
+        var body = new THREE.BufferGeometry();
+        body.addAttribute('position', new THREE.BufferAttribute( vBuff, 3 ));
+        body.setIndex( idxBuff );
+
+        var material = 0;
+
+        var ci = rnr_data.idxBuff;
+        let off = 0
+        var colBuff = new Float32Array( nBox * 8 *3 );
+        for (let x = 0; x < nBox; ++x)
+        {
+            var slice = ci[x*2];
+            var sliceColor =  calo3D.sliceColors[slice];
+            var tc = new THREE.Color(JSROOT.Painter.root_colors[sliceColor]);
+            for (var i = 0; i < 8; ++i)
+            {
+                colBuff[off    ] = tc.r;
+                colBuff[off + 1] = tc.g;
+                colBuff[off + 2] = tc.b;
+                off += 3;
+            }
+        }
+        body.addAttribute( 'color', new THREE.BufferAttribute( colBuff, 3 ) );
+        material = new THREE.MeshPhongMaterial( {
+	    color: 0xffffff,
+	    flatShading: true,
+	    vertexColors: THREE.VertexColors,
+	    shininess: 0
+        } );
+
+
+        var mesh = new THREE.Mesh(body, material);
+        mesh.get_ctrl = function() { return new Calo3DControl(mesh); };
+        return mesh;
+    }
+
+    function Calo3DControl(mesh)
+    {
+        EveElemControl.call(this, mesh);
+    }
+
+    Calo3DControl.prototype = Object.create(EveElemControl.prototype);
+
+    Calo3DControl.prototype.DrawForSelection = function(sec_idcs, res)
+    {
+        var s = this.obj3d.scene;
+        var caloData = s.mgr.GetElement(this.obj3d.eve_el.dataId);
+        let dataSelection = res.sel_type ?  caloData.highlight : caloData.select;
+        let cells;
+        for (let i = 0; i < dataSelection.length; i++) {
+            if (dataSelection[i].caloVizId ==  this.obj3d.eve_el.fElementId) {
+                cells = dataSelection[i].cells;
+                break;
+            }
+        }
+
+        let ibuff = this.obj3d.eve_el.render_data.idxBuff;
+        let nbox = ibuff.length/2;
+        let nBoxSelected = parseInt(cells.length);
+        let boxIdcs = new Array;
+        for (let i = 0; i < cells.length; i++)
+        {
+            let tower = cells[i].t;
+            let slice = cells[i].s;
+
+            for (let r = 0; r < nbox; r++) {
+                if (ibuff[r*2] == slice && ibuff[r*2+1] == tower) {
+                    boxIdcs.push(r);
+                    break;
+                }
+            }
+        }
+
+        let protoSize = 6 * 2 * 3;
+        let protoIdcs = [0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0, 1, 2, 3, 1, 3, 0, 4, 7, 6, 4, 6, 5];
+        var idxBuff = [];
+        for (let i = 0; i < nBoxSelected; ++i)
+        {
+            for (let c = 0; c < protoSize; c++) {
+                let off = boxIdcs[i] * 8;
+                idxBuff.push(protoIdcs[c] + off);
+            }
+        }
+
+        let body = new THREE.BufferGeometry();
+        body.addAttribute( 'position', this.obj3d.geometry.getAttribute("position") );
+        body.setIndex( idxBuff );
+
+        var mesh = new THREE.Mesh(body);
+        res.geom.push(mesh);
+    }
+
+    Calo3DControl.prototype.extractIndex = function(intersect)
+    {
+        let idx  = Math.floor(intersect.faceIndex/12);
+        return idx;
+    }
+
+    Calo3DControl.prototype.getTooltipText = function(intersect)
+    {
+        let t = this.obj3d.eve_el.fTitle || this.obj3d.eve_el.fName || "";
+        let idx = this.extractIndex(intersect);
+        let val =  this.obj3d.eve_el.render_data.nrmBuff[idx];
+        let idxBuff = this.obj3d.eve_el.render_data.idxBuff;
+        let caloData =  this.obj3d.scene.mgr.GetElement(this.obj3d.eve_el.dataId);
+        let slice = idxBuff[idx*2];
+
+        let vbuff =  this.obj3d.eve_el.render_data.vtxBuff;
+        let p = idx*24;
+        let x = vbuff[p];
+        let y = vbuff[p+1];
+        let z = vbuff[p+2];
+
+        let phi = Math.acos(x/Math.sqrt(x*x+y*y));
+        let cosTheta = z/Math.sqrt(x*x + y*y + z*z);
+        let eta = 0;
+        if (cosTheta*cosTheta < 1)
+        {
+            eta = -0.5* Math.log( (1.0-cosTheta)/(1.0+cosTheta) );
+        }
+
+        return caloData.sliceInfos[slice].name + "\n" + Math.floor(val*100)/100 +
+            " ("+  Math.floor(eta*100)/100 + ", " + Math.floor(phi*100)/100  + ")";
+    }
+
+    Calo3DControl.prototype.elementSelected = function(pidx)
+    {
+        let idx = pidx;
+        let calo =  this.obj3d.eve_el;
+        let idxBuff = calo.render_data.idxBuff;
+        let scene = this.obj3d.scene;
+        let selectionId = scene.mgr.global_selection_id;
+        let multi = event && event.ctrlKey ? true : false;
+        let fcall = "NewTowerPicked(" +  idxBuff[idx*2 + 1] + ", " +  idxBuff[idx*2] + ", "
+            + selectionId + ", " + multi + ");"
+        scene.mgr.SendMIR(fcall, calo.fElementId, "ROOT::Experimental::REveCalo3D");
+        return true;
+    }
+
+    Calo3DControl.prototype.elementHighlighted = function(pidx)
+    {
+        let idx = pidx;
+        let calo =  this.obj3d.eve_el;
+        let idxBuff = calo.render_data.idxBuff;
+        var scene = this.obj3d.scene;
+        var selectionId = scene.mgr.global_highlight_id;
+        let fcall = "NewTowerPicked(" +  idxBuff[idx*2 + 1] + ", " +  idxBuff[idx*2] + ", " + selectionId + ", false);"
+        scene.mgr.SendMIR(fcall, calo.fElementId, "ROOT::Experimental::REveCalo3D");
+    }
+
+    Calo3DControl.prototype.checkHighlightIndex = function(indx)
+    {
+        if (this.obj3d && this.obj3d.scene)
+        {
+            console.log("check highlight idx ?????? \n");
+            return this.invokeSceneMethod("processCheckHighlight", indx);
+
+        }
+
+        return true; // means index is different
+    }
+
    //==============================================================================
 
 
@@ -793,8 +1200,8 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       return true; // means index is different
    }
 
-   StraightLineSetControl.prototype.DrawForSelection = function(sec_idcs, dest)
-   {
+   StraightLineSetControl.prototype.DrawForSelection = function(sec_idcs, res)
+    {
       var m     = this.obj3d;
       var index = sec_idcs;
       var geom = new THREE.BufferGeometry();
@@ -817,7 +1224,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       line.matrixAutoUpdate = false;
       line.matrix.fromArray( m.matrix.toArray());
       line.updateMatrixWorld(true);
-      dest.push(line);
+      res.geom.push(line);
 
       var el = m.eve_el, mindx = []
 
@@ -850,12 +1257,13 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          mark.matrixAutoUpdate = false;
          mark.matrix.fromArray(m.matrix.toArray());
          mark.updateMatrixWorld(true);
-         dest.push(mark);
+         res.geom.push(mark);
       }
    }
 
    EveElements.prototype.makeStraightLineSet = function(el, rnr_data)
-   {
+    {
+        console.log("MAKE STRA ...");
       var obj3d = new THREE.Object3D();
 
       var mainColor = JSROOT.Painter.root_colors[el.fMainColor];
