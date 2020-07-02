@@ -34,11 +34,17 @@ public:
    ~RIoUring() {
       io_uring_queue_exit(&fRing);
    }
-   // todo try opening a ring and check the error code
+
+   /// Check if io_uring is available on this system.
    static bool IsAvailable() {
-      return false; 
+      try {
+         RIoUring(1);
+      } catch (const Experimental::RException& _err) {
+         return false;
+      }
+      return true;
    }
-}; 
+};
 
 } // namespace Internal
 } // namespace ROOT
