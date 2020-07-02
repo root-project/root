@@ -552,6 +552,13 @@ When using the options 2 or 3 above, the labels are automatically
         TH1::GetEntries() returns the number of entries
         TH1::Reset() resets the bin contents and errors of an histogram
 ~~~
+ IMPORTANT NOTE: The returned values for GetMean and GetStdDev depend on how the
+ histogram statistics are calculated. By default, if no range has been set, the
+ returned values are the (unbinned) ones calculated at fill time. If a range has been
+ set, however, the values are calculated using the bins in range; THIS IS TRUE EVEN
+ IF THE RANGE INCLUDES ALL BINS--use TAxis::SetRange(0, 0) to unset the range.
+ To ensure that the returned values are always those of the binned data stored in the
+ histogram, call TH1::ResetStats. See TH1::GetStats.
 */
 
 TF1 *gF1=0;  //left for back compatibility (use TVirtualFitter::GetUserFunc instead)
@@ -890,6 +897,12 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
 /// is used , ie  this = this + c1*factor*h1
 /// Use the other TH1::Add function if you do not want this feature
 ///
+/// IMPORTANT NOTE3: You should be careful about the statistics of the
+/// returned histogram, whose statistics may be binned or unbinned,
+/// depending on whether c1 is negative, whether TAxis::kAxisRange is true,
+/// and whether TH1::ResetStats has been called on either this or h1.
+/// See TH1::GetStats.
+///
 /// The function return kFALSE if the Add operation failed
 
 Bool_t TH1::Add(const TH1 *h1, Double_t c1)
@@ -1047,6 +1060,12 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
 /// IMPORTANT NOTE: If you intend to use the errors of this histogram later
 /// you should call Sumw2 before making this operation.
 /// This is particularly important if you fit the histogram after TH1::Add
+///
+/// IMPORTANT NOTE2: You should be careful about the statistics of the
+/// returned histogram, whose statistics may be binned or unbinned,
+/// depending on whether c1 is negative, whether TAxis::kAxisRange is true,
+/// and whether TH1::ResetStats has been called on either this or h1.
+/// See TH1::GetStats.
 ///
 /// ANOTHER SPECIAL CASE : h1 = h2 and c2 < 0
 /// do a scaling   this = c1 * h1 / (bin Volume)
@@ -7386,6 +7405,15 @@ void TH1::UseCurrentStyle()
 /// call the static function TH1::StatOverflows(kTRUE) before filling
 /// the histogram.
 ///
+/// IMPORTANT NOTE: The returned value depends on how the histogram statistics
+/// are calculated. By default, if no range has been set, the returned mean is
+/// the (unbinned) one calculated at fill time. If a range has been set, however,
+/// the mean is calculated using the bins in range, as described above; THIS
+/// IS TRUE EVEN IF THE RANGE INCLUDES ALL BINS--use TAxis::SetRange(0, 0) to unset
+/// the range. To ensure that the returned mean (and all other statistics) is
+/// always that of the binned data stored in the histogram, call TH1::ResetStats.
+/// See TH1::GetStats.
+///
 /// Return mean value of this histogram along the X axis.
 ///
 /// Note that the mean value/StdDev is computed using the bins in the currently
@@ -7425,6 +7453,15 @@ Double_t TH1::GetMean(Int_t axis) const
 ///
 /// Also note, that although the definition of standard error doesn't include the
 /// assumption of normality, many uses of this feature implicitly assume it.
+///
+/// IMPORTANT NOTE: The returned value depends on how the histogram statistics
+/// are calculated. By default, if no range has been set, the returned value is
+/// the (unbinned) one calculated at fill time. If a range has been set, however,
+/// the value is calculated using the bins in range, as described above; THIS
+/// IS TRUE EVEN IF THE RANGE INCLUDES ALL BINS--use TAxis::SetRange(0, 0) to unset
+/// the range. To ensure that the returned value (and all other statistics) is
+/// always that of the binned data stored in the histogram, call TH1::ResetStats.
+/// See TH1::GetStats.
 
 Double_t TH1::GetMeanError(Int_t axis) const
 {
@@ -7448,6 +7485,15 @@ Double_t TH1::GetMeanError(Int_t axis) const
 /// To force the underflows and overflows in the computation, one must
 /// call the static function TH1::StatOverflows(kTRUE) before filling
 /// the histogram.
+///
+/// IMPORTANT NOTE: The returned value depends on how the histogram statistics
+/// are calculated. By default, if no range has been set, the returned standard
+/// deviation is the (unbinned) one calculated at fill time. If a range has been
+/// set, however, the standard deviation is calculated using the bins in range,
+/// as described above; THIS IS TRUE EVEN IF THE RANGE INCLUDES ALL BINS--use
+/// TAxis::SetRange(0, 0) to unset the range. To ensure that the returned standard
+/// deviation (and all other statistics) is always that of the binned data stored
+/// in the histogram, call TH1::ResetStats. See TH1::GetStats.
 
 Double_t TH1::GetStdDev(Int_t axis) const
 {
@@ -7487,6 +7533,15 @@ Double_t TH1::GetStdDev(Int_t axis) const
 /// original data distribution is Normal. The correct one would require
 /// the 4-th momentum value, which cannot be accurately estimated from an histogram since
 /// the x-information for all entries is not kept.
+///
+/// IMPORTANT NOTE: The returned value depends on how the histogram statistics
+/// are calculated. By default, if no range has been set, the returned value is
+/// the (unbinned) one calculated at fill time. If a range has been set, however,
+/// the value is calculated using the bins in range, as described above; THIS
+/// IS TRUE EVEN IF THE RANGE INCLUDES ALL BINS--use TAxis::SetRange(0, 0) to unset
+/// the range. To ensure that the returned value (and all other statistics) is
+/// always that of the binned data stored in the histogram, call TH1::ResetStats.
+/// See TH1::GetStats.
 
 Double_t TH1::GetStdDevError(Int_t axis) const
 {
@@ -7500,6 +7555,9 @@ Double_t TH1::GetStdDevError(Int_t axis) const
 ///
 ///Note, that since third and fourth moment are not calculated
 ///at the fill time, skewness and its standard error are computed bin by bin
+///
+/// IMPORTANT NOTE: The returned value depends on how the histogram statistics
+/// are calculated. See TH1::GetMean and TH1::GetStdDev.
 
 Double_t TH1::GetSkewness(Int_t axis) const
 {
@@ -7570,6 +7628,9 @@ Double_t TH1::GetSkewness(Int_t axis) const
 ////
 /// Note, that since third and fourth moment are not calculated
 /// at the fill time, kurtosis and its standard error are computed bin by bin
+///
+/// IMPORTANT NOTE: The returned value depends on how the histogram statistics
+/// are calculated. See TH1::GetMean and TH1::GetStdDev.
 
 Double_t TH1::GetKurtosis(Int_t axis) const
 {
@@ -7647,6 +7708,12 @@ Double_t TH1::GetKurtosis(Int_t axis) const
 /// If a sub-range is specified, the function recomputes these quantities
 /// from the bin contents in the current axis range.
 ///
+/// IMPORTANT NOTE: This means that the returned statistics are context-dependent.
+/// If TAxis::kAxisRange, the returned statistics are dependent on the binning;
+/// otherwise, they are a copy of the histogram statistics computed at fill time,
+/// which are unbinned by default (calling TH1::ResetStats forces them to use
+/// binned statistics). You can reset TAxis::kAxisRange using TAxis::SetRange(0, 0).
+///
 /// Note that the mean value/StdDev is computed using the bins in the currently
 /// defined range (see TAxis::SetRange). By default the range includes
 /// all bins from 1 to nbins included, excluding underflows and overflows.
@@ -7719,6 +7786,9 @@ void TH1::PutStats(Double_t *stats)
 ///
 /// The number of entries is set to the total bin content or (in case of weighted histogram)
 /// to number of effective entries
+///
+/// Note that, by default, before calling this function, statistics are those
+/// computed at fill time, which are unbinned. See TH1::GetStats.
 
 void TH1::ResetStats()
 {
