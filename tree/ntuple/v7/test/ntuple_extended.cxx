@@ -1,3 +1,5 @@
+#include <ROOT/RConfig.hxx>
+
 #include "ntuple_test.hxx"
 
 TEST(RNTuple, RealWorld1)
@@ -122,10 +124,17 @@ TEST(RNTuple, LargeFile)
          ntuple->Fill();
       }
    }
+#ifdef R__SEEK64
+   FILE *file = fopen64(fileGuard.GetPath().c_str(), "rb");
+   ASSERT_TRUE(file != nullptr);
+   EXPECT_EQ(0, fseeko64(file, 0, SEEK_END));
+   EXPECT_GT(ftello64(file), 2048LL * 1024LL * 1024LL);
+#else
    FILE *file = fopen(fileGuard.GetPath().c_str(), "rb");
    ASSERT_TRUE(file != nullptr);
    EXPECT_EQ(0, fseek(file, 0, SEEK_END));
    EXPECT_GT(ftell(file), 2048LL * 1024LL * 1024LL);
+#endif
    fclose(file);
 
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
