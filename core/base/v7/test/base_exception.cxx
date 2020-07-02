@@ -106,6 +106,18 @@ TEST(Exception, DoubleThrow)
    }
 }
 
+TEST(Exception, VoidThrowOnError)
+{
+   // no throw on success
+   TestSuccess().ThrowOnError();
+   // throw on failure
+   try {
+      TestFailure().ThrowOnError();
+      FAIL() << "ThrowOnError must throw for error states";
+   } catch (const RException& err) {
+      // ThrowOnError() worked
+   }
+}
 
 TEST(Exception, Syscall)
 {
