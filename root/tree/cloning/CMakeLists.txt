@@ -58,6 +58,9 @@ if(NOT TARGET eventexe)
                   OUTREF references/treeCloneTest.ref)
 
 else()
+   if(MSVC)
+      set(RootExeOptions -e "gSystem->Load(\"${ROOTSYS}/test/Release/libEvent\")")
+   else()
       set(RootExeOptions -e "gSystem->Load(\"../test/libEvent\")")
 
       ROOTTEST_ADD_TEST(treeCloneTest
@@ -65,7 +68,7 @@ else()
                   COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/run.C -e "gSystem->Load(\"../test/libEvent\")"
                   POSTCMD ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/runEvent.C -e "gSystem->Load(\"../test/libEvent\")"
                   OUTREF references/treeCloneTest.ref)
-
+   endif()
 endif()
 
 if(ROOTTEST_DIR)
