@@ -308,8 +308,7 @@ sap.ui.define([
 
    /** interactive handler */
    EveScene.prototype.processElementHighlighted = function(obj3d, indx, evnt)
-    {
-        return;
+   {
       if (this.mgr.MatchSelection(this.mgr.global_selection_id, obj3d.eve_el, indx))
          return true;
 
@@ -422,7 +421,7 @@ sap.ui.define([
       else
       {
          let ctrl = obj3d.get_ctrl();
-         ctrl.DrawForSelection(sec_idcs, res.geom);
+         ctrl.DrawForSelection(sec_idcs, res);
          res.sec_sel = true;
       }
       opass.id2obj_map[element_id][selection_obj.fElementId] = res;
