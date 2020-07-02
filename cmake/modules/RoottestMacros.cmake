@@ -831,7 +831,12 @@ function(ROOTTEST_ADD_TEST testname)
     set(run_serial RUN_SERIAL ${ARG_RUN_SERIAL})
   endif()
 
-  if (NOT MSVC)
+  if(MSVC)
+    set(environment ENVIRONMENT
+                    ROOTSYS=${ROOTSYS}
+                    PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
+
+  else()
     string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
     string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
     string(REPLACE ";" ":" _librarypath "${ROOTTEST_ENV_LIBRARYPATH}")
@@ -1047,7 +1052,12 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     endforeach()
   endif(ARG_DEPENDS)
 
-  if(NOT MSVC)
+  if(MSVC)
+    set(environment ENVIRONMENT
+                    ROOTSYS=${ROOTSYS}
+                    PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
+
+  else()
     string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
     string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
     string(REPLACE ";" ":" _librarypath "${ROOTTEST_ENV_LIBRARYPATH}")

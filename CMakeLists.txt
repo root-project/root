@@ -37,6 +37,14 @@ if(MSVC)
   if (NOT PYTHON_EXECUTABLE)
     find_package(PythonInterp)
   endif()
+
+  if(DEFINED ROOT_SOURCE_DIR)
+    # ROOT_BINDIR is set by ROOTConfig.cmake
+    get_filename_component(realfp "${ROOT_BINDIR}/../" ABSOLUTE)
+    file(TO_CMAKE_PATH ${realfp} ROOTSYS)
+    set(ROOT_LIBRARIES libCore libRIO libNet libHist libGpad libTree libRint libMatrix libMathCore)
+  endif()
+
   include(${ROOT_USE_FILE})
   set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
   file(READ "${ROOTSYS}/bin/root-config" root_config)
@@ -181,13 +189,19 @@ endif()
 set(ROOTTEST_ENV_LIBRARYPATH ${ROOT_LIBRARY_DIR})
 set(ROOTTEST_ENV_EXTRA)
 
-set(ROOTTEST_ENVIRONMENT
-    ROOTSYS=${ROOTSYS}
-    PATH=${ROOTTEST_ENV_PATH}:$ENV{PATH}
-    PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH}:$ENV{PYTHONPATH}
-    ${ld_library_path}=${ROOTTEST_ENV_LIBRARYPATH}:$ENV{${ld_library_path}})
-if (gnuinstall)
-  set(ROOTTEST_ENVIRONMENT ${ROOTTEST_ENVIRONMENT} ROOTIGNOREPREFIX=1)
+if(MSVC)
+  set(ROOTTEST_ENVIRONMENT
+      ROOTSYS=${ROOTSYS}
+      PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
+else()
+  set(ROOTTEST_ENVIRONMENT
+      ROOTSYS=${ROOTSYS}
+      PATH=${ROOTTEST_ENV_PATH}:$ENV{PATH}
+      PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH}:$ENV{PYTHONPATH}
+      ${ld_library_path}=${ROOTTEST_ENV_LIBRARYPATH}:$ENV{${ld_library_path}})
+  if (gnuinstall)
+    set(ROOTTEST_ENVIRONMENT ${ROOTTEST_ENVIRONMENT} ROOTIGNOREPREFIX=1)
+  endif()
 endif()
 
 # Resolve symbolic links for the ROOTTEST_DIR variable.
