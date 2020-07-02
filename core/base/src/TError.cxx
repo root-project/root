@@ -117,31 +117,26 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, std::va_li
    char small_buf[256];
    char *buf = buf_storage ? buf_storage : small_buf;
 
-   int vc = 0;
-   std::va_list sap;
-   va_copy(sap, ap);
-
-again:
-   if (!buf) {
-      buf_storage = buf = new char[buf_size];
-   }
+   std::va_list ap_copy;
+   va_copy(ap_copy, ap);
 
    if (!fmt)
       fmt = "no error message provided";
 
-   Int_t n = vsnprintf(buf, buf_size, fmt, ap);
+   Int_t n = vsnprintf(buf, buf_size, fmt, ap_copy);
    if (n >= buf_size) {
+      va_end(ap_copy);
+
       buf_size = n + 1;
-      if (buf != &(small_buf[0])) delete [] buf;
-      buf = 0;
-      va_end(ap);
-      va_copy(ap, sap);
-      vc = 1;
-      goto again;
+      if (buf != &(small_buf[0]))
+         delete[] buf;
+      buf = new char[buf_size];
+
+      // Try again with a sufficiently large buffer
+      va_copy(ap_copy, ap);
+      vsnprintf(buf, buf_size, fmt, ap_copy);
    }
-   va_end(sap);
-   if (vc)
-      va_end(ap);
+   va_end(ap_copy);
 
    std::string bp = buf;
    if (level >= kSysError && level < kFatal) {
