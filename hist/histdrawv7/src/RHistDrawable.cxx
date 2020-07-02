@@ -57,9 +57,15 @@ std::unique_ptr<RDisplayItem> RHist1Drawable::CreateHistDisplay(const RDisplayCo
 
       bool needrebin = false;
 
-      if (i2 - i1 > NumVisibleBins) {
+      // with minmax approach 2*n bins replaced by 2 bins with min and max value inside the range
+      // this let display histogram showing dynamic values range properly
+      bool produce_minmax = true;
+
+      if (i2 - i1 > NumVisibleBins * (produce_minmax ? 2 : 1)) {
          stepi = (i2 - i1) / NumVisibleBins;
-         if (stepi < 2) stepi = 2;
+         int minstep = produce_minmax ? 4 : 2;
+         if (stepi < minstep) stepi = minstep;
+         if (produce_minmax && (stepi % 2 == 1)) stepi++; // ensure even number of stepi
          i1 = (i1 / stepi) * stepi;
          if (i2 % stepi > 0) i2 = (i2/stepi + 1) * stepi;
          needrebin = true;
@@ -71,7 +77,12 @@ std::unique_ptr<RDisplayItem> RHist1Drawable::CreateHistDisplay(const RDisplayCo
       // In this case axis rebin is special
 
       auto &bins = item->GetBinContent();
-      bins.resize((i2 - i1) / stepi);
+      if (needrebin) {
+         bins.resize((i2 - i1) / stepi * (produce_minmax ? 2 : 1));
+      } else {
+         bins.resize(i2 - i1);
+         stepi = 1;
+      }
 
       double min{0}, minpos{0}, max{0};
 
@@ -94,21 +105,35 @@ std::unique_ptr<RDisplayItem> RHist1Drawable::CreateHistDisplay(const RDisplayCo
       // TODO: provide methods in histogram classes
       if (needrebin)
          for (int i = i1; i < i2; i += stepi) {
-            double sum = 0.;
             int ir = std::min(i+stepi, nbinsx);
-            for(int ii = i; ii < ir; ++ii)
-               sum += himpl->GetBinContentAsDouble(ii + 1);
-            int indx = (i-i1)/stepi;
-            bins[indx] = sum/(ir-i);
+            if (produce_minmax) {
+               double vmin = himpl->GetBinContentAsDouble(i + 1);
+               double vmax = vmin;
+               int imin = i;
+               int imax = i;
+               for(int ii = i+1; ii < ir; ++ii) {
+                  double val = himpl->GetBinContentAsDouble(ii + 1);
+                  if (val < vmin) { vmin = val; imin = ii; }
+                  if (val > vmax) { vmax = val; imax = ii; }
+               }
+               int indx = (i-i1)/stepi*2;
+               bins[indx]   = (imin<imax) ? vmin : vmax;
+               bins[indx+1] = (imin<imax) ? vmax : vmin;
+            } else {
+               double sum = 0.;
+               for(int ii = i; ii < ir; ++ii)
+                  sum += himpl->GetBinContentAsDouble(ii + 1);
+               int indx = (i-i1)/stepi;
+               bins[indx] = sum/(ir-i);
+            }
          }
 
       item->SetContentMinMax(min, minpos, max);
-      item->AddAxis(&himpl->GetAxis(0), i1, i2, stepi);
+      item->AddAxis(&himpl->GetAxis(0), i1, i2, !needrebin ? 1 : stepi / (produce_minmax ? 2 : 1));
    }
 
    return item;
 }
-
 
 std::unique_ptr<RDisplayItem> RHist2Drawable::CreateHistDisplay(const RDisplayContext &ctxt)
 {

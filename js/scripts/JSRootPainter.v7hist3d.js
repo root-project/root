@@ -506,7 +506,7 @@
       if (main.logx) {
          if (xmax <= 0) xmax = 1.;
          if ((xmin <= 0) && this.xaxis)
-            for (var i=0;i<this.xaxis.fNbins;++i) {
+            for (var i=0;i<this.xaxis.GetNumBins();++i) {
                xmin = Math.max(xmin, this.xaxis.GetBinLowEdge(i+1));
                if (xmin>0) break;
             }
@@ -530,7 +530,7 @@
       if (main.logy && !opts.use_y_for_z) {
          if (ymax <= 0) ymax = 1.;
          if ((ymin <= 0) && this.yaxis)
-            for (var i=0;i<this.yaxis.fNbins;++i) {
+            for (var i=0;i<this.yaxis.GetNumBins();++i) {
                ymin = Math.max(ymin, this.yaxis.GetBinLowEdge(i+1));
                if (ymin>0) break;
             }
@@ -1470,39 +1470,35 @@
           histo = this.GetHisto();
 
       if (reason == "resize")  {
-
          if (is_main && main.Resize3D()) main.Render3D();
-
-      } else {
-
-         this.DeleteAtt();
-
-         this.ScanContent(true); // may be required for axis drawings
-
-         if (is_main) {
-            main.Create3DScene();
-            main.SetAxesRanges(this.xmin, this.xmax, this.ymin, this.ymax, 0, 0);
-            main.Set3DOptions(this.options);
-            main.DrawXYZ(main.toplevel, { use_y_for_z: true, zmult: 1.1, zoom: JSROOT.gStyle.Zooming, ndim: 1 });
-         }
-
-         if (main.mode3d) {
-            this.DrawLego();
-            this.UpdatePaletteDraw();
-            main.Render3D();
-            this.UpdateStatWebCanvas();
-            main.AddKeysHandler();
-         }
+         return JSROOT.CallBack(call_back);
       }
+
+      this.DeleteAtt();
+
+      this.ScanContent(true); // may be required for axis drawings
 
       if (is_main) {
-         // (re)draw palette by resize while canvas may change dimension
-         // this.DrawColorPalette(this.options.Zscale && ((this.options.Lego===12) || (this.options.Lego===14)));
-
-         // this.DrawTitle();
+         main.Create3DScene();
+         main.SetAxesRanges(this.xmin, this.xmax, this.ymin, this.ymax, 0, 0);
+         main.Set3DOptions(this.options);
+         main.DrawXYZ(main.toplevel, { use_y_for_z: true, zmult: 1.1, zoom: JSROOT.gStyle.Zooming, ndim: 1 });
       }
 
-      JSROOT.CallBack(call_back);
+      if (!main.mode3d)
+         return JSROOT.CallBack(call_back);
+
+      this.DrawingBins(call_back, reason, function() {
+         // called when bins received from server, must be reentrant
+         var main = this.frame_painter();
+
+         this.DrawLego();
+         this.UpdatePaletteDraw();
+         main.Render3D();
+         this.UpdateStatWebCanvas();
+         main.AddKeysHandler();
+      });
+
    }
 
    // ==========================================================================================
@@ -1635,8 +1631,19 @@
           handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 1, middle: 0.5 }),
           i, j, x1, y1, x2, y2, z11, z12, z21, z22,
           di = handle.stepi, dj = handle.stepj,
+          numstepi = handle.i2 - handle.i1, numstepj = handle.j2 - handle.j1,
           axis_zmin = main.grz.domain()[0],
           axis_zmax = main.grz.domain()[1];
+
+      if (di > 1) {
+         numstepi = Math.round(numstepi/di);
+         if (numstepi * di < (handle.i2 - handle.i1)) numstepi++;
+      }
+
+      if (dj > 1) {
+         numstepj = Math.round(numstepj/dj);
+         if (numstepj * dj < (handle.j2 - handle.j1)) numstepj++;
+      }
 
       // first adjust ranges
 
@@ -1739,7 +1746,7 @@
       }
 
       function RememberVertex(indx, ii,jj) {
-         var bin = ((ii-handle.i1)/di * (handle.j2-handle.j1)/dj + (jj-handle.j1)/dj)*8;
+         var bin = ((ii-handle.i1)/di * numstepj + (jj-handle.j1)/dj)*8;
 
          if (normindx[bin]>=0)
             return console.error('More than 8 vertexes for the bin');
@@ -1752,7 +1759,7 @@
       function RecalculateNormals(arr) {
          for (var ii=handle.i1; ii<handle.i2; ii += di) {
             for (var jj=handle.j1; jj<handle.j2; jj += dj) {
-               var bin = ((ii-handle.i1)/di * (handle.j2-handle.j1)/dj + (jj-handle.j1)/dj) * 8;
+               var bin = ((ii-handle.i1)/di * numstepj + (jj-handle.j1)/dj) * 8;
 
                if (normindx[bin] === -1) continue; // nothing there
 
@@ -1872,7 +1879,7 @@
 
       if (donormals) {
          // for each bin maximal 8 points reserved
-         normindx = new Int32Array((handle.i2-handle.i1)/di*(handle.j2-handle.j1)/dj*8);
+         normindx = new Int32Array(numstepi * numstepj * 8);
          for (var n=0;n<normindx.length;++n) normindx[n] = -1;
       }
 
