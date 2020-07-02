@@ -1528,6 +1528,8 @@ For a more detailed explanation, see "Input/Output".
 
 -   **`TH1`**`::GetMean(int axis)` - returns the mean value along axis.
 
+-   **`TH1`**`::GetStdDev(int axis)` - returns the sigma distribution along axis.
+
 -   **`TH1`**`::GetRMS(int axis)` - returns the Root Mean Square
     along axis.
 
