@@ -41,7 +41,7 @@ void draw_rh1_large()
    auto pHist = std::make_shared<RH1D>(xaxis);
 
    for(int i=0;i<nbins;++i)
-      pHist->Fill(1.*i, 1000.*TMath::Sin(100.*i/nbins));
+      pHist->Fill(1.*i, 1000.*(2+TMath::Sin(100.*i/nbins)));
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
@@ -56,10 +56,10 @@ void draw_rh1_large()
    auto draw = canvas->Draw(pHist);
 
    draw->AttrLine().SetColor(RColor::kLime);
-   draw->AttrFill().SetColor(RColor::kLime);
+   // draw->AttrFill().SetColor(RColor::kLime);
    // draw->Line(); // configure line draw option
    // draw->Bar(); // configure bar draw option
-   // draw->Error(1); // configure error drawing
+   // draw->Error(3); // configure error drawing
    draw->Hist();  // configure hist draw option, default
 
    draw->Optimize(true); // enable draw optimization, reduced data set will be send to clients
