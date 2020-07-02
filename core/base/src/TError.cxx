@@ -113,7 +113,7 @@ ErrorHandlerFunc_t GetErrorHandler()
 void ErrorHandler(Int_t level, const char *location, const char *fmt, std::va_list ap)
 {
    TTHREAD_TLS(Int_t) buf_size(256);
-   TTHREAD_TLS(char*) buf_storage(0);
+   TTHREAD_TLS(char*) buf_storage(nullptr);
 
    char small_buf[256];
    char *buf = buf_storage ? buf_storage : small_buf;
@@ -137,7 +137,7 @@ again:
       if (n == -1)
          buf_size *= 2;
       else
-         buf_size = n+1;
+         buf_size = n + 1;
       if (buf != &(small_buf[0])) delete [] buf;
       buf = 0;
       va_end(ap);
