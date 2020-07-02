@@ -1068,12 +1068,11 @@
       return true;
    }
 
-   RH1Painter.prototype.DrawBars = function(width, height) {
+   RH1Painter.prototype.DrawBars = function(handle, width, height) {
 
       this.CreateG(true);
 
-      var left = this.GetSelectIndex("x", "left", -1),
-          right = this.GetSelectIndex("x", "right", 1),
+      var left = handle.i1, right = handle.i2, di = handle.stepi,
           pmain = this.frame_painter(),
           pthis = this,
           histo = this.GetHisto(), xaxis = this.GetAxis("x"),
@@ -1085,9 +1084,9 @@
          if (this.options.BaseLine >= pmain.scale_ymin)
             gry2 = Math.round(pmain.gry(this.options.BaseLine));
 
-      for (i = left; i < right; ++i) {
+      for (i = left; i < right; i += di) {
          x1 = xaxis.GetBinCoord(i);
-         x2 = xaxis.GetBinCoord(i+1);
+         x2 = xaxis.GetBinCoord(i+di);
 
          if (pmain.logx && (x2 <= 0)) continue;
 
@@ -1140,17 +1139,16 @@
                .style("fill", d3.rgb(this.fillatt.color).darker(0.5).toString());
    }
 
-   RH1Painter.prototype.DrawFilledErrors = function(width, height) {
+   RH1Painter.prototype.DrawFilledErrors = function(handle, width, height) {
       this.CreateG(true);
 
-      var left = this.GetSelectIndex("x", "left", -1),
-          right = this.GetSelectIndex("x", "right", 1),
+      var left = handle.i1, right = handle.i2, di = handle.stepi,
           pmain = this.frame_painter(),
           histo = this.GetHisto(), xaxis = this.GetAxis("x"),
           i, x, grx, y, yerr, gry1, gry2,
           bins1 = [], bins2 = [];
 
-      for (i = left; i < right; ++i) {
+      for (i = left; i < right; i += di) {
          x = xaxis.GetBinCoord(i+0.5);
          if (pmain.logx && (x <= 0)) continue;
          grx = Math.round(pmain.grx(x));
@@ -1189,20 +1187,21 @@
 
       this.CheckHistDrawAttributes();
 
+      var handle = this.PrepareColorDraw({ extra: 1, only_indexes: true });
+
       if (this.options.Bar)
-         return this.DrawBars(width, height);
+         return this.DrawBars(handle, width, height);
 
       if ((this.options.ErrorKind === 3) || (this.options.ErrorKind === 4))
-         return this.DrawFilledErrors(width, height);
+         return this.DrawFilledErrors(handle, width, height);
 
-      return this.DrawHistBins(width, height);
+      return this.DrawHistBins(handle, width, height);
    }
 
-   RH1Painter.prototype.DrawHistBins = function(width, height) {
+   RH1Painter.prototype.DrawHistBins = function(handle, width, height) {
       this.CreateG(true);
 
       var options = this.options,
-          handle = this.PrepareColorDraw({ extra: 1, only_indexes: true }),
           left = handle.i1,
           right = handle.i2,
           di = handle.stepi,
@@ -1225,7 +1224,7 @@
 
       if (options.ErrorKind === 2) {
          if (this.fillatt.empty()) show_markers = true;
-                               else path_fill = "";
+                              else path_fill = "";
       } else if (options.Error) {
          path_err = "";
       }
@@ -1796,15 +1795,11 @@
       this.Clear3DScene();
       this.mode3d = false;
 
-      console.log('Calling histogram Draw2D');
-
       if (!this.DrawAxes())
          return JSROOT.CallBack(call_back);
 
       this.DrawingBins(call_back, reason, function() {
          // called when bins received from server, must be reentrant
-         console.log('Calling DrawBins');
-
          this.DrawBins();
          this.UpdateStatWebCanvas();
          this.AddInteractive();

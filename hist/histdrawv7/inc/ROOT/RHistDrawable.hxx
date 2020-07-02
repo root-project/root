@@ -157,9 +157,7 @@ public:
    RHist1Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<1>(hist) {}
 
    RHist1Drawable &Bar() { SetDrawKind("bar", 0); fBarOffset.Clear(); fBarWidth.Clear(); return *this; }
-   RHist1Drawable &Bar(double offset, double width) { SetDrawKind("bar", 0); fBarOffset = offset; fBarWidth = width; return *this; }
-   RHist1Drawable &Bar3D() { SetDrawKind("bar", 1); fBarOffset.Clear(); fBarWidth.Clear(); return *this; }
-   RHist1Drawable &Bar3D(double offset, double width) { SetDrawKind("bar", 1); fBarOffset = offset; fBarWidth = width; return *this; }
+   RHist1Drawable &Bar(double offset, double width, bool mode3d = false) { SetDrawKind("bar", mode3d ? 1 : 0); fBarOffset = offset; fBarWidth = width; return *this; }
    RHist1Drawable &Error(int kind = 0) { SetDrawKind("err", kind); return *this; }
    RHist1Drawable &Marker() { SetDrawKind("p"); return *this; }
    RHist1Drawable &Star() { AttrMarker().SetStyle(3); return Marker(); }
