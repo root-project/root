@@ -27,6 +27,10 @@ public:
          throw R__FAIL("couldn't open ring");
       }
    }
+
+   RIoUring(const RIoUring&) = delete;
+   RIoUring& operator=(const RIoUring&) = delete;
+
    ~RIoUring() {
       io_uring_queue_exit(&fRing);
    }
