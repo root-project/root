@@ -9,6 +9,11 @@ TEST(RIoUring, Basics)
    RIoUring ring(4);
 }
 
+TEST(RIoUring, IsAvailable)
+{
+   ASSERT_TRUE(RIoUring::IsAvailable());
+}
+
 TEST(RawUring, NopRoundTrip)
 {
    struct io_uring ring;
