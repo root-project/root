@@ -9,6 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "ROOT/RConfig.hxx"
+
 #include "ROOT/RRawFileUnix.hxx"
 #include "ROOT/RMakeUnique.hxx"
 
@@ -47,8 +49,13 @@ std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileUnix::Clone() 
 
 std::uint64_t ROOT::Internal::RRawFileUnix::GetSizeImpl()
 {
+#ifdef R__SEEK64
+   struct stat64 info;
+   int res = fstat64(fFileDes, &info);
+#else
    struct stat info;
    int res = fstat(fFileDes, &info);
+#endif
    if (res != 0)
       throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
    return info.st_size;
@@ -68,7 +75,11 @@ void *ROOT::Internal::RRawFileUnix::MapImpl(size_t nbytes, std::uint64_t offset,
 
 void ROOT::Internal::RRawFileUnix::OpenImpl()
 {
+#ifdef R__SEEK64
+   fFileDes = open64(GetLocation(fUrl).c_str(), O_RDONLY);
+#else
    fFileDes = open(GetLocation(fUrl).c_str(), O_RDONLY);
+#endif
    if (fFileDes < 0) {
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));
    }
@@ -76,8 +87,13 @@ void ROOT::Internal::RRawFileUnix::OpenImpl()
    if (fOptions.fBlockSize >= 0)
       return;
 
+#ifdef R__SEEK64
+   struct stat64 info;
+   int res = fstat64(fFileDes, &info);
+#else
    struct stat info;
    int res = fstat(fFileDes, &info);
+#endif
    if (res != 0) {
       throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
    }
@@ -92,7 +108,11 @@ size_t ROOT::Internal::RRawFileUnix::ReadAtImpl(void *buffer, size_t nbytes, std
 {
    size_t total_bytes = 0;
    while (nbytes) {
+#ifdef R__SEEK64
+      ssize_t res = pread64(fFileDes, buffer, nbytes, offset);
+#else
       ssize_t res = pread(fFileDes, buffer, nbytes, offset);
+#endif
       if (res < 0) {
          if (errno == EINTR)
             continue;
