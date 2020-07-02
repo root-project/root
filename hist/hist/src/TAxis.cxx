@@ -1125,7 +1125,7 @@ void TAxis::Streamer(TBuffer &R__b)
 void TAxis::UnZoom()
 {
    if (!gPad) {
-      Warning("TAxis::UnZoom","Cannot UnZoom if gPad does not exist.")
+      Warning("TAxis::UnZoom","Cannot UnZoom if gPad does not exist.");
       return;
    }
    gPad->SetView();
