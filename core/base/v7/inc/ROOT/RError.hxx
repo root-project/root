@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -244,6 +244,13 @@ public:
       if (result.fError)
          result.fError->AddFrame(std::move(sourceLocation));
       return result;
+   }
+
+   /// Shorthand method to throw an exception in the case of errors. Does nothing for
+   /// functions that succeeded.
+   void ThrowOnError() {
+      if (!Check())
+         Throw();
    }
 
    explicit operator bool() { return Check(); }
