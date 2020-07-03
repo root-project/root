@@ -1,4 +1,4 @@
-/// \file ROOT/RHistView.h
+/// \file ROOT/RHistView.hxx
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-08-06

@@ -1,5 +1,5 @@
 /**
- * @file NeuralNet
+ * @file TMVA/NeuralNet.h
  * @author  Peter Speckmayer
  * @version 1.0
  *

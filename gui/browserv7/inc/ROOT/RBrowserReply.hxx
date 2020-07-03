@@ -1,4 +1,4 @@
-/// \file ROOT/RBrowserRequest.hxx
+/// \file ROOT/RBrowserReply.hxx
 /// \ingroup WebGui ROOT7
 /// \author Bertrand Bellenot <bertrand.bellenot@cern.ch>
 /// \author Sergey Linev <S.Linev@gsi.de>
