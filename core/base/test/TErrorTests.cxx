@@ -50,4 +50,8 @@ TEST(TError, LongMessage) {
 
    Info("location", "%s", longMessage.c_str());
    EXPECT_EQ(longMessage, gTestLastMsg);
+
+   // Again, should reuse the now enlarged, thread-local heap-allocated buffer
+   Info("location", "%s", longMessage.c_str());
+   EXPECT_EQ(longMessage, gTestLastMsg);
 }
