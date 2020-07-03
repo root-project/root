@@ -3,9 +3,12 @@
 
 #include <ROOT/RError.hxx>
 
+#include <memory>
 #include <stdexcept>
 
 using RException = ROOT::Experimental::RException;
+template<typename T>
+using RResult = ROOT::Experimental::RResult<T>;
 
 namespace {
 
@@ -73,7 +76,7 @@ TEST(Exception, ForwardResult)
 {
    auto res = TestChain(true);
    ASSERT_TRUE(static_cast<bool>(res));
-   EXPECT_EQ(42, res.Get());
+   EXPECT_EQ(42, res.Inspect());
 }
 
 
@@ -121,13 +124,35 @@ TEST(Exception, Syscall)
       // In production code, we would expect error handling code other than throw
       EXPECT_THROW(fd.Throw(), RException);
    }
-   EXPECT_EQ(42, fd.Get());
+   EXPECT_EQ(42, fd.Inspect());
 
-   EXPECT_THROW(TestSyscall(false).Get(), RException);
+   EXPECT_THROW(TestSyscall(false).Inspect(), RException);
 }
 
 TEST(Exception, ComplexReturnType)
 {
    auto res = TestComplex();
    EXPECT_EQ(1, ComplexReturnType::gNCopies);
+}
+
+TEST(Exception, MoveOnlyReturnType)
+{
+   auto TestMoveOnly = []() -> RResult<std::unique_ptr<int>> {
+      return std::make_unique<int>(1);
+   };
+   auto res = TestMoveOnly();
+
+   // Using Inspect to make a copy won't compile
+   // auto copy_inner = res.Inspect();
+
+   // This will compile, but we only have read-only access
+   const auto& copy_inner = res.Inspect();
+   EXPECT_EQ(1, *copy_inner);
+
+   // Instead, Unwrap is required to get ownership of the move-only type
+   auto move_inner = res.Unwrap();
+   EXPECT_EQ(1, *move_inner);
+   move_inner.reset();
+   move_inner = std::make_unique<int>(2);
+   EXPECT_EQ(2, *move_inner);
 }
