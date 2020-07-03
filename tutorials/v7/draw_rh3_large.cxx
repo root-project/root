@@ -31,18 +31,20 @@ R__LOAD_LIBRARY(libROOTHistDraw)
 
 using namespace ROOT::Experimental;
 
-void draw_rh2_large()
+void draw_rh3_large()
 {
-   const int nbins = 2000;
+   const int nbins = 200;
 
    // Create the histogram.
    RAxisConfig xaxis("x", nbins, 0., nbins);
    RAxisConfig yaxis("y", nbins, 0., nbins);
-   auto pHist = std::make_shared<RH2D>(xaxis, yaxis);
+   RAxisConfig zaxis("z", nbins, 0., nbins);
+   auto pHist = std::make_shared<RH3D>(xaxis, yaxis, zaxis);
 
    for(int i=0;i<nbins;++i)
       for(int j=0;j<nbins;++j)
-         pHist->Fill({1.*i,1.*j}, i+j);
+         for(int k=0;k<nbins;++k)
+            pHist->Fill({1.*i,1.*j,1.*k}, i+j+k);
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
@@ -52,29 +54,24 @@ void draw_rh2_large()
    // should we made special style for frame with palette?
    // frame->Margins().SetRight(0.2_normal);
 
-   frame->SetGridX(false).SetGridY(false);
-   frame->AttrX().SetZoomMinMax(nbins*0.2, nbins*0.8);
-   frame->AttrY().SetZoomMinMax(nbins*0.2, nbins*0.8);
+   frame->AttrX().SetZoomMinMax(nbins*0.1, nbins*0.9);
+   frame->AttrY().SetZoomMinMax(nbins*0.1, nbins*0.9);
+   frame->AttrZ().SetZoomMinMax(nbins*0.1, nbins*0.9);
 
-   canvas->Draw<RFrameTitle>(TString::Format("Large RH2D histogram with %d x %d bins",nbins,nbins).Data());
+   canvas->Draw<RFrameTitle>(TString::Format("Large RH3D histogram with %d x %d x %d bins",nbins,nbins,nbins).Data());
 
    auto draw = canvas->Draw(pHist);
 
    draw->AttrLine().SetColor(RColor::kLime);
-   // draw->Contour(); // configure cont draw option
-   // draw->Scatter(); // configure scatter draw option
-   // draw->Arrow(); // configure arrow draw option
-   draw->Color(); // configure color draw option (default)
-   // draw->Text(true); // configure text drawing (can be enabled with most 2d options)
-   // draw->Box(1); // configure box1 draw option
-   // draw->Surf(2); // configure surf4 draw option, 3d
-   // draw->Lego(2); // configure lego2 draw option, 3d
-   // draw->Error(); // configure error drawing, 3d
+   // draw->Box(); // configure box draw option (default)
+   // draw->Sphere(); // configure sphere draw option
+   draw->Scatter(); // configure scatter draw option
+   // draw->Color(); // configure color draw option
 
    draw->Optimize(true); // enable draw optimization, reduced data set will be send to clients
 
-   auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist");
-   stat->AttrFill().SetColor(RColor::kBlue);
+   //auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist");
+   //stat->AttrFill().SetColor(RColor::kBlue);
 
    canvas->SetSize(1000, 700);
    canvas->Show();

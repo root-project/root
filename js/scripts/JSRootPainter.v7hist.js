@@ -107,7 +107,37 @@
          histo = obj;
 
          if (!histo.getBinContent || force) {
-            if (histo.fAxes.length == 2) {
+            if (histo.fAxes.length == 3) {
+               this.ProvideAxisMethods(histo.fAxes[0]);
+               this.ProvideAxisMethods(histo.fAxes[1]);
+               this.ProvideAxisMethods(histo.fAxes[2]);
+
+               histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
+               histo.dx = histo.fIndicies[0] + 1;
+               histo.stepx = histo.fIndicies[2];
+
+               histo.ny = histo.fIndicies[4] - histo.fIndicies[3];
+               histo.dy = histo.fIndicies[3] + 1;
+               histo.stepy = histo.fIndicies[5];
+
+               histo.nz = histo.fIndicies[7] - histo.fIndicies[6];
+               histo.dz = histo.fIndicies[6] + 1;
+               histo.stepz = histo.fIndicies[8];
+
+               // this is index in original histogram
+               histo.getBin = function(x, y, z) { return (x-1) + this.fAxes[0].GetNumBins()*(y-1) + this.fAxes[0].GetNumBins()*this.fAxes[1].GetNumBins()*(z-1); }
+
+               // this is index in current available data
+               if ((histo.stepx > 1) || (histo.stepy > 1) || (histo.stepz > 1))
+                  histo.getBin0 = function(x, y, z) { return Math.floor((x-this.dx)/this.stepx) + this.nx/this.stepx*Math.floor((y-this.dy)/this.stepy) + this.nx/this.stepx*this.ny/this.stepy*Math.floor((z-this.dz)/this.stepz); }
+               else
+                  histo.getBin0 = function(x, y, z) { return (x-this.dx) + this.nx*(y-this.dy) + this.nx*this.ny*(z-dz); }
+
+               histo.getBinContent = function(x, y, z) { return this.fBinContent[this.getBin0(x, y, z)]; }
+               histo.getBinError = function(x, y, z) { return Math.sqrt(Math.abs(this.getBinContent(x, y, z))); }
+
+
+            } else if (histo.fAxes.length == 2) {
                this.ProvideAxisMethods(histo.fAxes[0]);
                this.ProvideAxisMethods(histo.fAxes[1]);
 
@@ -118,10 +148,6 @@
                histo.ny = histo.fIndicies[4] - histo.fIndicies[3];
                histo.dy = histo.fIndicies[3] + 1;
                histo.stepy = histo.fIndicies[5];
-
-               // does display item covers full range?
-               // histo._full_range = (histo.dx == 1) && (histo.nx >= histo.fAxes[0].GetNumBins()) &&
-               //                     (histo.dy == 1) && (histo.ny >= histo.fAxes[1].GetNumBins());
 
                // this is index in original histogram
                histo.getBin = function(x, y) { return (x-1) + this.fAxes[0].GetNumBins()*(y-1); }
@@ -139,9 +165,6 @@
                histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
                histo.dx = histo.fIndicies[0] + 1;
                histo.stepx = histo.fIndicies[2];
-
-               // does display item covers full range?
-               // histo._full_range = (histo.dx == 1) && (histo.nx >= histo.fAxes[0].GetNumBins());
 
                histo.getBin = function(x) { return x-1; }
                if (histo.stepx > 1)
@@ -717,6 +740,7 @@
       if (!args) args = { rounding: true, extra: 0, middle: 0 };
 
       if (args.extra === undefined) args.extra = 0;
+      if (args.right_extra === undefined) args.right_extra = args.extra;
       if (args.middle === undefined) args.middle = 0;
 
       var histo = this.GetHisto(), xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y"),
@@ -725,11 +749,11 @@
           i, j, x, y, binz, binarea,
           res = {
              i1: this.GetSelectIndex("x", "left", 0 - args.extra),
-             i2: this.GetSelectIndex("x", "right", 1 + args.extra),
+             i2: this.GetSelectIndex("x", "right", 1 + args.right_extra),
              j1: (hdim < 2) ? 0 : this.GetSelectIndex("y", "left", 0 - args.extra),
-             j2: (hdim < 2) ? 1 : this.GetSelectIndex("y", "right", 1 + args.extra),
+             j2: (hdim < 2) ? 1 : this.GetSelectIndex("y", "right", 1 + args.right_extra),
              k1: (hdim < 3) ? 0 : this.GetSelectIndex("z", "left", 0 - args.extra),
-             k2: (hdim < 3) ? 1 : this.GetSelectIndex("z", "right", 1 + args.extra),
+             k2: (hdim < 3) ? 1 : this.GetSelectIndex("z", "right", 1 + args.right_extra),
              stepi: 1, stepj: 1, stepk: 1,
              min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1
           };
@@ -3677,14 +3701,67 @@
       return painter;
    }
 
+   // =================================================================================
+
+
+   // place basic declaration here to be able use it with RHistDisplayItem
+   function RH3Painter(histo) {
+      JSROOT.v7.RHistPainter.call(this, histo);
+
+      this.mode3d = true;
+   }
+
+   RH3Painter.prototype = Object.create(RHistPainter.prototype);
+
+   RH3Painter.prototype.Dimension = function() {
+      return 3;
+   }
+
+   function drawHist3(divid, histo, opt) {
+      // create painter and add it to canvas
+      var painter = new RH3Painter(histo);
+
+      painter.PrepareFrame(divid, true); // create if necessary frame in 3d mode
+
+      painter.options = { Box: 0, Scatter: false, Sphere: 0, Color: false, minimum: -1111, maximum: -1111 };
+
+      var kind = painter.v7EvalAttr("kind", ""),
+          sub = painter.v7EvalAttr("sub", 0),
+          o = painter.options;
+
+      switch(kind) {
+         case "box": o.Box = 10 + sub; break;
+         case "sphere": o.Sphere = 10 + sub; break;
+         case "col": o.Color = true; break;
+         case "scat": o.Scatter = true;  break;
+         default: o.Box = 10;
+      }
+
+      JSROOT.AssertPrerequisites('v7hist3d', function() {
+         painter.ScanContent();
+         painter.Redraw();
+         painter.DrawingReady();
+      }.bind(this));
+
+      return painter;
+   }
+
+   // =================================================================================
+
    function drawHistDisplayItem(divid, obj, opt) {
-      if (!obj || (obj.fAxes.length < 2))
+      if (!obj)
+         return null;
+
+      if (obj.fAxes.length == 1)
          return drawHist1(divid, obj, opt);
 
       if (obj.fAxes.length == 2)
          return drawHist2(divid, obj, opt);
 
-      return null; // support of RH3 object
+      if (obj.fAxes.length == 3)
+         return drawHist3(divid, obj, opt);
+
+      return null;
    }
 
    // =============================================================
@@ -3889,9 +3966,12 @@
    JSROOT.v7.RHistPainter = RHistPainter;
    JSROOT.v7.RH1Painter = RH1Painter;
    JSROOT.v7.RH2Painter = RH2Painter;
+   JSROOT.v7.RH3Painter = RH3Painter;
 
    JSROOT.v7.drawHist1 = drawHist1;
    JSROOT.v7.drawHist2 = drawHist2;
+   JSROOT.v7.drawHist3 = drawHist3;
+
    JSROOT.v7.drawHistDisplayItem = drawHistDisplayItem;
    JSROOT.v7.drawHistStats = drawHistStats;
 
