@@ -49,7 +49,7 @@
 //     if (!result) {
 //        /* custom error handling or result.Throw() */
 //     }
-//     switch (result.Get()) {
+//     switch (result.Inspect()) {
 //        ...
 //     }
 //
@@ -187,6 +187,20 @@ private:
    /// The result value in case of successful execution
    T fValue;
 
+   // Ensure accessor methods throw in case of errors
+   inline void ThrowOnError() {
+      if (R__unlikely(fError)) {
+         // Accessors can be wrapped in a try-catch block, so throwing the
+         // exception here is akin to checking the error.
+         //
+         // Setting fIsChecked to true also avoids a spurious warning in the RResult destructor
+         fIsChecked = true;
+
+         fError->AppendToMessage(" (unchecked RResult access!)");
+         throw RException(*fError);
+      }
+   }
+
 public:
    RResult(const T &value) : fValue(value) {}
    RResult(T &&value) : fValue(std::move(value)) {}
@@ -206,24 +220,29 @@ public:
       return result;
    }
 
-   /// If the operation was successful, returns the inner value and consumes the RResult.
-   /// If there was an error, Get() instead throws an exception.
-   T Get() {
-      if (R__unlikely(fError)) {
-         // Get() can be wrapped in a try-catch block, so throwing the exception here is akin to checking the error.
-         // Setting fIsChecked to true also avoids a spurious warning in the RResult destructor
-         fIsChecked = true;
+   /// If the operation was successful, returns a const reference to the inner type.
+   /// If there was an error, Inspect() instead throws an exception.
+   const T &Inspect() {
+      ThrowOnError();
+      return fValue;
+   }
 
-         fError->AppendToMessage(" (unchecked RResult access!)");
-         throw RException(*fError);
-      }
+   /// If the operation was successful, returns the inner type by value.
+   ///
+   /// For move-only types, Unwrap can only be called once, as it yields ownership of
+   /// the inner value to the caller using std::move, potentially leaving the
+   /// RResult in an unspecified state.
+   ///
+   /// If there was an error, Unwrap() instead throws an exception.
+   T Unwrap() {
+      ThrowOnError();
       return std::move(fValue);
    }
 
    explicit operator bool() { return Check(); }
 };
 
-/// RResult<void> has no data member and no Get() method but instead a Success() factory method
+/// RResult<void> has no data member and no Inspect() method but instead a Success() factory method
 template<>
 class RResult<void> : public Internal::RResultBase {
 private:
