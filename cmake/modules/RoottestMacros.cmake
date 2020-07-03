@@ -835,7 +835,6 @@ function(ROOTTEST_ADD_TEST testname)
     set(environment ENVIRONMENT
                     ROOTSYS=${ROOTSYS}
                     PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
-
   else()
     string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
     string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
@@ -1056,7 +1055,6 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     set(environment ENVIRONMENT
                     ROOTSYS=${ROOTSYS}
                     PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
-
   else()
     string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
     string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
