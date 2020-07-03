@@ -1,5 +1,5 @@
 
-.PHONY: filter folders mathjax js images doxygen
+.PHONY: filter folders mathjax js images doxygen replaceCollaborationDiagrams
 
 NJOB ?= $(shell nproc)
 PYTHON_EXECUTABLE ?= python3
@@ -55,7 +55,6 @@ doxygen: filter pyzdoc
 	./makehtmlfooter.sh > htmlfooter.html
 	./makeinput.sh
 	doxygen
-	./listlibs.sh
 	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.tag
 	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.qch
 	rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
