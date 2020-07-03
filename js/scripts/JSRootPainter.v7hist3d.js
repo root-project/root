@@ -1074,7 +1074,7 @@
           main = this.frame_painter(),
           axis_zmin = main.grz.domain()[0],
           axis_zmax = main.grz.domain()[1],
-          handle = this.PrepareColorDraw({ rounding: false, use3d: true, extra: 1 }),
+          handle = this.PrepareDraw({ rounding: false, use3d: true, extra: 1 }),
           i1 = handle.i1, i2 = handle.i2, j1 = handle.j1, j2 = handle.j2, di = handle.stepi, dj = handle.stepj,
           i, j, x1, x2, y1, y2, binz1, binz2, reduced, nobottom, notop,
           pthis = this,
@@ -1595,7 +1595,7 @@
    JSROOT.v7.RH2Painter.prototype.DrawContour3D = function(realz) {
       // for contour plots one requires handle with full range
       var main = this.frame_painter(),
-          handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 }),
+          handle = this.PrepareDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 }),
           histo = this.GetHisto(), // get levels
           palette = main.GetPalette(),
           layerz = 2*main.size_z3d, pnts = [];
@@ -1628,7 +1628,7 @@
    JSROOT.v7.RH2Painter.prototype.DrawSurf = function() {
       var histo = this.GetHisto(),
           main = this.frame_painter(),
-          handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 1, middle: 0.5 }),
+          handle = this.PrepareDraw({rounding: false, use3d: true, extra: 1, middle: 0.5 }),
           i, j, x1, y1, x2, y2, z11, z12, z21, z22,
           di = handle.stepi, dj = handle.stepj,
           numstepi = handle.i2 - handle.i1, numstepj = handle.j2 - handle.j1,
@@ -1981,7 +1981,7 @@
 
       if (this.options.Surf === 13) {
 
-         handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 });
+         handle = this.PrepareDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 });
 
          // get levels
          var levels = this.GetContour(), // init contour
@@ -2052,7 +2052,7 @@
       var pthis = this,
           main = this.frame_painter(),
           histo = this.GetHisto(),
-          handle = this.PrepareColorDraw({ rounding: false, use3d: true, extra: 1 }),
+          handle = this.PrepareDraw({ rounding: false, use3d: true, extra: 1 }),
           zmin = main.grz.domain()[0],
           zmax = main.grz.domain()[1],
           i, j, binz, binerr, x1, y1, x2, y2, z1, z2,
@@ -2649,7 +2649,7 @@
 
       if (!this.draw_content) return;
 
-      var handle = this.PrepareColorDraw({ only_indexes: true, extra: -0.5, right_extra: -1 });
+      var handle = this.PrepareDraw({ only_indexes: true, extra: -0.5, right_extra: -1 });
 
       if (this.options.Scatter)
          if (this.Draw3DScatter(handle)) return;

@@ -1789,9 +1789,9 @@
          unzoom_z = (zmin === zmax) && (zmin === 0);
       }
 
-      var changed = false, fp = this, changes = {};
-
-      var req = {
+      var changed = false, fp = this, changes = {},
+          r_x = "", r_y = "", r_z = "",
+         req = {
          _typename: "ROOT::Experimental::RFrame::RUserRanges",
          values: [0, 0, 0, 0, 0, 0],
          flags: [false, false, false, false, false, false]
@@ -1803,7 +1803,7 @@
             if (zoom_x && obj.CanZoomIn("x", xmin, xmax)) {
                fp.zoom_xmin = xmin;
                fp.zoom_xmax = xmax;
-               changed = true;
+               changed = true; r_x = "0";
                zoom_x = false;
                fp.v7AttrChange(changes, "x_zoommin", xmin);
                fp.v7AttrChange(changes, "x_zoommax", xmax);
@@ -1813,7 +1813,7 @@
             if (zoom_y && obj.CanZoomIn("y", ymin, ymax)) {
                fp.zoom_ymin = ymin;
                fp.zoom_ymax = ymax;
-               changed = true;
+               changed = true; r_y = "1";
                zoom_y = false;
                fp.v7AttrChange(changes, "y_zoommin", ymin);
                fp.v7AttrChange(changes, "y_zoommax", ymax);
@@ -1823,7 +1823,7 @@
             if (zoom_z && obj.CanZoomIn("z", zmin, zmax)) {
                fp.zoom_zmin = zmin;
                fp.zoom_zmax = zmax;
-               changed = true;
+               changed = true; r_z = "2";
                zoom_z = false;
                fp.v7AttrChange(changes, "z_zoommin", zmin);
                fp.v7AttrChange(changes, "z_zoommax", zmax);
@@ -1835,21 +1835,21 @@
       // and process unzoom, if any
       if (unzoom_x || unzoom_y || unzoom_z) {
          if (unzoom_x) {
-            if (this.zoom_xmin !== this.zoom_xmax) changed = true;
+            if (this.zoom_xmin !== this.zoom_xmax) { changed = true; r_x = "0"; }
             this.zoom_xmin = this.zoom_xmax = 0;
             fp.v7AttrChange(changes, "x_zoommin", null);
             fp.v7AttrChange(changes, "x_zoommax", null);
             req.values[0] = req.values[1] = -1;
          }
          if (unzoom_y) {
-            if (this.zoom_ymin !== this.zoom_ymax) changed = true;
+            if (this.zoom_ymin !== this.zoom_ymax) { changed = true; r_y = "1"; }
             this.zoom_ymin = this.zoom_ymax = 0;
             fp.v7AttrChange(changes, "y_zoommin", null);
             fp.v7AttrChange(changes, "y_zoommax", null);
             req.values[2] = req.values[3] = -1;
          }
          if (unzoom_z) {
-            if (this.zoom_zmin !== this.zoom_zmax) changed = true;
+            if (this.zoom_zmin !== this.zoom_zmax) { changed = true; r_z = "2"; }
             this.zoom_zmin = this.zoom_zmax = 0;
             fp.v7AttrChange(changes, "z_zoommin", null);
             fp.v7AttrChange(changes, "z_zoommax", null);
@@ -1857,15 +1857,13 @@
          }
       }
 
-      if (this.v7CommMode() == JSROOT.v7.CommMode.kNormal) {
-         console.log('Send zoom ', req);
+      if (this.v7CommMode() == JSROOT.v7.CommMode.kNormal)
          this.v7SubmitRequest("zoom", { _typename: "ROOT::Experimental::RFrame::RZoomRequest", ranges: req });
-      }
 
       // this.v7SendAttrChanges(changes);
 
       if (changed)
-         this.InteractiveRedraw("pad", "zoom");
+         this.InteractiveRedraw("pad", "zoom" + r_x + r_y + r_z);
 
       return changed;
    }
