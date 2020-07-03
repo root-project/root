@@ -2357,19 +2357,7 @@
 
    // ==============================================================================
 
-   function RH3Painter(histo) {
-      JSROOT.v7.RHistPainter.call(this, histo);
-
-      this.mode3d = true;
-   }
-
-   RH3Painter.prototype = Object.create(JSROOT.v7.RHistPainter.prototype);
-
-   RH3Painter.prototype.Dimension = function() {
-      return 3;
-   }
-
-   RH3Painter.prototype.ScanContent = function(when_axis_changed) {
+   JSROOT.v7.RH3Painter.prototype.ScanContent = function(when_axis_changed) {
 
       // no need to rescan histogram while result does not depend from axis selection
       if (when_axis_changed && this.nbinsx && this.nbinsy && this.nbinsz) return;
@@ -2383,22 +2371,29 @@
 
       // global min/max, used at the moment in 3D drawing
 
-      this.gminbin = this.gmaxbin = histo.getBinContent(1,1,1);
+      if (this.IsDisplayItem()) {
+         // take min/max values from the display item
+         this.gminbin = histo.fContMin;
+         this.gminposbin = histo.fContMinPos > 0 ? histo.fContMinPos : null;
+         this.gmaxbin = histo.fContMax;
+      } else {
+         this.gminbin = this.gmaxbin = histo.getBinContent(1,1,1);
 
-      for (var i = 0; i < this.nbinsx; ++i)
-         for (var j = 0; j < this.nbinsy; ++j)
-            for (var k = 0; k < this.nbinsz; ++k) {
-               var bin_content = histo.getBinContent(i+1, j+1, k+1);
-               if (bin_content < this.gminbin) this.gminbin = bin_content; else
-               if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
-            }
+         for (var i = 0; i < this.nbinsx; ++i)
+            for (var j = 0; j < this.nbinsy; ++j)
+               for (var k = 0; k < this.nbinsz; ++k) {
+                  var bin_content = histo.getBinContent(i+1, j+1, k+1);
+                  if (bin_content < this.gminbin) this.gminbin = bin_content; else
+                  if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
+               }
+      }
 
       this.draw_content = this.gmaxbin > 0;
 
       this.CreateAxisFuncs(true, true);
    }
 
-   RH3Painter.prototype.CountStat = function() {
+   JSROOT.v7.RH3Painter.prototype.CountStat = function() {
       var histo = this.GetHisto(),
           xaxis = this.GetAxis("x"),
           yaxis = this.GetAxis("y"),
@@ -2472,7 +2467,7 @@
       return res;
    }
 
-   RH3Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
+   JSROOT.v7.RH3Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
 
       // no need to refill statistic if histogram is dummy
       if (this.IgnoreStatsFill()) return false;
@@ -2517,7 +2512,7 @@
       return true;
    }
 
-   RH3Painter.prototype.GetBinTips = function (ix, iy, iz) {
+   JSROOT.v7.RH3Painter.prototype.GetBinTips = function (ix, iy, iz) {
       var lines = [], pmain = this.frame_painter(), histo = this.GetHisto(),
           xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y"), zaxis = this.GetAxis("z"),
           dx = 1, dy = 1, dz = 1;
@@ -2555,18 +2550,15 @@
       return lines;
    }
 
-   RH3Painter.prototype.Draw3DScatter = function() {
+   JSROOT.v7.RH3Painter.prototype.Draw3DScatter = function(handle) {
       // try to draw 3D histogram as scatter plot
       // if too many points, box will be displayed
 
       var histo = this.GetHisto(),
           main = this.frame_painter(),
-          i1 = this.GetSelectIndex("x", "left", 0.5),
-          i2 = this.GetSelectIndex("x", "right", 0),
-          j1 = this.GetSelectIndex("y", "left", 0.5),
-          j2 = this.GetSelectIndex("y", "right", 0),
-          k1 = this.GetSelectIndex("z", "left", 0.5),
-          k2 = this.GetSelectIndex("z", "right", 0),
+          i1 = handle.i1, i2 = handle.i2, di = handle.stepi,
+          j1 = handle.j1, j2 = handle.j2, dj = handle.stepj,
+          k1 = handle.k1, k2 = handle.k2, dk = handle.stepk,
           name = this.GetTipName("<br/>"),
           i, j, k, bin_content;
 
@@ -2576,9 +2568,9 @@
       var coef = (this.gmaxbin > 1000) ? 1000/this.gmaxbin : 1,
           numpixels = 0, sumz = 0, content_lmt = Math.max(0, this.gminbin);
 
-      for (i = i1; i < i2; ++i) {
-         for (j = j1; j < j2; ++j) {
-            for (k = k1; k < k2; ++k) {
+      for (i = i1; i < i2; i += di) {
+         for (j = j1; j < j2; j += dj) {
+            for (k = k1; k < k2; k += dk) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
                sumz += bin_content;
                if (bin_content <= content_lmt) continue;
@@ -2596,9 +2588,9 @@
           bins = new Int32Array(numpixels), nbin = 0,
           xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y"), zaxis = this.GetAxis("z");
 
-      for (i = i1; i < i2; ++i) {
-         for (j = j1; j < j2; ++j) {
-            for (k = k1; k < k2; ++k) {
+      for (i = i1; i < i2; i += di) {
+         for (j = j1; j < j2; j += dj) {
+            for (k = k1; k < k2; k += dk) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
                if (bin_content <= content_lmt) continue;
                var num = Math.round(bin_content*coef);
@@ -2639,11 +2631,11 @@
              tip = p.Get3DToolTip(this.bins[indx]);
 
          tip.x1 = main.grx(p.GetAxis("x").GetBinLowEdge(tip.ix));
-         tip.x2 = main.grx(p.GetAxis("x").GetBinLowEdge(tip.ix+1));
+         tip.x2 = main.grx(p.GetAxis("x").GetBinLowEdge(tip.ix+di));
          tip.y1 = main.gry(p.GetAxis("y").GetBinLowEdge(tip.iy));
-         tip.y2 = main.gry(p.GetAxis("y").GetBinLowEdge(tip.iy+1));
+         tip.y2 = main.gry(p.GetAxis("y").GetBinLowEdge(tip.iy+dj));
          tip.z1 = main.grz(p.GetAxis("z").GetBinLowEdge(tip.iz));
-         tip.z2 = main.grz(p.GetAxis("z").GetBinLowEdge(tip.iz+1));
+         tip.z2 = main.grz(p.GetAxis("z").GetBinLowEdge(tip.iz+dk));
          tip.color = this.tip_color;
          tip.opacity = 0.3;
 
@@ -2653,12 +2645,14 @@
       return true;
    }
 
-   RH3Painter.prototype.Draw3DBins = function() {
+   JSROOT.v7.RH3Painter.prototype.Draw3DBins = function() {
 
       if (!this.draw_content) return;
 
+      var handle = this.PrepareColorDraw({ only_indexes: true, extra: -0.5, right_extra: -1 });
+
       if (this.options.Scatter)
-         if (this.Draw3DScatter()) return;
+         if (this.Draw3DScatter(handle)) return;
 
       var fillcolor = this.v7EvalColor("fill_color", "red"),
           main = this.frame_painter(),
@@ -2738,12 +2732,9 @@
          use_scale = (this.gminbin || this.gmaxbin) ? 1 / Math.max(Math.abs(this.gminbin), Math.abs(this.gmaxbin)) : 1;
 
       var histo = this.GetHisto(),
-          i1 = this.GetSelectIndex("x", "left", 0.5),
-          i2 = this.GetSelectIndex("x", "right", 0),
-          j1 = this.GetSelectIndex("y", "left", 0.5),
-          j2 = this.GetSelectIndex("y", "right", 0),
-          k1 = this.GetSelectIndex("z", "left", 0.5),
-          k2 = this.GetSelectIndex("z", "right", 0),
+          i1 = handle.i1, i2 = handle.i2, di = handle.stepi,
+          j1 = handle.j1, j2 = handle.j2, dj = handle.stepj,
+          k1 = handle.k1, k2 = handle.k2, dk = handle.stepk,
           name = this.GetTipName("<br/>"),
           palette = null;
 
@@ -2755,15 +2746,15 @@
       if ((i2<=i1) || (j2<=j1) || (k2<=k1)) return;
 
       var xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y"), zaxis = this.GetAxis("z"),
-          scalex = (main.grx(xaxis.GetBinLowEdge(i2+1)) - main.grx(xaxis.GetBinLowEdge(i1+1))) / (i2-i1),
-          scaley = (main.gry(yaxis.GetBinLowEdge(j2+1)) - main.gry(yaxis.GetBinLowEdge(j1+1))) / (j2-j1),
-          scalez = (main.grz(zaxis.GetBinLowEdge(k2+1)) - main.grz(zaxis.GetBinLowEdge(k1+1))) / (k2-k1);
+          scalex = (main.grx(xaxis.GetBinCoord(i2)) - main.grx(xaxis.GetBinCoord(i1))) / (i2 - i1) * di,
+          scaley = (main.gry(yaxis.GetBinCoord(j2)) - main.gry(yaxis.GetBinCoord(j1))) / (j2 - j1) * dj,
+          scalez = (main.grz(zaxis.GetBinCoord(k2)) - main.grz(zaxis.GetBinCoord(k1))) / (k2 - k1) * dk;
 
       var nbins = 0, i, j, k, wei, bin_content, cols_size = [], num_colors = 0, cols_sequence = [];
 
-      for (i = i1; i < i2; ++i) {
-         for (j = j1; j < j2; ++j) {
-            for (k = k1; k < k2; ++k) {
+      for (i = i1; i < i2; i += di) {
+         for (j = j1; j < j2; j += dj) {
+            for (k = k1; k < k2; k += dk) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
                if (!this.options.Color && ((bin_content===0) || (bin_content < this.gminbin))) continue;
                wei = use_scale ? Math.pow(Math.abs(bin_content*use_scale), 0.3333) : 1;
@@ -2801,7 +2792,7 @@
           helper_indexes = new Array(num_colors),  // helper_kind == 1, use original vertices
           helper_positions = new Array(num_colors);  // helper_kind == 2, all vertices copied into separate buffer
 
-      for(var ncol=0;ncol<cols_size.length;++ncol) {
+      for(var ncol = 0; ncol < cols_size.length; ++ncol) {
          if (!cols_size[ncol]) continue; // ignore dummy colors
 
          nbins = cols_size[ncol]; // how many bins with specified color
@@ -2832,11 +2823,11 @@
           yaxis = this.GetAxis("y"),
           zaxis = this.GetAxis("z");
 
-      for (i = i1; i < i2; ++i) {
+      for (i = i1; i < i2; i += di) {
          binx = xaxis.GetBinCenter(i+1); grx = main.grx(binx);
-         for (j = j1; j < j2; ++j) {
+         for (j = j1; j < j2; j += dj) {
             biny = yaxis.GetBinCenter(j+1); gry = main.gry(biny);
-            for (k = k1; k < k2; ++k) {
+            for (k = k1; k < k2; k +=dk) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
                if (!this.options.Color && ((bin_content===0) || (bin_content < this.gminbin))) continue;
 
@@ -2975,31 +2966,36 @@
          this.UpdatePaletteDraw();
    }
 
-   RH3Painter.prototype.Redraw = function(reason) {
+   JSROOT.v7.RH3Painter.prototype.Redraw = function(reason) {
 
       var main = this.frame_painter(), // who makes axis and 3D drawing
           histo = this.GetHisto();
 
       if (reason == "resize") {
-
          if (main.Resize3D()) main.Render3D();
+         return;
+      }
 
-      } else {
+      main.Create3DScene();
+      main.SetAxesRanges(this.xmin, this.xmax, this.ymin, this.ymax, this.zmin, this.zmax);
+      main.Set3DOptions(this.options);
+      main.DrawXYZ(main.toplevel, { zoom: JSROOT.gStyle.Zooming, ndim: 3 });
 
-         main.Create3DScene();
-         main.SetAxesRanges(this.xmin, this.xmax, this.ymin, this.ymax, this.zmin, this.zmax);
-         main.Set3DOptions(this.options);
-         main.DrawXYZ(main.toplevel, { zoom: JSROOT.gStyle.Zooming, ndim: 3 });
+      this.DrawingBins(null, reason, function() {
+         // called when bins received from server, must be reentrant
+
+         var main = this.frame_painter();
+
+         console.log("drawing bins", this.options.Color, this.draw_content);
+
          this.Draw3DBins();
          main.Render3D();
          this.UpdateStatWebCanvas();
          main.AddKeysHandler();
-      }
-
-      // this.DrawTitle();
+      });
    }
 
-   RH3Painter.prototype.FillToolbar = function() {
+   JSROOT.v7.RH3Painter.prototype.FillToolbar = function() {
       var pp = this.pad_painter();
       if (!pp) return;
 
@@ -3009,14 +3005,14 @@
       pp.ShowButtons();
    }
 
-   RH3Painter.prototype.CanZoomIn = function(axis,min,max) {
+   JSROOT.v7.RH3Painter.prototype.CanZoomIn = function(axis,min,max) {
       // check if it makes sense to zoom inside specified axis range
       var obj = this.GetHisto();
       if (obj) obj = obj["f"+axis.toUpperCase()+"axis"];
       return !obj || (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
-   RH3Painter.prototype.AutoZoom = function() {
+   JSROOT.v7.RH3Painter.prototype.AutoZoom = function() {
       var i1 = this.GetSelectIndex("x", "left"),
           i2 = this.GetSelectIndex("x", "right"),
           j1 = this.GetSelectIndex("y", "left"),
@@ -3077,7 +3073,7 @@
       if (isany) this.frame_painter().Zoom(xmin, xmax, ymin, ymax, zmin, zmax);
    }
 
-   RH3Painter.prototype.FillHistContextMenu = function(menu) {
+   JSROOT.v7.RH3Painter.prototype.FillHistContextMenu = function(menu) {
 
       var sett = JSROOT.getDrawSettings("ROOT." + this.GetObject()._typename, 'nosame');
 
@@ -3090,37 +3086,6 @@
          this.InteractiveRedraw(true, "drawopt");
       });
    }
-
-   JSROOT.v7.drawHist3 = function(divid, histo, opt) {
-      // create painter and add it to canvas
-      var painter = new RH3Painter(histo);
-
-      painter.PrepareFrame(divid, true); // create if necessary frame in 3d mode
-
-      painter.options = { Box: 0, Scatter: false, Sphere: 0, Color: false, minimum: -1111, maximum: -1111 };
-
-      var kind = painter.v7EvalAttr("kind", ""),
-          sub = painter.v7EvalAttr("sub", 0),
-          o = painter.options;
-
-      switch(kind) {
-         case "box": o.Box = 10 + sub; break;
-         case "sphere": o.Sphere = 10 + sub; break;
-         case "col": o.Color = true; break;
-         case "scat": o.Scatter = true;  break;
-         default: o.Box = 10;
-      }
-
-      painter.ScanContent();
-
-      painter.Redraw();
-
-      // painter.FillToolbar();
-
-      return painter.DrawingReady();
-   }
-
-   JSROOT.v7.RH3Painter = RH3Painter;
 
    return JSROOT;
 }));
