@@ -24,6 +24,7 @@
 #include "ROOT/RHistStatBox.hxx"
 #include "ROOT/RFrame.hxx"
 #include "TMath.h"
+#include "TString.h"
 
 
 // macro must be here while cling is not capable to load
@@ -34,7 +35,7 @@ using namespace ROOT::Experimental;
 
 void draw_rh1_large()
 {
-   const int nbins = 500000;
+   const int nbins = 5000000;
 
    // Create the histogram.
    RAxisConfig xaxis("x", nbins, 0., nbins);
@@ -51,7 +52,7 @@ void draw_rh1_large()
    frame->SetGridX(true).SetGridY(true);
    frame->AttrX().SetZoomMinMax(nbins*0.2, nbins*0.8);
 
-   canvas->Draw<RFrameTitle>(Form("Large RH1D histogram with %d bins",nbins));
+   canvas->Draw<RFrameTitle>(TString::Format("Large RH1D histogram with %d bins",nbins).Data());
 
    auto draw = canvas->Draw(pHist);
 
