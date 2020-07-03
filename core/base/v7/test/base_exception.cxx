@@ -111,12 +111,7 @@ TEST(Exception, VoidThrowOnError)
    // no throw on success
    TestSuccess().ThrowOnError();
    // throw on failure
-   try {
-      TestFailure().ThrowOnError();
-      FAIL() << "ThrowOnError must throw for error states";
-   } catch (const RException& err) {
-      // ThrowOnError() worked
-   }
+   EXPECT_THROW(TestFailure().ThrowOnError(), RException);
 }
 
 TEST(Exception, Syscall)

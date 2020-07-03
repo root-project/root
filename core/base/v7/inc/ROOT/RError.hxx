@@ -246,8 +246,8 @@ public:
       return result;
    }
 
-   /// Shorthand method to throw an exception in the case of errors. Does nothing for
-   /// functions that succeeded.
+   /// Short-hand method to throw an exception in the case of errors. Does nothing for
+   /// successful RResults.
    void ThrowOnError() {
       if (!Check())
          Throw();
