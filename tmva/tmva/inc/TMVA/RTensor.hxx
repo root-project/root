@@ -259,6 +259,9 @@ public:
    RTensor<Value_t, Container_t> Reshape(const Shape_t &shape);
    RTensor<Value_t, Container_t> Slice(const Slice_t &slice);
 
+   RTensor<Value_t, Container_t> Concatenate(RTensor<Value_t, Container_t> &a, std::size_t idx = 0);
+
+
    // Iterator class
    class Iterator : public std::iterator<std::random_access_iterator_tag, Value_t> {
    private:
@@ -590,6 +593,41 @@ std::ostream &operator<<(std::ostream &os, RTensor<T> &x)
       os << "{ printing not yet implemented for this rank }";
    }
    return os;
+}
+
+
+
+
+/// \brief Concatenates two tensors
+/// \param[in] a RTensor to concatenate with the given one.
+/// \param[in] idx Index of the axis to concatenate alongside of 
+/// \returns New RTensor
+/// Concatenates the vector with a second one along the provided axis.
+template <typename Value_t, typename Container_t>
+inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Concatenate(RTensor<Value_t, Container_t> &a, std::size_t idx)
+{   
+   
+   Shape_t new_fShape = this->fShape;
+   new_fShape[idx] = this->fShape[idx] + a.fShape[idx];
+   
+   std::size_t new_fSize = Internal::GetSizeFromShape(new_fShape);
+
+   Value_t * new_fData = new Value_t [new_fSize];
+
+   // Trivial case of concatenation alongside the 0th dimention
+   if (idx == 0){
+      for (std::size_t i = 0; i < this->this->fShape.size(); i++) {
+         new_fData[i] = this->fData[i];
+      }
+      for (std::size_t i = 0; i < a.this->fShape.size(); i++) {
+         new_fData[i + this->fSize] = a.fData[i];
+      }
+   }
+  
+
+   RTensor<Value_t, Container_t> res (new_fData, new_fShape, this->fLayout);
+
+   return res;
 }
 
 } // namespace TMVA::Experimental
