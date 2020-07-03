@@ -130,7 +130,7 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, std::va_li
       buf_size = n + 1;
       if (buf != &(small_buf[0]))
          delete[] buf;
-      buf = new char[buf_size];
+      buf_storage = buf = new char[buf_size];
 
       // Try again with a sufficiently large buffer
       va_copy(ap_copy, ap);
