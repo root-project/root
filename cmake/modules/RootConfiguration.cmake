@@ -501,6 +501,11 @@ if (tmva-rmva)
 else()
   set(hasrmva undef)
 endif()
+if (uring)
+  set(hasuring define)
+else()
+  set(hasuring undef)
+endif()
 
 # clear cache to allow reconfiguring
 # with a different CMAKE_CXX_STANDARD
