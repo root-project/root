@@ -169,7 +169,7 @@ ROOT_BUILD_OPTION(tmva-pymva ON "Enable support for Python in TMVA (requires num
 ROOT_BUILD_OPTION(tmva-rmva OFF "Enable support for R in TMVA")
 ROOT_BUILD_OPTION(spectrum ON "Enable support for TSpectrum")
 ROOT_BUILD_OPTION(unuran OFF "Enable support for UNURAN (package for generating non-uniform random numbers)")
-ROOT_BUILD_OPTION(uring OFF "Enable support for io_uring (requires Linux kernel >= 5.1)")
+ROOT_BUILD_OPTION(uring OFF "Enable support for io_uring (requires liburing and Linux kernel >= 5.1)")
 ROOT_BUILD_OPTION(vc OFF "Enable support for Vc (SIMD Vector Classes for C++)")
 ROOT_BUILD_OPTION(vmc OFF "Build VMC simulation library")
 ROOT_BUILD_OPTION(vdt ON "Enable support for VDT (fast and vectorisable mathematical functions)")
