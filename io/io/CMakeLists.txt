@@ -71,7 +71,6 @@ if(root7)
 endif()
 
 if(uring)
-  target_compile_definitions(RIO PRIVATE HAVE_LIBURING)
   target_link_libraries(RIO PRIVATE uring)
 endif()
 
