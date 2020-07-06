@@ -1,3 +1,4 @@
+/// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
@@ -62,17 +63,17 @@ void rf514_RooCustomizer() {
 
   // 1. Each sample should have its own mean for the gaussian
   // The customiser will make copies of `meanG` for each category.
-  // The they will all appear in the set `newLeafs`, which will own the new nodes.
+  // These will all appear in the set `newLeafs`, which will own the new nodes.
   RooCustomizer cust(model, sample, newLeafs, &allCustomiserNodes);
   cust.splitArg(meanG, sample);
 
 
   // 2. Each sample should have its own signal yield, but there is an extra complication:
-  // We need each yields 1 and 2 to be a function of the variable "mass".
+  // We need the yields 1 and 2 to be a function of the variable "mass".
   // For this, we pre-define nodes with exacly the names that the customiser would have created automatically,
   // that is, "<nodeName>_<categoryName>", and we register them in the set of customiser nodes.
   // The customiser will pick them up instead of creating new ones.
-  // If we don't provide one (e.g. for "yieldSig_Sample3"), it will be created by cloning `yieldSig`.
+  // If we don't provide one (e.g. for "yieldSig_Sample3"), it will be created automatically by cloning `yieldSig`.
   RooRealVar mass("M", "M", 1, 0, 12000);
   RooFormulaVar yield1("yieldSig_Sample1", "Signal yield in the first sample", "M/3.360779", mass);
   RooFormulaVar yield2("yieldSig_Sample2", "Signal yield in the second sample", "M/2", mass);
