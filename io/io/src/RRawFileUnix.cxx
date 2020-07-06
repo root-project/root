@@ -14,7 +14,7 @@
 #include "ROOT/RRawFileUnix.hxx"
 #include "ROOT/RMakeUnique.hxx"
 
-#ifdef HAVE_LIBURING
+#ifdef R__HAS_URING
   #include "ROOT/RIoUring.hxx"
 #endif
 
@@ -114,7 +114,7 @@ void ROOT::Internal::RRawFileUnix::OpenImpl()
 
 void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
-#ifdef HAVE_LIBURING
+#ifdef R__HAS_URING
    if (!RIoUring::IsAvailable()) {
       RRawFile::ReadVImpl(ioVec, nReq);
       return;

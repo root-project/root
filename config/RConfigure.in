@@ -68,5 +68,6 @@
 #@haspymva@ R__HAS_PYMVA /**/
 #@hasrmva@ R__HAS_RMVA /**/
 
+#@hasuring@ R__HAS_URING /**/
 
 #endif
