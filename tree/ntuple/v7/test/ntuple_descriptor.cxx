@@ -190,6 +190,8 @@ TEST(RDanglingFieldDescriptor, MakeDescriptorErrors)
 TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 {
    RNTupleDescriptorBuilder descBuilder;
+
+   // empty string is not a valid NTuple name
    descBuilder.SetNTuple("", "", "", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
    try {
       descBuilder.EnsureValidDescriptor();
@@ -198,6 +200,17 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
    }
    descBuilder.SetNTuple("something", "", "", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
    descBuilder.EnsureValidDescriptor();
+
+   descBuilder.AddFieldLink(0, 1);
+   // leaf fields can't have children
+   descBuilder.AddField(1, RNTupleVersion(), RNTupleVersion(), "int", "int32_t",
+      0, ENTupleStructure::kLeaf);
+   descBuilder.AddFieldLink(1, 2);
+   try {
+      descBuilder.EnsureValidDescriptor();
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("leaf field '1' cannot have child fields"));
+   }
 }
 
 TEST(RFieldDescriptorRange, IterateOverFieldNames)

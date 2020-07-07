@@ -765,6 +765,18 @@ ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::EnsureValidDescriptor() const {
    // Reuse field name validity check
    Detail::RFieldBase::EnsureValidFieldName(fDescriptor.GetName()).ThrowOnError();
+   // open-ended list of invariant checks
+   for (const auto& key_val: fDescriptor.fFieldDescriptors) {
+      const auto& id = key_val.first;
+      const auto& desc = key_val.second;
+      // parent not properly set
+      if (id != DescriptorId_t(0) && desc.GetParentId() == kInvalidDescriptorId) {
+         return R__FAIL("field with id '" + std::to_string(id) + "' has an invalid parent id");
+      }
+      if (desc.GetStructure() == ENTupleStructure::kLeaf && desc.GetLinkIds().size() != 0) {
+         return R__FAIL("leaf field '" + std::to_string(id) + "' cannot have child fields");
+      }
+   }
    return RResult<void>::Success();
 }
 
