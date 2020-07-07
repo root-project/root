@@ -13,6 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -759,6 +760,11 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleDescriptorBuilder::EnsureValidDescriptor() const {
+   return R__FAIL("unimplemented!");
+}
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::RNTupleDescriptorBuilder::MoveDescriptor()
 {
