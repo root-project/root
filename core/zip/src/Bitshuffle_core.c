@@ -29,12 +29,43 @@
 #endif */
 
 // Conditional includes for SSE2 and AVX2.
-#if defined(__AVX2__) && defined (__SSE2__)
-#include <immintrin.h>
-#elif defined(__SSE2__)
-#include <emmintrin.h>
-#elif defined(__ARM_NEON__) || (__ARM_NEON)
-#include <arm_neon.h>
+#if defined(_MSC_VER)
+     /* Microsoft C/C++-compatible compiler */
+     #include <intrin.h>
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+     /* GCC-compatible compiler, targeting x86/x86-64 */
+     #include <x86intrin.h>
+#elif defined(__GNUC__) && defined(__ARM_NEON__)
+     /* GCC-compatible compiler, targeting ARM with NEON */
+     #include <arm_neon.h>
+#elif defined(__GNUC__) && defined(__IWMMXT__)
+     /* GCC-compatible compiler, targeting ARM with WMMX */
+     #include <mmintrin.h>
+#elif (defined(__GNUC__) || defined(__xlC__)) && (defined(__VEC__) || defined(__ALTIVEC__))
+     /* XLC or GCC-compatible compiler, targeting PowerPC with VMX/VSX */
+     #include <altivec.h>
+#elif defined(__GNUC__) && defined(__SPE__)
+     /* GCC-compatible compiler, targeting PowerPC with SPE */
+     #include <spe.h>
+#elif defined(__clang__) && defined(__linux__)
+    #include <x86intrin.h>
+#endif
+
+#if defined (__x86_64__) && defined (__linux__)
+#include "cpuid.h"
+#endif
+
+// from cpuid.h
+#ifndef bit_AVX2
+#define bit_AVX2 0x00000020
+#endif
+
+#ifndef bit_SSE4_2
+# define bit_SSE4_2 0x100000
+#endif
+
+#ifndef bit_SSE2
+# define bit_SSE2 0x4000000
 #endif
 
 #if defined(_MSC_VER)
@@ -47,21 +78,9 @@ typedef size_t omp_size_t;
 #define CHECK_MULT_EIGHT(n) if (n % 8) return -80;
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
-#if defined (__x86_64__) && defined (__linux__)
-#include "cpuid.h"
-#endif
-
-// from cpuid.h
-#ifndef bit_AVX2
-# define bit_AVX2 0x00000020
-#endif
-
-#ifndef bit_SSE2
-# define bit_SSE2 0x4000000
-#endif
 
 /* ---- Functions indicating compile time instruction set. ---- */
-
+/*
 int bshuf_using_NEON(void) {
 #ifdef USEARMNEON
     return 1;
@@ -87,7 +106,7 @@ int bshuf_using_AVX2(void) {
     return 0;
 #endif
 }
-
+*.
 
 /* ---- Worker code not requiring special instruction sets. ----
  *
@@ -1391,8 +1410,6 @@ int64_t bshuf_untrans_bit_elem_SSE(const void* in, void* out, const size_t size,
  *
  */
 
-#ifdef __AVX2__
-
 /* Transpose bits within bytes. */
 __attribute__ ((target ("avx2")))
 int64_t bshuf_trans_bit_byte_AVX(const void* in, void* out, const size_t size,
@@ -1609,8 +1626,6 @@ int64_t bshuf_untrans_bit_elem_AVX(const void* in, void* out, const size_t size,
     return count;
 }
 
-#endif
-
 void *resolve_bitshuffle(void) {
     unsigned int eax, ebx, ecx, edx;
 	signed char has_sse2 = 0;
@@ -1823,5 +1838,5 @@ size_t bshuf_default_block_size(const size_t elem_size) {
 #undef CHECK_MULT_EIGHT
 #undef CHECK_ERR_FREE
 
-#undef USESSE2
-#undef USEAVX2
+//#undef USESSE2
+//#undef USEAVX2
