@@ -578,6 +578,18 @@ if(ROOT_pyroot_FOUND)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
 
+  #----------------------------------------------------------------------
+  # List requirements for python tutorials.
+  # To add a new requirement, add a glob expression that's named requires_<packageName>,
+  # and add it to the list "fixtureLists" below.
+  file(GLOB requires_numpy   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/df026_AsNumpyArrays.py)
+  file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} pyroot/pyroot004_NumbaDeclare.py)
+  file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/df026_AsNumpyArrays.py)
+  file(GLOB requires_keras   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
+  file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/tmva10*.py)
+  set(fixtureLists requires_numpy requires_numba requires_pandas requires_keras requires_xgboost)
+
+  # Now set up all the tests
   foreach(t ${pytutorials})
     if (${t} IN_LIST returncode_1)
       set(rc 255)
@@ -602,16 +614,23 @@ if(ROOT_pyroot_FOUND)
       set(py_will_fail ${PYTESTS_WILLFAIL})
     endif()
 
+    # Test if this tutorial is requiring any fixture
+    unset(python_deps)
+    foreach(fixtureList ${fixtureLists})
+      if(${t} IN_LIST ${fixtureList})
+        string(REPLACE "requires_" "" fixture ${fixtureList})
+        list(APPEND python_deps ${fixture})
+        list(APPEND labels python_runtime_deps)
+      endif()
+    endforeach()
+
     ROOT_ADD_TEST(${tutorial_name}
                 COMMAND ${PYTHON_EXECUTABLE_Development_Main} ${CMAKE_CURRENT_SOURCE_DIR}/launcher.py ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
                 DEPENDS ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ}
+                PYTHON_DEPS ${python_deps}
                 ${py_will_fail})
-
-    if(${t} IN_LIST pydisable)
-      set_property(TEST ${tutorial_name} PROPERTY DISABLED ON)
-    endif()
   endforeach()
 endif()
