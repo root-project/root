@@ -506,7 +506,7 @@ void RooSimPdfBuilder::addSpecializations(const RooArgSet& specSet)
 /// Initialize needed components
 
 RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents,
-					    const RooArgSet* auxSplitCats, Bool_t verbose)
+    const RooArgSet* auxSplitCats, Bool_t verbose)
 {
   const char* spaceChars = " \t" ;
 
@@ -521,7 +521,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     physCat = dynamic_cast<RooAbsCategoryLValue*>(dependents.find(physCatName)) ;
     if (!physCat) {
       coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR physics index category " << physCatName 
-			    << " not found in dataset variables" << endl ;
+          << " not found in dataset variables" << endl ;
       delete[] buf ;
       return 0 ;      
     }
@@ -555,13 +555,13 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     if (strchr(physName,'=')) {
       // Must have a physics category for mapping to make sense
       if (!physCat) {
-	coutW(ObjectHandling) << "RooSimPdfBuilder::buildPdf: WARNING: without physCat specification "
-			 << "<physCatState>=<pdfProtoName> association is meaningless" << endl ;
+        coutW(ObjectHandling) << "RooSimPdfBuilder::buildPdf: WARNING: without physCat specification "
+            << "<physCatState>=<pdfProtoName> association is meaningless" << endl ;
       }
       stateName = physName ;
       physName = strchr(stateName,'=') ;
       if (physName) {
-	*(physName++) = 0 ;      
+        *(physName++) = 0 ;
       }
     } else {
       stateName = physName ;
@@ -570,7 +570,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     RooAbsPdf* physModel = (RooAbsPdf*) (physName ? _protoPdfSet.find(physName) : 0 );
     if (!physModel) {
       coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR requested physics model " 
-			    << (physName?physName:"(null)") << " is not defined" << endl ;
+          << (physName?physName:"(null)") << " is not defined" << endl ;
       delete[] buf ;
       return 0 ;
     }    
@@ -578,7 +578,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     // Check if state mapping has already been defined
     if (stateMap.find(stateName)) {
       coutW(InputArguments) << "RooSimPdfBuilder::buildPdf: WARNING: multiple PDFs specified for state " 
-			    << stateName << ", only first will be used" << endl ;
+          << stateName << ", only first will be used" << endl ;
       continue ;
     }
 
@@ -628,7 +628,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     RooCategory* splitCat = catName ? dynamic_cast<RooCategory*>(dependents.find(catName)) : 0 ;
     if (!splitCat) {
       coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR requested split category " << (catName?catName:"(null)") 
-			    << " is not a RooCategory in the dataset" << endl ;
+			        << " is not a RooCategory in the dataset" << endl ;
       delete[] buf ;
       return 0 ;
     }
@@ -637,7 +637,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     // Process optional state list
     if (stateList) {
       coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: splitting of category " << catName 
-		       << " restricted to states (" << stateList << ")" << endl ;
+          << " restricted to states (" << stateList << ")" << endl ;
 
       // Create list named after this splitCat holding its selected states
       TList* slist = new TList ;
@@ -647,26 +647,26 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       char* stateLabel = R__STRTOK_R(stateList,",",&tokenPtr) ;
 
       while(stateLabel) {
-	// Lookup state label and require it exists
-	const RooCatType* type = splitCat->lookupType(stateLabel) ;
-	if (!type) {
-	  coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR splitCat " << splitCat->GetName() 
-				<< " doesn't have a state named " << stateLabel << endl ;
-	  splitStateList.Delete() ;
-	  delete[] buf ;
-	  return 0 ;
-	}
-	slist->Add((TObject*)type) ;
+        // Lookup state label and require it exists
+        const RooCatType* type = splitCat->lookupType(stateLabel) ;
+        if (!type) {
+          coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR splitCat " << splitCat->GetName()
+				    << " doesn't have a state named " << stateLabel << endl ;
+          splitStateList.Delete() ;
+          delete[] buf ;
+          return 0 ;
+        }
+        slist->Add((TObject*)type) ;
 
-	stateLabel = R__STRTOK_R(0,",",&tokenPtr) ;
+        stateLabel = R__STRTOK_R(0,",",&tokenPtr) ;
       }
     }
-    
+
     catName = strtok(0,spaceChars) ;
   }
   if (physCat) splitCatSet.add(*physCat) ;
   RooSuperCategory masterSplitCat("masterSplitCat","Master splitting category",splitCatSet) ;
-  
+
   coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: list of splitting categories " << splitCatSet << endl ;
 
   // Clone auxiliary split cats and attach to splitCatSet
@@ -689,19 +689,19 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
       // Check that there is no fundamental splitCat in the dataset with the bane of the auxiliary split
       if (splitCatSet.find(aux->GetName())) {
-	coutW(InputArguments) << "RooSimPdfBuilder::buildPdf: WARNING: dataset contains a fundamental splitting category " << endl 
-			      << " with the same name as an auxiliary split function (" << aux->GetName() << "). " << endl 
-			      << " Auxiliary split function will be ignored" << endl ;
-	continue ;
+        coutW(InputArguments) << "RooSimPdfBuilder::buildPdf: WARNING: dataset contains a fundamental splitting category " << endl
+            << " with the same name as an auxiliary split function (" << aux->GetName() << "). " << endl
+            << " Auxiliary split function will be ignored" << endl ;
+        continue ;
       }
 
       // Check that all servers of this aux cat are contained in splitCatSet
       RooArgSet* parSet = aux->getParameters(splitCatSet) ;
       if (parSet->getSize()>0) {
-	coutW(InputArguments) << "RooSimPdfBuilder::buildPdf: WARNING: ignoring auxiliary category " << aux->GetName() 
-			      << " because it has servers that are not listed in splitCatSet: " << *parSet << endl ;
-	delete parSet ;
-	continue ;
+        coutW(InputArguments) << "RooSimPdfBuilder::buildPdf: WARNING: ignoring auxiliary category " << aux->GetName()
+			          << " because it has servers that are not listed in splitCatSet: " << *parSet << endl ;
+        delete parSet ;
+        continue ;
       }
 
       // Redirect servers to splitCatSet
@@ -739,7 +739,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       char *tokenPtr(0) ;
 
       char* token = R__STRTOK_R(buf,spaceChars,&tokenPtr) ;
-      
+
       enum Mode { SplitCat, Colon, ParamList } ;
       Mode mode(SplitCat) ;
 
@@ -748,267 +748,267 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
       while(token) {
 
-	switch (mode) {
-	case SplitCat:
-	  {
-	    splitCatName = token ;
-	   	    
-	    if (strchr(splitCatName,',')) {
-	      // Composite splitting category
-	      
-	      // Check if already instantiated
-	      splitCat = (RooAbsCategory*) _compSplitCatSet.find(splitCatName) ;	      
-	      TString origCompCatName(splitCatName) ;
-	      if (!splitCat) {
-		// Build now
+        switch (mode) {
+        case SplitCat:
+        {
+          splitCatName = token ;
 
-		char *tokptr = 0;
-		char *catName2 = R__STRTOK_R(token,",",&tokptr) ;
+          if (strchr(splitCatName,',')) {
+            // Composite splitting category
 
-		RooArgSet compCatSet ;
-		while(catName2) {
-		  RooAbsArg* cat = splitCatSet.find(catName2) ;
-		  
-		  // If not, check if it is an auxiliary splitcat
-		  if (!cat) {
-		    cat = (RooAbsCategory*) auxSplitSet.find(catName2) ;
-		  }
+            // Check if already instantiated
+            splitCat = (RooAbsCategory*) _compSplitCatSet.find(splitCatName) ;
+            TString origCompCatName(splitCatName) ;
+            if (!splitCat) {
+              // Build now
 
-		  if (!cat) {
-		    coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR " << catName2
-					  << " not found in the primary or auxilary splitcat list" << endl ;
-		    customizerList->Delete() ;
-		    delete customizerList ;
+              char *tokptr = 0;
+              char *catName2 = R__STRTOK_R(token,",",&tokptr) ;
 
-		    splitStateList.Delete() ;
-		    delete[] buf ;
-		    return 0 ;
-		  }
-		  compCatSet.add(*cat) ;
+              RooArgSet compCatSet ;
+              while(catName2) {
+                RooAbsArg* cat = splitCatSet.find(catName2) ;
 
-		  catName2 = R__STRTOK_R(0,",",&tokptr) ;
-		}		
+                // If not, check if it is an auxiliary splitcat
+                if (!cat) {
+                  cat = (RooAbsCategory*) auxSplitSet.find(catName2) ;
+                }
+
+                if (!cat) {
+                  coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR " << catName2
+                      << " not found in the primary or auxilary splitcat list" << endl ;
+                  customizerList->Delete() ;
+                  delete customizerList ;
+
+                  splitStateList.Delete() ;
+                  delete[] buf ;
+                  return 0 ;
+                }
+                compCatSet.add(*cat) ;
+
+                catName2 = R__STRTOK_R(0,",",&tokptr) ;
+              }
 
 
-		// check that any auxSplitCats in compCatSet do not depend on any other
-		// fundamental or auxiliary splitting categories in the composite set.
-		TIterator* iter = compCatSet.createIterator() ;
-		RooAbsArg* arg ;
-		while((arg=(RooAbsArg*)iter->Next())) {
-		  RooArgSet tmp(compCatSet) ;
-		  tmp.remove(*arg) ;
-		  if (arg->dependsOnValue(tmp)) {
-		    coutE(InputArguments) << "RooSimPdfBuilder::buildPDF: ERROR: Ill defined split: auxiliary splitting category " << arg->GetName() 
-					  << " used in composite split " << compCatSet << " depends on one or more of the other splitting categories in the composite split" << endl ;
-		    
-		    // Cleanup and axit
-		    customizerList->Delete() ;
-		    delete customizerList ;
-		    splitStateList.Delete() ;
-		    delete[] buf ;
-		    return 0 ;
-		  }
-		}
-		delete iter ;
+              // check that any auxSplitCats in compCatSet do not depend on any other
+              // fundamental or auxiliary splitting categories in the composite set.
+              TIterator* iter = compCatSet.createIterator() ;
+              RooAbsArg* arg ;
+              while((arg=(RooAbsArg*)iter->Next())) {
+                RooArgSet tmp(compCatSet) ;
+                tmp.remove(*arg) ;
+                if (arg->dependsOnValue(tmp)) {
+                  coutE(InputArguments) << "RooSimPdfBuilder::buildPDF: ERROR: Ill defined split: auxiliary splitting category " << arg->GetName()
+					      << " used in composite split " << compCatSet << " depends on one or more of the other splitting categories in the composite split" << endl ;
 
-		splitCat = new RooMultiCategory(origCompCatName,origCompCatName,compCatSet) ;
-		_compSplitCatSet.addOwned(*splitCat) ;
-		//cout << "composite splitcat: " << splitCat->GetName() ;
-	      }
-	    } else {
-	      // Simple splitting category
-	      
-	      // First see if it is a simple splitting category
-	      splitCat = (RooAbsCategory*) splitCatSet.find(splitCatName) ;
+                  // Cleanup and axit
+                  customizerList->Delete() ;
+                  delete customizerList ;
+                  splitStateList.Delete() ;
+                  delete[] buf ;
+                  return 0 ;
+                }
+              }
+              delete iter ;
 
-	      // If not, check if it is an auxiliary splitcat
-	      if (!splitCat) {
-		splitCat = (RooAbsCategory*) auxSplitSet.find(splitCatName) ;
-	      }
+              splitCat = new RooMultiCategory(origCompCatName,origCompCatName,compCatSet) ;
+              _compSplitCatSet.addOwned(*splitCat) ;
+              //cout << "composite splitcat: " << splitCat->GetName() ;
+            }
+          } else {
+            // Simple splitting category
 
-	      if (!splitCat) {
-		coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR splitting category " 
-				      << splitCatName << " not found in the primary or auxiliary splitcat list" << endl ;
-		customizerList->Delete() ;
-		delete customizerList ;
-		splitStateList.Delete() ;
-		delete[] buf ;
-		return 0 ;
-	      }
-	    }
-	    
-	    mode = Colon ;
-	    break ;
-	  }
-	case Colon:
-	  {
-	    if (strcmp(token,":")) {
-	      coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR in parsing, expected ':' after " 
-				    << splitCat << ", found " << token << endl ;
-	      customizerList->Delete() ;
-	      delete customizerList ;
-	      splitStateList.Delete() ;
-	      delete[] buf ;
-	      return 0 ;	    
-	    }
-	    mode = ParamList ;
-	    break ;
-	  }
-	case ParamList:
-	  {
-	    // Verify the validity of the parameter list and build the corresponding argset
-	    RooArgSet splitParamList ;
-	    RooArgSet* paramList = physModel->getParameters(dependents) ;
+            // First see if it is a simple splitting category
+            splitCat = (RooAbsCategory*) splitCatSet.find(splitCatName) ;
 
-	    // wve -- add nodes to parameter list
-	    RooArgSet* compList = physModel->getComponents() ;
-	    paramList->add(*compList) ;
-	    delete compList ;
+            // If not, check if it is an auxiliary splitcat
+            if (!splitCat) {
+              splitCat = (RooAbsCategory*) auxSplitSet.find(splitCatName) ;
+            }
 
-	    Bool_t lastCharIsComma = (token[strlen(token)-1]==',') ;
+            if (!splitCat) {
+              coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR splitting category "
+                  << splitCatName << " not found in the primary or auxiliary splitcat list" << endl ;
+              customizerList->Delete() ;
+              delete customizerList ;
+              splitStateList.Delete() ;
+              delete[] buf ;
+              return 0 ;
+            }
+          }
 
-	    char *tokptr = 0 ;
-	    char *paramName = R__STRTOK_R(token,",",&tokptr) ;
+          mode = Colon ;
+          break ;
+        }
+        case Colon:
+        {
+          if (strcmp(token,":")) {
+            coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR in parsing, expected ':' after "
+                << splitCat << ", found " << token << endl ;
+            customizerList->Delete() ;
+            delete customizerList ;
+            splitStateList.Delete() ;
+            delete[] buf ;
+            return 0 ;
+          }
+          mode = ParamList ;
+          break ;
+        }
+        case ParamList:
+        {
+          // Verify the validity of the parameter list and build the corresponding argset
+          RooArgSet splitParamList ;
+          RooArgSet* paramList = physModel->getParameters(dependents) ;
 
-	    // Check for fractional split option 'param_name[remainder_state]'
-	    char *remainderState = 0 ;
-	    char *tokptr2 = 0 ;
-	    if (paramName && R__STRTOK_R(paramName,"[",&tokptr2)) {
-	      remainderState = R__STRTOK_R(0,"]",&tokptr2) ;
-	    }
+          // wve -- add nodes to parameter list
+          RooArgSet* compList = physModel->getComponents() ;
+          paramList->add(*compList) ;
+          delete compList ;
 
-	    while(paramName) {
+          Bool_t lastCharIsComma = (token[strlen(token)-1]==',') ;
 
-	      // If fractional split is specified, check that remainder state is a valid state of this split cat
-	      if (remainderState) {
-		if (!splitCat->hasLabel(remainderState)) {
-		  coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR fraction split of parameter " 
-					<< paramName << " has invalid remainder state name: " << remainderState << endl ;
-		  delete paramList ;
-		  customizerList->Delete() ;
-		  delete customizerList ;
-		  splitStateList.Delete() ;
-		  delete[] buf ;
-		  return 0 ;
-		}
-	      }	      
+          char *tokptr = 0 ;
+          char *paramName = R__STRTOK_R(token,",",&tokptr) ;
 
-	      RooAbsArg* param = paramList->find(paramName) ;
-	      if (!param) {
-		coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR " << paramName 
-				      << " is not a parameter of physics model " << physModel->GetName() << endl ;
-		delete paramList ;
-		customizerList->Delete() ;
-		delete customizerList ;
-		splitStateList.Delete() ;
-		delete[] buf ;
-		return 0 ;
-	      }
-	      splitParamList.add(*param) ;
-	      
-	      // Build split leaf of fraction splits here
-	      if (remainderState) {
+          // Check for fractional split option 'param_name[remainder_state]'
+          char *remainderState = 0 ;
+          char *tokptr2 = 0 ;
+          if (paramName && R__STRTOK_R(paramName,"[",&tokptr2)) {
+            remainderState = R__STRTOK_R(0,"]",&tokptr2) ;
+          }
 
-		// Check if we are splitting a real-valued parameter
-		if (!dynamic_cast<RooAbsReal*>(param)) {
-		  coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR fraction split requested of non-real valued parameter " 
-					<< param->GetName() << endl ;
-		  delete paramList ;
-		  customizerList->Delete() ;
-		  delete customizerList ;
-		  splitStateList.Delete() ;
-		  delete[] buf ;
-		  return 0 ;
-		}
+          while(paramName) {
 
-		// Check if we are doing a restricted build
-		TList* remStateSplitList = static_cast<TList*>(splitStateList.FindObject(splitCat->GetName())) ;
+            // If fractional split is specified, check that remainder state is a valid state of this split cat
+            if (remainderState) {
+              if (!splitCat->hasLabel(remainderState)) {
+                coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR fraction split of parameter "
+                    << paramName << " has invalid remainder state name: " << remainderState << endl ;
+                delete paramList ;
+                customizerList->Delete() ;
+                delete customizerList ;
+                splitStateList.Delete() ;
+                delete[] buf ;
+                return 0 ;
+              }
+            }
 
-		// If so, check if remainder state is actually being built.
-		if (remStateSplitList && !remStateSplitList->FindObject(remainderState)) {
-		  coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR " << paramName 
-					<< " remainder state " << remainderState << " in parameter split " 
-					<< param->GetName() << " is not actually being built" << endl ;
-		  delete paramList ;
-		  customizerList->Delete() ;
-		  delete customizerList ;
-		  splitStateList.Delete() ;
-		  delete[] buf ;
-		  return 0 ;		  
-		}
+            RooAbsArg* param = paramList->find(paramName) ;
+            if (!param) {
+              coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR " << paramName
+                  << " is not a parameter of physics model " << physModel->GetName() << endl ;
+              delete paramList ;
+              customizerList->Delete() ;
+              delete customizerList ;
+              splitStateList.Delete() ;
+              delete[] buf ;
+              return 0 ;
+            }
+            splitParamList.add(*param) ;
 
-		TIterator* iter = splitCat->typeIterator() ;
-		RooCatType* type ;
-		RooArgList fracLeafList ;
-		TString formExpr("1") ;
-		Int_t i(0) ;
+            // Build split leaf of fraction splits here
+            if (remainderState) {
 
-		while((type=(RooCatType*)iter->Next())) {
+              // Check if we are splitting a real-valued parameter
+              if (!dynamic_cast<RooAbsReal*>(param)) {
+                coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR fraction split requested of non-real valued parameter "
+                    << param->GetName() << endl ;
+                delete paramList ;
+                customizerList->Delete() ;
+                delete customizerList ;
+                splitStateList.Delete() ;
+                delete[] buf ;
+                return 0 ;
+              }
 
-		  // Skip remainder state
-		  if (!TString(type->GetName()).CompareTo(remainderState)) continue ;
+              // Check if we are doing a restricted build
+              TList* remStateSplitList = static_cast<TList*>(splitStateList.FindObject(splitCat->GetName())) ;
 
-		  // If restricted build is requested, skip states of splitcat that are not built
-		  if (remStateSplitList && !remStateSplitList->FindObject(type->GetName())) {
-		    continue ;
-		  }
-		  
-		  // Construct name of split leaf
-		  TString splitLeafName(param->GetName()) ;
-		  splitLeafName.Append("_") ;
-		  splitLeafName.Append(type->GetName()) ;
-		  
-		  // Check if split leaf already exists
-		  RooAbsArg* splitLeaf = _splitNodeList.find(splitLeafName) ;
-		  if (!splitLeaf) {
-		    // If not create it now
-		    splitLeaf = (RooAbsArg*) param->clone(splitLeafName) ;
-		    _splitNodeList.add(*splitLeaf) ;
-		    _splitNodeListOwned.addOwned(*splitLeaf) ;
-		  }
-		  fracLeafList.add(*splitLeaf) ;
-		  formExpr.Append(Form("-@%d",i++)) ;
-		}
-		delete iter ;		
+              // If so, check if remainder state is actually being built.
+              if (remStateSplitList && !remStateSplitList->FindObject(remainderState)) {
+                coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR " << paramName
+                    << " remainder state " << remainderState << " in parameter split "
+                    << param->GetName() << " is not actually being built" << endl ;
+                delete paramList ;
+                customizerList->Delete() ;
+                delete customizerList ;
+                splitStateList.Delete() ;
+                delete[] buf ;
+                return 0 ;
+              }
 
-		// Construct RooFormulaVar expresssing remainder of fraction		
-		TString remLeafName(param->GetName()) ;
-		remLeafName.Append("_") ;
-		remLeafName.Append(remainderState) ;
+              TIterator* iter = splitCat->typeIterator() ;
+              RooCatType* type ;
+              RooArgList fracLeafList ;
+              TString formExpr("1") ;
+              Int_t i(0) ;
 
-		// Check if no specialization was already specified for remainder state
-		if (!_splitNodeList.find(remLeafName)) {
-		  RooAbsArg* remLeaf = new RooFormulaVar(remLeafName,formExpr,fracLeafList) ;
-		  _splitNodeList.add(*remLeaf) ;
-		  _splitNodeListOwned.addOwned(*remLeaf) ;
-		  coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: creating remainder fraction formula for " << remainderState 
-				   << " specialization of split parameter " << param->GetName() << " " << formExpr << endl ;
-		}
-	      }
+              while((type=(RooCatType*)iter->Next())) {
 
-	      // Parse next parameter name
-	      paramName = R__STRTOK_R(0,",",&tokptr) ;
-	      if (paramName && R__STRTOK_R(paramName,"[",&tokptr2)) {
-		remainderState = R__STRTOK_R(0,"]",&tokptr2) ;
-	      }
-	    }
+                // Skip remainder state
+                if (!TString(type->GetName()).CompareTo(remainderState)) continue ;
 
-	    // Add the rule to the appropriate customizer ;
-	    physCustomizer->splitArgs(splitParamList,*splitCat) ;
+                // If restricted build is requested, skip states of splitcat that are not built
+                if (remStateSplitList && !remStateSplitList->FindObject(type->GetName())) {
+                  continue ;
+                }
 
-	    delete paramList ;
+                // Construct name of split leaf
+                TString splitLeafName(param->GetName()) ;
+                splitLeafName.Append("_") ;
+                splitLeafName.Append(type->GetName()) ;
 
-	    if (!lastCharIsComma) mode = SplitCat ;
-	    break ;
-	  }
-	}
+                // Check if split leaf already exists
+                RooAbsArg* splitLeaf = _splitNodeList.find(splitLeafName) ;
+                if (!splitLeaf) {
+                  // If not create it now
+                  splitLeaf = (RooAbsArg*) param->clone(splitLeafName) ;
+                  _splitNodeList.add(*splitLeaf) ;
+                  _splitNodeListOwned.addOwned(*splitLeaf) ;
+                }
+                fracLeafList.add(*splitLeaf) ;
+                formExpr.Append(Form("-@%d",i++)) ;
+              }
+              delete iter ;
 
-	token = R__STRTOK_R(0,spaceChars,&tokenPtr) ;
+              // Construct RooFormulaVar expresssing remainder of fraction
+              TString remLeafName(param->GetName()) ;
+              remLeafName.Append("_") ;
+              remLeafName.Append(remainderState) ;
+
+              // Check if no specialization was already specified for remainder state
+              if (!_splitNodeList.find(remLeafName)) {
+                RooAbsArg* remLeaf = new RooFormulaVar(remLeafName,formExpr,fracLeafList) ;
+                _splitNodeList.add(*remLeaf) ;
+                _splitNodeListOwned.addOwned(*remLeaf) ;
+                coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: creating remainder fraction formula for " << remainderState
+                    << " specialization of split parameter " << param->GetName() << " " << formExpr << endl ;
+              }
+            }
+
+            // Parse next parameter name
+            paramName = R__STRTOK_R(0,",",&tokptr) ;
+            if (paramName && R__STRTOK_R(paramName,"[",&tokptr2)) {
+              remainderState = R__STRTOK_R(0,"]",&tokptr2) ;
+            }
+          }
+
+          // Add the rule to the appropriate customizer ;
+          physCustomizer->splitArgs(splitParamList,*splitCat) ;
+
+          delete paramList ;
+
+          if (!lastCharIsComma) mode = SplitCat ;
+          break ;
+        }
+        }
+
+        token = R__STRTOK_R(0,spaceChars,&tokenPtr) ;
 
       }
       if (mode!=SplitCat) {
-	coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR in parsing, expected " 
-			      << (mode==Colon?":":"parameter list") << " after " << (token?token:"(null)") << endl ;
+        coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR in parsing, expected "
+            << (mode==Colon?":":"parameter list") << " after " << (token?token:"(null)") << endl ;
       }
 
       //RooArgSet* paramSet = physModel->getParameters(dependents) ;
@@ -1016,7 +1016,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: no splitting rules for " << physModel->GetName() << endl ;
     }    
   }
-  
+
   coutI(ObjectHandling)  << "RooSimPdfBuilder::buildPdf: configured customizers for all physics models" << endl ;
   if (oodologI((TObject*)0,ObjectHandling)) {
     customizerList->Print() ;
@@ -1050,12 +1050,12 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       if (!slist) continue ;
       RooCatType* type = (RooCatType*) slist->FindObject(splitCat->getCurrentLabel()) ;
       if (!type) {
-	select = kFALSE ;
+        select = kFALSE ;
       }
     }
     if (!select) continue ;
 
-    
+
     // Select appropriate PDF for this physCat state
     RooCustomizer* physCustomizer ;
     if (physCat) {      
@@ -1067,7 +1067,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     }
 
     coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: Customizing physics model " << physCustomizer->GetName() 
-		     << " for mode " << fcState->GetName() << endl ;    
+       << " for mode " << fcState->GetName() << endl ;
 
     // Customizer PDF for current state and add to master simPdf
     RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat.getCurrentLabel(),verbose) ;
