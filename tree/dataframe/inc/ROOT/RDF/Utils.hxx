@@ -56,7 +56,7 @@ using namespace ROOT::RDF;
 ///
 /// Note that for all uses in RDF we don't want to classify std::string as a container.
 /// Template specializations of IsDataContainer make it return `true` for std::span<T>, std::vector<bool> and
-/// RVec<bool>, which we do want to count as containers even though they don not satisty all the traits tested by the
+/// RVec<bool>, which we do want to count as containers even though they do not satisfy all the traits tested by the
 /// generic IsDataContainer<T>.
 template <typename T>
 struct IsDataContainer {
