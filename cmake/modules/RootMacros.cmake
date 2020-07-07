@@ -1404,12 +1404,14 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 #                        [BUILD target] [PROJECT project]
 #                        [PASSREGEX exp] [FAILREGEX epx]
 #                        [PASSRC code]
-#                        [LABELS label1 label2])
+#                        [LABELS label1 label2]
+#                        [PYTHON_DEPS numpy numba keras ...] # List of python packages required to run this test.
+#                                                              A fixture will be added the tries to import them before the test starts.)
 #
 function(ROOT_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR;RUN_SERIAL"
                             "TIMEOUT;BUILD;INPUT;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
-                             "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS"
+                            "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS;PYTHON_DEPS"
                             ${ARGN})
 
   #- Handle COMMAND argument
@@ -1608,6 +1610,19 @@ function(ROOT_ADD_TEST test)
     set_tests_properties(${test} PROPERTIES LABELS "${ARG_LABELS}")
   endif()
 
+  if(ARG_PYTHON_DEPS)
+    foreach(python_dep ${ARG_PYTHON_DEPS})
+      if(NOT TEST test-import-${python_dep})
+        add_test(NAME test-import-${python_dep} COMMAND ${PYTHON_EXECUTABLE_Development_Main} -c "import ${python_dep}")
+        set_tests_properties(test-import-${python_dep} PROPERTIES FIXTURES_SETUP requires_${python_dep})
+      endif()
+      list(APPEND fixtures "requires_${python_dep}")
+    endforeach()
+    if(fixtures)
+      set_tests_properties(${test} PROPERTIES FIXTURES_REQUIRED "${fixtures}")
+    endif()
+  endif()
+
   if(ARG_RUN_SERIAL)
     set_property(TEST ${test} PROPERTY RUN_SERIAL true)
   endif()
@@ -1729,10 +1744,10 @@ endfunction()
 #                     [WILLFAIL]
 #                     [COPY_TO_BUILDDIR copy_file1 copy_file1 ...]
 #                     [ENVIRONMENT var1=val1 var2=val2 ...]
-#                     [DEPENDENCIES_FOUND dep_x_found dep_y_found ...])
+#                     [PYTHON_DEPS dep_x dep_y ...] # Communicate that this test requires python packages. A fixture checking for these will be run before the test.)
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTEST name file)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;ENVIRONMENT;DEPENDENCIES_FOUND" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS" ${ARGN})
   if(MSVC)
     set(ROOT_ENV ROOTSYS=${ROOTSYS}
         PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
@@ -1757,23 +1772,18 @@ function(ROOT_ADD_PYUNITTEST name file)
   if(ARG_WILLFAIL)
     set(will_fail WILLFAIL)
   endif()
-
-  set(dependencies ON)
-  if(DEFINED ARG_DEPENDENCIES_FOUND)
-      foreach(dep ${ARG_DEPENDENCIES_FOUND})
-      if(NOT ${dep})
-        set(dependencies FALSE)
-      endif()
-    endforeach()
+  
+  if(ARG_PYTHON_DEPS)
+    list(APPEND labels python_runtime_deps)
   endif()
 
-  if(dependencies)
-    ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE_Development_Main} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
-                ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
-                ${copy_to_builddir}
-                ${will_fail})
-  endif()
+  ROOT_ADD_TEST(pyunittests-${good_name}
+              COMMAND ${PYTHON_EXECUTABLE_Development_Main} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+              ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
+              LABELS ${labels}
+              ${copy_to_builddir}
+              ${will_fail}
+              PYTHON_DEPS ${ARG_PYTHON_DEPS})
 endfunction()
 
 #----------------------------------------------------------------------------
