@@ -242,7 +242,9 @@ TEST(RDataFrameUtils, FindUnknownColumnsFriendTrees)
 TEST(RDataFrameUtils, IsDataContainer)
 {
    static_assert(RDFInt::IsDataContainer<std::vector<int>>::value, "");
+   static_assert(RDFInt::IsDataContainer<ROOT::RVec<int>>::value, "");
    static_assert(RDFInt::IsDataContainer<std::vector<bool>>::value, "");
+   static_assert(RDFInt::IsDataContainer<ROOT::RVec<bool>>::value, "");
    static_assert(RDFInt::IsDataContainer<std::tuple<int, int>>::value == false, "");
    static_assert(RDFInt::IsDataContainer<std::string>::value == false, "");
 }
