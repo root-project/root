@@ -186,6 +186,12 @@ TEST(RDanglingFieldDescriptor, MakeDescriptorErrors)
       .MakeDescriptor();
    ASSERT_FALSE(fieldDescRes) << "unnamed field descriptors should throw";
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("field name cannot be empty string"));
+
+TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
+{
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetNTuple("", "", "", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
+   EXPECT_THROW(descBuilder.EnsureValidDescriptor(), RException);
 }
 
 TEST(RFieldDescriptorRange, IterateOverFieldNames)

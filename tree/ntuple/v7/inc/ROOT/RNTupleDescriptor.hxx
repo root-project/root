@@ -547,7 +547,10 @@ private:
    RNTupleDescriptor fDescriptor;
 
 public:
-   bool IsValid() const { return true; /* TODO(jblomer) */}
+   /// Checks whether invariants hold:
+   /// * NTuple name is valid
+   /// * Fields have valid parent and child ids
+   RResult<void> EnsureValidDescriptor() const;
    const RNTupleDescriptor& GetDescriptor() const { return fDescriptor; }
    RNTupleDescriptor MoveDescriptor();
 
