@@ -763,7 +763,9 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
 
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::EnsureValidDescriptor() const {
-   return R__FAIL("unimplemented!");
+   // Reuse field name validity check
+   Detail::RFieldBase::EnsureValidFieldName(fDescriptor.GetName()).ThrowOnError();
+   return RResult<void>::Success();
 }
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::RNTupleDescriptorBuilder::MoveDescriptor()
