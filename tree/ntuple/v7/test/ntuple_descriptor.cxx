@@ -185,7 +185,23 @@ TEST(RDanglingFieldDescriptor, MakeDescriptorErrors)
       .Structure(ENTupleStructure::kCollection)
       .MakeDescriptor();
    ASSERT_FALSE(fieldDescRes) << "unnamed field descriptors should throw";
-   EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("field name cannot be empty string"));
+   EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("name cannot be empty string"));
+}
+
+TEST(RNTupleDescriptorBuilder, CatchBadLinks)
+{
+   RNTupleDescriptorBuilder descBuilder;
+   try {
+      descBuilder.AddFieldLink(10, 0);
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("cannot make FieldZero a child field"));
+   }
+   try {
+      descBuilder.AddFieldLink(1, 1);
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("cannot make field '1' a child of itself"));
+   }
+}
 
 TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 {
@@ -203,8 +219,13 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 
    descBuilder.AddFieldLink(0, 1);
    // leaf fields can't have children
-   descBuilder.AddField(1, RNTupleVersion(), RNTupleVersion(), "int", "int32_t",
-      0, ENTupleStructure::kLeaf);
+   descBuilder.AddField(RDanglingFieldDescriptor()
+      .FieldId(1)
+      .FieldName("int")
+      .TypeName("int32_t")
+      .Structure(ENTupleStructure::kLeaf)
+      .MakeDescriptor()
+      .Unwrap());
    descBuilder.AddFieldLink(1, 2);
    try {
       descBuilder.EnsureValidDescriptor();
