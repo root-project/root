@@ -558,7 +558,7 @@ public:
                   const RNTupleVersion &version, const RNTupleUuid &uuid);
 
    void AddField(const RFieldDescriptor& fieldDesc);
-   void AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
+   RResult<void> AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
    void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId,
                   const RNTupleVersion &version, const RColumnModel &model, std::uint32_t index);
