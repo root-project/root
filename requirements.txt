@@ -1,5 +1,9 @@
 # ROOT requirements for third-party Python packages
 
+# PyROOT: Interoperability with numpy arrays
+# TMVA: PyMVA interfaces
+numpy>=1.4.1
+
 # PyROOT: ROOT.Numba.Declare decorator
 numba>=0.47.0
 cffi>=1.9.1
