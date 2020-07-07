@@ -33,8 +33,7 @@ class REveCaloViz : public REveElement,
 {
 
 private:
-   REveCaloViz(const REveCaloViz&);        // Not implemented
-   REveCaloViz& operator=(const REveCaloViz&); // Not implemented
+   REveCaloViz& operator=(const REveCaloViz&) = delete;
 
 protected:
    REveCaloData* fData;           // event data reference
@@ -156,8 +155,7 @@ public:
 class REveCalo3D : public REveCaloViz
 {
 private:
-   REveCalo3D(const REveCalo3D&);            // Not implemented
-   REveCalo3D& operator=(const REveCalo3D&); // Not implemented
+   REveCalo3D& operator=(const REveCalo3D&) = delete;
 
    void MakeBarrelCell(const REveCaloData::CellGeom_t &cellData, float towerH, Float_t& offset, float *pnts) const;
    void MakeEndCapCell(const REveCaloData::CellGeom_t &cellData, float towerH, Float_t& offset, float *pnts) const;
@@ -210,8 +208,7 @@ public:
    typedef std::vector<REveCaloData::vCellId_t*>::iterator vBinCells_i;
 
 private:
-   REveCalo2D(const REveCalo2D&);            // Not implemented
-   REveCalo2D& operator=(const REveCalo2D&); // Not implemented
+   REveCalo2D& operator=(const REveCalo2D&) = delete;
 
    REveProjection::EPType_e  fOldProjectionType;
    void CellSelectionChangedInternal(REveCaloData::vCellId_t& cells, std::vector<REveCaloData::vCellId_t*>& cellLists);
@@ -274,8 +271,7 @@ public:
    enum EBoxMode_e    { kNone, kFrontBack, kBack};
 
 private:
-   REveCaloLego(const REveCaloLego&);            // Not implemented
-   REveCaloLego& operator=(const REveCaloLego&); // Not implemented
+   REveCaloLego& operator=(const REveCaloLego&) = delete;
 
 protected:
    REveCaloData::vCellId_t fCellList;

@@ -150,8 +150,7 @@ public:
    typedef std::vector<CellGeom_t>::const_iterator   vCellGeom_ci;
 
 private:
-   REveCaloData(const REveCaloData&);            // Not implemented
-   REveCaloData& operator=(const REveCaloData&); // Not implemented
+   REveCaloData& operator=(const REveCaloData&) = delete;
 
 protected:
    vSliceInfo_t fSliceInfos;
@@ -241,8 +240,7 @@ class REveCaloDataVec: public REveCaloData
 {
 
 private:
-   REveCaloDataVec(const REveCaloDataVec&);            // Not implemented
-   REveCaloDataVec& operator=(const REveCaloDataVec&); // Not implemented
+   REveCaloDataVec& operator=(const REveCaloDataVec&) = delete;
 
 protected:
    typedef std::vector<Float_t>               vFloat_t;
@@ -296,8 +294,7 @@ public:
 class REveCaloDataHist: public REveCaloData
 {
 private:
-   REveCaloDataHist(const REveCaloDataHist&);            // Not implemented
-   REveCaloDataHist& operator=(const REveCaloDataHist&); // Not implemented
+   REveCaloDataHist& operator=(const REveCaloDataHist&) = delete;
 
 protected:
    THStack*    fHStack;
