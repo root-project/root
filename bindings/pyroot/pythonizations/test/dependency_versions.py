@@ -5,6 +5,18 @@ import os
 import sys
 
 
+# Compile list of packages to be ignored in the test
+ignore = []
+
+if sys.version_info[0] == 2 and "ROOTTEST_IGNORE_NUMBA_PY2" in os.environ or \
+   sys.version_info[0] == 3 and "ROOTTEST_IGNORE_NUMBA_PY3" in os.environ:
+       ignore += ['numba', 'cffi']
+
+if sys.version_info[0] == 2 and "ROOTTEST_IGNORE_JUPYTER_PY2" in os.environ or \
+   sys.version_info[0] == 3 and "ROOTTEST_IGNORE_JUPYTER_PY3" in os.environ:
+       ignore += ['notebook', 'metakernel']
+
+
 class DependencyVersions(unittest.TestCase):
     def test_versions(self):
         '''
@@ -25,9 +37,13 @@ class DependencyVersions(unittest.TestCase):
         requirements = pkg_resources.parse_requirements(f)
         errors = []
         for requirement in requirements:
-            name = str(requirement)
+            requirement_str = str(requirement)
+            name = requirement.project_name
+            if name in ignore:
+                print('Ignore dependency {}'.format(requirement_str))
+                continue
             try:
-                pkg_resources.require(name)
+                pkg_resources.require(requirement_str)
             except Exception as e:
                 errors.append(e)
         f.close()
