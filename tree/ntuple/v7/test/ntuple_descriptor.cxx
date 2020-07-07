@@ -191,7 +191,13 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 {
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetNTuple("", "", "", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
-   EXPECT_THROW(descBuilder.EnsureValidDescriptor(), RException);
+   try {
+      descBuilder.EnsureValidDescriptor();
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("name cannot be empty string"));
+   }
+   descBuilder.SetNTuple("something", "", "", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
+   descBuilder.EnsureValidDescriptor();
 }
 
 TEST(RFieldDescriptorRange, IterateOverFieldNames)
