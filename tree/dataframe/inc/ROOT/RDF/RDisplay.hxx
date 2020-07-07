@@ -156,9 +156,9 @@ private:
    ////////////////////////////////////////////////////////////////////////////
    /// AddInterpreterString overload for arrays of booleans.
    ///
-   /// \param[in] boolArr The character array to convert to string representation
+   /// \param[in] boolArr The bool array to convert to string representation
    /// \param[in] index To which column the event belongs
-   /// \return true, the event is not a collection
+   /// \return true, the event is a collection
    ///
    /// This specialization for arrays of booleans skips the cling::printValue
    /// (i.e. appends nothing to the stream) and directly writes to fCollectionsRepresentations the
