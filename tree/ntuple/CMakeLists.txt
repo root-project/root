@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -27,6 +27,7 @@ HEADERS
   ROOT/RMiniFile.hxx
   ROOT/RNTuple.hxx
   ROOT/RNTupleDescriptor.hxx
+  ROOT/RNTupleMerger.hxx
   ROOT/RNTupleMetrics.hxx
   ROOT/RNTupleModel.hxx
   ROOT/RNTupleOptions.hxx
@@ -50,6 +51,7 @@ SOURCES
   v7/src/RNTuple.cxx
   v7/src/RNTupleDescriptor.cxx
   v7/src/RNTupleDescriptorFmt.cxx
+  v7/src/RNTupleMerger.cxx
   v7/src/RNTupleMetrics.cxx
   v7/src/RNTupleModel.cxx
   v7/src/RPage.cxx
