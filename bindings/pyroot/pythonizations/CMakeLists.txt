@@ -16,6 +16,8 @@ if(dataframe)
     list(APPEND PYROOT_EXTRA_SOURCE
         src/RDataFramePyz.cxx
         src/RTensorPyz.cxx)
+    list(APPEND PYROOT_EXTRA_HEADERS
+        inc/RNumpyDS.hxx)
 endif()
 
 set(py_sources
@@ -151,5 +153,8 @@ endforeach()
 install(DIRECTORY ${localruntimedir}/ROOT
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
         COMPONENT libraries)
+
+# Install headers required by pythonizations
+install(FILES ${PYROOT_EXTRA_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ROOT)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
