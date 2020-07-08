@@ -1,6 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
+## \brief Cache a processed RDataFrame in memory for further usage
 ## This tutorial shows how the content of a data frame can be cached in memory
 ## in form of a data frame. The content of the columns is stored in memory in
 ## contiguous slabs of memory and is "ready to use", i.e. no ROOT IO operation

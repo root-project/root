@@ -1,6 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
+## \brief The W boson mass analysis from the ATLAS Open Data release of 2020, with RDataFrame
 ## This tutorial is the analysis of the W boson mass taken from the ATLAS Open Data release in 2020
 ## (http://opendata.atlas.cern/release/2020/documentation/). The data was recorded with the ATLAS detector
 ## during 2016 at a center-of-mass energy of 13 TeV. W bosons are produced frequently at the LHC and

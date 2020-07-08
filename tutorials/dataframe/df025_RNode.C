@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// Manipulating RDF objects in functions, loops and conditional branches
+/// \brief Manipulate RDF objects in functions, loops and conditional branches
 ///
 /// Each RDataFrame object has its own type. It helps with performance,
 /// but sometimes it gets in the way of writing simple code that manages RDF objects.

@@ -2,6 +2,7 @@
 ## \ingroup tutorial_dataframe
 ## \notebook -nodraw
 ##
+## \brief Use just-in-time-compiled Filters and Defines for quick prototyping
 ## This tutorial illustrates how to use jit-compiling features of RDataFrame
 ## to define data using C++ code in a Python script
 ##

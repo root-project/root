@@ -1,8 +1,8 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -js
-/// Plot the location of ROOT downloads reading a remote sqlite3 file with RSqliteDS.
-/// The world map is hold by a TH2Poly histogram which, after filling, will show
+/// \brief Plot the location of ROOT downloads reading a remote sqlite3 file
+/// The world map is held by a TH2Poly histogram which, after filling, will show
 /// the world wide dispersion of ROOT's users.
 /// To histogram filling, is done thanks to a lambda expression having as input parameters
 /// the two columns of the database: "IPLongitude' - for the longitude, and the

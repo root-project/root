@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// This tutorial shows usage of the RDF helper tools, contained in ROOT/RDFHelpers.hxx
+/// \brief Show usage of RDataFrame's helper tools, contained in ROOT/RDFHelpers.hxx
 ///
 /// \macro_code
 ///

@@ -1,6 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
+## \brief The Higgs to two photons analysis from the ATLAS Open Data 2020 release, with RDataFrame
 ## This tutorial is the Higgs to two photons analysis from the ATLAS Open Data release in 2020
 ## (http://opendata.atlas.cern/release/2020/documentation/). The data was taken with the ATLAS detector
 ## during 2016 at a center-of-mass energy of 13 TeV. Although the Higgs to two photons decay is very rare,
