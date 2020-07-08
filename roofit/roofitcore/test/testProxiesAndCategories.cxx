@@ -146,6 +146,15 @@ TEST(RooCategory, BracketOperator) {
 }
 
 
+TEST(RooCategory, OverwriteActiveState) {
+  RooCategory myCat;
+  myCat["0Lep"] = 1;
+  myCat["1Lep"] = 2;
+
+  EXPECT_EQ(myCat.getCurrentIndex(), 1);
+}
+
+
 struct DummyClass : public RooAbsPdf {
     DummyClass(RooAbsCategory& theCat, RooRealVar& theVar, RooAbsPdf* thePdf = nullptr) :
       cat("catProxy", "Stores categories", this, theCat),
