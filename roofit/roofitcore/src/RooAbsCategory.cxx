@@ -121,12 +121,13 @@ RooAbsCategory::value_type RooAbsCategory::getCurrentIndex() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return label string of current state
+/// Return label string of current state.
 
 const char* RooAbsCategory::getCurrentLabel() const
 {
+  const auto index = getCurrentIndex();
   for (const auto& item : stateNames()) {
-    if (item.second == _currentIndex)
+    if (item.second == index)
       return item.first.c_str();
   }
 

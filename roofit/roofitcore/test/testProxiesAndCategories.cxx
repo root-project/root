@@ -99,9 +99,9 @@ public:
 
 protected:
   enum State_t {one = 0, two = 1, three = 2, four = 3};
-  RooCategory* cat;
-  RooDataSet* data;
-  RooCategory* catFromDataset;
+  RooCategory* cat{nullptr};
+  RooDataSet* data{nullptr};
+  RooCategory* catFromDataset{nullptr};
 };
 
 TEST_P(RooCategoryIO, ReadWithRanges) {
@@ -152,6 +152,12 @@ TEST(RooCategory, OverwriteActiveState) {
   myCat["1Lep"] = 2;
 
   EXPECT_EQ(myCat.getCurrentIndex(), 1);
+
+  RooCategory otherCat;
+  otherCat["test1"] = 1;
+  otherCat["test2"] = 2;
+
+  EXPECT_STREQ(otherCat.getCurrentLabel(), "test1");
 }
 
 
