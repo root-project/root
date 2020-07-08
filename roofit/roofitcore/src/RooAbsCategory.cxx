@@ -589,10 +589,9 @@ unsigned int RooAbsCategory::getCurrentOrdinalNumber() const {
   // Retrieve state names, trigger possible recomputation
   auto& theStateNames = stateNames();
 
-  const auto currentIndex = getCurrentIndex();
-
-  // If we don't have the full history if inserted state names, have to go by map ordering:
+  // If we don't have the full history of inserted state names, have to go by map ordering:
   if (theStateNames.size() != _insertionOrder.size()) {
+    const auto currentIndex = getCurrentIndex();
     for (auto it = theStateNames.begin(); it != theStateNames.end(); ++it) {
       if (it->second == currentIndex)
         return std::distance(theStateNames.begin(), it);
