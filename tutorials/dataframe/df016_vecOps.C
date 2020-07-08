@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
+/// \brief Process collections in RDataFrame with the help of RVec
 /// This tutorial shows the potential of the VecOps approach for treating collections
 /// stored in datasets, a situation very common in HEP data analysis.
 ///

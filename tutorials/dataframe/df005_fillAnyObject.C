@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
+/// \brief Using the generic Fill action
 /// This tutorial shows how to fill any object the class of which exposes a
 /// `Fill` method.
 ///

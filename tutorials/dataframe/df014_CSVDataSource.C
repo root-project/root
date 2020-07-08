@@ -1,8 +1,9 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
+/// \brief Process a CSV file with RDataFrame and the CSV data source
 /// This tutorial illustrates how use the RDataFrame in combination with a
-/// RDataSource. In this case we use a TCsvDS. This data source allows to read
+/// RDataSource. In this case we use a RCsvDS. This data source allows to read
 /// a CSV file from a RDataFrame.
 /// As a result of running this tutorial, we will produce plots of the dimuon
 /// spectrum starting from a subset of the CMS collision events of Run2010B.

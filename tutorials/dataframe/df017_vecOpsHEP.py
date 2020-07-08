@@ -1,6 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
+## \brief Use RVecs to plot the transverse momentum of selected particles
 ## This tutorial shows how VecOps can be used to slim down the programming
 ## model typically adopted in HEP for analysis.
 ##
