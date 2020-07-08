@@ -31,7 +31,7 @@ protected:
 
 public:
    TEveBox(const char* n="TEveBox", const char* t="");
-   virtual ~TEveBox();
+   ~TEveBox() override;
 
    void SetVertex(Int_t i, Float_t x, Float_t y, Float_t z);
    void SetVertex(Int_t i, const Float_t* v);
@@ -40,10 +40,10 @@ public:
    const Float_t* GetVertex(Int_t i) const { return fVertices[i]; }
 
    // For TAttBBox:
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
    // Projectable:
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   TClass* ProjectedClass(const TEveProjection* p) const override;
 
    ClassDef(TEveBox, 0); // 3D box with arbitrary vertices.
 };
@@ -67,22 +67,22 @@ protected:
    Int_t        fBreakIdx;
    vVector2_t   fDebugPoints;
 
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
    static Bool_t fgDebugCornerPoints;
 
 public:
    TEveBoxProjected(const char* n="TEveBoxProjected", const char* t="");
-   virtual ~TEveBoxProjected();
+   ~TEveBoxProjected() override;
 
    // For TAttBBox:
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
    // Projected:
-   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
-   virtual void UpdateProjection();
+   void SetProjection(TEveProjectionManager* mng, TEveProjectable* model) override;
+   void UpdateProjection() override;
 
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   TEveElement* GetProjectedAsElement() override { return this; }
 
    static Bool_t GetDebugCornerPoints();
    static void   SetDebugCornerPoints(Bool_t d);

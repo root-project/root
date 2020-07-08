@@ -235,8 +235,8 @@ protected:
    void    *fSender;        //delegation object
    TString  fSenderClass;   //class name of delegation object
 
-   virtual void       *GetSender() { return fSender; }
-   virtual const char *GetSenderClassName() const { return fSenderClass; }
+   void       *GetSender() override { return fSender; }
+   const char *GetSenderClassName() const override { return fSenderClass; }
 
 private:
    TQObjSender(const TQObjSender&);            // not implemented
@@ -244,12 +244,12 @@ private:
 
 public:
    TQObjSender() : TQObject(), fSender(0), fSenderClass() { }
-   virtual ~TQObjSender() { Disconnect(); }
+   ~TQObjSender() override { Disconnect(); }
 
    virtual void SetSender(void *sender) { fSender = sender; }
    void SetSenderClassName(const char *sclass = "") { fSenderClass = sclass; }
 
-   ClassDef(TQObjSender,0) //Used to "delegate" TQObject functionality
+   ClassDefOverride(TQObjSender, 0) // Used to "delegate" TQObject functionality
                            //to interpreted classes, see also RQ_OBJECT.h
 };
 

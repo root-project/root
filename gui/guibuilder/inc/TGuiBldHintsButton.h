@@ -36,11 +36,11 @@ protected:
    virtual void DrawBottomLeft();
    virtual void DrawBottomRight();
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
    TGuiBldHintsButton(const TGWindow *p, Int_t id);
-   virtual ~TGuiBldHintsButton() {}
+   ~TGuiBldHintsButton() override {}
 
    ClassDef(TGuiBldHintsButton,0) //Button for editing layout hints in GUI Builder
 };

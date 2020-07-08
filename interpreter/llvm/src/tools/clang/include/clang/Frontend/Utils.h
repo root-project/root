@@ -144,7 +144,7 @@ public:
   bool hasErrors() { return HasErrors; }
   ModuleDependencyCollector(std::string DestDir)
       : DestDir(std::move(DestDir)) {}
-  ~ModuleDependencyCollector() { writeFileMap(); }
+  ~ModuleDependencyCollector() override { writeFileMap(); }
 };
 
 /// AttachDependencyGraphGen - Create a dependency graph generator, and attach

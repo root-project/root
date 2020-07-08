@@ -34,7 +34,7 @@ protected:
 public:
    TMixture();
    TMixture(const char *name, const char *title, Int_t nmixt);
-   virtual ~TMixture();
+   ~TMixture() override;
 
    virtual void  DefineElement(Int_t n, Float_t a, Float_t z, Float_t w);
    Int_t         GetNmixt() const {return fNmixt;}

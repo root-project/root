@@ -96,14 +96,14 @@ public:
    TGLSAViewer(TVirtualPad* pad, TGLFormat* format=0);
    TGLSAViewer(const TGWindow* parent, TVirtualPad *pad, TGedEditor *ged=0,
                TGLFormat* format=0);
-   ~TGLSAViewer();
+   ~TGLSAViewer() override;
 
-   virtual void CreateGLWidget();
-   virtual void DestroyGLWidget();
+   void CreateGLWidget() override;
+   void DestroyGLWidget() override;
 
-   virtual const char* GetName() const { return "GLViewer"; }
+   const char* GetName() const override { return "GLViewer"; }
 
-   virtual void SelectionChanged();
+   void SelectionChanged() override;
 
    void   Show();
    void   Close();

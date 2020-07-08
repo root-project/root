@@ -43,7 +43,7 @@ protected:
    GContext_t          fNormGC;      // entry drawing context
    FontStruct_t        fFontStruct;  // font
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
@@ -56,17 +56,17 @@ public:
                  Int_t id = -1, TGString *path = 0, GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t options = kHorizontalFrame, Pixel_t back = GetWhitePixel());
-   virtual ~TGTreeLBEntry();
+   ~TGTreeLBEntry() override;
 
    const TGString  *GetText() const { return fText; }
    const TGPicture *GetPicture() const { return fPic; }
    const TGString  *GetPath() const { return fPath; }
 
-   virtual TGDimension GetDefaultSize() const;
+   TGDimension GetDefaultSize() const override;
 
-   virtual void Activate(Bool_t a);
-   virtual void Update(TGLBEntry *e);
-   virtual void DrawCopy(Handle_t id, Int_t x, Int_t y);
+   void Activate(Bool_t a) override;
+   void Update(TGLBEntry *e) override;
+   void DrawCopy(Handle_t id, Int_t x, Int_t y) override;
 
    ClassDef(TGTreeLBEntry,0)  // TGFSComboBox entry
 };
@@ -80,7 +80,7 @@ public:
                 kDoubleBorder, Pixel_t back = GetWhitePixel());
 
    virtual void Update(const char *path);
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGFSComboBox,0)  // Combo box widget for file system path
 };

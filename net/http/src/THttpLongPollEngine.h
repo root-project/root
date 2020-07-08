@@ -32,11 +32,11 @@ protected:
 
    std::string MakeBuffer(const void *buf, int len, const char *hdr = nullptr);
 
-   virtual Bool_t CanSendDirectly() override;
+   Bool_t CanSendDirectly() override;
 
 public:
    THttpLongPollEngine(bool raw = false);
-   virtual ~THttpLongPollEngine() = default;
+   ~THttpLongPollEngine() override = default;
 
    UInt_t GetId() const override;
 

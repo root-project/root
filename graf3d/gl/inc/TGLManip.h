@@ -47,7 +47,7 @@ protected:
 public:
    TGLManip();
    TGLManip(TGLPhysicalShape* shape);
-   virtual ~TGLManip();
+   ~TGLManip() override;
 
    UInt_t GetSelectedWidget()   const { return fSelectedWidget; }
    void   SetSelectedWidget(UInt_t s) { fSelectedWidget = s; }
@@ -60,7 +60,7 @@ public:
 
    virtual void   Draw(const TGLCamera& camera) const = 0;
    // CRAPPY TVirtualGLManip TTTT, just override it here
-   virtual Bool_t Select(const TGLCamera&, const TGLRect&, const TGLBoundingBox&) { return kFALSE; }
+   Bool_t Select(const TGLCamera&, const TGLRect&, const TGLBoundingBox&) override { return kFALSE; }
 
    virtual Bool_t HandleButton(const Event_t& event, const TGLCamera& camera);
    virtual Bool_t HandleMotion(const Event_t& event, const TGLCamera& camera);

@@ -53,8 +53,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoTranslationEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoTranslationEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoDx();
    void           DoDy();
@@ -103,8 +103,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoRotationEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoRotationEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoRotPhi();
    void           DoRotTheta();
@@ -160,8 +160,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoCombiTransEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoCombiTransEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoDx();
    void           DoDy();

@@ -26,7 +26,7 @@ private:
 
 public:
    // Virtual copy constructor
-   virtual TVirtualCollectionProxy* Generate() const;
+   TVirtualCollectionProxy* Generate() const override;
 
    // Copy constructor
    TEmulatedMapProxy(const TEmulatedMapProxy& copy);
@@ -35,23 +35,23 @@ public:
    TEmulatedMapProxy(const char* cl_name, Bool_t silent);
 
    // Standard destructor
-   virtual ~TEmulatedMapProxy();
+   ~TEmulatedMapProxy() override;
 
    // Return the address of the value at index 'idx'
-   virtual void *At(UInt_t idx);
+   void *At(UInt_t idx) override;
 
    // Return the current size of the container
-   virtual UInt_t Size() const;
+   UInt_t Size() const override;
 
    // Read portion of the streamer
-   virtual void ReadBuffer(TBuffer &buff, void *pObj);
-   virtual void ReadBuffer(TBuffer &buff, void *pObj, const TClass *onfile);
+   void ReadBuffer(TBuffer &buff, void *pObj) override;
+   void ReadBuffer(TBuffer &buff, void *pObj, const TClass *onfile) override;
 
    // Streamer for I/O handling
-   virtual void Streamer(TBuffer &refBuffer);
+   void Streamer(TBuffer &refBuffer) override;
 
    // Streamer I/O overload
-   virtual void Streamer(TBuffer &buff, void *pObj, int siz) {
+   void Streamer(TBuffer &buff, void *pObj, int siz) override {
       TEmulatedCollectionProxy::Streamer(buff,pObj,siz);
    }
 };

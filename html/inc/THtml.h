@@ -44,7 +44,7 @@ public:
    class THelperBase: public TObject {
    public:
       THelperBase(): fHtml(0) {}
-      virtual ~THelperBase();
+      ~THelperBase() override;
       void    SetOwner(THtml* html);
       THtml*  GetOwner() const { return fHtml; }
    private:
@@ -107,13 +107,13 @@ public:
    public:
       TFileSysEntry(const char* name, TFileSysDir* parent):
          fName(name), fParent(parent), fLevel(parent ? parent->GetLevel() + 1 : 0) {}
-      ~TFileSysEntry()
+      ~TFileSysEntry() override
       {
          // Required since we overload TObject::Hash.
          ROOT::CallRecursiveRemoveIfNeeded(*this);
       }
-      const char* GetName() const { return fName; }
-      virtual ULong_t Hash() const { return fName.Hash(); }
+      const char* GetName() const override { return fName; }
+      ULong_t Hash() const override { return fName.Hash(); }
       virtual void GetFullName(TString& fullname, Bool_t asIncluded) const {
          if (fParent) {
             fParent->GetFullName(fullname, asIncluded);
@@ -158,7 +158,7 @@ public:
    public:
       TFileSysRoot(const char* name, TFileSysDB* parent):
          TFileSysDir(name, parent) {}
-      void GetFullName(TString& fullname, Bool_t asIncluded) const {
+      void GetFullName(TString& fullname, Bool_t asIncluded) const override {
          // prepend directory part of THtml::GetInputPath() only
          // if !asIncluded
          fullname = "";
@@ -239,7 +239,7 @@ public:
    };
 
    THtml();
-   virtual      ~THtml();
+        ~THtml() override;
 
    static void   LoadAllLibs();
 

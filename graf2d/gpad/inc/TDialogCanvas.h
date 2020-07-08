@@ -30,22 +30,22 @@ public:
    TDialogCanvas();
    TDialogCanvas(const char *name, const char *title, Int_t ww, Int_t wh);
    TDialogCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, UInt_t ww, UInt_t wh);
-   virtual        ~TDialogCanvas();
+          ~TDialogCanvas() override;
    virtual void   Apply(const char *action="");
    virtual void   BuildStandardButtons();
-   virtual void   Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0);
+   void   Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0) override;
    TObject        *GetRefObject() const { return fRefObject; }
    TPad           *GetRefPad() const { return fRefPad; }
-   virtual void   Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
-   virtual void   RecursiveRemove(TObject *obj);
-   virtual void   SetBorderMode(Short_t bordermode){ fBorderMode = bordermode; }
-   virtual void   SetGrid(Int_t valuex = 1, Int_t valuey = 1);
-   virtual void   SetLogx(Int_t value = 1);
-   virtual void   SetLogy(Int_t value = 1);
-   virtual void   SetName(const char *name) { fName = name; }
+   void   Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override;
+   void   RecursiveRemove(TObject *obj) override;
+   void   SetBorderMode(Short_t bordermode) override{ fBorderMode = bordermode; }
+   void   SetGrid(Int_t valuex = 1, Int_t valuey = 1) override;
+   void   SetLogx(Int_t value = 1) override;
+   void   SetLogy(Int_t value = 1) override;
+   void   SetName(const char *name) override { fName = name; }
    virtual void   SetRefObject(TObject*obj) { fRefObject=obj; }
    virtual void   SetRefPad(TPad *pad) { fRefPad=pad; }
-   virtual void   x3d(Option_t *option="");
+   void   x3d(Option_t *option="") override;
 
    ClassDef(TDialogCanvas,0)  //A specialized canvas to set attributes.
 };

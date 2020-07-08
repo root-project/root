@@ -109,7 +109,7 @@ protected:
 
 public:
    TWinNTSystem();
-   virtual ~TWinNTSystem();
+   ~TWinNTSystem() override;
 
    //---- non-TSystem methods ----------------------------------
    HANDLE            GetProcess();

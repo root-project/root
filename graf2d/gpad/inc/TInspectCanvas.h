@@ -30,7 +30,7 @@ protected:
 public:
    TInspectCanvas();
    TInspectCanvas(UInt_t ww, UInt_t wh);
-   virtual        ~TInspectCanvas();
+          ~TInspectCanvas() override;
    TButton       *GetBackward() const  {return fBackward;}
    TButton       *GetForward() const    {return fForward;}
    TObject       *GetCurObject() const  {return fCurObject;}
@@ -39,19 +39,19 @@ public:
    static  void   GoForward();
    static  void   Inspector(TObject *obj);
    virtual void   InspectObject(TObject *obj);
-   virtual void   RecursiveRemove(TObject *obj);
+   void   RecursiveRemove(TObject *obj) override;
 
    //dummies
-   virtual void   Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0);
-   virtual void   SetGrid(Int_t valuex = 1, Int_t valuey = 1);
-   virtual void   SetGridx(Int_t value = 1);
-   virtual void   SetGridy(Int_t value = 1);
-   virtual void   SetLogx(Int_t value = 1);
-   virtual void   SetLogy(Int_t value = 1);
-   virtual void   SetLogz(Int_t value = 1);
-   virtual void   SetTickx(Int_t value = 1);
-   virtual void   SetTicky(Int_t value = 1);
-   virtual void   x3d(Option_t *option="");
+   void   Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0) override;
+   void   SetGrid(Int_t valuex = 1, Int_t valuey = 1) override;
+   void   SetGridx(Int_t value = 1) override;
+   void   SetGridy(Int_t value = 1) override;
+   void   SetLogx(Int_t value = 1) override;
+   void   SetLogy(Int_t value = 1) override;
+   void   SetLogz(Int_t value = 1) override;
+   void   SetTickx(Int_t value = 1) override;
+   void   SetTicky(Int_t value = 1) override;
+   void   x3d(Option_t *option="") override;
 
    ClassDef(TInspectCanvas,1)  //The canvas Inspector
 };

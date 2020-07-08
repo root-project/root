@@ -90,9 +90,9 @@ protected:
 public:
    TFitParametersDialog(const TGWindow *p, const TGWindow *main, TF1 *func,
                         TVirtualPad *pad, Int_t *ret_code = 0);
-   virtual ~TFitParametersDialog();
+   ~TFitParametersDialog() override;
 
-   virtual void  CloseWindow();
+   void  CloseWindow() override;
    virtual void  DoApply();
    virtual void  DoCancel();
    virtual void  DoOK();

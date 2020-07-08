@@ -71,10 +71,10 @@ public:
    TGSearchDialog(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
                   TGSearchType *sstruct = 0, Int_t *ret_code = 0,
                   UInt_t options = kVerticalFrame);
-   virtual ~TGSearchDialog();
+   ~TGSearchDialog() override;
 
-   virtual void   CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void   CloseWindow() override;
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    virtual void   SetClose(Bool_t on) { fType->fClose = on; }
    virtual Bool_t IsClose() const {  return fType->fClose; }
    virtual void   TextEntered(const char *text); //*SIGNAL*
@@ -107,11 +107,11 @@ public:
    TGPrintDialog(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
                  char **printerName = 0, char **printProg = 0, Int_t *ret_code = 0,
                  UInt_t options = kVerticalFrame);
-   virtual ~TGPrintDialog();
+   ~TGPrintDialog() override;
 
-   virtual void   CloseWindow();
+   void   CloseWindow() override;
    virtual void   GetPrinters();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
    ClassDef(TGPrintDialog,0)  // Print dialog used by TGTextEdit widget
 };
@@ -132,10 +132,10 @@ protected:
 public:
    TGGotoDialog(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
                 Long_t *ret_code = 0, UInt_t options = kVerticalFrame);
-   virtual ~TGGotoDialog();
+   ~TGGotoDialog() override;
 
-   virtual void   CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void   CloseWindow() override;
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
    ClassDef(TGGotoDialog,0)  // Goto line dialog used by TGTextEdit widget
 };

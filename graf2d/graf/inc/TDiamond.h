@@ -20,12 +20,12 @@ public:
    TDiamond();
    TDiamond(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    TDiamond(const TDiamond &diamond);
-   virtual ~TDiamond();
-   virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void  Draw(Option_t *option="");
-   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual void  Paint(Option_t *option="");
-   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
+   ~TDiamond() override;
+   Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
+   void  Draw(Option_t *option="") override;
+   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void  Paint(Option_t *option="") override;
+   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TDiamond,1)  //Diamond class
 };

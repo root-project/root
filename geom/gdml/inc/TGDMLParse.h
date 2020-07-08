@@ -37,7 +37,7 @@ public:
       fMatrix = 0;
    }
 
-   virtual ~TGDMLRefl() {}
+   ~TGDMLRefl() override {}
 
    TGDMLRefl(const char* name, const char* solid, TGeoMatrix* matrix);
    TGeoMatrix* GetMatrix();
@@ -106,7 +106,7 @@ public:
    std::string fDefault_aunit = "rad";
 
    TGDMLParse();
-   virtual ~TGDMLParse() {}
+   ~TGDMLParse() override {}
 
    static TGeoVolume* StartGDML(const char* filename) {
       TGDMLParse* parser = new TGDMLParse;

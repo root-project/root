@@ -49,7 +49,7 @@ public:
 
    FunctorImpl() : IBaseFunc() { }
 
-   virtual ~FunctorImpl() {}
+   ~FunctorImpl() override {}
 
    virtual FunctorImpl* Copy() const = 0;
 
@@ -246,26 +246,26 @@ public:
       : fDim(dim), fObj(pObj), fMemFn(pMemFn)
    {}
 
-   virtual ~MemFunHandler() {}
+   ~MemFunHandler() override {}
 
    // clone of the function handler (use copy-ctor)
-   ImplFunc * Copy() const { return new MemFunHandler(*this); }
+   ImplFunc * Copy() const override { return new MemFunHandler(*this); }
 
    // clone of the function handler (use copy-ctor)
-   BaseFunc * Clone() const { return new MemFunHandler(*this); }
+   BaseFunc * Clone() const override { return new MemFunHandler(*this); }
 
    // constructor for multi-dimensional functions
-   unsigned int NDim() const {
+   unsigned int NDim() const override {
       return fDim;
    }
 
 private :
 
-   inline double DoEval (double x) const {
+   inline double DoEval (double x) const override {
       return ((*fObj).*fMemFn)(x);
    }
 
-   inline double DoEval (const double * x) const {
+   inline double DoEval (const double * x) const override {
       return ((*fObj).*fMemFn)(x);
    }
 
@@ -432,7 +432,7 @@ public:
    /**
       Destructor (no operations)
    */
-   virtual ~Functor ()  {}
+   ~Functor () override  {}
 
    /**
       Copy constructor for functor based on ROOT::Math::IMultiGenFunction
@@ -457,15 +457,15 @@ public:
 
 
    // clone of the function handler (use copy-ctor)
-   ImplBase * Clone() const { return new Functor(*this); }
+   ImplBase * Clone() const override { return new Functor(*this); }
 
    // for multi-dimensional functions
-   unsigned int NDim() const { return fImpl->NDim(); }
+   unsigned int NDim() const override { return fImpl->NDim(); }
 
 private :
 
 
-   inline double DoEval (const double * x) const {
+   inline double DoEval (const double * x) const override {
       return (*fImpl)(x);
    }
 
@@ -525,7 +525,7 @@ public:
    /**
       Destructor (no operations)
    */
-   virtual ~Functor1D ()  {}
+   ~Functor1D () override  {}
 
 
    /**
@@ -550,11 +550,11 @@ public:
    }
 
    // clone of the function handler (use copy-ctor)
-   ImplBase * Clone() const { return new Functor1D(*this); }
+   ImplBase * Clone() const override { return new Functor1D(*this); }
 
 private :
 
-   inline double DoEval (double x) const {
+   inline double DoEval (double x) const override {
       return (*fImpl)(x);
    }
 
@@ -626,7 +626,7 @@ public:
    /**
       Destructor (no operations)
    */
-   virtual ~GradFunctor ()  {}
+   ~GradFunctor () override  {}
 
 
    /**
@@ -650,20 +650,20 @@ public:
 
 
    // clone of the function handler (use copy-ctor)
-   ImplBase * Clone() const { return new GradFunctor(*this); }
+   ImplBase * Clone() const override { return new GradFunctor(*this); }
 
    // for multi-dimensional functions
-   unsigned int NDim() const { return fImpl->NDim(); }
+   unsigned int NDim() const override { return fImpl->NDim(); }
 
 private :
 
 
-   inline double DoEval (const double * x) const {
+   inline double DoEval (const double * x) const override {
       return (*fImpl)(x);
    }
 
 
-   inline double DoDerivative (const double * x, unsigned int icoord  ) const {
+   inline double DoDerivative (const double * x, unsigned int icoord  ) const override {
       return fImpl->Derivative(x,icoord);
    }
 
@@ -740,7 +740,7 @@ public:
    /**
       Destructor (no operations)
    */
-   virtual ~GradFunctor1D ()  {}
+   ~GradFunctor1D () override  {}
 
 
    /**
@@ -766,18 +766,18 @@ public:
 
 
    // clone of the function handler (use copy-ctor)
-   ImplBase * Clone() const { return new GradFunctor1D(*this); }
+   ImplBase * Clone() const override { return new GradFunctor1D(*this); }
 
 
 private :
 
 
-   inline double DoEval (double x) const {
+   inline double DoEval (double x) const override {
       return (*fImpl)(x);
    }
 
 
-   inline double DoDerivative (double x) const {
+   inline double DoDerivative (double x) const override {
       return fImpl->Derivative(x);
    }
 

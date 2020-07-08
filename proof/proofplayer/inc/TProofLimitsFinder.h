@@ -29,10 +29,10 @@ class TProofLimitsFinder : public THLimitsFinder {
 
 public:
    TProofLimitsFinder() { }
-   virtual ~TProofLimitsFinder() { }
-   virtual Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax);
-   virtual Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax);
-   virtual Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax, Axis_t zmin, Axis_t zmax);
+   ~TProofLimitsFinder() override { }
+   Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax) override;
+   Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax) override;
+   Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax, Axis_t zmin, Axis_t zmax) override;
 
    static void AutoBinFunc(TString& key,
                            Double_t& xmin, Double_t& xmax,

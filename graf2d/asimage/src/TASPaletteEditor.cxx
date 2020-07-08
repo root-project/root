@@ -39,7 +39,7 @@ It is called by a pull down menu item of TASImage.
 #endif
 
 #ifdef WIN32
-#include "Windows4root.h"
+#include "Windows4Root.h"
 #endif
 
 #ifndef WIN32

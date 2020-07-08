@@ -111,7 +111,7 @@ public:
    TBasket();
    TBasket(TDirectory *motherDir);
    TBasket(const char *name, const char *title, TBranch *branch);
-   virtual ~TBasket();
+   ~TBasket() override;
 
    virtual void    AdjustSize(Int_t newsize);
    virtual void    DeleteEntryOffset();
@@ -131,7 +131,7 @@ public:
    virtual void    PrepareBasket(Long64_t /* entry */) {};
            Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
-   virtual void    Reset();
+   void    Reset() override;
 
 // Time spent reseting basket sizes (typically, at event cluster boundaries), in microseconds
 #ifdef R__TRACK_BASKET_ALLOC_TIME
@@ -151,7 +151,7 @@ public:
    virtual void    Update(Int_t newlast, Int_t skipped);
    virtual Int_t   WriteBuffer();
 
-   ClassDef(TBasket, 3); // the TBranch buffers
+   ClassDefOverride(TBasket, 3); // the TBranch buffers
 };
 
 #endif

@@ -102,13 +102,13 @@ public:
 
    TProtoClass(TProtoClass *pc);
    TProtoClass(TClass *cl);
-   virtual ~TProtoClass();
+   ~TProtoClass() override;
 
    Bool_t FillTClass(TClass *pcl);
    const TList *GetListOfEnums() {
       return fEnums;
    };
-   void Delete(Option_t *opt = "");
+   void Delete(Option_t *opt = "") override;
 
    int GetSize() { return fSizeof; }
    TList * GetBaseList() { return fBase; }

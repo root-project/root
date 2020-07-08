@@ -36,14 +36,14 @@ protected:
 
 public:
    TEveProjectionAxesGL();
-   virtual ~TEveProjectionAxesGL() {}
+   ~TEveProjectionAxesGL() override {}
 
-   virtual Bool_t  SetModel(TObject* obj, const Option_t* opt = 0);
-   virtual void    SetBBox();
-   virtual void    Draw(TGLRnrCtx& rnrCtx) const;
-   virtual void    DirectDraw(TGLRnrCtx & rnrCtx) const;
+   Bool_t  SetModel(TObject* obj, const Option_t* opt = 0) override;
+   void    SetBBox() override;
+   void    Draw(TGLRnrCtx& rnrCtx) const override;
+   void    DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
-   Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+   Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 
    ClassDef(TEveProjectionAxesGL, 0); // GL renderer class for TEveProjectionAxes.
 };

@@ -59,7 +59,7 @@ public:
 
    TDirectoryFile();
    TDirectoryFile(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = nullptr);
-   virtual ~TDirectoryFile();
+   ~TDirectoryFile() override;
 
           void        Append(TObject *obj, Bool_t replace = kFALSE) override;
           void        Add(TObject *obj, Bool_t replace = kFALSE) override { Append(obj,replace); }

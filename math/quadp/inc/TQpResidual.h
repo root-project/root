@@ -103,7 +103,7 @@ public:
                TVectorD &ixlow,TVectorD &ixupp,TVectorD &iclow,TVectorD &icupp);
    TQpResidual(const TQpResidual &another);
 
-   virtual ~TQpResidual() {}
+   ~TQpResidual() override {}
 
    Double_t GetResidualNorm() { return fResidualNorm; }
    Double_t GetDualityGap  () { return fDualityGap; };

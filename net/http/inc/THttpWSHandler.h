@@ -60,7 +60,7 @@ protected:
    virtual void VerifyDefaultPageContent(std::shared_ptr<THttpCallArg> &arg) { arg->AddNoCacheHeader(); }
 
 public:
-   virtual ~THttpWSHandler();
+   ~THttpWSHandler() override;
 
    /// Returns processing mode of WS handler
    /// If sync mode is TRUE (default), all event processing and data sending performed in main thread

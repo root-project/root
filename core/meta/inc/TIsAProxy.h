@@ -47,11 +47,11 @@ public:
    // Standard initializing constructor
    TIsAProxy(const std::type_info &typ);
    // Standard destructor
-   virtual ~TIsAProxy();
+   ~TIsAProxy() override;
    // Callbacl to set the class
-   virtual void SetClass(TClass *cl);
+   void SetClass(TClass *cl) override;
    // IsA callback
-   virtual TClass* operator()(const void *obj);
+   TClass* operator()(const void *obj) override;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -75,11 +75,11 @@ public:
    // Standard initializing constructor
    TInstrumentedIsAProxy(TClass *cl) : fClass(cl)      {}
    // Standard destructor
-   virtual ~TInstrumentedIsAProxy()                    {}
+   ~TInstrumentedIsAProxy() override                    {}
    // Callbacl to set the class
-   virtual void SetClass(TClass *cl)                   { fClass = cl; }
+   void SetClass(TClass *cl) override                   { fClass = cl; }
    // IsA callback
-   virtual TClass* operator()(const void *obj) {
+   TClass* operator()(const void *obj) override {
       return obj==0 ? fClass : ((const T*)obj)->IsA();
    }
 };

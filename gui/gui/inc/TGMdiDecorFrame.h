@@ -78,8 +78,8 @@ public:
                    Int_t mdioptions = kMdiDefaultResizeMode,
                    Int_t w = 1, Int_t h = 1, UInt_t options = kOwnBackground);
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual void   DrawBorder() {};
+   Bool_t HandleButton(Event_t *event) override;
+   void   DrawBorder() override {};
 
    void SetResizeMode(Int_t mode) { fMdiOptions = mode; }
    void SetMinSize(Int_t w = 50, Int_t h = 20) { fMinW = w; fMinH = h; }
@@ -96,8 +96,8 @@ public:
                            Int_t mdioptions = kMdiDefaultResizeMode,
                            Int_t w = 4, Int_t h = 5);
 
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual void   DrawBorder();
+   Bool_t HandleMotion(Event_t *event) override;
+   void   DrawBorder() override;
 
    ClassDef(TGMdiVerticalWinResizer, 0) // Vertical Window Resizer
 };
@@ -111,8 +111,8 @@ public:
                              Int_t mdioptions = kMdiDefaultResizeMode,
                              Int_t w = 5, Int_t h = 4);
 
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual void   DrawBorder();
+   Bool_t HandleMotion(Event_t *event) override;
+   void   DrawBorder() override;
 
    ClassDef(TGMdiHorizontalWinResizer, 0) // Horizontal Window Resizer
 };
@@ -126,8 +126,8 @@ public:
                          Int_t mdioptions = kMdiDefaultResizeMode,
                          Int_t w = 20, Int_t h = 20);
 
-   virtual Bool_t  HandleMotion(Event_t *event);
-   virtual void DrawBorder();
+   Bool_t  HandleMotion(Event_t *event) override;
+   void DrawBorder() override;
 
    ClassDef(TGMdiCornerWinResizer, 0) // Corner Window Resizer
 };
@@ -146,7 +146,7 @@ protected:
 
 public:
    TGMdiButtons(const TGWindow *p, const TGWindow *titlebar);
-   virtual ~TGMdiButtons();
+   ~TGMdiButtons() override;
 
    TGPictureButton *GetButton(Int_t no) const { return fButton[no]; }
 
@@ -165,15 +165,15 @@ protected:
    const TGWindow   *fMsgWindow;    // window handling container messages
    TGPopupMenu      *fPopup;        // Popup menu associated to the title icon
 
-   virtual void     DoRedraw();
+   void     DoRedraw() override;
 
 public:
    TGMdiTitleIcon(const TGWindow *p, const TGWindow *titlebar,
                   const TGPicture *pic, Int_t w, Int_t h);
-   virtual ~TGMdiTitleIcon();
+   ~TGMdiTitleIcon() override;
 
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleButton(Event_t *event);
+   Bool_t HandleDoubleClick(Event_t *event) override;
+   Bool_t HandleButton(Event_t *event) override;
    TGPopupMenu *GetPopup() const { return fPopup; }
 
    ClassDef(TGMdiTitleIcon, 0) // MDI Title Icon
@@ -206,12 +206,12 @@ protected:
    void RemoveFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);
 
 public:
-   virtual ~TGMdiTitleBar();
+   ~TGMdiTitleBar() override;
 
-   virtual Bool_t       HandleButton(Event_t *event);
-   virtual Bool_t       HandleDoubleClick(Event_t *event);
-   virtual Bool_t       HandleMotion(Event_t *event);
-   virtual Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t       HandleButton(Event_t *event) override;
+   Bool_t       HandleDoubleClick(Event_t *event) override;
+   Bool_t       HandleMotion(Event_t *event) override;
+   Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
    void                 SetTitleBarColors(UInt_t fore, UInt_t back, TGFont *f);
    TGMdiButtons        *GetButtons() const { return fButtons; }
@@ -268,23 +268,23 @@ public:
    TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame, Int_t w, Int_t h,
                    const TGGC *boxGC, UInt_t options = 0,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGMdiDecorFrame();
+   ~TGMdiDecorFrame() override;
 
-   virtual Bool_t   HandleButton(Event_t *event);
-   virtual Bool_t   HandleConfigureNotify(Event_t *event);
+   Bool_t   HandleButton(Event_t *event) override;
+   Bool_t   HandleConfigureNotify(Event_t *event) override;
 
    virtual Int_t    CloseWindow() { return fFrame->CloseWindow(); }
-   virtual void     Layout();
+   void     Layout() override;
 
-   virtual void     Move(Int_t x, Int_t y);
-   virtual void     MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void     Move(Int_t x, Int_t y) override;
+   void     MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
 
    void             SetMdiButtons(ULong_t buttons);
    ULong_t          GetMdiButtons() const { return fButtonMask; }
 
    void             SetResizeMode(Int_t mode = kMdiDefaultResizeMode);
 
-   void             SetWindowName(const char *name);
+   void             SetWindowName(const char *name) override;
    void             SetWindowIcon(const TGPicture *pic);
    const char      *GetWindowName() {
                      return (const char *)fTitlebar->GetWinName()->GetText()->GetString();

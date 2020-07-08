@@ -57,7 +57,7 @@ protected:
    static TUrl       fgProxy;           // globally set proxy URL
    static Long64_t   fgMaxFullCacheSize; // maximal size of full-cached content, 500 MB by default
 
-   virtual void        Init(Bool_t readHeadOnly);
+   void        Init(Bool_t readHeadOnly) override;
    virtual void        CheckProxy();
    virtual TString     BasicAuthentication();
    virtual Int_t       GetHead();
@@ -75,15 +75,15 @@ protected:
 public:
    TWebFile(const char *url, Option_t *opt="");
    TWebFile(TUrl url, Option_t *opt="");
-   virtual ~TWebFile();
+   ~TWebFile() override;
 
-   virtual Long64_t    GetSize() const;
-   virtual Bool_t      IsOpen() const;
-   virtual Int_t       ReOpen(Option_t *mode);
-   virtual Bool_t      ReadBuffer(char *buf, Int_t len);
-   virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   virtual Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
-   virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
+   Long64_t    GetSize() const override;
+   Bool_t      IsOpen() const override;
+   Int_t       ReOpen(Option_t *mode) override;
+   Bool_t      ReadBuffer(char *buf, Int_t len) override;
+   Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
+   Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf) override;
+   void        Seek(Long64_t offset, ERelativeTo pos = kBeg) override;
 
    static void        SetProxy(const char *url);
    static const char *GetProxy();
@@ -100,19 +100,19 @@ class TWebSystem : public TSystem {
 private:
    void *fDirp;    // directory handler
 
-   void *GetDirPtr() const { return fDirp; }
+   void *GetDirPtr() const override { return fDirp; }
 
 public:
    TWebSystem();
-   virtual ~TWebSystem() { }
+   ~TWebSystem() override { }
 
-   Int_t       MakeDirectory(const char *name);
-   void       *OpenDirectory(const char *name);
-   void        FreeDirectory(void *dirp);
-   const char *GetDirEntry(void *dirp);
-   Int_t       GetPathInfo(const char *path, FileStat_t &buf);
-   Bool_t      AccessPathName(const char *path, EAccessMode mode);
-   Int_t       Unlink(const char *path);
+   Int_t       MakeDirectory(const char *name) override;
+   void       *OpenDirectory(const char *name) override;
+   void        FreeDirectory(void *dirp) override;
+   const char *GetDirEntry(void *dirp) override;
+   Int_t       GetPathInfo(const char *path, FileStat_t &buf) override;
+   Bool_t      AccessPathName(const char *path, EAccessMode mode) override;
+   Int_t       Unlink(const char *path) override;
 
    ClassDef(TWebSystem,0)  // Directory handler for HTTP (TWebFiles)
 };

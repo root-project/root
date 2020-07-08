@@ -34,7 +34,7 @@ public:
    TArrayD(Int_t n, const Double_t *array);
    TArrayD(const TArrayD &array);
    TArrayD    &operator=(const TArrayD &rhs);
-   virtual    ~TArrayD();
+      ~TArrayD() override;
 
    void            Adopt(Int_t n, Double_t *array);
    void            AddAt(Double_t c, Int_t i);
@@ -42,17 +42,17 @@ public:
    void            Copy(TArrayD &array) const {array.Set(fN,fArray);}
    const Double_t *GetArray() const { return fArray; }
    Double_t       *GetArray() { return fArray; }
-   Double_t        GetAt(Int_t i) const { return At(i); }
+   Double_t        GetAt(Int_t i) const override { return At(i); }
    Stat_t          GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
    void            Reset()             {memset(fArray, 0, fN*sizeof(Double_t));}
    void            Reset(Double_t val) {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
-   void            Set(Int_t n);
+   void            Set(Int_t n) override;
    void            Set(Int_t n, const Double_t *array);
-   void            SetAt(Double_t v, Int_t i) { AddAt(v, i); }
+   void            SetAt(Double_t v, Int_t i) override { AddAt(v, i); }
    Double_t       &operator[](Int_t i);
    Double_t        operator[](Int_t i) const;
 
-   ClassDef(TArrayD,1)  //Array of doubles
+   ClassDefOverride(TArrayD, 1) // Array of doubles
 };
 
 

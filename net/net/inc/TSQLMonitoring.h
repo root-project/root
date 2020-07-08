@@ -42,11 +42,11 @@ private:
 
 public:
    TSQLMonitoringWriter(const char *serv, const char *user, const char *pass, const char *table);
-   virtual ~TSQLMonitoringWriter();
+   ~TSQLMonitoringWriter() override;
 
-   Bool_t SendParameters(TList *values, const char * /*identifier*/);
+   Bool_t SendParameters(TList *values, const char * /*identifier*/) override;
 
-   void Verbose(Bool_t onoff) { fVerbose = onoff; }
+   void Verbose(Bool_t onoff) override { fVerbose = onoff; }
 
    ClassDef(TSQLMonitoringWriter, 0)   // Sending monitoring data to a SQL DB
 };

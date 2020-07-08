@@ -74,7 +74,7 @@ protected:
 
 public:
    TEveCompositeFrame(TGCompositeFrame* gui_parent, TEveWindow* eve_parent);
-   virtual ~TEveCompositeFrame();
+   ~TEveCompositeFrame() override;
 
    virtual void WindowNameChanged(const TString& name);
 
@@ -122,11 +122,11 @@ protected:
 public:
    TEveCompositeFrameInMainFrame(TGCompositeFrame* parent, TEveWindow* eve_parent,
                                  TGMainFrame* mf);
-   virtual ~TEveCompositeFrameInMainFrame();
+   ~TEveCompositeFrameInMainFrame() override;
 
-   virtual void WindowNameChanged(const TString& name);
+   void WindowNameChanged(const TString& name) override;
 
-   virtual void Destroy();
+   void Destroy() override;
 
    void SetOriginalSlotAndContainer(TEveWindow* slot, TEveWindow* container);
 
@@ -156,9 +156,9 @@ protected:
 public:
    TEveCompositeFrameInPack(TGCompositeFrame* parent, TEveWindow* eve_parent,
                             TGPack* pack);
-   virtual ~TEveCompositeFrameInPack();
+   ~TEveCompositeFrameInPack() override;
 
-   virtual void Destroy();
+   void Destroy() override;
 
    ClassDef(TEveCompositeFrameInPack, 0); // Eve-composite-frame that is contained in a TGPack.
 };
@@ -183,13 +183,13 @@ protected:
 public:
    TEveCompositeFrameInTab(TGCompositeFrame* parent, TEveWindow* eve_parent,
                            TGTab* tab);
-   virtual ~TEveCompositeFrameInTab();
+   ~TEveCompositeFrameInTab() override;
 
-   virtual void WindowNameChanged(const TString& name);
+   void WindowNameChanged(const TString& name) override;
 
-   virtual void Destroy();
+   void Destroy() override;
 
-   virtual void SetCurrent(Bool_t curr);
+   void SetCurrent(Bool_t curr) override;
 
    ClassDef(TEveCompositeFrameInTab, 0); // Eve-composite-frame that is contained in one tab of a TGTab.
 };
@@ -226,13 +226,13 @@ protected:
    static Pixel_t       fgCurrentBackgroundColor;
    static Pixel_t       fgMiniBarBackgroundColor;
 
-   virtual void PreDeleteElement();
+   void PreDeleteElement() override;
 
 public:
    TEveWindow(const char* n="TEveWindow", const char* t="");
-   virtual ~TEveWindow();
+   ~TEveWindow() override;
 
-   virtual void NameTitleChanged();
+   void NameTitleChanged() override;
 
    virtual TGFrame*        GetGUIFrame() = 0;
    virtual void            PreUndock();
@@ -308,13 +308,13 @@ protected:
    TGTextButton      *fEmptyButt;
    TGCompositeFrame  *fEmbedBuffer;
 
-   virtual void SetCurrent(Bool_t curr);
+   void SetCurrent(Bool_t curr) override;
 
 public:
    TEveWindowSlot(const char* n="TEveWindowSlot", const char* t="");
-   virtual ~TEveWindowSlot();
+   ~TEveWindowSlot() override;
 
-   virtual TGFrame* GetGUIFrame();
+   TGFrame* GetGUIFrame() override;
 
    TEveWindowPack*   MakePack(); // *MENU*
    TEveWindowTab*    MakeTab();  // *MENU*
@@ -343,9 +343,9 @@ protected:
 
 public:
    TEveWindowFrame(TGFrame* frame, const char* n="TEveWindowFrame", const char* t="");
-   virtual ~TEveWindowFrame();
+   ~TEveWindowFrame() override;
 
-   virtual TGFrame* GetGUIFrame() { return fGUIFrame; }
+   TGFrame* GetGUIFrame() override { return fGUIFrame; }
 
    TGCompositeFrame* GetGUICompositeFrame();
 
@@ -368,13 +368,13 @@ protected:
 
 public:
    TEveWindowPack(TGPack* p, const char* n="TEveWindowPack", const char* t="");
-   virtual ~TEveWindowPack();
+   ~TEveWindowPack() override;
 
-   virtual TGFrame*        GetGUIFrame();
+   TGFrame*        GetGUIFrame() override;
 
-   virtual Bool_t          CanMakeNewSlots() const { return kTRUE; }
+   Bool_t          CanMakeNewSlots() const override { return kTRUE; }
    virtual TEveWindowSlot* NewSlotWithWeight(Float_t w);
-   virtual TEveWindowSlot* NewSlot(); // *MENU*
+   TEveWindowSlot* NewSlot() override; // *MENU*
 
    void FlipOrientation(); // *MENU*
    void SetVertical(Bool_t x=kTRUE);
@@ -403,12 +403,12 @@ protected:
 
 public:
    TEveWindowTab(TGTab* tab, const char* n="TEveWindowTab", const char* t="");
-   virtual ~TEveWindowTab();
+   ~TEveWindowTab() override;
 
-   virtual TGFrame*        GetGUIFrame();
+   TGFrame*        GetGUIFrame() override;
 
-   virtual Bool_t          CanMakeNewSlots() const { return kTRUE; }
-   virtual TEveWindowSlot* NewSlot(); // *MENU*
+   Bool_t          CanMakeNewSlots() const override { return kTRUE; }
+   TEveWindowSlot* NewSlot() override; // *MENU*
 
    TGTab* GetTab() const { return fTab; }
 

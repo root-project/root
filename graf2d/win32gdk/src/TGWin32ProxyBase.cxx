@@ -93,7 +93,7 @@ public:
    void              *fParam;    // arguments passed to/from callback function
 
    TGWin32CallBackObject(TGWin32CallBack cb,void *p):fCallBack(cb),fParam(p) {}
-   ~TGWin32CallBackObject() { if (fParam) delete fParam; }
+   ~TGWin32CallBackObject() override { if (fParam) delete fParam; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

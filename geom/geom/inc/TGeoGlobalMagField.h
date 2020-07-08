@@ -29,7 +29,7 @@ protected:
 
 public:
    TGeoGlobalMagField();
-   virtual ~TGeoGlobalMagField();
+   ~TGeoGlobalMagField() override;
 
    // Using SetField() makes a given field global. The field manager owns it from now on.
    TVirtualMagField       *GetField() const {return fField;}

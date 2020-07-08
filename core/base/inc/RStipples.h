@@ -165,28 +165,28 @@ const unsigned char gStipples[26][32] = {
 
 const unsigned char gStipples[26][32] = {
    {
-      ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55,
-      ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55,
-      ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55
+      static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55),
+      static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55),
+      static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55)
    },  //0
    {
-      ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55,
-      ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55,
-      ~0xaa, ~0xaa, ~0x55, ~0x55, ~0xaa, ~0xaa, ~0x55, ~0x55
+      static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55),
+      static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55),
+      static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0xaa), static_cast<unsigned char>(~0x55), static_cast<unsigned char>(~0x55)
    },  //1
    {
-      ~0x44, ~0x44, ~0x11, ~0x11, ~0x44, ~0x44, ~0x11, ~0x11, ~0x44, ~0x44, ~0x11, ~0x11,
-      ~0x44, ~0x44, ~0x11, ~0x11, ~0x44, ~0x44, ~0x11, ~0x11, ~0x44, ~0x44, ~0x11, ~0x11,
-      ~0x44, ~0x44, ~0x11, ~0x11, ~0x44, ~0x44, ~0x11, ~0x11
+      static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11),
+      static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11),
+      static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11)
    },  //2
    {
-      ~0x00, ~0x00, ~0x44, ~0x44, ~0x00, ~0x00, ~0x11, ~0x11, ~0x00, ~0x00, ~0x44, ~0x44,
-      ~0x00, ~0x00, ~0x11, ~0x11, ~0x00, ~0x00, ~0x44, ~0x44, ~0x00, ~0x00, ~0x11, ~0x11,
-      ~0x00, ~0x00, ~0x44, ~0x44, ~0x00, ~0x00, ~0x11, ~0x11
+      static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44),
+      static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11),
+      static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x44), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x00), static_cast<unsigned char>(~0x11), static_cast<unsigned char>(~0x11)
    }, //3
    {
-      ~0x80, ~0x80, ~0x40, ~0x40, ~0x20, ~0x20, ~0x10, ~0x10, ~0x08, ~0x08, ~0x04, ~0x04,
-      ~0x02, ~0x02, ~0x01, ~0x01, ~0x80, ~0x80, ~0x40, ~0x40, ~0x20, ~0x20, ~0x10, ~0x10,
+      static_cast<unsigned char>(~0x80), static_cast<unsigned char>(~0x80), static_cast<unsigned char>(~0x40), static_cast<unsigned char>(~0x40), static_cast<unsigned char>(~0x20), static_cast<unsigned char>(~0x20), static_cast<unsigned char>(~0x10), static_cast<unsigned char>(~0x10), static_cast<unsigned char>(~0x08), static_cast<unsigned char>(~0x08), static_cast<unsigned char>(~0x04), static_cast<unsigned char>(~0x04),
+      static_cast<unsigned char>(~0x02), static_cast<unsigned char>(~0x02), static_cast<unsigned char>(~0x01), static_cast<unsigned char>(~0x01), static_cast<unsigned char>(~0x80), static_cast<unsigned char>(~0x80), static_cast<unsigned char>(~0x40), static_cast<unsigned char>(~0x40), static_cast<unsigned char>(~0x20), static_cast<unsigned char>(~0x20), static_cast<unsigned char>(~0x10), static_cast<unsigned char>(~0x10),
       ~0x08, ~0x08, ~0x04, ~0x04, ~0x02, ~0x02, ~0x01, ~0x01
    }, //4
    {

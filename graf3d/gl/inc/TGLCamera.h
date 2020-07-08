@@ -113,7 +113,7 @@ protected:
 public:
    TGLCamera();
    TGLCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis);
-   virtual ~TGLCamera();
+   ~TGLCamera() override;
 
    virtual Bool_t IsOrthographic() const {  return kFALSE; }
    virtual Bool_t IsPerspective() const { return kFALSE; }

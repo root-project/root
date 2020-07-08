@@ -38,7 +38,7 @@ private :
    void                   SetGeometry(TGeoManager *geom) {fGeometry = geom;}
 
 public :
-   virtual ~TGeoBuilder();
+   ~TGeoBuilder() override;
 
    static TGeoBuilder    *Instance(TGeoManager *geom);
 

@@ -22,7 +22,7 @@ public:
    TFoamMaxwt();                            // NOT IMPLEMENTED (NEVER USED)
    TFoamMaxwt(Double_t, Int_t);             // Principal Constructor
    TFoamMaxwt(TFoamMaxwt &From);            // Copy constructor
-   virtual ~TFoamMaxwt();                   // Destructor
+   ~TFoamMaxwt() override;                   // Destructor
    void Reset();                            // Reset
    TFoamMaxwt& operator=(const TFoamMaxwt &);    // operator =
    void Fill(Double_t);

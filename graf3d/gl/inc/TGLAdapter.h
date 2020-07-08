@@ -21,10 +21,10 @@ private:
 public:
    explicit TGLAdapter(Int_t glDevice = -1);
 
-   Bool_t            MakeCurrent();
-   void              SwapBuffers();
-   const TGLFormat  *GetPixelFormat()const{return 0;}
-   const TGLContext *GetContext()const{return 0;}
+   Bool_t            MakeCurrent() override;
+   void              SwapBuffers() override;
+   const TGLFormat  *GetPixelFormat()const override{return 0;}
+   const TGLContext *GetContext()const override{return 0;}
 
    void SetGLDevice(Int_t glDevice)
    {
@@ -34,14 +34,14 @@ public:
    void ReadGLBuffer();
    void SelectOffScreenDevice();
    void MarkForDirectCopy(Bool_t isDirect);
-   void ExtractViewport(Int_t *vp)const;
+   void ExtractViewport(Int_t *vp)const override;
 
 private:
    TGLAdapter(const TGLAdapter &);
    TGLAdapter &operator = (const TGLAdapter &);
 
-   void AddContext(TGLContext *){}
-   void RemoveContext(TGLContext *){}
+   void AddContext(TGLContext *) override{}
+   void RemoveContext(TGLContext *) override{}
 
    ClassDef(TGLAdapter, 0) // Allow plot-painters to be used for gl-inpad and gl-viewer.
 };

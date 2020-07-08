@@ -27,7 +27,7 @@ class TView : public TObject, public TAttLine {
 public:
 
    TView() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
-   virtual ~TView() = default;
+   ~TView() override = default;
 
    virtual void          DefinePerspectiveView() = 0;
    virtual void          AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &iy1, Int_t &iy2, Int_t &iz1, Int_t &iz2) = 0;
@@ -37,7 +37,7 @@ public:
                                     Double_t cospsi, Double_t sinpsi,
                                     Double_t *tnorm, Double_t *tback) = 0;
    virtual void          DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax) = 0;
-   virtual void          ExecuteEvent(Int_t event, Int_t px, Int_t py) = 0;
+   void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override = 0;
    virtual void          ExecuteRotateView(Int_t event, Int_t px, Int_t py) = 0;
    virtual void          FindScope(Double_t *scale, Double_t *center, Int_t &irep) = 0;
    virtual Int_t         GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio) = 0;

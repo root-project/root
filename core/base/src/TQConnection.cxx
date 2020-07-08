@@ -53,7 +53,7 @@ protected:
 public:
    TQSlot(TClass *cl, const char *method, const char *funcname);
    TQSlot(const char *class_name, const char *funcname);
-   virtual ~TQSlot();
+   ~TQSlot() override;
 
    Bool_t      CheckSlot(Int_t nargs) const;
    Long_t      GetOffset() const { return fOffset; }
@@ -61,7 +61,7 @@ public:
    CallFunc_t *GetFunc() const { return fFunc; }
    void        EndExecuting();
 
-   const char *GetName() const {
+   const char *GetName() const override {
       return fName.Data();
    }
 
@@ -74,8 +74,8 @@ public:
    void ExecuteMethod(void *object, Double_t param);
    void ExecuteMethod(void *object, const char *params);
    void ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam = -1);
-   void Print(Option_t *opt = "") const;
-   void ls(Option_t *opt = "") const {
+   void Print(Option_t *opt = "") const override;
+   void ls(Option_t *opt = "") const override {
       Print(opt);
    }
 

@@ -51,16 +51,16 @@ protected:
 
 public:
    TGLObject() : TGLLogicalShape(0), fMultiColor(kFALSE) {}
-   virtual ~TGLObject() {}
+   ~TGLObject() override {}
 
-   virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
+   Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const override;
 
    // Kept from TGLLogicalShape
    // virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
 
    // Changed from TGLLogicalShape
-   virtual Bool_t KeepDuringSmartRefresh() const { return kTRUE; }
-   virtual void   UpdateBoundingBox();
+   Bool_t KeepDuringSmartRefresh() const override { return kTRUE; }
+   void   UpdateBoundingBox() override;
 
    // TGLObject virtuals
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0) = 0;

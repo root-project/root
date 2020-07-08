@@ -156,7 +156,7 @@ protected:
 public:
 
    TRatioPlot();
-   virtual ~TRatioPlot();
+   ~TRatioPlot() override;
    TRatioPlot(TH1* h1, TH1* h2, Option_t *option = "pois");
 
    TRatioPlot(THStack* st, TH1* h2, Option_t *option = "pois");
@@ -170,11 +170,11 @@ public:
 
    void SetInsetWidth(Double_t width);
 
-   virtual void Draw(Option_t *chopt="");
-   virtual void Browse(TBrowser *b);
+   void Draw(Option_t *chopt="") override;
+   void Browse(TBrowser *b) override;
 
 
-   virtual void Paint(Option_t *opt = "");
+   void Paint(Option_t *opt = "") override;
 
    // Slots for signal receiving
    void UnZoomed();

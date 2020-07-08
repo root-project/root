@@ -93,12 +93,12 @@ private:
 
 public:
    TApplicationRemote(const char *url, Int_t debug = 0, const char *script = 0);
-   virtual ~TApplicationRemote();
+   ~TApplicationRemote() override;
 
-   virtual void  Browse(TBrowser *b);
-   Bool_t        IsFolder() const { return kTRUE; }
-   const char   *ApplicationName() const { return fName; }
-   Long_t        ProcessLine(const char *line, Bool_t /*sync*/ = kFALSE, Int_t *error = 0);
+   void  Browse(TBrowser *b) override;
+   Bool_t        IsFolder() const override { return kTRUE; }
+   const char   *ApplicationName() const override { return fName; }
+   Long_t        ProcessLine(const char *line, Bool_t /*sync*/ = kFALSE, Int_t *error = 0) override;
 
    Int_t         SendFile(const char *file, Int_t opt = kAscii,
                           const char *rfile = 0);
@@ -107,9 +107,9 @@ public:
    void          Interrupt(Int_t type = kRRI_Hard);
    Bool_t        IsValid() const { return (fSocket) ? kTRUE : kFALSE; }
 
-   void          Print(Option_t *option="") const;
+   void          Print(Option_t *option="") const override;
 
-   void          Terminate(Int_t status = 0);
+   void          Terminate(Int_t status = 0) override;
 
    static void   SetPortParam(Int_t lower = -1, Int_t upper = -1, Int_t attempts = -1);
 
@@ -125,7 +125,7 @@ private:
 public:
    TARInterruptHandler(TApplicationRemote *r)
       : TSignalHandler(kSigInterrupt, kFALSE), fApplicationRemote(r) { }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 #endif

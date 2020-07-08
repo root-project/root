@@ -79,7 +79,7 @@ public:
    TClingMethodInfo(cling::Interpreter *, const clang::FunctionDecl *);
    TClingMethodInfo(cling::Interpreter *, TClingClassInfo *);
 
-   ~TClingMethodInfo();
+   ~TClingMethodInfo() override;
 
    const clang::FunctionDecl                   *GetMethodDecl() const;
    TDictionary::DeclId_t                        GetDeclId() const;

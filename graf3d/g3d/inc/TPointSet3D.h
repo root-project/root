@@ -39,9 +39,9 @@ public:
 
    TPointSet3D& operator=(const TPointSet3D& t);
 
-   virtual ~TPointSet3D();
+   ~TPointSet3D() override;
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
    void     SetPointId(TObject* id);
    void     SetPointId(Int_t n, TObject* id);

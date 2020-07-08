@@ -52,7 +52,7 @@ public:
 
    TEnum(): fInfo(nullptr), fClass(nullptr) {}
    TEnum(const char *name, DeclId_t declid, TClass *cls);
-   virtual ~TEnum();
+   ~TEnum() override;
 
    void                  AddConstant(TEnumConstant *constant);
    TClass               *GetClass() const { return fClass; }
@@ -61,14 +61,14 @@ public:
    DeclId_t              GetDeclId() const;
    EDataType             GetUnderlyingType() const;
    Bool_t                IsValid();
-   Long_t                Property() const;
+   Long_t                Property() const override;
    void                  SetClass(TClass *cl) { fClass = cl; }
    void                  Update(DeclId_t id);
    const char*           GetQualifiedName() const { return fQualName.c_str(); }
    static TEnum         *GetEnum(const std::type_info &ti, ESearchAction sa = kALoadAndInterpLookup);
    static TEnum         *GetEnum(const char *enumName, ESearchAction sa = kALoadAndInterpLookup);
 
-   ClassDef(TEnum, 2) //Enum type class
+   ClassDefOverride(TEnum, 2) // Enum type class
 };
 
 #endif

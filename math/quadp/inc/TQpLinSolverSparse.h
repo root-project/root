@@ -70,12 +70,12 @@ public:
    TQpLinSolverSparse(TQpProbSparse *factory,TQpDataSparse *data);
    TQpLinSolverSparse(const TQpLinSolverSparse &another);
 
-   virtual ~TQpLinSolverSparse() {}
+   ~TQpLinSolverSparse() override {}
 
-   virtual void Factor         (TQpDataBase *prob,TQpVar *vars);
-   virtual void SolveCompressed(TVectorD &rhs);
-   virtual void PutXDiagonal   (TVectorD &xdiag);
-   virtual void PutZDiagonal   (TVectorD &zdiag);
+   void Factor         (TQpDataBase *prob,TQpVar *vars) override;
+   void SolveCompressed(TVectorD &rhs) override;
+   void PutXDiagonal   (TVectorD &xdiag) override;
+   void PutZDiagonal   (TVectorD &zdiag) override;
 
    TQpLinSolverSparse &operator= (const TQpLinSolverSparse &source);
 

@@ -36,7 +36,7 @@ private:
 public:
 
    TFPBlock(Long64_t*, Int_t*, Int_t);
-   virtual ~TFPBlock();
+   ~TFPBlock() override;
 
    Long64_t  GetPos(Int_t) const;
    Int_t     GetLen(Int_t) const;
@@ -53,7 +53,7 @@ public:
    void SetPos(Int_t, Long64_t);
    void ReallocBlock(Long64_t*, Int_t*, Int_t);
 
-   ClassDef(TFPBlock, 0);  // File prefetch block
+   ClassDefOverride(TFPBlock, 0); // File prefetch block
 };
 
 /// Get pointer to the array of postions.

@@ -54,22 +54,22 @@ protected:
    TGPicture(const char *name, Pixmap_t pxmap, Pixmap_t mask = 0);
 
    // override default of TObject
-   void Draw(Option_t * = "") { MayNotUse("Draw(Option_t*)"); }
+   void Draw(Option_t * = "") override { MayNotUse("Draw(Option_t*)"); }
 
 public:
-   virtual ~TGPicture();
+   ~TGPicture() override;
 
-   const char *GetName() const { return fName; }
+   const char *GetName() const override { return fName; }
    UInt_t      GetWidth() const { return fAttributes.fWidth; }
    UInt_t      GetHeight() const { return fAttributes.fHeight; }
    Pixmap_t    GetPicture() const { return fPic; }
    Pixmap_t    GetMask() const { return fMask; }
    Bool_t      IsScaled() const { return fScaled; }
-   ULong_t     Hash() const { return fName.Hash(); }
+   ULong_t     Hash() const override { return fName.Hash(); }
    static const char *HashName(const char *name, Int_t width, Int_t height);
 
    virtual void Draw(Handle_t id, GContext_t gc, Int_t x, Int_t y) const;
-   void         Print(Option_t *option="") const;
+   void         Print(Option_t *option="") const override;
 
    ClassDef(TGPicture,0)  // Pictures and icons used by the GUI classes
 };
@@ -91,7 +91,7 @@ protected:
 
 public:
    TGSelectedPicture(const TGClient *client, const TGPicture *p);
-   virtual ~TGSelectedPicture();
+   ~TGSelectedPicture() override;
 
    ClassDef(TGSelectedPicture,0)  // Selected looking picture
 };
@@ -110,7 +110,7 @@ protected:
 public:
    TGPicturePool(const TGClient *client, const char *path):
       fClient(client), fPath(path), fPicList(0) { }
-   virtual ~TGPicturePool();
+   ~TGPicturePool() override;
 
    const char      *GetPath() const { return fPath; }
    const TGPicture *GetPicture(const char *name);
@@ -119,7 +119,7 @@ public:
    const TGPicture *GetPicture(const char *name, Pixmap_t pxmap, Pixmap_t mask =  0);
    void             FreePicture(const TGPicture *pic);
 
-   void             Print(Option_t *option="") const;
+   void             Print(Option_t *option="") const override;
 
    ClassDef(TGPicturePool,0)  // Picture and icon cache
 };

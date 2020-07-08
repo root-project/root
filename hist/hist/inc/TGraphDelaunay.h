@@ -77,7 +77,7 @@ public:
    TGraphDelaunay();
    TGraphDelaunay(TGraph2D *g);
 
-   virtual ~TGraphDelaunay();
+   ~TGraphDelaunay() override;
 
    Double_t  ComputeZ(Double_t x, Double_t y);
    void      FindAllTriangles();

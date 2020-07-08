@@ -49,7 +49,7 @@ public:
    TVirtualMonitoringWriter(const char *name, Double_t value)
      : TNamed(name, ""), fValue(value), fTmpOpenPhases(0) { }
 
-   virtual ~TVirtualMonitoringWriter();
+   ~TVirtualMonitoringWriter() override;
 
    // TFile related info. In general they are gathered and sent only sometimes as summaries
    virtual Bool_t SendFileCloseEvent(TFile * /*file*/)
@@ -90,7 +90,7 @@ class TVirtualMonitoringReader : public TNamed {
 
 public:
    TVirtualMonitoringReader( const char * /*serviceurl*/ ="") { }
-   virtual ~TVirtualMonitoringReader() { }
+   ~TVirtualMonitoringReader() override { }
 
    virtual void   DumpResult() { MayNotUse("DumpResult"); }
    virtual void   GetValues(const char * /*farmName*/, const char * /*clusterName*/,

@@ -37,21 +37,21 @@ public:
 public:
 // ctor/dtor ... cctor and assignment are private in base class
    TPySelector( TTree* /* tree */ = 0, PyObject* self = 0 );
-   virtual ~TPySelector();
+   ~TPySelector() override;
 
 // TSelector set of forwarded (overridden) methods
-   virtual Int_t  Version() const;
-   virtual Int_t  GetEntry( Long64_t entry, Int_t getall = 0 );
-   virtual Bool_t Notify();
+   Int_t  Version() const override;
+   Int_t  GetEntry( Long64_t entry, Int_t getall = 0 ) override;
+   Bool_t Notify() override;
 
-   virtual void   Init( TTree* tree );
-   virtual void   Begin( TTree* tree = 0 /* not used */ );
-   virtual void   SlaveBegin( TTree* tree );
-   virtual Bool_t Process( Long64_t entry );
-   virtual void   SlaveTerminate();
-   virtual void   Terminate();
+   void   Init( TTree* tree ) override;
+   void   Begin( TTree* tree = 0 /* not used */ ) override;
+   void   SlaveBegin( TTree* tree ) override;
+   Bool_t Process( Long64_t entry ) override;
+   void   SlaveTerminate() override;
+   void   Terminate() override;
 
-   virtual void Abort( const char* why, EAbort what = kAbortProcess );
+   void Abort( const char* why, EAbort what = kAbortProcess ) override;
 
    ClassDef( TPySelector, 1 );   //Python equivalent base class for PROOF
 

@@ -46,25 +46,25 @@ public:
    TPolyMarker3D(Int_t n, Float_t *p, Marker_t marker=1, Option_t *option="");
    TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker=1, Option_t *option="");
    TPolyMarker3D(const TPolyMarker3D &p);
-   virtual ~TPolyMarker3D();
+   ~TPolyMarker3D() override;
 
-   virtual void      Copy(TObject &polymarker) const;
-   Int_t             DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void      Draw(Option_t *option="");
+   void      Copy(TObject &polymarker) const override;
+   Int_t             DistancetoPrimitive(Int_t px, Int_t py) override;
+   void      Draw(Option_t *option="") override;
    virtual void      DrawPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
-   virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void      ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual Int_t     GetLastPoint() const { return fLastPoint;}
-   virtual const char  *GetName() const {return fName.Data();}
+   const char  *GetName() const override {return fName.Data();}
    virtual Int_t     GetN() const { return fN;}
    virtual Float_t  *GetP() const { return fP;}
    virtual void      GetPoint(Int_t n, Float_t &x, Float_t &y, Float_t &z) const;
    virtual void      GetPoint(Int_t n, Double_t &x, Double_t &y, Double_t &z) const;
-   Option_t         *GetOption() const {return fOption.Data();}
-   virtual void      ls(Option_t *option="") const;
+   Option_t         *GetOption() const override {return fOption.Data();}
+   void      ls(Option_t *option="") const override;
    virtual Int_t     Merge(TCollection *list);
-   virtual void      Paint(Option_t *option="");
-   virtual void      Print(Option_t *option="") const;
-   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
+   void      Paint(Option_t *option="") override;
+   void      Print(Option_t *option="") const override;
+   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void      SetName(const char *name); // *MENU*
    void              SetPoint(Int_t n, Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void      SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");

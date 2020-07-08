@@ -34,9 +34,9 @@ public:
    TNodeDiv();
    TNodeDiv(const char *name, const char *title, const char *shapename, Int_t ndiv, Int_t axis, Option_t *option="");
    TNodeDiv(const char *name, const char *title, TShape *shape, Int_t ndiv, Int_t axis, Option_t *option="");
-   virtual ~TNodeDiv();
-   virtual void             Draw(Option_t *option="");
-   virtual void             Paint(Option_t *option="");
+   ~TNodeDiv() override;
+   void             Draw(Option_t *option="") override;
+   void             Paint(Option_t *option="") override;
 
    ClassDef(TNodeDiv,1)  //Description of parameters to divide a 3-D geometry object
 };

@@ -64,7 +64,7 @@ public:
    TSecContext(const char *user, const char *host, Int_t meth, Int_t offset,
                const char *id, const char *token,
                TDatime expdate = kROOTTZERO, void *ctx = 0);
-   virtual    ~TSecContext();
+      ~TSecContext() override;
 
    void        AddForCleanup(Int_t port, Int_t proto, Int_t type);
    virtual const char *AsString(TString &out);
@@ -84,7 +84,7 @@ public:
    Bool_t      IsA(const char *methodname);
    Bool_t      IsActive()   const;
 
-   virtual void Print(Option_t *option = "F") const;
+   void Print(Option_t *option = "F") const override;
 
    void        SetExpDate(TDatime expdate)  { fExpDate= expdate; }
    void        SetID(const char *id)        { fID= id; }
@@ -115,7 +115,7 @@ private:
 public:
    TSecContextCleanup(Int_t port, Int_t proto, Int_t type) :
                fPort(port), fServerProtocol(proto), fServerType(type) { };
-   virtual ~TSecContextCleanup() { };
+   ~TSecContextCleanup() override { };
 
    Int_t   GetPort() const { return fPort; }
    Int_t   GetProtocol() const { return fServerProtocol; }

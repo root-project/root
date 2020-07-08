@@ -59,7 +59,7 @@ public:
    TSVDUnfold( const TSVDUnfold& other );
 
    // Destructor
-   virtual ~TSVDUnfold();
+   ~TSVDUnfold() override;
 
    // Set option to normalize unfolded spectrum to unit area
    // "normalize" - switch

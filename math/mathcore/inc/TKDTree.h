@@ -13,7 +13,7 @@ public:
    TKDTree();
    TKDTree(Index npoints, Index ndim, UInt_t bsize);
    TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **data);
-   ~TKDTree();
+   ~TKDTree() override;
 
    void            Build();  // build the tree
 

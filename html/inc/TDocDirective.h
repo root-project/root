@@ -44,9 +44,9 @@ protected:
    TDocDirective() {}
    TDocDirective(const char* name):
       TNamed(name, ""), fDocParser(0), fHtml(0), fDocOutput(0), fCounter(-1) {};
-   virtual ~TDocDirective() {}
+   ~TDocDirective() override {}
 
-   const char* GetName() const { return TNamed::GetName(); }
+   const char* GetName() const override { return TNamed::GetName(); }
    void GetName(TString& name) const;
    TDocParser* GetDocParser() const { return fDocParser; }
    TDocOutput* GetDocOutput() const { return fDocOutput; }
@@ -83,11 +83,11 @@ private:
    Bool_t  fVerbatim; // whether we are in a <pre></pre> block
 public:
    TDocHtmlDirective(): TDocDirective("HTML"), fVerbatim(kFALSE) {}
-   virtual ~TDocHtmlDirective() {}
+   ~TDocHtmlDirective() override {}
 
-   virtual void AddLine(const TSubString& line);
-   virtual const char* GetEndTag() const { return "end_html"; }
-   virtual Bool_t GetResult(TString& result);
+   void AddLine(const TSubString& line) override;
+   const char* GetEndTag() const override { return "end_html"; }
+   Bool_t GetResult(TString& result) override;
 
    ClassDef(TDocHtmlDirective, 0); // Handler for "Begin_Html"/"End_Html" for raw HTML in documentation comments
 };
@@ -99,20 +99,20 @@ private:
    Bool_t  fShowSource;    // whether a source tab should be created
    Bool_t  fIsFilename;    // whether the directive is a failename to be executed
 
-   virtual void AddParameter(const TString& name, const char* value = 0);
+   void AddParameter(const TString& name, const char* value = 0) override;
    TString CreateSubprocessInputFile();
 
 public:
    TDocMacroDirective():
       TDocDirective("MACRO"), fMacro(0), fNeedGraphics(kFALSE),
       fShowSource(kFALSE), fIsFilename(kTRUE) {};
-   virtual ~TDocMacroDirective();
+   ~TDocMacroDirective() override;
 
-   virtual void AddLine(const TSubString& line);
-   virtual const char* GetEndTag() const { return "end_macro"; }
-   virtual Bool_t GetResult(TString& result);
+   void AddLine(const TSubString& line) override;
+   const char* GetEndTag() const override { return "end_macro"; }
+   Bool_t GetResult(TString& result) override;
    // Delete output for the parser's current class or module.
-   virtual void DeleteOutput() const { DeleteOutputFiles(".gif"); }
+   void DeleteOutput() const override { DeleteOutputFiles(".gif"); }
 
    static void SubProcess(const TString& what, const TString& out);
 
@@ -129,17 +129,17 @@ protected:
    TVirtualPad* fBBCanvas;    // canvas for bounding box determination
 
    virtual void    CreateLatex(const char* filename);
-   virtual void    AddParameter(const TString& name, const char* value = 0);
+   void    AddParameter(const TString& name, const char* value = 0) override;
    virtual void GetBoundingBox(TLatex& latex, const char* text, Float_t& width, Float_t& height);
 
 public:
    TDocLatexDirective():
       TDocDirective("LATEX"), fLatex(0), fFontSize(16),
       fSepIsRegexp(kFALSE), fBBCanvas(0) {};
-   virtual ~TDocLatexDirective();
+   ~TDocLatexDirective() override;
 
-   virtual void AddLine(const TSubString& line);
-   virtual const char* GetEndTag() const {return "end_latex";}
+   void AddLine(const TSubString& line) override;
+   const char* GetEndTag() const override {return "end_latex";}
 
    const char* GetAlignment() const {return fAlignment;}
    const char* GetSeparator() const {return fSeparator;}
@@ -147,9 +147,9 @@ public:
    Int_t  GetFontSize() const {return fFontSize;}
    TList* GetListOfLines() const;
 
-   virtual Bool_t GetResult(TString& result);
+   Bool_t GetResult(TString& result) override;
    // Delete output for the parser's current class or module.
-   virtual void DeleteOutput() const { DeleteOutputFiles(".gif"); }
+   void DeleteOutput() const override { DeleteOutputFiles(".gif"); }
 
    ClassDef(TDocLatexDirective, 0); // Handler for "Begin_Latex"/"End_Latex" to generate an image from latex
 };

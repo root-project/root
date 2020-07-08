@@ -56,7 +56,7 @@ class TGeoBorderSurface;
 class TGDMLWrite : public TObject {
 public:
    TGDMLWrite();
-   virtual ~TGDMLWrite();
+   ~TGDMLWrite() override;
 
    static void StartGDMLWriting(TGeoManager * geomanager, const char* filename, TString option) {
       //static function -

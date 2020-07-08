@@ -58,8 +58,8 @@ public:
                   const char *functionname="", TObject *obj=0,
                   const char *args="", Int_t selfobjposition=-1,
                   Bool_t self=kFALSE);
-   virtual        ~TClassMenuItem();
-   virtual const char *GetTitle() const { return fTitle; }
+          ~TClassMenuItem() override;
+   const char *GetTitle() const override { return fTitle; }
    virtual const char *GetFunctionName() const { return fFunctionName; }
    virtual const char *GetArgs() const { return fArgs; }
    virtual TObject *GetCalledObject() const { return fCalledObject; }

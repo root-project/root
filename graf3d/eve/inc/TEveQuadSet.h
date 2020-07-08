@@ -81,7 +81,7 @@ public:
    TEveQuadSet(const char* n="TEveQuadSet", const char* t="");
    TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
                const char* n="TEveQuadSet", const char* t="");
-   virtual ~TEveQuadSet() {}
+   ~TEveQuadSet() override {}
 
    void Reset(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
 
@@ -116,7 +116,7 @@ public:
 
    // void Test(Int_t nquads);
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
    // virtual void Paint(Option_t* option="");
 

@@ -80,7 +80,7 @@ public:
                 EAuthType authType, const TString& accessKey,
                 const TString& secretKey);
    TS3HTTPRequest(const TS3HTTPRequest& m);
-   virtual ~TS3HTTPRequest() { }
+   ~TS3HTTPRequest() override { }
 
    EHTTPVerb       GetHTTPVerb() const { return fVerb; }
    const TString&  GetHost() const { return fHost; }

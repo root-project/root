@@ -45,7 +45,7 @@ namespace {
                       Sema* S) :
       m_Policy(Policy), m_Addresses(Addresses), m_Sema(S) {}
 
-    virtual ~StmtPrinterHelper() {}
+    ~StmtPrinterHelper() override {}
 
 
     // Handle only DeclRefExprs since they are local and the call wrapper
@@ -54,7 +54,7 @@ namespace {
     // * CallExpr
     // * MemberExpr
     // * CXXDependentScopeMemberExpr
-    virtual bool handledStmt(Stmt* S, llvm::raw_ostream& OS) {
+    bool handledStmt(Stmt* S, llvm::raw_ostream& OS) override {
       if (DeclRefExpr* Node = dyn_cast<DeclRefExpr>(S))
         // Exclude the artificially dependent DeclRefExprs, created by the
         // Lookup

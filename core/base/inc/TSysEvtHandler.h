@@ -30,11 +30,11 @@ class TSysEvtHandler : public TObject, public TQObject {
 private:
    Bool_t   fIsActive;    // kTRUE if handler is active, kFALSE if not active
 
-   void  *GetSender() { return this; }  //used to set gTQSender
+   void  *GetSender() override { return this; }  //used to set gTQSender
 
 public:
    TSysEvtHandler() : fIsActive(kTRUE) { }
-   virtual ~TSysEvtHandler() { }
+   ~TSysEvtHandler() override { }
 
    void             Activate();
    void             DeActivate();
@@ -42,7 +42,7 @@ public:
 
    virtual void     Add()    = 0;
    virtual void     Remove() = 0;
-   virtual Bool_t   Notify() = 0;
+   Bool_t   Notify() override = 0;
 
    virtual void     Activated()   { Emit("Activated()"); }   //*SIGNAL*
    virtual void     DeActivated() { Emit("DeActivated()"); } //*SIGNAL*
@@ -50,7 +50,7 @@ public:
    virtual void     Added()       { Emit("Added()"); }       //*SIGNAL*
    virtual void     Removed()     { Emit("Removed()"); }     //*SIGNAL*
 
-   ClassDef(TSysEvtHandler,0)  //ABC for handling system events
+   ClassDefOverride(TSysEvtHandler, 0) // ABC for handling system events
 };
 
 
@@ -75,10 +75,10 @@ public:
    enum { kRead = 1, kWrite = 2 };
 
    TFileHandler(int fd, int mask);
-   virtual ~TFileHandler() { Remove(); }
+   ~TFileHandler() override { Remove(); }
    int             GetFd() const { return fFileNum; }
    void            SetFd(int fd) { fFileNum = fd; }
-   virtual Bool_t  Notify();
+   Bool_t  Notify() override;
    virtual Bool_t  ReadNotify();
    virtual Bool_t  WriteNotify();
    virtual Bool_t  HasReadInterest();
@@ -89,10 +89,10 @@ public:
    virtual void    SetWriteReady() { fReadyMask |= 0x2; }
    virtual Bool_t  IsReadReady() const { return (fReadyMask & 0x1) == 0x1; }
    virtual Bool_t  IsWriteReady() const { return (fReadyMask & 0x2) == 0x2; }
-   virtual void    Add();
-   virtual void    Remove();
+   void    Add() override;
+   void    Remove() override;
 
-   ClassDef(TFileHandler,0)  //Handles events on file descriptors
+   ClassDefOverride(TFileHandler, 0) // Handles events on file descriptors
 };
 
 
@@ -135,18 +135,18 @@ protected:
 
 public:
    TSignalHandler(ESignals sig, Bool_t sync = kTRUE);
-   virtual ~TSignalHandler() { Remove(); }
+   ~TSignalHandler() override { Remove(); }
    void           Delay() { fDelay = 1; }
    void           HandleDelayedSignal();
    ESignals       GetSignal() const { return fSignal; }
    void           SetSignal(ESignals sig) { fSignal = sig; }
    Bool_t         IsSync() const { return fSync; }
    Bool_t         IsAsync() const { return !fSync; }
-   virtual Bool_t Notify();
-   virtual void   Add();
-   virtual void   Remove();
+   Bool_t Notify() override;
+   void   Add() override;
+   void   Remove() override;
 
-   ClassDef(TSignalHandler,0)  //Signal event handler
+   ClassDefOverride(TSignalHandler, 0) // Signal event handler
 };
 
 inline void TSignalHandler::HandleDelayedSignal()
@@ -175,15 +175,15 @@ public:
    enum EStatus { kSEProceed, kSEHandled, kSEAbort };
 
    TStdExceptionHandler();
-   virtual ~TStdExceptionHandler() { }
+   ~TStdExceptionHandler() override { }
 
-   virtual void     Add();
-   virtual void     Remove();
-   virtual Bool_t   Notify();
+   void     Add() override;
+   void     Remove() override;
+   Bool_t   Notify() override;
 
    virtual EStatus  Handle(std::exception& exc) = 0;
 
-   ClassDef(TStdExceptionHandler,0)  //C++ exception handler
+   ClassDefOverride(TStdExceptionHandler, 0) // C++ exception handler
 };
 
 #endif

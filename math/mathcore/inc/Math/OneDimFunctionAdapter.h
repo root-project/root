@@ -92,12 +92,12 @@ public:
    /**
       Destructor (no operations)
    */
-   virtual ~OneDimMultiFunctionAdapter ()  { if (fOwn && fX) delete [] fX; }
+   ~OneDimMultiFunctionAdapter () override  { if (fOwn && fX) delete [] fX; }
 
    /**
       clone
    */
-   virtual OneDimMultiFunctionAdapter * Clone( ) const {
+   OneDimMultiFunctionAdapter * Clone( ) const override {
       if (fOwn) {
          OneDimMultiFunctionAdapter * f =  new OneDimMultiFunctionAdapter( fFunc, fDim, fCoord, fParams);
          std::copy(fX, fX+fDim, f->fX);
@@ -166,7 +166,7 @@ private:
       evaluate function at the  values x[] given in the constructor and
       as function of  the coordinate fCoord.
    */
-   double DoEval(double x) const {
+   double DoEval(double x) const override {
       if (fOwn) {
          fX[fCoord] = x;
          return EvaluatorOneDim<MultiFuncType>::F( fFunc, fX, fParams );
@@ -231,12 +231,12 @@ public:
    /**
       Destructor (no operations)
    */
-   ~OneDimParamFunctionAdapter ()  {}
+   ~OneDimParamFunctionAdapter () override  {}
 
    /**
       clone
    */
-   virtual OneDimParamFunctionAdapter * Clone( ) const {
+   OneDimParamFunctionAdapter * Clone( ) const override {
       return new OneDimParamFunctionAdapter(fFunc, fX, fParams, fIpar);
    }
 
@@ -248,7 +248,7 @@ private:
       evaluate function at the  values x[] given in the constructor and
       as function of  the coordinate fCoord.
    */
-   double DoEval(double x) const {
+   double DoEval(double x) const override {
       // HACK: use const_cast to modify the function values x[] and restore afterwards the original ones
       double * p = const_cast<double *>(fParams);
       double pprev = fParams[fIpar]; // keep original value to restore in fX

@@ -76,7 +76,7 @@ private:
 public:
    TProofProgressLog(TProofProgressDialog *d, Int_t w = 700, Int_t h = 600);
    TProofProgressLog(const char *url = 0, Int_t sessionidx = 0, Int_t w = 700, Int_t h = 600);
-   virtual ~TProofProgressLog();
+   ~TProofProgressLog() override;
 
    void   BuildLogList(Bool_t create = kFALSE);
    void   DoLog(Bool_t grep=kFALSE);
@@ -88,7 +88,7 @@ public:
 
    void   LoadFile(const char *file);
 
-   void   Clear(Option_t * = 0);
+   void   Clear(Option_t * = 0) override;
    void   Popup();
    void   SaveToFile();
    void   NoLineEntry();
@@ -97,7 +97,7 @@ public:
 
    void   SetUrl(const char *url) { fSessionUrl = url; }
    // slots
-   void   CloseWindow();
+   void   CloseWindow() override;
 
    ClassDef(TProofProgressLog,0) //Class implementing a log graphic box
 };

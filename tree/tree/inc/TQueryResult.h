@@ -113,9 +113,9 @@ public:
                     fFinalized(kFALSE), fArchived(kFALSE), fPrepTime(0.),
                     fInitTime(0.), fProcTime(0.), fMergeTime(0.),
                     fRecvTime(-1), fTermTime(0.), fNumWrks(-1), fNumMergers(-1) { }
-   virtual ~TQueryResult();
+   ~TQueryResult() override;
 
-   void           Browse(TBrowser *b = 0);
+   void           Browse(TBrowser *b = 0) override;
 
    Int_t          GetSeqNum() const { return fSeqNum; }
    EQueryStatus   GetStatus() const { return fStatus; }
@@ -151,9 +151,9 @@ public:
 
    Bool_t         Matches(const char *ref);
 
-   void Print(Option_t *opt = "") const;
+   void Print(Option_t *opt = "") const override;
 
-   ClassDef(TQueryResult,5)  //Class describing a query
+   ClassDefOverride(TQueryResult, 5) // Class describing a query
 };
 
 inline Bool_t operator!=(const TQueryResult &qr1,  const TQueryResult &qr2)

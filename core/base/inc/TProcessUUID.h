@@ -42,7 +42,7 @@ protected:
 public:
 
    TProcessUUID();
-   virtual ~TProcessUUID();
+   ~TProcessUUID() override;
    UInt_t             AddUUID(TUUID &uuid, TObject *obj);
    UInt_t             AddUUID(const char *uuids);
    TObjString        *FindUUID(UInt_t number) const;

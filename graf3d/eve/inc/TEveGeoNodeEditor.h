@@ -39,9 +39,9 @@ protected:
 public:
    TEveGeoNodeEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveGeoNodeEditor() {}
+   ~TEveGeoNodeEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoVizNode();
    void DoVizNodeDaughters();
@@ -68,9 +68,9 @@ protected:
 public:
    TEveGeoTopNodeEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                         UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveGeoTopNodeEditor() {}
+   ~TEveGeoTopNodeEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoVisOption();
    void DoVisLevel();

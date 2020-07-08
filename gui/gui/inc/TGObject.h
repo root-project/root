@@ -43,12 +43,12 @@ protected:
 public:
    TGObject(): fId(0), fClient(0) { }
    TGObject(const TGObject& tgo): TObject(tgo), fId(tgo.fId), fClient(tgo.fClient) { }
-   virtual ~TGObject();
+   ~TGObject() override;
    Handle_t  GetId() const { return fId; }
    TGClient *GetClient() const { return fClient; }
-   ULong_t   Hash() const { return (ULong_t) fId >> 0; }
-   Bool_t    IsEqual(const TObject *obj) const;
-   virtual void SaveAs(const char* filename = "", Option_t* option = "") const;
+   ULong_t   Hash() const override { return (ULong_t) fId >> 0; }
+   Bool_t    IsEqual(const TObject *obj) const override;
+   void SaveAs(const char* filename = "", Option_t* option = "") const override;
 
    ClassDef(TGObject,0)  //ROOT GUI base class
 };

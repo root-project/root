@@ -29,12 +29,12 @@ protected:
 
 public:
    TEveQuadSetGL();
-   virtual ~TEveQuadSetGL() {}
+   ~TEveQuadSetGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual void   DirectDraw(TGLRnrCtx& rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   void   DirectDraw(TGLRnrCtx& rnrCtx) const override;
 
-   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+   Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 
    ClassDef(TEveQuadSetGL, 0); // GL-renderer for TEveQuadSet class.
 };

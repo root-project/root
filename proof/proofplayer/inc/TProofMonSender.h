@@ -47,7 +47,7 @@ protected:
       TDSet   *fDSet;
       TDSetPlet(const char *name, TDSet *ds = 0) :
          TNamed(name, ""), fFiles(0), fMissing(0), fDSet(ds) { }
-      virtual ~TDSetPlet() { }
+      ~TDSetPlet() override { }
    };
 
 public:
@@ -59,7 +59,7 @@ public:
                      SetBit(kSendSummary);
                      SetBit(kSendDataSetInfo);
                      ResetBit(kSendFileInfo); }
-   virtual ~TProofMonSender() { }
+   ~TProofMonSender() override { }
 
    // This changes the send control options
    Int_t SetSendOptions(const char *);

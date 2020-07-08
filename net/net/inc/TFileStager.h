@@ -37,7 +37,7 @@ class TFileStager : public TNamed {
 
 public:
    TFileStager(const char *stager) : TNamed(stager, stager) { }
-   virtual ~TFileStager() { }
+   ~TFileStager() override { }
 
    virtual TList          *GetStaged(TCollection *pathlist);
    virtual Bool_t          IsStaged(const char *);
@@ -55,7 +55,7 @@ public:
    //--- Load desired plugin
    static TFileStager *Open(const char *stager);
 
-   ClassDef(TFileStager,0)  // ABC defining interface to a stager
+   ClassDefOverride(TFileStager, 0) // ABC defining interface to a stager
 };
 
 #endif

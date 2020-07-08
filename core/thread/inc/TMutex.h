@@ -40,20 +40,20 @@ private:
 
 public:
    TMutex(Bool_t recursive = kFALSE);
-   virtual ~TMutex() { delete fMutexImp; }
+   ~TMutex() override { delete fMutexImp; }
 
-   Int_t  Lock();
-   Int_t  TryLock();
-   Int_t  UnLock();
-   Int_t  CleanUp();
+   Int_t  Lock() override;
+   Int_t  TryLock() override;
+   Int_t  UnLock() override;
+   Int_t  CleanUp() override;
 
    // Compatibility with standard library
    void lock() { TMutex::Lock(); }
    void unlock() { TMutex::UnLock(); }
 
-   TVirtualMutex *Factory(Bool_t recursive = kFALSE);
+   TVirtualMutex *Factory(Bool_t recursive = kFALSE) override;
 
-   ClassDef(TMutex,0)  // Mutex lock class
+   ClassDefOverride(TMutex, 0) // Mutex lock class
 };
 
 #endif

@@ -34,7 +34,7 @@ class TFileCollection;
 class TGridCollection : public TObject {
 public:
    TGridCollection() { }
-   virtual ~TGridCollection() { }
+   ~TGridCollection() override { }
 
    virtual void         Reset()
       { MayNotUse("Reset"); }
@@ -73,7 +73,7 @@ public:
       { MayNotUse("GetExportUrl"); return 0;}
    virtual Bool_t      SetExportUrl(const char * /*exporturl*/ = 0)
       { MayNotUse("SetExportUrl"); return kFALSE;}
-   virtual void         Print(Option_t *) const
+   void         Print(Option_t *) const override
       { MayNotUse("Print"); }
    virtual TFile       *OpenFile(const char *)
       { MayNotUse("OpenFile"); return 0;}

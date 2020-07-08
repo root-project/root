@@ -195,7 +195,7 @@ public:
 
    TFile();
    TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
-   virtual ~TFile();
+   ~TFile() override;
 
            void        Close(Option_t *option="") override; // *MENU*
            void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
@@ -374,7 +374,7 @@ private:
    TFile      *GetFile() const { return fFile; }
 
 public:
-   ~TFileOpenHandle() { }
+   ~TFileOpenHandle() override { }
 
    Bool_t      Matches(const char *name);
 

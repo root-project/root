@@ -25,13 +25,13 @@ class TPyMultiGenFunction : public ROOT::Math::IMultiGenFunction {
 public:
 // ctor/dtor, and assignment
    TPyMultiGenFunction( PyObject* self = 0 );
-   virtual ~TPyMultiGenFunction();
+   ~TPyMultiGenFunction() override;
 
 // Math::IMultiGenFunction implementation
-   virtual ROOT::Math::IBaseFunctionMultiDim* Clone() const
+   ROOT::Math::IBaseFunctionMultiDim* Clone() const override
       { return new TPyMultiGenFunction( fPySelf ); }
-   virtual unsigned int NDim() const;
-   virtual double DoEval( const double* x ) const;
+   unsigned int NDim() const override;
+   double DoEval( const double* x ) const override;
 
    ClassDef( TPyMultiGenFunction, 1 );   //Python for Math::IMultiGenFunction equivalent
 
@@ -49,17 +49,17 @@ class TPyMultiGradFunction : public ROOT::Math::IMultiGradFunction {
 public:
 // ctor/dtor, and assignment
    TPyMultiGradFunction( PyObject* self = 0 );
-   virtual ~TPyMultiGradFunction();
+   ~TPyMultiGradFunction() override;
 
 // Math::IMultiGenFunction implementation
-   virtual ROOT::Math::IBaseFunctionMultiDim* Clone() const
+   ROOT::Math::IBaseFunctionMultiDim* Clone() const override
       { return new TPyMultiGradFunction( fPySelf ); }
-   virtual unsigned int NDim() const;
-   virtual double DoEval( const double* x ) const;
+   unsigned int NDim() const override;
+   double DoEval( const double* x ) const override;
 
-   virtual void Gradient( const double* x, double* grad ) const;
-   virtual void FdF( const double* x, double& f, double* df ) const;
-   virtual double DoDerivative( const double * x, unsigned int icoord ) const;
+   void Gradient( const double* x, double* grad ) const override;
+   void FdF( const double* x, double& f, double* df ) const override;
+   double DoDerivative( const double * x, unsigned int icoord ) const override;
 
    ClassDef( TPyMultiGradFunction, 1 );   //Python for Math::IMultiGradFunction equivalent
 

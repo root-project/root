@@ -57,13 +57,13 @@ public:
              : fName(name), fVal(val) { Reset(); SetBit(kIsConst);}
    TParameter(const char *name, const AParamType &val, char mergemode)
              : fName(name), fVal(val) { SetMergeMode(mergemode); SetBit(kIsConst);}
-   virtual ~TParameter()
+   ~TParameter() override
    {
       // Required since we overload TObject::Hash.
       ROOT::CallRecursiveRemoveIfNeeded(*this);
    }
 
-   const char       *GetName() const { return fName; }
+   const char       *GetName() const override { return fName; }
    const AParamType &GetVal() const { return fVal; }
    Bool_t            IsConst() const { return (TestBit(kIsConst) ? kTRUE : kFALSE); }
    void              SetVal(const AParamType &val) { fVal = val; }
@@ -89,9 +89,9 @@ public:
          SetBit(kLast);
       }
    }
-   virtual ULong_t  Hash() const { return fName.Hash(); }
-   virtual Bool_t   IsSortable() const { return kTRUE; }
-   virtual Int_t    Compare(const TObject *obj) const {
+   ULong_t  Hash() const override { return fName.Hash(); }
+   Bool_t   IsSortable() const override { return kTRUE; }
+   Int_t    Compare(const TObject *obj) const override {
       // Compare two TParameter objects. Returns 0 when equal, -1 when this is
       // smaller and +1 when bigger (like strcmp).
 
@@ -99,13 +99,13 @@ public:
       return fName.CompareTo(obj->GetName());
    }
 
-   virtual void ls(Option_t *) const {
+   void ls(Option_t *) const override {
       // Print this parameter content
       TROOT::IndentLevel();
       std::cout << "OBJ: " << IsA()->GetName() << "\t" << fName << " = " << fVal << std::endl;
    }
 
-   virtual void Print(Option_t *) const {
+   void Print(Option_t *) const override {
       // Print this parameter content
       TROOT::IndentLevel();
       std::cout << IsA()->GetName() << "\t" << fName << " = " << fVal << std::endl;
@@ -113,7 +113,7 @@ public:
 
    virtual Int_t Merge(TCollection *in);
 
-   ClassDef(TParameter,2)  //Named templated parameter type
+   ClassDefOverride(TParameter, 2) // Named templated parameter type
 };
 
 template <class AParamType>

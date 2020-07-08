@@ -47,13 +47,13 @@ private:
 
 public:
    TMethodArg(MethodArgInfo_t *info = 0, TFunction *method = 0);
-   virtual       ~TMethodArg();
+         ~TMethodArg() override;
    const char    *GetDefault() const;
    TFunction     *GetMethod() const { return fMethod; }
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
    std::string    GetTypeNormalizedName() const;
-   Long_t         Property() const;
+   Long_t         Property() const override;
 
    TDataMember   *GetDataMember() const;
    TList         *GetOptions() const;

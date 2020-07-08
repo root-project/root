@@ -38,9 +38,9 @@ protected:
 public:
    TEveShapeEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
          UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveShapeEditor() {}
+   ~TEveShapeEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoLineWidth();
    void DoLineColor(Pixel_t color);

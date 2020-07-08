@@ -48,7 +48,7 @@ private:
 
    TString* fPolarLabels;      ///<! [fNdivPol] Specified polar labels
 
-   void Paint(Option_t* options="");
+   void Paint(Option_t* options="") override;
    void PaintRadialDivisions(Bool_t drawaxis);
    void PaintPolarDivisions(Bool_t noLabels);
    void ReduceFraction(Int_t Num, Int_t Denom, Int_t &rnum, Int_t &rden);
@@ -64,7 +64,7 @@ public:
    TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
                                      Double_t tmin, Double_t tmax);
    TGraphPolargram(const char* name="");
-   virtual ~TGraphPolargram();
+   ~TGraphPolargram() override;
 
    Color_t  GetPolarColorLabel (){ return fPolarLabelColor;};
    Color_t  GetRadialColorLabel (){ return fRadialLabelColor;};
@@ -83,7 +83,7 @@ public:
    Font_t   GetPolarLabelFont() { return fPolarLabelFont;};
    Font_t   GetRadialLabelFont() { return fRadialLabelFont;};
 
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py);
+   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
    Int_t    GetNdivPolar() { return fNdivPol;};
    Int_t    GetNdivRadial() { return fNdivRad;};
 
@@ -92,8 +92,8 @@ public:
    Bool_t   IsGrad()   {return fGrad;};
 
    void     ChangeRangePolar(Double_t tmin, Double_t tmax);
-   void     Draw(Option_t* options="");
-   void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void     Draw(Option_t* options="") override;
+   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    void     PaintCircle(Double_t x, Double_t y, Double_t r,
                         Double_t phimin, Double_t phimax, Double_t theta);
    void     SetAxisAngle(Double_t angle = 0); //*MENU*

@@ -25,7 +25,7 @@ class TList;
 class TXMLPlayer : public TObject {
 public:
    TXMLPlayer();
-   virtual ~TXMLPlayer();
+   ~TXMLPlayer() override;
 
    Bool_t ProduceCode(TList *cllist, const char *filename);
 

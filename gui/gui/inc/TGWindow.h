@@ -79,7 +79,7 @@ public:
             UInt_t wtype = 0);
    TGWindow(TGClient *c, Window_t id, const TGWindow *parent = 0);
 
-   virtual ~TGWindow();
+   ~TGWindow() override;
 
    const TGWindow *GetParent() const { return fParent; }
    virtual const TGWindow *GetMainFrame() const;
@@ -102,7 +102,7 @@ public:
    virtual Bool_t HandleExpose(Event_t *event)
                   { if (event->fCount == 0) fClient->NeedRedraw(this); return kTRUE; }
    virtual Bool_t HandleEvent(Event_t *) { return kFALSE; }
-   virtual Bool_t HandleTimer(TTimer *) { return kFALSE; }
+   Bool_t HandleTimer(TTimer *) override { return kFALSE; }
    virtual Bool_t HandleIdleEvent(TGIdleHandler *) { return kFALSE; }
 
    virtual void   Move(Int_t x, Int_t y);
@@ -115,10 +115,10 @@ public:
    virtual void   SetEditable(Bool_t on = kTRUE)
                   { if (!(fEditDisabled & kEditDisable)) fClient->SetRoot(on ? this : 0); }
    virtual Int_t  MustCleanup() const { return 0; }
-   virtual void   Print(Option_t *option="") const;
+   void   Print(Option_t *option="") const override;
 
    virtual void        SetWindowName(const char *name = 0);
-   virtual const char *GetName() const;
+   const char *GetName() const override;
    virtual void        SetName(const char *name) { fName = name; }
 
    virtual void   SetMapSubwindows(Bool_t /*on*/) {  }
@@ -143,7 +143,7 @@ class TGUnknownWindowHandler : public TObject {
 
 public:
    TGUnknownWindowHandler() { }
-   virtual ~TGUnknownWindowHandler() { }
+   ~TGUnknownWindowHandler() override { }
 
    virtual Bool_t HandleEvent(Event_t *) = 0;
 

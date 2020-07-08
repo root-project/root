@@ -59,8 +59,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoMaterialEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoMaterialEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoA();
    void           DoZ();
@@ -97,15 +97,15 @@ protected:
    TGTextButton        *fBAddElem;          // Button for adding element as component
    TGCompositeFrame    *fComps;             // Frame with components
 
-   virtual void ConnectSignals2Slots();     // Connect the signals to the slots
+   void ConnectSignals2Slots() override;     // Connect the signals to the slots
 
 public:
    TGeoMixtureEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoMixtureEditor() {}
-   virtual void   SetModel(TObject *obj);
+   ~TGeoMixtureEditor() override {}
+   void   SetModel(TObject *obj) override;
    void           UpdateElements();
 
    void           DoApply1();

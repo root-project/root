@@ -88,7 +88,7 @@ public:
    TQpDataBase();
    TQpDataBase(Int_t nx,Int_t my,Int_t mz);
    TQpDataBase(const TQpDataBase &another);
-   virtual ~TQpDataBase() {}
+   ~TQpDataBase() override {}
 
    virtual void PutQIntoAt(TMatrixDBase &M,Int_t row,Int_t col) = 0;
    virtual void PutAIntoAt(TMatrixDBase &M,Int_t row,Int_t col) = 0;

@@ -99,7 +99,7 @@ public:
    TQpSolverBase();
    TQpSolverBase(const TQpSolverBase &another);
 
-   virtual ~TQpSolverBase();
+   ~TQpSolverBase() override;
 
    virtual void     Start       (TQpProbBase *formulation,
                                  TQpVar *iterate,TQpDataBase *prob,

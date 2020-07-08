@@ -49,7 +49,7 @@ public:
    TGRegion(Int_t n, Int_t *x, Int_t *y, Bool_t winding = kFALSE);
    TGRegion(const TArrayS &x, const TArrayS &y, Bool_t winding = kFALSE);
    TGRegion(const TGRegion &reg);
-   virtual ~TGRegion();
+   ~TGRegion() override;
 
    Bool_t      Contains(const TPoint &p) const;
    Bool_t      Contains(Int_t x, Int_t y) const;
@@ -98,7 +98,7 @@ public:
    TGRegionWithId(Int_t id, Int_t n, TPoint *points, Bool_t winding = kFALSE);
    TGRegionWithId(const TGRegionWithId &reg);
    TGRegionWithId(const TGRegion &reg, Int_t id);
-   virtual ~TGRegionWithId();
+   ~TGRegionWithId() override;
 
    Int_t        GetId() const { return fId; }
    TGToolTip   *GetToolTipText() const { return fTip; }
@@ -134,21 +134,21 @@ protected:
 public:
    TGImageMap(const TGWindow *p = 0, const TGPicture *pic = 0);
    TGImageMap(const TGWindow *p, const TString &pic);
-   virtual ~TGImageMap();
+   ~TGImageMap() override;
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleDoubleClick(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
 
    ENavMode       GetNavMode() { return fNavMode; }
    void           AddRegion(const TGRegion &region, Int_t id);
    TGPopupMenu   *CreatePopup(Int_t id);
    TGPopupMenu   *GetPopup(Int_t id);
 
-   void SetToolTipText(const char *text, Long_t delayms = 300);
+   void SetToolTipText(const char *text, Long_t delayms = 300) override;
    void SetToolTipText(Int_t id, const char *text, Long_t delayms = 300);
    void SetCursor(ECursor cursor = kHand) { fCursorMouseOver = cursor; }
-   void SetPicture(const TGPicture * /*new_pic*/) { } // disabled
+   void SetPicture(const TGPicture * /*new_pic*/) override { } // disabled
 
    virtual void RegionClicked(Int_t id); // *SIGNAL*
    virtual void DoubleClicked(Int_t id); // *SIGNAL*

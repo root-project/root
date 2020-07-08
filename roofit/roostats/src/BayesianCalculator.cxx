@@ -242,7 +242,7 @@ public:
    bool HasError() const { return fError; }
 
 
-   ROOT::Math::IGenFunction * Clone() const {
+   ROOT::Math::IGenFunction * Clone() const override {
       ooccoutD((TObject*)0,NumIntegration) << " cloning function .........." << std::endl;
       return new PosteriorCdfFunction(*this);
    }
@@ -257,7 +257,7 @@ private:
       return *this;
    }
 
-   double DoEval (double x) const {
+   double DoEval (double x) const override {
 
       // evaluate cdf at poi value x by integrating poi from [xmin,x] and all the nuisances
       fXmax[0] = x;
@@ -397,7 +397,7 @@ public:
    }
 
 
-   ROOT::Math::IGenFunction * Clone() const {
+   ROOT::Math::IGenFunction * Clone() const override {
       assert(1);
       return 0; // cannot clone this function for integrator
    }
@@ -406,7 +406,7 @@ public:
 
 
 private:
-   double DoEval (double x) const {
+   double DoEval (double x) const override {
 
       // evaluate posterior function at a poi value x by integrating all nuisance parameters
 
@@ -505,7 +505,7 @@ public:
       }
    }
 
-   virtual ~PosteriorFunctionFromToyMC() { if (fGenParams) delete fGenParams; }
+   ~PosteriorFunctionFromToyMC() override { if (fGenParams) delete fGenParams; }
 
    // generate first n-samples of the nuisance parameters
    void GenerateToys() const {
@@ -518,7 +518,7 @@ public:
 
    double Error() const { return fError;}
 
-   ROOT::Math::IGenFunction * Clone() const {
+   ROOT::Math::IGenFunction * Clone() const override {
       // use default copy constructor
       //return new PosteriorFunctionFromToyMC(*this);
       //  clone not implemented
@@ -528,7 +528,7 @@ public:
 
 private:
    // evaluate the posterior at the poi value x
-   double DoEval( double x) const {
+   double DoEval( double x) const override {
 
       int npar = fNuisParams.getSize();
       assert (npar > 0);

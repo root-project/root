@@ -45,10 +45,10 @@ public:
    TRemoteObject();
    TRemoteObject(const char *name, const char *title, const char *classname);
 
-   virtual ~TRemoteObject();
+   ~TRemoteObject() override;
 
-   virtual void            Browse(TBrowser *b);
-   Bool_t                  IsFolder() const { return fIsFolder; }
+   void            Browse(TBrowser *b) override;
+   Bool_t                  IsFolder() const override { return fIsFolder; }
    TList                  *Browse();
    Bool_t                  GetFileStat(FileStat_t *sbuf);
    const char             *GetClassName() const { return fClassName.Data(); }

@@ -54,7 +54,7 @@ protected:
 
 public:
    TClassDocOutput(THtml& html, TClass* cl, TList* typedefs);
-   virtual ~TClassDocOutput();
+   ~TClassDocOutput() override;
 
    void           Class2Html(Bool_t force=kFALSE);
    Bool_t         ClassDotCharts(std::ostream & out);

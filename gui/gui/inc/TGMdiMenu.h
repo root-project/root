@@ -67,11 +67,11 @@ protected:
 
 public:
    TGMdiMenuBar(const TGWindow *p, Int_t w = 1, Int_t h = 20);
-   virtual ~TGMdiMenuBar();
+   ~TGMdiMenuBar() override;
 
    void AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l);
    TGMenuBar *GetMenuBar() const { return fBar;}
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGMdiMenuBar, 0) // MDI menu bar
 };

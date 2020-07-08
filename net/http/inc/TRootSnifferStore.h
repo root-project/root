@@ -29,7 +29,7 @@ protected:
    Int_t fResNumChilds{-1};          ///<! count of found childs, -1 by default
    Int_t fResRestrict{0};            ///<! restriction for result, 0-default, 1-readonly, 2-full
 public:
-   virtual ~TRootSnifferStore() = default;
+   ~TRootSnifferStore() override = default;
 
    virtual void CreateNode(Int_t, const char *) {}
    virtual void SetField(Int_t, const char *, const char *, Bool_t) {}

@@ -72,7 +72,7 @@ public:
    TGeoPatternFinder();
    TGeoPatternFinder(TGeoVolume *vol, Int_t ndiv);
    // destructor
-   virtual ~TGeoPatternFinder();
+   ~TGeoPatternFinder() override;
    // methods
    virtual TGeoMatrix* CreateMatrix() const = 0;
    virtual void        cd(Int_t /*idiv*/) {}
@@ -126,18 +126,18 @@ public:
    TGeoPatternX& operator=(const TGeoPatternX&);
 
    // destructor
-   virtual ~TGeoPatternX();
+   ~TGeoPatternX() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
-   virtual Int_t       GetDivAxis()      {return 1;}
-   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   Int_t       GetDivAxis() override      {return 1;}
+   Bool_t      IsOnBoundary(const Double_t *point) const override;
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternX, 1)              // X division pattern
 };
@@ -159,18 +159,18 @@ public:
    TGeoPatternY(const TGeoPatternY &pf);
    TGeoPatternY& operator=(const TGeoPatternY&);
    // destructor
-   virtual ~TGeoPatternY();
+   ~TGeoPatternY() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
-   virtual Int_t       GetDivAxis()      {return 2;}
-   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   Int_t       GetDivAxis() override      {return 2;}
+   Bool_t      IsOnBoundary(const Double_t *point) const override;
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternY, 1)              // Y division pattern
 };
@@ -192,18 +192,18 @@ public:
    TGeoPatternZ(const TGeoPatternZ &pf);
    TGeoPatternZ& operator=(const TGeoPatternZ&);
    // destructor
-   virtual ~TGeoPatternZ();
+   ~TGeoPatternZ() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
-   virtual Int_t       GetDivAxis()      {return 3;}
-   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   Int_t       GetDivAxis() override      {return 3;}
+   Bool_t      IsOnBoundary(const Double_t *point) const override;
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternZ, 1)              // Z division pattern
 };
@@ -226,17 +226,17 @@ public:
    TGeoPatternParaX& operator=(const TGeoPatternParaX&);
 
    // destructor
-   virtual ~TGeoPatternParaX();
+   ~TGeoPatternParaX() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
-   virtual Int_t       GetDivAxis()      {return 1;}
-   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
+   Int_t       GetDivAxis() override      {return 1;}
+   Bool_t      IsOnBoundary(const Double_t *point) const override;
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternParaX, 1)              // Para X division pattern
 };
@@ -262,17 +262,17 @@ public:
    TGeoPatternParaY& operator=(const TGeoPatternParaY&);
 
    // destructor
-   virtual ~TGeoPatternParaY();
+   ~TGeoPatternParaY() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
-   virtual Int_t       GetDivAxis()      {return 2;}
-   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
+   Int_t       GetDivAxis() override      {return 2;}
+   Bool_t      IsOnBoundary(const Double_t *point) const override;
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternParaY, 1)              // Para Y division pattern
 };
@@ -299,17 +299,17 @@ public:
    TGeoPatternParaZ& operator=(const TGeoPatternParaZ&);
 
    // destructor
-   virtual ~TGeoPatternParaZ();
+   ~TGeoPatternParaZ() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
-   virtual Int_t       GetDivAxis()      {return 3;}
-   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
+   Int_t       GetDivAxis() override      {return 3;}
+   Bool_t      IsOnBoundary(const Double_t *point) const override;
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternParaZ, 1)              // Para Z division pattern
 };
@@ -336,19 +336,19 @@ public:
    TGeoPatternTrapZ& operator=(const TGeoPatternTrapZ&);
 
    // destructor
-   virtual ~TGeoPatternTrapZ();
+   ~TGeoPatternTrapZ() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
+   TGeoMatrix* CreateMatrix() const override;
    Double_t            GetTxz() const {return fTxz;}
    Double_t            GetTyz() const {return fTyz;}
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
-   virtual Int_t       GetDivAxis()      {return 3;}
-   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
+   Int_t       GetDivAxis() override      {return 3;}
+   Bool_t      IsOnBoundary(const Double_t *point) const override;
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternTrapZ, 1)              // Trap od Gtra Z division pattern
 };
@@ -371,17 +371,17 @@ public:
    TGeoPatternCylR(const TGeoPatternCylR &pf);
    TGeoPatternCylR& operator=(const TGeoPatternCylR&);
    // destructor
-   virtual ~TGeoPatternCylR();
+   ~TGeoPatternCylR() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
-   virtual Int_t       GetDivAxis()      {return 1;}
-   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
+   Int_t       GetDivAxis() override      {return 1;}
+   Bool_t      IsOnBoundary(const Double_t *point) const override;
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternCylR, 1)              // Cylindrical R division pattern
 };
@@ -412,17 +412,17 @@ public:
    TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t step);
    TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end);
    // destructor
-   virtual ~TGeoPatternCylPhi();
+   ~TGeoPatternCylPhi() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
-   virtual Int_t       GetDivAxis()      {return 2;}
-   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
+   Int_t       GetDivAxis() override      {return 2;}
+   Bool_t      IsOnBoundary(const Double_t *point) const override;
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternCylPhi, 1)              // Cylindrical phi division pattern
 };
@@ -444,16 +444,16 @@ public:
    TGeoPatternSphR(const TGeoPatternSphR &pf);
    TGeoPatternSphR& operator=(const TGeoPatternSphR&);
    // destructor
-   virtual ~TGeoPatternSphR();
+   ~TGeoPatternSphR() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
-   virtual Int_t       GetDivAxis()      {return 1;}
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
+   Int_t       GetDivAxis() override      {return 1;}
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternSphR, 1)              // spherical R division pattern
 };
@@ -475,16 +475,16 @@ public:
    TGeoPatternSphTheta(const TGeoPatternSphTheta &pf);
    TGeoPatternSphTheta& operator=(const TGeoPatternSphTheta&);
    // destructor
-   virtual ~TGeoPatternSphTheta();
+   ~TGeoPatternSphTheta() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
-   virtual Int_t       GetDivAxis()      {return 3;}
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
+   Int_t       GetDivAxis() override      {return 3;}
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternSphTheta, 1)              // spherical theta division pattern
 };
@@ -511,17 +511,17 @@ public:
    TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t step);
    TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end);
    // destructor
-   virtual ~TGeoPatternSphPhi();
+   ~TGeoPatternSphPhi() override;
    // methods
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
-   virtual Int_t       GetDivAxis()      {return 2;}
-   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
-   virtual
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
+   Int_t       GetDivAxis() override      {return 2;}
+   Bool_t      IsOnBoundary(const Double_t *point) const override;
+   
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternSphPhi, 1)              // Spherical phi division pattern
 };
@@ -550,13 +550,13 @@ public:
    TGeoPatternHoneycomb();
    TGeoPatternHoneycomb(TGeoVolume *vol, Int_t nrows);
    // destructor
-   virtual ~TGeoPatternHoneycomb();
+   ~TGeoPatternHoneycomb() override;
    // methods
-   TGeoPatternFinder  *MakeCopy(Bool_t) {return 0;}
-   virtual TGeoMatrix* CreateMatrix() const;
-   virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
-   virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
+   TGeoPatternFinder  *MakeCopy(Bool_t) override {return 0;}
+   TGeoMatrix* CreateMatrix() const override;
+   void        cd(Int_t idiv) override;
+   TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0) override;
+   void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
    ClassDef(TGeoPatternHoneycomb, 1)             // pattern for honeycomb divisions
 };

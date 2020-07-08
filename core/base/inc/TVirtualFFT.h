@@ -94,7 +94,7 @@ class TVirtualFFT: public TObject {
  public:
 
    TVirtualFFT(){};
-   virtual ~TVirtualFFT();
+   ~TVirtualFFT() override;
 
    virtual Int_t     *GetN()    const = 0;
 

@@ -80,7 +80,7 @@ public:
                         Int_t width = 140, Int_t height = 30,
                         UInt_t options = kChildFrame,
                         Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TParallelCoordEditor();
+   ~TParallelCoordEditor() override;
 
    virtual void            DoActivateSelection(Bool_t);
    virtual void            DoAddSelection();
@@ -117,7 +117,7 @@ public:
    virtual void            DoUnApply();
    virtual void            DoVariableSelect(const char* var);
    virtual void            DoWeightCut();
-   virtual void            SetModel(TObject* obj);
+   void            SetModel(TObject* obj) override;
 
    ClassDef(TParallelCoordEditor,0)    // GUI for editing the parallel coordinates plot attributes.
 };

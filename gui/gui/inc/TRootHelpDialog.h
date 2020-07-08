@@ -43,14 +43,14 @@ private:
 public:
    TRootHelpDialog(const TGWindow *main = 0, const char *title = "ROOT Help Dialog",
                    UInt_t w = 1, UInt_t h = 1);
-   virtual ~TRootHelpDialog();
+   ~TRootHelpDialog() override;
 
    void   SetText(const char *helpText);
    void   AddText(const char *helpText);
 
    void   Popup();
-   void   CloseWindow();
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void   CloseWindow() override;
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
    ClassDef(TRootHelpDialog,0)  //Dialog to display help text
 };

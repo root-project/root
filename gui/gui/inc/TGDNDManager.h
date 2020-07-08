@@ -26,7 +26,7 @@ protected:
    static Cursor_t fgDefaultCursor; // Default Cursor
 
 protected:
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
    Window_t fInput;                 // Input Window
    Pixmap_t fPic, fMask;            // Pixmaps used as Window shape
@@ -35,17 +35,17 @@ protected:
 public:
    TGDragWindow(const TGWindow *p, Pixmap_t pic, Pixmap_t mask,
                 UInt_t options = kChildFrame, Pixel_t back = GetWhitePixel());
-   virtual ~TGDragWindow();
+   ~TGDragWindow() override;
 
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fPw, fPh); }
+   TGDimension GetDefaultSize() const override { return TGDimension(fPw, fPh); }
 
-   virtual void MapWindow();
-   virtual void UnmapWindow();
-   virtual void RaiseWindow();
-   virtual void LowerWindow();
-   virtual void MapRaised();
+   void MapWindow() override;
+   void UnmapWindow() override;
+   void RaiseWindow() override;
+   void LowerWindow() override;
+   void MapRaised() override;
 
-   virtual void Layout();
+   void Layout() override;
 
    Window_t GetInputId() const { return fInput; }
    Bool_t HasWindow(Window_t w) const { return (w == fId || w == fInput); }
@@ -70,7 +70,7 @@ private:
 public:
    TDNDData(Atom_t dt = kNone, void *d = 0, Int_t len = 0, Atom_t act = kNone) :
       fDataType(dt), fAction(act), fData(d), fDataLength(len) {}
-   ~TDNDData() {}
+   ~TDNDData() override {}
 
    Atom_t    fDataType;       // Data type description
    Atom_t    fAction;         // Action description
@@ -150,13 +150,13 @@ protected:
 
 public:
    TGDNDManager(TGFrame *toplevel, Atom_t *typelist);
-   virtual ~TGDNDManager();
+   ~TGDNDManager() override;
 
    Bool_t         HandleClientMessage(Event_t *event);
    Bool_t         HandleSelectionRequest(Event_t *event);
    Bool_t         HandleSelection(Event_t *event);
 
-   Bool_t         HandleTimer(TTimer *t);
+   Bool_t         HandleTimer(TTimer *t) override;
 
   //--- called by widgets
 

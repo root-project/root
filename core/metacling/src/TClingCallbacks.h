@@ -53,7 +53,7 @@ private:
 public:
    TClingCallbacks(cling::Interpreter* interp, bool hasCodeGen);
 
-   ~TClingCallbacks();
+   ~TClingCallbacks() override;
 
    void Initialize();
 

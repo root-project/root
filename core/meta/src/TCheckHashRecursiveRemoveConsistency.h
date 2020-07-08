@@ -59,7 +59,7 @@ public:
    // Hash so it can rely on the base class to call
    // RecursiveRemove (and hence remove this from the list
    // of cleanups).
-   ~TCheckHashRecursiveRemoveConsistency()
+   ~TCheckHashRecursiveRemoveConsistency() override
    {
       // ... unless the mechanism is disabled in which case
       // we need to do it explicitly.
@@ -76,7 +76,7 @@ public:
       fCont.push_back(Value_t{hashValue, obj});
    }
 
-   void RecursiveRemove(TObject *obj)
+   void RecursiveRemove(TObject *obj) override
    {
       // Since we use std::list, a remove (from another thread)
       // would invalidate out iterator and taking the write lock

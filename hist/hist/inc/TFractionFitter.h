@@ -28,7 +28,7 @@ class TFractionFitter: public TObject {
 public:
    TFractionFitter();
    TFractionFitter(TH1* data, TObjArray *MCs, Option_t *option="");
-   virtual ~TFractionFitter();
+   ~TFractionFitter() override;
 
    //TVirtualFitter* GetFitter() const;
    ROOT::Fit::Fitter* GetFitter() const;

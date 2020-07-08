@@ -26,11 +26,11 @@ private:
 public:
    TGLSphere(const TBuffer3DSphere &buffer);
 
-   virtual UInt_t DLOffset(Short_t lod) const;
+   UInt_t DLOffset(Short_t lod) const override;
 
-   virtual ELODAxes SupportedLODAxes() const { return kLODAxesAll; }
-   virtual Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const;
-   virtual void     DirectDraw(TGLRnrCtx & rnrCtx) const;
+   ELODAxes SupportedLODAxes() const override { return kLODAxesAll; }
+   Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const override;
+   void     DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
    ClassDef(TGLSphere,0); // a spherical logical shape
 };

@@ -42,19 +42,19 @@ public:
          ,Float_t arrowsize=0.05
          ,Option_t *option=">");
    TArrow(const TArrow &arrow);
-   virtual ~TArrow();
-   void Copy(TObject &arrow) const;
+   ~TArrow() override;
+   void Copy(TObject &arrow) const override;
 
-   virtual void   Draw(Option_t *option="");
+   void   Draw(Option_t *option="") override;
    virtual void   DrawArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
                                ,Float_t arrowsize=0 ,Option_t *option="");
    Float_t        GetAngle() const {return fAngle;}
    Float_t        GetArrowSize() const {return fArrowSize;}
-   Option_t      *GetOption() const { return fOption.Data();}
-   virtual void   Paint(Option_t *option="");
+   Option_t      *GetOption() const override { return fOption.Data();}
+   void   Paint(Option_t *option="") override;
    virtual void   PaintArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
                                  ,Float_t arrowsize=0.05 ,Option_t *option=">");
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void   SetAngle(Float_t angle=60) {fAngle=angle;} // *MENU*
    virtual void   SetArrowSize(Float_t arrowsize=0.05) {fArrowSize=arrowsize;} // *MENU*
    virtual void   SetOption(Option_t *option=">"){ fOption = option;}

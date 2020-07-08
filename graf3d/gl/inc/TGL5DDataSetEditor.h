@@ -113,9 +113,9 @@ private:
 public:
    TGL5DDataSetEditor(const TGWindow *p = 0, Int_t width = 140, Int_t height = 30,
                       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
-   ~TGL5DDataSetEditor();
+   ~TGL5DDataSetEditor() override;
 
-   virtual void   SetModel(TObject* obj);
+   void   SetModel(TObject* obj) override;
 
    //Slots for "Grid" tab events.
    void GridParametersChanged();

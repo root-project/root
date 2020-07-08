@@ -36,12 +36,12 @@ private:
 public:
    TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad=0, Int_t border=2);
    TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged, Int_t border=2);
-   ~TGLEmbeddedViewer();
+   ~TGLEmbeddedViewer() override;
 
-   virtual void CreateGLWidget();
-   virtual void DestroyGLWidget();
+   void CreateGLWidget() override;
+   void DestroyGLWidget() override;
 
-   virtual const char *GetName() const { return "GLViewer"; }
+   const char *GetName() const override { return "GLViewer"; }
 
    TGCompositeFrame*   GetFrame() const { return fFrame; }
 

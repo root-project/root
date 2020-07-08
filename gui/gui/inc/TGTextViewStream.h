@@ -40,11 +40,11 @@ private:
 protected:
    std::vector<char> fInputbuffer;
    typedef std::char_traits<char> traits;
-   virtual int overflow(int = traits::eof());
+   int overflow(int = traits::eof()) override;
 
 public:
    TGTextViewStreamBuf(TGTextView *textview);
-   virtual ~TGTextViewStreamBuf() { }
+   ~TGTextViewStreamBuf() override { }
 
    ClassDef(TGTextViewStreamBuf, 0) // Specialization of std::streambuf
 };
@@ -64,7 +64,7 @@ public:
    TGTextViewostream(const TGWindow *parent, UInt_t w, UInt_t h,
                      const char *string, Int_t id, UInt_t sboptions,
                      ULong_t back);
-   virtual ~TGTextViewostream() { }
+   ~TGTextViewostream() override { }
 
    ClassDef(TGTextViewostream, 0) // Specialization of TGTextView and std::ostream
 };

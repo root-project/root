@@ -46,27 +46,27 @@ public:
    TSystemDirectory();
    TSystemDirectory(const char *dirname, const char *path);
 
-   virtual ~TSystemDirectory();
+   ~TSystemDirectory() override;
 
-   virtual Bool_t IsFolder() const { return kTRUE; }
-   virtual Bool_t IsDirectory(const char * = 0) const { return kTRUE; }
+   Bool_t IsFolder() const override { return kTRUE; }
+   Bool_t IsDirectory(const char * = 0) const override { return kTRUE; }
 
-   virtual void   Browse(TBrowser *b);
-   virtual void   Edit() { }
+   void   Browse(TBrowser *b) override;
+   void   Edit() override { }
    virtual TList *GetListOfFiles() const;
    virtual void   SetDirectory(const char *name);
-   virtual void   Delete() {}
-   virtual void   Copy(const char *) {}
-   virtual void   Move(const char *) {}
+   void   Delete() override {}
+   void   Copy(const char *) override {}
+   void   Move(const char *) override {}
 
    // dummy methods from TObject
-   void        DrawClass() const { }
-   TObject    *DrawClone(Option_t *) const { return 0; }
-   void        SetDrawOption(Option_t *) { }
-   void        SetName(const char *name) { TSystemFile::SetName(name); }
-   void        SetTitle(const char *title) { TSystemFile::SetTitle(title); }
-   void        Delete(Option_t *) { }
-   void        Copy(TObject & ) const { }
+   void        DrawClass() const override { }
+   TObject    *DrawClone(Option_t *) const override { return 0; }
+   void        SetDrawOption(Option_t *) override { }
+   void        SetName(const char *name) override { TSystemFile::SetName(name); }
+   void        SetTitle(const char *title) override { TSystemFile::SetTitle(title); }
+   void        Delete(Option_t *) override { }
+   void        Copy(TObject & ) const override { }
    ClassDef(TSystemDirectory,0)  //A system directory
 };
 

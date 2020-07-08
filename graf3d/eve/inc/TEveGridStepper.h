@@ -41,7 +41,7 @@ protected:
 
 public:
    TEveGridStepper(Int_t sm=kSM_XYZ);
-   virtual ~TEveGridStepper() {}
+   ~TEveGridStepper() override {}
 
    void Reset();
    void Subtract(TEveGridStepper& s);

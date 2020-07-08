@@ -125,7 +125,7 @@ public:
    void      SetH(Double_t h) { fH = h; }
    void      SetFlag(UInt_t flag) { fFlag = flag; }
 
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    ClassDef(TGXYLayoutHints,0)  // Hits for the X / Y - layout manager
 };
@@ -150,9 +150,9 @@ protected:
 public:
    TGXYLayout(TGCompositeFrame *main);
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    void NewSize() { fFirst = kTRUE; }
 

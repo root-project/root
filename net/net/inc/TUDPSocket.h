@@ -80,7 +80,7 @@ protected:
 
 private:
    TUDPSocket&   operator=(const TUDPSocket &);  // not implemented
-   Option_t     *GetOption() const { return TObject::GetOption(); }
+   Option_t     *GetOption() const override { return TObject::GetOption(); }
 
 public:
    TUDPSocket(TInetAddress address, const char *service);
@@ -93,7 +93,7 @@ public:
    TUDPSocket(Int_t descriptor, const char *sockpath);
    TUDPSocket(const TUDPSocket &s);
 
-   virtual ~TUDPSocket() { Close(); }
+   ~TUDPSocket() override { Close(); }
 
    virtual void          Close(Option_t *opt="");
    virtual Int_t         GetDescriptor() const { return fSocket; }

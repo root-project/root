@@ -52,13 +52,13 @@ protected:
 
 public:
    TColorWheel();
-   virtual  ~TColorWheel();
-   virtual  Int_t DistancetoPrimitive(Int_t px, Int_t py);
-   virtual  void  Draw(Option_t *option="");
+    ~TColorWheel() override;
+    Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
+    void  Draw(Option_t *option="") override;
    TCanvas *GetCanvas() const {return fCanvas;}
    virtual  Int_t GetColor(Int_t px, Int_t py) const;
-   virtual  char *GetObjectInfo(Int_t px, Int_t py) const;
-   virtual  void  Paint(Option_t *option="");
+    char *GetObjectInfo(Int_t px, Int_t py) const override;
+    void  Paint(Option_t *option="") override;
    virtual  void  SetCanvas(TCanvas *can) {fCanvas = can;}
 
    ClassDef(TColorWheel,1)  //The ROOT Color Wheel

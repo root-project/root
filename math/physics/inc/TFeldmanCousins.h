@@ -75,7 +75,7 @@ protected:
 
 public:
    TFeldmanCousins(Double_t newCL=0.9, TString options = "");
-   virtual ~TFeldmanCousins();
+   ~TFeldmanCousins() override;
 
    ////////////////////////////////////////////////
    // calculate the upper limit given Nobserved  //

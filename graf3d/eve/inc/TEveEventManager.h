@@ -23,7 +23,7 @@ protected:
 
 public:
    TEveEventManager(const char* n="TEveEventManager", const char* t="");
-   virtual ~TEveEventManager() {}
+   ~TEveEventManager() override {}
 
    std::vector<TString>& GetNewEventCommands() { return fNewEventCommands; }
 

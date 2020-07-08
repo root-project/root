@@ -71,19 +71,19 @@ protected:
    Int_t        fNPnts;    // number of reduced and projected points
    TEveVector*  fPnts;     // reduced and projected points
 
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
    Float_t PolygonSurfaceXY(const Polygon_t& poly) const;
 
 public:
    TEvePolygonSetProjected(const char* n="TEvePolygonSetProjected", const char* t="");
-   virtual ~TEvePolygonSetProjected();
+   ~TEvePolygonSetProjected() override;
 
-   virtual void    ComputeBBox();
+   void    ComputeBBox() override;
 
-   virtual void    SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
-   virtual void    UpdateProjection();
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   void    SetProjection(TEveProjectionManager* mng, TEveProjectable* model) override;
+   void    UpdateProjection() override;
+   TEveElement* GetProjectedAsElement() override { return this; }
 
    void            ProjectBuffer3D();
 

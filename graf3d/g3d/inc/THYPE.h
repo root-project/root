@@ -34,7 +34,7 @@ public:
    THYPE();
    THYPE(const char *name, const char *title, const char *material, Float_t rmin, Float_t rmax, Float_t dz,
          Float_t phi);
-   virtual ~THYPE();
+   ~THYPE() override;
 
    virtual Float_t GetPhi() const {return fPhi;}
 

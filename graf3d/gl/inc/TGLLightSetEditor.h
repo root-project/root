@@ -39,7 +39,7 @@ protected:
 
 public:
    TGLLightSetSubEditor(const TGWindow* p);
-   virtual ~TGLLightSetSubEditor() {}
+   ~TGLLightSetSubEditor() override {}
 
    void SetModel(TGLLightSet* m);
 
@@ -63,9 +63,9 @@ protected:
 
 public:
    TGLLightSetEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TGLLightSetEditor();
+   ~TGLLightSetEditor() override;
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    ClassDef(TGLLightSetEditor, 0); // Editor for TGLLightSet.
 }; // endclass TGLLightSetEditor

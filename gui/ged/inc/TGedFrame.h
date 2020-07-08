@@ -65,11 +65,11 @@ public:
              Int_t width = 140, Int_t height = 30,
              UInt_t options = kChildFrame,
              Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGedFrame();
+   ~TGedFrame() override;
 
    virtual void      Update();
 
-   virtual Option_t *GetDrawOption() const;
+   Option_t *GetDrawOption() const override;
 
    TClass*           GetModelClass()              { return fModelClass;  }
    Int_t             GetPriority()                { return fPriority;    }
@@ -79,7 +79,7 @@ public:
    virtual TGVerticalFrame* CreateEditorTabSubFrame(const char* name);
 
    virtual void      Refresh(TObject *model);
-   virtual void      SetDrawOption(Option_t *option="");
+   void      SetDrawOption(Option_t *option="") override;
    virtual Bool_t    AcceptModel(TObject*) { return kTRUE; }
    void              SetModelClass(TClass* mcl)   { fModelClass = mcl; }
    virtual void      SetModel(TObject* obj) = 0;
@@ -104,12 +104,12 @@ public:
                  Int_t width = 170, Int_t height = 30,
                  UInt_t options = kChildFrame,
                  Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGedNameFrame();
+   ~TGedNameFrame() override;
 
-   virtual Bool_t   HandleButton(Event_t *event);
-   virtual Bool_t   HandleCrossing(Event_t *event);
+   Bool_t   HandleButton(Event_t *event) override;
+   Bool_t   HandleCrossing(Event_t *event) override;
 
-   virtual void     SetModel(TObject* obj);
+   void     SetModel(TObject* obj) override;
 
    ClassDef(TGedNameFrame,0)      //frame showing the selected object name
 };

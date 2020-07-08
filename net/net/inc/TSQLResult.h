@@ -37,7 +37,7 @@ protected:
    TSQLResult() : fRowCount(0) { }
 
 public:
-   virtual ~TSQLResult() { }
+   ~TSQLResult() override { }
 
    virtual void        Close(Option_t *option="") = 0;
    virtual Int_t       GetFieldCount() = 0;
@@ -45,7 +45,7 @@ public:
    virtual Int_t       GetRowCount() const { return fRowCount; }
    virtual TSQLRow    *Next() = 0;
 
-   ClassDef(TSQLResult,0)  // SQL query result
+   ClassDefOverride(TSQLResult, 0) // SQL query result
 };
 
 #endif

@@ -95,7 +95,7 @@ protected:
 protected:
    TVirtualTableInterface *fInterface; // Interface to the data source
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
    virtual void Expand(UInt_t nrows, UInt_t ncolumns);
    virtual void ExpandColumns(UInt_t ncolumns);
@@ -119,7 +119,7 @@ public:
    TGTable(const TGWindow *p = 0, Int_t id = 0,
            TVirtualTableInterface *interface = 0, UInt_t nrows = 50,
            UInt_t ncolumns = 20);
-   virtual ~TGTable();
+   ~TGTable() override;
 
    virtual TObjArray *GetRow(UInt_t row);
    virtual TObjArray *GetColumn(UInt_t columns);

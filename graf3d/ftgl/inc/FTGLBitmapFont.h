@@ -34,17 +34,17 @@ class FTGL_EXPORT FTGLBitmapFont : public FTFont
         /**
          * Destructor
          */
-        ~FTGLBitmapFont();
+        ~FTGLBitmapFont() override;
 
         /**
          * Prepare for rendering
          */
-        virtual void PreRender();
+        void PreRender() override;
 
         /**
          * Cleanup after rendering
          */
-        virtual void PostRender();
+        void PostRender() override;
 
     private:
         /**
@@ -53,7 +53,7 @@ class FTGL_EXPORT FTGLBitmapFont : public FTFont
          * @param g The glyph index NOT the char code.
          * @return  An FTBitmapGlyph or <code>null</code> on failure.
          */
-        inline virtual FTGlyph* MakeGlyph( unsigned int g);
+        inline FTGlyph* MakeGlyph( unsigned int g) override;
 
 };
 #endif  //  __FTGLBitmapFont__

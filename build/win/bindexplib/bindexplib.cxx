@@ -615,7 +615,7 @@ DumpFile(LPSTR filename, FILE *fout, int full, int fort)
    CloseHandle(hFile);
 }
 
-void
+int
 main(int argc, char **argv)
 {
    std::string cmdline;

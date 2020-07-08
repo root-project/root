@@ -42,9 +42,9 @@ public:
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TCurlyArcEditor();
+   ~TCurlyArcEditor() override;
 
-   virtual void   SetModel(TObject* obj);
+   void   SetModel(TObject* obj) override;
    virtual void   DoRadius();
    virtual void   DoPhimin();
    virtual void   DoPhimax();

@@ -28,7 +28,7 @@ class TControlBar : public TControlBarButton {
 friend class  TControlBarImp;
 
 private:
-   virtual void   Create();
+   void   Create() override;
    void           Initialize(Int_t x, Int_t y);
 
 protected:
@@ -44,7 +44,7 @@ public:
    TControlBar();
    TControlBar(const char *orientation, const char *title="");
    TControlBar(const char *orientation, const char *title, Int_t x, Int_t y);
-   virtual ~TControlBar();
+   ~TControlBar() override;
 
    void            AddButton(TControlBarButton *button);
    void            AddButton(TControlBarButton &button);

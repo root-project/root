@@ -73,26 +73,26 @@ public:
    TGPack(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, UInt_t options = 0,
           Pixel_t back = GetDefaultFrameBackground());
    TGPack(TGClient *c, Window_t id, const TGWindow *parent = 0);
-   virtual ~TGPack();
+   ~TGPack() override;
 
    virtual void   AddFrameWithWeight(TGFrame *f, TGLayoutHints* l, Float_t w);
-   virtual void   AddFrame(TGFrame *f, TGLayoutHints* l=0);
+   void   AddFrame(TGFrame *f, TGLayoutHints* l=0) override;
 
    virtual void   DeleteFrame(TGFrame *f);
-   virtual void   RemoveFrame(TGFrame *f);
-   virtual void   ShowFrame(TGFrame *f);
-   virtual void   HideFrame(TGFrame *f);
+   void   RemoveFrame(TGFrame *f) override;
+   void   ShowFrame(TGFrame *f) override;
+   void   HideFrame(TGFrame *f) override;
 
    using          TGCompositeFrame::Resize;
-   virtual void   Resize(UInt_t w = 0, UInt_t h = 0);
+   void   Resize(UInt_t w = 0, UInt_t h = 0) override;
 
    using          TGCompositeFrame::MapSubwindows;
-   virtual void   MapSubwindows();
+   void   MapSubwindows() override;
 
-   virtual void   MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0);
-   virtual void   Layout();
+   void   MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) override;
+   void   Layout() override;
 
-   virtual void Dump() const;
+   void Dump() const override;
 
    void EqualizeFrames();
    void HandleSplitterStart();

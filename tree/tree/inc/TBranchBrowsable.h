@@ -35,16 +35,16 @@ public:
    typedef Int_t (*MethodCreateListOfBrowsables_t)
       (TList&, const TBranch* branch, const TVirtualBranchBrowsable* parent);
 
-   ~TVirtualBranchBrowsable();
+   ~TVirtualBranchBrowsable() override;
 
-   void Browse(TBrowser *b);
-   const char *GetIconName() const {
+   void Browse(TBrowser *b) override;
+   const char *GetIconName() const override {
       // return icon shown when browsing a TVirtualBranchBrowsable
       if (IsFolder()) return "TBranchElement-folder";
       else return "TBranchElement-leaf";
    }
    void GetScope(TString & scope) const;
-   Bool_t IsFolder() const {
+   Bool_t IsFolder() const override {
       // check whether we have sub-elements
       return (GetLeaves() && GetLeaves()->GetSize()); }
 
@@ -92,17 +92,17 @@ private:
    Bool_t            fTypeIsPointer; ///< return type is pointer to class
    static std::list<MethodCreateListOfBrowsables_t> fgGenerators; ///< list of MethodCreateListOfBrowsables_t called by CreateListOfBrowsables
    static Bool_t     fgGeneratorsSet; ///< have we set the generators yet? empty is not good enough - user might have removed them
-   ClassDef(TVirtualBranchBrowsable, 0); ///< Base class for helper objects used for browsing
+   ClassDefOverride(TVirtualBranchBrowsable, 0); ///< Base class for helper objects used for browsing
 };
 
 
 class TMethodBrowsable: public TVirtualBranchBrowsable {
 public:
-   ~TMethodBrowsable() {};
+   ~TMethodBrowsable() override {};
 
    static Int_t GetBrowsables(TList& list, const TBranch* branch,
                               const TVirtualBranchBrowsable* parent=0);
-   const char *GetIconName() const {
+   const char *GetIconName() const override {
       // return our special icons
       if (IsFolder()) return "TMethodBrowsable-branch";
       return "TMethodBrowsable-leaf";}
@@ -117,13 +117,13 @@ protected:
 
 private:
    TMethod         *fMethod; // pointer to a method
-   ClassDef(TMethodBrowsable,0); // Helper object to browse methods
+   ClassDefOverride(TMethodBrowsable, 0); // Helper object to browse methods
 };
 
 
 class TNonSplitBrowsable: public TVirtualBranchBrowsable {
 public:
-   ~TNonSplitBrowsable() {}
+   ~TNonSplitBrowsable() override {}
 
    static Int_t GetBrowsables(TList& list, const TBranch* branch,
                               const TVirtualBranchBrowsable* parent=0);
@@ -135,15 +135,15 @@ protected:
       const TVirtualBranchBrowsable* parent=0);
 
 private:
-   ClassDef(TNonSplitBrowsable, 0); // Helper object to browse unsplit objects
+   ClassDefOverride(TNonSplitBrowsable, 0); // Helper object to browse unsplit objects
 };
 
 
 class TCollectionPropertyBrowsable: public TVirtualBranchBrowsable {
 public:
-   ~TCollectionPropertyBrowsable() {}
+   ~TCollectionPropertyBrowsable() override {}
 
-   void Browse(TBrowser *b);
+   void Browse(TBrowser *b) override;
    static Int_t GetBrowsables(TList& list, const TBranch* branch,
                               const TVirtualBranchBrowsable* parent=0);
    const char* GetDraw() const {
@@ -163,12 +163,12 @@ protected:
 
 private:
    TString fDraw; // string to send to TTree::Draw(), NOT by GetScope()!
-   ClassDef(TCollectionPropertyBrowsable, 0); // Helper object to add browsable collection properties
+   ClassDefOverride(TCollectionPropertyBrowsable, 0); // Helper object to add browsable collection properties
 };
 
 class TCollectionMethodBrowsable: public TMethodBrowsable {
 public:
-   ~TCollectionMethodBrowsable() {};
+   ~TCollectionMethodBrowsable() override {};
 
    static Int_t GetBrowsables(TList& list, const TBranch* branch,
                               const TVirtualBranchBrowsable* parent=0);
@@ -179,7 +179,7 @@ protected:
    TCollectionMethodBrowsable(const TBranch* branch, TMethod* m,
       const TVirtualBranchBrowsable* parent=0);
 
-   ClassDef(TCollectionMethodBrowsable,0); // Helper object to browse a collection's methods
+   ClassDefOverride(TCollectionMethodBrowsable,0); // Helper object to browse a collection's methods
 };
 
 #endif // defined ROOT_TBranchBrowsable

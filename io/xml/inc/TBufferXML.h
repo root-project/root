@@ -37,7 +37,7 @@ class TBufferXML final : public TBufferText, public TXMLSetup {
 public:
    TBufferXML(TBuffer::EMode mode);
    TBufferXML(TBuffer::EMode mode, TXMLFile *file);
-   virtual ~TBufferXML();
+   ~TBufferXML() override;
 
    static TString ConvertToXML(const TObject *obj, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
    static TString

@@ -105,9 +105,9 @@ public:
 
    TLeaf();
    TLeaf(TBranch *parent, const char *name, const char *type);
-   virtual ~TLeaf();
+   ~TLeaf() override;
 
-   virtual void     Browse(TBrowser *b);
+   void     Browse(TBrowser *b) override;
    virtual Bool_t   CanGenerateOffsetArray() {return fLeafCount;} // overload and return true if this leaf can generate its own offset array.
    virtual void     Export(TClonesArray *, Int_t) {}
    virtual void     FillBasket(TBuffer &b);
@@ -164,7 +164,7 @@ public:
    virtual void     SetRange(Bool_t range = kTRUE) { fIsRange = range; }
    virtual void     SetUnsigned() { fIsUnsigned = kTRUE; }
 
-   ClassDef(TLeaf, 2); // Leaf: description of a Branch data type
+   ClassDefOverride(TLeaf, 2); // Leaf: description of a Branch data type
 };
 
 

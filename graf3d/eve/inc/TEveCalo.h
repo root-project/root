@@ -71,14 +71,14 @@ protected:
 public:
    TEveCaloViz(TEveCaloData* data=0, const char* n="TEveCaloViz", const char* t="");
 
-   virtual ~TEveCaloViz();
+   ~TEveCaloViz() override;
 
-   virtual TEveElement* ForwardSelection();
-   virtual TEveElement* ForwardEdit();
+   TEveElement* ForwardSelection() override;
+   TEveElement* ForwardEdit() override;
 
-   virtual void Paint(Option_t* option="");
+   void Paint(Option_t* option="") override;
 
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   TClass* ProjectedClass(const TEveProjection* p) const override;
    virtual Float_t GetValToHeight() const;
    virtual void    CellSelectionChanged() {}
 
@@ -171,12 +171,12 @@ protected:
    Color_t   fFrameColor;
    Char_t    fFrameTransparency;
 
-   virtual void BuildCellIdCache();
+   void BuildCellIdCache() override;
 
 public:
    TEveCalo3D(TEveCaloData* d=0, const char* n="TEveCalo3D", const char* t="xx");
-   virtual ~TEveCalo3D() {}
-   virtual void ComputeBBox();
+   ~TEveCalo3D() override {}
+   void ComputeBBox() override;
 
    void    SetFrameWidth(Float_t w) { fFrameWidth = w; }
    Float_t GetFrameWidth() const    { return fFrameWidth; }
@@ -222,23 +222,23 @@ protected:
    Float_t                                 fMaxESumBin;
    Float_t                                 fMaxEtSumBin;
 
-   virtual void BuildCellIdCache();
+   void BuildCellIdCache() override;
 
-   virtual void SetDepthLocal(Float_t x) { fDepth = x; }
+   void SetDepthLocal(Float_t x) override { fDepth = x; }
 
 public:
    TEveCalo2D(const char* n="TEveCalo2D", const char* t="");
-   virtual ~TEveCalo2D();
+   ~TEveCalo2D() override;
 
-   virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
-   virtual void UpdateProjection();
-   virtual void ComputeBBox();
+   void SetProjection(TEveProjectionManager* proj, TEveProjectable* model) override;
+   void UpdateProjection() override;
+   void ComputeBBox() override;
 
-   virtual void CellSelectionChanged();
+   void CellSelectionChanged() override;
 
-   virtual void    SetScaleAbs(Bool_t);
+   void    SetScaleAbs(Bool_t) override;
 
-   virtual Float_t GetValToHeight() const;
+   Float_t GetValToHeight() const override;
 
    const TEveCalo2D::vBinCells_t& GetBinLists() const { return fCellLists; }
 
@@ -289,13 +289,13 @@ protected:
    Int_t                   fDrawNumberCellPixels;
    Int_t                   fCellPixelFontSize;
 
-   virtual void BuildCellIdCache();
+   void BuildCellIdCache() override;
 
 public:
    TEveCaloLego(TEveCaloData* data=0, const char* n="TEveCaloLego", const char* t="");
-   virtual ~TEveCaloLego(){}
+   ~TEveCaloLego() override{}
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
    virtual void  SetData(TEveCaloData* d);
 
    Color_t  GetFontColor() const { return fFontColor; }

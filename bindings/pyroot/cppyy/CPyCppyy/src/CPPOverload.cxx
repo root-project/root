@@ -50,18 +50,18 @@ public:
         fCallable = callable;
     }
 
-    virtual ~TPythonCallback() {
+    ~TPythonCallback() override {
         Py_DECREF(fCallable);
         fCallable = nullptr;
     }
 
-    virtual PyObject* GetSignature(bool /*show_formalargs*/ = true) {
+    PyObject* GetSignature(bool /*show_formalargs*/ = true) override {
         return CPyCppyy_PyText_FromString("*args, **kwargs");
     }
-    virtual PyObject* GetPrototype(bool /*show_formalargs*/ = true) {
+    PyObject* GetPrototype(bool /*show_formalargs*/ = true) override {
         return CPyCppyy_PyText_FromString("<callback>");
     }
-    virtual PyObject* GetDocString() {
+    PyObject* GetDocString() override {
         if (PyObject_HasAttrString(fCallable, "__doc__")) {
             return PyObject_GetAttrString(fCallable, "__doc__");
         } else {
@@ -69,29 +69,29 @@ public:
         }
     }
 
-    virtual int GetPriority() { return 100; };
-    virtual bool IsGreedy() { return false; };
+    int GetPriority() override { return 100; };
+    bool IsGreedy() override { return false; };
 
-    virtual int GetMaxArgs() { return 100; };
-    virtual PyObject* GetCoVarNames() { // TODO: pick these up from the callable
+    int GetMaxArgs() override { return 100; };
+    PyObject* GetCoVarNames() override { // TODO: pick these up from the callable
         Py_RETURN_NONE;
     }
-    virtual PyObject* GetArgDefault(int /* iarg */) { // TODO: pick these up from the callable
-        Py_RETURN_NONE;
-    }
-
-    virtual PyObject* GetScopeProxy() { // should this be the module ??
+    PyObject* GetArgDefault(int /* iarg */) override { // TODO: pick these up from the callable
         Py_RETURN_NONE;
     }
 
-    virtual Cppyy::TCppFuncAddr_t GetFunctionAddress() {
+    PyObject* GetScopeProxy() override { // should this be the module ??
+        Py_RETURN_NONE;
+    }
+
+    Cppyy::TCppFuncAddr_t GetFunctionAddress() override {
         return (Cppyy::TCppFuncAddr_t)nullptr;
     }
 
-    virtual PyCallable* Clone() { return new TPythonCallback(*this); }
+    PyCallable* Clone() override { return new TPythonCallback(*this); }
 
-    virtual PyObject* Call(
-            CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* /* ctxt = 0 */) {
+    PyObject* Call(
+            CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* /* ctxt = 0 */) override {
 
         PyObject* newArgs = nullptr;
         if (self) {

@@ -22,18 +22,18 @@ class TPointSet3DGL : public TGLObject
 public:
    TPointSet3DGL() : TGLObject() {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual void   SetBBox();
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   void   SetBBox() override;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
-   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+   Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 
-   virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
+   Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const override;
 
-   virtual void   Draw(TGLRnrCtx & rnrCtx) const;
+   void   Draw(TGLRnrCtx & rnrCtx) const override;
 
-   virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
+   Bool_t SupportsSecondarySelect() const override { return kTRUE; }
+   void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec) override;
 
    ClassDef(TPointSet3DGL,1)  // GL renderer for TPointSet3D
 };

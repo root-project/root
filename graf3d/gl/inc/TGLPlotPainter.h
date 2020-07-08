@@ -237,10 +237,10 @@ public:
    virtual void     InitGL()const = 0;
    virtual void     DeInitGL()const = 0;
    virtual void     DrawPlot()const = 0;
-   virtual void     Paint();
+   void     Paint() override;
 
    //Checks, if mouse cursor is above plot.
-   virtual Bool_t   PlotSelected(Int_t px, Int_t py);
+   Bool_t   PlotSelected(Int_t px, Int_t py) override;
    //Init geometry does plot's specific initialization.
    virtual Bool_t   InitGeometry() = 0;
 

@@ -184,7 +184,7 @@ static void inline do_trace(int sig) {
 
 class TExceptionHandlerImp : public TExceptionHandler {
 public:
-    virtual void HandleException(Int_t sig) {
+    void HandleException(Int_t sig) override {
         if (TROOT::Initialized()) {
             if (gException) {
                 gInterpreter->RewindDictionary();

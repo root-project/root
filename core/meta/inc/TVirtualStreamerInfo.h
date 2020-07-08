@@ -125,14 +125,14 @@ public:
 
    TVirtualStreamerInfo();
    TVirtualStreamerInfo(TClass * /*cl*/);
-   virtual            ~TVirtualStreamerInfo();
+              ~TVirtualStreamerInfo() override;
    virtual void        Build() = 0;
    virtual void        BuildCheck(TFile *file = 0) = 0;
    virtual void        BuildEmulated(TFile *file) = 0;
    virtual void        BuildOld() = 0;
    virtual Bool_t      BuildFor( const TClass *cl ) = 0;
    virtual void        CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient) const = 0;
-   virtual void        Clear(Option_t *) = 0;
+   void        Clear(Option_t *) override = 0;
    virtual Bool_t      CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete, TFile *file) = 0;
    virtual void        Compile() = 0;
    virtual void        ForceWriteInfo(TFile *file, Bool_t force=kFALSE) = 0;
@@ -156,7 +156,7 @@ public:
            Bool_t      IsCompiled() const { return fIsCompiled; }
            Bool_t      IsOptimized() const { return fOptimized; }
            Int_t       IsRecovered() const { return TestBit(kRecovered); }
-   virtual void        ls(Option_t *option="") const = 0;
+   void        ls(Option_t *option="") const override = 0;
    virtual TVirtualStreamerInfo *NewInfo(TClass *cl) = 0;
    virtual void       *New(void *obj = 0) = 0;
    virtual void       *NewArray(Long_t nElements, void* ary = 0) = 0;
@@ -187,7 +187,7 @@ public:
    static TVirtualStreamerInfo *Factory();
 
    //WARNING this class version must be the same as TStreamerInfo
-   ClassDef(TVirtualStreamerInfo,6)  //Abstract Interface describing Streamer information for one class
+   ClassDefOverride(TVirtualStreamerInfo, 6) // Abstract Interface describing Streamer information for one class
 };
 
 #endif

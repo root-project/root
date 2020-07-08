@@ -54,9 +54,9 @@ protected:
 public:
    TEveCaloVizEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveCaloVizEditor() {}
+   ~TEveCaloVizEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoMaxTowerH();
    void DoScaleAbs();
@@ -89,9 +89,9 @@ protected:
 public:
    TEveCalo3DEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveCalo3DEditor() {}
+   ~TEveCalo3DEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
    void    DoFrameTransparency();
 
    ClassDef(TEveCalo3DEditor, 0); // GUI editor for TEveCalo3DEditor.

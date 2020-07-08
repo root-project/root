@@ -56,27 +56,27 @@ public:
    typedef TOrdCollectionIter Iterator_t;
 
    TOrdCollection(Int_t capacity = kDefaultCapacity);
-   ~TOrdCollection();
-   void          Clear(Option_t *option="");
-   void          Delete(Option_t *option="");
-   TObject     **GetObjectRef(const TObject *obj) const;
-   Int_t         IndexOf(const TObject *obj) const;
-   TIterator    *MakeIterator(Bool_t dir = kIterForward) const;
+   ~TOrdCollection() override;
+   void          Clear(Option_t *option="") override;
+   void          Delete(Option_t *option="") override;
+   TObject     **GetObjectRef(const TObject *obj) const override;
+   Int_t         IndexOf(const TObject *obj) const override;
+   TIterator    *MakeIterator(Bool_t dir = kIterForward) const override;
 
-   void          AddFirst(TObject *obj);
-   void          AddLast(TObject *obj);
-   void          AddAt(TObject *obj, Int_t idx);
-   void          AddAfter(const TObject *after, TObject *obj);
-   void          AddBefore(const TObject *before, TObject *obj);
+   void          AddFirst(TObject *obj) override;
+   void          AddLast(TObject *obj) override;
+   void          AddAt(TObject *obj, Int_t idx) override;
+   void          AddAfter(const TObject *after, TObject *obj) override;
+   void          AddBefore(const TObject *before, TObject *obj) override;
    void          PutAt(TObject *obj, Int_t idx);
-   TObject      *RemoveAt(Int_t idx);
-   TObject      *Remove(TObject *obj);
+   TObject      *RemoveAt(Int_t idx) override;
+   TObject      *Remove(TObject *obj) override;
 
-   TObject      *At(Int_t idx) const;
-   TObject      *Before(const TObject *obj) const;
-   TObject      *After(const TObject *obj) const;
-   TObject      *First() const;
-   TObject      *Last() const;
+   TObject      *At(Int_t idx) const override;
+   TObject      *Before(const TObject *obj) const override;
+   TObject      *After(const TObject *obj) const override;
+   TObject      *First() const override;
+   TObject      *Last() const override;
 
    void          Sort();
    Int_t         BinarySearch(TObject *obj);
@@ -109,16 +109,16 @@ private:
 public:
    TOrdCollectionIter(const TOrdCollection *col, Bool_t dir = kIterForward);
    TOrdCollectionIter(const TOrdCollectionIter &iter);
-   ~TOrdCollectionIter() { }
-   TIterator          &operator=(const TIterator &rhs);
+   ~TOrdCollectionIter() override { }
+   TIterator          &operator=(const TIterator &rhs) override;
    TOrdCollectionIter &operator=(const TOrdCollectionIter &rhs);
 
-   const TCollection *GetCollection() const { return fCol; }
-   TObject           *Next();
-   void               Reset();
-   Bool_t             operator!=(const TIterator &aIter) const;
+   const TCollection *GetCollection() const override { return fCol; }
+   TObject           *Next() override;
+   void               Reset() override;
+   Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const TOrdCollectionIter &aIter) const;
-   TObject           *operator*() const;
+   TObject           *operator*() const override;
 
    ClassDef(TOrdCollectionIter,0)  //Ordered collection iterator
 };

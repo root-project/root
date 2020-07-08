@@ -40,7 +40,7 @@ public:
 
    TGuiBldAction(const char *name = 0, const char *title = 0,
                  Int_t type = kGuiBldCtor, TGLayoutHints *hints = 0);
-   virtual ~TGuiBldAction();
+   ~TGuiBldAction() override;
 
    ClassDef(TGuiBldAction,0)  // gui builder action
 };

@@ -46,7 +46,7 @@ protected:
 public:
    TGeoCacheState();
    TGeoCacheState(Int_t capacity);
-   virtual ~TGeoCacheState();
+   ~TGeoCacheState() override;
 
    void                 SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point=0);
    Bool_t               GetState(Int_t &level, Int_t &nmany, Double_t *point) const;
@@ -84,7 +84,7 @@ private:
 public:
    TGeoNodeCache();
    TGeoNodeCache(TGeoNode *top, Bool_t nodeid=kFALSE, Int_t capacity=30);
-   virtual ~TGeoNodeCache();
+   ~TGeoNodeCache() override;
 
    void                 BuildIdArray();
    void                 BuildInfoBranch();

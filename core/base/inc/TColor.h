@@ -37,9 +37,9 @@ public:
    TColor(Float_t r, Float_t g, Float_t b, Float_t a = 1);
    TColor(const TColor &color);
    TColor &operator=(const TColor &color);
-   virtual ~TColor();
+   ~TColor() override;
    const char   *AsHexString() const;
-   void          Copy(TObject &color) const;
+   void          Copy(TObject &color) const override;
    static void   CreateColorWheel();
    static void   CreateColorsGray();
    static void   CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb);
@@ -62,8 +62,8 @@ public:
    Float_t       GetSaturation() const { return IsGrayscale() ? 0 : fSaturation; }
    Float_t       GetAlpha() const { return fAlpha; }
    virtual Float_t GetGrayscale() const { /*ITU*/ return 0.299f*fRed + 0.587f*fGreen + 0.114f*fBlue; }
-   virtual void  ls(Option_t *option="") const;
-   virtual void  Print(Option_t *option="") const;
+   void          ls(Option_t *option="") const override;
+   void          Print(Option_t *option="") const override;
    virtual void  SetAlpha(Float_t a) { fAlpha = a; }
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
 
@@ -101,7 +101,7 @@ public:
    static void    SetGrayscale(Bool_t set = kTRUE);
    static void    SetPalette(Int_t ncolors, Int_t *colors,Float_t alpha=1.);
 
-   ClassDef(TColor,2)  //Color defined by RGB or HLS
+   ClassDefOverride(TColor,2)  //Color defined by RGB or HLS
 };
 
    enum EColorPalette {kDeepSea=51,          kGreyScale=52,    kDarkBodyRadiator=53,

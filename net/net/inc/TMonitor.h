@@ -48,14 +48,14 @@ private:
    Bool_t    fInterrupt;  //flags an interrupt to Select
 
    void  SetReady(TSocket *sock);
-   void *GetSender() { return this; }  // used to get gTQSender
+   void *GetSender() override { return this; }  // used to get gTQSender
 
 public:
    enum EInterest { kRead = 1, kWrite = 2 };
 
    TMonitor(Bool_t mainloop = kTRUE);
    TMonitor(const TMonitor &m);
-   virtual ~TMonitor();
+   ~TMonitor() override;
 
    virtual void Add(TSocket *sock, Int_t interest = kRead);
    virtual void SetInterest(TSocket *sock, Int_t interest = kRead);

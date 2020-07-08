@@ -178,7 +178,7 @@ public:
 
    TSQLFile();
    TSQLFile(const char *dbname, Option_t *option = "read", const char *user = "user", const char *pass = "pass");
-   virtual ~TSQLFile();
+   ~TSQLFile() override;
 
    // configuration of SQL
    Bool_t GetUseSuffixes() const { return fUseSuffixes; }

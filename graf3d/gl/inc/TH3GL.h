@@ -35,12 +35,12 @@ protected:
 public:
    TH3GL();
    TH3GL(TH3 *h, TPolyMarker3D *pm);
-   virtual ~TH3GL();
+   ~TH3GL() override;
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   void   SetBBox() override;
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
+   void DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }

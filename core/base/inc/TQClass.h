@@ -46,7 +46,7 @@ public:
            TQObject(),
            TClass(name, cversion, info,isa,dfil, ifil, dl, il) { }
 
-   virtual ~TQClass() { Disconnect(); }
+   ~TQClass() override { Disconnect(); }
 
    ClassDef(TQClass,0)  // Class with connections
 };
@@ -62,10 +62,10 @@ namespace Internal {
    class TDefaultInitBehavior;
    class TQObjectInitBehavior : public TDefaultInitBehavior {
    public:
-      virtual TClass *CreateClass(const char *cname, Version_t id,
+      TClass *CreateClass(const char *cname, Version_t id,
                                   const std::type_info &info, TVirtualIsAProxy *isa,
                                   const char *dfil, const char *ifil,
-                                  Int_t dl, Int_t il) const
+                                  Int_t dl, Int_t il) const override
       {
          return new TQClass(cname, id, info, isa, dfil, ifil,dl, il);
       }

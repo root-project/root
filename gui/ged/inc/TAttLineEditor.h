@@ -47,9 +47,9 @@ public:
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TAttLineEditor();
+   ~TAttLineEditor() override;
 
-   virtual void   SetModel(TObject* obj);
+   void   SetModel(TObject* obj) override;
    virtual void   DoLineColor(Pixel_t color);
    virtual void   DoLineAlphaColor(ULong_t p);
    virtual void   DoLineStyle(Int_t style);

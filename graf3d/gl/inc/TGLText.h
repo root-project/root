@@ -32,7 +32,7 @@ private:
 public:
    TGLText();
    TGLText(Double_t x, Double_t y, Double_t z, const char *text);
-   virtual ~TGLText();
+   ~TGLText() override;
 
    FTFont* GetFont() { return fGLTextFont; }
 

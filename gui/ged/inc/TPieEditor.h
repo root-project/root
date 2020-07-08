@@ -61,9 +61,9 @@ public:
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TPieEditor();
-   virtual void SetModel(TObject* );
-   virtual void ActivateBaseClassEditors(TClass*);
+   ~TPieEditor() override;
+   void SetModel(TObject* ) override;
+   void ActivateBaseClassEditors(TClass*) override;
 
    // slots related to graph attributes
    virtual void DoShape();

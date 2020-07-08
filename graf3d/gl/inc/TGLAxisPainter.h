@@ -146,7 +146,7 @@ protected:
 
 public:
    TGLAxisPainterBox();
-   virtual ~TGLAxisPainterBox();
+   ~TGLAxisPainterBox() override;
 
    void SetAxis3DTitlePos(TGLRnrCtx &rnrCtx);
    void DrawAxis3D(TGLRnrCtx &rnrCtx);

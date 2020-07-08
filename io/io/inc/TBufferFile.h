@@ -71,7 +71,7 @@ public:
    TBufferFile(TBuffer::EMode mode);
    TBufferFile(TBuffer::EMode mode, Int_t bufsiz);
    TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
-   virtual ~TBufferFile();
+   ~TBufferFile() override;
 
    Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss) override;
    Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname) override;

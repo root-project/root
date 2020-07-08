@@ -46,22 +46,22 @@ public:
    TPolyLine3D(Int_t n, Double_t const* x, Double_t const* y, Double_t const* z, Option_t *option="");
    TPolyLine3D(const TPolyLine3D &polylin);
    TPolyLine3D& operator=(const TPolyLine3D &polylin);
-   virtual ~TPolyLine3D();
+   ~TPolyLine3D() override;
 
-   virtual void      Copy(TObject &polyline) const;
-   virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void      Draw(Option_t *option="");
+   void      Copy(TObject &polyline) const override;
+   Int_t     DistancetoPrimitive(Int_t px, Int_t py) override;
+   void      Draw(Option_t *option="") override;
    virtual void      DrawPolyLine(Int_t n, Float_t *p, Option_t *option="");
-   virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void      ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    Int_t             GetLastPoint() const {return fLastPoint;}
    Int_t             GetN() const {return fN;}
    Float_t          *GetP() const {return fP;}
-   Option_t         *GetOption() const {return fOption.Data();}
-   virtual void      ls(Option_t *option="") const;
+   Option_t         *GetOption() const override {return fOption.Data();}
+   void      ls(Option_t *option="") const override;
    virtual Int_t     Merge(TCollection *list);
-   virtual void      Paint(Option_t *option="");
-   virtual void      Print(Option_t *option="") const;
-   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
+   void      Paint(Option_t *option="") override;
+   void      Print(Option_t *option="") const override;
+   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual Int_t     SetNextPoint(Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void      SetOption(Option_t *option="") {fOption = option;}
    virtual void      SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*

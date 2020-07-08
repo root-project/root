@@ -53,20 +53,20 @@ public:
    TFriendElement(TTree *tree, const char *treename, const char *filename);
    TFriendElement(TTree *tree, const char *treename, TFile *file);
    TFriendElement(TTree *tree, TTree* friendtree, const char *alias);
-   virtual ~TFriendElement();
+   ~TFriendElement() override;
    virtual TTree      *Connect();
    virtual TTree      *DisConnect();
    virtual TFile      *GetFile();
    virtual TTree      *GetParentTree() const {return fParentTree;}
    virtual TTree      *GetTree();
    virtual const char *GetTreeName() const {return fTreeName.Data();}
-   virtual void        ls(Option_t *option="") const;
+   void        ls(Option_t *option="") const override;
            void        Reset() { fTree = nullptr; fFile = nullptr; }
            Bool_t      IsUpdated() const { return TestBit(kUpdated); }
            void        ResetUpdated() { ResetBit(kUpdated); }
            void        MarkUpdated() { SetBit(kUpdated); }
 
-   ClassDef(TFriendElement,2)  //A friend element of another TTree
+   ClassDefOverride(TFriendElement, 2) // A friend element of another TTree
 };
 
 #endif

@@ -44,9 +44,9 @@ public:
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TLineEditor();
+   ~TLineEditor() override;
 
-   virtual void   SetModel(TObject* obj);
+   void   SetModel(TObject* obj) override;
    virtual void   DoStartPoint();
    virtual void   DoEndPoint();
    virtual void   DoLineVertical();

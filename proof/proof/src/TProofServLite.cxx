@@ -76,7 +76,7 @@ class TProofServLiteInterruptHandler : public TSignalHandler {
 public:
    TProofServLiteInterruptHandler(TProofServLite *s)
       : TSignalHandler(kSigUrgent, kFALSE) { fServ = s; }
-   Bool_t  Notify();
+   Bool_t  Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,7 +99,7 @@ class TProofServLiteSigPipeHandler : public TSignalHandler {
 public:
    TProofServLiteSigPipeHandler(TProofServLite *s) : TSignalHandler(kSigPipe, kFALSE)
       { fServ = s; }
-   Bool_t  Notify();
+   Bool_t  Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +119,7 @@ class TProofServLiteTerminationHandler : public TSignalHandler {
 public:
    TProofServLiteTerminationHandler(TProofServLite *s)
       : TSignalHandler(kSigTermination, kFALSE) { fServ = s; }
-   Bool_t  Notify();
+   Bool_t  Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,7 +141,7 @@ class TProofServLiteSegViolationHandler : public TSignalHandler {
 public:
    TProofServLiteSegViolationHandler(TProofServLite *s)
       : TSignalHandler(kSigSegmentationViolation, kFALSE) { fServ = s; }
-   Bool_t  Notify();
+   Bool_t  Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,8 +164,8 @@ class TProofServLiteInputHandler : public TFileHandler {
 public:
    TProofServLiteInputHandler(TProofServLite *s, Int_t fd) : TFileHandler(fd, 1)
       { fServ = s; }
-   Bool_t Notify();
-   Bool_t ReadNotify() { return Notify(); }
+   Bool_t Notify() override;
+   Bool_t ReadNotify() override { return Notify(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

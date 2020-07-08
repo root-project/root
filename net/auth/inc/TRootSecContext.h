@@ -29,7 +29,7 @@ class TRootSecContext : public TSecContext {
 private:
    Int_t        fRSAKey;              // Type of RSA key used
 
-   Bool_t       CleanupSecContext(Bool_t all);
+   Bool_t       CleanupSecContext(Bool_t all) override;
 
 public:
 
@@ -39,14 +39,14 @@ public:
    TRootSecContext(const char *user, const char *host, Int_t meth, Int_t offset,
                const char *id, const char *token,
                TDatime expdate = kROOTTZERO, void *ctx = 0, Int_t key = 1);
-   virtual    ~TRootSecContext();
+      ~TRootSecContext() override;
 
-   const char *AsString(TString &out);
+   const char *AsString(TString &out) override;
 
-   void        DeActivate(Option_t *opt = "CR");
+   void        DeActivate(Option_t *opt = "CR") override;
    Int_t       GetRSAKey()  const { return fRSAKey; }
 
-   void        Print(Option_t *option = "F") const;
+   void        Print(Option_t *option = "F") const override;
 
    ClassDef(TRootSecContext,0)  // Class providing host specific authentication information
 };

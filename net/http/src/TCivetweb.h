@@ -25,15 +25,15 @@ protected:
    Bool_t fOnlySecured{kFALSE}; ///<! if server should run only https protocol
    Int_t fMaxAge{3600};         ///<! max-age parameter
 
-   virtual void Terminate() { fTerminating = kTRUE; }
+   void Terminate() override { fTerminating = kTRUE; }
 
    Bool_t IsSecured() const { return fOnlySecured; }
 
 public:
    TCivetweb(Bool_t only_secured = kFALSE);
-   virtual ~TCivetweb();
+   ~TCivetweb() override;
 
-   virtual Bool_t Create(const char *args);
+   Bool_t Create(const char *args) override;
 
    const char *GetTopName() const { return fTopName.Data(); }
 

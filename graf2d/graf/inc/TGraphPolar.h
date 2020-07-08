@@ -35,16 +35,16 @@ public:
    TGraphPolar();
    TGraphPolar(Int_t n, const Double_t* theta=0, const Double_t* r=0,
                         const Double_t* etheta=0, const Double_t* er=0);
-   virtual ~TGraphPolar();
+   ~TGraphPolar() override;
 
    TGraphPolargram *GetPolargram() {return fPolargram;};
 
-   void             Draw(Option_t* options = "");
+   void             Draw(Option_t* options = "") override;
    Bool_t           GetOptionAxis() {return fOptionAxis;};
    void             SetMaxRadial(Double_t maximum = 1); //*MENU*
    void             SetMinRadial(Double_t minimum = 0); //*MENU*
-   void             SetMaximum(Double_t maximum = 1) {SetMaxRadial(maximum);}
-   void             SetMinimum(Double_t minimum = 0) {SetMinRadial(minimum);}
+   void             SetMaximum(Double_t maximum = 1) override {SetMaxRadial(maximum);}
+   void             SetMinimum(Double_t minimum = 0) override {SetMinRadial(minimum);}
    void             SetMaxPolar(Double_t maximum = 6.28318530717958623); //*MENU*
    void             SetMinPolar(Double_t minimum = 0); //*MENU*
    void             SetOptionAxis(Bool_t opt) {fOptionAxis = opt;};

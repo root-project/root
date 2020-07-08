@@ -48,9 +48,9 @@ public:
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TAttMarkerEditor();
+   ~TAttMarkerEditor() override;
 
-   virtual void     SetModel(TObject* obj);
+   void     SetModel(TObject* obj) override;
    virtual void     DoMarkerColor(Pixel_t color);
    virtual void     DoMarkerAlphaColor(ULong_t p);
    virtual void     DoMarkerSize();

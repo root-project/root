@@ -18,11 +18,11 @@ namespace PyROOT {
       using TMethodHolder::TMethodHolder;
 
    public:
-      virtual PyCallable* Clone() { return new TSetItemHolder( *this ); }
-      virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
+      PyCallable* Clone() override { return new TSetItemHolder( *this ); }
+      PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds ) override;
 
    protected:
-      virtual Bool_t InitExecutor_( TExecutor*&, TCallContext* ctxt = 0 );
+      Bool_t InitExecutor_( TExecutor*&, TCallContext* ctxt = 0 ) override;
    };
 
 } // namespace PyROOT

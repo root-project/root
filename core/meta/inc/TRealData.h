@@ -46,10 +46,10 @@ public:
 
    TRealData();
    TRealData(const char *name, Long_t offset, TDataMember *datamember);
-   virtual     ~TRealData();
+       ~TRealData() override;
 
    void                AdoptStreamer(TMemberStreamer *p);
-   virtual const char *GetName() const {return fName.Data();}
+   const char *GetName() const override {return fName.Data();}
    TDataMember        *GetDataMember() const {return fDataMember;}
    TMemberStreamer    *GetStreamer() const;
    Long_t              GetThisOffset() const {return fThisOffset;}
@@ -59,7 +59,7 @@ public:
 
    static void         GetName(TString &output, TDataMember *dm);
 
-   ClassDef(TRealData,0)  //Description of persistent data members
+   ClassDefOverride(TRealData, 0) // Description of persistent data members
 };
 
 #endif

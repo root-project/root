@@ -40,20 +40,20 @@ public:
       TMathText(
          Double_t x, Double_t y, const char *text);
       TMathText(const TMathText &text);
-      virtual ~TMathText(void);
-      void Copy(TObject &text) const;
+      ~TMathText(void) override;
+      void Copy(TObject &text) const override;
       TMathText *DrawMathText(
          Double_t x, Double_t y, const char *text);
       void GetBoundingBox(
-         UInt_t &w, UInt_t &h, Bool_t angle = kFALSE);
+         UInt_t &w, UInt_t &h, Bool_t angle = kFALSE) override;
       Double_t GetXsize(void);
       Double_t GetYsize(void);
-      virtual void Paint(Option_t *option = "");
+      void Paint(Option_t *option = "") override;
       virtual void PaintMathText(
          Double_t x, Double_t y, Double_t angle, Double_t size,
          const char *text);
-      virtual void SavePrimitive(
-         std::ostream &out, Option_t *option = "");
+      void SavePrimitive(
+         std::ostream &out, Option_t *option = "") override;
       friend class TMathTextRenderer;
 
       ClassDef(TMathText,2) //TeX mathematical formula

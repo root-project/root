@@ -50,10 +50,10 @@ protected:
 public:
    TSPlot();
    TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree* tree);
-   virtual ~TSPlot();
+   ~TSPlot() override;
 
-   void       Browse(TBrowser *b);
-   Bool_t     IsFolder() const { return kTRUE;}
+   void       Browse(TBrowser *b) override;
+   Bool_t     IsFolder() const override { return kTRUE;}
 
    void       FillXvarHists(Int_t nbins = 100);
    void       FillYvarHists(Int_t nbins = 100);

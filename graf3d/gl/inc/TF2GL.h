@@ -30,13 +30,13 @@ protected:
 
 public:
    TF2GL();
-   virtual ~TF2GL();
+   ~TF2GL() override;
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual void   SetBBox();
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   void   SetBBox() override;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
-   virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
+   Bool_t KeepDuringSmartRefresh() const override { return kFALSE; }
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }

@@ -39,15 +39,15 @@ protected:
 
 public:
    TEveBoxGL();
-   virtual ~TEveBoxGL() {}
+   ~TEveBoxGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   void   SetBBox() override;
 
-   virtual void Draw(TGLRnrCtx& rnrCtx) const;
-   virtual void DirectDraw(TGLRnrCtx& rnrCtx) const;
+   void Draw(TGLRnrCtx& rnrCtx) const override;
+   void DirectDraw(TGLRnrCtx& rnrCtx) const override;
 
-   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+   Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
@@ -74,15 +74,15 @@ protected:
 
 public:
    TEveBoxProjectedGL();
-   virtual ~TEveBoxProjectedGL() {}
+   ~TEveBoxProjectedGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   void   SetBBox() override;
 
-   virtual void Draw(TGLRnrCtx& rnrCtx) const;
-   virtual void DirectDraw(TGLRnrCtx& rnrCtx) const;
+   void Draw(TGLRnrCtx& rnrCtx) const override;
+   void DirectDraw(TGLRnrCtx& rnrCtx) const override;
 
-   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+   Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }

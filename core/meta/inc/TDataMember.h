@@ -66,7 +66,7 @@ protected:
 public:
 
    TDataMember(DataMemberInfo_t *info = 0, TClass *cl = 0);
-   virtual       ~TDataMember();
+         ~TDataMember() override;
    Int_t          GetArrayDim() const;
    DeclId_t       GetDeclId() const;
    Int_t          GetMaxIndex(Int_t dim) const;
@@ -89,11 +89,11 @@ public:
    Bool_t         IsPersistent() const { return TestBit(kObjIsPersistent); }
    Int_t          IsSTLContainer();
    Bool_t         IsValid();
-   Long_t         Property() const;
+   Long_t         Property() const override;
    void           SetClass(TClass* cl) { fClass = cl; }
    virtual bool   Update(DataMemberInfo_t *info);
 
-   ClassDef(TDataMember,2)  //Dictionary for a class data member
+   ClassDefOverride(TDataMember, 2) // Dictionary for a class data member
 };
 
 

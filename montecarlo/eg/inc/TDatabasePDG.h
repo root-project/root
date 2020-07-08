@@ -40,7 +40,7 @@ protected:
 public:
 
    TDatabasePDG();
-   virtual ~TDatabasePDG();
+   ~TDatabasePDG() override;
 
    static TDatabasePDG*  Instance();
 
@@ -71,10 +71,10 @@ public:
 
    const THashList *ParticleList() const { return fParticleList; }
 
-   virtual void   Print(Option_t *opt = "") const;
+   void   Print(Option_t *opt = "") const override;
 
-   Bool_t IsFolder() const { return kTRUE; }
-   virtual void   Browse(TBrowser* b);
+   Bool_t IsFolder() const override { return kTRUE; }
+   void   Browse(TBrowser* b) override;
 
    virtual void   ReadPDGTable (const char *filename = "");
    virtual Int_t  WritePDGTable(const char *filename);

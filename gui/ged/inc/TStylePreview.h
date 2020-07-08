@@ -39,7 +39,7 @@ private:
 
 public:
    TStylePreview(const TGWindow *p, TStyle *style, TVirtualPad *currentPad);
-   virtual ~TStylePreview();
+   ~TStylePreview() override;
    void Update(TStyle *style, TVirtualPad *pad);
    void MapTheWindow();
    TCanvas *GetMainCanvas();

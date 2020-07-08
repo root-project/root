@@ -135,15 +135,15 @@ public:
    {
    }
 
-   void *Next() {
+   void *Next() override {
       fStarted = kTRUE;
       fCurrent = fNext(fIterators.fBegin,fIterators.fEnd);
       return fCurrent;
    }
 
-   virtual void* operator*() const { return fCurrent; }
+   void* operator*() const override { return fCurrent; }
 
-   operator bool() const { return fStarted ? fCurrent != 0 : kTRUE; }
+   operator bool() const override { return fStarted ? fCurrent != 0 : kTRUE; }
 
 };
 
@@ -165,16 +165,16 @@ public:
    {
    }
 
-   void *Next() {
+   void *Next() override {
       if ( ! (bool)*this ) return 0;
       void *result = GetValue();
       fIterators.fBegin = ((char*)fIterators.fBegin) + fIncrement;
       return result;
    }
 
-   virtual void* operator*() const { return GetValue(); }
+   void* operator*() const override { return GetValue(); }
 
-   operator bool() const { return fIterators.fBegin != fIterators.fEnd; }
+   operator bool() const override { return fIterators.fBegin != fIterators.fEnd; }
 
 };
 

@@ -30,8 +30,8 @@ protected:
 public:
    TEveSelectorToEventList(TEventList* evl, const char* sel);
 
-   virtual Int_t  Version() const { return 1; }
-   virtual Bool_t Process(Long64_t entry);
+   Int_t  Version() const override { return 1; }
+   Bool_t Process(Long64_t entry) override;
 
    ClassDef(TEveSelectorToEventList, 1); // TSelector that stores entry numbers of matching TTree entries into an event-list.
 };
@@ -83,11 +83,11 @@ protected:
 public:
    TEvePointSelector(TTree* t=0, TEvePointSelectorConsumer* c=0,
                      const char* vexp="", const char* sel="");
-   virtual ~TEvePointSelector() {}
+   ~TEvePointSelector() override {}
 
    virtual Long64_t Select(const char* selection=0);
    virtual Long64_t Select(TTree* t, const char* selection=0);
-   virtual void  TakeAction();
+   void  TakeAction() override;
 
 
    TTree* GetTree() const   { return fTree; }

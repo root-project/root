@@ -58,7 +58,7 @@ private:
 public:
    TBinomialEfficiencyFitter();
    TBinomialEfficiencyFitter(const TH1 *numerator, const TH1 *denominator);
-   virtual ~TBinomialEfficiencyFitter();
+   ~TBinomialEfficiencyFitter() override;
 
    void   Set(const TH1 *numerator, const TH1 *denominator);
    void   SetPrecision(Double_t epsilon);

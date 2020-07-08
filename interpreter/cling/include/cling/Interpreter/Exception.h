@@ -27,7 +27,7 @@ namespace cling {
   public:
     InterpreterException(const std::string& Reason);
     InterpreterException(const char* What, clang::Sema* = nullptr);
-    virtual ~InterpreterException() noexcept;
+    ~InterpreterException() noexcept override;
 
     ///\brief Return true if error was diagnosed false otherwise
     virtual bool diagnose() const;
@@ -44,7 +44,7 @@ namespace cling {
     const DerefType m_Type;
   public:
     InvalidDerefException(clang::Sema* S, const clang::Expr* E, DerefType type);
-    virtual ~InvalidDerefException() noexcept;
+    ~InvalidDerefException() noexcept override;
 
     bool diagnose() const override;
   };
@@ -59,7 +59,7 @@ namespace cling {
   class CompilationException: public InterpreterException {
   public:
     CompilationException(const std::string& Reason);
-    ~CompilationException() noexcept;
+    ~CompilationException() noexcept override;
 
     // Handle fatal llvm errors by throwing an exception.
     // Yes, throwing exceptions in error handlers is bad.

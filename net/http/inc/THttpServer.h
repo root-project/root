@@ -72,7 +72,7 @@ protected:
 
 public:
    THttpServer(const char *engine = "civetweb:8080");
-   virtual ~THttpServer();
+   ~THttpServer() override;
 
    Bool_t CreateEngine(const char *engine);
 

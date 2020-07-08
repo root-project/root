@@ -49,18 +49,18 @@ private:
    TGCanvas             *fCanvas;
 
 protected:
-   void DoRedraw();
+   void DoRedraw() override;
 
 public:
    TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor);
-   virtual ~TGuiBldNameFrame() { }
+   ~TGuiBldNameFrame() override { }
 
    void              ChangeSelected(TGFrame *frame);
    Bool_t            CheckItems(TGCompositeFrame *main);
    TGListTreeItem   *FindItemByName(TGListTree *tree, const char* name, TGListTreeItem *item = 0);
    TGCompositeFrame *GetMdi(TGFrame *frame);
    void              MapItems(TGCompositeFrame *main);
-   void              RemoveFrame(TGFrame *frame);
+   void              RemoveFrame(TGFrame *frame) override;
    void              Reset();
    void              SelectFrameByItem(TGListTreeItem* item, Int_t i = 0);
    void              UpdateName();

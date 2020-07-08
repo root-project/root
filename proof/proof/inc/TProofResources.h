@@ -38,7 +38,7 @@ protected:
 
 public:
    TProofResources() : fValid(kFALSE) { }
-   virtual ~TProofResources() { }
+   ~TProofResources() override { }
 
    virtual TProofNodeInfo *GetMaster() = 0;
    virtual TList          *GetSubmasters() = 0;

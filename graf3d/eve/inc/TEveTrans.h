@@ -50,7 +50,7 @@ public:
    TEveTrans(const TEveTrans& t);
    TEveTrans(const Double_t arr[16]);
    TEveTrans(const Float_t  arr[16]);
-   virtual ~TEveTrans() {}
+   ~TEveTrans() override {}
 
    // General operations
 
@@ -156,7 +156,7 @@ public:
    void     RotateIP(Float_t*  v) const;
    TVector3 Rotate(const TVector3& v) const;
 
-   virtual void Print(Option_t* option = "") const;
+   void Print(Option_t* option = "") const override;
 
    // TEveUtil stuff
 

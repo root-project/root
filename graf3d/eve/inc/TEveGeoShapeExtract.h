@@ -35,7 +35,7 @@ protected:
 
 public:
    TEveGeoShapeExtract(const char* n="TEveGeoShapeExtract", const char* t=0);
-   ~TEveGeoShapeExtract();
+   ~TEveGeoShapeExtract() override;
 
    Bool_t HasElements();
    void   AddElement(TEveGeoShapeExtract* gse);

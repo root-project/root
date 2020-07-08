@@ -45,7 +45,7 @@ protected:
 
 public:
    TEveTransSubEditor(TGWindow* p);
-   virtual ~TEveTransSubEditor() {}
+   ~TEveTransSubEditor() override {}
 
    void SetModel(TEveTrans* t);
    void SetTransFromData();
@@ -77,9 +77,9 @@ protected:
 
 public:
    TEveTransEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveTransEditor() {}
+   ~TEveTransEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    ClassDef(TEveTransEditor, 0); // Editor for TEveTrans class.
 };

@@ -56,14 +56,14 @@ protected:
 public:
    TClassTree();
    TClassTree(const char *name, const char *classes="");
-   virtual      ~TClassTree();
-   virtual  void Draw(const char *classes ="");
+        ~TClassTree() override;
+    void Draw(const char *classes ="") override;
    virtual Int_t FindClass(const char *classname);
    const char   *GetClasses() const {return fClasses.Data();}
    virtual const char  *GetSourceDir() const {return fSourceDir.Data();}
-   virtual  void ls(Option_t *option="") const;
-   virtual  void Paint(Option_t *option="");
-   virtual  void SaveAs(const char *filename="",Option_t *option="") const;
+    void ls(Option_t *option="") const override;
+    void Paint(Option_t *option="") override;
+    void SaveAs(const char *filename="",Option_t *option="") const override;
    virtual  void SetClasses(const char *classes, Option_t *option="ID");
    virtual  void SetSourceDir(const char *dir="src") {fSourceDir = dir;}
    virtual  void SetYoffset(Float_t offset=0);

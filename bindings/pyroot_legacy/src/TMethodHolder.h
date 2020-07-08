@@ -22,23 +22,23 @@ namespace PyROOT {
       TMethodHolder( Cppyy::TCppScope_t scope, Cppyy::TCppMethod_t method );
       TMethodHolder( const TMethodHolder& );
       TMethodHolder& operator=( const TMethodHolder& );
-      virtual ~TMethodHolder();
+      ~TMethodHolder() override;
 
    public:
-      virtual PyObject* GetSignature();
-      virtual PyObject* GetPrototype();
-      virtual Int_t GetPriority();
+      PyObject* GetSignature() override;
+      PyObject* GetPrototype() override;
+      Int_t GetPriority() override;
 
-      virtual Int_t GetMaxArgs();
-      virtual PyObject* GetCoVarNames();
-      virtual PyObject* GetArgDefault( Int_t iarg );
-      virtual PyObject* GetScopeProxy();
+      Int_t GetMaxArgs() override;
+      PyObject* GetCoVarNames() override;
+      PyObject* GetArgDefault( Int_t iarg ) override;
+      PyObject* GetScopeProxy() override;
 
-      virtual PyCallable* Clone() { return new TMethodHolder( *this ); }
+      PyCallable* Clone() override { return new TMethodHolder( *this ); }
 
    public:
-      virtual PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
+      PyObject* Call(
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 ) override;
 
       virtual Bool_t Initialize( TCallContext* ctxt = 0 );
       virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );

@@ -97,7 +97,7 @@ public:
    TQpProbBase(Int_t nx,Int_t my,Int_t mz);
    TQpProbBase(const TQpProbBase &another);
 
-   virtual ~TQpProbBase() {}
+   ~TQpProbBase() override {}
 
    virtual TQpDataBase      *MakeData     (TVectorD     &c,
                                            TMatrixDBase &Q_in,

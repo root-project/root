@@ -33,13 +33,13 @@ protected:
    Float_t fTheta;  // polar angle from the centre of the low z to the high z
    Float_t fPhi;    // polar angle from the centre of the low z to the high z
 
-   virtual void    SetPoints(Double_t *points) const;
+   void    SetPoints(Double_t *points) const override;
 
 public:
    TPARA();
    TPARA(const char *name, const char *title, const char *material, Float_t dx, Float_t dy, Float_t dz,
          Float_t alpha, Float_t theta, Float_t phi);
-   virtual ~TPARA();
+   ~TPARA() override;
 
    virtual Float_t  GetAlpha() const  {return fAlpha;}
    virtual Float_t  GetTheta() const  {return fTheta;}

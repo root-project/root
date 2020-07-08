@@ -43,7 +43,7 @@ class TGuiFactory : public TNamed {
 
 public:
    TGuiFactory(const char *name = "Batch", const char *title = "Batch GUI Factory");
-   virtual ~TGuiFactory() { }
+   ~TGuiFactory() override { }
 
    virtual TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv);
 

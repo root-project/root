@@ -31,7 +31,7 @@ class TNeuron : public TNamed {
    TNeuron(ENeuronType type = kSigmoid,
            const char* name = "", const char* title = "",
            const char* extF = "", const char* extD  = "" );
-   virtual ~TNeuron() {}
+   ~TNeuron() override {}
    inline TSynapse* GetPre(Int_t n) const { return (TSynapse*) fpre.At(n); }
    inline TSynapse* GetPost(Int_t n) const { return (TSynapse*) fpost.At(n); }
    inline TNeuron* GetInLayer(Int_t n) const { return (TNeuron*) flayer.At(n); }

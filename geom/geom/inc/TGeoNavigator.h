@@ -87,7 +87,7 @@ private :
 public :
    TGeoNavigator();
    TGeoNavigator(TGeoManager* geom);
-   virtual ~TGeoNavigator();
+   ~TGeoNavigator() override;
 
    void                   BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);
    Bool_t                 cd(const char *path="");
@@ -225,7 +225,7 @@ private:
 public:
    TGeoNavigatorArray() : TObjArray(), fCurrentNavigator(0), fGeoManager(0) {}
    TGeoNavigatorArray(TGeoManager *mgr) : TObjArray(), fCurrentNavigator(0), fGeoManager(mgr) {SetOwner();}
-   virtual ~TGeoNavigatorArray() {}
+   ~TGeoNavigatorArray() override {}
 
    TGeoNavigator         *AddNavigator();
    inline TGeoNavigator  *GetCurrentNavigator() const {return fCurrentNavigator;}

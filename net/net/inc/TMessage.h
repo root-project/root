@@ -64,7 +64,7 @@ protected:
 
 public:
    TMessage(UInt_t what = kMESS_ANY, Int_t bufsiz = TBuffer::kInitialSize);
-   virtual ~TMessage();
+   ~TMessage() override;
 
    void     ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force) override;
    void     Forward();

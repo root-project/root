@@ -60,12 +60,12 @@ public:
    TExMap(Int_t mapSize = 100);
    TExMap(const TExMap &map);
    TExMap& operator=(const TExMap&);
-   ~TExMap();
+   ~TExMap() override;
 
    void      Add(ULong64_t hash, Long64_t key, Long64_t value);
    void      Add(Long64_t key, Long64_t value) { Add(key, key, value); }
    void      AddAt(UInt_t slot, ULong64_t hash, Long64_t key, Long64_t value);
-   void      Delete(Option_t *opt = "");
+   void      Delete(Option_t *opt = "") override;
    Int_t     Capacity() const { return fSize; }
    void      Expand(Int_t newsize);
    Int_t     GetSize() const { return fTally; }

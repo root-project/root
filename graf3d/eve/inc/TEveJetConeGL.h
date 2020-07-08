@@ -40,14 +40,14 @@ protected:
 
 public:
    TEveJetConeGL();
-   virtual ~TEveJetConeGL() {}
+   ~TEveJetConeGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   void   SetBBox() override;
 
-   virtual void   DLCacheClear();
-   virtual void   Draw(TGLRnrCtx& rnrCtx) const;
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   void   DLCacheClear() override;
+   void   Draw(TGLRnrCtx& rnrCtx) const override;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
    ClassDef(TEveJetConeGL, 0); // GL renderer class for TEveJetCone.
 };
@@ -66,20 +66,20 @@ private:
 protected:
    TEveJetConeProjected  *fM;  // Model object.
 
-   virtual void CalculatePoints() const;
+   void CalculatePoints() const override;
 
    void RenderOutline() const;
    void RenderPolygon() const;
 
 public:
    TEveJetConeProjectedGL();
-   virtual ~TEveJetConeProjectedGL() {}
+   ~TEveJetConeProjectedGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   void   SetBBox() override;
 
-   virtual void   Draw(TGLRnrCtx& rnrCtx) const;
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   void   Draw(TGLRnrCtx& rnrCtx) const override;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
    ClassDef(TEveJetConeProjectedGL, 0); // GL renderer class for TEveJetCone.
 };

@@ -49,13 +49,13 @@ private:
 
 public:
    TStatus();
-   virtual ~TStatus() { }
+   ~TStatus() override { }
 
    inline Bool_t  IsOk() const { return TestBit(kNotOk) ? kFALSE : kTRUE; }
    void           Add(const char *mesg);
    void           AddInfo(const char *mesg);
    virtual Int_t  Merge(TCollection *list);
-   virtual void   Print(Option_t *option="") const;
+   void   Print(Option_t *option="") const override;
    void           Reset();
    const char    *NextMesg();
 

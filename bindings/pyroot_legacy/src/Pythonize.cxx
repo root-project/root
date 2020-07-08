@@ -1526,20 +1526,20 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          }
          return *this;
       }
-      ~TTreeMemberFunction() { Py_DECREF( fOrg ); fOrg = 0; }
+      ~TTreeMemberFunction() override { Py_DECREF( fOrg ); fOrg = 0; }
 
    public:
-      virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "(...)" ); }
-      virtual PyObject* GetPrototype() { return PyObject_GetAttrString( (PyObject*)fOrg, (char*)"__doc__" ); }
-      virtual Int_t GetPriority() { return 100; }
-      virtual PyObject* GetCoVarNames() {
+      PyObject* GetSignature() override { return PyROOT_PyUnicode_FromString( "(...)" ); }
+      PyObject* GetPrototype() override { return PyObject_GetAttrString( (PyObject*)fOrg, (char*)"__doc__" ); }
+      Int_t GetPriority() override { return 100; }
+      PyObject* GetCoVarNames() override {
          PyObject* co_varnames = PyTuple_New( 1 /* self */ + 1 /* fake */ );
          PyTuple_SET_ITEM( co_varnames, 0, PyROOT_PyUnicode_FromString( "self" ) );
          PyTuple_SET_ITEM( co_varnames, 1, PyROOT_PyUnicode_FromString( "*args" ) );
          return co_varnames;
       }
-      virtual PyObject* GetArgDefault( Int_t ) { return NULL; }
-      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TTree" ); }
+      PyObject* GetArgDefault( Int_t ) override { return NULL; }
+      PyObject* GetScopeProxy() override { return CreateScopeProxy( "TTree" ); }
 
    protected:
       MethodProxy* fOrg;
@@ -1552,11 +1552,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTreeBranch( MethodProxy* org ) : TTreeMemberFunction( org ) {}
 
    public:
-      virtual Int_t GetMaxArgs() { return 5; }
-      virtual PyCallable* Clone() { return new TTreeBranch( *this ); }
+      Int_t GetMaxArgs() override { return 5; }
+      PyCallable* Clone() override { return new TTreeBranch( *this ); }
 
-      virtual PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
+      PyObject* Call(
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ ) override
       {
       // acceptable signatures:
       //   ( const char*, void*, const char*, Int_t = 32000 )
@@ -1674,16 +1674,16 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTreeSetBranchAddress( MethodProxy* org ) : TTreeMemberFunction( org ) {}
 
    public:
-      virtual PyObject* GetPrototype()
+      PyObject* GetPrototype() override
       {
          return PyROOT_PyUnicode_FromString( "TBranch* TTree::SetBranchAddress( ... )" );
       }
 
-      virtual Int_t GetMaxArgs() { return 2; }
-      virtual PyCallable* Clone() { return new TTreeSetBranchAddress( *this ); }
+      Int_t GetMaxArgs() override { return 2; }
+      PyCallable* Clone() override { return new TTreeSetBranchAddress( *this ); }
 
-      virtual PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
+      PyObject* Call(
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ ) override
       {
       // acceptable signature:
       //   ( const char*, void* )
@@ -1750,16 +1750,16 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TChainSetBranchAddress( MethodProxy* org ) : TTreeSetBranchAddress( org ) {}
 
    public:
-      virtual PyObject* GetPrototype()
+      PyObject* GetPrototype() override
       {
          return PyROOT_PyUnicode_FromString( "TBranch* TChain::SetBranchAddress( ... )" );
       }
 
-      virtual Int_t GetMaxArgs() { return 2; }
-      virtual PyCallable* Clone() { return new TChainSetBranchAddress( *this ); }
+      Int_t GetMaxArgs() override { return 2; }
+      PyCallable* Clone() override { return new TChainSetBranchAddress( *this ); }
 
    protected:
-      virtual PyObject* ReportTypeError()
+      PyObject* ReportTypeError() override
       {
          PyErr_SetString( PyExc_TypeError,
             "TChain::SetBranchAddress must be called with a TChain instance as first argument" );
@@ -1860,15 +1860,15 @@ namespace {
 
    public:
       Int_t GetNArgs() { return fNArgs; }
-      virtual Int_t GetPriority() { return 100; }
-      virtual Int_t GetMaxArgs() { return GetNArgs()+1; }
-      virtual PyObject* GetCoVarNames() {
+      Int_t GetPriority() override { return 100; }
+      Int_t GetMaxArgs() override { return GetNArgs()+1; }
+      PyObject* GetCoVarNames() override {
          PyObject* co_varnames = PyTuple_New( 1 /* self */ + 1 /* fake */ );
          PyTuple_SET_ITEM( co_varnames, 0, PyROOT_PyUnicode_FromString( "self" ) );
          PyTuple_SET_ITEM( co_varnames, 1, PyROOT_PyUnicode_FromString( "*args" ) );
          return co_varnames;
       }
-      virtual PyObject* GetArgDefault( Int_t ) { return NULL; }
+      PyObject* GetArgDefault( Int_t ) override { return NULL; }
 
       Bool_t IsCallable( PyObject* pyobject )
       {
@@ -1895,18 +1895,18 @@ namespace {
       TF1InitWithPyFunc( int ntf = 1 ) : TPretendInterpreted( 2 + 2*ntf ) {}
 
    public:
-      virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "(...)" ); }
-      virtual PyObject* GetPrototype()
+      PyObject* GetSignature() override { return PyROOT_PyUnicode_FromString( "(...)" ); }
+      PyObject* GetPrototype() override
       {
          return PyROOT_PyUnicode_FromString(
             "TF1::TF1(const char* name, PyObject* callable, "
             "Double_t xmin, Double_t xmax, Int_t npar = 0)" );
       }
-      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TF1" ); }
-      virtual PyCallable* Clone() { return new TF1InitWithPyFunc( *this ); }
+      PyObject* GetScopeProxy() override { return CreateScopeProxy( "TF1" ); }
+      PyCallable* Clone() override { return new TF1InitWithPyFunc( *this ); }
 
-      virtual PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
+      PyObject* Call(
+         ObjectProxy*& self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ ) override
       {
       // expected signature: ( char* name, pyfunc, double xmin, double xmax, int npar = 0 )
          int argc = PyTuple_GET_SIZE( args );
@@ -1974,15 +1974,15 @@ namespace {
       TF2InitWithPyFunc() : TF1InitWithPyFunc( 2 ) {}
 
    public:
-      virtual PyObject* GetPrototype()
+      PyObject* GetPrototype() override
       {
          return PyROOT_PyUnicode_FromString(
             "TF2::TF2(const char* name, PyObject* callable, "
             "Double_t xmin, Double_t xmax, "
             "Double_t ymin, Double_t ymax, Int_t npar = 0)" );
       }
-      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TF2" ); }
-      virtual PyCallable* Clone() { return new TF2InitWithPyFunc( *this ); }
+      PyObject* GetScopeProxy() override { return CreateScopeProxy( "TF2" ); }
+      PyCallable* Clone() override { return new TF2InitWithPyFunc( *this ); }
    };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1992,7 +1992,7 @@ namespace {
       TF3InitWithPyFunc() : TF1InitWithPyFunc( 3 ) {}
 
    public:
-      virtual PyObject* GetPrototype()
+      PyObject* GetPrototype() override
       {
          return PyROOT_PyUnicode_FromString(
             "TF3::TF3(const char* name, PyObject* callable, "
@@ -2000,8 +2000,8 @@ namespace {
             "Double_t ymin, Double_t ymax, "
             "Double_t zmin, Double_t zmax, Int_t npar = 0)" );
       }
-      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TF3" ); }
-      virtual PyCallable* Clone() { return new TF3InitWithPyFunc( *this ); }
+      PyObject* GetScopeProxy() override { return CreateScopeProxy( "TF3" ); }
+      PyCallable* Clone() override { return new TF3InitWithPyFunc( *this ); }
    };
 
 //- TFunction behavior ---------------------------------------------------------
@@ -2016,17 +2016,17 @@ namespace {
       TMinuitSetFCN( int nArgs = 1 ) : TPretendInterpreted( nArgs ) {}
 
    public:
-      virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "(PyObject* callable)" ); }
-      virtual PyObject* GetPrototype()
+      PyObject* GetSignature() override { return PyROOT_PyUnicode_FromString( "(PyObject* callable)" ); }
+      PyObject* GetPrototype() override
       {
          return PyROOT_PyUnicode_FromString(
             "TMinuit::SetFCN(PyObject* callable)" );
       }
-      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TMinuit" ); }
-      virtual PyCallable* Clone() { return new TMinuitSetFCN( *this ); }
+      PyObject* GetScopeProxy() override { return CreateScopeProxy( "TMinuit" ); }
+      PyCallable* Clone() override { return new TMinuitSetFCN( *this ); }
 
-      virtual PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
+      PyObject* Call(
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt ) override
       {
       // expected signature: ( pyfunc )
          int argc = PyTuple_GET_SIZE( args );
@@ -2100,16 +2100,16 @@ namespace {
       TMinuitFitterSetFCN() : TMinuitSetFCN( 1 ) {}
 
    public:
-      virtual PyObject* GetPrototype()
+      PyObject* GetPrototype() override
       {
          return PyROOT_PyUnicode_FromString(
             "TMinuitFitter::SetFCN(PyObject* callable)" );
       }
 
-      virtual PyCallable* Clone() { return new TMinuitFitterSetFCN( *this ); }
+      PyCallable* Clone() override { return new TMinuitFitterSetFCN( *this ); }
 
-      virtual PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
+      PyObject* Call(
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt ) override
       {
       // expected signature: ( pyfunc )
          int argc = PyTuple_GET_SIZE( args );
@@ -2162,21 +2162,21 @@ namespace {
       TFitterFitFCN() : TPretendInterpreted( 2 ) {}
 
    public:
-      virtual PyObject* GetSignature()
+      PyObject* GetSignature() override
       {
          return PyROOT_PyUnicode_FromString(
             "(PyObject* callable, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false)" );
       }
-      virtual PyObject* GetPrototype()
+      PyObject* GetPrototype() override
       {
          return PyROOT_PyUnicode_FromString(
             "TFitter::FitFCN(PyObject* callable, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false)" );
       }
-      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TFitter" ); }
-      virtual PyCallable* Clone() { return new TFitterFitFCN( *this ); }
+      PyObject* GetScopeProxy() override { return CreateScopeProxy( "TFitter" ); }
+      PyCallable* Clone() override { return new TFitterFitFCN( *this ); }
 
-      virtual PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
+      PyObject* Call(
+         ObjectProxy*& self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ ) override
       {
       // expected signature: ( self, pyfunc, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false )
          int argc = PyTuple_GET_SIZE( args );

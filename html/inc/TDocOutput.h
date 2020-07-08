@@ -65,7 +65,7 @@ public:
    enum EFileType { kSource, kInclude, kTree, kDoc };
 
    TDocOutput(THtml& html);
-   virtual ~TDocOutput();
+   ~TDocOutput() override;
 
    virtual void   AdjustSourcePath(TString& line, const char* relpath = "../");
    void           Convert(std::istream& in, const char* infilename,

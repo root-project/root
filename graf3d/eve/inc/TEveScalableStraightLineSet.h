@@ -26,7 +26,7 @@ protected:
 
 public:
    TEveScalableStraightLineSet(const char* n="ScalableStraightLineSet", const char* t="");
-   virtual ~TEveScalableStraightLineSet() {}
+   ~TEveScalableStraightLineSet() override {}
 
    void SetScaleCenter(Float_t x, Float_t y, Float_t z);
    void SetScale(Double_t scale);

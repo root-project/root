@@ -61,7 +61,7 @@ public:
    TGeoChecker();
    TGeoChecker(TGeoManager *geom);
    // destructor
-   virtual ~TGeoChecker();
+   ~TGeoChecker() override;
    // methods
    virtual void     CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.);
    virtual void     CheckBoundaryReference(Int_t icheck=-1);

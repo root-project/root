@@ -51,7 +51,7 @@ public :
    TGraphSmooth();
    TGraphSmooth(const char *name);
 //      TGraphSmooth(const TGraphSmooth &smoothReg);   //??
-   virtual ~TGraphSmooth();
+   ~TGraphSmooth() override;
 
    TGraph         *Approx(TGraph *grin, Option_t *option="linear", Int_t nout=50, Double_t *xout=0,
                           Double_t yleft=0, Double_t yright=0, Int_t rule=0, Double_t f=0, Option_t *ties="mean");

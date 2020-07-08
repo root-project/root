@@ -58,7 +58,7 @@ protected:
 
 public:
    TMemStatShow() {;}
-   virtual   ~TMemStatShow() {;}
+     ~TMemStatShow() override {;}
    static void EventInfo1(Int_t event, Int_t px, Int_t py, TObject *selected);
    static void EventInfo2(Int_t event, Int_t px, Int_t py, TObject *selected);
    static void FillBTString(Int_t bin, Int_t mode, TString &btstring);

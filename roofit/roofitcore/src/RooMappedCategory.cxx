@@ -47,10 +47,10 @@ class RooMappedCategoryCache : public RooAbsCache {
     RooAbsCategory::value_type lookup(Int_t idx) const
     { return _map[idx]; }
 
-    virtual void wireCache()
+    void wireCache() override
     { _map.clear(); initialise(); }
 
-    virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/)
+    Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override
     { _map.clear(); initialise(); return kFALSE; }
 
   private:

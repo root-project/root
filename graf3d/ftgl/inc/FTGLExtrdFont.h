@@ -34,14 +34,14 @@ class FTGL_EXPORT FTGLExtrdFont : public FTFont
         /**
          * Destructor
          */
-        ~FTGLExtrdFont();
+        ~FTGLExtrdFont() override;
 
         /**
          * Set the extrusion distance for the font.
          *
          * @param d  The extrusion distance.
          */
-        void Depth( float d) { depth = d;}
+        void Depth( float d) override { depth = d;}
 
     private:
         /**
@@ -50,7 +50,7 @@ class FTGL_EXPORT FTGLExtrdFont : public FTFont
          * @param glyphIndex The glyph index NOT the char code.
          * @return An FTExtrdGlyph or <code>null</code> on failure.
          */
-        inline virtual FTGlyph* MakeGlyph( unsigned int glyphIndex);
+        inline FTGlyph* MakeGlyph( unsigned int glyphIndex) override;
 
         /**
          * The extrusion distance for the font.

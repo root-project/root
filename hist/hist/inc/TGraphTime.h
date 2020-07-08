@@ -44,12 +44,12 @@ public:
    TGraphTime();
    TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
    TGraphTime(const TGraphTime &gr);
-   virtual ~TGraphTime();
+   ~TGraphTime() override;
 
    virtual Int_t   Add(const TObject *obj, Int_t slot, Option_t *option="");
-   virtual void    Draw(Option_t *chopt="");
+   void    Draw(Option_t *chopt="") override;
    TObjArray      *GetSteps() const {return fSteps;}
-   virtual void    Paint(Option_t *chopt="");
+   void    Paint(Option_t *chopt="") override;
    virtual void    SaveAnimatedGif(const char *filename="") const;
    virtual void    SetSleepTime(Int_t stime=0) {fSleepTime = stime;}
 

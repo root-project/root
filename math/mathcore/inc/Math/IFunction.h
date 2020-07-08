@@ -333,13 +333,13 @@ namespace ROOT {
          /**
             Virtual Destructor (no operations)
          */
-         virtual ~IGradientFunctionMultiDimTempl() {}
+         ~IGradientFunctionMultiDimTempl() override {}
 
          /**
             Evaluate all the vector of function derivatives (gradient)  at a point x.
             Derived classes must re-implement it if more efficient than evaluting one at a time
          */
-         virtual void Gradient(const T *x, T *grad) const
+         void Gradient(const T *x, T *grad) const override
          {
             unsigned int ndim = NDim();
             for (unsigned int icoord  = 0; icoord < ndim; ++icoord)
@@ -354,7 +354,7 @@ namespace ROOT {
             Derived class should implement this method if performances play an important role and if it is faster to
             evaluate value and derivative at the same time
          */
-         virtual void FdF(const T *x, T &f, T *df) const
+         void FdF(const T *x, T &f, T *df) const override
          {
             f = BaseFunc::operator()(x);
             Gradient(x, df);
@@ -392,7 +392,7 @@ namespace ROOT {
          /**
              Virtual Destructor (no operations)
          */
-         virtual ~IGradientFunctionOneDim() {}
+         ~IGradientFunctionOneDim() override {}
 
 
          /**
@@ -402,7 +402,7 @@ namespace ROOT {
              evaluate value and derivative at the same time
 
          */
-         virtual void FdF(double x, double &f, double &df) const
+         void FdF(double x, double &f, double &df) const override
          {
             f = operator()(x);
             df = Derivative(x);

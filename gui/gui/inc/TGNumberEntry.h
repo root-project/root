@@ -100,7 +100,7 @@ public:
    virtual void SetTime(Int_t hour, Int_t min, Int_t sec);
    virtual void SetDate(Int_t year, Int_t month, Int_t day);
    virtual void SetHexNumber(ULong_t val);
-   virtual void SetText(const char* text, Bool_t emit = kTRUE);
+   void SetText(const char* text, Bool_t emit = kTRUE) override;
 
    virtual Double_t GetNumber() const;
    virtual Long_t   GetIntNumber() const;
@@ -115,7 +115,7 @@ public:
                            EAttribute attr = kNEAAnyNumber);
    virtual void  SetLimits(ELimit limits = kNELNoLimits,
                            Double_t min = 0, Double_t max = 1);
-   virtual void  SetState(Bool_t state);
+   void  SetState(Bool_t state) override;
    virtual void  SetLogStep(Bool_t on = kTRUE) {
       // Set logarithmic steps
       fStepLog = on; }
@@ -139,14 +139,14 @@ public:
       // Is log step enabled?
       return fStepLog; }
 
-   virtual Bool_t HandleKey(Event_t* event);
-   virtual Bool_t HandleFocusChange (Event_t* event);
-   virtual void   TextChanged(const char *text = 0);
-   virtual void   ReturnPressed();
-   virtual void   Layout();
-   virtual Bool_t IsEditable() const { return kFALSE; }
+   Bool_t HandleKey(Event_t* event) override;
+   Bool_t HandleFocusChange (Event_t* event) override;
+   void   TextChanged(const char *text = 0) override;
+   void   ReturnPressed() override;
+   void   Layout() override;
+   Bool_t IsEditable() const override { return kFALSE; }
    virtual void   InvalidInput(const char *instr) { Emit("InvalidInput(char*)", instr); }   //*SIGNAL*
-   virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
+   void   SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    ClassDef(TGNumberEntryField,0)  // A text entry field used by a TGNumberEntry
 };
@@ -181,7 +181,7 @@ public:
                  EAttribute attr = kNEAAnyNumber,
                  ELimit limits = kNELNoLimits,
                  Double_t min = 0, Double_t max = 1);
-   virtual ~TGNumberEntry();
+   ~TGNumberEntry() override;
 
    virtual void SetNumber(Double_t val) {
       // Set the numeric value (floating point representation)
@@ -260,8 +260,8 @@ public:
          SetLimits(GetNumLimits(), min, max);  }            //*MENU*
    virtual void SetLogStep(Bool_t on = kTRUE);              //*TOGGLE* *GETTER=IsLogStep
 
-   virtual void   Associate(const TGWindow *w);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void   Associate(const TGWindow *w) override;
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    virtual void   ValueChanged(Long_t val);     //*SIGNAL*
    virtual void   ValueSet(Long_t val);         //*SIGNAL*
 
@@ -275,11 +275,11 @@ public:
       // Get the down button
       return fButtonDown; }
 
-   virtual Bool_t IsEditable() const { return kFALSE; }
+   Bool_t IsEditable() const override { return kFALSE; }
 
-   UInt_t GetDefaultHeight() const { return fNumericEntry->GetDefaultHeight(); }
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
-   virtual TGLayoutManager *GetLayoutManager() const;
+   UInt_t GetDefaultHeight() const override { return fNumericEntry->GetDefaultHeight(); }
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   TGLayoutManager *GetLayoutManager() const override;
 
    ClassDef(TGNumberEntry,0)  // Entry field widget for several numeric formats
 };
@@ -295,8 +295,8 @@ private:
 
 public:
    TGNumberEntryLayout(TGNumberEntry *box): fBox(box) { }
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
 
    ClassDef(TGNumberEntryLayout,0)  // Layout manager for number entry widget
 };

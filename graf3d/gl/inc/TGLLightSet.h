@@ -42,7 +42,7 @@ protected:
 
 public:
    TGLLightSet();
-   virtual ~TGLLightSet() {}
+   ~TGLLightSet() override {}
 
    void    ToggleLight(ELight light);
    void    SetLight(ELight light, Bool_t on);

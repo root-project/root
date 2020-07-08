@@ -20,7 +20,7 @@ class TGeoExtension : public TObject
 {
 protected:
    TGeoExtension() : TObject() {}
-   virtual ~TGeoExtension() {}
+   ~TGeoExtension() override {}
 
 public:
    // Method called whenever requiring a pointer to the extension
@@ -36,7 +36,7 @@ public:
 class TGeoRCExtension : public TGeoExtension
 {
 protected:
-   virtual ~TGeoRCExtension() {delete fUserObject;}
+   ~TGeoRCExtension() override {delete fUserObject;}
 public:
    TGeoRCExtension() : TGeoExtension(), fRC(0), fUserObject(0) { fRC++; }
    TGeoRCExtension(TObject *obj) : TGeoExtension(), fRC(0), fUserObject(obj) { fRC++; }

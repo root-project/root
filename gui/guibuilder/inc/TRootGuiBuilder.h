@@ -100,15 +100,15 @@ private:
 
 public:
    TRootGuiBuilder(const TGWindow *p = 0);
-   virtual ~TRootGuiBuilder();
+   ~TRootGuiBuilder() override;
 
-   virtual void      AddAction(TGuiBldAction *act, const char *sect);
+   void      AddAction(TGuiBldAction *act, const char *sect) override;
    virtual void      AddMacro(const char *macro, TImage *img);
-   virtual void      AddSection(const char *sect);
-   virtual TGFrame  *ExecuteAction();
+   void      AddSection(const char *sect) override;
+   TGFrame  *ExecuteAction() override;
    virtual void      HandleButtons();
-   virtual void      Show() { MapRaised(); }
-   virtual void      Hide();
+   void      Show() override { MapRaised(); }
+   void      Hide() override;
    virtual void      ChangeSelected(TGFrame *f);
    virtual void      Update();
    virtual Bool_t    IsSelectMode() const;
@@ -116,9 +116,9 @@ public:
    virtual Bool_t    OpenProject(Event_t *event = 0);
    virtual Bool_t    SaveProject(Event_t *event = 0);
    virtual Bool_t    NewProject(TString type = "");
-   virtual Bool_t    HandleKey(Event_t *event);
+   Bool_t    HandleKey(Event_t *event) override;
    virtual void      HandleMenu(Int_t id);
-   virtual void      CloseWindow();
+   void      CloseWindow() override;
    virtual void      MaybeCloseWindow();
    virtual void      HandleWindowClosed(Int_t id);
    virtual void      UpdateStatusBar(const char *text = 0);

@@ -105,7 +105,7 @@ public:
                            };
 
    TDataSetManager(const char *group = 0, const char *user = 0, const char *options = 0);
-   virtual ~TDataSetManager();
+   ~TDataSetManager() override;
 
    virtual Int_t            ClearCache(const char *uri);
    virtual Long64_t         GetAvgFileSize() const { return fAvgFileSize; }

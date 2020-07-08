@@ -39,14 +39,14 @@ private:
 
 public:
    TSemaphore(Int_t initial = 1);
-   virtual ~TSemaphore() { }
+   ~TSemaphore() override { }
 
    Int_t  Wait();
    Int_t  Wait(Int_t millisec);
    Int_t  TryWait();
    Int_t  Post();
 
-   ClassDef(TSemaphore, 0)  // Counting semaphore
+   ClassDefOverride(TSemaphore, 0) // Counting semaphore
 };
 
 #endif

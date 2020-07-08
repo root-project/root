@@ -35,9 +35,9 @@ protected:
 
 public:
    TEveLineEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveLineEditor() {}
+   ~TEveLineEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoRnrLine();
    void DoRnrPoints();

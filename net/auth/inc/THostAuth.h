@@ -62,7 +62,7 @@ public:
    THostAuth(const char *asstring);
    THostAuth(THostAuth &ha);
 
-   virtual ~THostAuth();
+   ~THostAuth() override;
 
    void     AsString(TString &out) const;
 
@@ -100,7 +100,7 @@ public:
    TList   *Established() const { return fSecContexts; }
    void     SetEstablished(TList *nl) { fSecContexts = nl; }
 
-   virtual  void  Print(Option_t *option = "") const;
+    void  Print(Option_t *option = "") const override;
    void     PrintEstablished() const;
 
    TRootSecContext *CreateSecContext(const char *user, const char *host, Int_t meth,

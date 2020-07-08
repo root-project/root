@@ -53,7 +53,7 @@ protected:
 
 public:
    TGLAutoRotator(TGLViewer* v);
-   virtual ~TGLAutoRotator();
+   ~TGLAutoRotator() override;
 
    TGLViewer* GetViewer() const { return fViewer; }
    TGLCamera* GetCamera() const { return fCamera; }

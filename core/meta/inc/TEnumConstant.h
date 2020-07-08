@@ -34,7 +34,7 @@ private:
 public:
    TEnumConstant(): fEnum(0), fValue(-1) {}
    TEnumConstant(DataMemberInfo_t *info, const char* name, Long64_t value, TEnum* type);
-   virtual ~TEnumConstant();
+   ~TEnumConstant() override;
 
    void *GetAddress() const override { auto valPtr = &fValue; return (void*) const_cast<Long64_t*>(valPtr); }
    Long64_t      GetValue() const { return fValue; }

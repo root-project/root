@@ -23,13 +23,13 @@ namespace textinput {
   class StreamReaderWin: public StreamReader {
   public:
     StreamReaderWin();
-    ~StreamReaderWin();
+    ~StreamReaderWin() override;
 
-    void GrabInputFocus();
-    void ReleaseInputFocus();
+    void GrabInputFocus() override;
+    void ReleaseInputFocus() override;
 
-    bool HavePendingInput(bool wait);
-    bool ReadInput(size_t& nRead, InputData& in);
+    bool HavePendingInput(bool wait) override;
+    bool ReadInput(size_t& nRead, InputData& in) override;
 
     bool IsFromTTY() override { return fIsConsole; }
 

@@ -46,17 +46,17 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
-   virtual ~TGTableHeader();
+   ~TGTableHeader() override;
 
-   virtual void SetWidth(UInt_t width);
-   virtual void SetHeight(UInt_t height);
+   void SetWidth(UInt_t width) override;
+   void SetHeight(UInt_t height) override;
 
-   virtual void SetLabel(const char *label);
+   void SetLabel(const char *label) override;
 
    virtual void SetDefaultLabel();
    virtual void SetPosition(UInt_t pos);
-   virtual void Resize(UInt_t width, UInt_t height);  // Resize width or height
-   virtual void Resize(TGDimension newsize);          // depending on type
+   void Resize(UInt_t width, UInt_t height) override;  // Resize width or height
+   void Resize(TGDimension newsize) override;          // depending on type
    virtual void Sort(Bool_t order = kSortAscending);
    virtual void UpdatePosition();
 

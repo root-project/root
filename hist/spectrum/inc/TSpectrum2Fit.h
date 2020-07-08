@@ -132,7 +132,7 @@ public:
    };
    TSpectrum2Fit(void); //default constructor
    TSpectrum2Fit(Int_t numberPeaks);
-   virtual ~TSpectrum2Fit();
+   ~TSpectrum2Fit() override;
    //auxiliary functions for 2. parameter fit functions
 protected:
    Double_t            Deramp2(Double_t x,Double_t y,Double_t x0,Double_t y0,Double_t sigmax,Double_t sigmay,Double_t ro,Double_t txy,Double_t sxy,Double_t bx,Double_t by);

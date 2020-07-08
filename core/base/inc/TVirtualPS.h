@@ -45,7 +45,7 @@ protected:
 public:
    TVirtualPS();
    TVirtualPS(const char *filename, Int_t type=-111);
-   virtual     ~TVirtualPS();
+       ~TVirtualPS() override;
    virtual void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) = 0;
    virtual void  CellArrayFill(Int_t r, Int_t g, Int_t b) = 0;
    virtual void  CellArrayEnd() = 0;
@@ -74,7 +74,7 @@ public:
    virtual void  SetType(Int_t /*type*/ = -111) { }
    virtual Int_t GetType() const { return 111; }
 
-   ClassDef(TVirtualPS,0)  //Abstract interface to a PostScript driver
+   ClassDefOverride(TVirtualPS, 0) // Abstract interface to a PostScript driver
 };
 
 

@@ -56,9 +56,9 @@ protected:
 
 public:
    TGLCameraOverlay(Bool_t showOrtho=kTRUE, Bool_t showPersp=kFALSE);
-   virtual ~TGLCameraOverlay();
+   ~TGLCameraOverlay() override;
 
-   virtual  void   Render(TGLRnrCtx& rnrCtx);
+    void   Render(TGLRnrCtx& rnrCtx) override;
 
    TGLPlane& RefExternalRefPlane() { return fExternalRefPlane; }
    void      UseExternalRefPlane(Bool_t x) { fUseExternalRefPlane=x; }

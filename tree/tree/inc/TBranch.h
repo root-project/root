@@ -189,12 +189,12 @@ public:
    TBranch();
    TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
    TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
-   virtual ~TBranch();
+   ~TBranch() override;
 
    virtual void      AddBasket(TBasket &b, Bool_t ondisk, Long64_t startEntry);
    virtual void      AddLastBasket(Long64_t startEntry);
            Int_t     BackFill();
-   virtual void      Browse(TBrowser *b);
+   void      Browse(TBrowser *b) override;
    virtual void      DeleteBaskets(Option_t* option="");
    virtual void      DropBaskets(Option_t *option = "");
            void      ExpandBasketArrays();
@@ -223,7 +223,7 @@ public:
            Int_t     GetEntryOffsetLen() const { return fEntryOffsetLen; }
            Int_t     GetEvent(Long64_t entry=0) {return GetEntry(entry);}
    TString           GetFullName() const;
-   const char       *GetIconName() const;
+   const char       *GetIconName() const override;
    virtual Int_t     GetExpectedType(TClass *&clptr,EDataType &type);
    virtual TLeaf    *GetLeaf(const char *name) const;
    virtual TFile    *GetFile(Int_t mode=0);
@@ -252,10 +252,10 @@ public:
    TBranch          *GetSubBranch(const TBranch *br) const;
    TBuffer          *GetTransientBuffer(Int_t size);
    Bool_t            IsAutoDelete() const;
-   Bool_t            IsFolder() const;
+   Bool_t            IsFolder() const override;
    virtual void      KeepCircular(Long64_t maxEntries);
    virtual Int_t     LoadBaskets();
-   virtual void      Print(Option_t *option="") const;
+   void      Print(Option_t *option="") const override;
            void      PrintCacheInfo() const;
    virtual void      ReadBasket(TBuffer &b);
    virtual void      Refresh(TBranch *b);
@@ -288,7 +288,7 @@ public:
 
    static  void      ResetCount();
 
-   ClassDef(TBranch, 13); // Branch descriptor
+   ClassDefOverride(TBranch, 13); // Branch descriptor
 };
 
 //______________________________________________________________________________

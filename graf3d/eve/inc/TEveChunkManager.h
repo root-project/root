@@ -130,7 +130,7 @@ private:
 public:
    TEveChunkVector()                 : TEveChunkManager() {}
    TEveChunkVector(Int_t chunk_size) : TEveChunkManager(sizeof(T), chunk_size) {}
-   virtual ~TEveChunkVector() {}
+   ~TEveChunkVector() override {}
 
    void Reset(Int_t chunk_size) { Reset(sizeof(T), chunk_size); }
 

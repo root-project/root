@@ -95,7 +95,7 @@ protected:
 
 private:
    TSocket&      operator=(const TSocket &);  // not implemented
-   Option_t     *GetOption() const { return TObject::GetOption(); }
+   Option_t     *GetOption() const override { return TObject::GetOption(); }
 
 public:
    TSocket(TInetAddress address, const char *service, Int_t tcpwindowsize = -1);
@@ -106,7 +106,7 @@ public:
    TSocket(Int_t descriptor);
    TSocket(Int_t descriptor, const char *sockpath);
    TSocket(const TSocket &s);
-   virtual ~TSocket() { Close(); }
+   ~TSocket() override { Close(); }
 
    virtual void          Close(Option_t *opt="");
    virtual Int_t         GetDescriptor() const { return fSocket; }

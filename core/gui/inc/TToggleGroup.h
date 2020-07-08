@@ -36,7 +36,7 @@ public:
    TToggleGroup();
    TToggleGroup(const TToggleGroup&);
    TToggleGroup &operator=(const TToggleGroup&);
-   virtual ~TToggleGroup();
+   ~TToggleGroup() override;
    virtual Int_t       GetTogglesCount() {return fToggles->GetSize();};
    virtual TToggle    *At(Int_t idx) {return (TToggle*)fToggles->At(idx);};
 

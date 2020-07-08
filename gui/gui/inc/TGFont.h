@@ -128,7 +128,7 @@ protected:
 
 public:
    TGTextLayout(): fFont(NULL), fString(""), fWidth(0), fNumChunks(0), fChunks(NULL) {}
-   virtual ~TGTextLayout();
+   ~TGTextLayout() override;
 
    void   DrawText(Drawable_t dst, GContext_t gc, Int_t x, Int_t y,
                    Int_t firstChar, Int_t lastChar) const;
@@ -140,7 +140,7 @@ public:
    Int_t  IntersectText(Int_t x, Int_t y, Int_t w, Int_t h) const;
    void   ToPostscript(TString *dst) const;
 
-   ClassDef(TGTextLayout,0)   // Keep track of string  measurement information.
+   ClassDefOverride(TGTextLayout, 0) // Keep track of string  measurement information.
 };
 
 
@@ -187,7 +187,7 @@ protected:
                            const char *start, int numChars,
                            int curX, int newX, int y) const;
 public:
-   virtual ~TGFont();
+   ~TGFont() override;
 
    FontH_t      GetFontHandle() const { return fFontH; }
    FontStruct_t GetFontStruct() const { return fFontStruct; }
@@ -212,10 +212,10 @@ public:
    void   DrawChars(Drawable_t dst, GContext_t gc, const char *source,
                    Int_t numChars, Int_t x, Int_t y) const;
 
-   void  Print(Option_t *option="") const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void  Print(Option_t *option="") const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGFont,0)   // GUI font description
+   ClassDefOverride(TGFont, 0) // GUI font description
 };
 
 
@@ -245,7 +245,7 @@ protected:
 
 public:
    TGFontPool(TGClient *client);
-   virtual ~TGFontPool();
+   ~TGFontPool() override;
 
    TGFont  *GetFont(const char *font, Bool_t fixedDefault = kTRUE);
    TGFont  *GetFont(const TGFont *font);
@@ -264,9 +264,9 @@ public:
    Bool_t   ParseFontName(const char *string, FontAttributes_t *fa);
    const char *NameOfFont(TGFont *font);
 
-   void     Print(Option_t *option="") const;
+   void     Print(Option_t *option="") const override;
 
-   ClassDef(TGFontPool,0)  // Font pool
+   ClassDefOverride(TGFontPool, 0) // Font pool
 };
 
 #endif

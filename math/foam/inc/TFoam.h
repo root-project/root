@@ -76,7 +76,7 @@ protected:
 public:
    TFoam();                          // Default constructor (used only by ROOT streamer)
    TFoam(const Char_t*);             // Principal user-defined constructor
-   virtual ~TFoam();                 // Default destructor
+   ~TFoam() override;                 // Default destructor
    TFoam(const TFoam&);              // Copy Constructor  NOT USED
    // Initialization
    virtual void Initialize();                // Initialization of the FOAM (grid, cells, etc), mandatory!

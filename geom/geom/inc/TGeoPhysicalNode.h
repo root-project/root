@@ -60,11 +60,11 @@ public:
    TGeoPhysicalNode();
    TGeoPhysicalNode(const char *path);
    // destructor
-   virtual ~TGeoPhysicalNode();
+   ~TGeoPhysicalNode() override;
 
    Bool_t            Align(TGeoMatrix *newmat=0, TGeoShape *newshape=0, Bool_t check=kFALSE, Double_t ovlp=0.001);
    void              cd() const;
-   void              Draw(Option_t *option="");
+   void              Draw(Option_t *option="") override;
    Int_t             GetLevel() const {return fLevel;}
    TGeoHMatrix      *GetMatrix(Int_t level=-1) const;
    TGeoHMatrix      *GetOriginalMatrix() const {return fMatrixOrig;}
@@ -80,14 +80,14 @@ public:
    Bool_t            IsVisible() const {return TObject::TestBit(kGeoPNodeVisible);}
    Bool_t            IsVisibleFull() const {return TObject::TestBit(kGeoPNodeFull);}
 
-   virtual void      Print(Option_t *option="") const;
+   void      Print(Option_t *option="") const override;
    void              Refresh();
 
    void              SetMatrixOrig(const TGeoMatrix *local);
    void              SetIsVolAtt(Bool_t flag=kTRUE) {TObject::SetBit(kGeoPNodeVolAtt,flag);}
    void              SetVisibility(Bool_t flag=kTRUE)  {TObject::SetBit(kGeoPNodeVisible,flag);}
    void              SetVisibleFull(Bool_t flag=kTRUE) {TObject::SetBit(kGeoPNodeFull,flag);}
-   virtual void      Paint(Option_t *option = "");
+   void      Paint(Option_t *option = "") override;
 
 
    ClassDef(TGeoPhysicalNode, 1)               // base class for physical nodes
@@ -120,7 +120,7 @@ protected:
 public:
    TGeoPNEntry();
    TGeoPNEntry(const char *unique_name, const char *path);
-   virtual ~TGeoPNEntry();
+   ~TGeoPNEntry() override;
 
    inline const char   *GetPath() const {return GetTitle();}
    const TGeoHMatrix   *GetMatrix() const {return fMatrix;}

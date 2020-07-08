@@ -45,7 +45,7 @@ protected:
 public:
    TCivetwebWSEngine(struct mg_connection *conn) : THttpWSEngine(), fWSconn(conn) {}
 
-   virtual ~TCivetwebWSEngine() = default;
+   ~TCivetwebWSEngine() override = default;
 
    UInt_t GetId() const override { return TString::Hash((void *)&fWSconn, sizeof(void *)); }
 

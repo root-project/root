@@ -134,12 +134,12 @@ protected:
 public:
    TZIPFile();
    TZIPFile(const char *archive, const char *member, TFile *file);
-   virtual ~TZIPFile() { }
+   ~TZIPFile() override { }
 
-   virtual Int_t OpenArchive();
-   virtual Int_t SetCurrentMember();
+   Int_t OpenArchive() override;
+   Int_t SetCurrentMember() override;
 
-   void          Print(Option_t *option = "") const;
+   void          Print(Option_t *option = "") const override;
 
    ClassDef(TZIPFile,1)  //A ZIP archive file
 };
@@ -173,7 +173,7 @@ public:
    TZIPMember(const char *name);
    TZIPMember(const TZIPMember &member);
    TZIPMember &operator=(const TZIPMember &rhs);
-   virtual ~TZIPMember();
+   ~TZIPMember() override;
 
    void     *GetLocal() const { return fLocal; }
    UInt_t    GetLocalLen() const { return fLocalLen; }
@@ -185,7 +185,7 @@ public:
    UInt_t    GetMethod() const { return fMethod; }
    UInt_t    GetLevel() const { return fLevel; }
 
-   void      Print(Option_t *option = "") const;
+   void      Print(Option_t *option = "") const override;
 
    ClassDef(TZIPMember, 0);  //A ZIP archive member file
 };

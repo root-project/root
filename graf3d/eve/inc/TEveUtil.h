@@ -106,9 +106,9 @@ public:
    TEveException(const char* s)    : TString(s) {}
    TEveException(const std::string& s);
 
-   virtual ~TEveException() noexcept {}
+   ~TEveException() noexcept override {}
 
-   virtual const char* what() const noexcept { return Data(); }
+   const char* what() const noexcept override { return Data(); }
 
    ClassDef(TEveException, 1); // Exception-type thrown by Eve classes.
 };
@@ -193,7 +193,7 @@ protected:
 
 public:
    TEveRefBackPtr();
-   virtual ~TEveRefBackPtr();
+   ~TEveRefBackPtr() override;
 
    TEveRefBackPtr(const TEveRefBackPtr&);
    TEveRefBackPtr& operator=(const TEveRefBackPtr&);

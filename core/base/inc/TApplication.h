@@ -99,7 +99,7 @@ protected:
 public:
    TApplication(const char *appClassName, Int_t *argc, char **argv,
                 void *options = 0, Int_t numOptions = 0);
-   virtual ~TApplication();
+   ~TApplication() override;
 
    void            InitializeGraphics();
    virtual void    GetOptions(Int_t *argc, char **argv);
@@ -131,7 +131,7 @@ public:
    virtual Bool_t  IsCmdThread() { return fAppImp ? fAppImp->IsCmdThread() : kTRUE; }
    virtual TApplicationImp *GetApplicationImp() { return fAppImp;}
 
-   virtual void    ls(Option_t *option="") const;
+   void    ls(Option_t *option="") const override;
 
    Int_t           Argc() const  { return fArgc; }
    char          **Argv() const  { return fArgv; }

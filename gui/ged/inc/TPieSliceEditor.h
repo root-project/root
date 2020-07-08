@@ -42,9 +42,9 @@ public:
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
-   ~TPieSliceEditor();
+   ~TPieSliceEditor() override;
 
-   void SetModel(TObject *);
+   void SetModel(TObject *) override;
 
    void DoTitle(const char*);
    void DoValue();

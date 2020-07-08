@@ -35,7 +35,7 @@ protected:
    TMap    fDescriptionMap;   // stores the key, value pairs of the JDL
 public:
    TGridJDL() : fMap(), fDescriptionMap() { }
-   virtual ~TGridJDL();
+   ~TGridJDL() override;
 
    void             SetValue(const char *key, const char *value);
    const char      *GetValue(const char *key);
@@ -45,7 +45,7 @@ public:
    void             AddToSet(const char *key, const char *value);
    void             AddToSetDescription(const char *key, const char *description);
    virtual TString  Generate();
-   virtual void     Clear(const Option_t* = 0);
+   void     Clear(const Option_t* = 0) override;
 
    virtual void SetExecutable(const char *value=0, const char *description=0) = 0;
    virtual void SetArguments(const char *value=0, const char *description=0) = 0;

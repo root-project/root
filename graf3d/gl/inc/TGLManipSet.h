@@ -35,16 +35,16 @@ protected:
 
 public:
    TGLManipSet();
-   virtual ~TGLManipSet();
+   ~TGLManipSet() override;
 
-   virtual void SetPShape(TGLPhysicalShape* shape);
+   void SetPShape(TGLPhysicalShape* shape) override;
 
-   virtual Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
-   virtual Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
-                         Event_t* event);
-   virtual void   MouseLeave();
+   Bool_t MouseEnter(TGLOvlSelectRecord& selRec) override;
+   Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
+                         Event_t* event) override;
+   void   MouseLeave() override;
 
-   virtual void Render(TGLRnrCtx& rnrCtx);
+   void Render(TGLRnrCtx& rnrCtx) override;
 
    TGLManip* GetCurrentManip() const { return fManip[fType]; }
 

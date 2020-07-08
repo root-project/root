@@ -67,7 +67,7 @@ public:
                 UInt_t w = 900, UInt_t h = 600);
    TGTextEditor(TMacro *macro, const TGWindow *p = 0, UInt_t w = 0,
                 UInt_t h = 0);
-   virtual ~TGTextEditor();
+   ~TGTextEditor() override;
 
    void           ClearText();
    Bool_t         LoadBuffer(const char *buf) { return fTextEdit->LoadBuffer(buf); }
@@ -90,11 +90,11 @@ public:
    void           AddLineFast(const char *string) { fTextEdit->AddLineFast(string); }
    TGText        *GetText() const { return fTextEdit->GetText(); }
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   virtual Bool_t HandleKey(Event_t *event);
-   virtual Bool_t HandleTimer(TTimer *t);
-   virtual void   CloseWindow();
-   virtual void   DeleteWindow();
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t HandleKey(Event_t *event) override;
+   Bool_t HandleTimer(TTimer *t) override;
+   void   CloseWindow() override;
+   void   DeleteWindow() override;
 
    ClassDef(TGTextEditor,0)  // Simple text editor using TGTextEdit widget
 };

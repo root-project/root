@@ -41,7 +41,7 @@ private:
 
 public:
    TRWLock();
-   virtual ~TRWLock() { }
+   ~TRWLock() override { }
 
    Int_t  ReadLock();
    Int_t  ReadUnLock();

@@ -47,7 +47,7 @@ public:
    };
    TSpectrumTransform();
    TSpectrumTransform(Int_t size);
-   virtual ~TSpectrumTransform();
+   ~TSpectrumTransform() override;
 
 protected:
    void                BitReverse(Double_t *working_space,Int_t num);

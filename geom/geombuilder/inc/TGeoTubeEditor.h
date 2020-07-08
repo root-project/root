@@ -54,8 +54,8 @@ public:
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoTubeEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoTubeEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoRmin();
    void           DoRmax();
@@ -82,21 +82,21 @@ protected:
    TGNumberEntry   *fEPhi1;             // Number entry for phi1
    TGNumberEntry   *fEPhi2;             // Number entry for phi2
 
-   virtual void ConnectSignals2Slots();   // Connect the signals to the slots
+   void ConnectSignals2Slots() override;   // Connect the signals to the slots
 
 public:
    TGeoTubeSegEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoTubeSegEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoTubeSegEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoPhi();
    void           DoPhi1();
    void           DoPhi2();
-   virtual void   DoApply();
-   virtual void   DoUndo();
+   void   DoApply() override;
+   void   DoUndo() override;
 
    ClassDef(TGeoTubeSegEditor,0)   // TGeoTubeSeg editor
 };
@@ -118,15 +118,15 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoCtubEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoCtubEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoThlo();
    void           DoPhlo();
    void           DoThhi();
    void           DoPhhi();
-   virtual void   DoApply();
-   virtual void   DoUndo();
+   void   DoApply() override;
+   void   DoUndo() override;
 
    ClassDef(TGeoCtubEditor,0)   // TGeoCtub editor
 };

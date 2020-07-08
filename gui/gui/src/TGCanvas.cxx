@@ -91,7 +91,7 @@ private:
    TGContainer   *fContainer;
 public:
    TGContainerKeyboardTimer(TGContainer *t) : TTimer(kKeyboardTime) { fContainer = t; }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +112,7 @@ private:
    TGContainer   *fContainer;
 public:
    TGContainerScrollTimer(TGContainer *t) : TTimer(50) { fContainer = t; }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

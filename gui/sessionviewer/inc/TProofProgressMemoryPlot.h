@@ -60,9 +60,9 @@ class TProofProgressMemoryPlot : public TGTransientFrame {
 
  public:
    TProofProgressMemoryPlot(TProofProgressDialog *d, Int_t w = 700, Int_t h = 300);
-   virtual ~TProofProgressMemoryPlot();
+   ~TProofProgressMemoryPlot() override;
 
-   void       Clear(Option_t * = 0);
+   void       Clear(Option_t * = 0) override;
    void       DoPlot();
    void       Select(Int_t id);
 

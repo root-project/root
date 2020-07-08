@@ -270,13 +270,13 @@ namespace cling {
       clang::NamedDecl* m_TesterDecl;
     public:
       SymbolResolverCallback(Interpreter* interp, bool resolve = true);
-      ~SymbolResolverCallback();
+      ~SymbolResolverCallback() override;
 
-      bool LookupObject(clang::LookupResult& R, clang::Scope* S);
-      bool LookupObject(const clang::DeclContext*, clang::DeclarationName) {
+      bool LookupObject(clang::LookupResult& R, clang::Scope* S) override;
+      bool LookupObject(const clang::DeclContext*, clang::DeclarationName) override {
         return false;
       }
-      bool LookupObject(clang::TagDecl* Tag) {
+      bool LookupObject(clang::TagDecl* Tag) override {
         return false;
       }
       bool ShouldResolveAtRuntime(clang::LookupResult& R, clang::Scope* S);

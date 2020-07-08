@@ -32,7 +32,7 @@ class TGridResult : public TList {
 
 public:
    TGridResult() : TList() { SetOwner(kTRUE); }
-   virtual ~TGridResult() { }
+   ~TGridResult() override { }
 
    virtual const char *GetFileName(UInt_t) const
       { MayNotUse("GetFileName"); return 0; }

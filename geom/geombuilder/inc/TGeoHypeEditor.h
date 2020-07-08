@@ -56,8 +56,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoHypeEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoHypeEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoRin();
    void           DoRout();

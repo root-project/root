@@ -53,7 +53,7 @@ private:
 public:
    TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,
                   TVirtualPad *currentPad = 0);
-   virtual ~TStyleDialog();
+   ~TStyleDialog() override;
 
    void DoCloseWindow();                  // SLOT
    void DoCancel();                       // SLOT

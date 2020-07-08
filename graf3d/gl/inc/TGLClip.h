@@ -50,7 +50,7 @@ protected:
 
 public:
    TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, const float color[4]);
-   virtual ~TGLClip();
+   ~TGLClip() override;
 
    virtual void Modified() { TGLPhysicalShape::Modified(); IncTimeStamp(); }
 
@@ -66,7 +66,7 @@ public:
    Bool_t IsValid() const { return fValid;   }
    void   Invalidate()    { fValid = kFALSE; }
 
-   virtual void Draw(TGLRnrCtx & rnrCtx) const;
+   void Draw(TGLRnrCtx & rnrCtx) const override;
    virtual void PlaneSet(TGLPlaneSet_t & set) const = 0;
 
    ClassDef(TGLClip,0); // abstract clipping object
@@ -89,14 +89,14 @@ private:
 
 public:
    TGLClipPlane();
-   virtual ~TGLClipPlane();
+   ~TGLClipPlane() override;
 
-   virtual void Setup(const TGLBoundingBox & bbox);
-   virtual void Setup(const TGLVector3& point, const TGLVector3& normal);
+   void Setup(const TGLBoundingBox & bbox) override;
+   void Setup(const TGLVector3& point, const TGLVector3& normal) override;
 
    void Set(const TGLPlane & plane);
 
-   virtual void PlaneSet(TGLPlaneSet_t & set) const;
+   void PlaneSet(TGLPlaneSet_t & set) const override;
 
    ClassDef(TGLClipPlane, 0); // clipping plane
 };
@@ -117,12 +117,12 @@ private:
 
 public:
    TGLClipBox();
-   virtual ~TGLClipBox();
+   ~TGLClipBox() override;
 
-   virtual void Setup(const TGLBoundingBox & bbox);
-   virtual void Setup(const TGLVector3& min_point, const TGLVector3& max_point);
+   void Setup(const TGLBoundingBox & bbox) override;
+   void Setup(const TGLVector3& min_point, const TGLVector3& max_point) override;
 
-   virtual void PlaneSet(TGLPlaneSet_t & set) const;
+   void PlaneSet(TGLPlaneSet_t & set) const override;
 
    ClassDef(TGLClipBox, 0); // clipping box
 };
@@ -156,15 +156,15 @@ protected:
 
 public:
    TGLClipSet();
-   virtual ~TGLClipSet();
+   ~TGLClipSet() override;
 
-   virtual Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
-   virtual Bool_t MouseStillInside(TGLOvlSelectRecord& selRec);
-   virtual Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
-                         Event_t* event);
-   virtual void   MouseLeave();
+   Bool_t MouseEnter(TGLOvlSelectRecord& selRec) override;
+   Bool_t MouseStillInside(TGLOvlSelectRecord& selRec) override;
+   Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
+                         Event_t* event) override;
+   void   MouseLeave() override;
 
-   virtual void Render(TGLRnrCtx& rnrCtx);
+   void Render(TGLRnrCtx& rnrCtx) override;
 
    Bool_t    IsClipping()     const { return fCurrentClip != 0; }
    TGLClip*  GetCurrentClip() const { return fCurrentClip; }

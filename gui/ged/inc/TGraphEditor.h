@@ -54,8 +54,8 @@ public:
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGraphEditor();
-   virtual void SetModel(TObject* obj);
+   ~TGraphEditor() override;
+   void SetModel(TObject* obj) override;
 
    // slots related to graph attributes
    virtual void DoShape();

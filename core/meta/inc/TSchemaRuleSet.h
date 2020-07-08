@@ -42,7 +42,7 @@ namespace Detail {
       };
 
       TSchemaRuleSet();
-      virtual ~TSchemaRuleSet();
+      ~TSchemaRuleSet() override;
 
       Bool_t              AddRule( TSchemaRule* rule, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = 0 );
       Bool_t              AddRules( TSchemaRuleSet* rules, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = 0);
@@ -61,10 +61,10 @@ namespace Detail {
       void                RemoveRules( TObjArray* rules );
       void                SetClass( TClass* cls );
 
-      void                ls(Option_t *option="") const;
+      void                ls(Option_t *option="") const override;
       void                AsString(TString &out) const;
 
-      ClassDef( TSchemaRuleSet, 1 )
+      ClassDefOverride(TSchemaRuleSet, 1)
 
    private:
       TObjArray* fPersistentRules; //  Array of the rules that will be embeded in the file

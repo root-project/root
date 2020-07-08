@@ -34,7 +34,7 @@ class FTGL_EXPORT FTOutlineGlyph : public FTGlyph
         /**
          * Destructor
          */
-        virtual ~FTOutlineGlyph();
+        ~FTOutlineGlyph() override;
 
         /**
          * Renders this glyph at the current pen position.
@@ -42,7 +42,7 @@ class FTGL_EXPORT FTOutlineGlyph : public FTGlyph
          * @param pen The current pen position.
          * @return    The advance distance for this glyph.
          */
-        virtual const FTPoint& Render( const FTPoint& pen);
+        const FTPoint& Render( const FTPoint& pen) override;
 
     private:
         /**

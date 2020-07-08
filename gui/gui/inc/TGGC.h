@@ -44,7 +44,7 @@ protected:
 public:
    TGGC(GCValues_t *values = 0);
    TGGC(const TGGC &g);
-   virtual ~TGGC();
+   ~TGGC() override;
    TGGC &operator=(const TGGC &rhs);
 
    GContext_t GetGC() const { return fContext; }
@@ -102,10 +102,10 @@ public:
    const char       *GetDashes() const { return fValues.fDashes; }
    Int_t             GetArcMode() const { return fValues.fArcMode; }
 
-   void Print(Option_t *option="") const;
-   void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void Print(Option_t *option="") const override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGGC,0)  // Graphics context
+   ClassDefOverride(TGGC, 0) // Graphics context
 };
 
 
@@ -128,7 +128,7 @@ protected:
 
 public:
    TGGCPool(TGClient *client);
-   virtual ~TGGCPool();
+   ~TGGCPool() override;
 
    TGGC *GetGC(GCValues_t *values, Bool_t rw = kFALSE);
    TGGC *GetGC(GContext_t gct);
@@ -138,9 +138,9 @@ public:
    TGGC *FindGC(const TGGC *gc);
    TGGC *FindGC(GContext_t gc);
 
-   void  Print(Option_t *option="") const;
+   void  Print(Option_t *option="") const override;
 
-   ClassDef(TGGCPool,0)  // Graphics context pool
+   ClassDefOverride(TGGCPool, 0) // Graphics context pool
 };
 
 #endif

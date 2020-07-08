@@ -80,7 +80,7 @@ protected:
 
 public:
    TEveParamList(const char* n="TEveParamList", const char* t="", Bool_t doColor=kFALSE);
-   virtual ~TEveParamList() {}
+   ~TEveParamList() override {}
 
    void AddParameter(const FloatConfig_t& parameter) { fFloatParameters.push_back(parameter); }
    void AddParameter(const IntConfig_t& parameter)   { fIntParameters.push_back(parameter); }
@@ -137,9 +137,9 @@ protected:
 public:
    TEveParamListEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
          UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveParamListEditor() {}
+   ~TEveParamListEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    // Declare callback/slot methods
    void DoIntUpdate();

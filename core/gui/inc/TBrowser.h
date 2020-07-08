@@ -76,7 +76,7 @@ public:
    //    Create(new TBrowserObject(obj,gROOT->GetClass(typeid(T)),objname));
    // }
 
-   virtual ~TBrowser();
+   ~TBrowser() override;
 
    void          Add(TObject *obj,             const char *name = 0, Int_t check = -1);
    void          Add(void    *obj, TClass *cl, const char *name = 0, Int_t check = -1);
@@ -96,12 +96,12 @@ public:
    TObject      *GetSelected() const           { return fLastSelectedObject; }
    void          SetRefreshFlag(Bool_t flag)   { fNeedRefresh = flag; }
    void          Iconify()                     { if (fImp) fImp->Iconify(); }
-   virtual void  RecursiveRemove(TObject *obj);
+   void  RecursiveRemove(TObject *obj) override;
    void          Refresh();
    void          SetSelected(TObject *clickedObject);
    void          Show()                        { if (fImp) fImp->Show(); }
-   void          SetDrawOption(Option_t *option="") { if (fImp) fImp->SetDrawOption(option); }
-   Option_t     *GetDrawOption() const { return  (fImp) ? fImp->GetDrawOption() : 0; }
+   void          SetDrawOption(Option_t *option="") override { if (fImp) fImp->SetDrawOption(option); }
+   Option_t     *GetDrawOption() const override { return  (fImp) ? fImp->GetDrawOption() : 0; }
 
    Long_t        ExecPlugin(const char *name = 0, const char *fname = 0,
                             const char *cmd = 0, Int_t pos = 1, Int_t subpos = -1) {
@@ -115,7 +115,7 @@ public:
                  }
    void          StopEmbedding(const char *name = "") { if (fImp) fImp->StopEmbedding(name); }
 
-   ClassDef(TBrowser,0)  //ROOT Object Browser
+   ClassDefOverride(TBrowser, 0) // ROOT Object Browser
 };
 
 #endif

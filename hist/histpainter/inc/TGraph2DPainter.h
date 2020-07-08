@@ -74,10 +74,10 @@ public:
    TGraph2DPainter(TGraphDelaunay *gd);
    TGraph2DPainter(TGraphDelaunay2D *gd);
 
-   virtual ~TGraph2DPainter();
+   ~TGraph2DPainter() override;
 
    TList *GetContourList(Double_t contour);
-   void   Paint(Option_t *option);
+   void   Paint(Option_t *option) override;
    void   PaintContour(Option_t *option);
    void   PaintErrors(Option_t *option);
    void   PaintPolyMarker(Option_t *option);

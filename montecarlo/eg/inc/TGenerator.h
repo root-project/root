@@ -162,11 +162,11 @@ public:
 
    TGenerator(): fPtCut(0), fShowNeutrons(kTRUE), fParticles(0) { } //Used by Dictionary
    TGenerator(const char *name, const char *title="Generator class");
-   virtual ~TGenerator();
-   virtual void            Browse(TBrowser *b);
-   virtual Int_t           DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void            Draw(Option_t *option="");
-   virtual void            ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   ~TGenerator() override;
+   void            Browse(TBrowser *b) override;
+   Int_t           DistancetoPrimitive(Int_t px, Int_t py) override;
+   void            Draw(Option_t *option="") override;
+   void            ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void            GenerateEvent();
    virtual Double_t        GetParameter(const char* /*name*/) const { return 0.; }
    virtual Int_t           ImportParticles(TClonesArray *particles, Option_t *option="");
@@ -176,7 +176,7 @@ public:
    virtual TObjArray      *GetListOfParticles() const {return fParticles;}
    virtual TObjArray      *GetPrimaries(Option_t *option="") {return ImportParticles(option);}
    Float_t                 GetPtCut() const {return fPtCut;}
-   virtual void            Paint(Option_t *option="");
+   void            Paint(Option_t *option="") override;
    virtual void            SetParameter(const char* /*name*/,Double_t /*val*/){}
    virtual void            SetPtCut(Float_t ptcut=0); // *MENU*
    virtual void            SetViewRadius(Float_t rbox = 1000); // *MENU*

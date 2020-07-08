@@ -24,7 +24,7 @@ protected:
    TBufferText(TBuffer::EMode mode, TObject *parent = nullptr);
 
 public:
-   virtual ~TBufferText();
+   ~TBufferText() override;
 
    // virtual TBuffer methods, which are generic for all text-based streamers
 

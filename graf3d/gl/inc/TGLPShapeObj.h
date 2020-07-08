@@ -26,9 +26,9 @@ public:
    TGLPShapeObj() : TObject(), fPShape(0), fViewer(0) {}
    TGLPShapeObj(TGLPhysicalShape* sh, TGLViewer* v) :
       TObject(), fPShape(sh), fViewer(v) {}
-   virtual ~TGLPShapeObj() {}
+   ~TGLPShapeObj() override {}
 
-   virtual const char* GetName() const { return "Selected"; }
+   const char* GetName() const override { return "Selected"; }
 
 private:
    TGLPShapeObj(const TGLPShapeObj &); // Not implemented

@@ -41,14 +41,14 @@ namespace ROOT {
          typedef void (*ReadRawFuncPtr_t)( char*, TBuffer&);
 
          TSchemaRule();
-         virtual ~TSchemaRule();
+         ~TSchemaRule() override;
 
          TSchemaRule( const TSchemaRule& rhs );
          TSchemaRule& operator = ( const TSchemaRule& rhs );
          Bool_t operator == ( const TSchemaRule& rhs ) const;
 
 
-         void             Clear(Option_t * /*option*/ ="");
+         void             Clear(Option_t * /*option*/ ="") override;
          Bool_t           SetFromRule( const char *rule );
 
          const char      *GetVersion( ) const;
@@ -88,9 +88,9 @@ namespace ROOT {
          Bool_t           Conflicts( const TSchemaRule* rule ) const;
 
          void             AsString( TString &out, const char *options = "" ) const;
-         void             ls(Option_t *option="") const;
+         void             ls(Option_t *option="") const override;
 
-         ClassDef( TSchemaRule, 1 );
+         ClassDefOverride(TSchemaRule, 1);
 
       private:
 

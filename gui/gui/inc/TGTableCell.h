@@ -44,12 +44,12 @@ protected:
    static const TGGC   *fgDefaultGC;   // Default graphics context
    static const TGFont *fgDefaultFont; // Default font
 
-   virtual void DoRedraw();
-   virtual void DrawBorder();
+   void DoRedraw() override;
+   void DrawBorder() override;
    virtual void DrawBorder(Handle_t id, Int_t x, Int_t y);
    virtual void MoveDraw(Int_t x, Int_t y);
-   virtual void Resize(UInt_t width, UInt_t height);
-   virtual void Resize(TGDimension newsize);
+   void Resize(UInt_t width, UInt_t height) override;
+   void Resize(TGDimension newsize) override;
 
    virtual void Highlight();
    void         Init(Bool_t resize);
@@ -78,9 +78,9 @@ public:
 //                UInt_t height, GContext_t norm = GetDefaultGC()(),
 //                FontStruct_t font = GetDefaultFontStruct(),
 //                UInt_t option = 0, Bool_t resize = kTRUE);
-   virtual ~TGTableCell();
+   ~TGTableCell() override;
 
-   virtual void DrawCopy(Handle_t id, Int_t x, Int_t y);
+   void DrawCopy(Handle_t id, Int_t x, Int_t y) override;
 
    virtual void SetLabel(const char *label);
 

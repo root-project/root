@@ -30,15 +30,15 @@ namespace textinput {
   // Base class for output to a terminal.
   class TerminalDisplay: public Display {
   public:
-    ~TerminalDisplay();
+    ~TerminalDisplay() override;
     static TerminalDisplay* Create();
 
-    void NotifyTextChange(Range r);
-    void NotifyCursorChange();
-    void NotifyResetInput();
-    void NotifyError();
-    void Detach();
-    void DisplayInfo(const std::vector<std::string>& Options);
+    void NotifyTextChange(Range r) override;
+    void NotifyCursorChange() override;
+    void NotifyResetInput() override;
+    void NotifyError() override;
+    void Detach() override;
+    void DisplayInfo(const std::vector<std::string>& Options) override;
     bool IsTTY() const { return fIsTTY; }
 
   protected:

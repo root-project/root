@@ -149,7 +149,7 @@ private:
 
 public:
    /** Destructor */
-   ~TBufferMergerFile();
+   ~TBufferMergerFile() override;
 
    using TMemFile::Write;
 
@@ -160,7 +160,7 @@ public:
     * This function must be called before the TBufferMergerFile gets destroyed,
     * or no data is appended to the TBufferMerger.
     */
-   virtual Int_t Write(const char *name = nullptr, Int_t opt = 0, Int_t bufsize = 0) override;
+   Int_t Write(const char *name = nullptr, Int_t opt = 0, Int_t bufsize = 0) override;
 
    ClassDefOverride(TBufferMergerFile, 0);
 };

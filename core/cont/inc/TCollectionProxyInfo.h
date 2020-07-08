@@ -765,7 +765,7 @@ namespace Detail {
       typedef Cont_t                  *PCont_t;
       typedef Value_t                 *PValue_t;
 
-      virtual ~Type() {}
+      ~Type() override {}
 
       static inline PCont_t object(void* ptr)   {
          return PCont_t(PEnv_t(ptr)->fObject);

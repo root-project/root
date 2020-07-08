@@ -31,7 +31,7 @@ public:
    TCutG(const char *name, Int_t n=0);
    TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y);
    TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y);
-   virtual ~TCutG();
+   ~TCutG() override;
 
    TCutG &operator=(const TCutG &);
    virtual Double_t Area() const;
@@ -41,7 +41,7 @@ public:
    const char      *GetVarX() const {return fVarX.Data();}
    const char      *GetVarY() const {return fVarY.Data();}
    virtual Double_t IntegralHist(TH2 *h, Option_t *option="") const;
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetObjectX(TObject *obj);
    virtual void     SetObjectY(TObject *obj);
    virtual void     SetVarX(const char *varx); // *MENU*

@@ -42,7 +42,7 @@ class TSQLClassInfo final : public TObject {
 public:
    TSQLClassInfo() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TSQLClassInfo(Long64_t classid, const char *classname, Int_t version);
-   virtual ~TSQLClassInfo();
+   ~TSQLClassInfo() override;
 
    Long64_t GetClassId() const { return fClassId; }
 

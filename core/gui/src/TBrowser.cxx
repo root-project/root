@@ -46,7 +46,7 @@ protected:
 public:
    TBrowserTimer(TBrowser *b, Long_t ms = 1000)
       : TTimer(ms, kTRUE), fBrowser(b), fActivate(kFALSE) { }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 /** \class TBrowserObject
@@ -60,11 +60,11 @@ class TBrowserObject : public TNamed
 public:
 
    TBrowserObject(void *obj, TClass *cl, const char *brname);
-   ~TBrowserObject(){;}
+   ~TBrowserObject() override{;}
 
-   void    Browse(TBrowser* b);
-   Bool_t  IsFolder() const;
-   TClass *IsA() const { return fClass; }
+   void    Browse(TBrowser* b) override;
+   Bool_t  IsFolder() const override;
+   TClass *IsA() const override { return fClass; }
 
 private:
    void     *fObj;   //! pointer to the foreign object

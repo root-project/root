@@ -77,7 +77,7 @@ private:
 
 public:
 
-   ~TClingDataMemberInfo() { delete fClassInfo; }
+   ~TClingDataMemberInfo() override { delete fClassInfo; }
 
    explicit TClingDataMemberInfo(cling::Interpreter *interp)
    : TClingDeclInfo(nullptr), fInterp(interp), fClassInfo(0), fFirstTime(true), fContextIdx(0U)

@@ -47,14 +47,14 @@ public:
    TTreeRow();
    TTreeRow(Int_t nfields);
    TTreeRow(Int_t nfields, const Int_t *fields, const char *row);
-   virtual ~TTreeRow();
+   ~TTreeRow() override;
 
-   void        Close(Option_t *option="");
-   ULong_t     GetFieldLength(Int_t field);
-   const char *GetField(Int_t field);
+   void        Close(Option_t *option="") override;
+   ULong_t     GetFieldLength(Int_t field) override;
+   const char *GetField(Int_t field) override;
    void        SetRow(const Int_t *fields, const char *row);
 
-   ClassDef(TTreeRow,1)  // One row of an TTree query result
+   ClassDefOverride(TTreeRow, 1) // One row of an TTree query result
 };
 
 #endif

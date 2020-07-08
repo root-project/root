@@ -542,7 +542,7 @@ public:
    TDumpMembers(bool noAddr): fNoAddr(noAddr) { }
 
    using TMemberInspector::Inspect;
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -739,7 +739,7 @@ public:
       fRealDataClass = cl;
    }
    using TMemberInspector::Inspect;
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
 
 };
 
@@ -884,10 +884,10 @@ public:
    TAutoInspector(TBrowser *b) {
       // main constructor.
       fBrowser = b; fCount = 0; }
-   virtual ~TAutoInspector() { }
+   ~TAutoInspector() override { }
    using TMemberInspector::Inspect;
-   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
-   virtual Bool_t IsTreatingNonAccessibleTypes() {return kFALSE;}
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
+   Bool_t IsTreatingNonAccessibleTypes() override {return kFALSE;}
 };
 
 ////////////////////////////////////////////////////////////////////////////////

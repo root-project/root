@@ -49,7 +49,7 @@ public:
 
 public:
    TEveVSD(const char* name="TEveVSD", const char* title="");
-   virtual ~TEveVSD();
+   ~TEveVSD() override;
 
    virtual void SetDirectory(TDirectory* dir);
 

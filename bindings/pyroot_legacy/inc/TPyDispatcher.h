@@ -49,7 +49,7 @@ public:
    TPyDispatcher( PyObject* callable );
    TPyDispatcher( const TPyDispatcher& );
    TPyDispatcher& operator=( const TPyDispatcher& );
-   ~TPyDispatcher();
+   ~TPyDispatcher() override;
 
 public:
 #ifndef __CINT__

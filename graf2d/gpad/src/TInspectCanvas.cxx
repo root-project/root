@@ -38,13 +38,13 @@ class TInspectorObject : public TObject
 public:
 
    TInspectorObject(void *obj, TClass *cl) : fObj(obj),fClass(cl) {};
-   ~TInspectorObject(){;}
+   ~TInspectorObject() override{;}
 
    void   *GetObject() const { return fObj; };
-   void    Inspect() const {
+   void    Inspect() const override {
       gGuiFactory->CreateInspectorImp(this, 400, 200);
    };
-   TClass *IsA() const { return fClass; }
+   TClass *IsA() const override { return fClass; }
 
 private:
    void     *fObj;   //! pointer to the foreign object

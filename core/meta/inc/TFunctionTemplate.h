@@ -32,15 +32,15 @@ public:
    TFunctionTemplate(FuncTempInfo_t *info, TClass *cl);
    TFunctionTemplate(const TFunctionTemplate &orig);
    TFunctionTemplate& operator=(const TFunctionTemplate &rhs);
-   virtual            ~TFunctionTemplate();
-   virtual TObject   *Clone(const char *newname="") const;
+              ~TFunctionTemplate() override;
+   TObject   *Clone(const char *newname="") const override;
 
    DeclId_t            GetDeclId() const;
    UInt_t              GetTemplateNargs() const;
    UInt_t              GetTemplateMinReqArgs() const;
 
    virtual Bool_t      IsValid();
-   Long_t              Property() const;
+   Long_t              Property() const override;
    Long_t              ExtraProperty() const;
 
    virtual bool        Update(FuncTempInfo_t *info);

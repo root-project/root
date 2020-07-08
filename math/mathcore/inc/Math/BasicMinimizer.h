@@ -64,7 +64,7 @@ public:
    /**
       Destructor
    */
-   virtual ~BasicMinimizer ();
+   ~BasicMinimizer () override;
 
 private:
    // usually copying is non trivial, so we make this unaccessible
@@ -85,64 +85,64 @@ private:
 public:
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func);
+   void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 
    /// set gradient the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func);
+   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
 
    /// set free variable
-   virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step);
+   bool SetVariable(unsigned int ivar, const std::string & name, double val, double step) override;
 
 
    /// set lower limit variable  (override if minimizer supports them )
-   virtual bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower );
+   bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower ) override;
    /// set upper limit variable (override if minimizer supports them )
-   virtual bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper );
+   bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ) override;
    /// set upper/lower limited variable (override if minimizer supports them )
-   virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */);
+   bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */) override;
    /// set fixed variable (override if minimizer supports them )
-   virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);
+   bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */) override;
    /// set the value of an existing variable
-   virtual bool SetVariableValue(unsigned int ivar, double val );
+   bool SetVariableValue(unsigned int ivar, double val ) override;
    /// set the values of all existing variables (array must be dimensioned to the size of existing parameters)
-   virtual bool SetVariableValues(const double * x);
+   bool SetVariableValues(const double * x) override;
    /// set the step size of an already existing variable
-   virtual bool SetVariableStepSize(unsigned int ivar, double step );
+   bool SetVariableStepSize(unsigned int ivar, double step ) override;
    /// set the lower-limit of an already existing variable
-   virtual bool SetVariableLowerLimit(unsigned int ivar, double lower);
+   bool SetVariableLowerLimit(unsigned int ivar, double lower) override;
    /// set the upper-limit of an already existing variable
-   virtual bool SetVariableUpperLimit(unsigned int ivar, double upper);
+   bool SetVariableUpperLimit(unsigned int ivar, double upper) override;
    /// set the limits of an already existing variable
-   virtual bool SetVariableLimits(unsigned int ivar, double lower, double upper);
+   bool SetVariableLimits(unsigned int ivar, double lower, double upper) override;
    /// fix an existing variable
-   virtual bool FixVariable(unsigned int ivar);
+   bool FixVariable(unsigned int ivar) override;
    /// release an existing variable
-   virtual bool ReleaseVariable(unsigned int ivar);
+   bool ReleaseVariable(unsigned int ivar) override;
    /// query if an existing variable is fixed (i.e. considered constant in the minimization)
    /// note that by default all variables are not fixed
-   virtual bool IsFixedVariable(unsigned int ivar)  const;
+   bool IsFixedVariable(unsigned int ivar)  const override;
    /// get variable settings in a variable object (like ROOT::Fit::ParamsSettings)
-   virtual bool GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & varObj) const;
+   bool GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & varObj) const override;
    /// get name of variables (override if minimizer support storing of variable names)
-   virtual std::string VariableName(unsigned int ivar) const;
+   std::string VariableName(unsigned int ivar) const override;
    /// get index of variable given a variable given a name
    /// return -1 if variable is not found
-   virtual int VariableIndex(const std::string & name) const;
+   int VariableIndex(const std::string & name) const override;
 
    /// method to perform the minimization
-   virtual  bool Minimize();
+    bool Minimize() override;
 
    /// return minimum function value
-   virtual double MinValue() const { return fMinVal; }
+   double MinValue() const override { return fMinVal; }
 
    /// return  pointer to X values at the minimum
-   virtual const double *  X() const { return &fValues.front(); }
+   const double *  X() const override { return &fValues.front(); }
 
    /// number of dimensions
-   virtual unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
    /// number of free variables (real dimension of the problem)
-   virtual unsigned int NFree() const;
+   unsigned int NFree() const override;
 
    /// total number of parameter defined
    virtual unsigned int NPar() const { return fValues.size(); }

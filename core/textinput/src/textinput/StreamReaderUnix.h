@@ -27,7 +27,7 @@ namespace textinput {
   class StreamReaderUnix: public StreamReader {
   public:
     StreamReaderUnix();
-    ~StreamReaderUnix();
+    ~StreamReaderUnix() override;
 
     void GrabInputFocus() override;
     void ReleaseInputFocus() override;

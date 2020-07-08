@@ -45,9 +45,9 @@ private:
 
 public:
    TStructViewer(void* ptr = NULL, const char * clname = NULL);
-   ~TStructViewer();
+   ~TStructViewer() override;
 
-   void     Draw(Option_t *option = "");
+   void     Draw(Option_t *option = "") override;
    TCanvas* GetCanvas();
    TGMainFrame* GetFrame();
    TColor   GetColor(const char* typeName);

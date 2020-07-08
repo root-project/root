@@ -56,8 +56,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoTorusEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoTorusEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoR();
    void           DoRmin();

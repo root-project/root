@@ -46,9 +46,9 @@ public:
                   Int_t backlog = kDefaultBacklog,
                   Int_t tcpwindowsize = -1);
 
-   virtual ~TPServerSocket() { }
+   ~TPServerSocket() override { }
 
-   virtual TSocket *Accept(UChar_t Opt = kSrvNoAuth);
+   TSocket *Accept(UChar_t Opt = kSrvNoAuth) override;
 
    ClassDef(TPServerSocket,0)  // Parallel server socket
 };

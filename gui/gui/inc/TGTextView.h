@@ -59,10 +59,10 @@ protected:
    static const TGGC   *fgDefaultSelectedBackgroundGC;
 
    void Init(Pixel_t bg);
-   virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
    virtual void Mark(Long_t xPos, Long_t yPos);
    virtual void UnMark();
-   virtual void Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
+   void Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
    virtual void HLayout();
    virtual void VLayout();
 
@@ -83,7 +83,7 @@ public:
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, const char *string,
               Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
 
-   virtual ~TGTextView();
+   ~TGTextView() override;
 
    virtual Bool_t IsSaved() { fIsSaved = fText->IsSaved(); return fIsSaved;}
    virtual Long_t ToObjXCoord(Long_t xCoord, Long_t line);
@@ -93,7 +93,7 @@ public:
    virtual void   AdjustWidth();
    virtual Bool_t LoadFile(const char *fname, long startpos = 0, long length = -1);
    virtual Bool_t LoadBuffer(const char *txtbuf);
-   virtual void   Clear(Option_t * = "");
+   void   Clear(Option_t * = "") override;
    virtual Bool_t Copy();
    virtual Bool_t SelectAll();
    virtual Bool_t Search(const char *string, Bool_t direction, Bool_t caseSensitive);
@@ -110,18 +110,18 @@ public:
    virtual void   ShowBottom();
    virtual void   ShowTop();
 
-   virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
+   void   SavePrimitive(std::ostream &out, Option_t * = "") override;
    virtual void   SetText(TGText *text);
    virtual void   AddText(TGText *text);
    virtual void   AddLine(const char *string);
    virtual void   AddLineFast(const char *string);
    virtual void   Update();
-   virtual void   Layout();
+   void   Layout() override;
 
    virtual void   SetBackground(Pixel_t p);
    virtual void   SetSelectBack(Pixel_t p);
    virtual void   SetSelectFore(Pixel_t p);
-   virtual void   SetForegroundColor(Pixel_t);
+   void   SetForegroundColor(Pixel_t) override;
 
    TGText        *GetText() const { return fText; }
 
@@ -129,19 +129,19 @@ public:
    Bool_t IsReadOnly() const { return fReadOnly; }
    Bool_t IsMarked() const { return fIsMarked; }
 
-   virtual Bool_t HandleDNDDrop(TDNDData *data);
-   virtual Atom_t HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
-                                    Int_t xroot, Int_t yroot);
-   virtual Atom_t HandleDNDEnter(Atom_t * typelist);
-   virtual Bool_t HandleDNDLeave();
+   Bool_t HandleDNDDrop(TDNDData *data) override;
+   Atom_t HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
+                                    Int_t xroot, Int_t yroot) override;
+   Atom_t HandleDNDEnter(Atom_t * typelist) override;
+   Bool_t HandleDNDLeave() override;
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleSelectionClear(Event_t *event);
-   virtual Bool_t HandleSelectionRequest(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual Bool_t HandleTimer(TTimer *t);
-   virtual Bool_t HandleCrossing(Event_t *event);
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleDoubleClick(Event_t *event) override;
+   Bool_t HandleSelectionClear(Event_t *event) override;
+   Bool_t HandleSelectionRequest(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   Bool_t HandleTimer(TTimer *t) override;
+   Bool_t HandleCrossing(Event_t *event) override;
 
    virtual void DataChanged() { Emit("DataChanged()"); }  //*SIGNAL*
    virtual void DataDropped(const char *fname) { Emit("DataDropped(char *)", fname); }  //*SIGNAL*
@@ -162,7 +162,7 @@ private:
 
 public:
    TViewTimer(TGView *t, Long_t ms) : TTimer(ms, kTRUE), fView(t) { }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 

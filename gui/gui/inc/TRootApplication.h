@@ -41,18 +41,18 @@ private:
 
 public:
    TRootApplication(const char *appClassName, Int_t *argc, char **argv);
-   virtual ~TRootApplication();
+   ~TRootApplication() override;
 
    TGClient     *Client() const { return fClient; }
 
-   void    Show() { }
-   void    Hide() { }
-   void    Iconify() { }
-   Bool_t  IsCmdThread();
-   void    Init() { }
-   void    Open() { }
-   void    Raise() { }
-   void    Lower() { }
+   void    Show() override { }
+   void    Hide() override { }
+   void    Iconify() override { }
+   Bool_t  IsCmdThread() override;
+   void    Init() override { }
+   void    Open() override { }
+   void    Raise() override { }
+   void    Lower() override { }
 
    ClassDef(TRootApplication,0)  // ROOT native GUI application environment
 };

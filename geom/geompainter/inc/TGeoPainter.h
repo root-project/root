@@ -78,7 +78,7 @@ protected:
 
 public:
    TGeoPainter(TGeoManager *manager);
-   virtual ~TGeoPainter();
+   ~TGeoPainter() override;
 
    void       AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys) override;
    TVirtualGeoTrack *AddTrack(Int_t id, Int_t pdgcode, TObject *part) override;

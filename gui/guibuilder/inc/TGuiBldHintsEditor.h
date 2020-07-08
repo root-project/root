@@ -64,7 +64,7 @@ public:
 
 public:
    TGuiBldHintsEditor(const TGWindow *p, TGuiBldEditor *e);
-   virtual ~TGuiBldHintsEditor() {}
+   ~TGuiBldHintsEditor() override {}
 
    void     ChangeSelected(TGFrame *);
    void     LayoutSubframes(Bool_t on = kTRUE);

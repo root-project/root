@@ -65,7 +65,7 @@ public:
       kHasVersion = 0x08, kHasCustomStreamerMember = 0x10
    };
 
-   ~TClassTable();
+   ~TClassTable() override;
 
    static void          Add(const char *cname, Version_t id,
                             const std::type_info &info, DictFuncPtr_t dict,
@@ -84,7 +84,7 @@ public:
    static TProtoClass  *GetProtoNorm(const char *cname);
    static void          Init();
    static char         *Next();
-   void                 Print(Option_t *option="") const;
+   void                 Print(Option_t *option="") const override;
    static void          PrintTable();
    static void          Remove(const char *cname);
    static void          Terminate();

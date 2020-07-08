@@ -289,7 +289,7 @@ private:
 
 public:
    TGHtmlTextElement(int size);
-   virtual ~TGHtmlTextElement();
+   ~TGHtmlTextElement() override;
 
    Html_32_t    fY;                // y coordinate where text should be rendered
    Html_16_t    fX;                // x coordinate where text should be rendered
@@ -323,13 +323,13 @@ public:
 class TGHtmlMarkupElement : public TGHtmlElement {
 public:
    TGHtmlMarkupElement(int type, int argc, int arglen[], char *argv[]);
-   virtual ~TGHtmlMarkupElement();
+   ~TGHtmlMarkupElement() override;
 
-   virtual const char *MarkupArg(const char *tag, const char *zDefault);
-   virtual int  GetAlignment(int dflt);
-   virtual int  GetOrderedListType(int dflt);
-   virtual int  GetUnorderedListType(int dflt);
-   virtual int  GetVerticalAlignment(int dflt);
+   const char *MarkupArg(const char *tag, const char *zDefault) override;
+   int  GetAlignment(int dflt) override;
+   int  GetOrderedListType(int dflt) override;
+   int  GetUnorderedListType(int dflt) override;
+   int  GetVerticalAlignment(int dflt) override;
 
 public://protected:
    char **fArgv;
@@ -353,7 +353,7 @@ public://protected:
 class TGHtmlTable : public TGHtmlMarkupElement {
 public:
    TGHtmlTable(int type, int argc, int arglen[], char *argv[]);
-   ~TGHtmlTable();
+   ~TGHtmlTable() override;
 
 public:
    Html_u8_t      fBorderWidth;              // Width of the border
@@ -380,7 +380,7 @@ public:
 class TGHtmlCell : public TGHtmlMarkupElement {
 public:
    TGHtmlCell(int type, int argc, int arglen[], char *argv[]);
-   ~TGHtmlCell();
+   ~TGHtmlCell() override;
 
 public:
    Html_16_t      fRowspan;      // Number of rows spanned by this cell
@@ -404,7 +404,7 @@ public:
 class TGHtmlRef : public TGHtmlMarkupElement {
 public:
    TGHtmlRef(int type, int argc, int arglen[], char *argv[]);
-   ~TGHtmlRef();
+   ~TGHtmlRef() override;
 
 public:
    TGHtmlElement *fPOther;      // Pointer to some other Html element
@@ -511,7 +511,7 @@ private:
 public:
    TGHtmlImage(TGHtml *htm, const char *url, const char *width,
                const char *height);
-   virtual ~TGHtmlImage();
+   ~TGHtmlImage() override;
 
 public:
    TGHtml            *fHtml;              // The owner of this image
@@ -710,7 +710,7 @@ public:
 class TGHtmlBlock : public TGHtmlElement {
 public:
    TGHtmlBlock();
-   virtual ~TGHtmlBlock();
+   ~TGHtmlBlock() override;
 
 public:
    char        *fZ;                 // Space to hold text when n > 0
@@ -872,19 +872,19 @@ class THashTable;
 class TGHtml : public TGView {
 public:
    TGHtml(const TGWindow *p, int w, int h, int id = -1);
-   virtual ~TGHtml();
+   ~TGHtml() override;
 
-   virtual Bool_t HandleFocusChange(Event_t *event);
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
+   Bool_t HandleFocusChange(Event_t *event) override;
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
 
-   virtual Bool_t HandleIdleEvent(TGIdleHandler *i);
-   virtual Bool_t HandleTimer(TTimer *timer);
+   Bool_t HandleIdleEvent(TGIdleHandler *i) override;
+   Bool_t HandleTimer(TTimer *timer) override;
 
-   virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t);
+   Bool_t ProcessMessage(Long_t, Long_t, Long_t) override;
 
-   virtual void   DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   virtual Bool_t ItemLayout();
+   void   DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   Bool_t ItemLayout() override;
 
    Bool_t         HandleHtmlInput(TGHtmlInput *pr, Event_t *event);
    Bool_t         HandleRadioButton(TGHtmlInput *p);
@@ -910,7 +910,7 @@ public:   // user commands
 public:   // reloadable methods
 
    // called when the widget is cleared
-   virtual void Clear(Option_t * = "");
+   void Clear(Option_t * = "") override;
 
    // User function to resolve URIs
    virtual char *ResolveUri(const char *uri);
@@ -1119,10 +1119,10 @@ public:
    virtual void CheckToggled(const char *name, Bool_t on, const char *val); // *SIGNAL*
    virtual void RadioChanged(const char *name, const char *val); // *SIGNAL*
    virtual void InputSelected(const char *name, const char *val);   //*SIGNAL*
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
 protected:
-   virtual void UpdateBackgroundStart();
+   void UpdateBackgroundStart() override;
 
 protected:
    TGHtmlElement *fPFirst;          // First HTML token on a list of them all

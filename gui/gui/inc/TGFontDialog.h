@@ -72,14 +72,14 @@ protected:
 
    Bool_t               Build(char **fontList, Int_t cnt);
    void                 GetFontName();
-   virtual void         CloseWindow();
-   virtual Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void         CloseWindow() override;
+   Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
 public:
    TGFontDialog(const TGWindow *parent = 0, const TGWindow *t = 0,
                 FontProp_t *fontProp = 0, const TString &sample = "",
                 char **fontList = 0, Bool_t wait = kTRUE);
-   virtual ~TGFontDialog();
+   ~TGFontDialog() override;
 
    virtual void SetFont(TGFont *font);
    virtual void SetColor(Pixel_t color);

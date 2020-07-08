@@ -48,13 +48,13 @@ protected:
 public:
    TMultiGraph();
    TMultiGraph(const char *name, const char *title);
-   virtual ~TMultiGraph();
+   ~TMultiGraph() override;
 
    virtual void      Add(TGraph *graph, Option_t *chopt="");
    virtual void      Add(TMultiGraph *multigraph, Option_t *chopt="");
-   virtual void      Browse(TBrowser *b);
-   virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void      Draw(Option_t *chopt="");
+   void      Browse(TBrowser *b) override;
+   Int_t     DistancetoPrimitive(Int_t px, Int_t py) override;
+   void      Draw(Option_t *chopt="") override;
    virtual TFitResultPtr Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
    virtual TFitResultPtr Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t rxmin=0, Axis_t rxmax=0);
    virtual void      FitPanel(); // *MENU*
@@ -74,13 +74,13 @@ public:
    const TList      *GetListOfFunctions() const { return fFunctions; }
    TAxis            *GetXaxis();
    TAxis            *GetYaxis();
-   virtual void      Paint(Option_t *chopt="");
+   void      Paint(Option_t *chopt="") override;
    void              PaintPads(Option_t *chopt="");
    void              PaintPolyLine3D(Option_t *chopt="");
    void              PaintReverse(Option_t *chopt="");
-   virtual void      Print(Option_t *chopt="") const;
-   virtual void      RecursiveRemove(TObject *obj);
-   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
+   void      Print(Option_t *chopt="") const override;
+   void      RecursiveRemove(TObject *obj) override;
+   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void      SetMaximum(Double_t maximum=-1111);
    virtual void      SetMinimum(Double_t minimum=-1111);
 

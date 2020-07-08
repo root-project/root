@@ -93,11 +93,11 @@ public:
             Int_t buttons = kMBDismiss, Int_t *ret_code = 0,
             UInt_t options = kVerticalFrame,
             Int_t text_align = kTextCenterX | kTextCenterY);
-   virtual ~TGMsgBox();
+   ~TGMsgBox() override;
 
-   virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   virtual Bool_t HandleKey(Event_t* event);
+   void CloseWindow() override;
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t HandleKey(Event_t* event) override;
 
    ClassDef(TGMsgBox,0)  // A message dialog box
 };

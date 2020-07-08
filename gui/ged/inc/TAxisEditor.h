@@ -69,8 +69,8 @@ public:
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TAxisEditor();
-   virtual void   SetModel(TObject* obj);
+   ~TAxisEditor() override;
+   void   SetModel(TObject* obj) override;
    // slots related to axis attributes
    virtual void   DoTickLength();
    virtual void   DoAxisColor(Pixel_t color);

@@ -187,7 +187,7 @@ protected:
 
 public:
    TGCursorWindow();
-   virtual ~TGCursorWindow();
+   ~TGCursorWindow() override;
 };
 
 static TGCursorWindow *gCursorWin = 0;

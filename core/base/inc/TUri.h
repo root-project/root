@@ -74,7 +74,7 @@ public:
    TUri(const TString &uri);
    TUri(const char *uri);
    TUri &operator=(const TUri &rhs); //copy ctor
-   virtual ~TUri() { }
+   ~TUri() override { }
 
    const TString GetUri() const;
    const TString GetScheme() const { return fScheme; }
@@ -112,8 +112,8 @@ public:
 
    Bool_t SetRelativePart(const TString&);
 
-   void   Print(Option_t *option = "") const;
-   Bool_t IsSortable() const { return kTRUE; }
+   void   Print(Option_t *option = "") const override;
+   Bool_t IsSortable() const override { return kTRUE; }
 
    void Normalise();
    void Reset();

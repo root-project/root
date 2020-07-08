@@ -29,11 +29,11 @@ private:
 
 public:
    TASPluginGS(const char *ext);
-   virtual ~TASPluginGS();
+   ~TASPluginGS() override;
 
-   ASImage *File2ASImage(const char *filename);
+   ASImage *File2ASImage(const char *filename) override;
 
-   ClassDef(TASPluginGS, 0)  // PS/EPS/PDF plugin based on GhostScript interpreter
+   ClassDefOverride(TASPluginGS, 0) // PS/EPS/PDF plugin based on GhostScript interpreter
 };
 
 #endif

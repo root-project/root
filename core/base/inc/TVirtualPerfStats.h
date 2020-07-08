@@ -31,7 +31,7 @@ class TBranch;
 class TVirtualPerfStats : public TObject {
 
 public:
-   virtual ~TVirtualPerfStats() {}
+   ~TVirtualPerfStats() override {}
 
    enum EEventType {
       kUnDefined,
@@ -84,7 +84,7 @@ public:
 
    static const char *EventType(EEventType type);
 
-   ClassDef(TVirtualPerfStats,0)  // ABC for collecting PROOF statistics
+   ClassDefOverride(TVirtualPerfStats, 0) // ABC for collecting PROOF statistics
 };
 
 

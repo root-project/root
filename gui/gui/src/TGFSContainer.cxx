@@ -56,7 +56,7 @@ private:
 
 public:
    TViewUpdateTimer(TGFileContainer *t, Long_t ms) : TTimer(ms, kTRUE) { fContainer = t; }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 
@@ -66,7 +66,7 @@ class TGFileIcon : public TGIcon {
 protected:
    const TGPicture *fLpic;   // icon picture
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
    TGFileIcon(const TGWindow *p, const TGPicture *pic, const TGPicture *lpic,
@@ -82,8 +82,8 @@ class TGFSFrameElement : public TGFrameElement {
 public:
    TGFileContainer  *fContainer;   // file container
 
-   Bool_t IsSortable() const { return kTRUE; }
-   Int_t  Compare(const TObject *obj) const;
+   Bool_t IsSortable() const override { return kTRUE; }
+   Int_t  Compare(const TObject *obj) const override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

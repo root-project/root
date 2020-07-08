@@ -62,7 +62,7 @@ protected :
 public :
    TDecompBase();
    TDecompBase(const TDecompBase &another);
-   virtual ~TDecompBase() {};
+   ~TDecompBase() override {};
 
    inline  Double_t GetTol       () const { return fTol; }
    inline  Double_t GetDet1      () const { return fDet1; }
@@ -86,7 +86,7 @@ public :
 
    virtual Bool_t   MultiSolve (TMatrixD &B);
 
-   void Print(Option_t *opt="") const;
+   void Print(Option_t *opt="") const override;
 
    TDecompBase &operator= (const TDecompBase &source);
 

@@ -84,7 +84,7 @@ protected:
 
 public:
    TGClient(const char *dpyName = 0);
-   virtual ~TGClient();
+   ~TGClient() override;
 
    const TGWindow *GetRoot() const;
    const TGWindow *GetDefaultRoot() const;
@@ -159,7 +159,7 @@ public:
 
    static TGClient *Instance();
 
-   ClassDef(TGClient,0)  // Class making connection to display server
+   ClassDefOverride(TGClient, 0) // Class making connection to display server
 };
 
 #ifndef __CINT__

@@ -83,9 +83,9 @@ protected:
 public:
 
    TGLViewerBase();
-   virtual ~TGLViewerBase();
+   ~TGLViewerBase() override;
 
-   virtual const char* LockIdStr() const;
+   const char* LockIdStr() const override;
 
    TGLSceneInfo* AddScene(TGLSceneBase* scene);
    void          RemoveScene(TGLSceneBase* scene);

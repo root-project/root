@@ -22,7 +22,7 @@ protected:
    TGeoManager                   *fGeom; // Pointer to geometry manager
 public:
    TVirtualGeoConverter(TGeoManager *geom);
-   virtual ~TVirtualGeoConverter();
+   ~TVirtualGeoConverter() override;
 
    virtual void       ConvertGeometry() {}
    static  TVirtualGeoConverter *Instance(TGeoManager *geom=0);

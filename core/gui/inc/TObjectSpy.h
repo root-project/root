@@ -39,9 +39,9 @@ protected:
 
 public:
    TObjectSpy(TObject *obj = nullptr, Bool_t fixMustCleanupBit=kTRUE);
-   virtual ~TObjectSpy();
+   ~TObjectSpy() override;
 
-   virtual void  RecursiveRemove(TObject *obj);
+   void  RecursiveRemove(TObject *obj) override;
    TObject      *GetObject() const { return fObj; }
    void          SetObject(TObject *obj, Bool_t fixMustCleanupBit=kTRUE);
 
@@ -61,9 +61,9 @@ protected:
 
 public:
    TObjectRefSpy(TObject *&obj, Bool_t fixMustCleanupBit=kTRUE);
-   virtual ~TObjectRefSpy();
+   ~TObjectRefSpy() override;
 
-   virtual void  RecursiveRemove(TObject *obj);
+   void  RecursiveRemove(TObject *obj) override;
    TObject      *GetObject() const { return fObj; }
 
    ClassDef(TObjectRefSpy, 0);  // Spy object reference for deletion

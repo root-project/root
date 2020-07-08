@@ -45,10 +45,10 @@ protected:
 
 public:
    TEveShape(const char* n="TEveShape", const char* t="");
-   virtual ~TEveShape();
+   ~TEveShape() override;
 
    // Rendering parameters.
-   virtual void    SetMainColor(Color_t color);
+   void    SetMainColor(Color_t color) override;
 
    virtual Color_t GetFillColor() const { return fFillColor; }
    virtual Color_t GetLineColor() const { return fLineColor; }
@@ -66,13 +66,13 @@ public:
 
    // ----------------------------------------------------------------
 
-   virtual void CopyVizParams(const TEveElement* el);
-   virtual void WriteVizParams(std::ostream& out, const TString& var);
+   void CopyVizParams(const TEveElement* el) override;
+   void WriteVizParams(std::ostream& out, const TString& var) override;
 
    // ----------------------------------------------------------------
 
    // Virtual from TObject
-   virtual void Paint(Option_t* option="");
+   void Paint(Option_t* option="") override;
 
    // Abstract function from TAttBBox:
    // virtual void ComputeBBox();

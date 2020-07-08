@@ -45,16 +45,16 @@ public:
                const char *title = "ROOT Dialog", Bool_t okB = kTRUE,
                Bool_t cancelB = kTRUE, Bool_t applyB = kFALSE,
                Bool_t helpB = kTRUE);
-   virtual ~TRootDialog();
+   ~TRootDialog() override;
 
    virtual void Add(const char *argname, const char *value, const char *type);
    //virtual void Add(TGComboBox *optionSel);
 
    virtual const char *GetParameters();
 
-   virtual void   CloseWindow();
+   void   CloseWindow() override;
    virtual void   Popup();
-   virtual Bool_t HandleKey(Event_t *event);
+   Bool_t HandleKey(Event_t *event) override;
 
    void TabPressed();
 

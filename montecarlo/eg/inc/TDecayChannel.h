@@ -36,7 +36,7 @@ public:
                  Int_t     NDaughters,
                  Int_t*    DaughterPdgCode);
 
-   virtual ~TDecayChannel();
+   ~TDecayChannel() override;
    // ****** accessors
 
    Int_t     Number                () { return fNumber; }

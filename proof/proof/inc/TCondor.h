@@ -41,7 +41,7 @@ public:
    TString  fOrdinal;
    TString  fWorkDir;
 
-   void        Print(Option_t *option="") const;
+   void        Print(Option_t *option="") const override;
 
    ClassDef(TCondorSlave,0)  // Describes a claimed slave
 };
@@ -65,10 +65,10 @@ protected:
 
 public:
    TCondor(const char *pool = "");
-   virtual ~TCondor();
+   ~TCondor() override;
 
 
-   void           Print(Option_t *option="") const;
+   void           Print(Option_t *option="") const override;
    Bool_t         IsValid() const { return fValid; }
 
    TList         *GetVirtualMachines() const;

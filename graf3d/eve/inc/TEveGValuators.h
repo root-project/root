@@ -35,7 +35,7 @@ protected:
 
 public:
    TEveGValuatorBase(const TGWindow *p, const char* title, UInt_t w, UInt_t h, Int_t widgetId=-1);
-   virtual ~TEveGValuatorBase() {}
+   ~TEveGValuatorBase() override {}
 
    virtual void Build(Bool_t connect=kTRUE) = 0;
 
@@ -73,9 +73,9 @@ protected:
 
 public:
    TEveGValuator(const TGWindow *p, const char* title, UInt_t w, UInt_t h, Int_t widgetId=-1);
-   virtual ~TEveGValuator() {}
+   ~TEveGValuator() override {}
 
-   virtual void Build(Bool_t connect=kTRUE);
+   void Build(Bool_t connect=kTRUE) override;
 
    Float_t GetValue() const { return fValue; }
    virtual void SetValue(Float_t v, Bool_t emit=kFALSE);
@@ -117,9 +117,9 @@ protected:
 
 public:
    TEveGDoubleValuator(const TGWindow *p, const char* title, UInt_t w, UInt_t h, Int_t widgetId=-1);
-   virtual ~TEveGDoubleValuator() {}
+   ~TEveGDoubleValuator() override {}
 
-   virtual void Build(Bool_t connect=kTRUE);
+   void Build(Bool_t connect=kTRUE) override;
 
    void MinEntryCallback();
    void MaxEntryCallback();
@@ -162,7 +162,7 @@ protected:
 
 public:
    TEveGTriVecValuator(const TGWindow *p, const char* name, UInt_t w, UInt_t h, Int_t widgetId=-1);
-   virtual ~TEveGTriVecValuator() {}
+   ~TEveGTriVecValuator() override {}
 
    void Build(Bool_t vertical, const char* lab0, const char* lab1, const char* lab2);
 

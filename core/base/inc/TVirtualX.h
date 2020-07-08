@@ -57,7 +57,7 @@ protected:
 public:
    TVirtualX(): fDrawMode() { }
    TVirtualX(const char *name, const char *title);
-   virtual ~TVirtualX() { }
+   ~TVirtualX() override { }
 
    virtual Bool_t    Init(void *display=0);
    virtual void      ClearWindow();
@@ -128,23 +128,23 @@ public:
    virtual void      SetDoubleBufferOFF();
    virtual void      SetDoubleBufferON();
    virtual void      SetDrawMode(EDrawMode mode);
-   virtual void      SetFillColor(Color_t cindex);
-   virtual void      SetFillStyle(Style_t style);
-   virtual void      SetLineColor(Color_t cindex);
+   void      SetFillColor(Color_t cindex) override;
+   void      SetFillStyle(Style_t style) override;
+   void      SetLineColor(Color_t cindex) override;
    virtual void      SetLineType(Int_t n, Int_t *dash);
-   virtual void      SetLineStyle(Style_t linestyle);
-   virtual void      SetLineWidth(Width_t width);
-   virtual void      SetMarkerColor(Color_t cindex);
-   virtual void      SetMarkerSize(Float_t markersize);
-   virtual void      SetMarkerStyle(Style_t markerstyle);
+   void      SetLineStyle(Style_t linestyle) override;
+   void      SetLineWidth(Width_t width) override;
+   void      SetMarkerColor(Color_t cindex) override;
+   void      SetMarkerSize(Float_t markersize) override;
+   void      SetMarkerStyle(Style_t markerstyle) override;
    virtual void      SetOpacity(Int_t percent);
    virtual void      SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b);
-   virtual void      SetTextAlign(Short_t talign=11);
-   virtual void      SetTextColor(Color_t cindex);
+   void      SetTextAlign(Short_t talign=11) override;
+   void      SetTextColor(Color_t cindex) override;
    virtual Int_t     SetTextFont(char *fontname, ETextSetMode mode);
-   virtual void      SetTextFont(Font_t fontnumber);
+   void      SetTextFont(Font_t fontnumber) override;
    virtual void      SetTextMagnitude(Float_t mgn);
-   virtual void      SetTextSize(Float_t textsize);
+   void      SetTextSize(Float_t textsize) override;
    virtual void      Sync(Int_t mode);
    virtual void      UpdateWindow(Int_t mode);
    virtual void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
@@ -331,7 +331,7 @@ public:
 
    static TVirtualX    *&Instance();
 
-   ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
+   ClassDefOverride(TVirtualX, 0) // ABC defining a generic interface to graphics system
 };
 
 #ifndef __CINT__

@@ -47,9 +47,9 @@ public:
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TFrameEditor();
+   ~TFrameEditor() override;
 
-   virtual void   SetModel(TObject* obj);
+   void   SetModel(TObject* obj) override;
    virtual void   DoBorderMode();
    virtual void   DoBorderSize(Int_t size);
 

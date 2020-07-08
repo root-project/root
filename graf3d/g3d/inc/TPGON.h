@@ -29,13 +29,13 @@
 
 class TPGON : public TPCON {
 protected:
-   virtual void    FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const; // Fill the table of cosin
+   void    FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const override; // Fill the table of cosin
 
 public:
    TPGON();
    TPGON(const char *name, const char *title, const char *material, Float_t phi1, Float_t dphi1,
          Int_t npdv, Int_t nz);
-   virtual ~TPGON();
+   ~TPGON() override;
    ClassDef(TPGON,1)  //PGON shape
 };
 

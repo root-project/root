@@ -24,10 +24,10 @@ namespace PyROOT {
    class TMemoryRegulator : public TObject {
    public:
       TMemoryRegulator();
-      ~TMemoryRegulator();
+      ~TMemoryRegulator() override;
 
    // callback for ROOT/CINT
-      virtual void RecursiveRemove( TObject* object );
+      void RecursiveRemove( TObject* object ) override;
 
    // cleanup of all tracked objects
       void ClearProxiedObjects();

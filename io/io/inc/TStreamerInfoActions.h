@@ -111,7 +111,7 @@ namespace TStreamerInfoActions {
       {
          // Usual constructor.
       }
-      ~TConfiguredAction() {
+      ~TConfiguredAction() override {
          // Usual destructor.
          // Idea: the configuration ownership might be moved to a single list so that
          // we can shared them between the optimized and non-optimized list of actions.
@@ -131,7 +131,7 @@ namespace TStreamerInfoActions {
          return fLoopAction(buffer, start_collection, end_collection, loopconf, fConfiguration);
       }
 
-      ClassDef(TConfiguredAction,0); // A configured action
+      ClassDefOverride(TConfiguredAction, 0); // A configured action
    };
 
    struct TIDNode;
@@ -176,7 +176,7 @@ namespace TStreamerInfoActions {
       using SequenceGetter_t = SequencePtr(*)(TStreamerInfo *info, TVirtualCollectionProxy *collectionProxy, TClass *originalClass);
 
       TActionSequence(TVirtualStreamerInfo *info, UInt_t maxdata) : fStreamerInfo(info), fLoopConfig(0) { fActions.reserve(maxdata); };
-      ~TActionSequence() {
+      ~TActionSequence() override {
          delete fLoopConfig;
       }
 
@@ -203,7 +203,7 @@ namespace TStreamerInfoActions {
       TActionSequence *CreateSubSequence(const TIDs &element_ids, size_t offset, SequenceGetter_t create);
       void AddToSubSequence(TActionSequence *sequence, const TIDs &element_ids, Int_t offset, SequenceGetter_t create);
 
-      void Print(Option_t * = "") const;
+      void Print(Option_t * = "") const override;
 
       // Maybe owner unique_ptr
       struct SequencePtr {
@@ -279,7 +279,7 @@ namespace TStreamerInfoActions {
          auto seq = info->GetWriteMemberWiseActions(kFALSE);
          return {seq, kFALSE};
       }
-      ClassDef(TActionSequence,0);
+      ClassDefOverride(TActionSequence, 0);
    };
 
 }

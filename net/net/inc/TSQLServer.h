@@ -69,7 +69,7 @@ public:
       kSQL_TIMESTAMP = 8   // TIMESTAMP -
    };
 
-   virtual ~TSQLServer() { }
+   ~TSQLServer() override { }
 
    virtual void        Close(Option_t *option = "") = 0;
    virtual TSQLResult *Query(const char *sql) = 0;
@@ -113,7 +113,7 @@ public:
    static    void     SetFloatFormat(const char* fmt = "%e");
    static const char* GetFloatFormat();
 
-   ClassDef(TSQLServer,0)  // Connection to SQL server
+   ClassDefOverride(TSQLServer, 0) // Connection to SQL server
 };
 
 #endif

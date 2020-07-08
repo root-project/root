@@ -122,11 +122,11 @@ private:
 public:
    TGLViewerEditor(const TGWindow *p=0, Int_t width=140, Int_t height=30,
                    UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   ~TGLViewerEditor();
+   ~TGLViewerEditor() override;
 
    virtual void ViewerRedraw();
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void SetGuides();
    void DoClearColor(Pixel_t color);

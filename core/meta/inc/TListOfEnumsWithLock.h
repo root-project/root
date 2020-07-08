@@ -95,7 +95,7 @@ class TListOfEnumsWithLockIter : public TListIter
 
    using TListIter::operator=;
 
-   TObject *Next();
+   TObject *Next() override;
 
    ClassDef(TListOfEnumsWithLockIter,0)
 };

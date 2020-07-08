@@ -15,15 +15,15 @@ namespace PyROOT {
       using TMethodHolder::TMethodHolder;
 
    public:
-      virtual PyObject* GetDocString();
-      virtual PyCallable* Clone() { return new TConstructorHolder( *this ); }
+      PyObject* GetDocString() override;
+      PyCallable* Clone() override { return new TConstructorHolder( *this ); }
 
    public:
-      virtual PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
+      PyObject* Call(
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 ) override;
 
    protected:
-      virtual Bool_t InitExecutor_( TExecutor*&, TCallContext* ctxt = 0 );
+      Bool_t InitExecutor_( TExecutor*&, TCallContext* ctxt = 0 ) override;
    };
 
 } // namespace PyROOT

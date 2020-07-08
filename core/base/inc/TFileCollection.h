@@ -61,7 +61,7 @@ public:
    };
    TFileCollection(const char *name = 0, const char *title = 0,
                    const char *file = 0, Int_t nfiles = -1, Int_t firstfile = 1);
-   virtual ~TFileCollection();
+   ~TFileCollection() override;
 
    Int_t           Add(TFileInfo *info);
    Int_t           Add(TFileCollection *coll);
@@ -77,7 +77,7 @@ public:
    Int_t           Update(Long64_t avgsize = -1);
    void            Sort(Bool_t useindex = kFALSE);
    void            SetAnchor(const char *anchor);
-   void            Print(Option_t *option = "") const;
+   void            Print(Option_t *option = "") const override;
 
    void            SetBitAll(UInt_t f);
    void            ResetBitAll(UInt_t f);

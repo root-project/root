@@ -172,7 +172,7 @@ public:
    TDictionary(): fAttributeMap(0), fUpdatingTransactionCount(0) { }
    TDictionary(const char* name): TNamed(name, ""), fAttributeMap(0), fUpdatingTransactionCount(0) { }
    TDictionary(const TDictionary& dict);
-   virtual ~TDictionary();
+   ~TDictionary() override;
 
    TDictionary& operator=(const TDictionary& other);
 
@@ -207,7 +207,7 @@ public:
    };
 
    typedef const void *DeclId_t;
-   ClassDef(TDictionary,2)  //Interface to dictionary
+   ClassDefOverride(TDictionary, 2) // Interface to dictionary
 };
 
 #endif

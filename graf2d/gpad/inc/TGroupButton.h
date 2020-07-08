@@ -24,11 +24,11 @@ private:
 public:
    TGroupButton();
    TGroupButton(const char *groupname, const char *title, const char *method, Double_t x1, Double_t y1,Double_t x2 ,Double_t y2);
-   virtual ~TGroupButton();
+   ~TGroupButton() override;
    virtual void  DisplayColorTable(const char *action, Double_t x0, Double_t y0, Double_t wc, Double_t hc);
    virtual void  ExecuteAction();
-   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
+   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
    ClassDef(TGroupButton,0)  //A user interface button in a group of buttons.
 };
 

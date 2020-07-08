@@ -141,8 +141,8 @@ class TTreeReaderValueFast final : public ROOT::Experimental::Internal::TTreeRea
    protected:
       T* Deserialize(char *) {return nullptr;}
 
-      virtual const char *GetTypeName() override {return "{INCOMPLETE}";}
-      virtual UInt_t GetSize() override {return sizeof(T);}
+      const char *GetTypeName() override {return "{INCOMPLETE}";}
+      UInt_t GetSize() override {return sizeof(T);}
 };
 
 template<>
@@ -160,9 +160,9 @@ class TTreeReaderValueFast<float> final : public ROOT::Experimental::Internal::T
       float& operator*() { return *Get(); }
 
    protected:
-      virtual const char *GetTypeName() override {return "float";}
-      virtual const char *BranchTypeName() override {return "float";}
-      virtual UInt_t GetSize() override {return sizeof(float);}
+      const char *GetTypeName() override {return "float";}
+      const char *BranchTypeName() override {return "float";}
+      UInt_t GetSize() override {return sizeof(float);}
       float * Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
 
       float fTmp;
@@ -185,9 +185,9 @@ class TTreeReaderValueFast<double> final : public ROOT::Experimental::Internal::
       double& operator*() { return *Get(); }
 
    protected:
-      virtual const char *GetTypeName() override {return "double";}
-      virtual const char *BranchTypeName() override {return "double";}
-      virtual UInt_t GetSize() override {return sizeof(double);}
+      const char *GetTypeName() override {return "double";}
+      const char *BranchTypeName() override {return "double";}
+      UInt_t GetSize() override {return sizeof(double);}
       double* Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
 
       double fTmp;
@@ -208,9 +208,9 @@ class TTreeReaderValueFast<Int_t> final : public ROOT::Experimental::Internal::T
       Int_t& operator*() { return *Get(); }
 
    protected:
-      virtual const char *GetTypeName() override {return "integer";}
-      virtual const char *BranchTypeName() override {return "integer";}
-      virtual UInt_t GetSize() override {return sizeof(Int_t);}
+      const char *GetTypeName() override {return "integer";}
+      const char *BranchTypeName() override {return "integer";}
+      UInt_t GetSize() override {return sizeof(Int_t);}
       Int_t* Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
 
       Int_t fTmp;
@@ -231,9 +231,9 @@ class TTreeReaderValueFast<UInt_t> final : public ROOT::Experimental::Internal::
       UInt_t& operator*() { return *Get(); }
 
    protected:
-      virtual const char *GetTypeName() override {return "unsigned integer";}
-      virtual const char *BranchTypeName() override {return "unsigned integer";}
-      virtual UInt_t GetSize() override {return sizeof(UInt_t);}
+      const char *GetTypeName() override {return "unsigned integer";}
+      const char *BranchTypeName() override {return "unsigned integer";}
+      UInt_t GetSize() override {return sizeof(UInt_t);}
       UInt_t* Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
 
       UInt_t fTmp;
@@ -254,9 +254,9 @@ class TTreeReaderValueFast<Bool_t> final : public ROOT::Experimental::Internal::
       Bool_t& operator*() { return *Get(); }
 
    protected:
-      virtual const char *GetTypeName() override {return "unsigned integer";}
-      virtual const char *BranchTypeName() override {return "unsigned integer";}
-      virtual UInt_t GetSize() override {return sizeof(Bool_t);}
+      const char *GetTypeName() override {return "unsigned integer";}
+      const char *BranchTypeName() override {return "unsigned integer";}
+      UInt_t GetSize() override {return sizeof(Bool_t);}
       Bool_t* Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
 
       Bool_t fTmp;

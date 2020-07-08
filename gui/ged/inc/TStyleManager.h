@@ -450,7 +450,7 @@ private:
 
 public:
    TStyleManager(const TGWindow *);
-   virtual ~TStyleManager();
+   ~TStyleManager() override;
 
    static void Show();
    static void Terminate();
@@ -479,7 +479,7 @@ public:
    void DoSelectNoCanvas();                  // SLOT
    void DoSelectCanvas(TVirtualPad *pad,
          TObject *obj, Int_t mouseButton);   // SLOT
-   void CloseWindow();                       // SLOT
+   void CloseWindow() override;                       // SLOT
 
 // GENERAL
    void ModFillColor();                      // SLOT

@@ -41,7 +41,7 @@ private:
    TRotation(const TQuaternion &);
    // Copy constructor.
 
-   virtual ~TRotation() {;};
+   ~TRotation() override {;};
 
    inline Double_t XX() const;
    inline Double_t XY() const;

@@ -69,7 +69,7 @@ protected:
 
 public:
    TSQLTableData(TSQLFile *f = nullptr, TSQLClassInfo *info = nullptr);
-   virtual ~TSQLTableData();
+   ~TSQLTableData() override;
 
    void AddColumn(const char *name, Long64_t value);
    void AddColumn(const char *name, const char *sqltype, const char *value, Bool_t numeric);
@@ -111,7 +111,7 @@ protected:
 
 public:
    TSQLStructure() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
-   virtual ~TSQLStructure();
+   ~TSQLStructure() override;
 
    TSQLStructure *GetParent() const { return fParent; }
    void SetParent(TSQLStructure *p) { fParent = p; }
@@ -161,7 +161,7 @@ public:
    void AddObjectData(TSQLObjectData *objdata);
    TSQLObjectData *GetObjectData(Bool_t search = false);
 
-   virtual void Print(Option_t *option = "") const;
+   void Print(Option_t *option = "") const override;
    void PrintLevel(Int_t level) const;
 
    Bool_t ConvertToTables(TSQLFile *f, Long64_t keyid, TObjArray *cmds);

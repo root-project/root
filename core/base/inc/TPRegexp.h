@@ -115,7 +115,7 @@ public:
    TPMERegexp(const TString& s, UInt_t opts, Int_t nMatchMax = 10);
    TPMERegexp(const TPMERegexp& r);
 
-   virtual ~TPMERegexp() {}
+   ~TPMERegexp() override {}
 
    void    Reset(const TString& s, const TString& opts = "", Int_t nMatchMax = -1);
    void    Reset(const TString& s, UInt_t opts, Int_t nMatchMax = -1);
@@ -150,7 +150,7 @@ protected:
 
 public:
    TStringToken(const TString& fullStr, const TString& splitRe, Bool_t retVoid=kFALSE);
-   virtual ~TStringToken() {}
+   ~TStringToken() override {}
 
    Bool_t NextToken();
    Bool_t AtEnd() const { return fPos >= fFullStr.Length(); }

@@ -52,11 +52,11 @@ public:
    TGToolTip(const TGWindow *p, const TBox *b, const char *text, Long_t delayms);
    TGToolTip(const TBox *b, const char *text, Long_t delayms);
    TGToolTip(Int_t x, Int_t y, const char *text, Long_t delayms);
-   virtual ~TGToolTip();
+   ~TGToolTip() override;
 
-   virtual void DrawBorder();
+   void DrawBorder() override;
 
-   Bool_t HandleTimer(TTimer *t);
+   Bool_t HandleTimer(TTimer *t) override;
    void   Show(Int_t x, Int_t y);    //*SIGNAL*
    void   Hide();                    //*SIGNAL*
    void   Reset();                   //*SIGNAL*

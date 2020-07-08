@@ -65,7 +65,7 @@ protected:
 
 public:
    TEveBoxSet(const char* n="TEveBoxSet", const char* t="");
-   virtual ~TEveBoxSet() {}
+   ~TEveBoxSet() override {}
 
    void Reset(EBoxType_e boxType, Bool_t valIsCol, Int_t chunkSize);
    void Reset();
@@ -79,7 +79,7 @@ public:
 
    void AddHex(const TEveVector& pos, Float_t r, Float_t angle, Float_t depth);
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
    // virtual void Paint(Option_t* option = "");
 
    void Test(Int_t nboxes);

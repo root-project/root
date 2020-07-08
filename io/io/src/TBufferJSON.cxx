@@ -361,7 +361,7 @@ public:
 
    TJSONStackObj() = default;
 
-   ~TJSONStackObj()
+   ~TJSONStackObj() override
    {
       if (fIsElemOwner)
          delete fElem;

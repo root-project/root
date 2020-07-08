@@ -74,7 +74,7 @@ public:
    };
 
    TFileMerger(Bool_t isLocal = kTRUE, Bool_t histoOneGo = kTRUE);
-   virtual ~TFileMerger();
+   ~TFileMerger() override;
 
    Int_t       GetPrintLevel() const { return fPrintLevel; }
    void        SetPrintLevel(Int_t level) { fPrintLevel = level; }
@@ -113,7 +113,7 @@ public:
    virtual Bool_t PartialMerge(Int_t type = kAll | kIncremental);
    virtual void   SetFastMethod(Bool_t fast=kTRUE)  {fFastMethod = fast;}
    virtual void   SetNotrees(Bool_t notrees=kFALSE) {fNoTrees = notrees;}
-   virtual void        RecursiveRemove(TObject *obj);
+   void        RecursiveRemove(TObject *obj) override;
 
    ClassDef(TFileMerger, 6)  // File copying and merging services
 };

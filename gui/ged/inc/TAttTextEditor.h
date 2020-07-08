@@ -51,10 +51,10 @@ public:
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TAttTextEditor();
+   ~TAttTextEditor() override;
 
-   virtual void     SetModel(TObject* obj);
-   virtual Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void     SetModel(TObject* obj) override;
+   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    virtual void     DoTextAlphaColor(ULong_t p);
    virtual void     DoAlpha();
    virtual void     DoAlphaField();

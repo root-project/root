@@ -33,7 +33,7 @@ protected:
 
 public:
    TEveWindowManager(const char* n="TEveWindowManager", const char* t="");
-   virtual ~TEveWindowManager();
+   ~TEveWindowManager() override;
 
    void SelectWindow(TEveWindow* w);
    void DeleteWindow(TEveWindow* w);

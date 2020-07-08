@@ -107,10 +107,10 @@ public:
                   Bool_t reversed = kFALSE,
                   Bool_t mark_ends = kFALSE);
 
-   virtual ~TGDoubleSlider() { }
+   ~TGDoubleSlider() override { }
 
-   virtual Bool_t HandleButton(Event_t *event) = 0;
-   virtual Bool_t HandleMotion(Event_t *event) = 0;
+   Bool_t HandleButton(Event_t *event) override = 0;
+   Bool_t HandleMotion(Event_t *event) override = 0;
 
    virtual void  SetScale(Int_t scale) { fScale = scale; }
    virtual void  SetRange(Float_t min, Float_t max) {
@@ -141,7 +141,7 @@ public:
       else { *min = fSmin; *max = fSmax; }
    }
 
-   virtual void  MapSubwindows() { TGWindow::MapSubwindows(); }
+   void  MapSubwindows() override { TGWindow::MapSubwindows(); }
 
    virtual void  PositionChanged() { Emit("PositionChanged()"); } //*SIGNAL*
    virtual void  Pressed() { Emit("Pressed()"); }                 //*SIGNAL*
@@ -156,7 +156,7 @@ class TGDoubleVSlider : public TGDoubleSlider {
 protected:
    Int_t   fYp;      // vertical slider y position in pixel coordinates
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
    TGDoubleVSlider(const TGWindow *p = 0, UInt_t h = 1, UInt_t type = 1, Int_t id = -1,
@@ -165,13 +165,13 @@ public:
                    Bool_t reversed = kFALSE,
                    Bool_t mark_ends = kFALSE);
 
-   virtual ~TGDoubleVSlider();
+   ~TGDoubleVSlider() override;
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual TGDimension GetDefaultSize() const
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   TGDimension GetDefaultSize() const override
                      { return TGDimension(kDoubleSliderWidth, fHeight); }
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGDoubleVSlider,0)  // Vertical double slider widget
 };
@@ -182,7 +182,7 @@ class TGDoubleHSlider : public TGDoubleSlider {
 protected:
    Int_t       fXp;     // horizontal slider x position in pixel coordinates
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
    TGDoubleHSlider(const TGWindow *p = 0, UInt_t w = 1, UInt_t type = 1, Int_t id = -1,
@@ -191,13 +191,13 @@ public:
                    Bool_t reversed = kFALSE,
                    Bool_t mark_ends = kFALSE);
 
-   virtual ~TGDoubleHSlider();
+   ~TGDoubleHSlider() override;
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual TGDimension GetDefaultSize() const
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   TGDimension GetDefaultSize() const override
                      { return TGDimension(fWidth, kDoubleSliderHeight); }
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGDoubleHSlider,0)  // Horizontal double slider widget
 };

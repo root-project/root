@@ -43,8 +43,8 @@ private:
 public:
    TTreeInput(const TGWindow *p, const TGWindow *main,
               char *strvars, char* strcuts);
-   ~TTreeInput();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
+   ~TTreeInput() override;
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t) override;
 
    ClassDef(TTreeInput, 0)  // Simple input dialog
 

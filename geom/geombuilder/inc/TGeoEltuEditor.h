@@ -52,8 +52,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoEltuEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoEltuEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoA();
    void           DoB();

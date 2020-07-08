@@ -28,12 +28,12 @@ protected:
 public:
 
    TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h);
-   virtual ~TGCommandPlugin();
+   ~TGCommandPlugin() override;
 
    void           CheckRemote(const char * /*str*/);
    void           HandleCommand();
 
-   virtual Bool_t HandleTimer(TTimer *t);
+   Bool_t HandleTimer(TTimer *t) override;
 
    ClassDef(TGCommandPlugin, 0) // Command (I/O redirection) plugin for the new ROOT Browser
 };

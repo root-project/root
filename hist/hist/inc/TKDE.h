@@ -87,7 +87,7 @@ public:
       Instantiate(new ROOT::Math::WrappedFunction<const KernelFunction&>(kernfunc), events, data, dataWeight, xMin, xMax, option, rho);
    }
 
-   virtual ~TKDE();
+   ~TKDE() override;
 
    void Fill(Double_t data);
    void Fill(Double_t data, Double_t weight);
@@ -100,7 +100,7 @@ public:
    void SetTuneFactor(Double_t rho);
    void SetRange(Double_t xMin, Double_t xMax); // By default computed from the data
 
-   virtual void Draw(const Option_t* option = "");
+   void Draw(const Option_t* option = "") override;
 
    Double_t operator()(Double_t x) const;
    Double_t operator()(const Double_t* x, const Double_t* p=0) const;  // Needed for creating TF1

@@ -123,7 +123,7 @@ protected:
 
 public:
    TBufferSQL2(TBuffer::EMode mode, TSQLFile *file = nullptr);
-   virtual ~TBufferSQL2();
+   ~TBufferSQL2() override;
 
    void SetCompressionLevel(int level) { fCompressLevel = level; }
 

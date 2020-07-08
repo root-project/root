@@ -60,7 +60,7 @@ TList *TApplication::fgApplications = nullptr;  // List of available application
 class TIdleTimer : public TTimer {
 public:
    TIdleTimer(Long_t ms) : TTimer(ms, kTRUE) { }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

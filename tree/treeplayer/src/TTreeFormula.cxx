@@ -116,7 +116,7 @@ public:
    TFormLeafInfoMultiVarDim* fMultiDim;
    TDimensionInfo(Int_t code, Int_t oper, Int_t size, TFormLeafInfoMultiVarDim* multiDim)
       : fCode(code), fOper(oper), fSize(size), fMultiDim(multiDim) {};
-   ~TDimensionInfo() {};
+   ~TDimensionInfo() override {};
 };
 
 ////////////////////////////////////////////////////////////////////////////////

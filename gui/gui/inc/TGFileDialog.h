@@ -107,10 +107,10 @@ private:
 public:
    TGFileDialog(const TGWindow *p = 0, const TGWindow *main = 0,
                 EFileDialogMode dlg_type = kFDOpen, TGFileInfo *file_info = 0);
-   virtual ~TGFileDialog();
+   ~TGFileDialog() override;
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   virtual void CloseWindow();
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   void CloseWindow() override;
 
    ClassDef(TGFileDialog,0)  //File selection dialog
 };

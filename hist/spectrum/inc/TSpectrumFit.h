@@ -85,7 +85,7 @@ public:
    };
    TSpectrumFit(void); //default constructor
    TSpectrumFit(Int_t numberPeaks);
-   virtual ~TSpectrumFit();
+   ~TSpectrumFit() override;
 
    //auxiliary functions for 1. parameter fit functions
 protected:

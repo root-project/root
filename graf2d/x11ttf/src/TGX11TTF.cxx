@@ -64,7 +64,7 @@ public:
       fGC = gc; fXftFont = (XftFont *)font;
    }
 
-   ~TXftFontData()
+   ~TXftFontData() override
    {
       if (References() == 1) {
          if (fXftFont) XftFontClose((Display*)gVirtualX->GetDisplay(), fXftFont);

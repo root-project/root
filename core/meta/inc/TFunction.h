@@ -44,8 +44,8 @@ public:
    TFunction(MethodInfo_t *info = 0);
    TFunction(const TFunction &orig);
    TFunction& operator=(const TFunction &rhs);
-   virtual            ~TFunction();
-   virtual TObject    *Clone(const char *newname="") const;
+              ~TFunction() override;
+   TObject    *Clone(const char *newname="") const override;
    virtual const char *GetMangledName() const;
    virtual const char *GetPrototype() const;
    const char         *GetSignature();
@@ -57,14 +57,14 @@ public:
    DeclId_t            GetDeclId() const;
    void               *InterfaceMethod() const;
    virtual Bool_t      IsValid();
-   virtual void        Print(Option_t *option="") const;
-   Long_t              Property() const;
+   void        Print(Option_t *option="") const override;
+   Long_t              Property() const override;
    Long_t              ExtraProperty() const;
    virtual bool        Update(MethodInfo_t *info);
 
-   virtual void        ls(Option_t *option="") const;
+   void        ls(Option_t *option="") const override;
 
-   ClassDef(TFunction,0)  //Dictionary for global function
+   ClassDefOverride(TFunction, 0) // Dictionary for global function
 };
 
 #endif

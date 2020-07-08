@@ -45,7 +45,7 @@ private:
 
 public:
    TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *editor);
-   virtual ~TGuiBldGeometryFrame() { }
+   ~TGuiBldGeometryFrame() override { }
 
    void ResizeSelected();
    void ChangeSelected(TGFrame *frame);

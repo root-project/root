@@ -24,9 +24,9 @@ public:
    TEveMacro();
    TEveMacro(const TEveMacro&);
    TEveMacro(const char* name);
-   virtual ~TEveMacro() {}
+   ~TEveMacro() override {}
 
-   virtual Long_t Exec(const char* params = "0", Int_t* error = 0);
+   Long_t Exec(const char* params = "0", Int_t* error = 0) override;
 
    void ResetRoot();
 

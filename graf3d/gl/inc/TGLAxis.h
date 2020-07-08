@@ -48,7 +48,7 @@ private:
 
 public:
    TGLAxis();
-   virtual ~TGLAxis();
+   ~TGLAxis() override;
 
    void PaintGLAxis             (const Double_t p1[3], const Double_t p2[3],
                                  Double_t wmin , Double_t wmax , Int_t ndiv,

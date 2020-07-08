@@ -74,7 +74,7 @@ public:
 
    TFTP(const char *url, Int_t parallel = 1, Int_t wsize = kDfltWindowSize,
         TSocket *sock = 0);
-   virtual ~TFTP();
+   ~TFTP() override;
 
    void     SetBlockSize(Int_t blockSize);
    Int_t    GetBlockSize() const { return fBlockSize; }
@@ -83,7 +83,7 @@ public:
    Int_t    GetMode() const { return fMode; }
 
    Bool_t   IsOpen() const { return fSocket ? kTRUE : kFALSE; }
-   void     Print(Option_t *opt = "") const;
+   void     Print(Option_t *opt = "") const override;
 
    Long64_t PutFile(const char *file, const char *remoteName = 0);
    Long64_t GetFile(const char *file, const char *localName = 0);
@@ -113,7 +113,7 @@ public:
    void cd(const char *dir) const { ChangeDirectory(dir); }
    void mkdir(const char *dir) const { MakeDirectory(dir); }
    void rmdir(const char *dir) const { DeleteDirectory(dir); }
-   void ls(Option_t *cmd = "") const { ListDirectory(cmd); }
+   void ls(Option_t *cmd = "") const override { ListDirectory(cmd); }
    void pwd() const { PrintDirectory(); }
    void mv(const char *file1, const char *file2) const { RenameFile(file1, file2); }
    void rm(const char *file) const { DeleteFile(file); }

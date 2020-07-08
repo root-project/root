@@ -39,14 +39,14 @@ private:
    TTimer  *fTimer;  //timer for delayed Condor COD suspend
 
 protected:
-   Bool_t   StartSlaves(Bool_t);
+   Bool_t   StartSlaves(Bool_t) override;
    TString  GetJobAd();
 
 public:
    TProofCondor(const char *masterurl, const char *conffile = kPROOF_ConfFile,
                 const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0,
                 const char *alias = 0, TProofMgr *mgr = 0);
-   virtual ~TProofCondor();
+   ~TProofCondor() override;
    virtual void SetActive() { TProof::SetActive(); }
    virtual void SetActive(Bool_t active);
 

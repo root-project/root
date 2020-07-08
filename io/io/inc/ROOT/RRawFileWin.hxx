@@ -41,7 +41,7 @@ protected:
 
 public:
    RRawFileWin(std::string_view url, RRawFile::ROptions options);
-   ~RRawFileWin();
+   ~RRawFileWin() override;
    std::unique_ptr<RRawFile> Clone() const final;
    int GetFeatures() const final { return kFeatureHasSize; }
 };

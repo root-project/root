@@ -42,9 +42,9 @@ protected:
 public:
    TEveTrackEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                    UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveTrackEditor() {}
+   ~TEveTrackEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
    void DoEditPropagator();
 
    ClassDef(TEveTrackEditor, 0); // Editor for TEveTrack class.
@@ -78,10 +78,10 @@ protected:
 public:
    TEveTrackListEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                        UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveTrackListEditor() {}
+   ~TEveTrackListEditor() override {}
 
    void CreateRefsTab();
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoRnrLine();
    void DoRnrPoints();

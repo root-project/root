@@ -60,12 +60,12 @@ protected:
 
 public:
    TTreeFormulaManager();
-   ~TTreeFormulaManager();
+   ~TTreeFormulaManager() override;
 
    virtual void       Add(TTreeFormula*);
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
    virtual Int_t      GetNdata(Bool_t forceLoadDim = kFALSE);
-   virtual Bool_t     Notify() { UpdateFormulaLeaves(); return kTRUE; }
+   Bool_t     Notify() override { UpdateFormulaLeaves(); return kTRUE; }
    virtual void       Remove(TTreeFormula*);
    virtual Bool_t     Sync();
    virtual void       UpdateFormulaLeaves();

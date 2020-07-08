@@ -32,7 +32,7 @@ private:
 public:
    TGLFaceSet(const TBuffer3D & buffer);
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
+   void DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
    void SetFromMesh(const RootCsg::TBaseMesh *m);
    void CalculateNormals();

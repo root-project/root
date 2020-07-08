@@ -66,7 +66,7 @@ protected:
    Bool_t           fRelative;     // kTRUE if pointer position is relative to slider
    const TGPicture *fPointerPic;   // picture to draw pointer
 
-   virtual void     DoRedraw();
+   void     DoRedraw() override;
    virtual void     SetPointerPos(Int_t z, Int_t opt = 0);
 
 public:
@@ -78,7 +78,7 @@ public:
                    Bool_t constrained = kTRUE,
                    Bool_t relative = kFALSE);
 
-   virtual ~TGTripleVSlider();
+   ~TGTripleVSlider() override;
 
    virtual void      PointerPositionChanged() { Emit("PointerPositionChanged()"); } //*SIGNAL*
    virtual void      DrawPointer();
@@ -86,13 +86,13 @@ public:
       if (fReversedScale) return fVmin + fVmax - fSCz;
       else return fSCz;
    }
-   virtual Bool_t    HandleButton(Event_t *event);
-   virtual Bool_t    HandleConfigureNotify(Event_t* event);
-   virtual Bool_t    HandleMotion(Event_t *event);
+   Bool_t    HandleButton(Event_t *event) override;
+   Bool_t    HandleConfigureNotify(Event_t* event) override;
+   Bool_t    HandleMotion(Event_t *event) override;
    virtual void      SetConstrained(Bool_t on = kTRUE);
    virtual void      SetPointerPosition(Float_t pos);
    virtual void      SetRelative(Bool_t rel = kTRUE) { fRelative = rel; }
-   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
+   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGTripleVSlider,0)  // Vertical triple slider widget
 };
@@ -107,7 +107,7 @@ protected:
    Bool_t           fRelative;     // kTRUE if pointer position is relative to slider
    const TGPicture *fPointerPic;   // picture to draw pointer
 
-   virtual void     DoRedraw();
+   void     DoRedraw() override;
    virtual void     SetPointerPos(Int_t z, Int_t opt = 0);
 
 public:
@@ -119,7 +119,7 @@ public:
                    Bool_t constrained = kTRUE,
                    Bool_t relative = kFALSE);
 
-   virtual ~TGTripleHSlider();
+   ~TGTripleHSlider() override;
 
    virtual void      PointerPositionChanged() { Emit("PointerPositionChanged()"); } //*SIGNAL*
    virtual void      DrawPointer();
@@ -127,13 +127,13 @@ public:
       if (fReversedScale) return fVmin + fVmax - fSCz;
       else return fSCz;
    }
-   virtual Bool_t    HandleButton(Event_t *event);
-   virtual Bool_t    HandleConfigureNotify(Event_t* event);
-   virtual Bool_t    HandleMotion(Event_t *event);
+   Bool_t    HandleButton(Event_t *event) override;
+   Bool_t    HandleConfigureNotify(Event_t* event) override;
+   Bool_t    HandleMotion(Event_t *event) override;
    virtual void      SetConstrained(Bool_t on = kTRUE);
    virtual void      SetPointerPosition(Float_t pos);
    virtual void      SetRelative(Bool_t rel = kTRUE) { fRelative = rel; }
-   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
+   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGTripleHSlider,0)  // Horizontal triple slider widget
 };

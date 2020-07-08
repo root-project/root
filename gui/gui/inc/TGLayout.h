@@ -84,7 +84,7 @@ public:
 
    TGLayoutHints(const TGLayoutHints &lh);
 
-   virtual ~TGLayoutHints();
+   ~TGLayoutHints() override;
 
    ULong_t GetLayoutHints() const { return fLayoutHints; }
    Int_t   GetPadTop() const { return fPadtop; }
@@ -98,12 +98,12 @@ public:
    virtual void SetPadLeft(Int_t v)  {  fPadleft = v; }
    virtual void SetPadRight(Int_t v)  {  fPadright = v; }
 
-   void Print(Option_t* option = "") const;
-   void ls(Option_t* option = "") const { Print(option); }
+   void Print(Option_t* option = "") const override;
+   void ls(Option_t* option = "") const override { Print(option); }
 
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGLayoutHints,0)  // Class describing GUI layout hints
+   ClassDefOverride(TGLayoutHints, 0) // Class describing GUI layout hints
 };
 
 // Temporarily public as we need to share this class definition
@@ -122,12 +122,12 @@ public:
 
    TGFrameElement() : fFrame(0), fState(0), fLayout(0) { }
    TGFrameElement(TGFrame *f, TGLayoutHints *l);
-   ~TGFrameElement();
+   ~TGFrameElement() override;
 
-   void Print(Option_t* option = "") const;
-   void ls(Option_t* option = "") const { Print(option); }
+   void Print(Option_t* option = "") const override;
+   void ls(Option_t* option = "") const override { Print(option); }
 
-   ClassDef(TGFrameElement, 0); // Base class used in GUI containers
+   ClassDefOverride(TGFrameElement, 0); // Base class used in GUI containers
 };
 
 
@@ -153,7 +153,7 @@ public:
    virtual Bool_t IsModified() const { return fModified; }
    virtual void   SetModified(Bool_t flag = kTRUE) { fModified = flag; }
 
-   ClassDef(TGLayoutManager,0)  // Layout manager abstract base class
+   ClassDefOverride(TGLayoutManager, 0) // Layout manager abstract base class
 };
 
 
@@ -178,22 +178,22 @@ protected:
 public:
    TGVerticalLayout(TGCompositeFrame *main);
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGVerticalLayout,0)  // Vertical layout manager
+   ClassDefOverride(TGVerticalLayout,0)  // Vertical layout manager
 };
 
 class TGHorizontalLayout : public TGVerticalLayout {
 public:
    TGHorizontalLayout(TGCompositeFrame *main) : TGVerticalLayout(main) { }
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGHorizontalLayout,0)  // Horizontal layout manager
+   ClassDefOverride(TGHorizontalLayout,0)  // Horizontal layout manager
 };
 
 
@@ -212,22 +212,22 @@ public:
    TGRowLayout(TGCompositeFrame *main, Int_t s = 0) :
       TGVerticalLayout(main), fSep(s) { }
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGRowLayout,0)  // Row layout manager
+   ClassDefOverride(TGRowLayout,0)  // Row layout manager
 };
 
 class TGColumnLayout : public TGRowLayout {
 public:
    TGColumnLayout(TGCompositeFrame *main, Int_t s = 0) : TGRowLayout(main, s) { }
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGColumnLayout,0)  // Column layout manager
+   ClassDefOverride(TGColumnLayout,0)  // Column layout manager
 };
 
 
@@ -257,11 +257,11 @@ public:
 
    TGMatrixLayout(TGCompositeFrame *main, UInt_t r, UInt_t c, Int_t s=0, Int_t h=0);
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGMatrixLayout,0)  // Matrix layout manager
+   ClassDefOverride(TGMatrixLayout,0)  // Matrix layout manager
 };
 
 
@@ -289,12 +289,12 @@ protected:
 public:
    TGTileLayout(TGCompositeFrame *main, Int_t sep = 0);
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual Bool_t IsModified() const { return fModified; }
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   Bool_t IsModified() const override { return fModified; }
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGTileLayout,0)  // Tile layout manager
+   ClassDefOverride(TGTileLayout,0)  // Tile layout manager
 };
 
 class TGListLayout : public TGTileLayout {
@@ -302,11 +302,11 @@ public:
    TGListLayout(TGCompositeFrame *main, Int_t sep = 0) :
       TGTileLayout(main, sep) { }
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGListLayout,0)  // Layout manager for TGListView widget
+   ClassDefOverride(TGListLayout,0)  // Layout manager for TGListView widget
 };
 
 class TGListDetailsLayout : public TGTileLayout {
@@ -317,12 +317,12 @@ public:
    TGListDetailsLayout(TGCompositeFrame *main, Int_t sep = 0, UInt_t w = 0) :
       TGTileLayout(main, sep), fWidth(w) { }
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SetDefaultWidth(UInt_t w) { fWidth = w; }
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SetDefaultWidth(UInt_t w) override { fWidth = w; }
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGListDetailsLayout,0)  // Layout manager for TGListView details
+   ClassDefOverride(TGListDetailsLayout,0)  // Layout manager for TGListView details
 };
 
 #endif

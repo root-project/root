@@ -35,7 +35,7 @@ public:
    TGlobal (const TGlobal &);
    TGlobal &operator=(const TGlobal &);
 
-   virtual       ~TGlobal();
+         ~TGlobal() override;
    virtual Int_t  GetArrayDim() const;
    virtual DeclId_t GetDeclId() const;
    virtual Int_t  GetMaxIndex(Int_t dim) const;
@@ -43,10 +43,10 @@ public:
    virtual const char *GetTypeName() const;
    virtual const char *GetFullTypeName() const;
    virtual Bool_t IsValid();
-   virtual Long_t Property() const;
+   Long_t Property() const override;
    virtual bool   Update(DataMemberInfo_t *info);
 
-   ClassDef(TGlobal,2)  //Global variable class
+   ClassDefOverride(TGlobal, 2) // Global variable class
 };
 
 // Class to map the "funcky" globals and be able to add them to the list of globals.
@@ -57,7 +57,7 @@ public:
 
    TGlobalMappedFunction(const char *name, const char *type, GlobalFunc_t funcPtr);
 
-   virtual ~TGlobalMappedFunction() = default;
+   ~TGlobalMappedFunction() override = default;
    Int_t GetArrayDim() const override { return 0; }
    DeclId_t GetDeclId() const override { return (DeclId_t)(fFuncPtr); } // Used as DeclId because of uniqueness
    Int_t GetMaxIndex(Int_t /*dim*/) const override { return -1; }

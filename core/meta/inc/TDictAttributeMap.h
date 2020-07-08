@@ -31,7 +31,7 @@ class TDictAttributeMap : public TObject
 public:
 
    TDictAttributeMap();
-   virtual ~TDictAttributeMap();
+   ~TDictAttributeMap() override;
 
    void        AddProperty(const char* key, const char* value);
    Bool_t      HasKey(const char* key) const;
@@ -39,7 +39,7 @@ public:
    Int_t       GetPropertySize() const { return fStringProperty.GetSize(); }
    TString     RemovePropertyString(const char* key);
    Bool_t      RemoveProperty(const char* key);
-   void        Clear(Option_t* option = "");
+   void        Clear(Option_t* option = "") override;
 
 private:
 

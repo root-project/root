@@ -173,12 +173,12 @@ public:
    TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menu, Int_t w, Int_t h,
                   UInt_t options = 0,
                   Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGMdiMainFrame();
+   ~TGMdiMainFrame() override;
 
-   virtual Bool_t   HandleKey(Event_t *event);
-   virtual Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t   HandleKey(Event_t *event) override;
+   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
-   virtual void     Layout();
+   void     Layout() override;
 
    virtual void     FreeMove(TGMdiFrame *frame);
    virtual void     FreeSize(TGMdiFrame *frame);
@@ -231,7 +231,7 @@ public:
    virtual void     FrameRestored(Int_t id) { Emit("FrameRestored(Int_t)", id); } //*SIGNAL*
    virtual void     FramesArranged(Int_t mode) { Emit("FramesArranged(Int_t)", mode); } //*SIGNAL*
 
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGMdiMainFrame, 0) // MDI main frame
 };
@@ -249,8 +249,8 @@ public:
                   UInt_t options = 0,
                   ULong_t back = GetDefaultFrameBackground());
 
-   virtual Bool_t HandleConfigureNotify(Event_t *event);
-   virtual TGDimension GetDefaultSize() const;
+   Bool_t HandleConfigureNotify(Event_t *event) override;
+   TGDimension GetDefaultSize() const override;
 
    ClassDef(TGMdiContainer, 0) // MDI container
 };

@@ -64,7 +64,7 @@ public:
        : fRowUpb(nrows-1),fRowLwb(0),fColUpb(ncols-1),fColLwb(0) { }
    TMatrixTLazy(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
        : fRowUpb(row_upb),fRowLwb(row_lwb),fColUpb(col_upb),fColLwb(col_lwb) { }
-   virtual ~TMatrixTLazy() {}
+   ~TMatrixTLazy() override {}
 
    inline Int_t GetRowLwb() const { return fRowLwb; }
    inline Int_t GetRowUpb() const { return fRowUpb; }
@@ -105,7 +105,7 @@ public:
        : fRowUpb(nrows-1),fRowLwb(0) { }
    TMatrixTSymLazy(Int_t row_lwb,Int_t row_upb)
        : fRowUpb(row_upb),fRowLwb(row_lwb) { }
-   virtual ~TMatrixTSymLazy() {}
+   ~TMatrixTSymLazy() override {}
 
    inline Int_t GetRowLwb() const { return fRowLwb; }
    inline Int_t GetRowUpb() const { return fRowUpb; }
@@ -122,12 +122,12 @@ public:
 template<class Element> class THaarMatrixT: public TMatrixTLazy<Element> {
 
 private:
-   void FillIn(TMatrixT<Element> &m) const;
+   void FillIn(TMatrixT<Element> &m) const override;
 
 public:
    THaarMatrixT() {}
    THaarMatrixT(Int_t n,Int_t no_cols = 0);
-   virtual ~THaarMatrixT() {}
+   ~THaarMatrixT() override {}
 
    ClassDef(THaarMatrixT,2)  // Template of Haar Matrix class
 };
@@ -141,13 +141,13 @@ public:
 template<class Element> class THilbertMatrixT : public TMatrixTLazy<Element> {
 
 private:
-   void FillIn(TMatrixT<Element> &m) const;
+   void FillIn(TMatrixT<Element> &m) const override;
 
 public:
    THilbertMatrixT() {}
    THilbertMatrixT(Int_t no_rows,Int_t no_cols);
    THilbertMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
-   virtual ~THilbertMatrixT() {}
+   ~THilbertMatrixT() override {}
 
    ClassDef(THilbertMatrixT,2)  // Template of Hilbert Matrix class
 };
@@ -161,13 +161,13 @@ public:
 template<class Element> class THilbertMatrixTSym : public TMatrixTSymLazy<Element> {
 
 private:
-   void FillIn(TMatrixTSym<Element> &m) const;
+   void FillIn(TMatrixTSym<Element> &m) const override;
 
 public:
    THilbertMatrixTSym() {}
    THilbertMatrixTSym(Int_t no_rows);
    THilbertMatrixTSym(Int_t row_lwb,Int_t row_upb);
-   virtual ~THilbertMatrixTSym() {}
+   ~THilbertMatrixTSym() override {}
 
    ClassDef(THilbertMatrixTSym,2)  // Template of Symmetric Hilbert Matrix class
 };

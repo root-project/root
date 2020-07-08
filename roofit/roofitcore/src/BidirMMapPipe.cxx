@@ -61,7 +61,7 @@ namespace BidirMMapPipe_impl {
             /// constructor taking error code, hint on operation (msg)
             BidirMMapPipeException(const char* msg, int err);
             /// return a destcription of what went wrong
-            virtual const char* what() const noexcept { return m_buf; }
+            const char* what() const noexcept override { return m_buf; }
     };
 
     BidirMMapPipeException::BidirMMapPipeException(const char* msg, int err)

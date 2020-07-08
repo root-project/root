@@ -33,9 +33,9 @@ public:
                       UInt_t options = kChildFrame,
                       Pixel_t back = GetDefaultFrameBackground());
 
-   virtual void DrawBorder();
+   void DrawBorder() override;
 
-   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
+   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGHorizontal3DLine,0)  //A horizontal 3D separator line
 };
@@ -48,9 +48,9 @@ public:
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
 
-   virtual void DrawBorder();
+   void DrawBorder() override;
 
-   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
+   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGVertical3DLine,0)  //A vertical 3D separator line
 };

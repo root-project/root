@@ -334,7 +334,7 @@ public:
           const std::type_info &info, TVirtualIsAProxy *isa,
           const char *dfil, const char *ifil,
           Int_t dl, Int_t il, Bool_t silent = kFALSE);
-   virtual           ~TClass();
+             ~TClass() override;
 
    void               AddInstance(Bool_t heap = kFALSE) { fInstanceCount++; if (heap) fOnHeap++; }
    void               AddImplFile(const char *filename, int line);
@@ -342,7 +342,7 @@ public:
    static Int_t       ReadRules(const char *filename);
    static Int_t       ReadRules();
    void               AdoptSchemaRules( ROOT::Detail::TSchemaRuleSet *rules );
-   virtual void       Browse(TBrowser *b);
+   void       Browse(TBrowser *b) override;
    void               BuildRealData(void *pointer=0, Bool_t isTransient = kFALSE);
    void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
    void               CalculateStreamerOffset() const;
@@ -350,10 +350,10 @@ public:
    Bool_t             CanSplit() const;
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
    Long_t             ClassProperty() const;
-   TObject           *Clone(const char *newname="") const;
+   TObject           *Clone(const char *newname="") const override;
    void               CopyCollectionProxy(const TVirtualCollectionProxy&);
-   void               Draw(Option_t *option="");
-   void               Dump() const { TDictionary::Dump(); }
+   void               Draw(Option_t *option="") override;
+   void               Dump() const override { TDictionary::Dump(); }
    void               Dump(const void *obj, Bool_t noAddr = kFALSE) const;
    char              *EscapeChars(const char *text) const;
    TVirtualStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
@@ -460,17 +460,17 @@ public:
    Bool_t HasLocalHashMember() const;
    void               GetMissingDictionaries(THashTable& result, bool recurse = false);
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
-   Bool_t             InheritsFrom(const char *cl) const;
-   Bool_t             InheritsFrom(const TClass *cl) const;
+   Bool_t             InheritsFrom(const char *cl) const override;
+   Bool_t             InheritsFrom(const TClass *cl) const override;
    void               InterpretedShowMembers(void* obj, TMemberInspector &insp, Bool_t isTransient);
-   Bool_t             IsFolder() const { return kTRUE; }
+   Bool_t             IsFolder() const override { return kTRUE; }
    Bool_t             IsLoaded() const;
    Bool_t             IsForeign() const;
    Bool_t             IsStartingWithTObject() const;
    Bool_t             IsVersioned() const { return !( GetClassVersion()<=1 && IsForeign() ); }
    Bool_t             IsTObject() const;
    static TClass     *LoadClass(const char *requestedname, Bool_t silent);
-   void               ls(Option_t *opt="") const;
+   void               ls(Option_t *opt="") const override;
    void               MakeCustomMenuList();
    Bool_t             MatchLegacyCheckSum(UInt_t checksum) const;
    void               Move(void *arenaFrom, void *arenaTo) const;
@@ -479,7 +479,7 @@ public:
    void              *NewArray(Long_t nElements, ENewType defConstructor = kClassNew) const;
    void              *NewArray(Long_t nElements, void *arena, ENewType defConstructor = kClassNew) const;
    virtual void       PostLoadCheck();
-   Long_t             Property() const;
+   Long_t             Property() const override;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
    void               RegisterStreamerInfo(TVirtualStreamerInfo *info);
@@ -557,7 +557,7 @@ public:
 #endif
    }
 
-   ClassDef(TClass,0)  //Dictionary containing class information
+   ClassDefOverride(TClass, 0) // Dictionary containing class information
 };
 
 namespace ROOT {

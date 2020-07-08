@@ -75,7 +75,7 @@ private:
 
 public:
    explicit THttpCallArg() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
-   virtual ~THttpCallArg();
+   ~THttpCallArg() override;
 
    // these methods used to set http request arguments
 

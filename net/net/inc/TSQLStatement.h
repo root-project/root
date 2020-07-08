@@ -31,7 +31,7 @@ protected:
    void                SetError(Int_t code, const char* msg, const char *method = nullptr);
 
 public:
-   virtual ~TSQLStatement() = default;
+   ~TSQLStatement() override = default;
 
    virtual Int_t       GetBufferLength() const = 0;
    virtual Int_t       GetNumParameters() = 0;

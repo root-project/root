@@ -28,8 +28,8 @@ private:
 public:
    TKeyMapFile();
    TKeyMapFile(const char *name, const char *classname, TMapFile *mapfile);
-   virtual ~TKeyMapFile() {;}
-   virtual void      Browse(TBrowser *b);
+   ~TKeyMapFile() override {;}
+   void      Browse(TBrowser *b) override;
 
    ClassDef(TKeyMapFile,0);  //Utility class for browsing TMapFile objects.
 };

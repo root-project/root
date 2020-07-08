@@ -47,7 +47,7 @@ protected:
 
 public:
    TEveRGBAPaletteSubEditor(const TGWindow* p);
-   virtual ~TEveRGBAPaletteSubEditor() {}
+   ~TEveRGBAPaletteSubEditor() override {}
 
    void SetModel(TEveRGBAPalette* p);
 
@@ -83,9 +83,9 @@ protected:
 
 public:
    TEveRGBAPaletteEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveRGBAPaletteEditor() {}
+   ~TEveRGBAPaletteEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    ClassDef(TEveRGBAPaletteEditor, 0); // Editor for TEveRGBAPalette class.
 };

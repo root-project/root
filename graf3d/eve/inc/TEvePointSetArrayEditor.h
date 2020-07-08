@@ -36,9 +36,9 @@ protected:
 public:
    TEvePointSetArrayEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                            UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   ~TEvePointSetArrayEditor();
+   ~TEvePointSetArrayEditor() override;
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoRange();
 

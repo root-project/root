@@ -128,7 +128,7 @@ private:
 public:
    TAuthenticate(TSocket *sock, const char *remote, const char *proto,
                  const char *user = "");
-   virtual ~TAuthenticate() { }
+   ~TAuthenticate() override { }
 
    Bool_t             Authenticate();
    Int_t              AuthExists(TString User, Int_t method, const char *Options,

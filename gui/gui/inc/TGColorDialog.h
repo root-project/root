@@ -67,7 +67,7 @@ protected:
    Pixel_t *fPixels;       // pixel value of colors
    TGGC     fDrawGC;       // graphics context used for drawing
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
    virtual void GotFocus();
    virtual void LostFocus();
 
@@ -75,13 +75,13 @@ protected:
 
 public:
    TGColorPalette(const TGWindow *p = 0, Int_t cols = 8, Int_t rows = 8, Int_t id = -1);
-   virtual ~TGColorPalette();
+   ~TGColorPalette() override;
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual Bool_t HandleKey(Event_t *event);
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   Bool_t HandleKey(Event_t *event) override;
 
-   virtual TGDimension GetDefaultSize() const
+   TGDimension GetDefaultSize() const override
             { return TGDimension((fCw + 5) * fCols, (fCh + 5) * fRows); }
 
    void    SetColors(Pixel_t colors[]);
@@ -120,7 +120,7 @@ protected:
    Rectangle_t  fSliderRect;     // color lightness slider rectangle
    TGGC         fCursorGC;       // color lightness slider cursor GC
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
    void    DrawHScursor(Int_t onoff);
    void    DrawLcursor(Int_t onoff);
@@ -138,10 +138,10 @@ protected:
 
 public:
    TGColorPick(const TGWindow *p = 0, Int_t w = 1, Int_t h = 1, Int_t id = -1);
-   virtual ~TGColorPick();
+   ~TGColorPick() override;
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
 
    void     SetColor(Pixel_t color);
    Pixel_t  GetCurrentColor() const { return fCurrentColor; }
@@ -186,13 +186,13 @@ protected:
    void           UpdateRGBentries(Pixel_t *c);
    void           UpdateHLSentries(Pixel_t *c);
    void           UpdateAlpha(Pixel_t *c);
-   virtual void   CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void   CloseWindow() override;
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
 public:
    TGColorDialog(const TGWindow *p = 0, const TGWindow *m = 0, Int_t *retc = 0,
                  Pixel_t *color = 0, Bool_t wait = kTRUE);
-   virtual ~TGColorDialog();
+   ~TGColorDialog() override;
 
    TGColorPalette *GetPalette() const { return fPalette; }
    TGColorPalette *GetCustomPalette() const { return fCpalette; }
