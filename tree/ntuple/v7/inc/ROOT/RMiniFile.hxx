@@ -25,7 +25,9 @@
 #include <memory>
 #include <string>
 
+class TCollection;
 class TFile;
+class TFileMergeInfo;
 
 namespace ROOT {
 
@@ -82,6 +84,12 @@ struct RNTuple {
          fLenFooter == other.fLenFooter &&
          fReserved == other.fReserved;
    }
+
+   // RNTuple implements the hadd MergeFile interface
+   /// Merge this NTuple with the input list entries
+   Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
+   /// Reset any state after merging
+   void ResetAfterMerge(TFileMergeInfo* /* mergeInfo */) {};
 };
 
 namespace Internal {
