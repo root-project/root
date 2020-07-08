@@ -191,8 +191,20 @@ TEST(RDanglingFieldDescriptor, MakeDescriptorErrors)
 TEST(RNTupleDescriptorBuilder, CatchBadLinks)
 {
    RNTupleDescriptorBuilder descBuilder;
+   descBuilder.AddField(RDanglingFieldDescriptor()
+      .FieldId(0)
+      .Structure(ENTupleStructure::kRecord)
+      .MakeDescriptor()
+      .Unwrap());
+   descBuilder.AddField(RDanglingFieldDescriptor()
+      .FieldId(1)
+      .FieldName("field")
+      .TypeName("int32_t")
+      .Structure(ENTupleStructure::kLeaf)
+      .MakeDescriptor()
+      .Unwrap());
    try {
-      descBuilder.AddFieldLink(10, 0);
+      descBuilder.AddFieldLink(1, 0);
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("cannot make FieldZero a child field"));
    }
@@ -200,6 +212,11 @@ TEST(RNTupleDescriptorBuilder, CatchBadLinks)
       descBuilder.AddFieldLink(1, 1);
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("cannot make field '1' a child of itself"));
+   }
+   try {
+      descBuilder.AddFieldLink(1, 10);
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("child field with id '10' doesn't exist in NTuple"));
    }
 }
 
@@ -216,22 +233,6 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
    }
    descBuilder.SetNTuple("something", "", "", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
    descBuilder.EnsureValidDescriptor();
-
-   descBuilder.AddFieldLink(0, 1);
-   // leaf fields can't have children
-   descBuilder.AddField(RDanglingFieldDescriptor()
-      .FieldId(1)
-      .FieldName("int")
-      .TypeName("int32_t")
-      .Structure(ENTupleStructure::kLeaf)
-      .MakeDescriptor()
-      .Unwrap());
-   descBuilder.AddFieldLink(1, 2);
-   try {
-      descBuilder.EnsureValidDescriptor();
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("leaf field '1' cannot have child fields"));
-   }
 }
 
 TEST(RFieldDescriptorRange, IterateOverFieldNames)
