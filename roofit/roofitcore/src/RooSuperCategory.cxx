@@ -54,7 +54,7 @@ RooSuperCategory::RooSuperCategory() :
 /// Construct a super category from other categories.
 /// \param[in] name Name of this object
 /// \param[in] title Title (for e.g. printing)
-/// \param[in] inputCatList RooArgSet with category objects. These all need to derive from RooAbsCategoryLValue, *i.e.*
+/// \param[in] inputCategories RooArgSet with category objects. These all need to derive from RooAbsCategoryLValue, *i.e.*
 /// one needs to be able to assign to them.
 RooSuperCategory::RooSuperCategory(const char *name, const char *title, const RooArgSet& inputCategories) :
   RooAbsCategoryLValue(name, title),

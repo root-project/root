@@ -66,7 +66,7 @@ ClassImp(RooFormulaVar);
 /// Constructor with formula expression and list of input variables.
 /// \param[in] name Name of the formula.
 /// \param[in] title Title of the formula.
-/// \param[in] formula Expression to be evaluated.
+/// \param[in] inFormula Expression to be evaluated.
 /// \param[in] dependents Variables that should be passed to the formula.
 /// \param[in] checkVariables Check that all variables from `dependents` are used in the expression.
 RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* inFormula, const RooArgList& dependents,

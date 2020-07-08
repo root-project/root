@@ -92,7 +92,7 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
 /// and if found, the computation will be batched over their
 /// values. If batch data are not found for one of the proxies, the proxies value is assumed to
 /// be constant over the batch.
-/// \param[in] batchIndex Index of the batch to be computed.
+/// \param[in] begin Index of the batch to be computed.
 /// \param[in] batchSize Size of each batch. The last batch may be smaller.
 /// \return A span with the computed values.
 

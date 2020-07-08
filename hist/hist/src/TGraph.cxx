@@ -1900,9 +1900,9 @@ Int_t TGraph::IsInside(Double_t x, Double_t y) const
 /// Least squares polynomial fitting without weights.
 ///
 /// \param [in] m     number of parameters
-/// \param [in] ma     array of parameters
-/// \param [in] mfirst 1st point number to fit (default =0)
-/// \param [in] mlast  last point number to fit (default=fNpoints-1)
+/// \param [in] a     array of parameters
+/// \param [in] xmin  1st point number to fit (default =0)
+/// \param [in] xmax  last point number to fit (default=fNpoints-1)
 ///
 /// based on CERNLIB routine LSQ: Translated to C++ by Rene Brun
 

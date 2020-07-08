@@ -61,7 +61,7 @@ public:
 
   Sets the model function for the data (for example gaussian+linear for a peak)
 
-  @param modelFunction a reference to the model function.
+  @param modelFCN a reference to the model function.
 
   */
 
