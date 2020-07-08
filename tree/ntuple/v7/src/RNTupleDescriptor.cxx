@@ -773,9 +773,6 @@ ROOT::Experimental::RNTupleDescriptorBuilder::EnsureValidDescriptor() const {
       if (id != DescriptorId_t(0) && desc.GetParentId() == kInvalidDescriptorId) {
          return R__FAIL("field with id '" + std::to_string(id) + "' has an invalid parent id");
       }
-      if (desc.GetStructure() == ENTupleStructure::kLeaf && desc.GetLinkIds().size() != 0) {
-         return R__FAIL("leaf field '" + std::to_string(id) + "' cannot have child fields");
-      }
    }
    return RResult<void>::Success();
 }
@@ -974,8 +971,14 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldI
    if (linkId == DescriptorId_t(0)) {
       return R__FAIL("cannot make FieldZero a child field");
    }
+   if (fDescriptor.fFieldDescriptors.count(fieldId) == 0) {
+      return R__FAIL("field with id '" + std::to_string(fieldId) + "' doesn't exist in NTuple");
+   }
+   if (fDescriptor.fFieldDescriptors.count(linkId) == 0) {
+      return R__FAIL("child field with id '" + std::to_string(linkId) + "' doesn't exist in NTuple");
+   }
    // fail if field already has a valid parent
-   auto parentId = fDescriptor.fFieldDescriptors[linkId].fParentId;
+   auto parentId = fDescriptor.fFieldDescriptors.at(linkId).GetParentId();
    if (parentId != kInvalidDescriptorId) {
       return R__FAIL("field '" + std::to_string(linkId) + "' already has a parent ('" +
          std::to_string(parentId) + ")");
@@ -983,8 +986,8 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldI
    if (fieldId == linkId) {
       return R__FAIL("cannot make field '" + std::to_string(fieldId) + "' a child of itself");
    }
-   fDescriptor.fFieldDescriptors[linkId].fParentId = fieldId;
-   fDescriptor.fFieldDescriptors[fieldId].fLinkIds.push_back(linkId);
+   fDescriptor.fFieldDescriptors.at(linkId).fParentId = fieldId;
+   fDescriptor.fFieldDescriptors.at(fieldId).fLinkIds.push_back(linkId);
    return RResult<void>::Success();
 }
 
