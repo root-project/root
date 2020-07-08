@@ -681,9 +681,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       return 0 ;
     }
 
-    TIterator* iter = auxSplitCats->createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
+    for (const auto arg : *auxSplitCats) {
       // Find counterpart in cloned set
       RooAbsArg* aux = auxSplitCats->find(arg->GetName()) ;
 
@@ -710,18 +708,18 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       // Add top level nodes to auxSplitSet
       auxSplitSet.add(*aux) ;
     }
-    delete iter ;
 
     coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: list of auxiliary splitting categories " << auxSplitSet << endl ;
   }
 
+  delete[] buf;
 
   TList* customizerList = new TList ;
 
   // Loop over requested physics models and build components
-  TIterator* physIter = physModelSet.createIterator() ;
-  RooAbsPdf* physModel ;
-  while((physModel=(RooAbsPdf*)physIter->Next())) {
+  for (const auto arg : physModelSet) {
+    auto physModel = static_cast<const RooAbsPdf*>(arg);
+
     coutI(ObjectHandling) << "RooSimPdfBuilder::buildPdf: processing physics model " << physModel->GetName() << endl ;
 
     RooCustomizer* physCustomizer = new RooCustomizer(*physModel,masterSplitCat,_splitNodeList) ;
@@ -792,14 +790,12 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
               // check that any auxSplitCats in compCatSet do not depend on any other
               // fundamental or auxiliary splitting categories in the composite set.
-              TIterator* iter = compCatSet.createIterator() ;
-              RooAbsArg* arg ;
-              while((arg=(RooAbsArg*)iter->Next())) {
+              for (const auto theArg : compCatSet) {
                 RooArgSet tmp(compCatSet) ;
-                tmp.remove(*arg) ;
-                if (arg->dependsOnValue(tmp)) {
-                  coutE(InputArguments) << "RooSimPdfBuilder::buildPDF: ERROR: Ill defined split: auxiliary splitting category " << arg->GetName()
-					      << " used in composite split " << compCatSet << " depends on one or more of the other splitting categories in the composite split" << endl ;
+                tmp.remove(*theArg) ;
+                if (theArg->dependsOnValue(tmp)) {
+                  coutE(InputArguments) << "RooSimPdfBuilder::buildPDF: ERROR: Ill defined split: auxiliary splitting category " << theArg->GetName()
+					            << " used in composite split " << compCatSet << " depends on one or more of the other splitting categories in the composite split" << endl ;
 
                   // Cleanup and axit
                   customizerList->Delete() ;
@@ -809,7 +805,6 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
                   return 0 ;
                 }
               }
-              delete iter ;
 
               splitCat = new RooMultiCategory(origCompCatName,origCompCatName,compCatSet) ;
               _compSplitCatSet.addOwned(*splitCat) ;
@@ -1026,7 +1021,6 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
   RooArgSet fitCatList ;
   if (physCat) fitCatList.add(*physCat) ;
   fitCatList.add(splitCatSet) ;
-  TIterator* fclIter = fitCatList.createIterator() ;
   RooSuperCategory *fitCat = new RooSuperCategory("fitCat","fitCat",fitCatList) ;
 
   // Create master PDF 
@@ -1041,10 +1035,10 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     fitCat->setLabel(fcState->GetName()) ;
 
     // Check if this fitCat state is selected
-    fclIter->Reset() ;
-    RooAbsCategory* splitCat ;
     Bool_t select(kTRUE) ;
-    while((splitCat=(RooAbsCategory*)fclIter->Next())) {
+    for (const auto arg : fitCatList) {
+      auto splitCat = static_cast<const RooAbsCategory*>(arg);
+
       // Find selected state list 
       TList* slist = (TList*) splitStateList.FindObject(splitCat->GetName()) ;
       if (!slist) continue ;
@@ -1079,11 +1073,9 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
   _retiredCustomizerList.AddAll(customizerList) ;
   delete customizerList ;
 
-  delete fclIter ;
   splitStateList.Delete() ;
 
   if (auxSplitCloneSet) delete auxSplitCloneSet ;
-  delete physIter ;
 
   delete[] buf ;
   _simPdfList.push_back(simPdf) ;
