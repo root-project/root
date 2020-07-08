@@ -594,7 +594,7 @@ const std::vector< Float_t >& TMVA::Reader::EvaluateRegression( const TString& m
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluates the regression MVA
 /// check for NaN in event data:  (note: in the factory, this check was done already at the creation of the datasets, hence
-/// it is not again checked in each of these subsequent calls..
+/// it is not again checked in each of these subsequent calls.
 
 const std::vector< Float_t >& TMVA::Reader::EvaluateRegression( MethodBase* method, Double_t /*aux*/ )
 {
@@ -660,7 +660,7 @@ const std::vector< Float_t >& TMVA::Reader::EvaluateMulticlass( const TString& m
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluates the multiclass MVA
 /// check for NaN in event data:  (note: in the factory, this check was done already at the creation of the datasets, hence
-/// it is not again checked in each of these subsequent calls..
+/// it is not again checked in each of these subsequent calls.
 
 const std::vector< Float_t >& TMVA::Reader::EvaluateMulticlass( MethodBase* method, Double_t /*aux*/ )
 {

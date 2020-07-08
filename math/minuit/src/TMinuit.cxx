@@ -187,11 +187,11 @@ the error matrix, or setting of exact confidence levels see:
 
   1. F.James.
      Determining the statistical Significance of experimental Results.
-     Technical Report DD/81/02 and CERN Report 81-03, CERN, 1981.</li>
+     Technical Report DD/81/02 and CERN Report 81-03, CERN, 1981.
 
   2. W.T.Eadie, D.Drijard, F.James, M.Roos, and B.Sadoulet.
      Statistical Methods in Experimental Physics.
-     North-Holland, 1971.</li>
+     North-Holland, 1971.
 
 ### Reliability of MINUIT error estimates.
 

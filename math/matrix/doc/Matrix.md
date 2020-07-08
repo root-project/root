@@ -325,7 +325,7 @@ constructor</td>
       <td>C=A*B<br>
 A*=B<br>
 C.Mult(A,B)<br>TMatrixD(A,TMatrixD::kMult,B)<br>TMatrixD(A, TMatrixD(A, TMatrixD::kTransposeMult,B)<br>TMatrixD(A, TMatrixD::kMultTranspose,B)</td>
-      <td>overwrites A<br>&nbsp;<br>&nbsp;<br>constructor of A.B<br>constructor of A<sup>T</sup> .B<br>constructor of A.B<sup>T</sup></td>
+      <td>overwrites A<br>&nbsp;<br>&nbsp;<br>constructor of A·B<br>constructor of A<sup>T</sup>·B<br>constructor of A·B<sup>T</sup></td>
     </tr>
       <tr>
       <td>Element wise multiplication</td>
