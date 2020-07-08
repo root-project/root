@@ -77,6 +77,7 @@
 #include "TKey.h"
 #include "TClass.h"
 #include "TSystem.h"
+#include "TStopwatch.h"
 #include "TUUID.h"
 #include "ROOT/StringConv.hxx"
 #include "snprintf.h"
@@ -116,6 +117,9 @@ int main( int argc, char **argv )
    Int_t maxopenedfiles = 0;
    Int_t verbosity = 99;
    TString cacheSize;
+   std::vector<std::string> AddObjectNamesList;
+   Bool_t blacklist = kFALSE;
+   TStopwatch clock;
    SysInfo_t s;
    gSystem->GetSysInfo(&s);
    auto nProcesses = s.fCpus;
@@ -143,7 +147,10 @@ int main( int argc, char **argv )
          debug = kTRUE;
          verbosity = kTRUE;
          ++ffirst;
-      } else if (strcmp(argv[a], "-d") == 0) {
+      } else if ( strcmp(argv[a],"-b") == 0 ) {
+         blacklist = kTRUE;
+         ++ffirst;
+      }  else if (strcmp(argv[a], "-d") == 0) {
          if (a + 1 != argc && argv[a + 1][0] != '-') {
             if (gSystem->AccessPathName(argv[a + 1])) {
                std::cerr << "Error: could not access the directory specified: " << argv[a + 1]
@@ -288,6 +295,18 @@ int main( int argc, char **argv )
             }
          }
          ++ffirst;
+      } else if (!strcmp(argv[a], "-l")) {
+         if (a+1 >= argc) {
+            std::cerr << "Error: no AddObjectNamesList items were specified after -l; ignoring\n";
+         } else {
+            std::stringstream ss;
+            ss.str(argv[++a]);
+            ++ffirst;
+            std::string item;
+            while (std::getline(ss, item, ','))
+              AddObjectNamesList.push_back(item);
+         }
+         ++ffirst;
       } else if ( argv[a][0] == '-' ) {
          bool farg = false;
          if (force && argv[a][1] == 'f') {
@@ -344,12 +363,15 @@ int main( int argc, char **argv )
    }
 
    if (verbosity > 1) {
+      clock.Start();
       std::cout << "hadd Target file: " << targetname << std::endl;
    }
 
    TFileMerger fileMerger(kFALSE, kFALSE);
    fileMerger.SetMsgPrefix("hadd");
    fileMerger.SetPrintLevel(verbosity - 1);
+   for(const auto& objn : AddObjectNamesList)
+     fileMerger.AddObjectNames(objn.data());
    if (maxopenedfiles > 0) {
       fileMerger.SetMaxOpenedFiles(maxopenedfiles);
    }
@@ -398,6 +420,12 @@ int main( int argc, char **argv )
    }
 
    auto filesToProcess = argc - ffirst;
+   for (auto i = argc - ffirst; i < argc; i++)
+      if (argv[i] && argv[i][0] == '@'){
+         auto inFile = std::ifstream(argv[i]+1);
+         filesToProcess = std::count(std::istreambuf_iterator<char>(inFile), std::istreambuf_iterator<char>(), '\n');
+      }
+
    auto step = (filesToProcess + nProcesses - 1) / nProcesses;
    if (multiproc && step < 3) {
       // At least 3 files per process
@@ -437,8 +465,12 @@ int main( int argc, char **argv )
       Bool_t status;
       if (append)
          status = merger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kAll);
-      else
-         status = merger.Merge();
+      else {
+         Int_t merge_type = TFileMerger::kAll | TFileMerger::kRegular;
+         if (!AddObjectNamesList.empty())
+            blacklist ? merge_type |= TFileMerger::kSkipListed : merge_type |= TFileMerger::kOnlyListed;
+         status = merger.PartialMerge(merge_type);
+      }
       return status;
    };
 
@@ -515,6 +547,10 @@ int main( int argc, char **argv )
 #endif
 
    if (status) {
+      if (verbosity > 1) {
+         clock.Stop();
+         clock.Print();
+      }
       if (verbosity == 1) {
          std::cout << "hadd merged " << fileMerger.GetMergeList()->GetEntries() << " input files in " << targetname
                    << ".\n";
