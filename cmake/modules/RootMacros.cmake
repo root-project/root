@@ -1155,10 +1155,12 @@ function(ROOT_INSTALL_HEADERS)
     foreach (include_file ${include_files})
       set (src ${CMAKE_CURRENT_SOURCE_DIR}/${d}/${include_file})
       set (dst ${CMAKE_BINARY_DIR}/include/${include_file})
+      get_filename_component(dstDir ${dst} DIRECTORY)
       add_custom_command(
         OUTPUT ${dst}
-        COMMAND ${CMAKE_COMMAND} -E copy ${src} ${dst}
-        COMMENT "Copying header ${src} to ${CMAKE_BINARY_DIR}/include"
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${dstDir}
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${src} ${dst}
+        COMMENT "Creating symlink for header ${src} in ${CMAKE_BINARY_DIR}/include"
         DEPENDS ${src})
       list(APPEND dst_list ${dst})
     endforeach()
