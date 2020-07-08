@@ -24,6 +24,21 @@ protected:
 };
 
 
+// specialization for multiple inheritance disambiguation
+class CPPMultiConstructor : public CPPConstructor {
+public:
+    CPPMultiConstructor(Cppyy::TCppScope_t scope, Cppyy::TCppMethod_t method);
+    CPPMultiConstructor(const CPPMultiConstructor&);
+    CPPMultiConstructor& operator=(const CPPMultiConstructor&);
+
+public:
+    virtual PyObject* Call(CPPInstance*&, PyObject*, PyObject*, CallContext* = nullptr);
+
+private:
+    Py_ssize_t fNumBases;
+};
+
+
 // specializations of prohibiting constructors
 class CPPAbstractClassConstructor : public CPPConstructor {
 public:
