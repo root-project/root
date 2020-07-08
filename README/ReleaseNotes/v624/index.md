@@ -56,6 +56,12 @@ The following people have contributed to this new version:
 
 ## Math Libraries
 
+- Update the definitions of the physical constants using the recommended 2018 values from NIST.
+ - Use also the new SI definition of base units from 2019, where the Planck constant, the Boltzman constant , the elementary electric charge and the Avogadro constant are exact numerical values. See
+ <https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units>. Note that with this new definition the functions `TMath::HUncertainty()`, `TMath::KUncertainty()`,
+ `TMath::QeUncertainty()` and `TMath::NaUncertainty()` all return a  `0.0` value. 
+ 
+
 
 ## RooFit Libraries
 
