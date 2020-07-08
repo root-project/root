@@ -1113,26 +1113,47 @@ static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling
          struct DefinitionFinder : public RecursiveASTVisitor<DefinitionFinder> {
             DefinitionFinder(clang::GlobalModuleIndex::UserDefinedInterestingIDs& IDs,
                              clang::TranslationUnitDecl* TU) : DefinitionIDs(IDs) {
-               TraverseDecl(TU);
-            }
-            bool VisitNamedDecl(NamedDecl *ND) {
-               for (auto R : ND->redecls()) {
-                  if (!R->isFromASTFile())
+               for (const Decl* D : TU->decls()) {
+                  if (!isa<NamedDecl>(D))
                      continue;
-                  if (TagDecl *TD = llvm::dyn_cast<TagDecl>(R)) {
+                  const NamedDecl* ND = cast<NamedDecl>(D);
+                  if (!ND->isFromASTFile())
+                     continue;
+
+                  if (const TagDecl *TD = llvm::dyn_cast<TagDecl>(ND)) {
                      if (TD->isCompleteDefinition())
                         Register(TD);
-                  } else if (NamespaceDecl *NSD = llvm::dyn_cast<NamespaceDecl>(R))
+                  } else if (const NamespaceDecl *NSD = llvm::dyn_cast<NamespaceDecl>(ND)) {
+                     // if (!NSD->getParent()->isTranslationUnit())
+                     //    return false;
                      Register(NSD, /*AddSingleEntry=*/ false);
-                  else if (TypedefNameDecl *TND = dyn_cast<TypedefNameDecl>(R))
+                  }
+                  else if (const TypedefNameDecl *TND = dyn_cast<TypedefNameDecl>(ND))
                      Register(TND);
                   // FIXME: Add the rest...
                }
+               //TraverseDecl(TU);
+            }
+            bool VisitNamedDecl(NamedDecl *ND) {
+               if (!ND->isFromASTFile())
+                  return true; // Do not descend.
+
+               if (TagDecl *TD = llvm::dyn_cast<TagDecl>(ND)) {
+                  if (TD->isCompleteDefinition())
+                     Register(TD);
+               } else if (NamespaceDecl *NSD = llvm::dyn_cast<NamespaceDecl>(ND)) {
+                  // if (!NSD->getParent()->isTranslationUnit())
+                  //    return false;
+                  Register(NSD, /*AddSingleEntry=*/ false);
+               }
+               else if (TypedefNameDecl *TND = dyn_cast<TypedefNameDecl>(ND))
+                  Register(TND);
+               // FIXME: Add the rest...
                return true; // continue decending
             }
          private:
             clang::GlobalModuleIndex::UserDefinedInterestingIDs &DefinitionIDs;
-            void Register(NamedDecl* ND, bool AddSingleEntry = true) {
+            void Register(const NamedDecl* ND, bool AddSingleEntry = true) {
                assert(ND->isFromASTFile());
                // FIXME: All decls should have an owning module once rootcling
                // updates its generated decls from within the LookupHelper & co.
