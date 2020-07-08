@@ -451,6 +451,7 @@
 #include "RooDataHist.h"
 #include "RooGenericPdf.h"
 #include "RooMsgService.h"
+#include "RooHelpers.h"
 
 using namespace std ;
 
@@ -729,29 +730,20 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     RooStringVar* ruleStr = (RooStringVar*) buildConfig.find(physModel->GetName()) ;
     if (ruleStr) {
 
-      delete[] buf ; 
-      buflen = strlen(ruleStr->getVal())+1 ;
-      buf = new char[buflen] ;
-
-      strlcpy(buf,ruleStr->getVal(),buflen) ;
-      char *tokenPtr(0) ;
-
-      char* token = R__STRTOK_R(buf,spaceChars,&tokenPtr) ;
-
       enum Mode { SplitCat, Colon, ParamList } ;
       Mode mode(SplitCat) ;
 
-      char* splitCatName ;
+      const char* splitCatName ;
       RooAbsCategory* splitCat(0) ;
 
-      while(token) {
+      for (const auto& token : RooHelpers::tokenise(ruleStr->getVal(), spaceChars)) {
 
         switch (mode) {
         case SplitCat:
         {
-          splitCatName = token ;
+          splitCatName = token.data();
 
-          if (strchr(splitCatName,',')) {
+          if (token.find(',') != std::string::npos) {
             // Composite splitting category
 
             // Check if already instantiated
@@ -760,16 +752,13 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
             if (!splitCat) {
               // Build now
 
-              char *tokptr = 0;
-              char *catName2 = R__STRTOK_R(token,",",&tokptr) ;
-
               RooArgSet compCatSet ;
-              while(catName2) {
-                RooAbsArg* cat = splitCatSet.find(catName2) ;
+              for (const auto& catName2 : RooHelpers::tokenise(token, ",")) {
+                RooAbsArg* cat = splitCatSet.find(catName2.data()) ;
 
                 // If not, check if it is an auxiliary splitcat
                 if (!cat) {
-                  cat = (RooAbsCategory*) auxSplitSet.find(catName2) ;
+                  cat = (RooAbsCategory*) auxSplitSet.find(catName2.data()) ;
                 }
 
                 if (!cat) {
@@ -779,12 +768,9 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
                   delete customizerList ;
 
                   splitStateList.Delete() ;
-                  delete[] buf ;
                   return 0 ;
                 }
                 compCatSet.add(*cat) ;
-
-                catName2 = R__STRTOK_R(0,",",&tokptr) ;
               }
 
 
@@ -801,7 +787,6 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
                   customizerList->Delete() ;
                   delete customizerList ;
                   splitStateList.Delete() ;
-                  delete[] buf ;
                   return 0 ;
                 }
               }
@@ -827,7 +812,6 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
               customizerList->Delete() ;
               delete customizerList ;
               splitStateList.Delete() ;
-              delete[] buf ;
               return 0 ;
             }
           }
@@ -837,13 +821,12 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
         }
         case Colon:
         {
-          if (strcmp(token,":")) {
+          if (token != ":") {
             coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR in parsing, expected ':' after "
                 << splitCat << ", found " << token << endl ;
             customizerList->Delete() ;
             delete customizerList ;
             splitStateList.Delete() ;
-            delete[] buf ;
             return 0 ;
           }
           mode = ParamList ;
@@ -860,22 +843,19 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
           paramList->add(*compList) ;
           delete compList ;
 
-          Bool_t lastCharIsComma = (token[strlen(token)-1]==',') ;
+          const bool lastCharIsComma = (token[token.size()-1]==',') ;
 
-          char *tokptr = 0 ;
-          char *paramName = R__STRTOK_R(token,",",&tokptr) ;
+          for (const auto& paramName : RooHelpers::tokenise(token, ",")) {
+            // Check for fractional split option 'param_name[remainder_state]'
+            std::string remainderState;
+            if (const auto pos = paramName.find('[') != std::string::npos) {
+              const auto posEnd = paramName.find(']');
+              remainderState = paramName.substr(pos+1, posEnd - pos - 1);
+            }
 
-          // Check for fractional split option 'param_name[remainder_state]'
-          char *remainderState = 0 ;
-          char *tokptr2 = 0 ;
-          if (paramName && R__STRTOK_R(paramName,"[",&tokptr2)) {
-            remainderState = R__STRTOK_R(0,"]",&tokptr2) ;
-          }
-
-          while(paramName) {
 
             // If fractional split is specified, check that remainder state is a valid state of this split cat
-            if (remainderState) {
+            if (!remainderState.empty()) {
               if (!splitCat->hasLabel(remainderState)) {
                 coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR fraction split of parameter "
                     << paramName << " has invalid remainder state name: " << remainderState << endl ;
@@ -883,12 +863,11 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
                 customizerList->Delete() ;
                 delete customizerList ;
                 splitStateList.Delete() ;
-                delete[] buf ;
                 return 0 ;
               }
             }
 
-            RooAbsArg* param = paramList->find(paramName) ;
+            RooAbsArg* param = paramList->find(paramName.data()) ;
             if (!param) {
               coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR " << paramName
                   << " is not a parameter of physics model " << physModel->GetName() << endl ;
@@ -896,13 +875,12 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
               customizerList->Delete() ;
               delete customizerList ;
               splitStateList.Delete() ;
-              delete[] buf ;
               return 0 ;
             }
             splitParamList.add(*param) ;
 
             // Build split leaf of fraction splits here
-            if (remainderState) {
+            if (!remainderState.empty()) {
 
               // Check if we are splitting a real-valued parameter
               if (!dynamic_cast<RooAbsReal*>(param)) {
@@ -912,7 +890,6 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
                 customizerList->Delete() ;
                 delete customizerList ;
                 splitStateList.Delete() ;
-                delete[] buf ;
                 return 0 ;
               }
 
@@ -920,7 +897,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
               TList* remStateSplitList = static_cast<TList*>(splitStateList.FindObject(splitCat->GetName())) ;
 
               // If so, check if remainder state is actually being built.
-              if (remStateSplitList && !remStateSplitList->FindObject(remainderState)) {
+              if (remStateSplitList && !remStateSplitList->FindObject(remainderState.data())) {
                 coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR " << paramName
                     << " remainder state " << remainderState << " in parameter split "
                     << param->GetName() << " is not actually being built" << endl ;
@@ -928,7 +905,6 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
                 customizerList->Delete() ;
                 delete customizerList ;
                 splitStateList.Delete() ;
-                delete[] buf ;
                 return 0 ;
               }
 
@@ -980,12 +956,6 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
                     << " specialization of split parameter " << param->GetName() << " " << formExpr << endl ;
               }
             }
-
-            // Parse next parameter name
-            paramName = R__STRTOK_R(0,",",&tokptr) ;
-            if (paramName && R__STRTOK_R(paramName,"[",&tokptr2)) {
-              remainderState = R__STRTOK_R(0,"]",&tokptr2) ;
-            }
           }
 
           // Add the rule to the appropriate customizer ;
@@ -997,13 +967,10 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
           break ;
         }
         }
-
-        token = R__STRTOK_R(0,spaceChars,&tokenPtr) ;
-
       }
       if (mode!=SplitCat) {
         coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR in parsing, expected "
-            << (mode==Colon?":":"parameter list") << " after " << (token?token:"(null)") << endl ;
+            << (mode==Colon?":":"parameter list") << " in " << ruleStr->getVal() << endl ;
       }
 
       //RooArgSet* paramSet = physModel->getParameters(dependents) ;
@@ -1077,7 +1044,6 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
   if (auxSplitCloneSet) delete auxSplitCloneSet ;
 
-  delete[] buf ;
   _simPdfList.push_back(simPdf) ;
   _fitCatList.push_back(fitCat) ;
   return simPdf ;
