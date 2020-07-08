@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// This tutorial shows how to fill a TGraph using the Dataframe.
+/// \brief Fill a TGraph using RDataFrame
 ///
 /// \macro_code
 /// \macro_image

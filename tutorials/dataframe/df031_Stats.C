@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
+/// \brief Use the Stats action to extract the statistics of a column
 /// Extract the statistics relative to RDataFrame columns and store them
 /// in TStatistic instances.
 ///

@@ -1,6 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -nodraw
+## \brief Create data from scratch with RDataFrame
 ## This tutorial shows how to create a dataset from scratch with RDataFrame
 ##
 ## \macro_code
