@@ -320,15 +320,25 @@ bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFir
    // Find the modules that reference the identifier.
    // Note that this only finds top-level modules.
    if (Index->lookupIdentifier(Name.getAsString(), FoundModules)) {
-      for (auto FileName : FoundModules) {
-         StringRef ModuleName = llvm::sys::path::stem(*FileName);
+      for (llvm::StringRef FileName : FoundModules) {
+         StringRef ModuleName = llvm::sys::path::stem(FileName);
+
+         // Skip to the first not-yet-loaded module.
+         if (m_LoadedModuleFiles.count(FileName)) {
+            if (gDebug > 2)
+               llvm::errs() << "Module '" << ModuleName << "' already loaded"
+                            << " for '" << Name.getAsString() << "'\n";
+            continue;
+         }
+
          fIsLoadingModule = true;
          if (gDebug > 2)
-            llvm::errs() << "Loading " << ModuleName << " on demand"
-                         << " for " << Name.getAsString() << "\n";
+            llvm::errs() << "Loading '" << ModuleName << "' on demand"
+                         << " for '" << Name.getAsString() << "'\n";
 
          m_Interpreter->loadModule(ModuleName);
          fIsLoadingModule = false;
+         m_LoadedModuleFiles[FileName] = Name;
          if (loadFirstMatchOnly)
             break;
       }
@@ -349,7 +359,7 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    if (fIsAutoParsingSuspended || fIsAutoLoadingRecursively)
       return false;
 
-   if (findInGlobalModuleIndex(Name, /*loadFirstMatchOnly*/ false))
+   if (findInGlobalModuleIndex(Name, /*loadFirstMatchOnly*/ true))
       return true;
 
    if (Name.getNameKind() != DeclarationName::Identifier)
