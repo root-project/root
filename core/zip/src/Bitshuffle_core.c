@@ -1059,13 +1059,14 @@ int64_t bshuf_untrans_bit_elem_AVX(const void* in, void* out, const size_t size,
     return count;
 }
 
-int64_t *resolve_bitshuffle(const void* in, void* out, const size_t size, const size_t elem_size) {
+void *resolve_bitshuffle(void) {
     unsigned int eax, ebx, ecx, edx;
 	signed char has_sse2 = 0;
 
     /* Collect CPU features */
-    if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx))
+    if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx)){
         return bshuf_trans_bit_elem_scal;
+    }
 
 	has_sse2 = ((edx & bit_SSE2) != 0);
     if (__get_cpuid_max (0, NULL) < 7){
@@ -1076,23 +1077,26 @@ int64_t *resolve_bitshuffle(const void* in, void* out, const size_t size, const 
     
 	signed char has_avx2 = 0;
 	has_avx2 = ((ebx & bit_AVX2) != 0);
-	if (has_avx2)
+	if (has_avx2){
 	    return bshuf_trans_bit_elem_AVX;
-#endif
+    }
+
     /* Pick SSE2 version */
-    if (has_sse2)
+    if (has_sse2){
         return bshuf_trans_bit_elem_SSE;
+    }
     /* Fallback to default implementation */
     return bshuf_trans_bit_elem_scal;
 }
 
-int64_t *resolve_bitunshuffle(const void* in, void* out, const size_t size, const size_t elem_size) {
+void *resolve_bitunshuffle(void) {
     unsigned int eax, ebx, ecx, edx;
 	signed char has_sse2 = 0;
 
     /* Collect CPU features */
-    if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx))
+    if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx)){
         return bshuf_untrans_bit_elem_scal;
+    }
 
 	has_sse2 = ((edx & bit_SSE2) != 0);
     if (__get_cpuid_max (0, NULL) < 7){
@@ -1103,12 +1107,14 @@ int64_t *resolve_bitunshuffle(const void* in, void* out, const size_t size, cons
     
 	signed char has_avx2 = 0;
 	has_avx2 = ((ebx & bit_AVX2) != 0);
-	if (has_avx2)
+	if (has_avx2){
 	    return bshuf_untrans_bit_elem_AVX;
-#endif
+    }
+
     /* Pick SSE2 version */
-    if (has_sse2)
+    if (has_sse2){
         return bshuf_untrans_bit_elem_SSE;
+    }
     /* Fallback to default implementation */
     return bshuf_untrans_bit_elem_scal;
 }
