@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// \brief Fill a TGraph using RDataFrame
+/// \brief Fill a TGraph using RDataFrame.
 ///
 /// \macro_code
 /// \macro_image

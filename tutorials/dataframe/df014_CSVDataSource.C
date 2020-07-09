@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// \brief Process a CSV file with RDataFrame and the CSV data source
+/// \brief Process a CSV file with RDataFrame and the CSV data source.
+///
 /// This tutorial illustrates how use the RDataFrame in combination with a
 /// RDataSource. In this case we use a RCsvDS. This data source allows to read
 /// a CSV file from a RDataFrame.

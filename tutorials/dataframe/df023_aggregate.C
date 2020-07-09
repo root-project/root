@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// \brief Use the Aggregate action to specify arbitrary data aggregations
+/// \brief Use the Aggregate action to specify arbitrary data aggregations.
+///
 /// This tutorial shows how to use the Aggregate action to evaluate the product of all the elements of a column.
 /// This operation may be performed using a Reduce action, however aggregate is used for the sake of the tutorial
 ///

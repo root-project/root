@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// \brief Use callbacks to update a plot and a progress bar during the event loop
+/// \brief Use callbacks to update a plot and a progress bar during the event loop.
+///
 /// Showcase registration of callback functions that act on partial results while
 /// the event-loop is running using `OnPartialResult` and `OnPartialResultSlot`.
 /// This tutorial is not meant to run in batch mode.

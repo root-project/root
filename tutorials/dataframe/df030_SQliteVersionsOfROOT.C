@@ -2,7 +2,8 @@
 /// \ingroup tutorial_dataframe
 /// \notebook -js
 ///
-/// \brief Read an sqlite3 databases with RDataFrame and plot statistics on ROOT downloads
+/// \brief Read an sqlite3 databases with RDataFrame and plot statistics on ROOT downloads.
+///
 /// Plot the downloads of different ROOT versions reading a remote sqlite3 file with RSqliteDS.
 /// Then a TH1F histogram is created and filled
 /// using a lambda expression which receives the recorded
