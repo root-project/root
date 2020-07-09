@@ -235,8 +235,6 @@ else()
 endif()  
   configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
   ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in" LABELS longtest)
-  ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit )
 
   add_subdirectory(fit)
 endif()
@@ -246,8 +244,6 @@ if(ROOT_roofit_FOUND)
   ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats)
   configure_file(stressRooStats_ref.root stressRooStats_ref.root COPYONLY)
   ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats FAILREGEX "FAILED|Error in" LABELS longtest)
-  ROOT_ADD_TEST(test-stressroostats-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooStats.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressroostats )
 endif()
 
 #--stressHistFactory--------------------------------------------------------------------------------
@@ -257,7 +253,6 @@ if(NOT MSVC)
   configure_file(HistFactoryTest.tar HistFactoryTest.tar COPYONLY)
   configure_file(stressHistFactory_ref.root stressHistFactory_ref.root COPYONLY)
   ROOT_ADD_TEST(test-stressHistFactory ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory FAILREGEX "FAILED|Error in" LABELS longtest)
-  ROOT_ADD_TEST(test-stressHistFactory-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistFactory.cxx FAILREGEX "FAILED|Error in" DEPENDS test-stressHistFactory)
 endif()
 endif()
 
