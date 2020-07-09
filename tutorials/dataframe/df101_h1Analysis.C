@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// \brief Show how to express ROOT's standard H1 analysis with RDataFrame
+/// \brief Show how to express ROOT's standard H1 analysis with RDataFrame.
 ///
 /// \macro_code
 /// \macro_image

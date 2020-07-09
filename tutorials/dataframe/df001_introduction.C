@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -nodraw
-/// \brief Basic RDataFrame usage
+/// \brief Basic RDataFrame usage.
+///
 /// This tutorial illustrates the basic features of the RDataFrame class,
 /// a utility which allows to interact with data stored in TTrees following
 /// a functional-chain like approach.

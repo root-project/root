@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// \brief Display cut/Filter efficiencies with RDataFrame
+/// \brief Display cut/Filter efficiencies with RDataFrame.
+///
 /// This tutorial shows how to get information about the efficiency of the filters
 /// applied
 ///

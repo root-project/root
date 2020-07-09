@@ -1,7 +1,8 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook
-## \brief Use the Display action to inspect entry values
+## \brief Use the Display action to inspect entry values.
+##
 ## This tutorial shows how to use the Display action
 ##
 ## \macro_code

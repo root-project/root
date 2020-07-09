@@ -1,7 +1,8 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -nodraw
-## \brief Use Range to limit the amount of data processed
+## \brief Use Range to limit the amount of data processed.
+##
 ## This tutorial shows how to express the concept of ranges when working with the RDataFrame.
 ##
 ## \macro_code

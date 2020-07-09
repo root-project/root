@@ -1,7 +1,8 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -js
-## \brief Show how NanoAOD files can be processed with RDataFrame
+## \brief Show how NanoAOD files can be processed with RDataFrame.
+##
 ## This tutorial illustrates how NanoAOD files can be processed with ROOT
 ## dataframes. The NanoAOD-like input files are filled with 66 mio. events
 ## from CMS OpenData containing muon candidates part of 2012 dataset
