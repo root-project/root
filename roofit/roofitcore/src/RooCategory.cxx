@@ -213,7 +213,7 @@ bool RooCategory::defineType(const std::string& label)
     return true;
   }
 
-  return RooAbsCategory::defineState(label) == RooAbsCategory::_invalidCategory;
+  return RooAbsCategory::defineState(label) == invalidCategory();
 }
 
 
@@ -229,7 +229,7 @@ bool RooCategory::defineType(const std::string& label, Int_t index)
     return true;
   }
 
-  return RooAbsCategory::defineState(label, index) == RooAbsCategory::_invalidCategory;
+  return RooAbsCategory::defineState(label, index) == invalidCategory();
 }
 
 
@@ -373,7 +373,7 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
   // Parse list of state names, verify that each is valid and add them to the list
   for (const auto& token : RooHelpers::tokenise(stateNameList, ",")) {
     const value_type idx = lookupIndex(token);
-    if (idx != _invalidCategory.second) {
+    if (idx != invalidCategory().second) {
       addToRange(name, idx);
     } else {
       coutW(InputArguments) << "RooCategory::setRange(" << GetName() << ") WARNING: Ignoring invalid state name '" 
