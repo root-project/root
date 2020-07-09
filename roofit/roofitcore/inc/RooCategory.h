@@ -115,7 +115,7 @@ protected:
       return _currentIndex;
 
     if (_insertionOrder.empty()) {
-      return RooAbsCategory::_invalidCategory.second;
+      return invalidCategory().second;
     } else {
       auto item = stateNames().find(_insertionOrder.front());
       assert(item != stateNames().end());
