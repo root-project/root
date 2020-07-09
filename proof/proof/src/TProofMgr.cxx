@@ -823,7 +823,7 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
    if (dest && strlen(dest) > 0) {
       TString dst(dest), dt;
       Ssiz_t from = 0;
-      TRegexp re("<d+[0-9]>");
+      TRegexp re("<d[0-9]+>");
       while (dst.Tokenize(dt, from, "/")) {
          if (dt.Contains(re)) {
             TParameter<Int_t> *pi = new TParameter<Int_t>(dt, -1);
