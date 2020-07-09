@@ -118,7 +118,7 @@ int main( int argc, char **argv )
    Int_t verbosity = 99;
    TString cacheSize;
    std::vector<std::string> AddObjectNamesList;
-   Bool_t blacklist = kFALSE;
+   Bool_t exclusionlist = kFALSE;
    TStopwatch clock;
    SysInfo_t s;
    gSystem->GetSysInfo(&s);
