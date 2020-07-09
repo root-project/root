@@ -68,7 +68,7 @@ void rf204b_extendedLikelihood_rangedFit()
 
  // Build plain exponential model
  RooRealVar x("x", "x", 10, 100);
- RooRealVar alpha("alpha", "alpha", -0.04, -0.1, -0);
+ RooRealVar alpha("alpha", "alpha", -0.04, -0.1, -0.0);
  RooExponential model("model", "Exponential model", x, alpha);
 
  // Define side band regions and full range
