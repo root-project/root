@@ -1626,7 +1626,7 @@ int64_t bshuf_untrans_bit_elem_AVX(const void* in, void* out, const size_t size,
     return count;
 }
 
-void *resolve_bitshuffle(void) {
+int64_t *resolve_bitshuffle(const void* in, void* out, const size_t size, const size_t elem_size) {
     unsigned int eax, ebx, ecx, edx;
 	signed char has_sse2 = 0;
 
@@ -1635,8 +1635,9 @@ void *resolve_bitshuffle(void) {
         return bshuf_trans_bit_elem_scal;
 
 	has_sse2 = ((edx & bit_SSE2) != 0);
-    if (__get_cpuid_max (0, NULL) < 7)
+    if (__get_cpuid_max (0, NULL) < 7){
         return bshuf_trans_bit_elem_scal;
+    }
 
 	__cpuid_count (7, 0, eax, ebx, ecx, edx);
     /* Pick AVX2 version only if as supports AVX2 (not the case of Haswell)*/
@@ -1653,7 +1654,7 @@ void *resolve_bitshuffle(void) {
     return bshuf_trans_bit_elem_scal;
 }
 
-void *resolve_bitunshuffle(void) {
+int64_t *resolve_bitunshuffle(const void* in, void* out, const size_t size, const size_t elem_size) {
     unsigned int eax, ebx, ecx, edx;
 	signed char has_sse2 = 0;
 
@@ -1662,8 +1663,9 @@ void *resolve_bitunshuffle(void) {
         return bshuf_untrans_bit_elem_scal;
 
 	has_sse2 = ((edx & bit_SSE2) != 0);
-    if (__get_cpuid_max (0, NULL) < 7)
+    if (__get_cpuid_max (0, NULL) < 7){
         return bshuf_untrans_bit_elem_scal;
+    }
 
 	__cpuid_count (7, 0, eax, ebx, ecx, edx);
     /* Pick AVX2 version only if as supports AVX2 (not the case of Haswell)*/
