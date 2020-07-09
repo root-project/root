@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-/// This macro demonstrates how to set up a fit in two ranges
+/// \brief This macro demonstrates how to set up a fit in two ranges
 /// such that it does not only fit the shapes in each region, but also
 /// takes into account the relative normalization of the two.
 ///
@@ -47,6 +47,10 @@
 ///
 /// This requires that the likelihood model is extended using RooAddPdf in the
 /// form SumPdf = Nsig * sigPdf + Nbkg * bkgPdf.
+///
+/// \macro_image
+/// \macro_code
+/// \macro_output
 ///
 /// \authors Stephan Hageboeck, Wouter Verkerke
 
