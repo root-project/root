@@ -39,8 +39,6 @@ class RooAbsCategory : public RooAbsArg {
 public:
   /// The type used to denote a specific category state.
   using value_type = int;
-  /// A category state to signify an invalid category. The `first` member is std::numeric_limits<int>::min(), the name is empty.
-  static const std::map<std::string, RooAbsCategory::value_type>::value_type _invalidCategory;
 
   // Constructors, assignment etc.
   RooAbsCategory() { };
@@ -224,6 +222,8 @@ protected:
   mutable UChar_t _byteValue{0}; //! Transient cache for byte values from tree branches
   mutable std::map<value_type, std::unique_ptr<RooCatType, std::function<void(RooCatType*)>> > _legacyStates; //! Map holding pointers to RooCatType instances. Only for legacy interface. Don't use if possible.
   bool _treeVar{false}; /// Is this category attached to a tree?
+
+  static const decltype(_stateNames)::value_type& invalidCategory();
 
   ClassDef(RooAbsCategory, 3) // Abstract discrete variable
 };

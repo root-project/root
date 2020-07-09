@@ -130,7 +130,7 @@ Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t
 
   // Check if output type exists, if not register
   value_type catIdx = lookupIndex(outKey);
-  if (catIdx == RooAbsCategory::_invalidCategory.second) {
+  if (catIdx == invalidCategory().second) {
     if (outIdx==NoCatIdx) {
       catIdx = defineState(outKey).second;
     } else {
@@ -138,7 +138,7 @@ Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t
     }
   }
 
-  if (catIdx == RooAbsCategory::_invalidCategory.second) {
+  if (catIdx == invalidCategory().second) {
     coutE(InputArguments) << "RooMappedCategory::map(" << GetName()
                           << "): ERROR, unable to define category for output type " << outKey << std::endl ;
     return true;
@@ -260,7 +260,7 @@ Bool_t RooMappedCategory::readFromStream(std::istream& is, Bool_t compact, Bool_
 void RooMappedCategory::printMetaArgs(std::ostream& os) const
 {
   // Scan array of regexps
-  RooAbsCategory::value_type prevOutCat = RooAbsCategory::_invalidCategory.second;
+  RooAbsCategory::value_type prevOutCat = invalidCategory().second;
   Bool_t first(kTRUE) ;
   os << "map=(" ;
   for (const auto& iter : _mapArray) {
@@ -294,7 +294,7 @@ void RooMappedCategory::writeToStream(std::ostream& os, Bool_t compact) const
     // Write mapping expression
 
     // Scan array of regexps
-    RooAbsCategory::value_type prevOutCat = RooAbsCategory::_invalidCategory.second;
+    RooAbsCategory::value_type prevOutCat = invalidCategory().second;
     Bool_t first(kTRUE) ;
     for (const auto& iter : _mapArray) {
       if (iter.second.outCat() != prevOutCat) {
