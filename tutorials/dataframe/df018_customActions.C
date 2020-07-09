@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// \brief Implement a custom action to fill THns
+/// \brief Implement a custom action to fill THns.
+///
 /// This tutorial shows how to implement a custom action.
 /// As an example, we build a helper for filling THns.
 ///

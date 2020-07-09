@@ -1,7 +1,8 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief The Higgs to four lepton analysis from the ATLAS Open Data release of 2020, with RDataFrame
+## \brief The Higgs to four lepton analysis from the ATLAS Open Data release of 2020, with RDataFrame.
+##
 ## This tutorial is the Higgs to four lepton analysis from the ATLAS Open Data release in 2020
 ## (http://opendata.atlas.cern/release/2020/documentation/). The data was taken with the ATLAS detector
 ## during 2016 at a center-of-mass energy of 13 TeV. The decay of the Standard Model Higgs boson

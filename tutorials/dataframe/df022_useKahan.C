@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// \brief Implement a custom action that evaluates a Kahan sum
+/// \brief Implement a custom action that evaluates a Kahan sum.
+///
 /// This tutorial shows how to implement a Kahan summation custom action.
 ///
 /// \macro_code

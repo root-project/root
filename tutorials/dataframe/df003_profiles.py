@@ -1,7 +1,8 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief Use TProfiles with RDataFrame
+## \brief Use TProfiles with RDataFrame.
+##
 ## This tutorial illustrates how to use TProfiles in combination with the
 ## RDataFrame. See the documentation of TProfile and TProfile2D to better
 ## understand the analogy of this code with the example one.
