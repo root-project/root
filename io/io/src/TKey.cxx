@@ -1021,7 +1021,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
    }
    TBufferFile bufferRef(TBuffer::kRead, fObjlen+fKeylen);
    if (!bufferRef.Buffer()) {
-      Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
+      Error("ReadObjectAny", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
    }
    if (GetFile()==0) return 0;
@@ -1116,7 +1116,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
    if (cl->IsTObject()) {
       auto tobjBaseOffset = cl->GetBaseClassOffset(TObject::Class());
       if (tobjBaseOffset == -1) {
-         Fatal("ReadObj","Incorrect detection of the inheritance from TObject for class %s.\n",
+         Fatal("ReadObjectAny","Incorrect detection of the inheritance from TObject for class %s.\n",
                fClassName.Data());
       }
       TObject *tobj = (TObject*)( ((char*)pobj) + tobjBaseOffset);
