@@ -55,29 +55,6 @@
 extern "C" {
 #endif
 
-/* --- bshuf_using_SSE2 ----
- *
- * Whether routines where compiled with the SSE2 instruction set.
- *
- * Returns
- * -------
- *  1 if using SSE2, 0 otherwise.
- *
- */
-int bshuf_using_SSE2(void);
-
-
-/* ---- bshuf_using_AVX2 ----
- *
- * Whether routines where compiled with the AVX2 instruction set.
- *
- * Returns
- * -------
- *  1 if using AVX2, 0 otherwise.
- *
- */
-int bshuf_using_AVX2(void);
-
 
 /* ---- bshuf_default_block_size ----
  *
