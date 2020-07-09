@@ -756,7 +756,8 @@ TObject *TKey::ReadObj()
    }
    if (!cl->IsTObject()) {
       // in principle user should call TKey::ReadObjectAny!
-      return (TObject*)ReadObjectAny(0);
+      Error("ReadObj", "class %s does not inherit from TObject, call ReadObjectAny instead", fClassName.Data());
+      return 0;
    }
 
    TBufferFile bufferRef(TBuffer::kRead, fObjlen+fKeylen);
@@ -1014,6 +1015,10 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
 
 void *TKey::ReadObjectAny(const TClass* expectedClass)
 {
+   if (!expectedClass) {
+      Error("ReadObjectAny", "input was null pointer");
+      return 0;
+   }
    TBufferFile bufferRef(TBuffer::kRead, fObjlen+fKeylen);
    if (!bufferRef.Buffer()) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
