@@ -842,6 +842,24 @@ struct RTFNTuple {
       ntuple.fReserved     = fReserved;
       return ntuple;
    }
+
+   friend std::ostream& operator<<(std::ostream& os, const RTFNTuple& ntpl) {
+      os << "RTFNTuple {\n";
+      os << "    fByteCount: " << ntpl.fByteCount << ",\n";
+      os << "    fVersionClass: " << ntpl.fVersionClass << ",\n";
+      os << "    fChecksum: " << ntpl.fChecksum << ",\n";
+      os << "    fVersionInternal: " << ntpl.fVersionInternal << ",\n";
+      os << "    fSize: " << ntpl.fSize << ",\n";
+      os << "    fSeekHeader: " << ntpl.fSeekHeader << ",\n";
+      os << "    fNBytesHeader: " << ntpl.fNBytesHeader << ",\n";
+      os << "    fLenHeader: " << ntpl.fLenHeader << ",\n";
+      os << "    fSeekFooter: " << ntpl.fSeekFooter << ",\n";
+      os << "    fNBytesFooter: " << ntpl.fNBytesFooter << ",\n";
+      os << "    fLenFooter: " << ntpl.fLenFooter << ",\n";
+      os << "    fReserved: " << ntpl.fReserved << ",\n";
+      os << "}";
+      return os;
+   }
 };
 
 /// The bare file global header
