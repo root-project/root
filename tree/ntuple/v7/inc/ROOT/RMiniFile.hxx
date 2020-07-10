@@ -82,6 +82,21 @@ struct RNTuple {
          fLenFooter == other.fLenFooter &&
          fReserved == other.fReserved;
    }
+
+   friend std::ostream& operator<<(std::ostream& os, const RNTuple& ntpl) {
+      os << "RNTuple {\n";
+      os << "    fVersion: " << ntpl.fVersion << ",\n";
+      os << "    fSize: " << ntpl.fSize << ",\n";
+      os << "    fSeekHeader: " << ntpl.fSeekHeader << ",\n";
+      os << "    fNBytesHeader: " << ntpl.fNBytesHeader << ",\n";
+      os << "    fLenHeader: " << ntpl.fLenHeader << ",\n";
+      os << "    fSeekFooter: " << ntpl.fSeekFooter << ",\n";
+      os << "    fNBytesFooter: " << ntpl.fNBytesFooter << ",\n";
+      os << "    fLenFooter: " << ntpl.fLenFooter << ",\n";
+      os << "    fReserved: " << ntpl.fReserved << ",\n";
+      os << "}";
+      return os;
+   }
 };
 
 namespace Internal {
