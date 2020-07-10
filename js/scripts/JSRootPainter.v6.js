@@ -3120,7 +3120,7 @@
       if (!obj) return false;
 
       if (obj._typename == "TStyle") {
-         JSROOT.extend(JSROOT.gStyle, style);
+         JSROOT.extend(JSROOT.gStyle, obj);
          return true;
       }
 
