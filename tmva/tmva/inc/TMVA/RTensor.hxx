@@ -606,7 +606,44 @@ std::ostream &operator<<(std::ostream &os, RTensor<T> &x)
 template <typename Value_t, typename Container_t>
 inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Concatenate(RTensor<Value_t, Container_t> &a, std::size_t idx)
 {   
-   
+      // Checking that required dimentions is within the limits of tensor shapes
+   if (this->fShape.size() <= idx){
+      std::stringstream ss;
+      ss << "The required dimention index " << idx << " is less than the number of dimentions of the first tensor: " << this->fShape.size();
+      throw std::runtime_error(ss.str());
+   }
+
+   if (a.fShape.size() <= idx){
+      std::stringstream ss;
+      ss << "The required dimention index " << idx << " is less than the number of dimentions of the second tensor: " << a.fShape.size();
+      throw std::runtime_error(ss.str());
+   }
+
+
+   // Checks for the shape to be equal except along the axis of concatenation
+   bool shapes_valid = (a.fShape.size() == this->fShape.size());
+   if (shapes_valid) {
+      for (std::size_t i = 0; i < this->fShape.size(); i++) {
+         if (a.fShape[i] != this->fShape[i]) {
+            shapes_valid = false;
+            break;
+         }
+      }
+   }
+
+   // Throwing the error for incorrect shapes
+   if (!shapes_valid){
+      std::stringstream dim1;
+      std::stringstream dim2;
+
+      std::copy(this->fShape.begin(), this->fShape.end(), std::ostream_iterator<std::size_t>(dim1, ", "));
+      std::copy(a.fShape.begin(), a.fShape.end(), std::ostream_iterator<std::size_t>(dim2, ", "));
+
+      std::stringstream ss;
+      ss << "Tensors have incompatible shapes concatenating alongside axis " << idx << std::endl <<"The dimentions of the tensors are {" << dim1.str() << "}, and {"<< dim1.str() <<"}";
+      throw std::runtime_error(ss.str());
+   }
+
    Shape_t new_fShape = this->fShape;
    new_fShape[idx] = this->fShape[idx] + a.fShape[idx];
    
