@@ -24,7 +24,7 @@ namespace
 class TGLClipPlaneLogical : public TGLLogicalShape
 {
 protected:
-   void DirectDraw(TGLRnrCtx & rnrCtx) const override
+   void DirectDraw(TGLRnrCtx &rnrCtx) const override
    {
       glBegin(rnrCtx.IsDrawPassFilled() ? GL_QUADS : GL_LINE_LOOP);
       glNormal3d (0.0, 0.0, 1.0);
@@ -52,7 +52,7 @@ public:
 class TGLClipBoxLogical : public TGLLogicalShape
 {
 protected:
-   void DirectDraw(TGLRnrCtx & rnrCtx) const override
+   void DirectDraw(TGLRnrCtx &rnrCtx) const override
    {
       glEnable(GL_NORMALIZE);
       fBoundingBox.Draw(rnrCtx.IsDrawPassFilled());

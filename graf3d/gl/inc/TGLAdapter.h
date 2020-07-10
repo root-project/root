@@ -23,8 +23,8 @@ public:
 
    Bool_t            MakeCurrent() override;
    void              SwapBuffers() override;
-   const TGLFormat  *GetPixelFormat()const override{return 0;}
-   const TGLContext *GetContext()const override{return 0;}
+   const TGLFormat * GetPixelFormat() const override { return 0; }
+   const TGLContext *GetContext() const override { return 0; }
 
    void SetGLDevice(Int_t glDevice)
    {
@@ -34,14 +34,14 @@ public:
    void ReadGLBuffer();
    void SelectOffScreenDevice();
    void MarkForDirectCopy(Bool_t isDirect);
-   void ExtractViewport(Int_t *vp)const override;
+   void ExtractViewport(Int_t *vp) const override;
 
 private:
    TGLAdapter(const TGLAdapter &);
    TGLAdapter &operator = (const TGLAdapter &);
 
-   void AddContext(TGLContext *) override{}
-   void RemoveContext(TGLContext *) override{}
+   void AddContext(TGLContext *) override {}
+   void RemoveContext(TGLContext *) override {}
 
    ClassDef(TGLAdapter, 0) // Allow plot-painters to be used for gl-inpad and gl-viewer.
 };

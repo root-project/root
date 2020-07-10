@@ -444,29 +444,29 @@ public:
    TEveElementList(const TEveElementList& e);
    ~TEveElementList() override {}
 
-   TObject* GetObject(const TEveException& /*eh*/="TEveElementList::GetObject ") const override
+   TObject *GetObject(const TEveException & /*eh*/ = "TEveElementList::GetObject ") const override
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
-   TEveElementList* CloneElement() const override;
+   TEveElementList *CloneElement() const override;
 
-   const char* GetElementName()  const override { return GetName();  }
-   const char* GetElementTitle() const override { return GetTitle(); }
+   const char *GetElementName() const override { return GetName(); }
+   const char *GetElementTitle() const override { return GetTitle(); }
 
-   void SetElementName (const char* name) override
+   void SetElementName(const char *name) override
    { TNamed::SetName(name); NameTitleChanged(); }
 
-   void SetElementTitle(const char* title) override
+   void SetElementTitle(const char *title) override
    { TNamed::SetTitle(title); NameTitleChanged(); }
 
-   void SetElementNameTitle(const char* name, const char* title) override
+   void SetElementNameTitle(const char *name, const char *title) override
    { TNamed::SetNameTitle(name, title); NameTitleChanged(); }
 
    TClass* GetChildClass() const { return fChildClass; }
    void    SetChildClass(TClass* c) { fChildClass = c; }
 
-   Bool_t  AcceptElement(TEveElement* el) override;
+   Bool_t AcceptElement(TEveElement *el) override;
 
-   TClass* ProjectedClass(const TEveProjection* p) const override;
+   TClass *ProjectedClass(const TEveProjection *p) const override;
 
    ClassDef(TEveElementList, 0); // List of TEveElement objects with a possibility to limit the class of accepted elements.
 };
@@ -487,8 +487,8 @@ public:
    TEveElementListProjected();
    ~TEveElementListProjected() override {}
 
-   void UpdateProjection() override;
-   TEveElement* GetProjectedAsElement() override { return this; }
+   void         UpdateProjection() override;
+   TEveElement *GetProjectedAsElement() override { return this; }
 
    ClassDef(TEveElementListProjected, 0); // Projected TEveElementList.
 };

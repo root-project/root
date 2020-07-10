@@ -63,7 +63,7 @@ protected:
 
    void         Init(const TGPicture *blpic, const TGPicture *slpic,
                      FileStat_t &stat, EListViewMode viewMode);
-   void DoRedraw() override;
+   void         DoRedraw() override;
 
 public:
    TGFileItem(const TGWindow *p = 0,
@@ -99,16 +99,16 @@ public:
 
    Atom_t HandleDNDEnter(Atom_t *) override;
 
-   Bool_t HandleDNDLeave() override {
-      return kTRUE;
-   }
+   Bool_t HandleDNDLeave() override { return kTRUE; }
 
-   Atom_t HandleDNDPosition(int, int, Atom_t action, int, int) override {
+   Atom_t HandleDNDPosition(int, int, Atom_t action, int, int) override
+   {
       if (action == TGDNDManager::GetDNDActionCopy()) return action;
       return kNone;
    }
 
-   Bool_t HandleDNDFinished() override {
+   Bool_t HandleDNDFinished() override
+   {
       return ((TGFrame *)(const_cast<TGWindow*>(GetParent())))->HandleDNDFinished();
    }
 
@@ -160,7 +160,7 @@ public:
 
    virtual TGFileItem *AddFile(const char *name, const TGPicture *pic = 0, const TGPicture *lpic = 0);
    virtual TGFileItem *AddRemoteFile(TObject *obj, const TGPicture *ipic = 0, const TGPicture *ilpic = 0);
-   void AddFrame(TGFrame *f, TGLayoutHints *l = 0) override;
+   void                AddFrame(TGFrame *f, TGLayoutHints *l = 0) override;
    virtual void Sort(EFSSortMode sortType);
    virtual void SetFilter(const char *filter);
    virtual void ChangeDirectory(const char *path);

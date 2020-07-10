@@ -61,7 +61,7 @@ public:
    virtual Bool_t    IsReflection() const {return TestBit(kReflection);}  // Return kTRUE if this matrix defines the reflection
    virtual const     Double_t* SetAngles(Double_t theta1, Double_t phi1,Double_t theta2, Double_t phi2, Double_t theta3, Double_t phi3);
    virtual void      SetMatrix(const Double_t *matrix);
-   void      SetName(const char *name) override;
+   void                        SetName(const char *name) override;
 
    ClassDef(TRotMatrix,2)  //Rotation Matrix for 3-D geometry objects
 };

@@ -50,7 +50,7 @@ public:
    Bool_t      IsSigned()    const { return fSigned==1; }
    Bool_t      IsUnsigned()  const { return fSigned==0; }
 
-   void Print(Option_t* option = "") const override;
+   void Print(Option_t *option = "") const override;
 
    ClassDefOverride(TSQLColumnInfo, 0) // Summury information about column from SQL table
 };

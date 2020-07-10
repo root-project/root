@@ -64,7 +64,7 @@ public:
    /**
       Destructor
    */
-   ~BasicMinimizer () override;
+   ~BasicMinimizer() override;
 
 private:
    // usually copying is non trivial, so we make this unaccessible
@@ -85,29 +85,31 @@ private:
 public:
 
    /// set the function to minimize
-   void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
+   void SetFunction(const ROOT::Math::IMultiGenFunction &func) override;
 
    /// set gradient the function to minimize
-   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
+   void SetFunction(const ROOT::Math::IMultiGradFunction &func) override;
 
    /// set free variable
-   bool SetVariable(unsigned int ivar, const std::string & name, double val, double step) override;
-
+   bool SetVariable(unsigned int ivar, const std::string &name, double val, double step) override;
 
    /// set lower limit variable  (override if minimizer supports them )
-   bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower ) override;
+   bool
+   SetLowerLimitedVariable(unsigned int ivar, const std::string &name, double val, double step, double lower) override;
    /// set upper limit variable (override if minimizer supports them )
-   bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ) override;
+   bool
+   SetUpperLimitedVariable(unsigned int ivar, const std::string &name, double val, double step, double upper) override;
    /// set upper/lower limited variable (override if minimizer supports them )
-   bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */) override;
+   bool SetLimitedVariable(unsigned int ivar, const std::string &name, double val, double step, double /* lower */,
+                           double /* upper */) override;
    /// set fixed variable (override if minimizer supports them )
    bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */) override;
    /// set the value of an existing variable
-   bool SetVariableValue(unsigned int ivar, double val ) override;
+   bool SetVariableValue(unsigned int ivar, double val) override;
    /// set the values of all existing variables (array must be dimensioned to the size of existing parameters)
-   bool SetVariableValues(const double * x) override;
+   bool SetVariableValues(const double *x) override;
    /// set the step size of an already existing variable
-   bool SetVariableStepSize(unsigned int ivar, double step ) override;
+   bool SetVariableStepSize(unsigned int ivar, double step) override;
    /// set the lower-limit of an already existing variable
    bool SetVariableLowerLimit(unsigned int ivar, double lower) override;
    /// set the upper-limit of an already existing variable
@@ -120,23 +122,23 @@ public:
    bool ReleaseVariable(unsigned int ivar) override;
    /// query if an existing variable is fixed (i.e. considered constant in the minimization)
    /// note that by default all variables are not fixed
-   bool IsFixedVariable(unsigned int ivar)  const override;
+   bool IsFixedVariable(unsigned int ivar) const override;
    /// get variable settings in a variable object (like ROOT::Fit::ParamsSettings)
-   bool GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & varObj) const override;
+   bool GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings &varObj) const override;
    /// get name of variables (override if minimizer support storing of variable names)
    std::string VariableName(unsigned int ivar) const override;
    /// get index of variable given a variable given a name
    /// return -1 if variable is not found
-   int VariableIndex(const std::string & name) const override;
+   int VariableIndex(const std::string &name) const override;
 
    /// method to perform the minimization
-    bool Minimize() override;
+   bool Minimize() override;
 
    /// return minimum function value
    double MinValue() const override { return fMinVal; }
 
    /// return  pointer to X values at the minimum
-   const double *  X() const override { return &fValues.front(); }
+   const double *X() const override { return &fValues.front(); }
 
    /// number of dimensions
    unsigned int NDim() const override { return fDim; }

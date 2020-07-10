@@ -59,10 +59,10 @@ public:
    void           AddRange(TParallelCoordRange* range);
    void           AddRange() {AddRange(NULL);} // *MENU*
    void           DeleteVariable(); // *MENU*
-   Int_t  DistancetoPrimitive(Int_t px, Int_t py) override;
-   void   Draw(Option_t *option="") override;
+   Int_t           DistancetoPrimitive(Int_t px, Int_t py) override;
+   void            Draw(Option_t *option = "") override;
    Bool_t         Eval(Long64_t evtidx, TParallelCoordSelect *select); // Check an entry is within its ranges owned by a given TParallelSelect.
-   void   ExecuteEvent(Int_t entry, Int_t px, Int_t py) override;
+   void            ExecuteEvent(Int_t entry, Int_t px, Int_t py) override;
    Bool_t         GetBarHisto() {return TestBit(kShowBarHisto);}
    Bool_t         GetBoxPlot() {return TestBit(kShowBox);}
    TH1F          *GetHistogram();
@@ -82,7 +82,7 @@ public:
    Double_t       GetY() {return fY1;}
    Int_t          GetNbins() {return fNbins;}
    Long64_t       GetNentries() const {return fNentries;}
-   char  *GetObjectInfo(Int_t px, Int_t py) const override;
+   char *          GetObjectInfo(Int_t px, Int_t py) const override;
    TParallelCoord* GetParallel() {return fParallel;}
    TList         *GetRanges() {return fRanges;}
    Double_t      *GetValues() {return fVal;}
@@ -90,12 +90,12 @@ public:
    Bool_t         GetVert() {return fX1 == fX2;} // Tells if the axis is vertical or not.
    void           GetXYfromValue(Double_t value, Double_t & x, Double_t & y);
    void           Init();
-   void   Paint(Option_t* option="") override;
+   void            Paint(Option_t *option = "") override;
    void           PaintBoxPlot();
    void           PaintHistogram();
    void           PaintLabels();
-   void   Print(Option_t* option="") const override; // *MENU*
-   void           SavePrimitive(std::ostream & out, Option_t *options) override;
+   void            Print(Option_t *option = "") const override; // *MENU*
+   void            SavePrimitive(std::ostream &out, Option_t *options) override;
    void           SetBoxPlot(Bool_t box); // *TOGGLE* *GETTER=GetBoxPlot
    void           SetBarHisto(Bool_t h) {SetBit(kShowBarHisto,h);} // *TOGGLE* *GETTER=GetBarHisto
    void           SetHistogramLineWidth(Int_t lw=2) {fHistoLW = lw;} // *MENU*
@@ -108,7 +108,7 @@ public:
    void           SetInitMax(Double_t max) {fMaxInit = max;}
    void           SetLiveRangesUpdate(Bool_t on);
    void           SetLogScale(Bool_t log); // *TOGGLE* *GETTER=GetLogScale
-   void           SetTitle(const char* /*title*/) override {} // To hide TNamed::SetTitle.
+   void            SetTitle(const char * /*title*/) override {} // To hide TNamed::SetTitle.
    void           SetValues(Long64_t length, Double_t* val);
    void           SetX(Double_t x, Bool_t gl);    // Set a new x position in case of a vertical display.
    void           SetY(Double_t y, Bool_t gl);    // Set a new y position in case of a horizontal display.

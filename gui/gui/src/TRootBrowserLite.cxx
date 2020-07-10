@@ -183,14 +183,19 @@ public:
    TGListTreeItem *fItem;
 
    TRootBrowserHistoryCursor(TGListTreeItem *item) : fItem(item) {}
-   void Print(Option_t *) const override {  if (fItem) printf("%s\n", fItem->GetText()); }
+   void Print(Option_t *) const override
+   {
+      if (fItem)
+         printf("%s\n", fItem->GetText());
+   }
 };
 
 
 ////////////////////////////////////////////////////////////////////////////////////
 class TRootBrowserHistory : public TList {
 public:
-   void RecursiveRemove(TObject *obj) override {
+   void RecursiveRemove(TObject *obj) override
+   {
       TRootBrowserHistoryCursor *cur;
       TIter next(this);
 
@@ -244,7 +249,7 @@ public:
       fSmall = spic;
       fLarge = pic;
    }
-   ULong_t Hash() const override { return fName.Hash(); }
+   ULong_t     Hash() const override { return fName.Hash(); }
    const char *GetName() const override { return fName.Data(); }
 };
 
@@ -259,7 +264,8 @@ public:
                 const TGPicture *spic, TGString *name,
                 TObject *obj, TClass *cl, EListViewMode viewMode = kLVSmallIcons);
 
-   TDNDData *GetDNDData(Atom_t) override {
+   TDNDData *GetDNDData(Atom_t) override
+   {
       TObject *object = 0;
       if (fObj->IsA() == TKey::Class())
          object = ((TKey *)fObj)->ReadObj();
@@ -275,7 +281,8 @@ public:
       return &fDNDData;
    }
 
-   Bool_t HandleDNDFinished() override {
+   Bool_t HandleDNDFinished() override
+   {
       if (GetParent())
          return ((TGFrame *)GetParent())->HandleDNDFinished();
       return kFALSE;
@@ -337,7 +344,7 @@ public:
    TRootIconList(TRootIconBox* box = 0);
    ~TRootIconList() override;
    void              UpdateName();
-   const char       *GetTitle() const override { return "ListView Container"; }
+   const char *      GetTitle() const override { return "ListView Container"; }
    Bool_t            IsFolder() const override { return kFALSE; }
    void              Browse(TBrowser *b) override;
    const TGPicture  *GetPicture() const { return fPic; }
@@ -403,10 +410,8 @@ private:
    Bool_t           fAutoThumbnail;  //
    TRootBrowserLite    *fBrowser;
 
-   void  *FindItem(const TString& name,
-                   Bool_t direction = kTRUE,
-                   Bool_t caseSensitive = kTRUE,
-                   Bool_t beginWith = kFALSE) override;
+   void *FindItem(const TString &name, Bool_t direction = kTRUE, Bool_t caseSensitive = kTRUE,
+                  Bool_t beginWith = kFALSE) override;
    void RemoveGarbage();
 
 public:
@@ -421,10 +426,13 @@ public:
                          TObject *obj, const char *name);
    void   SetObjHeaders();
    void   Refresh();
-   void   RemoveAll() override;
+   void            RemoveAll() override;
    void   SetGroupSize(Int_t siz) { fGroupSize = siz; }
    Int_t  GetGroupSize() const { return fGroupSize; }
-   TGFrameElement *FindFrame(Int_t x, Int_t y, Bool_t exclude=kTRUE) override { return TGContainer::FindFrame(x,y,exclude); }
+   TGFrameElement *FindFrame(Int_t x, Int_t y, Bool_t exclude = kTRUE) override
+   {
+      return TGContainer::FindFrame(x, y, exclude);
+   }
    Bool_t WasGrouped() const { return fWasGrouped; }
 };
 

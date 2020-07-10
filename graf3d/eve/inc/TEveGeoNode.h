@@ -43,31 +43,31 @@ protected:
 public:
    TEveGeoNode(TGeoNode* node);
 
-   TObject* GetObject(const TEveException&) const override
+   TObject *GetObject(const TEveException &) const override
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
-   const char* GetName()  const override;
-   const char* GetTitle() const override;
-   const char* GetElementName()  const override;
-   const char* GetElementTitle() const override;
+   const char *GetName() const override;
+   const char *GetTitle() const override;
+   const char *GetElementName() const override;
+   const char *GetElementTitle() const override;
 
    TGeoNode* GetNode() const { return fNode; }
 
-   void   ExpandIntoListTree(TGListTree* ltree, TGListTreeItem* parent) override;
+   void ExpandIntoListTree(TGListTree *ltree, TGListTreeItem *parent) override;
 
    virtual void   ExpandIntoListTrees();
    virtual void   ExpandIntoListTreesRecursively();
 
    Bool_t CanEditElement() const override { return kFALSE; }
 
-   void   AddStamp(UChar_t bits) override;
+   void AddStamp(UChar_t bits) override;
 
    Bool_t CanEditMainColor() const override;
    void   SetMainColor(Color_t color) override;
 
-   Bool_t  CanEditMainTransparency() const override;
-   Char_t  GetMainTransparency() const override;
-   void    SetMainTransparency(Char_t t) override;
+   Bool_t CanEditMainTransparency() const override;
+   Char_t GetMainTransparency() const override;
+   void   SetMainTransparency(Char_t t) override;
 
    void UpdateNode(TGeoNode* node);
    void UpdateVolume(TGeoVolume* volume);
@@ -76,7 +76,7 @@ public:
    void SaveExtract(const char* file, const char* name, Bool_t leafs_only);
    void WriteExtract(const char* name, Bool_t leafs_only);
 
-   void Draw(Option_t* option="") override;
+   void Draw(Option_t *option = "") override;
 
    static Int_t GetCSGExportNSeg();
    static void  SetCSGExportNSeg(Int_t nseg);
@@ -116,10 +116,10 @@ public:
    Bool_t CanEditElement() const override { return kTRUE; }
    Bool_t SingleRnrState() const override { return kTRUE; }
 
-   void   AddStamp(UChar_t bits) override;
+   void AddStamp(UChar_t bits) override;
 
-   void Draw(Option_t* option="") override;
-   void Paint(Option_t* option="") override;
+   void Draw(Option_t *option = "") override;
+   void Paint(Option_t *option = "") override;
 
    // Signals from GeoManager.
    // These are not available any more ... colors in list-tree not refreshed

@@ -113,7 +113,7 @@ public:
    virtual Bool_t PartialMerge(Int_t type = kAll | kIncremental);
    virtual void   SetFastMethod(Bool_t fast=kTRUE)  {fFastMethod = fast;}
    virtual void   SetNotrees(Bool_t notrees=kFALSE) {fNoTrees = notrees;}
-   void        RecursiveRemove(TObject *obj) override;
+   void           RecursiveRemove(TObject *obj) override;
 
    ClassDef(TFileMerger, 6)  // File copying and merging services
 };

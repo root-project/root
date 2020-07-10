@@ -162,20 +162,17 @@ namespace ROOT {
 
    class TDefaultInitBehavior: public TInitBehavior {
    public:
-      void Register(const char *cname, Version_t id,
-                            const std::type_info &info,
-                            DictFuncPtr_t dict, Int_t pragmabits) const override {
+      void Register(const char *cname, Version_t id, const std::type_info &info, DictFuncPtr_t dict,
+                    Int_t pragmabits) const override
+      {
          ROOT::AddClass(cname, id, info, dict, pragmabits);
       }
 
-      void Unregister(const char *classname) const override {
-         ROOT::RemoveClass(classname);
-      }
+      void Unregister(const char *classname) const override { ROOT::RemoveClass(classname); }
 
-      TClass *CreateClass(const char *cname, Version_t id,
-                                  const std::type_info &info, TVirtualIsAProxy *isa,
-                                  const char *dfil, const char *ifil,
-                                  Int_t dl, Int_t il) const override {
+      TClass *CreateClass(const char *cname, Version_t id, const std::type_info &info, TVirtualIsAProxy *isa,
+                          const char *dfil, const char *ifil, Int_t dl, Int_t il) const override
+      {
          return ROOT::CreateClass(cname, id, info, isa, dfil, ifil, dl, il);
       }
    };

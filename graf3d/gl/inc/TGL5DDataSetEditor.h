@@ -115,7 +115,7 @@ public:
                       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
    ~TGL5DDataSetEditor() override;
 
-   void   SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    //Slots for "Grid" tab events.
    void GridParametersChanged();

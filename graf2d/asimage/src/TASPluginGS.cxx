@@ -23,7 +23,7 @@ Allows to read PS/EPS/PDF files via GhostScript
 #   define X_DISPLAY_MISSING 1
 #   define popen_flags "r"
 #elif defined (WIN32)
-#   include "Windows4Root.h"
+#include "Windows4Root.h"
 #   define popen_flags "rb"
 #else
 #   include <X11/Xlib.h>

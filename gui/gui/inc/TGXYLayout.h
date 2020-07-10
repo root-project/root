@@ -150,9 +150,9 @@ protected:
 public:
    TGXYLayout(TGCompositeFrame *main);
 
-   void Layout() override;
+   void        Layout() override;
    TGDimension GetDefaultSize() const override;
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    void NewSize() { fFirst = kTRUE; }
 

@@ -79,7 +79,7 @@ private:
 
 public:
    TTimeOutTimer(TMonitor *m, Long_t ms);
-   Bool_t  Notify() override;
+   Bool_t Notify() override;
 };
 
 TTimeOutTimer::TTimeOutTimer(TMonitor *m, Long_t ms)

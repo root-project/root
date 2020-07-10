@@ -52,8 +52,7 @@ public:
 
    ~TFitResult() override {}
 
-
-   void  Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
 
    TMatrixDSym GetCovarianceMatrix() const;
 

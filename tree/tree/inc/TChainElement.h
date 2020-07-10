@@ -65,7 +65,7 @@ public:
    virtual Int_t       GetPacketSize() const {return fPacketSize;}
    virtual Int_t       GetStatus() const {return fStatus;}
    virtual Bool_t      HasBeenLookedUp() { return TestBit(kHasBeenLookedUp); }
-   void        ls(Option_t *option="") const override;
+   void                ls(Option_t *option = "") const override;
    virtual void        SetBaddress(void *add) {fBaddress = add;}
    virtual void        SetBaddressClassName(const char* clname) { fBaddressClassName = clname; }
    virtual void        SetBaddressIsPtr(Bool_t isptr) { fBaddressIsPtr = isptr; }

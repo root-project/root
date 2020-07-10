@@ -91,12 +91,12 @@ public:
    void       RemoveSurface(SurfIter_t surf);
 
    //TGLPlotPainter final-overriders.
-   char      *GetPlotInfo(Int_t px, Int_t py) override;
-   Bool_t     InitGeometry() override;
-   void       StartPan(Int_t px, Int_t py) override;
-   void       Pan(Int_t px, Int_t py) override;
-   void       AddOption(const TString &option) override;
-   void       ProcessEvent(Int_t event, Int_t px, Int_t py) override;
+   char * GetPlotInfo(Int_t px, Int_t py) override;
+   Bool_t InitGeometry() override;
+   void   StartPan(Int_t px, Int_t py) override;
+   void   Pan(Int_t px, Int_t py) override;
+   void   AddOption(const TString &option) override;
+   void   ProcessEvent(Int_t event, Int_t px, Int_t py) override;
 
    //Methods for ged.
    void       ShowBoxCut(Bool_t show) {fBoxCut.SetActive(show);}
@@ -115,15 +115,15 @@ public:
 
 private:
    //TGLPlotPainter final-overriders.
-   void       InitGL()const override;
-   void       DeInitGL()const override;
+   void InitGL() const override;
+   void DeInitGL() const override;
 
-   void       DrawPlot()const override;
+   void DrawPlot() const override;
 
    //Empty overriders.
-   void       DrawSectionXOZ()const override{}
-   void       DrawSectionYOZ()const override{}
-   void       DrawSectionXOY()const override{}
+   void DrawSectionXOZ() const override {}
+   void DrawSectionYOZ() const override {}
+   void DrawSectionXOY() const override {}
 
    //Auxiliary functions.
    void       SetSurfaceColor(ConstSurfIter_t surf)const;

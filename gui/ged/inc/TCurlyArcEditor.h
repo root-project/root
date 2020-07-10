@@ -44,7 +44,7 @@ public:
                 Pixel_t back = GetDefaultFrameBackground());
    ~TCurlyArcEditor() override;
 
-   void   SetModel(TObject* obj) override;
+   void           SetModel(TObject *obj) override;
    virtual void   DoRadius();
    virtual void   DoPhimin();
    virtual void   DoPhimax();

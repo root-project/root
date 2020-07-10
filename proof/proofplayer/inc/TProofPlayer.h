@@ -102,13 +102,13 @@ protected:
 
    static THashList *fgDrawInputPars;  // List of input parameters to be kept on drawing actions
 
-   void         *GetSender() override { return this; }  //used to set gTQSender
+   void *GetSender() override { return this; } // used to set gTQSender
 
    virtual Int_t DrawCanvas(TObject *obj); // Canvas drawing via libProofDraw
 
    virtual void SetupFeedback();  // specialized setup
-   
-   void  MergeOutput(Bool_t savememvalues = kFALSE) override;
+
+   void MergeOutput(Bool_t savememvalues = kFALSE) override;
 
 public:   // fix for broken compilers so TCleanup can call StopFeedback()
    virtual void StopFeedback();   // specialized teardown
@@ -134,57 +134,50 @@ public:
    TProofPlayer(TProof *proof = 0);
    ~TProofPlayer() override;
 
-   Long64_t  Process(TDSet *set,
-                     const char *selector, Option_t *option = "",
-                     Long64_t nentries = -1, Long64_t firstentry = 0) override;
-   Long64_t  Process(TDSet *set,
-                     TSelector *selector, Option_t *option = "",
-                     Long64_t nentries = -1, Long64_t firstentry = 0) override;
-   Bool_t JoinProcess(TList *workers) override;
+   Long64_t            Process(TDSet *set, const char *selector, Option_t *option = "", Long64_t nentries = -1,
+                               Long64_t firstentry = 0) override;
+   Long64_t            Process(TDSet *set, TSelector *selector, Option_t *option = "", Long64_t nentries = -1,
+                               Long64_t firstentry = 0) override;
+   Bool_t              JoinProcess(TList *workers) override;
    TVirtualPacketizer *GetPacketizer() const override { return 0; }
-   Long64_t  Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE) override;
-   Long64_t  Finalize(TQueryResult *qr) override;
-   Long64_t  DrawSelect(TDSet *set, const char *varexp,
-                        const char *selection, Option_t *option = "",
-                        Long64_t nentries = -1, Long64_t firstentry = 0) override;
-   Int_t     GetDrawArgs(const char *var, const char *sel, Option_t *opt,
-                         TString &selector, TString &objname) override;
+   Long64_t            Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE) override;
+   Long64_t            Finalize(TQueryResult *qr) override;
+   Long64_t            DrawSelect(TDSet *set, const char *varexp, const char *selection, Option_t *option = "",
+                                  Long64_t nentries = -1, Long64_t firstentry = 0) override;
+   Int_t     GetDrawArgs(const char *var, const char *sel, Option_t *opt, TString &selector, TString &objname) override;
    void      HandleGetTreeHeader(TMessage *mess) override;
    void      HandleRecvHisto(TMessage *mess) override;
    void      FeedBackCanvas(const char *name, Bool_t create);
 
-   void      StopProcess(Bool_t abort, Int_t timeout = -1) override;
-   void      AddInput(TObject *inp) override;
-   void      ClearInput() override;
-   TObject  *GetOutput(const char *name) const override;
-   TList    *GetOutputList() const override;
-   TList    *GetInputList() const override { return fInput; }
-   TList    *GetListOfResults() const override { return fQueryResults; }
-   void      AddQueryResult(TQueryResult *q) override;
+   void          StopProcess(Bool_t abort, Int_t timeout = -1) override;
+   void          AddInput(TObject *inp) override;
+   void          ClearInput() override;
+   TObject *     GetOutput(const char *name) const override;
+   TList *       GetOutputList() const override;
+   TList *       GetInputList() const override { return fInput; }
+   TList *       GetListOfResults() const override { return fQueryResults; }
+   void          AddQueryResult(TQueryResult *q) override;
    TQueryResult *GetCurrentQuery() const override { return fQuery; }
    TQueryResult *GetQueryResult(const char *ref) override;
-   void      RemoveQueryResult(const char *ref) override;
-   void      SetCurrentQuery(TQueryResult *q) override;
-   void      SetMaxDrawQueries(Int_t max) override { fMaxDrawQueries = max; }
-   void      RestorePreviousQuery() override { fQuery = fPreviousQuery; }
-   Int_t     AddOutputObject(TObject *obj) override;
-   void      AddOutput(TList *out) override;   // Incorporate a list
-   void      StoreOutput(TList *out) override;   // Adopts the list
-   void      StoreFeedback(TObject *slave, TList *out) override; // Adopts the list
-   void      Progress(Long64_t total, Long64_t processed) override; // *SIGNAL*
-   void      Progress(TSlave *, Long64_t total, Long64_t processed) override
-                { Progress(total, processed); }
-   void      Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
-                      Float_t initTime, Float_t procTime,
-                      Float_t evtrti, Float_t mbrti) override; // *SIGNAL*
-   void      Progress(TSlave *, Long64_t total, Long64_t processed, Long64_t bytesread,
-                      Float_t initTime, Float_t procTime,
-                      Float_t evtrti, Float_t mbrti) override
-                { Progress(total, processed, bytesread, initTime, procTime,
-                           evtrti, mbrti); } // *SIGNAL*
-   void      Progress(TProofProgressInfo *pi) override; // *SIGNAL*
-   void      Progress(TSlave *, TProofProgressInfo *pi) override { Progress(pi); } // *SIGNAL*
-   void      Feedback(TList *objs) override; // *SIGNAL*
+   void          RemoveQueryResult(const char *ref) override;
+   void          SetCurrentQuery(TQueryResult *q) override;
+   void          SetMaxDrawQueries(Int_t max) override { fMaxDrawQueries = max; }
+   void          RestorePreviousQuery() override { fQuery = fPreviousQuery; }
+   Int_t         AddOutputObject(TObject *obj) override;
+   void          AddOutput(TList *out) override;                        // Incorporate a list
+   void          StoreOutput(TList *out) override;                      // Adopts the list
+   void          StoreFeedback(TObject *slave, TList *out) override;    // Adopts the list
+   void          Progress(Long64_t total, Long64_t processed) override; // *SIGNAL*
+   void          Progress(TSlave *, Long64_t total, Long64_t processed) override { Progress(total, processed); }
+   void          Progress(Long64_t total, Long64_t processed, Long64_t bytesread, Float_t initTime, Float_t procTime,
+                          Float_t evtrti, Float_t mbrti) override; // *SIGNAL*
+   void Progress(TSlave *, Long64_t total, Long64_t processed, Long64_t bytesread, Float_t initTime, Float_t procTime,
+                 Float_t evtrti, Float_t mbrti) override
+   {
+      Progress(total, processed, bytesread, initTime, procTime, evtrti, mbrti); } // *SIGNAL*
+   void Progress(TProofProgressInfo *pi) override;                            // *SIGNAL*
+   void Progress(TSlave *, TProofProgressInfo *pi) override { Progress(pi); } // *SIGNAL*
+   void Feedback(TList *objs) override;                                       // *SIGNAL*
 
    TDrawFeedback *CreateDrawFeedback(TProof *p) override;
    void           SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt) override;
@@ -192,38 +185,35 @@ public:
 
    TDSetElement *GetNextPacket(TSlave *slave, TMessage *r) override;
 
-   Int_t     ReinitSelector(TQueryResult *qr) override;
+   Int_t ReinitSelector(TQueryResult *qr) override;
 
-   void      UpdateAutoBin(const char *name,
-                           Double_t& xmin, Double_t& xmax,
-                           Double_t& ymin, Double_t& ymax,
-                           Double_t& zmin, Double_t& zmax) override;
+   void UpdateAutoBin(const char *name, Double_t &xmin, Double_t &xmax, Double_t &ymin, Double_t &ymax, Double_t &zmin,
+                      Double_t &zmax) override;
 
-   Bool_t    IsClient() const override { return kFALSE; }
+   Bool_t IsClient() const override { return kFALSE; }
 
-   void      SetExitStatus(EExitStatus st) override { fExitStatus = st; }
+   void        SetExitStatus(EExitStatus st) override { fExitStatus = st; }
    EExitStatus GetExitStatus() const override { return fExitStatus; }
    Long64_t    GetEventsProcessed() const override { return fProgressStatus->GetEntries(); }
    void        AddEventsProcessed(Long64_t ev) override { fProgressStatus->IncEntries(ev); }
 
-   void      SetDispatchTimer(Bool_t on = kTRUE) override;
-   void      SetStopTimer(Bool_t on = kTRUE,
-                          Bool_t abort = kFALSE, Int_t timeout = 0) override;
+   void SetDispatchTimer(Bool_t on = kTRUE) override;
+   void SetStopTimer(Bool_t on = kTRUE, Bool_t abort = kFALSE, Int_t timeout = 0) override;
 
-   void      SetInitTime() override { }
+   void SetInitTime() override {}
 
-   void      SetMerging(Bool_t = kTRUE) override { }
+   void SetMerging(Bool_t = kTRUE) override {}
 
-   Long64_t  GetCacheSize() override;
-   Int_t     GetLearnEntries() override;
+   Long64_t GetCacheSize() override;
+   Int_t    GetLearnEntries() override;
 
-   void      SetOutputFilePath(const char *fp) override { fOutputFilePath = fp; }
-   Int_t     SavePartialResults(Bool_t queryend = kFALSE, Bool_t force = kFALSE) override;
+   void  SetOutputFilePath(const char *fp) override { fOutputFilePath = fp; }
+   Int_t SavePartialResults(Bool_t queryend = kFALSE, Bool_t force = kFALSE) override;
 
    void              SetProcessing(Bool_t on = kTRUE);
-   TProofProgressStatus  *GetProgressStatus() const override { return fProgressStatus; }
+   TProofProgressStatus *GetProgressStatus() const override { return fProgressStatus; }
 
-   void      UpdateProgressInfo() override;
+   void UpdateProgressInfo() override;
 
    ClassDef(TProofPlayer,0)  // Basic PROOF player
 };
@@ -237,24 +227,26 @@ private:
    Bool_t   fIsClient;
 
 protected:
-   void SetupFeedback() override { }
-   void StopFeedback() override { }
+   void SetupFeedback() override {}
+   void StopFeedback() override {}
 
 public:
    TProofPlayerLocal(Bool_t client = kTRUE) : fIsClient(client) { }
-   ~TProofPlayerLocal() override { }
+   ~TProofPlayerLocal() override {}
 
-   Bool_t         IsClient() const override { return fIsClient; }
+   Bool_t    IsClient() const override { return fIsClient; }
    Long64_t  Process(const char *selector, Long64_t nentries = -1, Option_t *option = "");
    Long64_t  Process(TSelector *selector, Long64_t nentries = -1, Option_t *option = "");
-   Long64_t  Process(TDSet *set,
-                     const char *selector, Option_t *option = "",
-                     Long64_t nentries = -1, Long64_t firstentry = 0) override {
-             return TProofPlayer::Process(set, selector, option, nentries, firstentry); }
-   Long64_t  Process(TDSet *set,
-                     TSelector *selector, Option_t *option = "",
-                     Long64_t nentries = -1, Long64_t firstentry = 0) override {
-             return TProofPlayer::Process(set, selector, option, nentries, firstentry); }
+   Long64_t  Process(TDSet *set, const char *selector, Option_t *option = "", Long64_t nentries = -1,
+                     Long64_t firstentry = 0) override
+   {
+      return TProofPlayer::Process(set, selector, option, nentries, firstentry);
+   }
+   Long64_t Process(TDSet *set, TSelector *selector, Option_t *option = "", Long64_t nentries = -1,
+                    Long64_t firstentry = 0) override
+   {
+      return TProofPlayer::Process(set, selector, option, nentries, firstentry);
+   }
    ClassDef(TProofPlayerLocal,0)  // PROOF player running on client
 };
 
@@ -295,7 +287,7 @@ protected:
    TStopwatch         *fMergeSTW;      // Merging stop watch
    Int_t               fNumMergers;    // Number of submergers
 
-   Bool_t  HandleTimer(TTimer *timer) override;
+   Bool_t          HandleTimer(TTimer *timer) override;
    Int_t           InitPacketizer(TDSet *dset, Long64_t nentries,
                                   Long64_t first, const char *defpackunit,
                                   const char *defpackdata);
@@ -305,8 +297,8 @@ protected:
    void            SetLastMergingMsg(TObject *obj);
    virtual Bool_t  SendSelector(const char *selector_file); //send selector to slaves
    TProof         *GetProof() const { return fProof; }
-   void            SetupFeedback() override;  // specialized setup
-   void            StopFeedback() override;   // specialized teardown
+   void            SetupFeedback() override; // specialized setup
+   void            StopFeedback() override;  // specialized teardown
    void            SetSelectorDataMembersFromOutputList();
 
 public:
@@ -316,54 +308,56 @@ public:
                                            fMergeTH1OneByOne(kTRUE), fProcPackets(0),
                                            fProcessMessage(0), fMergeSTW(0), fNumMergers(0) 
                                            { fProgressStatus = new TProofProgressStatus(); }
-   ~TProofPlayerRemote() override;   // Owns the fOutput list
-   Long64_t Process(TDSet *set, const char *selector,
-                            Option_t *option = "", Long64_t nentries = -1,
-                            Long64_t firstentry = 0) override;
-   Long64_t Process(TDSet *set, TSelector *selector,
-                            Option_t *option = "", Long64_t nentries = -1,
-                            Long64_t firstentry = 0) override;
-   Bool_t JoinProcess(TList *workers) override;
-   Long64_t Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE) override;
-   Long64_t Finalize(TQueryResult *qr) override;
-   Long64_t       DrawSelect(TDSet *set, const char *varexp,
-                             const char *selection, Option_t *option = "",
-                             Long64_t nentries = -1, Long64_t firstentry = 0) override;
+                                           ~TProofPlayerRemote() override; // Owns the fOutput list
+                                           Long64_t Process(TDSet *set, const char *selector, Option_t *option = "",
+                                                            Long64_t nentries = -1, Long64_t firstentry = 0) override;
+                                           Long64_t Process(TDSet *set, TSelector *selector, Option_t *option = "",
+                                                            Long64_t nentries = -1, Long64_t firstentry = 0) override;
+                                           Bool_t   JoinProcess(TList *workers) override;
+                                           Long64_t Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE) override;
+                                           Long64_t Finalize(TQueryResult *qr) override;
+                                           Long64_t DrawSelect(TDSet *set, const char *varexp, const char *selection,
+                                                               Option_t *option = "", Long64_t nentries = -1,
+                                                               Long64_t firstentry = 0) override;
 
-   void           RedirectOutput(Bool_t on = kTRUE);
-   void           StopProcess(Bool_t abort, Int_t timeout = -1) override;
-   void           StoreOutput(TList *out) override;   // Adopts the list
-   void   StoreFeedback(TObject *slave, TList *out) override; // Adopts the list
-   Int_t          Incorporate(TObject *obj, TList *out, Bool_t &merged);
-   TObject       *HandleHistogram(TObject *obj, Bool_t &merged);
-   Bool_t         HistoSameAxis(TH1 *h0, TH1 *h1);
-   Int_t          AddOutputObject(TObject *obj) override;
-   void           AddOutput(TList *out) override;   // Incorporate a list
-   void   MergeOutput(Bool_t savememvalues = kFALSE) override;
-   void           Progress(Long64_t total, Long64_t processed) override; // *SIGNAL*
-   void           Progress(TSlave*, Long64_t total, Long64_t processed) override
-                     { Progress(total, processed); }
-   void           Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
-                           Float_t initTime, Float_t procTime,
-                           Float_t evtrti, Float_t mbrti) override; // *SIGNAL*
-   void           Progress(TSlave *, Long64_t total, Long64_t processed, Long64_t bytesread,
-                           Float_t initTime, Float_t procTime,
-                           Float_t evtrti, Float_t mbrti) override
-                      { Progress(total, processed, bytesread, initTime, procTime,
-                           evtrti, mbrti); } // *SIGNAL*
-   void           Progress(TProofProgressInfo *pi) override; // *SIGNAL*
-   void           Progress(TSlave *, TProofProgressInfo *pi) override { Progress(pi); } // *SIGNAL*
-   void           Feedback(TList *objs) override; // *SIGNAL*
-   TDSetElement  *GetNextPacket(TSlave *slave, TMessage *r) override;
-   TVirtualPacketizer *GetPacketizer() const override { return fPacketizer; }
+                                           void  RedirectOutput(Bool_t on = kTRUE);
+                                           void  StopProcess(Bool_t abort, Int_t timeout = -1) override;
+                                           void  StoreOutput(TList *out) override;                   // Adopts the list
+                                           void  StoreFeedback(TObject *slave, TList *out) override; // Adopts the list
+                                           Int_t Incorporate(TObject *obj, TList *out, Bool_t &merged);
+                                           TObject *HandleHistogram(TObject *obj, Bool_t &merged);
+                                           Bool_t   HistoSameAxis(TH1 *h0, TH1 *h1);
+                                           Int_t    AddOutputObject(TObject *obj) override;
+                                           void     AddOutput(TList *out) override; // Incorporate a list
+                                           void     MergeOutput(Bool_t savememvalues = kFALSE) override;
+                                           void     Progress(Long64_t total, Long64_t processed) override; // *SIGNAL*
+                                           void     Progress(TSlave *, Long64_t total, Long64_t processed) override
+                                           {
+                                              Progress(total, processed); }
+                                           void Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                                                         Float_t initTime, Float_t procTime, Float_t evtrti,
+                                                         Float_t mbrti) override; // *SIGNAL*
+                                           void Progress(TSlave *, Long64_t total, Long64_t processed,
+                                                         Long64_t bytesread, Float_t initTime, Float_t procTime,
+                                                         Float_t evtrti, Float_t mbrti) override
+                                           {
+                                              Progress(total, processed, bytesread, initTime, procTime, evtrti, mbrti); } // *SIGNAL*
+                                           void Progress(TProofProgressInfo *pi) override; // *SIGNAL*
+                                           void Progress(TSlave *, TProofProgressInfo *pi) override
+                                           {
+                                              Progress(pi);
+                                           }                                                   // *SIGNAL*
+                                           void                Feedback(TList *objs) override; // *SIGNAL*
+                                           TDSetElement *      GetNextPacket(TSlave *slave, TMessage *r) override;
+                                           TVirtualPacketizer *GetPacketizer() const override { return fPacketizer; }
 
-   Bool_t         IsClient() const override;
+                                           Bool_t IsClient() const override;
 
-   void           SetInitTime() override;
+                                           void SetInitTime() override;
 
-   void           SetMerging(Bool_t on = kTRUE) override;
+                                           void SetMerging(Bool_t on = kTRUE) override;
 
-   ClassDef(TProofPlayerRemote,0)  // PROOF player running on master server
+                                           ClassDef(TProofPlayerRemote, 0) // PROOF player running on master server
 };
 
 
@@ -384,7 +378,7 @@ protected:
 public:
    TProofPlayerSlave(TSocket *socket = 0) : fSocket(socket), fFeedback(0) { }
 
-   void  HandleGetTreeHeader(TMessage *mess) override;
+   void HandleGetTreeHeader(TMessage *mess) override;
 
    ClassDef(TProofPlayerSlave,0)  // PROOF player running on slave server
 };
@@ -415,29 +409,24 @@ protected:
 public:
    TProofPlayerSuperMaster(TProof *proof = 0) :
       TProofPlayerRemote(proof), fReturnFeedback(kFALSE) { }
-   ~TProofPlayerSuperMaster() override { }
+   ~TProofPlayerSuperMaster() override {}
 
-   Long64_t Process(TDSet *set, const char *selector,
-                    Option_t *option = "", Long64_t nentries = -1,
+   Long64_t Process(TDSet *set, const char *selector, Option_t *option = "", Long64_t nentries = -1,
                     Long64_t firstentry = 0) override;
-   Long64_t Process(TDSet *set, TSelector *selector,
-                    Option_t *option = "", Long64_t nentries = -1,
+   Long64_t Process(TDSet *set, TSelector *selector, Option_t *option = "", Long64_t nentries = -1,
                     Long64_t firstentry = 0) override
-                    { return TProofPlayerRemote::Process(set, selector, option,
-                                                         nentries, firstentry); }
-   void  Progress(Long64_t total, Long64_t processed) override
-                    { TProofPlayerRemote::Progress(total, processed); }
-   void  Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
-                  Float_t initTime, Float_t procTime,
-                  Float_t evtrti, Float_t mbrti) override
-                    { TProofPlayerRemote::Progress(total, processed, bytesread,
-                                                   initTime, procTime, evtrti, mbrti); }
-   void  Progress(TProofProgressInfo *pi) override { TProofPlayerRemote::Progress(pi); }
-   void  Progress(TSlave *sl, Long64_t total, Long64_t processed) override;
-   void  Progress(TSlave *sl, Long64_t total, Long64_t processed, Long64_t bytesread,
-                  Float_t initTime, Float_t procTime,
-                  Float_t evtrti, Float_t mbrti) override;
-   void  Progress(TSlave *sl, TProofProgressInfo *pi) override;
+   {
+      return TProofPlayerRemote::Process(set, selector, option, nentries, firstentry); }
+   void Progress(Long64_t total, Long64_t processed) override { TProofPlayerRemote::Progress(total, processed); }
+   void Progress(Long64_t total, Long64_t processed, Long64_t bytesread, Float_t initTime, Float_t procTime,
+                 Float_t evtrti, Float_t mbrti) override
+   {
+      TProofPlayerRemote::Progress(total, processed, bytesread, initTime, procTime, evtrti, mbrti); }
+   void Progress(TProofProgressInfo *pi) override { TProofPlayerRemote::Progress(pi); }
+   void Progress(TSlave *sl, Long64_t total, Long64_t processed) override;
+   void Progress(TSlave *sl, Long64_t total, Long64_t processed, Long64_t bytesread, Float_t initTime, Float_t procTime,
+                 Float_t evtrti, Float_t mbrti) override;
+   void Progress(TSlave *sl, TProofProgressInfo *pi) override;
 
    ClassDef(TProofPlayerSuperMaster,0)  // PROOF player running on super master
 };

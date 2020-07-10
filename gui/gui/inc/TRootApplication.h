@@ -45,14 +45,14 @@ public:
 
    TGClient     *Client() const { return fClient; }
 
-   void    Show() override { }
-   void    Hide() override { }
-   void    Iconify() override { }
-   Bool_t  IsCmdThread() override;
-   void    Init() override { }
-   void    Open() override { }
-   void    Raise() override { }
-   void    Lower() override { }
+   void   Show() override {}
+   void   Hide() override {}
+   void   Iconify() override {}
+   Bool_t IsCmdThread() override;
+   void   Init() override {}
+   void   Open() override {}
+   void   Raise() override {}
+   void   Lower() override {}
 
    ClassDef(TRootApplication,0)  // ROOT native GUI application environment
 };

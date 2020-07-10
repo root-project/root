@@ -35,7 +35,7 @@ public:
 
    void DrawBorder() override;
 
-   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGHorizontal3DLine,0)  //A horizontal 3D separator line
 };
@@ -50,7 +50,7 @@ public:
 
    void DrawBorder() override;
 
-   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGVertical3DLine,0)  //A vertical 3D separator line
 };

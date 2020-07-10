@@ -54,35 +54,37 @@ public:
    };
 
    // inherited interface
-   Double_t  Chisquare(Int_t npar, Double_t *params) const override;
-   void      Clear(Option_t *option="") override;
-   Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs) override;
-   void      FixParameter(Int_t ipar) override;
+   Double_t Chisquare(Int_t npar, Double_t *params) const override;
+   void     Clear(Option_t *option = "") override;
+   Int_t    ExecuteCommand(const char *command, Double_t *args, Int_t nargs) override;
+   void     FixParameter(Int_t ipar) override;
 
-   void      GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95) override;
-   void      GetConfidenceIntervals(TObject *obj, Double_t cl=0.95) override;
+   void GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl = 0.95) override;
+   void GetConfidenceIntervals(TObject *obj, Double_t cl = 0.95) override;
 
    Double_t *GetCovarianceMatrix() const override;
    Double_t  GetCovarianceMatrixElement(Int_t i, Int_t j) const override;
-   Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const override;
-   Int_t     GetNumberTotalParameters() const override;
-   Int_t     GetNumberFreeParameters() const override;
+   Int_t GetErrors(Int_t ipar, Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const override;
+   Int_t GetNumberTotalParameters() const override;
+   Int_t GetNumberFreeParameters() const override;
 
-   Double_t  GetParError(Int_t ipar) const override;
-   Double_t  GetParameter(Int_t ipar) const override;
-   Int_t     GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const override;
+   Double_t    GetParError(Int_t ipar) const override;
+   Double_t    GetParameter(Int_t ipar) const override;
+   Int_t       GetParameter(Int_t ipar, char *name, Double_t &value, Double_t &verr, Double_t &vlow,
+                            Double_t &vhigh) const override;
    const char *GetParName(Int_t ipar) const override;
-   Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const override;
-   Double_t  GetSumLog(Int_t i) override;
+   Int_t       GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const override;
+   Double_t    GetSumLog(Int_t i) override;
 
-   Bool_t    IsFixed(Int_t ipar) const override ;
+   Bool_t IsFixed(Int_t ipar) const override;
 
-   void      PrintResults(Int_t level, Double_t amin) const override;
-   void      ReleaseParameter(Int_t ipar) override;
-   void      SetFitMethod(const char *name) override;
-   Int_t     SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh) override;
+   void PrintResults(Int_t level, Double_t amin) const override;
+   void ReleaseParameter(Int_t ipar) override;
+   void SetFitMethod(const char *name) override;
+   Int_t
+   SetParameter(Int_t ipar, const char *parname, Double_t value, Double_t verr, Double_t vlow, Double_t vhigh) override;
 
-   void      SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t) ) override;
+   void SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t)) override;
    // for using interpreted function passed by the user
    virtual void SetMethodCall(TMethodCall * m) { fMethodCall = m; }
 

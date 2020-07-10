@@ -39,7 +39,7 @@ public:
                           Float_t width, Float_t height);
    ~TEveRGBAPaletteOverlay() override {}
 
-   void Render(TGLRnrCtx& rnrCtx) override;
+   void Render(TGLRnrCtx &rnrCtx) override;
 
    TAxis&           RefAxis() { return fAxis; }
    TGLAxisPainter&  RefAxisPainter() { return fAxisPainter; }

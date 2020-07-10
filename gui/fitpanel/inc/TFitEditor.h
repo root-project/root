@@ -185,7 +185,7 @@ public:
    TList*  GetListOfFittingFunctions(TObject* obj = 0);
 
    static  TFitEditor *GetInstance(TVirtualPad* pad = 0, TObject *obj = 0);
-   Option_t  *GetDrawOption() const override;
+   Option_t *          GetDrawOption() const override;
    virtual void       Hide();
    virtual void       Show(TVirtualPad* pad, TObject *obj);
 
@@ -194,59 +194,59 @@ public:
    virtual void       Terminate();
            void       UpdateGUI();
 
-   void   CloseWindow() override;
-   virtual void   ConnectSlots();
-   virtual void   DisconnectSlots();
-   void   RecursiveRemove(TObject* obj) override;
+           void         CloseWindow() override;
+           virtual void ConnectSlots();
+           virtual void DisconnectSlots();
+           void         RecursiveRemove(TObject *obj) override;
 
-protected:
-   virtual void   SetCanvas(TCanvas *c);
+        protected:
+           virtual void SetCanvas(TCanvas *c);
 
-public:
-   virtual void   SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event);
-   virtual void   SetFunction(const char *function);
+        public:
+           virtual void SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event);
+           virtual void SetFunction(const char *function);
 
-   // slot methods 'General' tab
-   void           FillFunctionList(Int_t selected = -1);
-   void           FillMinMethodList(Int_t selected = -1);
-   virtual void   DoAddition(Bool_t on);
-   virtual void   DoNormAddition(Bool_t on);
-   virtual void   DoConvolution(Bool_t on);
-   virtual void   DoAdvancedOptions();
-   virtual void   DoAllWeights1();
-   virtual void   DoClose();
-   virtual void   DoEmptyBinsAllWeights1();
-   virtual void   DoEnteredFunction();
-   virtual void   DoUpdate();
-   virtual void   DoFit();
-   virtual void   DoMaxIterations();
-   virtual void   DoDataSet(Int_t sel);
-   virtual void   DoFunction(Int_t sel);
-   virtual void   DoLinearFit();
-   virtual void   DoNoChi2();
-   virtual void   DoNoSelection();
-   virtual void   DoNoStoreDrawing();
-   virtual void   DoReset();
-   virtual void   DoRobustFit();
-   virtual void   DoSetParameters();
-   virtual void   DoSliderXMoved();
-   virtual void   DoNumericSliderXChanged();
-   virtual void   DoSliderYMoved();
-   virtual void   DoNumericSliderYChanged();
-   virtual void   DoSliderZMoved();
-   virtual void   DoUserDialog();
-   virtual void   DoUseFuncRange();
+           // slot methods 'General' tab
+           void         FillFunctionList(Int_t selected = -1);
+           void         FillMinMethodList(Int_t selected = -1);
+           virtual void DoAddition(Bool_t on);
+           virtual void DoNormAddition(Bool_t on);
+           virtual void DoConvolution(Bool_t on);
+           virtual void DoAdvancedOptions();
+           virtual void DoAllWeights1();
+           virtual void DoClose();
+           virtual void DoEmptyBinsAllWeights1();
+           virtual void DoEnteredFunction();
+           virtual void DoUpdate();
+           virtual void DoFit();
+           virtual void DoMaxIterations();
+           virtual void DoDataSet(Int_t sel);
+           virtual void DoFunction(Int_t sel);
+           virtual void DoLinearFit();
+           virtual void DoNoChi2();
+           virtual void DoNoSelection();
+           virtual void DoNoStoreDrawing();
+           virtual void DoReset();
+           virtual void DoRobustFit();
+           virtual void DoSetParameters();
+           virtual void DoSliderXMoved();
+           virtual void DoNumericSliderXChanged();
+           virtual void DoSliderYMoved();
+           virtual void DoNumericSliderYChanged();
+           virtual void DoSliderZMoved();
+           virtual void DoUserDialog();
+           virtual void DoUseFuncRange();
 
-   // slot methods 'Minimization' tab
-   virtual void   DoLibrary(Bool_t on);
-   virtual void   DoMinMethod(Int_t );
-   virtual void   DoPrintOpt(Bool_t on);
+           // slot methods 'Minimization' tab
+           virtual void DoLibrary(Bool_t on);
+           virtual void DoMinMethod(Int_t);
+           virtual void DoPrintOpt(Bool_t on);
 
-public:
-   typedef std::vector<FuncParamData_t > FuncParams_t;
+        public:
+           typedef std::vector<FuncParamData_t> FuncParams_t;
 
-   friend class FitEditorUnitTesting;
-   ClassDef(TFitEditor,0)  //Fit Panel interface
+           friend class FitEditorUnitTesting;
+           ClassDef(TFitEditor, 0) // Fit Panel interface
 };
 
 #endif

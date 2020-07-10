@@ -114,7 +114,7 @@ public:
                     Pixel_t back = GetDefaultFrameBackground());
    ~TGeoManagerEditor() override;
    static void    LoadLib() {;}
-   void   SetModel(TObject *obj) override;
+   void           SetModel(TObject *obj) override;
 
    virtual void   SelectedSlot(TVirtualPad* pad, TObject* obj, Int_t event);
    void           ConnectSelected(TCanvas *c);

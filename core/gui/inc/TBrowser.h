@@ -96,12 +96,16 @@ public:
    TObject      *GetSelected() const           { return fLastSelectedObject; }
    void          SetRefreshFlag(Bool_t flag)   { fNeedRefresh = flag; }
    void          Iconify()                     { if (fImp) fImp->Iconify(); }
-   void  RecursiveRemove(TObject *obj) override;
+   void RecursiveRemove(TObject *obj) override;
    void          Refresh();
    void          SetSelected(TObject *clickedObject);
    void          Show()                        { if (fImp) fImp->Show(); }
-   void          SetDrawOption(Option_t *option="") override { if (fImp) fImp->SetDrawOption(option); }
-   Option_t     *GetDrawOption() const override { return  (fImp) ? fImp->GetDrawOption() : 0; }
+   void SetDrawOption(Option_t *option = "") override
+   {
+      if (fImp)
+         fImp->SetDrawOption(option);
+   }
+   Option_t *GetDrawOption() const override { return (fImp) ? fImp->GetDrawOption() : 0; }
 
    Long_t        ExecPlugin(const char *name = 0, const char *fname = 0,
                             const char *cmd = 0, Int_t pos = 1, Int_t subpos = -1) {

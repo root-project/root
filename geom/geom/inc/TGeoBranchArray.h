@@ -94,7 +94,7 @@ public:
 
    void              AddLevel(Int_t dindex);
    static Long64_t   BinarySearch(Long64_t n, const TGeoBranchArray **array, TGeoBranchArray *value);
-   Int_t     Compare(const TObject *obj) const override;
+   Int_t             Compare(const TObject *obj) const override;
    void              CleanMatrix();
    TGeoNode        **GetArray() const    {return fArray;}
    size_t            GetLevel() const    {return fLevel;}
@@ -106,9 +106,9 @@ public:
    void              GetPath(TString &path) const;
    void              Init(TGeoNode **branch, TGeoMatrix *global, Int_t level);
    void              InitFromNavigator(TGeoNavigator *nav);
-   Bool_t    IsSortable() const override {return kTRUE;}
+   Bool_t            IsSortable() const override { return kTRUE; }
    Bool_t            IsOutside() const {return (fLevel<0)?kTRUE:kFALSE;}
-   void      Print(Option_t *option="") const override;
+   void              Print(Option_t *option = "") const override;
    static void       Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_t down=kTRUE);
    void              UpdateNavigator(TGeoNavigator *nav) const;
 

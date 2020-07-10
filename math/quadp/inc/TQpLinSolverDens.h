@@ -72,10 +72,10 @@ public:
 
    ~TQpLinSolverDens() override {}
 
-   void Factor         (TQpDataBase *prob,TQpVar *vars) override;
+   void Factor(TQpDataBase *prob, TQpVar *vars) override;
    void SolveCompressed(TVectorD &rhs) override;
-   void PutXDiagonal   (TVectorD &xdiag) override;
-   void PutZDiagonal   (TVectorD &zdiag) override;
+   void PutXDiagonal(TVectorD &xdiag) override;
+   void PutZDiagonal(TVectorD &zdiag) override;
 
    TQpLinSolverDens &operator= (const TQpLinSolverDens &source);
 

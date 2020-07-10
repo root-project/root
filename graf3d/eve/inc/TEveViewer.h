@@ -59,14 +59,14 @@ public:
 
    virtual void AddScene(TEveScene* scene);
 
-   void RemoveElementLocal(TEveElement* el) override;
+   void RemoveElementLocal(TEveElement *el) override;
    void RemoveElementsLocal() override;
 
-   TObject* GetEditorObject(const TEveException& eh="TEveViewer::GetEditorObject ") const override;
+   TObject *GetEditorObject(const TEveException &eh = "TEveViewer::GetEditorObject ") const override;
 
-   Bool_t HandleElementPaste(TEveElement* el) override;
+   Bool_t HandleElementPaste(TEveElement *el) override;
 
-   const TGPicture* GetListTreeIcon(Bool_t open=kFALSE) override;
+   const TGPicture *GetListTreeIcon(Bool_t open = kFALSE) override;
 
    ClassDef(TEveViewer, 0); // Reve representation of TGLViewer.
 };
@@ -94,8 +94,8 @@ public:
    TEveViewerList(const char* n="TEveViewerList", const char* t="");
    ~TEveViewerList() override;
 
-   void AddElement(TEveElement* el) override;
-   void RemoveElementLocal(TEveElement* el) override;
+   void AddElement(TEveElement *el) override;
+   void RemoveElementLocal(TEveElement *el) override;
    void RemoveElementsLocal() override;
 
    // --------------------------------

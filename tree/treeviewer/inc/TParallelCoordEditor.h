@@ -117,7 +117,7 @@ public:
    virtual void            DoUnApply();
    virtual void            DoVariableSelect(const char* var);
    virtual void            DoWeightCut();
-   void            SetModel(TObject* obj) override;
+   void                    SetModel(TObject *obj) override;
 
    ClassDef(TParallelCoordEditor,0)    // GUI for editing the parallel coordinates plot attributes.
 };

@@ -31,7 +31,7 @@ public:
    TPyROOTApplication(
       const char* acn, Int_t* argc, char** argv, Bool_t bLoadLibs = kTRUE );
 
-   ~TPyROOTApplication() override { }
+   ~TPyROOTApplication() override {}
    ClassDef(TPyROOTApplication,0)   //Setup interactive application
 };
 

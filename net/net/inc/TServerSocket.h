@@ -62,31 +62,53 @@ public:
    ~TServerSocket() override;
 
    virtual TSocket      *Accept(UChar_t Opt = 0);
-   TInetAddress  GetLocalInetAddress() override;
-   Int_t         GetLocalPort() override;
+   TInetAddress          GetLocalInetAddress() override;
+   Int_t                 GetLocalPort() override;
 
-   Int_t         Send(const TMessage &) override
-                    { MayNotUse("Send(const TMessage &)"); return 0; }
-   Int_t         Send(Int_t) override
-                    { MayNotUse("Send(Int_t)"); return 0; }
-   Int_t         Send(Int_t, Int_t) override
-                    { MayNotUse("Send(Int_t, Int_t)"); return 0; }
-   Int_t         Send(const char *, Int_t = kMESS_STRING) override
-                    { MayNotUse("Send(const char *, Int_t)"); return 0; }
-   Int_t         SendObject(const TObject *, Int_t = kMESS_OBJECT) override
-                    { MayNotUse("SendObject(const TObject *, Int_t)"); return 0; }
-   Int_t         SendRaw(const void *, Int_t, ESendRecvOptions = kDefault) override
-                    { MayNotUse("SendRaw(const void *, Int_t, ESendRecvOptions)"); return 0; }
-   Int_t         Recv(TMessage *&) override
-                    { MayNotUse("Recv(TMessage *&)"); return 0; }
-   Int_t         Recv(Int_t &, Int_t &) override
-                    { MayNotUse("Recv(Int_t &, Int_t &)"); return 0; }
-   Int_t         Recv(char *, Int_t) override
-                    { MayNotUse("Recv(char *, Int_t)"); return 0; }
-   Int_t         Recv(char *, Int_t, Int_t &) override
-                    { MayNotUse("Recv(char *, Int_t, Int_t &)"); return 0; }
-   Int_t         RecvRaw(void *, Int_t, ESendRecvOptions = kDefault) override
-                    { MayNotUse("RecvRaw(void *, Int_t, ESendRecvOptions)"); return 0; }
+   Int_t Send(const TMessage &) override
+   {
+      MayNotUse("Send(const TMessage &)");
+      return 0; }
+   Int_t Send(Int_t) override
+   {
+      MayNotUse("Send(Int_t)");
+      return 0; }
+   Int_t Send(Int_t, Int_t) override
+   {
+      MayNotUse("Send(Int_t, Int_t)");
+      return 0; }
+   Int_t Send(const char *, Int_t = kMESS_STRING) override
+   {
+      MayNotUse("Send(const char *, Int_t)");
+      return 0; }
+   Int_t SendObject(const TObject *, Int_t = kMESS_OBJECT) override
+   {
+      MayNotUse("SendObject(const TObject *, Int_t)");
+      return 0; }
+   Int_t SendRaw(const void *, Int_t, ESendRecvOptions = kDefault) override
+   {
+      MayNotUse("SendRaw(const void *, Int_t, ESendRecvOptions)");
+      return 0; }
+   Int_t Recv(TMessage *&) override
+   {
+      MayNotUse("Recv(TMessage *&)");
+      return 0; }
+   Int_t Recv(Int_t &, Int_t &) override
+   {
+      MayNotUse("Recv(Int_t &, Int_t &)");
+      return 0; }
+   Int_t Recv(char *, Int_t) override
+   {
+      MayNotUse("Recv(char *, Int_t)");
+      return 0; }
+   Int_t Recv(char *, Int_t, Int_t &) override
+   {
+      MayNotUse("Recv(char *, Int_t, Int_t &)");
+      return 0; }
+   Int_t RecvRaw(void *, Int_t, ESendRecvOptions = kDefault) override
+   {
+      MayNotUse("RecvRaw(void *, Int_t, ESendRecvOptions)");
+      return 0; }
 
    static UChar_t     GetAcceptOptions();
    static void        SetAcceptOptions(UChar_t Opt);

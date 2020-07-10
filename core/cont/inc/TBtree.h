@@ -69,27 +69,27 @@ public:
    typedef TBtreeIter Iterator_t;
 
    TBtree(Int_t ordern = 3);  //create a TBtree of order n
-       ~TBtree() override;
-   void        Clear(Option_t *option="") override;
-   void        Delete(Option_t *option="") override;
-   TObject    *FindObject(const char *name) const override;
-   TObject    *FindObject(const TObject *obj) const override;
-   TObject   **GetObjectRef(const TObject *) const override { return 0; }
-   TIterator  *MakeIterator(Bool_t dir = kIterForward) const override;
+   ~TBtree() override;
+   void       Clear(Option_t *option = "") override;
+   void       Delete(Option_t *option = "") override;
+   TObject *  FindObject(const char *name) const override;
+   TObject *  FindObject(const TObject *obj) const override;
+   TObject ** GetObjectRef(const TObject *) const override { return 0; }
+   TIterator *MakeIterator(Bool_t dir = kIterForward) const override;
 
-   void        Add(TObject *obj) override;
-   void        AddFirst(TObject *obj) override { Add(obj); }
-   void        AddLast(TObject *obj) override { Add(obj); }
-   void        AddAt(TObject *obj, Int_t) override { Add(obj); }
-   void        AddAfter(const TObject *, TObject *obj) override { Add(obj); }
-   void        AddBefore(const TObject *, TObject *obj) override { Add(obj); }
-   TObject    *Remove(TObject *obj) override;
+   void     Add(TObject *obj) override;
+   void     AddFirst(TObject *obj) override { Add(obj); }
+   void     AddLast(TObject *obj) override { Add(obj); }
+   void     AddAt(TObject *obj, Int_t) override { Add(obj); }
+   void     AddAfter(const TObject *, TObject *obj) override { Add(obj); }
+   void     AddBefore(const TObject *, TObject *obj) override { Add(obj); }
+   TObject *Remove(TObject *obj) override;
 
-   TObject    *At(Int_t idx) const override;
-   TObject    *Before(const TObject *obj) const override;
-   TObject    *After(const TObject *obj) const override;
-   TObject    *First() const override;
-   TObject    *Last() const override;
+   TObject *At(Int_t idx) const override;
+   TObject *Before(const TObject *obj) const override;
+   TObject *After(const TObject *obj) const override;
+   TObject *First() const override;
+   TObject *Last() const override;
 
    //void PrintOn(std::ostream &os) const;
 
@@ -202,8 +202,8 @@ public:
    void      Remove(Int_t idx) override;
    void      RemoveItem(Int_t idx);
 
-   TObject  *operator[](Int_t i) const override;
-   TObject  *Found(const TObject *obj, TBtNode **which, Int_t *where) override;
+   TObject *operator[](Int_t i) const override;
+   TObject *Found(const TObject *obj, TBtNode **which, Int_t *where) override;
 
    Int_t     NofKeys(Int_t idx) const;
    Int_t     NofKeys() const override;
@@ -283,8 +283,8 @@ public:
    void       Remove(Int_t idx) override;
    void       RemoveItem(Int_t idx) { Remove(idx); }
 
-   TObject   *operator[](Int_t i) const override;
-   TObject   *Found(const TObject *obj, TBtNode **which, Int_t *where) override;
+   TObject *operator[](Int_t i) const override;
+   TObject *Found(const TObject *obj, TBtNode **which, Int_t *where) override;
 
    Int_t      NofKeys(Int_t i) const;
    Int_t      NofKeys() const override;
@@ -294,8 +294,8 @@ public:
 
    Int_t      IndexOf(const TObject *obj) const;
 
-   TBtLeafNode  *FirstLeafNode() override;
-   TBtLeafNode  *LastLeafNode() override;
+   TBtLeafNode *FirstLeafNode() override;
+   TBtLeafNode *LastLeafNode() override;
 
    void       Split() override;
    void       SplitWith(TBtLeafNode *r, Int_t idx);
@@ -347,16 +347,16 @@ private:
 public:
    TBtreeIter(const TBtree *t, Bool_t dir = kIterForward);
    TBtreeIter(const TBtreeIter &iter);
-   ~TBtreeIter() override { }
-   TIterator  &operator=(const TIterator &rhs) override;
+   ~TBtreeIter() override {}
+   TIterator & operator=(const TIterator &rhs) override;
    TBtreeIter &operator=(const TBtreeIter &rhs);
 
-   const TCollection  *GetCollection() const override { return fTree; }
-   TObject            *Next() override;
+   const TCollection * GetCollection() const override { return fTree; }
+   TObject *           Next() override;
    void                Reset() override;
    Bool_t              operator!=(const TIterator &aIter) const override;
    Bool_t              operator!=(const TBtreeIter &aIter) const;
-   TObject            *operator*() const override;
+   TObject *           operator*() const override;
 
    ClassDef(TBtreeIter,0)  //B-tree iterator
 };

@@ -48,7 +48,7 @@ private:
    Bool_t    fInterrupt;  //flags an interrupt to Select
 
    void  SetReady(TSocket *sock);
-   void *GetSender() override { return this; }  // used to get gTQSender
+   void *GetSender() override { return this; } // used to get gTQSender
 
 public:
    enum EInterest { kRead = 1, kWrite = 2 };

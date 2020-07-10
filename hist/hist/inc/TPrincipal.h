@@ -54,8 +54,8 @@ public:
    TPrincipal(Int_t nVariables, Option_t *opt="ND");
 
    virtual void       AddRow(const Double_t *x);
-   void       Browse(TBrowser *b) override;
-   void       Clear(Option_t *option="") override;
+   void               Browse(TBrowser *b) override;
+   void               Clear(Option_t *option = "") override;
    const TMatrixD    *GetCovarianceMatrix() const {return &fCovarianceMatrix;}
    const TVectorD    *GetEigenValues() const      {return &fEigenValues;}
    const TMatrixD    *GetEigenVectors() const     {return &fEigenVectors;}
@@ -64,13 +64,13 @@ public:
    const Double_t    *GetRow(Int_t row);
    const TVectorD    *GetSigmas() const           {return &fSigmas;}
    const TVectorD    *GetUserData() const         {return &fUserData;}
-   Bool_t             IsFolder() const override { return kTRUE;}
+   Bool_t             IsFolder() const override { return kTRUE; }
    virtual void       MakeCode(const char *filename ="pca", Option_t *option="");  // *MENU*
    virtual void       MakeHistograms(const char *name = "pca", Option_t *option="epsdx"); // *MENU*
    virtual void       MakeMethods(const char *classname = "PCA", Option_t *option=""); // *MENU*
    virtual void       MakePrincipals();            // *MENU*
    virtual void       P2X(const Double_t *p, Double_t *x, Int_t nTest);
-   void       Print(Option_t *opt="MSE") const override;         // *MENU*
+   void               Print(Option_t *opt = "MSE") const override; // *MENU*
    virtual void       SumOfSquareResiduals(const Double_t *x, Double_t *s);
    void               Test(Option_t *option="");       // *MENU*
    virtual void       X2P(const Double_t *x, Double_t *p);

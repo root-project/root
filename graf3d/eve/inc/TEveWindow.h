@@ -124,7 +124,7 @@ public:
                                  TGMainFrame* mf);
    ~TEveCompositeFrameInMainFrame() override;
 
-   void WindowNameChanged(const TString& name) override;
+   void WindowNameChanged(const TString &name) override;
 
    void Destroy() override;
 
@@ -185,7 +185,7 @@ public:
                            TGTab* tab);
    ~TEveCompositeFrameInTab() override;
 
-   void WindowNameChanged(const TString& name) override;
+   void WindowNameChanged(const TString &name) override;
 
    void Destroy() override;
 
@@ -314,7 +314,7 @@ public:
    TEveWindowSlot(const char* n="TEveWindowSlot", const char* t="");
    ~TEveWindowSlot() override;
 
-   TGFrame* GetGUIFrame() override;
+   TGFrame *GetGUIFrame() override;
 
    TEveWindowPack*   MakePack(); // *MENU*
    TEveWindowTab*    MakeTab();  // *MENU*
@@ -345,7 +345,7 @@ public:
    TEveWindowFrame(TGFrame* frame, const char* n="TEveWindowFrame", const char* t="");
    ~TEveWindowFrame() override;
 
-   TGFrame* GetGUIFrame() override { return fGUIFrame; }
+   TGFrame *GetGUIFrame() override { return fGUIFrame; }
 
    TGCompositeFrame* GetGUICompositeFrame();
 
@@ -370,11 +370,11 @@ public:
    TEveWindowPack(TGPack* p, const char* n="TEveWindowPack", const char* t="");
    ~TEveWindowPack() override;
 
-   TGFrame*        GetGUIFrame() override;
+   TGFrame *GetGUIFrame() override;
 
-   Bool_t          CanMakeNewSlots() const override { return kTRUE; }
+   Bool_t                  CanMakeNewSlots() const override { return kTRUE; }
    virtual TEveWindowSlot* NewSlotWithWeight(Float_t w);
-   TEveWindowSlot* NewSlot() override; // *MENU*
+   TEveWindowSlot *        NewSlot() override; // *MENU*
 
    void FlipOrientation(); // *MENU*
    void SetVertical(Bool_t x=kTRUE);
@@ -405,10 +405,10 @@ public:
    TEveWindowTab(TGTab* tab, const char* n="TEveWindowTab", const char* t="");
    ~TEveWindowTab() override;
 
-   TGFrame*        GetGUIFrame() override;
+   TGFrame *GetGUIFrame() override;
 
    Bool_t          CanMakeNewSlots() const override { return kTRUE; }
-   TEveWindowSlot* NewSlot() override; // *MENU*
+   TEveWindowSlot *NewSlot() override; // *MENU*
 
    TGTab* GetTab() const { return fTab; }
 

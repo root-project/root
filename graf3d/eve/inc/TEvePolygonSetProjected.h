@@ -79,11 +79,11 @@ public:
    TEvePolygonSetProjected(const char* n="TEvePolygonSetProjected", const char* t="");
    ~TEvePolygonSetProjected() override;
 
-   void    ComputeBBox() override;
+   void ComputeBBox() override;
 
-   void    SetProjection(TEveProjectionManager* mng, TEveProjectable* model) override;
-   void    UpdateProjection() override;
-   TEveElement* GetProjectedAsElement() override { return this; }
+   void         SetProjection(TEveProjectionManager *mng, TEveProjectable *model) override;
+   void         UpdateProjection() override;
+   TEveElement *GetProjectedAsElement() override { return this; }
 
    void            ProjectBuffer3D();
 

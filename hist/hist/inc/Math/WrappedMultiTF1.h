@@ -82,18 +82,12 @@ namespace ROOT {
          /**
              Clone the wrapper but not the original function
          */
-         IMultiGenFunctionTempl<T> *Clone() const override
-         {
-            return new WrappedMultiTF1Templ<T>(*this);
-         }
+         IMultiGenFunctionTempl<T> *Clone() const override { return new WrappedMultiTF1Templ<T>(*this); }
 
          /**
               Retrieve the dimension of the function
           */
-         unsigned int NDim() const override
-         {
-            return fDim;
-         }
+         unsigned int NDim() const override { return fDim; }
 
          /// get the parameter values (return values from TF1)
          const double *Parameters() const override
@@ -117,9 +111,7 @@ namespace ROOT {
          }
 
          /// return parameter name (from TF1)
-         std::string ParameterName(unsigned int i) const override {
-            return std::string(fFunc->GetParName(i));
-         }
+         std::string ParameterName(unsigned int i) const override { return std::string(fFunc->GetParName(i)); }
 
          // evaluate the derivative of the function with respect to the parameters
          void ParameterGradient(const T *x, const double *par, T *grad) const override;
@@ -143,10 +135,7 @@ namespace ROOT {
 
       private:
          /// evaluate function passing coordinates x and vector of parameters
-         T DoEvalPar(const T *x, const double *p) const override
-         {
-            return fFunc->EvalPar(x, p);
-         }
+         T DoEvalPar(const T *x, const double *p) const override { return fFunc->EvalPar(x, p); }
 
          /// evaluate function using the cached parameter values (of TF1)
          /// re-implement for better efficiency

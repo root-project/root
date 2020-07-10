@@ -45,7 +45,8 @@ namespace ROOT {
 
          void SetSeed(uint32_t seed) { fSeed = seed; }
 
-         double Rndm() override {
+         double Rndm() override
+         {
             //double Rndm() {
             return Rndm_impl();
          }

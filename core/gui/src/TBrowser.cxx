@@ -60,9 +60,9 @@ class TBrowserObject : public TNamed
 public:
 
    TBrowserObject(void *obj, TClass *cl, const char *brname);
-   ~TBrowserObject() override{;}
+   ~TBrowserObject() override { ; }
 
-   void    Browse(TBrowser* b) override;
+   void    Browse(TBrowser *b) override;
    Bool_t  IsFolder() const override;
    TClass *IsA() const override { return fClass; }
 

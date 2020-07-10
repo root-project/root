@@ -43,13 +43,13 @@ private:
 public:
    THashList(Int_t capacity=TCollection::kInitHashTableCapacity, Int_t rehash=0);
    THashList(TObject *parent, Int_t capacity=TCollection::kInitHashTableCapacity, Int_t rehash=0);
-      ~THashList() override;
+   ~THashList() override;
    Float_t    AverageCollisions() const;
-   void       Clear(Option_t *option="") override;
-   void       Delete(Option_t *option="") override;
+   void       Clear(Option_t *option = "") override;
+   void       Delete(Option_t *option = "") override;
 
-   TObject   *FindObject(const char *name) const override;
-   TObject   *FindObject(const TObject *obj) const override;
+   TObject *FindObject(const char *name) const override;
+   TObject *FindObject(const TObject *obj) const override;
 
    const TList *GetListForObject(const char *name) const;
    const TList *GetListForObject(const TObject *obj) const;
@@ -65,8 +65,8 @@ public:
    void       AddBefore(TObjLink *before, TObject *obj) override;
    void       RecursiveRemove(TObject *obj) override;
    void       Rehash(Int_t newCapacity);
-   TObject   *Remove(TObject *obj) override;
-   TObject   *Remove(TObjLink *lnk) override;
+   TObject *  Remove(TObject *obj) override;
+   TObject *  Remove(TObjLink *lnk) override;
    bool       UseRWLock() override;
 
    ClassDefOverride(THashList, 0) // Doubly linked list with hashtable for lookup

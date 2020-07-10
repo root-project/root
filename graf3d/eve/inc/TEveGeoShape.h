@@ -42,7 +42,7 @@ public:
    TEveGeoShape(const char* name="TEveGeoShape", const char* title=0);
    ~TEveGeoShape() override;
 
-   TObject* GetObject(const TEveException&) const override
+   TObject *GetObject(const TEveException &) const override
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
    Int_t       GetNSegments()  const { return fNSegments; }
@@ -51,7 +51,7 @@ public:
    void        SetShape(TGeoShape* s);
 
    void ComputeBBox() override;
-   void Paint(Option_t* option="") override;
+   void Paint(Option_t *option = "") override;
 
    void Save(const char* file, const char* name="Extract");
    void SaveExtract(const char* file, const char* name);
@@ -61,7 +61,7 @@ public:
 
    // GeoProjectable
    virtual TBuffer3D*   MakeBuffer3D();
-   TClass*      ProjectedClass(const TEveProjection* p) const override;
+   TClass *             ProjectedClass(const TEveProjection *p) const override;
 
    static TGeoManager*  GetGeoMangeur();
    static TGeoHMatrix*  GetGeoHMatrixIdentity();
@@ -87,9 +87,9 @@ public:
    TEveGeoShapeProjected();
    ~TEveGeoShapeProjected() override;
 
-   void SetProjection(TEveProjectionManager* proj, TEveProjectable* model) override;
-   void UpdateProjection() override;
-   TEveElement* GetProjectedAsElement() override { return this; }
+   void         SetProjection(TEveProjectionManager *proj, TEveProjectable *model) override;
+   void         UpdateProjection() override;
+   TEveElement *GetProjectedAsElement() override { return this; }
 
    void ComputeBBox() override;
 

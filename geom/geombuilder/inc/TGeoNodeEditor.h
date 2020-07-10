@@ -60,7 +60,7 @@ public:
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
    ~TGeoNodeEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
    void           DoEditMother();
    void           DoEditVolume();

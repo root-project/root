@@ -35,8 +35,8 @@ public:
    TDSetProxy();
    TDSetProxy(const char *type, const char *objname = "*", const char *dir = "/");
 
-   void           Reset() override;
-   TDSetElement  *Next(Long64_t totalEntries = -1) override;
+   void          Reset() override;
+   TDSetElement *Next(Long64_t totalEntries = -1) override;
 
    void  SetProofServ(TProofServ *serv);
 

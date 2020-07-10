@@ -122,7 +122,7 @@ public:
    TGuiBldMenuDialog(const TGWindow *main, TObject *obj, TMethod *method);
 
    const char *GetParameters();
-   void CloseWindow() override;
+   void        CloseWindow() override;
    void ConnectButtonSignals();
    void Build();
    void Popup();
@@ -676,7 +676,12 @@ private:
 public:
    TGuiBldDragManagerRepeatTimer(TGuiBldDragManager *m, Long_t ms) :
                                  TTimer(ms, kTRUE) { fManager = m; }
-   Bool_t Notify() override { fManager->HandleTimer(this); Reset(); return kFALSE; }
+   Bool_t Notify() override
+   {
+      fManager->HandleTimer(this);
+      Reset();
+      return kFALSE;
+   }
 };
 
 
@@ -691,7 +696,7 @@ public:
    TGGrabRect(Int_t type);
    ~TGGrabRect() override {}
 
-   Bool_t HandleButton(Event_t *ev) override;
+   Bool_t  HandleButton(Event_t *ev) override;
    ECursor GetType() const { return fType; }
 };
 

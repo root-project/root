@@ -137,10 +137,7 @@ namespace ROOT {
          /**
             Implement the ROOT::Math::IBaseFunctionMultiDim interface DoEval(x) using the cached parameter values
          */
-         T DoEval(const T *x) const override
-         {
-            return DoEvalPar(x, Parameters());
-         }
+         T DoEval(const T *x) const override { return DoEvalPar(x, Parameters()); }
       };
 
 
@@ -197,11 +194,7 @@ namespace ROOT {
          /**
             Implement the ROOT::Math::IBaseFunctionOneDim interface DoEval(x) using the cached parameter values
          */
-         double DoEval(double x) const override
-         {
-            return DoEvalPar(x, Parameters());
-         }
-
+         double DoEval(double x) const override { return DoEvalPar(x, Parameters()); }
       };
 
 
@@ -232,8 +225,7 @@ namespace ROOT {
          /**
             Virtual Destructor (no operations)
          */
-         ~IParametricGradFunctionMultiDimTempl() override  {}
-
+         ~IParametricGradFunctionMultiDimTempl() override {}
 
          /* Reimplementation instead of using BaseParamFunc::operator();
          until the bug in VS is fixed */
@@ -284,11 +276,8 @@ namespace ROOT {
             Evaluate the partial derivative w.r.t a parameter ipar , to be implemented by the derived classes
           */
          virtual T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const = 0;
-         T DoEvalPar(const T *x, const double *p) const override = 0;
-         T DoEval(const T *x) const override
-         {
-            return DoEvalPar(x, Parameters());
-         }
+         T         DoEvalPar(const T *x, const double *p) const override = 0;
+         T         DoEval(const T *x) const override { return DoEvalPar(x, Parameters()); }
       };
 
 //_______________________________________________________________________________
@@ -320,8 +309,7 @@ namespace ROOT {
          /**
             Virtual Destructor (no operations)
          */
-         ~IParametricGradFunctionOneDim() override  {}
-
+         ~IParametricGradFunctionOneDim() override {}
 
          using BaseParamFunc::operator();
 

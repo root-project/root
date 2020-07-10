@@ -61,11 +61,11 @@ public:
    void     CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
    void     CellArrayFill(Int_t r, Int_t g, Int_t b) override;
    void     CellArrayEnd() override;
-   void     Close(Option_t *opt="") override;
+   void     Close(Option_t *opt = "") override;
    Double_t CMtoPDF(Double_t u) {return Int_t(0.5 + 72*u/2.54);}
-   void     DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) override;
-   void     DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
-                      Int_t mode, Int_t border, Int_t dark, Int_t light) override;
+   void     DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override;
+   void     DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t yt, Int_t mode, Int_t border, Int_t dark,
+                      Int_t light) override;
    void     DrawHatch(Float_t dy, Float_t angle, Int_t n, Float_t *x, Float_t *y);
    void     DrawHatch(Float_t dy, Float_t angle, Int_t n, Double_t *x, Double_t *y);
    void     DrawPolyLine(Int_t n, TPoints *xy);
@@ -81,30 +81,30 @@ public:
    void     NewPage() override;
    void     Off();
    void     On();
-   void     Open(const char *filename, Int_t type=-111) override;
+   void     Open(const char *filename, Int_t type = -111) override;
    void     PatternEncode();
-   void     PrintFast(Int_t nch, const char *string="") override;
-   void     PrintStr(const char *string="") override;
+   void     PrintFast(Int_t nch, const char *string = "") override;
+   void     PrintStr(const char *string = "") override;
    void     Range(Float_t xrange, Float_t yrange);
    void     SetAlpha(Float_t alpha = 1.);
    void     SetColor(Int_t color = 1);
    void     SetColor(Float_t r, Float_t g, Float_t b) override;
-   void     SetFillColor( Color_t cindex=1) override;
+   void     SetFillColor(Color_t cindex = 1) override;
    void     SetFillPatterns(Int_t ipat, Int_t color);
-   void     SetLineColor( Color_t cindex=1) override;
+   void     SetLineColor(Color_t cindex = 1) override;
    void     SetLineJoin(Int_t linejoin=0);
    void     SetLineCap(Int_t linecap=0);
    void     SetLineScale(Float_t scale=1) {fLineScale = scale;}
    void     SetLineStyle(Style_t linestyle = 1) override;
    void     SetLineWidth(Width_t linewidth = 1) override;
-   void     SetMarkerColor( Color_t cindex=1) override;
-   void     SetTextColor( Color_t cindex=1) override;
+   void     SetMarkerColor(Color_t cindex = 1) override;
+   void     SetTextColor(Color_t cindex = 1) override;
    void     Text(Double_t x, Double_t y, const char *string) override;
    void     Text(Double_t, Double_t, const wchar_t *) override;
    void     TextNDC(Double_t u, Double_t v, const char *string);
    void     TextNDC(Double_t, Double_t, const wchar_t *);
    void     WriteCompressedBuffer();
-    void WriteReal(Float_t r, Bool_t space=kTRUE) override;
+   void     WriteReal(Float_t r, Bool_t space = kTRUE) override;
    Double_t UtoPDF(Double_t u);
    Double_t VtoPDF(Double_t v);
    Double_t XtoPDF(Double_t x);

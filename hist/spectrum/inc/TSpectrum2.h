@@ -43,7 +43,7 @@ public:
    Int_t         GetNPeaks() const {return fNPeaks;}
    Double_t      *GetPositionX() const {return fPositionX;}
    Double_t      *GetPositionY() const {return fPositionY;}
-   void  Print(Option_t *option="") const override;
+   void           Print(Option_t *option = "") const override;
    virtual Int_t Search(const TH1 *hist, Double_t sigma=2, Option_t *option="", Double_t threshold=0.05);
    static void   SetAverageWindow(Int_t w=3);   //set average window
    static void   SetDeconIterations(Int_t n=3); //set max number of decon iterations

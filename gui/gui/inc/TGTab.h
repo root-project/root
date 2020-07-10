@@ -50,9 +50,9 @@ private:
 public:
    TGTabLayout(TGTab *main);
 
-   void Layout() override;
+   void        Layout() override;
    TGDimension GetDefaultSize() const override;
-   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGTabLayout,0)  // Layout manager for TGTab widget
 };
@@ -99,7 +99,7 @@ public:
                                        Bool_t storeRemoved = kTRUE); // *MENU*icon=bld_removetab.png*
    virtual Bool_t            SetTab(Int_t tabIndex, Bool_t emit = kTRUE);
    virtual Bool_t            SetTab(const char *name, Bool_t emit = kTRUE);
-   void              DrawBorder() override { }
+   void                      DrawBorder() override {}
 
    TGCompositeFrame *GetContainer() const { return fContainer; }
    Int_t             GetCurrent() const { return fCurrent; }
@@ -115,7 +115,7 @@ public:
    virtual void      SetText(const char *text = "tab");              //*MENU*icon=bld_rename.png*
    Bool_t            IsEnabled(Int_t tabIndex) const;
 
-   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    virtual void CloseTab(Int_t id) { Emit("CloseTab(Int_t)", id); }  //*SIGNAL*
    virtual void Removed(Int_t id) { Emit("Removed(Int_t)", id); }    //*SIGNAL*
@@ -153,15 +153,15 @@ public:
                 Pixel_t back = GetDefaultFrameBackground());
    ~TGTabElement() override;
 
-   void        DrawBorder() override;
-   TGDimension GetDefaultSize() const override;
+   void                DrawBorder() override;
+   TGDimension         GetDefaultSize() const override;
    const TGString     *GetText() const { return fText; }
    const char         *GetString() const { return fText->GetString(); }
-   Bool_t      HandleButton(Event_t *event) override;
+   Bool_t              HandleButton(Event_t *event) override;
    void                SetText(TGString *text);
    virtual void        SetEnabled(Bool_t on = kTRUE) { fEnabled = on; }
    Bool_t              IsEnabled() const { return fEnabled; }
-   void        SetEditDisabled(UInt_t) override {}
+   void                SetEditDisabled(UInt_t) override {}
    virtual void        ShowClose(Bool_t on = kTRUE);
    Bool_t              IsCloseShown() const { return fShowClose; }
    virtual void        SetActive(Bool_t on = kTRUE) { fActive = on; }

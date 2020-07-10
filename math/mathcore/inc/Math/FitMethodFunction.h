@@ -53,7 +53,7 @@ public:
    /**
       Virtual Destructor (no operations)
    */
-   ~BasicFitMethodFunction () override  {}
+   ~BasicFitMethodFunction() override {}
 
    /**
       Number of dimension (parameters) . From IGenMultiFunction interface

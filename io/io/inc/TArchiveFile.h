@@ -81,7 +81,7 @@ public:
    TArchiveMember(const char *name);
    TArchiveMember(const TArchiveMember &member);
    TArchiveMember &operator=(const TArchiveMember &rhs);
-   ~TArchiveMember() override { }
+   ~TArchiveMember() override {}
 
    const char *GetName() const override { return fName; }
    const char *GetComment() const { return fComment; }

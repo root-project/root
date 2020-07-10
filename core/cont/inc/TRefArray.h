@@ -61,38 +61,38 @@ public:
    TRefArray(Int_t s, Int_t lowerBound = 0, TProcessID *pid = 0);
    TRefArray(const TRefArray &a);
    TRefArray& operator=(const TRefArray &a);
-            ~TRefArray() override;
-   void     Clear(Option_t *option="") override;
+   ~TRefArray() override;
+   void             Clear(Option_t *option = "") override;
    virtual void     Compress();
-   void     Delete(Option_t *option="") override;
+   void             Delete(Option_t *option = "") override;
    virtual void     Expand(Int_t newSize);   // expand or shrink an array
    Int_t            GetEntries() const override;
    Int_t            GetEntriesFast() const {
       return GetAbsLast() + 1;   //only OK when no gaps
    }
    Int_t            GetLast() const override;
-   TObject        **GetObjectRef(const TObject *obj) const override;
+   TObject **       GetObjectRef(const TObject *obj) const override;
    TProcessID      *GetPID() const {return fPID;}
    UInt_t           GetUID(Int_t at) const;
    Bool_t           IsEmpty() const override { return GetAbsLast() == -1; }
-   TIterator       *MakeIterator(Bool_t dir = kIterForward) const override;
+   TIterator *      MakeIterator(Bool_t dir = kIterForward) const override;
 
    void             Add(TObject *obj) override { AddLast(obj); }
-   void     AddFirst(TObject *obj) override;
-   void     AddLast(TObject *obj) override;
-   void     AddAt(TObject *obj, Int_t idx) override;
+   void             AddFirst(TObject *obj) override;
+   void             AddLast(TObject *obj) override;
+   void             AddAt(TObject *obj, Int_t idx) override;
    virtual void     AddAtAndExpand(TObject *obj, Int_t idx);
    virtual Int_t    AddAtFree(TObject *obj);
-   void     AddAfter(const TObject *after, TObject *obj) override;
-   void     AddBefore(const TObject *before, TObject *obj) override;
-   TObject *RemoveAt(Int_t idx) override;
-   TObject *Remove(TObject *obj) override;
+   void             AddAfter(const TObject *after, TObject *obj) override;
+   void             AddBefore(const TObject *before, TObject *obj) override;
+   TObject *        RemoveAt(Int_t idx) override;
+   TObject *        Remove(TObject *obj) override;
 
-   TObject         *At(Int_t idx) const override;
-   TObject         *Before(const TObject *obj) const override;
-   TObject         *After(const TObject *obj) const override;
-   TObject         *First() const override;
-   TObject         *Last() const override;
+   TObject *        At(Int_t idx) const override;
+   TObject *        Before(const TObject *obj) const override;
+   TObject *        After(const TObject *obj) const override;
+   TObject *        First() const override;
+   TObject *        Last() const override;
    virtual TObject *operator[](Int_t i) const;
    Int_t            LowerBound() const { return fLowerBound; }
    Int_t            IndexOf(const TObject *obj) const override;
@@ -135,16 +135,16 @@ private:
 public:
    TRefArrayIter(const TRefArray *arr, Bool_t dir = kIterForward);
    TRefArrayIter(const TRefArrayIter &iter);
-   ~TRefArrayIter() override { }
-   TIterator         &operator=(const TIterator &rhs) override;
+   ~TRefArrayIter() override {}
+   TIterator &        operator=(const TIterator &rhs) override;
    TRefArrayIter     &operator=(const TRefArrayIter &rhs);
 
    const TCollection *GetCollection() const override { return fArray; }
-   TObject           *Next() override;
+   TObject *          Next() override;
    void               Reset() override;
    Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const TRefArrayIter &aIter) const;
-   TObject           *operator*() const override;
+   TObject *          operator*() const override;
 
    ClassDef(TRefArrayIter,0)  //Object array iterator
 };

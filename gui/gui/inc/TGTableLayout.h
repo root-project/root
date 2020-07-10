@@ -55,13 +55,13 @@ public:
          fAttachRight(attach_right),
          fAttachTop(attach_top),
          fAttachBottom(attach_bottom) { }
-   ~TGTableLayoutHints() override { }
+   ~TGTableLayoutHints() override {}
 
    UInt_t GetAttachLeft() const { return fAttachLeft; }
    UInt_t GetAttachRight() const { return fAttachRight; }
    UInt_t GetAttachTop() const { return fAttachTop; }
    UInt_t GetAttachBottom() const { return fAttachBottom; }
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void   SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    ClassDef(TGTableLayoutHints,0)  // Class describing GUI table layout hints
 };
@@ -129,9 +129,9 @@ public:
                  Bool_t homogeneous = kFALSE, Int_t sep = 0, Int_t hints = 0);
    ~TGTableLayout() override;
 
-   void Layout() override;
+   void        Layout() override;
    TGDimension GetDefaultSize() const override; // return sum of all child sizes
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    ClassDef(TGTableLayout,0)  // Table layout manager
 };

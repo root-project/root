@@ -98,7 +98,7 @@ public:
 
    TGLSelectRecord& operator=(const TGLSelectRecord& rec);
 
-   void Set(UInt_t* data) override;
+   void Set(UInt_t *data) override;
    void Reset() override;
 
    Bool_t             GetTransparent() const { return fTransparent; }
@@ -150,7 +150,7 @@ public:
 
    TGLOvlSelectRecord& operator=(const TGLOvlSelectRecord& rec);
 
-   void Set(UInt_t* data) override;
+   void Set(UInt_t *data) override;
    void Reset() override;
 
    TGLOverlayElement* GetOvlElement() const { return fOvlElement; }

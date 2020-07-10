@@ -118,14 +118,14 @@ public:
 
    ~TMatrixTBase() override {}
 
-           inline       Int_t     GetRowLwb     () const { return fRowLwb; }
-           inline       Int_t     GetRowUpb     () const { return fNrows+fRowLwb-1; }
-           inline       Int_t     GetNrows      () const { return fNrows; }
-           inline       Int_t     GetColLwb     () const { return fColLwb; }
-           inline       Int_t     GetColUpb     () const { return fNcols+fColLwb-1; }
-           inline       Int_t     GetNcols      () const { return fNcols; }
-           inline       Int_t     GetNoElements () const { return fNelems; }
-           inline       Element   GetTol        () const { return fTol; }
+   inline Int_t   GetRowLwb() const { return fRowLwb; }
+   inline Int_t   GetRowUpb() const { return fNrows + fRowLwb - 1; }
+   inline Int_t   GetNrows() const { return fNrows; }
+   inline Int_t   GetColLwb() const { return fColLwb; }
+   inline Int_t   GetColUpb() const { return fNcols + fColLwb - 1; }
+   inline Int_t   GetNcols() const { return fNcols; }
+   inline Int_t   GetNoElements() const { return fNelems; }
+   inline Element GetTol() const { return fTol; }
 
    virtual        const Element  *GetMatrixArray  () const = 0;
    virtual              Element  *GetMatrixArray  ()       = 0;
@@ -139,27 +139,31 @@ public:
    virtual              TMatrixTBase<Element> &SetMatrixArray  (const Element *data,Option_t *option="");
            inline       Element                SetTol          (Element tol);
 
-   void   Clear      (Option_t *option="") override = 0;
+           void Clear(Option_t *option = "") override = 0;
 
-   inline  void   Invalidate ()       { SetBit(kStatus); }
-   inline  void   MakeValid  ()       { ResetBit(kStatus); }
-   inline  Bool_t IsValid    () const { return !TestBit(kStatus); }
-   inline  Bool_t IsOwner    () const { return fIsOwner; }
-   virtual Bool_t IsSymmetric() const;
+           inline void    Invalidate() { SetBit(kStatus); }
+           inline void    MakeValid() { ResetBit(kStatus); }
+           inline Bool_t  IsValid() const { return !TestBit(kStatus); }
+           inline Bool_t  IsOwner() const { return fIsOwner; }
+           virtual Bool_t IsSymmetric() const;
 
-   virtual TMatrixTBase<Element> &GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                         TMatrixTBase<Element> &target,Option_t *option="S") const = 0;
-   virtual TMatrixTBase<Element> &SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase<Element> &source) = 0;
+           virtual TMatrixTBase<Element> &GetSub(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
+                                                 TMatrixTBase<Element> &target, Option_t *option = "S") const = 0;
+           virtual TMatrixTBase<Element> &SetSub(Int_t row_lwb, Int_t col_lwb, const TMatrixTBase<Element> &source) = 0;
 
-   virtual void                   GetMatrix2Array(Element *data,Option_t *option="") const;
-   virtual TMatrixTBase<Element> &InsertRow      (Int_t row,Int_t col,const Element *v,Int_t n = -1);
-   virtual void                   ExtractRow     (Int_t row,Int_t col,      Element *v,Int_t n = -1) const;
+           virtual void                   GetMatrix2Array(Element *data, Option_t *option = "") const;
+           virtual TMatrixTBase<Element> &InsertRow(Int_t row, Int_t col, const Element *v, Int_t n = -1);
+           virtual void                   ExtractRow(Int_t row, Int_t col, Element *v, Int_t n = -1) const;
 
-   virtual TMatrixTBase<Element> &Shift          (Int_t row_shift,Int_t col_shift);
-   virtual TMatrixTBase<Element> &ResizeTo       (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1) = 0;
-   virtual TMatrixTBase<Element> &ResizeTo       (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1) = 0;
+           virtual TMatrixTBase<Element> &Shift(Int_t row_shift, Int_t col_shift);
+           virtual TMatrixTBase<Element> &ResizeTo(Int_t nrows, Int_t ncols, Int_t nr_nonzeros = -1) = 0;
+           virtual TMatrixTBase<Element> &
+           ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Int_t nr_nonzeros = -1) = 0;
 
-   virtual Double_t Determinant() const                          { AbstractMethod("Determinant()"); return 0.; }
+           virtual Double_t Determinant() const
+           {
+              AbstractMethod("Determinant()");
+              return 0.; }
    virtual void     Determinant(Double_t &d1,Double_t &d2) const { AbstractMethod("Determinant()"); d1 = 0.; d2 = 0.; }
 
    virtual TMatrixTBase<Element> &Zero       ();
@@ -180,8 +184,8 @@ public:
    virtual Element Min        () const;
    virtual Element Max        () const;
 
-   void Draw (Option_t *option="") override;       // *MENU*
-   void Print(Option_t *name  ="") const override; // *MENU*
+   void Draw(Option_t *option = "") override;      // *MENU*
+   void Print(Option_t *name = "") const override; // *MENU*
 
    virtual Element   operator()(Int_t rown,Int_t coln) const = 0;
    virtual Element  &operator()(Int_t rown,Int_t coln)       = 0;

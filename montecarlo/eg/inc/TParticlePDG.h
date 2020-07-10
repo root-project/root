@@ -105,7 +105,7 @@ public:
 
    virtual void  PrintDecayChannel(TDecayChannel* dc, Option_t* opt = "") const;
 
-   void  Print(Option_t* opt = "") const override; // *MENU*
+   void Print(Option_t *opt = "") const override; // *MENU*
 
    ClassDef(TParticlePDG,2)  // PDG static particle definition
 };

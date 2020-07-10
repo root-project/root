@@ -30,7 +30,7 @@ public:
 
    ELODAxes SupportedLODAxes() const override { return kLODAxesAll; }
    Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const override;
-   void     DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   void     DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
    ClassDef(TGLSphere,0); // a spherical logical shape
 };

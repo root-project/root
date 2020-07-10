@@ -92,21 +92,21 @@ public:
    virtual TGShutterItem *AddPage(const char *item = "Page"); //*MENU*
    virtual void   RemovePage();                    //*MENU*
    virtual void   RenamePage(const char *name);    //*MENU*
-   Bool_t HandleTimer(TTimer *t) override;
-   void   Layout() override;
-   void   SetLayoutManager(TGLayoutManager*) override { }
+   Bool_t                 HandleTimer(TTimer *t) override;
+   void                   Layout() override;
+   void                   SetLayoutManager(TGLayoutManager *) override {}
    TGShutterItem *GetSelectedItem() const { return fSelectedItem; }
    TGShutterItem *GetItem(const char *name);
    virtual void   SetSelectedItem(TGShutterItem *item);
    virtual void   SetSelectedItem(const char *name);
    virtual void   EnableItem(const char *name, Bool_t on = kTRUE);
 
-   TGDimension GetDefaultSize() const override;
+   TGDimension         GetDefaultSize() const override;
    virtual void        SetDefaultSize(UInt_t w, UInt_t h);
 
-   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   Bool_t ProcessMessage(Long_t cmd, Long_t parm1, Long_t parm2) override;
+   Bool_t         ProcessMessage(Long_t cmd, Long_t parm1, Long_t parm2) override;
    virtual void   Selected(TGShutterItem *item) { Emit(" Selected(TGShutterItem*)", item); } //*SIGNAL*
 
    ClassDef(TGShutter,0)  // Shutter widget

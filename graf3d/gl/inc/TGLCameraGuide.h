@@ -38,12 +38,11 @@ public:
    void SetXY(Float_t x, Float_t y) { fXPos = x; fYPos = y; }
    void SetSize(Float_t s) { fSize = s; }
 
-   Bool_t MouseEnter(TGLOvlSelectRecord& selRec) override;
-   Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
-                         Event_t* event) override;
+   Bool_t MouseEnter(TGLOvlSelectRecord &selRec) override;
+   Bool_t Handle(TGLRnrCtx &rnrCtx, TGLOvlSelectRecord &selRec, Event_t *event) override;
    void   MouseLeave() override;
 
-   void Render(TGLRnrCtx& rnrCtx) override;
+   void Render(TGLRnrCtx &rnrCtx) override;
 
    ClassDef(TGLCameraGuide, 0); // Short description.
 };

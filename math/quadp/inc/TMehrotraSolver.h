@@ -75,10 +75,9 @@ public:
 
    ~TMehrotraSolver() override;
 
-   Int_t Solve           (TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid) override;
-   void  DefMonitor      (TQpDataBase *data,TQpVar *vars,TQpResidual *resids,
-                                  Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
-                                  Int_t status_code,Int_t level) override;
+   Int_t Solve(TQpDataBase *prob, TQpVar *iterate, TQpResidual *resid) override;
+   void  DefMonitor(TQpDataBase *data, TQpVar *vars, TQpResidual *resids, Double_t alpha, Double_t sigma, Int_t i,
+                    Double_t mu, Int_t status_code, Int_t level) override;
 
    TMehrotraSolver &operator=(const TMehrotraSolver &source);
 

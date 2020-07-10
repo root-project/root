@@ -42,9 +42,9 @@ public:
    TEventList();
    TEventList(const char *name, const char *title="",Int_t initsize=0, Int_t delta = 0);
    TEventList(const TEventList &list);
-             ~TEventList() override;
+   ~TEventList() override;
    virtual void      Add(const TEventList *list);
-   void      Clear(Option_t *option="") override {Reset(option);}
+   void              Clear(Option_t *option = "") override { Reset(option); }
    virtual Bool_t    Contains(Long64_t entry);
    virtual Bool_t    ContainsRange(Long64_t entrymin, Long64_t entrymax);
    virtual void      DirectoryAutoAdd(TDirectory *);
@@ -58,12 +58,12 @@ public:
    virtual Int_t     GetSize() const { return fSize; }
    virtual void      Intersect(const TEventList *list);
    virtual Int_t     Merge(TCollection *list);
-   void      Print(Option_t *option="") const override;
+   void              Print(Option_t *option = "") const override;
    virtual void      Reset(Option_t *option="");
    virtual void      Resize(Int_t delta=0);
    virtual void      SetDelta(Int_t delta=100) {fDelta = delta;}
    virtual void      SetDirectory(TDirectory *dir);
-   void      SetName(const char *name) override; // *MENU*
+   void              SetName(const char *name) override;                       // *MENU*
    virtual void      SetReapplyCut(Bool_t apply = kFALSE) {fReapply = apply;}; // *TOGGLE*
    virtual void      Sort();
    virtual void      Subtract(const TEventList *list);

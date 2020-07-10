@@ -249,25 +249,18 @@ public:
    ~MemFunHandler() override {}
 
    // clone of the function handler (use copy-ctor)
-   ImplFunc * Copy() const override { return new MemFunHandler(*this); }
+   ImplFunc *Copy() const override { return new MemFunHandler(*this); }
 
    // clone of the function handler (use copy-ctor)
-   BaseFunc * Clone() const override { return new MemFunHandler(*this); }
+   BaseFunc *Clone() const override { return new MemFunHandler(*this); }
 
    // constructor for multi-dimensional functions
-   unsigned int NDim() const override {
-      return fDim;
-   }
+   unsigned int NDim() const override { return fDim; }
 
 private :
+   inline double DoEval(double x) const override { return ((*fObj).*fMemFn)(x); }
 
-   inline double DoEval (double x) const override {
-      return ((*fObj).*fMemFn)(x);
-   }
-
-   inline double DoEval (const double * x) const override {
-      return ((*fObj).*fMemFn)(x);
-   }
+   inline double DoEval(const double *x) const override { return ((*fObj).*fMemFn)(x); }
 
    unsigned int fDim;
    mutable PointerToObj fObj;
@@ -432,7 +425,7 @@ public:
    /**
       Destructor (no operations)
    */
-   ~Functor () override  {}
+   ~Functor() override {}
 
    /**
       Copy constructor for functor based on ROOT::Math::IMultiGenFunction
@@ -457,18 +450,13 @@ public:
 
 
    // clone of the function handler (use copy-ctor)
-   ImplBase * Clone() const override { return new Functor(*this); }
+   ImplBase *Clone() const override { return new Functor(*this); }
 
    // for multi-dimensional functions
    unsigned int NDim() const override { return fImpl->NDim(); }
 
 private :
-
-
-   inline double DoEval (const double * x) const override {
-      return (*fImpl)(x);
-   }
-
+   inline double DoEval(const double *x) const override { return (*fImpl)(x); }
 
    std::unique_ptr<Impl> fImpl;   // pointer to base functor handler
 
@@ -525,8 +513,7 @@ public:
    /**
       Destructor (no operations)
    */
-   ~Functor1D () override  {}
-
+   ~Functor1D() override {}
 
    /**
       Copy constructor for Functor based on ROOT::Math::IGenFunction
@@ -550,13 +537,10 @@ public:
    }
 
    // clone of the function handler (use copy-ctor)
-   ImplBase * Clone() const override { return new Functor1D(*this); }
+   ImplBase *Clone() const override { return new Functor1D(*this); }
 
 private :
-
-   inline double DoEval (double x) const override {
-      return (*fImpl)(x);
-   }
+   inline double DoEval(double x) const override { return (*fImpl)(x); }
 
    std::unique_ptr<Impl> fImpl;   // pointer to base functor handler
 };
@@ -626,8 +610,7 @@ public:
    /**
       Destructor (no operations)
    */
-   ~GradFunctor () override  {}
-
+   ~GradFunctor() override {}
 
    /**
       Copy constructor for functor based on ROOT::Math::IMultiGradFunction
@@ -650,20 +633,16 @@ public:
 
 
    // clone of the function handler (use copy-ctor)
-   ImplBase * Clone() const override { return new GradFunctor(*this); }
+   ImplBase *Clone() const override { return new GradFunctor(*this); }
 
    // for multi-dimensional functions
    unsigned int NDim() const override { return fImpl->NDim(); }
 
 private :
+   inline double DoEval(const double *x) const override { return (*fImpl)(x); }
 
-
-   inline double DoEval (const double * x) const override {
-      return (*fImpl)(x);
-   }
-
-
-   inline double DoDerivative (const double * x, unsigned int icoord  ) const override {
+   inline double DoDerivative(const double *x, unsigned int icoord) const override
+   {
       return fImpl->Derivative(x,icoord);
    }
 
@@ -740,8 +719,7 @@ public:
    /**
       Destructor (no operations)
    */
-   ~GradFunctor1D () override  {}
-
+   ~GradFunctor1D() override {}
 
    /**
       Copy constructor for Functor based on ROOT::Math::IGradFunction
@@ -766,20 +744,12 @@ public:
 
 
    // clone of the function handler (use copy-ctor)
-   ImplBase * Clone() const override { return new GradFunctor1D(*this); }
-
+   ImplBase *Clone() const override { return new GradFunctor1D(*this); }
 
 private :
+   inline double DoEval(double x) const override { return (*fImpl)(x); }
 
-
-   inline double DoEval (double x) const override {
-      return (*fImpl)(x);
-   }
-
-
-   inline double DoDerivative (double x) const override {
-      return fImpl->Derivative(x);
-   }
+   inline double DoDerivative(double x) const override { return fImpl->Derivative(x); }
 
    std::unique_ptr<Impl> fImpl;    // pointer to base gradient functor handler
 

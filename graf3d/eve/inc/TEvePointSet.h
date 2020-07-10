@@ -52,23 +52,31 @@ public:
    TEvePointSet(const TEvePointSet& e);
    ~TEvePointSet() override;
 
-   TObject* GetObject(const TEveException&) const override
+   TObject *GetObject(const TEveException &) const override
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
-   TEvePointSet* CloneElement() const override { return new TEvePointSet(*this); }
+   TEvePointSet *CloneElement() const override { return new TEvePointSet(*this); }
 
    virtual void ClonePoints(const TEvePointSet& e);
 
    void  Reset(Int_t n_points=0, Int_t n_int_ids=0);
    Int_t GrowFor(Int_t n_points);
 
-   const char* GetTitle()         const override { return fTitle; }
-   const char* GetElementName()   const override { return TPointSet3D::GetName(); }
-   const char* GetElementTitle()  const override { return fTitle; }
-   void  SetElementName (const char* n) override { fName  = n; NameTitleChanged(); }
+   const char *GetTitle() const override { return fTitle; }
+   const char *GetElementName() const override { return TPointSet3D::GetName(); }
+   const char *GetElementTitle() const override { return fTitle; }
+   void        SetElementName(const char *n) override
+   {
+      fName = n;
+      NameTitleChanged();
+   }
    virtual void  SetTitle(const char* t)        { fTitle = t; NameTitleChanged(); }
-   void  SetElementTitle(const char* t) override { fTitle = t; NameTitleChanged(); }
-   void  SetElementNameTitle(const char* n, const char* t) override
+   void          SetElementTitle(const char *t) override
+   {
+      fTitle = t;
+      NameTitleChanged();
+   }
+   void SetElementNameTitle(const char *n, const char *t) override
    { fName = n; fTitle = t; NameTitleChanged(); }
 
    Int_t  GetIntIdsPerPoint() const { return fIntIdsPerPoint; }
@@ -79,22 +87,22 @@ public:
    void   SetPointIntIds(Int_t n, Int_t* ids);
 
    void SetMarkerColor(Color_t col) override { SetMainColor(col); }
-   void SetMarkerStyle(Style_t mstyle=1) override;
-   void SetMarkerSize(Size_t msize=1) override;
+   void SetMarkerStyle(Style_t mstyle = 1) override;
+   void SetMarkerSize(Size_t msize = 1) override;
 
-   void Paint(Option_t* option="") override;
+   void Paint(Option_t *option = "") override;
 
    void InitFill(Int_t subIdNum) override;
-   void TakeAction(TEvePointSelector*) override;
+   void TakeAction(TEvePointSelector *) override;
 
    void PointSelected(Int_t id) override; // *SIGNAL*
 
-   const TGPicture* GetListTreeIcon(Bool_t open=kFALSE) override;
+   const TGPicture *GetListTreeIcon(Bool_t open = kFALSE) override;
 
-   void CopyVizParams(const TEveElement* el) override;
-   void WriteVizParams(std::ostream& out, const TString& var) override;
+   void CopyVizParams(const TEveElement *el) override;
+   void WriteVizParams(std::ostream &out, const TString &var) override;
 
-   TClass* ProjectedClass(const TEveProjection* p) const override;
+   TClass *ProjectedClass(const TEveProjection *p) const override;
 
    ClassDef(TEvePointSet, 0); // Set of 3D points with same marker attributes; optionally each point can be assigned an external TRef or a number of integer indices.
 };
@@ -128,14 +136,14 @@ public:
    TEvePointSetArray(const char* name="TEvePointSetArray", const char* title="");
    ~TEvePointSetArray() override;
 
-   void RemoveElementLocal(TEveElement* el) override;
+   void RemoveElementLocal(TEveElement *el) override;
    void RemoveElementsLocal() override;
 
-   void SetMarkerColor(Color_t tcolor=1) override;
-   void SetMarkerStyle(Style_t mstyle=1) override;
-   void SetMarkerSize(Size_t msize=1) override;
+   void SetMarkerColor(Color_t tcolor = 1) override;
+   void SetMarkerStyle(Style_t mstyle = 1) override;
+   void SetMarkerSize(Size_t msize = 1) override;
 
-   void TakeAction(TEvePointSelector*) override;
+   void TakeAction(TEvePointSelector *) override;
 
    virtual Int_t Size(Bool_t under=kFALSE, Bool_t over=kFALSE) const;
 
@@ -181,12 +189,11 @@ public:
    TEvePointSetProjected();
    ~TEvePointSetProjected() override {}
 
-   void SetProjection(TEveProjectionManager* proj, TEveProjectable* model) override;
-   void UpdateProjection() override;
-   TEveElement* GetProjectedAsElement() override { return this; }
+   void         SetProjection(TEveProjectionManager *proj, TEveProjectable *model) override;
+   void         UpdateProjection() override;
+   TEveElement *GetProjectedAsElement() override { return this; }
 
    void PointSelected(Int_t id) override;
-
 
    ClassDef(TEvePointSetProjected, 0); // Projected copy of a TEvePointSet.
 };

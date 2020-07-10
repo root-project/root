@@ -47,7 +47,6 @@ namespace {
 
     ~StmtPrinterHelper() override {}
 
-
     // Handle only DeclRefExprs since they are local and the call wrapper
     // won't "see" them. Consequently we don't need to handle:
     // * DependentScopeDeclRefExpr

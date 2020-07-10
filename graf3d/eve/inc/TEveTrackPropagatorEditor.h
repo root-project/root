@@ -116,7 +116,7 @@ public:
                              UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveTrackPropagatorEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    ClassDef(TEveTrackPropagatorEditor, 0); // Editor for TEveTrackPropagator class.
 };

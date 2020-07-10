@@ -58,7 +58,7 @@ public:
    Int_t     GetSize() const { return fSize; }
    Int_t     Instances() const { return fTally; }
    void      InstanceStatistics() const;
-   void      Print(Option_t *option="") const override;
+   void      Print(Option_t *option = "") const override;
    Bool_t    PtrIsValid(TObject *obj);
    void      Remove(TObject *obj);
    void      RemoveQuietly(TObject *obj);

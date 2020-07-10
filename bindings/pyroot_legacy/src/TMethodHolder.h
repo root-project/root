@@ -25,20 +25,19 @@ namespace PyROOT {
       ~TMethodHolder() override;
 
    public:
-      PyObject* GetSignature() override;
-      PyObject* GetPrototype() override;
-      Int_t GetPriority() override;
+      PyObject *GetSignature() override;
+      PyObject *GetPrototype() override;
+      Int_t     GetPriority() override;
 
-      Int_t GetMaxArgs() override;
-      PyObject* GetCoVarNames() override;
-      PyObject* GetArgDefault( Int_t iarg ) override;
-      PyObject* GetScopeProxy() override;
+      Int_t     GetMaxArgs() override;
+      PyObject *GetCoVarNames() override;
+      PyObject *GetArgDefault(Int_t iarg) override;
+      PyObject *GetScopeProxy() override;
 
-      PyCallable* Clone() override { return new TMethodHolder( *this ); }
+      PyCallable *Clone() override { return new TMethodHolder(*this); }
 
    public:
-      PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 ) override;
+      PyObject *Call(ObjectProxy *&self, PyObject *args, PyObject *kwds, TCallContext *ctxt = 0) override;
 
       virtual Bool_t Initialize( TCallContext* ctxt = 0 );
       virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );

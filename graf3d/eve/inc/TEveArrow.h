@@ -47,7 +47,7 @@ public:
              Float_t xOrg=0, Float_t yOrg=0, Float_t zOrg=0);
    ~TEveArrow() override {}
 
-   TObject* GetObject(const TEveException& ) const override
+   TObject *GetObject(const TEveException &) const override
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
    void    StampGeom() { ResetBBox(); AddStamp(kCBTransBBox | kCBObjProps); }
@@ -74,7 +74,7 @@ public:
    void  SetDrawQuality(Int_t q) { fDrawQuality = q;    }
 
    void ComputeBBox() override;
-   void Paint(Option_t* option="") override;
+   void Paint(Option_t *option = "") override;
 
    ClassDef(TEveArrow, 0); // Class for gl visualisation of arrow.
 };

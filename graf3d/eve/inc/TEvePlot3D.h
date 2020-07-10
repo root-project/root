@@ -50,7 +50,7 @@ public:
    Bool_t   GetLogY() const { return fLogY; }
    Bool_t   GetLogZ() const { return fLogZ; }
 
-   void Paint(Option_t* option="") override;
+   void Paint(Option_t *option = "") override;
 
    ClassDef(TEvePlot3D, 0); // Short description.
 };

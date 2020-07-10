@@ -54,11 +54,11 @@ public:
 
    TObjArray(Int_t s = TCollection::kInitCapacity, Int_t lowerBound = 0);
    TObjArray(const TObjArray &a);
-            ~TObjArray() override;
+   ~TObjArray() override;
    TObjArray& operator=(const TObjArray&);
-   void     Clear(Option_t *option="") override;
+   void             Clear(Option_t *option = "") override;
    virtual void     Compress();
-   void     Delete(Option_t *option="") override;
+   void             Delete(Option_t *option = "") override;
    virtual void     Expand(Int_t newSize);   // expand or shrink an array
    Int_t            GetEntries() const override;
    Int_t            GetEntriesFast() const {
@@ -67,35 +67,35 @@ public:
    Int_t            GetEntriesUnsafe() const;
    Int_t            GetLast() const override;
    TObject        **GetObjectRef() const { return fCont; };
-   TObject        **GetObjectRef(const TObject *obj) const override;
+   TObject **       GetObjectRef(const TObject *obj) const override;
    Bool_t           IsEmpty() const override { return GetAbsLast() == -1; }
-   TIterator       *MakeIterator(Bool_t dir = kIterForward) const override;
+   TIterator *      MakeIterator(Bool_t dir = kIterForward) const override;
 
    void             Add(TObject *obj) override { AddLast(obj); }
-   void     AddFirst(TObject *obj) override;
-   void     AddLast(TObject *obj) override;
-   void     AddAt(TObject *obj, Int_t idx) override;
+   void             AddFirst(TObject *obj) override;
+   void             AddLast(TObject *obj) override;
+   void             AddAt(TObject *obj, Int_t idx) override;
    virtual void     AddAtAndExpand(TObject *obj, Int_t idx);
    virtual Int_t    AddAtFree(TObject *obj);
-   void     AddAfter(const TObject *after, TObject *obj) override;
-   void     AddBefore(const TObject *before, TObject *obj) override;
-   TObject *FindObject(const char *name) const override;
-   TObject *FindObject(const TObject *obj) const override;
-   TObject *RemoveAt(Int_t idx) override;
-   TObject *Remove(TObject *obj) override;
+   void             AddAfter(const TObject *after, TObject *obj) override;
+   void             AddBefore(const TObject *before, TObject *obj) override;
+   TObject *        FindObject(const char *name) const override;
+   TObject *        FindObject(const TObject *obj) const override;
+   TObject *        RemoveAt(Int_t idx) override;
+   TObject *        Remove(TObject *obj) override;
    virtual void     RemoveRange(Int_t idx1, Int_t idx2);
-   void     RecursiveRemove(TObject *obj) override;
+   void             RecursiveRemove(TObject *obj) override;
 
-   TObject         *At(Int_t idx) const override;
+   TObject *         At(Int_t idx) const override;
    TObject         *UncheckedAt(Int_t i) const { return fCont[i-fLowerBound]; }
-   TObject         *Before(const TObject *obj) const override;
-   TObject         *After(const TObject *obj) const override;
-   TObject         *First() const override;
-   TObject         *Last() const override;
+   TObject *         Before(const TObject *obj) const override;
+   TObject *         After(const TObject *obj) const override;
+   TObject *         First() const override;
+   TObject *         Last() const override;
    virtual TObject *&operator[](Int_t i);
    virtual TObject *operator[](Int_t i) const;
    Int_t            LowerBound() const { return fLowerBound; }
-   Int_t            IndexOf(const TObject *obj) const override;
+   Int_t             IndexOf(const TObject *obj) const override;
    void             SetLast(Int_t last);
 
    virtual void     Randomize(Int_t ntimes=1);
@@ -136,16 +136,16 @@ private:
 public:
    TObjArrayIter(const TObjArray *arr, Bool_t dir = kIterForward);
    TObjArrayIter(const TObjArrayIter &iter);
-   ~TObjArrayIter() override { }
-   TIterator     &operator=(const TIterator &rhs) override;
+   ~TObjArrayIter() override {}
+   TIterator &    operator=(const TIterator &rhs) override;
    TObjArrayIter &operator=(const TObjArrayIter &rhs);
 
    const TCollection *GetCollection() const override { return fArray; }
-   TObject           *Next() override;
+   TObject *          Next() override;
    void               Reset() override;
    Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const TObjArrayIter &aIter) const;
-   TObject           *operator*() const override;
+   TObject *          operator*() const override;
 
    ClassDefOverride(TObjArrayIter, 0) // Object array iterator
 };

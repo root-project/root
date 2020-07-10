@@ -165,9 +165,9 @@ public:
    /// Initializing constructor
    TCollectionClassStreamer() : TClassStreamer(0)     {                        }
    /// Standard destructor
-   ~TCollectionClassStreamer() override                {                        }
+   ~TCollectionClassStreamer() override {}
    /// Streamer for I/O handling
-   void operator()(TBuffer &buff, void *obj ) override { Streamer(buff,obj,0,fOnFileClass); }
+   void operator()(TBuffer &buff, void *obj) override { Streamer(buff, obj, 0, fOnFileClass); }
 
    void Stream(TBuffer &b, void *obj, const TClass *onfileClass) override
    {
@@ -185,9 +185,7 @@ public:
    }
 
    /// Virtual copy constructor.
-   TClassStreamer *Generate() const override {
-      return new TCollectionClassStreamer(*this);
-   }
+   TClassStreamer *Generate() const override { return new TCollectionClassStreamer(*this); }
 
    TGenCollectionProxy *GetXYZ() { return TCollectionStreamer::fStreamer; }
 
@@ -212,10 +210,9 @@ public:
    TCollectionMemberStreamer(const TCollectionMemberStreamer& c)
       : TMemberStreamer(c), TCollectionStreamer(c)   { }
    /// Standard destructor
-   ~TCollectionMemberStreamer() override             { }
+   ~TCollectionMemberStreamer() override {}
    /// Streamer for I/O handling
-   void operator()(TBuffer &buff,void *obj,Int_t siz=0) override
-   { Streamer(buff, obj, siz, 0); /* FIXME */ }
+   void operator()(TBuffer &buff, void *obj, Int_t siz = 0) override { Streamer(buff, obj, siz, 0); /* FIXME */ }
 };
 
 #endif

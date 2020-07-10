@@ -36,7 +36,7 @@ public:
    ~TFileCacheWrite() override;
    virtual Bool_t      Flush();
    virtual Int_t       GetBytesInCache() const { return fNtot; }
-   void        Print(Option_t *option="") const override;
+   void                Print(Option_t *option = "") const override;
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
    virtual Int_t       WriteBuffer(const char *buf, Long64_t pos, Int_t len);
    virtual void        SetFile(TFile *file);

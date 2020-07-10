@@ -35,7 +35,7 @@ public:
 
    static TOutputListSelectorDataMap* FindInList(TCollection* coll);
 
-   const char* GetName() const override;
+   const char *GetName() const override;
 
    Bool_t Init(TSelector* sel);
    Bool_t SetDataMembers(TSelector* sel) const;

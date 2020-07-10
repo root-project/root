@@ -177,7 +177,7 @@ public:
                       fTotal(tot), fProcessed(proc), fBytesRead(bytes),
                       fInitTime(initt), fProcTime(proct), fEvtRateI(evts), fMBRateI(mbs),
                       fActWorkers(actw), fTotSessions(tsess), fEffSessions(esess) { }
-   ~TProofProgressInfo() override { }
+   ~TProofProgressInfo() override {}
    ClassDef(TProofProgressInfo, 1); // Progress information
 };
 
@@ -237,8 +237,8 @@ public:
 
    Int_t  Compare(const TObject *obj) const override;
    Bool_t IsSortable() const override { return kTRUE; }
-   void   Print(Option_t *option="") const override;
-   Bool_t IsEqual(const TObject* obj) const override;
+   void   Print(Option_t *option = "") const override;
+   Bool_t IsEqual(const TObject *obj) const override;
 
    ClassDef(TSlaveInfo,4) //basic info on workers
 };
@@ -843,7 +843,7 @@ public:
    void        SetLogLevel(Int_t level, UInt_t mask = TProofDebug::kAll);
 
    void        Close(Option_t *option="");
-   void Print(Option_t *option="") const override;
+   void        Print(Option_t *option = "") const override;
 
    //-- cache and package management
    virtual void  ShowCache(Bool_t all = kFALSE);

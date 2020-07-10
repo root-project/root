@@ -68,10 +68,10 @@ public:
    ~TGScrollBarElement() override;
 
    virtual void SetState(Int_t state);
-   void DrawBorder() override;
+   void           DrawBorder() override;
    virtual void SetEnabled(Bool_t on = kTRUE);
    virtual Bool_t IsEnabled() const { return !(fState & kButtonDisabled); }
-   Bool_t HandleCrossing(Event_t *event) override;
+   Bool_t         HandleCrossing(Event_t *event) override;
 
    ClassDef(TGScrollBarElement,0)  // Scrollbar element (head, tail, slider)
 };
@@ -119,7 +119,7 @@ public:
 
    void           GrabPointer(Bool_t grab) { fGrabPointer = grab; }
 
-   void   DrawBorder() override { }
+   void   DrawBorder() override {}
    Bool_t HandleButton(Event_t *event) override = 0;
    Bool_t HandleCrossing(Event_t *event) override;
    Bool_t HandleMotion(Event_t *event) override = 0;
@@ -132,27 +132,33 @@ public:
    virtual Int_t GetPosition() const { return fPos; }
    virtual Int_t GetPageSize() const { return fPsize; }
    virtual Int_t GetRange() const { return fRange; }
-   void  Resize(UInt_t w = 0, UInt_t h = 0) override { TGFrame::Resize(w, h); SetRange(fRange, fPsize); }
-   void  MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) override
-                  { TGFrame::MoveResize(x, y, w, h); SetRange(fRange, fPsize); }
-   void  Resize(TGDimension size) override { Resize(size.fWidth, size.fHeight); }
-   void  ChangeBackground(Pixel_t back) override;
+   void          Resize(UInt_t w = 0, UInt_t h = 0) override
+   {
+      TGFrame::Resize(w, h);
+      SetRange(fRange, fPsize);
+   }
+   void MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) override
+   {
+      TGFrame::MoveResize(x, y, w, h);
+      SetRange(fRange, fPsize); }
+   void          Resize(TGDimension size) override { Resize(size.fWidth, size.fHeight); }
+   void          ChangeBackground(Pixel_t back) override;
    virtual void  SetAccelerated(Bool_t m = kTRUE) { fAccelerated = m; }
          Bool_t  IsAccelerated() const { return fAccelerated; }
 
-   void MapSubwindows() override { TGWindow::MapSubwindows(); }
-   TGScrollBarElement *GetHead() const { return fHead; }
-   TGScrollBarElement *GetTail() const { return fTail; }
-   TGScrollBarElement *GetSlider() const { return fSlider; }
+         void                MapSubwindows() override { TGWindow::MapSubwindows(); }
+         TGScrollBarElement *GetHead() const { return fHead; }
+         TGScrollBarElement *GetTail() const { return fTail; }
+         TGScrollBarElement *GetSlider() const { return fSlider; }
 
-   virtual void  PositionChanged(Int_t pos) { Emit("PositionChanged(Int_t)", pos); } //*SIGNAL*
-   virtual void  RangeChanged(Int_t range) { Emit("RangeChanged(Int_t)", range); } //*SIGNAL*
-   virtual void  PageSizeChanged(Int_t range) { Emit("PageSizeChanged(Int_t)", range); } //*SIGNAL*
+         virtual void PositionChanged(Int_t pos) { Emit("PositionChanged(Int_t)", pos); }     //*SIGNAL*
+         virtual void RangeChanged(Int_t range) { Emit("RangeChanged(Int_t)", range); }       //*SIGNAL*
+         virtual void PageSizeChanged(Int_t range) { Emit("PageSizeChanged(Int_t)", range); } //*SIGNAL*
 
-   virtual Int_t GetSmallIncrement() { return fSmallInc; }
-   virtual void  SetSmallIncrement(Int_t increment) { fSmallInc = increment; }
+         virtual Int_t GetSmallIncrement() { return fSmallInc; }
+         virtual void  SetSmallIncrement(Int_t increment) { fSmallInc = increment; }
 
-   ClassDef(TGScrollBar,0)  // Scrollbar widget
+         ClassDef(TGScrollBar, 0) // Scrollbar widget
 };
 
 
@@ -163,16 +169,15 @@ public:
    TGHScrollBar(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 2,
                 UInt_t options = kHorizontalFrame,
                 Pixel_t back = GetDefaultFrameBackground());
-   ~TGHScrollBar() override { }
+   ~TGHScrollBar() override {}
 
-   Bool_t HandleButton(Event_t *event) override;
-   Bool_t HandleMotion(Event_t *event) override;
-   TGDimension GetDefaultSize() const override
-                        { return TGDimension(fWidth, GetScrollBarWidth()); }
-   void Layout() override;
+   Bool_t      HandleButton(Event_t *event) override;
+   Bool_t      HandleMotion(Event_t *event) override;
+   TGDimension GetDefaultSize() const override { return TGDimension(fWidth, GetScrollBarWidth()); }
+   void        Layout() override;
 
-   void SetRange(Int_t range, Int_t page_size) override;  //*MENU*
-   void SetPosition(Int_t pos) override;                  //*MENU* *GETTER=GetPosition
+   void SetRange(Int_t range, Int_t page_size) override; //*MENU*
+   void SetPosition(Int_t pos) override;                 //*MENU* *GETTER=GetPosition
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGHScrollBar,0)  // Horizontal scrollbar widget
@@ -186,16 +191,15 @@ public:
    TGVScrollBar(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 4,
                 UInt_t options = kVerticalFrame,
                 Pixel_t back = GetDefaultFrameBackground());
-   ~TGVScrollBar() override { }
+   ~TGVScrollBar() override {}
 
-   Bool_t HandleButton(Event_t *event) override;
-   Bool_t HandleMotion(Event_t *event) override;
-   TGDimension GetDefaultSize() const override
-                        { return TGDimension(GetScrollBarWidth(), fHeight); }
-   void Layout() override;
+   Bool_t      HandleButton(Event_t *event) override;
+   Bool_t      HandleMotion(Event_t *event) override;
+   TGDimension GetDefaultSize() const override { return TGDimension(GetScrollBarWidth(), fHeight); }
+   void        Layout() override;
 
-   void SetRange(Int_t range, Int_t page_size) override;  //*MENU*
-   void SetPosition(Int_t pos) override;                  //*MENU*  *GETTER=GetPosition
+   void SetRange(Int_t range, Int_t page_size) override; //*MENU*
+   void SetPosition(Int_t pos) override;                 //*MENU*  *GETTER=GetPosition
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGVScrollBar,0)  // Vertical scrollbar widget

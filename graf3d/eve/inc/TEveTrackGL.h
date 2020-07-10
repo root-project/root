@@ -34,11 +34,11 @@ public:
    TEveTrackGL();
    ~TEveTrackGL() override {}
 
-   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
-   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   Bool_t SetModel(TObject *obj, const Option_t *opt = 0) override;
+   void   DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
    Bool_t SupportsSecondarySelect() const override { return kTRUE; }
-   void   ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec) override;
+   void   ProcessSelection(TGLRnrCtx &rnrCtx, TGLSelectRecord &rec) override;
 
    ClassDef(TEveTrackGL, 0); // GL-renderer for TEveTrack class.
 };

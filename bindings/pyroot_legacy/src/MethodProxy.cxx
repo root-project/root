@@ -42,14 +42,16 @@ namespace PyROOT {
          Py_INCREF( fCallable );
       }
 
-      ~TPythonCallback() override {
+      ~TPythonCallback() override
+      {
          Py_DECREF( fCallable );
          fCallable = 0;
       }
 
-      PyObject* GetSignature() override { return PyROOT_PyUnicode_FromString( "*args, **kwargs" ); } ;
-      PyObject* GetPrototype() override { return PyROOT_PyUnicode_FromString( "<callback>" ); } ;
-      PyObject* GetDocString() override {
+      PyObject *GetSignature() override { return PyROOT_PyUnicode_FromString("*args, **kwargs"); };
+      PyObject *GetPrototype() override { return PyROOT_PyUnicode_FromString("<callback>"); };
+      PyObject *GetDocString() override
+      {
          if ( PyObject_HasAttrString( fCallable, "__doc__" )) {
             return PyObject_GetAttrString( fCallable, "__doc__" );
          } else {
@@ -59,25 +61,28 @@ namespace PyROOT {
 
       Int_t GetPriority() override { return 100; };
 
-      Int_t GetMaxArgs() override { return 100; };
-      PyObject* GetCoVarNames() override { // TODO: pick these up from the callable
+      Int_t     GetMaxArgs() override { return 100; };
+      PyObject *GetCoVarNames() override
+      { // TODO: pick these up from the callable
          Py_INCREF( Py_None );
          return Py_None;
       }
-      PyObject* GetArgDefault( Int_t /* iarg */ ) override { // TODO: pick these up from the callable
+      PyObject *GetArgDefault(Int_t /* iarg */) override
+      { // TODO: pick these up from the callable
          Py_INCREF( Py_None );
          return Py_None;
       }
 
-      PyObject* GetScopeProxy() override { // should this be the module ??
+      PyObject *GetScopeProxy() override
+      { // should this be the module ??
          Py_INCREF( Py_None );
          return Py_None;
       }
 
-      PyCallable* Clone() override { return new TPythonCallback( *this ); }
+      PyCallable *Clone() override { return new TPythonCallback(*this); }
 
-      PyObject* Call(
-            ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt = 0 */ ) override {
+      PyObject *Call(ObjectProxy *&self, PyObject *args, PyObject *kwds, TCallContext * /* ctxt = 0 */) override
+      {
 
          PyObject* newArgs = nullptr;
          if ( self ) {

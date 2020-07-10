@@ -33,7 +33,7 @@ class TThreadFactory : public TNamed {
 
 public:
    TThreadFactory(const char *name = "Unknown", const char *title = "Unknown Thread Factory");
-   ~TThreadFactory() override { }
+   ~TThreadFactory() override {}
 
    virtual TMutexImp      *CreateMutexImp(Bool_t recursive) = 0;
    virtual TConditionImp  *CreateConditionImp(TMutexImp *m) = 0;

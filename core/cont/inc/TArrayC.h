@@ -34,7 +34,7 @@ public:
    TArrayC(Int_t n, const Char_t *array);
    TArrayC(const TArrayC &array);
    TArrayC    &operator=(const TArrayC &rhs);
-      ~TArrayC() override;
+   ~TArrayC() override;
 
    void          Adopt(Int_t n, Char_t *array);
    void          AddAt(Char_t c, Int_t i);

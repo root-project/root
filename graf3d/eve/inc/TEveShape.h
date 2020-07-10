@@ -48,7 +48,7 @@ public:
    ~TEveShape() override;
 
    // Rendering parameters.
-   void    SetMainColor(Color_t color) override;
+   void SetMainColor(Color_t color) override;
 
    virtual Color_t GetFillColor() const { return fFillColor; }
    virtual Color_t GetLineColor() const { return fLineColor; }
@@ -66,13 +66,13 @@ public:
 
    // ----------------------------------------------------------------
 
-   void CopyVizParams(const TEveElement* el) override;
-   void WriteVizParams(std::ostream& out, const TString& var) override;
+   void CopyVizParams(const TEveElement *el) override;
+   void WriteVizParams(std::ostream &out, const TString &var) override;
 
    // ----------------------------------------------------------------
 
    // Virtual from TObject
-   void Paint(Option_t* option="") override;
+   void Paint(Option_t *option = "") override;
 
    // Abstract function from TAttBBox:
    // virtual void ComputeBBox();

@@ -42,12 +42,12 @@ public:
    TEveJetConeGL();
    ~TEveJetConeGL() override {}
 
-   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   Bool_t SetModel(TObject *obj, const Option_t *opt = 0) override;
    void   SetBBox() override;
 
-   void   DLCacheClear() override;
-   void   Draw(TGLRnrCtx& rnrCtx) const override;
-   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   void DLCacheClear() override;
+   void Draw(TGLRnrCtx &rnrCtx) const override;
+   void DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
    ClassDef(TEveJetConeGL, 0); // GL renderer class for TEveJetCone.
 };
@@ -75,11 +75,11 @@ public:
    TEveJetConeProjectedGL();
    ~TEveJetConeProjectedGL() override {}
 
-   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   Bool_t SetModel(TObject *obj, const Option_t *opt = 0) override;
    void   SetBBox() override;
 
-   void   Draw(TGLRnrCtx& rnrCtx) const override;
-   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   void Draw(TGLRnrCtx &rnrCtx) const override;
+   void DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
    ClassDef(TEveJetConeProjectedGL, 0); // GL renderer class for TEveJetCone.
 };

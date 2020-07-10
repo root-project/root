@@ -42,10 +42,10 @@ public:
    TMutex(Bool_t recursive = kFALSE);
    ~TMutex() override { delete fMutexImp; }
 
-   Int_t  Lock() override;
-   Int_t  TryLock() override;
-   Int_t  UnLock() override;
-   Int_t  CleanUp() override;
+   Int_t Lock() override;
+   Int_t TryLock() override;
+   Int_t UnLock() override;
+   Int_t CleanUp() override;
 
    // Compatibility with standard library
    void lock() { TMutex::Lock(); }

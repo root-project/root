@@ -87,8 +87,7 @@ public:
 
    virtual Long64_t Select(const char* selection=0);
    virtual Long64_t Select(TTree* t, const char* selection=0);
-   void  TakeAction() override;
-
+   void             TakeAction() override;
 
    TTree* GetTree() const   { return fTree; }
    void   SetTree(TTree* t) { fTree = t; }

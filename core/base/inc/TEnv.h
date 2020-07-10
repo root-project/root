@@ -161,7 +161,7 @@ public:
    virtual Int_t       WriteFile(const char *fname, EEnvLevel level = kEnvAll);
    virtual void        Save();
    virtual void        SaveLevel(EEnvLevel level);
-   void        Print(Option_t *option="") const override;
+   void                Print(Option_t *option = "") const override;
    virtual void        PrintEnv(EEnvLevel level = kEnvAll) const;
    Bool_t              IgnoreDuplicates(Bool_t ignore);
 

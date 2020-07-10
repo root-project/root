@@ -121,7 +121,7 @@ public:
       ~CellData_t() override {}
 
       Float_t Value(Bool_t) const;
-      void Dump() const override;
+      void    Dump() const override;
    };
 
 
@@ -179,7 +179,7 @@ public:
 
    TString GetHighlightTooltip() override;
 
-   void    FillImpliedSelectedSet(Set_t& impSelSet) override;
+   void FillImpliedSelectedSet(Set_t &impSelSet) override;
 
    virtual void    GetCellList(Float_t etaMin, Float_t etaMax,
                                Float_t phi,    Float_t phiRng,
@@ -274,18 +274,19 @@ public:
    std::vector<Float_t>&  GetSliceVals(Int_t slice) { return fSliceVec[slice]; }
    std::vector<TEveCaloData::CellGeom_t>& GetCellGeom() { return fGeomVec; }
 
-   void GetCellList(Float_t etaMin, Float_t etaMax,
-                            Float_t phi,    Float_t phiRng,
-                            vCellId_t &out) const override;
+   void GetCellList(Float_t etaMin, Float_t etaMax, Float_t phi, Float_t phiRng, vCellId_t &out) const override;
 
    void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const override;
 
-   void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const override;
-   void GetEtaLimits(Double_t &min, Double_t &max) const override { min=fEtaMin, max=fEtaMax;}
-   void GetPhiLimits(Double_t &min, Double_t &max) const override { min=fPhiMin; max=fPhiMax;}
+   void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t &data) const override;
+   void GetEtaLimits(Double_t &min, Double_t &max) const override { min = fEtaMin, max = fEtaMax; }
+   void GetPhiLimits(Double_t &min, Double_t &max) const override
+   {
+      min = fPhiMin;
+      max = fPhiMax;
+   }
 
-
-   void  DataChanged() override;
+   void          DataChanged() override;
    void          SetAxisFromBins(Double_t epsX=0.001, Double_t epsY=0.001);
 
    ClassDef(TEveCaloDataVec, 0); // Manages calorimeter event data.
@@ -307,16 +308,14 @@ public:
    TEveCaloDataHist();
    ~TEveCaloDataHist() override;
 
-   void GetCellList( Float_t etaMin, Float_t etaMax,
-                             Float_t phi, Float_t phiRng, vCellId_t &out) const override;
+   void GetCellList(Float_t etaMin, Float_t etaMax, Float_t phi, Float_t phiRng, vCellId_t &out) const override;
 
    void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const override;
 
-   void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const override;
+   void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t &data) const override;
 
    void GetEtaLimits(Double_t &min, Double_t &max) const override;
    void GetPhiLimits(Double_t &min, Double_t &max) const override;
-
 
    void DataChanged() override;
 

@@ -53,7 +53,7 @@ public:
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    ~TGeoEltuEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
    void           DoA();
    void           DoB();

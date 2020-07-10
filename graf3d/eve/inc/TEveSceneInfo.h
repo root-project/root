@@ -43,10 +43,10 @@ public:
 
    Bool_t SingleRnrState() const override { return kTRUE; }
 
-   void   AddStamp(UChar_t bits) override;
+   void AddStamp(UChar_t bits) override;
 
-   Bool_t AcceptElement(TEveElement* el) override;
-   Bool_t HandleElementPaste(TEveElement* el) override;
+   Bool_t AcceptElement(TEveElement *el) override;
+   Bool_t HandleElementPaste(TEveElement *el) override;
 
    ClassDef(TEveSceneInfo, 0); // TEveUtil representation of TGLSceneInfo.
 };

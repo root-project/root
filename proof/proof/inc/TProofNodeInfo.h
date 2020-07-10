@@ -56,9 +56,9 @@ public:
    TProofNodeInfo();
    TProofNodeInfo(const char *str);
    TProofNodeInfo(const TProofNodeInfo &nodeInfo);
-   ~TProofNodeInfo() override { }
+   ~TProofNodeInfo() override {}
 
-   const char    *GetName() const override { return fName; }
+   const char *   GetName() const override { return fName; }
    ENodeType      GetNodeType() const { return fNodeType; }
    const TString &GetNodeName() const { return fNodeName; }
    const TString &GetWorkDir() const { return fWorkDir; }

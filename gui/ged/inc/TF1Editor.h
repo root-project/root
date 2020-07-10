@@ -52,8 +52,8 @@ public:
              UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
    ~TF1Editor() override;
 
-   void   SetModel(TObject* obj) override;
-   void   ActivateBaseClassEditors(TClass* cl) override;
+   void SetModel(TObject *obj) override;
+   void ActivateBaseClassEditors(TClass *cl) override;
 
    virtual void   DoParameterSettings();
    virtual void   DoXPoints();

@@ -90,13 +90,12 @@ public:
 
    ~TGondzioSolver() override;
 
-   Int_t Solve           (TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid) override;
+   Int_t Solve(TQpDataBase *prob, TQpVar *iterate, TQpResidual *resid) override;
 
    virtual void  Reset_parameters() {}         // reset parameters to their default values
 
-   void  DefMonitor      (TQpDataBase *data,TQpVar *vars,TQpResidual *resids,
-                                  Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
-                                  Int_t status_code,Int_t level) override;
+   void DefMonitor(TQpDataBase *data, TQpVar *vars, TQpResidual *resids, Double_t alpha, Double_t sigma, Int_t i,
+                   Double_t mu, Int_t status_code, Int_t level) override;
 
    TGondzioSolver &operator=(const TGondzioSolver &source);
 

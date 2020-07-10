@@ -159,14 +159,14 @@ private:
    void           CheckTargetUnderGrab();
    void           HighlightCompositeFrame(Window_t);
    void           Compact(Bool_t global = kTRUE);
-   Bool_t         StartDrag(TGFrame *src, Int_t x, Int_t y) override;
-   Bool_t         EndDrag() override;
-   Bool_t         Drop() override;
-   Bool_t         Cancel(Bool_t delSrc) override;
+   Bool_t            StartDrag(TGFrame *src, Int_t x, Int_t y) override;
+   Bool_t            EndDrag() override;
+   Bool_t            Drop() override;
+   Bool_t            Cancel(Bool_t delSrc) override;
    void           Menu4Frame(TGFrame *, Int_t x, Int_t y);
    void           Menu4Lasso(Int_t x, Int_t y);
    void           CreatePropertyEditor();
-   void           DoRedraw() override;
+   void              DoRedraw() override;
    void           SwitchEditable(TGFrame *frame);
    void           UnmapAllPopups();
    void           BreakLayout();
@@ -176,7 +176,7 @@ private:
    Bool_t         HandleButtonPress(Event_t *);
    Bool_t         HandleButtonRelease(Event_t *);
    Bool_t         HandleButton(Event_t *) override;
-   Bool_t         HandleDoubleClick(Event_t*) override;
+   Bool_t         HandleDoubleClick(Event_t *) override;
    Bool_t         HandleMotion(Event_t *) override;
    Bool_t         HandleClientMessage(Event_t *) override;
    Bool_t         HandleDestroyNotify(Event_t *);
@@ -198,7 +198,7 @@ private:
 
 public:
    TGuiBldDragManager();
-          ~TGuiBldDragManager() override;
+   ~TGuiBldDragManager() override;
 
    void           HandleAction(Int_t act);
    Bool_t         HandleKey(Event_t *) override;

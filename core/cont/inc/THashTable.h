@@ -54,28 +54,28 @@ private:
 
 public:
    THashTable(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);
-         ~THashTable() override;
+   ~THashTable() override;
    void          Add(TObject *obj) override;
    void          AddBefore(const TObject *before, TObject *obj);
-   void  AddAll(const TCollection *col) override;
+   void          AddAll(const TCollection *col) override;
    Float_t       AverageCollisions() const;
-   void          Clear(Option_t *option="") override;
+   void          Clear(Option_t *option = "") override;
    Int_t         Collisions(const char *name) const;
    Int_t         Collisions(TObject *obj) const;
-   void          Delete(Option_t *option="") override;
+   void          Delete(Option_t *option = "") override;
    Bool_t        Empty() const { return fEntries == 0; }
-   TObject      *FindObject(const char *name) const override;
-   TObject      *FindObject(const TObject *obj) const override;
+   TObject *     FindObject(const char *name) const override;
+   TObject *     FindObject(const TObject *obj) const override;
    const TList  *GetListForObject(const char *name) const;
    const TList  *GetListForObject(const TObject *obj) const;
-   TObject     **GetObjectRef(const TObject *obj) const override;
+   TObject **    GetObjectRef(const TObject *obj) const override;
    Int_t         GetRehashLevel() const { return fRehashLevel; }
    Int_t         GetSize() const override { return fEntries; }
-   TIterator    *MakeIterator(Bool_t dir = kIterForward) const override;
+   TIterator *   MakeIterator(Bool_t dir = kIterForward) const override;
    void          Print(Option_t *option, Int_t recurse) const override;
    using TCollection::Print;
    void          Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
-   TObject      *Remove(TObject *obj) override;
+   TObject *     Remove(TObject *obj) override;
    TObject      *RemoveSlow(TObject *obj);
    void          SetRehashLevel(Int_t rehash) { fRehashLevel = rehash; }
 
@@ -126,15 +126,15 @@ public:
    THashTableIter(const THashTable *ht, Bool_t dir = kIterForward);
    THashTableIter(const THashTableIter &iter);
    ~THashTableIter() override;
-   TIterator      &operator=(const TIterator &rhs) override;
+   TIterator &     operator=(const TIterator &rhs) override;
    THashTableIter &operator=(const THashTableIter &rhs);
 
    const TCollection *GetCollection() const override { return fTable; }
-   TObject           *Next() override;
+   TObject *          Next() override;
    void               Reset() override;
    Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const THashTableIter &aIter) const;
-   TObject           *operator*() const override;
+   TObject *          operator*() const override;
 
    ClassDefOverride(THashTableIter, 0) // Hash table iterator
 };

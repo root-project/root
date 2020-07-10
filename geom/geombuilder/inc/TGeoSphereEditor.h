@@ -63,7 +63,7 @@ public:
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
    ~TGeoSphereEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
    void           DoRmin();
    void           DoRmax();

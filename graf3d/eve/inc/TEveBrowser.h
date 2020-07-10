@@ -41,39 +41,42 @@ public:
    TEveListTreeItem(TEveElement* el) : TGListTreeItem(), fElement(el) {}
    ~TEveListTreeItem() override {}
 
-   Bool_t          IsActive()       const override { return fElement->GetSelectedLevel() != 0; }
-   Pixel_t         GetActiveColor() const override;
-   void            SetActive(Bool_t) override      { NotSupported("SetActive"); }
+   Bool_t  IsActive() const override { return fElement->GetSelectedLevel() != 0; }
+   Pixel_t GetActiveColor() const override;
+   void    SetActive(Bool_t) override { NotSupported("SetActive"); }
 
-   const char     *GetText()          const override { return fElement->GetElementName(); }
-   Int_t           GetTextLength()    const override { return strlen(fElement->GetElementName()); }
-   const char     *GetTipText()       const override { return fElement->GetElementTitle(); }
-   Int_t           GetTipTextLength() const override { return strlen(fElement->GetElementTitle()); }
-   void            SetText(const char *) override    { NotSupported("SetText"); }
-   void            SetTipText(const char *) override { NotSupported("SetTipText"); }
+   const char *GetText() const override { return fElement->GetElementName(); }
+   Int_t       GetTextLength() const override { return strlen(fElement->GetElementName()); }
+   const char *GetTipText() const override { return fElement->GetElementTitle(); }
+   Int_t       GetTipTextLength() const override { return strlen(fElement->GetElementTitle()); }
+   void        SetText(const char *) override { NotSupported("SetText"); }
+   void        SetTipText(const char *) override { NotSupported("SetTipText"); }
 
-   void            SetUserData(void *, Bool_t=kFALSE) override { NotSupported("SetUserData"); }
-   void           *GetUserData() const override { return fElement; }
+   void  SetUserData(void *, Bool_t = kFALSE) override { NotSupported("SetUserData"); }
+   void *GetUserData() const override { return fElement; }
 
-   const TGPicture*GetPicture()         const override { return fElement->GetListTreeIcon(fOpen); }
-   const TGPicture*GetCheckBoxPicture() const override { return fElement->GetListTreeCheckBoxIcon(); }
+   const TGPicture *GetPicture() const override { return fElement->GetListTreeIcon(fOpen); }
+   const TGPicture *GetCheckBoxPicture() const override { return fElement->GetListTreeCheckBoxIcon(); }
 
-   void            SetPictures(const TGPicture*, const TGPicture*) override { NotSupported("SetUserData"); }
-   void            SetCheckBoxPictures(const TGPicture*, const TGPicture*) override { NotSupported("SetUserData"); }
+   void SetPictures(const TGPicture *, const TGPicture *) override { NotSupported("SetUserData"); }
+   void SetCheckBoxPictures(const TGPicture *, const TGPicture *) override { NotSupported("SetUserData"); }
 
-   void            SetCheckBox(Bool_t=kTRUE) override { NotSupported("SetCheckBox"); }
-   Bool_t          HasCheckBox()       const override { return kTRUE; }
-   void            CheckItem(Bool_t=kTRUE) override   { printf("TEveListTreeItem::CheckItem - to be ignored ... all done via signal Checked().\n"); }
-   void            Toggle() override;
-   Bool_t          IsChecked()         const override { return fElement->GetRnrState(); }
+   void   SetCheckBox(Bool_t = kTRUE) override { NotSupported("SetCheckBox"); }
+   Bool_t HasCheckBox() const override { return kTRUE; }
+   void   CheckItem(Bool_t = kTRUE) override
+   {
+      printf("TEveListTreeItem::CheckItem - to be ignored ... all done via signal Checked().\n");
+   }
+   void   Toggle() override;
+   Bool_t IsChecked() const override { return fElement->GetRnrState(); }
 
    // Propagation of checked-state form children to parents. Not needed, ignore.
 
    // Item coloration (underline + minibox)
-   Bool_t          HasColor()  const override { return fElement->HasMainColor(); }
-   Color_t         GetColor()  const override { return fElement->GetMainColor(); }
-   void            SetColor(Color_t) override { NotSupported("SetColor"); }
-   void            ClearColor() override      { NotSupported("ClearColor"); }
+   Bool_t  HasColor() const override { return fElement->HasMainColor(); }
+   Color_t GetColor() const override { return fElement->GetMainColor(); }
+   void    SetColor(Color_t) override { NotSupported("SetColor"); }
+   void    ClearColor() override { NotSupported("ClearColor"); }
 
    ClassDef(TEveListTreeItem,0); // Special llist-tree-item for Eve.
 };

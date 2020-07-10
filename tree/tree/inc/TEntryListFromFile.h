@@ -61,13 +61,16 @@ public:
    TEntryListFromFile(const char *filename, const char *listname, Int_t nfiles);
    ~TEntryListFromFile() override;
    void        Add(const TEntryList * /*elist*/) override{};
-   Int_t       Contains(Long64_t /*entry*/, TTree * /*tree = 0*/) override  {return 0;};
-   Bool_t      Enter(Long64_t /*entry*/, TTree * /*tree = 0*/) override{return 0;};
+   Int_t       Contains(Long64_t /*entry*/, TTree * /*tree = 0*/) override { return 0; };
+   Bool_t      Enter(Long64_t /*entry*/, TTree * /*tree = 0*/) override { return 0; };
    TEntryList *GetCurrentList() const override { return fCurrent; };
-   TEntryList *GetEntryList(const char * /*treename*/, const char * /*filename*/, Option_t * /*opt=""*/) override {return 0;};
+   TEntryList *GetEntryList(const char * /*treename*/, const char * /*filename*/, Option_t * /*opt=""*/) override
+   {
+      return 0;
+   };
 
-   Long64_t    GetEntry(Int_t index) override;
-   Long64_t    GetEntryAndTree(Int_t index, Int_t &treenum) override;
+   Long64_t            GetEntry(Int_t index) override;
+   Long64_t            GetEntryAndTree(Int_t index, Int_t &treenum) override;
    virtual Long64_t    GetEntries();
    virtual Long64_t    GetEntriesFast() const { return fN; };
 
@@ -78,20 +81,20 @@ public:
 
    virtual Int_t       LoadList(Int_t listnumber);
 
-   Int_t       Merge(TCollection * /*list*/) override{ return 0; };
+   Int_t Merge(TCollection * /*list*/) override { return 0; };
 
-   Long64_t    Next() override;
-   void        OptimizeStorage() override {};
-   Bool_t      Remove(Long64_t /*entry*/, TTree * /*tree = 0*/) override{ return 0; };
+   Long64_t Next() override;
+   void     OptimizeStorage() override{};
+   Bool_t   Remove(Long64_t /*entry*/, TTree * /*tree = 0*/) override { return 0; };
 
-   void        Print(const Option_t* option = "") const override;
+   void Print(const Option_t *option = "") const override;
 
-   void        SetTree(const TTree * /*tree*/) override{};
-   void        SetTree(const char * /*treename*/, const char * /*filename*/) override{};
+   void                SetTree(const TTree * /*tree*/) override{};
+   void                SetTree(const char * /*treename*/, const char * /*filename*/) override{};
    virtual void        SetFileNames(TObjArray *names) { fFileNames = names; }
-   void        SetTreeNumber(Int_t index) override { fTreeNumber=index;  }
+   void                SetTreeNumber(Int_t index) override { fTreeNumber = index; }
    virtual void        SetNFiles(Int_t nfiles) { fNFiles = nfiles; }
-   void        Subtract(const TEntryList * /*elist*/) override {};
+   void                Subtract(const TEntryList * /*elist*/) override{};
 
    ClassDefOverride(TEntryListFromFile, 1); // Manager for entry lists from different files
 };

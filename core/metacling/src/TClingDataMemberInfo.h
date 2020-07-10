@@ -76,7 +76,6 @@ private:
    inline void CheckForIoTypeAndName () const;
 
 public:
-
    ~TClingDataMemberInfo() override { delete fClassInfo; }
 
    explicit TClingDataMemberInfo(cling::Interpreter *interp)

@@ -56,7 +56,7 @@ public:
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveCaloVizEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    void DoMaxTowerH();
    void DoScaleAbs();
@@ -91,7 +91,7 @@ public:
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveCalo3DEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void    SetModel(TObject *obj) override;
    void    DoFrameTransparency();
 
    ClassDef(TEveCalo3DEditor, 0); // GUI editor for TEveCalo3DEditor.

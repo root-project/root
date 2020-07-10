@@ -52,9 +52,9 @@ public:
 
    virtual const char *GetParameters();
 
-   void   CloseWindow() override;
+   void           CloseWindow() override;
    virtual void   Popup();
-   Bool_t HandleKey(Event_t *event) override;
+   Bool_t         HandleKey(Event_t *event) override;
 
    void TabPressed();
 

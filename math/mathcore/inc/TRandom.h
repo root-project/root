@@ -46,7 +46,7 @@ public:
    virtual  void     Rannor(Double_t &a, Double_t &b);
    virtual  void     ReadRandom(const char *filename);
    virtual  void     SetSeed(ULong_t seed=0);
-    Double_t Rndm() override;
+   Double_t          Rndm() override;
    // keep for backward compatibility
    virtual  Double_t Rndm(Int_t ) { return Rndm(); }
    virtual  void     RndmArray(Int_t n, Float_t *array);

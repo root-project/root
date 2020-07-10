@@ -139,7 +139,7 @@ public:
          UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveParamListEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    // Declare callback/slot methods
    void DoIntUpdate();

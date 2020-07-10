@@ -118,27 +118,30 @@ private:
                                Int_t chunkSize = 1024 * 16);
 
  public:
-   ~THnBase() override;
+    ~THnBase() override;
 
-   TObjArray* GetListOfAxes() { return &fAxes; }
-   const TObjArray* GetListOfAxes() const { return &fAxes; }
-   TAxis* GetAxis(Int_t dim) const { return (TAxis*)fAxes[dim]; }
+    TObjArray *      GetListOfAxes() { return &fAxes; }
+    const TObjArray *GetListOfAxes() const { return &fAxes; }
+    TAxis *          GetAxis(Int_t dim) const { return (TAxis *)fAxes[dim]; }
 
-   TFitResultPtr Fit(TF1 *f1 ,Option_t *option = "", Option_t *goption = "");
-   TList* GetListOfFunctions() { return 0; }
+    TFitResultPtr Fit(TF1 *f1, Option_t *option = "", Option_t *goption = "");
+    TList *       GetListOfFunctions() { return 0; }
 
-   virtual ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const = 0;
+    virtual ROOT::Internal::THnBaseBinIter *CreateIter(Bool_t respectAxisRange) const = 0;
 
-   virtual Long64_t GetNbins() const = 0;
-   Double_t GetEntries() const { return fEntries; }
-   Double_t GetWeightSum() const { return fTsumw; }
-   Int_t    GetNdimensions() const { return fNdimensions; }
-   Bool_t   GetCalculateErrors() const { return fTsumw2 >= 0.; }
+    virtual Long64_t GetNbins() const = 0;
+    Double_t         GetEntries() const { return fEntries; }
+    Double_t         GetWeightSum() const { return fTsumw; }
+    Int_t            GetNdimensions() const { return fNdimensions; }
+    Bool_t           GetCalculateErrors() const { return fTsumw2 >= 0.; }
 
-   /// Calculate errors (or not if "calc" == kFALSE)
-   void     CalculateErrors(Bool_t calc = kTRUE) {
-      if (calc) Sumw2();
-      else fTsumw2 = -1.;
+    /// Calculate errors (or not if "calc" == kFALSE)
+    void CalculateErrors(Bool_t calc = kTRUE)
+    {
+       if (calc)
+          Sumw2();
+       else
+          fTsumw2 = -1.;
    }
 
    Long64_t Fill(const Double_t *x, Double_t w = 1.) {
@@ -163,7 +166,7 @@ private:
    void SetBinError(Long64_t bin, Double_t e) { SetBinError2(bin, e*e); }
    void AddBinContent(const Int_t* x, Double_t v = 1.) { AddBinContent(GetBin(x), v); }
    void SetEntries(Double_t entries) { fEntries = entries; }
-   void SetTitle(const char *title) override;
+   void     SetTitle(const char *title) override;
 
    Double_t GetBinContent(const Int_t *idx) const { return GetBinContent(GetBin(idx)); } // intentionally non-virtual
    virtual Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const = 0;
@@ -247,14 +250,14 @@ private:
    Double_t ComputeIntegral();
    void GetRandom(Double_t *rand, Bool_t subBinRandom = kTRUE);
 
-   void Print(Option_t* option = "") const override;
+   void Print(Option_t *option = "") const override;
    void PrintEntries(Long64_t from = 0, Long64_t howmany = -1, Option_t* options = 0) const;
    void PrintBin(Int_t* coord, Option_t* options) const {
       PrintBin(-1, coord, options);
    }
    void PrintBin(Long64_t idx, Option_t* options) const;
 
-   void Browse(TBrowser *b) override;
+   void   Browse(TBrowser *b) override;
    Bool_t IsFolder() const override { return kTRUE; }
 
    //void Draw(Option_t* option = "");
@@ -271,7 +274,7 @@ namespace Internal {
    public:
       THnBaseBrowsable(THnBase* hist, Int_t axis);
       ~THnBaseBrowsable() override;
-      void Browse(TBrowser *b) override;
+      void   Browse(TBrowser *b) override;
       Bool_t IsFolder() const override { return kFALSE; }
 
    private:

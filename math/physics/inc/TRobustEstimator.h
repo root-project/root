@@ -75,7 +75,7 @@ public:
 
    TRobustEstimator();
    TRobustEstimator(Int_t nvectors, Int_t nvariables, Int_t hh=0);
-   ~TRobustEstimator() override{;}
+   ~TRobustEstimator() override { ; }
 
    void    AddColumn(Double_t *col);         //adds a column to the data matrix
    void    AddRow(Double_t *row);            //adds a row to the data matrix

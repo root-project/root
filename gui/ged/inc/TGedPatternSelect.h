@@ -52,10 +52,10 @@ protected:
 public:
    TGedPopup(const TGWindow* p, const TGWindow *m, UInt_t w, UInt_t h,
              UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
-   ~TGedPopup() override { }
+   ~TGedPopup() override {}
 
-   Bool_t HandleButton(Event_t *event) override;
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t         HandleButton(Event_t *event) override;
+   Bool_t         ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    void           PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void           EndPopup();
 
@@ -72,16 +72,16 @@ protected:
    TGToolTip      *fTip;         // tool tip associated with a button
    char            fTipText[7];
 
-   void    DoRedraw() override;
+   void DoRedraw() override;
 
 public:
    TGedPatternFrame(const TGWindow *p, Style_t pattern, Int_t width = 40,
                     Int_t height = 20);
    ~TGedPatternFrame() override { delete fTip; }
 
-   Bool_t  HandleButton(Event_t *event) override;
-   Bool_t  HandleCrossing(Event_t *event) override;
-   void    DrawBorder() override;
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleCrossing(Event_t *event) override;
+   void   DrawBorder() override;
 
    void            SetActive(Bool_t in) { fActive = in; gClient->NeedRedraw(this); }
    Style_t         GetPattern() const { return fPattern; }
@@ -101,7 +101,7 @@ public:
    TGedPatternSelector(const TGWindow *p);
    ~TGedPatternSelector() override;
 
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t         ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    void           SetActive(Int_t newat);
    Int_t          GetActive() const { return fActive; }
 
@@ -128,7 +128,7 @@ protected:
    TGGC           *fDrawGC;
    TGedPopup      *fPopup;
 
-   void   DoRedraw() override;
+   void           DoRedraw() override;
    void           DrawTriangle(GContext_t gc, Int_t x, Int_t y);
 
 public:
@@ -157,13 +157,13 @@ public:
 
    void           SetPattern(Style_t pattern, Bool_t emit=kTRUE);
    Style_t        GetPattern() const { return fPattern; }
-          TGDimension GetDefaultSize() const override { return TGDimension(55, 21); }
+   TGDimension    GetDefaultSize() const override { return TGDimension(55, 21); }
    virtual void   PatternSelected(Style_t pattern = 0)
                   { Emit("PatternSelected(Style_t)", pattern ? pattern : GetPattern()); }  // *SIGNAL*
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
-   void   SavePrimitive(std::ostream &out, Option_t * = "") override;
+                  Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+                  void   SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGedPatternSelect,0)  //pattern selection check-button
+                  ClassDef(TGedPatternSelect, 0) // pattern selection check-button
 };
 
 #endif

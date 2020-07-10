@@ -92,7 +92,7 @@ public:
                         TVirtualPad *pad, Int_t *ret_code = 0);
    ~TFitParametersDialog() override;
 
-   void  CloseWindow() override;
+   void           CloseWindow() override;
    virtual void  DoApply();
    virtual void  DoCancel();
    virtual void  DoOK();

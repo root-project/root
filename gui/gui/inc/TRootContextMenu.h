@@ -43,16 +43,16 @@ public:
    TRootContextMenu(TContextMenu *c = 0, const char *name = "ROOT Context Menu");
    ~TRootContextMenu() override;
 
-   void   DisplayPopup(Int_t x, Int_t y) override;
-   void   Dialog(TObject *object, TMethod *method) override;
-   void   Dialog(TObject *object, TFunction *function) override;
-   void   DrawEntry(TGMenuEntry *entry) override;
+   void           DisplayPopup(Int_t x, Int_t y) override;
+   void           Dialog(TObject *object, TMethod *method) override;
+   void           Dialog(TObject *object, TFunction *function) override;
+   void           DrawEntry(TGMenuEntry *entry) override;
    TRootDialog   *GetDialog() const { return fDialog; };
-   Bool_t HandleButton(Event_t *event) override;
-   Bool_t HandleCrossing(Event_t *event) override;
-   Bool_t HandleMotion(Event_t *event) override;
+   Bool_t         HandleButton(Event_t *event) override;
+   Bool_t         HandleCrossing(Event_t *event) override;
+   Bool_t         HandleMotion(Event_t *event) override;
    virtual void   OnlineHelp();
-   void   RecursiveRemove(TObject *obj) override;
+   void           RecursiveRemove(TObject *obj) override;
 
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 

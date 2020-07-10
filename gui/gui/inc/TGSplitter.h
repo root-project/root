@@ -42,7 +42,7 @@ public:
    TGSplitter(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 4,
               UInt_t options = kChildFrame,
               Pixel_t back = GetDefaultFrameBackground());
-   ~TGSplitter() override { }
+   ~TGSplitter() override {}
 
    virtual void   SetFrame(TGFrame *frame, Bool_t prev) = 0;
 
@@ -82,12 +82,12 @@ public:
    TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external);
    ~TGVSplitter() override;
 
-   void   DrawBorder() override;
-   void   SetFrame(TGFrame *frame, Bool_t left) override;
+   void           DrawBorder() override;
+   void           SetFrame(TGFrame *frame, Bool_t left) override;
    const TGFrame *GetFrame() const { return fFrame; }
    Bool_t         GetLeft() const { return fLeft; }
    Bool_t         IsLeft() const { return fLeft; }
-   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void           SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleMotion(Event_t *event) override;
@@ -119,12 +119,12 @@ public:
    TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external);
    ~TGHSplitter() override;
 
-   void   DrawBorder() override;
-   void   SetFrame(TGFrame *frame, Bool_t above) override;
+   void           DrawBorder() override;
+   void           SetFrame(TGFrame *frame, Bool_t above) override;
    const TGFrame *GetFrame() const { return fFrame; }
    Bool_t         GetAbove() const { return fAbove; }
    Bool_t         IsAbove() const { return fAbove; }
-   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void           SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleMotion(Event_t *event) override;

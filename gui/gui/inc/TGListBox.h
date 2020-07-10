@@ -55,18 +55,22 @@ protected:
    Pixel_t    fBkcolor;          // entry background color
    Bool_t     fActive;           // true if entry is active
 
-   void DoRedraw() override { }
+   void DoRedraw() override {}
 
 public:
    TGLBEntry(const TGWindow *p = 0, Int_t id = -1, UInt_t options = kHorizontalFrame,
              Pixel_t back = GetWhitePixel());
 
-   void Activate(Bool_t a) override;
+   void         Activate(Bool_t a) override;
    virtual void Toggle();
    virtual void Update(TGLBEntry *) { }  // this is needed on TGComboBoxes :(
    Int_t  EntryId() const { return fEntryId; }
-   Bool_t IsActive() const override { return fActive;  }
-   void SetBackgroundColor(Pixel_t col) override { TGFrame::SetBackgroundColor(col); fBkcolor = col; }
+   Bool_t       IsActive() const override { return fActive; }
+   void         SetBackgroundColor(Pixel_t col) override
+   {
+      TGFrame::SetBackgroundColor(col);
+      fBkcolor = col;
+   }
 
    ClassDef(TGLBEntry,0)  // Basic listbox entry
 };
@@ -110,15 +114,14 @@ public:
                  Pixel_t back = GetWhitePixel());
    ~TGTextLBEntry() override;
 
-   TGDimension GetDefaultSize() const override { return TGDimension(fTWidth, fTHeight+1); }
+   TGDimension     GetDefaultSize() const override { return TGDimension(fTWidth, fTHeight + 1); }
    const TGString *GetText() const { return fText; }
    void SetText(TGString *new_text);
-   const char *GetTitle() const override { return fText->Data(); }
+   const char *    GetTitle() const override { return fText->Data(); }
    virtual void  SetTitle(const char *text) { *fText = text; }
 
-   void  DrawCopy(Handle_t id, Int_t x, Int_t y) override;
-   void  Update(TGLBEntry *e) override
-                  { SetText(new TGString(((TGTextLBEntry *)e)->GetText())); }
+   void DrawCopy(Handle_t id, Int_t x, Int_t y) override;
+   void Update(TGLBEntry *e) override { SetText(new TGString(((TGTextLBEntry *)e)->GetText())); }
 
    GContext_t     GetNormGC() const { return fNormGC; }
    FontStruct_t   GetFontStruct() const { return fFontStruct; }
@@ -159,15 +162,14 @@ public:
                      Pixel_t back = GetWhitePixel());
    ~TGLineLBEntry() override;
 
-   TGDimension GetDefaultSize() const override
-                  { return TGDimension(fTWidth, fTHeight+1); }
+   TGDimension   GetDefaultSize() const override { return TGDimension(fTWidth, fTHeight + 1); }
    virtual Int_t GetLineWidth() const { return fLineWidth; }
    virtual void  SetLineWidth(Int_t width);
    Style_t       GetLineStyle() const { return fLineStyle; }
    virtual void  SetLineStyle(Style_t style);
    TGGC         *GetLineGC() const { return fLineGC; }
-   void  Update(TGLBEntry *e) override;
-   void  DrawCopy(Handle_t id, Int_t x, Int_t y) override;
+   void          Update(TGLBEntry *e) override;
+   void          DrawCopy(Handle_t id, Int_t x, Int_t y) override;
 
    ClassDef(TGLineLBEntry, 0)  // Line width listbox entry
 };
@@ -199,13 +201,12 @@ public:
                  Pixel_t back = GetWhitePixel());
    ~TGIconLBEntry() override;
 
-   TGDimension GetDefaultSize() const override
-                  { return TGDimension(fTWidth, fTHeight+1); }
+   TGDimension      GetDefaultSize() const override { return TGDimension(fTWidth, fTHeight + 1); }
    const TGPicture *GetPicture() const { return fPicture; }
    virtual void  SetPicture(const TGPicture *pic = 0);
 
-   void  Update(TGLBEntry *e) override;
-   void  DrawCopy(Handle_t id, Int_t x, Int_t y) override;
+   void Update(TGLBEntry *e) override;
+   void DrawCopy(Handle_t id, Int_t x, Int_t y) override;
 
    ClassDef(TGIconLBEntry, 0)  // Icon + text listbox entry
 };
@@ -248,15 +249,15 @@ public:
    virtual void InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID);
    virtual void RemoveEntry(Int_t id);
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID);
-   void RemoveAll() override;
+   void         RemoveAll() override;
 
-   void       ActivateItem(TGFrameElement *el) override;
-   void       Associate(const TGWindow *w) override { fMsgWindow = w; }
+   void               ActivateItem(TGFrameElement *el) override;
+   void               Associate(const TGWindow *w) override { fMsgWindow = w; }
    virtual void       SetListBox(TGListBox *lb) { fListBox = lb; }
    TGListBox         *GetListBox() const { return fListBox; }
-   Bool_t     HandleButton(Event_t *event) override;
-   Bool_t     HandleDoubleClick(Event_t *event) override;
-   Bool_t     HandleMotion(Event_t *event) override;
+   Bool_t             HandleButton(Event_t *event) override;
+   Bool_t             HandleDoubleClick(Event_t *event) override;
+   Bool_t             HandleMotion(Event_t *event) override;
    virtual Int_t      GetSelected() const;
    virtual Bool_t     GetSelection(Int_t id);
    virtual Int_t      GetPos(Int_t id);
@@ -265,10 +266,10 @@ public:
    virtual TGLBEntry *Select(Int_t id, Bool_t sel);
    virtual TGLBEntry *Select(Int_t id);
 
-   TGVScrollBar  *GetVScrollbar() const override;
-   void   SetVsbPosition(Int_t newPos) override;
-   void   Layout() override;
-   UInt_t GetDefaultWidth() const override  { return fWidth; }
+   TGVScrollBar *GetVScrollbar() const override;
+   void          SetVsbPosition(Int_t newPos) override;
+   void          Layout() override;
+   UInt_t        GetDefaultWidth() const override { return fWidth; }
 
    virtual void   SetMultipleSelections(Bool_t multi);
    virtual Bool_t GetMultipleSelections() const { return fMultiSelect; }
@@ -319,9 +320,9 @@ public:
    virtual void InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID);
    virtual void NewEntry(const char *s = "Entry");             //*MENU*
    virtual void RemoveEntry(Int_t id = -1);                    //*MENU*
-   void RemoveAll() override;                                   //*MENU*
+   void         RemoveAll() override;                          //*MENU*
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID);
-   void ChangeBackground(Pixel_t back) override;
+   void         ChangeBackground(Pixel_t back) override;
    virtual void SetTopEntry(Int_t id = -1);
    virtual void SetMultipleSelections(Bool_t multi = kTRUE)
                   { fLbc->SetMultipleSelections(multi); }      //*TOGGLE* *GETTER=GetMultipleSelections
@@ -336,15 +337,15 @@ public:
    virtual TGScrollBar  *GetScrollBar() const { return fVScrollbar; }
    virtual TGVScrollBar *GetVScrollbar() const { return fVScrollbar; }
 
-   void DrawBorder() override;
-   void Resize(UInt_t w, UInt_t h) override;
-   void Resize(TGDimension size) override { Resize(size.fWidth, size.fHeight); }
-   void MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
-   void Layout() override;
-   void SetLayoutManager(TGLayoutManager*) override { }
+   void         DrawBorder() override;
+   void         Resize(UInt_t w, UInt_t h) override;
+   void         Resize(TGDimension size) override { Resize(size.fWidth, size.fHeight); }
+   void         MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   void         Layout() override;
+   void         SetLayoutManager(TGLayoutManager *) override {}
    virtual void SortByName(Bool_t ascend = kTRUE);   //*MENU*icon=bld_sortup.png*
    virtual void IntegralHeight(Bool_t mode) { fIntegralHeight = mode; }
-   TGDimension GetDefaultSize() const override;
+   TGDimension  GetDefaultSize() const override;
 
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 

@@ -47,7 +47,7 @@ public:
                   Pixel_t back = GetDefaultFrameBackground());
    ~TAttFillEditor() override;
 
-   void   SetModel(TObject* obj) override;
+   void           SetModel(TObject *obj) override;
    virtual void   DoFillColor(Pixel_t color);
    virtual void   DoFillAlphaColor(ULong_t p);
    virtual void   DoFillPattern(Style_t color);

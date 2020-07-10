@@ -55,7 +55,7 @@ public:
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    ~TGeoTrd1Editor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
    void           DoDx1();
    void           DoDx2();

@@ -37,7 +37,8 @@ protected:
    Float_t fTl2;       // half length in x at high z and y high edge
    Float_t fAlpha2;    // angle w.r.t. the y axis
 
-   void    SetPoints(Double_t *points) const override;
+   void SetPoints(Double_t *points) const override;
+
 public:
    TGTRA();
    TGTRA(const char *name, const char *title, const char *material, Float_t dz, Float_t theta, Float_t phi, Float_t twist, Float_t h1,

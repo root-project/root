@@ -43,9 +43,9 @@ class FTGL_EXPORT FTExtrdGlyph : public FTGlyph
          * @param pen   The current pen position.
          * @return      The advance distance for this glyph.
          */
-        const FTPoint& Render( const FTPoint& pen) override;
+        const FTPoint &Render(const FTPoint &pen) override;
 
-    private:
+     private:
         /**
          * Calculate the normal vector to 2 points. This is 2D and ignores
          * the z component. The normal will be normalised

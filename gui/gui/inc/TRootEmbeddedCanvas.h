@@ -64,12 +64,11 @@ public:
    Int_t      GetCanvasWindowId() const { return fCWinId; }
    Bool_t     GetAutoFit() const { return fAutoFit; }
    void       SetAutoFit(Bool_t fit = kTRUE) { fAutoFit = fit; }
-   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void       SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    Bool_t HandleDNDDrop(TDNDData *data) override;
-   Atom_t HandleDNDPosition(Int_t /*x*/, Int_t /*y*/, Atom_t action,
-                                    Int_t /*xroot*/, Int_t /*yroot*/) override;
-   Atom_t HandleDNDEnter(Atom_t * typelist) override;
+   Atom_t HandleDNDPosition(Int_t /*x*/, Int_t /*y*/, Atom_t action, Int_t /*xroot*/, Int_t /*yroot*/) override;
+   Atom_t HandleDNDEnter(Atom_t *typelist) override;
    Bool_t HandleDNDLeave() override;
 
    ClassDef(TRootEmbeddedCanvas,0)  //A ROOT TCanvas that can be embedded in a TGFrame

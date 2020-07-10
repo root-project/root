@@ -53,7 +53,7 @@ public:
    TGLObject() : TGLLogicalShape(0), fMultiColor(kFALSE) {}
    ~TGLObject() override {}
 
-   Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const override;
+   Bool_t ShouldDLCache(const TGLRnrCtx &rnrCtx) const override;
 
    // Kept from TGLLogicalShape
    // virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }

@@ -81,9 +81,9 @@ public:
    Float_t             GetLabelSize() const    {return fLabelSize;}
    Float_t             GetTitleOffset() const  {return fTitleOffset;}
    Float_t             GetTitleSize() const    {return fTitleSize;}
-   const char *GetName() const override  {return fName.Data();}
-   const char *GetOption() const override {return fChopt.Data();}
-   const char *GetTitle() const override {return fTitle.Data();}
+   const char *        GetName() const override { return fName.Data(); }
+   const char *        GetOption() const override { return fChopt.Data(); }
+   const char *        GetTitle() const override { return fTitle.Data(); }
    static Int_t        GetMaxDigits();
    Int_t               GetNdiv() const         {return fNdiv;}
    Double_t            GetWmin() const         {return fWmin;}
@@ -91,14 +91,14 @@ public:
    Float_t             GetTickSize() const     {return fTickSize;}
    virtual void        ImportAxisAttributes(TAxis *axis);
    void                LabelsLimits(const char *label, Int_t &first, Int_t &last);
-   void        Paint(Option_t *chopt="") override;
+   void                Paint(Option_t *chopt = "") override;
    virtual void        PaintAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                  Double_t &wmin,Double_t &wmax,Int_t &ndiv, Option_t *chopt="",
                                  Double_t gridlength = 0, Bool_t drawGridOnly = kFALSE);
    virtual void        Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
                              ,Double_t XT, Double_t YT, Double_t &U,   Double_t &V);
    void                ResetLabelAttributes(TLatex* t);
-   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void                SetFunction(const char *funcname="");
    void                SetOption(Option_t *option="");
    void                SetLabelColor(Int_t labelcolor) {fLabelColor = labelcolor;} // *MENU*

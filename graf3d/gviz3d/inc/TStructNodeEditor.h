@@ -54,7 +54,7 @@ public:
    void  DefaultButtonSlot();
    void  MaxLevelsValueSetSlot(Long_t);
    void  MaxObjectsValueSetSlot(Long_t);
-   void  SetModel(TObject* obj) override;
+   void  SetModel(TObject *obj) override;
    void  Update(Bool_t resetCamera);
    void  Update() override;
 

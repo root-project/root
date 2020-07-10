@@ -31,9 +31,9 @@ private:
 public:
    TGLPolyMarker(const TBuffer3D & buffer);
 
-   void DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   void DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
-   Bool_t   IgnoreSizeForOfInterest() const override { return kTRUE; }
+   Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 
 private:
    void DrawStars()const;

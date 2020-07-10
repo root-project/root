@@ -175,10 +175,10 @@ public:
                   Pixel_t back = GetDefaultFrameBackground());
    ~TGMdiMainFrame() override;
 
-   Bool_t   HandleKey(Event_t *event) override;
-   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t HandleKey(Event_t *event) override;
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
-   void     Layout() override;
+   void Layout() override;
 
    virtual void     FreeMove(TGMdiFrame *frame);
    virtual void     FreeSize(TGMdiFrame *frame);
@@ -231,7 +231,7 @@ public:
    virtual void     FrameRestored(Int_t id) { Emit("FrameRestored(Int_t)", id); } //*SIGNAL*
    virtual void     FramesArranged(Int_t mode) { Emit("FramesArranged(Int_t)", mode); } //*SIGNAL*
 
-   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGMdiMainFrame, 0) // MDI main frame
 };
@@ -249,7 +249,7 @@ public:
                   UInt_t options = 0,
                   ULong_t back = GetDefaultFrameBackground());
 
-   Bool_t HandleConfigureNotify(Event_t *event) override;
+   Bool_t      HandleConfigureNotify(Event_t *event) override;
    TGDimension GetDefaultSize() const override;
 
    ClassDef(TGMdiContainer, 0) // MDI container

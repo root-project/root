@@ -94,7 +94,7 @@ ROOT tutorials: `$ROOTSYS/tutorials/image/`
 #   include <X11/Xlib.h>
 #endif
 #else
-#   include "Windows4Root.h"
+#include "Windows4Root.h"
 #endif
 #ifndef WIN32
 #ifdef R__HAS_COCOA

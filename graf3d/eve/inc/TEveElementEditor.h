@@ -44,7 +44,7 @@ public:
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveElementEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    void DoRnrSelf();
    void DoRnrChildren();

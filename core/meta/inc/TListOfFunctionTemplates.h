@@ -57,28 +57,28 @@ public:
    ~TListOfFunctionTemplates() override;
 
    void Clear(Option_t *option) override;
-   void Delete(Option_t *option="") override;
+   void Delete(Option_t *option = "") override;
 
    using THashList::FindObject;
-   TObject   *FindObject(const char *name) const override;
+   TObject *          FindObject(const char *name) const override;
    virtual TList     *GetListForObject(const char* name) const;
    virtual TList     *GetListForObject(const TObject* obj) const;
 
    TFunctionTemplate *Get(DeclId_t id);
 
-   void       AddFirst(TObject *obj) override;
-   void       AddFirst(TObject *obj, Option_t *opt) override;
-   void       AddLast(TObject *obj) override;
-   void       AddLast(TObject *obj, Option_t *opt) override;
-   void       AddAt(TObject *obj, Int_t idx) override;
-   void       AddAfter(const TObject *after, TObject *obj) override;
-   void       AddAfter(TObjLink *after, TObject *obj) override;
-   void       AddBefore(const TObject *before, TObject *obj) override;
-   void       AddBefore(TObjLink *before, TObject *obj) override;
+   void AddFirst(TObject *obj) override;
+   void AddFirst(TObject *obj, Option_t *opt) override;
+   void AddLast(TObject *obj) override;
+   void AddLast(TObject *obj, Option_t *opt) override;
+   void AddAt(TObject *obj, Int_t idx) override;
+   void AddAfter(const TObject *after, TObject *obj) override;
+   void AddAfter(TObjLink *after, TObject *obj) override;
+   void AddBefore(const TObject *before, TObject *obj) override;
+   void AddBefore(TObjLink *before, TObject *obj) override;
 
-   void       RecursiveRemove(TObject *obj) override;
-   TObject   *Remove(TObject *obj) override;
-   TObject   *Remove(TObjLink *lnk) override;
+   void     RecursiveRemove(TObject *obj) override;
+   TObject *Remove(TObject *obj) override;
+   TObject *Remove(TObjLink *lnk) override;
 
    void Load();
    void Unload();

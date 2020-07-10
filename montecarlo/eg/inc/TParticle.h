@@ -170,14 +170,13 @@ public:
 
              // ****** overloaded functions of TObject
 
-   void      Paint(Option_t *option = "") override;
-   void      Print(Option_t *option = "") const override;
-   void      Sizeof3D() const override;
-   Int_t     DistancetoPrimitive(Int_t px, Int_t py) override;
-   void      ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   const     char *GetName() const override;
-   const     char *GetTitle() const override;
-
+   void        Paint(Option_t *option = "") override;
+   void        Print(Option_t *option = "") const override;
+   void        Sizeof3D() const override;
+   Int_t       DistancetoPrimitive(Int_t px, Int_t py) override;
+   void        ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   const char *GetName() const override;
+   const char *GetTitle() const override;
 
    ClassDef(TParticle,2)  // TParticle vertex particle information
 };

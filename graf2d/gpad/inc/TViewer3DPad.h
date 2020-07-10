@@ -28,18 +28,18 @@ private:
 
 public:
    TViewer3DPad(TVirtualPad & pad) : fPad(pad), fBuilding(kFALSE) {};
-   ~TViewer3DPad() override {};
+   ~TViewer3DPad() override{};
 
    Bool_t PreferLocalFrame() const override;
    void   BeginScene() override;
    Bool_t BuildingScene() const override { return fBuilding; }
    void   EndScene() override;
-   Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0) override;
-   Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = 0) override;
+   Int_t  AddObject(const TBuffer3D &buffer, Bool_t *addChildren = 0) override;
+   Int_t  AddObject(UInt_t placedID, const TBuffer3D &buffer, Bool_t *addChildren = 0) override;
 
    // Composite shapes not supported on this viewer currently - ignore.
    // Will result in a set of individual component shapes
-   Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0) override;
+   Bool_t OpenComposite(const TBuffer3D &buffer, Bool_t *addChildren = 0) override;
    void   CloseComposite() override;
    void   AddCompositeOp(UInt_t operation) override;
 

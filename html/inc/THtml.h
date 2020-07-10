@@ -112,8 +112,8 @@ public:
          // Required since we overload TObject::Hash.
          ROOT::CallRecursiveRemoveIfNeeded(*this);
       }
-      const char* GetName() const override { return fName; }
-      ULong_t Hash() const override { return fName.Hash(); }
+      const char * GetName() const override { return fName; }
+      ULong_t      Hash() const override { return fName.Hash(); }
       virtual void GetFullName(TString& fullname, Bool_t asIncluded) const {
          if (fParent) {
             fParent->GetFullName(fullname, asIncluded);
@@ -158,7 +158,8 @@ public:
    public:
       TFileSysRoot(const char* name, TFileSysDB* parent):
          TFileSysDir(name, parent) {}
-      void GetFullName(TString& fullname, Bool_t asIncluded) const override {
+      void GetFullName(TString &fullname, Bool_t asIncluded) const override
+      {
          // prepend directory part of THtml::GetInputPath() only
          // if !asIncluded
          fullname = "";
@@ -239,7 +240,7 @@ public:
    };
 
    THtml();
-        ~THtml() override;
+   ~THtml() override;
 
    static void   LoadAllLibs();
 

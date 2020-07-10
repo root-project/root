@@ -187,30 +187,36 @@ public:
 
    TStreamerInfo();
    TStreamerInfo(TClass *cl);
-              ~TStreamerInfo() override;
-   void                Build() override;
-   void                BuildCheck(TFile *file = 0) override;
-   void                BuildEmulated(TFile *file) override;
-   void                BuildOld() override;
-   Bool_t      BuildFor( const TClass *cl ) override;
-   void                CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient) const override;
-   void                Clear(Option_t *) override;
-   TObject            *Clone(const char *newname = "") const override;
-   Bool_t              CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete, TFile *file) override;
-   void                Compile() override;
+   ~TStreamerInfo() override;
+   void     Build() override;
+   void     BuildCheck(TFile *file = 0) override;
+   void     BuildEmulated(TFile *file) override;
+   void     BuildOld() override;
+   Bool_t   BuildFor(const TClass *cl) override;
+   void     CallShowMembers(const void *obj, TMemberInspector &insp, Bool_t isTransient) const override;
+   void     Clear(Option_t *) override;
+   TObject *Clone(const char *newname = "") const override;
+   Bool_t   CompareContent(TClass *cl, TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete, TFile *file) override;
+   void     Compile() override;
    void                ComputeSize();
-   void                ForceWriteInfo(TFile *file, Bool_t force=kFALSE) override;
-   Int_t               GenerateHeaderFile(const char *dirname, const TList *subClasses = 0, const TList *extrainfos = 0) override;
-   TClass             *GetActualClass(const void *obj) const override;
-   TClass             *GetClass() const override {return fClass;}
-   UInt_t              GetCheckSum() const override {return fCheckSum;}
+   void                ForceWriteInfo(TFile *file, Bool_t force = kFALSE) override;
+   Int_t   GenerateHeaderFile(const char *dirname, const TList *subClasses = 0, const TList *extrainfos = 0) override;
+   TClass *GetActualClass(const void *obj) const override;
+   TClass *GetClass() const override { return fClass; }
+   UInt_t  GetCheckSum() const override { return fCheckSum; }
    UInt_t              GetCheckSum(TClass::ECheckSum code) const;
-   Int_t               GetClassVersion() const override {return fClassVersion;}
+   Int_t               GetClassVersion() const override { return fClassVersion; }
    Int_t               GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&streamer) const;
-   TObjArray          *GetElements() const override {return fElements;}
-   TStreamerElement   *GetElem(Int_t id) const override {return fComp[id].fElem;}  // Return the element for the list of optimized elements (max GetNdata())
-   TStreamerElement   *GetElement(Int_t id) const override {return (TStreamerElement*)fElements->At(id);} // Return the element for the complete list of elements (max GetElements()->GetEntries())
-   Int_t               GetElementOffset(Int_t id) const override {return fCompFull[id]->fOffset;}
+   TObjArray *         GetElements() const override { return fElements; }
+   TStreamerElement *  GetElem(Int_t id) const override
+   {
+      return fComp[id].fElem;
+   } // Return the element for the list of optimized elements (max GetNdata())
+   TStreamerElement *GetElement(Int_t id) const override
+   {
+      return (TStreamerElement *)fElements->At(id);
+   } // Return the element for the complete list of elements (max GetElements()->GetEntries())
+   Int_t                                  GetElementOffset(Int_t id) const override { return fCompFull[id]->fOffset; }
    TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Bool_t forCollection) { return forCollection ? fReadMemberWiseVecPtr : fReadMemberWise; }
    TStreamerInfoActions::TActionSequence *GetReadObjectWiseActions() { return fReadObjectWise; }
    TStreamerInfoActions::TActionSequence *GetReadTextActions() { return fReadText; }
@@ -219,17 +225,17 @@ public:
    TStreamerInfoActions::TActionSequence *GetWriteTextActions() { return fWriteText; }
    Int_t               GetNdata()   const {return fNdata;}
    Int_t               GetNelement() const { return fElements->GetEntries(); }
-   Int_t               GetNumber()  const override {return fNumber;}
+   Int_t                                  GetNumber() const override { return fNumber; }
    Int_t               GetLength(Int_t id) const {return fComp[id].fLength;}
    ULong_t             GetMethod(Int_t id) const {return fComp[id].fMethod;}
    Int_t               GetNewType(Int_t id) const {return fComp[id].fNewType;}
-   Int_t               GetOffset(const char *) const override;
-   Int_t               GetOffset(Int_t id) const override {return fComp[id].fOffset;}
-   Version_t           GetOldVersion() const override {return fOldVersion;}
-   Int_t               GetOnFileClassVersion() const override {return fOnFileClassVersion;}
-   Int_t               GetSize()    const override;
+   Int_t                                  GetOffset(const char *) const override;
+   Int_t                                  GetOffset(Int_t id) const override { return fComp[id].fOffset; }
+   Version_t                              GetOldVersion() const override { return fOldVersion; }
+   Int_t                                  GetOnFileClassVersion() const override { return fOnFileClassVersion; }
+   Int_t                                  GetSize() const override;
    Int_t               GetSizeElements()    const;
-   TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const override;
+   TStreamerElement *                     GetStreamerElement(const char *datamember, Int_t &offset) const override;
    TStreamerElement   *GetStreamerElementReal(Int_t i, Int_t j) const;
    Int_t               GetType(Int_t id)   const {return fComp[id].fType;}
    template <typename T> T GetTypedValue(char *pointer, Int_t i, Int_t j, Int_t len) const;
@@ -240,13 +246,13 @@ public:
    Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const { return GetTypedValueClones<Double_t>(clones, i, j, k, eoffset); }
    Double_t            GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const { return GetTypedValueSTL<Double_t>(cont, i, j, k, eoffset); }
    Double_t            GetValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const { return GetTypedValueSTLP<Double_t>(cont, i, j, k, eoffset); }
-   void                ls(Option_t *option="") const override;
+   void                  ls(Option_t *option = "") const override;
    Bool_t              MatchLegacyCheckSum(UInt_t checksum) const;
-   TVirtualStreamerInfo *NewInfo(TClass *cl) override {return new TStreamerInfo(cl);}
-   void               *New(void *obj = 0) override;
-   void               *NewArray(Long_t nElements, void* ary = 0) override;
-   void                Destructor(void* p, Bool_t dtorOnly = kFALSE) override;
-   void                DeleteArray(void* p, Bool_t dtorOnly = kFALSE) override;
+   TVirtualStreamerInfo *NewInfo(TClass *cl) override { return new TStreamerInfo(cl); }
+   void *                New(void *obj = 0) override;
+   void *                NewArray(Long_t nElements, void *ary = 0) override;
+   void                  Destructor(void *p, Bool_t dtorOnly = kFALSE) override;
+   void                  DeleteArray(void *p, Bool_t dtorOnly = kFALSE) override;
    void                PrintValue(const char *name, char *pointer, Int_t i, Int_t len, Int_t lenmax=1000) const;
    void                PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
    void                PrintValueSTL(const char *name, TVirtualCollectionProxy *cont, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
@@ -262,11 +268,12 @@ public:
 
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
    Int_t               ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t eoffset, Bool_t v7 = kTRUE );
-   void                SetCheckSum(UInt_t checksum) override {fCheckSum = checksum;}
-   void                SetClass(TClass *cl) override {fClass = cl;}
-   void                SetClassVersion(Int_t vers) override {fClassVersion=vers;}
+   void                SetCheckSum(UInt_t checksum) override { fCheckSum = checksum; }
+   void                SetClass(TClass *cl) override { fClass = cl; }
+   void                SetClassVersion(Int_t vers) override { fClassVersion = vers; }
    void                SetOnFileClassVersion(Int_t vers) {fOnFileClassVersion=vers;}
    void                TagFile(TFile *fFile) override;
+
 private:
    // Try to remove those functions from the public interface.
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
@@ -274,12 +281,12 @@ private:
    Int_t               WriteBufferSTL   (TBuffer &b, TVirtualCollectionProxy *cont,   Int_t nc);
    Int_t               WriteBufferSTLPtrs( TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset);
 public:
-   void        Update(const TClass *oldClass, TClass *newClass) override;
+   void Update(const TClass *oldClass, TClass *newClass) override;
 
-   TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name, Bool_t silent) override;
-   TClassStreamer *GenEmulatedClassStreamer(const char* class_name, Bool_t silent) override;
-   TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl ) override;
-   TClassStreamer *GenExplicitClassStreamer( const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl ) override;
+   TVirtualCollectionProxy *GenEmulatedProxy(const char *class_name, Bool_t silent) override;
+   TClassStreamer *         GenEmulatedClassStreamer(const char *class_name, Bool_t silent) override;
+   TVirtualCollectionProxy *GenExplicitProxy(const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl) override;
+   TClassStreamer *GenExplicitClassStreamer(const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl) override;
 
    static TStreamerElement   *GetCurrentElement();
 

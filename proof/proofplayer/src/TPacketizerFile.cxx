@@ -79,11 +79,15 @@ private:
 
 public:
    TIterObj(const char *n, TIter *iter) : fName(n), fIter(iter) { }
-   ~TIterObj() override { if (fIter) delete fIter; }
+   ~TIterObj() override
+   {
+      if (fIter)
+         delete fIter;
+   }
 
-   const char *GetName() const override {return fName;}
+   const char *GetName() const override { return fName; }
    TIter      *GetIter() const {return fIter;}
-   void        Print(Option_t* option = "") const override;
+   void        Print(Option_t *option = "") const override;
 };
 
 ClassImp(TPacketizerFile);

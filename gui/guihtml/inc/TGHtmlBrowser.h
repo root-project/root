@@ -59,7 +59,7 @@ public:
                  UInt_t w = 900, UInt_t h = 600);
    ~TGHtmlBrowser() override { ; }
 
-   Bool_t    ProcessMessage(Long_t msg, Long_t parm1, Long_t) override;
+   Bool_t            ProcessMessage(Long_t msg, Long_t parm1, Long_t) override;
    void              Selected(const char *txt);
    void              URLChanged();
    void              Back();

@@ -3440,32 +3440,36 @@ public:
       InterpreterCallbacks(interp),
       fFilesIncludedByLinkdef(filesIncludedByLinkdef){};
 
-   ~TRootClingCallbacks() override{};
+    ~TRootClingCallbacks() override{};
 
-   void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
-                                   llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
-                                   const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
-                                   llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/) override
-   {
-      if (isLocked) return;
-      if (IsAngled) return;
-      auto& PP = m_Interpreter->getCI()->getPreprocessor();
-      auto curLexer = PP.getCurrentFileLexer();
-      if (!curLexer) return;
-      auto fileEntry = curLexer->getFileEntry();
-      if (!fileEntry) return;
-      auto thisFileName = fileEntry->getName();
-      auto fileNameAsString = FileName.str();
-      auto isThisLinkdef = ROOT::TMetaUtils::IsLinkdefFile(thisFileName.data());
-      if (isThisLinkdef) {
-         auto isTheIncludedLinkdef = ROOT::TMetaUtils::IsLinkdefFile(fileNameAsString.c_str());
-         if (isTheIncludedLinkdef) {
-            fFilesIncludedByLinkdef.clear();
-            isLocked = true;
-         } else {
-            fFilesIncludedByLinkdef.emplace_back(fileNameAsString.c_str());
-         }
-      }
+    void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
+                            llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
+                            const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
+                            llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/) override
+    {
+       if (isLocked)
+          return;
+       if (IsAngled)
+          return;
+       auto &PP = m_Interpreter->getCI()->getPreprocessor();
+       auto  curLexer = PP.getCurrentFileLexer();
+       if (!curLexer)
+          return;
+       auto fileEntry = curLexer->getFileEntry();
+       if (!fileEntry)
+          return;
+       auto thisFileName = fileEntry->getName();
+       auto fileNameAsString = FileName.str();
+       auto isThisLinkdef = ROOT::TMetaUtils::IsLinkdefFile(thisFileName.data());
+       if (isThisLinkdef) {
+          auto isTheIncludedLinkdef = ROOT::TMetaUtils::IsLinkdefFile(fileNameAsString.c_str());
+          if (isTheIncludedLinkdef) {
+             fFilesIncludedByLinkdef.clear();
+             isLocked = true;
+          } else {
+             fFilesIncludedByLinkdef.emplace_back(fileNameAsString.c_str());
+          }
+       }
    }
 
    // rootcling pre-includes things such as Rtypes.h. This means that ACLiC can
@@ -3476,9 +3480,8 @@ public:
    // outside environment and pre-included files have no effect. This hook
    // informs rootcling when a new submodule is being built so that it can
    // make Core.Rtypes.h visible.
-   void EnteredSubmodule(clang::Module* M,
-                                 clang::SourceLocation ImportLoc,
-                                 bool ForPragma) override {
+   void EnteredSubmodule(clang::Module *M, clang::SourceLocation ImportLoc, bool ForPragma) override
+   {
       assert(M);
       using namespace clang;
       if (llvm::StringRef(M->Name).endswith("ACLiC_dict")) {
@@ -4456,9 +4459,8 @@ int RootClingMain(int argc,
    public:
       IgnoringPragmaHandler(const char* pragma):
          clang::PragmaNamespace(pragma) {}
-      void HandlePragma(clang::Preprocessor &PP,
-                        clang::PragmaIntroducerKind Introducer,
-                        clang::Token &tok) override {
+      void HandlePragma(clang::Preprocessor &PP, clang::PragmaIntroducerKind Introducer, clang::Token &tok) override
+      {
          PP.DiscardUntilEndOfDirective();
       }
    };

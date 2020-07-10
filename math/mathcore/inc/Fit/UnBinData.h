@@ -183,25 +183,23 @@ public:
   /**
     destructor, delete pointer to internal data or external data wrapper
   */
-  ~UnBinData() override {
-  }
+   ~UnBinData() override {}
 
-  /**
-    preallocate a data set given size and dimension of the coordinates
-    if a vector already exists with correct dimension (point size) extend the existing one
-    to a total size of maxpoints (equivalent to a Resize)
-  */
-  //void Initialize(unsigned int maxpoints, unsigned int dim = 1, bool isWeighted = false);
+   /**
+     preallocate a data set given size and dimension of the coordinates
+     if a vector already exists with correct dimension (point size) extend the existing one
+     to a total size of maxpoints (equivalent to a Resize)
+   */
+   // void Initialize(unsigned int maxpoints, unsigned int dim = 1, bool isWeighted = false);
 
+   /**
+     add one dim coordinate data (unweighted)
+   */
+   void Add(double x)
+   {
+      assert(!fWeighted);
 
-  /**
-    add one dim coordinate data (unweighted)
-  */
-  void Add(double x)
-  {
-    assert( !fWeighted );
-
-    FitData::Add( x );
+      FitData::Add(x);
   }
 
 

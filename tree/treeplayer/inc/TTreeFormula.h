@@ -155,12 +155,12 @@ protected:
 
    virtual TClass*   EvalClass(Int_t oper) const;
    virtual Bool_t    IsLeafInteger(Int_t code) const;
-   Bool_t    IsString(Int_t oper) const override;
+   Bool_t            IsString(Int_t oper) const override;
    virtual Bool_t    IsLeafString(Int_t code) const;
    virtual Bool_t    SwitchToFormLeafInfo(Int_t code);
-   Bool_t    StringToNumber(Int_t code) override;
+   Bool_t            StringToNumber(Int_t code) override;
 
-   void              Convert(UInt_t fromVersion) override;
+   void Convert(UInt_t fromVersion) override;
 
 private:
    // Not implemented yet
@@ -172,9 +172,9 @@ private:
 public:
    TTreeFormula();
    TTreeFormula(const char *name,const char *formula, TTree *tree);
-     ~TTreeFormula() override;
+   ~TTreeFormula() override;
 
-   Int_t       DefinedVariable(TString &variable, Int_t &action) override;
+   Int_t               DefinedVariable(TString &variable, Int_t &action) override;
    virtual TClass*     EvalClass() const;
 
    template<typename T> T EvalInstance(Int_t i=0, const char *stringStack[]=0);
@@ -200,7 +200,11 @@ public:
    virtual Bool_t      IsInteger(Bool_t fast=kTRUE) const;
            Bool_t      IsQuickLoad() const { return fQuickLoad; }
    virtual Bool_t      IsString() const;
-   Bool_t      Notify() override { UpdateFormulaLeaves(); return kTRUE; }
+   Bool_t              Notify() override
+   {
+      UpdateFormulaLeaves();
+      return kTRUE;
+   }
    virtual char       *PrintValue(Int_t mode=0) const;
    virtual char       *PrintValue(Int_t mode, Int_t instance, const char *decform = "9.9") const;
    virtual void        SetAxis(TAxis *axis=0);

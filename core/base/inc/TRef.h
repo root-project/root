@@ -44,7 +44,7 @@ public:
    TRef(const TRef &ref);
    void  operator=(TObject *obj);
    TRef& operator=(const TRef &ref);
-   ~TRef() override { }
+   ~TRef() override {}
 
    TObject           *GetObject() const;
    TProcessID        *GetPID() const {return fPID;}

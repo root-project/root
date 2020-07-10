@@ -47,14 +47,13 @@ class FTGL_EXPORT FTGLOutlineFont : public FTFont
          */
         void PostRender() override;
 
-    private:
+     private:
         /**
          * Construct a FTOutlineGlyph.
          *
          * @param g The glyph index NOT the char code.
          * @return  An FTOutlineGlyph or <code>null</code> on failure.
          */
-        inline FTGlyph* MakeGlyph( unsigned int g) override;
-
+        inline FTGlyph *MakeGlyph(unsigned int g) override;
 };
 #endif // __FTGLOutlineFont__

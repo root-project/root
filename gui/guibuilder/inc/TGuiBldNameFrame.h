@@ -53,7 +53,7 @@ protected:
 
 public:
    TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor);
-   ~TGuiBldNameFrame() override { }
+   ~TGuiBldNameFrame() override {}
 
    void              ChangeSelected(TGFrame *frame);
    Bool_t            CheckItems(TGCompositeFrame *main);

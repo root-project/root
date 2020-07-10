@@ -70,7 +70,7 @@ public:
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    ~TAxisEditor() override;
-   void   SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
    // slots related to axis attributes
    virtual void   DoTickLength();
    virtual void   DoAxisColor(Pixel_t color);

@@ -56,7 +56,7 @@ public:
 
    void DrawBorder() override;
 
-   Bool_t HandleTimer(TTimer *t) override;
+   Bool_t          HandleTimer(TTimer *t) override;
    void   Show(Int_t x, Int_t y);    //*SIGNAL*
    void   Hide();                    //*SIGNAL*
    void   Reset();                   //*SIGNAL*

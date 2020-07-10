@@ -105,7 +105,7 @@ public :
    Bool_t              NeedRebuild() const {return TObject::TestBit(kGeoRebuildVoxels);}
    Double_t           *GetBoxes() const {return fBoxes;}
    Bool_t              IsSafeVoxel(const Double_t *point, Int_t inode, Double_t minsafe) const;
-   void        Print(Option_t *option="") const override;
+   void                Print(Option_t *option = "") const override;
    void                PrintVoxelLimits(const Double_t *point) const;
    void                SetInvalid(Bool_t flag=kTRUE) {TObject::SetBit(kGeoInvalidVoxels, flag);}
    void                SetNeedRebuild(Bool_t flag=kTRUE) {TObject::SetBit(kGeoRebuildVoxels, flag);}

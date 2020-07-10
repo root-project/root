@@ -42,7 +42,7 @@ protected:
    Int_t          *fMessIds;    // message ids
    Bool_t          fDerived;    // if true handle messages also for derived classes
 
-   void  *GetSender() override { return this; }  //used to set gTQSender
+   void *GetSender() override { return this; } // used to set gTQSender
 
 public:
    TMessageHandler(const TClass *cl, Bool_t derived = kTRUE);
@@ -55,11 +55,11 @@ public:
    Bool_t          HandleDerived() const { return fDerived; }
    virtual void    HandleMessage(Int_t id, const TObject *obj);
 
-   void    Print(Option_t *option= "") const override;
+   void Print(Option_t *option = "") const override;
 
    virtual void    Add();
    virtual void    Remove();
-   Bool_t  Notify() override;
+   Bool_t          Notify() override;
 
    virtual void    Added()    { Emit("Added()"); }       //*SIGNAL*
    virtual void    Removed()  { Emit("Removed()"); }     //*SIGNAL*

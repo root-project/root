@@ -100,7 +100,7 @@ public:
    void SetTuneFactor(Double_t rho);
    void SetRange(Double_t xMin, Double_t xMax); // By default computed from the data
 
-   void Draw(const Option_t* option = "") override;
+   void Draw(const Option_t *option = "") override;
 
    Double_t operator()(Double_t x) const;
    Double_t operator()(const Double_t* x, const Double_t* p=0) const;  // Needed for creating TF1

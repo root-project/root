@@ -55,18 +55,18 @@ public:
    TNode(const char *name, const char *title, TShape *shape, Double_t x=0, Double_t y=0, Double_t z=0,
          TRotMatrix *matrix=0, Option_t *option="");
    ~TNode() override;
-   void        Browse(TBrowser *b) override;
+   void                Browse(TBrowser *b) override;
    virtual void        BuildListOfNodes();
    virtual void        cd(const char *path=0); // *MENU*
-   Int_t       DistancetoPrimitive(Int_t px, Int_t py) override;
-   void        Draw(Option_t *option="") override; // *MENU*
+   Int_t               DistancetoPrimitive(Int_t px, Int_t py) override;
+   void                Draw(Option_t *option = "") override; // *MENU*
    virtual void        DrawOnly(Option_t *option="");
-   void        ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void                ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    TList              *GetListOfNodes() const {return fNodes;}
    virtual TRotMatrix *GetMatrix() const {return fMatrix;}
    virtual TNode      *GetNode(const char *name) const;
-   char       *GetObjectInfo(Int_t px, Int_t py) const override;
-   const   Option_t   *GetOption() const override { return fOption.Data();}
+   char *              GetObjectInfo(Int_t px, Int_t py) const override;
+   const Option_t *    GetOption() const override { return fOption.Data(); }
    virtual TNode      *GetParent() const {return fParent;}
    TShape             *GetShape() const {return fShape;}
    Int_t               GetVisibility() const {return fVisibility;}
@@ -77,18 +77,18 @@ public:
    Bool_t              IsFolder() const override;
    virtual void        Local2Master(const Double_t *local, Double_t *master);
    virtual void        Local2Master(const Float_t *local, Float_t *master);
-   void        ls(Option_t *option="2") const override; // *MENU*
+   void                ls(Option_t *option = "2") const override; // *MENU*
    virtual void        Master2Local(const Double_t *master, Double_t *local);
    virtual void        Master2Local(const Float_t *master, Float_t *local);
-   void        Paint(Option_t *option="") override;
-   void        RecursiveRemove(TObject *obj) override;
+   void                Paint(Option_t *option = "") override;
+   void                RecursiveRemove(TObject *obj) override;
    virtual void        SetMatrix(TRotMatrix *matrix=0) {fMatrix = matrix;}
-   void        SetName(const char *name) override;
+   void                SetName(const char *name) override;
    virtual void        SetParent(TNode *parent);
-   void        SetNameTitle(const char *name, const char *title) override;
+   void                SetNameTitle(const char *name, const char *title) override;
    virtual void        SetPosition( Double_t x=0, Double_t y=0, Double_t z=0) {fX=x; fY=y; fZ=z;}
    virtual void        SetVisibility(Int_t vis=1); // *MENU*
-   void        Sizeof3D() const override;
+   void                Sizeof3D() const override;
    virtual void        UpdateMatrix();
    virtual void        UpdateTempMatrix(const Double_t *dx1,const Double_t *rmat1,
                               Double_t x, Double_t y, Double_t z, Double_t *matrix,

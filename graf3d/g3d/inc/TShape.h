@@ -50,14 +50,14 @@ public:
    TShape(const char *name, const char *title, const char *material);
    TShape(const TShape&);
    TShape& operator=(const TShape&);
-           ~TShape() override;
+   ~TShape() override;
 
    virtual const   TBuffer3D &GetBuffer3D(Int_t reqSections) const;
    TMaterial      *GetMaterial()  const {return fMaterial;}
    virtual Int_t   GetNumber()     const {return fNumber;}
    Int_t           GetVisibility() const {return fVisibility;}
-   void    Paint(Option_t *option="") override;
-   void    SetName(const char *name) override;
+   void                       Paint(Option_t *option = "") override;
+   void                       SetName(const char *name) override;
    virtual void    SetPoints(Double_t *points) const ;
    virtual void    SetVisibility(Int_t vis) {fVisibility = vis;} // *MENU*
    void            TransformPoints(Double_t *points, UInt_t NbPnts) const;

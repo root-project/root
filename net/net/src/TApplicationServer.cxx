@@ -74,7 +74,7 @@ class TASInterruptHandler : public TSignalHandler {
 public:
    TASInterruptHandler(TApplicationServer *s)
       : TSignalHandler(kSigUrgent, kFALSE) { fServ = s; }
-   Bool_t  Notify() override;
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ class TASSigPipeHandler : public TSignalHandler {
 public:
    TASSigPipeHandler(TApplicationServer *s) : TSignalHandler(kSigPipe, kFALSE)
       { fServ = s; }
-   Bool_t  Notify() override;
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

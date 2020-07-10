@@ -38,15 +38,15 @@ namespace {
    class ROOTTabCompletion: public TabCompletion {
    public:
       ROOTTabCompletion(): fLineBuf(new char[fgLineBufSize]) {}
-      ~ROOTTabCompletion() override { delete []fLineBuf; }
+      ~ROOTTabCompletion() override { delete[] fLineBuf; }
 
       ROOTTabCompletion(const ROOTTabCompletion&) = delete;
       ROOTTabCompletion& operator=(const ROOTTabCompletion&) = delete;
 
       // Returns false on error
-      bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
-                    EditorRange& r /*out*/,
-                    std::vector<std::string>& displayCompletions /*out*/) override {
+      bool Complete(Text &line /*in+out*/, size_t &cursor /*in+out*/, EditorRange &r /*out*/,
+                    std::vector<std::string> &displayCompletions /*out*/) override
+      {
          strlcpy(fLineBuf, line.GetText().c_str(), fgLineBufSize);
          int cursorInt = (int) cursor;
          std::stringstream sstr;
@@ -81,6 +81,7 @@ namespace {
          line.GetColors().resize(lenLineBuf);
          return true;
       }
+
    private:
       static const size_t fgLineBufSize;
       char* fLineBuf;
@@ -96,9 +97,9 @@ namespace {
       TClingTabCompletion& operator=(const TClingTabCompletion&) = delete;
 
       // Returns false on error
-      bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
-                    EditorRange& r /*out*/,
-                    std::vector<std::string>& completions /*out*/) override {
+      bool Complete(Text &line /*in+out*/, size_t &cursor /*in+out*/, EditorRange &r /*out*/,
+                    std::vector<std::string> &completions /*out*/) override
+      {
          gInterpreter->CodeComplete(line.GetText(), cursor, completions);
          // FIXME: handle single completion by completing "line"
          // FIXME: adjust r's update range, for now:

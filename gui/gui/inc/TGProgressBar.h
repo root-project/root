@@ -67,7 +67,7 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t options = kDoubleBorder | kSunkenFrame);
-   ~TGProgressBar() override { }
+   ~TGProgressBar() override {}
 
    Float_t      GetMin() const { return fMin; }
    Float_t      GetMax() const { return fMax; }
@@ -95,7 +95,7 @@ public:
    virtual void SetBarColor(Pixel_t color);
    void         SetBarColor(const char *color="blue");
    virtual void Reset();                                 //*MENU*
-   void SetForegroundColor(Pixel_t pixel) override;
+   void         SetForegroundColor(Pixel_t pixel) override;
 
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
@@ -117,10 +117,9 @@ public:
                   FontStruct_t font = GetDefaultFontStruct(),
                   UInt_t options = kDoubleBorder | kSunkenFrame);
    TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w);
-   ~TGHProgressBar() override { }
+   ~TGHProgressBar() override {}
 
-   TGDimension GetDefaultSize() const override
-                     { return TGDimension(fWidth, fBarWidth); }
+   TGDimension GetDefaultSize() const override { return TGDimension(fWidth, fBarWidth); }
 
    void ShowPosition(Bool_t set = kTRUE, Bool_t percent = kTRUE,
                      const char *format = "%.2f");
@@ -145,13 +144,12 @@ public:
                   FontStruct_t font = GetDefaultFontStruct(),
                   UInt_t options = kDoubleBorder | kSunkenFrame);
    TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h);
-   ~TGVProgressBar() override { }
+   ~TGVProgressBar() override {}
 
-   TGDimension GetDefaultSize() const override
-                     { return TGDimension(fBarWidth, fHeight); }
-   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   void ShowPos(Bool_t) override { }
-   void Percent(Bool_t) override { }
+   TGDimension GetDefaultSize() const override { return TGDimension(fBarWidth, fHeight); }
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        ShowPos(Bool_t) override {}
+   void        Percent(Bool_t) override {}
 
    ClassDef(TGVProgressBar,0)  // Vertical progress bar widget
 };

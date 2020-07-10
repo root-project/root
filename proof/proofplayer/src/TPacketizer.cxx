@@ -103,7 +103,11 @@ private:
 
 public:
    TFileNode(const char *name);
-   ~TFileNode() override { delete fFiles; delete fActFiles; }
+   ~TFileNode() override
+   {
+      delete fFiles;
+      delete fActFiles;
+   }
 
    void        IncMySlaveCnt() { fMySlaveCnt++; }
    void        IncSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt++; }
@@ -217,6 +221,7 @@ private:
    TFileStat     *fCurFile;      // file currently being processed
    TDSetElement  *fCurElem;      // TDSetElement currently being processed
    TProofProgressStatus *AddProcessed(TProofProgressStatus *st) override;
+
 public:
    TSlaveStat(TSlave *slave);
    ~TSlaveStat() override;

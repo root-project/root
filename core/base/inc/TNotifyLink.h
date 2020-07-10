@@ -40,7 +40,8 @@ public:
       kLinked = BIT(11) // Used when the TNotifyLink is connected to a TTree.
    };
 
-   void Clear(Option_t * /*option*/ ="") override {
+   void Clear(Option_t * /*option*/ = "") override
+   {
       auto current = this;
       do {
          auto next = dynamic_cast<TNotifyLinkBase*>(fNext);

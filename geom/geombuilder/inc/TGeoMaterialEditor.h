@@ -60,7 +60,7 @@ public:
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    ~TGeoMaterialEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
    void           DoA();
    void           DoZ();
@@ -97,7 +97,7 @@ protected:
    TGTextButton        *fBAddElem;          // Button for adding element as component
    TGCompositeFrame    *fComps;             // Frame with components
 
-   void ConnectSignals2Slots() override;     // Connect the signals to the slots
+   void ConnectSignals2Slots() override; // Connect the signals to the slots
 
 public:
    TGeoMixtureEditor(const TGWindow *p = 0,
@@ -105,7 +105,7 @@ public:
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    ~TGeoMixtureEditor() override {}
-   void   SetModel(TObject *obj) override;
+   void           SetModel(TObject *obj) override;
    void           UpdateElements();
 
    void           DoApply1();

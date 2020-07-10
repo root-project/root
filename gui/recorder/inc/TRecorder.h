@@ -211,12 +211,14 @@ public:
       return fText.Data();
    }
 
-   ERecEventType GetType() const override {
+   ERecEventType GetType() const override
+   {
       // Returns what kind of event it stores (commandline event)
       return TRecEvent::kCmdEvent;
    }
 
-   void ReplayEvent(Bool_t) override {
+   void ReplayEvent(Bool_t) override
+   {
       // Stored command is executed again
       std::cout << GetText() << std::endl;
       gApplication->ProcessLine(GetText());
@@ -253,12 +255,14 @@ public:
       return fText;
    }
 
-   ERecEventType GetType() const override {
+   ERecEventType GetType() const override
+   {
       // Returns what kind of event it stores (Especial event)
       return TRecEvent::kExtraEvent;
    }
 
-   void ReplayEvent(Bool_t) override {
+   void ReplayEvent(Bool_t) override
+   {
       // Stored event is executed again
 
       gApplication->ProcessLine(GetText());
@@ -319,12 +323,13 @@ public:
       kROOT_MESSAGE     = 10002
    };
 
-   ERecEventType GetType() const override {
+   ERecEventType GetType() const override
+   {
       // Returns what kind of event it stores (GUI event)
       return TRecEvent::kGuiEvent;
    }
 
-   void    ReplayEvent(Bool_t showMouseCursor = kTRUE) override;
+   void            ReplayEvent(Bool_t showMouseCursor = kTRUE) override;
    static Event_t *CreateEvent(TRecGuiEvent *ge);
 
    ClassDef(TRecGuiEvent,1) // Class stores information about 1 GUI event in ROOT
@@ -552,7 +557,7 @@ public:
 class TRecorderReplaying : public TRecorderState
 {
 private:
-    ~TRecorderReplaying() override;
+   ~TRecorderReplaying() override;
    Bool_t   PrepareNextEvent();
    Bool_t   RemapWindowReferences();
    Bool_t   CanOverlap();
@@ -622,9 +627,9 @@ protected:
 public:
    TRecorder::ERecorderState GetState() const override { return TRecorder::kReplaying; }
 
-   void   Pause(TRecorder *r) override;
+   void           Pause(TRecorder *r) override;
    virtual void   Continue();
-   void   ReplayStop(TRecorder *r) override;
+   void           ReplayStop(TRecorder *r) override;
 
    void           RegisterWindow(Window_t w);   //SLOT
    void           ReplayRealtime();             //SLOT
@@ -723,11 +728,11 @@ private:
    TSeqCollection *fCollect;
 
 public:
-          ~TRecorderInactive() override {}
+   ~TRecorderInactive() override {}
    TRecorderInactive() : fCollect(0) {}
 
-   void   ListCmd(const char *filename) override;
-   void   ListGui(const char *filename) override;
+   void ListCmd(const char *filename) override;
+   void ListGui(const char *filename) override;
 
    void   Start(TRecorder *r, const char *filename, Option_t *option, Window_t *w = 0, Int_t winCount = 0) override;
    Bool_t Replay(TRecorder *r, const char *filename, Bool_t showMouseCursor, TRecorder::EReplayModes mode) override;

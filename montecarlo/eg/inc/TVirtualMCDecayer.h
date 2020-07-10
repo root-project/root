@@ -24,7 +24,7 @@ class TVirtualMCDecayer : public TObject {
 public:
 //
    TVirtualMCDecayer() {;}
-   ~TVirtualMCDecayer() override{;}
+   ~TVirtualMCDecayer() override { ; }
 
    /// Initialize the decayer
    virtual void    Init()                                     =0;

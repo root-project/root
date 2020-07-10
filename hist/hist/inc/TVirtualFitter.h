@@ -60,7 +60,7 @@ public:
    ~TVirtualFitter() override;
    virtual Double_t  Chisquare(Int_t npar, Double_t *params) const  = 0;
 
-   void      Clear(Option_t *option="") override = 0;
+   void              Clear(Option_t *option = "") override = 0;
    virtual Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs) = 0;
    virtual void      FixParameter(Int_t ipar) = 0;
    virtual void      GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95);

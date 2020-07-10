@@ -80,10 +80,10 @@ public:
    ~TGLPShapeObjEditor() override;
 
    // Virtuals from TGLPShapeRef
-   void SetPShape(TGLPhysicalShape * shape) override;
+   void SetPShape(TGLPhysicalShape *shape) override;
    void PShapeModified() override;
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    // geometry
    void SetCenter(const Double_t *center);

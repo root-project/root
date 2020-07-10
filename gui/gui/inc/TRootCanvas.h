@@ -100,11 +100,10 @@ private:
    Bool_t   HandleContainerExpose(Event_t *ev);
    Bool_t   HandleContainerCrossing(Event_t *ev);
 
-   Bool_t   HandleDNDDrop(TDNDData *data) override;
-   Atom_t   HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
-                              Int_t xroot, Int_t yroot) override;
-   Atom_t   HandleDNDEnter(Atom_t * typelist) override;
-   Bool_t   HandleDNDLeave() override;
+   Bool_t HandleDNDDrop(TDNDData *data) override;
+   Atom_t HandleDNDPosition(Int_t x, Int_t y, Atom_t action, Int_t xroot, Int_t yroot) override;
+   Atom_t HandleDNDEnter(Atom_t *typelist) override;
+   Bool_t HandleDNDLeave() override;
 
 public:
    TRootCanvas(TCanvas *c = 0, const char *name = "ROOT Canvas", UInt_t width = 500, UInt_t height = 300);
@@ -129,18 +128,18 @@ public:
    void     SetCanvasSize(UInt_t w, UInt_t h) override;
    void     SetStatusText(const char *txt = 0, Int_t partidx = 0) override;
 
-   void     Show() override { MapRaised(); }
-   void     ShowMenuBar(Bool_t show = kTRUE) override;
-   void     ShowStatusBar(Bool_t show = kTRUE) override;
-   void     ShowEditor(Bool_t show = kTRUE) override;
-   void     ShowToolBar(Bool_t show = kTRUE) override;
-   void     ShowToolTips(Bool_t show = kTRUE) override;
+   void Show() override { MapRaised(); }
+   void ShowMenuBar(Bool_t show = kTRUE) override;
+   void ShowStatusBar(Bool_t show = kTRUE) override;
+   void ShowEditor(Bool_t show = kTRUE) override;
+   void ShowToolBar(Bool_t show = kTRUE) override;
+   void ShowToolTips(Bool_t show = kTRUE) override;
 
-   Bool_t   HasEditor() const override;
-   Bool_t   HasMenuBar() const override;
-   Bool_t   HasStatusBar() const override;
-   Bool_t   HasToolBar() const override;
-   Bool_t   HasToolTips() const override;
+   Bool_t HasEditor() const override;
+   Bool_t HasMenuBar() const override;
+   Bool_t HasStatusBar() const override;
+   Bool_t HasToolBar() const override;
+   Bool_t HasToolTips() const override;
 
    void     Activated(Int_t id);
 
@@ -150,9 +149,9 @@ public:
    TGDockableFrame *GetToolDock() const { return fToolDock; }
 
    // overridden from TGMainFrame
-   void     CloseWindow() override;
-   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
-   void     ReallyDelete() override;
+   void   CloseWindow() override;
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   void   ReallyDelete() override;
 
    ClassDef(TRootCanvas,0)  //ROOT native GUI version of main window with menubar and drawing area
 };

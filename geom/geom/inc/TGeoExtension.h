@@ -36,7 +36,8 @@ public:
 class TGeoRCExtension : public TGeoExtension
 {
 protected:
-   ~TGeoRCExtension() override {delete fUserObject;}
+   ~TGeoRCExtension() override { delete fUserObject; }
+
 public:
    TGeoRCExtension() : TGeoExtension(), fRC(0), fUserObject(0) { fRC++; }
    TGeoRCExtension(TObject *obj) : TGeoExtension(), fRC(0), fUserObject(obj) { fRC++; }

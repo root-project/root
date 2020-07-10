@@ -55,7 +55,7 @@ public:
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    ~TGraphEditor() override;
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    // slots related to graph attributes
    virtual void DoShape();

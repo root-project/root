@@ -176,10 +176,11 @@ public:
    using GradientStorage = std::vector<Double_t>;
 
                   TFormula();
-          ~TFormula() override;
-   TFormula&      operator=(const TFormula &rhs);
-   TFormula(const char *name, const char * formula = "", bool addToGlobList = true, bool vectorize = false);
-   TFormula(const char *name, const char * formula, int ndim, int npar, bool addToGlobList = true);
+                  ~TFormula() override;
+                  TFormula &operator=(const TFormula &rhs);
+                  TFormula(const char *name, const char *formula = "", bool addToGlobList = true,
+                           bool vectorize = false);
+                  TFormula(const char *name, const char *formula, int ndim, int npar, bool addToGlobList = true);
                   TFormula(const TFormula &formula);
    //               TFormula(const char *name, Int_t nparams, Int_t ndims);
 
@@ -187,8 +188,8 @@ public:
    void           AddVariable(const TString &name, Double_t value = 0);
    void           AddVariables(const TString *vars, const Int_t size);
    Int_t          Compile(const char *expression="");
-   void   Copy(TObject &f1) const override;
-   void   Clear(Option_t * option="") override;
+   void           Copy(TObject &f1) const override;
+   void           Clear(Option_t *option = "") override;
    Double_t       Eval(Double_t x) const;
    Double_t       Eval(Double_t x, Double_t y) const;
    Double_t       Eval(Double_t x, Double_t y , Double_t z) const;
@@ -236,7 +237,7 @@ public:
    Bool_t IsVectorized() const { return fVectorized; }
    Bool_t         IsLinear() const { return TestBit(kLinear); }
    void           Print(Option_t *option = "") const override;
-   void           SetName(const char* name) override;
+   void           SetName(const char *name) override;
    void           SetParameter(const char* name, Double_t value);
    void           SetParameter(Int_t param, Double_t value);
    void           SetParameters(const Double_t *params);

@@ -73,8 +73,8 @@ public:
                   UInt_t options = kVerticalFrame);
    ~TGSearchDialog() override;
 
-   void   CloseWindow() override;
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   void                  CloseWindow() override;
+   Bool_t                ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    virtual void   SetClose(Bool_t on) { fType->fClose = on; }
    virtual Bool_t IsClose() const {  return fType->fClose; }
    virtual void   TextEntered(const char *text); //*SIGNAL*
@@ -109,9 +109,9 @@ public:
                  UInt_t options = kVerticalFrame);
    ~TGPrintDialog() override;
 
-   void   CloseWindow() override;
+   void           CloseWindow() override;
    virtual void   GetPrinters();
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t         ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
    ClassDef(TGPrintDialog,0)  // Print dialog used by TGTextEdit widget
 };

@@ -36,45 +36,45 @@ private:
 
 public:
    TViewPubFunctions(TClass *cl = 0);
-      ~TViewPubFunctions() override;
+   ~TViewPubFunctions() override;
 
-   TObject   *FindObject(const char *name) const override;
-   TObject   *FindObject(const TObject *obj) const override;
+   TObject *FindObject(const char *name) const override;
+   TObject *FindObject(const TObject *obj) const override;
 
-   TObject  *At(Int_t idx) const override;
+   TObject *            At(Int_t idx) const override;
    virtual const TList *GetListOfClasses() const { return &fClasses; }
-   Int_t        GetSize() const override;
-   TIterator   *MakeIterator(Bool_t dir = kIterForward) const override;
+   Int_t                GetSize() const override;
+   TIterator *          MakeIterator(Bool_t dir = kIterForward) const override;
 
    void       Load();
 
    // All the following routines are explicitly disallow/unsupported for
    // a view
 protected:
-   void       Clear(Option_t *option="") override;
-   void       Delete(Option_t *option="") override;
+   void Clear(Option_t *option = "") override;
+   void Delete(Option_t *option = "") override;
 
-   void       AddFirst(TObject *obj) override;
-   void       AddFirst(TObject *obj, Option_t *opt) override;
-   void       AddLast(TObject *obj) override;
-   void       AddLast(TObject *obj, Option_t *opt) override;
-   void       AddAt(TObject *obj, Int_t idx) override;
-   void       AddAfter(const TObject *after, TObject *obj) override;
-   void       AddAfter(TObjLink *after, TObject *obj) override;
-   void       AddBefore(const TObject *before, TObject *obj) override;
-   void       AddBefore(TObjLink *before, TObject *obj) override;
+   void AddFirst(TObject *obj) override;
+   void AddFirst(TObject *obj, Option_t *opt) override;
+   void AddLast(TObject *obj) override;
+   void AddLast(TObject *obj, Option_t *opt) override;
+   void AddAt(TObject *obj, Int_t idx) override;
+   void AddAfter(const TObject *after, TObject *obj) override;
+   void AddAfter(TObjLink *after, TObject *obj) override;
+   void AddBefore(const TObject *before, TObject *obj) override;
+   void AddBefore(TObjLink *before, TObject *obj) override;
 
-   TObject  *After(const TObject *obj) const override;
-   TObject  *Before(const TObject *obj) const override;
-   TObject  *First() const override;
+   TObject * After(const TObject *obj) const override;
+   TObject * Before(const TObject *obj) const override;
+   TObject * First() const override;
    TObjLink *FirstLink() const override;
    TObject **GetObjectRef(const TObject *obj) const override;
-   TObject  *Last() const override;
+   TObject * Last() const override;
    TObjLink *LastLink() const override;
 
-   void       RecursiveRemove(TObject *obj) override;
-   TObject   *Remove(TObject *obj) override;
-   TObject   *Remove(TObjLink *lnk) override;
+   void     RecursiveRemove(TObject *obj) override;
+   TObject *Remove(TObject *obj) override;
+   TObject *Remove(TObjLink *lnk) override;
 
 public:
    ClassDefInline(TViewPubFunctions, 0) // Doubly linked list with hashtable for lookup
@@ -110,16 +110,16 @@ protected:
 public:
    TViewPubFunctionsIter(const TViewPubFunctions *l, Bool_t dir = kIterForward);
    TViewPubFunctionsIter(const TViewPubFunctionsIter &iter);
-   ~TViewPubFunctionsIter() override { }
-   TIterator &operator=(const TIterator &rhs) override;
+   ~TViewPubFunctionsIter() override {}
+   TIterator &            operator=(const TIterator &rhs) override;
    TViewPubFunctionsIter &operator=(const TViewPubFunctionsIter &rhs);
 
    const TCollection *GetCollection() const override { return fView; }
-   TObject           *Next() override;
+   TObject *          Next() override;
    void               Reset() override;
    Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const TViewPubFunctionsIter &aIter) const;
-   TObject           *operator*() const override { return *fFuncIter; }
+   TObject *          operator*() const override { return *fFuncIter; }
 
    // ClassDefInline does not yet support non default constructible classes
    // ClassDefInline(TViewPubFunctionsIter,0)  //Linked list iterator

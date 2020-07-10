@@ -141,19 +141,19 @@ public:
    const TGeoFacet &GetFacet(int i) { return fFacets[i]; }
    const Vertex_t &GetVertex(int i) { return fVertices[i]; }
 
-   void AfterStreamer() override;
-   int DistancetoPrimitive(int, int) override { return 99999; }
+   void             AfterStreamer() override;
+   int              DistancetoPrimitive(int, int) override { return 99999; }
    const TBuffer3D &GetBuffer3D(int reqSections, Bool_t localFrame) const override;
-   void GetMeshNumbers(int &nvert, int &nsegs, int &npols) const override;
-   int GetNmeshVertices() const override { return fNvert; }
-   void InspectShape() const override {}
-   TBuffer3D *MakeBuffer3D() const override;
-   void Print(Option_t *option = "") const override;
-   void SavePrimitive(std::ostream &, Option_t *) override {}
-   void SetPoints(double *points) const override;
-   void SetPoints(float *points) const override;
-   void SetSegsAndPols(TBuffer3D &buff) const override;
-   void Sizeof3D() const override {}
+   void             GetMeshNumbers(int &nvert, int &nsegs, int &npols) const override;
+   int              GetNmeshVertices() const override { return fNvert; }
+   void             InspectShape() const override {}
+   TBuffer3D *      MakeBuffer3D() const override;
+   void             Print(Option_t *option = "") const override;
+   void             SavePrimitive(std::ostream &, Option_t *) override {}
+   void             SetPoints(double *points) const override;
+   void             SetPoints(float *points) const override;
+   void             SetSegsAndPols(TBuffer3D &buff) const override;
+   void             Sizeof3D() const override {}
 
    /// Resize and center the shape in a box of size maxsize
    void ResizeCenter(double maxsize);

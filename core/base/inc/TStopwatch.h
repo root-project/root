@@ -53,7 +53,7 @@ public:
    void        ResetCpuTime(Double_t time = 0) { Stop();  fTotalCpuTime = time; }
    void        ResetRealTime(Double_t time = 0) { Stop(); fTotalRealTime = time; }
    Double_t    CpuTime();
-   void        Print(Option_t *option="") const override;
+   void        Print(Option_t *option = "") const override;
 
    ClassDefOverride(TStopwatch, 1) // A stopwatch which times real and cpu time
 };

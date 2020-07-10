@@ -49,8 +49,8 @@ public:
    ~TStatistic() override;
 
    // Getters
-   const char    *GetName() const override { return fName; }
-   ULong_t        Hash() const override { return fName.Hash(); }
+   const char *GetName() const override { return fName; }
+   ULong_t     Hash() const override { return fName.Hash(); }
 
    inline       Long64_t GetN() const { return fN; }
    inline       Long64_t GetNeff() const { return fW*fW/fW2; }

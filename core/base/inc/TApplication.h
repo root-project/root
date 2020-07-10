@@ -131,7 +131,7 @@ public:
    virtual Bool_t  IsCmdThread() { return fAppImp ? fAppImp->IsCmdThread() : kTRUE; }
    virtual TApplicationImp *GetApplicationImp() { return fAppImp;}
 
-   void    ls(Option_t *option="") const override;
+   void ls(Option_t *option = "") const override;
 
    Int_t           Argc() const  { return fArgc; }
    char          **Argv() const  { return fArgv; }

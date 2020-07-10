@@ -42,11 +42,11 @@ protected:
 
 public:
    TBenchmark();
-              ~TBenchmark() override;
+   ~TBenchmark() override;
    Int_t              GetBench(const char *name) const;
    Float_t            GetCpuTime(const char *name);
    Float_t            GetRealTime(const char *name);
-   void       Print(Option_t *name="") const override;
+   void               Print(Option_t *name = "") const override;
    virtual void       Reset();
    virtual void       Show(const char *name);
    virtual void       Start(const char *name);

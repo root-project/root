@@ -49,7 +49,7 @@ public:
    TTreeRow(Int_t nfields, const Int_t *fields, const char *row);
    ~TTreeRow() override;
 
-   void        Close(Option_t *option="") override;
+   void        Close(Option_t *option = "") override;
    ULong_t     GetFieldLength(Int_t field) override;
    const char *GetField(Int_t field) override;
    void        SetRow(const Int_t *fields, const char *row);

@@ -115,7 +115,7 @@ public:
                     fRecvTime(-1), fTermTime(0.), fNumWrks(-1), fNumMergers(-1) { }
    ~TQueryResult() override;
 
-   void           Browse(TBrowser *b = 0) override;
+   void Browse(TBrowser *b = 0) override;
 
    Int_t          GetSeqNum() const { return fSeqNum; }
    EQueryStatus   GetStatus() const { return fStatus; }

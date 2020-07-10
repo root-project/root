@@ -47,9 +47,14 @@ public:
       TNamed(ord, name), fPackets(0), fRemotePackets(0), fEventsProcessed(0),
       fBytesRead(0), fLatency(0), fProcTime(0), fCpuTime(0), fStart(0), fStop(-1),
       fRateT(0), fRateRemoteT(0), fMBRateT(0), fMBRateRemoteT(0), fLatencyT(0) { }
-   ~TWrkInfo() override { SafeDelete(fRateT); SafeDelete(fRateRemoteT);
-                         SafeDelete(fMBRateT); SafeDelete(fMBRateRemoteT);
-                         SafeDelete(fLatencyT); }
+   ~TWrkInfo() override
+   {
+      SafeDelete(fRateT);
+      SafeDelete(fRateRemoteT);
+      SafeDelete(fMBRateT);
+      SafeDelete(fMBRateRemoteT);
+      SafeDelete(fLatencyT);
+   }
 
    Int_t     fPackets;          // Number of packets processed
    Int_t     fRemotePackets;    // Number of processed packet from non-local files
@@ -71,7 +76,8 @@ public:
    Double_t  AvgRate() { if (fProcTime > 0) return (fEventsProcessed/fProcTime); return -1.; }
    Double_t  AvgIO() { if (fProcTime > 0) return (fBytesRead/fProcTime); return -1.; }
 
-   void Print(Option_t * = "") const override {
+   void Print(Option_t * = "") const override
+   {
       Printf(" +++ TWrkInfo ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ");
       Printf(" +++ Worker:             %s, %s", GetName(), GetTitle());
       Printf(" +++ Activity interval:  %f -> %f", fStart, fStop);
@@ -85,15 +91,18 @@ public:
       Printf(" +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ");
    }
 
-   Int_t Compare(const TObject *o) const override { TWrkInfo *wi = (TWrkInfo *)o;
-                                           if (wi) {
-                                             if (fStop < wi->fStop) {
-                                                return -1;
-                                             } else if (fStop == wi->fStop) {
-                                                return 0;
-                                             }
-                                          }
-                                          return 1; }
+   Int_t Compare(const TObject *o) const override
+   {
+      TWrkInfo *wi = (TWrkInfo *)o;
+      if (wi) {
+         if (fStop < wi->fStop) {
+            return -1;
+         } else if (fStop == wi->fStop) {
+            return 0;
+         }
+      }
+      return 1;
+   }
 };
 
 
@@ -106,7 +115,8 @@ public:
    Float_t   fStop;             // When the packet has been finished
    Long64_t  fSize;             // Packet size
    Double_t  fMBRate;           // Processing rate MB/s
-   void Print(Option_t *opt= "") const override {
+   void      Print(Option_t *opt = "") const override
+   {
       if (!strcmp(opt, "S")) {
          Printf("       \t%10lld evts, \t%12.2f MB/s, \t%12.3f -> %12.3f s", fSize, fMBRate, fStart, fStop);
       } else {
@@ -118,9 +128,14 @@ public:
 class TProofPerfAnalysis::TWrkInfoFile : public TNamed {
 public:
    TWrkInfoFile(const char *ord, const char *name) :  TNamed(ord, name) { }
-   ~TWrkInfoFile() override {fPackets.SetOwner(kFALSE); fPackets.Clear("nodelete");}
+   ~TWrkInfoFile() override
+   {
+      fPackets.SetOwner(kFALSE);
+      fPackets.Clear("nodelete");
+   }
    TList     fPackets;          // Packest from this file processed by this worker
-   void Print(Option_t *opt= "") const override {
+   void      Print(Option_t *opt = "") const override
+   {
       if (!strcmp(opt, "R")) {
          Printf(" Worker: %s,\tpacket(s): %d", GetName(), fPackets.GetSize());
       } else {
@@ -139,7 +154,10 @@ public:
    Double_t fEvtRate;        // Event processing rate from this worker for this packet
    Double_t fMBRate;         // I/O processing rate from this worker for this packet
    Double_t fProcTime;       // Processing time
-   void Print(Option_t * = "") const override { Printf("%.4f \t%.3f evt/s \t%.3f MB/s \t%.3f s ", fXx, fEvtRate, fMBRate, fProcTime); }
+   void     Print(Option_t * = "") const override
+   {
+      Printf("%.4f \t%.3f evt/s \t%.3f MB/s \t%.3f s ", fXx, fEvtRate, fMBRate, fProcTime);
+   }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,12 +169,20 @@ public:
       fSizeAvg(0), fSizeMax(-1.), fSizeMin(-1.),
       fMBRateAvg(0), fMBRateMax(-1.), fMBRateMin(-1.), fSizeP(0),
       fRateP(0), fRatePRemote(0), fMBRateP(0), fMBRatePRemote(0) { }
-   ~TFileInfo() override {SafeDelete(fSizeP);
-                         SafeDelete(fRateP); SafeDelete(fRatePRemote);
-                         SafeDelete(fMBRateP); SafeDelete(fMBRatePRemote);
-                         fPackList.SetOwner(kTRUE); fPackList.Clear();
-                         fWrkList.SetOwner(kTRUE); fWrkList.Clear();
-                         fRWrkList.SetOwner(kTRUE); fRWrkList.Clear();}
+   ~TFileInfo() override
+   {
+      SafeDelete(fSizeP);
+      SafeDelete(fRateP);
+      SafeDelete(fRatePRemote);
+      SafeDelete(fMBRateP);
+      SafeDelete(fMBRatePRemote);
+      fPackList.SetOwner(kTRUE);
+      fPackList.Clear();
+      fWrkList.SetOwner(kTRUE);
+      fWrkList.Clear();
+      fRWrkList.SetOwner(kTRUE);
+      fRWrkList.Clear();
+   }
 
    Int_t     fPackets;          // Number of packets from this file
    Int_t     fRPackets;         // Number of different remote workers processing this file
@@ -182,7 +208,8 @@ public:
    TGraph   *fMBRateP;           // Byte processing rate vs packet (all)
    TGraph   *fMBRatePRemote;     // Byte processing rate vs packet (remote workers)
 
-   void Print(Option_t *opt = "") const override {
+   void Print(Option_t *opt = "") const override
+   {
       Printf(" +++ TFileInfo ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ");
       Printf(" +++ Server:         %s", GetTitle());
       Printf(" +++ File:           %s", GetName());
@@ -200,15 +227,18 @@ public:
       Printf(" +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ");
    }
 
-   Int_t Compare(const TObject *o) const override { TFileInfo *wi = (TFileInfo *)o;
-                                           if (wi) {
-                                             if (fStop < wi->fStop) {
-                                                return -1;
-                                             } else if (fStop == wi->fStop) {
-                                                return 0;
-                                             }
-                                          }
-                                          return 1; }
+   Int_t Compare(const TObject *o) const override
+   {
+      TFileInfo *wi = (TFileInfo *)o;
+      if (wi) {
+         if (fStop < wi->fStop) {
+            return -1;
+         } else if (fStop == wi->fStop) {
+            return 0;
+         }
+      }
+      return 1;
+   }
 };
 
 Bool_t TProofPerfAnalysis::fgDebug = kTRUE;

@@ -51,7 +51,7 @@ public:
    // Callbacl to set the class
    void SetClass(TClass *cl) override;
    // IsA callback
-   TClass* operator()(const void *obj) override;
+   TClass *operator()(const void *obj) override;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -75,13 +75,11 @@ public:
    // Standard initializing constructor
    TInstrumentedIsAProxy(TClass *cl) : fClass(cl)      {}
    // Standard destructor
-   ~TInstrumentedIsAProxy() override                    {}
+   ~TInstrumentedIsAProxy() override {}
    // Callbacl to set the class
-   void SetClass(TClass *cl) override                   { fClass = cl; }
+   void SetClass(TClass *cl) override { fClass = cl; }
    // IsA callback
-   TClass* operator()(const void *obj) override {
-      return obj==0 ? fClass : ((const T*)obj)->IsA();
-   }
+   TClass *operator()(const void *obj) override { return obj == 0 ? fClass : ((const T *)obj)->IsA(); }
 };
 
 #endif // ROOT_TIsAProxy

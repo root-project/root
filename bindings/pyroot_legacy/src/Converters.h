@@ -98,7 +98,7 @@ namespace PyROOT {
 
    class TVoidConverter : public TConverter {
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
+      Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
    };
 
    class TCStringConverter : public TConverter {
@@ -106,9 +106,9 @@ namespace PyROOT {
       TCStringConverter( UInt_t maxSize = UINT_MAX ) : fMaxSize( maxSize ) {}
 
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
-      PyObject* FromMemory( void* address ) override;
-      Bool_t ToMemory( PyObject* value, void* address ) override;
+      Bool_t    SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
+      PyObject *FromMemory(void *address) override;
+      Bool_t    ToMemory(PyObject *value, void *address) override;
 
    protected:
       std::string fBuffer;
@@ -120,8 +120,8 @@ namespace PyROOT {
       TNonConstCStringConverter( UInt_t maxSize = UINT_MAX ) : TCStringConverter( maxSize ) {}
 
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
-      PyObject* FromMemory( void* address ) override;
+      Bool_t    SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
+      PyObject *FromMemory(void *address) override;
    };
 
    class TNonConstUCStringConverter : public TNonConstCStringConverter {
@@ -129,16 +129,16 @@ namespace PyROOT {
       TNonConstUCStringConverter( UInt_t maxSize = UINT_MAX ) : TNonConstCStringConverter( maxSize ) {}
 
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
+      Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
    };
 
 // pointer/array conversions
    class TVoidArrayConverter : public TConverter {
    public:
       TVoidArrayConverter( Bool_t keepControl = kTRUE ) { fKeepControl = keepControl; }
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
-      PyObject* FromMemory( void* address ) override;
-      Bool_t ToMemory( PyObject* value, void* address ) override;
+      Bool_t    SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
+      PyObject *FromMemory(void *address) override;
+      Bool_t    ToMemory(PyObject *value, void *address) override;
 
    protected:
       virtual Bool_t GetAddressSpecialCase( PyObject* pyobject, void*& address );
@@ -162,7 +162,7 @@ namespace PyROOT {
 
    class TLongLongArrayConverter : public TVoidArrayConverter {
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
+      Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
    };
 
 // converters for special cases
@@ -172,9 +172,9 @@ namespace PyROOT {
          TVoidArrayConverter( keepControl ), fClass( klass ), fObjProxy(nullptr) {}
 
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
-      PyObject* FromMemory( void* address ) override;
-      Bool_t ToMemory( PyObject* value, void* address ) override;
+      Bool_t    SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
+      PyObject *FromMemory(void *address) override;
+      Bool_t    ToMemory(PyObject *value, void *address) override;
 
    protected:
       Cppyy::TCppType_t fClass;
@@ -186,7 +186,7 @@ namespace PyROOT {
       using TCppObjectConverter::TCppObjectConverter;
 
    protected:
-      Bool_t GetAddressSpecialCase( PyObject*, void*& ) override { return kFALSE; }
+      Bool_t GetAddressSpecialCase(PyObject *, void *&) override { return kFALSE; }
    };
 
    class TValueCppObjectConverter : public TStrictCppObjectConverter {
@@ -194,7 +194,7 @@ namespace PyROOT {
       using TStrictCppObjectConverter::TStrictCppObjectConverter;
 
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
+      Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
    };
 
    class TRefCppObjectConverter : public TConverter  {
@@ -202,7 +202,7 @@ namespace PyROOT {
       TRefCppObjectConverter( Cppyy::TCppType_t klass ) : fClass( klass ), fObjProxy(nullptr) {}
 
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
+      Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
 
    protected:
       Cppyy::TCppType_t fClass;
@@ -215,9 +215,9 @@ namespace PyROOT {
       using TCppObjectConverter::TCppObjectConverter;
 
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
-      PyObject* FromMemory( void* address ) override;
-      Bool_t ToMemory( PyObject* value, void* address ) override;
+      Bool_t    SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
+      PyObject *FromMemory(void *address) override;
+      Bool_t    ToMemory(PyObject *value, void *address) override;
    };
 
    extern template class TCppObjectPtrConverter<true>;
@@ -229,9 +229,9 @@ namespace PyROOT {
          TCppObjectConverter( klass, keepControl ), m_size( size ) {}
 
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
-      PyObject* FromMemory( void* address ) override;
-      Bool_t ToMemory( PyObject* value, void* address ) override;
+      Bool_t    SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
+      PyObject *FromMemory(void *address) override;
+      Bool_t    ToMemory(PyObject *value, void *address) override;
 
    protected:
       size_t m_size;
@@ -241,19 +241,19 @@ namespace PyROOT {
 // they come in a bazillion different guises, so just do whatever
    class TSTLIteratorConverter : public TConverter {
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
+      Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
    };
 // -- END CLING WORKAROUND
 
    class TVoidPtrRefConverter : public TConverter {
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
+      Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
    };
 
    class TVoidPtrPtrConverter : public TConverter {
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
-      PyObject* FromMemory( void* address ) override;
+      Bool_t    SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
+      PyObject *FromMemory(void *address) override;
    };
 
    PYROOT_DECLARE_BASIC_CONVERTER( PyObject );
@@ -276,7 +276,7 @@ namespace PyROOT {
 
    class TNotImplementedConverter : public TConverter {
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* = 0 ) override;
+      Bool_t SetArg(PyObject *, TParameter &, TCallContext * = 0) override;
    };
 
 // smart pointer converter
@@ -291,8 +291,8 @@ namespace PyROOT {
            fKeepControl( keepControl ), fHandlePtr( handlePtr ) {}
 
    public:
-      Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) override;
-      PyObject* FromMemory( void* address ) override;
+      Bool_t    SetArg(PyObject *, TParameter &, TCallContext *ctxt = 0) override;
+      PyObject *FromMemory(void *address) override;
       //virtual Bool_t ToMemory( PyObject* value, void* address );
 
    protected:

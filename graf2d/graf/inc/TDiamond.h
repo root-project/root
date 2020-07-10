@@ -22,9 +22,9 @@ public:
    TDiamond(const TDiamond &diamond);
    ~TDiamond() override;
    Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
-   void  Draw(Option_t *option="") override;
+   void  Draw(Option_t *option = "") override;
    void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   void  Paint(Option_t *option="") override;
+   void  Paint(Option_t *option = "") override;
    void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TDiamond,1)  //Diamond class

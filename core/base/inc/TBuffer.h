@@ -64,10 +64,8 @@ protected:
    void operator=(const TBuffer &);    // not implemented
 
    Int_t Read(const char *name) override { return TObject::Read(name); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufs) override
-                              { return TObject::Write(name, opt, bufs); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufs) const override
-                              { return TObject::Write(name, opt, bufs); }
+   Int_t Write(const char *name, Int_t opt, Int_t bufs) override { return TObject::Write(name, opt, bufs); }
+   Int_t Write(const char *name, Int_t opt, Int_t bufs) const override { return TObject::Write(name, opt, bufs); }
 
 public:
    enum EMode { kRead = 0, kWrite = 1 };
@@ -337,7 +335,7 @@ public:
    static TClass *GetClass(const std::type_info &typeinfo);
    static TClass *GetClass(const char *className);
 
-   ClassDefOverride(TBuffer,0)  //Buffer base class used for serializing objects
+   ClassDefOverride(TBuffer, 0) // Buffer base class used for serializing objects
 };
 
 //---------------------- TBuffer default external operators --------------------

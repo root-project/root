@@ -34,7 +34,7 @@ public:
    TSystemFile();
    TSystemFile(const char *filename, const char *dirname);
    ~TSystemFile() override;
-   void     Browse(TBrowser *b) override;
+   void             Browse(TBrowser *b) override;
    virtual void     Rename(const char *name);      // *MENU*
    virtual void     Delete();                      // *MENU*
    virtual void     Copy(const char *to);          // *MENU*
@@ -43,19 +43,19 @@ public:
 
    virtual Bool_t   IsDirectory(const char *dir = 0) const;
    virtual void     SetIconName(const char *name) { fIconName = name; }
-   const char      *GetIconName() const override { return fIconName.Data(); }
+   const char *     GetIconName() const override { return fIconName.Data(); }
 
    // dummy methods from TObject
-   void     Inspect() const override;
-   void     Dump() const override;
+   void Inspect() const override;
+   void Dump() const override;
 
-   void        DrawClass() const override { }
-   TObject    *DrawClone(Option_t *) const override { return 0; }
-   void        SetDrawOption(Option_t *) override { }
-   void        SetName(const char *name) override { TNamed::SetName(name); }
-   void        SetTitle(const char *title) override { TNamed::SetTitle(title); }
-   void        Delete(Option_t *) override { }
-   void        Copy(TObject & ) const override { }
+   void     DrawClass() const override {}
+   TObject *DrawClone(Option_t *) const override { return 0; }
+   void     SetDrawOption(Option_t *) override {}
+   void     SetName(const char *name) override { TNamed::SetName(name); }
+   void     SetTitle(const char *title) override { TNamed::SetTitle(title); }
+   void     Delete(Option_t *) override {}
+   void     Copy(TObject &) const override {}
 
    ClassDef(TSystemFile,0)  //A system file
 };

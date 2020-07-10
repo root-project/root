@@ -76,21 +76,16 @@ public:
                                            Double_t *C,
                                            Double_t *clo,Bool_t *iclo,
                                            Double_t *cup,Bool_t *icup);
-   TQpDataBase      *MakeData     (TVectorD     &c,
-                                           TMatrixDBase &Q_in,
-                                           TVectorD     &xlo, TVectorD &ixlo,
-                                           TVectorD     &xup, TVectorD &ixup,
-                                           TMatrixDBase &A_in,TVectorD &bA,
-                                           TMatrixDBase &C_in,
-                                           TVectorD     &clo, TVectorD &iclo,
-                                           TVectorD     &cup, TVectorD &icup) override;
-   TQpResidual      *MakeResiduals(const TQpDataBase *data) override;
-   TQpVar           *MakeVariables(const TQpDataBase *data) override;
-   TQpLinSolverBase *MakeLinSys   (const TQpDataBase *data) override;
+   TQpDataBase *MakeData(TVectorD &c, TMatrixDBase &Q_in, TVectorD &xlo, TVectorD &ixlo, TVectorD &xup, TVectorD &ixup,
+                         TMatrixDBase &A_in, TVectorD &bA, TMatrixDBase &C_in, TVectorD &clo, TVectorD &iclo,
+                         TVectorD &cup, TVectorD &icup) override;
+   TQpResidual *MakeResiduals(const TQpDataBase *data) override;
+   TQpVar *     MakeVariables(const TQpDataBase *data) override;
+   TQpLinSolverBase *MakeLinSys(const TQpDataBase *data) override;
 
-   void JoinRHS       (TVectorD &rhs_in,TVectorD &rhs1_in,TVectorD &rhs2_in,TVectorD &rhs3_in) override;
-   void SeparateVars  (TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TVectorD &vars_in) override;
-           void MakeRandomData(TQpDataDens *&data,TQpVar *&soln,Int_t nnzQ,Int_t nnzA,Int_t nnzC);
+   void JoinRHS(TVectorD &rhs_in, TVectorD &rhs1_in, TVectorD &rhs2_in, TVectorD &rhs3_in) override;
+   void SeparateVars(TVectorD &x_in, TVectorD &y_in, TVectorD &z_in, TVectorD &vars_in) override;
+   void MakeRandomData(TQpDataDens *&data, TQpVar *&soln, Int_t nnzQ, Int_t nnzA, Int_t nnzC);
 
    TQpProbDens &operator= (const TQpProbDens &source);
 

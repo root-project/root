@@ -65,15 +65,15 @@ public:
    TPacketizerUnit(TList *slaves, Long64_t num, TList *input, TProofProgressStatus *st = 0);
    ~TPacketizerUnit() override;
 
-   Int_t         AssignWork(TDSet* /*dset*/, Long64_t /*first*/, Long64_t num) override;
+   Int_t         AssignWork(TDSet * /*dset*/, Long64_t /*first*/, Long64_t num) override;
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r) override;
 
    Double_t      GetCurrentTime();
 
-   Float_t       GetCurrentRate(Bool_t &all) override;
-   Int_t         GetActiveWorkers() override { return fWrkStats->GetSize(); }
+   Float_t GetCurrentRate(Bool_t &all) override;
+   Int_t   GetActiveWorkers() override { return fWrkStats->GetSize(); }
 
-   Int_t         AddWorkers(TList *workers) override;
+   Int_t AddWorkers(TList *workers) override;
 
    ClassDef(TPacketizerUnit,0)  //Generate work packets for parallel processing
 };

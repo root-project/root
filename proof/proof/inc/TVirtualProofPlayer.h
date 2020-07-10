@@ -48,7 +48,7 @@ public:
    enum EExitStatus { kFinished, kStopped, kAborted };
 
    TVirtualProofPlayer() { ResetBit(TVirtualProofPlayer::kIsSubmerger); }
-   ~TVirtualProofPlayer() override { }
+   ~TVirtualProofPlayer() override {}
 
    virtual Long64_t  Process(TDSet *set,
                              const char *selector, Option_t *option = "",

@@ -90,7 +90,7 @@ class TVirtualMonitoringReader : public TNamed {
 
 public:
    TVirtualMonitoringReader( const char * /*serviceurl*/ ="") { }
-   ~TVirtualMonitoringReader() override { }
+   ~TVirtualMonitoringReader() override {}
 
    virtual void   DumpResult() { MayNotUse("DumpResult"); }
    virtual void   GetValues(const char * /*farmName*/, const char * /*clusterName*/,

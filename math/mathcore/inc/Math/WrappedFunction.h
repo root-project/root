@@ -68,18 +68,12 @@ class WrappedFunction : public IGenFunction {
    // use default  copy contructor and assignment operator
 
    /// clone (required by the interface)
-   WrappedFunction * Clone() const override {
-      return new WrappedFunction(fFunc);
-   }
+   WrappedFunction *Clone() const override { return new WrappedFunction(fFunc); }
 
    //  virtual ~WrappedFunction() { /**/ }
 
 private:
-
-   double DoEval (double x) const override {
-      return fFunc( x );
-   }
-
+   double DoEval(double x) const override { return fFunc(x); }
 
    Func fFunc;
 
@@ -119,17 +113,10 @@ class WrappedMemFunction : public IGenFunction {
    // use default  copy contructor and assignment operator
 
    /// clone (required by the interface)
-   WrappedMemFunction * Clone() const override {
-      return new WrappedMemFunction(*fObj,fMemFunc);
-   }
-
+   WrappedMemFunction *Clone() const override { return new WrappedMemFunction(*fObj, fMemFunc); }
 
 private:
-
-   double DoEval (double x) const override {
-      return ((*fObj).*fMemFunc)( x );
-   }
-
+   double DoEval(double x) const override { return ((*fObj).*fMemFunc)(x); }
 
    FuncObj * fObj;
    MemFuncPtr fMemFunc;
@@ -167,20 +154,14 @@ class WrappedMultiFunction : public IMultiGenFunction {
    // use default  copy contructor and assignment operator
 
    /// clone (required by the interface)
-   WrappedMultiFunction * Clone() const override {
-      return new WrappedMultiFunction(fFunc,fDim);
-   }
+   WrappedMultiFunction *Clone() const override { return new WrappedMultiFunction(fFunc, fDim); }
 
    unsigned int NDim() const override { return fDim; }
 
    //  virtual ~WrappedFunction() { /**/ }
 
 private:
-
-   double DoEval (const double * x) const override {
-      return fFunc( x );
-   }
-
+   double DoEval(const double *x) const override { return fFunc(x); }
 
    Func fFunc;
    unsigned int fDim;
@@ -207,19 +188,12 @@ class WrappedMemMultiFunction : public IMultiGenFunction {
    // use default  copy contructor and assignment operator
 
    /// clone (required by the interface)
-   WrappedMemMultiFunction * Clone() const override {
-      return new WrappedMemMultiFunction(*fObj,fMemFunc,fDim);
-   }
-
+   WrappedMemMultiFunction *Clone() const override { return new WrappedMemMultiFunction(*fObj, fMemFunc, fDim); }
 
    unsigned int NDim() const override { return fDim; }
 
 private:
-
-   double DoEval (const double * x) const override {
-      return ((*fObj).*fMemFunc)( x );
-   }
-
+   double DoEval(const double *x) const override { return ((*fObj).*fMemFunc)(x); }
 
    FuncObj * fObj;
    MemFuncPtr fMemFunc;

@@ -256,7 +256,7 @@ public:
    TLorentzVector & Transform(const TLorentzRotation &);
    // Transformation with HepLorenzRotation.
 
-   void        Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
 
    ClassDef(TLorentzVector,4) // A four vector with (-,-,-,+) metric
 };

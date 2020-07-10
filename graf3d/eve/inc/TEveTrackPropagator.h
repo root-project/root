@@ -249,9 +249,9 @@ public:
 
    void OnZeroRefCount() override;
 
-   void CheckReferenceCount(const TEveException& eh="TEveElement::CheckReferenceCount ") override;
+   void CheckReferenceCount(const TEveException &eh = "TEveElement::CheckReferenceCount ") override;
 
-   void ElementChanged(Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE) override;
+   void ElementChanged(Bool_t update_scenes = kTRUE, Bool_t redraw = kFALSE) override;
 
    // propagation
    void   InitTrack(const TEveVectorD& v, Int_t charge);

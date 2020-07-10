@@ -49,7 +49,7 @@ public:
                   Pixel_t back = GetDefaultFrameBackground());
    ~TAttLineEditor() override;
 
-   void   SetModel(TObject* obj) override;
+   void           SetModel(TObject *obj) override;
    virtual void   DoLineColor(Pixel_t color);
    virtual void   DoLineAlphaColor(ULong_t p);
    virtual void   DoLineStyle(Int_t style);

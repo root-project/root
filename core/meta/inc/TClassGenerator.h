@@ -29,7 +29,7 @@ class TClassGenerator : public TObject {
 
 protected:
    TClassGenerator() : TObject() { }
-   ~TClassGenerator() override { }
+   ~TClassGenerator() override {}
 
 public:
    virtual TClass *GetClass(const char* classname, Bool_t load) = 0;

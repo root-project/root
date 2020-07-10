@@ -32,10 +32,10 @@ public:
    TEveTextGL();
    ~TEveTextGL() override {}
 
-   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   Bool_t SetModel(TObject *obj, const Option_t *opt = 0) override;
    void   SetBBox() override;
 
-   void DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   void DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
    ClassDef(TEveTextGL, 0); // GL renderer class for TEveText.
 };

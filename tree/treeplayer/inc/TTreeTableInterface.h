@@ -51,12 +51,12 @@ public:
                        Long64_t nentries = 0, Long64_t firstentry = 0);
    ~TTreeTableInterface() override;
 
-   Double_t    GetValue(UInt_t row, UInt_t column) override;
-   const char *GetValueAsString(UInt_t row, UInt_t column) override;
-   const char *GetRowHeader(UInt_t row) override;
-   const char *GetColumnHeader(UInt_t column) override;
-   UInt_t      GetNRows() override;
-   UInt_t      GetNColumns() override;
+   Double_t            GetValue(UInt_t row, UInt_t column) override;
+   const char *        GetValueAsString(UInt_t row, UInt_t column) override;
+   const char *        GetRowHeader(UInt_t row) override;
+   const char *        GetColumnHeader(UInt_t column) override;
+   UInt_t              GetNRows() override;
+   UInt_t              GetNColumns() override;
    virtual TEntryList *GetEntryList() { return fEntries; }
 
    virtual void AddColumn(const char *expression, UInt_t position);

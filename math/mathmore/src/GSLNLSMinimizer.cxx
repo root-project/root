@@ -62,7 +62,8 @@ public:
       // constructor from al already existing Transformation object. Ownership of the transformation onbect is passed to caller
    }
 
-   ~FitTransformFunction() override {
+   ~FitTransformFunction() override
+   {
       if (fOwnTransformation) {
          assert(fTransform);
          delete fTransform;
@@ -70,7 +71,8 @@ public:
    }
 
    // re-implement data element
-   double DataElement(const double *  x, unsigned i, double * g = 0) const override {
+   double DataElement(const double *x, unsigned i, double *g = 0) const override
+   {
       // transform from x internal to x external
       const double * xExt = fTransform->Transformation(x);
       if ( g == 0) return fFunc.DataElement( xExt, i );
@@ -81,16 +83,14 @@ public:
       return val;
    }
 
-
-   IMultiGenFunction * Clone() const override {
+   IMultiGenFunction *Clone() const override
+   {
       // not supported
       return 0;
    }
 
    // dimension (this is number of free dimensions)
-   unsigned int NDim() const override {
-      return fTransform->NDim();
-   }
+   unsigned int NDim() const override { return fTransform->NDim(); }
 
    unsigned int NTot() const {
       return fTransform->NTot();
@@ -117,9 +117,7 @@ private:
    FitTransformFunction(const FitTransformFunction& rhs);
    FitTransformFunction& operator=(const FitTransformFunction& rhs);
 
-   double DoEval(const double * x) const override {
-      return fFunc( fTransform->Transformation(x) );
-   }
+   double DoEval(const double *x) const override { return fFunc(fTransform->Transformation(x)); }
 
    bool fOwnTransformation;
    const FitMethodFunction & fFunc;                  // pointer to original fit method function

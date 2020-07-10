@@ -85,7 +85,7 @@ public:
    TGLViewerBase();
    ~TGLViewerBase() override;
 
-   const char* LockIdStr() const override;
+   const char *LockIdStr() const override;
 
    TGLSceneInfo* AddScene(TGLSceneBase* scene);
    void          RemoveScene(TGLSceneBase* scene);

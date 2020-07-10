@@ -39,7 +39,7 @@ protected:
    friend class TTreeCloner;
 
    void Init(TTree *tree, TBranch *parent, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
-   Int_t   FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
+   Int_t FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
 public:
    TBranchClones();
@@ -47,22 +47,25 @@ public:
    TBranchClones(TBranch *parent, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
    ~TBranchClones() override;
 
-   void    Browse(TBrowser *b) override;
-   const char* GetClassName() const override { return fClassName; }
-   Int_t   GetEntry(Long64_t entry=0, Int_t getall = 0) override;
+   void             Browse(TBrowser *b) override;
+   const char *     GetClassName() const override { return fClassName; }
+   Int_t            GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
    virtual Int_t   GetN() const {return fN;}
    TClonesArray    *GetList() const {return fList;}
-   Bool_t          IsFolder() const override {return kTRUE;}
-   void    Print(Option_t *option="") const override;
-   void    Reset(Option_t *option="") override;
-   void    ResetAfterMerge(TFileMergeInfo *) override;
-   void    SetAddress(void *add) override;
-   void    SetBasketSize(Int_t buffsize) override;
-   void    SetTree(TTree *tree) override { fTree = tree; fBranchCount->SetTree(tree); }
-   void    UpdateFile() override;
+   Bool_t           IsFolder() const override { return kTRUE; }
+   void             Print(Option_t *option = "") const override;
+   void             Reset(Option_t *option = "") override;
+   void             ResetAfterMerge(TFileMergeInfo *) override;
+   void             SetAddress(void *add) override;
+   void             SetBasketSize(Int_t buffsize) override;
+   void             SetTree(TTree *tree) override
+   {
+      fTree = tree;
+      fBranchCount->SetTree(tree);
+   }
+   void UpdateFile() override;
 
 private:
-
    ClassDefOverride(TBranchClones, 2); // Branch in case of an array of clone objects
 };
 

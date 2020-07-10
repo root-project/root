@@ -62,7 +62,7 @@ public:
    static  TAttParticle  *GetParticle(Int_t mcnumber);
    virtual const char    *GetParticleType() const { return fParticleType.Data(); }
    virtual Bool_t         GetStable() const { return fPDGStable; }
-   void           Print(Option_t *option="") const override ;
+   void                   Print(Option_t *option = "") const override;
    virtual Double_t       SampleMass() const ;
    virtual Double_t       SampleMass(Double_t widthcut) const ;
 

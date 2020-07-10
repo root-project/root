@@ -9,7 +9,7 @@
 class TFoamIntegrand : public TObject  {
 public:
    TFoamIntegrand() { };
-   ~TFoamIntegrand() override { };
+   ~TFoamIntegrand() override{};
    virtual Double_t Density(Int_t ndim, Double_t *) = 0;
 
    ClassDef(TFoamIntegrand,1); //n-dimensional real positive integrand of FOAM

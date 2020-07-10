@@ -47,7 +47,7 @@ private:
 
 public:
    // Virtual copy constructor
-   TVirtualCollectionProxy* Generate() const override;
+   TVirtualCollectionProxy *Generate() const override;
 
    // Copy constructor
    TGenCollectionStreamer(const TGenCollectionStreamer& copy);
@@ -66,9 +66,7 @@ public:
    virtual void StreamerAsMap(TBuffer &refBuffer);
 
    // Streamer I/O overload
-   void Streamer(TBuffer &buff, void *pObj, int siz) override  {
-      TGenCollectionProxy::Streamer(buff, pObj, siz);
-   }
+   void Streamer(TBuffer &buff, void *pObj, int siz) override { TGenCollectionProxy::Streamer(buff, pObj, siz); }
 
    // Routine to read the content of the buffer into 'obj'.
    void ReadBuffer(TBuffer &b, void *obj, const TClass *onfileClass) override;
@@ -94,7 +92,7 @@ struct AnyCollectionStreamer : public TGenCollectionStreamer  {
       fFeed           = T::feed;
       CheckFunctions();
    }
-   ~AnyCollectionStreamer() override {  }
+   ~AnyCollectionStreamer() override {}
 };
 
 // Forward declaration in the event of later separation

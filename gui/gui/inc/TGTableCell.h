@@ -44,12 +44,12 @@ protected:
    static const TGGC   *fgDefaultGC;   // Default graphics context
    static const TGFont *fgDefaultFont; // Default font
 
-   void DoRedraw() override;
-   void DrawBorder() override;
+   void         DoRedraw() override;
+   void         DrawBorder() override;
    virtual void DrawBorder(Handle_t id, Int_t x, Int_t y);
    virtual void MoveDraw(Int_t x, Int_t y);
-   void Resize(UInt_t width, UInt_t height) override;
-   void Resize(TGDimension newsize) override;
+   void         Resize(UInt_t width, UInt_t height) override;
+   void         Resize(TGDimension newsize) override;
 
    virtual void Highlight();
    void         Init(Bool_t resize);

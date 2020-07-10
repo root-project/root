@@ -90,30 +90,23 @@ public:
 //    {}
 
    /// clone the function
-   IMultiGenFunction * Clone() const override {
+   IMultiGenFunction *Clone() const override
+   {
       return new WrappedParamFunction(fFunc, fDim, fParams.begin(), fParams.end());
    }
 
-   const double * Parameters() const override {
-      return fParams.empty() ? nullptr : &fParams.front();
-   }
+   const double *Parameters() const override { return fParams.empty() ? nullptr : &fParams.front(); }
 
-   void SetParameters(const double * p) override  {
-      std::copy(p, p+NPar(), fParams.begin() );
-   }
+   void SetParameters(const double *p) override { std::copy(p, p + NPar(), fParams.begin()); }
 
    unsigned int NPar() const override { return fParams.size(); }
 
    unsigned int NDim() const override { return fDim; }
 
-
 private:
 
    /// evaluate the function given values and parameters (requested interface)
-   double DoEvalPar(const double * x, const double * p) const override {
-      return (*fFunc)( x, p );
-   }
-
+   double DoEvalPar(const double *x, const double *p) const override { return (*fFunc)(x, p); }
 
    FuncPtr fFunc;
    unsigned int fDim;
@@ -171,7 +164,8 @@ public:
    }
 
    /// clone the function
-   IMultiGenFunction * Clone() const override {
+   IMultiGenFunction *Clone() const override
+   {
       return new WrappedParamFunctionGen(fFunc, fDim, fParams.size(), fParams.empty() ? nullptr : &fParams.front(), fParIndices.empty() ? nullptr : &fParIndices.front());
    }
 
@@ -181,12 +175,10 @@ private:
    WrappedParamFunctionGen & operator=(const  WrappedParamFunctionGen &); // not implemented
 
 public:
+   const double *Parameters() const override { return fParams.empty() ? nullptr : &fParams.front(); }
 
-   const double * Parameters() const override {
-      return fParams.empty() ? nullptr : &fParams.front();
-   }
-
-   void SetParameters(const double * p) override  {
+   void SetParameters(const double *p) override
+   {
       unsigned int npar = NPar();
       std::copy(p, p+ npar, fParams.begin() );
       SetParValues(npar, p);
@@ -196,26 +188,27 @@ public:
 
    unsigned int NDim() const override { return fDim; }
 
-//    // re-implement this since is more efficient
-//    double operator() (const double * x, const double * p) {
-//       unsigned int n = fX.size();
-//       unsigned int npar = fParams.size();
-//       unsigned j = 0;
-//       return (*fFunc)( fX);
-//    }
+   //    // re-implement this since is more efficient
+   //    double operator() (const double * x, const double * p) {
+   //       unsigned int n = fX.size();
+   //       unsigned int npar = fParams.size();
+   //       unsigned j = 0;
+   //       return (*fFunc)( fX);
+   //    }
 
 private:
 
    /// evaluate the function (re-implement for being more efficient)
-   double DoEval(const double * x) const override {
+   double DoEval(const double *x) const override
+   {
 
-//       std::cout << this << fDim << " x : ";
-//       std::ostream_iterator<double> oix(std::cout," ,  ");
-//       std::copy(x, x+fDim, oix);
-//       std::cout << std::endl;
-//       std::cout << "npar " << npar << std::endl;
-//       std::cout <<  fVarIndices.size() << std::endl;
-//       assert ( fVarIndices.size() == fDim);  // otherwise something is wrong
+      //       std::cout << this << fDim << " x : ";
+      //       std::ostream_iterator<double> oix(std::cout," ,  ");
+      //       std::copy(x, x+fDim, oix);
+      //       std::cout << std::endl;
+      //       std::cout << "npar " << npar << std::endl;
+      //       std::cout <<  fVarIndices.size() << std::endl;
+      //       assert ( fVarIndices.size() == fDim);  // otherwise something is wrong
 
       for (unsigned int i = 0; i < fDim; ++i) {
          unsigned int j = fVarIndices[i];
@@ -230,15 +223,14 @@ private:
       return (*fFunc)( fX.empty() ? nullptr : &fX.front() );
    }
 
-
    /**
        implement the required IParamFunction interface
    */
-   double DoEvalPar(const double * x, const double * p ) const override {
+   double DoEvalPar(const double *x, const double *p) const override
+   {
       SetParValues(NPar(), p);
       return DoEval(x);
    }
-
 
    void DoInit() {
       // calculate variable indices and set in X the parameter values

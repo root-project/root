@@ -143,7 +143,7 @@ public:
    unsigned int NPoints() const { return fNCalls; }
 
    /// name of 1D integrator
-   std::string  Integrator() const override;
+   std::string Integrator() const override;
 
    /// type of the integrator (return the enumeration type)
    IntegrationOneDim::Type IntegratorType() const { return (IntegrationOneDim::Type) fIntegType; }
@@ -222,7 +222,7 @@ public:
    unsigned int NCalls() const { return fNCalls; }
 
    /// name of multi-dim integrator
-   std::string  Integrator() const override;
+   std::string Integrator() const override;
 
    /// type of the integrator (return the enumeration type)
    IntegrationMultiDim::Type IntegratorType() const { return (IntegrationMultiDim::Type) fIntegType; }

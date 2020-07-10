@@ -180,7 +180,7 @@ public:
                                                // sanity check.
    virtual Double_t Violation    ();           // The amount by which the current variables violate the
                                                //  non-negativity constraints.
-   void     Print        (Option_t *option="") const override;
+   void             Print(Option_t *option = "") const override;
    virtual Double_t Norm1        ();           // compute the 1-norm of the variables
    virtual Double_t NormInf      ();           // compute the inf-norm of the variables
    virtual Bool_t   ValidNonZeroPattern();

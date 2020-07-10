@@ -67,7 +67,7 @@ protected:
    Pixel_t *fPixels;       // pixel value of colors
    TGGC     fDrawGC;       // graphics context used for drawing
 
-   void DoRedraw() override;
+   void         DoRedraw() override;
    virtual void GotFocus();
    virtual void LostFocus();
 
@@ -81,8 +81,7 @@ public:
    Bool_t HandleMotion(Event_t *event) override;
    Bool_t HandleKey(Event_t *event) override;
 
-   TGDimension GetDefaultSize() const override
-            { return TGDimension((fCw + 5) * fCols, (fCh + 5) * fRows); }
+   TGDimension GetDefaultSize() const override { return TGDimension((fCw + 5) * fCols, (fCh + 5) * fRows); }
 
    void    SetColors(Pixel_t colors[]);
    void    SetColor(Int_t ix, Pixel_t color);
@@ -186,8 +185,8 @@ protected:
    void           UpdateRGBentries(Pixel_t *c);
    void           UpdateHLSentries(Pixel_t *c);
    void           UpdateAlpha(Pixel_t *c);
-   void   CloseWindow() override;
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   void           CloseWindow() override;
+   Bool_t         ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
 public:
    TGColorDialog(const TGWindow *p = 0, const TGWindow *m = 0, Int_t *retc = 0,

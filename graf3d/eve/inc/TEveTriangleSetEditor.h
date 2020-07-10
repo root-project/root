@@ -33,7 +33,7 @@ public:
    TEveTriangleSetEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveTriangleSetEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    ClassDef(TEveTriangleSetEditor, 0); // Editor for TEveTriangleSet class.
 };

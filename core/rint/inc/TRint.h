@@ -49,17 +49,17 @@ private:
 public:
    TRint(const char *appClassName, int *argc, char **argv,
          void *options = 0, int numOptions = 0, Bool_t noLogo = kFALSE);
-               ~TRint() override;
+   ~TRint() override;
    virtual char       *GetPrompt();
    virtual const char *SetPrompt(const char *newPrompt);
-   void        SetEchoMode(Bool_t mode) override;
-   void        HandleException(Int_t sig) override;
-   Bool_t      HandleTermInput() override;
+   void                SetEchoMode(Bool_t mode) override;
+   void                HandleException(Int_t sig) override;
+   Bool_t              HandleTermInput() override;
    virtual void        PrintLogo(Bool_t lite = kFALSE);
-   void        Run(Bool_t retrn = kFALSE) override;
-   void        Terminate(int status) override;
-           void        Interrupt() { fInterrupt = kTRUE; }
-   Int_t       TabCompletionHook(char *buf, int *pLoc, std::ostream& out) override;
+   void                Run(Bool_t retrn = kFALSE) override;
+   void                Terminate(int status) override;
+   void                Interrupt() { fInterrupt = kTRUE; }
+   Int_t               TabCompletionHook(char *buf, int *pLoc, std::ostream &out) override;
 
    TFileHandler       *GetInputHandler() { return fInputHandler; }
 

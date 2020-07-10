@@ -44,12 +44,11 @@ public:
               const char *workdir, const char *msd, Int_t = 1);
    ~TSlaveLite() override;
 
-   void   Close(Option_t *opt = "") override;
-   void   DoError(int level, const char *location, const char *fmt,
-                  va_list va) const override;
+   void Close(Option_t *opt = "") override;
+   void DoError(int level, const char *location, const char *fmt, va_list va) const override;
 
-   void   Print(Option_t *option="") const override;
-   Int_t  SetupServ(Int_t stype, const char *conffile) override;
+   void  Print(Option_t *option = "") const override;
+   Int_t SetupServ(Int_t stype, const char *conffile) override;
 
    ClassDef(TSlaveLite, 0)  //PROOF lite worker server
 };

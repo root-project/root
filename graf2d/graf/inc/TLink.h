@@ -26,7 +26,7 @@ public:
    TLink();
    TLink(Double_t x, Double_t y, void *pointer);
    ~TLink() override;
-   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
 
    ClassDef(TLink,0)  //Link: hypertext link to an object
 };

@@ -1847,11 +1847,11 @@ public:
     : TGPictureButton(p, pic, id), fTimer(0), fIgnoreNextFire(0),
        fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep), fDoLogStep(logstep)
        { fEditDisabled = kEditDisable | kEditDisableGrab; }
-   ~TGRepeatFireButton() override { delete fTimer; }
+       ~TGRepeatFireButton() override { delete fTimer; }
 
-    Bool_t HandleButton(Event_t *event) override;
-            void   FireButton();
-   virtual  void   SetLogStep(Bool_t on = kTRUE) { fStepLog = on; }
+       Bool_t       HandleButton(Event_t *event) override;
+       void         FireButton();
+       virtual void SetLogStep(Bool_t on = kTRUE) { fStepLog = on; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

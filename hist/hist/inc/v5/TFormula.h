@@ -218,15 +218,15 @@ public:
                TFormula(const char *name,const char *formula);
                TFormula(const TFormula &formula);
    TFormula&   operator=(const TFormula &rhs);
-      ~TFormula() override;
+   ~TFormula() override;
 
- public:
+public:
    void                Optimize();
    virtual void        Analyze(const char *schain, Int_t &err, Int_t offset=0);
    virtual Bool_t      AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset=0);
    virtual Int_t       Compile(const char *expression="");
-   void        Copy(TObject &formula) const override;
-   void        Clear(Option_t *option="") override;
+   void                   Copy(TObject &formula) const override;
+   void                   Clear(Option_t *option = "") override;
    virtual char       *DefinedString(Int_t code);
    virtual Double_t    DefinedValue(Int_t code);
    virtual Int_t       DefinedVariable(TString &variable,Int_t &action);
@@ -246,7 +246,7 @@ public:
    virtual Int_t       GetParNumber(const char *name) const;
    virtual Bool_t      IsLinear() const {return TestBit(kLinear);}
    virtual Bool_t      IsNormalized() const {return TestBit(kNormalized);}
-   void        Print(Option_t *option="") const override; // *MENU*
+   void                   Print(Option_t *option = "") const override; // *MENU*
    virtual void        ProcessLinear(TString &replaceformula);
    virtual void        SetNumber(Int_t number) {fNumber = number;}
    virtual void        SetParameter(const char *name, Double_t parvalue);

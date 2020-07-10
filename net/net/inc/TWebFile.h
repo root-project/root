@@ -57,7 +57,7 @@ protected:
    static TUrl       fgProxy;           // globally set proxy URL
    static Long64_t   fgMaxFullCacheSize; // maximal size of full-cached content, 500 MB by default
 
-   void        Init(Bool_t readHeadOnly) override;
+   void                Init(Bool_t readHeadOnly) override;
    virtual void        CheckProxy();
    virtual TString     BasicAuthentication();
    virtual Int_t       GetHead();
@@ -77,13 +77,13 @@ public:
    TWebFile(TUrl url, Option_t *opt="");
    ~TWebFile() override;
 
-   Long64_t    GetSize() const override;
-   Bool_t      IsOpen() const override;
-   Int_t       ReOpen(Option_t *mode) override;
-   Bool_t      ReadBuffer(char *buf, Int_t len) override;
-   Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
-   Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf) override;
-   void        Seek(Long64_t offset, ERelativeTo pos = kBeg) override;
+   Long64_t GetSize() const override;
+   Bool_t   IsOpen() const override;
+   Int_t    ReOpen(Option_t *mode) override;
+   Bool_t   ReadBuffer(char *buf, Int_t len) override;
+   Bool_t   ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
+   Bool_t   ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf) override;
+   void     Seek(Long64_t offset, ERelativeTo pos = kBeg) override;
 
    static void        SetProxy(const char *url);
    static const char *GetProxy();
@@ -104,10 +104,10 @@ private:
 
 public:
    TWebSystem();
-   ~TWebSystem() override { }
+   ~TWebSystem() override {}
 
    Int_t       MakeDirectory(const char *name) override;
-   void       *OpenDirectory(const char *name) override;
+   void *      OpenDirectory(const char *name) override;
    void        FreeDirectory(void *dirp) override;
    const char *GetDirEntry(void *dirp) override;
    Int_t       GetPathInfo(const char *path, FileStat_t &buf) override;

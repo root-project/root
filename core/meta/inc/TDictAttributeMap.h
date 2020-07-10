@@ -39,7 +39,7 @@ public:
    Int_t       GetPropertySize() const { return fStringProperty.GetSize(); }
    TString     RemovePropertyString(const char* key);
    Bool_t      RemoveProperty(const char* key);
-   void        Clear(Option_t* option = "") override;
+   void         Clear(Option_t *option = "") override;
 
 private:
 

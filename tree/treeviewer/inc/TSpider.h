@@ -88,9 +88,9 @@ public:
    void           AddSuperposed(TSpider* sp);
    void           AddVariable(const char* varexp); // *MENU*
    void           DeleteVariable(const char* varexp); // *MENU*
-   void   Draw(Option_t *options="") override;
-   Int_t  DistancetoPrimitive(Int_t px, Int_t py) override;
-   void   ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void           Draw(Option_t *options = "") override;
+   Int_t          DistancetoPrimitive(Int_t px, Int_t py) override;
+   void           ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    Style_t        GetAverageLineStyle() const;
    Color_t        GetAverageLineColor() const;
    Width_t        GetAverageLineWidth() const;
@@ -107,17 +107,17 @@ public:
    void           GotoPrevious(); // *MENU*
    void           GotoFollowing(); // *MENU*
    void           GotoPreceding(); // *MENU*
-   void   Paint(Option_t *options) override;
+   void           Paint(Option_t *options) override;
    void           SetAverageLineStyle(Style_t sty);
    void           SetAverageLineColor(Color_t col);
    void           SetAverageLineWidth(Width_t wid);
    void           SetAverageFillColor(Color_t col);
    void           SetAverageFillStyle(Style_t sty);
-   void   SetLineStyle(Style_t sty) override;
-   void   SetLineColor(Color_t col) override;
-   void   SetLineWidth(Width_t wid) override;
-   void   SetFillColor(Color_t col) override;
-   void   SetFillStyle(Style_t sty) override;
+   void           SetLineStyle(Style_t sty) override;
+   void           SetLineColor(Color_t col) override;
+   void           SetLineWidth(Width_t wid) override;
+   void           SetFillColor(Color_t col) override;
+   void           SetFillStyle(Style_t sty) override;
    void           SetDisplayAverage(Bool_t disp); // *TOGGLE*
    void           SetVariablesExpression(const char* varexp);
    void           SetNdivRadial(Int_t div); // *MENU*

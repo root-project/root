@@ -345,7 +345,7 @@ private:
 public:
 
    // Virtual copy constructor.
-   TVirtualCollectionProxy* Generate() const override;
+   TVirtualCollectionProxy *Generate() const override;
 
    // Copy constructor.
    TGenCollectionProxy(const TGenCollectionProxy& copy);
@@ -366,10 +366,10 @@ public:
    TClass *GetCollectionClass() const override;
 
    // Return the type of collection see TClassEdit::ESTLType
-   Int_t   GetCollectionType() const override;
+   Int_t GetCollectionType() const override;
 
    // Return the offset between two consecutive value_types (memory layout).
-   ULong_t   GetIncrement() const override;
+   ULong_t GetIncrement() const override;
 
    // Return the sizeof the collection object.
    UInt_t Sizeof() const override;
@@ -402,14 +402,14 @@ public:
    UInt_t Size() const override;
 
    // Block allocation of containees.
-   void* Allocate(UInt_t n, Bool_t forceDelete) override;
+   void *Allocate(UInt_t n, Bool_t forceDelete) override;
 
    // Insert data into the container where data is a C-style array of the actual type contained in the collection
    // of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
-   void  Insert(const void *data, void *container, size_t size) override;
+   void Insert(const void *data, void *container, size_t size) override;
 
    // Block commit of containees.
-   void Commit(void* env) override;
+   void Commit(void *env) override;
 
    // Streamer function.
    virtual void Streamer(TBuffer &refBuffer);
@@ -455,7 +455,7 @@ public:
    // If the end was not reached, 'Next' returns the address of the content pointed to by the iterator before the
    // incrementation ; if the collection contains pointers, 'Next' will return the value of the pointer.
 
-   DeleteIterator_t GetFunctionDeleteIterator(Bool_t read = kTRUE) override;
+   DeleteIterator_t     GetFunctionDeleteIterator(Bool_t read = kTRUE) override;
    DeleteTwoIterators_t GetFunctionDeleteTwoIterators(Bool_t read = kTRUE) override;
    // typedef void (*DeleteIterator_t)(void *iter);
    // typedef void (*DeleteTwoIterators_t)(void *begin, void *end);
@@ -482,7 +482,7 @@ struct AnyCollectionProxy : public TGenCollectionProxy  {
       fFeed           = T::feed;
       CheckFunctions();
    }
-   ~AnyCollectionProxy() override {  }
+   ~AnyCollectionProxy() override {}
 };
 
 #endif

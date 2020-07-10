@@ -34,7 +34,7 @@ public:
    TArrayL(Int_t n, const Long_t *array);
    TArrayL(const TArrayL &array);
    TArrayL    &operator=(const TArrayL &rhs);
-      ~TArrayL() override;
+   ~TArrayL() override;
 
    void          Adopt(Int_t n, Long_t *array);
    void          AddAt(Long_t c, Int_t i);
@@ -46,7 +46,7 @@ public:
    Stat_t        GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
    void          Reset()           {memset(fArray,  0, fN*sizeof(Long_t));}
    void          Reset(Long_t val) {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
-   void          Set(Int_t n) override;
+   void Set(Int_t n) override;
    void          Set(Int_t n, const Long_t *array);
    void          SetAt(Double_t v, Int_t i) override { AddAt((Long_t)v, i); }
    Long_t       &operator[](Int_t i);

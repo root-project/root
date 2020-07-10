@@ -53,8 +53,8 @@ public:
                   Pixel_t back = GetDefaultFrameBackground());
    ~TAttTextEditor() override;
 
-   void     SetModel(TObject* obj) override;
-   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   void             SetModel(TObject *obj) override;
+   Bool_t           ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    virtual void     DoTextAlphaColor(ULong_t p);
    virtual void     DoAlpha();
    virtual void     DoAlphaField();

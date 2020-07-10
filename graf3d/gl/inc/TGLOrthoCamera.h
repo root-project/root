@@ -62,20 +62,19 @@ public:
 
    Bool_t IsOrthographic() const override { return kTRUE; }
 
-   void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE) override;
-   void   Reset() override;
+   void Setup(const TGLBoundingBox &box, Bool_t reset = kTRUE) override;
+   void Reset() override;
 
    Bool_t Dolly(Int_t delta, Bool_t mod1, Bool_t mod2) override;
-   Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2) override;
+   Bool_t Zoom(Int_t delta, Bool_t mod1, Bool_t mod2) override;
    using   TGLCamera::Truck;
    Bool_t Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2) override;
    Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2) override;
-   void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const override;
+   void   Apply(const TGLBoundingBox &sceneBox, const TGLRect *pickRect = 0) const override;
 
    // External scripting control
    //   void Configure(Double_t left, Double_t right, Double_t top, Double_t bottom);
-   void Configure(Double_t zoom, Double_t dolly, Double_t center[3],
-                          Double_t hRotate, Double_t vRotate) override;
+   void Configure(Double_t zoom, Double_t dolly, Double_t center[3], Double_t hRotate, Double_t vRotate) override;
 
    void     SetEnableRotate(Bool_t x) { fEnableRotate = x; }
    Bool_t   GetEnableRotate()   const { return fEnableRotate; }

@@ -71,10 +71,10 @@ public:
 
    const THashList *ParticleList() const { return fParticleList; }
 
-   void   Print(Option_t *opt = "") const override;
+   void Print(Option_t *opt = "") const override;
 
    Bool_t IsFolder() const override { return kTRUE; }
-   void   Browse(TBrowser* b) override;
+   void   Browse(TBrowser *b) override;
 
    virtual void   ReadPDGTable (const char *filename = "");
    virtual Int_t  WritePDGTable(const char *filename);

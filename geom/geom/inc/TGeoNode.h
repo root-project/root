@@ -69,16 +69,16 @@ public:
    // destructor
    ~TGeoNode() override;
 
-   void              Browse(TBrowser *b) override;
+   void                Browse(TBrowser *b) override;
    virtual void      cd() const {;}
    void              CheckOverlaps(Double_t ovlp=0.1, Option_t *option=""); // *MENU*
    void              CheckShapes();
    Int_t             CountDaughters(Bool_t unique_volumes=kFALSE);
-   Int_t     DistancetoPrimitive(Int_t px, Int_t py) override;
-   void              Draw(Option_t *option="") override;
+   Int_t               DistancetoPrimitive(Int_t px, Int_t py) override;
+   void                Draw(Option_t *option = "") override;
    void              DrawOnly(Option_t *option="");
    void              DrawOverlaps();
-   void      ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void                ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    void              FillIdArray(Int_t &ifree, Int_t &nodeid, Int_t *array) const;
    Int_t             FindNode(const TGeoNode *node, Int_t level);
    virtual Int_t     GetByteCount() const {return 44;}
@@ -95,11 +95,11 @@ public:
    Int_t             GetNumber() const {return fNumber;}
    Int_t            *GetOverlaps(Int_t &novlp) const {novlp=fNovlp; return fOverlaps;}
    TGeoVolume       *GetVolume() const                   {return fVolume;}
-   char     *GetObjectInfo(Int_t px, Int_t py) const override;
+   char *                     GetObjectInfo(Int_t px, Int_t py) const override;
    virtual Int_t     GetOptimalVoxels() const {return 0;}
    void              InspectNode() const; // *MENU*
    Bool_t            IsCloned() const {return TObject::TestBit(kGeoNodeCloned);}
-   Bool_t    IsFolder() const override {return (GetNdaughters()?kTRUE:kFALSE);}
+   Bool_t                     IsFolder() const override { return (GetNdaughters() ? kTRUE : kFALSE); }
    Bool_t            IsOffset() const {return TObject::TestBit(kGeoNodeOffset);}
    Bool_t            IsOnScreen() const; // *MENU*
    Bool_t            IsOverlapping() const {return TObject::TestBit(kGeoNodeOverlap);}
@@ -117,7 +117,7 @@ public:
    void              SetCloned(Bool_t flag=kTRUE)        {TObject::SetBit(kGeoNodeCloned, flag);}
    void              SetOverlapping(Bool_t flag=kTRUE)   {TObject::SetBit(kGeoNodeOverlap, flag);}
    void              SetVirtual()                        {TObject::SetBit(kGeoNodeVC, kTRUE);}
-   void              SetVisibility(Bool_t vis=kTRUE) override; // *MENU*
+   void              SetVisibility(Bool_t vis = kTRUE) override;                  // *MENU*
    void              SetInvisible()                      {SetVisibility(kFALSE);} // *MENU*
    void              SetAllInvisible()                   {VisibleDaughters(kFALSE);} // *MENU*
    void              SetMotherVolume(TGeoVolume *mother) {fMother = mother;}
@@ -134,8 +134,8 @@ public:
    virtual void      LocalToMaster(const Double_t *local, Double_t *master) const;
    virtual void      LocalToMasterVect(const Double_t *local, Double_t *master) const;
 
-   void      ls(Option_t *option = "") const override;
-   void      Paint(Option_t *option = "") override;
+   void              ls(Option_t *option = "") const override;
+   void              Paint(Option_t *option = "") override;
    void              PrintCandidates() const; // *MENU*
    void              PrintOverlaps() const; // *MENU*
    void              VisibleDaughters(Bool_t vis=kTRUE); // *MENU*
@@ -164,11 +164,11 @@ public:
    // destructor
    ~TGeoNodeMatrix() override;
 
-   Int_t     GetByteCount() const override;
-   Int_t     GetOptimalVoxels() const override;
-   Bool_t    IsFolder() const override {return kTRUE;}
-   TGeoMatrix *GetMatrix() const override   {return fMatrix;}
-   TGeoNode *MakeCopyNode() const override;
+   Int_t             GetByteCount() const override;
+   Int_t             GetOptimalVoxels() const override;
+   Bool_t            IsFolder() const override { return kTRUE; }
+   TGeoMatrix *      GetMatrix() const override { return fMatrix; }
+   TGeoNode *        MakeCopyNode() const override;
    void              SetMatrix(const TGeoMatrix *matrix);
 
    ClassDef(TGeoNodeMatrix, 1)               // a geometry node in the general case
@@ -197,12 +197,16 @@ public:
    // destructor
    ~TGeoNodeOffset() override;
 
-   void      cd() const override           {fFinder->cd(fIndex);}
+   void               cd() const override { fFinder->cd(fIndex); }
    Double_t          GetOffset() const {return fOffset;}
-   Int_t     GetIndex() const override;
-   TGeoPatternFinder *GetFinder() const override {return fFinder;}
-   TGeoMatrix *GetMatrix() const override {cd(); return fFinder->GetMatrix();}
-   TGeoNode *MakeCopyNode() const override;
+   Int_t              GetIndex() const override;
+   TGeoPatternFinder *GetFinder() const override { return fFinder; }
+   TGeoMatrix *       GetMatrix() const override
+   {
+      cd();
+      return fFinder->GetMatrix();
+   }
+   TGeoNode *        MakeCopyNode() const override;
    void              SetFinder(TGeoPatternFinder *finder) {fFinder = finder;}
 
    ClassDef(TGeoNodeOffset, 1)      // a geometry node with just an offset

@@ -44,9 +44,9 @@ public:
    ~TStringLong() override;
 
    // ROOT I/O interface
-   void     FillBuffer(char *&buffer) const override;
-   void     ReadBuffer(char *&buffer) override;
-   Int_t    Sizeof() const override;
+   void  FillBuffer(char *&buffer) const override;
+   void  ReadBuffer(char *&buffer) override;
+   Int_t Sizeof() const override;
 
    ClassDef(TStringLong,1)  //Long string class (more than 255 chars)
 } R__ALWAYS_SUGGEST_ALTERNATIVE("TString");

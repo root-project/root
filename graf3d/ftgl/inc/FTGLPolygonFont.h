@@ -37,15 +37,14 @@ class FTGL_EXPORT FTGLPolygonFont : public FTFont
          */
         ~FTGLPolygonFont() override;
 
-    private:
+     private:
         /**
          * Construct a FTPolyGlyph.
          *
          * @param g The glyph index NOT the char code.
          * @return  An FTPolyGlyph or <code>null</code> on failure.
          */
-        inline FTGlyph* MakeGlyph( unsigned int g) override;
-
+        inline FTGlyph *MakeGlyph(unsigned int g) override;
 };
 
 

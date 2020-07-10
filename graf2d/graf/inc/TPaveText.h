@@ -38,9 +38,9 @@ public:
    virtual TLine   *AddLine(Double_t x1=0, Double_t y1=0, Double_t x2=0, Double_t y2=0);
    virtual TText   *AddText(Double_t x1, Double_t y1, const char *label);
    virtual TText   *AddText(const char *label);
-   void     Clear(Option_t *option="") override;  // *MENU*
+   void             Clear(Option_t *option = "") override; // *MENU*
    virtual void     DeleteText(); // *MENU*
-   void     Draw(Option_t *option="") override;
+   void             Draw(Option_t *option = "") override;
    virtual void     DrawFile(const char *filename, Option_t *option="");
    virtual void     EditText(); // *MENU*
    const char      *GetLabel() const {return fLabel.Data();}
@@ -52,16 +52,16 @@ public:
    virtual Int_t    GetSize() const;
    virtual void     InsertLine(); // *MENU*
    virtual void     InsertText(const char *label); // *MENU*
-   void     Paint(Option_t *option="") override;
+   void             Paint(Option_t *option = "") override;
    virtual void     PaintPrimitives(Int_t mode);
-   void     Print(Option_t *option="") const override;
+   void             Print(Option_t *option = "") const override;
    virtual void     ReadFile(const char *filename, Option_t *option="", Int_t nlines=50, Int_t fromline=0); // *MENU*
    virtual void     SaveLines(std::ostream &out, const char *name, Bool_t saved);
-   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetAllWith(const char *text, Option_t *option, Double_t value); // *MENU*
    virtual void     SetLabel(const char *label) {fLabel = label;} // *MENU*
    virtual void     SetMargin(Float_t margin=0.05) {fMargin=margin;} // *MENU*
-   void     UseCurrentStyle() override;
+   void             UseCurrentStyle() override;
 
    ClassDef(TPaveText,2)  //PaveText. A Pave with several lines of text.
 };

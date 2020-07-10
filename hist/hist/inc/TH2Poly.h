@@ -75,30 +75,30 @@ public:
    virtual Int_t AddBin(TObject *poly);
    Int_t         AddBin(Int_t n, const Double_t *x, const Double_t *y);
    Int_t         AddBin(Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
-   Bool_t Add(const TH1 *h1, Double_t c1) override;
-   Bool_t Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1) override;
-   Bool_t Add(TF1 *h1, Double_t c1=1, Option_t *option="") override;
+   Bool_t              Add(const TH1 *h1, Double_t c1) override;
+   Bool_t              Add(const TH1 *h1, const TH1 *h2, Double_t c1 = 1, Double_t c2 = 1) override;
+   Bool_t              Add(TF1 *h1, Double_t c1 = 1, Option_t *option = "") override;
    void          ClearBinContents();                 // Clears the content of all bins
-   TObject      *Clone(const char* newname = "") const override;
+   TObject *           Clone(const char *newname = "") const override;
    void          ChangePartition(Int_t n, Int_t m);  // Sets the number of partition cells to another value
    using TH2::Multiply;
    using TH2::Divide;
    using TH2::Interpolate;
-   Bool_t Divide(TF1 *, Double_t) override;
-   Bool_t Multiply(TF1 *, Double_t) override;
-   Double_t ComputeIntegral(Bool_t) override;
-   TH1 *  FFT(TH1*, Option_t * ) override;
+   Bool_t           Divide(TF1 *, Double_t) override;
+   Bool_t           Multiply(TF1 *, Double_t) override;
+   Double_t         ComputeIntegral(Bool_t) override;
+   TH1 *            FFT(TH1 *, Option_t *) override;
    virtual TH1 *  GetAsymmetry(TH1* , Double_t,  Double_t);
    virtual Double_t Interpolate(Double_t, Double_t);
-   Int_t Fill(Double_t x,Double_t y) override;
-   Int_t Fill(Double_t x,Double_t y, Double_t w) override;
-   Int_t Fill(const char* name, Double_t w) override;
-   void         FillN(Int_t ntimes, const Double_t* x, const Double_t* y, const Double_t* w, Int_t stride = 1) override;
+   Int_t            Fill(Double_t x, Double_t y) override;
+   Int_t            Fill(Double_t x, Double_t y, Double_t w) override;
+   Int_t            Fill(const char *name, Double_t w) override;
+   void         FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double_t *w, Int_t stride = 1) override;
    Int_t        FindBin(Double_t x, Double_t y, Double_t z = 0) override;
    TList       *GetBins(){return fBins;} ///< Returns the TList of all bins in the histogram
    Double_t     GetBinContent(Int_t bin) const override;
    Bool_t       GetBinContentChanged() const{return fBinContentChanged;}
-   Double_t GetBinError(Int_t bin) const override;
+   Double_t     GetBinError(Int_t bin) const override;
    const char  *GetBinName(Int_t bin) const;
    const char  *GetBinTitle(Int_t bin) const;
    Bool_t       GetFloat(){return fFloat;}
@@ -109,45 +109,46 @@ public:
    Bool_t       GetNewBinAdded() const{return fNewBinAdded;}
    Int_t        GetNumberOfBins() const{return fNcells-kNOverflow;}
    void         Honeycomb(Double_t xstart, Double_t ystart, Double_t a, Int_t k, Int_t s);
-   Double_t     Integral(Option_t* option = "") const override;
+   Double_t     Integral(Option_t *option = "") const override;
    Long64_t     Merge(TCollection *) override;
-   void Reset(Option_t *option) override;
-   void Scale(Double_t c1 = 1, Option_t* option = "") override;
-   void         SavePrimitive(std::ostream& out, Option_t* option = "") override;
-   void SetBinContent(Int_t bin, Double_t content) override;
-   void SetBinError(Int_t bin, Double_t error) override;
+   void         Reset(Option_t *option) override;
+   void         Scale(Double_t c1 = 1, Option_t *option = "") override;
+   void         SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void         SetBinContent(Int_t bin, Double_t content) override;
+   void         SetBinError(Int_t bin, Double_t error) override;
    void         SetBinContentChanged(Bool_t flag){fBinContentChanged = flag;}
    void         SetFloat(Bool_t flag = true);
    void         SetNewBinAdded(Bool_t flag){fNewBinAdded = flag;}
    Bool_t       IsInsideBin(Int_t binnr, Double_t x, Double_t y);
-   void GetStats(Double_t *stats) const override;
-
+   void         GetStats(Double_t *stats) const override;
 
 protected:
 
    //functions not to be used for TH2Poly
 
-   Int_t        Fill(Double_t) override{return -1;}                              //MayNotUse
-   Int_t        Fill(Double_t , const char *, Double_t) override{return -1;}     //MayNotUse
-   Int_t        Fill(const char *, Double_t , Double_t ) override{return -1;}    //MayNotUse
-   Int_t        Fill(const char *, const char *, Double_t ) override{return -1;} //MayNotUse
-   void         FillN(Int_t, const Double_t*, const Double_t*, Int_t) override{return;}  //MayNotUse
+   Int_t Fill(Double_t) override { return -1; }                                       // MayNotUse
+   Int_t Fill(Double_t, const char *, Double_t) override { return -1; }               // MayNotUse
+   Int_t Fill(const char *, Double_t, Double_t) override { return -1; }               // MayNotUse
+   Int_t Fill(const char *, const char *, Double_t) override { return -1; }           // MayNotUse
+   void  FillN(Int_t, const Double_t *, const Double_t *, Int_t) override { return; } // MayNotUse
 
-   Double_t     Integral(Int_t, Int_t, const Option_t*) const override{return 0;}                             //MayNotUse
-   Double_t     Integral(Int_t, Int_t, Int_t, Int_t, const Option_t*) const override{return 0;}               //MayNotUse
-   Double_t     Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, const Option_t*) const override{return 0;} //MayNotUse
+   Double_t Integral(Int_t, Int_t, const Option_t *) const override { return 0; }               // MayNotUse
+   Double_t Integral(Int_t, Int_t, Int_t, Int_t, const Option_t *) const override { return 0; } // MayNotUse
+   Double_t Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, const Option_t *) const override
+   {
+      return 0;
+   } // MayNotUse
 
-   Double_t     GetBinContent(Int_t, Int_t) const override {return 0;}           //MayNotUse
-   Double_t     GetBinContent(Int_t, Int_t, Int_t) const override {return 0;}    //MayNotUse
+   Double_t GetBinContent(Int_t, Int_t) const override { return 0; }        // MayNotUse
+   Double_t GetBinContent(Int_t, Int_t, Int_t) const override { return 0; } // MayNotUse
 
-   Double_t GetBinError(Int_t , Int_t) const override {return 0;}            //MayNotUse
-   Double_t GetBinError(Int_t , Int_t , Int_t) const override {return 0;}    //MayNotUse
+   Double_t GetBinError(Int_t, Int_t) const override { return 0; }        // MayNotUse
+   Double_t GetBinError(Int_t, Int_t, Int_t) const override { return 0; } // MayNotUse
 
-   void         SetBinContent(Int_t, Int_t, Double_t) override{}           //MayNotUse
-   void         SetBinContent(Int_t, Int_t, Int_t, Double_t) override{}    //MayNotUse
-   void         SetBinError(Int_t, Int_t, Double_t) override {}
-   void         SetBinError(Int_t, Int_t, Int_t, Double_t) override {}
-
+   void SetBinContent(Int_t, Int_t, Double_t) override {}        // MayNotUse
+   void SetBinContent(Int_t, Int_t, Int_t, Double_t) override {} // MayNotUse
+   void SetBinError(Int_t, Int_t, Double_t) override {}
+   void SetBinError(Int_t, Int_t, Int_t, Double_t) override {}
 
 protected:
     enum {
@@ -171,10 +172,12 @@ protected:
    Bool_t IsIntersecting(TH2PolyBin *bin, Double_t xclipl, Double_t xclipr, Double_t yclipb, Double_t yclipt);
    Bool_t IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y, Double_t xclipl, Double_t xclipr, Double_t yclipb, Double_t yclipt);
    // needed by TH1 - no need to have a separate implementation , but internal ibin=0 is first bin.
-   Double_t RetrieveBinContent(Int_t bin) const override {
+   Double_t RetrieveBinContent(Int_t bin) const override
+   {
       return (bin>=kNOverflow) ? GetBinContent(bin-kNOverflow+1) : GetBinContent(-bin-1);
    }
-   void     UpdateBinContent(Int_t bin, Double_t content) override {
+   void UpdateBinContent(Int_t bin, Double_t content) override
+   {
       return (bin>=kNOverflow) ? SetBinContent(bin-kNOverflow+1,content) : SetBinContent(-bin-1,content);
    }
 

@@ -61,11 +61,13 @@ public:
    TDirectoryFile(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = nullptr);
    ~TDirectoryFile() override;
 
-          void        Append(TObject *obj, Bool_t replace = kFALSE) override;
-          void        Add(TObject *obj, Bool_t replace = kFALSE) override { Append(obj,replace); }
-          Int_t       AppendKey(TKey *key) override;
-          void        Browse(TBrowser *b) override;
-          void        Build(TFile* motherFile = nullptr, TDirectory* motherDir = nullptr) override { BuildDirectoryFile(motherFile, motherDir); }
+   void  Append(TObject *obj, Bool_t replace = kFALSE) override;
+   void  Add(TObject *obj, Bool_t replace = kFALSE) override { Append(obj, replace); }
+   Int_t AppendKey(TKey *key) override;
+   void  Browse(TBrowser *b) override;
+   void  Build(TFile *motherFile = nullptr, TDirectory *motherDir = nullptr) override
+   {
+      BuildDirectoryFile(motherFile, motherDir); }
           TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE) override;
           void        Close(Option_t *option="") override;
           void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }

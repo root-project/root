@@ -50,7 +50,7 @@ private:
 
 public:
    TGRegionData() { fRgn = 0; fIsNull = kTRUE; AddReference(); }
-   ~TGRegionData() override { }
+   ~TGRegionData() override {}
    TGRegionData &operator=(const TGRegionData &r);
 };
 

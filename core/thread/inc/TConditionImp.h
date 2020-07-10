@@ -27,14 +27,14 @@ class TConditionImp : public TObject {
 
 public:
    TConditionImp() { }
-   ~TConditionImp() override { }
+   ~TConditionImp() override {}
 
    virtual Int_t  Wait() = 0;
    virtual Int_t  TimedWait(ULong_t secs, ULong_t nanoSecs = 0) = 0;
    virtual Int_t  Signal() = 0;
    virtual Int_t  Broadcast() = 0;
 
-   ClassDefOverride(TConditionImp,0)  // Condition variable implementation ABC
+   ClassDefOverride(TConditionImp, 0) // Condition variable implementation ABC
 };
 
 #endif

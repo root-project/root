@@ -115,7 +115,7 @@ public:
    Int_t AdoptFile(TFile *f);                    // Adopt a TFile already open
    TFile* OpenFile(const char *opt);             // Open a file with the specified name in fFileName1
    Long64_t Merge(TCollection *list);
-   void Print(Option_t *option = "") const override;
+   void     Print(Option_t *option = "") const override;
    void SetOutputFileName(const char *name);
    void ResetFileCollection() { fDataSet = 0; }
 

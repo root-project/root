@@ -76,12 +76,12 @@ public:
    // TVirtualViewer3D interface
 
    Bool_t CanLoopOnPrimitives() const override { return kTRUE; }
-   void   PadPaint(TVirtualPad* pad) override;
-   void   ObjectPaint(TObject* obj, Option_t* opt="") override;
+   void   PadPaint(TVirtualPad *pad) override;
+   void   ObjectPaint(TObject *obj, Option_t *opt = "") override;
 
    // For now handled by viewer
-   Int_t  DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/) override { return 9999; }
-   void   ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/) override {}
+   Int_t DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/) override { return 9999; }
+   void  ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/) override {}
 
    Bool_t PreferLocalFrame() const override { return kTRUE; }
 
@@ -89,9 +89,9 @@ public:
    Bool_t BuildingScene() const override { return CurrentLock() == kModifyLock; }
    void   EndScene() override;
 
-   Int_t  AddObject(const TBuffer3D& buffer, Bool_t* addChildren = 0) override;
-   Int_t  AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t* addChildren = 0) override;
-   Bool_t OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren = 0) override;
+   Int_t  AddObject(const TBuffer3D &buffer, Bool_t *addChildren = 0) override;
+   Int_t  AddObject(UInt_t physicalID, const TBuffer3D &buffer, Bool_t *addChildren = 0) override;
+   Bool_t OpenComposite(const TBuffer3D &buffer, Bool_t *addChildren = 0) override;
    void   CloseComposite() override;
    void   AddCompositeOp(UInt_t operation) override;
 

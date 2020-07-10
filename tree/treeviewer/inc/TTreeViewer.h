@@ -179,13 +179,13 @@ private:
 public:
    TTreeViewer(const char* treeName = 0);
    TTreeViewer(const TTree *tree);
-         ~TTreeViewer() override;
-// public methods
+   ~TTreeViewer() override;
+   // public methods
    void          AppendTree(TTree *tree);
    void          ActivateButtons(Bool_t first, Bool_t previous,
                                  Bool_t next , Bool_t last);
-   void  CloseWindow() override;
-   void  Delete(Option_t *) override { }                          // *MENU*
+   void          CloseWindow() override;
+   void          Delete(Option_t *) override {} // *MENU*
    void          DoRefresh();
    void          EditExpression();
    void          Empty();
@@ -201,14 +201,14 @@ public:
    Bool_t        IsCutEnabled() {return fEnableCut;}
    Bool_t        IsScanRedirected();
    Int_t         MakeSelector(const char* selector = 0);         // *MENU*
-   void          Message(const char* msg) override;
+   void          Message(const char *msg) override;
    void          NewExpression();                                // *MENU*
    void          PrintEntries();
    Long64_t      Process(const char* filename, Option_t *option="", Long64_t nentries=TTree::kMaxEntries, Long64_t firstentry=0); // *MENU*
    Bool_t        ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    void          RemoveItem();
    void          RemoveLastRecord();                             // *MENU*
-   void          SaveSource(const char* filename="", Option_t *option="") override;            // *MENU*
+   void          SaveSource(const char *filename = "", Option_t *option = "") override; // *MENU*
    void          SetHistogramTitle(const char *title);
    void          SetCutMode(Bool_t enabled = kTRUE) {fEnableCut = enabled;}
    void          SetCurrentRecord(Long64_t entry);

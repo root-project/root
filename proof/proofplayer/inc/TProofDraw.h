@@ -80,15 +80,15 @@ protected:
 
 public:
    TProofDraw();
-              ~TProofDraw() override;
-   int         Version() const override { return 1; }
-   void        Init(TTree *) override;
-   void        Begin(TTree *) override;
-   void        SlaveBegin(TTree *) override;
-   Bool_t      Notify() override;
-   Bool_t      Process(Long64_t /*entry*/) override;
-   void        SlaveTerminate() override;
-   void        Terminate() override;
+   ~TProofDraw() override;
+   int    Version() const override { return 1; }
+   void   Init(TTree *) override;
+   void   Begin(TTree *) override;
+   void   SlaveBegin(TTree *) override;
+   Bool_t Notify() override;
+   Bool_t Process(Long64_t /*entry*/) override;
+   void   SlaveTerminate() override;
+   void   Terminate() override;
 
    ClassDef(TProofDraw,0)  //Tree drawing selector for PROOF
 };
@@ -107,15 +107,15 @@ protected:
    virtual void        Begin1D(TTree *t);
    virtual void        Begin2D(TTree *t);
    virtual void        Begin3D(TTree *t);
-   void        DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
-   void        DefVar() override;
+   void                DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
+   void                DefVar() override;
 
 public:
    TProofDrawHist() : fHistogram(0) { }
-   void        Begin(TTree *t) override;
-   void        Init(TTree *) override;
-   void        SlaveBegin(TTree *) override;
-   void        Terminate() override;
+   void Begin(TTree *t) override;
+   void Init(TTree *) override;
+   void SlaveBegin(TTree *) override;
+   void Terminate() override;
 
    ClassDef(TProofDrawHist,0)  //Tree drawing selector for PROOF
 };
@@ -127,17 +127,17 @@ protected:
    TEventList*    fElist;          //  event list
    TList*         fEventLists;     //  a list of EventLists
 
-   void   DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
-   void   DefVar() override { }
+   void DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
+   void DefVar() override {}
 
 public:
    TProofDrawEventList() : fElist(0), fEventLists(0) {}
    ~TProofDrawEventList() override {}
 
-   void        Init(TTree *) override;
-   void        SlaveBegin(TTree *) override;
-   void        SlaveTerminate() override;
-   void        Terminate() override;
+   void Init(TTree *) override;
+   void SlaveBegin(TTree *) override;
+   void SlaveTerminate() override;
+   void Terminate() override;
 
    ClassDef(TProofDrawEventList,0)  //Tree drawing selector for PROOF
 };
@@ -149,7 +149,7 @@ class TProofDrawEntryList : public TProofDraw {
    void DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
    void DefVar() override {}
 
- public:
+public:
    TProofDrawEntryList() : fElist(0) {}
    ~TProofDrawEntryList() override {}
 
@@ -167,15 +167,15 @@ class TProofDrawProfile : public TProofDraw {
 protected:
    TProfile           *fProfile;
 
-   void        DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
-   void        DefVar() override;
+   void DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
+   void DefVar() override;
 
 public:
    TProofDrawProfile() : fProfile(0) { }
-   void        Init(TTree *) override;
-   void        Begin(TTree *t) override;
-   void        SlaveBegin(TTree *) override;
-   void        Terminate() override;
+   void Init(TTree *) override;
+   void Begin(TTree *t) override;
+   void SlaveBegin(TTree *) override;
+   void Terminate() override;
 
    ClassDef(TProofDrawProfile,0)  //Tree drawing selector for PROOF
 };
@@ -186,15 +186,15 @@ class TProofDrawProfile2D : public TProofDraw {
 protected:
    TProfile2D         *fProfile;
 
-   void        DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
-   void        DefVar() override;
+   void DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
+   void DefVar() override;
 
 public:
    TProofDrawProfile2D() : fProfile(0) { }
-   void        Init(TTree *) override;
-   void        Begin(TTree *t) override;
-   void        SlaveBegin(TTree *) override;
-   void        Terminate() override;
+   void Init(TTree *) override;
+   void Begin(TTree *t) override;
+   void SlaveBegin(TTree *) override;
+   void Terminate() override;
 
    ClassDef(TProofDrawProfile2D,0)  //Tree drawing selector for PROOF
 };
@@ -205,14 +205,14 @@ class TProofDrawGraph : public TProofDraw {
 protected:
    TGraph             *fGraph;
 
-   void        DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
-   void        DefVar() override { }
+   void DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
+   void DefVar() override {}
 
 public:
    TProofDrawGraph() : fGraph(0) { }
-   void        Init(TTree *tree) override;
-   void        SlaveBegin(TTree *) override;
-   void        Terminate() override;
+   void Init(TTree *tree) override;
+   void SlaveBegin(TTree *) override;
+   void Terminate() override;
 
    ClassDef(TProofDrawGraph,0)  //Tree drawing selector for PROOF
 };
@@ -223,14 +223,14 @@ class TProofDrawPolyMarker3D : public TProofDraw {
 protected:
    TPolyMarker3D      *fPolyMarker3D;
 
-   void        DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
-   void        DefVar() override { }
+   void DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
+   void DefVar() override {}
 
 public:
    TProofDrawPolyMarker3D() : fPolyMarker3D(0) { }
-   void        Init(TTree *tree) override;
-   void        SlaveBegin(TTree *) override;
-   void        Terminate() override;
+   void Init(TTree *tree) override;
+   void SlaveBegin(TTree *) override;
+   void Terminate() override;
 
    ClassDef(TProofDrawPolyMarker3D,0)  //Tree drawing selector for PROOF
 };
@@ -266,13 +266,13 @@ public:
 
 protected:
    TProofVectorContainer<Point3D_t> *fPoints;
-   void        DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
-   void        DefVar() override { }
+   void                              DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
+   void                              DefVar() override {}
 
 public:
    TProofDrawListOfGraphs() : fPoints(0) { }
-   void        SlaveBegin(TTree *) override;
-   void        Terminate() override;
+   void SlaveBegin(TTree *) override;
+   void Terminate() override;
 
    ClassDef(TProofDrawListOfGraphs,0)  //Tree drawing selector for PROOF
 };
@@ -290,13 +290,13 @@ public:
 
 protected:
    TProofVectorContainer<Point4D_t> *fPoints;
-   void        DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
-   void        DefVar() override { }
+   void                              DoFill(Long64_t entry, Double_t w, const Double_t *v) override;
+   void                              DefVar() override {}
 
 public:
    TProofDrawListOfPolyMarkers3D() : fPoints(0) { }
-   void        SlaveBegin(TTree *) override;
-   void        Terminate() override;
+   void SlaveBegin(TTree *) override;
+   void Terminate() override;
 
    ClassDef(TProofDrawListOfPolyMarkers3D,0)  //Tree drawing selector for PROOF
 };

@@ -120,13 +120,13 @@ public:
    TTreeCacheUnzip(TTree *tree, Int_t buffersize=0);
    ~TTreeCacheUnzip() override;
 
-   Int_t       AddBranch(TBranch *b, Bool_t subbranches = kFALSE) override;
-   Int_t       AddBranch(const char *branch, Bool_t subbranches = kFALSE) override;
-   Bool_t              FillBuffer() override;
-   Int_t       ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc) override;
-   void                SetEntryRange(Long64_t emin,   Long64_t emax) override;
-   void        StopLearningPhase() override;
-   void                UpdateBranches(TTree *tree) override;
+   Int_t  AddBranch(TBranch *b, Bool_t subbranches = kFALSE) override;
+   Int_t  AddBranch(const char *branch, Bool_t subbranches = kFALSE) override;
+   Bool_t FillBuffer() override;
+   Int_t  ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc) override;
+   void   SetEntryRange(Long64_t emin, Long64_t emax) override;
+   void   StopLearningPhase() override;
+   void   UpdateBranches(TTree *tree) override;
 
    // Methods related to the thread
    static EParUnzipMode GetParallelUnzip();
@@ -138,10 +138,10 @@ public:
    Int_t          CreateTasks();
 #endif
    Int_t          GetRecordHeader(char *buf, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
-   Int_t  GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_t *free) override;
+   Int_t          GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_t *free) override;
    Int_t          GetUnzipGroupSize() { return fUnzipGroupSize; }
-   void   ResetCache() override;
-   Int_t  SetBufferSize(Int_t buffersize) override;
+   void           ResetCache() override;
+   Int_t          SetBufferSize(Int_t buffersize) override;
    void           SetUnzipBufferSize(Long64_t bufferSize);
    void           SetUnzipGroupSize(Int_t groupSize) { fUnzipGroupSize = groupSize; }
    static void    SetUnzipRelBufferSize(Float_t relbufferSize);
@@ -153,7 +153,7 @@ public:
    Int_t  GetNMissed(){ return fNMissed; }
    Int_t  GetNFound() { return fNFound; }
 
-   void Print(Option_t* option = "") const override;
+   void Print(Option_t *option = "") const override;
 
    // static members
    ClassDefOverride(TTreeCacheUnzip, 0) // Specialization of TTreeCache for parallel unzipping

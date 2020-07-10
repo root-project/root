@@ -52,12 +52,12 @@ public:
    THelix(const THelix &helix);
    ~THelix() override;
 
-   void    Copy(TObject &helix) const override;
-   void    Draw(Option_t *option="") override;
-   Option_t       *GetOption() const override {return fOption.Data();}
-   void    Print(Option_t *option="") const override;
-   void    SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   void    SetOption(Option_t *option="") override {fOption = option;}
+   void            Copy(TObject &helix) const override;
+   void            Draw(Option_t *option = "") override;
+   Option_t *      GetOption() const override { return fOption.Data(); }
+   void            Print(Option_t *option = "") const override;
+   void            SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void            SetOption(Option_t *option = "") override { fOption = option; }
    virtual void    SetAxis(Double_t const* axis);       //Define new axis
    virtual void    SetAxis(Double_t x, Double_t y, Double_t z);
    virtual void    SetRange(Double_t * range, EHelixRangeType rtype=kHelixZ);

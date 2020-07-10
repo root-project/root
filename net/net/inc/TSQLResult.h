@@ -37,7 +37,7 @@ protected:
    TSQLResult() : fRowCount(0) { }
 
 public:
-   ~TSQLResult() override { }
+   ~TSQLResult() override {}
 
    virtual void        Close(Option_t *option="") = 0;
    virtual Int_t       GetFieldCount() = 0;

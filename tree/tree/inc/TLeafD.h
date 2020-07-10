@@ -36,21 +36,21 @@ public:
    TLeafD(TBranch *parent, const char *name, const char *type);
    ~TLeafD() override;
 
-   void    Export(TClonesArray *list, Int_t n) override;
-   void    FillBasket(TBuffer &b) override;
+   void            Export(TClonesArray *list, Int_t n) override;
+   void            FillBasket(TBuffer &b) override;
    DeserializeType GetDeserializeType() const override { return DeserializeType::kInPlace; }
-   const char     *GetTypeName() const override { return "Double_t"; }
-   Double_t        GetValue(Int_t i=0) const override;
-   void   *GetValuePointer() const override { return fValue; }
-   void    Import(TClonesArray *list, Int_t n) override;
-   void    PrintValue(Int_t i=0) const override;
-   void    ReadBasket(TBuffer &b) override;
-   void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n) override;
-   void    ReadValue(std::istream& s, Char_t delim = ' ') override;
-   void    SetAddress(void *add=0) override;
+   const char *    GetTypeName() const override { return "Double_t"; }
+   Double_t        GetValue(Int_t i = 0) const override;
+   void *          GetValuePointer() const override { return fValue; }
+   void            Import(TClonesArray *list, Int_t n) override;
+   void            PrintValue(Int_t i = 0) const override;
+   void            ReadBasket(TBuffer &b) override;
+   void            ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n) override;
+   void            ReadValue(std::istream &s, Char_t delim = ' ') override;
+   void            SetAddress(void *add = 0) override;
 
-   bool    ReadBasketFast(TBuffer&, Long64_t) override;
-   bool    ReadBasketSerialized(TBuffer&, Long64_t) override { return GetDeserializeType() == DeserializeType::kInPlace; }
+   bool ReadBasketFast(TBuffer &, Long64_t) override;
+   bool ReadBasketSerialized(TBuffer &, Long64_t) override { return GetDeserializeType() == DeserializeType::kInPlace; }
 
    ClassDefOverride(TLeafD, 1); // A TLeaf for a 64 bit floating point data type.
 };

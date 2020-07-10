@@ -47,14 +47,14 @@ private:
 
 public:
    TSelector();
-              ~TSelector() override;
+   ~TSelector() override;
 
    virtual int         Version() const { return 0; }
    virtual void        Init(TTree *) { }
    virtual void        Begin(TTree *) { }
    virtual void        SlaveBegin(TTree *) { }
-   Bool_t      Notify() override { return kTRUE; }
-   const char *GetOption() const override { return fOption; }
+   Bool_t              Notify() override { return kTRUE; }
+   const char *        GetOption() const override { return fOption; }
    virtual Long64_t    GetStatus() const { return fStatus; }
    virtual Int_t       GetEntry(Long64_t /*entry*/, Int_t /*getall*/ = 0) { return 0; }
    virtual Bool_t      ProcessCut(Long64_t /*entry*/);

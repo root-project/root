@@ -83,8 +83,8 @@ public:
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
    ~TGeoVolumeEditor() override;
-   void   SetModel(TObject *obj) override;
-   void   ActivateBaseClassEditors(TClass* cl) override;
+   void SetModel(TObject *obj) override;
+   void ActivateBaseClassEditors(TClass *cl) override;
 
    void           DoAddNode();
    void           DoVolumeName();

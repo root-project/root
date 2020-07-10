@@ -156,7 +156,7 @@ class TProofServTerminationHandler : public TSignalHandler {
 public:
    TProofServTerminationHandler(TProofServ *s)
       : TSignalHandler(kSigTermination, kFALSE) { fServ = s; }
-   Bool_t  Notify() override;
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +177,7 @@ class TProofServInterruptHandler : public TSignalHandler {
 public:
    TProofServInterruptHandler(TProofServ *s)
       : TSignalHandler(kSigUrgent, kFALSE) { fServ = s; }
-   Bool_t  Notify() override;
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +200,7 @@ class TProofServSigPipeHandler : public TSignalHandler {
 public:
    TProofServSigPipeHandler(TProofServ *s) : TSignalHandler(kSigPipe, kFALSE)
       { fServ = s; }
-   Bool_t  Notify() override;
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

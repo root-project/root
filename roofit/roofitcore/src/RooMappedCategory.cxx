@@ -50,7 +50,8 @@ class RooMappedCategoryCache : public RooAbsCache {
     void wireCache() override
     { _map.clear(); initialise(); }
 
-    Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override
+    Bool_t redirectServersHook(const RooAbsCollection & /*newServerList*/, Bool_t /*mustReplaceAll*/,
+                               Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override
     { _map.clear(); initialise(); return kFALSE; }
 
   private:

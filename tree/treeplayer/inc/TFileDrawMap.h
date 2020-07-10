@@ -51,13 +51,13 @@ public:
    ~TFileDrawMap() override;
 
    virtual void  AnimateTree(const char *branches=""); // *MENU*
-   Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
+   Int_t         DistancetoPrimitive(Int_t px, Int_t py) override;
    virtual void  DrawObject(); // *MENU*
    virtual void  DumpObject(); // *MENU*
-   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   char *GetObjectInfo(Int_t px, Int_t py) const override;
+   void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   char *        GetObjectInfo(Int_t px, Int_t py) const override;
    virtual void  InspectObject(); // *MENU*
-   void  Paint(Option_t *option) override;
+   void          Paint(Option_t *option) override;
 
    ClassDef(TFileDrawMap,1);  //Draw a 2-d map of the objects in a file
 };

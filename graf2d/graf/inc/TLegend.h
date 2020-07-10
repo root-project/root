@@ -35,10 +35,10 @@ public:
 
    TLegendEntry   *AddEntry(const TObject* obj, const char* label = "", Option_t* option = "lpf" );
    TLegendEntry   *AddEntry(const char *name, const char* label = "", Option_t* option = "lpf" );
-   void    Clear( Option_t* option = "" ) override; // *MENU*
-   void    Copy( TObject &obj ) const override;
+   void                Clear(Option_t *option = "") override; // *MENU*
+   void                Copy(TObject &obj) const override;
    virtual void    DeleteEntry(); // *MENU*
-   void    Draw( Option_t* option = "" ) override;
+   void                Draw(Option_t *option = "") override;
    virtual void    EditEntryAttFill();
    virtual void    EditEntryAttLine();
    virtual void    EditEntryAttMarker();
@@ -53,11 +53,11 @@ public:
    Int_t           GetNRows() const;
    virtual void    InsertEntry( const char* objectName = "",const char* label = "",
                              Option_t* option = "lpf" ); // *MENU*
-   void    Paint( Option_t* option = "" ) override;
+   void                Paint(Option_t *option = "") override;
    virtual void    PaintPrimitives();
-   void    Print( Option_t* option = "" ) const override;
-   void    RecursiveRemove(TObject *obj) override;
-   void    SavePrimitive(std::ostream &out, Option_t *option  = "") override;
+   void                Print(Option_t *option = "") const override;
+   void                RecursiveRemove(TObject *obj) override;
+   void                SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void            SetDefaults() { fEntrySeparation = 0.1f; fMargin = 0.25f; fNColumns = 1; fColumnSeparation = 0.0f; }
    void            SetColumnSeparation( Float_t columnSeparation )
                      { fColumnSeparation = columnSeparation; } // *MENU*

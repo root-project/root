@@ -35,17 +35,15 @@ public:
 
    ~FcnAdapter() override {}
 
-    unsigned int NDim() const override { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
-   ROOT::Math::IMultiGenFunction * Clone() const override {
-      return new FcnAdapter(fFCN,fDim);
-   }
+   ROOT::Math::IMultiGenFunction *Clone() const override { return new FcnAdapter(fFCN, fDim); }
 
    void SetDimension(int dim) { fDim = dim; }
 
 private:
-
-   double DoEval(const double * x) const override {
+   double DoEval(const double *x) const override
+   {
       double fval = 0;
       int dim = fDim;
       // call with flag 4

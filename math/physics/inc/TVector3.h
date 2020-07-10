@@ -37,7 +37,7 @@ public:
    TVector3(const TVector3 &);
    // The copy constructor.
 
-   ~TVector3() override {};
+   ~TVector3() override{};
    // Destructor
 
    Double_t operator () (int) const;
@@ -178,7 +178,7 @@ public:
 
    inline TVector2 XYvector() const;
 
-   void Print(Option_t* option="") const override;
+   void Print(Option_t *option = "") const override;
 
 private:
 

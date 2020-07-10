@@ -85,16 +85,15 @@ public:
    TPostScript(const char *filename, Int_t type=-111);
    ~TPostScript() override;
 
-   void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
-                                          Double_t y1, Double_t y2) override;
+   void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
    void  CellArrayFill(Int_t r, Int_t g, Int_t b) override;
    void  CellArrayEnd() override;
-   void  Close(Option_t *opt="") override;
+   void  Close(Option_t *opt = "") override;
    Int_t CMtoPS(Double_t u) {return Int_t(0.5 + 72*u/2.54);}
    void  DefineMarkers();
-   void  DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) override;
-   void  DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
-                   Int_t mode, Int_t border, Int_t dark, Int_t light) override;
+   void  DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override;
+   void  DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t yt, Int_t mode, Int_t border, Int_t dark,
+                   Int_t light) override;
    void  DrawHatch(Float_t dy, Float_t angle, Int_t n, Float_t *x,
                    Float_t *y);
    void  DrawHatch(Float_t dy, Float_t angle, Int_t n, Double_t *x,
@@ -114,18 +113,18 @@ public:
    void  NewPage() override;
    void  Off();
    void  On();
-   void  Open(const char *filename, Int_t type=-111) override;
+   void  Open(const char *filename, Int_t type = -111) override;
    void  SaveRestore(Int_t flag);
-   void  SetFillColor( Color_t cindex=1) override;
+   void  SetFillColor(Color_t cindex = 1) override;
    void  SetFillPatterns(Int_t ipat, Int_t color);
-   void  SetLineColor( Color_t cindex=1) override;
+   void  SetLineColor(Color_t cindex = 1) override;
    void  SetLineJoin(Int_t linejoin=0);
    void  SetLineCap(Int_t linecap=0);
    void  SetLineStyle(Style_t linestyle = 1) override;
    void  SetLineWidth(Width_t linewidth = 1) override;
    void  SetLineScale(Float_t scale=3) {fLineScale = scale;}
-   void  SetMarkerColor( Color_t cindex=1) override;
-   void  SetTextColor( Color_t cindex=1) override;
+   void  SetMarkerColor(Color_t cindex = 1) override;
+   void  SetTextColor(Color_t cindex = 1) override;
    void  MovePS(Int_t x, Int_t y);
    void  Range(Float_t xrange, Float_t yrange);
    void  SetColor(Int_t color = 1);

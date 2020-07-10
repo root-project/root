@@ -47,8 +47,8 @@ public:
 // destructor
    ~TPyException() noexcept override;
 
-// give reason for raised exception
-   const char* what() const noexcept override;
+   // give reason for raised exception
+   const char *what() const noexcept override;
 
    ClassDef(TPyException,0)   //C++ exception for throwing python exceptions
 };

@@ -42,22 +42,26 @@ public:
    TClonesArray(const char *classname, Int_t size = 1000, Bool_t call_dtor = kFALSE);
    TClonesArray(const TClass *cl, Int_t size = 1000, Bool_t call_dtor = kFALSE);
    TClonesArray(const TClonesArray& tc);
-           ~TClonesArray() override;
+   ~TClonesArray() override;
    TClonesArray& operator=(const TClonesArray& tc);
-   void     Compress() override;
-   void     Clear(Option_t *option="") override;
-   void     Delete(Option_t *option="") override;
-   void     Expand(Int_t newSize) override;
+   void             Compress() override;
+   void             Clear(Option_t *option = "") override;
+   void             Delete(Option_t *option = "") override;
+   void             Expand(Int_t newSize) override;
    virtual void     ExpandCreate(Int_t n);
    virtual void     ExpandCreateFast(Int_t n);
    TClass          *GetClass() const { return fClass; }
-   void     SetOwner(Bool_t enable = kTRUE) override;
+   void             SetOwner(Bool_t enable = kTRUE) override;
 
-   void             AddFirst(TObject *) override { MayNotUse("AddFirst"); }
-   void             AddLast(TObject *) override { MayNotUse("AddLast"); }
-   void             AddAt(TObject *, Int_t) override { MayNotUse("AddAt"); }
-   void             AddAtAndExpand(TObject *, Int_t) override { MayNotUse("AddAtAndExpand"); }
-   Int_t            AddAtFree(TObject *) override { MayNotUse("AddAtFree"); return 0; }
+   void  AddFirst(TObject *) override { MayNotUse("AddFirst"); }
+   void  AddLast(TObject *) override { MayNotUse("AddLast"); }
+   void  AddAt(TObject *, Int_t) override { MayNotUse("AddAt"); }
+   void  AddAtAndExpand(TObject *, Int_t) override { MayNotUse("AddAtAndExpand"); }
+   Int_t AddAtFree(TObject *) override
+   {
+      MayNotUse("AddAtFree");
+      return 0;
+   }
    void             AddAfter(const TObject *, TObject *) override { MayNotUse("AddAfter"); }
    void             AddBefore(const TObject *, TObject *) override { MayNotUse("AddBefore"); }
    void             BypassStreamer(Bool_t bypass=kTRUE);
@@ -70,15 +74,15 @@ public:
    void             AbsorbObjects(TClonesArray *tc);
    void             AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2);
    void             MultiSort(Int_t nTCs, TClonesArray** tcs, Int_t upto = kMaxInt);
-   TObject *RemoveAt(Int_t idx) override;
-   TObject *Remove(TObject *obj) override;
-   void     RemoveRange(Int_t idx1, Int_t idx2) override;
-   void     Sort(Int_t upto = kMaxInt) override;
+   TObject *        RemoveAt(Int_t idx) override;
+   TObject *        Remove(TObject *obj) override;
+   void             RemoveRange(Int_t idx1, Int_t idx2) override;
+   void             Sort(Int_t upto = kMaxInt) override;
 
    TObject         *New(Int_t idx);
    TObject         *AddrAt(Int_t idx);
-   TObject         *&operator[](Int_t idx) override;
-   TObject         *operator[](Int_t idx) const override;
+   TObject *&       operator[](Int_t idx) override;
+   TObject *        operator[](Int_t idx) const override;
 
    ClassDefOverride(TClonesArray, 4) // An array of clone objects
 };

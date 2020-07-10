@@ -27,11 +27,10 @@ public:
    TPyMultiGenFunction( PyObject* self = 0 );
    ~TPyMultiGenFunction() override;
 
-// Math::IMultiGenFunction implementation
-   ROOT::Math::IBaseFunctionMultiDim* Clone() const override
-      { return new TPyMultiGenFunction( fPySelf ); }
-   unsigned int NDim() const override;
-   double DoEval( const double* x ) const override;
+   // Math::IMultiGenFunction implementation
+   ROOT::Math::IBaseFunctionMultiDim *Clone() const override { return new TPyMultiGenFunction(fPySelf); }
+   unsigned int                       NDim() const override;
+   double                             DoEval(const double *x) const override;
 
    ClassDef( TPyMultiGenFunction, 1 );   //Python for Math::IMultiGenFunction equivalent
 
@@ -51,15 +50,14 @@ public:
    TPyMultiGradFunction( PyObject* self = 0 );
    ~TPyMultiGradFunction() override;
 
-// Math::IMultiGenFunction implementation
-   ROOT::Math::IBaseFunctionMultiDim* Clone() const override
-      { return new TPyMultiGradFunction( fPySelf ); }
-   unsigned int NDim() const override;
-   double DoEval( const double* x ) const override;
+   // Math::IMultiGenFunction implementation
+   ROOT::Math::IBaseFunctionMultiDim *Clone() const override { return new TPyMultiGradFunction(fPySelf); }
+   unsigned int                       NDim() const override;
+   double                             DoEval(const double *x) const override;
 
-   void Gradient( const double* x, double* grad ) const override;
-   void FdF( const double* x, double& f, double* df ) const override;
-   double DoDerivative( const double * x, unsigned int icoord ) const override;
+   void   Gradient(const double *x, double *grad) const override;
+   void   FdF(const double *x, double &f, double *df) const override;
+   double DoDerivative(const double *x, unsigned int icoord) const override;
 
    ClassDef( TPyMultiGradFunction, 1 );   //Python for Math::IMultiGradFunction equivalent
 

@@ -34,16 +34,16 @@ private:
 
 public:
    TVirtualHistPainter() { }
-   ~TVirtualHistPainter() override { }
-   Int_t      DistancetoPrimitive(Int_t px, Int_t py) override = 0;
+   ~TVirtualHistPainter() override {}
+   Int_t              DistancetoPrimitive(Int_t px, Int_t py) override = 0;
    virtual void       DrawPanel() = 0;
-   void       ExecuteEvent(Int_t event, Int_t px, Int_t py) override = 0;
+   void               ExecuteEvent(Int_t event, Int_t px, Int_t py) override = 0;
    virtual TList     *GetContourList(Double_t contour) const = 0;
-   char      *GetObjectInfo(Int_t px, Int_t py) const override = 0;
+   char *             GetObjectInfo(Int_t px, Int_t py) const override = 0;
    virtual TList     *GetStack() const = 0;
    virtual Bool_t     IsInside(Int_t x, Int_t y) = 0;
    virtual Bool_t     IsInside(Double_t x, Double_t y) = 0;
-   void       Paint(Option_t *option="") override = 0;
+   void               Paint(Option_t *option = "") override = 0;
    virtual void       PaintStat(Int_t dostat, TF1 *fit) = 0;
    virtual void       ProcessMessage(const char *mess, const TObject *obj) = 0;
    virtual void       SetHighlight() = 0;

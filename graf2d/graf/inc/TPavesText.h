@@ -26,10 +26,10 @@ public:
    TPavesText(const TPavesText &pavestext);
    ~TPavesText() override;
 
-   void  Draw(Option_t *option="") override;
+   void          Draw(Option_t *option = "") override;
    virtual Int_t GetNpaves() {return fNpaves;}
-   void  Paint(Option_t *option="") override;
-   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void          Paint(Option_t *option = "") override;
+   void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void  SetNpaves(Int_t npaves=5) {fNpaves=npaves;} // *MENU*
 
    ClassDef(TPavesText,1)  //Stacked Paves with text strings

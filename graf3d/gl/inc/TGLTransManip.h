@@ -33,8 +33,8 @@ public:
    TGLTransManip(TGLPhysicalShape * shape);
    ~TGLTransManip() override;
 
-   void   Draw(const TGLCamera & camera) const override;
-   Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera) override;
+   void   Draw(const TGLCamera &camera) const override;
+   Bool_t HandleMotion(const Event_t &event, const TGLCamera &camera) override;
 
    ClassDef(TGLTransManip,0) // GL translation manipulator widget
 };

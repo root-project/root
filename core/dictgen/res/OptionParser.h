@@ -1422,7 +1422,7 @@ public:
   {
   }
 
-  bool perform(Option&) override
+  bool perform(Option &) override
   {
     if (*buffer_max == 0x7fffffff)
       return false; // overflow protection: don't accept number of options that doesn't fit signed int
@@ -1462,7 +1462,7 @@ public:
     parser.op_count = bufidx;
   }
 
-  bool perform(Option& option) override
+  bool perform(Option &option) override
   {
     if (bufmax < 0 || parser.op_count < bufmax)
     {
@@ -1482,7 +1482,7 @@ public:
     return true; // NOTE: an option that is discarded because of a full buffer is not fatal
   }
 
-  bool finished(int numargs, const char** args) override
+  bool finished(int numargs, const char **args) override
   {
     // only overwrite non-option argument list if there's at least 1
     // new non-option argument. Otherwise we keep the old list. This
@@ -1734,10 +1734,7 @@ struct PrintUsageImplementation
   {
     Function* write;
 
-    void operator()(const char* str, int size) override
-    {
-      (*write)(str, size);
-    }
+    void operator()(const char *str, int size) override { (*write)(str, size); }
 
     FunctionWriter(Function* w) :
         write(w)
@@ -1755,10 +1752,7 @@ struct PrintUsageImplementation
   {
     OStream& ostream;
 
-    void operator()(const char* str, int size) override
-    {
-      ostream.write(str, size);
-    }
+    void operator()(const char *str, int size) override { ostream.write(str, size); }
 
     OStreamWriter(OStream& o) :
         ostream(o)
@@ -1776,10 +1770,7 @@ struct PrintUsageImplementation
   {
     const Temporary& userstream;
 
-    void operator()(const char* str, int size) override
-    {
-      userstream.write(str, size);
-    }
+    void operator()(const char *str, int size) override { userstream.write(str, size); }
 
     TemporaryWriter(const Temporary& u) :
         userstream(u)
@@ -1799,10 +1790,7 @@ struct PrintUsageImplementation
     Syscall* write;
     int fd;
 
-    void operator()(const char* str, int size) override
-    {
-      (*write)(fd, str, size);
-    }
+    void operator()(const char *str, int size) override { (*write)(fd, str, size); }
 
     SyscallWriter(Syscall* w, int f) :
         write(w), fd(f)
@@ -1820,10 +1808,7 @@ struct PrintUsageImplementation
     Function* fwrite;
     Stream* stream;
 
-    void operator()(const char* str, int size) override
-    {
-      (*fwrite)(str, size, 1, stream);
-    }
+    void operator()(const char *str, int size) override { (*fwrite)(str, size, 1, stream); }
 
     StreamWriter(Function* w, Stream* s) :
         fwrite(w), stream(s)

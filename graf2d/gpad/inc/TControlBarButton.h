@@ -25,7 +25,7 @@ public:
 
    TControlBarButton();
    TControlBarButton(const char *label, const char *action="", const char *hint="", const char *type="button");
-   ~TControlBarButton() override { }
+   ~TControlBarButton() override {}
 
    virtual void        Create() { }
    virtual void        Action();

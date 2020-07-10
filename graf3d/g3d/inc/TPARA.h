@@ -33,7 +33,7 @@ protected:
    Float_t fTheta;  // polar angle from the centre of the low z to the high z
    Float_t fPhi;    // polar angle from the centre of the low z to the high z
 
-   void    SetPoints(Double_t *points) const override;
+   void SetPoints(Double_t *points) const override;
 
 public:
    TPARA();

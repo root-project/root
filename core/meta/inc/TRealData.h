@@ -46,10 +46,10 @@ public:
 
    TRealData();
    TRealData(const char *name, Long_t offset, TDataMember *datamember);
-       ~TRealData() override;
+   ~TRealData() override;
 
    void                AdoptStreamer(TMemberStreamer *p);
-   const char *GetName() const override {return fName.Data();}
+   const char *        GetName() const override { return fName.Data(); }
    TDataMember        *GetDataMember() const {return fDataMember;}
    TMemberStreamer    *GetStreamer() const;
    Long_t              GetThisOffset() const {return fThisOffset;}

@@ -45,17 +45,17 @@ public:
    TBranchRef();
    TBranchRef(TTree *tree);
    ~TBranchRef() override;
-   void    Clear(Option_t *option="") override;
+   void            Clear(Option_t *option = "") override;
    TRefTable      *GetRefTable() const {return fRefTable;}
-   Bool_t  Notify() override;
-   void    Print(Option_t *option="") const override;
-   void    Reset(Option_t *option="") override;
-   void    ResetAfterMerge(TFileMergeInfo *) override;
+   Bool_t          Notify() override;
+   void            Print(Option_t *option = "") const override;
+   void            Reset(Option_t *option = "") override;
+   void            ResetAfterMerge(TFileMergeInfo *) override;
    virtual Int_t   SetParent(const TObject* obj, Int_t branchID);
    virtual void    SetRequestedEntry(Long64_t entry) {fRequestedEntry = entry;}
 
 private:
-   Int_t   FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
+   Int_t FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
    ClassDefOverride(TBranchRef, 1); // to support referenced objects on other branches
 };

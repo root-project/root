@@ -45,7 +45,7 @@ public:
    Double_t            *GetPositionX() const {return fPositionX;}
    Double_t            *GetPositionY() const {return fPositionY;}
    Double_t            *GetPositionZ() const {return fPositionZ;}
-   void        Print(Option_t *option="") const override;
+   void                 Print(Option_t *option = "") const override;
    virtual Int_t       Search(const TH1 *hist, Double_t sigma=2, Option_t *option="goff", Double_t threshold=0.05);
    Int_t               SearchFast(const Double_t ***source, Double_t ***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez, Double_t sigma, Double_t threshold, Bool_t markov, Int_t averWindow);
    Int_t               SearchHighRes(const Double_t ***source,Double_t ***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez, Double_t sigma, Double_t threshold, Bool_t backgroundRemove,Int_t deconIterations, Bool_t markov, Int_t averWindow);

@@ -109,7 +109,7 @@ protected:
 
    TDSetElement  *CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num);
    Long64_t       GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
-   Bool_t HandleTimer(TTimer *timer) override;
+   Bool_t         HandleTimer(TTimer *timer) override;
 
 public:
    enum EStatusBits { kIsInitializing = BIT(16), kIsDone = BIT(17), kIsTree = BIT(18) };
@@ -165,7 +165,7 @@ protected:
    TProofProgressStatus *fStatus; // status as of the last finished packet
 
 public:
-   const char *GetName() const override { return fWrkFQDN.Data(); }
+   const char *                  GetName() const override { return fWrkFQDN.Data(); }
    const char *GetOrdinal() const { return fSlave->GetOrdinal(); }
    Long64_t    GetEntriesProcessed() const { return fStatus?fStatus->GetEntries():-1; }
    Double_t    GetProcTime() const { return fStatus?fStatus->GetProcTime():-1; }

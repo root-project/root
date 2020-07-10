@@ -188,77 +188,84 @@ public:
    typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
 
                      TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);
-             ~TROOT() override;
-   void              AddClass(TClass *cl);
-   void              AddClassGenerator(TClassGenerator *gen);
-   void      Append(TObject *obj, Bool_t replace = kFALSE) override;
-   void              Browse(TBrowser *b) override;
-   Bool_t            ClassSaved(TClass *cl);
-   void              CloseFiles();
-   void              EndOfProcessCleanups();
-   TObject  *FindObject(const char *name) const override;
-   TObject  *FindObject(const TObject *obj) const override;
-   TObject  *FindObjectAny(const char *name) const override;
-   TObject  *FindObjectAnyFile(const char *name) const override;
-   TObject          *FindSpecialObject(const char *name, void *&where);
-   const char       *FindObjectClassName(const char *name) const;
-   const char       *FindObjectPathName(const TObject *obj) const;
-   TClass           *FindSTLClass(const char *name, Bool_t load, Bool_t silent = kFALSE) const;
-   void              ForceStyle(Bool_t force = kTRUE) { fForceStyle = force; }
-   Bool_t            FromPopUp() const { return fFromPopUp; }
-   TPluginManager   *GetPluginManager() const { return fPluginManager; }
-   TApplication     *GetApplication() const { return fApplication; }
-   TInterpreter     *GetInterpreter() const { return fInterpreter; }
-   TClass           *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
-   TClass           *GetClass(const std::type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
-   TColor           *GetColor(Int_t color) const;
-   const char       *GetConfigOptions() const { return fConfigOptions; }
-   const char       *GetConfigFeatures() const { return fConfigFeatures; }
-   const char       *GetCutClassName() const { return fCutClassName; }
-   const char       *GetDefCanvasName() const { return fDefCanvasName; }
-   Bool_t            GetEditHistograms() const { return fEditHistograms; }
-   Int_t             GetEditorMode() const { return fEditorMode; }
-   Bool_t            GetForceStyle() const { return fForceStyle; }
-   Int_t             GetBuiltDate() const { return fBuiltDate; }
-   Int_t             GetBuiltTime() const { return fBuiltTime; }
-   const char       *GetGitCommit() const { return fGitCommit; }
-   const char       *GetGitBranch() const { return fGitBranch; }
-   const char       *GetGitDate();
-   Int_t             GetVersionDate() const { return fVersionDate; }
-   Int_t             GetVersionTime() const { return fVersionTime; }
-   Int_t             GetVersionInt() const { return fVersionInt; }
-   Int_t             GetVersionCode() const { return fVersionCode; }
-   const char       *GetVersion() const { return fVersion; }
-   TCollection      *GetListOfClasses() const { return fClasses; }
-   TSeqCollection   *GetListOfColors() const { return fColors; }
-   TCollection      *GetListOfTypes(Bool_t load = kFALSE);
-   TCollection      *GetListOfGlobals(Bool_t load = kFALSE);
-   TCollection      *GetListOfGlobalFunctions(Bool_t load = kFALSE);
-   TSeqCollection   *GetListOfClosedObjects() const { return fClosedObjects; }
-   TSeqCollection   *GetListOfFiles() const       { return fFiles; }
-   TSeqCollection   *GetListOfMappedFiles() const { return fMappedFiles; }
-   TSeqCollection   *GetListOfSockets() const     { return fSockets; }
-   TSeqCollection   *GetListOfCanvases() const    { return fCanvases; }
-   TSeqCollection   *GetListOfStyles() const      { return fStyles; }
-   TCollection      *GetListOfFunctions() const   { return fFunctions; }
-   TCollection      *GetListOfFunctionOverloads(const char* name) const;
-   TSeqCollection   *GetListOfGeometries() const  { return fGeometries; }
-   TSeqCollection   *GetListOfBrowsers() const    { return fBrowsers; }
-   TSeqCollection   *GetListOfSpecials() const    { return fSpecials; }
-   TSeqCollection   *GetListOfTasks() const       { return fTasks; }
-   TSeqCollection   *GetListOfCleanups() const    { return fCleanups; }
-   TSeqCollection   *GetListOfStreamerInfo() const { return fStreamerInfo; }
-   TSeqCollection   *GetListOfMessageHandlers() const { return fMessageHandlers; }
-   TCollection      *GetListOfClassGenerators() const { return fClassGenerators; }
-   TSeqCollection   *GetListOfSecContexts() const { return fSecContexts; }
-   TSeqCollection   *GetListOfProofs() const { return fProofs; }
-   TSeqCollection   *GetClipboard() const { return fClipboard; }
-   TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
-   TCollection      *GetListOfEnums(Bool_t load = kFALSE);
-   TCollection      *GetListOfFunctionTemplates();
-   TList            *GetListOfBrowsables() const { return fBrowsables; }
-   TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
-   TFile            *GetFile() const override { if (gDirectory != this) return gDirectory->GetFile(); else return 0;}
+                     ~TROOT() override;
+                     void            AddClass(TClass *cl);
+                     void            AddClassGenerator(TClassGenerator *gen);
+                     void            Append(TObject *obj, Bool_t replace = kFALSE) override;
+                     void            Browse(TBrowser *b) override;
+                     Bool_t          ClassSaved(TClass *cl);
+                     void            CloseFiles();
+                     void            EndOfProcessCleanups();
+                     TObject *       FindObject(const char *name) const override;
+                     TObject *       FindObject(const TObject *obj) const override;
+                     TObject *       FindObjectAny(const char *name) const override;
+                     TObject *       FindObjectAnyFile(const char *name) const override;
+                     TObject *       FindSpecialObject(const char *name, void *&where);
+                     const char *    FindObjectClassName(const char *name) const;
+                     const char *    FindObjectPathName(const TObject *obj) const;
+                     TClass *        FindSTLClass(const char *name, Bool_t load, Bool_t silent = kFALSE) const;
+                     void            ForceStyle(Bool_t force = kTRUE) { fForceStyle = force; }
+                     Bool_t          FromPopUp() const { return fFromPopUp; }
+                     TPluginManager *GetPluginManager() const { return fPluginManager; }
+                     TApplication *  GetApplication() const { return fApplication; }
+                     TInterpreter *  GetInterpreter() const { return fInterpreter; }
+                     TClass *        GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
+                     TClass *
+                     GetClass(const std::type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
+                     TColor *        GetColor(Int_t color) const;
+                     const char *    GetConfigOptions() const { return fConfigOptions; }
+                     const char *    GetConfigFeatures() const { return fConfigFeatures; }
+                     const char *    GetCutClassName() const { return fCutClassName; }
+                     const char *    GetDefCanvasName() const { return fDefCanvasName; }
+                     Bool_t          GetEditHistograms() const { return fEditHistograms; }
+                     Int_t           GetEditorMode() const { return fEditorMode; }
+                     Bool_t          GetForceStyle() const { return fForceStyle; }
+                     Int_t           GetBuiltDate() const { return fBuiltDate; }
+                     Int_t           GetBuiltTime() const { return fBuiltTime; }
+                     const char *    GetGitCommit() const { return fGitCommit; }
+                     const char *    GetGitBranch() const { return fGitBranch; }
+                     const char *    GetGitDate();
+                     Int_t           GetVersionDate() const { return fVersionDate; }
+                     Int_t           GetVersionTime() const { return fVersionTime; }
+                     Int_t           GetVersionInt() const { return fVersionInt; }
+                     Int_t           GetVersionCode() const { return fVersionCode; }
+                     const char *    GetVersion() const { return fVersion; }
+                     TCollection *   GetListOfClasses() const { return fClasses; }
+                     TSeqCollection *GetListOfColors() const { return fColors; }
+                     TCollection *   GetListOfTypes(Bool_t load = kFALSE);
+                     TCollection *   GetListOfGlobals(Bool_t load = kFALSE);
+                     TCollection *   GetListOfGlobalFunctions(Bool_t load = kFALSE);
+                     TSeqCollection *GetListOfClosedObjects() const { return fClosedObjects; }
+                     TSeqCollection *GetListOfFiles() const { return fFiles; }
+                     TSeqCollection *GetListOfMappedFiles() const { return fMappedFiles; }
+                     TSeqCollection *GetListOfSockets() const { return fSockets; }
+                     TSeqCollection *GetListOfCanvases() const { return fCanvases; }
+                     TSeqCollection *GetListOfStyles() const { return fStyles; }
+                     TCollection *   GetListOfFunctions() const { return fFunctions; }
+                     TCollection *   GetListOfFunctionOverloads(const char *name) const;
+                     TSeqCollection *GetListOfGeometries() const { return fGeometries; }
+                     TSeqCollection *GetListOfBrowsers() const { return fBrowsers; }
+                     TSeqCollection *GetListOfSpecials() const { return fSpecials; }
+                     TSeqCollection *GetListOfTasks() const { return fTasks; }
+                     TSeqCollection *GetListOfCleanups() const { return fCleanups; }
+                     TSeqCollection *GetListOfStreamerInfo() const { return fStreamerInfo; }
+                     TSeqCollection *GetListOfMessageHandlers() const { return fMessageHandlers; }
+                     TCollection *   GetListOfClassGenerators() const { return fClassGenerators; }
+                     TSeqCollection *GetListOfSecContexts() const { return fSecContexts; }
+                     TSeqCollection *GetListOfProofs() const { return fProofs; }
+                     TSeqCollection *GetClipboard() const { return fClipboard; }
+                     TSeqCollection *GetListOfDataSets() const { return fDataSets; }
+                     TCollection *   GetListOfEnums(Bool_t load = kFALSE);
+                     TCollection *   GetListOfFunctionTemplates();
+                     TList *         GetListOfBrowsables() const { return fBrowsables; }
+                     TDataType *     GetType(const char *name, Bool_t load = kFALSE) const;
+                     TFile *         GetFile() const override
+                     {
+                        if (gDirectory != this)
+                           return gDirectory->GetFile();
+                        else
+                           return 0;
+                     }
    TFile            *GetFile(const char *name) const;
    TFunctionTemplate*GetFunctionTemplate(const char *name);
    TStyle           *GetStyle(const char *name) const;
@@ -310,7 +317,7 @@ public:
                                     const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                                     const char** classesHeaders,
                                     bool hasCxxModule = false);
-   TObject          *Remove(TObject*) override;
+   TObject *         Remove(TObject *) override;
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
    void              SaveContext();

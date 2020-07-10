@@ -58,9 +58,9 @@ public:
    TPackMgr(const char *dir, const char *key = "L0");
    ~TPackMgr() override;
 
-   const char       *GetName() const override { return fName.Data(); }
-   void              SetName(const char *name) override { fName = name; }
-   const char       *GetTitle() const override { return GetDir(); }
+   const char *GetName() const override { return fName.Data(); }
+   void        SetName(const char *name) override { fName = name; }
+   const char *GetTitle() const override { return GetDir(); }
 
    TLockPath        *GetLock() { return &fLock; }
 

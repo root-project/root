@@ -51,11 +51,10 @@ public:
    void SetNumberPoints(int num);
 
    /** Set the desired relative Error. */
-   void SetRelTolerance (double) override;
+   void SetRelTolerance(double) override;
 
    /** This method is not implemented. */
-   void SetAbsTolerance (double) override;
-
+   void SetAbsTolerance(double) override;
 
    /** Returns the arrays x and w containing the abscissa and weight of
        the Gauss-Legendre n-point quadrature formula.
@@ -73,12 +72,11 @@ public:
    */
    int NEval() const override { return fNum; }
 
-
    ///  get the option used for the integration
    ROOT::Math::IntegratorOneDimOptions Options() const override;
 
    // set the options
-   void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt) override;
+   void SetOptions(const ROOT::Math::IntegratorOneDimOptions &opt) override;
 
 private:
 
@@ -86,7 +84,7 @@ private:
       Integration surrugate method. Return integral of passed function in  interval [a,b]
       Reimplement method of GaussIntegrator using CalcGaussLegendreSamplingPoints
    */
-   double DoIntegral (double a, double b, const IGenFunction* func) override;
+   double DoIntegral(double a, double b, const IGenFunction *func) override;
 
    /**
       Type: unsafe but fast interface filling the arrays x and w (static method)

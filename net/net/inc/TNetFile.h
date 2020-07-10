@@ -64,7 +64,7 @@ public:
    TNetFile() : fEndpointUrl(), fUser(), fSocket(0), fProtocol(0), fErrorCode(0), fNetopt(0) { }
    ~TNetFile() override;
 
-   void    Close(Option_t *option="") override;  // *MENU*
+   void    Close(Option_t *option = "") override; // *MENU*
    void    Flush() override;
    Int_t   GetErrorCode() const { return fErrorCode; }
    Bool_t  IsOpen() const override;
@@ -72,7 +72,7 @@ public:
    Int_t   ReOpen(Option_t *mode) override;
    Bool_t  ReadBuffer(char *buf, Int_t len) override;
    Bool_t  ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
-   Bool_t  ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf) override;
+   Bool_t  ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf) override;
    Bool_t  WriteBuffer(const char *buf, Int_t len) override;
    void    Seek(Long64_t offset, ERelativeTo pos = kBeg) override;
 
@@ -96,7 +96,7 @@ private:
    TNetSystem(const TNetSystem&);             // not implemented
    TNetSystem& operator=(const TNetSystem&);  // not implemented
 
-   void       *GetDirPtr() const override { return fDirp; }
+   void *GetDirPtr() const override { return fDirp; }
 
 protected:
    Bool_t      fIsLocal;     // TRUE if the path points to this host
@@ -112,7 +112,7 @@ public:
 
    Bool_t      ConsistentWith(const char *path, void *dirptr) override;
    Int_t       MakeDirectory(const char *name) override;
-   void       *OpenDirectory(const char *name) override;
+   void *      OpenDirectory(const char *name) override;
    void        FreeDirectory(void *dirp = 0) override;
    const char *GetDirEntry(void *dirp = 0) override;
    Int_t       GetPathInfo(const char *path, FileStat_t &buf) override;

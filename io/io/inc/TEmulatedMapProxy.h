@@ -26,7 +26,7 @@ private:
 
 public:
    // Virtual copy constructor
-   TVirtualCollectionProxy* Generate() const override;
+   TVirtualCollectionProxy *Generate() const override;
 
    // Copy constructor
    TEmulatedMapProxy(const TEmulatedMapProxy& copy);
@@ -51,9 +51,7 @@ public:
    void Streamer(TBuffer &refBuffer) override;
 
    // Streamer I/O overload
-   void Streamer(TBuffer &buff, void *pObj, int siz) override {
-      TEmulatedCollectionProxy::Streamer(buff,pObj,siz);
-   }
+   void Streamer(TBuffer &buff, void *pObj, int siz) override { TEmulatedCollectionProxy::Streamer(buff, pObj, siz); }
 };
 
 #endif

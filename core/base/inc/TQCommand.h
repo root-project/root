@@ -44,7 +44,7 @@ protected:
 
    virtual void Init(const char *cl, void *object,
                      const char *redo, const char *undo);
-   void PrintCollectionHeader(Option_t* option) const override;
+   void         PrintCollectionHeader(Option_t *option) const override;
 
 private:
    TQCommand &operator=(const TQCommand &); // Not yet implemented.
@@ -66,7 +66,7 @@ public:
    virtual Long64_t Merge(TCollection*,TFileMergeInfo*);
    virtual Bool_t CanCompress(TQCommand *c) const;
    virtual void   Compress(TQCommand *c);
-   Bool_t IsEqual(const TObject* obj) const override;
+   Bool_t           IsEqual(const TObject *obj) const override;
    virtual Bool_t IsSetter() const;
    virtual Bool_t CanRedo() const;
    virtual Bool_t CanUndo() const;
@@ -86,12 +86,12 @@ public:
    Bool_t         IsExecuting() const;
    virtual void   SetName(const char *name);
    virtual void   SetTitle(const char *title);
-   void   ls(Option_t *option="") const override;
-   void   Add(TObject *obj, Option_t *opt) override;
-   void   Add(TObject *obj) override { Add(obj, 0); }
-   void   Delete(Option_t *option="") override;
-   const char *GetName() const override;
-   const char *GetTitle() const override;
+   void             ls(Option_t *option = "") const override;
+   void             Add(TObject *obj, Option_t *opt) override;
+   void             Add(TObject *obj) override { Add(obj, 0); }
+   void             Delete(Option_t *option = "") override;
+   const char *     GetName() const override;
+   const char *     GetTitle() const override;
 
    static TQCommand *GetCommand();
 
@@ -109,18 +109,18 @@ protected:
    TList      *fLogBook; // listing of all actions during execution
    Bool_t      fLogging; // kTRUE if logging is ON
 
-   void PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const override;
+   void PrintCollectionEntry(TObject *entry, Option_t *option, Int_t recurse) const override;
 
 public:
    TQUndoManager();
    ~TQUndoManager() override;
 
-   void   Add(TObject *obj, Option_t *opt) override;
-   void   Add(TObject *obj) override { Add(obj, 0); }
-   void   Redo(Option_t *option="") override;
-   void   Undo(Option_t *option="") override;
-   Bool_t CanRedo() const override;
-   Bool_t CanUndo() const override;
+   void           Add(TObject *obj, Option_t *opt) override;
+   void           Add(TObject *obj) override { Add(obj, 0); }
+   void           Redo(Option_t *option = "") override;
+   void           Undo(Option_t *option = "") override;
+   Bool_t         CanRedo() const override;
+   Bool_t         CanUndo() const override;
    virtual void   SetLogging(Bool_t on = kTRUE);
    Bool_t         IsLogging() const;
    TQCommand     *GetCurrent() const;
@@ -128,7 +128,7 @@ public:
    UInt_t         GetLimit() const;
    virtual void   SetLimit(UInt_t limit);
    virtual void   CurrentChanged(TQCommand *c); //*SIGNAL*
-   void   ls(Option_t *option="") const override;
+   void           ls(Option_t *option = "") const override;
 
    ClassDef(TQUndoManager,0) // recorder of operations for undo and redo
 };

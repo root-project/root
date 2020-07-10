@@ -54,7 +54,7 @@ protected:
 
 public:
    TGrid() : fGridUrl(), fGrid(), fHost(), fUser(), fPw(), fOptions(), fPort(-1) { }
-   ~TGrid() override { }
+   ~TGrid() override {}
 
    const char    *GridUrl() const { return fGridUrl; }
    const char    *GetGrid() const { return fGrid; }

@@ -60,8 +60,8 @@ public:
 
    Double_t      GetCurrentTime();
 
-   Float_t       GetCurrentRate(Bool_t &all) override;
-   Int_t         GetActiveWorkers() override { return -1; }
+   Float_t GetCurrentRate(Bool_t &all) override;
+   Int_t   GetActiveWorkers() override { return -1; }
 
    ClassDef(TPacketizerFile,0)  //Generate work packets for parallel processing
 };

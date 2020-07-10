@@ -235,7 +235,7 @@ protected:
    void    *fSender;        //delegation object
    TString  fSenderClass;   //class name of delegation object
 
-   void       *GetSender() override { return fSender; }
+   void *      GetSender() override { return fSender; }
    const char *GetSenderClassName() const override { return fSenderClass; }
 
 private:
@@ -250,7 +250,7 @@ public:
    void SetSenderClassName(const char *sclass = "") { fSenderClass = sclass; }
 
    ClassDefOverride(TQObjSender, 0) // Used to "delegate" TQObject functionality
-                           //to interpreted classes, see also RQ_OBJECT.h
+                                    // to interpreted classes, see also RQ_OBJECT.h
 };
 
 

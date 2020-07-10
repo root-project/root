@@ -105,43 +105,23 @@ namespace ROOT {
          /**
             clone
          */
-         BaseFunc *Clone() const override
-         {
-            return new MultiDimParamFunctionAdapter(*this);
-         }
+         BaseFunc *Clone() const override { return new MultiDimParamFunctionAdapter(*this); }
 
       public:
 
          // methods required by interface
-         const double *Parameters() const override
-         {
-            return  fFunc->Parameters();
-         }
+         const double *Parameters() const override { return fFunc->Parameters(); }
 
-         void SetParameters(const double *p) override
-         {
-            fFunc->SetParameters(p);
-         }
+         void SetParameters(const double *p) override { fFunc->SetParameters(p); }
 
-         unsigned int NPar() const override
-         {
-            return fFunc->NPar();
-         }
+         unsigned int NPar() const override { return fFunc->NPar(); }
 
-         unsigned int NDim() const override
-         {
-            return 1;
-         }
-
+         unsigned int NDim() const override { return 1; }
 
       private:
 
          /// needed by the interface
-         double DoEvalPar(const double *x, const double *p) const override
-         {
-            return (*fFunc)(*x, p);
-         }
-
+         double DoEvalPar(const double *x, const double *p) const override { return (*fFunc)(*x, p); }
 
       private:
 
@@ -236,37 +216,22 @@ namespace ROOT {
          /**
             clone
          */
-         BaseFunc *Clone() const override
-         {
-            return new MultiDimParamGradFunctionAdapter(*this);
-         }
+         BaseFunc *Clone() const override { return new MultiDimParamGradFunctionAdapter(*this); }
 
       public:
 
          // methods required by interface
-         const double *Parameters() const override
-         {
-            return  fFunc->Parameters();
-         }
+         const double *Parameters() const override { return fFunc->Parameters(); }
 
-         void SetParameters(const double *p) override
-         {
-            fFunc->SetParameters(p);
-         }
+         void SetParameters(const double *p) override { fFunc->SetParameters(p); }
 
-         unsigned int NPar() const override
-         {
-            return fFunc->NPar();
-         }
+         unsigned int NPar() const override { return fFunc->NPar(); }
 
-         unsigned int NDim() const override
-         {
-            return 1;
-         }
+         unsigned int NDim() const override { return 1; }
 
-//    void Gradient(const double *x, double * grad) const {
-//       grad[0] = fFunc->Derivative( *x);
-//    }
+         //    void Gradient(const double *x, double * grad) const {
+         //       grad[0] = fFunc->Derivative( *x);
+         //    }
 
          void ParameterGradient(const double *x, const double *p, double *grad) const override
          {
@@ -278,14 +243,11 @@ namespace ROOT {
       private:
 
          /// functions needed by interface
-         double DoEvalPar(const double *x, const double *p) const override
-         {
-            return (*fFunc)(*x, p);
-         }
+         double DoEvalPar(const double *x, const double *p) const override { return (*fFunc)(*x, p); }
 
-//    double DoDerivative(const double * x, unsigned int ) const {
-//       return fFunc->Derivative(*x);
-//    }
+         //    double DoDerivative(const double * x, unsigned int ) const {
+         //       return fFunc->Derivative(*x);
+         //    }
 
          double DoParameterDerivative(const double *x, const double *p, unsigned int ipar) const override
          {

@@ -106,10 +106,10 @@ private:
 public:
    TEventIterUnit();
    TEventIterUnit(TDSet *dset, TSelector *sel, Long64_t num);
-   ~TEventIterUnit() override { }
+   ~TEventIterUnit() override {}
 
-   Long64_t GetCacheSize() override {return -1;}
-   Int_t    GetLearnEntries() override {return -1;}
+   Long64_t GetCacheSize() override { return -1; }
+   Int_t    GetLearnEntries() override { return -1; }
    Long64_t GetNextEvent() override;
    Int_t    GetNextPacket(Long64_t &first, Long64_t &num) override;
 
@@ -135,8 +135,8 @@ public:
    TEventIterObj(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
    ~TEventIterObj() override;
 
-   Long64_t GetCacheSize() override {return -1;}
-   Int_t    GetLearnEntries() override {return -1;}
+   Long64_t GetCacheSize() override { return -1; }
+   Int_t    GetLearnEntries() override { return -1; }
    Long64_t GetNextEvent() override;
    Int_t    GetNextPacket(Long64_t &first, Long64_t &num) override;
 

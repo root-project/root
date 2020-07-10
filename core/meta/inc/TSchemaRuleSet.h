@@ -61,13 +61,12 @@ namespace Detail {
       void                RemoveRules( TObjArray* rules );
       void                SetClass( TClass* cls );
 
-      void                ls(Option_t *option="") const override;
+      void                ls(Option_t *option = "") const override;
       void                AsString(TString &out) const;
 
       ClassDefOverride(TSchemaRuleSet, 1)
 
-   private:
-      TObjArray* fPersistentRules; //  Array of the rules that will be embeded in the file
+         private : TObjArray *fPersistentRules; //  Array of the rules that will be embeded in the file
       TObjArray* fRemainingRules;  //! Array of non-persisten rules - just for cleanup purposes - owns the elements
       TObjArray* fAllRules;        //! Array of all rules
       TClassRef  fClass;           //! Target class pointer (for consistency checking)

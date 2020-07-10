@@ -41,12 +41,12 @@ public:
    TText &operator=(const TText &src);
 
    void             Copy(TObject &text) const override;
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
    virtual TText   *DrawText(Double_t x, Double_t y, const char *text);
    virtual TText   *DrawText(Double_t x, Double_t y, const wchar_t *text);
    virtual TText   *DrawTextNDC(Double_t x, Double_t y, const char *text);
    virtual TText   *DrawTextNDC(Double_t x, Double_t y, const wchar_t *text);
-   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void             ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
 
    virtual void     GetControlBox(Int_t x, Int_t y, Double_t theta,
                                   Int_t cBoxX[4], Int_t cBoxY[4]);
@@ -60,15 +60,15 @@ public:
    const void *     GetWcsTitle(void) const;
    Double_t         GetY() const  { return fY; }
 
-   void     ls(Option_t *option="") const override;
-   void     Paint(Option_t *option="") override;
+   void             ls(Option_t *option = "") const override;
+   void             Paint(Option_t *option = "") override;
    virtual void     PaintControlBox(Int_t x, Int_t y, Double_t theta);
    virtual void     PaintText(Double_t x, Double_t y, const char *text);
    virtual void     PaintText(Double_t x, Double_t y, const wchar_t *text);
    virtual void     PaintTextNDC(Double_t u, Double_t v, const char *text);
    virtual void     PaintTextNDC(Double_t u, Double_t v, const wchar_t *text);
-   void     Print(Option_t *option="") const override;
-   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void             Print(Option_t *option = "") const override;
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetMbTitle(const wchar_t *title=L"");
    virtual void     SetNDC(Bool_t isNDC=kTRUE);
    virtual void     SetText(Double_t x, Double_t y, const char *text) {fX=x; fY=y; SetTitle(text);} // *MENU* *ARGS={x=>fX,y=>fY,text=>fTitle}
@@ -76,15 +76,15 @@ public:
    virtual void     SetX(Double_t x) { fX = x; } // *MENU*
    virtual void     SetY(Double_t y) { fY = y; } // *MENU*
 
-   Rectangle_t  GetBBox() override;
-   TPoint       GetBBoxCenter() override;
-   void         SetBBoxCenter(const TPoint &p) override;
-   void         SetBBoxCenterX(const Int_t x) override;
-   void         SetBBoxCenterY(const Int_t y) override;
-   void         SetBBoxX1(const Int_t x) override; //Not Implemented
-   void         SetBBoxX2(const Int_t x) override; //Not Implemented
-   void         SetBBoxY1(const Int_t y) override; //Not Implemented
-   void         SetBBoxY2(const Int_t y) override; //Not Implemented
+   Rectangle_t GetBBox() override;
+   TPoint      GetBBoxCenter() override;
+   void        SetBBoxCenter(const TPoint &p) override;
+   void        SetBBoxCenterX(const Int_t x) override;
+   void        SetBBoxCenterY(const Int_t y) override;
+   void        SetBBoxX1(const Int_t x) override; // Not Implemented
+   void        SetBBoxX2(const Int_t x) override; // Not Implemented
+   void        SetBBoxY1(const Int_t y) override; // Not Implemented
+   void        SetBBoxY2(const Int_t y) override; // Not Implemented
 
    ClassDefOverride(TText, 3) // Text
 };

@@ -161,14 +161,16 @@ public:
       }
    }
 
-   Int_t FindColor(UShort_t r, UShort_t g, UShort_t b) override {
+   Int_t FindColor(UShort_t r, UShort_t g, UShort_t b) override
+   {
       Int_t ri = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)r);
       Int_t gi = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)g);
       Int_t bi = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)b);
       return fCLUT[ri][gi][bi];
    }
 
-   Int_t *GetRootColors() override {
+   Int_t *GetRootColors() override
+   {
       static Int_t *gRootColors = 0;
       if (gRootColors) return gRootColors;
 

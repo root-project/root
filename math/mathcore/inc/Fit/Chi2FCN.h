@@ -84,7 +84,7 @@ public:
    /**
       Destructor (no operations)
    */
-   ~Chi2FCN () override  {}
+   ~Chi2FCN() override {}
    /**
       Copy constructor
    */
@@ -108,31 +108,28 @@ public:
    /*
       clone the function
     */
-   BaseFunction * Clone() const override {
-      return new Chi2FCN(*this);
-   }
-
-
+   BaseFunction *Clone() const override { return new Chi2FCN(*this); }
 
    using BaseObjFunction::operator();
 
 
    /// i-th chi-square residual
-   double DataElement(const double *x, unsigned int i, double *g) const override {
+   double DataElement(const double *x, unsigned int i, double *g) const override
+   {
       if (i==0) this->UpdateNCalls();
       return FitUtil::Evaluate<T>::EvalChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
    }
 
    // need to be virtual to be instantiated
-   void Gradient(const double *x, double *g) const override {
+   void Gradient(const double *x, double *g) const override
+   {
       // evaluate the chi2 gradient
       FitUtil::Evaluate<T>::EvalChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints,
                                              fExecutionPolicy);
    }
 
    /// get type of fit method function
-    typename BaseObjFunction::Type_t Type() const override { return BaseObjFunction::kLeastSquare; }
-
+   typename BaseObjFunction::Type_t Type() const override { return BaseObjFunction::kLeastSquare; }
 
 protected:
 
@@ -144,7 +141,8 @@ private:
    /**
       Evaluation of the  function (required by interface)
     */
-   double DoEval (const double * x) const override {
+   double DoEval(const double *x) const override
+   {
       this->UpdateNCalls();
       if (BaseFCN::Data().HaveCoordErrors() || BaseFCN::Data().HaveAsymErrors())
          return FitUtil::Evaluate<T>::EvalChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
@@ -153,11 +151,11 @@ private:
    }
 
    // for derivatives
-   double  DoDerivative(const double * x, unsigned int icoord ) const override {
+   double DoDerivative(const double *x, unsigned int icoord) const override
+   {
       Gradient(x, fGrad.data());
       return fGrad[icoord];
    }
-
 
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit
 

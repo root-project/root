@@ -118,7 +118,6 @@ http://dx.doi.org/10.1016/j.chaos.2016.05.003
 
          ~MixMaxEngine() override;
 
-
          /// Get the size of the generator
          static int Size();
 

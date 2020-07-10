@@ -66,7 +66,7 @@ public:
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    ~TGeoTrapEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
    void           DoH1();
    void           DoBl1();
@@ -98,11 +98,11 @@ public:
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    ~TGeoGtraEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
    void           DoTwist();
-   void   DoApply() override;
-   void   DoUndo() override;
+   void           DoApply() override;
+   void           DoUndo() override;
 
    ClassDef(TGeoGtraEditor,0)   // TGeoTrap editor
 };

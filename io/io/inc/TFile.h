@@ -197,8 +197,8 @@ public:
    TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    ~TFile() override;
 
-           void        Close(Option_t *option="") override; // *MENU*
-           void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
+   void                Close(Option_t *option = "") override; // *MENU*
+   void                Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
    virtual Bool_t      Cp(const char *dst, Bool_t progressbar = kTRUE,UInt_t buffersize = 1000000);
    virtual TKey*       CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
    virtual TKey*       CreateKey(TDirectory* mother, const void* obj, const TClass* cl,
@@ -374,7 +374,7 @@ private:
    TFile      *GetFile() const { return fFile; }
 
 public:
-   ~TFileOpenHandle() override { }
+   ~TFileOpenHandle() override {}
 
    Bool_t      Matches(const char *name);
 

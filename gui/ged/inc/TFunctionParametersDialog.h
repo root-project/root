@@ -73,7 +73,7 @@ public:
                              Double_t rmin, Double_t rmax);
    ~TFunctionParametersDialog() override;
 
-   void  CloseWindow() override;
+   void          CloseWindow() override;
    virtual void  DoApply();
    virtual void  DoCancel();
    virtual void  DoFix(Bool_t on);

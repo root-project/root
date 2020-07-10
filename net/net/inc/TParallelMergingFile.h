@@ -49,10 +49,10 @@ public:
    TParallelMergingFile(const char *filename, Option_t *option = "", const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    ~TParallelMergingFile() override;
 
-   void   Close(Option_t *option="") override;
-           Bool_t UploadAndReset();
-   Int_t  Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) override;
-   Int_t  Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const override;
+   void   Close(Option_t *option = "") override;
+   Bool_t UploadAndReset();
+   Int_t  Write(const char *name = 0, Int_t opt = 0, Int_t bufsiz = 0) override;
+   Int_t  Write(const char *name = 0, Int_t opt = 0, Int_t bufsiz = 0) const override;
    void   WriteStreamerInfo() override;
 
    ClassDef(TParallelMergingFile, 0);  // TFile specialization that will semi-automatically upload its content to a merging server.

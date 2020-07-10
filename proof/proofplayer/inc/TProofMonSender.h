@@ -47,7 +47,7 @@ protected:
       TDSet   *fDSet;
       TDSetPlet(const char *name, TDSet *ds = 0) :
          TNamed(name, ""), fFiles(0), fMissing(0), fDSet(ds) { }
-      ~TDSetPlet() override { }
+      ~TDSetPlet() override {}
    };
 
 public:
@@ -59,24 +59,24 @@ public:
                      SetBit(kSendSummary);
                      SetBit(kSendDataSetInfo);
                      ResetBit(kSendFileInfo); }
-   ~TProofMonSender() override { }
+                   ~TProofMonSender() override {}
 
-   // This changes the send control options
-   Int_t SetSendOptions(const char *);
+                   // This changes the send control options
+                   Int_t SetSendOptions(const char *);
 
-   // Object validity
-   Bool_t IsValid() const { return (TestBit(TObject::kInvalidObject)) ? kFALSE : kTRUE; }
+                   // Object validity
+                   Bool_t IsValid() const { return (TestBit(TObject::kInvalidObject)) ? kFALSE : kTRUE; }
 
-   // Summary record
-   virtual Int_t SendSummary(TList *, const char *) = 0;
+                   // Summary record
+                   virtual Int_t SendSummary(TList *, const char *) = 0;
 
-   // Information about the dataset(s) processed
-   virtual Int_t SendDataSetInfo(TDSet *, TList *, const char *, const char *) = 0;
+                   // Information about the dataset(s) processed
+                   virtual Int_t SendDataSetInfo(TDSet *, TList *, const char *, const char *) = 0;
 
-   // Detailed information about files
-   virtual Int_t SendFileInfo(TDSet *, TList *, const char *, const char *) = 0;
+                   // Detailed information about files
+                   virtual Int_t SendFileInfo(TDSet *, TList *, const char *, const char *) = 0;
 
-   ClassDef(TProofMonSender,0); // Interface for PROOF monitoring
+                   ClassDef(TProofMonSender, 0); // Interface for PROOF monitoring
 };
 
 #endif

@@ -53,8 +53,7 @@ class TAsyncOpenHandler: public XrdCl::ResponseHandler
       // Called when a response to open arrives
       //////////////////////////////////////////////////////////////////////////
 
-      void HandleResponse(XrdCl::XRootDStatus *status,
-                                  XrdCl::AnyObject    *response) override
+      void HandleResponse(XrdCl::XRootDStatus *status, XrdCl::AnyObject *response) override
       {
          if (status->IsOK())
          {
@@ -95,8 +94,7 @@ class TAsyncReadvHandler: public XrdCl::ResponseHandler
       // Handle readv response
       //////////////////////////////////////////////////////////////////////////
 
-      void HandleResponse(XrdCl::XRootDStatus *status,
-                                  XrdCl::AnyObject    *response) override
+      void HandleResponse(XrdCl::XRootDStatus *status, XrdCl::AnyObject *response) override
       {
          fStatuses->at(fStatusIndex) = status;
          fSemaphore->Post();

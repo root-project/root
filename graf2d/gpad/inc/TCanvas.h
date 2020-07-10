@@ -111,14 +111,14 @@ public:
            Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh);
    void Destructor();
 
-   TVirtualPad      *cd(Int_t subpadnumber=0) override;
-   void      Browse(TBrowser *b) override;
-   void              Clear(Option_t *option="") override;
-   void              Close(Option_t *option="") override;
-   void      Delete(Option_t * = "") override { MayNotUse("Delete()"); }
+   TVirtualPad *     cd(Int_t subpadnumber = 0) override;
+   void              Browse(TBrowser *b) override;
+   void              Clear(Option_t *option = "") override;
+   void              Close(Option_t *option = "") override;
+   void              Delete(Option_t * = "") override { MayNotUse("Delete()"); }
    void              DisconnectWidget();  // used by TCanvasImp
-   void      Draw(Option_t *option="") override;
-   TObject  *DrawClone(Option_t *option="") const override; // *MENU*
+   void              Draw(Option_t *option = "") override;
+   TObject *         DrawClone(Option_t *option = "") const override; // *MENU*
    virtual TObject  *DrawClonePad(); // *MENU*
    virtual void      EditorBar();
    void              EmbedInto(Int_t winid, Int_t ww, Int_t wh);
@@ -134,14 +134,14 @@ public:
    Int_t             GetEventX() const override { return fEventX; }
    Int_t             GetEventY() const override { return fEventY; }
    Color_t           GetHighLightColor() const override { return fHighLightColor; }
-   TVirtualPad      *GetPadSave() const override { return fPadSave; }
+   TVirtualPad *     GetPadSave() const override { return fPadSave; }
    void              ClearPadSave() { fPadSave = 0; }
-   TObject          *GetSelected() const override {return fSelected;}
+   TObject *         GetSelected() const override { return fSelected; }
    TObject          *GetClickSelected() const {return fClickSelected;}
    Int_t             GetSelectedX() const {return fSelectedX;}
    Int_t             GetSelectedY() const {return fSelectedY;}
    Option_t         *GetSelectedOpt() const {return fSelectedOpt.Data();}
-   TVirtualPad      *GetSelectedPad() const override { return fSelectedPad; }
+   TVirtualPad *     GetSelectedPad() const override { return fSelectedPad; }
    TVirtualPad      *GetClickSelectedPad() const { return fClickSelectedPad; }
    Bool_t            GetShowEventStatus() const { return TestBit(kShowEventStatus); }
    Bool_t            GetShowToolBar() const { return TestBit(kShowToolBar); }
@@ -152,8 +152,8 @@ public:
    Size_t            GetYsizeUser() const {return fYsizeUser;}
    Size_t            GetXsizeReal() const {return fXsizeReal;}
    Size_t            GetYsizeReal() const {return fYsizeReal;}
-   Int_t             GetCanvasID() const override {return fCanvasID;}
-   TCanvasImp       *GetCanvasImp() const override {return fCanvasImp;}
+   Int_t             GetCanvasID() const override { return fCanvasID; }
+   TCanvasImp *      GetCanvasImp() const override { return fCanvasImp; }
    Int_t             GetWindowTopX();
    Int_t             GetWindowTopY();
    UInt_t            GetWindowWidth() const { return fWindowWidth; }
@@ -172,29 +172,29 @@ public:
    Bool_t            IsGrayscale();
    Bool_t            IsRetained() const override { return fRetained; }
    Bool_t            IsWeb() const;
-   void      ls(Option_t *option="") const override;
+   void              ls(Option_t *option = "") const override;
    void              MoveOpaque(Int_t set=1);
    Bool_t            OpaqueMoving() const override { return TestBit(kMoveOpaque); }
    Bool_t            OpaqueResizing() const override { return TestBit(kResizeOpaque); }
-   void      Paint(Option_t *option="") override;
-   TPad     *Pick(Int_t px, Int_t py, TObjLink *&pickobj) override { return TPad::Pick(px, py, pickobj); }
+   void              Paint(Option_t *option = "") override;
+   TPad *            Pick(Int_t px, Int_t py, TObjLink *&pickobj) override { return TPad::Pick(px, py, pickobj); }
    virtual TPad     *Pick(Int_t px, Int_t py, TObject *prevSelObj);
    virtual void      Picked(TPad *selpad, TObject *selected, Int_t event);             // *SIGNAL*
    virtual void      Highlighted(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y);    // *SIGNAL*
    virtual void      ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *selected); // *SIGNAL*
    virtual void      Selected(TVirtualPad *pad, TObject *obj, Int_t event);            // *SIGNAL*
    virtual void      Cleared(TVirtualPad *pad);                                        // *SIGNAL*
-   void      Closed() override;                                                         // *SIGNAL*
+   void              Closed() override;                                                // *SIGNAL*
    void              RaiseWindow();
    void              ResetDrawn() { fDrawn=kFALSE; }
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1);
    void              SaveSource(const char *filename="", Option_t *option="");
    void              SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   void      SetCursor(ECursor cursor) override;
-   void      SetDoubleBuffer(Int_t mode=1) override;
-   void      SetName(const char *name="") override;
-   void      SetFixedAspectRatio(Bool_t fixed = kTRUE) override;  // *TOGGLE*
+   void              SetCursor(ECursor cursor) override;
+   void              SetDoubleBuffer(Int_t mode = 1) override;
+   void              SetName(const char *name = "") override;
+   void              SetFixedAspectRatio(Bool_t fixed = kTRUE) override; // *TOGGLE*
    void              SetGrayscale(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsGrayscale
    void              SetWindowPosition(Int_t x, Int_t y);
    void              SetWindowSize(UInt_t ww, UInt_t wh);
@@ -207,18 +207,18 @@ public:
    void              SetClickSelectedPad(TPad *pad) { fClickSelectedPad = pad; }
    void              Show();
    virtual void      Size(Float_t xsizeuser=0, Float_t ysizeuser=0);
-   void              SetBatch(Bool_t batch=kTRUE) override;
+   void              SetBatch(Bool_t batch = kTRUE) override;
    static  void      SetFolder(Bool_t isfolder=kTRUE);
    void              SetPadSave(TPad *pad) {fPadSave = pad;}
    bool              SetRealAspectRatio(const Int_t axis = 1); // *MENU*
    void              SetRetained(Bool_t retained=kTRUE) { fRetained=retained;}
-   void              SetTitle(const char *title="") override;
+   void              SetTitle(const char *title = "") override;
    virtual void      ToggleEventStatus();
    virtual void      ToggleAutoExec();
    virtual void      ToggleToolBar();
    virtual void      ToggleEditor();
    virtual void      ToggleToolTips();
-   void      Update() override;
+   void              Update() override;
 
    Bool_t              UseGL() const { return fUseGL; }
    void                SetSupportGL(Bool_t support) {fUseGL = support;}

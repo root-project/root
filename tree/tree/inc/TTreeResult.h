@@ -50,11 +50,11 @@ public:
    TTreeResult(Int_t nfields);
    ~TTreeResult() override;
 
-   void        Close(Option_t *option="") override;
+   void        Close(Option_t *option = "") override;
    Int_t       GetFieldCount() override;
    const char *GetFieldName(Int_t field) override;
    TObjArray  *GetRows() const {return fResult;}
-   TSQLRow    *Next() override;
+   TSQLRow *   Next() override;
 
    ClassDefOverride(TTreeResult, 1) // TTree query result
 };

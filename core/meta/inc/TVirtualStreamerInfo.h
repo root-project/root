@@ -125,14 +125,14 @@ public:
 
    TVirtualStreamerInfo();
    TVirtualStreamerInfo(TClass * /*cl*/);
-              ~TVirtualStreamerInfo() override;
+   ~TVirtualStreamerInfo() override;
    virtual void        Build() = 0;
    virtual void        BuildCheck(TFile *file = 0) = 0;
    virtual void        BuildEmulated(TFile *file) = 0;
    virtual void        BuildOld() = 0;
    virtual Bool_t      BuildFor( const TClass *cl ) = 0;
    virtual void        CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient) const = 0;
-   void        Clear(Option_t *) override = 0;
+   void                      Clear(Option_t *) override = 0;
    virtual Bool_t      CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete, TFile *file) = 0;
    virtual void        Compile() = 0;
    virtual void        ForceWriteInfo(TFile *file, Bool_t force=kFALSE) = 0;
@@ -156,38 +156,40 @@ public:
            Bool_t      IsCompiled() const { return fIsCompiled; }
            Bool_t      IsOptimized() const { return fOptimized; }
            Int_t       IsRecovered() const { return TestBit(kRecovered); }
-   void        ls(Option_t *option="") const override = 0;
-   virtual TVirtualStreamerInfo *NewInfo(TClass *cl) = 0;
-   virtual void       *New(void *obj = 0) = 0;
-   virtual void       *NewArray(Long_t nElements, void* ary = 0) = 0;
-   virtual void        Destructor(void* p, Bool_t dtorOnly = kFALSE) = 0;
-   virtual void        DeleteArray(void* p, Bool_t dtorOnly = kFALSE) = 0;
+           void              ls(Option_t *option = "") const override = 0;
+           virtual TVirtualStreamerInfo *NewInfo(TClass *cl) = 0;
+           virtual void *                New(void *obj = 0) = 0;
+           virtual void *                NewArray(Long_t nElements, void *ary = 0) = 0;
+           virtual void                  Destructor(void *p, Bool_t dtorOnly = kFALSE) = 0;
+           virtual void                  DeleteArray(void *p, Bool_t dtorOnly = kFALSE) = 0;
 
-   virtual void        SetCheckSum(UInt_t checksum) = 0;
-   virtual void        SetClass(TClass *cl) = 0;
-   virtual void        SetClassVersion(Int_t vers) = 0;
-   static  Bool_t      SetStreamMemberWise(Bool_t enable = kTRUE);
-   virtual void        TagFile(TFile *fFile) = 0;
-   virtual void        Update(const TClass *oldClass, TClass *newClass) = 0;
+           virtual void  SetCheckSum(UInt_t checksum) = 0;
+           virtual void  SetClass(TClass *cl) = 0;
+           virtual void  SetClassVersion(Int_t vers) = 0;
+           static Bool_t SetStreamMemberWise(Bool_t enable = kTRUE);
+           virtual void  TagFile(TFile *fFile) = 0;
+           virtual void  Update(const TClass *oldClass, TClass *newClass) = 0;
 
-   static const char         *GetElementCounterStart(const char *dmTitle);
-   static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl);
+           static const char *        GetElementCounterStart(const char *dmTitle);
+           static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl);
 
-   static Bool_t       CanOptimize();
-   static Bool_t       GetStreamMemberWise();
-   static void         Optimize(Bool_t opt=kTRUE);
-   static Bool_t       CanDelete();
-   static void         SetCanDelete(Bool_t opt=kTRUE);
-   static void         SetFactory(TVirtualStreamerInfo *factory);
+           static Bool_t CanOptimize();
+           static Bool_t GetStreamMemberWise();
+           static void   Optimize(Bool_t opt = kTRUE);
+           static Bool_t CanDelete();
+           static void   SetCanDelete(Bool_t opt = kTRUE);
+           static void   SetFactory(TVirtualStreamerInfo *factory);
 
-   virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name, Bool_t silent) = 0;
-   virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name, Bool_t silent) = 0;
-   virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl ) = 0;
-   virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl ) = 0;
-   static TVirtualStreamerInfo *Factory();
+           virtual TVirtualCollectionProxy *GenEmulatedProxy(const char *class_name, Bool_t silent) = 0;
+           virtual TClassStreamer *         GenEmulatedClassStreamer(const char *class_name, Bool_t silent) = 0;
+           virtual TVirtualCollectionProxy *
+           GenExplicitProxy(const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl) = 0;
+           virtual TClassStreamer *
+           GenExplicitClassStreamer(const ::ROOT::Detail::TCollectionProxyInfo &info, TClass *cl) = 0;
+           static TVirtualStreamerInfo *Factory();
 
-   //WARNING this class version must be the same as TStreamerInfo
-   ClassDefOverride(TVirtualStreamerInfo, 6) // Abstract Interface describing Streamer information for one class
+           // WARNING this class version must be the same as TStreamerInfo
+           ClassDefOverride(TVirtualStreamerInfo, 6) // Abstract Interface describing Streamer information for one class
 };
 
 #endif

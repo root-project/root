@@ -129,9 +129,9 @@ public:
 
    void              CreateBrowser(const char *name);
    void              CloneBrowser();
-   void      CloseWindow() override;
+   void              CloseWindow() override;
    virtual void      CloseTab(Int_t id);
-   void      CloseTabs() override;
+   void              CloseTabs() override;
    void              DoTab(Int_t id);
    void              EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
    TGFrame          *GetActFrame() const { return (TGFrame *)fEditFrame; }
@@ -148,35 +148,34 @@ public:
    void              RemoveTab(Int_t pos, Int_t subpos);
    void              SetActBrowser(TBrowserImp *b) { fActBrowser = b; }
    void              ShowMenu(TGCompositeFrame *menu);
-   void      StartEmbedding(Int_t pos = kRight, Int_t subpos = -1) override;
-   void      StopEmbedding(const char *name = 0) override { StopEmbedding(name, 0); }
+   void              StartEmbedding(Int_t pos = kRight, Int_t subpos = -1) override;
+   void              StopEmbedding(const char *name = 0) override { StopEmbedding(name, 0); }
    void              StopEmbedding(const char *name, TGLayoutHints *layout);
    void              SwitchMenus(TGCompositeFrame *from);
 
-   void      BrowseObj(TObject *obj) override;             //*SIGNAL*
-   void      ExecuteDefaultAction(TObject *obj) override;  //*SIGNAL*
+   void              BrowseObj(TObject *obj) override;            //*SIGNAL*
+   void              ExecuteDefaultAction(TObject *obj) override; //*SIGNAL*
    virtual void      DoubleClicked(TObject *obj);         //*SIGNAL*
    virtual void      Checked(TObject *obj, Bool_t check); //*SIGNAL*
 
-   void      Add(TObject *obj, const char *name = 0, Int_t check = -1) override;
-   void      RecursiveRemove(TObject *obj) override;
-   void      Refresh(Bool_t force = kFALSE) override;
-   void      Show() override { MapRaised(); }
-   Option_t         *GetDrawOption() const override;
-   TGMainFrame      *GetMainFrame() const override { return (TGMainFrame *)this; }
+   void         Add(TObject *obj, const char *name = 0, Int_t check = -1) override;
+   void         RecursiveRemove(TObject *obj) override;
+   void         Refresh(Bool_t force = kFALSE) override;
+   void         Show() override { MapRaised(); }
+   Option_t *   GetDrawOption() const override;
+   TGMainFrame *GetMainFrame() const override { return (TGMainFrame *)this; }
 
-   Long_t    ExecPlugin(const char *name = 0, const char *fname = 0,
-                                const char *cmd = 0, Int_t pos = kRight,
-                                Int_t subpos = -1) override;
-   void      SetStatusText(const char *txt, Int_t col) override;
-   Bool_t    HandleKey(Event_t *event) override;
+   Long_t ExecPlugin(const char *name = 0, const char *fname = 0, const char *cmd = 0, Int_t pos = kRight,
+                     Int_t subpos = -1) override;
+   void   SetStatusText(const char *txt, Int_t col) override;
+   Bool_t HandleKey(Event_t *event) override;
 
    virtual void      ShowCloseTab(Bool_t show) { fShowCloseTab = show; }
    virtual Bool_t    IsCloseTabShown() const { return fShowCloseTab; }
    Bool_t            IsWebGUI();
 
    // overridden from TGMainFrame
-   void      ReallyDelete() override;
+   void ReallyDelete() override;
 
    static TBrowserImp *NewBrowser(TBrowser *b = 0, const char *title = "ROOT Browser", UInt_t width = 800, UInt_t height = 500, Option_t *opt="");
    static TBrowserImp *NewBrowser(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt="");

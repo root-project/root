@@ -37,16 +37,19 @@ public:
 
    ~TVirtualBranchBrowsable() override;
 
-   void Browse(TBrowser *b) override;
-   const char *GetIconName() const override {
+   void        Browse(TBrowser *b) override;
+   const char *GetIconName() const override
+   {
       // return icon shown when browsing a TVirtualBranchBrowsable
       if (IsFolder()) return "TBranchElement-folder";
       else return "TBranchElement-leaf";
    }
    void GetScope(TString & scope) const;
-   Bool_t IsFolder() const override {
+   Bool_t IsFolder() const override
+   {
       // check whether we have sub-elements
-      return (GetLeaves() && GetLeaves()->GetSize()); }
+      return (GetLeaves() && GetLeaves()->GetSize());
+   }
 
    static Int_t FillListOfBrowsables(TList& list, const TBranch* branch,
                                      const TVirtualBranchBrowsable* parent=0);
@@ -98,14 +101,16 @@ private:
 
 class TMethodBrowsable: public TVirtualBranchBrowsable {
 public:
-   ~TMethodBrowsable() override {};
+   ~TMethodBrowsable() override{};
 
    static Int_t GetBrowsables(TList& list, const TBranch* branch,
                               const TVirtualBranchBrowsable* parent=0);
-   const char *GetIconName() const override {
+   const char * GetIconName() const override
+   {
       // return our special icons
       if (IsFolder()) return "TMethodBrowsable-branch";
-      return "TMethodBrowsable-leaf";}
+      return "TMethodBrowsable-leaf";
+   }
    static Bool_t IsMethodBrowsable(const TMethod* m);
    static void Register();
    static void Unregister();
@@ -143,7 +148,7 @@ class TCollectionPropertyBrowsable: public TVirtualBranchBrowsable {
 public:
    ~TCollectionPropertyBrowsable() override {}
 
-   void Browse(TBrowser *b) override;
+   void         Browse(TBrowser *b) override;
    static Int_t GetBrowsables(TList& list, const TBranch* branch,
                               const TVirtualBranchBrowsable* parent=0);
    const char* GetDraw() const {
@@ -168,7 +173,7 @@ private:
 
 class TCollectionMethodBrowsable: public TMethodBrowsable {
 public:
-   ~TCollectionMethodBrowsable() override {};
+   ~TCollectionMethodBrowsable() override{};
 
    static Int_t GetBrowsables(TList& list, const TBranch* branch,
                               const TVirtualBranchBrowsable* parent=0);
@@ -179,7 +184,7 @@ protected:
    TCollectionMethodBrowsable(const TBranch* branch, TMethod* m,
       const TVirtualBranchBrowsable* parent=0);
 
-   ClassDefOverride(TCollectionMethodBrowsable,0); // Helper object to browse a collection's methods
+   ClassDefOverride(TCollectionMethodBrowsable, 0); // Helper object to browse a collection's methods
 };
 
 #endif // defined ROOT_TBranchBrowsable

@@ -47,8 +47,7 @@ namespace ROOT {
          TSchemaRule& operator = ( const TSchemaRule& rhs );
          Bool_t operator == ( const TSchemaRule& rhs ) const;
 
-
-         void             Clear(Option_t * /*option*/ ="") override;
+         void             Clear(Option_t * /*option*/ = "") override;
          Bool_t           SetFromRule( const char *rule );
 
          const char      *GetVersion( ) const;
@@ -88,7 +87,7 @@ namespace ROOT {
          Bool_t           Conflicts( const TSchemaRule* rule ) const;
 
          void             AsString( TString &out, const char *options = "" ) const;
-         void             ls(Option_t *option="") const override;
+         void             ls(Option_t *option = "") const override;
 
          ClassDefOverride(TSchemaRule, 1);
 

@@ -150,9 +150,9 @@ public:
              Pixel_t back = GetDefaultFrameBackground());
    ~TH2Editor() override;
 
-   Bool_t AcceptModel(TObject* model) override;
-   void   SetModel(TObject* obj) override;
-   void   ActivateBaseClassEditors(TClass* cl) override;
+   Bool_t AcceptModel(TObject *model) override;
+   void   SetModel(TObject *obj) override;
+   void   ActivateBaseClassEditors(TClass *cl) override;
 
    virtual void DoTitle(const char *text);
    virtual void DoHistView();
@@ -198,7 +198,7 @@ public:
 
    Int_t* Dividers(Int_t n);
 
-   void RecursiveRemove(TObject* obj) override;
+   void RecursiveRemove(TObject *obj) override;
 
    ClassDef(TH2Editor,0)  // TH2 editor
 };

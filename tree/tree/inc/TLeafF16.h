@@ -38,17 +38,17 @@ public:
    TLeafF16(TBranch *parent, const char *name, const char *type);
    ~TLeafF16() override;
 
-   void Export(TClonesArray *list, Int_t n) override;
-   void FillBasket(TBuffer &b) override;
+   void        Export(TClonesArray *list, Int_t n) override;
+   void        FillBasket(TBuffer &b) override;
    const char *GetTypeName() const override { return "Float16_t"; }
-   Double_t GetValue(Int_t i = 0) const override;
-   void *GetValuePointer() const override { return fValue; }
-   void Import(TClonesArray *list, Int_t n) override;
-   void PrintValue(Int_t i = 0) const override;
-   void ReadBasket(TBuffer &b) override;
-   void ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n) override;
-   void ReadValue(std::istream &s, Char_t delim = ' ') override;
-   void SetAddress(void *add = 0) override;
+   Double_t    GetValue(Int_t i = 0) const override;
+   void *      GetValuePointer() const override { return fValue; }
+   void        Import(TClonesArray *list, Int_t n) override;
+   void        PrintValue(Int_t i = 0) const override;
+   void        ReadBasket(TBuffer &b) override;
+   void        ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n) override;
+   void        ReadValue(std::istream &s, Char_t delim = ' ') override;
+   void        SetAddress(void *add = 0) override;
 
    ClassDefOverride(TLeafF16, 1); // A TLeaf for a 24 bit truncated floating point data type.
 };

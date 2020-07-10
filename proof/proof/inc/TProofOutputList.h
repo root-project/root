@@ -31,18 +31,19 @@ private:
 public:
    TProofOutputList(const char *dontshow = "PROOF_*");
 TProofOutputList(TObject *o) : TList(o), fDontShow(0) { } // for backward compatibility, don't use
-   ~TProofOutputList() override;
+~TProofOutputList() override;
 
-   void AttachList(TList *alist);
+void AttachList(TList *alist);
 
-   void ls(Option_t *option="") const override ;
-   void Print(Option_t *option="") const override;
-   void Print(Option_t *option, Int_t recurse) const override
-                                { TCollection::Print(option, recurse); }
-   void Print(Option_t *option, const char* wildcard, Int_t recurse=1) const override
-                                { TCollection::Print(option, wildcard, recurse); }
-   void Print(Option_t *option, TPRegexp& regexp, Int_t recurse=1) const override
-                                { TCollection::Print(option, regexp, recurse);}
+void ls(Option_t *option = "") const override;
+void Print(Option_t *option = "") const override;
+void Print(Option_t *option, Int_t recurse) const override { TCollection::Print(option, recurse); }
+void Print(Option_t *option, const char *wildcard, Int_t recurse = 1) const override
+{
+   TCollection::Print(option, wildcard, recurse); }
+void Print(Option_t *option, TPRegexp &regexp, Int_t recurse = 1) const override
+{
+   TCollection::Print(option, regexp, recurse);}
 
    TList *GetDontShowList() { return fDontShow; }
 

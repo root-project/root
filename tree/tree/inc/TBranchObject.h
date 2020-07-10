@@ -50,23 +50,23 @@ public:
    TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, Bool_t isptrptr = kTRUE);
    ~TBranchObject() override;
 
-   void        Browse(TBrowser *b) override;
-   const char* GetClassName() const override { return fClassName.Data(); };
+   void                Browse(TBrowser *b) override;
+   const char *        GetClassName() const override { return fClassName.Data(); };
    virtual const char* GetObjClassName() { return fClassName.Data(); };
-   Int_t       GetEntry(Long64_t entry=0, Int_t getall = 0) override;
-   Int_t       GetExpectedType(TClass *&clptr,EDataType &type) override;
+   Int_t               GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
+   Int_t               GetExpectedType(TClass *&clptr, EDataType &type) override;
    Bool_t              IsFolder() const override;
-   void        Print(Option_t *option="") const override;
-   void        Reset(Option_t *option="") override;
-   void        ResetAfterMerge(TFileMergeInfo *) override;
-   void        SetAddress(void *addobj) override;
-   void        SetAutoDelete(Bool_t autodel=kTRUE) override;
-   void        SetBasketSize(Int_t buffsize) override;
-   void        SetupAddresses() override;
-   void        UpdateAddress() override;
+   void                Print(Option_t *option = "") const override;
+   void                Reset(Option_t *option = "") override;
+   void                ResetAfterMerge(TFileMergeInfo *) override;
+   void                SetAddress(void *addobj) override;
+   void                SetAutoDelete(Bool_t autodel = kTRUE) override;
+   void                SetBasketSize(Int_t buffsize) override;
+   void                SetupAddresses() override;
+   void                UpdateAddress() override;
 
 private:
-   Int_t       FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
+   Int_t FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
    ClassDefOverride(TBranchObject, 1); // Branch in case of an object
 };

@@ -37,15 +37,17 @@ class TRootGuiFactory : public TGuiFactory {
 
 public:
    TRootGuiFactory(const char *name = "Root", const char *title = "ROOT GUI Factory");
-   ~TRootGuiFactory() override { }
+   ~TRootGuiFactory() override {}
 
    TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv) override;
 
    TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height) override;
    TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height) override;
 
-   TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt="") override;
-   TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt="") override;
+   TBrowserImp *
+   CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt = "") override;
+   TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height,
+                                 Option_t *opt = "") override;
 
    TContextMenuImp *CreateContextMenuImp(TContextMenu *c, const char *name, const char *title) override;
 

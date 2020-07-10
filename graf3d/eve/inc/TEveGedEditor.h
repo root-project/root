@@ -35,7 +35,7 @@ protected:
    TEveElement   *fElement;    // Cached eve-element pointer.
    TObject       *fObject;     // Cached tobj pointer.
 
-   TGedFrame* CreateNameFrame(const TGWindow* parent, const char* tab_name) override;
+   TGedFrame *CreateNameFrame(const TGWindow *parent, const char *tab_name) override;
 
    static Int_t   fgMaxExtraEditors;
    static TList  *fgExtraEditors;
@@ -53,8 +53,8 @@ public:
    void DisplayElement(TEveElement* re);
    void DisplayObject(TObject* obj);
 
-   void SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t force=kFALSE) override;
-   void Update(TGedFrame* gframe=0) override;
+   void SetModel(TVirtualPad *pad, TObject *obj, Int_t event, Bool_t force = kFALSE) override;
+   void Update(TGedFrame *gframe = 0) override;
 
    // --- Statics for extra editors. ---
 
@@ -88,7 +88,7 @@ public:
                     UInt_t options=kChildFrame | kHorizontalFrame);
    ~TEveGedNameFrame() override;
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    void SpawnEditorClone();
 
@@ -112,7 +112,7 @@ public:
    TEveGedNameTextButton(TEveGedNameFrame* p);
    ~TEveGedNameTextButton() override;
 
-   Bool_t HandleButton(Event_t* event) override;
+   Bool_t HandleButton(Event_t *event) override;
 
    ClassDef(TEveGedNameTextButton, 0); // Button for GED name-frame.
 };

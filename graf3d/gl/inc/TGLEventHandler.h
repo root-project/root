@@ -67,21 +67,21 @@ public:
    TGLEventHandler(TGWindow *w, TObject *obj);
    ~TGLEventHandler() override;
 
-   void   ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   Bool_t HandleEvent(Event_t *event) override;
+   void           ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   Bool_t         HandleEvent(Event_t *event) override;
    virtual Bool_t HandleExpose(Event_t * event);
-   Bool_t HandleFocusChange(Event_t *event) override;
-   Bool_t HandleCrossing(Event_t *event) override;
-   Bool_t HandleButton(Event_t * event) override;
-   Bool_t HandleDoubleClick(Event_t *event) override;
-   Bool_t HandleConfigureNotify(Event_t *event) override;
-   Bool_t HandleKey(Event_t *event) override;
-   Bool_t HandleMotion(Event_t * event) override;
-   Bool_t HandleTimer(TTimer *t) override;
+   Bool_t         HandleFocusChange(Event_t *event) override;
+   Bool_t         HandleCrossing(Event_t *event) override;
+   Bool_t         HandleButton(Event_t *event) override;
+   Bool_t         HandleDoubleClick(Event_t *event) override;
+   Bool_t         HandleConfigureNotify(Event_t *event) override;
+   Bool_t         HandleKey(Event_t *event) override;
+   Bool_t         HandleMotion(Event_t *event) override;
+   Bool_t         HandleTimer(TTimer *t) override;
    virtual void   StartMouseTimer();
    virtual void   StopMouseTimer();
    virtual void   ClearMouseOver();
-   void   Repaint() override;
+   void           Repaint() override;
 
    virtual void   PopupContextMenu(TGLPhysicalShape* pshp, Event_t *event, Int_t gx, Int_t gy);
 

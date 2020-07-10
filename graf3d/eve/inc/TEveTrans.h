@@ -156,7 +156,7 @@ public:
    void     RotateIP(Float_t*  v) const;
    TVector3 Rotate(const TVector3& v) const;
 
-   void Print(Option_t* option = "") const override;
+   void Print(Option_t *option = "") const override;
 
    // TEveUtil stuff
 

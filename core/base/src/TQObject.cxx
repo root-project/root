@@ -311,11 +311,11 @@ private:
 public:
    TQConnectionList(const char *name, Int_t nsigargs) : TList()
       { fName = name; fSignalArgs = nsigargs; }
-   ~TQConnectionList() override;
+      ~TQConnectionList() override;
 
-   Bool_t Disconnect(void *receiver=0, const char *slot_name=0);
-   Int_t  GetNargs() const { return fSignalArgs; }
-   void   ls(Option_t *option = "") const override;
+      Bool_t Disconnect(void *receiver = 0, const char *slot_name = 0);
+      Int_t  GetNargs() const { return fSignalArgs; }
+      void   ls(Option_t *option = "") const override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

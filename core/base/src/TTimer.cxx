@@ -56,15 +56,21 @@ private:
    TList  *fGarbage;
 public:
    TSingleShotCleaner() : TTimer(10, kTRUE) { fGarbage = new TList(); }
-   ~TSingleShotCleaner() override { fGarbage->Delete(); delete fGarbage; }
-   void TurnOn() override {
+   ~TSingleShotCleaner() override
+   {
+      fGarbage->Delete();
+      delete fGarbage;
+   }
+   void TurnOn() override
+   {
       TObject *obj = (TObject*) gTQSender;
       fGarbage->Add(obj);
       Reset();
       if (gSystem)
          gSystem->AddTimer(this);
    }
-   Bool_t Notify() override {
+   Bool_t Notify() override
+   {
       fGarbage->Delete();
       Reset();
       if (gSystem)

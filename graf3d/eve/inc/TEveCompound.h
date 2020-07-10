@@ -41,13 +41,13 @@ public:
    void SetMainColor(Color_t color) override;
    void SetMainTransparency(Char_t t) override;
 
-   void AddElement(TEveElement* el) override;
-   void RemoveElementLocal(TEveElement* el) override;
+   void AddElement(TEveElement *el) override;
+   void RemoveElementLocal(TEveElement *el) override;
    void RemoveElementsLocal() override;
 
-   void FillImpliedSelectedSet(Set_t& impSelSet) override;
+   void FillImpliedSelectedSet(Set_t &impSelSet) override;
 
-   TClass* ProjectedClass(const TEveProjection* p) const override;
+   TClass *ProjectedClass(const TEveProjection *p) const override;
 
    ClassDef(TEveCompound, 0); // Container for managing compounds of TEveElements.
 };
@@ -70,8 +70,8 @@ public:
 
    void SetMainColor(Color_t color) override;
 
-   void UpdateProjection() override      {}
-   TEveElement* GetProjectedAsElement() override { return this; }
+   void         UpdateProjection() override {}
+   TEveElement *GetProjectedAsElement() override { return this; }
 
    ClassDef(TEveCompoundProjected, 0); // Projected TEveCompund container.
 };

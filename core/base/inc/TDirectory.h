@@ -205,8 +205,11 @@ public:
    virtual void        SetSeekDir(Long64_t) {}
    virtual void        SetWritable(Bool_t) {}
            Int_t       Sizeof() const override {return 0;}
-   Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Int_t /*bufsize*/=0) override {return 0;}
-   Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Int_t /*bufsize*/=0) const override {return 0;}
+           Int_t Write(const char * /*name*/ = nullptr, Int_t /*opt*/ = 0, Int_t /*bufsize*/ = 0) override { return 0; }
+           Int_t Write(const char * /*name*/ = nullptr, Int_t /*opt*/ = 0, Int_t /*bufsize*/ = 0) const override
+           {
+              return 0;
+           }
    virtual Int_t       WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="", Int_t /*bufsize*/ =0);
 private:
            Int_t       WriteObject(void *obj, const char* name, Option_t *option="", Int_t bufsize=0); // Intentionally not implemented.

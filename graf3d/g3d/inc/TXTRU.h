@@ -28,12 +28,12 @@ public:
    ~TXTRU() override;
    TXTRU& operator=(const TXTRU& rhs);
 
-   void     Copy(TObject &xtru) const override;
+   void             Copy(TObject &xtru) const override;
    virtual void     DefineSection(Int_t secNum, Float_t z, Float_t scale=1.,
                                   Float_t x0=0., Float_t y0=0.);
    virtual void     DefineVertex(Int_t pointNum, Float_t x, Float_t y);
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
-   const    TBuffer3D &GetBuffer3D(Int_t) const override;
+   Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
+   const TBuffer3D &GetBuffer3D(Int_t) const override;
    virtual Int_t    GetNxy() const { return fNxy; }
    virtual Int_t    GetNz() const { return fNz; }
    virtual Float_t  GetOutlinePointX(Int_t pointNum) const;
@@ -48,15 +48,15 @@ public:
    virtual Float_t *GetScale() const {return fScale; }
    virtual Float_t *GetX0() const {return fX0; }
    virtual Float_t *GetY0() const {return fY0; }
-   void     Print(Option_t *option="") const override;
-   void     Sizeof3D() const override;
+   void             Print(Option_t *option = "") const override;
+   void             Sizeof3D() const override;
    void             SplitConcavePolygon(Bool_t split = kTRUE);
    virtual void     TruncateNxy(Int_t npts);
    virtual void     TruncateNz(Int_t npts);
 
 protected:
    void            CheckOrdering();
-   void    SetPoints(Double_t *points) const override;
+   void            SetPoints(Double_t *points) const override;
 
    Int_t       fNxy;       // number of x-y points in the cross section
    Int_t       fNxyAlloc;  // number of x-y points allocated

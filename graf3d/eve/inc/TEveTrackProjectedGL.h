@@ -32,8 +32,8 @@ public:
    TEveTrackProjectedGL();
    ~TEveTrackProjectedGL() override {}
 
-   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
-   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   Bool_t SetModel(TObject *obj, const Option_t *opt = 0) override;
+   void   DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
    ClassDef(TEveTrackProjectedGL, 0); // GL-renderer for TEveTrackProjected class.
 };

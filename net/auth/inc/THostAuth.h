@@ -100,7 +100,7 @@ public:
    TList   *Established() const { return fSecContexts; }
    void     SetEstablished(TList *nl) { fSecContexts = nl; }
 
-    void  Print(Option_t *option = "") const override;
+   void     Print(Option_t *option = "") const override;
    void     PrintEstablished() const;
 
    TRootSecContext *CreateSecContext(const char *user, const char *host, Int_t meth,

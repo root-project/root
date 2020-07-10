@@ -37,7 +37,7 @@ class TFileStager : public TNamed {
 
 public:
    TFileStager(const char *stager) : TNamed(stager, stager) { }
-   ~TFileStager() override { }
+   ~TFileStager() override {}
 
    virtual TList          *GetStaged(TCollection *pathlist);
    virtual Bool_t          IsStaged(const char *);

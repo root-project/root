@@ -38,12 +38,10 @@ class TInspectorObject : public TObject
 public:
 
    TInspectorObject(void *obj, TClass *cl) : fObj(obj),fClass(cl) {};
-   ~TInspectorObject() override{;}
+   ~TInspectorObject() override { ; }
 
    void   *GetObject() const { return fObj; };
-   void    Inspect() const override {
-      gGuiFactory->CreateInspectorImp(this, 400, 200);
-   };
+   void    Inspect() const override { gGuiFactory->CreateInspectorImp(this, 400, 200); };
    TClass *IsA() const override { return fClass; }
 
 private:

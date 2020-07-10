@@ -60,22 +60,22 @@ public:
    TGLHistPainter(TGLTH3Composition *comp);
 
    //TVirtualHistPainter final overriders
-   Int_t          DistancetoPrimitive(Int_t px, Int_t py) override;
-   void           DrawPanel() override;
-   void           ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   TList         *GetContourList(Double_t contour)const override;
-   char          *GetObjectInfo(Int_t px, Int_t py)const override;
-   TList         *GetStack()const override;
-   Bool_t         IsInside(Int_t x, Int_t y) override;
-   Bool_t         IsInside(Double_t x, Double_t y) override;
-   void           Paint(Option_t *option) override;
-   void           PaintStat(Int_t dostat, TF1 *fit) override;
-   void           ProcessMessage(const char *message, const TObject *obj) override;
-   void           SetHighlight() override;
-   void           SetHistogram(TH1 *hist) override;
-   void           SetStack(TList *stack) override;
-   Int_t          MakeCuts(char *cutsOpt) override;
-   void           SetShowProjection(const char *option, Int_t nbins) override;
+   Int_t  DistancetoPrimitive(Int_t px, Int_t py) override;
+   void   DrawPanel() override;
+   void   ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   TList *GetContourList(Double_t contour) const override;
+   char * GetObjectInfo(Int_t px, Int_t py) const override;
+   TList *GetStack() const override;
+   Bool_t IsInside(Int_t x, Int_t y) override;
+   Bool_t IsInside(Double_t x, Double_t y) override;
+   void   Paint(Option_t *option) override;
+   void   PaintStat(Int_t dostat, TF1 *fit) override;
+   void   ProcessMessage(const char *message, const TObject *obj) override;
+   void   SetHighlight() override;
+   void   SetHistogram(TH1 *hist) override;
+   void   SetStack(TList *stack) override;
+   Int_t  MakeCuts(char *cutsOpt) override;
+   void   SetShowProjection(const char *option, Int_t nbins) override;
 
    TGLPlotPainter *GetRealPainter(){return fGLPainter.get();}
 private:

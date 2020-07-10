@@ -80,7 +80,7 @@ protected:
 
 private:
    TUDPSocket&   operator=(const TUDPSocket &);  // not implemented
-   Option_t     *GetOption() const override { return TObject::GetOption(); }
+   Option_t *    GetOption() const override { return TObject::GetOption(); }
 
 public:
    TUDPSocket(TInetAddress address, const char *service);

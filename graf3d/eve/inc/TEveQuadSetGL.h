@@ -31,8 +31,8 @@ public:
    TEveQuadSetGL();
    ~TEveQuadSetGL() override {}
 
-   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
-   void   DirectDraw(TGLRnrCtx& rnrCtx) const override;
+   Bool_t SetModel(TObject *obj, const Option_t *opt = 0) override;
+   void   DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
    Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 

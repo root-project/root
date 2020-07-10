@@ -79,7 +79,7 @@ public:
                    Int_t w = 1, Int_t h = 1, UInt_t options = kOwnBackground);
 
    Bool_t HandleButton(Event_t *event) override;
-   void   DrawBorder() override {};
+   void   DrawBorder() override{};
 
    void SetResizeMode(Int_t mode) { fMdiOptions = mode; }
    void SetMinSize(Int_t w = 50, Int_t h = 20) { fMinW = w; fMinH = h; }
@@ -126,8 +126,8 @@ public:
                          Int_t mdioptions = kMdiDefaultResizeMode,
                          Int_t w = 20, Int_t h = 20);
 
-   Bool_t  HandleMotion(Event_t *event) override;
-   void DrawBorder() override;
+   Bool_t HandleMotion(Event_t *event) override;
+   void   DrawBorder() override;
 
    ClassDef(TGMdiCornerWinResizer, 0) // Corner Window Resizer
 };
@@ -165,15 +165,15 @@ protected:
    const TGWindow   *fMsgWindow;    // window handling container messages
    TGPopupMenu      *fPopup;        // Popup menu associated to the title icon
 
-   void     DoRedraw() override;
+   void DoRedraw() override;
 
 public:
    TGMdiTitleIcon(const TGWindow *p, const TGWindow *titlebar,
                   const TGPicture *pic, Int_t w, Int_t h);
    ~TGMdiTitleIcon() override;
 
-   Bool_t HandleDoubleClick(Event_t *event) override;
-   Bool_t HandleButton(Event_t *event) override;
+   Bool_t       HandleDoubleClick(Event_t *event) override;
+   Bool_t       HandleButton(Event_t *event) override;
    TGPopupMenu *GetPopup() const { return fPopup; }
 
    ClassDef(TGMdiTitleIcon, 0) // MDI Title Icon
@@ -208,10 +208,10 @@ protected:
 public:
    ~TGMdiTitleBar() override;
 
-   Bool_t       HandleButton(Event_t *event) override;
-   Bool_t       HandleDoubleClick(Event_t *event) override;
-   Bool_t       HandleMotion(Event_t *event) override;
-   Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleDoubleClick(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
    void                 SetTitleBarColors(UInt_t fore, UInt_t back, TGFont *f);
    TGMdiButtons        *GetButtons() const { return fButtons; }
@@ -270,14 +270,14 @@ public:
                    Pixel_t back = GetDefaultFrameBackground());
    ~TGMdiDecorFrame() override;
 
-   Bool_t   HandleButton(Event_t *event) override;
-   Bool_t   HandleConfigureNotify(Event_t *event) override;
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleConfigureNotify(Event_t *event) override;
 
    virtual Int_t    CloseWindow() { return fFrame->CloseWindow(); }
-   void     Layout() override;
+   void             Layout() override;
 
-   void     Move(Int_t x, Int_t y) override;
-   void     MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   void Move(Int_t x, Int_t y) override;
+   void MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
 
    void             SetMdiButtons(ULong_t buttons);
    ULong_t          GetMdiButtons() const { return fButtonMask; }

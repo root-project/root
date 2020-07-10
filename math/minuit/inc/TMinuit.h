@@ -181,9 +181,9 @@ public:
 public:
    TMinuit();
    TMinuit(Int_t maxpar);
-         ~TMinuit() override;
+   ~TMinuit() override;
    virtual void   BuildArrays(Int_t maxpar=15);
-   TObject *Clone(const char *newname="") const override;   //Clone-Method to copy the function-pointer fFCN
+   TObject *        Clone(const char *newname = "") const override; // Clone-Method to copy the function-pointer fFCN
    virtual Int_t  Command(const char *command);
    virtual TObject *Contour(Int_t npoints=10, Int_t pa1=0, Int_t pa2=1);
    virtual Int_t  DefineParameter( Int_t parNo, const char *name, Double_t initVal, Double_t initErr, Double_t lowerLimit, Double_t upperLimit );

@@ -47,9 +47,9 @@ public:
    ~TGraphTime() override;
 
    virtual Int_t   Add(const TObject *obj, Int_t slot, Option_t *option="");
-   void    Draw(Option_t *chopt="") override;
+   void            Draw(Option_t *chopt = "") override;
    TObjArray      *GetSteps() const {return fSteps;}
-   void    Paint(Option_t *chopt="") override;
+   void            Paint(Option_t *chopt = "") override;
    virtual void    SaveAnimatedGif(const char *filename="") const;
    virtual void    SetSleepTime(Int_t stime=0) {fSleepTime = stime;}
 

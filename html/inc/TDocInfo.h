@@ -56,33 +56,32 @@ public:
    }
 
    TDictionary *GetClass() const { return fClass; }
-   const char*     GetName() const override;
-           const char*     GetHtmlFileName() const { return fHtmlFileName; }
-           const char*     GetDeclFileName() const { return fDeclFileName; }
-           const char*     GetImplFileName() const { return fImplFileName; }
-           const char*     GetDeclFileSysName() const { return fDeclFileSysName; }
-           const char*     GetImplFileSysName() const { return fImplFileSysName; }
+   const char * GetName() const override;
+   const char * GetHtmlFileName() const { return fHtmlFileName; }
+   const char * GetDeclFileName() const { return fDeclFileName; }
+   const char * GetImplFileName() const { return fImplFileName; }
+   const char * GetDeclFileSysName() const { return fDeclFileSysName; }
+   const char * GetImplFileSysName() const { return fImplFileSysName; }
 
-           void            SetModule(TModuleDocInfo* module) { fModule = module; }
-           TModuleDocInfo* GetModule() const { return fModule; }
+   void            SetModule(TModuleDocInfo *module) { fModule = module; }
+   TModuleDocInfo *GetModule() const { return fModule; }
 
-           void            SetSelected(Bool_t sel = kTRUE) { fSelected = sel; }
-           Bool_t          IsSelected() const { return fSelected; }
-           Bool_t          HaveSource() const { return fDeclFileSysName.Length()
-                                                   || (fClass && !dynamic_cast<TClass*>(fClass)); }
+   void   SetSelected(Bool_t sel = kTRUE) { fSelected = sel; }
+   Bool_t IsSelected() const { return fSelected; }
+   Bool_t HaveSource() const { return fDeclFileSysName.Length() || (fClass && !dynamic_cast<TClass *>(fClass)); }
 
-           void            SetHtmlFileName(const char* name) { fHtmlFileName = name; }
-           void            SetDeclFileName(const char* name) { fDeclFileName = name; }
-           void            SetImplFileName(const char* name) { fImplFileName = name; }
-           void            SetDeclFileSysName(const char* fsname) { fDeclFileSysName = fsname; }
-           void            SetImplFileSysName(const char* fsname) { fImplFileSysName = fsname; }
+   void SetHtmlFileName(const char *name) { fHtmlFileName = name; }
+   void SetDeclFileName(const char *name) { fDeclFileName = name; }
+   void SetImplFileName(const char *name) { fImplFileName = name; }
+   void SetDeclFileSysName(const char *fsname) { fDeclFileSysName = fsname; }
+   void SetImplFileSysName(const char *fsname) { fImplFileSysName = fsname; }
 
-           ULong_t         Hash() const override;
+   ULong_t Hash() const override;
 
-           TList&          GetListOfTypedefs() { return fTypedefs; }
+   TList &GetListOfTypedefs() { return fTypedefs; }
 
-   Bool_t          IsSortable() const override { return kTRUE; }
-   Int_t           Compare(const TObject* obj) const override;
+   Bool_t IsSortable() const override { return kTRUE; }
+   Int_t  Compare(const TObject *obj) const override;
 
 private:
    TClassDocInfo();
@@ -110,7 +109,11 @@ public:
       TNamed(name, doc), fSuper(super), fSub(0), fSelected(kTRUE) {
          if (super) super->GetSub().Add(this);
       }
-   ~TModuleDocInfo() override { fSub.Clear("nodelete"); fClasses.Clear("nodelete"); }
+      ~TModuleDocInfo() override
+      {
+         fSub.Clear("nodelete");
+         fClasses.Clear("nodelete");
+      }
 
    void        SetDoc(const char* doc) { SetTitle(doc); }
    const char* GetDoc() const { return GetTitle(); }

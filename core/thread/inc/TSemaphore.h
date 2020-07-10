@@ -39,7 +39,7 @@ private:
 
 public:
    TSemaphore(Int_t initial = 1);
-   ~TSemaphore() override { }
+   ~TSemaphore() override {}
 
    Int_t  Wait();
    Int_t  Wait(Int_t millisec);

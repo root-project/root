@@ -31,10 +31,10 @@ namespace {
          fCoord = new Int_t[hist->GetNdimensions()];
          fCoord[0] = -1;
       }
-      ~THnSparseBinIter() override { delete [] fCoord; }
+      ~THnSparseBinIter() override { delete[] fCoord; }
 
-      Int_t GetCoord(Int_t dim) const override;
-      Long64_t Next(Int_t* coord = 0) override;
+      Int_t    GetCoord(Int_t dim) const override;
+      Long64_t Next(Int_t *coord = 0) override;
 
    private:
       THnSparseBinIter(const THnSparseBinIter&); // intentionally unimplemented

@@ -79,7 +79,7 @@ public:
    TGLClipSetEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TGLClipSetEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    ClassDef(TGLClipSetEditor, 0); // GUI editor for TGLClipSet.
 };

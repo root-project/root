@@ -30,7 +30,7 @@ public:
    enum EGridJobStatus { kUNKNOWN, kWAITING, kRUNNING, kABORTED, kFAIL, kDONE };
 
   TGridJobStatus() { }
-  ~TGridJobStatus() override { }
+  ~TGridJobStatus() override {}
 
   // These functions reduces the possible job states to the subset given above
   // in EGridJobStatus, for detailed status information query the specific

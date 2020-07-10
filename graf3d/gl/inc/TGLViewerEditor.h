@@ -126,7 +126,7 @@ public:
 
    virtual void ViewerRedraw();
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    void SetGuides();
    void DoClearColor(Pixel_t color);

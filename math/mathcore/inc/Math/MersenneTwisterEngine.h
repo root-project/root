@@ -65,9 +65,7 @@ namespace ROOT {
 
          void SetSeed(Result_t seed);
 
-         double Rndm() override {
-            return Rndm_impl();
-         }
+         double        Rndm() override { return Rndm_impl(); }
          inline double operator() () { return Rndm_impl(); }
 
          uint32_t IntRndm() {

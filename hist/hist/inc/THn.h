@@ -34,7 +34,7 @@ private:
 
 protected:
    void AllocCoordBuf() const;
-   void InitStorage(Int_t* nbins, Int_t chunkSize) override;
+   void InitStorage(Int_t *nbins, Int_t chunkSize) override;
 
    THn(): fCoordBuf() {}
    THn(const char* name, const char* title, Int_t dim, const Int_t* nbins,
@@ -50,20 +50,20 @@ public:
       return (THn*) CreateHnAny(name, title, hn, kFALSE /*THn*/, -1);
    }
 
-   ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const override;
-   Long64_t GetNbins() const override { return GetArray().GetNbins(); }
+   ROOT::Internal::THnBaseBinIter *CreateIter(Bool_t respectAxisRange) const override;
+   Long64_t                        GetNbins() const override { return GetArray().GetNbins(); }
 
-   Long64_t GetBin(const Int_t* idx) const override {
-      return GetArray().GetBin(idx);
-   }
-   Long64_t GetBin(const Double_t* x) const override {
+   Long64_t GetBin(const Int_t *idx) const override { return GetArray().GetBin(idx); }
+   Long64_t GetBin(const Double_t *x) const override
+   {
       if (!fCoordBuf) AllocCoordBuf();
       for (Int_t d = 0; d < fNdimensions; ++d) {
          fCoordBuf[d] = GetAxis(d)->FindFixBin(x[d]);
       }
       return GetArray().GetBin(fCoordBuf);
    }
-   Long64_t GetBin(const char* name[]) const override {
+   Long64_t GetBin(const char *name[]) const override
+   {
       if (!fCoordBuf) AllocCoordBuf();
       for (Int_t d = 0; d < fNdimensions; ++d) {
          fCoordBuf[d] = GetAxis(d)->FindBin(name[d]);
@@ -71,17 +71,21 @@ public:
       return GetArray().GetBin(fCoordBuf);
    }
 
-   Long64_t GetBin(const Int_t* idx, Bool_t /*allocate*/ = kTRUE) override {
+   Long64_t GetBin(const Int_t *idx, Bool_t /*allocate*/ = kTRUE) override
+   {
       return const_cast<const THn*>(this)->GetBin(idx);
    }
-   Long64_t GetBin(const Double_t* x, Bool_t /*allocate*/ = kTRUE) override {
+   Long64_t GetBin(const Double_t *x, Bool_t /*allocate*/ = kTRUE) override
+   {
       return const_cast<const THn*>(this)->GetBin(x);
    }
-   Long64_t GetBin(const char* name[], Bool_t /*allocate*/ = kTRUE) override {
+   Long64_t GetBin(const char *name[], Bool_t /*allocate*/ = kTRUE) override
+   {
       return const_cast<const THn*>(this)->GetBin(name);
    }
 
-   void FillBin(Long64_t bin, Double_t w) override {
+   void FillBin(Long64_t bin, Double_t w) override
+   {
       // Increment the bin content of "bin" by "w",
       // return the bin index.
       GetArray().AddAt(bin, w);
@@ -96,10 +100,9 @@ public:
       // Non-virtual, CINT-compatible replacement of a using declaration.
       THnBase::SetBinContent(idx, v);
    }
-    void SetBinContent(Long64_t bin, Double_t v) override {
-      GetArray().SetAsDouble(bin, v);
-   }
-   void SetBinError2(Long64_t bin, Double_t e2) override {
+   void SetBinContent(Long64_t bin, Double_t v) override { GetArray().SetAsDouble(bin, v); }
+   void SetBinError2(Long64_t bin, Double_t e2) override
+   {
       if (!GetCalculateErrors()) Sumw2();
       fSumw2.At(bin) = e2;
    }
@@ -108,18 +111,15 @@ public:
       // Non-virtual, CINT-compatible replacement of a using declaration.
       THnBase::AddBinContent(idx, v);
    }
-   void AddBinContent(Long64_t bin, Double_t v = 1.) override {
-      GetArray().AddAt(bin, v);
-   }
-   void AddBinError2(Long64_t bin, Double_t e2) override {
-      fSumw2.At(bin) += e2;
-   }
+   void     AddBinContent(Long64_t bin, Double_t v = 1.) override { GetArray().AddAt(bin, v); }
+   void     AddBinError2(Long64_t bin, Double_t e2) override { fSumw2.At(bin) += e2; }
    Double_t GetBinContent(const Int_t *idx) const {
       // Forwards to THnBase::GetBinContent() overload.
       // Non-virtual, CINT-compatible replacement of a using declaration.
       return THnBase::GetBinContent(idx);
    }
-   Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const override {
+   Double_t GetBinContent(Long64_t bin, Int_t *idx = 0) const override
+   {
       // Get the content of bin, and set its index if idx is != 0.
       if (idx) {
          const TNDArray& arr = GetArray();
@@ -132,7 +132,8 @@ public:
       }
       return GetArray().AtAsDouble(bin);
    }
-   Double_t GetBinError2(Long64_t linidx) const override {
+   Double_t GetBinError2(Long64_t linidx) const override
+   {
       return GetCalculateErrors() ? fSumw2.At(linidx) : GetBinContent(linidx);
    }
 
@@ -176,7 +177,7 @@ public:
       return (THn*) RebinBase(group);
    }
 
-   void Reset(Option_t* option = "") override;
+   void Reset(Option_t *option = "") override;
 
 protected:
    TNDArrayT<Double_t> fSumw2; // bin error, lazy allocation happens in TNDArrayT
@@ -229,8 +230,8 @@ public:
    THn(name, title, dim, nbins, xmin, xmax),
    fArray(dim, nbins, true)  {}
 
-   const TNDArray& GetArray() const override { return fArray; }
-   TNDArray& GetArray() override { return fArray; }
+   const TNDArray &GetArray() const override { return fArray; }
+   TNDArray &      GetArray() override { return fArray; }
 
 protected:
    TNDArrayT<T> fArray; // bin content

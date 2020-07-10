@@ -38,10 +38,10 @@ public:
 
    //These are functions for TPad and
    //TPad's standard machinery (picking, painting).
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
-   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   char    *GetObjectInfo(Int_t px, Int_t py) const override;
-   void     Paint(Option_t *option) override;
+   Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
+   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   char *GetObjectInfo(Int_t px, Int_t py) const override;
+   void  Paint(Option_t *option) override;
 
 private:
    void CheckRanges(const TH3 *hist);
@@ -66,24 +66,24 @@ public:
                             TGLPlotCoordinates *coord);
 
    //TGLPlotPainter final-overriders.
-   char      *GetPlotInfo(Int_t px, Int_t py) override;
-   Bool_t     InitGeometry() override;
-   void       StartPan(Int_t px, Int_t py) override;
-   void       Pan(Int_t px, Int_t py) override;
-   void       AddOption(const TString &option) override;
-   void       ProcessEvent(Int_t event, Int_t px, Int_t py) override;
+   char * GetPlotInfo(Int_t px, Int_t py) override;
+   Bool_t InitGeometry() override;
+   void   StartPan(Int_t px, Int_t py) override;
+   void   Pan(Int_t px, Int_t py) override;
+   void   AddOption(const TString &option) override;
+   void   ProcessEvent(Int_t event, Int_t px, Int_t py) override;
 
 private:
    //TGLPlotPainter final-overriders.
-   void       InitGL()const override;
-   void       DeInitGL()const override;
+   void InitGL() const override;
+   void DeInitGL() const override;
 
-   void       DrawPlot()const override;
+   void DrawPlot() const override;
 
    //Empty overriders.
-   void       DrawSectionXOZ()const override{}
-   void       DrawSectionYOZ()const override{}
-   void       DrawSectionXOY()const override{}
+   void DrawSectionXOZ() const override {}
+   void DrawSectionYOZ() const override {}
+   void DrawSectionXOY() const override {}
 
    void       SetColor(Int_t color)const;
 

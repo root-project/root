@@ -177,13 +177,16 @@ public:
                       AutoParse_t autoParse,
                       bool *shuttingDownPtr,
                       const int *pgDebug = 0);
-   ~TClingLookupHelper() override { /* we're not owner */ }
+   ~TClingLookupHelper() override
+   { /* we're not owner */
+   }
 
    bool ExistingTypeCheck(const std::string &tname, std::string &result) override;
    void GetPartiallyDesugaredName(std::string &nameLong) override;
    bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong) override;
    bool IsDeclaredScope(const std::string &base, bool &isInlined) override;
-   bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result, bool dropstd = true) override;
+   bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result,
+                                                   bool dropstd = true) override;
    void ShuttingDownSignal() override;
 };
 

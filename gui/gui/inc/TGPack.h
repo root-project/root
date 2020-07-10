@@ -76,21 +76,21 @@ public:
    ~TGPack() override;
 
    virtual void   AddFrameWithWeight(TGFrame *f, TGLayoutHints* l, Float_t w);
-   void   AddFrame(TGFrame *f, TGLayoutHints* l=0) override;
+   void           AddFrame(TGFrame *f, TGLayoutHints *l = 0) override;
 
    virtual void   DeleteFrame(TGFrame *f);
-   void   RemoveFrame(TGFrame *f) override;
-   void   ShowFrame(TGFrame *f) override;
-   void   HideFrame(TGFrame *f) override;
+   void           RemoveFrame(TGFrame *f) override;
+   void           ShowFrame(TGFrame *f) override;
+   void           HideFrame(TGFrame *f) override;
 
    using          TGCompositeFrame::Resize;
-   void   Resize(UInt_t w = 0, UInt_t h = 0) override;
+   void Resize(UInt_t w = 0, UInt_t h = 0) override;
 
    using          TGCompositeFrame::MapSubwindows;
-   void   MapSubwindows() override;
+   void MapSubwindows() override;
 
-   void   MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) override;
-   void   Layout() override;
+   void MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) override;
+   void Layout() override;
 
    void Dump() const override;
 

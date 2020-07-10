@@ -63,7 +63,7 @@ public:
    TInetAddress();
    TInetAddress(const TInetAddress &adr);
    TInetAddress &operator=(const TInetAddress &rhs);
-   ~TInetAddress() override { }
+   ~TInetAddress() override {}
 
    UInt_t      GetAddress() const { return fAddresses[0]; }
    UChar_t    *GetAddressBytes() const;
@@ -74,7 +74,7 @@ public:
    const AddressList_t &GetAddresses() const { return fAddresses; }
    const AliasList_t   &GetAliases() const { return fAliases; }
    Bool_t      IsValid() const { return fFamily == -1 ? kFALSE : kTRUE; }
-   void        Print(Option_t *option="") const override;
+   void                 Print(Option_t *option = "") const override;
 
    static const char *GetHostAddress(UInt_t addr);
 

@@ -70,11 +70,7 @@ namespace ROOT {
          /**
              Clone the wrapper but not the original function
          */
-         ROOT::Math::IGenFunction *Clone() const override
-         {
-            return  new WrappedTF1(*this);
-         }
-
+         ROOT::Math::IGenFunction *Clone() const override { return new WrappedTF1(*this); }
 
          /** @name interface inherited from IParamFunction */
 
@@ -101,16 +97,12 @@ namespace ROOT {
          }
 
          /// return parameter name (this is stored in TF1)
-         std::string ParameterName(unsigned int i) const override
-         {
-            return std::string(fFunc->GetParName(i));
-         }
-
+         std::string ParameterName(unsigned int i) const override { return std::string(fFunc->GetParName(i)); }
 
          using BaseGradFunc::operator();
 
          /// evaluate the derivative of the function with respect to the parameters
-         void  ParameterGradient(double x, const double *par, double *grad) const override;
+         void ParameterGradient(double x, const double *par, double *grad) const override;
 
          /// calculate function and derivative at same time (required by IGradient interface)
          void FdF(double x, double &f, double &deriv) const override
@@ -149,10 +141,10 @@ namespace ROOT {
          }
 
          /// return the function derivatives w.r.t. x
-         double DoDerivative(double  x) const override;
+         double DoDerivative(double x) const override;
 
          /// evaluate the derivative of the function with respect to the parameters
-         double  DoParameterDerivative(double x, const double *p, unsigned int ipar) const override;
+         double DoParameterDerivative(double x, const double *p, unsigned int ipar) const override;
 
          bool fLinear;                 // flag for linear functions
          bool fPolynomial;             // flag for polynomial functions

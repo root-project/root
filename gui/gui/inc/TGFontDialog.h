@@ -72,8 +72,8 @@ protected:
 
    Bool_t               Build(char **fontList, Int_t cnt);
    void                 GetFontName();
-   void         CloseWindow() override;
-   Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   void                 CloseWindow() override;
+   Bool_t               ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
 public:
    TGFontDialog(const TGWindow *parent = 0, const TGWindow *t = 0,

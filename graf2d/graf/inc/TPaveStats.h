@@ -28,29 +28,29 @@ public:
    TPaveStats();
    TPaveStats(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Option_t *option="br");
    ~TPaveStats() override;
-   TBox    *AddBox(Double_t , Double_t , Double_t , Double_t) override {return 0;}
-   TLine   *AddLine(Double_t , Double_t , Double_t, Double_t) override {return 0;}
-   void     DeleteText() override { }
-   void     EditText() override { }
+   TBox *               AddBox(Double_t, Double_t, Double_t, Double_t) override { return 0; }
+   TLine *              AddLine(Double_t, Double_t, Double_t, Double_t) override { return 0; }
+   void                 DeleteText() override {}
+   void                 EditText() override {}
    virtual const char  *GetFitFormat()  const {return fFitFormat.Data();}
    virtual const char  *GetStatFormat() const {return fStatFormat.Data();}
    Int_t            GetOptFit() const;
    Int_t            GetOptStat() const;
-   TObject *GetParent() const override {return fParent;}
-   void     Paint(Option_t *option="") override;
-   void     InsertText(const char *) override { }
-   void     InsertLine() override { }
-   void     ReadFile(const char *, Option_t *, Int_t, Int_t) override { }
-   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   TObject *            GetParent() const override { return fParent; }
+   void                 Paint(Option_t *option = "") override;
+   void                 InsertText(const char *) override {}
+   void                 InsertLine() override {}
+   void                 ReadFile(const char *, Option_t *, Int_t, Int_t) override {}
+   void                 SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SaveStyle(); // *MENU*
-   void     SetAllWith(const char *, Option_t *, Double_t) override { }
-   void     SetMargin(Float_t) override { }
+   void                 SetAllWith(const char *, Option_t *, Double_t) override {}
+   void                 SetMargin(Float_t) override {}
    virtual void     SetFitFormat(const char *format="5.4g");    // *MENU*
    virtual void     SetStatFormat(const char *format="6.4g");   // *MENU*
    void             SetOptFit(Int_t fit=1);                     // *MENU*
    void             SetOptStat(Int_t stat=1);                   // *MENU*
-   void     SetParent(TObject*obj) override {fParent = obj;}
-   void     UseCurrentStyle() override;
+   void                 SetParent(TObject *obj) override { fParent = obj; }
+   void                 UseCurrentStyle() override;
 
    ClassDef(TPaveStats,5)  //A special TPaveText to draw histogram statistics.
 };

@@ -292,7 +292,7 @@ protected:
       TF1FunctorPointerImpl(const ROOT::Math::ParamFunctorTempl<T> &func): fImpl(func) {};
       TF1FunctorPointerImpl(const std::function<T(const T *f, const Double_t *param)> &func) : fImpl(func){};
       ~TF1FunctorPointerImpl() override {}
-       TF1FunctorPointer * Clone() const override { return new TF1FunctorPointerImpl<T>(fImpl); }
+      TF1FunctorPointer *              Clone() const override { return new TF1FunctorPointerImpl<T>(fImpl); }
       ROOT::Math::ParamFunctorTempl<T> fImpl;
    };
 
@@ -402,7 +402,7 @@ public:
 
    TF1(const TF1 &f1);
    TF1 &operator=(const TF1 &rhs);
-     ~TF1() override;
+   ~TF1() override;
    virtual void     AddParameter(const TString &name, Double_t value)
    {
       if (fFormula) fFormula->AddParameter(name, value);
@@ -412,15 +412,15 @@ public:
    // virtual void     AddVariables(const TString *vars, Int_t size) { if (fFormula) fFormula->AddVariables(vars,size); }
    virtual Bool_t   AddToGlobalList(Bool_t on = kTRUE);
    static  Bool_t   DefaultAddToGlobalList(Bool_t on = kTRUE);
-   void     Browse(TBrowser *b) override;
-   void     Copy(TObject &f1) const override;
-   TObject*         Clone(const char* newname=0) const override;
+   void             Browse(TBrowser *b) override;
+   void             Copy(TObject &f1) const override;
+   TObject *        Clone(const char *newname = 0) const override;
    virtual Double_t Derivative(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
    virtual Double_t Derivative2(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
    virtual Double_t Derivative3(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
    static  Double_t DerivativeError();
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
-   void     Draw(Option_t *option = "") override;
+   Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
+   void             Draw(Option_t *option = "") override;
    virtual TF1     *DrawCopy(Option_t *option = "") const;
    virtual TObject *DrawDerivative(Option_t *option = "al"); // *MENU*
    virtual TObject *DrawIntegral(Option_t *option = "al"); // *MENU*
@@ -431,7 +431,7 @@ public:
    template <class T> T EvalPar(const T *x, const Double_t *params = 0);
    virtual Double_t operator()(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    template <class T> T operator()(const T *x, const Double_t *params = nullptr);
-   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void                 ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void     FixParameter(Int_t ipar, Double_t value);
    bool      IsVectorized()
    {
@@ -500,7 +500,7 @@ public:
    {
       return fNpfits;
    }
-   char    *GetObjectInfo(Int_t px, Int_t py) const override;
+   char *      GetObjectInfo(Int_t px, Int_t py) const override;
    TObject    *GetParent() const
    {
       return fParent;
@@ -600,11 +600,11 @@ public:
       return (fFormula) ? fFormula->IsLinear() : false;
    }
    virtual Bool_t   IsValid() const;
-   void     Print(Option_t *option = "") const override;
-   void     Paint(Option_t *option = "") override;
+   void             Print(Option_t *option = "") const override;
+   void             Paint(Option_t *option = "") override;
    virtual void     ReleaseParameter(Int_t ipar);
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
-   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetChisquare(Double_t chi2)
    {
       fChisquare = chi2;
@@ -666,7 +666,7 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin,  Double_t xmax, Double_t ymax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     SetSavedPoint(Int_t point, Double_t value);
-   void     SetTitle(const char *title = "") override; // *MENU*
+   void             SetTitle(const char *title = "") override; // *MENU*
    virtual void     SetVectorized(Bool_t vectorized)
    {
       if (fType == EFType::kFormula && fFormula)

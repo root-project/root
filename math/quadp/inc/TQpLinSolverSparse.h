@@ -72,10 +72,10 @@ public:
 
    ~TQpLinSolverSparse() override {}
 
-   void Factor         (TQpDataBase *prob,TQpVar *vars) override;
+   void Factor(TQpDataBase *prob, TQpVar *vars) override;
    void SolveCompressed(TVectorD &rhs) override;
-   void PutXDiagonal   (TVectorD &xdiag) override;
-   void PutZDiagonal   (TVectorD &zdiag) override;
+   void PutXDiagonal(TVectorD &xdiag) override;
+   void PutZDiagonal(TVectorD &zdiag) override;
 
    TQpLinSolverSparse &operator= (const TQpLinSolverSparse &source);
 

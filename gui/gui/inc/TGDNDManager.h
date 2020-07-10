@@ -156,9 +156,9 @@ public:
    Bool_t         HandleSelectionRequest(Event_t *event);
    Bool_t         HandleSelection(Event_t *event);
 
-   Bool_t         HandleTimer(TTimer *t) override;
+   Bool_t HandleTimer(TTimer *t) override;
 
-  //--- called by widgets
+   //--- called by widgets
 
    TGFrame       *GetMainFrame() const { return fMain; }
    void           SetMainFrame(TGFrame *main) { fMain = main; }

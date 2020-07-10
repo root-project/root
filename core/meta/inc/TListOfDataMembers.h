@@ -62,10 +62,10 @@ public:
    ~TListOfDataMembers() override;
 
    void Clear(Option_t *option) override;
-   void Delete(Option_t *option="") override;
+   void Delete(Option_t *option = "") override;
 
    using THashList::FindObject;
-   TObject   *FindObject(const char *name) const override;
+   TObject *FindObject(const char *name) const override;
 
    TDictionary *Find(DeclId_t id) const;
    TDictionary *Get(DeclId_t id);
@@ -86,9 +86,9 @@ public:
    void       SetClass(TClass* cl) { fClass = cl; }
    void       Update(TDictionary *member);
 
-   void       RecursiveRemove(TObject *obj) override;
-   TObject   *Remove(TObject *obj) override;
-   TObject   *Remove(TObjLink *lnk) override;
+   void     RecursiveRemove(TObject *obj) override;
+   TObject *Remove(TObject *obj) override;
+   TObject *Remove(TObjLink *lnk) override;
 
    void Load();
    void Unload();

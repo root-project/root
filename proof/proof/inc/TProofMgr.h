@@ -158,7 +158,7 @@ public:
                      Int_t id = -1, Int_t remid = -1, Int_t status = kIdle, TProof *p = 0)
                     : TNamed(tag, alias),
      fLocalId(id), fStatus(0), fProof(p), fRemoteId(remid), fUrl(url) { SetStatus(status); }
-   ~TProofDesc() override { }
+   ~TProofDesc() override {}
 
    Int_t          GetLocalId() const { return fLocalId; }
    TProof        *GetProof() const { return fProof; }
@@ -172,7 +172,7 @@ public:
 
    Bool_t         MatchId(Int_t id) const { return (fLocalId == id); }
 
-   void           Print(Option_t *opt = "") const override;
+   void Print(Option_t *opt = "") const override;
 
    void           SetStatus(Int_t st) { fStatus = (st < kIdle || st > kShutdown) ? -1 : st; }
 

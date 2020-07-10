@@ -55,10 +55,10 @@ public:
 
    // ****** overloaded methods of TObject
 
-   void    Print(Option_t* opt="") const override; // *MENU*
+   void Print(Option_t *opt = "") const override; // *MENU*
 
    Bool_t IsFolder() const override { return kTRUE; }
-   void   Browse(TBrowser* b) override;
+   void   Browse(TBrowser *b) override;
 
    ClassDef(TParticleClassPDG,1)  // PDG static particle definition
 };

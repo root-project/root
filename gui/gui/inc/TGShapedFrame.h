@@ -27,7 +27,7 @@ private:
 protected:
    const TGPicture      *fBgnd;     // picture used as background/shape
    TImage               *fImage;    // image used as background/shape
-   void          DoRedraw() override {}
+   void                  DoRedraw() override {}
 
 public:
    TGShapedFrame(const char *fname=0, const TGWindow *p=0, UInt_t w=1, UInt_t h=1, UInt_t options=0);
@@ -36,7 +36,7 @@ public:
    const TGPicture   GetPicture() const { return *fBgnd; }
    TImage            GetImage() const { return *fImage; }
 
-   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGShapedFrame, 0) // Shaped composite frame
 };

@@ -70,8 +70,8 @@ public:
    TSBRepeatTimer(TGScrollBar *s, Long_t ms, Int_t inc) : TTimer(ms, kTRUE)
       { fScrollBar = s;  fSmallInc = inc; }
 
-   Bool_t Notify() override;
-   Int_t  GetSmallInc() const { return fSmallInc; }
+      Bool_t Notify() override;
+      Int_t  GetSmallInc() const { return fSmallInc; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

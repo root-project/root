@@ -165,19 +165,19 @@ public:
    TEveRhoZProjection();
    ~TEveRhoZProjection() override {}
 
-   Bool_t      Is2D() const override { return kTRUE;  }
-   Bool_t      Is3D() const override { return kFALSE; }
+   Bool_t Is2D() const override { return kTRUE; }
+   Bool_t Is3D() const override { return kFALSE; }
 
-   void        ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
+   void ProjectPoint(Float_t &x, Float_t &y, Float_t &z, Float_t d, EPProc_e proc = kPP_Full) override;
 
-   void        SetCenter(TEveVector& v) override;
-   Float_t*    GetProjectedCenter() override { return fProjectedCenter.Arr(); }
+   void     SetCenter(TEveVector &v) override;
+   Float_t *GetProjectedCenter() override { return fProjectedCenter.Arr(); }
 
-   Bool_t      HasSeveralSubSpaces() const override { return kTRUE; }
-   Bool_t      AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance) const override;
-   Int_t       SubSpaceId(const TEveVector& v) const override;
-   Bool_t      IsOnSubSpaceBoundrary(const TEveVector& v) const override;
-   void        SetDirectionalVector(Int_t screenAxis, TEveVector& vec) override;
+   Bool_t HasSeveralSubSpaces() const override { return kTRUE; }
+   Bool_t AcceptSegment(TEveVector &v1, TEveVector &v2, Float_t tolerance) const override;
+   Int_t  SubSpaceId(const TEveVector &v) const override;
+   Bool_t IsOnSubSpaceBoundrary(const TEveVector &v) const override;
+   void   SetDirectionalVector(Int_t screenAxis, TEveVector &vec) override;
 
    ClassDef(TEveRhoZProjection, 0); // Rho/Z non-linear projection.
 };
@@ -193,10 +193,10 @@ public:
    TEveRPhiProjection();
    ~TEveRPhiProjection() override {}
 
-   Bool_t Is2D() const override { return kTRUE;  }
+   Bool_t Is2D() const override { return kTRUE; }
    Bool_t Is3D() const override { return kFALSE; }
 
-   void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
+   void ProjectPoint(Float_t &x, Float_t &y, Float_t &z, Float_t d, EPProc_e proc = kPP_Full) override;
 
    ClassDef(TEveRPhiProjection, 0); // XY non-linear projection.
 };
@@ -213,9 +213,9 @@ public:
    ~TEve3DProjection() override {}
 
    Bool_t Is2D() const override { return kFALSE; }
-   Bool_t Is3D() const override { return kTRUE;  }
+   Bool_t Is3D() const override { return kTRUE; }
 
-   void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
+   void ProjectPoint(Float_t &x, Float_t &y, Float_t &z, Float_t d, EPProc_e proc = kPP_Full) override;
 
    ClassDef(TEve3DProjection, 0); // 3D scaling "projection"
 };

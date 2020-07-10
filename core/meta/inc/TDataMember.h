@@ -66,7 +66,7 @@ protected:
 public:
 
    TDataMember(DataMemberInfo_t *info = 0, TClass *cl = 0);
-         ~TDataMember() override;
+   ~TDataMember() override;
    Int_t          GetArrayDim() const;
    DeclId_t       GetDeclId() const;
    Int_t          GetMaxIndex(Int_t dim) const;

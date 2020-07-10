@@ -60,8 +60,8 @@ public:
    ~TProofResourcesStatic() override;
 
    TProofNodeInfo *GetMaster() override;
-   TList          *GetSubmasters() override;
-   TList          *GetWorkers() override;
+   TList *         GetSubmasters() override;
+   TList *         GetWorkers() override;
    TString         GetFileName() const { return fFileName; }
 
    ClassDef(TProofResourcesStatic,0) // Class to handle PROOF static config

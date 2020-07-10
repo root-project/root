@@ -189,7 +189,7 @@ public:
    void SetSwitch(bool bnd) ;
 
    /* Dump internals. Option is not used */
-   void Print(Option_t*) const override;
+   void Print(Option_t *) const override;
 
    ClassDef(TRolke, 2)
 };

@@ -86,7 +86,7 @@ public:
    TEveDigitSet(const char* n="TEveDigitSet", const char* t="");
    ~TEveDigitSet() override;
 
-   TObject* GetObject(const TEveException&) const override
+   TObject *GetObject(const TEveException &) const override
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
    void   UseSingleColor();
@@ -136,7 +136,7 @@ public:
    // Implemented in subclasses:
    // virtual void ComputeBBox();
 
-   void Paint(Option_t* option="") override;
+   void Paint(Option_t *option = "") override;
 
    virtual void DigitSelected(Int_t idx);
    virtual void SecSelected(TEveDigitSet* qs, Int_t idx); // *SIGNAL*

@@ -85,23 +85,22 @@ public:
    virtual TGCompositeFrame* GetEditorTab(const char* name);
    virtual TGedTabInfo*      GetEditorTabInfo(const char* name);
 
-   TCanvas*          GetCanvas() const override { return fCanvas; }
+   TCanvas *                 GetCanvas() const override { return fCanvas; }
    virtual TVirtualPad*      GetPad()    const { return fPad; }
    virtual TObject*          GetModel()  const { return fModel; }
 
-
-   void   CloseWindow() override;
+   void           CloseWindow() override;
    virtual void   ConnectToCanvas(TCanvas *c);
    virtual void   DisconnectFromCanvas();
-   Bool_t IsGlobal() const override  { return fGlobal; }
-   void   Hide() override;
+   Bool_t         IsGlobal() const override { return fGlobal; }
+   void           Hide() override;
    virtual void   GlobalClosed();
    virtual void   SetCanvas(TCanvas *c);
-   void   SetGlobal(Bool_t global) override;
+   void           SetGlobal(Bool_t global) override;
    virtual void   GlobalSetModel(TVirtualPad *, TObject *, Int_t);
    virtual void   SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t force=kFALSE);
-   void   Show() override;
-   void   RecursiveRemove(TObject* obj) override;
+   void           Show() override;
+   void           RecursiveRemove(TObject *obj) override;
 
    static TGedEditor* GetFrameCreator();
    static void SetFrameCreator(TGedEditor* e);

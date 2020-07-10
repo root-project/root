@@ -20,8 +20,8 @@ namespace textinput {
   // Base class for input from a terminal or file descriptor.
   class StreamReader: public Reader {
   public:
-    ~StreamReader() override;
-    static StreamReader* Create();
+     ~StreamReader() override;
+     static StreamReader *Create();
 
   protected:
     StreamReader() {}

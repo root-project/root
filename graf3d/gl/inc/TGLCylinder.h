@@ -43,8 +43,8 @@ public:
       // and LOD is set to Pixel way too early. Resetting this to kLODAxesAll.
       return ELODAxes(kLODAxesAll);
    }
-   Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const override;
-   void     DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   Short_t QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const override;
+   void    DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
 private:
    ClassDef(TGLCylinder,0); // a cylinderical logical shape

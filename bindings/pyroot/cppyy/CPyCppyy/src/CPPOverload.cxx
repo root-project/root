@@ -50,65 +50,70 @@ public:
         fCallable = callable;
     }
 
-    ~TPythonCallback() override {
-        Py_DECREF(fCallable);
-        fCallable = nullptr;
+    ~TPythonCallback() override
+    {
+       Py_DECREF(fCallable);
+       fCallable = nullptr;
     }
 
-    PyObject* GetSignature(bool /*show_formalargs*/ = true) override {
-        return CPyCppyy_PyText_FromString("*args, **kwargs");
+    PyObject *GetSignature(bool /*show_formalargs*/ = true) override
+    {
+       return CPyCppyy_PyText_FromString("*args, **kwargs");
     }
-    PyObject* GetPrototype(bool /*show_formalargs*/ = true) override {
-        return CPyCppyy_PyText_FromString("<callback>");
+    PyObject *GetPrototype(bool /*show_formalargs*/ = true) override
+    {
+       return CPyCppyy_PyText_FromString("<callback>");
     }
-    PyObject* GetDocString() override {
-        if (PyObject_HasAttrString(fCallable, "__doc__")) {
-            return PyObject_GetAttrString(fCallable, "__doc__");
-        } else {
-            return GetPrototype();
-        }
+    PyObject *GetDocString() override
+    {
+       if (PyObject_HasAttrString(fCallable, "__doc__")) {
+          return PyObject_GetAttrString(fCallable, "__doc__");
+       } else {
+          return GetPrototype();
+       }
     }
 
-    int GetPriority() override { return 100; };
+    int  GetPriority() override { return 100; };
     bool IsGreedy() override { return false; };
 
-    int GetMaxArgs() override { return 100; };
-    PyObject* GetCoVarNames() override { // TODO: pick these up from the callable
-        Py_RETURN_NONE;
+    int       GetMaxArgs() override { return 100; };
+    PyObject *GetCoVarNames() override
+    { // TODO: pick these up from the callable
+       Py_RETURN_NONE;
     }
-    PyObject* GetArgDefault(int /* iarg */) override { // TODO: pick these up from the callable
-        Py_RETURN_NONE;
-    }
-
-    PyObject* GetScopeProxy() override { // should this be the module ??
-        Py_RETURN_NONE;
+    PyObject *GetArgDefault(int /* iarg */) override
+    { // TODO: pick these up from the callable
+       Py_RETURN_NONE;
     }
 
-    Cppyy::TCppFuncAddr_t GetFunctionAddress() override {
-        return (Cppyy::TCppFuncAddr_t)nullptr;
+    PyObject *GetScopeProxy() override
+    { // should this be the module ??
+       Py_RETURN_NONE;
     }
 
-    PyCallable* Clone() override { return new TPythonCallback(*this); }
+    Cppyy::TCppFuncAddr_t GetFunctionAddress() override { return (Cppyy::TCppFuncAddr_t) nullptr; }
 
-    PyObject* Call(
-            CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* /* ctxt = 0 */) override {
+    PyCallable *Clone() override { return new TPythonCallback(*this); }
 
-        PyObject* newArgs = nullptr;
-        if (self) {
-            Py_ssize_t nargs = PyTuple_Size(args);
-            newArgs = PyTuple_New(nargs+1);
-            Py_INCREF(self);
-            PyTuple_SET_ITEM(newArgs, 0, (PyObject*)self);
-            for (Py_ssize_t iarg = 0; iarg < nargs; ++iarg) {
-                PyObject* pyarg = PyTuple_GET_ITEM(args, iarg);
-                Py_INCREF(pyarg);
-                PyTuple_SET_ITEM(newArgs, iarg+1, pyarg);
-            }
-        } else {
-            Py_INCREF(args);
-            newArgs = args;
-        }
-        return PyObject_Call(fCallable, newArgs, kwds);
+    PyObject *Call(CPPInstance *&self, PyObject *args, PyObject *kwds, CallContext * /* ctxt = 0 */) override
+    {
+
+       PyObject *newArgs = nullptr;
+       if (self) {
+          Py_ssize_t nargs = PyTuple_Size(args);
+          newArgs = PyTuple_New(nargs + 1);
+          Py_INCREF(self);
+          PyTuple_SET_ITEM(newArgs, 0, (PyObject *)self);
+          for (Py_ssize_t iarg = 0; iarg < nargs; ++iarg) {
+             PyObject *pyarg = PyTuple_GET_ITEM(args, iarg);
+             Py_INCREF(pyarg);
+             PyTuple_SET_ITEM(newArgs, iarg + 1, pyarg);
+          }
+       } else {
+          Py_INCREF(args);
+          newArgs = args;
+       }
+       return PyObject_Call(fCallable, newArgs, kwds);
     }
 };
 

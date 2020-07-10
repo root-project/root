@@ -145,19 +145,19 @@ public:
    TStyle(const char *name, const char *title);
    TStyle(const TStyle &style);
    TStyle& operator=(const TStyle& style);
-            ~TStyle() override;
+   ~TStyle() override;
    inline Int_t     AxisChoice(Option_t *axis) const {
       // Return axis number (1 for X, 2 for Y, 3 for Z)
       UChar_t a = *axis;
       a -= (a >= 'x') ? 'x' : 'X'; // toupper and a-='X'; intentional underflow
       return (a > 2) ? 0 : (Int_t)(a+1);
    };
-   void     Browse(TBrowser *b) override;
+   void             Browse(TBrowser *b) override;
    static  void     BuildStyles();
-   void     Copy(TObject &style) const override;
+   void             Copy(TObject &style) const override;
    virtual void     cd();
 
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
    Int_t            GetNdivisions(Option_t *axis="X") const;
    TAttText        *GetAttDate() {return &fAttDate;}
    Color_t          GetAxisColor(Option_t *axis="X") const;
@@ -280,7 +280,7 @@ public:
    Float_t          GetLineScalePS() const {return fLineScalePS;}
 
    Bool_t           IsReading() const {return fIsReading;}
-   void     Paint(Option_t *option="") override;
+   void             Paint(Option_t *option = "") override;
    virtual void     Reset(Option_t *option="");
 
    void             SetColorModelPS(Int_t c=0);

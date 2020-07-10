@@ -90,10 +90,16 @@ private:
 public:
    TGMenuEntry(): fEntryId(0), fUserData(0), fType(), fStatus(0),
       fEx(0), fEy(0), fEw(0), fEh(0), fLabel(0), fShortcut(0), fPic(0), fPopup(0) { }
-   ~TGMenuEntry() override { if (fLabel) delete fLabel; if (fShortcut) delete fShortcut; }
+   ~TGMenuEntry() override
+   {
+      if (fLabel)
+         delete fLabel;
+      if (fShortcut)
+         delete fShortcut;
+   }
 
    Int_t          GetEntryId() const { return fEntryId; }
-   const char    *GetName() const override { return fLabel ? fLabel->GetString() : 0; }
+   const char *     GetName() const override { return fLabel ? fLabel->GetString() : 0; }
    const char    *GetShortcutText() const { return fShortcut ? fShortcut->GetString() : 0; }
    virtual Int_t  GetStatus() const { return fStatus; }
    EMenuEntryType GetType() const { return fType; }
@@ -156,7 +162,7 @@ protected:
    void DrawTrianglePattern(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
    void DrawCheckMark(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
    void DrawRCheckMark(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
-   void DoRedraw() override;
+   void         DoRedraw() override;
    virtual void DrawEntry(TGMenuEntry *entry);
    virtual void Reposition();
 
@@ -211,17 +217,17 @@ public:
    virtual TGMenuEntry *GetCurrent() const { return fCurrent; }
    virtual TGMenuEntry *GetEntry(const char *s);
    const TList    *GetListOfEntries() const { return fEntryList; }
-   void    DrawBorder() override;
-   Bool_t  HandleButton(Event_t *event) override;
-   Bool_t  HandleMotion(Event_t *event) override;
-   Bool_t  HandleCrossing(Event_t *event) override;
-   Bool_t  HandleTimer(TTimer *t) override;
+   void                 DrawBorder() override;
+   Bool_t               HandleButton(Event_t *event) override;
+   Bool_t               HandleMotion(Event_t *event) override;
+   Bool_t               HandleCrossing(Event_t *event) override;
+   Bool_t               HandleTimer(TTimer *t) override;
    virtual void    Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual void    SetMenuBar(TGMenuBar *bar) { fMenuBar = bar; }
    TGMenuBar      *GetMenuBar() const { return fMenuBar; }
-   void    Activate(Bool_t) override { }
+   void                 Activate(Bool_t) override {}
    virtual void    Activate(TGMenuEntry *entry);
-   void    SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                 SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    UInt_t GetEntrySep()  const { return fEntrySep; }
    virtual void SetEntrySep(UInt_t sep)  { fEntrySep = sep; }
@@ -277,7 +283,11 @@ public:
                GContext_t norm = GetDefaultGC()(),
                FontStruct_t font = GetDefaultFontStruct(),
                UInt_t options = 0);
-   ~TGMenuTitle() override { if (fLabel) delete fLabel; }
+   ~TGMenuTitle() override
+   {
+      if (fLabel)
+         delete fLabel;
+   }
 
    Pixel_t      GetTextColor() const { return fTextColor; }
    void         SetTextColor(Pixel_t col) { fTextColor = col; }
@@ -285,9 +295,9 @@ public:
    Bool_t       GetState() const { return fState; }
    Int_t        GetHotKeyCode() const { return fHkeycode; }
    TGPopupMenu *GetMenu() const { return fMenu; }
-   const char  *GetName() const override { return fLabel ? fLabel->GetString() : 0; }
+   const char * GetName() const override { return fLabel ? fLabel->GetString() : 0; }
    virtual void DoSendMessage();
-   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void         SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGMenuTitle,0)  // Menu title class
 };
@@ -347,12 +357,12 @@ public:
 
    virtual TGMenuTitle *GetCurrent() const { return fCurrent; }
    virtual TList  *GetTitles() const { return fTitles; }
-   Bool_t  HandleButton(Event_t *event) override;
-   Bool_t  HandleMotion(Event_t *event) override;
-   Bool_t  HandleKey(Event_t *event) override;
-   void    SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   void    Layout() override;
-           void    PopupConnection();
+   Bool_t               HandleButton(Event_t *event) override;
+   Bool_t               HandleMotion(Event_t *event) override;
+   Bool_t               HandleKey(Event_t *event) override;
+   void                 SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                 Layout() override;
+   void                 PopupConnection();
    TGFrameElement* GetLastOnLeft();
 
    ClassDef(TGMenuBar,0)  // Menu bar class

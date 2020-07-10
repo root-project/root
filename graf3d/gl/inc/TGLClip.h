@@ -66,7 +66,7 @@ public:
    Bool_t IsValid() const { return fValid;   }
    void   Invalidate()    { fValid = kFALSE; }
 
-   void Draw(TGLRnrCtx & rnrCtx) const override;
+   void         Draw(TGLRnrCtx &rnrCtx) const override;
    virtual void PlaneSet(TGLPlaneSet_t & set) const = 0;
 
    ClassDef(TGLClip,0); // abstract clipping object
@@ -91,12 +91,12 @@ public:
    TGLClipPlane();
    ~TGLClipPlane() override;
 
-   void Setup(const TGLBoundingBox & bbox) override;
-   void Setup(const TGLVector3& point, const TGLVector3& normal) override;
+   void Setup(const TGLBoundingBox &bbox) override;
+   void Setup(const TGLVector3 &point, const TGLVector3 &normal) override;
 
    void Set(const TGLPlane & plane);
 
-   void PlaneSet(TGLPlaneSet_t & set) const override;
+   void PlaneSet(TGLPlaneSet_t &set) const override;
 
    ClassDef(TGLClipPlane, 0); // clipping plane
 };
@@ -119,10 +119,10 @@ public:
    TGLClipBox();
    ~TGLClipBox() override;
 
-   void Setup(const TGLBoundingBox & bbox) override;
-   void Setup(const TGLVector3& min_point, const TGLVector3& max_point) override;
+   void Setup(const TGLBoundingBox &bbox) override;
+   void Setup(const TGLVector3 &min_point, const TGLVector3 &max_point) override;
 
-   void PlaneSet(TGLPlaneSet_t & set) const override;
+   void PlaneSet(TGLPlaneSet_t &set) const override;
 
    ClassDef(TGLClipBox, 0); // clipping box
 };
@@ -158,13 +158,12 @@ public:
    TGLClipSet();
    ~TGLClipSet() override;
 
-   Bool_t MouseEnter(TGLOvlSelectRecord& selRec) override;
-   Bool_t MouseStillInside(TGLOvlSelectRecord& selRec) override;
-   Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
-                         Event_t* event) override;
+   Bool_t MouseEnter(TGLOvlSelectRecord &selRec) override;
+   Bool_t MouseStillInside(TGLOvlSelectRecord &selRec) override;
+   Bool_t Handle(TGLRnrCtx &rnrCtx, TGLOvlSelectRecord &selRec, Event_t *event) override;
    void   MouseLeave() override;
 
-   void Render(TGLRnrCtx& rnrCtx) override;
+   void Render(TGLRnrCtx &rnrCtx) override;
 
    Bool_t    IsClipping()     const { return fCurrentClip != 0; }
    TGLClip*  GetCurrentClip() const { return fCurrentClip; }

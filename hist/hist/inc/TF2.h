@@ -86,53 +86,59 @@ public:
 
    TF2(const TF2 &f2);
    TF2 &operator=(const TF2& rhs);
-     ~TF2() override;
+   ~TF2() override;
    void     Copy(TObject &f2) const override;
    Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
-   void     Draw(Option_t *option="") override;
-   TF1     *DrawCopy(Option_t *option="") const override;
-   TObject *DrawDerivative(Option_t * ="al") override {return 0;}
-   TObject *DrawIntegral(Option_t * ="al") override   {return 0;}
+   void     Draw(Option_t *option = "") override;
+   TF1 *    DrawCopy(Option_t *option = "") const override;
+   TObject *DrawDerivative(Option_t * = "al") override { return 0; }
+   TObject *DrawIntegral(Option_t * = "al") override { return 0; }
    //virtual void     DrawF2(const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t *option="");
-   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void                ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual Int_t    GetContour(Double_t *levels=0);
    virtual Double_t GetContourLevel(Int_t level) const;
           Int_t     GetNpy() const {return fNpy;}
-   char    *GetObjectInfo(Int_t px, Int_t py) const override;
-       Double_t     GetRandom() override;
-       Double_t     GetRandom(Double_t xmin, Double_t xmax) override;
-   virtual void     GetRandom2(Double_t &xrandom, Double_t &yrandom);
-   using TF1::GetRange;
-   void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const override;
-   void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const override;
-   Double_t GetSave(const Double_t *x) override;
-   virtual Double_t GetMinimumXY(Double_t &x, Double_t &y) const;
-   virtual Double_t GetMaximumXY(Double_t &x, Double_t &y) const;
-   using TF1::GetMinimum;
-   using TF1::GetMaximum;
-   virtual Double_t GetMinimum(Double_t *x ) const;
-   virtual Double_t GetMaximum(Double_t *x ) const;
-   virtual Double_t GetYmin() const {return fYmin;}
-   virtual Double_t GetYmax() const {return fYmax;}
-   using TF1::Integral;
-   virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsrel=1.e-6);
-   Bool_t   IsInside(const Double_t *x) const override;
-   TH1     *CreateHistogram() override;
-   void     Paint(Option_t *option="") override;
-   void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax) override;
-   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   virtual void     SetNpy(Int_t npy=100); // *MENU*
-   virtual void     SetContour(Int_t nlevels=20, const Double_t *levels=0);
-   virtual void     SetContourLevel(Int_t level, Double_t value);
-   void     SetRange(Double_t xmin, Double_t xmax) override;
-   void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) override; // *MENU*
-   void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax) override;
+          char *       GetObjectInfo(Int_t px, Int_t py) const override;
+          Double_t     GetRandom() override;
+          Double_t     GetRandom(Double_t xmin, Double_t xmax) override;
+          virtual void GetRandom2(Double_t &xrandom, Double_t &yrandom);
+          using TF1::GetRange;
+          void             GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const override;
+          void             GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax,
+                                    Double_t &zmax) const override;
+          Double_t         GetSave(const Double_t *x) override;
+          virtual Double_t GetMinimumXY(Double_t &x, Double_t &y) const;
+          virtual Double_t GetMaximumXY(Double_t &x, Double_t &y) const;
+          using TF1::GetMinimum;
+          using TF1::GetMaximum;
+          virtual Double_t GetMinimum(Double_t *x) const;
+          virtual Double_t GetMaximum(Double_t *x) const;
+          virtual Double_t GetYmin() const { return fYmin; }
+          virtual Double_t GetYmax() const { return fYmax; }
+          using TF1::Integral;
+          virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsrel = 1.e-6);
+          Bool_t           IsInside(const Double_t *x) const override;
+          TH1 *            CreateHistogram() override;
+          void             Paint(Option_t *option = "") override;
+          void Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax) override;
+          void SavePrimitive(std::ostream &out, Option_t *option = "") override;
+          virtual void SetNpy(Int_t npy = 100); // *MENU*
+          virtual void SetContour(Int_t nlevels = 20, const Double_t *levels = 0);
+          virtual void SetContourLevel(Int_t level, Double_t value);
+          void         SetRange(Double_t xmin, Double_t xmax) override;
+          void         SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) override; // *MENU*
+          void
+          SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax) override;
 
-   //Moments
-   virtual Double_t Moment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t epsilon=0.000001);
-   virtual Double_t CentralMoment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t epsilon=0.000001);
+          // Moments
+          virtual Double_t Moment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by,
+                                   Double_t epsilon = 0.000001);
+          virtual Double_t CentralMoment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by,
+                                          Double_t epsilon = 0.000001);
 
-   virtual Double_t Mean2X(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return Moment2(1,ax,bx,0,ay,by,epsilon);}
+          virtual Double_t Mean2X(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon = 0.000001)
+          {
+             return Moment2(1, ax, bx, 0, ay, by, epsilon);}
    virtual Double_t Mean2Y(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return Moment2(0,ax,bx,1,ay,by,epsilon);}
 
    virtual Double_t Variance2X(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return CentralMoment2(2,ax,bx,0,ay,by,epsilon);}

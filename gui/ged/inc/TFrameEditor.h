@@ -49,7 +49,7 @@ public:
                 Pixel_t back = GetDefaultFrameBackground());
    ~TFrameEditor() override;
 
-   void   SetModel(TObject* obj) override;
+   void           SetModel(TObject *obj) override;
    virtual void   DoBorderMode();
    virtual void   DoBorderSize(Int_t size);
 

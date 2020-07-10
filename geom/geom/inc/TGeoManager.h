@@ -445,7 +445,7 @@ public:
    //--- utilities
    Int_t                  CountNodes(const TGeoVolume *vol=0, Int_t nlevels=10000, Int_t option=0);
    void                   CountLevels();
-   void           ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void                   ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
    Int_t                  ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew);
    Int_t                  TransformVolumeToAssembly(const char *vname);

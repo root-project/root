@@ -50,7 +50,7 @@ public:
                     Pixel_t back = GetDefaultFrameBackground());
    ~TAttMarkerEditor() override;
 
-   void     SetModel(TObject* obj) override;
+   void             SetModel(TObject *obj) override;
    virtual void     DoMarkerColor(Pixel_t color);
    virtual void     DoMarkerAlphaColor(ULong_t p);
    virtual void     DoMarkerSize();

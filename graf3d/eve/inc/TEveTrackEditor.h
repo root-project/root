@@ -44,7 +44,7 @@ public:
                    UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveTrackEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
    void DoEditPropagator();
 
    ClassDef(TEveTrackEditor, 0); // Editor for TEveTrack class.
@@ -81,7 +81,7 @@ public:
    ~TEveTrackListEditor() override {}
 
    void CreateRefsTab();
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    void DoRnrLine();
    void DoRnrPoints();

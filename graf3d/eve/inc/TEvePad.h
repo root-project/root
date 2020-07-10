@@ -23,12 +23,11 @@ public:
            Color_t color = -1, Short_t bordersize = -1, Short_t bordermode = -2);
    ~TEvePad() override {}
 
-   Bool_t    IsBatch() const override { return kTRUE; }
+   Bool_t IsBatch() const override { return kTRUE; }
 
-   void      Update() override { PaintModified(); }
+   void Update() override { PaintModified(); }
 
-   TVirtualViewer3D *GetViewer3D(Option_t * /*type*/ = "") override
-   { return fViewer3D; }
+   TVirtualViewer3D *GetViewer3D(Option_t * /*type*/ = "") override { return fViewer3D; }
 
    ClassDef(TEvePad, 1); // Internal TEveUtil pad class (sub-class of TPad) overriding handling of updates and 3D-viewers.
 };

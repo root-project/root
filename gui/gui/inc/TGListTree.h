@@ -165,43 +165,54 @@ public:
                      Bool_t checkbox = kFALSE);
    ~TGListTreeItemStd() override;
 
-   Pixel_t         GetActiveColor() const override;
-   Bool_t          IsActive()       const override { return fActive; }
-   void            SetActive(Bool_t a) override    { fActive = a; }
+   Pixel_t GetActiveColor() const override;
+   Bool_t  IsActive() const override { return fActive; }
+   void    SetActive(Bool_t a) override { fActive = a; }
 
-   const char     *GetText()             const override { return fText.Data(); }
-   Int_t           GetTextLength()       const override { return fText.Length(); }
-   const char     *GetTipText()          const override { return fTipText.Data(); }
-   Int_t           GetTipTextLength()    const override { return fTipText.Length(); }
-   void            SetText(const char *text) override   { fText = text; }
-   void            SetTipText(const char *tip) override { fTipText = tip; }
+   const char *GetText() const override { return fText.Data(); }
+   Int_t       GetTextLength() const override { return fText.Length(); }
+   const char *GetTipText() const override { return fTipText.Data(); }
+   Int_t       GetTipTextLength() const override { return fTipText.Length(); }
+   void        SetText(const char *text) override { fText = text; }
+   void        SetTipText(const char *tip) override { fTipText = tip; }
 
-   void            SetUserData(void *userData, Bool_t own=kFALSE) override { fUserData = userData; fOwnsData=own; }
-   void           *GetUserData() const override { return fUserData; }
+   void SetUserData(void *userData, Bool_t own = kFALSE) override
+   {
+      fUserData = userData;
+      fOwnsData = own;
+   }
+   void *GetUserData() const override { return fUserData; }
 
-   const TGPicture*GetPicture()         const override { return fOpen ? fOpenPic : fClosedPic; }
-   const TGPicture*GetCheckBoxPicture() const override { return fCheckBox ? (fChecked ? fCheckedPic : fUncheckedPic) : 0; }
-   void            SetPictures(const TGPicture *opened, const TGPicture *closed) override;
-   void            SetCheckBoxPictures(const TGPicture *checked, const TGPicture *unchecked) override;
+   const TGPicture *GetPicture() const override { return fOpen ? fOpenPic : fClosedPic; }
+   const TGPicture *GetCheckBoxPicture() const override
+   {
+      return fCheckBox ? (fChecked ? fCheckedPic : fUncheckedPic) : 0;
+   }
+   void SetPictures(const TGPicture *opened, const TGPicture *closed) override;
+   void SetCheckBoxPictures(const TGPicture *checked, const TGPicture *unchecked) override;
 
-   void            SetCheckBox(Bool_t on = kTRUE) override;
-   Bool_t          HasCheckBox() const override { return fCheckBox; }
-   void            CheckItem(Bool_t checked = kTRUE) override { fChecked = checked; }
-   void            Toggle() override { fChecked = !fChecked; }
-   Bool_t          IsChecked() const override { return fChecked; }
+   void   SetCheckBox(Bool_t on = kTRUE) override;
+   Bool_t HasCheckBox() const override { return fCheckBox; }
+   void   CheckItem(Bool_t checked = kTRUE) override { fChecked = checked; }
+   void   Toggle() override { fChecked = !fChecked; }
+   Bool_t IsChecked() const override { return fChecked; }
 
-   void            CheckAllChildren(Bool_t state = kTRUE) override;
-   void            CheckChildren(TGListTreeItem *item, Bool_t state) override;
-   Bool_t          HasCheckedChild(Bool_t first=kFALSE) override;
-   Bool_t          HasUnCheckedChild(Bool_t first=kFALSE) override;
-   void            UpdateState() override;
+   void   CheckAllChildren(Bool_t state = kTRUE) override;
+   void   CheckChildren(TGListTreeItem *item, Bool_t state) override;
+   Bool_t HasCheckedChild(Bool_t first = kFALSE) override;
+   Bool_t HasUnCheckedChild(Bool_t first = kFALSE) override;
+   void   UpdateState() override;
 
-   Bool_t          HasColor() const override { return fHasColor; }
-   Color_t         GetColor() const override { return fColor; }
-   void            SetColor(Color_t color) override { fHasColor = true;fColor = color; }
-   void            ClearColor() override { fHasColor = false; }
+   Bool_t  HasColor() const override { return fHasColor; }
+   Color_t GetColor() const override { return fColor; }
+   void    SetColor(Color_t color) override
+   {
+      fHasColor = true;
+      fColor = color;
+   }
+   void ClearColor() override { fHasColor = false; }
 
-   void            SavePrimitive(std::ostream &out, Option_t *option, Int_t n) override;
+   void SavePrimitive(std::ostream &out, Option_t *option, Int_t n) override;
 
    ClassDef(TGListTreeItemStd,0)  //Item that goes into a TGListTree container
 };
@@ -279,7 +290,7 @@ protected:
    static const TGGC   &GetColorGC();
 
    void  Draw(Handle_t id, Int_t yevent, Int_t hevent);
-   void  Draw(Option_t * ="") override { MayNotUse("Draw(Option_t*)"); }
+   void         Draw(Option_t * = "") override { MayNotUse("Draw(Option_t*)"); }
    Int_t DrawChildren(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y, Int_t xroot);
    void  DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y, Int_t *xroot,
                   UInt_t *retwidth, UInt_t *retheight);
@@ -296,23 +307,22 @@ protected:
    Int_t SearchChildren(TGListTreeItem *item, Int_t y, Int_t findy,
                         TGListTreeItem **finditem);
    TGListTreeItem *FindItem(Int_t findy);
-   void *FindItem(const TString& name,
-                  Bool_t direction = kTRUE,
-                  Bool_t caseSensitive = kTRUE,
-                  Bool_t beginWith = kFALSE) override
-      { return TGContainer::FindItem(name, direction, caseSensitive, beginWith); }
+   void *          FindItem(const TString &name, Bool_t direction = kTRUE, Bool_t caseSensitive = kTRUE,
+                            Bool_t beginWith = kFALSE) override
+   {
+      return TGContainer::FindItem(name, direction, caseSensitive, beginWith); }
 
    void Layout() override {}
 
-   void OnMouseOver(TGFrame*) override { }
-   void CurrentChanged(Int_t /*x*/, Int_t /*y*/) override { }
-   void CurrentChanged(TGFrame *) override { }
-   void ReturnPressed(TGFrame*) override { }
-   void Clicked(TGFrame *, Int_t /*btn*/) override { }
-   void Clicked(TGFrame *, Int_t /*btn*/, Int_t /*x*/, Int_t /*y*/) override { }
-   void DoubleClicked(TGFrame *, Int_t /*btn*/) override { }
-   void DoubleClicked(TGFrame *, Int_t /*btn*/, Int_t /*x*/, Int_t /*y*/) override { }
-   void KeyPressed(TGFrame *, UInt_t /*keysym*/, UInt_t /*mask*/) override { }
+   void OnMouseOver(TGFrame *) override {}
+   void CurrentChanged(Int_t /*x*/, Int_t /*y*/) override {}
+   void CurrentChanged(TGFrame *) override {}
+   void ReturnPressed(TGFrame *) override {}
+   void Clicked(TGFrame *, Int_t /*btn*/) override {}
+   void Clicked(TGFrame *, Int_t /*btn*/, Int_t /*x*/, Int_t /*y*/) override {}
+   void DoubleClicked(TGFrame *, Int_t /*btn*/) override {}
+   void DoubleClicked(TGFrame *, Int_t /*btn*/, Int_t /*x*/, Int_t /*y*/) override {}
+   void KeyPressed(TGFrame *, UInt_t /*keysym*/, UInt_t /*mask*/) override {}
 
 private:
    TGListTree(const TGListTree&);               // not implemented
@@ -332,14 +342,13 @@ public:
    Bool_t HandleKey(Event_t *event) override;
 
    virtual void SetCanvas(TGCanvas *canvas) { fCanvas = canvas; }
-   void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   void         DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
 
    virtual void DrawOutline(Handle_t id, TGListTreeItem *item, Pixel_t col=0xbbbbbb,
                             Bool_t clear=kFALSE);
    virtual void DrawActive(Handle_t id, TGListTreeItem *item);
 
-   TGDimension GetDefaultSize() const override
-            { return TGDimension(fDefw, fDefh); }
+   TGDimension GetDefaultSize() const override { return TGDimension(fDefw, fDefh); }
 
    void            AddItem(TGListTreeItem *parent, TGListTreeItem *item);
    TGListTreeItem *AddItem(TGListTreeItem *parent, const char *string,
@@ -437,15 +446,12 @@ public:
    void         SetEventHandled(Bool_t eh=kTRUE) { fEventHandled = eh; }
    Bool_t       IsEventHandled() const { return fEventHandled; }
 
-   Bool_t   HandleDNDDrop(TDNDData *data) override;
-   Atom_t   HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
-                              Int_t xroot, Int_t yroot) override;
-   Atom_t   HandleDNDEnter(Atom_t * typelist) override;
-   Bool_t   HandleDNDLeave() override;
+   Bool_t HandleDNDDrop(TDNDData *data) override;
+   Atom_t HandleDNDPosition(Int_t x, Int_t y, Atom_t action, Int_t xroot, Int_t yroot) override;
+   Atom_t HandleDNDEnter(Atom_t *typelist) override;
+   Bool_t HandleDNDLeave() override;
 
-   TDNDData *GetDNDData(Atom_t) override {
-      return &fDNDData;
-   }
+   TDNDData *GetDNDData(Atom_t) override { return &fDNDData; }
 
    EColorMarkupMode GetColorMode() const { return fColorMode; }
    void SetColorMode(EColorMarkupMode colorMode) { fColorMode = colorMode; }

@@ -180,7 +180,6 @@ public:
       kNstat       = 13  // size of statistics data (up to TProfile3D)
    };
 
-
    ~TH1() override;
 
    virtual Bool_t   Add(TF1 *h1, Double_t c1=1, Option_t *option="");
@@ -190,27 +189,27 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w);
    static  void     AddDirectory(Bool_t add=kTRUE);
    static  Bool_t   AddDirectoryStatus();
-   void     Browse(TBrowser *b) override;
+   void             Browse(TBrowser *b) override;
    virtual Bool_t   CanExtendAllAxes() const;
    virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = 0) const;
    virtual Double_t Chi2TestX(const TH1* h2, Double_t &chi2, Int_t &ndf, Int_t &igood,Option_t *option = "UU",  Double_t *res = 0) const;
    virtual Double_t Chisquare(TF1 * f1, Option_t *option = "") const;
    virtual void     ClearUnderflowAndOverflow();
    virtual Double_t ComputeIntegral(Bool_t onlyPositive = false);
-   TObject*         Clone(const char* newname=0) const override;
-   void     Copy(TObject &hnew) const override;
+   TObject *        Clone(const char *newname = 0) const override;
+   void             Copy(TObject &hnew) const override;
    virtual void     DirectoryAutoAdd(TDirectory *);
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
    virtual Bool_t   Divide(TF1 *f1, Double_t c1=1);
    virtual Bool_t   Divide(const TH1 *h1);
    virtual Bool_t   Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
-   void     Draw(Option_t *option="") override;
+   void             Draw(Option_t *option = "") override;
    virtual TH1     *DrawCopy(Option_t *option="", const char * name_postfix = "_copy") const;
    virtual TH1     *DrawNormalized(Option_t *option="", Double_t norm=1) const;
    virtual void     DrawPanel(); // *MENU*
    virtual Int_t    BufferEmpty(Int_t action=0);
    virtual void     Eval(TF1 *f1, Option_t *option="");
-   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void             ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void     ExtendAxis(Double_t x, TAxis *axis);
    virtual TH1     *FFT(TH1* h_output, Option_t *option);
    virtual Int_t    Fill(Double_t x);
@@ -224,8 +223,8 @@ public:
    virtual Int_t    FindFixBin(Double_t x, Double_t y=0, Double_t z=0) const;
    virtual Int_t    FindFirstBinAbove(Double_t threshold=0, Int_t axis=1, Int_t firstBin=1, Int_t lastBin=-1) const;
    virtual Int_t    FindLastBinAbove (Double_t threshold=0, Int_t axis=1, Int_t firstBin=1, Int_t lastBin=-1) const;
-   TObject *FindObject(const char *name) const override;
-   TObject *FindObject(const TObject *obj) const override;
+   TObject *        FindObject(const char *name) const override;
+   TObject *        FindObject(const TObject *obj) const override;
    virtual TFitResultPtr    Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Double_t xmin=0, Double_t xmax=0); // *MENU*
    virtual TFitResultPtr    Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Double_t xmin=0, Double_t xmax=0);
    virtual void     FitPanel(); // *MENU*
@@ -295,8 +294,8 @@ public:
    virtual Int_t    GetNbinsZ() const {return fZaxis.GetNbins();}
    virtual Int_t    GetNcells() const {return fNcells; }
    virtual Double_t GetNormFactor() const {return fNormFactor;}
-   char    *GetObjectInfo(Int_t px, Int_t py) const override;
-   Option_t        *GetOption() const override {return fOption.Data();}
+   char *                GetObjectInfo(Int_t px, Int_t py) const override;
+   Option_t *            GetOption() const override { return fOption.Data(); }
 
    TVirtualHistPainter *GetPainter(Option_t *option="");
 
@@ -340,16 +339,16 @@ public:
    virtual Bool_t   Multiply(TF1 *f1, Double_t c1=1);
    virtual Bool_t   Multiply(const TH1 *h1);
    virtual Bool_t   Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
-   void     Paint(Option_t *option="") override;
-   void     Print(Option_t *option="") const override;
+   void                   Paint(Option_t *option = "") override;
+   void                   Print(Option_t *option = "") const override;
    virtual void     PutStats(Double_t *stats);
    virtual TH1     *Rebin(Int_t ngroup=2, const char*newname="", const Double_t *xbins=0);  // *MENU*
    virtual TH1     *RebinX(Int_t ngroup=2, const char*newname="") { return Rebin(ngroup,newname, (Double_t*) 0); }
    virtual void     Rebuild(Option_t *option="");
-   void     RecursiveRemove(TObject *obj) override;
+   void                   RecursiveRemove(TObject *obj) override;
    virtual void     Reset(Option_t *option="");
    virtual void     ResetStats();
-   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                   SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     Scale(Double_t c1=1, Option_t *option="");
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="X");
    virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="X");
@@ -395,8 +394,8 @@ public:
    virtual void     SetMaximum(Double_t maximum = -1111) { fMaximum = maximum; }; // *MENU*
    virtual void     SetMinimum(Double_t minimum = -1111) { fMinimum = minimum; }; // *MENU*
 
-   void     SetName(const char *name) override; // *MENU*
-   void     SetNameTitle(const char *name, const char *title) override;
+   void                  SetName(const char *name) override; // *MENU*
+   void                  SetNameTitle(const char *name, const char *title) override;
    virtual void     SetNdivisions(Int_t n=510, Option_t *axis="X");
    virtual void     SetNormFactor(Double_t factor=1) {fNormFactor = factor;}
    virtual void     SetStats(Bool_t stats=kTRUE); // *MENU*
@@ -406,23 +405,24 @@ public:
    virtual void     SetTitleOffset(Float_t offset=1, Option_t *axis="X");
    virtual void     SetTitleSize(Float_t size=0.02, Option_t *axis="X");
            void     SetStatOverflows(EStatOverflows statOverflows) {fStatOverflows = statOverflows;}; ///< See GetStatOverflows for more information.
-   void     SetTitle(const char *title) override;  // *MENU*
-   virtual void     SetXTitle(const char *title) {fXaxis.SetTitle(title);}
-   virtual void     SetYTitle(const char *title) {fYaxis.SetTitle(title);}
-   virtual void     SetZTitle(const char *title) {fZaxis.SetTitle(title);}
-   virtual TH1     *ShowBackground(Int_t niter=20, Option_t *option="same"); // *MENU*
-   virtual Int_t    ShowPeaks(Double_t sigma=2, Option_t *option="", Double_t threshold=0.05); // *MENU*
-   virtual void     Smooth(Int_t ntimes=1, Option_t *option=""); // *MENU*
-   static  void     SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes=1);
-   static  void     StatOverflows(Bool_t flag=kTRUE);
-   virtual void     Sumw2(Bool_t flag = kTRUE);
-   void             UseCurrentStyle() override;
-   static  TH1     *TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option);
+           void          SetTitle(const char *title) override;                                             // *MENU*
+           virtual void  SetXTitle(const char *title) { fXaxis.SetTitle(title); }
+           virtual void  SetYTitle(const char *title) { fYaxis.SetTitle(title); }
+           virtual void  SetZTitle(const char *title) { fZaxis.SetTitle(title); }
+           virtual TH1 * ShowBackground(Int_t niter = 20, Option_t *option = "same");                     // *MENU*
+           virtual Int_t ShowPeaks(Double_t sigma = 2, Option_t *option = "", Double_t threshold = 0.05); // *MENU*
+           virtual void  Smooth(Int_t ntimes = 1, Option_t *option = "");                                 // *MENU*
+           static void   SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes = 1);
+           static void   StatOverflows(Bool_t flag = kTRUE);
+           virtual void  Sumw2(Bool_t flag = kTRUE);
+           void          UseCurrentStyle() override;
+           static TH1 *  TransformHisto(TVirtualFFT *fft, TH1 *h_output, Option_t *option);
 
-
-   // TODO: Remove obsolete methods in v6-04
-   virtual Double_t GetCellContent(Int_t binx, Int_t biny) const
-                        { Obsolete("GetCellContent", "v6-00", "v6-04"); return GetBinContent(GetBin(binx, biny)); }
+           // TODO: Remove obsolete methods in v6-04
+           virtual Double_t GetCellContent(Int_t binx, Int_t biny) const
+           {
+              Obsolete("GetCellContent", "v6-00", "v6-04");
+              return GetBinContent(GetBin(binx, biny)); }
    virtual Double_t GetCellError(Int_t binx, Int_t biny) const
                         { Obsolete("GetCellError", "v6-00", "v6-04"); return GetBinError(binx, biny); }
    virtual void     RebinAxis(Double_t x, TAxis *axis)
@@ -457,11 +457,11 @@ public:
    TH1C& operator=(const TH1C &h1);
    ~TH1C() override;
 
-   void     AddBinContent(Int_t bin) override;
-   void     AddBinContent(Int_t bin, Double_t w) override;
-   void     Copy(TObject &hnew) const override;
-   void     Reset(Option_t *option="") override;
-   void     SetBinsLength(Int_t n=-1) override;
+   void AddBinContent(Int_t bin) override;
+   void AddBinContent(Int_t bin, Double_t w) override;
+   void Copy(TObject &hnew) const override;
+   void Reset(Option_t *option = "") override;
+   void SetBinsLength(Int_t n = -1) override;
 
    ClassDef(TH1C,3)  //1-Dim histograms (one char per channel)
 
@@ -473,8 +473,8 @@ public:
    friend  TH1C     operator/(const TH1C &h1, const TH1C &h2);
 
 protected:
-   Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
-   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Char_t (content); }
+   Double_t RetrieveBinContent(Int_t bin) const override { return Double_t(fArray[bin]); }
+   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Char_t(content); }
 };
 
 TH1C operator*(Double_t c1, const TH1C &h1);
@@ -498,11 +498,11 @@ public:
    TH1S& operator=(const TH1S &h1);
    ~TH1S() override;
 
-   void     AddBinContent(Int_t bin) override;
-   void     AddBinContent(Int_t bin, Double_t w) override;
-   void     Copy(TObject &hnew) const override;
-   void     Reset(Option_t *option="") override;
-   void     SetBinsLength(Int_t n=-1) override;
+   void AddBinContent(Int_t bin) override;
+   void AddBinContent(Int_t bin, Double_t w) override;
+   void Copy(TObject &hnew) const override;
+   void Reset(Option_t *option = "") override;
+   void SetBinsLength(Int_t n = -1) override;
 
    ClassDef(TH1S,3)  //1-Dim histograms (one short per channel)
 
@@ -514,8 +514,8 @@ public:
    friend  TH1S     operator/(const TH1S &h1, const TH1S &h2);
 
 protected:
-   Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
-   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Short_t (content); }
+   Double_t RetrieveBinContent(Int_t bin) const override { return Double_t(fArray[bin]); }
+   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Short_t(content); }
 };
 
 TH1S operator*(Double_t c1, const TH1S &h1);
@@ -539,11 +539,11 @@ public:
    TH1I& operator=(const TH1I &h1);
    ~TH1I() override;
 
-   void     AddBinContent(Int_t bin) override;
-   void     AddBinContent(Int_t bin, Double_t w) override;
-   void     Copy(TObject &hnew) const override;
-   void     Reset(Option_t *option="") override;
-   void     SetBinsLength(Int_t n=-1) override;
+   void AddBinContent(Int_t bin) override;
+   void AddBinContent(Int_t bin, Double_t w) override;
+   void Copy(TObject &hnew) const override;
+   void Reset(Option_t *option = "") override;
+   void SetBinsLength(Int_t n = -1) override;
 
    ClassDef(TH1I,3)  //1-Dim histograms (one 32 bits integer per channel)
 
@@ -555,8 +555,8 @@ public:
    friend  TH1I     operator/(const TH1I &h1, const TH1I &h2);
 
 protected:
-   Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
-   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Int_t (content); }
+   Double_t RetrieveBinContent(Int_t bin) const override { return Double_t(fArray[bin]); }
+   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Int_t(content); }
 };
 
 TH1I operator*(Double_t c1, const TH1I &h1);
@@ -581,12 +581,11 @@ public:
    TH1F& operator=(const TH1F &h1);
    ~TH1F() override;
 
-   void     AddBinContent(Int_t bin) override {++fArray[bin];}
-   void     AddBinContent(Int_t bin, Double_t w) override
-                                 {fArray[bin] += Float_t (w);}
-   void     Copy(TObject &hnew) const override;
-   void     Reset(Option_t *option="") override;
-   void     SetBinsLength(Int_t n=-1) override;
+   void AddBinContent(Int_t bin) override { ++fArray[bin]; }
+   void AddBinContent(Int_t bin, Double_t w) override { fArray[bin] += Float_t(w); }
+   void Copy(TObject &hnew) const override;
+   void Reset(Option_t *option = "") override;
+   void SetBinsLength(Int_t n = -1) override;
 
    ClassDef(TH1F,3)  //1-Dim histograms (one float per channel)
 
@@ -598,8 +597,8 @@ public:
    friend  TH1F     operator/(const TH1F &h1, const TH1F &h2);
 
 protected:
-   Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
-   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Float_t (content); }
+   Double_t RetrieveBinContent(Int_t bin) const override { return Double_t(fArray[bin]); }
+   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Float_t(content); }
 };
 
 TH1F operator*(Double_t c1, const TH1F &h1);
@@ -624,12 +623,11 @@ public:
    TH1D& operator=(const TH1D &h1);
    ~TH1D() override;
 
-   void     AddBinContent(Int_t bin) override {++fArray[bin];}
-   void     AddBinContent(Int_t bin, Double_t w) override
-                                 {fArray[bin] += Double_t (w);}
-   void     Copy(TObject &hnew) const override;
-   void     Reset(Option_t *option="") override;
-   void     SetBinsLength(Int_t n=-1) override;
+   void AddBinContent(Int_t bin) override { ++fArray[bin]; }
+   void AddBinContent(Int_t bin, Double_t w) override { fArray[bin] += Double_t(w); }
+   void Copy(TObject &hnew) const override;
+   void Reset(Option_t *option = "") override;
+   void SetBinsLength(Int_t n = -1) override;
 
    ClassDef(TH1D,3)  //1-Dim histograms (one double per channel)
 

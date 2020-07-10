@@ -29,7 +29,7 @@ private:
 public:
    TGLPolyLine(const TBuffer3D & buffer);
 
-   void DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   void DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
    ClassDef(TGLPolyLine,0) // a polyline logical shape
 };

@@ -44,9 +44,9 @@ class FTGL_EXPORT FTPolyGlyph : public FTGlyph
          * @param pen   The current pen position.
          * @return      The advance distance for this glyph.
          */
-        const FTPoint& Render( const FTPoint& pen) override;
+        const FTPoint &Render(const FTPoint &pen) override;
 
-    private:
+     private:
         /**
          * OpenGL display list
          */

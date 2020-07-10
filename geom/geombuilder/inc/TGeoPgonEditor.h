@@ -31,11 +31,11 @@ public:
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    ~TGeoPgonEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
    void           DoNedges();
-   void   DoApply() override;
-   void   DoUndo() override;
+   void           DoApply() override;
+   void           DoUndo() override;
 
    ClassDef(TGeoPgonEditor,0)   // TGeoPgon editor
 };

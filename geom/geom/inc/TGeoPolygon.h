@@ -50,7 +50,7 @@ public:
    // methods
    Double_t            Area() const;
    Bool_t              Contains(const Double_t *point) const;
-   void        Draw(Option_t *option="") override;
+   void                Draw(Option_t *option = "") override;
    void                FinishPolygon();
    Int_t               GetNvert() const {return fNvert;}
    Int_t               GetNconvex() const {return fNconvex;}

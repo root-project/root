@@ -34,7 +34,7 @@ public:
    // constructors
    TGRectMap(Int_t rx, Int_t ry, UInt_t rw, UInt_t rh):
              fX(rx), fY(ry), fW(rw), fH(rh) { }
-   ~TGRectMap() override { }
+   ~TGRectMap() override {}
 
    // methods
    Bool_t Contains(Int_t px, Int_t py) const
@@ -95,12 +95,12 @@ public:
                 UInt_t options = 0);
    ~TGSplitFrame() override;
 
-   void   AddFrame(TGFrame *f, TGLayoutHints *l = 0) override;
-   void   Cleanup() override;
-   Bool_t HandleConfigureNotify(Event_t *) override;
+   void           AddFrame(TGFrame *f, TGLayoutHints *l = 0) override;
+   void           Cleanup() override;
+   Bool_t         HandleConfigureNotify(Event_t *) override;
    virtual void   HSplit(UInt_t h = 0);
    virtual void   VSplit(UInt_t w = 0);
-   void   RemoveFrame(TGFrame *f) override;
+   void           RemoveFrame(TGFrame *f) override;
 
    TGSplitFrame  *GetFirst() const { return fFirst; }
    TGFrame       *GetFrame() const { return fFrame; }
@@ -134,7 +134,7 @@ public:
 
    static  void   SwitchFrames(TGFrame *frame, TGCompositeFrame *dest,
                                TGFrame *prev);
-   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void           SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGSplitFrame, 0) // Splittable composite frame
 };

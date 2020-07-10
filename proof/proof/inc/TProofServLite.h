@@ -42,15 +42,15 @@ public:
    TProofServLite(Int_t *argc, char **argv, FILE *flog = 0);
    ~TProofServLite() override;
 
-   Int_t         CreateServer() override;
+   Int_t CreateServer() override;
 
-   void          HandleFork(TMessage *mess) override;
+   void HandleFork(TMessage *mess) override;
 
    //void          HandleUrgentData();
-   void          HandleSigPipe() override;
-   void          HandleTermination() override;
+   void HandleSigPipe() override;
+   void HandleTermination() override;
 
-   void          Terminate(Int_t status) override;
+   void Terminate(Int_t status) override;
 
    ClassDef(TProofServLite,0)  //PROOF-Lite Server Application Interface
 };

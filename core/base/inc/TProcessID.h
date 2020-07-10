@@ -92,14 +92,14 @@ public:
    TProcessID();
    ~TProcessID() override;
    void             CheckInit();
-   void     Clear(Option_t *option="") override;
+   void             Clear(Option_t *option = "") override;
    Int_t            DecrementCount();
    Int_t            IncrementCount();
    Int_t            GetCount() const {return fCount;}
    TObjArray       *GetObjects() const {return fObjects;}
    TObject         *GetObjectWithID(UInt_t uid);
    void             PutObjectWithID(TObject *obj, UInt_t uid=0);
-   void     RecursiveRemove(TObject *obj) override;
+   void             RecursiveRemove(TObject *obj) override;
 
    static TProcessID  *AddProcessID();
    static UInt_t       AssignID(TObject *obj);

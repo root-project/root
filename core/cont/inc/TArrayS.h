@@ -34,7 +34,7 @@ public:
    TArrayS(Int_t n, const Short_t *array);
    TArrayS(const TArrayS &array);
    TArrayS    &operator=(const TArrayS &rhs);
-      ~TArrayS() override;
+   ~TArrayS() override;
 
    void           Adopt(Int_t n, Short_t *array);
    void           AddAt(Short_t c, Int_t i);
@@ -46,7 +46,7 @@ public:
    Stat_t         GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
    void           Reset()             {memset(fArray, 0,fN*sizeof(Short_t));}
    void           Reset(Short_t val)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
-   void           Set(Int_t n) override;
+   void Set(Int_t n) override;
    void           Set(Int_t n, const Short_t *array);
    void           SetAt(Double_t v, Int_t i) override { AddAt((Short_t)v, i); }
    Short_t       &operator[](Int_t i);

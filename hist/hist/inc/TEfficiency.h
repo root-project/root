@@ -92,12 +92,12 @@ public:
       ~TEfficiency() override;
 
       void          Add(const TEfficiency& rEff) {*this += rEff;}
-      void          Browse(TBrowser*) override{Draw();}
+      void                 Browse(TBrowser *) override { Draw(); }
       TGraphAsymmErrors*   CreateGraph(Option_t * opt = "") const;
       TH2*          CreateHistogram(Option_t * opt = "") const;
-      Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
-      void          Draw(Option_t* opt = "") override;
-      void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+      Int_t                DistancetoPrimitive(Int_t px, Int_t py) override;
+      void                 Draw(Option_t *opt = "") override;
+      void                 ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
       void          Fill(Bool_t bPassed,Double_t x,Double_t y=0,Double_t z=0);
       void          FillWeighted(Bool_t bPassed,Double_t weight,Double_t x,Double_t y=0,Double_t z=0);
       Int_t         FindFixBin(Double_t x,Double_t y=0,Double_t z=0) const;
@@ -124,14 +124,14 @@ public:
       Long64_t      Merge(TCollection* list);
       TEfficiency&  operator+=(const TEfficiency& rhs);
       TEfficiency&  operator=(const TEfficiency& rhs);
-      void          Paint(Option_t* opt) override;
-      void          SavePrimitive(std::ostream& out,Option_t* opt="") override;
+      void                 Paint(Option_t *opt) override;
+      void                 SavePrimitive(std::ostream &out, Option_t *opt = "") override;
       void          SetBetaAlpha(Double_t alpha);
       void          SetBetaBeta(Double_t beta);
       void          SetBetaBinParameters(Int_t bin, Double_t alpha, Double_t beta);
       void          SetConfidenceLevel(Double_t level);
       void          SetDirectory(TDirectory* dir);
-      void          SetName(const char* name) override;
+      void                 SetName(const char *name) override;
       Bool_t        SetPassedEvents(Int_t bin,Int_t events);
       Bool_t        SetPassedHistogram(const TH1& rPassed,Option_t* opt);
       void          SetPosteriorMode(Bool_t on = true) { SetBit(kPosteriorMode,on); SetShortestInterval(on); }
@@ -148,7 +148,7 @@ public:
       Bool_t        SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
                             const Double_t *zBins);
 
-      void          SetTitle(const char* title) override;
+      void          SetTitle(const char *title) override;
       Bool_t        SetTotalEvents(Int_t bin,Int_t events);
       Bool_t        SetTotalHistogram(const TH1& rTotal,Option_t* opt);
       void          SetUseWeightedEvents(Bool_t on = kTRUE);

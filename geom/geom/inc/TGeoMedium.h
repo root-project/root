@@ -50,7 +50,7 @@ public:
    void                     SetParam(Int_t i, Double_t val)   {fParams[i] = val;}
    char                    *GetPointerName() const;
    TGeoMaterial            *GetMaterial() const {return fMaterial;}
-   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void                     SetId(Int_t id)     {fId = id;}
    void                     SetMaterial(TGeoMaterial *mat) {fMaterial = mat;}
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fMaterial->SetCerenkovProperties(cerenkov);}

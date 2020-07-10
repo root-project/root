@@ -1665,15 +1665,12 @@ namespace RootCsg {
       const PLIST &Polys()const{return fPolys;}
 
       //TBaseMesh's final-overriders
-      UInt_t          NumberOfPolys()const override{return fPolys.size();}
-      UInt_t          NumberOfVertices()const override{return fVerts.size();}
-      UInt_t          SizeOfPoly(UInt_t polyIndex)const override{return fPolys[polyIndex].Size();}
-      const Double_t *GetVertex(UInt_t vertexNum)const override{return fVerts[vertexNum].GetValue();}
+      UInt_t          NumberOfPolys() const override { return fPolys.size(); }
+      UInt_t          NumberOfVertices() const override { return fVerts.size(); }
+      UInt_t          SizeOfPoly(UInt_t polyIndex) const override { return fPolys[polyIndex].Size(); }
+      const Double_t *GetVertex(UInt_t vertexNum) const override { return fVerts[vertexNum].GetValue(); }
 
-      Int_t GetVertexIndex(UInt_t polyNum, UInt_t vertexNum)const override
-      {
-         return fPolys[polyNum][vertexNum];
-      }
+      Int_t GetVertexIndex(UInt_t polyNum, UInt_t vertexNum) const override { return fPolys[polyNum][vertexNum]; }
    };
 
    const Int_t cofacTable[3][2] = {{1,2}, {0,2}, {0,1}};

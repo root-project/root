@@ -48,7 +48,7 @@ private:
 
    TString* fPolarLabels;      ///<! [fNdivPol] Specified polar labels
 
-   void Paint(Option_t* options="") override;
+   void     Paint(Option_t *options = "") override;
    void PaintRadialDivisions(Bool_t drawaxis);
    void PaintPolarDivisions(Bool_t noLabels);
    void ReduceFraction(Int_t Num, Int_t Denom, Int_t &rnum, Int_t &rden);
@@ -92,7 +92,7 @@ public:
    Bool_t   IsGrad()   {return fGrad;};
 
    void     ChangeRangePolar(Double_t tmin, Double_t tmax);
-   void     Draw(Option_t* options="") override;
+   void     Draw(Option_t *options = "") override;
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    void     PaintCircle(Double_t x, Double_t y, Double_t r,
                         Double_t phimin, Double_t phimax, Double_t theta);

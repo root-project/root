@@ -65,7 +65,7 @@ public:
    void         OnElementSelected(TObject *obj); //*SIGNAL*
 
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
-   void CloseWindow() override;
+   void   CloseWindow() override;
 
    ClassDef(TNewChainDlg, 0) // New chain dialog
 };
@@ -114,7 +114,7 @@ public:
    void     Popup();
    void     SettingsChanged();
    void     UpdateFields(TQueryDescription *desc);
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
    ClassDef(TNewQueryDlg, 0) // New query dialog
 };
@@ -148,8 +148,8 @@ public:
    TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h);
    ~TUploadDataSetDlg() override;
 
-   void   CloseWindow() override;
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   void           CloseWindow() override;
+   Bool_t         ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    void           AddFiles(const char *fileName);
    void           AddFiles(TList *fileList);
    void           BrowseFiles();

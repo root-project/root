@@ -33,21 +33,21 @@ public:
    TWbox &operator=(const TWbox &src);
 
    void          Copy(TObject &wbox) const override;
-   void  Draw(Option_t *option="") override;
+   void          Draw(Option_t *option = "") override;
    virtual void  DrawWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       Color_t color=33 ,Short_t bordersize=5 ,Short_t bordermode=-1);
-   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    Short_t       GetBorderMode() const { return fBorderMode;}
    Short_t       GetBorderSize() const { return fBorderSize;}
    Int_t         GetDarkColor() const  {return TColor::GetColorDark(GetFillColor());}
    Int_t         GetLightColor() const {return TColor::GetColorBright(GetFillColor());}
-   void  Paint(Option_t *option="") override;
+   void          Paint(Option_t *option = "") override;
    virtual void  PaintFrame(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                             Color_t color, Short_t bordersize, Short_t bordermode,
                             Bool_t tops);
    virtual void  PaintWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                  Color_t color=33, Short_t bordersize=5, Short_t bordermode=-1);
-   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void  SetBorderMode(Short_t bordermode) {fBorderMode = bordermode;} // *MENU*
    virtual void  SetBorderSize(Short_t bordersize) {fBorderSize = bordersize;} // *MENU*
 

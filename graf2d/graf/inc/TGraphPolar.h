@@ -39,12 +39,12 @@ public:
 
    TGraphPolargram *GetPolargram() {return fPolargram;};
 
-   void             Draw(Option_t* options = "") override;
+   void             Draw(Option_t *options = "") override;
    Bool_t           GetOptionAxis() {return fOptionAxis;};
    void             SetMaxRadial(Double_t maximum = 1); //*MENU*
    void             SetMinRadial(Double_t minimum = 0); //*MENU*
-   void             SetMaximum(Double_t maximum = 1) override {SetMaxRadial(maximum);}
-   void             SetMinimum(Double_t minimum = 0) override {SetMinRadial(minimum);}
+   void             SetMaximum(Double_t maximum = 1) override { SetMaxRadial(maximum); }
+   void             SetMinimum(Double_t minimum = 0) override { SetMinRadial(minimum); }
    void             SetMaxPolar(Double_t maximum = 6.28318530717958623); //*MENU*
    void             SetMinPolar(Double_t minimum = 0); //*MENU*
    void             SetOptionAxis(Bool_t opt) {fOptionAxis = opt;};

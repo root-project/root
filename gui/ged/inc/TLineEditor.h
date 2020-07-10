@@ -46,7 +46,7 @@ public:
                Pixel_t back = GetDefaultFrameBackground());
    ~TLineEditor() override;
 
-   void   SetModel(TObject* obj) override;
+   void           SetModel(TObject *obj) override;
    virtual void   DoStartPoint();
    virtual void   DoEndPoint();
    virtual void   DoLineVertical();

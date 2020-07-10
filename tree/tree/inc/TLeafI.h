@@ -37,23 +37,23 @@ public:
    TLeafI(TBranch *parent, const char *name, const char *type);
    ~TLeafI() override;
 
-   void    Export(TClonesArray *list, Int_t n) override;
-   void    FillBasket(TBuffer &b) override;
+   void            Export(TClonesArray *list, Int_t n) override;
+   void            FillBasket(TBuffer &b) override;
    DeserializeType GetDeserializeType() const override { return DeserializeType::kInPlace; }
-   const char     *GetTypeName() const override;
-   Int_t   GetMaximum() const override { return fMaximum; }
-   Int_t   GetMinimum() const override { return fMinimum; }
-   Double_t        GetValue(Int_t i=0) const override;
-   void   *GetValuePointer() const override { return fValue; }
-   Bool_t  IncludeRange(TLeaf *) override;
-   void    Import(TClonesArray *list, Int_t n) override;
-   void    PrintValue(Int_t i=0) const override;
-   void    ReadBasket(TBuffer &b) override;
-   void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n) override;
-   bool    ReadBasketFast(TBuffer&, Long64_t) override;
-   bool    ReadBasketSerialized(TBuffer&, Long64_t) override { return GetDeserializeType() == DeserializeType::kInPlace; }
-   void    ReadValue(std::istream& s, Char_t delim = ' ') override;
-   void    SetAddress(void *add=0) override;
+   const char *    GetTypeName() const override;
+   Int_t           GetMaximum() const override { return fMaximum; }
+   Int_t           GetMinimum() const override { return fMinimum; }
+   Double_t        GetValue(Int_t i = 0) const override;
+   void *          GetValuePointer() const override { return fValue; }
+   Bool_t          IncludeRange(TLeaf *) override;
+   void            Import(TClonesArray *list, Int_t n) override;
+   void            PrintValue(Int_t i = 0) const override;
+   void            ReadBasket(TBuffer &b) override;
+   void            ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n) override;
+   bool            ReadBasketFast(TBuffer &, Long64_t) override;
+   bool ReadBasketSerialized(TBuffer &, Long64_t) override { return GetDeserializeType() == DeserializeType::kInPlace; }
+   void ReadValue(std::istream &s, Char_t delim = ' ') override;
+   void SetAddress(void *add = 0) override;
    virtual void    SetMaximum(Int_t max) {fMaximum = max;}
    virtual void    SetMinimum(Int_t min) {fMinimum = min;}
 

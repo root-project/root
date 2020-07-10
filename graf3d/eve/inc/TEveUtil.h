@@ -108,7 +108,7 @@ public:
 
    ~TEveException() noexcept override {}
 
-   const char* what() const noexcept override { return Data(); }
+   const char *what() const noexcept override { return Data(); }
 
    ClassDef(TEveException, 1); // Exception-type thrown by Eve classes.
 };

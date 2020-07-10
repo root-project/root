@@ -39,7 +39,7 @@ public:
          UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveArrowEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    void DoTubeR();
    void DoConeR();

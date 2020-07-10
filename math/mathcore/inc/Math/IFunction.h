@@ -394,7 +394,6 @@ namespace ROOT {
          */
          ~IGradientFunctionOneDim() override {}
 
-
          /**
              Optimized method to evaluate at the same time the function value and derivative at a point x.
               Often both value and derivatives are needed and it is often more efficient to compute them at the same time.

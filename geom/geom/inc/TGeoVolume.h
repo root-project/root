@@ -94,7 +94,7 @@ public:
    ~TGeoVolume() override;
    // methods
    virtual void    cd(Int_t inode) const;
-   void            Browse(TBrowser *b) override;
+   void                Browse(TBrowser *b) override;
    Double_t        Capacity() const;
    void            CheckShapes();
    void            ClearNodes() {fNodes = 0;}
@@ -110,7 +110,7 @@ public:
    static void     CreateDummyMedium();
    static TGeoMedium *DummyMedium();
    virtual Bool_t  IsAssembly() const;
-   Bool_t  IsFolder() const override;
+   Bool_t              IsFolder() const override;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
    virtual Bool_t  IsVolumeMulti() const {return kFALSE;}
    virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");       // most general case
@@ -118,14 +118,14 @@ public:
    virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");
 
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
-   Int_t   DistancetoPrimitive(Int_t px, Int_t py) override;
-   void    Draw(Option_t *option="") override; // *MENU*
+   Int_t               DistancetoPrimitive(Int_t px, Int_t py) override;
+   void                Draw(Option_t *option = "") override; // *MENU*
    virtual void    DrawOnly(Option_t *option=""); // *MENU*
    TH2F           *LegoPlot(Int_t ntheta=20, Double_t themin=0., Double_t themax=180.,
                             Int_t nphi=60, Double_t phimin=0., Double_t phimax=360.,
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option=""); // *MENU*
-   void    Paint(Option_t *option="") override;
-   void    Print(Option_t *option="") const override; // *MENU*
+   void            Paint(Option_t *option = "") override;
+   void            Print(Option_t *option = "") const override; // *MENU*
    void            PrintNodes() const;
    void            PrintVoxels() const; // *MENU*
    void            ReplayCreation(const TGeoVolume *other);
@@ -138,7 +138,7 @@ public:
    TGeoExtension  *GrabFWExtension() const;
    void            Grab()                   {fRefCount++;}
    void            Release()                {fRefCount--; if (fRefCount==0) delete this;}
-   void    ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
 
    Bool_t          IsActive() const {return TGeoAtt::IsActive();}
    Bool_t          IsActiveDaughters() const {return TGeoAtt::IsActiveDaughters();}
@@ -174,15 +174,15 @@ public:
    TObject        *GetField() const                  {return fField;}
    TGeoPatternFinder *GetFinder() const              {return fFinder;}
    TGeoVoxelFinder   *GetVoxels() const;
-   const char     *GetIconName() const override               {return fShape->GetName();}
+   const char *        GetIconName() const override { return fShape->GetName(); }
    Int_t           GetIndex(const TGeoNode *node) const;
    TGeoNode       *GetNode(const char *name) const;
    TGeoNode       *GetNode(Int_t i) const {return (TGeoNode*)fNodes->UncheckedAt(i);}
    Int_t           GetNodeIndex(const TGeoNode *node, Int_t *check_list, Int_t ncheck) const;
    Int_t           GetNumber() const {return fNumber;}
-   char   *GetObjectInfo(Int_t px, Int_t py) const override;
+   char *              GetObjectInfo(Int_t px, Int_t py) const override;
    Bool_t          GetOptimalVoxels() const;
-   Option_t       *GetOption() const override { return fOption.Data(); }
+   Option_t *          GetOption() const override { return fOption.Data(); }
    char           *GetPointerName() const;
    Char_t          GetTransparency() const {return (fMedium==0)?0:(fMedium->GetMaterial()->GetTransparency());}
    TGeoShape      *GetShape() const                  {return fShape;}
@@ -201,8 +201,8 @@ public:
    void            RegisterYourself(Option_t *option="");
    void            RemoveNode(TGeoNode *node);
    TGeoNode       *ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape=0, TGeoMatrix *newpos=0, TGeoMedium *newmed=0);
-   void            SaveAs(const char *filename,Option_t *option="") const override; // *MENU*
-   void    SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                SaveAs(const char *filename, Option_t *option = "") const override; // *MENU*
+   void                SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void            SelectVolume(Bool_t clear = kFALSE);
    void            SetActivity(Bool_t flag=kTRUE) {TGeoAtt::SetActivity(flag);}
    void            SetActiveDaughters(Bool_t flag=kTRUE) {TGeoAtt::SetActiveDaughters(flag);}
@@ -218,13 +218,13 @@ public:
    void            SetField(TObject *field)          {fField = field;}
    void            SetOption(const char *option);
    void            SetAttVisibility(Bool_t vis) {TGeoAtt::SetVisibility(vis);}
-   void    SetVisibility(Bool_t vis=kTRUE) override; // *TOGGLE* *GETTER=IsVisible
-   void    SetVisContainers(Bool_t flag=kTRUE) override; // *TOGGLE* *GETTER=IsVisContainers
-   void    SetVisLeaves(Bool_t flag=kTRUE) override; // *TOGGLE* *GETTER=IsVisLeaves
-   void    SetVisOnly(Bool_t flag=kTRUE) override; // *TOGGLE* *GETTER=IsVisOnly
-   void    SetLineColor(Color_t lcolor) override;
-   void    SetLineStyle(Style_t lstyle) override;
-   void    SetLineWidth(Width_t lwidth) override;
+   void            SetVisibility(Bool_t vis = kTRUE) override;     // *TOGGLE* *GETTER=IsVisible
+   void            SetVisContainers(Bool_t flag = kTRUE) override; // *TOGGLE* *GETTER=IsVisContainers
+   void            SetVisLeaves(Bool_t flag = kTRUE) override;     // *TOGGLE* *GETTER=IsVisLeaves
+   void            SetVisOnly(Bool_t flag = kTRUE) override;       // *TOGGLE* *GETTER=IsVisOnly
+   void            SetLineColor(Color_t lcolor) override;
+   void            SetLineStyle(Style_t lstyle) override;
+   void            SetLineWidth(Width_t lwidth) override;
    void            SetInvisible() {SetVisibility(kFALSE);}
    virtual void    SetMedium(TGeoMedium *medium) {fMedium = medium;}
    void            SetVoxelFinder(TGeoVoxelFinder *finder) {fVoxels = finder;}
@@ -272,22 +272,23 @@ public:
 
    void            AddVolume(TGeoVolume *vol);
    TGeoVolume     *GetVolume(Int_t id) const {return (TGeoVolume*)fVolumes->At(id);}
-   void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="") override;       // most general case
-   void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="") override;
-   TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="") override;
+   void AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option = "") override; // most general case
+   void AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option = "") override;
+   TGeoVolume *    Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed = 0,
+                          Option_t *option = "") override;
    TGeoShape      *GetLastShape() const;
    Int_t           GetNvolumes() const {return fVolumes->GetEntriesFast();}
    Int_t           GetAxis() const {return fNdiv;}
    Int_t           GetNdiv() const {return fNdiv;}
    Double_t        GetStart() const {return fStart;}
    Double_t        GetStep() const {return fStep;}
-   Bool_t  IsVolumeMulti() const override {return kTRUE;}
-   TGeoVolume *MakeCopyVolume(TGeoShape *newshape) override;
-   void    SetLineColor(Color_t lcolor) override;
-   void    SetLineStyle(Style_t lstyle) override;
-   void    SetLineWidth(Width_t lwidth) override;
-   void    SetMedium(TGeoMedium *medium) override;
-   void    SetVisibility(Bool_t vis=kTRUE) override;
+   Bool_t          IsVolumeMulti() const override { return kTRUE; }
+   TGeoVolume *    MakeCopyVolume(TGeoShape *newshape) override;
+   void            SetLineColor(Color_t lcolor) override;
+   void            SetLineStyle(Style_t lstyle) override;
+   void            SetLineWidth(Width_t lwidth) override;
+   void            SetMedium(TGeoMedium *medium) override;
+   void            SetVisibility(Bool_t vis = kTRUE) override;
 
    ClassDef(TGeoVolumeMulti, 3)     // class to handle multiple volumes in one step
 };
@@ -312,8 +313,8 @@ public:
    };
 
    ThreadData_t& GetThreadData()   const;
-   void  ClearThreadData() const override;
-   void  CreateThreadData(Int_t nthreads) override;
+   void          ClearThreadData() const override;
+   void          CreateThreadData(Int_t nthreads) override;
 
 protected:
    mutable std::vector<ThreadData_t*> fThreadData; //! Thread specific data vector
@@ -329,16 +330,17 @@ public:
    TGeoVolumeAssembly(const char *name);
    ~TGeoVolumeAssembly() override;
 
-   void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="") override;
-   void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option) override;
-   TGeoVolume *CloneVolume() const override;
-   TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="") override;
+   void            AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat = 0, Option_t *option = "") override;
+   void            AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option) override;
+   TGeoVolume *    CloneVolume() const override;
+   TGeoVolume *    Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed = 0,
+                          Option_t *option = "") override;
    TGeoVolume     *Divide(TGeoVolume *cell, TGeoPatternFinder *pattern, Option_t *option="spacedout");
-   void    DrawOnly(Option_t *) override {;}
-   Int_t   GetCurrentNodeIndex() const override;
-   Int_t   GetNextNodeIndex() const override;
-   Bool_t  IsAssembly() const override {return kTRUE;}
-   Bool_t  IsVisible() const override {return kFALSE;}
+   void            DrawOnly(Option_t *) override { ; }
+   Int_t           GetCurrentNodeIndex() const override;
+   Int_t           GetNextNodeIndex() const override;
+   Bool_t          IsAssembly() const override { return kTRUE; }
+   Bool_t          IsVisible() const override { return kFALSE; }
    static TGeoVolumeAssembly *MakeAssemblyFromVolume(TGeoVolume *vol);
    void            SetCurrentNodeIndex(Int_t index);
    void            SetNextNodeIndex(Int_t index);

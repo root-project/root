@@ -131,7 +131,7 @@ public:
    virtual void    PrepareBasket(Long64_t /* entry */) {};
            Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
-   void    Reset() override;
+           void    Reset() override;
 
 // Time spent reseting basket sizes (typically, at event cluster boundaries), in microseconds
 #ifdef R__TRACK_BASKET_ALLOC_TIME

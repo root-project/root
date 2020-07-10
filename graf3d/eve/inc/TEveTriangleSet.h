@@ -68,7 +68,7 @@ public:
                               Bool_t interp=kFALSE, Bool_t wrap=kFALSE);
 
    void ComputeBBox() override;
-   void Paint(Option_t* option="") override;
+   void Paint(Option_t *option = "") override;
 
    void SetTransparency(Char_t tr) { SetMainTransparency(tr); } // *MENU*
 

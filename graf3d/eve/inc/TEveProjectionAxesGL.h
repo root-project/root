@@ -38,10 +38,10 @@ public:
    TEveProjectionAxesGL();
    ~TEveProjectionAxesGL() override {}
 
-   Bool_t  SetModel(TObject* obj, const Option_t* opt = 0) override;
-   void    SetBBox() override;
-   void    Draw(TGLRnrCtx& rnrCtx) const override;
-   void    DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   Bool_t SetModel(TObject *obj, const Option_t *opt = 0) override;
+   void   SetBBox() override;
+   void   Draw(TGLRnrCtx &rnrCtx) const override;
+   void   DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
    Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 

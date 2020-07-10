@@ -307,7 +307,7 @@ void TGuiBldMenuTitle::DoRedraw()
 class TGuiBldPopupMenu : public TGPopupMenu {
 
 public:
-   ~TGuiBldPopupMenu() override { }
+   ~TGuiBldPopupMenu() override {}
    TGuiBldPopupMenu() :
       TGPopupMenu(gClient->GetDefaultRoot()) {
       fEditDisabled = kEditDisable;
@@ -473,10 +473,10 @@ private:
    Pixel_t fBgndColor;
 
 protected:
-   void  DoRedraw() override;
+   void DoRedraw() override;
 
 public:
-   ~TGuiBldToolButton() override { }
+   ~TGuiBldToolButton() override {}
    TGuiBldToolButton(const TGWindow *p, const TGPicture *pic, Int_t id = -1) :
          TGPictureButton(p, pic, id) {
       fBgndColor = TRootGuiBuilder::GetBgnd();
@@ -484,9 +484,13 @@ public:
    }
 
    Bool_t IsDown() const override { return (fOptions & kSunkenFrame); }
-   void SetState(EButtonState state, Bool_t emit = kTRUE) override;
+   void   SetState(EButtonState state, Bool_t emit = kTRUE) override;
    Bool_t HandleCrossing(Event_t *event) override;
-   void SetBackgroundColor(Pixel_t bgnd) override { fBgndColor = bgnd; TGFrame::SetBackgroundColor(bgnd); }
+   void   SetBackgroundColor(Pixel_t bgnd) override
+   {
+      fBgndColor = bgnd;
+      TGFrame::SetBackgroundColor(bgnd);
+   }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

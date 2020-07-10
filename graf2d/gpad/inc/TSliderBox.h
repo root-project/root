@@ -33,8 +33,8 @@ public:
    TSliderBox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
               Color_t color=18, Short_t bordersize=2 ,Short_t bordermode=-1);
    ~TSliderBox() override;
-   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void          SetSlider(TSlider*slider) {fSlider=slider;}
 
    ClassDef(TSliderBox,1)  //The moving box of a TSlider

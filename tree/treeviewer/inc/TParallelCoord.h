@@ -75,9 +75,9 @@ public:
    void           RemoveVariable(TParallelCoordVar* var);
    Bool_t         RemoveVariable(const char* var);
    void           DeleteSelection(TParallelCoordSelect* sel);
-   Int_t  DistancetoPrimitive(Int_t px, Int_t py) override;
-   void   Draw(Option_t* options="") override;
-   void   ExecuteEvent(Int_t entry, Int_t px, Int_t py) override;
+   Int_t                 DistancetoPrimitive(Int_t px, Int_t py) override;
+   void                  Draw(Option_t *options = "") override;
+   void                  ExecuteEvent(Int_t entry, Int_t px, Int_t py) override;
    Bool_t         GetCandleChart() {return TestBit(kCandleChart);}
    Long64_t       GetCurrentFirst() {return fCurrentFirst;}
    Long64_t       GetCurrentN() {return fCurrentN;}
@@ -102,10 +102,10 @@ public:
    TList         *GetVarList() {return fVarList;}
    Bool_t         GetVertDisplay() const {return TestBit(kVertDisplay);}
    Int_t          GetWeightCut() const {return fWeightCut;};
-   void   Paint(Option_t* options="") override;
+   void                  Paint(Option_t *options = "") override;
    void           ResetTree();
    void           SaveEntryLists(const char* filename="", Bool_t overwrite=kFALSE); // *MENU*
-   void           SavePrimitive(std::ostream & out,Option_t *options) override;
+   void                  SavePrimitive(std::ostream &out, Option_t *options) override;
    void           SaveTree(const char* filename="", Bool_t overwrite=kFALSE); // *MENU*
    void           SetAxisHistogramBinning(Int_t n=100); // *MENU*
    void           SetAxisHistogramHeight(Double_t h=0.5); // *MENU*

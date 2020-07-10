@@ -116,7 +116,7 @@ public:
    TObject       *fChain;           // dataset on which to process selector
    TQueryResult  *fResult;          // query result received back
 
-   const char    *GetName() const override { return fQueryName; }
+   const char *GetName() const override { return fQueryName; }
 
    ClassDef(TQueryDescription, 1)  // Query description
 };
@@ -154,7 +154,7 @@ public:
    TProofMgr         *fProofMgr;    // Proof sessions manager
    Int_t              fNbHistos;    // number of feedback histos
 
-   const char        *GetName() const override { return fName; }
+   const char *GetName() const override { return fName; }
 
    ClassDef(TSessionDescription, 1) // Session description
 };
@@ -172,7 +172,7 @@ public:
    Bool_t         fUploaded;     // package has been uploaded
    Bool_t         fEnabled;      // package has been enabled
 
-   const char    *GetName() const override { return fName; }
+   const char *GetName() const override { return fName; }
 
    ClassDef(TPackageDescription, 1) // Package description
 };
@@ -235,8 +235,8 @@ public:
    void        OnBtnAddClicked();
    void        OnConfigFileClicked();
    void        Update(TSessionDescription* desc);
-   Bool_t HandleExpose(Event_t *event) override;
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t      HandleExpose(Event_t *event) override;
+   Bool_t      ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
 
    ClassDef(TSessionServerFrame, 0) // Server frame
 };
@@ -480,7 +480,7 @@ public:
    TGLVContainer  *GetLVContainer() { return fLVContainer; }
    void           OnElementClicked(TGLVEntry* entry, Int_t btn, Int_t x, Int_t y);
    void           OnElementDblClicked(TGLVEntry *entry ,Int_t btn, Int_t x, Int_t y);
-   void           RemoveAll() override { fLVContainer->RemoveAll(); }
+   void            RemoveAll() override { fLVContainer->RemoveAll(); }
 
    ClassDef(TSessionOutputFrame, 0) // Output frame
 };
@@ -505,7 +505,7 @@ public:
 
    void           AddObject(TObject *obj);
    void           Build(TSessionViewer *gui);
-   void           RemoveAll() override { fLVContainer->RemoveAll(); }
+   void            RemoveAll() override { fLVContainer->RemoveAll(); }
    TGLVContainer  *GetLVContainer() { return fLVContainer; }
 
    ClassDef(TSessionInputFrame, 0) // Input frame
@@ -577,7 +577,7 @@ public:
    TSessionViewer(const char *title, Int_t x, Int_t y, UInt_t w, UInt_t h);
    ~TSessionViewer() override;
    virtual void Build();
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t) override;
+   Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t) override;
 
    TSessionServerFrame    *GetServerFrame() const { return fServerFrame; }
    TSessionFrame          *GetSessionFrame() const { return fSessionFrame; }

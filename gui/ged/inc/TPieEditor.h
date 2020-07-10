@@ -62,8 +62,8 @@ public:
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    ~TPieEditor() override;
-   void SetModel(TObject* ) override;
-   void ActivateBaseClassEditors(TClass*) override;
+   void SetModel(TObject *) override;
+   void ActivateBaseClassEditors(TClass *) override;
 
    // slots related to graph attributes
    virtual void DoShape();

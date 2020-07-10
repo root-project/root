@@ -83,13 +83,13 @@ namespace Math {
    public:
 
       /** Return current estimate of the position of the minimum. */
-      double XMinimum() const override {   return fXMinimum;  }
+      double XMinimum() const override { return fXMinimum; }
 
       /** Return current lower bound of the minimization interval. */
-      double XLower() const override {   return fXMin;  }
+      double XLower() const override { return fXMin; }
 
       /** Return current upper bound of the minimization interval. */
-      double XUpper() const override {   return fXMax;  }
+      double XUpper() const override { return fXMax; }
 
       /** Return function value at current estimate of the minimum. */
       double FValMinimum() const override;
@@ -107,13 +107,13 @@ namespace Math {
           \@param absTol desired absolute error in the minimum position (default 1.E-8)
           \@param absTol desired relative error in the minimum position (default = 1.E-10)
       */
-      bool Minimize( int maxIter, double absTol = 1.E-8, double relTol = 1.E-10) override;
+      bool Minimize(int maxIter, double absTol = 1.E-8, double relTol = 1.E-10) override;
 
       /** Return number of iteration used to find minimum */
       int Iterations() const override { return fNIter; }
 
       /** Return name of minimization algorithm ("BrentMinimizer1D") */
-      const char * Name() const override;
+      const char *Name() const override;
 
       /** Sets function to be minimized.
 

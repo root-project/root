@@ -41,7 +41,7 @@ public:
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveGeoNodeEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    void DoVizNode();
    void DoVizNodeDaughters();
@@ -70,7 +70,7 @@ public:
                         UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveGeoTopNodeEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    void DoVisOption();
    void DoVisLevel();

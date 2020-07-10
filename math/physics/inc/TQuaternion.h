@@ -105,7 +105,7 @@ public:
    void Rotate(TVector3& vect) const;
    TVector3 Rotation(const TVector3& vect) const;
 
-   void Print(Option_t* option="") const override;
+   void Print(Option_t *option = "") const override;
 
    Double_t fRealPart;          // Real part
    TVector3 fVectorPart; // vector part

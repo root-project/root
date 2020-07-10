@@ -41,7 +41,7 @@ protected:
    Float_t fTl2;       // half length in x at high z and y high edge
    Float_t fAlpha2;    // angle w.r.t. the y axis
 
-   void     SetPoints(Double_t *points) const override;
+   void SetPoints(Double_t *points) const override;
 
 public:
    TTRAP();

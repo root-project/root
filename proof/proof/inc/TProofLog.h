@@ -103,7 +103,7 @@ public:
    Bool_t  IsMaster() const { return (fRole == "master") ? kTRUE : kFALSE; }
    Bool_t  IsSubMaster() const { return (fRole == "submaster") ? kTRUE : kFALSE; }
    Bool_t  IsWorker() const { return (fRole == "worker") ? kTRUE : kFALSE; }
-   void    Print(Option_t *opt = 0) const override;
+   void            Print(Option_t *opt = 0) const override;
    void    Prt(const char *what);
    Int_t   Retrieve(TProofLog::ERetrieveOpt opt = TProofLog::kTrailing,
                     const char *pattern = 0);

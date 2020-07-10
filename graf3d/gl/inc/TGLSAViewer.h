@@ -101,7 +101,7 @@ public:
    void CreateGLWidget() override;
    void DestroyGLWidget() override;
 
-   const char* GetName() const override { return "GLViewer"; }
+   const char *GetName() const override { return "GLViewer"; }
 
    void SelectionChanged() override;
 

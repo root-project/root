@@ -57,17 +57,21 @@ protected:
    Style_t          fMarkerStyle;   //marker style
    const TGPicture *fPicture;       //image used for popup window
 
-   void     DoRedraw() override;
+   void DoRedraw() override;
 
 public:
    TGedMarkerSelect(const TGWindow *p, Style_t markerStyle, Int_t id);
-   ~TGedMarkerSelect() override { if(fPicture) gClient->FreePicture(fPicture);}
+   ~TGedMarkerSelect() override
+   {
+      if (fPicture)
+         gClient->FreePicture(fPicture);
+   }
 
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t         ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    Style_t        GetMarkerStyle() const { return fMarkerStyle; }
    void           SetMarkerStyle(Style_t pattern);
    virtual void   MarkerSelected(Style_t marker = 0) { Emit("MarkerSelected(Style_t)", marker ? marker : GetMarkerStyle()); }  // *SIGNAL*
-   void   SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void           SavePrimitive(std::ostream &out, Option_t * = "") override;
    TGDimension GetDefaultSize() const override { return TGDimension(38, 21); }
 
    ClassDef(TGedMarkerSelect,0)  // Marker selection button

@@ -32,8 +32,8 @@ public:
    TFunctionTemplate(FuncTempInfo_t *info, TClass *cl);
    TFunctionTemplate(const TFunctionTemplate &orig);
    TFunctionTemplate& operator=(const TFunctionTemplate &rhs);
-              ~TFunctionTemplate() override;
-   TObject   *Clone(const char *newname="") const override;
+   ~TFunctionTemplate() override;
+   TObject *Clone(const char *newname = "") const override;
 
    DeclId_t            GetDeclId() const;
    UInt_t              GetTemplateNargs() const;

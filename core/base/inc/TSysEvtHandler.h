@@ -30,11 +30,11 @@ class TSysEvtHandler : public TObject, public TQObject {
 private:
    Bool_t   fIsActive;    // kTRUE if handler is active, kFALSE if not active
 
-   void  *GetSender() override { return this; }  //used to set gTQSender
+   void *GetSender() override { return this; } // used to set gTQSender
 
 public:
    TSysEvtHandler() : fIsActive(kTRUE) { }
-   ~TSysEvtHandler() override { }
+   ~TSysEvtHandler() override {}
 
    void             Activate();
    void             DeActivate();
@@ -42,7 +42,7 @@ public:
 
    virtual void     Add()    = 0;
    virtual void     Remove() = 0;
-   Bool_t   Notify() override = 0;
+   Bool_t           Notify() override = 0;
 
    virtual void     Activated()   { Emit("Activated()"); }   //*SIGNAL*
    virtual void     DeActivated() { Emit("DeActivated()"); } //*SIGNAL*
@@ -78,7 +78,7 @@ public:
    ~TFileHandler() override { Remove(); }
    int             GetFd() const { return fFileNum; }
    void            SetFd(int fd) { fFileNum = fd; }
-   Bool_t  Notify() override;
+   Bool_t          Notify() override;
    virtual Bool_t  ReadNotify();
    virtual Bool_t  WriteNotify();
    virtual Bool_t  HasReadInterest();
@@ -89,8 +89,8 @@ public:
    virtual void    SetWriteReady() { fReadyMask |= 0x2; }
    virtual Bool_t  IsReadReady() const { return (fReadyMask & 0x1) == 0x1; }
    virtual Bool_t  IsWriteReady() const { return (fReadyMask & 0x2) == 0x2; }
-   void    Add() override;
-   void    Remove() override;
+   void            Add() override;
+   void            Remove() override;
 
    ClassDefOverride(TFileHandler, 0) // Handles events on file descriptors
 };
@@ -142,9 +142,9 @@ public:
    void           SetSignal(ESignals sig) { fSignal = sig; }
    Bool_t         IsSync() const { return fSync; }
    Bool_t         IsAsync() const { return !fSync; }
-   Bool_t Notify() override;
-   void   Add() override;
-   void   Remove() override;
+   Bool_t         Notify() override;
+   void           Add() override;
+   void           Remove() override;
 
    ClassDefOverride(TSignalHandler, 0) // Signal event handler
 };
@@ -175,11 +175,11 @@ public:
    enum EStatus { kSEProceed, kSEHandled, kSEAbort };
 
    TStdExceptionHandler();
-   ~TStdExceptionHandler() override { }
+   ~TStdExceptionHandler() override {}
 
-   void     Add() override;
-   void     Remove() override;
-   Bool_t   Notify() override;
+   void   Add() override;
+   void   Remove() override;
+   Bool_t Notify() override;
 
    virtual EStatus  Handle(std::exception& exc) = 0;
 

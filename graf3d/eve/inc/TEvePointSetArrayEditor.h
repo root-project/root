@@ -38,7 +38,7 @@ public:
                            UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEvePointSetArrayEditor() override;
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    void DoRange();
 

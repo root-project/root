@@ -50,11 +50,11 @@ public:
                            TMethod(MethodInfo_t *info = 0, TClass *cl = 0);
                            TMethod(const TMethod &org);
    TMethod&                operator=(const TMethod &rhs);
-                  ~TMethod() override;
-   TObject        *Clone(const char *newname="") const override;
+   ~TMethod() override;
+   TObject *               Clone(const char *newname = "") const override;
    TClass                 *GetClass() const { return fClass; }
    EMenuItemKind           IsMenuItem() const { return fMenuItem; }
-   Bool_t          IsValid() override;
+   Bool_t                  IsValid() override;
    virtual const char     *GetCommentString();
    virtual const char     *Getter() const { return fGetter; }
    virtual TMethodCall    *GetterMethod();
@@ -63,7 +63,7 @@ public:
    virtual TList          *GetListOfMethodArgs();
    virtual void            SetMenuItem(EMenuItemKind menuItem) {fMenuItem=menuItem;}
 
-   Bool_t          Update(MethodInfo_t *info) override;
+   Bool_t Update(MethodInfo_t *info) override;
 
    ClassDefOverride(TMethod, 0) // Dictionary for a class member function (method)
 };

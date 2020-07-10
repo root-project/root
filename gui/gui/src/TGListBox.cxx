@@ -447,7 +447,8 @@ public:
    ~TGLBFrameElement() override {}
 
    Bool_t IsSortable() const override { return kTRUE; }
-   Int_t  Compare(const TObject *obj) const override {
+   Int_t  Compare(const TObject *obj) const override
+   {
       if (!fFrame->InheritsFrom(TGTextLBEntry::Class())) {
          return 0;
       }

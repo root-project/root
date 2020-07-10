@@ -92,7 +92,7 @@ public:
    void           MoveNextEntry(Long64_t step) {fNextEntry += step;}
 
    // This method is used to keep a sorted list of remaining files to be processed
-   Int_t          Compare(const TObject* obj) const override
+   Int_t Compare(const TObject *obj) const override
    {
       // Return -1 if elem.entries < obj.elem.entries, 0 if elem.entries equal
       // and 1 if elem.entries < obj.elem.entries.
@@ -153,7 +153,11 @@ private:
 
 public:
    TFileNode(const char *name, Int_t strategy, TSortedList *files);
-   ~TFileNode() override { delete fFiles; delete fActFiles; }
+   ~TFileNode() override
+   {
+      delete fFiles;
+      delete fActFiles;
+   }
 
    void        IncMySlaveCnt() { fMySlaveCnt++; }
    Int_t       GetMySlaveCnt() const { return fMySlaveCnt; }

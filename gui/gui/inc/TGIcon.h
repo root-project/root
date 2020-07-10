@@ -57,13 +57,13 @@ public:
    virtual void SetImage(TImage *img);
    virtual void SetImagePath(const char *path);
 
-   void Resize(UInt_t w = 0, UInt_t h = 0) override;
-   void Resize(TGDimension size) override { Resize(size.fWidth, size.fHeight); }
-   void MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) override;
+   void         Resize(UInt_t w = 0, UInt_t h = 0) override;
+   void         Resize(TGDimension size) override { Resize(size.fWidth, size.fHeight); }
+   void         MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) override;
    virtual void ChangeBackgroundColor() { }
 
    TGDimension GetDefaultSize() const override;
-   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGIcon,0)  // Icon GUI class
 };

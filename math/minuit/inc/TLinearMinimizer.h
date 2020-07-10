@@ -45,7 +45,7 @@ public:
    /**
       Destructor (no operations)
    */
-   ~TLinearMinimizer () override;
+   ~TLinearMinimizer() override;
 
 private:
    // usually copying is non trivial, so we make this unaccessible
@@ -63,19 +63,19 @@ private:
 public:
 
    /// set the fit model function
-   void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
+   void SetFunction(const ROOT::Math::IMultiGenFunction &func) override;
 
    /// set the function to minimize
-   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
+   void SetFunction(const ROOT::Math::IMultiGradFunction &func) override;
 
    /// set free variable (dummy impl. )
-   bool SetVariable(unsigned int , const std::string & , double , double ) override { return false; }
+   bool SetVariable(unsigned int, const std::string &, double, double) override { return false; }
 
    /// set fixed variable (override if minimizer supports them )
    bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */) override;
 
    /// method to perform the minimization
-    bool Minimize() override;
+   bool Minimize() override;
 
    /// return minimum function value
    double MinValue() const override { return fMinVal; }
@@ -84,10 +84,10 @@ public:
    double Edm() const override { return 0; }
 
    /// return  pointer to X values at the minimum
-   const double *  X() const override { return &fParams.front(); }
+   const double *X() const override { return &fParams.front(); }
 
    /// return pointer to gradient values at the minimum
-   const double *  MinGradient() const override { return 0; } // not available in Minuit2
+   const double *MinGradient() const override { return 0; } // not available in Minuit2
 
    /// number of function calls to reach the minimum
    unsigned int NCalls() const override { return 0; }
@@ -104,18 +104,20 @@ public:
    bool ProvidesError() const override { return true; }
 
    /// return errors at the minimum
-   const double * Errors() const override { return  (fErrors.empty()) ? 0 : &fErrors.front(); }
+   const double *Errors() const override { return (fErrors.empty()) ? 0 : &fErrors.front(); }
 
    /** return covariance matrices elements
        if the variable is fixed the matrix is zero
        The ordering of the variables is the same as in errors
    */
-   double CovMatrix(unsigned int i, unsigned int j) const override {
+   double CovMatrix(unsigned int i, unsigned int j) const override
+   {
       return (fCovar.empty()) ? 0 : fCovar[i + fDim* j];
    }
 
    /// return covariance matrix status
-   int CovMatrixStatus() const override {
+   int CovMatrixStatus() const override
+   {
       if (fCovar.size() == 0) return 0;
       return (fStatus ==0) ? 3 : 1;
    }

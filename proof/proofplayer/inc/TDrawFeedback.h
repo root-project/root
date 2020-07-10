@@ -48,7 +48,7 @@ public:
 
    void Feedback(TList *objs);
    const char *GetName() const override { return fName.Data(); }
-   ULong_t  Hash() const override { return fName.Hash(); }
+   ULong_t     Hash() const override { return fName.Hash(); }
    void SetOption(Option_t *option) { fOption = option; }
 
    ClassDef(TDrawFeedback,0)  // Present PROOF query feedback

@@ -48,15 +48,14 @@ class FTGL_EXPORT FTGLPixmapFont : public FTFont
          */
         void PostRender() override;
 
-    private:
+     private:
         /**
          * Construct a FTPixmapGlyph.
          *
          * @param g The glyph index NOT the char code.
          * @return  An FTPixmapGlyph or <code>null</code> on failure.
          */
-        inline FTGlyph* MakeGlyph( unsigned int g) override;
-
+        inline FTGlyph *MakeGlyph(unsigned int g) override;
 };
 
 

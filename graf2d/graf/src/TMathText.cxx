@@ -101,13 +101,11 @@ private:
       return (serif ? 28 : 29) * 10 + 2;
    }
 protected:
-   inline mathtext::affine_transform_t
-   transform_logical_to_pixel(void) const override
+   inline mathtext::affine_transform_t transform_logical_to_pixel(void) const override
    {
       return mathtext::affine_transform_t::identity;
    }
-   inline mathtext::affine_transform_t
-   transform_pixel_to_logical(void) const override
+   inline mathtext::affine_transform_t transform_pixel_to_logical(void) const override
    {
       return mathtext::affine_transform_t::identity;
    }
@@ -129,31 +127,22 @@ public:
       _pad_scale_y_relative = 0;
       for (i = 0; i < mathtext::math_text_renderer_t::NFAMILY; i++) _current_font_size[i] = 0;
    }
-   inline float
-   font_size(const unsigned int family = FAMILY_PLAIN) const override
+   inline float font_size(const unsigned int family = FAMILY_PLAIN) const override
    {
       return _current_font_size[family];
    }
-   inline void
-   point(const float /*x*/, const float /*y*/) override
-   {
-   }
-   inline void
-   set_font_size(const float size, const unsigned int family) override
+   inline void point(const float /*x*/, const float /*y*/) override {}
+   inline void set_font_size(const float size, const unsigned int family) override
    {
       _current_font_size[family] = size;
    }
-   inline void
-   set_font_size(const float size) override
+   inline void set_font_size(const float size) override
    {
       _font_size = size;
       std::fill(_current_font_size,
               _current_font_size + NFAMILY, size);
    }
-   inline void
-   reset_font_size(const unsigned int /*family*/) override
-   {
-   }
+   inline void reset_font_size(const unsigned int /*family*/) override {}
    inline void
    set_parameter(const float x, const float y, const float size,
               const float angle_degree)
@@ -195,8 +184,7 @@ public:
          x * _pad_pixel_transform[3] +
          y * _pad_pixel_transform[4] + _pad_pixel_transform[5]));
    }
-   inline void
-   filled_rectangle(const mathtext::bounding_box_t &bounding_box_0) override
+   inline void filled_rectangle(const mathtext::bounding_box_t &bounding_box_0) override
    {
       SetFillColor(_parent->fTextColor);
       SetFillStyle(1001);
@@ -219,10 +207,7 @@ public:
                  bounding_box_0.top());
       gPad->PaintFillArea(4, xt, yt);
    }
-   inline void
-   rectangle(const mathtext::bounding_box_t &/*bounding_box*/) override
-   {
-   }
+   inline void rectangle(const mathtext::bounding_box_t & /*bounding_box*/) override {}
    inline mathtext::bounding_box_t
    bounding_box(const wchar_t character, float &current_x,
              const unsigned int family)
@@ -268,8 +253,7 @@ public:
       return ret;
    }
    inline mathtext::bounding_box_t
-   bounding_box(const std::wstring string,
-             const unsigned int family = FAMILY_PLAIN) override
+   bounding_box(const std::wstring string, const unsigned int family = FAMILY_PLAIN) override
    {
       if (TTF::fgCurFontIdx<0) return mathtext::bounding_box_t(0, 0, 0, 0, 0, 0);
       if (string.empty() || TTF::fgFace[TTF::fgCurFontIdx] == NULL ||
@@ -294,9 +278,7 @@ public:
       return ret;
    }
    inline void
-   text_raw(const float x, const float y,
-          const std::wstring string,
-          const unsigned int family = FAMILY_PLAIN) override
+   text_raw(const float x, const float y, const std::wstring string, const unsigned int family = FAMILY_PLAIN) override
    {
       SetTextFont((Font_t) root_face_number(family));
       SetTextSize(_current_font_size[family]);
@@ -329,10 +311,8 @@ public:
          }
       }
    }
-   inline void
-   text_with_bounding_box(const float /*x*/, const float /*y*/,
-                     const std::wstring /*string*/,
-                     const unsigned int /*family = FAMILY_PLAIN*/) override
+   inline void text_with_bounding_box(const float /*x*/, const float /*y*/, const std::wstring /*string*/,
+                                      const unsigned int /*family = FAMILY_PLAIN*/) override
    {
    }
    using mathtext::math_text_renderer_t::bounding_box;

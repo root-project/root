@@ -45,22 +45,22 @@ public:
    TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    TPolyMarker(const TPolyMarker &polymarker);
    ~TPolyMarker() override;
-   void     Copy(TObject &polymarker) const override;
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
-   void     Draw(Option_t *option="") override;
+   void             Copy(TObject &polymarker) const override;
+   Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
+   void             Draw(Option_t *option = "") override;
    virtual void     DrawPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void             ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual Int_t    GetLastPoint() const { return fLastPoint;}
    virtual Int_t    GetN() const {return fN;}
-   Option_t        *GetOption() const override {return fOption.Data();}
+   Option_t *       GetOption() const override { return fOption.Data(); }
    Double_t        *GetX() const {return fX;}
    Double_t        *GetY() const {return fY;}
-   void     ls(Option_t *option="") const override;
+   void             ls(Option_t *option = "") const override;
    virtual Int_t    Merge(TCollection *list);
-   void     Paint(Option_t *option="") override;
+   void             Paint(Option_t *option = "") override;
    virtual void     PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-   void     Print(Option_t *option="") const override;
-   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void             Print(Option_t *option = "") const override;
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual Int_t    SetNextPoint(Double_t x, Double_t y); // *MENU*
    virtual void     SetPoint(Int_t point, Double_t x, Double_t y); // *MENU*
    virtual void     SetPolyMarker(Int_t n);

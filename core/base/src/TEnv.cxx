@@ -233,7 +233,8 @@ private:
 public:
    TReadEnvParser(TEnv *e, FILE *f, EEnvLevel l) : TEnvParser(e, f), fLevel(l) { }
    void KeyValue(const TString &name, const TString &value, const TString &type) override
-      { fEnv->SetValue(name, value, fLevel, type); }
+   {
+      fEnv->SetValue(name, value, fLevel, type); }
 };
 
 /** \class TWriteEnvParser

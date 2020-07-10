@@ -62,15 +62,15 @@ public:
    Bool_t            MakeCurrent() override;
    Bool_t            ClearCurrent();
    void              SwapBuffers() override;
-   const TGLContext *GetContext()const override;
+   const TGLContext *GetContext() const override;
 
-   const  TGLFormat *GetPixelFormat()const override;
+   const TGLFormat *GetPixelFormat() const override;
 
    //This function is public _ONLY_ for calls
    //via gInterpreter. Do not call it directly.
    void              SetFormat();
    //To repaint gl-widget without GUI events.
-   void              ExtractViewport(Int_t *vp)const override;
+   void ExtractViewport(Int_t *vp) const override;
 
    TGEventHandler   *GetEventHandler() const { return fEventHandler; }
    void              SetEventHandler(TGEventHandler *eh);
@@ -83,7 +83,7 @@ public:
    Bool_t HandleFocusChange(Event_t *) override;
    Bool_t HandleCrossing(Event_t *) override;
 
-   void   DoRedraw() override;
+   void DoRedraw() override;
 
 private:
    TGLWidget(const TGLWidget &);              // Not implemented.

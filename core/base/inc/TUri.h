@@ -74,7 +74,7 @@ public:
    TUri(const TString &uri);
    TUri(const char *uri);
    TUri &operator=(const TUri &rhs); //copy ctor
-   ~TUri() override { }
+   ~TUri() override {}
 
    const TString GetUri() const;
    const TString GetScheme() const { return fScheme; }

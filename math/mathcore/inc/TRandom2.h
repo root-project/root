@@ -33,11 +33,11 @@ protected:
 public:
    TRandom2(UInt_t seed=1);
    ~TRandom2() override;
-    Double_t Rndm( ) override;
+   Double_t Rndm() override;
    using TRandom::Rndm;
-    void     RndmArray(Int_t n, Float_t *array) override;
-    void     RndmArray(Int_t n, Double_t *array) override;
-    void     SetSeed(ULong_t seed=0) override;
+   void RndmArray(Int_t n, Float_t *array) override;
+   void RndmArray(Int_t n, Double_t *array) override;
+   void SetSeed(ULong_t seed = 0) override;
 
    ClassDef(TRandom2,1)  //Random number generator with periodicity of 10**26
 };

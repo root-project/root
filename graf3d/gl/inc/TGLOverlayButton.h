@@ -46,13 +46,13 @@ protected:
 public:
    TGLOverlayButton(TGLViewerBase *parent, const char *text, Float_t posx,
                     Float_t posy, Float_t width, Float_t height);
-   ~TGLOverlayButton() override { }
+   ~TGLOverlayButton() override {}
 
-   Bool_t       MouseEnter(TGLOvlSelectRecord& selRec) override;
-   Bool_t       Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec, Event_t* event) override;
-   void         MouseLeave() override;
+   Bool_t MouseEnter(TGLOvlSelectRecord &selRec) override;
+   Bool_t Handle(TGLRnrCtx &rnrCtx, TGLOvlSelectRecord &selRec, Event_t *event) override;
+   void   MouseLeave() override;
 
-   void         Render(TGLRnrCtx& rnrCtx) override;
+   void                 Render(TGLRnrCtx &rnrCtx) override;
    virtual void         ResetState() { fActiveID = -1; }
 
    virtual const char  *GetText() const { return fText.Data(); }

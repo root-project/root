@@ -31,7 +31,7 @@ private:
 
 public:
    TVirtualGraphPainter() { }
-   ~TVirtualGraphPainter() override { }
+   ~TVirtualGraphPainter() override {}
 
    virtual Int_t DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t py) = 0;
    virtual void  DrawPanelHelper(TGraph *theGraph) = 0;

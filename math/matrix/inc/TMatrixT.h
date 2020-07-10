@@ -107,19 +107,32 @@ public:
    void MultT(const TMatrixTSym<Element> &a,const TMatrixT   <Element> &b);
    void MultT(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b) { Mult(a,b); }
 
-   const Element *GetMatrixArray  () const override;
-         Element *GetMatrixArray  () override;
-   const Int_t   *GetRowIndexArray() const override { return 0; }
-         Int_t   *GetRowIndexArray() override       { return 0; }
-   const Int_t   *GetColIndexArray() const override { return 0; }
-         Int_t   *GetColIndexArray() override       { return 0; }
+   const Element *GetMatrixArray() const override;
+   Element *      GetMatrixArray() override;
+   const Int_t *  GetRowIndexArray() const override { return 0; }
+   Int_t *        GetRowIndexArray() override { return 0; }
+   const Int_t *  GetColIndexArray() const override { return 0; }
+   Int_t *        GetColIndexArray() override { return 0; }
 
-         TMatrixTBase<Element> &SetRowIndexArray(Int_t * /*data*/) override { MayNotUse("SetRowIndexArray(Int_t *)"); return *this; }
-         TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) override { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
+   TMatrixTBase<Element> &SetRowIndexArray(Int_t * /*data*/) override
+   {
+      MayNotUse("SetRowIndexArray(Int_t *)");
+      return *this;
+   }
+   TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) override
+   {
+      MayNotUse("SetColIndexArray(Int_t *)");
+      return *this;
+   }
 
-   void Clear(Option_t * /*option*/ ="") override { if (this->fIsOwner) Delete_m(this->fNelems,fElements);
-                                                   else fElements = 0;
-                                                   this->fNelems = 0; }
+   void Clear(Option_t * /*option*/ = "") override
+   {
+      if (this->fIsOwner)
+         Delete_m(this->fNelems, fElements);
+      else
+         fElements = 0;
+      this->fNelems = 0;
+   }
 
            TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Element *data);
    const   TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,const Element *data) const
@@ -130,37 +143,41 @@ public:
            TMatrixT    <Element> &Use     (TMatrixT<Element> &a);
    const   TMatrixT    <Element> &Use     (const TMatrixT<Element> &a) const;
 
-   TMatrixTBase<Element> &GetSub  (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                           TMatrixTBase<Element> &target,Option_t *option="S") const override;
-           TMatrixT    <Element>  GetSub  (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
-   TMatrixTBase<Element> &SetSub  (Int_t row_lwb,Int_t col_lwb,const TMatrixTBase<Element> &source) override;
+   TMatrixTBase<Element> &GetSub(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
+                                 TMatrixTBase<Element> &target, Option_t *option = "S") const override;
+   TMatrixT<Element> GetSub(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Option_t *option = "S") const;
+   TMatrixTBase<Element> &SetSub(Int_t row_lwb, Int_t col_lwb, const TMatrixTBase<Element> &source) override;
 
-   TMatrixTBase<Element> &ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/ =-1) override;
-   TMatrixTBase<Element> &ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t /*nr_nonzeros*/ =-1) override;
+   TMatrixTBase<Element> &ResizeTo(Int_t nrows, Int_t ncols, Int_t /*nr_nonzeros*/ = -1) override;
+   TMatrixTBase<Element> &
+   ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Int_t /*nr_nonzeros*/ = -1) override;
    inline  TMatrixTBase<Element> &ResizeTo(const TMatrixT<Element> &m) {
                                             return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
                                  }
 
-   Double_t Determinant  () const override;
-   void     Determinant  (Double_t &d1,Double_t &d2) const override;
+                                 Double_t Determinant() const override;
+                                 void     Determinant(Double_t &d1, Double_t &d2) const override;
 
-           TMatrixT<Element> &Invert      (Double_t *det=0);
-           TMatrixT<Element> &InvertFast  (Double_t *det=0);
-           TMatrixT<Element> &Transpose   (const TMatrixT<Element> &source);
-   inline  TMatrixT<Element> &T           () { return this->Transpose(*this); }
-           TMatrixT<Element> &Rank1Update (const TVectorT<Element> &v,Element alpha=1.0);
-           TMatrixT<Element> &Rank1Update (const TVectorT<Element> &v1,const TVectorT<Element> &v2,Element alpha=1.0);
-           Element            Similarity  (const TVectorT<Element> &v) const;
+                                 TMatrixT<Element> &       Invert(Double_t *det = 0);
+                                 TMatrixT<Element> &       InvertFast(Double_t *det = 0);
+                                 TMatrixT<Element> &       Transpose(const TMatrixT<Element> &source);
+                                 inline TMatrixT<Element> &T() { return this->Transpose(*this); }
+                                 TMatrixT<Element> &       Rank1Update(const TVectorT<Element> &v, Element alpha = 1.0);
+                                 TMatrixT<Element> &       Rank1Update(const TVectorT<Element> &v1,
+                                                                       const TVectorT<Element> &v2, Element alpha = 1.0);
+                                 Element                   Similarity(const TVectorT<Element> &v) const;
 
-   TMatrixT<Element> &NormByColumn(const TVectorT<Element> &v,Option_t *option="D");
-   TMatrixT<Element> &NormByRow   (const TVectorT<Element> &v,Option_t *option="D");
+                                 TMatrixT<Element> &NormByColumn(const TVectorT<Element> &v, Option_t *option = "D");
+                                 TMatrixT<Element> &NormByRow(const TVectorT<Element> &v, Option_t *option = "D");
 
-   // Either access a_ij as a(i,j)
-   inline       Element                     operator()(Int_t rown,Int_t coln) const override;
-   inline       Element                    &operator()(Int_t rown,Int_t coln) override;
+                                 // Either access a_ij as a(i,j)
+                                 inline Element  operator()(Int_t rown, Int_t coln) const override;
+                                 inline Element &operator()(Int_t rown, Int_t coln) override;
 
-   // or as a[i][j]
-   inline const TMatrixTRow_const<Element>  operator[](Int_t rown) const { return TMatrixTRow_const<Element>(*this,rown); }
+                                 // or as a[i][j]
+                                 inline const TMatrixTRow_const<Element> operator[](Int_t rown) const
+                                 {
+                                    return TMatrixTRow_const<Element>(*this, rown); }
    inline       TMatrixTRow      <Element>  operator[](Int_t rown)       { return TMatrixTRow      <Element>(*this,rown); }
 
    TMatrixT<Element> &operator= (const TMatrixT      <Element> &source);

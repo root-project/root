@@ -32,13 +32,12 @@ class TRootAuth : public TVirtualAuth {
 
 public:
    TRootAuth() { }
-   ~TRootAuth() override { }
+   ~TRootAuth() override {}
 
-   TSecContext *Authenticate(TSocket *, const char *host,
-                             const char *user, Option_t *options = "") override;
+   TSecContext *Authenticate(TSocket *, const char *host, const char *user, Option_t *options = "") override;
    Int_t        ClientVersion() override;
    void         ErrorMsg(const char *where, Int_t ecode = -1) override;
-   const char  *Name() override { return "Root"; }
+   const char * Name() override { return "Root"; }
 
    ClassDef(TRootAuth,0)  // client auth interface
 };

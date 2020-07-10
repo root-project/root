@@ -40,7 +40,7 @@ protected:
    void    *fReceiver = 0;   // ptr to object to which slot is applied
    TString  fClassName;  // class name of the receiver
 
-   void PrintCollectionHeader(Option_t* option) const override;
+   void PrintCollectionHeader(Option_t *option) const override;
 
    Bool_t      CheckSlot(Int_t nargs) const;
    void       *GetSlotAddress() const;
@@ -56,7 +56,7 @@ protected:
    void SetArg(Double_t param) override { SetArgImpl(param); }
    void SetArg(Long64_t param) override { SetArgImpl(param); }
    void SetArg(ULong64_t param) override { SetArgImpl(param); }
-   void SetArg(const char * param) override { SetArgImpl(param); }
+   void SetArg(const char *param) override { SetArgImpl(param); }
 
    void SetArg(const Long_t *params, Int_t nparam = -1) override;
 

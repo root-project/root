@@ -59,7 +59,7 @@ public:
    void            SetImportEmpty(Bool_t ie)  { fImportEmpty = ie;   }
    Bool_t          GetImportEmpty()     const { return fImportEmpty; }
 
-   Bool_t  HandleElementPaste(TEveElement* el) override;
+   Bool_t HandleElementPaste(TEveElement *el) override;
 
    virtual TEveElement* ImportElementsRecurse(TEveElement* el,
                                               TEveElement* parent);
@@ -72,7 +72,7 @@ public:
    virtual void    ProjectChildren();
    virtual void    ProjectChildrenRecurse(TEveElement* el);
 
-   void    ComputeBBox() override;
+   void ComputeBBox() override;
 
    ClassDef(TEveProjectionManager, 0); // Manager class for steering of projections and managing projected objects.
 };

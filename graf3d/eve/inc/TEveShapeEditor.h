@@ -40,7 +40,7 @@ public:
          UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveShapeEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    void DoLineWidth();
    void DoLineColor(Pixel_t color);

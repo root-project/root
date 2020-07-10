@@ -35,7 +35,7 @@ protected:
 
 public:
    TGridJob(TString jobID) : fJobID(jobID) { }
-   ~TGridJob() override { }
+   ~TGridJob() override {}
 
    virtual TString GetJobID() { return fJobID; }
 

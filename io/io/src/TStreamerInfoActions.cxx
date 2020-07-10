@@ -139,7 +139,8 @@ namespace TStreamerInfoActions
       // Mostly to cancel out the PrintDebug.
    public:
       TGenericConfiguration(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset = 0) : TConfiguration(info,id,compinfo,offset) {};
-      void PrintDebug(TBuffer &, void *) const override {
+      void PrintDebug(TBuffer &, void *) const override
+      {
          // Since we call the old code, it will print the debug statement.
       }
 
@@ -155,7 +156,8 @@ namespace TStreamerInfoActions
       Int_t  fObjectOffset;  // Offset of the TObject part within the object
 
       TBitsConfiguration(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset = 0) : TConfiguration(info,id,compinfo,offset),fObjectOffset(0) {};
-      void PrintDebug(TBuffer &, void *) const override {
+      void PrintDebug(TBuffer &, void *) const override
+      {
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
          TStreamerElement *aElement = fCompInfo->fElem;
          TString sequenceType;
@@ -184,7 +186,6 @@ namespace TStreamerInfoActions
       }
 
       TConfiguration *Copy() override { return new TBitsConfiguration(*this); }
-
    };
 
    Int_t GenericReadAction(TBuffer &buf, void *addr, const TConfiguration *config)
@@ -1025,20 +1026,17 @@ namespace TStreamerInfoActions
    public:
       TVectorLoopConfig(TVirtualCollectionProxy *proxy, Long_t increment, Bool_t /* read */) : TLoopConfiguration(proxy), fIncrement(increment) {};
       //virtual void PrintDebug(TBuffer &buffer, void *);
-      ~TVectorLoopConfig() override {};
-      void Print() const override
-      {
-         printf("TVectorLoopConfig: increment=%ld\n",fIncrement);
-      }
+      ~TVectorLoopConfig() override{};
+      void Print() const override { printf("TVectorLoopConfig: increment=%ld\n", fIncrement); }
 
-      void* GetFirstAddress(void *start, const void * /* end */) const override
+      void *GetFirstAddress(void *start, const void * /* end */) const override
       {
          // Return the address of the first element of the collection.
 
          return start;
       }
 
-      TLoopConfiguration* Copy() const override { return new TVectorLoopConfig(*this); }
+      TLoopConfiguration *Copy() const override { return new TVectorLoopConfig(*this); }
    };
 
    class TAssocLoopConfig : public TLoopConfiguration {
@@ -1046,14 +1044,11 @@ namespace TStreamerInfoActions
    public:
       TAssocLoopConfig(TVirtualCollectionProxy *proxy, Bool_t /* read */) : TLoopConfiguration(proxy) {};
       //virtual void PrintDebug(TBuffer &buffer, void *);
-      ~TAssocLoopConfig() override {};
-      void Print() const override
-      {
-         printf("TAssocLoopConfig: proxy=%s\n",fProxy->GetCollectionClass()->GetName());
-      }
-      TLoopConfiguration* Copy() const override { return new TAssocLoopConfig(*this); }
+      ~TAssocLoopConfig() override{};
+      void Print() const override { printf("TAssocLoopConfig: proxy=%s\n", fProxy->GetCollectionClass()->GetName()); }
+      TLoopConfiguration *Copy() const override { return new TAssocLoopConfig(*this); }
 
-      void* GetFirstAddress(void *start, const void * /* end */) const override
+      void *GetFirstAddress(void *start, const void * /* end */) const override
       {
          // Return the address of the first element of the collection.
 
@@ -1093,14 +1088,11 @@ namespace TStreamerInfoActions
       {
          Init(read);
       }
-      ~TGenericLoopConfig() override {};
-      void Print() const override
-      {
-         printf("TGenericLoopConfig: proxy=%s\n",fProxy->GetCollectionClass()->GetName());
-      }
-      TLoopConfiguration* Copy() const override { return new TGenericLoopConfig(*this); }
+      ~TGenericLoopConfig() override{};
+      void Print() const override { printf("TGenericLoopConfig: proxy=%s\n", fProxy->GetCollectionClass()->GetName()); }
+      TLoopConfiguration *Copy() const override { return new TGenericLoopConfig(*this); }
 
-      void* GetFirstAddress(void *start_collection, const void *end_collection) const override
+      void *GetFirstAddress(void *start_collection, const void *end_collection) const override
       {
          // Return the address of the first element of the collection.
 
@@ -1470,7 +1462,8 @@ namespace TStreamerInfoActions
          TConfiguration(info, -1, nullptr, offset), fOnfileObject(onfileObject)
       {}
 
-      void Print() const override {
+      void Print() const override
+      {
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
          if (fOnfileObject)
             printf("StreamerInfoAction, class:%s, PushDataCache offset=%d\n",
@@ -1479,7 +1472,8 @@ namespace TStreamerInfoActions
             printf("StreamerInfoAction, class:%s, PopDataCache offset=%d\n",
                    info->GetClass()->GetName(), fOffset);
       }
-      void PrintDebug(TBuffer &buffer, void *object) const override {
+      void PrintDebug(TBuffer &buffer, void *object) const override
+      {
          if (gDebug > 1) {
             TStreamerInfo *info = (TStreamerInfo*)fInfo;
             printf("StreamerInfoAction, class:%s, %sDataCache, bufpos=%d, arr=%p, offset=%d, onfileObject=%p\n",
@@ -1547,8 +1541,9 @@ namespace TStreamerInfoActions
          }
 
       }
-      ~TConfigurationUseCache() override {};
-      TConfiguration *Copy() override {
+      ~TConfigurationUseCache() override{};
+      TConfiguration *Copy() override
+      {
          TConfigurationUseCache *copy = new TConfigurationUseCache(*this);
          fAction.fConfiguration = copy->fAction.fConfiguration->Copy(); // since the previous allocation did a 'move' of fAction we need to fix it.
          return copy;

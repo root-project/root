@@ -44,7 +44,7 @@ public:
    TEveScene(TGLScenePad* gl_scene, const char* n="TEveScene", const char* t="");
    ~TEveScene() override;
 
-   void CollectSceneParents(List_t& scenes) override;
+   void CollectSceneParents(List_t &scenes) override;
 
    Bool_t SingleRnrState() const override { return kTRUE; }
 
@@ -60,13 +60,13 @@ public:
    TGLScenePad* GetGLScene() const { return fGLScene; }
    void SetGLScene(TGLScenePad* s) { fGLScene = s; }
 
-   void SetName(const char* n) override;
-   void Paint(Option_t* option = "") override;
+   void SetName(const char *n) override;
+   void Paint(Option_t *option = "") override;
 
    void DestroyElementRenderers(TEveElement* element);
    void DestroyElementRenderers(TObject* rnrObj);
 
-   const TGPicture* GetListTreeIcon(Bool_t open=kFALSE) override;
+   const TGPicture *GetListTreeIcon(Bool_t open = kFALSE) override;
 
    ClassDef(TEveScene, 0); // Reve representation of TGLScene.
 };

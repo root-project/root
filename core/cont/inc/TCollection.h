@@ -156,26 +156,26 @@ protected:
 public:
    enum { kInitCapacity = 16, kInitHashTableCapacity = 17 };
 
-              ~TCollection() override;
+   ~TCollection() override;
    virtual void       Add(TObject *obj) = 0;
    void               AddVector(TObject *obj1, ...);
    virtual void       AddAll(const TCollection *col);
    Bool_t             AssertClass(TClass *cl) const;
    void               Browse(TBrowser *b) override;
    Int_t              Capacity() const { return fSize; }
-   void       Clear(Option_t *option="") override = 0;
-   TObject   *Clone(const char *newname="") const override;
+   void               Clear(Option_t *option = "") override = 0;
+   TObject *          Clone(const char *newname = "") const override;
    Int_t              Compare(const TObject *obj) const override;
    Bool_t             Contains(const char *name) const { return FindObject(name) != 0; }
    Bool_t             Contains(const TObject *obj) const { return FindObject(obj) != 0; }
-   void       Delete(Option_t *option="") override = 0;
-   void       Draw(Option_t *option="") override;
-   void       Dump() const override ;
-   TObject   *FindObject(const char *name) const override;
+   void               Delete(Option_t *option = "") override = 0;
+   void               Draw(Option_t *option = "") override;
+   void               Dump() const override;
+   TObject *          FindObject(const char *name) const override;
    TObject           *operator()(const char *name) const;
-   TObject   *FindObject(const TObject *obj) const override;
+   TObject *          FindObject(const TObject *obj) const override;
    virtual Int_t      GetEntries() const { return GetSize(); }
-   const char *GetName() const override;
+   const char *       GetName() const override;
    virtual TObject  **GetObjectRef(const TObject *obj) const = 0;
    /// Return the *capacity* of the collection, i.e. the current total amount of space that has been allocated so far.
    /// Same as `Capacity`. Use `GetEntries` to get the number of elements currently in the collection.
@@ -184,19 +184,19 @@ public:
    ULong_t            Hash() const override { return fName.Hash(); }
    Bool_t             IsArgNull(const char *where, const TObject *obj) const;
    virtual Bool_t     IsEmpty() const { return GetSize() <= 0; }
-   Bool_t     IsFolder() const override { return kTRUE; }
+   Bool_t             IsFolder() const override { return kTRUE; }
    Bool_t             IsOwner() const { return TestBit(kIsOwner); }
    Bool_t             IsSortable() const override { return kTRUE; }
-   void       ls(Option_t *option="") const override ;
-   Bool_t     Notify() override;
+   void               ls(Option_t *option = "") const override;
+   Bool_t             Notify() override;
    virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const = 0;
    virtual TIterator *MakeReverseIterator() const { return MakeIterator(kIterBackward); }
-   void       Paint(Option_t *option="") override;
-   void       Print(Option_t *option="") const override;
+   void               Paint(Option_t *option = "") override;
+   void               Print(Option_t *option = "") const override;
    virtual void       Print(Option_t *option, Int_t recurse) const;
    virtual void       Print(Option_t *option, const char* wildcard, Int_t recurse=1) const;
    virtual void       Print(Option_t *option, TPRegexp& regexp, Int_t recurse=1) const;
-   void       RecursiveRemove(TObject *obj) override;
+   void               RecursiveRemove(TObject *obj) override;
    virtual TObject   *Remove(TObject *obj) = 0;
    virtual void       RemoveAll(TCollection *col);
    void               RemoveAll() { Clear(); }
@@ -204,8 +204,8 @@ public:
    void               SetName(const char *name) { fName = name; }
    virtual void       SetOwner(Bool_t enable = kTRUE);
    virtual bool       UseRWLock();
-   Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0) override;
-   Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const override;
+   Int_t              Write(const char *name = 0, Int_t option = 0, Int_t bufsize = 0) override;
+   Int_t              Write(const char *name = 0, Int_t option = 0, Int_t bufsize = 0) const override;
 
    R__ALWAYS_INLINE Bool_t IsUsingRWLock() const { return TestBit(TCollection::kUseRWLock); }
 
@@ -274,7 +274,7 @@ class TIterCategory: public TIter, public std::iterator_traits<typename T::Itera
 public:
    TIterCategory(const TCollection *col, Bool_t dir = kIterForward) : TIter(col, dir) { }
    TIterCategory(TIterator *it) : TIter(it) { }
-   ~TIterCategory() override { }
+   ~TIterCategory() override {}
    TIterCategory &Begin() { TIter::Begin(); return *this; }
    static TIterCategory End() { return TIterCategory(static_cast<TIterator*>(nullptr)); }
 };

@@ -64,7 +64,8 @@ public:
    TGTextEditHist() {}
    ~TGTextEditHist() override { Delete(); }
 
-   Bool_t Notify() override { //
+   Bool_t Notify() override
+   { //
       TObject *obj = Last();
       if (!obj) return kFALSE;
 
@@ -96,7 +97,8 @@ public:
    TInsCharCom(TGTextEdit *te, char ch) : TGTextEditCommand(te) {
       fEdit->InsChar(ch);
    }
-   Bool_t Notify() override { //
+   Bool_t Notify() override
+   { //
       fEdit->SetCurrent(fPos);
       fEdit->NextChar();
       fEdit->DelChar();
@@ -116,7 +118,8 @@ public:
       fChar = fEdit->GetText()->GetChar(fPos);
       fEdit->DelChar();
    }
-   Bool_t Notify() override { //
+   Bool_t Notify() override
+   { //
       if (fChar > 0) {
          fEdit->SetCurrent(fPos);
          fEdit->InsChar(fChar);
@@ -138,7 +141,8 @@ public:
       fPos.fY++;
    }
 
-   Bool_t Notify() override { //
+   Bool_t Notify() override
+   { //
       fEdit->SetCurrent(fPos);
       fEdit->DelChar();
       return kTRUE;
@@ -160,7 +164,8 @@ public:
       fEndPos = end;
    }
 
-   Bool_t Notify() override { //
+   Bool_t Notify() override
+   { //
       fEdit->GetText()->DelText(fPos, fEndPos);
 
       if (fChar > 0) {
@@ -208,7 +213,8 @@ public:
 
    void SetBreakLine(Bool_t on) { fBreakLine = on; }
 
-   Bool_t Notify() override { //
+   Bool_t Notify() override
+   { //
       TGLongPosition start_src, end_src;
       start_src.fX = start_src.fY = 0;
       end_src.fY   = fText->RowCount() - 1;

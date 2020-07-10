@@ -49,7 +49,7 @@ public:
    TVirtualGeoTrack   *GetDaughter(Int_t index) const {return (TVirtualGeoTrack*)fTracks->At(index);}
    TVirtualGeoTrack   *GetMother() const {return fParent;}
    TObject            *GetMotherParticle() const {return (fParent)?fParent->GetParticle():0;}
-   const char *GetName() const override;
+   const char *              GetName() const override;
    Int_t               GetNdaughters() const {return (fTracks)?fTracks->GetEntriesFast():0;}
    virtual Int_t       GetNpoints() const = 0;
    Int_t               GetParentId() const   {return (fParent)?fParent->GetId():-1;}
@@ -62,7 +62,7 @@ public:
    virtual const Double_t *GetPoint(Int_t i) const = 0;
    Bool_t              HasPoints() const {return (GetNpoints()==0)?kFALSE:kTRUE;}
    Bool_t              IsInTimeRange() const;
-   void        Paint(Option_t *option="") override = 0;
+   void                    Paint(Option_t *option = "") override = 0;
    virtual void        PaintCollect(Double_t /*time*/, Double_t * /*box*/) {;}
    virtual void        PaintCollectTrack(Double_t /*time*/, Double_t * /*box*/) {;}
    virtual void        PaintTrack(Option_t *option="") = 0;

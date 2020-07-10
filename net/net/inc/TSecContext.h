@@ -64,7 +64,7 @@ public:
    TSecContext(const char *user, const char *host, Int_t meth, Int_t offset,
                const char *id, const char *token,
                TDatime expdate = kROOTTZERO, void *ctx = 0);
-      ~TSecContext() override;
+   ~TSecContext() override;
 
    void        AddForCleanup(Int_t port, Int_t proto, Int_t type);
    virtual const char *AsString(TString &out);
@@ -115,7 +115,7 @@ private:
 public:
    TSecContextCleanup(Int_t port, Int_t proto, Int_t type) :
                fPort(port), fServerProtocol(proto), fServerType(type) { };
-   ~TSecContextCleanup() override { };
+   ~TSecContextCleanup() override{};
 
    Int_t   GetPort() const { return fPort; }
    Int_t   GetProtocol() const { return fServerProtocol; }

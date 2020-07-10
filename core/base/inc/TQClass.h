@@ -62,10 +62,8 @@ namespace Internal {
    class TDefaultInitBehavior;
    class TQObjectInitBehavior : public TDefaultInitBehavior {
    public:
-      TClass *CreateClass(const char *cname, Version_t id,
-                                  const std::type_info &info, TVirtualIsAProxy *isa,
-                                  const char *dfil, const char *ifil,
-                                  Int_t dl, Int_t il) const override
+      TClass *CreateClass(const char *cname, Version_t id, const std::type_info &info, TVirtualIsAProxy *isa,
+                          const char *dfil, const char *ifil, Int_t dl, Int_t il) const override
       {
          return new TQClass(cname, id, info, isa, dfil, ifil,dl, il);
       }

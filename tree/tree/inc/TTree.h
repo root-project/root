@@ -412,7 +412,7 @@ public:
    virtual TBranch        *Bronch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
    virtual TBranch        *BranchOld(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 1);
    virtual TBranch        *BranchRef();
-   void            Browse(TBrowser*) override;
+   void                    Browse(TBrowser *) override;
    virtual Int_t           BuildIndex(const char* majorname, const char* minorname = "0");
    TStreamerInfo          *BuildStreamerInfo(TClass* cl, void* pointer = 0, Bool_t canOptimize = kTRUE);
    virtual TFile          *ChangeFile(TFile* file);
@@ -423,8 +423,8 @@ public:
    virtual TBasket        *CreateBasket(TBranch*);
    virtual void            DirectoryAutoAdd(TDirectory *);
    Int_t                   Debug() const { return fDebug; }
-   void            Delete(Option_t* option = "") override; // *MENU*
-   void            Draw(Option_t* opt) override { Draw(opt, "", "", kMaxEntries, 0); }
+   void                    Delete(Option_t *option = "") override; // *MENU*
+   void                    Draw(Option_t *opt) override { Draw(opt, "", "", kMaxEntries, 0); }
    virtual Long64_t        Draw(const char* varexp, const TCut& selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual Long64_t        Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
    virtual void            DropBaskets();
@@ -551,10 +551,10 @@ public:
    virtual Long64_t        Merge(TCollection* list, Option_t* option = "");
    virtual Long64_t        Merge(TCollection* list, TFileMergeInfo *info);
    static  TTree          *MergeTrees(TList* list, Option_t* option = "");
-   Bool_t          Notify() override;
+   Bool_t                  Notify() override;
    virtual void            OptimizeBaskets(ULong64_t maxMemory=10000000, Float_t minComp=1.1, Option_t *option="");
    TPrincipal             *Principal(const char* varexp = "", const char* selection = "", Option_t* option = "np", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
-   void            Print(Option_t* option = "") const override; // *MENU*
+   void                    Print(Option_t *option = "") const override; // *MENU*
    virtual void            PrintCacheStats(Option_t* option = "") const;
    virtual Long64_t        Process(const char* filename, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
    virtual Long64_t        Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
@@ -566,7 +566,7 @@ public:
    virtual void            RegisterExternalFriend(TFriendElement *);
    virtual void            RemoveExternalFriend(TFriendElement *);
    virtual void            RemoveFriend(TTree*);
-   void            RecursiveRemove(TObject *obj) override;
+   void                    RecursiveRemove(TObject *obj) override;
    virtual void            Reset(Option_t* option = "");
    virtual void            ResetAfterMerge(TFileMergeInfo *);
    virtual void            ResetBranchAddress(TBranch *);
@@ -617,7 +617,7 @@ public:
    virtual void            SetMaxEntryLoop(Long64_t maxev = kMaxEntries) { fMaxEntryLoop = maxev; } // *MENU*
    static  void            SetMaxTreeSize(Long64_t maxsize = 100000000000LL);
    virtual void            SetMaxVirtualSize(Long64_t size = 0) { fMaxVirtualSize = size; } // *MENU*
-   void            SetName(const char* name) override; // *MENU*
+   void                      SetName(const char *name) override;                              // *MENU*
 
    /**
     * @brief Sets the address of the object to be notified when the tree is loaded.
@@ -645,8 +645,8 @@ public:
    virtual Int_t           StopCacheLearningPhase();
    virtual Int_t           UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    void                    UseCurrentStyle() override;
-   Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0) override;
-   Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const override;
+   Int_t                   Write(const char *name = 0, Int_t option = 0, Int_t bufsize = 0) override;
+   Int_t                   Write(const char *name = 0, Int_t option = 0, Int_t bufsize = 0) const override;
 
    ClassDefOverride(TTree, 20) // Tree descriptor (the main ROOT I/O class)
 };
@@ -673,15 +673,24 @@ protected:
 public:
    TTreeFriendLeafIter(const TTree* t, Bool_t dir = kIterForward);
    TTreeFriendLeafIter(const TTreeFriendLeafIter &iter);
-   ~TTreeFriendLeafIter() override { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
-   TIterator &operator=(const TIterator &rhs) override;
+   ~TTreeFriendLeafIter() override
+   {
+      SafeDelete(fLeafIter);
+      SafeDelete(fTreeIter);
+   }
+   TIterator &          operator=(const TIterator &rhs) override;
    TTreeFriendLeafIter &operator=(const TTreeFriendLeafIter &rhs);
 
    const TCollection *GetCollection() const override { return 0; }
-   Option_t          *GetOption() const override;
-   TObject           *Next() override;
-   void               Reset() override { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
-   Bool_t operator !=(const TIterator&) const override {
+   Option_t *         GetOption() const override;
+   TObject *          Next() override;
+   void               Reset() override
+   {
+      SafeDelete(fLeafIter);
+      SafeDelete(fTreeIter);
+   }
+   Bool_t operator!=(const TIterator &) const override
+   {
       // TODO: Implement me
       return false;
    }
@@ -689,7 +698,8 @@ public:
       // TODO: Implement me
       return false;
    }
-   TObject *operator*() const override {
+   TObject *operator*() const override
+   {
       // TODO: Implement me
       return nullptr;
    }

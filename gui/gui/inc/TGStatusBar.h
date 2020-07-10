@@ -56,7 +56,7 @@ public:
                Pixel_t back = GetDefaultFrameBackground());
    ~TGStatusBar() override;
 
-   void DrawBorder() override;
+   void         DrawBorder() override;
    virtual void SetText(TGString *text, Int_t partidx = 0);
    virtual void SetText(const char *text, Int_t partidx = 0);
            void AddText(const char *text, Int_t partidx = 0)
@@ -66,7 +66,7 @@ public:
    virtual void SetParts(Int_t *parts, Int_t npart);
    void         Draw3DCorner(Bool_t corner) { f3DCorner = corner; }
    TGCompositeFrame *GetBarPart(Int_t npart) const;
-   TGDimension GetDefaultSize() const override;
+   TGDimension       GetDefaultSize() const override;
 
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 

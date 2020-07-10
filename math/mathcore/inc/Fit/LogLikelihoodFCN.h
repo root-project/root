@@ -80,7 +80,7 @@ public:
    /**
       Destructor (no operations)
    */
-   ~LogLikelihoodFCN () override {}
+   ~LogLikelihoodFCN() override {}
 
    /**
       Copy constructor
@@ -111,8 +111,7 @@ public:
 
 
    /// clone the function (need to return Base for Windows)
-   BaseFunction * Clone() const override { return  new LogLikelihoodFCN(*this); }
-
+   BaseFunction *Clone() const override { return new LogLikelihoodFCN(*this); }
 
    //using BaseObjFunction::operator();
 
@@ -120,21 +119,22 @@ public:
    virtual unsigned int NFitPoints() const { return fNEffPoints; }
 
    /// i-th likelihood contribution and its gradient
-   double DataElement(const double * x, unsigned int i, double * g) const override {
+   double DataElement(const double *x, unsigned int i, double *g) const override
+   {
       if (i==0) this->UpdateNCalls();
       return FitUtil::EvaluatePdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
    }
 
    // need to be virtual to be instantited
-   void Gradient(const double *x, double *g) const override {
+   void Gradient(const double *x, double *g) const override
+   {
       // evaluate the chi2 gradient
       FitUtil::Evaluate<typename BaseFCN::T>::EvalLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g,
                                                                fNEffPoints, fExecutionPolicy);
    }
 
    /// get type of fit method function
-    typename BaseObjFunction::Type_t Type() const override { return BaseObjFunction::kLogLikelihood; }
-
+   typename BaseObjFunction::Type_t Type() const override { return BaseObjFunction::kLogLikelihood; }
 
    // Use sum of the weight squared in evaluating the likelihood
    // (this is needed for calculating the errors)
@@ -154,17 +154,18 @@ private:
    /**
       Evaluation of the  function (required by interface)
     */
-   double DoEval (const double * x) const override {
+   double DoEval(const double *x) const override
+   {
       this->UpdateNCalls();
       return FitUtil::Evaluate<T>::EvalLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints, fExecutionPolicy);
    }
 
    // for derivatives
-   double  DoDerivative(const double * x, unsigned int icoord ) const override {
+   double DoDerivative(const double *x, unsigned int icoord) const override
+   {
       Gradient(x, &fGrad[0]);
       return fGrad[icoord];
    }
-
 
       //data member
    bool fIsExtended;  // flag for indicating if likelihood is extended

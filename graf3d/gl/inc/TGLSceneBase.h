@@ -76,7 +76,7 @@ public:
    void RemoveViewer(TGLViewerBase* viewer);
    void TagViewersChanged();
 
-   const char* LockIdStr() const override;
+   const char *LockIdStr() const override;
 
    virtual const char  *GetName()  const { return fName; }
    virtual const char  *GetTitle() const { return fTitle; }

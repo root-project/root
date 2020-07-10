@@ -31,7 +31,7 @@ protected:
    Float_t fDx2;        // half length in x at the high z surface
    Float_t fDy2;        // half length in y at the high z surface
 
-   void    SetPoints(Double_t *points) const override;
+   void SetPoints(Double_t *points) const override;
 
 public:
    TTRD2();

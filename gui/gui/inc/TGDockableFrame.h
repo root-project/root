@@ -119,7 +119,7 @@ public:
 
    void AddFrame(TGFrame *f, TGLayoutHints *hints) override;
 
-   Bool_t ProcessMessage(Long_t, Long_t, Long_t) override;
+   Bool_t       ProcessMessage(Long_t, Long_t, Long_t) override;
    virtual void Docked() { Emit("Docked()"); }        //*SIGNAL*
    virtual void Undocked() { Emit("Undocked()"); }    //*SIGNAL*
 
@@ -145,7 +145,7 @@ public:
    TGCompositeFrame *GetContainer() const { return fContainer; }
    TGUndockedFrame  *GetUndocked() const { return fFrame; }
 
-   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGDockableFrame,0)  // Dockable widget
 };

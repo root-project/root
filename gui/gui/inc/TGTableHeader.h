@@ -55,8 +55,8 @@ public:
 
    virtual void SetDefaultLabel();
    virtual void SetPosition(UInt_t pos);
-   void Resize(UInt_t width, UInt_t height) override;  // Resize width or height
-   void Resize(TGDimension newsize) override;          // depending on type
+   void         Resize(UInt_t width, UInt_t height) override; // Resize width or height
+   void         Resize(TGDimension newsize) override;         // depending on type
    virtual void Sort(Bool_t order = kSortAscending);
    virtual void UpdatePosition();
 

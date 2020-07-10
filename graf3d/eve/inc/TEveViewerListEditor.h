@@ -34,7 +34,7 @@ public:
          UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveViewerListEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    // Declare callback/slot methods
    void DoBrightness();

@@ -53,16 +53,16 @@ public:
    TClingValue& operator=(TClingValue &Other);
    ~TClingValue() override;
 
-   const void* GetValAddr() const override { return &fValue; }
-   void* GetValAddr() override { return &fValue; }
+   const void *GetValAddr() const override { return &fValue; }
+   void *      GetValAddr() override { return &fValue; }
 
    std::pair<std::string, std::string> ToTypeAndValueString() const override;
-   Bool_t      IsValid() const override;
-   Double_t    GetAsDouble() const override;
-   Long_t      GetAsLong() const override;
-   ULong_t     GetAsUnsignedLong() const override;
-   void*       GetAsPointer() const override;
-   std::string ToString() const override;
+   Bool_t                              IsValid() const override;
+   Double_t                            GetAsDouble() const override;
+   Long_t                              GetAsLong() const override;
+   ULong_t                             GetAsUnsignedLong() const override;
+   void *                              GetAsPointer() const override;
+   std::string                         ToString() const override;
 };
 
 #endif // ROOT_TClingValue

@@ -111,7 +111,8 @@ namespace TStreamerInfoActions {
       {
          // Usual constructor.
       }
-      ~TConfiguredAction() override {
+      ~TConfiguredAction() override
+      {
          // Usual destructor.
          // Idea: the configuration ownership might be moved to a single list so that
          // we can shared them between the optimized and non-optimized list of actions.
@@ -176,9 +177,7 @@ namespace TStreamerInfoActions {
       using SequenceGetter_t = SequencePtr(*)(TStreamerInfo *info, TVirtualCollectionProxy *collectionProxy, TClass *originalClass);
 
       TActionSequence(TVirtualStreamerInfo *info, UInt_t maxdata) : fStreamerInfo(info), fLoopConfig(0) { fActions.reserve(maxdata); };
-      ~TActionSequence() override {
-         delete fLoopConfig;
-      }
+      ~TActionSequence() override { delete fLoopConfig; }
 
       template <typename action_t>
       void AddAction( action_t action, TConfiguration *conf ) {

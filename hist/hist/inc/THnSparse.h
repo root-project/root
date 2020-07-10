@@ -56,21 +56,22 @@ class THnSparse: public THnBase {
       return (THnSparseArrayChunk*) fBinContent[idx]; }
 
    THnSparseArrayChunk* AddChunk();
-   void Reserve(Long64_t nbins) override;
+   void                 Reserve(Long64_t nbins) override;
    void FillExMap();
    virtual TArray* GenerateArray() const = 0;
    Long64_t GetBinIndexForCurrentBin(Bool_t allocate);
 
    /// Increment the bin content of "bin" by "w",
    /// return the bin index.
-   void FillBin(Long64_t bin, Double_t w) override {
+   void FillBin(Long64_t bin, Double_t w) override
+   {
       THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
       chunk->AddBinContent(bin % fChunkSize, w);
       FillBinBase(w);
    }
-   void InitStorage(Int_t* nbins, Int_t chunkSize) override;
+   void InitStorage(Int_t *nbins, Int_t chunkSize) override;
 
- public:
+public:
    ~THnSparse() override;
 
    static THnSparse* CreateSparse(const char* name, const char* title,
@@ -87,17 +88,17 @@ class THnSparse: public THnBase {
    Int_t GetChunkSize() const { return fChunkSize; }
    Int_t GetNChunks() const { return fBinContent.GetEntriesFast(); }
 
-   ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const override;
+   ROOT::Internal::THnBaseBinIter *CreateIter(Bool_t respectAxisRange) const override;
 
    Long64_t GetNbins() const override { return fFilledBins; }
-   void SetFilledBins(Long64_t nbins) override { fFilledBins = nbins; }
+   void     SetFilledBins(Long64_t nbins) override { fFilledBins = nbins; }
 
-   Long64_t GetBin(const Int_t* idx) const override { return const_cast<THnSparse*>(this)->GetBin(idx, kFALSE); }
-   Long64_t GetBin(const Double_t* x) const override { return const_cast<THnSparse*>(this)->GetBin(x, kFALSE); }
-   Long64_t GetBin(const char* name[]) const override { return const_cast<THnSparse*>(this)->GetBin(name, kFALSE); }
-   Long64_t GetBin(const Int_t* idx, Bool_t allocate = kTRUE) override;
-   Long64_t GetBin(const Double_t* x, Bool_t allocate = kTRUE) override;
-   Long64_t GetBin(const char* name[], Bool_t allocate = kTRUE) override;
+   Long64_t GetBin(const Int_t *idx) const override { return const_cast<THnSparse *>(this)->GetBin(idx, kFALSE); }
+   Long64_t GetBin(const Double_t *x) const override { return const_cast<THnSparse *>(this)->GetBin(x, kFALSE); }
+   Long64_t GetBin(const char *name[]) const override { return const_cast<THnSparse *>(this)->GetBin(name, kFALSE); }
+   Long64_t GetBin(const Int_t *idx, Bool_t allocate = kTRUE) override;
+   Long64_t GetBin(const Double_t *x, Bool_t allocate = kTRUE) override;
+   Long64_t GetBin(const char *name[], Bool_t allocate = kTRUE) override;
 
    /// Forwards to THnBase::SetBinContent().
    /// Non-virtual, CINT-compatible replacement of a using declaration.
@@ -121,7 +122,7 @@ class THnSparse: public THnBase {
 
       return THnBase::GetBinContent(idx);
    }
-   Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const override;
+   Double_t GetBinContent(Long64_t bin, Int_t *idx = 0) const override;
    Double_t GetBinError2(Long64_t linidx) const override;
 
    Double_t GetSparseFractionBins() const;
@@ -162,7 +163,7 @@ class THnSparse: public THnBase {
       return (THnSparse*) RebinBase(group);
    }
 
-   void Reset(Option_t* option = "") override;
+   void Reset(Option_t *option = "") override;
    void Sumw2() override;
 
    ClassDef(THnSparse, 3); // Interfaces of sparse n-dimensional histogram
@@ -211,8 +212,9 @@ class THnSparseT: public THnSparse {
               const Double_t* xmax = 0, Int_t chunksize = 1024 * 16):
       THnSparse(name, title, dim, nbins, xmin, xmax, chunksize) {}
 
-   TArray* GenerateArray() const override { return new CONT(GetChunkSize()); }
- private:
+   TArray *GenerateArray() const override { return new CONT(GetChunkSize()); }
+
+private:
    ClassDef(THnSparseT, 1); // Sparse n-dimensional histogram with templated content
 };
 

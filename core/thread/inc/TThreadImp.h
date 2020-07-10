@@ -31,7 +31,7 @@ class TThread;
 class TThreadImp : public TObject {
 public:
    TThreadImp() { }
-   ~TThreadImp() override { }
+   ~TThreadImp() override {}
 
    virtual Int_t  Join(TThread *th, void **ret) = 0;
    virtual Long_t SelfId() = 0;

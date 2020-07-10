@@ -55,12 +55,12 @@ private:
 
 public:
    TBaseClass(BaseClassInfo_t *info = 0, TClass *cl = 0);
-       ~TBaseClass() override;
-   void   Browse(TBrowser *b) override;
-   const char    *GetTitle() const override;
+   ~TBaseClass() override;
+   void           Browse(TBrowser *b) override;
+   const char *   GetTitle() const override;
    TClass        *GetClassPointer(Bool_t load=kTRUE);
    Int_t          GetDelta();
-   Bool_t         IsFolder() const override {return kTRUE;}
+   Bool_t         IsFolder() const override { return kTRUE; }
    ROOT::ESTLType IsSTLContainer();
    Long_t         Property() const override;
    void           SetClass(TClass* cl) { fClass = cl; }

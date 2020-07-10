@@ -71,7 +71,7 @@ protected:
    UInt_t            fDefHeight;         // default height
 
             void        CopyText() const;
-    void        DoRedraw() override;
+            void        DoRedraw() override;
             Int_t       GetCharacterIndex(Int_t xcoord);
    virtual  void        Init();
    virtual  Bool_t      IsCursorOutOfFrame();
@@ -108,12 +108,12 @@ public:
 
    ~TGTextEntry() override;
 
-    TGDimension GetDefaultSize() const override;
+   TGDimension          GetDefaultSize() const override;
    virtual  void        SetDefaultSize(UInt_t w, UInt_t h);
 
    virtual  void        AppendText(const char *text);
             void        Backspace();
-            void        Clear(Option_t *option="") override;
+            void        Clear(Option_t *option = "") override;
             void        CursorLeft(Bool_t mark = kFALSE , Int_t steps = 1);
             void        CursorRight(Bool_t mark = kFALSE , Int_t steps = 1);
             void        CursorWordForward(Bool_t mark = kFALSE);
@@ -121,7 +121,7 @@ public:
             void        Cut();
             void        Del();
             void        Deselect();
-    void        DrawBorder() override;
+            void        DrawBorder() override;
             void        End(Bool_t mark = kFALSE);
    ETextJustification   GetAlignment() const       { return fAlignment; }
    TGTextBuffer        *GetBuffer() const { return fText; }
@@ -133,16 +133,16 @@ public:
             Int_t       GetMaxLength() const    { return fMaxLen; }
    const    char       *GetText() const { return fText->GetString(); }
    virtual TGToolTip   *GetToolTip() const { return fTip; }
-   const char  *GetTitle() const override { return GetText(); }
-            Bool_t      HasMarkedText() const  { return fSelectionOn && (fStartIX != fEndIX); }
-            Pixel_t     GetTextColor() const { return fNormGC.GetForeground(); }
-           FontStruct_t GetFontStruct() const { return fFontStruct; }
-            void        Home(Bool_t mark = kFALSE);
+   const char *         GetTitle() const override { return GetText(); }
+   Bool_t               HasMarkedText() const { return fSelectionOn && (fStartIX != fEndIX); }
+   Pixel_t              GetTextColor() const { return fNormGC.GetForeground(); }
+   FontStruct_t         GetFontStruct() const { return fFontStruct; }
+   void                 Home(Bool_t mark = kFALSE);
    virtual  void        Insert(const char *);
    virtual  void        InsertText(const char *text, Int_t pos);
             Bool_t      IsFrameDrawn() const       { return fFrameDrawn; }
             Bool_t      IsEdited() const           { return fEdited; }
-    void        Layout() override { UpdateOffset(); }
+            void        Layout() override { UpdateOffset(); }
             void        MarkWord(Int_t pos);
             Int_t       MaxMark() const { return fStartIX > fEndIX ? fStartIX : fEndIX; }
             Int_t       MinMark() const { return fStartIX < fEndIX ? fStartIX : fEndIX; }
@@ -168,23 +168,23 @@ public:
    virtual  void        SetFrameDrawn(Bool_t flag = kTRUE);
    virtual  void        SetState(Bool_t state);
    virtual  void        SetTitle(const char *label) { SetText(label); }
-    void        SetForegroundColor(Pixel_t fore) override { SetTextColor(fore, kFALSE); }
+   void                 SetForegroundColor(Pixel_t fore) override { SetTextColor(fore, kFALSE); }
    Pixel_t              GetForeground() const override { return fNormGC.GetForeground(); }
    Bool_t               HasOwnFont() const { return fHasOwnFont; }
 
-    void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-    Bool_t      HandleButton(Event_t *event) override;
-    Bool_t      HandleDoubleClick(Event_t *event) override;
-    Bool_t      HandleCrossing(Event_t *event) override;
-    Bool_t      HandleMotion(Event_t *event) override;
-    Bool_t      HandleKey(Event_t *event) override;
-    Bool_t      HandleFocusChange(Event_t *event) override;
-    Bool_t      HandleSelection(Event_t *event) override;
-    Bool_t      HandleSelectionClear(Event_t *event) override;
-    Bool_t      HandleSelectionRequest(Event_t *event) override;
-    Bool_t      HandleTimer(TTimer *t) override;
-    Bool_t      HandleConfigureNotify(Event_t *event) override;
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleDoubleClick(Event_t *event) override;
+   Bool_t HandleCrossing(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   Bool_t HandleKey(Event_t *event) override;
+   Bool_t HandleFocusChange(Event_t *event) override;
+   Bool_t HandleSelection(Event_t *event) override;
+   Bool_t HandleSelectionClear(Event_t *event) override;
+   Bool_t HandleSelectionRequest(Event_t *event) override;
+   Bool_t HandleTimer(TTimer *t) override;
+   Bool_t HandleConfigureNotify(Event_t *event) override;
 
    virtual  void        TextChanged(const char *text = 0);      //*SIGNAL*
    virtual  void        ReturnPressed();                        //*SIGNAL*

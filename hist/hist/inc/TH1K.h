@@ -38,21 +38,20 @@ public:
    TH1K(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup,Int_t k=0);
    ~TH1K() override;
 
-   void      Copy(TObject &obj) const override;
-   Int_t     Fill(Double_t x) override;
-   Int_t     Fill(Double_t x,Double_t w) override{return TH1::Fill(x,w);}
-   Int_t     Fill(const char *name,Double_t w) override{return TH1::Fill(name,w);}
-   Double_t  GetBinContent(Int_t bin) const override;
-   Double_t  GetBinContent(Int_t bin,Int_t) const override {return GetBinContent(bin);}
-   Double_t  GetBinContent(Int_t bin,Int_t,Int_t) const override {return GetBinContent(bin);}
+   void     Copy(TObject &obj) const override;
+   Int_t    Fill(Double_t x) override;
+   Int_t    Fill(Double_t x, Double_t w) override { return TH1::Fill(x, w); }
+   Int_t    Fill(const char *name, Double_t w) override { return TH1::Fill(name, w); }
+   Double_t GetBinContent(Int_t bin) const override;
+   Double_t GetBinContent(Int_t bin, Int_t) const override { return GetBinContent(bin); }
+   Double_t GetBinContent(Int_t bin, Int_t, Int_t) const override { return GetBinContent(bin); }
 
-   Double_t  GetBinError(Int_t bin) const override;
-   Double_t  GetBinError(Int_t bin,Int_t) const override {return GetBinError(bin);}
-   Double_t  GetBinError(Int_t bin,Int_t,Int_t) const override {return GetBinError(bin);}
+   Double_t GetBinError(Int_t bin) const override;
+   Double_t GetBinError(Int_t bin, Int_t) const override { return GetBinError(bin); }
+   Double_t GetBinError(Int_t bin, Int_t, Int_t) const override { return GetBinError(bin); }
 
-
-   void      Reset(Option_t *option="") override;
-   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void Reset(Option_t *option = "") override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    void    SetKOrd(Int_t k){fKOrd=k;}
 

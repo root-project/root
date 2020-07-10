@@ -43,7 +43,7 @@ public:
    void ComputeBBox() override;
 
    // Projectable:
-   TClass* ProjectedClass(const TEveProjection* p) const override;
+   TClass *ProjectedClass(const TEveProjection *p) const override;
 
    ClassDef(TEveBox, 0); // 3D box with arbitrary vertices.
 };
@@ -79,10 +79,10 @@ public:
    void ComputeBBox() override;
 
    // Projected:
-   void SetProjection(TEveProjectionManager* mng, TEveProjectable* model) override;
+   void SetProjection(TEveProjectionManager *mng, TEveProjectable *model) override;
    void UpdateProjection() override;
 
-   TEveElement* GetProjectedAsElement() override { return this; }
+   TEveElement *GetProjectedAsElement() override { return this; }
 
    static Bool_t GetDebugCornerPoints();
    static void   SetDebugCornerPoints(Bool_t d);

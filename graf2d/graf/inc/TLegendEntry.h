@@ -28,11 +28,11 @@ public:
    TLegendEntry(const TObject *obj, const char *label = 0, Option_t *option="lpf" );
    TLegendEntry( const TLegendEntry &entry );
    ~TLegendEntry() override;
-   void          Copy( TObject &obj ) const override;
+   void                  Copy(TObject &obj) const override;
    virtual const char   *GetLabel() const { return fLabel.Data(); }
    virtual TObject      *GetObject() const { return fObject; }
-   Option_t     *GetOption() const override { return fOption.Data(); }
-   void          Print( Option_t *option = "" ) const override;
+   Option_t *            GetOption() const override { return fOption.Data(); }
+   void                  Print(Option_t *option = "") const override;
    virtual void          SaveEntry( std::ostream &out, const char *name );
    virtual void          SetLabel( const char *label = "" ) { fLabel = label; } // *MENU*
    virtual void          SetObject(TObject* obj );

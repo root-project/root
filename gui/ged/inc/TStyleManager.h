@@ -479,9 +479,9 @@ public:
    void DoSelectNoCanvas();                  // SLOT
    void DoSelectCanvas(TVirtualPad *pad,
          TObject *obj, Int_t mouseButton);   // SLOT
-   void CloseWindow() override;                       // SLOT
+   void CloseWindow() override;              // SLOT
 
-// GENERAL
+   // GENERAL
    void ModFillColor();                      // SLOT
    void ModFillStyle();                      // SLOT
    void ModHatchesLineWidth();               // SLOT

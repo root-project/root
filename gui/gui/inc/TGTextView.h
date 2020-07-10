@@ -59,10 +59,10 @@ protected:
    static const TGGC   *fgDefaultSelectedBackgroundGC;
 
    void Init(Pixel_t bg);
-   void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   void         DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
    virtual void Mark(Long_t xPos, Long_t yPos);
    virtual void UnMark();
-   void Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
+   void         Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
    virtual void HLayout();
    virtual void VLayout();
 
@@ -93,7 +93,7 @@ public:
    virtual void   AdjustWidth();
    virtual Bool_t LoadFile(const char *fname, long startpos = 0, long length = -1);
    virtual Bool_t LoadBuffer(const char *txtbuf);
-   void   Clear(Option_t * = "") override;
+   void           Clear(Option_t * = "") override;
    virtual Bool_t Copy();
    virtual Bool_t SelectAll();
    virtual Bool_t Search(const char *string, Bool_t direction, Bool_t caseSensitive);
@@ -110,18 +110,18 @@ public:
    virtual void   ShowBottom();
    virtual void   ShowTop();
 
-   void   SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void           SavePrimitive(std::ostream &out, Option_t * = "") override;
    virtual void   SetText(TGText *text);
    virtual void   AddText(TGText *text);
    virtual void   AddLine(const char *string);
    virtual void   AddLineFast(const char *string);
    virtual void   Update();
-   void   Layout() override;
+   void           Layout() override;
 
    virtual void   SetBackground(Pixel_t p);
    virtual void   SetSelectBack(Pixel_t p);
    virtual void   SetSelectFore(Pixel_t p);
-   void   SetForegroundColor(Pixel_t) override;
+   void           SetForegroundColor(Pixel_t) override;
 
    TGText        *GetText() const { return fText; }
 
@@ -130,9 +130,8 @@ public:
    Bool_t IsMarked() const { return fIsMarked; }
 
    Bool_t HandleDNDDrop(TDNDData *data) override;
-   Atom_t HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
-                                    Int_t xroot, Int_t yroot) override;
-   Atom_t HandleDNDEnter(Atom_t * typelist) override;
+   Atom_t HandleDNDPosition(Int_t x, Int_t y, Atom_t action, Int_t xroot, Int_t yroot) override;
+   Atom_t HandleDNDEnter(Atom_t *typelist) override;
    Bool_t HandleDNDLeave() override;
 
    Bool_t HandleButton(Event_t *event) override;

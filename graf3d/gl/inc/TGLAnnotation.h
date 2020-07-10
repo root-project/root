@@ -99,16 +99,15 @@ public:
    TGLFont::ETextAlignH_e GetTextAlign() const { return fTextAlign; }
    void SetTextAlign(TGLFont::ETextAlignH_e a) { fTextAlign = a; }
 
-   Bool_t MouseEnter(TGLOvlSelectRecord& selRec) override;
-   Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
-                         Event_t* event) override;
+   Bool_t MouseEnter(TGLOvlSelectRecord &selRec) override;
+   Bool_t Handle(TGLRnrCtx &rnrCtx, TGLOvlSelectRecord &selRec, Event_t *event) override;
    void   MouseLeave() override;
 
    void CloseEditor();
 
    void UpdateText();
 
-   void   Render(TGLRnrCtx& rnrCtx) override;
+   void Render(TGLRnrCtx &rnrCtx) override;
 
    ClassDef(TGLAnnotation, 0); // GL-annotation.
 };

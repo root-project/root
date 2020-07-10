@@ -93,7 +93,7 @@ public:
 
    ~TGComboBox() override;
 
-   void DrawBorder() override;
+   void        DrawBorder() override;
    TGDimension GetDefaultSize() const override { return TGDimension(fWidth, fHeight); }
 
    Bool_t HandleButton(Event_t *event) override;
@@ -118,8 +118,8 @@ public:
    virtual void NewEntry(const char *s = "Entry")
                         { fListBox->NewEntry(s); Resize(); }       //*MENU*
    virtual void RemoveEntry(Int_t id = -1);                        //*MENU*
-   void RemoveAll() override;                                       //*MENU*
-   void Layout() override;
+   void           RemoveAll() override;                              //*MENU*
+   void           Layout() override;
    virtual Bool_t IsTextInputEnabled() const { return (fTextEntry != 0); }
    virtual void EnableTextInput(Bool_t on);    //*TOGGLE* *GETTER=IsTextInputEnabled
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID)
@@ -144,7 +144,7 @@ public:
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  // *SIGNAL*
    virtual void Selected(const char *txt) { Emit("Selected(char*)", txt); } // *SIGNAL*
    virtual void ReturnPressed();                                     // *SIGNAL*
-   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void         SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGComboBox,0)  // Combo box widget
 };

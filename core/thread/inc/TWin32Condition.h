@@ -66,10 +66,10 @@ public:
    TWin32Condition(TMutexImp *m);
    ~TWin32Condition() override;
 
-   Int_t  Wait() override;
-   Int_t  TimedWait(ULong_t secs, ULong_t nanoSecs = 0) override;
-   Int_t  Signal() override;
-   Int_t  Broadcast() override;
+   Int_t Wait() override;
+   Int_t TimedWait(ULong_t secs, ULong_t nanoSecs = 0) override;
+   Int_t Signal() override;
+   Int_t Broadcast() override;
 
    ClassDef(TWin32Condition,0)   // Posix condition variable
 };

@@ -35,7 +35,7 @@ public:
    TGlobal (const TGlobal &);
    TGlobal &operator=(const TGlobal &);
 
-         ~TGlobal() override;
+   ~TGlobal() override;
    virtual Int_t  GetArrayDim() const;
    virtual DeclId_t GetDeclId() const;
    virtual Int_t  GetMaxIndex(Int_t dim) const;
@@ -43,7 +43,7 @@ public:
    virtual const char *GetTypeName() const;
    virtual const char *GetFullTypeName() const;
    virtual Bool_t IsValid();
-   Long_t Property() const override;
+   Long_t              Property() const override;
    virtual bool   Update(DataMemberInfo_t *info);
 
    ClassDefOverride(TGlobal, 2) // Global variable class

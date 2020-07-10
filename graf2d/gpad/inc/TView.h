@@ -37,7 +37,7 @@ public:
                                     Double_t cospsi, Double_t sinpsi,
                                     Double_t *tnorm, Double_t *tback) = 0;
    virtual void          DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax) = 0;
-   void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override = 0;
+   void                    ExecuteEvent(Int_t event, Int_t px, Int_t py) override = 0;
    virtual void          ExecuteRotateView(Int_t event, Int_t px, Int_t py) = 0;
    virtual void          FindScope(Double_t *scale, Double_t *center, Int_t &irep) = 0;
    virtual Int_t         GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio) = 0;

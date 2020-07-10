@@ -48,8 +48,8 @@ public:
                 Pixel_t back = GetDefaultFrameBackground());
    ~TCurlyLineEditor() override;
 
-   void   SetModel(TObject* obj) override;
-   void   ActivateBaseClassEditors(TClass* cl) override;
+   void           SetModel(TObject *obj) override;
+   void           ActivateBaseClassEditors(TClass *cl) override;
    virtual void   DoStartXY();
    virtual void   DoEndXY();
    virtual void   DoAmplitude();

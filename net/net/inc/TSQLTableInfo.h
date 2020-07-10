@@ -35,7 +35,7 @@ public:
                  const char* update_time = 0);
    ~TSQLTableInfo() override;
 
-   void Print(Option_t* option = "") const override;
+   void Print(Option_t *option = "") const override;
 
    TList* GetColumns() const { return fColumns; }
 

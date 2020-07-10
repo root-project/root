@@ -75,16 +75,15 @@ protected:
 
 public:
    TEveCaloLegoOverlay();
-   ~TEveCaloLegoOverlay() override{}
+   ~TEveCaloLegoOverlay() override {}
 
    //rendering
-    void   Render(TGLRnrCtx& rnrCtx) override;
+   void Render(TGLRnrCtx &rnrCtx) override;
 
    // event handling
-    Bool_t MouseEnter(TGLOvlSelectRecord& selRec) override;
-    Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec, Event_t* event) override;
-    void   MouseLeave() override;
-
+   Bool_t MouseEnter(TGLOvlSelectRecord &selRec) override;
+   Bool_t Handle(TGLRnrCtx &rnrCtx, TGLOvlSelectRecord &selRec, Event_t *event) override;
+   void   MouseLeave() override;
 
    TEveCaloLego* GetCaloLego() {return fCalo;}
    void          SetCaloLego(TEveCaloLego* c) {fCalo = c;}

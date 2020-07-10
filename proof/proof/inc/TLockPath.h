@@ -30,9 +30,13 @@ private:
 
 public:
    TLockPath(const char *path = "");
-   ~TLockPath() override { if (IsLocked()) Unlock(); }
+   ~TLockPath() override
+   {
+      if (IsLocked())
+         Unlock();
+   }
 
-   const char   *GetName() const override { return fName; }
+   const char *  GetName() const override { return fName; }
    void          SetName(const char *path) { fName = path; }
 
    Int_t         Lock(Bool_t shared = kFALSE);

@@ -13,11 +13,10 @@ namespace PyROOT {
    public:
       using TMethodHolder::TMethodHolder;
 
-      PyCallable* Clone() override { return new TFunctionHolder( *this ); }
+      PyCallable *Clone() override { return new TFunctionHolder(*this); }
 
-      PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds ) override;
-      PyObject* Call(
-         ObjectProxy*&, PyObject* args, PyObject* kwds, TCallContext* ctx = 0 ) override;
+      PyObject *PreProcessArgs(ObjectProxy *&self, PyObject *args, PyObject *kwds) override;
+      PyObject *Call(ObjectProxy *&, PyObject *args, PyObject *kwds, TCallContext *ctx = 0) override;
    };
 
 } // namespace PyROOT

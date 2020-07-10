@@ -86,17 +86,17 @@ public:
    TDirectory   *GetDirectory() const {return fDirectory;}
    Int_t         GetFd() const { return fFd; }
    void         *GetMmallocDesc() const { return fMmallocDesc; }
-   const char   *GetName() const override { return fName; }
+   const char *  GetName() const override { return fName; }
    Int_t         GetSize() const { return fSize; }
-   const char   *GetOption() const override { return fOption; }
-   const char   *GetTitle() const override { return fTitle; }
+   const char *  GetOption() const override { return fOption; }
+   const char *  GetTitle() const override { return fTitle; }
    TMapRec      *GetFirst() const { return (TMapRec*)((Long_t) fFirst + fOffset); }
    TMapRec      *GetLast() const { return (TMapRec*)((Long_t) fLast + fOffset); }
    Bool_t        IsFolder() const override;
    Bool_t        IsWritable() const { return fWritable; }
    void         *OrgAddress(void *addr) const { return (void *)((Long_t)addr - fOffset); }
-   void          Print(Option_t *option="") const override;
-   void          ls(Option_t *option="") const override;
+   void          Print(Option_t *option = "") const override;
+   void          ls(Option_t *option = "") const override;
    Bool_t        cd(const char *path = 0);
 
    void          Add(const TObject *obj, const char *name = "");

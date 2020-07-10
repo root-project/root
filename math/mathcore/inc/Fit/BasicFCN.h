@@ -62,7 +62,7 @@ protected:
    /**
       Destructor (no operations)
    */
-   ~BasicFCN () override  {}
+   ~BasicFCN() override {}
 
 public:
 

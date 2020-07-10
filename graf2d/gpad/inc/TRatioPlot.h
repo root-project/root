@@ -170,9 +170,8 @@ public:
 
    void SetInsetWidth(Double_t width);
 
-   void Draw(Option_t *chopt="") override;
+   void Draw(Option_t *chopt = "") override;
    void Browse(TBrowser *b) override;
-
 
    void Paint(Option_t *opt = "") override;
 

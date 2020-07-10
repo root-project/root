@@ -27,8 +27,8 @@ public:
    ~TGroupButton() override;
    virtual void  DisplayColorTable(const char *action, Double_t x0, Double_t y0, Double_t wc, Double_t hc);
    virtual void  ExecuteAction();
-   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
    ClassDef(TGroupButton,0)  //A user interface button in a group of buttons.
 };
 

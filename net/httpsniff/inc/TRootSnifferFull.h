@@ -54,8 +54,8 @@ public:
 
    ULong_t GetItemHash(const char *itemname) override;
 
-   void *
-   FindInHierarchy(const char *path, TClass **cl = nullptr, TDataMember **member = nullptr, Int_t *chld = nullptr) override;
+   void *FindInHierarchy(const char *path, TClass **cl = nullptr, TDataMember **member = nullptr,
+                         Int_t *chld = nullptr) override;
 
    ClassDef(TRootSnifferFull, 0) // Sniffer for many ROOT classes, including histograms, graphs, pads and tree
 };

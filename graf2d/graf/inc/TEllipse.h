@@ -40,11 +40,11 @@ public:
    TEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2=0,Double_t phimin=0, Double_t phimax=360,Double_t theta=0);
    TEllipse(const TEllipse &ellipse);
    ~TEllipse() override;
-   void   Copy(TObject &ellipse) const override;
-   Int_t        DistancetoPrimitive(Int_t px, Int_t py) override;
-   void         Draw(Option_t *option="") override;
+   void  Copy(TObject &ellipse) const override;
+   Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
+   void  Draw(Option_t *option = "") override;
    virtual void         DrawEllipse(Double_t x1, Double_t y1, Double_t r1,Double_t r2,Double_t phimin, Double_t phimax,Double_t theta,Option_t *option="");
-   void         ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void                 ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    Double_t             GetX1() const {return fX1;}
    Double_t             GetY1() const {return fY1;}
    Double_t             GetR1() const {return fR1;}
@@ -53,11 +53,11 @@ public:
    Double_t             GetPhimax() const {return fPhimax;}
    Double_t             GetTheta() const  {return fTheta;}
    Bool_t               GetNoEdges() const;
-   void         ls(Option_t *option="") const override;
-   void         Paint(Option_t *option="") override;
+   void                 ls(Option_t *option = "") const override;
+   void                 Paint(Option_t *option = "") override;
    virtual void         PaintEllipse(Double_t x1, Double_t y1, Double_t r1,Double_t r2,Double_t phimin, Double_t phimax,Double_t theta,Option_t *option="");
-   void         Print(Option_t *option="") const override;
-   void         SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                 Print(Option_t *option = "") const override;
+   void                 SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void         SetNoEdges(Bool_t noEdges=kTRUE); // *TOGGLE* *GETTER=GetNoEdges
    virtual void         SetPhimin(Double_t phi=0)   {fPhimin=phi;} // *MENU*
    virtual void         SetPhimax(Double_t phi=360) {fPhimax=phi;} // *MENU*
@@ -66,16 +66,15 @@ public:
    virtual void         SetTheta(Double_t theta=0) {fTheta=theta;} // *MENU*
    virtual void         SetX1(Double_t x1) {fX1=x1;} // *MENU*
    virtual void         SetY1(Double_t y1) {fY1=y1;} // *MENU*
-   Rectangle_t  GetBBox() override;
-   TPoint       GetBBoxCenter() override;
-   void         SetBBoxCenter(const TPoint &p) override;
-   void         SetBBoxCenterX(const Int_t x) override;
-   void         SetBBoxCenterY(const Int_t y) override;
-   void         SetBBoxX1(const Int_t x) override;
-   void         SetBBoxX2(const Int_t x) override;
-   void         SetBBoxY1(const Int_t y) override;
-   void         SetBBoxY2(const Int_t y) override;
-
+   Rectangle_t          GetBBox() override;
+   TPoint               GetBBoxCenter() override;
+   void                 SetBBoxCenter(const TPoint &p) override;
+   void                 SetBBoxCenterX(const Int_t x) override;
+   void                 SetBBoxCenterY(const Int_t y) override;
+   void                 SetBBoxX1(const Int_t x) override;
+   void                 SetBBoxX2(const Int_t x) override;
+   void                 SetBBoxY1(const Int_t y) override;
+   void                 SetBBoxY2(const Int_t y) override;
 
    ClassDef(TEllipse,3)  //An ellipse
 };

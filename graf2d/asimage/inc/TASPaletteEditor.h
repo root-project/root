@@ -46,7 +46,7 @@ protected:
    public:
       PaintPalette(TImagePalette **palette, TAttImage *attImage)
          { fPalette = palette; fAttImage = attImage; }
-      void Paint(Option_t *option) override;
+         void Paint(Option_t *option) override;
    };
 
    class LimitLine : public TLine {
@@ -54,6 +54,7 @@ protected:
       TASPaletteEditor  *fGui;
    protected:
       void ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+
    public:
       LimitLine(Coord_t x, Coord_t y1, Coord_t y2, TASPaletteEditor *gui);
       void Paint(Option_t *option) override;

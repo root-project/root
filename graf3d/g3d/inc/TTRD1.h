@@ -29,7 +29,7 @@ class TTRD1 : public TBRIK {
 protected:
    Float_t fDx2;        // half length in x at the high z surface
 
-   void    SetPoints(Double_t *points) const override;
+   void SetPoints(Double_t *points) const override;
 
 public:
    TTRD1();

@@ -79,7 +79,7 @@ public:
    void           Interrupt() { fInterrupt = kTRUE; }
    Bool_t         IsValid() const { return fIsValid; }
 
-   Long_t         ProcessLine(const char *line, Bool_t = kFALSE, Int_t *err = 0) override;
+   Long_t ProcessLine(const char *line, Bool_t = kFALSE, Int_t *err = 0) override;
 
    void           Reset(const char *dir);
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);
@@ -89,7 +89,7 @@ public:
    Int_t          BrowseFile(const char *fname);
    Int_t          BrowseKey(const char *keyname);
 
-   void           Terminate(Int_t status) override;
+   void Terminate(Int_t status) override;
 
    ClassDef(TApplicationServer,0)  //Remote Application Interface
 };

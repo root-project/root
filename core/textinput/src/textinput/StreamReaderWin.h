@@ -29,7 +29,7 @@ namespace textinput {
     void ReleaseInputFocus() override;
 
     bool HavePendingInput(bool wait) override;
-    bool ReadInput(size_t& nRead, InputData& in) override;
+    bool ReadInput(size_t &nRead, InputData &in) override;
 
     bool IsFromTTY() override { return fIsConsole; }
 

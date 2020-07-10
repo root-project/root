@@ -69,7 +69,7 @@ public:
       kSQL_TIMESTAMP = 8   // TIMESTAMP -
    };
 
-   ~TSQLServer() override { }
+   ~TSQLServer() override {}
 
    virtual void        Close(Option_t *option = "") = 0;
    virtual TSQLResult *Query(const char *sql) = 0;

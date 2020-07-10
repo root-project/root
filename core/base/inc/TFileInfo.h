@@ -93,13 +93,13 @@ public:
    Bool_t          AddMetaData(TObject *meta);
    Bool_t          RemoveMetaData(const char *meta = 0);
 
-   Bool_t          IsSortable() const override { return kTRUE; }
-   Int_t           Compare(const TObject *obj) const override;
+   Bool_t IsSortable() const override { return kTRUE; }
+   Int_t  Compare(const TObject *obj) const override;
 
    Int_t           GetIndex() const { return fIndex; }
    void            SetIndex(Int_t idx) { fIndex = idx; }
 
-   void            Print(Option_t *options="") const override;
+   void Print(Option_t *options = "") const override;
 
    ClassDefOverride(TFileInfo, 4) // Describes generic file info including meta data information
 };
@@ -132,7 +132,7 @@ public:
                  Long64_t totbytes = -1, Long64_t zipbytes = -1);
    TFileInfoMeta(const TFileInfoMeta &m);
 
-   ~TFileInfoMeta() override { }
+   ~TFileInfoMeta() override {}
 
    const char     *GetObject() const;
    const char     *GetClass() const        { return GetTitle(); }
@@ -150,7 +150,7 @@ public:
    void            SetTotBytes(Long64_t tot)    { fTotBytes = tot; }
    void            SetZipBytes(Long64_t zip)    { fZipBytes = zip; }
 
-   void            Print(Option_t *options="") const override;
+   void Print(Option_t *options = "") const override;
 
    ClassDefOverride(TFileInfoMeta, 2) // Describes TFileInfo meta data
 };

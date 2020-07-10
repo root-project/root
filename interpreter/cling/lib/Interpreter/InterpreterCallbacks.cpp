@@ -33,17 +33,16 @@ namespace cling {
     cling::InterpreterCallbacks* m_Callbacks;
   public:
     InterpreterPPCallbacks(InterpreterCallbacks* C) : m_Callbacks(C) { }
-    ~InterpreterPPCallbacks() override { }
+    ~InterpreterPPCallbacks() override {}
 
     void InclusionDirective(clang::SourceLocation HashLoc,
-                                    const clang::Token &IncludeTok,
-                                    llvm::StringRef FileName,
-                                    bool IsAngled,
-                                    clang::CharSourceRange FilenameRange,
-                                    const clang::FileEntry *File,
-                                    llvm::StringRef SearchPath,
-                                    llvm::StringRef RelativePath,
-                                    const clang::Module *Imported) override {
+                            const clang::Token& IncludeTok,
+                            llvm::StringRef FileName, bool IsAngled,
+                            clang::CharSourceRange FilenameRange,
+                            const clang::FileEntry* File,
+                            llvm::StringRef SearchPath,
+                            llvm::StringRef RelativePath,
+                            const clang::Module* Imported) override {
       m_Callbacks->InclusionDirective(HashLoc, IncludeTok, FileName,
                                       IsAngled, FilenameRange, File,
                                       SearchPath, RelativePath, Imported);
@@ -56,7 +55,7 @@ namespace cling {
     }
 
     bool FileNotFound(llvm::StringRef FileName,
-                              llvm::SmallVectorImpl<char>& RecoveryPath) override {
+                      llvm::SmallVectorImpl<char>& RecoveryPath) override {
       if (m_Callbacks)
         return m_Callbacks->FileNotFound(FileName, RecoveryPath);
 
@@ -75,7 +74,7 @@ namespace cling {
     InterpreterDeserializationListener(InterpreterCallbacks* C)
       : m_Callbacks(C) {}
 
-    void DeclRead(serialization::DeclID, const Decl *D) override {
+    void DeclRead(serialization::DeclID, const Decl* D) override {
       if (m_Callbacks)
         m_Callbacks->DeclDeserialized(D);
     }
@@ -130,8 +129,7 @@ namespace cling {
       return m_Source->GetExternalCXXCtorInitializers(Offset);
     }
 
-    CXXBaseSpecifier*
-    GetExternalCXXBaseSpecifiers(uint64_t Offset) override {
+    CXXBaseSpecifier* GetExternalCXXBaseSpecifiers(uint64_t Offset) override {
       return m_Source->GetExternalCXXBaseSpecifiers(Offset);
     }
 
@@ -140,7 +138,7 @@ namespace cling {
     }
 
     bool FindExternalVisibleDeclsByName(const DeclContext* DC,
-                                                DeclarationName Name) override {
+                                        DeclarationName Name) override {
       return m_Source->FindExternalVisibleDeclsByName(DC, Name);
     }
 
@@ -148,9 +146,7 @@ namespace cling {
       m_Source->completeVisibleDeclsMap(DC);
     }
 
-    Module* getModule(unsigned ID) override {
-      return m_Source->getModule(ID);
-    }
+    Module* getModule(unsigned ID) override { return m_Source->getModule(ID); }
 
     llvm::Optional<ASTSourceDescriptor>
     getSourceDescriptor(unsigned ID) override {
@@ -168,9 +164,8 @@ namespace cling {
       m_Source->FindExternalLexicalDecls(DC, IsKindWeWant, Result);
     }
 
-    void FindFileRegionDecls(FileID File, unsigned Offset,
-                                     unsigned Length,
-                                     SmallVectorImpl<Decl*>& Decls) override {
+    void FindFileRegionDecls(FileID File, unsigned Offset, unsigned Length,
+                             SmallVectorImpl<Decl*>& Decls) override {
       m_Source->FindFileRegionDecls(File, Offset, Length, Decls);
     }
 
@@ -178,9 +173,7 @@ namespace cling {
       m_Source->CompleteRedeclChain(D);
     }
 
-    void CompleteType(TagDecl* Tag) override {
-      m_Source->CompleteType(Tag);
-    }
+    void CompleteType(TagDecl* Tag) override { m_Source->CompleteType(Tag); }
 
     void CompleteType(ObjCInterfaceDecl* Class) override {
       m_Source->CompleteType(Class);
@@ -188,13 +181,9 @@ namespace cling {
 
     void ReadComments() override { m_Source->ReadComments(); }
 
-    void StartedDeserializing() override {
-      m_Source->StartedDeserializing();
-    }
+    void StartedDeserializing() override { m_Source->StartedDeserializing(); }
 
-    void FinishedDeserializing() override {
-      m_Source->FinishedDeserializing();
-    }
+    void FinishedDeserializing() override { m_Source->FinishedDeserializing(); }
 
     void StartTranslationUnit(ASTConsumer* Consumer) override {
       m_Source->StartTranslationUnit(Consumer);
@@ -243,13 +232,9 @@ namespace cling {
       }
     }
 
-    void InitializeSema(Sema& S) override {
-      m_Sema = &S;
-    }
+    void InitializeSema(Sema& S) override { m_Sema = &S; }
 
-    void ForgetSema() override {
-      m_Sema = 0;
-    }
+    void ForgetSema() override { m_Sema = 0; }
 
     InterpreterCallbacks* getCallbacks() const { return m_Callbacks; }
 
@@ -271,7 +256,7 @@ namespace cling {
     }
 
     bool FindExternalVisibleDeclsByName(const clang::DeclContext* DC,
-                                                clang::DeclarationName Name) override {
+                                        clang::DeclarationName Name) override {
       if (m_Callbacks)
         return m_Callbacks->LookupObject(DC, Name);
 

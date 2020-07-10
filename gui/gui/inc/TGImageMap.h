@@ -148,7 +148,7 @@ public:
    void SetToolTipText(const char *text, Long_t delayms = 300) override;
    void SetToolTipText(Int_t id, const char *text, Long_t delayms = 300);
    void SetCursor(ECursor cursor = kHand) { fCursorMouseOver = cursor; }
-   void SetPicture(const TGPicture * /*new_pic*/) override { } // disabled
+   void SetPicture(const TGPicture * /*new_pic*/) override {} // disabled
 
    virtual void RegionClicked(Int_t id); // *SIGNAL*
    virtual void DoubleClicked(Int_t id); // *SIGNAL*

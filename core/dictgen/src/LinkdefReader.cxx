@@ -735,9 +735,8 @@ public:
       LinkdefReaderPragmaHandler("extra_include", owner, sm) {
    }
 
-   void HandlePragma(clang::Preprocessor &PP,
-                     clang::PragmaIntroducerKind Introducer,
-                     clang::Token &tok) override {
+   void HandlePragma(clang::Preprocessor &PP, clang::PragmaIntroducerKind Introducer, clang::Token &tok) override
+   {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
@@ -784,9 +783,8 @@ public:
       LinkdefReaderPragmaHandler("read", owner, sm) {
    }
 
-   void HandlePragma(clang::Preprocessor &PP,
-                     clang::PragmaIntroducerKind Introducer,
-                     clang::Token &tok) override {
+   void HandlePragma(clang::Preprocessor &PP, clang::PragmaIntroducerKind Introducer, clang::Token &tok) override
+   {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
@@ -843,9 +841,8 @@ public:
       LinkdefReaderPragmaHandler("link", owner, sm) {
    }
 
-   void HandlePragma(clang::Preprocessor &PP,
-                     clang::PragmaIntroducerKind Introducer,
-                     clang::Token &tok) override {
+   void HandlePragma(clang::Preprocessor &PP, clang::PragmaIntroducerKind Introducer, clang::Token &tok) override
+   {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
@@ -938,7 +935,6 @@ public:
 //         llvm::errs() << "\n";
 //      } while (tok.isNot(clang::tok::eod));
    }
-
 };
 
 class PragmaCreateCollector : public LinkdefReaderPragmaHandler {
@@ -948,9 +944,8 @@ public:
       LinkdefReaderPragmaHandler("create", owner, sm) {
    }
 
-   void HandlePragma(clang::Preprocessor &PP,
-                     clang::PragmaIntroducerKind Introducer,
-                     clang::Token &tok) override {
+   void HandlePragma(clang::Preprocessor &PP, clang::PragmaIntroducerKind Introducer, clang::Token &tok) override
+   {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
@@ -997,7 +992,6 @@ public:
 //         llvm::errs() << "\n";
 //      } while (tok.isNot(clang::tok::eod));
    };
-
 };
 
 

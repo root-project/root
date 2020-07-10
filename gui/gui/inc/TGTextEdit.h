@@ -67,7 +67,7 @@ protected:
    virtual void CursorOff();
    virtual void DrawCursor(Int_t mode);
    virtual void AdjustPos();
-   void Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
+   void         Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
 
    static const TGGC &GetCursor0GC();
    static const TGGC &GetCursor1GC();
@@ -83,8 +83,8 @@ public:
    ~TGTextEdit() override;
 
    virtual Bool_t SaveFile(const char *fname, Bool_t saveas = kFALSE);
-   void   Clear(Option_t * = "") override;
-   Bool_t Copy() override;
+   void           Clear(Option_t * = "") override;
+   Bool_t         Copy() override;
    virtual Bool_t Cut();
    virtual Bool_t Paste();
    virtual void   InsChar(char character);
@@ -98,9 +98,9 @@ public:
    virtual void   ScreenDown();
    virtual void   Home();
    virtual void   End();
-   void   Print(Option_t * = "") const override;
-   void   Delete(Option_t * = "") override;
-   Bool_t Search(const char *string, Bool_t direction = kTRUE, Bool_t caseSensitive = kFALSE) override;
+   void           Print(Option_t * = "") const override;
+   void           Delete(Option_t * = "") override;
+   Bool_t         Search(const char *string, Bool_t direction = kTRUE, Bool_t caseSensitive = kFALSE) override;
    virtual void   Search(Bool_t close);
    virtual Bool_t Replace(TGLongPosition pos, const char *oldText, const char *newText,
                           Bool_t direction, Bool_t caseSensitive);
@@ -114,16 +114,16 @@ public:
    virtual void   EnableCursorWithoutFocus(Bool_t on = kTRUE) { fEnableCursorWithoutFocus = on; }
    virtual Bool_t IsCursorEnabledithoutFocus() const { return fEnableCursorWithoutFocus; }
 
-   void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height) override;
-   void   ScrollCanvas(Int_t newTop, Int_t direction) override;
+   void           DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height) override;
+   void           ScrollCanvas(Int_t newTop, Int_t direction) override;
    virtual void   SetFocus() { RequestFocus(); }
 
    virtual void   SetCurrent(TGLongPosition new_coord);
    TGLongPosition GetCurrentPos() const { return fCurrent; }
-   Long_t ReturnLongestLineWidth() override;
+   Long_t         ReturnLongestLineWidth() override;
 
    Bool_t HandleTimer(TTimer *t) override;
-   Bool_t HandleSelection (Event_t *event) override;
+   Bool_t HandleSelection(Event_t *event) override;
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleKey(Event_t *event) override;
    Bool_t HandleMotion(Event_t *event) override;
@@ -138,7 +138,7 @@ public:
    virtual void   Saved() { Emit("Saved()"); }          //*SIGNAL*
    virtual void   SavedAs() { Emit("SavedAs()"); }      //*SIGNAL*
 
-   void   SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    ClassDef(TGTextEdit,0)  // Text edit widget
 };

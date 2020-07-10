@@ -55,18 +55,18 @@ public:
    ~TSpline() override;
 
    virtual void     GetKnot(Int_t i, Double_t &x, Double_t &y) const =0;
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
-   void     Draw(Option_t *option="") override;
-   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
+   void             Draw(Option_t *option = "") override;
+   void             ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual Double_t GetDelta() const {return fDelta;}
    TH1F            *GetHistogram() const {return fHistogram;}
    virtual Int_t    GetNp()    const {return fNp;}
    virtual Int_t    GetNpx()   const {return fNpx;}
    virtual Double_t GetXmin()  const {return fXmin;}
    virtual Double_t GetXmax()  const {return fXmax;}
-   void     Paint(Option_t *option="") override;
+   void             Paint(Option_t *option = "") override;
    virtual Double_t Eval(Double_t x) const=0;
-   void     SaveAs(const char * /*filename*/,Option_t * /*option*/) const override {;}
+   void             SaveAs(const char * /*filename*/, Option_t * /*option*/) const override { ; }
    void             SetNpx(Int_t n) {fNpx=n;}
 
    ClassDef (TSpline,2) // Spline base class
@@ -127,7 +127,8 @@ public:
    Double_t &B() {return fB;}
    Double_t &C() {return fC;}
    Double_t &D() {return fD;}
-   Double_t Eval(Double_t x) const override {
+   Double_t  Eval(Double_t x) const override
+   {
       Double_t dx=x-fX;
       return (fY+dx*(fB+dx*(fC+dx*fD)));
    }
@@ -173,7 +174,8 @@ public:
    Double_t &D() {return fD;}
    Double_t &E() {return fE;}
    Double_t &F() {return fF;}
-   Double_t Eval(Double_t x) const override {
+   Double_t  Eval(Double_t x) const override
+   {
       Double_t dx=x-fX;
       return (fY+dx*(fB+dx*(fC+dx*(fD+dx*(fE+dx*fF)))));
    }
@@ -234,16 +236,22 @@ public:
    TSpline3(const TSpline3&);
    TSpline3& operator=(const TSpline3&);
    Int_t    FindX(Double_t x) const;
-   Double_t Eval(Double_t x) const override;
+   Double_t  Eval(Double_t x) const override;
    Double_t Derivative(Double_t x) const;
-   ~TSpline3() override {if (fPoly) delete [] fPoly;}
+   ~TSpline3() override
+   {
+      if (fPoly)
+         delete[] fPoly;
+   }
    void GetCoeff(Int_t i, Double_t &x, Double_t &y, Double_t &b,
                  Double_t &c, Double_t &d) {x=fPoly[i].X();y=fPoly[i].Y();
                   b=fPoly[i].B();c=fPoly[i].C();d=fPoly[i].D();}
    void GetKnot(Int_t i, Double_t &x, Double_t &y) const override
-      {x=fPoly[i].X(); y=fPoly[i].Y();}
-    void     SaveAs(const char *filename,Option_t *option="") const override;
-    void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   {
+      x = fPoly[i].X();
+      y = fPoly[i].Y();}
+   void              SaveAs(const char *filename, Option_t *option = "") const override;
+   void              SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual  void     SetPoint(Int_t i, Double_t x, Double_t y);
    virtual  void     SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d);
    static void Test();
@@ -295,24 +303,27 @@ public:
    TSpline5(const TSpline5&);
    TSpline5& operator=(const TSpline5&);
    Int_t    FindX(Double_t x) const;
-   Double_t Eval(Double_t x) const override;
+   Double_t  Eval(Double_t x) const override;
    Double_t Derivative(Double_t x) const;
-   ~TSpline5() override {if (fPoly) delete [] fPoly;}
+   ~TSpline5() override
+   {
+      if (fPoly)
+         delete[] fPoly;
+   }
    void GetCoeff(Int_t i, Double_t &x, Double_t &y, Double_t &b,
                  Double_t &c, Double_t &d, Double_t &e, Double_t &f)
       {x=fPoly[i].X();y=fPoly[i].Y();b=fPoly[i].B();
       c=fPoly[i].C();d=fPoly[i].D();
       e=fPoly[i].E();f=fPoly[i].F();}
-   void GetKnot(Int_t i, Double_t &x, Double_t &y) const override
+      void GetKnot(Int_t i, Double_t &x, Double_t &y) const override
       {x=fPoly[i].X(); y=fPoly[i].Y();}
-    void     SaveAs(const char *filename,Option_t *option="") const override;
-    void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   virtual  void     SetPoint(Int_t i, Double_t x, Double_t y);
-   virtual  void     SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,
-                                   Double_t e, Double_t f);
-   static void Test();
+      void         SaveAs(const char *filename, Option_t *option = "") const override;
+      void         SavePrimitive(std::ostream &out, Option_t *option = "") override;
+      virtual void SetPoint(Int_t i, Double_t x, Double_t y);
+      virtual void SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d, Double_t e, Double_t f);
+      static void  Test();
 
-   ClassDef (TSpline5,2) // Class to create quintic natural splines
+      ClassDef(TSpline5, 2) // Class to create quintic natural splines
 };
 
 #endif

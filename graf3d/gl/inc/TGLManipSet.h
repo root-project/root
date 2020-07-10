@@ -37,14 +37,13 @@ public:
    TGLManipSet();
    ~TGLManipSet() override;
 
-   void SetPShape(TGLPhysicalShape* shape) override;
+   void SetPShape(TGLPhysicalShape *shape) override;
 
-   Bool_t MouseEnter(TGLOvlSelectRecord& selRec) override;
-   Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
-                         Event_t* event) override;
+   Bool_t MouseEnter(TGLOvlSelectRecord &selRec) override;
+   Bool_t Handle(TGLRnrCtx &rnrCtx, TGLOvlSelectRecord &selRec, Event_t *event) override;
    void   MouseLeave() override;
 
-   void Render(TGLRnrCtx& rnrCtx) override;
+   void Render(TGLRnrCtx &rnrCtx) override;
 
    TGLManip* GetCurrentManip() const { return fManip[fType]; }
 

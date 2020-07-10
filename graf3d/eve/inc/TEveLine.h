@@ -45,7 +45,7 @@ public:
 
    void SetMarkerColor(Color_t col) override;
 
-   void SetLineColor(Color_t col) override   { SetMainColor(col); }
+   void SetLineColor(Color_t col) override { SetMainColor(col); }
    void SetLineStyle(Style_t lstyle) override;
    void SetLineWidth(Width_t lwidth) override;
 
@@ -62,12 +62,12 @@ public:
    TEveVector GetLineStart() const;
    TEveVector GetLineEnd()   const;
 
-   const TGPicture* GetListTreeIcon(Bool_t open=kFALSE) override;
+   const TGPicture *GetListTreeIcon(Bool_t open = kFALSE) override;
 
-   void CopyVizParams(const TEveElement* el) override;
-   void WriteVizParams(std::ostream& out, const TString& var) override;
+   void CopyVizParams(const TEveElement *el) override;
+   void WriteVizParams(std::ostream &out, const TString &var) override;
 
-   TClass* ProjectedClass(const TEveProjection* p) const override;
+   TClass *ProjectedClass(const TEveProjection *p) const override;
 
    static Bool_t GetDefaultSmooth();
    static void   SetDefaultSmooth(Bool_t r);
@@ -94,9 +94,9 @@ public:
    TEveLineProjected();
    ~TEveLineProjected() override {}
 
-   void SetProjection(TEveProjectionManager* mng, TEveProjectable* model) override;
-   void UpdateProjection() override;
-   TEveElement* GetProjectedAsElement() override { return this; }
+   void         SetProjection(TEveProjectionManager *mng, TEveProjectable *model) override;
+   void         UpdateProjection() override;
+   TEveElement *GetProjectedAsElement() override { return this; }
 
    ClassDef(TEveLineProjected, 0); // Projected replica of a TEveLine.
 };

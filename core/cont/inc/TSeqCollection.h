@@ -34,8 +34,8 @@ protected:
    virtual void      Changed() { fSorted = kFALSE; }
 
 public:
-             ~TSeqCollection() override { }
-   void      Add(TObject *obj) override { AddLast(obj); }
+   ~TSeqCollection() override {}
+   void              Add(TObject *obj) override { AddLast(obj); }
    virtual void      AddFirst(TObject *obj) = 0;
    virtual void      AddLast(TObject *obj) = 0;
    virtual void      AddAt(TObject *obj, Int_t idx) = 0;

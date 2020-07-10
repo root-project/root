@@ -67,7 +67,7 @@ public:
               Pixel_t back = GetDefaultFrameBackground());
    ~TGMdiFrame() override;
 
-   void      Move(Int_t x, Int_t y) override;
+   void              Move(Int_t x, Int_t y) override;
    virtual Bool_t    CloseWindow();     //*SIGNAL*
    virtual Bool_t    Help() { return kFALSE; }
 
@@ -80,7 +80,7 @@ public:
    const char       *GetWindowName();
    const TGPicture  *GetWindowIcon();
 
-   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGMdiFrame, 0) // MDI Frame
 };

@@ -82,35 +82,35 @@ public:
 
    void SetNonZeros(Int_t nnzQ,Int_t nnzA,Int_t nnzC);
 
-   void PutQIntoAt(TMatrixDBase &M,Int_t row,Int_t col) override;
-                                               // insert the Hessian Q into the matrix M for the fundamental
-                                               // linear system, where M is stored as a TMatrixDSparse
-   void PutAIntoAt(TMatrixDBase &M,Int_t row,Int_t col) override;
-                                               // insert the constraint matrix A into the matrix M for the
-                                               // fundamental linear system, where M is stored as a TMatrixDSparse
-   void PutCIntoAt(TMatrixDBase &M,Int_t row,Int_t col) override;
-                                               // insert the constraint matrix C into the matrix M for the
-                                               // fundamental linear system, where M is stored as a
-                                               // TMatrixDSparse
+   void PutQIntoAt(TMatrixDBase &M, Int_t row, Int_t col) override;
+   // insert the Hessian Q into the matrix M for the fundamental
+   // linear system, where M is stored as a TMatrixDSparse
+   void PutAIntoAt(TMatrixDBase &M, Int_t row, Int_t col) override;
+   // insert the constraint matrix A into the matrix M for the
+   // fundamental linear system, where M is stored as a TMatrixDSparse
+   void PutCIntoAt(TMatrixDBase &M, Int_t row, Int_t col) override;
+   // insert the constraint matrix C into the matrix M for the
+   // fundamental linear system, where M is stored as a
+   // TMatrixDSparse
 
-   void Qmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) override;
-                                               // y = beta * y + alpha * Q * x
-   void Amult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) override;
-                                               // y = beta * y + alpha * A * x
-   void Cmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) override;
-                                               // y = beta * y + alpha * C * x
-   void ATransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) override;
-                                               // y = beta * y + alpha * A^T * x
-   void CTransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) override;
-                                               // y = beta * y + alpha * C^T * x
+   void Qmult(Double_t beta, TVectorD &y, Double_t alpha, const TVectorD &x) override;
+   // y = beta * y + alpha * Q * x
+   void Amult(Double_t beta, TVectorD &y, Double_t alpha, const TVectorD &x) override;
+   // y = beta * y + alpha * A * x
+   void Cmult(Double_t beta, TVectorD &y, Double_t alpha, const TVectorD &x) override;
+   // y = beta * y + alpha * C * x
+   void ATransmult(Double_t beta, TVectorD &y, Double_t alpha, const TVectorD &x) override;
+   // y = beta * y + alpha * A^T * x
+   void CTransmult(Double_t beta, TVectorD &y, Double_t alpha, const TVectorD &x) override;
+   // y = beta * y + alpha * C^T * x
 
-   void GetDiagonalOfQ(TVectorD &dQ) override;  // extract the diagonal of Q and put it in the vector dQ
+   void GetDiagonalOfQ(TVectorD &dQ) override; // extract the diagonal of Q and put it in the vector dQ
 
    Double_t DataNorm() override;
-   void DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s) override;
-                                               // Create a random problem (x,y,z,s)
-                                               // the solution to the random problem
-   void Print(Option_t *opt="") const override;
+   void     DataRandom(TVectorD &x, TVectorD &y, TVectorD &z, TVectorD &s) override;
+   // Create a random problem (x,y,z,s)
+   // the solution to the random problem
+   void Print(Option_t *opt = "") const override;
 
    Double_t ObjectiveValue(TQpVar *vars) override;
 

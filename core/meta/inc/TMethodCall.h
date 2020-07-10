@@ -61,8 +61,8 @@ private:
    Bool_t         fDtorOnly;  //call only dtor and not delete when calling ~xxx
    EReturnType    fRetType;   //method return type
 
-   void Execute(const char *,  const char *, int * /*error*/ = 0) override { }    // versions of TObject
-   void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) override { }
+   void Execute(const char *, const char *, int * /*error*/ = 0) override {} // versions of TObject
+   void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) override {}
 
    void InitImplementation(const char *methodname, const char *params, const char *proto, Bool_t objectIsConst, TClass *cl, const ClassInfo_t *cinfo, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
 
@@ -83,7 +83,7 @@ public:
    void           InitWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void           InitWithPrototype(const char *function, const char *proto, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    Bool_t         IsValid() const;
-   TObject       *Clone(const char *newname="") const override;
+   TObject *      Clone(const char *newname = "") const override;
    void           CallDtorOnly(Bool_t set = kTRUE) { fDtorOnly = set; }
 
    TFunction     *GetMethod();

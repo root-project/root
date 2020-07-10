@@ -46,7 +46,7 @@ protected:
       TNamed(name, ""), fDocParser(0), fHtml(0), fDocOutput(0), fCounter(-1) {};
    ~TDocDirective() override {}
 
-   const char* GetName() const override { return TNamed::GetName(); }
+   const char *GetName() const override { return TNamed::GetName(); }
    void GetName(TString& name) const;
    TDocParser* GetDocParser() const { return fDocParser; }
    TDocOutput* GetDocOutput() const { return fDocOutput; }
@@ -85,9 +85,9 @@ public:
    TDocHtmlDirective(): TDocDirective("HTML"), fVerbatim(kFALSE) {}
    ~TDocHtmlDirective() override {}
 
-   void AddLine(const TSubString& line) override;
-   const char* GetEndTag() const override { return "end_html"; }
-   Bool_t GetResult(TString& result) override;
+   void        AddLine(const TSubString &line) override;
+   const char *GetEndTag() const override { return "end_html"; }
+   Bool_t      GetResult(TString &result) override;
 
    ClassDef(TDocHtmlDirective, 0); // Handler for "Begin_Html"/"End_Html" for raw HTML in documentation comments
 };
@@ -99,7 +99,7 @@ private:
    Bool_t  fShowSource;    // whether a source tab should be created
    Bool_t  fIsFilename;    // whether the directive is a failename to be executed
 
-   void AddParameter(const TString& name, const char* value = 0) override;
+   void    AddParameter(const TString &name, const char *value = 0) override;
    TString CreateSubprocessInputFile();
 
 public:
@@ -108,9 +108,9 @@ public:
       fShowSource(kFALSE), fIsFilename(kTRUE) {};
    ~TDocMacroDirective() override;
 
-   void AddLine(const TSubString& line) override;
-   const char* GetEndTag() const override { return "end_macro"; }
-   Bool_t GetResult(TString& result) override;
+   void        AddLine(const TSubString &line) override;
+   const char *GetEndTag() const override { return "end_macro"; }
+   Bool_t      GetResult(TString &result) override;
    // Delete output for the parser's current class or module.
    void DeleteOutput() const override { DeleteOutputFiles(".gif"); }
 
@@ -129,7 +129,7 @@ protected:
    TVirtualPad* fBBCanvas;    // canvas for bounding box determination
 
    virtual void    CreateLatex(const char* filename);
-   void    AddParameter(const TString& name, const char* value = 0) override;
+   void            AddParameter(const TString &name, const char *value = 0) override;
    virtual void GetBoundingBox(TLatex& latex, const char* text, Float_t& width, Float_t& height);
 
 public:
@@ -138,8 +138,8 @@ public:
       fSepIsRegexp(kFALSE), fBBCanvas(0) {};
    ~TDocLatexDirective() override;
 
-   void AddLine(const TSubString& line) override;
-   const char* GetEndTag() const override {return "end_latex";}
+   void        AddLine(const TSubString &line) override;
+   const char *GetEndTag() const override { return "end_latex"; }
 
    const char* GetAlignment() const {return fAlignment;}
    const char* GetSeparator() const {return fSeparator;}
@@ -147,7 +147,7 @@ public:
    Int_t  GetFontSize() const {return fFontSize;}
    TList* GetListOfLines() const;
 
-   Bool_t GetResult(TString& result) override;
+   Bool_t GetResult(TString &result) override;
    // Delete output for the parser's current class or module.
    void DeleteOutput() const override { DeleteOutputFiles(".gif"); }
 

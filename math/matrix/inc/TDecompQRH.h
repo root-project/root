@@ -47,8 +47,8 @@ public :
    TDecompQRH(const TDecompQRH &another);
    ~TDecompQRH() override {}
 
-         Int_t     GetNrows () const override { return fQ.GetNrows(); }
-         Int_t     GetNcols () const override { return fQ.GetNcols(); }
+   Int_t                   GetNrows() const override { return fQ.GetNrows(); }
+   Int_t                   GetNcols() const override { return fQ.GetNcols(); }
    virtual const TMatrixD &GetQ     ()       { if ( !TestBit(kDecomposed) ) Decompose();
                                                return fQ; }
    virtual const TMatrixD &GetR     ()       { if ( !TestBit(kDecomposed) ) Decompose();
@@ -63,20 +63,33 @@ public :
 
    virtual       void      SetMatrix(const TMatrixD &a);
 
-   Bool_t   Decompose  () override;
-   Bool_t   Solve      (      TVectorD &b) override;
-   TVectorD Solve      (const TVectorD& b,Bool_t &ok) override { TVectorD x = b; ok = Solve(x); return x; }
-   Bool_t   Solve      (      TMatrixDColumn &b) override;
-   Bool_t   TransSolve (      TVectorD &b) override;
-   TVectorD TransSolve (const TVectorD& b,Bool_t &ok) override { TVectorD x = b; ok = TransSolve(x); return x; }
-   Bool_t   TransSolve (      TMatrixDColumn &b) override;
-   void     Det        (Double_t &d1,Double_t &d2) override;
+   Bool_t   Decompose() override;
+   Bool_t   Solve(TVectorD &b) override;
+   TVectorD Solve(const TVectorD &b, Bool_t &ok) override
+   {
+      TVectorD x = b;
+      ok = Solve(x);
+      return x;
+   }
+   Bool_t   Solve(TMatrixDColumn &b) override;
+   Bool_t   TransSolve(TVectorD &b) override;
+   TVectorD TransSolve(const TVectorD &b, Bool_t &ok) override
+   {
+      TVectorD x = b;
+      ok = TransSolve(x);
+      return x;
+   }
+   Bool_t TransSolve(TMatrixDColumn &b) override;
+   void   Det(Double_t &d1, Double_t &d2) override;
 
-           Bool_t   Invert     (TMatrixD &inv);
-           TMatrixD Invert     (Bool_t &status);
-           TMatrixD Invert     () { Bool_t status; return Invert(status); }
+   Bool_t   Invert(TMatrixD &inv);
+   TMatrixD Invert(Bool_t &status);
+   TMatrixD Invert()
+   {
+      Bool_t status;
+      return Invert(status); }
 
-   void Print(Option_t *opt ="") const override; // *MENU*
+   void Print(Option_t *opt = "") const override; // *MENU*
 
    TDecompQRH &operator= (const TDecompQRH &source);
 

@@ -57,11 +57,11 @@ public:
 
    TOrdCollection(Int_t capacity = kDefaultCapacity);
    ~TOrdCollection() override;
-   void          Clear(Option_t *option="") override;
-   void          Delete(Option_t *option="") override;
-   TObject     **GetObjectRef(const TObject *obj) const override;
-   Int_t         IndexOf(const TObject *obj) const override;
-   TIterator    *MakeIterator(Bool_t dir = kIterForward) const override;
+   void       Clear(Option_t *option = "") override;
+   void       Delete(Option_t *option = "") override;
+   TObject ** GetObjectRef(const TObject *obj) const override;
+   Int_t      IndexOf(const TObject *obj) const override;
+   TIterator *MakeIterator(Bool_t dir = kIterForward) const override;
 
    void          AddFirst(TObject *obj) override;
    void          AddLast(TObject *obj) override;
@@ -69,14 +69,14 @@ public:
    void          AddAfter(const TObject *after, TObject *obj) override;
    void          AddBefore(const TObject *before, TObject *obj) override;
    void          PutAt(TObject *obj, Int_t idx);
-   TObject      *RemoveAt(Int_t idx) override;
-   TObject      *Remove(TObject *obj) override;
+   TObject *     RemoveAt(Int_t idx) override;
+   TObject *     Remove(TObject *obj) override;
 
-   TObject      *At(Int_t idx) const override;
-   TObject      *Before(const TObject *obj) const override;
-   TObject      *After(const TObject *obj) const override;
-   TObject      *First() const override;
-   TObject      *Last() const override;
+   TObject *At(Int_t idx) const override;
+   TObject *Before(const TObject *obj) const override;
+   TObject *After(const TObject *obj) const override;
+   TObject *First() const override;
+   TObject *Last() const override;
 
    void          Sort();
    Int_t         BinarySearch(TObject *obj);
@@ -109,16 +109,16 @@ private:
 public:
    TOrdCollectionIter(const TOrdCollection *col, Bool_t dir = kIterForward);
    TOrdCollectionIter(const TOrdCollectionIter &iter);
-   ~TOrdCollectionIter() override { }
-   TIterator          &operator=(const TIterator &rhs) override;
+   ~TOrdCollectionIter() override {}
+   TIterator &         operator=(const TIterator &rhs) override;
    TOrdCollectionIter &operator=(const TOrdCollectionIter &rhs);
 
    const TCollection *GetCollection() const override { return fCol; }
-   TObject           *Next() override;
+   TObject *          Next() override;
    void               Reset() override;
    Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const TOrdCollectionIter &aIter) const;
-   TObject           *operator*() const override;
+   TObject *          operator*() const override;
 
    ClassDef(TOrdCollectionIter,0)  //Ordered collection iterator
 };

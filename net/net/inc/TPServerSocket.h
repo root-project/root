@@ -46,7 +46,7 @@ public:
                   Int_t backlog = kDefaultBacklog,
                   Int_t tcpwindowsize = -1);
 
-   ~TPServerSocket() override { }
+   ~TPServerSocket() override {}
 
    TSocket *Accept(UChar_t Opt = kSrvNoAuth) override;
 

@@ -47,7 +47,7 @@ public:
 
    ~TRemoteObject() override;
 
-   void            Browse(TBrowser *b) override;
+   void                    Browse(TBrowser *b) override;
    Bool_t                  IsFolder() const override { return fIsFolder; }
    TList                  *Browse();
    Bool_t                  GetFileStat(FileStat_t *sbuf);

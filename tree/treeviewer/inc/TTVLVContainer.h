@@ -39,10 +39,10 @@ protected:
    TTVLVEntry *fItem;       // pointer to associated item
 public:
    TGItemContext();
-       ~TGItemContext() override { }
+   ~TGItemContext() override {}
    void         Associate(TTVLVEntry *item) { fItem = item; }
-   void Delete(Option_t *) override { }           // *MENU*
-   void         Draw(Option_t *option="") override;       // *MENU*
+   void         Delete(Option_t *) override {}        // *MENU*
+   void         Draw(Option_t *option = "") override; // *MENU*
    void         EditExpression();                // *MENU*
    void         Empty();                         // *MENU*
    void         RemoveItem();                    // *MENU*
@@ -80,7 +80,7 @@ public:
    const char     *GetConvName() {return fConvName;}
    const char     *GetTrueName() {return fTrueName.Data();}
    TGToolTip      *GetTip() {return fTip;}
-   Bool_t  HandleCrossing(Event_t *event) override;
+   Bool_t          HandleCrossing(Event_t *event) override;
    Bool_t          HasAlias();
    Bool_t          IsCut() {return fIsCut;}
    void            PrependTilde();
@@ -130,13 +130,13 @@ public:
    const char    *Ey();
    const char    *Ez();
    TTreeViewer   *GetViewer() {return fViewer;}
-   void           SetListView(TGListView *lv) override {fListView = lv;}
+   void           SetListView(TGListView *lv) override { fListView = lv; }
    void           SetViewer(TTreeViewer *viewer) {fViewer = viewer;}
    void           RemoveNonStatic();
    const char    *ScanList();
    void           SelectItem(const char* name);
-   Bool_t HandleButton(Event_t *event) override;
-   Bool_t HandleMotion(Event_t *event) override;
+   Bool_t         HandleButton(Event_t *event) override;
+   Bool_t         HandleMotion(Event_t *event) override;
 
    ClassDef(TTVLVContainer,0)  // A dragging-capable LVContainer
 };
@@ -176,14 +176,14 @@ protected:
 public:
    TGSelectBox(const TGWindow *p, const TGWindow *main, UInt_t w = 10, UInt_t h = 10);
    ~TGSelectBox() override;
-   void   CloseWindow() override;
+   void           CloseWindow() override;
    TTVLVEntry    *EditedEntry() {return fEntry;}
    void           GrabPointer();
    void           SetLabel(const char* title);
    void           SetEntry(TTVLVEntry *entry);
    void           SaveText();
    void           InsertText(const char* text);
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t         ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    Bool_t         ValidateAlias();
 
    static TGSelectBox *GetInstance();

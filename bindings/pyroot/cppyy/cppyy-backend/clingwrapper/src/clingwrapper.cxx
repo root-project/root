@@ -184,23 +184,24 @@ static void inline do_trace(int sig) {
 
 class TExceptionHandlerImp : public TExceptionHandler {
 public:
-    void HandleException(Int_t sig) override {
-        if (TROOT::Initialized()) {
-            if (gException) {
-                gInterpreter->RewindDictionary();
-                gInterpreter->ClearFileBusy();
-            }
+   void HandleException(Int_t sig) override
+   {
+      if (TROOT::Initialized()) {
+         if (gException) {
+            gInterpreter->RewindDictionary();
+            gInterpreter->ClearFileBusy();
+         }
 
-            if (!getenv("CPPYY_CRASH_QUIET"))
-                do_trace(sig);
+         if (!getenv("CPPYY_CRASH_QUIET"))
+            do_trace(sig);
 
-        // jump back, if catch point set
-            Throw(sig);
-        }
+         // jump back, if catch point set
+         Throw(sig);
+      }
 
-        do_trace(sig);
-        gSystem->Exit(128 + sig);
-    }
+      do_trace(sig);
+      gSystem->Exit(128 + sig);
+   }
 };
 
 class ApplicationStarter {

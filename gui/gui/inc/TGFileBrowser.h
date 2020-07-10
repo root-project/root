@@ -79,12 +79,12 @@ public:
    TGFileBrowser(const TGWindow *p, TBrowser* b=0, UInt_t w=200, UInt_t h=400);
    ~TGFileBrowser() override;
 
-   void Add(TObject *obj, const char *name = 0, Int_t check = -1) override;
-   void BrowseObj(TObject *obj) override;
-   void RecursiveRemove(TObject *obj) override;
-   void Refresh(Bool_t force = kFALSE) override;
-   void Show() override { MapRaised(); }
-   Option_t    *GetDrawOption() const override;
+   void      Add(TObject *obj, const char *name = 0, Int_t check = -1) override;
+   void      BrowseObj(TObject *obj) override;
+   void      RecursiveRemove(TObject *obj) override;
+   void      Refresh(Bool_t force = kFALSE) override;
+   void      Show() override { MapRaised(); }
+   Option_t *GetDrawOption() const override;
 
    TRootBrowser *GetNewBrowser() const          { return fNewBrowser; }
    void          SetNewBrowser(TRootBrowser* b) { fNewBrowser = b;    }

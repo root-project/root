@@ -47,7 +47,7 @@ public:
                 Pixel_t back = GetDefaultFrameBackground());
    ~TArrowEditor() override;
 
-   void   SetModel(TObject* obj) override;
+   void           SetModel(TObject *obj) override;
    virtual void   DoAngle();
    virtual void   DoOption(Int_t id);
    virtual void   DoSize();

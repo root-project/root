@@ -62,19 +62,19 @@ public:
    // Implementing VirtualIntegrator Interface
 
    /** Set the desired relative Error. */
-   void SetRelTolerance (double eps) override { fEpsRel = eps; }
+   void SetRelTolerance(double eps) override { fEpsRel = eps; }
 
    /** This method is not implemented. */
-   void SetAbsTolerance (double eps) override { fEpsAbs = eps; }
+   void SetAbsTolerance(double eps) override { fEpsAbs = eps; }
 
    /** Returns the result of the last Integral calculation. */
-   double Result () const override;
+   double Result() const override;
 
    /** Return the estimate of the absolute Error of the last Integral calculation. */
-   double Error () const override;
+   double Error() const override;
 
    /** return the status of the last integration - 0 in case of success */
-   int Status () const override;
+   int Status() const override;
 
    // Implementing VirtualIntegratorOneDim Interface
 
@@ -146,7 +146,7 @@ public:
       required. The subprogram may therefore be used when these values are
       undefined
    */
-   double Integral (double a, double b) override;
+   double Integral(double a, double b) override;
 
    /** Returns Integral of function on an infinite interval.
       This function computes, to an attempted specified accuracy, the value of the integral:
@@ -159,7 +159,7 @@ public:
 
       The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
    */
-   double Integral () override;
+   double Integral() override;
 
    /** Returns Integral of function on an upper semi-infinite interval.
       This function computes, to an attempted specified accuracy, the value of the integral:
@@ -173,7 +173,7 @@ public:
 
       The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
    */
-   double IntegralUp (double a) override;
+   double IntegralUp(double a) override;
 
    /** Returns Integral of function on a lower semi-infinite interval.
        This function computes, to an attempted specified accuracy, the value of the integral:
@@ -187,25 +187,24 @@ public:
 
       The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
    */
-   double IntegralLow (double b) override;
-
+   double IntegralLow(double b) override;
 
    /** Set integration function (flag control if function must be copied inside).
        \@param f Function to be used in the calculations.
    */
-   void SetFunction (const IGenFunction &) override;
+   void SetFunction(const IGenFunction &) override;
 
    /** This method is not implemented. */
-   double Integral (const std::vector< double > &pts) override;
+   double Integral(const std::vector<double> &pts) override;
 
    /** This method is not implemented. */
-   double IntegralCauchy (double a, double b, double c) override;
+   double IntegralCauchy(double a, double b, double c) override;
 
    ///  get the option used for the integration
    ROOT::Math::IntegratorOneDimOptions Options() const override;
 
    // set the options
-   void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt) override;
+   void SetOptions(const ROOT::Math::IntegratorOneDimOptions &opt) override;
 
 private:
 
@@ -237,8 +236,9 @@ public:
    IntegrandTransform(const IGenFunction* integrand);
    IntegrandTransform(const double boundary, ESemiInfinitySign sign, const IGenFunction* integrand);
    double operator()(double x) const;
-   double DoEval(double x) const override;
-   IGenFunction* Clone() const override;
+   double        DoEval(double x) const override;
+   IGenFunction *Clone() const override;
+
 private:
    ESemiInfinitySign fSign;
    const IGenFunction* fIntegrand;

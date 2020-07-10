@@ -31,25 +31,25 @@ class TWin32Thread : public TThreadImp {
 
 public:
    TWin32Thread() { }
-   ~TWin32Thread() override { }
+   ~TWin32Thread() override {}
 
    Int_t  Join(TThread *th, void **ret) override;
    Long_t SelfId() override;
    Int_t  Run(TThread *th) override;
 
-   Int_t  Kill(TThread *th) override;
+   Int_t Kill(TThread *th) override;
 
-   Int_t  SetCancelOff() override;
-   Int_t  SetCancelOn() override;
-   Int_t  SetCancelAsynchronous() override;
-   Int_t  SetCancelDeferred() override;
-   Int_t  CancelPoint() override;
+   Int_t SetCancelOff() override;
+   Int_t SetCancelOn() override;
+   Int_t SetCancelAsynchronous() override;
+   Int_t SetCancelDeferred() override;
+   Int_t CancelPoint() override;
 
-   Int_t  CleanUpPush(void **main, void *free,void *arg) override;
-   Int_t  CleanUpPop(void **main, Int_t exe) override;
-   Int_t  CleanUp(void **main) override;
+   Int_t CleanUpPush(void **main, void *free, void *arg) override;
+   Int_t CleanUpPop(void **main, Int_t exe) override;
+   Int_t CleanUp(void **main) override;
 
-   Int_t  Exit(void *ret) override;
+   Int_t Exit(void *ret) override;
 
    ClassDef(TWin32Thread,0)  // TWin32Thread class
 };

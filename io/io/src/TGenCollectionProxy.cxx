@@ -42,12 +42,10 @@ public:
    {
    }
    // Standard Destructor
-   ~TGenVectorProxy() override
-{
-   }
+   ~TGenVectorProxy() override {}
    // Return the address of the value at index 'idx'
-   void* At(UInt_t idx) override
-{
+   void *At(UInt_t idx) override
+   {
       if ( fEnv && fEnv->fObject ) {
          fEnv->fIdx = idx;
          switch( idx ) {
@@ -62,7 +60,7 @@ public:
       return 0;
    }
    // Call to delete/destruct individual item
-   void DeleteItem(Bool_t force, void* ptr) const override
+   void DeleteItem(Bool_t force, void *ptr) const override
    {
       if ( force && ptr ) {
          if ( fVal->fProperties&kNeedDelete) {
@@ -96,7 +94,7 @@ public:
    {
       // Standard Destructor.
    }
-   void* At(UInt_t idx) override
+   void *At(UInt_t idx) override
    {
       // Return the address of the value at index 'idx'
 
@@ -111,7 +109,7 @@ public:
       return 0;
    }
 
-   void DeleteItem(Bool_t force, void* ptr) const override
+   void DeleteItem(Bool_t force, void *ptr) const override
    {
       // Call to delete/destruct individual item
       if ( force && ptr ) {
@@ -142,7 +140,7 @@ public:
    {
       // Standard Destructor.
    }
-   void* At(UInt_t idx) override
+   void *At(UInt_t idx) override
    {
       // Return the address of the value at index 'idx'
 
@@ -168,7 +166,7 @@ public:
       return 0;
    }
 
-   void DeleteItem(Bool_t force, void* ptr) const override
+   void DeleteItem(Bool_t force, void *ptr) const override
    {
       // Call to delete/destruct individual item
       if ( force && ptr ) {
@@ -194,12 +192,10 @@ public:
 {
    }
    // Standard Destructor
-   ~TGenListProxy() override
-{
-   }
+   ~TGenListProxy() override {}
    // Return the address of the value at index 'idx'
-   void* At(UInt_t idx) override
-{
+   void *At(UInt_t idx) override
+   {
       if ( fEnv && fEnv->fObject ) {
          switch( idx ) {
          case 0:
@@ -236,12 +232,10 @@ public:
 {
    }
    // Standard Destructor
-   ~TGenSetProxy() override
-{
-   }
+   ~TGenSetProxy() override {}
    // Return the address of the value at index 'idx'
-   void* At(UInt_t idx) override
-{
+   void *At(UInt_t idx) override
+   {
       if ( fEnv && fEnv->fObject ) {
          if ( fEnv->fUseTemp ) {
             return (((char*)fEnv->fTemp)+idx*fValDiff);
@@ -281,11 +275,9 @@ public:
 {
    }
    // Standard Destructor
-   ~TGenMapProxy() override
-{
-   }
+   ~TGenMapProxy() override {}
    // Call to delete/destruct individual item
-   void DeleteItem(Bool_t force, void* ptr) const override
+   void DeleteItem(Bool_t force, void *ptr) const override
    {
       if (force) {
          if ( fKey->fProperties&kNeedDelete) {

@@ -68,12 +68,12 @@ public:
    ~TProfile2Poly() override {}
 
    using TH2Poly::Fill;
-   Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value) override;
+   Int_t         Fill(Double_t xcoord, Double_t ycoord, Double_t value) override;
    virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value, Double_t weight);
 
    Long64_t Merge(const std::vector<TProfile2Poly *> &list);
    Long64_t Merge(TCollection *in) override;
-   void Reset(Option_t *option = "") override;
+   void     Reset(Option_t *option = "") override;
 
    // option to dispay different measures on bins
    void SetContentToAverage(); // this one is used by default
@@ -94,7 +94,6 @@ public:
    Double_t GetBinError(Int_t bin) const override;
 
    void GetStats(Double_t *stats) const override;
-
 
    Double_t GetOverflowContent(Int_t idx) { return fOverflowBins[idx].fSumw; }
    void PrintOverflowRegions();

@@ -57,10 +57,10 @@ public:
    /**
       Destructor (delete function pointer)
    */
-   ~MinimTransformFunction () override  {
+   ~MinimTransformFunction() override
+   {
       if (fFunc) delete fFunc;
    }
-
 
    // method inherited from IFunction interface
 
@@ -69,10 +69,7 @@ public:
    unsigned int NTot() const { return fFunc->NDim(); }
 
    /// clone:  not supported (since unique_ptr used in the fVariables)
-   IMultiGenFunction * Clone() const override {
-      return 0;
-   }
-
+   IMultiGenFunction *Clone() const override { return 0; }
 
    /// transform from internal to external
    /// result is cached also inside the class
@@ -105,7 +102,8 @@ public:
 private:
 
    /// function evaluation
-   double DoEval(const double * x) const override {
+   double DoEval(const double *x) const override
+   {
 #ifndef DO_THREADSAFE
       return (*fFunc)(Transformation(x));
 #else
@@ -116,7 +114,8 @@ private:
    }
 
    /// calculate derivatives
-   double DoDerivative (const double * x, unsigned int icoord  ) const override {
+   double DoDerivative(const double *x, unsigned int icoord) const override
+   {
       const MinimTransformVariable & var = fVariables[ fIndex[icoord] ];
       double dExtdInt = (var.IsLimited() ) ? var.DerivativeIntToExt( x[icoord] ) : 1.0;
       double deriv =  fFunc->Derivative( Transformation(x) , fIndex[icoord] );

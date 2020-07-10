@@ -37,7 +37,7 @@ public:
    TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
               Double_t wl = .02,
               Double_t amp = .01);
-   ~TCurlyLine() override{;}
+   ~TCurlyLine() override { ; }
    virtual void Build();
    Int_t        DistancetoPrimitive(Int_t px, Int_t py) override;
    void         ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
@@ -54,7 +54,7 @@ public:
    virtual void SetAmplitude(Double_t x);               // *MENU* *ARGS={x=>fAmplitude}
    virtual void SetStartPoint(Double_t x1, Double_t y1);
    virtual void SetEndPoint  (Double_t x2, Double_t y2);
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void         SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    static void     SetDefaultWaveLength(Double_t WaveLength);
    static void     SetDefaultAmplitude (Double_t Amplitude );
@@ -62,15 +62,15 @@ public:
    static Double_t GetDefaultWaveLength();
    static Double_t GetDefaultAmplitude ();
    static Bool_t   GetDefaultIsCurly   ();
-   Rectangle_t  GetBBox() override;
-   TPoint       GetBBoxCenter() override;
-   void         SetBBoxCenter(const TPoint &p) override;
-   void         SetBBoxCenterX(const Int_t x) override;
-   void         SetBBoxCenterY(const Int_t y) override;
-   void         SetBBoxX1(const Int_t x) override;
-   void         SetBBoxX2(const Int_t x) override;
-   void         SetBBoxY1(const Int_t y) override;
-   void         SetBBoxY2(const Int_t y) override;
+   Rectangle_t     GetBBox() override;
+   TPoint          GetBBoxCenter() override;
+   void            SetBBoxCenter(const TPoint &p) override;
+   void            SetBBoxCenterX(const Int_t x) override;
+   void            SetBBoxCenterY(const Int_t y) override;
+   void            SetBBoxX1(const Int_t x) override;
+   void            SetBBoxX2(const Int_t x) override;
+   void            SetBBoxY1(const Int_t y) override;
+   void            SetBBoxY2(const Int_t y) override;
 
    ClassDef(TCurlyLine,3) // A curly polyline
 };

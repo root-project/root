@@ -61,20 +61,20 @@ public:
    TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock);
    ~TPSocket() override;
 
-   void          Close(Option_t *opt="") override;
-   Int_t         GetDescriptor() const override;
-   TInetAddress  GetLocalInetAddress() override;
+   void         Close(Option_t *opt = "") override;
+   Int_t        GetDescriptor() const override;
+   TInetAddress GetLocalInetAddress() override;
 
-   Int_t   Send(const TMessage &mess) override;
-   Int_t   Send(Int_t kind) override { return TSocket::Send(kind); }
-   Int_t   Send(Int_t status, Int_t kind) override { return TSocket::Send(status, kind); }
-   Int_t   Send(const char *mess, Int_t kind = kMESS_STRING) override { return TSocket::Send(mess, kind); }
-   Int_t   SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt) override;
-   Int_t   Recv(TMessage *&mess) override;
-   Int_t   Recv(Int_t &status, Int_t &kind) override { return TSocket::Recv(status, kind); }
-   Int_t   Recv(char *mess, Int_t max) override { return TSocket::Recv(mess, max); }
-   Int_t   Recv(char *mess, Int_t max, Int_t &kind) override { return TSocket::Recv(mess, max, kind); }
-   Int_t   RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt) override;
+   Int_t Send(const TMessage &mess) override;
+   Int_t Send(Int_t kind) override { return TSocket::Send(kind); }
+   Int_t Send(Int_t status, Int_t kind) override { return TSocket::Send(status, kind); }
+   Int_t Send(const char *mess, Int_t kind = kMESS_STRING) override { return TSocket::Send(mess, kind); }
+   Int_t SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt) override;
+   Int_t Recv(TMessage *&mess) override;
+   Int_t Recv(Int_t &status, Int_t &kind) override { return TSocket::Recv(status, kind); }
+   Int_t Recv(char *mess, Int_t max) override { return TSocket::Recv(mess, max); }
+   Int_t Recv(char *mess, Int_t max, Int_t &kind) override { return TSocket::Recv(mess, max, kind); }
+   Int_t RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt) override;
 
    Bool_t  IsValid() const override { return fSockets ? kTRUE : kFALSE; }
    Int_t   GetErrorCode() const;

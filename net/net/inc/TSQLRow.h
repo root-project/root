@@ -33,7 +33,7 @@ protected:
    TSQLRow() { }
 
 public:
-   ~TSQLRow() override { }
+   ~TSQLRow() override {}
 
    virtual void        Close(Option_t *option="") = 0;
    virtual ULong_t     GetFieldLength(Int_t field) = 0;

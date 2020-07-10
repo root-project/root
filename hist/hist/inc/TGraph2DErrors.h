@@ -44,19 +44,19 @@ public:
    Double_t        GetErrorX(Int_t bin) const override;
    Double_t        GetErrorY(Int_t bin) const override;
    Double_t        GetErrorZ(Int_t bin) const override;
-   Double_t       *GetEX() const override {return fEX;}
-   Double_t       *GetEY() const override {return fEY;}
-   Double_t       *GetEZ() const override {return fEZ;}
+   Double_t *      GetEX() const override { return fEX; }
+   Double_t *      GetEY() const override { return fEY; }
+   Double_t *      GetEZ() const override { return fEZ; }
    Double_t        GetXmaxE() const override;
    Double_t        GetXminE() const override;
    Double_t        GetYmaxE() const override;
    Double_t        GetYminE() const override;
    Double_t        GetZmaxE() const override;
    Double_t        GetZminE() const override;
-   void    Print(Option_t *chopt="") const override;
+   void            Print(Option_t *chopt = "") const override;
    Int_t           RemovePoint(Int_t ipoint); // *MENU*
-   void    Set(Int_t n) override;
-   void    SetPoint(Int_t i, Double_t x, Double_t y, Double_t z) override;
+   void            Set(Int_t n) override;
+   void            SetPoint(Int_t i, Double_t x, Double_t y, Double_t z) override;
    virtual void    SetPointError(Int_t i, Double_t ex, Double_t ey, Double_t ez);
 
    ClassDef(TGraph2DErrors,1)  //A 2D graph with error bars

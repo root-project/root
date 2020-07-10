@@ -118,10 +118,10 @@ public:
 
    virtual void   Close(Option_t *opt = "");
 
-   Int_t          Compare(const TObject *obj) const override;
-   Bool_t         IsSortable() const override { return kTRUE; }
+   Int_t  Compare(const TObject *obj) const override;
+   Bool_t IsSortable() const override { return kTRUE; }
 
-   const char    *GetName() const override { return fName; }
+   const char *   GetName() const override { return fName; }
    const char    *GetImage() const { return fImage; }
    const char    *GetProofWorkDir() const { return fProofWorkDir; }
    const char    *GetWorkDir() const { return fWorkDir; }
@@ -149,7 +149,7 @@ public:
 
    virtual Bool_t IsValid() const { return fSocket ? kTRUE : kFALSE; }
 
-   void   Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
 
    virtual Int_t  SetupServ(Int_t stype, const char *conffile);
 

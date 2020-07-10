@@ -135,16 +135,16 @@ public:
    {
    }
 
-   void *Next() override {
+   void *Next() override
+   {
       fStarted = kTRUE;
       fCurrent = fNext(fIterators.fBegin,fIterators.fEnd);
       return fCurrent;
    }
 
-   void* operator*() const override { return fCurrent; }
+   void *operator*() const override { return fCurrent; }
 
    operator bool() const override { return fStarted ? fCurrent != 0 : kTRUE; }
-
 };
 
 class TGenericCollectionIterator::VectorIterator : public TGenericCollectionIterator {
@@ -165,17 +165,17 @@ public:
    {
    }
 
-   void *Next() override {
+   void *Next() override
+   {
       if ( ! (bool)*this ) return 0;
       void *result = GetValue();
       fIterators.fBegin = ((char*)fIterators.fBegin) + fIncrement;
       return result;
    }
 
-   void* operator*() const override { return GetValue(); }
+   void *operator*() const override { return GetValue(); }
 
    operator bool() const override { return fIterators.fBegin != fIterators.fEnd; }
-
 };
 
 inline TGenericCollectionIterator *TGenericCollectionIterator::New(void *collection, TVirtualCollectionProxy *proxy)

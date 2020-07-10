@@ -740,7 +740,6 @@ public:
    }
    using TMemberInspector::Inspect;
    void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -884,10 +883,10 @@ public:
    TAutoInspector(TBrowser *b) {
       // main constructor.
       fBrowser = b; fCount = 0; }
-   ~TAutoInspector() override { }
+   ~TAutoInspector() override {}
    using TMemberInspector::Inspect;
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
-   Bool_t IsTreatingNonAccessibleTypes() override {return kFALSE;}
+   void   Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
+   Bool_t IsTreatingNonAccessibleTypes() override { return kFALSE; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

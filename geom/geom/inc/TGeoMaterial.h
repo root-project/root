@@ -127,8 +127,8 @@ public:
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    Bool_t                   IsUsed() const {return TObject::TestBit(kMatUsed);}
    virtual Bool_t           IsMixture() const {return kFALSE;}
-   void             Print(const Option_t *option="") const override;
-   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                     Print(const Option_t *option = "") const override;
+   void                     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void             SetA(Double_t a) {fA = a; SetRadLen(0);}
    virtual void             SetZ(Double_t z) {fZ = z; SetRadLen(0);}
    virtual void             SetDensity(Double_t density) {fDensity = density; SetRadLen(0);}
@@ -184,26 +184,35 @@ public:
    void                     DefineElement(Int_t iel, TGeoElement *elem, Double_t weight);
    void                     DefineElement(Int_t iel, Int_t z, Int_t natoms);
    // radioactive mixture evolution
-   TGeoMaterial    *DecayMaterial(Double_t time, Double_t precision=0.001) override;
-   void             FillMaterialEvolution(TObjArray *population, Double_t precision=0.001) override;
+   TGeoMaterial *DecayMaterial(Double_t time, Double_t precision = 0.001) override;
+   void          FillMaterialEvolution(TObjArray *population, Double_t precision = 0.001) override;
    // getters
-   Int_t            GetByteCount() const override {return 48+12*fNelements;}
-   TGeoElement     *GetElement(Int_t i=0) const override;
-   void             GetElementProp(Double_t &a, Double_t &z, Double_t &w, Int_t i=0) override {a=fAmixture[i]; z=fZmixture[i]; w=fWeights[i];}
-   Int_t            GetNelements() const override {return fNelements;}
+   Int_t        GetByteCount() const override { return 48 + 12 * fNelements; }
+   TGeoElement *GetElement(Int_t i = 0) const override;
+   void         GetElementProp(Double_t &a, Double_t &z, Double_t &w, Int_t i = 0) override
+   {
+      a = fAmixture[i];
+      z = fZmixture[i];
+      w = fWeights[i];
+   }
+   Int_t                    GetNelements() const override { return fNelements; }
    Double_t                *GetZmixt() const     {return fZmixture;}
    Double_t                *GetAmixt() const     {return fAmixture;}
    Double_t                *GetWmixt() const     {return fWeights;}
    Int_t                   *GetNmixt() const     {return fNatoms;}
-   Double_t         GetSpecificActivity(Int_t i=-1) const override;
+   Double_t                 GetSpecificActivity(Int_t i = -1) const override;
    // utilities
-   Bool_t           IsEq(const TGeoMaterial *other) const override;
-   Bool_t           IsMixture() const override {return kTRUE;}
-   void             Print(const Option_t *option="") const override;
-   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   void             SetA(Double_t a) override {fA = a;}
-   void             SetZ(Double_t z) override {fZ = z;}
-   void             SetDensity(Double_t density) override {fDensity = density; AverageProperties();}
+   Bool_t IsEq(const TGeoMaterial *other) const override;
+   Bool_t IsMixture() const override { return kTRUE; }
+   void   Print(const Option_t *option = "") const override;
+   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void   SetA(Double_t a) override { fA = a; }
+   void   SetZ(Double_t z) override { fZ = z; }
+   void   SetDensity(Double_t density) override
+   {
+      fDensity = density;
+      AverageProperties();
+   }
    void                     ComputeDerivedQuantities();
    void                     ComputeRadiationLength();
    void                     ComputeNuclearInterLength();

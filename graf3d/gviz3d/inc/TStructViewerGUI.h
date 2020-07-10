@@ -95,10 +95,10 @@ public:
 
    void           AutoRefreshButtonSlot(Bool_t on);
    void           BoxHeightValueSetSlot(Long_t h);
-   void           CloseWindow() override;
+   void                 CloseWindow() override;
    void           ColorSelectedSlot(Pixel_t pixel);
    void           DoubleClickedSlot();
-   void           Draw(Option_t* option = "") override;
+   void                 Draw(Option_t *option = "") override;
    TCanvas       *GetCanvas();
    Int_t          GetColor(TStructNode* node);
    TStructNodeProperty* GetDefaultColor();

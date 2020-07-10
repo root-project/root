@@ -30,22 +30,22 @@ class TBranchSTL: public TBranch {
                   Int_t buffsize, Int_t splitlevel,
                   TStreamerInfo* info, Int_t id );
       ~TBranchSTL() override;
-      void           Browse( TBrowser *b ) override;
-      Bool_t         IsFolder() const override;
-      const char    *GetClassName() const override { return fClassName.Data(); }
-      Int_t          GetExpectedType(TClass *&clptr,EDataType &type) override;
-      Int_t          GetEntry( Long64_t entry = 0, Int_t getall = 0 ) override;
+      void                   Browse(TBrowser *b) override;
+      Bool_t                 IsFolder() const override;
+      const char *           GetClassName() const override { return fClassName.Data(); }
+      Int_t                  GetExpectedType(TClass *&clptr, EDataType &type) override;
+      Int_t                  GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
       virtual TStreamerInfo *GetInfo() const;
-      void           Print(Option_t*) const override;
-      void           SetAddress( void* addr ) override;
+      void                   Print(Option_t *) const override;
+      void                   SetAddress(void *addr) override;
 
       ClassDefOverride(TBranchSTL, 1) // Branch handling STL collection of pointers
 
-   private:
+         private :
 
-      void ReadLeavesImpl( TBuffer& b );
+         void ReadLeavesImpl(TBuffer &b);
       void FillLeavesImpl( TBuffer& b );
-      Int_t          FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
+      Int_t FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
       struct ElementBranchHelper_t
       {

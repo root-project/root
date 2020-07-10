@@ -31,7 +31,7 @@ public:
    void     SetColor(const TColor & color);
    void     SetColor(Pixel_t pixel);
    void     SetColor(Int_t color);
-   Int_t    Compare(const TObject* obj) const override;
+   Int_t    Compare(const TObject *obj) const override;
    Bool_t   IsSortable() const override;
 
    ClassDef(TStructNodeProperty, 1); // Class with nodes color property

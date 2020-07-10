@@ -62,8 +62,8 @@ public:
    Float_t       GetSaturation() const { return IsGrayscale() ? 0 : fSaturation; }
    Float_t       GetAlpha() const { return fAlpha; }
    virtual Float_t GetGrayscale() const { /*ITU*/ return 0.299f*fRed + 0.587f*fGreen + 0.114f*fBlue; }
-   void          ls(Option_t *option="") const override;
-   void          Print(Option_t *option="") const override;
+   void            ls(Option_t *option = "") const override;
+   void            Print(Option_t *option = "") const override;
    virtual void  SetAlpha(Float_t a) { fAlpha = a; }
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
 
@@ -101,7 +101,7 @@ public:
    static void    SetGrayscale(Bool_t set = kTRUE);
    static void    SetPalette(Int_t ncolors, Int_t *colors,Float_t alpha=1.);
 
-   ClassDefOverride(TColor,2)  //Color defined by RGB or HLS
+   ClassDefOverride(TColor, 2) // Color defined by RGB or HLS
 };
 
    enum EColorPalette {kDeepSea=51,          kGreyScale=52,    kDarkBodyRadiator=53,

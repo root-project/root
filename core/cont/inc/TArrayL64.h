@@ -34,7 +34,7 @@ public:
    TArrayL64(Int_t n, const Long64_t *array);
    TArrayL64(const TArrayL64 &array);
    TArrayL64  &operator=(const TArrayL64 &rhs);
-      ~TArrayL64() override;
+   ~TArrayL64() override;
 
    void            Adopt(Int_t n, Long64_t *array);
    void            AddAt(Long64_t c, Int_t i);
@@ -46,7 +46,7 @@ public:
    Stat_t          GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
    void            Reset()           {memset(fArray,  0, fN*sizeof(Long64_t));}
    void            Reset(Long64_t val) {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
-   void            Set(Int_t n) override;
+   void Set(Int_t n) override;
    void            Set(Int_t n, const Long64_t *array);
    void            SetAt(Double_t v, Int_t i) override { AddAt((Long64_t)v, i); }
    Long64_t       &operator[](Int_t i);

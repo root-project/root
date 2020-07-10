@@ -22,7 +22,8 @@ namespace cling {
       class ColoredOutput : public llvm::raw_os_ostream {
         bool m_Colorize = true;
 
-        raw_ostream& changeColor(enum Colors colors, bool bold, bool bg) override {
+        raw_ostream& changeColor(enum Colors colors, bool bold,
+                                 bool bg) override {
           if (m_Colorize) {
             if (llvm::sys::Process::ColorNeedsFlush()) flush();
             if (const char* colorcode =
@@ -53,6 +54,7 @@ namespace cling {
         }
         bool has_colors() const override { return m_Colorize; }
         bool is_displayed() const override { return m_Colorize; }
+
       public:
 
         ColoredOutput(std::ostream& OS, bool Unbufferd = true)

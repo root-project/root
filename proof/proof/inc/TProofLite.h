@@ -73,7 +73,7 @@ private:
 
    Int_t CleanupSandbox();
    Int_t CreateSandbox();
-   void FindUniqueSlaves() override;
+   void  FindUniqueSlaves() override;
    void  NotifyStartUp(const char *action, Int_t done, Int_t tot);
    Int_t SetProofServEnv(const char *ord);
    Int_t InitDataSetManager();
@@ -105,40 +105,38 @@ public:
               const char *alias = 0, TProofMgr *mgr = 0);
    ~TProofLite() override;
 
-   void Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
 
-   Long64_t DrawSelect(TDSet *dset, const char *varexp,
-                       const char *selection = "",
-                       Option_t *option = "", Long64_t nentries = -1,
-                       Long64_t firstentry = 0) override;
-   Long64_t Process(TDSet *dset, const char *sel, Option_t *o = "",
-                    Long64_t nent = -1, Long64_t fst = 0) override;
-   Long64_t Process(TFileCollection *fc, const char *sel, Option_t *o = "",
-                    Long64_t nent = -1, Long64_t fst = 0) override
-                    { return TProof::Process(fc, sel, o, nent, fst); }
-   Long64_t Process(const char *dsname, const char *sel, Option_t *o = "",
-                    Long64_t nent = -1, Long64_t fst = 0, TObject *enl = 0) override
-                    { return TProof::Process(dsname, sel, o, nent, fst, enl); }
-   Long64_t Process(const char *sel, Long64_t nent, Option_t *o = "") override
-                    { return TProof::Process(sel, nent, o); }
+   Long64_t DrawSelect(TDSet *dset, const char *varexp, const char *selection = "", Option_t *option = "",
+                       Long64_t nentries = -1, Long64_t firstentry = 0) override;
+   Long64_t Process(TDSet *dset, const char *sel, Option_t *o = "", Long64_t nent = -1, Long64_t fst = 0) override;
+   Long64_t
+   Process(TFileCollection *fc, const char *sel, Option_t *o = "", Long64_t nent = -1, Long64_t fst = 0) override
+   {
+      return TProof::Process(fc, sel, o, nent, fst); }
+   Long64_t Process(const char *dsname, const char *sel, Option_t *o = "", Long64_t nent = -1, Long64_t fst = 0,
+                    TObject *enl = 0) override
+   {
+      return TProof::Process(dsname, sel, o, nent, fst, enl); }
+   Long64_t Process(const char *sel, Long64_t nent, Option_t *o = "") override { return TProof::Process(sel, nent, o); }
    // Process via TSelector
-   Long64_t Process(TDSet *dset, TSelector *sel, Option_t *o = "",
-                    Long64_t nent = -1, Long64_t fst = 0) override
-                    { return TProof::Process(dset, sel, o, nent, fst); }
-   Long64_t Process(TFileCollection *fc, TSelector *sel, Option_t *o = "",
-                    Long64_t nent = -1, Long64_t fst = 0) override
-                    { return TProof::Process(fc, sel, o, nent, fst); }
-   Long64_t Process(const char *dsname, TSelector *sel, Option_t *o = "",
-                    Long64_t nent = -1, Long64_t fst = 0, TObject *enl = 0) override
-                    { return TProof::Process(dsname, sel, o, nent, fst, enl); }
-   Long64_t Process(TSelector* sel, Long64_t nent, Option_t *o = "") override
-                    { return TProof::Process(sel, nent, o); }
+   Long64_t Process(TDSet *dset, TSelector *sel, Option_t *o = "", Long64_t nent = -1, Long64_t fst = 0) override
+   {
+      return TProof::Process(dset, sel, o, nent, fst); }
+   Long64_t
+   Process(TFileCollection *fc, TSelector *sel, Option_t *o = "", Long64_t nent = -1, Long64_t fst = 0) override
+   {
+      return TProof::Process(fc, sel, o, nent, fst); }
+   Long64_t Process(const char *dsname, TSelector *sel, Option_t *o = "", Long64_t nent = -1, Long64_t fst = 0,
+                    TObject *enl = 0) override
+   {
+      return TProof::Process(dsname, sel, o, nent, fst, enl); }
+   Long64_t Process(TSelector *sel, Long64_t nent, Option_t *o = "") override { return TProof::Process(sel, nent, o); }
 
    // Cache management
    void  ShowCache(Bool_t all = kFALSE) override;
    void  ClearCache(const char *file = 0) override;
-   Int_t Load(const char *macro, Bool_t notOnClient = kFALSE, Bool_t uniqueOnly = kTRUE,
-              TList *wrks = 0) override;
+   Int_t Load(const char *macro, Bool_t notOnClient = kFALSE, Bool_t uniqueOnly = kTRUE, TList *wrks = 0) override;
 
    // Data management
    void ShowData() override;
@@ -148,19 +146,19 @@ public:
    Int_t Remove(const char *ref, Bool_t all);
 
    // Dataset handling
-   Bool_t   RegisterDataSet(const char *dsName, TFileCollection *ds, const char *opt = "") override;
-   Bool_t   ExistsDataSet(const char *uri) override;
-   TMap    *GetDataSets(const char *uri = "", const char * = 0) override;
-   void     ShowDataSets(const char *uri = "", const char * = 0) override;
+   Bool_t           RegisterDataSet(const char *dsName, TFileCollection *ds, const char *opt = "") override;
+   Bool_t           ExistsDataSet(const char *uri) override;
+   TMap *           GetDataSets(const char *uri = "", const char * = 0) override;
+   void             ShowDataSets(const char *uri = "", const char * = 0) override;
    TFileCollection *GetDataSet(const char *uri, const char * = 0) override;
-   Int_t    RemoveDataSet(const char *uri, const char * = 0) override;
-   Bool_t   RequestStagingDataSet(const char *dataset) override;
-   Bool_t   CancelStagingDataSet(const char *dataset) override;
+   Int_t            RemoveDataSet(const char *uri, const char * = 0) override;
+   Bool_t           RequestStagingDataSet(const char *dataset) override;
+   Bool_t           CancelStagingDataSet(const char *dataset) override;
    TFileCollection *GetStagingStatusDataSet(const char *dataset) override;
-   Int_t    VerifyDataSet(const char *uri, const char * = 0) override;
-   Int_t    SetDataSetTreeName( const char *dataset, const char *treename) override;
-   void     ShowDataSetCache(const char *dataset = 0) override;
-   void     ClearDataSetCache(const char *dataset = 0) override;
+   Int_t            VerifyDataSet(const char *uri, const char * = 0) override;
+   Int_t            SetDataSetTreeName(const char *dataset, const char *treename) override;
+   void             ShowDataSetCache(const char *dataset = 0) override;
+   void             ClearDataSetCache(const char *dataset = 0) override;
 
    // Browsing
    TTree *GetTreeHeader(TDSet *tdset) override;

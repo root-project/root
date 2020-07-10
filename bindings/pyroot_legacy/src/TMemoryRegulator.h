@@ -26,10 +26,10 @@ namespace PyROOT {
       TMemoryRegulator();
       ~TMemoryRegulator() override;
 
-   // callback for ROOT/CINT
-      void RecursiveRemove( TObject* object ) override;
+      // callback for ROOT/CINT
+      void RecursiveRemove(TObject *object) override;
 
-   // cleanup of all tracked objects
+      // cleanup of all tracked objects
       void ClearProxiedObjects();
 
    // add a python object to the table of managed objects

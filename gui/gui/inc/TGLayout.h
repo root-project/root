@@ -98,8 +98,8 @@ public:
    virtual void SetPadLeft(Int_t v)  {  fPadleft = v; }
    virtual void SetPadRight(Int_t v)  {  fPadright = v; }
 
-   void Print(Option_t* option = "") const override;
-   void ls(Option_t* option = "") const override { Print(option); }
+   void Print(Option_t *option = "") const override;
+   void ls(Option_t *option = "") const override { Print(option); }
 
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
@@ -124,8 +124,8 @@ public:
    TGFrameElement(TGFrame *f, TGLayoutHints *l);
    ~TGFrameElement() override;
 
-   void Print(Option_t* option = "") const override;
-   void ls(Option_t* option = "") const override { Print(option); }
+   void Print(Option_t *option = "") const override;
+   void ls(Option_t *option = "") const override { Print(option); }
 
    ClassDefOverride(TGFrameElement, 0); // Base class used in GUI containers
 };
@@ -178,22 +178,22 @@ protected:
 public:
    TGVerticalLayout(TGCompositeFrame *main);
 
-   void Layout() override;
+   void        Layout() override;
    TGDimension GetDefaultSize() const override;
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDefOverride(TGVerticalLayout,0)  // Vertical layout manager
+   ClassDefOverride(TGVerticalLayout, 0) // Vertical layout manager
 };
 
 class TGHorizontalLayout : public TGVerticalLayout {
 public:
    TGHorizontalLayout(TGCompositeFrame *main) : TGVerticalLayout(main) { }
 
-   void Layout() override;
+   void        Layout() override;
    TGDimension GetDefaultSize() const override;
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDefOverride(TGHorizontalLayout,0)  // Horizontal layout manager
+   ClassDefOverride(TGHorizontalLayout, 0) // Horizontal layout manager
 };
 
 
@@ -212,22 +212,22 @@ public:
    TGRowLayout(TGCompositeFrame *main, Int_t s = 0) :
       TGVerticalLayout(main), fSep(s) { }
 
-   void Layout() override;
+   void        Layout() override;
    TGDimension GetDefaultSize() const override;
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDefOverride(TGRowLayout,0)  // Row layout manager
+   ClassDefOverride(TGRowLayout, 0) // Row layout manager
 };
 
 class TGColumnLayout : public TGRowLayout {
 public:
    TGColumnLayout(TGCompositeFrame *main, Int_t s = 0) : TGRowLayout(main, s) { }
 
-   void Layout() override;
+   void        Layout() override;
    TGDimension GetDefaultSize() const override;
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDefOverride(TGColumnLayout,0)  // Column layout manager
+   ClassDefOverride(TGColumnLayout, 0) // Column layout manager
 };
 
 
@@ -257,11 +257,11 @@ public:
 
    TGMatrixLayout(TGCompositeFrame *main, UInt_t r, UInt_t c, Int_t s=0, Int_t h=0);
 
-   void Layout() override;
+   void        Layout() override;
    TGDimension GetDefaultSize() const override;
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDefOverride(TGMatrixLayout,0)  // Matrix layout manager
+   ClassDefOverride(TGMatrixLayout, 0) // Matrix layout manager
 };
 
 
@@ -289,12 +289,12 @@ protected:
 public:
    TGTileLayout(TGCompositeFrame *main, Int_t sep = 0);
 
-   void Layout() override;
+   void        Layout() override;
    TGDimension GetDefaultSize() const override;
-   Bool_t IsModified() const override { return fModified; }
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   Bool_t      IsModified() const override { return fModified; }
+   void        SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDefOverride(TGTileLayout,0)  // Tile layout manager
+   ClassDefOverride(TGTileLayout, 0) // Tile layout manager
 };
 
 class TGListLayout : public TGTileLayout {
@@ -302,11 +302,11 @@ public:
    TGListLayout(TGCompositeFrame *main, Int_t sep = 0) :
       TGTileLayout(main, sep) { }
 
-   void Layout() override;
+   void        Layout() override;
    TGDimension GetDefaultSize() const override;
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDefOverride(TGListLayout,0)  // Layout manager for TGListView widget
+   ClassDefOverride(TGListLayout, 0) // Layout manager for TGListView widget
 };
 
 class TGListDetailsLayout : public TGTileLayout {
@@ -317,12 +317,12 @@ public:
    TGListDetailsLayout(TGCompositeFrame *main, Int_t sep = 0, UInt_t w = 0) :
       TGTileLayout(main, sep), fWidth(w) { }
 
-   void Layout() override;
+   void        Layout() override;
    TGDimension GetDefaultSize() const override;
-   void SetDefaultWidth(UInt_t w) override { fWidth = w; }
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void        SetDefaultWidth(UInt_t w) override { fWidth = w; }
+   void        SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDefOverride(TGListDetailsLayout,0)  // Layout manager for TGListView details
+   ClassDefOverride(TGListDetailsLayout, 0) // Layout manager for TGListView details
 };
 
 #endif

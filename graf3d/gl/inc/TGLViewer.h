@@ -200,25 +200,25 @@ public:
 
    // Forward to TGLScenePad
    Bool_t CanLoopOnPrimitives() const override { return kTRUE; }
-   void   PadPaint(TVirtualPad* pad) override;
+   void   PadPaint(TVirtualPad *pad) override;
    // Actually used by GL-in-pad
-   Int_t  DistancetoPrimitive(Int_t px, Int_t py) override;
-   void   ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
+   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    // Only implemented because they're abstract ... should throw an
    // exception or assert they are not called.
    Bool_t PreferLocalFrame() const override { return kTRUE; }
    void   BeginScene() override {}
    Bool_t BuildingScene() const override { return kFALSE; }
    void   EndScene() override {}
-   Int_t  AddObject(const TBuffer3D&, Bool_t* = 0) override { return TBuffer3D::kNone; }
-   Int_t  AddObject(UInt_t, const TBuffer3D&, Bool_t* = 0) override { return TBuffer3D::kNone; }
-   Bool_t OpenComposite(const TBuffer3D&, Bool_t* = 0) override { return kFALSE; }
+   Int_t  AddObject(const TBuffer3D &, Bool_t * = 0) override { return TBuffer3D::kNone; }
+   Int_t  AddObject(UInt_t, const TBuffer3D &, Bool_t * = 0) override { return TBuffer3D::kNone; }
+   Bool_t OpenComposite(const TBuffer3D &, Bool_t * = 0) override { return kFALSE; }
    void   CloseComposite() override {}
    void   AddCompositeOp(UInt_t) override {}
 
-   void   PrintObjects() override;
-   void   ResetCameras() override                { SetupCameras(kTRUE); }
-   void   ResetCamerasAfterNextUpdate() override { fResetCamerasOnNextUpdate = kTRUE; }
+   void PrintObjects() override;
+   void ResetCameras() override { SetupCameras(kTRUE); }
+   void ResetCamerasAfterNextUpdate() override { fResetCamerasOnNextUpdate = kTRUE; }
 
    TGLWidget* GetGLWidget() { return fGLWidget; }
 
@@ -384,7 +384,7 @@ public:
    virtual void OverlayDragFinished();
    virtual void RefreshPadEditor(TObject* obj=0);
 
-   void RemoveOverlayElement(TGLOverlayElement* el) override;
+   void RemoveOverlayElement(TGLOverlayElement *el) override;
 
    TGLSelectRecord&    GetSelRec()    { return fSelRec; }
    TGLOvlSelectRecord& GetOvlSelRec() { return fOvlSelRec; }
@@ -414,7 +414,7 @@ public:
       TTimer::Start(milliSec, kTRUE);
    }
    Bool_t IsPending() const { return fPending; }
-   void Stop() override
+   void   Stop() override
    {
       if (fPending) { TurnOff(); fPending = kFALSE; }
    }

@@ -55,7 +55,7 @@ public:
                     Pixel_t back = GetDefaultFrameBackground());
    ~TPaveStatsEditor() override;
 
-   void   SetModel(TObject* obj) override;
+   void           SetModel(TObject *obj) override;
    virtual void   DoStatOptions();
    virtual void   DoFitOptions();
    virtual void   SetValuesON(Bool_t on);

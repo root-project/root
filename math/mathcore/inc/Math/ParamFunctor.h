@@ -71,9 +71,7 @@ public:
    // constructor
    ParamFunctorHandler(const Func & fun) : fFunc(fun) {}
 
-
    ~ParamFunctorHandler() override {}
-
 
    // for 1D functions
    inline EvalType operator() (EvalType x, double *p)  {
@@ -86,19 +84,18 @@ public:
 //    inline double operator() (const double * x, const double *p) const {
 //       return fFunc(x,p);
 //    }
-   inline EvalType operator() (EvalType * x, double *p) override  {
+   inline EvalType operator()(EvalType *x, double *p) override
+   {
       return FuncEvaluator<Func, EvalType>::Eval(fFunc,x,p);
    }
 
-   inline EvalType operator() (const EvalType * x, const double *p) override  {
+   inline EvalType operator()(const EvalType *x, const double *p) override
+   {
       return FuncEvaluator<Func, EvalType>::EvalConst(fFunc,x,p);
    }
 
    // clone (use same pointer)
-   ParamFunctorHandler  * Clone() const override {
-      return new ParamFunctorHandler(fFunc);
-   }
-
+   ParamFunctorHandler *Clone() const override { return new ParamFunctorHandler(fFunc); }
 
 private :
 
@@ -183,9 +180,9 @@ public:
 
    ~ParamMemFunHandler() override {}
 
-//    inline double operator() (double x, const double * p) const {
-//       return ((*fObj).*fMemFn)(x,p);
-//    }
+   //    inline double operator() (double x, const double * p) const {
+   //       return ((*fObj).*fMemFn)(x,p);
+   //    }
 
    inline double operator() (double x, double * p)  {
       return ((*fObj).*fMemFn)(x,p);
@@ -195,18 +192,18 @@ public:
 //       return ((*fObj).*fMemFn)(x,p);
 //    }
 
-   inline double operator() (double * x, double * p) override  {
+   inline double operator()(double *x, double *p) override
+   {
       return MemFuncEvaluator<PointerToObj,PointerToMemFn, double>::Eval(fObj,fMemFn,x,p);
    }
 
-   inline double operator() (const double * x, const double * p) override  {
+   inline double operator()(const double *x, const double *p) override
+   {
       return MemFuncEvaluator<PointerToObj,PointerToMemFn, double>::EvalConst(fObj,fMemFn,x,p);
    }
 
    // clone (use same pointer)
-   ParamMemFunHandler  * Clone() const override {
-      return new ParamMemFunHandler(fObj, fMemFn);
-   }
+   ParamMemFunHandler *Clone() const override { return new ParamMemFunHandler(fObj, fMemFn); }
 
 private:
 

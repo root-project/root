@@ -63,7 +63,7 @@ public:
       ROOT::CallRecursiveRemoveIfNeeded(*this);
    }
 
-   const char       *GetName() const override { return fName; }
+   const char *      GetName() const override { return fName; }
    const AParamType &GetVal() const { return fVal; }
    Bool_t            IsConst() const { return (TestBit(kIsConst) ? kTRUE : kFALSE); }
    void              SetVal(const AParamType &val) { fVal = val; }
@@ -89,9 +89,10 @@ public:
          SetBit(kLast);
       }
    }
-   ULong_t  Hash() const override { return fName.Hash(); }
-   Bool_t   IsSortable() const override { return kTRUE; }
-   Int_t    Compare(const TObject *obj) const override {
+   ULong_t Hash() const override { return fName.Hash(); }
+   Bool_t  IsSortable() const override { return kTRUE; }
+   Int_t   Compare(const TObject *obj) const override
+   {
       // Compare two TParameter objects. Returns 0 when equal, -1 when this is
       // smaller and +1 when bigger (like strcmp).
 
@@ -99,13 +100,15 @@ public:
       return fName.CompareTo(obj->GetName());
    }
 
-   void ls(Option_t *) const override {
+   void ls(Option_t *) const override
+   {
       // Print this parameter content
       TROOT::IndentLevel();
       std::cout << "OBJ: " << IsA()->GetName() << "\t" << fName << " = " << fVal << std::endl;
    }
 
-   void Print(Option_t *) const override {
+   void Print(Option_t *) const override
+   {
       // Print this parameter content
       TROOT::IndentLevel();
       std::cout << IsA()->GetName() << "\t" << fName << " = " << fVal << std::endl;

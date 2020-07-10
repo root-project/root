@@ -60,13 +60,16 @@ public:
    virtual TTree      *GetParentTree() const {return fParentTree;}
    virtual TTree      *GetTree();
    virtual const char *GetTreeName() const {return fTreeName.Data();}
-   void        ls(Option_t *option="") const override;
-           void        Reset() { fTree = nullptr; fFile = nullptr; }
+   void                ls(Option_t *option = "") const override;
+   void                Reset()
+   {
+      fTree = nullptr;
+      fFile = nullptr; }
            Bool_t      IsUpdated() const { return TestBit(kUpdated); }
            void        ResetUpdated() { ResetBit(kUpdated); }
            void        MarkUpdated() { SetBit(kUpdated); }
 
-   ClassDefOverride(TFriendElement, 2) // A friend element of another TTree
+           ClassDefOverride(TFriendElement, 2) // A friend element of another TTree
 };
 
 #endif

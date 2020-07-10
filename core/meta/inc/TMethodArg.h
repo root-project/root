@@ -47,7 +47,7 @@ private:
 
 public:
    TMethodArg(MethodArgInfo_t *info = 0, TFunction *method = 0);
-         ~TMethodArg() override;
+   ~TMethodArg() override;
    const char    *GetDefault() const;
    TFunction     *GetMethod() const { return fMethod; }
    const char    *GetTypeName() const;

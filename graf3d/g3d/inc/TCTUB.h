@@ -32,7 +32,8 @@ protected:
    Float_t fCosLow[3];        // dir cosinus of surface cutting tube at low z
    Float_t fCosHigh[3];       // dir cosinus of surface cutting tube at high z
 
-   void    SetPoints(Double_t *points) const override;
+   void SetPoints(Double_t *points) const override;
+
 public:
    TCTUB();
    TCTUB(const char *name, const char *title, const char *material, Float_t rmin,

@@ -34,25 +34,25 @@ public:
    TImageDump(const char *filename, Int_t type = -111);
    ~TImageDump() override;
 
-   void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
-   void  CellArrayFill(Int_t r, Int_t g, Int_t b) override;
-   void  CellArrayEnd() override;
-   void  Close(Option_t *opt = "") override;
-   void  DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) override;
-   void  DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
-                   Int_t mode, Int_t border, Int_t dark, Int_t light) override;
-   void  DrawPolyMarker(Int_t n, Float_t *x, Float_t *y) override;
-   void  DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override;
-   void  DrawPS(Int_t n, Float_t *xw, Float_t *yw) override;
-   void  DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
-   void  NewPage() override;
-   void  Open(const char *filename, Int_t type = -111) override;
-   void  Text(Double_t x, Double_t y, const char *string) override;
-   void  Text(Double_t x, Double_t y, const wchar_t *string) override;
-   void  SetColor(Float_t r, Float_t g, Float_t b) override;
-   void *GetStream() const override {  return (void*)fImage; }
-   void  SetType(Int_t type = -111) override { fType = type; }
-   Int_t GetType() const override { return fType; }
+   void    CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
+   void    CellArrayFill(Int_t r, Int_t g, Int_t b) override;
+   void    CellArrayEnd() override;
+   void    Close(Option_t *opt = "") override;
+   void    DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override;
+   void    DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t yt, Int_t mode, Int_t border, Int_t dark,
+                     Int_t light) override;
+   void    DrawPolyMarker(Int_t n, Float_t *x, Float_t *y) override;
+   void    DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override;
+   void    DrawPS(Int_t n, Float_t *xw, Float_t *yw) override;
+   void    DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
+   void    NewPage() override;
+   void    Open(const char *filename, Int_t type = -111) override;
+   void    Text(Double_t x, Double_t y, const char *string) override;
+   void    Text(Double_t x, Double_t y, const wchar_t *string) override;
+   void    SetColor(Float_t r, Float_t g, Float_t b) override;
+   void *  GetStream() const override { return (void *)fImage; }
+   void    SetType(Int_t type = -111) override { fType = type; }
+   Int_t   GetType() const override { return fType; }
    TImage *GetImage() const { return fImage; }
 
    ClassDef(TImageDump,0)  // create image in batch mode

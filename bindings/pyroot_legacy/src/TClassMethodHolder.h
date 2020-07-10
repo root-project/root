@@ -14,9 +14,8 @@ namespace PyROOT {
    public:
       using TMethodHolder::TMethodHolder;
 
-      PyCallable* Clone() override { return new TClassMethodHolder( *this ); }
-      PyObject* Call(
-         ObjectProxy*&, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 ) override;
+      PyCallable *Clone() override { return new TClassMethodHolder(*this); }
+      PyObject *  Call(ObjectProxy *&, PyObject *args, PyObject *kwds, TCallContext *ctxt = 0) override;
    };
 
 } // namespace PyROOT

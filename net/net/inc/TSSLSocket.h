@@ -53,7 +53,7 @@ public:
    TSSLSocket(const TSSLSocket &s);
    ~TSSLSocket() override;
 
-   void  Close(Option_t *option="") override;
+   void Close(Option_t *option = "") override;
 
    // Set up the SSL environment for the next instantiation
    static void SetUpSSL(const char *cafile, const char *capath,
@@ -64,16 +64,15 @@ public:
    Int_t Recv(TMessage *&mess) override;
    Int_t RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt = kDefault) override;
    Int_t Send(const TMessage &mess) override;
-   Int_t SendRaw(const void *buffer, Int_t length,
-                 ESendRecvOptions opt = kDefault) override;
+   Int_t SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt = kDefault) override;
 
    // Issue with hidden method :(
-   Int_t Send(Int_t kind) override                                  { return TSocket::Send(kind); }
-   Int_t Send(Int_t status, Int_t kind) override                    { return TSocket::Send(status, kind); }
+   Int_t Send(Int_t kind) override { return TSocket::Send(kind); }
+   Int_t Send(Int_t status, Int_t kind) override { return TSocket::Send(status, kind); }
    Int_t Send(const char *mess, Int_t kind = kMESS_STRING) override { return TSocket::Send(mess, kind); }
-   Int_t Recv(Int_t &status, Int_t &kind) override                  { return TSocket::Recv(status, kind); }
-   Int_t Recv(char *mess, Int_t max) override                       { return TSocket::Recv(mess, max); }
-   Int_t Recv(char *mess, Int_t max, Int_t &kind) override          { return TSocket::Recv(mess, max, kind); }
+   Int_t Recv(Int_t &status, Int_t &kind) override { return TSocket::Recv(status, kind); }
+   Int_t Recv(char *mess, Int_t max) override { return TSocket::Recv(mess, max); }
+   Int_t Recv(char *mess, Int_t max, Int_t &kind) override { return TSocket::Recv(mess, max, kind); }
 
    ClassDef(TSSLSocket,0)  // SSL wrapped socket
 };

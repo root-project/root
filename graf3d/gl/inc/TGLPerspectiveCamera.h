@@ -41,16 +41,15 @@ public:
    Double_t GetFOV() const { return fFOV; }
    void     SetFOV(Double_t fov) { fFOV = fov; }
 
-   void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE) override;
+   void   Setup(const TGLBoundingBox &box, Bool_t reset = kTRUE) override;
    void   Reset() override;
-   Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2) override;
+   Bool_t Zoom(Int_t delta, Bool_t mod1, Bool_t mod2) override;
    using   TGLCamera::Truck;
    Bool_t Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2) override;
-   void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0) const override;
+   void   Apply(const TGLBoundingBox &box, const TGLRect *pickRect = 0) const override;
 
    // External scripting control
-   void Configure(Double_t fov, Double_t dolly, Double_t center[3],
-                          Double_t hRotate, Double_t vRotate) override;
+   void Configure(Double_t fov, Double_t dolly, Double_t center[3], Double_t hRotate, Double_t vRotate) override;
 
    ClassDef(TGLPerspectiveCamera,1) // Camera for perspective view.
 };

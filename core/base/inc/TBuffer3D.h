@@ -59,7 +59,7 @@ public:
              UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
              UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0,
              UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
-    ~TBuffer3D() override;
+   ~TBuffer3D() override;
 
    // Section validity flags
    void   SetSectionsValid(UInt_t mask)     { fSections |= mask & kAll; }

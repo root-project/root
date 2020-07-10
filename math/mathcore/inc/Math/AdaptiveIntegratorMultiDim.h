@@ -112,14 +112,10 @@ public:
     */
    ~AdaptiveIntegratorMultiDim() override {}
 
-
    /**
       evaluate the integral with the previously given function between xmin[] and xmax[]
    */
-   double Integral(const double* xmin, const double * xmax) override {
-      return DoIntegral(xmin,xmax, false);
-   }
-
+   double Integral(const double *xmin, const double *xmax) override { return DoIntegral(xmin, xmax, false); }
 
    /// evaluate the integral passing a new function
    double Integral(const IMultiGenFunction &f, const double* xmin, const double * xmax);
@@ -167,7 +163,7 @@ public:
    void SetMaxPts(unsigned int n) { fMaxPts = n; }
 
    /// set the options
-   void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt) override;
+   void SetOptions(const ROOT::Math::IntegratorMultiDimOptions &opt) override;
 
    ///  get the option used for the integration
    ROOT::Math::IntegratorMultiDimOptions Options() const override;

@@ -31,9 +31,9 @@ public:
    TEveArrowGL();
    ~TEveArrowGL() override {}
 
-   Bool_t SetModel(TObject* obj, const Option_t* opt=0) override;
+   Bool_t SetModel(TObject *obj, const Option_t *opt = 0) override;
    void   SetBBox() override;
-   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   void   DirectDraw(TGLRnrCtx &rnrCtx) const override;
 
    ClassDef(TEveArrowGL, 0); // GL renderer class for TEveArrow.
 };

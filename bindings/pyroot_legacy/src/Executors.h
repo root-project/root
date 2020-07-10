@@ -66,8 +66,7 @@ namespace PyROOT {
    class TCppObjectExecutor : public TExecutor {
    public:
       TCppObjectExecutor( Cppyy::TCppType_t klass ) : fClass( klass ) {}
-      PyObject* Execute(
-         Cppyy::TCppMethod_t, Cppyy::TCppObject_t,TCallContext* ) override;
+      PyObject *Execute(Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext *) override;
 
    protected:
       Cppyy::TCppType_t fClass;
@@ -76,8 +75,7 @@ namespace PyROOT {
    class TCppObjectByValueExecutor : public TCppObjectExecutor {
    public:
       using TCppObjectExecutor::TCppObjectExecutor;
-      PyObject* Execute(
-         Cppyy::TCppMethod_t, Cppyy::TCppObject_t,TCallContext* ) override;
+      PyObject *Execute(Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext *) override;
    };
 
    class TRefExecutor : public TExecutor {
@@ -121,8 +119,7 @@ namespace PyROOT {
    class TCppObjectRefExecutor : public TRefExecutor {
    public:
       TCppObjectRefExecutor( Cppyy::TCppType_t klass ) : fClass( klass ) {}
-      PyObject* Execute(
-         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* ) override;
+      PyObject *Execute(Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext *) override;
 
    protected:
       Cppyy::TCppType_t fClass;
@@ -131,23 +128,20 @@ namespace PyROOT {
    class TCppObjectPtrPtrExecutor : public TCppObjectExecutor {
    public:
       using TCppObjectExecutor::TCppObjectExecutor;
-      PyObject* Execute(
-         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* ) override;
+      PyObject *Execute(Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext *) override;
    };
 
    class TCppObjectPtrRefExecutor : public TCppObjectExecutor {
    public:
       using TCppObjectExecutor::TCppObjectExecutor;
-      PyObject* Execute(
-         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* ) override;
+      PyObject *Execute(Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext *) override;
    };
 
    class TCppObjectArrayExecutor : public TCppObjectExecutor {
    public:
       TCppObjectArrayExecutor( Cppyy::TCppType_t klass, Py_ssize_t array_size )
          : TCppObjectExecutor ( klass ), fArraySize( array_size ) {}
-      PyObject* Execute(
-         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* ) override;
+      PyObject *Execute(Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext *) override;
 
    protected:
       Py_ssize_t fArraySize;
@@ -159,8 +153,7 @@ namespace PyROOT {
       TCppObjectBySmartPtrExecutor( Cppyy::TCppType_t klass, Cppyy::TCppType_t rawPtrType,
          Cppyy::TCppMethod_t deref ) : fClass( klass ), fRawPtrType( rawPtrType ), fDereferencer( deref ) {}
 
-      PyObject* Execute(
-         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* ) override;
+      PyObject *Execute(Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext *) override;
 
    protected:
       Cppyy::TCppType_t   fClass;
@@ -172,8 +165,7 @@ namespace PyROOT {
    public:
       using TCppObjectBySmartPtrExecutor::TCppObjectBySmartPtrExecutor;
 
-      PyObject* Execute(
-         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* ) override;
+      PyObject *Execute(Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext *) override;
    };
 
    class TCppObjectBySmartPtrRefExecutor : public TRefExecutor {
@@ -181,13 +173,12 @@ namespace PyROOT {
      TCppObjectBySmartPtrRefExecutor( Cppyy::TCppType_t klass, Cppyy::TCppType_t rawPtrType,
         Cppyy::TCppMethod_t deref ) : fClass( klass ), fRawPtrType( rawPtrType ), fDereferencer( deref ) {}
 
-      PyObject* Execute(
-         Cppyy::TCppMethod_t, Cppyy::TCppObject_t,TCallContext* ) override;
+     PyObject *Execute(Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext *) override;
 
-   protected:
-      Cppyy::TCppType_t fClass;
-      Cppyy::TCppType_t fRawPtrType;
-      Cppyy::TCppMethod_t fDereferencer;
+  protected:
+     Cppyy::TCppType_t   fClass;
+     Cppyy::TCppType_t   fRawPtrType;
+     Cppyy::TCppMethod_t fDereferencer;
    };
 
 // create executor from fully qualified type

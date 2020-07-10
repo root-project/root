@@ -88,10 +88,10 @@ public:
    void        SetPort(Int_t port) { fPort = port; fUrl = ""; }
    void        SetUrl(const char *url, Bool_t defaultIsFile = kFALSE);
 
-   Bool_t      IsSortable() const override { return kTRUE; }
-   Int_t       Compare(const TObject *obj) const override;
+   Bool_t IsSortable() const override { return kTRUE; }
+   Int_t  Compare(const TObject *obj) const override;
 
-   void        Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
 
    static TObjArray *GetSpecialProtocols();
 

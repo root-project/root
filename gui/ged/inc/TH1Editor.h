@@ -134,8 +134,8 @@ public:
                Pixel_t back = GetDefaultFrameBackground());
    ~TH1Editor() override;
 
-   Bool_t AcceptModel(TObject* model) override;
-   void   SetModel(TObject* obj) override;
+   Bool_t AcceptModel(TObject *model) override;
+   void   SetModel(TObject *obj) override;
 
    virtual void DoTitle(const char *text);
    virtual void DoAddMarker(Bool_t on);
@@ -169,8 +169,7 @@ public:
    virtual void DoCancel();
    virtual void PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
    Int_t* Dividers(Int_t n);
-   void RecursiveRemove(TObject* obj) override;
-
+   void         RecursiveRemove(TObject *obj) override;
 
    ClassDef(TH1Editor,0)  // TH1 editor
 };

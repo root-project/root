@@ -24,7 +24,7 @@ public:
                 Pixel_t back = GetDefaultFrameBackground());
 
    virtual void SetActive(Bool_t active = kTRUE);
-   void Update() override;
+   void         Update() override;
 
    ClassDef(TGeoGedFrame, 0) // Common base-class for geombuilder editors.
 };

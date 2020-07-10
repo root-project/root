@@ -63,7 +63,7 @@ protected:
 public:
    TDataType(TypedefInfo_t *info = 0);
    TDataType(const char *typenam);
-         ~TDataType() override;
+   ~TDataType() override;
    Int_t          Size() const;
    Int_t          GetType() const { return (Int_t)fType; }
    TString        GetTypeName();

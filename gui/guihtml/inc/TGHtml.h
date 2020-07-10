@@ -326,10 +326,10 @@ public:
    ~TGHtmlMarkupElement() override;
 
    const char *MarkupArg(const char *tag, const char *zDefault) override;
-   int  GetAlignment(int dflt) override;
-   int  GetOrderedListType(int dflt) override;
-   int  GetUnorderedListType(int dflt) override;
-   int  GetVerticalAlignment(int dflt) override;
+   int         GetAlignment(int dflt) override;
+   int         GetOrderedListType(int dflt) override;
+   int         GetUnorderedListType(int dflt) override;
+   int         GetVerticalAlignment(int dflt) override;
 
 public://protected:
    char **fArgv;
@@ -1119,7 +1119,7 @@ public:
    virtual void CheckToggled(const char *name, Bool_t on, const char *val); // *SIGNAL*
    virtual void RadioChanged(const char *name, const char *val); // *SIGNAL*
    virtual void InputSelected(const char *name, const char *val);   //*SIGNAL*
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void         SavePrimitive(std::ostream &out, Option_t * = "") override;
 
 protected:
    void UpdateBackgroundStart() override;

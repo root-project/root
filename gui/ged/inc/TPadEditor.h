@@ -59,8 +59,8 @@ public:
               Pixel_t back = GetDefaultFrameBackground());
    ~TPadEditor() override;
 
-   void   SetModel(TObject* obj) override;
-   void   ActivateBaseClassEditors(TClass* cl) override;
+   void SetModel(TObject *obj) override;
+   void ActivateBaseClassEditors(TClass *cl) override;
 
    virtual void   DoEditable(Bool_t on);
    virtual void   DoCrosshair(Bool_t on);

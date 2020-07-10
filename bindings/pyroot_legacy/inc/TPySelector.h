@@ -39,19 +39,19 @@ public:
    TPySelector( TTree* /* tree */ = 0, PyObject* self = 0 );
    ~TPySelector() override;
 
-// TSelector set of forwarded (overridden) methods
+   // TSelector set of forwarded (overridden) methods
    Int_t  Version() const override;
-   Int_t  GetEntry( Long64_t entry, Int_t getall = 0 ) override;
+   Int_t  GetEntry(Long64_t entry, Int_t getall = 0) override;
    Bool_t Notify() override;
 
-   void   Init( TTree* tree ) override;
-   void   Begin( TTree* tree = 0 /* not used */ ) override;
-   void   SlaveBegin( TTree* tree ) override;
-   Bool_t Process( Long64_t entry ) override;
+   void   Init(TTree *tree) override;
+   void   Begin(TTree *tree = 0 /* not used */) override;
+   void   SlaveBegin(TTree *tree) override;
+   Bool_t Process(Long64_t entry) override;
    void   SlaveTerminate() override;
    void   Terminate() override;
 
-   void Abort( const char* why, EAbort what = kAbortProcess ) override;
+   void Abort(const char *why, EAbort what = kAbortProcess) override;
 
    ClassDef( TPySelector, 1 );   //Python equivalent base class for PROOF
 

@@ -58,21 +58,39 @@ public:
 
    TDSetElement *GetNextPacket(TSlave *wrk, TMessage *r) override;
 
-   Int_t    GetEstEntriesProcessed(Float_t f, Long64_t &ent, Long64_t &bytes, Long64_t &calls) override
-                    { if (fCurrent) return fCurrent->GetEstEntriesProcessed(f,ent,bytes,calls);
-                      return 1; }
-   Float_t  GetCurrentRate(Bool_t &all) override { all = kTRUE;
-                                          return (fCurrent? fCurrent->GetCurrentRate(all) : 0.); }
-   void     StopProcess(Bool_t abort, Bool_t stoptimer = kFALSE) override {
-                                        if (fCurrent) fCurrent->StopProcess(abort, stoptimer);
-                                        TVirtualPacketizer::StopProcess(abort, stoptimer); }
-   void     MarkBad(TSlave *wrk, TProofProgressStatus *st, TList **missing) override
-                    { if (fCurrent) fCurrent->MarkBad(wrk, st, missing); return; }
-   Int_t    AddProcessed(TSlave *wrk, TProofProgressStatus *st, Double_t lat, TList **missing) override
-                    { if (fCurrent) return fCurrent->AddProcessed(wrk, st, lat, missing);
-                      return -1; }
+   Int_t GetEstEntriesProcessed(Float_t f, Long64_t &ent, Long64_t &bytes, Long64_t &calls) override
+   {
+      if (fCurrent)
+         return fCurrent->GetEstEntriesProcessed(f, ent, bytes, calls);
+      return 1; }
+   Float_t GetCurrentRate(Bool_t &all) override
+   {
+      all = kTRUE;
+      return (fCurrent ? fCurrent->GetCurrentRate(all) : 0.);
+   }
+   void StopProcess(Bool_t abort, Bool_t stoptimer = kFALSE) override
+   {
+      if (fCurrent)
+         fCurrent->StopProcess(abort, stoptimer);
+      TVirtualPacketizer::StopProcess(abort, stoptimer);
+   }
+   void MarkBad(TSlave *wrk, TProofProgressStatus *st, TList **missing) override
+   {
+      if (fCurrent)
+         fCurrent->MarkBad(wrk, st, missing);
+      return; }
+   Int_t AddProcessed(TSlave *wrk, TProofProgressStatus *st, Double_t lat, TList **missing) override
+   {
+      if (fCurrent)
+         return fCurrent->AddProcessed(wrk, st, lat, missing);
+      return -1; }
 
-   Int_t    GetActiveWorkers() override { if (fCurrent) return fCurrent->GetActiveWorkers(); return 0; }
+   Int_t GetActiveWorkers() override
+   {
+      if (fCurrent)
+         return fCurrent->GetActiveWorkers();
+      return 0;
+   }
 
    ClassDef(TPacketizerMulti,0)  //Generate work packets for parallel processing
 };

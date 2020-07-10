@@ -43,9 +43,9 @@ protected:
 class DemoPluginPragmaHandler : public clang::PragmaHandler {
 public:
   DemoPluginPragmaHandler() : clang::PragmaHandler("demoplugin") { }
-  void HandlePragma(clang::Preprocessor &PP,
+  void HandlePragma(clang::Preprocessor& PP,
                     clang::PragmaIntroducerKind Introducer,
-                    clang::Token &PragmaTok) override {
+                    clang::Token& PragmaTok) override {
     llvm::outs() << "DemoPluginPragmaHandler::HandlePragma\n";
     // Handle the pragma
   }

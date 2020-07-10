@@ -34,12 +34,12 @@ public:
    TRandom3(UInt_t seed=4357);
    ~TRandom3() override;
    // get the current seed (only first element of the seed table)
-    UInt_t    GetSeed() const override { return fMt[0];}
+   UInt_t GetSeed() const override { return fMt[0]; }
    using TRandom::Rndm;
-    Double_t  Rndm( ) override;
-    void      RndmArray(Int_t n, Float_t *array) override;
-    void      RndmArray(Int_t n, Double_t *array) override;
-    void      SetSeed(ULong_t seed=0) override;
+   Double_t Rndm() override;
+   void     RndmArray(Int_t n, Float_t *array) override;
+   void     RndmArray(Int_t n, Double_t *array) override;
+   void     SetSeed(ULong_t seed = 0) override;
 
    ClassDef(TRandom3,2)  //Random number generator: Mersenne Twister
 };

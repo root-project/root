@@ -49,7 +49,7 @@ public:
    ~TEveJetCone() override {}
 
    void    ComputeBBox() override;
-   TClass* ProjectedClass(const TEveProjection* p) const override;
+   TClass *ProjectedClass(const TEveProjection *p) const override;
 
    void  SetApex(const TEveVector& a)      { fApex = a; }
    void  SetCylinder(Float_t r, Float_t z) { fLimits.Set(0, r, z); fThetaC = fLimits.Theta(); }
@@ -89,10 +89,10 @@ public:
    void ComputeBBox() override;
 
    // Projected:
-   void SetProjection(TEveProjectionManager* mng, TEveProjectable* model) override;
+   void SetProjection(TEveProjectionManager *mng, TEveProjectable *model) override;
    void UpdateProjection() override;
 
-   TEveElement* GetProjectedAsElement() override { return this; }
+   TEveElement *GetProjectedAsElement() override { return this; }
 
    ClassDef(TEveJetConeProjected, 0); // Projection of TEveJetCone.
 };

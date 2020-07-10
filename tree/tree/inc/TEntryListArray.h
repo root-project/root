@@ -55,29 +55,24 @@ public:
    TEntryListArray(const TEntryList& elist); // to convert TEL to TELA
    ~TEntryListArray() override;
 
-   void        Add(const TEntryList *elist) override;
+   void                Add(const TEntryList *elist) override;
    virtual Int_t       Contains(Long64_t entry, TTree *tree, Long64_t subentry);
-   Int_t       Contains(Long64_t entry, TTree *tree = 0) override {
-      return TEntryList::Contains(entry, tree);
-   };
+   Int_t               Contains(Long64_t entry, TTree *tree = 0) override { return TEntryList::Contains(entry, tree); };
    virtual Bool_t      Enter(Long64_t entry, TTree *tree, Long64_t subentry);
-   Bool_t      Enter(Long64_t entry, TTree *tree = 0) override {
-      return Enter(entry, tree, -1);
-   };
-//    virtual Bool_t      Enter(Long64_t entry, TTree *tree, const TEntryList *e);
+   Bool_t              Enter(Long64_t entry, TTree *tree = 0) override { return Enter(entry, tree, -1); };
+   //    virtual Bool_t      Enter(Long64_t entry, TTree *tree, const TEntryList *e);
    virtual TEntryListArray* GetSubListForEntry(Long64_t entry, TTree *tree = 0);
-   void        Print(const Option_t* option = "") const override;
+   void                     Print(const Option_t *option = "") const override;
    virtual Bool_t      Remove(Long64_t entry, TTree *tree, Long64_t subentry);
-   Bool_t      Remove(Long64_t entry, TTree *tree = 0) override {
-      return Remove(entry, tree, -1);
-   };
-   void        Reset() override;
+   Bool_t                   Remove(Long64_t entry, TTree *tree = 0) override { return Remove(entry, tree, -1); };
+   void                     Reset() override;
 
-   void        SetTree(const char *treename, const char *filename) override;
-   void        SetTree(const TTree *tree) override {
+   void SetTree(const char *treename, const char *filename) override;
+   void SetTree(const TTree *tree) override
+   {
       TEntryList::SetTree(tree);   // will take treename and filename from the tree and call the method above
    }
-   void        Subtract(const TEntryList *elist) override;
+   void           Subtract(const TEntryList *elist) override;
    virtual TList* GetSubLists() const {
       return fSubLists;
    };

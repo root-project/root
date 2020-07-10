@@ -77,43 +77,43 @@ public:
 
    TList() : fAscending(kTRUE) { }
    TList(TObject *) : fAscending(kTRUE) { } // for backward compatibility, don't use
-             ~TList() override;
-   void      Clear(Option_t *option="") override;
-   void      Delete(Option_t *option="") override;
-   TObject  *FindObject(const char *name) const override;
-   TObject  *FindObject(const TObject *obj) const override;
+   ~TList() override;
+   void       Clear(Option_t *option = "") override;
+   void       Delete(Option_t *option = "") override;
+   TObject *  FindObject(const char *name) const override;
+   TObject *  FindObject(const TObject *obj) const override;
    TIterator *MakeIterator(Bool_t dir = kIterForward) const override;
 
-   void      Add(TObject *obj) override { AddLast(obj); }
+   void              Add(TObject *obj) override { AddLast(obj); }
    virtual void      Add(TObject *obj, Option_t *opt) { AddLast(obj, opt); }
-   void      AddFirst(TObject *obj) override;
+   void              AddFirst(TObject *obj) override;
    virtual void      AddFirst(TObject *obj, Option_t *opt);
-   void      AddLast(TObject *obj) override;
+   void              AddLast(TObject *obj) override;
    virtual void      AddLast(TObject *obj, Option_t *opt);
-   void      AddAt(TObject *obj, Int_t idx) override;
-   void      AddAfter(const TObject *after, TObject *obj) override;
+   void              AddAt(TObject *obj, Int_t idx) override;
+   void              AddAfter(const TObject *after, TObject *obj) override;
    virtual void      AddAfter(TObjLink *after, TObject *obj);
-   void      AddBefore(const TObject *before, TObject *obj) override;
+   void              AddBefore(const TObject *before, TObject *obj) override;
    virtual void      AddBefore(TObjLink *before, TObject *obj);
-   TObject  *Remove(TObject *obj) override;
+   TObject *         Remove(TObject *obj) override;
    virtual TObject  *Remove(TObjLink *lnk);
            TObject  *Remove(const TObjLinkPtr_t &lnk) { return Remove(lnk.get()); }
-   void      RemoveLast() override;
-   void      RecursiveRemove(TObject *obj) override;
+           void      RemoveLast() override;
+           void      RecursiveRemove(TObject *obj) override;
 
-   TObject  *At(Int_t idx) const override;
-   TObject  *After(const TObject *obj) const override;
-   TObject  *Before(const TObject *obj) const override;
-   TObject  *First() const override;
-   virtual TObjLink *FirstLink() const { return fFirst.get(); }
-   TObject **GetObjectRef(const TObject *obj) const override;
-   TObject  *Last() const override;
-   virtual TObjLink *LastLink() const { return fLast.get(); }
+           TObject *         At(Int_t idx) const override;
+           TObject *         After(const TObject *obj) const override;
+           TObject *         Before(const TObject *obj) const override;
+           TObject *         First() const override;
+           virtual TObjLink *FirstLink() const { return fFirst.get(); }
+           TObject **        GetObjectRef(const TObject *obj) const override;
+           TObject *         Last() const override;
+           virtual TObjLink *LastLink() const { return fLast.get(); }
 
-   virtual void      Sort(Bool_t order = kSortAscending);
-   Bool_t            IsAscending() { return fAscending; }
+           virtual void Sort(Bool_t order = kSortAscending);
+           Bool_t       IsAscending() { return fAscending; }
 
-   ClassDefOverride(TList, 5) // Doubly linked list
+           ClassDefOverride(TList, 5) // Doubly linked list
 };
 
 
@@ -174,10 +174,10 @@ private:
 
 public:
    TObjOptLink(TObject *obj, Option_t *opt) : TObjLink(obj), fOption(opt) { }
-   ~TObjOptLink() override { }
-   Option_t        *GetAddOption() const override { return fOption.Data(); }
-   Option_t        *GetOption() const override { return fOption.Data(); }
-   void             SetOption(Option_t *option) override { fOption = option; }
+   ~TObjOptLink() override {}
+   Option_t *GetAddOption() const override { return fOption.Data(); }
+   Option_t *GetOption() const override { return fOption.Data(); }
+   void      SetOption(Option_t *option) override { fOption = option; }
 };
 
 
@@ -214,18 +214,18 @@ protected:
 public:
    TListIter(const TList *l, Bool_t dir = kIterForward);
    TListIter(const TListIter &iter);
-   ~TListIter() override { }
+   ~TListIter() override {}
    TIterator &operator=(const TIterator &rhs) override;
    TListIter &operator=(const TListIter &rhs);
 
    const TCollection *GetCollection() const override { return fList; }
-   Option_t          *GetOption() const override;
+   Option_t *         GetOption() const override;
    void               SetOption(Option_t *option);
-   TObject           *Next() override;
+   TObject *          Next() override;
    void               Reset() override;
    Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const TListIter &aIter) const;
-   TObject           *operator*() const override { return (fCurCursor ? fCurCursor->GetObject() : nullptr); }
+   TObject *          operator*() const override { return (fCurCursor ? fCurCursor->GetObject() : nullptr); }
 
    ClassDefOverride(TListIter, 0) // Linked list iterator
 };

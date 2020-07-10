@@ -44,13 +44,13 @@ protected:
    Double_t **Allocate(Int_t size) override;
    Bool_t CtorAllocate();
 
-   void CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend, Int_t obegin) override;
+   void   CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend, Int_t obegin) override;
    Bool_t CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend, Int_t obegin) override;
-   void FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE) override;
+   void   FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE) override;
 
    void CalcYErrorsSum() const;
    Bool_t DoMerge(const TGraph *tg) override;
-   void SwapPoints(Int_t pos1, Int_t pos2) override;
+   void   SwapPoints(Int_t pos1, Int_t pos2) override;
 
 public:
    enum ESummationModes {
@@ -120,27 +120,27 @@ public:
    ~TGraphMultiErrors() override;
 
    virtual void AddYError(Int_t np, const Double_t *eyL = nullptr, const Double_t *eyH = nullptr);
-   void Apply(TF1 *f) override;
+   void         Apply(TF1 *f) override;
    virtual void BayesDivide(const TH1 *pass, const TH1 *total, Option_t *opt = "");
    void Divide(const TH1 *pass, const TH1 *total, Option_t *opt = "cp");
-   void ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const override;
+   void         ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const override;
    virtual void DeleteYError(Int_t e);
 
-   Double_t GetErrorX(Int_t i) const override;
-   Double_t GetErrorY(Int_t i) const override;
+   Double_t         GetErrorX(Int_t i) const override;
+   Double_t         GetErrorY(Int_t i) const override;
    virtual Double_t GetErrorY(Int_t i, Int_t e) const;
 
-   Double_t GetErrorXlow(Int_t i) const override;
-   Double_t GetErrorXhigh(Int_t i) const override;
-   Double_t GetErrorYlow(Int_t i) const override;
-   Double_t GetErrorYhigh(Int_t i) const override;
+   Double_t         GetErrorXlow(Int_t i) const override;
+   Double_t         GetErrorXhigh(Int_t i) const override;
+   Double_t         GetErrorYlow(Int_t i) const override;
+   Double_t         GetErrorYhigh(Int_t i) const override;
    virtual Double_t GetErrorYlow(Int_t i, Int_t e) const;
    virtual Double_t GetErrorYhigh(Int_t i, Int_t e) const;
 
-   Double_t *GetEXlow() const override { return fExL; }
-   Double_t *GetEXhigh() const override { return fExH; }
-   Double_t *GetEYlow() const override;
-   Double_t *GetEYhigh() const override;
+   Double_t *        GetEXlow() const override { return fExL; }
+   Double_t *        GetEXhigh() const override { return fExH; }
+   Double_t *        GetEYlow() const override;
+   Double_t *        GetEYhigh() const override;
    virtual Double_t *GetEYlow(Int_t e);
    virtual Double_t *GetEYhigh(Int_t e);
 

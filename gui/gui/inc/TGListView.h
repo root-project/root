@@ -101,10 +101,10 @@ public:
 
    virtual void SetViewMode(EListViewMode viewMode);
 
-   void        Activate(Bool_t a) override;
+   void                Activate(Bool_t a) override;
    Bool_t              IsActive() const override { return fActive; }
    TGString           *GetItemName() const { return fItemName; }
-   const char *GetTitle() const override { return fItemName->GetString(); }
+   const char *        GetTitle() const override { return fItemName->GetString(); }
    virtual void        SetTitle(const char *text) { *fItemName = text; }
    void                SetItemName(const char *name) { *fItemName = name; }
    const TGPicture    *GetPicture() const { return fCurrent; }
@@ -121,7 +121,7 @@ public:
    virtual void        SetColumns(Int_t *cpos, Int_t *jmode) { fCpos = cpos; fJmode = jmode; }
    virtual void        SetCheckedEntry(Bool_t check = kTRUE) { fChecked = check; }
 
-   TGDimension GetDefaultSize() const override;
+   TGDimension         GetDefaultSize() const override;
    virtual Int_t       GetSubnameWidth(Int_t idx) const { return fCtw[idx]; }
 
    void DrawCopy(Handle_t id, Int_t x, Int_t y) override;
@@ -164,11 +164,11 @@ public:
    ~TGListView() override;
 
    virtual void   ResizeColumns();
-   void   Layout() override;
+   void                Layout() override;
    virtual void   LayoutHeader(TGFrame *head);
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   Bool_t              ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
    virtual void   ScrollHeader(Int_t pos);
-   void   SetContainer(TGFrame *f) override;
+   void                SetContainer(TGFrame *f) override;
    virtual void   AdjustHeaders() { fJustChanged = kTRUE; LayoutHeader(0); }
    virtual void   SetHeaders(Int_t ncolumns);
    virtual void   SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx);
@@ -178,7 +178,7 @@ public:
    UInt_t         GetNumColumns() { return fNColumns; }
    EListViewMode  GetViewMode() const { return fViewMode; }
    virtual const char *GetHeader(Int_t idx) const;
-   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void   SetIncrements(Int_t hInc, Int_t vInc);
    virtual void   SetDefaultColumnWidth(TGVFileSplitter* splitter);
    TGDimension    GetMaxItemSize() const { return fMaxSize; }
@@ -208,8 +208,8 @@ protected:
    TGListView        *fListView;      // listview which contains this container
    TGLVEntry         *fLastActive;    // last active item
 
-   void ActivateItem(TGFrameElement* el) override;
-   void DeActivateItem(TGFrameElement* el) override;
+   void ActivateItem(TGFrameElement *el) override;
+   void DeActivateItem(TGFrameElement *el) override;
 
 public:
    TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
@@ -232,19 +232,19 @@ public:
    EListViewMode GetViewMode() const { return fViewMode; }
    virtual void  SetColumns(Int_t *cpos, Int_t *jmode);
 
-   TGDimension GetPageDimension() const override;
+   TGDimension         GetPageDimension() const override;
    virtual TGDimension GetMaxItemSize() const;
    virtual Int_t GetMaxSubnameWidth(Int_t idx) const;
    virtual void  SetColHeaders(const char* n1="",const char* n2="",const char* n3="",
                                const char* n4="",const char* n5="",const char* n6="",
                                const char* n7="",const char* n8="",const char* n9="",
                                const char* n10="",const char* n11="",const char* n12="");
-   void LineUp(Bool_t select = kFALSE) override;
-   void LineDown(Bool_t select = kFALSE) override;
-   void LineLeft(Bool_t select = kFALSE) override;
-   void LineRight(Bool_t select = kFALSE) override;
+   void                LineUp(Bool_t select = kFALSE) override;
+   void                LineDown(Bool_t select = kFALSE) override;
+   void                LineLeft(Bool_t select = kFALSE) override;
+   void                LineRight(Bool_t select = kFALSE) override;
 
-   Bool_t HandleButton(Event_t* event) override;
+   Bool_t HandleButton(Event_t *event) override;
    TList *GetSelectedItems();
    TList *GetSelectedEntries();
    Bool_t GetMultipleSelection() const { return fMultiSelect; };
@@ -254,7 +254,7 @@ public:
                               { fListView->SetHeader(s,hmode,cmode,idx); }
    void   SetDefaultHeaders() { fListView->SetDefaultHeaders(); }
    const char *GetHeader(Int_t idx) const { return fListView->GetHeader(idx); }
-   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGLVContainer,0)  // Listview container
 };

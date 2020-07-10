@@ -55,7 +55,7 @@ public:
          UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TEveCaloLegoEditor() override {}
 
-   void SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    // Declare callback/slot methods
    void DoGridColor(Pixel_t color);

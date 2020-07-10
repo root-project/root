@@ -28,7 +28,7 @@ class TControlBar : public TControlBarButton {
 friend class  TControlBarImp;
 
 private:
-   void   Create() override;
+   void           Create() override;
    void           Initialize(Int_t x, Int_t y);
 
 protected:

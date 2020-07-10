@@ -49,9 +49,7 @@ public:
    fNdimPlusOne(), fSizes() {
       TNDArray::Init(ndim, nbins, addOverflow);
    }
-   ~TNDArray() override {
-      delete[] fSizes;
-   }
+   ~TNDArray() override { delete[] fSizes; }
 
    virtual void Init(Int_t ndim, const Int_t* nbins, bool addOverflow = false) {
       // Calculate fSize based on ndim dimensions, nbins for each dimension,
@@ -128,18 +126,18 @@ public:
    fNumData(), fData() {
       fNumData = fSizes[0];
    }
-   ~TNDArrayT() override {
-      delete[] fData;
-   }
+   ~TNDArrayT() override { delete[] fData; }
 
-   void Init(Int_t ndim, const Int_t* nbins, bool addOverflow = false) override {
+   void Init(Int_t ndim, const Int_t *nbins, bool addOverflow = false) override
+   {
       delete[] fData;
       fData = 0;
       TNDArray::Init(ndim, nbins, addOverflow);
       fNumData = fSizes[0];
    }
 
-   void Reset(Option_t* /*option*/ = "") override {
+   void Reset(Option_t * /*option*/ = "") override
+   {
       // Reset the content
 
       // Use placement-new with value initialization:
@@ -171,15 +169,18 @@ public:
       return fData[linidx];
    }
 
-   Double_t AtAsDouble(ULong64_t linidx) const override {
+   Double_t AtAsDouble(ULong64_t linidx) const override
+   {
       if (!fData) return 0.;
       return fData[linidx];
    }
-   void SetAsDouble(ULong64_t linidx, Double_t value) override {
+   void SetAsDouble(ULong64_t linidx, Double_t value) override
+   {
       if (!fData) fData = new T[fNumData]();
       fData[linidx] = (T) value;
    }
-   void AddAt(ULong64_t linidx, Double_t value) override {
+   void AddAt(ULong64_t linidx, Double_t value) override
+   {
       if (!fData) fData = new T[fNumData]();
       fData[linidx] += (T) value;
    }

@@ -109,13 +109,13 @@ public:
    virtual void SetRnrLines(Bool_t x)   { fRnrLines   = x; }
    virtual void SetDepthTest(Bool_t x)  { fDepthTest   = x; }
 
-   void CopyVizParams(const TEveElement* el) override;
-   void WriteVizParams(std::ostream& out, const TString& var) override;
+   void CopyVizParams(const TEveElement *el) override;
+   void WriteVizParams(std::ostream &out, const TString &var) override;
 
-   TClass* ProjectedClass(const TEveProjection* p) const override;
+   TClass *ProjectedClass(const TEveProjection *p) const override;
 
    void ComputeBBox() override;
-   void Paint(Option_t* option="") override;
+   void Paint(Option_t *option = "") override;
 
    ClassDef(TEveStraightLineSet, 0); // Set of straight lines with optional markers along the lines.
 };
@@ -137,9 +137,9 @@ public:
    TEveStraightLineSetProjected();
    ~TEveStraightLineSetProjected() override {}
 
-   void SetProjection(TEveProjectionManager* mng, TEveProjectable* model) override;
-   void UpdateProjection() override;
-   TEveElement* GetProjectedAsElement() override { return this; }
+   void         SetProjection(TEveProjectionManager *mng, TEveProjectable *model) override;
+   void         UpdateProjection() override;
+   TEveElement *GetProjectedAsElement() override { return this; }
 
    ClassDef(TEveStraightLineSetProjected, 0); // Projected copy of a TEveStraightLineSet.
 };

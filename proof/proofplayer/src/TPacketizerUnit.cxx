@@ -75,12 +75,12 @@ public:
    TSlaveStat(TSlave *sl, TList *input);
    ~TSlaveStat() override;
 
-//   void        GetCurrentTime();
+   //   void        GetCurrentTime();
 
    void        UpdatePerformance(Double_t time);
    TProofProgressStatus *AddProcessed(TProofProgressStatus *st) override;
 
-//   ClassDef(TPacketizerUnit::TSlaveStat, 0);
+   //   ClassDef(TPacketizerUnit::TSlaveStat, 0);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

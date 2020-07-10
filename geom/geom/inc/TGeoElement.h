@@ -86,7 +86,7 @@ public:
    Bool_t                   IsDefined() const {return TObject::TestBit(kElemDefined);}
    virtual Bool_t           IsRadioNuclide() const {return kFALSE;}
    Bool_t                   IsUsed() const {return TObject::TestBit(kElemUsed);}
-   void             Print(Option_t *option = "") const override;
+   void                     Print(Option_t *option = "") const override;
    void                     SetDefined(Bool_t flag=kTRUE) {TObject::SetBit(kElemDefined,flag);}
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kElemUsed,flag);}
    static TGeoElementTable *GetElementTable();
@@ -121,7 +121,7 @@ public:
    Int_t                    GetN() const {return fN;}
    Double_t                 GetA() const {return fA;}
    static TGeoIsotope      *FindIsotope(const char *name);
-   void             Print(Option_t *option = "") const override;
+   void                     Print(Option_t *option = "") const override;
 
    ClassDef(TGeoIsotope, 1)              // Isotope class defined by Z,N,A
 };
@@ -175,9 +175,9 @@ public:
    static Int_t             ENDF(Int_t a, Int_t z, Int_t iso) {return 10000*z+10*a+iso;}
 
    // Getters
-   Int_t            ENDFCode()    const override {return fENDFcode;}
-   Double_t         GetSpecificActivity() const override;
-   Bool_t           IsRadioNuclide() const override {return kTRUE;}
+   Int_t                    ENDFCode() const override { return fENDFcode; }
+   Double_t                 GetSpecificActivity() const override;
+   Bool_t                   IsRadioNuclide() const override { return kTRUE; }
    Int_t                    MassNo()      const {return (Int_t)fA;}
    Int_t                    AtomicNo()    const {return fZ;}
    Int_t                    IsoNo()       const {return fIso;}
@@ -200,9 +200,9 @@ public:
    Bool_t                   CheckDecays() const;
    Int_t                    DecayResult(TGeoDecayChannel *dc) const;
    void                     FillPopulation(TObjArray *population, Double_t precision=0.001, Double_t factor=1.);
-   void             Print(Option_t *option = "") const override;
+   void                     Print(Option_t *option = "") const override;
    static TGeoElementRN    *ReadElementRN(const char *record, Int_t &ndecays);
-   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                     SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGeoElementRN, 2)           // radionuclides class
 };
@@ -252,7 +252,7 @@ public:
 
    // Getters
    Int_t                    GetIndex()       const;
-   const char      *GetName()        const override;
+   const char *             GetName() const override;
    UInt_t                   Decay()          const {return fDecay;}
    Double_t                 BranchingRatio() const {return fBranchingRatio;}
    Double_t                 Qvalue()         const {return fQvalue;}
@@ -264,9 +264,9 @@ public:
    void                     SetParent(TGeoElementRN *parent) {fParent = parent;}
    void                     SetDaughter(TGeoElementRN *daughter) {fDaughter = daughter;}
    // Services
-   void             Print(Option_t *opt = " ") const override;
+   void                     Print(Option_t *opt = " ") const override;
    static TGeoDecayChannel *ReadDecay(const char *record);
-   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void             DecayShift(Int_t &dA, Int_t &dZ, Int_t &dI) const ;
 
    ClassDef(TGeoDecayChannel,1)    // Decay channel for Elements
@@ -304,13 +304,13 @@ public:
    TGeoBatemanSol& operator+=(const TGeoBatemanSol& other);
 
    Double_t                 Concentration(Double_t time) const;
-   void             Draw(Option_t *option="") override;
+   void                     Draw(Option_t *option = "") override;
    void                     GetCoeff(Int_t i, Double_t &cn, Double_t &lambda) const {cn=fCoeff[i].cn; lambda=fCoeff[i].lambda;}
    void                     GetRange(Double_t &tmin, Double_t &tmax) const {tmin=fTmin; tmax=fTmax;}
    TGeoElementRN           *GetElement()    const {return fElem;}
    TGeoElementRN           *GetTopElement() const {return fElemTop;}
    Int_t                    GetNcoeff()     const  {return fNcoeff;}
-   void             Print(Option_t *option = "") const override;
+   void                     Print(Option_t *option = "") const override;
    void                     SetRange(Double_t tmin=0., Double_t tmax=0.) {fTmin=tmin; fTmax=tmax;}
    void                     SetFactor(Double_t factor) {fFactor = factor;}
    void                     FindSolution(const TObjArray *array);
@@ -417,7 +417,7 @@ public:
    Int_t                    GetNelements() const {return fNelements;}
    Int_t                    GetNelementsRN() const {return fNelementsRN;}
    void                     ExportElementsRN(const char *filename="");
-   void             Print(Option_t *option = "") const override;
+   void                     Print(Option_t *option = "") const override;
 
    ClassDef(TGeoElementTable,4)              // table of elements
 };

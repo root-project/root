@@ -71,18 +71,18 @@ public :
    TSelVerifyDataSet(TTree *);
    TSelVerifyDataSet();
    ~TSelVerifyDataSet() override {}
-   Int_t   Version() const override {return 1;}
-   void    Begin(TTree *) override { }
-   void    SlaveBegin(TTree *tree) override;
-   void    Init(TTree *) override { }
-   Bool_t  Notify() override { return kTRUE; }
-   Bool_t  Process(Long64_t entry) override;
-   void    SetOption(const char *option) override { fOption = option; }
-   void    SetObject(TObject *obj) override { fObject = obj; }
-   void    SetInputList(TList *input) override {fInput = input;}
-   TList  *GetOutputList() const override { return fOutput; }
-   void    SlaveTerminate() override;
-   void    Terminate() override { }
+   Int_t  Version() const override { return 1; }
+   void   Begin(TTree *) override {}
+   void   SlaveBegin(TTree *tree) override;
+   void   Init(TTree *) override {}
+   Bool_t Notify() override { return kTRUE; }
+   Bool_t Process(Long64_t entry) override;
+   void   SetOption(const char *option) override { fOption = option; }
+   void   SetObject(TObject *obj) override { fObject = obj; }
+   void   SetInputList(TList *input) override { fInput = input; }
+   TList *GetOutputList() const override { return fOutput; }
+   void   SlaveTerminate() override;
+   void   Terminate() override {}
 
    ClassDef(TSelVerifyDataSet,0) //PROOF selector for parallel dataset verification
 };

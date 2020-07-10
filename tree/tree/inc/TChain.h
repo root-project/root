@@ -74,73 +74,83 @@ public:
    virtual Int_t     Add(const char* name, Long64_t nentries = TTree::kMaxEntries);
    virtual Int_t     AddFile(const char* name, Long64_t nentries = TTree::kMaxEntries, const char* tname = "");
    virtual Int_t     AddFileInfoList(TCollection* list, Long64_t nfiles = TTree::kMaxEntries);
-   TFriendElement *AddFriend(const char* chainname, const char* dummy = "") override;
-   TFriendElement *AddFriend(const char* chainname, TFile* dummy) override;
-   TFriendElement *AddFriend(TTree* chain, const char* alias = "", Bool_t warn = kFALSE) override;
-   void      Browse(TBrowser*) override;
+   TFriendElement *  AddFriend(const char *chainname, const char *dummy = "") override;
+   TFriendElement *  AddFriend(const char *chainname, TFile *dummy) override;
+   TFriendElement *  AddFriend(TTree *chain, const char *alias = "", Bool_t warn = kFALSE) override;
+   void              Browse(TBrowser *) override;
    virtual void      CanDeleteRefs(Bool_t flag = kTRUE);
    virtual void      CreatePackets();
-   void      DirectoryAutoAdd(TDirectory *) override;
-   Long64_t  Draw(const char* varexp, const TCut& selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0) override;
-   Long64_t  Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0) override; // *MENU*
-   void      Draw(Option_t* opt) override { Draw(opt, "", "", kMaxEntries, 0); }
-   Int_t     Fill() override { MayNotUse("Fill()"); return -1; }
-   TBranch  *FindBranch(const char* name) override;
-   TLeaf    *FindLeaf(const char* name) override;
-   TBranch  *GetBranch(const char* name) override;
-   Bool_t    GetBranchStatus(const char* branchname) const override;
-   Long64_t  GetCacheSize() const override { return fTree ? fTree->GetCacheSize() : fCacheSize; }
-   Long64_t  GetChainEntryNumber(Long64_t entry) const override;
-   TClusterIterator GetClusterIterator(Long64_t firstentry) override;
-           Int_t     GetNtrees() const { return fNtrees; }
-   Long64_t  GetEntries() const override;
-   Long64_t  GetEntries(const char *sel) override { return TTree::GetEntries(sel); }
-   Int_t     GetEntry(Long64_t entry=0, Int_t getall=0) override;
-   Long64_t  GetEntryNumber(Long64_t entry) const override;
-   Int_t     GetEntryWithIndex(Int_t major, Int_t minor=0) override;
+   void              DirectoryAutoAdd(TDirectory *) override;
+   Long64_t Draw(const char *varexp, const TCut &selection, Option_t *option = "", Long64_t nentries = kMaxEntries,
+                 Long64_t firstentry = 0) override;
+   Long64_t Draw(const char *varexp, const char *selection, Option_t *option = "", Long64_t nentries = kMaxEntries,
+                 Long64_t firstentry = 0) override; // *MENU*
+   void     Draw(Option_t *opt) override { Draw(opt, "", "", kMaxEntries, 0); }
+   Int_t    Fill() override
+   {
+      MayNotUse("Fill()");
+      return -1;
+   }
+   TBranch *         FindBranch(const char *name) override;
+   TLeaf *           FindLeaf(const char *name) override;
+   TBranch *         GetBranch(const char *name) override;
+   Bool_t            GetBranchStatus(const char *branchname) const override;
+   Long64_t          GetCacheSize() const override { return fTree ? fTree->GetCacheSize() : fCacheSize; }
+   Long64_t          GetChainEntryNumber(Long64_t entry) const override;
+   TClusterIterator  GetClusterIterator(Long64_t firstentry) override;
+   Int_t             GetNtrees() const { return fNtrees; }
+   Long64_t          GetEntries() const override;
+   Long64_t          GetEntries(const char *sel) override { return TTree::GetEntries(sel); }
+   Int_t             GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
+   Long64_t          GetEntryNumber(Long64_t entry) const override;
+   Int_t             GetEntryWithIndex(Int_t major, Int_t minor = 0) override;
    TFile            *GetFile() const;
-   TLeaf    *GetLeaf(const char* branchname, const char* leafname) override;
-   TLeaf    *GetLeaf(const char* name) override;
-   TObjArray *GetListOfBranches() override;
+   TLeaf *           GetLeaf(const char *branchname, const char *leafname) override;
+   TLeaf *           GetLeaf(const char *name) override;
+   TObjArray *       GetListOfBranches() override;
    //                Warning, GetListOfFiles returns the list of TChainElements (not the list of files)
    //                see TChain::AddFile to see how to get the corresponding TFile objects
    TObjArray        *GetListOfFiles() const {return fFiles;}
-   TObjArray *GetListOfLeaves() override;
-   const char *GetAlias(const char *aliasName) const override;
-   Double_t  GetMaximum(const char *columname) override;
-   Double_t  GetMinimum(const char *columname) override;
-   Int_t     GetNbranches() override;
-   Long64_t  GetReadEntry() const override;
+   TObjArray *       GetListOfLeaves() override;
+   const char *      GetAlias(const char *aliasName) const override;
+   Double_t          GetMaximum(const char *columname) override;
+   Double_t          GetMinimum(const char *columname) override;
+   Int_t             GetNbranches() override;
+   Long64_t          GetReadEntry() const override;
    TList            *GetStatus() const { return fStatus; }
-   TTree    *GetTree() const override { return fTree; }
-   Int_t     GetTreeNumber() const override { return fTreeNumber; }
-           Long64_t *GetTreeOffset() const { return fTreeOffset; }
-           Int_t     GetTreeOffsetLen() const { return fTreeOffsetLen; }
-   Double_t  GetWeight() const override;
-   Int_t     LoadBaskets(Long64_t maxmemory) override;
-   Long64_t  LoadTree(Long64_t entry) override;
-           void      Lookup(Bool_t force = kFALSE);
+   TTree *           GetTree() const override { return fTree; }
+   Int_t             GetTreeNumber() const override { return fTreeNumber; }
+   Long64_t *        GetTreeOffset() const { return fTreeOffset; }
+   Int_t             GetTreeOffsetLen() const { return fTreeOffsetLen; }
+   Double_t          GetWeight() const override;
+   Int_t             LoadBaskets(Long64_t maxmemory) override;
+   Long64_t          LoadTree(Long64_t entry) override;
+   void              Lookup(Bool_t force = kFALSE);
    virtual void      Loop(Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0); // *MENU*
-   void      ls(Option_t *option="") const override;
+   void              ls(Option_t *option = "") const override;
    virtual Long64_t  Merge(const char *name, Option_t *option = "");
-   Long64_t  Merge(TCollection *list, Option_t *option = "") override;
-   Long64_t  Merge(TCollection *list, TFileMergeInfo *info) override;
+   Long64_t          Merge(TCollection *list, Option_t *option = "") override;
+   Long64_t          Merge(TCollection *list, TFileMergeInfo *info) override;
    virtual Long64_t  Merge(TFile *file, Int_t basketsize, Option_t *option="");
-   void      Print(Option_t *option="") const override;
-   Long64_t  Process(const char *filename, Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0) override; // *MENU*
-   Long64_t  Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0) override;
-   void      RecursiveRemove(TObject *obj) override;
-   void      RemoveFriend(TTree*) override;
-   void      Reset(Option_t *option="") override;
-   void      ResetAfterMerge(TFileMergeInfo *) override;
-   void      ResetBranchAddress(TBranch *) override;
-   void      ResetBranchAddresses() override;
-   void      SavePrimitive (std::ostream &out, Option_t *option="") override;
-   Long64_t  Scan(const char *varexp="", const char *selection="", Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0) override; // *MENU*
+   void              Print(Option_t *option = "") const override;
+   Long64_t          Process(const char *filename, Option_t *option = "", Long64_t nentries = kMaxEntries,
+                             Long64_t firstentry = 0) override; // *MENU*
+   Long64_t          Process(TSelector *selector, Option_t *option = "", Long64_t nentries = kMaxEntries,
+                             Long64_t firstentry = 0) override;
+   void              RecursiveRemove(TObject *obj) override;
+   void              RemoveFriend(TTree *) override;
+   void              Reset(Option_t *option = "") override;
+   void              ResetAfterMerge(TFileMergeInfo *) override;
+   void              ResetBranchAddress(TBranch *) override;
+   void              ResetBranchAddresses() override;
+   void              SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   Long64_t          Scan(const char *varexp = "", const char *selection = "", Option_t *option = "",
+                          Long64_t nentries = kMaxEntries, Long64_t firstentry = 0) override; // *MENU*
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
-   Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0) override;
-   Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr) override;
-   Int_t     SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr) override;
+   Int_t             SetBranchAddress(const char *bname, void *add, TBranch **ptr = 0) override;
+   Int_t SetBranchAddress(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype,
+                          Bool_t isptr) override;
+   Int_t SetBranchAddress(const char *bname, void *add, TClass *realClass, EDataType datatype, Bool_t isptr) override;
    template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
      return TTree::SetBranchAddress<T>(bname, add, ptr);
    }
@@ -152,17 +162,22 @@ public:
    }
 #endif
 
-   void      SetBranchStatus(const char *bname, Bool_t status=1, UInt_t *found=0) override;
-   Int_t     SetCacheSize(Long64_t cacheSize = -1) override;
-   void      SetDirectory(TDirectory *dir) override;
-   void      SetEntryList(TEntryList *elist, Option_t *opt="") override;
+   void              SetBranchStatus(const char *bname, Bool_t status = 1, UInt_t *found = 0) override;
+   Int_t             SetCacheSize(Long64_t cacheSize = -1) override;
+   void              SetDirectory(TDirectory *dir) override;
+   void              SetEntryList(TEntryList *elist, Option_t *opt = "") override;
    virtual void      SetEntryListFile(const char *filename="", Option_t *opt="");
-   void      SetEventList(TEventList *evlist) override;
-   void      SetMakeClass(Int_t make) override { TTree::SetMakeClass(make); if (fTree) fTree->SetMakeClass(make);}
-   void      SetName(const char *name) override;
+   void              SetEventList(TEventList *evlist) override;
+   void              SetMakeClass(Int_t make) override
+   {
+      TTree::SetMakeClass(make);
+      if (fTree)
+         fTree->SetMakeClass(make);
+   }
+   void              SetName(const char *name) override;
    virtual void      SetPacketSize(Int_t size = 100);
    virtual void      SetProof(Bool_t on = kTRUE, Bool_t refresh = kFALSE, Bool_t gettreeheader = kFALSE);
-   void      SetWeight(Double_t w=1, Option_t *option="") override;
+   void              SetWeight(Double_t w = 1, Option_t *option = "") override;
    virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = 0);
 
    ClassDefOverride(TChain, 5) // A chain of TTrees

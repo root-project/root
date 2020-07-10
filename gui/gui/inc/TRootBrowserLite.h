@@ -121,7 +121,7 @@ public:
    TRootBrowserLite(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
    ~TRootBrowserLite() override;
 
-   void Add(TObject *obj, const char *name = 0, Int_t check = -1) override;
+   void         Add(TObject *obj, const char *name = 0, Int_t check = -1) override;
    virtual void AddToBox(TObject *obj, const char *name);
    virtual void AddToTree(TObject *obj, const char *name, Int_t check = -1);
 
@@ -129,36 +129,36 @@ public:
    void CheckObjectItem(TObject *obj, Bool_t check = kFALSE) override;
    void RemoveCheckBox(TObject *obj) override;
 
-   void BrowseObj(TObject *obj) override;             //*SIGNAL*
-   void ExecuteDefaultAction(TObject *obj) override;  //*SIGNAL*
+   void         BrowseObj(TObject *obj) override;            //*SIGNAL*
+   void         ExecuteDefaultAction(TObject *obj) override; //*SIGNAL*
    virtual void DoubleClicked(TObject *obj);         //*SIGNAL*
    virtual void Checked(TObject *obj, Bool_t check); //*SIGNAL*
-   void CloseTabs() override { }
-   void Iconify() override { }
-   void RecursiveRemove(TObject *obj) override;
-   void Refresh(Bool_t force = kFALSE) override;
+   void         CloseTabs() override {}
+   void         Iconify() override {}
+   void         RecursiveRemove(TObject *obj) override;
+   void         Refresh(Bool_t force = kFALSE) override;
    virtual void ResizeBrowser() { }
    virtual void ShowToolBar(Bool_t show = kTRUE);
    virtual void ShowStatusBar(Bool_t show = kTRUE);
-   void Show() override { MapRaised(); }
+   void         Show() override { MapRaised(); }
    virtual void SetDefaults(const char *iconStyle = 0, const char *sortBy = 0);
-   Bool_t HandleKey(Event_t *event) override;
-   void SetStatusText(const char *txt, Int_t col) override;
+   Bool_t       HandleKey(Event_t *event) override;
+   void         SetStatusText(const char *txt, Int_t col) override;
 
    TGListTree      *GetListTree()  const { return fLt; }
    TGFileContainer *GetIconBox()   const;
    TGStatusBar     *GetStatusBar() const { return fStatusBar; }
    TGMenuBar       *GetMenuBar()   const { return  fMenuBar; }
    TGToolBar       *GetToolBar()   const { return fToolBar; }
-   void             SetDrawOption(Option_t *option="") override;
-   Option_t        *GetDrawOption() const override;
+   void             SetDrawOption(Option_t *option = "") override;
+   Option_t *       GetDrawOption() const override;
    void             SetSortMode(Int_t new_mode);
-   TGMainFrame     *GetMainFrame() const override { return (TGMainFrame *)this; }
+   TGMainFrame *    GetMainFrame() const override { return (TGMainFrame *)this; }
 
    // overridden from TGMainFrame
-   void     CloseWindow() override;
-   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
-   void     ReallyDelete() override;
+   void   CloseWindow() override;
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
+   void   ReallyDelete() override;
 
    // auxilary (a la privae) methods
    void     ExecMacro();

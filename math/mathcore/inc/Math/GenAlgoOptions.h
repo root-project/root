@@ -34,7 +34,7 @@ public:
 
    GenAlgoOptions() /* : fExtraOptions(0) */  {}
 
-   ~GenAlgoOptions() override {}// { if (fExtraOptions) delete fExtraOptions; }
+   ~GenAlgoOptions() override {} // { if (fExtraOptions) delete fExtraOptions; }
 
    // use default copy constructor and assignment operator
 
@@ -43,28 +43,28 @@ public:
 
    // methods implementing the  IOptions interface
 
-   IOptions * Clone() const override {
-      return new GenAlgoOptions(*this);
-   }
+   IOptions *Clone() const override { return new GenAlgoOptions(*this); }
 
    // t.b.d need probably to implement in a .cxx file for CINT
 
-
-   bool GetRealValue(const char * name, double & val) const override {
+   bool GetRealValue(const char *name, double &val) const override
+   {
       const double * pval = FindValue(name, fRealOpts);
       if (!pval) return false;
       val = *pval;
       return true;
    }
 
-   bool GetIntValue(const char * name, int & val) const override {
+   bool GetIntValue(const char *name, int &val) const override
+   {
       const int * pval = FindValue(name, fIntOpts);
       if (!pval) return false;
       val = *pval;
       return true;
    }
 
-   bool GetNamedValue(const char * name, std::string & val) const override {
+   bool GetNamedValue(const char *name, std::string &val) const override
+   {
       const std::string * pval = FindValue(name, fNamOpts);
       if (!pval) return false;
       val = *pval;
@@ -72,26 +72,19 @@ public:
    }
 
    /// method wich need to be re-implemented by the derived classes
-   void SetRealValue(const char * name, double val) override  {
-      InsertValue(name, fRealOpts, val);
-   }
+   void SetRealValue(const char *name, double val) override { InsertValue(name, fRealOpts, val); }
 
-   void SetIntValue(const char * name , int val) override {
-      InsertValue(name, fIntOpts, val);
-   }
+   void SetIntValue(const char *name, int val) override { InsertValue(name, fIntOpts, val); }
 
-   void SetNamedValue(const char * name, const char * val) override {
-      InsertValue(name, fNamOpts, std::string(val));
-   }
-
+   void SetNamedValue(const char *name, const char *val) override { InsertValue(name, fNamOpts, std::string(val)); }
 
    /// print options
-   void Print(std::ostream & os = std::cout ) const override {
+   void Print(std::ostream &os = std::cout) const override
+   {
       Print(fNamOpts,os);
       Print(fIntOpts,os);
       Print(fRealOpts,os);
    }
-
 
    // static methods to retrieve the default options
 

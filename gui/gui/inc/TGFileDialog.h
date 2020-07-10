@@ -110,7 +110,7 @@ public:
    ~TGFileDialog() override;
 
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2) override;
-   void CloseWindow() override;
+   void   CloseWindow() override;
 
    ClassDef(TGFileDialog,0)  //File selection dialog
 };

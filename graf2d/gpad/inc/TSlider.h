@@ -35,8 +35,8 @@ public:
    Double_t      GetMinimum() const {return fMinimum;}
    Double_t      GetMaximum() const {return fMaximum;}
    virtual const char *GetMethod() const { return fMethod.Data(); }
-   void  Paint(Option_t *option="") override;
-   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                Paint(Option_t *option = "") override;
+   void                SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void  SetMethod(const char *method) { fMethod=method; } // *MENU*
    void          SetObject(TObject *obj=0) {fObject=obj;}
    virtual void  SetMinimum(Double_t min=0) {fMinimum=min;}

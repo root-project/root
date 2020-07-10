@@ -34,7 +34,7 @@ public:
    TVector2 (Double_t *s);
    TVector2 (Double_t x0, Double_t y0);
    ~TVector2() override;
-                                        // ****** unary operators
+   // ****** unary operators
 
    TVector2&       operator  = (TVector2 const & v);
    TVector2&       operator += (TVector2 const & v);
@@ -101,8 +101,7 @@ public:
                                         // returns phi angle in the interval [-PI,PI)
    static Double_t Phi_mpi_pi(Double_t x);
 
-
-   void Print(Option_t* option="") const override;
+   void Print(Option_t *option = "") const override;
 
    ClassDef(TVector2,3)  // A 2D physics vector
 

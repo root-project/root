@@ -73,12 +73,12 @@ public:
 
    ~TEveCaloViz() override;
 
-   TEveElement* ForwardSelection() override;
-   TEveElement* ForwardEdit() override;
+   TEveElement *ForwardSelection() override;
+   TEveElement *ForwardEdit() override;
 
-   void Paint(Option_t* option="") override;
+   void Paint(Option_t *option = "") override;
 
-   TClass* ProjectedClass(const TEveProjection* p) const override;
+   TClass *        ProjectedClass(const TEveProjection *p) const override;
    virtual Float_t GetValToHeight() const;
    virtual void    CellSelectionChanged() {}
 
@@ -230,13 +230,13 @@ public:
    TEveCalo2D(const char* n="TEveCalo2D", const char* t="");
    ~TEveCalo2D() override;
 
-   void SetProjection(TEveProjectionManager* proj, TEveProjectable* model) override;
+   void SetProjection(TEveProjectionManager *proj, TEveProjectable *model) override;
    void UpdateProjection() override;
    void ComputeBBox() override;
 
    void CellSelectionChanged() override;
 
-   void    SetScaleAbs(Bool_t) override;
+   void SetScaleAbs(Bool_t) override;
 
    Float_t GetValToHeight() const override;
 
@@ -293,9 +293,9 @@ protected:
 
 public:
    TEveCaloLego(TEveCaloData* data=0, const char* n="TEveCaloLego", const char* t="");
-   ~TEveCaloLego() override{}
+   ~TEveCaloLego() override {}
 
-   void ComputeBBox() override;
+   void          ComputeBBox() override;
    virtual void  SetData(TEveCaloData* d);
 
    Color_t  GetFontColor() const { return fFontColor; }

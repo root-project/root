@@ -57,10 +57,10 @@ private:
 
 public:
    TGColorFrame(const TGWindow *p = 0, Pixel_t c = 0, Int_t n = 1);
-   ~TGColorFrame() override { }
+   ~TGColorFrame() override {}
 
-   Bool_t  HandleButton(Event_t *event) override;
-   void    DrawBorder() override;
+   Bool_t HandleButton(Event_t *event) override;
+   void   DrawBorder() override;
 
    void     SetActive(Bool_t in) { fActive = in; gClient->NeedRedraw(this); }
    Pixel_t  GetColor() const { return fColor; }
@@ -157,10 +157,10 @@ public:
    // dummy methods just to remove from context menu
    void SetDown(Bool_t on = kTRUE, Bool_t emit = kFALSE) override { TGButton::SetDown(on, emit); }
    void Rename(const char *title)  { TGTextButton::SetTitle(title); }
-   void SetEnabled(Bool_t e = kTRUE) override {TGButton::SetEnabled(e); }
+   void SetEnabled(Bool_t e = kTRUE) override { TGButton::SetEnabled(e); }
 
    TGDimension GetDefaultSize() const override { return TGDimension(43, 21); }
-   void SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void        SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    virtual void ColorSelected(Pixel_t color = 0)
             { Emit("ColorSelected(Pixel_t)", color ? color : GetColor()); }  //*SIGNAL*

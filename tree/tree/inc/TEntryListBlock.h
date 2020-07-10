@@ -74,11 +74,10 @@ class TEntryListBlock:public TObject
    void    ResetIndices() {fLastIndexQueried = -1, fLastIndexReturned = -1;}
    Int_t   GetType() { return fType; }
    Int_t   GetNPassed();
-   void Print(const Option_t *option = "") const override;
+   void    Print(const Option_t *option = "") const override;
    void    PrintWithShift(Int_t shift) const;
 
    ClassDefOverride(TEntryListBlock, 1) // Used internally in TEntryList to store the entry numbers
-
 };
 
 #endif

@@ -95,7 +95,7 @@ protected:
 
 private:
    TSocket&      operator=(const TSocket &);  // not implemented
-   Option_t     *GetOption() const override { return TObject::GetOption(); }
+   Option_t *    GetOption() const override { return TObject::GetOption(); }
 
 public:
    TSocket(TInetAddress address, const char *service, Int_t tcpwindowsize = -1);

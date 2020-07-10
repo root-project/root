@@ -49,7 +49,7 @@ protected:
 
    virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab
    virtual void    FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const; // Fill the table of cosin
-   void    SetPoints(Double_t *points) const override;
+   void            SetPoints(Double_t *points) const override;
    virtual Bool_t  SetSegsAndPols(TBuffer3D & buffer) const;
 
 public:
@@ -58,7 +58,7 @@ public:
    ~TPCON() override;
 
    virtual void     DefineSection(Int_t secNum, Float_t z, Float_t rmin, Float_t rmax);
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
    const TBuffer3D &GetBuffer3D(Int_t reqSections) const override;
    virtual Int_t    GetNumberOfDivisions () const {if (fNdiv) return fNdiv; else return kDiv;}
    virtual Float_t  GetPhi1() const  {return fPhi1;}
@@ -69,7 +69,7 @@ public:
    virtual Float_t *GetDz() const    {return fDz;}
    virtual Int_t    GetNdiv() const  {return fNdiv;}
    virtual void     SetNumberOfDivisions (Int_t p);
-   void     Sizeof3D() const override;
+   void             Sizeof3D() const override;
 
    ClassDef(TPCON,2)  //PCON shape
 };

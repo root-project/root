@@ -125,16 +125,16 @@ public:
 class TGeoVolumeDialog : public TGeoTreeDialog {
 
 protected:
-   void        BuildListTree() override;
-   void        ConnectSignalsToSlots() override;
+   void BuildListTree() override;
+   void ConnectSignalsToSlots() override;
 
 public:
    TGeoVolumeDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   ~TGeoVolumeDialog() override {;}
+   ~TGeoVolumeDialog() override { ; }
 
    // Slots
-   void        DoClose() override;
-   void        DoItemClick(TGListTreeItem *item, Int_t btn) override;
+   void DoClose() override;
+   void DoItemClick(TGListTreeItem *item, Int_t btn) override;
 
    ClassDef(TGeoVolumeDialog, 0)   // List-Tree based volume dialog
 };
@@ -150,16 +150,16 @@ public:
 class TGeoShapeDialog : public TGeoTreeDialog {
 
 protected:
-   void        BuildListTree() override;
-   void        ConnectSignalsToSlots() override;
+   void BuildListTree() override;
+   void ConnectSignalsToSlots() override;
 
 public:
    TGeoShapeDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   ~TGeoShapeDialog() override {;}
+   ~TGeoShapeDialog() override { ; }
 
    // Slots
-   void        DoClose() override;
-   void        DoItemClick(TGListTreeItem *item, Int_t btn) override;
+   void DoClose() override;
+   void DoItemClick(TGListTreeItem *item, Int_t btn) override;
 
    ClassDef(TGeoShapeDialog, 0)   // List-Tree based shape dialog
 };
@@ -175,16 +175,16 @@ public:
 class TGeoMediumDialog : public TGeoTreeDialog {
 
 protected:
-   void        BuildListTree() override;
-   void        ConnectSignalsToSlots() override;
+   void BuildListTree() override;
+   void ConnectSignalsToSlots() override;
 
 public:
    TGeoMediumDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   ~TGeoMediumDialog() override {;}
+   ~TGeoMediumDialog() override { ; }
 
    // Slots
-   void        DoClose() override;
-   void        DoItemClick(TGListTreeItem *item, Int_t btn) override;
+   void DoClose() override;
+   void DoItemClick(TGListTreeItem *item, Int_t btn) override;
 
    ClassDef(TGeoMediumDialog, 0)   // List-Tree based medium dialog
 };
@@ -200,16 +200,16 @@ public:
 class TGeoMaterialDialog : public TGeoTreeDialog {
 
 protected:
-   void        BuildListTree() override;
-   void        ConnectSignalsToSlots() override;
+   void BuildListTree() override;
+   void ConnectSignalsToSlots() override;
 
 public:
    TGeoMaterialDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   ~TGeoMaterialDialog() override {;}
+   ~TGeoMaterialDialog() override { ; }
 
    // Slots
-   void        DoClose() override;
-   void        DoItemClick(TGListTreeItem *item, Int_t btn) override;
+   void DoClose() override;
+   void DoItemClick(TGListTreeItem *item, Int_t btn) override;
 
    ClassDef(TGeoMaterialDialog, 0)   // List-Tree based material dialog
 };
@@ -225,16 +225,16 @@ public:
 class TGeoMatrixDialog : public TGeoTreeDialog {
 
 protected:
-   void        BuildListTree() override;
-   void        ConnectSignalsToSlots() override;
+   void BuildListTree() override;
+   void ConnectSignalsToSlots() override;
 
 public:
    TGeoMatrixDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   ~TGeoMatrixDialog() override {;}
+   ~TGeoMatrixDialog() override { ; }
 
    // Slots
-   void        DoClose() override;
-   void        DoItemClick(TGListTreeItem *item, Int_t btn) override;
+   void DoClose() override;
+   void DoItemClick(TGListTreeItem *item, Int_t btn) override;
 
    ClassDef(TGeoMatrixDialog, 0)   // List-Tree based matrix dialog
 };
@@ -260,7 +260,7 @@ public:
    TGeoTransientPanel(TGedEditor* ged, const char *name, TObject *obj);
    ~TGeoTransientPanel() override;
 
-   void        CloseWindow() override;
+   void                CloseWindow() override;
    virtual void        DeleteEditors();
 
    TGTab              *GetTab() const {return fTab;}

@@ -28,7 +28,7 @@ public:
       TObject(), fPShape(sh), fViewer(v) {}
    ~TGLPShapeObj() override {}
 
-   const char* GetName() const override { return "Selected"; }
+   const char *GetName() const override { return "Selected"; }
 
 private:
    TGLPShapeObj(const TGLPShapeObj &); // Not implemented

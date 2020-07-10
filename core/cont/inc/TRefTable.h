@@ -67,7 +67,7 @@ public:
    TRefTable(TObject *owner, Int_t size);
    ~TRefTable() override;
    virtual Int_t      Add(Int_t uid, TProcessID* context = 0);
-   void       Clear(Option_t * /*option*/ ="") override;
+   void               Clear(Option_t * /*option*/ = "") override;
    virtual Int_t      Expand(Int_t pid, Int_t newsize);
    virtual void       FillBuffer(TBuffer &b);
    static TRefTable  *GetRefTable();
@@ -79,7 +79,7 @@ public:
    TObjArray         *GetParents() const {return fParents;}
    UInt_t             GetUID() const {return fUID;}
    TProcessID        *GetUIDContext() const {return fUIDContext;}
-   Bool_t     Notify() override;
+   Bool_t             Notify() override;
    virtual void       ReadBuffer(TBuffer &b);
    virtual void       Reset(Option_t * /* option */ ="");
    virtual Int_t      SetParent(const TObject* parent, Int_t branchID);

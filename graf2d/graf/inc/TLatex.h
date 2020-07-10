@@ -105,7 +105,7 @@ public:
       TLatex(Double_t x, Double_t y, const char *text);
       TLatex(const TLatex &text);
       ~TLatex() override;
-      void             Copy(TObject &text) const override;
+      void Copy(TObject &text) const override;
 
       TLatex          *DrawLatex(Double_t x, Double_t y, const char *text);
       TLatex          *DrawLatexNDC(Double_t x, Double_t y, const char *text);
@@ -114,10 +114,10 @@ public:
       Double_t         GetXsize();
       Double_t         GetYsize();
       void             GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle = kFALSE) override;
-      void     Paint(Option_t *option="") override;
+      void             Paint(Option_t *option = "") override;
       virtual void     PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
 
-      void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
+      void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
       virtual void     SetIndiceSize(Double_t factorSize);
       virtual void     SetLimitIndiceSize(Int_t limitFactorSize);
 

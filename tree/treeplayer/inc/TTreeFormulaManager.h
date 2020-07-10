@@ -65,7 +65,11 @@ public:
    virtual void       Add(TTreeFormula*);
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
    virtual Int_t      GetNdata(Bool_t forceLoadDim = kFALSE);
-   Bool_t     Notify() override { UpdateFormulaLeaves(); return kTRUE; }
+   Bool_t             Notify() override
+   {
+      UpdateFormulaLeaves();
+      return kTRUE;
+   }
    virtual void       Remove(TTreeFormula*);
    virtual Bool_t     Sync();
    virtual void       UpdateFormulaLeaves();

@@ -124,7 +124,7 @@ public:
    void             AddAssocObj(TObject *assocobj);
    TList           *GetListOfAssocObjs() const { return fAssocObjList; }
    TObject         *GetAssocObj(Long64_t i, Bool_t isentry = kFALSE);
-   void             Print(Option_t *options="") const override;
+   void             Print(Option_t *options = "") const override;
    Long64_t         GetTDSetOffset() const { return fTDSetOffset; }
    void             SetTDSetOffset(Long64_t offset) { fTDSetOffset = offset; }
    void             SetEntryList(TObject *aList, Long64_t first = -1, Long64_t num = -1);
@@ -213,11 +213,11 @@ public:
    virtual Long64_t      Draw(const char *varexp, const TCut &selection,
                               Option_t *option = "", Long64_t nentries = -1,
                               Long64_t firstentry = 0); // *MENU*
-   void          Draw(Option_t *opt) override { Draw(opt, "", "", -1, 0); }
+   void                  Draw(Option_t *opt) override { Draw(opt, "", "", -1, 0); }
 
    Int_t                 ExportFileList(const char *filepath, Option_t *opt = "");
 
-   void                  Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
 
    void                  SetObjName(const char *objname);
    void                  SetDirectory(const char *dir);

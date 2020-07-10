@@ -97,7 +97,7 @@ public:
 
    void   SetUrl(const char *url) { fSessionUrl = url; }
    // slots
-   void   CloseWindow() override;
+   void CloseWindow() override;
 
    ClassDef(TProofProgressLog,0) //Class implementing a log graphic box
 };

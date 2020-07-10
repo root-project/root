@@ -212,7 +212,7 @@ public:
    void   DrawChars(Drawable_t dst, GContext_t gc, const char *source,
                    Int_t numChars, Int_t x, Int_t y) const;
 
-   void  Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
    void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
    ClassDefOverride(TGFont, 0) // GUI font description
@@ -264,7 +264,7 @@ public:
    Bool_t   ParseFontName(const char *string, FontAttributes_t *fa);
    const char *NameOfFont(TGFont *font);
 
-   void     Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
 
    ClassDefOverride(TGFontPool, 0) // Font pool
 };

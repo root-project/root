@@ -82,7 +82,7 @@ static void ResetTermAtExit()
 class TInterruptHandler : public TSignalHandler {
 public:
    TInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
-   Bool_t  Notify() override;
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

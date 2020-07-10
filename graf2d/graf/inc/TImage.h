@@ -105,7 +105,7 @@ public:
             { TNamed::operator=(img); TAttImage::operator=(img); return *this; }
    TImage(UInt_t /*w*/, UInt_t /*h*/) : TNamed(), TAttImage() { }
 
-   ~TImage() override { }
+   ~TImage() override {}
 
    // Cloning
    TObject *Clone(const char *) const override { return 0; }
@@ -255,7 +255,7 @@ public:
    TImage    &operator+=(const TImage &i) { Append(&i, "+"); return *this; }
    TImage    &operator/=(const TImage &i) { Append(&i, "/"); return *this; }
 
-   void  ls(Option_t *option="") const override;
+   void ls(Option_t *option = "") const override;
 
    ClassDefOverride(TImage, 1) // Abstract image class
 };

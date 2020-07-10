@@ -29,7 +29,7 @@
 
 class TPGON : public TPCON {
 protected:
-   void    FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const override; // Fill the table of cosin
+   void FillTableOfCoSin(Double_t phi, Double_t angstep, Int_t n) const override; // Fill the table of cosin
 
 public:
    TPGON();

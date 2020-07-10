@@ -200,7 +200,7 @@ public:
       if (par) fFunc->SetParameters(par);
    }
 
-   ROOT::Math::IGenFunction *Clone()  const override
+   ROOT::Math::IGenFunction *Clone() const override
    {
       // use default copy constructor
       TF1_EvalWrapper *f =  new TF1_EvalWrapper(*this);

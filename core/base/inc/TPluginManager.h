@@ -172,7 +172,7 @@ public:
       return ExecPluginImpl(params...);
    }
 
-   void        Print(Option_t *opt = "") const override;
+   void Print(Option_t *opt = "") const override;
 
    ClassDefOverride(TPluginHandler, 3) // Handler for plugin libraries
 };

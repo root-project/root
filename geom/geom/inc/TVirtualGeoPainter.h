@@ -106,7 +106,7 @@ public:
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="") = 0;
    virtual void       ModifiedPad(Bool_t update=kFALSE) const = 0;
    virtual void       OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=nullptr, Bool_t last=kFALSE, Bool_t refresh=kFALSE, const char *msg="") = 0;
-   void       Paint(Option_t *option="") override = 0;
+   void                Paint(Option_t *option = "") override = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="", TGeoMatrix* global=nullptr) = 0;
    virtual void       PaintShape(TGeoShape *shape, Option_t *option="") = 0;
    virtual void       PaintOverlap(void *ovlp, Option_t *option="")  = 0;

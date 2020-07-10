@@ -25,7 +25,7 @@ class TConvertClonesArrayToProxy : public TMemberStreamer {
 public:
    TConvertClonesArrayToProxy(TVirtualCollectionProxy *proxy, Bool_t isPointer, Bool_t isPrealloc);
    ~TConvertClonesArrayToProxy() override;
-   void operator()(TBuffer &b, void *pmember, Int_t size=0) override;
+   void operator()(TBuffer &b, void *pmember, Int_t size = 0) override;
 };
 
 class TConvertMapToProxy : public TMemberStreamer {
@@ -36,7 +36,7 @@ class TConvertMapToProxy : public TMemberStreamer {
 
 public:
    TConvertMapToProxy(TClassStreamer *streamer, Bool_t isPointer, Bool_t isPrealloc);
-   void operator()(TBuffer &b, void *pmember, Int_t size=0) override;
+   void   operator()(TBuffer &b, void *pmember, Int_t size = 0) override;
    Bool_t IsValid() { return fCollectionClass != 0; }
 };
 

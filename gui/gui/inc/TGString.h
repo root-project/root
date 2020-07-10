@@ -34,7 +34,7 @@ public:
    TGString(const char *s) : TString(s) { }
    TGString(Int_t number) : TString() { *this += number; }
    TGString(const TGString *s);
-   ~TGString() override { }
+   ~TGString() override {}
 
    Int_t GetLength() const { return Length(); }
    const char  *GetString() const { return Data(); }
@@ -66,9 +66,8 @@ public:
 
    Int_t GetHotChar() const { return fHotChar; }
    Int_t GetHotPos() const { return fHotPos; }
-   void Draw(Drawable_t id, GContext_t gc, Int_t x, Int_t y) override;
-   void DrawWrapped(Drawable_t id, GContext_t gc,
-                            Int_t x, Int_t y, UInt_t w, FontStruct_t font) override;
+   void  Draw(Drawable_t id, GContext_t gc, Int_t x, Int_t y) override;
+   void  DrawWrapped(Drawable_t id, GContext_t gc, Int_t x, Int_t y, UInt_t w, FontStruct_t font) override;
 
    ClassDef(TGHotString,0)  // Graphics string with hot character
 };

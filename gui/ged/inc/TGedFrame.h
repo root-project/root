@@ -79,7 +79,7 @@ public:
    virtual TGVerticalFrame* CreateEditorTabSubFrame(const char* name);
 
    virtual void      Refresh(TObject *model);
-   void      SetDrawOption(Option_t *option="") override;
+   void              SetDrawOption(Option_t *option = "") override;
    virtual Bool_t    AcceptModel(TObject*) { return kTRUE; }
    void              SetModelClass(TClass* mcl)   { fModelClass = mcl; }
    virtual void      SetModel(TObject* obj) = 0;
@@ -106,10 +106,10 @@ public:
                  Pixel_t back = GetDefaultFrameBackground());
    ~TGedNameFrame() override;
 
-   Bool_t   HandleButton(Event_t *event) override;
-   Bool_t   HandleCrossing(Event_t *event) override;
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleCrossing(Event_t *event) override;
 
-   void     SetModel(TObject* obj) override;
+   void SetModel(TObject *obj) override;
 
    ClassDef(TGedNameFrame,0)      //frame showing the selected object name
 };

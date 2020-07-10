@@ -282,7 +282,7 @@ public:
 
    virtual EQueryAction GetWorkers(TList *workers, Int_t &prioritychange,
                                    Bool_t resume = kFALSE);
-   void   HandleException(Int_t sig) override;
+   void                 HandleException(Int_t sig) override;
    virtual Int_t  HandleSocketInput(TMessage *mess, Bool_t all);
    virtual void   HandleSocketInput();
    virtual void   HandleUrgentData();
@@ -294,9 +294,9 @@ public:
    Bool_t         IsParallel() const;
    Bool_t         IsTopMaster() const { return fOrdinal == "0"; }
 
-   void           Run(Bool_t retrn = kFALSE) override;
+   void Run(Bool_t retrn = kFALSE) override;
 
-   void           Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
 
    void           RestartComputeTime();
 
@@ -316,7 +316,7 @@ public:
    virtual void   DisableTimeout() { }
    virtual void   EnableTimeout() { }
 
-   void   Terminate(Int_t status) override;
+   void Terminate(Int_t status) override;
 
    // Log control
    void           LogToMaster(Bool_t on = kTRUE) { fSendLogToMaster = on; }
@@ -352,7 +352,11 @@ private:
 
 public:
    TProofLockPath(const char *path) : TNamed(path,path), fLockId(-1) { }
-   ~TProofLockPath() override { if (IsLocked()) Unlock(); }
+   ~TProofLockPath() override
+   {
+      if (IsLocked())
+         Unlock();
+   }
 
    Int_t         Lock();
    Int_t         Unlock();

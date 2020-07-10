@@ -102,82 +102,82 @@ private:
    void           Constructor();
    void           SetComment(const char *txt = 0)
                      { fComment[0] = 0; if (txt) { strncpy(fComment, txt, 99); fComment[99] = 0; } }
-   void           DoError(Int_t level, const char *location, const char *fmt, va_list va) const override;
-   void           ErrorHandler(int level, const char *location, const char *fmt, va_list ap) const;
-   static void    Init();
-   static void   *Function(void *ptr);
-   static Int_t   XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret);
-   static void    AfterCancel(TThread *th);
-   static void    **GetTls(Int_t k);
+                     void        DoError(Int_t level, const char *location, const char *fmt, va_list va) const override;
+                     void        ErrorHandler(int level, const char *location, const char *fmt, va_list ap) const;
+                     static void Init();
+                     static void * Function(void *ptr);
+                     static Int_t  XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret);
+                     static void   AfterCancel(TThread *th);
+                     static void **GetTls(Int_t k);
 
-   TThread(const TThread&);            // not implemented
-   TThread& operator=(const TThread&); // not implemented
+                     TThread(const TThread &);            // not implemented
+                     TThread &operator=(const TThread &); // not implemented
 
-public:
-   TThread(VoidRtnFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
-   TThread(VoidFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
-   TThread(const char *thname, VoidRtnFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
-   TThread(const char *thname, VoidFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
-   TThread(Long_t id = 0);
-   ~TThread() override;
+                  public:
+                     TThread(VoidRtnFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
+                     TThread(VoidFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
+                     TThread(const char *thname, VoidRtnFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
+                     TThread(const char *thname, VoidFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
+                     TThread(Long_t id = 0);
+                     ~TThread() override;
 
-   Int_t            Kill();
-   Int_t            Run(void *arg = 0);
-   void             SetPriority(EPriority pri);
-   void             Delete(Option_t *option="") override { TObject::Delete(option); }
-   EPriority        GetPriority() const { return fPriority; }
-   EState           GetState() const { return fState; }
-   Long_t           GetId() const { return fId; }
-   static void      Ps();
-   static void      ps() { Ps(); }
+                     Int_t       Kill();
+                     Int_t       Run(void *arg = 0);
+                     void        SetPriority(EPriority pri);
+                     void        Delete(Option_t *option = "") override { TObject::Delete(option); }
+                     EPriority   GetPriority() const { return fPriority; }
+                     EState      GetState() const { return fState; }
+                     Long_t      GetId() const { return fId; }
+                     static void Ps();
+                     static void ps() { Ps(); }
 
-   static void      Initialize();
-   static Bool_t    IsInitialized();
+                     static void   Initialize();
+                     static Bool_t IsInitialized();
 
-   Long_t           Join(void **ret = 0);
-   static Long_t    Join(Long_t id, void **ret = 0);
+                     Long_t        Join(void **ret = 0);
+                     static Long_t Join(Long_t id, void **ret = 0);
 
-   static Int_t     Exit(void *ret = 0);
-   static Int_t     Exists();
-   static TThread  *GetThread(Long_t id);
-   static TThread  *GetThread(const char *name);
+                     static Int_t    Exit(void *ret = 0);
+                     static Int_t    Exists();
+                     static TThread *GetThread(Long_t id);
+                     static TThread *GetThread(const char *name);
 
-   static Int_t     Lock();                  //User's lock of main mutex
-   static Int_t     TryLock();               //User's try lock of main mutex
-   static Int_t     UnLock();                //User's unlock of main mutex
-   static TThread  *Self();
-   static Long_t    SelfId();
-   static Int_t     Sleep(ULong_t secs, ULong_t nanos = 0);
-   static Int_t     GetTime(ULong_t *absSec, ULong_t *absNanoSec);
+                     static Int_t    Lock();    // User's lock of main mutex
+                     static Int_t    TryLock(); // User's try lock of main mutex
+                     static Int_t    UnLock();  // User's unlock of main mutex
+                     static TThread *Self();
+                     static Long_t   SelfId();
+                     static Int_t    Sleep(ULong_t secs, ULong_t nanos = 0);
+                     static Int_t    GetTime(ULong_t *absSec, ULong_t *absNanoSec);
 
-   static Int_t     Delete(TThread *&th);
-   static void    **Tsd(void *dflt, Int_t k);
+                     static Int_t  Delete(TThread *&th);
+                     static void **Tsd(void *dflt, Int_t k);
 
-   // Cancellation
-   // there are two types of TThread cancellation:
-   //    DEFERRED     - Cancellation only in user provided cancel-points
-   //    ASYNCHRONOUS - In any point
-   //    DEFERRED is more safe, it is DEFAULT.
-   static Int_t     SetCancelOn();
-   static Int_t     SetCancelOff();
-   static Int_t     SetCancelAsynchronous();
-   static Int_t     SetCancelDeferred();
-   static Int_t     CancelPoint();
-   static Int_t     Kill(Long_t id);
-   static Int_t     Kill(const char *name);
-   static Int_t     CleanUpPush(void *free, void *arg = 0);
-   static Int_t     CleanUpPop(Int_t exe = 0);
-   static Int_t     CleanUp();
+                     // Cancellation
+                     // there are two types of TThread cancellation:
+                     //    DEFERRED     - Cancellation only in user provided cancel-points
+                     //    ASYNCHRONOUS - In any point
+                     //    DEFERRED is more safe, it is DEFAULT.
+                     static Int_t SetCancelOn();
+                     static Int_t SetCancelOff();
+                     static Int_t SetCancelAsynchronous();
+                     static Int_t SetCancelDeferred();
+                     static Int_t CancelPoint();
+                     static Int_t Kill(Long_t id);
+                     static Int_t Kill(const char *name);
+                     static Int_t CleanUpPush(void *free, void *arg = 0);
+                     static Int_t CleanUpPop(Int_t exe = 0);
+                     static Int_t CleanUp();
 
-   // XActions
-   static void      Printf(const char *fmt, ...)   // format and print
+                     // XActions
+                     static void Printf(const char *fmt, ...) // format and print
 #if defined(__GNUC__) && !defined(__CINT__)
-   __attribute__((format(printf, 1, 2)))
+                        __attribute__((format(printf, 1, 2)))
 #endif
-   ;
+                        ;
    static void      XAction();
 
-   ClassDefOverride(TThread,0)  // Thread class
+   ClassDefOverride(TThread, 0) // Thread class
 };
 
 

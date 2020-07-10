@@ -47,18 +47,18 @@ private:
 public:
    TGLTF3Painter(TF3 *fun, TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
 
-   char   *GetPlotInfo(Int_t px, Int_t py) override;
-   Bool_t  InitGeometry() override;
-   void    StartPan(Int_t px, Int_t py) override;
-   void    Pan(Int_t px, Int_t py) override;
-   void    AddOption(const TString &stringOption) override;
-   void    ProcessEvent(Int_t event, Int_t px, Int_t py) override;
+   char * GetPlotInfo(Int_t px, Int_t py) override;
+   Bool_t InitGeometry() override;
+   void   StartPan(Int_t px, Int_t py) override;
+   void   Pan(Int_t px, Int_t py) override;
+   void   AddOption(const TString &stringOption) override;
+   void   ProcessEvent(Int_t event, Int_t px, Int_t py) override;
 
 private:
-   void    InitGL()const override;
-   void    DeInitGL()const override;
+   void InitGL() const override;
+   void DeInitGL() const override;
 
-   void    DrawPlot()const override;
+   void DrawPlot() const override;
    //
    void    DrawToSelectionBuffer()const;
    void    DrawDefaultPlot()const;
@@ -68,9 +68,9 @@ private:
    void    SetSurfaceColor()const;
    Bool_t  HasSections()const;
 
-   void    DrawSectionXOZ()const override;
-   void    DrawSectionYOZ()const override;
-   void    DrawSectionXOY()const override;
+   void DrawSectionXOZ() const override;
+   void DrawSectionYOZ() const override;
+   void DrawSectionXOY() const override;
 
    ClassDef(TGLTF3Painter, 0) // GL TF3 painter.
 };
@@ -113,22 +113,22 @@ public:
    TGLIsoPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
 
    //TGLPlotPainter final-overriders.
-   char    *GetPlotInfo(Int_t px, Int_t py) override;
-   Bool_t   InitGeometry() override;
-   void     StartPan(Int_t px, Int_t py) override;
-   void     Pan(Int_t px, Int_t py) override;
-   void     AddOption(const TString &option) override;
-   void     ProcessEvent(Int_t event, Int_t px, Int_t py) override;
+   char * GetPlotInfo(Int_t px, Int_t py) override;
+   Bool_t InitGeometry() override;
+   void   StartPan(Int_t px, Int_t py) override;
+   void   Pan(Int_t px, Int_t py) override;
+   void   AddOption(const TString &option) override;
+   void   ProcessEvent(Int_t event, Int_t px, Int_t py) override;
 
 private:
    //TGLPlotPainter final-overriders.
-   void     InitGL()const override;
-   void     DeInitGL()const override;
+   void InitGL() const override;
+   void DeInitGL() const override;
 
-   void     DrawPlot()const override;
-   void     DrawSectionXOZ()const override;
-   void     DrawSectionYOZ()const override;
-   void     DrawSectionXOY()const override;
+   void DrawPlot() const override;
+   void DrawSectionXOZ() const override;
+   void DrawSectionYOZ() const override;
+   void DrawSectionXOY() const override;
    //Auxiliary methods.
    Bool_t   HasSections()const;
    void     SetSurfaceColor(Int_t ind)const;

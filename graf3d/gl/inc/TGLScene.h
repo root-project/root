@@ -148,28 +148,27 @@ public:
 
    void CalcBoundingBox() const override;
 
-   TSceneInfo* CreateSceneInfo(TGLViewerBase* view) override;
-   void        RebuildSceneInfo(TGLRnrCtx& rnrCtx) override;
-   void        UpdateSceneInfo(TGLRnrCtx& rnrCtx) override;
-   void        LodifySceneInfo(TGLRnrCtx& rnrCtx) override;
-
+   TSceneInfo *CreateSceneInfo(TGLViewerBase *view) override;
+   void        RebuildSceneInfo(TGLRnrCtx &rnrCtx) override;
+   void        UpdateSceneInfo(TGLRnrCtx &rnrCtx) override;
+   void        LodifySceneInfo(TGLRnrCtx &rnrCtx) override;
 
    // Rendering
-   void PreDraw        (TGLRnrCtx& rnrCtx) override;
+   void PreDraw(TGLRnrCtx &rnrCtx) override;
    // virtual void PreRender   (TGLRnrCtx& rnrCtx);
    // virtual void Render      (TGLRnrCtx& rnrCtx);
-   void RenderOpaque   (TGLRnrCtx& rnrCtx) override;
-   void RenderTransp   (TGLRnrCtx& rnrCtx) override;
-   void RenderSelOpaque(TGLRnrCtx& rnrCtx) override;
-   void RenderSelTransp(TGLRnrCtx& rnrCtx) override;
-   void RenderSelOpaqueForHighlight(TGLRnrCtx& rnrCtx) override;
-   void RenderSelTranspForHighlight(TGLRnrCtx& rnrCtx) override;
+   void RenderOpaque(TGLRnrCtx &rnrCtx) override;
+   void RenderTransp(TGLRnrCtx &rnrCtx) override;
+   void RenderSelOpaque(TGLRnrCtx &rnrCtx) override;
+   void RenderSelTransp(TGLRnrCtx &rnrCtx) override;
+   void RenderSelOpaqueForHighlight(TGLRnrCtx &rnrCtx) override;
+   void RenderSelTranspForHighlight(TGLRnrCtx &rnrCtx) override;
 
    virtual void RenderHighlight(TGLRnrCtx&           rnrCtx,
                                 DrawElementPtrVec_t& elVec);
 
    // virtual void PostRender(TGLRnrCtx& rnrCtx);
-   void PostDraw       (TGLRnrCtx& rnrCtx) override;
+   void PostDraw(TGLRnrCtx &rnrCtx) override;
 
    virtual void RenderAllPasses(TGLRnrCtx&           rnrCtx,
                                 DrawElementPtrVec_t& elVec,
@@ -182,13 +181,13 @@ public:
                                 const TGLPlaneSet_t* clipPlanes = 0);
 
    // Selection
-   Bool_t ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx) override;
+   Bool_t ResolveSelectRecord(TGLSelectRecord &rec, Int_t curIdx) override;
 
    // Basic logical shape management
    virtual void              AdoptLogical(TGLLogicalShape& shape);
    virtual Bool_t            DestroyLogical(TObject* logid, Bool_t mustFind=kTRUE);
    virtual Int_t             DestroyLogicals();
-   TGLLogicalShape*  FindLogical(TObject* logid)  const override;
+   TGLLogicalShape *         FindLogical(TObject *logid) const override;
 
    // Basic physical shape management
    virtual void              AdoptPhysical(TGLPhysicalShape& shape);

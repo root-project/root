@@ -171,11 +171,16 @@ public:
 
    void Add(const TVectorT<Element> &v);
    void Add(const TVectorT<Element> &v1, const TVectorT<Element> &v2);
-   void Clear(Option_t * /*option*/ ="") override { if (fIsOwner) Delete_m(fNrows,fElements);
-                                           else fElements = 0;
-                                           fNrows = 0; }
-   void Draw (Option_t *option="") override; // *MENU*
-   void Print(Option_t *option="") const override;  // *MENU*
+   void Clear(Option_t * /*option*/ = "") override
+   {
+      if (fIsOwner)
+         Delete_m(fNrows, fElements);
+      else
+         fElements = 0;
+      fNrows = 0;
+   }
+   void Draw(Option_t *option = "") override;        // *MENU*
+   void Print(Option_t *option = "") const override; // *MENU*
 
    ClassDefOverride(TVectorT, 4) // Template of Vector class
 };

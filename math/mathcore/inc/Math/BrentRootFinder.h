@@ -70,7 +70,6 @@ namespace Math {
       /** Default Destructor. */
       ~BrentRootFinder() override {}
 
-
       /** Set function to solve and the interval in where to look for the root.
 
           \@param f Function to be minimized.
@@ -78,8 +77,7 @@ namespace Math {
           \@param xup Upper bound of the search interval.
       */
       using IRootFinderMethod::SetFunction;
-      bool SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup) override;
-
+      bool SetFunction(const ROOT::Math::IGenFunction &f, double xlow, double xup) override;
 
       /** Returns the X value corresponding to the function value fy for (xmin<x<xmax).
           Method:
@@ -115,7 +113,7 @@ namespace Math {
       int Iterations() const override { return fNIter; }
 
       /** Return name of root finder algorithm ("BrentRootFinder"). */
-      const char* Name() const override;
+      const char *Name() const override;
 
       // static function used to modify the default parameters
 

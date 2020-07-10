@@ -28,7 +28,7 @@ public:
 protected:
 
    // Some hack to avoid const-ness
-   TGenCollectionProxy* InitializeEx(Bool_t silent) override;
+   TGenCollectionProxy *InitializeEx(Bool_t silent) override;
 
    // Object input streamer
    void ReadItems(int nElements, TBuffer &b);
@@ -47,7 +47,7 @@ private:
 
 public:
    // Virtual copy constructor
-   TVirtualCollectionProxy* Generate() const override;
+   TVirtualCollectionProxy *Generate() const override;
 
    // Copy constructor
    TEmulatedCollectionProxy(const TEmulatedCollectionProxy& copy);
@@ -59,25 +59,25 @@ public:
    ~TEmulatedCollectionProxy() override;
 
    // Virtual constructor
-   void* New()   const override             {  return new Cont_t;         }
+   void *New() const override { return new Cont_t; }
 
    // Virtual in-place constructor
-   void* New(void* memory)   const override {  return new(memory) Cont_t; }
+   void *New(void *memory) const override { return new (memory) Cont_t; }
 
    // Virtual array constructor
-   void* NewArray(Int_t nElements)   const override             {  return new Cont_t[nElements];         }
+   void *NewArray(Int_t nElements) const override { return new Cont_t[nElements]; }
 
    // Virtual in-place constructor
-   void* NewArray(Int_t nElements, void* memory)   const override {  return new(memory) Cont_t[nElements]; }
+   void *NewArray(Int_t nElements, void *memory) const override { return new (memory) Cont_t[nElements]; }
 
    // Virtual destructor
-   void  Destructor(void* p, Bool_t dtorOnly = kFALSE) const override;
+   void Destructor(void *p, Bool_t dtorOnly = kFALSE) const override;
 
    // Virtual array destructor
-   void  DeleteArray(void* p, Bool_t dtorOnly = kFALSE) const override;
+   void DeleteArray(void *p, Bool_t dtorOnly = kFALSE) const override;
 
    // TVirtualCollectionProxy overload: Return the sizeof the collection object.
-   UInt_t Sizeof() const override           {  return sizeof(Cont_t);     }
+   UInt_t Sizeof() const override { return sizeof(Cont_t); }
 
    // Return the address of the value at index 'idx'
    void *At(UInt_t idx) override;
@@ -92,14 +92,14 @@ public:
    UInt_t Size() const override;
 
    // Block allocation of containees
-   void* Allocate(UInt_t n, Bool_t forceDelete) override;
+   void *Allocate(UInt_t n, Bool_t forceDelete) override;
 
    // Block commit of containees
-   void Commit(void* env) override;
+   void Commit(void *env) override;
 
    // Insert data into the container where data is a C-style array of the actual type contained in the collection
    // of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
-   void  Insert(const void *data, void *container, size_t size) override;
+   void Insert(const void *data, void *container, size_t size) override;
 
    // Read portion of the streamer
    void ReadBuffer(TBuffer &buff, void *pObj) override;
@@ -109,9 +109,7 @@ public:
    void Streamer(TBuffer &refBuffer) override;
 
    // Streamer I/O overload
-   void Streamer(TBuffer &buff, void *pObj, int siz) override {
-      TGenCollectionProxy::Streamer(buff,pObj,siz);
-   }
+   void Streamer(TBuffer &buff, void *pObj, int siz) override { TGenCollectionProxy::Streamer(buff, pObj, siz); }
 
    // Check validity of the proxy itself
    Bool_t IsValid() const;

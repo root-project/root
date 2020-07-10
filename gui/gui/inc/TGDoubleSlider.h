@@ -107,7 +107,7 @@ public:
                   Bool_t reversed = kFALSE,
                   Bool_t mark_ends = kFALSE);
 
-   ~TGDoubleSlider() override { }
+   ~TGDoubleSlider() override {}
 
    Bool_t HandleButton(Event_t *event) override = 0;
    Bool_t HandleMotion(Event_t *event) override = 0;
@@ -141,7 +141,7 @@ public:
       else { *min = fSmin; *max = fSmax; }
    }
 
-   void  MapSubwindows() override { TGWindow::MapSubwindows(); }
+   void MapSubwindows() override { TGWindow::MapSubwindows(); }
 
    virtual void  PositionChanged() { Emit("PositionChanged()"); } //*SIGNAL*
    virtual void  Pressed() { Emit("Pressed()"); }                 //*SIGNAL*
@@ -167,11 +167,10 @@ public:
 
    ~TGDoubleVSlider() override;
 
-   Bool_t HandleButton(Event_t *event) override;
-   Bool_t HandleMotion(Event_t *event) override;
-   TGDimension GetDefaultSize() const override
-                     { return TGDimension(kDoubleSliderWidth, fHeight); }
-   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   Bool_t      HandleButton(Event_t *event) override;
+   Bool_t      HandleMotion(Event_t *event) override;
+   TGDimension GetDefaultSize() const override { return TGDimension(kDoubleSliderWidth, fHeight); }
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGDoubleVSlider,0)  // Vertical double slider widget
 };
@@ -193,11 +192,10 @@ public:
 
    ~TGDoubleHSlider() override;
 
-   Bool_t HandleButton(Event_t *event) override;
-   Bool_t HandleMotion(Event_t *event) override;
-   TGDimension GetDefaultSize() const override
-                     { return TGDimension(fWidth, kDoubleSliderHeight); }
-   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   Bool_t      HandleButton(Event_t *event) override;
+   Bool_t      HandleMotion(Event_t *event) override;
+   TGDimension GetDefaultSize() const override { return TGDimension(fWidth, kDoubleSliderHeight); }
+   void        SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDef(TGDoubleHSlider,0)  // Horizontal double slider widget
 };

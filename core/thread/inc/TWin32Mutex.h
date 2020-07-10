@@ -42,9 +42,9 @@ public:
    TWin32Mutex(Bool_t recursive=kFALSE);
    ~TWin32Mutex() override;
 
-   Int_t  Lock() override;
-   Int_t  UnLock() override;
-   Int_t  TryLock() override;
+   Int_t Lock() override;
+   Int_t UnLock() override;
+   Int_t TryLock() override;
 
    ClassDef(TWin32Mutex,0)  // Win32 mutex lock
 };

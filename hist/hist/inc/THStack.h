@@ -60,9 +60,9 @@ public:
    THStack(const THStack &hstack);
    ~THStack() override;
    virtual void     Add(TH1 *h, Option_t *option="");
-   void     Browse(TBrowser *b) override;
-   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
-   void     Draw(Option_t *chopt="") override;
+   void             Browse(TBrowser *b) override;
+   Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
+   void             Draw(Option_t *chopt = "") override;
    TH1             *GetHistogram() const;
    TList           *GetHists()  const { return fHists; }
    TIter            begin() const;
@@ -73,13 +73,13 @@ public:
    virtual Double_t GetMinimum(Option_t *option="");
    TAxis           *GetXaxis() const;
    TAxis           *GetYaxis() const;
-   void     ls(Option_t *option="") const override;
+   void             ls(Option_t *option = "") const override;
    virtual Long64_t Merge(TCollection* li, TFileMergeInfo *info);
    virtual void     Modified();
-   void     Paint(Option_t *chopt="") override;
-   void     Print(Option_t *chopt="") const override;
-   void     RecursiveRemove(TObject *obj) override;
-   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void             Paint(Option_t *chopt = "") override;
+   void             Print(Option_t *chopt = "") const override;
+   void             RecursiveRemove(TObject *obj) override;
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetHistogram(TH1 *h) {fHistogram = h;}
    virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*

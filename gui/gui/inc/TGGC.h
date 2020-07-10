@@ -102,7 +102,7 @@ public:
    const char       *GetDashes() const { return fValues.fDashes; }
    Int_t             GetArcMode() const { return fValues.fArcMode; }
 
-   void Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDefOverride(TGGC, 0) // Graphics context
@@ -138,7 +138,7 @@ public:
    TGGC *FindGC(const TGGC *gc);
    TGGC *FindGC(GContext_t gc);
 
-   void  Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
 
    ClassDefOverride(TGGCPool, 0) // Graphics context pool
 };

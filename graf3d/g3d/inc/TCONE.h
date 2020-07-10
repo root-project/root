@@ -31,7 +31,8 @@ protected:
    Float_t fRmin2;        // inside radius at the high z limit
    Float_t fRmax2;        // outside radius at the high z limit
 
-   void    SetPoints(Double_t *points) const override;
+   void SetPoints(Double_t *points) const override;
+
 public:
    TCONE();
    TCONE(const char *name, const char *title, const char *material, Float_t dz, Float_t rmin1, Float_t rmax1,

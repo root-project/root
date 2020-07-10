@@ -44,26 +44,26 @@ class  FTGL_EXPORT FTGLTextureFont : public FTFont
          * @param res       the resolution of the target device.
          * @return          <code>true</code> if size was set correctly
          */
-        bool FaceSize( const unsigned int size, const unsigned int res = 72) override;
+        bool FaceSize(const unsigned int size, const unsigned int res = 72) override;
 
-         /**
+        /**
          * Prepare for rendering
          */
         void PreRender() override;
 
-         /**
+        /**
          * Cleanup after rendering
          */
         void PostRender() override;
 
-    private:
+     private:
         /**
          * Construct a FTTextureGlyph.
          *
          * @param glyphIndex The glyph index NOT the char code.
          * @return  An FTTextureGlyph or <code>null</code> on failure.
          */
-        inline FTGlyph* MakeGlyph( unsigned int glyphIndex) override;
+        inline FTGlyph *MakeGlyph(unsigned int glyphIndex) override;
 
         /**
          * Get the size of a block of memory required to layout the glyphs

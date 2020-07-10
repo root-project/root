@@ -43,17 +43,17 @@ public:
    ~TMacro() override;
    TMacro& operator=(const TMacro&);
    virtual TObjString  *AddLine(const char *text);
-   void         Browse(TBrowser *b) override;
+   void                 Browse(TBrowser *b) override;
    virtual TMD5        *Checksum();
    virtual TObjString  *GetLineWith(const char *text) const;
    virtual Bool_t       Load() const; //*MENU*
    virtual Long_t       Exec(const char *params = 0, Int_t* error = 0); //*MENU*
    TList               *GetListOfLines() const {return fLines;}
-   void         Paint(Option_t *option="") override;
-   void         Print(Option_t *option="") const override;  //*MENU*
+   void                 Paint(Option_t *option = "") override;
+   void                 Print(Option_t *option = "") const override; //*MENU*
    virtual Int_t        ReadFile(const char *filename);
    virtual void         SaveSource(const char *filename);  //*MENU*
-   void         SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                 SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void         SetParams(const char *params=0); //*MENU*
 
    ClassDefOverride(TMacro, 1) // Class supporting a collection of lines with C++ code.

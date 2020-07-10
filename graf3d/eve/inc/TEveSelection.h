@@ -67,11 +67,11 @@ public:
    Bool_t GetIsMaster()       const { return fIsMaster; }
    void   SetIsMaster(Bool_t m)     { fIsMaster = m; }
 
-   Bool_t AcceptElement(TEveElement* el) override;
+   Bool_t AcceptElement(TEveElement *el) override;
 
-   void AddElement(TEveElement* el) override;
-   void RemoveElement(TEveElement* el) override;
-   void RemoveElementLocal(TEveElement* el) override;
+   void AddElement(TEveElement *el) override;
+   void RemoveElement(TEveElement *el) override;
+   void RemoveElementLocal(TEveElement *el) override;
    void RemoveElements() override;
    void RemoveElementsLocal() override;
 
