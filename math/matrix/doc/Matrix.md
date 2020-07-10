@@ -311,7 +311,7 @@ The matrix/vector operations are classified according to BLAS (basic linear alge
       <td>Wise sum</td>
       <td>A+=B<br>Add (A,alpha,B)
 <br>TMatrixD(A,TMatrixD::kPlus,B)</td>
-      <td>A = A + &alpha; B constructor</td>
+      <td>A = A + &alpha; B constructor</td>
     </tr>
         <tr>
       <td>Element wise substraction</td>
