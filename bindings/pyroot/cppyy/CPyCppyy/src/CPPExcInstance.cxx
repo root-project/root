@@ -150,6 +150,77 @@ static PyObject* ep_richcompare(CPPExcInstance* self, PyObject* other, int op)
     return PyObject_RichCompare(self->fCppInstance, other, op);
 }
 
+//----------------------------------------------------------------------------
+static int ep_nonzero(CPPExcInstance* self)
+{
+   if (self->fCppInstance)
+      return PyObject_IsTrue(self->fCppInstance);
+
+   return 0;
+}
+
+//-----------------------------------------------------------------------------
+static PyNumberMethods ep_as_number = {
+    0,                             // nb_add
+    0,                             // nb_subtract
+    0,                             // nb_multiply
+#if PY_VERSION_HEX < 0x03000000
+    0,                             // nb_divide
+#endif
+    0,                             // nb_remainder
+    0,                             // nb_divmod
+    0,                             // nb_power
+    0,                             // nb_negative
+    0,                             // nb_positive
+    0,                             // nb_absolute
+    (inquiry)ep_nonzero,           // nb_bool (nb_nonzero in p2)
+    0,                             // nb_invert
+    0,                             // nb_lshift
+    0,                             // nb_rshift
+    0,                             // nb_and
+    0,                             // nb_xor
+    0,                             // nb_or
+#if PY_VERSION_HEX < 0x03000000
+    0,                             // nb_coerce
+#endif
+    0,                             // nb_int
+    0,                             // nb_long (nb_reserved in p3)
+    0,                             // nb_float
+#if PY_VERSION_HEX < 0x03000000
+    0,                             // nb_oct
+    0,                             // nb_hex
+#endif
+    0,                             // nb_inplace_add
+    0,                             // nb_inplace_subtract
+    0,                             // nb_inplace_multiply
+#if PY_VERSION_HEX < 0x03000000
+    0,                             // nb_inplace_divide
+#endif
+    0,                             // nb_inplace_remainder
+    0,                             // nb_inplace_power
+    0,                             // nb_inplace_lshift
+    0,                             // nb_inplace_rshift
+    0,                             // nb_inplace_and
+    0,                             // nb_inplace_xor
+    0                              // nb_inplace_or
+#if PY_VERSION_HEX >= 0x02020000
+    , 0                            // nb_floor_divide
+#if PY_VERSION_HEX < 0x03000000
+    , 0                            // nb_true_divide
+#else
+    , 0                            // nb_true_divide
+#endif
+    , 0                            // nb_inplace_floor_divide
+    , 0                            // nb_inplace_true_divide
+#endif
+#if PY_VERSION_HEX >= 0x02050000
+    , 0                            // nb_index
+#endif
+#if PY_VERSION_HEX >= 0x03050000
+    , 0                            // nb_matrix_multiply
+    , 0                            // nb_inplace_matrix_multiply
+#endif
+};
 
 //= CPyCppyy exception object proxy type ======================================
 PyTypeObject CPPExcInstance_Type = {
@@ -163,7 +234,7 @@ PyTypeObject CPPExcInstance_Type = {
     0,                             // tp_setattr
     0,                             // tp_compare
     (reprfunc)ep_repr,             // tp_repr
-    0,                             // tp_as_number
+    &ep_as_number,                 // tp_as_number
     0,                             // tp_as_sequence
     0,                             // tp_as_mapping
     0,                             // tp_hash
