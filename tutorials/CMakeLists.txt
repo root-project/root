@@ -520,6 +520,7 @@ if(ROOT_pyroot_FOUND)
              sql/sqlfilldb.py       # same as the C++ case
              sql/sqlselect.py       # same as the C++ case
              launcher.py            # Not a tutorial
+             dataframe/df026_AsNumpyArrays.py    # Needs pandas. Should be activated once pandas on the build nodes.
              )
 
   if(pyroot_legacy)
