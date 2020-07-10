@@ -21,6 +21,9 @@ ROOT_ADD_GTEST(testProxiesAndCategories testProxiesAndCategories.cxx
   LIBRARIES RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testProxiesAndCategories_1.root
   ${CMAKE_CURRENT_SOURCE_DIR}/categories_v620.root ${CMAKE_CURRENT_SOURCE_DIR}/categories_v621.root ${CMAKE_CURRENT_SOURCE_DIR}/categories_v622.root)
+ROOT_ADD_GTEST(testRooRealVar testRooRealVar.cxx LIBRARIES RooFitCore
+  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooRealVar_data1.root)
+
 if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(testRooAbsReal testRooAbsReal.cxx
     LIBRARIES RooFitCore
