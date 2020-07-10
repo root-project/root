@@ -1113,37 +1113,35 @@ static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling
          struct DefinitionFinder : public RecursiveASTVisitor<DefinitionFinder> {
             DefinitionFinder(clang::GlobalModuleIndex::UserDefinedInterestingIDs& IDs,
                              clang::TranslationUnitDecl* TU) : DefinitionIDs(IDs) {
-               for (const Decl* D : TU->decls()) {
-                  if (!isa<NamedDecl>(D))
-                     continue;
-                  const NamedDecl* ND = cast<NamedDecl>(D);
-                  if (!ND->isFromASTFile())
-                     continue;
+               // for (const Decl* D : TU->decls()) {
+               //    if (!isa<NamedDecl>(D))
+               //       continue;
+               //    const NamedDecl* ND = cast<NamedDecl>(D);
+               //    if (!ND->isFromASTFile())
+               //       continue;
 
-                  if (const TagDecl *TD = llvm::dyn_cast<TagDecl>(ND)) {
-                     if (TD->isCompleteDefinition())
-                        Register(TD);
-                  } else if (const NamespaceDecl *NSD = llvm::dyn_cast<NamespaceDecl>(ND)) {
-                     // if (!NSD->getParent()->isTranslationUnit())
-                     //    return false;
-                     Register(NSD, /*AddSingleEntry=*/ false);
-                  }
-                  else if (const TypedefNameDecl *TND = dyn_cast<TypedefNameDecl>(ND))
-                     Register(TND);
-                  // FIXME: Add the rest...
-               }
-               //TraverseDecl(TU);
+               //    if (const TagDecl *TD = llvm::dyn_cast<TagDecl>(ND)) {
+               //       if (TD->isCompleteDefinition())
+               //          Register(TD);
+               //    } else if (const NamespaceDecl *NSD = llvm::dyn_cast<NamespaceDecl>(ND)) {
+               //       // if (!NSD->getParent()->isTranslationUnit())
+               //       //    return false;
+               //       Register(NSD, /*AddSingleEntry=*/ false);
+               //    }
+               //    else if (const TypedefNameDecl *TND = dyn_cast<TypedefNameDecl>(ND))
+               //       Register(TND);
+               //    // FIXME: Add the rest...
+               // }
+               TraverseDecl(TU);
             }
             bool VisitNamedDecl(NamedDecl *ND) {
                if (!ND->isFromASTFile())
-                  return true; // Do not descend.
+                  return true;
 
                if (TagDecl *TD = llvm::dyn_cast<TagDecl>(ND)) {
                   if (TD->isCompleteDefinition())
                      Register(TD);
                } else if (NamespaceDecl *NSD = llvm::dyn_cast<NamespaceDecl>(ND)) {
-                  // if (!NSD->getParent()->isTranslationUnit())
-                  //    return false;
                   Register(NSD, /*AddSingleEntry=*/ false);
                }
                else if (TypedefNameDecl *TND = dyn_cast<TypedefNameDecl>(ND))
