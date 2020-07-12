@@ -1,5 +1,3 @@
-/**
-
   \page Vector3DPage  Vector3D Classes
 
 
@@ -120,5 +118,3 @@ Note that the multiplication between two vectors using the operator * is not sup
 
 <pre>XYZVector u = v1.Unit();               //  return unit vector parallel to v1
 </pre>
-
-*/

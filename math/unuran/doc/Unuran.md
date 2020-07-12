@@ -1,8 +1,6 @@
-/**
-
-Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers
-
 \defgroup Unuran Unuran
+
+\brief Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers.
 
 \ingroup Math
 
@@ -120,5 +118,3 @@ TRandom pointer when constructing the TUnuran class (by default the ROOT gRandom
 
 The (UNU.RAN documentation)[http://statistik.wu-wien.ac.at/unuran/doc/unuran.html#Top] provides a detailed
 description of all the available methods and the possible options which one can pass to UNU.RAN for the various distributions.
-*/
-

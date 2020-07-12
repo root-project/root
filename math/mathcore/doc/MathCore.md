@@ -1,5 +1,3 @@
-/**
-
 \defgroup MathCore  MathCore
 
 \brief The Core Mathematical Library of %ROOT. See the \ref MathCorePage "MathCore" description page.
@@ -32,6 +30,3 @@ MathCore contains instead now classes which were originally part of _libCore_. T
 *   Other classes, such as
 	*   TKDTree for partitioning the data using a kd-Tree and TKDTreeBinning for binning data using a kdTree
 	*   ROOT::Math::GoFTest for goodness of fit tests
-
-
-*/

@@ -1,5 +1,3 @@
-/**
-
   \page Vector  Generic Vector for 2, 3 and 4 Dimensions
 
 
@@ -113,8 +111,3 @@ A more detailed description of all the GenVector classes is available in this [d
 2.  [CLHEP Geometry package](http://www.hep.phy.cam.ac.uk/lhcb/doc/CLHEP/1.9.1.2/html/namespaceH)
 3.  [%ROOT Physics Vector classes](http://root.cern.ch/root/html/PHYSICS_Index.html)
 4.  [CMS Vector package](http://lcgapp.cern.ch/doxygen/SEAL/snapshot/html/dir_000007.html)
-
-* * *
-
-*/
-

@@ -1,6 +1,3 @@
-/**
-
-
 \page MatrixPage The ROOT Matrix Linear Algebra classes.
 
 
