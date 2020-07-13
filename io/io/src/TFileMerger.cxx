@@ -573,26 +573,31 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                         ndir->cd();
                         TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                         if (key2) {
-                           TObject *hobj = key2->ReadObj();
-                           if (!hobj) {
-                              Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
-                                   key->GetName(), key->GetTitle(), nextsource->GetName());
-                              nextsource = (TFile*)sourcelist->After(nextsource);
-                              continue;
-                           }
-                           // Set ownership for collections
-                           if (hobj->InheritsFrom(TCollection::Class())) {
-                              ((TCollection*)hobj)->SetOwner();
-                           }
-                           hobj->ResetBit(kMustCleanup);
-                           inputs.Add(hobj);
+                           if (cl->IsTObject()) {
+                              TObject *hobj = key2->ReadObj();
+                              if (!hobj) {
+                                 Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
+                                      key->GetName(), key->GetTitle(), nextsource->GetName());
+                                 nextsource = (TFile*)sourcelist->After(nextsource);
+                                 continue;
+                              }
+                              // Set ownership for collections
+                              if (hobj->InheritsFrom(TCollection::Class())) {
+                                 ((TCollection*)hobj)->SetOwner();
+                              }
+                              hobj->ResetBit(kMustCleanup);
+                              inputs.Add(hobj);
+                           } else {
+                             Info("MergeRecursive", "non-inheriting merge for key: %s in file %s",
+			        key->GetName(), nextsource->GetName());
+			   }
                            if (!oneGo) {
                               ROOT::MergeFunc_t func = cl->GetMerge();
                               Long64_t result = func(obj, &inputs, &info);
                               info.fIsFirst = kFALSE;
                               if (result < 0) {
                                  Error("MergeRecursive", "calling Merge() on '%s' with the corresponding object in '%s'",
-                                       obj->GetName(), nextsource->GetName());
+                                       key->GetName(), nextsource->GetName());
                               }
                               inputs.Delete();
                            }
