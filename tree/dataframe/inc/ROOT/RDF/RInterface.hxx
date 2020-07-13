@@ -56,8 +56,8 @@ namespace Internal {
 namespace RDF {
 class GraphCreatorHelper;
 }
-}
-}
+} // namespace Internal
+} // namespace ROOT
 namespace cling {
 std::string printValue(ROOT::RDataFrame *tdf);
 }
@@ -498,7 +498,6 @@ public:
                << RDFInternal::PrettyPrintAddr(&resPtr)
                << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase>*>("
                << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Snapshot<";
-
 
       const auto validColumnNames = GetValidatedColumnNames(columnList.size(), columnList);
       const auto colTypes = GetValidatedArgTypes(validColumnNames, fCustomColumns, fLoopManager->GetTree(), fDataSource,
@@ -1552,7 +1551,7 @@ public:
    /// auto stats1 = myDf.Stats<float>("values");
    /// ~~~
    ///
-   template<typename V = RDFDetail::RInferredType>
+   template <typename V = RDFDetail::RInferredType>
    RResultPtr<TStatistic> Stats(std::string_view value = "")
    {
       ColumnNames_t columns;
@@ -1562,8 +1561,7 @@ public:
       const auto validColumnNames = GetValidatedColumnNames(1, columns);
       if (std::is_same<V, RDFDetail::RInferredType>::value) {
          return Fill(TStatistic(), validColumnNames);
-      }
-      else {
+      } else {
          return Fill<V>(TStatistic(), validColumnNames);
       }
    }
@@ -1585,14 +1583,14 @@ public:
    /// auto stats1 = myDf.Stats<int, float>("values", "weights");
    /// ~~~
    ///
-   template<typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
+   template <typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<TStatistic> Stats(std::string_view value, std::string_view weight)
    {
-      ColumnNames_t columns {std::string(value), std::string(weight)};
+      ColumnNames_t columns{std::string(value), std::string(weight)};
       constexpr auto vIsInferred = std::is_same<V, RDFDetail::RInferredType>::value;
       constexpr auto wIsInferred = std::is_same<W, RDFDetail::RInferredType>::value;
       const auto validColumnNames = GetValidatedColumnNames(2, columns);
-      // We have 3 cases: 
+      // We have 3 cases:
       // 1. Both types are inferred: we use Fill and let the jit kick in.
       // 2. One of the two types is explicit and the other one is inferred: the case is not supported.
       // 3. Both types are explicit: we invoke the fully compiled Fill method.
@@ -2419,7 +2417,7 @@ private:
       fLoopManager->Book(actionPtr.get());
 
       return RDFInternal::CreateSnapshotRDF(validCols, fullTreename, filename, options.fLazy, *fLoopManager,
-                                           std::move(actionPtr));
+                                            std::move(actionPtr));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2476,7 +2474,7 @@ protected:
    }
 };
 
-} // end NS RDF
+} // namespace RDF
 
 } // namespace ROOT
 
