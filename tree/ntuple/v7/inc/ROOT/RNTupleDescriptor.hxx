@@ -530,7 +530,7 @@ public:
    }
    /// Attempt to make a field descriptor. This may fail if the dangling field
    /// was not given enough information to make a proper descriptor.
-   RResult<RFieldDescriptor> GetDescriptor() const {
+   RResult<RFieldDescriptor> MakeDescriptor() const {
       if (fField.GetId() == kInvalidDescriptorId) {
          return R__FAIL("invalid field id");
       }
@@ -542,10 +542,10 @@ public:
       }
       return fField.Clone();
    }
-   /// Shorthand method for GetDescriptor().Get()
-   /// Will throw an RException if an RFieldDescriptor cannot be constructed.
+   /// Shorthand method for MakeDescriptor().Unwrap()
+   /// Throws an RException if the descriptor would be invalid.
    RFieldDescriptor UnwrapDescriptor() const {
-       return GetDescriptor().Get();
+      return MakeDescriptor().Unwrap();
    }
 };
 
