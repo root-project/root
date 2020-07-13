@@ -62,6 +62,7 @@ public:
 
       Float_t fFraction;
 
+      CellId_t() : fTower(0), fSlice(0), fFraction(0) {}
       CellId_t(Int_t t, Int_t s, Float_t f=1.0f) : fTower(t), fSlice(s), fFraction(f) {}
 
       bool operator<(const CellId_t& o) const
