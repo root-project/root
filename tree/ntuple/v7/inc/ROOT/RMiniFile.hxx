@@ -88,8 +88,6 @@ struct RNTuple {
    // RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
-   /// Reset any state after merging
-   void ResetAfterMerge(TFileMergeInfo* /* mergeInfo */) {};
 };
 
 namespace Internal {
