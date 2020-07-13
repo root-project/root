@@ -530,18 +530,7 @@ public:
    }
    /// Attempt to make a field descriptor. This may fail if the dangling field
    /// was not given enough information to make a proper descriptor.
-   RResult<RFieldDescriptor> MakeDescriptor() const {
-      if (fField.GetId() == kInvalidDescriptorId) {
-         return R__FAIL("invalid field id");
-      }
-      if (fField.GetStructure() == ENTupleStructure::kInvalid) {
-         return R__FAIL("invalid field structure");
-      }
-      if (fField.GetFieldName() == "" && fField.GetId() != DescriptorId_t(0)) {
-         return R__FAIL("invalid field name");
-      }
-      return fField.Clone();
-   }
+   RResult<RFieldDescriptor> MakeDescriptor() const;
    /// Shorthand method for MakeDescriptor().Unwrap()
    /// Throws an RException if the descriptor would be invalid.
    RFieldDescriptor UnwrapDescriptor() const {

@@ -13,6 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RField.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -923,6 +924,21 @@ ROOT::Experimental::RDanglingFieldDescriptor::FromField(const Detail::RFieldBase
       .Structure(field.GetStructure())
       .NRepetitions(field.GetNRepetitions());
    return fieldDesc;
+}
+
+ROOT::Experimental::RResult<ROOT::Experimental::RFieldDescriptor>
+ROOT::Experimental::RDanglingFieldDescriptor::MakeDescriptor() const {
+   if (fField.GetId() == kInvalidDescriptorId) {
+      return R__FAIL("invalid field id");
+   }
+   if (fField.GetStructure() == ENTupleStructure::kInvalid) {
+      return R__FAIL("invalid field structure");
+   }
+   // FieldZero is usually named "" and would be a false positive here
+   if (fField.GetId() != DescriptorId_t(0)) {
+      Detail::RFieldBase::EnsureValidFieldName(fField.GetFieldName()).ThrowOnError();
+   }
+   return fField.Clone();
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor& fieldDesc) {
