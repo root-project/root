@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveCalo
-#define ROOT_TEveCalo
+#ifndef ROOT_REveCalo
+#define ROOT_REveCalo
 
 #include "ROOT/REveElement.hxx"
 #include "ROOT/REveProjectionBases.hxx"
