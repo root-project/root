@@ -10,7 +10,6 @@
 
 #include <ROOT/RDF/InterfaceUtils.hxx>
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RDF/RInterface.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TSeq.hxx>
 #include <RtypesCore.h>
