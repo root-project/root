@@ -101,9 +101,6 @@ auto PassAsVec(F &&f) -> RDFInternal::PassAsVecHelper<std::make_index_sequence<N
 {
    return RDFInternal::PassAsVecHelper<std::make_index_sequence<N>, T, F>(std::forward<F>(f));
 }
-template <typename Proxied, typename DataSource>
-class RInterface;
-
 
 // clang-format off
 /// Create a graphviz representation of the dataframe computation graph, return it as a string.
