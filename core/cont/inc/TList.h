@@ -97,23 +97,23 @@ public:
    virtual void      AddBefore(TObjLink *before, TObject *obj);
    TObject *         Remove(TObject *obj) override;
    virtual TObject  *Remove(TObjLink *lnk);
-           TObject  *Remove(const TObjLinkPtr_t &lnk) { return Remove(lnk.get()); }
-           void      RemoveLast() override;
-           void      RecursiveRemove(TObject *obj) override;
+   TObject          *Remove(const TObjLinkPtr_t &lnk) { return Remove(lnk.get()); }
+   void              RemoveLast() override;
+   void              RecursiveRemove(TObject *obj) override;
 
-           TObject *         At(Int_t idx) const override;
-           TObject *         After(const TObject *obj) const override;
-           TObject *         Before(const TObject *obj) const override;
-           TObject *         First() const override;
-           virtual TObjLink *FirstLink() const { return fFirst.get(); }
-           TObject **        GetObjectRef(const TObject *obj) const override;
-           TObject *         Last() const override;
-           virtual TObjLink *LastLink() const { return fLast.get(); }
+   TObject *         At(Int_t idx) const override;
+   TObject *         After(const TObject *obj) const override;
+   TObject *         Before(const TObject *obj) const override;
+   TObject *         First() const override;
+   virtual TObjLink *FirstLink() const { return fFirst.get(); }
+   TObject **        GetObjectRef(const TObject *obj) const override;
+   TObject *         Last() const override;
+   virtual TObjLink *LastLink() const { return fLast.get(); }
 
-           virtual void Sort(Bool_t order = kSortAscending);
-           Bool_t       IsAscending() { return fAscending; }
+   virtual void Sort(Bool_t order = kSortAscending);
+   Bool_t       IsAscending() { return fAscending; }
 
-           ClassDefOverride(TList, 5) // Doubly linked list
+   ClassDefOverride(TList, 5) // Doubly linked list
 };
 
 
