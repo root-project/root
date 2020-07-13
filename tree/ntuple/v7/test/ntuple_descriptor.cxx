@@ -184,7 +184,7 @@ TEST(RDanglingFieldDescriptor, GetDescriptorErrors)
          .UnwrapDescriptor();
       FAIL() << "unnamed field descriptors should throw";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("field name cannot be empty string"));
    }
 }
 
