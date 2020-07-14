@@ -531,11 +531,6 @@ public:
    /// Attempt to make a field descriptor. This may fail if the dangling field
    /// was not given enough information to make a proper descriptor.
    RResult<RFieldDescriptor> MakeDescriptor() const;
-   /// Shorthand method for MakeDescriptor().Unwrap()
-   /// Throws an RException if the descriptor would be invalid.
-   RFieldDescriptor UnwrapDescriptor() const {
-      return MakeDescriptor().Unwrap();
-   }
 };
 
 // clang-format off
