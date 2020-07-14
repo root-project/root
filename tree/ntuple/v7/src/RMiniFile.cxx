@@ -842,23 +842,21 @@ struct RTFNTuple {
       ntuple.fReserved     = fReserved;
       return ntuple;
    }
-
-   friend std::ostream& operator<<(std::ostream& os, const RTFNTuple& ntpl) {
-      os << "RTFNTuple {\n";
-      os << "    fByteCount: " << ntpl.fByteCount << ",\n";
-      os << "    fVersionClass: " << ntpl.fVersionClass << ",\n";
-      os << "    fChecksum: " << ntpl.fChecksum << ",\n";
-      os << "    fVersionInternal: " << ntpl.fVersionInternal << ",\n";
-      os << "    fSize: " << ntpl.fSize << ",\n";
-      os << "    fSeekHeader: " << ntpl.fSeekHeader << ",\n";
-      os << "    fNBytesHeader: " << ntpl.fNBytesHeader << ",\n";
-      os << "    fLenHeader: " << ntpl.fLenHeader << ",\n";
-      os << "    fSeekFooter: " << ntpl.fSeekFooter << ",\n";
-      os << "    fNBytesFooter: " << ntpl.fNBytesFooter << ",\n";
-      os << "    fLenFooter: " << ntpl.fLenFooter << ",\n";
-      os << "    fReserved: " << ntpl.fReserved << ",\n";
-      os << "}";
-      return os;
+   void Print(std::ostream& output) {
+      output << "RTFNTuple {\n";
+      output << "    fByteCount: " << fByteCount << ",\n";
+      output << "    fVersionClass: " << fVersionClass << ",\n";
+      output << "    fChecksum: " << fChecksum << ",\n";
+      output << "    fVersionInternal: " << fVersionInternal << ",\n";
+      output << "    fSize: " << fSize << ",\n";
+      output << "    fSeekHeader: " << fSeekHeader << ",\n";
+      output << "    fNBytesHeader: " << fNBytesHeader << ",\n";
+      output << "    fLenHeader: " << fLenHeader << ",\n";
+      output << "    fSeekFooter: " << fSeekFooter << ",\n";
+      output << "    fNBytesFooter: " << fNBytesFooter << ",\n";
+      output << "    fLenFooter: " << fLenFooter << ",\n";
+      output << "    fReserved: " << fReserved << ",\n";
+      output << "}";
    }
 };
 
