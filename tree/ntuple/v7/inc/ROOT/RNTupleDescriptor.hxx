@@ -524,13 +524,13 @@ public:
    /// was not given enough information to make a proper descriptor.
    RResult<RFieldDescriptor> GetDescriptor() const {
       if (fField.GetId() == kInvalidDescriptorId) {
-         return R__FAIL("invalid descriptor id");
+         return R__FAIL("invalid field id");
       }
       if (fField.GetStructure() == ENTupleStructure::kInvalid) {
-         return R__FAIL("invalid structure");
+         return R__FAIL("invalid field structure");
       }
       if (fField.GetFieldName() == "" && fField.GetId() != DescriptorId_t(0)) {
-         return R__FAIL("invalid name");
+         return R__FAIL("invalid field name");
       }
       return fField;
    }
