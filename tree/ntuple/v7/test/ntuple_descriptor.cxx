@@ -8,13 +8,15 @@ TEST(RNTuple, Descriptor)
       .FieldId(0)
       .FieldName("")
       .Structure(ENTupleStructure::kRecord)
-      .UnwrapDescriptor());
+      .MakeDescriptor()
+      .Unwrap());
    descBuilder.AddField(RDanglingFieldDescriptor()
       .FieldId(1)
       .FieldName("list")
       .TypeName("std::vector<std::int32_t>")
       .Structure(ENTupleStructure::kCollection)
-      .UnwrapDescriptor());
+      .MakeDescriptor()
+      .Unwrap());
    descBuilder.AddFieldLink(0, 1);
 
    descBuilder.AddField(RDanglingFieldDescriptor()
@@ -22,7 +24,8 @@ TEST(RNTuple, Descriptor)
       .FieldName("list") // at different levels, duplicate names are fine
       .TypeName("std::int32_t")
       .Structure(ENTupleStructure::kLeaf)
-      .UnwrapDescriptor());
+      .MakeDescriptor()
+      .Unwrap());
    descBuilder.AddFieldLink(1, 2);
 
    descBuilder.AddField(RDanglingFieldDescriptor()
@@ -30,7 +33,8 @@ TEST(RNTuple, Descriptor)
       .FieldName("x")
       .TypeName("std::string")
       .Structure(ENTupleStructure::kLeaf)
-      .UnwrapDescriptor());
+      .MakeDescriptor()
+      .Unwrap());
    descBuilder.AddFieldLink(0, 42);
 
    descBuilder.AddColumn(3, 42, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);
@@ -157,12 +161,14 @@ TEST(RDanglingFieldDescriptor, GetDescriptorErrors)
       .FieldId(1)
       .Structure(ENTupleStructure::kCollection)
       .FieldName("someField")
-      .UnwrapDescriptor();
+      .MakeDescriptor()
+      .Unwrap();
 
    // must set field id
    try {
       RFieldDescriptor badFieldDesc = RDanglingFieldDescriptor()
-         .UnwrapDescriptor();
+         .MakeDescriptor()
+         .Unwrap();
       FAIL() << "default constructed dangling descriptors should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field id"));
@@ -171,7 +177,8 @@ TEST(RDanglingFieldDescriptor, GetDescriptorErrors)
    try {
       RFieldDescriptor badFieldDesc = RDanglingFieldDescriptor()
          .FieldId(1)
-         .UnwrapDescriptor();
+         .MakeDescriptor()
+         .Unwrap();
       FAIL() << "field descriptors without structure should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field structure"));
@@ -181,7 +188,8 @@ TEST(RDanglingFieldDescriptor, GetDescriptorErrors)
       RFieldDescriptor badFieldDesc = RDanglingFieldDescriptor()
          .FieldId(1)
          .Structure(ENTupleStructure::kCollection)
-         .UnwrapDescriptor();
+         .MakeDescriptor()
+         .Unwrap();
       FAIL() << "unnamed field descriptors should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name cannot be empty string"));
