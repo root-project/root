@@ -3570,7 +3570,7 @@ TList *TClass::GetListOfBases()
             }
          }
          // We test again on fCanLoadClassInfo has another thread may have executed it.
-         if (!fHasRootPcmInfo && !fCanLoadClassInfo) {
+         if (!fHasRootPcmInfo && fCanLoadClassInfo) {
             LoadClassInfo();
          }
       }
