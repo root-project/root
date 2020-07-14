@@ -609,7 +609,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
     # get target properties added after call to ROOT_GENERATE_DICTIONARY()
     if(TARGET ${ARG_MODULE})
-if(MSVC)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
       set(module_incs $<REMOVE_DUPLICATES:$<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>>)
 else()
       set(module_incs $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
