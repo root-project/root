@@ -1790,6 +1790,7 @@ TBasket* TBranch::GetFreshBasket(TBuffer* user_buffer)
                fBaskets.AddAt(0,oldindex);
                fBaskets.SetLast(-1);
                fNBaskets = 0;
+               basket->Reset();
             } else {
                basket = fTree->CreateBasket(this);
             }
