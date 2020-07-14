@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -23,6 +23,13 @@
 namespace ROOT {
 namespace Experimental {
 
+struct RNTuple;
+
+namespace Internal {
+
+void PrintRNTuple(const RNTuple& ntuple, std::ostream& output);
+
+} // namespace Internal
 
 /**
  * The fields in the ntuple model tree can carry different structural information about the type system.
