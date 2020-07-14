@@ -4296,9 +4296,9 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
             if (!ntlibs.IsNull()) ntlibs.Append(" ");
             if ((s.Index("python") == kNPOS) && (s.Index("cppyy") == kNPOS) &&
                 (s.Index("vcruntime") == kNPOS) && (s.Index(".pyd") == kNPOS) &&
-                (s.Index("lzma") == kNPOS) && (s.Index("gdk") == kNPOS) &&
-                (s.Index("glib") == kNPOS) && (s.Index("iconv") == kNPOS) &&
-                (s.Index("msvcp") == kNPOS))
+                (s.Index("lzma") == kNPOS) && (s.Index("gdk-1.3") == kNPOS) &&
+                (s.Index("glib-1.3") == kNPOS) && (s.Index("iconv-1.3") == kNPOS) &&
+                (s.Index("concrt") == kNPOS) && (s.Index("msvcp") == kNPOS))
               ntlibs.Append(s);
          }
          start += end+1;
