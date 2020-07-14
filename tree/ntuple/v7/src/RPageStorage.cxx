@@ -133,14 +133,16 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    fDescriptorBuilder.AddField(
       RDanglingFieldDescriptor::FromField(fieldZero)
          .FieldId(fLastFieldId)
-         .UnwrapDescriptor()
+         .MakeDescriptor()
+         .Unwrap()
    );
    fieldPtr2Id[&fieldZero] = fLastFieldId++;
    for (auto& f : *model.GetFieldZero()) {
       fDescriptorBuilder.AddField(
          RDanglingFieldDescriptor::FromField(f)
             .FieldId(fLastFieldId)
-            .UnwrapDescriptor()
+            .MakeDescriptor()
+            .Unwrap()
       );
       fDescriptorBuilder.AddFieldLink(fieldPtr2Id[f.GetParent()], fLastFieldId);
       Detail::RFieldFuse::Connect(fLastFieldId, *this, f); // issues in turn one or several calls to AddColumn()
