@@ -150,6 +150,44 @@ TEST(RNTuple, Descriptor)
    delete[] headerBuffer;
 }
 
+TEST(RDanglingFieldDescriptor, GetDescriptorErrors)
+{
+   // minimum requirements for making a field descriptor from scratch
+   RFieldDescriptor fieldDesc = RDanglingFieldDescriptor()
+      .FieldId(1)
+      .Structure(ENTupleStructure::kCollection)
+      .FieldName("someField")
+      .UnwrapDescriptor();
+
+   // must set field id
+   try {
+      RFieldDescriptor badFieldDesc = RDanglingFieldDescriptor()
+         .UnwrapDescriptor();
+      FAIL() << "default constructed dangling descriptors should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field id"));
+   }
+   // must set field structure
+   try {
+      RFieldDescriptor badFieldDesc = RDanglingFieldDescriptor()
+         .FieldId(1)
+         .UnwrapDescriptor();
+      FAIL() << "field descriptors without structure should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field structure"));
+   }
+   // must set field name
+   try {
+      RFieldDescriptor badFieldDesc = RDanglingFieldDescriptor()
+         .FieldId(1)
+         .Structure(ENTupleStructure::kCollection)
+         .UnwrapDescriptor();
+      FAIL() << "unnamed field descriptors should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name"));
+   }
+}
+
 TEST(RFieldDescriptorRange, IterateOverFieldNames)
 {
    auto model = RNTupleModel::Create();
