@@ -10,9 +10,8 @@
  *************************************************************************/
 
 #include "ROOT/RConfig.hxx"
-
+#include <ROOT/RLogger.hxx> // for R__DEBUG_HERE
 #include "ROOT/RRawFileUnix.hxx"
-#include "ROOT/RLogger.hxx" // for R__DEBUG_HERE
 #include "ROOT/RMakeUnique.hxx"
 
 #ifdef R__HAS_URING
