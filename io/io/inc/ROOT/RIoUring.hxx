@@ -13,6 +13,7 @@
 #include <liburing/io_uring.h>
 
 #include <ROOT/RError.hxx>
+using ROOT::Experimental::RException;
 
 namespace ROOT {
 namespace Internal {
@@ -24,7 +25,7 @@ public:
    explicit RIoUring(size_t size) {
       int ret = io_uring_queue_init(size, &fRing, 0 /* no flags */);
       if (ret) {
-         throw R__FAIL("couldn't open ring");
+         throw RException(R__FAIL("couldn't open ring"));
       }
    }
 
@@ -39,7 +40,7 @@ public:
    static bool IsAvailable() {
       try {
          RIoUring(1);
-      } catch (const Experimental::RException&) {
+      } catch (const RException&) {
          return false;
       }
       return true;
