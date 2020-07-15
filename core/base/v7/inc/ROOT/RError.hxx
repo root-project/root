@@ -159,6 +159,16 @@ public:
    /// Throws an RException with fError
    void Throw();
 
+   /// Used by R__FORWARD_ERROR in order to keep track of the stack trace.
+   static RError ForwardError(RResultBase &&result, RError::RLocation &&sourceLocation) {
+      if (!result.fError) {
+         return RError("internal error: attempt to forward error of successful operation",
+                       std::move(sourceLocation));
+      }
+      result.fError->AddFrame(std::move(sourceLocation));
+      return *result.fError;
+   }
+
    // Help to prevent heap construction of RResult objects. Unchecked RResult objects in failure state should throw
    // an exception close to the error location. For stack allocated RResult objects, an exception is thrown
    // the latest when leaving the scope. Heap allocated RResult objects in failure state can live much longer making it
@@ -281,6 +291,8 @@ public:
 #define R__FAIL(msg) ROOT::Experimental::RError(msg, {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
 /// Short-hand to return an RResult<T> value from a subroutine to the calling stack frame
 #define R__FORWARD_RESULT(res) std::move(res.Forward({R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__}))
+/// Short-hand to return an RResult<T> in an error state (i.e. after checking)
+#define R__FORWARD_ERROR(res) res.ForwardError(std::move(res), {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
 } // namespace Experimental
 } // namespace ROOT
 
