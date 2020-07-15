@@ -4296,6 +4296,8 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
             if (!ntlibs.IsNull()) ntlibs.Append(" ");
             if ((s.Index("python") == kNPOS) && (s.Index("cppyy") == kNPOS) &&
                 (s.Index("vcruntime") == kNPOS) && (s.Index(".pyd") == kNPOS) &&
+                (s.Index("lzma") == kNPOS) && (s.Index("gdk-1.3") == kNPOS) &&
+                (s.Index("glib-1.3") == kNPOS) && (s.Index("iconv-1.3") == kNPOS) &&
                 (s.Index("msvcp") == kNPOS))
               ntlibs.Append(s);
          }
