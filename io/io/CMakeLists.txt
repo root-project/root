@@ -14,9 +14,10 @@ if (WIN32)
 else ()
   set(rawfile_local_headers ROOT/RRawFileUnix.hxx)
   set(rawfile_local_sources src/RRawFileUnix.cxx)
-  if (uring)
-    list(APPEND rawfile_local_headers ROOT/RIoUring.hxx)
-  endif ()
+endif ()
+
+if (uring)
+  list(APPEND rawfile_local_headers ROOT/RIoUring.hxx)
 endif ()
 
 ROOT_LINKER_LIBRARY(RIO
