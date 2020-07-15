@@ -33,6 +33,13 @@ static ROOT::Experimental::RResult<void> TestSuccess()
    return ROOT::Experimental::RResult<void>::Success();
 }
 
+static ROOT::Experimental::RResult<void> TestSuccessOrFailure(bool succeed)
+{
+   if (succeed)
+      return R__FORWARD_RESULT(TestSuccess());
+   return R__FORWARD_RESULT(TestFailure());
+}
+
 static ROOT::Experimental::RResult<int> TestSyscall(bool succeed)
 {
    if (succeed)
@@ -44,6 +51,14 @@ static ROOT::Experimental::RResult<int> TestChain(bool succeed)
 {
    auto rv = TestSyscall(succeed);
    return R__FORWARD_RESULT(rv);
+}
+
+static ROOT::Experimental::RResult<int> TestChainMultiTypes(bool succeed)
+{
+   auto rv = TestSuccessOrFailure(succeed);
+   if (!rv)
+      return R__FORWARD_ERROR(rv);
+   return 0;
 }
 
 static ROOT::Experimental::RResult<ComplexReturnType> TestComplex()
@@ -77,6 +92,19 @@ TEST(Exception, ForwardResult)
    auto res = TestChain(true);
    ASSERT_TRUE(static_cast<bool>(res));
    EXPECT_EQ(42, res.Inspect());
+}
+
+
+TEST(Exception, ForwardError)
+{
+   EXPECT_THROW(TestSuccessOrFailure(false), RException);
+   EXPECT_NO_THROW(TestSuccessOrFailure(true));
+
+   auto res = TestChainMultiTypes(true);
+   ASSERT_TRUE(static_cast<bool>(res));
+   EXPECT_EQ(0, res.Inspect());
+
+   EXPECT_THROW(TestChainMultiTypes(false), RException);
 }
 
 
