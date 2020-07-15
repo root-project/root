@@ -39,7 +39,7 @@ public:
    static bool IsAvailable() {
       try {
          RIoUring(1);
-      } catch (const Experimental::RException& _err) {
+      } catch (const Experimental::RException&) {
          return false;
       }
       return true;
