@@ -1226,7 +1226,7 @@ TBasket* TBranch::GetBasketImpl(Int_t basketnumber, TBuffer *user_buffer)
    if (fTree->GetMaxVirtualSize() < 0 || fTree->GetClusterPrefetch())
       basket = GetFreshCluster();
    else
-      basket = GetFreshBasket(user_buffer);
+      basket = GetFreshBasket(basketnumber, user_buffer);
 
    // fSkipZip is old stuff still maintained for CDF
    if (fSkipZip) basket->SetBit(TBufferFile::kNotDecompressed);
@@ -1763,8 +1763,11 @@ TFile* TBranch::GetFile(Int_t mode)
 ///
 /// If the user_buffer argument is non-null, then the memory in the
 /// user-provided buffer will be utilized by the underlying basket.
+///
+/// The basket number is used to estimate the required buffer size
+/// and try to optimize memory usage and number of memory allocation.
 
-TBasket* TBranch::GetFreshBasket(TBuffer* user_buffer)
+TBasket* TBranch::GetFreshBasket(Int_t basketnumber, TBuffer* user_buffer)
 {
    TBasket *basket = 0;
    if (user_buffer && fExtraBasket) {
@@ -1793,7 +1796,11 @@ TBasket* TBranch::GetFreshBasket(TBuffer* user_buffer)
                fBaskets.AddAt(0,oldindex);
                fBaskets.SetLast(-1);
                fNBaskets = 0;
-               basket->Reset();
+               basket->ReadResetBuffer(basketnumber);
+#ifdef R__TRACK_BASKET_ALLOC_TIME
+               fTree->AddAllocationTime(basket->GetResetAllocationTime());
+#endif
+               fTree->AddAllocationCount(basket->GetResetAllocationCount());
             } else {
                basket = fTree->CreateBasket(this);
             }
@@ -2149,7 +2156,7 @@ Int_t TBranch::LoadBaskets()
    for (Int_t i=0;i<nbaskets;i++) {
       basket = (TBasket*)fBaskets.UncheckedAt(i);
       if (basket) continue;
-      basket = GetFreshBasket(nullptr);
+      basket = GetFreshBasket(i, nullptr);
       if (fBasketBytes[i] == 0) {
          fBasketBytes[i] = basket->ReadBasketBytes(fBasketSeek[i],file);
       }
@@ -2471,7 +2478,7 @@ void TBranch::ResetAfterMerge(TFileMergeInfo *)
    fBaskets.Delete();
    if (reusebasket) {
       fNBaskets = 1;
-      reusebasket->Reset();
+      reusebasket->WriteReset();
       fBaskets[0] = reusebasket;
    } else {
       fNBaskets = 0;
@@ -3055,7 +3062,7 @@ Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBr
          fBaskets[where] = 0;
 
          reusebasket = basket;
-         reusebasket->Reset();
+         reusebasket->WriteReset();
 
          fZipBytes += nout;
          fTotBytes += addbytes;
