@@ -45,7 +45,7 @@
 
 // from cpuid.h
 #ifndef bit_AVX2
-#define bit_AVX2 0x00000020
+# define bit_AVX2 0x00000020
 #endif
 
 #ifndef bit_SSE4_2
@@ -1059,18 +1059,21 @@ int64_t bshuf_untrans_bit_elem_AVX(const void* in, void* out, const size_t size,
     return count;
 }
 
-void *resolve_bitshuffle(void) {
+
+/* ---- Drivers selecting best instruction set at run time. ---- */
+
+int64_t bshuf_trans_bit_elem(const void* in, void* out, const size_t size, const size_t elem_size) {
     unsigned int eax, ebx, ecx, edx;
 	signed char has_sse2 = 0;
 
     /* Collect CPU features */
     if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx)){
-        return bshuf_trans_bit_elem_scal;
+        return bshuf_trans_bit_elem_scal(in, out, size, elem_size);
     }
 
 	has_sse2 = ((edx & bit_SSE2) != 0);
     if (__get_cpuid_max (0, NULL) < 7){
-        return bshuf_trans_bit_elem_scal;
+        return bshuf_trans_bit_elem_scal(in, out, size, elem_size);
     }
 
 	__cpuid_count (7, 0, eax, ebx, ecx, edx);
@@ -1078,29 +1081,29 @@ void *resolve_bitshuffle(void) {
 	signed char has_avx2 = 0;
 	has_avx2 = ((ebx & bit_AVX2) != 0);
 	if (has_avx2){
-	    return bshuf_trans_bit_elem_AVX;
+	    return bshuf_trans_bit_elem_AVX(in, out, size, elem_size);
     }
 
     /* Pick SSE2 version */
     if (has_sse2){
-        return bshuf_trans_bit_elem_SSE;
+        return bshuf_trans_bit_elem_SSE(in, out, size, elem_size);
     }
     /* Fallback to default implementation */
-    return bshuf_trans_bit_elem_scal;
+    return bshuf_trans_bit_elem_scal(in, out, size, elem_size);
 }
 
-void *resolve_bitunshuffle(void) {
+int64_t bshuf_untrans_bit_elem(const void* in, void* out, const size_t size, const size_t elem_size) {
     unsigned int eax, ebx, ecx, edx;
 	signed char has_sse2 = 0;
 
     /* Collect CPU features */
     if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx)){
-        return bshuf_untrans_bit_elem_scal;
+        return bshuf_untrans_bit_elem_scal(in, out, size, elem_size);
     }
 
 	has_sse2 = ((edx & bit_SSE2) != 0);
     if (__get_cpuid_max (0, NULL) < 7){
-        return bshuf_untrans_bit_elem_scal;
+        return bshuf_untrans_bit_elem_scal(in, out, size, elem_size);
     }
 
 	__cpuid_count (7, 0, eax, ebx, ecx, edx);
@@ -1108,25 +1111,16 @@ void *resolve_bitunshuffle(void) {
 	signed char has_avx2 = 0;
 	has_avx2 = ((ebx & bit_AVX2) != 0);
 	if (has_avx2){
-	    return bshuf_untrans_bit_elem_AVX;
+	    return bshuf_untrans_bit_elem_AVX(in, out, size, elem_size);
     }
 
     /* Pick SSE2 version */
     if (has_sse2){
-        return bshuf_untrans_bit_elem_SSE;
+        return bshuf_untrans_bit_elem_SSE(in, out, size, elem_size);
     }
     /* Fallback to default implementation */
-    return bshuf_untrans_bit_elem_scal;
+    return bshuf_untrans_bit_elem_scal(in, out, size, elem_size);
 }
-
-
-/* ---- Drivers selecting best instruction set at compile time. ---- */
-
-int64_t bshuf_trans_bit_elem(const void* in, void* out, const size_t size, const size_t elem_size)
-__attribute__ ((ifunc ("resolve_bitshuffle")));
-
-int64_t bshuf_untrans_bit_elem(const void* in, void* out, const size_t size, const size_t elem_size)
-__attribute__ ((ifunc ("resolve_bitunshuffle")));
 
 #else // x86_64
 
