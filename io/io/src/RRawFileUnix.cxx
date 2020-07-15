@@ -12,6 +12,7 @@
 #include "ROOT/RConfig.hxx"
 
 #include "ROOT/RRawFileUnix.hxx"
+#include "ROOT/RLogger.hxx" // for R__DEBUG_HERE
 #include "ROOT/RMakeUnique.hxx"
 
 #ifdef R__HAS_URING
@@ -116,6 +117,8 @@ void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
 #ifdef R__HAS_URING
    if (!RIoUring::IsAvailable()) {
+      R__DEBUG_HERE("RRawFileUnix") <<
+         "io_uring setup failed, falling back to default ReadV implementation";
       RRawFile::ReadVImpl(ioVec, nReq);
       return;
    }
