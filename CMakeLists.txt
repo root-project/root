@@ -4,7 +4,15 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+if(MSVC)
+  # required for the following feature & bug fix:
+  # 3.15: Added $<REMOVE_DUPLICATES:list> generator expression
+  # 3.16: Bug fix with CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS: the auto-generated exports
+  #       are now updated only when the object files providing the symbols are updated
+  cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+else()
+  cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR
