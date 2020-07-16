@@ -1417,7 +1417,11 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // ROOT usually knows better where its libraries are. This way we can
       // discover modules without having to should thisroot.sh and should fix
       // gnuinstall.
+#ifdef R__WIN32
+      Paths.push_back(TROOT::GetBinDir().Data());
+#else
       Paths.push_back(TROOT::GetLibDir().Data());
+#endif
       GetEnvVarPath("CLING_PREBUILT_MODULE_PATH", Paths);
       //GetEnvVarPath("LD_LIBRARY_PATH", Paths);
       std::string EnvVarPath;
