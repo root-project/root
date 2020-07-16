@@ -284,7 +284,10 @@ void TObject::Execute(const char *method, const char *params, Int_t *error)
 
    gInterpreter->Execute(this, IsA(), method, params, error);
 
-   if (gPad && must_cleanup) gPad->Modified();
+   if (gPad && must_cleanup) {
+      gPad->Modified();
+      gPad->Update();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,7 +305,10 @@ void TObject::Execute(TMethod *method, TObjArray *params, Int_t *error)
 
    gInterpreter->Execute(this, IsA(), method, params, error);
 
-   if (gPad && must_cleanup) gPad->Modified();
+   if (gPad && must_cleanup) {
+      gPad->Modified();
+      gPad->Update();
+   }
 }
 
 
