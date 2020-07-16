@@ -156,8 +156,6 @@ const char *TRootDialog::GetParameters()
                TGlobal* gb = (TGlobal*)gROOT->GetListOfGlobals(kTRUE)->FindObject(data);
                if (gb)
                   address = (ULong_t)gb->GetAddress();
-               if (address == -1)
-                  address = 0;
             }
             param = TString::Format("(%s)0x%lx", type, address);
          }

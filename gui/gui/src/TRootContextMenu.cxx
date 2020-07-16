@@ -462,7 +462,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
          if (datatype) {
             strlcpy(basictype, datatype->GetTypeName(), 32);
          } else {
-            TClass *cl = TClass::GetClass(type);
+            //TClass *cl = TClass::GetClass(type);
             //if (strncmp(type, "enum", 4) && (cl && !(cl->Property() & kIsEnum)))
             //   Warning("Dialog", "data type is not basic type, assuming (int)");
             strlcpy(basictype, "int", 32);
