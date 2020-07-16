@@ -128,8 +128,12 @@ if (dataframe)
     if(NOT MSVC OR win_broken_tests)
         # std::string_view backport in CPyCppyy
         ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
-        # Test wrapping Python callables for use in C++ using numba
-        ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py PYTHON_DEPS numba)
+
+        if(NOT (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2) AND NOT
+            (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
+            # Test wrapping Python callables for use in C++ using numba
+            ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py PYTHON_DEPS numba)
+        endif()
     endif()
 endif()
 
