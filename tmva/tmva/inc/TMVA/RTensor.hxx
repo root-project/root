@@ -258,6 +258,7 @@ public:
    RTensor<Value_t, Container_t> ExpandDims(int idx);
    RTensor<Value_t, Container_t> Reshape(const Shape_t &shape);
    RTensor<Value_t, Container_t> Slice(const Slice_t &slice);
+   RTensor<Value_t, Container_t> Flatten();
 
    RTensor<Value_t, Container_t> Concatenate(RTensor<Value_t, Container_t> &a, std::size_t idx = 0);
 
@@ -666,6 +667,17 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Concatenate(
 
    return res;
 }
+
+/// \brief Flattens a vector
+/// \returns New RTensor
+/// Flattens a vector into a 1d array and returns a new one, flattened
+template <typename Value_t, typename Container_t>
+inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Flatten(){
+   Shape_t new_fShape = {this->fSize};
+   RTensor<Value_t, Container_t> new_tensor (this->fData, new_fShape, this->fLayout);
+   return new_tensor;
+}
+
 
 } // namespace TMVA::Experimental
 } // namespace TMVA
