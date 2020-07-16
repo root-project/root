@@ -37,6 +37,7 @@ set(EVE_HEADERS1
   TEveTransEditor.h
   TEveTreeTools.h
   TEveUtil.h
+  TEveVector.h
   TEveViewer.h
   TEveViewerListEditor.h
   TEveVSD.h
