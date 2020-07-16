@@ -378,7 +378,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   if (wmode==Extended) {
     // Add two points to make curve jump from 0 to yval at the left end of the plotting range.
     // This ensures that filled polygons are drawn properly.
-    addPoint(xlo-dx*1.00000001,0) ;
+    addPoint(xlo-dx*1.001, 0);
     addPoint(xlo-dx,yval[0]) ;
   } else if (wmode==Straight) {
     addPoint(xlo,0) ;
@@ -408,7 +408,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 
   if (wmode==Extended) {
     addPoint(xhi+dx,yval[minPoints-1]) ;
-    addPoint(xhi+dx,0) ;
+    addPoint(xhi+dx*1.001, 0);
   } else if (wmode==Straight) {
     addPoint(xhi,0) ;
   }
