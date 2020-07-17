@@ -83,7 +83,7 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
             double zlim = fState.Parameter(kex).UpperLimit();
             if (fabs(zdir) < fState.Precision().Eps()) {
                // we have a limit
-               if (abs(zlim-zmid) < fState.Precision().Eps() ) limset = true;
+               if (fabs(zlim-zmid) < fState.Precision().Eps() ) limset = true;
                continue;
             }
             aulim = std::min(aulim, (zlim-zmid)/zdir);
@@ -92,7 +92,7 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
             double zlim = fState.Parameter(kex).LowerLimit();
             if (fabs(zdir) < fState.Precision().Eps()) {
                // we have a limit
-               if (abs(zlim-zmid) < fState.Precision().Eps() ) limset = true;
+               if (fabs(zlim-zmid) < fState.Precision().Eps() ) limset = true;
                continue;
             }
             aulim = std::min(aulim, (zlim-zmid)/zdir);
