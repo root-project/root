@@ -844,12 +844,11 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
     CPPInstance* pyobj =
         (CPPInstance*)((PyTypeObject*)pyclass)->tp_new((PyTypeObject*)pyclass, args, nullptr);
     Py_DECREF(args);
-    Py_DECREF(pyclass);
 
 // bind, register and return if successful
     if (pyobj != 0) { // fill proxy value?
         unsigned objflags =
-            (isRef ? CPPInstance::kIsReference : 0) | (isValue ? CPPInstance::kIsValue : 0);
+            (isRef ? CPPInstance::kIsReference : 0) | (isValue ? CPPInstance::kIsValue : 0) | (flags & CPPInstance::kIsOwner);
         pyobj->Set(address, (CPPInstance::EFlags)objflags);
 
         if (smart_type)
@@ -864,8 +863,12 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
     if (((CPPClass*)pyclass)->fFlags & CPPScope::kIsException) {
         PyObject* exc_obj = CPPExcInstance_Type.tp_new(&CPPExcInstance_Type, nullptr, nullptr);
         ((CPPExcInstance*)exc_obj)->fCppInstance = (PyObject*)pyobj;
+        Py_DECREF(pyclass);
         return exc_obj;
     }
+
+    Py_DECREF(pyclass);
+
     return (PyObject*)pyobj;
 }
 

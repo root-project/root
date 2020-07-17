@@ -207,11 +207,13 @@ void CPyCppyy::op_dealloc_nofree(CPPInstance* pyobj) {
     if (pyobj->fFlags & CPPInstance::kIsRegulated)
         MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));
 
-    if (pyobj->fFlags & CPPInstance::kIsValue) {
-        Cppyy::CallDestructor(klass, cppobj);
-        Cppyy::Deallocate(klass, cppobj);
-    } else if (pyobj->fFlags & CPPInstance::kIsOwner) {
-        if (cppobj) Cppyy::Destruct(klass, cppobj);
+    if (pyobj->fFlags & CPPInstance::kIsOwner) {
+       if (pyobj->fFlags & CPPInstance::kIsValue) {
+           Cppyy::CallDestructor(klass, cppobj);
+           Cppyy::Deallocate(klass, cppobj);
+       } else {
+           if (cppobj) Cppyy::Destruct(klass, cppobj);
+       }
     }
     cppobj = nullptr;
 
