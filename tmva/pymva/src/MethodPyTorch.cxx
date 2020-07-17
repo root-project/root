@@ -55,7 +55,7 @@ MethodPyTorch::MethodPyTorch(DataSetInfo &theData, const TString &theWeightFile)
    fNumEpochs = 10;
    fBatchSize = 100;
 
-   // TODO: Check if verbosity is required in pytorch models.
+   // TODO: Ignore if verbosity not required in pytorch models.
    fVerbose = 1;
    
    fContinueTraining = false;
@@ -63,7 +63,7 @@ MethodPyTorch::MethodPyTorch(DataSetInfo &theData, const TString &theWeightFile)
    fTriesEarlyStopping = -1;
    fLearningRateSchedule = ""; // empty string deactivates learning rate scheduler
    fFilenameTrainedModel = ""; // empty string sets output model filename to default (in weights/)
-   fTensorBoard = "";          // empty string deactivates TensorBoard callback
+   fTensorBoard = "";          // empty string deactivates TensorBoard
 }
 
 MethodPyTorch::~MethodPyTorch() {
@@ -74,4 +74,29 @@ Bool_t MethodPyTorch::HasAnalysisType(Types::EAnalysisType type, UInt_t numberCl
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    if (type == Types::kMulticlass && numberClasses >= 2) return kTRUE;
    return kFALSE;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void MethodPyTorch::DeclareOptions() {
+   DeclareOptionRef(fFilenameModel, "FilenameModel", "Filename of the initial PyTorch model");
+   DeclareOptionRef(fFilenameTrainedModel, "FilenameTrainedModel", "Filename of the trained output PyTorch model");
+   DeclareOptionRef(fBatchSize, "BatchSize", "Training batch size");
+   DeclareOptionRef(fNumEpochs, "NumEpochs", "Number of training epochs");
+
+   // TODO: Check if verbosity is required in pytorch models.
+   DeclareOptionRef(fVerbose, "Verbose", "PyTorch verbosity during training");
+
+   DeclareOptionRef(fContinueTraining, "ContinueTraining", "Load weights from previous training");
+   DeclareOptionRef(fSaveBestOnly, "SaveBestOnly", "Store only weights with smallest validation loss");
+   DeclareOptionRef(fTriesEarlyStopping, "TriesEarlyStopping", "Number of epochs with no improvement in validation loss after "
+                                          "which training will be stopped. The default or a negative number deactivates this option.");
+   DeclareOptionRef(fLearningRateSchedule, "LearningRateSchedule", "Set new learning rate during training at specific epochs, e.g., \"50,0.01;70,0.005\" using torch.optim.lr_scheduler");
+   DeclareOptionRef(fTensorBoard, "TensorBoard",
+                    "Write a log during training to visualize and monitor the training performance with torch.utils.tensorboard");
+
+   DeclareOptionRef(fNumValidationString = "20%", "ValidationSize", "Part of the training data to use for validation."
+                    "Specify as 0.2 or 20% to use a fifth of the data set as validation set."
+                    "Specify as 100 to use exactly 100 events. (Default: 20%)");
+
 }
