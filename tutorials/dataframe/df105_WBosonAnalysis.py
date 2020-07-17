@@ -32,7 +32,9 @@ if args.b: ROOT.gROOT.SetBatch(True)
 
 # Create a ROOT dataframe for each dataset
 # Note that we load the filenames from an external json file.
-path = "root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22"
+#path = "root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22"
+# TO BE REVERTED: Since the files on the Open Data portal are suboptimally produced, we serve a reduced subset from our webserver.
+path = "http://root.cern/files/atlas_opendata_hotfix"
 files = json.load(open(os.path.join(os.environ["ROOTSYS"], "tutorials/dataframe", "df105_WBosonAnalysis.json")))
 processes = files.keys()
 df = {}
