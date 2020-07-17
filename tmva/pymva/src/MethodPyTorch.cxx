@@ -172,7 +172,10 @@ void MethodPyTorch::ProcessOptions() {
    //     perform cpu operations like conv or mm (usually used by OpenMP or MKL).
 
    Log() << kINFO << "Using PyTorch - setting special configuration options "  << Endl;
-   PyRunString("import torch");
+   PyRunString("import torch", "Error importing pytorch");
+
+      // run these above lines also in global namespace to make them visible overall
+   PyRun_String("import torch", Py_single_input, fGlobalNS, fGlobalNS);
 
    // check pytorch version
    PyRunString("torch_major_version = int(torch.__version__.split('.')[0])");
@@ -200,6 +203,24 @@ void MethodPyTorch::SetupTorchModel(bool loadTrainedModel) {
    /*
     * Load PyTorch model from file
     */
+
+   Log() << kINFO << " Setup Torch Model " << Endl;
+
+   PyRunString("load_model_custom_objects=None");
+
+
+   if (!fUserCodeName.IsNull()) {
+      Log() << kINFO << " Executing user initialization code from  " << fUserCodeName << Endl;
+
+
+        // run some python code provided by user for model initialization if needed
+      TString cmd = "exec(open('" + fUserCodeName + "').read())";
+      TString errmsg = "Error executing the provided user code";
+      PyRunString(cmd, errmsg);
+
+      PyRunString("print('custom objects for loading model : ',load_model_custom_objects)");
+   }
+
 
    // Load already trained model or initial model
    TString filenameLoadModel;
@@ -237,4 +258,21 @@ void MethodPyTorch::SetupTorchModel(bool loadTrainedModel) {
 
    // Mark the model as setup
    fModelIsSetup = true;
+}
+
+void MethodPyTorch::Init() {
+
+   TMVA::Internal::PyGILRAII raii;
+
+   if (!PyIsInitialized()) {
+      Log() << kFATAL << "Python is not initialized" << Endl;
+   }
+   _import_array(); // required to use numpy arrays
+
+   // Import torch
+   PyRunString("import sys; sys.argv = ['']", "Set sys.argv failed");
+   PyRunString("import torch", "Import torch failed");
+
+   // Set flag that model is not setup
+   fModelIsSetup = false;
 }
