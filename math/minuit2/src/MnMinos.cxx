@@ -112,10 +112,10 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
    int printLevel = MnPrint::Level();
    if (printLevel > 2) {
       if (direction == 1)
-         std::cout << "\n--------- MnMinos --------- \n Determination of upper Minos error for parameter "
+         std::cout << "--------- MnMinos -------\nDetermination of upper Minos error for parameter "
                    << par << std::endl;
       else
-         std::cout << "\n--------- MnMinos --------- \n Determination of lower Minos error for parameter "
+         std::cout << "--------- MnMinos -------\nDetermination of lower Minos error for parameter "
                    << par << std::endl;
    }
 

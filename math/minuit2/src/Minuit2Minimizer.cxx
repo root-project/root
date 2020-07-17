@@ -605,6 +605,17 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
    }
 
    if (debugLevel >= 1) PrintResults();
+
+   // set the minimum values in the fValues vector
+   const std::vector<MinuitParameter> & paramsObj = fState.MinuitParameters();
+   if (paramsObj.size() == 0) return 0;
+   assert(fDim == paramsObj.size());
+   // re-size vector if it has changed after a new minimization
+   if (fValues.size() != fDim) fValues.resize(fDim);
+   for (unsigned int i = 0; i < fDim; ++i) {
+      fValues[i] = paramsObj[i].Value();
+   }
+
    return validMinimum;
 }
 
@@ -638,22 +649,6 @@ void Minuit2Minimizer::PrintResults() {
       std::cout << "Nfcn  = " << fState.NFcn() << std::endl;
    }
 }
-
-const double * Minuit2Minimizer::X() const {
-   // return values at minimum
-   const std::vector<MinuitParameter> & paramsObj = fState.MinuitParameters();
-   if (paramsObj.size() == 0) return 0;
-   assert(fDim == paramsObj.size());
-   // be careful for multiple calls of this function. I will redo an allocation here
-   // only when size of vectors has changed (e.g. after a new minimization)
-   if (fValues.size() != fDim) fValues.resize(fDim);
-   for (unsigned int i = 0; i < fDim; ++i) {
-      fValues[i] = paramsObj[i].Value();
-   }
-
-   return  &fValues.front();
-}
-
 
 const double * Minuit2Minimizer::Errors() const {
    // return error at minimum (set to zero for fixed and constant params)
@@ -776,8 +771,7 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // runopt is a flag which specifies if only lower or upper error needs to be run
    // if runopt = 0 both, = 1 only lower, + 2 only upper errors
    errLow = 0; errUp = 0;
-   bool runLower = runopt != 2;
-   bool runUpper = runopt != 1;
+   
 
    assert( fMinuitFCN );
 
@@ -786,9 +780,6 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
       return false;
    }
 
-   int debugLevel = PrintLevel();
-   // internal minuit messages
-   MnPrint::SetLevel( debugLevel );
 
    // to run minos I need function minimum class
    // redo minimization from current state
@@ -810,7 +801,51 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    if (ErrorDef() != fMinimum->Up() )
       fMinimum->SetErrorDef(ErrorDef() );
 
+   int mstatus = RunMinosError(i,errLow, errUp, runopt);
+
+   // run again the Minimization in case of a new minimum
+   // bit 8 is set
+   if ((mstatus & 8) != 0) {
+     
+      MN_INFO_MSG2("Minuit2Minimizer::GetMinosError",
+                   "Found a new minimum: run again the Minimization  starting from the new  point ");
+      if (PrintLevel() > 1) {
+         std::cout << "New minimum point found by MINOS: " << std::endl;
+         std::cout << "FVAL  = " << fState.Fval() << std::endl;
+         for (auto & par : fState.MinuitParameters() ) {
+            std::cout << par.Name() << "\t  = " << par.Value() << std::endl;
+         }
+      }
+      // release parameter that was fixed in the returned state from Minos
+      ReleaseVariable(i);
+      bool ok = Minimize();
+      if (!ok)  return false;
+      // run again Minos from new Minimum (also lower error needs to be re-computed)
+      MN_INFO_MSG2("Minuit2Minimizer::GetMinosError", "Run now again Minos from the new found Minimum");
+      mstatus = RunMinosError(i, errLow, errUp, runopt);
+
+      // do not reset new minimum bit to flag for other parameters
+      mstatus |= 8; 
+   }
+
+   fStatus += 10*mstatus;
+   fMinosStatus = mstatus; 
+
+   bool isValid =  ((mstatus & 1) == 0) && ((mstatus & 2) == 0);    
+   return isValid;
+}
+
+
+int Minuit2Minimizer::RunMinosError(unsigned int i, double & errLow, double & errUp, int runopt) {
    // switch off Minuit2 printing
+
+   bool runLower = runopt != 2;
+   bool runUpper = runopt != 1;
+
+   int debugLevel = PrintLevel();
+   // internal minuit messages
+   MnPrint::SetLevel( debugLevel );
+
    int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2;
 
    // set the precision if needed
@@ -832,24 +867,30 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // cut off too small tolerance (they are not needed)
    tol = std::max(tol, 0.01);
 
-   if (debugLevel >=1) {
-      // print the real number of maxfcn used (defined in MnMinos)
-      int maxfcn_used = maxfcn;
-      if (maxfcn_used == 0) {
-         int nvar = fState.VariableParameters();
-         maxfcn_used = 2*(nvar+1)*(200 + 100*nvar + 5*nvar*nvar);
-      }
-      // print an empty line above
-      std::cout << "******************************************************************************************************\n";
-      std::string txt = (runLower) ? "lower" : "upper";
-      if (runLower && runUpper) txt = "lower and upper";
-      std::cout << "Minuit2Minimizer::GetMinosError - Run MINOS " << txt << " error for parameter #" << i << " : " << par_name
-                << " using max-calls " << maxfcn_used << ", tolerance " << tol << std::endl;
+   
+   // get the real number of maxfcn used (defined in MnMinos) to be printed 
+   int maxfcn_used = maxfcn;
+   if (maxfcn_used == 0) {
+      int nvar = fState.VariableParameters();
+      maxfcn_used = 2*(nvar+1)*(200 + 100*nvar + 5*nvar*nvar);
    }
 
-   if (runLower)
+   if (runLower) {
+      if (debugLevel >=1) {
+         std::cout << "******************************************************************************************************\n";
+         std::cout << "Minuit2Minimizer::GetMinosError - Run MINOS LOWER error for parameter #" << i << " : " << par_name
+                << " using max-calls " << maxfcn_used << ", tolerance " << tol << std::endl;
+      }
       low = minos.Loval(i, maxfcn, tol);
-   if (runUpper) up  = minos.Upval(i,maxfcn,tol);
+   }
+   if (runUpper) {
+      if (debugLevel >=1) {
+         std::cout << "******************************************************************************************************\n";
+         std::cout << "Minuit2Minimizer::GetMinosError - Run MINOS UPPER error for parameter #" << i << " : " << par_name
+                << " using max-calls " << maxfcn_used << ", tolerance " << tol << std::endl;
+      }
+      up  = minos.Upval(i,maxfcn,tol);
+   }
 
    ROOT::Minuit2::MinosError me(i, fMinimum->UserState().Value(i),low, up);
 
@@ -919,7 +960,7 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    if (lowerInvalid || upperInvalid ) {
       // set status accroding to bit
       // bit 1:  lower invalid Minos errors
-      // bit 2:  uper invalid Minos error
+      // bit 2:  upper invalid Minos error
       // bit 3:   invalid because max FCN
       // bit 4 : invalid because a new minimum has been found
       if (lowerInvalid) {
@@ -928,60 +969,34 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
          if (me.LowerNewMin() ) mstatus |= 8;
       }
       if(upperInvalid) {
-         mstatus |= 3;
+         mstatus |= 2;
          if (me.AtUpperMaxFcn() ) mstatus |= 4;
          if (me.UpperNewMin() ) mstatus |= 8;
       }
-      //std::cout << "Error running Minos for parameter " << i << std::endl;
-      fStatus += 10*mstatus;
    }
+   // case upper/lower limit
+   if (me.AtUpperLimit() || me.AtLowerLimit())
+      mstatus |= 16; 
+
+   
 
    if (runLower) errLow = me.Lower();
    if (runUpper) errUp = me.Upper();
 
-   // in case of new minimum update minimum state
-   int iflagNewMinimum = 0;
+   // in case of new minimum found update also the  minimum state
    if (  ( runLower && me.LowerNewMin()) && (runUpper && me.UpperNewMin() ) ) {
-      iflagNewMinimum = 3;
       // take state with lower function value
       fState = (low.State().Fval() < up.State().Fval()) ? low.State() : up.State();
    } else if ( runLower && me.LowerNewMin() ) {
-      iflagNewMinimum = 1;
       fState = low.State();
    } else if ( runUpper && me.UpperNewMin() ) {
-      iflagNewMinimum = 2;
       fState = up.State();
    }
 
+   return mstatus;
 
-   // run gain the Minimization
-   if (iflagNewMinimum > 0) {
-      if (fCountNewMinMinos > 10) {
-          MN_ERROR_MSG("Minuit2Minimizer::GetMinosErrors:  failed - a maximum number of searches for a new minimum has been done");
-          return false;
-      }
-      fCountNewMinMinos++;
-      MN_INFO_MSG2("Minuit2Minimizer::GetMinosError",
-                   "Found a new minimum: run again the Minimization  starting from the new  point ");
-      if (debugLevel > 1) {
-         std::cout << "New minimum point found by Minos : " << std::endl;
-         std::cout << "FVAL  = " << fState.Fval() << std::endl;
-         for (auto & par : fState.MinuitParameters() ) {
-            std::cout << par.Name() << "\t  = " << par.Value() << std::endl;
-         }
-      }
-      // release parameter that was fixed in the returned state from Minos
-      ReleaseVariable(i);
-      bool ok = Minimize();
-      if (!ok)  return false;
-      // run again Minos from new Minimum (also lower error needs to be re-computed)
-      MN_INFO_MSG2("Minuit2Minimizer::GetMinosError", "Run now again Minos from the new found Minimum");
-      GetMinosError(i, errLow, errUp, runopt);
-   }
-
-   bool isValid = (runLower && me.LowerValid() ) || (runUpper && me.UpperValid() );
-   return isValid;
 }
+
 
 bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x, double * y, double xmin, double xmax) {
    // scan a parameter (variable) around the minimum value
