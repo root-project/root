@@ -100,3 +100,63 @@ void MethodPyTorch::DeclareOptions() {
                     "Specify as 100 to use exactly 100 events. (Default: 20%)");
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Validation of the ValidationSize option. Allowed formats are 20%, 0.2 and
+/// 100 etc.
+///    - 20% and 0.2 selects 20% of the training set as validation data.
+///    - 100 selects 100 events as the validation data.
+///
+/// @return number of samples in validation set
+///
+UInt_t TMVA::MethodPyTorch::GetNumValidationSamples()
+{
+   Int_t nValidationSamples = 0;
+   UInt_t trainingSetSize = GetEventCollection(Types::kTraining).size();
+
+   // Parsing + Validation
+   // --------------------
+   if (fNumValidationString.EndsWith("%")) {
+      // Relative spec. format 20%
+      TString intValStr = TString(fNumValidationString.Strip(TString::kTrailing, '%'));
+
+      if (intValStr.IsFloat()) {
+         Double_t valSizeAsDouble = fNumValidationString.Atof() / 100.0;
+         nValidationSamples = GetEventCollection(Types::kTraining).size() * valSizeAsDouble;
+      } else {
+         Log() << kFATAL << "Cannot parse number \"" << fNumValidationString
+               << "\". Expected string like \"20%\" or \"20.0%\"." << Endl;
+      }
+   } else if (fNumValidationString.IsFloat()) {
+      Double_t valSizeAsDouble = fNumValidationString.Atof();
+
+      if (valSizeAsDouble < 1.0) {
+         // Relative spec. format 0.2
+         nValidationSamples = GetEventCollection(Types::kTraining).size() * valSizeAsDouble;
+      } else {
+         // Absolute spec format 100 or 100.0
+         nValidationSamples = valSizeAsDouble;
+      }
+   } else {
+      Log() << kFATAL << "Cannot parse number \"" << fNumValidationString << "\". Expected string like \"0.2\" or \"100\"."
+            << Endl;
+   }
+
+   // Value validation
+   // ----------------
+   if (nValidationSamples < 0) {
+      Log() << kFATAL << "Validation size \"" << fNumValidationString << "\" is negative." << Endl;
+   }
+
+   if (nValidationSamples == 0) {
+      Log() << kFATAL << "Validation size \"" << fNumValidationString << "\" is zero." << Endl;
+   }
+
+   if (nValidationSamples >= (Int_t)trainingSetSize) {
+      Log() << kFATAL << "Validation size \"" << fNumValidationString
+            << "\" is larger than or equal in size to training set (size=\"" << trainingSetSize << "\")." << Endl;
+   }
+
+   return nValidationSamples;
+}
