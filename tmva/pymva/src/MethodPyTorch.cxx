@@ -160,3 +160,37 @@ UInt_t TMVA::MethodPyTorch::GetNumValidationSamples()
 
    return nValidationSamples;
 }
+
+void MethodPyTorch::ProcessOptions() {
+   // Set default filename for trained model if option is not used
+   if (fFilenameTrainedModel.IsNull()) {
+      fFilenameTrainedModel = GetWeightFileDir() + "/TrainedModel_" + GetName() + ".pt";
+   }
+
+   //  -  set up number of threads for CPU if NumThreads option was specified
+   //     `torch.set_num_threads` sets the number of threads that can be used to
+   //     perform cpu operations like conv or mm (usually used by OpenMP or MKL).
+
+   Log() << kINFO << "Using PyTorch - setting special configuration options "  << Endl;
+   PyRunString("import torch");
+
+   // check pytorch version
+   PyRunString("torch_major_version = int(torch.__version__.split('.')[0])");
+   PyObject *pyTorchVersion = PyDict_GetItemString(fLocalNS, "torch_major_version");
+   int torchVersion = PyLong_AsLong(pyTorchVersion);
+   Log() << kINFO << "Using PyTorch version " << torchVersion << Endl;
+
+   // in case specify number of threads
+   int num_threads = fNumThreads;
+   if (num_threads > 0) {
+      Log() << kINFO << "Setting the CPU number of threads =  "  << num_threads << Endl;
+
+      PyRunString(TString::Format("torch.set_num_threads(%d)", num_threads));
+      PyRunString(TString::Format("torch.set_num_interop_threads(%d)", num_threads));
+   }
+
+   // Setup model, either the initial model from `fFilenameModel` or
+   // the trained model from `fFilenameTrainedModel`
+   if (fContinueTraining) Log() << kINFO << "Continue training with trained model" << Endl;
+   SetupTorchModel(fContinueTraining);
+}
