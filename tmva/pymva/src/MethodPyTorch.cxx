@@ -276,3 +276,196 @@ void MethodPyTorch::Init() {
    // Set flag that model is not setup
    fModelIsSetup = false;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// TODO: This method is not fully implemented yet. Callback specific structure in PyTorch TBD. 
+// Adaptation in process from PyKeras
+
+/////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+void MethodPyTorch::Train() {
+   if(!fModelIsSetup) Log() << kFATAL << "Model is not setup for training" << Endl;
+
+   /*
+    * Load training data to numpy array. 
+    * NOTE: These are later forced to be converted into torch tensors throught the training loop which may not be the ideal method.
+    */
+
+   UInt_t nAllEvents = Data()->GetNTrainingEvents();
+   UInt_t nValEvents = GetNumValidationSamples();
+   UInt_t nTrainingEvents = nAllEvents - nValEvents;
+
+   Log() << kINFO << "Split TMVA training data in " << nTrainingEvents << " training events and "
+         << nValEvents << " validation events" << Endl;
+
+   float* trainDataX = new float[nTrainingEvents*fNVars];
+   float* trainDataY = new float[nTrainingEvents*fNOutputs];
+   float* trainDataWeights = new float[nTrainingEvents];
+   for (UInt_t i=0; i<nTrainingEvents; i++) {
+      const TMVA::Event* e = GetTrainingEvent(i);
+      // Fill variables
+      for (UInt_t j=0; j<fNVars; j++) {
+         trainDataX[j + i*fNVars] = e->GetValue(j);
+      }
+      // Fill targets
+      // NOTE: For classification, convert class number in one-hot vector,
+      // e.g., 1 -> [0, 1] or 0 -> [1, 0] for binary classification
+      if (GetAnalysisType() == Types::kClassification || GetAnalysisType() == Types::kMulticlass) {
+         for (UInt_t j=0; j<fNOutputs; j++) {
+            trainDataY[j + i*fNOutputs] = 0;
+         }
+         trainDataY[e->GetClass() + i*fNOutputs] = 1;
+      }
+      else if (GetAnalysisType() == Types::kRegression) {
+         for (UInt_t j=0; j<fNOutputs; j++) {
+            trainDataY[j + i*fNOutputs] = e->GetTarget(j);
+         }
+      }
+      else Log() << kFATAL << "Can not fill target vector because analysis type is not known" << Endl;
+      // Fill weights
+      // NOTE: If no weight branch is given, this defaults to ones for all events
+      trainDataWeights[i] = e->GetWeight();
+   }
+
+   npy_intp dimsTrainX[2] = {(npy_intp)nTrainingEvents, (npy_intp)fNVars};
+   npy_intp dimsTrainY[2] = {(npy_intp)nTrainingEvents, (npy_intp)fNOutputs};
+   npy_intp dimsTrainWeights[1] = {(npy_intp)nTrainingEvents};
+   PyArrayObject* pTrainDataX = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsTrainX, NPY_FLOAT, (void*)trainDataX);
+   PyArrayObject* pTrainDataY = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsTrainY, NPY_FLOAT, (void*)trainDataY);
+   PyArrayObject* pTrainDataWeights = (PyArrayObject*)PyArray_SimpleNewFromData(1, dimsTrainWeights, NPY_FLOAT, (void*)trainDataWeights);
+   PyDict_SetItemString(fLocalNS, "trainX", (PyObject*)pTrainDataX);
+   PyDict_SetItemString(fLocalNS, "trainY", (PyObject*)pTrainDataY);
+   PyDict_SetItemString(fLocalNS, "trainWeights", (PyObject*)pTrainDataWeights);
+
+   /*
+    * Load validation data to numpy array
+    */
+
+   // NOTE: TMVA Validation data is a subset of all the training data
+   // we will not use test data for validation. They will be used for the real testing
+
+
+   float* valDataX = new float[nValEvents*fNVars];
+   float* valDataY = new float[nValEvents*fNOutputs];
+   float* valDataWeights = new float[nValEvents];
+   //validation events follows the trainig one in the TMVA training vector
+   for (UInt_t i=0; i< nValEvents ; i++) {
+      UInt_t ievt = nTrainingEvents + i; // TMVA event index
+      const TMVA::Event* e = GetTrainingEvent(ievt);
+      // Fill variables
+      for (UInt_t j=0; j<fNVars; j++) {
+         valDataX[j + i*fNVars] = e->GetValue(j);
+      }
+      // Fill targets
+      if (GetAnalysisType() == Types::kClassification || GetAnalysisType() == Types::kMulticlass) {
+         for (UInt_t j=0; j<fNOutputs; j++) {
+            valDataY[j + i*fNOutputs] = 0;
+         }
+         valDataY[e->GetClass() + i*fNOutputs] = 1;
+      }
+      else if (GetAnalysisType() == Types::kRegression) {
+         for (UInt_t j=0; j<fNOutputs; j++) {
+            valDataY[j + i*fNOutputs] = e->GetTarget(j);
+         }
+      }
+      else Log() << kFATAL << "Can not fill target vector because analysis type is not known" << Endl;
+      // Fill weights
+      valDataWeights[i] = e->GetWeight();
+   }
+
+   npy_intp dimsValX[2] = {(npy_intp)nValEvents, (npy_intp)fNVars};
+   npy_intp dimsValY[2] = {(npy_intp)nValEvents, (npy_intp)fNOutputs};
+   npy_intp dimsValWeights[1] = {(npy_intp)nValEvents};
+   PyArrayObject* pValDataX = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsValX, NPY_FLOAT, (void*)valDataX);
+   PyArrayObject* pValDataY = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsValY, NPY_FLOAT, (void*)valDataY);
+   PyArrayObject* pValDataWeights = (PyArrayObject*)PyArray_SimpleNewFromData(1, dimsValWeights, NPY_FLOAT, (void*)valDataWeights);
+   PyDict_SetItemString(fLocalNS, "valX", (PyObject*)pValDataX);
+   PyDict_SetItemString(fLocalNS, "valY", (PyObject*)pValDataY);
+   PyDict_SetItemString(fLocalNS, "valWeights", (PyObject*)pValDataWeights);
+
+   /*
+    * Train PyTorch model
+    */
+   Log() << kINFO << "Print Training Model Architecture" << Endl;
+   PyRunString("print(model)");
+
+   // Setup parameters
+
+   PyObject* pBatchSize = PyLong_FromLong(fBatchSize);
+   PyObject* pNumEpochs = PyLong_FromLong(fNumEpochs);
+   
+   // Ignore if verbosity is not required in pytorch models.
+   PyObject* pVerbose = PyLong_FromLong(fVerbose);
+   
+   PyDict_SetItemString(fLocalNS, "batchSize", pBatchSize);
+   PyDict_SetItemString(fLocalNS, "numEpochs", pNumEpochs);
+   
+   // TODO: Check if verbosity is required in pytorch models.
+   PyDict_SetItemString(fLocalNS, "verbose", pVerbose);
+
+   // ////////////////////////////////////////////////////////////////////
+   // TODO: Better startegy for using Callbacks in PyTorch
+
+   // Setup training functions acting as callbacks
+
+   // SAVE BEST MODEL Save only weights with smallest validation loss
+
+   // EARLY STOPPING Stop training early if no improvement in validation loss is observed
+
+   // LRScheduler
+
+   // PyTorch TensorBoard
+
+   // ////////////////////////////////////////////////////////////////////
+
+   // Train model
+   PyRunString("train(trainX, trainY, sample_weight=trainWeights, batch_size=batchSize, epochs=numEpochs, verbose=verbose, validation_data=(valX, valY, valWeights))",
+               "Failed to train model");
+
+
+   std::vector<float> fHistory; // Hold training history  (val_acc or loss etc)
+   fHistory.resize(fNumEpochs); // holds training loss or accuracy output
+   npy_intp dimsHistory[1] = { (npy_intp)fNumEpochs};
+   PyArrayObject* pHistory = (PyArrayObject*)PyArray_SimpleNewFromData(1, dimsHistory, NPY_FLOAT, (void*)&fHistory[0]);
+   PyDict_SetItemString(fLocalNS, "HistoryOutput", (PyObject*)pHistory);
+
+
+//#endif
+
+   /*
+    * Store trained model to file (only if option 'SaveBestOnly' is NOT activated,
+    * because we do not want to override the best model checkpoint)
+    */
+
+   if (!fSaveBestOnly) {
+      PyRunString("torch.jit.save('"+fFilenameTrainedModel"')",
+                  "Failed to save trained model: "+fFilenameTrainedModel);
+      Log() << kINFO << "Trained model written to file: " << fFilenameTrainedModel << Endl;
+   }
+
+   /*
+    * Clean-up
+    */
+
+   delete[] trainDataX;
+   delete[] trainDataY;
+   delete[] trainDataWeights;
+   delete[] valDataX;
+   delete[] valDataY;
+   delete[] valDataWeights;
+}
+
+
+void MethodPyTorch::GetHelpMessage() const {
+   Log() << Endl;
+   Log() << "PyTorch is a scientific computing package supporting"​ << Endl;
+   Log() << "automatic differentiation. This method wraps the training"​ << Endl;
+   Log() << "and predictions steps of the PyTorch Python package for"​ << Endl;
+   Log() << "TMVA, so that dataloading, preprocessing and evaluation" << Endl;
+   Log() << "can be done within the TMVA system. To use this PyTorch" << Endl;
+   Log() << "interface, you need to generatea model with PyTorch first." << Endl;
+   Log() << "Then, this model can be loaded and trained in TMVA." << Endl;
+   
+   Log() << Endl;
+}
