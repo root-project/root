@@ -69,16 +69,10 @@ namespace TMVA {
 
       void GetHelpMessage() const;
 
-      /// enumeration defining the used Keras backend
-      enum EBackendType { kUndefined = -1, kTensorFlow = 0, kTheano = 1, kCNTK = 2 };
-
-      /// Get the Keras backend (can be: TensorFlow, Theano or CNTK)
-      EBackendType GetKerasBackend();
-      TString GetKerasBackendName();
 
     private:
 
-      TString fFilenameModel;                         // Filename of the previously exported Keras model
+      TString fFilenameModel;                         // Filename of the previously exported PyTorch model
       UInt_t fBatchSize {0};                          // Training batch size
       UInt_t fNumEpochs {0};                          // Number of training epochs
       Int_t fNumThreads {0};                          // Number of CPU threads (if 0 uses default values)
