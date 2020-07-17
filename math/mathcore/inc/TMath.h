@@ -661,15 +661,13 @@ inline Double_t TMath::TanH(Double_t x)
 
 ////////////////////////////////////////////////////////////////////////////////
 inline Double_t TMath::ASin(Double_t x)
-   { if (x < -1.) return -TMath::Pi()/2;
-     if (x >  1.) return  TMath::Pi()/2;
+   { 
      return asin(x);
    }
 
 ////////////////////////////////////////////////////////////////////////////////
 inline Double_t TMath::ACos(Double_t x)
-   { if (x < -1.) return TMath::Pi();
-     if (x >  1.) return 0;
+   { 
      return acos(x);
    }
 
