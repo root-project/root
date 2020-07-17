@@ -684,6 +684,39 @@ class Cpp10StandardExceptions( MyTestCase ):
       self.assert_( e )
       self.assertEqual( e.what(), "runtime pb!!" )
 
+   def test2ExceptionBoolValue(self):
+      """Test boolean value of exception object"""
+      # ROOT-10870
+
+      ROOT.gInterpreter.Declare("""
+      namespace test2Exception {
+         template <typename T>
+         class Handle;
+
+         class Exception : public std::exception {};
+      }
+
+      template <typename T>
+      class test2Exception::Handle {
+      public:
+         std::shared_ptr<test2Exception::Exception const> returnsNull() const noexcept;
+         std::shared_ptr<test2Exception::Exception const> returnsNotNull() const noexcept;
+      };
+
+      template<class T>
+      inline std::shared_ptr<test2Exception::Exception const>
+      test2Exception::Handle<T>::returnsNull() const noexcept { return std::shared_ptr<test2Exception::Exception>(); }
+
+      template<class T>
+      inline std::shared_ptr<test2Exception::Exception const>
+      test2Exception::Handle<T>::returnsNotNull() const noexcept { return std::shared_ptr<test2Exception::Exception>(new test2Exception::Exception()); }
+      """)
+
+      handle = ROOT.test2Exception.Handle('int')()
+
+      self.assert_(not handle.returnsNull());
+      self.assert_(handle.returnsNotNull);
+
 
 ### Test handing over of pointer variables from containers ===================
 class Cpp11PointerContainers( MyTestCase ):
