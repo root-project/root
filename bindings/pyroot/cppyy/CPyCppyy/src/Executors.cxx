@@ -581,7 +581,7 @@ PyObject* CPyCppyy::InstancePtrExecutor::Execute(
 
 //----------------------------------------------------------------------------
 CPyCppyy::InstanceExecutor::InstanceExecutor(Cppyy::TCppType_t klass) :
-    fClass(klass), fFlags(CPPInstance::kIsValue)
+    fClass(klass), fFlags(CPPInstance::kIsValue | CPPInstance::kIsOwner)
 {
     /* empty */
 }
@@ -604,8 +604,8 @@ PyObject* CPyCppyy::InstanceExecutor::Execute(
     if (!pyobj)
         return nullptr;
 
-// python ref counting will now control this object's life span
-    ((CPPInstance*)pyobj)->PythonOwns();
+// python ref counting will now control this object's life span; it will be
+// deleted b/c it is marked as a by-value object (unless C++ ownership is set)
     return pyobj;
 }
 
