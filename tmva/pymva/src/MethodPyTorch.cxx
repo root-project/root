@@ -194,3 +194,47 @@ void MethodPyTorch::ProcessOptions() {
    if (fContinueTraining) Log() << kINFO << "Continue training with trained model" << Endl;
    SetupTorchModel(fContinueTraining);
 }
+
+
+void MethodPyTorch::SetupTorchModel(bool loadTrainedModel) {
+   /*
+    * Load PyTorch model from file
+    */
+
+   // Load already trained model or initial model
+   TString filenameLoadModel;
+   if (loadTrainedModel) {
+      filenameLoadModel = fFilenameTrainedModel;
+   }
+   else {
+      filenameLoadModel = fFilenameModel;
+   }
+   PyRunString("model = torch.jit.load('"+filenameLoadModel+"')",
+               "Failed to load PyTorch model from file: "+filenameLoadModel);
+   Log() << kINFO << "Load model from file: " << filenameLoadModel << Endl;
+
+
+   /*
+    * Init variables and weights
+    */
+
+   // Get variables, classes and target numbers
+   fNVars = GetNVariables();
+   if (GetAnalysisType() == Types::kClassification || GetAnalysisType() == Types::kMulticlass) fNOutputs = DataInfo().GetNClasses();
+   else if (GetAnalysisType() == Types::kRegression) fNOutputs = DataInfo().GetNTargets();
+   else Log() << kFATAL << "Selected analysis type is not implemented" << Endl;
+
+   // Init evaluation (needed for getMvaValue)
+   fVals = new float[fNVars]; // holds values used for classification and regression
+   npy_intp dimsVals[2] = {(npy_intp)1, (npy_intp)fNVars};
+   PyArrayObject* pVals = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsVals, NPY_FLOAT, (void*)fVals);
+   PyDict_SetItemString(fLocalNS, "vals", (PyObject*)pVals);
+
+   fOutput.resize(fNOutputs); // holds classification probabilities or regression output
+   npy_intp dimsOutput[2] = {(npy_intp)1, (npy_intp)fNOutputs};
+   PyArrayObject* pOutput = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsOutput, NPY_FLOAT, (void*)&fOutput[0]);
+   PyDict_SetItemString(fLocalNS, "output", (PyObject*)pOutput);
+
+   // Mark the model as setup
+   fModelIsSetup = true;
+}
