@@ -45,6 +45,12 @@ foreach(val RANGE ${how_many_pythons})
                              RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
                              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
                              ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+  if (NOT CMAKE_INSTALL_LIBDIR STREQUAL CMAKE_INSTALL_PYTHONDIR)
+    # add a symlink to ${libname} in CMAKE_INSTALL_PYTHONDIR
+    install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink\
+            ${CMAKE_INSTALL_FULL_LIBDIR}/lib${libname}.so\
+            ${CMAKE_INSTALL_FULL_PYTHONDIR}/lib${libname}.so)")
+  endif()
 
   # Compile .py files
   foreach(py_source ${py_sources})
@@ -55,5 +61,5 @@ endforeach()
 
 # Install Python sources and bytecode
 install(DIRECTORY ${localruntimedir}/cppyy_backend
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
         COMPONENT libraries)

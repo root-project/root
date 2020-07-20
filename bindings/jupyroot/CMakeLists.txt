@@ -79,5 +79,5 @@ endforeach()
 
 # Install Python sources and bytecode
 install(DIRECTORY ${localruntimedir}/JupyROOT
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
         COMPONENT libraries)
