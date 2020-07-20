@@ -462,7 +462,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       # list(APPEND incdirs ${CMAKE_SOURCE_DIR})
       set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
     elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-      set(incdirs ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+      list(APPEND incdirs ${CMAKE_CURRENT_SOURCE_DIR}/inc)
     endif()
 
     foreach(dep ${ARG_DEPENDENCIES})
