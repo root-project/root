@@ -936,7 +936,10 @@ ROOT::Experimental::RDanglingFieldDescriptor::MakeDescriptor() const {
    }
    // FieldZero is usually named "" and would be a false positive here
    if (fField.GetId() != DescriptorId_t(0)) {
-      Detail::RFieldBase::EnsureValidFieldName(fField.GetFieldName()).ThrowOnError();
+      auto validName = Detail::RFieldBase::EnsureValidFieldName(fField.GetFieldName());
+      if (!validName) {
+         return R__FORWARD_ERROR(validName);
+      }
    }
    return fField.Clone();
 }

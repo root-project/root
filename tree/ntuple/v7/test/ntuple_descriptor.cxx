@@ -154,7 +154,7 @@ TEST(RNTuple, Descriptor)
    delete[] headerBuffer;
 }
 
-TEST(RDanglingFieldDescriptor, GetDescriptorErrors)
+TEST(RDanglingFieldDescriptor, MakeDescriptorErrors)
 {
    // minimum requirements for making a field descriptor from scratch
    RFieldDescriptor fieldDesc = RDanglingFieldDescriptor()
@@ -164,36 +164,28 @@ TEST(RDanglingFieldDescriptor, GetDescriptorErrors)
       .MakeDescriptor()
       .Unwrap();
 
+   // MakeDescriptor() returns an RResult<RFieldDescriptor>
+   // -- here we check the error cases
+
    // must set field id
-   try {
-      RFieldDescriptor badFieldDesc = RDanglingFieldDescriptor()
-         .MakeDescriptor()
-         .Unwrap();
-      FAIL() << "default constructed dangling descriptors should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field id"));
-   }
+   RResult<RFieldDescriptor> fieldDescRes = RDanglingFieldDescriptor().MakeDescriptor();
+   ASSERT_FALSE(fieldDescRes) << "default constructed dangling descriptors should throw";
+   EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("invalid field id"));
+
    // must set field structure
-   try {
-      RFieldDescriptor badFieldDesc = RDanglingFieldDescriptor()
-         .FieldId(1)
-         .MakeDescriptor()
-         .Unwrap();
-      FAIL() << "field descriptors without structure should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field structure"));
-   }
+   fieldDescRes = RDanglingFieldDescriptor()
+      .FieldId(1)
+      .MakeDescriptor();
+   ASSERT_FALSE(fieldDescRes) << "field descriptors without structure should throw";
+   EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("invalid field structure"));
+
    // must set field name
-   try {
-      RFieldDescriptor badFieldDesc = RDanglingFieldDescriptor()
-         .FieldId(1)
-         .Structure(ENTupleStructure::kCollection)
-         .MakeDescriptor()
-         .Unwrap();
-      FAIL() << "unnamed field descriptors should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field name cannot be empty string"));
-   }
+   fieldDescRes = RDanglingFieldDescriptor()
+      .FieldId(1)
+      .Structure(ENTupleStructure::kCollection)
+      .MakeDescriptor();
+   ASSERT_FALSE(fieldDescRes) << "unnamed field descriptors should throw";
+   EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("field name cannot be empty string"));
 }
 
 TEST(RFieldDescriptorRange, IterateOverFieldNames)
