@@ -77,6 +77,8 @@ set(cpp_sources
     src/PyzPythonHelpers.cxx
     src/CPPInstancePyz.cxx
     src/FacadeHelpers.cxx
+    src/TPyDispatcher.cxx
+    inc/TPyDispatcher.h
     ${PYROOT_EXTRA_SOURCE}
 )
 
@@ -108,7 +110,9 @@ foreach(val RANGE ${how_many_pythons})
     target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all Core Tree cppyy${python_under_version_string})
   endif()
 
-  target_include_directories(${libname} PRIVATE ${python_include_dir})
+  target_include_directories(${libname}
+     PRIVATE ${python_include_dir}
+     PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
 
   # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
   if(NOT MSVC)
