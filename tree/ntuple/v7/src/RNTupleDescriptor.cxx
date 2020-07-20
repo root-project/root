@@ -764,7 +764,10 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::EnsureValidDescriptor() const {
    // Reuse field name validity check
-   Detail::RFieldBase::EnsureValidFieldName(fDescriptor.GetName()).ThrowOnError();
+   auto validName = Detail::RFieldBase::EnsureValidFieldName(fDescriptor.GetName());
+   if (!validName) {
+      return R__FORWARD_ERROR(validName);
+   }
    // open-ended list of invariant checks
    for (const auto& key_val: fDescriptor.fFieldDescriptors) {
       const auto& id = key_val.first;
