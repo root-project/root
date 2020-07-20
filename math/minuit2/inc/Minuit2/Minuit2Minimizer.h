@@ -240,17 +240,17 @@ public:
       A minimizaiton must be performed befre, return false if no minimization has been done
       In case of Minos failed the status error is updated as following
       status += 10 * minosStatus. 
-      The Minos status of last Minos run can also be retrieved bby calling MinosStatus()
+      The Minos status of last Minos run can also be retrieved by calling MinosStatus()
    */
    virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp, int = 0);
 
    /** 
       MINOS status code of last Minos run
-       status & 1 > 0  : invalid lower error
-       status & 2 > 0  : invalid upper error 
-       status & 4 > 0  : invalid because maximum number of function calls exceeded 
-       status & 8 > 0  : a new minimum has been found
-       status & 16 > 0 : error is truuncated because parameter is at lower/upper limit
+       `status & 1 > 0`  : invalid lower error
+       `status & 2 > 0`  : invalid upper error
+       `status & 4 > 0`  : invalid because maximum number of function calls exceeded
+       `status & 8 > 0`  : a new minimum has been found
+       `status & 16 > 0` : error is truncated because parameter is at lower/upper limit
    */
    virtual int MinosStatus() const { return fMinosStatus; }
 

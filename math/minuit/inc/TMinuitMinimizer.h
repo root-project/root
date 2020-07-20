@@ -194,9 +194,9 @@ public:
    virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp, int = 0);
 
    /// minos status code of last Minos run
-   /// minosstatus = -1   : Minos is not run
-   ///             =  0   : last MINOS run was succesfull
-   ///             >  0   : some problems 
+   /// minos status = -1   : Minos is not run
+   ///              =  0   : last MINOS run was succesfull
+   ///              >  0   : some problems encountered when running MINOS
    virtual int MinosStatus() const { return fMinosStatus; }
 
    /**
