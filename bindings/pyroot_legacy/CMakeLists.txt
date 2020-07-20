@@ -104,6 +104,14 @@ foreach(pyfile cppyy.py _pythonization.py ROOT.py _rdf_utils.py)
   file(COPY ${pyfile} DESTINATION ${localruntimedir})
 endforeach()
 
+if (NOT CMAKE_INSTALL_LIBDIR STREQUAL CMAKE_INSTALL_PYTHONDIR)
+  # add a symlink to libPyROOT.so in CMAKE_INSTALL_PYTHONDIR
+  install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink\
+          ${CMAKE_INSTALL_FULL_LIBDIR}/libPyROOT.so\
+          ${CMAKE_INSTALL_FULL_PYTHONDIR}/libPyROOT.so)")
+endif()
+
+
 set(JupyROOTDirName "JupyROOT")
 install (DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
 file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
