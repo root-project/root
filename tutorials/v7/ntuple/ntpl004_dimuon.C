@@ -17,6 +17,13 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
+// Until C++ runtime modules are universally used, we explicitly load the ntuple library.  Otherwise the
+// use of templated types might prevent autoloading from taking place
+#include <RConfigure.h>
+#ifndef R__USE_CXXMODULES
+R__LOAD_LIBRARY(ROOTNTuple)
+#endif
+
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
