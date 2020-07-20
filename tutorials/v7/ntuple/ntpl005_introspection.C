@@ -14,9 +14,12 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-// The following line should disappear in a future version of RNTuple, when
-// the common template specializations of RField are part of the LinkDef.h
+// Until C++ runtime modules are universally used, we explicitly load the ntuple library.  Otherwise the
+// use of templated types might prevent autoloading from taking place
+#include <RConfigure.h>
+#ifndef R__USE_CXXMODULES
 R__LOAD_LIBRARY(ROOTNTuple)
+#endif
 
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
