@@ -38,3 +38,8 @@ tags
 .cache
 .gdb_history
 compile_commands.json
+
+# Doxygen
+documentation/doxygen/*.eps
+documentation/doxygen/*.pcm
+documentation/doxygen/*.jpg
