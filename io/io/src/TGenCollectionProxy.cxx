@@ -25,6 +25,9 @@
 
 #define MESSAGE(which,text)
 
+// See TEmulatedCollectionProxy.cxx
+extern TStreamerInfo *R__GenerateTClassForPair(const std::string &f, const std::string &s);
+
 /**
 \class TGenVectorProxy
 \ingroup IO
@@ -876,10 +879,19 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
             case ROOT::kSTLunorderedmultimap:
                nam = "pair<"+inside[1]+","+inside[2];
                nam += (nam[nam.length()-1]=='>') ? " >" : ">";
-               newfValue = R__CreateValue(nam, silent);
 
                fVal   = R__CreateValue(inside[2], silent);
                fKey   = R__CreateValue(inside[1], silent);
+
+               {
+                  TInterpreter::SuspendAutoParsing autoParseRaii(gCling);
+                  if (0==TClass::GetClass(nam.c_str())) {
+                     // We need to emulate the pair
+                     R__GenerateTClassForPair(inside[1],inside[2]);
+                  }
+               }
+               newfValue = R__CreateValue(nam, silent);
+
                fPointers = (0 != (fKey->fCase&kIsPointer));
                if (fPointers || (0 != (fKey->fProperties&kNeedDelete))) {
                   fProperties |= kNeedDelete;
