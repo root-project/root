@@ -834,7 +834,20 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name
 
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
-   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kResolveTypedef | TClassEdit::kKeepOuterConst);
+   splitname.ShortType(norm_name, TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kResolveTypedef | TClassEdit::kKeepOuterConst);
+
+   if (splitname.fElements.empty() || splitname.fElements[0] == "std::pair" || splitname.fElements[0] == "pair") {
+      // We don't want to lookup the std::pair itself.
+      std::string first, second;
+      GetNormalizedName(first, splitname.fElements[1]);
+      GetNormalizedName(second, splitname.fElements[2]);
+      norm_name = "pair<" + first + "," + second;
+      if (!second.empty() && second.back() == '>')
+         norm_name += " >";
+      else
+         norm_name += ">";
+      return;
+   }
 
    // Depending on how the user typed their code, in particular typedef
    // declarations, we may end up with an explicit '::' being
