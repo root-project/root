@@ -515,6 +515,77 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    // dx : Activation gradient to be computed                               -> activationGradients [in place op]
    // dy : Gradient of activation from the following layer (backpropagation)-> activationGradients
 
+#if (CUDNN_VERSION >= 8000)
+   /**
+    * I'm sure there may be a faster way, but this works
+    */
+   convRequestedAlgoCount = 6; // reset to max number of available backward algorithms
+   cudnnConvolutionDescriptor_t tempConvBwdDescriptor;
+   CUDDNCHECK(cudnnCreateConvolutionDescriptor(&tempConvBwdDescriptor));
+   cudnnTensorDescriptor_t  outputBwdTensorDescriptor;
+   CUDNNCHECK(cudnnCreateTensorDescriptor(&outputBwdTensorDescriptor));
+   CUDNNCHECK(cudnnSetTensor4dDescriptor(outputBwdTensorDescriptor,
+                                             CUDNN_TENSOR_NCHW,  // Layout of the tensor in memory
+                                             Tensor_t::GetDataType(),
+                                             (int)L->GetBatchSize(),
+                                             (int)L->GetInputDepth(),
+                                             (int)L->GetInputHeight(),
+                                             (int)L->GetInputWidth()));
+   int algoCount;
+   cudnnConvolutionBwdDataAlgoPerf_t convPerfBwdResults[convRequestedAlgoCount];  // this will store metrics to choose convolution algorithm
+   CUDNNCHECK(cudnnFindConvolutionBackwardDataAlgorithm(
+      cudnnHandle,
+      convDescriptors->WeightsDescriptor,
+      activationGradientsBackwardDescriptor,
+      tempConvBwdDescriptor,
+      outputBwdTensorDescriptor,
+      convRequestedAlgoCount,
+      &algoCount,
+      &convPerfBwdResults));
+   // we could also do it with the expert mode (cudnnFindConvolutionForwardAlgorithmEx),
+   // but we arrive at an chicken or egg problem:
+   // workspace size is calculated from chosen forward algorithm,
+   // but finding a forward algorithm depends on workspace size...
+   // i.e.
+   // Tensor_t & outputBwdTensor = L->GetInput();
+   // outputBwdTensor = Tensor_t(outputBwdTensor.GetDeviceBuffer(),{ L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth() },GetTensorLayout(),0,0);
+   // CUDNNCHECK(cudnnFindConvolutionBackwardDataAlgorithmEx(
+   //    cudnnHandle,
+   //    convDescriptors->WeightsDescriptor,
+   //    &filters,
+   //    activationGradientsBackwardDescriptor,
+   //    &activationGradientsBackwardTensor,
+   //    tempConvBwdDescriptor,
+   //    outputBwdTensorDescriptor,
+   //    &outputBwdTensor,
+   //    convRequestedAlgoCount,
+   //    &algoCount,
+   //    &convPerfBwdResults,
+   //    &convWorkspace,
+   //    convWorkspace->ForwardWorkspaceSize));
+   // instead choose either fastest or lowest memory algo as per preference
+   int algoIdx{0};
+   if (CNNOptions::ConvMaxWorkspaceSize != 0) {  // prefer fastest
+      float temp_runtime{std::numeric_limits<float>::max()};
+      for (int i = 0; i < algoCount; ++i) {
+         if (convPerfBwdResults[i].status != 0) continue;
+         if (convPerfBwdResults[i].time < temp_runtime) {
+            temp_runtime = convPerfBwdResults[i].time;
+            algoIdx = i;
+         }
+      }
+   } else {  // prefer smallest workspace size
+      size_t temp_memsize{std::numeric_limits<size_t>::max()};
+      for (int i = 0; i < algoCount; ++i) {
+         if (convPerfBwdResults[i].status != 0) continue;
+         if (convPerfBwdResults[i].memory < temp_memsize) {
+            temp_memsize = convPerfBwdResults[i].memory;
+            algoIdx = i;
+         }
+      }
+   }
+   convWorkspace->AlgorithmBackward = convPerfBwdResults[algoIdx].algo;
+#else
    cudnnConvolutionBwdDataPreference_t preferenceBwdData =
       (CNNOptions::ConvMaxWorkspaceSize != 0) ? CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST : CUDNN_CONVOLUTION_BWD_DATA_NO_WORKSPACE;
 
@@ -525,6 +596,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                                       activationGradientsBackwardDescriptor,
                                                       preferenceBwdData, memLimit,
                                                       &convWorkspace->AlgorithmBackward));
+#endif
 
    std::cout << "CONV BWD Data Algo used  is "  << convWorkspace->AlgorithmBackward << std::endl;
    //CUDNNCHECK(cudnnSetConvolutionMathType(convDescriptors->LayerDescriptor, CUDNN_TENSOR_OP_MATH));
