@@ -27,6 +27,9 @@
 // #include "Kernels.cuh"*/
 // #include <math.h>
 
+// for std::numeric_limits<T>::max()
+#include <limits>
+
 namespace TMVA {
 namespace DNN  {
 
@@ -378,7 +381,78 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    cudnnHandle_t cudnnHandle = outputTensor.GetCudnnHandle();
 
    // cuDNN decides which algorithm to use
-   // More detailed alternative: cudnnFindConvolutionForwardAlgorithm
+#if (CUDNN_VERSION >= 8000)
+   /**
+    * I'm sure there may be a faster way, but this works
+    */
+   int convRequestedAlgoCount{8}; // requestedAlgoCount is setting how many algorithms to try, can be tuned, fixed for now as all available
+   cudnnConvolutionDescriptor_t tempConvDescriptor;
+   CUDDNCHECK(cudnnCreateConvolutionDescriptor(&tempConvDescriptor));
+   cudnnTensorDescriptor_t  outputTensorDescriptor;
+   CUDNNCHECK(cudnnCreateTensorDescriptor(&outputTensorDescriptor));
+   CUDNNCHECK(cudnnSetTensor4dDescriptor(outputTensorDescriptor,
+                                             CUDNN_TENSOR_NCHW,  // Layout of the tensor in memory
+                                             Tensor_t::GetDataType(),
+                                             (int)L->GetBatchSize(),
+                                             (int)L->GetDepth(),
+                                             (int)L->GetHeight(),
+                                             (int)L->GetWidth()));
+   int algoCount;
+   cudnnConvolutionFwdAlgoPerf_t convPerfResults[convRequestedAlgoCount];  // this will store metrics to choose convolution algorithm
+   CUDNNCHECK(cudnnFindConvolutionForwardAlgorithm(
+      cudnnHandle,
+      inputTensorDescriptor,
+      convDescriptors->WeightsDescriptor,
+      tempConvDescriptor,
+      outputTensorDescriptor,
+      convRequestedAlgoCount,
+      &algoCount,
+      &convPerfResults));
+   // we could also do it with the expert mode (cudnnFindConvolutionForwardAlgorithmEx),
+   // but we arrive at an chicken or egg problem:
+   // workspace size is calculated from chosen forward algorithm,
+   // but finding a forward algorithm depends on workspace size...
+   // i.e.
+   // Tensor_t & inputTensor = L->GetInput();
+   // inputTensor = Tensor_t(inputTensor.GetDeviceBuffer(),{ L->GetBatchSize(), L->GetInputDepth(), L->GetInputHeight(), L->GetInputWidth() },GetTensorLayout(),0,0);
+   // CUDNNCHECK(cudnnFindConvolutionForwardAlgorithmEx(
+   //    cudnnHandle,
+   //    inputTensorDescriptor,
+   //    &inputTensor,
+   //    convDescriptors->WeightsDescriptor,
+   //    &filters,
+   //    tempConvDescriptor,
+   //    outputTensorDescriptor,
+   //    &outputTensor,
+   //    convRequestedAlgoCount,
+   //    &algoCount,
+   //    &convPerfResults,
+   //    &convWorkspace,
+   //    convWorkspace->ForwardWorkspaceSize));
+   // instead choose either fastest or lowest memory algo as per preference
+   int algoIdx{0};
+   if (CNNOptions::ConvMaxWorkspaceSize != 0) {  // prefer fastest
+      float temp_runtime{std::numeric_limits<float>::max()};
+      for (int i = 0; i < algoCount; ++i) {
+         if (convPerfResults[i].status != 0) continue;
+         if (convPerfResults[i].time < temp_runtime) {
+            temp_runtime = convPerfResults[i].time;
+            algoIdx = i;
+         }
+      }
+   } else {  // prefer smallest workspace size
+      size_t temp_memsize{std::numeric_limits<size_t>::max()};
+      for (int i = 0; i < algoCount; ++i) {
+         if (convPerfResults[i].status != 0) continue;
+         if (convPerfResults[i].memory < temp_memsize) {
+            temp_memsize = convPerfResults[i].memory;
+            algoIdx = i;
+         }
+      }
+   }
+   convWorkspace->AlgorithmForward = convPerfResults[algoIdx].algo;
+#else
+   // More detailed alternative: cudnnFindConvolutionForwardAlgorithm (only option in newer cuDNN versions)
    cudnnConvolutionFwdPreference_t preferenceFwd = (CNNOptions::ConvMaxWorkspaceSize !=0) ? CUDNN_CONVOLUTION_FWD_PREFER_FASTEST :
                                                    CUDNN_CONVOLUTION_FWD_NO_WORKSPACE;
 
@@ -389,6 +463,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
       outputTensor.GetTensorDescriptor(), preferenceFwd,
       memLimit, // Memory limit in bytes for mode CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT
       &convWorkspace->AlgorithmForward));
+#endif
 
    // Allocate memory for the convolution
    //size_t workSpaceSizeInBytes = 0;
