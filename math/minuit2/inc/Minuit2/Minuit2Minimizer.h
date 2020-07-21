@@ -159,7 +159,7 @@ public:
    virtual double Edm() const { return fState.Edm(); }
 
    /// return  pointer to X values at the minimum
-   virtual const double *  X() const;
+   virtual const double *  X() const { return  &fValues.front();}
 
    /// return pointer to gradient values at the minimum
    virtual const double *  MinGradient() const { return 0; } // not available in Minuit2
@@ -239,15 +239,20 @@ public:
       get the minos error for parameter i, return false if Minos failed
       A minimizaiton must be performed befre, return false if no minimization has been done
       In case of Minos failed the status error is updated as following
-      status += 10 * minosStatus where the minos status is:
-       status = 1    : maximum number of function calls exceeded when running for lower error
-       status = 2    : maximum number of function calls exceeded when running for upper error
-       status = 3    : new minimum found when running for lower error
-       status = 4    : new minimum found when running for upper error
-       status = 5    : any other failure
-
+      status += 10 * minosStatus. 
+      The Minos status of last Minos run can also be retrieved by calling MinosStatus()
    */
    virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp, int = 0);
+
+   /** 
+      MINOS status code of last Minos run
+       `status & 1 > 0`  : invalid lower error
+       `status & 2 > 0`  : invalid upper error
+       `status & 4 > 0`  : invalid because maximum number of function calls exceeded
+       `status & 8 > 0`  : a new minimum has been found
+       `status & 16 > 0` : error is truncated because parameter is at lower/upper limit
+   */
+   virtual int MinosStatus() const { return fMinosStatus; }
 
    /**
       scan a parameter i around the minimum. A minimization must have been done before,
@@ -307,10 +312,14 @@ protected:
    /// examine the minimum result
    bool ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & min);
 
+   // internal function to compute Minos errors
+   int RunMinosError(unsigned int i, double & errLow, double & errUp, int runopt);
+
 private:
 
    unsigned int fDim;       // dimension of the function to be minimized
    bool fUseFumili;
+   int fMinosStatus = -1;  // Minos status code
 
    ROOT::Minuit2::MnUserParameterState fState;
    // std::vector<ROOT::Minuit2::MinosError> fMinosErrors;

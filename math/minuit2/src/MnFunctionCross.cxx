@@ -59,11 +59,14 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
    std::vector<double> alsb(3, 0.), flsb(3, 0.);
 
    int printLevel = MnPrint::Level();
-
+#ifdef DEBUG
+   printLevel = 3;
+#endif
 
 #ifdef DEBUG
-   std::cout<<"MnFunctionCross for parameter  "<<par.front()<< "fmin = " << aminsv
-            << " contur value aim = (fmin + up) = " << aim << std::endl;
+   for (unsigned int i = 0; i < par.size(); ++i)
+         std::cout << "MnFunctionCross for parameter  " << par[i] << " value " << pmid[i] << " dir " << pdir[i]
+         << " function min = " << aminsv << " contur value aim = (fmin + up) = " << aim << std::endl;
 #endif
 
 
@@ -75,14 +78,23 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
       if(fState.Parameter(kex).HasLimits()) {
          double zmid = pmid[i];
          double zdir = pdir[i];
-         if(fabs(zdir) < fState.Precision().Eps()) continue;
          //       double zlim = 0.;
          if(zdir > 0. && fState.Parameter(kex).HasUpperLimit()) {
             double zlim = fState.Parameter(kex).UpperLimit();
+            if (fabs(zdir) < fState.Precision().Eps()) {
+               // we have a limit
+               if (fabs(zlim-zmid) < fState.Precision().Eps() ) limset = true;
+               continue;
+            }
             aulim = std::min(aulim, (zlim-zmid)/zdir);
          }
          else if(zdir < 0. && fState.Parameter(kex).HasLowerLimit()) {
             double zlim = fState.Parameter(kex).LowerLimit();
+            if (fabs(zdir) < fState.Precision().Eps()) {
+               // we have a limit
+               if (fabs(zlim-zmid) < fState.Precision().Eps() ) limset = true;
+               continue;
+            }
             aulim = std::min(aulim, (zlim-zmid)/zdir);
          }
       }
@@ -92,19 +104,30 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
    std::cout<<"Largest allowed aulim "<< aulim << std::endl;
 #endif
 
-   if(aulim  < aopt+tla) limset = true;
 
+   // case of a single parameter and we are at limit
+   if (limset && npar == 1) {
+      if (printLevel > 1)
+         std::cout << "MnFunctionCross: parameter is at limit " << pmid[0] << " delta "
+         << pdir[0] << std::endl;
+      return MnCross(fState, nfcn, MnCross::CrossParLimit());
+   }
+
+   if (aulim < aopt + tla)
+      limset = true;
 
    MnMigrad migrad(fFCN, fState, MnStrategy(std::max(0, int(fStrategy.Strategy()-1))));
 
-   for(unsigned int i = 0; i < npar; i++) {
-#ifdef DEBUG
-      std::cout << "MnFunctionCross: Set value for " << par[i] <<  " to " << pmid[i] << std::endl;
-#endif
+   if (printLevel > 2) {
+      std::cout << "MnFunctionCross: Run Migrad fixing parameters :";
+      if (npar > 1) std::cout << std::endl;
+   }
+   for (unsigned int i = 0; i < npar; i++) {
+
       migrad.SetValue(par[i], pmid[i]);
 
-      if (printLevel > 1) {
-         std::cout << "MnFunctionCross: parameter " << i << " set to " << pmid[i] << std::endl;
+      if (printLevel > 2) {
+         std::cout << "\t" << fState.Name(par[i]) << " #" << par[i] << "  to " << pmid[i] << std::endl;
       }
    }
    // find minimum with respect all the other parameters (n- npar) (npar are the fixed ones)
@@ -112,12 +135,20 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
    FunctionMinimum min0 = migrad(maxcalls, mgr_tlr);
    nfcn += min0.NFcn();
 
-#ifdef DEBUG
-   std::cout << "MnFunctionCross: after Migrad on n-1  minimum is " << min0 << std::endl;
-#endif
+   if (printLevel > 2) {
+      MnPrint::PrintState(std::cout, min0.State(), "MnFunctionCross: Result after Migrad");
+      std::cout << min0.UserState().Parameters() << std::endl;
+   }
 
-   if (min0.Fval() < fFval + tlf)  // case of new minimum found
+   // case a new minimum is found
+   if (min0.Fval() < fFval - tlf) {
+      // case of new minimum is found
+      if (printLevel > 1) {
+         std::cout << "MnFunctionCross: A new minimum is found when scanning parameter  " << par.front() << " new value = "
+         << min0.Fval() << " old value : " << fFval << std::endl;
+      }
       return MnCross(min0.UserState(), nfcn, MnCross::CrossNewMin());
+   }
    if(min0.HasReachedCallLimit())
       return MnCross(min0.UserState(), nfcn, MnCross::CrossFcnLimit());
    if(!min0.IsValid()) return MnCross(fState, nfcn);
@@ -142,26 +173,26 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
    std::cout << "MnFunctionCross: flsb[0] = " << flsb[0] << " aopt =  " << aopt  << std::endl;
 #endif
 
-   for(unsigned int i = 0; i < npar; i++) {
-#ifdef DEBUG
-      std::cout << "MnFunctionCross: Set new value for " << par[i] <<  " from " << pmid[i] << " to " << pmid[i] + (aopt)*pdir[i] << " aopt = " << aopt << std::endl;
-#endif
+   if (printLevel > 2) {
+      std::cout << "MnFunctionCross: Run Migrad again (#2) : ";
+      if (npar > 1) std::cout << std::endl;
+   }
+   for (unsigned int i = 0; i < npar; i++) {
       migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
-
-      if (printLevel > 1) {
-         std::cout << "MnFunctionCross: parameter " << i << " set to " << pmid[i] + (aopt)*pdir[i] << std::endl;
+      if (printLevel > 2) {
+         std::cout << "\t - parameter " << i << " fixed to " << pmid[i] + (aopt)*pdir[i] << std::endl;
       }
-
    }
 
    FunctionMinimum min1 = migrad(maxcalls, mgr_tlr);
    nfcn += min1.NFcn();
 
-#ifdef DEBUG
-   std::cout << "MnFunctionCross: after Migrad on n-1  minimum is " << min1 << std::endl;
-#endif
+   if (printLevel > 2) {
+      MnPrint::PrintState(std::cout, min1.State(), "MnFunctionCross: Result after 2nd Migrad");
+      std::cout << min1.UserState().Parameters() << std::endl;
+   }
 
-   if (min1.Fval() < fFval + tlf) // case of new minimum found
+   if (min1.Fval() < fFval - tlf) // case of new minimum found
       return MnCross(min1.UserState(), nfcn, MnCross::CrossNewMin());
    if(min1.HasReachedCallLimit())
       return MnCross(min1.UserState(), nfcn, MnCross::CrossFcnLimit());
@@ -198,24 +229,25 @@ L300:
                aopt = aulim;
                limset = true;
             }
+            if (printLevel > 2) {
+               std::cout << "MnFunctionCross: Run Migrad again (iteration " << it << " ) :  ";
+               if (npar > 1) std::cout << std::endl;
+            }
             for(unsigned int i = 0; i < npar; i++) {
-#ifdef DEBUG
-      std::cout << "MnFunctionCross: Set new value for " << par[i] <<  " to " << pmid[i] + (aopt)*pdir[i] << " aopt = " << aopt << std::endl;
-#endif
                migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
-               if (printLevel > 1) {
-                  std::cout << "MnFunctionCross: parameter " << i << " set to " << pmid[i] + (aopt)*pdir[i] << std::endl;
+               if (printLevel > 2) {
+                  std::cout << "\t - parameter " << i << " fixed to " << pmid[i] + (aopt)*pdir[i] << std::endl;
                }
-
             }
             min1 = migrad(maxcalls, mgr_tlr);
             nfcn += min1.NFcn();
 
-#ifdef DEBUG
-   std::cout << "MnFunctionCross: after Migrad on n-1  minimum is " << min1 << std::endl;
-   std::cout << "nfcn = " << nfcn << std::endl;
-#endif
-            if (min1.Fval() < fFval + tlf) // case of new minimum found
+            if (printLevel > 2) {
+               MnPrint::PrintState(std::cout, min1.State(), "MnFunctionCross: Result after Migrad");
+               std::cout << min1.UserState().Parameters() << std::endl;
+            }
+
+            if (min1.Fval() < fFval - tlf) // case of new minimum found
                return MnCross(min1.UserState(), nfcn, MnCross::CrossNewMin());
             if(min1.HasReachedCallLimit())
                return MnCross(min1.UserState(), nfcn, MnCross::CrossFcnLimit());
@@ -264,25 +296,25 @@ L460:
       limset = true;
    }
 
+   if (printLevel > 2) {
+      std::cout << "MnFunctionCross: Run Migrad again (#3) : ";
+      if (npar > 1) std::cout << std::endl;
+   }
    for(unsigned int i = 0; i < npar; i++) {
-#ifdef DEBUG
-      std::cout << "MnFunctionCross: Set new value for " << par[i] <<  " from " << pmid[i] << " to " << pmid[i] + (aopt)*pdir[i] << " aopt = " << aopt << std::endl;
-#endif
       migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
-      if (printLevel > 1) {
-         std::cout << "MnFunctionCross: parameter " << i << " set to " << pmid[i] + (aopt)*pdir[i] << std::endl;
+      if (printLevel > 2) {
+         std::cout << "\t : parameter " << i << " fixed to " << pmid[i] + (aopt)*pdir[i] << std::endl;
       }
-
    }
    FunctionMinimum min2 = migrad(maxcalls, mgr_tlr);
    nfcn += min2.NFcn();
 
-#ifdef DEBUG
-   std::cout << "MnFunctionCross: after Migrad on n-1  minimum is " << min2 << std::endl;
-   std::cout << "nfcn = " << nfcn << std::endl;
-#endif
+   if (printLevel > 2) {
+      MnPrint::PrintState(std::cout, min2.State(), "MnFunctionCross: Result after Migrad (#3): ");
+      std::cout << min2.UserState().Parameters() << std::endl;
+   }
 
-   if (min2.Fval() < fFval + tlf) // case of new minimum found
+   if (min2.Fval() < fFval - tlf) // case of new minimum found
       return MnCross(min2.UserState(), nfcn, MnCross::CrossNewMin());
    if(min2.HasReachedCallLimit())
       return MnCross(min2.UserState(), nfcn, MnCross::CrossFcnLimit());
@@ -471,23 +503,25 @@ L500:
          }
 
          // evaluate at new point aopt
+         if (printLevel > 2) {
+            std::cout << "MnFunctionCross: Run Migrad again at new point (#iter = " << ipt << " ): ";
+            if (npar > 1) std::cout << std::endl;
+         }
          for(unsigned int i = 0; i < npar; i++) {
-#ifdef DEBUG
-      std::cout << "MnFunctionCross: Set new value for " << par[i] <<  " from " << pmid[i] << " to " << pmid[i] + (aopt)*pdir[i] << " aopt = " << aopt << std::endl;
-#endif
             migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
-            if (printLevel > 1) {
-               std::cout << "MnFunctionCross: parameter " << i << " set to " << pmid[i] + (aopt)*pdir[i] << std::endl;
+            if (printLevel > 2) {
+               std::cout << "\t : parameter " << i << " fixed to " << pmid[i] + (aopt)*pdir[i] << std::endl;
             }
          }
          min2 = migrad(maxcalls, mgr_tlr);
          nfcn += min2.NFcn();
-#ifdef DEBUG
-   std::cout << "MnFunctionCross: after Migrad on n-1  minimum is " << min2 << std::endl;
-   std::cout << "nfcn = " << nfcn << std::endl;
-#endif
 
-         if (min2.Fval() < fFval + tlf) // case of new minimum found
+         if (printLevel > 2) {
+            MnPrint::PrintState(std::cout, min2.State(), "MnFunctionCross: Result after new Migrad : ");
+            std::cout << min2.UserState().Parameters() << std::endl;
+         }
+
+         if (min2.Fval() < fFval - tlf) // case of new minimum found
             return MnCross(min2.UserState(), nfcn, MnCross::CrossNewMin());
          if(min2.HasReachedCallLimit())
             return MnCross(min2.UserState(), nfcn, MnCross::CrossFcnLimit());
