@@ -249,7 +249,7 @@ if(minuit2_mpi)
 endif()
 
 if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-  add_definitions(-DWARNINGMSG -DUSE_ROOT_ERROR)
+  add_definitions(-DWARNINGMSG)
   ROOT_ADD_TEST_SUBDIRECTORY(test)
 else()
   include(StandAlone.cmake)
