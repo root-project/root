@@ -374,7 +374,11 @@ public:
    TMethod           *GetClassMethodWithPrototype(const char *name, const char *proto,
                                                   Bool_t objectIsConst = kFALSE,
                                                   ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
-   Version_t          GetClassVersion() const { fVersionUsed = kTRUE; return fClassVersion; }
+   Version_t          GetClassVersion() const {
+      if (!fVersionUsed.load())
+         fVersionUsed = kTRUE;
+      return fClassVersion;
+   }
    Int_t              GetClassSize() const { return Size(); }
    TDataMember       *GetDataMember(const char *datamember) const;
    Long_t             GetDataMemberOffset(const char *membername) const;
