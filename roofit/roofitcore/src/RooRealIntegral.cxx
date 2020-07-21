@@ -286,7 +286,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // Choose same expensive object cache as integrand
   setExpensiveObjectCache(function.expensiveObjectCache()) ;
-//   cout << "RRI::ctor(" << GetName() << ") setting expensive object cache to " << &expensiveObjectCache() << " as taken from " << function.GetName() << std::endl ;
 
   // Use objects integrator configuration if none is specified
   if (!_iconfig) _iconfig = (RooNumIntConfig*) function.getIntegratorConfig() ;
@@ -300,9 +299,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       }
     }
   }
-
-  //_funcNormSet = funcNormSet ? (RooArgSet*)funcNormSet->snapshot(false) : 0 ;
-
+  
   // Make internal copy of dependent list
   RooArgSet intDepList(depList) ;
 
@@ -346,13 +343,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue*>(branch) ;
     if ((realArgLV && (realArgLV->isJacobianOK(intDepList)!=0)) || catArgLV) {
       exclLVBranches.add(*branch) ;
-//       cout << "exclv branch = " << std::endl ;
-//       branch->printCompactTree() ;
     }
     if (dependsOnValue(*branch)) {
       branchListVD.add(*branch) ;
-    } else {
-//       cout << "value of self does not depend on branch " << branch->GetName() << std::endl ;
     }
   }
   exclLVBranches.remove(depList,true,true) ;
@@ -406,13 +399,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // Replace exclusive lvalue branch servers with lvalue branches
   // WVE Don't do this for binned distributions - deal with this using numeric integration with transformed bin boundaroes
   if (!exclLVServers.empty() && !function.isBinnedDistribution(exclLVBranches)) {
-//     cout << "activating LVservers " << exclLVServers << " for use in integration " << std::endl ;
     intDepList.remove(exclLVServers) ;
     intDepList.add(exclLVBranches) ;
-
-    //cout << "intDepList removing exclLVServers " << exclLVServers << std::endl ;
-    //cout << "intDepList adding exclLVBranches " << exclLVBranches << std::endl ;
-
   }
 
 
@@ -503,13 +491,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       intDepList.add(exclLVServers) ;
      }
   }
-  //cout << "NUMINT intDepList = " << intDepList << std::endl ;
 
   // Loop again over function servers to add remaining numeric integrations
   for (const auto arg : function.servers()) {
-
-    //cout << "processing server for numeric integration " << arg->ClassName() << "::" << arg->GetName() << std::endl ;
-
     // Process only servers that are not treated analytically
     if (!_anaList.find(arg->GetName()) && arg->dependsOn(intDepList)) {
 
@@ -809,11 +793,6 @@ RooFit::OwningPtr<RooAbsReal> RooRealIntegral::createIntegral(const RooArgSet& i
 
 double RooRealIntegral::getValV(const RooArgSet* nset) const
 {
-//   // fast-track clean-cache processing
-//   if (_operMode==AClean) {
-//     return _value ;
-//   }
-
   if (nset && nset->uniqueId().value() != _lastNormSetId) {
     const_cast<RooRealIntegral*>(this)->setProxyNormSet(nset);
     _lastNormSetId = nset->uniqueId().value();
@@ -850,7 +829,6 @@ double RooRealIntegral::evaluate() const
 
       if (cacheVal) {
         retVal = *cacheVal ;
-   // cout << "using cached value of integral" << GetName() << std::endl ;
       } else {
 
 
@@ -885,7 +863,6 @@ double RooRealIntegral::evaluate() const
         if ((_cacheNum && !_intList.empty()) || _intList.getSize()>=_cacheAllNDim) {
           RooDouble* val = new RooDouble(retVal) ;
           expensiveObjectCache().registerObject(_function->GetName(),GetName(),*val,parameters())  ;
-          //     cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << std::endl ;
         }
 
       }
@@ -912,9 +889,7 @@ double RooRealIntegral::evaluate() const
       // integrated over later.
       assert(servers().size() == _facList.size() + 1);
 
-      //setDirtyInhibit(true) ;
       retVal= _function->getVal(funcNormSet());
-      //setDirtyInhibit(false) ;
       break ;
     }
   }
@@ -925,12 +900,12 @@ double RooRealIntegral::evaluate() const
     for (const auto arg : _facList) {
       // Multiply by fit range for 'real' dependents
       if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
-        RooAbsRealLValue* argLV = (RooAbsRealLValue*)arg ;
+        auto argLV = static_cast<const RooAbsRealLValue*>(arg);
         retVal *= (argLV->getMax(intRange()) - argLV->getMin(intRange())) ;
       }
       // Multiply by number of states for category dependents
       if (arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
-        RooAbsCategoryLValue* argLV = (RooAbsCategoryLValue*)arg ;
+        auto argLV = static_cast<const RooAbsCategoryLValue*>(arg);
         retVal *= argLV->numTypes() ;
       }
     }
@@ -950,7 +925,6 @@ double RooRealIntegral::evaluate() const
 
   return retVal ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
