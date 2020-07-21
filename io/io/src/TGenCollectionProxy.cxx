@@ -972,8 +972,12 @@ Bool_t TGenCollectionProxy::HasPointers() const
 
 TClass *TGenCollectionProxy::GetValueClass() const
 {
-   if (!fValue.load()) Initialize(kFALSE);
-   return fValue.load() ? (*fValue).fType.GetClass() : 0;
+   auto value = fValue.load();
+   if (!value) {
+      Initialize(kFALSE);
+      value = fValue.load();
+   }
+   return value ? (*value).fType.GetClass() : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -985,9 +989,10 @@ void TGenCollectionProxy::UpdateValueClass(const TClass *oldValueType, TClass *n
    // Note that we do not need to update anything if we have not yet been
    // initialized.  In addition (see ROOT-6040) doing an initialization here
    // might hence a nested dlopen (due to autoloading).
-   if (fValue.load() && (*fValue).fType == oldValueType) {
+   auto value = fValue.load();
+   if (value && (*value).fType == oldValueType) {
       // Set pointer to the TClass representing the content.
-      (*fValue).fType = newValueType;
+      (*value).fType = newValueType;
    }
 }
 
@@ -996,8 +1001,12 @@ void TGenCollectionProxy::UpdateValueClass(const TClass *oldValueType, TClass *n
 
 EDataType TGenCollectionProxy::GetType() const
 {
-   if ( !fValue.load() ) Initialize(kFALSE);
-   return (*fValue).fKind;
+   auto value = fValue.load();
+   if (!value) {
+      Initialize(kFALSE);
+      value = fValue.load();
+   }
+   return value ? (*value).fKind : kNoType_t;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
