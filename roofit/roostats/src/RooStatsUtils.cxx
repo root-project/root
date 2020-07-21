@@ -122,9 +122,7 @@ namespace RooStats {
       if(constraints.getSize() == 0) {
          oocoutW((TObject *)0, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;
          return 0;
-      } else if(constraints.getSize() == 1) {
-         return dynamic_cast<RooAbsPdf *>(constraints.first()->clone(name));
-      }
+      } 
       return new RooProdPdf(name,"", constraints);
    }
 
