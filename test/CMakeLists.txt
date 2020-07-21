@@ -254,6 +254,9 @@ if(ROOT_roofit_FOUND)
   ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressroostats-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooStats.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressroostats )
+if (ROOT_minuit2_FOUND)
+  ROOT_ADD_TEST(test-stressroostats-minuit2 COMMAND stressRooStats -minim Minuit2  FAILREGEX "FAILED|Error in" LABELS longtest)
+endif()
 endif()
 
 #--stressHistFactory--------------------------------------------------------------------------------
