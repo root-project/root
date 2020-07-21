@@ -2855,7 +2855,7 @@ TVirtualCollectionProxy *TClass::GetCollectionProxy() const
 {
    // Use assert, so that this line (slow because of the TClassEdit) is completely
    // removed in optimized code.
-   assert(TestBit(kLoading) || !TClassEdit::IsSTLCont(fName) || fCollectionProxy || 0 == "The TClass for the STL collection has no collection proxy!");
+   //assert(TestBit(kLoading) || !TClassEdit::IsSTLCont(fName) || fCollectionProxy || 0 == "The TClass for the STL collection has no collection proxy!");
    if (gThreadTsd && fCollectionProxy) {
       TClassLocalStorage *local = TClassLocalStorage::GetStorage(this);
       if (local == 0) return fCollectionProxy;

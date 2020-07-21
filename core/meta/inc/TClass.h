@@ -390,7 +390,8 @@ public:
    }
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
-      if (fCurrentInfo.load()) return fCurrentInfo;
+      auto current = fCurrentInfo.load();
+      if (current) return current;
       else return DetermineCurrentStreamerInfo();
    }
    TVirtualStreamerInfo     *GetLastReadInfo() const { return fLastReadInfo; }
