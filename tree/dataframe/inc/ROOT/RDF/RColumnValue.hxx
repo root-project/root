@@ -99,9 +99,6 @@ class R__CLING_PTRCHECK(off) RColumnValue {
    RVec<ColumnValue_t> fRVec;
    bool fCopyWarningPrinted = false;
 
-public:
-   RColumnValue(){};
-
    void SetTmpColumn(unsigned int slot, RCustomColumnBase *customColumn)
    {
       fCustomColumn = customColumn;
@@ -149,6 +146,31 @@ public:
    {
       fColumnKind = EColumnKind::kTree;
       fTreeReader = std::make_unique<TreeReader_t>(*r, bn.c_str());
+   }
+
+public:
+   /// Construct the RColumnValue. Actual initialization is performed lazily by the Init method.
+   RColumnValue() {};
+
+   /// Initialize the RColumnValue.
+   ///
+   /// At least one of customColumn or r is expected to be non-null. If customColumn is non-null, then we are
+   /// initializing a RColumnValue corresponding to that RCustomColumn (which also covers the case of RDataSource
+   /// columns), otherwise a RColumnValue corresponding to a TTree branch.
+   ///
+   /// This initialization has to be performed lazily, at event loop time rather than at computation graph construction
+   /// time, because before the event loop starts TTreeReaders have not been created and RJittedCustomColumns do not
+   /// have a concrete RCustomColumn to forward calls to (it is jitted right before the event loop starts).
+   //
+   // TODO: this Init form is just an intermediate refactoring step. In the future we will construct different
+   // RColumnValue-like types depending on whether we are reading from TTree or from a RDataSource, and eventually
+   // we might use a RDataSource to read a TTree too.
+   void Init(unsigned int slot, RCustomColumnBase *customColumn, TTreeReader *r, const std::string &colName) {
+      R__ASSERT(customColumn != nullptr || r != nullptr);
+      if(customColumn != nullptr)
+         SetTmpColumn(slot, customColumn);
+      else
+         MakeProxy(r, colName);
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a RVec)

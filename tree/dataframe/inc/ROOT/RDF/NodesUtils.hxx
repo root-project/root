@@ -56,11 +56,10 @@ void InitRDFValues(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader *r,
                    const std::array<bool, sizeof...(S)> &isCustomColumn)
 {
    // hack to expand a parameter pack without c++17 fold expressions.
-   // The statement defines a variable with type std::initializer_list<int>, containing all zeroes, and SetTmpColumn or
-   // SetProxy are conditionally executed as the braced init list is expanded. The final ... expands S.
-   int expander[] = {(isCustomColumn[S]
-                         ? std::get<S>(valueTuple).SetTmpColumn(slot, customCols.GetColumns().at(bn[S]).get())
-                         : std::get<S>(valueTuple).MakeProxy(r, bn[S]),
+   // The statement defines a variable with type std::initializer_list<int>, containing all zeroes, and Init
+   // is executed as the braced init list is expanded. The final ... expands S.
+   int expander[] = {(std::get<S>(valueTuple)
+                         .Init(slot, isCustomColumn[S] ? customCols.GetColumns().at(bn[S]).get() : nullptr, r, bn[S]),
                       0)...,
                      0};
    (void)expander; // avoid "unused variable" warnings for expander on gcc4.9
