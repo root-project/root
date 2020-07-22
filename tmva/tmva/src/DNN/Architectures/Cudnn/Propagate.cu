@@ -659,7 +659,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    //    &convWorkspace,
    //    memLimit));  // use memLimit for workspace size
    // instead choose either fastest or lowest memory algo as per preference
-   convWorkspace->AlgorithmBackward = convPerfBwdFilterResults[choose_algo(algoChoice, algoCount, convPerfBwdFilterResults, memLimit)].algo;
+   convWorkspace->HelperAlgorithm = convPerfBwdFilterResults[choose_algo(algoChoice, algoCount, convPerfBwdFilterResults, memLimit)].algo;
 #else
    CUDNNCHECK(cudnnGetConvolutionBackwardFilterAlgorithm(cudnnHandle,
                                                          activationBackwardDescriptor,
