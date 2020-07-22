@@ -22,7 +22,6 @@
 
 #include <TError.h>
 #include <TFile.h>
-#include <TFileMergeInfo.h>
 #include <TKey.h>
 
 #include <algorithm>
@@ -1010,14 +1009,6 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
 {
    auto nread = fRawFile->ReadAt(buffer, nbytes, offset);
    R__ASSERT(nread == nbytes);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-Long64_t ROOT::Experimental::RNTuple::Merge(TCollection* /* input */, TFileMergeInfo* /* mergeInfo */) {
-   return -1;
 }
 
 
