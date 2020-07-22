@@ -622,7 +622,9 @@ get_filename_component(altld ${CMAKE_CXX_COMPILER} NAME)
 
 set(pythonvers ${PYTHON_VERSION_STRING_Development_Main})
 set(python${PYTHON_VERSION_MAJOR_Development_Main}vers ${PYTHON_VERSION_STRING_Development_Main})
-set(python${PYTHON_VERSION_MAJOR_Development_Other}vers ${PYTHON_VERSION_STRING_Development_Other})
+if(PYTHON_VERSION_STRING_Development_Other)
+   set(python${PYTHON_VERSION_MAJOR_Development_Other}vers ${PYTHON_VERSION_STRING_Development_Other})
+endif()
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in ginclude/RConfigure.h NEWLINE_STYLE UNIX)
