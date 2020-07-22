@@ -305,16 +305,16 @@ extern template class RColumnValue<std::vector<ULong64_t>>;
 #endif
 
 template <typename T>
-struct TRDFValueTuple {
+struct RDFValueTuple {
 };
 
 template <typename... BranchTypes>
-struct TRDFValueTuple<TypeList<BranchTypes...>> {
+struct RDFValueTuple<TypeList<BranchTypes...>> {
    using type = std::tuple<RColumnValue<BranchTypes>...>;
 };
 
 template <typename BranchType>
-using RDFValueTuple_t = typename TRDFValueTuple<BranchType>::type;
+using RDFValueTuple_t = typename RDFValueTuple<BranchType>::type;
 
 /// Clear the proxies of a tuple of RColumnValues
 template <typename ValueTuple, std::size_t... S>
