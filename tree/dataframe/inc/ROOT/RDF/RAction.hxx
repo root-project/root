@@ -76,9 +76,8 @@ void InitRDFValues(unsigned int slot, std::vector<RTypeErasedColumnValue> &value
    (void)slot; // avoid bogus 'unused parameter' warning
    (void)r; // avoid bogus 'unused parameter' warning
    (void)expander{(values.emplace_back(std::make_unique<RColumnValue<ColTypes>>()), 0)..., 0};
-   (void)expander{(isTmpColumn[S]
-                      ? values[S].Cast<ColTypes>()->SetTmpColumn(slot, customCols.GetColumns().at(bn.at(S)).get())
-                      : values[S].Cast<ColTypes>()->MakeProxy(r, bn.at(S)),
+   (void)expander{(values[S].Cast<ColTypes>()->Init(
+                      slot, isTmpColumn[S] ? customCols.GetColumns().at(bn.at(S)).get() : nullptr, r, bn.at(S)),
                    0)...,
                   0};
 }
