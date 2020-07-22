@@ -380,6 +380,16 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
 #endif
    // decide on algorithm preference early
    if (CNNOptions::ConvMaxWorkspaceSize < 0) {
+#if (CUDNN_VERSION >= 8000)
+      // fastest overall
+      algoChoice = fastest;
+#else
+      preferenceFwd = CUDNN_CONVOLUTION_FWD_PREFER_FASTEST;
+      preferenceBwdData = CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST;
+      preferenceBwdFilter = CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST;
+#endif
+
+   } else if (CNNOptions::ConvMaxWorkspaceSize == 0) {
       // no workspace case
 #if (CUDNN_VERSION >= 8000)
       algoChoice = no_workspace;
@@ -387,16 +397,6 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
       preferenceFwd = CUDNN_CONVOLUTION_FWD_NO_WORKSPACE;
       preferenceBwdData = CUDNN_CONVOLUTION_BWD_DATA_NO_WORKSPACE;
       preferenceBwdFilter = CUDNN_CONVOLUTION_BWD_FILTER_NO_WORKSPACE;
-#endif
-
-   } else if (CNNOptions::ConvMaxWorkspaceSize == 0) {
-      // fastest overall
-#if (CUDNN_VERSION >= 8000)
-      algoChoice = fastest;
-#else
-      preferenceFwd = CUDNN_CONVOLUTION_FWD_PREFER_FASTEST;
-      preferenceBwdData = CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST;
-      preferenceBwdFilter = CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST;
 #endif
 
    } else {
