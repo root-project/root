@@ -588,9 +588,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                               hobj->ResetBit(kMustCleanup);
                               inputs.Add(hobj);
                            } else {
-                             Info("MergeRecursive", "non-inheriting merge for key: %s in file %s",
-			        key->GetName(), nextsource->GetName());
-			   }
+                              Fatal("MergeRecursive", "Merging objects that don't inherit from TObject is unimplemented (key: %s in file %s)",
+                                    key->GetName(), nextsource->GetName());
+                           }
                            if (!oneGo) {
                               ROOT::MergeFunc_t func = cl->GetMerge();
                               Long64_t result = func(obj, &inputs, &info);
