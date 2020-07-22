@@ -387,7 +387,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
     */
    int convRequestedAlgoCount{8}; // requestedAlgoCount is setting how many algorithms to try, can be tuned, fixed for now as all available
    cudnnConvolutionDescriptor_t tempConvDescriptor;
-   CUDDNCHECK(cudnnCreateConvolutionDescriptor(&tempConvDescriptor));
+   CUDNNCHECK(cudnnCreateConvolutionDescriptor(&tempConvDescriptor));
    cudnnTensorDescriptor_t  outputTensorDescriptor;
    CUDNNCHECK(cudnnCreateTensorDescriptor(&outputTensorDescriptor));
    CUDNNCHECK(cudnnSetTensor4dDescriptor(outputTensorDescriptor,
@@ -407,7 +407,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
       outputTensorDescriptor,
       convRequestedAlgoCount,
       &algoCount,
-      &convPerfResults));
+      convPerfResults));
    // we could also do it with the expert mode (cudnnFindConvolutionForwardAlgorithmEx),
    // but we arrive at an chicken or egg problem:
    // workspace size is calculated from chosen forward algorithm,
@@ -521,7 +521,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
     */
    convRequestedAlgoCount = 6; // reset to max number of available backward algorithms
    cudnnConvolutionDescriptor_t tempConvBwdDescriptor;
-   CUDDNCHECK(cudnnCreateConvolutionDescriptor(&tempConvBwdDescriptor));
+   CUDNNCHECK(cudnnCreateConvolutionDescriptor(&tempConvBwdDescriptor));
    cudnnTensorDescriptor_t  outputBwdTensorDescriptor;
    CUDNNCHECK(cudnnCreateTensorDescriptor(&outputBwdTensorDescriptor));
    CUDNNCHECK(cudnnSetTensor4dDescriptor(outputBwdTensorDescriptor,
@@ -531,7 +531,6 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
                                              (int)L->GetInputDepth(),
                                              (int)L->GetInputHeight(),
                                              (int)L->GetInputWidth()));
-   int algoCount;
    cudnnConvolutionBwdDataAlgoPerf_t convPerfBwdResults[convRequestedAlgoCount];  // this will store metrics to choose convolution algorithm
    CUDNNCHECK(cudnnFindConvolutionBackwardDataAlgorithm(
       cudnnHandle,
@@ -541,7 +540,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
       outputBwdTensorDescriptor,
       convRequestedAlgoCount,
       &algoCount,
-      &convPerfBwdResults));
+      convPerfBwdResults));
    // we could also do it with the expert mode (cudnnFindConvolutionForwardAlgorithmEx),
    // but we arrive at an chicken or egg problem:
    // workspace size is calculated from chosen forward algorithm,
@@ -564,7 +563,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    //    &convWorkspace,
    //    convWorkspace->ForwardWorkspaceSize));
    // instead choose either fastest or lowest memory algo as per preference
-   int algoIdx{0};
+   algoIdx = 0;
    if (CNNOptions::ConvMaxWorkspaceSize != 0) {  // prefer fastest
       float temp_runtime{std::numeric_limits<float>::max()};
       for (int i = 0; i < algoCount; ++i) {
