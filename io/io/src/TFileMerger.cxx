@@ -640,7 +640,10 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      inputs.Delete();
                   }
                }
-            } else if (cl->IsTObject()) {
+            } else if (cl->IsTObject()
+                  && (cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*")
+                      || cl->GetMethodWithPrototype("Merge", "TCollection*"))) {
+
                if (alreadyseen) continue;
 
                // synthesize a method call according to the TObject
@@ -649,15 +652,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                if (cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*")) {
                   listHargs.Form("(TCollection*)0x%lx,(TFileMergeInfo*)0x%lx",
                                   (ULong_t)&listH, (ULong_t)&info);
-               } else if (cl->GetMethodWithPrototype("Merge", "TCollection*")) {
-                  listHargs.Form("((TCollection*)0x%lx)", (ULong_t)&listH);
                } else {
-                  // skip any unhandled TObjects
-                  Info("MergeRecursive", "skipping TObject without Merge method with type (%s), name: %s title: %s",
-                        key->GetClassName(), key->GetName(), key->GetTitle());
-                  continue;
+                  listHargs.Form("((TCollection*)0x%lx)", (ULong_t)&listH);
                }
-
                // Loop over all source files and merge same-name object
                TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
                if (nextsource == 0) {
