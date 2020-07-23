@@ -344,41 +344,50 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    enum algoPreference { no_workspace, fastest, workspace_limit };
    algoPreference algoChoice;
    // C++11 lambdas cannot be templated, so we have to do this HORRIBLE stuff...
-   union LocalPerf_t {
+   class LocalPerf {
+    public:
+      LocalPerf(cudnnConvolutionFwdAlgoPerf_t * fwd) {m_fwd = fwd;}
+      LocalPerf(cudnnConvolutionBwdFilterAlgoPerf_t * bwdFilter) {m_bwdFilter = bwdFilter;}
+      LocalPerf(cudnnConvolutionBwdDataAlgoPerf_t * bwdData) {m_bwdData = bwdData;}
+      size_t getMemory(int i) {return m_fwd != nullptr ? m_fwd[i].memory : m_bwdFilter != nullptr ? m_bwdFilter[i].memory : m_bwdData != nullptr ? m_bwdData[i].memory : 0;}
+      float getTime(int i) {return m_fwd != nullptr ? m_fwd[i].time : m_bwdFilter != nullptr ? m_bwdFilter[i].time : m_bwdData != nullptr ? m_bwdData[i].time : 0;}
+      cudnnStatus_t getStatus(int i) {return m_fwd != nullptr ? m_fwd[i].status : m_bwdFilter != nullptr ? m_bwdFilter[i].status : m_bwdData != nullptr ? m_bwdData[i].status : CUDNN_STATUS_BAD_PARAM;}
+      int getIdx(algoPreference const & algoPref, int const algoCount, size_t memLim = std::numeric_limits<size_t>::max()) {
+         int algoIdx{0};
+         if (algoPref == algoPreference::fastest) {  // prefer fastest
+            float temp_runtime{std::numeric_limits<float>::max()};
+            for (int i = 0; i < algoCount; ++i) {
+               if (getStatus(i) == CUDNN_STATUS_SUCCESS && getTime(i) < temp_runtime) {
+                  temp_runtime = getTime(i);
+                  algoIdx = i;
+               }
+            }
+         } else if (algoPref == algoPreference::workspace_limit) {  // constrain to workspace size
+            float temp_runtime{std::numeric_limits<float>::max()};
+            for (int i = 0; i < algoCount; ++i) {
+               if (getStatus(i) == CUDNN_STATUS_SUCCESS && getTime(i) < temp_runtime && getMemory(i) <= memLim) {
+                  temp_runtime = getTime(i);
+                  algoIdx = i;
+               }
+            }
+         } else {  // prefer smallest workspace size
+            size_t temp_memsize{std::numeric_limits<size_t>::max()};
+            for (int i = 0; i < algoCount; ++i) {
+               if (getStatus(i) == CUDNN_STATUS_SUCCESS && getMemory(i) < temp_memsize) {
+                  temp_memsize = getMemory(i);
+                  algoIdx = i;
+               }
+            }
+         }
+         return algoIdx;
+      };
+    private:
+      LocalPerf();
       // these three type are absolutely equivalent
       // and one can access them as they wish to get info
-      cudnnConvolutionFwdAlgoPerf_t * fwd;
-      cudnnConvolutionBwdFilterAlgoPerf_t * bwdFilter;
-      cudnnConvolutionBwdDataAlgoPerf_t * bwdData;
-   };
-   auto choose_algo = [](algoPreference const & algoPref, int const algoCount, LocalPerf_t const & perfResults, size_t memLim = std::numeric_limits<size_t>::max()) -> int {
-      int algoIdx{0};
-      if (algoPref == algoPreference::fastest) {  // prefer fastest
-         float temp_runtime{std::numeric_limits<float>::max()};
-         for (int i = 0; i < algoCount; ++i) {
-            if (perfResults.fwd[i].status == CUDNN_STATUS_SUCCESS && perfResults.fwd[i].time < temp_runtime) {
-               temp_runtime = perfResults.fwd[i].time;
-               algoIdx = i;
-            }
-         }
-      } else if (algoPref == algoPreference::workspace_limit) {  // constrain to workspace size
-         float temp_runtime{std::numeric_limits<float>::max()};
-         for (int i = 0; i < algoCount; ++i) {
-            if (perfResults.fwd[i].status == CUDNN_STATUS_SUCCESS && perfResults.fwd[i].time < temp_runtime && perfResults.fwd[i].memory <= memLim) {
-               temp_runtime = perfResults.fwd[i].time;
-               algoIdx = i;
-            }
-         }
-      } else {  // prefer smallest workspace size
-         size_t temp_memsize{std::numeric_limits<size_t>::max()};
-         for (int i = 0; i < algoCount; ++i) {
-            if (perfResults.fwd[i].status == CUDNN_STATUS_SUCCESS && perfResults.fwd[i].memory < temp_memsize) {
-               temp_memsize = perfResults.fwd[i].memory;
-               algoIdx = i;
-            }
-         }
-      }
-      return algoIdx;
+      cudnnConvolutionFwdAlgoPerf_t * m_fwd;
+      cudnnConvolutionBwdFilterAlgoPerf_t * m_bwdFilter;
+      cudnnConvolutionBwdDataAlgoPerf_t * m_bwdData;
    };
 #else
    // More detailed alternative: cudnnFindConvolutionForwardAlgorithm (only option in newer cuDNN versions)
@@ -502,8 +511,8 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    //    &convWorkspace,
    //    memLimit));  // use memLimit for workspace size
    // instead choose either fastest or lowest memory algo as per preference
-   LocalPerf_t fwdPerfResults{convFwdPerfResults};
-   convWorkspace->AlgorithmForward = convFwdPerfResults[choose_algo(algoChoice, algoCount, fwdPerfResults, memLimit)].algo;
+   LocalPerf fwdPerfResults{convFwdPerfResults};
+   convWorkspace->AlgorithmForward = convFwdPerfResults[fwdPerfResults.getIdx(algoChoice, algoCount, memLimit)].algo;
 #else
    CUDNNCHECK(cudnnGetConvolutionForwardAlgorithm(
       cudnnHandle, inputTensorDescriptor, convDescriptors->WeightsDescriptor, convDescriptors->LayerDescriptor,
@@ -594,8 +603,8 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    //    &convWorkspace,
    //    memLimit));  // use memLimit for workspace size
    // instead choose either fastest or lowest memory algo as per preference
-   LocalPerf_t bwdDataPerfResults{convBwdDataPerfResults};
-   convWorkspace->AlgorithmBackward = convBwdDataPerfResults[choose_algo(algoChoice, algoCount, bwdDataPerfResults, memLimit)].algo;
+   LocalPerf bwdDataPerfResults{convBwdDataPerfResults};
+   convWorkspace->AlgorithmBackward = convBwdDataPerfResults[bwdDataPerfResults.getIdx(algoChoice, algoCount, memLimit)].algo;
 #else
    CUDNNCHECK(cudnnGetConvolutionBackwardDataAlgorithm(cudnnHandle,
                                                       convDescriptors->WeightsDescriptor,
@@ -669,8 +678,8 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    //    &convWorkspace,
    //    memLimit));  // use memLimit for workspace size
    // instead choose either fastest or lowest memory algo as per preference
-   LocalPerf_t bwdFilterPerfResults{convBwdFilterPerfResults};
-   convWorkspace->HelperAlgorithm = convBwdFilterPerfResults[choose_algo(algoChoice, algoCount, bwdFilterPerfResults, memLimit)].algo;
+   LocalPerf bwdFilterPerfResults{convBwdFilterPerfResults};
+   convWorkspace->HelperAlgorithm = convBwdFilterPerfResults[bwdFilterPerfResults.getIdx(algoChoice, algoCount, memLimit)].algo;
 #else
    CUDNNCHECK(cudnnGetConvolutionBackwardFilterAlgorithm(cudnnHandle,
                                                          activationBackwardDescriptor,
