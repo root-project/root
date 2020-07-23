@@ -371,6 +371,22 @@ Bool_t TFileMerger::Merge(Bool_t)
    return PartialMerge(kAll | kRegular);
 }
 
+namespace {
+
+/// Merge a list of RNTuples
+Long64_t MergeRNTuples(TClass* rntupleHandle, const TString& /* target */, const TList& /* sources */) {
+   if (!rntupleHandle) {
+      return Long64_t(-1);
+   }
+   // todo(max) implement rntuple merger
+   // [ ] build complete list of sources (some sources may actually be a directory with RNTuples inside)
+   // [ ] merge them
+   ROOT::MergeFunc_t func = rntupleHandle->GetMerge();
+   return func(static_cast<void*>(rntupleHandle), nullptr, nullptr);
+}
+
+} // anonymous namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge all objects in a directory
 ///
@@ -547,8 +563,23 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                status = MergeRecursive(newdir, sourcelist, type);
                if (onlyListed) type |= kOnlyListed;
                if (!status) return status;
-            } else if (cl->GetMerge()) {
-
+            } else if (!cl->IsTObject() && cl->GetMerge()) {
+               // merge objects that don't derive from TObject
+               if (std::string(key->GetClassName()) == "ROOT::Experimental::RNTuple") {
+                  Warning("MergeRecursive", "merging RNTuples is experimental");
+                  // todo(max): check if this works when a TDirectory is passed as the first
+                  // input argument
+                  Long64_t mergeResult = MergeRNTuples(cl, *path, *sourcelist);
+                  if (mergeResult < 0) {
+                     Error("MergeRecursive", "error merging RNTuples");
+                     return kFALSE;
+                  }
+                  return kTRUE;
+               }
+               TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
+               Fatal("MergeRecursive", "Merging objects that don't inherit from TObject is unimplemented (key: %s in file %s)",
+                      key->GetName(), nextsource->GetName());
+            } else if (cl->IsTObject() && cl->GetMerge()) {
                // Check if already treated
                if (alreadyseen) continue;
 
