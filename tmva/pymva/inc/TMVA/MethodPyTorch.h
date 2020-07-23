@@ -8,13 +8,13 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Interface for PyTorch python based scientific supporting automatic        *
- *      differentiation for machine learning.                                     *
+ *      Interface for PyTorch python based scientific package supporting          *
+ *      automatic differentiation for machine learning.                           *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Anirudh Dagar <anirudhdagar6@gmail.com> - IIT, Roorkee                    *
  *                                                                                *
- * Copyright (c) 2016:                                                            *
+ * Copyright (c) 2020:                                                            *
  *      CERN, Switzerland                                                         *
  *      IIT, Roorkee                                                              *
  *                                                                                *
@@ -91,8 +91,6 @@ namespace TMVA {
       
       TString fNumValidationString;                   // option string defining the number of validation events
 
-      // TODO: Can remove this.
-      TString fGpuOptions;                            // GPU options (for PyTorch this may not be needed.)
       TString fUserCodeName;                          // filename of the user script that will be executed before loading the PyTorch model
 
       bool fModelIsSetup = false;                     // flag whether model is loaded, needed for getMvaValue during evaluation
