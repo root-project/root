@@ -4,8 +4,8 @@
 #include <Python.h>
 #include "TMVA/MethodPyTorch.h"
 
-// #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-// #include <numpy/arrayobject.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
 #include "TMVA/Types.h"
 #include "TMVA/Config.h"
@@ -195,16 +195,16 @@ void MethodPyTorch::ProcessOptions() {
    // Setup model, either the initial model from `fFilenameModel` or
    // the trained model from `fFilenameTrainedModel`
    if (fContinueTraining) Log() << kINFO << "Continue training with trained model" << Endl;
-   SetupTorchModel(fContinueTraining);
+   SetupPyTorchModel(fContinueTraining);
 }
 
 
-void MethodPyTorch::SetupTorchModel(bool loadTrainedModel) {
+void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
    /*
     * Load PyTorch model from file
     */
 
-   Log() << kINFO << " Setup Torch Model " << Endl;
+   Log() << kINFO << " Setup PyTorch Model " << Endl;
 
    PyRunString("load_model_custom_objects=None");
 
@@ -269,9 +269,14 @@ void MethodPyTorch::Init() {
    }
    _import_array(); // required to use numpy arrays
 
-   // Import torch
+   // Import PyTorch
+   // TODO: Skip clearing sys.argv for pytorch
    PyRunString("import sys; sys.argv = ['']", "Set sys.argv failed");
-   PyRunString("import torch", "Import torch failed");
+   PyRunString("import torch", "Import PyTorch failed");
+   // do import also in global namespace
+   auto ret = PyRun_String("import torch", Py_single_input, fGlobalNS, fGlobalNS);
+   if (!ret)
+      Log() << kFATAL << "Import PyTorch in global namespace fsailed " << Endl;
 
    // Set flag that model is not setup
    fModelIsSetup = false;
@@ -394,18 +399,15 @@ void MethodPyTorch::Train() {
 
    PyObject* pBatchSize = PyLong_FromLong(fBatchSize);
    PyObject* pNumEpochs = PyLong_FromLong(fNumEpochs);
-   
    // Ignore if verbosity is not required in pytorch models.
    PyObject* pVerbose = PyLong_FromLong(fVerbose);
-   
    PyDict_SetItemString(fLocalNS, "batchSize", pBatchSize);
    PyDict_SetItemString(fLocalNS, "numEpochs", pNumEpochs);
-   
    // TODO: Check if verbosity is required in pytorch models.
    PyDict_SetItemString(fLocalNS, "verbose", pVerbose);
 
    // ////////////////////////////////////////////////////////////////////
-   // TODO: Better startegy for using Callbacks in PyTorch
+   // TODO: Better strategy for using Callbacks in PyTorch
 
    // Setup training functions acting as callbacks
 
@@ -420,26 +422,19 @@ void MethodPyTorch::Train() {
    // ////////////////////////////////////////////////////////////////////
 
    // Train model
-   PyRunString("train(trainX, trainY, sample_weight=trainWeights, batch_size=batchSize, epochs=numEpochs, verbose=verbose, validation_data=(valX, valY, valWeights))",
+   PyRunString("train(trainX, trainY, batch_size=batchSize, epochs=numEpochs, verbose=verbose, validation_data=(valX, valY, valWeights))",
                "Failed to train model");
 
 
-   std::vector<float> fHistory; // Hold training history  (val_acc or loss etc)
-   fHistory.resize(fNumEpochs); // holds training loss or accuracy output
-   npy_intp dimsHistory[1] = { (npy_intp)fNumEpochs};
-   PyArrayObject* pHistory = (PyArrayObject*)PyArray_SimpleNewFromData(1, dimsHistory, NPY_FLOAT, (void*)&fHistory[0]);
-   PyDict_SetItemString(fLocalNS, "HistoryOutput", (PyObject*)pHistory);
+   // TODO: Add method to store training history data. 
 
-
-//#endif
 
    /*
     * Store trained model to file (only if option 'SaveBestOnly' is NOT activated,
     * because we do not want to override the best model checkpoint)
     */
-
    if (!fSaveBestOnly) {
-      PyRunString("torch.jit.save('"+fFilenameTrainedModel"')",
+      PyRunString("torch.jit.save('"+fFilenameTrainedModel+"')",
                   "Failed to save trained model: "+fFilenameTrainedModel);
       Log() << kINFO << "Trained model written to file: " << fFilenameTrainedModel << Endl;
    }
@@ -456,16 +451,183 @@ void MethodPyTorch::Train() {
    delete[] valDataWeights;
 }
 
+void MethodPyTorch::TestClassification() {
+    MethodBase::TestClassification();
+}
+
+Double_t MethodPyTorch::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
+   // Cannot determine error
+   NoErrorCalc(errLower, errUpper);
+
+   // Check whether the model is setup
+   // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
+   if (!fModelIsSetup) {
+      // Setup the trained model
+      SetupPyTorchModel(true);
+   }
+
+
+   /////////////////////
+   // TODO: PyTorch doesn't have a method to use direct predictions.
+   //       Convert or omit to get the Keras like predictions setup.
+   //       Also, set model to model.eval() before making predictions.
+   /////////////////////
+
+
+   // // Get signal probability (called mvaValue here)
+   // const TMVA::Event* e = GetEvent();
+   // for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
+   // PyRunString("model.eval(); for i,p in enumerate(model.predict(vals)): output[i]=p\n",
+   //             "Failed to get predictions");
+
+
+   return fOutput[TMVA::Types::kSignal];
+}
+
+
+std::vector<Double_t> MethodPyTorch::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress) {
+   // Check whether the model is setup
+   // NOTE: Unfortunately this is needed because during evaluation ProcessOptions is not called again
+   if (!fModelIsSetup) {
+      // Setup the trained model
+      SetupPyTorchModel(true);
+   }
+
+   // Load data to numpy array
+   Long64_t nEvents = Data()->GetNEvents();
+   if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
+   if (firstEvt < 0) firstEvt = 0;
+   nEvents = lastEvt-firstEvt;
+
+   // use timer
+   Timer timer( nEvents, GetName(), kTRUE );
+
+   if (logProgress)
+      Log() << kHEADER << Form("[%s] : ",DataInfo().GetName())
+            << "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType() == Types::kTraining ? "training" : "testing")
+            << " sample (" << nEvents << " events)" << Endl;
+
+   float* data = new float[nEvents*fNVars];
+   for (UInt_t i=0; i<nEvents; i++) {
+      Data()->SetCurrentEvent(i);
+      const TMVA::Event *e = GetEvent();
+      for (UInt_t j=0; j<fNVars; j++) {
+         data[j + i*fNVars] = e->GetValue(j);
+      }
+   }
+
+   npy_intp dimsData[2] = {(npy_intp)nEvents, (npy_intp)fNVars};
+   PyArrayObject* pDataMvaValues = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsData, NPY_FLOAT, (void*)data);
+   if (pDataMvaValues==0) Log() << "Failed to load data to Python array" << Endl;
+
+
+   // Get prediction for all events
+   PyObject* pModel = PyDict_GetItemString(fLocalNS, "model");
+   if (pModel==0) Log() << kFATAL << "Failed to get model Python object" << Endl;
+
+
+   /////////////////////
+   // TODO: PyTorch doesn't have a method to use direct predictions.
+   //       Convert or omit to get the Keras like predictions setup.
+   /////////////////////
+
+   PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallMethod(pModel, (char*)"predict", (char*)"O", pDataMvaValues);
+   
+
+   if (pPredictions==0) Log() << kFATAL << "Failed to get predictions" << Endl;
+   delete[] data;
+
+
+   // Load predictions to double vector
+   // NOTE: The signal probability is given at the output
+   std::vector<double> mvaValues(nEvents);
+   float* predictionsData = (float*) PyArray_DATA(pPredictions);
+   for (UInt_t i=0; i<nEvents; i++) {
+      mvaValues[i] = (double) predictionsData[i*fNOutputs + TMVA::Types::kSignal];
+   }
+
+   if (logProgress) {
+      Log() << kINFO
+            << "Elapsed time for evaluation of " << nEvents <<  " events: "
+            << timer.GetElapsedTime() << "       " << Endl;
+   }
+
+   return mvaValues;
+}
+
+std::vector<Float_t>& MethodPyTorch::GetRegressionValues() {
+   // Check whether the model is setup
+   // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
+   if (!fModelIsSetup){
+      // Setup the model and load weights
+      SetupPyTorchModel(true);
+   }
+
+   // Get regression values
+   const TMVA::Event* e = GetEvent();
+   for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
+
+   /////////////////////
+   // TODO: PyTorch doesn't have a method to use direct predictions.
+   //       Convert or omit to get the Keras like predictions setup.
+   /////////////////////
+
+
+   // PyRunString("for i,p in enumerate(model.predict(vals)): output[i]=p\n",
+   //             "Failed to get predictions");
+
+
+   // Use inverse transformation of targets to get final regression values
+   Event * eTrans = new Event(*e);
+   for (UInt_t i=0; i<fNOutputs; ++i) {
+      eTrans->SetTarget(i,fOutput[i]);
+   }
+
+   const Event* eTrans2 = GetTransformationHandler().InverseTransform(eTrans);
+   for (UInt_t i=0; i<fNOutputs; ++i) {
+      fOutput[i] = eTrans2->GetTarget(i);
+   }
+
+   return fOutput;
+}
+
+std::vector<Float_t>& MethodPyTorch::GetMulticlassValues() {
+   // Check whether the model is setup
+   // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
+   if (!fModelIsSetup){
+      // Setup the model and load weights
+      SetupPyTorchModel(true);
+   }
+
+   // Get class probabilites
+   const TMVA::Event* e = GetEvent();
+   for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
+
+   /////////////////////
+   // TODO: PyTorch doesn't have a method to use direct predictions.
+   //       Convert or omit to get the Keras like predictions setup.
+   /////////////////////
+
+
+   PyRunString("for i,p in enumerate(model.predict(vals)): output[i]=p\n",
+               "Failed to get predictions");
+
+
+   return fOutput;
+}
+
+void MethodPyTorch::ReadModelFromFile() {
+}
 
 void MethodPyTorch::GetHelpMessage() const {
    Log() << Endl;
-   Log() << "PyTorch is a scientific computing package supporting"​ << Endl;
-   Log() << "automatic differentiation. This method wraps the training"​ << Endl;
-   Log() << "and predictions steps of the PyTorch Python package for"​ << Endl;
+   Log() << "PyTorch is a scientific computing package supporting" << Endl;
+   Log() << "automatic differentiation. This method wraps the training" << Endl;
+   Log() << "and predictions steps of the PyTorch Python package for" << Endl;
    Log() << "TMVA, so that dataloading, preprocessing and evaluation" << Endl;
    Log() << "can be done within the TMVA system. To use this PyTorch" << Endl;
    Log() << "interface, you need to generatea model with PyTorch first." << Endl;
    Log() << "Then, this model can be loaded and trained in TMVA." << Endl;
-   
    Log() << Endl;
 }
