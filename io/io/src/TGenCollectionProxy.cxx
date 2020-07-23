@@ -1007,22 +1007,6 @@ TClass *TGenCollectionProxy::GetValueClass() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Update the internal ValueClass when a TClass constructor need to
-/// replace an emulated TClass by the real TClass.
-
-void TGenCollectionProxy::UpdateValueClass(const TClass *oldValueType, TClass *newValueType)
-{
-   // Note that we do not need to update anything if we have not yet been
-   // initialized.  In addition (see ROOT-6040) doing an initialization here
-   // might hence a nested dlopen (due to autoloading).
-   auto value = fValue.load(std::memory_order_relaxed);
-   if (value && (*value).fType == oldValueType) {
-      // Set pointer to the TClass representing the content.
-      (*value).fType = newValueType;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// If the content is a simple numerical value, return its type (see TDataType)
 
 EDataType TGenCollectionProxy::GetType() const
