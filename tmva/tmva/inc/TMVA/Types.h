@@ -103,6 +103,7 @@ namespace TMVA {
          kPyAdaBoost     ,
          kPyGTB          ,
          kPyKeras        ,
+         kPyTorch        ,
          kC50            ,
          kRSNNS          ,
          kRSVM           ,

@@ -27,6 +27,7 @@
 #define ROOT_TMVA_MethodPyTorch
 
 #include "TMVA/PyMethodBase.h"
+#include <vector>
 
 namespace TMVA {
 
@@ -92,6 +93,7 @@ namespace TMVA {
 
       // TODO: Can remove this.
       TString fGpuOptions;                            // GPU options (for PyTorch this may not be needed.)
+      TString fUserCodeName;                          // filename of the user script that will be executed before loading the PyTorch model
 
       bool fModelIsSetup = false;                     // flag whether model is loaded, needed for getMvaValue during evaluation
       float* fVals = nullptr;                         // variables array used for GetMvaValue
