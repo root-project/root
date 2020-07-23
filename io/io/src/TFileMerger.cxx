@@ -643,7 +643,6 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             } else if (cl->IsTObject()) {
                if (alreadyseen) continue;
 
-               bool mergeableTObject = true;
                // try synthesizing the Merge method call according to the TObject
                TList listH;
                TString listHargs;
@@ -653,10 +652,10 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                } else if (cl->GetMethodWithPrototype("Merge", "TCollection*")) {
                   listHargs.Form("((TCollection*)0x%lx)", (ULong_t)&listH);
                } else {
-                  // do nothing and pass unmergeable objects through to the output file
-                  mergeableTObject = false;
+                  // pass unmergeable objects through to the output file
+                  canBeMerged = kFALSE;
                }
-               if (mergeableTObject) {
+               if (canBeMerged) {
                   // Loop over all source files and merge same-name object
                   TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
                   if (nextsource == 0) {
