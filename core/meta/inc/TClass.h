@@ -389,7 +389,7 @@ public:
                                                   Bool_t objectIsConst = kFALSE,
                                                   ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    Version_t          GetClassVersion() const {
-      if (!fVersionUsed.load())
+      if (!fVersionUsed.load(std::memory_order_relaxed))
          fVersionUsed = kTRUE;
       return fClassVersion;
    }
@@ -408,7 +408,7 @@ public:
    }
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
-      auto current = fCurrentInfo.load();
+      auto current = fCurrentInfo.load(std::memory_order_relaxed);
       if (current) return current;
       else return DetermineCurrentStreamerInfo();
    }
