@@ -43,7 +43,6 @@ private:
 protected:
    TClassRef fClass;
    UInt_t    fProperties;
-   virtual void UpdateValueClass(const TClass *oldcl, TClass *newcl) = 0;
    friend class TClass;
 
 public:

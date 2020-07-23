@@ -336,9 +336,6 @@ protected:
    // Allow to check function pointers.
    void CheckFunctions()  const;
 
-   // Set pointer to the TClass representing the content.
-   virtual void UpdateValueClass(const TClass *oldcl, TClass *newcl);
-
 private:
    TGenCollectionProxy(); // not implemented on purpose.
 
