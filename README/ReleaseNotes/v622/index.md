@@ -53,7 +53,7 @@ The following people have contributed to this version:
 
 ## Core Libraries
 
-- ROOT comes with C++ Modules enabled. More details about the technology found [here](../../README.CXXMODULES.md).
+- ROOT comes with C++ Modules enabled. More details about the technology found [here]( https://github.com/root-project/root/blob/v6-22-00-patches/README/README.CXXMODULES.md).
 - The `ACLiC` can be configured to pass options to the `rootcling` invocation by enabling in the `.rootrc` the `ACLiC.ExtraRootclingFlags [-opts]` line.
 - A call to `ROOT::EnableThreadSafety` is not required before using `TThreadExecutor` or `TTreeProcessorMT` anymore
 - `TTreeProcessorMT` does not silently activate implicit multi-threading features anymore. An explicit call to
@@ -155,7 +155,7 @@ will result (as one would expect) with the first SetBranchAddress being ignored/
 ## Histogram Libraries
 
 - When fitting an histogram using the fit option `W` (set all bin errors to be equal to 1),  renormalize the obtained fit  parameter errors using the obtained chi2 fit value. This is the same procedure performed already when fitting a `TGraph`.
-- Applying some fixes when performing histogram fits using bin integral in multi-thread mode. 
+- Applying some fixes when performing histogram fits using bin integral in multi-thread mode.
 
 ## Math Libraries
 
@@ -168,7 +168,7 @@ will result (as one would expect) with the first SetBranchAddress being ignored/
 ### Matrix
 
 - Improve `TDecompQRH` , QR decomposition in an orthogonal matrix Q. Add a function `TDecompQR::GetOrthogonalMatrix()` returning the
-Q matrix found by the decomposition. 
+Q matrix found by the decomposition.
 
 
 ## RooFit Libraries
@@ -330,7 +330,7 @@ operations provided by the ROOT TMatrix classes.
 ### PyMVA
 
 - Add support for Tensorflow version 2 as backend for Keras in `MethodPyKeras`. Note that it requires still an independent Keras installation with a Keras version >= 2.3
-- Add also some fixes needed when using Python  version 3. 
+- Add also some fixes needed when using Python  version 3.
 
 ## 2D Graphics Libraries
 
@@ -729,7 +729,7 @@ Therefore, in a Python3-Python2 ROOT build, the Python code executed with `TPyth
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10527'>ROOT-10527</a>] - `RDataFrame` `Display()` crashes with column of `std::string`
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10529'>ROOT-10529</a>] - `Error in <TClass::ReadRules()>: Cannot find rules etc/class.rules`
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10533'>ROOT-10533</a>] - [TTreeProcessorMT] Support friend chains with differently named trees
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10545'>ROOT-10545</a>] - `.qqqqqq` does not exit root 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10545'>ROOT-10545</a>] - `.qqqqqq` does not exit root
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10549'>ROOT-10549</a>] - `RDataFrame` warns but does not throw when skipping files after network glitch
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10550'>ROOT-10550</a>] - `plotOn` normalization crazy and error message when doing loops of toys
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10561'>ROOT-10561</a>] - [TTreeProcessorMT] Breaks without `EnableImplicitMT` on
@@ -797,11 +797,11 @@ Therefore, in a Python3-Python2 ROOT build, the Python code executed with `TPyth
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10782'>ROOT-10782</a>] - With gcc10 STL headers don't include implicitly `stdexcept`
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10784'>ROOT-10784</a>] - Mistake in what is reported in documentation
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10788'>ROOT-10788</a>] - PyROOT failed to load cmssw libraires
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10790'>ROOT-10790</a>] - [DF] Single-thread `Snapshot` into a directory also creates a spurious `TTree` outside of it 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10790'>ROOT-10790</a>] - [DF] Single-thread `Snapshot` into a directory also creates a spurious `TTree` outside of it
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10792'>ROOT-10792</a>] - [DF] `Snapshot` of `TClonesArrays` read via `TTreeReaderArray` is broken
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10798'>ROOT-10798</a>] - ROOT 6.20/02 can't generate a dictionary for ATLAS's `EventLoop` package
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10804'>ROOT-10804</a>] - assertion in `clang::Sema::LookupSpecialMember`
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10810'>ROOT-10810</a>] - Segmentation fault in pickling of weighted RooFit datasets 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10810'>ROOT-10810</a>] - Segmentation fault in pickling of weighted RooFit datasets
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10820'>ROOT-10820</a>] - Circular includes `Rtypes.h` and `TGenericClassInfo.h`
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10822'>ROOT-10822</a>] - [DF] `RVec`s of non-split branches can read from invalid addresses
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10833'>ROOT-10833</a>] - PyROOT FutureWarning in `ROOT.py`
