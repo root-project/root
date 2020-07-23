@@ -1252,45 +1252,83 @@ Int_t RooPlot::defaultPrintContents(Option_t* /*opt*/) const
 
 
 
+/// \see TH1::GetXaxis()
 TAxis* RooPlot::GetXaxis() const { return _hist->GetXaxis() ; }
+/// \see TH1::GetYaxis()
 TAxis* RooPlot::GetYaxis() const { return _hist->GetYaxis() ; }
+/// \see TH1::GetNbinsX()
 Int_t  RooPlot::GetNbinsX() const { return _hist->GetNbinsX() ; }
+/// \see TH1::GetNdivisions()
 Int_t  RooPlot::GetNdivisions(Option_t* axis) const { return _hist->GetNdivisions(axis) ; }
+/// \see TH1::GetMinimum()
 Double_t  RooPlot::GetMinimum(Double_t minval) const { return _hist->GetMinimum(minval) ; }
+/// \see TH1::GetMaximum()
 Double_t   RooPlot::GetMaximum(Double_t maxval) const { return _hist->GetMaximum(maxval) ; }
 
 
+/// \see TH1::SetAxisColor()
 void RooPlot::SetAxisColor(Color_t color, Option_t* axis) { _hist->SetAxisColor(color,axis) ; }
+/// \see TH1::SetAxisRange()
 void RooPlot::SetAxisRange(Double_t xmin, Double_t xmax, Option_t* axis) { _hist->SetAxisRange(xmin,xmax,axis) ; }
+/// \see TH1::SetBarOffset()
 void RooPlot::SetBarOffset(Float_t offset) { _hist->SetBarOffset(offset) ; }
+/// \see TH1::SetBarWidth()
 void RooPlot::SetBarWidth(Float_t width) { _hist->SetBarWidth(width) ; }
+/// \see TH1::SetContour()
 void RooPlot::SetContour(Int_t nlevels, const Double_t* levels) { _hist->SetContour(nlevels,levels) ; }
+/// \see TH1::SetContourLevel()
 void RooPlot::SetContourLevel(Int_t level, Double_t value) { _hist->SetContourLevel(level,value) ; }
+/// \see TH1::SetDrawOption()
 void RooPlot::SetDrawOption(Option_t* option) { _hist->SetDrawOption(option) ; }
+/// \see TH1::SetFillAttributes()
 void RooPlot::SetFillAttributes() { _hist->SetFillAttributes() ; }
+/// \see TH1::SetFillColor()
 void RooPlot::SetFillColor(Color_t fcolor) { _hist->SetFillColor(fcolor) ; }
+/// \see TH1::SetFillStyle()
 void RooPlot::SetFillStyle(Style_t fstyle) { _hist->SetFillStyle(fstyle) ; }
+/// \see TH1::SetLabelColor()
 void RooPlot::SetLabelColor(Color_t color, Option_t* axis) { _hist->SetLabelColor(color,axis) ; }
+/// \see TH1::SetLabelFont()
 void RooPlot::SetLabelFont(Style_t font, Option_t* axis) { _hist->SetLabelFont(font,axis) ; }
+/// \see TH1::SetLabelOffset()
 void RooPlot::SetLabelOffset(Float_t offset, Option_t* axis) { _hist->SetLabelOffset(offset,axis) ; }
+/// \see TH1::SetLabelSize()
 void RooPlot::SetLabelSize(Float_t size, Option_t* axis) { _hist->SetLabelSize(size,axis) ; }
+/// \see TH1::SetLineAttributes()
 void RooPlot::SetLineAttributes() { _hist->SetLineAttributes() ; }
+/// \see TH1::SetLineColor()
 void RooPlot::SetLineColor(Color_t lcolor) { _hist->SetLineColor(lcolor) ; }
+/// \see TH1::SetLineStyle()
 void RooPlot::SetLineStyle(Style_t lstyle) { _hist->SetLineStyle(lstyle) ; }
+/// \see TH1::SetLineWidth()
 void RooPlot::SetLineWidth(Width_t lwidth) { _hist->SetLineWidth(lwidth) ; }
+/// \see TH1::SetMarkerAttributes()
 void RooPlot::SetMarkerAttributes() { _hist->SetMarkerAttributes() ; }
+/// \see TH1::SetMarkerColor()
 void RooPlot::SetMarkerColor(Color_t tcolor) { _hist->SetMarkerColor(tcolor) ; }
+/// \see TH1::SetMarkerSize()
 void RooPlot::SetMarkerSize(Size_t msize) { _hist->SetMarkerSize(msize) ; }
+/// \see TH1::SetMarkerStyle()
 void RooPlot::SetMarkerStyle(Style_t mstyle) { _hist->SetMarkerStyle(mstyle) ; }
+/// \see TH1::SetNdivisions()
 void RooPlot::SetNdivisions(Int_t n, Option_t* axis) { _hist->SetNdivisions(n,axis) ; }
+/// \see TH1::SetOption()
 void RooPlot::SetOption(Option_t* option) { _hist->SetOption(option) ; }
+/// Like TH1::SetStats(), but statistics boxes are *off* by default in RooFit.
 void RooPlot::SetStats(Bool_t stats) { _hist->SetStats(stats) ; }
+/// \see TH1::SetTickLength()
 void RooPlot::SetTickLength(Float_t length, Option_t* axis) { _hist->SetTickLength(length,axis) ; }
+/// \see TH1::SetTitleFont()
 void RooPlot::SetTitleFont(Style_t font, Option_t* axis) { _hist->SetTitleFont(font,axis) ; }
+/// \see TH1::SetTitleOffset()
 void RooPlot::SetTitleOffset(Float_t offset, Option_t* axis) { _hist->SetTitleOffset(offset,axis) ; }
+/// \see TH1::SetTitleSize()
 void RooPlot::SetTitleSize(Float_t size, Option_t* axis) { _hist->SetTitleSize(size,axis) ; }
+/// \see TH1::SetXTitle()
 void RooPlot::SetXTitle(const char *title) { _hist->SetXTitle(title) ; }
+/// \see TH1::SetYTitle()
 void RooPlot::SetYTitle(const char *title) { _hist->SetYTitle(title) ; }
+/// \see TH1::SetZTitle()
 void RooPlot::SetZTitle(const char *title) { _hist->SetZTitle(title) ; }
 
 
