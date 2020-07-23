@@ -444,7 +444,7 @@ sap.ui.define([], function() {
          }
 
          if (rd.index_size) {
-            rd.idxBuff = new Int32Array(rawdata, off, rd.index_size);
+            rd.idxBuff = new Uint32Array(rawdata, off, rd.index_size);
             off += rd.index_size*4;
          }
 
