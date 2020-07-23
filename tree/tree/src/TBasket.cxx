@@ -732,7 +732,7 @@ void TBasket::AdoptBuffer(TBuffer *user_buffer)
 
 void TBasket::ReadResetBuffer(Int_t basketnumber)
 {
-      // By default, we don't reallocate.
+   // By default, we don't reallocate.
    fResetAllocation = false;
 #ifdef R__TRACK_BASKET_ALLOC_TIME
    fResetAllocationTime = 0;
