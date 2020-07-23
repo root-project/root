@@ -423,3 +423,19 @@ TEST(RDataFrameInterface, TypeUnknownToInterpreter)
       df.Filter("res; return true;"),
       ss.str().c_str());
 }
+
+// ROOT-10942
+TEST(RDataFrameInterface, GetColumnNamesWithSimpleStruct)
+{
+   gInterpreter->Declare("struct S { int a; int b; };");
+   S c;
+   c.a = 1;
+   c.b = 2;
+   TTree t("t", "t");
+   t.Branch("c", &c);
+   t.Fill();
+
+   ROOT::RDataFrame df(t);
+   const std::vector<std::string> expected({ "c.a", "a", "c.b", "b", "c" });
+   EXPECT_EQ(df.GetColumnNames(), expected);
+}
