@@ -8,6 +8,43 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+r'''
+/**
+\class TArray
+\brief \parblock \endparblock
+\htmlonly
+<div class="pyrootbox">
+\endhtmlonly
+## PyROOT
+
+When used from Python, the subclasses of TArray (TArrayC, TArrayS, TArrayI, TArrayL, TArrayF and TArrayD) benefit from the following extra features:
+
+- Their size can be obtained with `len`, which is equivalent to TArray::GetSize():
+\code{.py}
+import ROOT
+
+a = ROOT.TArrayD(2)
+print(len(a)) # prints '2'
+\endcode
+
+- Their elements can be read and written with the `getitem` and `setitem` operators, respectively:
+\code{.py}
+a[0] = 0.2
+a[1] = 1.7
+print(a[0]) # prints '0.2'
+\endcode
+
+- They are iterable:
+\code{.py}
+for elem in a:
+    print(elem)
+\endcode
+\htmlonly
+</div>
+\endhtmlonly
+*/
+'''
+
 from ROOT import pythonization
 
 from ._generic import _add_getitem_checked
