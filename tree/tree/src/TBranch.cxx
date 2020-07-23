@@ -2629,28 +2629,28 @@ void TBranch::SetCompressionSettings(Int_t settings)
 {
    fCompress = settings;
    TObjArray *leaves = GetListOfLeaves();
-   if (GetCompressionAlgorithm() == 6 && leaves->GetEntriesFast() == 1) {
-       TLeaf* leaf = (TLeaf*) GetListOfLeaves()->At(0);
-       const char *leaf_type = leaf->GetTypeName();
-       bool result = !strcmp(leaf_type, "UChar_t") ||
-                     !strcmp(leaf_type, "Char_t") ||
-                     !strcmp(leaf_type, "Short_t") ||
-                     !strcmp(leaf_type, "UShort_t") ||
-                     !strcmp(leaf_type, "Bool_t") ||
-                     !strcmp(leaf_type, "Float_t") ||
-                     !strcmp(leaf_type, "Float16_t") ||
-                     !strcmp(leaf_type, "Double_t") ||
-                     !strcmp(leaf_type, "Double32_t") ||
-                     !strcmp(leaf_type, "Int_t") ||
-                     !strcmp(leaf_type, "UInt_t") ||
-                     !strcmp(leaf_type, "Long64_t") ||
-                     !strcmp(leaf_type, "ULong64_t");
-      if (!result) { // if leaf_type is not primitive, then switch from LZ4BS to LZ4
-          //printf("Converting compression algorithm to use BitShuffle.\n");
-          fCompress = 404;
-          settings = fCompress;
-      }
-   }
+   // if (GetCompressionAlgorithm() == 6 && leaves->GetEntriesFast() == 1) {
+   //     TLeaf* leaf = (TLeaf*) GetListOfLeaves()->At(0);
+   //     const char *leaf_type = leaf->GetTypeName();
+   //     bool result = !strcmp(leaf_type, "UChar_t") ||
+   //                   !strcmp(leaf_type, "Char_t") ||
+   //                   !strcmp(leaf_type, "Short_t") ||
+   //                   !strcmp(leaf_type, "UShort_t") ||
+   //                   !strcmp(leaf_type, "Bool_t") ||
+   //                   !strcmp(leaf_type, "Float_t") ||
+   //                   !strcmp(leaf_type, "Float16_t") ||
+   //                   !strcmp(leaf_type, "Double_t") ||
+   //                   !strcmp(leaf_type, "Double32_t") ||
+   //                   !strcmp(leaf_type, "Int_t") ||
+   //                   !strcmp(leaf_type, "UInt_t") ||
+   //                   !strcmp(leaf_type, "Long64_t") ||
+   //                   !strcmp(leaf_type, "ULong64_t");
+   //    if (!result) { // if leaf_type is not primitive, then switch from LZ4BS to LZ4
+   //        //printf("Converting compression algorithm to use BitShuffle.\n");
+   //        fCompress = 404;
+   //        settings = fCompress;
+   //    }
+   // }
 
    Int_t nb = fBranches.GetEntriesFast();
    for (Int_t i=0;i<nb;i++) {

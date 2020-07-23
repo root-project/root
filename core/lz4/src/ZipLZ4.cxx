@@ -139,27 +139,41 @@ void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, 
       R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
       return;
    }
-   char *temp_tgt = (char *)malloc(*srcsize * 2);
-   char *temp_src = (char *)malloc(*srcsize);
-   memcpy((void*)temp_src, (void*)src, *srcsize);
+
    uint64_t out_size; /* compressed size */
    uint64_t in_size = (unsigned)(*srcsize);
 
    size_t elem_count = *srcsize / sizeof(float);
-   int64_t returnStatus = bshuf_compress_lz4(temp_src, temp_tgt, elem_count, sizeof(float), 0);
-   free(temp_tgt);
-   free(temp_src);
 
-   if (returnStatus > *tgtsize - kHeaderSize) {
-      fprintf(stderr, "Bitshuffle failed: too small tgtsize %d, required %ld\n", *tgtsize, returnStatus);
-      fprintf(stderr, "LZ4_compressBound(): %d\n", LZ4_compressBound(*srcsize));
+   char *temp_tgt_lz4bs = (char *)malloc(*srcsize * 2);
+   char *temp_src_lz4bs = (char *)malloc(*srcsize);
+   memcpy((void*)temp_src_lz4bs, (void*)src, *srcsize);
+   int64_t returnStatus_lz4bs = bshuf_compress_lz4(temp_src_lz4bs, temp_tgt_lz4bs, elem_count, sizeof(float), 0);
+   free(temp_tgt_lz4bs);
+   free(temp_src_lz4bs);
+
+   char *temp_tgt_lz4 = (char *)malloc(*srcsize * 2);
+   char *temp_src_lz4 = (char *)malloc(*srcsize);
+   memcpy((void*)temp_src_lz4, (void*)src, *srcsize);
+   int64_t returnStatus_lz4;
+   if (cxlevel >= 4) {
+      returnStatus_lz4 = LZ4_compress_HC(temp_src_lz4, temp_tgt_lz4, *srcsize, *tgtsize - kHeaderSize, cxlevel);
+   } else {
+      returnStatus_lz4 = LZ4_compress_default(temp_src_lz4, temp_tgt_lz4, *srcsize, *tgtsize - kHeaderSize);
+   }
+   free(temp_tgt_lz4);
+   free(temp_src_lz4);
+
+   if (returnStatus_lz4bs > returnStatus_lz4) {
+      // fprintf(stderr, "Bitshuffle failed: too small tgtsize %d, required %ld\n", *tgtsize, returnStatus);
+      // fprintf(stderr, "LZ4_compressBound(): %d\n", LZ4_compressBound(*srcsize));
       R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
       return;
    } else if (returnStatus < 0) {
       fprintf(stderr, "Bitshuffle failed: got negative returnStatus %ld\n", returnStatus);
       return;
    }
-   returnStatus = bshuf_compress_lz4(src, &tgt[kHeaderSize], elem_count, sizeof(float), 0);
+   int64_t returnStatus = bshuf_compress_lz4(src, &tgt[kHeaderSize], elem_count, sizeof(float), 0);
    XXH64_hash_t checksumResult = XXH64(tgt + kHeaderSize, returnStatus, 0);
 
    tgt[0] = 'L';
