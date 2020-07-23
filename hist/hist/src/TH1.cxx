@@ -8437,11 +8437,11 @@ void TH1::SetNameTitle(const char *name, const char *title)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set statistics option on/off
+/// Set statistics option on/off.
 ///
 /// By default, the statistics box is drawn.
 /// The paint options can be selected via gStyle->SetOptStats.
-/// This function sets/resets the kNoStats bin in the histogram object.
+/// This function sets/resets the kNoStats bit in the histogram object.
 /// It has priority over the Style option.
 
 void TH1::SetStats(Bool_t stats)
