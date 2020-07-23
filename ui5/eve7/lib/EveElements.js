@@ -603,6 +603,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
         }
 
         let ibuff = this.obj3d.eve_el.render_data.idxBuff;
+        let vbuff = this.obj3d.eve_el.render_data.vtxBuff;
         let nbox = ibuff.length/2;
         let nBoxSelected = cells.length;
         let boxIdcs = new Array;
@@ -612,9 +613,17 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
             let slice = cells[i].s;
             let fraction =  cells[i].f;
             for (let r = 0; r < nbox; r++) {
-                if (ibuff[r*2] == slice && ibuff[r*2+1] == bin) {
+                if (ibuff[r*2] == slice) {
+
+                if (bin > 0 && ibuff[r*2+1] == bin) {
                     boxIdcs.push(r);
                     break;
+                }
+                else if (bin < 0 && ibuff[r*2+1] == Math.abs(bin) && vbuff[r*12+1] < 0)
+                {
+                    boxIdcs.push(r);
+                    break;
+                }
                 }
             }
         }
@@ -713,32 +722,32 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                 " ("+  Math.floor(eta*100)/100 + ")";
         }
 
-   }
+    }
 
-    Calo2DControl.prototype.elementSelected = function(pidx)
+    Calo2DControl.prototype.elementSelectedSendMIR = function(idx, selectionId)
     {
-        let idx = pidx;
         let calo =  this.obj3d.eve_el;
         let idxBuff = calo.render_data.idxBuff;
         let scene = this.obj3d.scene;
-        let selectionId = scene.mgr.global_selection_id;
         let multi = event && event.ctrlKey ? true : false;
-        let fcall = "NewBinPicked((Int_t)" +  idxBuff[idx*2 + 1] + ", " +  idxBuff[idx*2] + ", " + selectionId + ", " + multi + ")"
+        let bin = idxBuff[idx*2 + 1];
+        let slice =  idxBuff[idx*2];
+        // get sign for the case of RhoZ projection
+        if (calo.render_data.vtxBuff[idx*12 + 1] < 0) bin = -bin ;
+
+        let fcall = "NewBinPicked((Int_t)" +  bin + ", " +  slice + ", " + selectionId + ", " + multi + ")"
         scene.mgr.SendMIR(fcall, calo.fElementId, "ROOT::Experimental::REveCalo2D");
         return true;
     }
 
-   Calo2DControl.prototype.elementHighlighted = function(pidx)
+    Calo2DControl.prototype.elementSelected = function(idx)
     {
-        console.log("calo2d control element highlighted idx = ", pidx);
-        let idx = pidx;
-        let calo =  this.obj3d.eve_el;
-        let idxBuff = calo.render_data.idxBuff;
-        var scene = this.obj3d.scene;
-        var selectionId = scene.mgr.global_highlight_id;
-        let fcall = "NewBinPicked((Int_t)" +  idxBuff[idx*2 + 1] + ", " +  idxBuff[idx*2] + ", " + selectionId + ", false)"
-        scene.mgr.SendMIR(fcall, calo.fElementId, "ROOT::Experimental::REveCalo2D");
-        return true;
+        return this.elementSelectedSendMIR(idx, this.obj3d.scene.mgr.global_selection_id);
+    }
+
+   Calo2DControl.prototype.elementHighlighted = function(idx)
+    {
+        return this.elementSelectedSendMIR(idx, this.obj3d.scene.mgr.global_highlight_id);
    }
 
    Calo2DControl.prototype.checkHighlightIndex = function(indx)

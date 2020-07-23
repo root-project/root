@@ -1265,8 +1265,7 @@ void REveCalo2D::BuildRenderDataRhoZ()
                offLow += towerH;
                fRenderData->PushV(pnts, 12);
                fRenderData->PushI( s);
-               int ne = -etaBin;
-               fRenderData->PushI(ne);
+               fRenderData->PushI(etaBin);
                fRenderData->PushN(sliceValsLow[s]);
             }
 
