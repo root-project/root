@@ -4029,11 +4029,6 @@ void TClass::ReplaceWith(TClass *newcl) const
 
          info->Update(this, newcl);
       }
-
-      if (acl->GetCollectionProxy()) {
-         acl->GetCollectionProxy()->UpdateValueClass(this, newcl);
-      }
-      // We should also inform all the TBranchElement :( but we do not have a master list :(
    }
 
    TIter delIter( &tobedeleted );
