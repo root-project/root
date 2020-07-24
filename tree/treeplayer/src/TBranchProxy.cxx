@@ -17,6 +17,7 @@ of the autoloading of branches as well as all the generic setup routine.
 #include "TBranchProxy.h"
 #include "TLeaf.h"
 #include "TBranchElement.h"
+#include "TBranchObject.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 
@@ -307,7 +308,7 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
       }
 
       if (!fWhere) {
-         fBranch->SetAddress(0);
+         fBranch->SetupAddresses();
          fWhere = (double*)fBranch->GetAddress();
       }
 
@@ -400,11 +401,14 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
             fWhere = ((unsigned char*)be->GetObject()) + fOffset;
 
          }
+      } else if (fBranch->IsA() == TBranchObject::Class()) {
+         fIsaPointer = true; // this holds for all cases we test
+         fClassName = fBranch->GetClassName();
+         fClass = TClass::GetClass(fClassName);
       } else {
          fClassName = fBranch->GetClassName();
          fClass = TClass::GetClass(fClassName);
       }
-
 
       /*
         fClassName = fBranch->GetClassName(); // What about TClonesArray?
