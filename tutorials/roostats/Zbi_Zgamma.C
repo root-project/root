@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// Demonstrate Z_Bi = Z_Gamma
+/// \brief Demonstrate Z_Bi = Z_Gamma
 ///
 /// \macro_image
 /// \macro_output

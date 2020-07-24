@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// Limits: number counting experiment with uncertainty on both the background rate and signal efficiency.
+/// \brief Limits: number counting experiment with uncertainty on both the background rate and signal efficiency.
 ///
 /// The usage of a Confidence Interval Calculator to set a limit on the signal is illustrated
 ///

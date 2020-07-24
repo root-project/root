@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// An example of using the HypoTestInverterOriginal class
+/// \brief An example of using the HypoTestInverterOriginal class
 ///
 /// \macro_image
 /// \macro_output
