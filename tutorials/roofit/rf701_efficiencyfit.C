@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Special p.d.f.'s: unbinned maximum likelihood fit of an efficiency eff(x) function
+///
+/// \brief Special p.d.f.'s: unbinned maximum likelihood fit of an efficiency eff(x) function
 ///
 /// to a dataset D(x,cut), where cut is a category encoding a selection, of which the
 /// efficiency as function of x should be described by eff(x)

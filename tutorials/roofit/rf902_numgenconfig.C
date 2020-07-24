@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Numeric algorithm tuning: configuration and customization of how MC sampling algorithms on specific p.d.f.s are
+///
+/// \brief Numeric algorithm tuning: configuration and customization of how MC sampling algorithms on specific p.d.f.s are
 /// executed
 ///
 /// \macro_output

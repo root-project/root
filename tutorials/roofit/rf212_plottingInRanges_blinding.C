@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Plot a PDF in disjunct ranges, and get normalisation right.
+///
+/// \brief Plot a PDF in disjunct ranges, and get normalisation right.
 ///
 /// Usually, when comparing a fit to data, one should first plot the data, and then the PDF.
 /// In this case, the PDF is automatically normalised to match the number of data events in the plot.

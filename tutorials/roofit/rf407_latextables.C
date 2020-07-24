@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Data and categories: latex printing of lists and sets of RooArgSets
+///
+/// \brief Data and categories: latex printing of lists and sets of RooArgSets
 ///
 /// \macro_output
 /// \macro_code

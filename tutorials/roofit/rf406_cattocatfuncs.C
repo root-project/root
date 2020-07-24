@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Data and categories: demonstration of discrete-->discrete (invertible) functions
+///
+/// \brief Data and categories: demonstration of discrete-->discrete (invertible) functions
 ///
 /// \macro_output
 /// \macro_code

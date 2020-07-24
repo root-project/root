@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Organisation and simultaneous fits: using RooSimWSTool to construct a simultaneous p.d.f
+///
+/// \brief Organisation and simultaneous fits: using RooSimWSTool to construct a simultaneous p.d.f
 /// that is built of variations of an input p.d.f
 ///
 /// \macro_output

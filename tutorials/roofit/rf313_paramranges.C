@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Multidimensional models: working with parametrized ranges to define non-rectangular
+///
+/// \brief Multidimensional models: working with parametrized ranges to define non-rectangular
 /// regions for fitting and integration
 ///
 /// \macro_image

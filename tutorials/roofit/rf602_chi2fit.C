@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Likelihood and minimization: setting up a chi^2 fit to a binned dataset
+///
+/// \brief Likelihood and minimization: setting up a chi^2 fit to a binned dataset
 ///
 /// \macro_output
 /// \macro_code

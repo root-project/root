@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Special p.d.f.'s: special decay pdf for B physics with mixing and/or CP violation
+///
+/// \brief Special p.d.f.'s: special decay pdf for B physics with mixing and/or CP violation
 ///
 /// \macro_image
 /// \macro_output

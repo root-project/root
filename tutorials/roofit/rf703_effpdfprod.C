@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Special p.d.f.'s: using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
+///
+/// \brief Special p.d.f.'s: using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
 ///
 /// \macro_image
 /// \macro_output

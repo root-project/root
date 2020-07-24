@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook
 ///
-/// Special p.d.f.'s: linear interpolation between p.d.f shapes using the 'Alex Read' algorithm
+///
+/// \brief Special p.d.f.'s: linear interpolation between p.d.f shapes using the 'Alex Read' algorithm
 ///
 /// \macro_image
 /// \macro_output

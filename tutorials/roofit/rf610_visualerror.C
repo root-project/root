@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Likelihood and minimization: visualization of errors from a covariance matrix
+///
+/// \brief Likelihood and minimization: visualization of errors from a covariance matrix
 ///
 /// \macro_image
 /// \macro_output

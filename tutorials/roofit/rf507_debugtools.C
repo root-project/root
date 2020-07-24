@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Organization and simultaneous fits: RooFit memory tracing debug tool
+///
+/// \brief Organization and simultaneous fits: RooFit memory tracing debug tool
 ///
 /// \macro_output
 /// \macro_code
