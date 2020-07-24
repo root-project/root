@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Multidimensional models: working with parameterized ranges to define non-rectangular
+## \brief Multidimensional models: working with parameterized ranges to define non-rectangular
 ## regions for fitting and integration
 ##
 ## \macro_code

@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Addition and convolution: fitting and plotting in sub ranges
+## \brief Addition and convolution: fitting and plotting in sub ranges
 ##
 ## \macro_code
 ##

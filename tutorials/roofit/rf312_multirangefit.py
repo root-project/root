@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## Multidimensional models: performing fits in multiple (disjoint) ranges in one or more dimensions
+## \brief Multidimensional models: performing fits in multiple (disjoint) ranges in one or more dimensions
 ##
 ## \macro_code
 ##

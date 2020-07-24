@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Multidimensional models: simple uncorrelated multi-dimensional p.d.f.s
+## \brief Multidimensional models: simple uncorrelated multi-dimensional p.d.f.s
 ##
 ## `pdf = gauss(x,mx,sx) * gauss(y,my,sy)`
 ##

@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Validation and MC studies: toy Monte Carlo study that perform cycles of event generation and fitting
+## \brief Validation and MC studies: toy Monte Carlo study that perform cycles of event generation and fitting
 ##
 ## \macro_code
 ##

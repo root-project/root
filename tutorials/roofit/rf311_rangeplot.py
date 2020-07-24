@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Multidimensional models: projecting p.d.f and data ranges in continuous observables
+## \brief Multidimensional models: projecting p.d.f and data ranges in continuous observables
 ##
 ## \macro_code
 ##

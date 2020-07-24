@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Basic functionality: numerical 1st, and 3rd order derivatives w.r.t. observables and parameters
+## \brief Basic functionality: numerical 1st, and 3rd order derivatives w.r.t. observables and parameters
 ##
 ## ```
 ## pdf = gauss(x,m,s)

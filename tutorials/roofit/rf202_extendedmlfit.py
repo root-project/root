@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Addition and convolution: setting up an extended maximum likelihood fit
+## \brief Addition and convolution: setting up an extended maximum likelihood fit
 ##
 ## \macro_code
 ##

@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Likelihood and minimization: visualization of errors from a covariance matrix
+## \brief Likelihood and minimization: visualization of errors from a covariance matrix
 ##
 ## \macro_code
 ##

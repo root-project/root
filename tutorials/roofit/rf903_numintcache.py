@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Numeric algorithm tuning: caching of slow numeric integrals and parameterizations of slow numeric integrals
+## \brief Numeric algorithm tuning: caching of slow numeric integrals and parameterizations of slow numeric integrals
 ##
 ## \macro_code
 ##
