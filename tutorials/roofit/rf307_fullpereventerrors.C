@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook
 ///
-/// Multidimensional models: full p.d.f. with per-event errors
+///
+/// \brief Multidimensional models: full p.d.f. with per-event errors
 ///
 /// \macro_code
 ///

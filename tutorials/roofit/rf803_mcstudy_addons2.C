@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Validation and MC studies: RooMCStudy - Using the randomizer and profile likelihood add-on models
+///
+/// \brief Validation and MC studies: RooMCStudy - Using the randomizer and profile likelihood add-on models
 ///
 /// \macro_image
 /// \macro_output

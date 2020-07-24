@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Organisation and simultaneous fits: reading and writing ASCII configuration files
+///
+/// \brief Organisation and simultaneous fits: reading and writing ASCII configuration files
 ///
 /// \macro_output
 /// \macro_code

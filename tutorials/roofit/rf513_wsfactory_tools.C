@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Organization and simultaneous fits: RooCustomizer and RooSimWSTool interface in factory
+///
+/// \brief Organization and simultaneous fits: RooCustomizer and RooSimWSTool interface in factory
 /// workspace tool in a complex standalone B physics example
 ///
 /// \macro_output

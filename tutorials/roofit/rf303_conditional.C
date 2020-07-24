@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Multidimensional models: use of tailored p.d.f as conditional p.d.fs.s
+///
+/// \brief Multidimensional models: use of tailored p.d.f as conditional p.d.fs.s
 ///
 /// `pdf = gauss(x,f(y),sx | y )` with `f(y) = a0 + a1*y`
 ///

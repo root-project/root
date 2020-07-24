@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Multidimensional models: using the likelihood ratio technique to construct a signal
+///
+/// \brief Multidimensional models: using the likelihood ratio technique to construct a signal
 /// enhanced one-dimensional projection of a multi-dimensional p.d.f.
 ///
 /// \macro_image

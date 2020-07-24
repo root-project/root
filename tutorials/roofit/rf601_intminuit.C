@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Likelihood and minimization: interactive minimization with MINUIT
+///
+/// \brief Likelihood and minimization: interactive minimization with MINUIT
 ///
 /// \macro_image
 /// \macro_output

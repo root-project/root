@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Addition and convolution: convolution in cyclical angular observables theta
+///
+/// \brief Addition and convolution: convolution in cyclical angular observables theta
 ///
 /// and construction of p.d.f in terms of transformed angular coordinates, e.g. cos(theta),
 /// where the convolution is performed in theta rather than cos(theta)

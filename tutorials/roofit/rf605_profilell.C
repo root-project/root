@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Likelihood and minimization: working with the profile likelihood estimator
+///
+/// \brief Likelihood and minimization: working with the profile likelihood estimator
 ///
 /// \macro_image
 /// \macro_output

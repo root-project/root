@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Data and categories: advanced options for importing data from ROOT TTree and THx histograms
+///
+/// \brief Data and categories: advanced options for importing data from ROOT TTree and THx histograms
 ///
 /// Basic import options are demonstrated in rf102_dataimport.C
 ///

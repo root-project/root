@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Organisation and simultaneous fits: creating and writing a workspace
+///
+/// \brief Organisation and simultaneous fits: creating and writing a workspace
 ///
 /// \macro_output
 /// \macro_code

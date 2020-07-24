@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Basic functionality: various plotting styles of data, functions in a RooPlot
+///
+/// \brief Basic functionality: various plotting styles of data, functions in a RooPlot
 ///
 /// \macro_image
 /// \macro_output

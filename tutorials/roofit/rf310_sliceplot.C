@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook
 ///
-/// Multidimensional models: projecting p.d.f and data slices in discrete observables
+///
+/// \brief Multidimensional models: projecting p.d.f and data slices in discrete observables
 ///
 /// \macro_image
 /// \macro_output

@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Likelihood and minimization: setting up a multi-core parallelized unbinned maximum likelihood fit
+///
+/// \brief Likelihood and minimization: setting up a multi-core parallelized unbinned maximum likelihood fit
 ///
 /// \macro_image
 /// \macro_output

@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook
 ///
-/// Multidimensional models: making 2/3 dimensional plots of p.d.f.s and datasets
+///
+/// \brief Multidimensional models: making 2/3 dimensional plots of p.d.f.s and datasets
 ///
 /// \macro_image
 /// \macro_output
