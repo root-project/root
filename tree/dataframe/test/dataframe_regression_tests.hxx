@@ -1,5 +1,8 @@
 #include "ROOT/RDataFrame.hxx"
+#include "TBranchObject.h"
+#include "TBranchElement.h"
 #include "TROOT.h"
+#include "TVector3.h"
 #include "TSystem.h"
 
 #include <algorithm>
@@ -105,4 +108,45 @@ TEST(TEST_CATEGORY, UniqueEntryNumbers)
       EXPECT_EQ(i, entries[i]);
 
    gSystem->Unlink(fname);
+}
+
+// ROOT-9731
+TEST(TEST_CATEGORY, ReadVector3)
+{
+   const std::string filename = "readwritetvector3.root";
+   {
+      TFile tfile(filename.c_str(), "recreate");
+      TTree tree("t", "t");
+      TVector3 a;
+      tree.Branch("a", &a); // TVector3 as TBranchElement
+      auto *c = new TVector3();
+      tree.Branch("b", "TVector3", &c, 32000, 0); // TVector3 as TBranchObject
+      for (int i = 0; i < 10; ++i) {
+         a.SetX(i);
+         c->SetX(i);
+         tree.Fill();
+      }
+      tree.Write();
+      delete c;
+   }
+
+   const std::string snap_fname = std::string("snap_") + filename;
+
+   ROOT::RDataFrame rdf("t", filename);
+   auto ha = rdf.Define("aval", "a.X()").Histo1D("aval");
+   auto hb = rdf.Define("bval", "b.X()").Histo1D("bval");
+   EXPECT_EQ(ha->GetMean(), 4.5);
+   EXPECT_EQ(ha->GetMean(), hb->GetMean());
+
+   /* TODO: Enable when ROOT-10022 is fixed
+   auto out_df = rdf.Snapshot<TVector3, TVector3>("t", snap_fname, {"a", "b"});
+
+   auto ha_snap = out_df->Define("aval", "a.X()").Histo1D("aval");
+   auto hb_snap = out_df->Define("bval", "b.X()").Histo1D("bval");
+   EXPECT_EQ(ha_snap->GetMean(), 4.5);
+   EXPECT_EQ(ha_snap->GetMean(), hb_snap->GetMean());
+
+   gSystem->Unlink(snap_fname.c_str());
+   */
+   gSystem->Unlink(filename.c_str());
 }
