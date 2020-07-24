@@ -531,6 +531,9 @@ endif()
 if(found_stdstringview)
   CHECK_CXX_SOURCE_COMPILES("#include <string_view>
      int main() { size_t pos; std::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
+  if(CMAKE_CUDA_STANDARD GREATER_EQUAL CMAKE_CXX_STANDARD)
+    set(cudahasstdstringview define)
+  endif()
 elseif(found_stdexpstringview)
   CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
      int main() { size_t pos; std::experimental::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
