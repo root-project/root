@@ -518,40 +518,38 @@ CHECK_CXX_SOURCE_COMPILES("#include <string_view>
 if(found_stdstringview)
   set(hasstdstringview define)
   if(cuda)
-    if(CMAKE_CUDA_STANDARD GREATER_EQUAL CMAKE_CXX_STANDARD)
-      # CUDA_NVCC_EXECUTABLE
-      if(DEFINED ENV{CUDA_NVCC_EXECUTABLE})
-        set(CUDA_NVCC_EXECUTABLE "$ENV{CUDA_NVCC_EXECUTABLE}" CACHE FILEPATH "The CUDA compiler")
-      else()
-        find_program(CUDA_NVCC_EXECUTABLE
-          NAMES nvcc nvcc.exe
-          PATHS "${CUDA_TOOLKIT_ROOT_DIR}"
-            ENV CUDA_TOOKIT_ROOT
-            ENV CUDA_PATH
-            ENV CUDA_BIN_PATH
-          PATH_SUFFIXES bin bin64
-          DOC "The CUDA compiler"
-          NO_DEFAULT_PATH
-        )
-        find_program(CUDA_NVCC_EXECUTABLE
-          NAMES nvcc nvcc.exe
-          PATHS /opt/cuda/bin
-          PATH_SUFFIXES cuda/bin
-          DOC "The CUDA compiler"
-        )
-        # Search default search paths, after we search our own set of paths.
-        find_program(CUDA_NVCC_EXECUTABLE nvcc)
-      endif()
-      mark_as_advanced(CUDA_NVCC_EXECUTABLE)
-      if(CUDA_NVCC_EXECUTABLE)
-        execute_process(COMMAND "echo"
-          "-e" "#include <string_view>\nint main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}"
-          "|"
-          "${CUDA_NVCC_EXECUTABLE}" "-std=c++${CMAKE_CUDA_STANDARD}" "-o" "/dev/null" "-x" "c++" "-"
-          RESULT_VARIABLE nvcc_compiled_string_view)
-        if (nvcc_compiled_string_view EQUAL "0")
-          set(cudahasstdstringview define)
-        endif()
+    # CUDA_NVCC_EXECUTABLE
+    if(DEFINED ENV{CUDA_NVCC_EXECUTABLE})
+      set(CUDA_NVCC_EXECUTABLE "$ENV{CUDA_NVCC_EXECUTABLE}" CACHE FILEPATH "The CUDA compiler")
+    else()
+      find_program(CUDA_NVCC_EXECUTABLE
+        NAMES nvcc nvcc.exe
+        PATHS "${CUDA_TOOLKIT_ROOT_DIR}"
+          ENV CUDA_TOOKIT_ROOT
+          ENV CUDA_PATH
+          ENV CUDA_BIN_PATH
+        PATH_SUFFIXES bin bin64
+        DOC "The CUDA compiler"
+        NO_DEFAULT_PATH
+      )
+      find_program(CUDA_NVCC_EXECUTABLE
+        NAMES nvcc nvcc.exe
+        PATHS /opt/cuda/bin
+        PATH_SUFFIXES cuda/bin
+        DOC "The CUDA compiler"
+      )
+      # Search default search paths, after we search our own set of paths.
+      find_program(CUDA_NVCC_EXECUTABLE nvcc)
+    endif()
+    mark_as_advanced(CUDA_NVCC_EXECUTABLE)
+    if(CUDA_NVCC_EXECUTABLE)
+      execute_process(COMMAND "echo"
+        "-e" "#include <string_view>\nint main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}"
+        "|"
+        "${CUDA_NVCC_EXECUTABLE}" "-std=c++${CMAKE_CUDA_STANDARD}" "-o" "/dev/null" "-x" "c++" "-"
+        RESULT_VARIABLE nvcc_compiled_string_view)
+      if (nvcc_compiled_string_view EQUAL "0")
+        set(cudahasstdstringview define)
       endif()
     endif()
   endif()
