@@ -528,6 +528,7 @@ else()
   endif()
 endif()
 
+set(cudahasstdstringview undef)
 if(found_stdstringview)
   CHECK_CXX_SOURCE_COMPILES("#include <string_view>
      int main() { size_t pos; std::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
