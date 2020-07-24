@@ -577,8 +577,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   return kTRUE;
                }
                TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
-               Fatal("MergeRecursive", "Merging objects that don't inherit from TObject is unimplemented (key: %s in file %s)",
-                      key->GetName(), nextsource->GetName());
+               Error("MergeRecursive", "Merging objects that don't inherit from TObject is unimplemented (key: %s of type %s in file %s)",
+                      key->GetName(), key->GetClassName(), nextsource->GetName());
+               canBeMerged = kFALSE;
             } else if (cl->IsTObject() && cl->GetMerge()) {
                // Check if already treated
                if (alreadyseen) continue;
