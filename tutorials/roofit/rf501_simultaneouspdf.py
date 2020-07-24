@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Organization and simultaneous fits: using simultaneous p.d.f.s to describe simultaneous
+## \brief Organization and simultaneous fits: using simultaneous p.d.f.s to describe simultaneous
 ## fits to multiple datasets
 ##
 ## \macro_code

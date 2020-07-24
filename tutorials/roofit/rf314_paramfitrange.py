@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Multidimensional models: working with parameterized ranges in a fit.
+## \brief Multidimensional models: working with parameterized ranges in a fit.
 ## This an example of a fit with an acceptance that changes per-event
 ##
 ## `pdf = exp(-t/tau)` with `t[tmin,5]`

@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Multidimensional models: usage of full p.d.f. with per-event errors
+## \brief Multidimensional models: usage of full p.d.f. with per-event errors
 ##
 ## \macro_code
 ##

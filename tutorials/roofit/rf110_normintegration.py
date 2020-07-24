@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Basic functionality: examples on normalization and integration of p.d.fs, construction
+## \brief Basic functionality: examples on normalization and integration of p.d.fs, construction
 ## of cumulative distribution functions from monodimensional p.d.f.s
 ##
 ## \macro_code

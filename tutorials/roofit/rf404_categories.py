@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## Data and categories: working with ROOT.RooCategory objects to describe discrete variables
+## \brief Data and categories: working with ROOT.RooCategory objects to describe discrete variables
 ##
 ## \macro_code
 ##

@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Basic functionality: adding boxes with parameters to RooPlots and decorating with arrows, etc...
+## \brief Basic functionality: adding boxes with parameters to RooPlots and decorating with arrows, etc...
 ##
 ## \macro_code
 ##
