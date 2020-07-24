@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## Organization and simultaneous fits: reading and writing ASCII configuration files
+## \brief Organization and simultaneous fits: reading and writing ASCII configuration files
 ##
 ## \macro_code
 ##

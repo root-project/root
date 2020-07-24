@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Basic functionality: interpreted functions and p.d.f.s
+## \brief Basic functionality: interpreted functions and p.d.f.s
 ##
 ## \macro_code
 ##

@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## Addition and convolution: extended maximum likelihood fit with alternate range definition
+## \brief Addition and convolution: extended maximum likelihood fit with alternate range definition
 ## for observed number of events.
 ##
 ## \macro_code

@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## Organization and simultaneous fits: creating and writing a workspace
+## \brief Organization and simultaneous fits: creating and writing a workspace
 ##
 ## \macro_code
 ##

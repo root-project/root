@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## Addition and convolution: tools for visualization of ROOT.RooAbsArg expression trees
+## \brief Addition and convolution: tools for visualization of ROOT.RooAbsArg expression trees
 ##
 ## \macro_code
 ##

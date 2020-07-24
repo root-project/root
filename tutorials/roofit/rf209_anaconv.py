@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Addition and convolution: decay function p.d.fs with optional B physics effects (mixing
+## \brief Addition and convolution: decay function p.d.fs with optional B physics effects (mixing
 ## and CP violation) that can be analytically convolved with e.g. Gaussian resolution functions
 ##
 ## ```

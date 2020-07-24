@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## Numeric algorithm tuning: configuration and customization of how numeric (partial) integrals are executed
+## \brief Numeric algorithm tuning: configuration and customization of how numeric (partial) integrals are executed
 ##
 ## \macro_code
 ##

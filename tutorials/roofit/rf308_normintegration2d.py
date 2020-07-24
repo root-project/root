@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Multidimensional models: normalization and  integration of p.d.fs, construction of
+## \brief Multidimensional models: normalization and  integration of p.d.fs, construction of
 ## cumulative distribution functions from p.d.f.s in two dimensions
 ##
 ## \macro_code

@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## This tutorial illustrates the basic features of RooFit.
+## \brief This tutorial illustrates the basic features of RooFit.
 ##
 ## \macro_code
 ##

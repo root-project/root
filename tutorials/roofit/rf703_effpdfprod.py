@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Special p.d.f.'s: using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
+## \brief Special p.d.f.'s: using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
 ##
 ## \macro_code
 ##
