@@ -897,22 +897,25 @@ void TAxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set the viewing range for the axis from bin first to last.
+///  Set the viewing range for the axis using bin numbers.
+///
+///  \param first First bin of the range.
+///  \param last  Last bin of the range.
 ///  To set a range using the axis coordinates, use TAxis::SetRangeUser.
 ///
-///  If first == last == 0 or if last < first or if the range specified does
-///  not intersect at all with the maximum available range [0, fNbins + 1],
-///  then the range is reset by removing the bit TAxis::kAxisRange. In this
-///  case the functions TAxis::GetFirst() and TAxis::GetLast() will return 1
+///  If `first == last == 0` or if `first > last` or if the range specified does
+///  not intersect at all with the maximum available range `[0, fNbins + 1]`,
+///  then the viewing range is reset by removing the bit TAxis::kAxisRange. In this
+///  case, the functions TAxis::GetFirst() and TAxis::GetLast() will return 1
 ///  and fNbins.
 ///
-///  If the range specified partially intersects [0, fNbins + 1], then the
-///  intersection range is set. For instance, if first == -2 and last == fNbins,
-///  then the set range is [0, fNbins] (fFirst = 0 and fLast = fNbins).
+///  If the range specified partially intersects with `[0, fNbins + 1]`, then the
+///  intersection range is accepted. For instance, if `first == -2` and `last == fNbins`,
+///  the accepted range will be `[0, fNbins]` (`fFirst = 0` and `fLast = fNbins`).
 ///
-///  NOTE: for historical reasons, SetRange(0,0) resets the range even though Bin 0 is
+///  \note For historical reasons, SetRange(0,0) resets the range even though bin 0 is
 ///       technically reserved for the underflow; in order to set the range of the axis
-///       so that it only includes the underflow, use SetRange(a,0), where a < 0
+///       so that it only includes the underflow, use `SetRange(-1,0)`.
 
 void TAxis::SetRange(Int_t first, Int_t last)
 {
@@ -936,7 +939,8 @@ void TAxis::SetRange(Int_t first, Int_t last)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set the viewing range for the axis from ufirst to ulast (in user coordinates).
+///  Set the viewing range for the axis from ufirst to ulast (in user coordinates,
+///  that is, the "natural" axis coordinates).
 ///  To set a range using the axis bin numbers, use TAxis::SetRange.
 
 void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
