@@ -3120,7 +3120,7 @@ void TBranch::SetFirstEntry(Long64_t entry)
 
 void TBranch::SetupAddresses()
 {
-   // Nothing to do for regular branch, the TLeaf already did it.
+   SetAddress(nullptr); // in some cases, this triggers setting of the address
 }
 
 ////////////////////////////////////////////////////////////////////////////////
