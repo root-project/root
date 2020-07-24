@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Addition and convolution: tools for visualization of RooAbsArg expression trees
+///
+/// \brief Addition and convolution: tools for visualization of RooAbsArg expression trees
 ///
 /// \macro_output
 /// \macro_code

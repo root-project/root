@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Addition and convolution: one-dimensional numeric convolution
+///
+/// \brief Addition and convolution: one-dimensional numeric convolution
 ///
 /// ```
 /// pdf = landau(t) (x) gauss(t)

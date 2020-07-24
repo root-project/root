@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Validation and MC studies:
+///
+/// \brief Validation and MC studies:
 /// RooMCStudy - using separate fit and generator models, using the chi^2 calculator model
 /// Running a biased fit model against an optimal fit.
 ///

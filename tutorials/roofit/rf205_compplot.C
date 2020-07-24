@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js -nodraw
 ///
-/// Addition and convolution: options for plotting components of composite p.d.f.s.
+///
+/// \brief Addition and convolution: options for plotting components of composite p.d.f.s.
 ///
 /// \macro_image
 /// \macro_output

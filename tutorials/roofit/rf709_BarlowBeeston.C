@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Implementing the Barlow-Beeston method for taking into account the statistical
+///
+/// \brief Implementing the Barlow-Beeston method for taking into account the statistical
 /// uncertainty of a Monte-Carlo fit template.
 ///
 /// \macro_image

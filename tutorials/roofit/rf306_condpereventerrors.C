@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook
 ///
-/// Multidimensional models: conditional p.d.f. with per-event errors
+///
+/// \brief Multidimensional models: conditional p.d.f. with per-event errors
 ///
 /// \macro_image
 /// \macro_output

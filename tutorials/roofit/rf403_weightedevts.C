@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Data and categories: using weights in unbinned datasets
+///
+/// \brief Data and categories: using weights in unbinned datasets
 ///
 /// \macro_image
 /// \macro_output

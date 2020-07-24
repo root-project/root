@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Basic functionality: binding ROOT math functions as RooFit functions and pdfs
+///
+/// \brief Basic functionality: binding ROOT math functions as RooFit functions and pdfs
 ///
 /// \macro_image
 /// \macro_output

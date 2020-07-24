@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Likelihood and minimization: Parameter uncertainties for weighted unbinned ML fits
+///
+/// \brief Likelihood and minimization: Parameter uncertainties for weighted unbinned ML fits
 ///
 /// ## Parameter uncertainties for weighted unbinned ML fits
 ///

@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Basic functionality: interpreted functions and PDFs.
+///
+/// \brief Basic functionality: interpreted functions and PDFs.
 ///
 /// \macro_image
 /// \macro_output

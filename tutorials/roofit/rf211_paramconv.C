@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook
 ///
-/// Addition and convolution: working with a p.d.f. with a convolution operator in terms of a parameter
+///
+/// \brief Addition and convolution: working with a p.d.f. with a convolution operator in terms of a parameter
 ///
 /// This tutorial requires FFT3 to be enabled.
 ///

@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Addition and convolution: tools and utilities for manipulation of composite objects
+///
+/// \brief Addition and convolution: tools and utilities for manipulation of composite objects
 ///
 /// \macro_output
 /// \macro_code

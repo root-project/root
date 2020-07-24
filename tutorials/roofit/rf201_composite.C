@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Addition and convolution: composite p.d.f with signal and background component
+///
+/// \brief Addition and convolution: composite p.d.f with signal and background component
 ///
 /// ```
 ///  pdf = f_bkg * bkg(x,a0,a1) + (1-fbkg) * (f_sig1 * sig1(x,m,s1 + (1-f_sig1) * sig2(x,m,s2)))

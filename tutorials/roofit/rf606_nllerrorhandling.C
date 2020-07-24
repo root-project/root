@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Likelihood and minimization: understanding and customizing error handling in likelihood evaluations
+///
+/// \brief Likelihood and minimization: understanding and customizing error handling in likelihood evaluations
 ///
 /// \macro_image
 /// \macro_output

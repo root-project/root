@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Basic functionality: adding boxes with parameters, statistics to RooPlots, decorating with arrows, text etc...
+///
+/// \brief Basic functionality: adding boxes with parameters, statistics to RooPlots, decorating with arrows, text etc...
 ///
 /// \macro_image
 /// \macro_output

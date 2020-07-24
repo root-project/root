@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Setting up an extended maximum likelihood fit.
+///
+/// \brief Setting up an extended maximum likelihood fit.
 ///
 /// \macro_image
 /// \macro_output

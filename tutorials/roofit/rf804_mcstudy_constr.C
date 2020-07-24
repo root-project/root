@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Validation and MC studies: using RooMCStudy on models with constrains
+///
+/// \brief Validation and MC studies: using RooMCStudy on models with constrains
 ///
 /// \macro_image
 /// \macro_output

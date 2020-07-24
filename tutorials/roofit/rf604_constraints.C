@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Likelihood and minimization: fitting with constraints
+///
+/// \brief Likelihood and minimization: fitting with constraints
 ///
 /// \macro_output
 /// \macro_code

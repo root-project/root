@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Organization and simultaneous fits: operator expressions and expression-based basic
+///
+/// \brief Organization and simultaneous fits: operator expressions and expression-based basic
 /// p.d.f.s in the workspace factory syntax
 ///
 /// \macro_output

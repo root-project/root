@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook
 ///
-/// Multidimensional models: marginizalization of multi-dimensional p.d.f.s through integration
+///
+/// \brief Multidimensional models: marginizalization of multi-dimensional p.d.f.s through integration
 ///
 /// \macro_image
 /// \macro_output

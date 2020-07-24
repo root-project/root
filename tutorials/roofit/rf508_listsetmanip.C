@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Organization and simultaneous fits: RooArgSet and RooArgList tools and tricks
+///
+/// \brief Organization and simultaneous fits: RooArgSet and RooArgList tools and tricks
 ///
 /// \macro_output
 /// \macro_code

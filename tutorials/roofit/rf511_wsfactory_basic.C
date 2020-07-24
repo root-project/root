@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Organization and simultaneous fits: basic use of the 'object factory' associated with
+///
+/// \brief Organization and simultaneous fits: basic use of the 'object factory' associated with
 /// a workspace to rapidly build p.d.f.s functions and their parameter components
 ///
 /// \macro_output

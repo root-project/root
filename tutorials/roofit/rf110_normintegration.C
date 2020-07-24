@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Basic functionality: normalization and integration of p.d.fs, construction of cumulative distribution
+///
+/// \brief Basic functionality: normalization and integration of p.d.fs, construction of cumulative distribution
 /// monodimensional functions
 ///
 /// \macro_image

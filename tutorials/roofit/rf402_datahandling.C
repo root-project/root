@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Data and categories: tools for manipulation of (un)binned datasets
+///
+/// \brief Data and categories: tools for manipulation of (un)binned datasets
 ///
 /// \macro_image
 /// \macro_output

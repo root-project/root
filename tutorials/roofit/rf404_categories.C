@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
 ///
-/// Data and categories: working with RooCategory objects to describe discrete variables
+///
+/// \brief Data and categories: working with RooCategory objects to describe discrete variables
 ///
 /// \macro_output
 /// \macro_code

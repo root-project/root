@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-///  Extended maximum likelihood fit in multiple ranges.
+///
+/// \brief Extended maximum likelihood fit in multiple ranges.
 ///  When an extended pdf and multiple ranges are used, the
 ///  RooExtendPdf cannot correctly interpret the coefficients
 ///  used for extension.

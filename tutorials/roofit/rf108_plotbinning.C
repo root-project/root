@@ -2,7 +2,8 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 ///
-/// Basic functionality: plotting unbinned data with alternate and variable binnings
+///
+/// \brief Basic functionality: plotting unbinned data with alternate and variable binnings
 ///
 /// \macro_image
 /// \macro_output
