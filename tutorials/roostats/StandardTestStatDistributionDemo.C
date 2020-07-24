@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// StandardTestStatDistributionDemo.C
+/// \brief StandardTestStatDistributionDemo.C
 ///
 /// This simple script plots the sampling distribution of the profile likelihood
 /// ratio test statistic based on the input Model File.  To do this one needs to

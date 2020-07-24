@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// TwoSidedFrequentistUpperLimitWithBands
+/// \brief TwoSidedFrequentistUpperLimitWithBands
 ///
 ///
 /// This is a standard demo that can be used with any ROOT file

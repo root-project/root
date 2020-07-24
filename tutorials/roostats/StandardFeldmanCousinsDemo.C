@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// Standard demo of the Feldman-Cousins calculator
+/// \brief Standard demo of the Feldman-Cousins calculator
 /// StandardFeldmanCousinsDemo
 ///
 /// This is a standard demo that can be used with any ROOT file

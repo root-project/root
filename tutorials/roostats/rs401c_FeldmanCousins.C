@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// Produces an interval on the mean signal in a number counting experiment with known background using the
+/// \brief Produces an interval on the mean signal in a number counting experiment with known background using the
 /// Feldman-Cousins technique.
 ///
 /// Using the RooStats FeldmanCousins tool with 200 bins

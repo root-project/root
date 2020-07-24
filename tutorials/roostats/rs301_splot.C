@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// SPlot tutorial
+/// \brief SPlot tutorial
 ///
 /// This tutorial shows an example of using SPlot to unfold two distributions.
 /// The physics context for the example is that we want to know
