@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// Standard demo of the Profile Likelihood calculator
+/// \brief Standard demo of the Profile Likelihood calculator
 /// StandardProfileLikelihoodDemo
 ///
 /// This is a standard demo that can be used with any ROOT file

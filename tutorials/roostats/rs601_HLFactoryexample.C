@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// High Level Factory: creation of a simple model
+/// \brief High Level Factory: creation of a simple model
 ///
 /// \macro_image
 /// \macro_output
