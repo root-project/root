@@ -641,8 +641,6 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   }
                }
             } else if (cl->IsTObject()) {
-               if (alreadyseen) continue;
-
                // try synthesizing the Merge method call according to the TObject
                TList listH;
                TString listHargs;
@@ -656,6 +654,10 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   canBeMerged = kFALSE;
                }
                if (canBeMerged) {
+                  if (alreadyseen) {
+                     // skip already seen mergeable objects, don't skip unmergeable objects
+                     continue;
+                  }
                   // Loop over all source files and merge same-name object
                   TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
                   if (nextsource == 0) {
