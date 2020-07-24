@@ -14,7 +14,7 @@ ROOT_ADD_GTEST(dataframe_callbacks dataframe_callbacks.cxx LIBRARIES ROOTDataFra
 ROOT_ADD_GTEST(dataframe_histomodels dataframe_histomodels.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_interface dataframe_interface.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_nodes dataframe_nodes.cxx LIBRARIES ROOTDataFrame)
-ROOT_ADD_GTEST(dataframe_regression dataframe_regression.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(dataframe_regression dataframe_regression.cxx LIBRARIES Physics ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_utils dataframe_utils.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_report dataframe_report.cxx LIBRARIES ROOTDataFrame)
 ROOT_GENERATE_DICTIONARY(TwoFloatsDict TwoFloats.h LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader)
