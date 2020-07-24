@@ -106,6 +106,10 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
     if (PyDict_DelItem(clbs, PyStrings::gInit) != 0)
         PyErr_Clear();
 
+// protected methods and data need their access changed in the C++ trampoline and then
+// exposed on the Python side; so, collect their names as we go along
+    std::vector<std::string> protected_names;
+
 // simple case: methods from current class
     bool has_default = false;
     bool has_cctor = false;
@@ -114,7 +118,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
     for (Cppyy::TCppIndex_t imeth = 0; imeth < nMethods; ++imeth) {
         Cppyy::TCppMethod_t method = Cppyy::GetMethod(klass->fCppType, imeth);
 
-        if (Cppyy::IsConstructor(method)) {
+        if (Cppyy::IsConstructor(method) && (Cppyy::IsPublicMethod(method) || Cppyy::IsProtectedMethod(method))) {
             has_constructors = true;
             Cppyy::TCppIndex_t nreq = Cppyy::GetMethodReqArgs(method);
             if (nreq == 0)
@@ -132,6 +136,13 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
         if (contains == -1) PyErr_Clear();
         if (contains != 1) {
             Py_DECREF(key);
+
+        // if the method is protected, we expose it with a 'using'
+            if (Cppyy::IsProtectedMethod(method)) {
+                protected_names.push_back(mtCppName);
+                code << "  using " << baseName << "::" << mtCppName << ";\n";
+            }
+
             continue;
         }
 
@@ -184,6 +195,16 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
 
 // destructor: default is fine
 
+// pull in data members that are protected
+    Cppyy::TCppIndex_t nData = Cppyy::GetNumDatamembers(klass->fCppType);
+    if (nData) code << "public:\n";
+    for (Cppyy::TCppIndex_t idata = 0; idata < nData; ++idata) {
+        if (Cppyy::IsProtectedData(klass->fCppType, idata)) {
+            protected_names.push_back(Cppyy::GetDatamemberName(klass->fCppType, idata));
+            code << "  using " << baseName << "::" << protected_names.back() << ";\n";
+        }
+    }
+
 // finish class declaration
     code << "};\n}";
 
@@ -201,6 +222,20 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
 // that are part of the hierarchy in Python, so create it, which will cache it for
 // later use by e.g. the MemoryRegulator
     PyObject* disp_proxy = CPyCppyy::CreateScopeProxy(disp);
+
+// finally, to expose protected members, copy them over from the C++ dispatcher base
+// to the Python dictionary (the C++ dispatcher's Python proxy is not a base of the
+// Python class to keep the inheritance tree intact)
+    for (const auto& name : protected_names) {
+         PyObject* disp_dct = PyObject_GetAttr(disp_proxy, PyStrings::gDict);
+         PyObject* pyf = PyMapping_GetItemString(disp_dct, (char*)name.c_str());
+         if (pyf) {
+             PyObject_SetAttrString((PyObject*)klass, (char*)name.c_str(), pyf);
+             Py_DECREF(pyf);
+         }
+         Py_DECREF(disp_dct);
+    }
+
     Py_XDECREF(disp_proxy);
 
     return true;
