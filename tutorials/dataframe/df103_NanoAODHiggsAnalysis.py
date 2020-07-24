@@ -272,8 +272,8 @@ def df103_NanoAODHiggsAnalysis(run_fast = True):
     df_bkg_2el2mu = ROOT.RDataFrame("Events", path + "ZZTo2e2mu.root")
 
     # CMS data taken in 2012 (11.6 fb^-1 integrated luminosity)
-    df_data_doublemu = ROOT.RDataFrame("Events", (path + f for f in ["Run2012B_DoubleMuParked.root", "Run2012B_DoubleMuParked.root"]))
-    df_data_doubleel = ROOT.RDataFrame("Events", (path + f for f in ["Run2012B_DoubleElectron.root", "Run2012B_DoubleElectron.root"]))
+    df_data_doublemu = ROOT.RDataFrame("Events", (path + f for f in ["Run2012B_DoubleMuParked.root", "Run2012C_DoubleMuParked.root"]))
+    df_data_doubleel = ROOT.RDataFrame("Events", (path + f for f in ["Run2012B_DoubleElectron.root", "Run2012C_DoubleElectron.root"]))
 
     # Number of bins for all histograms
     nbins = 36
