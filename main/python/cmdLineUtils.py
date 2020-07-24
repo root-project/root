@@ -730,9 +730,12 @@ def _openBrowser(rootFile=None):
     browser = ROOT.TBrowser()
     if ROOT.gSystem.InheritsFrom('TMacOSXSystem'):
         print("Press ctrl+c to exit.")
-        while True:
-            ROOT.gSystem.ProcessEvents()
-            sleep(0.01)
+        try:
+            while True:
+                ROOT.gSystem.ProcessEvents()
+                sleep(0.01)
+        except (KeyboardInterrupt, SystemExit):
+            pass
     else:
         _input("Press enter to exit.")
 
