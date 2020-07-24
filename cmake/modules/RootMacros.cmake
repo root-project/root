@@ -1409,7 +1409,7 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 #                        [PASSREGEX exp] [FAILREGEX epx]
 #                        [PASSRC code]
 #                        [LABELS label1 label2]
-#                        [PYTHON_DEPS numpy numba keras ...] # List of python packages required to run this test.
+#                        [PYTHON_DEPS numpy numba keras torch ...] # List of python packages required to run this test.
 #                                                              A fixture will be added the tries to import them before the test starts.)
 #
 function(ROOT_ADD_TEST test)

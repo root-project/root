@@ -98,6 +98,7 @@ void MethodPyTorch::DeclareOptions() {
    DeclareOptionRef(fNumValidationString = "20%", "ValidationSize", "Part of the training data to use for validation."
                     "Specify as 0.2 or 20% to use a fifth of the data set as validation set."
                     "Specify as 100 to use exactly 100 events. (Default: 20%)");
+   DeclareOptionRef(fUserCodeName = "", "UserCode", "Necessary python code provided by the user to be executed before loading and training the PyTorch Model");
 
 }
 
@@ -213,12 +214,26 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
       Log() << kINFO << " Executing user initialization code from  " << fUserCodeName << Endl;
 
 
-        // run some python code provided by user for model initialization if needed
+      // run some python code provided by user for model initialization if needed
       TString cmd = "exec(open('" + fUserCodeName + "').read())";
       TString errmsg = "Error executing the provided user code";
       PyRunString(cmd, errmsg);
 
       PyRunString("print('custom objects for loading model : ',load_model_custom_objects)");
+
+      PyRunString("fit = load_model_custom_objects[\"train_func\"]",
+                  "Failed to load train function from file");
+      Log() << kINFO << "Loaded pytorch train function: " << Endl;
+
+
+      PyRunString("optimizer = load_model_custom_objects[\"optimizer\"]",
+                  "Failed to load optimizer object from file");
+      Log() << kINFO << "Loaded pytorch optimizer: " << Endl;
+
+
+      PyRunString("train = load_model_custom_objects[\"criterion\"]",
+                  "Failed to load loss function from file");
+      Log() << kINFO << "Loaded pytorch loss function: " << Endl;
    }
 
 
@@ -272,11 +287,11 @@ void MethodPyTorch::Init() {
    // Import PyTorch
    // TODO: Skip clearing sys.argv for pytorch
    PyRunString("import sys; sys.argv = ['']", "Set sys.argv failed");
-   PyRunString("import torch", "Import PyTorch failed");
+   PyRunString("import torch", "import PyTorch failed");
    // do import also in global namespace
    auto ret = PyRun_String("import torch", Py_single_input, fGlobalNS, fGlobalNS);
    if (!ret)
-      Log() << kFATAL << "Import PyTorch in global namespace fsailed " << Endl;
+      Log() << kFATAL << "import PyTorch in global namespace failed " << Endl;
 
    // Set flag that model is not setup
    fModelIsSetup = false;
@@ -422,7 +437,7 @@ void MethodPyTorch::Train() {
    // ////////////////////////////////////////////////////////////////////
 
    // Train model
-   PyRunString("train(trainX, trainY, batch_size=batchSize, epochs=numEpochs, verbose=verbose, validation_data=(valX, valY, valWeights))",
+   PyRunString("fit(model, trainX, trainY, num_epochs=numEpochs, batch_size=batchSize, optimizer=optimizer, criterion=criterion)",
                "Failed to train model");
 
 
@@ -529,13 +544,14 @@ std::vector<Double_t> MethodPyTorch::GetMvaValues(Long64_t firstEvt, Long64_t la
 
    /////////////////////
    // TODO: PyTorch doesn't have a method to use direct predictions.
-   //       Convert or omit to get the Keras like predictions setup.
+   //       Use external function predict for this functionality.
    /////////////////////
 
    PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallMethod(pModel, (char*)"predict", (char*)"O", pDataMvaValues);
    
 
-   if (pPredictions==0) Log() << kFATAL << "Failed to get predictions" << Endl;
+   // Note: This will surely fail for now.
+   if (pPredictions==0) Log() << kFATAL << "Predictions for PyTorch Not implemented yet" << Endl;
    delete[] data;
 
 
