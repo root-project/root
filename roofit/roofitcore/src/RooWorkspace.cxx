@@ -33,7 +33,7 @@ storing the source code of those classes in the workspace as well.
 This process is also organized by the workspace through the
 `importClassCode()` method.
 
-### Seemingly random rashes when reading large workspaces
+### Seemingly random crashes when reading large workspaces
 When reading or loading workspaces with deeply nested PDFs, one can encounter
 ouf-of-memory errors if the stack size is too small. This manifests in crashes
 at seemingly random locations, or in the process silently ending.
