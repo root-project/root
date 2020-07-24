@@ -605,24 +605,19 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                         ndir->cd();
                         TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                         if (key2) {
-                           if (cl->IsTObject()) {
-                              TObject *hobj = key2->ReadObj();
-                              if (!hobj) {
-                                 Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
-                                      key->GetName(), key->GetTitle(), nextsource->GetName());
-                                 nextsource = (TFile*)sourcelist->After(nextsource);
-                                 continue;
-                              }
-                              // Set ownership for collections
-                              if (hobj->InheritsFrom(TCollection::Class())) {
-                                 ((TCollection*)hobj)->SetOwner();
-                              }
-                              hobj->ResetBit(kMustCleanup);
-                              inputs.Add(hobj);
-                           } else {
-                              Fatal("MergeRecursive", "Merging objects that don't inherit from TObject is unimplemented (key: %s in file %s)",
-                                    key->GetName(), nextsource->GetName());
+                           TObject *hobj = key2->ReadObj();
+                           if (!hobj) {
+                              Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
+                                   key->GetName(), key->GetTitle(), nextsource->GetName());
+                              nextsource = (TFile*)sourcelist->After(nextsource);
+                              continue;
                            }
+                           // Set ownership for collections
+                           if (hobj->InheritsFrom(TCollection::Class())) {
+                              ((TCollection*)hobj)->SetOwner();
+                           }
+                           hobj->ResetBit(kMustCleanup);
+                           inputs.Add(hobj);
                            if (!oneGo) {
                               ROOT::MergeFunc_t func = cl->GetMerge();
                               Long64_t result = func(obj, &inputs, &info);
