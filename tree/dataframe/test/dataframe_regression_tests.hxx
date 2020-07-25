@@ -150,3 +150,59 @@ TEST(TEST_CATEGORY, ReadVector3)
    */
    gSystem->Unlink(filename.c_str());
 }
+
+TEST(TEST_CATEGORY, PolymorphicTBranchObject)
+{
+   const std::string filename = "polymorphictbranchobject.root";
+   {
+      TFile f(filename.c_str(), "recreate");
+      TTree t("t", "t");
+      TObject *o = nullptr;
+      t.Branch("o", &o, 32000, 0); // must be unsplit to generate a TBranchObject
+
+      // Fill branch with different concrete types
+      TNamed name("name", "title");
+      TList list;
+      list.Add(&name);
+      o = &list;
+      t.Fill();
+      TH1D h("h", "h", 100, 0, 100);
+      h.Fill(42);
+      o = &h;
+      t.Fill();
+      o = nullptr;
+
+      t.Write();
+   }
+
+   auto checkEntries = [](const TObject &obj, ULong64_t entry) {
+      if (entry == 0) {
+         EXPECT_STREQ(obj.ClassName(), "TList");
+         auto &asList = static_cast<const TList &>(obj);
+         EXPECT_EQ(asList.GetEntries(), 1);
+         EXPECT_STREQ(asList.At(0)->GetTitle(), "title");
+         EXPECT_STREQ(asList.At(0)->GetName(), "name");
+      } else {
+         EXPECT_STREQ(obj.ClassName(), "TH1D");
+         EXPECT_DOUBLE_EQ(static_cast<const TH1D &>(obj).GetMean(), 42.);
+      }
+   };
+
+   const std::string snap_fname = std::string("snap_") + filename;
+
+   ROOT::RDataFrame rdf("t", filename);
+   ASSERT_EQ(rdf.Count().GetValue(), 2ull);
+   rdf.Foreach(checkEntries, {"o", "rdfentry_"});
+
+   /* TODO: Enable when ROOT-10022 is fixed
+   auto out_df = rdf.Snapshot<TObject>("t", snap_fname, {"o"});
+   out_df->Foreach(checkEntries, {"o", "rdfentry_"});
+
+   TFile f(snap_fname.c_str());
+   auto t = f.Get<TTree>("t");
+   EXPECT_EQ(t->GetBranch("o")->IsA(), TBranchObject::Class());
+   */
+
+   gSystem->Unlink(snap_fname.c_str());
+   gSystem->Unlink(filename.c_str());
+}
