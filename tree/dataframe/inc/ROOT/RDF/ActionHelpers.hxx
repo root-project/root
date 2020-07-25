@@ -1128,12 +1128,21 @@ void *GetData(T & /*v*/)
    return nullptr;
 }
 
-
 template <typename T>
-void SetBranchesHelper(BoolArrayMap &, TTree * /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
-                       const std::string &name, TBranch *& branch, void *& branchAddress, T *address)
+void SetBranchesHelper(BoolArrayMap &, TTree *inputTree, TTree &outputTree, const std::string &inName,
+                       const std::string &name, TBranch *&branch, void *&branchAddress, T *address)
 {
-   outputTree.Branch(name.c_str(), address);
+   auto *inputBranch = inputTree ? inputTree->GetBranch(inName.c_str()) : nullptr;
+   if (inputBranch) {
+      // Respect the original bufsize and splitlevel arguments
+      // In particular, by keeping splitlevel equal to 0 if this was the case for `inputBranch`, we avoid
+      // writing garbage when unsplit objects cannot be written as split objects (e.g. in case of a polymorphic
+      // TObject branch, see https://bit.ly/2EjLMId ).
+      outputTree.Branch(name.c_str(), address, inputBranch->GetBasketSize(), inputBranch->GetSplitLevel());
+   } else {
+      outputTree.Branch(name.c_str(), address);
+   }
+   // This is not an array branch, so we don't need to register the address of the input branch.
    branch = nullptr;
    branchAddress = nullptr;
 }
