@@ -15,7 +15,9 @@ endif()
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
 # Test versions of Python dependencies
-ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
+if(NOT MSVC)
+    ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
+endif()
 
 # General pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
