@@ -9,10 +9,13 @@
 #ifndef ROOT_RIoUring
 #define ROOT_RIoUring
 
+#include <cstring>
 #include <liburing.h>
 #include <liburing/io_uring.h>
 
 #include <ROOT/RError.hxx>
+#include <ROOT/RLogger.hxx>
+
 using ROOT::Experimental::RException;
 
 namespace ROOT {
@@ -25,7 +28,7 @@ public:
    explicit RIoUring(size_t size) {
       int ret = io_uring_queue_init(size, &fRing, 0 /* no flags */);
       if (ret) {
-         throw RException(R__FAIL("couldn't open ring"));
+         throw RException(R__FAIL("Error initializing io_uring: " + std::string(std::strerror(-ret))));
       }
    }
 
@@ -46,8 +49,8 @@ public:
             RIoUring(1);
             couldOpenRing = true;
          }
-         catch (const RException&) {
-            // ring setup failed
+         catch (const RException& err) {
+            R__DEBUG_HERE("RIoUring") << "io_uring is not available\n" << err.what();
          }
       }
       return couldOpenRing;
