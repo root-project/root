@@ -38,12 +38,19 @@ public:
 
    /// Check if io_uring is available on this system.
    static bool IsAvailable() {
-      try {
-         RIoUring(1);
-      } catch (const RException&) {
-         return false;
+      thread_local bool couldOpenRing = false;
+      thread_local bool firstPass = true;
+      if (firstPass) {
+         firstPass = false;
+         try {
+            RIoUring(1);
+            couldOpenRing = true;
+         }
+         catch (const RException&) {
+            // ring setup failed
+         }
       }
-      return true;
+      return couldOpenRing;
    }
 };
 
