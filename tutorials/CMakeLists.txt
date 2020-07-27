@@ -82,6 +82,8 @@ if (NOT dataframe)
     list(APPEND dataframe_veto graphs/timeSeriesFromCSV_TDF.C)
     # TMVA tutorials dependent on RDataFrame
     list(APPEND dataframe_veto tmva/tmva*.C)
+elseif(MSVC AND NOT win_broken_tests)
+    list(APPEND dataframe_veto dataframe/*.py)
 endif()
 
 if(NOT sqlite)
