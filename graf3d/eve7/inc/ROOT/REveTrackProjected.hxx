@@ -35,7 +35,7 @@ private:
    REveVector *fOrigPnts{nullptr}; // original track points
 
 protected:
-   std::vector<Int_t> fBreakPoints; // indices of track break-points
+   std::vector<UInt_t> fBreakPoints; // indices of track break-points
 
    void SetDepthLocal(Float_t d) override;
 
