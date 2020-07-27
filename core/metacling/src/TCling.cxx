@@ -1399,7 +1399,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    }
 
    auto GetEnvVarPath = [](const std::string &EnvVar,
-                            std::vector<std::string> &Paths) {
+                       std::vector<std::string> &Paths) {
       llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
       if (EnvOpt.hasValue()) {
          StringRef Env(*EnvOpt);
@@ -1423,7 +1423,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       Paths.push_back(TROOT::GetLibDir().Data());
 #endif
       GetEnvVarPath("CLING_PREBUILT_MODULE_PATH", Paths);
-      //GetEnvVarPath("LD_LIBRARY_PATH", Paths);
       std::string EnvVarPath;
       for (const std::string& P : Paths)
          EnvVarPath += P + ROOT::FoundationUtils::GetEnvPathSeparator();
@@ -1441,26 +1440,19 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    // flag is passed.
    if (fCxxModulesEnabled && !fromRootCling) {
       // For now we prefer rootcling to enumerate explicitly its modulemaps.
-      std::vector<std::string> Paths;
-      Paths.push_back(TROOT::GetIncludeDir().Data());
-      GetEnvVarPath("CLING_MODULEMAP_PATH", Paths);
+      std::vector<std::string> ModuleMaps;
+      std::string ModuleMapSuffix = ROOT::FoundationUtils::GetPathSeparator() + "module.modulemap";
+      ModuleMaps.push_back(TROOT::GetIncludeDir().Data() + ModuleMapSuffix);
+      GetEnvVarPath("CLING_MODULEMAP_FILES", ModuleMaps);
 
-      // Give highest precedence of the modulemap in the cwd.
-      Paths.push_back(gSystem->WorkingDirectory());
+      std::string cwd = gSystem->WorkingDirectory();
+      // Give highest precedence of the modulemap in the cwd if any.
+      if (llvm::sys::fs::exists(cwd + ModuleMapSuffix))
+         ModuleMaps.push_back(cwd + ModuleMapSuffix);
 
-      for (const std::string& P : Paths) {
-         std::string ModuleMapLoc = P + ROOT::FoundationUtils::GetPathSeparator()
-            + "module.modulemap";
-         if (!llvm::sys::fs::exists(ModuleMapLoc)) {
-            if (gDebug > 1)
-               ::Info("TCling::TCling", "Modulemap %s does not exist \n",
-                      ModuleMapLoc.c_str());
+      for (const std::string& M : ModuleMaps)
+         clingArgsStorage.push_back("-fmodule-map-file=" + M);
 
-            continue;
-         }
-
-         clingArgsStorage.push_back("-fmodule-map-file=" + ModuleMapLoc);
-      }
       std::string ModulesCachePath;
       EnvOpt = llvm::sys::Process::GetEnv("CLING_MODULES_CACHE_PATH");
       if (EnvOpt.hasValue()){
