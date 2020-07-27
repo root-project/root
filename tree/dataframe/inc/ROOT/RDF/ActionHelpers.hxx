@@ -1138,7 +1138,15 @@ void SetBranchesHelper(BoolArrayMap &, TTree *inputTree, TTree &outputTree, cons
       // In particular, by keeping splitlevel equal to 0 if this was the case for `inputBranch`, we avoid
       // writing garbage when unsplit objects cannot be written as split objects (e.g. in case of a polymorphic
       // TObject branch, see https://bit.ly/2EjLMId ).
-      outputTree.Branch(name.c_str(), address, inputBranch->GetBasketSize(), inputBranch->GetSplitLevel());
+      const auto bufSize = inputBranch->GetBasketSize();
+      const auto splitLevel = inputBranch->GetSplitLevel();
+
+      if (std::string_view(inputBranch->ClassName()) == "TBranchObject") {
+         // Need to pass a pointer to pointer
+         outputTree.Branch(name.c_str(), (T **)inputBranch->GetAddress(), bufSize, splitLevel);
+      } else {
+         outputTree.Branch(name.c_str(), address, bufSize, splitLevel);
+      }
    } else {
       outputTree.Branch(name.c_str(), address);
    }
