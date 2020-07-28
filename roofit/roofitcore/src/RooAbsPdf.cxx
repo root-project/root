@@ -1355,6 +1355,20 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   const char* minAlg = pc.getString("minalg","minuit") ;
 #endif
 
+  if (optConst > 1) {
+    // optConst >= 2 is pre-computating values, which are never used when
+    // the batchMode is on. This just wastes time.
+
+    RooCmdConfig conf(Form("RooAbsPdf::fitTo(%s)", GetName()));
+    conf.defineInt("BatchMode","BatchMode",0,0);
+    conf.allowUndefined(true);
+    conf.process(nllCmdList);
+    if (conf.getInt("BatchMode") != 0) {
+      optConst = 1;
+    }
+  }
+
+
   // Determine if the dataset has weights
   Bool_t weightedData = data.isNonPoissonWeighted() ;
 
