@@ -178,13 +178,13 @@ TEST(TEST_CATEGORY, PolymorphicTBranchObject)
    auto checkEntries = [](const TObject &obj, ULong64_t entry) {
       if (entry == 0) {
          EXPECT_STREQ(obj.ClassName(), "TList");
-         auto &asList = static_cast<const TList &>(obj);
+         auto &asList = dynamic_cast<const TList &>(obj);
          EXPECT_EQ(asList.GetEntries(), 1);
          EXPECT_STREQ(asList.At(0)->GetTitle(), "title");
          EXPECT_STREQ(asList.At(0)->GetName(), "name");
       } else {
          EXPECT_STREQ(obj.ClassName(), "TH1D");
-         EXPECT_DOUBLE_EQ(static_cast<const TH1D &>(obj).GetMean(), 42.);
+         EXPECT_DOUBLE_EQ(dynamic_cast<const TH1D &>(obj).GetMean(), 42.);
       }
    };
 
