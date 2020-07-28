@@ -38,23 +38,6 @@ public:
 
    void Dump() const;
 
-#ifdef R__WIN32
-   // This fixes the following rootcling error when generating the dictionary:
-   // error G34C21FBE: static_assert expression is not an integral constant expression
-   // FIXME: check if the error is fixed when upgrading llvm/clang 
-   const TT *Arr() const
-   {
-      if (offsetof(TEveVectorT, fZ) != offsetof(TEveVectorT, fX) + 2 * sizeof(TT))
-         Error("TEveVectorT", "Subsequent nembers cannot be accessed as array!");
-      return &fX;
-   }
-   TT *Arr()
-   {
-      if (offsetof(TEveVectorT, fZ) != offsetof(TEveVectorT, fX) + 2 * sizeof(TT))
-         Error("TEveVectorT", "Subsequent nembers cannot be accessed as array!");
-      return &fX;
-   }
-#else
    const TT *Arr() const
    {
       static_assert(offsetof(TEveVectorT, fZ) == offsetof(TEveVectorT, fX) + 2 * sizeof(TT),
@@ -67,7 +50,6 @@ public:
                     "Subsequent nembers cannot be accessed as array!");
       return &fX;
    }
-#endif
 
    operator const TT*() const { return Arr(); }
    operator       TT*()       { return Arr(); }
