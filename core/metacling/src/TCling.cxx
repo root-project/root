@@ -2566,10 +2566,15 @@ void TCling::PrintIntro()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add the given path to the list of directories in which the interpreter
-/// looks for include files. Only one path item can be specified at a
-/// time, i.e. "path1:path2" is NOT supported.
-
+/// \brief Add a directory to the list of directories in which the
+///        interpreter looks for include files.
+/// \param[in] path The path to the directory.
+/// \note Only one path item can be specified at a time, i.e. "path1:path2" is
+///       \b NOT supported.
+/// \warning Only the path to the directory should be specified, without
+///          prepending the \c -I prefix, i.e.
+///          <tt>gCling->AddIncludePath("/path/to/my/includes")</tt>. If the
+///          \c -I prefix is used it will be ignored.
 void TCling::AddIncludePath(const char *path)
 {
    R__LOCKGUARD(gInterpreterMutex);
