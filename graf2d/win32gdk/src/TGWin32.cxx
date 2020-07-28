@@ -3403,17 +3403,23 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
 
 void TGWin32::UpdateMarkerStyle()
 {
-   gMarkerLineWidth = TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle)));
-   gdk_gc_set_line_attributes(gGCmark, gMarkerLineWidth,
-			      (GdkLineStyle)gMarkerLineStyle,
-			      (GdkCapStyle) gMarkerCapStyle,
-			      (GdkJoinStyle) gMarkerJoinStyle);
+   Style_t markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
+   gMarkerLineWidth = TAttMarker::GetMarkerLineWidth(fMarkerStyle);
+
+   // The fast pixel markers need to be treated separately
+   if (markerstyle == 1 || markerstyle == 6 || markerstyle == 7) {
+       gdk_gc_set_line_attributes(gGCmark, 0, GDK_LINE_SOLID, GDK_CAP_BUTT, GDK_JOIN_MITER);
+   } else {
+       gdk_gc_set_line_attributes(gGCmark, gMarkerLineWidth,
+                                  (GdkLineStyle) gMarkerLineStyle,
+                                  (GdkCapStyle)  gMarkerCapStyle,
+                                  (GdkJoinStyle) gMarkerJoinStyle);
+   }
 
    static GdkPoint shape[30];
 
-   Float_t MarkerSizeReduced = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.;
+   Float_t MarkerSizeReduced = fMarkerSize - TMath::Floor(gMarkerLineWidth/2.)/4.;
    Int_t im = Int_t(4 * MarkerSizeReduced + 0.5);
-   Style_t markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
 
    if (markerstyle == 2) {
       // + shaped marker
