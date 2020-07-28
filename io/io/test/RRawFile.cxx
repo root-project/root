@@ -160,20 +160,11 @@ TEST(RRawFile, ReadV)
    iovec[1].fBuffer = &buffer[1];
    iovec[1].fOffset = 11;
    iovec[1].fSize = 2;
-#ifdef R__HAS_URING
-   try {
-      f->ReadV(iovec, 2);
-      FAIL() << "ReadV unimplemented for io_uring backend, should throw";
-   } catch (const std::runtime_error& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("io_uring ReadV unimplemented!"));
-   }
-#else
    f->ReadV(iovec, 2);
    EXPECT_EQ(1U, iovec[0].fOutBytes);
    EXPECT_EQ(1U, iovec[1].fOutBytes);
    EXPECT_EQ('H', buffer[0]);
    EXPECT_EQ('d', buffer[1]);
-#endif
 }
 
 
