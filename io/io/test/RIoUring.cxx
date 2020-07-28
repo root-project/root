@@ -1,5 +1,5 @@
 #include "ROOT/RIoUring.hxx"
-using RIoUring = ROOT::Internal::RIoUring; 
+using RIoUring = ROOT::Internal::RIoUring;
 
 #include "gtest/gtest.h"
 

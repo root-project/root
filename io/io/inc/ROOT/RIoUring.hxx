@@ -10,13 +10,13 @@
 #define ROOT_RIoUring
 
 #include <cstring>
+#include <stdexcept>
+
 #include <liburing.h>
 #include <liburing/io_uring.h>
 
-#include <ROOT/RError.hxx>
+#include "TError.h"
 #include <ROOT/RLogger.hxx>
-
-using ROOT::Experimental::RException;
 
 namespace ROOT {
 namespace Internal {
@@ -24,11 +24,24 @@ namespace Internal {
 class RIoUring {
 private:
    struct io_uring fRing;
+
+   static bool CheckIsAvailable() {
+      bool couldOpenRing = false;
+      try {
+         RIoUring(1);
+         couldOpenRing = true;
+      }
+      catch (const std::runtime_error& err) {
+         Warning("RIoUring", "io_uring is not available\n%s", err.what());
+      }
+      return couldOpenRing;
+   }
+
 public:
    explicit RIoUring(size_t size) {
       int ret = io_uring_queue_init(size, &fRing, 0 /* no flags */);
       if (ret) {
-         throw RException(R__FAIL("Error initializing io_uring: " + std::string(std::strerror(-ret))));
+         throw std::runtime_error("Error initializing io_uring: " + std::string(std::strerror(-ret)));
       }
    }
 
@@ -41,19 +54,8 @@ public:
 
    /// Check if io_uring is available on this system.
    static bool IsAvailable() {
-      thread_local bool couldOpenRing = false;
-      thread_local bool firstPass = true;
-      if (firstPass) {
-         firstPass = false;
-         try {
-            RIoUring(1);
-            couldOpenRing = true;
-         }
-         catch (const RException& err) {
-            R__DEBUG_HERE("RIoUring") << "io_uring is not available\n" << err.what();
-         }
-      }
-      return couldOpenRing;
+      static bool available = RIoUring::CheckIsAvailable();
+      return available;
    }
 };
 

@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "ROOT/RConfig.hxx"
-#include <ROOT/RLogger.hxx> // for R__DEBUG_HERE
 #include "ROOT/RRawFileUnix.hxx"
 #include "ROOT/RMakeUnique.hxx"
 
@@ -116,14 +115,13 @@ void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
 #ifdef R__HAS_URING
    if (!RIoUring::IsAvailable()) {
-      R__DEBUG_HERE("RRawFileUnix") <<
-         "io_uring setup failed, falling back to default ReadV implementation";
+      Warning("RRawFileUnix",
+              "io_uring setup failed, falling back to default ReadV implementation");
       RRawFile::ReadVImpl(ioVec, nReq);
       return;
    }
-   // check we can construct the ring
-   RIoUring ring(8);
-   throw std::runtime_error("io_uring ReadV unimplemented!");
+   // todo(max) actually use the ring
+   RRawFile::ReadVImpl(ioVec, nReq);
 #else
    RRawFile::ReadVImpl(ioVec, nReq);
 #endif
