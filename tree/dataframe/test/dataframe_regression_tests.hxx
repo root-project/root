@@ -111,7 +111,7 @@ TEST(TEST_CATEGORY, UniqueEntryNumbers)
 }
 
 // ROOT-9731
-TEST(TEST_CATEGORY, ReadVector3)
+TEST(TEST_CATEGORY, ReadWriteVector3)
 {
    const std::string filename = "readwritetvector3.root";
    {
@@ -138,7 +138,6 @@ TEST(TEST_CATEGORY, ReadVector3)
    EXPECT_EQ(ha->GetMean(), 4.5);
    EXPECT_EQ(ha->GetMean(), hb->GetMean());
 
-   /* TODO: Enable when ROOT-10022 is fixed
    auto out_df = rdf.Snapshot<TVector3, TVector3>("t", snap_fname, {"a", "b"});
 
    auto ha_snap = out_df->Define("aval", "a.X()").Histo1D("aval");
@@ -147,7 +146,6 @@ TEST(TEST_CATEGORY, ReadVector3)
    EXPECT_EQ(ha_snap->GetMean(), hb_snap->GetMean());
 
    gSystem->Unlink(snap_fname.c_str());
-   */
    gSystem->Unlink(filename.c_str());
 }
 
@@ -176,7 +174,7 @@ TEST(TEST_CATEGORY, PolymorphicTBranchObject)
    }
 
    auto checkEntries = [](const TObject &obj, ULong64_t entry) {
-      if (entry == 0) {
+      if (entry % 2 == 0) {
          EXPECT_STREQ(obj.ClassName(), "TList");
          auto &asList = dynamic_cast<const TList &>(obj);
          EXPECT_EQ(asList.GetEntries(), 1);
@@ -190,18 +188,19 @@ TEST(TEST_CATEGORY, PolymorphicTBranchObject)
 
    const std::string snap_fname = std::string("snap_") + filename;
 
-   ROOT::RDataFrame rdf("t", filename);
-   ASSERT_EQ(rdf.Count().GetValue(), 2ull);
+   // Read in the same file twice to force the use of TChain,
+   // which has trickier edge cases due to object addresses changing
+   // when switching from one file to the other.
+   ROOT::RDataFrame rdf("t", {filename, filename});
+   ASSERT_EQ(rdf.Count().GetValue(), 4ull);
    rdf.Foreach(checkEntries, {"o", "rdfentry_"});
 
-   /* TODO: Enable when ROOT-10022 is fixed
    auto out_df = rdf.Snapshot<TObject>("t", snap_fname, {"o"});
    out_df->Foreach(checkEntries, {"o", "rdfentry_"});
 
    TFile f(snap_fname.c_str());
    auto t = f.Get<TTree>("t");
    EXPECT_EQ(t->GetBranch("o")->IsA(), TBranchObject::Class());
-   */
 
    gSystem->Unlink(snap_fname.c_str());
    gSystem->Unlink(filename.c_str());
