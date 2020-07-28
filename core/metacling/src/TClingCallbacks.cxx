@@ -359,7 +359,7 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    if (fIsAutoParsingSuspended || fIsAutoLoadingRecursively)
       return false;
 
-   if (findInGlobalModuleIndex(Name, /*loadFirstMatchOnly*/ true))
+   if (findInGlobalModuleIndex(Name, /*loadFirstMatchOnly*/ false))
       return true;
 
    if (Name.getNameKind() != DeclarationName::Identifier)
