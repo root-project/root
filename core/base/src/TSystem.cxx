@@ -4164,7 +4164,7 @@ void TSystem::SetMakeSharedLib(const char *directives)
 ///       gInterpreter for this include path. If the TInterpreter needs to know
 ///       about the include path please use \c gInterpreter->AddIncludePath .
 /// \warning The path should start with the \c -I prefix, i.e.
-///          <tt>gSystem->AddIncludePath("-I /path/to/my/includes")</tt>. 
+///          <tt>gSystem->AddIncludePath("-I /path/to/my/includes")</tt>.
 void TSystem::AddIncludePath(const char *includePath)
 {
    if (includePath) {
