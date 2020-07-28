@@ -39,20 +39,6 @@ public:
 
    void Dump() const;
 
-#ifdef R__WIN32
-   const TT *Arr() const
-   {
-      if (offsetof(REveVectorT, fZ) == offsetof(REveVectorT, fX) + 2 * sizeof(TT))
-         Error("REveVectorT", "Subsequent members cannot be accessed as array!");
-      return &fX;
-   }
-   TT *Arr()
-   {
-      if (offsetof(REveVectorT, fZ) == offsetof(REveVectorT, fX) + 2 * sizeof(TT))
-         Error("REveVectorT", "Subsequent members cannot be accessed as array!");
-      return &fX;
-   }
-#else
    const TT *Arr() const
    {
       static_assert(offsetof(REveVectorT, fZ) == offsetof(REveVectorT, fX) + 2 * sizeof(TT),
@@ -65,7 +51,6 @@ public:
                     "Subsequent members cannot be accessed as array!");
       return &fX;
    }
-#endif
 
    operator const TT*() const { return Arr(); }
    operator       TT*()       { return Arr(); }
