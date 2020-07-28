@@ -2437,12 +2437,19 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
    if (fMarkerStyle == markerstyle) return;
    static RXPoint shape[30];
    fMarkerStyle = TMath::Abs(markerstyle);
-   gMarkerLineWidth = TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle)));
-   XSetLineAttributes((Display*)fDisplay, *gGCmark, gMarkerLineWidth,
-                      gMarkerLineStyle, gMarkerCapStyle, gMarkerJoinStyle);
-   Float_t MarkerSizeReduced = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.;
-   Int_t im = Int_t(4*MarkerSizeReduced + 0.5);
    markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
+   gMarkerLineWidth = TAttMarker::GetMarkerLineWidth(fMarkerStyle);
+
+   // The fast pixel markers need to be treated separately
+   if (markerstyle == 1 || markerstyle == 6 || markerstyle == 7) {
+       XSetLineAttributes((Display*)fDisplay, *gGCmark, 0, LineSolid, CapButt, JoinMiter);
+   } else {
+       XSetLineAttributes((Display*)fDisplay, *gGCmark, gMarkerLineWidth,
+                          gMarkerLineStyle, gMarkerCapStyle, gMarkerJoinStyle);
+   }
+
+   Float_t MarkerSizeReduced = fMarkerSize - TMath::Floor(gMarkerLineWidth/2.)/4.;
+   Int_t im = Int_t(4*MarkerSizeReduced + 0.5);
    if (markerstyle == 2) {
       // + shaped marker
       shape[0].x = -im;  shape[0].y = 0;
