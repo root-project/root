@@ -28,6 +28,7 @@ Plain Gaussian p.d.f
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooMath.h"
+#include "RooHelpers.h"
 
 #include "RooVDTHeaders.h"
 
@@ -46,6 +47,7 @@ RooGaussian::RooGaussian(const char *name, const char *title,
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma)
 {
+  RooHelpers::checkRangeOfParameters(this, {&_sigma}, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
