@@ -534,6 +534,10 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
          ParseConvLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "MAXPOOL") {
          ParseMaxPoolLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "CONV3D") {
+         ParseConv3DLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "MAXPOOL3D") {
+         ParseMaxPool3DLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "RESHAPE") {
          ParseReshapeLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "BNORM") {
@@ -789,6 +793,193 @@ void MethodDL::ParseMaxPoolLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
 
    // Add the same layer to fNet
    if (fBuildNet) fNet->AddMaxPoolLayer(filterHeight, filterWidth, strideRows, strideCols);
+
+
+   //TMaxPoolLayer<Architecture_t> *copyMaxPoolLayer = new TMaxPoolLayer<Architecture_t>(*maxPoolLayer);
+
+   //// add the copy to all slave nets
+   //for (size_t i = 0; i < nets.size(); i++) {
+   //   nets[i].AddMaxPoolLayer(copyMaxPoolLayer);
+   //}
+}
+
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::ParseConv3DLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
+                              TString delim)
+{
+   int depth = 0;
+   int fltHeight = 0;
+   int fltWidth = 0;
+   int strideRows = 0;
+   int strideCols = 0;
+   int strideDepth = 0;
+   int zeroPadHeight = 0;
+   int zeroPadWidth = 0;
+   int zeroPadDepth = 0;
+   EActivationFunction activationFunction = EActivationFunction::kTanh;
+
+   // Split layer details
+   TObjArray *subStrings = layerString.Tokenize(delim);
+   TIter nextToken(subStrings);
+   TObjString *token = (TObjString *)nextToken();
+   int idxToken = 0;
+
+   for (; token != nullptr; token = (TObjString *)nextToken()) {
+      switch (idxToken) {
+      case 1: // depth
+      {
+         TString strDepth(token->GetString());
+         depth = strDepth.Atoi();
+      } break;
+      case 2: // filter height
+      {
+         TString strFltHeight(token->GetString());
+         fltHeight = strFltHeight.Atoi();
+      } break;
+      case 3: // filter width
+      {
+         TString strFltWidth(token->GetString());
+         fltWidth = strFltWidth.Atoi();
+      } break;
+      case 4: // filter depth
+      {
+         TString strFltWidth(token->GetString());
+         fltDepth = strFltWidth.Atoi();
+      } break;
+      case 5: // stride in rows
+      {
+         TString strStrideRows(token->GetString());
+         strideRows = strStrideRows.Atoi();
+      } break;
+      case 6: // stride in cols
+      {
+         TString strStrideCols(token->GetString());
+         strideCols = strStrideCols.Atoi();
+      } break;
+      case 7: // stride in depth
+      {
+         TString strStrideCols(token->GetString());
+         strideDepth = strStrideCols.Atoi();
+      } break;
+      case 8: // zero padding height
+      {
+         TString strZeroPadHeight(token->GetString());
+         zeroPadHeight = strZeroPadHeight.Atoi();
+      } break;
+      case 9: // zero padding width
+      {
+         TString strZeroPadWidth(token->GetString());
+         zeroPadWidth = strZeroPadWidth.Atoi();
+      } break;
+      case 10: // zero padding depth
+      {
+         TString strZeroPadWidth(token->GetString());
+         zeroPadDepth = strZeroPadWidth.Atoi();
+      } break;
+      case 11: // activation function
+      {
+         TString strActFnc(token->GetString());
+         if (strActFnc == "RELU") {
+            activationFunction = DNN::EActivationFunction::kRelu;
+         } else if (strActFnc == "TANH") {
+            activationFunction = DNN::EActivationFunction::kTanh;
+         } else if (strActFnc == "SYMMRELU") {
+            activationFunction = DNN::EActivationFunction::kSymmRelu;
+         } else if (strActFnc == "SOFTSIGN") {
+            activationFunction = DNN::EActivationFunction::kSoftSign;
+         } else if (strActFnc == "SIGMOID") {
+            activationFunction = DNN::EActivationFunction::kSigmoid;
+         } else if (strActFnc == "LINEAR") {
+            activationFunction = DNN::EActivationFunction::kIdentity;
+         } else if (strActFnc == "GAUSS") {
+            activationFunction = DNN::EActivationFunction::kGauss;
+         }
+      } break;
+      }
+      ++idxToken;
+   }
+
+   // Add the convolutional layer, initialize the weights and biases and copy
+   TConv3DLayer<Architecture_t> *convLayer = deepNet.AddConv3DLayer(depth, fltHeight, fltWidth, fltDepth, strideRows, strideCols, strideDepth,
+                                                                zeroPadHeight, zeroPadWidth, zeroPadDepth, activationFunction);
+   convLayer->Initialize();
+
+   // Add same layer to fNet
+   if (fBuildNet) fNet->AddConv3DLayer(depth, fltHeight, fltWidth, fltDepth, strideRows, strideCols, strideDepth,
+                      zeroPadHeight, zeroPadWidth, zeroPadDepth, activationFunction);
+
+   //TConvLayer<Architecture_t> *copyConvLayer = new TConvLayer<Architecture_t>(*convLayer);
+
+   //// add the copy to all slave nets
+   //for (size_t i = 0; i < nets.size(); i++) {
+   //   nets[i].AddConvLayer(copyConvLayer);
+   //}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Pases the layer string and creates the appropriate max pool layer
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::ParseMaxPool3DLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                                 std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
+                                 TString delim)
+{
+
+   int filterHeight = 0;
+   int filterWidth = 0;
+   int filterDepth = 0;
+   int strideRows = 0;
+   int strideCols = 0;
+   int strideDepth = 0;
+
+   // Split layer details
+   TObjArray *subStrings = layerString.Tokenize(delim);
+   TIter nextToken(subStrings);
+   TObjString *token = (TObjString *)nextToken();
+   int idxToken = 0;
+
+   for (; token != nullptr; token = (TObjString *)nextToken()) {
+      switch (idxToken) {
+      case 1: // filter height
+      {
+         TString strFrmHeight(token->GetString());
+         filterHeight = strFrmHeight.Atoi();
+      } break;
+      case 2: // filter width
+      {
+         TString strFrmWidth(token->GetString());
+         filterWidth = strFrmWidth.Atoi();
+      } break;
+      case 2: // filter depth
+      {
+         TString strFrmWidth(token->GetString());
+         filterDepth = strFrmWidth.Atoi();
+      } break;
+      case 3: // stride in rows
+      {
+         TString strStrideRows(token->GetString());
+         strideRows = strStrideRows.Atoi();
+      } break;
+      case 4: // stride in cols
+      {
+         TString strStrideCols(token->GetString());
+         strideCols = strStrideCols.Atoi();
+      } break;
+      case 4: // stride in depth
+      {
+         TString strStrideCols(token->GetString());
+         strideDepth = strStrideCols.Atoi();
+      } break;
+      }
+      ++idxToken;
+   }
+
+   // Add the Max pooling layer
+   // TMaxPoolLayer<Architecture_t> *maxPoolLayer =
+   deepNet.AddMaxPool3DLayer(filterHeight, filterWidth, filterDepth, strideRows, strideCols, strideDepth);
+
+   // Add the same layer to fNet
+   if (fBuildNet) fNet->AddMaxPool3DLayer(filterHeight, filterWidth, filterDepth, strideRows, strideCols, strideDepth);
 
 
    //TMaxPoolLayer<Architecture_t> *copyMaxPoolLayer = new TMaxPoolLayer<Architecture_t>(*maxPoolLayer);
@@ -2148,7 +2339,22 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
 
          fNet->AddDenseLayer(width, func, 0.0); // no need to pass dropout probability
 
+      } 
+      
+      // MaxPool Layer
+      else if (layerName == "MaxPoolLayer") {
+
+         // read maxpool layer info
+         size_t filterHeight, filterWidth = 0;
+         size_t strideRows, strideCols = 0;
+         gTools().ReadAttr(layerXML, "FilterHeight", filterHeight);
+         gTools().ReadAttr(layerXML, "FilterWidth", filterWidth);
+         gTools().ReadAttr(layerXML, "StrideRows", strideRows);
+         gTools().ReadAttr(layerXML, "StrideCols", strideCols);
+
+         fNet->AddMaxPoolLayer(filterHeight, filterWidth, strideRows, strideCols);
       }
+
       // Convolutional Layer
       else if (layerName == "ConvLayer") {
 
@@ -2176,19 +2382,51 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
 
       }
 
-      // MaxPool Layer
-      else if (layerName == "MaxPoolLayer") {
+      // MaxPool 3D Layer
+      else if (layerName == "MaxPool3DLayer") {
 
          // read maxpool layer info
-         size_t filterHeight, filterWidth = 0;
-         size_t strideRows, strideCols = 0;
+         size_t filterHeight, filterWidth = 0, filterDepth = 0;
+         size_t strideRows, strideCols = 0, strideDepth = 0;
          gTools().ReadAttr(layerXML, "FilterHeight", filterHeight);
          gTools().ReadAttr(layerXML, "FilterWidth", filterWidth);
+         gTools().ReadAttr(layerXML, "FilterDepth", filterDepth);
          gTools().ReadAttr(layerXML, "StrideRows", strideRows);
          gTools().ReadAttr(layerXML, "StrideCols", strideCols);
+         gTools().ReadAttr(layerXML, "StrideDepth", strideDepth);
 
-         fNet->AddMaxPoolLayer(filterHeight, filterWidth, strideRows, strideCols);
+         fNet->AddMaxPool3DLayer(filterHeight, filterWidth, filterDepth, strideRows, strideCols, strideDepth);
       }
+      // Convolutional 3D Layer
+      else if (layerName == "Conv3DLayer") {
+
+         // read width and activation function and then we can create the layer
+         size_t depth = 0;
+         gTools().ReadAttr(layerXML, "Depth", depth);
+         size_t fltHeight, fltWidth, fltDepth = 0;
+         size_t strideRows, strideCols, strideDepth = 0;
+         size_t padHeight, padWidth = 0, padDepth = 0;
+         gTools().ReadAttr(layerXML, "FilterHeight", fltHeight);
+         gTools().ReadAttr(layerXML, "FilterWidth", fltWidth);
+         gTools().ReadAttr(layerXML, "FilterDepth", fltDepth);
+         gTools().ReadAttr(layerXML, "StrideRows", strideRows);
+         gTools().ReadAttr(layerXML, "StrideCols", strideCols);
+         gTools().ReadAttr(layerXML, "StrideDepth", strideDepth);
+         gTools().ReadAttr(layerXML, "PaddingHeight", padHeight);
+         gTools().ReadAttr(layerXML, "PaddingWidth", padWidth);
+         gTools().ReadAttr(layerXML, "PaddingDepth", padDepth);
+
+         // Read activation function.
+         TString funcString;
+         gTools().ReadAttr(layerXML, "ActivationFunction", funcString);
+         EActivationFunction actFunction = static_cast<EActivationFunction>(funcString.Atoi());
+
+
+         fNet->AddConv3DLayer(depth, fltHeight, fltWidth, fltDepth, strideRows, strideCols, strideDepth,
+                            padHeight, padWidth, padDepth, actFunction);
+
+      }
+
       // Reshape Layer
       else if (layerName == "ReshapeLayer") {
 

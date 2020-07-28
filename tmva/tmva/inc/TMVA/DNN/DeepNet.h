@@ -40,6 +40,9 @@
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
+#include "TMVA/DNN/CNN_3D/ConvLayer.h"
+#include "TMVA/DNN/CNN_3D/MaxPoolLayer.h"
+
 #include "TMVA/DNN/RNN/RNNLayer.h"
 #include "TMVA/DNN/RNN/LSTMLayer.h"
 #include "TMVA/DNN/RNN/GRULayer.h"
@@ -58,6 +61,7 @@
 namespace TMVA {
 namespace DNN {
 
+   using namespace CNN_3D;
    using namespace CNN;
    using namespace RNN;
 
@@ -125,9 +129,15 @@ public:
                                             size_t strideCols, size_t paddingHeight, size_t paddingWidth,
                                             EActivationFunction f, Scalar_t dropoutProbability = 1.0);
 
+   TConvLayer<Architecture_t> *AddConv3DLayer(size_t depth, size_t filterHeight, size_t filterWidth, size_t filterDepth, 
+                                            size_t strideRows,  size_t strideCols, size_t strideDepth, size_t paddingHeight, size_t paddingWidth, size_t paddingDepth,
+                                            EActivationFunction f, Scalar_t dropoutProbability = 1.0);
+
    /*! Function for adding Convolution Layer in the Deep Neural Network,
     *  when the layer is already created.  */
    void AddConvLayer(TConvLayer<Architecture_t> *convLayer);
+
+   void AddConv3DLayer(TConv3DLayer<Architecture_t> *convLayer);
 
    /*! Function for adding Pooling layer in the Deep Neural Network,
     *  with a given filter height and width, striding in rows and columns as
@@ -136,9 +146,12 @@ public:
     *  height of the pooling layer. */
    TMaxPoolLayer<Architecture_t> *AddMaxPoolLayer(size_t frameHeight, size_t frameWidth, size_t strideRows,
                                                   size_t strideCols, Scalar_t dropoutProbability = 1.0);
+
+   TMaxPoolLayer<Architecture_t> *AddMaxPool3DLayer(size_t frameHeight, size_t frameWidth, size_t frameDepth, size_t strideRows,
+                                                  size_t strideCols, size_t strideDepth, Scalar_t dropoutProbability = 1.0);
    /*! Function for adding Max Pooling layer in the Deep Neural Network,
     *  when the layer is already created. */
-   void AddMaxPoolLayer(CNN::TMaxPoolLayer<Architecture_t> *maxPoolLayer);
+   void AddMaxPool3DLayer(CNN::TMaxPool3DLayer<Architecture_t> *maxPoolLayer);
 
 
    /*! Function for adding Recurrent Layer in the Deep Neural Network,
@@ -482,6 +495,53 @@ void TDeepNet<Architecture_t, Layer_t>::AddConvLayer(TConvLayer<Architecture_t> 
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
+TConvLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddConv3DLayer(size_t depth, size_t filterHeight,
+                                                                            size_t filterWidth, size_t filterDepth, size_t strideRows,
+                                                                            size_t strideCols, size_t strideDepth, size_t paddingHeight,
+                                                                            size_t paddingWidth, size_t paddingDepth, EActivationFunction f,
+                                                                            Scalar_t dropoutProbability)
+{
+   // Depth represents number of maps(or number of filters)
+   // All variables defining a convolutional layer
+   size_t batchSize = this->GetBatchSize();
+   size_t inputDepth;
+   size_t inputHeight;
+   size_t inputWidth;
+   EInitialization init = this->GetInitialization();
+   ERegularization reg = this->GetRegularization();
+   Scalar_t decay = this->GetWeightDecay();
+
+   if (fLayers.size() == 0) {
+      inputDepth = this->GetInputDepth();
+      inputHeight = this->GetInputHeight();
+      inputWidth = this->GetInputWidth();
+   } else {
+      Layer_t *lastLayer = fLayers.back();
+      inputDepth = lastLayer->GetDepth();
+      inputHeight = lastLayer->GetHeight();
+      inputWidth = lastLayer->GetWidth();
+   }
+
+
+
+   // Create the conv layer
+   TConv3DLayer<Architecture_t> *convLayer = new TConv3DLayer<Architecture_t>(
+           batchSize, inputDepth, inputHeight, inputWidth, depth, init, filterHeight, filterWidth, filterDepth, strideRows,
+           strideCols, strideDepth, paddingHeight, paddingWidth, paddingDepth, dropoutProbability, f, reg, decay);
+
+   fLayers.push_back(convLayer);
+   return convLayer;
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+void TDeepNet<Architecture_t, Layer_t>::AddConv3DLayer(TConv3DLayer<Architecture_t> *convLayer)
+{
+   fLayers.push_back(convLayer);
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
 TMaxPoolLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLayer(size_t frameHeight, size_t frameWidth,
                                                                                   size_t strideRows, size_t strideCols,
                                                                                   Scalar_t dropoutProbability)
@@ -515,6 +575,45 @@ TMaxPoolLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLaye
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 void TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLayer(TMaxPoolLayer<Architecture_t> *maxPoolLayer)
+{
+   fLayers.push_back(maxPoolLayer);
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+TMaxPoolLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddMaxPool3DLayer(size_t frameHeight, size_t frameWidth, size_t frameDepth,
+                                                                                  size_t strideRows, size_t strideCols, size_t strideDepth,
+                                                                                  Scalar_t dropoutProbability)
+{
+   size_t batchSize = this->GetBatchSize();
+   size_t inputDepth;
+   size_t inputHeight;
+   size_t inputWidth;
+
+   if (fLayers.size() == 0) {
+      inputDepth = this->GetInputDepth();
+      inputHeight = this->GetInputHeight();
+      inputWidth = this->GetInputWidth();
+   } else {
+      Layer_t *lastLayer = fLayers.back();
+      inputDepth = lastLayer->GetDepth();
+      inputHeight = lastLayer->GetHeight();
+      inputWidth = lastLayer->GetWidth();
+   }
+
+   TMaxPool3DLayer<Architecture_t> *maxPoolLayer = new TMaxPool3DLayer<Architecture_t>(
+      batchSize, inputDepth, inputHeight, inputWidth, frameHeight, frameWidth, frameDepth,
+      strideRows, strideCols, strideDepth, dropoutProbability);
+
+   // But this creates a copy or what?
+   fLayers.push_back(maxPoolLayer);
+
+   return maxPoolLayer;
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+void TDeepNet<Architecture_t, Layer_t>::AddMaxPool3DLayer(TMaxPool3DLayer<Architecture_t> *maxPoolLayer)
 {
    fLayers.push_back(maxPoolLayer);
 }
