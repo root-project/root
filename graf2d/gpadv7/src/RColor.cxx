@@ -14,26 +14,6 @@ using namespace ROOT::Experimental;
 
 using namespace std::string_literals;
 
-constexpr RColor::RGB_t RColor::kBlack;
-constexpr RColor::RGB_t RColor::kGreen;
-constexpr RColor::RGB_t RColor::kLime;
-constexpr RColor::RGB_t RColor::kAqua;
-constexpr RColor::RGB_t RColor::kPurple;
-constexpr RColor::RGB_t RColor::kGrey;
-constexpr RColor::RGB_t RColor::kFuchsia;
-constexpr RColor::RGB_t RColor::kNavy;
-constexpr RColor::RGB_t RColor::kBlue;
-constexpr RColor::RGB_t RColor::kTeal;
-constexpr RColor::RGB_t RColor::kOlive;
-constexpr RColor::RGB_t RColor::kSilver;
-constexpr RColor::RGB_t RColor::kMaroon;
-constexpr RColor::RGB_t RColor::kRed;
-constexpr RColor::RGB_t RColor::kYellow;
-constexpr RColor::RGB_t RColor::kWhite;
-constexpr float RColor::kTransparent;
-constexpr float RColor::kSemiTransparent;
-constexpr float RColor::kOpaque;
-
 
 ///////////////////////////////////////////////////////////////////////////
 /// Converts string name of color in RGB value - when possible
