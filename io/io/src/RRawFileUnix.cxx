@@ -114,17 +114,15 @@ void ROOT::Internal::RRawFileUnix::OpenImpl()
 void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
 #ifdef R__HAS_URING
-   if (!RIoUring::IsAvailable()) {
-      Warning("RRawFileUnix",
-              "io_uring setup failed, falling back to default ReadV implementation");
+   if (RIoUring::IsAvailable()) {
+      // todo(max) actually use the ring
       RRawFile::ReadVImpl(ioVec, nReq);
       return;
    }
-   // todo(max) actually use the ring
-   RRawFile::ReadVImpl(ioVec, nReq);
-#else
-   RRawFile::ReadVImpl(ioVec, nReq);
+   Warning("RRawFileUnix",
+           "io_uring setup failed, falling back to default ReadV implementation");
 #endif
+   RRawFile::ReadVImpl(ioVec, nReq);
 }
 
 size_t ROOT::Internal::RRawFileUnix::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
