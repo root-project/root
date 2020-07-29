@@ -53,7 +53,7 @@ public:
 
    /// Check if io_uring is available on this system.
    static bool IsAvailable() {
-      static bool available = RIoUring::CheckIsAvailable();
+      static const bool available = RIoUring::CheckIsAvailable();
       return available;
    }
 };
