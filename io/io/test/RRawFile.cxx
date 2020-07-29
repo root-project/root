@@ -12,7 +12,6 @@
 #include <utility>
 
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
 
 using RRawFile = ROOT::Internal::RRawFile;
 
@@ -161,6 +160,7 @@ TEST(RRawFile, ReadV)
    iovec[1].fOffset = 11;
    iovec[1].fSize = 2;
    f->ReadV(iovec, 2);
+
    EXPECT_EQ(1U, iovec[0].fOutBytes);
    EXPECT_EQ(1U, iovec[1].fOutBytes);
    EXPECT_EQ('H', buffer[0]);
