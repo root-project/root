@@ -25,6 +25,7 @@
 #include "RtypesCore.h"
 #include "TBranch.h"
 #include "TClassEdit.h"
+#include "TClassRef.h"
 #include "TDirectory.h"
 #include "TFile.h" // for SnapshotHelper
 #include "TH1.h"
@@ -1066,7 +1067,8 @@ void SetBranchesHelper(BoolArrayMap &, TTree *inputTree, TTree &outputTree, cons
       const auto bufSize = inputBranch->GetBasketSize();
       const auto splitLevel = inputBranch->GetSplitLevel();
 
-      if (std::string_view(inputBranch->ClassName()) == "TBranchObject") {
+      static TClassRef tbo_cl("TBranchObject");
+      if (inputBranch->IsA() == tbo_cl) {
          // Need to pass a pointer to pointer
          outputTree.Branch(name.c_str(), (T **)inputBranch->GetAddress(), bufSize, splitLevel);
       } else {
