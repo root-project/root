@@ -26,15 +26,14 @@ private:
    struct io_uring fRing;
 
    static bool CheckIsAvailable() {
-      bool couldOpenRing = false;
       try {
          RIoUring(1);
-         couldOpenRing = true;
+         return true;
       }
       catch (const std::runtime_error& err) {
          Warning("RIoUring", "io_uring is not available\n%s", err.what());
       }
-      return couldOpenRing;
+      return false;
    }
 
 public:
