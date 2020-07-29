@@ -33,6 +33,7 @@
 #include "RtypesCore.h"
 #include "TBranch.h"
 #include "TClassEdit.h"
+#include "TClassRef.h"
 #include "TDirectory.h"
 #include "TFile.h" // for SnapshotHelper
 #include "TH1.h"
