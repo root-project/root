@@ -824,4 +824,7 @@ Therefore, in a Python3-Python2 ROOT build, the Python code executed with `TPyth
 
 These changes will be part of a future 6.22/02.
 
-* None so far.
+### RDataFrame
+
+- With [ROOT-10023](https://sft.its.cern.ch/jira/browse/ROOT-10023) fixed, RDataFrame can now read and write certain branches containing unsplit objects, i.e. TBranchObjects. More information is available at [ROOT-10022](https://sft.its.cern.ch/jira/browse/ROOT-10022).
+- Snapshot now respects the basket size and split level of the original branch when copying branches to a new TTree.
