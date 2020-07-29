@@ -54,6 +54,7 @@ The following people have contributed to this new version:
 ## RDataFrame
 
 - With [ROOT-10023](https://sft.its.cern.ch/jira/browse/ROOT-10023) fixed, RDataFrame can now read and write certain branches containing unsplit objects, i.e. TBranchObjects. More information is available at [ROOT-10022](https://sft.its.cern.ch/jira/browse/ROOT-10022).
+- Snapshot now respects the basket size and split level of the original branch when copying branches to a new TTree.
 
 
 ## Histogram Libraries
