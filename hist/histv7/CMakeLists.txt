@@ -28,6 +28,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHist
     MathCore
     Matrix
     RIO
+    Hist
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

@@ -19,6 +19,9 @@
 
 #include "TFitResult.h"
 #include "TFitResultPtr.h"
+#include "TF1.h"
+#include "Fit/DataOptions.h"
+#include "Fit/FitConfig.h"
 
 namespace ROOT {
 namespace Experimental {

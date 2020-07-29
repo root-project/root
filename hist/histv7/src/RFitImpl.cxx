@@ -18,30 +18,21 @@
 #include "HFitInterface.h"
 #include "TFitResult.h"
 #include "TFitResultPtr.h"
-#include "Foption.h"
+
 #include "Fit/DataRange.h"
 #include "Fit/BinData.h"
 #include "Fit/DataOptions.h"
 #include "Fit/FitConfig.h"
 #include "Fit/Fitter.h"
-#include "Fit/UnBinData.h"
-#include "Fit/Chi2FCN.h"
-#include "Fit/PoissonLikelihoodFCN.h"
-#include "Math/MinimizerOptions.h"
-#include "Math/Minimizer.h"
-#include "TMath.h"
 #include "Fit/FitExecutionPolicy.h"
 
-#include "Math/WrappedTF1.h"
+#include "TMath.h"
+#include "Math/MinimizerOptions.h"
+#include "Math/Minimizer.h"
 #include "Math/WrappedMultiTF1.h"
 #include "Math/IParamFunction.h"
 
 #include "TError.h"
-
-#include <stdlib.h>
-#include <cmath>
-#include <memory>
-#include <limits>
 
 namespace ROOT {
 namespace Experimental {
@@ -104,8 +95,6 @@ void RFit::GetFunctionRange(const TF1 & f1, ROOT::Fit::DataRange & range) {
 /// For now, only for dim <= 3 (due to the use of functions restricting dimension like in DataRange) 
 template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 TFitResultPtr RFit::Fit(RHist<DIMENSIONS, PRECISION, STAT...> & hist, TF1 *f1, const ROOT::Fit::DataOptions & fitOption, const ROOT::Fit::FitConfig & fitConfig)
-//TFitResultPtr Fit(RHist<DIMENSIONS, PRECISION, STAT...> & hist, IParamFunction & func, const DataOptions & fitOption, const FitConfig & fitConfig)
-//TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Double_t xxmax)
 {
    // Make sure function and histogram are compatible for fitting
    int ndim = hist.GetNDim();
