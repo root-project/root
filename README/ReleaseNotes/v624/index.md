@@ -51,6 +51,11 @@ The following people have contributed to this new version:
 ## TTree Libraries
 
 
+## RDataFrame
+
+- With [ROOT-10023](https://sft.its.cern.ch/jira/browse/ROOT-10023) fixed, RDataFrame can now read and write certain branches containing unsplit objects, i.e. TBranchObjects. More information is available at [ROOT-10022](https://sft.its.cern.ch/jira/browse/ROOT-10022).
+
+
 ## Histogram Libraries
 
 
