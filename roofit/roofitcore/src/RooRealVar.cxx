@@ -227,9 +227,8 @@ void RooRealVar::setVal(Double_t value)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set value of variable to 'value'. If 'value' is outside
-/// range named 'rangeName' of object, clip value into that range
-
+/// Set value of variable to `value`. If `value` is outside of the
+/// range named `rangeName`, clip value into that range.
 void RooRealVar::setVal(Double_t value, const char* rangeName)
 {
   Double_t clipValue ;
