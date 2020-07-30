@@ -376,7 +376,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns);
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
-      auto cachedPage = fPagePool->GetPage(columnId, clusterIndex);
+      auto cachedPage = fPagePool->GetPage(columnId, RClusterIndex(clusterId, clusterIndex));
       if (!cachedPage.IsNull())
          return cachedPage;
 
@@ -694,18 +694,13 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster
    scheduler.Run();
 
    const auto clusterId = cluster->GetId();
-   //printf("UNZIP cluster %ld\n", clusterId);
    const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
 
    std::vector<std::unique_ptr<RColumnElementBase>> allElements;
 
-
    const auto &columnsInCluster = cluster->GetAvailColumns();
    for (const auto columnId : columnsInCluster) {
       const auto &columnDesc = fDescriptor.GetColumnDescriptor(columnId);
-
-      //const auto &fieldDesc = fDescriptor.GetFieldDescriptor(columnDesc.GetFieldId());
-      //printf("   UNZIP cluster %ld column %ld %s\n", clusterId, columnId, fieldDesc.GetFieldName().c_str());
 
       allElements.emplace_back(RColumnElementBase::Generate(columnDesc.GetModel().GetType()));
 
@@ -713,7 +708,6 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster
       std::uint64_t pageNo = 0;
       std::uint64_t firstInPage = 0;
       for (const auto &pi : pageRange.fPageInfos) {
-         //printf("      UNZIP cluster %ld column %ld page %ld\n", clusterId, columnId, pageNo);
          ROnDiskPage::Key key(columnId, pageNo);
          auto onDiskPage = cluster->GetOnDiskPage(key);
          R__ASSERT(onDiskPage);
@@ -757,7 +751,6 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster
             };
 
          scheduler.ScheduleTask(std::move(unzipTask));
-         //unzipTask->Run();
 
          firstInPage += pi.fNElements;
          pageNo++;
