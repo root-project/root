@@ -16,7 +16,6 @@
 #include <liburing/io_uring.h>
 
 #include "TError.h"
-#include <ROOT/RLogger.hxx>
 
 namespace ROOT {
 namespace Internal {
