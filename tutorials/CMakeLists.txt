@@ -137,7 +137,9 @@ if(NOT xrootd)
                   dataframe/df103_NanoAODHiggsAnalysis.py
                   dataframe/df104_HiggsToTwoPhotons.py
                   dataframe/df105_WBosonAnalysis.py
-                  dataframe/df106_HiggsToFourLeptons.py)
+                  dataframe/df106_HiggsToFourLeptons.py
+                  dataframe/df107_SingleTopAnalysis.py
+                  )
 endif()
 
 # variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
