@@ -16,13 +16,7 @@
 #include "ROOT/RFitInterface.hxx"
 
 #include "HFitInterface.h"
-#include "TFitResult.h"
-#include "TFitResultPtr.h"
 
-#include "Fit/DataRange.h"
-#include "Fit/BinData.h"
-#include "Fit/DataOptions.h"
-#include "Fit/FitConfig.h"
 #include "Fit/Fitter.h"
 #include "Fit/FitExecutionPolicy.h"
 
@@ -37,15 +31,39 @@
 namespace ROOT {
 namespace Experimental {
 
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
+void RFitInterface::GetBinContentToBinData(RHist<DIMENSIONS, PRECISION, STAT...> & hist, ROOT::Fit::BinData & fitData,
+                                 TF1 *f1, const ROOT::Fit::DataOptions & fitOption, const ROOT::Fit::DataRange & range);
+
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
+TFitResultPtr RFitInterface::FitHist(RHist<DIMENSIONS, PRECISION, STAT...> & hist, TF1 *f1, ROOT::Fit::DataOptions & fitOption, ROOT::Fit::FitConfig & fitConfig);
+
 namespace RFit {
+   bool AdjustError(const ROOT::Fit::DataOptions & option, double & error, double value = 1);
    int CheckFitFunction(const TF1 * f1, int dim);
    void GetFunctionRange(const TF1 & f1, ROOT::Fit::DataRange & range);
 
    template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
-   TFitResultPtr RFit::Fit(RHist<DIMENSIONS, PRECISION, STAT...> & hist, TF1 *f1, const ROOT::Fit::DataOptions & fitOption, const ROOT::Fit::FitConfig & fitConfig);
+   void BinContentToBinData(RHist<DIMENSIONS, PRECISION, STAT...> & hist, ROOT::Fit::BinData & fitData, TF1 *f1,
+                           const ROOT::Fit::DataOptions & fitOption, const ROOT::Fit::DataRange & range);
+
+   template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
+   TFitResultPtr Fit(RHist<DIMENSIONS, PRECISION, STAT...> & hist, TF1 *f1, ROOT::Fit::DataOptions & fitOption, ROOT::Fit::FitConfig & fitConfig);
 }
 
-int RFit::CheckFitFunction(const TF1 * f1, int dim) {
+bool RFit::AdjustError(const ROOT::Fit::DataOptions & option, double & error, double value) {
+   if (error <= 0) {
+      if (option.fUseEmpty || (option.fErrors1 && std::abs(value) > 0 ) )
+         error = 1.;
+      else
+         return false;
+   } else if (option.fErrors1)
+      error = 1;
+   return true;
+}
+
+int RFit::CheckFitFunction(const TF1 * f1, int dim)
+{
    // Check validity of fitted function
    if (!f1) {
       Error("Fit", "function may not be null pointer");
@@ -78,8 +96,8 @@ int RFit::CheckFitFunction(const TF1 * f1, int dim) {
 
 }
 
-
-void RFit::GetFunctionRange(const TF1 & f1, ROOT::Fit::DataRange & range) {
+void RFit::GetFunctionRange(const TF1 & f1, ROOT::Fit::DataRange & range)
+{
    // get the range form the function and fill and return the DataRange object
    Double_t fxmin, fymin, fzmin, fxmax, fymax, fzmax;
    f1.GetRange(fxmin, fymin, fzmin, fxmax, fymax, fzmax);
@@ -90,11 +108,82 @@ void RFit::GetFunctionRange(const TF1 & f1, ROOT::Fit::DataRange & range) {
    return;
 }
 
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
+void RFit::BinContentToBinData(RHist<DIMENSIONS, PRECISION, STAT...> & hist, ROOT::Fit::BinData & fitData,
+                                 TF1 *f1, const ROOT::Fit::DataOptions & fitOption, const ROOT::Fit::DataRange & range)
+{
+   int ndim = hist.GetNDim();
+   int nPoints = hist.GetImpl()->GetNBins();
+   bool useRange = (range.Size(0) > 0);
 
+   // Get the error on bin data to initialize
+   ROOT::Fit::BinData::ErrorType errorType = ROOT::Fit::BinData::kValueError;
+   if (fitOption.fErrors1) {
+      errorType =  ROOT::Fit::BinData::kNoError;
+   }
+   fitData.Initialize(nPoints, ndim, errorType);
+   
+   double xmin = 0, ymin = 0, zmin = 0;
+   double xmax = 0, ymax = 0, zmax = 0;
+   switch (ndim) {
+      case 1:
+         range.GetRange(xmin,xmax);
+         break;
+      case 2:
+         range.GetRange(xmin,xmax,ymin,ymax);
+         break;
+      case 3:
+         range.GetRange(xmin,xmax,ymin,ymax,zmin,zmax);
+      default:
+         break;
+   }
+   
+   // Convert RHist bin data to BinData
+   for (auto bin: hist) {
+      // Don't add bin if out of range
+      switch (ndim) {
+         case 1:
+            if (useRange && (bin.GetFrom()[0] < xmin || bin.GetTo()[0] > xmax))
+               continue;
+            break;
+         case 2:
+            if (useRange && (bin.GetFrom()[0] < xmin || bin.GetTo()[0] > xmax || 
+                              bin.GetFrom()[1] < ymin || bin.GetTo()[1] > ymax ))
+               continue;
+            break;
+         case 3:
+            if (useRange && (bin.GetFrom()[0] < xmin || bin.GetTo()[0] > xmax || 
+                              bin.GetFrom()[1] < ymin || bin.GetTo()[1] > ymax ||
+                              bin.GetFrom()[2] < zmin || bin.GetTo()[2] > zmax ))
+               continue;
+         default:
+            break;
+      }
+
+      // Don't add bin if rejected by TF1
+      if (f1) {
+         TF1::RejectPoint(false);
+         (*f1)(bin);
+         if (TF1::RejectedPoint())
+            continue;
+      }
+
+      // Add bin data depending on error requested
+      if (fitOption.fErrors1) {
+         fitData.Add(bin.GetCenter(), bin.GetContent());
+      }
+      else if (errorType == ROOT::Fit::BinData::kValueError) {
+         if (!RFit::AdjustError(fitOption, bin.GetUncertainty(), bin.GetContent()))
+            continue;
+         fitData.Add(bin.GetCenter(), bin.GetContent(), bin.GetUncertainty());
+      }
+   }
+}
 
 /// For now, only for dim <= 3 (due to the use of functions restricting dimension like in DataRange) 
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
-TFitResultPtr RFit::Fit(RHist<DIMENSIONS, PRECISION, STAT...> & hist, TF1 *f1, const ROOT::Fit::DataOptions & fitOption, const ROOT::Fit::FitConfig & fitConfig)
+template <int DIMENSIONS, class PRECISION,
+         template <int D_, class P_> class... STAT>
+TFitResultPtr RFit::Fit(RHist<DIMENSIONS, PRECISION, STAT...> & hist, TF1 *f1, ROOT::Fit::DataOptions & fitOption, ROOT::Fit::FitConfig & fitConfig)
 {
    // Make sure function and histogram are compatible for fitting
    int ndim = hist.GetNDim();
@@ -110,7 +199,7 @@ TFitResultPtr RFit::Fit(RHist<DIMENSIONS, PRECISION, STAT...> & hist, TF1 *f1, c
       throw std::runtime_error("Attempted to fit a model function with a lesser dimension than that of the data object");
 
    // If specified, use range of function when fitting
-   ROOT::Fit::DataRange & range = new ROOT::Fit::DataRange(ndim);
+   ROOT::Fit::DataRange range(ndim);
    if (fitOption.fUseRange) {
       RFit::GetFunctionRange(*f1,range);
    }
@@ -140,53 +229,8 @@ TFitResultPtr RFit::Fit(RHist<DIMENSIONS, PRECISION, STAT...> & hist, TF1 *f1, c
    // Fill data for fitting
    std::shared_ptr<ROOT::Fit::BinData> fitData(new ROOT::Fit::BinData(fitOption,range));
    // TODO: check the different errors/uncertainty wanted for implementation
-   int nPoints = hist.GetImpl()->GetNBins();
 
-   bool useRange = (range.Size(0) > 0);
-   double xmin = 0, ymin = 0, zmin = 0;
-   double xmax = 0, ymax = 0, zmax = 0;
-   switch (ndim) {
-      case 1:
-         range.GetRange(xmin,xmax);
-         break;
-      case 2:
-         range.GetRange(xmin,xmax,ymin,ymax);
-         break;
-      case 3:
-         range.GetRange(xmin,xmax,ymin,ymax,zmin,zmax);
-      default:
-         break;
-   }
-
-   ROOT::Fit::BinData::ErrorType errorType = ROOT::Fit::BinData::kValueError;
-   if (fitOption.fErrors1) {
-      errorType =  ROOT::Fit::BinData::kNoError;
-   }
-   fitData->Initialize(nPoints, ndim, errorType);
-   
-   for (auto bin: hist) {
-
-      if (useRange && (bin.GetFrom()[0] < xmin || bin.GetTo()[0] > xmax || 
-                        bin.GetFrom()[1] < ymin || bin.GetTo()[1] > ymax ||
-                        bin.GetFrom()[2] < zmin || bin.GetTo()[2] > zmax ))
-         continue;
-
-      if (f1) {
-         TF1::RejectPoint(false);
-         (*f1)(bin);
-         if (TF1::RejectedPoint())
-            continue;
-      }
-
-      if (fitOption.fErrors1) {
-         fitData->Add(bin.GetCenter(), bin.GetContent());
-      }
-      else if (errorType == ROOT::Fit::BinData::kValueError) {
-         if (!ROOT::Fit::HFitInterface::AdjustError(fitOption, bin.GetUncertainty()))
-            continue;
-         fitData->Add(bin.GetCenter(), bin.GetContent(), bin.GetUncertainty());
-      }
-   }
+   ROOT::Experimental::RFit::BinContentToBinData(hist, fitData, f1, fitOption, range);
    
    if (fitData->Size() == 0) {
       Warning("Fit","Fit data is empty ");
@@ -263,7 +307,7 @@ TFitResultPtr RFit::Fit(RHist<DIMENSIONS, PRECISION, STAT...> & hist, TF1 *f1, c
    }
 
    // Set all default minimizer options (tolerance, max iterations, etc..)
-   const ROOT::Math::MinimizerOptions minimizerOpts = fitConfig->MinimizerOptions();
+   ROOT::Math::MinimizerOptions minimizerOpts = fitConfig.MinimizerOptions();
    fitterConfig.SetMinimizerOptions(minimizerOpts);
 
    // Specific minimizer options depending on minimizer
@@ -304,28 +348,28 @@ TFitResultPtr RFit::Fit(RHist<DIMENSIONS, PRECISION, STAT...> & hist, TF1 *f1, c
    }
 
    return TFitResultPtr(checkResult);
-
-   // ROOT::Fit::BinData d;
-   // ROOT::Fit::FillData(d,h1,func);
-
-   // printData(d);
-
-   // double p[3] = {100,0,3.};
-   // f.SetParameters(p);
-
-   // // create the fitter
-
-   // ROOT::Fit::Fitter fitter;
-
-   //bool ret = fitter.Fit(fitData, paramFunction);
-
-   // ROOT::Fit::DataOptions opt;
-   // opt.fUseEmpty = true;
-   // ROOT::Fit::BinData dl(opt);
-   // ROOT::Fit::FillData(dl,h1,func);
 }
 
 
+
+
+void RFitInterface::FunctionRange(const TF1 & f1, ROOT::Fit::DataRange & range)
+{
+   return RFit::GetFunctionRange(f1, range);
+}
+
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
+void RFitInterface::GetBinContentToBinData(RHist<DIMENSIONS, PRECISION, STAT...> & hist, ROOT::Fit::BinData & fitData,
+                                 TF1 *f1, const ROOT::Fit::DataOptions & fitOption, const ROOT::Fit::DataRange & range)
+{
+   return RFit::BinContentToBinData(hist, fitData, f1, fitOption, range);
+}
+
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
+TFitResultPtr RFitInterface::FitHist(RHist<DIMENSIONS, PRECISION, STAT...> & hist, TF1 *f1, ROOT::Fit::DataOptions & fitOption, ROOT::Fit::FitConfig & fitConfig)
+{
+   return RFit::Fit(hist, f1, fitOption, fitConfig);
+}
 
 }// namespace Experimental
 }// namespace ROOT
