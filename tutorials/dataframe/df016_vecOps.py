@@ -38,3 +38,6 @@ ring_h = d1.Define("rInFig", "r > .4 && r < .8 && x*y < 0")\
 
 cring = ROOT.TCanvas()
 ring_h.Draw("Colz")
+cring.SaveAs("df016_ring.png")
+
+print("Saved figure to df016_ring.png")

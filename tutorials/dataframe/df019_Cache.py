@@ -30,7 +30,7 @@ import os
 hsimplePath = os.path.join(str(ROOT.gROOT.GetTutorialDir().Data()), "hsimple.root")
 df = ROOT.RDataFrame("ntuple", hsimplePath)
 
-#We apply a simple cut and define a new column
+# We apply a simple cut and define a new column
 df_cut = df.Filter("py > 0.f")\
            .Define("px_plus_py", "px + py")
 
@@ -40,6 +40,10 @@ df_cached = df_cut.Cache()
 
 h = df_cached.Histo1D("px_plus_py")
 
-# Now the event loop on the cached dataset is triggered. This event triggers the loop
-# on the `df` data frame lazily.
+# Now the event loop on the cached dataset is triggered by accessing the histogram.
+# This event triggers the loop on the `df` data frame lazily.
+c = ROOT.TCanvas()
 h.Draw()
+c.SaveAs("df019_Cache.png")
+
+print("Saved figure to df019_Cache.png")

@@ -88,6 +88,9 @@ branchList.clear()
 branchList.push_back("b1_square")
 snapshot_df = d2.Snapshot(treeName, outFileName, branchList);
 h = snapshot_df.Histo1D("b1_square")
+
 c = ROOT.TCanvas()
 h.Draw()
+c.SaveAs("df007_snapshot.png")
 
+print("Saved figure to df007_snapshot.png")

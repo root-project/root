@@ -46,6 +46,7 @@ c = ROOT.TCanvas()
 c.SetLogx()
 c.SetLogy()
 invMass.Draw()
+c.SaveAs("df014_invMass.png")
 
 # We will now produce a plot also for the J/Psi particle. We will plot
 # on the same canvas the full spectrum and the zoom in the J/psi particle.
@@ -70,3 +71,6 @@ leftPad.SetLogy()
 fullSpectrum.Draw("Hist")
 dualCanvas.cd(2)
 jpsi.Draw("HistP")
+dualCanvas.SaveAs("df014_jpsi.png")
+
+print("Saved figures to df014_*.png")
