@@ -36,10 +36,10 @@ TEST(FittingTest, RH1D) {
       ROOT::Fit::FitConfig fitConfig;
       ROOT::Fit::DataRange range(ndim);
       if (fitOption.fUseRange) {
-         RFitInterface::FunctionRange(*f1,range);
+         RFit::GetFunctionRange(*f1,range);
       }
 
-      RFitInterface::GetBinContentToBinData(hist, fitData, f1, fitOption, range);
+      RFit::BinContentToBinData(hist, fitData, f1, fitOption, range);
 
       // Create gauss function for fitting
       ROOT::Math::WrappedMultiTF1 wF1(*f1);
