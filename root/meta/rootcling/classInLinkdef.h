@@ -8,7 +8,6 @@
 
 #pragma link C++ nestedclass;
 #pragma link C++ nestedtypedef;
-#pragma link C++ namespace FdUtil;
 
 // #pragma extra_include "headerForLinkdef.h";
 
