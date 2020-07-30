@@ -23,8 +23,14 @@ sap.ui.define([
 
          var pthis = this;
 
-         import("../../eve7/rnr_core/RenderCore.js").then((module) => {
+         // For offline mode, one needs a a full URL or the request
+         // gets forwarded to openi5.hana.ondemand.com.
+         // This has to be understood and fixed. Loading of shaders
+         // afterwards fails, too.
+         // // console.log(window.location.pathname); // where are we loading from?
+         // import("https://desire.physics.ucsd.edu/matevz/alja.github.io/rootui5/eve7/rnr_core/RenderCore.js").then((module) => {
 
+         import("../../eve7/rnr_core/RenderCore.js").then((module) => {
             console.log("GlViewerRCore.onInit - RenderCore.js loaded");
 
             RC = module;
@@ -45,8 +51,11 @@ sap.ui.define([
 
          this.controller.glViewerInitDone();
 
-         // As RC gets loaded asynchronously we've probably missed the initial resize.
-         this.onResizeTimeout();
+         // As RCore gets loaded asynchronously we've probably missed the initial resize.
+         // Nothing gets drawn until window is manually resized.
+         // Neither of the resizes below help.
+         // this.onResizeTimeout();
+         // this.controller.onResizeTimeout();
       },
 
       //==============================================================================
@@ -72,8 +81,6 @@ sap.ui.define([
 
          //this.canvas = document.createElement('canvas');
          this.canvas = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'canvas' );
-
-         this.get_view().getDomRef().appendChild(this.canvas);
 
          this.renderer = new RC.MeshRenderer(this.canvas, RC.WEBGL2);
          this.renderer.clearColor = "#FFFFFFFF";
@@ -107,31 +114,32 @@ sap.ui.define([
 
       setupRCoreDomAndEventHandlers: function()
       {
-         // this.get_view().getDomRef().appendChild( this.renderer.domElement );
+         this.get_view().getDomRef().appendChild(this.canvas);
 
          // This will also call render().
-         // this.resetRCoreRenderer();
-
-         // this.onResizeTimeout();
-
-         this.render();
+         this.resetRCoreRenderer();
       },
 
       resetRCoreRenderer: function()
       {
-         let THREE = RC;
+         let sbbox = new RC.Box3();
+         sbbox.setFromObject( this.scene );
+         if (sbbox.isEmpty())
+         {
+            console.log("GlViewerRenderCore.resetRCoreRenderer scene bbox empty", sbbox);
+            // XXXX infinity ... no traversal?
+            const ext = 400;
+            sbbox.expandByPoint(new RC.Vector3(-ext,-ext,-ext));
+            sbbox.expandByPoint(new RC.Vector3( ext, ext, ext));
+         }
 
-         let sbbox = new THREE.Box3();
-         //sbbox.setFromObject( this.scene );
-         // XXXX infinity ... no traversal?
-         sbbox.expandByPoint(new RC.Point(-1000,-1000,-1000));
-         sbbox.expandByPoint(new RC.Point( 1000, 1000, 1000));
+         let posV = new RC.Vector3; posV.subVectors(sbbox.max, this.rot_center);
+         let negV = new RC.Vector3; negV.subVectors(sbbox.min, this.rot_center);
 
-         let posV = new THREE.Vector3; posV.subVectors(sbbox.max, this.rot_center);
-         let negV = new THREE.Vector3; negV.subVectors(sbbox.min, this.rot_center);
-
-         let extV = new THREE.Vector3; extV = negV; extV.negate(); extV.max(posV);
+         let extV = new RC.Vector3; extV = negV; extV.negate(); extV.max(posV);
          let extR = extV.length();
+
+         console.log("GlViewerRenderCore.resetRCoreRenderer", sbbox, posV, negV, extV, extR);
 
          let lc = this.point_lights.children;
          lc[0].position.set( extR, extR, -extR);
@@ -140,9 +148,10 @@ sap.ui.define([
 
          if (this.controller.kind === "3D") // (this.camera.isPerspectiveCamera)
          {
-            let posC = new THREE.Vector3(-0.7 * extR, 0.5 * extR, -0.7 * extR);
+            let posC = new RC.Vector3(-0.7 * extR, 0.5 * extR, -0.7 * extR);
 
             this.camera.position.copy(posC);
+            this.camera.lookAt(new RC.Vector3(0,0,0), new RC.Vector3(0,1,0));
 
             // this.controls.screenSpacePanning = true;
 
@@ -150,7 +159,7 @@ sap.ui.define([
          }
          else
          {
-            let posC = new THREE.Vector3(0, 0, 1000);
+            let posC = new RC.Vector3(0, 0, 1000);
 
             this.camera.position.copy(posC);
 
@@ -190,10 +199,11 @@ sap.ui.define([
 
       onResizeTimeout: function()
       {
-         console.log("GlViewerRCore RESIZE ", this.get_width(), this.get_height(), "canvas=", this.canvas);
-
          let w = this.get_width();
          let h = this.get_height();
+
+         console.log("GlViewerRCore RESIZE ", w, h, "canvas=", this.canvas,
+                     this.canvas.width, this.canvas.height);
 
          this.canvas.width  = w;
          this.canvas.height = h;
