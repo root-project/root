@@ -29,4 +29,6 @@ h_s = d_s.Define("x", "1./(1. + col0)").Histo1D(("h_s", "h_s", 128, 0, .6), "x")
 c = ROOT.TCanvas()
 c.SetLogy()
 h_s.Draw()
+c.SaveAs("df010_trivialDataSource.png")
 
+print("Saved figure to df010_trivialDataSource.png")
