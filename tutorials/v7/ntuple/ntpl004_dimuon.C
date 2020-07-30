@@ -2,7 +2,7 @@
 /// \ingroup tutorial_ntuple
 /// \notebook
 /// Mini-Analysis on CMS OpenData with RDataFrame.
-/// This tutorial illustrates that there is analyzing data with RDataFrame works the same
+/// This tutorial illustrates that analyzing data with RDataFrame works the same
 /// for both TTree data and RNTuple data.  The RNTuple data are converted from the Events tree
 /// in http://root.cern.ch/files/NanoAOD_DoubleMuon_CMS2011OpenData.root
 /// Based on RDataFrame's df102_NanoAODDimuonAnalysis.C
