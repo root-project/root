@@ -60,6 +60,7 @@ public:
   }
 
   virtual void setVal(Double_t value);
+  virtual void setVal(Double_t value, const char* rangeName);
   inline Double_t getError() const { return _error>=0?_error:0. ; }
   inline Bool_t hasError(Bool_t allowZero=kTRUE) const { return allowZero ? (_error>=0) : (_error>0) ; }
   inline void setError(Double_t value) { _error= value ; }
@@ -139,8 +140,6 @@ public:
 
   static Bool_t _printScientific ;
   static Int_t  _printSigDigits ;
-
-  virtual void setVal(Double_t value, const char* rangeName) ;
 
   friend class RooAbsRealLValue ;
   virtual void setValFast(Double_t value) { _value = value ; setValueDirty() ; }
