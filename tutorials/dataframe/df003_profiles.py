@@ -24,8 +24,6 @@ def fill_tree(treeName, fileName):
      .Define("pz", "sqrt(px * px + py * py)")\
      .Snapshot(treeName, fileName)
 
-
-
 # We prepare an input tree to run on
 fileName = "df003_profiles_py.root"
 treeName = "myTree"
@@ -45,6 +43,10 @@ hprof2d = d.Profile2D(("hprof2d", "Profile of pz versus px and py", 40, -4, 4, 4
 # And Draw
 c1 = ROOT.TCanvas("c1", "Profile histogram example", 200, 10, 700, 500)
 hprof1d.Draw()
+c1.SaveAs("df003_c1.png")
+
 c2 = ROOT.TCanvas("c2", "Profile2D histogram example", 200, 10, 700, 500)
 hprof2d.Draw()
+c2.SaveAs("df003_c2.png")
 
+print("Saved figures to df003_*.png")
