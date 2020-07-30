@@ -224,12 +224,6 @@ if (JEMALLOC_FOUND)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ljemalloc -L${JEMALLOC_LIBRARY_PATH}")
 endif()
 
-#---Here we add liburing to the linker flags if needed------------------------------------------
-if (LIBURING_FOUND)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -luring -L${LIBURING_LIBRARY_PATH}")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -luring -L${LIBURING_LIBRARY_PATH}")
-endif()
-
 #---Populate the configure arguments returned by 'root-config --config'-------------------------
 get_cmake_property(variables CACHE_VARIABLES)
 foreach(var ${variables})
