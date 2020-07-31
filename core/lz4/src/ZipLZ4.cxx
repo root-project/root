@@ -169,8 +169,8 @@ void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, 
       // fprintf(stderr, "LZ4_compressBound(): %d\n", LZ4_compressBound(*srcsize));
       R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
       return;
-   } else if (returnStatus < 0) {
-      fprintf(stderr, "Bitshuffle failed: got negative returnStatus %ld\n", returnStatus);
+   } else if (returnStatus_lz4bs < 0) {
+      fprintf(stderr, "Bitshuffle failed: got negative returnStatus %ld\n", returnStatus_lz4bs);
       return;
    }
    int64_t returnStatus = bshuf_compress_lz4(src, &tgt[kHeaderSize], elem_count, sizeof(float), 0);
