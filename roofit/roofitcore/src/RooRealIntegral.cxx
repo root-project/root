@@ -47,6 +47,8 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include "RooConstVar.h"
 #include "RooDouble.h"
 #include "RooTrace.h"
+#include "BatchHelpers.h"
+#include "RunContext.h"
 
 #include "TClass.h"
 
@@ -743,14 +745,58 @@ Double_t RooRealIntegral::getValV(const RooArgSet* nset) const
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Perform one integration for each of the values of observables found in `evalData`, and return
+/// the results.
+/// All observables / categories that are not found in `evalData` will be taken at their
+/// current value.
+///
+/// This overrides the generic implementation of RooAbsReal, because we need to call the classic
+/// evaluate() in a loop. A specialised implementation is needed, since RooAbsReal::evaluateBatch doesn't play well
+/// with the component selection that is enabled / disabled when integrating.
+RooSpan<const double> RooRealIntegral::getValBatch(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  if (normSet && normSet != _lastNSet) {
+    // See comment in RooAbsReal::getValBatch()
+    const_cast<RooRealIntegral*>(this)->setProxyNormSet(normSet);
+    _lastNSet = const_cast<RooArgSet*>(normSet);
+  }
 
+  RooArgSet allLeafs;
+  leafNodeServerList(&allLeafs);
+
+  RooArgSet oldValues;
+  allLeafs.snapshot(oldValues);
+
+  std::vector<RooAbsRealLValue*> ourServers;
+  std::vector<RooSpan<const double>> batchValues;
+  for (auto arg : allLeafs) {
+    const auto item = evalData.spans.find(static_cast<RooAbsReal*>(arg));
+    if (item != evalData.spans.end()) {
+      ourServers.push_back(static_cast<RooAbsRealLValue*>(arg));
+      batchValues.push_back(item->second);
+    }
+  }
+
+  auto batchSize = BatchHelpers::findSmallestBatch(batchValues);
+  RooSpan<double> output = evalData.makeBatch(this, batchSize);
+  for (std::size_t evtNo=0; evtNo < batchSize; ++evtNo) {
+    for (unsigned int i=0; i < ourServers.size(); ++i) {
+      ourServers[i]->setVal(batchValues[i].size() == 1 ? batchValues[i][0] : batchValues[i][evtNo]);
+    }
+
+    output[evtNo] = evaluate();
+  }
+
+  // Restore the old values
+  allLeafs = oldValues;
+
+  return output;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform the integration and return the result
-
-Double_t RooRealIntegral::evaluate() const 
-{
+/// Perform the integration and return the result.
+Double_t RooRealIntegral::evaluate() const {
   GlobalSelectComponentRAII selCompRAII(_globalSelectComp || !_respectCompSelect);
   
   Double_t retVal(0) ;
