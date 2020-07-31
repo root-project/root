@@ -589,84 +589,9 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
 }
 
 
-namespace {
-
-class RTask;
-
-class RTaskScheduler {
-private:
-   static constexpr int kNumThreads = 12;
-   std::mutex fLock;
-   std::condition_variable fCvHasWork;
-   std::queue<std::unique_ptr<RTask>> fWaitingTasks;
-   int fNumRunning = 0;
-   std::vector<std::thread> fThreads;
-
-   void ExecTaskRunner();
-
-public:
-   ~RTaskScheduler() {
-      for (int i = 0; i < kNumThreads; ++i) {
-         ScheduleTask(nullptr);
-      }
-      for (int i = 0; i < kNumThreads; ++i) {
-         fThreads[i].join();
-      }
-   }
-
-   void ScheduleTask(std::unique_ptr<RTask> task) {
-      std::unique_lock<std::mutex> lock(fLock);
-      fWaitingTasks.emplace(std::move(task));
-      fCvHasWork.notify_one();
-   }
-
-   void Run() {
-      for (int i = 0; i < kNumThreads; ++i) {
-         fThreads.emplace_back(std::thread(&RTaskScheduler::ExecTaskRunner, this));
-      }
-   }
-};
-
-class RTask {
-public:
-   virtual void Run() = 0;
-};
-
-
-void RTaskScheduler::ExecTaskRunner()
-{
-   std::unique_ptr<RTask> task;
-   while (true) {
-      {
-         std::unique_lock<std::mutex> lock(fLock);
-         fCvHasWork.wait(lock, [&]{ return !fWaitingTasks.empty(); });
-         task = std::move(fWaitingTasks.front());
-         fWaitingTasks.pop();
-         if (!task)
-            return;
-      }
-
-      task->Run();
-   }
-}
-
-
-class RUnzipTask : public RTask {
-public:
-   std::function<void()> fRunFunc;
-   void Run() final { fRunFunc(); }
-};
-
-
-} // anonymous namespace
-
-
 void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(
-   RCluster *cluster, TaskScheduleFunc_t /* taskScheduleFunc */)
+   RCluster *cluster, TaskScheduleFunc_t taskScheduleFunc)
 {
-   RTaskScheduler scheduler;
-   scheduler.Run();
-
    std::mutex fLockIsDone;
    std::condition_variable fCvIsDone;
    std::atomic<size_t> nTasks{cluster->GetNOnDiskPages()};
@@ -691,8 +616,7 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(
          R__ASSERT(onDiskPage);
          R__ASSERT(onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage);
 
-         auto unzipTask = std::make_unique<RUnzipTask>();
-         unzipTask->fRunFunc =
+         auto taskFunc =
             [this, columnId, clusterId, firstInPage, onDiskPage,
              &fLockIsDone, &fCvIsDone, &nTasks,
              element = allElements.back().get(),
@@ -734,7 +658,7 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(
                }
             };
 
-         scheduler.ScheduleTask(std::move(unzipTask));
+         taskScheduleFunc(taskFunc);
 
          firstInPage += pi.fNElements;
          pageNo++;
@@ -742,6 +666,7 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(
    } // for all columns in cluster
 
    fCounters->fNPagePopulated.Add(cluster->GetNOnDiskPages());
+
    std::unique_lock<std::mutex> lock(fLockIsDone);
    fCvIsDone.wait(lock, [&]{ return nTasks == 0; });
 }
