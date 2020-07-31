@@ -43,6 +43,7 @@ public:
   virtual ~RooRealIntegral();
 
   virtual Double_t getValV(const RooArgSet* set=0) const ;
+  RooSpan<const double> getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
 
   Bool_t isValid() const { return _valid; }
 
@@ -89,7 +90,6 @@ protected:
   const RooArgSet& parameters() const ;
 
   enum IntOperMode { Hybrid, Analytic, PassThrough } ;
-  //friend class RooAbsPdf ;
 
   Bool_t initNumIntegrator() const;
   void autoSelectDirtyMode() ;
