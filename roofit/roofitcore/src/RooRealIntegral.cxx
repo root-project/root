@@ -798,6 +798,13 @@ RooSpan<const double> RooRealIntegral::getValues(BatchHelpers::RunContext& evalD
 /// Perform the integration and return the result.
 Double_t RooRealIntegral::evaluate() const {
   GlobalSelectComponentRAII selCompRAII(_globalSelectComp || !_respectCompSelect);
+  struct InhibitDirtyRAII {
+    InhibitDirtyRAII(const RooAbsArg* owner) : _oldState(owner->inhibitDirty()) {
+      RooAbsArg::setDirtyInhibit(true);
+    }
+    ~InhibitDirtyRAII() { RooAbsArg::setDirtyInhibit(_oldState); }
+    bool _oldState;
+  };
   
   Double_t retVal(0) ;
   if (_intOperMode == Hybrid) {
@@ -810,28 +817,27 @@ Double_t RooRealIntegral::evaluate() const {
     if (cacheVal) {
       retVal = *cacheVal ;
     } else {
-      // Find any function dependents that are AClean
-      // and switch them temporarily to ADirty
-      Bool_t origState = inhibitDirty() ;
-      setDirtyInhibit(kTRUE) ;
+      {
+        // Globally set RooAbsArg's inhibitDirty. All components will act as
+        // if they were dirty, and no dirty-state propagation happens.
+        InhibitDirtyRAII inhibDirty(this);
 
-      // try to initialize our numerical integration engine
-      if(!(_valid= initNumIntegrator())) {
-        coutE(Integration) << ClassName() << "::" << GetName()
-                                 << ":evaluate: cannot initialize numerical integrator" << endl;
-        return 0;
+        // try to initialize our numerical integration engine
+        if(!(_valid= initNumIntegrator())) {
+          coutE(Integration) << ClassName() << "::" << GetName()
+              << ":evaluate: cannot initialize numerical integrator" << endl;
+          return 0;
+        }
+
+        // Save current integral dependent values
+        _saveInt = _intList ;
+        _saveSum = _sumList ;
+
+        // Evaluate sum/integral
+        retVal = sum() ;
+
+        // End dirty inhibit block BEFORE restoring dependents, otherwise no dirty state propagation in restore step
       }
-
-      // Save current integral dependent values
-      _saveInt = _intList ;
-      _saveSum = _sumList ;
-
-      // Evaluate sum/integral
-      retVal = sum() ;
-
-
-      // This must happen BEFORE restoring dependents, otherwise no dirty state propagation in restore step
-      setDirtyInhibit(origState) ;
 
       // Restore integral dependent values
       _intList=_saveInt ;
