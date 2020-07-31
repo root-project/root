@@ -165,6 +165,7 @@ private:
 
 protected:
    RNTupleDescriptor AttachImpl() final;
+   void UnzipClusterImpl(RCluster *cluster, TaskScheduleFunc_t taskScheduleFunc) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
@@ -183,7 +184,6 @@ public:
    void ReleasePage(RPage &page) final;
 
    std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) final;
-   void UnzipCluster(RCluster *cluster) final;
 
    RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };

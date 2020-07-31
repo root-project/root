@@ -661,7 +661,8 @@ public:
 } // anonymous namespace
 
 
-void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster)
+void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(
+   RCluster *cluster, TaskScheduleFunc_t /* taskScheduleFunc */)
 {
    RTaskScheduler scheduler;
    scheduler.Run();

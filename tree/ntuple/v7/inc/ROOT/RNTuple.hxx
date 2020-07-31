@@ -37,6 +37,7 @@ namespace Experimental {
 
 class REntry;
 class RNTupleModel;
+class TTaskGroup;
 
 namespace Detail {
 class RPageSink;
@@ -84,9 +85,12 @@ private:
    /// is a clone of the original reader.
    std::unique_ptr<RNTupleReader> fDisplayReader;
    Detail::RNTupleMetrics fMetrics;
+   /// Set as the page source's scheduler for parallel page decompression if IMT is on
+   std::unique_ptr<TTaskGroup> fUnzipTasks;
 
    void ConnectModel(const RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
+   void InitPageSource();
 
 public:
    // Browse through the entries
