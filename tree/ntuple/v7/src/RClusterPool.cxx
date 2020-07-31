@@ -50,7 +50,7 @@ bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(cons
 ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource, unsigned int size)
    : fPageSource(pageSource)
    , fPool(size)
-   , fThreadIo(&RClusterPool::ExecLoadClusters, this)
+   , fThreadIo(&RClusterPool::ExecReadClusters, this)
    , fThreadUnzip(&RClusterPool::ExecUnzipClusters, this)
 {
    R__ASSERT(size > 0);
@@ -68,8 +68,8 @@ ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
    {
       // Controlled shutdown of the I/O thread
       std::unique_lock<std::mutex> lock(fLockWorkQueue);
-      fWorkQueue.emplace(RWorkItem());
-      fCvHasWork.notify_one();
+      fReadQueue.emplace(RReadItem());
+      fCvHasReadWork.notify_one();
    }
    fThreadIo.join();
 
@@ -101,25 +101,26 @@ void ROOT::Experimental::Detail::RClusterPool::ExecUnzipClusters()
 
          fPageSource.UnzipCluster(item.fCluster.get());
 
+         // Afterwards the GetCluster() method in the main thread can pick-up the cluster
          item.fPromise.set_value(std::move(item.fCluster));
       }
    } // while (true)
 }
 
-void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
+void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
 {
    while (true) {
-      std::vector<RWorkItem> workItems;
+      std::vector<RReadItem> readItems;
       {
          std::unique_lock<std::mutex> lock(fLockWorkQueue);
-         fCvHasWork.wait(lock, [&]{ return !fWorkQueue.empty(); });
-         while (!fWorkQueue.empty()) {
-            workItems.emplace_back(std::move(fWorkQueue.front()));
-            fWorkQueue.pop();
+         fCvHasReadWork.wait(lock, [&]{ return !fReadQueue.empty(); });
+         while (!fReadQueue.empty()) {
+            readItems.emplace_back(std::move(fReadQueue.front()));
+            fReadQueue.pop();
          }
       }
 
-      for (auto &item : workItems) {
+      for (auto &item : readItems) {
          if (item.fClusterId == kInvalidDescriptorId)
             return;
 
@@ -142,6 +143,7 @@ void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
             cluster.reset();
             item.fPromise.set_value(std::move(cluster));
          } else {
+            // Hand-over the loaded cluster pages to the unzip thread
             std::unique_lock<std::mutex> lock(fLockUnzipQueue);
             fUnzipQueue.emplace(RUnzipItem{std::move(cluster), std::move(item.fPromise)});
             fCvHasUnzipWork.notify_one();
@@ -308,20 +310,20 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
       for (const auto &kv : provide) {
          R__ASSERT(!kv.second.empty());
 
-         RWorkItem workItem;
-         workItem.fClusterId = kv.first;
-         workItem.fColumns = kv.second;
+         RReadItem readItem;
+         readItem.fClusterId = kv.first;
+         readItem.fColumns = kv.second;
 
          RInFlightCluster inFlightCluster;
          inFlightCluster.fClusterId = kv.first;
          inFlightCluster.fColumns = kv.second;
-         inFlightCluster.fFuture = workItem.fPromise.get_future();
+         inFlightCluster.fFuture = readItem.fPromise.get_future();
          fInFlightClusters.emplace_back(std::move(inFlightCluster));
 
-         fWorkQueue.emplace(std::move(workItem));
+         fReadQueue.emplace(std::move(readItem));
       }
-      if (fWorkQueue.size() > 0)
-         fCvHasWork.notify_one();
+      if (fReadQueue.size() > 0)
+         fCvHasReadWork.notify_one();
    } // work queue lock guard
 
    return WaitFor(clusterId, columns);
