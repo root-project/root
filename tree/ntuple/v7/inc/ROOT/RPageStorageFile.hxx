@@ -161,11 +161,7 @@ private:
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
-                                 ClusterSize_t::ValueType clusterIndex);
-   //RPage UnwrapPage(DescriptorId_t clusterId,
-   //                 const ROnDiskPage::Key &key,
-   //                 const ROnDiskPage &onDiskPage,
-   //                 const RColumnElement &element);
+                                 ClusterSize_t::ValueType idxInCluster);
 
 protected:
    RNTupleDescriptor AttachImpl() final;
