@@ -95,6 +95,12 @@ ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSource::GetColum
    return columnHandle.fId;
 }
 
+void ROOT::Experimental::Detail::RPageSource::UnzipCluster(RCluster *cluster)
+{
+   if (fTaskScheduleFunc)
+      UnzipClusterImpl(cluster, fTaskScheduleFunc);
+}
+
 
 //------------------------------------------------------------------------------
 
