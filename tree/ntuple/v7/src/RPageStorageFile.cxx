@@ -598,7 +598,6 @@ private:
    static constexpr int kNumThreads = 12;
    std::mutex fLock;
    std::condition_variable fCvHasWork;
-   std::condition_variable fCvIsDone;
    std::queue<std::unique_ptr<RTask>> fWaitingTasks;
    int fNumRunning = 0;
    std::vector<std::thread> fThreads;
@@ -626,22 +625,11 @@ public:
          fThreads.emplace_back(std::thread(&RTaskScheduler::ExecTaskRunner, this));
       }
    }
-
-   void WaitFor() {
-      std::unique_lock<std::mutex> lock(fLock);
-      fCvIsDone.wait(lock, [&]{ return (fNumRunning == 0) && fWaitingTasks.empty(); });
-   }
 };
 
 class RTask {
-private:
-   RTaskScheduler &fScheduler;
-   RTask *fAndThen = nullptr;
 public:
-   explicit RTask(RTaskScheduler &scheduler) : fScheduler(scheduler) {}
    virtual void Run() = 0;
-   void SetAndThen(RTask *andThen) { fAndThen = andThen; }
-   RTask *GetAndThen() { return fAndThen; }
 };
 
 
@@ -656,21 +644,9 @@ void RTaskScheduler::ExecTaskRunner()
          fWaitingTasks.pop();
          if (!task)
             return;
-         fNumRunning++;
       }
 
       task->Run();
-
-      {
-         std::unique_lock<std::mutex> lock(fLock);
-         fNumRunning--;
-         if (task->GetAndThen()) {
-            fWaitingTasks.emplace(std::unique_ptr<RTask>(task->GetAndThen()));
-            fCvHasWork.notify_one();
-         }
-         if ((fNumRunning == 0) && fWaitingTasks.empty())
-            fCvIsDone.notify_one();
-      }
    }
 }
 
@@ -678,9 +654,6 @@ void RTaskScheduler::ExecTaskRunner()
 class RUnzipTask : public RTask {
 public:
    std::function<void()> fRunFunc;
-
-   RUnzipTask(RTaskScheduler &scheduler) : RTask(scheduler) {}
-
    void Run() final { fRunFunc(); }
 };
 
@@ -692,6 +665,10 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster
 {
    RTaskScheduler scheduler;
    scheduler.Run();
+
+   std::mutex fLockIsDone;
+   std::condition_variable fCvIsDone;
+   std::atomic<size_t> nTasks{cluster->GetNOnDiskPages()};
 
    const auto clusterId = cluster->GetId();
    const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
@@ -713,9 +690,10 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster
          R__ASSERT(onDiskPage);
          R__ASSERT(onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage);
 
-         auto unzipTask = std::make_unique<RUnzipTask>(scheduler);
+         auto unzipTask = std::make_unique<RUnzipTask>();
          unzipTask->fRunFunc =
             [this, columnId, clusterId, firstInPage, onDiskPage,
+             &fLockIsDone, &fCvIsDone, &nTasks,
              element = allElements.back().get(),
              nElements = pi.fNElements,
              indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex
@@ -748,6 +726,11 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster
                   {
                      RPageAllocatorFile::DeletePage(page);
                   }, nullptr));
+
+               if (--nTasks == 0) {
+                  std::lock_guard<std::mutex> lockGuard(fLockIsDone);
+                  fCvIsDone.notify_one();
+               }
             };
 
          scheduler.ScheduleTask(std::move(unzipTask));
@@ -757,6 +740,7 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipCluster(RCluster *cluster
       } // for all pages in column
    } // for all columns in cluster
 
-   scheduler.WaitFor();
    fCounters->fNPagePopulated.Add(cluster->GetNOnDiskPages());
+   std::unique_lock<std::mutex> lock(fLockIsDone);
+   fCvIsDone.wait(lock, [&]{ return nTasks == 0; });
 }
