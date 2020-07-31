@@ -12,7 +12,7 @@
 #define ROOT_RCOLUMNVALUE
 
 #include <ROOT/RDF/RCustomColumnBase.hxx>
-#include <ROOT/RDF/Utils.hxx> // IsRVec_t, TypeID2TypeName
+#include <ROOT/RDF/Utils.hxx> // IsRVec_t
 #include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RVec.hxx>
@@ -36,6 +36,8 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 using namespace ROOT::VecOps;
+
+void CheckCustomColumn(RCustomColumnBase *customColumn, const std::type_info &tid);
 
 /**
 \class ROOT::Internal::RDF::RColumnValue
@@ -101,37 +103,9 @@ class R__CLING_PTRCHECK(off) RColumnValue {
 
    void SetTmpColumn(unsigned int slot, RCustomColumnBase *customColumn)
    {
+      CheckCustomColumn(customColumn, typeid(T));
+
       fCustomColumn = customColumn;
-      // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
-      // and a jitted one.
-      const auto diffTypes = (0 != std::strcmp(customColumn->GetTypeId().name(), typeid(T).name()));
-      auto inheritedType = [&](){
-         auto colTClass = TClass::GetClass(customColumn->GetTypeId());
-         return colTClass && colTClass->InheritsFrom(TClass::GetClass<T>());
-      };
-
-      if (diffTypes && !inheritedType()) {
-         const auto tName = TypeID2TypeName(typeid(T));
-         const auto colTypeName = TypeID2TypeName(customColumn->GetTypeId());
-         std::string errMsg = "RColumnValue: type specified for column \"" +
-                              customColumn->GetName() + "\" is ";
-         if (tName.empty()) {
-            errMsg += typeid(T).name();
-            errMsg += " (extracted from type info)";
-         } else {
-            errMsg += tName;
-         }
-         errMsg += " but temporary column has type ";
-         if (colTypeName.empty()) {
-            auto &id = customColumn->GetTypeId();
-            errMsg += id.name();
-            errMsg += " (extracted from type info)";
-         } else {
-            errMsg += colTypeName;
-         }
-         throw std::runtime_error(errMsg);
-      }
-
       if (customColumn->IsDataSourceColumn()) {
          fColumnKind = EColumnKind::kDataSource;
          fDSValuePtr = static_cast<T **>(customColumn->GetValuePtr(slot));
