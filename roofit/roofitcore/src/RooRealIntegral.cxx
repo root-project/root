@@ -816,6 +816,14 @@ double RooRealIntegral::evaluate() const
 {
   GlobalSelectComponentRAII selCompRAII(_globalSelectComp || !_respectCompSelect);
 
+  struct InhibitDirtyRAII {
+    InhibitDirtyRAII(const RooAbsArg* owner) : _oldState(owner->inhibitDirty()) {
+      RooAbsArg::setDirtyInhibit(true);
+    }
+    ~InhibitDirtyRAII() { RooAbsArg::setDirtyInhibit(_oldState); }
+    bool _oldState;
+  };
+
   double retVal(0) ;
   switch (_intOperMode) {
 
@@ -830,12 +838,9 @@ double RooRealIntegral::evaluate() const
       if (cacheVal) {
         retVal = *cacheVal ;
       } else {
-
-
-        // Find any function dependents that are AClean
-        // and switch them temporarily to ADirty
-        bool origState = inhibitDirty() ;
-        setDirtyInhibit(true) ;
+        // Globally set RooAbsArg's inhibitDirty. All components will act as
+        // if they were dirty, and no dirty-state propagation happens.
+        InhibitDirtyRAII inhibDirty(this);
 
         // try to initialize our numerical integration engine
         if(!(_valid= initNumIntegrator())) {
@@ -850,10 +855,6 @@ double RooRealIntegral::evaluate() const
 
         // Evaluate sum/integral
         retVal = sum() ;
-
-
-        // This must happen BEFORE restoring dependents, otherwise no dirty state propagation in restore step
-        setDirtyInhibit(origState) ;
 
         // Restore integral dependent values
         _intList.assign(_saveInt) ;
