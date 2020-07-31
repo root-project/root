@@ -82,7 +82,12 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
 
 ROOT::Experimental::RNTupleReader::~RNTupleReader()
 {
-   fSource->SetTaskScheduleFunc(Detail::RPageSource::TaskScheduleFunc_t());
+#ifdef R__USE_IMT
+   if (fUnzipTasks) {
+      fUnzipTasks->Wait();
+      fSource->SetTaskScheduleFunc(Detail::RPageSource::TaskScheduleFunc_t());
+   }
+#endif
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(
