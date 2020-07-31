@@ -25,6 +25,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <unordered_set>
 
@@ -177,6 +178,13 @@ class RPageSource : public RPageStorage {
 public:
    /// Derived from the model (fields) that are actually being requested at a given point in time
    using ColumnSet_t = std::unordered_set<DescriptorId_t>;
+   /// The interface of a task scheduler to schedule page decompression tasks: the task scheduler
+   /// is a callable that takes another callable (the actual task)
+   using TaskScheduleFunc_t = std::function<void(const std::function<void(void)> &)>;
+
+private:
+   /// Connects to the application's task scheduler, e.g. ThreadExecutor
+   TaskScheduleFunc_t fTaskScheduleFunc;
 
 protected:
    RNTupleReadOptions fOptions;
@@ -185,6 +193,9 @@ protected:
    ColumnSet_t fActiveColumns;
 
    virtual RNTupleDescriptor AttachImpl() = 0;
+   // Only called if a task scheduler is set. No-op be default.
+   virtual void UnzipClusterImpl(RCluster * /* cluster */, TaskScheduleFunc_t /* scheduleTaskFunc */)
+      { }
 
 public:
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
@@ -224,7 +235,13 @@ public:
    /// concurrently to other methods of the page source.
    virtual std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) = 0;
 
-   virtual void UnzipCluster(RCluster * /*cluster*/) {}
+   /// Parallel decompression and unpacking of the pages in the given cluster. The unzipped pages are supposed
+   /// to be preloaded in a page pool attached to the source. The method is triggered by the cluster pool's
+   /// unzip thread. It is an optional optimization, the method can safely do nothing. In particular, the
+   /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
+   /// if implicit multi-threading is turned on.
+   void UnzipCluster(RCluster *cluster);
+   void SetTaskScheduleFunc(TaskScheduleFunc_t f) { fTaskScheduleFunc = f; }
 };
 
 } // namespace Detail
