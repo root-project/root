@@ -36,6 +36,9 @@ class TList ;
 class RooLinkedList ;
 class RooNumGenConfig ;
 class RooRealIntegral ;
+namespace BatchHelpers {
+struct RunContext;
+}
 
 class RooAbsPdf : public RooAbsReal {
 public:
@@ -201,6 +204,7 @@ public:
 
   RooSpan<const double> getValBatch(std::size_t begin, std::size_t batchSize,
       const RooArgSet* normSet = nullptr) const final;
+  RooSpan<const double> getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
   RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
       const RooArgSet* normSet = nullptr) const;
 
