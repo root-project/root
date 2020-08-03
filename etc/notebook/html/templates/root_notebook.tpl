@@ -6,7 +6,7 @@
     <div class="container" id="notebook-container">
 
       <div id="root_banner">
-        <a href="https://root.cern.ch" title="ROOT Data Analysis Framework">
+        <a href="https://root.cern" title="ROOT Data Analysis Framework">
           <img src="https://root.cern/assets/images/splash_optimized.jpg" alt="ROOT Notebook"/>
         </a>
       </div>

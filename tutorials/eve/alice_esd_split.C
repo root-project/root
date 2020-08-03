@@ -78,7 +78,7 @@ void alice_esd_split()
    dir.ReplaceAll("alice_esd_split.C","");
    dir.ReplaceAll("/./","/");
    gROOT->LoadMacro(dir +"SplitGLView.C+");
-   const char* esd_file_name = "http://root.cern.ch/files/alice_ESDs.root";
+   const char* esd_file_name = "http://root.cern/files/alice_ESDs.root";
    TFile::SetCacheFileDir(".");
    TString lib(Form("aliesd/aliesd.%s", gSystem->GetSoExt()));
 

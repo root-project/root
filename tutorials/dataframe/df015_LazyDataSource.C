@@ -11,7 +11,7 @@
 /// McCauley, T. (2014). Dimuon event information derived from the Run2010B
 /// public Mu dataset. CERN Open Data Portal.
 /// DOI: [10.7483/OPENDATA.CMS.CB8H.MFFA](http://opendata.cern.ch/record/700).
-/// From the ROOT website: https://root.cern.ch/files/tutorials/tdf014_CsvDataSource_MuRun2010B.csv
+/// From the ROOT website: https://root.cern/files/tutorials/tdf014_CsvDataSource_MuRun2010B.csv
 ///
 /// \macro_code
 /// \macro_image
@@ -24,8 +24,8 @@ int df015_LazyDataSource()
    using namespace ROOT::RDF;
 
    // Let's first create a RDF that will read from the CSV file.
-   // See the tutorial (https://root.cern.ch/doc/master/df014__CSVDataSource_8C.html) on CSV data sources for more details!
-   auto fileNameUrl = "http://root.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
+   // See the tutorial (https://root.cern/doc/master/df014__CSVDataSource_8C.html) on CSV data sources for more details!
+   auto fileNameUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
    auto fileName = "df015_CsvDataSource_MuRun2010B.csv";
    if(gSystem->AccessPathName(fileName))
       TFile::Cp(fileNameUrl, fileName);

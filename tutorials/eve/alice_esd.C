@@ -74,7 +74,7 @@
 
 void alice_esd()
 {
-   const char* esd_file_name = "http://root.cern.ch/files/alice_ESDs.root";
+   const char* esd_file_name = "http://root.cern/files/alice_ESDs.root";
    TFile::SetCacheFileDir(".");
    TString lib(Form("aliesd/aliesd.%s", gSystem->GetSoExt()));
 

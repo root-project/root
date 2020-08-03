@@ -46,7 +46,7 @@ namespace Minuit2 {
    Using a string  (used by the plugin manager) or via an enumeration
    an one can set all the possible minimization algorithms (Migrad, Simplex, Combined, Scan and Fumili).
 
-   Refer to the [guide](https://root.cern.ch/root/htmldoc/guides/minuit2/Minuit2.html) for an introduction how Minuit
+   Refer to the [guide](https://root.cern/root/htmldoc/guides/minuit2/Minuit2.html) for an introduction how Minuit
    works.
 
    @ingroup Minuit

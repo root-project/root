@@ -160,9 +160,9 @@ const char gHelpBuilder[] = "\
                     More information\n\
      ************************************************\n\
 \n\
-For more information, please see the GuiBuilder Howto page at:\n\
+For more information, please see:\n\
 \n\
-   http://root.cern.ch/root/HowtoGuiBuilder.html\n\
+   https://root.cern.ch/doc/master/group__guibuilder.html\n\
 \n\
 ";
 
