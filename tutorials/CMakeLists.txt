@@ -431,8 +431,9 @@ set (tmva-tmva101_Training-depends tutorial-tmva-tmva100_DataPreparation-py)
 set (tmva-tmva102_Testing-depends tutorial-tmva-tmva101_Training-py)
 
 #--List long-running tutorials to label them as "longtest"
-set (long_running dataframe/df10[2-5]*
-  multicore/mp103*)
+set (long_running
+     dataframe/df10[2-7]*
+     multicore/mp103*)
 file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 
 #---Loop over all tutorials and define the corresponding test---------
