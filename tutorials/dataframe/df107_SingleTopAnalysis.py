@@ -37,7 +37,7 @@ args = parser.parse_args()
 if args.b: ROOT.gROOT.SetBatch(True)
 if args.t: ROOT.EnableImplicitMT()
 
-if not args.full_dataset: lumi_scale = 0.05 # The preskimmed dataset contains only 0.05 fb^-1
+if not args.full_dataset: lumi_scale = 0.05 # The preskimmed dataset contains only 0.5 fb^-1
 else: lumi_scale = args.lumi_scale
 lumi = 10064.0
 print('Run on data corresponding to {:.1f} fb^-1 ...'.format(lumi * lumi_scale / 1000.0))
