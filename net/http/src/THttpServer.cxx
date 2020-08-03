@@ -337,7 +337,7 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
 ///
 /// One could specify address like:
 ///
-/// * https://root.cern.ch/js/7.1.0/
+/// * https://root.cern/js/7.1.0/
 /// * http://jsroot.gsi.de/7.1.0/
 ///
 /// This allows to get new JSROOT features with old server,
