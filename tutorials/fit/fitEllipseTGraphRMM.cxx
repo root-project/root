@@ -106,7 +106,7 @@ double ellipse_TGraph_chi2(const double *x)
 }
 
 //
-// http://root.cern.ch/root/html534/tutorials/fit/NumericalMinimization.C.html
+// http://root.cern/root/html534/tutorials/fit/NumericalMinimization.C.html
 //
 ROOT::Math::Minimizer *ellipse_TGraph_minimize(TGraph *g)
 {
