@@ -157,6 +157,19 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
          const auto branchName = colName.substr(0, dotPos);
          const auto leafName = colName.substr(dotPos + 1);
          leaf = t.GetLeaf(branchName.c_str(), leafName.c_str());
+
+         // FIXME GetLeaf("a.b") and GetLeaf("a", "b") might fail while GetBranch("a.b") might work, even if a leaf
+         // called "a.b" exists. If that's the case, however, we don't want branch->GetCurrentClass()->GetName() as the
+         // type, because GetCurrentClass() returns the type of the top-level branch.
+         // So as a last resort, let's check if we manage to get to the leaf from the TBranch.
+         // To be revised once the TLeaf part of ROOT-10942 is fixed (see the ticket for more context).
+         auto branch = t.GetBranch(colName.c_str());
+         if (branch) {
+            auto leaves = branch->GetListOfLeaves();
+            if (leaves->GetEntries() == 1 && branch->GetListOfBranches()->GetEntries() == 0 &&
+                static_cast<TLeaf *>(leaves->At(0))->GetFullName() == colName)
+               return GetLeafTypeName(static_cast<TLeaf *>(leaves->At(0)), colName);
+         }
       }
    }
    if (leaf)
