@@ -64,18 +64,15 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
     return;
   }
   // check that all of the arguments are real valued and store them
-  RooAbsArg *var = 0;
-  TIterator* iter = vars.createIterator() ;
-  Int_t index(0) ;
-  while((var=(RooAbsArg*)iter->Next())) {
+  for (unsigned int index=0; index < vars.size(); ++index) {
+    RooAbsArg* var = vars[index];
     _vars[index]= dynamic_cast<RooAbsRealLValue*>(var);
     if(0 == _vars[index]) {
       oocoutE((TObject*)0,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName() << endl ;
       _valid= kFALSE;
     }
-    index++ ;
   }
-  delete iter ;
+
   _xvecValid = kTRUE ;
 }
 
@@ -175,8 +172,9 @@ void RooRealBinding::restoreXVec() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Load the vector of variable values into the RooRealVars associated
-/// as variables with the bound RooAbsReal function
-
+/// as variables with the bound RooAbsReal function.
+/// \warning This will load as many values as the dimensionality of the function
+/// requires. The size of `xvector` is not checked.
 void RooRealBinding::loadValues(const Double_t xvector[]) const 
 {
   _xvecValid = kTRUE ;
