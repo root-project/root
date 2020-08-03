@@ -425,11 +425,11 @@ TEST(RDataFrameInterface, TypeUnknownToInterpreter)
 }
 
 // ROOT-10942
-TEST(RDataFrameInterface, GetColumnNamesWithSimpleStruct)
+TEST(RDataFrameInterface, ColumnWithSimpleStruct)
 {
    gInterpreter->Declare("struct S { int a; int b; };");
    S c;
-   c.a = 1;
+   c.a = 42;
    c.b = 2;
    TTree t("t", "t");
    t.Branch("c", &c);
@@ -438,4 +438,8 @@ TEST(RDataFrameInterface, GetColumnNamesWithSimpleStruct)
    ROOT::RDataFrame df(t);
    const std::vector<std::string> expected({ "c.a", "a", "c.b", "b", "c" });
    EXPECT_EQ(df.GetColumnNames(), expected);
+   for (const std::string &col : {"c.a", "a"}) {
+      EXPECT_DOUBLE_EQ(df.Mean<int>(col).GetValue(), 42.); // compiled
+      EXPECT_DOUBLE_EQ(df.Mean(col).GetValue(), 42.); // jitted
+   }
 }
