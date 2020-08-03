@@ -589,8 +589,9 @@ extern "C" const Decl* TCling__GetObjectDecl(TObject *obj) {
 extern "C" R__DLLEXPORT TInterpreter *CreateInterpreter(void* interpLibHandle,
                                                         const char* argv[])
 {
+   auto tcling = new TCling("C++", "cling C++ Interpreter", argv);
    cling::DynamicLibraryManager::ExposeHiddenSharedLibrarySymbols(interpLibHandle);
-   return new TCling("C++", "cling C++ Interpreter", argv);
+   return tcling;
 }
 
 extern "C" R__DLLEXPORT void DestroyInterpreter(TInterpreter *interp)
