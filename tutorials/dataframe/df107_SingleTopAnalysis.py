@@ -8,8 +8,9 @@
 ## during 2016 at a center-of-mass energy of 13 TeV. Top quarks with a mass of about 172 GeV are mostly
 ## produced in pairs but also appear alone, dominantly from the decays of a W boson in association with a light jet.
 ##
-## The analysis is translated to a RDataFrame workflow processing a subset of 60 GB of simulated events and data.
-## The original analysis is reduced by a factor given as the command line argument --lumi-scale.
+## The analysis is translated to a RDataFrame workflow processing up to 60 GB of simulated events and data.
+## By default the analysis runs on a preskimmed dataset to reduce the runtime. The full dataset can be used with
+## the --full-dataset argument and you can also run only on a fraction of the original dataset using the argument --lumi-scale.
 ##
 ## \macro_image
 ## \macro_code
@@ -25,20 +26,27 @@ import os
 
 # Argument parsing
 parser = argparse.ArgumentParser()
-parser.add_argument("--lumi-scale", default=0.05, help="Run only on a fraction of the total available 10 fb^-1")
+parser.add_argument("--lumi-scale", type=float, default=0.05,
+                    help="Run only on a fraction of the total available 10 fb^-1 (only usable together with --full-dataset)")
+parser.add_argument("--full-dataset", action="store_true", default=False,
+                    help="Use the full dataset (use --lumi-scale to run only on a fraction of it)")
 parser.add_argument("-b", action="store_true", default=False, help="Use ROOT batch mode")
-parser.add_argument("-t", action="store_true", default=False, help="Use implicit multi threading (will always run on the full dataset)")
+parser.add_argument("-t", action="store_true", default=False, help="Use implicit multi threading (for the full dataset only possible with --lumi-scale 1.0)")
 args = parser.parse_args()
+
 if args.b: ROOT.gROOT.SetBatch(True)
-if args.t:
-    ROOT.EnableImplicitMT()
-    lumi_scale = 1.0
-else:
-    lumi_scale = args.lumi_scale
+if args.t: ROOT.EnableImplicitMT()
+
+if not args.full_dataset: lumi_scale = 0.05 # The preskimmed dataset contains only 0.05 fb^-1
+else: lumi_scale = args.lumi_scale
+lumi = 10064.0
+print('Run on data corresponding to {:.1f} fb^-1 ...'.format(lumi * lumi_scale / 1000.0))
+
+if args.full_dataset: dataset_path = "root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22"
+else: dataset_path = "root://eospublic.cern.ch//eos/root-eos/reduced_atlas_opendata/singletop"
 
 # Create a ROOT dataframe for each dataset
 # Note that we load the filenames from the external json file placed in the same folder than this script.
-path = "root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22"
 files = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "df107_SingleTopAnalysis.json")))
 processes = files.keys()
 df = {}
@@ -54,10 +62,10 @@ for p in processes:
         sumws[sample] = d[3] # Sum of weights
         num_events = d[4] # Number of events
         samples.append(sample)
-        df[sample] = ROOT.RDataFrame("mini", "{}/1lep/{}/{}.1lep.root".format(path, folder, sample))
+        df[sample] = ROOT.RDataFrame("mini", "{}/1lep/{}/{}.1lep.root".format(dataset_path, folder, sample))
 
         # Scale down the datasets if requested
-        if not (args.t or lumi_scale == 1.0):
+        if args.full_dataset and lumi_scale < 1.0:
             df[sample] = df[sample].Range(int(num_events * lumi_scale))
 
 # Select events for the analysis and make histograms of the top mass
@@ -125,7 +133,6 @@ for s in samples:
                  .Filter("lep_pt[idx_lep] + jet_pt[idx_tagged] + jet_pt[idx_untagged] + met_et > 195000")
 
 # Compute luminosity, scale factors and MC weights for simulated events
-lumi = 10064.0
 for s in samples:
     if "data" in s:
         df[s] = df[s].Define("weight", "1.0")
@@ -236,4 +243,5 @@ text.SetTextSize(0.04)
 text.DrawLatex(0.21, 0.80, "#sqrt{{s}} = 13 TeV, {:.1f} fb^{{-1}}".format(lumi * lumi_scale / 1000.0))
 
 # Save the plot
-c.SaveAs("SingleTopAnalysis.pdf")
+c.SaveAs("df107_SingleTopAnalysis.png")
+print("Save figure to df107_SingleTopAnalysis.png")
