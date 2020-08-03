@@ -398,6 +398,52 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxS
   return ret;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute batch of values for given input data, and normalise by integrating over
+/// the observables in `nset`. Store result in `evalData`, and return a span pointing to
+/// it.
+///
+/// If `nset` is `nullptr`, unnormalised values
+/// are returned. All elements of `nset` must be lvalues.
+///
+/// \param[in/out]  evalData Object holding data that should be used in computations.
+/// Each array of data is identified by the pointer to the RooFit object that this data belongs to.
+/// The object that this function is called on will store its results here as well.
+/// \param[in] normSet   If not nullptr, normalise results by integrating over
+/// the variables in this set. The normalisation is only computed once, and applied
+/// to the full batch.
+/// \return RooSpan with probabilities. The memory of this span is owned by `evalData`.
+RooSpan<const double> RooAbsPdf::getValBatch(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  auto item = evalData.spans.find(this);
+  if (item != evalData.spans.end()) {
+    return item->second;
+  }
+
+  auto outputs = evaluateBatch(evalData, normSet);
+  assert(evalData.spans.count(this) > 0);
+
+  if (normSet != nullptr) {
+    // Evaluate denominator
+    const double normVal = _norm->getVal();
+
+    if (normVal < 0.
+        || (normVal == 0. && std::any_of(outputs.begin(), outputs.end(), [](double val){return val != 0;}))) {
+      logEvalError(Form("p.d.f normalization integral is zero or negative."
+          "\n\tInt(%s) = %f", GetName(), normVal));
+    }
+
+    if (normVal != 1. && normVal > 0.) {
+      const double invNorm = 1./normVal;
+      for (double& val : outputs) { //CHECK_VECTORISE
+        val *= invNorm;
+      }
+    }
+  }
+
+  return outputs;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Analytical integral with normalization (see RooAbsReal::analyticalIntegralWN() for further information)
 ///
@@ -1077,7 +1123,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
      // retrieve from cache
      const RooArgSet *constr =
         _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()));
-     coutI(Minimization) << "createNLL picked up cached consraints from workspace with " << constr->getSize()
+     coutI(Minimization) << "createNLL picked up cached constraints from workspace with " << constr->getSize()
                          << " entries" << endl;
      allConstraints.add(*constr);
 
