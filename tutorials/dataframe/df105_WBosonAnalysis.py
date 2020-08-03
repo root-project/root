@@ -8,8 +8,9 @@
 ## during 2016 at a center-of-mass energy of 13 TeV. W bosons are produced frequently at the LHC and
 ## are an important background to studies of Standard Model processes, for example the Higgs boson analyses.
 ##
-## The analysis is translated to a RDataFrame workflow processing a subset of 60 GB of simulated events and data.
-## The original analysis is reduced by a factor given as the command line argument --lumi-scale.
+## The analysis is translated to a RDataFrame workflow processing up to 60 GB of simulated events and data.
+## By default the analysis runs on a preskimmed dataset to reduce the runtime. The full dataset can be used with
+## the --full-dataset argument and you can also run only on a fraction of the original dataset using the argument --lumi-scale.
 ##
 ## \macro_image
 ## \macro_code
@@ -25,16 +26,27 @@ import os
 
 # Argument parsing
 parser = argparse.ArgumentParser()
-parser.add_argument("--lumi-scale", default=0.01, help="Scale of the overall lumi of 10 fb^-1")
+parser.add_argument("--lumi-scale", type=float, default=0.001,
+                    help="Run only on a fraction of the total available 10 fb^-1 (only usable together with --full-dataset)")
+parser.add_argument("--full-dataset", action="store_true", default=False,
+                    help="Use the full dataset (use --lumi-scale to run only on a fraction of it)")
 parser.add_argument("-b", action="store_true", default=False, help="Use ROOT batch mode")
+parser.add_argument("-t", action="store_true", default=False, help="Use implicit multi threading (for the full dataset only possible with --lumi-scale 1.0)")
 args = parser.parse_args()
+
 if args.b: ROOT.gROOT.SetBatch(True)
+if args.t: ROOT.EnableImplicitMT()
+
+if not args.full_dataset: lumi_scale = 0.001 # The preskimmed dataset contains only 0.01 fb^-1
+else: lumi_scale = args.lumi_scale
+lumi = 10064.0
+print('Run on data corresponding to {:.2f} fb^-1 ...'.format(lumi * lumi_scale / 1000.0))
+
+if args.full_dataset: dataset_path = "root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22"
+else: dataset_path = "root://eospublic.cern.ch//eos/root-eos/reduced_atlas_opendata/w"
 
 # Create a ROOT dataframe for each dataset
 # Note that we load the filenames from the external json file placed in the same folder than this script.
-#path = "root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22"
-# TO BE REVERTED: Since the files on the Open Data portal are suboptimally produced, we serve a reduced subset from our webserver.
-path = "http://root.cern/files/atlas_opendata_hotfix"
 files = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "df105_WBosonAnalysis.json")))
 processes = files.keys()
 df = {}
@@ -50,12 +62,15 @@ for p in processes:
         sumws[sample] = d[3] # Sum of weights
         num_events = d[4] # Number of events
         samples.append(sample)
-        df[sample] = ROOT.RDataFrame("mini", "{}/1lep/{}/{}.1lep.root".format(path, folder, sample))
+        df[sample] = ROOT.RDataFrame("mini", "{}/1lep/{}/{}.1lep.root".format(dataset_path, folder, sample))
 
-        # Scale down the datasets
-        df[sample] = df[sample].Range(int(num_events * args.lumi_scale))
+        # Scale down the datasets if requested
+        if args.full_dataset and lumi_scale < 1.0:
+            df[sample] = df[sample].Range(int(num_events * lumi_scale))
 
 # Select events for the analysis
+
+# Just-in-time compile custom helper function performing complex computations
 ROOT.gInterpreter.Declare("""
 bool GoodElectronOrMuon(int type, float pt, float eta, float phi, float e, float trackd0pv, float tracksigd0pv, float z0)
 {
@@ -74,19 +89,19 @@ bool GoodElectronOrMuon(int type, float pt, float eta, float phi, float e, float
 """)
 
 for s in samples:
-    # Require missing transverse energy larger than 30 GeV
-    df[s] = df[s].Filter("met_et > 30000")
-    # Select electron or muon trigger
-    df[s] = df[s].Filter("trigE || trigM")
-    # Select events with exactly one good lepton
+    # Select events with a muon or electron trigger and with a missing transverse energy larger than 30 GeV
+    df[s] = df[s].Filter("trigE || trigM")\
+                 .Filter("met_et > 30000")
+
+    # Find events with exactly one good lepton
     df[s] = df[s].Define("good_lep", "lep_isTightID && lep_pt > 35000 && lep_ptcone30 / lep_pt < 0.1 && lep_etcone20 / lep_pt < 0.1")\
-                 .Filter("Sum(good_lep) == 1")
+                 .Filter("ROOT::VecOps::Sum(good_lep) == 1")
+
     # Apply additional cuts in case the lepton is an electron or muon
     df[s] = df[s].Define("idx", "ROOT::VecOps::ArgMax(good_lep)")\
                  .Filter("GoodElectronOrMuon(lep_type[idx], lep_pt[idx], lep_eta[idx], lep_phi[idx], lep_E[idx], lep_trackd0pvunbiased[idx], lep_tracksigd0pvunbiased[idx], lep_z0[idx])")
 
 # Apply luminosity, scale factors and MC weights for simulated events
-lumi = 10064.0
 for s in samples:
     if "data" in s:
         df[s] = df[s].Define("weight", "1.0")
@@ -106,7 +121,7 @@ float ComputeTransverseMass(float met_et, float met_phi, float lep_pt, float lep
 histos = {}
 for s in samples:
     df[s] = df[s].Define("mt_w", "ComputeTransverseMass(met_et, met_phi, lep_pt[idx], lep_eta[idx], lep_phi[idx], lep_E[idx])")
-    histos[s] = df[s].Histo1D(ROOT.RDF.TH1DModel(s, "mt_w", 40, 60, 180), "mt_w", "weight")
+    histos[s] = df[s].Histo1D(ROOT.RDF.TH1DModel(s, "mt_w", 24, 60, 180), "mt_w", "weight")
 
 # Run the event loop and merge histograms of the respective processes
 
@@ -158,7 +173,7 @@ stack.GetYaxis().SetTitle("Events")
 stack.GetYaxis().SetLabelSize(0.04)
 stack.GetYaxis().SetTitleSize(0.045)
 stack.SetMaximum(1e10 * args.lumi_scale)
-stack.SetMinimum(1e1)
+stack.SetMinimum(1)
 
 # Draw data
 data.SetMarkerStyle(20)
@@ -191,7 +206,8 @@ text.DrawLatex(0.21, 0.86, "ATLAS")
 text.SetTextFont(42)
 text.DrawLatex(0.21 + 0.16, 0.86, "Open Data")
 text.SetTextSize(0.04)
-text.DrawLatex(0.21, 0.80, "#sqrt{{s}} = 13 TeV, {:.1f} fb^{{-1}}".format(lumi * args.lumi_scale / 1000.0))
+text.DrawLatex(0.21, 0.80, "#sqrt{{s}} = 13 TeV, {:.2f} fb^{{-1}}".format(lumi * args.lumi_scale / 1000.0))
 
 # Save the plot
-c.SaveAs("WBosonAnalysis.pdf")
+c.SaveAs("df105_WBosonAnalysis.png")
+print("Save figure to df105_WBosonAnalysis.png")
