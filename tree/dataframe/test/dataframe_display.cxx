@@ -178,7 +178,7 @@ TEST(RDFDisplayTests, DisplayPrintString)
 TEST(RDFDisplayTests, CharArray)
 {
    {
-      TFile f("f.root", "recreate");
+      TFile f("chararray.root", "recreate");
       TTree t("t", "t");
       char str[4] = "asd";
       t.Branch("str", str, "str[4]/C");
@@ -189,7 +189,7 @@ TEST(RDFDisplayTests, CharArray)
       f.Write();
    }
 
-   const auto str = ROOT::RDataFrame("t", "f.root").Display()->AsString();
+   const auto str = ROOT::RDataFrame("t", "chararray.root").Display()->AsString();
    EXPECT_EQ(str, "str | \nasd | \nbar | \n    | \n");
 }
 

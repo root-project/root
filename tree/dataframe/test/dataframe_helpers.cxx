@@ -226,7 +226,7 @@ TEST(RDFHelpers, SaveGraphAfterEventLoop)
 
 TEST(RDFHelpers, SaveGraphRootFromTree)
 {
-   TFile f("f.root", "recreate");
+   TFile f("savegraphrootfromtree.root", "recreate");
    TTree t("t", "t");
    int a;
    t.Branch("a", &a);
@@ -239,7 +239,7 @@ TEST(RDFHelpers, SaveGraphRootFromTree)
       "digraph {\n\t2 [label=\"Count\", style=\"filled\", fillcolor=\"#9cbbe5\", shape=\"box\"];\n\t0 [label=\"t\", "
       "style=\"filled\", fillcolor=\"#e8f8fc\", shape=\"oval\"];\n\t0 -> 2;\n}");
 
-   ROOT::RDataFrame df("t", "f.root");
+   ROOT::RDataFrame df("t", "savegraphrootfromtree.root");
    auto c = df.Count();
 
    auto strOut = SaveGraph(c);
@@ -249,7 +249,7 @@ TEST(RDFHelpers, SaveGraphRootFromTree)
 
 TEST(RDFHelpers, SaveGraphToFile)
 {
-   TFile f("f.root", "recreate");
+   TFile f("savegraphtofile.root", "recreate");
    TTree t("t", "t");
    int a;
    t.Branch("a", &a);
@@ -262,7 +262,7 @@ TEST(RDFHelpers, SaveGraphToFile)
       "digraph {\n\t2 [label=\"Count\", style=\"filled\", fillcolor=\"#9cbbe5\", shape=\"box\"];\n\t0 [label=\"t\", "
       "style=\"filled\", fillcolor=\"#e8f8fc\", shape=\"oval\"];\n\t0 -> 2;\n}");
 
-   ROOT::RDataFrame df("t", "f.root");
+   ROOT::RDataFrame df("t", "savegraphtofile.root");
    auto c = df.Count();
 
    const auto outFileName = "savegraphout.root";
