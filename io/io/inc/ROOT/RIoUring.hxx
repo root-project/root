@@ -47,6 +47,7 @@ public:
    RIoUring& operator=(const RIoUring&) = delete;
 
    ~RIoUring() {
+      // todo(max) try submitting any pending events before exiting
       io_uring_queue_exit(&fRing);
    }
 
