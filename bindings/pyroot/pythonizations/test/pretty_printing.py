@@ -65,6 +65,25 @@ class PrettyPrinting(unittest.TestCase):
         self.assertIn("TTree object at", s)
         self.assertEqual(s, r)
 
+    def test_user_class_with_str(self):
+        # ROOT-10967: Respect existing __str__ method defined in C++
+        ROOT.gInterpreter.Declare('struct MyClassWithStr { std::string __str__() { return "foo"; } };')
+        x = ROOT.MyClassWithStr()
+        self._print(x)
+        s = x.__str__()
+        r = x.__repr__()
+        self.assertIn("MyClassWithStr object at", r)
+        self.assertEqual(s, "foo")
+
+        # Test inherited class
+        ROOT.gInterpreter.Declare('struct MyClassWithStr2 : public MyClassWithStr { };')
+        x2 = ROOT.MyClassWithStr2()
+        self._print(x2)
+        s2 = x2.__str__()
+        r2 = x2.__repr__()
+        self.assertIn("MyClassWithStr2 object at", r2)
+        self.assertEqual(s2, "foo")
+
 
     # TNamed and TObject are not pythonized because these object are touched
     # by PyROOT before any pythonizations are added. Following, the classes
