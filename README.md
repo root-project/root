@@ -33,8 +33,8 @@ acquisition, simulation and data analysis systems.
 | Branch | Nightly build status |
 |--------|------------|
 | master | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-master)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-master/) |
+| v6-22-00-patches | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-v6-22-00-patches)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-v6-22-00-patches/) |
 | v6-20-00-patches | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-v6-20-00-patches)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-v6-20-00-patches/) |
-| v6-18-00-patches | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-v6-18-00-patches)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-v6-18-00-patches/) |
 
 ## Cite
 
