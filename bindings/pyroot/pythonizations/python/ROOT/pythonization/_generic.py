@@ -41,8 +41,15 @@ def pythonizegeneric(klass, name):
     # name: string containing the name of the class
 
     # Add pretty printing via setting the __str__ special function
+
+    # Exclude classes which have the method __str__ already defined in C++
+    m = getattr(klass, '__str__', None)
+    has_cpp_str = True if m is not None and type(m).__name__ == 'CPPOverload' else False
+
+    # Exclude std::string with its own pythonization from cppyy
     exclude = [ 'std::string' ]
-    if name not in exclude:
+
+    if name not in exclude and not has_cpp_str:
         AddPrettyPrintingPyz(klass)
 
     return True
