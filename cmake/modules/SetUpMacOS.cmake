@@ -12,7 +12,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
                   COMMAND cut -d . -f 1-2
                   OUTPUT_VARIABLE MACOSX_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  MESSAGE(STATUS "Found a Mac OS X System ${MACOSX_VERSION}")
+  MESSAGE(STATUS "Found a macOS system ${MACOSX_VERSION}")
 
   if(MACOSX_VERSION VERSION_GREATER 10.7 AND ${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
     set(libcxx ON CACHE BOOL "Build using libc++" FORCE)
@@ -23,8 +23,14 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
     #TODO: check Thread, define link command
     #TODO: more stuff check configure script
     if(CMAKE_SYSTEM_PROCESSOR MATCHES 64)
-       MESSAGE(STATUS "Found a 64bit system")
-       set(ROOT_ARCHITECTURE macosx64)
+       if(CMAKE_SYSTEM_PROCESSOR MATCHES arm64)
+          MESSAGE(STATUS "Found an AArch64 system")
+          set(ROOT_ARCHITECTURE macosxarm64)
+       else()
+          MESSAGE(STATUS "Found an x86_64 system")
+          set(ROOT_ARCHITECTURE macosx64)
+       endif()
+
        SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
        SET(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -m64")
        SET(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -m64")
