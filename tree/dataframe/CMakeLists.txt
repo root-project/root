@@ -43,6 +43,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RSnapshotOptions.hxx
     ROOT/RTrivialDS.hxx
     ROOT/RDF/ActionHelpers.hxx
+    ROOT/RDF/ColumnReaders.hxx
     ROOT/RDF/GraphNode.hxx
     ROOT/RDF/GraphUtils.hxx
     ROOT/RDF/HistoModels.hxx
@@ -81,6 +82,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDataFrame.cxx
     src/RDFActionHelpers.cxx
     src/RDFBookedCustomColumns.cxx
+    src/RDFColumnReaders.cxx
     src/RDFDisplay.cxx
     src/RDFGraphUtils.cxx
     src/RDFHistoModels.cxx
