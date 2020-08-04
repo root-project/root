@@ -637,7 +637,7 @@ namespace Internal {
       TStlProxy() = default; // work around bug in GCC < 7
       ~TStlProxy() override = default;
 
-      const TVirtualCollectionProxy* GetPtr() {
+      TVirtualCollectionProxy* GetPtr() {
          if (!Read()) return 0;
          return GetCollection();
       }
