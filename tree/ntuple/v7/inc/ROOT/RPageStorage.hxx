@@ -65,6 +65,8 @@ public:
    explicit RPageStorage(std::string_view name);
    RPageStorage(const RPageStorage &other) = delete;
    RPageStorage& operator =(const RPageStorage &other) = delete;
+   RPageStorage(RPageStorage &&other) = default;
+   RPageStorage& operator =(RPageStorage &&other) = default;
    virtual ~RPageStorage();
 
    /// Whether the concrete implementation is a sink or a source
@@ -130,7 +132,13 @@ protected:
 
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
+
+   RPageSink(const RPageSink&) = delete;
+   RPageSink& operator=(const RPageSink&) = delete;
+   RPageSink(RPageSink&&) = default;
+   RPageSink& operator=(RPageSink&&) = default;
    virtual ~RPageSink();
+
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
                                             const RNTupleWriteOptions &options = RNTupleWriteOptions());
@@ -180,6 +188,10 @@ protected:
 
 public:
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
+   RPageSource(const RPageSource&) = delete;
+   RPageSource& operator=(const RPageSource&) = delete;
+   RPageSource(RPageSource&&) = default;
+   RPageSource& operator=(RPageSource&&) = default;
    virtual ~RPageSource();
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,

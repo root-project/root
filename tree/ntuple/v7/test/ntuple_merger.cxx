@@ -3,7 +3,7 @@
 class RNTupleMergerTest : public ::testing::Test {
 protected:
    std::vector<FileRaii> fFiles;
-   std::vector<std::unique_ptr<RPageSource>> fMergeSources;
+   std::vector<std::unique_ptr<RPageSourceFile>> fMergeSources;
    std::string fNtplName = "some_ntuple";
 
    void SetUp() override {
@@ -29,7 +29,9 @@ protected:
          ntuple->Fill();
       }
       for (int i = 0; i < numFiles; ++i) {
-         fMergeSources.push_back(RPageSource::Create(fNtplName, fFiles.at(i).GetPath()));
+         fMergeSources.push_back(std::make_unique<RPageSourceFile>(
+            RPageSourceFile(fNtplName, fFiles.at(i).GetPath(), RNTupleReadOptions())
+         ));
       }
    }
 };
@@ -39,11 +41,15 @@ TEST_F(RNTupleMergerTest, LowLevelMerge)
    if (fMergeSources.size() == 0) {
       FAIL() << "no page sources opened to merge";
    }
-   const auto& ref_desc = fMergeSources.front()->GetDescriptor();
-   for (std::size_t i = 0; i < fMergeSources.size(); ++i) {
-      std::cout << "file: " << fFiles.at(i).GetPath() << "\n";
-      EXPECT_EQ(ref_desc, fMergeSources.at(i)->GetDescriptor());
-   }
+   auto mergeTarget = std::make_unique<RPageSinkFile>(
+      RPageSinkFile(fNtplName, "merged.root", RNTupleWriteOptions()));
+   mergeTarget->Merge(fMergeSources);
+
+   // const auto& ref_desc = fMergeSources.front()->GetDescriptor();
+   // for (std::size_t i = 0; i < fMergeSources.size(); ++i) {
+   //    std::cout << "file: " << fFiles.at(i).GetPath() << "\n";
+   //    EXPECT_EQ(ref_desc, fMergeSources.at(i)->GetDescriptor());
+   // }
 }
 
 TEST(RFieldMerger, Merge)
