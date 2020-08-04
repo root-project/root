@@ -326,11 +326,13 @@ namespace Internal {
       // and we can still allocate the TROOT object's memory
       // statically.
       //
-      char fHolder[sizeof(TROOT)];
+      union {
+         TROOT fObj;
+         char fHolder[sizeof(TROOT)];
+      };
    public:
-      TROOTAllocator() {
-         new(&(fHolder[0])) TROOT("root", "The ROOT of EVERYTHING");
-      }
+      TROOTAllocator(): fObj("root", "The ROOT of EVERYTHING")
+      {}
 
       ~TROOTAllocator() {
          if (gROOTLocal) {
