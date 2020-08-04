@@ -450,7 +450,7 @@ RooMomentMorphND::CacheElem *RooMomentMorphND::getCache(const RooArgSet * /*nset
 
    for (int i = 0; i < 3 * nPdf; ++i) {
       string fracName = Form("frac_%d", i);
-      RooRealVar *frac = new RooRealVar(fracName.c_str(), fracName.c_str(), 1.); // to be set later
+      RooRealVar *frac = new RooRealVar(fracName.c_str(), fracName.c_str(), /*value=*/1.); // to be set later
 
       fracl.add(*frac);
       if (i < nPdf)
