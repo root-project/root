@@ -51,11 +51,11 @@ sap.ui.define([
 
          this.controller.glViewerInitDone();
 
-         // As RCore gets loaded asynchronously we've probably missed the initial resize.
-         // Nothing gets drawn until window is manually resized.
-         // Neither of the resizes below help.
-         // this.onResizeTimeout();
-         // this.controller.onResizeTimeout();
+         // XXXX MT: HACK ... give RCore some time to load shaders.
+         // Would be better to have some onShadersLoaded thing but
+         // this is probably problematic later on,k if we add objects with
+         // custom shaders later on.
+         setTimeout(this.render.bind(this), 500);
       },
 
       //==============================================================================
@@ -79,8 +79,10 @@ sap.ui.define([
          var w = this.get_width();
          var h = this.get_height();
 
-         //this.canvas = document.createElement('canvas');
-         this.canvas = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'canvas' );
+         //this.canvas = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'canvas' );
+         this.canvas = document.createElement('canvas');
+         this.canvas.width  = w;
+         this.canvas.height = h;
 
          this.renderer = new RC.MeshRenderer(this.canvas, RC.WEBGL2);
          this.renderer.clearColor = "#FFFFFFFF";
@@ -126,9 +128,8 @@ sap.ui.define([
          sbbox.setFromObject( this.scene );
          if (sbbox.isEmpty())
          {
-            console.log("GlViewerRenderCore.resetRCoreRenderer scene bbox empty", sbbox);
-            // XXXX infinity ... no traversal?
-            const ext = 400;
+            console.error("GlViewerRenderCore.resetRCoreRenderer scene bbox empty", sbbox);
+            const ext = 100;
             sbbox.expandByPoint(new RC.Vector3(-ext,-ext,-ext));
             sbbox.expandByPoint(new RC.Vector3( ext, ext, ext));
          }
@@ -165,10 +166,10 @@ sap.ui.define([
 
             let ey = 1.02 * extV.y;
             let ex = ey / this.get_height() * this.get_width();
-            this.camera.left   = -ex;
-            this.camera.right  =  ex;
-            this.camera.top    =  ey;
-            this.camera.bottom = -ey;
+            this.camera._left   = -ex;
+            this.camera._right  =  ex;
+            this.camera._top    =  ey;
+            this.camera._bottom = -ey;
 
             // this.controls.resetOrthoPanZoom();
 
@@ -183,6 +184,8 @@ sap.ui.define([
 
          // this.controls.update();
 
+         this.camera.updateProjectionMatrix();
+
          this.render();
       },
 
@@ -190,7 +193,7 @@ sap.ui.define([
 
       render: function()
       {
-         console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
+         // console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
 
          this.renderer.render( this.scene, this.camera );
       },
@@ -202,23 +205,31 @@ sap.ui.define([
          let w = this.get_width();
          let h = this.get_height();
 
-         console.log("GlViewerRCore RESIZE ", w, h, "canvas=", this.canvas,
-                     this.canvas.width, this.canvas.height);
+         // console.log("GlViewerRCore RESIZE ", w, h, "canvas=", this.canvas,
+         //             this.canvas.width, this.canvas.height);
 
          this.canvas.width  = w;
          this.canvas.height = h;
 
          if (this.controller.kind === "3D")
          {
-            this.camera.aspect = w / h;
+            // this.camera.aspect = w / h;
+            // XXXX MT left / right are not recalculated from aspect,
+            // apprently only top/bot/lft/rgt are used.
+            // Need a different set aspect interface in RCore?
+            //
+            // Use this hack for now ...
+            this.camera._aspect = w / h;
+            this.camera._left  = -0.5 * (this.camera._aspect * (2 * this.camera._top));
+	    this.camera._right = -this.camera._left;
+            this.camera.updateProjectionMatrix();
          }
          else
          {
-            this.camera.left  =  this.camera.bottom / h * w;
-            this.camera.right = -this.camera.left;
+            this.camera._left  =  this.camera._bottom / h * w;
+            this.camera._right = -this.camera._left;
             this.camera.updateProjectionMatrix();
          }
-         // this.camera.updateProjectionMatrix();
 
          // this.renderer.setSize(w, h);
          this.renderer.updateViewport(w, h);
