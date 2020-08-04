@@ -20,12 +20,14 @@
 
 #include <vector>
 
-#include "Fit/FitResult.h"
+//#include "Fit/FitResult.h"
 #include "Minuit2/MnStrategy.h"
-#include "TMatrixDSym.h"
-#include "Math/IFunction.h"
-#include "RooGradientFunction.h"
+#include "Minuit2/FunctionGradient.h"
+#include "Minuit2/MnMatrix.h"  // MnAlgebraicVector
+//#include "TMatrixDSym.h"
+#include "Math/IFunction.h"  // IMultiGradFunction
 #include "Fit/ParameterSettings.h"
+#include "NumericalDerivatorMinuit2.h"
 
 #include "RooAbsMinimizerFcn.h"
 
