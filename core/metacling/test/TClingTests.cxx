@@ -46,32 +46,32 @@ struct CleanupRAII {
 TEST_F(TClingTests, GenerateDictionaryErrorHandling)
 {
    // Check error reporting and handling.
-   ROOT_EXPECT_ERROR(ASSERT_FALSE(gInterpreter->GenerateDictionary("", "")), "TInterpreter::TCling::GenerateDictionary",
+   ROOT_EXPECT_ERROR(EXPECT_FALSE(gInterpreter->GenerateDictionary("", "")), "TInterpreter::TCling::GenerateDictionary",
                      "Cannot generate dictionary without passing classes.");
-   ROOT_EXPECT_ERROR(ASSERT_FALSE(gInterpreter->GenerateDictionary(nullptr, nullptr)),
+   ROOT_EXPECT_ERROR(EXPECT_FALSE(gInterpreter->GenerateDictionary(nullptr, nullptr)),
                      "TInterpreter::TCling::GenerateDictionary", "Cannot generate dictionary without passing classes.");
 }
 
 TEST_F(TClingTests, GenerateDictionaryRegression)
 {
    // Make sure we do not crash or go in an infinite loop.
-   ASSERT_TRUE(gInterpreter->GenerateDictionary("std::set<int>"));
-   ASSERT_TRUE(gInterpreter->GenerateDictionary("std::set<int>", ""));
-   ASSERT_TRUE(gInterpreter->GenerateDictionary("std::set<int>", "set"));
+   EXPECT_TRUE(gInterpreter->GenerateDictionary("std::set<int>"));
+   EXPECT_TRUE(gInterpreter->GenerateDictionary("std::set<int>", ""));
+   EXPECT_TRUE(gInterpreter->GenerateDictionary("std::set<int>", "set"));
 
    // FIXME: This makes the linkdef parser go in an infinite loop.
-   //ASSERT_TRUE(gInterpreter->GenerateDictionary("std::vector<std::array<int, 5>>", ""));
+   //EXPECT_TRUE(gInterpreter->GenerateDictionary("std::vector<std::array<int, 5>>", ""));
 }
 
 TEST_F(TClingTests, GenerateDictionary)
 {
    auto cl = TClass::GetClass("vector<TNamed*>");
-   ASSERT_FALSE(cl && cl->IsLoaded());
+   EXPECT_FALSE(cl && cl->IsLoaded());
 
-   ASSERT_TRUE(gInterpreter->GenerateDictionary("std::vector<TNamed*>"));
+   EXPECT_TRUE(gInterpreter->GenerateDictionary("std::vector<TNamed*>"));
    cl = TClass::GetClass("vector<TNamed*>");
-   ASSERT_TRUE(cl != nullptr);
-   ASSERT_TRUE(cl->IsLoaded());
+   EXPECT_TRUE(cl != nullptr);
+   EXPECT_TRUE(cl->IsLoaded());
 }
 
 // Test ROOT-6967
@@ -79,7 +79,7 @@ TEST_F(TClingTests, GetEnumWithSameVariableName)
 {
    gInterpreter->ProcessLine("int en;enum en{kNone};");
    auto en = gInterpreter->GetEnum(nullptr, "en");
-   ASSERT_TRUE(en != nullptr);
+   EXPECT_TRUE(en != nullptr);
 }
 
 // Check if we can get the source code of function definitions.
@@ -88,7 +88,7 @@ TEST_F(TClingTests, MakeInterpreterValue)
    gInterpreter->Declare("void my_func_to_print() {}");
    std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
    gInterpreter->Evaluate("my_func_to_print", *v);
-   ASSERT_THAT(v->ToString(), testing::HasSubstr("void my_func_to_print"));
+   EXPECT_THAT(v->ToString(), testing::HasSubstr("void my_func_to_print"));
 }
 
 static std::string MakeLibNamePlatformIndependent(llvm::StringRef libName)
@@ -112,31 +112,31 @@ TEST_F(TClingTests, GetClassSharedLibs)
    };
 
    llvm::StringRef lib = GetLibs("TLorentzVector");
-   ASSERT_STREQ("Physics", MakeLibNamePlatformIndependent(lib).c_str());
+   EXPECT_STREQ("Physics", MakeLibNamePlatformIndependent(lib).c_str());
 
    // FIXME: This should return GenVector. The default args of the LorentzVector
    // are shadowed by Vector4Dfwd.h.
    lib = GetLibs("ROOT::Math::LorentzVector");
-   ASSERT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
+   EXPECT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
 
    lib = GetLibs("ROOT::Math::PxPyPzE4D<float>");
-   ASSERT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
+   EXPECT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
 
    // FIXME: We should probably resolve again to GenVector as it contains the
    // template pattern.
    lib = GetLibs("ROOT::Math::PxPyPzE4D<int>");
-   ASSERT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
+   EXPECT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
 
    lib = GetLibs("vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >");
-   ASSERT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
+   EXPECT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
 
    lib = GetLibs("ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > ");
 #ifdef R__USE_CXXMODULES
-   ASSERT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
+   EXPECT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
 #else
    // FIXME: This is another bug in the non-modules functionality. Note the
    // trailing space...
-   ASSERT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
+   EXPECT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
 #endif
 
    // FIXME: Another bug in non-modules:
@@ -172,10 +172,10 @@ TEST_F(TClingTests, GetSharedLibDeps)
       = MakeDepLibsPlatformIndependent(GetLibDeps("libGenVector.so"));
 #ifdef R__MACOSX
    // It may depend on tbb
-   ASSERT_TRUE(llvm::StringRef(SeenDeps).startswith("GenVector"));
+   EXPECT_TRUE(llvm::StringRef(SeenDeps).startswith("GenVector"));
 #else
     // Depends only on libCore.so but libCore.so is loaded and thus missing.
-    ASSERT_STREQ("GenVector", SeenDeps.c_str());
+    EXPECT_STREQ("GenVector", SeenDeps.c_str());
 #endif
 
    SeenDeps = MakeDepLibsPlatformIndependent(GetLibDeps("libTreePlayer.so"));
@@ -184,12 +184,12 @@ TEST_F(TClingTests, GetSharedLibDeps)
    // Depending on the configuration we expect:
    // TreePlayer Gpad Graf Graf3d Hist [Imt] [MathCore] MultiProc Net Tree [tbb]..
    // FIXME: We should add a generic gtest regex matcher and use a regex here.
-   ASSERT_TRUE(SeenDepsRef.startswith("TreePlayer Gpad Graf Graf3d Hist"));
-   ASSERT_TRUE(SeenDepsRef.contains("MultiProc Net Tree"));
+   EXPECT_TRUE(SeenDepsRef.startswith("TreePlayer Gpad Graf Graf3d Hist"));
+   EXPECT_TRUE(SeenDepsRef.contains("MultiProc Net Tree"));
 
-   ROOT_EXPECT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("")), "TCling__GetSharedLibImmediateDepsSlow",
+   ROOT_EXPECT_ERROR(EXPECT_TRUE(nullptr == GetLibDeps("")), "TCling__GetSharedLibImmediateDepsSlow",
                      "Cannot find library ''");
-   ROOT_EXPECT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("   ")), "TCling__GetSharedLibImmediateDepsSlow",
+   ROOT_EXPECT_ERROR(EXPECT_TRUE(nullptr == GetLibDeps("   ")), "TCling__GetSharedLibImmediateDepsSlow",
                      "Cannot find library '   '");
 }
 #endif
