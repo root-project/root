@@ -292,7 +292,7 @@
 #   if defined(__i386__)
 #      define R__BYTESWAP
 #   endif
-#   if defined(__arm__)
+#   if defined(__arm__) || defined (__arm64__)
 #      define R__BYTESWAP
 #   endif
 #   if defined(__x86_64__)
