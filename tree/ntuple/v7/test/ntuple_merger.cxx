@@ -2,7 +2,7 @@
 
 class RNTupleMergerTest : public ::testing::Test {
 protected:
-   std::vector<std::string> fFiles;
+   std::vector<FileRaii> fFiles;
    std::vector<std::unique_ptr<RPageSource>> fMergeSources;
    std::string fNtplName = "some_ntuple";
 
@@ -22,19 +22,14 @@ protected:
 
       auto numFiles = 10;
       for (int i = 0; i < numFiles; ++i) {
-         auto file = "merger_input" + std::to_string(i) + ".root";
-         fFiles.push_back(file);
+         std::string file = "merger_input" + std::to_string(i) + ".root";
+         fFiles.emplace_back(FileRaii(file));
          auto ntuple = RNTupleWriter::Recreate(
             std::unique_ptr<RNTupleModel>(modelWrite->Clone()), fNtplName, file);
          ntuple->Fill();
       }
       for (int i = 0; i < numFiles; ++i) {
-         fMergeSources.push_back(RPageSource::Create(fNtplName, fFiles.at(i)));
-      }
-   }
-   void TearDown() override {
-      for (auto file: fFiles) {
-         std::remove(file.c_str());
+         fMergeSources.push_back(RPageSource::Create(fNtplName, fFiles.at(i).GetPath()));
       }
    }
 };
@@ -46,7 +41,7 @@ TEST_F(RNTupleMergerTest, LowLevelMerge)
    }
    const auto& ref_desc = fMergeSources.front()->GetDescriptor();
    for (std::size_t i = 0; i < fMergeSources.size(); ++i) {
-      std::cout << "file: " << fFiles.at(i) << "\n";
+      std::cout << "file: " << fFiles.at(i).GetPath() << "\n";
       EXPECT_EQ(ref_desc, fMergeSources.at(i)->GetDescriptor());
    }
 }
