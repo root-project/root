@@ -99,7 +99,7 @@ PyObject *PyROOT::GetDataPointer(PyObject * /*self*/, PyObject *args)
 /// \brief Get endianess of the system
 /// \param[in] self Always null, since this is a module function.
 /// \param[in] args Pointer to an empty Python tuple.
-/// \param[out] Endianess as Python string
+/// \return Endianess as Python string
 ///
 /// This function returns endianess of the system as a Python integer. The
 /// return value is either '<' or '>' for little or big endian, respectively.

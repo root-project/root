@@ -1,7 +1,3 @@
-// Rotation and transformation doxygen page
-
-/**
-
 \page TransformPage Vector Transformations
 
 Transformations classes are grouped in Rotations (in 3 dimensions), Lorentz transformations and Poincarre transformations, which are Translation/Rotation combinations. Each group has several members which may model physically equivalent trasformations but with different internal representations.   
@@ -114,5 +110,3 @@ Transform3D t;  t.GetComponens(m);             // fill matrix of size 3x4 with c
 </pre>
 
 For more detailed documentation on all methods see the reference doc for the specific transformation class.
-
-*/

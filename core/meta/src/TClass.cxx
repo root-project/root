@@ -6785,7 +6785,7 @@ void TClass::SetDestructor(ROOT::DesFunc_t destructorFunc)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Install a new wrapper around the directory auto add function..
+/// Install a new wrapper around the directory auto add function.
 /// The function autoAddFunc has the signature void (*)(void *obj, TDirectory dir)
 /// and should register 'obj' to the directory if dir is not null
 /// and unregister 'obj' from its current directory if dir is null
@@ -7125,12 +7125,12 @@ Bool_t ROOT::Internal::HasConsistentHashMember(TClass &clRef)
 /// (public or not), use
 /// \code{.cpp}
 ///     cl->GetProperty() & kClassHasDefaultCtor
-/// \code
+/// \endcode
 /// To know if the class described by this TClass has a public default
 /// constructor use:
 /// \code{.cpp}
 ///    gInterpreter->ClassInfo_HasDefaultConstructor(aClass->GetClassInfo());
-/// \code
+/// \endcode
 
 Bool_t TClass::HasDefaultConstructor(Bool_t testio) const
 {

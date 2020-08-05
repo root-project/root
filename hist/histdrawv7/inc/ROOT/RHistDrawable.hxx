@@ -1,4 +1,4 @@
-/// \file ROOT/RHistDrawable.h
+/// \file ROOT/RHistDrawable.hxx
 /// \ingroup HistDraw ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-09

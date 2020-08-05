@@ -126,14 +126,14 @@ public:
    virtual const std::vector<std::string> &GetColumnNames() const = 0;
 
    /// \brief Checks if the dataset has a certain column
-   /// \param[in] columnName The name of the column
-   virtual bool HasColumn(std::string_view) const = 0;
+   /// \param[in] colName The name of the column
+   virtual bool HasColumn(std::string_view colName) const = 0;
 
    // clang-format off
    /// \brief Type of a column as a string, e.g. `GetTypeName("x") == "double"`. Required for jitting e.g. `df.Filter("x>0")`.
-   /// \param[in] columnName The name of the column
+   /// \param[in] colName The name of the column
    // clang-format on
-   virtual std::string GetTypeName(std::string_view) const = 0;
+   virtual std::string GetTypeName(std::string_view colName) const = 0;
 
    // clang-format off
    /// Called at most once per column by RDF. Return vector of pointers to pointers to column values - one per slot.

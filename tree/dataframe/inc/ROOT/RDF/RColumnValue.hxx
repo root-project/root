@@ -93,7 +93,7 @@ class R__CLING_PTRCHECK(off) RColumnValue {
    /// Enumerator for the different properties of the branch storage in memory
    enum class EStorageType : char { kContiguous, kUnknown, kSparse };
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
-   /// in contiguous memory. Only used when T == RVec<U>.
+   /// in contiguous memory. Only used when T == RVec\<U\>.
    EStorageType fStorageType = EStorageType::kUnknown;
    /// If MustUseRVec, i.e. we are reading an array, we return a reference to this RVec to clients
    RVec<ColumnValue_t> fRVec;

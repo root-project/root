@@ -197,7 +197,7 @@ protected:
     return hasIndex(_currentIndex);
   }
 
-  /// If a category depends on the shape of others, *i.e.*, its state numbers or names depend
+  /// If a category depends on the shape of others, i.e.\ its state numbers or names depend
   /// on the states of other categories, this function has to be implemented to recompute
   /// _stateNames and _insertionOrder.
   /// If one of these two changes, setShapeDirty() has to be called to propagate this information

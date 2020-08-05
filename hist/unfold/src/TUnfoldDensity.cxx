@@ -1311,7 +1311,7 @@ const TUnfoldBinning *TUnfoldDensity::GetOutputBinning
 /// \param[out] scanResult the scanned function wrt log(tau)
 /// \param[in] mode 1st parameter for the scan function
 /// \param[in] distribution 2nd parameter for the scan function
-/// \param[in] projectionMode 3rd parameter for the scan function
+/// \param[in] axisSteering 3rd parameter for the scan function
 /// \param[out] lCurvePlot for monitoring, shows the L-curve
 /// \param[out] logTauXPlot for monitoring, L-curve(X) as a function of log(tau)
 /// \param[out] logTauYPlot for monitoring, L-curve(Y) as a function of log(tau)

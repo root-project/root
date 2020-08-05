@@ -119,21 +119,21 @@
 /// \param[in] a2 Start of right tail.
 /// \param[in] n2 Shape parameter of right tail (\f$ n2 \ge 0 \f$). With \f$ n2 = 0 \f$, the function is constant.
 RooHypatia2::RooHypatia2(const char *name, const char *title, RooAbsReal& x, RooAbsReal& lambda,
-    RooAbsReal& zeta, RooAbsReal& beta, RooAbsReal& sigm, RooAbsReal& mu, RooAbsReal& a,
+    RooAbsReal& zeta, RooAbsReal& beta, RooAbsReal& argSigma, RooAbsReal& mu, RooAbsReal& a,
     RooAbsReal& n, RooAbsReal& a2, RooAbsReal& n2) :
                 RooAbsPdf(name, title),
                 _x("x", "x", this, x),
                 _lambda("lambda", "Lambda", this, lambda),
                 _zeta("zeta", "zeta", this, zeta),
                 _beta("beta", "Asymmetry parameter beta", this, beta),
-                _sigma("sigma", "Width parameter sigma", this, sigm),
+                _sigma("sigma", "Width parameter sigma", this, argSigma),
                 _mu("mu", "Location parameter mu", this, mu),
                 _a("a", "Left tail location a", this, a),
                 _n("n", "Left tail parameter n", this, n),
                 _a2("a2", "Right tail location a2", this, a2),
                 _n2("n2", "Right tail parameter n2", this, n2)
 {
-  RooHelpers::checkRangeOfParameters(this, {&sigm}, 0.);
+  RooHelpers::checkRangeOfParameters(this, {&argSigma}, 0.);
   RooHelpers::checkRangeOfParameters(this, {&zeta, &n, &n2, &a, &a2}, 0., std::numeric_limits<double>::max(), true);
   if (zeta.getVal() == 0. && zeta.isConstant()) {
     RooHelpers::checkRangeOfParameters(this, {&lambda}, -std::numeric_limits<double>::max(), 0., false,

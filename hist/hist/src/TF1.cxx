@@ -1973,12 +1973,11 @@ Double_t TF1::GetProb() const
 ///        F(x_{\frac{1}{2}}) = \prod(x < x_{\frac{1}{2}}) = \frac{1}{2}
 /// \f]
 ///
-/// \param[in] this TF1 function
 /// \param[in] nprobSum maximum size of array q and size of array probSum
+/// \param[out] q array filled with nq quantiles
 /// \param[in] probSum array of positions where quantiles will be computed.
 ///     It is assumed to contain at least nprobSum values.
-/// \param[out] return value nq (<=nprobSum) with the number of quantiles computed
-/// \param[out] array q filled with nq quantiles
+/// \return value nq (<=nprobSum) with the number of quantiles computed
 ///
 ///  Getting quantiles from two histograms and storing results in a TGraph,
 ///  a so-called QQ-plot

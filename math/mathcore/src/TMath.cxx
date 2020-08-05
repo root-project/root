@@ -857,7 +857,7 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 /// \f[
 /// lorentz(xx) = \frac{ \frac{1}{\pi} \frac{lg}{2} }{ (xx^{2} + \frac{lg^{2}}{4}) }
 /// \f]
-/// .
+/// \.
 ///
 /// The Voigt function is known to be the real part of Faddeeva function also
 /// called complex error function [2].

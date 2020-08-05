@@ -1,4 +1,4 @@
-/// \file ROOT/RHistBufferedFill.h
+/// \file ROOT/RHistBufferedFill.hxx
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-03

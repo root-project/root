@@ -567,7 +567,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns in memory
    /// \tparam ColumnTypes variadic list of branch/column types.
-   /// \param[in] columns to be cached in memory.
+   /// \param[in] columnList columns to be cached in memory.
    /// \return a `RDataFrame` that wraps the cached dataset.
    ///
    /// This action returns a new `RDataFrame` object, completely detached from
@@ -602,7 +602,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns in memory
-   /// \param[in] columns to be cached in memory
+   /// \param[in] columnList columns to be cached in memory
    /// \return a `RDataFrame` that wraps the cached dataset.
    ///
    /// See the previous overloads for more information.
@@ -659,7 +659,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns in memory
-   /// \param[in] columns to be cached in memory.
+   /// \param[in] columnList columns to be cached in memory.
    /// \return a `RDataFrame` that wraps the cached dataset.
    ///
    /// See the previous overloads for more information.
@@ -1527,13 +1527,13 @@ public:
    /// ~~~
    ///
    template <typename T>
-   RResultPtr<T> Fill(T &&model, const ColumnNames_t &bl)
+   RResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
    {
       auto h = std::make_shared<T>(std::forward<T>(model));
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<RDFInternal::ActionTags::Fill, RDFDetail::RInferredType>(bl, h, bl.size());
+      return CreateAction<RDFInternal::ActionTags::Fill, RDFDetail::RInferredType>(columnList, h, columnList.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2132,7 +2132,7 @@ public:
    /// \brief Provides a representation of the columns in the dataset
    /// \tparam ColumnTypes variadic list of branch/column types.
    /// \param[in] columnList Names of the columns to be displayed.
-   /// \param[in] rows Number of events for each column to be displayed.
+   /// \param[in] nRows Number of events for each column to be displayed.
    /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
    ///
    /// This function returns a `RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
@@ -2163,7 +2163,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Provides a representation of the columns in the dataset
    /// \param[in] columnList Names of the columns to be displayed.
-   /// \param[in] rows Number of events for each column to be displayed.
+   /// \param[in] nRows Number of events for each column to be displayed.
    /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
    ///
    /// This overload automatically infers the column types.
@@ -2179,7 +2179,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Provides a representation of the columns in the dataset
    /// \param[in] columnNameRegexp A regular expression to select the columns.
-   /// \param[in] rows Number of events for each column to be displayed.
+   /// \param[in] nRows Number of events for each column to be displayed.
    /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
    ///
    /// The existing columns are matched against the regular expression. If the string provided

@@ -65,7 +65,7 @@ public:
       as it searches for the Minimum or performs whatever analysis is requested by
       the user.
 
-      @param par function parameters as defined by the user.
+      @param v function parameters as defined by the user.
 
       @return the Value of the function.
 
@@ -75,7 +75,7 @@ public:
 
    */
 
-   virtual double operator()(const std::vector<double>& x) const = 0;
+   virtual double operator()(const std::vector<double>& v) const = 0;
 
 
    /**

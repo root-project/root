@@ -3122,8 +3122,8 @@ L500:
 /// Set light source
 ///
 /// \param[in] nl   source number: 1 off all light sources, 0 set diffused light
-/// \param[in] xl   intensity of the light source
-/// \param[in] xscr   `yscr` `zscr`  direction of the light (in respect of the screen)
+/// \param[in] yl   intensity of the light source
+/// \param[in] xscr, yscr, zscr  direction of the light (in respect of the screen)
 ///
 /// \param[out] irep   reply (0 - O.K, -1 error)
 
@@ -4074,7 +4074,7 @@ L500:
 /// \param[in] qqa   diffusion coefficient for diffused light  [0.,1.]
 /// \param[in] qqd   diffusion coefficient for direct light    [0.,1.]
 /// \param[in] qqs   diffusion coefficient for reflected light [0.,1.]
-/// \param[in] nncs   power coefficient for reflected light     (.GE.1)
+/// \param[in] nnqs   power coefficient for reflected light     (.GE.1)
 ///
 ///    Lightness model formula: Y = YD*QA + > YLi*(QD*cosNi+QS*cosRi)
 ///

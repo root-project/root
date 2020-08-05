@@ -1,4 +1,4 @@
-/// \file FoundationUtils.hxx
+/// \file FoundationUtils.cxx
 ///
 /// \brief The file contains utilities which are foundational and could be used
 /// across the core component of ROOT.

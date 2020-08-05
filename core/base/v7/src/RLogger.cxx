@@ -1,4 +1,4 @@
-/// \file TLogger.cxx
+/// \file RLogger.cxx
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-07

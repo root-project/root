@@ -262,7 +262,7 @@ public:
    /// Register a callback that RDataFrame will execute in each worker thread concurrently on that thread's partial result.
    ///
    /// \param[in] everyNEvents Frequency at which the callback will be called by each thread, as a number of events processed
-   /// \param[in] a callable with signature `void(unsigned int, Value_t&)` where Value_t is the type of the value contained in this RResultPtr
+   /// \param[in] callback A callable with signature `void(unsigned int, Value_t&)` where Value_t is the type of the value contained in this RResultPtr
    /// \return this RResultPtr, to allow chaining of OnPartialResultSlot with other calls
    ///
    /// See `OnPartialResult` for a generic explanation of the callback mechanism.

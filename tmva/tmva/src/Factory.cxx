@@ -683,9 +683,9 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Iterates through all booked methods and sees if they use parameter tuning and if so..
-/// does just that  i.e. calls "Method::Train()" for different parameter settings and
-/// keeps in mind the "optimal one"... and that's the one that will later on be used
+/// Iterates through all booked methods and sees if they use parameter tuning and if so
+/// does just that, i.e.\ calls "Method::Train()" for different parameter settings and
+/// keeps in mind the "optimal one"...\ and that's the one that will later on be used
 /// in the main training loop.
 
 std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType)

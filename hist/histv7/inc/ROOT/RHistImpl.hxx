@@ -1,4 +1,4 @@
-/// \file ROOT/RHistImpl.h
+/// \file ROOT/RHistImpl.hxx
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-03-23

@@ -41,12 +41,11 @@ it is organized as follows (see the examples in `${ROOTSYS}/tutorials/histfactor
 <li> several 'Measurements' (corresponding to a full fit of the model) each of which specifies</li>
 <ul>
 <li> a name for this fit to be used in tables and files</li>
-<ul>
-<li>      what is the luminosity associated to the measurement in picobarns</li>
-<li>      which bins of the histogram should be used</li>
-<li>      what is the relative uncertainty on the luminosity </li>
-<li>      what is (are) the parameter(s) of interest that will be measured</li>
-<li>      which parameters should be fixed/floating (eg. nuisance parameters)</li>
+<li> what is the luminosity associated to the measurement in picobarns</li>
+<li> which bins of the histogram should be used</li>
+<li> what is the relative uncertainty on the luminosity </li>
+<li> what is (are) the parameter(s) of interest that will be measured</li>
+<li> which parameters should be fixed/floating (eg. nuisance parameters)</li>
 </ul>
 </ul>
 </ul>

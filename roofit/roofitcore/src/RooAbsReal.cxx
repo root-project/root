@@ -4294,7 +4294,7 @@ RooAbsMoment* RooAbsReal::moment(RooRealVar& obs, Int_t order, Bool_t central, B
 /// \param[in] order Order of the moment
 /// \param[in] central If true, the central moment is given by \f$ \langle (x- \langle x \rangle )^2 \rangle \f$
 /// \param[in] takeRoot Calculate the square root
-/// \param[in] intNormOb If true, the moment of the function integrated over all normalization observables is returned.
+/// \param[in] intNormObs If true, the moment of the function integrated over all normalization observables is returned.
 
 RooAbsMoment* RooAbsReal::moment(RooRealVar& obs, const RooArgSet& normObs, Int_t order, Bool_t central, Bool_t takeRoot, Bool_t intNormObs)
 {

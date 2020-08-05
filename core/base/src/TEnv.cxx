@@ -388,10 +388,9 @@ TString TEnvRec::ExpandValue(const char *value)
 ClassImp(TEnv);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a resource table and read the (possibly) three resource files, i.e
-/// `$ROOTSYS/etc/system``<name>` (or `ROOTETCDIR/system``<name>`),
-/// `$HOME/``<name>` and
-/// `./``<name>`.
+/// Create a resource table and read the (possibly) three resource files,
+/// i.e.\ `$ROOTSYS/etc/system<name>` (or `ROOTETCDIR/system<name>`),
+/// `$HOME/<name>` and `$PWD/<name>`.
 /// ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
 /// read additional user defined resource files by creating additional TEnv
 /// objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of

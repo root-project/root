@@ -1,4 +1,4 @@
-/// \file ROOT/RError.h
+/// \file ROOT/RError.hxx
 /// \ingroup Base ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-12-11

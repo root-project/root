@@ -73,7 +73,7 @@ inline std::vector<std::size_t> ComputeStridesFromShape(const T &shape, MemoryLa
 }
 
 /// \brief Compute indices from global index
-/// \param[in] Shape vector
+/// \param[in] shape Shape vector
 /// \param[in] idx Global index
 /// \param[in] layout Memory layout
 /// \return Indice vector

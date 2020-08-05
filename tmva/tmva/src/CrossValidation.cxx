@@ -99,7 +99,7 @@ TMultiGraph *TMVA::CrossValidationResult::GetROCCurves(Bool_t /*fLegend*/)
 ///
 /// \note You own the returned pointer.
 ///
-/// \param numSamples[in] Number of samples used for generating the average ROC
+/// \param[in] numSamples Number of samples used for generating the average ROC
 ///                       Curve. Avg. curve will be evaluated only at these
 ///                       points (using interpolation if necessary).
 ///

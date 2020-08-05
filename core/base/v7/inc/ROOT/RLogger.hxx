@@ -1,4 +1,4 @@
-/// \file ROOT/TLogger.h
+/// \file ROOT/RLogger.hxx
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-03-29

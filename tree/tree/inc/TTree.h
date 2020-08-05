@@ -357,7 +357,7 @@ public:
    /// possible, unless e.g. type conversions are needed.
    ///
    /// \param[in] name Name of the branch to be created.
-   /// \param[in] obj Array of the objects to be added. When calling Fill(), the current value of the type/object will be saved.
+   /// \param[in] addobj Array of the objects to be added. When calling Fill(), the current value of the type/object will be saved.
    /// \param[in] bufsize he buffer size in bytes for this branch. When the buffer is full, it is compressed and written to disc.
    /// The default value of 32000 bytes and should be ok for most simple types. Larger buffers (e.g. 256000) if your Tree is not split and each entry is large (Megabytes).
    /// A small value for bufsize is beneficial if entries in the Tree are accessed randomly and the Tree is in split mode.

@@ -1,7 +1,3 @@
-// example on using with exteral classes (doxygen page)
-
-/**
-
   \page ExtUsagePage Examples with External Packages
 
 ### Connection to Linear Algebra classes
@@ -48,5 +44,3 @@ XYZPoint p1(hp);                            // create a 3D Point from CLHEP geom
 
 CLHEP::HepLorentzVector  hq;
 XYZTVector    q(hq);                        // create a LorentzVector  from CLHEP L.V.</double> </pre>
-
-*/

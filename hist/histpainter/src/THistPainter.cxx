@@ -418,7 +418,7 @@ some combinations must be use with care.
 - It does not work when combined with the `LEGO` and `SURF` options unless the
   histogram plotted with the option `SAME` has exactly the same
   ranges on the X, Y and Z axis as the currently drawn histogram. To superimpose
-  lego plots [histograms' stacks](#HP26) should be used.</li>
+  lego plots [histograms' stacks](#HP26) should be used.
 
 
 ### <a name="HP061"></a> Colors automatically picked in palette

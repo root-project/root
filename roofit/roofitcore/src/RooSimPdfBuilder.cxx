@@ -99,7 +99,7 @@
 ///    PDF for each state of the C index category.
 ///  </p>
 ///  <p>
-///    In the above example </tt>RooSimPdfBuilder</tt>
+///    In the above example <tt>RooSimPdfBuilder</tt>
 ///    will first replicate <tt>k</tt> and <tt>s</tt> into
 ///    <tt>k_C1,k_C2</tt> and <tt>s_C1,s_C2</tt>, as prescribed in the
 ///    configuration. Then it will recursively replicate all PDF nodes that depend on
@@ -383,7 +383,7 @@
 ///    <tt>pdfA(x;p,q)</tt> and <tt>pdfB(x;p,r)</tt> that have a common parameter <tt>p</tt>.
 ///    We want to build a <tt>RooSimultaneous</tt> for both <tt>pdfA</tt> and <tt>B</tt>,
 ///    which involves a split of parameter <tt>p</tt> and we would like to build the
-///    simultaneous pdfs </tt>simA</tt> and <tt>simB</tt> such that still share their (now split) parameters
+///    simultaneous pdfs <tt>simA</tt> and <tt>simB</tt> such that still share their (now split) parameters
 ///    <tt>p_XXX</tt>. This is accomplished by letting a single instance of <tt>RooSimPdfBuilder</tt> handle
 ///    the builds of both <tt>pdfA</tt> and <tt>pdfB</tt>, as illustrated in this example:
 ///  </p>

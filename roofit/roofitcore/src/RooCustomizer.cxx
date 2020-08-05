@@ -198,7 +198,7 @@ static Int_t init()
 /// replaceArg() and splitArg() functionality.
 /// \param[in] pdf Proto PDF to be customised.
 /// \param[in] masterCat Category to be used for splitting.
-/// \param[in/out] splitLeafs All nodes created in
+/// \param[in,out] splitLeafs All nodes created in
 /// the customisation process are added to this set.
 /// The user can provide nodes that are *taken*
 /// from the set if they have a name that matches `<parameterNameToBeReplaced>_<category>`.
@@ -209,7 +209,7 @@ static Int_t init()
 ///  auto yield1 = new RooFormulaVar("yieldSig_BBG1m2T","sigy1","M/3.360779",mass);
 ///  customisedLeafs.addOwned(*yield1);
 /// ```
-/// \param[in/out] splitLeafsAll All leafs that are used when customising are collected here.
+/// \param[in,out] splitLeafsAll All leafs that are used when customising are collected here.
 /// If this set already contains leaves, they will be used for customising if the names match
 /// as above.
 /// 
