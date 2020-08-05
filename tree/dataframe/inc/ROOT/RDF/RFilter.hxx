@@ -11,8 +11,8 @@
 #ifndef ROOT_RFILTER
 #define ROOT_RFILTER
 
+#include "ROOT/RDF/ColumnReaders.hxx"
 #include "ROOT/RDF/RCutFlowReport.hxx"
-#include "ROOT/RDF/RColumnValue.hxx"
 #include "ROOT/RDF/NodesUtils.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
@@ -104,14 +104,15 @@ public:
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
-      return fFilter(std::get<S>(fValues[slot]).Get(entry)...);
+      return fFilter(std::get<S>(fValues[slot])->Get(entry)...);
    }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       for (auto &bookedBranch : fCustomColumns.GetColumns())
          bookedBranch.second->InitSlot(r, slot);
-      RDFInternal::InitRDFValues(slot, fValues[slot], r, fColumnNames, fCustomColumns, TypeInd_t(), fIsCustomColumn);
+      RDFInternal::InitColumnReaders(slot, fValues[slot], r, fColumnNames, fCustomColumns, TypeInd_t(),
+                                     fIsCustomColumn);
    }
 
    // recursive chain of `Report`s
@@ -146,7 +147,7 @@ public:
 
    virtual void ClearValueReaders(unsigned int slot) final
    {
-      RDFInternal::ResetRDFValueTuple(fValues[slot], TypeInd_t());
+      RDFInternal::ResetColumnReaders(fValues[slot], TypeInd_t());
    }
 
    void AddFilterName(std::vector<std::string> &filters)

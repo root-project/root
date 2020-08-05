@@ -11,8 +11,8 @@
 #ifndef ROOT_RCUSTOMCOLUMN
 #define ROOT_RCUSTOMCOLUMN
 
+#include "ROOT/RDF/ColumnReaders.hxx"
 #include "ROOT/RDF/NodesUtils.hxx"
-#include "ROOT/RDF/RColumnValue.hxx"
 #include "ROOT/RDF/RCustomColumnBase.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RIntegerSequence.hxx"
@@ -70,7 +70,7 @@ class RCustomColumn final : public RCustomColumnBase {
    template <std::size_t... S>
    void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, NoneTag)
    {
-      fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
+      fLastResults[slot] = fExpression(std::get<S>(fValues[slot])->Get(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
@@ -79,7 +79,7 @@ class RCustomColumn final : public RCustomColumnBase {
    template <std::size_t... S>
    void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, SlotTag)
    {
-      fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
+      fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot])->Get(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
@@ -88,7 +88,7 @@ class RCustomColumn final : public RCustomColumnBase {
    template <std::size_t... S>
    void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, SlotAndEntryTag)
    {
-      fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot]).Get(entry)...);
+      fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot])->Get(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
@@ -112,7 +112,8 @@ public:
    {
       if (!fIsInitialized[slot]) {
          fIsInitialized[slot] = true;
-         RDFInternal::InitRDFValues(slot, fValues[slot], r, fColumnNames, fCustomColumns, TypeInd_t(), fIsCustomColumn);
+         RDFInternal::InitColumnReaders(slot, fValues[slot], r, fColumnNames, fCustomColumns, TypeInd_t(),
+                                        fIsCustomColumn);
          fLastCheckedEntry[slot] = -1;
       }
    }
@@ -136,7 +137,7 @@ public:
    void ClearValueReaders(unsigned int slot) final
    {
       if (fIsInitialized[slot]) {
-         RDFInternal::ResetRDFValueTuple(fValues[slot], TypeInd_t());
+         RDFInternal::ResetColumnReaders(fValues[slot], TypeInd_t());
          fIsInitialized[slot] = false;
       }
    }
