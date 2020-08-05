@@ -306,7 +306,7 @@ struct RDFValueTuple {
 
 template <typename... BranchTypes>
 struct RDFValueTuple<TypeList<BranchTypes...>> {
-   using type = std::tuple<RColumnValue<BranchTypes>...>;
+   using type = std::tuple<RGenericValue<BranchTypes>...>;
 };
 
 template <typename BranchType>
@@ -321,6 +321,25 @@ void ResetRDFValueTuple(ValueTuple &values, std::index_sequence<S...>)
    (void)expander; // avoid "unused variable" warnings
 }
 
+template <typename... ColTypes>
+RDFValueTuple_t<TypeList<ColTypes...>> MakeTreeColumnValuesHelper(bool hasDataSource, TypeList<ColTypes...>)
+{
+   // this slightly uglier spelling avoids instantiation of make_unique<RDSValue<T>> and make_unique<RTreeValue<T>>
+   // (notoriously slow to compile/jit)
+   return {RGenericValue(std::unique_ptr<RVirtualColumnValue<ColTypes>>(
+      hasDataSource ? new RDataSourceValue<ColTypes>() : new RTreeValue<ColTypes>()))...};
+}
+
+template <typename ColTypes>
+std::vector<RDFValueTuple_t<ColTypes>>
+MakeTreeColumnValues(unsigned int nSlots, bool hasDataSource)
+{
+   std::vector<RDFValueTuple_t<ColTypes>> ret;
+   ret.reserve(nSlots);
+   for (auto i = 0u; i < nSlots; ++i)
+      ret.emplace_back(hasDataSource, MakeTreeColumnValuesHelper(ColTypes{}));
+   return ret;
+}
 
 } // ns RDF
 } // ns Internal
