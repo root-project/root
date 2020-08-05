@@ -14,7 +14,6 @@
 #include "ROOT/RDF/ColumnReaders.hxx"
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RActionBase.hxx"
-#include "ROOT/RDF/NodesUtils.hxx" // InitRDFValues
 #include "ROOT/RDF/Utils.hxx"      // ColumnNames_t
 #include "ROOT/RDF/RLoopManager.hxx"
 
