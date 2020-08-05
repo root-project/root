@@ -12,7 +12,6 @@
 #define ROOT_RCUSTOMCOLUMN
 
 #include "ROOT/RDF/ColumnReaders.hxx"
-#include "ROOT/RDF/NodesUtils.hxx"
 #include "ROOT/RDF/RCustomColumnBase.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RIntegerSequence.hxx"
