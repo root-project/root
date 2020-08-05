@@ -11,11 +11,11 @@
 #ifndef ROOT_RACTION
 #define ROOT_RACTION
 
+#include "ROOT/RDF/ColumnReaders.hxx"
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RActionBase.hxx"
 #include "ROOT/RDF/NodesUtils.hxx" // InitRDFValues
 #include "ROOT/RDF/Utils.hxx"      // ColumnNames_t
-#include "ROOT/RDF/RColumnValue.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 
 #include <cstddef> // std::size_t
@@ -45,50 +45,54 @@ class RActionCRTP {
 /// A type-erasing wrapper around RColumnValue.
 /// Used to reduce compile time by avoiding instantiation of very large tuples and/or (std::get<N>...) fold expressions.
 class RTypeErasedColumnValue {
-   std::shared_ptr<void> fPtr; // shared_ptr correctly deletes the type-erased object
+   std::shared_ptr<void> fPtr;  // shared_ptr to take advantage of the type-erased custom deleter
 
 public:
    template <typename T>
-   RTypeErasedColumnValue(std::unique_ptr<RColumnValue<T>> v) : fPtr(std::move(v))
+   RTypeErasedColumnValue(std::unique_ptr<RColumnReaderBase<T>> v) : fPtr(std::move(v))
    {
    }
 
    template <typename T>
    T &Get(ULong64_t e)
    {
-      return std::static_pointer_cast<RColumnValue<T>>(fPtr)->Get(e);
+      return static_cast<RColumnReaderBase<T> *>(fPtr.get())->Get(e);
    }
 
    template <typename T>
-   RColumnValue<T> *Cast()
+   RColumnReaderBase<T> *Cast()
    {
-      return static_cast<RColumnValue<T> *>(fPtr.get());
+      return static_cast<RColumnReaderBase<T> *>(fPtr.get());
    }
 };
 
 /// This overload is specialized to act on RTypeErasedColumnValues instead of RColumnValues.
 template <std::size_t... S, typename... ColTypes>
-void InitRDFValues(unsigned int slot, std::vector<RTypeErasedColumnValue> &values, TTreeReader *r,
-                   const ColumnNames_t &bn, const RBookedCustomColumns &customCols, std::index_sequence<S...>,
-                   ROOT::TypeTraits::TypeList<ColTypes...>, const std::array<bool, sizeof...(S)> &isTmpColumn)
+void InitColumnReaders(unsigned int slot, std::vector<RTypeErasedColumnValue> &values, TTreeReader *r,
+                       const ColumnNames_t &bn, const RBookedCustomColumns &customCols, std::index_sequence<S...>,
+                       ROOT::TypeTraits::TypeList<ColTypes...>, const std::array<bool, sizeof...(S)> &isTmpColumn)
 {
+   const auto &customColMap = customCols.GetColumns();
    using expander = int[];
-   (void)slot; // avoid bogus 'unused parameter' warning
-   (void)r; // avoid bogus 'unused parameter' warning
-   (void)expander{(values.emplace_back(std::make_unique<RColumnValue<ColTypes>>()), 0)..., 0};
-   (void)expander{(values[S].Cast<ColTypes>()->Init(
-                      slot, isTmpColumn[S] ? customCols.GetColumns().at(bn.at(S)).get() : nullptr, r, bn.at(S)),
+
+   // Construct the column readers
+   (void)expander{(values.emplace_back(MakeColumnReader<ColTypes>(
+                      slot, isTmpColumn[S] ? customColMap.at(bn[S]).get() : nullptr, r, bn[S])),
                    0)...,
                   0};
+
+   (void)slot; // avoid bogus 'unused parameter' warning
+   (void)r;    // avoid bogus 'unused parameter' warning
 }
 
 /// This overload is specialized to act on RTypeErasedColumnValues instead of RColumnValues.
 template <std::size_t... S, typename... ColTypes>
-void ResetRDFValueTuple(std::vector<RTypeErasedColumnValue> &values, std::index_sequence<S...>,
+void ResetColumnReaders(std::vector<RTypeErasedColumnValue> &values, std::index_sequence<S...>,
                         ROOT::TypeTraits::TypeList<ColTypes...>)
 {
    using expander = int[];
    (void)expander{(values[S].Cast<ColTypes>()->Reset(), 0)...};
+   values.clear();
 }
 
 // fwd decl for RActionCRTP
@@ -228,27 +232,28 @@ class RAction final : public RActionCRTP<RAction<Helper, PrevDataFrame, ColumnTy
 public:
    using ActionCRTP_t = RActionCRTP<RAction<Helper, PrevDataFrame, ColumnTypes_t>>;
 
-   RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
-           RBookedCustomColumns &&customColumns)
-      : ActionCRTP_t(std::forward<Helper>(h), bl, std::move(pd), std::move(customColumns)), fValues(GetNSlots()) { }
+   RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd, RBookedCustomColumns &&customColumns)
+      : ActionCRTP_t(std::forward<Helper>(h), bl, std::move(pd), std::move(customColumns)), fValues(GetNSlots())
+   {
+   }
 
    void InitColumnValues(TTreeReader *r, unsigned int slot)
    {
-      InitRDFValues(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
-                    typename ActionCRTP_t::TypeInd_t{}, ActionCRTP_t::fIsCustomColumn);
+      InitColumnReaders(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
+                        typename ActionCRTP_t::TypeInd_t{}, ActionCRTP_t::fIsCustomColumn);
    }
 
    template <std::size_t... S>
    void Exec(unsigned int slot, Long64_t entry, std::index_sequence<S...>)
    {
       (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
-      ActionCRTP_t::GetHelper().Exec(slot, std::get<S>(fValues[slot]).Get(entry)...);
+      ActionCRTP_t::GetHelper().Exec(slot, std::get<S>(fValues[slot])->Get(entry)...);
    }
 
    template <std::size_t... S>
    void ResetColumnValues(unsigned int slot, std::index_sequence<S...> s)
    {
-      ResetRDFValueTuple(fValues[slot], s);
+      ResetColumnReaders(fValues[slot], s);
    }
 };
 
@@ -281,12 +286,14 @@ public:
       : ActionCRTP_t(std::forward<SnapshotHelper<ColTypes...>>(h), bl, std::move(pd), std::move(customColumns)),
         fValues(GetNSlots())
    {
+      for (auto &v : fValues)
+         v.reserve(sizeof...(ColTypes));
    }
 
    void InitColumnValues(TTreeReader *r, unsigned int slot)
    {
-      InitRDFValues(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
-                    typename ActionCRTP_t::TypeInd_t{}, ColumnTypes_t{}, ActionCRTP_t::fIsCustomColumn);
+      InitColumnReaders(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
+                        typename ActionCRTP_t::TypeInd_t{}, ColumnTypes_t{}, ActionCRTP_t::fIsCustomColumn);
    }
 
    template <std::size_t... S>
@@ -299,7 +306,7 @@ public:
    template <std::size_t... S>
    void ResetColumnValues(unsigned int slot, std::index_sequence<S...> s)
    {
-      ResetRDFValueTuple(fValues[slot], s, ColumnTypes_t{});
+      ResetColumnReaders(fValues[slot], s, ColumnTypes_t{});
    }
 };
 
@@ -321,12 +328,14 @@ public:
       : ActionCRTP_t(std::forward<SnapshotHelperMT<ColTypes...>>(h), bl, std::move(pd), std::move(customColumns)),
         fValues(GetNSlots())
    {
+      for (auto &v : fValues)
+         v.reserve(sizeof...(ColTypes));
    }
 
    void InitColumnValues(TTreeReader *r, unsigned int slot)
    {
-      InitRDFValues(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
-                    typename ActionCRTP_t::TypeInd_t{}, ColumnTypes_t{}, ActionCRTP_t::fIsCustomColumn);
+      InitColumnReaders(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
+                        typename ActionCRTP_t::TypeInd_t{}, ColumnTypes_t{}, ActionCRTP_t::fIsCustomColumn);
    }
 
    template <std::size_t... S>
@@ -339,7 +348,7 @@ public:
    template <std::size_t... S>
    void ResetColumnValues(unsigned int slot, std::index_sequence<S...> s)
    {
-      ResetRDFValueTuple(fValues[slot], s, ColumnTypes_t{});
+      ResetColumnReaders(fValues[slot], s, ColumnTypes_t{});
    }
 };
 
