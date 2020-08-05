@@ -242,15 +242,14 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       if (this.TestRnr("jetp", jet, rnr_data)) return null;
 
-
       let pos_ba = new RC.BufferAttribute( rnr_data.vtxBuff, 3 );
       let N      = rnr_data.vtxBuff.length / 3;
 
       let geo_body = new RC.Geometry();
       geo_body.vertices = pos_ba;
       let idcs = new Uint32Array( N > 3 ? 6 : 3);
-      idcs[0] = 0; idcs[1] = 2; idcs[2] = 1;
-      if (N > 3) {  idcs[3] = 0; idcs[4] = 5; idcs[5] = 2; }
+      idcs[0] = 0; idcs[1] = 1; idcs[2] = 2;
+      if (N > 3) {  idcs[3] = 0; idcs[4] = 2; idcs[5] = 3; }
       geo_body.indices = new RC.BufferAttribute( idcs, 1 );
       geo_body.computeVertexNormals();
 
@@ -273,7 +272,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       // double-side material required for correct tracing of colors - otherwise points sequence should be changed
       let mesh = new RC.Mesh(geo_body, new RC.MeshBasicMaterial);
-      mesh.material.update({ depthWrite: false, color: fcol, transparent: true, opacity: 0.5, side: RC.DoubleSide });
+      mesh.material.update({ depthWrite: false, color: fcol, transparent: true, opacity: 0.5, side: RC.FRONT_SIDE });
 
       let line1 = new RC.Line(geo_rim,  new RC.MeshBasicMaterial);
       // line1.material.update({ linewidth: 2, color: lcol, transparent: true, opacity: 0.5 });
@@ -282,7 +281,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       // line2.material.update({ linewidth: 1, color: lcol, transparent: true, opacity: 0.5 });
       line2.renderingPrimitive = RC.LINES;
 
-      // jet_ro.add( mesh  );
       mesh.add( line1 );
       mesh.add( line2 );
 
