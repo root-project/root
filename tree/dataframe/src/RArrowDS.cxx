@@ -382,8 +382,8 @@ public:
 
 ////////////////////////////////////////////////////////////////////////
 /// Constructor to create an Arrow RDataSource for RDataFrame.
-/// \param[in] table the arrow Table to observe.
-/// \param[in] columns the name of the columns to use
+/// \param[in] inTable the arrow Table to observe.
+/// \param[in] inColumns the name of the columns to use
 /// In case columns is empty, we use all the columns found in the table
 RArrowDS::RArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::string> const &inColumns)
    : fTable{inTable}, fColumnNames{inColumns}

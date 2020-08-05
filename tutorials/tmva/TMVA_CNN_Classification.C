@@ -22,7 +22,7 @@
 /// Helper function to create input images data
 /// we create a signal and background 2D histograms from 2d gaussians
 /// with a location (means in X and Y)  different for each event
-/// The difference between signal and background is in the gaussian width..
+/// The difference between signal and background is in the gaussian width.
 /// The width for the bakground gaussian is slightly larger than the signal width by few % values
 ///
 ///

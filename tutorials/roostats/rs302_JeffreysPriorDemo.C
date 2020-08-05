@@ -49,7 +49,7 @@
 
 using namespace RooFit;
 
-void JeffreysPriorDemo()
+void rs302_JeffreysPriorDemo()
 {
    RooWorkspace w("w");
    w.factory("Uniform::u(x[0,1])");

@@ -155,7 +155,7 @@ template <typename T>
 using TakeFirstParameter_t = typename TakeFirstParameter<T>::type;
 
 /// Remove first of possibly many template parameters.
-/// e.g. RemoveFirstParameter_t<U<A,B>> is U<B>
+/// e.g. RemoveFirstParameter_t<U<A,B>> is U\<B\>
 template <typename>
 struct RemoveFirstParameter {
 };

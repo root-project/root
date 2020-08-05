@@ -1,4 +1,4 @@
-/// \file ROOT/RHist.h
+/// \file ROOT/RHist.hxx
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-03-23
@@ -219,9 +219,9 @@ struct RHistImplGen {
    ///
    /// Delegate to the appropriate MakeNextAxis instantiation, depending on the
    /// axis type selected in the RAxisConfig.
+   /// \param title - title of the derived object.
    /// \param axes - `RAxisConfig` objects describing the axis of the resulting
    ///   RHistImpl.
-   /// \param statConfig - the statConfig parameter to be passed to the RHistImpl
    /// \param processedAxisArgs - the RAxisBase-derived axis objects describing the
    ///   axes of the resulting RHistImpl. There are `IDIM` of those; in the end
    /// (`IDIM` == `GetNDim()`), all `axes` have been converted to

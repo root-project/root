@@ -632,8 +632,8 @@ void RooDataHist::_adjustBinning(RooRealVar &theirVar, const TAxis &axis,
 /// observable to binning in given reference TH1. Used by constructors
 /// that import data from an external TH1.
 /// Both the variables in vars and in this RooDataHist are adjusted.
-/// @param List with variables that are supposed to have their binning adjusted.
-/// @param Reference histogram that dictates the binning
+/// @param vars List with variables that are supposed to have their binning adjusted.
+/// @param href Reference histogram that dictates the binning
 /// @param offset If not nullptr, a possible bin count offset for the axes x,y,z is saved here as Int_t[3]
 
 void RooDataHist::adjustBinning(const RooArgList& vars, const TH1& href, Int_t* offset)

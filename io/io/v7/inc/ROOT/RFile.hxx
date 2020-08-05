@@ -1,4 +1,4 @@
-/// \file ROOT/RFile.h
+/// \file ROOT/RFile.hxx
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-31

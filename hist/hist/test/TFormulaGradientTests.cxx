@@ -1,4 +1,4 @@
-/// \file TFormulaGradientTests.h
+/// \file TFormulaGradientTests.cxx
 ///
 /// \brief The file contain unit tests which test the clad-based gradient
 ///        computations.

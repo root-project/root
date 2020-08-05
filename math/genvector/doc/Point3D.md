@@ -1,7 +1,3 @@
-// Point3d doxygen page
-
-/**
-
 \page Point3DPage Point3D Classes
 
 To avoid exposing templated parameter to the users, typedefs are defined for all types of vectors based an double's and float's. To use them, one must include the header file _Math/Point3D.h_. The following typedef's, defined in the header file _Math/Point3Dfwd.h_, are available for the different instantiations of the template class ROOT::Math::PositionVector3D:
@@ -61,5 +57,3 @@ Exactly as for the 3D Vectors, the following operations are allowed:
 *   comparison of points
 *   scaling and division of points with a scalar
 *   dot and cross product with any type of vector
-
-*/

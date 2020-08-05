@@ -1,6 +1,3 @@
-
-/** 
-
   \defgroup MathMore  MathMore
 
     \brief The Mathematical library providing some advanced functionality and based on GSL. See the \ref MathMorePage "MathMore" Library page. 
@@ -32,5 +29,3 @@ To build MathMore you need to have first GSL installed somewhere in your system.
 MathMore (and its %ROOT CINT dictionary) can be built within %ROOT whenever a GSL library is found in the system. Optionally the GSL library and header file location can be specified in the %ROOT configure script with _configure --with-gsl-incdir=... --with-gsl-libdir=..._
 MathMore links with the GSL static libraries. On some platform (like Linux x86-64)  GSL needs to be compiled with the option _--with-pic_.
 The source code of MathMore is distributed under the GNU General Public License
-
-*/

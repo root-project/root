@@ -215,7 +215,7 @@ void TDocHtmlDirective::AddLine(const TSubString& line)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set result to the HTML code that was passed in via AddLine().
-/// Prepend a closing </pre>, append an opening <pre>
+/// Prepend a closing \</pre\>, append an opening \<pre\>
 
 Bool_t TDocHtmlDirective::GetResult(TString& result)
 {

@@ -6,7 +6,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/// \file ROOT/RFileBrowsable.cxx
+/// \file ROOT/RSysFile.cxx
 /// \ingroup rbrowser
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2019-10-15

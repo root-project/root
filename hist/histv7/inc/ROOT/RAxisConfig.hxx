@@ -1,4 +1,4 @@
-/// \file ROOT/RAxisConfig.h
+/// \file ROOT/RAxisConfig.hxx
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2020-02-05

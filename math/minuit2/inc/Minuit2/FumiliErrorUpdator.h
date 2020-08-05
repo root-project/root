@@ -67,7 +67,7 @@ public:
 
   @param fGradientCalculator the Gradient calculator used to retrieved the Parameter transformation
 
-  @param fFumiliFCNBase the function calculating the figure of merit.
+  @param lambda the Marquard lambda factor
 
 
   \todo Some nice latex mathematical formuli...

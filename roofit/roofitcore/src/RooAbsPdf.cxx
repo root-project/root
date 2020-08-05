@@ -711,7 +711,7 @@ bool checkInfNaNNeg(const T& inputs) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Scan through outputs and fix+log all nans and negative values.
-/// \param[in/out] outputs Array to be scanned & fixed.
+/// \param[in,out] outputs Array to be scanned & fixed.
 /// \param[in] begin Begin of event range. Only needed to print the correct event number
 /// where the error occurred.
 void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const {
@@ -734,7 +734,7 @@ void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::s
 /// Compute the log-likelihoods for all events in the requested batch.
 /// The arguments are passed over to getValBatch().
 /// \param[in] begin Start of the batch.
-/// \param[in] size  Maximum size of the batch. Depending on data layout and memory, the batch
+/// \param[in] maxSize  Maximum size of the batch. Depending on data layout and memory, the batch
 /// may come back smaller.
 /// \return    Returns a batch of doubles that contains the log probabilities.
 RooSpan<const double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t maxSize,

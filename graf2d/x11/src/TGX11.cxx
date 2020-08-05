@@ -3606,9 +3606,9 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns an array of pixels created from a part of drawable (defined by x, y, w, h)
-/// in format:
-/// `b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..`
+/// Returns an array of pixels created from a part of drawable
+/// (defined by x, y, w, h) in format:
+/// `b1, g1, r1, 0,  b2, g2, r2, 0,  ...,  bn, gn, rn, 0`.
 ///
 /// Pixels are numbered from left to right and from top to bottom.
 /// By default all pixels from the whole drawable are returned.

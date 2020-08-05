@@ -1,4 +1,4 @@
-/// \file ROOT/RAxis.h
+/// \file ROOT/RAxis.hxx
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-03-23
@@ -68,7 +68,7 @@ protected:
    /// determine the bin number taking into account how over/underflow
    /// should be handled.
    ///
-   /// \param[out] result status of the bin determination.
+   /// \param[in] rawbin for which to determine the bin number.
    /// \return Returns the bin number adjusted for potential over- and underflow
    /// bins. Returns `kInvalidBin` if the axis cannot handle the over- / underflow.
    ///
@@ -390,7 +390,7 @@ protected:
    /// Determine the inverse bin width.
    /// \param nbinsNoOver - number of bins without unter-/overflow
    /// \param lowOrHigh - first axis boundary
-   /// \param lighOrLow - second axis boundary
+   /// \param highOrLow - second axis boundary
    static double GetInvBinWidth(int nbinsNoOver, double lowOrHigh, double highOrLow)
    {
       return nbinsNoOver / std::fabs(highOrLow - lowOrHigh);
@@ -413,7 +413,7 @@ public:
 
    /// Initialize a RAxisEquidistant.
    /// \param[in] title - axis title used for graphics and text representation.
-   /// \param nbins - number of bins in the axis, excluding under- and overflow
+   /// \param nbinsNoOver - number of bins in the axis, excluding under- and overflow
    ///   bins.
    /// \param low - the low axis range. Any coordinate below that is considered
    ///   as underflow. The first bin's lower edge is at this value.
@@ -427,13 +427,12 @@ public:
    {}
 
    /// Initialize a RAxisEquidistant.
-   /// \param nbins - number of bins in the axis, excluding under- and overflow
+   /// \param nbinsNoOver - number of bins in the axis, excluding under- and overflow
    ///   bins.
    /// \param low - the low axis range. Any coordinate below that is considered
    ///   as underflow. The first bin's lower edge is at this value.
    /// \param high - the high axis range. Any coordinate above that is considered
    ///   as overflow. The last bin's higher edge is at this value.
-   /// \param canGrow - whether this axis can extend its range.
    explicit RAxisEquidistant(int nbinsNoOver, double low, double high) noexcept
       : RAxisEquidistant("", nbinsNoOver, low, high)
    {}
@@ -505,6 +504,7 @@ struct AxisConfigToType<RAxisConfig::kEquidistant> {
 class RAxisGrow: public RAxisEquidistant {
 public:
    /// Initialize a RAxisGrow.
+   /// \param[in] title - axis title used for graphics and text representation.
    /// \param nbins - number of bins in the axis, excluding under- and overflow
    ///   bins. This value is fixed over the lifetime of the object.
    /// \param low - the initial value for the low axis range. Any coordinate
@@ -518,7 +518,6 @@ public:
    {}
 
    /// Initialize a RAxisGrow.
-   /// \param[in] title - axis title used for graphics and text representation.
    /// \param nbins - number of bins in the axis, excluding under- and overflow
    ///   bins. This value is fixed over the lifetime of the object.
    /// \param low - the initial value for the low axis range. Any coordinate
