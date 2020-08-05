@@ -27,7 +27,8 @@ const char* __asan_default_options() {
          ":check_initialization_order=1"
          ":detect_container_overflow=1"
          ":alloc_dealloc_mismatch=0"
-         DETECT_LEAKS;
+         DETECT_LEAKS
+         ":verify_asan_link_order=0";
 }
 
 /// Default options when leak sanitizer starts up in ROOT exectuables.
