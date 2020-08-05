@@ -194,7 +194,7 @@ if(asan)
     message(WARNING "Address sanitizer builds only tested with gcc and Clang")
   endif()
 
-  set(ASAN_EXTRA_LD_PRELOAD "${ASAN_RUNTIME_LIBRARY}:${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}ROOTSanitizerConfig${CMAKE_SHARED_LIBRARY_SUFFIX}")
+  set(ASAN_EXTRA_LD_PRELOAD "${CMAKE_BINARY_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}ROOTSanitizerConfig${CMAKE_SHARED_LIBRARY_SUFFIX}:${ASAN_RUNTIME_LIBRARY}")
 
   foreach(item IN LISTS ASAN_EXTRA_CXX_FLAGS)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${item}>)
