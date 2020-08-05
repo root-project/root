@@ -2,6 +2,7 @@ import unittest
 import ROOT
 import numpy as np
 import sys
+import gc
 
 
 def get_maximum_for_dtype(dtype):
@@ -105,9 +106,11 @@ class AsRVec(unittest.TestCase):
         """
         np_obj = np.array([1, 2])
         rvec = ROOT.VecOps.AsRVec(np_obj)
+        gc.collect()
         self.assertEqual(sys.getrefcount(rvec), 2)
         self.assertEqual(sys.getrefcount(np_obj), 3)
         del rvec
+        gc.collect()
         self.assertEqual(sys.getrefcount(np_obj), 2)
 
 
