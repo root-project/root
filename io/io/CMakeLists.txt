@@ -72,7 +72,7 @@ if(root7)
 endif()
 
 if(uring)
-  target_link_libraries(RIO PRIVATE uring)
+  target_link_libraries(RIO PUBLIC uring)
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__RIO
