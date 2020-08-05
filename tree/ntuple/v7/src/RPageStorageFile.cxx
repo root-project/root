@@ -183,7 +183,9 @@ void ROOT::Experimental::Detail::RPageSinkFile::Merge(
    std::cout << "merge target is:\n";
    fDescriptorBuilder.GetDescriptor().PrintInfo(std::cout);
 
+   std::cout << "\nmerge inputs are:\n";
    for (std::size_t i = 0; i < sources.size(); ++i) {
+      sources[i]->Attach();
       const auto& desc = sources[i]->GetDescriptor();
       desc.PrintInfo(std::cout);
    }
