@@ -2,6 +2,7 @@ import unittest
 import ROOT
 import numpy as np
 import sys
+import gc
 
 
 class MakeNumpyDataFrame(unittest.TestCase):
@@ -44,10 +45,12 @@ class MakeNumpyDataFrame(unittest.TestCase):
         Check refcounts of associated PyObjects
         """
         data = {"x": np.array([1, 2, 3], dtype="float32")}
+        gc.collect()
         self.assertEqual(sys.getrefcount(data), 2)
         self.assertEqual(sys.getrefcount(data["x"]), 2)
 
         df = ROOT.RDF.MakeNumpyDataFrame(data)
+        gc.collect()
         self.assertTrue(hasattr(df, "__data__"))
         self.assertEqual(sys.getrefcount(df), 2)
 
@@ -94,13 +97,16 @@ class MakeNumpyDataFrame(unittest.TestCase):
         Test lifetime of numpy array
         """
         x = np.array([1, 2, 3], dtype="float32")
+        gc.collect()
         ref1 = sys.getrefcount(x)
 
         df = ROOT.RDF.MakeNumpyDataFrame({"x": x})
+        gc.collect()
         ref2 = sys.getrefcount(x)
         self.assertEqual(ref2, ref1 + 1)
 
         del df
+        gc.collect()
         ref3 = sys.getrefcount(x)
         self.assertEqual(ref1, ref3)
 
@@ -111,12 +117,14 @@ class MakeNumpyDataFrame(unittest.TestCase):
         Datasource survives until last node of the graph goes out of scope
         """
         x = np.array([1, 2, 3], dtype="float32")
+        gc.collect()
         ref1 = sys.getrefcount(x)
 
         # Data source has dictionary with RVecs attached, which take a reference
         # to the numpy array
         df = ROOT.RDF.MakeNumpyDataFrame({"x": x})
         m = df.Mean("x")
+        gc.collect()
         ref2 = sys.getrefcount(x)
         self.assertEqual(ref1 + 1, ref2)
 
@@ -124,12 +132,14 @@ class MakeNumpyDataFrame(unittest.TestCase):
         # owns the RVecs
         del df
         self.assertEqual(m.GetValue(), 2)
+        gc.collect()
         ref3 = sys.getrefcount(x)
         self.assertEqual(ref1 + 1, ref3)
 
         # Deleting the last node releases the RVecs and releases the reference
         # to the numpy array
         del m
+        gc.collect()
         ref4 = sys.getrefcount(x)
         self.assertEqual(ref1, ref4)
 

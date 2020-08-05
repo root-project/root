@@ -3,6 +3,7 @@ import ROOT
 import sys
 import os
 import numpy as np
+import gc
 
 
 # Check whether these tests should be skipped
@@ -45,6 +46,7 @@ class NumbaDeclareSimple(unittest.TestCase):
         Test refcount of decorator
         """
         x = ROOT.Numba.Declare(["float"], "float")
+        gc.collect()
         self.assertEqual(sys.getrefcount(x), 2)
 
     @unittest.skipIf(skip, skip_reason)
@@ -58,6 +60,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             return x
         fn0 = ROOT.Numba.Declare(["float"], "float")(f1)
         ref = nb.cfunc("float32(float32)", nopython=True)(f2)
+        gc.collect()
         if sys.version_info.major == 2:
             self.assertEqual(sys.getrefcount(f1), sys.getrefcount(f2) + 1)
         else:
@@ -84,6 +87,8 @@ class NumbaDeclareSimple(unittest.TestCase):
         @ROOT.Numba.Declare(["float"], "float")
         def fn1(x):
             return x
+
+        gc.collect()
 
         self.assertTrue(hasattr(fn1, "__cpp_wrapper__"))
         self.assertTrue(type(fn1.__cpp_wrapper__) == str)
