@@ -112,6 +112,10 @@ sap.ui.define([
          this.point_lights.add( new RC.PointLight( 0x50ff50, 0.7 )); // G
          this.point_lights.add( new RC.PointLight( 0x5050ff, 0.7 )); // B
          this.scene.add(this.point_lights);
+
+         let aLight = new RC.AmbientLight(new RC.Color(0xFF0000), 0.1);
+         this.point_lights.add(aLight);
+
       },
 
       setupRCoreDomAndEventHandlers: function()
@@ -211,27 +215,8 @@ sap.ui.define([
          this.canvas.width  = w;
          this.canvas.height = h;
 
-         if (this.controller.kind === "3D")
-         {
-            // this.camera.aspect = w / h;
-            // XXXX MT left / right are not recalculated from aspect,
-            // apprently only top/bot/lft/rgt are used.
-            // Need a different set aspect interface in RCore?
-            //
-            // Use this hack for now ...
-            this.camera._aspect = w / h;
-            this.camera._left  = -0.5 * (this.camera._aspect * (2 * this.camera._top));
-	    this.camera._right = -this.camera._left;
-            this.camera.updateProjectionMatrix();
-         }
-         else
-         {
-            this.camera._left  =  this.camera._bottom / h * w;
-            this.camera._right = -this.camera._left;
-            this.camera.updateProjectionMatrix();
-         }
+         this.camera.aspect = w / h;
 
-         // this.renderer.setSize(w, h);
          this.renderer.updateViewport(w, h);
 
          //this.outline_pass.setSize(w, h);
