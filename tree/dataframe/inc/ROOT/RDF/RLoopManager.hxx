@@ -12,7 +12,6 @@
 #define ROOT_RLOOPMANAGER
 
 #include "ROOT/RDF/RNodeBase.hxx"
-#include "ROOT/RDF/NodesUtils.hxx"
 
 #include <functional>
 #include <map>
@@ -21,7 +20,9 @@
 #include <vector>
 
 // forward declarations
+class TTree;
 class TTreeReader;
+class TDirectory;
 
 namespace ROOT {
 namespace RDF {
@@ -31,7 +32,7 @@ class RDataSource;
 
 namespace Internal {
 namespace RDF {
-ColumnNames_t GetBranchNames(TTree &t, bool allowDuplicates = true);
+std::vector<std::string> GetBranchNames(TTree &t, bool allowDuplicates = true);
 
 class RActionBase;
 class GraphNode;
@@ -44,12 +45,12 @@ class GraphCreatorHelper;
 
 namespace Detail {
 namespace RDF {
-using namespace ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
 
 class RFilterBase;
 class RRangeBase;
 using ROOT::RDF::RDataSource;
+using ColumnNames_t = std::vector<std::string>;
 
 /// The head node of a RDF computation graph.
 /// This class is responsible of running the event loop.

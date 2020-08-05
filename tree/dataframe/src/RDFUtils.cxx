@@ -18,6 +18,7 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClassRef.h"
+#include "TError.h" // Info
 #include "TInterpreter.h"
 #include "TLeaf.h"
 #include "TROOT.h" // IsImplicitMTEnabled, GetThreadPoolSize

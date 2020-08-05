@@ -48,11 +48,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/GraphUtils.hxx
     ROOT/RDF/HistoModels.hxx
     ROOT/RDF/InterfaceUtils.hxx
-    ROOT/RDF/NodesUtils.hxx
     ROOT/RDF/RActionBase.hxx
     ROOT/RDF/RAction.hxx
     ROOT/RDF/RBookedCustomColumns.hxx
-    ROOT/RDF/RColumnValue.hxx
     ROOT/RDF/RCustomColumnBase.hxx
     ROOT/RDF/RCustomColumn.hxx
     ROOT/RDF/RCutFlowReport.hxx
@@ -75,7 +73,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
     src/RActionBase.cxx
-    src/RColumnValue.cxx
     src/RCsvDS.cxx
     src/RCustomColumnBase.cxx
     src/RCutFlowReport.cxx

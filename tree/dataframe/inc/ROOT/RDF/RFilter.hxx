@@ -13,7 +13,6 @@
 
 #include "ROOT/RDF/ColumnReaders.hxx"
 #include "ROOT/RDF/RCutFlowReport.hxx"
-#include "ROOT/RDF/NodesUtils.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
