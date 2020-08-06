@@ -1533,9 +1533,14 @@ function(ROOT_ADD_TEST test)
   set(_command ${_command} -DSYS=${ROOTSYS})
 
   #- Handle ENVIRONMENT argument
-  if(ASAN_EXTRA_LD_PRELOAD AND _command MATCHES python)
+  if(ASAN_EXTRA_LD_PRELOAD)
     # Address sanitizer runtime needs to be preloaded in all python tests
-    list(APPEND ARG_ENVIRONMENT ${ld_preload}=${ASAN_EXTRA_LD_PRELOAD})
+    # Check now if the -DCMD= contains "python[0-9.] "
+    set(theCommand ${_command})
+    list(FILTER theCommand INCLUDE REGEX "^-DCMD=.*python[0-9.]*[\\^]")
+    if(theCommand OR _command MATCHES roottest/python/cmdLineUtils)
+      list(APPEND ARG_ENVIRONMENT ${ld_preload}=${ASAN_EXTRA_LD_PRELOAD})
+    endif()
   endif()
 
   if(ARG_ENVIRONMENT)
