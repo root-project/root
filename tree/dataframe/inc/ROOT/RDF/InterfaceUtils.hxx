@@ -376,7 +376,8 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name,
    // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
    delete customColumns;
 
-   jittedFilter->SetFilter(std::make_unique<F_t>(std::forward<F>(f), cols, *prevNodeOnHeap, newColumns, name));
+   jittedFilter->SetFilter(
+      std::unique_ptr<RFilterBase>(new F_t(std::forward<F>(f), cols, *prevNodeOnHeap, newColumns, name)));
    delete prevNodeOnHeap;
    delete wkJittedFilter;
 }
