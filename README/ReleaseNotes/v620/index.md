@@ -727,3 +727,7 @@ chain->GetEntry(0);
 ```
 
 will result (as one would expect) with the first SetBranchAddress being ignored/over-ridden.
+
+### RDataFrame
+
+-  For some `TTrees`, RDataFrame's `GetColumnNames` method returns more valid spellings for a given column. For example, leaf `"l"` under branch `"b"` might now be mentioned as `"l"` as well as `"b.l"`, while only one of the two spellings might have been recognized before.
