@@ -144,8 +144,8 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       }
       columns.emplace_back(info);
    }
-   auto headerSize = SerializeHeader(nullptr);
-   auto footerSize = SerializeFooter(nullptr);
+   auto headerSize = GetHeaderSize();
+   auto footerSize = GetFooterSize();
    output << "============================================================" << std::endl;
    output << "NTUPLE:      " << GetName() << std::endl;
    output << "Compression: " << compression << std::endl;
