@@ -3878,11 +3878,8 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
                   else delete (TBrowser*)0x%lx", (ULong_t)b, (ULong_t)b, (ULong_t)b, (ULong_t)b));
          }
       }
-      gROOT->EndOfProcessCleanups();
    }
-   if (gInterpreter) {
-      gInterpreter->ShutDown();
-   }
+   TROOT::ShutDown();
    gVirtualX->CloseDisplay();
 
    if (mode) {
