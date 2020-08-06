@@ -843,6 +843,7 @@ INPUT                  = . \
                          ../../io/sql/ \
                          ../../io/xml/ \
                          ../../io/xmlparser/ \
+                         ../../main/src/hadd.cxx \
                          ../../math/ \
                          ../../misc/memstat/ \
                          ../../montecarlo/ \
