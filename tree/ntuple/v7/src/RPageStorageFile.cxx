@@ -84,7 +84,7 @@ ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile()
 void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & /* model */)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   auto szHeader = descriptor.SerializeHeader(nullptr);
+   auto szHeader = descriptor.GetHeaderSize();
    auto buffer = std::unique_ptr<unsigned char[]>(new unsigned char[szHeader]);
    descriptor.SerializeHeader(buffer.get());
 
