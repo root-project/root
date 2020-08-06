@@ -11,7 +11,7 @@
 #include <arrow/memory_pool.h>
 #include <arrow/record_batch.h>
 #include <arrow/table.h>
-#include <arrow/compute/test_util.h>
+#include <arrow/testing/gtest_util.h>
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
