@@ -579,6 +579,7 @@ public:
    void AddClusterPageRange(DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange);
 
    void AddClustersFromFooter(void* footerBuffer);
+   void AddRawPages(void* footerBuffer);
 };
 
 } // namespace Experimental

@@ -915,6 +915,71 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
    }
 }
 
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddRawPages(void* footerBuffer) {
+   auto pos = reinterpret_cast<unsigned char *>(footerBuffer);
+   auto base = pos;
+
+   std::uint32_t frameSize;
+   pos += DeserializeFrame(RNTupleDescriptor::kFrameVersionCurrent, pos, &frameSize);
+   VerifyCrc32(base, frameSize);
+   std::uint64_t reserved;
+   pos += DeserializeUInt64(pos, &reserved);
+
+   std::uint64_t nClusters;
+   pos += DeserializeUInt64(pos, &nClusters);
+   std::cout << "num clusters: " << nClusters << "\n";
+   for (std::uint64_t i = 0; i < nClusters; ++i) {
+      RNTupleUuid uuid;
+      pos += DeserializeUuid(pos, &uuid);
+      R__ASSERT(uuid == fDescriptor.fOwnUuid);
+      auto clusterBase = pos;
+      pos += DeserializeFrame(RClusterDescriptor::kFrameVersionCurrent, clusterBase, &frameSize);
+
+      std::uint64_t clusterId;
+      RNTupleVersion version;
+      std::uint64_t firstEntry;
+      std::uint64_t nEntries;
+      pos += DeserializeUInt64(pos, &clusterId);
+      pos += DeserializeVersion(pos, &version);
+      pos += DeserializeUInt64(pos, &firstEntry);
+      pos += DeserializeUInt64(pos, &nEntries);
+      std::cout << "nEntries: " << nEntries << "\n";
+      AddCluster(clusterId, version, firstEntry, ROOT::Experimental::ClusterSize_t(nEntries));
+      RClusterDescriptor::RLocator locator;
+      pos += DeserializeLocator(pos, &locator);
+      SetClusterLocator(clusterId, locator);
+
+      pos = clusterBase + frameSize;
+
+      std::uint32_t nColumns;
+      pos += DeserializeUInt32(pos, &nColumns);
+      std::cout << "num columns: " << nColumns << "\n";
+      for (std::uint32_t j = 0; j < nColumns; ++j) {
+         uint64_t columnId;
+         pos += DeserializeUInt64(pos, &columnId);
+
+         RClusterDescriptor::RColumnRange columnRange;
+         columnRange.fColumnId = columnId;
+         pos += DeserializeColumnRange(pos, &columnRange);
+         AddClusterColumnRange(clusterId, columnRange);
+         std::cout << "nElements in column " << columnRange.fNElements << "\n";
+
+         RClusterDescriptor::RPageRange pageRange;
+         pageRange.fColumnId = columnId;
+         uint32_t nPages;
+         pos += DeserializeUInt32(pos, &nPages);
+         for (unsigned int k = 0; k < nPages; ++k) {
+            RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+            pos += DeserializePageInfo(pos, &pageInfo);
+            std::cout << "\tpage " << k << " has " << pageInfo.fNElements << " elements\n";
+            pageRange.fPageInfos.emplace_back(pageInfo);
+         }
+         AddClusterPageRange(clusterId, std::move(pageRange));
+      }
+   }
+}
+
+
 void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
    const std::string_view name, const std::string_view description, const std::string_view author,
    const RNTupleVersion &version, const RNTupleUuid &uuid)

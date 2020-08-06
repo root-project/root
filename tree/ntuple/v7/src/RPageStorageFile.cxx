@@ -180,15 +180,40 @@ void ROOT::Experimental::Detail::RPageSinkFile::Merge(
    const std::vector<std::unique_ptr<RPageSourceFile>>& sources)
 {
    std::cout << "\n\ngot " << sources.size() << " files to merge\n";
-   std::cout << "merge target is:\n";
-   fDescriptorBuilder.GetDescriptor().PrintInfo(std::cout);
+   if (sources.empty()) {
+      return;
+   }
 
-   std::cout << "\nmerge inputs are:\n";
-   for (std::size_t i = 0; i < sources.size(); ++i) {
+   // todo(max) handle non-empty PageSink NTuple descriptor
+   sources.front()->Attach();
+   const auto& sourceDesc = sources.front()->GetDescriptor();
+   auto szFooter = sourceDesc.GetFooterSize();
+   auto szHeader = sourceDesc.GetHeaderSize();
+   std::cout << "source header size " << szHeader << "\n";
+   std::cout << "source footer size " << szFooter << "\n";
+
+   auto headerBuffer = new unsigned char[szHeader];
+   sourceDesc.SerializeHeader(headerBuffer);
+   fDescriptorBuilder.SetFromHeader(headerBuffer);
+
+   auto footerBuffer = new unsigned char[szFooter];
+   sourceDesc.SerializeFooter(footerBuffer);
+   fDescriptorBuilder.AddClustersFromFooter(footerBuffer);
+
+   std::cout << "merge header size " << fDescriptorBuilder.GetDescriptor().GetHeaderSize() << "\n";
+   std::cout << "merge footer size " << fDescriptorBuilder.GetDescriptor().GetFooterSize() << "\n";
+
+   std::cout << "\nother merge inputs are:\n";
+   for (std::size_t i = 1; i < sources.size(); ++i) {
       sources[i]->Attach();
       const auto& desc = sources[i]->GetDescriptor();
       desc.PrintInfo(std::cout);
+      desc.SerializeFooter(footerBuffer);
+      fDescriptorBuilder.AddRawPages(footerBuffer);
    }
+
+   // std::cout << "merge footer size " << fDescriptorBuilder.GetDescriptor().GetFooterSize() << "\n";
+   fDescriptorBuilder.GetDescriptor().PrintInfo(std::cout);
 }
 
 
