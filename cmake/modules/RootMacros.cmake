@@ -580,13 +580,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---what rootcling command to use--------------------------
   if(ARG_STAGE1)
-    set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:rootcling_stage1> -failOnWarnings)
+    set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:rootcling_stage1>)
     set(ROOTCINTDEP rconfigure)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
-                  "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild -failOnWarnings)
+                  "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
       # Modules need RConfigure.h copied into include/.
       set(ROOTCINTDEP rootcling rconfigure)
     elseif(TARGET ROOT::rootcling)
