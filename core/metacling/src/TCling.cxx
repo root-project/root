@@ -1119,6 +1119,9 @@ static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling
                if (!ND->isFromASTFile())
                   return true;
 
+               if (ND->getAccess() == AS_protected || ND->getAccess() == AS_private)
+                  return true;
+
                if (TagDecl *TD = llvm::dyn_cast<TagDecl>(ND)) {
                   if (TD->isCompleteDefinition())
                      Register(TD);
