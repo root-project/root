@@ -93,12 +93,14 @@ sap.ui.define([
             this.camera = new RC.PerspectiveCamera(75, w / h, 1, 5000);
             this.camera.position = new RC.Vector3(-500, 0, 0);
             this.camera.lookAt(new RC.Vector3(0, 0, 0), new RC.Vector3(0, 1, 0));
+            this.camera.isPerspectiveCamera = true;
          }
          else
          {
             this.camera = new RC.OrthographicCamera(-w/2, w/2, -h/2, h/2, 0, 2000);
             this.camera.position = new RC.Vector3(0, 0, 500);
             this.camera.lookAt(new RC.Vector3(0, 0, 0), new RC.Vector3(0, 1, 0));
+            this.camera.isOrthographicCamera = true;
          }
 
          this.scene = new RC.Scene();
@@ -120,19 +122,140 @@ sap.ui.define([
 
       setupRCoreDomAndEventHandlers: function()
       {
-         this.get_view().getDomRef().appendChild(this.canvas);
+         let dome = this.get_view().getDomRef();
+
+         dome.appendChild(this.canvas);
+
+         this.controls = new RC.ReveCameraControls(this.camera, this.get_view().getDomRef());
+
+         this.controls.addEventListener('change', this.render.bind(this));
+
+         // Setup some event pre-handlers
+         var glc = this;
+
+         dome.addEventListener('mousemove', function(event) {
+
+            if (event.movementX == 0 && event.movementY == 0)
+               return;
+
+            glc.removeMouseupListener();
+
+            if (event.buttons === 0) {
+               glc.removeMouseMoveTimeout();
+               glc.mousemove_timeout = setTimeout(glc.onMouseMoveTimeout.bind(glc, event.offsetX, event.offsetY), glc.controller.htimeout);
+            } else {
+               glc.clearHighlight();
+            }
+         });
+
+         dome.addEventListener('mouseleave', function(event) {
+
+            glc.removeMouseMoveTimeout();
+            glc.clearHighlight();
+            glc.removeMouseupListener();
+         });
+
+         dome.addEventListener('mousedown', function(event) {
+
+            glc.removeMouseMoveTimeout();
+            if (event.buttons != 1 && event.buttons != 2)  glc.clearHighlight();
+            glc.removeMouseupListener();
+
+            // console.log("GLC::mousedown", this, glc, event, event.offsetX, event.offsetY);
+
+            glc.mouseup_listener = function(event2)
+            {
+               this.removeEventListener('mouseup', glc.mouseup_listener);
+
+               if (event.buttons == 1) // Selection on mouseup without move
+               {
+                  glc.handleMouseSelect(event2);
+               }
+               else if (event.buttons == 2) // Context menu on delay without move
+               {
+                  // Was needed for "on press with timeout"
+                  // glc.controls.resetMouseDown(event);
+
+                  JSROOT.Painter.createMenu(glc, glc.showContextMenu.bind(glc, event2));
+               }
+            }
+
+            this.addEventListener('mouseup', glc.mouseup_listener);
+         });
+
+         dome.addEventListener('dblclick', function(event) {
+            //if (glc.controller.dblclick_action == "Reset")
+               glc.resetRenderer();
+         });
+
+         // Key-handlers go on window ...
+
+         window.addEventListener('keydown', function(event) {
+
+            // console.log("GLC::keydown", event.key, event.code, event);
+
+            let handled = true;
+
+            if (event.key == "t")
+            {
+               glc.scene.traverse( function( node ) {
+
+                  if ( node.material && node.material.linewidth )
+                  {
+                     if ( ! node.material.linewidth_orig) node.material.linewidth_orig = node.material.linewidth;
+
+                     node.material.linewidth *= 1.2;
+                  }
+               });
+            }
+            else if (event.key == "e")
+            {
+               glc.scene.traverse( function( node ) {
+
+                  if ( node.material && node.material.linewidth )
+                  {
+                     if ( ! node.material.linewidth_orig) node.material.linewidth_orig = node.material.linewidth;
+
+                     node.material.linewidth *= 0.8;
+                  }
+               });
+            }
+            else if (event.key == "r")
+            {
+               glc.scene.traverse( function( node ) {
+
+                  if ( node.material && node.material.linewidth && node.material.linewidth_orig )
+                  {
+                     node.material.linewidth = node.material.linewidth_orig;
+                  }
+               });
+            }
+            else
+            {
+               handled = false;
+            }
+
+            if (handled)
+            {
+               // // // event.stopPropagation();
+               // event.preventDefault();
+               // event.stopImmediatePropagation();
+
+               glc.render();
+            }
+         });
 
          // This will also call render().
-         this.resetRCoreRenderer();
+         this.resetRenderer();
       },
 
-      resetRCoreRenderer: function()
+      resetRenderer: function()
       {
          let sbbox = new RC.Box3();
          sbbox.setFromObject( this.scene );
          if (sbbox.isEmpty())
          {
-            console.error("GlViewerRenderCore.resetRCoreRenderer scene bbox empty", sbbox);
+            console.error("GlViewerRenderCore.resetRenderer scene bbox empty", sbbox);
             const ext = 100;
             sbbox.expandByPoint(new RC.Vector3(-ext,-ext,-ext));
             sbbox.expandByPoint(new RC.Vector3( ext, ext, ext));
@@ -144,7 +267,7 @@ sap.ui.define([
          let extV = new RC.Vector3; extV = negV; extV.negate(); extV.max(posV);
          let extR = extV.length();
 
-         console.log("GlViewerRenderCore.resetRCoreRenderer", sbbox, posV, negV, extV, extR);
+         console.log("GlViewerRenderCore.resetRenderer", sbbox, posV, negV, extV, extR);
 
          let lc = this.point_lights.children;
          lc[0].position.set( extR, extR, -extR);
@@ -158,7 +281,7 @@ sap.ui.define([
             this.camera.position.copy(posC);
             this.camera.lookAt(new RC.Vector3(0,0,0), new RC.Vector3(0,1,0));
 
-            // this.controls.screenSpacePanning = true;
+            this.controls.screenSpacePanning = true;
 
             // console.log("resetThreejsRenderer 3D scene bbox ", sbbox, ", camera_pos ", posC, ", look_at ", this.rot_center);
          }
@@ -174,23 +297,20 @@ sap.ui.define([
             this.camera._right  =  ex;
             this.camera._top    =  ey;
             this.camera._bottom = -ey;
+            this.camera.updateProjectionMatrix();
 
-            // this.controls.resetOrthoPanZoom();
+            this.controls.resetOrthoPanZoom();
 
-            // this.controls.screenSpacePanning = true;
-            // this.controls.enableRotate = false;
+            this.controls.screenSpacePanning = true;
+            this.controls.enableRotate = false;
 
             // console.log("resetThreejsRenderer 2D scene bbox ex ey", sbbox, ex, ey, ", camera_pos ", posC, ", look_at ", this.rot_center);
          }
-         // this.controls.target.copy( this.rot_center );
+         this.controls.target.copy( this.rot_center );
 
          // this.composer.reset();
 
-         // this.controls.update();
-
-         this.camera.updateProjectionMatrix();
-
-         this.render();
+         this.controls.update();
       },
 
       //==============================================================================
@@ -223,9 +343,197 @@ sap.ui.define([
          //this.fxaa_pass.uniforms.resolution.value.set(0.5 / w, 0.5 / h);
 
          //this.composer.reset();
-         //this.controls.update();
 
-         this.render();
+         this.controls.update();
+      },
+
+
+      //==============================================================================
+      // RCore renderer event handlers etc.
+      //==============================================================================
+
+      //------------------------------------------------------------------------------
+      // Highlight & Mouse move timeout handling
+      //------------------------------------------------------------------------------
+
+      clearHighlight: function()
+      {
+         if (this.highlighted_scene)
+         {
+            this.highlighted_scene.clearHighlight(); // XXXX should go through manager
+            this.highlighted_scene = 0;
+
+            this.ttip.style.display = "none";
+         }
+      },
+
+      removeMouseMoveTimeout: function()
+      {
+         if (this.mousemove_timeout)
+         {
+            clearTimeout(this.mousemove_timeout);
+            delete this.mousemove_timeout;
+         }
+      },
+
+      /** Get three.js intersect object at specified mouse position */
+      getIntersectAt: function(x, y)
+      {
+         let w = this.get_width();
+         let h = this.get_height();
+
+         console.log("GLC::onMouseMoveTimeout", this, event, x, y);
+
+         /*
+         let mouse = new THREE.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
+
+         this.raycaster.setFromCamera(mouse, this.camera);
+
+         let intersects = this.raycaster.intersectObjects(this.scene.children, true);
+
+         let o = null, c = null;
+
+         for (let i = 0; i < intersects.length; ++i)
+         {
+            if (intersects[i].object.get_ctrl)
+            {
+               intersects[i].mouse = mouse;
+               intersects[i].w = w;
+               intersects[i].h = h;
+               return intersects[i];
+            }
+         }
+         */
+      },
+
+      onMouseMoveTimeout: function(x, y)
+      {
+         delete this.mousemove_timeout;
+
+         var intersect = this.getIntersectAt(x,y);
+
+         if (!intersect)
+            return this.clearHighlight();
+
+         var c = intersect.object.get_ctrl();
+
+         var mouse = intersect.mouse;
+
+         c.elementHighlighted(c.extractIndex(intersect));
+
+         this.highlighted_scene = c.obj3d.scene;
+
+         if (c.obj3d && c.obj3d.eve_el)
+            this.ttip_text.innerHTML = c.getTooltipText(intersect);
+         else
+            this.ttip_text.innerHTML = "";
+
+         let dome = this.controller.getView().getDomRef();
+         let offs = (mouse.x > 0 || mouse.y < 0) ? this.getRelativeOffsets(dome) : null;
+
+         if (mouse.x <= 0) {
+            this.ttip.style.left  = (x + dome.offsetLeft + 10) + "px";
+            this.ttip.style.right = null;
+         } else {
+            this.ttip.style.right = (intersect.w - x + offs.right + 10) + "px";
+            this.ttip.style.left  = null;
+         }
+         if (mouse.y >= 0) {
+            this.ttip.style.top    = (y + dome.offsetTop + 10) + "px";
+            this.ttip.style.bottom = null;
+         } else {
+            this.ttip.style.bottom = (intersect.h - y + offs.bottom + 10) + "px";
+            this.ttip.style.top = null;
+         }
+
+         this.ttip.style.display= "block";
+      },
+
+      getRelativeOffsets: function(elem)
+      {
+         // Based on:
+         // https://stackoverflow.com/questions/3000887/need-to-calculate-offsetright-in-javascript
+
+         let r = { left: 0, right: 0, top:0, bottom: 0 };
+
+         let parent = elem.offsetParent;
+
+         while (parent && getComputedStyle(parent).position === 'relative')
+         {
+            r.top    += elem.offsetTop;
+            r.left   += elem.offsetLeft;
+            r.right  += parent.offsetWidth  - (elem.offsetLeft + elem.offsetWidth);
+            r.bottom += parent.offsetHeight - (elem.offsetTop  + elem.offsetHeight);
+
+            elem   = parent;
+            parent = parent.offsetParent;
+         }
+
+         return r;
+      },
+
+      //------------------------------------------------------------------------------
+      // Mouse button handlers, selection, context menu
+      //------------------------------------------------------------------------------
+
+      removeMouseupListener: function()
+      {
+         if (this.mouseup_listener)
+         {
+            this.get_view().getDomRef().removeEventListener('mouseup', this.mouseup_listener);
+            this.mouseup_listener = 0;
+         }
+      },
+
+      showContextMenu: function(event, menu)
+      {
+         // console.log("GLC::showContextMenu", this, menu)
+
+         // See js/scripts/JSRootPainter.jquery.js JSROOT.Painter.createMenu(), menu.add()
+
+
+         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
+
+         menu.add("header:Context Menu");
+
+         if (intersect) {
+            if (intersect.object.eve_el)
+               menu.add("Browse to " + (intersect.object.eve_el.fName || "element"), intersect.object.eve_el.fElementId, this.controller.invokeBrowseOf.bind(this.controller));
+         }
+
+         menu.add("Reset camera", this.resetThreejsRenderer);
+
+         menu.add("separator");
+
+         let fff = this.defaultContextMenuAction;
+         menu.add("sub:Sub Test");
+         menu.add("Foo",     'foo', fff);
+         menu.add("Bar",     'bar', fff);
+         menu.add("Baz",     'baz', fff);
+         menu.add("endsub:");
+
+         menu.show(event);
+      },
+
+      defaultContextMenuAction: function(arg)
+      {
+         console.log("GLC::defaultContextMenuAction", this, arg);
+      },
+
+      handleMouseSelect: function(event)
+      {
+         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
+
+         if (intersect) {
+            var c = intersect.object.get_ctrl();
+            c.event = event;
+            c.elementSelected(c.extractIndex(intersect));
+            this.highlighted_scene = intersect.object.scene;
+         } else {
+            // XXXX HACK - handlersMIR senders should really be in the mgr
+
+            this.controller.created_scenes[0].processElementSelected(null, [], event);
+         }
       },
 
    });
