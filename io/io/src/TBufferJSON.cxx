@@ -3301,7 +3301,8 @@ void TBufferJSON::WriteFastArray(const Bool_t *b, Int_t n)
 
 void TBufferJSON::WriteFastArray(const Char_t *c, Int_t n)
 {
-   Bool_t need_blob = false, has_zero = false;
+   Bool_t need_blob = false;
+   Bool_t has_zero = false;
    for (int i=0;i<n;++i)
       if (!c[i])
          has_zero = true;
