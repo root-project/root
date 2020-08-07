@@ -1892,10 +1892,10 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
       if (objClass && (jsonClass != objClass)) {
          if (obj || (jsonClass->GetBaseClassOffset(objClass) != 0)) {
-            if (jsonClass->GetBaseClassOffset(objClass) < 0) 
+            if (jsonClass->GetBaseClassOffset(objClass) < 0)
                Error("JsonReadObject", "Not possible to read %s and casting to %s pointer as the two classes are unrelated",
                      jsonClass->GetName(), objClass->GetName());
-            else 
+            else
                Error("JsonReadObject", "Reading %s and casting to %s pointer is currently not supported",
                      jsonClass->GetName(), objClass->GetName());
             if (process_stl)
@@ -2762,10 +2762,10 @@ R__ALWAYS_INLINE void TBufferJSON::JsonReadFastArray(T *arr, Int_t arrsize, bool
          nlohmann::json *elem = &(json->at(indx[0]));
          for (int k = 1; k < lastdim; ++k)
             elem = &((*elem)[indx[k]]);
-         arr[cnt] = asstring ? elem->get<std::string>()[indx[lastdim]] : (*elem)[indx[lastdim]].get<T>();
+         arr[cnt] = (asstring && elem->is_string()) ? elem->get<std::string>()[indx[lastdim]] : (*elem)[indx[lastdim]].get<T>();
          indexes->NextSeparator();
       }
-   } else if (asstring) {
+   } else if (asstring && json->is_string()) {
       std::string str = json->get<std::string>();
       for (int cnt = 0; cnt < arrsize; ++cnt)
          arr[cnt] = (cnt < (int)str.length()) ? str[cnt] : 0;
@@ -3294,10 +3294,28 @@ void TBufferJSON::WriteFastArray(const Bool_t *b, Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Char_t to buffer
+///
+/// Normally written as JSON string, but if string includes \0 in the middle
+/// or some special characters, uses regular array. From array size 1000 it
+/// will be automatically converted into base64 coding
 
 void TBufferJSON::WriteFastArray(const Char_t *c, Int_t n)
 {
-   JsonWriteFastArray(c, n, "Int8", &TBufferJSON::JsonWriteConstChar);
+   Bool_t need_blob = false;
+   Bool_t has_zero = false;
+   for (int i=0;i<n;++i) {
+      if (!c[i]) {
+         has_zero = true; // might be terminal '\0'
+      } else if (has_zero || !isprint(c[i])) {
+         need_blob = true;
+         break;
+      }
+   }
+
+   if (need_blob && (n >= 1000) && (!Stack()->fElem || (Stack()->fElem->GetArrayDim() < 2)))
+      Stack()->fBase64 = true;
+
+   JsonWriteFastArray(c, n, "Int8", need_blob ? &TBufferJSON::JsonWriteArrayCompress<Char_t> : &TBufferJSON::JsonWriteConstChar);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
