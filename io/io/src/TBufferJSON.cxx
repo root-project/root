@@ -3295,7 +3295,7 @@ void TBufferJSON::WriteFastArray(const Bool_t *b, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Char_t to buffer
 ///
-/// Normally written as JSON string, but if string includes 0 in the middle
+/// Normally written as JSON string, but if string includes \0 in the middle
 /// or some special characters, uses regular array. From array size 1000 it
 /// will be automatically converted into base64 coding
 
