@@ -3306,7 +3306,7 @@ void TBufferJSON::WriteFastArray(const Char_t *c, Int_t n)
    for (int i=0;i<n;++i)
       if (!c[i])
          has_zero = true;
-      else if (has_zero || (c[i] < 10))
+      else if (has_zero || !isprint(c[i]))
          need_blob = true;
 
    if (need_blob && (n >= 1000) && (!Stack()->fElem || (Stack()->fElem->GetArrayDim() < 2)))
