@@ -533,6 +533,14 @@ void CodeGenFunction::EmitEndEHSpec(const Decl *D) {
     return;
 
   ExceptionSpecificationType EST = Proto->getExceptionSpecType();
+
+  // Might need to deserialize
+  if (EST == EST_Uninstantiated || EST == EST_Unevaluated) {
+    FD = FD->getMostRecentDecl();
+    Proto = FD->getType()->getAs<FunctionProtoType>();
+    EST = Proto->getExceptionSpecType();
+  }
+
   if (isNoexceptExceptionSpec(EST)) {
     if (Proto->getNoexceptSpec(getContext()) == FunctionProtoType::NR_Nothrow) {
       EHStack.popTerminate();
