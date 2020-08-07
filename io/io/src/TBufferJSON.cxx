@@ -3305,7 +3305,7 @@ void TBufferJSON::WriteFastArray(const Char_t *c, Int_t n)
    Bool_t has_zero = false;
    for (int i=0;i<n;++i)
       if (!c[i])
-         has_zero = true;
+         has_zero = true; // might be terminal '\0'
       else if (has_zero || !isprint(c[i]))
          need_blob = true;
 
