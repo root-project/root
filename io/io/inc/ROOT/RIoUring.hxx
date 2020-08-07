@@ -56,6 +56,10 @@ public:
       static const bool available = RIoUring::CheckIsAvailable();
       return available;
    }
+
+   struct io_uring *raw() {
+      return &fRing;
+   }
 };
 
 } // namespace Internal
