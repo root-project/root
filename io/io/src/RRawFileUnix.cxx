@@ -115,8 +115,49 @@ void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
 #ifdef R__HAS_URING
    if (RIoUring::IsAvailable()) {
-      // todo(max) actually use the ring
-      RRawFile::ReadVImpl(ioVec, nReq);
+      RIoUring ring(nReq);
+      auto *p_ring = ring.raw();
+
+      // prep reads
+      struct io_uring_sqe *sqe;
+      for (std::size_t i = 0; i < nReq; ++i) {
+         sqe = io_uring_get_sqe(p_ring);
+         if (!sqe) {
+            throw std::runtime_error("get SQE failed for read request '" +
+               std::to_string(i) + "', error: " + std::string(strerror(errno)));
+         }
+         io_uring_prep_read(sqe, fFileDes, ioVec[i].fBuffer, ioVec[i].fSize, ioVec[i].fOffset);
+         sqe->user_data = i;
+      }
+
+      // todo(max) fix for batched sqe submissions where ret may not equal nReq
+      int submitted = io_uring_submit_and_wait(p_ring, nReq);
+      if (submitted <= 0) {
+         throw std::runtime_error("ring submit failed, error: " + std::string(strerror(errno)));
+      }
+      if (submitted != static_cast<int>(nReq)) {
+         throw std::runtime_error("ring submitted " + std::to_string(submitted) +
+            " events but requested " + std::to_string(nReq));
+      }
+      // reap reads
+      struct io_uring_cqe *cqe;
+      int ret;
+      for (int i = 0; i < submitted; ++i) {
+         ret = io_uring_wait_cqe(p_ring, &cqe);
+         if (ret < 0) {
+            throw std::runtime_error("wait cqe failed, error: " + std::string(std::strerror(-ret)));
+         }
+         auto index = reinterpret_cast<std::size_t>(io_uring_cqe_get_data(cqe));
+         if (index >= nReq) {
+            throw std::runtime_error("bad cqe user data: " + std::to_string(index));
+         }
+         if (cqe->res < 0) {
+            throw std::runtime_error("read failed for RIOVec[" + std::to_string(index) + "], "
+               "error: " + std::string(std::strerror(-cqe->res)));
+         }
+         ioVec[index].fOutBytes = static_cast<std::size_t>(cqe->res);
+         io_uring_cqe_seen(p_ring, cqe);
+      }
       return;
    }
    Warning("RRawFileUnix",
