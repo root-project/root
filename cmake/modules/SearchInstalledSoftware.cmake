@@ -1611,7 +1611,8 @@ endif()
 
 #---Check for deprecated PyROOT experimental ---------------------------------------------
 if(pyroot_experimental)
-  message(WARNING "pyroot_experimental is a deprecated flag from 6.22.00. To build the new PyROOT, just configure with -Dpyroot=ON.")
+  message(WARNING "pyroot_experimental is a deprecated flag from 6.22.00."
+                  "To build the new PyROOT, just configure with -Dpyroot=ON -Dpyroot_experimental=OFF.")
 endif()
 
 #---Check for MPI---------------------------------------------------------------------
