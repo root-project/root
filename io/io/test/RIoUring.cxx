@@ -1,7 +1,10 @@
-#include "ROOT/RIoUring.hxx"
-using RIoUring = ROOT::Internal::RIoUring;
+#include "io_test.hxx"
 
-#include "gtest/gtest.h"
+#include "ROOT/RIoUring.hxx"
+#include "ROOT/RRawFileUnix.hxx"
+
+using RIoUring = ROOT::Internal::RIoUring;
+using RRawFileUnix = ROOT::Internal::RRawFileUnix;
 
 TEST(RIoUring, Basics)
 {
@@ -12,6 +15,41 @@ TEST(RIoUring, Basics)
 TEST(RIoUring, IsAvailable)
 {
    ASSERT_TRUE(RIoUring::IsAvailable());
+}
+
+TEST(RRawFileUnix, ReadV)
+{
+   using RIOVec = RRawFile::RIOVec;
+   auto file = "test_uring_readv";
+   auto filesize = 2 << 20;
+   FileRaii fileGuard(file, std::string(filesize, 'a')); // ~2MB
+   auto f = RRawFileUnix::Create(file);
+
+   auto make_iovecs = [&](int num) -> std::vector<RIOVec> {
+      std::vector<RIOVec> iovecs;
+      for (int i = 0; i < num; ++i) {
+         RIOVec io;
+         io.fBuffer = malloc(4096 * 9);
+         io.fOffset = std::rand() % filesize;
+         io.fSize = 4096 * 8;
+         iovecs.push_back(io);
+      }
+      return iovecs;
+   };
+
+   auto nReq = 2000;
+
+   auto iovecs = make_iovecs(nReq);
+   // auto t1 = std::chrono::high_resolution_clock::now();
+   f->ReadV(iovecs.data(), nReq);
+   // auto t2 = std::chrono::high_resolution_clock::now();
+   // std::cout << std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count() << " microseconds\n";
+   for (auto iovec: iovecs) {
+      for (std::size_t i = 0; i < iovec.fOutBytes; ++i) {
+         EXPECT_EQ('a', ((unsigned char*)iovec.fBuffer)[i]);
+      }
+      free(iovec.fBuffer);
+   }
 }
 
 TEST(RawUring, NopRoundTrip)
