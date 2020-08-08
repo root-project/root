@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<gdml xmlns:gdml="http://cern.ch/2001/Schemas/GDML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://service-spi.web.cern.ch/service-spi/app/releases/GDML/GDML_2_10_0/src/GDMLSchema/gdml.xsd" >
+
+<define>
+
+  <constant name="worldSize" value="100.0"/>
+  <position name="center"/>
+
+  <position name="y_center" unit="mm" x="0" y="350" z="0.0"/>
+
+  <position name="x_center" unit="mm" x="350" y="0" z="0.0"/>
+
+  <position name="z_center" unit="mm" x="0" y="0" z="350"/>
+
+
+  <rotation name="identity"/>
+  <rotation name="z90" unit="deg" z="90"/>
+  <rotation name="x90" unit="deg" x="90"/>
+
+</define>
+
+<materials>
+
+  <material Z="7" formula=" " name="Vacuum" >
+    <D value="1e-10" />
+    <atom value="14.0007" />
+  </material>
+
+  <material name="Aluminum" formulae="Al" Z="13.0">
+    <D value="2.70"/> <atom value="27.0"/>
+  </material>
+
+</materials>
+
+<solids>
+
+  <box name="WorldBox" x="1000.0" y="1000.0" z="1000.0" lunit="mm"/>
+  <box name="PSBox" x="100.0" y="600.0" z="100.0" lunit="mm"/>
+
+</solids>
+
+<structure>
+
+  <volume name="PSV_xc"><materialref ref="Aluminum"/><solidref ref="PSBox"/></volume>
+
+  <volume name="PSV_yc"><materialref ref="Aluminum"/><solidref ref="PSBox"/></volume>
+
+  <volume name="PSV_zc"><materialref ref="Aluminum"/><solidref ref="PSBox"/></volume>
+
+
+  <volume name="World" >
+
+    <materialref ref="Vacuum" />
+    <solidref ref="WorldBox" />
+
+    <physvol>
+      <volumeref ref="PSV_xc"/> <positionref ref="x_center"/> <rotationref ref="z90"/>
+    </physvol>
+
+    <physvol>
+      <volumeref ref="PSV_yc"/> <positionref ref="y_center"/> <rotationref ref="identity"/>
+    </physvol>
+
+    <physvol>
+      <volumeref ref="PSV_zc"/> <positionref ref="z_center"/> <rotationref ref="x90"/>
+    </physvol>
+
+    
+  </volume>
+
+</structure>
+
+<setup name="Default" version="1.0" >
+
+  <world ref="World" />
+
+</setup>
+
+</gdml>
+

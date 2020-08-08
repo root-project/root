@@ -765,6 +765,87 @@ void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
    z = d;
 }
 
+/** \class TEveXZProjection
+\ingroup TEve
+XZ projection with distortion around given center.
+*/
+
+ClassImp(TEveXZProjection);
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
+TEveXZProjection::TEveXZProjection() :
+   TEveProjection()
+{
+   fType    = kPT_XZ;
+   fGeoMode = kGM_Polygons;
+   fName    = "XZ";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Project point.
+
+void TEveXZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
+                                      Float_t d, EPProc_e proc)
+{
+   
+   using namespace TMath;
+   
+   if (fDisplaceOrigin)
+   {
+      x  -= fCenter.fX;
+      y  -= fCenter.fY;
+      z  -= fCenter.fZ;
+   }
+   
+
+   //projcetion
+   y = z;
+   z = d;
+   
+   if (proc != kPP_Plane)
+   {
+      Float_t r, phi;
+      if (fUsePreScale)
+      {
+         r   = Sqrt(x*x + y*y);
+         phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+         PreScalePoint(r, phi);
+         x = r*Cos(phi);
+         y = r*Sin(phi);
+      }
+
+      if (!fDisplaceOrigin)
+      {
+         x  -= fCenter.fX;
+         y  -= fCenter.fY;
+         z  -= fCenter.fZ;
+      }
+
+      r   = Sqrt(x*x + y*y);
+      phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+
+      if (r > fFixR)
+         r =  fFixR + fPastFixRScale*(r - fFixR);
+      else if (r < -fFixR)
+         r = -fFixR + fPastFixRScale*(r + fFixR);
+      else
+         r =  r * fScaleR / (1.0f + r*fDistortion);
+
+      x = r*Cos(phi);
+      y = r*Sin(phi);
+
+      if (!fDisplaceOrigin)
+      {
+         x += fCenter.fX;
+         y += fCenter.fY;
+         z += fCenter.fZ;
+      }
+   }
+   
+}
+
 /** \class TEve3DProjection
 \ingroup TEve
 3D scaling projection. One has to use pre-scaling to make any ise of this.
