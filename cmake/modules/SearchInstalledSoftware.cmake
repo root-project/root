@@ -209,6 +209,7 @@ if(builtin_lzma)
       set(LIBLZMA_CFLAGS "${LIBLZMA_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
     set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(LIBLZMA_CFLAGS "${LIBLZMA_CFLAGS} -O3")
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
