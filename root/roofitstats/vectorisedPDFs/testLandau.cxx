@@ -21,7 +21,7 @@ class TestLandauEvil: public PDFTest
 {
   protected:
     TestLandauEvil() :
-      PDFTest("Landau_evil", 300000)
+      PDFTest("Landau_evil", 100000)
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
         auto x = new RooRealVar("x", "x", -250, 3000);
@@ -38,7 +38,8 @@ class TestLandauEvil: public PDFTest
       for (auto par : {mean, sigma}) {
         _parameters.addOwned(*par);
       }
-     
+
+      _toleranceParameter = 8.E-6;
     }
 };
 
@@ -54,7 +55,7 @@ class TestLandau: public PDFTest
 {
   protected:
     TestLandau() :
-      PDFTest("Landau_convenient", 300000)
+      PDFTest("Landau_convenient", 100000)
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
         auto x = new RooRealVar("x", "x", -3, 40);
@@ -72,7 +73,7 @@ class TestLandau: public PDFTest
         _parameters.addOwned(*par);
       }
 
-     
+      _toleranceParameter = 8.E-6;
     }
 };
 

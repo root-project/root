@@ -62,7 +62,7 @@ class TestGaussWeighted : public PDFTestWeightedData
 {
   protected:
     TestGaussWeighted() :
-      PDFTestWeightedData("GaussWithWeights", 300000)
+      PDFTestWeightedData("GaussWithWeights", 100000)
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
       auto x = new RooRealVar("x", "x", -10, 10);
@@ -81,7 +81,7 @@ class TestGaussWeighted : public PDFTestWeightedData
   }
 };
 
-FIT_TEST_BATCH(TestGaussWeighted, RunBatch)
+FIT_TEST_BATCH(TestGaussWeighted, DISABLED_RunBatch) // Would need SumW2 or asymptotic error correction, but that's not in test macro.
 FIT_TEST_BATCH_VS_SCALAR(TestGaussWeighted, CompareBatchScalar)
 
 

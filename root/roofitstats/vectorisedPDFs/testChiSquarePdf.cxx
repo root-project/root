@@ -21,7 +21,7 @@ class TestChiSquarePdfinX: public PDFTest
 {
   protected:
     TestChiSquarePdfinX() :
-      PDFTest("ChiSquarePdf", 300000)
+      PDFTest("ChiSquarePdf", 100000)
     {
       auto x = new RooRealVar("x", "x", 0.1, 100);
       auto ndof = new RooRealVar("ndof", "ndof of chiSquarePdf", 2, 1, 5);
@@ -53,7 +53,7 @@ class TestChiSquarePdfinNdof: public PDFTest
 {
   protected:
     TestChiSquarePdfinNdof() :
-      PDFTest("ChiSquarePdf", 300000)
+      PDFTest("ChiSquarePdf", 100000)
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
       auto x = new RooRealVar("x", "x", 0.01, 20);
@@ -87,7 +87,7 @@ class TestChiSquarePdfinXandNdof: public PDFTest
 {
   protected:
     TestChiSquarePdfinXandNdof() :
-      PDFTest("ChiSquarePdf", 300000)
+      PDFTest("ChiSquarePdf", 100000)
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
       auto x = new RooRealVar("x", "x", 0.1, 50);

@@ -21,7 +21,7 @@ class TestPolynomial2 : public PDFTest
 {
   protected:
     TestPolynomial2() :
-      PDFTest("Polynomial2", 300000)
+      PDFTest("Polynomial2", 100000)
   {
         auto x = new RooRealVar("x", "x", -10, 10);
         auto a1 = new RooRealVar("a1", "a1", 0.3, 0.01, 0.5);
@@ -43,15 +43,15 @@ class TestPolynomial2 : public PDFTest
 COMPARE_FIXED_VALUES_UNNORM(TestPolynomial2, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestPolynomial2, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestPolynomial2, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestPolynomial2, RunScalar)
-FIT_TEST_BATCH(TestPolynomial2, RunBatch)
+FIT_TEST_SCALAR(TestPolynomial2, DISABLED_RunScalar) // Save time
+FIT_TEST_BATCH(TestPolynomial2, DISABLED_RunBatch)   // Save time
 FIT_TEST_BATCH_VS_SCALAR(TestPolynomial2, CompareBatchScalar)
 
 class TestPolynomial5 : public PDFTest
 {
   protected:
     TestPolynomial5() :
-      PDFTest("Polynomial5", 300000)
+      PDFTest("Polynomial5", 100000)
   {
       auto x = new RooRealVar("x", "x", -150, 40);
       auto a0 = new RooRealVar("a0", "a0", 1000.0);
@@ -83,7 +83,7 @@ class TestPolynomial5 : public PDFTest
 COMPARE_FIXED_VALUES_UNNORM(TestPolynomial5, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestPolynomial5, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestPolynomial5, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestPolynomial5, RunScalar)
-FIT_TEST_BATCH(TestPolynomial5, RunBatch)
+FIT_TEST_SCALAR(TestPolynomial5, DISABLED_RunScalar) // Save time
+FIT_TEST_BATCH(TestPolynomial5, DISABLED_RunBatch)   // Save time
 FIT_TEST_BATCH_VS_SCALAR(TestPolynomial5, CompareBatchScalar)
 

@@ -21,7 +21,7 @@ class TestArgus : public PDFTest
 {
   protected:
     TestArgus() :
-      PDFTest("Argus", 300000)
+      PDFTest("Argus", 100000)
   { 
       auto m = new RooRealVar("m", "m", 300.0, 1.0, 800.0);
       auto m0 = new RooRealVar("m0", "m0", 1100.0, 800.0, 1400.0);

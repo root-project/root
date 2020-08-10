@@ -22,7 +22,7 @@ class TestChebychev2 : public PDFTest
 {
   protected:
     TestChebychev2() :
-      PDFTest("Chebychev2", 300000)
+      PDFTest("Chebychev2", 100000)
   {
         auto x = new RooRealVar("x", "x", -10, 10);
         auto a1 = new RooRealVar("a1", "a1", 0.3, -0.5, 0.5);
@@ -52,7 +52,7 @@ class TestChebychev5 : public PDFTest
 {
   protected:
     TestChebychev5() :
-      PDFTest("Chebychev5", 300000)
+      PDFTest("Chebychev5", 50000)
   {
         auto x = new RooRealVar("x", "x", -10, 10);
         auto a1 = new RooRealVar("a1", "a1", 0.15, -0.3, 0.3);
@@ -60,6 +60,7 @@ class TestChebychev5 : public PDFTest
         auto a3 = new RooRealVar("a3", "a3", 0.20, 0.10, 0.30);
         auto a4 = new RooRealVar("a4", "a4", 0.35, 0.3, 0.5);
         auto a5 = new RooRealVar("a5", "a5", -0.07, -0.2, 0.2);
+        a2->setConstant(true);
         a3->setConstant(true);
 
         _pdf = std::make_unique<RooChebychev>("chebychev5", "chebychev PDF 5 coefficients", *x, RooArgSet(*a1, *a2, *a3, *a4, *a5));

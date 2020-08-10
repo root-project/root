@@ -21,11 +21,11 @@ class TestBreitWigner : public PDFTest
 {
   protected:
     TestBreitWigner() :
-      PDFTest("BreitWigner", 300000)
+      PDFTest("BreitWigner", 100000)
   {
         auto x = new RooRealVar("x", "x", -10, 10);
         auto mean = new RooRealVar("mean", "mean", 1, -7, 7);
-        auto width = new RooRealVar("a2", "a2", 1, 0.5, 2.5);
+        auto width = new RooRealVar("a2", "a2", 1.8, 0.5, 2.5);
 
         _pdf = std::make_unique<RooBreitWigner>("breitWigner", "breitWigner PDF", *x, *mean, *width);
 
@@ -37,7 +37,9 @@ class TestBreitWigner : public PDFTest
       for (auto par : {mean, width}) {
         _parameters.addOwned(*par);
       }
-      _toleranceCompareLogs = 4.1774312644789e-13;
+
+      _toleranceCompareLogs = 5.e-13;
+      _toleranceCorrelation = 0.007;
   }
 };
 

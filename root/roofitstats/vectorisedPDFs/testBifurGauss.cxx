@@ -22,7 +22,7 @@ class TestBifurGauss : public PDFTest
 {
   protected:
     TestBifurGauss() :
-      PDFTest("BifurGauss", 300000)
+      PDFTest("BifurGauss", 100000)
   { 
     auto x = new RooRealVar("x", "x", 300.0, 100.0, 800.0);
     auto mean = new RooRealVar("mean", "mean", 350.0, 250.0, 500.0);
@@ -41,6 +41,8 @@ class TestBifurGauss : public PDFTest
     for (auto par : {mean, sigmaL, sigmaR}) {
       _parameters.addOwned(*par);
     }
+
+    _toleranceParameter = 8.E-6;
   }
 };
 

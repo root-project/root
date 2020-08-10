@@ -217,12 +217,12 @@ class TestNonVecGaussWeighted : public PDFTestWeightedData
 {
   protected:
     TestNonVecGaussWeighted() :
-      PDFTestWeightedData("GaussNoBatchesWithWeights", 300000)
+      PDFTestWeightedData("GaussNoBatchesWithWeights", 50000)
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
       auto x = new RooRealVar("x", "x", -10, 10);
       auto mean = new RooRealVar("mean", "mean of gaussian", 1, -10, 10);
-      auto sigma = new RooRealVar("sigma", "width of gaussian", 1, 0.1, 10);
+      auto sigma = new RooRealVar("sigma", "width of gaussian", 2.3, 0.1, 10);
 
       // Build gaussian p.d.f in terms of x,mean and sigma
       _pdf = std::make_unique<RooNonVecGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
@@ -242,8 +242,8 @@ COMPARE_FIXED_VALUES_UNNORM(TestNonVecGaussWeighted, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestNonVecGaussWeighted, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestNonVecGaussWeighted, CompareFixedNormLog)
 
-FIT_TEST_SCALAR(TestNonVecGaussWeighted, RunScalar)
-FIT_TEST_BATCH(TestNonVecGaussWeighted, RunBatch)
+FIT_TEST_SCALAR(TestNonVecGaussWeighted, DISABLED_RunScalar) // Would need SumW2 error matrix correction, but no done in macro
+FIT_TEST_BATCH(TestNonVecGaussWeighted, DISABLED_RunBatch)   // As above
 FIT_TEST_BATCH_VS_SCALAR(TestNonVecGaussWeighted, CompareBatchScalar)
 
 
