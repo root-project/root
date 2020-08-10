@@ -22,31 +22,26 @@ class TestDstD0BG : public PDFTest
 {
   protected:
     TestDstD0BG() :
-      PDFTest("DstD0BG", 300000)
+      PDFTest("DstD0BG", 100000)
   { 
-      auto m = new RooRealVar("m", "m", 750, 500, 1000);
-      auto m0 = new RooRealVar("m0", "m0", 350, 100, 450);
-      auto C = new RooRealVar("C", "C", 500, 300, 800);
-      auto A = new RooRealVar("A", "A", 1, 0.5, 4);
-      auto B = new RooRealVar("B", "B", 1, 0.5, 2);
-      
+      auto m = new RooRealVar("m", "m", 2.0, 1.61, 3);
+      auto m0 = new RooRealVar("m0", "m0", 1.6);
+      auto C = new RooRealVar("C", "C", 1, 0.1, 2);
+      auto A = new RooRealVar("A", "A", -1.2);
+      auto B = new RooRealVar("B", "B", 0.1);
+
       _pdf = std::make_unique<RooDstD0BG>("DstD0BG", "DstD0BG", *m, *m0, *C, *A, *B);
-      m0->setConstant(true);
-      //C->setConstant(true);
-      
+
       for (auto var : {m}) {
         _variables.addOwned(*var);
       }
 
-      for (auto var : {m}) {
-        _variablesToPlot.add(*var);
-      }
-
-      for (auto par : {C, A, B}) {
+      for (auto par : {C}) {
         _parameters.addOwned(*par);
       }
-    _printLevel = 1;
-    //_toleranceParameter = 3e-5;
+
+    _toleranceCompareBatches = 3.E-14;
+    _toleranceCompareLogs    = 3.E-10;
 
   }
 };
