@@ -4077,6 +4077,13 @@ int RootClingMain(int argc,
    for (const std::string &PPDefine : gOptPPDefines)
       clingArgs.push_back(std::string("-D") + PPDefine);
 
+#if defined(_MSC_VER) && (_MSC_VER >= 1926)
+    // FIXME: Silly workaround for rootcling not being able to parse the STL
+    //        headers anymore after the update of Visual Studio v16.7.0
+    //        To be checked/removed after the upgrade of LLVM & Clang
+   clingArgs.push_back(std::string("-D__CUDACC__"));
+#endif
+
    for (const std::string &PPUndefine : gOptPPUndefines)
       clingArgs.push_back(std::string("-U") + PPUndefine);
 
