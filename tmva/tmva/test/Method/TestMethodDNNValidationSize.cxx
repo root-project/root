@@ -44,14 +44,14 @@ struct TestMethodDNNValidationSize {
    size_t GetProcessedValidationOption(TString options)
    {
 #ifdef DNNCPU
-      const TString defualtOptions = "!H:!V:Layout=RELU|50:Architecture=CPU:";
-#elif DNNCUDA
-      const TString defualtOptions = "!H:!V:Layout=RELU|50:Architecture=GPU:";
+      const TString defaultOptions = "!H:!V:Layout=RELU|50:Architecture=CPU:";
+#elif defined DNNCUDA
+      const TString defaultOptions = "!H:!V:Layout=RELU|50:Architecture=GPU:";
 #else
 #error "This should not happen. Can only compile with CPU or CUDA implementations."
 #endif
 
-      IMethod *m = fFactory->BookMethod(fDataLoader.get(), Types::kDNN, "DNN", defualtOptions + options);
+      IMethod *m = fFactory->BookMethod(fDataLoader.get(), Types::kDNN, "DNN", defaultOptions + options);
       MethodDNN *mdnn = dynamic_cast<MethodDNN *>(m);
 
       size_t numValidationSamples = mdnn->GetNumValidationSamples();
