@@ -20,7 +20,14 @@
     \ingroup Roofit
 
 Special p.d.f shape that can be used to model the background of
-D*-D0 mass difference distributions
+D*-D0 mass difference distributions. It computes
+
+\f[
+  \mathrm{RooDSTD0}(m \, | \, m_0, A, B, C) =
+    \left(1 - \exp\left(-\frac{m - m_0}{C}\right) \right)
+    \cdot \left(\frac{m}{m_0}\right)^A + B
+    \cdot \left(\frac{m}{m_0} - 1 \right)
+\f]
 **/
 
 #include "RooDstD0BG.h"
