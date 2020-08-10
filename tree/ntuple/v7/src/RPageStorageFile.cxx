@@ -187,33 +187,54 @@ void ROOT::Experimental::Detail::RPageSinkFile::Merge(
    // todo(max) handle non-empty PageSink NTuple descriptor
    sources.front()->Attach();
    const auto& sourceDesc = sources.front()->GetDescriptor();
+   sourceDesc.PrintInfo(std::cout);
+
+   std::cout << "input has " << sourceDesc.GetColumnIds().size() << " columns\n";
+
+   // assume all inputs have the same size header and footer
    auto szFooter = sourceDesc.GetFooterSize();
    auto szHeader = sourceDesc.GetHeaderSize();
    std::cout << "source header size " << szHeader << "\n";
    std::cout << "source footer size " << szFooter << "\n";
 
+   // fill header to get column ids
    auto headerBuffer = new unsigned char[szHeader];
    sourceDesc.SerializeHeader(headerBuffer);
    fDescriptorBuilder.SetFromHeader(headerBuffer);
+   auto columnIds = fDescriptorBuilder.GetDescriptor().GetColumnIds();
+
+   // loop over footers
+   RRawColumns cols;
+   for (auto id: columnIds) {
+      std::cout << "got column: " << id << "\n";
+      // todo(max) capacity heuristic
+      cols.AddColumn(id, 1000);
+   }
 
    auto footerBuffer = new unsigned char[szFooter];
    sourceDesc.SerializeFooter(footerBuffer);
-   fDescriptorBuilder.AddClustersFromFooter(footerBuffer);
-
-   std::cout << "merge header size " << fDescriptorBuilder.GetDescriptor().GetHeaderSize() << "\n";
-   std::cout << "merge footer size " << fDescriptorBuilder.GetDescriptor().GetFooterSize() << "\n";
+   cols.AddRawPages(footerBuffer);
 
    std::cout << "\nother merge inputs are:\n";
    for (std::size_t i = 1; i < sources.size(); ++i) {
       sources[i]->Attach();
       const auto& desc = sources[i]->GetDescriptor();
-      desc.PrintInfo(std::cout);
       desc.SerializeFooter(footerBuffer);
-      fDescriptorBuilder.AddRawPages(footerBuffer);
+      cols.AddRawPages(footerBuffer).ThrowOnError();
    }
 
+   for (auto id: columnIds) {
+      const auto& pages = cols.GetPages(id);
+      std::cout << "column " << id << "\n"
+                << "\tnum pages: " << pages.size() << "\n";
+      std::size_t numElts = 0;
+      for (const auto& page: pages) {
+         numElts += page.fNElements;
+      }
+      std::cout << "\tnum elements: " << numElts << "\n";
+   }
    // std::cout << "merge footer size " << fDescriptorBuilder.GetDescriptor().GetFooterSize() << "\n";
-   fDescriptorBuilder.GetDescriptor().PrintInfo(std::cout);
+   // fDescriptorBuilder.GetDescriptor().PrintInfo(std::cout);
 }
 
 

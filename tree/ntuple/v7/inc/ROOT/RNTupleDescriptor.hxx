@@ -549,6 +549,40 @@ public:
    RResult<RFieldDescriptor> MakeDescriptor() const;
 };
 
+class RRawColumns {
+public:
+   using RPageInfo = RClusterDescriptor::RPageRange::RPageInfo;
+private:
+   std::unordered_map<DescriptorId_t, std::vector<RPageInfo>> fColumns;
+
+   inline bool ColumnExists(DescriptorId_t columnId) const {
+      return fColumns.count(columnId) != 0;
+   }
+
+public:
+   RResult<void> AddColumn(DescriptorId_t columnId, std::size_t capacity) {
+      if (ColumnExists(columnId)) {
+         return R__FAIL("column " + std::to_string(columnId) + " already exists");
+      }
+      std::vector<RPageInfo> columnPages;
+      columnPages.reserve(capacity);
+      fColumns.emplace(columnId, columnPages);
+      return RResult<void>::Success();
+   }
+   RResult<void> AddPagesToColumn(DescriptorId_t columnId, const std::vector<RPageInfo>& pages) {
+      if (!ColumnExists(columnId)) {
+         return R__FAIL("column " + std::to_string(columnId) + " doesn't exist, can't add raw pages");
+      }
+      auto& columnVec = fColumns.at(columnId);
+      columnVec.insert(columnVec.end(), pages.begin(), pages.end());
+      return RResult<void>::Success();
+   }
+   RResult<void> AddRawPages(void* footerBuffer);
+   const std::vector<RPageInfo>& GetPages(DescriptorId_t columnId) const {
+      return fColumns.at(columnId);
+   }
+};
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleDescriptorBuilder
@@ -588,7 +622,6 @@ public:
    void AddClusterPageRange(DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange);
 
    void AddClustersFromFooter(void* footerBuffer);
-   void AddRawPages(void* footerBuffer);
 };
 
 } // namespace Experimental

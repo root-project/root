@@ -17,6 +17,7 @@
 #define ROOT7_RPageStorageFile
 
 #include <ROOT/RClusterPool.hxx>
+#include <ROOT/RError.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
