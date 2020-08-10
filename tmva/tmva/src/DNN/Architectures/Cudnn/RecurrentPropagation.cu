@@ -132,7 +132,11 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
    cudnnDataType_t mathPrec = CUDNN_DATA_FLOAT;
    if      (std::is_same<AFloat, double>::value) { mathPrec = CUDNN_DATA_DOUBLE;}
 
+#if (CUDNN_VERSION >= 8000)
+   CUDNNCHECK(cudnnSetRNNDescriptor_v6(handle, rnnDescriptors->LayerDescriptor, hiddenSize, numLayers, rnnDescriptors->HelperDescriptor,
+#else
    CUDNNCHECK(cudnnSetRNNDescriptor(handle, rnnDescriptors->LayerDescriptor, hiddenSize, numLayers, rnnDescriptors->HelperDescriptor,
+#endif
       inputMode, direction, mode, algo, mathPrec) );
 
 
