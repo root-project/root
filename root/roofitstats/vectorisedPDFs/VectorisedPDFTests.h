@@ -45,7 +45,7 @@ class PDFTest : public ::testing::Test
 
     void kickParameters();
 
-    void compareFixedValues(double& maximalError, bool normalise, bool compareLogs, bool runTimer = true, unsigned int nChunks = 1);
+    void compareFixedValues(double& maximalError, bool normalise, bool compareLogs, bool runTimer = false, unsigned int nChunks = 1);
 
     void checkParameters();
 

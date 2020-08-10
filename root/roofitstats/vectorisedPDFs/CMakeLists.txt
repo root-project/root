@@ -1,12 +1,17 @@
-if(CMAKE_CXX_COMPILER_ID STREQUAL Intel AND DEFINED ENV{VTUNE_AMPLIFIER_2019_DIR})
+if(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
+  if(DEFINED ENV{VTUNE_AMPLIFIER_2019_DIR})
+    set(VTUNE_DIR ENV{VTUNE_AMPLIFIER_2019_DIR})
+  elseif(DEFINED ENV{VTUNE_PROFILER_2020_DIR})
+    set(VTUNE_DIR ENV{VTUNE_PROFILER_2020_DIR})
+  endif()
   # To be able to start/stop the vtune profiler, ittnotify must be available.
-  include_directories("$ENV{VTUNE_AMPLIFIER_2019_DIR}/include/")
-  link_directories("$ENV{VTUNE_AMPLIFIER_2019_DIR}/lib64/")
-  link_libraries(-littnotify)
+  target_include_directories(VectorisedPDFTests PUBLIC "${VTUNE_DIR}/include/")
+  target_link_libraries(VectorisedPDFTests INTERFACE "${VTUNE_DIR}/lib64/libittnotify.a")
 endif()
 
 add_library(VectorisedPDFTests STATIC VectorisedPDFTests.cxx)
 target_link_libraries(VectorisedPDFTests PUBLIC gtest ROOT::Gpad ROOT::RooFitCore ROOT::RooFit)
+
 
 ROOT_ADD_GTEST(testCompatMode testCompatMode.cxx
               LIBRARIES VectorisedPDFTests)
