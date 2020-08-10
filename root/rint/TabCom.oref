@@ -1,4 +1,3 @@
-TObj	
 TObject::k	
 gROOT->GetListOfT	
 TNamed tabComTestNamedObj("AName","ATitle");
@@ -11,18 +10,6 @@ TH1F *h = 0;
 h->GetXaxis()->SetTi		
 .q
 
-
-TObjArray
-TObjArrayIter
-TObjLink
-TObjOptLink
-TObjString
-TObject
-TObjectHolder
-TObjectItem
-TObjectRefSpy
-TObjectSpy
-TObjectTable
 
 kBitMask
 kCanDelete
