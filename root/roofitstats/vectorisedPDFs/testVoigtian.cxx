@@ -25,19 +25,23 @@ class TestVoigtian : public PDFTest
   {
         auto x = new RooRealVar("x", "x", 1, 0.1, 10);
         auto mean = new RooRealVar("mean", "mean", 1, 0.1, 10);
-        auto width = new RooRealVar("width", "width", 0.5, 0.1, 0.9);
-        auto sigma = new RooRealVar("sigma", "sigma", 0.5, 0.1, 0.9);
+        auto width = new RooRealVar("width", "width", 0.8, 0.1, 0.9);
+        auto sigma = new RooRealVar("sigma", "sigma", 0.7, 0.1, 0.9);
 
         _pdf = std::make_unique<RooVoigtian>("Voigtian", "Voigtian PDF", *x, *mean, *width, *sigma);
 
 
       _variables.addOwned(*x);
 
-      //_variablesToPlot.add(*x);
+//      _variablesToPlot.add(*x);
 
       for (auto par : {mean, width, sigma}) {
         _parameters.addOwned(*par);
       }
+
+      _toleranceParameter = 2.E-5;
+      _toleranceCorrelation = 4.E-4;
+      _toleranceCompareLogs = 5.E-12;
   }
 };
 

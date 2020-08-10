@@ -61,8 +61,6 @@ ROOT_ADD_GTEST(testDstD0BG testDstD0BG.cxx
 ROOT_ADD_GTEST(testLognormal testLognormal.cxx
               LIBRARIES VectorisedPDFTests)
 ROOT_ADD_GTEST(testNovosibirsk testNovosibirsk.cxx
-              LIBRARIES VectorisedPDFTests
-              WILLFAIL)
+              LIBRARIES VectorisedPDFTests)
 ROOT_ADD_GTEST(testVoigtian testVoigtian.cxx
-              LIBRARIES VectorisedPDFTests
-              WILLFAIL)
+              LIBRARIES VectorisedPDFTests)
