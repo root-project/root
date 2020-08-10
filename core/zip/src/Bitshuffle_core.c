@@ -387,8 +387,7 @@ int64_t bshuf_untrans_bit_elem_scal(const void* in, void* out, const size_t size
 /* Transpose bytes within elements for 16 bit elements. */
 __attribute__ ((target ("sse2")))
 int64_t bshuf_trans_byte_elem_SSE_16(const void* in, void* out, const size_t size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     size_t ii;
     const char *in_b = (const char*) in;
     char *out_b = (char*) out;
@@ -421,8 +420,7 @@ int64_t bshuf_trans_byte_elem_SSE_16(const void* in, void* out, const size_t siz
 /* Transpose bytes within elements for 32 bit elements. */
 __attribute__ ((target ("sse2")))
 int64_t bshuf_trans_byte_elem_SSE_32(const void* in, void* out, const size_t size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     size_t ii;
     const char *in_b;
     char *out_b;
@@ -469,8 +467,7 @@ int64_t bshuf_trans_byte_elem_SSE_32(const void* in, void* out, const size_t siz
 /* Transpose bytes within elements for 64 bit elements. */
 __attribute__ ((target ("sse2")))
 int64_t bshuf_trans_byte_elem_SSE_64(const void* in, void* out, const size_t size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     size_t ii;
     const char* in_b = (const char*) in;
     char* out_b = (char*) out;
@@ -541,8 +538,7 @@ int64_t bshuf_trans_byte_elem_SSE_64(const void* in, void* out, const size_t siz
 __attribute__ ((target ("sse2")))
 int64_t bshuf_trans_byte_elem_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     int64_t count;
 
     // Trivial cases: power of 2 bytes.
@@ -605,8 +601,7 @@ int64_t bshuf_trans_byte_elem_SSE(const void* in, void* out, const size_t size,
 __attribute__ ((target ("sse2")))
 int64_t bshuf_trans_bit_byte_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     size_t ii, kk;
     const char* in_b = (const char*) in;
     char* out_b = (char*) out;
@@ -640,8 +635,7 @@ int64_t bshuf_trans_bit_byte_SSE(const void* in, void* out, const size_t size,
 __attribute__ ((target ("sse2")))
 int64_t bshuf_trans_bit_elem_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     int64_t count;
 
     CHECK_MULT_EIGHT(size);
@@ -666,8 +660,7 @@ int64_t bshuf_trans_bit_elem_SSE(const void* in, void* out, const size_t size,
 __attribute__ ((target ("sse2")))
 int64_t bshuf_trans_byte_bitrow_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     size_t ii, jj;
     const char* in_b = (const char*) in;
     char* out_b = (char*) out;
@@ -774,8 +767,7 @@ int64_t bshuf_trans_byte_bitrow_SSE(const void* in, void* out, const size_t size
 __attribute__ ((target ("sse2")))
 int64_t bshuf_shuffle_bit_eightelem_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     CHECK_MULT_EIGHT(size);
 
     // With a bit of care, this could be written such that such that it is
@@ -813,8 +805,7 @@ int64_t bshuf_shuffle_bit_eightelem_SSE(const void* in, void* out, const size_t 
 __attribute__ ((target ("sse2")))
 int64_t bshuf_untrans_bit_elem_SSE(const void* in, void* out, const size_t size,
          const size_t elem_size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     int64_t count;
 
     CHECK_MULT_EIGHT(size);
@@ -847,8 +838,7 @@ int64_t bshuf_untrans_bit_elem_SSE(const void* in, void* out, const size_t size,
 __attribute__ ((target ("avx2")))
 int64_t bshuf_trans_bit_byte_AVX(const void* in, void* out, const size_t size,
          const size_t elem_size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     size_t ii, kk;
     const char* in_b = (const char*) in;
     char* out_b = (char*) out;
@@ -880,8 +870,7 @@ int64_t bshuf_trans_bit_byte_AVX(const void* in, void* out, const size_t size,
 __attribute__ ((target ("avx2")))
 int64_t bshuf_trans_bit_elem_AVX(const void* in, void* out, const size_t size,
          const size_t elem_size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     int64_t count;
 
     CHECK_MULT_EIGHT(size);
@@ -906,8 +895,7 @@ int64_t bshuf_trans_bit_elem_AVX(const void* in, void* out, const size_t size,
 __attribute__ ((target ("avx2")))
 int64_t bshuf_trans_byte_bitrow_AVX(const void* in, void* out, const size_t size,
          const size_t elem_size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     size_t hh, ii, jj, kk, mm;
     const char* in_b = (const char*) in;
     char* out_b = (char*) out;
@@ -1003,8 +991,7 @@ int64_t bshuf_trans_byte_bitrow_AVX(const void* in, void* out, const size_t size
 __attribute__ ((target ("avx2")))
 int64_t bshuf_shuffle_bit_eightelem_AVX(const void* in, void* out, const size_t size,
          const size_t elem_size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     CHECK_MULT_EIGHT(size);
 
     // With a bit of care, this could be written such that such that it is
@@ -1042,8 +1029,7 @@ int64_t bshuf_shuffle_bit_eightelem_AVX(const void* in, void* out, const size_t 
 __attribute__ ((target ("avx2")))
 int64_t bshuf_untrans_bit_elem_AVX(const void* in, void* out, const size_t size,
          const size_t elem_size) {
-    // This function has been modified from original bitshuffle source code
-    // in order to avoid duplicated declaration.
+    
     int64_t count;
 
     CHECK_MULT_EIGHT(size);

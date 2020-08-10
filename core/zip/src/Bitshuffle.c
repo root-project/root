@@ -18,11 +18,6 @@
 #include <string.h>
 
 
-// Constants.
-// Use fast decompression instead of safe decompression for LZ4.
-#define BSHUF_LZ4_DECOMPRESS_FAST
-
-
 // Macros.
 #define CHECK_ERR_FREE_LZ(count, buf) if (count < 0) {                      \
     free(buf); return count - 1000; }
@@ -98,19 +93,6 @@ int64_t bshuf_decompress_lz4_block(ioc_chain *C_ptr,
     tmp_buf = malloc(size * elem_size);
     if (tmp_buf == NULL) return -1;
 
-    // We don't use LZ4_decompress_fast because it is discouraged by lz4 developers
-    // (See https://github.com/lz4/lz4/blob/dev/lib/lz4.h#L721)
-
-/*
-#ifdef BSHUF_LZ4_DECOMPRESS_FAST
-    nbytes = LZ4_decompress_fast((const char*) in + 4, (char*) tmp_buf, size * elem_size); // HERE IS THE PROBLEM!
-    CHECK_ERR_FREE_LZ(nbytes, tmp_buf);
-    if (nbytes != nbytes_from_header) {
-        free(tmp_buf);
-        return -91;
-    }
-#else */
-
     nbytes = LZ4_decompress_safe((const char*) in + 4, (char *) tmp_buf, nbytes_from_header,
                                  size * elem_size);
     CHECK_ERR_FREE_LZ(nbytes, tmp_buf); // if nbytes < 0, frees tmp_buf and returns nbytes - 1000
@@ -119,7 +101,7 @@ int64_t bshuf_decompress_lz4_block(ioc_chain *C_ptr,
         return -91;
     }
     nbytes = nbytes_from_header;
-/* #endif */
+
     count = bshuf_untrans_bit_elem(tmp_buf, out, size, elem_size);
     CHECK_ERR_FREE(count, tmp_buf);
     nbytes += 4;

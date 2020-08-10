@@ -94,10 +94,6 @@ int64_t bshuf_compress_lz4(const void* in, void* out, const size_t size, const s
  * To properly unshuffle bitshuffled data, *size*, *elem_size* and *block_size*
  * must patch the parameters used to compress the data.
  *
- * NOT TO BE USED WITH UNTRUSTED DATA: This routine uses the function
- * LZ4_decompress_fast from LZ4, which does not protect against maliciously
- * formed datasets. By modifying the compressed data, this function could be
- * coerced into leaving the boundaries of the input buffer.
  *
  * Parameters
  * ----------

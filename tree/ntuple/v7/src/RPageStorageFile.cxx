@@ -112,11 +112,6 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnH
    auto zippedBytes = packedBytes;
 
    if (fOptions.GetCompression() != 0) {
-      // if (fOptions.GetCompression() == 6 && columnHandle.fColumn->GetModel().GetType() != ROOT::Experimental::EColumnType::kIndex){
-      //    zippedBytes = fCompressor(buffer, packedBytes, 404);
-      // }else{
-      //    zippedBytes = fCompressor(buffer, packedBytes, fOptions.GetCompression());
-      // }
       zippedBytes = fCompressor(buffer, packedBytes, fOptions.GetCompression());
       if (!isAdoptedBuffer)
          delete[] buffer;

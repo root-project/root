@@ -136,6 +136,7 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
 void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
    if (*srcsize % sizeof(float) != 0) {
+      // srcsize should be multiple of sizeof(float) in order for bitshuffle to work properly
       R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
       return;
    }
@@ -165,8 +166,7 @@ void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, 
    free(temp_src_lz4);
 
    if (returnStatus_lz4bs > returnStatus_lz4) {
-      // fprintf(stderr, "Bitshuffle failed: too small tgtsize %d, required %ld\n", *tgtsize, returnStatus);
-      // fprintf(stderr, "LZ4_compressBound(): %d\n", LZ4_compressBound(*srcsize));
+      // We compare lz4 vs. lz4bs and choose better one
       R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
       return;
    } else if (returnStatus_lz4bs < 0) {
