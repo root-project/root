@@ -21,7 +21,7 @@ class TestBernstein2 : public PDFTest
 {
   protected:
     TestBernstein2() :
-      PDFTest("Bernstein2", 300000)
+      PDFTest("Bernstein2", 100000)
   {
         auto x = new RooRealVar("x", "x", -10, 10);
         auto a1 = new RooRealVar("a1", "a1", 1, 0.8, 1.2);
@@ -54,7 +54,7 @@ class TestBernstein5 : public PDFTest
 {
   protected:
     TestBernstein5() :
-      PDFTest("Bernstein5", 300000)
+      PDFTest("Bernstein5", 100000)
   {
         auto x = new RooRealVar("x", "x", -100, 50);
         auto a1 = new RooRealVar("a1", "a1", 0.8, 0.6, 1.2);

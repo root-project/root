@@ -22,18 +22,16 @@ class TestLognormal : public PDFTest
 {
   protected:
     TestLognormal() :
-      PDFTest("Lognormal", 300000)
+      PDFTest("Lognormal", 100000)
   {
         auto x = new RooRealVar("x", "x", 1, 0.1, 10);
-        auto m0 = new RooRealVar("m0", "m0", 1, 0.1, 10);
-        auto k = new RooRealVar("k", "k", 0.5, 0.1, 0.9);
+        auto m0 = new RooRealVar("m0", "m0", 5, 0.1, 10);
+        auto k = new RooRealVar("k", "k", 0.6, 0.1, 0.9);
 
         _pdf = std::make_unique<RooLognormal>("Lognormal", "Lognormal PDF", *x, *m0, *k);
 
 
       _variables.addOwned(*x);
-
-      //_variablesToPlot.add(*x);
 
       for (auto par : {m0, k}) {
         _parameters.addOwned(*par);
@@ -56,7 +54,7 @@ class TestLognormalInMeanAndX : public PDFTest
 {
   protected:
     TestLognormalInMeanAndX() :
-      PDFTest("Lognormal(x, mean)", 300000)
+      PDFTest("Lognormal(x, mean)", 100000)
   {
         auto x = new RooRealVar("x", "x", 1, 0.1, 10);
         auto m0 = new RooRealVar("m0", "m0", 1, 0.1, 10);

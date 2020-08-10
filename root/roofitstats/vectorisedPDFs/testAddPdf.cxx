@@ -25,7 +25,7 @@ class TestGaussPlusPoisson : public PDFTest
 {
   protected:
     TestGaussPlusPoisson() :
-      PDFTest("Gauss + Poisson", 200000)
+      PDFTest("Gauss + Poisson", 100000)
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
       auto x = new RooRealVar("x", "x", -1.5, 40.5);
@@ -58,7 +58,7 @@ class TestGaussPlusPoisson : public PDFTest
 
       // Gauss is slightly less accurate
       _toleranceCompareBatches = 2.E-14;
-      _toleranceParameter = 3.E-6;
+      _toleranceParameter = 5.E-5;
       _toleranceCorrelation = 5.E-4;
     }
 };
@@ -67,8 +67,8 @@ COMPARE_FIXED_VALUES_UNNORM(TestGaussPlusPoisson, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestGaussPlusPoisson, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestGaussPlusPoisson, CompareFixedValuesNormLog)
 
-FIT_TEST_SCALAR(TestGaussPlusPoisson, Scalar)
-FIT_TEST_BATCH(TestGaussPlusPoisson, Batch)
+FIT_TEST_SCALAR(TestGaussPlusPoisson, DISABLED_Scalar) // Save time
+FIT_TEST_BATCH(TestGaussPlusPoisson, DISABLED_Batch)   // Save time
 FIT_TEST_BATCH_VS_SCALAR(TestGaussPlusPoisson, CompareBatchScalar)
 
 
@@ -76,7 +76,7 @@ class TestGaussPlusGaussPlusExp : public PDFTest
 {
   protected:
     TestGaussPlusGaussPlusExp() :
-      PDFTest("Gauss + Gauss + Exp")
+      PDFTest("Gauss + Gauss + Exp", 100000)
     {
       auto x = new RooRealVar("x", "x", 0., 100.);
 
@@ -128,7 +128,7 @@ COMPARE_FIXED_VALUES_NORM(TestGaussPlusGaussPlusExp, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestGaussPlusGaussPlusExp, CompareFixedValuesNormLog)
 
 
-FIT_TEST_SCALAR(TestGaussPlusGaussPlusExp, DISABLED_Scalar)
-FIT_TEST_BATCH(TestGaussPlusGaussPlusExp, DISABLED_Batch)
+FIT_TEST_SCALAR(TestGaussPlusGaussPlusExp, DISABLED_Scalar) // Save time
+FIT_TEST_BATCH(TestGaussPlusGaussPlusExp, DISABLED_Batch)   // Save time
 FIT_TEST_BATCH_VS_SCALAR(TestGaussPlusGaussPlusExp, CompareBatchScalar)
 

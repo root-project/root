@@ -22,7 +22,7 @@ class TestNovosibirsk : public PDFTest
 {
   protected:
     TestNovosibirsk() :
-      PDFTest("Novosibirsk", 300000)
+      PDFTest("Novosibirsk", 100000)
   { 
       auto x = new RooRealVar("x", "x", 0, -5, 2);
       auto peak = new RooRealVar("peak", "peak", 0.5, 0, 1);

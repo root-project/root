@@ -21,14 +21,14 @@ class TestCBShape : public PDFTest
 {
   protected:
     TestCBShape() :
-      PDFTest("CBShape", 300000)
+      PDFTest("CBShape", 100000)
   {
         auto m = new RooRealVar("m", "m", -10, 10);
         auto m0 = new RooRealVar("m0", "m0", 1, -7, 7);
         auto sigma = new RooRealVar("sigma", "sigma", 1, 0.5, 2.5);
         auto alpha = new RooRealVar("alpha", "alpha", 1, -3, 3);
         auto n = new RooRealVar("n", "n", 1, 0.5, 2.5);
-        
+
         _pdf = std::make_unique<RooCBShape>("CBShape", "CBShape PDF", *m, *m0, *sigma, *alpha, *n);
 
 
@@ -41,6 +41,7 @@ class TestCBShape : public PDFTest
       }
 
       // For i686:
+      _toleranceParameter = 1.E-5;
       _toleranceCompareBatches = 1.5E-14;
       _toleranceCorrelation = 1.5E-3;
   }

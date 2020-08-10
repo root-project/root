@@ -21,7 +21,7 @@ class TestVoigtian : public PDFTest
 {
   protected:
     TestVoigtian() :
-      PDFTest("Voigtian", 300000)
+      PDFTest("Voigtian", 100000)
   {
         auto x = new RooRealVar("x", "x", 1, 0.1, 10);
         auto mean = new RooRealVar("mean", "mean", 1, 0.1, 10);
@@ -52,7 +52,7 @@ class TestVoigtianInXandMean : public PDFTest
 {
   protected:
     TestVoigtianInXandMean() :
-      PDFTest("Voigtian(x,m)", 300000)
+      PDFTest("Voigtian(x,m)", 100000)
   {
         auto x = new RooRealVar("x", "x", 1, 0.1, 10);
         auto mean = new RooRealVar("mean", "mean", 1, 0.1, 10);

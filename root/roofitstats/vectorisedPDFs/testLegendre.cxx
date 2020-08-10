@@ -23,7 +23,7 @@ class TestLegendre : public PDFTest
 {
   protected:
     TestLegendre() :
-      PDFTest("Legendre", 300000)
+      PDFTest("Legendre", 100000)
   {
     auto x = new RooRealVar("x", "x", 0.5, 0.1, 1.0);
     auto coef = new RooRealVar("coef", "coef", 0.5, 0.3, 1.0);

@@ -22,7 +22,7 @@ class TestGamma : public PDFTest
 {
   protected:
     TestGamma() :
-      PDFTest("Gamma", 300000)
+      PDFTest("Gamma", 100000)
   {
     auto x = new RooRealVar("x", "x", 5, 4, 10);
     auto gamma = new RooRealVar("gamma", "N+1", 6, 4, 8);
