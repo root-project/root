@@ -562,15 +562,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get the library and module dependencies-----------------
   if(ARG_DEPENDENCIES)
     foreach(dep ${ARG_DEPENDENCIES})
-      set(dict "G__${dep}")
-      set(dependent_pcm ${libprefix}${dep}_rdict.pcm})
-      if(runtime_cxxmodules)
-        #---Check for NO_CXXMODULE flag in a dependent module---
-        set(dependent_pcm "$<IF:$<BOOL:$<TARGET_PROPERTY:${dict},NO_MODULE>>,,-m ${dep}.pcm>")
-        set(newargs ${newargs} ${dependent_pcm})
-      else()
-        set(newargs ${newargs} -m ${dependent_pcm})
+      set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
+      if (runtime_cxxmodules)
+        set(dependent_pcm ${dep}.pcm)
       endif()
+      set(newargs ${newargs} -m  ${dependent_pcm})
     endforeach()
   endif()
 
@@ -651,7 +647,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # would not happen if we used target_sources() directly with the dictionary source.
   if(TARGET "${ARG_MODULE}" AND NOT "${ARG_MODULE}" STREQUAL "${dictionary}")
     add_library(${dictionary} OBJECT ${dictionary}.cxx)
-    set_target_properties(${dictionary} PROPERTIES POSITION_INDEPENDENT_CODE TRUE NO_MODULE ${ARG_NO_CXXMODULE})
+    set_target_properties(${dictionary} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
     target_sources(${ARG_MODULE} PRIVATE $<TARGET_OBJECTS:${dictionary}>)
 
     target_compile_options(${dictionary} PRIVATE
