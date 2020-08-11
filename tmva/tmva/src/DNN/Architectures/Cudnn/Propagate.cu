@@ -475,7 +475,8 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    /**
     * I'm sure there may be a faster way, but this works
     */
-   int convRequestedAlgoCount{8};  // requestedAlgoCount is setting how many algorithms to try, can be tuned, fixed for now as all available
+   int convRequestedAlgoCount{0};  // requestedAlgoCount is setting how many algorithms to try
+   CUDNNCHECK(cudnnGetConvolutionForwardAlgorithmMaxCount(cudnnHandle, &convRequestedAlgoCount))  // ask cuDNN how much it can try
 
    int algoCount;
    cudnnConvolutionFwdAlgoPerf_t convFwdPerfResults[convRequestedAlgoCount];  // this will store metrics to choose convolution algorithm
@@ -575,7 +576,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    /**
     * I'm sure there may be a faster way, but this works
     */
-   convRequestedAlgoCount = 6;  // reset to max number of available backward algorithms
+   CUDNNCHECK(cudnnGetConvolutionBackwardDataAlgorithmMaxCount(cudnnHandle, &convRequestedAlgoCount))  // ask cuDNN how much it can try
    cudnnConvolutionBwdDataAlgoPerf_t convBwdDataPerfResults[convRequestedAlgoCount];  // this will store metrics to choose convolution algorithm
    CUDNNCHECK(cudnnFindConvolutionBackwardDataAlgorithm(
       cudnnHandle,
@@ -650,7 +651,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    /**
     * I'm sure there may be a faster way, but this works
     */
-   convRequestedAlgoCount = 6;  // reset to max number of available backward algorithms
+   CUDNNCHECK(cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(cudnnHandle, &convRequestedAlgoCount))  // ask cuDNN how much it can try
    cudnnConvolutionBwdFilterAlgoPerf_t convBwdFilterPerfResults[convRequestedAlgoCount];  // this will store metrics to choose convolution algorithm
    CUDNNCHECK(cudnnFindConvolutionBackwardFilterAlgorithm(
       cudnnHandle,
