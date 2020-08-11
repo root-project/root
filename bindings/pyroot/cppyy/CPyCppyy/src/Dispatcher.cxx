@@ -123,8 +123,9 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
             Cppyy::TCppIndex_t nreq = Cppyy::GetMethodReqArgs(method);
             if (nreq == 0)
                 has_default = true;
-            else if (nreq == 1) {
-                if (TypeManip::clean_type(Cppyy::GetMethodArgType(method, 0), false) == baseNameScoped)
+            else if (!has_cctor && nreq == 1) {
+                const std::string& argtype = Cppyy::GetMethodArgType(method, 0);
+                if (Utility::Compound(argtype) == "&" && TypeManip::clean_type(argtype, false) == baseNameScoped)
                     has_cctor = true;
             }
             continue;
