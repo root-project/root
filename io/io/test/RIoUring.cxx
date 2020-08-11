@@ -37,7 +37,7 @@ TEST(RRawFileUnix, ReadV)
       return iovecs;
    };
 
-   auto nReq = 2000;
+   auto nReq = 128;
 
    auto iovecs = make_iovecs(nReq);
    // auto t1 = std::chrono::high_resolution_clock::now();
