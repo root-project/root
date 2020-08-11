@@ -32,7 +32,7 @@ The release specific tag can be obtained using for example:
 ==========================
 
 ROOT requires CMake to be built.
-You may want to compile features into ROOT, which depend on third-party libraries.
+You may want to build ROOT with features (such as HistFactory) that depend on third-party libraries (such as libxml2).
 Make sure you meet all demands for additional
 features before trying to enable them (see below).
 
@@ -118,7 +118,7 @@ Using the fixed location mode (section 3.2), the default 'CMAKE_INSTALL_PREFIX'
 path is '/usr/local', which will result in the ROOT files to be
 installed in '/usr/local/bin', `/usr/local/lib', etc. You can specify
 an installation prefix other than `/usr/local' by giving `cmake'
-the option `-DCMAKE_INSTALL_PREFIX=PATH'.
+the option `-DCMAKE_INSTALL_PREFIX=/opt/root-6.22'.
 
 
 5. Where to get more information:
