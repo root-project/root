@@ -176,27 +176,24 @@ RooWorkspace* RooMsgService::debugWorkspace()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a message logging stream for message with given RooFit::MsgLevel or higher (i.e. more severe)
-/// This method accepts the following arguments to configure the stream
+/// Add a message logging stream for message with given RooFit::MsgLevel or higher.
+/// Higher means that messages with higher priority/severity are issued.
 ///
-/// Output Style options
-/// --------------------
-/// Prefix(Bool_t flag=kTRUE) -- Prefix all messages in this stream with Topic/Originator information
-///
-/// Filtering options
-/// -----------------
-/// Topic(const char*)        -- Restrict stream to messages on given topic
-/// ObjectName(const char*)   -- Restrict stream to messages from object with given name
-/// ClassName(const char*)    -- Restrict stream to messages from objects with given class name
-/// BaseClassName(const char*)-- Restrict stream to messages from objects with given base class name
-/// LabelName(const chat*)    -- Restrict stream to messages from objects setAtrribute(const char*) tag with given name
-///
-/// Output redirection options
-/// --------------------------
-/// OutputFile(const char*)  -- Send output to file with given name. Multiple streams can write to same file.
-/// OutputStream(ostream&)   -- Send output to given C++ stream. Multiple message streams can write to same c++ stream
-///
-/// The return value is the unique ID code of the defined stream
+/// This method accepts the following arguments to configure the stream:
+/// <table>
+/// <tr><th> Output Style options <th>
+/// <tr><td> Prefix(Bool_t flag=kTRUE) <td> Prefix all messages in this stream with Topic/Originator information
+/// <tr><th> Filtering options <th>
+/// <tr><td> Topic()                   <td> Restrict stream to messages on given topic
+/// <tr><td> ObjectName(const char*)   <td> Restrict stream to messages from object with given name
+/// <tr><td> ClassName(const char*)    <td> Restrict stream to messages from objects with given class name
+/// <tr><td> BaseClassName(const char*)<td> Restrict stream to messages from objects with given base class name
+/// <tr><td> LabelName(const chat*)    <td> Restrict stream to messages from objects setAtrribute(const char*) tag with given name
+/// <tr><th> Output redirection options <th>
+/// <tr><td> OutputFile(const char*)  <td> Send output to file with given name. Multiple streams can write to same file.
+/// <tr><td> OutputStream(ostream&)   <td> Send output to given C++ stream. Multiple message streams can write to same c++ stream
+/// </table>
+/// The return value is the unique ID of the defined stream.
 
 Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
     	      			               const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6) 
