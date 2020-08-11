@@ -7,7 +7,6 @@
 set(headers
     inc/CPyCppyy/API.h
     inc/CPyCppyy/PyResult.h
-    inc/CPyCppyy/TPyArg.h
     inc/CPyCppyy/CommonDefs.h
     inc/CPyCppyy/PyException.h
     inc/CPyCppyy/DispatchPtr.h
@@ -40,7 +39,6 @@ set(sources
     src/TemplateProxy.cxx
     src/PyException.cxx
     src/PyResult.cxx
-    src/TPyArg.cxx
     src/TupleOfInstances.cxx
     src/TypeManip.cxx
     src/Utility.cxx
