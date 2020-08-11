@@ -48,8 +48,8 @@ There are two main methods of installing ROOT from source.
   - 'location independent' is advised for a personal installation of ROOT
   - 'fixed location' for a system wide installation.
 
-Both require to set the CMAKE_INSTALL_PREFIX variable at configuration time.
-The 'fixed location' requires in addition to set the 'gnuinstall' option at configuration.
+Both methods will install ROOT in the location specified as the `CMAKE_INSTALL_PREFIX` cmake variable at configuration time (`/usr/local` by default).
+The 'fixed location' requires in addition to set the 'gnuinstall' cmake option at configuration time, with `-Dgnuinstall=ON`.
 
 
 3.1. Location independent build:
@@ -118,7 +118,7 @@ Using the fixed location mode (section 3.2), the default 'CMAKE_INSTALL_PREFIX'
 path is '/usr/local', which will result in the ROOT files to be
 installed in '/usr/local/bin', `/usr/local/lib', etc. You can specify
 an installation prefix other than `/usr/local' by giving `cmake'
-the option `-DCMAKE_INSTALL_PREFIX=/opt/root-6.22'.
+the option `-DCMAKE_INSTALL_PREFIX=/opt/root-6.22'. Using a version-specific install prefix is recommended in case mulitple versions of ROOT will be installed in the system at the same time.
 
 
 5. Where to get more information:
