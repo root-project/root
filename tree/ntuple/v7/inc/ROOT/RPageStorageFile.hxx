@@ -17,7 +17,6 @@
 #define ROOT7_RPageStorageFile
 
 #include <ROOT/RClusterPool.hxx>
-#include <ROOT/RError.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
@@ -93,8 +92,6 @@ public:
    void ReleasePage(RPage &page) final;
 
    RNTupleMetrics &GetMetrics() final { return fMetrics; }
-
-   void Merge(const std::vector<std::unique_ptr<RPageSourceFile>>& sources);
 };
 
 

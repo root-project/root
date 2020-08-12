@@ -3,7 +3,7 @@
 class RNTupleMergerTest : public ::testing::Test {
 protected:
    std::vector<FileRaii> fFiles;
-   std::vector<std::unique_ptr<RPageSourceFile>> fMergeSources;
+   std::vector<std::unique_ptr<RPageSource>> fMergeSources;
    std::string fNtplName = "some_ntuple";
 
    void SetUp() override {
@@ -43,7 +43,7 @@ TEST_F(RNTupleMergerTest, LowLevelMerge)
    }
    auto mergeTarget = std::make_unique<RPageSinkFile>(
       RPageSinkFile(fNtplName, "merged.root", RNTupleWriteOptions()));
-   mergeTarget->Merge(fMergeSources);
+   mergeTarget->Merge(fMergeSources).ThrowOnError();
 
    // const auto& ref_desc = fMergeSources.front()->GetDescriptor();
    // for (std::size_t i = 0; i < fMergeSources.size(); ++i) {

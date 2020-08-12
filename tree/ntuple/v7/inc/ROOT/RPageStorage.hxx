@@ -16,6 +16,7 @@
 #ifndef ROOT7_RPageStorage
 #define ROOT7_RPageStorage
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -39,6 +40,7 @@ namespace Detail {
 class RCluster;
 class RColumn;
 class RPagePool;
+class RPageSource;
 class RFieldBase;
 class RNTupleMetrics;
 
@@ -161,6 +163,9 @@ public:
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
    virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) = 0;
+
+   /// Merge a number of page sources into the sink.
+   RResult<void> Merge(const std::vector<std::unique_ptr<RPageSource>>& sources);
 };
 
 // clang-format off
