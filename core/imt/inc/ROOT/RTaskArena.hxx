@@ -24,6 +24,7 @@
 #define ROOT_RTaskArena
 
 #include "RConfigure.h"
+#include "tbb/task_arena.h"
 #include <memory>
 
 // exclude in case ROOT does not have IMT support
@@ -33,13 +34,6 @@
 #  error "Cannot use ROOT::Internal::RTaskArenaWrapper if build option imt=OFF."
 # endif
 #else
-
-/// tbb::task_arena is an alias of tbb::interface7::task_arena, which doesn't allow
-/// to forward declare tbb::task_arena without forward declaring tbb::interface7
-namespace tbb{
-namespace interface7{class task_arena;}
-using task_arena = interface7::task_arena;
-}
 
 namespace ROOT {
 namespace Internal {
