@@ -116,7 +116,7 @@ TGraphErrors* HypoTestInverterPlot::MakePlot(Option_t * opt)
          CLErr = fResults->CLsError(index[i]);
       }
 
-      if (CLVal < 0.) {
+      if (CLVal < 0. || !std::isfinite(CLVal)) {
          Warning("HypoTestInverterPlot::MakePlot", "Got a confidence level of %f at x=%f (failed fit?). Skipping this point.", CLVal, fResults->GetXValue(index[i]));
          continue;
       }
