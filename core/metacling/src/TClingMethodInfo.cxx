@@ -445,14 +445,17 @@ int TClingMethodInfo::InternalNext()
          // enable_if'ed functions.
          fTemplateSpec = GetOrInstantiateFuncTemplateWithDefaults(templateDecl, fInterp->getSema(),
                                                                   fInterp->getLookupHelper());
+         if (fTemplateSpec && fTemplateSpec->isDeleted())
+            fTemplateSpec = nullptr;
          if (fTemplateSpec)
             return 1;
       }
 
       // Return if this decl is a function or method.
-      if (llvm::isa<clang::FunctionDecl>(declIter)) {
-         // Iterator is now valid.
-         return 1;
+      if (auto *FD = llvm::dyn_cast<clang::FunctionDecl>(declIter)) {
+         if (!FD->isDeleted())
+            // Iterator is now valid.
+            return 1;
       }
 
       // Collect internal `__cling_N5xxx' inline namespaces; they will be traversed later
