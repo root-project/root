@@ -174,10 +174,8 @@ public:
    CompareResult(int _opts = cmpPars, double _tolPar = 3, double _tolChi2 = 0.01):
       refValue(0), opts(_opts), tolPar(_tolPar), tolChi2(_tolChi2) {};
 
-   CompareResult(CompareResult const& copy):
-      refValue(copy.refValue), opts(copy.opts),
-      tolPar(copy.tolPar), tolChi2(copy.tolChi2) {};
-
+   // use default copy-ctor and assignment operator
+   
    void setRefValue(struct RefValue* _refValue)
    {
       refValue = _refValue;
