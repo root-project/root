@@ -4876,12 +4876,11 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
   leafNodeServerList(&allLeafs);
 
   if (RooMsgService::instance().isActive(this, RooFit::Optimization, RooFit::INFO)) {
-    coutI(Optimization) << "The class " << IsA()->GetName() << " does not have the faster batch evaluation interface."
-          << " Consider requesting this feature on ROOT's JIRA tracker." << std::endl;
+    coutI(Optimization) << "The class " << IsA()->GetName() << " could benefit from implementing the faster batch evaluation interface."
+        << " If it is part of ROOT, consider requesting this on https://root.cern." << std::endl;
   }
 
 
-  // TODO Make faster by using batch computation results also on intermediate nodes?
   std::vector<std::tuple<RooRealVar*, RooSpan<const double>, double>> batchLeafs;
   for (auto leaf : allLeafs) {
     auto leafRRV = dynamic_cast<RooRealVar*>(leaf);
@@ -4902,6 +4901,13 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
 
   auto output = _batchData.makeWritableBatchUnInit(begin, maxSize);
 
+  // Side track all caching that RooFit might think is necessary.
+  // This yields wrong results when used with batch computations,
+  // since data are not loaded globally here, and the caches of
+  // objects are therefore not updated.
+  const bool oldInhibitState = inhibitDirty();
+  setDirtyInhibit(true);
+
   for (std::size_t i = 0; i < output.size(); ++i) {
     for (auto& tup : batchLeafs) {
       RooRealVar* leaf = std::get<0>(tup);
@@ -4912,6 +4918,8 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
 
     output[i] = evaluate();
   }
+
+  setDirtyInhibit(oldInhibitState);
 
   // Reset values
   for (auto& tup : batchLeafs) {
