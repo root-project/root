@@ -654,12 +654,11 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax, bool s
             thisX = xMin + i*(xMax-xMin)/(nBins-1);          // linear scan in x
       }
 
-      bool status = RunOnePoint(thisX);
+      const bool status = RunOnePoint(thisX);
 
       // check if failed status
       if ( status==false ) {
-         std::cout << "\t\tLoop interrupted because of failed status\n";
-         return false;
+        oocoutW((TObject*)0,Eval) << "HypoTestInverter::RunFixedScan - The hypo test for point " << thisX << " failed. Skipping." << std::endl;
       }
    }
 
@@ -714,10 +713,12 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
       return false;
    }
    // in case of a dummy result
-   if (TMath::IsNaN(result->NullPValue() ) && TMath::IsNaN(result->AlternatePValue() ) ) {
-      oocoutW((TObject*)0,Eval) << "HypoTestInverter - Skip invalid result for  point " << fScannedVariable->GetName() << " = " <<
-         fScannedVariable->getVal() << endl;
-      return true;  // need to return true to avoid breaking the scan loop
+   const double nullPV = result->NullPValue();
+   const double altPV = result->AlternatePValue();
+   if (!std::isfinite(nullPV) || nullPV < 0. || nullPV > 1. || !std::isfinite(altPV) || altPV < 0. || altPV > 1.) {
+      oocoutW((TObject*)0,Eval) << "HypoTestInverter - Skipping invalid result for  point " << fScannedVariable->GetName() << " = " <<
+         fScannedVariable->getVal() << ". null p-value=" << nullPV << ", alternate p-value=" << altPV << endl;
+      return false;
    }
 
    double lastXtested;
@@ -799,15 +800,16 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
   if (fVerbose > 0) std::cout << "Search for upper limit to the limit" << std::endl;
   for (int tries = 0; tries < 6; ++tries) {
      if (! RunOnePoint(rMax) ) {
-        oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Hypotest failed" << std::endl;
-        return false;
+        oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Hypotest failed at upper limit of scan range: " << rMax << std::endl;
+        rMax *= 0.95;
+        continue;
      }
      clsMax = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
      if (clsMax.first == 0 || clsMax.first + 3 * fabs(clsMax.second) < clsTarget ) break;
      rMax += rMax;
      if (tries == 5) {
-        oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Cannot set higher limit: at " << r->GetName()
-                                  << " = " << rMax  << " still get "
+        oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Cannot determine upper limit of scan range. At " << r->GetName()
+                                  << " = " << rMax  << " still getting "
                                   << (fUseCLs ? "CLs" : "CLsplusb") << " = " << clsMax.first << std::endl;
         return false;
      }
@@ -815,12 +817,15 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
   if (fVerbose > 0) {
      oocoutI((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Search for lower limit to the limit" << std::endl;
   }
-  //clsMin = (fUseCLs && rMin == 0 ? CLs_t(1,0) : eval(w, mc_s, mc_b, data, rMin));
+
   if ( fUseCLs && rMin == 0 ) {
      clsMin =  CLs_t(1,0);
   }
   else {
-     if (! RunOnePoint(rMin) ) return false;
+     if (! RunOnePoint(rMin) ) {
+       oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Hypotest failed at lower limit of scan range: " << rMin << std::endl;
+       return false;
+     }
      clsMin = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
   }
   if (clsMin.first != 1 && clsMin.first - 3 * fabs(clsMin.second) < clsTarget) {
@@ -830,12 +835,16 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
      } else {
         rMin = -rMax / 4;
         for (int tries = 0; tries < 6; ++tries) {
-           if (! RunOnePoint(rMax) ) return false;
+           if (! RunOnePoint(rMin) ) {
+             oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Hypotest failed at lower limit of scan range: " << rMin << std::endl;
+             rMin = rMin == 0. ? 0.1 : rMin * 1.1;
+             continue;
+           }
            clsMin = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
            if (clsMin.first == 1 || clsMin.first - 3 * fabs(clsMin.second) > clsTarget) break;
            rMin += rMin;
            if (tries == 5) {
-              oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Cannot set lower limit: at " << r->GetName()
+              oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Cannot determine lower limit of scan range. At " << r->GetName()
                                         << " = " << rMin << " still get " << (fUseCLs ? "CLs" : "CLsplusb")
                                         << " = " << clsMin.first << std::endl;
               return false;
@@ -876,9 +885,10 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
      }
 
      // evaluate point
-
-     //clsMid = eval(w, mc_s, mc_b, data, limit, true, clsTarget);
-     if (! RunOnePoint(limit, true, clsTarget) ) return false;
+     if (! RunOnePoint(limit, true, clsTarget) ) {
+       oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Hypo test failed at x=" << limit << " when trying to find limit." << std::endl;
+       return false;
+     }
      clsMid = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
 
      if (clsMid.second == -1) {
@@ -899,14 +909,20 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
        // try to reduce the size of the interval
        while (clsMin.second == 0 || fabs(rMin-limit) > std::max(absAccuracy, relAccuracy * limit)) {
          rMin = 0.5*(rMin+limit);
-         if (!RunOnePoint(rMin,true, clsTarget) ) return false;
+         if (!RunOnePoint(rMin,true, clsTarget) ) {
+           oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Hypo test failed at x=" << rMin << " when trying to find limit from below." << std::endl;
+           return false;
+         }
          clsMin = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
          if (fabs(clsMin.first-clsTarget) <= 2*clsMin.second) break;
          rMinBound = rMin;
        }
        while (clsMax.second == 0 || fabs(rMax-limit) > std::max(absAccuracy, relAccuracy * limit)) {
          rMax = 0.5*(rMax+limit);
-         if (!RunOnePoint(rMax,true,clsTarget) ) return false;
+         if (!RunOnePoint(rMax,true,clsTarget) ) {
+           oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Hypo test failed at x=" << rMin << " when trying to find limit from above." << std::endl;
+           return false;
+         }
          clsMax = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
          if (fabs(clsMax.first-clsTarget) <= 2*clsMax.second) break;
          rMaxBound = rMax;
