@@ -149,7 +149,7 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitClusterImpl(ROOT::Experimental:
 void ROOT::Experimental::Detail::RPageSinkFile::CommitDatasetImpl()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   auto szFooter = descriptor.SerializeFooter(nullptr);
+   auto szFooter = descriptor.GetFooterSize();
    auto buffer = std::unique_ptr<unsigned char []>(new unsigned char[szFooter]);
    descriptor.SerializeFooter(buffer.get());
 
