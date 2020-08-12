@@ -673,12 +673,6 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    }
    double limit =  brf.Root();
 
-   // auto grfunc = [&](double * x, double *) {
-   //    return (fInterpolOption == kSpline) ? graph.Eval(*x, nullptr, "S") - y0 : graph.Eval(*x) - y0;
-   // };
-   // TF1 tgrfunc("tgrfunc",grfunc,xmin,xmax,0);
-   // double limit = tgrfunc.GetX(0,xmin,xmax);
-
 #ifdef DO_DEBUG
    if (lowSearch) std::cout << "lower limit search : ";
    else std::cout << "Upper limit search :  ";

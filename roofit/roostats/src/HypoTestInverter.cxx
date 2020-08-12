@@ -749,9 +749,6 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
 
    }
 
-      // std::cout << "computed value for poi  " << rVal  << " : " << fResults->GetYValue(fResults->ArraySize()-1)
-      //        << " +/- " << fResults->GetYError(fResults->ArraySize()-1) << endl;
-
    fScannedVariable->setVal(oldValue);
 
    return true;
@@ -773,10 +770,8 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
 
 
    // routine from G. Petrucciani (from HiggsCombination CMS package)
-// bool HybridNew::runLimit(RooWorkspace *w, RooStats::ModelConfig *mc_s, RooStats::ModelConfig *mc_b, RooAbsData &data, double &limit, double &limitErr, const double *hint) {
 
    RooRealVar *r = fScannedVariable;
-   //w->loadSnapshot("clean");
 
   if ((hint != 0) && (*hint > r->getMin())) {
      r->setMax(std::min<double>(3.0 * (*hint), r->getMax()));
@@ -799,33 +794,10 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
 
   TF1 expoFit("expoFit","[0]*exp([1]*(x-[2]))", rMin, rMax);
 
-  // if (readHybridResults_) {
-  //     if (verbose > 0) std::cout << "Search for upper limit using pre-computed grid of p-values" << std::endl;
-
-  //     readAllToysFromFile();
-  //     double minDist=1e3;
-  //     for (int i = 0, n = limitPlot_->GetN(); i < n; ++i) {
-  //         double x = limitPlot_->GetX()[i], y = limitPlot_->GetY()[i], ey = limitPlot_->GetErrorY(i);
-  //         if (verbose > 0) std::cout << "  r " << x << (CLs_ ? ", CLs = " : ", CLsplusb = ") << y << " +/- " << ey << std::endl;
-  //         if (y-3*ey >= clsTarget) { rMin = x; clsMin = CLs_t(y,ey); }
-  //         if (y+3*ey <= clsTarget) { rMax = x; clsMax = CLs_t(y,ey); }
-  //         if (fabs(y-clsTarget) < minDist) { limit = x; minDist = fabs(y-clsTarget); }
-  //     }
-  //     if (verbose > 0) std::cout << " after scan x ~ " << limit << ", bounds [ " << rMin << ", " << rMax << "]" << std::endl;
-  //     limitErr = std::max(limit-rMin, rMax-limit);
-  //     expoFit.SetRange(rMin,rMax);
-
-  //     if (limitErr < std::max(rAbsAccuracy_, rRelAccuracy_ * limit)) {
-  //         if (verbose > 1) std::cout << "  reached accuracy " << limitErr << " below " << std::max(rAbsAccuracy_, rRelAccuracy_ * limit) << std::endl;
-  //         done = true;
-  //     }
-  // } else {
-
   fLimitPlot.reset(new TGraphErrors());
 
   if (fVerbose > 0) std::cout << "Search for upper limit to the limit" << std::endl;
   for (int tries = 0; tries < 6; ++tries) {
-     //clsMax = eval(w, mc_s, mc_b, data, rMax);
      if (! RunOnePoint(rMax) ) {
         oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Hypotest failed" << std::endl;
         return false;
@@ -916,34 +888,32 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
 
      // if sufficiently far away, drop one of the points
      if (fabs(clsMid.first-clsTarget) >= 2*clsMid.second) {
-        if ((clsMid.first>clsTarget) == (clsMax.first>clsTarget)) {
-           rMax = limit; clsMax = clsMid;
-        } else {
-                  rMin = limit; clsMin = clsMid;
-              }
-          } else {
-              if (fVerbose > 0) std::cout << "Trying to move the interval edges closer" << std::endl;
-              double rMinBound = rMin, rMaxBound = rMax;
-              // try to reduce the size of the interval
-              while (clsMin.second == 0 || fabs(rMin-limit) > std::max(absAccuracy, relAccuracy * limit)) {
-                  rMin = 0.5*(rMin+limit);
-                  if (!RunOnePoint(rMin,true, clsTarget) ) return false;
-                  clsMin = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
-                  //clsMin = eval(w, mc_s, mc_b, data, rMin, true, clsTarget);
-                  if (fabs(clsMin.first-clsTarget) <= 2*clsMin.second) break;
-                  rMinBound = rMin;
-              }
-              while (clsMax.second == 0 || fabs(rMax-limit) > std::max(absAccuracy, relAccuracy * limit)) {
-                  rMax = 0.5*(rMax+limit);
-//                  clsMax = eval(w, mc_s, mc_b, data, rMax, true, clsTarget);
-                  if (!RunOnePoint(rMax,true,clsTarget) ) return false;
-                  clsMax = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
-                  if (fabs(clsMax.first-clsTarget) <= 2*clsMax.second) break;
-                  rMaxBound = rMax;
-              }
-              expoFit.SetRange(rMinBound,rMaxBound);
-              break;
-          }
+       if ((clsMid.first>clsTarget) == (clsMax.first>clsTarget)) {
+         rMax = limit; clsMax = clsMid;
+       } else {
+         rMin = limit; clsMin = clsMid;
+       }
+     } else {
+       if (fVerbose > 0) std::cout << "Trying to move the interval edges closer" << std::endl;
+       double rMinBound = rMin, rMaxBound = rMax;
+       // try to reduce the size of the interval
+       while (clsMin.second == 0 || fabs(rMin-limit) > std::max(absAccuracy, relAccuracy * limit)) {
+         rMin = 0.5*(rMin+limit);
+         if (!RunOnePoint(rMin,true, clsTarget) ) return false;
+         clsMin = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
+         if (fabs(clsMin.first-clsTarget) <= 2*clsMin.second) break;
+         rMinBound = rMin;
+       }
+       while (clsMax.second == 0 || fabs(rMax-limit) > std::max(absAccuracy, relAccuracy * limit)) {
+         rMax = 0.5*(rMax+limit);
+         if (!RunOnePoint(rMax,true,clsTarget) ) return false;
+         clsMax = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
+         if (fabs(clsMax.first-clsTarget) <= 2*clsMax.second) break;
+         rMaxBound = rMax;
+       }
+       expoFit.SetRange(rMinBound,rMaxBound);
+       break;
+     }
   } while (true);
 
   if (!done) { // didn't reach accuracy with scan, now do fit
