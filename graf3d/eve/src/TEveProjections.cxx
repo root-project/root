@@ -580,7 +580,6 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
       if (fUsePreScale)
          PreScalePoint(y, x);
 
-
       // distort
 
       if (!fDisplaceOrigin) {
@@ -762,6 +761,7 @@ void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
          y += fCenter.fY;
       }
    }
+
    z = d;
 }
 
@@ -787,9 +787,8 @@ TEveXZProjection::TEveXZProjection() :
 /// Project point.
 
 void TEveXZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
-                                      Float_t d, EPProc_e proc)
+                                    Float_t d, EPProc_e proc)
 {
-   
    using namespace TMath;
    
    if (fDisplaceOrigin)
@@ -798,13 +797,14 @@ void TEveXZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
       y  -= fCenter.fY;
       z  -= fCenter.fZ;
    }
-   
 
-   //projcetion
-   y = z;
-   z = d;
-   
-   if (proc != kPP_Plane)
+   // projection
+   if (proc == kPP_Plane || proc == kPP_Full)
+   {
+      y = z;
+      z = d;
+   }
+   if (proc != kPP_Distort || proc == kPP_Full)
    {
       Float_t r, phi;
       if (fUsePreScale)
@@ -818,9 +818,8 @@ void TEveXZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
 
       if (!fDisplaceOrigin)
       {
-         x  -= fCenter.fX;
-         y  -= fCenter.fY;
-         z  -= fCenter.fZ;
+         x -= fProjectedCenter.fX;
+         y -= fProjectedCenter.fY;
       }
 
       r   = Sqrt(x*x + y*y);
@@ -838,13 +837,44 @@ void TEveXZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
 
       if (!fDisplaceOrigin)
       {
-         x += fCenter.fX;
-         y += fCenter.fY;
-         z += fCenter.fZ;
+         x += fProjectedCenter.fX;
+         y += fProjectedCenter.fY;
       }
    }
-   
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set center of distortion (virtual method).
+
+void TEveXZProjection::SetCenter(TEveVector& v)
+{
+   fCenter = v;
+
+   if (fDisplaceOrigin)
+   {
+      fProjectedCenter.Set(0.f, 0.f, 0.f);
+   }
+   else
+   {
+      fProjectedCenter.fX = fCenter.fX;
+      fProjectedCenter.fY = fCenter.fZ;
+      fProjectedCenter.fZ = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get direction in the unprojected space for axis index in the
+/// projected space.
+/// This is virtual method from base-class TEveProjection.
+
+void TEveXZProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
+{
+   if (screenAxis == 0)
+      vec.Set(1.0f, 0.0f, 0.0f);
+   else if (screenAxis == 1)
+      vec.Set(0.0f, 0.0f, 1.0f);
+}
+
 
 /** \class TEve3DProjection
 \ingroup TEve

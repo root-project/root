@@ -208,6 +208,9 @@ public:
 
 class TEveXZProjection : public TEveProjection
 {
+private:
+   TEveVector   fProjectedCenter; // projected center of distortion.
+
 public:
    TEveXZProjection();
    virtual ~TEveXZProjection() {}
@@ -216,6 +219,11 @@ public:
    virtual Bool_t Is3D() const { return kFALSE; }
 
    virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+
+   virtual void     SetCenter(TEveVector& v);
+   virtual Float_t* GetProjectedCenter() { return fProjectedCenter.Arr(); }
+
+   virtual void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    ClassDef(TEveXZProjection, 0); // XZ non-linear projection.
 };

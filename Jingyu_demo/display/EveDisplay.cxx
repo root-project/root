@@ -12,6 +12,7 @@
 #include "TEveProjectionAxes.h"
 #include "TEveScene.h"
 #include "TEveWindow.h"
+#include "TEveBrowser.h"
 #include "TEveBox.h"
 #include "TRandom.h"
 #include <iostream>
