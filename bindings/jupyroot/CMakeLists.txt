@@ -34,12 +34,23 @@ foreach(val RANGE ${how_many_pythons})
   list(GET python_under_version_strings ${val} python_under_version_string)
   list(GET python_include_dirs ${val} python_include_dir)
   list(GET python_executables ${val} python_executable)
-  list(GET python_libraries ${val} python_library)
 
   set(libname JupyROOT${python_under_version_string})
 
   # libJupyROOT uses ROOT headers from source dirs and depends on Core
-  ROOT_LINKER_LIBRARY(${libname} src/IOHandler.cxx LIBRARIES ${python_library} DEPENDENCIES Core CMAKENOEXPORT)
+  add_library(${libname} SHARED src/IOHandler.cxx)
+  # Set the suffix to '.so' and the prefix to 'lib'
+  set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
+  if(MSVC)
+    set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
+    target_link_libraries(${libname} PUBLIC Core)
+  elseif(APPLE)
+    target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup Core)
+  else()
+    target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all Core)
+  endif()
+
   target_include_directories(${libname} PRIVATE ${python_include_dir})
 
   # Disables warnings originating from deprecated register keyword in Python
@@ -58,7 +69,10 @@ foreach(val RANGE ${how_many_pythons})
   endforeach()
 
   # Install library
-  install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION ${runtimedir})
+  install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
+                             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
+                             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+                             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 
 endforeach()
 
