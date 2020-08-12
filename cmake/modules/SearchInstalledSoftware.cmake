@@ -906,6 +906,7 @@ if(builtin_xrootd)
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
                -DENABLE_PYTHON=OFF
                -DENABLE_CEPH=OFF
+               -DCMAKE_INSTALL_RPATH:STRING=${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
             COMMAND ${CMAKE_COMMAND} -E copy_directory <INSTALL_DIR>/include/xrootd <INSTALL_DIR>/include
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -918,6 +919,16 @@ if(builtin_xrootd)
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${XROOTD_VERSIONNUM}")
   install(DIRECTORY ${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libXrd*")
   install(DIRECTORY ${XROOTD_ROOTDIR}/include/xrootd/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+  if(APPLE)
+    # XRootD libraries on mac need the LC_RPATH variable set. The build process already takes care of setting
+    #   * BUILD_RPATH = build/XROOTD-prefix/../src
+    #   * INSTALL_RPATH = build/lib
+    # Since the install directory for the builtin_xrootd target corresponds to the build directory of the main project.
+    # Use a post install script to change the LC_RPATH variable of the libraries in the ROOT install folder.
+    install(SCRIPT ${CMAKE_CURRENT_LIST_DIR}/XROOTDApplePostInstall.cmake
+            CODE "xrootd_libs_change_rpath(${XROOTD_ROOTDIR}/${XROOTD_LIBDIR} ${CMAKE_INSTALL_FULL_LIBDIR})"
+    )
+  endif()
   set(XROOTD_TARGET XROOTD)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
 endif()
