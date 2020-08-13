@@ -136,11 +136,10 @@ Class category: foreign.
 --- Class class6
 Class category: foreign.
  * Version: -1
- o Methods (4):
+ o Methods (3):
   * class6 class6::class6(int i)
   * void class6::~class6()
   * class6 class6::class6(const class6&)
-  * class6& class6::operator=(const class6&)
  o Members (20):
   * const int m_arrSize [ isBasic ]
   * int* m_arr1 [ isPtr isBasic "[m_arrSize]" ]
