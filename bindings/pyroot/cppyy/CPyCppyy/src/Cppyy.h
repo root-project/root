@@ -208,8 +208,6 @@ namespace Cppyy {
     CPPYY_IMPORT
     bool IsPublicMethod(TCppMethod_t method);
     CPPYY_IMPORT
-    bool IsProtectedMethod(TCppMethod_t method);
-    CPPYY_IMPORT
     bool IsConstructor(TCppMethod_t method);
     CPPYY_IMPORT
     bool IsDestructor(TCppMethod_t method);
@@ -231,8 +229,6 @@ namespace Cppyy {
 // data member properties ----------------------------------------------------
     CPPYY_IMPORT
     bool IsPublicData(TCppScope_t scope, TCppIndex_t idata);
-    CPPYY_IMPORT
-    bool IsProtectedData(TCppScope_t scope, TCppIndex_t idata);
     CPPYY_IMPORT
     bool IsStaticData(TCppScope_t scope, TCppIndex_t idata);
     CPPYY_IMPORT

@@ -43,8 +43,7 @@ public:
         kIsException     = 0x0004,
         kIsSmart         = 0x0008,
         kIsPython        = 0x0010,
-        kIsMultiCross    = 0x0020,
-        kIsInComplete    = 0x0040 };
+        kIsInComplete    = 0x0020 };
 
 public:
     PyHeapTypeObject  fType;

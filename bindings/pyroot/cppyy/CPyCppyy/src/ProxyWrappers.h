@@ -9,10 +9,10 @@ namespace CPyCppyy {
 
 // construct a Python shadow class for the named C++ class
 PyObject* GetScopeProxy(Cppyy::TCppScope_t);
-PyObject* CreateScopeProxy(Cppyy::TCppScope_t, const unsigned flags = 0);
+PyObject* CreateScopeProxy(Cppyy::TCppScope_t);
 PyObject* CreateScopeProxy(PyObject*, PyObject* args);
 PyObject* CreateScopeProxy(
-    const std::string& scope_name, PyObject* parent = nullptr, const unsigned flags = 0);
+    const std::string& scope_name, PyObject* parent = nullptr);
 
 // C++ exceptions form a special case b/c they have to derive from BaseException
 PyObject* CreateExcScopeProxy(PyObject* pyscope, PyObject* pyname, PyObject* parent);
