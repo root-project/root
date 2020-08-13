@@ -23,6 +23,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = False
 from ROOT import gROOT, gInterpreter
 from ROOT import TClass, TObject, TFile
 from ROOT import TH1I, TVector3, TGraph, TMatrixD
+import cppyy
 
 from common import *
 
@@ -602,6 +603,41 @@ class Regression23TFractionFitter(MyTestCase):
 
       ff = ROOT.TFractionFitter(h3, mc)
       ff.Fit()
+
+
+class Regression24CppPythonInheritance(MyTestCase):
+   def test1DeletedCopyConstructor(self):
+      """Test that deleted base class copy constructor is not used"""
+      # ROOT-10872
+      cppyy.gbl.gInterpreter.Declare('''
+      struct NoCopy1 {
+         NoCopy1() = default;
+         NoCopy1(const NoCopy1&) = delete;
+         virtual ~NoCopy1() = default;
+      };
+
+      struct MyClass1 : NoCopy1 {};
+      ''')
+
+      class MyDerived1(cppyy.gbl.MyClass1):
+         pass
+
+   def test2MoveConstructor(self):
+      """Test that move constructor is not mistaken for copy constructor"""
+      # ROOT-10872
+      cppyy.gbl.gInterpreter.Declare('''
+      struct NoCopy2 {
+         NoCopy2() = default;
+         NoCopy2(const NoCopy2&) = delete;
+         NoCopy2(NoCopy2&&) = default;
+         virtual ~NoCopy2() = default;
+      };
+
+      struct MyClass2 : NoCopy2 {};
+      ''')
+
+      class MyDerived2(cppyy.gbl.MyClass2):
+         pass
 
 
 ## actual test run
