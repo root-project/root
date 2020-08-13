@@ -74,6 +74,18 @@ public:
    /// Whether the concrete implementation is a sink or a source
    virtual EPageStorageType GetType() = 0;
 
+   struct RRawPage {
+      std::unique_ptr<unsigned char[]> fBuffer = nullptr;
+      std::uint32_t fSize = 0;
+      std::uint32_t fNElements = 0;
+
+      RRawPage() = default;
+      RRawPage(const RRawPage &other) = delete;
+      RRawPage& operator =(const RRawPage &other) = delete;
+      RRawPage(RRawPage &&other) = default;
+      RRawPage& operator =(RRawPage &&other) = default;
+   };
+
    struct RColumnHandle {
       DescriptorId_t fId = kInvalidDescriptorId;
       const RColumn *fColumn = nullptr;
@@ -219,6 +231,8 @@ public:
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;
    /// Another version of PopulatePage that allows to specify cluster-relative indexes
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) = 0;
+
+   virtual RPageStorage::RRawPage ReadRawPage(DescriptorId_t columnId, NTupleSize_t globalIndex) = 0;
 
    /// Populates all the pages of the given cluster id and columns; it is possible that some columns do not
    /// contain any pages.  The pages source may load more columns than the minimal necessary set from `columns`.

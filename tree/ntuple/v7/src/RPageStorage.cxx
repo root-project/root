@@ -226,42 +226,30 @@ ROOT::Experimental::Detail::RPageSink::Merge(
    std::cout << "source footer size " << szFooter << "\n";
 
    // fill header to get column ids
-   auto headerBuffer = new unsigned char[szHeader];
-   sourceDesc.SerializeHeader(headerBuffer);
-   fDescriptorBuilder.SetFromHeader(headerBuffer);
+   auto headerBuffer = std::make_unique<unsigned char[]>(szHeader);
+   sourceDesc.SerializeHeader(headerBuffer.get());
+   fDescriptorBuilder.SetFromHeader(headerBuffer.get());
    auto columnIds = fDescriptorBuilder.GetDescriptor().GetColumnIds();
 
-   // loop over footers
-   RRawColumns cols;
    for (auto id: columnIds) {
       std::cout << "got column: " << id << "\n";
-      // todo(max) capacity heuristic
-      cols.AddColumn(id, 1000);
    }
 
-   auto footerBuffer = new unsigned char[szFooter];
-   sourceDesc.SerializeFooter(footerBuffer);
-   cols.AddRawPages(footerBuffer);
+   auto columnId = DescriptorId_t(0);
+   auto elementIdx = NTupleSize_t(0);
 
-   std::cout << "\nother merge inputs are:\n";
-   for (std::size_t i = 1; i < sources.size(); ++i) {
-      sources[i]->Attach();
-      const auto& desc = sources[i]->GetDescriptor();
-      desc.SerializeFooter(footerBuffer);
-      cols.AddRawPages(footerBuffer).ThrowOnError();
-   }
+   RPageStorage::RRawPage rp = sources.front()->ReadRawPage(columnId, elementIdx);
+   std::cout << "read raw page:\n"
+      << "\tbytes: " << rp.fSize << "\n\telements: "
+      << rp.fNElements << "\n";
 
-   for (auto id: columnIds) {
-      const auto& pages = cols.GetPages(id);
-      std::cout << "column " << id << "\n"
-                << "\tnum pages: " << pages.size() << "\n";
-      std::size_t numElts = 0;
-      for (const auto& page: pages) {
-         numElts += page.fNElements;
-      }
-      std::cout << "\tnum elements: " << numElts << "\n";
-   }
-   // std::cout << "merge footer size " << fDescriptorBuilder.GetDescriptor().GetFooterSize() << "\n";
-   // fDescriptorBuilder.GetDescriptor().PrintInfo(std::cout);
+   //std::cout << "\nother merge inputs are:\n";
+   //for (std::size_t i = 1; i < sources.size(); ++i) {
+   //   sources[i]->Attach();
+   //   const auto& desc = sources[i]->GetDescriptor();
+   //   desc.SerializeFooter(footerBuffer);
+   //   cols.AddRawPages(footerBuffer).ThrowOnError();
+   //}
+
    return RResult<void>::Success();
 }

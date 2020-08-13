@@ -364,6 +364,76 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    return PopulatePageFromCluster(columnHandle, clusterDescriptor, index);
 }
 
+
+ROOT::Experimental::Detail::RPageStorage::RRawPage
+ROOT::Experimental::Detail::RPageSourceFile::ReadRawPage(
+   DescriptorId_t columnId, NTupleSize_t globalIndex)
+{
+   const auto clusterId = fDescriptor.FindClusterId(columnId, globalIndex);
+   R__ASSERT(clusterId != kInvalidDescriptorId);
+   const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   const auto selfOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
+   R__ASSERT(selfOffset <= globalIndex);
+   std::cout << "searching in cluster: " << clusterDescriptor.GetId() << "\n";
+   return ReadRawPageFromCluster(columnId, clusterDescriptor, globalIndex - selfOffset);
+}
+
+
+ROOT::Experimental::Detail::RPageStorage::RRawPage
+ROOT::Experimental::Detail::RPageSourceFile::ReadRawPageFromCluster(
+   DescriptorId_t columnId, const RClusterDescriptor &clusterDescriptor,
+   ClusterSize_t::ValueType clusterIndex)
+{
+   //const auto clusterId = clusterDescriptor.GetId();
+   const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
+
+   // TODO(jblomer): binary search
+   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   decltype(clusterIndex) firstInPage = 0;
+   NTupleSize_t pageNo = 0;
+   for (const auto &pi : pageRange.fPageInfos) {
+      if (firstInPage + pi.fNElements > clusterIndex) {
+         pageInfo = pi;
+         break;
+      }
+      firstInPage += pi.fNElements;
+      ++pageNo;
+   }
+   std::cout << "found on page " << pageNo << "\n";
+   std::cout << "page has " << pageInfo.fNElements << " elements\n";
+   R__ASSERT(firstInPage <= clusterIndex);
+   R__ASSERT((firstInPage + pageInfo.fNElements) > clusterIndex);
+
+   const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
+   std::cout << "page takes up " << bytesOnStorage << " bytes\n";
+
+   auto pageBuffer = std::make_unique<unsigned char[]>(bytesOnStorage);
+   fReader.ReadBuffer(pageBuffer.get(), bytesOnStorage, pageInfo.fLocator.fPosition);
+   //if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
+   //   fReader.ReadBuffer(pageBuffer.get(), bytesOnStorage, pageInfo.fLocator.fPosition);
+   //} else {
+   //   std::cout << "some cache\n";
+   //   if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId)
+   //       || !fCurrentCluster->ContainsColumn(columnId))
+   //   {
+   //      fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns);
+   //   }
+   //   std::cout << "get cluster\n";
+   //   R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
+   //   ROnDiskPage::Key key(columnId, pageNo);
+   //   auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
+   //   R__ASSERT(onDiskPage);
+   //   R__ASSERT(bytesOnStorage == onDiskPage->GetSize());
+   //   memcpy(pageBuffer, onDiskPage->GetAddress(), onDiskPage->GetSize());
+   //}
+
+   RPageStorage::RRawPage rawPage;
+   rawPage.fBuffer = std::move(pageBuffer);
+   rawPage.fSize = bytesOnStorage;
+   rawPage.fNElements = pageInfo.fNElements;
+   return rawPage;
+}
+
 void ROOT::Experimental::Detail::RPageSourceFile::ReleasePage(RPage &page)
 {
    fPagePool->ReturnPage(page);

@@ -160,6 +160,9 @@ private:
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
                                  ClusterSize_t::ValueType clusterIndex);
 
+   RPageStorage::RRawPage ReadRawPageFromCluster(DescriptorId_t clusterId,
+      const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType clusterIndex);
+
 protected:
    RNTupleDescriptor AttachImpl() final;
 
@@ -182,6 +185,8 @@ public:
    std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) final;
 
    RNTupleMetrics &GetMetrics() final { return fMetrics; }
+
+   RPageStorage::RRawPage ReadRawPage(DescriptorId_t columnId, NTupleSize_t globalIndex) final;
 };
 
 
