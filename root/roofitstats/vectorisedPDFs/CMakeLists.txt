@@ -24,8 +24,7 @@ ROOT_ADD_GTEST(testAddPdf testAddPdf.cxx
 ROOT_ADD_GTEST(testExponential testExponential.cxx
               LIBRARIES VectorisedPDFTests)
 ROOT_ADD_GTEST(testNestedPDFs testNestedPDFs.cxx
-              LIBRARIES VectorisedPDFTests
-              WILLFAIL)
+              LIBRARIES VectorisedPDFTests)
 ROOT_ADD_GTEST(testProductPdf testProductPdf.cxx
               LIBRARIES VectorisedPDFTests)
 ROOT_ADD_GTEST(testJohnson testJohnson.cxx
