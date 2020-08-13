@@ -81,11 +81,7 @@ TClass::New() on Outer<int> does create an object
 OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
  OBJ: TMethod	Wrapper<int&>	 : 0
       Wrapper<int&> Wrapper<int&>::Wrapper<int&>(const Wrapper<int&>&)
- OBJ: TMethod	operator=	 : 0
-      Wrapper<int&>& Wrapper<int&>::operator=(const Wrapper<int&>&)
  OBJ: TMethod	Wrapper<int&>	 : 0
       Wrapper<int&> Wrapper<int&>::Wrapper<int&>(Wrapper<int&>&&)
- OBJ: TMethod	operator=	 : 0
-      Wrapper<int&>& Wrapper<int&>::operator=(Wrapper<int&>&&)
  OBJ: TMethod	~Wrapper<int&>	 : 0
       void Wrapper<int&>::~Wrapper<int&>()

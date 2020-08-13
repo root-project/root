@@ -627,10 +627,8 @@ childCl::Class()->GetListOfAllPublicMethods():
 childCl::childCl() // 
 childCl::childCl(const childCl&) // 
 childCl::fGetIndex(Int_t aIndex) // Title Derived
-childCl::operator=(const childCl&) // 
 childCl::~childCl() // 
 baseCl::baseCl() // 
 baseCl::baseCl(const baseCl&) // 
 baseCl::fGetIndex(Int_t aIndex = 0) // Title Base
-baseCl::operator=(const baseCl&) // 
 baseCl::~baseCl() // 
