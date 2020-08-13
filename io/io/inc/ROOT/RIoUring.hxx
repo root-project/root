@@ -57,7 +57,7 @@ public:
       return available;
    }
 
-   struct io_uring *raw() {
+   struct io_uring *GetRawRing() {
       return &fRing;
    }
 };
