@@ -59,7 +59,7 @@ public:
 /// Column reader for defined (aka custom) columns.
 template <typename T>
 class R__CLING_PTRCHECK(off) RDefineReader final : public RColumnReaderBase<T> {
-   /// Non-owning ptr to the node responsible for the custom column. Needed when querying custom values.
+   /// Non-owning reference to the node responsible for the custom column. Needed when querying custom values.
    RDFDetail::RCustomColumnBase &fCustomColumn;
 
    /// Non-owning ptr to the value of a custom column.
@@ -106,7 +106,7 @@ public:
    void Reset() final { fTreeValue.reset(); }
 };
 
-/// RTreeColumnReader specialization for TTree values read via TTreeReaderArrays
+/// RTreeColumnReader specialization for TTree values read via TTreeReaderArrays.
 ///
 /// TTreeReaderArrays are used whenever the RDF column type is RVec<T>.
 template <typename T>
@@ -193,7 +193,7 @@ public:
    void Reset() final { fTreeArray.reset(); }
 };
 
-/// RTreeColumnReader specialization for arrays of boolean values read via TTreeReaderArrays
+/// RTreeColumnReader specialization for arrays of boolean values read via TTreeReaderArrays.
 ///
 /// TTreeReaderArray<bool> is used whenever the RDF column type is RVec<bool>.
 template <>
