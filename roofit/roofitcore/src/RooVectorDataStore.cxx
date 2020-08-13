@@ -569,7 +569,7 @@ Double_t RooVectorDataStore::weightError(RooAbsData::ErrorType etype) const
     // We have a weight array, use that info
 
     // Return symmetric error on current bin calculated either from Poisson statistics or from SumOfWeights
-    Double_t lo,hi ;
+    Double_t lo = 0, hi = 0 ;
     weightError(lo,hi,etype) ;
     return (lo+hi)/2 ;
 
@@ -579,7 +579,7 @@ Double_t RooVectorDataStore::weightError(RooAbsData::ErrorType etype) const
     if (_wgtVar->hasAsymError()) {
       return ( _wgtVar->getAsymErrorHi() - _wgtVar->getAsymErrorLo() ) / 2 ;
     } else if (_wgtVar->hasError(kFALSE)) {
-      return _wgtVar->getError() ;    
+      return _wgtVar->getError();
     } else {
       return 0 ;
     }
@@ -612,11 +612,11 @@ void RooVectorDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::Err
       break ;
       
     case RooAbsData::Poisson:
-      // Weight may be preset or precalculated    
+      // Weight may be preset or precalculated
       if (_curWgtErrLo>=0) {
-	lo = _curWgtErrLo ;
-	hi = _curWgtErrHi ;
-	return ;
+         lo = _curWgtErrLo ;
+         hi = _curWgtErrHi ;
+         return ;
       }
       
       // Otherwise Calculate poisson errors
