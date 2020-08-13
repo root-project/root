@@ -116,7 +116,7 @@ void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 #ifdef R__HAS_URING
    if (RIoUring::IsAvailable()) {
       RIoUring ring(nReq);
-      struct io_uring *p_ring = ring.raw();
+      struct io_uring *p_ring = ring.GetRawRing();
 
       // todo(max) try registering fFileDes to avoid repeated kernel fd mappings
       // ```
