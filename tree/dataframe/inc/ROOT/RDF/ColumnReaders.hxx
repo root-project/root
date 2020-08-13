@@ -116,12 +116,12 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public RColumnRe
    /// Enumerator for the memory layout of the branch
    enum class EStorageType : char { kContiguous, kUnknown, kSparse };
 
+   /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout.
+   RVec<T> fRVec;
+   
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
    /// in contiguous memory.
    EStorageType fStorageType = EStorageType::kUnknown;
-
-   /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout.
-   RVec<T> fRVec;
 
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
