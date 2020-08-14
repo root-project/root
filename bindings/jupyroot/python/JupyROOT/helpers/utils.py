@@ -73,7 +73,8 @@ if (typeof require !== 'undefined') {{
 
     // Try loading a local version of requirejs and fallback to cdn if not possible.
     script_load(base_url + 'static/scripts/JSRootCore.js', script_success, function(){{
-        script_load('https://root.cern/js/notebook/scripts/JSRootCore.min.js', script_success, function(){{
+        console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file')
+        script_load('https://root.cern/js/5.8.1/scripts/JSRootCore.min.js', script_success, function(){{
             document.getElementById("{jsDivId}").innerHTML = "Failed to load JSROOT";
         }});
     }});
