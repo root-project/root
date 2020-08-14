@@ -1,7 +1,7 @@
 #include <ROOT/REveDataSimpleProxyBuilder.hxx>
 
 // user include files
-#include <ROOT/REveDataClasses.hxx>
+#include <ROOT/REveDataCollection.hxx>
 #include <ROOT/REveCompound.hxx>
 
 using namespace ROOT::Experimental;

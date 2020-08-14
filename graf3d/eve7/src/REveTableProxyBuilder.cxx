@@ -2,7 +2,8 @@
 #include <ROOT/REveTableProxyBuilder.hxx>
 #include <ROOT/REveTableInfo.hxx>
 #include <ROOT/REveViewContext.hxx>
-#include <ROOT/REveDataClasses.hxx>
+#include <ROOT/REveDataCollection.hxx>
+#include <ROOT/REveDataTable.hxx>
 #include <ROOT/REveManager.hxx>
 
 using namespace ROOT::Experimental;

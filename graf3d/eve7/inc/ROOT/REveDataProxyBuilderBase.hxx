@@ -14,7 +14,7 @@
 
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveCompound.hxx>
-#include <ROOT/REveDataClasses.hxx>
+#include <ROOT/REveDataCollection.hxx>
 
 namespace ROOT {
 namespace Experimental {

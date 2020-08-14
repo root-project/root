@@ -10,8 +10,8 @@
  *************************************************************************/
 
 
-#ifndef ROOT7_REveDataClasses
-#define ROOT7_REveDataClasses
+#ifndef ROOT7_REveDataCollection
+#define ROOT7_REveDataCollection
 
 #include <ROOT/REveElement.hxx>
 
@@ -113,57 +113,6 @@ public:
 
    Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 };
-
-//==============================================================================
-
-class REveDataTable : public REveElement
-{
-protected:
-   const REveDataCollection *fCollection{nullptr};
-
-public:
-   REveDataTable(const std::string& n = "REveDataTable", const std::string& t = "");
-   virtual ~REveDataTable() {}
-
-   void SetCollection(const REveDataCollection *col) { fCollection = col; }
-   const REveDataCollection *GetCollection() const { return fCollection; }
-
-   void PrintTable();
-   virtual Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset);
-
-   void AddNewColumn(const std::string& expr, const std::string& title, int prec = 2);
-};
-
-//==============================================================================
-
-class REveDataColumn : public REveElement
-{
-public:
-   enum FieldType_e { FT_Double = 0, FT_Bool, FT_String };
-
-protected:
-public:
-   TString fExpression;
-   FieldType_e fType; // can we auto detect this?
-   Int_t fPrecision{2};
-
-   std::string fTrue{"*"};
-   std::string fFalse{" "};
-
-   std::function<double(void *)> fDoubleFoo;
-   std::function<bool(void *)> fBoolFoo;
-   std::function<std::string(void *)> fStringFoo;
-
-public:
-   REveDataColumn(const std::string& n = "REveDataColumn", const std::string& t = "");
-   virtual ~REveDataColumn() {}
-
-   void SetExpressionAndType(const std::string &expr, FieldType_e type);
-   void SetPrecision(Int_t prec);
-
-   std::string EvalExpr(void *iptr);
-};
-
 
 } // namespace Experimental
 } // namespace ROOT

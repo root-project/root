@@ -6,9 +6,7 @@
 ///
 
 
-#include "ROOT/REveDataClasses.hxx"
-//#include "ROOT/REveDataProxyBuilderBase.hxx"
-//#include "ROOT/REveDataSimpleProxyBuilder.hxx"
+#include "ROOT/REveDataTable.hxx"
 #include "ROOT/REveDataSimpleProxyBuilderTemplate.hxx"
 #include "ROOT/REveManager.hxx"
 #include "ROOT/REveScalableStraightLineSet.hxx"
