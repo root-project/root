@@ -30,7 +30,7 @@ class TVirtualPaveStats {
 public:
    virtual ~TVirtualPaveStats() = default;
 
-   virtual TObject *GetParent() const = 0;;
+   virtual TObject *GetParent() const = 0;
    virtual void SetParent(TObject *) = 0;
 
    ClassDef(TVirtualPaveStats, 0)  //Abstract interface for TPaveStats
