@@ -344,6 +344,7 @@ void REveCaloData::SetSliceColor(Int_t slice, Color_t col)
    {
       c->AddStamp(REveElement::kCBObjProps);
    }
+   AddStamp(REveElement::kCBObjProps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,6 +365,7 @@ void REveCaloData::SetSliceTransparency(Int_t slice, Char_t t)
    {
       c->AddStamp(REveElement::kCBObjProps);
    }
+   AddStamp(REveElement::kCBObjProps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -386,6 +388,7 @@ void REveCaloData::InvalidateUsersCellIdCache()
       calo->InvalidateCellIdCache();
       calo->StampObjProps();
    }
+   AddStamp(REveElement::kCBObjProps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -441,7 +444,7 @@ Int_t REveCaloData::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    {
       nlohmann::json slice = {};
       slice["name"]     = s.fName;
-      slice["treshold"] = s.fThreshold;
+      slice["threshold"] = s.fThreshold;
       slice["color"]    = s.fColor;
       sarr.push_back(slice);
    }
