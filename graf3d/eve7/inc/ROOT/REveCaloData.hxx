@@ -173,7 +173,7 @@ protected:
    int          fHighlightSecondarySelectIdx;
 
 public:
-   REveCaloData(const char* n="REveCalData", const char* t="");
+   REveCaloData(const char* n="REveCaloData", const char* t="");
    virtual ~REveCaloData() {}
 
    virtual void UnSelected();
