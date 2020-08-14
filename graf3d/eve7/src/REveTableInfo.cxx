@@ -18,7 +18,6 @@
 #include "TMethodArg.h"
 
 #include <ROOT/REveTableInfo.hxx>
-#include <ROOT/REveDataClasses.hxx>
 #include <ROOT/REveManager.hxx>
 
 #include <sstream>
