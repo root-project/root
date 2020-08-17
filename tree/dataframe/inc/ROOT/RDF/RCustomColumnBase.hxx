@@ -14,10 +14,11 @@
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RBookedCustomColumns.hxx"
 
+#include <deque>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include <deque>
 
 class TTreeReader;
 
@@ -41,12 +42,14 @@ protected:
    const unsigned int fID = GetNextID();
    RDFInternal::RBookedCustomColumns fCustomColumns;
    std::deque<bool> fIsInitialized; // because vector<bool> is not thread-safe
+   const std::map<std::string, std::vector<void *>> &fDSValuePtrs; // reference to RLoopManager's data member
 
    static unsigned int GetNextID();
 
 public:
    RCustomColumnBase(std::string_view name, std::string_view type, unsigned int nSlots,
-                     bool isDSColumn, const RDFInternal::RBookedCustomColumns &customColumns);
+                     bool isDSColumn, const RDFInternal::RBookedCustomColumns &customColumns,
+                     const std::map<std::string, std::vector<void *>> &DSValuePtrs);
 
    RCustomColumnBase &operator=(const RCustomColumnBase &) = delete;
    RCustomColumnBase &operator=(RCustomColumnBase &&) = delete;

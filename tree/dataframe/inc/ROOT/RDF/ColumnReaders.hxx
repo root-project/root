@@ -237,21 +237,12 @@ public:
 /// Column reader type that deals with values read from RDataSources.
 template <typename T>
 class R__CLING_PTRCHECK(off) RDSColumnReader final : public RColumnReaderBase<T> {
-   RDFDetail::RCustomColumnBase &fCustomColumn;
    T **fDSValuePtr = nullptr;
-   unsigned int fSlot = std::numeric_limits<unsigned int>::max();
 
 public:
-   RDSColumnReader(unsigned int slot, RDFDetail::RCustomColumnBase &customColumn)
-      : fCustomColumn(customColumn), fDSValuePtr(static_cast<T **>(customColumn.GetValuePtr(slot))), fSlot(slot)
-   {
-   }
+   RDSColumnReader(void * DSValuePtr) : fDSValuePtr(static_cast<T **>(DSValuePtr)) {}
 
-   T &Get(Long64_t entry) final
-   {
-      fCustomColumn.Update(fSlot, entry);
-      return **fDSValuePtr;
-   }
+   T &Get(Long64_t) final { return **fDSValuePtr; }
 };
 
 template <typename BranchTypeList>
@@ -268,25 +259,32 @@ using RDFValueTuple_t = typename RDFValueTuple<BranchTypeList>::type;
 
 template <typename T>
 std::unique_ptr<RColumnReaderBase<T>>
-MakeColumnReader(unsigned int slot, RDFDetail::RCustomColumnBase *customCol, TTreeReader *r, const std::string &colName)
+MakeColumnReader(unsigned int slot, RDFDetail::RCustomColumnBase *customCol, TTreeReader *r,
+                 const std::vector<void *> *DSValuePtrsPtr, const std::string &colName)
 {
    using Ret_t = std::unique_ptr<RColumnReaderBase<T>>;
 
-   if (customCol == nullptr)
-      return Ret_t(new RTreeColumnReader<T>(*r, colName));
+   if (customCol != nullptr)
+      return Ret_t(new RDefineReader<T>(slot, *customCol));
 
-   if (customCol->IsDataSourceColumn())
-      return Ret_t(new RDSColumnReader<T>(slot, *customCol));
+   if (DSValuePtrsPtr != nullptr) {
+      auto &DSValuePtrs = *DSValuePtrsPtr;
+      return Ret_t(new RDSColumnReader<T>(DSValuePtrs[slot]));
+   }
 
-   return Ret_t(new RDefineReader<T>(slot, *customCol));
+   return Ret_t(new RTreeColumnReader<T>(*r, colName));
 }
 
 template <typename T>
 void InitColumnReadersHelper(std::unique_ptr<RColumnReaderBase<T>> &colReader, unsigned int slot,
-                             RDFDetail::RCustomColumnBase *customCol, TTreeReader *r, const std::string &colName)
+                             RDFDetail::RCustomColumnBase *customCol,
+                             const std::map<std::string, std::vector<void *>> &DSValuePtrsMap, TTreeReader *r,
+                             const std::string &colName)
 {
-   R__ASSERT(customCol != nullptr || r != nullptr);
-   auto newColReader = MakeColumnReader<T>(slot, customCol, r, colName);
+   const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
+   const std::vector<void *> *DSValuePtrsPtr = DSValuePtrsIt != DSValuePtrsMap.end() ? &DSValuePtrsIt->second : nullptr;
+   R__ASSERT(customCol != nullptr || r != nullptr || DSValuePtrsPtr != nullptr);
+   auto newColReader = MakeColumnReader<T>(slot, customCol, r, DSValuePtrsPtr, colName);
    colReader.swap(newColReader);
 }
 
@@ -297,7 +295,8 @@ void InitColumnReadersHelper(std::unique_ptr<RColumnReaderBase<T>> &colReader, u
 template <typename RDFValueTuple, std::size_t... S>
 void InitColumnReaders(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader *r,
                        const std::vector<std::string> &colNames, const RBookedCustomColumns &customCols,
-                       std::index_sequence<S...>, const std::array<bool, sizeof...(S)> &isCustomColumn)
+                       std::index_sequence<S...>, const std::array<bool, sizeof...(S)> &isCustomColumn,
+                       const std::map<std::string, std::vector<void *>> &DSValuePtrsMap)
 {
    const auto &customColMap = customCols.GetColumns();
 
@@ -305,11 +304,11 @@ void InitColumnReaders(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader
 
    // Hack to expand a parameter pack without c++17 fold expressions.
    // Construct the column readers
-   (void)expander{
-      (InitColumnReadersHelper(std::get<S>(valueTuple), slot,
-                               isCustomColumn[S] ? customColMap.at(colNames[S]).get() : nullptr, r, colNames[S]),
-       0)...,
-      0};
+   (void)expander{(InitColumnReadersHelper(std::get<S>(valueTuple), slot,
+                                           isCustomColumn[S] ? customColMap.at(colNames[S]).get() : nullptr,
+                                           DSValuePtrsMap, r, colNames[S]),
+                   0)...,
+                  0};
 
    (void)slot;     // avoid _bogus_ "unused variable" warnings for slot on gcc 4.9
    (void)r;        // avoid "unused variable" warnings for r on gcc5.2

@@ -26,9 +26,10 @@ unsigned int RCustomColumnBase::GetNextID()
 }
 
 RCustomColumnBase::RCustomColumnBase(std::string_view name, std::string_view type, unsigned int nSlots, bool isDSColumn,
-                                     const RDFInternal::RBookedCustomColumns &customColumns)
+                                     const RDFInternal::RBookedCustomColumns &customColumns,
+                                     const std::map<std::string, std::vector<void *>> &DSValuePtrs)
    : fName(name), fType(type), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn), fLastCheckedEntry(fNSlots, -1),
-     fCustomColumns(customColumns), fIsInitialized(nSlots, false)
+     fCustomColumns(customColumns), fIsInitialized(nSlots, false), fDSValuePtrs(DSValuePtrs)
 {
 }
 
