@@ -1,3 +1,16 @@
+#-----------------------------------------------------------------------------
+#  Author: Danilo Piparo <Danilo.Piparo@cern.ch> CERN
+#  Author: Enric Tejedor <enric.tejedor.saavedra@cern.ch> CERN
+#-----------------------------------------------------------------------------
+
+################################################################################
+# Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.                      #
+# All rights reserved.                                                         #
+#                                                                              #
+# For the licensing terms see $ROOTSYS/LICENSE.                                #
+# For the list of contributors see $ROOTSYS/README/CREDITS.                    #
+################################################################################
+
 """This preprocessor marks cell's metadata so that the appropriate
 highlighter can be used in the `highlight` filter afterwards.
 More precisely, the language of a cell is set to C++ in two scenarios:
