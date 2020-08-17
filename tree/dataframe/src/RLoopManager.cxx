@@ -692,3 +692,13 @@ const ColumnNames_t &RLoopManager::GetBranchNames()
    }
    return fValidBranchNames;
 }
+
+bool RLoopManager::HasDSValuePtrs(const std::string &col) const
+{
+   return fDSValuePtrMap.find(col) != fDSValuePtrMap.end();
+}
+
+void RLoopManager::AddDSValuePtrs(const std::string &col, const std::vector<void *> ptrs)
+{
+   fDSValuePtrMap[col] = ptrs;
+}
