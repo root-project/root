@@ -820,12 +820,42 @@ Therefore, in a Python3-Python2 ROOT build, the Python code executed with `TPyth
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10665'>ROOT-10665</a>] - Make `TFile::ReadProcessID` thread safe
 
 
-## HEAD of the v6-22-00-patches branch
+## Release 6.22/02
 
-These changes will be part of a future 6.22/02.
+Published on August 17, 2020
 
 ### RDataFrame
 
 - With [ROOT-10023](https://sft.its.cern.ch/jira/browse/ROOT-10023) fixed, RDataFrame can now read and write certain branches containing unsplit objects, i.e. TBranchObjects. More information is available at [ROOT-10022](https://sft.its.cern.ch/jira/browse/ROOT-10022).
 - Snapshot now respects the basket size and split level of the original branch when copying branches to a new TTree.
 - For some `TTrees`, RDataFrame's `GetColumnNames` method returns multiple valid spellings for a given column. For example, leaf `"l"` under branch `"b"` might now be mentioned as `"l"` as well as `"b.l"`, while only one of the two spellings might have been recognized before.
+
+### Bugs and Issues fixed in this release
+
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9240'>ROOT-9240</a>] -         Compiled program with `libNew.so` crash
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9731'>ROOT-9731</a>] [DF] Cannot read columns holding `TVector3` pointers
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10023'>ROOT-10023</a>] [TTreeReader] Unable to read `TBranchObject `
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10796'>ROOT-10796</a>] Bug in `MakeProxy` `std::map<int,std::vector<double,*>>`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10845'>ROOT-10845</a>] `RooArgSet` `IsOnHeap` result incorrect
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10846'>ROOT-10846</a>] `TPython` documentation is gone
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10870'>ROOT-10870</a>] pyROOT issue with `std::shared_ptr` in 6.22/00
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10882'>ROOT-10882</a>] Drawing crashes when histogram title contain special characters
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10884'>ROOT-10884</a>] Error importing `JupyROOT` with conda ROOT
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10889'>ROOT-10889</a>] [RDF] Unexpected/broken behaviour of the `Display` action
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10891'>ROOT-10891</a>] [DF] Display of `char*` branches is broken
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10913'>ROOT-10913</a>] `RooCategory` doesn't update its label when its state is dirty.
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10916'>ROOT-10916</a>] [Graphics][JSROOT] "%jsroot on" broken in Juypter notebooks
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10917'>ROOT-10917</a>] prompt: pressing ctrl-R when no root_hist file is present results in a segfault
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10920'>ROOT-10920</a>] Models with Poisson constraints don't have `noRounding=true`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10925'>ROOT-10925</a>] Can not compile ROOT macro on Windows
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10927'>ROOT-10927</a>] Dramatic increase of memory usage while reading trees containing histograms
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10931'>ROOT-10931</a>] Polygon doesn't close when drawing PDF as filled curve
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10934'>ROOT-10934</a>] Error when making a nested `RooSimultaneous`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10969'>ROOT-10969</a>] Can not compile ROOT macro on Win10: picking up paths to other SW
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10987'>ROOT-10987</a>] RooFit's caching can lead to wrong results when batch computations used.
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10022'>ROOT-10022</a>] [DF] Add support for `TBranchObjects` (e.g. branches containing `TH2F`)
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10967'>ROOT-10967</a>] [PyROOT] Improve pretty printing to respect existing C++ methods
+
+## HEAD of the v6-22-00-patches branch
+
+These changes will be part of a future 6.22/04.
