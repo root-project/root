@@ -88,12 +88,33 @@ sap.ui.define([
          this.renderer.clearColor = "#FFFFFFFF";
          this.renderer.addShaderLoaderUrls("rootui5sys/eve7/rnr_core/shaders");
 
+         this.scene = new RC.Scene();
+
+         this.lights = this.make_object("Light container");
+         this.scene.add(this.lights);
+         let a_light = new RC.AmbientLight(new RC.Color(0xffffff), 0.1);
+         this.lights.add(a_light);
+
          if (this.controller.kind === "3D")
          {
             this.camera = new RC.PerspectiveCamera(75, w / h, 1, 5000);
             this.camera.position = new RC.Vector3(-500, 0, 0);
             this.camera.lookAt(new RC.Vector3(0, 0, 0), new RC.Vector3(0, 1, 0));
             this.camera.isPerspectiveCamera = true;
+
+            let l_int = 0.65;
+            // PointLight seems to have trouble, using directional for now.
+            this.lights.add( new RC.DirectionalLight( 0xaa8888, l_int )); // R
+            this.lights.add( new RC.DirectionalLight( 0x88aa88, l_int )); // G
+            this.lights.add( new RC.DirectionalLight( 0x8888aa, l_int )); // B
+            this.lights.add( new RC.DirectionalLight( 0x999999, l_int )); // gray
+            // Lights are positioned in resetRenderer.
+
+            for (let i = 1; i <= 4; ++i)
+            {
+               let l = this.lights.children[i];
+               l.add( new RC.IcoSphere(1, 1, 10.0, l.color.clone().multiplyScalar(0.8), false) );
+            }
          }
          else
          {
@@ -101,23 +122,12 @@ sap.ui.define([
             this.camera.position = new RC.Vector3(0, 0, 500);
             this.camera.lookAt(new RC.Vector3(0, 0, 0), new RC.Vector3(0, 1, 0));
             this.camera.isOrthographicCamera = true;
+
+            this.lights.add( new RC.DirectionalLight( 0xffffff, 1 )); // white
+            // Lights are positioned in resetRenderer.
          }
 
-         this.scene = new RC.Scene();
-
          this.rot_center = new THREE.Vector3(0,0,0);
-
-         // Lights are positioned in resetRenderer
-
-         this.point_lights = this.make_object("Lamp container");
-         this.point_lights.add( new RC.PointLight( 0xff5050, 0.7 )); // R
-         this.point_lights.add( new RC.PointLight( 0x50ff50, 0.7 )); // G
-         this.point_lights.add( new RC.PointLight( 0x5050ff, 0.7 )); // B
-         this.scene.add(this.point_lights);
-
-         let aLight = new RC.AmbientLight(new RC.Color(0xFF0000), 0.1);
-         this.point_lights.add(aLight);
-
       },
 
       setupRCoreDomAndEventHandlers: function()
@@ -269,11 +279,6 @@ sap.ui.define([
 
          console.log("GlViewerRenderCore.resetRenderer", sbbox, posV, negV, extV, extR);
 
-         let lc = this.point_lights.children;
-         lc[0].position.set( extR, extR, -extR);
-         lc[1].position.set(-extR, extR,  extR);
-         lc[2].position.set( extR, extR,  extR);
-
          if (this.controller.kind === "3D") // (this.camera.isPerspectiveCamera)
          {
             let posC = new RC.Vector3(-0.7 * extR, 0.5 * extR, -0.7 * extR);
@@ -282,6 +287,12 @@ sap.ui.define([
             this.camera.lookAt(new RC.Vector3(0,0,0), new RC.Vector3(0,1,0));
 
             this.controls.screenSpacePanning = true;
+
+            let lc = this.lights.children;
+            lc[1].position.set( extR, extR, -extR);
+            lc[2].position.set(-extR, extR,  extR);
+            lc[3].position.set( extR, extR,  extR);
+            lc[4].position.set(-extR, extR, -extR);
 
             // console.log("resetThreejsRenderer 3D scene bbox ", sbbox, ", camera_pos ", posC, ", look_at ", this.rot_center);
          }
@@ -303,6 +314,9 @@ sap.ui.define([
 
             this.controls.screenSpacePanning = true;
             this.controls.enableRotate = false;
+
+            let lc = this.lights.children;
+            lc[1].position.set( 0, 0, -extR);
 
             // console.log("resetThreejsRenderer 2D scene bbox ex ey", sbbox, ex, ey, ", camera_pos ", posC, ", look_at ", this.rot_center);
          }
