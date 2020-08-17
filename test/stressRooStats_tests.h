@@ -1475,6 +1475,10 @@ public:
       return kTRUE;
    }
 
+   // larger value test tolerance especially when using toys (difference of <~ 0.1 observed between using Minuit or Minuit2)
+   //  (inherited default value is 1e-3)
+   Double_t vtol() { return (fCalculatorType == kAsymptotic) ? 0.01 : 0.1; } 
+
    Bool_t testCode() {
 
       // Create workspace and model
@@ -1629,8 +1633,9 @@ public:
       fConfidenceLevel(confidenceLevel)
    {};
 
-   Double_t vtol() { return 2e-2 ; } // set value test tolerance to 2e-2 (inherited default is 1e-3)
-
+   // larger value test tolerance especially when using toys (difference of <~ 0.1 observed between using Minuit or Minuit2)
+   //  (inherited default value is 1e-3)
+   Double_t vtol() { return (fCalculatorType == kAsymptotic) ? 0.02 : 0.1; } 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
    Bool_t isTestAvailable() {
