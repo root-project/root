@@ -12,7 +12,7 @@
 #include "Bitshuffle.h"
 #include "Bitshuffle_core.h"
 #include "Bitshuffle_internals.h"
-#include "lz4.h"
+#include <lz4.h>
 
 #include <stdio.h>
 #include <string.h>
