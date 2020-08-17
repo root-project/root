@@ -179,6 +179,17 @@ void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHand
    fOpenPageRanges[columnId].fPageInfos.emplace_back(pageInfo);
 }
 
+void ROOT::Experimental::Detail::RPageSink::WriteRawPage(
+   ROOT::Experimental::DescriptorId_t columnId,
+   ROOT::Experimental::Detail::RPageStorage::RRawPage page)
+{
+   fOpenColumnRanges.at(columnId).fNElements += page.fNElements;
+
+   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   pageInfo.fNElements = page.fNElements;
+   pageInfo.fLocator = WriteRawPageImpl(std::move(page));
+   fOpenPageRanges.at(columnId).fPageInfos.emplace_back(pageInfo);
+}
 
 void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {

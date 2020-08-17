@@ -143,6 +143,7 @@ protected:
    virtual RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) = 0;
    virtual void CommitDatasetImpl() = 0;
+   virtual RClusterDescriptor::RLocator WriteRawPageImpl(RPageStorage::RRawPage page) = 0;
 
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
@@ -171,6 +172,9 @@ public:
    void CommitCluster(NTupleSize_t nEntries);
    /// Finalize the current cluster and the entrire data set.
    void CommitDataset() { CommitDatasetImpl(); }
+
+   /// Write a raw page to storage. The column must have been added before.
+   void WriteRawPage(DescriptorId_t columnId, RPageStorage::RRawPage page);
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
