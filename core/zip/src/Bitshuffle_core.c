@@ -1111,11 +1111,11 @@ int64_t bshuf_untrans_bit_elem(const void* in, void* out, const size_t size, con
 #else // x86_64
 
 int64_t bshuf_trans_bit_elem(const void* in, void* out, const size_t size, const size_t elem_size){
-    return bshuf_trans_bit_elem_scal(const void* in, void* out, const size_t size, const size_t elem_size);
+    return bshuf_trans_bit_elem_scal(in, out, size, elem_size);
 }
 
 int64_t bshuf_untrans_bit_elem(const void* in, void* out, const size_t size, const size_t elem_size){
-    return bshuf_untrans_bit_elem_scal(const void* in, void* out, const size_t size, const size_t elem_size);
+    return bshuf_untrans_bit_elem_scal(in, out, size, elem_size);
 }
 
 #endif
