@@ -1,5 +1,13 @@
 // Author: Danilo Piparo, Omar Zapata   16/12/2015
 
+/*************************************************************************
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <fcntl.h>
 #ifdef _MSC_VER // Visual Studio
 #include <winsock2.h>
