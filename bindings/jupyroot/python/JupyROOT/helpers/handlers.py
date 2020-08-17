@@ -1,11 +1,7 @@
 # -*- coding:utf-8 -*-
 #-----------------------------------------------------------------------------
-#  Copyright (c) 2015, ROOT Team.
 #  Authors: Danilo Piparo
 #           Omar Zapata <Omar.Zapata@cern.ch> http://oproject.org
-#  Distributed under the terms of the Modified LGPLv3 License.
-#
-#  The full license is in the file COPYING.rst, distributed with this software.
 #-----------------------------------------------------------------------------
 from threading import Thread
 from time import sleep as timeSleep
