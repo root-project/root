@@ -116,8 +116,8 @@ public:
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    RActionCRTP(Helper &&h, const ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
-               RBookedCustomColumns &&customColumns)
-      : RActionBase(pd->GetLoopManagerUnchecked(), columns, std::move(customColumns)), fHelper(std::forward<Helper>(h)),
+               const RBookedCustomColumns &customColumns)
+      : RActionBase(pd->GetLoopManagerUnchecked(), columns, customColumns), fHelper(std::forward<Helper>(h)),
         fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fIsCustomColumn()
    {
       const auto nColumns = columns.size();
@@ -231,8 +231,9 @@ class RAction final : public RActionCRTP<RAction<Helper, PrevDataFrame, ColumnTy
 public:
    using ActionCRTP_t = RActionCRTP<RAction<Helper, PrevDataFrame, ColumnTypes_t>>;
 
-   RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd, RBookedCustomColumns &&customColumns)
-      : ActionCRTP_t(std::forward<Helper>(h), bl, std::move(pd), std::move(customColumns)), fValues(GetNSlots())
+   RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
+           const RBookedCustomColumns &customColumns)
+      : ActionCRTP_t(std::forward<Helper>(h), bl, std::move(pd), customColumns), fValues(GetNSlots())
    {
    }
 
@@ -281,7 +282,7 @@ class RAction<SnapshotHelper<ColTypes...>, PrevDataFrame, ROOT::TypeTraits::Type
 
 public:
    RAction(SnapshotHelper<ColTypes...> &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
-           RBookedCustomColumns &&customColumns)
+           const RBookedCustomColumns &customColumns)
       : ActionCRTP_t(std::forward<SnapshotHelper<ColTypes...>>(h), bl, std::move(pd), std::move(customColumns)),
         fValues(GetNSlots())
    {
@@ -323,7 +324,7 @@ class RAction<SnapshotHelperMT<ColTypes...>, PrevDataFrame, ROOT::TypeTraits::Ty
 
 public:
    RAction(SnapshotHelperMT<ColTypes...> &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
-           RBookedCustomColumns &&customColumns)
+           const RBookedCustomColumns &customColumns)
       : ActionCRTP_t(std::forward<SnapshotHelperMT<ColTypes...>>(h), bl, std::move(pd), std::move(customColumns)),
         fValues(GetNSlots())
    {
