@@ -54,6 +54,46 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       return new RC.Color(JSROOT.Painter.getColor(root_col));
    }
 
+   function RcLineMaterial(color, opacity, line_width, props)
+   {
+      let mat = new RC.MeshBasicMaterial; // StripeBasicMaterial
+      mat._color = color;
+      if (opacity !== undefined && opacity < 1.0)
+      {
+         mat._opacity     = opacity;
+         mat._transparent = true;
+         mat._depthWrite  = false;
+      }
+      if (line_width !== undefined)
+      {
+         mat._lineWidth = line_width;
+      }
+      if (props !== undefined)
+      {
+         mat.update(props);
+      }
+      return mat;
+   }
+
+   function RcFancyMaterial(color, opacity, props)
+   {
+      let mat = new RC.MeshBasicMaterial; // Phong, has some trouble / point lights ?
+      mat._color = color;
+      if (opacity !== undefined && opacity < 1.0)
+      {
+         mat._opacity     = opacity;
+         mat._transparent = true;
+         mat._depthWrite  = false;
+      }
+      if (props !== undefined)
+      {
+         mat.update(props);
+      }
+      return mat;
+   }
+
+   //------------------------------------------------------------------------------
+
    function EveElements(rc)
    {
       console.log("EveElements -- RCore");
@@ -146,12 +186,13 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       }
 
       let style = (track.fLineStyle > 1) ? JSROOT.Painter.root_line_styles[track.fLineStyle] : "",
-          dash = style ? style.split(",") : [], lineMaterial;
+          dash = style ? style.split(",") : [],
+          lineMaterial;
 
       if (dash && (dash.length > 1)) {
-         lineMaterial = new RC.MeshBasicMaterial({ color: track_color, linewidth: track_width, dashSize: parseInt(dash[0]), gapSize: parseInt(dash[1]) });
+         lineMaterial = RcLineMaterial(track_color, 1.0, track_width, { dashSize: parseInt(dash[0]), gapSize: parseInt(dash[1]) });
       } else {
-         lineMaterial = new RC.MeshBasicMaterial({ color: track_color, linewidth: track_width });
+         lineMaterial = RcLineMaterial(track_color, 1.0, track_width);
       }
 
       let geom = new RC.Geometry();
@@ -215,14 +256,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       let mcol = RcCol(jet.fMainColor);
       let lcol = RcCol(jet.fLineColor);
 
-      let mesh = new RC.Mesh(geo_body, new RC.MeshPhongMaterial);
-      mesh.material.update({ depthWrite: false, color: mcol, transparent: true, opacity: 0.5, side: RC.DoubleSide});
+      let mesh  = new RC.Mesh(geo_body, RcFancyMaterial(mcol, 0.5, { side: RC.FRONT_AND_BACK_SIDE }));
 
-      let line1 = new RC.Line(geo_rim,  new RC.MeshBasicMaterial);
-      //line1.material.update({ linewidth: 2,   color: lcol, transparent: true, opacity: 0.5 });
+      let line1 = new RC.Line(geo_rim,  RcLineMaterial(lcol, 0.8, 2));
 
-      let line2 = new RC.Line(geo_rays, new RC.MeshBasicMaterial);
-      // line2.material.update({ linewidth: 0.5, color: lcol, transparent: true, opacity: 0.5 });
+      let line2 = new RC.Line(geo_rays, RcLineMaterial(lcol, 0.8, 0.5));
       line2.renderingPrimitive = RC.LINES;
 
       mesh.add( line1 );
@@ -271,14 +309,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       // console.log("cols", fcol, lcol);
 
       // double-side material required for correct tracing of colors - otherwise points sequence should be changed
-      let mesh = new RC.Mesh(geo_body, new RC.MeshBasicMaterial);
-      mesh.material.update({ depthWrite: false, color: fcol, transparent: true, opacity: 0.5, side: RC.FRONT_SIDE });
+      let mesh  = new RC.Mesh(geo_body, RcFancyMaterial(fcol, 0.5));
 
-      let line1 = new RC.Line(geo_rim,  new RC.MeshBasicMaterial);
-      // line1.material.update({ linewidth: 2, color: lcol, transparent: true, opacity: 0.5 });
+      let line1 = new RC.Line(geo_rim,  RcLineMaterial(lcol, 0.8, 2));
 
-      let line2 = new RC.Line(geo_rays, new RC.MeshBasicMaterial);
-      // line2.material.update({ linewidth: 1, color: lcol, transparent: true, opacity: 0.5 });
+      let line2 = new RC.Line(geo_rays, RcLineMaterial(lcol, 0.8, 0.5));
       line2.renderingPrimitive = RC.LINES;
 
       mesh.add( line1 );
@@ -327,12 +362,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       // let material = new RC.MeshPhongMaterial({// side: THREE.DoubleSide,
       //                     depthWrite: false, color:fcol, transparent: true, opacity: 0.2 });
-      let material = new RC.MeshBasicMaterial; // new RC.MeshPhongMaterial;
-      material.color       = fcol;
-      material.side        = RC.FRONT_AND_BACK_SIDE;
-      material.depthWrite  = false;
-      material.transparent = true;
-      material.opacity     = 0.2;
+      let material = RcFancyMaterial(fcol, 0.2);
+      material.side      = RC.FRONT_AND_BACK_SIDE;
+      material.specular  = new RC.Color(1, 1, 1);
+      material.shininess = 50;
 
       return new RC.Mesh(geom, material);
    }
@@ -352,17 +385,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       let fcol =  RcCol(psp.fMainColor);
 
-      let material = new RC.MeshPhongMaterial;
-      material.color       = fcol;
-      material.specular    = new RC.Color(1, 1, 1);
-      material.shininess   = 50;
-      material.side        = RC.FRONT_AND_BACK_SIDE;
-      material.depthWrite  = false;
-      material.transparent = true;
-      material.opacity     = 0.4;
+      let material = RcFancyMaterial(fcol, 0.4);
+      material.side      = RC.FRONT_AND_BACK_SIDE;
+      material.specular  = new RC.Color(1, 1, 1);
+      material.shininess = 50;
 
-      let line_mat = new RC.MeshBasicMaterial;
-      line_mat.color = fcol;
+      let line_mat = RcLineMaterial(fcol);
 
       for (let ib_pos = 0; ib_pos < ib_len; )
       {
