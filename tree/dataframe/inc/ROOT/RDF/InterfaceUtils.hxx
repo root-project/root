@@ -132,7 +132,7 @@ struct HistoUtils<T, false> {
 template <typename... BranchTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
-            std::shared_ptr<PrevNodeType> prevNode, ActionTag, RDFInternal::RBookedCustomColumns &&customColumns)
+            std::shared_ptr<PrevNodeType> prevNode, ActionTag, const RDFInternal::RBookedCustomColumns &customColumns)
 {
    using Helper_t = FillParHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
@@ -143,7 +143,7 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
 template <typename... BranchTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Histo1D, RDFInternal::RBookedCustomColumns &&customColumns)
+                                         ActionTags::Histo1D, const RDFInternal::RBookedCustomColumns &customColumns)
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
 
@@ -161,7 +161,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename... BranchTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<TGraph> &g,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Graph, RDFInternal::RBookedCustomColumns &&customColumns)
+                                         ActionTags::Graph, const RDFInternal::RBookedCustomColumns &customColumns)
 {
    using Helper_t = FillTGraphHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
@@ -172,7 +172,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &minV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Min, RDFInternal::RBookedCustomColumns &&customColumns)
+                                         ActionTags::Min, const RDFInternal::RBookedCustomColumns &customColumns)
 {
    using Helper_t = MinHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -183,7 +183,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &maxV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Max, RDFInternal::RBookedCustomColumns &&customColumns)
+                                         ActionTags::Max, const RDFInternal::RBookedCustomColumns &customColumns)
 {
    using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -194,7 +194,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &sumV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Sum, RDFInternal::RBookedCustomColumns &&customColumns)
+                                         ActionTags::Sum, const RDFInternal::RBookedCustomColumns &customColumns)
 {
    using Helper_t = SumHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -205,7 +205,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename BranchType, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Mean, RDFInternal::RBookedCustomColumns &&customColumns)
+                                         ActionTags::Mean, const RDFInternal::RBookedCustomColumns &customColumns)
 {
    using Helper_t = MeanHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -216,7 +216,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename BranchType, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviationV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::StdDev, RDFInternal::RBookedCustomColumns &&customColumns)
+                                         ActionTags::StdDev, const RDFInternal::RBookedCustomColumns &customColumns)
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -227,7 +227,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 template <typename... BranchTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<RDisplay> &d,
                                          const unsigned int, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Display, RDFInternal::RBookedCustomColumns &&customColumns)
+                                         ActionTags::Display, const RDFInternal::RBookedCustomColumns &customColumns)
 {
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
