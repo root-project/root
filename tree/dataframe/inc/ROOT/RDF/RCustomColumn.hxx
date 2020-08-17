@@ -95,9 +95,11 @@ class RCustomColumn final : public RCustomColumnBase {
 
 public:
    RCustomColumn(std::string_view name, std::string_view type, F expression, const ColumnNames_t &columns,
-                 unsigned int nSlots, const RDFInternal::RBookedCustomColumns &customColumns, bool isDSColumn = false)
-      : RCustomColumnBase(name, type, nSlots, isDSColumn, customColumns), fExpression(std::move(expression)),
-        fColumnNames(columns), fLastResults(fNSlots), fValues(fNSlots), fIsCustomColumn()
+                 unsigned int nSlots, const RDFInternal::RBookedCustomColumns &customColumns,
+                 const std::map<std::string, std::vector<void *>> &DSValuePtrs, bool isDSColumn = false)
+      : RCustomColumnBase(name, type, nSlots, isDSColumn, customColumns, DSValuePtrs),
+        fExpression(std::move(expression)), fColumnNames(columns), fLastResults(fNSlots), fValues(fNSlots),
+        fIsCustomColumn()
    {
       const auto nColumns = fColumnNames.size();
       for (auto i = 0u; i < nColumns; ++i)
@@ -112,7 +114,7 @@ public:
       if (!fIsInitialized[slot]) {
          fIsInitialized[slot] = true;
          RDFInternal::InitColumnReaders(slot, fValues[slot], r, fColumnNames, fCustomColumns, TypeInd_t(),
-                                        fIsCustomColumn);
+                                        fIsCustomColumn, fDSValuePtrs);
          fLastCheckedEntry[slot] = -1;
       }
    }

@@ -65,20 +65,30 @@ public:
    }
 };
 
+inline const std::vector<void *> *
+GetValuePtrsPtr(const std::string &colName, const std::map<std::string, std::vector<void *>> &DSValuePtrsMap)
+{
+   const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
+   const std::vector<void *> *DSValuePtrsPtr = DSValuePtrsIt != DSValuePtrsMap.end() ? &DSValuePtrsIt->second : nullptr;
+   return DSValuePtrsPtr;
+}
+
 /// This overload is specialized to act on RTypeErasedColumnValues instead of RColumnValues.
 template <std::size_t... S, typename... ColTypes>
 void InitColumnReaders(unsigned int slot, std::vector<RTypeErasedColumnValue> &values, TTreeReader *r,
                        const ColumnNames_t &bn, const RBookedCustomColumns &customCols, std::index_sequence<S...>,
-                       ROOT::TypeTraits::TypeList<ColTypes...>, const std::array<bool, sizeof...(S)> &isTmpColumn)
+                       ROOT::TypeTraits::TypeList<ColTypes...>, const std::array<bool, sizeof...(S)> &isTmpColumn,
+                       const std::map<std::string, std::vector<void *>> &DSValuePtrsMap)
 {
    const auto &customColMap = customCols.GetColumns();
-   using expander = int[];
 
    // Construct the column readers
-   (void)expander{(values.emplace_back(MakeColumnReader<ColTypes>(
-                      slot, isTmpColumn[S] ? customColMap.at(bn[S]).get() : nullptr, r, bn[S])),
-                   0)...,
-                  0};
+   using expander = int[];
+   (void)expander{
+      (values.emplace_back(MakeColumnReader<ColTypes>(slot, isTmpColumn[S] ? customColMap.at(bn[S]).get() : nullptr, r,
+                                                      GetValuePtrsPtr(bn[S], DSValuePtrsMap), bn[S])),
+       0)...,
+      0};
 
    (void)slot; // avoid bogus 'unused parameter' warning
    (void)r;    // avoid bogus 'unused parameter' warning
@@ -240,7 +250,8 @@ public:
    void InitColumnValues(TTreeReader *r, unsigned int slot)
    {
       InitColumnReaders(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
-                        typename ActionCRTP_t::TypeInd_t{}, ActionCRTP_t::fIsCustomColumn);
+                        typename ActionCRTP_t::TypeInd_t{}, ActionCRTP_t::fIsCustomColumn,
+                        ActionCRTP_t::fLoopManager->GetDSValuePtrs());
    }
 
    template <std::size_t... S>
@@ -293,7 +304,8 @@ public:
    void InitColumnValues(TTreeReader *r, unsigned int slot)
    {
       InitColumnReaders(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
-                        typename ActionCRTP_t::TypeInd_t{}, ColumnTypes_t{}, ActionCRTP_t::fIsCustomColumn);
+                        typename ActionCRTP_t::TypeInd_t{}, ColumnTypes_t{}, ActionCRTP_t::fIsCustomColumn,
+                        ActionCRTP_t::fLoopManager->GetDSValuePtrs());
    }
 
    template <std::size_t... S>
@@ -335,7 +347,8 @@ public:
    void InitColumnValues(TTreeReader *r, unsigned int slot)
    {
       InitColumnReaders(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
-                        typename ActionCRTP_t::TypeInd_t{}, ColumnTypes_t{}, ActionCRTP_t::fIsCustomColumn);
+                        typename ActionCRTP_t::TypeInd_t{}, ColumnTypes_t{}, ActionCRTP_t::fIsCustomColumn,
+                        ActionCRTP_t::fLoopManager->GetDSValuePtrs());
    }
 
    template <std::size_t... S>

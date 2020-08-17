@@ -190,14 +190,13 @@ public:
       using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
       constexpr auto nColumns = ColTypes_t::list_size;
       const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
-      const auto newColumns =
-         CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<nColumns>(), ColTypes_t());
+      CheckAndFillDSColumns(validColumnNames, ColTypes_t());
 
       using F_t = RDFDetail::RFilter<F, Proxied>;
 
-      auto filterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, fProxiedPtr, newColumns, name);
+      auto filterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, fProxiedPtr, fCustomColumns, name);
       fLoopManager->Book(filterPtr.get());
-      return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, newColumns, fDataSource);
+      return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fCustomColumns, fDataSource);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -765,14 +764,12 @@ public:
       constexpr auto nColumns = ColTypes_t::list_size;
 
       const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
-
-      auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<nColumns>(), ColTypes_t());
+      CheckAndFillDSColumns(validColumnNames, ColTypes_t());
 
       using Helper_t = RDFInternal::ForeachSlotHelper<F>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
 
-      auto action =
-         std::make_unique<Action_t>(Helper_t(std::move(f)), validColumnNames, fProxiedPtr, std::move(newColumns));
+      auto action = std::make_unique<Action_t>(Helper_t(std::move(f)), validColumnNames, fProxiedPtr, fCustomColumns);
       fLoopManager->Book(action.get());
 
       fLoopManager->Run();
@@ -888,8 +885,7 @@ public:
       const auto columns = column.empty() ? ColumnNames_t() : ColumnNames_t({std::string(column)});
 
       const auto validColumnNames = GetValidatedColumnNames(1, columns);
-
-      auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<1>(), TTraits::TypeList<T>());
+      CheckAndFillDSColumns(validColumnNames, TTraits::TypeList<T>());
 
       using Helper_t = RDFInternal::TakeHelper<T, T, COLL>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
@@ -897,7 +893,7 @@ public:
       const auto nSlots = fLoopManager->GetNSlots();
 
       auto action =
-         std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, fProxiedPtr, std::move(newColumns));
+         std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, fProxiedPtr, fCustomColumns);
       fLoopManager->Book(action.get());
       return MakeResultPtr(valuesPtr, *fLoopManager, std::move(action));
    }
@@ -2030,15 +2026,14 @@ public:
       const auto columns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
 
       const auto validColumnNames = GetValidatedColumnNames(1, columns);
-
-      auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<1>(), TTraits::TypeList<T>());
+      CheckAndFillDSColumns(validColumnNames, TTraits::TypeList<T>());
 
       auto accObjPtr = std::make_shared<U>(aggIdentity);
       using Helper_t = RDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
       using Action_t = typename RDFInternal::RAction<Helper_t, Proxied>;
       auto action = std::make_unique<Action_t>(
          Helper_t(std::move(aggregator), std::move(merger), accObjPtr, fLoopManager->GetNSlots()), validColumnNames,
-         fProxiedPtr, std::move(newColumns));
+         fProxiedPtr, fCustomColumns);
       fLoopManager->Book(action.get());
       return MakeResultPtr(accObjPtr, *fLoopManager, std::move(action));
    }
@@ -2118,11 +2113,10 @@ public:
       using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
       auto resPtr = helper.GetResultPtr();
 
-      auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<nColumns>(),
-                                              RDFInternal::TypeList<ColumnTypes...>());
+      CheckAndFillDSColumns(validColumnNames, RDFInternal::TypeList<ColumnTypes...>());
 
       auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr,
-                                               RDFInternal::RBookedCustomColumns(newColumns));
+                                               fCustomColumns);
       fLoopManager->Book(action.get());
       return MakeResultPtr(resPtr, *fLoopManager, std::move(action));
    }
@@ -2216,8 +2210,9 @@ private:
       using NewColEntry_t =
          RDFDetail::RCustomColumn<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
 
-      auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
-                                                         ColumnNames_t{}, fLoopManager->GetNSlots(), newCols);
+      auto entryColumn =
+         std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen), ColumnNames_t{},
+                                         fLoopManager->GetNSlots(), newCols, fLoopManager->GetDSValuePtrs());
       newCols.AddName(entryColName);
       newCols.AddColumn(entryColumn, entryColName);
 
@@ -2227,8 +2222,9 @@ private:
       auto slotColGen = [](unsigned int slot) { return slot; };
       using NewColSlot_t = RDFDetail::RCustomColumn<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>;
 
-      auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
-                                                       fLoopManager->GetNSlots(), newCols);
+      auto slotColumn =
+         std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
+                                        fLoopManager->GetNSlots(), newCols, fLoopManager->GetDSValuePtrs());
       newCols.AddName(slotColName);
       newCols.AddColumn(slotColumn, slotColName);
 
@@ -2267,14 +2263,12 @@ private:
       constexpr auto nColumns = sizeof...(BranchTypes);
 
       const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
-
-      auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<nColumns>(),
-                                              RDFInternal::TypeList<BranchTypes...>());
+      CheckAndFillDSColumns(validColumnNames, RDFInternal::TypeList<BranchTypes...>());
 
       const auto nSlots = fLoopManager->GetNSlots();
 
       auto action = RDFInternal::BuildAction<BranchTypes...>(validColumnNames, r, nSlots, fProxiedPtr, ActionTag{},
-                                                             std::move(newColumns));
+                                                             fCustomColumns);
       fLoopManager->Book(action.get());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
    }
@@ -2327,8 +2321,7 @@ private:
       constexpr auto nColumns = ColTypes_t::list_size;
 
       const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
-
-      auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<nColumns>(), ColTypes_t());
+      CheckAndFillDSColumns(validColumnNames, ColTypes_t());
 
       // Declare return type to the interpreter, for future use by jitted actions
       auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
@@ -2340,14 +2333,15 @@ private:
       }
 
       using NewCol_t = RDFDetail::RCustomColumn<F, CustomColumnType>;
-      RDFInternal::RBookedCustomColumns newCols(newColumns);
-      auto newColumn = std::make_shared<NewCol_t>(name, retTypeName, std::forward<F>(expression), validColumnNames,
-                                                  fLoopManager->GetNSlots(), newCols);
+      auto newColumn =
+         std::make_shared<NewCol_t>(name, retTypeName, std::forward<F>(expression), validColumnNames,
+                                    fLoopManager->GetNSlots(), fCustomColumns, fLoopManager->GetDSValuePtrs());
 
+      RDFInternal::RBookedCustomColumns newCols(fCustomColumns);
       newCols.AddName(name);
       newCols.AddColumn(newColumn, name);
 
-      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, newCols, fDataSource);
 
       return newInterface;
    }
@@ -2383,9 +2377,7 @@ private:
       RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columnList.size());
 
       const auto validCols = GetValidatedColumnNames(columnList.size(), columnList);
-
-      auto newColumns = CheckAndFillDSColumns(validCols, std::index_sequence_for<ColumnTypes...>(),
-                                              TTraits::TypeList<ColumnTypes...>());
+      CheckAndFillDSColumns(validCols, TTraits::TypeList<ColumnTypes...>());
 
       const std::string fullTreename(treename);
       // split name into directory and treename if needed
@@ -2403,14 +2395,14 @@ private:
          using Helper_t = RDFInternal::SnapshotHelper<ColumnTypes...>;
          using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
          actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, validCols, columnList, options), validCols,
-                                      fProxiedPtr, std::move(newColumns)));
+                                      fProxiedPtr, fCustomColumns));
       } else {
          // multi-thread snapshot
          using Helper_t = RDFInternal::SnapshotHelperMT<ColumnTypes...>;
          using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
          actionPtr.reset(new Action_t(
             Helper_t(fLoopManager->GetNSlots(), filename, dirname, treename, validCols, columnList, options), validCols,
-            fProxiedPtr, std::move(newColumns)));
+            fProxiedPtr, fCustomColumns));
       }
 
       fLoopManager->Book(actionPtr.get());
@@ -2462,14 +2454,11 @@ protected:
                                                   fDataSource);
    }
 
-   template <typename... ColumnTypes, std::size_t... S>
-   RDFInternal::RBookedCustomColumns
-   CheckAndFillDSColumns(ColumnNames_t validCols, std::index_sequence<S...>, TTraits::TypeList<ColumnTypes...>)
+   template <typename... ColumnTypes>
+   void CheckAndFillDSColumns(ColumnNames_t validCols, TTraits::TypeList<ColumnTypes...> typeList)
    {
-      return fDataSource ? RDFInternal::AddDSColumns(validCols, fCustomColumns, *fDataSource, fLoopManager->GetNSlots(),
-                                                     std::index_sequence_for<ColumnTypes...>(),
-                                                     TTraits::TypeList<ColumnTypes...>())
-                         : fCustomColumns;
+      if (fDataSource != nullptr)
+         RDFInternal::AddDSColumns(validCols, *fLoopManager, *fDataSource, typeList);
    }
 };
 
