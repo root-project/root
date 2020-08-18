@@ -219,6 +219,7 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
 
    Bool_t initialLimitsFound = kFALSE;
    Bool_t allHaveLabels = kTRUE;  // assume all histo have labels and check later
+   UInt_t labelAxisType = TH1::kNoAxis;    // type of axes that have label
    Bool_t allHaveLimits = kTRUE;
    Bool_t allSameLimits = kTRUE;
    Bool_t sameLimitsX = kTRUE;
@@ -367,8 +368,13 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
 
       // if histogram is empty it does not matter if it has label or not 
       if (allHaveLabels && !histoIsEmpty) {
-         THashList* hlabels=h->GetXaxis()->GetLabels();
-         Bool_t haveOneLabel = (hlabels != nullptr);
+         THashList* hlabelsX = h->GetXaxis()->GetLabels();
+         THashList* hlabelsY = (dimension > 1) ? h->GetYaxis()->GetLabels() : nullptr;
+         THashList* hlabelsZ = (dimension > 2) ? h->GetZaxis()->GetLabels() : nullptr;
+         Bool_t haveOneLabelX = hlabelsX != nullptr;
+         Bool_t haveOneLabelY = hlabelsY != nullptr;
+         Bool_t haveOneLabelZ = hlabelsZ != nullptr;
+         Bool_t haveOneLabel = haveOneLabelX || haveOneLabelY || haveOneLabelZ;
          // do here to print message only one time
          if (foundLabelHist && allHaveLabels && !haveOneLabel) {
             Warning("Merge","Not all histograms have labels. I will ignore labels,"
@@ -376,15 +382,34 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
          }
 
          allHaveLabels &= (haveOneLabel);
-         // for the error message
-         if (haveOneLabel) foundLabelHist = kTRUE;
-
-         if (foundLabelHist && gDebug)
-            Info("TH1Merger::ExamineHistogram","Histogram %s has labels",h->GetName() );
          
-         // If histograms have labels but CanExtendAllAxes() is false
-         // use bin center mode
-         if (allHaveLabels && !fH0->CanExtendAllAxes())  {
+         if (haveOneLabel) { 
+            foundLabelHist = kTRUE;
+            UInt_t type = 0; 
+            if (haveOneLabelX) type |= TH1::kXaxis;
+            if (haveOneLabelY) type |= TH1::kYaxis;
+            if (haveOneLabelZ) type |= TH1::kZaxis;
+            if (labelAxisType == TH1::kNoAxis) labelAxisType = type; 
+            // check if all histogram have consistent label axis
+            // this means that there is at least one axis where boith histogram have labels
+            Bool_t consistentLabels = (type & labelAxisType) != TH1::kNoAxis;
+            allHaveLabels &= consistentLabels;
+            if (!consistentLabels)
+               Warning("TH1Merger::ExamineHistogram","Histogram %s has not consistent labels: %d is not consistent with  %d",
+                     h->GetName(), (int) type, (int) labelAxisType );
+            if (gDebug && consistentLabels)
+               Info("TH1Merger::ExamineHistogram","Histogram %s has consistent labels",h->GetName() );  
+         } 
+         
+         // Check compatibility of axis that have labels with axis that can be extended
+         UInt_t extendAxisType = TH1::kNoAxis;
+         if (fH0->GetXaxis()->CanExtend()) extendAxisType |= TH1::kXaxis;
+         if (dimension > 1 && fH0->GetYaxis()->CanExtend()) extendAxisType |= TH1::kYaxis;
+         if (dimension > 2 && fH0->GetZaxis()->CanExtend()) extendAxisType |= TH1::kZaxis;
+         // it is sufficient to have a consistent label axis that can be extended
+         Bool_t labelAxisCanBeExtended = ((extendAxisType & labelAxisType) != TH1::kNoAxis);
+         // If histograms have labels but corresponding axes cannot be extended use bin center mode
+         if (allHaveLabels && !labelAxisCanBeExtended)   {
             // special case for this histogram when is empty
             // and axis cannot be extended (because it is the default)
             if ( fH0->IsEmpty()  ) {
@@ -393,34 +418,54 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
                UInt_t bitMaskX = fH0->GetXaxis()->CanBeAlphanumeric() & TH1::kXaxis;
                UInt_t bitMaskY = (fH0->GetYaxis()->CanBeAlphanumeric() << 1 ) & TH1::kYaxis;
                UInt_t bitMaskZ = (fH0->GetZaxis()->CanBeAlphanumeric() << 2 ) & TH1::kZaxis; 
-               fH0->SetCanExtend(bitMaskX | bitMaskY | bitMaskZ );
+               fH0->SetCanExtend( labelAxisType );
             }
-            if (!fH0->CanExtendAllAxes()) {
+            else { // histogram is not empty
                if (gDebug) 
-                  Info("TH1Merger::ExamineHistogram","Histogram %s to be merged has label but axis cannot be extended - using bin numeric mode to merge. Call TH1::SetExtendAllAxes() if want to merge using label mode",fH0->GetName());
+                  Info("TH1Merger::ExamineHistogram","Histogram %s to be merged has labels but corresponding axis cannot be extended - using bin numeric mode to merge. Call TH1::SetCanExtend(TH1::kAllAxes) if want to merge using label mode",fH0->GetName());
                allHaveLabels = kFALSE;
             }
          }
-         // I could add a check if histogram contains bins without a label
-         // and with non-zero bin content
-         // Do we want to support this ???
-         // only in case the !h->CanExtendAllAxes()
-         if (allHaveLabels && !h->CanExtendAllAxes()) {
+         // we don;t need to check anymore for case of non=empty histograms with some labels.
+         // If we have some labels set ans axis is not extendable the LabelsMerge function handles 
+         // that case correctly
+#if 0
+         if (allHaveLabels ) {
             // count number of bins with non-null content
             Int_t non_zero_bins = 0;
-            Int_t nbins = h->GetXaxis()->GetNbins();
-            if (nbins > hlabels->GetEntries() ) {
-               for (Int_t i = 1; i <= nbins; i++) {
-                  if (h->RetrieveBinContent(i) != 0 || (fH0->fSumw2.fN && h->GetBinError(i) != 0) ) {
-                     non_zero_bins++;
+            // loop on axis that have labels. Support this only for 1D histogram
+            if (hlabelsX && dimension == 1 && !h->GetXaxis()->CanExtend()) { 
+               Int_t nbins = h->GetXaxis()->GetNbins();
+               if (nbins > hlabelsX->GetEntries() ) {
+                  for (Int_t i = 1; i <= nbins; i++) {
+                     if (h->RetrieveBinContent(i) != 0 || (h->fSumw2.fN && h->GetBinError(i) != 0) ) {
+                        non_zero_bins++;
+                     }
+                  }
+                  if (non_zero_bins > hlabelsX->GetEntries() ) {
+                     Warning("TH1Merger::ExamineHistograms","Histogram %s contains non-empty bins without labels - falling back to bin numbering mode",h->GetName() );
+                     allHaveLabels = kFALSE;
                   }
                }
-               if (non_zero_bins > hlabels->GetEntries() ) {
-                  Warning("TH1Merger::ExamineHistograms","Histogram %s contains non-empty bins without labels - falling back to bin numbering mode",h->GetName() );
+            }
+            // for multidimensional case check that labels size is less than axis size
+
+            if (dimension > 1 ) {
+               if (hlabelsX && !h->GetXaxis()->CanExtend() && hlabelsX->GetEntries() < h->GetXaxis()->GetNbins()-1 ) { // use -1 because one bin without label is like a dummy label
+                  Warning("TH1Merger::ExamineHistograms","Histogram %s has the X axis containing more than one bin without labels - falling back to bin numbering mode",h->GetName() );
+                  allHaveLabels = kFALSE;
+               }
+               if (hlabelsY && !h->GetYaxis()->CanExtend() && hlabelsY->GetEntries() < h->GetYaxis()->GetNbins()-1 ) { // use -1 because one bin without label is like a dummy label
+                  Warning("TH1Merger::ExamineHistograms","Histogram %s has the Y axis containing more than one bin without labels - falling back to bin numbering mode",h->GetName() );
+                  allHaveLabels = kFALSE;
+               }
+               if (hlabelsZ && !h->GetZaxis()->CanExtend() && hlabelsZ->GetEntries() < h->GetZaxis()->GetNbins()-1 ) { // use -1 because one bin without label is like a dummy label
+                  Warning("TH1Merger::ExamineHistograms","Histogram %s has the Z axis containing more than one bin without labels - falling back to bin numbering mode",h->GetName() );
                   allHaveLabels = kFALSE;
                }
             }
          }
+#endif
       }
       if (gDebug)
          Info("TH1Merger::ExamineHistogram","Examine histogram %s - labels %d - same limits %d - axis found %d",h->GetName(),allHaveLabels,allSameLimits,initialLimitsFound );
@@ -971,6 +1016,10 @@ Bool_t TH1Merger::LabelMerge() {
       auto labelsZ = hist->GetZaxis()->GetLabels();
       R__ASSERT(!( labelsX == nullptr  && labelsY == nullptr && labelsZ == nullptr));
 
+      Bool_t mergeLabelsX = labelsX && fH0->fXaxis.CanExtend() && hist->fXaxis.CanExtend(); 
+      Bool_t mergeLabelsY = labelsY && fH0->fYaxis.CanExtend() && hist->fYaxis.CanExtend(); 
+      Bool_t mergeLabelsZ = labelsZ && fH0->fZaxis.CanExtend() && hist->fZaxis.CanExtend(); 
+
       // check if histogram has duplicate labels
       if (!fNoCheck && hist->GetEntries() > 0) CheckForDuplicateLabels(hist); 
 
@@ -1017,21 +1066,22 @@ Bool_t TH1Merger::LabelMerge() {
 
 
          // find corresponding case (in case bin is not overflow)
+         // and see if for that axis we need to merge using labels or bin numbers 
          if (ix == -1) {
-            if (labelsX)
+            if (mergeLabelsX)
                ix = fH0->fXaxis.FindBin(labelX);
             else
                ix = FindFixBinNumber(binx, hist->fXaxis, fH0->fXaxis);
          }
 
          if (iy == -1 && fH0->fDimension> 1 ) { // check on dim should not be needed
-            if (labelsY)
+            if (mergeLabelsY)
                iy= fH0->fYaxis.FindBin(labelY);
             else 
                iy = FindFixBinNumber(biny, hist->fYaxis, fH0->fYaxis);
          }
          if (iz == -1 && fH0->fDimension> 2)  {
-            if (labelsZ)
+            if (mergeLabelsZ)
                iz= fH0->fZaxis.FindBin(labelZ);
             else 
                iz = FindFixBinNumber(binz, hist->fZaxis, fH0->fZaxis);

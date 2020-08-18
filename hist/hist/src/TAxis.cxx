@@ -792,7 +792,7 @@ void TAxis::SetAlphanumeric(Bool_t alphanumeric)
       double s[TH1::kNstat];
       h->GetStats(s);
       if (s[0] != 0. && gDebug > 0)
-         Info("SetAlphanumeric","Histogram %s is set alphanumeric but has non-zero content",GetName());
+         Info("SetAlphanumeric","%s of histogram %s is set alphanumeric but has non-zero content",GetName(),h->GetName());
    }
 }
 
