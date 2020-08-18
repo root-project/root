@@ -22,7 +22,7 @@
 
 class THttpServer;
 
-/// Class used to handle off-screen application and should emulate some render requests
+/// Base class for gui and osr handlers
 
 class BaseHandler : public CefClient, public CefLifeSpanHandler, public CefLoadHandler, public CefDisplayHandler {
 protected:
