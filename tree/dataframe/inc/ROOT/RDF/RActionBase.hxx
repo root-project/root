@@ -36,12 +36,6 @@ class GraphNode;
 
 using namespace ROOT::Detail::RDF;
 
-// fwd decl for RActionBase
-namespace GraphDrawing {
-bool CheckIfDefaultOrDSColumn(const std::string &name,
-                              const std::shared_ptr<ROOT::Detail::RDF::RCustomColumnBase> &column);
-} // namespace GraphDrawing
-
 class RActionBase {
 protected:
    /// A raw pointer to the RLoopManager at the root of this functional graph.
