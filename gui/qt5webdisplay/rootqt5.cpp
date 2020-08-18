@@ -61,6 +61,9 @@ namespace Experimental {
 
 class RQt5WebDisplayHandle : public RWebDisplayHandle {
 protected:
+
+   RootWebView *fView{nullptr};  ///< pointer on widget, need to release when handle is destroyed
+
    class Qt5Creator : public Creator {
       int fCounter{0}; ///< counter used to number handlers
       QApplication *qapp{nullptr};  ///< created QApplication
@@ -135,13 +138,15 @@ protected:
             fullurl = fHandler->MakeFullUrl(args.GetHttpServer(), fullurl);
          }
 
-         QWidget *qparent = (QWidget *) args.GetDriverData();
+         QWidget *qparent = static_cast<QWidget *>(args.GetDriverData());
 
          auto handle = std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData());
 
          RootWebView *view = new RootWebView(qparent, args.GetWidth(), args.GetHeight(), args.GetX(), args.GetY());
          view->load(QUrl(fullurl));
          view->show();
+
+         if (!qparent) handle->fView = view;
 
          return handle;
       }
@@ -150,6 +155,12 @@ protected:
 
 public:
    RQt5WebDisplayHandle(const std::string &url) : RWebDisplayHandle(url) {}
+
+   virtual ~RQt5WebDisplayHandle()
+   {
+      // now view can be safely destroyed
+      if (fView) fView->deleteLater();
+   }
 
    static void AddCreator()
    {
