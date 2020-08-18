@@ -35,7 +35,6 @@ protected:
    unsigned int fNChildren{0};      ///< number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< number of times that a children node signaled to stop processing entries.
    const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
-   const bool fIsDataSourceColumn; ///< does the custom column refer to a data-source column? (or a user-define column?)
    std::vector<Long64_t> fLastCheckedEntry;
    /// A unique ID that identifies this custom column.
    /// Used e.g. to distinguish custom columns with the same name in different branches of the computation graph.
@@ -48,7 +47,7 @@ protected:
 
 public:
    RCustomColumnBase(std::string_view name, std::string_view type, unsigned int nSlots,
-                     bool isDSColumn, const RDFInternal::RBookedCustomColumns &customColumns,
+                     const RDFInternal::RBookedCustomColumns &customColumns,
                      const std::map<std::string, std::vector<void *>> &DSValuePtrs);
 
    RCustomColumnBase &operator=(const RCustomColumnBase &) = delete;
@@ -61,7 +60,6 @@ public:
    std::string GetTypeName() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
-   bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
    /// Return the unique identifier of this RCustomColumnBase.
    unsigned int GetID() const { return fID; }
 };
