@@ -42,9 +42,6 @@ std::shared_ptr<GraphNode> CreateFilterNode(const ROOT::Detail::RDF::RFilterBase
 
 std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr);
 
-bool CheckIfDefaultOrDSColumn(const std::string &name,
-                              const std::shared_ptr<ROOT::Detail::RDF::RCustomColumnBase> &column);
-
 // clang-format off
 /**
 \class ROOT::Internal::RDF::GraphCreatorHelper
