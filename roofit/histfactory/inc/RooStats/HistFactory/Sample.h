@@ -127,7 +127,6 @@ public:
   void SetStatError( RooStats::HistFactory::StatError Error ) {
     fStatError = std::move(Error);
   }
-  template<class T> void Export(T& t) const;
 
 protected:
 
