@@ -34,7 +34,7 @@ class RJittedCustomColumn : public RCustomColumnBase {
 public:
    RJittedCustomColumn(std::string_view name, std::string_view type, unsigned int nSlots,
                        const std::map<std::string, std::vector<void *>> &DSValuePtrs)
-      : RCustomColumnBase(name, type, nSlots, /*isDSColumn=*/false, RDFInternal::RBookedCustomColumns(), DSValuePtrs)
+      : RCustomColumnBase(name, type, nSlots, RDFInternal::RBookedCustomColumns(), DSValuePtrs)
    {
    }
 
