@@ -31,6 +31,7 @@
 #include <string>
 
 #include "include/base/cef_bind.h"
+#include "include/cef_version.h"
 #include "include/cef_app.h"
 #include "include/views/cef_browser_view.h"
 #include "include/views/cef_window.h"
@@ -88,6 +89,24 @@ void BaseHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser)
    }
 }
 
+#if CEF_COMMIT_NUMBER > 2230
+
+#include "include/cef_parser.h"
+
+namespace {
+
+   // Returns a data: URI with the specified contents.
+   std::string GetDataURI(const std::string& data, const std::string& mime_type)
+   {
+      return "data:" + mime_type + ";base64," +
+              CefURIEncode(CefBase64Encode(data.data(), data.size()), false)
+               .ToString();
+   }
+
+}
+
+#endif
+
 void BaseHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode,
                               const CefString &errorText, const CefString &failedUrl)
 {
@@ -103,7 +122,11 @@ void BaseHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame>
          "<h2>Failed to load URL "
       << std::string(failedUrl) << " with error " << std::string(errorText) << " (" << errorCode
       << ").</h2></body></html>";
+#if CEF_COMMIT_NUMBER > 2230
+   frame->LoadURL(GetDataURI(ss.str(), "text/html"));
+#else
    frame->LoadString(ss.str(), failedUrl);
+#endif
 }
 
 void BaseHandler::CloseAllBrowsers(bool force_close)
