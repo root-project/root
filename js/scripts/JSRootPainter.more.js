@@ -6,7 +6,7 @@
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootPainter', 'd3', 'JSRootMath'], factory );
    } else if (typeof exports === 'object' && typeof module !== 'undefined') {
-       factory(require("./JSRootCore.js"), require("d3"), require("./JSRootMath.js"));
+      factory(require("./JSRootCore.js"), require("d3"), require("./JSRootMath.js"));
    } else {
       if (typeof d3 != 'object')
          throw new Error('This extension requires d3.js', 'JSRootPainter.more.js');
@@ -501,7 +501,7 @@
     *
     * @constructor
     * @memberof JSROOT
-    * @augments JSROOT.TObjectPainter
+    * @arguments JSROOT.TObjectPainter
     * @param {object} tf1 - TF1 object to draw
     */
 
@@ -794,7 +794,7 @@
     *
     * @constructor
     * @memberof JSROOT
-    * @augments JSROOT.TObjectPainter
+    * @arguments JSROOT.TObjectPainter
     * @param {object} graph - TGraph object to draw
     */
 
@@ -3519,25 +3519,347 @@
       return painter.DrawingReady();
    }
 
-   JSROOT.Painter.drawASImage = function(divid, obj, opt) {
-      var painter = new JSROOT.TBasePainter();
-      painter.SetDivId(divid, -1);
 
-      var main = painter.select_main(); // this is d3 selection of main element for image drawing
+   // ===================================================================================
 
-      // from here one should insert PNG image
+   /**
+    * @summary Painter for TASImage object.
+    *
+    * @constructor
+    * @memberof JSROOT
+    * @arguments JSROOT.TObjectPainter
+    * @param {object} obj - TASImage object to draw
+    * @param {string} opt - string draw options
+    */
 
-      // this is example how external image can be inserted
-      // main.append("img").attr("src","https://root.cern/js/files/img/tf1.png");
+   function TASImagePainter(obj, opt) {
+      JSROOT.TObjectPainter.call(this, obj, opt);
+      this.wheel_zoomy = true;
+   }
 
-      // this is potential example how image can be generated
-      // one could use TASImage member like obj.fPngBuf
-      // main.append("img").attr("src","data:image/png;base64,xxxxxxxxx..");
+   TASImagePainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
 
-      painter.SetDivId(divid);
+   TASImagePainter.prototype.DecodeOptions = function(opt) {
+      this.options = { Zscale: false };
+
+      if (opt && (opt.indexOf("z") >=0)) this.options.Zscale = true;
+   }
+
+   TASImagePainter.prototype.CreateRGBA = function(nlevels) {
+      var obj = this.GetObject();
+
+      if (!obj || !obj.fPalette) return null;
+
+      var rgba = new Array((nlevels+1) * 4), indx = 1, pal = obj.fPalette; // precaclucated colors
+
+      for(var lvl=0;lvl<=nlevels;++lvl) {
+         var l = 1.*lvl/nlevels;
+         while ((pal.fPoints[indx] < l) && (indx < pal.fPoints.length-1)) indx++;
+
+         var r1 = (pal.fPoints[indx] - l) / (pal.fPoints[indx] - pal.fPoints[indx-1]);
+         var r2 = (l - pal.fPoints[indx-1]) / (pal.fPoints[indx] - pal.fPoints[indx-1]);
+
+         rgba[lvl*4]   = Math.min(255, Math.round((pal.fColorRed[indx-1] * r1 + pal.fColorRed[indx] * r2) / 256));
+         rgba[lvl*4+1] = Math.min(255, Math.round((pal.fColorGreen[indx-1] * r1 + pal.fColorGreen[indx] * r2) / 256));
+         rgba[lvl*4+2] = Math.min(255, Math.round((pal.fColorBlue[indx-1] * r1 + pal.fColorBlue[indx] * r2) / 256));
+         rgba[lvl*4+3] = Math.min(255, Math.round((pal.fColorAlpha[indx-1] * r1 + pal.fColorAlpha[indx] * r2) / 256));
+      }
+
+      return rgba;
+   }
+
+   TASImagePainter.prototype.getContourColor = function(zval) {
+      if (!this.fContour || !this.rgba) return "white";
+      var indx = Math.round((zval - this.fContour[0]) / (this.fContour[this.fContour.length-1] - this.fContour[0]) * (this.rgba.length-4)/4) * 4;
+      return "rgba(" + this.rgba[indx] + "," + this.rgba[indx+1] + "," + this.rgba[indx+2] + "," + this.rgba[indx+3] + ")";
+   }
+
+   TASImagePainter.prototype.CreateImage = function() {
+      var obj = this.GetObject(), is_buf = false, fp = this.frame_painter();
+
+      if (obj._blob) {
+         // try to process blob data due to custom streamer
+         if ((obj._blob.length == 15) && !obj._blob[0]) {
+            obj.fImageQuality = obj._blob[1];
+            obj.fImageCompression = obj._blob[2];
+            obj.fConstRatio = obj._blob[3];
+            obj.fPalette = {
+                _typename: "TImagePalette",
+                fUniqueID: obj._blob[4],
+                fBits: obj._blob[5],
+                fNumPoints: obj._blob[6],
+                fPoints: obj._blob[7],
+                fColorRed: obj._blob[8],
+                fColorGreen: obj._blob[9],
+                fColorBlue: obj._blob[10],
+                fColorAlpha: obj._blob[11]
+            }
+
+            obj.fWidth = obj._blob[12];
+            obj.fHeight = obj._blob[13];
+            obj.fImgBuf = obj._blob[14];
+
+            if ((obj.fWidth * obj.fHeight != obj.fImgBuf.length) ||
+                  (obj.fPalette.fNumPoints != obj.fPalette.fPoints.length)) {
+               console.error('TASImage _blob decoding error', obj.fWidth * obj.fHeight, '!=', obj.fImgBuf.length, obj.fPalette.fNumPoints, "!=", obj.fPalette.fPoints.length);
+               delete obj.fImgBuf;
+               delete obj.fPalette;
+            }
+
+         } else if ((obj._blob.length == 3) && obj._blob[0]) {
+            obj.fPngBuf = obj._blob[2];
+            if (!obj.fPngBuf || (obj.fPngBuf.length != obj._blob[1])) {
+               console.error('TASImage with png buffer _blob error', obj._blob[1], '!=', (obj.fPngBuf ? obj.fPngBuf.length : -1));
+               delete obj.fPngBuf;
+            }
+         } else {
+            console.error('TASImage _blob len', obj._blob.length, 'not recognized');
+         }
+
+         delete obj._blob;
+      }
+
+      var url, constRatio = true;
+
+      if (obj.fImgBuf && obj.fPalette) {
+
+         is_buf = true;
+
+         var nlevels = 1000;
+         this.rgba = this.CreateRGBA(nlevels); // precaclucated colors
+
+         var min = obj.fImgBuf[0], max = obj.fImgBuf[0];
+         for (var k=1;k<obj.fImgBuf.length;++k) {
+            var v = obj.fImgBuf[k];
+            min = Math.min(v, min);
+            max = Math.max(v, max);
+         }
+
+         // does not work properly in Node.js, causes "Maximum call stack size exceeded" error
+         // min = Math.min.apply(null, obj.fImgBuf),
+         // max = Math.max.apply(null, obj.fImgBuf);
+
+         // create countor like in hist painter to allow palette drawing
+         this.fContour = new Array(200);
+         for (var k=0;k<200;k++)
+            this.fContour[k] = min + (max-min)/(200-1)*k;
+
+         if (min >= max) max = min + 1;
+
+         var xmin = 0, xmax = obj.fWidth, ymin = 0, ymax = obj.fHeight; // dimension in pixels
+
+         if (fp && (fp.zoom_xmin != fp.zoom_xmax)) {
+            xmin = Math.round(fp.zoom_xmin * obj.fWidth);
+            xmax = Math.round(fp.zoom_xmax * obj.fWidth);
+         }
+
+         if (fp && (fp.zoom_ymin != fp.zoom_ymax)) {
+            ymin = Math.round(fp.zoom_ymin * obj.fHeight);
+            ymax = Math.round(fp.zoom_ymax * obj.fHeight);
+         }
+
+         var canvas;
+
+         if (JSROOT.nodejs) {
+            try {
+               require('canvas');
+               canvas = createCanvas(xmax - xmin, ymax - ymin);
+            } catch (er) {
+               console.log('canvas is not installed, most probably due to SoftwareRenderer, see https://github.com/root-project/jsroot/issues/201');
+            }
+
+         } else {
+            canvas = document.createElement('canvas');
+            canvas.width = xmax - xmin;
+            canvas.height = ymax - ymin;
+         }
+
+         if (!canvas) return;
+
+         var context = canvas.getContext('2d'),
+             imageData = context.getImageData(0, 0, canvas.width, canvas.height),
+             arr = imageData.data;
+
+         for(var i = ymin; i < ymax; ++i) {
+            var dst = (ymax - i - 1) * (xmax - xmin) * 4,
+                row = i * obj.fWidth;
+            for(var j = xmin; j < xmax; ++j) {
+               var iii = Math.round((obj.fImgBuf[row + j] - min) / (max - min) * nlevels) * 4;
+               // copy rgba value for specified point
+               arr[dst++] = this.rgba[iii++];
+               arr[dst++] = this.rgba[iii++];
+               arr[dst++] = this.rgba[iii++];
+               arr[dst++] = this.rgba[iii++];
+            }
+         }
+
+         context.putImageData(imageData, 0, 0);
+
+         url = canvas.toDataURL(); // create data url to insert into image
+
+         constRatio = obj.fConstRatio;
+
+         // console.log('url', url.length, url.substr(0,100), url.substr(url.length-20, 20));
+
+      } else if (obj.fPngBuf) {
+         var pngbuf = "", btoa_func;
+         if (typeof obj.fPngBuf == "string") {
+            pngbuf = obj.fPngBuf;
+         } else {
+            for (var k=0;k<obj.fPngBuf.length;++k)
+               pngbuf += String.fromCharCode(obj.fPngBuf[k] < 0 ? 256 + obj.fPngBuf[k] : obj.fPngBuf[k]);
+         }
+
+         if (JSROOT.nodejs)
+            btoa_func = require("btoa");
+         else
+            btoa_func = window.btoa;
+
+         url = "data:image/png;base64," + btoa_func(pngbuf);
+      }
+
+      if (url)
+         this.CreateG(true)
+             .append("image")
+             .attr("href", url)
+             .attr("width", this.frame_width())
+             .attr("height", this.frame_height())
+             .attr("preserveAspectRatio", constRatio ? null : "none");
+
+      if (url && this.is_main_painter() && is_buf && fp) {
+
+         this.DrawColorPalette(this.options.Zscale, false, true);
+
+         fp.SetAxesRanges(JSROOT.Create("TAxis"), 0, 1, JSROOT.Create("TAxis"), 0, 1, null, 0, 0);
+         fp.CreateXY({ ndim: 2,
+                       check_pad_range: false,
+                       create_canvas: false });
+         fp.AddInteractive();
+      }
+   }
+
+   TASImagePainter.prototype.CanZoomIn = function(axis,min,max) {
+      var obj = this.GetObject();
+
+      if (!obj || !obj.fImgBuf)
+         return false;
+
+      if ((axis == "x") && ((max - min) * obj.fWidth > 3)) return true;
+
+      if ((axis == "y") && ((max - min) * obj.fHeight > 3)) return true;
+
+      return false;
+   }
+
+   TASImagePainter.prototype.DrawColorPalette = function(enabled, postpone_draw, can_move) {
+      // only when create new palette, one could change frame size
+
+      if (!this.is_main_painter()) return null;
+
+      if (!this.draw_palette) {
+         var pal = JSROOT.Create('TPave');
+
+         JSROOT.extend(pal, { _typename: "TPaletteAxis", fName: "TPave", fH: null, fAxis: JSROOT.Create('TGaxis'),
+                               fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 } );
+
+         pal.fAxis.fChopt = "+";
+
+         this.draw_palette = pal;
+      }
+
+      var pal_painter = this.FindPainterFor(this.draw_palette);
+
+      if (!enabled) {
+         if (pal_painter) {
+            pal_painter.Enabled = false;
+            pal_painter.RemoveDrawG(); // completely remove drawing without need to redraw complete pad
+         }
+         return;
+      }
+
+      var frame_painter = this.frame_painter();
+
+      // keep palette width
+      if (can_move && frame_painter) {
+         var pal = this.draw_palette;
+         pal.fX2NDC = frame_painter.fX2NDC + 0.01 + (pal.fX2NDC - pal.fX1NDC);
+         pal.fX1NDC = frame_painter.fX2NDC + 0.01;
+         pal.fY1NDC = frame_painter.fY1NDC;
+         pal.fY2NDC = frame_painter.fY2NDC;
+      }
+
+      if (!pal_painter) {
+         JSROOT.draw(this.divid, this.draw_palette, "onpad:" + this.pad_name, function(p) {
+            // mark painter as secondary - not in list of TCanvas primitives
+            p.$secondary = true;
+
+            // make dummy redraw, palette will be updated only from histogram painter
+            p.Redraw = function() {};
+         });
+      } else {
+         pal_painter.Enabled = true;
+         pal_painter.DrawPave("");
+      }
+   }
+
+   TASImagePainter.prototype.ToggleColz = function() {
+      var obj = this.GetObject(),
+          can_toggle = obj && obj.fPalette;
+
+      if (can_toggle) {
+         this.options.Zscale = !this.options.Zscale;
+         this.DrawColorPalette(this.options.Zscale, false, true);
+      }
+   }
+
+   TASImagePainter.prototype.Redraw = function(reason) {
+      var img = null;
+      if (this.draw_g)
+         img = this.draw_g.select("image");
+
+      if (img && !img.empty() && (reason !== "zoom")) {
+         var fw = this.frame_width(), fh = this.frame_height();
+         img.attr("width", fw).attr("height", fh);
+      } else {
+         this.CreateImage();
+      }
+   }
+
+   TASImagePainter.prototype.ButtonClick = function(funcname) {
+      if (this !== this.main_painter()) return false;
+
+      switch(funcname) {
+         case "ToggleColorZ": this.ToggleColz(); break;
+         default: return false;
+      }
+
+      return true;
+   }
+
+   TASImagePainter.prototype.FillToolbar = function() {
+      var pp = this.pad_painter(), obj = this.GetObject();
+      if (pp && obj && obj.fPalette) {
+         pp.AddButton(JSROOT.ToolbarIcons.th2colorz, "Toggle color palette", "ToggleColorZ");
+         pp.ShowButtons();
+      }
+   }
+
+   function drawASImage(divid, obj, opt) {
+      var painter = new TASImagePainter(obj, opt);
+
+      painter.DecodeOptions(opt);
+
+      painter.SetDivId(divid, 1);
+
+      painter.CreateImage();
+
+      painter.FillToolbar();
 
       return painter.DrawingReady();
    }
+
+   // ===================================================================================
+
 
    JSROOT.Painter.drawJSImage = function(divid, obj, opt) {
       var painter = new JSROOT.TBasePainter();
@@ -3776,12 +4098,15 @@
    JSROOT.Painter.drawFunction = drawFunction;
    JSROOT.Painter.drawGraphPolar = drawGraphPolar;
    JSROOT.Painter.drawGraphPolargram = drawGraphPolargram;
+   JSROOT.Painter.drawASImage = drawASImage;
+
 
    JSROOT.TF1Painter = TF1Painter;
    JSROOT.TGraphPainter = TGraphPainter;
    JSROOT.TGraphPolarPainter = TGraphPolarPainter;
    JSROOT.TMultiGraphPainter = TMultiGraphPainter;
    JSROOT.TSplinePainter = TSplinePainter;
+   JSROOT.TASImagePainter = TASImagePainter;
 
    return JSROOT;
 

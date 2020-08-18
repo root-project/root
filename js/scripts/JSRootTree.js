@@ -519,7 +519,7 @@
     *
     * @constructor
     * @memberof JSROOT
-    * @augments JSROOT.TSelector
+    * @arguments JSROOT.TSelector
     */
    function TDrawSelector(callback) {
       TSelector.call(this);

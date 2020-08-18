@@ -2677,7 +2677,7 @@
          var v = buf.last_read_version;
          buf.ClassStreamer(obj, "RooAbsCategoryLValue");
          obj._sharedProp = (v===1) ? buf.ReadObjectAny() : buf.ClassStreamer({}, "RooCategorySharedProperties");
-      };
+      }
 
       cs['RooWorkspace::CodeRepo'] = function(buf,obj) {
          var sz = (buf.last_read_version == 2) ? 3 : 2;
@@ -2695,7 +2695,27 @@
          while(size--)
             obj.arr.Add(buf.ReadObjectAny());
          if (v>1) obj._name = buf.ReadTString();
-      };
+      }
+
+      cs['TImagePalette'] = [
+         { basename: 'TObject', base: 1, func: function(buf,obj) {
+            if (!obj._typename) obj._typename = 'TImagePalette';
+            buf.ClassStreamer(obj, "TObject"); }
+         },
+         { name: 'fNumPoints', func: function(buf,obj) { obj.fNumPoints = buf.ntou4(); } },
+         { name: 'fPoints', func: function(buf,obj) { obj.fPoints = buf.ReadFastArray(obj.fNumPoints, JSROOT.IO.kDouble); } },
+         { name: 'fColorRed', func: function(buf,obj) { obj.fColorRed = buf.ReadFastArray(obj.fNumPoints, JSROOT.IO.kUShort); } },
+         { name: 'fColorGreen', func: function(buf,obj) { obj.fColorGreen = buf.ReadFastArray(obj.fNumPoints, JSROOT.IO.kUShort); } },
+         { name: 'fColorBlue', func: function(buf,obj) { obj.fColorBlue = buf.ReadFastArray(obj.fNumPoints, JSROOT.IO.kUShort); } },
+         { name: 'fColorAlpha', func: function(buf,obj) { obj.fColorAlpha = buf.ReadFastArray(obj.fNumPoints, JSROOT.IO.kUShort); } }
+      ];
+
+      cs['TAttImage'] = [
+         { name: 'fImageQuality', func: function(buf, obj) { obj.fImageQuality = buf.ntoi4(); } },
+         { name: 'fImageCompression', func: function(buf, obj) { obj.fImageCompression = buf.ntou4(); } },
+         { name: 'fConstRatio', func: function(buf, obj) { obj.fConstRatio = (buf.ntou1() != 0); } },
+         { name: 'fPalette', func: function(buf, obj) { obj.fPalette = buf.ClassStreamer({}, "TImagePalette"); } }
+      ]
 
       cs['TASImage'] = function(buf,obj) {
          if ((buf.last_read_version==1) && (buf.fFile.fVersion>0) && (buf.fFile.fVersion<50000)) {
