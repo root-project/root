@@ -32,7 +32,7 @@
     *
     * @constructor
     * @memberof JSROOT
-    * @augments JSROOT.TObjectPainter
+    * @arguments JSROOT.TObjectPainter
     * @param {object} axis - object to draw
     * @param {boolean} embedded - if true, painter used in other objects painters
     */
@@ -840,7 +840,7 @@
     *
     * @constructor
     * @memberof JSROOT
-    * @augments JSROOT.TObjectPainter
+    * @arguments JSROOT.TObjectPainter
     * @param {object} tframe - TFrame object to draw
     */
 
@@ -2705,7 +2705,7 @@
     *
     * @constructor
     * @memberof JSROOT
-    * @augments JSROOT.TObjectPainter
+    * @arguments JSROOT.TObjectPainter
     * @param {object} pad - TPad object to draw
     * @param {boolean} iscan - if TCanvas object
     */
@@ -4437,7 +4437,7 @@
     *
     * @constructor
     * @memberof JSROOT
-    * @augments JSROOT.TPadPainter
+    * @arguments JSROOT.TPadPainter
     * @param {object} canvas - TCanvas object to draw
     */
 
