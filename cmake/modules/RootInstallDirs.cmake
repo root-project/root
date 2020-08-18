@@ -58,7 +58,11 @@ if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
 endif()
 
 if(NOT DEFINED CMAKE_INSTALL_PYTHONDIR)
-  set(CMAKE_INSTALL_PYTHONDIR "${CMAKE_INSTALL_LIBDIR}" CACHE PATH "python libraries and modules (same as LIBDIR)")
+  if(MSVC)
+    set(CMAKE_INSTALL_PYTHONDIR "${CMAKE_INSTALL_BINDIR}" CACHE PATH "python libraries and modules (same as BINDIR)")
+  else()
+    set(CMAKE_INSTALL_PYTHONDIR "${CMAKE_INSTALL_LIBDIR}" CACHE PATH "python libraries and modules (same as LIBDIR)")
+  endif()
 endif()
 
 if(NOT DEFINED CMAKE_INSTALL_INCLUDEDIR)

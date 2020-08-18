@@ -5,7 +5,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 if(pyroot)
-  if (NOT CMAKE_INSTALL_LIBDIR STREQUAL CMAKE_INSTALL_PYTHONDIR AND (how_many_pythons GREATER 1 OR MSVC))
+  if ((MSVC AND NOT CMAKE_INSTALL_BINDIR STREQUAL CMAKE_INSTALL_PYTHONDIR) OR
+      (NOT CMAKE_INSTALL_LIBDIR STREQUAL CMAKE_INSTALL_PYTHONDIR AND (how_many_pythons GREATER 1)))
+    message(STATUS "CMAKE_INSTALL_BINDIR = ${CMAKE_INSTALL_BINDIR}; CMAKE_INSTALL_PYTHONDIR = ${CMAKE_INSTALL_PYTHONDIR} ")
     message(FATAL_ERROR "Using a custom CMAKE_INSTALL_PYTHONDIR is not supported for multi-python builds or on Windows. Please check your build configuration.")
   endif()
 
