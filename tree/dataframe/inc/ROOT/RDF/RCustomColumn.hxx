@@ -96,10 +96,9 @@ class RCustomColumn final : public RCustomColumnBase {
 public:
    RCustomColumn(std::string_view name, std::string_view type, F expression, const ColumnNames_t &columns,
                  unsigned int nSlots, const RDFInternal::RBookedCustomColumns &customColumns,
-                 const std::map<std::string, std::vector<void *>> &DSValuePtrs, bool isDSColumn = false)
-      : RCustomColumnBase(name, type, nSlots, isDSColumn, customColumns, DSValuePtrs),
-        fExpression(std::move(expression)), fColumnNames(columns), fLastResults(fNSlots), fValues(fNSlots),
-        fIsCustomColumn()
+                 const std::map<std::string, std::vector<void *>> &DSValuePtrs)
+      : RCustomColumnBase(name, type, nSlots, customColumns, DSValuePtrs), fExpression(std::move(expression)),
+        fColumnNames(columns), fLastResults(fNSlots), fValues(fNSlots), fIsCustomColumn()
    {
       const auto nColumns = fColumnNames.size();
       for (auto i = 0u; i < nColumns; ++i)
@@ -130,10 +129,7 @@ public:
       }
    }
 
-   const std::type_info &GetTypeId() const
-   {
-      return fIsDataSourceColumn ? typeid(typename std::remove_pointer<ret_type>::type) : typeid(ret_type);
-   }
+   const std::type_info &GetTypeId() const { return typeid(ret_type); }
 
    void ClearValueReaders(unsigned int slot) final
    {
