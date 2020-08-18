@@ -110,3 +110,4 @@ The following people have contributed to this new version:
 
 ## Build, Configuration and Testing Infrastructure
 
+- a new cmake variable, `CMAKE_INSTALL_PYTHONDIR`, has been added: it allows customization of the installation directory of ROOT's python modules
