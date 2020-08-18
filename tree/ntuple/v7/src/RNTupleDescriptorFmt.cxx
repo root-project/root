@@ -113,8 +113,8 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    std::uint64_t nPages = 0;
    int compression = -1;
    for (const auto &column : fColumnDescriptors) {
-      auto element = Detail::RColumnElementBase::Generate(column.second.GetModel().GetType());
-      auto elementSize = element.GetSize();
+      auto elementSize = Detail::RColumnElementBase::Generate(
+         column.second.GetModel().GetType())->GetSize();
 
       ColumnInfo info;
       info.fColumnId = column.second.GetId();
