@@ -415,9 +415,6 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
             if ( fH0->IsEmpty()  ) {
                 if (gDebug) 
                    Info("TH1Merger::ExamineHistogram","Histogram %s to be merged is empty and we are merging with %s that has labels. Force the axis to be extended",fH0->GetName(),h->GetName());
-               UInt_t bitMaskX = fH0->GetXaxis()->CanBeAlphanumeric() & TH1::kXaxis;
-               UInt_t bitMaskY = (fH0->GetYaxis()->CanBeAlphanumeric() << 1 ) & TH1::kYaxis;
-               UInt_t bitMaskZ = (fH0->GetZaxis()->CanBeAlphanumeric() << 2 ) & TH1::kZaxis; 
                fH0->SetCanExtend( labelAxisType );
             }
             else { // histogram is not empty
@@ -1019,6 +1016,21 @@ Bool_t TH1Merger::LabelMerge() {
       Bool_t mergeLabelsX = labelsX && fH0->fXaxis.CanExtend() && hist->fXaxis.CanExtend(); 
       Bool_t mergeLabelsY = labelsY && fH0->fYaxis.CanExtend() && hist->fYaxis.CanExtend(); 
       Bool_t mergeLabelsZ = labelsZ && fH0->fZaxis.CanExtend() && hist->fZaxis.CanExtend(); 
+
+      if (gDebug) {
+         if (mergeLabelsX)
+            Info("TH1Merger::LabelMerge","Merging X axis in label mode");
+         else
+            Info("TH1Merger::LabelMerge","Merging X axis in numeric mode");
+         if (mergeLabelsY)
+            Info("TH1Merger::LabelMerge","Merging Y axis in label mode");
+         else if (hist->GetDimension() > 1)
+            Info("TH1Merger::LabelMerge","Merging Y axis in numeric mode");
+         if (mergeLabelsZ)
+            Info("TH1Merger::LabelMerge","Merging Z axis in label mode" );
+         else if (hist->GetDimension() > 2)
+            Info("TH1Merger::LabelMerge","Merging Z axis in numeric mode");
+      }
 
       // check if histogram has duplicate labels
       if (!fNoCheck && hist->GetEntries() > 0) CheckForDuplicateLabels(hist); 

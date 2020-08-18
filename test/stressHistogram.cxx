@@ -90,6 +90,7 @@
 #include "TRandom2.h"
 #include "TFile.h"
 #include "TClass.h"
+#include "THashList.h"
 
 #include "TROOT.h"
 #include <algorithm>
@@ -99,13 +100,13 @@ using namespace std;
 
 const unsigned int __DRAW__ = 0;
 
-const Double_t minRange = 1;
-const Double_t maxRange = 5;
+Double_t minRange = 1;
+Double_t maxRange = 5;
 
 const Double_t minRebin = 3;
 const Double_t maxRebin = 7;
 
-const int nEvents = 1000;
+int nEvents = 1000;
 const int numberOfBins = 10;
 
 enum compareOptions {
@@ -133,7 +134,7 @@ TFile * refFile = 0;
 const char* refFileName = "http://root.cern.ch/files/stressHistogram.5.18.00.root";
 
 TRandom2 r;
-// set to zero if want to run different every time
+// set to zero if want to run different numbers every time
 const int initialSeed = 0;
 
 
@@ -4864,59 +4865,69 @@ bool testMerge1DLabelAllDiff()
 
 bool testMerge2DLabelAllDiff()
 {
-   // Tests the merge method with fully differently labelled 2D Histograms
 
-   // It does not work properly! Look, the bins with the same labels
-   // are different ones and still the tests passes! This is not
-   // consistent with TH1::Merge()
+   // Tests the merge method with differently labelled 2D Histograms
+
+   // This tests verify to perforl a merge using labels for the X axis and
+   // a numeric merge for the Y axis.
+   // Note: in case of underflow/overflow in x axis not clear  how merge should proceed
+   // when merging with labels underflow/overflow will not be considered
 
    TH2D* h1 = new TH2D("merge2DLabelAllDiff-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+                       numberOfBins + 1, minRange, maxRange);
    TH2D* h2 = new TH2D("merge2DLabelAllDiff-h2", "h2-Title",
                        numberOfBins, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+                       numberOfBins + 1, minRange, maxRange);
    TH2D* h3 = new TH2D("merge2DLabelAllDiff-h3", "h3-Title",
                        numberOfBins, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+                       numberOfBins + 1, minRange, maxRange);
    TH2D* h4 = new TH2D("merge2DLabelAllDiff-h4", "h4-Title",
                        numberOfBins, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+                       numberOfBins + 1, minRange, maxRange);
 
-   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
-      Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, 1.0);
-      h4->Fill(x, y, 1.0);
-   }
 
-   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
-      Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y, 1.0);
-      h4->Fill(x, y, 1.0);
-   }
-
-   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
-      Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h3->Fill(x, y, 1.0);
-      h4->Fill(x, y, 1.0);
-   }
-
+   // the y axis will have the last bin without a label since it contains numberOfBins+1
    for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h1->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      name << 1;
-      h2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h2->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      name << 2;
-      h3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h3->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      name << 3;
-      h4->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      char letter = (char) ((int) 'a' + i - 1);
+      ostringstream name1, name2;
+      name1 << letter << 1;
+      h1->GetXaxis()->SetBinLabel(i, name1.str().c_str());
+      h1->GetYaxis()->SetBinLabel(i, name1.str().c_str());
+      name2 << letter << 2;
+      h2->GetXaxis()->SetBinLabel(i, name2.str().c_str());
+      h2->GetYaxis()->SetBinLabel(i, name2.str().c_str());
+      // use for h3 same label as for h2 to test the merging
+      h3->GetXaxis()->SetBinLabel(i, name2.str().c_str());
+      h3->GetYaxis()->SetBinLabel(i, name2.str().c_str());
+   }
+
+   // the x axis will be full labels while the y axis will be numeric
+   // avoid underflow-overflow in x
+   // should the merge not use labels if underflow-overflows are presents ?
+   // when merging with labels underflow/overflow are ignored and
+   //NB when axis are extended underflow/overflow are set to zero
+
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      //Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+      TString label = h1->GetXaxis()->GetLabels()->At(r.Integer(numberOfBins))->GetName();
+      Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+      h1->Fill(label, y, 1.0);
+      h4->Fill(label, y, 1.0);
+   }
+
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      TString label = h2->GetXaxis()->GetLabels()->At(r.Integer(numberOfBins))->GetName();
+      Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+      h2->Fill(label, y, 1.0);
+      h4->Fill(label, y, 1.0);
+   }
+
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      TString label = h2->GetXaxis()->GetLabels()->At(r.Integer(numberOfBins))->GetName();
+      Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+      h3->Fill(label, y, 1.0);
+      h4->Fill(label, y, 1.0);
    }
 
    TList *list = new TList;
@@ -4924,6 +4935,10 @@ bool testMerge2DLabelAllDiff()
    list->Add(h3);
 
    h1->Merge(list);
+
+   // make sure labels are ordered
+   h1->LabelsOption("a","x");
+   h4->LabelsOption("a","x");
 
    bool ret = equals("MergeLabelAllDiff2D", h1, h4, cmpOptStats, 1E-10);
    if (cleanHistos) delete h1;
@@ -4936,9 +4951,9 @@ bool testMerge3DLabelAllDiff()
 {
    // Tests the merge method with fully differently labelled 3D Histograms
 
-   // It does not work properly! Look, the bins with the same labels
-   // are different ones and still the tests passes! This is not
-   // consistent with TH1::Merge()
+   // Make the tests such that merge is done withouy using labels for all axis.
+   // All label sizes are less than number of bins, therefore axis cannot be extended
+   // and merge is done then numerically and not in label mode
 
    TH3D* h1 = new TH3D("merge3DLabelAllDiff-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
@@ -4981,7 +4996,10 @@ bool testMerge3DLabelAllDiff()
       h4->Fill(x, y, z, 1.0);
    }
 
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+   //NB do not set labels for all bins
+   //this will make merge for all axis numeric
+   // i.e. using bin centers and ignoring labels
+   for ( Int_t i = 1; i < numberOfBins; ++ i) {
       ostringstream name;
       name << (char) ((int) 'a' + i - 1);
       h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
