@@ -654,9 +654,9 @@ Released on June 10, 2020
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10822'>ROOT-10822</a>] - [DF] `RVec`s of non-split branches can read from invalid addresses
 
 
-## HEAD of the v6-20-00-patches branch
+## Release 6.20/08
 
-These changes will be part of a future 6.20/08.
+Released on August 18, 2020
 
 ### TTree
 
@@ -731,3 +731,21 @@ will result (as one would expect) with the first SetBranchAddress being ignored/
 ### RDataFrame
 
 -  For some `TTrees`, RDataFrame's `GetColumnNames` method returns multiple valid spellings for a given column. For example, leaf `"l"` under branch `"b"` might now be mentioned as `"l"` as well as `"b.l"`, while only one of the two spellings might have been recognized before.
+
+### Bugs and Issues fixed in this release
+
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9240'>ROOT-9240</a>] -         Compiled program with `libNew.so` crash
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10702'>ROOT-10702</a>] -         [TTree] Wrong data could be silently written if data-member of object has same name as another branch
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10796'>ROOT-10796</a>] -         Bug in `MakeProxy` `std::map<int,std::vector<double,*>>`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10800'>ROOT-10800</a>] -         `TClass::GetListOfAllPublicMethods()` lists deleted copy constructor of `std::unique_ptr`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10833'>ROOT-10833</a>] -         PyROOT `FutureWarning` in `ROOT.py`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10837'>ROOT-10837</a>] -         `hadd` crashes when slow merging file with multiple array with same index
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10839'>ROOT-10839</a>] -         Missing lock guard in `THashTable`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10873'>ROOT-10873</a>] -         `thisroot.sh` sets the wrong `PYTHONPATH` on LCG views
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10882'>ROOT-10882</a>] -         Drawing crashes when histogram title contain special characters
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10927'>ROOT-10927</a>] -         Dramatic increase of memory usage while reading trees containing histograms
+
+
+## HEAD of the v6-20-00-patches branch
+
+These changes will be part of a future 6.20/10.
