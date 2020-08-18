@@ -1901,7 +1901,7 @@ public:
       auto columns = fCustomColumns.GetColumns();
 
       for (auto column : columns) {
-         if (!RDFInternal::IsInternalColumn(column.first) && !column.second->IsDataSourceColumn())
+         if (!RDFInternal::IsInternalColumn(column.first))
             definedColumns.emplace_back(column.first);
       }
 

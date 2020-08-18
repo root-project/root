@@ -48,12 +48,6 @@ std::string GraphCreatorHelper::FromGraphActionsToDot(std::vector<std::shared_pt
    return "digraph {\n" + dotStringLabels.str() + dotStringGraph.str() + "}";
 }
 
-bool CheckIfDefaultOrDSColumn(const std::string &name,
-                              const std::shared_ptr<ROOT::Detail::RDF::RCustomColumnBase> &column)
-{
-   return (ROOT::Internal::RDF::IsInternalColumn(name) || column->IsDataSourceColumn());
-}
-
 std::string GraphCreatorHelper::RepresentGraph(ROOT::RDataFrame &rDataFrame)
 {
    auto loopManager = rDataFrame.GetLoopManager();

@@ -35,8 +35,6 @@ using namespace ROOT::Detail::RDF;
 namespace GraphDrawing {
 std::shared_ptr<GraphNode> CreateFilterNode(const RFilterBase *filterPtr);
 
-bool CheckIfDefaultOrDSColumn(const std::string &name, const std::shared_ptr<RCustomColumnBase> &column);
-
 std::shared_ptr<GraphNode>
 CreateDefineNode(const std::string &columnName, const RDFDetail::RCustomColumnBase *columnPtr);
 } // ns GraphDrawing
@@ -186,7 +184,7 @@ public:
 
       for (auto &column : fCustomColumns.GetColumns()) {
          // Even if treated as custom columns by the Dataframe, datasource columns must not be in the graph.
-         if (RDFGraphDrawing::CheckIfDefaultOrDSColumn(column.first, column.second))
+         if (RDFInternal::IsInternalColumn(column.first))
             continue;
          if (std::find(prevColumns.begin(), prevColumns.end(), column.first) == prevColumns.end()) {
             auto defineNode = RDFGraphDrawing::CreateDefineNode(column.first, column.second.get());

@@ -14,7 +14,7 @@
 #include "ROOT/RDF/ColumnReaders.hxx"
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RActionBase.hxx"
-#include "ROOT/RDF/Utils.hxx"      // ColumnNames_t
+#include "ROOT/RDF/Utils.hxx" // ColumnNames_t, IsInternalColumn
 #include "ROOT/RDF/RLoopManager.hxx"
 
 #include <cstddef> // std::size_t
@@ -32,7 +32,6 @@ namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 // fwd declarations for RActionCRTP
 namespace GraphDrawing {
 std::shared_ptr<GraphNode> CreateDefineNode(const std::string &colName, const RDFDetail::RCustomColumnBase *columnPtr);
-bool CheckIfDefaultOrDSColumn(const std::string &name, const std::shared_ptr<RDFDetail::RCustomColumnBase> &column);
 } // ns GraphDrawing
 
 /// Unused, not instantiatable. Only the partial specialization RActionCRTP<RAction<...>> can be used.
@@ -201,7 +200,7 @@ public:
       for (auto &column : GetCustomColumns().GetColumns()) {
          /* Each column that this node has but the previous hadn't has been defined in between,
           * so it has to be built and appended. */
-         if (RDFGraphDrawing::CheckIfDefaultOrDSColumn(column.first, column.second))
+         if (RDFInternal::IsInternalColumn(column.first))
             continue;
          if (std::find(prevColumns.begin(), prevColumns.end(), column.first) == prevColumns.end()) {
             auto defineNode = RDFGraphDrawing::CreateDefineNode(column.first, column.second.get());
