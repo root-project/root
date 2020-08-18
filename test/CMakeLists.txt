@@ -234,11 +234,11 @@ ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l 
 
 #--stressRooFit----------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
-if(ROOT_mathmore_FOUND)
-  ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit RooFitMore)
-else()
-  ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit )
-endif()  
+  if(ROOT_mathmore_FOUND)
+    ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit RooFitMore)
+  else()
+    ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit )
+  endif()  
   configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
   ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
@@ -254,20 +254,20 @@ if(ROOT_roofit_FOUND)
   ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressroostats-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooStats.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressroostats )
-if (ROOT_minuit2_FOUND)
-  ROOT_ADD_TEST(test-stressroostats-minuit2 COMMAND stressRooStats -minim Minuit2  FAILREGEX "FAILED|Error in" LABELS longtest)
-endif()
+  if (ROOT_minuit2_FOUND)
+    ROOT_ADD_TEST(test-stressroostats-minuit2 COMMAND stressRooStats -minim Minuit2  FAILREGEX "FAILED|Error in" LABELS longtest)
+  endif()
 endif()
 
 #--stressHistFactory--------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND AND GSL_FOUND AND ROOT_xml_FOUND)
   ROOT_EXECUTABLE(stressHistFactory stressHistFactory.cxx LIBRARIES RooStats HistFactory XMLParser)
-if(NOT MSVC)
-  configure_file(HistFactoryTest.tar HistFactoryTest.tar COPYONLY)
-  configure_file(stressHistFactory_ref.root stressHistFactory_ref.root COPYONLY)
-  ROOT_ADD_TEST(test-stressHistFactory ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory FAILREGEX "FAILED|Error in" LABELS longtest)
-  ROOT_ADD_TEST(test-stressHistFactory-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistFactory.cxx FAILREGEX "FAILED|Error in" DEPENDS test-stressHistFactory)
-endif()
+  if(NOT MSVC)
+    configure_file(HistFactoryTest.tar HistFactoryTest.tar COPYONLY)
+    configure_file(stressHistFactory_ref.root stressHistFactory_ref.root COPYONLY)
+    ROOT_ADD_TEST(test-stressHistFactory ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory FAILREGEX "FAILED|Error in" LABELS longtest)
+    ROOT_ADD_TEST(test-stressHistFactory-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistFactory.cxx FAILREGEX "FAILED|Error in" DEPENDS test-stressHistFactory)
+  endif()
 endif()
 
 #--stressFit---------------------------------------------------------------------------------
