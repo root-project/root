@@ -76,7 +76,8 @@ protected:
    RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) final;
    void CommitDatasetImpl() final;
-   RClusterDescriptor::RLocator WriteRawPageImpl(RPageStorage::RNTupleBuffer page) final;
+   RClusterDescriptor::RLocator WriteRawPageImpl(DescriptorId_t columnId,
+      RPageStorage::RNTupleBuffer page) final;
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);

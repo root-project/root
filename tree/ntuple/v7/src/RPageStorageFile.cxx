@@ -135,11 +135,16 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnH
 
 ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkFile::WriteRawPageImpl(
-   ROOT::Experimental::Detail::RPageStorage::RNTupleBuffer page)
+   DescriptorId_t columnId, RPageStorage::RNTupleBuffer page)
 {
-   // todo(max) check if setting packedBytes to zippedBytes breaks blob reads
-   auto offsetData = fWriter->WriteBlob(page.fBuffer.get(),
-      /* zippedBytes */ page.fSize, /* packedBytes */ page.fSize);
+   const auto bitsOnStorage = Detail::RColumnElementBase::Generate(
+      fDescriptorBuilder.GetDescriptor()
+      .GetColumnDescriptor(columnId)
+      .GetModel()
+      .GetType())->GetBitsOnStorage();
+
+   const auto bytesPacked = (bitsOnStorage * page.fNElements + 7) / 8;
+   const auto offsetData = fWriter->WriteBlob(page.fBuffer.get(), page.fSize, bytesPacked);
    fClusterMinOffset = std::min(offsetData, fClusterMinOffset);
    fClusterMaxOffset = std::max(offsetData + page.fSize, fClusterMaxOffset);
 

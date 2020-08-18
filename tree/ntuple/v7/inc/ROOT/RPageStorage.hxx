@@ -143,7 +143,8 @@ protected:
    virtual RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) = 0;
    virtual void CommitDatasetImpl() = 0;
-   virtual RClusterDescriptor::RLocator WriteRawPageImpl(RPageStorage::RNTupleBuffer page) = 0;
+   virtual RClusterDescriptor::RLocator WriteRawPageImpl(DescriptorId_t columnId,
+      RPageStorage::RNTupleBuffer page) = 0;
 
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);

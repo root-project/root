@@ -185,7 +185,7 @@ void ROOT::Experimental::Detail::RPageSink::WriteRawPage(
 
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    pageInfo.fNElements = page.fNElements;
-   pageInfo.fLocator = WriteRawPageImpl(std::move(page));
+   pageInfo.fLocator = WriteRawPageImpl(columnId, std::move(page));
    fOpenPageRanges.at(columnId).fPageInfos.emplace_back(pageInfo);
 }
 
@@ -225,19 +225,12 @@ ROOT::Experimental::Detail::RPageSink::Merge(
    sources.front()->Attach();
    const auto& sourceDesc = sources.front()->GetDescriptor();
    sourceDesc.PrintInfo(std::cout);
+   // initialize merge target columns from source RNTupleModel
+   Create(*sourceDesc.GenerateModel());
 
    std::cout << "input has " << sourceDesc.GetColumnIds().size() << " columns\n";
+   std::cout << "input has " << sourceDesc.GetNEntries() << " entries\n";
 
-   // assume all inputs have the same size header and footer
-   auto szFooter = sourceDesc.GetFooterSize();
-   auto szHeader = sourceDesc.GetHeaderSize();
-   std::cout << "source header size " << szHeader << "\n";
-   std::cout << "source footer size " << szFooter << "\n";
-
-   // fill header to get column ids
-   auto headerBuffer = std::make_unique<unsigned char[]>(szHeader);
-   sourceDesc.SerializeHeader(headerBuffer.get());
-   fDescriptorBuilder.SetFromHeader(headerBuffer.get());
    auto columnIds = fDescriptorBuilder.GetDescriptor().GetColumnIds();
 
    for (auto id: columnIds) {
@@ -252,13 +245,26 @@ ROOT::Experimental::Detail::RPageSink::Merge(
       << "\tbytes: " << rp.fSize << "\n\telements: "
       << rp.fNElements << "\n";
 
-   //std::cout << "\nother merge inputs are:\n";
+   // write page to the sink. this consumes the page
+   WriteRawPage(columnId, std::move(rp));
+
+   // read another column
+   rp = sources.front()->ReadRawPage(DescriptorId_t(10), NTupleSize_t(0));
+   std::cout << "read raw page:\n"
+      << "\tbytes: " << rp.fSize << "\n\telements: "
+      << rp.fNElements << "\n";
+   WriteRawPage(DescriptorId_t(10), std::move(rp));
+
    //for (std::size_t i = 1; i < sources.size(); ++i) {
    //   sources[i]->Attach();
-   //   const auto& desc = sources[i]->GetDescriptor();
-   //   desc.SerializeFooter(footerBuffer);
-   //   cols.AddRawPages(footerBuffer).ThrowOnError();
+   //   // todo merge
    //}
+
+   auto nEntries = 1;
+   CommitCluster(nEntries);
+   CommitDataset();
+
+   fDescriptorBuilder.GetDescriptor().PrintInfo(std::cout);
 
    return RResult<void>::Success();
 }
