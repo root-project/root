@@ -531,8 +531,6 @@ const ColumnNames_t SelectColumns(unsigned int nArgs, const ColumnNames_t &bl, c
 ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const ColumnNames_t &datasetColumns,
                                  const ColumnNames_t &definedCols, const ColumnNames_t &dataSourceColumns);
 
-bool IsInternalColumn(std::string_view colName);
-
 /// Returns the list of Filters defined in the whole graph
 std::vector<std::string> GetFilterNames(const std::shared_ptr<RLoopManager> &loopManager);
 

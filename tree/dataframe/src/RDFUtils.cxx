@@ -325,6 +325,15 @@ Long64_t InterpreterCalc(const std::string &code, const std::string &context)
    return res;
 }
 
+bool IsInternalColumn(std::string_view colName)
+{
+   const auto str = colName.data();
+   const auto goodPrefix = colName.size() > 3 &&               // has at least more characters than {r,t}df
+                           ('r' == str[0] || 't' == str[0]) && // starts with r or t
+                           0 == strncmp("df", str + 1, 2);     // 2nd and 3rd letters are df
+   return goodPrefix && '_' == colName.back();                 // also ends with '_'
+}
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
