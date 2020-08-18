@@ -76,7 +76,7 @@ protected:
    RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) final;
    void CommitDatasetImpl() final;
-   RClusterDescriptor::RLocator WriteRawPageImpl(RPageStorage::RRawPage page) final;
+   RClusterDescriptor::RLocator WriteRawPageImpl(RPageStorage::RNTupleBuffer page) final;
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
@@ -161,7 +161,7 @@ private:
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
                                  ClusterSize_t::ValueType clusterIndex);
 
-   RPageStorage::RRawPage ReadRawPageFromCluster(DescriptorId_t clusterId,
+   RPageStorage::RNTupleBuffer ReadRawPageFromCluster(DescriptorId_t clusterId,
       const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType clusterIndex);
 
 protected:
@@ -187,7 +187,7 @@ public:
 
    RNTupleMetrics &GetMetrics() final { return fMetrics; }
 
-   RPageStorage::RRawPage ReadRawPage(DescriptorId_t columnId, NTupleSize_t globalIndex) final;
+   RPageStorage::RNTupleBuffer ReadRawPage(DescriptorId_t columnId, NTupleSize_t globalIndex) final;
 };
 
 

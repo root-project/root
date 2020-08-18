@@ -135,7 +135,7 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnH
 
 ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkFile::WriteRawPageImpl(
-   ROOT::Experimental::Detail::RPageStorage::RRawPage page)
+   ROOT::Experimental::Detail::RPageStorage::RNTupleBuffer page)
 {
    // todo(max) check if setting packedBytes to zippedBytes breaks blob reads
    auto offsetData = fWriter->WriteBlob(page.fBuffer.get(),
@@ -381,7 +381,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
 }
 
 
-ROOT::Experimental::Detail::RPageStorage::RRawPage
+ROOT::Experimental::Detail::RPageStorage::RNTupleBuffer
 ROOT::Experimental::Detail::RPageSourceFile::ReadRawPage(
    DescriptorId_t columnId, NTupleSize_t globalIndex)
 {
@@ -395,7 +395,7 @@ ROOT::Experimental::Detail::RPageSourceFile::ReadRawPage(
 }
 
 
-ROOT::Experimental::Detail::RPageStorage::RRawPage
+ROOT::Experimental::Detail::RPageStorage::RNTupleBuffer
 ROOT::Experimental::Detail::RPageSourceFile::ReadRawPageFromCluster(
    DescriptorId_t columnId, const RClusterDescriptor &clusterDescriptor,
    ClusterSize_t::ValueType clusterIndex)
@@ -443,7 +443,7 @@ ROOT::Experimental::Detail::RPageSourceFile::ReadRawPageFromCluster(
    //   memcpy(pageBuffer, onDiskPage->GetAddress(), onDiskPage->GetSize());
    //}
 
-   RPageStorage::RRawPage rawPage;
+   RPageStorage::RNTupleBuffer rawPage;
    rawPage.fBuffer = std::move(pageBuffer);
    rawPage.fSize = bytesOnStorage;
    rawPage.fNElements = pageInfo.fNElements;

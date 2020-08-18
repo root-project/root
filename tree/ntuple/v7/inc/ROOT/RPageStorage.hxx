@@ -74,16 +74,16 @@ public:
    /// Whether the concrete implementation is a sink or a source
    virtual EPageStorageType GetType() = 0;
 
-   struct RRawPage {
+   struct RNTupleBuffer {
       std::unique_ptr<unsigned char[]> fBuffer = nullptr;
       std::uint32_t fSize = 0;
       std::uint32_t fNElements = 0;
 
-      RRawPage() = default;
-      RRawPage(const RRawPage &other) = delete;
-      RRawPage& operator =(const RRawPage &other) = delete;
-      RRawPage(RRawPage &&other) = default;
-      RRawPage& operator =(RRawPage &&other) = default;
+      RNTupleBuffer() = default;
+      RNTupleBuffer(const RNTupleBuffer &other) = delete;
+      RNTupleBuffer& operator =(const RNTupleBuffer &other) = delete;
+      RNTupleBuffer(RNTupleBuffer &&other) = default;
+      RNTupleBuffer& operator =(RNTupleBuffer &&other) = default;
    };
 
    struct RColumnHandle {
@@ -143,7 +143,7 @@ protected:
    virtual RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) = 0;
    virtual void CommitDatasetImpl() = 0;
-   virtual RClusterDescriptor::RLocator WriteRawPageImpl(RPageStorage::RRawPage page) = 0;
+   virtual RClusterDescriptor::RLocator WriteRawPageImpl(RPageStorage::RNTupleBuffer page) = 0;
 
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
@@ -174,7 +174,7 @@ public:
    void CommitDataset() { CommitDatasetImpl(); }
 
    /// Write a raw page to storage. The column must have been added before.
-   void WriteRawPage(DescriptorId_t columnId, RPageStorage::RRawPage page);
+   void WriteRawPage(DescriptorId_t columnId, RPageStorage::RNTupleBuffer page);
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
@@ -236,7 +236,7 @@ public:
    /// Another version of PopulatePage that allows to specify cluster-relative indexes
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) = 0;
 
-   virtual RPageStorage::RRawPage ReadRawPage(DescriptorId_t columnId, NTupleSize_t globalIndex) = 0;
+   virtual RPageStorage::RNTupleBuffer ReadRawPage(DescriptorId_t columnId, NTupleSize_t globalIndex) = 0;
 
    /// Populates all the pages of the given cluster id and columns; it is possible that some columns do not
    /// contain any pages.  The pages source may load more columns than the minimal necessary set from `columns`.

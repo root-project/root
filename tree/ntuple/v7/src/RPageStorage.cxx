@@ -179,7 +179,7 @@ void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHand
 
 void ROOT::Experimental::Detail::RPageSink::WriteRawPage(
    ROOT::Experimental::DescriptorId_t columnId,
-   ROOT::Experimental::Detail::RPageStorage::RRawPage page)
+   ROOT::Experimental::Detail::RPageStorage::RNTupleBuffer page)
 {
    fOpenColumnRanges.at(columnId).fNElements += page.fNElements;
 
@@ -247,7 +247,7 @@ ROOT::Experimental::Detail::RPageSink::Merge(
    auto columnId = DescriptorId_t(0);
    auto elementIdx = NTupleSize_t(0);
 
-   RPageStorage::RRawPage rp = sources.front()->ReadRawPage(columnId, elementIdx);
+   RPageStorage::RNTupleBuffer rp = sources.front()->ReadRawPage(columnId, elementIdx);
    std::cout << "read raw page:\n"
       << "\tbytes: " << rp.fSize << "\n\telements: "
       << rp.fNElements << "\n";
