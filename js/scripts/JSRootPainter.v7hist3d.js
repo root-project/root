@@ -1928,13 +1928,14 @@
             geometry.computeVertexNormals();
             if (donormals && (lvl===1)) RecalculateNormals(geometry.getAttribute('normal').array);
 
-            var fcolor, material;
+            var fcolor, material, fFillColor = 5;
             if (palette) {
-               fcolor = palette.getColor(lvl);
+               fcolor = palette.getColor(lvl-1);
             } else {
-               fcolor = 5 /*histo.fFillColor*/ > 1 ? this.get_color(5/*histo.fFillColor*/) : 'white';
-               if ((this.options.Surf === 14) && (5/*histo.fFillColor*/<2)) fcolor = this.get_color(48);
+               fcolor = fFillColor > 1 ? this.get_color(fFillColor) : 'white';
+               if ((this.options.Surf === 14) && (fFillColor<2)) fcolor = this.get_color(48);
             }
+
             if (this.options.Surf === 14)
                material = new THREE.MeshLambertMaterial( { color: fcolor, side: THREE.DoubleSide  } );
             else
