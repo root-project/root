@@ -29,7 +29,7 @@ RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height, int x
 {
    setObjectName("RootWebView");
 
-   setPage(new RootWebPage());
+   setPage(new RootWebPage(this));
 
    connect(page(), &QWebEnginePage::windowCloseRequested, this, &RootWebView::onWindowCloseRequested);
 
@@ -38,6 +38,9 @@ RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height, int x
    setAcceptDrops(true);
 
    if ((fX >= 0) || (fY >= 0)) move(fX > 0 ? fX : 0, fY > 0 ? fY : 0);
+
+   // do not destroy view on close, one require some time to handle close events
+   setAttribute( Qt::WA_DeleteOnClose, false );
 }
 
 QSize RootWebView::sizeHint() const
