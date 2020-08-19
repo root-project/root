@@ -18,7 +18,7 @@
 using ROOT::Internal::RDF::RJittedAction;
 using ROOT::Detail::RDF::RLoopManager;
 
-RJittedAction::RJittedAction(RLoopManager &lm) : RActionBase(&lm, {}, ROOT::Internal::RDF::RBookedDefines{}) { }
+RJittedAction::RJittedAction(RLoopManager &lm) : RActionBase(&lm, {}, ROOT::Internal::RDF::RBookedDefines{}) {}
 
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
