@@ -11,7 +11,7 @@
 #ifndef ROOT_RACTIONBASE
 #define ROOT_RACTIONBASE
 
-#include "ROOT/RDF/RBookedCustomColumns.hxx"
+#include "ROOT/RDF/RBookedDefines.hxx"
 #include "ROOT/RDF/Utils.hxx" // ColumnNames_t
 #include "RtypesCore.h"
 
@@ -23,7 +23,7 @@ namespace ROOT {
 namespace Detail {
 namespace RDF {
 class RLoopManager;
-class RCustomColumnBase;
+class RDefineBase;
 class RMergeableValueBase;
 } // namespace RDF
 } // namespace Detail
@@ -47,16 +47,16 @@ private:
    bool fHasRun = false;
    const ColumnNames_t fColumnNames;
 
-   RBookedCustomColumns fCustomColumns;
+   RBookedDefines fDefines;
 
 public:
-   RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RBookedCustomColumns &customColumns);
+   RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RBookedDefines &defines);
    RActionBase(const RActionBase &) = delete;
    RActionBase &operator=(const RActionBase &) = delete;
    virtual ~RActionBase();
 
    const ColumnNames_t &GetColumnNames() const { return fColumnNames; }
-   RBookedCustomColumns &GetCustomColumns() { return fCustomColumns; }
+   RBookedDefines &GetDefines() { return fDefines; }
    RLoopManager *GetLoopManager() { return fLoopManager; }
    unsigned int GetNSlots() const { return fNSlots; }
    virtual void Run(unsigned int slot, Long64_t entry) = 0;

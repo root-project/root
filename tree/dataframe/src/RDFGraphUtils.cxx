@@ -71,7 +71,7 @@ std::string GraphCreatorHelper::RepresentGraph(RLoopManager *loopManager)
 }
 
 std::shared_ptr<GraphNode>
-CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RCustomColumnBase *columnPtr)
+CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RDefineBase *columnPtr)
 {
    // If there is already a node for this define (recognized by the custom column it is defining) return it. If there is
    // not, return a new one.

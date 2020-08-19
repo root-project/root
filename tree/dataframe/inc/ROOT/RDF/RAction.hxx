@@ -66,7 +66,7 @@ void InitColumnReaders(unsigned int slot, std::vector<RTypeErasedColumnValue> &v
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
    const auto &customCols = colInfo.fCustomCols;
-   const bool *isCustomColumn = colInfo.fIsCustomColumn;
+   const bool *isDefine = colInfo.fIsDefine;
    const auto &DSValuePtrsMap = colInfo.fDSValuePtrsMap;
 
    const auto &customColMap = customCols.GetColumns();
@@ -75,8 +75,8 @@ void InitColumnReaders(unsigned int slot, std::vector<RTypeErasedColumnValue> &v
    using expander = int[];
    int i = 0;
    (void)expander{
-      (values.emplace_back(MakeColumnReader<ColTypes>(slot, isCustomColumn[i] ? customColMap.at(colNames[i]).get() : nullptr, r,
-                                                      GetValuePtrsPtr(colNames[i], DSValuePtrsMap), colNames[i])),
+      (values.emplace_back(MakeColumnReader<ColTypes>(slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr,
+                                                      r, GetValuePtrsPtr(colNames[i], DSValuePtrsMap), colNames[i])),
        ++i)...,
       0};
 
@@ -105,7 +105,7 @@ namespace RDFDetail = ROOT::Detail::RDF;
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 namespace GraphDrawing {
-std::shared_ptr<GraphNode> CreateDefineNode(const std::string &colName, const RDFDetail::RCustomColumnBase *columnPtr);
+std::shared_ptr<GraphNode> CreateDefineNode(const std::string &colName, const RDFDetail::RDefineBase *columnPtr);
 } // namespace GraphDrawing
 
 // helper functions and types
@@ -124,11 +124,11 @@ struct ActionImpl {
    using Values_t = RDFValueTuple_t<ColumnTypes>;
 
    static void InitColumnReaders(unsigned int slot, Values_t &values, TTreeReader *r, const ColumnNames_t &colNames,
-                                 const RBookedCustomColumns &customCols,
-                                 const std::array<bool, ColumnTypes::list_size> &isCustomColumn,
+                                 const RBookedDefines &customCols,
+                                 const std::array<bool, ColumnTypes::list_size> &isDefine,
                                  const std::map<std::string, std::vector<void *>> &DSValuePtrs)
    {
-      RDFInternal::RColumnReadersInfo info{colNames, customCols, isCustomColumn.data(), DSValuePtrs};
+      RDFInternal::RColumnReadersInfo info{colNames, customCols, isDefine.data(), DSValuePtrs};
       RDFInternal::InitColumnReaders(slot, values, r, TypeInd_t{}, info);
    }
 
@@ -153,11 +153,11 @@ struct ActionImpl<Helper, ColumnTypes, true> {
    using Values_t = std::vector<RTypeErasedColumnValue>;
 
    static void InitColumnReaders(unsigned int slot, Values_t &values, TTreeReader *r, const ColumnNames_t &colNames,
-                                 const RBookedCustomColumns &customCols,
-                                 const std::array<bool, ColumnTypes::list_size> &isCustomColumn,
+                                 const RBookedDefines &customCols,
+                                 const std::array<bool, ColumnTypes::list_size> &isDefine,
                                  const std::map<std::string, std::vector<void *>> &DSValuePtrs)
    {
-      RDFInternal::RColumnReadersInfo info{colNames, customCols, isCustomColumn.data(), DSValuePtrs};
+      RDFInternal::RColumnReadersInfo info{colNames, customCols, isDefine.data(), DSValuePtrs};
       RDFInternal::InitColumnReaders(slot, values, r, ColumnTypes{}, info);
    }
 
@@ -198,18 +198,18 @@ class RAction : public RActionBase {
    std::vector<typename ActionImpl_t::Values_t> fValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
-   std::array<bool, ColumnTypes_t::list_size> fIsCustomColumn;
+   std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 
 public:
    RAction(Helper &&h, const ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
-           const RBookedCustomColumns &customColumns)
-      : RActionBase(pd->GetLoopManagerUnchecked(), columns, customColumns), fHelper(std::forward<Helper>(h)),
-        fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(GetNSlots()), fIsCustomColumn()
+           const RBookedDefines &defines)
+      : RActionBase(pd->GetLoopManagerUnchecked(), columns, defines), fHelper(std::forward<Helper>(h)),
+        fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(GetNSlots()), fIsDefine()
    {
       const auto nColumns = columns.size();
-      const auto &customCols = GetCustomColumns();
+      const auto &customCols = GetDefines();
       for (auto i = 0u; i < nColumns; ++i)
-         fIsCustomColumn[i] = customCols.HasName(columns[i]);
+         fIsDefine[i] = customCols.HasName(columns[i]);
    }
 
    RAction(const RAction &) = delete;
@@ -231,10 +231,10 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      for (auto &bookedBranch : GetCustomColumns().GetColumns())
+      for (auto &bookedBranch : GetDefines().GetColumns())
          bookedBranch.second->InitSlot(r, slot);
       ActionImpl_t::InitColumnReaders(slot, fValues[slot], r, RActionBase::GetColumnNames(),
-                                      RActionBase::GetCustomColumns(), fIsCustomColumn, fLoopManager->GetDSValuePtrs());
+                                      RActionBase::GetDefines(), fIsDefine, fLoopManager->GetDSValuePtrs());
       fHelper.InitTask(r, slot);
    }
 
@@ -250,7 +250,7 @@ public:
    void FinalizeSlot(unsigned int slot) final
    {
       ClearValueReaders(slot);
-      for (auto &column : GetCustomColumns().GetColumns()) {
+      for (auto &column : GetDefines().GetColumns()) {
          column.second->ClearValueReaders(slot);
       }
       fHelper.CallFinalizeTask(slot);
@@ -273,7 +273,7 @@ public:
       // multiple branches
       auto thisNode = std::make_shared<RDFGraphDrawing::GraphNode>(fHelper.GetActionName());
       auto evaluatedNode = thisNode;
-      for (auto &column : GetCustomColumns().GetColumns()) {
+      for (auto &column : GetDefines().GetColumns()) {
          /* Each column that this node has but the previous hadn't has been defined in between,
           * so it has to be built and appended. */
          if (RDFInternal::IsInternalColumn(column.first))
@@ -285,7 +285,7 @@ public:
          }
       }
 
-      thisNode->AddDefinedColumns(GetCustomColumns().GetNames());
+      thisNode->AddDefinedColumns(GetDefines().GetNames());
       thisNode->SetAction(HasRun());
       evaluatedNode->SetPrevNode(prevNode);
       return thisNode;

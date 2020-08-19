@@ -12,7 +12,7 @@
 #define ROOT_RCUSTOMCOLUMNBASE
 
 #include "ROOT/RDF/GraphNode.hxx"
-#include "ROOT/RDF/RBookedCustomColumns.hxx"
+#include "ROOT/RDF/RBookedDefines.hxx"
 
 #include <deque>
 #include <map>
@@ -28,7 +28,7 @@ namespace RDF {
 
 namespace RDFInternal = ROOT::Internal::RDF;
 
-class RCustomColumnBase {
+class RDefineBase {
 protected:
    const std::string fName; ///< The name of the custom column
    const std::string fType; ///< The type of the custom column as a text string
@@ -39,20 +39,20 @@ protected:
    /// A unique ID that identifies this custom column.
    /// Used e.g. to distinguish custom columns with the same name in different branches of the computation graph.
    const unsigned int fID = GetNextID();
-   RDFInternal::RBookedCustomColumns fCustomColumns;
+   RDFInternal::RBookedDefines fDefines;
    std::deque<bool> fIsInitialized; // because vector<bool> is not thread-safe
    const std::map<std::string, std::vector<void *>> &fDSValuePtrs; // reference to RLoopManager's data member
 
    static unsigned int GetNextID();
 
 public:
-   RCustomColumnBase(std::string_view name, std::string_view type, unsigned int nSlots,
-                     const RDFInternal::RBookedCustomColumns &customColumns,
+   RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
+                     const RDFInternal::RBookedDefines &defines,
                      const std::map<std::string, std::vector<void *>> &DSValuePtrs);
 
-   RCustomColumnBase &operator=(const RCustomColumnBase &) = delete;
-   RCustomColumnBase &operator=(RCustomColumnBase &&) = delete;
-   virtual ~RCustomColumnBase();
+   RDefineBase &operator=(const RDefineBase &) = delete;
+   RDefineBase &operator=(RDefineBase &&) = delete;
+   virtual ~RDefineBase();
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void *GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
@@ -60,7 +60,7 @@ public:
    std::string GetTypeName() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
-   /// Return the unique identifier of this RCustomColumnBase.
+   /// Return the unique identifier of this RDefineBase.
    unsigned int GetID() const { return fID; }
 };
 

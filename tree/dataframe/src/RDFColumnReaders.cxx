@@ -9,7 +9,7 @@
  *************************************************************************/
 
 #include <ROOT/RDF/ColumnReaders.hxx>
-#include <ROOT/RDF/RCustomColumnBase.hxx>
+#include <ROOT/RDF/RDefineBase.hxx>
 #include <ROOT/RDF/Utils.hxx> // TypeID2TypeName
 #include <TClass.h>
 
@@ -17,9 +17,9 @@
 #include <string>
 #include <typeinfo>
 
-void ROOT::Internal::RDF::CheckCustomColumn(RCustomColumnBase &customColumn, const std::type_info &tid)
+void ROOT::Internal::RDF::CheckDefine(RDefineBase &define, const std::type_info &tid)
 {
-   const auto &colTId = customColumn.GetTypeId();
+   const auto &colTId = define.GetTypeId();
 
    // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
    // and a jitted one.
@@ -32,7 +32,7 @@ void ROOT::Internal::RDF::CheckCustomColumn(RCustomColumnBase &customColumn, con
    if (diffTypes && !inheritedType()) {
       const auto tName = TypeID2TypeName(tid);
       const auto colTypeName = TypeID2TypeName(colTId);
-      std::string errMsg = "RColumnValue: type specified for column \"" + customColumn.GetName() + "\" is ";
+      std::string errMsg = "RColumnValue: type specified for column \"" + define.GetName() + "\" is ";
       if (tName.empty()) {
          errMsg += tid.name();
          errMsg += " (extracted from type info)";

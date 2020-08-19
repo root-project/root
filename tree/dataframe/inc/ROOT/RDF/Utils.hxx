@@ -37,7 +37,7 @@ namespace RDF {
 using ColumnNames_t = std::vector<std::string>;
 
 // fwd decl for ColumnName2ColumnTypeName
-class RCustomColumnBase;
+class RDefineBase;
 
 // type used for tag dispatching
 struct RInferredType {
@@ -112,7 +112,7 @@ const std::type_info &TypeName2TypeID(const std::string &name);
 
 std::string TypeID2TypeName(const std::type_info &id);
 
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, RDataSource *, RCustomColumnBase *,
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, RDataSource *, RDefineBase *,
                                       bool vector2rvec = true);
 
 char TypeName2ROOTTypeName(const std::string &b);

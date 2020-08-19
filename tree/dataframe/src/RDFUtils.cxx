@@ -10,7 +10,7 @@
 
 #include "RConfigure.h" // R__USE_IMT
 #include "ROOT/RDataSource.hxx"
-#include "ROOT/RDF/RCustomColumnBase.hxx"
+#include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "RtypesCore.h"
 #include "TBranch.h"
@@ -207,10 +207,10 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
 /// column created by Define. Throws if type name deduction fails.
 /// Note that for fixed- or variable-sized c-style arrays the returned type name will be RVec<T>.
 /// vector2rvec specifies whether typename 'std::vector<T>' should be converted to 'RVec<T>' or returned as is
-/// customColID is only used if isCustomColumn is true, and must correspond to the custom column's unique identifier
+/// customColID is only used if isDefine is true, and must correspond to the custom column's unique identifier
 /// returned by its `GetID()` method.
 std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, RDataSource *ds,
-                                      RCustomColumnBase *customColumn, bool vector2rvec)
+                                      RDefineBase *define, bool vector2rvec)
 {
    std::string colType;
 
@@ -228,8 +228,8 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, R
       }
    }
 
-   if (colType.empty() && customColumn) {
-      colType = customColumn->GetTypeName();
+   if (colType.empty() && define) {
+      colType = define->GetTypeName();
    }
 
    if (colType.empty())

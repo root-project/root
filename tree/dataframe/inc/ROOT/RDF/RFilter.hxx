@@ -36,7 +36,7 @@ namespace GraphDrawing {
 std::shared_ptr<GraphNode> CreateFilterNode(const RFilterBase *filterPtr);
 
 std::shared_ptr<GraphNode>
-CreateDefineNode(const std::string &columnName, const RDFDetail::RCustomColumnBase *columnPtr);
+CreateDefineNode(const std::string &columnName, const RDFDetail::RDefineBase *columnPtr);
 } // ns GraphDrawing
 
 } // ns RDF
@@ -58,18 +58,18 @@ class RFilter final : public RFilterBase {
    PrevDataFrame &fPrevData;
    std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
    /// The nth flag signals whether the nth input column is a custom column or not.
-   std::array<bool, ColumnTypes_t::list_size> fIsCustomColumn;
+   std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 
 public:
    RFilter(FilterF f, const ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
-           const RDFInternal::RBookedCustomColumns &customColumns, std::string_view name = "")
-      : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), customColumns),
+           const RDFInternal::RBookedDefines &defines, std::string_view name = "")
+      : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), defines),
         fFilter(std::move(f)), fColumnNames(columns), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr),
-        fValues(fNSlots), fIsCustomColumn()
+        fValues(fNSlots), fIsDefine()
    {
       const auto nColumns = fColumnNames.size();
       for (auto i = 0u; i < nColumns; ++i)
-         fIsCustomColumn[i] = fCustomColumns.HasName(fColumnNames[i]);
+         fIsDefine[i] = fDefines.HasName(fColumnNames[i]);
    }
 
    RFilter(const RFilter &) = delete;
@@ -106,10 +106,9 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      for (auto &bookedBranch : fCustomColumns.GetColumns())
+      for (auto &bookedBranch : fDefines.GetColumns())
          bookedBranch.second->InitSlot(r, slot);
-      RDFInternal::RColumnReadersInfo info{fColumnNames, fCustomColumns, fIsCustomColumn.data(),
-                                           fLoopManager->GetDSValuePtrs()};
+      RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fLoopManager->GetDSValuePtrs()};
       RDFInternal::InitColumnReaders(slot, fValues[slot], r, TypeInd_t(), info);
    }
 
@@ -157,7 +156,7 @@ public:
 
    virtual void ClearTask(unsigned int slot) final
    {
-      for (auto &column : fCustomColumns.GetColumns()) {
+      for (auto &column : fDefines.GetColumns()) {
          column.second->ClearValueReaders(slot);
       }
 
@@ -183,7 +182,7 @@ public:
       /* Each column that this node has but the previous hadn't has been defined in between,
        * so it has to be built and appended. */
 
-      for (auto &column : fCustomColumns.GetColumns()) {
+      for (auto &column : fDefines.GetColumns()) {
          // Even if treated as custom columns by the Dataframe, datasource columns must not be in the graph.
          if (RDFInternal::IsInternalColumn(column.first))
             continue;
@@ -195,7 +194,7 @@ public:
       }
 
       // Keep track of the columns defined up to this point.
-      thisNode->AddDefinedColumns(fCustomColumns.GetNames());
+      thisNode->AddDefinedColumns(fDefines.GetNames());
 
       evaluatedNode->SetPrevNode(prevNode);
       return thisNode;

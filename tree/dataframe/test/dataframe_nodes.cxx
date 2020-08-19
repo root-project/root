@@ -82,7 +82,7 @@ TEST(RDataFrameNodes, DoubleEvtLoop)
 }
 
 // ROOT-9736
-TEST(RDataFrameNodes, InheritanceOfCustomColumns)
+TEST(RDataFrameNodes, InheritanceOfDefines)
 {
    ROOT::RDataFrame df(1);
    const auto nBinsExpected = 42;
@@ -90,7 +90,7 @@ TEST(RDataFrameNodes, InheritanceOfCustomColumns)
    df.Define("b", [&]() { return TH1F("b", "b", nBinsExpected, 0, 1); })
       .Foreach([&](TH1 &h) { EXPECT_EQ(h.GetNbinsX(), nBinsExpected);}, {"b"});
 
-   const auto ofileName = "InheritanceOfCustomColumns.root";
+   const auto ofileName = "InheritanceOfDefines.root";
 
    const auto val = 42.;
    auto createStat = [&val]() {
