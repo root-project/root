@@ -3,7 +3,6 @@
 #include "ROOT/RMakeUnique.hxx"
 
 #include <algorithm>
-#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
