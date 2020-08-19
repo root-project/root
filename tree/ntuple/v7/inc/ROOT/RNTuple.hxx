@@ -30,6 +30,8 @@
 #include <sstream>
 #include <utility>
 
+class TFile;
+
 namespace ROOT {
 namespace Experimental {
 
@@ -205,6 +207,10 @@ public:
                                                   std::string_view ntupleName,
                                                   std::string_view storage,
                                                   const RNTupleWriteOptions &options = RNTupleWriteOptions());
+   static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<RNTupleModel> model,
+                                                std::string_view ntupleName,
+                                                TFile &file,
+                                                const RNTupleWriteOptions &options = RNTupleWriteOptions());
    RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
    RNTupleWriter(const RNTupleWriter&) = delete;
    RNTupleWriter& operator=(const RNTupleWriter&) = delete;

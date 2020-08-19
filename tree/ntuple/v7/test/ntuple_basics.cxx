@@ -41,31 +41,31 @@ TEST(RNTuple, MultipleInFile)
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt", 42.0);
-      RNTupleWriter ntuple(std::move(model), std::make_unique<RPageSinkFile>("first", *file, RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto ntuple = RNTupleWriter::Append(std::move(model), "first", *file);
+      ntuple->Fill();
    }
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("E", 1.0);
-      RNTupleWriter ntuple(std::move(model), std::make_unique<RPageSinkFile>("second", *file, RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto ntuple = RNTupleWriter::Append(std::move(model), "second", *file);
+      ntuple->Fill();
    }
    file->Close();
    delete file;
 
-   RNTupleReader ntupleFirst(std::make_unique<RPageSourceFile>("first", fileGuard.GetPath(), RNTupleReadOptions()));
-   auto viewPt = ntupleFirst.GetView<float>("pt");
+   auto ntupleFirst = RNTupleReader::Open("first", fileGuard.GetPath());
+   auto viewPt = ntupleFirst->GetView<float>("pt");
    int n = 0;
-   for (auto i : ntupleFirst.GetEntryRange()) {
+   for (auto i : ntupleFirst->GetEntryRange()) {
       EXPECT_EQ(42.0, viewPt(i));
       n++;
    }
    EXPECT_EQ(1, n);
 
-   RNTupleReader ntupleSecond(std::make_unique<RPageSourceFile>("second", fileGuard.GetPath(), RNTupleReadOptions()));
-   auto viewE = ntupleSecond.GetView<float>("E");
+   auto ntupleSecond = RNTupleReader::Open("second", fileGuard.GetPath());
+   auto viewE = ntupleSecond->GetView<float>("E");
    n = 0;
-   for (auto i : ntupleSecond.GetEntryRange()) {
+   for (auto i : ntupleSecond->GetEntryRange()) {
       EXPECT_EQ(1.0, viewE(i));
       n++;
    }
