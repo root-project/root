@@ -473,22 +473,22 @@ std::function<R(unsigned int, Args...)> AddSlotParameter(F &f, TypeList<Args...>
 }
 
 template <typename ColType, typename... Rest>
-struct TNeedJitting {
-   static constexpr bool value = TNeedJitting<Rest...>::value;
+struct RNeedJitting {
+   static constexpr bool value = RNeedJitting<Rest...>::value;
 };
 
 template <typename... Rest>
-struct TNeedJitting<RInferredType, Rest...> {
+struct RNeedJitting<RInferredType, Rest...> {
    static constexpr bool value = true;
 };
 
 template <typename T>
-struct TNeedJitting<T> {
+struct RNeedJitting<T> {
    static constexpr bool value = false;
 };
 
 template <>
-struct TNeedJitting<RInferredType> {
+struct RNeedJitting<RInferredType> {
    static constexpr bool value = true;
 };
 
