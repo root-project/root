@@ -13,13 +13,13 @@
 
 #include <ROOT/RDF/RAction.hxx>
 #include <ROOT/RDF/ActionHelpers.hxx> // for BuildAction
-#include <ROOT/RDF/RBookedCustomColumns.hxx>
-#include <ROOT/RDF/RCustomColumn.hxx>
+#include <ROOT/RDF/RBookedDefines.hxx>
+#include <ROOT/RDF/RDefine.hxx>
 #include <ROOT/RDF/RFilter.hxx>
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/RDF/RJittedAction.hxx>
-#include <ROOT/RDF/RJittedCustomColumn.hxx>
+#include <ROOT/RDF/RJittedDefine.hxx>
 #include <ROOT/RDF/RJittedFilter.hxx>
 #include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RMakeUnique.hxx>
@@ -77,7 +77,7 @@ HeadNode_t CreateSnapshotRDF(const ColumnNames_t &validCols,
 
 std::string DemangleTypeIdName(const std::type_info &typeInfo);
 
-ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedCustomColumns &customColumns, TTree *tree,
+ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedDefines &defines, TTree *tree,
                                     ROOT::RDF::RDataSource *dataSource, std::string_view columnNameRegexp,
                                     std::string_view callerName);
 
@@ -132,106 +132,106 @@ struct HistoUtils<T, false> {
 template <typename... BranchTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
-            std::shared_ptr<PrevNodeType> prevNode, ActionTag, const RDFInternal::RBookedCustomColumns &customColumns)
+            std::shared_ptr<PrevNodeType> prevNode, ActionTag, const RDFInternal::RBookedDefines &defines)
 {
    using Helper_t = FillParHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(defines));
 }
 
 // Histo1D filling (must handle the special case of distinguishing FillParHelper and FillHelper
 template <typename... BranchTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Histo1D, const RDFInternal::RBookedCustomColumns &customColumns)
+                                         ActionTags::Histo1D, const RDFInternal::RBookedDefines &defines)
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
 
    if (hasAxisLimits) {
       using Helper_t = FillParHelper<::TH1D>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(customColumns));
+      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(defines));
    } else {
       using Helper_t = FillHelper;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(customColumns));
+      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(defines));
    }
 }
 
 template <typename... BranchTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<TGraph> &g,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Graph, const RDFInternal::RBookedCustomColumns &customColumns)
+                                         ActionTags::Graph, const RDFInternal::RBookedDefines &defines)
 {
    using Helper_t = FillTGraphHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(g, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(g, nSlots), bl, std::move(prevNode), std::move(defines));
 }
 
 // Min action
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &minV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Min, const RDFInternal::RBookedCustomColumns &customColumns)
+                                         ActionTags::Min, const RDFInternal::RBookedDefines &defines)
 {
    using Helper_t = MinHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, std::move(prevNode), std::move(defines));
 }
 
 // Max action
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &maxV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Max, const RDFInternal::RBookedCustomColumns &customColumns)
+                                         ActionTags::Max, const RDFInternal::RBookedDefines &defines)
 {
    using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, std::move(prevNode), std::move(defines));
 }
 
 // Sum action
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &sumV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Sum, const RDFInternal::RBookedCustomColumns &customColumns)
+                                         ActionTags::Sum, const RDFInternal::RBookedDefines &defines)
 {
    using Helper_t = SumHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, std::move(prevNode), std::move(defines));
 }
 
 // Mean action
 template <typename BranchType, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Mean, const RDFInternal::RBookedCustomColumns &customColumns)
+                                         ActionTags::Mean, const RDFInternal::RBookedDefines &defines)
 {
    using Helper_t = MeanHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, std::move(prevNode), std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, std::move(prevNode), std::move(defines));
 }
 
 // Standard Deviation action
 template <typename BranchType, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviationV,
                                          const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::StdDev, const RDFInternal::RBookedCustomColumns &customColumns)
+                                         ActionTags::StdDev, const RDFInternal::RBookedDefines &defines)
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, std::move(defines));
 }
 
 // Display action
 template <typename... BranchTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<RDisplay> &d,
                                          const unsigned int, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Display, const RDFInternal::RBookedCustomColumns &customColumns)
+                                         ActionTags::Display, const RDFInternal::RBookedDefines &defines)
 {
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(d, prevNode), bl, prevNode, std::move(customColumns));
+   return std::make_unique<Action_t>(Helper_t(d, prevNode), bl, prevNode, std::move(defines));
 }
 
 /****** end BuildAndBook ******/
@@ -244,7 +244,7 @@ void CheckFilter(Filter &)
                  "filter expression returns a type that is not convertible to bool");
 }
 
-void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
+void CheckDefine(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
                        const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &dataSourceColumns);
 
 std::string PrettyPrintAddr(const void *const addr);
@@ -252,16 +252,16 @@ std::string PrettyPrintAddr(const void *const addr);
 void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, std::shared_ptr<RNodeBase> *prevNodeOnHeap,
                    std::string_view name, std::string_view expression,
                    const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                   const RDFInternal::RBookedCustomColumns &customCols, TTree *tree, RDataSource *ds);
+                   const RDFInternal::RBookedDefines &customCols, TTree *tree, RDataSource *ds);
 
-std::shared_ptr<RJittedCustomColumn> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                                   RDataSource *ds, const RDFInternal::RBookedCustomColumns &customCols,
+std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
+                                                   RDataSource *ds, const RDFInternal::RBookedDefines &customCols,
                                                    const ColumnNames_t &branches,
                                                    std::shared_ptr<RNodeBase> *prevNodeOnHeap);
 
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
-                           const unsigned int nSlots, const RDFInternal::RBookedCustomColumns &customColumns,
+                           const unsigned int nSlots, const RDFInternal::RBookedDefines &defines,
                            RDataSource *ds, std::weak_ptr<RJittedAction> *jittedActionOnHeap);
 
 // Allocate a weak_ptr on the heap, return a pointer to it. The user is responsible for deleting this weak_ptr.
@@ -290,9 +290,9 @@ bool AtLeastOneEmptyString(const std::vector<std::string_view> strings);
 std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr);
 
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
-                                      const ColumnNames_t &validCustomColumns, RDataSource *ds);
+                                      const ColumnNames_t &validDefines, RDataSource *ds);
 
-std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RBookedCustomColumns &customColumns,
+std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RBookedDefines &defines,
                                               TTree *tree, RDataSource *ds, const std::string &context,
                                               bool vector2rvec);
 
@@ -327,15 +327,15 @@ void AddDSColumns(const std::vector<std::string> &requiredCols, RLoopManager &lm
 template <typename F, typename PrevNode>
 void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name,
                      std::weak_ptr<RJittedFilter> *wkJittedFilter, std::shared_ptr<PrevNode> *prevNodeOnHeap,
-                     RDFInternal::RBookedCustomColumns *customColumns)
+                     RDFInternal::RBookedDefines *defines)
 {
    if (wkJittedFilter->expired()) {
       // The branch of the computation graph that needed this jitted code went out of scope between the type
       // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
       delete wkJittedFilter;
-      // customColumns must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
+      // defines must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
       // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
-      delete customColumns;
+      delete defines;
       delete prevNodeOnHeap;
       return;
    }
@@ -356,34 +356,34 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name,
       RDFInternal::AddDSColumns(cols, lm, *ds, ColTypes_t());
 
    jittedFilter->SetFilter(
-      std::unique_ptr<RFilterBase>(new F_t(std::forward<F>(f), cols, *prevNodeOnHeap, *customColumns, name)));
-   // customColumns points to the columns structure in the heap, created before the jitted call so that the jitter can
+      std::unique_ptr<RFilterBase>(new F_t(std::forward<F>(f), cols, *prevNodeOnHeap, *defines, name)));
+   // defines points to the columns structure in the heap, created before the jitted call so that the jitter can
    // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
-   delete customColumns;
+   delete defines;
    delete prevNodeOnHeap;
    delete wkJittedFilter;
 }
 
 template <typename F>
 void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RLoopManager *lm,
-                     std::weak_ptr<RJittedCustomColumn> *wkJittedCustomCol,
-                     RDFInternal::RBookedCustomColumns *customColumns, std::shared_ptr<RNodeBase> *prevNodeOnHeap)
+                     std::weak_ptr<RJittedDefine> *wkJittedDefine,
+                     RDFInternal::RBookedDefines *defines, std::shared_ptr<RNodeBase> *prevNodeOnHeap)
 {
-   if (wkJittedCustomCol->expired()) {
+   if (wkJittedDefine->expired()) {
       // The branch of the computation graph that needed this jitted code went out of scope between the type
       // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
-      delete wkJittedCustomCol;
-      // customColumns must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
+      delete wkJittedDefine;
+      // defines must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
       // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
-      delete customColumns;
+      delete defines;
       delete prevNodeOnHeap;
       return;
    }
 
-   auto jittedCustomCol = wkJittedCustomCol->lock();
+   auto jittedDefine = wkJittedDefine->lock();
 
    using Callable_t = typename std::decay<F>::type;
-   using NewCol_t = RCustomColumn<Callable_t, CustomColExtraArgs::None>;
+   using NewCol_t = RDefine<Callable_t, CustomColExtraArgs::None>;
    using ColTypes_t = typename TTraits::CallableTraits<Callable_t>::arg_types;
    constexpr auto nColumns = ColTypes_t::list_size;
 
@@ -391,20 +391,20 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
    if (ds != nullptr)
       RDFInternal::AddDSColumns(cols, *lm, *ds, ColTypes_t());
 
-   // will never actually be used (trumped by jittedCustomCol->GetTypeName()), but we set it to something meaningful
+   // will never actually be used (trumped by jittedDefine->GetTypeName()), but we set it to something meaningful
    // to help devs debugging
    const auto dummyType = "jittedCol_t";
-   // use unique_ptr<RCustomColumnBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
-   jittedCustomCol->SetCustomColumn(std::unique_ptr<RCustomColumnBase>(
-      new NewCol_t(name, dummyType, std::forward<F>(f), cols, lm->GetNSlots(), *customColumns, lm->GetDSValuePtrs())));
+   // use unique_ptr<RDefineBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
+   jittedDefine->SetDefine(std::unique_ptr<RDefineBase>(
+      new NewCol_t(name, dummyType, std::forward<F>(f), cols, lm->GetNSlots(), *defines, lm->GetDSValuePtrs())));
 
-   // customColumns points to the columns structure in the heap, created before the jitted call so that the jitter can
+   // defines points to the columns structure in the heap, created before the jitted call so that the jitter can
    // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
-   delete customColumns;
+   delete defines;
    // prevNodeOnHeap only serves the purpose of keeping the RLoopManager alive so it can be accessed by
-   // customColumns' destructor in case the rest of the computation graph is gone. Can be safely deleted here.
+   // defines' destructor in case the rest of the computation graph is gone. Can be safely deleted here.
    delete prevNodeOnHeap;
-   delete wkJittedCustomCol;
+   delete wkJittedDefine;
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
@@ -412,14 +412,14 @@ template <typename ActionTag, typename... BranchTypes, typename PrevNodeType, ty
 void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const ColumnNames_t &cols,
                      const unsigned int nSlots, std::weak_ptr<ActionResultType> *wkROnHeap,
                      std::weak_ptr<RJittedAction> *wkJittedActionOnHeap,
-                     RDFInternal::RBookedCustomColumns *customColumns)
+                     RDFInternal::RBookedDefines *defines)
 {
    if (wkROnHeap->expired()) {
       delete wkROnHeap;
       delete wkJittedActionOnHeap;
-      // customColumns must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
+      // defines must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
       // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
-      delete customColumns;
+      delete defines;
       delete prevNodeOnHeap;
       return;
    }
@@ -437,12 +437,12 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
       RDFInternal::AddDSColumns(cols, loopManager, *ds, ColTypes_t());
 
    auto actionPtr = BuildAction<BranchTypes...>(cols, std::move(rOnHeap), nSlots, std::move(prevNodePtr), ActionTag{},
-                                                *customColumns);
+                                                *defines);
    jittedActionOnHeap->SetAction(std::move(actionPtr));
 
-   // customColumns points to the columns structure in the heap, created before the jitted call so that the jitter can
+   // defines points to the columns structure in the heap, created before the jitted call so that the jitter can
    // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
-   delete customColumns;
+   delete defines;
 
    delete wkROnHeap;
    delete prevNodeOnHeap;

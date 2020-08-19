@@ -8,40 +8,40 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDF/RCustomColumnBase.hxx"
+#include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h" // Long64_t
 
 #include <string>
 #include <vector>
 
-using ROOT::Detail::RDF::RCustomColumnBase;
+using ROOT::Detail::RDF::RDefineBase;
 namespace RDFInternal = ROOT::Internal::RDF;
 
-unsigned int RCustomColumnBase::GetNextID()
+unsigned int RDefineBase::GetNextID()
 {
    static unsigned int id = 0U;
    ++id;
    return id;
 }
 
-RCustomColumnBase::RCustomColumnBase(std::string_view name, std::string_view type, unsigned int nSlots,
-                                     const RDFInternal::RBookedCustomColumns &customColumns,
+RDefineBase::RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
+                                     const RDFInternal::RBookedDefines &defines,
                                      const std::map<std::string, std::vector<void *>> &DSValuePtrs)
-   : fName(name), fType(type), fNSlots(nSlots), fLastCheckedEntry(fNSlots, -1), fCustomColumns(customColumns),
+   : fName(name), fType(type), fNSlots(nSlots), fLastCheckedEntry(fNSlots, -1), fDefines(defines),
      fIsInitialized(nSlots, false), fDSValuePtrs(DSValuePtrs)
 {
 }
 
 // pin vtable. Work around cling JIT issue.
-RCustomColumnBase::~RCustomColumnBase() {}
+RDefineBase::~RDefineBase() {}
 
-std::string RCustomColumnBase::GetName() const
+std::string RDefineBase::GetName() const
 {
    return fName;
 }
 
-std::string RCustomColumnBase::GetTypeName() const
+std::string RDefineBase::GetTypeName() const
 {
    return fType;
 }

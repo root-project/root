@@ -46,7 +46,7 @@
 namespace ROOT {
 namespace Detail {
 namespace RDF {
-class RCustomColumnBase;
+class RDefineBase;
 class RFilterBase;
 class RLoopManager;
 class RRangeBase;
@@ -353,7 +353,7 @@ std::string DemangleTypeIdName(const std::type_info &typeInfo)
    return tname;
 }
 
-ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedCustomColumns & customColumns,
+ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedDefines & defines,
                                     TTree *tree,
                                     ROOT::RDF::RDataSource *dataSource,
                                     std::string_view columnNameRegexp,
@@ -375,7 +375,7 @@ ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedCustomColumns & cu
    // Since we support gcc48 and it does not provide in its stl std::regex,
    // we need to use TPRegexp
    TPRegexp regexp(theRegex);
-   for (auto &&branchName : customColumns.GetNames()) {
+   for (auto &&branchName : defines.GetNames()) {
       if ((isEmptyRegex || 0 != regexp.Match(branchName.c_str())) &&
             !RDFInternal::IsInternalColumn(branchName)) {
          selectedColumns.emplace_back(branchName);
@@ -413,7 +413,7 @@ ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedCustomColumns & cu
    return selectedColumns;
 }
 
-void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
+void CheckDefine(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
                        const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &dataSourceColumns)
 {
    const std::string definedColStr(definedCol);
@@ -501,8 +501,8 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const Column
       const auto isBranch = std::find(datasetColumns.begin(), datasetColumns.end(), column) != datasetColumns.end();
       if (isBranch)
          continue;
-      const auto isCustomColumn = std::find(definedCols.begin(), definedCols.end(), column) != definedCols.end();
-      if (isCustomColumn)
+      const auto isDefine = std::find(definedCols.begin(), definedCols.end(), column) != definedCols.end();
+      if (isDefine)
          continue;
       const auto isDataSourceColumn =
          std::find(dataSourceColumns.begin(), dataSourceColumns.end(), column) != dataSourceColumns.end();
@@ -529,7 +529,7 @@ std::string PrettyPrintAddr(const void *const addr)
 void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
                    std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name,
                    std::string_view expression, const std::map<std::string, std::string> &aliasMap,
-                   const ColumnNames_t &branches, const RDFInternal::RBookedCustomColumns &customCols, TTree *tree,
+                   const ColumnNames_t &branches, const RDFInternal::RBookedDefines &customCols, TTree *tree,
                    RDataSource *ds)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
@@ -543,9 +543,9 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
    if (type != "bool")
       std::runtime_error("Filter: the following expression does not evaluate to bool:\n" + std::string(expression));
 
-   // columnsOnHeap is deleted by the jitted call to JitFilterHelper
-   ROOT::Internal::RDF::RBookedCustomColumns *columnsOnHeap = new ROOT::Internal::RDF::RBookedCustomColumns(customCols);
-   const auto columnsOnHeapAddr = PrettyPrintAddr(columnsOnHeap);
+   // definesOnHeap is deleted by the jitted call to JitFilterHelper
+   ROOT::Internal::RDF::RBookedDefines *definesOnHeap = new ROOT::Internal::RDF::RBookedDefines(customCols);
+   const auto definesOnHeapAddr = PrettyPrintAddr(definesOnHeap);
    const auto prevNodeAddr = PrettyPrintAddr(prevNodeOnHeap);
 
    // Produce code snippet that creates the filter and registers it with the corresponding RJittedFilter
@@ -559,12 +559,12 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
    // lifetime of pointees:
    // - jittedFilter: heap-allocated weak_ptr to the actual jittedFilter that will be deleted by JitFilterHelper
    // - prevNodeOnHeap: heap-allocated shared_ptr to the actual previous node that will be deleted by JitFilterHelper
-   // - columnsOnHeap: heap-allocated, will be deleted by JitFilterHelper
+   // - definesOnHeap: heap-allocated, will be deleted by JitFilterHelper
    filterInvocation << "}, \"" << name << "\", "
                     << "reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedFilter>*>("
                     << PrettyPrintAddr(MakeWeakOnHeap(jittedFilter)) << "), "
                     << "reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>(" << prevNodeAddr << "),"
-                    << "reinterpret_cast<ROOT::Internal::RDF::RBookedCustomColumns*>(" << columnsOnHeapAddr << ")"
+                    << "reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesOnHeapAddr << ")"
                     << ");\n";
 
    auto lm = jittedFilter->GetLoopManagerUnchecked();
@@ -572,8 +572,8 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
 }
 
 // Jit a Define call
-std::shared_ptr<RJittedCustomColumn> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                                   RDataSource *ds, const RDFInternal::RBookedCustomColumns &customCols,
+std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
+                                                   RDataSource *ds, const RDFInternal::RBookedDefines &customCols,
                                                    const ColumnNames_t &branches,
                                                    std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
 {
@@ -588,9 +588,9 @@ std::shared_ptr<RJittedCustomColumn> BookDefineJit(std::string_view name, std::s
    const auto lambdaName = DeclareLambda(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfLambda(lambdaName);
 
-   auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols);
-   auto customColumnsAddr = PrettyPrintAddr(customColumnsCopy);
-   auto jittedCustomColumn = std::make_shared<RDFDetail::RJittedCustomColumn>(name, type, lm.GetNSlots(), lm.GetDSValuePtrs());
+   auto definesCopy = new RDFInternal::RBookedDefines(customCols);
+   auto definesAddr = PrettyPrintAddr(definesCopy);
+   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm.GetNSlots(), lm.GetDSValuePtrs());
 
    std::stringstream defineInvocation;
    defineInvocation << "ROOT::Internal::RDF::JitDefineHelper(" << lambdaName << ", {";
@@ -601,25 +601,25 @@ std::shared_ptr<RJittedCustomColumn> BookDefineJit(std::string_view name, std::s
       defineInvocation.seekp(-2, defineInvocation.cur); // remove the last ",
    // lifetime of pointees:
    // - lm is the loop manager, and if that goes out of scope jitting does not happen at all (i.e. will always be valid)
-   // - jittedCustomColumn: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
-   // - customColumnsAddr: heap-allocated, will be deleted by JitDefineHelper after usage
+   // - jittedDefine: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
+   // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
    defineInvocation << "}, \"" << name << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>("
                     << PrettyPrintAddr(&lm)
-                    << "), reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedCustomColumn>*>("
-                    << PrettyPrintAddr(MakeWeakOnHeap(jittedCustomColumn))
-                    << "), reinterpret_cast<ROOT::Internal::RDF::RBookedCustomColumns*>(" << customColumnsAddr
+                    << "), reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedDefine>*>("
+                    << PrettyPrintAddr(MakeWeakOnHeap(jittedDefine))
+                    << "), reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesAddr
                     << "), reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>("
                     << PrettyPrintAddr(upcastNodeOnHeap) << "));\n";
 
    lm.ToJitExec(defineInvocation.str());
-   return jittedCustomColumn;
+   return jittedDefine;
 }
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
-                           const unsigned int nSlots, const RDFInternal::RBookedCustomColumns &customCols,
+                           const unsigned int nSlots, const RDFInternal::RBookedDefines &customCols,
                            RDataSource *ds, std::weak_ptr<RJittedAction> *jittedActionOnHeap)
 {
    // retrieve type of result of the action as a string
@@ -638,8 +638,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::R
    }
    const auto actionTypeName = actionTypeClass->GetName();
 
-   auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols); // deleted in jitted CallBuildAction
-   auto customColumnsAddr = PrettyPrintAddr(customColumnsCopy);
+   auto definesCopy = new RDFInternal::RBookedDefines(customCols); // deleted in jitted CallBuildAction
+   auto definesAddr = PrettyPrintAddr(definesCopy);
 
    // Build a call to CallBuildAction with the appropriate argument. When run through the interpreter, this code will
    // just-in-time create an RAction object and it will assign it to its corresponding RJittedAction.
@@ -661,7 +661,7 @@ std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::R
                     << PrettyPrintAddr(rOnHeap)
                     << "), reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedAction>*>("
                     << PrettyPrintAddr(jittedActionOnHeap)
-                    << "), reinterpret_cast<ROOT::Internal::RDF::RBookedCustomColumns*>(" << customColumnsAddr << "));";
+                    << "), reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesAddr << "));";
    return createAction_str.str();
 }
 
@@ -685,12 +685,12 @@ std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr)
 /// * replace column names from aliases by the actual column name
 /// Return the list of selected column names.
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
-                                      const ColumnNames_t &validCustomColumns, RDataSource *ds)
+                                      const ColumnNames_t &validDefines, RDataSource *ds)
 {
    const auto &defaultColumns = lm.GetDefaultColumnNames();
    auto selectedColumns = SelectColumns(nColumns, columns, defaultColumns);
    const auto &validBranchNames = lm.GetBranchNames();
-   const auto unknownColumns = FindUnknownColumns(selectedColumns, validBranchNames, validCustomColumns,
+   const auto unknownColumns = FindUnknownColumns(selectedColumns, validBranchNames, validDefines,
                                                   ds ? ds->GetColumnNames() : ColumnNames_t{});
 
    if (!unknownColumns.empty()) {
@@ -719,14 +719,14 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
    return selectedColumns;
 }
 
-std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RBookedCustomColumns &customColumns,
+std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RBookedDefines &defines,
                                               TTree *tree, RDataSource *ds, const std::string &context,
                                               bool vector2rvec)
 {
    auto toCheckedArgType = [&](const std::string &c) {
-      RDFDetail::RCustomColumnBase *customCol =
-         customColumns.HasName(c) ? customColumns.GetColumns().at(c).get() : nullptr;
-      const auto colType = ColumnName2ColumnTypeName(c, tree, ds, customCol, vector2rvec);
+      RDFDetail::RDefineBase *define =
+         defines.HasName(c) ? defines.GetColumns().at(c).get() : nullptr;
+      const auto colType = ColumnName2ColumnTypeName(c, tree, ds, define, vector2rvec);
       if (colType.rfind("CLING_UNKNOWN_TYPE", 0) == 0) { // the interpreter does not know this type
          const auto msg =
             "The type of custom column \"" + c + "\" (" + colType.substr(19) +

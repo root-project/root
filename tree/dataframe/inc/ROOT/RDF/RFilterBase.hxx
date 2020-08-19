@@ -11,7 +11,7 @@
 #ifndef ROOT_RFILTERBASE
 #define ROOT_RFILTERBASE
 
-#include "ROOT/RDF/RBookedCustomColumns.hxx"
+#include "ROOT/RDF/RBookedDefines.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "RtypesCore.h"
 #include "TError.h" // R_ASSERT
@@ -42,11 +42,11 @@ protected:
    const std::string fName;
    const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
 
-   RDFInternal::RBookedCustomColumns fCustomColumns;
+   RDFInternal::RBookedDefines fDefines;
 
 public:
    RFilterBase(RLoopManager *df, std::string_view name, const unsigned int nSlots,
-               const RDFInternal::RBookedCustomColumns &customColumns);
+               const RDFInternal::RBookedDefines &defines);
    RFilterBase &operator=(const RFilterBase &) = delete;
 
    virtual ~RFilterBase();

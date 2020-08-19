@@ -12,7 +12,7 @@
 #define ROOT_RCUSTOMCOLUMN
 
 #include "ROOT/RDF/ColumnReaders.hxx"
-#include "ROOT/RDF/RCustomColumnBase.hxx"
+#include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RStringView.hxx"
@@ -40,7 +40,7 @@ struct SlotAndEntry{};
 // clang-format on
 
 template <typename F, typename ExtraArgsTag = CustomColExtraArgs::None>
-class RCustomColumn final : public RCustomColumnBase {
+class RDefine final : public RDefineBase {
    // shortcuts
    using NoneTag = CustomColExtraArgs::None;
    using SlotTag = CustomColExtraArgs::Slot;
@@ -64,7 +64,7 @@ class RCustomColumn final : public RCustomColumnBase {
    std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
-   std::array<bool, ColumnTypes_t::list_size> fIsCustomColumn;
+   std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 
    template <std::size_t... S>
    void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, NoneTag)
@@ -94,25 +94,25 @@ class RCustomColumn final : public RCustomColumnBase {
    }
 
 public:
-   RCustomColumn(std::string_view name, std::string_view type, F expression, const ColumnNames_t &columns,
-                 unsigned int nSlots, const RDFInternal::RBookedCustomColumns &customColumns,
+   RDefine(std::string_view name, std::string_view type, F expression, const ColumnNames_t &columns,
+                 unsigned int nSlots, const RDFInternal::RBookedDefines &defines,
                  const std::map<std::string, std::vector<void *>> &DSValuePtrs)
-      : RCustomColumnBase(name, type, nSlots, customColumns, DSValuePtrs), fExpression(std::move(expression)),
-        fColumnNames(columns), fLastResults(fNSlots), fValues(fNSlots), fIsCustomColumn()
+      : RDefineBase(name, type, nSlots, defines, DSValuePtrs), fExpression(std::move(expression)),
+        fColumnNames(columns), fLastResults(fNSlots), fValues(fNSlots), fIsDefine()
    {
       const auto nColumns = fColumnNames.size();
       for (auto i = 0u; i < nColumns; ++i)
-         fIsCustomColumn[i] = fCustomColumns.HasName(fColumnNames[i]);
+         fIsDefine[i] = fDefines.HasName(fColumnNames[i]);
    }
 
-   RCustomColumn(const RCustomColumn &) = delete;
-   RCustomColumn &operator=(const RCustomColumn &) = delete;
+   RDefine(const RDefine &) = delete;
+   RDefine &operator=(const RDefine &) = delete;
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       if (!fIsInitialized[slot]) {
          fIsInitialized[slot] = true;
-         RDFInternal::RColumnReadersInfo info{fColumnNames, fCustomColumns, fIsCustomColumn.data(), fDSValuePtrs};
+         RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fDSValuePtrs};
          RDFInternal::InitColumnReaders(slot, fValues[slot], r, TypeInd_t(), info);
          fLastCheckedEntry[slot] = -1;
       }

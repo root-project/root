@@ -7,7 +7,7 @@
 namespace RDFInt = ROOT::Internal::RDF;
 
 // Thanks clang-format...
-TEST(RDataFrameUtils, DeduceAllPODsFromTmpColumns)
+TEST(RDataFrameUtils, DeduceAllPODsFromDefines)
 {
    ROOT::RDataFrame tdf(1);
    auto d = tdf.Define("char_tmp", []() { return char(0); })
@@ -72,7 +72,7 @@ TEST(RDataFrameUtils, DeduceAllPODsFromColumns)
                                                      {"vararrint.a", "ROOT::VecOps::RVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, &t, /*ds=*/nullptr, /*customCol=*/nullptr);
+      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, &t, /*ds=*/nullptr, /*define=*/nullptr);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
 }
@@ -99,30 +99,30 @@ TEST(RDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
                                                      {"vararrint.a", "ROOT::VecOps::RVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, &t, /*ds=*/nullptr, /*customCol=*/nullptr);
+      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, &t, /*ds=*/nullptr, /*define=*/nullptr);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
 }
 /* //- TODO
-TEST(RDataFrameUtils, CheckNonExistingCustomColumnNullTree)
+TEST(RDataFrameUtils, CheckNonExistingDefineNullTree)
 {
-   // CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
+   // CheckDefine(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
    //                   const ColumnNames_t &dataSourceColumns)
-   RDFInt::CheckCustomColumn("Bla", nullptr, {"a", "b"}, {});
+   RDFInt::CheckDefine("Bla", nullptr, {"a", "b"}, {});
 }
 
-TEST(RDataFrameUtils, CheckExistingCustomColumnNullTree)
+TEST(RDataFrameUtils, CheckExistingDefineNullTree)
 {
    int ret = 1;
    try {
-      RDFInt::CheckCustomColumn("a", nullptr, {"a", "b"}, {});
+      RDFInt::CheckDefine("a", nullptr, {"a", "b"}, {});
    } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
 }
 
-TEST(RDataFrameUtils, CheckExistingCustomColumn)
+TEST(RDataFrameUtils, CheckExistingDefine)
 {
    int i;
    TTree t("t", "t");
@@ -130,14 +130,14 @@ TEST(RDataFrameUtils, CheckExistingCustomColumn)
 
    int ret = 1;
    try {
-      RDFInt::CheckCustomColumn("a", &t, {"b"}, {});
+      RDFInt::CheckDefine("a", &t, {"b"}, {});
    } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
 }
 
-TEST(RDataFrameUtils, CheckExistingCustomColumnDataSource)
+TEST(RDataFrameUtils, CheckExistingDefineDataSource)
 {
    int i;
    TTree t("t", "t");
@@ -145,7 +145,7 @@ TEST(RDataFrameUtils, CheckExistingCustomColumnDataSource)
 
    int ret = 1;
    try {
-      RDFInt::CheckCustomColumn("c", &t, {"b"}, {"c"});
+      RDFInt::CheckDefine("c", &t, {"b"}, {"c"});
    } catch (const std::runtime_error &) {
       ret = 0;
    }

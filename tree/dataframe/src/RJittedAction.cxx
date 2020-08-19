@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDF/RBookedCustomColumns.hxx"
+#include "ROOT/RDF/RBookedDefines.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RJittedAction.hxx"
 // Avoid error: invalid application of ‘sizeof’ to incomplete type in RJittedAction::GetMergeableValue
@@ -18,7 +18,7 @@
 using ROOT::Internal::RDF::RJittedAction;
 using ROOT::Detail::RDF::RLoopManager;
 
-RJittedAction::RJittedAction(RLoopManager &lm) : RActionBase(&lm, {}, ROOT::Internal::RDF::RBookedCustomColumns{}) { }
+RJittedAction::RJittedAction(RLoopManager &lm) : RActionBase(&lm, {}, ROOT::Internal::RDF::RBookedDefines{}) { }
 
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
