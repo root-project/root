@@ -245,17 +245,17 @@ public:
    T &Get(Long64_t) final { return **fDSValuePtr; }
 };
 
-template <typename BranchTypeList>
+template <typename ColTypeList>
 struct RDFValueTuple {
 };
 
-template <typename... BranchTypes>
-struct RDFValueTuple<TypeList<BranchTypes...>> {
-   using type = std::tuple<std::unique_ptr<RColumnReaderBase<BranchTypes>>...>;
+template <typename... ColTypes>
+struct RDFValueTuple<TypeList<ColTypes...>> {
+   using type = std::tuple<std::unique_ptr<RColumnReaderBase<ColTypes>>...>;
 };
 
-template <typename BranchTypeList>
-using RDFValueTuple_t = typename RDFValueTuple<BranchTypeList>::type;
+template <typename ColTypeList>
+using RDFValueTuple_t = typename RDFValueTuple<ColTypeList>::type;
 
 template <typename T>
 std::unique_ptr<RColumnReaderBase<T>>
