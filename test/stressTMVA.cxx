@@ -2505,6 +2505,7 @@ void RegressionUnitTestWithDeviation::run()
    outputFile->Close();
    delete dataloader; 
    delete factory;
+   delete input;
 
    // reader tests
 

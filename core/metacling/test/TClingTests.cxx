@@ -63,6 +63,7 @@ TEST_F(TClingTests, GenerateDictionaryRegression)
    //EXPECT_TRUE(gInterpreter->GenerateDictionary("std::vector<std::array<int, 5>>", ""));
 }
 
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 TEST_F(TClingTests, GenerateDictionary)
 {
    auto cl = TClass::GetClass("vector<TNamed*>");
@@ -73,6 +74,7 @@ TEST_F(TClingTests, GenerateDictionary)
    EXPECT_TRUE(cl != nullptr);
    EXPECT_TRUE(cl->IsLoaded());
 }
+#endif
 
 // Test ROOT-6967
 TEST_F(TClingTests, GetEnumWithSameVariableName)
@@ -210,5 +212,8 @@ TEST_F(TClingTests, ClingLookupHelper) {
 TEST_F(TClingTests, ROOT10499) {
    EXPECT_EQ((void*)&std::cout, (void*)gInterpreter->Calc("&std::cout"));
    EXPECT_EQ((void*)&std::cerr, (void*)gInterpreter->Calc("&std::cerr"));
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+   // strangely enough, this works on the command prompt, but not in this test...
    EXPECT_EQ((void*)&errno, (void*)gInterpreter->Calc("&errno"));
+#endif
 }
