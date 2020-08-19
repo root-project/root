@@ -29,7 +29,7 @@ namespace RDF {
 /// A type-erasing wrapper around RColumnReaderBase
 /// Used to reduce compile time by avoiding instantiation of very large tuples and/or (std::get<N>...) fold expressions.
 class R__CLING_PTRCHECK(off) RTypeErasedColumnValue {
-   std::shared_ptr<void> fPtr;  // shared_ptr to take advantage of the type-erased custom deleter
+   std::shared_ptr<void> fPtr; // shared_ptr to take advantage of the type-erased custom deleter
 
 public:
    template <typename T>
