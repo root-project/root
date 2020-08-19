@@ -86,17 +86,6 @@ public:
             + "ring with size (" + std::to_string(fSize) + "). event batching is not implemented yet");
       }
 
-      // todo(max) think about registering fFileDes to avoid repeated kernel fd mappings
-      // ```
-      // io_uring_register_files(p_ring, &fFileDes, 1);
-      // -- then fd parameter in prep_read is the offset into the array of fixed files
-      // -- (i.e. 0, because we only have one file)
-      // io_uring_prep_read(sqe, 0, ioVec[i].fBuffer, ioVec[i].fSize, ioVec[i].fOffset);
-      // -- and the sqe flags have to be adjusted
-      // sqe->flags |= IOSQE_FIXED_FILE;
-      // ```
-      // files are unregistered when the queue is destroyed
-
       // prep reads
       struct io_uring_sqe *sqe;
       for (std::size_t i = 0; i < nReads; ++i) {

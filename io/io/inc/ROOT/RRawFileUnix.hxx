@@ -45,6 +45,7 @@ public:
    ~RRawFileUnix();
    std::unique_ptr<RRawFile> Clone() const final;
    int GetFeatures() const final;
+   int GetFd() const { return fFileDes; }
 };
 
 } // namespace Internal
