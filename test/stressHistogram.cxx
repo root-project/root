@@ -120,7 +120,7 @@ enum compareOptions {
 int defaultEqualOptions = 0; //cmpOptPrint;
 //int defaultEqualOptions = cmpOptDebug;
 
-constexpr Bool_t cleanHistos = kTRUE;   // delete histogram after testing (swicth off in case of debugging)
+Bool_t cleanHistos = kTRUE;   // delete histogram after testing (swicth off in case of debugging)
 
 const double defaultErrorLimit = 1.E-10;
 
@@ -148,7 +148,7 @@ struct TTestSuite {
 };
 
 // Methods for histogram comparisions (later implemented)
-void printResult(const char* msg, bool status);
+void printResult(int counter, const char* msg, bool status);
 void FillVariableRange(Double_t v[numberOfBins+1]);
 void FillHistograms(TH1D* h1, TH1D* h2, Double_t c1 = 1.0, Double_t c2 = 1.0);
 void FillProfiles(TProfile* p1, TProfile* p2, Double_t c1 = 1.0, Double_t c2 = 1.0);
@@ -9910,7 +9910,7 @@ public:
    }
 };
 
-int stressHistogram()
+int stressHistogram(int testNumber = 0)
 {
 #ifdef R__WIN32
    // On windows there is an order of initialization problem that lead to
@@ -9927,6 +9927,13 @@ int stressHistogram()
    int GlobalStatus = false;
    int status = false;
 
+   bool runAll = (testNumber == 0);
+
+   int testCounter = 0;
+
+   // avoid cleaning histogram when running a single test suite
+   if (testNumber > 0 && defaultEqualOptions == cmpOptDebug) cleanHistos = kFALSE;
+
    TBenchmark bm;
    bm.Start("stressHistogram");
 
@@ -9935,7 +9942,7 @@ int stressHistogram()
    std::cout << "****************************************************************************" <<std::endl;
 
    // Test 1
-   if ( defaultEqualOptions & cmpOptPrint )
+   if (runAll  && defaultEqualOptions & cmpOptPrint )
       std::cout << "**********************************\n"
            << "       Test without weights       \n"
            << "**********************************\n"
@@ -9948,29 +9955,31 @@ int stressHistogram()
    TProfile3D::Approximate();
 
 
-
-   {
+   testCounter++;
+   if (runAll || testNumber == testCounter) {
       ProjectionTester* ht = new ProjectionTester();
       ht->buildHistograms();
       //Ht->buildHistograms(2,4,5,6,8,10);
       status = ht->compareHistograms();
       GlobalStatus += status;
       if (cleanHistos) delete ht;
-      printResult("Testing Histogram Projections without weights....................", status);
+      printResult(testCounter, "Testing Histogram Projections without weights....................", status);
    }
 
-   {
+   testCounter++;
+   if (runAll || testNumber == testCounter) {
       ProjectionTester* htp = new ProjectionTester();
       htp->buildProfiles();
       status = htp->compareProfiles();
       GlobalStatus += status;
       if (cleanHistos) delete htp;
+      printResult(testCounter, "Testing Profile Projections without weights......................", status);
    }
 
-   printResult("Testing Profile Projections without weights......................", status);
+
 
    // Test 3-4
-   if ( defaultEqualOptions & cmpOptPrint )
+   if ( runAll && defaultEqualOptions & cmpOptPrint )
       std::cout << "**********************************\n"
            << "        Test with weights         \n"
            << "**********************************\n"
@@ -9978,22 +9987,23 @@ int stressHistogram()
 
    TH1::SetDefaultSumw2();
 
-
-   {
+   testCounter++;
+   if (runAll || testNumber == testCounter) {
       ProjectionTester* ht2 = new ProjectionTester();
       ht2->buildHistogramsWithWeights();
       status = ht2->compareHistograms();
       GlobalStatus += status;
-      printResult("Testing Histogram Projections with weights.......................", status);
+      printResult(testCounter, "Testing Histogram Projections with weights.......................", status);
       if (cleanHistos) delete ht2;
    }
 
-   {
+   testCounter++;
+   if (runAll || testNumber == testCounter) {
       ProjectionTester* htp2 = new ProjectionTester(true);
       htp2->buildProfiles();
       status = htp2->compareProfiles();
       GlobalStatus += status;
-      printResult("Testing Profile   Projections with weights.......................", status);
+      printResult(testCounter, "Testing Profile   Projections with weights.......................", status);
       if (cleanHistos) delete htp2;
    }
 
@@ -10295,11 +10305,14 @@ int stressHistogram()
       bool internalStatus = false;
 //       #pragma omp parallel
 //       #pragma omp for reduction(|: internalStatus)
-      for ( unsigned int j = 0; j < testSuite[i]->nTests; ++j ) {
-         internalStatus |= testSuite[i]->tests[j]();
+      testCounter++;
+      if (runAll || testNumber == testCounter) {
+         for ( unsigned int j = 0; j < testSuite[i]->nTests; ++j ) {
+            internalStatus |= testSuite[i]->tests[j]();
+         }
+         printResult(testCounter,  testSuite[i]->suiteName, internalStatus);
+         status += internalStatus;
       }
-      printResult( testSuite[i]->suiteName, internalStatus);
-      status += internalStatus;
    }
    GlobalStatus += status;
 
@@ -10316,27 +10329,29 @@ int stressHistogram()
                                           refReadTestPointer };
 
 
-   if ( refFileOption == refFileWrite ) {
-      refFile = TFile::Open(refFileName, "RECREATE");
-   }
-   else {
-      auto isBatch = gROOT->IsBatch();
-      gROOT->SetBatch();
-      TFile::SetCacheFileDir(".");
-      refFile = TFile::Open(refFileName, "CACHEREAD");
-      gROOT->SetBatch(isBatch);
-   }
-
-   if ( refFile != 0 ) {
-      r.SetSeed(8652);
-      status = 0;
-      for ( unsigned int j = 0; j < refReadTestSuite.nTests; ++j ) {
-         status += refReadTestSuite.tests[j]();
+   testCounter++;
+   if (runAll || testNumber == testCounter) {
+      if (refFileOption == refFileWrite) {
+         refFile = TFile::Open(refFileName, "RECREATE");
+      } else {
+         auto isBatch = gROOT->IsBatch();
+         gROOT->SetBatch();
+         TFile::SetCacheFileDir(".");
+         refFile = TFile::Open(refFileName, "CACHEREAD");
+         gROOT->SetBatch(isBatch);
       }
-      printResult( refReadTestSuite.suiteName, status);
-      GlobalStatus += status;
-   } else {
-      Warning("stressHistogram", "No reference file found");
+
+      if (refFile != 0) {
+         r.SetSeed(8652);
+         status = 0;
+         for (unsigned int j = 0; j < refReadTestSuite.nTests; ++j) {
+            status += refReadTestSuite.tests[j]();
+         }
+         printResult(testCounter, refReadTestSuite.suiteName, status);
+         GlobalStatus += status;
+      } else {
+         Warning("stressHistogram", "Test %d - No reference file found", testCounter);
+      }
    }
 
    bm.Stop("stressHistogram");
@@ -10361,15 +10376,13 @@ std::ostream& operator<<(std::ostream& out, TH1D* h)
    return out;
 }
 
-void printResult(const char* msg, bool status)
+void printResult(int counter, const char* msg, bool status)
 {
-   static int counter = 1;
    std::cout << "Test ";
    std::cout.width(2);
    std::cout<< counter << ": "
        << msg
        << (status?"FAILED":"OK") << std::endl;
-   counter += 1;
 }
 
 void FillVariableRange(Double_t v[numberOfBins+1])
@@ -10798,12 +10811,43 @@ int main(int argc, char** argv)
    if ( __DRAW__ )
       theApp = new TApplication("App",&argc,argv);
 
-   if (argc > 1) {
-      // for changing printing option (0 default, 1 print all test, 2 debug)
-      defaultEqualOptions = atoi(argv[1] );
+   int testNumber = 0;
+
+   // Parse command line arguments
+   for (Int_t i = 1 ;  i < argc ; i++) {
+      string arg = argv[i] ;
+
+      if (arg == "-v" || arg == "1") {
+         cout << "stressHistogram: running in verbose mode" << endl;
+         defaultEqualOptions = cmpOptPrint;
+      } else if (arg == "-vv" || arg =="-vvv" || arg == "2") {
+         cout << "stressHistogram: running in very verbose  mode" << endl;
+         defaultEqualOptions = cmpOptDebug;
+      } else if (arg == "-fast") {
+         cout << "stressHistogram: running in fast mode " << endl;
+         nEvents = 10;
+      } else if (arg == "-n") {
+         cout << "stressHistogram: running single test" << endl;
+         testNumber = atoi(argv[++i]);
+      } else if (arg == "-d") {
+         cout << "stressHistogram: running in debug mode, setting gDebug to " << argv[i + 1] << endl;
+         gDebug = atoi(argv[++i]);
+         defaultEqualOptions = cmpOptDebug;
+      } else if (arg == "-h" || arg == "-help") {
+         cout << "usage: stressHistogram [ options ] " << endl;
+         cout << "" << endl;
+         cout << "       -n N      : only run test with sequential number N" << endl;
+         cout << "       -v/-vv    : set verbose mode (show result of each single test) or very verbose mode (show all comparison output as well)" << endl;
+         cout << "       -d N      : very verbose mode + set ROOT gDebug flag to N" << endl ;
+         cout << "       -fast      : running in fast mode with fewer events generated " << std::endl;
+         cout << " " << endl ;
+         return 0 ;
+      }
+
    }
 
-   int ret = stressHistogram();
+
+   int ret = stressHistogram(testNumber);
 
    if ( __DRAW__ ) {
       theApp->Run();
