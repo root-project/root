@@ -16,8 +16,6 @@
 #include <liburing.h>
 #include <liburing/io_uring.h>
 
-#include <ROOT/RRawFile.hxx>
-
 #include "TError.h"
 
 namespace ROOT {
@@ -67,17 +65,24 @@ public:
       return &fRing;
    }
 
-   /// Basic read event composed of RIOVec IO data and a target file descriptor.
+   /// Basic read event composed of IO data and a target file descriptor.
    struct RReadEvent {
-      RRawFile::RIOVec* fIoVec = nullptr;
+      /// The destination for reading
+      void *fBuffer = nullptr;
+      /// The file offset
+      std::uint64_t fOffset = 0;
+      /// The number of desired bytes
+      std::size_t fSize = 0;
+      /// The number of actually read bytes, set by ReadV()
+      std::size_t fOutBytes = 0;
+      /// The file descriptor
       int fFileDes = -1;
    };
 
    /// Submit a number of read events and wait for completion.
-   void SubmitReadsAndWait(std::vector<RReadEvent>& readEvents) {
-      auto numEvents = readEvents.size();
-      if (numEvents > fSize) {
-         throw std::runtime_error("too many read events (" + std::to_string(numEvents) + ") for "
+   void SubmitReadsAndWait(RReadEvent* readEvents, unsigned int nReads) {
+      if (nReads > fSize) {
+         throw std::runtime_error("too many read events (" + std::to_string(nReads) + ") for "
             + "ring with size (" + std::to_string(fSize) + "). event batching is not implemented yet");
       }
 
@@ -94,7 +99,7 @@ public:
 
       // prep reads
       struct io_uring_sqe *sqe;
-      for (std::size_t i = 0; i < numEvents; ++i) {
+      for (std::size_t i = 0; i < nReads; ++i) {
          sqe = io_uring_get_sqe(&fRing);
          if (!sqe) {
             throw std::runtime_error("get SQE failed for read request '" +
@@ -103,27 +108,27 @@ public:
          if (readEvents[i].fFileDes == -1) {
             throw std::runtime_error("bad fd (-1) for read request '" + std::to_string(i) + "'");
          }
-         if (readEvents[i].fIoVec == nullptr) {
-            throw std::runtime_error("null RIOVec* for read request '" + std::to_string(i) + "'");
+         if (readEvents[i].fBuffer == nullptr) {
+            throw std::runtime_error("null read buffer for read request '" + std::to_string(i) + "'");
          }
          io_uring_prep_read(sqe,
             readEvents[i].fFileDes,
-            readEvents[i].fIoVec->fBuffer,
-            readEvents[i].fIoVec->fSize,
-            readEvents[i].fIoVec->fOffset
+            readEvents[i].fBuffer,
+            readEvents[i].fSize,
+            readEvents[i].fOffset
          );
          sqe->user_data = i;
       }
 
       // todo(max) fix for batched sqe submissions where ret may not equal nReq
       // todo(max) check for any difference between submit vs. submit and wait for large nReq
-      int submitted = io_uring_submit_and_wait(&fRing, numEvents);
+      int submitted = io_uring_submit_and_wait(&fRing, nReads);
       if (submitted <= 0) {
          throw std::runtime_error("ring submit failed, error: " + std::string(strerror(errno)));
       }
-      if (submitted != static_cast<int>(numEvents)) {
+      if (submitted != static_cast<int>(nReads)) {
          throw std::runtime_error("ring submitted " + std::to_string(submitted) +
-            " events but requested " + std::to_string(numEvents));
+            " events but requested " + std::to_string(nReads));
       }
       // reap reads
       struct io_uring_cqe *cqe;
@@ -134,14 +139,14 @@ public:
             throw std::runtime_error("wait cqe failed, error: " + std::string(std::strerror(-ret)));
          }
          auto index = reinterpret_cast<std::size_t>(io_uring_cqe_get_data(cqe));
-         if (index >= numEvents) {
+         if (index >= nReads) {
             throw std::runtime_error("bad cqe user data: " + std::to_string(index));
          }
          if (cqe->res < 0) {
             throw std::runtime_error("read failed for ReadEvent[" + std::to_string(index) + "], "
                "error: " + std::string(std::strerror(-cqe->res)));
          }
-         readEvents[index].fIoVec->fOutBytes = static_cast<std::size_t>(cqe->res);
+         readEvents[index].fOutBytes = static_cast<std::size_t>(cqe->res);
          io_uring_cqe_seen(&fRing, cqe);
       }
       return;
