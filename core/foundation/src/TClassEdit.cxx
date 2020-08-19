@@ -771,7 +771,9 @@ static bool IsDefElement(const char *elementName, const char* defaultElementName
       size_t end = findNameEnd(c,pos);
 
       std::string keypart;
-      TClassEdit::GetNormalizedName(keypart,std::string_view(c.c_str()+pos,end-pos));
+      if (pos != end) {  // i.e. elementName != "std::less<>", see ROOT-11000.
+         TClassEdit::GetNormalizedName(keypart,std::string_view(c.c_str()+pos,end-pos));
+      }
 
       std::string norm_key;
       TClassEdit::GetNormalizedName(norm_key,k);
