@@ -375,10 +375,10 @@ ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedDefines & defines,
    // Since we support gcc48 and it does not provide in its stl std::regex,
    // we need to use TPRegexp
    TPRegexp regexp(theRegex);
-   for (auto &&branchName : defines.GetNames()) {
-      if ((isEmptyRegex || 0 != regexp.Match(branchName.c_str())) &&
-            !RDFInternal::IsInternalColumn(branchName)) {
-         selectedColumns.emplace_back(branchName);
+   for (auto &&colName : defines.GetNames()) {
+      if ((isEmptyRegex || 0 != regexp.Match(colName.c_str())) &&
+            !RDFInternal::IsInternalColumn(colName)) {
+         selectedColumns.emplace_back(colName);
       }
    }
 
