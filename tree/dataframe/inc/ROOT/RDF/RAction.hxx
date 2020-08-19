@@ -82,12 +82,12 @@ void InitColumnReaders(unsigned int slot, std::vector<RTypeErasedColumnValue> &v
 }
 
 /// This overload is specialized to act on RTypeErasedColumnValues instead of RColumnValues.
-template <std::size_t... S, typename... ColTypes>
-void ResetColumnReaders(std::vector<RTypeErasedColumnValue> &values, std::index_sequence<S...>,
-                        ROOT::TypeTraits::TypeList<ColTypes...>)
+template <typename... ColTypes>
+void ResetColumnReaders(std::vector<RTypeErasedColumnValue> &values, ROOT::TypeTraits::TypeList<ColTypes...>)
 {
    using expander = int[];
-   (void)expander{(values[S].Cast<ColTypes>()->Reset(), 0)...};
+   int i = 0;
+   (void)expander{(values[i].Cast<ColTypes>()->Reset(), ++i)...};
    values.clear();
 }
 
@@ -169,10 +169,7 @@ struct ActionImpl<Helper, ColumnTypes, true> {
       CallExec(slot, entry, helper, values, TypeInd_t{}, ColumnTypes{});
    }
 
-   static void ResetColumnReaders(Values_t &values)
-   {
-      RDFInternal::ResetColumnReaders(values, TypeInd_t{}, ColumnTypes{});
-   }
+   static void ResetColumnReaders(Values_t &values) { RDFInternal::ResetColumnReaders(values, ColumnTypes{}); }
 };
 
 // clang-format off
