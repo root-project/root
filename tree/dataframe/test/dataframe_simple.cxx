@@ -932,12 +932,12 @@ TEST(RDFSimpleTests, ScalarValuesCollectionWeights)
 
 TEST_P(RDFSimpleTests, ChainWithDifferentTreeNames)
 {
-	const auto fname1 = "test_chainwithdifferenttreenames_1.root";
-	const auto fname2 = "test_chainwithdifferenttreenames_2.root";
-	{
-		ROOT::RDataFrame(10).Define("x", [] { return 1; }).Snapshot<int>("t1", fname1, {"x"});
-		ROOT::RDataFrame(10).Define("x", [] { return 3; }).Snapshot<int>("t2", fname2, {"x"});
-	}
+   const auto fname1 = "test_chainwithdifferenttreenames_1.root";
+   const auto fname2 = "test_chainwithdifferenttreenames_2.root";
+   {
+      ROOT::RDataFrame(10).Define("x", [] { return 1; }).Snapshot<int>("t1", fname1, {"x"});
+      ROOT::RDataFrame(10).Define("x", [] { return 3; }).Snapshot<int>("t2", fname2, {"x"});
+   }
 
    // add trees to chain
    TChain c("t1");
