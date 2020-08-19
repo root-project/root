@@ -40,10 +40,7 @@ TEST(RRawFileUnix, ReadV)
    auto nReq = 128;
 
    auto iovecs = make_iovecs(nReq);
-   // auto t1 = std::chrono::high_resolution_clock::now();
    f->ReadV(iovecs.data(), nReq);
-   // auto t2 = std::chrono::high_resolution_clock::now();
-   // std::cout << std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count() << " microseconds\n";
    for (auto iovec: iovecs) {
       for (std::size_t i = 0; i < iovec.fOutBytes; ++i) {
          EXPECT_EQ('a', ((unsigned char*)iovec.fBuffer)[i]);
