@@ -438,7 +438,9 @@ Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
  [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs]\
  [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--tutdir] [--srcdir]\
  [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch]\
-[--python-version] [--python2-version] [--python3-version] [--cc] [--cxx] [--f77] [--ld ] [--help]"
+ [--platform] [--config] [--features] [--ncpu] [--git-revision]\
+ [--python-version] [--python2-version] [--python3-version]\
+ [--cc] [--cxx] [--f77] [--ld ] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
