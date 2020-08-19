@@ -169,7 +169,7 @@ public:
          // The storage is not contiguous or we don't know yet: we cannot but copy into the rvec
 #ifndef NDEBUG
          if (!fCopyWarningPrinted) {
-            Warning("RColumnValue::Get",
+            Warning("RTreeColumnReader::Get",
                     "Branch %s hangs from a non-split branch. A copy is being performed in order "
                     "to properly read the content.",
                     readerArray.GetBranchName());
@@ -300,9 +300,6 @@ struct RColumnReadersInfo {
 };
 
 /// Initialize a tuple of column readers.
-/// For real TTree branches a TTreeReader{Array,Value} is built and passed to the
-/// RColumnValue. For temporary columns a pointer to the corresponding variable
-/// is passed instead.
 template <typename RDFValueTuple, std::size_t... S>
 void InitColumnReaders(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader *r, std::index_sequence<S...>,
                        const RColumnReadersInfo &colInfo)
@@ -329,7 +326,7 @@ void InitColumnReaders(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader
    (void)r;        // avoid "unused variable" warnings for r on gcc5.2
 }
 
-/// Clear the proxies of a tuple of RColumnValues
+/// Call Reset on a tuple of column readers
 template <typename ValueTuple, std::size_t... S>
 void ResetColumnReaders(ValueTuple &values, std::index_sequence<S...>)
 {
