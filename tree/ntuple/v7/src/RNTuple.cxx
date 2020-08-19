@@ -18,6 +18,7 @@
 #include "ROOT/RFieldVisitor.hxx"
 #include "ROOT/RNTupleModel.hxx"
 #include "ROOT/RPageStorage.hxx"
+#include "ROOT/RPageStorageFile.hxx"
 
 #include <algorithm>
 #include <exception>
@@ -29,6 +30,7 @@
 #include <utility>
 
 #include <TError.h>
+#include <TFile.h> // for RNTupleWriter::Append
 
 
 void ROOT::Experimental::RNTupleReader::ConnectModel(const RNTupleModel &model) {
@@ -232,6 +234,16 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWr
    const RNTupleWriteOptions &options)
 {
    return std::make_unique<RNTupleWriter>(std::move(model), Detail::RPageSink::Create(ntupleName, storage, options));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWriter::Append(
+   std::unique_ptr<RNTupleModel> model,
+   std::string_view ntupleName,
+   TFile &file,
+   const RNTupleWriteOptions &options)
+{
+   auto sink = std::make_unique<Detail::RPageSinkFile>(ntupleName, file, options);
+   return std::make_unique<RNTupleWriter>(std::move(model), std::move(sink));
 }
 
 
