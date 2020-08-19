@@ -41,7 +41,7 @@ TEST(RRawFileUnix, ReadV)
    FileRaii fileGuard(file, std::string(filesize, 'a')); // ~2MB
    auto f = RRawFileUnix::Create(file);
 
-   auto nReq = 128;
+   auto nReq = 1000; // demo submission batching, uring size is around ~128
 
    auto iovecs = make_iovecs(nReq, filesize);
    f->ReadV(iovecs.data(), nReq);
