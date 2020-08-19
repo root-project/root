@@ -96,8 +96,8 @@ public:
       // The following to bits are reserved for now; when supported, set
       // kSupported = kGenerateOffsetMap | kBasketClassMap
       kGenerateOffsetMap = BIT(0),
-      kOnlyFlushAtCluster = BIT(1),
-      kSupported = kGenerateOffsetMap + kOnlyFlushAtCluster
+      // kOnlyFlushAtCluster = BIT(1),
+      kSupported = kGenerateOffsetMap
    };
    // This enum covers IOBits that are known to this ROOT release but
    // not supported; provides a mechanism for us to have experimental
