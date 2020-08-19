@@ -120,11 +120,16 @@ void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
       reads.reserve(nReq);
       for (std::size_t i = 0; i < nReq; ++i) {
          RIoUring::RReadEvent ev;
-         ev.fIoVec = &ioVec[i];
+         ev.fBuffer = ioVec[i].fBuffer;
+         ev.fOffset = ioVec[i].fOffset;
+         ev.fSize = ioVec[i].fSize;
          ev.fFileDes = fFileDes;
          reads.push_back(ev);
       }
-      ring.SubmitReadsAndWait(reads);
+      ring.SubmitReadsAndWait(reads.data(), nReq);
+      for (std::size_t i = 0; i < nReq; ++i) {
+         ioVec[i].fOutBytes = reads.at(i).fOutBytes;
+      }
       return;
    }
    Warning("RRawFileUnix",
