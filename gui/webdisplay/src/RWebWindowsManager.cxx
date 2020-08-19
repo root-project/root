@@ -493,5 +493,5 @@ void ROOT::Experimental::RWebWindowsManager::Terminate()
       fServer->SetTerminate();
 
    if (gApplication)
-      gApplication->Terminate();
+      TTimer::SingleShot(100, "TApplication",  gApplication, "Terminate()");
 }

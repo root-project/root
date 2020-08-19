@@ -1328,6 +1328,18 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindow::
 
 void ROOT::Experimental::RWebWindow::TerminateROOT()
 {
+
+   // workaround to release all connection-specific handles as soon as possible
+   // required to work with QWebEngine
+   // once problem solved, can be removed here
+   ConnectionsList_t arr1, arr2;
+
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
+      std::swap(arr1, fConn);
+      std::swap(arr2, fPendingConn);
+   }
+
    fMgr->Terminate();
 }
 
