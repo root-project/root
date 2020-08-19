@@ -84,6 +84,7 @@ if (NOT dataframe)
     list(APPEND dataframe_veto tmva/tmva*.C)
 elseif(MSVC AND NOT win_broken_tests)
     list(APPEND dataframe_veto dataframe/*.py)
+    list(APPEND dataframe_veto tmva/tmva003_RReader.C)
 endif()
 
 if(NOT sqlite)
