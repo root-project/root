@@ -90,6 +90,11 @@ protected:
          if (args.IsHeadless())
             return nullptr;
 
+         if (!fInitEngine) {
+            QtWebEngine::initialize();
+            fInitEngine = true;
+         }
+
          if (!qapp && !QApplication::instance()) {
 
             if (!gApplication) {
@@ -109,11 +114,6 @@ protected:
             qargv[1] = nullptr;
 
             qapp = new QApplication(qargc, qargv);
-         }
-
-         if (!fInitEngine) {
-            QtWebEngine::initialize();
-            fInitEngine = true;
          }
 
          if (!fTimer) {
@@ -159,7 +159,7 @@ public:
    virtual ~RQt5WebDisplayHandle()
    {
       // now view can be safely destroyed
-      if (fView) fView->deleteLater();
+      if (fView) delete fView;
    }
 
    static void AddCreator()
