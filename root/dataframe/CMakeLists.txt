@@ -30,8 +30,7 @@ ROOTTEST_ADD_TEST(test_chainZombieFile
 # ROOT-9366
 # We use this to write something like the FCC data model, dictionaries done with aclic
 ROOTTEST_ADD_TEST(writeFcc
-                  MACRO writeFcc.C+
-                  ${WILLFAIL_ON_WIN32})
+                  MACRO writeFcc.C+)
 
 # We build and run an executable that reads the file created above without dictionaries
 ROOTTEST_GENERATE_EXECUTABLE(test_readFcc readFcc.C LIBRARIES ${DFLIBRARIES})
@@ -39,7 +38,6 @@ ROOTTEST_GENERATE_EXECUTABLE(test_readFcc readFcc.C LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_readFcc
                   EXEC ./test_readFcc
                   COPY_TO_BUILDDIR fccSkim.root
-                  ${WILLFAIL_ON_WIN32}
                   DEPENDS ${GENERATE_EXECUTABLE_TEST} writeFcc)
 
 # ROOT-9116
@@ -96,7 +94,6 @@ ROOTTEST_ADD_TEST(emptysource
 
 ROOTTEST_ADD_TEST(regression_snapshot
                   MACRO regression_snapshot.C+
-                  ${WILLFAIL_ON_WIN32}
                   OUTREF regression_snapshot.ref)
 
 ROOTTEST_GENERATE_EXECUTABLE(test_inference test_inference.cxx LIBRARIES ${DFLIBRARIES})
@@ -120,7 +117,6 @@ ROOTTEST_ADD_TEST(test_glob
 
 ROOTTEST_ADD_TEST(test_reduce
                   MACRO test_reduce.C+
-                  ${WILLFAIL_ON_WIN32}
                   OUTREF test_reduce.ref)
 
 ROOTTEST_GENERATE_EXECUTABLE(test_callables test_callables.cxx LIBRARIES ${DFLIBRARIES})
@@ -155,8 +151,7 @@ ROOTTEST_ADD_TEST(misc
 
 ROOTTEST_ADD_TEST(ctors
                   MACRO test_ctors.C+
-                  OUTREF test_ctors.ref
-                  ${WILLFAIL_ON_WIN32})
+                  OUTREF test_ctors.ref)
 
 ROOTTEST_GENERATE_EXECUTABLE(branchoverwrite test_branchoverwrite.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(branchoverwrite
