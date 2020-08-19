@@ -81,62 +81,73 @@ public:
 
    /// Submit a number of read events and wait for completion.
    void SubmitReadsAndWait(RReadEvent* readEvents, unsigned int nReads) {
-      if (nReads > fSize) {
-         throw std::runtime_error("too many read events (" + std::to_string(nReads) + ") for "
-            + "ring with size (" + std::to_string(fSize) + "). event batching is not implemented yet");
-      }
 
-      // prep reads
-      struct io_uring_sqe *sqe;
-      for (std::size_t i = 0; i < nReads; ++i) {
-         sqe = io_uring_get_sqe(&fRing);
-         if (!sqe) {
-            throw std::runtime_error("get SQE failed for read request '" +
-               std::to_string(i) + "', error: " + std::string(strerror(errno)));
-         }
-         if (readEvents[i].fFileDes == -1) {
-            throw std::runtime_error("bad fd (-1) for read request '" + std::to_string(i) + "'");
-         }
-         if (readEvents[i].fBuffer == nullptr) {
-            throw std::runtime_error("null read buffer for read request '" + std::to_string(i) + "'");
-         }
-         io_uring_prep_read(sqe,
-            readEvents[i].fFileDes,
-            readEvents[i].fBuffer,
-            readEvents[i].fSize,
-            readEvents[i].fOffset
-         );
-         sqe->user_data = i;
-      }
+      unsigned int batch = 0;
+      unsigned int batchSize = fSize;
+      unsigned int readPos = 0;
 
-      // todo(max) fix for batched sqe submissions where ret may not equal nReq
-      // todo(max) check for any difference between submit vs. submit and wait for large nReq
-      int submitted = io_uring_submit_and_wait(&fRing, nReads);
-      if (submitted <= 0) {
-         throw std::runtime_error("ring submit failed, error: " + std::string(strerror(errno)));
-      }
-      if (submitted != static_cast<int>(nReads)) {
-         throw std::runtime_error("ring submitted " + std::to_string(submitted) +
-            " events but requested " + std::to_string(nReads));
-      }
-      // reap reads
-      struct io_uring_cqe *cqe;
-      int ret;
-      for (int i = 0; i < submitted; ++i) {
-         ret = io_uring_wait_cqe(&fRing, &cqe);
-         if (ret < 0) {
-            throw std::runtime_error("wait cqe failed, error: " + std::string(std::strerror(-ret)));
+      while (readPos < nReads) {
+         if (readPos + batchSize > nReads) {
+            batchSize = nReads - readPos;
          }
-         auto index = reinterpret_cast<std::size_t>(io_uring_cqe_get_data(cqe));
-         if (index >= nReads) {
-            throw std::runtime_error("bad cqe user data: " + std::to_string(index));
+         // prep reads
+         struct io_uring_sqe *sqe;
+         for (std::size_t i = readPos; i < readPos + batchSize; ++i) {
+            sqe = io_uring_get_sqe(&fRing);
+            if (!sqe) {
+               throw std::runtime_error("batch " + std::to_string(batch) + ": "
+                  + "get SQE failed for read request '" + std::to_string(i)
+                  + "', error: " + std::string(strerror(errno)));
+            }
+            if (readEvents[i].fFileDes == -1) {
+               throw std::runtime_error("batch " + std::to_string(batch) + ": "
+                  + "bad fd (-1) for read request '" + std::to_string(i) + "'");
+            }
+            if (readEvents[i].fBuffer == nullptr) {
+               throw std::runtime_error("batch " + std::to_string(batch) + ": "
+                  + "null read buffer for read request '" + std::to_string(i) + "'");
+            }
+            io_uring_prep_read(sqe,
+               readEvents[i].fFileDes,
+               readEvents[i].fBuffer,
+               readEvents[i].fSize,
+               readEvents[i].fOffset
+            );
+            sqe->user_data = i;
          }
-         if (cqe->res < 0) {
-            throw std::runtime_error("read failed for ReadEvent[" + std::to_string(index) + "], "
-               "error: " + std::string(std::strerror(-cqe->res)));
+
+         // todo(max) check for any difference between submit vs. submit and wait for large nReq
+         int submitted = io_uring_submit_and_wait(&fRing, batchSize);
+         if (submitted <= 0) {
+            throw std::runtime_error("batch " + std::to_string(batch) + ": "
+               "ring submit failed, error: " + std::string(strerror(errno)));
          }
-         readEvents[index].fOutBytes = static_cast<std::size_t>(cqe->res);
-         io_uring_cqe_seen(&fRing, cqe);
+         if (submitted != static_cast<int>(batchSize)) {
+            throw std::runtime_error("ring submitted " + std::to_string(submitted) +
+               " events but requested " + std::to_string(batchSize));
+         }
+         // reap reads
+         struct io_uring_cqe *cqe;
+         int ret;
+         for (int i = 0; i < submitted; ++i) {
+            ret = io_uring_wait_cqe(&fRing, &cqe);
+            if (ret < 0) {
+               throw std::runtime_error("wait cqe failed, error: " + std::string(std::strerror(-ret)));
+            }
+            auto index = reinterpret_cast<std::size_t>(io_uring_cqe_get_data(cqe));
+            if (index >= nReads) {
+               throw std::runtime_error("bad cqe user data: " + std::to_string(index));
+            }
+            if (cqe->res < 0) {
+               throw std::runtime_error("batch " + std::to_string(batch) + ": "
+                  + "read failed for ReadEvent[" + std::to_string(index) + "], "
+                  "error: " + std::string(std::strerror(-cqe->res)));
+            }
+            readEvents[index].fOutBytes = static_cast<std::size_t>(cqe->res);
+            io_uring_cqe_seen(&fRing, cqe);
+         }
+         readPos += batchSize;
+         batch += 1;
       }
       return;
    }
