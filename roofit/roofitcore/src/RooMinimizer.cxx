@@ -789,15 +789,51 @@ void RooMinimizer::profileStop()
 }
 
 
-const RooAbsMinimizerFcn *RooMinimizer::fitterFcn() const
+ROOT::Math::IMultiGenFunction* RooMinimizer::getFitterMultiGenFcn() const
 {
-   if (fitter()->GetFCN()) {
+   return fitter()->GetFCN();
+}
+
+
+ROOT::Math::IMultiGenFunction* RooMinimizer::getMultiGenFcn() const
+{
+   if (getFitterMultiGenFcn()) {
+      return getFitterMultiGenFcn();
+   } else {
       switch (_fcnMode) {
       case FcnMode::classic: {
-         return static_cast<RooAbsMinimizerFcn *>(static_cast<RooMinimizerFcn *>(fitter()->GetFCN()));
+         return static_cast<ROOT::Math::IMultiGenFunction *>(static_cast<RooMinimizerFcn *>(_fcn));
       }
       case FcnMode::gradient: {
-         auto thing = dynamic_cast<RooGradMinimizerFcn *>(fitter()->GetFCN());
+         auto thing = dynamic_cast<RooGradMinimizerFcn *>(_fcn);
+         if (thing != nullptr) {
+            return static_cast<ROOT::Math::IMultiGenFunction *>(thing);
+         } else {
+            throw std::logic_error("In RooMinimizer::fitterFcn: Minimizer fcnMode was set to gradient, but fit function type does not match RooGradMinimizerFcn!");
+         }
+      }
+      case FcnMode::generic_wrapper: {
+         auto thing = dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad *>(_fcn);
+         if (thing != nullptr) {
+            return static_cast<ROOT::Math::IMultiGenFunction *>(thing);
+         } else {
+            throw std::logic_error("In RooMinimizer::fitterFcn: Minimizer fcnMode was set to generic_wrapper, but fit function type does not match RooFit::TestStatistics::MinuitFcnGrad!");
+         }
+      }
+      }
+   }
+}
+
+
+const RooAbsMinimizerFcn *RooMinimizer::fitterFcn() const
+{
+   if (getFitterMultiGenFcn()) {
+      switch (_fcnMode) {
+      case FcnMode::classic: {
+         return static_cast<RooAbsMinimizerFcn *>(static_cast<RooMinimizerFcn *>(getFitterMultiGenFcn()));
+      }
+      case FcnMode::gradient: {
+         auto thing = dynamic_cast<RooGradMinimizerFcn *>(getFitterMultiGenFcn());
          if (thing != nullptr) {
             return static_cast<RooAbsMinimizerFcn *>(thing);
          } else {
@@ -805,7 +841,7 @@ const RooAbsMinimizerFcn *RooMinimizer::fitterFcn() const
          }
       }
       case FcnMode::generic_wrapper: {
-         auto thing = dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad *>(fitter()->GetFCN());
+         auto thing = dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad *>(getFitterMultiGenFcn());
          if (thing != nullptr) {
             return static_cast<RooAbsMinimizerFcn *>(thing);
          } else {

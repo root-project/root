@@ -126,6 +126,9 @@ public:
 
    inline Int_t getNPar() const { return fitterFcn()->get_nDim(); }
 
+   ROOT::Math::IMultiGenFunction* getFitterMultiGenFcn() const;
+   ROOT::Math::IMultiGenFunction* getMultiGenFcn() const;
+
 protected:
    friend class RooAbsPdf;
    void applyCovarianceMatrix(TMatrixDSym &V);

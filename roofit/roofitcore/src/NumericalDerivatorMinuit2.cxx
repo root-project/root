@@ -41,63 +41,29 @@
 
 namespace RooFit {
 
-NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f,
-                                                     ROOT::Minuit2::FunctionGradient &grad,
+NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(ROOT::Minuit2::FunctionGradient &grad,
                                                      bool always_exactly_mimic_minuit2)
-   : fFunction(f), fN(f->NDim()), fG(grad), _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
+   : fG(grad), _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
 {
 }
 
-NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f,
-                                                     ROOT::Minuit2::FunctionGradient &grad, double step_tolerance,
+NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(ROOT::Minuit2::FunctionGradient &grad, double step_tolerance,
                                                      double grad_tolerance, unsigned int ncycles, double error_level,
                                                      bool always_exactly_mimic_minuit2)
-   : fFunction(f), fStepTolerance(step_tolerance), fGradTolerance(grad_tolerance), fNCycles(ncycles), Up(error_level),
-     fN(f->NDim()), fG(grad), _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
+   : fStepTolerance(step_tolerance), fGradTolerance(grad_tolerance), fNCycles(ncycles), Up(error_level),
+     fG(grad), _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
 {
 }
 
 // deep copy constructor
 NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDerivatorMinuit2 &other,
                                                      ROOT::Minuit2::FunctionGradient &grad)
-   : fFunction(other.fFunction), fStepTolerance(other.fStepTolerance), fGradTolerance(other.fGradTolerance),
-     fNCycles(other.fNCycles), Up(other.Up), fVal(other.fVal), fN(other.fN), fG(grad), vx(other.vx),
-     vx_external(other.vx_external), dfmin(other.dfmin), vrysml(other.vrysml), precision(other.precision),
+   : fStepTolerance(other.fStepTolerance), fGradTolerance(other.fGradTolerance), fNCycles(other.fNCycles), Up(other.Up),
+     fVal(other.fVal), fG(grad), vx(other.vx), vx_external(other.vx_external), dfmin(other.dfmin),
+     vrysml(other.vrysml), precision(other.precision),
      _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2), vx_fVal_cache(other.vx_fVal_cache)
 {
 }
-
-// Almost deep copy constructor, except for fFunction.
-// This ctor is used for cloning when the fFunction has just been (deep)
-// copied and it must then be passed here from the initialization list.
-NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDerivatorMinuit2 &other,
-                                                     ROOT::Minuit2::FunctionGradient &grad,
-                                                     const ROOT::Math::IBaseFunctionMultiDim *f)
-   : fFunction(f), fStepTolerance(other.fStepTolerance), fGradTolerance(other.fGradTolerance), fNCycles(other.fNCycles),
-     Up(other.Up), fVal(other.fVal), fN(other.fN), fG(grad), vx(other.vx), vx_external(other.vx_external),
-     dfmin(other.dfmin), vrysml(other.vrysml), precision(other.precision),
-     _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2), vx_fVal_cache(other.vx_fVal_cache)
-{
-}
-
-// an operator= copy ctor doesn't make sense with const members...
-//  RooFit::NumericalDerivatorMinuit2& NumericalDerivatorMinuit2::operator=(const RooFit::NumericalDerivatorMinuit2
-//  &other) {
-//    if(&other != this) {
-//      fG = other.fG;
-//      _parameter_has_limits = other._parameter_has_limits;
-//      fFunction = other.fFunction;
-//      fStepTolerance = other.fStepTolerance;
-//      fGradTolerance = other.fGradTolerance;
-//      fNCycles = other.fNCycles;
-//      fVal = other.fVal;
-//      fN = other.fN;
-//      Up = other.Up;
-//      precision = other.precision;
-//      _always_exactly_mimic_minuit2 = other._always_exactly_mimic_minuit2;
-//    }
-//    return *this;
-//  }
 
 void NumericalDerivatorMinuit2::SetStepTolerance(double value)
 {
@@ -121,18 +87,11 @@ NumericalDerivatorMinuit2::~NumericalDerivatorMinuit2()
 
 // This function sets internal state based on input parameters. This state
 // setup is used in the actual (partial) derivative calculations.
-void NumericalDerivatorMinuit2::setup_differentiate(const double *cx,
+void NumericalDerivatorMinuit2::setup_differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
                                                     const std::vector<ROOT::Fit::ParameterSettings> &parameters)
 {
-   setup_differentiate_fcn(fFunction, cx, parameters);
-}
 
-void NumericalDerivatorMinuit2::setup_differentiate_fcn(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
-                                                        const std::vector<ROOT::Fit::ParameterSettings> &parameters)
-{
-
-   assert(function != 0);
-   assert(function->NDim() == fN);
+   assert(function != nullptr && "function is a nullptr");
 
    auto get_time = []() {
       return std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -195,24 +154,19 @@ void NumericalDerivatorMinuit2::setup_differentiate_fcn(const ROOT::Math::IBaseF
 }
 
 std::tuple<double, double, double>
-NumericalDerivatorMinuit2::partial_derivative(const double *x,
+NumericalDerivatorMinuit2::partial_derivative(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
                                               const std::vector<ROOT::Fit::ParameterSettings> &parameters,
                                               unsigned int i_component)
 {
-   setup_differentiate(x, parameters);
-   do_fast_partial_derivative(parameters, i_component);
+   setup_differentiate(function, x, parameters);
+   do_fast_partial_derivative(function, parameters, i_component);
    return {fG.Grad()(i_component), fG.G2()(i_component), fG.Gstep()(i_component)};
 }
 
 // leaves the parameter setup to the caller
-void NumericalDerivatorMinuit2::do_fast_partial_derivative(const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+void NumericalDerivatorMinuit2::do_fast_partial_derivative(const ROOT::Math::IBaseFunctionMultiDim *function,
+                                                           const std::vector<ROOT::Fit::ParameterSettings> &parameters,
                                                            unsigned int ix)
-{
-   do_fast_partial_derivative_fcn(fFunction, parameters, ix);
-}
-
-void NumericalDerivatorMinuit2::do_fast_partial_derivative_fcn(const ROOT::Math::IBaseFunctionMultiDim *function, const std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                                                              unsigned int ix)
 {
    double xtf = vx[ix];
    double epspri = precision.Eps2() + std::abs(fG.Grad()(ix) * precision.Eps2());
@@ -259,28 +213,28 @@ void NumericalDerivatorMinuit2::do_fast_partial_derivative_fcn(const ROOT::Math:
 }
 
 std::tuple<double, double, double>
-NumericalDerivatorMinuit2::operator()(const double *x, const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+NumericalDerivatorMinuit2::operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x, const std::vector<ROOT::Fit::ParameterSettings> &parameters,
                                       unsigned int i_component)
 {
-   return partial_derivative(x, parameters, i_component);
+   return partial_derivative(function, x, parameters, i_component);
 }
 
 ROOT::Minuit2::FunctionGradient
-NumericalDerivatorMinuit2::Differentiate(const double *cx, const std::vector<ROOT::Fit::ParameterSettings> &parameters)
+NumericalDerivatorMinuit2::Differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx, const std::vector<ROOT::Fit::ParameterSettings> &parameters)
 {
-   setup_differentiate(cx, parameters);
+   setup_differentiate(function, cx, parameters);
 
-   for (int ix = 0; ix < int(fN); ++ix) {
-      do_fast_partial_derivative(parameters, ix);
+   for (unsigned int ix = 0; ix < function->NDim(); ++ix) {
+      do_fast_partial_derivative(function, parameters, ix);
    }
 
    return fG;
 }
 
 ROOT::Minuit2::FunctionGradient
-NumericalDerivatorMinuit2::operator()(const double *x, const std::vector<ROOT::Fit::ParameterSettings> &parameters)
+NumericalDerivatorMinuit2::operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x, const std::vector<ROOT::Fit::ParameterSettings> &parameters)
 {
-   return NumericalDerivatorMinuit2::Differentiate(x, parameters);
+   return NumericalDerivatorMinuit2::Differentiate(function, x, parameters);
 }
 
 double NumericalDerivatorMinuit2::Int2ext(const ROOT::Fit::ParameterSettings &parameter, double val) const
@@ -370,12 +324,8 @@ double NumericalDerivatorMinuit2::GStepInt2Ext(const ROOT::Fit::ParameterSetting
 // MODIFIED:
 // This function was not implemented as in Minuit2. Now it copies the behavior
 // of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
-void NumericalDerivatorMinuit2::SetInitialGradient(const std::vector<ROOT::Fit::ParameterSettings> &parameters)
-{
-   SetInitialGradient_fcn(fFunction, parameters);
-}
-
-void NumericalDerivatorMinuit2::SetInitialGradient_fcn(const ROOT::Math::IBaseFunctionMultiDim *function, const std::vector<ROOT::Fit::ParameterSettings> &parameters)
+void NumericalDerivatorMinuit2::SetInitialGradient(const ROOT::Math::IBaseFunctionMultiDim *function,
+                                                   const std::vector<ROOT::Fit::ParameterSettings> &parameters)
 {
    // set an initial gradient using some given steps
    // (used in the first iteration)
@@ -389,8 +339,7 @@ void NumericalDerivatorMinuit2::SetInitialGradient_fcn(const ROOT::Math::IBaseFu
    RooWallTimer timer;
    t1 = get_time();
 
-   assert(function != 0 && "Function is a nullptr, which may mean you're using fFunction without properly initializing it!");
-   assert(function->NDim() == fN);
+   assert(function != nullptr && "function is a nullptr");
 
    double eps2 = precision.Eps2();
 

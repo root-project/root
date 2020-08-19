@@ -25,7 +25,7 @@ namespace RooFit {
 namespace TestStatistics {
 
 LikelihoodGradientJob::LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood, RooMinimizer *minimizer)
-   : LikelihoodGradientWrapper(std::move(likelihood), minimizer), _grad(minimizer->getNPar()), _gradf(nullptr, _grad)
+   : LikelihoodGradientWrapper(std::move(likelihood), minimizer), _grad(minimizer->getNPar()), _gradf(_grad)
 {
 }
 
@@ -42,7 +42,7 @@ LikelihoodGradientJob *LikelihoodGradientJob::clone() const
 void LikelihoodGradientJob::synchronize_parameter_settings(
    const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings)
 {
-   _gradf.SetInitialGradient(parameter_settings);
+   _gradf.SetInitialGradient(_minimizer->getMultiGenFcn(), parameter_settings);
 }
 
 void LikelihoodGradientJob::synchronize_with_minimizer(const ROOT::Math::MinimizerOptions &options)
@@ -94,7 +94,7 @@ void LikelihoodGradientJob::evaluate_task(std::size_t task) {
    oocxcoutD((TObject*)nullptr,Benchmarking1) << "worker_id: " << get_manager()->process_manager().worker_id() << ", task: " << task << ", partial derivative time: " << timer.timing_s() << "s -- cputime: " << ctimer.timing_s() << "s" << std::endl;
 }
 
-void LikelihoodGradientJob::update_real(std::size_t ix, double val, bool is_constant) {
+void LikelihoodGradientJob::update_real(std::size_t ix, double val, bool /*is_constant*/) {
    if (get_manager()->process_manager().is_worker()) {
       // ix is defined in "flat" FunctionGradient space ix_dim * size + ix_component
       switch (ix / _minimizer->getNPar()) {
@@ -169,7 +169,7 @@ void LikelihoodGradientJob::run_derivator(unsigned int i_component) const
    // Calculate the derivative etc for these parameters
    auto parameter_values = _minimizer->get_function_parameter_values();
    std::tie(mutable_grad()(i_component), mutable_g2()(i_component), mutable_gstep()(i_component)) =
-      _gradf.partial_derivative(parameter_values.data(), _minimizer->fitter()->Config().ParamsSettings(), i_component);
+      _gradf.partial_derivative(_minimizer->getMultiGenFcn(), parameter_values.data(), _minimizer->fitter()->Config().ParamsSettings(), i_component);
 }
 
 
@@ -179,13 +179,13 @@ void LikelihoodGradientJob::run_derivator(unsigned int i_component) const
 void LikelihoodGradientJob::update_workers_state() {
    // TODO optimization: only send changed parameters (now sending all)
    RooFit::MultiProcess::M2Q msg = RooFit::MultiProcess::M2Q::update_real;
-   for (std::size_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
+   for (Int_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
       get_manager()->messenger().send_from_master_to_queue(msg, id, ix, _grad.Grad()(ix), false);
    }
-   for (std::size_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
+   for (Int_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
       get_manager()->messenger().send_from_master_to_queue(msg, id, ix + 1 * _minimizer->getNPar(), _grad.G2()(ix), false);
    }
-   for (std::size_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
+   for (Int_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
       get_manager()->messenger().send_from_master_to_queue(msg, id, ix + 2 * _minimizer->getNPar(), _grad.Gstep()(ix), false);
    }
 
@@ -233,7 +233,7 @@ void LikelihoodGradientJob::fill_gradient(double *grad) {
 
       // TODO: maybe make a flag to avoid this copy operation, but maybe not worth the effort
       // put the results from _grad into *grad
-      for (std::size_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
+      for (Int_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
          grad[ix] = _grad.Grad()(ix);
       }
    }
@@ -246,7 +246,7 @@ void LikelihoodGradientJob::fill_second_derivative(double *g2) {
 
       // TODO: maybe make a flag to avoid this copy operation, but maybe not worth the effort
       // put the results from _grad into *grad
-      for (std::size_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
+      for (Int_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
          g2[ix] = _grad.G2()(ix);
       }
    }
@@ -258,7 +258,7 @@ void LikelihoodGradientJob::fill_step_size(double *gstep) {
 
       // TODO: maybe make a flag to avoid this copy operation, but maybe not worth the effort
       // put the results from _grad into *grad
-      for (std::size_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
+      for (Int_t ix = 0; ix < _minimizer->getNPar(); ++ix) {
          gstep[ix] = _grad.Gstep()(ix);
       }
    }

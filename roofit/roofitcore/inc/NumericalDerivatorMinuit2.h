@@ -36,36 +36,28 @@ namespace RooFit {
 
 class NumericalDerivatorMinuit2 {
 public:
-   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, ROOT::Minuit2::FunctionGradient &grad,
-                             bool always_exactly_mimic_minuit2 = true);
+   explicit NumericalDerivatorMinuit2(ROOT::Minuit2::FunctionGradient &grad, bool always_exactly_mimic_minuit2 = true);
    NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other, ROOT::Minuit2::FunctionGradient &grad);
-   NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other, ROOT::Minuit2::FunctionGradient &grad,
-                             const ROOT::Math::IBaseFunctionMultiDim *f);
-   //    NumericalDerivatorMinuit2& operator=(const NumericalDerivatorMinuit2 &other);
-   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, ROOT::Minuit2::FunctionGradient &grad,
-                             double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level,
-                             bool always_exactly_mimic_minuit2 = true);
-   //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter);
-   //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const
-   //   ROOT::Minuit2::MnStrategy &strategy);
+   NumericalDerivatorMinuit2(ROOT::Minuit2::FunctionGradient &grad, double step_tolerance, double grad_tolerance,
+                             unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2 = true);
    virtual ~NumericalDerivatorMinuit2();
 
-   void setup_differentiate(const double *cx, const std::vector<ROOT::Fit::ParameterSettings> &parameters);
-   void setup_differentiate_fcn(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx, const std::vector<ROOT::Fit::ParameterSettings> &parameters);
-   ROOT::Minuit2::FunctionGradient
-   Differentiate(const double *x, const std::vector<ROOT::Fit::ParameterSettings> &parameters);
-   ROOT::Minuit2::FunctionGradient
-   operator()(const double *x, const std::vector<ROOT::Fit::ParameterSettings> &parameters);
+   void setup_differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
+                            const std::vector<ROOT::Fit::ParameterSettings> &parameters);
+   ROOT::Minuit2::FunctionGradient Differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
+                                                 const std::vector<ROOT::Fit::ParameterSettings> &parameters);
+   ROOT::Minuit2::FunctionGradient operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
+                                              const std::vector<ROOT::Fit::ParameterSettings> &parameters);
 
-   std::tuple<double, double, double> partial_derivative(const double *x,
-                                                         const std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                                                         unsigned int i_component);
-   void
-   do_fast_partial_derivative(const std::vector<ROOT::Fit::ParameterSettings> &parameters, unsigned int i_component);
-   void
-   do_fast_partial_derivative_fcn(const ROOT::Math::IBaseFunctionMultiDim *function, const std::vector<ROOT::Fit::ParameterSettings> &parameters, unsigned int i_component);
    std::tuple<double, double, double>
-   operator()(const double *x, const std::vector<ROOT::Fit::ParameterSettings> &parameters, unsigned int i_component);
+   partial_derivative(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
+                      const std::vector<ROOT::Fit::ParameterSettings> &parameters, unsigned int i_component);
+   void do_fast_partial_derivative(const ROOT::Math::IBaseFunctionMultiDim *function,
+                                   const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                   unsigned int i_component);
+   std::tuple<double, double, double> operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
+                                                 const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                                 unsigned int i_component);
 
    double GetFValue() const { return fVal; }
    const double *GetG2() const { return fG.G2().Data(); }
@@ -79,8 +71,8 @@ public:
    double D2Int2Ext(const ROOT::Fit::ParameterSettings &parameter, double val) const;
    double GStepInt2Ext(const ROOT::Fit::ParameterSettings &parameter, double val) const;
 
-   void SetInitialGradient(const std::vector<ROOT::Fit::ParameterSettings> &parameters);
-   void SetInitialGradient_fcn(const ROOT::Math::IBaseFunctionMultiDim *function, const std::vector<ROOT::Fit::ParameterSettings> &parameters);
+   void SetInitialGradient(const ROOT::Math::IBaseFunctionMultiDim *function,
+                           const std::vector<ROOT::Fit::ParameterSettings> &parameters);
 
    void set_step_tolerance(double step_tolerance);
    void set_grad_tolerance(double grad_tolerance);
@@ -88,20 +80,11 @@ public:
    void set_error_level(double error_level);
 
 private:
-   // fFunction can be set during construction to either the correct function pointer or to
-   // nullptr. In the latter case, it is the user's responsibility to use the methods of this
-   // class where an IBaseFunctionMultiDim pointer must be passed as an argument (name ending
-   // in _fcn). The variants without _fcn assume that fFunction is not a nullptr and will
-   // segfault if it is. These three variant functions are SetInitialGradient(_fcn),
-   // do_fast_partial_derivative(_fcn) and setup_differentiate(_fcn).
-   const ROOT::Math::IBaseFunctionMultiDim *fFunction;
-
    double fStepTolerance = 0.5;
    double fGradTolerance = 0.1;
    unsigned int fNCycles = 2;
    double Up = 1;
    double fVal = 0;
-   unsigned int fN;
 
    ROOT::Minuit2::FunctionGradient &fG;
 
