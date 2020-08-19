@@ -451,17 +451,17 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
 
 /// The contained `type` alias is `double` if `T == RInferredType`, `U` if `T == std::container<U>`, `T` otherwise.
 template <typename T, bool Container = RDFInternal::IsDataContainer<T>::value && !std::is_same<T, std::string>::value>
-struct TMinReturnType {
+struct RMinReturnType {
    using type = T;
 };
 
 template <>
-struct TMinReturnType<RInferredType, false> {
+struct RMinReturnType<RInferredType, false> {
    using type = double;
 };
 
 template <typename T>
-struct TMinReturnType<T, true> {
+struct RMinReturnType<T, true> {
    using type = TTraits::TakeFirstParameter_t<T>;
 };
 
@@ -579,7 +579,7 @@ namespace RDF {
 
 /// The aliased type is `double` if `T == RInferredType`, `U` if `T == container<U>`, `T` otherwise.
 template <typename T>
-using MinReturnType_t = typename RDFInternal::TMinReturnType<T>::type;
+using MinReturnType_t = typename RDFInternal::RMinReturnType<T>::type;
 
 template <typename T>
 using MaxReturnType_t = MinReturnType_t<T>;
