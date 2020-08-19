@@ -160,6 +160,8 @@ public:
    }
 
    static const std::vector<std::shared_ptr<RCanvas>> GetCanvases();
+
+   static void ReleaseHeldCanvases();
 };
 
 } // namespace Experimental
