@@ -28,12 +28,12 @@ namespace RDF {
 
 /// A type-erasing wrapper around RColumnReaderBase
 /// Used to reduce compile time by avoiding instantiation of very large tuples and/or (std::get<N>...) fold expressions.
-class R__CLING_PTRCHECK(off) RTypeErasedColumnValue {
+class R__CLING_PTRCHECK(off) RTypeErasedColumnReader {
    std::shared_ptr<void> fPtr; // shared_ptr to take advantage of the type-erased custom deleter
 
 public:
    template <typename T>
-   RTypeErasedColumnValue(std::unique_ptr<RColumnReaderBase<T>> v) : fPtr(std::move(v))
+   RTypeErasedColumnReader(std::unique_ptr<RColumnReaderBase<T>> v) : fPtr(std::move(v))
    {
    }
 
@@ -58,9 +58,9 @@ GetValuePtrsPtr(const std::string &colName, const std::map<std::string, std::vec
    return DSValuePtrsPtr;
 }
 
-/// This overload is specialized to act on RTypeErasedColumnValues instead of RColumnValues.
+/// This overload is specialized to act on RTypeErasedColumnReaders instead of RColumnValues.
 template <typename... ColTypes>
-void InitColumnReaders(unsigned int slot, std::vector<RTypeErasedColumnValue> &values, TTreeReader *r,
+void InitColumnReaders(unsigned int slot, std::vector<RTypeErasedColumnReader> &values, TTreeReader *r,
                        ROOT::TypeTraits::TypeList<ColTypes...>, const RColumnReadersInfo &colInfo)
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
@@ -84,9 +84,9 @@ void InitColumnReaders(unsigned int slot, std::vector<RTypeErasedColumnValue> &v
    (void)r;    // avoid bogus 'unused parameter' warning
 }
 
-/// This overload is specialized to act on RTypeErasedColumnValues instead of RColumnValues.
+/// This overload is specialized to act on RTypeErasedColumnReaders instead of RColumnValues.
 template <typename... ColTypes>
-void ResetColumnReaders(std::vector<RTypeErasedColumnValue> &values, ROOT::TypeTraits::TypeList<ColTypes...>)
+void ResetColumnReaders(std::vector<RTypeErasedColumnReader> &values, ROOT::TypeTraits::TypeList<ColTypes...>)
 {
    using expander = int[];
    int i = 0;
@@ -150,7 +150,7 @@ struct ActionImpl {
 template <typename Helper, typename ColumnTypes>
 struct ActionImpl<Helper, ColumnTypes, true> {
    using TypeInd_t = std::make_index_sequence<ColumnTypes::list_size>;
-   using Values_t = std::vector<RTypeErasedColumnValue>;
+   using Values_t = std::vector<RTypeErasedColumnReader>;
 
    static void InitColumnReaders(unsigned int slot, Values_t &values, TTreeReader *r, const ColumnNames_t &colNames,
                                  const RBookedDefines &customCols,
