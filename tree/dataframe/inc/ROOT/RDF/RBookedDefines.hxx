@@ -21,7 +21,7 @@
 namespace ROOT {
 namespace Detail {
 namespace RDF {
-class RCustomColumnBase;
+class RDefineBase;
 }
 }
 
@@ -31,58 +31,58 @@ namespace RDF {
 namespace RDFDetail = ROOT::Detail::RDF;
 
 /**
- * \class ROOT::Internal::RDF::RBookedCustomColumns
+ * \class ROOT::Internal::RDF::RBookedDefines
  * \ingroup dataframe
  * \brief Encapsulates the columns defined by the user
  */
 
-class RBookedCustomColumns {
-   using RCustomColumnBasePtrMap_t = std::map<std::string, std::shared_ptr<RDFDetail::RCustomColumnBase>>;
+class RBookedDefines {
+   using RDefineBasePtrMap_t = std::map<std::string, std::shared_ptr<RDFDetail::RDefineBase>>;
    using ColumnNames_t = std::vector<std::string>;
 
-   // Since RBookedCustomColumns is meant to be an immutable, copy-on-write object, the actual values are set as const
-   using RCustomColumnBasePtrMapPtr_t = std::shared_ptr<const RCustomColumnBasePtrMap_t>;
+   // Since RBookedDefines is meant to be an immutable, copy-on-write object, the actual values are set as const
+   using RDefineBasePtrMapPtr_t = std::shared_ptr<const RDefineBasePtrMap_t>;
    using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 
 private:
-   RCustomColumnBasePtrMapPtr_t fCustomColumns;
-   ColumnNamesPtr_t fCustomColumnsNames;
+   RDefineBasePtrMapPtr_t fDefines;
+   ColumnNamesPtr_t fDefinesNames;
 
 public:
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Copy-ctor for RBookedCustomColumns.
-   RBookedCustomColumns(const RBookedCustomColumns &) = default;
+   /// \brief Copy-ctor for RBookedDefines.
+   RBookedDefines(const RBookedDefines &) = default;
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Move-ctor for RBookedCustomColumns.
-   RBookedCustomColumns(RBookedCustomColumns &&) = default;
+   /// \brief Move-ctor for RBookedDefines.
+   RBookedDefines(RBookedDefines &&) = default;
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Copy-assignment operator for RBookedCustomColumns.
-   RBookedCustomColumns &operator=(const RBookedCustomColumns &) = default;
+   /// \brief Copy-assignment operator for RBookedDefines.
+   RBookedDefines &operator=(const RBookedDefines &) = default;
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates the object starting from the provided maps
-   RBookedCustomColumns(RCustomColumnBasePtrMapPtr_t customColumns, ColumnNamesPtr_t customColumnNames)
-      : fCustomColumns(customColumns), fCustomColumnsNames(customColumnNames)
+   RBookedDefines(RDefineBasePtrMapPtr_t defines, ColumnNamesPtr_t defineNames)
+      : fDefines(defines), fDefinesNames(defineNames)
    {
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a new wrapper with empty maps
-   RBookedCustomColumns()
-      : fCustomColumns(std::make_shared<RCustomColumnBasePtrMap_t>()),
-        fCustomColumnsNames(std::make_shared<ColumnNames_t>())
+   RBookedDefines()
+      : fDefines(std::make_shared<RDefineBasePtrMap_t>()),
+        fDefinesNames(std::make_shared<ColumnNames_t>())
    {
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Returns the list of the names of the defined columns
-   ColumnNames_t GetNames() const { return *fCustomColumnsNames; }
+   ColumnNames_t GetNames() const { return *fDefinesNames; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Returns the list of the pointers to the defined columns
-   const RCustomColumnBasePtrMap_t &GetColumns() const { return *fCustomColumns; }
+   const RDefineBasePtrMap_t &GetColumns() const { return *fDefines; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Check if the provided name is tracked in the names list
@@ -90,7 +90,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Internally it recreates the map with the new column, and swaps with the old one.
-   void AddColumn(const std::shared_ptr<RDFDetail::RCustomColumnBase> &column, std::string_view name);
+   void AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column, std::string_view name);
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Internally it recreates the map with the new column name, and swaps with the old one.

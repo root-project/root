@@ -11,7 +11,7 @@
 #ifndef ROOT_RJITTEDCUSTOMCOLUMN
 #define ROOT_RJITTEDCUSTOMCOLUMN
 
-#include "ROOT/RDF/RCustomColumnBase.hxx"
+#include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 
@@ -24,21 +24,21 @@ namespace ROOT {
 namespace Detail {
 namespace RDF {
 
-/// A wrapper around a concrete RCustomColumn, which forwards all calls to it
-/// RJittedCustomColumn is a placeholder that is put in the collection of custom columns in place of a RCustomColumn
-/// that will be just-in-time compiled. Jitted code will assign the concrete RCustomColumn to this RJittedCustomColumn
+/// A wrapper around a concrete RDefine, which forwards all calls to it
+/// RJittedDefine is a placeholder that is put in the collection of custom columns in place of a RDefine
+/// that will be just-in-time compiled. Jitted code will assign the concrete RDefine to this RJittedDefine
 /// before the event-loop starts.
-class RJittedCustomColumn : public RCustomColumnBase {
-   std::unique_ptr<RCustomColumnBase> fConcreteCustomColumn = nullptr;
+class RJittedDefine : public RDefineBase {
+   std::unique_ptr<RDefineBase> fConcreteDefine = nullptr;
 
 public:
-   RJittedCustomColumn(std::string_view name, std::string_view type, unsigned int nSlots,
+   RJittedDefine(std::string_view name, std::string_view type, unsigned int nSlots,
                        const std::map<std::string, std::vector<void *>> &DSValuePtrs)
-      : RCustomColumnBase(name, type, nSlots, RDFInternal::RBookedCustomColumns(), DSValuePtrs)
+      : RDefineBase(name, type, nSlots, RDFInternal::RBookedDefines(), DSValuePtrs)
    {
    }
 
-   void SetCustomColumn(std::unique_ptr<RCustomColumnBase> c) { fConcreteCustomColumn = std::move(c); }
+   void SetDefine(std::unique_ptr<RDefineBase> c) { fConcreteDefine = std::move(c); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final;
    void *GetValuePtr(unsigned int slot) final;

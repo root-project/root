@@ -15,15 +15,15 @@
 
 #pragma link C++ class ROOT::RDataFrame-;
 #pragma link C++ class ROOT::RDF::RInterface<ROOT::Detail::RDF::RFilterBase>-;
-#pragma link C++ class ROOT::RDF::RInterface<ROOT::Detail::RDF::RCustomColumnBase>-;
+#pragma link C++ class ROOT::RDF::RInterface<ROOT::Detail::RDF::RDefineBase>-;
 #pragma link C++ namespace ROOT::Internal::RDF;
 #pragma link C++ namespace ROOT::Detail::RDF;
 #pragma link C++ namespace ROOT::RDF;
 #pragma link C++ class ROOT::Internal::RDF::RActionBase-;
 #pragma link C++ class ROOT::Detail::RDF::RFilterBase-;
 #pragma link C++ class ROOT::Detail::RDF::RJittedFilter-;
-#pragma link C++ class ROOT::Detail::RDF::RCustomColumnBase-;
-#pragma link C++ class ROOT::Detail::RDF::RJittedCustomColumn-;
+#pragma link C++ class ROOT::Detail::RDF::RDefineBase-;
+#pragma link C++ class ROOT::Detail::RDF::RJittedDefine-;
 #pragma link C++ class ROOT::Internal::RDF::CountHelper-;
 #pragma link C++ class ROOT::Detail::RDF::RRangeBase-;
 #pragma link C++ class ROOT::Detail::RDF::RLoopManager-;
@@ -38,7 +38,7 @@
 #pragma link C++ class ROOT::Internal::RDF::RRootDS-;
 #pragma link C++ class ROOT::RDF::RCsvDS-;
 #pragma link C++ class ROOT::Internal::RDF::MeanHelper-;
-#pragma link C++ class ROOT::Internal::RDF::RBookedCustomColumns-;
+#pragma link C++ class ROOT::Internal::RDF::RBookedDefines-;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValueBase+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<int>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<unsigned int>+;

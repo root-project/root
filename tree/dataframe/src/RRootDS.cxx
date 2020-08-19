@@ -67,7 +67,7 @@ std::string RRootDS::GetTypeName(std::string_view colName) const
    // TODO: we need to factor out the routine for the branch alone...
    // Maybe a cache for the names?
    auto typeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(std::string(colName), &fModelChain, /*ds=*/nullptr,
-                                                                  /*customCol=*/nullptr);
+                                                                  /*define=*/nullptr);
    // We may not have yet loaded the library where the dictionary of this type is
    TClass::GetClass(typeName.c_str());
    return typeName;

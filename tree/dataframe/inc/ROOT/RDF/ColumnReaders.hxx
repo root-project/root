@@ -11,7 +11,7 @@
 #ifndef ROOT_RDF_COLUMNREADERS
 #define ROOT_RDF_COLUMNREADERS
 
-#include <ROOT/RDF/RCustomColumnBase.hxx>
+#include <ROOT/RDF/RDefineBase.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RVec.hxx>
 #include <ROOT/TypeTraits.hxx>
@@ -35,7 +35,7 @@ namespace RDF {
 using namespace ROOT::TypeTraits;
 namespace RDFDetail = ROOT::Detail::RDF;
 
-void CheckCustomColumn(RDFDetail::RCustomColumnBase &customColumn, const std::type_info &tid);
+void CheckDefine(RDFDetail::RDefineBase &define, const std::type_info &tid);
 
 /**
 \class ROOT::Internal::RDF::RColumnReaderBase
@@ -60,7 +60,7 @@ public:
 template <typename T>
 class R__CLING_PTRCHECK(off) RDefineReader final : public RColumnReaderBase<T> {
    /// Non-owning reference to the node responsible for the custom column. Needed when querying custom values.
-   RDFDetail::RCustomColumnBase &fCustomColumn;
+   RDFDetail::RDefineBase &fDefine;
 
    /// Non-owning ptr to the value of a custom column.
    T *fCustomValuePtr = nullptr;
@@ -68,15 +68,15 @@ class R__CLING_PTRCHECK(off) RDefineReader final : public RColumnReaderBase<T> {
    /// The slot this value belongs to.
    unsigned int fSlot = std::numeric_limits<unsigned int>::max();
 public:
-   RDefineReader(unsigned int slot, RDFDetail::RCustomColumnBase &customColumn)
-      : fCustomColumn(customColumn), fCustomValuePtr(static_cast<T *>(customColumn.GetValuePtr(slot))), fSlot(slot)
+   RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define)
+      : fDefine(define), fCustomValuePtr(static_cast<T *>(define.GetValuePtr(slot))), fSlot(slot)
    {
-      CheckCustomColumn(customColumn, typeid(T));
+      CheckDefine(define, typeid(T));
    }
 
    T &Get(Long64_t entry) final
    {
-      fCustomColumn.Update(fSlot, entry);
+      fDefine.Update(fSlot, entry);
       return *fCustomValuePtr;
    }
 };
@@ -259,13 +259,13 @@ using RDFValueTuple_t = typename RDFValueTuple<BranchTypeList>::type;
 
 template <typename T>
 std::unique_ptr<RColumnReaderBase<T>>
-MakeColumnReader(unsigned int slot, RDFDetail::RCustomColumnBase *customCol, TTreeReader *r,
+MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader *r,
                  const std::vector<void *> *DSValuePtrsPtr, const std::string &colName)
 {
    using Ret_t = std::unique_ptr<RColumnReaderBase<T>>;
 
-   if (customCol != nullptr)
-      return Ret_t(new RDefineReader<T>(slot, *customCol));
+   if (define != nullptr)
+      return Ret_t(new RDefineReader<T>(slot, *define));
 
    if (DSValuePtrsPtr != nullptr) {
       auto &DSValuePtrs = *DSValuePtrsPtr;
@@ -277,14 +277,14 @@ MakeColumnReader(unsigned int slot, RDFDetail::RCustomColumnBase *customCol, TTr
 
 template <typename T>
 void InitColumnReadersHelper(std::unique_ptr<RColumnReaderBase<T>> &colReader, unsigned int slot,
-                             RDFDetail::RCustomColumnBase *customCol,
+                             RDFDetail::RDefineBase *define,
                              const std::map<std::string, std::vector<void *>> &DSValuePtrsMap, TTreeReader *r,
                              const std::string &colName)
 {
    const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
    const std::vector<void *> *DSValuePtrsPtr = DSValuePtrsIt != DSValuePtrsMap.end() ? &DSValuePtrsIt->second : nullptr;
-   R__ASSERT(customCol != nullptr || r != nullptr || DSValuePtrsPtr != nullptr);
-   auto newColReader = MakeColumnReader<T>(slot, customCol, r, DSValuePtrsPtr, colName);
+   R__ASSERT(define != nullptr || r != nullptr || DSValuePtrsPtr != nullptr);
+   auto newColReader = MakeColumnReader<T>(slot, define, r, DSValuePtrsPtr, colName);
    colReader.swap(newColReader);
 }
 
@@ -294,8 +294,8 @@ void InitColumnReadersHelper(std::unique_ptr<RColumnReaderBase<T>> &colReader, u
 /// incorrectly from a compiled InitColumnReaders symbols when invoked from a jitted symbol.
 struct RColumnReadersInfo {
    const std::vector<std::string> &fColNames;
-   const RBookedCustomColumns &fCustomCols;
-   const bool *fIsCustomColumn;
+   const RBookedDefines &fCustomCols;
+   const bool *fIsDefine;
    const std::map<std::string, std::vector<void *>> &fDSValuePtrsMap;
 };
 
@@ -310,7 +310,7 @@ void InitColumnReaders(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
    const auto &customCols = colInfo.fCustomCols;
-   const bool *isCustomColumn = colInfo.fIsCustomColumn;
+   const bool *isDefine = colInfo.fIsDefine;
    const auto &DSValuePtrsMap = colInfo.fDSValuePtrsMap;
 
    const auto &customColMap = customCols.GetColumns();
@@ -320,7 +320,7 @@ void InitColumnReaders(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader
    // Hack to expand a parameter pack without c++17 fold expressions.
    // Construct the column readers
    (void)expander{(InitColumnReadersHelper(std::get<S>(valueTuple), slot,
-                                           isCustomColumn[S] ? customColMap.at(colNames[S]).get() : nullptr,
+                                           isDefine[S] ? customColMap.at(colNames[S]).get() : nullptr,
                                            DSValuePtrsMap, r, colNames[S]),
                    0)...,
                   0};
