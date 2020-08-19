@@ -3598,7 +3598,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       moduleMapFile << "}" << std::endl;
       moduleMapFile.close();
       gInterpreter->RegisterPrebuiltModulePath(build_loc.Data(), moduleMapName.Data());
-      rcling.Append(" \"-fmodule-map-file=" + moduleMapFullPath + "\" ");
+      rcling.Append(" \"-moduleMapFile=" + moduleMapFullPath + "\" ");
    }
 
    rcling.Append(" \"").Append(filename_fullpath).Append("\" ");
