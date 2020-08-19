@@ -6,7 +6,7 @@ def printme(o):
     print("t now %g %d %d" % (o.get["double"](), o.get["int"](), o.get["float"]()))
     stdout.flush()
 
-ROOT.gROOT.ProcessLine(".L t.h+")
+ROOT.gROOT.ProcessLine(".L t.h++")
 sortedMethods = [ item for item in ROOT.t.__dict__.keys() if item[0:2] != '__' ]
 sortedMethods.sort()
 print("# just a comment")
