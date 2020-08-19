@@ -2028,11 +2028,10 @@ public:
    {
       RDFInternal::CheckAggregate<R, MergeFun>(ArgTypesNoDecay());
       const auto columns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      constexpr auto nColumns = ArgTypes::list_size;
 
       const auto validColumnNames = GetValidatedColumnNames(1, columns);
 
-      auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<nColumns>(), ArgTypes());
+      auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<1>(), TTraits::TypeList<T>());
 
       auto accObjPtr = std::make_shared<U>(aggIdentity);
       using Helper_t = RDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
