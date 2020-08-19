@@ -58,7 +58,7 @@ GetValuePtrsPtr(const std::string &colName, const std::map<std::string, std::vec
    return DSValuePtrsPtr;
 }
 
-/// This overload is specialized to act on RTypeErasedColumnReaders instead of RColumnValues.
+/// This overload is specialized to act on RTypeErasedColumnReaders.
 template <typename... ColTypes>
 void InitColumnReaders(unsigned int slot, std::vector<RTypeErasedColumnReader> &values, TTreeReader *r,
                        ROOT::TypeTraits::TypeList<ColTypes...>, const RColumnReadersInfo &colInfo)
@@ -84,7 +84,7 @@ void InitColumnReaders(unsigned int slot, std::vector<RTypeErasedColumnReader> &
    (void)r;    // avoid bogus 'unused parameter' warning
 }
 
-/// This overload is specialized to act on RTypeErasedColumnReaders instead of RColumnValues.
+/// This overload is specialized to act on RTypeErasedColumnReaders.
 template <typename... ColTypes>
 void ResetColumnReaders(std::vector<RTypeErasedColumnReader> &values, ROOT::TypeTraits::TypeList<ColTypes...>)
 {
