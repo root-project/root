@@ -11,6 +11,7 @@
 ROOT_LINKER_LIBRARY(Imt
     src/base.cxx
     src/TTaskGroup.cxx
+    src/TThreadExecutor.cxx
   BUILTINS
     TBB
 )
@@ -51,6 +52,18 @@ if(imt)
   set_target_properties(Imt PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
 
   ROOT_ADD_TEST_SUBDIRECTORY(test)
+else()
+  ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
+    ROOT/TThreadExecutor.hxx
+    LINKDEF
+      LinkDef.h
+    MODULE
+      Imt
+    DEPENDENCIES
+      Core
+      Thread
+  )
+
 endif()
 
 ROOT_INSTALL_HEADERS()

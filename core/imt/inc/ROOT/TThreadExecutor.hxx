@@ -14,16 +14,15 @@
 
 #include "RConfigure.h"
 
-// exclude in case ROOT does not have IMT support
 #ifndef R__USE_IMT
-// No need to error out for dictionaries.
-# if !defined(__ROOTCLING__) && !defined(G__DICTIONARY)
-#  error "Cannot use ROOT::TThreadExecutor without defining R__USE_IMT."
-# endif
+namespace ROOT { namespace Internal {
+   class RTaskArenaWrapper;
+} }
 #else
+#include "RTaskArena.hxx"
+#endif
 
 #include "ROOT/TExecutor.hxx"
-#include "RTaskArena.hxx"
 #include "TError.h"
 #include <functional>
 #include <memory>
@@ -447,5 +446,4 @@ namespace ROOT {
 
 } // namespace ROOT
 
-#endif   // R__USE_IMT
 #endif
