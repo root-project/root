@@ -353,10 +353,8 @@ std::string DemangleTypeIdName(const std::type_info &typeInfo)
    return tname;
 }
 
-ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedDefines & defines,
-                                    TTree *tree,
-                                    ROOT::RDF::RDataSource *dataSource,
-                                    std::string_view columnNameRegexp,
+ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedDefines &defines, TTree *tree,
+                                    ROOT::RDF::RDataSource *dataSource, std::string_view columnNameRegexp,
                                     std::string_view callerName)
 {
    const auto theRegexSize = columnNameRegexp.size();
@@ -376,8 +374,7 @@ ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedDefines & defines,
    // we need to use TPRegexp
    TPRegexp regexp(theRegex);
    for (auto &&colName : defines.GetNames()) {
-      if ((isEmptyRegex || 0 != regexp.Match(colName.c_str())) &&
-            !RDFInternal::IsInternalColumn(colName)) {
+      if ((isEmptyRegex || 0 != regexp.Match(colName.c_str())) && !RDFInternal::IsInternalColumn(colName)) {
          selectedColumns.emplace_back(colName);
       }
    }
@@ -414,7 +411,7 @@ ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedDefines & defines,
 }
 
 void CheckDefine(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
-                       const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &dataSourceColumns)
+                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &dataSourceColumns)
 {
    const std::string definedColStr(definedCol);
 
@@ -573,9 +570,9 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
 
 // Jit a Define call
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                                   RDataSource *ds, const RDFInternal::RBookedDefines &customCols,
-                                                   const ColumnNames_t &branches,
-                                                   std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
+                                             RDataSource *ds, const RDFInternal::RBookedDefines &customCols,
+                                             const ColumnNames_t &branches,
+                                             std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
 {
    const auto &aliasMap = lm.GetAliasMap();
    auto *const tree = lm.GetTree();
@@ -604,8 +601,7 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    // - jittedDefine: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
    // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
    defineInvocation << "}, \"" << name << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>("
-                    << PrettyPrintAddr(&lm)
-                    << "), reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedDefine>*>("
+                    << PrettyPrintAddr(&lm) << "), reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedDefine>*>("
                     << PrettyPrintAddr(MakeWeakOnHeap(jittedDefine))
                     << "), reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesAddr
                     << "), reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>("
@@ -619,8 +615,8 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
-                           const unsigned int nSlots, const RDFInternal::RBookedDefines &customCols,
-                           RDataSource *ds, std::weak_ptr<RJittedAction> *jittedActionOnHeap)
+                           const unsigned int nSlots, const RDFInternal::RBookedDefines &customCols, RDataSource *ds,
+                           std::weak_ptr<RJittedAction> *jittedActionOnHeap)
 {
    // retrieve type of result of the action as a string
    auto actionResultTypeClass = TClass::GetClass(art);
@@ -690,8 +686,8 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
    const auto &defaultColumns = lm.GetDefaultColumnNames();
    auto selectedColumns = SelectColumns(nColumns, columns, defaultColumns);
    const auto &validBranchNames = lm.GetBranchNames();
-   const auto unknownColumns = FindUnknownColumns(selectedColumns, validBranchNames, validDefines,
-                                                  ds ? ds->GetColumnNames() : ColumnNames_t{});
+   const auto unknownColumns =
+      FindUnknownColumns(selectedColumns, validBranchNames, validDefines, ds ? ds->GetColumnNames() : ColumnNames_t{});
 
    if (!unknownColumns.empty()) {
       // throw
@@ -719,13 +715,11 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
    return selectedColumns;
 }
 
-std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RBookedDefines &defines,
-                                              TTree *tree, RDataSource *ds, const std::string &context,
-                                              bool vector2rvec)
+std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RBookedDefines &defines, TTree *tree,
+                                              RDataSource *ds, const std::string &context, bool vector2rvec)
 {
    auto toCheckedArgType = [&](const std::string &c) {
-      RDFDetail::RDefineBase *define =
-         defines.HasName(c) ? defines.GetColumns().at(c).get() : nullptr;
+      RDFDetail::RDefineBase *define = defines.HasName(c) ? defines.GetColumns().at(c).get() : nullptr;
       const auto colType = ColumnName2ColumnTypeName(c, tree, ds, define, vector2rvec);
       if (colType.rfind("CLING_UNKNOWN_TYPE", 0) == 0) { // the interpreter does not know this type
          const auto msg =
