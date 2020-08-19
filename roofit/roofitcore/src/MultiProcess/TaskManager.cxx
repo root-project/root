@@ -30,7 +30,7 @@
 #include <algorithm>  // for_each
 
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
 
     void set_socket_immediate(ZmqLingeringSocketPtr<> & socket) {
       int optval = 1;

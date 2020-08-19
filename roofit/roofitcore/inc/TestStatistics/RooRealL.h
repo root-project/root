@@ -11,9 +11,10 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
-#ifndef ROOT_ROOFIT_TESTSTATISTICS_LikelihoodWrapper
-#define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodWrapper
+#ifndef ROOT_ROOFIT_TESTSTATISTICS_RooRealL
+#define ROOT_ROOFIT_TESTSTATISTICS_RooRealL
 
+#include "Rtypes.h"  // ClassDef, ClassImp
 #include <memory>  // shared_ptr
 #include <RooAbsReal.h>
 #include "RooListProxy.h"
@@ -24,15 +25,30 @@ namespace TestStatistics {
 // forward declaration
 class RooAbsL;
 
-class RooRealL : RooAbsReal {
+class RooRealL : public RooAbsReal {
+public:
+   RooRealL(const char *name, const char *title, std::shared_ptr<RooAbsL> likelihood);
+   RooRealL(const RooRealL& other, const char* name=0);
+
+   // pure virtual overrides:
+   Double_t evaluate() const override;
+   TObject* clone(const char* newname) const override;
+   // virtual overrides:
+   double globalNormalization() const;
+
+   double get_carry() const;
 private:
    std::shared_ptr<RooAbsL> likelihood;
 
+   mutable double eval_carry = 0;
+
    // TODO: we need to track the clean/dirty state in this wrapper. See the old RooRealMPFE implementation for how that can be done automatically using the RooListProxy.
    RooListProxy _vars;    // Variables
+
+   ClassDef(RooRealL, 0);
 };
 
 }
 }
 
-#endif // ROOT_ROOFIT_TESTSTATISTICS_LikelihoodWrapper
+#endif // ROOT_ROOFIT_TESTSTATISTICS_RooRealL

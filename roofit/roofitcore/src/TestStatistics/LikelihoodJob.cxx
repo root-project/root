@@ -18,6 +18,10 @@
 #include <RooFit/MultiProcess/Job.h>
 #include <TestStatistics/kahan_sum.h>
 #include <TestStatistics/RooAbsL.h>
+#include <TestStatistics/RooUnbinnedL.h>
+#include <TestStatistics/RooBinnedL.h>
+#include <TestStatistics/RooConstraintL.h>
+#include <TestStatistics/RooMultiL.h>
 
 #include "RooRealVar.h"
 #include <ROOT/RMakeUnique.hxx>
@@ -30,6 +34,18 @@ LikelihoodJob::LikelihoodJob(std::shared_ptr<RooAbsL> _likelihood, RooMinimizer 
   : LikelihoodWrapper(std::move(_likelihood), minimizer)
 {
    init_vars();
+   // determine likelihood type
+   if (dynamic_cast<RooUnbinnedL*>(_likelihood.get()) != nullptr) {
+      likelihood_type = LikelihoodType::unbinned;
+   } else if (dynamic_cast<RooBinnedL*>(_likelihood.get()) != nullptr) {
+      likelihood_type = LikelihoodType::binned;
+   } else if (dynamic_cast<RooMultiL*>(_likelihood.get()) != nullptr) {
+      likelihood_type = LikelihoodType::multi;
+   } else if (dynamic_cast<RooConstraintL*>(_likelihood.get()) != nullptr) {
+      likelihood_type = LikelihoodType::constraint;
+   } else {
+      throw std::logic_error("in LikelihoodJob constructor: _likelihood is not of a valid subclass!");
+   }
 }
 
 LikelihoodJob* LikelihoodJob::clone() const {
@@ -196,9 +212,21 @@ void LikelihoodJob::evaluate_task(std::size_t task) {
    // used to have multiple modes here, but only kept "bulk" mode; dropped interleaved, single_event and all_events from old MultiProcess::NLLVar
    std::size_t first = N_events * task / get_manager()->process_manager().N_workers();
    std::size_t last  = N_events * (task + 1) / get_manager()->process_manager().N_workers();
-   std::size_t step  = 1;
 
-   result = likelihood->evaluate_partition(first, last, step);
+   switch (likelihood_type) {
+   case LikelihoodType::unbinned: {
+      result = likelihood->evaluate_partition(first, last, 0, 0);
+      break;
+   }
+   case LikelihoodType::binned: {
+      result = likelihood->evaluate_partition(0, 0, first, last);
+      break;
+   }
+   default: {
+      throw std::logic_error("in LikelihoodJob::evaluate_task: likelihood types other than binned and unbinned not yet implemented!");
+      break;
+   }
+   }
    carry = likelihood->get_carry();
 }
 

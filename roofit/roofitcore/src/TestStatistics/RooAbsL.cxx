@@ -18,12 +18,20 @@
 namespace RooFit {
 namespace TestStatistics {
 
+RooAbsL::RooAbsL(RooAbsPdf *pdf, RooAbsData *data, bool do_offset, double offset, double offset_carry,
+                 std::size_t N_events, std::size_t N_components)
+   : pdf(pdf), data(data), _do_offset(do_offset), _offset(offset), _offset_carry(offset_carry), N_events(N_events),
+     N_components(N_components)
+{
+}
+
 RooArgSet *RooAbsL::getParameters()
 {
    return pdf->getParameters(*data);
 }
 
-void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) {
+void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/)
+{
    // yet to be implemented
 }
 
@@ -54,7 +62,8 @@ bool RooAbsL::is_offsetting() const
 {
    return _do_offset;
 }
-void RooAbsL::enable_offsetting(bool flag) {
+void RooAbsL::enable_offsetting(bool flag)
+{
    _do_offset = flag;
    // Clear offset if feature is disabled so that it is recalculated next time it is enabled
    if (!_do_offset) {
@@ -63,8 +72,19 @@ void RooAbsL::enable_offsetting(bool flag) {
    }
 }
 
-void RooAbsL::optimize_pdf() {
+void RooAbsL::optimize_pdf()
+{
    // TODO: implement
+}
+
+std::size_t RooAbsL::get_N_events() const
+{
+   return N_events;
+}
+
+std::size_t RooAbsL::get_N_components() const
+{
+   return N_components;
 }
 
 } // namespace TestStatistics

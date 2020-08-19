@@ -52,6 +52,7 @@
 #pragma link C++ class RooNameReg+ ;
 #pragma link C++ class RooNameSet+ ;
 #pragma link C++ class RooNLLVar+ ;
+#pragma link C++ class RooFit::TestStatistics::RooRealL+ ;
 #pragma link C++ class RooNormSetCache+ ;
 #pragma link C++ class RooNumber+ ;
 #pragma link C++ class RooNumConvolution+ ;

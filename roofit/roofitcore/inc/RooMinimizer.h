@@ -19,7 +19,7 @@
 #ifndef ROO_MINIMIZER
 #define ROO_MINIMIZER
 
-#include <memory>  // shared_ptr
+#include <memory>  // shared_ptr, unique_ptr
 
 #include "TObject.h"
 #include "TStopwatch.h"
@@ -58,10 +58,11 @@ class RooMinimizer : public TObject {
 public:
    enum class FcnMode { classic, gradient, generic_wrapper };
 
-   template <typename MinimizerFcn = RooMinimizerFcn>
    RooMinimizer(RooAbsReal &function);
+   template <typename MinimizerFcn = RooMinimizerFcn>
+   static std::unique_ptr<RooMinimizer> make_minimizer(RooAbsReal &function);
    template <typename LikelihoodWrapperT = RooFit::TestStatistics::LikelihoodJob, typename LikelihoodGradientWrapperT = RooFit::TestStatistics::LikelihoodGradientJob>
-   RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood);
+   static std::unique_ptr<RooMinimizer> make_minimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood);
 
    virtual ~RooMinimizer();
 
@@ -141,6 +142,13 @@ protected:
    bool fitFcn() const;
 
 private:
+   template <typename MinimizerFcn = RooMinimizerFcn>
+   RooMinimizer(RooAbsReal &function, MinimizerFcn* /* used only for template deduction */);
+   template <typename LikelihoodWrapperT = RooFit::TestStatistics::LikelihoodJob, typename LikelihoodGradientWrapperT = RooFit::TestStatistics::LikelihoodGradientJob>
+   RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood,
+                LikelihoodWrapperT* /* used only for template deduction */ = static_cast<RooFit::TestStatistics::LikelihoodJob*>(nullptr),
+                LikelihoodGradientWrapperT* /* used only for template deduction */ = static_cast<RooFit::TestStatistics::LikelihoodGradientJob*>(nullptr));
+
    Int_t _printLevel = 1;
    Int_t _status = -99;
    Bool_t _profile = kFALSE;
@@ -178,7 +186,7 @@ private:
 /// value of the input function.
 
 template <typename MinimizerFcn>
-RooMinimizer::RooMinimizer(RooAbsReal &function)
+RooMinimizer::RooMinimizer(RooAbsReal &function, MinimizerFcn* /* value unused */)
 {
    RooSentinel::activate();
 
@@ -222,7 +230,8 @@ RooMinimizer::RooMinimizer(RooAbsReal &function)
 }
 
 template <typename LikelihoodWrapperT, typename LikelihoodGradientWrapperT>
-RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood) :
+RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood, LikelihoodWrapperT* /* value unused */,
+                           LikelihoodGradientWrapperT* /* value unused */) :
    _fcnMode(FcnMode::generic_wrapper)
 {
    RooSentinel::activate();
@@ -259,6 +268,20 @@ RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> like
       setPrintLevel(1);
    }
 }
+
+// static function
+template <typename MinimizerFcn>
+std::unique_ptr<RooMinimizer> RooMinimizer::make_minimizer(RooAbsReal &function) {
+   return std::unique_ptr<RooMinimizer>(new RooMinimizer(function, static_cast<MinimizerFcn*>(nullptr)));
+}
+
+// static function
+template <typename LikelihoodWrapperT, typename LikelihoodGradientWrapperT>
+std::unique_ptr<RooMinimizer> RooMinimizer::make_minimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood) {
+   return std::unique_ptr<RooMinimizer>(new RooMinimizer(likelihood, static_cast<LikelihoodWrapperT*>(nullptr),
+                                                         static_cast<LikelihoodGradientWrapperT*>(nullptr)));
+}
+
 
 #endif // ROO_MINIMIZER
 #endif // __ROOFIT_NOROOMINIMIZER

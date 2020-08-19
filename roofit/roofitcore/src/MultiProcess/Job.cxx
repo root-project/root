@@ -20,7 +20,7 @@
 #include <MultiProcess/messages.h>
 
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
     Job::Job(std::size_t _N_workers) : N_workers(_N_workers) {}
     Job::Job(const Job & other) :
       N_workers(other.N_workers),

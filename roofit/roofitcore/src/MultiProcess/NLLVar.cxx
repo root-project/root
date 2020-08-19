@@ -18,7 +18,7 @@
 #include <tuple>  // std::tie
 
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
 
     std::ostream& operator<<(std::ostream& out, const NLLVarTask value) {
       const char* s = 0;
@@ -35,7 +35,7 @@ namespace RooFit {
 
 
     NLLVar::NLLVar(std::size_t NumCPU, NLLVarTask task_mode, const RooNLLVar& nll) :
-        RooFit::MultiProcess::Vector<RooNLLVar>(NumCPU, nll),  // uses copy constructor for the RooNLLVar part
+        RooFit::MultiProcessV1::Vector<RooNLLVar>(NumCPU, nll),  // uses copy constructor for the RooNLLVar part
         mp_task_mode(task_mode)
     {
       if (_gofOpMode == RooAbsTestStatistic::GOFOpMode::MPMaster) {
@@ -96,7 +96,7 @@ namespace RooFit {
             if (rar_val) {
               Double_t val = rar_val->getVal();
               dynamic_cast<RooRealVar *>(&_saveVars[ix])->setVal(val);
-              RooFit::MultiProcess::M2Q msg = RooFit::MultiProcess::M2Q::update_real;
+              RooFit::MultiProcessV1::M2Q msg = RooFit::MultiProcessV1::M2Q::update_real;
               Bool_t isC = _vars[ix].isConstant();
               get_manager()->send_from_master_to_queue(msg, id, ix, val, isC);
             }

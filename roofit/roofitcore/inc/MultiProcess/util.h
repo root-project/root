@@ -15,7 +15,7 @@
 
 #include <unistd.h> // getpid, pid_t
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
     int wait_for_child(pid_t child_pid, bool may_throw, int retries_before_killing);
   }
 }

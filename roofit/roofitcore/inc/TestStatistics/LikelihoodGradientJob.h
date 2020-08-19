@@ -27,7 +27,9 @@ namespace TestStatistics {
 
 class LikelihoodGradientJob : public MultiProcess::Job, public LikelihoodGradientWrapper {
 public:
+   LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood, RooMinimizer* minimizer);
    LikelihoodGradientJob* clone() const override;
+   LikelihoodGradientJob(const LikelihoodGradientJob& other);
 
    void fill_gradient(double *grad) override;
    void fill_second_derivative(double *g2) override;

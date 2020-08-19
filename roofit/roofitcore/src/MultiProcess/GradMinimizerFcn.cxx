@@ -17,10 +17,10 @@
 #include <RooTimer.h>
 
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
     GradMinimizerFcn::GradMinimizerFcn(RooAbsReal *funct, RooMinimizerGenericPtr context, std::size_t _N_workers,
                                        bool verbose) :
-        RooFit::MultiProcess::Vector<RooGradMinimizerFcn>(_N_workers, funct, context, verbose) {
+        RooFit::MultiProcessV1::Vector<RooGradMinimizerFcn>(_N_workers, funct, context, verbose) {
       N_tasks = NDim();
       completed_task_ids.reserve(N_tasks);
       // TODO: make sure that the full gradients are sent back so that the
@@ -29,7 +29,7 @@ namespace RooFit {
 
     // copy ctor (necessary for Clone)
     GradMinimizerFcn::GradMinimizerFcn(const GradMinimizerFcn& other) :
-        RooFit::MultiProcess::Vector<RooGradMinimizerFcn>(other),
+        RooFit::MultiProcessV1::Vector<RooGradMinimizerFcn>(other),
         N_tasks(other.N_tasks),
         completed_task_ids(other.completed_task_ids) {}
 
@@ -41,7 +41,7 @@ namespace RooFit {
 
     void GradMinimizerFcn::update_state() {
       // TODO optimization: only send changed parameters (now sending all)
-      RooFit::MultiProcess::M2Q msg = RooFit::MultiProcess::M2Q::update_real;
+      RooFit::MultiProcessV1::M2Q msg = RooFit::MultiProcessV1::M2Q::update_real;
       for (std::size_t ix = 0; ix < NDim(); ++ix) {
         get_manager()->send_from_master_to_queue(msg, id, ix, _grad.Grad()(ix), false);
       }

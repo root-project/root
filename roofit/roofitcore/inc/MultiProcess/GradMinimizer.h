@@ -19,8 +19,8 @@
 #include <RooMinimizer.h>
 
 namespace RooFit {
-  namespace MultiProcess {
-    class GradMinimizerFcn : public RooFit::MultiProcess::Vector<RooGradMinimizerFcn> {
+  namespace MultiProcessV1 {
+    class GradMinimizerFcn : public RooFit::MultiProcessV1::Vector<RooGradMinimizerFcn> {
      public:
       GradMinimizerFcn(RooAbsReal *funct, RooMinimizerGenericPtr context,
                        std::size_t _N_workers, bool verbose = false);
@@ -65,7 +65,7 @@ namespace RooFit {
     };
 
     using GradMinimizer = RooMinimizerTemplate<GradMinimizerFcn, RooFit::MinimizerType::Minuit2, std::size_t>;
-  } // namespace MultiProcess
+  } // namespace MultiProcessV1
 } // namespace RooFit
 
 #endif //ROOFIT_MULTIPROCESS_GRADMINIMIZER_H

@@ -24,27 +24,41 @@
 #include "RooRealVar.h" // for the dynamic cast to have a complete type
 
 
-std::tuple<std::unique_ptr<RooAbsReal>, std::unique_ptr<RooArgSet>>
-generate_1D_gaussian_pdf_nll(RooWorkspace &w, unsigned long N_events) {
-  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+RooAbsPdf * generate_1D_gaussian_pdf(RooWorkspace &w)
+{
+   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+   RooAbsPdf *pdf = w.pdf("g");
+   return pdf;
+}
 
-  RooAbsPdf *pdf = w.pdf("g");
-  RooRealVar *mu = w.var("mu");
+RooDataSet * generate_1D_dataset(RooWorkspace &w, RooAbsPdf *pdf, unsigned long N_events)
+{
+   RooDataSet *data = pdf->generate(RooArgSet(*w.var("x")), N_events);
+   return data;
+}
 
-  RooDataSet *data = pdf->generate(RooArgSet(*w.var("x")), N_events);
-  mu->setVal(-2.9);
 
-  std::unique_ptr<RooAbsReal> nll {pdf->createNLL(*data)};
+std::tuple<std::unique_ptr<RooAbsReal>, RooAbsPdf *, RooDataSet *, std::unique_ptr<RooArgSet>>
+generate_1D_gaussian_pdf_nll(RooWorkspace &w, unsigned long N_events)
+{
+   RooAbsPdf *pdf = generate_1D_gaussian_pdf(w);
 
-  // save initial values for the start of all minimizations
-  std::unique_ptr<RooArgSet> values = std::make_unique<RooArgSet>(*mu, *pdf, *nll, "values");
+   RooDataSet *data = generate_1D_dataset(w, pdf, N_events);
 
-  return std::make_tuple(std::move(nll), std::move(values));
+   RooRealVar *mu = w.var("mu");
+   mu->setVal(-2.9);
+
+   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data)};
+
+   // save initial values for the start of all minimizations
+   std::unique_ptr<RooArgSet> values = std::make_unique<RooArgSet>(*mu, *pdf, *nll, "values");
+
+   return std::make_tuple(std::move(nll), pdf, data, std::move(values));
 }
 
 // return two unique_ptrs, the first because nll is a pointer,
 // the second because RooArgSet doesn't have a move ctor
-std::tuple<std::unique_ptr<RooAbsReal>, std::unique_ptr<RooArgSet>>
+std::tuple<std::unique_ptr<RooAbsReal>, RooAbsPdf *, RooDataSet *, std::unique_ptr<RooArgSet>>
 generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_events) {
   RooArgSet obs_set;
 
@@ -147,7 +161,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
     }
   }
 
-  return std::make_tuple(std::move(nll), std::move(all_values));
+  return std::make_tuple(std::move(nll), sum, data, std::move(all_values));
 }
 
 

@@ -14,7 +14,7 @@
 #include <MultiProcess/messages.h>
 
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
 
     // for debugging
 #define PROCESS_VAL(p) case(p): s = #p; break;

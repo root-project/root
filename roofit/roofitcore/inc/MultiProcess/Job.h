@@ -18,7 +18,7 @@
 #include <memory>  // shared_ptr
 
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
     // forward declaration
     class TaskManager;
 
@@ -93,6 +93,6 @@ namespace RooFit {
       static bool worker_loop_running;
     };
 
-  } // namespace MultiProcess
+  } // namespace MultiProcessV1
 } // namespace RooFit
 #endif //ROOFIT_MULTIPROCESS_JOB_H

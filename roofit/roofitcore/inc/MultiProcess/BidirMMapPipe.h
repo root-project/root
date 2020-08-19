@@ -22,7 +22,7 @@
 
 // forward declarations
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
     enum class M2Q;
     enum class Q2M;
     enum class W2Q;

@@ -28,8 +28,13 @@ namespace TestStatistics {
 
 class RooAbsL {
 public:
-   virtual double evaluate_partition(std::size_t, std::size_t, std::size_t) = 0;
-   virtual double get_carry() = 0;
+   RooAbsL() = default;
+   RooAbsL(RooAbsPdf *pdf, RooAbsData *data, bool do_offset, double offset, double offset_carry, std::size_t N_events,
+           std::size_t N_components);
+
+   virtual double evaluate_partition(std::size_t events_begin, std::size_t events_end, std::size_t components_begin,
+                                     std::size_t components_end) = 0;
+   virtual double get_carry() const = 0;
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
    RooArgSet *getParameters();
@@ -47,13 +52,19 @@ public:
    bool is_offsetting() const;
    void enable_offsetting(bool flag);
 
-private:
+   std::size_t get_N_events() const;
+   std::size_t get_N_components() const;
+
+protected:
    virtual void optimize_pdf();
-   RooAbsPdf *pdf;
-   RooAbsData *data;
+   RooAbsPdf *pdf = nullptr;
+   RooAbsData *data = nullptr;
    bool _do_offset = false;
    double _offset = 0;
    double _offset_carry = 0;
+
+   std::size_t N_events = 1;
+   std::size_t N_components = 1;
 };
 
 } // namespace TestStatistics

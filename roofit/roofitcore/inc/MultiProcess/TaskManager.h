@@ -26,7 +26,7 @@
 #include <unistd.h> // getpid
 
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
 
     // forward declarations
     class Job;
@@ -241,7 +241,7 @@ namespace RooFit {
       static std::unique_ptr <TaskManager> _instance;
     };
 
-  } // namespace MultiProcess
+  } // namespace MultiProcessV1
 } // namespace RooFit
 
 #endif //ROOFIT_MULTIPROCESS_TASKMANAGER_H

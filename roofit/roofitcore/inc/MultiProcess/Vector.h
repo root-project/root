@@ -21,7 +21,7 @@
 #include <RooRealVar.h>
 
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
 
     // Vector defines an interface and communication machinery to build a
     // parallelized subclass of an existing non-concurrent numerical class that
@@ -176,7 +176,7 @@ namespace RooFit {
 
     };  // class Vector
 
-  }  // namespace MultiProcess
+  }  // namespace MultiProcessV1
 }  // namespace RooFit
 
 #endif //ROOFIT_MULTIPROCESS_VECTOR_H

@@ -19,7 +19,7 @@
 #include <RooNLLVar.h>
 
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
 
     enum class NLLVarTask {
       all_events,
@@ -76,7 +76,7 @@ namespace RooFit {
     
     
     
-    class NLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
+    class NLLVar : public RooFit::MultiProcessV1::Vector<RooNLLVar> {
      public:
       NLLVar(std::size_t NumCPU, NLLVarTask task_mode, const RooNLLVar& nll);
       void init_vars();
@@ -106,7 +106,7 @@ namespace RooFit {
       NLLVarTask mp_task_mode;
     };
 
-  } // namespace MultiProcess
+  } // namespace MultiProcessV1
 } // namespace RooFit
 
 #endif //ROOFIT_MULTIPROCESS_NLLVAR_H

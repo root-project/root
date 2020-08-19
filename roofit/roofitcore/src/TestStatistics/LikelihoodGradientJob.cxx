@@ -24,6 +24,16 @@
 namespace RooFit {
 namespace TestStatistics {
 
+LikelihoodGradientJob::LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood, RooMinimizer *minimizer)
+   : LikelihoodGradientWrapper(std::move(likelihood), minimizer), _grad(minimizer->getNPar()), _gradf(nullptr, _grad)
+{
+}
+
+LikelihoodGradientJob::LikelihoodGradientJob(const LikelihoodGradientJob &other)
+: LikelihoodGradientWrapper(other), _grad(other._grad), _gradf(other._gradf, _grad)
+{
+}
+
 LikelihoodGradientJob *LikelihoodGradientJob::clone() const
 {
    return new LikelihoodGradientJob(*this);
@@ -266,8 +276,6 @@ ROOT::Minuit2::MnAlgebraicVector &LikelihoodGradientJob::mutable_gstep() const
 {
    return const_cast<ROOT::Minuit2::MnAlgebraicVector &>(_grad.Gstep());
 }
-
-
 
 } // namespace TestStatistics
 } // namespace RooFit

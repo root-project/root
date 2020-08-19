@@ -26,6 +26,13 @@
 namespace RooFit {
 namespace TestStatistics {
 
+enum class LikelihoodType {
+   unbinned,
+   binned,
+   constraint,
+   multi
+};
+
 class LikelihoodJob : public MultiProcess::Job, public LikelihoodWrapper {
 public:
    LikelihoodJob(std::shared_ptr<RooAbsL> _likelihood, RooMinimizer *minimizer);
@@ -62,6 +69,8 @@ private:
 
    RooArgList _vars;      // Variables
    RooArgList _saveVars;  // Copy of variables
+
+   LikelihoodType likelihood_type;
 };
 
 }

@@ -17,7 +17,7 @@
 #include <iostream>
 
 namespace RooFit {
-  namespace MultiProcess {
+  namespace MultiProcessV1 {
 
     // Messages from master to queue
     enum class M2Q : int {
@@ -60,7 +60,7 @@ namespace RooFit {
     std::ostream& operator<<(std::ostream& out, const Q2W value);
     std::ostream& operator<<(std::ostream& out, const W2Q value);
 
-  } // namespace MultiProcess
+  } // namespace MultiProcessV1
 
 //  // forward declaration:
 //  class BidirMMapPipe;
