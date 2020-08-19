@@ -615,7 +615,7 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    return jittedDefine;
 }
 
-// Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
+// Jit and call something equivalent to "this->BuildAndBook<ColTypes...>(params...)"
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,

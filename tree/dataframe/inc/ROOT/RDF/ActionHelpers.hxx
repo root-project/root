@@ -1237,8 +1237,8 @@ inline void UpdateBoolArray(BoolArrayMap &boolArrays, RVec<bool> &v, const std::
 void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &treeName, const std::string &fileName);
 
 /// Helper object for a single-thread Snapshot action
-template <typename... BranchTypes>
-class SnapshotHelper : public RActionImpl<SnapshotHelper<BranchTypes...>> {
+template <typename... ColTypes>
+class SnapshotHelper : public RActionImpl<SnapshotHelper<ColTypes...>> {
    const std::string fFileName;
    const std::string fDirName;
    const std::string fTreeName;
@@ -1254,7 +1254,7 @@ class SnapshotHelper : public RActionImpl<SnapshotHelper<BranchTypes...>> {
    std::vector<void *> fBranchAddresses; // Addresses associated to output branches, non-null only for the ones holding C arrays
 
 public:
-   using ColumnTypes_t = TypeList<BranchTypes...>;
+   using ColumnTypes_t = TypeList<ColTypes...>;
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
                   const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const RSnapshotOptions &options)
       : fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
@@ -1277,9 +1277,9 @@ public:
       fInputTree->AddClone(fOutputTree.get());
    }
 
-   void Exec(unsigned int /* slot */, BranchTypes &... values)
+   void Exec(unsigned int /* slot */, ColTypes &... values)
    {
-      using ind_t = std::index_sequence_for<BranchTypes...>;
+      using ind_t = std::index_sequence_for<ColTypes...>;
       if (! fIsFirstEvent) {
          UpdateCArraysPtrs(values..., ind_t{});
       } else {
@@ -1291,7 +1291,7 @@ public:
    }
 
    template <std::size_t... S>
-   void UpdateCArraysPtrs(BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void UpdateCArraysPtrs(ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // This code deals with branches which hold C arrays of variable size. It can happen that the buffers
       // associated to those is re-allocated. As a result the value of the pointer can change therewith
@@ -1307,7 +1307,7 @@ public:
    }
 
    template <std::size_t... S>
-   void SetBranches(BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void SetBranches(ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // create branches in output tree (and fill fBoolArrays for RVec<bool> columns)
       int expander[] = {(SetBranchesHelper(fBoolArrays, fInputTree, *fOutputTree, fInputBranchNames[S],
@@ -1318,7 +1318,7 @@ public:
    }
 
    template <std::size_t... S>
-   void UpdateBoolArrays(BranchTypes &...values, std::index_sequence<S...> /*dummy*/)
+   void UpdateBoolArrays(ColTypes &...values, std::index_sequence<S...> /*dummy*/)
    {
       int expander[] = {(UpdateBoolArray(fBoolArrays, values, fOutputBranchNames[S], *fOutputTree), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
@@ -1366,8 +1366,8 @@ public:
 };
 
 /// Helper object for a multi-thread Snapshot action
-template <typename... BranchTypes>
-class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
+template <typename... ColTypes>
+class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
    const unsigned int fNSlots;
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
@@ -1387,7 +1387,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
    std::vector<std::vector<void *>> fBranchAddresses; 
 
 public:
-   using ColumnTypes_t = TypeList<BranchTypes...>;
+   using ColumnTypes_t = TypeList<ColTypes...>;
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
                     std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
                     const RSnapshotOptions &options)
@@ -1445,9 +1445,9 @@ public:
       fOutputTrees[slot].reset(nullptr);
    }
 
-   void Exec(unsigned int slot, BranchTypes &... values)
+   void Exec(unsigned int slot, ColTypes &... values)
    {
-      using ind_t = std::index_sequence_for<BranchTypes...>;
+      using ind_t = std::index_sequence_for<ColTypes...>;
       if (!fIsFirstEvent[slot]) {
          UpdateCArraysPtrs(slot, values..., ind_t{});
       } else {
@@ -1463,7 +1463,7 @@ public:
    }
 
    template <std::size_t... S>
-   void UpdateCArraysPtrs(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void UpdateCArraysPtrs(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // This code deals with branches which hold C arrays of variable size. It can happen that the buffers
       // associated to those is re-allocated. As a result the value of the pointer can change therewith
@@ -1480,7 +1480,7 @@ public:
    }
 
    template <std::size_t... S>
-   void SetBranches(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void SetBranches(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
          // hack to call TTree::Branch on all variadic template arguments
          int expander[] = {
@@ -1493,7 +1493,7 @@ public:
    }
 
    template <std::size_t... S>
-   void UpdateBoolArrays(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void UpdateBoolArrays(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       (void)slot; // avoid bogus 'unused parameter' warning
       int expander[] = {
