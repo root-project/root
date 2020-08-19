@@ -120,4 +120,6 @@ foreach(val RANGE ${how_many_pythons})
 endforeach()
 
 file(COPY ${headers} DESTINATION ${CMAKE_BINARY_DIR}/include/CPyCppyy)
-install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CPyCppyy)
+install(FILES ${headers}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CPyCppyy
+        COMPONENT headers)
