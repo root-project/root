@@ -975,7 +975,13 @@ TROOT::~TROOT()
       SafeDelete(fCleanups);
 #endif
 
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+      // usedToIdentifyRootClingByDlSym is available when TROOT is part of rootcling.
+      if (dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
+         // deleting the interpreter makes things crash at exit in some cases
+         delete fInterpreter;
+      }
+#else
       // deleting the interpreter makes things crash at exit in some cases
       delete fInterpreter;
 #endif
