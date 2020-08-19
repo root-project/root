@@ -32,14 +32,14 @@ void ROOT::Internal::RDF::CheckDefine(RDefineBase &define, const std::type_info 
    if (diffTypes && !inheritedType()) {
       const auto tName = TypeID2TypeName(tid);
       const auto colTypeName = TypeID2TypeName(colTId);
-      std::string errMsg = "RColumnValue: type specified for column \"" + define.GetName() + "\" is ";
+      std::string errMsg = "RDefineReader: column \"" + define.GetName() + "\" is being used as ";
       if (tName.empty()) {
          errMsg += tid.name();
          errMsg += " (extracted from type info)";
       } else {
          errMsg += tName;
       }
-      errMsg += " but temporary column has type ";
+      errMsg += " but defined column has type ";
       if (colTypeName.empty()) {
          auto &id = colTId;
          errMsg += id.name();
