@@ -2257,7 +2257,7 @@ private:
 
    // Type was specified by the user, no need to infer it
    template <typename ActionTag, typename... ColTypes, typename ActionResultType,
-             typename std::enable_if<!RDFInternal::TNeedJitting<ColTypes...>::value, int>::type = 0>
+             typename std::enable_if<!RDFInternal::RNeedJitting<ColTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r)
    {
       constexpr auto nColumns = sizeof...(ColTypes);
@@ -2277,7 +2277,7 @@ private:
    // This version of CreateAction has a `nColumns` optional argument. If present, the number of required columns for
    // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(ColTypes)
    template <typename ActionTag, typename... ColTypes, typename ActionResultType,
-             typename std::enable_if<RDFInternal::TNeedJitting<ColTypes...>::value, int>::type = 0>
+             typename std::enable_if<RDFInternal::RNeedJitting<ColTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType>
    CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r, const int nColumns = -1)
    {
