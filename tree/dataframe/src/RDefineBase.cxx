@@ -26,8 +26,8 @@ unsigned int RDefineBase::GetNextID()
 }
 
 RDefineBase::RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
-                                     const RDFInternal::RBookedDefines &defines,
-                                     const std::map<std::string, std::vector<void *>> &DSValuePtrs)
+                         const RDFInternal::RBookedDefines &defines,
+                         const std::map<std::string, std::vector<void *>> &DSValuePtrs)
    : fName(name), fType(type), fNSlots(nSlots), fLastCheckedEntry(fNSlots, -1), fDefines(defines),
      fIsInitialized(nSlots, false), fDSValuePtrs(DSValuePtrs)
 {
