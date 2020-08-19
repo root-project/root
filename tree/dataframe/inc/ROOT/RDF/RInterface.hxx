@@ -2256,18 +2256,18 @@ private:
    }
 
    // Type was specified by the user, no need to infer it
-   template <typename ActionTag, typename... BranchTypes, typename ActionResultType,
-             typename std::enable_if<!RDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
+   template <typename ActionTag, typename... ColTypes, typename ActionResultType,
+             typename std::enable_if<!RDFInternal::TNeedJitting<ColTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r)
    {
-      constexpr auto nColumns = sizeof...(BranchTypes);
+      constexpr auto nColumns = sizeof...(ColTypes);
 
       const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
-      CheckAndFillDSColumns(validColumnNames, RDFInternal::TypeList<BranchTypes...>());
+      CheckAndFillDSColumns(validColumnNames, RDFInternal::TypeList<ColTypes...>());
 
       const auto nSlots = fLoopManager->GetNSlots();
 
-      auto action = RDFInternal::BuildAction<BranchTypes...>(validColumnNames, r, nSlots, fProxiedPtr, ActionTag{},
+      auto action = RDFInternal::BuildAction<ColTypes...>(validColumnNames, r, nSlots, fProxiedPtr, ActionTag{},
                                                              fDefines);
       fLoopManager->Book(action.get());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
@@ -2275,13 +2275,13 @@ private:
 
    // User did not specify type, do type inference
    // This version of CreateAction has a `nColumns` optional argument. If present, the number of required columns for
-   // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(BranchTypes)
-   template <typename ActionTag, typename... BranchTypes, typename ActionResultType,
-             typename std::enable_if<RDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
+   // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(ColTypes)
+   template <typename ActionTag, typename... ColTypes, typename ActionResultType,
+             typename std::enable_if<RDFInternal::TNeedJitting<ColTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType>
    CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r, const int nColumns = -1)
    {
-      auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
+      auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(ColTypes));
 
       const auto validColumnNames = GetValidatedColumnNames(realNColumns, columns);
       const unsigned int nSlots = fLoopManager->GetNSlots();
@@ -2413,20 +2413,20 @@ private:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Implementation of cache
-   template <typename... BranchTypes, std::size_t... S>
+   template <typename... ColTypes, std::size_t... S>
    RInterface<RLoopManager> CacheImpl(const ColumnNames_t &columnList, std::index_sequence<S...> s)
    {
       // Check at compile time that the columns types are copy constructible
       constexpr bool areCopyConstructible =
-         RDFInternal::TEvalAnd<std::is_copy_constructible<BranchTypes>::value...>::value;
+         RDFInternal::TEvalAnd<std::is_copy_constructible<ColTypes>::value...>::value;
       static_assert(areCopyConstructible, "Columns of a type which is not copy constructible cannot be cached yet.");
 
       // We share bits and pieces with snapshot. De facto this is a snapshot
       // in memory!
-      RDFInternal::CheckTypesAndPars(sizeof...(BranchTypes), columnList.size());
+      RDFInternal::CheckTypesAndPars(sizeof...(ColTypes), columnList.size());
 
-      auto colHolders = std::make_tuple(Take<BranchTypes>(columnList[S])...);
-      auto ds = std::make_unique<RLazyDS<BranchTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
+      auto colHolders = std::make_tuple(Take<ColTypes>(columnList[S])...);
+      auto ds = std::make_unique<RLazyDS<ColTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
 
       RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnList));
 
