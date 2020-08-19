@@ -830,8 +830,12 @@ bool TClassEdit::IsDefHash(const char *hashname, const char *classname)
 
 void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name)
 {
-   norm_name = std::string(name); // NOTE: Is that the shortest version?
+   if (name.empty()) {
+      norm_name.clear();
+      return;
+   }
 
+   norm_name = std::string(name); // NOTE: Is that the shortest version?
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
    splitname.ShortType(norm_name, TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kResolveTypedef | TClassEdit::kKeepOuterConst);
