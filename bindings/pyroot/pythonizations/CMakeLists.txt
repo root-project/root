@@ -159,6 +159,8 @@ install(DIRECTORY ${localruntimedir}/ROOT
         COMPONENT libraries)
 
 # Install headers required by pythonizations
-install(FILES ${PYROOT_EXTRA_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ROOT)
+install(FILES ${PYROOT_EXTRA_HEADERS}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ROOT
+        COMPONENT headers)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
