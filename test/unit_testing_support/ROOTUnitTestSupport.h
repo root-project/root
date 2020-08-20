@@ -33,7 +33,8 @@ public:
       EDK_NoDiag = 0,
       EDK_Info,
       EDK_Warning,
-      EDK_Error
+      EDK_Error,
+      EDK_SysError
    };
 private:
    ExpectedDiagKind fDiagKind;
@@ -62,6 +63,9 @@ private:
          break;
       case EDK_Info:
          Expected = "Info";
+         break;
+      case EDK_SysError:
+         Expected = "SysError";
          break;
       }
 
@@ -121,6 +125,13 @@ public:
 #define ROOT_EXPECT_NODIAG(expression)                                  \
    {                                                                    \
       ExpectedDiagRAII EE(ExpectedDiagRAII::EDK_NoDiag);                \
+      expression;                                                       \
+   }
+
+#define ROOT_EXPECT_SYSERROR(expression, where, expected_diag)          \
+   {                                                                    \
+      ExpectedDiagRAII EE(ExpectedDiagRAII::EDK_SysError, where,        \
+                          expected_diag);                               \
       expression;                                                       \
    }
 
