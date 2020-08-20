@@ -1460,7 +1460,21 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
 ///
 ///    Record_Adress Logical_Record_Length  Key_Length Object_Record_Length ClassName  CompressionFactor
 ///
-/// Example of output
+/// If the parameter opt contains "extended", the name and title of the keys are added:
+///     20200820/155031  At:100      N=180       TFile                      name: hsimple.root      title: Demo ROOT file with histograms
+///     220200820/155032  At:280      N=28880     TBasket        CX =  1.11  name: random            title: ntuple
+///     220200820/155032  At:29160    N=29761     TBasket        CX =  1.08  name: px                title: ntuple
+///     220200820/155032  At:58921    N=29725     TBasket        CX =  1.08  name: py                title: ntuple
+///     220200820/155032  At:88646    N=29209     TBasket        CX =  1.10  name: pz                title: ntuple
+///     220200820/155032  At:117855   N=10197     TBasket        CX =  3.14  name: i                 title: ntuple
+///     ...
+///     20200820/155032  At:405110   N=808       TNtuple        CX =  3.53  name: ntuple            title: Demo ntuple
+///     20200820/155706  At:405918   N=307       KeysList                   name: hsimple.root      title: Demo ROOT file with histograms
+///     20200820/155032  At:406225   N=8556      StreamerInfo   CX =  3.42  name: StreamerInfo      title: Doubly linked list
+///     20200820/155708  At:414781   N=86        FreeSegments               name: hsimple.root      title: Demo ROOT file with histograms
+///     20200820/155708  At:414867   N=1         END
+///
+/// Note: The combined size of the classname, name and title is truncated to 476 characters (a little more for regular keys of small files)
 ///
 
 
@@ -1469,10 +1483,11 @@ void TFile::Map(Option_t *opt)
    TString options(opt);
    options.ToLower();
    bool forComp = options.Contains("forcomp");
+   bool extended = options.Contains("extended");
 
    Short_t  keylen,cycle;
    UInt_t   datime;
-   Int_t    nbytes,date,time,objlen,nwheader;
+   Int_t    nbytes,date,time,objlen;
    date = 0;
    time = 0;
    Long64_t seekkey,seekpdir;
@@ -1480,16 +1495,19 @@ void TFile::Map(Option_t *opt)
    char     nwhc;
    Long64_t idcur = fBEGIN;
 
-   nwheader = 64;
-   Int_t nread = nwheader;
+   constexpr Int_t nwheader = 512;
 
-   char header[kBEGIN];
+   char header[nwheader];
    char classname[512];
+   char keyname[512];
+   char keytitle[512];
+   TString extrainfo;
 
    unsigned char nDigits = std::log10(fEND) + 1;
 
    while (idcur < fEND) {
       Seek(idcur);
+      Int_t nread = nwheader;
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
       if (ReadBuffer(header, nread)) {
          // ReadBuffer returns kTRUE in case of failure.
@@ -1526,27 +1544,58 @@ void TFile::Map(Option_t *opt)
          frombuf(buffer, &sdir);  seekpdir = (Long64_t)sdir;
       }
       frombuf(buffer, &nwhc);
+      if ( ((buffer-header) + nwhc) > nwheader ) // Don't read past the end of the part of the key we have read.
+         nwhc = nwheader - (buffer-header);
       for (int i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
       if (idcur == fSeekFree) strlcpy(classname,"FreeSegments",512);
       if (idcur == fSeekInfo) strlcpy(classname,"StreamerInfo",512);
       if (idcur == fSeekKeys) strlcpy(classname,"KeysList",512);
+
+      if (extended) {
+         if ( (buffer-header) >= nwheader )
+            nwhc = 0;
+         else {
+            frombuf(buffer, &nwhc);
+            if (nwhc < 0)
+               nwhc = 0;
+            else if ( ((buffer-header) + nwhc) > nwheader ) // Don't read past the end of the part of the key we have read.
+               nwhc = nwheader - (buffer-header);
+         }
+         for (int i = 0;i < nwhc; i++) frombuf(buffer, &keyname[i]);
+         keyname[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
+
+         if ( (buffer-header) >= nwheader )
+            nwhc = 0;
+         else {
+            frombuf(buffer, &nwhc);
+            if (nwhc < 0)
+               nwhc = 0;
+            else if ( ((buffer-header) + nwhc) > nwheader ) // Don't read past the end of the part of the key we have read.
+               nwhc = nwheader - (buffer-header);
+         }
+         for (int i = 0;i < nwhc; i++) frombuf(buffer, &keytitle[i]);
+         keytitle[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
+
+         extrainfo.Form(" name: %-16s  title: %s", keyname, keytitle);
+      }
+
       TDatime::GetDateTime(datime, date, time);
       if (!forComp) {
          if (objlen != nbytes - keylen) {
             Float_t cx = Float_t(objlen + keylen) / Float_t(nbytes);
-            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s CX = %5.2f", date, time, nDigits + 1, idcur, nbytes, classname,
-                   cx);
+            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s CX = %5.2f %s", date, time, nDigits + 1, idcur, nbytes, classname,
+                   cx, extrainfo.Data());
          } else {
-            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s", date, time, nDigits + 1, idcur, nbytes, classname);
+            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s            %s", date, time, nDigits + 1, idcur, nbytes, classname, extrainfo.Data());
          }
       } else {
          // Printing to help compare two files.
          if (objlen != nbytes - keylen) {
             Float_t cx = Float_t(objlen + keylen) / Float_t(nbytes);
-            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX = %5.2f", nDigits+1, idcur, nbytes, keylen, objlen, classname, cx);
+            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX = %5.2f %s", nDigits+1, idcur, nbytes, keylen, objlen, classname, cx, extrainfo.Data());
          } else {
-            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX =  1", nDigits+1, idcur, nbytes, keylen, objlen, classname);
+            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX =  1    %s", nDigits+1, idcur, nbytes, keylen, objlen, classname, extrainfo.Data());
          }
       }
       idcur += nbytes;
