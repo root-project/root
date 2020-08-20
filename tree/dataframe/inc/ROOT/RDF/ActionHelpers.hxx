@@ -1329,6 +1329,8 @@ public:
       fOutputFile.reset(
          TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"",
                      ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
+      if(!fOutputFile)
+         throw std::runtime_error("Snapshot: could not create output file " + fFileName);
 
       TDirectory *outputDir = fOutputFile.get();
       if (!fDirName.empty()) {
@@ -1502,7 +1504,10 @@ public:
    void Initialize()
    {
       const auto cs = ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
-      fMerger = std::make_unique<ROOT::Experimental::TBufferMerger>(fFileName.c_str(), fOptions.fMode.c_str(), cs);
+      auto out_file = TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/fFileName.c_str(), cs);
+      if(!out_file)
+         throw std::runtime_error("Snapshot: could not create output file " + fFileName);
+      fMerger = std::make_unique<ROOT::Experimental::TBufferMerger>(std::unique_ptr<TFile>(out_file));
    }
 
    void Finalize()
