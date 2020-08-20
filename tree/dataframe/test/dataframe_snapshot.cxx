@@ -731,6 +731,27 @@ TEST(RDFSnapshotMore, CompositeTypeWithNameClash)
    gSystem->Unlink(fname);
 }
 
+// Test that we error out gracefully in case the output file specified for a Snapshot cannot be opened
+TEST(RDFSnapshotMore, ForbiddenOutputFilename)
+{
+   ROOT::RDataFrame df(4);
+   const auto out_fname = "/definitely/not/a/valid/path/f.root";
+
+   // Compiled
+   try {
+      ROOT_EXPECT_SYSERROR(df.Snapshot<unsigned int>("t", out_fname, {"rdfslot_"}), "TFile::TFile",
+                        "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory")
+   } catch (const std::runtime_error &e) {
+      EXPECT_STREQ(e.what(), "Snapshot: could not create output file /definitely/not/a/valid/path/f.root");
+   }
+
+   // Jitted
+   // If some other test case called EnableThreadSafety, the error printed here is of the form
+   // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n"
+   // but the address printed changes every time
+   EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);
+}
+
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
 TEST_F(RDFSnapshotMT, Snapshot_update_diff_treename)
@@ -987,6 +1008,28 @@ TEST(RDFSnapshotMore, TClonesArrayMT)
 {
    TIMTEnabler _(4);
    ReadWriteTClonesArray();
+}
+
+// Test that we error out gracefully in case the output file specified for a Snapshot cannot be opened
+TEST(RDFSnapshotMore, ForbiddenOutputFilenameMT)
+{
+   TIMTEnabler _(4);
+   ROOT::RDataFrame df(4);
+   const auto out_fname = "/definitely/not/a/valid/path/f.root";
+
+   // Compiled
+   try {
+      const auto expected = "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory";
+      ROOT_EXPECT_SYSERROR(df.Snapshot<unsigned int>("t", out_fname, {"rdfslot_"}), "TFile::TFile", expected);
+   } catch (const std::runtime_error &e) {
+      EXPECT_STREQ(e.what(), "Snapshot: could not create output file /definitely/not/a/valid/path/f.root");
+   }
+
+   // Jitted
+   // the error printed here is
+   // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n"
+   // but the address printed changes every time
+   EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);
 }
 
 #endif // R__USE_IMT
