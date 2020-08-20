@@ -7404,7 +7404,7 @@ void TH1::PutStats(Double_t *stats)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the statistics including the number of entries
-/// and replace with values calculates from bin content
+/// and replace with values calculated from bin content
 ///
 /// The number of entries is set to the total bin content or (in case of weighted histogram)
 /// to number of effective entries
