@@ -73,7 +73,7 @@ public:
       std::uint64_t fOffset = 0;
       /// The number of desired bytes
       std::size_t fSize = 0;
-      /// The number of actually read bytes, set by ReadV()
+      /// The number of actually read bytes, set by the RIoUring instance
       std::size_t fOutBytes = 0;
       /// The file descriptor
       int fFileDes = -1;
@@ -81,7 +81,6 @@ public:
 
    /// Submit a number of read events and wait for completion.
    void SubmitReadsAndWait(RReadEvent* readEvents, unsigned int nReads) {
-
       unsigned int batch = 0;
       unsigned int batchSize = fSize;
       unsigned int readPos = 0;
