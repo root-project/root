@@ -115,7 +115,7 @@ void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
 #ifdef R__HAS_URING
    if (RIoUring::IsAvailable()) {
-      RIoUring ring(128);
+      RIoUring ring;
       std::vector<RIoUring::RReadEvent> reads;
       reads.reserve(nReq);
       for (std::size_t i = 0; i < nReq; ++i) {
