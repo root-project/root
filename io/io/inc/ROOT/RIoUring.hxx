@@ -9,6 +9,7 @@
 #ifndef ROOT_RIoUring
 #define ROOT_RIoUring
 
+#include <cstdint>
 #include <cstring>
 #include <stdexcept>
 #include <vector>
@@ -24,7 +25,7 @@ namespace Internal {
 class RIoUring {
 private:
    struct io_uring fRing;
-   size_t fSize;
+   std::uint32_t fDepth = 0;
 
    static bool CheckIsAvailable() {
       try {
@@ -38,16 +39,39 @@ private:
    }
 
 public:
-   explicit RIoUring(size_t size) : fSize(size) {
-      int ret = io_uring_queue_init(fSize, &fRing, 0 /* no flags */);
-      if (ret) {
+   // Create an io_uring instance. The ring selects an appropriate queue depth. which can be queried
+   // afterwards using GetQueueDepth(). The depth is typically 1024 or lower. Throws an exception if
+   // the ring could be not be initialized.
+   RIoUring() {
+      std::uint32_t queueDepth = 1024;
+      int ret;
+      while (true) {
+         ret = io_uring_queue_init(queueDepth, &fRing, 0 /* no flags */);
+         if (ret == 0) {
+            fDepth = queueDepth;
+            break; // ring setup succeeded
+         }
+         if (ret != -ENOMEM) {
+            throw std::runtime_error("Error initializing io_uring: " + std::string(std::strerror(-ret)));
+         }
+         // try again with a smaller queue for ENOMEM
+         // -- if it gets to 0, queue_init will fail with an invalid argument error
+         queueDepth /= 2;
+      }
+   }
+
+   // Create a io_uring instance with a specified queue depth. Throws an exception if the ring
+   // couldn't be created with the given depth.
+   RIoUring(std::uint32_t queueDepth) {
+      int ret = io_uring_queue_init(queueDepth, &fRing, 0 /* no flags */);
+      if (ret != 0) {
          throw std::runtime_error("Error initializing io_uring: " + std::string(std::strerror(-ret)));
       }
+      fDepth = queueDepth;
    }
 
    RIoUring(const RIoUring&) = delete;
    RIoUring& operator=(const RIoUring&) = delete;
-
 
    ~RIoUring() {
       // todo(max) try submitting any pending events before exiting
@@ -58,6 +82,10 @@ public:
    static bool IsAvailable() {
       static const bool available = RIoUring::CheckIsAvailable();
       return available;
+   }
+
+   std::uint32_t GetQueueDepth() {
+      return fDepth;
    }
 
    /// Access the raw io_uring instance.
@@ -82,7 +110,7 @@ public:
    /// Submit a number of read events and wait for completion.
    void SubmitReadsAndWait(RReadEvent* readEvents, unsigned int nReads) {
       unsigned int batch = 0;
-      unsigned int batchSize = fSize;
+      unsigned int batchSize = fDepth;
       unsigned int readPos = 0;
 
       while (readPos < nReads) {
