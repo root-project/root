@@ -60,14 +60,16 @@ public:
       }
    }
 
-   // Create a io_uring instance with a specified queue depth. Throws an exception if the ring
-   // couldn't be created with the given depth.
-   RIoUring(std::uint32_t queueDepth) {
-      int ret = io_uring_queue_init(queueDepth, &fRing, 0 /* no flags */);
+   // Create a io_uring instance that can hold at least `entriesHint` submission entries. The actual
+   // queue depth is rounded up to the next power of 2. Throws an exception if the ring couldn't
+   // be initialized.
+   RIoUring(std::uint32_t entriesHint) {
+      struct io_uring_params params = {}; /* zero initialize param struct, no flags */
+      int ret = io_uring_queue_init_params(entriesHint, &fRing, &params);
       if (ret != 0) {
          throw std::runtime_error("Error initializing io_uring: " + std::string(std::strerror(-ret)));
       }
-      fDepth = queueDepth;
+      fDepth = params.sq_entries;
    }
 
    RIoUring(const RIoUring&) = delete;
@@ -107,7 +109,8 @@ public:
       int fFileDes = -1;
    };
 
-   /// Submit a number of read events and wait for completion.
+   /// Submit a number of read events and wait for completion. Events are submitted in batches if
+   /// the number of events is larger than the submission queue depth.
    void SubmitReadsAndWait(RReadEvent* readEvents, unsigned int nReads) {
       unsigned int batch = 0;
       unsigned int batchSize = fDepth;

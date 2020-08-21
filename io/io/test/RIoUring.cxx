@@ -41,7 +41,7 @@ TEST(RRawFileUnix, ReadV)
    FileRaii fileGuard(file, std::string(filesize, 'a')); // ~2MB
    auto f = RRawFileUnix::Create(file);
 
-   auto nReq = 2048; // demo submission batching, uring size is usually around 1024
+   auto nReq = 2000; // demo submission batching, uring size is usually around 1024
 
    auto iovecs = make_iovecs(nReq, filesize);
    f->ReadV(iovecs.data(), nReq);
@@ -99,10 +99,12 @@ TEST(RawUring, FileRegistration)
    // files are opened lazily, force file open via GetSize
    auto size = f.GetSize();
 
-   unsigned int nReads = 128;
+   unsigned int nReads = 100;
    auto iovecs = make_iovecs(nReads, size);
 
    RIoUring ring(nReads);
+   EXPECT_EQ(ring.GetQueueDepth(), 128); // queue depth rounds up to next power of 2
+
    auto r = ring.GetRawRing();
    auto fd = f.GetFd();
    io_uring_register_files(r, &fd, 1);
