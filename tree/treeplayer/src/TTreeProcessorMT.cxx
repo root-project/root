@@ -403,7 +403,7 @@ Internal::FriendInfo TTreeProcessorMT::GetFriendInfo(TTree &tree)
          }
       } else {
          // Get name of the tree
-         const auto realName = frTree->GetName();
+         const auto realName = GetTreeFullPaths(*frTree)[0];
          friendNames.emplace_back(std::make_pair(realName, alias));
 
          // Get filename
