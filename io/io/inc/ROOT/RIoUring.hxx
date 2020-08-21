@@ -55,8 +55,11 @@ public:
             throw std::runtime_error("Error initializing io_uring: " + std::string(std::strerror(-ret)));
          }
          // try again with a smaller queue for ENOMEM
-         // -- if it gets to 0, queue_init will fail with an invalid argument error
          queueDepth /= 2;
+         if (queueDepth == 0) {
+            throw std::runtime_error("Fatal Error: failed to allocate memory for the smallest possible "
+               "io_uring instance. 'memlock' memory has been exhausted for this user");
+         }
       }
    }
 
