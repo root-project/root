@@ -44,45 +44,46 @@ Double_t fitFunction(Double_t *x, Double_t *par) {
 // Fit "fitFunction" to the histogram, and draw results on the canvas `c1`.
 void FitRoutine(TCanvas* c1, TH1* histo, float fitxmin, float fitxmax, TString filename){
    c1->cd();
-   // create a TF1 with the range from 0 to 3 and 6 parameters
-   TF1 *fitFcn = new TF1("fitFcn",fitFunction,fitxmin,fitxmax,3+nbgdpar);
-   fitFcn->SetNpx(500);
-   fitFcn->SetLineWidth(2);
-   fitFcn->SetLineColor(kBlue);
+   // create a TF1 with the range from 0 to 3 and N_PAR parameters (six by default)
+   TF1 fitFcn("fitFcn",fitFunction,fitxmin,fitxmax,N_PAR);
+   fitFcn.SetNpx(500);
+   fitFcn.SetLineWidth(2);
+   fitFcn.SetLineColor(kBlue);
 
-   // first try with ok-ish starting values for the parameters
-   fitFcn->SetParameters(30,0,0,50.,0.1,1.);
+   // Fit. First set ok-ish starting values for the parameters
+   fitFcn.SetParameters(30,0,0,50.,0.1,1.);
    histo->GetXaxis()->SetRange(2,40);
    histo->Fit("fitFcn","VR+","ep");
 
    // improve the picture:
-   TF1 *backFcn = new TF1("backFcn",background,fitxmin,fitxmax,3);
-   backFcn->SetLineColor(kRed);
-   TF1 *signalFcn = new TF1("signalFcn",signal,fitxmin,fitxmax,3);
-   signalFcn->SetLineColor(kBlue);
-   signalFcn->SetNpx(500);
+   // Draw signal and background functions separately
+   TF1 backFcn("backFcn",background,fitxmin,fitxmax,3);
+   backFcn.SetLineColor(kRed);
+   TF1 signalFcn("signalFcn",signal,fitxmin,fitxmax,3);
+   signalFcn.SetLineColor(kBlue);
+   signalFcn.SetNpx(500);
 
    // Retrieve fit parameters, and copy them to the signal and background functions
    Double_t par[6];
-   fitFcn->GetParameters(par);
+   fitFcn.GetParameters(par);
 
-   backFcn->SetParameters(par);
-   backFcn->Draw("same");
+   backFcn.SetParameters(par);
+   backFcn.DrawCopy("same");
 
-   signalFcn->SetParameters(&par[nbgdpar]);
+   signalFcn.SetParameters(&par[nbgdpar]));
 
    const double binwidth = (histo->GetXaxis()->GetXmax()-histo->GetXaxis()->GetXmin())/histo->GetNbinsX();
-   const double integral = signalFcn->Integral(0.,3.);
+   const double integral = signalFcn.Integral(0.,3.);
    cout << "number of signal events = " << integral/binwidth << endl;
 
    // draw the legend
-   TLegend *legend=new TLegend(0.15,0.7,0.28,0.85);
-   legend->SetTextFont(72);
-   legend->SetTextSize(0.03);
-   legend->AddEntry(histo,"Data","lpe");
-   legend->AddEntry(backFcn,"Bgd","l");
-   legend->AddEntry(fitFcn,"Sig+Bgd","l");
-   legend->Draw();
+   TLegend legend(0.15,0.7,0.28,0.85);
+   legend.SetTextFont(72);
+   legend.SetTextSize(0.03);
+   legend.AddEntry(histo,"Data","lpe");
+   legend.AddEntry(&backFcn,"Bgd","l");
+   legend.AddEntry(&fitFcn,"Sig+Bgd","l");
+   legend.DrawClone();
    histo->Draw("esame");
    c1->SaveAs(filename);
 }
@@ -117,7 +118,7 @@ void FitHistoInFile() {
    TCanvas *c1 = new TCanvas("c1","Fitting Demo of Histogram in File",10,10,700,500);
    CreateRootFile();
    TFile* f = new TFile("exampleRootFile.root");
-   TH1D* histo=0;
+   TH1D* histo= nullptr;
    f->GetObject("histo",histo);
    if (!histo){
       cout << "histo not found"<<endl;
