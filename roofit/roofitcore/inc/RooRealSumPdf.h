@@ -88,6 +88,7 @@ protected:
   Bool_t _extended ;        // Allow use as extended p.d.f.
 
   Bool_t _doFloor ; // Introduce floor at zero in pdf
+  mutable bool _haveWarned{false}; //!
   static Bool_t _doFloorGlobal ; // Global flag for introducing floor at zero in pdf
   
 private:
