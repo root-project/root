@@ -61,19 +61,22 @@ GetValuePtrsPtr(const std::string &colName, const std::map<std::string, std::vec
 /// This overload is specialized to act on RTypeErasedColumnValues instead of RColumnValues.
 template <typename... ColTypes>
 void InitColumnReaders(unsigned int slot, std::vector<RTypeErasedColumnValue> &values, TTreeReader *r,
-                       const ColumnNames_t &bn, const RBookedCustomColumns &customCols,
-                       ROOT::TypeTraits::TypeList<ColTypes...>,
-                       const std::array<bool, sizeof...(ColTypes)> &isTmpColumn,
-                       const std::map<std::string, std::vector<void *>> &DSValuePtrsMap)
+                       ROOT::TypeTraits::TypeList<ColTypes...>, const RColumnReadersInfo &colInfo)
 {
+   // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
+   const auto &colNames = colInfo.fColNames;
+   const auto &customCols = colInfo.fCustomCols;
+   const bool *isCustomColumn = colInfo.fIsCustomColumn;
+   const auto &DSValuePtrsMap = colInfo.fDSValuePtrsMap;
+
    const auto &customColMap = customCols.GetColumns();
 
    // Construct the column readers
    using expander = int[];
    int i = 0;
    (void)expander{
-      (values.emplace_back(MakeColumnReader<ColTypes>(slot, isTmpColumn[i] ? customColMap.at(bn[i]).get() : nullptr, r,
-                                                      GetValuePtrsPtr(bn[i], DSValuePtrsMap), bn[i])),
+      (values.emplace_back(MakeColumnReader<ColTypes>(slot, isCustomColumn[i] ? customColMap.at(colNames[i]).get() : nullptr, r,
+                                                      GetValuePtrsPtr(colNames[i], DSValuePtrsMap), colNames[i])),
        ++i)...,
       0};
 
@@ -125,7 +128,8 @@ struct ActionImpl {
                                  const std::array<bool, ColumnTypes::list_size> &isCustomColumn,
                                  const std::map<std::string, std::vector<void *>> &DSValuePtrs)
    {
-      RDFInternal::InitColumnReaders(slot, values, r, colNames, customCols, TypeInd_t{}, isCustomColumn, DSValuePtrs);
+      RDFInternal::RColumnReadersInfo info{colNames, customCols, isCustomColumn.data(), DSValuePtrs};
+      RDFInternal::InitColumnReaders(slot, values, r, TypeInd_t{}, info);
    }
 
    template <std::size_t... S>
@@ -153,7 +157,8 @@ struct ActionImpl<Helper, ColumnTypes, true> {
                                  const std::array<bool, ColumnTypes::list_size> &isCustomColumn,
                                  const std::map<std::string, std::vector<void *>> &DSValuePtrs)
    {
-      RDFInternal::InitColumnReaders(slot, values, r, colNames, customCols, ColumnTypes{}, isCustomColumn, DSValuePtrs);
+      RDFInternal::RColumnReadersInfo info{colNames, customCols, isCustomColumn.data(), DSValuePtrs};
+      RDFInternal::InitColumnReaders(slot, values, r, ColumnTypes{}, info);
    }
 
    template <std::size_t... S, typename... ColTypes>
