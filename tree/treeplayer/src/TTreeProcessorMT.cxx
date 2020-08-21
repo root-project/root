@@ -271,9 +271,10 @@ static std::vector<std::string> GetTreeFullPaths(const TTree &tree)
       if (motherDir->InheritsFrom("TFile")) {
          return {tree.GetName()};
       }
-      std::string fullPath(motherDir->GetPath());
+      std::string fullPath = motherDir->GetPath(); // e.g. "file.root:/dir"
+      fullPath = fullPath.substr(fullPath.find(":/") + 1); // e.g. "/dir"
       fullPath += "/";
-      fullPath += tree.GetName();
+      fullPath += tree.GetName(); // e.g. "/dir/tree"
       return {fullPath};
    }
 
