@@ -30,10 +30,6 @@ In extended mode, a
 
 #include "RooNLLVar.h"
 
-#include "RooFit.h"
-#include "Riostream.h"
-#include "TMath.h"
-
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
@@ -44,7 +40,9 @@ In extended mode, a
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
 #include "RooHelpers.h"
+#include "RooNaNPacker.h"
 
+#include "TMath.h"
 #include "Math/Util.h"
 
 #include <algorithm>
@@ -502,6 +500,10 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     }
   }
 
+  if (std::isnan(kahanProb.Sum())) {
+    // Some events with evaluation errors. Return "badness" of errors.
+    return std::tuple<double, double, double>{RooNaNPacker::accumulatePayloads(results.begin(), results.end()), 0., sumOfWeights};
+  }
 
   return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), sumOfWeights};
 }
@@ -512,6 +514,7 @@ std::tuple<double, double, double> RooNLLVar::computeScalar(std::size_t stepSize
 
   ROOT::Math::KahanSum<double> kahanWeight;
   ROOT::Math::KahanSum<double> kahanProb;
+  RooNaNPacker packedNaN(0.f);
 
   for (auto i=firstEvent; i<lastEvent; i+=stepSize) {
     _dataClone->get(i) ;
@@ -526,6 +529,12 @@ std::tuple<double, double, double> RooNLLVar::computeScalar(std::size_t stepSize
 
     kahanWeight.Add(eventWeight);
     kahanProb.Add(term);
+    packedNaN.accumulate(term);
+  }
+
+  if (packedNaN.getPayload() != 0.) {
+    // Some events with evaluation errors. Return "badness" of errors.
+    return std::tuple<double, double, double>{packedNaN._payload, 0., kahanWeight.Sum()};
   }
 
   return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};
