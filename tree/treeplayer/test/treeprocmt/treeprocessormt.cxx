@@ -178,9 +178,11 @@ TEST(TreeProcessorMT, TreesWithDifferentNamesVecCtor)
 TEST(TreeProcessorMT, TreeInSubDirectory)
 {
    auto filename = "fileTreeInSubDirectory.root";
-   auto procLambda = [](TTreeReader &r) {
+   int ans = 0;
+   auto procLambda = [&ans](TTreeReader &r) {
+      TTreeReaderValue<int> rv(r, "x");
       while (r.Next())
-         ;
+         ans += *rv;
    };
 
    {
@@ -200,9 +202,10 @@ TEST(TreeProcessorMT, TreeInSubDirectory)
 
    // With a TTree
    TFile f(filename);
-   auto t = (TTree *)f.Get(fullPath);
+   auto t = f.Get<TTree>(fullPath);
    ROOT::TTreeProcessorMT tp(*t);
    tp.Process(procLambda);
+   EXPECT_EQ(ans, 42);
 
    // With a TChain
    std::string chainElementName = filename;
@@ -211,10 +214,65 @@ TEST(TreeProcessorMT, TreeInSubDirectory)
    TChain chain;
    chain.Add(chainElementName.c_str());
    ROOT::TTreeProcessorMT tpc(chain);
+   ans = 0;
    tpc.Process(procLambda);
+   EXPECT_EQ(ans, 42);
 
    gSystem->Unlink(filename);
 }
+
+TEST(TreeProcessorMT, FriendInSubDirectory)
+{
+   auto filename = "fileFriendInSubDirectory.root";
+   int ans = 0;
+   auto procLambda = [&ans](TTreeReader &r) {
+      TTreeReaderValue<int> rv(r, "friend.x");
+      while (r.Next())
+         ans += *rv;
+   };
+
+   {
+      TFile f(filename, "RECREATE");
+      auto dir0 = f.mkdir("dir0");
+      dir0->cd();
+      auto dir1 = dir0->mkdir("dir1");
+      dir1->cd();
+      TTree t("tree", "tree");
+      int x = 42;
+      t.Branch("x", &x);
+      t.Fill();
+      t.Write();
+   }
+
+   auto fullPath = "dir0/dir1/tree";
+
+   // With a TTree
+   TFile f1(filename);
+   auto t = f1.Get<TTree>(fullPath);
+   TFile f2(filename);
+   auto tf = f2.Get<TTree>(fullPath);
+   t->AddFriend(tf, "friend");
+   ROOT::TTreeProcessorMT tp(*t);
+   tp.Process(procLambda);
+   EXPECT_EQ(ans, 42);
+
+   // With a TChain
+   std::string chainElementName = filename;
+   chainElementName += "/";
+   chainElementName += fullPath;
+   TChain chain;
+   chain.Add(chainElementName.c_str());
+   TChain frchain;
+   frchain.Add(chainElementName.c_str());
+   chain.AddFriend(&frchain, "friend");
+   ROOT::TTreeProcessorMT tpc(chain);
+   ans = 0;
+   tpc.Process(procLambda);
+   EXPECT_EQ(ans, 42);
+
+   gSystem->Unlink(filename);
+}
+
 
 TEST(TreeProcessorMT, LimitNTasks_CheckEntries)
 {
