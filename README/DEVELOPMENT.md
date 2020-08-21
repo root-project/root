@@ -1,7 +1,5 @@
 # ROOT Development Practice
 
-*Vassil Vassilev*
-
 ## Overview
 
 The development of ROOT almost exclusively happens using the [pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests)
@@ -62,7 +60,7 @@ following test:
 TEST(MyROOTFunc, ErrorCases)
 {
   ROOT_EXPECT_ERROR(MyROOTFunc(0), "MyROOTFunc", "x should be greater than 0!");
-  // Also ROOT_EXPECT_WARNING, ROOT_EXPECT_INFO and ROOT_EXPECT_NODIAG available.
+  // Also ROOT_EXPECT_WARNING, ROOT_EXPECT_INFO, ROOT_EXPECT_NODIAG and ROOT_EXPECT_SYSERROR available.
 }
 
 ```
