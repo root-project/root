@@ -81,6 +81,7 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include "RooGlobalFunc.h"
 #include "RooRealIntegral.h"
 #include "RooTrace.h"
+#include "RooNaNPacker.h"
 
 #include "Riostream.h"
 #include <algorithm>
@@ -723,6 +724,8 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
       // Treat coefficient degeneration
       const float coefDegen = lastCoef < 0. ? -lastCoef : (lastCoef > 1. ? lastCoef - 1. : 0.);
       if (coefDegen > 1.E-5) {
+        myCoefCache[_coefList.getSize()] = RooNaNPacker::packFloatIntoNaN(100.f*coefDegen);
+
         if (_coefErrCount-->0) {
           coutW(Eval) << "RooAddPdf::updateCoefCache(" << GetName()
 		            << " WARNING: sum of PDF coefficients not in range [0-1], value="
