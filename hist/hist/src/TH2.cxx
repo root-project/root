@@ -717,7 +717,7 @@ void TH2::DoFitSlices(bool onX,
    if (lastbin < 0 || lastbin > nbins + 1) lastbin = nbins + 1;
    if (lastbin < firstbin) {firstbin = 0; lastbin = nbins + 1;}
 
-   
+
    TString opt = option;
    TString proj_opt = "e";
    Int_t i1 = opt.Index("[");
@@ -761,11 +761,11 @@ void TH2::DoFitSlices(bool onX,
    const TArrayD *bins = outerAxis.GetXbins();
    // outer axis boudaries used for creating reported histograms are different
    // than the limits used in the projection loop (firstbin,lastbin)
-   Int_t firstOutBin = outerAxis.TestBit(TAxis::kAxisRange) ? std::max(firstbin,1) : 1; 
+   Int_t firstOutBin = outerAxis.TestBit(TAxis::kAxisRange) ? std::max(firstbin,1) : 1;
    Int_t lastOutBin = outerAxis.TestBit(TAxis::kAxisRange) ?  std::min(lastbin,outerAxis.GetNbins() ) : outerAxis.GetNbins();
    Int_t nOutBins = lastOutBin-firstOutBin+1;
    // merge bins if use nstep > 1 and fixed bins
-   if (bins->fN == 0) nOutBins /= nstep;  
+   if (bins->fN == 0) nOutBins /= nstep;
    for (ipar=0;ipar<npar;ipar++) {
       snprintf(name,2000,"%s_%d",GetName(),ipar);
       snprintf(title,2000,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
@@ -831,7 +831,7 @@ void TH2::DoFitSlices(bool onX,
       }
       // don't need to delete hp. If histogram has the same name it is re-used in TH2::Projection
    }
-   delete hp; 
+   delete hp;
    delete [] parsave;
    delete [] name;
    delete [] title;
@@ -1148,10 +1148,14 @@ void TH2::GetStats(Double_t *stats) const
             if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1;
          }
       }
+      // check for labels axis . In that case corresponsing statistics do not make sense and it is set to zero
+      Bool_t labelXaxis =  ((const_cast<TAxis&>(fXaxis)).GetLabels() && fXaxis.CanExtend() );
+      Bool_t labelYaxis =  ((const_cast<TAxis&>(fYaxis)).GetLabels() && fYaxis.CanExtend() );
+
       for (Int_t biny = firstBinY; biny <= lastBinY; ++biny) {
-         Double_t y = fYaxis.GetBinCenter(biny);
+         Double_t y = (!labelYaxis) ? fYaxis.GetBinCenter(biny) : 0;
          for (Int_t binx = firstBinX; binx <= lastBinX; ++binx) {
-            Double_t x = fXaxis.GetBinCenter(binx);
+            Double_t x = (!labelXaxis) ? fXaxis.GetBinCenter(binx) : 0;
             //w   = TMath::Abs(GetBinContent(bin));
             Int_t bin = GetBin(binx,biny);
             Double_t w = RetrieveBinContent(bin);
