@@ -288,16 +288,31 @@ void InitColumnReadersHelper(std::unique_ptr<RColumnReaderBase<T>> &colReader, u
    colReader.swap(newColReader);
 }
 
+/// This type aggregates some of the arguments passed to InitColumnReaders.
+/// We need to pass a single RColumnReadersInfo object rather than each argument separately because with too many
+/// arguments passed, gcc 7.5.0 and cling disagree on the ABI, which leads to the last function argument being read
+/// incorrectly from a compiled InitColumnReaders symbols when invoked from a jitted symbol.
+struct RColumnReadersInfo {
+   const std::vector<std::string> &fColNames;
+   const RBookedCustomColumns &fCustomCols;
+   const bool *fIsCustomColumn;
+   const std::map<std::string, std::vector<void *>> &fDSValuePtrsMap;
+};
+
 /// Initialize a tuple of column readers.
 /// For real TTree branches a TTreeReader{Array,Value} is built and passed to the
 /// RColumnValue. For temporary columns a pointer to the corresponding variable
 /// is passed instead.
 template <typename RDFValueTuple, std::size_t... S>
-void InitColumnReaders(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader *r,
-                       const std::vector<std::string> &colNames, const RBookedCustomColumns &customCols,
-                       std::index_sequence<S...>, const std::array<bool, sizeof...(S)> &isCustomColumn,
-                       const std::map<std::string, std::vector<void *>> &DSValuePtrsMap)
+void InitColumnReaders(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader *r, std::index_sequence<S...>,
+                       const RColumnReadersInfo &colInfo)
 {
+   // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
+   const auto &colNames = colInfo.fColNames;
+   const auto &customCols = colInfo.fCustomCols;
+   const bool *isCustomColumn = colInfo.fIsCustomColumn;
+   const auto &DSValuePtrsMap = colInfo.fDSValuePtrsMap;
+
    const auto &customColMap = customCols.GetColumns();
 
    using expander = int[];

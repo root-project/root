@@ -108,8 +108,9 @@ public:
    {
       for (auto &bookedBranch : fCustomColumns.GetColumns())
          bookedBranch.second->InitSlot(r, slot);
-      RDFInternal::InitColumnReaders(slot, fValues[slot], r, fColumnNames, fCustomColumns, TypeInd_t(),
-                                     fIsCustomColumn, fLoopManager->GetDSValuePtrs());
+      RDFInternal::RColumnReadersInfo info{fColumnNames, fCustomColumns, fIsCustomColumn.data(),
+                                           fLoopManager->GetDSValuePtrs()};
+      RDFInternal::InitColumnReaders(slot, fValues[slot], r, TypeInd_t(), info);
    }
 
    // recursive chain of `Report`s
