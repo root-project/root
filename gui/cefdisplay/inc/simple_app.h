@@ -28,6 +28,8 @@
 
 class THttpServer;
 
+class RCefWebDisplayHandle;
+
 // Implement application-level callbacks for the browser process.
 class SimpleApp : public CefApp, public CefBrowserProcessHandler /*, public CefRenderProcessHandler */ {
 protected:
@@ -36,6 +38,7 @@ protected:
    std::string fFirstUrl;   ///<! first URL to open
    bool fFirstBatch{false}; ///<! indicate batch mode
    CefRect fFirstRect;      ///<! original width
+   RCefWebDisplayHandle *fNextHandle{nullptr}; ///< next handle where browser will be created
 
    CefRefPtr<OsrHandler> fOsrHandler; ///<! batch-mode handler
    bool fUseViewes{false};            ///<! is views are used
@@ -45,6 +48,8 @@ protected:
 
 public:
    SimpleApp(const std::string &cef_main, const std::string &url = "", bool isbatch = false, int width = 0, int height = 0);
+
+   void SetNextHandle(RCefWebDisplayHandle *handle);
 
    // CefApp methods:
    virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE { return this; }
