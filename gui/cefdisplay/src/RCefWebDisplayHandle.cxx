@@ -24,6 +24,7 @@
 
 #include "TTimer.h"
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TEnv.h"
 #include "TApplication.h"
 
@@ -43,6 +44,30 @@ public:
 };
 
 
+class FrameSourceVisitor : public CefStringVisitor {
+
+   RCefWebDisplayHandle *fHandle{nullptr};
+
+public:
+
+   FrameSourceVisitor(RCefWebDisplayHandle *handle) : CefStringVisitor(), fHandle(handle) {}
+
+   virtual ~FrameSourceVisitor() = default;
+
+   void Visit( const CefString& str ) override
+   {
+      if (fHandle) fHandle->SetContent(str.ToString());
+   }
+
+private:
+   // Include the default reference counting implementation.
+   IMPLEMENT_REFCOUNTING(FrameSourceVisitor);
+   DISALLOW_COPY_AND_ASSIGN(FrameSourceVisitor);
+};
+
+
+
+
 std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Display(const ROOT::Experimental::RWebDisplayArgs &args)
 {
 
@@ -59,15 +84,22 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
       CefRect rect((args.GetX() > 0) ? args.GetX() : 0, (args.GetY() > 0) ? args.GetY() : 0,
             (args.GetWidth() > 0) ? args.GetWidth() : 800, (args.GetHeight() > 0) ? args.GetHeight() : 600);
       fCefApp->StartWindow(args.GetFullUrl(), args.IsHeadless(), rect);
+
+      if (args.IsHeadless())
+         handle->WaitForContent(30); // 30 seconds
+
       return handle;
    }
-
-   TApplication *root_app = gROOT->GetApplication();
 
 #if defined(OS_WIN)
    CefMainArgs main_args(GetModuleHandle(nullptr));
 #else
-   CefMainArgs main_args(root_app->Argc(), root_app->Argv());
+   TApplication *root_app = gROOT->GetApplication();
+
+   int cef_argc = 1;
+   char* cef_argv[] = { root_app->Argv(0), nullptr };
+
+   CefMainArgs main_args(cef_argc, cef_argv);
 #endif
 
    // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
@@ -130,6 +162,9 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    TCefTimer *timer = new TCefTimer((interval > 0) ? interval : 10, kTRUE);
    timer->TurnOn();
 
+   if (args.IsHeadless())
+      handle->WaitForContent(30); // 30 seconds
+
    // window not yet exists here
    return handle;
 }
@@ -146,6 +181,40 @@ RCefWebDisplayHandle::~RCefWebDisplayHandle()
    }
 
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Process system events until browser content is available
+/// Used in headless mode for batch production like chrome --dump-dom is doing
+
+bool RCefWebDisplayHandle::WaitForContent(int tmout_sec)
+{
+   int expired = tmout_sec * 100;
+
+   bool did_try = false;
+
+   while ((--expired > 0) && fContent.empty()) {
+
+      if (gSystem->ProcessEvents()) break; // interrupted, has to return
+
+      CefDoMessageLoopWork();
+
+      if (fBrowser && !did_try) {
+
+         auto frame = fBrowser->GetMainFrame();
+
+         if (frame && fBrowser->HasDocument() && !fBrowser->IsLoading()) {
+            frame->GetSource(new FrameSourceVisitor(this));
+            did_try = true;
+         }
+      }
+
+      gSystem->Sleep(10); // only 10 ms sleep
+   }
+
+   return !fContent.empty();
+}
+
 
 void RCefWebDisplayHandle::AddCreator()
 {
