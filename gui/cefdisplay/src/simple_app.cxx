@@ -303,6 +303,13 @@ SimpleApp::SimpleApp(const std::string &cef_main, const std::string &url, bool i
    fFirstRect.Set(0, 0, width, height);
 }
 
+
+void SimpleApp::SetNextHandle(RCefWebDisplayHandle *handle)
+{
+   fNextHandle = handle;
+}
+
+
 void SimpleApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar)
 {
    // registrar->AddCustomScheme("rootscheme", true, true, true, true, true, true);
@@ -457,13 +464,18 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
       // Create the first browser window.
 #if CEF_COMMIT_NUMBER > 1934
-      if (batch) {
-         auto browser = CefBrowserHost::CreateBrowserSync(window_info, fGuiHandler, url, browser_settings, nullptr, nullptr);
+      auto browser = CefBrowserHost::CreateBrowserSync(window_info, fGuiHandler, url, browser_settings, nullptr, nullptr);
 
-         printf("Starting browser is loading %d hasdocument %d\n", browser->IsLoading(), browser->HasDocument());
+      if (fNextHandle) {
+         fNextHandle->SetBrowser(browser);
+         fNextHandle = nullptr; // used only once
+      }
 
-         printf("Start StartWindow() event loop\n");
+      printf("Starting browser is loading %d hasdocument %d\n", browser->IsLoading(), browser->HasDocument());
 
+      if(batch) {
+
+         printf("Start StartWindow() batch event loop\n");
 
          while(browser) {
 
@@ -486,11 +498,8 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
          }
 
          printf("End StartWindow() loop\n");
-
-
-      } else {
-         CefBrowserHost::CreateBrowser(window_info, fGuiHandler, url, browser_settings, nullptr, nullptr);
       }
+
 #else
       CefBrowserHost::CreateBrowser(window_info, fGuiHandler, url, browser_settings, nullptr);
 #endif

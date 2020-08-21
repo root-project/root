@@ -20,10 +20,7 @@
 
 #include "simple_app.h"
 
-namespace ROOT {
-namespace Experimental {
-
-class RCefWebDisplayHandle : public RWebDisplayHandle {
+class RCefWebDisplayHandle : public ROOT::Experimental::RWebDisplayHandle {
 protected:
    class CefCreator : public Creator {
 
@@ -32,7 +29,7 @@ protected:
       CefCreator() = default;
       virtual ~CefCreator() = default;
 
-      std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override;
+      std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> Display(const ROOT::Experimental::RWebDisplayArgs &args) override;
    };
 
    enum EValidValues { kValid = 0x3C3C3C3C, kInvalid = 0x92929292 };
@@ -42,17 +39,16 @@ protected:
    CefRefPtr<CefBrowser> fBrowser; ///< associated browser
 
 public:
-   RCefWebDisplayHandle(const std::string &url) : RWebDisplayHandle(url) {}
+   RCefWebDisplayHandle(const std::string &url) : ROOT::Experimental::RWebDisplayHandle(url) {}
 
    virtual ~RCefWebDisplayHandle();
 
    bool IsValid() const { return fValid == kValid; }
 
+   void SetBrowser(CefRefPtr<CefBrowser> br) { if (IsValid()) fBrowser = br; }
+
    static void AddCreator();
 };
-
-} // namespace Experimental
-} // namepsace ROOT
 
 
 #endif
