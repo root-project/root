@@ -20,16 +20,15 @@
 #include "Fit/ParameterSettings.h"
 #include "Fit/FitResult.h"
 
-#include "TMatrixDSym.h"
-
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 
-#include <iostream>
 #include <fstream>
 #include <vector>
 
 class RooMinimizer;
+template<typename T> class TMatrixTSym;
+using TMatrixDSym = TMatrixTSym<double>;
 
 class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {
 
@@ -67,40 +66,33 @@ class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {
 
 
  private:
-  
-  Double_t GetPdfParamVal(Int_t index);
-  Double_t GetPdfParamErr(Int_t index);
   void SetPdfParamErr(Int_t index, Double_t value);
   void ClearPdfParamAsymErr(Int_t index);
   void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
 
-  inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const;
-
+  Bool_t SetPdfParamVal(int index, double value) const;
+  void printEvalErrors() const;
 
   virtual double DoEval(const double * x) const;  
-  void updateFloatVec() ;
 
-private:
 
-  mutable Int_t _evalCounter ;
-  
   RooAbsReal *_funct;
-  RooMinimizer *_context;
+  const RooMinimizer *_context;
 
   mutable double _maxFCN;
   mutable int _numBadNLL;
   mutable int _printEvalErrors;
-  Bool_t _doEvalErrorWall;
-
+  mutable int _evalCounter{0};
   int _nDim;
-  std::ofstream *_logfile;
-  bool _verbose;
 
   RooArgList* _floatParamList;
-  std::vector<RooAbsArg*> _floatParamVec ;
   RooArgList* _constParamList;
   RooArgList* _initFloatParamList;
   RooArgList* _initConstParamList;
+
+  std::ofstream *_logfile;
+  bool _doEvalErrorWall;
+  bool _verbose;
 
 };
 
