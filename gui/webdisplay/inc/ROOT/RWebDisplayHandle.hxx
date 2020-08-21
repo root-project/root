@@ -87,6 +87,8 @@ public:
 
    std::string GetUrl() const { return fUrl; }
 
+   virtual std::string GetDumpContent() const { return ""; }
+
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 
    static bool DisplayUrl(const std::string &url);

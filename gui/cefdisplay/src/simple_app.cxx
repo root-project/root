@@ -335,12 +335,11 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
 
    // printf("OnBeforeChildProcessLaunch %s LastBatch %s\n", command_line->GetProgram().ToString().c_str(), fLastBatch ? "true" : "false");
 
-   if (fLastBatch) {
-      command_line->AppendSwitch("disable-webgl");
-      command_line->AppendSwitch("disable-gpu");
-      command_line->AppendSwitch("disable-gpu-compositing");
-//      command_line->AppendSwitch("disable-gpu-sandbox");
-   }
+//   if (fLastBatch) {
+//      command_line->AppendSwitch("disable-webgl");
+//      command_line->AppendSwitch("disable-gpu");
+//      command_line->AppendSwitch("disable-gpu-compositing");
+//   }
 
    // auto str = command_line->GetCommandLineString().ToString();
    // printf("RUN %s\n", str.c_str());
@@ -354,42 +353,14 @@ void SimpleApp::OnContextInitialized()
 
    if (!fFirstUrl.empty())
       StartWindow(fFirstUrl, fFirstBatch, fFirstRect);
-
-   printf("StartWindow completed!!\n");
-
 }
-
-
-
-class MyVisitor : public CefStringVisitor {
-public:
-
-   MyVisitor() : CefStringVisitor() {}
-
-   virtual ~MyVisitor() {}
-
-   void Visit( const CefString& str ) override
-   {
-      printf("Visit content len = %ld\n", str.length());
-
-      std::string s = str.ToString();
-
-      printf("Visit content substr(1000) = %s\n", s.substr(0,1000).c_str());
-
-   }
-private:
-   // Include the default reference counting implementation.
-   IMPLEMENT_REFCOUNTING(MyVisitor);
-   DISALLOW_COPY_AND_ASSIGN(MyVisitor);
-};
-
 
 
 void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
 
-   fLastBatch = false; // batch;
+   fLastBatch = batch;
 
    std::string url;
 
@@ -469,35 +440,6 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       if (fNextHandle) {
          fNextHandle->SetBrowser(browser);
          fNextHandle = nullptr; // used only once
-      }
-
-      printf("Starting browser is loading %d hasdocument %d\n", browser->IsLoading(), browser->HasDocument());
-
-      if(batch) {
-
-         printf("Start StartWindow() batch event loop\n");
-
-         while(browser) {
-
-            CefDoMessageLoopWork();
-
-            // printf("Last browser loading %d hasdocument %d\n", last_browser->IsLoading(), last_browser->HasDocument());
-
-            auto frame = browser->GetMainFrame();
-
-            if (frame && browser->HasDocument() && !browser->IsLoading()) {
-               CefRefPtr< CefStringVisitor > visitor = new MyVisitor();
-               frame->GetSource(visitor);
-               browser = nullptr;
-
-               break; // do once
-
-            }
-
-            gSystem->Sleep(5);
-         }
-
-         printf("End StartWindow() loop\n");
       }
 
 #else

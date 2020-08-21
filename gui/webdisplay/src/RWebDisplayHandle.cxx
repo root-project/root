@@ -97,12 +97,13 @@ class RWebBrowserHandle : public RWebDisplayHandle {
 #else
    typedef pid_t browser_process_id;
 #endif
-   std::string fTmpDir;
+   std::string fTmpDir;         ///< temporary directory to delete at the end
+   std::string fDumpContent;    ///< dump content, used with headless mode
    bool fHasPid{false};
    browser_process_id fPid;
 
 public:
-   RWebBrowserHandle(const std::string &url, const std::string &tmpdir) : RWebDisplayHandle(url), fTmpDir(tmpdir) {}
+   RWebBrowserHandle(const std::string &url, const std::string &tmpdir, const std::string &dump) : RWebDisplayHandle(url), fTmpDir(tmpdir), fDumpContent(dump)  {}
 
    RWebBrowserHandle(const std::string &url, const std::string &tmpdir, browser_process_id pid)
       : RWebDisplayHandle(url), fTmpDir(tmpdir), fHasPid(true), fPid(pid)
@@ -123,6 +124,9 @@ public:
       if (!fTmpDir.empty())
          gSystem->Exec((rmdir + fTmpDir).c_str());
    }
+
+   std::string GetDumpContent() const override { return fDumpContent; }
+
 };
 
 } // namespace Experimental
@@ -312,7 +316,7 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
 
       _spawnv(_P_NOWAIT, fProg.c_str(), argv.data());
 
-      return std::make_unique<RWebBrowserHandle>(url, rmdir);
+      return std::make_unique<RWebBrowserHandle>(url, rmdir, ""s);
    }
 
    std::string prog = "\""s + gSystem->UnixPathName(fProg.c_str()) + "\""s;
@@ -329,18 +333,27 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
 
    exec = std::regex_replace(exec, std::regex("\\$prog"), prog);
 
-   if (!args.GetRedirectOutput().empty()) {
+   std::string redirect = args.GetRedirectOutput(), dump_content;
+
+   if (!redirect.empty()) {
       auto p = exec.length();
       if (exec.rfind("&") == p-1) --p;
-      exec.insert(p, " >"s + args.GetRedirectOutput() + " "s);
+      exec.insert(p, " >"s + redirect + " "s);
    }
 
    R__DEBUG_HERE("WebDisplay") << "Showing web window in browser with:\n" << exec;
 
    gSystem->Exec(exec.c_str());
 
+   // read content of redirected output
+   if (!redirect.empty()) {
+      dump_content = THttpServer::ReadFileContent(redirect.c_str());
+
+      gSystem->Unlink(redirect.c_str());
+   }
+
    // add rmdir if required
-   return std::make_unique<RWebBrowserHandle>(url, rmdir);
+   return std::make_unique<RWebBrowserHandle>(url, rmdir, dump_content);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -645,9 +658,12 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
 
    filecont = std::regex_replace(filecont, std::regex("\\$draw_object"), json);
 
+   RWebDisplayArgs args; // set default browser kind, but only Chrome or CEF can be used here
+   if (args.GetBrowserKind() != RWebDisplayArgs::kCEF)
+      args.SetBrowserKind(RWebDisplayArgs::kChrome);
 
    TString dump_name;
-   if (draw_kind != "draw") {
+   if ((draw_kind != "draw") && (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
       dump_name = "canvasdump";
       FILE *df = gSystem->TempFileName(dump_name);
       if (!df) {
@@ -659,7 +675,7 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
    }
 
    // When true, place HTML file into home directory
-   // Some Crome installation do not allow run html code from files, created in /tmp directory
+   // Some Chrome installation do not allow run html code from files, created in /tmp directory
    static bool chrome_tmp_workaround = false;
 
 try_again:
@@ -704,8 +720,6 @@ try_again:
 
    TString wait_file_name;
 
-   ROOT::Experimental::RWebDisplayArgs args;
-   args.SetBrowserKind(ROOT::Experimental::RWebDisplayArgs::kChrome);
    args.SetStandalone(true);
    args.SetHeadless(true);
    args.SetSize(width, height);
@@ -719,15 +733,14 @@ try_again:
       else
          args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
 
-   } else {
+   } else if (args.GetBrowserKind() == RWebDisplayArgs::kChrome) {
       // require temporary output file
       args.SetExtraArgs("--dump-dom");
       args.SetRedirectOutput(dump_name.Data());
 
-      wait_file_name = dump_name;
+      // wait_file_name = dump_name;
 
       gSystem->Unlink(dump_name.Data());
-      // printf("Redirect to %s\n", dump_name.Data());
    }
 
    // remove target image file - we use it as detection when chrome is ready
@@ -736,25 +749,23 @@ try_again:
    auto handle = ROOT::Experimental::RWebDisplayHandle::Display(args);
 
    if (!handle) {
-      R__DEBUG_HERE("CanvasPainter") << "Cannot start Chrome to produce image " << fname;
+      R__DEBUG_HERE("CanvasPainter") << "Cannot start " << args.GetBrowserName() << " to produce image " << fname;
       return false;
    }
 
    // delete temporary HTML file
    gSystem->Unlink(html_name.Data());
 
-   if (gSystem->AccessPathName(wait_file_name.Data())) {
+   if (!wait_file_name.IsNull() && gSystem->AccessPathName(wait_file_name.Data())) {
       R__ERROR_HERE("CanvasPainter") << "Fail to produce image " << fname;
       return false;
    }
 
    if (draw_kind != "draw") {
 
-      auto dumpcont = THttpServer::ReadFileContent(dump_name.Data());
+      auto dumpcont = handle->GetDumpContent();
 
-      gSystem->Unlink(dump_name.Data());
-
-      if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && !chrome_tmp_workaround) {
+      if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && !chrome_tmp_workaround && (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
          // chrome creates dummy html file with mostly no content
          // problem running chrome from /tmp directory, lets try work from home directory
          chrome_tmp_workaround = true;
@@ -762,7 +773,7 @@ try_again:
       }
 
       if (dumpcont.length() < 100) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to dump HTML code into " << dump_name;
+         R__ERROR_HERE("CanvasPainter") << "Fail to dump HTML code into " << (dump_name.IsNull() ? "CEF" : dump_name.Data());
          return false;
       }
 

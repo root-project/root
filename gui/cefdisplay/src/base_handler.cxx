@@ -49,9 +49,6 @@ void BaseHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 
    // Add to the list of existing browsers.
    browser_list_.push_back(browser);
-
-   printf("Starting browser is loading %d hadcoument %d\n", browser->IsLoading(), browser->HasDocument());
-
 }
 
 bool BaseHandler::DoClose(CefRefPtr<CefBrowser> browser)

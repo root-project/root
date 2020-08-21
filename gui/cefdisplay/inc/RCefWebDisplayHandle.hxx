@@ -38,6 +38,8 @@ protected:
 
    CefRefPtr<CefBrowser> fBrowser; ///< associated browser
 
+   std::string fContent;  ///< dump content of batch htmnl page
+
 public:
    RCefWebDisplayHandle(const std::string &url) : ROOT::Experimental::RWebDisplayHandle(url) {}
 
@@ -47,7 +49,14 @@ public:
 
    void SetBrowser(CefRefPtr<CefBrowser> br) { if (IsValid()) fBrowser = br; }
 
+   bool WaitForContent(int tmout_sec);
+
+   void SetContent(const std::string &cont) { if (IsValid()) fContent = cont; }
+
+   std::string GetDumpContent() const override { return fContent; }
+
    static void AddCreator();
+
 };
 
 

@@ -52,35 +52,34 @@ See details about [Chromimum Embeded Framework](https://bitbucket.org/chromiumem
 ~~~
 
 
-## Using CEF in batch mode on Linux
+## Using plain CEF in ROOT batch mode on Linux
 
 CEF under Linux uses X11 functionality and therefore requires configured display and running X11 server
-On the long run there is hope, that CEF introduces true headless mode - chromium itself
-[already supports it](https://chromium.googlesource.com/chromium/src/+/lkgr/headless/README.md).
+Unfortunately, CEF developers [will not support](https://bitbucket.org/chromiumembedded/cef/issues/2349/)
+chrome headless mode, where X11 server can be avoided completely.
 
-There is [PR to compile CEF without X11](https://bitbucket.org/chromiumembedded/cef/issues/2296/linux-add-ozone-mus-support-as-an) - probably it will be merged in the master soon.
+Nevertheless, ROOT allow to use CEF in batch mode, running `Xvfb` server. Most simple way is to use
+`xvfb-run` utility like:
 
-There is simple workaround for this problem.
-One could use [Xvfb](https://en.wikipedia.org/wiki/Xvfb) as X11 server.
-It does not require any graphics adapter, screen or input device.
-CEF works with  Xvfb without problem.
+~~~
+      $ xvfb-run --server-args='-screen 0, 1024x768x16'  root.exe -l --web=cef $ROOTSYS/tutorials/v7/line.cxx -q
+~~~
 
-1. Start Xvfb
+Or run `Xvfb` before starting ROOT:
 
 ~~~
      $ Xvfb :99 &
      $ export DISPLAY=:99
+     $ root.exe -l --web=cef $ROOTSYS/tutorials/v7/line.cxx -q
 ~~~
 
-2. Run macro in batch mode:
 
-~~~
-     $ root -l -b --web cef draw_v6.cxx -q
-~~~
+## Using CEF with ozone driver in headless mode
 
-Or one can start with special `xvfb-run` script which starts Xvfb, executes root macro and then stop Xvfb
+Since March 2019 one can compile [CEF without X11](https://bitbucket.org/chromiumembedded/cef/issues/2296/), but this
+is not included in available binary builds. Therefore to be able use it, one should compile CEF from source.
+[Here](https://bitbucket.org/chromiumembedded/cef/wiki/AutomatedBuildSetup.md) is complete comilation documentation.
+As usual - main problem is to provide all necessary dependency to be able compile it.
 
-~~~
-     $ xvfb-run --server-args='-screen 0, 1024x768x16' root -l -b --web cef draw_file.cxx -q
-~~~
+
 
