@@ -1163,13 +1163,19 @@ void TH3::GetStats(Double_t *stats) const
             if (lastBinZ ==  fZaxis.GetNbins() ) lastBinZ += 1;
          }
       }
+
+      // check for labels axis . In that case corresponsing statistics do not make sense and it is set to zero
+      Bool_t labelXaxis =  ((const_cast<TAxis&>(fXaxis)).GetLabels() && fXaxis.CanExtend() );
+      Bool_t labelYaxis =  ((const_cast<TAxis&>(fYaxis)).GetLabels() && fYaxis.CanExtend() );
+      Bool_t labelZaxis =  ((const_cast<TAxis&>(fZaxis)).GetLabels() && fZaxis.CanExtend() );
+
       for (binz = firstBinZ; binz <= lastBinZ; binz++) {
-         z = fZaxis.GetBinCenter(binz);
+         z = (!labelZaxis) ? fZaxis.GetBinCenter(binz) : 0;
          for (biny = firstBinY; biny <= lastBinY; biny++) {
-            y = fYaxis.GetBinCenter(biny);
+            y = (!labelYaxis) ? fYaxis.GetBinCenter(biny) : 0;
             for (binx = firstBinX; binx <= lastBinX; binx++) {
                bin = GetBin(binx,biny,binz);
-               x   = fXaxis.GetBinCenter(binx);
+               x = (!labelXaxis) ? fXaxis.GetBinCenter(binx) : 0;
                //w   = TMath::Abs(GetBinContent(bin));
                w   = RetrieveBinContent(bin);
                err = TMath::Abs(GetBinError(bin));

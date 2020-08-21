@@ -5292,6 +5292,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
    Double_t entries = fEntries;
    Int_t n = TMath::Min(axis->GetNbins(), labels->GetSize());
    std::vector<Int_t> a(n+2);
+   std::vector<Int_t> b(n);
 
    Int_t i,j,k;
    std::vector<Double_t>  cont;
@@ -5312,20 +5313,22 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
       if (GetDimension() == 1) {
          cont.resize(n);
          if (fSumw2.fN) errors.resize(n);
-         for (i=1;i<=n;i++) {
-            cont[i-1] = GetBinContent(i);
-            if (!errors.empty()) errors[i-1] = GetBinError(i);
+         for (i=0; i<n ;i++) {
+            cont[i] = GetBinContent(i+1);
+            if (!errors.empty()) errors[i] = GetBinError(i+1);
+            b[i] = labold->At(i)->GetUniqueID();   // this is the bin corresponding to the label
+            a[i] = i;
          }
          if (sort ==1) TMath::Sort(n,cont.data(),a.data(),kTRUE);  //sort by decreasing values
          else          TMath::Sort(n,cont.data(),a.data(),kFALSE); //sort by increasing values
-         for (i=1;i<=n;i++) {
-            SetBinContent(i,cont[a[i-1]]);
-            if (!errors.empty()) SetBinError(i,errors[a[i-1]]);
+         for (i=0; i<n; i++) {
+            SetBinContent(i+1,cont[b[a[i]]]);
+            if (!errors.empty()) SetBinError(i+1,errors[b[a[i]]]);
          }
-         for (i=1;i<=n;i++) {
-            obj = labold->At(a[i-1]);
+         for (i=0; i<n; i++) {
+            obj = labold->At(a[i]);
             labels->Add(obj);
-            obj->SetUniqueID(i);
+            obj->SetUniqueID(i+1);
          }
       } else if (GetDimension()== 2) {
          std::vector<Double_t> pcont(n+2);
@@ -5371,6 +5374,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
       }
    } else {
       //---alphabetic sort
+#if 0
       const UInt_t kUsed = 1<<18;
       TObject *objk=0;
       a[0] = 0;
@@ -5385,6 +5389,9 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
             if (strcmp(label,obj->GetName()) < 0) continue;
             objk = obj;
             a[i] = j;
+            if (gDebug) {
+               Info("LabelsOption","Order labels alhphabetic bin %d goes in %d label %s",j,i);
+            }
             label = obj->GetName();
          }
          if (objk) {
@@ -5398,45 +5405,101 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
          if (!obj) continue;
          obj->ResetBit(kUsed);
       }
+#endif
+      // sort labels using vector of strings and TMath::Sort
+      // I need to array because labels order in list is not necessary that of the bins
+      std::vector<std::string> vecLabels(n);
+      for (i=0; i < n; i++) {
+         vecLabels[i] = labold->At(i)->GetName();
+         b[i] = labold->At(i)->GetUniqueID();   // this is the bin corresponding to the label
+         a[i] = i;
+      }
+      // sort in ascending order for strings
+      TMath::Sort(n, vecLabels.data(), a.data(), kFALSE);
+      // set the new labels
+      for (i=0; i < n; i++) {
+         TObject * labelObj = labold->At(a[i]);
+         labels->Add( labold->At(a[i]) );
+         // set the corresponding bin. NB bin starts from 1
+         labelObj->SetUniqueID(i+1);
+         if (gDebug) std::cout << "bin " << i+1 << " setting new labels for axis " << labold->At(a[i])->GetName() << " from " << b[a[i]] << std::endl;
+      }
 
       if (GetDimension() == 1) {
          cont.resize(n+2);
          if (fSumw2.fN) errors.resize(n+2);
-         for (i=1;i<=n;i++) {
-            cont[i] = GetBinContent(a[i]);
-            if (!errors.empty()) errors[i] = GetBinError(a[i]);
+         for (i=0 ;i < n; i++) {
+            cont[i] = GetBinContent(b[a[i]]);
+            if (!errors.empty()) errors[i] = GetBinError(b[a[i]]);
          }
-         for (i=1;i<=n;i++) {
-            SetBinContent(i,cont[i]);
-            if (!errors.empty()) SetBinError(i,errors[i]);
+         for (i = 0; i < n ; i++) {
+            SetBinContent(i+1,cont[i]);
+            if (!errors.empty()) SetBinError(i+1,errors[i]);
          }
       } else if (GetDimension()== 2) {
          Int_t nx = fXaxis.GetNbins()+2;
          Int_t ny = fYaxis.GetNbins()+2;
          cont.resize(nx*ny);
          if (fSumw2.fN) errors.resize(nx*ny);
-         for (i=0;i<nx;i++) {
-            for (j=0;j<ny;j++) {
-               cont[i+nx*j] = GetBinContent(i,j);
-               if (!errors.empty()) errors[i+nx*j] = GetBinError(i,j);
+         // copy old bin contents and then set to new ordered bins
+         // N.B. bin in histograms starts from 1, but in y we consider under/overflows
+         for (i = 0 ; i < nx; i++) {
+            for (j = 0; j < ny; j++) {  // ny is nbins+2
+               cont[i + nx*j] = GetBinContent(i,j);
+               if (!errors.empty()) errors[i + nx*j] = GetBinError(i,j);
             }
          }
          if (axis == GetXaxis()) {
-            for (i=1;i<=n;i++) {
-               for (j=0;j<ny;j++) {
-                  SetBinContent(i,j,cont[a[i]+nx*j]);
-                  if (!errors.empty()) SetBinError(i,j,errors[a[i]+nx*j]);
+            for (i = 0; i < n; i++) {
+               for (j = 0; j < ny; j++) {
+                  SetBinContent(i + 1, j, cont[b[a[i]] + nx * j]);
+                  if (!errors.empty())
+                     SetBinError(i + 1, j, errors[b[a[i]] + nx * j]);
                }
             }
          } else {
-            for (i=0;i<nx;i++) {
-               for (j=1;j<=n;j++) {
-                  SetBinContent(i,j,cont[i+nx*a[j]]);
-                  if (!errors.empty()) SetBinError(i,j,errors[i+nx*a[j]]);
+            for (i = 0; i < nx; i++) {
+               for (j = 0; j < n; j++) {
+                  SetBinContent(i, j + 1, cont[i + nx * b[a[j]]]);
+                  if (!errors.empty())
+                     SetBinError(i, j + 1, errors[i + nx * b[a[j]]]);
                }
             }
          }
+#if 0
+         if (axis == GetXaxis()) {
+            // copy old bin contents and then set to new ordered bins
+            // N.B. bin in histograms starts from 1, but in y we consider under/overflows
+            for (i = 0 ; i < n; i++) {
+               for (j = 0; j < ny; j++) {  // ny is nbins+2
+                  cont[i + n*j] = GetBinContent(b[a[i]],j);
+                  if (!errors.empty()) errors[i + n*j] = GetBinError( b[a[i]],j);
+               }
+            }
+            for (i = 0; i < n; i++) {
+               for (j = 0; j< ny; j++) {
+                  SetBinContent(i+1, j, cont[i + n*j]);
+                  if (!errors.empty()) SetBinError(i+1 , j, errors[i + n*j]);
+               }
+            }
+         } else {
+             for (i = 0 ; i < nx; i++) {
+               for (j = 0; j < n; j++) {
+                  cont[j + n*i] = GetBinContent(i,b[a[j]]);
+                  if (!errors.empty()) errors[j + n*i] = GetBinError( i, b[a[j]]);
+               }
+            }
+            for (i = 0; i < nx; i++) {
+               for (j = 0; j< n; j++) {
+                  SetBinContent(i, j+1, cont[j + n*i]);
+                  if (!errors.empty()) SetBinError(i, j+1, errors[j + n*i]);
+               }
+            }
+         }
+#endif
+
       } else {
+         // case of 3D (needs to be fixed!)
          Int_t nx = fXaxis.GetNbins()+2;
          Int_t ny = fYaxis.GetNbins()+2;
          Int_t nz = fZaxis.GetNbins()+2;
@@ -5452,11 +5515,11 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
          }
          if (axis == GetXaxis()) {
             // labels on x axis
-            for (i=1;i<=n;i++) {
+            for (i=0; i<n; i++) {  // for x we lool only on bins with the labels
                for (j=0;j<ny;j++) {
                   for (k=0;k<nz;k++) {
-                     SetBinContent(i,j,k,cont[a[i]+nx*(j+ny*k)]);
-                     if (!errors.empty()) SetBinError(i,j,k,errors[a[i]+nx*(j+ny*k)]);
+                     SetBinContent(i+1,j,k,cont[b[a[i]]+nx*(j+ny*k)]);
+                     if (!errors.empty()) SetBinError(i+1,j,k,errors[b[a[i]]+nx*(j+ny*k)]);
                   }
                }
             }
@@ -5464,10 +5527,10 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
          else if (axis == GetYaxis()) {
             // labels on y axis
             for (i=0;i<nx;i++) {
-               for (j=1;j<=n;j++) {
+               for (j=0; j<n; j++) {
                   for (k=0;k<nz;k++) {
-                     SetBinContent(i,j,k,cont[i+nx*(a[j]+ny*k)]);
-                     if (!errors.empty()) SetBinError(i,j,k,errors[i+nx*(a[j]+ny*k)]);
+                     SetBinContent(i,j+1,k,cont[i+nx*(b[a[j]]+ny*k)]);
+                     if (!errors.empty()) SetBinError(i,j+1,k,errors[i+nx*(b[a[j]]+ny*k)]);
                   }
                }
             }
@@ -5476,15 +5539,17 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
             // labels on z axis
             for (i=0;i<nx;i++) {
                for (j=0;j<ny;j++) {
-                  for (k=1;k<=n;k++) {
-                     SetBinContent(i,j,k,cont[i+nx*(j+ny*a[k])]);
-                     if (!errors.empty()) SetBinError(i,j,k,errors[i+nx*(j+ny*a[k])]);
+                  for (k=0; k<n; k++) {
+                     SetBinContent(i,j,k+1,cont[i+nx*(j+ny*b[a[k]])]);
+                     if (!errors.empty()) SetBinError(i,j,k+1,errors[i+nx*(j+ny*b[a[k]])]);
                   }
                }
             }
          }
       }
    }
+   // need to reset stattistics after sorting
+   ResetStats();
    fEntries = entries;
    delete labold;
 }
@@ -7373,7 +7438,7 @@ void TH1::GetStats(Double_t *stats) const
    Double_t x;
    // identify the case of labels with extension of axis range
    // in this case the statistics in x does not make any sense
-   Bool_t labelHist =  ((const_cast<TAxis&>(fXaxis)).GetLabels() && CanExtendAllAxes() );
+   Bool_t labelHist =  ((const_cast<TAxis&>(fXaxis)).GetLabels() && fXaxis.CanExtend() );
    // fTsumw == 0 && fEntries > 0 is a special case when uses SetBinContent or calls ResetStats before
    if ((fTsumw == 0 && fEntries > 0) || ( fXaxis.TestBit(TAxis::kAxisRange) && !labelHist) ) {
       for (bin=0;bin<4;bin++) stats[bin] = 0;
