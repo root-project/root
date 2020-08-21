@@ -2,52 +2,54 @@
 
 See details about [Chromimum Embeded Framework](https://bitbucket.org/chromiumembedded/cef)
 
-1. Current code tested with CEF3 3.3325, should work with other recent releases (April 2018)
+1. Current code tested with CEF3 branch 4147, Chromium 84 (August 2020)
 
 2. Download binary code from [http://opensource.spotify.com/cefbuilds/index.html](http://opensource.spotify.com/cefbuilds/index.html) and unpack it in directory without spaces and special symbols:
 
 ~~~
      $ mkdir /d/cef
      $ cd /d/cef/
-     $ wget http://opensource.spotify.com/cefbuilds/cef_binary_3.3626.1895.g7001d56_linux64_minimal.tar.bz2
-     $ tar xjf cef_binary_3.3626.1895.g7001d56_linux64_minimal.tar.bz2
+     $ wget http://opensource.spotify.com/cefbuilds/cef_binary_84.4.1+gfdc7504+chromium-84.0.4147.105_linux32.tar.bz2
+     $ tar xjf cef_binary_84.4.1+gfdc7504+chromium-84.0.4147.105_linux32.tar.bz2
 ~~~
 
 
-3. As it is on 14.03.2019, CEF has problem to compile with gcc. Master already [patched](https://bitbucket.org/chromiumembedded/cef/commits/84a5749), but not yet appeared in the distribution. Therefore one has to modify cmake/cef_variables.cmake, iserting code at line approx 164:
+3. As it is on 21.08.2020, CEF has problem to compile with latest gcc, issuing error because of warnings in some standard libraries.
+   Therefore one has to modify cmake/cef_variables.cmake, removing code at line ~90:
 
 ~~~
-   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-     list(APPEND CEF_CXX_COMPILER_FLAGS
-        -Wno-attributes             # The cfi-icall attribute is not supported by the GNU C++ compiler
-     )
-   endif()
+   -Werror                         # Treat warnings as errors
 ~~~
 
 4. Set `CEF_ROOT` shell variable to unpacked directory:
 
 ~~~
-     $ export CEF_ROOT=/d/cef/cef_binary_3.3626.1895.g7001d56_linux64_minimal
+     $ export CEF_ROOT=/d/cef/cef_binary_84.4.1+gfdc7504+chromium-84.0.4147.105_linux64
 ~~~
 
 5. Install prerequisites - see comments in `$CEF_ROOT/CMakeLists.txt`.
    For the linux these are: `build-essential`, `libgtk2.0-dev`, `libgtkglext1-dev`
 
-6. Compile to produce libcef_dll_wrapper:
+6. Compile CEF to produce `libcef_dll_wrapper`:
 
 ~~~
      $ cd $CEF_ROOT
      $ mkdir build
      $ cd build
      $ cmake $CEF_ROOT
-     $ make -j8
+     $ make -j
 ~~~
 
-7. Compile ROOT from the same shell (CEF_ROOT variable should be set)
-   Check that files icudtl.dat, natives_blob.bin, snapshot_blob.bin copied into ROOT binaries directory
+7. When configure ROOT compilation with `cmake -Dwebgui=ON -Dcefweb=ON ...`, CEF_ROOT shell variable should be set appropriately.
+   During compilation library `$ROOTSYS/lib/libROOTCefDisplay.so` and executable `$ROOTSYS/bin/cef_main`
+   should be created. Also check that several files like `icudtl.dat`, `v8_context_snapshot_blob.bin`, `snapshot_blob.bin`
+   copied into ROOT library directory
 
-8. Run ROOT from the same shell (CEF_ROOT variable should be set)
+8. Run ROOT with `--web=cef` argument to use CEF web display like
 
+~~~
+   $ root --web=cef $ROOTSYS/tutorials/v7/draw_rh2.cxx
+~~~
 
 
 ## Using CEF in batch mode on Linux

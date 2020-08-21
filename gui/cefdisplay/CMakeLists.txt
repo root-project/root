@@ -29,15 +29,18 @@ if(ROOT_ARCHITECTURE MATCHES macosx)
 elseif(MSVC)
    set(CEF_platform src/gui_handler_win.cc)
    set(CEF_RESOURCES ${CEF_root}/Resources)
-   set(CEF_BLOBS ${CEF_root}/Release)
-   set(CEF_LIBRARY ${CEF_root}/Release/libcef.lib)
+   set(CEF_RELEASE_DIR ${CEF_root}/Release)
+   set(CEF_BLOBS ${CEF_RELEASE_DIR})
+   set(CEF_LIBRARY ${CEF_RELEASE_DIR}/libcef.lib)
    set(CEF_DLL_WRAPPER ${CEF_root}/build/libcef_dll_wrapper/Release/libcef_dll_wrapper.lib)
-   configure_file(${CEF_root}/Release/libcef.dll ${CMAKE_BINARY_DIR}/bin/ COPYONLY)
-else ()
+   configure_file(${CEF_RELEASE_DIR}/libcef.dll ${CMAKE_BINARY_DIR}/bin/ COPYONLY)
+else()
    set(CEF_platform src/gui_handler_linux.cxx)
    set(CEF_RESOURCES ${CEF_root}/Resources)
-   set(CEF_BLOBS ${CEF_root}/Release)
-   set(CEF_LIBRARY ${CEF_root}/Release/libcef.so)
+   set(CEF_RELEASE_DIR ${CEF_root}/Release)
+   set(CEF_BLOBS ${CEF_RELEASE_DIR})
+   set(CEF_LIBRARY ${CMAKE_BINARY_DIR}/lib/libcef.so)
+   set(cef_copylibs libcef.so libEGL.so libGLESv2.so)
    set(CEF_DLL_WRAPPER ${CEF_root}/build/libcef_dll_wrapper/libcef_dll_wrapper.a)
    set(CEF_LIB_DEPENDENCY ${X11_LIBRARIES})
 endif()
@@ -46,18 +49,23 @@ include_directories($ENV{CEF_ROOT} inc)
 set(CEF_MAIN src/cef_main.cxx)
 
 
-## copy different CEF files into binary directory to avoid CEF_ROOT when running ROOT
+## copy different CEF files into library directory to avoid CEF_ROOT shell variable when running ROOT
 
 file(GLOB cef_bins ${CEF_BLOBS}/*.bin)
 
-foreach(cef_b ${cef_bins})
-  configure_file(${cef_b} ${CMAKE_BINARY_DIR}/bin/ COPYONLY)
+foreach(cef_l ${cef_copylibs})
+  configure_file(${CEF_RELEASE_DIR}/${cef_l} ${CMAKE_BINARY_DIR}/lib/ COPYONLY)
 endforeach()
+
+foreach(cef_b ${cef_bins})
+  configure_file(${cef_b} ${CMAKE_BINARY_DIR}/lib/ COPYONLY)
+endforeach()
+
 
 file(GLOB_RECURSE cef_resources RELATIVE ${CEF_RESOURCES} ${CEF_RESOURCES}/*)
 
 foreach(cef_r ${cef_resources})
-  configure_file(${CEF_RESOURCES}/${cef_r} ${CMAKE_BINARY_DIR}/bin/${cef_r} COPYONLY)
+  configure_file(${CEF_RESOURCES}/${cef_r} ${CMAKE_BINARY_DIR}/lib/${cef_r} COPYONLY)
 endforeach()
 
 

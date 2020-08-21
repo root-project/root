@@ -518,7 +518,7 @@ protected:
          // cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.resources_dir_path);
          // cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
 
-         settings.no_sandbox = 1;
+         settings.no_sandbox = true;
          // if (gROOT->IsWebDisplayBatch()) settings.single_process = true;
 
          // if (batch_mode)
@@ -530,7 +530,7 @@ protected:
          std::string plog = "cef.log";
          cef_string_ascii_to_utf16(plog.c_str(), plog.length(), &settings.log_file);
 
-         settings.log_severity = LOGSEVERITY_VERBOSE; // LOGSEVERITY_VERBOSE, LOGSEVERITY_INFO, LOGSEVERITY_WARNING, LOGSEVERITY_ERROR, LOGSEVERITY_DISABLE
+         settings.log_severity = LOGSEVERITY_ERROR; // LOGSEVERITY_VERBOSE, LOGSEVERITY_INFO, LOGSEVERITY_WARNING, LOGSEVERITY_ERROR, LOGSEVERITY_DISABLE
          // settings.uncaught_exception_stack_size = 100;
          // settings.ignore_certificate_errors = true;
 
