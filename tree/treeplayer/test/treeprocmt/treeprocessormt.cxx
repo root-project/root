@@ -190,6 +190,9 @@ TEST(TreeProcessorMT, TreeInSubDirectory)
       auto dir1 = dir0->mkdir("dir1");
       dir1->cd();
       TTree t("tree", "tree");
+      int x = 42;
+      t.Branch("x", &x);
+      t.Fill();
       t.Write();
    }
 
