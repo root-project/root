@@ -43,8 +43,7 @@ public:
 };
 
 
-std::unique_ptr<ROOT::Experimental::RWebDisplayHandle>
-ROOT::Experimental::RCefWebDisplayHandle::CefCreator::Display(const RWebDisplayArgs &args)
+std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Display(const ROOT::Experimental::RWebDisplayArgs &args)
 {
 
    auto handle = std::make_unique<RCefWebDisplayHandle>(args.GetFullUrl());
@@ -54,6 +53,8 @@ ROOT::Experimental::RCefWebDisplayHandle::CefCreator::Display(const RWebDisplayA
          R__ERROR_HERE("CEF") << "CEF do not allows to use different THttpServer instances";
          return nullptr;
       }
+
+      fCefApp->SetNextHandle(handle.get());
 
       CefRect rect((args.GetX() > 0) ? args.GetX() : 0, (args.GetY() > 0) ? args.GetY() : 0,
             (args.GetWidth() > 0) ? args.GetWidth() : 800, (args.GetHeight() > 0) ? args.GetHeight() : 600);
@@ -119,6 +120,8 @@ ROOT::Experimental::RCefWebDisplayHandle::CefCreator::Display(const RWebDisplayA
    // CEF has initialized.
    fCefApp = new SimpleApp(cef_main.Data(), args.GetFullUrl(), args.IsHeadless(), args.GetWidth(), args.GetHeight());
 
+   fCefApp->SetNextHandle(handle.get());
+
    // Initialize CEF for the browser process.
    CefInitialize(main_args, settings, fCefApp.get(), nullptr);
 
@@ -127,11 +130,12 @@ ROOT::Experimental::RCefWebDisplayHandle::CefCreator::Display(const RWebDisplayA
    TCefTimer *timer = new TCefTimer((interval > 0) ? interval : 10, kTRUE);
    timer->TurnOn();
 
+   // window not yet exists here
    return handle;
 }
 
 
-ROOT::Experimental::RCefWebDisplayHandle::~RCefWebDisplayHandle()
+RCefWebDisplayHandle::~RCefWebDisplayHandle()
 {
    fValid = kInvalid;
 
@@ -143,7 +147,7 @@ ROOT::Experimental::RCefWebDisplayHandle::~RCefWebDisplayHandle()
 
 }
 
-void ROOT::Experimental::RCefWebDisplayHandle::AddCreator()
+void RCefWebDisplayHandle::AddCreator()
 {
    auto &entry = FindCreator("cef");
    if (!entry)
@@ -152,6 +156,6 @@ void ROOT::Experimental::RCefWebDisplayHandle::AddCreator()
 
 
 struct RCefCreatorReg {
-   RCefCreatorReg() { ROOT::Experimental::RCefWebDisplayHandle::AddCreator(); }
+   RCefCreatorReg() { RCefWebDisplayHandle::AddCreator(); }
 } newRCefCreatorReg;
 
