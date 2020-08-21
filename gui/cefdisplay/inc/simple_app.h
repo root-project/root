@@ -41,6 +41,8 @@ protected:
    bool fUseViewes{false};            ///<! is views are used
    CefRefPtr<GuiHandler> fGuiHandler; ///<! normal handler
 
+   static THttpServer *gHttpServer;
+
 public:
    SimpleApp(const std::string &cef_main, const std::string &url = "", bool isbatch = false, int width = 0, int height = 0);
 
@@ -63,6 +65,10 @@ public:
    // CefRenderProcessHandler methods
    // virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
    //                              CefRefPtr<CefV8Context> context) OVERRIDE;
+
+
+   static THttpServer *GetHttpServer();
+   static void SetHttpServer(THttpServer *serv);
 
 private:
    // Include the default reference counting implementation.
