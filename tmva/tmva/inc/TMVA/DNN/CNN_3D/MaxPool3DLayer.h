@@ -18,21 +18,14 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-<<<<<<< HEAD
+
 #ifndef MAXPOOL3DLAYER_H_
 #define MAXPOOL3DLAYER_H_
 
 #include "TMatrix.h"
 
 #include "TMVA/DNN/CNN_3D/Conv3DLayer.h"
-=======
-#ifndef MAXPOOLLAYER_H_
-#define MAXPOOLLAYER_H_
 
-#include "TMatrix.h"
-
-#include "TMVA/DNN/CNN/ConvLayer.h"
->>>>>>> e4825ce5f3d2fdacf57c585e56f9d6d7ab3bf8db
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN/ContextHandles.h"
 
@@ -40,11 +33,9 @@
 
 namespace TMVA {
 namespace DNN {
-<<<<<<< HEAD
+
 namespace CNN_3D {
-=======
-namespace CNN {
->>>>>>> e4825ce5f3d2fdacf57c585e56f9d6d7ab3bf8db
+
 
 
 /** \class TMaxPool3DLayer
@@ -113,11 +104,7 @@ private:
 public:
    /*! Constructor. */
    TMaxPool3DLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t FilterHeight,
-<<<<<<< HEAD
                  size_t FilterWidth, size_t FilterDepth, size_t StrideX, size_t StrideY, size_t StrideZ, Scalar_t DropoutProbability);
-=======
-                 size_t FilterWidth, size_t FilterDepth size_t StrideX, size_t StrideY, size_t StrideZ, Scalar_t DropoutProbability);
->>>>>>> e4825ce5f3d2fdacf57c585e56f9d6d7ab3bf8db
 
    /*! Copy the max pooling layer provided as a pointer */
    TMaxPool3DLayer(TMaxPool3DLayer<Architecture_t> *layer);
@@ -183,7 +170,6 @@ TMaxPool3DLayer<Architecture_t>::TMaxPool3DLayer(size_t batchSize, size_t inputD
                                              size_t strideY, size_t strideZ, Scalar_t dropoutProbability)
    : VGeneralLayer<Architecture_t>(
         batchSize, inputDepth, inputHeight, inputWidth, inputDepth,
-<<<<<<< HEAD
         TConv3DLayer<Architecture_t>::calculateDimension(inputHeight, filterHeight, 0, strideX),
         TConv3DLayer<Architecture_t>::calculateDimension(inputWidth, filterWidth, 0, strideY), 
         TConv3DLayer<Architecture_t>::calculateDimension(inputDepth, filterDepth, 0, strideZ), 0, 0, 0, 0, 0,
@@ -195,19 +181,6 @@ TMaxPool3DLayer<Architecture_t>::TMaxPool3DLayer(size_t batchSize, size_t inputD
      fFilterDepth(inputDepth), fFilterHeight(filterHeight), fFilterWidth(filterWidth), fStrideX(strideX),
      fStrideY(strideY), fStrideZ(strideZ),
      fNLocalViews(TConv3DLayer<Architecture_t>::calculateNLocalViews(inputHeight, filterHeight, 0, strideX,
-=======
-        TConvLayer<Architecture_t>::calculateDimension(inputHeight, filterHeight, 0, strideX),
-        TConvLayer<Architecture_t>::calculateDimension(inputWidth, filterWidth, 0, strideY), 
-        TConvLayer<Architecture_t>::calculateDimension(inputDepth, filterDepth, 0, strideZ), 0, 0, 0, 0, 0,
-        0, // weights dimensions
-        batchSize, inputDepth,
-        TConvLayer<Architecture_t>::calculateNLocalViews(inputHeight, filterHeight, 0, strideRows, inputWidth,
-                                                         filterWidth, 0, strideCols),
-        EInitialization::kZero),
-     fFilterDepth(inputDepth), fFilterHeight(filterHeight), fFilterWidth(filterWidth), fStrideX(strideX),
-     fStrideY(strideY), fStrideZ(strideZ),
-     fNLocalViews(TConvLayer<Architecture_t>::calculateNLocalViews(inputHeight, filterHeight, 0, strideX,
->>>>>>> e4825ce5f3d2fdacf57c585e56f9d6d7ab3bf8db
                                                                    inputWidth, filterWidth, 0, strideY,
                                                                    inputDepth, filterDepth, 0, strideZ)),
      fDropoutProbability(dropoutProbability), fIndexTensor(batchSize, inputDepth, fNLocalViews)
@@ -221,11 +194,7 @@ template <typename Architecture_t>
 TMaxPool3DLayer<Architecture_t>::TMaxPool3DLayer(TMaxPool3DLayer<Architecture_t> *layer)
    : VGeneralLayer<Architecture_t>(layer), fFilterDepth(layer->GetFilterDepth()),
      fFilterHeight(layer->GetFilterHeight()), fFilterWidth(layer->GetFilterWidth()),
-<<<<<<< HEAD
      fStrideX(layer->GetStrideX()), fStrideY(layer->GetStrideY()), fStrideZ(layer->GetStrideZ()), fNLocalViews(layer->GetNLocalViews()),
-=======
-     fStrideX(layer->GetStrideX()), fStrideY(layer->GetStrideY()), fStrideZ(layer->GetStrideZ()) fNLocalViews(layer->GetNLocalViews()),
->>>>>>> e4825ce5f3d2fdacf57c585e56f9d6d7ab3bf8db
      fDropoutProbability(layer->GetDropoutProbability()), fIndexTensor(layer->GetIndexTensor().GetShape())
 {
    InitializeDescriptors();
