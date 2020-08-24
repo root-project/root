@@ -40,7 +40,7 @@ private:
 public:
    // Create an io_uring instance. The ring selects an appropriate queue depth. which can be queried
    // afterwards using GetQueueDepth(). The depth is typically 1024 or lower. Throws an exception if
-   // the ring could be not be initialized.
+   // ring setup fails.
    RIoUring() {
       std::uint32_t queueDepth = 1024;
       int ret;
@@ -63,8 +63,7 @@ public:
    }
 
    // Create a io_uring instance that can hold at least `entriesHint` submission entries. The actual
-   // queue depth is rounded up to the next power of 2. Throws an exception if the ring couldn't
-   // be initialized.
+   // queue depth is rounded up to the next power of 2. Throws an exception if ring setup fails.
    RIoUring(std::uint32_t entriesHint) {
       struct io_uring_params params = {}; /* zero initialize param struct, no flags */
       int ret = io_uring_queue_init_params(entriesHint, &fRing, &params);
