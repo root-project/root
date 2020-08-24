@@ -203,7 +203,7 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor. Note that a copy of a set is always non-owning,
-/// even the source set is owning. To create an owning copy of
+/// even if the source set is owning. To create an owning copy of
 /// a set (owning or not), use the snaphot() method.
 
 RooArgSet::RooArgSet(const RooArgSet& other, const char *name) 
