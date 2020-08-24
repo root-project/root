@@ -40,17 +40,17 @@
 
 #include "RooArgList.h"
 
-#include "RooErrorHandler.h"
 #include "RooStreamParser.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooTrace.h"
 #include "RooMsgService.h"
 
+#include <stdexcept>
+
 using namespace std;
 
 ClassImp(RooArgList);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,19 +134,22 @@ RooArgList::~RooArgList()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Array operator. Element in slot 'idx' must already exist, otherwise
-/// code will abort. 
+/// Array operator. Element in slot `idx` must exist.
+/// \throws std::invalid_argument if `idx` is out of range.
 ///
-/// When used as lvalue in assignment operations, the element contained in
-/// the list will not be changed, only the value of the existing element!
-
+/// When used as
+/// ```
+///  myArgList[4] = x;
+/// ```
+/// note that the element contained in the list will not be
+/// replaced! Instead, `operator=` of the existing element is called.
 RooAbsArg& RooArgList::operator[](Int_t idx) const 
 {     
   RooAbsArg* arg = at(idx) ;
   if (!arg) {
     coutE(InputArguments) << "RooArgList::operator[](" << GetName() << ") ERROR: index " 
 			  << idx << " out of range (0," << getSize() << ")" << endl ;
-    RooErrorHandler::softAbort() ;
+    throw std::invalid_argument(std::string("Index ") + to_string(idx) + " is out of range.");
   }
   return *arg ; 
 }
