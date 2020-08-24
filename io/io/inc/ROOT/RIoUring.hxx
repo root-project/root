@@ -64,7 +64,7 @@ public:
 
    // Create a io_uring instance that can hold at least `entriesHint` submission entries. The actual
    // queue depth is rounded up to the next power of 2. Throws an exception if ring setup fails.
-   RIoUring(std::uint32_t entriesHint) {
+   explicit RIoUring(std::uint32_t entriesHint) {
       struct io_uring_params params = {}; /* zero initialize param struct, no flags */
       int ret = io_uring_queue_init_params(entriesHint, &fRing, &params);
       if (ret != 0) {
