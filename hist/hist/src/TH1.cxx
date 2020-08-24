@@ -5335,17 +5335,17 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
          }
       } else if (GetDimension()== 2) {
          std::vector<Double_t> pcont(n+2);
-         Int_t nx = fXaxis.GetNbins();
-         Int_t ny = fYaxis.GetNbins();
-         cont.resize( (nx+2)*(ny+2));
+         Int_t nx = fXaxis.GetNbins() + 2;
+         Int_t ny = fYaxis.GetNbins() + 2;
+         cont.resize((nx + 2) * (ny + 2));
          if (fSumw2.fN) errors.resize( (nx+2)*(ny+2));
-         for (i=1;i<=nx;i++) {
-            for (j=1;j<=ny;j++) {
+         for (i=0; i<nx; i++) {
+            for (j=0; j<ny;j++) {
                cont[i+nx*j] = GetBinContent(i,j);
                if (!errors.empty()) errors[i+nx*j] = GetBinError(i,j);
                if (axis == GetXaxis()) k = i-1;
                else                    k = j-1;
-               if (k < n) {
+               if (k >= 0 && k < n) { // we consider underflow/overflows in y for ordering the bins
                   pcont[k] += cont[i+nx*j];
                   a[k] = k;
                }
@@ -5374,7 +5374,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
          if (axis == GetXaxis()) {
             for (i = 0; i < n; i++) {
                Int_t ix = a[i] + 1;
-               for (j = 1; j <= ny; j++) {
+               for (j = 0; j < ny; j++) {
                   SetBinContent(i + 1, j, cont[ix + nx * j]);
                   if (!errors.empty())
                      SetBinError(i + 1, j, errors[ix + nx * j]);
@@ -5382,7 +5382,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
             }
             } else {
                // using y axis
-               for (i = 1; i <= nx; i++) {
+               for (i = 0; i < nx; i++) {
                   for (j = 0; j < n; j++) {
                      Int_t iy = a[j] + 1;
                      SetBinContent(i, j+1, cont[i + nx * iy]);
