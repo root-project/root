@@ -58,6 +58,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <stdexcept>
 
 using namespace std ;
 
@@ -303,8 +304,9 @@ RooAbsArg& RooArgSet::operator[](const char* name) const
 {     
   RooAbsArg* arg = find(name) ;
   if (!arg) {
-    coutE(InputArguments) << "RooArgSet::operator[](" << GetName() << ") ERROR: no element named " << name << " in set" << endl ;
-    RooErrorHandler::softAbort() ;
+    const std::string theName(name ? name : "");
+    coutE(InputArguments) << "RooArgSet::operator[](" << GetName() << ") ERROR: no element named '" << theName << "' in set" << endl ;
+    throw std::invalid_argument(std::string("No element named '") + theName + "' in set " + GetName());
   }
   return *arg ; 
 }
