@@ -5968,7 +5968,7 @@ bool testLabel2DX()
    // for filling bin i-th of h1 same bin i-th will be filled of h2
    for ( Int_t e = 0; e < nEvents*nEvents; ++e ) {
       Double_t xvalue = r.Uniform(minRange, maxRange);
-      Double_t yvalue = r.Uniform(minRange, maxRange);
+      Double_t yvalue = r.Uniform(0.9*minRange, 1.1*maxRange);
       Int_t binx = h1->GetXaxis()->FindBin(xvalue);
       Int_t biny = h1->GetYaxis()->FindBin(yvalue);
       h1->Fill(h1->GetXaxis()->GetBinCenter(binx), h1->GetYaxis()->GetBinCenter(biny), 1.0);
@@ -6012,7 +6012,7 @@ bool testLabel2DY()
    std::sort(vLabels.begin(), vLabels.end() );
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
-      Double_t xvalue = r.Uniform(minRange, maxRange);
+      Double_t xvalue = r.Uniform(0.9*minRange, 1.1*maxRange);
       Double_t yvalue = r.Uniform(minRange, maxRange);
       Int_t binx = h1->GetXaxis()->FindBin(xvalue);
       Int_t biny = h1->GetYaxis()->FindBin(yvalue);
