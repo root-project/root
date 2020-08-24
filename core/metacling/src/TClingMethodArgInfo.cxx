@@ -40,7 +40,7 @@ the Clang C++ compiler, not CINT.
 
 #include <string>
 
-TClingMethodArgInfo::TClingMethodArgInfo(cling::Interpreter *interp, const TClingMethodInfo* mi) : TClingDeclInfo(mi->GetMethodDecl()), fInterp(interp), fIdx(-1) {}
+TClingMethodArgInfo::TClingMethodArgInfo(cling::Interpreter *interp, const TClingMethodInfo* mi) : TClingDeclInfo(mi->GetTargetFunctionDecl()), fInterp(interp), fIdx(-1) {}
 
 bool TClingMethodArgInfo::IsValid() const
 {

@@ -4102,7 +4102,7 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
                int lineNumber = 0;
                bool success = false;
                std::tie(success, lineNumber) =
-                  ROOT::TMetaUtils::GetTrivialIntegralReturnValue(implLineFunc.GetMethodDecl(), *fInterpreter);
+                  ROOT::TMetaUtils::GetTrivialIntegralReturnValue(implLineFunc.GetAsFunctionDecl(), *fInterpreter);
                hasClassDefInline = success && (lineNumber == -1);
             }
          }
@@ -4890,6 +4890,11 @@ void TCling::GetFunctionOverloads(ClassInfo_t *cl, const char *funcname,
          if (!FD->getDescribedFunctionTemplate()) {
             res.push_back(FD);
          }
+      } else if (const auto *USD = llvm::dyn_cast<const clang::UsingShadowDecl>(*IR)) {
+         // FIXME: multi-level using
+         if (llvm::isa<clang::FunctionDecl>(USD->getTargetDecl())) {
+            res.push_back(USD);
+         }
       }
    }
 }
@@ -5166,7 +5171,7 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
    func.SetArgs(listpar);
    // Now calculate the 'this' pointer offset for the method
    // when starting from the class described by cl.
-   const CXXMethodDecl * mdecl = dyn_cast<CXXMethodDecl>(minfo->GetMethodDecl());
+   const CXXMethodDecl * mdecl = dyn_cast<CXXMethodDecl>(minfo->GetTargetFunctionDecl());
    Long_t offset = ((TClingClassInfo*)cl->GetClassInfo())->GetOffset(mdecl);
    void* address = (void*)((Long_t)addr + offset);
    func.Exec(address);
@@ -7958,22 +7963,45 @@ std::string TCling::CallFunc_GetWrapperCode(CallFunc_t *func) const
 
 Bool_t TCling::ClassInfo_Contains(ClassInfo_t *info, DeclId_t declid) const
 {
-   if (!declid) return kFALSE;
+   if (!declid)
+      return kFALSE;
 
-   const clang::Decl *scope;
-   if (info) scope = ((TClingClassInfo*)info)->GetDecl();
-   else scope = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
+   const clang::DeclContext *ctxt = nullptr;
+   if (info) {
+      ctxt = clang::Decl::castToDeclContext(((TClingClassInfo*)info)->GetDecl());
+   } else {
+      ctxt = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
+   }
+   if (!ctxt)
+      return kFALSE;
 
    const clang::Decl *decl = reinterpret_cast<const clang::Decl*>(declid);
-   const clang::DeclContext *ctxt = clang::Decl::castToDeclContext(scope);
-   if (!decl || !ctxt) return kFALSE;
-   if (decl->getDeclContext()->Equals(ctxt))
-      return kTRUE;
-   else if ((decl->getDeclContext()->isTransparentContext()
-             || decl->getDeclContext()->isInlineNamespace())
-            && decl->getDeclContext()->getParent()->Equals(ctxt))
-      return kTRUE;
-   return kFALSE;
+   if (!decl)
+      return kFALSE;
+
+   const clang::DeclContext *declDC = decl->getDeclContext();
+   // ClassInfo_t-s are always "spellable" scopes, never unnamed or inline ones.
+   while (true) {
+      if (declDC->isTransparentContext()) {
+         declDC = declDC->getParent();
+         continue;
+      }
+      if (const auto *declRD = llvm::dyn_cast<clang::RecordDecl>(declDC)) {
+         if (declRD->isAnonymousStructOrUnion()) {
+            declDC = declRD->getParent();
+            continue;
+         }
+      }
+      if (const auto *declNS = llvm::dyn_cast<clang::NamespaceDecl>(declDC)) {
+         if (declNS->isAnonymousNamespace() || declNS->isInlineNamespace()) {
+            declDC = declNS->getParent();
+            continue;
+         }
+      }
+      break;
+   }
+
+   return declDC->Equals(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8542,7 +8570,7 @@ void TCling::SetDeclAttr(DeclId_t declId, const char* attribute)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void ConstructorName(std::string &name, const clang::NamedDecl *decl,
+static void ConstructorName(std::string &name, const clang::Decl *decl,
                             cling::Interpreter &interp,
                             const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
@@ -8564,10 +8592,23 @@ static void ConstructorName(std::string &name, const clang::NamedDecl *decl,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TCling::GetFunctionName(const clang::FunctionDecl *decl, std::string &output) const
+void TCling::GetFunctionName(const clang::Decl *decl, std::string &output) const
 {
    output.clear();
-   if (llvm::isa<clang::CXXConstructorDecl>(decl))
+
+   const auto *FD = llvm::dyn_cast<clang::FunctionDecl>(decl);
+   if (const auto *USD = llvm::dyn_cast<clang::UsingShadowDecl>(decl)) {
+      FD = llvm::dyn_cast<clang::FunctionDecl>(USD->getTargetDecl());
+   }
+   if (!FD) {
+      Error("GetFunctionName", "NULL Decl!");
+      return;
+   }
+
+   // For using-decls, show "Derived", not "Base", i.e. use the
+   // name of the decl context of the UsingShadowDecl (aka `decl`)
+   // not the name of FD's decl context.
+   if (llvm::isa<clang::CXXConstructorDecl>(FD))
    {
       ConstructorName(output, decl, *fInterpreter, *fNormalizedCtxt);
 
@@ -8580,7 +8621,7 @@ void TCling::GetFunctionName(const clang::FunctionDecl *decl, std::string &outpu
       auto printPolicy = decl->getASTContext().getPrintingPolicy();
       // Don't trigger fopen of the source file to count lines:
       printPolicy.AnonymousTagLocations = false;
-      decl->getNameForDiagnostic(stream, printPolicy, /*Qualified=*/false);
+      FD->getNameForDiagnostic(stream, printPolicy, /*Qualified=*/false);
    }
 }
 
@@ -8826,8 +8867,7 @@ MethodInfo_t* TCling::MethodInfo_Factory(DeclId_t declid) const
 {
    const clang::Decl* decl = reinterpret_cast<const clang::Decl*>(declid);
    R__LOCKGUARD(gInterpreterMutex);
-   const clang::FunctionDecl* fd = llvm::dyn_cast_or_null<clang::FunctionDecl>(decl);
-   return (MethodInfo_t*) new TClingMethodInfo(GetInterpreterImpl(), fd);
+   return (MethodInfo_t*) new TClingMethodInfo(GetInterpreterImpl(), decl);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

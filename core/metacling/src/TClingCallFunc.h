@@ -203,7 +203,7 @@ public:
    TInterpreter::CallFuncIFacePtr_t IFacePtr();
    const clang::FunctionDecl *GetDecl() {
       if (!fDecl)
-         fDecl = fMethod->GetMethodDecl();
+         fDecl = fMethod->GetTargetFunctionDecl();
       return fDecl;
    }
 
@@ -212,7 +212,7 @@ public:
    const clang::FunctionDecl* GetDecl() const {
       if (fDecl)
          return fDecl;
-      return fMethod->GetMethodDecl();
+      return fMethod->GetTargetFunctionDecl();
    }
    void ResetArg();
    void SetArg(long arg);
