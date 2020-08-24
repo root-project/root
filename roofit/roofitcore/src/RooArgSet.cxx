@@ -42,7 +42,6 @@
 #include "RooArgSet.h"
 
 #include "TClass.h"
-#include "RooErrorHandler.h"
 #include "RooStreamParser.h"
 #include "RooFormula.h"
 #include "RooAbsRealLValue.h"
@@ -427,18 +426,17 @@ RooAbsArg* RooArgSet::addClone(const RooAbsArg& var, Bool_t silent)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Array operator. Named element must exist in set, otherwise
-/// code will abort. 
+/// Helper for operator[](). Named element must exist in set, otherwise
+/// an exception is thrown.
 ///
 /// When used as lvalue in assignment operations, the element contained in
 /// the list will not be changed, only the value of the existing element!
-
-RooAbsArg& RooArgSet::operator[](const char* name) const 
+RooAbsArg& RooArgSet::operator[](const TString& name) const
 {     
   RooAbsArg* arg = find(name) ;
   if (!arg) {
     coutE(InputArguments) << "RooArgSet::operator[](" << GetName() << ") ERROR: no element named " << name << " in set" << endl ;
-    RooErrorHandler::softAbort() ;
+    throw std::invalid_argument(std::string("No element named '") + name + "' in set " + GetName());
   }
   return *arg ; 
 }

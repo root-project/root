@@ -103,7 +103,10 @@ public:
   virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
 
   using RooAbsCollection::operator[];
-  RooAbsArg& operator[](const char* name) const;
+  /// Get a reference to an item in the set using its name.
+  /// \throws std::invalid_argument if element not in set.
+  RooAbsArg& operator[](const TString& str) const;
+
 
   /// Shortcut for readFromStream(std::istream&, Bool_t, const char*, const char*, Bool_t), setting
   /// `flagReadAtt` and `section` to 0.
