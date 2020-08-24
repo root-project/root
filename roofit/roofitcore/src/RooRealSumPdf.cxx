@@ -410,10 +410,11 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     }
     
     // Warn about coefficient degeneration
-    if (lastCoef<0 || lastCoef>1) {
+    if (!_haveWarned && (lastCoef<0 || lastCoef>1)) {
       coutW(Eval) << "RooRealSumPdf::evaluate(" << GetName() 
 		  << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
 		  << 1-lastCoef << endl ;
+      _haveWarned = true;
     } 
   }
   
