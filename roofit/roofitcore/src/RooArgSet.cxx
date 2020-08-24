@@ -150,12 +150,10 @@ RooArgSet::RooArgSet() :
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a RooArgList. If the list contains multiple
 /// objects with the same name, only the first is store in the set.
 /// Warning messages will be printed for dropped items.
-
 RooArgSet::RooArgSet(const RooArgList& list) :
   RooAbsCollection(list.GetName())
 {
@@ -164,27 +162,27 @@ RooArgSet::RooArgSet(const RooArgList& list) :
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor from a RooArgList. If the list contains multiple
-/// objects with the same name, only the first is store in the set.
+/// Constructor from a RooArgSet / RooArgList and a pointer to another RooFit object.
+///
+/// \param[in] collection Collection of RooFit objects to be added. If a list contains multiple
+/// objects with the same name, only the first is stored in the set.
 /// Warning messages will be printed for dropped items.
-
-RooArgSet::RooArgSet(const RooArgList& list, const RooAbsArg* var1) :
-  RooAbsCollection(list.GetName())
+/// \param[in] var1 Further object to be added. If it is already in `collection`,
+/// nothing happens, and the warning message is suppressed.
+RooArgSet::RooArgSet(const RooAbsCollection& collection, const RooAbsArg* var1) :
+  RooAbsCollection(collection.GetName())
 {
-  if (var1 && !list.contains(*var1)) {
+  if (var1 && !collection.contains(*var1)) {
     add(*var1,kTRUE) ;
   }
-  add(list,kTRUE) ; // verbose to catch duplicate errors
+  add(collection,kTRUE) ; // verbose to catch duplicate errors
   TRACE_CREATE
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Empty set constructor
-
+/// Empty set constructor.
 RooArgSet::RooArgSet(const char *name) :
   RooAbsCollection(name)
 {
@@ -192,151 +190,15 @@ RooArgSet::RooArgSet(const char *name) :
 }
 
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct a set from two existing sets
-
+/// Construct a set from two existing sets. The new set will not own its
+/// contents.
 RooArgSet::RooArgSet(const RooArgSet& set1, const RooArgSet& set2, const char *name) : RooAbsCollection(name)
 {
   add(set1) ;
   add(set2) ;
-  TRACE_CREATE    
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 1 initial object
-
-RooArgSet::RooArgSet(const RooAbsArg& var1,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1);
   TRACE_CREATE
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 2 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 3 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 4 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 5 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1,
-		     const RooAbsArg& var2, const RooAbsArg& var3,
-		     const RooAbsArg& var4, const RooAbsArg& var5,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 6 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 7 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 8 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7, const RooAbsArg& var8,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 9 initial objects
-
-RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7, const RooAbsArg& var8,
-		     const RooAbsArg& var9, const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7); add(var8); add(var9);
-  TRACE_CREATE
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,18 +224,15 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor. Note that a copy of a set is always non-owning,
-/// even the source set is owning. To create an owning copy of
-/// a set (owning or not), use the snaphot() method.
-
-RooArgSet::RooArgSet(const RooArgSet& other, const char *name) 
+/// even if the source set owns its contents. To create an owning copy of
+/// a set (owning or not), use the snapshot() method.
+RooArgSet::RooArgSet(const RooArgSet& other, const char *name)
   : RooAbsCollection(other,name)
 {
   TRACE_CREATE
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -385,6 +244,13 @@ RooArgSet::~RooArgSet()
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add contents of a RooArgList to the set.
+void RooArgSet::processArg(const RooArgList& list) {
+  add(list);
+  if (_name.Length() == 0)
+    _name = list.GetName();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add element to non-owning set. The operation will fail if
