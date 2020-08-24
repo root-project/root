@@ -5925,7 +5925,7 @@ bool testLabel()
    }
 
    // test ordering label in content ascending order
-   //h2->LabelsOption("<","x");
+   h2->LabelsOption("<","x");
    // test ordering label alphabetically
    h2->LabelsOption("a");
    h2->LabelsDeflate();
@@ -5966,7 +5966,7 @@ bool testLabel2DX()
    // fill h1 with numbers and h2 using labels
    // since labels are ordered alphabetically
    // for filling bin i-th of h1 same bin i-th will be filled of h2
-   for ( Int_t e = 0; e < nEvents; ++e ) {
+   for ( Int_t e = 0; e < nEvents*nEvents; ++e ) {
       Double_t xvalue = r.Uniform(minRange, maxRange);
       Double_t yvalue = r.Uniform(minRange, maxRange);
       Int_t binx = h1->GetXaxis()->FindBin(xvalue);
@@ -5975,15 +5975,19 @@ bool testLabel2DX()
 
       h2->Fill( vLabels[binx-1].c_str(), h1->GetYaxis()->GetBinCenter(biny), 1.0);
    }
+   // labels in h1 are set in alphabetic order
+   for (size_t i = 0; i < vLabels.size(); ++i ) {
+      h1->GetXaxis()->SetBinLabel(i+1, vLabels[i].c_str());
+   }
 
    // test ordering label in content descending order
-   //h2->LabelsOption(">","x");
+   h2->LabelsOption(">", "x");
    // test ordering label alphabetically
    h2->LabelsOption("a","x");
 
    h2->LabelsDeflate();
 
-   bool status = equals("testLabel2DX", h1, h2, cmpOptStats, 1E-13);
+   bool status = equals("testLabel2DX", h1, h2, cmpOptStats, 1E-10);
    if (cleanHistos) delete h1;
    return status;
 }
@@ -6017,9 +6021,13 @@ bool testLabel2DY()
       h2->Fill(  h1->GetXaxis()->GetBinCenter(binx), vLabels[biny-1].c_str(), 1.0);
    }
 
+   h2->LabelsDeflate("Y");
+   // test ordering label in content descending order
+   h2->LabelsOption(">", "y");
+   // then order labels alphabetically
    h2->LabelsOption("a","y");
 
-   h2->LabelsDeflate("Y");
+
 
    bool status = equals("testLabel2DY", h1, h2, cmpOptStats, 1E-13);
    if (cleanHistos) delete h1;
