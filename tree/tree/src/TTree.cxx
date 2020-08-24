@@ -3116,7 +3116,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    if (!newtree) {
       return 0;
    }
-   newtree->SetIOFeatures(features);
+   // newtree->SetIOFeatures(features);
 
    // The clone should not delete any objects allocated by SetAddress().
    TObjArray* branches = newtree->GetListOfBranches();
@@ -8948,9 +8948,9 @@ ROOT::TIOFeatures TTree::SetIOFeatures(const ROOT::TIOFeatures &features)
    fIOFeatures.Set(curFeatures);
 
    ROOT::TIOFeatures newSettings(newFeatures);
-   if (newSettings.Test(ROOT::Experimental::EIOFeatures::kOnlyFlushAtCluster)) {
-       SetBit(TTree::kOnlyFlushAtCluster);
-   }
+   // if (newSettings.Test(ROOT::Experimental::EIOFeatures::kOnlyFlushAtCluster)) {
+   //     SetBit(TTree::kOnlyFlushAtCluster);
+   // }
    return newSettings;
 }
 
