@@ -42,7 +42,6 @@
 #include "RooArgSet.h"
 
 #include "TClass.h"
-#include "RooErrorHandler.h"
 #include "RooStreamParser.h"
 #include "RooFormula.h"
 #include "RooAbsRealLValue.h"
@@ -294,19 +293,21 @@ RooAbsArg* RooArgSet::addClone(const RooAbsArg& var, Bool_t silent)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Array operator. Named element must exist in set, otherwise
-/// code will abort. 
+/// Get reference to an element using its name. Named element must exist in set.
+/// \throws invalid_argument if an element with the given name is not in the set.
 ///
-/// When used as lvalue in assignment operations, the element contained in
-/// the list will not be changed, only the value of the existing element!
-
-RooAbsArg& RooArgSet::operator[](const char* name) const 
+/// Note that since most RooFit objects use an assignment operator that copies
+/// values, an expression like
+/// ```
+/// mySet["x"] = y;
+/// ```
+/// will not replace the element "x", it just assigns the values of y.
+RooAbsArg& RooArgSet::operator[](const TString& name) const
 {     
   RooAbsArg* arg = find(name) ;
   if (!arg) {
-    const std::string theName(name ? name : "");
-    coutE(InputArguments) << "RooArgSet::operator[](" << GetName() << ") ERROR: no element named '" << theName << "' in set" << endl ;
-    throw std::invalid_argument(std::string("No element named '") + theName + "' in set " + GetName());
+    coutE(InputArguments) << "RooArgSet::operator[](" << GetName() << ") ERROR: no element named " << name << " in set" << endl ;
+    throw std::invalid_argument((TString("No element named '") + name + "' in set " + GetName()).Data());
   }
   return *arg ; 
 }
