@@ -38,6 +38,7 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TCling.cxx
   TClingDataMemberInfo.cxx
   TClingDeclInfo.cxx
+  TClingMemberIter.cxx
   TClingMethodArgInfo.cxx
   TClingMethodInfo.cxx
   TClingRdictModuleFileExtension.cxx
