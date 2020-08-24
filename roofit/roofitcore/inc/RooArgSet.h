@@ -83,22 +83,14 @@ public:
   TObject* create(const char* newname) const { return new RooArgSet(newname); }
   RooArgSet& operator=(const RooArgSet& other) { RooAbsCollection::operator=(other) ; return *this ;}
 
-  virtual Bool_t add(const RooAbsCollection& col, Bool_t silent=kFALSE) {
-    // Add all elements in list to collection
-    return RooAbsCollection::add(col, silent);
-  }
-  virtual Bool_t addOwned(const RooAbsCollection& col, Bool_t silent=kFALSE) {
-    // Add all elements in list as owned components to collection
-    return RooAbsCollection::addOwned(col, silent);
-  }
-  virtual void addClone(const RooAbsCollection& col, Bool_t silent=kFALSE) {
-    // Add owned clone of all elements of list to collection
-    RooAbsCollection::addClone(col, silent);
-  }
+  using RooAbsCollection::add;
+  virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE);
 
-  virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;
+  using RooAbsCollection::addOwned;
   virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
-  virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
+
+  using RooAbsCollection::addClone;
+  virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE);
 
   using RooAbsCollection::operator[];
   RooAbsArg& operator[](const char* name) const;
