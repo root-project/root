@@ -12,7 +12,6 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
-#include <vector>
 
 #include <liburing.h>
 #include <liburing/io_uring.h>
