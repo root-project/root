@@ -42,15 +42,17 @@ public:
   virtual const char* name() const { return GetName() ; }
 
   // List content management (modified for server hooks)
-  virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;
-  virtual Bool_t add(const RooAbsCollection& list, Bool_t silent=kFALSE) { return RooAbsCollection::add(list,silent) ; }
+  using RooAbsCollection::add;
+  virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE);
   virtual Bool_t add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeServer, Bool_t silent) ;
-  virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
-  virtual Bool_t addOwned(const RooAbsCollection& list, Bool_t silent=kFALSE) { return RooAbsCollection::addOwned(list,silent) ; }
-  virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
-  virtual void   addClone(const RooAbsCollection& list, Bool_t silent=kFALSE) { RooAbsCollection::addClone(list,silent) ; }
   virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
   virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
+
+  using RooAbsCollection::addOwned;
+  virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE) override;
+
+  using RooAbsCollection::addClone;
+  virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) override;
   Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
   virtual void removeAll() ;
 
