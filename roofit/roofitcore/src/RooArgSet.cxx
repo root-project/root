@@ -57,6 +57,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <exception>
 
 using namespace std ;
 
@@ -302,7 +303,7 @@ RooAbsArg& RooArgSet::operator[](const TString& name) const
   RooAbsArg* arg = find(name) ;
   if (!arg) {
     coutE(InputArguments) << "RooArgSet::operator[](" << GetName() << ") ERROR: no element named " << name << " in set" << endl ;
-    throw std::invalid_argument(std::string("No element named '") + name + "' in set " + GetName());
+    throw std::invalid_argument(std::string("No element named '") + name.Data() + "' in set " + GetName());
   }
   return *arg ; 
 }
