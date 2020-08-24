@@ -2628,7 +2628,6 @@ void TBranch::SetCompressionLevel(Int_t level)
 void TBranch::SetCompressionSettings(Int_t settings)
 {
    fCompress = settings;
-   TObjArray *leaves = GetListOfLeaves();
 
    Int_t nb = fBranches.GetEntriesFast();
    for (Int_t i=0;i<nb;i++) {

@@ -53,7 +53,7 @@ int64_t bshuf_compress_lz4_block(ioc_chain *C_ptr, \
         free(tmp_buf_bshuf);
         return count;
     }
-    nbytes = LZ4_compress((const char*) tmp_buf_bshuf, (char*) tmp_buf_lz4, size * elem_size);
+    nbytes = LZ4_compress_default((const char*) tmp_buf_bshuf, (char*) tmp_buf_lz4, size * elem_size, LZ4_compressBound(size * elem_size));
     free(tmp_buf_bshuf);
     CHECK_ERR_FREE_LZ(nbytes, tmp_buf_lz4);
 

@@ -21,7 +21,9 @@ void ioc_init(ioc_chain *C, const void *in_ptr_0, void *out_ptr_0) {
 }
 
 
-void ioc_destroy(ioc_chain *C) {}
+void ioc_destroy(ioc_chain *C) {
+    (void)C;
+}
 
 
 const void * ioc_get_in(ioc_chain *C, size_t *this_iter) {
