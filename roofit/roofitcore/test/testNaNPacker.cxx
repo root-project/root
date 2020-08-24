@@ -6,6 +6,9 @@
 #include "RooMinimizer.h"
 #include "RooFitResult.h"
 #include "RooDataSet.h"
+#include "RooAddPdf.h"
+#include "RooRealSumPdf.h"
+#include "RooRandom.h"
 
 #include "gtest/gtest.h"
 
@@ -26,6 +29,7 @@ void dumpFloats(double val) {
   std::cout << std::endl;
 }
 
+// Test if we can pack floats into NaNs, and recover them.
 TEST(RooNaNPacker, CanPackStuffIntoNaNs)
 {
   static_assert((RooNaNPacker::magicTag & RooNaNPacker::magicTagMask) == RooNaNPacker::magicTag, "Bit mask wrong.");
@@ -88,7 +92,7 @@ TEST(RooNaNPacker, CanPackStuffIntoNaNs)
 
 }
 
-
+/// Fit a simple linear function, that starts in the negative.
 TEST(RooNaNPacker, FitSimpleLinear) {
   RooRealVar x("x", "x", -10, 10);
   RooRealVar a1("a1", "a1", 12., -5., 15.);
@@ -101,6 +105,8 @@ TEST(RooNaNPacker, FitSimpleLinear) {
   ASSERT_TRUE(std::isnan(pdf.getVal(RooArgSet(x))));
 
   RooMinimizer minim(*nll);
+  minim.setPrintLevel(-1);
+  minim.setPrintEvalErrors(-1);
   minim.migrad();
   minim.hesse();
   auto fitResult = minim.save();
@@ -110,40 +116,180 @@ TEST(RooNaNPacker, FitSimpleLinear) {
 }
 
 
-
+/// Fit a parabola, where parameters are set up such that negative function values are obtained.
+/// The minimiser needs to recover from that.
+/// Test also that when recovery with NaN packing is switched off, the minimiser fails to recover.
 TEST(RooNaNPacker, FitParabola) {
+  constexpr bool verbose = false;
+
   RooRealVar x("x", "x", -10, 10);
-  RooRealVar a1("a1", "a1", 12., -10., 15.);
-  RooRealVar a2("a2", "a2", 1.1, -5., 15.);
+  RooRealVar a1("a1", "a1", 12., -10., 20.);
+  RooRealVar a2("a2", "a2", 1.1, -10., 20.);
   RooGenericPdf pdf("pdf", "a1 + x + a2 *x*x", RooArgSet(x, a1, a2));
   std::unique_ptr<RooDataSet> data(pdf.generate(x, 10000));
   auto nll = pdf.createNLL(*data);
 
   RooArgSet params(a1, a2);
+  RooArgSet paramsInit;
+  params.snapshot(paramsInit);
   RooArgSet evilValues;
   a1.setVal(-9.);
   a2.setVal(-1.);
   params.snapshot(evilValues);
 
-  params = evilValues;
-  auto fitResult1 = pdf.fitTo(*data, RooFit::Save());
+  RooFitResult *fitResult1 = nullptr, *fitResult2 = nullptr;
+  for (auto tryRecover : std::initializer_list<double>{0., 10.}) {
+    params = evilValues;
 
-  params = evilValues;
+    RooMinimizer::cleanup();
+    RooMinimizer minim(*nll);
+    minim.setRecoverFromNaNStrength(tryRecover);
+    minim.setPrintLevel(-1);
+    minim.setPrintEvalErrors(-1);
+    minim.migrad();
+    minim.hesse();
+    minim.minos();
+    auto fitResult = minim.save();
+    (tryRecover != 0. ? fitResult1 : fitResult2) = fitResult;
 
-  auto fitResult2 = pdf.fitTo(*data, RooFit::Save());
-
-  fitResult1->Print();
-  fitResult2->Print();
-
-  for (auto fitResult : std::initializer_list<RooFitResult*>{fitResult1, fitResult2}) {
-    std::string config = (fitResult == fitResult1 ? "No error wall" : "Error wall");
+    std::string config = (tryRecover != 0. ? "With recovery" : "Without recovery");
     const auto& a1Final = static_cast<RooRealVar&>(fitResult->floatParsFinal()[0]);
     const auto& a2Final = static_cast<RooRealVar&>(fitResult->floatParsFinal()[1]);
-    EXPECT_EQ(fitResult->status(), 0) << config;
-    EXPECT_NEAR(a1Final.getVal(), 12., a1Final.getError()) << config;
-    EXPECT_NEAR(a2Final.getVal(),  0., a2Final.getError()) << config;
+
+    if (tryRecover != 0.) {
+      EXPECT_EQ(fitResult->status(), 0) << config;
+      EXPECT_NEAR(a1Final.getVal(), static_cast<RooAbsReal&>(paramsInit["a1"]).getVal(), a1Final.getError()) << config;
+      EXPECT_NEAR(a2Final.getVal(), static_cast<RooAbsReal&>(paramsInit["a2"]).getVal(), a2Final.getError()) << config;
+    } else {
+      EXPECT_LT(a1Final.getVal(), 0.);
+      EXPECT_LT(a2Final.getVal(), 0.);
+    }
+
+    if (verbose) {
+      std::cout << "Recovery strength:" << tryRecover << std::endl;
+      fitResult->Print();
+    }
   }
 
+  EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
+}
+
+/// Make coefficients of RooAddPdf sum to more than 1. Fitter should recover from this.
+TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff) {
+  constexpr bool verbose = false;
+  RooRandom::randomGenerator()->SetSeed(100);
+
+  RooRealVar x("x", "x", 0., 10);
+  RooRealVar a1("a1", "a1", 0.4, -10., 10.);
+  RooRealVar a2("a2", "a2", 0.4, -10., 10.);
+  RooGenericPdf pdf1("gen1", "exp(-2.*x)", RooArgSet(x));
+  RooGenericPdf pdf2("gen2", "TMath::Gaus(x, 3, 2)", RooArgSet(x));
+  RooGenericPdf pdf3("gen3", "x*x*x+1", RooArgSet(x));
+  RooAddPdf pdf("sum", "a1*gen1 + a2*gen2 + (1-a1-a2)*gen3", RooArgList(pdf1, pdf2, pdf3), RooArgList(a1, a2));
+  std::unique_ptr<RooDataSet> data(pdf.generate(x, 2000));
+  auto nll = pdf.createNLL(*data);
+
+  RooArgSet params(a1, a2);
+  RooArgSet paramsInit;
+  params.snapshot(paramsInit);
+
+  RooArgSet evilValues;
+  a1.setVal(0.6);
+  a2.setVal(0.7);
+  params.snapshot(evilValues);
+
+  params = evilValues;
+
+  RooFitResult *fitResult1 = nullptr, *fitResult2 = nullptr;
+  for (auto tryRecover : std::initializer_list<double>{0., 10.}) {
+    params = evilValues;
+
+    RooMinimizer::cleanup();
+    RooMinimizer minim(*nll);
+    minim.setRecoverFromNaNStrength(tryRecover);
+    minim.setPrintLevel(-1);
+    minim.setPrintEvalErrors(-1);
+    minim.migrad();
+    minim.hesse();
+    auto fitResult = minim.save();
+    (tryRecover != 0. ? fitResult1 : fitResult2) = fitResult;
+
+    const auto& a1Final = static_cast<RooRealVar&>(fitResult->floatParsFinal()[0]);
+    const auto& a2Final = static_cast<RooRealVar&>(fitResult->floatParsFinal()[1]);
+
+    if (tryRecover != 0.) {
+      EXPECT_EQ(fitResult->status(), 0) << "Recovery strength=" << tryRecover;
+      EXPECT_NEAR(a1Final.getVal(), static_cast<RooAbsReal&>(paramsInit["a1"]).getVal(), a1Final.getError()) << "Recovery strength=" << tryRecover;
+      EXPECT_NEAR(a2Final.getVal(), static_cast<RooAbsReal&>(paramsInit["a2"]).getVal(), a2Final.getError()) << "Recovery strength=" << tryRecover;
+      EXPECT_NEAR(a1Final.getVal() + a2Final.getVal(), 0.8, 0.02) << "Check that coefficients sum to 1. " << "Recovery strength=" << tryRecover;
+    } else {
+      EXPECT_TRUE(a1Final.getVal() < 0. || a1Final.getVal() > 1. || a2Final.getVal() < 0. || a2Final.getVal() > 1.) << "Recovery strength=" << tryRecover;
+    }
+
+    if (verbose) {
+      std::cout << "Recovery strength:" << tryRecover << "\n";
+      fitResult->Print();
+    }
+  }
+
+  EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
+}
+
+/// Make coefficients of RooRealSumPdf sum to more than 1. Fitter should recover from this.
+TEST(RooNaNPacker, Interface_RooAbsPdf_fitTo_RooRealSumPdf_DegenerateCoeff) {
+  constexpr bool verbose = false;
+  RooRandom::randomGenerator()->SetSeed(100);
+
+  RooRealVar x("x", "x", 0., 10);
+  RooRealVar a1("a1", "a1", 0.3, -10., 10.);
+  RooRealVar a2("a2", "a2", 0.4, -10., 10.);
+  RooGenericPdf pdf1("gen1", "exp(-0.5*x)", RooArgSet(x));
+  RooGenericPdf pdf2("gen2", "TMath::Gaus(x, 5, 0.7)", RooArgSet(x));
+  RooGenericPdf pdf3("gen3", "TMath::Gaus(x, 8, 0.8)", RooArgSet(x));
+  RooRealSumPdf pdf("sum", "a1*gen1 + a2*gen2 + (1-a1-a2)*gen3", RooArgList(pdf1, pdf2, pdf3), RooArgList(a1, a2));
+  std::unique_ptr<RooDataSet> data(pdf.generate(x, 5000));
+
+  RooArgSet params(a1, a2);
+  RooArgSet paramsInit;
+  params.snapshot(paramsInit);
+
+  RooArgSet evilValues;
+  a1.setVal(0.6);
+  a2.setVal(0.7);
+  params.snapshot(evilValues);
+
+  params = evilValues;
+
+  RooFitResult *fitResult1 = nullptr, *fitResult2 = nullptr;
+  for (auto tryRecover : std::initializer_list<double>{0., 10.}) {
+    params = evilValues;
+
+    auto fitResult = pdf.fitTo(*data, RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1), RooFit::Save(), RooFit::RecoverFromUndefinedRegions(tryRecover));
+    (tryRecover != 0. ? fitResult1 : fitResult2) = fitResult;
+
+    const auto& a1Final = static_cast<RooRealVar&>(fitResult->floatParsFinal()[0]);
+    const auto& a2Final = static_cast<RooRealVar&>(fitResult->floatParsFinal()[1]);
+
+    if (tryRecover != 0.) {
+      EXPECT_EQ(fitResult->status(), 0) << "Recovery strength=" << tryRecover;
+      EXPECT_NEAR(a1Final.getVal(), static_cast<RooAbsReal&>(paramsInit["a1"]).getVal(), 3.*a1Final.getError()) << "Recovery strength=" << tryRecover;
+      EXPECT_NEAR(a2Final.getVal(), static_cast<RooAbsReal&>(paramsInit["a2"]).getVal(), 3.*a2Final.getError()) << "Recovery strength=" << tryRecover;
+      EXPECT_GE(a1Final.getVal() + a2Final.getVal(), 0.) << "Check that coefficients are in [0, 1]. " << "Recovery strength=" << tryRecover;
+      EXPECT_LE(a1Final.getVal() + a2Final.getVal(), 1.) << "Check that coefficients sum to [0, 1]. " << "Recovery strength=" << tryRecover;
+    } else {
+      EXPECT_TRUE(a1Final.getVal() < 0. || a1Final.getVal() > 1. || a2Final.getVal() < 0. || a2Final.getVal() > 1.) << "Recovery strength=" << tryRecover;
+    }
+
+    if (verbose) {
+      std::cout << "Recovery strength:" << tryRecover << "\n";
+      fitResult->Print();
+    }
+  }
+
+  if (verbose) {
+    fitResult1->Print();
+    fitResult2->Print();
+  }
   EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
 }
 
