@@ -23,17 +23,6 @@ std::vector<RIOVec> make_iovecs(int n, unsigned int fileSize) {
 
 } // anonymous namespace
 
-TEST(RIoUring, Basics)
-{
-   // successfully construct a ring with queue depth 4
-   RIoUring ring(4);
-}
-
-TEST(RIoUring, IsAvailable)
-{
-   ASSERT_TRUE(RIoUring::IsAvailable());
-}
-
 TEST(RRawFileUnix, ReadV)
 {
    auto file = "test_uring_readv";
