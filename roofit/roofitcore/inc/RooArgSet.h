@@ -42,44 +42,24 @@ public:
   explicit RooArgSet(const char *name);
   RooArgSet(const RooArgSet& set1, const RooArgSet& set2,
 	    const char *name="");
-  RooArgSet(const RooAbsArg& var1, 
-	    const char *name="");
-  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
-	    const char *name="");
-  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
-	    const RooAbsArg& var3, 
-	    const char *name="");
-  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
-	    const RooAbsArg& var3, const RooAbsArg& var4, 
-	    const char *name="");
-  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
-	    const RooAbsArg& var3, const RooAbsArg& var4, 
-	    const RooAbsArg& var5, 
-	    const char *name="");
-  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
-	    const RooAbsArg& var3, const RooAbsArg& var4, 
-	    const RooAbsArg& var5, const RooAbsArg& var6, 
-	    const char *name="");
-  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
-            const RooAbsArg& var3, const RooAbsArg& var4, 
-	    const RooAbsArg& var5, const RooAbsArg& var6, 
-	    const RooAbsArg& var7, 
-	    const char *name="");
-  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
-            const RooAbsArg& var3, const RooAbsArg& var4, 
-	    const RooAbsArg& var5, const RooAbsArg& var6, 
-	    const RooAbsArg& var7, const RooAbsArg& var8, 
-	    const char *name="");
-  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
-            const RooAbsArg& var3, const RooAbsArg& var4, 
-	    const RooAbsArg& var5, const RooAbsArg& var6, 
-	    const RooAbsArg& var7, const RooAbsArg& var8, 
-	    const RooAbsArg& var9, const char *name="");
+
+  /// Construct a (non-owning) RooArgSet from one or more
+  /// RooFit objects.
+  /// \param arg A RooFit object to be put in the set.
+  /// \param varsOrName Arbitrary number of
+  ///   - RooFit objects deriving from RooAbsArg.
+  ///   - RooArgSets whose contents will be added to this set.
+  ///   - A c-string to name the set.
+  template<typename... Arg_t>
+  RooArgSet(const RooAbsArg& arg, const Arg_t&... argsOrName) :
+  RooAbsCollection() {
+    processArg(arg);
+    // Expand parameter pack in C++ 11 way:
+    int dummy[] = { 0, ( (void) processArg(argsOrName), 0) ... };
+    (void)dummy;
+  };
 
   virtual ~RooArgSet();
-  // Create a copy of an existing list. New variables cannot be added
-  // to a copied list. The variables in the copied list are independent
-  // of the original variables.
   RooArgSet(const RooArgSet& other, const char *name="");
   virtual TObject* clone(const char* newname) const { return new RooArgSet(*this,newname); }
   virtual TObject* create(const char* newname) const { return new RooArgSet(newname); }
@@ -144,8 +124,12 @@ public:
   }
 
 protected:
-
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;
+
+private:
+  void processArg(const RooAbsArg& var) { add(var); }
+  void processArg(const RooArgSet& set) { add(set); }
+  void processArg(const char* name) { _name = name; }
 
 #ifdef USEMEMPOOLFORARGSET
 private:
