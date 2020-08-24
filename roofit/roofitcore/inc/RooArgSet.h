@@ -94,7 +94,8 @@ public:
   RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) override;
 
   using RooAbsCollection::operator[];
-  RooAbsArg& operator[](const char* name) const;
+  RooAbsArg& operator[](const TString& str) const;
+
 
   /// Shortcut for readFromStream(std::istream&, Bool_t, const char*, const char*, Bool_t), setting
   /// `flagReadAtt` and `section` to 0.
