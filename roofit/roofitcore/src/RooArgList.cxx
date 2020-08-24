@@ -38,13 +38,10 @@
 ///
 ///
 
-#include "Riostream.h"
-#include <iomanip>
-#include "TClass.h"
 #include "RooArgList.h"
+
 #include "RooErrorHandler.h"
 #include "RooStreamParser.h"
-#include "RooFormula.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooTrace.h"
@@ -87,139 +84,6 @@ RooArgList::RooArgList(const char *name) :
 {
   TRACE_CREATE
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for list containing 1 initial object
-
-RooArgList::RooArgList(const RooAbsArg& var1,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 2 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 3 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 4 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 5 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1,
-		     const RooAbsArg& var2, const RooAbsArg& var3,
-		     const RooAbsArg& var4, const RooAbsArg& var5,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 6 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 7 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 8 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7, const RooAbsArg& var8,
-		     const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
-  TRACE_CREATE
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor for set containing 9 initial objects
-
-RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-		     const RooAbsArg& var3, const RooAbsArg& var4, 
-		     const RooAbsArg& var5, const RooAbsArg& var6, 
-		     const RooAbsArg& var7, const RooAbsArg& var8,
-		     const RooAbsArg& var9, const char *name) :
-  RooAbsCollection(name)
-{
-  add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7); add(var8); add(var9);
-  TRACE_CREATE
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

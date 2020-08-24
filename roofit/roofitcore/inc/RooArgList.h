@@ -26,39 +26,20 @@ public:
   RooArgList(const RooArgSet& set) ;
   explicit RooArgList(const TCollection& tcoll, const char* name="") ;
   explicit RooArgList(const char *name);
-  RooArgList(const RooAbsArg& var1, 
-	     const char *name="");
-  RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
-	     const char *name="");
-  RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, 
-	     const char *name="");
-  RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, const RooAbsArg& var4, 
-	     const char *name="");
-  RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, const RooAbsArg& var4, 
-	     const RooAbsArg& var5, 
-	     const char *name="");
-  RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, const RooAbsArg& var4, 
-	     const RooAbsArg& var5, const RooAbsArg& var6, 
-	     const char *name="");
-  RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, const RooAbsArg& var4, 
-	     const RooAbsArg& var5, const RooAbsArg& var6, 
-	     const RooAbsArg& var7, 
-	     const char *name="");
-  RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, const RooAbsArg& var4, 
-	     const RooAbsArg& var5, const RooAbsArg& var6, 
-	     const RooAbsArg& var7, const RooAbsArg& var8, 
-	     const char *name="");
-  RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, const RooAbsArg& var4, 
-	     const RooAbsArg& var5, const RooAbsArg& var6, 
-	     const RooAbsArg& var7, const RooAbsArg& var8, 
-	     const RooAbsArg& var9, const char *name="");
+  /// Construct a (non-owning) RooArgList from one or more
+  /// RooFit objects.
+  /// \param arg A RooFit object to be put in the set.
+  /// \param varsOrName Arbitrary number of
+  ///   - RooFit objects deriving from RooAbsArg.
+  ///   - A c-string to name the set.
+  template<typename... Arg_t>
+  RooArgList(const RooAbsArg& arg, const Arg_t&... argsOrName)
+  /*NB: Making this a delegating constructor led to linker errors with MSVC*/ {
+    processArg(arg);
+    // Expand parameter pack in C++ 11 way:
+    int dummy[] = { 0, (processArg(argsOrName), 0) ... };
+    (void)dummy;
+  };
 
   virtual ~RooArgList();
   // Create a copy of an existing list. New variables cannot be added
@@ -85,7 +66,9 @@ public:
 
   RooAbsArg& operator[](Int_t idx) const ; 
 
-protected:
+private:
+  void processArg(const RooAbsArg& arg) { add(arg); }
+  void processArg(const char* name) { _name = name; }
 
   ClassDef(RooArgList,1) // Ordered list of RooAbsArg objects
 };
