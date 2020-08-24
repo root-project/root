@@ -32,8 +32,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HS3
     HistFactory    
 )
 
-if(yml)
-  FIND_PACKAGE(ryml)
+if(ryml)
   SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DINCLUDE_RYML")
   target_include_directories(HS3 PRIVATE
     ${RYML_INCLUDE_DIRS}
@@ -42,8 +41,9 @@ if(yml)
   target_link_directories(HS3 PRIVATE
     ${RYML_LIB_DIR}
     )
+else()
+  target_include_directories(HS3 PRIVATE
+    ${CMAKE_SOURCE_DIR}/io/io/res
+    )
 endif()
-
-target_include_directories(HS3 PRIVATE
-  ${CMAKE_SOURCE_DIR}/io/io/res
-  )
+  
