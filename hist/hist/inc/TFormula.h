@@ -20,6 +20,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <atomic>
 #include <Math/Types.h>
 
 class TMethodCall;
@@ -44,7 +45,7 @@ public:
    : fName(name),fBody(""),fNargs(0),fFound(false),fFuncCall(false){}
    Bool_t operator<(const TFormulaFunction &rhv) const
    {
-      // order by length - first the longer ones to avoid replacing wrong functions 
+      // order by length - first the longer ones to avoid replacing wrong functions
       if ( fName.Length() < rhv.fName.Length() )
          return true;
       else if ( fName.Length() > rhv.fName.Length() )
@@ -92,7 +93,7 @@ private:
    std::vector<Double_t>  fClingVariables;       //!  cached variables
    std::vector<Double_t>  fClingParameters;      //  parameter values
    Bool_t            fReadyToExecute;       //! trasient to force initialization
-   Bool_t            fClingInitialized;  //!  transient to force re-initialization
+   std::atomic<Bool_t>  fClingInitialized;  //!  transient to force re-initialization
    Bool_t            fAllParametersSetted;    // flag to control if all parameters are setted
    Bool_t            fLazyInitialization = kFALSE;  //! transient flag to control lazy initialization (needed for reading from files)
    TMethodCall *fMethod; //! pointer to methodcall
@@ -138,7 +139,7 @@ protected:
    std::map<TString,Double_t>          fConsts;   //!
    std::map<TString,TString>           fFunctionsShortcuts;  //!
    TString                             fFormula;  // string representing the formula expression
-   Int_t                               fNdim;  //   Dimension - needed for lambda expressions  
+   Int_t                               fNdim;  //   Dimension - needed for lambda expressions
    Int_t                               fNpar;  //!  Number of parameter (transient since we save the vector)
    Int_t                               fNumber;  //!
    std::vector<TObject*>               fLinearParts;  // vector of linear functions
@@ -158,7 +159,7 @@ protected:
    void   ReplaceParamName(TString &formula, const TString & oldname, const TString & name);
    void   DoAddParameter(const TString &name, Double_t value, bool processFormula);
    void   DoSetParameters(const Double_t * p, Int_t size);
-   void   SetPredefinedParamNames(); 
+   void   SetPredefinedParamNames();
 
    Double_t       DoEval(const Double_t * x, const Double_t * p = nullptr) const;
 #ifdef R__HAS_VECCORE
@@ -171,7 +172,7 @@ public:
       kNotGlobal     = BIT(10),    // don't store in gROOT->GetListOfFunction (it should be protected)
       kNormalized    = BIT(14),    // set to true if the TFormula (ex gausn) is normalized
       kLinear        = BIT(16),    //set to true if the TFormula is for linear fitting
-      kLambda        = BIT(17)     // set to true if TFormula has been build with a lambda  
+      kLambda        = BIT(17)     // set to true if TFormula has been build with a lambda
    };
    using GradientStorage = std::vector<Double_t>;
 
