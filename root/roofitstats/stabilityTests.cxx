@@ -51,7 +51,7 @@ TEST(Stability, ROOT_10615) {
   RooDataSet dataset("dataset", "dataset", input_tree, dt);
   EXPECT_FALSE(hijack.str().empty());
 
-  if (gSystem->Load("libMinuit2.so") < 0)
+  if (gSystem->Load("libMinuit2") < 0)
     GTEST_SKIP();
 
   auto fitResult = bkg_dt_model_.fitTo(dataset, RooFit::Minimizer("Minuit2"), RooFit::Save(), RooFit::Hesse(false), RooFit::PrintLevel(-1));
