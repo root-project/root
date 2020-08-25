@@ -1,8 +1,9 @@
 #ifndef RYML_PARSER_H
 #define RYML_PARSER_H
 #include "JSONInterface.h"
+#include "RConfigure.h"
 
-#ifdef INCLUDE_RYML
+#ifdef R__HAS_RYML
 #include <list>
 #include <istream>
 #include <memory>

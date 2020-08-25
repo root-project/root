@@ -33,7 +33,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HS3
 )
 
 if(ryml)
-  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DINCLUDE_RYML")
   target_include_directories(HS3 PRIVATE
     ${RYML_INCLUDE_DIRS}
     )
@@ -46,4 +45,4 @@ else()
     ${CMAKE_SOURCE_DIR}/io/io/res
     )
 endif()
-  
+
