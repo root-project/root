@@ -14,8 +14,10 @@ if(ROOT_roofit_FOUND)
                     POSTCMD diff ${CMAKE_CURRENT_SOURCE_DIR}/ASCII-in-out_data.txt ./ASCII-in-out_result.txt)
 
   if(MSVC)
-    ROOT_ADD_GTEST(stabilityTests stabilityTests.cxx LIBRARIES libCore libTree libRIO libRooFitCore libRooFit
-                   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/stabilityTests_data_1.root)
+    if(win_broken_tests)
+      ROOT_ADD_GTEST(stabilityTests stabilityTests.cxx LIBRARIES libCore libTree libRIO libRooFitCore libRooFit
+                     COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/stabilityTests_data_1.root)
+    endif()
   else()
     ROOT_ADD_GTEST(stabilityTests stabilityTests.cxx LIBRARIES Core Tree RIO RooFitCore RooFit
                    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/stabilityTests_data_1.root)
