@@ -316,7 +316,7 @@ int64_t bshuf_shuffle_bit_eightelem_scal(const void* in, void* out, \
 
     nbyte = elem_size * size;
 
-    for (jj = 0; jj < 8 * elem_size; jj += 8) {
+    for (jj = 0; jj + 7 < 8 * elem_size; jj += 8) {
         for (ii = 0; ii + 8 * elem_size - 1 < nbyte; ii += 8 * elem_size) {
             x = *((uint64_t*) &in_b[ii + jj]);
             if (little_endian) {

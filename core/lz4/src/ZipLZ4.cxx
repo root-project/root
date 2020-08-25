@@ -231,15 +231,16 @@ void R__unzipLZ4BS(int * srcsize, unsigned char * src, int * tgtsize, unsigned c
      size_t elem_count = *tgtsize / sizeof(float);
 
      int returnStatus = bshuf_decompress_lz4(&src[kHeaderSize], tgt, elem_count, sizeof(float), 0);
-     // bshuf_decompress_lz4 returns the number of bytes consumed in src buffer
-     // so change returnStatus to mean number of bytes consumed in tgt buffer
-     returnStatus = *tgtsize;
    
      if (R__unlikely(returnStatus < 0)) {
         fprintf(stderr, "R__unzipLZ4BS: error in decompression around byte %d out of maximum %d.\n", -returnStatus,
                 *tgtsize);
         return;
      }
+
+     // bshuf_decompress_lz4 returns the number of bytes consumed in src buffer
+     // so change returnStatus to mean number of bytes consumed in tgt buffer
+     returnStatus = *tgtsize;
 
      *irep = returnStatus;
 }
