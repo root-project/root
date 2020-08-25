@@ -5254,34 +5254,39 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
       return;
    THashList *labels = axis->GetLabels();
    if (!labels) {
-      Warning("LabelsOption", "Cannot sort. No labels");
+      Warning("LabelsOption", "Histogram has no labels!");
       return;
    }
    TString opt = option;
    opt.ToLower();
+   Int_t iopt = -1;
    if (opt.Contains("h")) {
       axis->SetBit(TAxis::kLabelsHori);
       axis->ResetBit(TAxis::kLabelsVert);
       axis->ResetBit(TAxis::kLabelsDown);
       axis->ResetBit(TAxis::kLabelsUp);
+      iopt = 0;
    }
    if (opt.Contains("v")) {
       axis->SetBit(TAxis::kLabelsVert);
       axis->ResetBit(TAxis::kLabelsHori);
       axis->ResetBit(TAxis::kLabelsDown);
       axis->ResetBit(TAxis::kLabelsUp);
+      iopt = 1;
    }
    if (opt.Contains("u")) {
       axis->SetBit(TAxis::kLabelsUp);
       axis->ResetBit(TAxis::kLabelsVert);
       axis->ResetBit(TAxis::kLabelsDown);
       axis->ResetBit(TAxis::kLabelsHori);
+      iopt = 2;
    }
    if (opt.Contains("d")) {
       axis->SetBit(TAxis::kLabelsDown);
       axis->ResetBit(TAxis::kLabelsVert);
       axis->ResetBit(TAxis::kLabelsHori);
       axis->ResetBit(TAxis::kLabelsUp);
+      iopt = 3;
    }
    Int_t sort = -1;
    if (opt.Contains("a"))
@@ -5290,12 +5295,11 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
       sort = 1;
    if (opt.Contains("<"))
       sort = 2;
-   if (sort < 0)
+   if (sort < 0) {
+      if (iopt < 0)
+         Error("LabelsOption", "%s is an invalid option!",opt.Data());
       return;
-   // if (sort > 0 && GetDimension() > 2) {
-   //    Error("LabelsOption","Sorting by value not implemented for 3-D histograms");
-   //    return;
-   // }
+   }
 
    Double_t entries = fEntries;
    Int_t n = TMath::Min(axis->GetNbins(), labels->GetSize());
@@ -5414,8 +5418,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
             }
          }
       } else {
-         // Error("LabelsOption","Ordering of labels with decreasing/increasing values is not implemeneted for 3D
-         // histograms"); delete labold; return; 3D case
+         // sorting histograms: 3D case
          std::vector<Double_t> pcont(n + 2);
          Int_t nx = fXaxis.GetNbins() + 2;
          Int_t ny = fYaxis.GetNbins() + 2;
