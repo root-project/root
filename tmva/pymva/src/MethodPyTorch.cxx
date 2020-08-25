@@ -234,6 +234,10 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
       PyRunString("train = load_model_custom_objects[\"criterion\"]",
                   "Failed to load loss function from file");
       Log() << kINFO << "Loaded pytorch loss function: " << Endl;
+
+      PyRunString("predict = load_model_custom_objects[\"predict_func\"]",
+                  "Can't find user predict function object from file. Please use key: 'predict' and pass a predict function for evaluating the model as the value.");
+      Log() << kINFO << "Loaded pytorch predict function: " << Endl;
    }
 
 
@@ -481,19 +485,11 @@ Double_t MethodPyTorch::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
       SetupPyTorchModel(true);
    }
 
-
-   /////////////////////
-   // TODO: PyTorch doesn't have a method to use direct predictions.
-   //       Convert or omit to get the Keras like predictions setup.
-   //       Also, set model to model.eval() before making predictions.
-   /////////////////////
-
-
-   // // Get signal probability (called mvaValue here)
-   // const TMVA::Event* e = GetEvent();
-   // for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
-   // PyRunString("model.eval(); for i,p in enumerate(model.predict(vals)): output[i]=p\n",
-   //             "Failed to get predictions");
+   // Get signal probability (called mvaValue here)
+   const TMVA::Event* e = GetEvent();
+   for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
+   PyRunString("for i,p in enumerate(predict(model, vals)): output[i]=p\n",
+               "Failed to get predictions");
 
 
    return fOutput[TMVA::Types::kSignal];
@@ -541,19 +537,14 @@ std::vector<Double_t> MethodPyTorch::GetMvaValues(Long64_t firstEvt, Long64_t la
    PyObject* pModel = PyDict_GetItemString(fLocalNS, "model");
    if (pModel==0) Log() << kFATAL << "Failed to get model Python object" << Endl;
 
+   PyObject* pPredict = PyDict_GetItemString(fLocalNS, "predict");
+   if (pPredict==0) Log() << kFATAL << "Failed to get Python predict function" << Endl;
 
-   /////////////////////
-   // TODO: PyTorch doesn't have a method to use direct predictions.
-   //       Use external function predict for this functionality.
-   /////////////////////
 
-   PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallMethod(pModel, (char*)"predict", (char*)"O", pDataMvaValues);
-   
-
-   // Note: This will surely fail for now.
-   if (pPredictions==0) Log() << kFATAL << "Predictions for PyTorch Not implemented yet" << Endl;
+   // Using PyTorch User Defined predict function for predictions
+   PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallFunctionObjArgs(pPredict, pModel, pDataMvaValues, NULL);      
+   if (pPredictions==0) Log() << kFATAL << "Failed to get predictions doosra" << Endl;
    delete[] data;
-
 
    // Load predictions to double vector
    // NOTE: The signal probability is given at the output
@@ -584,14 +575,8 @@ std::vector<Float_t>& MethodPyTorch::GetRegressionValues() {
    const TMVA::Event* e = GetEvent();
    for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
 
-   /////////////////////
-   // TODO: PyTorch doesn't have a method to use direct predictions.
-   //       Convert or omit to get the Keras like predictions setup.
-   /////////////////////
-
-
-   // PyRunString("for i,p in enumerate(model.predict(vals)): output[i]=p\n",
-   //             "Failed to get predictions");
+   PyRunString("for i,p in enumerate(predict(model, vals)): output[i]=p\n",
+               "Failed to get predictions");
 
 
    // Use inverse transformation of targets to get final regression values
@@ -619,22 +604,16 @@ std::vector<Float_t>& MethodPyTorch::GetMulticlassValues() {
    // Get class probabilites
    const TMVA::Event* e = GetEvent();
    for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
-
-   /////////////////////
-   // TODO: PyTorch doesn't have a method to use direct predictions.
-   //       Convert or omit to get the Keras like predictions setup.
-   /////////////////////
-
-
-   PyRunString("for i,p in enumerate(model.predict(vals)): output[i]=p\n",
+   PyRunString("for i,p in enumerate(predict(model, vals)): output[i]=p\n",
                "Failed to get predictions");
-
 
    return fOutput;
 }
 
+
 void MethodPyTorch::ReadModelFromFile() {
 }
+
 
 void MethodPyTorch::GetHelpMessage() const {
    Log() << Endl;
