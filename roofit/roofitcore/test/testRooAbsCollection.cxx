@@ -64,3 +64,13 @@ TEST(RooArgSet, SubscriptOperator) {
   RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::InputArguments);
   EXPECT_THROW(theSet[nullptr], std::invalid_argument);
 }
+
+TEST(RooArgSet, FromVector) {
+  std::vector<RooRealVar> vars;
+  vars.emplace_back("x", "x", 0.);
+  vars.emplace_back("y", "y", 0.);
+
+  RooArgSet theSet(vars.begin(), vars.end(), "Hallo");
+  EXPECT_EQ(theSet.size(), 2);
+  EXPECT_STREQ(theSet.GetName(), "Hallo");
+}
