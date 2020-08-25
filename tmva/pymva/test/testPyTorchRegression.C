@@ -14,10 +14,9 @@ from torch import nn\n\
 \n\
 # Define model\n\
 model = nn.Sequential(\n\
-                nn.Linear(4, 64),\n\
-                nn.ReLU(),\n\
-                nn.Linear(64, 2),\n\
-                nn.Softmax(dim=1))\n\
+                nn.Linear(2, 64),\n\
+                nn.Tanh(),\n\
+                nn.Linear(64, 1))\n\
 \n\
 # Construct loss function and Optimizer.\n\
 criterion = torch.nn.MSELoss()\n\
@@ -97,58 +96,54 @@ load_model_custom_objects = {\"optimizer\": optimizer, \"criterion\": criterion,
 \n\
 # Store model to file\n\
 m = torch.jit.script(model)\n\
-torch.jit.save(m,\"PyTorchModelClassification.pt\")\n";
+torch.jit.save(m,\"PyTorchModelRegression.pt\")\n";
 
-
-int testPyTorchClassification(){
+int testPyTorchRegression(){
    // Get data file
    std::cout << "Get test data..." << std::endl;
-   TString fname = "./tmva_class_example.root";
+   TString fname = "./tmva_reg_example.root";
    if (gSystem->AccessPathName(fname))  // file does not exist in local directory
-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
+      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_reg_example.root");
    TFile *input = TFile::Open(fname);
 
    // Build model from python file
    std::cout << "Generate PyTorch model..." << std::endl;
    UInt_t ret;
-   ret = gSystem->Exec("echo '"+pythonSrc+"' > generatePyTorchModelClassification.py");
+   ret = gSystem->Exec("echo '"+pythonSrc+"' > generatePyTorchModelRegression.py");
    if(ret!=0){
        std::cout << "[ERROR] Failed to write python code to file" << std::endl;
        return 1;
    }
-   ret = gSystem->Exec("python generatePyTorchModelClassification.py");
+   ret = gSystem->Exec("python generatePyTorchModelRegression.py");
    if(ret!=0){
        std::cout << "[ERROR] Failed to generate model using python" << std::endl;
        return 1;
    }
 
-   // // Setup PyMVA and factory
+   // Setup PyMVA and factory
    std::cout << "Setup TMVA..." << std::endl;
    TMVA::PyMethodBase::PyInitialize();
-   TFile* outputFile = TFile::Open("ResultsTestPyTorchClassification.root", "RECREATE");
-   TMVA::Factory *factory = new TMVA::Factory("testPyTorchClassification", outputFile,
-      "!V:Silent:Color:!DrawProgressBar:AnalysisType=Classification");
+   TFile* outputFile = TFile::Open("ResultsTestPyTorchRegression.root", "RECREATE");
+   TMVA::Factory *factory = new TMVA::Factory("testPyTorchRegression", outputFile,
+      "!V:Silent:Color:!DrawProgressBar:AnalysisType=Regression");
 
    // Load data
-   TMVA::DataLoader *dataloader = new TMVA::DataLoader("datasetTestPyTorchClassification");
+   TMVA::DataLoader *dataloader = new TMVA::DataLoader("datasetTestPyTorchRegression");
 
-   TTree *signal = (TTree*)input->Get("TreeS");
-   TTree *background = (TTree*)input->Get("TreeB");
-   dataloader->AddSignalTree(signal);
-   dataloader->AddBackgroundTree(background);
+   TTree *tree = (TTree*)input->Get("TreeR");
+   dataloader->AddRegressionTree(tree);
 
    dataloader->AddVariable("var1");
    dataloader->AddVariable("var2");
-   dataloader->AddVariable("var3");
-   dataloader->AddVariable("var4");
+   dataloader->AddTarget("fvalue");
 
    dataloader->PrepareTrainingAndTestTree("",
       "SplitMode=Random:NormMode=NumEvents:!V");
 
    // Book and train method
    factory->BookMethod(dataloader, TMVA::Types::kPyTorch, "PyTorch",
-      "!H:!V:VarTransform=D,G:FilenameModel=PyTorchModelClassification.pt:FilenameTrainedModel=trainedPyTorchModelClassification.pt:NumEpochs=10:BatchSize=32:UserCode=generatePyTorchModelClassification.py");
-   std::cout << "Training model..." << std::endl;
+      "!H:!V:VarTransform=D,G:FilenameModel=PyTorchModelRegression.pt:FilenameTrainedModel=trainedPyTorchModelRegression.h5:NumEpochs=10:BatchSize=32:SaveBestOnly=false:UserCode=generatePyTorchModelRegression.py");
+   std::cout << "Train model..." << std::endl;
    factory->TrainAllMethods();
 
    // Clean-up
@@ -158,46 +153,29 @@ int testPyTorchClassification(){
 
    // Setup reader
    UInt_t numEvents = 100;
-   std::cout << "Run reader and classify " << numEvents << " events..." << std::endl;
+   std::cout << "Run reader and estimate target of " << numEvents << " events..." << std::endl;
    TMVA::Reader *reader = new TMVA::Reader("!Color:Silent");
-   Float_t vars[4];
+   Float_t vars[3];
    reader->AddVariable("var1", vars+0);
    reader->AddVariable("var2", vars+1);
-   reader->AddVariable("var3", vars+2);
-   reader->AddVariable("var4", vars+3);
-   reader->BookMVA("PyTorch", "datasetTestPyTorchClassification/weights/testPyTorchClassification_PyTorch.weights.xml");
+   reader->BookMVA("PyTorch", "datasetTestPyTorchRegression/weights/testPyTorchRegression_PyTorch.weights.xml");
 
-   // Get mean response of method on signal and background events
-   signal->SetBranchAddress("var1", vars+0);
-   signal->SetBranchAddress("var2", vars+1);
-   signal->SetBranchAddress("var3", vars+2);
-   signal->SetBranchAddress("var4", vars+3);
+   // Get mean squared error on events
+   tree->SetBranchAddress("var1", vars+0);
+   tree->SetBranchAddress("var2", vars+1);
+   tree->SetBranchAddress("fvalue", vars+2);
 
-   background->SetBranchAddress("var1", vars+0);
-   background->SetBranchAddress("var2", vars+1);
-   background->SetBranchAddress("var3", vars+2);
-   background->SetBranchAddress("var4", vars+3);
-
-   Float_t meanMvaSignal = 0;
-   Float_t meanMvaBackground = 0;
+   Float_t meanMvaError = 0;
    for(UInt_t i=0; i<numEvents; i++){
-      signal->GetEntry(i);
-      meanMvaSignal += reader->EvaluateMVA("PyTorch");
-      background->GetEntry(i);
-      meanMvaBackground += reader->EvaluateMVA("PyTorch");
+      tree->GetEntry(i);
+      meanMvaError += std::pow(vars[2]-reader->EvaluateMVA("PyTorch"),2);
    }
-   meanMvaSignal = meanMvaSignal/float(numEvents);
-   meanMvaBackground = meanMvaBackground/float(numEvents);
+   meanMvaError = meanMvaError/float(numEvents);
 
    // Check whether the response is obviously better than guessing
-   std::cout << "Mean MVA response on signal: " << meanMvaSignal << std::endl;
-   if(meanMvaSignal < 0.6){
-      std::cout << "[ERROR] Mean response on signal is " << meanMvaSignal << " (<0.6)" << std::endl;
-      return 1;
-   }
-   std::cout << "Mean MVA response on background: " << meanMvaBackground << std::endl;
-   if(meanMvaBackground > 0.4){
-      std::cout << "[ERROR] Mean response on background is " << meanMvaBackground << " (>0.4)" << std::endl;
+   std::cout << "Mean squared error: " << meanMvaError << std::endl;
+   if(meanMvaError > 30.0){
+      std::cout << "[ERROR] Mean squared error is " << meanMvaError << " (>30.0)" << std::endl;
       return 1;
    }
 
@@ -205,6 +183,6 @@ int testPyTorchClassification(){
 }
 
 int main(){
-   int err = testPyTorchClassification();
+   int err = testPyTorchRegression();
    return err;
 }
