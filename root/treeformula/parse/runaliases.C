@@ -5,17 +5,20 @@ void part2() {
    fprintf(stdout,"Test part2\n");
    TTree *t=new TTree("test","test");
    TVectorF *v=new TVectorF(5);
-   int arr[5][5];
-   arr[3][1] = 99;
+   int arr[5][4];
    t->Branch("vec",&v);
-   t->Branch("arr",&arr[0][0],"arr[5][5]/I");
+   t->Branch("arr",&arr[0][0],"arr[5][4]/I");
    
    Int_t i;
    for (i=0;i<5;++i) {
       (*v)(i)=i;
       arr[i][0] = -1;
+      arr[i][1] = -2;
+      arr[i][2] = -3;
+      arr[i][3] = -4;
    }
-   
+   arr[3][1] = 99;
+
    t->Fill();
    t->SetAlias("a2","vec.fElements[3]>1");
    t->SetAlias("a1","0+vec.fElements[3]");
@@ -49,6 +52,9 @@ void part2() {
    fflush(stdout);
    t->Scan("b[1]");
    fflush(stdout);
+   t->Scan("arr.arr","","");
+   fflush(stdout);
+   t->Scan("arr.misspelt");
 }
 
 
