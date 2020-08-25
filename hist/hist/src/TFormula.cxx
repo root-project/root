@@ -683,7 +683,7 @@ void TFormula::Copy(TObject &obj) const
 
    fnew.fClingInput = fClingInput;
    fnew.fReadyToExecute = fReadyToExecute;
-   fnew.fClingInitialized = fClingInitialized;
+   fnew.fClingInitialized = fClingInitialized.load();
    fnew.fAllParametersSetted = fAllParametersSetted;
    fnew.fClingName = fClingName;
    fnew.fSavedInputFormula = fSavedInputFormula;
