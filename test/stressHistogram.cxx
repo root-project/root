@@ -5886,20 +5886,21 @@ bool testMerge1DMixedLimits() {
 
 
 
-bool testLabel()
+bool testLabel1D()
 {
-   // Tests labelling a 1D Histogram
+   // Tests labelling a 1D Histogram, test ordering of labels (TH1::LabelsOption)
+   // build histogram with extra  labels to test also TH1::LabelsDeflate
 
    TH1D* h1 = new TH1D("lD1_h1", "h1-Title", 2*numberOfBins, minRange, maxRange);
-   // build histo with extra  labels to tets the deflate option
    int extraBins = 20;
-   TH1D* h2 = new TH1D("lD1_h2", "h2-Title", 2*numberOfBins+20, minRange, maxRange + extraBins*h1->GetXaxis()->GetBinWidth(1));
+   TH1D* h2 = new TH1D("lD1_h2", "h2-Title", 2*numberOfBins+extraBins, minRange, maxRange + extraBins*h1->GetXaxis()->GetBinWidth(1));
 
 
    // set labels
-   std::vector<std::string> vLabels(h1->GetNbinsX());
-   std::vector<int> bins(h1->GetNbinsX());
-   for ( Int_t i = 0; i < h1->GetNbinsX() ; ++i ) {
+   Int_t n = h1->GetNbinsX();  // number of labels must be equal to number of bins of refeerence histogram
+   std::vector<std::string> vLabels(n);
+   std::vector<int> bins(n);
+   for ( Int_t i = 0; i < n ; ++i ) {
       Int_t bin = i+1;
       ostringstream label;
       char letter = (char) ((int) 'a' + i );
@@ -5930,7 +5931,7 @@ bool testLabel()
    h2->LabelsOption("a");
    h2->LabelsDeflate();
 
-   bool status = equals("testLabel", h1, h2, cmpOptStats, 1E-13);
+   bool status = equals("testLabel1D", h1, h2, cmpOptStats, 1E-13);
    if (cleanHistos) delete h1;
    return status;
 }
@@ -5938,10 +5939,10 @@ bool testLabel()
 
 bool testLabel2DX()
 {
-   // Tests labelling a 1D Histogram
+   // Tests labelling a 2D Histogram with labels in the X axis (TH1::LabelsOption)
+   // build histogram with extra  labels to test also TH1::LabelsDeflate
 
    TH2D* h1 = new TH2D("lD2_h1", "h1-Title", 2*numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange);
-   // build histo with extra  labels to tets the deflate option
    TH2D* h2 = new TH2D("lD2_h2", "h2-Title", 2*numberOfBins+20, minRange, maxRange + 20*h1->GetXaxis()->GetBinWidth(1), numberOfBins, minRange, maxRange);
 
    // set labels
@@ -5976,6 +5977,7 @@ bool testLabel2DX()
       h2->Fill( vLabels[binx-1].c_str(), h1->GetYaxis()->GetBinCenter(biny), 1.0);
    }
    // labels in h1 are set in alphabetic order
+   // by setting labels in h1 we make its axis extendable
    for (size_t i = 0; i < vLabels.size(); ++i ) {
       h1->GetXaxis()->SetBinLabel(i+1, vLabels[i].c_str());
    }
@@ -5994,19 +5996,27 @@ bool testLabel2DX()
 
 bool testLabel2DY()
 {
-   // Tests labelling a 1D Histogram
+   // Tests labelling a 2D Histogram and  test ordering of labels in Y axis (TH1::LabelsOption)
+   // build histogram with extra  labels to test also TH1::LabelsDeflate
 
    TH2D* h1 = new TH2D("lD2_h1", "h1-Title", numberOfBins, minRange, maxRange, 2*numberOfBins, minRange, maxRange);
    // build histo with extra  labels to tets the deflate option
    TH2D* h2 = new TH2D("lD2_h2", "h2-Title", numberOfBins, minRange, maxRange, 2*numberOfBins+20, minRange, maxRange + 20*h1->GetYaxis()->GetBinWidth(1));
 
-   // set labels
-   std::vector<std::string> vLabels;
-   for ( Int_t bin = 1; bin <= h1->GetNbinsY() ; ++bin ) {
+   // set labels (size must be equal to reference histogram (h1) nbins)
+   std::vector<std::string> vLabels(h1->GetNbinsY());
+   std::vector<int> bins(h1->GetNbinsY());
+   for (Int_t i = 0; i < h1->GetNbinsY(); ++i) {
+      Int_t bin = i + 1;
       ostringstream label;
-      label << bin;
-      vLabels.push_back(label.str());
-      h2->GetYaxis()->SetBinLabel(bin, label.str().c_str());
+      char letter = (char)((int)'a' + i);
+      label << letter;
+      vLabels[i] = label.str();
+      bins[i] = bin;
+   }
+   // try here without shuffling the labels to not test random label order in list
+   for (size_t i = 0; i < bins.size(); ++i) {
+      h2->GetYaxis()->SetBinLabel(bins[i], vLabels[i].c_str());
    }
    // sort labels in alphabetic order
    std::sort(vLabels.begin(), vLabels.end() );
@@ -6022,18 +6032,213 @@ bool testLabel2DY()
    }
 
    h2->LabelsDeflate("Y");
-   // test ordering label in content descending order
-   h2->LabelsOption(">", "y");
+   // test ordering label in content ascending order
+   h2->LabelsOption("<", "y");
    // then order labels alphabetically
    h2->LabelsOption("a","y");
 
-
+   // note in this test label axis (y) is not extendable because labels are matching the bins
+   // and we can test also the Mean and RMS
 
    bool status = equals("testLabel2DY", h1, h2, cmpOptStats, 1E-13);
    if (cleanHistos) delete h1;
    return status;
 }
 
+bool testLabel3DX()
+{
+   // Tests labelling a 1D Histogram, test ordering of labels (TH1::LabelsOption)
+   // build histogram with extra  labels to test also TH1::LabelsDeflate
+
+   TH3D* h1 = new TH3D("lD3_h1", "h1-Title", 2*numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange,
+                        numberOfBins, minRange, maxRange);
+   // build histo with extra  bins
+   TH3D* h2 = new TH3D("lD3_h2", "h2-Title", 2*numberOfBins+20, minRange, maxRange + 20*h1->GetXaxis()->GetBinWidth(1), numberOfBins, minRange, maxRange,  numberOfBins, minRange, maxRange);
+
+   // set labels
+   std::vector<std::string> vLabels(h1->GetNbinsX());
+   std::vector<int> bins(h1->GetNbinsX());
+   for ( Int_t i = 0; i < h1->GetNbinsX() ; ++i ) {
+      Int_t bin = i+1;
+      ostringstream label;
+      char letter = (char) ((int) 'a' + i );
+      label << letter;
+      vLabels[i] = label.str();
+      bins[i] = bin;
+   }
+   // set bin label in random order in bins to test ordering when labels are filled randomly
+   std::shuffle(bins.begin(), bins.end(), std::default_random_engine{});
+   for (size_t i = 0; i < bins.size(); ++i ) {
+      h2->GetXaxis()->SetBinLabel(bins[i], vLabels[i].c_str());
+   }
+   // sort labels in alphabetic order
+   std::sort(vLabels.begin(), vLabels.end() );
+
+   // fill h1 with numbers and h2 using labels
+   // since labels are ordered alphabetically
+   // for filling bin i-th of h1 same bin i-th will be filled of h2
+   for ( Int_t e = 0; e < nEvents*nEvents; ++e ) {
+      Double_t xvalue = r.Uniform(minRange, maxRange);
+      Double_t yvalue = r.Uniform(0.9*minRange, 1.1*maxRange);
+      Double_t zvalue = r.Uniform(minRange, maxRange);
+      Int_t binx = h1->GetXaxis()->FindBin(xvalue);
+      h1->Fill(xvalue, yvalue, zvalue, 1.0);
+
+      h2->Fill( vLabels[binx-1].c_str(), yvalue, zvalue, 1.0);
+   }
+
+   h2->LabelsDeflate("X");
+
+   // test ordering label in content descending order
+   h2->LabelsOption(">","x");
+   // test ordering label alphabetically
+   h2->LabelsOption("a","x");
+
+   // reset statistics  in ref histogram to have consistent mean and std-dev
+   // since h2 has its statistics reset
+   // fix problem of entries
+   Double_t nentries = h1->GetEntries();
+   h1->ResetStats();
+   h1->SetEntries(nentries);
+
+   bool status = equals("testLabel3DX", h1, h2, cmpOptStats, 1E-13);
+   if (cleanHistos) delete h1;
+   return status;
+}
+
+bool testLabel3DY()
+{
+   // Tests labelling a 1D Histogram, test ordering of labels (TH1::LabelsOption)
+   // build histogram with extra  labels to test also TH1::LabelsDeflate
+
+   TH3D *h1 = new TH3D("lD3_h1", "h1-Title", numberOfBins, minRange, maxRange, 2 * numberOfBins, minRange, maxRange,
+                       numberOfBins, minRange, maxRange);
+   // build histo with extra  bins
+   TH3D *h2 = new TH3D("lD3_h2", "h2-Title", numberOfBins, minRange, maxRange, 2 * numberOfBins + 20, minRange,
+                       maxRange + 20 * h1->GetYaxis()->GetBinWidth(1), numberOfBins, minRange, maxRange);
+
+   // set labels
+   std::vector<std::string> vLabels(h1->GetNbinsY());
+   std::vector<int> bins(h1->GetNbinsY());
+   for (Int_t i = 0; i < h1->GetNbinsY(); ++i) {
+      Int_t bin = i + 1;
+      ostringstream label;
+      char letter = (char)((int)'a' + i);
+      label << letter;
+      vLabels[i] = label.str();
+      bins[i] = bin;
+   }
+   // set bin label in random order in bins to test ordering when labels are filled randomly
+   std::shuffle(bins.begin(), bins.end(), std::default_random_engine{});
+   for (size_t i = 0; i < bins.size(); ++i) {
+      h2->GetYaxis()->SetBinLabel(bins[i], vLabels[i].c_str());
+   }
+   // sort labels in alphabetic order
+   std::sort(vLabels.begin(), vLabels.end());
+   // test also setting a label in x axis
+   for (Int_t i = 0; i < h2->GetNbinsX() && i < (Int_t) bins.size(); ++i) {
+      h2->GetXaxis()->SetBinLabel(i+1, vLabels[i].c_str());
+   }
+   // make axis not extendable otehrwise statistics in X will be set to zero
+   h2->GetXaxis()->SetCanExtend(kFALSE);
+
+   // fill h1 with numbers and h2 using labels
+   // since labels are ordered alphabetically
+   // for filling bin i-th of h1 same bin i-th will be filled of h2
+   for (Int_t e = 0; e < nEvents * nEvents; ++e) {
+      Double_t xvalue = r.Uniform(minRange, maxRange);
+      Double_t yvalue = r.Uniform(minRange, maxRange);
+      Double_t zvalue = r.Uniform(0.9*minRange, 1.1* maxRange);
+      Int_t binx = h1->GetXaxis()->FindBin(xvalue);
+      Int_t biny = h1->GetYaxis()->FindBin(yvalue);
+      h1->Fill(xvalue, yvalue, zvalue, 1.0);
+
+      h2->Fill(vLabels[binx - 1].c_str(), vLabels[biny - 1].c_str(), zvalue, 1.0);
+   }
+
+
+
+   // test ordering label in content descending order
+   h2->LabelsOption("<", "y");
+   // test ordering label alphabetically
+   h2->LabelsOption("a", "y");
+   h2->LabelsDeflate("Y");
+
+   // reset statistics  in ref histogram to have consistent mean and std-dev
+   // since h2 has its statistics reset
+   // fix problem of entries
+   Double_t nentries = h1->GetEntries();
+   h1->ResetStats();
+   h1->SetEntries(nentries);
+
+   bool status = equals("testLabel3DY", h1, h2, cmpOptStats, 1E-13);
+   if (cleanHistos)
+      delete h1;
+   return status;
+}
+
+bool testLabel3DZ()
+{
+   // Tests labelling a 1D Histogram, test ordering of labels (TH1::LabelsOption)
+   // build histogram with extra  labels to test also TH1::LabelsDeflate
+
+   TH3D *h1 = new TH3D("lD3_h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange,
+                       2 * numberOfBins, minRange, maxRange);
+   // build histo with extra  bins
+   TH3D *h2 = new TH3D("lD3_h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins, minRange,
+                       maxRange, 2 * numberOfBins + 20, minRange, maxRange + 20 * h1->GetZaxis()->GetBinWidth(1) );
+
+   // set labels
+   std::vector<std::string> vLabels(h1->GetNbinsZ());
+   std::vector<int> bins(h1->GetNbinsZ());
+   for (Int_t i = 0; i < h1->GetNbinsZ(); ++i) {
+      Int_t bin = i + 1;
+      ostringstream label;
+      char letter = (char)((int)'a' + i);
+      label << letter;
+      vLabels[i] = label.str();
+      bins[i] = bin;
+   }
+   // set bin label in random order in bins to test ordering when labels are filled randomly
+   std::shuffle(bins.begin(), bins.end(), std::default_random_engine{});
+   for (size_t i = 0; i < bins.size(); ++i) {
+      h2->GetZaxis()->SetBinLabel(bins[i], vLabels[i].c_str());
+   }
+   // sort labels in alphabetic order
+   std::sort(vLabels.begin(), vLabels.end());
+
+   // fill h1 with numbers and h2 using labels
+   // since labels are ordered alphabetically
+   // for filling bin i-th of h1 same bin i-th will be filled of h2
+   for (Int_t e = 0; e < nEvents * nEvents; ++e) {
+      Double_t xvalue = r.Uniform(minRange, maxRange);
+      Double_t yvalue = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+      Double_t zvalue = r.Uniform(minRange, maxRange);
+      Int_t binz = h1->GetZaxis()->FindBin(zvalue);
+      h1->Fill(xvalue, yvalue, zvalue, 1.0);
+
+      h2->Fill(xvalue, yvalue, vLabels[binz - 1].c_str(), 1.0);
+   }
+
+   h2->LabelsDeflate("Z");
+
+   // test ordering label in content descending order
+   h2->LabelsOption(">", "z");
+   // test ordering label alphabetically
+   h2->LabelsOption("a", "z");
+
+   // reset statistics  in ref histogram to have consistent mean and std-dev
+   // since h2 has its statistics reset
+   // fix problem of entries
+   Double_t nentries = h1->GetEntries();
+   h1->ResetStats();
+   h1->SetEntries(nentries);
+
+   bool status = equals("testLabel3DZ", h1, h2, cmpOptStats, 1E-13);
+   if (cleanHistos)
+      delete h1;
+   return status;
+}
 
 bool testLabelsInflateProf1D()
 {
@@ -10252,8 +10457,8 @@ int stressHistogram(int testNumber = 0)
                                            mergeExtTestPointer.data() };
    // Test 11
    // Label Tests
-   const unsigned int numberOfLabel = 4;
-   pointer2Test labelTestPointer[numberOfLabel] = { testLabel, testLabel2DX, testLabel2DY,
+   const unsigned int numberOfLabel = 5;
+   pointer2Test labelTestPointer[numberOfLabel] = { testLabel1D, testLabel2DX, testLabel2DY, testLabel3DX,
                                                     testLabelsInflateProf1D
    };
    struct TTestSuite labelTestSuite = { numberOfLabel,
@@ -10843,21 +11048,26 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
 
    if (!debug) gErrorIgnoreLevel = precLevel;
 
-   // Mean
-   differents += (bool) equals(h1->GetMean(1), h2->GetMean(1), ERRORLIMIT);
-   if ( debug )
-      std::cout << "Mean: " << h1->GetMean(1) << " " << h2->GetMean(1)
-           << " | " << fabs( h1->GetMean(1) - h2->GetMean(1) )
-           << " " << differents
-           << std::endl;
+   // Mean and RMS for each dimension
+   std::vector<string> axes = {"X", "Y", "Z"};
+   for (int idim = 1; idim <= h1->GetDimension(); idim++)
+   {
+      // Mean
+      differents += (bool) equals(h1->GetMean(idim), h2->GetMean(idim), ERRORLIMIT);
+      if ( debug )
+         std::cout << "Mean (" << axes[idim-1] << ")   " << h1->GetMean(idim) << " " << h2->GetMean(idim)
+              << " | " << fabs( h1->GetMean(idim) - h2->GetMean(idim) )
+              << " " << differents
+              << std::endl;
 
-   // RMS
-   differents += (bool) equals( h1->GetRMS(1), h2->GetRMS(1), ERRORLIMIT);
-   if ( debug )
-      std::cout << "RMS: " << h1->GetRMS(1) << " " << h2->GetRMS(1)
-           << " | " << fabs( h1->GetRMS(1) - h2->GetRMS(1) )
-           << " " << differents
-           << std::endl;
+      // Stddev
+      differents += (bool) equals( h1->GetStdDev(idim), h2->GetStdDev(idim), ERRORLIMIT);
+      if ( debug )
+         std::cout << "StdDev (" << axes[idim-1] << ") " << h1->GetStdDev(idim) << " " << h2->GetStdDev(idim)
+            << " | " << fabs( h1->GetStdDev(idim) - h2->GetStdDev(idim) )
+            << " " << differents
+            << std::endl;
+   }
 
    // Number of Entries
    // check if is an unweighted histogram compare entries and  effective entries
