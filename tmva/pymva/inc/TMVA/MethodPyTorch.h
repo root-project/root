@@ -78,16 +78,9 @@ namespace TMVA {
       UInt_t fNumEpochs {0};                          // Number of training epochs
       Int_t fNumThreads {0};                          // Number of CPU threads (if 0 uses default values)
       
-      // TODO: Check if this needs to be removed.
-      Int_t fVerbose;                                 // PyTorch verbosity during training
-      
       Bool_t fContinueTraining;                       // Load weights from previous training
       Bool_t fSaveBestOnly;                           // Store only weights with smallest validation loss
-      Int_t fTriesEarlyStopping;                      // Stop training if validation loss is not decreasing for several epochs
       TString fLearningRateSchedule;                  // Set new learning rate at specific epochs
-      
-      // TODO: Check if this needs to be removed.
-      TString fTensorBoard;                           // Store log files during training
       
       TString fNumValidationString;                   // option string defining the number of validation events
 
