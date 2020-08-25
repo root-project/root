@@ -34,40 +34,34 @@ REGISTER_METHOD(PyTorch)
 
 ClassImp(MethodPyTorch);
 
+
 MethodPyTorch::MethodPyTorch(const TString &jobName, const TString &methodTitle, DataSetInfo &dsi, const TString &theOption)
    : PyMethodBase(jobName, Types::kPyTorch, methodTitle, dsi, theOption) {
    fNumEpochs = 10;
    fBatchSize = 100;
-   
-   // TODO: Ignore if verbosity not required in pytorch models.
-   fVerbose = 1;
 
    fContinueTraining = false;
    fSaveBestOnly = true;
-   fTriesEarlyStopping = -1;
    fLearningRateSchedule = ""; // empty string deactivates learning rate scheduler
    fFilenameTrainedModel = ""; // empty string sets output model filename to default (in "weights/" directory.)
-   fTensorBoard = "";          // empty string deactivates TensorBoard
 }
+
 
 MethodPyTorch::MethodPyTorch(DataSetInfo &theData, const TString &theWeightFile)
     : PyMethodBase(Types::kPyTorch, theData, theWeightFile) {
    fNumEpochs = 10;
    fBatchSize = 100;
-
-   // TODO: Ignore if verbosity not required in pytorch models.
-   fVerbose = 1;
    
    fContinueTraining = false;
    fSaveBestOnly = true;
-   fTriesEarlyStopping = -1;
    fLearningRateSchedule = ""; // empty string deactivates learning rate scheduler
-   fFilenameTrainedModel = ""; // empty string sets output model filename to default (in weights/)
-   fTensorBoard = "";          // empty string deactivates TensorBoard
+   fFilenameTrainedModel = ""; // empty string sets output model filename to default (in "weights/" directory.)
 }
+
 
 MethodPyTorch::~MethodPyTorch() {
 }
+
 
 Bool_t MethodPyTorch::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t) {
    if (type == Types::kRegression) return kTRUE;
@@ -76,7 +70,6 @@ Bool_t MethodPyTorch::HasAnalysisType(Types::EAnalysisType type, UInt_t numberCl
    return kFALSE;
 }
 
-///////////////////////////////////////////////////////////////////////////////
 
 void MethodPyTorch::DeclareOptions() {
    DeclareOptionRef(fFilenameModel, "FilenameModel", "Filename of the initial PyTorch model");
@@ -84,16 +77,9 @@ void MethodPyTorch::DeclareOptions() {
    DeclareOptionRef(fBatchSize, "BatchSize", "Training batch size");
    DeclareOptionRef(fNumEpochs, "NumEpochs", "Number of training epochs");
 
-   // TODO: Check if verbosity is required in pytorch models.
-   DeclareOptionRef(fVerbose, "Verbose", "PyTorch verbosity during training");
-
    DeclareOptionRef(fContinueTraining, "ContinueTraining", "Load weights from previous training");
    DeclareOptionRef(fSaveBestOnly, "SaveBestOnly", "Store only weights with smallest validation loss");
-   DeclareOptionRef(fTriesEarlyStopping, "TriesEarlyStopping", "Number of epochs with no improvement in validation loss after "
-                                          "which training will be stopped. The default or a negative number deactivates this option.");
-   DeclareOptionRef(fLearningRateSchedule, "LearningRateSchedule", "Set new learning rate during training at specific epochs, e.g., \"50,0.01;70,0.005\" using torch.optim.lr_scheduler");
-   DeclareOptionRef(fTensorBoard, "TensorBoard",
-                    "Write a log during training to visualize and monitor the training performance with torch.utils.tensorboard");
+   DeclareOptionRef(fLearningRateSchedule, "LearningRateSchedule", "Set new learning rate during training at specific epochs, e.g., \"50,0.01;70,0.005\"");
 
    DeclareOptionRef(fNumValidationString = "20%", "ValidationSize", "Part of the training data to use for validation."
                     "Specify as 0.2 or 20% to use a fifth of the data set as validation set."
@@ -162,6 +148,7 @@ UInt_t TMVA::MethodPyTorch::GetNumValidationSamples()
    return nValidationSamples;
 }
 
+
 void MethodPyTorch::ProcessOptions() {
    // Set default filename for trained model if option is not used
    if (fFilenameTrainedModel.IsNull()) {
@@ -175,7 +162,7 @@ void MethodPyTorch::ProcessOptions() {
    Log() << kINFO << "Using PyTorch - setting special configuration options "  << Endl;
    PyRunString("import torch", "Error importing pytorch");
 
-      // run these above lines also in global namespace to make them visible overall
+   // run these above lines also in global namespace to make them visible overall
    PyRun_String("import torch", Py_single_input, fGlobalNS, fGlobalNS);
 
    // check pytorch version
@@ -222,18 +209,23 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
       PyRunString("print('custom objects for loading model : ',load_model_custom_objects)");
 
       PyRunString("fit = load_model_custom_objects[\"train_func\"]",
-                  "Failed to load train function from file");
+                  "Failed to load train function from file. Please use key: 'train_func' and pass training loop function as the value.");
       Log() << kINFO << "Loaded pytorch train function: " << Endl;
 
 
-      PyRunString("optimizer = load_model_custom_objects[\"optimizer\"]",
-                  "Failed to load optimizer object from file");
+      // Use SGD Optimizer as Default
+      PyRunString("if 'optimizer' in load_model_custom_objects:\n"
+                  "    optimizer = load_model_custom_objects['optimizer']\n"
+                  "else:\n"
+                  "    optimizer = torch.optim.SGD\n",
+                  "Please use key: 'optimizer' and pass a pytorch optimizer as the value for a custom optimizer.");
       Log() << kINFO << "Loaded pytorch optimizer: " << Endl;
 
 
-      PyRunString("train = load_model_custom_objects[\"criterion\"]",
-                  "Failed to load loss function from file");
+      PyRunString("criterion = load_model_custom_objects[\"criterion\"]",
+                  "Failed to load loss function from file. Using MSE Loss as default. Please use key: 'criterion' and pass a pytorch loss function as the value.");
       Log() << kINFO << "Loaded pytorch loss function: " << Endl;
+
 
       PyRunString("predict = load_model_custom_objects[\"predict_func\"]",
                   "Can't find user predict function object from file. Please use key: 'predict' and pass a predict function for evaluating the model as the value.");
@@ -289,24 +281,17 @@ void MethodPyTorch::Init() {
    _import_array(); // required to use numpy arrays
 
    // Import PyTorch
-   // TODO: Skip clearing sys.argv for pytorch
    PyRunString("import sys; sys.argv = ['']", "Set sys.argv failed");
    PyRunString("import torch", "import PyTorch failed");
    // do import also in global namespace
    auto ret = PyRun_String("import torch", Py_single_input, fGlobalNS, fGlobalNS);
    if (!ret)
-      Log() << kFATAL << "import PyTorch in global namespace failed " << Endl;
+      Log() << kFATAL << "import torch in global namespace failed!" << Endl;
 
    // Set flag that model is not setup
    fModelIsSetup = false;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// TODO: This method is not fully implemented yet. Callback specific structure in PyTorch TBD. 
-// Adaptation in process from PyKeras
-
-/////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 void MethodPyTorch::Train() {
    if(!fModelIsSetup) Log() << kFATAL << "Model is not setup for training" << Endl;
@@ -418,12 +403,23 @@ void MethodPyTorch::Train() {
 
    PyObject* pBatchSize = PyLong_FromLong(fBatchSize);
    PyObject* pNumEpochs = PyLong_FromLong(fNumEpochs);
-   // Ignore if verbosity is not required in pytorch models.
-   PyObject* pVerbose = PyLong_FromLong(fVerbose);
    PyDict_SetItemString(fLocalNS, "batchSize", pBatchSize);
    PyDict_SetItemString(fLocalNS, "numEpochs", pNumEpochs);
-   // TODO: Check if verbosity is required in pytorch models.
-   PyDict_SetItemString(fLocalNS, "verbose", pVerbose);
+
+   // Prepare PyTorch Training DataSet
+   PyRunString("train_dataset = torch.utils.data.TensorDataset(torch.Tensor(trainX), torch.Tensor(trainY))",
+               "Failed to create pytorch train Dataset.");
+   // Prepare PyTorch Training Dataloader
+   PyRunString("train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batchSize, shuffle=False)",
+               "Failed to create pytorch train Dataloader.");
+
+
+   // Prepare PyTorch Validation DataSet
+   PyRunString("val_dataset = torch.utils.data.TensorDataset(torch.Tensor(valX), torch.Tensor(valY))",
+               "Failed to create pytorch validation Dataset.");
+   // Prepare PyTorch validation Dataloader
+   PyRunString("val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batchSize, shuffle=False)",
+               "Failed to create pytorch validation Dataloader.");
 
    // ////////////////////////////////////////////////////////////////////
    // TODO: Better strategy for using Callbacks in PyTorch
@@ -441,7 +437,7 @@ void MethodPyTorch::Train() {
    // ////////////////////////////////////////////////////////////////////
 
    // Train model
-   PyRunString("fit(model, trainX, trainY, num_epochs=numEpochs, batch_size=batchSize, optimizer=optimizer, criterion=criterion)",
+   PyRunString("fit(model, train_loader, val_loader, num_epochs=numEpochs, batch_size=batchSize, optimizer=optimizer, criterion=criterion)",
                "Failed to train model");
 
 
