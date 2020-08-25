@@ -842,7 +842,7 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
    splitname.ShortType(norm_name, TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kResolveTypedef | TClassEdit::kKeepOuterConst);
 
-   if (splitname.fElements.empty() || splitname.fElements[0] == "std::pair" || splitname.fElements[0] == "pair") {
+   if (splitname.fElements.size() == 3 && (splitname.fElements[0] == "std::pair" || splitname.fElements[0] == "pair")) {
       // We don't want to lookup the std::pair itself.
       std::string first, second;
       GetNormalizedName(first, splitname.fElements[1]);
@@ -1134,7 +1134,17 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
 
       const char *cursor;
       int level = 0;
+      int parenthesis = 0;
       for(cursor = c + 1; *cursor != '\0' && !(level==0 && *cursor == '>'); ++cursor) {
+         if (*cursor == '(') {
+            ++parenthesis;
+            continue;
+         } else if (*cursor == ')') {
+            --parenthesis;
+            continue;
+         }
+         if (parenthesis)
+            continue;
          switch (*cursor) {
             case '<': ++level; break;
             case '>': --level; break;
