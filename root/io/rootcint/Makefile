@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log  MidadCint* cltest.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += sigbug virtualbase templateKeyword mytest rootcintIntTest constMemberTest cltest nestedtemplate
+TEST_TARGETS += sigbug virtualbase templateKeyword mytest rootcintIntTest constMemberTest cltest nestedtemplate weirdpairTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
    export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
@@ -54,6 +54,11 @@ sigbug: sigbug.log
 
 out.cxx: foo.hh foo_linkdef.h
 	$(CMDECHO) rootcint -f out.cxx foo.hh foo_linkdef.h
+
+weirdpair_dict.cxx: weirdpair.h weirdpair_LinkDef.h
+	$(CMDECHO) rootcling -f weirdpair_dict.cxx  weirdpair.h weirdpair_LinkDef.h > weirdpair_dict.rootcling.log 2>&1
+
+weirdpairTest: weirdpair_dict.$(ObjSuf)
 
 namespacetemp: out.$(ObjSuf)
 
