@@ -124,9 +124,10 @@ namespace {
       channels.set_map();
       const auto& indexCat = sim->indexCat();
       for(const auto& cat:indexCat){
-        RooAbsPdf* pdf = sim->getPdf(cat->GetName());
+        const auto catname=cat.first.c_str();
+        RooAbsPdf* pdf = sim->getPdf(catname);
         if(!pdf) RooJSONFactoryWSTool::error("no pdf found for category");
-        auto& ch = channels[cat->GetName()];
+        auto& ch = channels[catname];
         tool->exportObject(pdf,ch);
       }
       return true;
