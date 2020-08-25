@@ -271,6 +271,7 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
    fModelIsSetup = true;
 }
 
+
 void MethodPyTorch::Init() {
 
    TMVA::Internal::PyGILRAII raii;
@@ -421,35 +422,67 @@ void MethodPyTorch::Train() {
    PyRunString("val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batchSize, shuffle=False)",
                "Failed to create pytorch validation Dataloader.");
 
-   // ////////////////////////////////////////////////////////////////////
-   // TODO: Better strategy for using Callbacks in PyTorch
 
-   // Setup training functions acting as callbacks
+   // Learning Rate Scheduler
+   if (fLearningRateSchedule!="") {
+      // Setup a python dictionary with the desired learning rate steps
+      PyRunString("strScheduleSteps = '"+fLearningRateSchedule+"'\n"
+                  "schedulerSteps = {}\n"
+                  "for c in strScheduleSteps.split(';'):\n"
+                  "    x = c.split(',')\n"
+                  "    schedulerSteps[int(x[0])] = float(x[1])\n",
+                  "Failed to setup steps for scheduler function from string: "+fLearningRateSchedule,
+                   Py_file_input);
+      // Set scheduler function as piecewise function with given steps
+      PyRunString("def schedule(optimizer, epoch, schedulerSteps=schedulerSteps):\n"
+                  "    if epoch in schedulerSteps:\n"
+                  "        for param_group in optimizer.param_groups:\n"
+                  "            param_group['lr'] = float(schedulerSteps[epoch])\n",
+                  "Failed to setup scheduler function with string: "+fLearningRateSchedule,
+                  Py_file_input);
 
-   // SAVE BEST MODEL Save only weights with smallest validation loss
+      Log() << kINFO << "Option LearningRateSchedule: Set learning rate during training: " << fLearningRateSchedule << Endl;
+   }
+   else{
+      PyRunString("schedule = None; schedulerSteps = None", "Failed to set scheduler to None: ");
+   }
 
-   // EARLY STOPPING Stop training early if no improvement in validation loss is observed
 
-   // LRScheduler
+   // Save only weights with smallest validation loss
+   if (fSaveBestOnly) {
+      PyRunString("def save_best(model, curr_val, best_val, save_path='"+fFilenameTrainedModel+"'):\n"
+                  "    if curr_val<=best_val:\n"
+                  "        best_val = curr_val\n"
+                  "        best_model_jitted = torch.jit.script(model)\n"
+                  "        torch.jit.save(best_model_jitted, save_path)\n"
+                  "    return best_val",
+                  "Failed to setup training with option: SaveBestOnly");
+      Log() << kINFO << "Option SaveBestOnly: Only model weights with smallest validation loss will be stored" << Endl;
+   }
+   else{
+      PyRunString("save_best = None", "Failed to set scheduler to None: ");
+   }
 
-   // PyTorch TensorBoard
 
-   // ////////////////////////////////////////////////////////////////////
+   // Note: Early Stopping should not be implemented here. Can be implemented inside train loop function by user if required.
 
    // Train model
-   PyRunString("fit(model, train_loader, val_loader, num_epochs=numEpochs, batch_size=batchSize, optimizer=optimizer, criterion=criterion)",
+   PyRunString("trained_model = fit(model, train_loader, val_loader, num_epochs=numEpochs, batch_size=batchSize,"
+               "optimizer=optimizer, criterion=criterion, save_best=save_best, scheduler=(schedule, schedulerSteps))",
                "Failed to train model");
 
 
-   // TODO: Add method to store training history data. 
-
+   // Note: PyTorch doesn't store training history data unlike Keras. A user can append and save the loss, 
+   // accuracy, other metrics etc to a file for later use.
 
    /*
     * Store trained model to file (only if option 'SaveBestOnly' is NOT activated,
     * because we do not want to override the best model checkpoint)
     */
    if (!fSaveBestOnly) {
-      PyRunString("torch.jit.save('"+fFilenameTrainedModel+"')",
+      PyRunString("trained_model_jitted = torch.jit.script(trained_model)",
+                  "Model not scriptable. Failed to convert to torch script.");
+      PyRunString("torch.jit.save(trained_model_jitted, '"+fFilenameTrainedModel+"')",
                   "Failed to save trained model: "+fFilenameTrainedModel);
       Log() << kINFO << "Trained model written to file: " << fFilenameTrainedModel << Endl;
    }
@@ -465,6 +498,7 @@ void MethodPyTorch::Train() {
    delete[] valDataY;
    delete[] valDataWeights;
 }
+
 
 void MethodPyTorch::TestClassification() {
     MethodBase::TestClassification();
