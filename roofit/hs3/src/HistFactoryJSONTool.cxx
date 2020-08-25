@@ -7,7 +7,7 @@
 
 #include "JSONInterface.h"
 
-#ifdef INCLUDE_RYML  
+#ifdef R__HAS_RYML
 #include "RYMLParser.h"
 typedef TRYMLTree tree_t;
 #else
@@ -169,7 +169,7 @@ void RooStats::HistFactory::JSONTool::PrintJSON( std::string filename ) {
 }
 
 void RooStats::HistFactory::JSONTool::PrintYAML( std::ostream& os ) {
-#ifdef INCLUDE_RYML
+#ifdef R__HAS_RYML
   TRYMLTree p;
   auto& n = p.rootnode();
   n.set_map();

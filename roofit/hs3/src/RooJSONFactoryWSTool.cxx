@@ -11,8 +11,9 @@
 #include <RooStats/ModelConfig.h>
 
 #include "TROOT.h"
+#include "RConfigure.h"
 
-#ifdef INCLUDE_RYML  
+#ifdef R__HAS_RYML
 #include "RYMLParser.h"
 typedef TRYMLTree tree_t;
 #else
