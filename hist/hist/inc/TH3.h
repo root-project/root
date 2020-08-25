@@ -84,6 +84,7 @@ public:
    virtual Int_t    Fill(const char *namex, Double_t y, const char *namez, Double_t w);
    virtual Int_t    Fill(const char *namex, const char *namey, Double_t z, Double_t w);
    virtual Int_t    Fill(Double_t x, const char *namey, const char *namez, Double_t w);
+   virtual Int_t    Fill(const char *namex, Double_t y, Double_t z, Double_t w);
    virtual Int_t    Fill(Double_t x, const char *namey, Double_t z, Double_t w);
    virtual Int_t    Fill(Double_t x, Double_t y, const char *namez, Double_t w);
 
