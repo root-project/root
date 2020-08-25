@@ -16,12 +16,12 @@ from torch import nn\n\
 model = nn.Sequential(\n\
                 nn.Linear(4, 64),\n\
                 nn.ReLU(),\n\
-                nn.Linear(64, 2),\n\
+                nn.Linear(64, 4),\n\
                 nn.Softmax(dim=1))\n\
 \n\
 # Construct loss function and Optimizer.\n\
 criterion = torch.nn.MSELoss()\n\
-optimizer = torch.optim.SGD\n\
+optimizer = torch.optim.Adam\n\
 \n\
 \n\
 def fit(model, train_loader, val_loader, num_epochs, batch_size, optimizer, criterion, save_best, scheduler):\n\
@@ -97,26 +97,31 @@ load_model_custom_objects = {\"optimizer\": optimizer, \"criterion\": criterion,
 \n\
 # Store model to file\n\
 m = torch.jit.script(model)\n\
-torch.jit.save(m,\"PyTorchModelClassification.pt\")\n";
+torch.jit.save(m,\"PyTorchModelMulticlass.pt\")\n";
 
 
-int testPyTorchClassification(){
+int testPyTorchMulticlass(){
    // Get data file
    std::cout << "Get test data..." << std::endl;
-   TString fname = "./tmva_class_example.root";
-   if (gSystem->AccessPathName(fname))  // file does not exist in local directory
-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
+   TString fname = "./tmva_example_multiple_background.root";
+   if (gSystem->AccessPathName(fname)){  // file does not exist in local directory
+      std::cout << "Create multiclass test data..." << std::endl;
+      TString createDataMacro = TString(gROOT->GetTutorialsDir()) + "/tmva/createData.C";
+      gROOT->ProcessLine(TString::Format(".L %s",createDataMacro.Data()));
+      gROOT->ProcessLine("create_MultipleBackground(200)");
+      std::cout << "Created " << fname << " for tests of the multiclass features" << std::endl;
+   }
    TFile *input = TFile::Open(fname);
-
+   
    // Build model from python file
    std::cout << "Generate PyTorch model..." << std::endl;
    UInt_t ret;
-   ret = gSystem->Exec("echo '"+pythonSrc+"' > generatePyTorchModelClassification.py");
+   ret = gSystem->Exec("echo '"+pythonSrc+"' > generatePyTorchModelMulticlass.py");
    if(ret!=0){
        std::cout << "[ERROR] Failed to write python code to file" << std::endl;
        return 1;
    }
-   ret = gSystem->Exec("python generatePyTorchModelClassification.py");
+   ret = gSystem->Exec("python generatePyTorchModelMulticlass.py");
    if(ret!=0){
        std::cout << "[ERROR] Failed to generate model using python" << std::endl;
        return 1;
@@ -125,17 +130,21 @@ int testPyTorchClassification(){
    // // Setup PyMVA and factory
    std::cout << "Setup TMVA..." << std::endl;
    TMVA::PyMethodBase::PyInitialize();
-   TFile* outputFile = TFile::Open("ResultsTestPyTorchClassification.root", "RECREATE");
-   TMVA::Factory *factory = new TMVA::Factory("testPyTorchClassification", outputFile,
-      "!V:Silent:Color:!DrawProgressBar:AnalysisType=Classification");
+   TFile* outputFile = TFile::Open("ResultsTestPyTorchMulticlass.root", "RECREATE");
+   TMVA::Factory *factory = new TMVA::Factory("testPyTorchMulticlass", outputFile,
+      "!V:Silent:Color:!DrawProgressBar:AnalysisType=multiclass");
 
    // Load data
-   TMVA::DataLoader *dataloader = new TMVA::DataLoader("datasetTestPyTorchClassification");
+   TMVA::DataLoader *dataloader = new TMVA::DataLoader("datasetTestPyTorchMulticlass");
 
    TTree *signal = (TTree*)input->Get("TreeS");
-   TTree *background = (TTree*)input->Get("TreeB");
-   dataloader->AddSignalTree(signal);
-   dataloader->AddBackgroundTree(background);
+   TTree *background0 = (TTree*)input->Get("TreeB0");
+   TTree *background1 = (TTree*)input->Get("TreeB1");
+   TTree *background2 = (TTree*)input->Get("TreeB2");
+   dataloader->AddTree(signal, "Signal");
+   dataloader->AddTree(background0, "Background_0");
+   dataloader->AddTree(background1, "Background_1");
+   dataloader->AddTree(background2, "Background_2");
 
    dataloader->AddVariable("var1");
    dataloader->AddVariable("var2");
@@ -147,7 +156,7 @@ int testPyTorchClassification(){
 
    // Book and train method
    factory->BookMethod(dataloader, TMVA::Types::kPyTorch, "PyTorch",
-      "!H:!V:VarTransform=D,G:FilenameModel=PyTorchModelClassification.pt:FilenameTrainedModel=trainedPyTorchModelClassification.pt:NumEpochs=10:BatchSize=32:UserCode=generatePyTorchModelClassification.py");
+      "!H:!V:VarTransform=D,G:FilenameModel=PyTorchModelMulticlass.pt:FilenameTrainedModel=trainedPyTorchModelMulticlass.pt:NumEpochs=20:BatchSize=32:SaveBestOnly=false:UserCode=generatePyTorchModelMulticlass.py");
    std::cout << "Training model..." << std::endl;
    factory->TrainAllMethods();
 
@@ -165,7 +174,7 @@ int testPyTorchClassification(){
    reader->AddVariable("var2", vars+1);
    reader->AddVariable("var3", vars+2);
    reader->AddVariable("var4", vars+3);
-   reader->BookMVA("PyTorch", "datasetTestPyTorchClassification/weights/testPyTorchClassification_PyTorch.weights.xml");
+   reader->BookMVA("PyTorch", "datasetTestPyTorchMulticlass/weights/testPyTorchMulticlass_PyTorch.weights.xml");
 
    // Get mean response of method on signal and background events
    signal->SetBranchAddress("var1", vars+0);
@@ -173,31 +182,59 @@ int testPyTorchClassification(){
    signal->SetBranchAddress("var3", vars+2);
    signal->SetBranchAddress("var4", vars+3);
 
-   background->SetBranchAddress("var1", vars+0);
-   background->SetBranchAddress("var2", vars+1);
-   background->SetBranchAddress("var3", vars+2);
-   background->SetBranchAddress("var4", vars+3);
+   background0->SetBranchAddress("var1", vars+0);
+   background0->SetBranchAddress("var2", vars+1);
+   background0->SetBranchAddress("var3", vars+2);
+   background0->SetBranchAddress("var4", vars+3);
+
+   background1->SetBranchAddress("var1", vars+0);
+   background1->SetBranchAddress("var2", vars+1);
+   background1->SetBranchAddress("var3", vars+2);
+   background1->SetBranchAddress("var4", vars+3);
+
+   background2->SetBranchAddress("var1", vars+0);
+   background2->SetBranchAddress("var2", vars+1);
+   background2->SetBranchAddress("var3", vars+2);
+   background2->SetBranchAddress("var4", vars+3);
 
    Float_t meanMvaSignal = 0;
-   Float_t meanMvaBackground = 0;
+   Float_t meanMvaBackground0 = 0;
+   Float_t meanMvaBackground1 = 0;
+   Float_t meanMvaBackground2 = 0;
    for(UInt_t i=0; i<numEvents; i++){
       signal->GetEntry(i);
-      meanMvaSignal += reader->EvaluateMVA("PyTorch");
-      background->GetEntry(i);
-      meanMvaBackground += reader->EvaluateMVA("PyTorch");
+      meanMvaSignal += reader->EvaluateMulticlass("PyTorch")[0];
+      background0->GetEntry(i);
+      meanMvaBackground0 += reader->EvaluateMulticlass("PyTorch")[1];
+      background1->GetEntry(i);
+      meanMvaBackground1 += reader->EvaluateMulticlass("PyTorch")[2];
+      background2->GetEntry(i);
+      meanMvaBackground2 += reader->EvaluateMulticlass("PyTorch")[3];
    }
    meanMvaSignal = meanMvaSignal/float(numEvents);
-   meanMvaBackground = meanMvaBackground/float(numEvents);
+   meanMvaBackground0 = meanMvaBackground0/float(numEvents);
+   meanMvaBackground1 = meanMvaBackground1/float(numEvents);
+   meanMvaBackground2 = meanMvaBackground2/float(numEvents);
 
    // Check whether the response is obviously better than guessing
    std::cout << "Mean MVA response on signal: " << meanMvaSignal << std::endl;
-   if(meanMvaSignal < 0.6){
-      std::cout << "[ERROR] Mean response on signal is " << meanMvaSignal << " (<0.6)" << std::endl;
+   if(meanMvaSignal < 0.3){
+      std::cout << "[ERROR] Mean response on signal is " << meanMvaSignal << " (<0.3)" << std::endl;
       return 1;
    }
-   std::cout << "Mean MVA response on background: " << meanMvaBackground << std::endl;
-   if(meanMvaBackground > 0.4){
-      std::cout << "[ERROR] Mean response on background is " << meanMvaBackground << " (>0.4)" << std::endl;
+   std::cout << "Mean MVA response on background 0: " << meanMvaBackground0 << std::endl;
+   if(meanMvaBackground0 < 0.3){
+      std::cout << "[ERROR] Mean response on background 0 is " << meanMvaBackground0 << " (<0.3)" << std::endl;
+      return 1;
+   }
+   std::cout << "Mean MVA response on background 1: " << meanMvaBackground1 << std::endl;
+   if(meanMvaBackground0 < 0.3){
+      std::cout << "[ERROR] Mean response on background 1 is " << meanMvaBackground1 << " (<0.3)" << std::endl;
+      return 1;
+   }
+   std::cout << "Mean MVA response on background 2: " << meanMvaBackground2 << std::endl;
+   if(meanMvaBackground0 < 0.3){
+      std::cout << "[ERROR] Mean response on background 2 is " << meanMvaBackground2 << " (<0.3)" << std::endl;
       return 1;
    }
 
@@ -205,6 +242,6 @@ int testPyTorchClassification(){
 }
 
 int main(){
-   int err = testPyTorchClassification();
+   int err = testPyTorchMulticlass();
    return err;
 }
