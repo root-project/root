@@ -32,6 +32,7 @@
 #include "TEnv.h"
 #include "TThread.h"
 #include "THttpServer.h"
+#include "TSystem.h"
 
 #include "rootwebview.h"
 #include "rootwebpage.h"
@@ -63,6 +64,7 @@ class RQt5WebDisplayHandle : public RWebDisplayHandle {
 protected:
 
    RootWebView *fView{nullptr};  ///< pointer on widget, need to release when handle is destroyed
+   std::string fDumpContent;     ///< dump content which used in headless mode
 
    class Qt5Creator : public Creator {
       int fCounter{0}; ///< counter used to number handlers
@@ -82,14 +84,12 @@ protected:
           *  Disable it, while not clear if defaultProfile can be still used - seems to be not */
          // if (fHandler)
          //   QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
+
+         printf("Deleting Qt5Creator\n");
       }
 
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override
       {
-         // up to know headless mode not supported by QWebEngine
-         if (args.IsHeadless())
-            return nullptr;
-
          if (!fInitEngine) {
             QtWebEngine::initialize();
             fInitEngine = true;
@@ -116,7 +116,7 @@ protected:
             qapp = new QApplication(qargc, qargv);
          }
 
-         if (!fTimer) {
+         if (!fTimer && !args.IsHeadless()) {
             Int_t interval = gEnv->GetValue("WebGui.Qt5Timer", 1);
             if (interval > 0) {
                fTimer = std::make_unique<TQt5Timer>(interval, kTRUE);
@@ -143,10 +143,47 @@ protected:
          auto handle = std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData());
 
          RootWebView *view = new RootWebView(qparent, args.GetWidth(), args.GetHeight(), args.GetX(), args.GetY());
-         view->load(QUrl(fullurl));
-         view->show();
 
          if (!qparent) handle->fView = view;
+
+         if (!args.IsHeadless()) {
+            view->load(QUrl(fullurl));
+            view->show();
+         } else {
+
+            int tmout_sec = 30;
+            int expired = tmout_sec * 100;
+            bool load_finished = false, did_try = false, get_content = false, is_error = false;
+            std::string content;
+
+            QObject::connect(view, &RootWebView::loadFinished, [&load_finished, &is_error](bool is_ok) {
+               load_finished = true; is_error = !is_ok;
+            });
+
+            view->load(QUrl(fullurl));
+
+            // loop here until content is configured
+            while ((--expired > 0) && !get_content && !is_error) {
+
+               if (gSystem->ProcessEvents()) break; // interrupted, has to return
+
+               QApplication::sendPostedEvents();
+               QApplication::processEvents();
+
+               if (load_finished && !did_try) {
+                  did_try = true;
+                  view->page()->toHtml([&get_content, &content](const QString& res) {
+                     get_content = true;
+                     content = res.toLatin1().constData();
+                  });
+               }
+
+               gSystem->Sleep(10); // only 10 ms sleep
+            }
+
+            if(get_content)
+               handle->SetGetDumpContent(content);
+         }
 
          return handle;
       }
@@ -161,6 +198,9 @@ public:
       // now view can be safely destroyed
       if (fView) delete fView;
    }
+
+   void SetGetDumpContent(const std::string &cont) { fDumpContent = cont; }
+   std::string GetDumpContent() const override { return fDumpContent; }
 
    static void AddCreator()
    {

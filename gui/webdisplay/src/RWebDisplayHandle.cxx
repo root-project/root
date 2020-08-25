@@ -658,8 +658,8 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
 
    filecont = std::regex_replace(filecont, std::regex("\\$draw_object"), json);
 
-   RWebDisplayArgs args; // set default browser kind, but only Chrome or CEF can be used here
-   if (args.GetBrowserKind() != RWebDisplayArgs::kCEF)
+   RWebDisplayArgs args; // set default browser kind, only Chrome or CEF or Qt5 can be used here
+   if ((args.GetBrowserKind() != RWebDisplayArgs::kCEF) && (args.GetBrowserKind() != RWebDisplayArgs::kQt5))
       args.SetBrowserKind(RWebDisplayArgs::kChrome);
 
    TString dump_name;
