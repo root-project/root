@@ -1,7 +1,10 @@
 #include "TPython.h"
 #include "TError.h"
+#include "cppyy_backend_check.h"
 
 void runPyAPITestCppyy() {
+   check_cppyy_backend();
+
 // The higher warning ignore level is to suppress warnings about
 // classes already being in the class table (on Mac).
    int eil = gErrorIgnoreLevel;
