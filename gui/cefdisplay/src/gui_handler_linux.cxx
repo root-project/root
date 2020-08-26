@@ -54,8 +54,11 @@ void GuiHandler::PlatformInit()
 }
 
 
+
 void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
 {
+#ifdef CEF_X11
+
    std::string titleStr(title);
 
    // Retrieve the X11 display shared with Chromium.
@@ -81,4 +84,9 @@ void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefStr
    // is Compound Text. This shouldn't matter 90% of the time since this is the
    // fallback to the UTF8 property above.
    XStoreName(display, browser->GetHost()->GetWindowHandle(), titleStr.c_str());
+#else
+   // not supported
+   (void) browser;
+   (void) title;
+#endif
 }
