@@ -21,7 +21,7 @@ originally used in the Network Computing System (NCS) and
 later in the Open Software Foundation's (OSF) Distributed Computing
 Environment (DCE).
 
-Note: In the way this UUID is constructed, when used outside of
+\note In the way this UUID is constructed, when used outside of
 their original concept (NCS), they are actually not Globally unique
 and indeed multiple distinct concurrent processes are actually likely
 to generate the same UUID.  Technically this is because the UUID is
