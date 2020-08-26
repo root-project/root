@@ -20,9 +20,9 @@
 #include "include/cef_browser.h"
 
 
-void GuiHandler::PlatformInit()
+bool GuiHandler::PlatformInit()
 {
-   // do nothing
+   return false; // MAC not yet support ozone and headless mode
 }
 
 

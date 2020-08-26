@@ -37,6 +37,7 @@ protected:
    std::string fCefMain;    ///<! extra executable used for additional processes
    std::string fFirstUrl;   ///<! first URL to open
    CefRect fFirstRect;      ///<! original width
+   bool fFirstHeadless{false}; ///<! is first window is headless
    RCefWebDisplayHandle *fNextHandle{nullptr}; ///< next handle where browser will be created
 
    CefRefPtr<GuiHandler> fGuiHandler; ///<! normal handler
@@ -44,7 +45,7 @@ protected:
    static THttpServer *gHttpServer;
 
 public:
-   SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url = "", int width = 0, int height = 0);
+   SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url = "", int width = 0, int height = 0, bool headless = false);
 
    void SetNextHandle(RCefWebDisplayHandle *handle);
 
