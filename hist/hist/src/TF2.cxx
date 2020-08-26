@@ -491,7 +491,7 @@ char *TF2::GetObjectInfo(Int_t px, Int_t py) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a random number following this function shape
 
-Double_t TF2::GetRandom()
+Double_t TF2::GetRandom(TRandom *, Option_t *)
 {
    Error("GetRandom","cannot be called for TF2/3, use GetRandom2/3 instead");
    return 0;  // not yet implemented
@@ -501,7 +501,7 @@ Double_t TF2::GetRandom()
 /// Return a random number following this function shape
 
 
-Double_t TF2::GetRandom(Double_t, Double_t)
+Double_t TF2::GetRandom(Double_t, Double_t, TRandom *, Option_t *)
 {
    Error("GetRandom","cannot be called for TF2/3, use GetRandom2/3 instead");
    return 0;  // not yet implemented
@@ -526,7 +526,7 @@ Double_t TF2::GetRandom(Double_t, Double_t)
 ///  points (SetNpx, SetNpy) such that the peak is correctly tabulated
 ///  at several points.
 
-void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom)
+void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom, TRandom * rng)
 {
    //  Check if integral array must be build
    Int_t i,j,cell;
@@ -561,12 +561,13 @@ void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom)
 
 // return random numbers
    Double_t r,ddx,ddy,dxint;
-   r     = gRandom->Rndm();
+   if (!rng) rng = gRandom;
+   r     = rng->Rndm();
    cell  = TMath::BinarySearch(ncells,fIntegral.data(),r);
    dxint = fIntegral[cell+1] - fIntegral[cell];
    if (dxint > 0) ddx = dx*(r - fIntegral[cell])/dxint;
    else           ddx = 0;
-   ddy = dy*gRandom->Rndm();
+   ddy = dy*rng->Rndm();
    j   = cell/fNpx;
    i   = cell%fNpx;
    xrandom = fXmin +dx*i +ddx;

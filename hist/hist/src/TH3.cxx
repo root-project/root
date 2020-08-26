@@ -701,6 +701,10 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in function fname.
 ///
+///  @param fname  : Function name used for filling the historam
+///  @param ntimes : number of times the histogram is filled
+///  @param rng    : (optional) Random number generator used to sample
+///
 ///   The distribution contained in the function fname (TF1) is integrated
 ///   over the channel contents.
 ///   It is normalized to 1.
@@ -716,7 +720,7 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
 ///
 ///  One can also call TF1::GetRandom to get a random variate from a function.
 
-void TH3::FillRandom(const char *fname, Int_t ntimes)
+void TH3::FillRandom(const char *fname, Int_t ntimes, TRandom * rng)
 {
    Int_t bin, binx, biny, binz, ibin, loop;
    Double_t r1, x, y,z, xv[3];
@@ -779,7 +783,7 @@ void TH3::FillRandom(const char *fname, Int_t ntimes)
    if (fDimension < 2) nbinsy = -1;
    if (fDimension < 3) nbinsz = -1;
    for (loop=0;loop<ntimes;loop++) {
-      r1 = gRandom->Rndm();
+      r1 = (rng) ? rng->Rndm() : gRandom->Rndm();
       ibin = TMath::BinarySearch(nbins,&integral[0],r1);
       binz = ibin/nxy;
       biny = (ibin - nxy*binz)/nbinsx;
@@ -798,6 +802,10 @@ void TH3::FillRandom(const char *fname, Int_t ntimes)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in histogram h.
 ///
+///  @param h      : Histogram  pointer used for smpling random number
+///  @param ntimes : number of times the histogram is filled
+///  @param rng    : (optional) Random number generator used for sampling
+///
 ///   The distribution contained in the histogram h (TH3) is integrated
 ///   over the channel contents.
 ///   It is normalized to 1.
@@ -807,7 +815,7 @@ void TH3::FillRandom(const char *fname, Int_t ntimes)
 ///     - Fill histogram channel
 ///   ntimes random numbers are generated
 
-void TH3::FillRandom(TH1 *h, Int_t ntimes)
+void TH3::FillRandom(TH1 *h, Int_t ntimes, TRandom * rng)
 {
    if (!h) { Error("FillRandom", "Null histogram"); return; }
    if (fDimension != h->GetDimension()) {
@@ -820,7 +828,7 @@ void TH3::FillRandom(TH1 *h, Int_t ntimes)
    Int_t loop;
    Double_t x,y,z;
    for (loop=0;loop<ntimes;loop++) {
-      h3->GetRandom3(x,y,z);
+      h3->GetRandom3(x,y,z,rng);
       Fill(x,y,z);
    }
 }
@@ -1134,8 +1142,12 @@ Double_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 3 random numbers along axis x , y and z distributed according
 /// the cell-contents of a 3-dim histogram
+/// @param x  reference to random generated x value
+/// @param y  reference to random generated y value
+/// @param z  reference to random generated z value
+/// @param rng (optional) Random number generator pointer used (default is gRandom)
 
-void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z)
+void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z, TRandom * rng)
 {
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -1154,7 +1166,8 @@ void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z)
    // case histogram has negative bins
    if (integral == TMath::QuietNaN() ) { x = TMath::QuietNaN(); y = TMath::QuietNaN(); z = TMath::QuietNaN(); return;}
 
-   Double_t r1 = gRandom->Rndm();
+   if (!rng) rng = gRandom;
+   Double_t r1 = rng->Rndm();
    Int_t ibin = TMath::BinarySearch(nbins,fIntegral,(Double_t) r1);
    Int_t binz = ibin/nxy;
    Int_t biny = (ibin - nxy*binz)/nbinsx;
@@ -1162,8 +1175,8 @@ void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z)
    x = fXaxis.GetBinLowEdge(binx+1);
    if (r1 > fIntegral[ibin]) x +=
       fXaxis.GetBinWidth(binx+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
-   y = fYaxis.GetBinLowEdge(biny+1) + fYaxis.GetBinWidth(biny+1)*gRandom->Rndm();
-   z = fZaxis.GetBinLowEdge(binz+1) + fZaxis.GetBinWidth(binz+1)*gRandom->Rndm();
+   y = fYaxis.GetBinLowEdge(biny+1) + fYaxis.GetBinWidth(biny+1)*rng->Rndm();
+   z = fZaxis.GetBinLowEdge(binz+1) + fZaxis.GetBinWidth(binz+1)*rng->Rndm();
 }
 
 
