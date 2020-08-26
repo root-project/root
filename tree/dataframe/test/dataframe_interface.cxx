@@ -435,6 +435,11 @@ TEST(RDataFrameInterface, ColumnWithSimpleStruct)
    t.Branch("c", &c);
    t.Fill();
 
+   EXPECT_EQ(t.GetLeaf("a"),t.GetLeaf("c.a"));
+   EXPECT_EQ(t.GetLeaf("b"),t.GetLeaf("c.b"));
+   EXPECT_NE(t.GetLeaf("c.a"),t.GetLeaf("c.b"));
+   EXPECT_NE(t.GetLeaf("c.b"),nullptr);
+
    ROOT::RDataFrame df(t);
    const std::vector<std::string> expected({ "c.a", "a", "c.b", "b", "c" });
    EXPECT_EQ(df.GetColumnNames(), expected);
