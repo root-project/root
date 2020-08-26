@@ -330,8 +330,8 @@ public:
 
 } // namespace
 
-SimpleApp::SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url, int width, int height)
-   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUseViewes(use_viewes), fCefMain(cef_main), fFirstUrl(url)
+SimpleApp::SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url, int width, int height, bool headless)
+   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUseViewes(use_viewes), fCefMain(cef_main), fFirstUrl(url), fFirstHeadless(headless)
 {
    fFirstRect.Set(0, 0, width, height);
 
@@ -395,7 +395,8 @@ void SimpleApp::OnContextInitialized()
 {
    CEF_REQUIRE_UI_THREAD();
 
-   CefRegisterSchemeHandlerFactory("http", "rootserver.local", new ROOTSchemeHandlerFactory());
+   if (!fFirstHeadless)
+      CefRegisterSchemeHandlerFactory("http", "rootserver.local", new ROOTSchemeHandlerFactory());
 
    if (!fFirstUrl.empty())
       StartWindow(fFirstUrl, fFirstRect);
@@ -425,11 +426,8 @@ void SimpleApp::StartWindow(const std::string &addr, CefRect &rect)
    if (fUseViewes) {
       // Create the BrowserView.
       CefRefPtr<CefBrowserView> browser_view =
-#if CEF_COMMIT_NUMBER > 1934
          CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr, new SimpleBrowserViewDelegate());
-#else
-         CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr);
-#endif
+
       // Create the Window. It will show itself after creation.
       CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view, rect.width, rect.height));
 
@@ -455,7 +453,6 @@ void SimpleApp::StartWindow(const std::string &addr, CefRect &rect)
       #endif
 
       // Create the first browser window.
-#if CEF_COMMIT_NUMBER > 1934
       auto browser = CefBrowserHost::CreateBrowserSync(window_info, fGuiHandler, url, browser_settings, nullptr, nullptr);
 
       if (fNextHandle) {
@@ -463,9 +460,6 @@ void SimpleApp::StartWindow(const std::string &addr, CefRect &rect)
          fNextHandle = nullptr; // used only once
       }
 
-#else
-      CefBrowserHost::CreateBrowser(window_info, fGuiHandler, url, browser_settings, nullptr);
-#endif
    }
 
 }

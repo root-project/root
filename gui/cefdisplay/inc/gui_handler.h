@@ -65,10 +65,9 @@ public:
 
    bool IsClosing() const { return is_closing_; }
 
-private:
+   static bool PlatformInit();
 
-   // Platform-specific initialization
-   void PlatformInit();
+private:
 
    // Platform-specific implementation.
    void PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title);

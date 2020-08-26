@@ -92,18 +92,12 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
       return handle;
    }
 
-   bool use_views = false;
+   bool use_views = GuiHandler::PlatformInit();
 
 #ifdef OS_WIN
    CefMainArgs main_args(GetModuleHandle(nullptr));
 #else
    TApplication *root_app = gROOT->GetApplication();
-
-   #ifdef OS_LINUX
-   #ifndef CEF_X11
-   use_views = true;
-   #endif
-   #endif
 
    int cef_argc = 1;
    const char *arg2 = nullptr;
@@ -164,7 +158,7 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
-   fCefApp = new SimpleApp(use_views, cef_main.Data(), args.GetFullUrl(), args.GetWidth(), args.GetHeight());
+   fCefApp = new SimpleApp(use_views, cef_main.Data(), args.GetFullUrl(), args.GetWidth(), args.GetHeight(), args.IsHeadless());
 
    fCefApp->SetNextHandle(handle.get());
 
