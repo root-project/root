@@ -22,9 +22,9 @@
 
 #include "include/cef_app.h"
 
-#include "gui_handler.h"
-#include "osr_handler.h"
 #include <string>
+
+#include "gui_handler.h"
 
 class THttpServer;
 
@@ -35,19 +35,16 @@ class SimpleApp : public CefApp, public CefBrowserProcessHandler /*, public CefR
 protected:
    bool fUseViewes{false};  ///<! is views framework used
    std::string fCefMain;    ///<! extra executable used for additional processes
-   bool fLastBatch{false};  ///<! indicate if last started window was batch
    std::string fFirstUrl;   ///<! first URL to open
-   bool fFirstBatch{false}; ///<! indicate batch mode
    CefRect fFirstRect;      ///<! original width
    RCefWebDisplayHandle *fNextHandle{nullptr}; ///< next handle where browser will be created
 
-   CefRefPtr<OsrHandler> fOsrHandler; ///<! batch-mode handler
    CefRefPtr<GuiHandler> fGuiHandler; ///<! normal handler
 
    static THttpServer *gHttpServer;
 
 public:
-   SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url = "", bool isbatch = false, int width = 0, int height = 0);
+   SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url = "", int width = 0, int height = 0);
 
    void SetNextHandle(RCefWebDisplayHandle *handle);
 
@@ -65,7 +62,7 @@ public:
 
    virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) OVERRIDE;
 
-   void StartWindow(const std::string &url, bool batch, CefRect &rect);
+   void StartWindow(const std::string &url, CefRect &rect);
 
    // CefRenderProcessHandler methods
    // virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,

@@ -330,8 +330,8 @@ public:
 
 } // namespace
 
-SimpleApp::SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url, bool isbatch, int width, int height)
-   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUseViewes(use_viewes), fCefMain(cef_main), fFirstUrl(url), fFirstBatch(isbatch)
+SimpleApp::SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url, int width, int height)
+   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUseViewes(use_viewes), fCefMain(cef_main), fFirstUrl(url)
 {
    fFirstRect.Set(0, 0, width, height);
 
@@ -398,15 +398,13 @@ void SimpleApp::OnContextInitialized()
    CefRegisterSchemeHandlerFactory("http", "rootserver.local", new ROOTSchemeHandlerFactory());
 
    if (!fFirstUrl.empty())
-      StartWindow(fFirstUrl, fFirstBatch, fFirstRect);
+      StartWindow(fFirstUrl, fFirstRect);
 }
 
 
-void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
+void SimpleApp::StartWindow(const std::string &addr, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
-
-   fLastBatch = batch;
 
    std::string url;
 
@@ -420,34 +418,6 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
    // Specify CEF browser settings here.
    CefBrowserSettings browser_settings;
-
-   CefWindowInfo window_info;
-
-#if defined(OS_WIN)
-   RECT wnd_rect = {rect.x, rect.y, rect.x + rect.width, rect.y + rect.height};
-   if (!rect.IsEmpty()) window_info.SetAsChild(0, wnd_rect);
-#elif defined(OS_LINUX)
-   if (!rect.IsEmpty()) window_info.SetAsChild(0, rect);
-#else
-   if (!rect.IsEmpty()) window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
-#endif
-
-   if (false) { // disable OSR handler for the moment, maybe later
-
-      if (!fOsrHandler)
-         fOsrHandler = new OsrHandler(GetHttpServer());
-
-      window_info.SetAsWindowless(0);
-
-#if CEF_COMMIT_NUMBER > 1934
-      // Create the first browser window.
-      CefBrowserHost::CreateBrowser(window_info, fOsrHandler, url, browser_settings, nullptr, nullptr);
-#else
-      CefBrowserHost::CreateBrowser(window_info, fOsrHandler, url, browser_settings, nullptr);
-#endif
-
-      return;
-   }
 
    if (!fGuiHandler)
       fGuiHandler = new GuiHandler(GetHttpServer(), fUseViewes);
@@ -470,11 +440,19 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
    } else {
 
-#if defined(OS_WIN)
-      // On Windows we need to specify certain flags that will be passed to
-      // CreateWindowEx().
-      window_info.SetAsPopup(0, "cefsimple");
-#endif
+      CefWindowInfo window_info;
+
+      #if defined(OS_WIN)
+         RECT wnd_rect = {rect.x, rect.y, rect.x + rect.width, rect.y + rect.height};
+         if (!rect.IsEmpty()) window_info.SetAsChild(0, wnd_rect);
+         // On Windows we need to specify certain flags that will be passed to
+         // CreateWindowEx().
+         window_info.SetAsPopup(0, "cefsimple");
+      #elif defined(OS_LINUX)
+         if (!rect.IsEmpty()) window_info.SetAsChild(0, rect);
+      #else
+         if (!rect.IsEmpty()) window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
+      #endif
 
       // Create the first browser window.
 #if CEF_COMMIT_NUMBER > 1934
