@@ -50,7 +50,7 @@ public:
     return _origList.at(index);
   }
 
-  Bool_t ok() { return _tFormula != nullptr; }
+  Bool_t ok() const { return _tFormula != nullptr; }
   /// Evalute all parameters/observables, and then evaluate formula.
   Double_t eval(const RooArgSet* nset=0) const;
 
