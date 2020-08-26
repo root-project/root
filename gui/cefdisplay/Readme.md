@@ -3,6 +3,7 @@
 See details about [Chromimum Embeded Framework](https://bitbucket.org/chromiumembedded/cef)
 
 1. Current code tested with CEF3 branch 4147, Chromium 84 (August 2020)
+   Older CEF versions are no longer supported.
 
 2. Download binary code from [http://opensource.spotify.com/cefbuilds/index.html](http://opensource.spotify.com/cefbuilds/index.html) and unpack it in directory without spaces and special symbols:
 
@@ -14,17 +15,18 @@ See details about [Chromimum Embeded Framework](https://bitbucket.org/chromiumem
 ~~~
 
 
-3. As it is on 21.08.2020, CEF has problem to compile with latest gcc, issuing error because of warnings in some standard libraries.
-   Therefore one has to modify cmake/cef_variables.cmake, removing code at line ~90:
-
-~~~
-   -Werror                         # Treat warnings as errors
-~~~
-
-4. Set `CEF_ROOT` shell variable to unpacked directory:
+3. Set `CEF_ROOT` shell variable to unpacked directory:
 
 ~~~
      $ export CEF_ROOT=/d/cef/cef_binary_84.4.1+gfdc7504+chromium-84.0.4147.105_linux64
+~~~
+
+
+4. As it is on 21.08.2020, CEF has problem to compile with latest gcc, issuing error because of warnings in some standard libraries.
+   Therefore one has to modify `$CEF_ROOT/cmake/cef_variables.cmake`, removing code at line ~90 for Linux platforms:
+
+~~~
+   -Werror                         # Treat warnings as errors
 ~~~
 
 5. Install prerequisites - see comments in `$CEF_ROOT/CMakeLists.txt`.
@@ -37,7 +39,7 @@ See details about [Chromimum Embeded Framework](https://bitbucket.org/chromiumem
      $ mkdir build
      $ cd build
      $ cmake $CEF_ROOT
-     $ make -j
+     $ make -j libcef_dll_wrapper cefsimple
 ~~~
 
 7. When configure ROOT compilation with `cmake -Dwebgui=ON -Dcefweb=ON ...`, CEF_ROOT shell variable should be set appropriately.
@@ -54,12 +56,9 @@ See details about [Chromimum Embeded Framework](https://bitbucket.org/chromiumem
 
 ## Using plain CEF in ROOT batch mode on Linux
 
-CEF under Linux uses X11 functionality and therefore requires configured display and running X11 server
-Unfortunately, CEF developers [will not support](https://bitbucket.org/chromiumembedded/cef/issues/2349/)
-chrome headless mode, where X11 server can be avoided completely.
-
-Nevertheless, ROOT allow to use CEF in batch mode, running `Xvfb` server. Most simple way is to use
-`xvfb-run` utility like:
+Default CEF builds, provided by [http://opensource.spotify.com/cefbuilds/index.html](http://opensource.spotify.com/cefbuilds/index.html), do
+not include support of Ozone framework, which the only support headless mode in CEF. To run ROOT in headless (or batch) made with such CEF distribution,
+one can use `Xvfb` server. Most simple way is to use `xvfb-run` utility like:
 
 ~~~
       $ xvfb-run --server-args='-screen 0, 1024x768x16'  root.exe -l --web=cef $ROOTSYS/tutorials/v7/line.cxx -q
@@ -74,12 +73,21 @@ Or run `Xvfb` before starting ROOT:
 ~~~
 
 
-## Using CEF with ozone driver in headless mode
+## Compile CEF with ozone support
 
-Since March 2019 one can compile [CEF without X11](https://bitbucket.org/chromiumembedded/cef/issues/2296/), but this
-is not included in available binary builds. Therefore to be able use it, one should compile CEF from source.
-[Here](https://bitbucket.org/chromiumembedded/cef/wiki/AutomatedBuildSetup.md) is complete comilation documentation.
-As usual - main problem is to provide all necessary dependency to be able compile it.
+Since March 2019 one can compile [CEF without X11](https://bitbucket.org/chromiumembedded/cef/issues/2296/), but such builds not provided.
+Therefore to be able to use real headless mode in CEF, one should compile it from sources.
+On [CEF build tutorial](https://bitbucket.org/chromiumembedded/cef/wiki/AutomatedBuildSetup.md) one can find complete compilation documentation.
+Several Ubuntu distributions are supported by CEF, all others may require extra work. Once all depndencies are installed,
+CEF with ozone support can be compiled with following commands:
 
+~~~
+   $ export GN_DEFINES="is_official_build=true use_sysroot=true use_allocator=none symbol_level=1 is_cfi=false use_thin_lto=false use_ozone=true"
+   $ python automate-git.py --download-dir=/home/user/cef --branch=4147 --minimal-distrib --client-distrib --force-clean --x64-build --build-target=cefsimple
+~~~
+
+With little luck one get prepared tarballs in `/home/user/cef/chromium/src/cef/binary_distrib`.
+Just install it in the same way as described before in this document.
+ROOT will automatically detect that CEF build with `ozone` support and will use it for both interactive and headless modes.
 
 

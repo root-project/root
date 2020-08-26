@@ -30,17 +30,16 @@
 #include "include/views/cef_window.h"
 #include "include/wrapper/cef_closure_task.h"
 #include "include/wrapper/cef_helpers.h"
+#include "include/cef_parser.h"
+
 
 #include "TEnv.h"
 #include <ROOT/RLogger.hxx>
 
 
-
 GuiHandler::GuiHandler(THttpServer *serv, bool use_views) : fServer(serv), fUseViews(use_views), is_closing_(false)
 {
    fConsole = gEnv->GetValue("WebGui.Console", (int)0);
-
-   PlatformInit();
 }
 
 void GuiHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
@@ -106,10 +105,6 @@ void GuiHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser)
    }
 }
 
-#if CEF_COMMIT_NUMBER > 2230
-
-#include "include/cef_parser.h"
-
 namespace {
 
    // Returns a data: URI with the specified contents.
@@ -121,8 +116,6 @@ namespace {
    }
 
 }
-
-#endif
 
 void GuiHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode,
                               const CefString &errorText, const CefString &failedUrl)
@@ -139,11 +132,7 @@ void GuiHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> 
          "<h2>Failed to load URL "
       << std::string(failedUrl) << " with error " << std::string(errorText) << " (" << errorCode
       << ").</h2></body></html>";
-#if CEF_COMMIT_NUMBER > 2230
    frame->LoadURL(GetDataURI(ss.str(), "text/html"));
-#else
-   frame->LoadString(ss.str(), failedUrl);
-#endif
 }
 
 void GuiHandler::CloseAllBrowsers(bool force_close)

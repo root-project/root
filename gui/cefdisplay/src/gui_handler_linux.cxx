@@ -20,6 +20,9 @@
 
 #include "gui_handler.h"
 
+
+#ifdef CEF_X11
+
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <string>
@@ -47,17 +50,18 @@ int x11_errhandler( Display *dpy, XErrorEvent *err )
   return 0;
 }
 
-void GuiHandler::PlatformInit()
+bool GuiHandler::PlatformInit()
 {
    // install custom X11 error handler to avoid application exit in case of X11 failure
    XSetErrorHandler( x11_errhandler );
+
+   return false; // do not use view framework
 }
 
 
 
 void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
 {
-#ifdef CEF_X11
 
    std::string titleStr(title);
 
@@ -84,9 +88,20 @@ void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefStr
    // is Compound Text. This shouldn't matter 90% of the time since this is the
    // fallback to the UTF8 property above.
    XStoreName(display, browser->GetHost()->GetWindowHandle(), titleStr.c_str());
-#else
-   // not supported
-   (void) browser;
-   (void) title;
-#endif
 }
+
+#else
+
+bool GuiHandler::PlatformInit()
+{
+   return true; // use view framework
+}
+
+void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser>, const CefString &)
+{
+   // do nothing
+}
+
+
+#endif
+
