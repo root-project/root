@@ -22,7 +22,7 @@ define MkDir
 	+@[ -d $1 ] || mkdir -p $1
 endef
 
-all: filter folders mathjax images pyzdoc doxygen
+all: filter folders mathjax images doxygen
 
 filter:
 	`root-config --cxx` -o filter filter.cxx -std=c++11
@@ -50,4 +50,3 @@ doxygen: filter pyzdoc
 
 clean:
 	rm -r $(DOXYGEN_OUTPUT_DIRECTORY) filter htmlfooter.html dataset* $(PYZ_DIR)/*.pyzdoc
-
