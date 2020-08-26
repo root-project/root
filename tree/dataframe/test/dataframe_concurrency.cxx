@@ -1,8 +1,12 @@
 #include <ROOT/RDataFrame.hxx>
+#include <ROOT/RDF/RInterface.hxx>
 #include <ROOT/TThreadExecutor.hxx>
+#include <ROOT/RDFHelpers.hxx>
 #include <atomic>
 #include <chrono>
 #include <thread>
+#include <vector>
+#include <string>
 
 #include "gtest/gtest.h"
 
@@ -76,4 +80,151 @@ TEST(RDFSimpleTests, ThrowOnPoolSizeMismatch)
       }
    }
 }
+
+
+void SimpleParallelRDFs()
+{
+   // Run the RDF construction and the event loop in parallel
+   auto func = [] {
+         std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() / RAND_MAX * 200));
+         ROOT::RDataFrame df(10);
+         return df.Define("x", "rdfentry_").Mean("x").GetValue();
+      };
+
+   ROOT::TThreadExecutor pool;
+   auto res = pool.Map(func, 64);
+
+   const auto ref = func();
+
+   for(auto& r : res) {
+      EXPECT_EQ(r, ref);
+   }
+}
+
+TEST(RDFConcurrency, SimpleParallelRDFsEnableThreadSafety)
+{
+   ROOT::EnableThreadSafety();
+   SimpleParallelRDFs();
+}
+
+TEST(RDFConcurrency, SimpleParallelRDFsEnableImplicitMT)
+{
+   ROOT::EnableImplicitMT();
+   SimpleParallelRDFs();
+   ROOT::DisableImplicitMT();
+}
+
+void SimpleParallelRDFLoops()
+{
+   // Run only the event loops in parallel
+   auto create_df = [] {
+         std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() / RAND_MAX * 200));
+         ROOT::RDataFrame df(10);
+         return df.Define("x", "rdfentry_").Mean("x");
+      };
+
+   std::vector<ROOT::RDF::RResultPtr<double>> vals(64);
+   for (auto i = 0u; i < vals.size(); i++)
+       vals[i] = create_df();
+
+   ROOT::TThreadExecutor pool;
+   auto func = [](ROOT::RDF::RResultPtr<double> rptr){ return rptr.GetValue(); };
+   auto res = pool.Map(func, vals);
+
+   auto ref = func(create_df());
+
+   for(auto& r : res) {
+      EXPECT_EQ(r, ref);
+   }
+}
+
+TEST(RDFConcurrency, SimpleParallelRDFLoopsEnableThreadSafety)
+{
+   ROOT::EnableThreadSafety();
+   SimpleParallelRDFLoops();
+}
+
+TEST(RDFConcurrency, SimpleParallelRDFLoopsEnableImplicitMT)
+{
+   ROOT::EnableImplicitMT();
+   SimpleParallelRDFLoops();
+   ROOT::DisableImplicitMT();
+}
+
+void ParallelRDFSnapshots()
+{
+   // Run the RDF construction and the event loop in parallel
+   const auto nevts = 100u;
+   auto func = [&nevts] (int i) {
+         std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() / RAND_MAX * 200));
+         ROOT::RDataFrame df(nevts);
+         df.Define("x", "(int)rdfentry_").Snapshot("tree", "dataframe_parallel_snapshots_" + std::to_string(i) + ".root");
+      };
+
+   ROOT::TThreadExecutor pool;
+   std::vector<int> vals = {0, 1, 2, 3, 4, 5, 6, 7};
+   pool.Foreach(func, vals);
+
+   // Because a parallel snapshot does not preserve ordering of the events, we can just test
+   // an aggregate such as the sum of all values.
+   auto sum_ref = 0u;
+   for (auto i = 0u; i < nevts; i++) sum_ref += i;
+   for(auto& v : vals) {
+      ROOT::RDataFrame df("tree", "dataframe_parallel_snapshots_" + std::to_string(v) + ".root");
+      auto col = df.Take<int>("x");
+      int sum_col = 0;
+      for (auto i = 0u; i < nevts; i++)
+         sum_col += col->at(i);
+      EXPECT_EQ(sum_col, sum_ref);
+   }
+}
+
+TEST(RDFConcurrency, ParallelRDFSnapshotsEnableThreadSafety)
+{
+   ROOT::EnableThreadSafety();
+   ParallelRDFSnapshots();
+}
+
+TEST(RDFConcurrency, ParallelRDFSnapshotsEnableImplicitMT)
+{
+   ROOT::EnableImplicitMT();
+   ParallelRDFSnapshots();
+   ROOT::DisableImplicitMT();
+}
+
+void ParallelRDFCaches()
+{
+   // Run the RDF construction and the event loop in parallel
+   // and use an intermediate cache in the computation graph
+   const auto nevts = 100u;
+   auto func = [&nevts] {
+         std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() / RAND_MAX * 200));
+         ROOT::RDataFrame df(nevts);
+         auto cache = df.Define("x", "(int)rdfentry_").Cache("x");
+         return cache.Sum("x").GetValue();
+      };
+
+   ROOT::TThreadExecutor pool;
+   auto res = pool.Map(func, 8);
+
+   auto sum_ref = 0u;
+   for (auto i = 0u; i < nevts; i++) sum_ref += i;
+   for (auto i = 0u; i < res.size(); i++) {
+      EXPECT_EQ(res[i], sum_ref);
+   }
+}
+
+TEST(RDFConcurrency, ParallelRDFCachesEnableThreadSafety)
+{
+   ROOT::EnableThreadSafety();
+   ParallelRDFCaches();
+}
+
+TEST(RDFConcurrency, ParallelRDFCachesEnableImplicitMT)
+{
+   ROOT::EnableImplicitMT();
+   ParallelRDFCaches();
+   ROOT::DisableImplicitMT();
+}
+
 #endif
