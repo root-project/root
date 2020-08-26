@@ -183,36 +183,69 @@ namespace {
 // When using the Views framework this object provides the delegate
 // implementation for the CefWindow that hosts the Views-based browser.
 class SimpleWindowDelegate : public CefWindowDelegate {
+   CefRefPtr<CefBrowserView> fBrowserView;
+   int fWidth{800};  ///< preferred window width
+   int fHeight{600}; ///< preferred window height
 public:
-   explicit SimpleWindowDelegate(CefRefPtr<CefBrowserView> browser_view) : browser_view_(browser_view) {}
+   explicit SimpleWindowDelegate(CefRefPtr<CefBrowserView> browser_view, int width = 800, int height = 600)
+      : fBrowserView(browser_view), fWidth(width), fHeight(height)
+   {
+   }
 
    void OnWindowCreated(CefRefPtr<CefWindow> window) OVERRIDE
    {
       // Add the browser view and show the window.
-      window->AddChildView(browser_view_);
+      window->AddChildView(fBrowserView);
       window->Show();
 
       // Give keyboard focus to the browser view.
-      browser_view_->RequestFocus();
+      fBrowserView->RequestFocus();
    }
 
-   void OnWindowDestroyed(CefRefPtr<CefWindow> window) OVERRIDE { browser_view_ = nullptr; }
+   void OnWindowDestroyed(CefRefPtr<CefWindow> window) OVERRIDE { fBrowserView = nullptr; }
 
    bool CanClose(CefRefPtr<CefWindow> window) OVERRIDE
    {
       // Allow the window to close if the browser says it's OK.
-      CefRefPtr<CefBrowser> browser = browser_view_->GetBrowser();
+      CefRefPtr<CefBrowser> browser = fBrowserView->GetBrowser();
       if (browser)
          return browser->GetHost()->TryCloseBrowser();
       return true;
    }
 
+   CefSize GetPreferredSize(CefRefPtr<CefView> view) OVERRIDE
+   {
+     return CefSize(fWidth, fHeight);
+   }
+
+
 private:
-   CefRefPtr<CefBrowserView> browser_view_;
 
    IMPLEMENT_REFCOUNTING(SimpleWindowDelegate);
    DISALLOW_COPY_AND_ASSIGN(SimpleWindowDelegate);
 };
+
+
+class SimpleBrowserViewDelegate : public CefBrowserViewDelegate {
+ public:
+  SimpleBrowserViewDelegate() {}
+
+  bool OnPopupBrowserViewCreated(CefRefPtr<CefBrowserView> browser_view,
+                                 CefRefPtr<CefBrowserView> popup_browser_view,
+                                 bool is_devtools) OVERRIDE {
+    // Create a new top-level Window for the popup. It will show itself after
+    // creation.
+    CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(popup_browser_view));
+
+    // We created the Window.
+    return true;
+  }
+
+ private:
+  IMPLEMENT_REFCOUNTING(SimpleBrowserViewDelegate);
+  DISALLOW_COPY_AND_ASSIGN(SimpleBrowserViewDelegate);
+};
+
 
 class ROOTSchemeHandlerFactory : public CefSchemeHandlerFactory {
 protected:
@@ -297,10 +330,23 @@ public:
 
 } // namespace
 
-SimpleApp::SimpleApp(const std::string &cef_main, const std::string &url, bool isbatch, int width, int height)
-   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fCefMain(cef_main), fFirstUrl(url), fFirstBatch(isbatch)
+SimpleApp::SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url, bool isbatch, int width, int height)
+   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUseViewes(use_viewes), fCefMain(cef_main), fFirstUrl(url), fFirstBatch(isbatch)
 {
    fFirstRect.Set(0, 0, width, height);
+
+#if defined(OS_WIN) || defined(OS_LINUX)
+   // Create the browser using the Views framework if "--use-views" is specified
+   // via the command-line. Otherwise, create the browser using the native
+   // platform framework. The Views framework is currently only supported on
+   // Windows and Linux.
+#else
+   if (fUseViewes) {
+      R__ERROR_HERE("CEF") << "view framework does not supported by CEF on the platform, switching off";
+      fUseViewes = false;
+   }
+#endif
+
 }
 
 
@@ -403,15 +449,6 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       return;
    }
 
-#if defined(OS_WIN) || defined(OS_LINUX)
-   // Create the browser using the Views framework if "--use-views" is specified
-   // via the command-line. Otherwise, create the browser using the native
-   // platform framework. The Views framework is currently only supported on
-   // Windows and Linux.
-#else
-   fUseViewes = false;
-#endif
-
    if (!fGuiHandler)
       fGuiHandler = new GuiHandler(GetHttpServer(), fUseViewes);
 
@@ -419,12 +456,18 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       // Create the BrowserView.
       CefRefPtr<CefBrowserView> browser_view =
 #if CEF_COMMIT_NUMBER > 1934
-         CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr, nullptr);
+         CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr, new SimpleBrowserViewDelegate());
 #else
          CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr);
 #endif
       // Create the Window. It will show itself after creation.
-      CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view));
+      CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view, rect.width, rect.height));
+
+      if (fNextHandle) {
+         fNextHandle->SetBrowser(browser_view->GetBrowser());
+         fNextHandle = nullptr; // used only once
+      }
+
    } else {
 
 #if defined(OS_WIN)
@@ -448,6 +491,4 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
    }
 
 }
-
-
 

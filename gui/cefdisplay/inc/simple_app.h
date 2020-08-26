@@ -33,6 +33,7 @@ class RCefWebDisplayHandle;
 // Implement application-level callbacks for the browser process.
 class SimpleApp : public CefApp, public CefBrowserProcessHandler /*, public CefRenderProcessHandler */ {
 protected:
+   bool fUseViewes{false};  ///<! is views framework used
    std::string fCefMain;    ///<! extra executable used for additional processes
    bool fLastBatch{false};  ///<! indicate if last started window was batch
    std::string fFirstUrl;   ///<! first URL to open
@@ -41,13 +42,12 @@ protected:
    RCefWebDisplayHandle *fNextHandle{nullptr}; ///< next handle where browser will be created
 
    CefRefPtr<OsrHandler> fOsrHandler; ///<! batch-mode handler
-   bool fUseViewes{false};            ///<! is views are used
    CefRefPtr<GuiHandler> fGuiHandler; ///<! normal handler
 
    static THttpServer *gHttpServer;
 
 public:
-   SimpleApp(const std::string &cef_main, const std::string &url = "", bool isbatch = false, int width = 0, int height = 0);
+   SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url = "", bool isbatch = false, int width = 0, int height = 0);
 
    void SetNextHandle(RCefWebDisplayHandle *handle);
 

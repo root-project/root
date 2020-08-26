@@ -91,13 +91,26 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
       return handle;
    }
 
-#if defined(OS_WIN)
+   bool use_views = false;
+
+#ifdef OS_WIN
    CefMainArgs main_args(GetModuleHandle(nullptr));
 #else
    TApplication *root_app = gROOT->GetApplication();
 
+   #ifdef OS_LINUX
+   #ifndef CEF_X11
+   use_views = true;
+   #endif
+   #endif
+
    int cef_argc = 1;
-   char* cef_argv[] = { root_app->Argv(0), nullptr };
+   const char *arg2 = nullptr;
+   if (use_views && args.IsHeadless()) {
+      arg2 = "--ozone-platform=headless";
+      cef_argc++;
+   }
+   char *cef_argv[] = {root_app->Argv(0), (char *) arg2, nullptr};
 
    CefMainArgs main_args(cef_argc, cef_argv);
 #endif
@@ -150,7 +163,7 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
-   fCefApp = new SimpleApp(cef_main.Data(), args.GetFullUrl(), args.IsHeadless(), args.GetWidth(), args.GetHeight());
+   fCefApp = new SimpleApp(use_views, cef_main.Data(), args.GetFullUrl(), args.IsHeadless(), args.GetWidth(), args.GetHeight());
 
    fCefApp->SetNextHandle(handle.get());
 
