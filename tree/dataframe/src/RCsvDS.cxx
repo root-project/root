@@ -92,12 +92,12 @@ std::string RCsvDS::AsString()
 }
 
 // Regular expressions for type inference
-TRegexp RCsvDS::intRegex("^[-+]?[0-9]+$");
-TRegexp RCsvDS::doubleRegex1("^[-+]?[0-9]+\\.[0-9]*$");
-TRegexp RCsvDS::doubleRegex2("^[-+]?[0-9]*\\.[0-9]+$");
-TRegexp RCsvDS::doubleRegex3("^[-+]?[0-9]*\\.[0-9]+[eEdDqQ][-+]?[0-9]+$");
-TRegexp RCsvDS::trueRegex("^true$");
-TRegexp RCsvDS::falseRegex("^false$");
+const TRegexp RCsvDS::fgIntRegex("^[-+]?[0-9]+$");
+const TRegexp RCsvDS::fgDoubleRegex1("^[-+]?[0-9]+\\.[0-9]*$");
+const TRegexp RCsvDS::fgDoubleRegex2("^[-+]?[0-9]*\\.[0-9]+$");
+const TRegexp RCsvDS::fgDoubleRegex3("^[-+]?[0-9]*\\.[0-9]+[eEdDqQ][-+]?[0-9]+$");
+const TRegexp RCsvDS::fgTrueRegex("^true$");
+const TRegexp RCsvDS::fgFalseRegex("^false$");
 
 const std::map<RCsvDS::ColType_t, std::string>
    RCsvDS::fgColTypeMap({{'b', "bool"}, {'d', "double"}, {'l', "Long64_t"}, {'s', "std::string"}});
@@ -198,13 +198,13 @@ void RCsvDS::InferType(const std::string &col, unsigned int idxCol)
    ColType_t type;
    int dummy;
 
-   if (intRegex.Index(col, &dummy) != -1) {
+   if (fgIntRegex.Index(col, &dummy) != -1) {
       type = 'l'; // Long64_t
-   } else if (doubleRegex1.Index(col, &dummy) != -1 ||
-              doubleRegex2.Index(col, &dummy) != -1 ||
-              doubleRegex3.Index(col, &dummy) != -1) {
+   } else if (fgDoubleRegex1.Index(col, &dummy) != -1 ||
+              fgDoubleRegex2.Index(col, &dummy) != -1 ||
+              fgDoubleRegex3.Index(col, &dummy) != -1) {
       type = 'd'; // double
-   } else if (trueRegex.Index(col, &dummy) != -1 || falseRegex.Index(col, &dummy) != -1) {
+   } else if (fgTrueRegex.Index(col, &dummy) != -1 || fgFalseRegex.Index(col, &dummy) != -1) {
       type = 'b'; // bool
    } else {       // everything else is a string
       type = 's'; // std::string
