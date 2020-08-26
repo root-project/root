@@ -41,6 +41,8 @@ else()
    set(CEF_BLOBS ${CEF_RELEASE_DIR})
    set(CEF_LIBRARY ${CMAKE_BINARY_DIR}/lib/libcef.so)
    set(cef_copylibs libcef.so libEGL.so libGLESv2.so)
+   set(cef_copyshaderlibs swiftshader/libEGL.so swiftshader/libGLESv2.so)
+   set(cef_copyshaderdir ${CMAKE_BINARY_DIR}/bin)
    set(CEF_DLL_WRAPPER ${CEF_root}/build/libcef_dll_wrapper/libcef_dll_wrapper.a)
    set(CEF_LIB_DEPENDENCY ${X11_LIBRARIES})
 endif()
@@ -57,10 +59,13 @@ foreach(cef_l ${cef_copylibs})
   configure_file(${CEF_RELEASE_DIR}/${cef_l} ${CMAKE_BINARY_DIR}/lib/ COPYONLY)
 endforeach()
 
+foreach(shader_lib ${cef_copyshaderlibs})
+  configure_file(${CEF_RELEASE_DIR}/${shader_lib} ${cef_copyshaderdir}/${shader_lib} COPYONLY)
+endforeach()
+
 foreach(cef_b ${cef_bins})
   configure_file(${cef_b} ${CMAKE_BINARY_DIR}/lib/ COPYONLY)
 endforeach()
-
 
 file(GLOB_RECURSE cef_resources RELATIVE ${CEF_RESOURCES} ${CEF_RESOURCES}/*)
 
