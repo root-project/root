@@ -16,11 +16,13 @@ export DOXYGEN_NOTEBOOK_PATH := $(DOXYGEN_OUTPUT_DIRECTORY)/notebooks
 export DOXYGEN_STRIP_PATH := $(shell cd $(PWD)/../..; pwd)
 export DOXYGEN_INCLUDE_PATH := $(shell find $(DOXYGEN_STRIP_PATH) -type d -name dictpch -prune -o -type d -name inc)
 
+PYZ_DIR = ../../bindings/pyroot/pythonizations/python/ROOT/pythonization
+
 define MkDir
 	+@[ -d $1 ] || mkdir -p $1
 endef
 
-all: filter folders mathjax images doxygen
+all: filter folders mathjax images pyzdoc doxygen
 
 filter:
 	`root-config --cxx` -o filter filter.cxx -std=c++11
@@ -33,7 +35,10 @@ images:
 	$(call MkDir,$(DOXYGEN_IMAGE_PATH))
 	cp images/* $(DOXYGEN_IMAGE_PATH)
 
-doxygen: filter
+pyzdoc:
+	$(PYTHON_EXECUTABLE) extract_docstrings.py $(PYZ_DIR)
+
+doxygen: filter pyzdoc
 	$(call MkDir,$(DOXYGEN_OUTPUT_DIRECTORY))
 	$(call MkDir,$(DOXYGEN_EXAMPLE_PATH))
 	$(call MkDir,$(DOXYGEN_NOTEBOOK_PATH))
@@ -44,5 +49,5 @@ doxygen: filter
 	rm -f $(DOXYGEN_NOTEBOOK_PATH)/*.root
 
 clean:
-	rm -r $(DOXYGEN_OUTPUT_DIRECTORY) filter htmlfooter.html dataset*
+	rm -r $(DOXYGEN_OUTPUT_DIRECTORY) filter htmlfooter.html dataset* $(PYZ_DIR)/*.pyzdoc
 
