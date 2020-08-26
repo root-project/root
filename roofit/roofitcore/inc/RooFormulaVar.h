@@ -36,7 +36,7 @@ public:
   RooFormulaVar(const RooFormulaVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooFormulaVar(*this,newname); }
 
-  inline Bool_t ok() const { return formula().ok() ; }
+  inline Bool_t ok() const { return getFormula().ok() ; }
 
   /// Return pointer to parameter with given name.
   inline RooAbsArg* getParameter(const char* name) const { 
@@ -56,7 +56,12 @@ public:
   void printMetaArgs(std::ostream& os) const ;
 
   // Debugging
-  void dumpFormula() { formula().dump() ; }
+  /// Dump the formula to stdout.
+  void dumpFormula() { getFormula().dump() ; }
+  /// Get reference to the internal formula object.
+  const RooFormula& formula() const {
+    return getFormula();
+  }
 
   virtual Double_t defaultErrorLevel() const ;
 
@@ -73,7 +78,7 @@ public:
   virtual Bool_t isValidReal(Double_t /*value*/, Bool_t /*printError*/) const {return true;}
 
   private:
-  RooFormula& formula() const;
+  RooFormula& getFormula() const;
 
   RooListProxy _actualVars ;     // Actual parameters used by formula engine
   std::unique_ptr<RooFormula> _formula{nullptr}; //! Formula engine
