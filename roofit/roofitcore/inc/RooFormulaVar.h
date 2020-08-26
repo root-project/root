@@ -38,12 +38,12 @@ public:
 
   inline Bool_t ok() const { return formula().ok() ; }
 
+  /// Return pointer to parameter with given name.
   inline RooAbsArg* getParameter(const char* name) const { 
-    // Return pointer to parameter with given name
     return _actualVars.find(name) ; 
   }
+  /// Return pointer to parameter at given index.
   inline RooAbsArg* getParameter(Int_t index) const { 
-    // Return pointer to parameter at given index
     return _actualVars.at(index) ; 
   }
 
