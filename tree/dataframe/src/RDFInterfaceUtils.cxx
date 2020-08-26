@@ -220,6 +220,8 @@ BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const Colu
 /// If the lambda expression is already in GetJittedExprs, return the name for the lambda that has already been jitted.
 static std::string DeclareLambda(const std::string &expr, const ColumnNames_t &vars, const ColumnNames_t &varTypes)
 {
+   R__LOCKGUARD(gROOTMutex);
+
    const auto lambdaExpr = BuildLambdaString(expr, vars, varTypes);
    auto &exprMap = GetJittedExprs();
    const auto exprIt = exprMap.find(lambdaExpr);

@@ -527,6 +527,8 @@ void RLoopManager::CleanUpTask(unsigned int slot)
 /// This method also clears the contents of GetCodeToJit().
 void RLoopManager::Jit()
 {
+   R__LOCKGUARD(gROOTMutex);
+
    const std::string code = std::move(GetCodeToJit());
    if (code.empty())
       return;
@@ -634,6 +636,7 @@ void RLoopManager::Report(ROOT::RDF::RCutFlowReport &rep) const
 
 void RLoopManager::ToJitExec(const std::string &code) const
 {
+   R__LOCKGUARD(gROOTMutex);
    GetCodeToJit().append(code);
 }
 

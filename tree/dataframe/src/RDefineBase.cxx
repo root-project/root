@@ -14,15 +14,15 @@
 
 #include <string>
 #include <vector>
+#include <atomic>
 
 using ROOT::Detail::RDF::RDefineBase;
 namespace RDFInternal = ROOT::Internal::RDF;
 
 unsigned int RDefineBase::GetNextID()
 {
-   static unsigned int id = 0U;
-   ++id;
-   return id;
+   static std::atomic_uint id(0U);
+   return ++id;
 }
 
 RDefineBase::RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
