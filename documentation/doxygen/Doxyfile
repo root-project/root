@@ -293,7 +293,8 @@ OPTIMIZE_OUTPUT_VHDL   = NO
 # the files are not read by doxygen.
 
 EXTENSION_MAPPING      = h=C++ \
-                         icc=C++
+                         icc=C++ \
+                         pyzdoc=C++
 
 # If the MARKDOWN_SUPPORT tag is enabled then doxygen pre-processes all comments
 # according to the Markdown format, which allows for more readable
@@ -936,7 +937,8 @@ FILE_PATTERNS          = *.c \
                          *.ucf \
                          *.qsf \
                          *.as \
-                         *.js
+                         *.js \
+                         *.pyzdoc
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.
