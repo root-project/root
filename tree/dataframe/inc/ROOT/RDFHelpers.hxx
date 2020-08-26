@@ -105,6 +105,8 @@ auto PassAsVec(F &&f) -> RDFInternal::PassAsVecHelper<std::make_index_sequence<N
 // clang-format off
 /// Create a graphviz representation of the dataframe computation graph, return it as a string.
 /// \param[in] node any node of the graph. Called on the head (first) node, it prints the entire graph. Otherwise, only the branch the node belongs to.
+///
+/// Note that SaveGraph is not thread-safe and must not be called concurrently from different threads.
 // clang-format on
 template <typename NodeType>
 std::string SaveGraph(NodeType node)
@@ -117,6 +119,8 @@ std::string SaveGraph(NodeType node)
 /// Create a graphviz representation of the dataframe computation graph, write it to the specified file.
 /// \param[in] node any node of the graph. Called on the head (first) node, it prints the entire graph. Otherwise, only the branch the node belongs to.
 /// \param[in] outputFile file where to save the representation.
+///
+/// Note that SaveGraph is not thread-safe and must not be called concurrently from different threads.
 // clang-format on
 template <typename NodeType>
 void SaveGraph(NodeType node, const std::string &outputFile)

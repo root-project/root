@@ -33,6 +33,9 @@ private:
    using ColType_t = char;
    static const std::map<ColType_t, std::string> fgColTypeMap;
 
+   // Regular expressions for type inference
+   static const TRegexp fgIntRegex, fgDoubleRegex1, fgDoubleRegex2, fgDoubleRegex3, fgTrueRegex, fgFalseRegex;
+
    std::streampos fDataPos = 0;
    bool fReadHeaders = false;
    unsigned int fNSlots = 0U;
@@ -52,8 +55,6 @@ private:
    // This must be a deque to avoid the specialisation vector<bool>. This would not
    // work given that the pointer to the boolean in that case cannot be taken
    std::vector<std::deque<bool>> fBoolEvtValues; // one per column per slot
-
-   static TRegexp intRegex, doubleRegex1, doubleRegex2, doubleRegex3, trueRegex, falseRegex;
 
    void FillHeaders(const std::string &);
    void FillRecord(const std::string &, Record_t &);
