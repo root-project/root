@@ -1185,7 +1185,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
          }
       }
    } else {
-      // Regular/old TLeaf, there should be anything afterward ...
+      // Regular/old TLeaf, there should not be anything afterward ...
       if (subExpression && subExpression[0]) {
         Error("ParseWithLeaf", "Found a numerical leaf but the name has trailing characters: \"%s\"", subExpression);
         return -1;
