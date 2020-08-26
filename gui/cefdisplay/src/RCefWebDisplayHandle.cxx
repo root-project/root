@@ -83,7 +83,8 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
 
       CefRect rect((args.GetX() > 0) ? args.GetX() : 0, (args.GetY() > 0) ? args.GetY() : 0,
             (args.GetWidth() > 0) ? args.GetWidth() : 800, (args.GetHeight() > 0) ? args.GetHeight() : 600);
-      fCefApp->StartWindow(args.GetFullUrl(), args.IsHeadless(), rect);
+
+      fCefApp->StartWindow(args.GetFullUrl(), rect);
 
       if (args.IsHeadless())
          handle->WaitForContent(30); // 30 seconds
@@ -163,7 +164,7 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
-   fCefApp = new SimpleApp(use_views, cef_main.Data(), args.GetFullUrl(), args.IsHeadless(), args.GetWidth(), args.GetHeight());
+   fCefApp = new SimpleApp(use_views, cef_main.Data(), args.GetFullUrl(), args.GetWidth(), args.GetHeight());
 
    fCefApp->SetNextHandle(handle.get());
 

@@ -12,7 +12,7 @@ if(DEFINED ENV{CEF_ROOT})
 
 set(libname ROOTCefDisplay)
 
-set(CEF_sources src/simple_app.cxx src/base_handler.cxx src/osr_handler.cxx src/gui_handler.cxx src/RCefWebDisplayHandle.cxx)
+set(CEF_sources src/simple_app.cxx src/gui_handler.cxx src/RCefWebDisplayHandle.cxx)
 
 set(CEF_root $ENV{CEF_ROOT})
 
