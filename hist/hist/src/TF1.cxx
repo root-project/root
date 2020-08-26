@@ -2073,10 +2073,99 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 
    return nprobSum;
 }
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Compute the cumulative function at fNpx points between fXmin and fXmax
+///  Option controls if doin automatically or force using a log scale (option ="log")
+///  or linear (option = "lin")
+Bool_t TF1::ComputeCdfTable(Option_t * option) {
 
+   fIntegral.resize(fNpx + 1);
+   fAlpha.resize(fNpx + 1);
+   fBeta.resize(fNpx);
+   fGamma.resize(fNpx);
+   fIntegral[0] = 0;
+   fAlpha[fNpx] = 0;
+   Double_t integ;
+   Int_t intNegative = 0;
+   Int_t i;
+   Bool_t logbin = kFALSE;
+   Double_t dx;
+   Double_t xmin = fXmin;
+   Double_t xmax = fXmax;
+   TString opt(option);
+   opt.ToUpper();
+   // perform a log binning if specified by user (option="Log") or if some conditions are met
+   // and the user explicitly does not specify a Linear binning option
+   if (opt.Contains("LOG") || ((xmin > 0 && xmax / xmin > fNpx) && !opt.Contains("LIN"))) {
+      logbin = kTRUE;
+      fAlpha[fNpx] = 1;
+      xmin = TMath::Log10(fXmin);
+      xmax = TMath::Log10(fXmax);
+      if (gDebug)
+         Info("GetRandom", "Use log scale for tabulating the integral in [%f,%f] with %d points", fXmin, fXmax, fNpx);
+   }
+   dx = (xmax - xmin) / fNpx;
+
+   std::vector<Double_t> xx(fNpx + 1);
+   for (i = 0; i < fNpx; i++) {
+      xx[i] = xmin + i * dx;
+   }
+   xx[fNpx] = xmax;
+   for (i = 0; i < fNpx; i++) {
+      if (logbin) {
+         integ = Integral(TMath::Power(10, xx[i]), TMath::Power(10, xx[i + 1]), 0.0);
+      } else {
+         integ = Integral(xx[i], xx[i + 1], 0.0);
+      }
+      if (integ < 0) {
+         intNegative++;
+         integ = -integ;
+      }
+      fIntegral[i + 1] = fIntegral[i] + integ;
+   }
+   if (intNegative > 0) {
+      Warning("GetRandom", "function:%s has %d negative values: abs assumed", GetName(), intNegative);
+   }
+   if (fIntegral[fNpx] == 0) {
+      Error("GetRandom", "Integral of function is zero");
+      return kFALSE;
+   }
+   Double_t total = fIntegral[fNpx];
+   for (i = 1; i <= fNpx; i++) { // normalize integral to 1
+      fIntegral[i] /= total;
+   }
+   // the integral r for each bin is approximated by a parabola
+   //  x = alpha + beta*r +gamma*r**2
+   // compute the coefficients alpha, beta, gamma for each bin
+   Double_t x0, r1, r2, r3;
+   for (i = 0; i < fNpx; i++) {
+      x0 = xx[i];
+      r2 = fIntegral[i + 1] - fIntegral[i];
+      if (logbin)
+         r1 = Integral(TMath::Power(10, x0), TMath::Power(10, x0 + 0.5 * dx), 0.0) / total;
+      else
+         r1 = Integral(x0, x0 + 0.5 * dx, 0.0) / total;
+      r3 = 2 * r2 - 4 * r1;
+      if (TMath::Abs(r3) > 1e-8)
+         fGamma[i] = r3 / (dx * dx);
+      else
+         fGamma[i] = 0;
+      fBeta[i] = r2 / dx - fGamma[i] * dx;
+      fAlpha[i] = x0;
+      fGamma[i] *= 2;
+   }
+   return kTRUE;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a random number following this function shape
+///
+/// @param rng  Ranodm numjber generator. By default (or when passing a nullptr) the global gRandom is used
+/// @param option Option string which controls the binning used to compute the integral. Default mode is automatic depending of
+///               xmax, xmin and Npx (function points).
+///               Possible values are: "LOG" to force usage of log scale for tabulating the integral
+///                                    "LIN" to force usage of linear scale when tabulating the integral
 ///
 /// The distribution contained in the function fname (TF1) is integrated
 /// over the channel contents.
@@ -2088,84 +2177,28 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 ///  - Look in which bin in the normalized integral r1 corresponds to
 ///  - Evaluate the parabolic curve in the selected bin to find the corresponding X value.
 ///
+/// The user can provide as optional parameter a Random number generator.
+/// By default gRandom is used
+///
 /// If the ratio fXmax/fXmin > fNpx the integral is tabulated in log scale in x
-/// The parabolic approximation is very good as soon as the number of bins is greater than 50.
+/// A log scale for the intergral is also always used if a user specifies the "LOG" option
+/// Instead if a user requestes a "LIN" option the integral binning is never done in log scale
+/// whatever the fXmax/fXmin ratio is
+///
+/// Note that the parabolic approximation is very good as soon as the number of bins is greater than 50.
 
-Double_t TF1::GetRandom()
+
+Double_t TF1::GetRandom(TRandom * rng, Option_t * option)
 {
    //  Check if integral array must be build
    if (fIntegral.size() == 0) {
-      fIntegral.resize(fNpx + 1);
-      fAlpha.resize(fNpx + 1);
-      fBeta.resize(fNpx);
-      fGamma.resize(fNpx);
-      fIntegral[0] = 0;
-      fAlpha[fNpx] = 0;
-      Double_t integ;
-      Int_t intNegative = 0;
-      Int_t i;
-      Bool_t logbin = kFALSE;
-      Double_t dx;
-      Double_t xmin = fXmin;
-      Double_t xmax = fXmax;
-      if (xmin > 0 && xmax / xmin > fNpx) {
-         logbin =  kTRUE;
-         fAlpha[fNpx] = 1;
-         xmin = TMath::Log10(fXmin);
-         xmax = TMath::Log10(fXmax);
-      }
-      dx = (xmax - xmin) / fNpx;
-
-      Double_t *xx = new Double_t[fNpx + 1];
-      for (i = 0; i < fNpx; i++) {
-         xx[i] = xmin + i * dx;
-      }
-      xx[fNpx] = xmax;
-      for (i = 0; i < fNpx; i++) {
-         if (logbin) {
-            integ = Integral(TMath::Power(10, xx[i]), TMath::Power(10, xx[i + 1]), 0.0);
-         } else {
-            integ = Integral(xx[i], xx[i + 1], 0.0);
-         }
-         if (integ < 0) {
-            intNegative++;
-            integ = -integ;
-         }
-         fIntegral[i + 1] = fIntegral[i] + integ;
-      }
-      if (intNegative > 0) {
-         Warning("GetRandom", "function:%s has %d negative values: abs assumed", GetName(), intNegative);
-      }
-      if (fIntegral[fNpx] == 0) {
-         delete [] xx;
-         Error("GetRandom", "Integral of function is zero");
-         return 0;
-      }
-      Double_t total = fIntegral[fNpx];
-      for (i = 1; i <= fNpx; i++) { // normalize integral to 1
-         fIntegral[i] /= total;
-      }
-      //the integral r for each bin is approximated by a parabola
-      //  x = alpha + beta*r +gamma*r**2
-      // compute the coefficients alpha, beta, gamma for each bin
-      Double_t x0, r1, r2, r3;
-      for (i = 0; i < fNpx; i++) {
-         x0 = xx[i];
-         r2 = fIntegral[i + 1] - fIntegral[i];
-         if (logbin) r1 = Integral(TMath::Power(10, x0), TMath::Power(10, x0 + 0.5 * dx), 0.0) / total;
-         else        r1 = Integral(x0, x0 + 0.5 * dx, 0.0) / total;
-         r3 = 2 * r2 - 4 * r1;
-         if (TMath::Abs(r3) > 1e-8) fGamma[i] = r3 / (dx * dx);
-         else           fGamma[i] = 0;
-         fBeta[i]  = r2 / dx - fGamma[i] * dx;
-         fAlpha[i] = x0;
-         fGamma[i] *= 2;
-      }
-      delete [] xx;
+      Bool_t ret = ComputeCdfTable(option);
+      if (!ret) return TMath::QuietNaN();
    }
 
+
    // return random number
-   Double_t r  = gRandom->Rndm();
+   Double_t r  = (rng) ? rng->Rndm() : gRandom->Rndm();
    Int_t bin  = TMath::BinarySearch(fNpx, fIntegral.data(), r);
    Double_t rr = r - fIntegral[bin];
 
@@ -2197,59 +2230,23 @@ Double_t TF1::GetRandom()
 ///   The parabolic approximation is very good as soon as the number
 ///   of bins is greater than 50.
 ///
+///  @param  xmin    : minimum value for  generated random numbers
+///  @param  xmax    : maximum value for  generated random numbers
+///  @param  rng     : (optional) random number generator pointer
+///  @param  option  : (optional) : `LOG` or `LIN` force usage of Log or Linear fo computing Cdf table
+///
 ///  IMPORTANT NOTE
 ///
 ///  The integral of the function is computed at fNpx points. If the function
 ///  has sharp peaks, you should increase the number of points (SetNpx)
 ///  such that the peak is correctly tabulated at several points.
 
-Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
+Double_t TF1::GetRandom(Double_t xmin, Double_t xmax, TRandom * rng, Option_t * option)
 {
    //  Check if integral array must be build
    if (fIntegral.size() == 0) {
-      fIntegral.resize(fNpx + 1);
-      fAlpha.resize(fNpx+1);
-      fBeta.resize(fNpx);
-      fGamma.resize(fNpx);
-
-      Double_t dx = (fXmax - fXmin) / fNpx;
-      Double_t integ;
-      Int_t intNegative = 0;
-      Int_t i;
-      for (i = 0; i < fNpx; i++) {
-         integ = Integral(Double_t(fXmin + i * dx), Double_t(fXmin + i * dx + dx), 0.0);
-         if (integ < 0) {
-            intNegative++;
-            integ = -integ;
-         }
-         fIntegral[i + 1] = fIntegral[i] + integ;
-      }
-      if (intNegative > 0) {
-         Warning("GetRandom", "function:%s has %d negative values: abs assumed", GetName(), intNegative);
-      }
-      if (fIntegral[fNpx] == 0) {
-         Error("GetRandom", "Integral of function is zero");
-         return 0;
-      }
-      Double_t total = fIntegral[fNpx];
-      for (i = 1; i <= fNpx; i++) { // normalize integral to 1
-         fIntegral[i] /= total;
-      }
-      //the integral r for each bin is approximated by a parabola
-      //  x = alpha + beta*r +gamma*r**2
-      // compute the coefficients alpha, beta, gamma for each bin
-      Double_t x0, r1, r2, r3;
-      for (i = 0; i < fNpx; i++) {
-         x0 = fXmin + i * dx;
-         r2 = fIntegral[i + 1] - fIntegral[i];
-         r1 = Integral(x0, x0 + 0.5 * dx, 0.0) / total;
-         r3 = 2 * r2 - 4 * r1;
-         if (TMath::Abs(r3) > 1e-8) fGamma[i] = r3 / (dx * dx);
-         else           fGamma[i] = 0;
-         fBeta[i]  = r2 / dx - fGamma[i] * dx;
-         fAlpha[i] = x0;
-         fGamma[i] *= 2;
-      }
+      Bool_t ret = ComputeCdfTable(option);
+      if (!ret) return TMath::QuietNaN();
    }
 
    // return random number
@@ -2263,7 +2260,7 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
 
    Double_t r, x, xx, rr;
    do {
-      r  = gRandom->Uniform(pmin, pmax);
+      r  = (rng) ? rng->Uniform(pmin, pmax) : gRandom->Uniform(pmin, pmax);
 
       Int_t bin  = TMath::BinarySearch(fNpx, fIntegral.data(), r);
       rr = r - fIntegral[bin];

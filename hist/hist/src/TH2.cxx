@@ -585,6 +585,10 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in function fname.
 ///
+///  @param fname  : Function name used for filling the historam
+///  @param ntimes : number of times the histogram is filled
+///  @param rng    : (optional) Random number generator used to sample
+///
 ///   The distribution contained in the function fname (TF2) is integrated
 ///   over the channel contents.
 ///   It is normalized to 1.
@@ -596,7 +600,7 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
 ///
 ///  One can also call TF2::GetRandom2 to get a random variate from a function.
 
-void TH2::FillRandom(const char *fname, Int_t ntimes)
+void TH2::FillRandom(const char *fname, Int_t ntimes, TRandom * rng)
 {
    Int_t bin, binx, biny, ibin, loop;
    Double_t r1, x, y;
@@ -646,7 +650,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
 
    // Start main loop ntimes
    for (loop=0;loop<ntimes;loop++) {
-      r1 = gRandom->Rndm();
+      r1 = (rng) ? rng->Rndm() : gRandom->Rndm();
       ibin = TMath::BinarySearch(nbins,&integral[0],r1);
       biny = ibin/nbinsx;
       binx = 1 + ibin - nbinsx*biny;
@@ -662,6 +666,10 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in histogram h.
 ///
+///  @param h      : Histogram  pointer used for smpling random number
+///  @param ntimes : number of times the histogram is filled
+///  @param rng    : (optional) Random number generator used for sampling
+///
 ///   The distribution contained in the histogram h (TH2) is integrated
 ///   over the channel contents.
 ///   It is normalized to 1.
@@ -671,7 +679,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
 ///     - Fill histogram channel
 ///   ntimes random numbers are generated
 
-void TH2::FillRandom(TH1 *h, Int_t ntimes)
+void TH2::FillRandom(TH1 *h, Int_t ntimes, TRandom * rng)
 {
    if (!h) { Error("FillRandom", "Null histogram"); return; }
    if (fDimension != h->GetDimension()) {
@@ -684,7 +692,7 @@ void TH2::FillRandom(TH1 *h, Int_t ntimes)
    Double_t x,y;
    TH2 *h2 = (TH2*)h;
    for (loop=0;loop<ntimes;loop++) {
-      h2->GetRandom2(x,y);
+      h2->GetRandom2(x,y,rng);
       Fill(x,y);
    }
 }
@@ -1072,8 +1080,12 @@ Double_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
 /// Return 2 random numbers along axis x and y distributed according
 /// the cell-contents of a 2-dim histogram
 /// return a NaN if the histogram has a bin with negative content
+///
+/// @param x  reference to random generated x value
+/// @param y  reference to random generated x value
+/// @param rng (optional) Random number generator pointer used (default is gRandom)
 
-void TH2::GetRandom2(Double_t &x, Double_t &y)
+void TH2::GetRandom2(Double_t &x, Double_t &y, TRandom * rng)
 {
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -1090,14 +1102,15 @@ void TH2::GetRandom2(Double_t &x, Double_t &y)
    // case histogram has negative bins
    if (integral == TMath::QuietNaN() ) { x = TMath::QuietNaN(); y = TMath::QuietNaN(); return;}
 
-   Double_t r1 = gRandom->Rndm();
+   if (!rng) rng = gRandom;
+   Double_t r1 = rng->Rndm();
    Int_t ibin = TMath::BinarySearch(nbins,fIntegral,(Double_t) r1);
    Int_t biny = ibin/nbinsx;
    Int_t binx = ibin - nbinsx*biny;
    x = fXaxis.GetBinLowEdge(binx+1);
    if (r1 > fIntegral[ibin]) x +=
       fXaxis.GetBinWidth(binx+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
-   y = fYaxis.GetBinLowEdge(biny+1) + fYaxis.GetBinWidth(biny+1)*gRandom->Rndm();
+   y = fYaxis.GetBinLowEdge(biny+1) + fYaxis.GetBinWidth(biny+1)*rng->Rndm();
 }
 
 

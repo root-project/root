@@ -3451,6 +3451,11 @@ void TH1::DoFillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stri
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in function fname.
 ///
+///  @param fname  : Function name used for filling the historam
+///  @param ntimes : number of times the histogram is filled
+///  @param rng    : (optional) Random number generator used to sample
+///
+///
 /// The distribution contained in the function fname (TF1) is integrated
 /// over the channel contents for the bin range of this histogram.
 /// It is normalized to 1.
@@ -3463,7 +3468,7 @@ void TH1::DoFillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stri
 ///
 /// One can also call TF1::GetRandom to get a random variate from a function.
 
-void TH1::FillRandom(const char *fname, Int_t ntimes)
+void TH1::FillRandom(const char *fname, Int_t ntimes, TRandom * rng)
 {
    Int_t bin, binx, ibin, loop;
    Double_t r1, x;
@@ -3503,7 +3508,7 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
 
    //   --------------Start main loop ntimes
    for (loop=0;loop<ntimes;loop++) {
-      r1 = gRandom->Rndm();
+      r1 = (rng) ? rng->Rndm() : gRandom->Rndm();
       ibin = TMath::BinarySearch(nbinsx,&integral[0],r1);
       //binx = 1 + ibin;
       //x    = xAxis->GetBinCenter(binx); //this is not OK when SetBuffer is used
@@ -3516,6 +3521,10 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in histogram h.
+///
+///  @param h      : Histogram  pointer used for smpling random number
+///  @param ntimes : number of times the histogram is filled
+///  @param rng    : (optional) Random number generator used for sampling
 ///
 /// The distribution contained in the histogram h (TH1) is integrated
 /// over the channel contents for the bin range of this histogram.
@@ -3530,7 +3539,7 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
 /// in this case we simply use a poisson distribution where
 /// the mean value per bin = bincontent/integral.
 
-void TH1::FillRandom(TH1 *h, Int_t ntimes)
+void TH1::FillRandom(TH1 *h, Int_t ntimes, TRandom * rng)
 {
    if (!h) { Error("FillRandom", "Null histogram"); return; }
    if (fDimension != h->GetDimension()) {
@@ -3554,7 +3563,7 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
          Double_t sumgen = 0;
          for (Int_t bin=first;bin<=last;bin++) {
             Double_t mean = h->RetrieveBinContent(bin)*ntimes/sumw;
-            Double_t cont = (Double_t)gRandom->Poisson(mean);
+            Double_t cont = (rng) ? rng->Poisson(mean) : gRandom->Poisson(mean);
             sumgen += cont;
             AddBinContent(bin,cont);
             if (fSumw2.fN) fSumw2.fArray[bin] += cont;
@@ -3576,7 +3585,7 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
             // remove extra entries
             i =  Int_t(sumgen+0.5);
             while( i > ntimes) {
-               Double_t x = h->GetRandom();
+               Double_t x = h->GetRandom(rng);
                Int_t ibin = fXaxis.FindBin(x);
                Double_t y = RetrieveBinContent(ibin);
                // skip in case bin is empty
@@ -4869,12 +4878,14 @@ void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) cons
 /// This function checks if the bins integral exists. If not, the integral
 /// is evaluated, normalized to one.
 ///
+/// @param rng (optional) Random number generator pointer used (default is gRandom)
+///
 /// The integral is automatically recomputed if the number of entries
 /// is not the same then when the integral was computed.
 /// NB Only valid for 1-d histograms. Use GetRandom2 or 3 otherwise.
 /// If the histogram has a bin with negative content a NaN is returned
 
-Double_t TH1::GetRandom() const
+Double_t TH1::GetRandom(TRandom * rng) const
 {
    if (fDimension > 1) {
       Error("GetRandom","Function only valid for 1-d histograms");
@@ -4893,7 +4904,7 @@ Double_t TH1::GetRandom() const
    // return a NaN in case some bins have negative content
    if (integral == TMath::QuietNaN() ) return TMath::QuietNaN();
 
-   Double_t r1 = gRandom->Rndm();
+   Double_t r1 = (rng) ? rng->Rndm() : gRandom->Rndm();
    Int_t ibin = TMath::BinarySearch(nbinsx,fIntegral,r1);
    Double_t x = GetBinLowEdge(ibin+1);
    if (r1 > fIntegral[ibin]) x +=

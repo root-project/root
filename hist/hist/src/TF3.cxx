@@ -322,7 +322,7 @@ Double_t TF3::GetMaximumXYZ(Double_t &x, Double_t &y, Double_t &z)
 ///  points (SetNpx, SetNpy, SetNpz) such that the peak is correctly tabulated
 ///  at several points.
 
-void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom)
+void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom, TRandom * rng)
 {
    //  Check if integral array must be build
    Int_t i,j,k,cell;
@@ -367,14 +367,15 @@ void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom)
 
 // return random numbers
    Double_t r;
-   r    = gRandom->Rndm();
+   if (!rng) rng = gRandom;
+   r    = rng->Rndm();
    cell = TMath::BinarySearch(ncells,fIntegral.data(),r);
    k    = cell/(fNpx*fNpy);
    j    = (cell -k*fNpx*fNpy)/fNpx;
    i    = cell -fNpx*(j +fNpy*k);
-   xrandom = fXmin +dx*i +dx*gRandom->Rndm();
-   yrandom = fYmin +dy*j +dy*gRandom->Rndm();
-   zrandom = fZmin +dz*k +dz*gRandom->Rndm();
+   xrandom = fXmin +dx*i +dx*rng->Rndm();
+   yrandom = fYmin +dy*j +dy*rng->Rndm();
+   zrandom = fZmin +dz*k +dz*rng->Rndm();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

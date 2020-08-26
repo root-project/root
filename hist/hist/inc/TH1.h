@@ -52,6 +52,7 @@ class TList;
 class TCollection;
 class TVirtualFFT;
 class TVirtualHistPainter;
+class TRandom;
 
 
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
@@ -218,8 +219,8 @@ public:
    virtual Int_t    Fill(const char *name, Double_t w);
    virtual void     FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride=1);
    virtual void     FillN(Int_t, const Double_t *, const Double_t *, const Double_t *, Int_t) {;}
-   virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
-   virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
+   virtual void     FillRandom(const char *fname, Int_t ntimes=5000, TRandom * rng = nullptr);
+   virtual void     FillRandom(TH1 *h, Int_t ntimes=5000, TRandom * rng = nullptr);
    virtual Int_t    FindBin(Double_t x, Double_t y=0, Double_t z=0);
    virtual Int_t    FindFixBin(Double_t x, Double_t y=0, Double_t z=0) const;
    virtual Int_t    FindFirstBinAbove(Double_t threshold=0, Int_t axis=1, Int_t firstBin=1, Int_t lastBin=-1) const;
@@ -301,7 +302,7 @@ public:
    TVirtualHistPainter *GetPainter(Option_t *option="");
 
    virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum=0);
-   virtual Double_t GetRandom() const;
+   virtual Double_t GetRandom(TRandom * rng = nullptr) const;
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
    virtual Double_t GetStdDevError(Int_t axis=1) const;
