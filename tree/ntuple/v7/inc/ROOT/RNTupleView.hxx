@@ -164,14 +164,7 @@ private:
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName()), fValue(fField.GenerateValue())
    {
-      Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
-      std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> field2Id;
-      field2Id[&fField] = fieldId;
-      for (auto &f : fField) {
-         auto subFieldId = pageSource->GetDescriptor().FindFieldId(f.GetName(), field2Id[f.GetParent()]);
-         Detail::RFieldFuse::Connect(subFieldId, *pageSource, f);
-         field2Id[&f] = subFieldId;
-      }
+      Detail::RFieldFuse::ConnectRecursively(fieldId, *pageSource, fField);
    }
 
 public:
