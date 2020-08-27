@@ -344,6 +344,9 @@ set(dicttype ${ROOT_DICTTYPE})
 find_program(PERL_EXECUTABLE perl)
 set(perl ${PERL_EXECUTABLE})
 
+# --- workaround for Ubuntu 20.04, where snap chrome has problem with arguments translation, to be remove once problem fixed
+find_program(CHROME_EXECUTABLE NAMES chrome PATHS "/snap/chromium/current/usr/lib/chromium-browser/" NO_DEFAULT_PATH)
+
 find_program(CHROME_EXECUTABLE NAMES chrome.exe chromium chromium-browser chrome chrome-browser Google\ Chrome
              PATH_SUFFIXES "Google/Chrome/Application")
 if(CHROME_EXECUTABLE)
