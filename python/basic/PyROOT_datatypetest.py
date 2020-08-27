@@ -27,6 +27,8 @@ def setup_module(mod):
         if err:
             raise OSError("'make' failed (see stderr)")
 
+    check_cppyy_backend()
+
 
 class TestClassDATATYPES:
     def setup_class(cls):
