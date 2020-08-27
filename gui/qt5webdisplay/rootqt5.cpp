@@ -64,7 +64,6 @@ class RQt5WebDisplayHandle : public RWebDisplayHandle {
 protected:
 
    RootWebView *fView{nullptr};  ///< pointer on widget, need to release when handle is destroyed
-   std::string fDumpContent;     ///< dump content which used in headless mode
 
    class Qt5Creator : public Creator {
       int fCounter{0}; ///< counter used to number handlers
@@ -182,7 +181,7 @@ protected:
             }
 
             if(get_content)
-               handle->SetGetDumpContent(content);
+               handle->SetContent(content);
          }
 
          return handle;
@@ -198,9 +197,6 @@ public:
       // now view can be safely destroyed
       if (fView) delete fView;
    }
-
-   void SetGetDumpContent(const std::string &cont) { fDumpContent = cont; }
-   std::string GetDumpContent() const override { return fDumpContent; }
 
    static void AddCreator()
    {

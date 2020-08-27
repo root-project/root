@@ -98,12 +98,14 @@ class RWebBrowserHandle : public RWebDisplayHandle {
    typedef pid_t browser_process_id;
 #endif
    std::string fTmpDir;         ///< temporary directory to delete at the end
-   std::string fDumpContent;    ///< dump content, used with headless mode
    bool fHasPid{false};
    browser_process_id fPid;
 
 public:
-   RWebBrowserHandle(const std::string &url, const std::string &tmpdir, const std::string &dump) : RWebDisplayHandle(url), fTmpDir(tmpdir), fDumpContent(dump)  {}
+   RWebBrowserHandle(const std::string &url, const std::string &tmpdir, const std::string &dump) : RWebDisplayHandle(url), fTmpDir(tmpdir)
+   {
+      SetContent(dump);
+   }
 
    RWebBrowserHandle(const std::string &url, const std::string &tmpdir, browser_process_id pid)
       : RWebDisplayHandle(url), fTmpDir(tmpdir), fHasPid(true), fPid(pid)
@@ -124,8 +126,6 @@ public:
       if (!fTmpDir.empty())
          gSystem->Exec((rmdir + fTmpDir).c_str());
    }
-
-   std::string GetDumpContent() const override { return fDumpContent; }
 
 };
 
@@ -503,7 +503,6 @@ std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(s
    return rmdir;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create web display
 /// \param args - defines where and how to display web window
@@ -763,7 +762,7 @@ try_again:
 
    if (draw_kind != "draw") {
 
-      auto dumpcont = handle->GetDumpContent();
+      auto dumpcont = handle->GetContent();
 
       if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && !chrome_tmp_workaround && (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
          // chrome creates dummy html file with mostly no content

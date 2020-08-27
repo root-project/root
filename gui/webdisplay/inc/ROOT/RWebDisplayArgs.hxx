@@ -102,7 +102,7 @@ public:
    /// set window url
    RWebDisplayArgs &SetUrl(const std::string &url) { fUrl = url; return *this; }
    /// returns window url
-   std::string GetUrl() const { return fUrl; }
+   const std::string &GetUrl() const { return fUrl; }
 
    /// Set standalone mode for running browser, default on
    /// When disabled, normal browser window (or just tab) will be started
@@ -113,7 +113,7 @@ public:
    /// set window url options
    RWebDisplayArgs &SetUrlOpt(const std::string &opt) { fUrlOpt = opt; return *this; }
    /// returns window url options
-   std::string GetUrlOpt() const { return fUrlOpt; }
+   const std::string &GetUrlOpt() const { return fUrlOpt; }
 
    /// append extra url options, add "&" as separator if required
    void AppendUrlOpt(const std::string &opt);
