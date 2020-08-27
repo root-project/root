@@ -3,20 +3,20 @@
 
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RPageStorage.hxx>
 
 #include <gtest/gtest.h>
 
 using ROOT::Experimental::RNTupleDS;
-using ROOT::Experimental::RNTupleReader;
 using ROOT::Experimental::RNTupleWriter;
 using ROOT::Experimental::RNTupleModel;
+using ROOT::Experimental::Detail::RPageSource;
 
 class RNTupleDSTest : public ::testing::Test {
 protected:
-   // member variables are accessed by TEST_F functions
    std::string fFileName = "RNTupleDS_test.root";
    std::string fNtplName = "ntuple";
-   std::unique_ptr<RNTupleReader> fNTuple = nullptr;
+   std::unique_ptr<RPageSource> fPageSource;
 
    void SetUp() override {
       auto modelWrite = RNTupleModel::Create();
@@ -34,8 +34,9 @@ protected:
          auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), fNtplName, fFileName);
          ntuple->Fill();
       }
-      fNTuple = RNTupleReader::Open(fNtplName, fFileName);
+      fPageSource = RPageSource::Create(fNtplName, fFileName);
    }
+
    void TearDown() override {
       std::remove(fFileName.c_str());
    }
@@ -43,7 +44,7 @@ protected:
 
 TEST_F(RNTupleDSTest, ColTypeNames)
 {
-   RNTupleDS tds(std::move(fNTuple));
+   RNTupleDS tds(std::move(fPageSource));
 
    auto colNames = tds.GetColumnNames();
    ASSERT_EQ(colNames.size(), 5);
