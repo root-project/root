@@ -250,8 +250,9 @@ static std::string DeclareLambda(const std::string &expr, const ColumnNames_t &v
 /// Resolve that alias and return the true type as string.
 static std::string RetTypeOfLambda(const std::string &lambdaName)
 {
-   auto *ti = gInterpreter->TypedefInfo_Factory((lambdaName + "_ret_t").c_str());
-   const char *type = gInterpreter->TypedefInfo_TrueName(ti);
+   const auto dt = gROOT->GetType((lambdaName + "_ret_t").c_str());
+   R__ASSERT(dt != nullptr);
+   const auto type = dt->GetFullTypeName();
    return type;
 }
 
