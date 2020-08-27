@@ -53,7 +53,7 @@ TEST(RDFSimpleTests, ThrowOnPoolSizeMismatch)
       try {
          df.Count().GetValue();
       } catch (const std::runtime_error &e) {
-         const auto expected_msg = "RLoopManager::Run: when the RDataFrame was constructed the size of the thread pool "
+         const auto expected_msg = "RLoopManager::Run: when the RDataFrame was constructed the number of slots required "
                                    "was 1, but when starting the event loop it was 3. Maybe EnableImplicitMT() was "
                                    "called after the RDataFrame was constructed?";
          EXPECT_STREQ(e.what(), expected_msg);
@@ -69,8 +69,8 @@ TEST(RDFSimpleTests, ThrowOnPoolSizeMismatch)
       try {
          df.Count().GetValue();
       } catch (const std::runtime_error &e) {
-         const auto expected_msg = "RLoopManager::Run: when the RDataFrame was constructed the size of the thread pool "
-                                   "was 3, but when starting the event loop it was 0. Maybe DisableImplicitMT() was "
+         const auto expected_msg = "RLoopManager::Run: when the RDataFrame was constructed the number of slots required "
+                                   "was 3, but when starting the event loop it was 1. Maybe DisableImplicitMT() was "
                                    "called after the RDataFrame was constructed?";
          EXPECT_STREQ(e.what(), expected_msg);
       }

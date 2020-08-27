@@ -188,15 +188,14 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
    }
 }
 
-static void ThrowIfPoolSizeChanged(unsigned int nSlots)
+static void ThrowIfNSlotsChanged(unsigned int nSlots)
 {
-   const auto poolSize = ROOT::GetThreadPoolSize();
-   const bool isSingleThreadRun = (poolSize == 0 && nSlots == 1);
-   if (!isSingleThreadRun && poolSize != nSlots) {
-      std::string msg = "RLoopManager::Run: when the RDataFrame was constructed the size of the thread pool was " +
+   const auto currentSlots = RDFInternal::GetNSlots();
+   if (currentSlots != nSlots) {
+      std::string msg = "RLoopManager::Run: when the RDataFrame was constructed the number of slots required was " +
                         std::to_string(nSlots) + ", but when starting the event loop it was " +
-                        std::to_string(poolSize) + ".";
-      if (poolSize > nSlots)
+                        std::to_string(currentSlots) + ".";
+      if (currentSlots > nSlots)
          msg += " Maybe EnableImplicitMT() was called after the RDataFrame was constructed?";
       else
          msg += " Maybe DisableImplicitMT() was called after the RDataFrame was constructed?";
@@ -554,7 +553,7 @@ void RLoopManager::EvalChildrenCounts()
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
 void RLoopManager::Run()
 {
-   ThrowIfPoolSizeChanged(GetNSlots());
+   ThrowIfNSlotsChanged(GetNSlots());
 
    Jit();
 
