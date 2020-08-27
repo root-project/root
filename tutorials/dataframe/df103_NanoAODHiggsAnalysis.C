@@ -431,6 +431,22 @@ void df103_NanoAODHiggsAnalysis(const bool run_fast = true)
    ROOT::RDataFrame df_data_doubleel(
       "Events", {path + "Run2012B_DoubleElectron.root", path + "Run2012C_DoubleElectron.root"});
 
+   // [TO REMOVE] Add progress printouts (approximate total entries processed with entriesForOneThread * nThreads)
+   const auto poolSize = ROOT::GetThreadPoolSize();
+   auto printProgress = [poolSize](ULong64_t c) { std::cout << "Entries processed: " << c * poolSize << std::endl; };
+   auto c0 = df_sig_4l.Count();
+   c0.OnPartialResult(10000, printProgress);
+   auto c1 = df_bkg_4mu.Count();
+   c1.OnPartialResult(10000, printProgress);
+   auto c2 = df_bkg_4el.Count();
+   c2.OnPartialResult(10000, printProgress);
+   auto c3 = df_bkg_2el2mu.Count();
+   c3.OnPartialResult(10000, printProgress);
+   auto c4 = df_data_doublemu.Count();
+   c4.OnPartialResult(10000, printProgress);
+   auto c5 = df_data_doubleel.Count();
+   c5.OnPartialResult(10000, printProgress);
+
    // Reconstruct Higgs to 4 muons
    auto df_sig_4mu_reco = reco_higgs_to_4mu(df_sig_4l);
    const auto luminosity = 11580.0;            // Integrated luminosity of the data samples
