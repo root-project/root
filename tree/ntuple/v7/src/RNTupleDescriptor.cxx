@@ -682,6 +682,19 @@ ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, D
 }
 
 
+std::string ROOT::Experimental::RNTupleDescriptor::GetQualifiedFieldName(DescriptorId_t fieldId) const
+{
+   if (fieldId == kInvalidDescriptorId)
+      return "";
+
+   const auto &fieldDescriptor = fFieldDescriptors.at(fieldId);
+   auto prefix = GetQualifiedFieldName(fieldDescriptor.GetParentId());
+   if (prefix.empty())
+      return fieldDescriptor.GetFieldName();
+   return prefix + "." + fieldDescriptor.GetFieldName();
+}
+
+
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::GetFieldZeroId() const
 {

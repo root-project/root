@@ -455,6 +455,9 @@ public:
    DescriptorId_t FindNextClusterId(DescriptorId_t clusterId) const;
    DescriptorId_t FindPrevClusterId(DescriptorId_t clusterId) const;
 
+   /// Walks up the parents of the field ID and returns a field name of the form a.b.c.d
+   std::string GetQualifiedFieldName(DescriptorId_t fieldId) const;
+
    /// Re-create the C++ model from the stored meta-data
    std::unique_ptr<RNTupleModel> GenerateModel() const;
    void PrintInfo(std::ostream &output) const;
