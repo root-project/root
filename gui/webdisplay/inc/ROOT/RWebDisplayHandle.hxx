@@ -27,6 +27,10 @@ namespace Experimental {
 
 class RWebDisplayHandle {
 
+   std::string fUrl; ///!< URL used to launch display
+
+   std::string fContent; ///!< page content
+
 protected:
    class Creator {
    public:
@@ -72,8 +76,6 @@ protected:
       std::string MakeProfile(std::string &exec, bool batch) override;
    };
 
-   std::string fUrl; ///!< URL used to launch display
-
    static std::map<std::string, std::unique_ptr<Creator>> &GetMap();
 
    static std::unique_ptr<Creator> &FindCreator(const std::string &name, const std::string &libname = "");
@@ -85,9 +87,10 @@ public:
    // required virtual destructor for correct cleanup at the end
    virtual ~RWebDisplayHandle() = default;
 
-   std::string GetUrl() const { return fUrl; }
+   const std::string &GetUrl() const { return fUrl; }
 
-   virtual std::string GetDumpContent() const { return ""; }
+   void SetContent(const std::string &cont) { fContent = cont; }
+   const std::string &GetContent() const { return fContent; }
 
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 

@@ -56,7 +56,8 @@ public:
 
    void Visit( const CefString& str ) override
    {
-      if (fHandle) fHandle->SetContent(str.ToString());
+      if (fHandle && fHandle->IsValid())
+         fHandle->SetContent(str.ToString());
    }
 
 private:
@@ -64,8 +65,6 @@ private:
    IMPLEMENT_REFCOUNTING(FrameSourceVisitor);
    DISALLOW_COPY_AND_ASSIGN(FrameSourceVisitor);
 };
-
-
 
 
 std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Display(const ROOT::Experimental::RWebDisplayArgs &args)
@@ -201,7 +200,7 @@ bool RCefWebDisplayHandle::WaitForContent(int tmout_sec)
 
    bool did_try = false;
 
-   while ((--expired > 0) && fContent.empty()) {
+   while ((--expired > 0) && GetContent().empty()) {
 
       if (gSystem->ProcessEvents()) break; // interrupted, has to return
 
@@ -220,7 +219,7 @@ bool RCefWebDisplayHandle::WaitForContent(int tmout_sec)
       gSystem->Sleep(10); // only 10 ms sleep
    }
 
-   return !fContent.empty();
+   return !GetContent().empty();
 }
 
 
