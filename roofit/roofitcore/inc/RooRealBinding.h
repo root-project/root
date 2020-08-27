@@ -45,7 +45,7 @@ protected:
 
   void loadValues(const Double_t xvector[]) const;
   const RooAbsReal *_func;
-  RooAbsRealLValue **_vars;
+  std::vector<RooAbsRealLValue*> _vars; // Non-owned pointers to variables
   const RooArgSet *_nset;
   mutable Bool_t _xvecValid;
   Bool_t _clipInvalid ;
