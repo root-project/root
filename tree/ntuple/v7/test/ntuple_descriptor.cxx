@@ -235,6 +235,28 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
    descBuilder.EnsureValidDescriptor();
 }
 
+TEST(RNTupleDescriptor, QualifiedFieldName)
+{
+   auto model = RNTupleModel::Create();
+   model->MakeField<std::int32_t>("ints");
+   model->MakeField<std::vector<float>>("jets");
+   FileRaii fileGuard("test_field_qualified.root");
+   {
+      RNTupleWriter ntuple(std::move(model),
+         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   const auto &desc = ntuple->GetDescriptor();
+   EXPECT_TRUE(desc.GetQualifiedFieldName(desc.GetFieldZeroId()).empty());
+   auto fldIdInts = desc.FindFieldId("ints");
+   EXPECT_STREQ("ints", desc.GetQualifiedFieldName(fldIdInts).c_str());
+   auto fldIdJets = desc.FindFieldId("jets");
+   auto fldIdInner = desc.FindFieldId("float", fldIdJets);
+   EXPECT_STREQ("jets", desc.GetQualifiedFieldName(fldIdJets).c_str());
+   EXPECT_STREQ("jets.float", desc.GetQualifiedFieldName(fldIdInner).c_str());
+}
+
 TEST(RFieldDescriptorRange, IterateOverFieldNames)
 {
    auto model = RNTupleModel::Create();
