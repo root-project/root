@@ -18,6 +18,7 @@
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDataSource.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <cstdint>
@@ -28,26 +29,39 @@
 namespace ROOT {
 namespace Experimental {
 
-class RNTupleReader;
-class REntry;
+class RNTupleDescriptor;
+
+namespace Detail {
+class RFieldBase;
+class RFieldValue;
+class RPageSource;
+} // namespace Detail
 
 
 class RNTupleDS final : public ROOT::RDF::RDataSource {
-   /// Clones of the first reader, one for each slot
-   std::vector<std::unique_ptr<ROOT::Experimental::RNTupleReader>> fReaders;
-   std::vector<std::unique_ptr<ROOT::Experimental::REntry>> fEntries;
-   /// The raw pointers wrapped by the RValue items of fEntries
-   std::vector<std::vector<void*>> fValuePtrs;
-   unsigned fNSlots = 0;
-   bool fHasSeenAllRanges = false;
+   /// Clones of the first source, one for each slot
+   std::vector<std::unique_ptr<ROOT::Experimental::Detail::RPageSource>> fSources;
+
+   /// Fields and values for all active columns and all slots
+   std::vector<std::vector<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>>> fFields;
+   std::vector<std::vector<Detail::RFieldValue>> fValues;
+   std::vector<std::vector<void *>> fValuePtrs;
+
    std::vector<std::string> fColumnNames;
    std::vector<std::string> fColumnTypes;
+   std::vector<DescriptorId_t> fColumnFieldIds;
+   std::vector<size_t> fActiveColumns;
+
+   unsigned fNSlots = 0;
+   bool fHasSeenAllRanges = false;
+
+   void AddFields(const RNTupleDescriptor &desc, DescriptorId_t parentId);
 
 public:
-   explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> ntuple);
+   explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
    ~RNTupleDS() = default;
    void SetNSlots(unsigned int nSlots) final;
-   const std::vector<std::string> &GetColumnNames() const final;
+   const std::vector<std::string> &GetColumnNames() const final { return fColumnNames; }
    bool HasColumn(std::string_view colName) const final;
    std::string GetTypeName(std::string_view colName) const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
@@ -55,6 +69,7 @@ public:
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
 
    void Initialise() final;
+   void Finalise() final;
 
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
