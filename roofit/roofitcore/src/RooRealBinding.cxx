@@ -23,18 +23,15 @@ Lightweight interface adaptor that binds a RooAbsReal object to a subset
 of its servers and present it as a simple array oriented interface.
 **/
 
-
-#include "RooFit.h"
-#include "Riostream.h"
-
 #include "RooRealBinding.h"
+
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
 #include "RooAbsRealLValue.h"
 #include "RooNameReg.h"
 #include "RooMsgService.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 
@@ -55,21 +52,20 @@ ClassImp(RooRealBinding);
 /// range.
 
 RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid, const TNamed* rangeName) :
-  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName), _funcSave(0)
+  RooAbsFunc(vars.getSize()), _func(&func), _vars(), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName), _funcSave(0)
 {
-  // allocate memory
-  _vars= new RooAbsRealLValue*[getDimension()];
-  if(0 == _vars) {
-    _valid= kFALSE;
-    return;
-  }
   // check that all of the arguments are real valued and store them
   for (unsigned int index=0; index < vars.size(); ++index) {
     RooAbsArg* var = vars[index];
-    _vars[index]= dynamic_cast<RooAbsRealLValue*>(var);
-    if(0 == _vars[index]) {
-      oocoutE((TObject*)0,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName() << endl ;
+    _vars.push_back(dynamic_cast<RooAbsRealLValue*>(var));
+    if(_vars.back() == nullptr) {
+      oocoutE((TObject*)0,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName()
+          << ". Variables need to be assignable, e.g. instances of RooRealVar." << endl ;
       _valid= kFALSE;
+    }
+    if (!_func->dependsOn(*_vars[index])) {
+      oocoutW((TObject*)nullptr, InputArguments) << "RooRealBinding: The function " << func.GetName() << " does not depend on the parameter " << _vars[index]->GetName()
+          << ". Note that passing copies of the parameters is not supported." << std::endl;
     }
   }
 
@@ -88,15 +84,10 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
 /// range.
 
 RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nset) :
-  RooAbsFunc(other), _func(other._func), _nset(nset?nset:other._nset), _xvecValid(other._xvecValid),
+  RooAbsFunc(other), _func(other._func), _vars(other._vars), _nset(nset?nset:other._nset), _xvecValid(other._xvecValid),
   _clipInvalid(other._clipInvalid), _xsave(0), _rangeName(other._rangeName), _funcSave(other._funcSave)
 {
-  // allocate memory
-  _vars= new RooAbsRealLValue*[getDimension()];
 
-  for(unsigned int index=0 ; index<getDimension() ; index++) {
-    _vars[index]= other._vars[index] ;
-  }
 }
 
 
@@ -105,7 +96,6 @@ RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nse
 
 RooRealBinding::~RooRealBinding() 
 {
-  if(0 != _vars) delete[] _vars;
   if (_xsave) delete[] _xsave ;
 }
 
