@@ -1087,7 +1087,7 @@ void TGeoPcon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
 
    // outside, number of polygons: (nz-1)*(n-1)
    for (Int_t k = 0; k < (nz - 1); k++) {
-      indx1 = k*n;
+      indx1 = k*(n-1);
       indx2 = nz*(n-1) + n*2 + k*n;
       for (j = 0; j < n-1; j++) {
          buff.fPols[indx++] = c;
