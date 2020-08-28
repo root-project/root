@@ -155,7 +155,7 @@ void ParallelRDFSnapshots()
 {
    // Run the RDF construction and the event loop in parallel
    const auto nevts = 100u;
-   auto func = [&nevts] (int i) {
+   auto func = [&] (int i) {
          std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() / RAND_MAX * 200));
          ROOT::RDataFrame df(nevts);
          df.Define("x", "(int)rdfentry_").Snapshot("tree", "dataframe_parallel_snapshots_" + std::to_string(i) + ".root");
@@ -197,7 +197,7 @@ void ParallelRDFCaches()
    // Run the RDF construction and the event loop in parallel
    // and use an intermediate cache in the computation graph
    const auto nevts = 100u;
-   auto func = [&nevts] {
+   auto func = [&] {
          std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() / RAND_MAX * 200));
          ROOT::RDataFrame df(nevts);
          auto cache = df.Define("x", "(int)rdfentry_").Cache("x");
