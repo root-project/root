@@ -19,6 +19,7 @@
 #include "include/cef_client.h"
 #include "include/wrapper/cef_resource_manager.h"
 #include <list>
+#include <vector>
 
 class THttpServer;
 
@@ -29,17 +30,18 @@ class GuiHandler : public CefClient,
                    public CefRequestHandler,
                    public CefResourceRequestHandler {
 protected:
-   THttpServer *fServer{nullptr};
-   bool fUseViews{false};
-   int fConsole{0};
-   // List of existing browser windows. Only accessed on the CEF UI thread.
-   typedef std::list<CefRefPtr<CefBrowser>> BrowserList;
-   BrowserList browser_list_;
+
+   bool fUseViews{false};   ///<! if view framework is used, required for true headless mode
+   int fConsole{0};         ///<! console parameter, assigned via WebGui.Console rootrc parameter
+   typedef std::list<CefRefPtr<CefBrowser>> BrowserList; ///<! List of existing browser windows. Only accessed on the CEF UI thread.
+   BrowserList fBrowserList;
+
+   std::vector<THttpServer *> fServers;
 
    bool is_closing_;
 
 public:
-   explicit GuiHandler(THttpServer *serv = nullptr, bool use_views = false);
+   explicit GuiHandler(bool use_views = false);
 
    // Provide access to the single global instance of this object.
    // static BaseHandler *GetInstance();
@@ -72,6 +74,7 @@ public:
 
    bool IsClosing() const { return is_closing_; }
 
+   // CefRequestHandler methods:
    virtual CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(
          CefRefPtr<CefBrowser> browser,
          CefRefPtr<CefFrame> frame,
@@ -81,6 +84,7 @@ public:
          const CefString& request_initiator,
          bool& disable_default_handling) OVERRIDE { return this; }
 
+   // CefResourceRequestHandler methods:
    virtual cef_return_value_t OnBeforeResourceLoad(
          CefRefPtr<CefBrowser> browser,
          CefRefPtr<CefFrame> frame,
@@ -93,6 +97,8 @@ public:
          CefRefPtr<CefRequest> request) OVERRIDE;
 
    std::string AddBatchPage(const std::string &cont);
+
+   std::string MakePageUrl(THttpServer *serv, const std::string &addr);
 
    static bool PlatformInit();
 

@@ -27,156 +27,19 @@
 
 #include <string>
 #include <cstdio>
+#include <memory>
 
 #include "include/cef_browser.h"
-#include "include/cef_scheme.h"
 #include "include/cef_version.h"
 #include "include/views/cef_browser_view.h"
 #include "include/views/cef_window.h"
 #include "include/wrapper/cef_helpers.h"
-#include "include/wrapper/cef_stream_resource_handler.h"
 
 #include "THttpServer.h"
-#include "THttpCallArg.h"
-#include "TUrl.h"
 #include "TTimer.h"
-#include "TSystem.h"
-#include "TBase64.h"
-
-#include <memory>
-
-#include "RCefWebDisplayHandle.hxx"
 #include <ROOT/RLogger.hxx>
 
-THttpServer *SimpleApp::gHttpServer = nullptr;
-
-THttpServer *SimpleApp::GetHttpServer() { return gHttpServer; }
-void SimpleApp::SetHttpServer(THttpServer *serv) { gHttpServer = serv; }
-
-
-class TCefHttpCallArg : public THttpCallArg {
-protected:
-
-   CefRefPtr<CefCallback> fCallBack{nullptr};
-
-   void CheckWSPageContent(THttpWSHandler *) override
-   {
-      std::string search = "JSROOT.ConnectWebWindow({";
-      std::string replace = search + "platform:\"cef3\",socket_kind:\"longpoll\",";
-
-      ReplaceAllinContent(search, replace, true);
-   }
-
-public:
-   explicit TCefHttpCallArg() = default;
-
-   void AssignCallback(CefRefPtr<CefCallback> cb) { fCallBack = cb; }
-
-   // this is callback from HTTP server
-   void HttpReplied() override
-   {
-      if (IsFile()) {
-         // send file
-         std::string file_content = THttpServer::ReadFileContent((const char *)GetContent());
-         SetContent(std::move(file_content));
-      }
-
-      fCallBack->Continue(); // we have result and can continue with processing
-   }
-};
-
-class TGuiResourceHandler : public CefResourceHandler {
-public:
-   // QWebEngineUrlRequestJob *fRequest;
-   std::shared_ptr<TCefHttpCallArg> fArg;
-
-   int fTransferOffset{0};
-
-   explicit TGuiResourceHandler(bool dummy = false)
-   {
-      if (!dummy)
-         fArg = std::make_shared<TCefHttpCallArg>();
-   }
-
-   virtual ~TGuiResourceHandler() {}
-
-   void Cancel() OVERRIDE { CEF_REQUIRE_IO_THREAD(); }
-
-   bool ProcessRequest(CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback) OVERRIDE
-   {
-      CEF_REQUIRE_IO_THREAD();
-
-      if (fArg) {
-         fArg->AssignCallback(callback);
-         SimpleApp::GetHttpServer()->SubmitHttp(fArg);
-      } else {
-         callback->Continue();
-      }
-
-      return true;
-   }
-
-   void GetResponseHeaders(CefRefPtr<CefResponse> response, int64 &response_length, CefString &redirectUrl) OVERRIDE
-   {
-      CEF_REQUIRE_IO_THREAD();
-
-      if (!fArg || fArg->Is404()) {
-         response->SetMimeType("text/html");
-         response->SetStatus(404);
-         response_length = 0;
-      } else {
-         response->SetMimeType(fArg->GetContentType());
-         response->SetStatus(200);
-         response_length = fArg->GetContentLength();
-
-         if (fArg->NumHeader() > 0) {
-            // printf("******* Response with extra headers\n");
-            CefResponse::HeaderMap headers;
-            for (Int_t n = 0; n < fArg->NumHeader(); ++n) {
-               TString name = fArg->GetHeaderName(n);
-               TString value = fArg->GetHeader(name.Data());
-               headers.emplace(CefString(name.Data()), CefString(value.Data()));
-               // printf("   header %s %s\n", name.Data(), value.Data());
-            }
-            response->SetHeaderMap(headers);
-         }
-//         if (strstr(fArg->GetQuery(),"connection="))
-//            printf("Reply %s %s %s  len: %d %s\n", fArg->GetPathName(), fArg->GetFileName(), fArg->GetQuery(),
-//                  fArg->GetContentLength(), (const char *) fArg->GetContent() );
-      }
-      // DCHECK(!fArg->Is404());
-   }
-
-   bool ReadResponse(void *data_out, int bytes_to_read, int &bytes_read, CefRefPtr<CefCallback> callback) OVERRIDE
-   {
-      CEF_REQUIRE_IO_THREAD();
-
-      if (!fArg) return false;
-
-      bytes_read = 0;
-
-      if (fTransferOffset < fArg->GetContentLength()) {
-         char *data_ = (char *)fArg->GetContent();
-         // Copy the next block of data into the buffer.
-         int transfer_size = fArg->GetContentLength() - fTransferOffset;
-         if (transfer_size > bytes_to_read)
-            transfer_size = bytes_to_read;
-         memcpy(data_out, data_ + fTransferOffset, transfer_size);
-         fTransferOffset += transfer_size;
-
-         bytes_read = transfer_size;
-      }
-
-      // if content fully copied - can release reference, object will be cleaned up
-      if (fTransferOffset >= fArg->GetContentLength())
-         fArg.reset();
-
-      return bytes_read > 0;
-   }
-
-   IMPLEMENT_REFCOUNTING(TGuiResourceHandler);
-   DISALLOW_COPY_AND_ASSIGN(TGuiResourceHandler);
-};
+#include "RCefWebDisplayHandle.hxx"
 
 namespace {
 
@@ -247,93 +110,12 @@ class SimpleBrowserViewDelegate : public CefBrowserViewDelegate {
 };
 
 
-class ROOTSchemeHandlerFactory : public CefSchemeHandlerFactory {
-protected:
-public:
-   explicit ROOTSchemeHandlerFactory() = default;
-
-   CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
-                                        const CefString &scheme_name, CefRefPtr<CefRequest> request) OVERRIDE
-   {
-      std::string addr = request->GetURL().ToString();
-
-      TUrl url(addr.c_str());
-
-      const char *inp_path = url.GetFile();
-
-      TString inp_query = url.GetOptions();
-
-      TString fname;
-
-      if (SimpleApp::GetHttpServer()->IsFileRequested(inp_path, fname)) {
-         // process file - no need for special requests handling
-
-         // when file not exists - return nullptr
-         if (gSystem->AccessPathName(fname.Data()))
-            return new TGuiResourceHandler(true);
-
-         const char *mime = THttpServer::GetMimeType(fname.Data());
-
-         CefRefPtr<CefStreamReader> stream = CefStreamReader::CreateForFile(fname.Data());
-
-         // Constructor for HTTP status code 200 and no custom response headers.
-         // There’s also a version of the constructor for custom status code and response headers.
-         return new CefStreamResourceHandler(mime, stream);
-      }
-
-      std::string inp_method = request->GetMethod().ToString();
-
-      // printf("REQUEST METHOD %s\n", inp_method.c_str());
-
-      TGuiResourceHandler *handler = new TGuiResourceHandler();
-      handler->fArg->SetMethod(inp_method.c_str());
-      handler->fArg->SetPathAndFileName(inp_path);
-      handler->fArg->SetTopName("webgui");
-
-      if (inp_method == "POST") {
-
-         CefRefPtr< CefPostData > post_data = request->GetPostData();
-
-         if (!post_data) {
-            R__ERROR_HERE("CEF") << "FATAL - NO POST DATA in CEF HANDLER!!!";
-            exit(1);
-         } else {
-            CefPostData::ElementVector elements;
-            post_data->GetElements(elements);
-            size_t sz = 0, off = 0;
-            for (unsigned n = 0; n < elements.size(); ++n)
-               sz += elements[n]->GetBytesCount();
-            std::string data;
-            data.resize(sz);
-
-            for (unsigned n = 0; n < elements.size(); ++n) {
-               sz = elements[n]->GetBytes(elements[n]->GetBytesCount(), (char *)data.data() + off);
-               off += sz;
-            }
-            handler->fArg->SetPostData(std::move(data));
-         }
-      } else if (inp_query.Index("&post=") != kNPOS) {
-         Int_t pos = inp_query.Index("&post=");
-         TString buf = TBase64::Decode(inp_query.Data() + pos + 6);
-         handler->fArg->SetPostData(std::string(buf.Data()));
-         inp_query.Resize(pos);
-      }
-
-      handler->fArg->SetQuery(inp_query.Data());
-
-      // just return handler
-      return handler;
-   }
-
-   IMPLEMENT_REFCOUNTING(ROOTSchemeHandlerFactory);
-};
-
 } // namespace
 
 SimpleApp::SimpleApp(bool use_viewes, const std::string &cef_main,
-                     const std::string &url, const std::string &cont,
+                     THttpServer *serv, const std::string &url, const std::string &cont,
                      int width, int height, bool headless)
-   : CefApp(), CefBrowserProcessHandler(), fUseViewes(use_viewes), fCefMain(cef_main), fFirstUrl(url), fFirstContent(cont), fFirstHeadless(headless)
+   : CefApp(), CefBrowserProcessHandler(), fUseViewes(use_viewes), fCefMain(cef_main), fFirstServer(serv), fFirstUrl(url), fFirstContent(cont), fFirstHeadless(headless)
 {
    fFirstRect.Set(0, 0, width, height);
 
@@ -403,32 +185,28 @@ void SimpleApp::OnContextInitialized()
 {
    CEF_REQUIRE_UI_THREAD();
 
-   if (!fFirstHeadless)
-      CefRegisterSchemeHandlerFactory("http", "rootserver.local", new ROOTSchemeHandlerFactory());
-
    if (!fFirstUrl.empty() || !fFirstContent.empty()) {
-      StartWindow(fFirstUrl, fFirstContent, fFirstRect);
+      StartWindow(fFirstServer, fFirstUrl, fFirstContent, fFirstRect);
       fFirstUrl.clear();
       fFirstContent.clear();
    }
 }
 
 
-void SimpleApp::StartWindow(const std::string &addr, const std::string &cont, CefRect &rect)
+void SimpleApp::StartWindow(THttpServer *serv, const std::string &addr, const std::string &cont, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
 
    if (!fGuiHandler)
-      fGuiHandler = new GuiHandler(GetHttpServer(), fUseViewes);
+      fGuiHandler = new GuiHandler(fUseViewes);
 
    std::string url;
 
    // TODO: later one should be able both remote and local at the same time
    if(addr.empty() && !cont.empty()) {
       url = fGuiHandler->AddBatchPage(cont);
-   } else if (SimpleApp::GetHttpServer()) {
-      url = "http://rootserver.local";
-      url.append(addr);
+   } else if (serv) {
+      url = fGuiHandler->MakePageUrl(serv, addr);
    } else {
       url = addr;
    }
