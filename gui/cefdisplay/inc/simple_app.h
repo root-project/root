@@ -40,6 +40,7 @@ class SimpleApp : public CefApp,
 protected:
    bool fUseViewes{false};  ///<! is views framework used
    std::string fCefMain;    ///<! extra executable used for additional processes
+   THttpServer *fFirstServer; ///<! first server
    std::string fFirstUrl;   ///<! first URL to open
    std::string fFirstContent; ///<! first page content open
    CefRect fFirstRect;      ///<! original width
@@ -48,11 +49,9 @@ protected:
 
    CefRefPtr<GuiHandler> fGuiHandler; ///<! normal handler
 
-   static THttpServer *gHttpServer;
-
 public:
    SimpleApp(bool use_viewes, const std::string &cef_main,
-             const std::string &url = "", const std::string &cont = "",
+             THttpServer *serv = nullptr, const std::string &url = "", const std::string &cont = "",
              int width = 0, int height = 0, bool headless = false);
 
    void SetNextHandle(RCefWebDisplayHandle *handle);
@@ -87,14 +86,11 @@ public:
 #endif
 
 
-   void StartWindow(const std::string &url, const std::string &cont, CefRect &rect);
+   void StartWindow(THttpServer *serv, const std::string &url, const std::string &cont, CefRect &rect);
 
    // CefRenderProcessHandler methods
    // virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
    //                              CefRefPtr<CefV8Context> context) OVERRIDE;
-
-   static THttpServer *GetHttpServer();
-   static void SetHttpServer(THttpServer *serv);
 
 private:
    // Include the default reference counting implementation.
