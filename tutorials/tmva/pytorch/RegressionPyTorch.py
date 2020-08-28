@@ -10,12 +10,14 @@
 ## \date 2020
 ## \author Anirudh Dagar <anirudhdagar6@gmail.com> - IIT, Roorkee
 
+
 from ROOT import TMVA, TFile, TTree, TCut
 from subprocess import call
 from os.path import isfile
 
 import torch
 from torch import nn
+
 
 # Setup TMVA
 TMVA.Tools.Instance()
@@ -24,6 +26,7 @@ TMVA.PyMethodBase.PyInitialize()
 output = TFile.Open('TMVA.root', 'RECREATE')
 factory = TMVA.Factory('TMVARegression', output,
         '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Regression')
+
 
 # Load data
 if not isfile('tmva_reg_example.root'):
@@ -43,6 +46,7 @@ dataloader.AddRegressionTree(tree, 1.0)
 dataloader.PrepareTrainingAndTestTree(TCut(''),
         'nTrain_Regression=4000:SplitMode=Random:NormMode=NumEvents:!V')
 
+
 # Generate model
 
 # Define model
@@ -51,9 +55,11 @@ model.add_module('linear_1', nn.Linear(in_features=2, out_features=64))
 model.add_module('relu', nn.Tanh())
 model.add_module('linear_2', nn.Linear(in_features=64, out_features=1))
 
+
 # Construct loss function and Optimizer.
 loss = torch.nn.MSELoss()
 optimizer = torch.optim.SGD
+
 
 # Define train function
 def train(model, train_loader, val_loader, num_epochs, batch_size, optimizer, criterion, save_best, scheduler):
@@ -128,17 +134,20 @@ def predict(model, test_X, batch_size=32):
 
 load_model_custom_objects = {"optimizer": optimizer, "criterion": loss, "train_func": train, "predict_func": predict}
 
+
 # Store model to file
 # Convert the model to torchscript before saving
 m = torch.jit.script(model)
 torch.jit.save(m, "model.pt")
 print(m)
 
+
 # Book methods
 factory.BookMethod(dataloader, TMVA.Types.kPyTorch, 'PyTorch',
         'H:!V:VarTransform=D,G:FilenameModel=model.pt:NumEpochs=20:BatchSize=32')
 factory.BookMethod(dataloader, TMVA.Types.kBDT, 'BDTG',
         '!H:!V:VarTransform=D,G:NTrees=1000:BoostType=Grad:Shrinkage=0.1:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=4')
+
 
 # Run TMVA
 factory.TrainAllMethods()

@@ -10,12 +10,14 @@
 ## \date 2020
 ## \author Anirudh Dagar <anirudhdagar6@gmail.com> - IIT, Roorkee
 
+
 from ROOT import TMVA, TFile, TTree, TCut
 from subprocess import call
 from os.path import isfile
 
 import torch
 from torch import nn
+
 
 # Setup TMVA
 TMVA.Tools.Instance()
@@ -24,6 +26,7 @@ TMVA.PyMethodBase.PyInitialize()
 output = TFile.Open('TMVA.root', 'RECREATE')
 factory = TMVA.Factory('TMVAClassification', output,
                        '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Classification')
+
 
 # Load data
 if not isfile('tmva_class_example.root'):
@@ -51,6 +54,7 @@ model.add_module('linear_1', nn.Linear(in_features=4, out_features=64))
 model.add_module('relu', nn.ReLU())
 model.add_module('linear_2', nn.Linear(in_features=64, out_features=2))
 model.add_module('softmax', nn.Softmax(dim=1))
+
 
 # Construct loss function and Optimizer.
 loss = torch.nn.MSELoss()
@@ -130,6 +134,7 @@ def predict(model, test_X, batch_size=32):
 
 load_model_custom_objects = {"optimizer": optimizer, "criterion": loss, "train_func": train, "predict_func": predict}
 
+
 # Store model to file
 # Convert the model to torchscript before saving
 m = torch.jit.script(model)
@@ -143,10 +148,13 @@ factory.BookMethod(dataloader, TMVA.Types.kFisher, 'Fisher',
 factory.BookMethod(dataloader, TMVA.Types.kPyTorch, 'PyTorch',
                    'H:!V:VarTransform=D,G:FilenameModel=model.pt:NumEpochs=20:BatchSize=32')
 
+
 # Run training, test and evaluation
 factory.TrainAllMethods()
 factory.TestAllMethods()
 factory.EvaluateAllMethods()
 
+
+# Plot ROC Curves
 roc = factory.GetROCCurve(dataloader)
-roc.SaveAs('TMVA_PyTorh_ROC.png')
+roc.SaveAs('ROC_ClassificationPyTorch.png')
