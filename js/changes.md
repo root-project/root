@@ -7,6 +7,7 @@
 4. Major changes in v7 drawing: RFrame, RPalette, RColor, RStatBox, ...
 5. Fix in reading std::map member-wise
 6. Better handling of context menu position
+7. Support TASImage class - both PNG and binary content, including palette
 
 
 ## Changes in 5.8.1
