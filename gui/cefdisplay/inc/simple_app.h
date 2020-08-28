@@ -36,6 +36,7 @@ protected:
    bool fUseViewes{false};  ///<! is views framework used
    std::string fCefMain;    ///<! extra executable used for additional processes
    std::string fFirstUrl;   ///<! first URL to open
+   std::string fFirstContent; ///<! first page content open
    CefRect fFirstRect;      ///<! original width
    bool fFirstHeadless{false}; ///<! is first window is headless
    RCefWebDisplayHandle *fNextHandle{nullptr}; ///< next handle where browser will be created
@@ -45,7 +46,9 @@ protected:
    static THttpServer *gHttpServer;
 
 public:
-   SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url = "", int width = 0, int height = 0, bool headless = false);
+   SimpleApp(bool use_viewes, const std::string &cef_main,
+             const std::string &url = "", const std::string &cont = "",
+             int width = 0, int height = 0, bool headless = false);
 
    void SetNextHandle(RCefWebDisplayHandle *handle);
 
@@ -63,12 +66,11 @@ public:
 
    virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) OVERRIDE;
 
-   void StartWindow(const std::string &url, CefRect &rect);
+   void StartWindow(const std::string &url, const std::string &cont, CefRect &rect);
 
    // CefRenderProcessHandler methods
    // virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
    //                              CefRefPtr<CefV8Context> context) OVERRIDE;
-
 
    static THttpServer *GetHttpServer();
    static void SetHttpServer(THttpServer *serv);

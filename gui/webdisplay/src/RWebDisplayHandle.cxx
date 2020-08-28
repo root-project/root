@@ -677,41 +677,57 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
    // Some Chrome installation do not allow run html code from files, created in /tmp directory
    static bool chrome_tmp_workaround = false;
 
+   TString tmp_name, html_name;
+
 try_again:
 
-   TString tmp_name("canvasbody");
-   FILE *hf = gSystem->TempFileName(tmp_name);
-   if (!hf) {
-      R__ERROR_HERE("CanvasPainter") << "Fail to create temporary file for batch job";
-      return false;
-   }
-   fputs(filecont.c_str(), hf);
-   fclose(hf);
+   if (args.GetBrowserKind() == RWebDisplayArgs::kCEF) {
+      args.SetUrl(""s);
+      args.SetPageContent(filecont);
 
-   TString html_name = tmp_name + ".html";
+      tmp_name.Clear();
+      html_name.Clear();
 
-   if (chrome_tmp_workaround) {
-      std::string homedir = gSystem->GetHomeDirectory();
-      auto pos = html_name.Last('/');
-      if (pos == kNPOS)
-         html_name = TString::Format("/random%d.html", gRandom->Integer(1000000));
-      else
-         html_name.Remove(0,pos);
-      html_name = homedir + html_name.Data();
-      gSystem->Unlink(html_name.Data());
-      gSystem->Unlink(tmp_name.Data());
+      R__DEBUG_HERE("CanvasPainter") << "Using file content_len " << filecont.length() << " to produce batch image " << fname;
 
-      std::ofstream ofs (html_name.Data(), std::ofstream::out);
-      ofs << filecont;
    } else {
-      if (gSystem->Rename(tmp_name.Data(), html_name.Data()) != 0) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to rename temp file " << tmp_name << " into " << html_name;
-         gSystem->Unlink(tmp_name.Data());
+      tmp_name = "canvasbody";
+      FILE *hf = gSystem->TempFileName(tmp_name);
+      if (!hf) {
+         R__ERROR_HERE("CanvasPainter") << "Fail to create temporary file for batch job";
          return false;
       }
-   }
+      fputs(filecont.c_str(), hf);
+      fclose(hf);
 
-   R__DEBUG_HERE("CanvasPainter") << "Using " << html_name << " content_len " << filecont.length() << " to produce batch image " << fname;
+      html_name = tmp_name + ".html";
+
+      if (chrome_tmp_workaround) {
+         std::string homedir = gSystem->GetHomeDirectory();
+         auto pos = html_name.Last('/');
+         if (pos == kNPOS)
+            html_name = TString::Format("/random%d.html", gRandom->Integer(1000000));
+         else
+            html_name.Remove(0, pos);
+         html_name = homedir + html_name.Data();
+         gSystem->Unlink(html_name.Data());
+         gSystem->Unlink(tmp_name.Data());
+
+         std::ofstream ofs(html_name.Data(), std::ofstream::out);
+         ofs << filecont;
+      } else {
+         if (gSystem->Rename(tmp_name.Data(), html_name.Data()) != 0) {
+            R__ERROR_HERE("CanvasPainter") << "Fail to rename temp file " << tmp_name << " into " << html_name;
+            gSystem->Unlink(tmp_name.Data());
+            return false;
+         }
+      }
+
+      args.SetUrl("file://"s + gSystem->UnixPathName(html_name.Data()));
+      args.SetPageContent(""s);
+
+      R__DEBUG_HERE("CanvasPainter") << "Using " << html_name << " content_len " << filecont.length() << " to produce batch image " << fname;
+   }
 
    TString tgtfilename = fname.c_str();
    if (!gSystem->IsAbsoluteFileName(tgtfilename.Data()))
@@ -722,7 +738,7 @@ try_again:
    args.SetStandalone(true);
    args.SetHeadless(true);
    args.SetSize(width, height);
-   args.SetUrl("file://"s + gSystem->UnixPathName(html_name.Data()));
+
    if (draw_kind == "draw") {
 
       wait_file_name = tgtfilename;
@@ -753,7 +769,8 @@ try_again:
    }
 
    // delete temporary HTML file
-   gSystem->Unlink(html_name.Data());
+   if (html_name.Length() > 0)
+      gSystem->Unlink(html_name.Data());
 
    if (!wait_file_name.IsNull() && gSystem->AccessPathName(wait_file_name.Data())) {
       R__ERROR_HERE("CanvasPainter") << "Fail to produce image " << fname;

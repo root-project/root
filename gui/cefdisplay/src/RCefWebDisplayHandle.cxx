@@ -83,7 +83,7 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
       CefRect rect((args.GetX() > 0) ? args.GetX() : 0, (args.GetY() > 0) ? args.GetY() : 0,
             (args.GetWidth() > 0) ? args.GetWidth() : 800, (args.GetHeight() > 0) ? args.GetHeight() : 600);
 
-      fCefApp->StartWindow(args.GetFullUrl(), rect);
+      fCefApp->StartWindow(args.GetFullUrl(), args.GetPageContent(), rect);
 
       if (args.IsHeadless())
          handle->WaitForContent(30); // 30 seconds
@@ -99,12 +99,17 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    TApplication *root_app = gROOT->GetApplication();
 
    int cef_argc = 1;
-   const char *arg2 = nullptr;
-   if (use_views && args.IsHeadless()) {
-      arg2 = "--ozone-platform=headless";
+   const char *arg2 = nullptr, *arg3 = nullptr;
+   if (args.IsHeadless()) {
+      // arg2 = "--allow-file-access-from-files";
+      arg2 = "--disable-web-security";
       cef_argc++;
+      if (use_views) {
+         arg3 = "--ozone-platform=headless";
+         cef_argc++;
+      }
    }
-   char *cef_argv[] = {root_app->Argv(0), (char *) arg2, nullptr};
+   char *cef_argv[] = {root_app->Argv(0), (char *) arg2, (char *) arg3, nullptr};
 
    CefMainArgs main_args(cef_argc, cef_argv);
 #endif
@@ -157,20 +162,21 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
-   fCefApp = new SimpleApp(use_views, cef_main.Data(), args.GetFullUrl(), args.GetWidth(), args.GetHeight(), args.IsHeadless());
+   fCefApp = new SimpleApp(use_views, cef_main.Data(), args.GetFullUrl(), args.GetPageContent(), args.GetWidth(), args.GetHeight(), args.IsHeadless());
 
    fCefApp->SetNextHandle(handle.get());
 
    // Initialize CEF for the browser process.
    CefInitialize(main_args, settings, fCefApp.get(), nullptr);
 
-   Int_t interval = gEnv->GetValue("WebGui.CefTimer", 10);
-   // let run CEF message loop, should be improved later
-   TCefTimer *timer = new TCefTimer((interval > 0) ? interval : 10, kTRUE);
-   timer->TurnOn();
-
-   if (args.IsHeadless())
+   if (args.IsHeadless()) {
       handle->WaitForContent(30); // 30 seconds
+   } else {
+      // Create timer to let run CEF message loop together with ROOT event loop
+      Int_t interval = gEnv->GetValue("WebGui.CefTimer", 10);
+      TCefTimer *timer = new TCefTimer((interval > 0) ? interval : 10, kTRUE);
+      timer->TurnOn();
+   }
 
    // window not yet exists here
    return handle;
@@ -207,7 +213,6 @@ bool RCefWebDisplayHandle::WaitForContent(int tmout_sec)
       CefDoMessageLoopWork();
 
       if (fBrowser && !did_try) {
-
          auto frame = fBrowser->GetMainFrame();
 
          if (frame && fBrowser->HasDocument() && !fBrowser->IsLoading()) {
