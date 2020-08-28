@@ -368,8 +368,8 @@ void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, Cef
 {
    std::string name = process_type.ToString();
    std::string prog = command_line->GetProgram().ToString();
-   command_line->AppendSwitch("allow-file-access-from-files");
-   command_line->AppendSwitch("disable-web-security");
+   // command_line->AppendSwitch("allow-file-access-from-files");
+   // command_line->AppendSwitch("disable-web-security");
 
    // printf("OnBeforeCommandLineProcessing %s %s\n", name.c_str(), prog.c_str());
 //   if (fBatch) {
@@ -384,8 +384,8 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
    std::string newprog = fCefMain;
    command_line->SetProgram(newprog);
 
-   command_line->AppendSwitch("allow-file-access-from-files");
-   command_line->AppendSwitch("disable-web-security");
+   // command_line->AppendSwitch("allow-file-access-from-files");
+   // command_line->AppendSwitch("disable-web-security");
 
    // printf("OnBeforeChildProcessLaunch %s LastBatch %s\n", command_line->GetProgram().ToString().c_str(), fLastBatch ? "true" : "false");
 
