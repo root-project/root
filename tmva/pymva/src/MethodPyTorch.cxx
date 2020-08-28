@@ -194,43 +194,42 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
 
    Log() << kINFO << " Setup PyTorch Model " << Endl;
 
-   PyRunString("load_model_custom_objects=None");
-
-
    if (!fUserCodeName.IsNull()) {
       Log() << kINFO << " Executing user initialization code from  " << fUserCodeName << Endl;
 
-
-      // run some python code provided by user for model initialization if needed
+      // run some python code provided by user for method initializations
       TString cmd = "exec(open('" + fUserCodeName + "').read())";
       TString errmsg = "Error executing the provided user code";
       PyRunString(cmd, errmsg);
-
-      PyRunString("print('custom objects for loading model : ',load_model_custom_objects)");
-
-      PyRunString("fit = load_model_custom_objects[\"train_func\"]",
-                  "Failed to load train function from file. Please use key: 'train_func' and pass training loop function as the value.");
-      Log() << kINFO << "Loaded pytorch train function: " << Endl;
-
-
-      // Use SGD Optimizer as Default
-      PyRunString("if 'optimizer' in load_model_custom_objects:\n"
-                  "    optimizer = load_model_custom_objects['optimizer']\n"
-                  "else:\n"
-                  "    optimizer = torch.optim.SGD\n",
-                  "Please use key: 'optimizer' and pass a pytorch optimizer as the value for a custom optimizer.");
-      Log() << kINFO << "Loaded pytorch optimizer: " << Endl;
-
-
-      PyRunString("criterion = load_model_custom_objects[\"criterion\"]",
-                  "Failed to load loss function from file. Using MSE Loss as default. Please use key: 'criterion' and pass a pytorch loss function as the value.");
-      Log() << kINFO << "Loaded pytorch loss function: " << Endl;
-
-
-      PyRunString("predict = load_model_custom_objects[\"predict_func\"]",
-                  "Can't find user predict function object from file. Please use key: 'predict' and pass a predict function for evaluating the model as the value.");
-      Log() << kINFO << "Loaded pytorch predict function: " << Endl;
    }
+
+   PyRunString("print('custom objects for loading model : ',load_model_custom_objects)");
+
+   // Setup the training method
+   PyRunString("fit = load_model_custom_objects[\"train_func\"]",
+               "Failed to load train function from file. Please use key: 'train_func' and pass training loop function as the value.");
+   Log() << kINFO << "Loaded pytorch train function: " << Endl;
+
+
+   // Setup Optimizer. Use SGD Optimizer as Default
+   PyRunString("if 'optimizer' in load_model_custom_objects:\n"
+               "    optimizer = load_model_custom_objects['optimizer']\n"
+               "else:\n"
+               "    optimizer = torch.optim.SGD\n",
+               "Please use key: 'optimizer' and pass a pytorch optimizer as the value for a custom optimizer.");
+   Log() << kINFO << "Loaded pytorch optimizer: " << Endl;
+
+
+   // Setup the loss criterion
+   PyRunString("criterion = load_model_custom_objects[\"criterion\"]",
+               "Failed to load loss function from file. Using MSE Loss as default. Please use key: 'criterion' and pass a pytorch loss function as the value.");
+   Log() << kINFO << "Loaded pytorch loss function: " << Endl;
+
+
+   // Setup the predict method
+   PyRunString("predict = load_model_custom_objects[\"predict_func\"]",
+               "Can't find user predict function object from file. Please use key: 'predict' and pass a predict function for evaluating the model as the value.");
+   Log() << kINFO << "Loaded pytorch predict function: " << Endl;
 
 
    // Load already trained model or initial model
@@ -444,7 +443,7 @@ void MethodPyTorch::Train() {
       Log() << kINFO << "Option LearningRateSchedule: Set learning rate during training: " << fLearningRateSchedule << Endl;
    }
    else{
-      PyRunString("schedule = None; schedulerSteps = None", "Failed to set scheduler to None: ");
+      PyRunString("schedule = None; schedulerSteps = None", "Failed to set scheduler to None.");
    }
 
 
@@ -460,7 +459,7 @@ void MethodPyTorch::Train() {
       Log() << kINFO << "Option SaveBestOnly: Only model weights with smallest validation loss will be stored" << Endl;
    }
    else{
-      PyRunString("save_best = None", "Failed to set scheduler to None: ");
+      PyRunString("save_best = None", "Failed to set save_best to None.");
    }
 
 
@@ -573,7 +572,7 @@ std::vector<Double_t> MethodPyTorch::GetMvaValues(Long64_t firstEvt, Long64_t la
 
    // Using PyTorch User Defined predict function for predictions
    PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallFunctionObjArgs(pPredict, pModel, pDataMvaValues, NULL);      
-   if (pPredictions==0) Log() << kFATAL << "Failed to get predictions doosra" << Endl;
+   if (pPredictions==0) Log() << kFATAL << "Failed to get predictions" << Endl;
    delete[] data;
 
    // Load predictions to double vector
