@@ -89,17 +89,12 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    auto handle = std::make_unique<RCefWebDisplayHandle>(args.GetFullUrl());
 
    if (fCefApp) {
-      if (SimpleApp::GetHttpServer() != args.GetHttpServer()) {
-         R__ERROR_HERE("CEF") << "CEF do not allows to use different THttpServer instances";
-         return nullptr;
-      }
-
       fCefApp->SetNextHandle(handle.get());
 
       CefRect rect((args.GetX() > 0) ? args.GetX() : 0, (args.GetY() > 0) ? args.GetY() : 0,
             (args.GetWidth() > 0) ? args.GetWidth() : 800, (args.GetHeight() > 0) ? args.GetHeight() : 600);
 
-      fCefApp->StartWindow(args.GetFullUrl(), args.GetPageContent(), rect);
+      fCefApp->StartWindow(args.GetHttpServer(), args.GetFullUrl(), args.GetPageContent(), rect);
 
       if (args.IsHeadless())
          handle->WaitForContent(30, args.GetExtraArgs()); // 30 seconds
@@ -173,12 +168,10 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
 
    // settings.remote_debugging_port = 7890;
 
-   SimpleApp::SetHttpServer(args.GetHttpServer());
-
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
-   fCefApp = new SimpleApp(use_views, cef_main.Data(), args.GetFullUrl(), args.GetPageContent(), args.GetWidth(), args.GetHeight(), args.IsHeadless());
+   fCefApp = new SimpleApp(use_views, cef_main.Data(), args.GetHttpServer(), args.GetFullUrl(), args.GetPageContent(), args.GetWidth(), args.GetHeight(), args.IsHeadless());
 
    fCefApp->SetNextHandle(handle.get());
 
@@ -201,7 +194,6 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 /// Closes browser window if any
-
 
 RCefWebDisplayHandle::~RCefWebDisplayHandle()
 {
