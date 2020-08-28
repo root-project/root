@@ -645,6 +645,9 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Concatenate(
       throw std::runtime_error(ss.str());
    }
 
+   // TODO: Checking the memory layout?
+   // It should work either way due to the usage of operator()
+
    Shape_t new_fShape = this->fShape;
    new_fShape[idx] = this->fShape[idx] + a.fShape[idx];
    
@@ -654,14 +657,13 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Concatenate(
 
    // Trivial case of concatenation alongside the 0th dimention
    if (idx == 0){
-      for (std::size_t i = 0; i < this->this->fShape.size(); i++) {
+      for (std::size_t i = 0; i < this->fSize; i++) {
          new_fData[i] = this->fData[i];
       }
-      for (std::size_t i = 0; i < a.this->fShape.size(); i++) {
+      for (std::size_t i = 0; i < a.fSize; i++) {
          new_fData[i + this->fSize] = a.fData[i];
       }
    }
-  
    else{
       // Since our concatenation here is only from two tensors, we can take chunks of the data iteratively one after another
       // We pick the size of this chunk based on the size of the tensor after the index of the dimension
@@ -676,9 +678,9 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Concatenate(
       std::size_t cs1 = chunk_size * this->fShape[idx];
       std::size_t cs2 = chunk_size * a.fShape[idx];
 
-      for (std::size_t i = 0; (i * cs1 < this->fShape.size()) && (i * cs2 < a.fShape.size()); i++){
+      for (std::size_t i = 0; (i * cs1 < this->fSize) && (i * cs2 < a.fSize); i++){
          for (std::size_t j = 0; j < cs1 + cs2; j++) {
-            new_fData[i * (cs1 + cs2) + j] = (j < cs1) ? this->fData[  + j] : a.fData[j - cs1];
+            new_fData[i * (cs1 + cs2) + j] = (j < cs1) ? this->fData[ (i*cs1) + j] : a.fData[(i*cs2) + j - cs1];
 
          }
       }  
