@@ -40,6 +40,10 @@
 GuiHandler::GuiHandler(THttpServer *serv, bool use_views) : fServer(serv), fUseViews(use_views), is_closing_(false)
 {
    fConsole = gEnv->GetValue("WebGui.Console", (int)0);
+
+   // see https://bitbucket.org/chromiumembedded/cef-project/src/master/examples/resource_manager/?at=master for demo
+   // one probably can avoid to use scheme handler and just redirect requests
+   fResourceManager = new CefResourceManager();
 }
 
 void GuiHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
@@ -105,17 +109,14 @@ void GuiHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser)
    }
 }
 
-namespace {
-
-   // Returns a data: URI with the specified contents.
-   std::string GetDataURI(const std::string& data, const std::string& mime_type)
-   {
-      return "data:" + mime_type + ";base64," +
-              CefURIEncode(CefBase64Encode(data.data(), data.size()), false)
-               .ToString();
-   }
-
+// Returns a data: URI with the specified contents.
+std::string GuiHandler::GetDataURI(const std::string& data, const std::string& mime_type)
+{
+    return "data:" + mime_type + ";base64," +
+           CefURIEncode(CefBase64Encode(data.data(), data.size()), false)
+            .ToString();
 }
+
 
 void GuiHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode,
                               const CefString &errorText, const CefString &failedUrl)
@@ -130,9 +131,11 @@ void GuiHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> 
    std::stringstream ss;
    ss << "<html><body bgcolor=\"white\">"
          "<h2>Failed to load URL "
-      << std::string(failedUrl) << " with error " << std::string(errorText) << " (" << errorCode
+      << failedUrl.ToString().substr(0,100) << " with error " << errorText.ToString() << " (" << errorCode
       << ").</h2></body></html>";
-   frame->LoadURL(GetDataURI(ss.str(), "text/html"));
+   // frame->LoadURL(GetDataURI(ss.str(), "text/html"));
+
+   printf("Fail to load URL %s\n", failedUrl.ToString().substr(0,100).c_str());
 }
 
 void GuiHandler::CloseAllBrowsers(bool force_close)
@@ -156,22 +159,58 @@ bool GuiHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
                                   const CefString &message, const CefString &source,
                                   int line)
 {
+   std::string src = source.ToString().substr(0,100);
+
    switch (level) {
    case LOGSEVERITY_WARNING:
       if (fConsole > -1)
-         R__WARNING_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
+         R__WARNING_HERE("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    case LOGSEVERITY_ERROR:
       if (fConsole > -2)
-         R__ERROR_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
+         R__ERROR_HERE("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    default:
       if (fConsole > 0)
-         R__DEBUG_HERE("CEF") << Form("CEF: %s:%d: %s", source.ToString().c_str(), line, message.ToString().c_str());
+         R__DEBUG_HERE("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    }
 
    return true;
 }
 
+cef_return_value_t GuiHandler::OnBeforeResourceLoad(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    CefRefPtr<CefRequest> request,
+    CefRefPtr<CefRequestCallback> callback) {
+  CEF_REQUIRE_IO_THREAD();
 
+  // std::string url = request->GetURL().ToString();
+  // printf("OnBeforeResourceLoad url %s\n", url.c_str());
+
+  return fResourceManager->OnBeforeResourceLoad(browser, frame, request,
+                                                 callback);
+}
+
+CefRefPtr<CefResourceHandler> GuiHandler::GetResourceHandler(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    CefRefPtr<CefRequest> request) {
+  CEF_REQUIRE_IO_THREAD();
+
+  // std::string url = request->GetURL().ToString();
+  // printf("GetResourceHandler url %s\n", url.c_str());
+
+  return fResourceManager->GetResourceHandler(browser, frame, request);
+}
+
+std::string GuiHandler::AddBatchPage(const std::string &cont)
+{
+   std::string url = "file:///batch_page";
+   url.append(std::to_string(fBatchPageCount++));
+   url.append(".html");
+
+   fResourceManager->AddContentProvider(url, cont, "text/html", 0, std::string());
+   return url;
+}

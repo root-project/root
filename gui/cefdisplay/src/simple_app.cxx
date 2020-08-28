@@ -330,8 +330,10 @@ public:
 
 } // namespace
 
-SimpleApp::SimpleApp(bool use_viewes, const std::string &cef_main, const std::string &url, int width, int height, bool headless)
-   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUseViewes(use_viewes), fCefMain(cef_main), fFirstUrl(url), fFirstHeadless(headless)
+SimpleApp::SimpleApp(bool use_viewes, const std::string &cef_main,
+                     const std::string &url, const std::string &cont,
+                     int width, int height, bool headless)
+   : CefApp(), CefBrowserProcessHandler(), fUseViewes(use_viewes), fCefMain(cef_main), fFirstUrl(url), fFirstContent(cont), fFirstHeadless(headless)
 {
    fFirstRect.Set(0, 0, width, height);
 
@@ -366,6 +368,9 @@ void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, Cef
 {
    std::string name = process_type.ToString();
    std::string prog = command_line->GetProgram().ToString();
+   command_line->AppendSwitch("allow-file-access-from-files");
+   command_line->AppendSwitch("disable-web-security");
+
    // printf("OnBeforeCommandLineProcessing %s %s\n", name.c_str(), prog.c_str());
 //   if (fBatch) {
 //      command_line->AppendSwitch("disable-gpu");
@@ -378,6 +383,9 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
 {
    std::string newprog = fCefMain;
    command_line->SetProgram(newprog);
+
+   command_line->AppendSwitch("allow-file-access-from-files");
+   command_line->AppendSwitch("disable-web-security");
 
    // printf("OnBeforeChildProcessLaunch %s LastBatch %s\n", command_line->GetProgram().ToString().c_str(), fLastBatch ? "true" : "false");
 
@@ -398,19 +406,27 @@ void SimpleApp::OnContextInitialized()
    if (!fFirstHeadless)
       CefRegisterSchemeHandlerFactory("http", "rootserver.local", new ROOTSchemeHandlerFactory());
 
-   if (!fFirstUrl.empty())
-      StartWindow(fFirstUrl, fFirstRect);
+   if (!fFirstUrl.empty() || !fFirstContent.empty()) {
+      StartWindow(fFirstUrl, fFirstContent, fFirstRect);
+      fFirstUrl.clear();
+      fFirstContent.clear();
+   }
 }
 
 
-void SimpleApp::StartWindow(const std::string &addr, CefRect &rect)
+void SimpleApp::StartWindow(const std::string &addr, const std::string &cont, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
+
+   if (!fGuiHandler)
+      fGuiHandler = new GuiHandler(GetHttpServer(), fUseViewes);
 
    std::string url;
 
    // TODO: later one should be able both remote and local at the same time
-   if (SimpleApp::GetHttpServer()) {
+   if(addr.empty() && !cont.empty()) {
+      url = fGuiHandler->AddBatchPage(cont);
+   } else if (SimpleApp::GetHttpServer()) {
       url = "http://rootserver.local";
       url.append(addr);
    } else {
@@ -419,9 +435,10 @@ void SimpleApp::StartWindow(const std::string &addr, CefRect &rect)
 
    // Specify CEF browser settings here.
    CefBrowserSettings browser_settings;
-
-   if (!fGuiHandler)
-      fGuiHandler = new GuiHandler(GetHttpServer(), fUseViewes);
+   // browser_settings.plugins = STATE_DISABLED;
+   // browser_settings.file_access_from_file_urls = STATE_ENABLED;
+   // browser_settings.universal_access_from_file_urls = STATE_ENABLED;
+   // browser_settings.web_security = STATE_DISABLED;
 
    if (fUseViewes) {
       // Create the BrowserView.

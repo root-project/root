@@ -17,11 +17,17 @@
 #define ROOT_cef_gui_handler_h
 
 #include "include/cef_client.h"
+#include "include/wrapper/cef_resource_manager.h"
 #include <list>
 
 class THttpServer;
 
-class GuiHandler : public CefClient, public CefLifeSpanHandler, public CefLoadHandler, public CefDisplayHandler {
+class GuiHandler : public CefClient,
+                   public CefLifeSpanHandler,
+                   public CefLoadHandler,
+                   public CefDisplayHandler,
+                   public CefRequestHandler,
+                   public CefResourceRequestHandler {
 protected:
    THttpServer *fServer{nullptr};
    bool fUseViews{false};
@@ -42,6 +48,7 @@ public:
    virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE { return this; }
    virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
    virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE { return this; }
+   virtual CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE { return this; }
 
    // CefLifeSpanHandler methods:
    virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
@@ -65,12 +72,39 @@ public:
 
    bool IsClosing() const { return is_closing_; }
 
+   virtual CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(
+         CefRefPtr<CefBrowser> browser,
+         CefRefPtr<CefFrame> frame,
+         CefRefPtr<CefRequest> request,
+         bool is_navigation,
+         bool is_download,
+         const CefString& request_initiator,
+         bool& disable_default_handling) OVERRIDE { return this; }
+
+   virtual cef_return_value_t OnBeforeResourceLoad(
+         CefRefPtr<CefBrowser> browser,
+         CefRefPtr<CefFrame> frame,
+         CefRefPtr<CefRequest> request,
+         CefRefPtr<CefRequestCallback> callback) OVERRIDE;
+
+   virtual CefRefPtr<CefResourceHandler> GetResourceHandler(
+         CefRefPtr<CefBrowser> browser,
+         CefRefPtr<CefFrame> frame,
+         CefRefPtr<CefRequest> request) OVERRIDE;
+
+   std::string AddBatchPage(const std::string &cont);
+
    static bool PlatformInit();
+
+   static std::string GetDataURI(const std::string& data, const std::string& mime_type);
 
 private:
 
    // Platform-specific implementation.
    void PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title);
+
+   CefRefPtr<CefResourceManager> fResourceManager;
+   int fBatchPageCount{0};
 
    // Include the default reference counting implementation.
    IMPLEMENT_REFCOUNTING(GuiHandler);
