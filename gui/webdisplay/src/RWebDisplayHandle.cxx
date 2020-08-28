@@ -618,10 +618,16 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
       jsrootsys = jsrootsysdflt.Data();
    }
 
+   RWebDisplayArgs args; // set default browser kind, only Chrome or CEF or Qt5 can be used here
+   if ((args.GetBrowserKind() != RWebDisplayArgs::kCEF) && (args.GetBrowserKind() != RWebDisplayArgs::kQt5))
+      args.SetBrowserKind(RWebDisplayArgs::kChrome);
+
    std::string draw_kind;
 
-   if (EndsWith(".pdf") || EndsWith("shot.png"))
-      draw_kind = "draw";
+   if (EndsWith(".pdf"))
+      draw_kind = "draw"; // not a JSROOT drawing but Chrome capability to create PDF out of HTML page is used
+   else if (EndsWith("shot.png"))
+      draw_kind = (args.GetBrowserKind() == RWebDisplayArgs::kChrome) ? "draw" : "png";
    else if (EndsWith(".svg"))
       draw_kind = "svg";
    else if (EndsWith(".png"))
@@ -656,23 +662,6 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
    filecont = std::regex_replace(filecont, std::regex("\\$draw_kind"), draw_kind);
 
    filecont = std::regex_replace(filecont, std::regex("\\$draw_object"), json);
-
-   RWebDisplayArgs args; // set default browser kind, only Chrome or CEF or Qt5 can be used here
-   if ((args.GetBrowserKind() != RWebDisplayArgs::kCEF) && (args.GetBrowserKind() != RWebDisplayArgs::kQt5))
-      args.SetBrowserKind(RWebDisplayArgs::kChrome);
-
-   // check capability of configured web display
-   if (draw_kind == "draw") {
-      if (EndsWith(".pdf") && (args.GetBrowserKind() == RWebDisplayArgs::kCEF)) {
-         R__ERROR_HERE("CanvasPainter") << "CEF do not support saving into PDF file";
-         return false;
-      }
-
-      if (EndsWith("shot.png") && (args.GetBrowserKind() != RWebDisplayArgs::kChrome)) {
-         // there is no direct screenshot in CEF or Qt5, therefore using normal PNG output
-         draw_kind = "png";
-      }
-   }
 
    TString dump_name;
    if ((draw_kind != "draw") && (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
