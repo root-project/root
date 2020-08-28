@@ -654,7 +654,10 @@ Double_t TF2::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    Int_t nfnevl,ifail;
    Double_t result = IntegralMultiple(n,a,b,maxpts,epsrel,epsrel,relerr,nfnevl,ifail);
    if (ifail > 0) {
-      Warning("Integral","failed code=%d, maxpts=%d, epsrel=%g, nfnevl=%d, relerr=%g ",ifail,maxpts,epsrel,nfnevl,relerr);
+      Warning("Integral","failed for %s code=%d, maxpts=%d, epsrel=%g, nfnevl=%d, relerr=%g ",GetName(),ifail,maxpts,epsrel,nfnevl,relerr);
+   }
+   if (gDebug) {
+      Info("Integral", "Integral of %s using %d and tol=%f is %f , relerr=%f nfcn=%d", GetName(), maxpts,epsrel,result,relerr,nfnevl);
    }
    return result;
 }
@@ -1014,7 +1017,15 @@ Double_t TF2::Moment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double
       return 0;
    }
 
-   TF2 fnc("TF2_ExpValHelper",Form("%s*pow(x,%f)*pow(y,%f)",GetName(),nx,ny));
+   // define  integrand function as a lambda : g(x,y)=  x^(nx) * y^(ny) * f(x,y)
+   auto integrand = [&](double *x, double *) {
+      return std::pow(x[0], nx) * std::pow(x[1], ny) * this->EvalPar(x, nullptr);
+   };
+   // compute integral of g(x,y)
+   TF2 fnc("TF2_ExpValHelper",integrand,ax,bx,ay,by,0);
+   // set same points as current function to get correct max points when computing the integral
+   fnc.fNpx = fNpx;
+   fnc.fNpy = fNpy;
    return fnc.Integral(ax,bx,ay,by,epsilon)/norm;
 }
 
@@ -1033,14 +1044,30 @@ Double_t TF2::CentralMoment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny,
    Double_t xbar = 0;
    Double_t ybar = 0;
    if (nx!=0) {
-      TF2 fncx("TF2_ExpValHelperx",Form("%s*x",GetName()));
+      // compute first momentum in x
+      auto integrandX = [&](double *x, double *) { return x[0] * this->EvalPar(x, nullptr); };
+      TF2 fncx("TF2_ExpValHelperx",integrandX, ax, bx, ay, by, 0);
+      fncx.fNpx = fNpx;
+      fncx.fNpy = fNpy;
       xbar = fncx.Integral(ax,bx,ay,by,epsilon)/norm;
    }
    if (ny!=0) {
-      TF2 fncx("TF2_ExpValHelpery",Form("%s*y",GetName()));
-      ybar = fncx.Integral(ax,bx,ay,by,epsilon)/norm;
+      // compute first momentum in y
+      auto integrandY = [&](double *x, double *) { return x[1] * this->EvalPar(x, nullptr); };
+      TF2 fncy("TF2_ExpValHelperx", integrandY, ax, bx, ay, by, 0);
+      fncy.fNpx = fNpx;
+      fncy.fNpy = fNpy;
+      ybar = fncy.Integral(ax,bx,ay,by,epsilon)/norm;
    }
-   TF2 fnc("TF2_ExpValHelper",Form("%s*pow(x-%f,%f)*pow(y-%f,%f)",GetName(),xbar,nx,ybar,ny));
-   return fnc.Integral(ax,bx,ay,by,epsilon)/norm;
+   // define  integrand function as a lambda : g(x,y)=  (x-xbar)^(nx) * (y-ybar)^(ny) * f(x,y)
+   auto integrand = [&](double *x, double *) {
+      double xxx = (nx != 0) ? std::pow(x[0] - xbar, nx) : 1.;
+      double yyy = (ny != 0) ? std::pow(x[1] - ybar, ny) : 1.;
+      return xxx * yyy * this->EvalPar(x, nullptr);
+   };
+   // compute integral of g(x,y)
+   TF2 fnc("TF2_ExpValHelper", integrand, ax, bx, ay, by, 0);
+   fnc.fNpx = fNpx;
+   fnc.fNpy = fNpy;
+   return fnc.Integral(ax, bx, ay, by, epsilon) / norm;
 }
-
