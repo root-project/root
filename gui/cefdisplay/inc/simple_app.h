@@ -31,7 +31,12 @@ class THttpServer;
 class RCefWebDisplayHandle;
 
 // Implement application-level callbacks for the browser process.
-class SimpleApp : public CefApp, public CefBrowserProcessHandler /*, public CefRenderProcessHandler */ {
+class SimpleApp : public CefApp,
+#if defined(OS_LINUX)
+                  public CefPrintHandler,
+#endif
+                  /*, public CefRenderProcessHandler */
+                  public CefBrowserProcessHandler {
 protected:
    bool fUseViewes{false};  ///<! is views framework used
    std::string fCefMain;    ///<! extra executable used for additional processes
@@ -54,6 +59,11 @@ public:
 
    // CefApp methods:
    virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE { return this; }
+
+#if defined(OS_LINUX)
+   // only on Linux special print handler is required to return PDF size
+   virtual CefRefPtr<CefPrintHandler> GetPrintHandler() OVERRIDE { return this; }
+#endif
    // virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() OVERRIDE { return this; }
 
    virtual void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) OVERRIDE;
@@ -65,6 +75,17 @@ public:
    OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line) OVERRIDE;
 
    virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) OVERRIDE;
+
+#if defined(OS_LINUX)
+   // CefPrintHandler methods
+   virtual CefSize GetPdfPaperSize(int device_units_per_inch) OVERRIDE { return CefSize(device_units_per_inch*8.25, device_units_per_inch*11.75); }
+   virtual bool OnPrintDialog( CefRefPtr< CefBrowser > browser, bool has_selection, CefRefPtr< CefPrintDialogCallback > callback ) OVERRIDE { return false; }
+   virtual bool OnPrintJob( CefRefPtr< CefBrowser > browser, const CefString& document_name, const CefString& pdf_file_path, CefRefPtr< CefPrintJobCallback > callback ) OVERRIDE { return false; }
+   virtual void OnPrintReset( CefRefPtr< CefBrowser > browser ) OVERRIDE {}
+   virtual void OnPrintSettings( CefRefPtr< CefBrowser > browser, CefRefPtr< CefPrintSettings > settings, bool get_defaults ) OVERRIDE {}
+   virtual void OnPrintStart( CefRefPtr< CefBrowser > browser ) OVERRIDE {}
+#endif
+
 
    void StartWindow(const std::string &url, const std::string &cont, CefRect &rect);
 
