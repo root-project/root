@@ -47,6 +47,8 @@ public:
 
    void SetBrowser(CefRefPtr<CefBrowser> br) { if (IsValid()) fBrowser = br; }
 
+   void CloseBrowser();
+
    bool WaitForContent(int tmout_sec);
 
    static void AddCreator();

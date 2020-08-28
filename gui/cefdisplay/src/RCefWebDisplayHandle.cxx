@@ -54,7 +54,7 @@ public:
 
    virtual ~FrameSourceVisitor() = default;
 
-   void Visit( const CefString& str ) override
+   void Visit(const CefString &str) override
    {
       if (fHandle && fHandle->IsValid())
          fHandle->SetContent(str.ToString());
@@ -85,8 +85,9 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
 
       fCefApp->StartWindow(args.GetFullUrl(), args.GetPageContent(), rect);
 
-      if (args.IsHeadless())
+      if (args.IsHeadless()) {
          handle->WaitForContent(30); // 30 seconds
+      }
 
       return handle;
    }
@@ -182,18 +183,31 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    return handle;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+/// Closes browser window if any
+
 
 RCefWebDisplayHandle::~RCefWebDisplayHandle()
 {
    fValid = kInvalid;
 
+   CloseBrowser();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Closes associated browser window
+
+
+void RCefWebDisplayHandle::CloseBrowser()
+{
    if (fBrowser) {
       auto host = fBrowser->GetHost();
       if (host) host->CloseBrowser(true);
       fBrowser = nullptr;
    }
-
 }
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,6 +237,11 @@ bool RCefWebDisplayHandle::WaitForContent(int tmout_sec)
 
       gSystem->Sleep(10); // only 10 ms sleep
    }
+
+   CloseBrowser();
+
+   // call it once here to complete browser window closing, timer is not installed in batch mode
+   CefDoMessageLoopWork();
 
    return !GetContent().empty();
 }
