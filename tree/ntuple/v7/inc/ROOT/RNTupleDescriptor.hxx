@@ -456,6 +456,7 @@ public:
    DescriptorId_t FindPrevClusterId(DescriptorId_t clusterId) const;
 
    /// Walks up the parents of the field ID and returns a field name of the form a.b.c.d
+   /// In case of invalid field ID, an empty string is returned.
    std::string GetQualifiedFieldName(DescriptorId_t fieldId) const;
 
    /// Re-create the C++ model from the stored meta-data
