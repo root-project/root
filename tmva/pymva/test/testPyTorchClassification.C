@@ -9,96 +9,6 @@
 #include "TMVA/DataLoader.h"
 #include "TMVA/PyMethodBase.h"
 
-TString pythonSrc = "import torch\n\
-from torch import nn\n\
-\n\
-# Define model\n\
-model = nn.Sequential(\n\
-                nn.Linear(4, 64),\n\
-                nn.ReLU(),\n\
-                nn.Linear(64, 2),\n\
-                nn.Softmax(dim=1))\n\
-\n\
-# Construct loss function and Optimizer.\n\
-criterion = torch.nn.MSELoss()\n\
-optimizer = torch.optim.SGD\n\
-\n\
-\n\
-def fit(model, train_loader, val_loader, num_epochs, batch_size, optimizer, criterion, save_best, scheduler):\n\
-    trainer = optimizer(model.parameters(), lr=0.01)\n\
-    schedule, schedulerSteps = scheduler\n\
-    best_val = None\n\
-\n\
-    for epoch in range(num_epochs):\n\
-        # Training Loop\n\
-        # Set to train mode\n\
-        model.train()\n\
-        running_train_loss = 0.0\n\
-        running_val_loss = 0.0\n\
-        for i, (X, y) in enumerate(train_loader):\n\
-            trainer.zero_grad()\n\
-            output = model(X)\n\
-            train_loss = criterion(output, y)\n\
-            train_loss.backward()\n\
-            trainer.step()\n\
-\n\
-            # print train statistics\n\
-            running_train_loss += train_loss.item()\n\
-            if i % 32 == 31:    # print every 32 mini-batches\n\
-                print(f\"[{epoch+1}, {i+1}] train loss: {running_train_loss / 32 :.3f}\")\n\
-                running_train_loss = 0.0\n\
-\n\
-        if schedule:\n\
-            schedule(optimizer, epoch, schedulerSteps)\n\
-\n\
-        # Validation Loop\n\
-        # Set to eval mode\n\
-        model.eval()\n\
-        with torch.no_grad():\n\
-            for i, (X, y) in enumerate(val_loader):\n\
-                output = model(X)\n\
-                val_loss = criterion(output, y)\n\
-                running_val_loss += val_loss.item()\n\
-\n\
-            curr_val = running_val_loss / len(val_loader)\n\
-            if save_best:\n\
-               if best_val==None:\n\
-                   best_val = curr_val\n\
-               best_val = save_best(model, curr_val, best_val)\n\
-\n\
-            # print val statistics per epoch\n\
-            print(f\"[{epoch+1}] val loss: {curr_val :.3f}\")\n\
-            running_val_loss = 0.0\n\
-\n\
-    print(f\"Finished Training on {epoch+1} Epochs!\")\n\
-\n\
-    return model\n\
-\n\
-\n\
-def predict(model, test_X, batch_size=32):\n\
-    # Set to eval mode\n\
-    model.eval()\n\
-   \n\
-    test_dataset = torch.utils.data.TensorDataset(torch.Tensor(test_X))\n\
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)\n\
-\n\
-    predictions = []\n\
-    with torch.no_grad():\n\
-        for i, data in enumerate(test_loader):\n\
-            X = data[0]\n\
-            outputs = model(X)\n\
-            predictions.append(outputs)\n\
-        preds = torch.cat(predictions)\n\
-   \n\
-    return preds.numpy()\n\
-\n\
-\n\
-load_model_custom_objects = {\"optimizer\": optimizer, \"criterion\": criterion, \"train_func\": fit, \"predict_func\": predict}\n\
-\n\
-# Store model to file\n\
-m = torch.jit.script(model)\n\
-torch.jit.save(m,\"PyTorchModelClassification.pt\")\n";
-
 
 int testPyTorchClassification(){
    // Get data file
@@ -111,11 +21,6 @@ int testPyTorchClassification(){
    // Build model from python file
    std::cout << "Generate PyTorch model..." << std::endl;
    UInt_t ret;
-   ret = gSystem->Exec("echo '"+pythonSrc+"' > generatePyTorchModelClassification.py");
-   if(ret!=0){
-       std::cout << "[ERROR] Failed to write python code to file" << std::endl;
-       return 1;
-   }
    ret = gSystem->Exec("python generatePyTorchModelClassification.py");
    if(ret!=0){
        std::cout << "[ERROR] Failed to generate model using python" << std::endl;
