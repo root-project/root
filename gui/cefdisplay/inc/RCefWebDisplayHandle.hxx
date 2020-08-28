@@ -49,7 +49,7 @@ public:
 
    void CloseBrowser();
 
-   bool WaitForContent(int tmout_sec);
+   bool WaitForContent(int tmout_sec, const std::string &extra_args);
 
    static void AddCreator();
 

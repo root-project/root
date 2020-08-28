@@ -67,6 +67,22 @@ private:
 };
 
 
+class HeadlessPrintCallback : public CefPdfPrintCallback {
+   bool *fFlag{nullptr};
+public:
+   HeadlessPrintCallback(bool *flag) : CefPdfPrintCallback(), fFlag(flag) {}
+   virtual ~HeadlessPrintCallback() = default;
+
+   void OnPdfPrintFinished(const CefString&, bool ok ) override
+   {
+      if (fFlag) *fFlag = true;
+   }
+private:
+   // Include the default reference counting implementation.
+   IMPLEMENT_REFCOUNTING(HeadlessPrintCallback);
+   DISALLOW_COPY_AND_ASSIGN(HeadlessPrintCallback);
+};
+
 std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Display(const ROOT::Experimental::RWebDisplayArgs &args)
 {
 
@@ -85,9 +101,8 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
 
       fCefApp->StartWindow(args.GetFullUrl(), args.GetPageContent(), rect);
 
-      if (args.IsHeadless()) {
-         handle->WaitForContent(30); // 30 seconds
-      }
+      if (args.IsHeadless())
+         handle->WaitForContent(30, args.GetExtraArgs()); // 30 seconds
 
       return handle;
    }
@@ -171,7 +186,7 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    CefInitialize(main_args, settings, fCefApp.get(), nullptr);
 
    if (args.IsHeadless()) {
-      handle->WaitForContent(30); // 30 seconds
+      handle->WaitForContent(30, args.GetExtraArgs()); // 30 seconds
    } else {
       // Create timer to let run CEF message loop together with ROOT event loop
       Int_t interval = gEnv->GetValue("WebGui.CefTimer", 10);
@@ -214,24 +229,27 @@ void RCefWebDisplayHandle::CloseBrowser()
 /// Process system events until browser content is available
 /// Used in headless mode for batch production like chrome --dump-dom is doing
 
-bool RCefWebDisplayHandle::WaitForContent(int tmout_sec)
+bool RCefWebDisplayHandle::WaitForContent(int tmout_sec, const std::string &extra_args)
 {
    int expired = tmout_sec * 100;
+   bool did_try = false, print_finished = false;
+   std::string pdffile;
+   if (!extra_args.empty() && (extra_args.find("--print-to-pdf=")==0))
+      pdffile = extra_args.substr(15);
 
-   bool did_try = false;
-
-   while ((--expired > 0) && GetContent().empty()) {
+   while ((--expired > 0) && GetContent().empty() && !print_finished) {
 
       if (gSystem->ProcessEvents()) break; // interrupted, has to return
 
       CefDoMessageLoopWork();
 
-      if (fBrowser && !did_try) {
-         auto frame = fBrowser->GetMainFrame();
-
-         if (frame && fBrowser->HasDocument() && !fBrowser->IsLoading()) {
-            frame->GetSource(new FrameSourceVisitor(this));
-            did_try = true;
+      if (fBrowser && !did_try && fBrowser->HasDocument() && !fBrowser->IsLoading() && fBrowser->GetMainFrame()) {
+         did_try = true;
+         if (pdffile.empty()) {
+            fBrowser->GetMainFrame()->GetSource(new FrameSourceVisitor(this));
+         } else {
+            CefPdfPrintSettings settings;
+            fBrowser->GetHost()->PrintToPDF(pdffile, settings, new HeadlessPrintCallback(&print_finished));
          }
       }
 
