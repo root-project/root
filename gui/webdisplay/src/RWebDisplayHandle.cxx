@@ -681,7 +681,7 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
 
 try_again:
 
-   if (args.GetBrowserKind() == RWebDisplayArgs::kCEF) {
+   if ((args.GetBrowserKind() == RWebDisplayArgs::kCEF) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
       args.SetUrl(""s);
       args.SetPageContent(filecont);
 

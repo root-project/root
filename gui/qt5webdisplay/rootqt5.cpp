@@ -159,7 +159,11 @@ protected:
                load_finished = true; is_error = !is_ok;
             });
 
-            view->load(QUrl(fullurl));
+            const std::string &page_content = args.GetPageContent();
+            if (page_content.empty())
+               view->load(QUrl(fullurl));
+            else
+               view->setHtml(QString::fromUtf8(page_content.data(), page_content.size()), QUrl("file:///batch_page.html"));
 
             // loop here until content is configured
             while ((--expired > 0) && !get_content && !is_error) {
