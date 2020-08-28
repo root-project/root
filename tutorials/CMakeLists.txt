@@ -420,6 +420,16 @@ set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
 set (tmva-tmva101_Training-depends tutorial-tmva-tmva100_DataPreparation-py)
 set (tmva-tmva102_Testing-depends tutorial-tmva-tmva101_Training-py)
 
+#--List long-running tutorials to label them as "longtest"
+set (long_running
+     dataframe/df10[2-7]*
+     multicore/mp103*)
+file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
+#--List multithreaded tutorials to run them serially
+set (multithreaded
+     dataframe/df10[2-7]*
+     multicore/mp103*)
+file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 
 #---Loop over all tutorials and define the corresponding test---------
 
@@ -440,6 +450,14 @@ foreach(t ${tutorials})
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
 
+  set(labels tutorial)
+  if(${t} IN_LIST long_running)
+    list(APPEND labels longtest)
+  endif()
+  if(${t} IN_LIST multithreaded)
+    list(APPEND labels multithreaded)
+  endif()
+
    # These tests on ARM64 need much more than 20 minutes - increase the timeout
    if(ROOT_ARCHITECTURE MATCHES arm64)
      set(thisTestTimeout 2400) # 40m
@@ -450,10 +468,17 @@ foreach(t ${tutorials})
   ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
-                LABELS tutorial
+                LABELS ${labels}
                 DEPENDS tutorial-hsimple ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ}
                 TIMEOUT ${thisTestTimeout})
+
+  if(${t} IN_LIST multithreaded)
+    # Makes sure that this doesn't run in parallel with other multithreaded tutorials, and that cmake doesn't start too
+    # many other tests. That we use 4 processors is actually a lie, because IMT takes whatever it finds.
+    # However, even this poor indication of MT behaviour is a good hint for cmake to reduce congestion.
+    set_tests_properties(tutorial-${tname} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS 4)
+  endif()
 endforeach()
 
 #---Loop over all MPI tutorials and define the corresponding test---------
@@ -571,6 +596,11 @@ if(ROOT_pyroot_FOUND)
       set(rc 255)
     endif()
 
+    set(labels tutorial)
+    if(${t} IN_LIST multithreaded)
+      list(APPEND labels multithreaded)
+    endif()
+
     string(REPLACE ".py" "" tname ${t})
     string(REPLACE "/" "-" tname ${tname})
 
@@ -586,9 +616,16 @@ if(ROOT_pyroot_FOUND)
     ROOT_ADD_TEST(${tutorial_name}
                 COMMAND ${PYTHON_EXECUTABLE_Development_Main} ${CMAKE_CURRENT_SOURCE_DIR}/launcher.py ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
-                LABELS tutorial
+                LABELS ${labels}
                 DEPENDS ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ}
                 ${py_will_fail})
+
+    if(${t} IN_LIST multithreaded)
+      # Makes sure that this doesn't run in parallel with other multithreaded tutorials, and that cmake doesn't start too
+      # many other tests. That we use 4 processors is actually a lie, because IMT takes whatever it finds.
+      # However, even this poor indication of MT behaviour is a good hint for cmake to reduce congestion.
+      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS 4)
+    endif()
   endforeach()
 endif()
