@@ -143,21 +143,29 @@ protected:
 
          RootWebView *view = new RootWebView(qparent, args.GetWidth(), args.GetHeight(), args.GetX(), args.GetY());
 
-         if (!qparent) handle->fView = view;
-
          if (!args.IsHeadless()) {
+            if (!qparent) handle->fView = view;
             view->load(QUrl(fullurl));
             view->show();
          } else {
 
-            int tmout_sec = 30;
-            int expired = tmout_sec * 100;
+            int tmout_sec = 30, expired = tmout_sec * 100;
             bool load_finished = false, did_try = false, get_content = false, is_error = false;
-            std::string content;
+            std::string content, pdffile;
+
+            if (!args.GetExtraArgs().empty() && (args.GetExtraArgs().find("--print-to-pdf=")==0))
+               pdffile = args.GetExtraArgs().substr(15);
 
             QObject::connect(view, &RootWebView::loadFinished, [&load_finished, &is_error](bool is_ok) {
                load_finished = true; is_error = !is_ok;
             });
+
+            #if QT_VERSION >= 0x050900
+            if (!pdffile.empty())
+               QObject::connect(view->page(), &RootWebPage::pdfPrintingFinished, [&expired, &is_error](const QString &, bool is_ok) {
+                  expired = 0; is_error = !is_ok;
+               });
+            #endif
 
             const std::string &page_content = args.GetPageContent();
             if (page_content.empty())
@@ -175,10 +183,18 @@ protected:
 
                if (load_finished && !did_try) {
                   did_try = true;
-                  view->page()->toHtml([&get_content, &content](const QString& res) {
-                     get_content = true;
-                     content = res.toLatin1().constData();
-                  });
+
+                  if (pdffile.empty()) {
+                     view->page()->toHtml([&get_content, &content](const QString& res) {
+                        get_content = true;
+                        content = res.toLatin1().constData();
+                     });
+                  } else {
+                     view->page()->printToPdf(QString::fromUtf8(pdffile.data(), pdffile.size()));
+                     #if QT_VERSION < 0x050900
+                     expired = 5; // no signal will be produced, just wait short time and break loop
+                     #endif
+                  }
                }
 
                gSystem->Sleep(10); // only 10 ms sleep
@@ -186,6 +202,15 @@ protected:
 
             if(get_content)
                handle->SetContent(content);
+
+            // delete view and process events
+            delete view;
+
+            for (expired=0;expired<100;++expired) {
+               QApplication::sendPostedEvents();
+               QApplication::processEvents();
+            }
+
          }
 
          return handle;
@@ -199,7 +224,10 @@ public:
    virtual ~RQt5WebDisplayHandle()
    {
       // now view can be safely destroyed
-      if (fView) delete fView;
+      if (fView) {
+         delete fView;
+         fView = nullptr;
+      }
    }
 
    static void AddCreator()

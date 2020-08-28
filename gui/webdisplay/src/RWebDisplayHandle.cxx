@@ -661,6 +661,19 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
    if ((args.GetBrowserKind() != RWebDisplayArgs::kCEF) && (args.GetBrowserKind() != RWebDisplayArgs::kQt5))
       args.SetBrowserKind(RWebDisplayArgs::kChrome);
 
+   // check capability of configured web display
+   if (draw_kind == "draw") {
+      if (EndsWith(".pdf") && (args.GetBrowserKind() == RWebDisplayArgs::kCEF)) {
+         R__ERROR_HERE("CanvasPainter") << "CEF do not support saving into PDF file";
+         return false;
+      }
+
+      if (EndsWith("shot.png") && (args.GetBrowserKind() != RWebDisplayArgs::kChrome)) {
+         // there is no direct screenshot in CEF or Qt5, therefore using normal PNG output
+         draw_kind = "png";
+      }
+   }
+
    TString dump_name;
    if ((draw_kind != "draw") && (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
       dump_name = "canvasdump";
