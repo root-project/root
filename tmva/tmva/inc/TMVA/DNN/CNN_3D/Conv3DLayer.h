@@ -58,7 +58,6 @@ public:
    size_t filterHeight;  ///< The height of the filter.
    size_t filterWidth;   ///< The width of the filter.
    size_t filterDepth;   ///< The depth of the filter
-   size_t filter4D;      ///< Same as input4D
 
    size_t strideX;    ///< The number of row pixels to slid the filter each step.
    size_t strideY;    ///< The number of column pixels to slid the filter each step.
@@ -69,11 +68,24 @@ public:
    size_t paddingDepth;  ///< The number of zero layers front and back of the input.
 
 
+   size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride)
+   {
+      size_t temp = imgDim - fltDim + 2 * padding;
+      if (temp % stride || temp + stride <= 0) {
+        Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, padding, stride) "
+        "%zu, %zu, %zu, %zu", imgDim, fltDim, padding, stride);
+      }
+      return temp / stride + 1;
+   }
+
+
    TConv3DParams(size_t _batchSize, size_t _inputDepth, size_t _inputHeight, size_t _inputWidth, size_t _input4D, size_t _output4D,
                size_t _filterHeight, size_t _filterWidth, size_t _filterDepth, size_t _strideX, size_t _strideY, size_t _strideZ,
                size_t _paddingHeight, size_t _paddingWidth, size_t _paddingDepth)
              : batchSize(_batchSize), inputDepth(_inputDepth), inputHeight(_inputHeight), inputWidth(_inputWidth), input4D(_input4D),
-               output4D(_output4D), filterHeight(_filterHeight), filterWidth(_filterWidth), filterDepth(_filterDepth),
+               outputDepth(calculateDimension(_inputDepth, _filterDepth, _paddingDepth, _strideZ)), 
+               outputHeight(calculateDimension(_inputHeight, _filterHeight, _paddingHeight, _strideX)), outputWidth(calculateDimension(_inputWidth, _filterWidth, _paddingWidth, _strideY)), 
+               output4D(_output4D), numberFilters(_output4D), filterHeight(_filterHeight), filterWidth(_filterWidth), filterDepth(_filterDepth), 
                strideX(_strideX), strideY(_strideY), strideZ(_strideZ), paddingHeight(_paddingHeight),
                paddingWidth(_paddingWidth), paddingDepth(_paddingDepth)
    {}

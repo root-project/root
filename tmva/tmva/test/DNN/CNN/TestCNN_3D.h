@@ -176,7 +176,7 @@ auto testConvLayerForward(const typename Architecture::Tensor_t &input,
     typename Architecture::Tensor_t computedDerivatives(batchSize, nRows, nCols);
 
 
-   TConv3DParams params(1, inputDepth, inputHeight, inputWidth, nRows, output4D,
+   TConv3DParams params(1, inputDepth, inputHeight, inputWidth, input4D, output4D,
                        fltHeight, fltWidth, fltDepth, strideRows, strideCols, strideCols, 
                        zeroPaddingHeight, zeroPaddingWidth, zeroPaddingDepth);
 
@@ -260,7 +260,7 @@ void test_func()
            {0}
    };
 
-   double expected[][8] = {
+   double expected_cnn[][8] = {
 
            {24, 32, 48, 56, 24, 32, 48, 56},
 
@@ -268,13 +268,12 @@ void test_func()
     };
 
 
-
    size_t input4D = 2;
    size_t imgDepth = 3;
    size_t imgHeight = 3;
    size_t imgWidth = 3;
    size_t numberFilters = 2;
-   // size_t output4D = 2;
+   size_t output4D = 2;
    size_t fltHeight = 2;
    size_t fltWidth = 2;
    size_t fltDepth = 2;
@@ -307,26 +306,29 @@ void test_func()
     size_t width =  (imgWidth - fltWidth + 2 * zeroPaddingWidth) / strideCols + 1;
     size_t depth =  (imgDepth - fltDepth + 2 * zeroPaddingDepth) / strideDepth + 1;
 
-   Matrix_t outputEvent(numberFilters, height * width * depth);
+   Matrix_t output_cnn(numberFilters, height * width * depth);
 
    for (size_t i = 0; i < numberFilters; i++) {
       for (size_t j = 0; j < height * width * depth; j++) {
-         outputEvent(i, j) = expected[i][j];
+         output_cnn(i, j) = expected_cnn[i][j];
       }
    }
-   Tensor_t expectedOutput (outputEvent, 3);
+   Tensor_t expectedOutput_cnn (output_cnn, 3);
    
 
    // conv3d forward pass
    bool status = false; 
-   std::cout << "Testing Conv 3D forward pass" << std::endl;
-   status = testConvLayerForward<Architecture>(input, expectedOutput, weightsMatrix, biasesMatrix, imgHeight,
+   std::cout << "************Testing Conv 3D forward pass************" << std::endl;
+   status = testConvLayerForward<Architecture>(input, expectedOutput_cnn, weightsMatrix, biasesMatrix, imgHeight,
                                                     imgWidth, imgDepth, fltHeight, fltWidth, fltDepth, strideRows,
                                                     strideCols, strideDepth, zeroPaddingHeight, zeroPaddingWidth, zeroPaddingDepth);
    if(status)
    		std::cout << "Forward test passed" << std::endl;
    else
-   		std::cout << "Forward pass test failed" << std::endl << std::endl;
+   		std::cout << "Forward test failed" << std::endl ;
+
+    std::cout<< std::endl << std::endl;
+
 
 
 
@@ -350,7 +352,7 @@ void test_func()
   Tensor_t expectedOutput_maxpool (output_maxpool, 3);
 
   Tensor_t index(1, input4D, height * width * depth);  
-  std::cout << "Testing MaxPool 3D forward pass" << std::endl;
+  std::cout << "************Testing MaxPool 3D forward pass************" << std::endl;
   status = testMaxPoolLayerForward<Architecture>(input, expectedOutput_maxpool, index, imgHeight,
                                                     imgWidth, imgDepth, fltHeight, fltWidth, fltDepth, strideRows,
                                                     strideCols, strideDepth);
@@ -358,10 +360,97 @@ void test_func()
   if(status)
     std::cout << "Forward test passed" << std::endl;
   else
-    std::cout << "Forward pass test failed" << std::endl << std::endl;
+    std::cout << "Forward pass test failed" << std::endl ;
+
+  std::cout << std::endl << std::endl;
+
+
+
+
+  // CNN 3D backward pass
+
+  std::cout << "************Testing Conv 3D backward pass************" << std::endl;
+
+
+  // wrt to input, dl/dI
+  Tensor_t activationGradientsBackward(input);
+  Matrix_t weightGradients(weightsMatrix);
+  Matrix_t biasGradients(biasesMatrix);
+
+  // o/p without activation, basically expected_o/p
+  Tensor_t activationsBackward(expectedOutput_cnn);
+
+  Matrix_t tmp(input4D, height * width * depth);
+  for (size_t i = 0; i < output4D; i++) {
+    for (size_t j = 0; j < height * width * depth; j++) {
+         tmp(i, j) = 1;
+    }
+  }
+
+  for (size_t i = 0; i < input4D; i++) {
+    for (size_t j = 0; j < imgHeight * imgWidth * imgDepth; j++) {
+         activationGradientsBackward(0, i, j) = 0;
+    }
+  }
+  
+  TDescriptors * convDescriptors = nullptr;
+  TWorkspace   * convWorkspace   = nullptr;
+
+  // need to provide this, all 1's for now
+  Tensor_t activationGradients(tmp, 3);
+
+  TConv3DParams params(1, imgHeight, imgWidth, imgDepth, input4D, output4D,
+                       fltHeight, fltWidth, fltDepth, strideRows, strideCols, strideCols, 
+                       zeroPaddingHeight, zeroPaddingWidth, zeroPaddingDepth);
+
+  Architecture::Conv3DLayerBackward(activationGradientsBackward,
+                      weightGradients, biasGradients,
+                      input,
+                      activationGradients,
+                      weightsMatrix,
+                      activationsBackward,
+                      expectedOutput_cnn,
+                      EActivationFunction::kIdentity,
+                     (typename Architecture::ConvDescriptors_t &) *convDescriptors,
+                      (typename Architecture::ConvWorkspace_t &) *convWorkspace,
+                      params);
+
+    Architecture::PrintTensor(activationGradientsBackward,"activationGradientsBackward");
+    Architecture::PrintTensor(weightGradients,"weightGradients");
+    Architecture::PrintTensor(biasGradients,"biasGradients");
+    std::cout << std::endl << std::endl;
+
+
+
+
+
+    // MaxPool 3D backward pass
+
+    std::cout << "************Testing MaxPool3D 3D backward pass************" << std::endl;
+
+    for (size_t i = 0; i < input4D; i++) {
+      for (size_t j = 0; j < imgHeight * imgWidth * imgDepth; j++) {
+           activationGradientsBackward(0, i, j) = 0;
+      }
+    }
+
+    height = (imgHeight - fltHeight ) / strideRows + 1;
+    width =  (imgWidth  - fltWidth ) / strideCols + 1;
+    depth =  (imgDepth  - fltDepth ) / strideDepth + 1;
+
+    Architecture::MaxPoolLayer3DBackward(activationGradientsBackward, activationGradients, index,
+                              input, expectedOutput_maxpool, 
+                             (typename Architecture::PoolingDescriptors_t &) *convDescriptors,
+                              (typename Architecture::PoolingWorkspace_t &) *convWorkspace,
+                              imgHeight, imgWidth, fltHeight, fltWidth,  strideRows,
+                              strideCols, height*width*depth);
+
+
+    Architecture::PrintTensor(activationGradientsBackward,"activationGradientsBackward");
+
+
+  // MaxPool3D Backward Pass test
 }
-
-
 
 
 #endif

@@ -527,11 +527,16 @@ void TCpu<AFloat>::ConvLayerBackward(TCpuTensor<AFloat> &activationGradientsBack
                                      size_t filterDepth, size_t filterHeight,
                                      size_t filterWidth, size_t nLocalViews)
 {
-   // Update derivatives
-   //    size_t m, n;
-   //    m = activationGradients[0].GetNrows();
-   //    n = activationGradients[0].GetNcols();
 
+   // The names are indeed confusing, could have been much better
+   // O' = Conv_W * I,    O = f(O')
+   // activ_grad_back:  dL/dI
+   // weight/bias grad: dL/dw, dL/db
+   // activ_grad: dL/dO
+   // df: dL/dO'
+   // outputTensor: O
+   // actvBackward: O'
+   // inpuActvFunction:
 
    // Compute activation backward pass  dx = f'(x) * dy
    //  put resulting dx of activation in activationgradients
@@ -783,12 +788,13 @@ void TCpu<AFloat>::CalculateConv3DActivationGradients(TCpuTensor<AFloat> &activa
 
 
    activationGradientsBackward.Zero();
-   // Calcu
 
 
    TCpuMatrix<AFloat> rotWeights(params.input4D, params.output4D * params.filterDepth * params.filterHeight * params.filterWidth);
    RotateWeights3D(rotWeights, weights, params.filterDepth, params.filterHeight, params.filterWidth, weights.GetNrows(), params.input4D);
-   //TMVA_DNN_PrintTCpuMatrix(rotWeights,"rot-weights");
+   
+   // TMVA_DNN_PrintTCpuMatrix(weights,"weights");
+   // TMVA_DNN_PrintTCpuMatrix(rotWeights,"rot-weights");
 
 
    // Calculate the zero paddings so that convolution on ouput map with stride 1 gives input dim
@@ -798,11 +804,16 @@ void TCpu<AFloat>::CalculateConv3DActivationGradients(TCpuTensor<AFloat> &activa
 
    // Calculate the number of local views and the number of pixles in each view
    size_t tempNLocalViews = params.inputHeight * params.inputWidth * params.inputDepth;
-   size_t tempNLocalViewPixels = params.input4D * params.filterHeight * params.filterWidth * params.filterDepth;
+   size_t tempNLocalViewPixels = params.output4D * params.filterHeight * params.filterWidth * params.filterDepth;
 
    size_t tempStrideX = 1;
    size_t tempStrideY = 1;
    size_t tempStrideZ = 1;
+
+
+   // std::cout << " HI " << tempZeroPaddingHeight << "  " << tempZeroPaddingWidth << " " <<tempZeroPaddingWidth << std:: endl;
+   // std::cout << " HI " << params.outputHeight << "  " << params.outputWidth << " " << params.outputDepth<< std:: endl;
+
 
     //for (size_t i = 0; i < batchSize; i++) {
     R__ASSERT(params.batchSize == df.GetFirstSize() );
@@ -813,7 +824,7 @@ void TCpu<AFloat>::CalculateConv3DActivationGradients(TCpuTensor<AFloat> &activa
        //       tempZeroPaddingHeight, tempZeroPaddingWidth);
 
       TCpuMatrix<AFloat> dfTr(tempNLocalViews, tempNLocalViewPixels);
-      Im2col3D(dfTr, df.At(i).GetMatrix(), params.inputHeight, params.inputWidth, params.inputDepth, params.filterHeight,
+      Im2col3D(dfTr, df.At(i).GetMatrix(), params.outputHeight, params.outputWidth, params.outputDepth, params.filterHeight,
                  params.filterWidth, params.filterDepth, tempStrideX, tempStrideY, tempStrideZ, tempZeroPaddingHeight, tempZeroPaddingWidth,tempZeroPaddingDepth);
 
        //TMVA_DNN_PrintTCpuMatrix(df[i],"df[i]");
@@ -821,6 +832,7 @@ void TCpu<AFloat>::CalculateConv3DActivationGradients(TCpuTensor<AFloat> &activa
 
       Matrix_t agb_m = activationGradientsBackward.At(i).GetMatrix();
       MultiplyTranspose(agb_m, rotWeights, dfTr);
+
 
        //TMVA_DNN_PrintTCpuMatrix(activationGradientsBackward[i],"activGrad-result");
 
@@ -838,25 +850,26 @@ void TCpu<AFloat>::CalculateConv3DWeightGradients(TCpuMatrix<AFloat> &weightGrad
 {
    // reinitialize the weight gradients to 0
    weightGradients.Zero();
+   const size_t filterSize = params.filterDepth * params.filterHeight * params.filterWidth;
 
-   const size_t filterSize       =  params.filterHeight * params.filterWidth  * params.filterDepth;
-   const size_t nLocalViewPixels =  params.input4D * params.filterHeight * params.filterWidth * params.filterDepth;
-   R__ASSERT( weightGradients.GetNcols() == params.filterDepth * params.filterHeight * params.filterWidth);
+   //const size_t filterSize       =  params.filterHeight * params.filterWidth  * params.filterDepth;
+   R__ASSERT( weightGradients.GetNcols() == params.input4D * params.filterDepth * params.filterHeight * params.filterWidth);
 
+
+   
    const size_t tempStrideX = 1;
    const size_t tempStrideY = 1;
    const size_t tempStrideZ = 1;
 
-   // Calculate the zero paddings from the input height and width, so that conv with input gives output
+   // Calculate the zero paddings such that conv with input with strid 1  and ouput size gives filter size
    const size_t tempZeroPaddingHeight = (params.outputHeight - params.inputHeight + params.filterHeight - 1) / 2;
    const size_t tempZeroPaddingWidth  = (params.outputWidth  - params.inputWidth  + params.filterWidth  - 1) / 2;
    const size_t tempZeroPaddingDepth  = (params.outputDepth  - params.inputDepth  + params.filterDepth  - 1) / 2;
 
-    // nLocalViews
-   size_t height = calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideX);
-   size_t width  = calculateDimension(params.inputWidth,  params.filterWidth,  params.paddingWidth,  params.strideY);
-   size_t depth  = calculateDimension(params.inputDepth,  params.filterDepth,  params.paddingDepth,  params.strideZ);
-   size_t nLocalViews = height * width * depth;
+
+   size_t nLocalViews = params.filterDepth * params.filterHeight * params.filterWidth;
+   size_t nLocalViewPixels =  params.input4D * params.outputHeight * params.outputWidth * params.outputDepth;
+
 
    // convolution
    // std::vector<int> vIndices(nLocalViews * nLocalViewPixels );
@@ -872,12 +885,15 @@ void TCpu<AFloat>::CalculateConv3DWeightGradients(TCpuMatrix<AFloat> &weightGrad
    //    //TMVA_DNN_PrintTCpuMatrix(activationsBackward[i],"df");
 
    //}
-   //TCpuTensor<AFloat> vres( { batchSize, depth, nLocalViewPIxels} );
-   TCpuTensor<AFloat> vres( params.batchSize, params.output4D, nLocalViewPixels);
+   // TCpuTensor<AFloat> vres( { batchSize, depth, nLocalViewPIxels} );
+   // TCpuTensor<AFloat> vres( batchSize, depth, nLocalViewPixels);
+   // std::cout << " HI " << params.batchSize << "  " << params.output4D << " " << nLocalViewPixels << std:: endl;
+   TCpuTensor<AFloat> vres( params.batchSize, params.output4D, nLocalViewPixels );
 
    auto fmap = [&](int i) {
 
       //TMVA_DNN_PrintTCpuMatrix(df[i],"df-i");
+
       TCpuMatrix<AFloat> xTr(nLocalViews, nLocalViewPixels);
       TCpuMatrix<AFloat> res(params.output4D, nLocalViewPixels);
 
@@ -888,9 +904,9 @@ void TCpu<AFloat>::CalculateConv3DWeightGradients(TCpuMatrix<AFloat> &weightGrad
       // Im2col(xTr, const_cast<TCpuMatrix<AFloat> &>(activationsBackward[i]), inputHeight, inputWidth, filterHeight , filterWidth,
       //        tempStrideRows, tempStrideCols, tempZeroPaddingHeight, tempZeroPaddingWidth);
 
+
       Im2col3D(xTr, activationsBackward.At(i).GetMatrix(), params.inputHeight, params.inputWidth, params.inputDepth, params.filterHeight,
                  params.filterWidth, params.filterDepth, tempStrideX, tempStrideY, tempStrideZ, tempZeroPaddingHeight, tempZeroPaddingWidth, tempZeroPaddingDepth);
-
 
 
       //std::cout << "doing im2colfast" << std::endl;
@@ -898,11 +914,13 @@ void TCpu<AFloat>::CalculateConv3DWeightGradients(TCpuMatrix<AFloat> &weightGrad
       //TMVA_DNN_PrintTCpuMatrix(activationsBackward[i],"actbackward-i");
       Matrix_t mres = vres.At(i).GetMatrix();
       Multiply( mres, df.At(i).GetMatrix(), xTr);
+
       //TMVA_DNN_PrintTCpuMatrix(vres[i],"res_ofMT");
 
       return;
       //return res;
    };
+
 
    TCpuMatrix<AFloat>::GetThreadExecutor().Foreach(fmap, ROOT::TSeqI( params.batchSize ) );
 
