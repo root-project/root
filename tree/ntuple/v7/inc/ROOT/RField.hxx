@@ -248,7 +248,7 @@ can be read or written.
 class RFieldFuse {
 public:
    static void Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field);
-   /// Connect the fields columns and all sub field columns
+   /// Connect the field columns and all sub field columns
    static void ConnectRecursively(DescriptorId_t fieldId, RPageSource &pageSource, RFieldBase &field);
 };
 
