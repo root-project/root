@@ -21,6 +21,7 @@
 #include "TColor.h"
 #include "TVirtualFitter.h"
 #include "TVirtualHistPainter.h"
+#include "Math/IntegratorOptions.h"
 #include <cassert>
 
 ClassImp(TF3);
@@ -458,11 +459,14 @@ Double_t TF3::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    b[2] = bz;
    Double_t relerr  = 0;
    Int_t n = 3;
-   Int_t maxpts = TMath::Min(100000, 20*fNpx*fNpy*fNpz);
-   Int_t nfnevl,ifail;
+   Int_t maxpts = TMath::Max(UInt_t(fNpx * fNpy * fNpz), ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls());
+   Int_t nfnevl, ifail;
    Double_t result = IntegralMultiple(n,a,b,maxpts,epsrel,epsrel, relerr,nfnevl,ifail);
    if (ifail > 0) {
-      Warning("Integral","failed code=%d, maxpts=%d, epsrel=%g, nfnevl=%d, relerr=%g ",ifail,maxpts,epsrel,nfnevl,relerr);
+      Warning("Integral","failed for %s code=%d, maxpts=%d, epsrel=%g, nfnevl=%d, relerr=%g ",GetName(),ifail,maxpts,epsrel,nfnevl,relerr);
+   }
+   if (gDebug) {
+      Info("Integral","Integral of %s using %d and tol=%f is %f , relerr=%f nfcn=%d",GetName(),maxpts,epsrel,result,relerr,nfnevl);
    }
    return result;
 }
@@ -712,8 +716,17 @@ Double_t TF3::Moment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double
       return 0;
    }
 
-   TF3 fnc("TF3_ExpValHelper",Form("%s*pow(x,%f)*pow(y,%f)*pow(z,%f)",GetName(),nx,ny,nz));
-   return fnc.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
+   // define  integrand function as a lambda : g(x,y,z)=  x^(nx) * y^(ny) * z^(nz) * f(x,y,z)
+   auto integrand = [&](double *x, double *) {
+      return std::pow(x[0], nx) * std::pow(x[1], ny) * std::pow(x[2], nz) * this->EvalPar(x, nullptr);
+   };
+   // compute integral of g(x,y,z)
+   TF3 fnc("TF3_ExpValHelper", integrand, ax, bx, ay, by, az, bz, 0);
+   // set same points as current function to get correct max points when computing the integral
+   fnc.fNpx = fNpx;
+   fnc.fNpy = fNpy;
+   fnc.fNpz = fNpz;
+   return fnc.Integral(ax, bx, ay, by, az, bz, epsilon) / norm;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -732,18 +745,41 @@ Double_t TF3::CentralMoment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny,
    Double_t ybar = 0;
    Double_t zbar = 0;
    if (nx!=0) {
-      TF3 fncx("TF3_ExpValHelperx",Form("%s*x",GetName()));
-      xbar = fncx.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
+      // compute first momentum in x
+      auto integrandX = [&](double *x, double *) { return x[0] * this->EvalPar(x, nullptr); };
+      TF3 fncx("TF3_ExpValHelperx", integrandX, ax, bx, ay, by, az, bz, 0);
+      fncx.fNpx = fNpx;
+      fncx.fNpy = fNpy;
+      fncx.fNpz = fNpz;
+      xbar = fncx.Integral(ax, bx, ay, by, az, bz, epsilon) / norm;
    }
    if (ny!=0) {
-      TF3 fncy("TF3_ExpValHelpery",Form("%s*y",GetName()));
+      auto integrandY = [&](double *x, double *) { return x[1] * this->EvalPar(x, nullptr); };
+      TF3 fncy("TF3_ExpValHelpery", integrandY, ax, bx, ay, by, az, bz, 0);
+      fncy.fNpx = fNpx;
+      fncy.fNpy = fNpy;
+      fncy.fNpz = fNpz;
       ybar = fncy.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
    }
    if (nz!=0) {
-      TF3 fncz("TF3_ExpValHelperz",Form("%s*z",GetName()));
+      auto integrandZ = [&](double *x, double *) { return x[2] * this->EvalPar(x, nullptr); };
+      TF3 fncz("TF3_ExpValHelperz", integrandZ, ax, bx, ay, by, az, bz, 0);
+      fncz.fNpx = fNpx;
+      fncz.fNpy = fNpy;
+      fncz.fNpz = fNpz;
       zbar = fncz.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
    }
-   TF3 fnc("TF3_ExpValHelper",Form("%s*pow(x-%f,%f)*pow(y-%f,%f)*pow(z-%f,%f)",GetName(),xbar,nx,ybar,ny,zbar,nz));
+   // define  integrand function as a lambda : g(x,y)=  (x-xbar)^(nx) * (y-ybar)^(ny) * f(x,y)
+   auto integrand = [&](double *x, double *) {
+      double xxx = (nx != 0) ? std::pow(x[0] - xbar, nx) : 1.;
+      double yyy = (ny != 0) ? std::pow(x[1] - ybar, ny) : 1.;
+      double zzz = (nz != 0) ? std::pow(x[2] - zbar, nz) : 1.;
+      return xxx * yyy * zzz * this->EvalPar(x, nullptr);
+   };
+   // compute integral of g(x,y, z)
+   TF3 fnc("TF3_ExpValHelper",integrand,ax,bx,ay,by,az,bz,0) ;
+   fnc.fNpx = fNpx;
+   fnc.fNpy = fNpy;
+   fnc.fNpz = fNpz;
    return fnc.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
 }
-
