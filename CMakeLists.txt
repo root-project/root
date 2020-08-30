@@ -528,7 +528,12 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   if(webgui)
      install(DIRECTORY ui5/    DESTINATION ${CMAKE_INSTALL_OPENUI5DIR})
   endif()
-  install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR})
+  if(xproofd AND xrootd AND ssl)
+     set(MAN_PATT_EXCL)
+  else()
+     set(MAN_PATT_EXCL PATTERN xproofd.1 EXCLUDE)
+  endif()
+  install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR} ${MAN_PATT_EXCL})
   install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
   install(FILES
     cmake/modules/RootMacros.cmake
