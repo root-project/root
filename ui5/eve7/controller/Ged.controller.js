@@ -308,8 +308,81 @@ sap.ui.define([
 
       buildREveDataCollectionSetter : function(el)
       {
-         this.buildREveElementSetter(el);
-         this.makeStringSetter(el.fFilterExpr, "FilterExpr");
+         let pthis = this;
+         let gedFrame =  this.getView().byId("GED");
+
+         let thl = new HorizontalLayout();
+         this.makeColorSetter(el.fMainColor, "", "SetMainColorRGB", thl);
+         this.makeStringSetter(el.fFilterExpr, "FilterExpr", "SetFilterExpr", thl);
+         gedFrame.addContent(thl);
+
+         gedFrame.addContent(  new sap.ui.core.HTML({content:"<hr/>"}));
+         let list = new sap.m.List({});
+
+         let items = el.items;
+         for (let i = 0; i < items.length; ++i ) {
+            let iid = "item_"+ i;
+	    var item  = new sap.m.CustomListItem( iid, {type:sap.m.ListType.Active});
+
+            // item info
+	    let label = new sap.m.Label({text: iid});
+            label.addStyleClass("sapUiSmallMarginTop");
+            label.removeStyleClass("li");           
+
+            // rnr self
+	    let rb = new mCheckBox({
+               selected: items[i].fRnrSelf,
+               text: "RnrSelf",
+               select: function(oEvent)
+               {
+                  let value = oEvent.getSource().getSelected();
+                  let mir =  "SetItemVisible( " + i + ", " + value + " )";
+                  pthis.mgr.SendMIR(mir, el.fElementId, el._typename );
+               }
+            });
+            rb.addStyleClass("sapUiTinyMargin");
+
+            let col_widget = new EVEColorButton( {
+               text : "itemcolor",
+               background: JSROOT.Painter.root_colors[items[i].fColor],
+               press: function () {
+                  let oCPPop = new EVEColorPopup( {
+                     colorSelect: function(event) {
+                        let rgb = this.parseRGB(event.getParameters().value);
+                        let mir = "SetItemColorRGB(" + i + ", " + rgb.r + ", " + rgb.g +  ", " + rgb.b + ")";
+                        pthis.mgr.SendMIR(mir, el.fElementId, el._typename );
+                        console.log("color mir -  .... ", mir);
+                     }
+                  });
+                  oCPPop.openBy(this);
+               }
+            });
+            col_widget.addStyleClass("sapUiTinyMargin");
+
+
+            let box = new sap.m.HBox({
+               items : [ label, rb, col_widget ]
+            });
+
+
+            item.addContent(box);
+
+            item.attachPress(function(oEvent) {
+               console.log("Cell click: ", oEvent.getParameters(), oEvent);
+               console.log("amt clicj ", iid);
+               let esrc = oEvent.getSource();
+               if (esrc.hasStyleClass("eve_selected_item")) {
+                  oEvent.getSource().removeStyleClass("eve_selected_item");
+
+               }
+               else
+                  oEvent.getSource().addStyleClass("eve_selected_item");
+
+            });
+            list.addItem(item);
+
+	 }
+         gedFrame.addContent(list);
       },
 
       buildREveCaloDataHistSetter : function(el)
