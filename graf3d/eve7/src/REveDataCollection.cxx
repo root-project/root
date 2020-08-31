@@ -45,12 +45,10 @@ REveDataCollection::REveDataCollection(const std::string& n, const std::string& 
    _handler_func_ids = 0;
 }
 
-void REveDataCollection::AddItem(void *data_ptr, const std::string& n, const std::string& t)
+void REveDataCollection::AddItem(void *data_ptr, const std::string& /*n*/, const std::string& /*t*/)
 {
-   auto el = new REveDataItem(n, t);
-   AddElement(el);
-   el->SetMainColor(GetMainColor());
-   fItems.emplace_back(data_ptr, el);
+   auto el = new REveDataItem(data_ptr, GetMainColor());
+   fItems.emplace_back(el);
 }
 
 //------------------------------------------------------------------------------
@@ -87,11 +85,11 @@ void REveDataCollection::ApplyFilter()
    int idx = 0;
    for (auto &ii : fItems)
    {
-      bool res = fFilterFoo(ii.fDataPtr);
+      bool res = fFilterFoo(ii->fDataPtr);
 
       // printf("Item:%s -- filter result = %d\n", ii.fItemPtr->GetElementName(), res);
 
-      ii.fItemPtr->SetFiltered( ! res );
+      ii->SetFiltered( ! res );
 
       ids.push_back(idx++);
    }
@@ -101,9 +99,8 @@ void REveDataCollection::ApplyFilter()
 
 //______________________________________________________________________________
 
-Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
-{
-   struct PubMethods
+void  REveDataCollection::StreamPublicMethods(nlohmann::json &j)
+{   struct PubMethods
    {
       void FillJSON(TClass* c, nlohmann::json & arr)
       {
@@ -162,12 +159,28 @@ Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          }
       }
    };
-
-   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
-   j["fFilterExpr"] = fFilterExpr.Data();
    j["fPublicFunctions"]  = nlohmann::json::array();
    PubMethods pm;
    pm.FillJSON(fItemClass, j["fPublicFunctions"]);
+}
+
+//______________________________________________________________________________
+
+Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+
+
+   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
+   j["fFilterExpr"] = fFilterExpr.Data();
+   j["items"] =  nlohmann::json::array();
+   for (auto & chld : fItems)
+   {
+      nlohmann::json i;
+      i["fFiltered"] = chld->fFiltered;
+      i["fRnrSelf"] = chld->fRnrSelf;
+      i["fColor"] = chld->fColor;
+      j["items"].push_back(i);
+   }
 
    return ret;
 }
@@ -178,7 +191,7 @@ void REveDataCollection::SetMainColor(Color_t newv)
 {
    int idx = 0;
    Ids_t ids;
-   for (auto & chld : fChildren)
+   for (auto & chld : fItems)
    {
       chld->SetMainColor(newv);
       ids.push_back(idx);
@@ -186,8 +199,12 @@ void REveDataCollection::SetMainColor(Color_t newv)
    }
 
    REveElement::SetMainColor(newv);
-   // printf("REveDataCollection::SetCollectionColorRGB color ched to %d ->%d\n", oldv, GetMainColor());
-    if ( _handler_func_ids) _handler_func_ids( this , ids);
+   for (auto & chld : fItems)
+   {
+      chld->fColor = newv;
+   }
+
+   if ( _handler_func_ids) _handler_func_ids( this , ids);
 }
 
 //______________________________________________________________________________
@@ -195,12 +212,10 @@ void REveDataCollection::SetMainColor(Color_t newv)
 Bool_t REveDataCollection::SetRnrState(Bool_t iRnrSelf)
 {
    Bool_t ret = REveElement::SetRnrState(iRnrSelf);
-
    Ids_t ids;
-
    for (int i = 0; i < GetNItems(); ++i ) {
       ids.push_back(i);
-      GetDataItem(i)->SetRnrSelf(fRnrSelf);
+      fItems[i]->SetRnrSelf(fRnrSelf);
    }
 
    _handler_func_ids( this , ids);
@@ -208,7 +223,24 @@ Bool_t REveDataCollection::SetRnrState(Bool_t iRnrSelf)
    return ret;
 }
 
+//______________________________________________________________________________
 
+void REveDataCollection::SetItemVisible(Int_t idx, Bool_t visible)
+{
+   fItems[idx]->fRnrSelf = visible;
+   ItemChanged(idx);
+   StampObjProps();
+}
+
+//______________________________________________________________________________
+
+void REveDataCollection::SetItemColorRGB(Int_t idx, UChar_t r, UChar_t g, UChar_t b)
+{
+   Color_t c = TColor::GetColor(r, g, b);
+   fItems[idx]->fColor = c;
+   ItemChanged(idx);
+   StampObjProps();
+}
 
 //______________________________________________________________________________
 
@@ -216,7 +248,7 @@ void REveDataCollection::ItemChanged(REveDataItem* iItem)
 {
    int idx = 0;
    Ids_t ids;
-   for (auto & chld : fChildren)
+   for (auto & chld : fItems)
    {
       if (chld == iItem) {
          ids.push_back(idx);
@@ -227,59 +259,12 @@ void REveDataCollection::ItemChanged(REveDataItem* iItem)
    }
 }
 
-//==============================================================================
-// REveDataItem
-//==============================================================================
+//______________________________________________________________________________
 
-REveDataItem::REveDataItem(const std::string& n, const std::string& t) :
-   REveElement(n, t)
+void REveDataCollection::ItemChanged(Int_t idx)
 {
-   SetupDefaultColorAndTransparency(kMagenta, true, true);
+   Ids_t ids;
+   ids.push_back(idx);
+   _handler_func_ids( this , ids);
 }
 
-Int_t REveDataItem::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
-{
-   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
-   j["fFiltered"] = fFiltered;
-   return ret;
-}
-
-void REveDataItem::SetItemColorRGB(UChar_t r, UChar_t g, UChar_t b)
-{
-   Color_t color = TColor::GetColor(r, g, b);
-   REveElement::SetMainColor(color);
-   REveDataCollection* c = dynamic_cast<REveDataCollection*>(fMother);
-   c->ItemChanged(this);
-}
-
-Bool_t REveDataItem::SetRnrSelf(Bool_t iRnrSelf)
-{
-   Bool_t r = REveElement::SetRnrSelf(iRnrSelf);
-   REveDataCollection* c = dynamic_cast<REveDataCollection*>(fMother);
-   c->ItemChanged(this);
-   return r;
-}
-
-void REveDataItem::SetFiltered(bool f)
-{
-  if (f != fFiltered)
-  {
-     fFiltered = f;
-     StampObjProps();
-  }
-}
-
-void REveDataItem::FillImpliedSelectedSet(Set_t &impSelSet)
-{
-   for (auto &n : fNieces)
-   {
-      impSelSet.insert(n);
-      n->FillImpliedSelectedSet(impSelSet);
-
-      if (gDebug > 1)
-      {
-         printf("REveDataItem::FillImpliedSelectedSet added niece '%s' [%s]\n",
-                n->GetCName(), n->IsA()->GetName());
-      }
-   }
-}
