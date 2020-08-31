@@ -19,7 +19,7 @@ namespace ROOT {
 namespace Experimental {
 
 class REveDataCollection;
-   
+
 class REveDataTable : public REveElement
 {
 protected:
