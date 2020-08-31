@@ -2553,10 +2553,6 @@ Double_t *TH1::GetIntegral()
 
 TH1 *TH1::GetCumulative(Bool_t forward, const char* suffix) const
 {
-   const Int_t nbinsx = GetNbinsX();
-   const Int_t nbinsy = GetNbinsY();
-   const Int_t nbinsz = GetNbinsZ();
-
    const Int_t firstX = fXaxis.GetFirst();
    const Int_t lastX  = fXaxis.GetLast();
    const Int_t firstY = (fDimension > 1) ? fYaxis.GetFirst() : 1;
@@ -2583,7 +2579,6 @@ TH1 *TH1::GetCumulative(Bool_t forward, const char* suffix) const
          }
       }
    } else { // Backward computation
-      Double_t sum = 0.;
       for (Int_t binz = lastZ; binz >= firstZ; --binz) {
          for (Int_t biny = lastY; biny >= firstY; --biny) {
             for (Int_t binx = lastX; binx >= firstX; --binx) {
