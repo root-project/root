@@ -24,9 +24,9 @@ void REveDataTable::PrintTable()
    for (Int_t i = 0; i< Nit; ++i)
    {
       void         *data = fCollection->GetDataPtr(i);
-      REveDataItem *item = fCollection->GetDataItem(i);
+      // const REveDataItem &item = fCollection->RetDataItem(i);
 
-      printf("| %-20s |", item->GetCName());
+      // !!!      printf("| %-20s |", item->GetCName());
 
       for (auto & chld : fChildren)
       {
