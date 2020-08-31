@@ -261,6 +261,11 @@ public:
    RTensor<Value_t, Container_t> Flatten();
 
    RTensor<Value_t, Container_t> Concatenate(RTensor<Value_t, Container_t> &a, std::size_t idx = 0);
+   RTensor<Value_t, Container_t> operator[] (const std::size_t idx);
+
+   RTensor<Value_t, Container_t>& operator+= (RTensor<Value_t, Container_t> &a);
+   RTensor<Value_t, Container_t> operator+ (RTensor<Value_t, Container_t> &a);
+   void CopyData (RTensor<Value_t, Container_t> &a);
 
 
    // Iterator class
@@ -699,6 +704,99 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Flatten(){
    Shape_t new_fShape = {this->fSize};
    RTensor<Value_t, Container_t> new_tensor (this->fData, new_fShape, this->fLayout);
    return new_tensor;
+}
+
+
+
+/// \brief Dimension-wise slicing
+/// \param[in] idx Index of the axis to concatenate alongside of 
+/// \returns New RTensor
+/// Slices a dimension of a tensor. Works as if the tensor is a bunch of nested arrays. Data is not copied but referenced!
+template <typename Value_t, typename Container_t>
+inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::operator[](std::size_t idx)
+{   
+      // Checking that required dimentions is within the limits of tensor shapes
+   if (this->fShape[0] <= idx){
+      std::stringstream ss;
+      ss << "The required dimention index " << idx << " is out of bound for the top-most dimensionality of the tensor: " << this->fShape[0];
+      throw std::runtime_error(ss.str());
+   }
+
+   Shape_t new_fShape;
+
+   if (this->fShape.size() >= 2 ){
+      new_fShape = this->fShape;
+      new_fShape.erase(new_fShape.begin());
+   }
+   else {
+      new_fShape = {0};
+   }
+      
+   std::size_t elements_per_top_dim = this->fSize / this->fShape[0]; 
+
+   std::size_t beginning_index =  elements_per_top_dim * idx; 
+
+   // This may not work for different layouts, but I don't think there's an easy way to do it without copying for column-layout. 
+
+   Value_t * new_fData = &(this->fData[beginning_index]);
+
+   RTensor<Value_t, Container_t> new_tensor (new_fData, new_fShape, this->fLayout);
+   return new_tensor;
+}
+
+/// \brief Copies data
+/// \param[in] a RTensor to concatenate with the given one.
+/// \returns New RTensor
+/// Copies the data from one tensor to another
+template <typename Value_t, typename Container_t>
+inline void RTensor<Value_t, Container_t>::CopyData(RTensor<Value_t, Container_t> &x){
+   if (this->fSize != x.fSize){
+      std::stringstream ss;
+      ss << "The size of the original tensor " << this->fSize << " is differs from the size of the tensor to copy: " << x.fSize;
+      throw std::runtime_error(ss.str());
+   }
+
+   for (int i = 0; i < this->fSize; i++){
+      this->fData[i] = x.fData[i];
+   }
+}
+
+/// \brief Adds two tensors
+/// \param[in] a RTensor to add
+/// \returns New RTensor
+/// Adds two tensors and create a third tensor with a shape of the first tensor
+template <typename Value_t, typename Container_t>
+inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::operator+(RTensor<Value_t, Container_t> &x){
+   if (this->fSize != x.fSize){
+      std::stringstream ss;
+      ss << "The size of the original tensor " << this->fSize << " is differs from the size of the tensor to copy: " << x.fSize;
+      throw std::runtime_error(ss.str());
+   }
+   Value_t *new_fData = new Value_t [this->fSize];
+
+   for (int i = 0; i < this->size; i++){
+      new_fData[i] = this->fData[i] + x.fData[i];
+   }
+
+   RTensor<Value_t, Container_t> new_tensor (new_fData, this->fShape, this->fLayout);
+
+}
+
+/// \brief Adds a tensor to a given tensor 
+/// \param[in] a RTensor to add
+/// Takes a tensor and adds to the values in it values of another tensor
+template <typename Value_t, typename Container_t>
+inline RTensor<Value_t, Container_t>& RTensor<Value_t, Container_t>::operator+=(RTensor<Value_t, Container_t> &x){
+   if (this->fSize != x.fSize){
+      std::stringstream ss;
+      ss << "The size of the original tensor " << this->fSize << " is differs from the size of the tensor to copy: " << x.fSize;
+      throw std::runtime_error(ss.str());
+   }
+
+   for (int i = 0; i < this->size; i++){
+      this->fData[i] += x.fData[i];
+   }
+   return *this;
 }
 
 
