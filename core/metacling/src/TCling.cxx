@@ -4877,8 +4877,10 @@ void TCling::GetFunctionOverloads(ClassInfo_t *cl, const char *funcname,
       DName = &Ctx.Idents.get(funcname);
    }
 
+   // NotForRedeclaration: we want to find names in inline namespaces etc.
    clang::LookupResult R(S, DName, clang::SourceLocation(),
-                         Sema::LookupOrdinaryName, clang::Sema::ForRedeclaration);
+                         Sema::LookupOrdinaryName, clang::Sema::NotForRedeclaration);
+   R.suppressDiagnostics(); // else lookup with NotForRedeclaration will check access etc
    S.LookupQualifiedName(R, const_cast<DeclContext*>(DeclCtx));
    if (R.empty()) return;
    R.resolveKind();
