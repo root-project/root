@@ -2528,49 +2528,74 @@ Double_t *TH1::GetIntegral()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Return a pointer to an histogram containing the cumulative The
-///  cumulative can be computed both in the forward (default) or backward
+///  Return a pointer to an histogram containing the cumulative content.
+///  The cumulative can be computed both in the forward (default) or backward
 ///  direction; the name of the new histogram is constructed from
-///  the name of this histogram with the suffix suffix appended.
+///  the name of this histogram with the suffix "suffix" appended provided
+///  by the user. If not provided a default suffix="_cumulative" is used.
 ///
 /// The cumulative distribution is formed by filling each bin of the
 /// resulting histogram with the sum of that bin and all previous
 /// (forward == kTRUE) or following (forward = kFALSE) bins.
 ///
-/// note: while cumulative distributions make sense in one dimension, you
+/// Note: while cumulative distributions make sense in one dimension, you
 /// may not be getting what you expect in more than 1D because the concept
 /// of a cumulative distribution is much trickier to define; make sure you
 /// understand the order of summation before you use this method with
 /// histograms of dimension >= 2.
+///
+/// Note 2: By default the cumulative is computed from bin 1 to Nbins
+/// If an axis range is set, values between the minimum and maximum of the range
+/// are set.
+/// Setting an axis range can also be used for including underflow and overflow in
+/// the cumulative (e.g. by setting h->GetXaxis()->SetRange(0, h->GetNbinsX()+1); )
+///
 
 TH1 *TH1::GetCumulative(Bool_t forward, const char* suffix) const
 {
    const Int_t nbinsx = GetNbinsX();
    const Int_t nbinsy = GetNbinsY();
    const Int_t nbinsz = GetNbinsZ();
+
+   const Int_t firstX = fXaxis.GetFirst();
+   const Int_t lastX  = fXaxis.GetLast();
+   const Int_t firstY = (fDimension > 1) ? fYaxis.GetFirst() : 1;
+   const Int_t lastY = (fDimension > 1) ? fYaxis.GetLast() : 1;
+   const Int_t firstZ = (fDimension > 1) ? fZaxis.GetFirst() : 1;
+   const Int_t lastZ = (fDimension > 1) ? fZaxis.GetLast() : 1;
+
    TH1* hintegrated = (TH1*) Clone(fName + suffix);
    hintegrated->Reset();
+   Double_t sum = 0.;
+   Double_t esum = 0;
    if (forward) { // Forward computation
-      Double_t sum = 0.;
-      for (Int_t binz = 1; binz <= nbinsz; ++binz) {
-    for (Int_t biny = 1; biny <= nbinsy; ++biny) {
-       for (Int_t binx = 1; binx <= nbinsx; ++binx) {
-          const Int_t bin = hintegrated->GetBin(binx, biny, binz);
-          sum += GetBinContent(bin);
-          hintegrated->SetBinContent(bin, sum);
-       }
-    }
+      for (Int_t binz = firstZ; binz <= lastZ; ++binz) {
+         for (Int_t biny = firstY; biny <= lastY; ++biny) {
+            for (Int_t binx = firstX; binx <= lastX; ++binx) {
+               const Int_t bin = hintegrated->GetBin(binx, biny, binz);
+               sum += RetrieveBinContent(bin);
+               hintegrated->AddBinContent(bin, sum);
+               if (fSumw2.fN) {
+                  esum += GetBinErrorSqUnchecked(bin);
+                  fSumw2.fArray[bin] = esum;
+               }
+            }
+         }
       }
    } else { // Backward computation
       Double_t sum = 0.;
-      for (Int_t binz = nbinsz; binz >= 1; --binz) {
-    for (Int_t biny = nbinsy; biny >= 1; --biny) {
-       for (Int_t binx = nbinsx; binx >= 1; --binx) {
-          const Int_t bin = hintegrated->GetBin(binx, biny, binz);
-          sum += GetBinContent(bin);
-          hintegrated->SetBinContent(bin, sum);
-       }
-    }
+      for (Int_t binz = lastZ; binz >= firstZ; --binz) {
+         for (Int_t biny = lastY; biny >= firstY; --biny) {
+            for (Int_t binx = lastX; binx >= firstX; --binx) {
+               const Int_t bin = hintegrated->GetBin(binx, biny, binz);
+               sum += RetrieveBinContent(bin);
+               hintegrated->AddBinContent(bin, sum);
+               if (fSumw2.fN) {
+                  esum += GetBinErrorSqUnchecked(bin);
+                  fSumw2.fArray[bin] = esum;
+               }
+            }
+         }
       }
    }
    return hintegrated;
