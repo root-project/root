@@ -225,32 +225,17 @@ REveDataProxyBuilderBase::CreateProduct( std::string viewType, const REveViewCon
 
 //------------------------------------------------------------------------------
 
-namespace
-{
-   void applyColorAttrToChildren(REveElement* p) {
-      for (auto &it: p->RefChildren())
-      {
-         REveElement* c = it;
-         if (c->GetMainColor() != p->GetMainColor())
-         {
-            c->SetMainColor(p->GetMainColor());
-            // printf("apply color %d to %s\n", p->GetMainColor(), c->GetCName());
-         }
-         applyColorAttrToChildren(c);
-      }
-   }
-}
-
 void
-REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds, Product* p)
+REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t&, Product*)
 {
+   /*
    printf("REveDataProxyBuilderBase::ModelChanges  %s \n",  m_collection->GetCName());
    REveElement* elms = p->m_elements;
    assert(m_collection && static_cast<int>(m_collection->GetNItems()) <= elms->NumChildren() && "can not use default modelChanges implementation");
 
    for (auto itemIdx: iIds)
    {
-      REveDataItem *item = m_collection->GetDataItem(itemIdx);
+      REveDataItem& item = m_collection->RefDataItem(itemIdx);
 
       // printf("Edit compound for item index %d \n", itemIdx);
       // imitate FWInteractionList::modelChanges
@@ -274,6 +259,7 @@ REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds, Pr
          LocalModelChanges(itemIdx, comp, p->m_viewContext);
       }
    }
+   */
 }
 
 void
