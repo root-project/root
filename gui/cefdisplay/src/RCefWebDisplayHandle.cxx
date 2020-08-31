@@ -146,7 +146,11 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
 
    TString cef_main = TROOT::GetBinDir() + "/cef_main";
 
-   // cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.resources_dir_path);
+#ifdef OS_MACOSX
+   TString path = TROOT::GetDataDir() + "/Frameworks/Chromium Embedded Framework.framework";
+   cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.framework_dir_path);
+#endif
+
    // cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
 
    settings.no_sandbox = true;
