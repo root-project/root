@@ -26,6 +26,34 @@ namespace Experimental {
 
 class REveDataItem;
 
+
+//==============================================================================
+// could be a nested class ???
+class REveDataItem
+{
+   friend class REveDataCollection;
+
+protected:
+   void*    fDataPtr{nullptr};
+
+   Bool_t   fRnrSelf{true};
+   Color_t  fColor{0};
+   Bool_t   fFiltered{false};
+
+
+public:
+   REveDataItem(void* d, Color_t c): fDataPtr(d), fColor(c){}
+
+   Bool_t  GetRnrSelf() const { return fRnrSelf; }
+   Color_t GetMainColor()   const { return fColor; }
+   Bool_t  GetFiltered() const { return fFiltered; }
+
+
+   void SetFiltered(Bool_t i) { fFiltered = i; }
+   void SetMainColor(Color_t i) { fColor = i; }
+   void SetRnrSelf(Bool_t i) { fRnrSelf = i; }
+};
+
 //==============================================================================
 
 class REveDataCollection : public REveElement
@@ -42,16 +70,7 @@ public:
 
    TClass *fItemClass{nullptr}; // so far only really need class name
 
-   struct ItemInfo_t
-   {
-      void *fDataPtr{nullptr};
-      REveDataItem *fItemPtr{nullptr};
-
-      ItemInfo_t() = default;
-      ItemInfo_t(void *dp, REveDataItem *di) : fDataPtr(dp), fItemPtr(di) {}
-   };
-
-   std::vector<ItemInfo_t> fItems;
+   std::vector<REveDataItem*> fItems;
 
    TString fFilterExpr;
    std::function<bool(void *)> fFilterFoo = [](void *) { return true; };
@@ -61,6 +80,9 @@ public:
 
    Bool_t SingleRnrState() const override { return kTRUE; }
    Bool_t SetRnrState(Bool_t) override;
+
+   void SetItemVisible(Int_t idx, Bool_t visible);
+   void SetItemColorRGB(Int_t idx, UChar_t r, UChar_t g, UChar_t b);
 
    TClass *GetItemClass() const { return fItemClass; }
    void SetItemClass(TClass *cls) { fItemClass = cls; }
@@ -73,13 +95,16 @@ public:
    void ApplyFilter();
 
    Int_t GetNItems() const { return (Int_t)fItems.size(); }
-   void *GetDataPtr(Int_t i) const { return fItems[i].fDataPtr; }
-   REveDataItem *GetDataItem(Int_t i) const { return fItems[i].fItemPtr; }
+   void *GetDataPtr(Int_t i) const { return fItems[i]->fDataPtr; }
+   //   const REveDataItem& RefDataItem(Int_t i) const { return fItems[i]; }
+    const REveDataItem* GetDataItem(Int_t i) const { return fItems[i]; }
 
+   void  StreamPublicMethods(nlohmann::json &cj);
    Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 
    void SetMainColor(Color_t) override;
    virtual void ItemChanged(REveDataItem *item);
+   virtual void ItemChanged(Int_t idx);
 
    void SetHandlerFunc (std::function<void (REveDataCollection*)> handler_func)
    {
@@ -89,29 +114,6 @@ public:
    {
       _handler_func_ids= handler_func;
    }
-};
-
-//==============================================================================
-
-class REveDataItem : public REveElement,
-                     public REveAuntAsList
-{
-protected:
-   Bool_t fFiltered{false};
-
-public:
-   REveDataItem(const std::string& n = "REveDataItem", const std::string& t = "");
-   virtual ~REveDataItem() {}
-
-   Bool_t GetFiltered() const { return fFiltered; }
-   void   SetFiltered(Bool_t f);
-
-   virtual void SetItemColorRGB(UChar_t r, UChar_t g, UChar_t b);
-   Bool_t SetRnrSelf(Bool_t) override;
-
-   virtual void FillImpliedSelectedSet(Set_t& impSelSet) override;
-
-   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 };
 
 } // namespace Experimental
