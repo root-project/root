@@ -230,7 +230,7 @@ public:
    void     SetWrapTwoPi(Bool_t w) { fWrapTwoPi=w; }
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   
+
    static  Float_t EtaToTheta(Float_t eta);
 };
 
