@@ -36,6 +36,8 @@ protected:
    virtual void Build(const void* data, int index, REveElement* iCollectionHolder, const REveViewContext*) = 0;
    virtual void BuildViewType(const void* data, int index, REveElement* iCollectionHolder, std::string viewType, const REveViewContext*) = 0;
 
+
+   void ModelChanges(const REveDataCollection::Ids_t& iIds, Product* p) override;
    void Clean() override;
 
 private:

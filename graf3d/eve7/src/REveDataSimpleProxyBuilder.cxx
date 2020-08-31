@@ -3,6 +3,7 @@
 // user include files
 #include <ROOT/REveDataCollection.hxx>
 #include <ROOT/REveCompound.hxx>
+#include <assert.h>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -42,7 +43,7 @@ REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
    auto pIdx = product->RefChildren().begin();
    for (int index = 0; index < size; ++index)
    {
-      auto di = Collection()->GetDataItem(index);
+      const REveDataItem* di = Collection()->GetDataItem(index);
       REveElement *itemHolder = nullptr;
 
       if (index <  product->NumChildren())
@@ -60,8 +61,6 @@ REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
          product->AddElement(itemHolder);
       }
 
-      di->AddNiece(itemHolder);
-      itemHolder->SetSelectionMaster(di);
 
       if (di->GetRnrSelf() && !di->GetFiltered())
       {
@@ -96,12 +95,69 @@ REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
          product->AddElement(itemHolder);
       }
 
-      di->AddNiece(itemHolder);
-      itemHolder->SetSelectionMaster(di);
 
       if (di->GetRnrSelf() && !di->GetFiltered())
       {
          BuildViewType(collection->GetDataPtr(index), index, itemHolder, viewType, vc);
+      }
+      }
+}
+
+//______________________________________________________________________________
+
+namespace
+{
+   void applyColorAttrToChildren(REveElement* p) {
+      for (auto &it: p->RefChildren())
+      {
+         REveElement* c = it;
+         if (c->GetMainColor() != p->GetMainColor())
+         {
+            c->SetMainColor(p->GetMainColor());
+            printf("apply color %d to %s\n", p->GetMainColor(), c->GetCName());
+         }
+         applyColorAttrToChildren(c);
+      }
+   }
+}
+
+void
+REveDataSimpleProxyBuilder::ModelChanges(const REveDataCollection::Ids_t& iIds, Product* p)
+{
+   printf("REveDataSimple ProxyBuilderBase::ModelChanges >>>>> (%p)  %s \n", (void*)this, Collection()->GetCName());
+   REveElement* elms = p->m_elements;
+   assert(Collection() && static_cast<int>(Collection()->GetNItems()) <= elms->NumChildren() && "can not use default modelChanges implementation");
+
+   printf("N indices %d \n",(int)iIds.size());
+   for (auto itemIdx: iIds)
+   {
+      const REveDataItem* item = Collection()->GetDataItem(itemIdx);
+
+      // printf("Edit compound for item index %d \n", itemIdx);
+      // imitate FWInteractionList::modelChanges
+      auto itElement = elms->RefChildren().begin();
+      std::advance(itElement, itemIdx);
+      REveElement* comp = *itElement;
+      bool visible = (!item->GetFiltered()) && item->GetRnrSelf();
+      comp->SetRnrSelf(visible);
+      comp->SetRnrChildren(visible);
+
+      // printf("comapre %d %d\n", item->GetMainColor(), comp->GetMainColor());
+      if (item->GetMainColor() != comp->GetMainColor()) {
+         //printf("ffffffffffffffffffffffff set color to comp \n");
+         comp->SetMainColor(item->GetMainColor());
+
+      }
+      applyColorAttrToChildren(comp);
+
+      if (VisibilityModelChanges(itemIdx, comp, p->m_viewContext))
+      {
+         elms->ProjectChild(comp);
+         // printf("---REveDataProxyBuilderBase project child\n");
+      }
+      else
+      {
+         LocalModelChanges(itemIdx, comp, p->m_viewContext);
       }
    }
 }
@@ -111,7 +167,7 @@ REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
 bool
 REveDataSimpleProxyBuilder::VisibilityModelChanges(int idx, REveElement* iCompound, const REveViewContext* vc)
 {
-   REveDataItem* item = Collection()->GetDataItem(idx);
+   const REveDataItem* item = Collection()->GetDataItem(idx);
    bool returnValue = false;
    if (item->GetRnrSelf() && iCompound->NumChildren()==0)
    {
