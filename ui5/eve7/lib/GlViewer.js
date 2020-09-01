@@ -31,7 +31,7 @@ sap.ui.define([], function() {
 
       make_object:   function(name) { return null; },
       get_top_scene: function()     { return null; },
-
+      get_manager:   function()     { return this.controller.mgr; }
    };
 
    return GlViewer;

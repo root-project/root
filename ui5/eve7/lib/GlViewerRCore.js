@@ -92,8 +92,12 @@ sap.ui.define([
 
          this.lights = this.make_object("Light container");
          this.scene.add(this.lights);
+
          let a_light = new RC.AmbientLight(new RC.Color(0xffffff), 0.1);
          this.lights.add(a_light);
+
+         let light_class_3d = RC.PointLight; // RC.DirectionalLight;
+         let light_class_2d = RC.PointLight; // RC.DirectionalLight;
 
          if (this.controller.kind === "3D")
          {
@@ -102,12 +106,12 @@ sap.ui.define([
             this.camera.lookAt(new RC.Vector3(0, 0, 0), new RC.Vector3(0, 1, 0));
             this.camera.isPerspectiveCamera = true;
 
-            let l_int = 0.65;
-            // PointLight seems to have trouble, using directional for now.
-            this.lights.add( new RC.DirectionalLight( 0xaa8888, l_int )); // R
-            this.lights.add( new RC.DirectionalLight( 0x88aa88, l_int )); // G
-            this.lights.add( new RC.DirectionalLight( 0x8888aa, l_int )); // B
-            this.lights.add( new RC.DirectionalLight( 0x999999, l_int )); // gray
+            let l_int = 0.85;
+            this.lights.add(new light_class_3d(0xaa8888, l_int )); // R
+            this.lights.add(new light_class_3d(0x88aa88, l_int )); // G
+            this.lights.add(new light_class_3d(0x8888aa, l_int )); // B
+            this.lights.add(new light_class_3d(0x999999, l_int )); // gray
+
             // Lights are positioned in resetRenderer.
 
             for (let i = 1; i <= 4; ++i)
@@ -123,9 +127,23 @@ sap.ui.define([
             this.camera.lookAt(new RC.Vector3(0, 0, 0), new RC.Vector3(0, 1, 0));
             this.camera.isOrthographicCamera = true;
 
-            this.lights.add( new RC.DirectionalLight( 0xffffff, 1 )); // white
+            this.lights.add(new light_class_2d( 0xffffff, 1 )); // white front
+            this.lights.add(new light_class_2d( 0xffffff, 1 )); // white back
+
             // Lights are positioned in resetRenderer.
          }
+
+         /*
+           let c = new RC.Cube(100, new RC.Color(1,.6,.2));
+           c.material = new RC.MeshPhongMaterial();
+           c.material.transparent = true;
+           c.material.opacity = 0.5;
+           c.material.depthWrite  = false;
+           this.scene.add(c);
+         */
+         let ss = new RC.Stripe([0,0,0, 50,50,50, 200,200,200]);
+         ss.material.lineWidth = 2.0;
+         this.scene.add(ss);
 
          this.rot_center = new THREE.Vector3(0,0,0);
       },
@@ -195,7 +213,7 @@ sap.ui.define([
 
          dome.addEventListener('dblclick', function(event) {
             //if (glc.controller.dblclick_action == "Reset")
-               glc.resetRenderer();
+            glc.resetRenderer();
          });
 
          // Key-handlers go on window ...
@@ -298,7 +316,7 @@ sap.ui.define([
          }
          else
          {
-            let posC = new RC.Vector3(0, 0, 1000);
+            let posC = new RC.Vector3(0, 0, extR);
 
             this.camera.position.copy(posC);
 
@@ -316,7 +334,8 @@ sap.ui.define([
             this.controls.enableRotate = false;
 
             let lc = this.lights.children;
-            lc[1].position.set( 0, 0, -extR);
+            lc[1].position.set( 0, 0,  extR);
+            lc[2].position.set( 0, 0, -extR);
 
             // console.log("resetThreejsRenderer 2D scene bbox ex ey", sbbox, ex, ey, ", camera_pos ", posC, ", look_at ", this.rot_center);
          }
@@ -332,7 +351,6 @@ sap.ui.define([
       render: function()
       {
          // console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
-
          this.renderer.render( this.scene, this.camera );
       },
 
@@ -398,6 +416,15 @@ sap.ui.define([
 
          console.log("GLC::onMouseMoveTimeout", this, event, x, y);
 
+         var pthis = this;
+         this.renderer.pick(x, y, function(r)
+                            {
+                               let id = (r[0] << 16) + (r[1] << 8) + r[2];
+                               let obj = pthis.get_manager().GetElement(id);
+                               console.log("pick result", r, id, obj);
+                            }
+                           );
+         this.render();
          /*
          let mouse = new THREE.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
 
