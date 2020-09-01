@@ -202,3 +202,13 @@ TEST(RDFDisplayTests, BoolArray)
                          "\ntrue  | \nfalse | \ntrue  | \nfalse | \n      | \n";
    EXPECT_EQ(r->AsString(), expected);
 }
+
+TEST(RDFDisplayTests, UniquePtr)
+{
+   auto r = ROOT::RDataFrame(1)
+               .Define("uptr", []() -> std::unique_ptr<int> { return nullptr; })
+               .Display<std::unique_ptr<int>>({"uptr"});
+   const auto expected =
+      "uptr                       | \nstd::unique_ptr -> nullptr | \n                           | \n";
+   EXPECT_EQ(r->AsString(), expected);
+}
