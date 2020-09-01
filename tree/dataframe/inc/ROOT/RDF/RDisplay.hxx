@@ -197,7 +197,7 @@ private:
    ////////////////////////////////////////////////////////////////////////////
    /// Adds a row of events to the table
    template <typename... Columns>
-   void AddRow(Columns... columns)
+   void AddRow(Columns &... columns)
    {
       std::stringstream calc; // JITted code
       int columnIndex = 0;
