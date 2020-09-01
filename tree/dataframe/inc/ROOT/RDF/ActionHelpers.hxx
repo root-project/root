@@ -1019,7 +1019,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
 
    template <typename... Columns>
-   void Exec(unsigned int, Columns... columns)
+   void Exec(unsigned int, Columns &... columns)
    {
       fDisplayerHelper->AddRow(columns...);
       if (!fDisplayerHelper->HasNext()) {
