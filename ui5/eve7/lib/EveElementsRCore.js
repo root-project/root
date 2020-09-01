@@ -77,7 +77,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    function RcFancyMaterial(color, opacity, props)
    {
-      let mat = new RC.MeshBasicMaterial; // Phong, has some trouble / point lights ?
+      let mat = new RC.MeshPhongMaterial;
+      // let mat = new RC.MeshBasicMaterial;
+
       mat._color = color;
       if (opacity !== undefined && opacity < 1.0)
       {
@@ -360,14 +362,17 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       let fcol =  RcCol(egs.fFillColor);
 
-      // let material = new RC.MeshPhongMaterial({// side: THREE.DoubleSide,
-      //                     depthWrite: false, color:fcol, transparent: true, opacity: 0.2 });
       let material = RcFancyMaterial(fcol, 0.2);
       material.side      = RC.FRONT_AND_BACK_SIDE;
       material.specular  = new RC.Color(1, 1, 1);
       material.shininess = 50;
 
-      return new RC.Mesh(geom, material);
+      let mesh = new RC.Mesh(geom, material);
+
+      // Hack to test RCore picking ... to be done differently.
+      mesh.colorID = new RC.Color(egs.fElementId);
+
+      return mesh;
    }
 
 
