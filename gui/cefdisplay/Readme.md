@@ -54,6 +54,26 @@ See details about [Chromimum Embeded Framework](https://bitbucket.org/chromiumem
 ~~~
 
 
+## Compile libcef_dll_wrapper on Windows
+
+1. Download binary win32 build like http://opensource.spotify.com/cefbuilds/cef_binary_85.2.11+g0202816+chromium-85.0.4183.83_windows32.tar.bz2
+
+2. Extract in directory without spaces like `C:\Soft\cef`
+
+3. Modify `cmake/cef_variables.cmake` to set dynamic linking, replace "/MT" by "/MD" in approx line 389
+
+4. Start "x86 Native tools Command Prompt for VS 2019". Do:
+~~~
+   $ cd C:\Soft\cef
+   $ mkdir build
+   $ cd build
+   $ cmake -G"Visual Studio 16 2019" -A Win32 -Thost=x64 ..
+   $ cmake --build . --config Release --target libcef_dll_wrapper
+~~~
+
+5. Before compiling ROOT, `set CEF_ROOT=C:\Soft\cef` variable
+
+
 ## Using plain CEF in ROOT batch mode on Linux
 
 Default CEF builds, provided by [http://opensource.spotify.com/cefbuilds/index.html](http://opensource.spotify.com/cefbuilds/index.html), do
