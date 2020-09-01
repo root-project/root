@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "TROOT.h"
+#include "TList.h"
 
 namespace {
 
