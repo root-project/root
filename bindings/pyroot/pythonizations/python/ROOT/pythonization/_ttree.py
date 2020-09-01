@@ -187,6 +187,9 @@ def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labe
         array(, labels): Numpy array(, labels of columns)
     """
 
+    import warnings
+    warnings.warn("TTree.AsMatrix is deprecated since v6.24 and will be removed in v6.26. Please use instead RDataFrame.AsNumpy.", FutureWarning)
+
     # Import numpy lazily
     try:
         import numpy as np
