@@ -25,6 +25,7 @@ for globname in infiles:
 ROOTCLING_BINARY = os.path.join(ROOTSYS, "bin", "rootcling")
 
 headerdict = {}
+
 for pcmfile in pcmfiles:
     if not pcmfile.endswith(".pcm") or pcmfile.endswith("_rdict.pcm"):
         print("Ignoring ROOT pcm file ", pcmfile)
@@ -50,8 +51,28 @@ for pcmfile in pcmfiles:
             headerdict[header] = []
         headerdict[header].append(pcmfile)
 
-for header in sorted(
-    headerdict, key=lambda header: len(headerdict[header]), reverse=True
-):
-    if len(headerdict[header]) > 1:
-        print("Header {0} duplicated in - {1}".format(header, headerdict[header]))
+
+headerpath = []
+def shorten_path(filename):
+    dirname = os.path.dirname(filename)
+    for i in range(0, 3):
+        dirname = os.path.dirname(dirname)
+    # Do not shorten if the path has less than 3 components
+    if dirname == '/' or dirname == '':
+        return filename
+
+    if dirname not in headerpath:
+        headerpath.append(dirname)
+    return "[{0}]{1}".format(headerpath.index(dirname), filename.replace(dirname, ''))
+
+for header in sorted(headerdict, key=lambda header: len(headerdict[header]), reverse=True):
+    pcmfiles = headerdict[header]
+    if len(pcmfiles) > 1:
+        short_header = shorten_path(header)
+        short_pcmfiles = ','.join(shorten_path(x) for x in pcmfiles)
+        print("Header {0} duplicated in {1} modules - {2}"
+              .format(short_header, len(pcmfiles), short_pcmfiles))
+
+print("Legend:")
+for i in range(len(headerpath)):
+    print("[{0}] - {1}".format(i, headerpath[i]))
