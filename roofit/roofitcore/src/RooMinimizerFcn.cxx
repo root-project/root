@@ -29,6 +29,7 @@
 #include "RooMsgService.h"
 #include "RooMinimizer.h"
 
+#include "TClass.h"
 #include "TMatrixDSym.h"
 
 #include <fstream>
