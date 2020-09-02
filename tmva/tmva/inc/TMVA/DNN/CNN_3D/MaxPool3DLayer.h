@@ -25,6 +25,7 @@
 #include "TMatrix.h"
 
 #include "TMVA/DNN/CNN_3D/Conv3DLayer.h"
+#include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN_3D/ContextHandles.h"
@@ -171,7 +172,7 @@ TMaxPool3DLayer<Architecture_t>::TMaxPool3DLayer(size_t batchSize, size_t inputD
    : VGeneralLayer<Architecture_t>(
         batchSize, inputDepth, inputHeight, inputWidth, inputDepth,
         TConv3DLayer<Architecture_t>::calculateDimension(inputHeight, filterHeight, 0, strideX),
-        TConv3DLayer<Architecture_t>::calculateDimension(inputWidth, filterWidth, 0, strideY), 
+        TConv3DLayer<Architecture_t>::calculateDimension(inputWidth, filterWidth, 0, strideY),
         TConv3DLayer<Architecture_t>::calculateDimension(inputDepth, filterDepth, 0, strideZ), 0, 0, 0, 0,
         0, // weights dimensions
         batchSize, inputDepth,
@@ -256,8 +257,8 @@ auto TMaxPool3DLayer<Architecture_t>::Backward(Tensor_t &gradients_backward, con
    Architecture_t::MaxPoolLayer3DBackward(
       gradients_backward, this->GetActivationGradients(), fIndexTensor, activations_backward, this->GetOutput(),
       (CNN::TCNNDescriptors<TMVA::DNN::CNN::TMaxPoolLayer<Architecture_t>> &) (*fDescriptors),
-      (CNN::TCNNWorkspace<TMVA::DNN::CNN::TMaxPoolLayer<Architecture_t>> &) (*fWorkspace), this->GetInputHeight(), this->GetInputWidth(), 
-      this->GetFilterHeight(), this->GetFilterWidth(),  this->GetStrideX(), this->GetStrideY(), 
+      (CNN::TCNNWorkspace<TMVA::DNN::CNN::TMaxPoolLayer<Architecture_t>> &) (*fWorkspace), this->GetInputHeight(), this->GetInputWidth(),
+      this->GetFilterHeight(), this->GetFilterWidth(),  this->GetStrideX(), this->GetStrideY(),
       this->GetNLocalViews());
 }
 

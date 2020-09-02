@@ -231,7 +231,7 @@ void test_func()
 
    // instantiating net
    double img[][27] = {
-           {1, 2, 3, 4, 5, 6, 7, 8, 9,
+           {1, 2 , 3, 4, 5, 6, 7, 8, 9,
             1, 2, 3, 4, 5, 6, 7, 8, 9,
              1, 2, 3, 4, 5, 6, 7, 8 ,9},
 
@@ -404,16 +404,16 @@ void test_func()
                        zeroPaddingHeight, zeroPaddingWidth, zeroPaddingDepth);
 
   Architecture::Conv3DLayerBackward(activationGradientsBackward,
-                      weightGradients, biasGradients,
-                      input,
-                      activationGradients,
-                      weightsMatrix,
-                      activationsBackward,
-                      expectedOutput_cnn,
-                      EActivationFunction::kIdentity,
-                     (typename Architecture::ConvDescriptors_t &) *convDescriptors,
-                      (typename Architecture::ConvWorkspace_t &) *convWorkspace,
-                      params);
+                                    weightGradients, biasGradients,
+                                    input,
+                                    activationGradients,
+                                    weightsMatrix,
+                                    activationsBackward,
+                                    expectedOutput_cnn,
+                                    EActivationFunction::kIdentity,
+                                    (typename Architecture::ConvDescriptors_t &) *convDescriptors,
+                                    (typename Architecture::ConvWorkspace_t &) *convWorkspace,
+                                    params);
 
     Architecture::PrintTensor(activationGradientsBackward,"activationGradientsBackward");
     Architecture::PrintTensor(weightGradients,"weightGradients");

@@ -617,7 +617,7 @@ public:
 
    static void CalculateConv3DActivationGradients(Tensor_t &activationGradientsBackward,
                                                     const Tensor_t &df,
-                                                    const Matrix_t &weights, 
+                                                    const Matrix_t &weights,
                                                     const DNN::CNN_3D::TConv3DParams & params);
 
    static void CalculateConv3DWeightGradients(Matrix_t &weightGradients,
