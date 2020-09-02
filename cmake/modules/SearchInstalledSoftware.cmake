@@ -877,10 +877,6 @@ if(builtin_xrootd)
   set(XROOTD_DESTDIR ${CMAKE_BINARY_DIR})
   set(XROOTD_ROOTDIR ${XROOTD_DESTDIR})
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
-  string(REPLACE "-Wall " "" __cxxflags "${ROOT_EXTERNAL_CXX_FLAGS}")  # Otherwise it produces many warnings
-  string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
-  string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
-  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces manywarnings
 
   # Guess under which directory XRootD will install its libraires
   set(XROOTD_LIBDIR "lib")
@@ -898,10 +894,11 @@ if(builtin_xrootd)
     URL_HASH SHA256=6f2ca1accc8d49d605706bb556777c753860bf46d845b1ee11393a5cb5987f15
     INSTALL_DIR ${XROOTD_ROOTDIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+               -DCMAKE_BUILD_TYPE=Release
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS=${__cxxflags}\ -w
+               -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
                -DENABLE_PYTHON=OFF
