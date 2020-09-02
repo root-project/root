@@ -383,7 +383,6 @@ TStyle::TStyle(const char *name, const char *title)
       SetMarkerSize(1.2);
       SetHistLineWidth(2.);
       SetLineStyleString(2,"[12 12]");
-      SetErrorX(0.0001);   // get rid of X error bars (as recommended in ATLAS figure guidelines)
       SetEndErrorSize(0.); // get rid of error bar caps
       SetOptTitle(0);
       SetOptStat(0);
@@ -964,7 +963,6 @@ void TStyle::Reset(Option_t *opt)
       SetMarkerSize(1.2);
       SetHistLineWidth(2.);
       SetLineStyleString(2,"[12 12]");
-      SetErrorX(0.0001);
       SetEndErrorSize(0.);
       SetOptTitle(0);
       SetOptStat(0);
