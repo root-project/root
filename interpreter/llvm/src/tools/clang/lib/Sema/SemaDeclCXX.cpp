@@ -14720,7 +14720,7 @@ bool Sema::checkThisInStaticMemberFunctionExceptionSpec(CXXMethodDecl *Method) {
   case EST_MSAny:
   case EST_None:
     break;
-    
+
   case EST_ComputedNoexcept:
     if (!Finder.TraverseStmt(Proto->getNoexceptExpr()))
       return true;
