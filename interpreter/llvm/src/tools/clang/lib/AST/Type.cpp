@@ -2705,7 +2705,7 @@ FunctionProtoType::FunctionProtoType(QualType result, ArrayRef<QualType> params,
     }
   } else if (getExceptionSpecType() == EST_ComputedNoexcept) {
     // Store the noexcept expression and context.
-    Expr **noexSlot = reinterpret_cast<Expr **>(argSlot + NumParams);
+    auto **noexSlot = reinterpret_cast<Expr **>(argSlot + NumParams);
     *noexSlot = epi.ExceptionSpec.NoexceptExpr;
 
     if (epi.ExceptionSpec.NoexceptExpr) {

@@ -3220,8 +3220,10 @@ public:
     ExceptionSpecificationType Type;
     /// Explicitly-specified list of exception types.
     ArrayRef<QualType> Exceptions;
+
     /// Noexcept expression, if this is EST_ComputedNoexcept.
-    Expr *NoexceptExpr;
+    Expr *NoexceptExpr = nullptr;
+
     /// The function whose exception specification this is, for
     /// EST_Unevaluated and EST_Uninstantiated.
     FunctionDecl *SourceDecl;
@@ -3388,14 +3390,25 @@ public:
   /// Return whether this function has an instantiation-dependent exception
   /// spec.
   bool hasInstantiationDependentExceptionSpec() const;
+
   /// Result type of getNoexceptSpec().
   enum NoexceptResult {
-    NR_NoNoexcept,  ///< There is no noexcept specifier.
-    NR_BadNoexcept, ///< The noexcept specifier has a bad expression.
-    NR_Dependent,   ///< The noexcept specifier is dependent.
-    NR_Throw,       ///< The noexcept specifier evaluates to false.
-    NR_Nothrow      ///< The noexcept specifier evaluates to true.
+    /// There is no noexcept specifier.
+    NR_NoNoexcept,
+
+    /// The noexcept specifier has a bad expression.
+    NR_BadNoexcept,
+
+    /// The noexcept specifier is dependent.
+    NR_Dependent,
+
+    /// The noexcept specifier evaluates to false.
+    NR_Throw,
+
+    /// The noexcept specifier evaluates to true.
+    NR_Nothrow
   };
+
   /// Get the meaning of the noexcept spec on this function, if any.
   NoexceptResult getNoexceptSpec(const ASTContext &Ctx) const;
   unsigned getNumExceptions() const { return NumExceptions; }
@@ -3428,9 +3441,11 @@ public:
       return nullptr;
     return reinterpret_cast<FunctionDecl *const *>(param_type_end())[1];
   }
+
   /// Determine whether this function type has a non-throwing exception
   /// specification.
   CanThrowResult canThrow(const ASTContext &Ctx) const;
+
   /// Determine whether this function type has a non-throwing exception
   /// specification. If this depends on template arguments, returns
   /// \c ResultIfDependent.
