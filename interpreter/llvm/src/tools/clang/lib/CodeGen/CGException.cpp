@@ -446,11 +446,17 @@ void CodeGenFunction::EmitStartEHSpec(const Decl *D) {
     return;
 
   ExceptionSpecificationType EST = Proto->getExceptionSpecType();
-  if (isNoexceptExceptionSpec(EST)) {
-    if (Proto->getNoexceptSpec(getContext()) == FunctionProtoType::NR_Nothrow) {
-      // noexcept functions are simple terminate scopes.
-      EHStack.pushTerminate();
-    }
+
+  // Might need to deserialize
+  if (EST == EST_Uninstantiated || EST == EST_Unevaluated) {
+    FD->getMostRecentDecl();
+    Proto = FD->getType()->getAs<FunctionProtoType>();
+    EST = Proto->getExceptionSpecType();
+  }
+
+  if (isNoexceptExceptionSpec(EST) && Proto->canThrow() == CT_Cannot) {
+    // noexcept functions are simple terminate scopes.
+    EHStack.pushTerminate();
   } else if (EST == EST_Dynamic || EST == EST_DynamicNone) {
     // TODO: Revisit exception specifications for the MS ABI.  There is a way to
     // encode these in an object file but MSVC doesn't do anything with it.
@@ -525,10 +531,8 @@ void CodeGenFunction::EmitEndEHSpec(const Decl *D) {
     return;
 
   ExceptionSpecificationType EST = Proto->getExceptionSpecType();
-  if (isNoexceptExceptionSpec(EST)) {
-    if (Proto->getNoexceptSpec(getContext()) == FunctionProtoType::NR_Nothrow) {
-      EHStack.popTerminate();
-    }
+  if (isNoexceptExceptionSpec(EST) && Proto->canThrow() == CT_Cannot) {
+    EHStack.popTerminate();
   } else if (EST == EST_Dynamic || EST == EST_DynamicNone) {
     // TODO: Revisit exception specifications for the MS ABI.  There is a way to
     // encode these in an object file but MSVC doesn't do anything with it.
