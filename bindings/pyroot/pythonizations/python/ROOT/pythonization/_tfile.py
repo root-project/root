@@ -8,10 +8,35 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-# TFile inherits from
-# - TDirectory the pythonized attr syntax (__getattr__) and WriteObject method.
-# - TDirectoryFile the pythonized Get method (pythonized only in Python)
-# what is left to add is the pythonization of TFile::Open.
+r'''
+/**
+\class TFile
+\brief \parblock \endparblock
+\htmlonly
+<div class="pyrootbox">
+\endhtmlonly
+## PyROOT
+
+In the same way as for TDirectory, it is possible to inspect the content of a
+TFile object from Python as if the directories and objects it contains were its
+attributes. For more information, please refer to the TDirectory documentation.
+
+In addition, TFile instances can be inspected via the `Get` method, a feature
+that is inherited from TDirectoryFile (please see the documentation of
+TDirectoryFile for examples on how to use it).
+
+In order to write objects into a TFile, the `WriteObject` Python method can
+be used (more information in the documentation of TDirectoryFile).
+
+Finally, PyROOT modifies the TFile constructor and the TFile::Open
+method to make them behave in a more pythonic way. In particular,
+they both throw an `OSError` if there was a problem accessing the
+file (e.g. non-existent or corrupted file).
+\htmlonly
+</div>
+\endhtmlonly
+*/
+'''
 
 from libROOTPythonizations import AddFileOpenPyz
 from ROOT import pythonization
@@ -45,6 +70,11 @@ def _TFileOpen(klass, *args):
 # Pythonizor function
 @pythonization()
 def pythonize_tfile(klass, name):
+    """
+    TFile inherits from
+    - TDirectory the pythonized attr syntax (__getattr__) and WriteObject method.
+    - TDirectoryFile the pythonized Get method (pythonized only in Python)
+    """
 
     if name == 'TFile':
         # Pythonizations for TFile::Open
