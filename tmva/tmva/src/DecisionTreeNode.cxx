@@ -58,7 +58,7 @@ using std::string;
 
 ClassImp(TMVA::DecisionTreeNode);
 
-bool     TMVA::DecisionTreeNode::fgIsTraining = false;
+Bool_t   TMVA::DecisionTreeNode::fgIsTraining = false;
 UInt_t   TMVA::DecisionTreeNode::fgTmva_Version_Code = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
