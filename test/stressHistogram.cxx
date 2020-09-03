@@ -11137,8 +11137,8 @@ int main(int argc, char** argv)
          cout << "stressHistogram: running single test" << endl;
          testNumber = atoi(argv[++i]);
       } else if (arg == "-d") {
-         cout << "stressHistogram: running in debug mode, setting gDebug to " << argv[i + 1] << endl;
-         gDebug = atoi(argv[++i]);
+         gDebug = (argc+1>i) ? atoi(argv[++i]) : 1;
+         cout << "stressHistogram: running in debug mode, setting gDebug to " << gDebug << endl;
          defaultEqualOptions = cmpOptDebug;
       } else if (arg == "-h" || arg == "-help") {
          cout << "usage: stressHistogram [ options ] " << endl;
