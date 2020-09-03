@@ -322,6 +322,12 @@ TReentrantRWLock<MutexT, RecurseCountsT>::Rewind(const State &earlierState) {
    if (pStateDelta->fDeltaReadersCount != 0) {
       // Claim a recurse-state +1 to be able to call Unlock() below.
       *typedState.fReadersCountLoc = typedState.fReadersCount + 1;
+      // ReadersCount and Readers can be read/updated before actually holding the R/W lock.
+      // (See WriteLock and ReadLock methods) but fReaders is an atomic, so that should be fine
+      // but that's weird, that does not account to other change in fReaders during between
+      // the snapshot and the rewind ... humm unless the lock held is a WriteLock
+      // (the actual use case) in which case there is no other thread that can update fReaders
+      // and we also assume that the "user code" is balance and release all read locks it takes.
       fReaders = typedState.fReadersCount + 1;
       // Release this thread's reader lock(s)
       ReadUnLock(hint);
