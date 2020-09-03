@@ -52,6 +52,18 @@ public:
       virtual ~State(); // implemented in TVirtualMutex.cxx
    };
 
+   struct StateAndRecurseCount {
+      /// State of gCoreMutex when the first interpreter-related function was invoked.
+      std::unique_ptr<ROOT::TVirtualRWMutex::State> fState;
+
+      /// Interpreter-related functions will push the "entry" lock state to *this.
+      /// Recursive calls will do that, too - but we must only forget about the lock
+      /// state once this recursion count went to 0.
+      Int_t fRecurseCount = 0;
+
+      operator bool() const { return (bool)fState; }
+   };
+
    /// \class StateDelta
    /// State as returned by `GetStateDelta()` that can be passed to
    /// `Restore()`
