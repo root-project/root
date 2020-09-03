@@ -5254,7 +5254,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
       return;
    THashList *labels = axis->GetLabels();
    if (!labels) {
-      Warning("LabelsOption", "Histogram has no labels!");
+      Warning("LabelsOption", "Axis %s has no labels!",axis->GetName());
       return;
    }
    TString opt = option;
@@ -5297,13 +5297,13 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
       sort = 2;
    if (sort < 0) {
       if (iopt < 0)
-         Error("LabelsOption", "%s is an invalid option!",opt.Data());
+         Error("LabelsOption", "%s is an invalid label placement option!",opt.Data());
       return;
    }
 
    Double_t entries = fEntries;
    Int_t n = TMath::Min(axis->GetNbins(), labels->GetSize());
-   std::vector<Int_t> a(n + 2);
+   std::vector<Int_t> a(n);
    std::vector<Int_t> b(n);
 
    Int_t i, j, k;
@@ -5311,10 +5311,8 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
    std::vector<Double_t> errors;
    THashList *labold = new THashList(labels->GetSize(), 1);
    TIter nextold(labels);
-   TObject *obj;
-   while ((obj = nextold())) {
-      labold->Add(obj);
-   }
+   TObject *obj = nullptr;
+   labold->AddAll(labels);
    labels->Clear();
 
    // delete buffer if it is there since bins will be reordered.
@@ -5378,20 +5376,25 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
          else
             TMath::Sort(n, pcont.data(), a.data(), kFALSE); // sort by increasing values
          for (i = 0; i < n; i++) {
-            // iterate on onld label  list to find corresponding bin match
+            // iterate on old label  list to find corresponding bin match
             TIter next(labold);
             UInt_t bin = a[i] + 1;
             while ((obj = next())) {
                if (obj->GetUniqueID() == (UInt_t)bin)
                   break;
+               else
+                  obj = nullptr;
             }
+            if (!obj)
+               // this should not really happen
+               R__ASSERT("LabelsOption - No corresponding bin found when ordering labels");
+
             labels->Add(obj);
-            // obj->SetUniqueID(i+1);
             if (gDebug)
                std::cout << " set label " << obj->GetName() << " to bin " << i + 1 << " from order " << a[i] << " bin "
                          << b[a[i]] << "content " << pcont[a[i]] << std::endl;
          }
-         // need to set here new ordered labels - otherwise loop before does not work since labold and llabels list
+         // need to set here new ordered labels - otherwise loop before does not work since labold and labels list
          // contain same objects
          for (i = 0; i < n; i++) {
             labels->At(i)->SetUniqueID(i + 1);
@@ -5455,17 +5458,17 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
             // iterate on the old label  list to find corresponding bin match
             TIter next(labold);
             UInt_t bin = a[i] + 1;
-            bool foundBin = kFALSE;
+            obj = nullptr;
             while ((obj = next())) {
                if (obj->GetUniqueID() == (UInt_t)bin) {
-                  foundBin = kTRUE;
                   break;
                }
+               else
+                  obj = nullptr;
             }
-            if (!foundBin)
+            if (!obj)
                R__ASSERT("LabelsOption - No corresponding bin found when ordering labels");
             labels->Add(obj);
-            // obj->SetUniqueID(i+1);
             if (gDebug)
                std::cout << " set label " << obj->GetName() << " to bin " << i + 1 << " from bin " << a[i] << "content "
                          << pcont[a[i]] << std::endl;

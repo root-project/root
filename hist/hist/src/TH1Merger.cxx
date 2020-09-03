@@ -20,13 +20,13 @@ Bool_t TH1Merger::AxesHaveLimits(const TH1 * h) {
    Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
    if (h->GetDimension() > 1) hasLimits &=  h->GetYaxis()->GetXmin() < h->GetYaxis()->GetXmax();
    if (h->GetDimension() > 2) hasLimits &=  h->GetZaxis()->GetXmin() < h->GetZaxis()->GetXmax();
-   return hasLimits; 
+   return hasLimits;
 }
 
 /// Function performing the actual merge
 Bool_t TH1Merger::operator() () {
 
-   
+
    EMergerType type = ExamineHistograms();
 
    if (gDebug) Info("Merge","Histogram Merge type is %d and new axis flag is %d",(int) type,(int) fNewAxisFlag);
@@ -45,16 +45,16 @@ Bool_t TH1Merger::operator() () {
    if (type == kAutoP2HaveLimits || (type == kAutoP2NeedLimits && AutoP2BufferMerge()))
       return AutoP2Merge();
 
-   // this is the mixed case - more complicated 
+   // this is the mixed case - more complicated
    if (type == kHasNewLimits) {
-      // we need to define some new axes     
+      // we need to define some new axes
       DefineNewAxes();
       // we might need to merge some histogram using the buffer
       Bool_t ret =  BufferMerge();
-      // if ret is true the merge is completed and we can exit 
-      if (ret) return kTRUE; 
+      // if ret is true the merge is completed and we can exit
+      if (ret) return kTRUE;
       // in the other cases then we merge using FindBin
-      return DifferentAxesMerge(); 
+      return DifferentAxesMerge();
    }
    Error("TH1Merger","Unknown type of Merge for histogram %s",fH0->GetName());
    return kFALSE;
@@ -201,8 +201,8 @@ Bool_t TH1Merger::AutoP2BuildAxes(TH1 *h)
 
 /**
    Examine the list of histograms to find out which type of Merge we need to do
-   Pass the input list containing the histogram to merge and h0 which is the initial histogram 
-   on which all the histogram of the list will be merged 
+   Pass the input list containing the histogram to merge and h0 which is the initial histogram
+   on which all the histogram of the list will be merged
    This are the possible cases:
     - 1. All histogram have the same axis (allSameLimits = true)
     - 2. Histogram have different axis but compatible  (allSameLimits = false) and sameLimitsX,Y,Z specifies which axis
@@ -210,7 +210,7 @@ Bool_t TH1Merger::AutoP2BuildAxes(TH1 *h)
     - 3. Histogram do not have limits (so the Buffer is used)  allHaveLimits = false
     - 3b. One histogram has limits the other not : allHaveLimits = false AND initialLimitsFound = true
     - 4. Histogram Have labels  = allHaveLabels = true
-   
+
 
 */
 TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
@@ -226,8 +226,8 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
    Bool_t sameLimitsY = kTRUE;
    Bool_t sameLimitsZ = kTRUE;
    Bool_t foundLabelHist = kFALSE;
-   Bool_t haveWeights = kFALSE; 
-   
+   Bool_t haveWeights = kFALSE;
+
    Bool_t isAutoP2 = kFALSE;
 
    // TAxis newXAxis;
@@ -237,15 +237,15 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
    TIter next(&fInputList);
    TH1 * h = fH0;  // start with fH0
 
-   int dimension = fH0->GetDimension(); 
+   int dimension = fH0->GetDimension();
 
    isAutoP2 = fH0->TestBit(TH1::kAutoBinPTwo) ? kTRUE : kFALSE;
 
    // if the option alphanumeric merge is set
-   // we assume we do not have labels 
-   if (fNoLabelMerge)  allHaveLabels = kFALSE; 
+   // we assume we do not have labels
+   if (fNoLabelMerge)  allHaveLabels = kFALSE;
 
-   // start looping on the histograms 
+   // start looping on the histograms
 
    do  {
 
@@ -254,7 +254,7 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
          if (h->GetDimension() != dimension) {
             Error("Merge", "Cannot merge histogram - dimensions are different\n "
                   "%s has dim=%d and %s has dim=%d",fH0->GetName(),dimension,h->GetName(),h->GetDimension());
-            return kNotCompatible; 
+            return kNotCompatible;
          }
       }
 
@@ -325,7 +325,7 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
                if (!TH1::RecomputeAxisLimits(fNewXAxis, *(h->GetXaxis()))) {
                   Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
                         "first: %s (%d, %f, %f), second: %s (%d, %f, %f)", fH0->GetName(),
-                        fNewXAxis.GetNbins(), fNewXAxis.GetXmin(), fNewXAxis.GetXmax(), 
+                        fNewXAxis.GetNbins(), fNewXAxis.GetXmin(), fNewXAxis.GetXmax(),
                         h->GetName(),h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
                         h->GetXaxis()->GetXmax());
                   return kNotCompatible;
@@ -362,11 +362,11 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
 
          }
       }
-      Bool_t histoIsEmpty = h->IsEmpty(); 
+      Bool_t histoIsEmpty = h->IsEmpty();
       // std::cout << "considering histo " << h->GetName() << "  labels - " << allHaveLabels << " is empty "
       //           <<  histoIsEmpty << std::endl;
 
-      // if histogram is empty it does not matter if it has label or not 
+      // if histogram is empty it does not matter if it has label or not
       if (allHaveLabels && !histoIsEmpty) {
          THashList* hlabelsX = h->GetXaxis()->GetLabels();
          THashList* hlabelsY = (dimension > 1) ? h->GetYaxis()->GetLabels() : nullptr;
@@ -382,25 +382,25 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
          }
 
          allHaveLabels &= (haveOneLabel);
-         
-         if (haveOneLabel) { 
+
+         if (haveOneLabel) {
             foundLabelHist = kTRUE;
-            UInt_t type = 0; 
+            UInt_t type = 0;
             if (haveOneLabelX) type |= TH1::kXaxis;
             if (haveOneLabelY) type |= TH1::kYaxis;
             if (haveOneLabelZ) type |= TH1::kZaxis;
-            if (labelAxisType == TH1::kNoAxis) labelAxisType = type; 
+            if (labelAxisType == TH1::kNoAxis) labelAxisType = type;
             // check if all histogram have consistent label axis
             // this means that there is at least one axis where boith histogram have labels
             Bool_t consistentLabels = (type & labelAxisType) != TH1::kNoAxis;
             allHaveLabels &= consistentLabels;
             if (!consistentLabels)
-               Warning("TH1Merger::ExamineHistogram","Histogram %s has not consistent labels: %d is not consistent with  %d",
+               Warning("TH1Merger::ExamineHistogram","Histogram %s has inconsistent labels: %d is not consistent with  %d",
                      h->GetName(), (int) type, (int) labelAxisType );
             if (gDebug && consistentLabels)
-               Info("TH1Merger::ExamineHistogram","Histogram %s has consistent labels",h->GetName() );  
-         } 
-         
+               Info("TH1Merger::ExamineHistogram","Histogram %s has consistent labels",h->GetName() );
+         }
+
          // Check compatibility of axis that have labels with axis that can be extended
          UInt_t extendAxisType = TH1::kNoAxis;
          if (fH0->GetXaxis()->CanExtend()) extendAxisType |= TH1::kXaxis;
@@ -413,25 +413,25 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
             // special case for this histogram when is empty
             // and axis cannot be extended (because it is the default)
             if ( fH0->IsEmpty()  ) {
-                if (gDebug) 
+                if (gDebug)
                    Info("TH1Merger::ExamineHistogram","Histogram %s to be merged is empty and we are merging with %s that has labels. Force the axis to be extended",fH0->GetName(),h->GetName());
                fH0->SetCanExtend( labelAxisType );
             }
             else { // histogram is not empty
-               if (gDebug) 
+               if (gDebug)
                   Info("TH1Merger::ExamineHistogram","Histogram %s to be merged has labels but corresponding axis cannot be extended - using bin numeric mode to merge. Call TH1::SetCanExtend(TH1::kAllAxes) if want to merge using label mode",fH0->GetName());
                allHaveLabels = kFALSE;
             }
          }
          // we don;t need to check anymore for case of non=empty histograms with some labels.
-         // If we have some labels set ans axis is not extendable the LabelsMerge function handles 
+         // If we have some labels set ans axis is not extendable the LabelsMerge function handles
          // that case correctly
 #if 0
          if (allHaveLabels ) {
             // count number of bins with non-null content
             Int_t non_zero_bins = 0;
             // loop on axis that have labels. Support this only for 1D histogram
-            if (hlabelsX && dimension == 1 && !h->GetXaxis()->CanExtend()) { 
+            if (hlabelsX && dimension == 1 && !h->GetXaxis()->CanExtend()) {
                Int_t nbins = h->GetXaxis()->GetNbins();
                if (nbins > hlabelsX->GetEntries() ) {
                   for (Int_t i = 1; i <= nbins; i++) {
@@ -506,18 +506,18 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
    if (dimension > 1 && fH0->GetYaxis()->GetXmin() >= fH0->GetYaxis()->GetXmax()) fNewAxisFlag |= TH1::kYaxis;
    if (dimension > 2 && fH0->GetZaxis()->GetXmin() >= fH0->GetZaxis()->GetXmax()) fNewAxisFlag |= TH1::kZaxis;
 
-   
-   return kHasNewLimits; 
-   
+
+   return kHasNewLimits;
+
 }
 
 /**
    Function to define new histogram axis when merging
-   It is call only in case of merging with different axis or with the 
+   It is call only in case of merging with different axis or with the
    buffer  (kHasNewLimits)
 */
 
-void TH1Merger::DefineNewAxes() { 
+void TH1Merger::DefineNewAxes() {
 
    // first we need to create a copy of the histogram in case is not empty
 
@@ -760,7 +760,7 @@ Bool_t TH1Merger::AutoP2Merge()
 Bool_t TH1Merger::BufferMerge()
 {
 
-   TIter next(&fInputList); 
+   TIter next(&fInputList);
    while (TH1* hist = (TH1*)next()) {
       // support also case where some histogram have limits and some have the buffer
       if ( !TH1Merger::AxesHaveLimits(hist) && hist->fBuffer  ) {
@@ -774,16 +774,16 @@ Bool_t TH1Merger::BufferMerge()
    // return true if the merge is completed
    if (fInputList.GetSize() == 0) {
       // all histo have been merged
-      return kTRUE; 
+      return kTRUE;
    }
    // we need to reset the buffer in case of merging later on
    // is this really needed ???
    if (fH0->fBuffer) fH0->BufferEmpty(1);
-   
-   return kFALSE; 
+
+   return kFALSE;
 }
 
-Bool_t TH1Merger::SameAxesMerge() { 
+Bool_t TH1Merger::SameAxesMerge() {
 
 
    Double_t stats[TH1::kNstat], totstats[TH1::kNstat];
@@ -792,8 +792,8 @@ Bool_t TH1Merger::SameAxesMerge() {
    }
    fH0->GetStats(totstats);
    Double_t nentries = fH0->GetEntries();
-   
-   TIter next(&fInputList); 
+
+   TIter next(&fInputList);
    while (TH1* hist=(TH1*)next()) {
       // process only if the histogram has limits; otherwise it was processed before
       // in the case of an existing buffer (see if statement just before)
@@ -802,7 +802,7 @@ Bool_t TH1Merger::SameAxesMerge() {
          Info("TH1Merger::SameAxesMerge","Merging histogram %s into %s",hist->GetName(), fH0->GetName() );
 
       // skip empty histograms
-      if (hist->IsEmpty()) continue; 
+      if (hist->IsEmpty()) continue;
 
       // import statistics
       hist->GetStats(stats);
@@ -832,25 +832,25 @@ Bool_t TH1Merger::SameAxesMerge() {
 
 
 /**
-   Merged histogram when axis can be different. 
+   Merged histogram when axis can be different.
    Histograms are merged looking at bin center positions
-   
+
  */
-Bool_t TH1Merger::DifferentAxesMerge() { 
-   
+Bool_t TH1Merger::DifferentAxesMerge() {
+
    Double_t stats[TH1::kNstat], totstats[TH1::kNstat];
    for (Int_t i=0;i<TH1::kNstat;i++) {totstats[i] = stats[i] = 0;}
    fH0->GetStats(totstats);
    Double_t nentries = fH0->GetEntries();
 
-   TIter next(&fInputList); 
+   TIter next(&fInputList);
    while (TH1* hist=(TH1*)next()) {
 
       if (gDebug)
          Info("TH1Merger::DifferentAxesMerge","Merging histogram %s into %s",hist->GetName(), fH0->GetName() );
-      
+
       // skip empty histograms
-      if (hist->IsEmpty()) continue; 
+      if (hist->IsEmpty()) continue;
 
       // import statistics
       hist->GetStats(stats);
@@ -906,7 +906,7 @@ Bool_t TH1Merger::DifferentAxesMerge() {
           if (fH0->fDimension > 2)
              iz = fH0->fZaxis.FindBin(hist->GetZaxis()->GetBinCenter(binz));
 
-         Int_t ib = fH0->GetBin(ix,iy,iz); 
+         Int_t ib = fH0->GetBin(ix,iy,iz);
          if (ib < 0 || ib > fH0->fNcells) {
             Fatal("TH1Merger::LabelMerge","Fatal error merging histogram %s - bin number is %d and array size is %d",
                   fH0->GetName(), ib,fH0->fNcells);
@@ -927,8 +927,8 @@ Bool_t TH1Merger::DifferentAxesMerge() {
    Find a duplicate labels in an axis label list
 */
 Bool_t TH1Merger::HasDuplicateLabels(const THashList * labels) {
-   
-   if (!labels) return kFALSE; 
+
+   if (!labels) return kFALSE;
 
    for (const auto * obj: *labels) {
       auto objList = labels->GetListForObject(obj);
@@ -938,7 +938,7 @@ Bool_t TH1Merger::HasDuplicateLabels(const THashList * labels) {
          std::unordered_set<std::string> s;
          for ( const auto * o: *objList) {
             auto ret = s.insert(std::string(o->GetName() ));
-            if (!ret.second) return kTRUE; 
+            if (!ret.second) return kTRUE;
          }
       }
    }
@@ -947,21 +947,21 @@ Bool_t TH1Merger::HasDuplicateLabels(const THashList * labels) {
 
 /**
  Check if histogram has duplicate labels
- Return an integer with bit set correponding 
-  on the axis that has duplicate labels 
+ Return an integer with bit set correponding
+  on the axis that has duplicate labels
   e.g. duplicate labels on x axis : return 1
        duplicate labels on x and z axis : return 5
 
 */
 Int_t TH1Merger::CheckForDuplicateLabels(const TH1 * hist) {
-   
+
    R__ASSERT(hist != nullptr);
 
    auto labelsX = hist->GetXaxis()->GetLabels();
    auto labelsY = hist->GetYaxis()->GetLabels();
    auto labelsZ = hist->GetZaxis()->GetLabels();
 
-   Int_t res = 0; 
+   Int_t res = 0;
    if (HasDuplicateLabels(labelsX) ) {
       Warning("TH1Merger::CheckForDuplicateLabels","Histogram %s has duplicate labels in the x axis. "
               "Bin contents will be merged in a single bin",hist->GetName());
@@ -977,13 +977,13 @@ Int_t TH1Merger::CheckForDuplicateLabels(const TH1 * hist) {
               "Bin contents will be merged in a single bin",hist->GetName());
       res |= 4;
    }
-   return res; 
+   return res;
 }
 
 /**
-   Merge histograms with labels 
+   Merge histograms with labels
 */
-Bool_t TH1Merger::LabelMerge() { 
+Bool_t TH1Merger::LabelMerge() {
 
    Double_t stats[TH1::kNstat], totstats[TH1::kNstat];
    for (Int_t i=0;i<TH1::kNstat;i++) {totstats[i] = stats[i] = 0;}
@@ -991,16 +991,16 @@ Bool_t TH1Merger::LabelMerge() {
    Double_t nentries = fH0->GetEntries();
 
    // check for duplicate labels
-   if (!fNoCheck && nentries > 0) CheckForDuplicateLabels(fH0); 
+   if (!fNoCheck && nentries > 0) CheckForDuplicateLabels(fH0);
 
-   TIter next(&fInputList); 
+   TIter next(&fInputList);
    while (TH1* hist=(TH1*)next()) {
 
       if (gDebug)
          Info("TH1Merger::LabelMerge","Merging histogram %s into %s",hist->GetName(), fH0->GetName() );
 
       // skip empty histograms
-      if (hist->IsEmpty()) continue; 
+      if (hist->IsEmpty()) continue;
 
       // import statistics
       hist->GetStats(stats);
@@ -1013,9 +1013,9 @@ Bool_t TH1Merger::LabelMerge() {
       auto labelsZ = hist->GetZaxis()->GetLabels();
       R__ASSERT(!( labelsX == nullptr  && labelsY == nullptr && labelsZ == nullptr));
 
-      Bool_t mergeLabelsX = labelsX && fH0->fXaxis.CanExtend() && hist->fXaxis.CanExtend(); 
-      Bool_t mergeLabelsY = labelsY && fH0->fYaxis.CanExtend() && hist->fYaxis.CanExtend(); 
-      Bool_t mergeLabelsZ = labelsZ && fH0->fZaxis.CanExtend() && hist->fZaxis.CanExtend(); 
+      Bool_t mergeLabelsX = labelsX && fH0->fXaxis.CanExtend() && hist->fXaxis.CanExtend();
+      Bool_t mergeLabelsY = labelsY && fH0->fYaxis.CanExtend() && hist->fYaxis.CanExtend();
+      Bool_t mergeLabelsZ = labelsZ && fH0->fZaxis.CanExtend() && hist->fZaxis.CanExtend();
 
       if (gDebug) {
          if (mergeLabelsX)
@@ -1033,7 +1033,7 @@ Bool_t TH1Merger::LabelMerge() {
       }
 
       // check if histogram has duplicate labels
-      if (!fNoCheck && hist->GetEntries() > 0) CheckForDuplicateLabels(hist); 
+      if (!fNoCheck && hist->GetEntries() > 0) CheckForDuplicateLabels(hist);
 
       // loop on bins of the histogram and do the merge
       for (Int_t ibin = 0; ibin < hist->fNcells; ibin++) {
@@ -1043,27 +1043,27 @@ Bool_t TH1Merger::LabelMerge() {
          if (fH0->fSumw2.fN) e1sq= hist->GetBinErrorSqUnchecked(ibin);
 
          // if bin is empty we can skip it
-         if (cu == 0 && e1sq == 0) continue; 
-         
+         if (cu == 0 && e1sq == 0) continue;
+
          Int_t binx,biny,binz;
          hist->GetBinXYZ(ibin, binx, biny, binz);
 
          // here only in the case of bins with labels
-         const char * labelX = 0; 
-         const char * labelY = 0; 
-         const char * labelZ = 0; 
+         const char * labelX = 0;
+         const char * labelY = 0;
+         const char * labelZ = 0;
          labelX=hist->GetXaxis()->GetBinLabel(binx);
          if (fH0->fDimension > 1) labelY = hist->GetYaxis()->GetBinLabel(biny);
          if (fH0->fDimension > 2) labelZ = hist->GetYaxis()->GetBinLabel(binz);
          // do we need to support case when there are bins with labels and bins without them ??
-         // this case should have been detected before when examining the histograms 
-         
+         // this case should have been detected before when examining the histograms
+
 
          Int_t ix = -1;
          Int_t iy = (fH0->fDimension > 1) ? -1 : 0;
-         Int_t iz = (fH0->fDimension > 2) ? -1 : 0; 
+         Int_t iz = (fH0->fDimension > 2) ? -1 : 0;
 
-         // special case for underflow/overflows which have normally empty labels 
+         // special case for underflow/overflows which have normally empty labels
          if (binx == 0 && TString(labelX) == "" ) ix = 0;
          if (binx == hist->fXaxis.GetNbins() +1 && TString(labelX) == "" ) ix = fH0->fXaxis.GetNbins() +1;
          if (fH0->fDimension > 1 ) {
@@ -1078,7 +1078,7 @@ Bool_t TH1Merger::LabelMerge() {
 
 
          // find corresponding case (in case bin is not overflow)
-         // and see if for that axis we need to merge using labels or bin numbers 
+         // and see if for that axis we need to merge using labels or bin numbers
          if (ix == -1) {
             if (mergeLabelsX)
                ix = fH0->fXaxis.FindBin(labelX);
@@ -1089,13 +1089,13 @@ Bool_t TH1Merger::LabelMerge() {
          if (iy == -1 && fH0->fDimension> 1 ) { // check on dim should not be needed
             if (mergeLabelsY)
                iy= fH0->fYaxis.FindBin(labelY);
-            else 
+            else
                iy = FindFixBinNumber(biny, hist->fYaxis, fH0->fYaxis);
          }
          if (iz == -1 && fH0->fDimension> 2)  {
             if (mergeLabelsZ)
                iz= fH0->fZaxis.FindBin(labelZ);
-            else 
+            else
                iz = FindFixBinNumber(binz, hist->fZaxis, fH0->fZaxis);
          }
 
@@ -1103,7 +1103,7 @@ Bool_t TH1Merger::LabelMerge() {
             Info("TH1Merge::LabelMerge","Merge bin [%d,%d,%d] with label [%s,%s,%s] into bin [%d,%d,%d]",
                  binx,biny,binz,labelX,labelY,labelZ,ix,iy,iz);
 
-         Int_t ib = fH0->GetBin(ix,iy,iz); 
+         Int_t ib = fH0->GetBin(ix,iy,iz);
          if (ib < 0 || ib >= fH0->fNcells) {
             Fatal("TH1Merger::LabelMerge","Fatal error merging histogram %s - bin number is %d and array size is %d",
                   fH0->GetName(), ib,fH0->fNcells);
