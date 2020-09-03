@@ -1,5 +1,4 @@
 #include "TROOT.h"
-#include "ROOT/RTaskArena.hxx"
 #include "ROOT/TThreadExecutor.hxx"
 #include <fstream>
 #include <random>
@@ -8,9 +7,10 @@
 #include <condition_variable>
 #include <mutex>
 #include "gtest/gtest.h"
-#include "tbb/task_arena.h"
 
 #ifdef R__USE_IMT
+#include "ROOT/RTaskArena.hxx"
+#include "tbb/task_arena.h"
 
 const unsigned maxConcurrency = ROOT::Internal::LogicalCPUBandwithControl();
 std::mt19937 randGenerator(0);                                      // seed the generator
@@ -200,6 +200,7 @@ TEST(RTaskArena, ThreadSafety) {
    }));
 }
 
+#endif //IMT
 
 // Have many threads create TThreadExecutor instances in parallel, which
 // each increment atomic counters in parallel.
@@ -233,4 +234,3 @@ TEST(TThreadExecutor, ThreadSafety) {
    EXPECT_TRUE(std::equal(counters.begin(), counters.end(), target.begin()));
 }
 
-#endif

@@ -1,11 +1,11 @@
 #include "TROOT.h"
-#include "ROOT/TFuture.hxx"
 
 #include <future>
 
 #include "gtest/gtest.h"
 
 #ifdef R__USE_IMT
+#include "ROOT/TFuture.hxx"
 
 using namespace ROOT::Experimental;
 

@@ -50,8 +50,6 @@ if(imt)
   target_include_directories(Imt SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
   target_link_libraries(Imt PRIVATE ${TBB_LIBRARIES})
   set_target_properties(Imt PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
-
-  ROOT_ADD_TEST_SUBDIRECTORY(test)
 else()
   ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
     ROOT/TThreadExecutor.hxx
@@ -65,5 +63,7 @@ else()
   )
 
 endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 ROOT_INSTALL_HEADERS()
