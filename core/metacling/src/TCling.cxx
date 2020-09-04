@@ -3911,7 +3911,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    }
 
    bool instantiateTemplate = !cl->TestBit(TClass::kUnloading);
-   // FIXME: Rather than adding an option to the TClingClassInfo, we should consider combining code 
+   // FIXME: Rather than adding an option to the TClingClassInfo, we should consider combining code
    // that is currently in the caller (like SetUnloaded) that disable AutoLoading and AutoParsing and
    // code is in the callee (disabling template instantiation) and end up with a more explicit class:
    //      TClingClassInfoReadOnly.
@@ -5996,7 +5996,7 @@ Int_t TCling::DeepAutoLoadImpl(const char *cls)
       // Note that it is actually alright if another thread is populating this
       // set since we can then exclude both the infinite recursion (the main goal)
       // and duplicate work.
-      static std::set<std::string> gClassOnStack;  
+      static std::set<std::string> gClassOnStack;
       auto insertResult = gClassOnStack.insert(std::string(cls));
       if (insertResult.second) {
          // Now look through the TProtoClass to load the required library/dictionary
@@ -9385,7 +9385,17 @@ void TCling::ApplyToInterpreterMutex(void *delta)
          R__ASSERT(fInitialMutex.fRecurseCount == 0 && "Inconsistent state of fInitialMutex!  Another thread within Interpreter critical section.");
          std::swap(fInitialMutex, typedDelta->fInitialState);
       } else {
-         Error("ApplyToInterpreterMutex", "delta is a nullptr.");
+         // This case happens whenever, EnableThreadSafety is first called from
+         // the interpreter function we just handled.
+         // Since thread safetely was not enabled at the time we rewinded, there was
+         // no lock taken and even-though we should be locking the rest of this
+         // interpreter handling/modifying code (since there might be threads in
+         // flight), we can't because there would be any lock guard to release the
+         // locks
+         if (fInitialMutex || fInitialMutex.fRecurseCount !=0)
+            Error("ApplyToInterpreterMutex",
+                 "After returning from user code that turned on thread safety support, we notice that fInitialMutex is already used ... "
+                 "so the rest of this function/stack execution might have race condition (with the other thread that thinks it has exclusive access to the interpreter state.");
       }
    }
 }
