@@ -145,13 +145,29 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    CefSettings settings;
 
    TString cef_main = TROOT::GetBinDir() + "/cef_main";
+   cef_string_ascii_to_utf16(cef_main.Data(), cef_main.Length(), &settings.browser_subprocess_path);
+
+#ifdef OS_LINUX
+   // on linux resource directory copied to lib/
+   TString path2 = TROOT::GetLibDir() + "/locales";
+   cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
+   TString path3 = TROOT::GetLibDir();
+   cef_string_ascii_to_utf16(path3.Data(), path3.Length(), &settings.resources_dir_path);
+#endif
+
+#ifdef OS_WIN
+   // on windows resource directory copied to bin/
+   TString path2 = TROOT::GetBinDir() + "/locales";
+   cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
+   TString path3 = TROOT::GetBinDir();
+   cef_string_ascii_to_utf16(path3.Data(), path3.Length(), &settings.resources_dir_path);
+#endif
 
 #ifdef OS_MACOSX
+   // on mac there is framework directory, where resources and libs are combined together
    TString path = TROOT::GetDataDir() + "/Frameworks/Chromium Embedded Framework.framework";
    cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.framework_dir_path);
 #endif
-
-   // cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
 
    settings.no_sandbox = true;
    // if (gROOT->IsWebDisplayBatch()) settings.single_process = true;
@@ -175,7 +191,7 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
-   fCefApp = new SimpleApp(use_views, cef_main.Data(), args.GetHttpServer(), args.GetFullUrl(), args.GetPageContent(), args.GetWidth(), args.GetHeight(), args.IsHeadless());
+   fCefApp = new SimpleApp(use_views, args.GetHttpServer(), args.GetFullUrl(), args.GetPageContent(), args.GetWidth(), args.GetHeight(), args.IsHeadless());
 
    fCefApp->SetNextHandle(handle.get());
 

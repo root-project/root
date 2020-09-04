@@ -112,10 +112,10 @@ class SimpleBrowserViewDelegate : public CefBrowserViewDelegate {
 
 } // namespace
 
-SimpleApp::SimpleApp(bool use_viewes, const std::string &cef_main,
+SimpleApp::SimpleApp(bool use_viewes,
                      THttpServer *serv, const std::string &url, const std::string &cont,
                      int width, int height, bool headless)
-   : CefApp(), CefBrowserProcessHandler(), fUseViewes(use_viewes), fCefMain(cef_main), fFirstServer(serv), fFirstUrl(url), fFirstContent(cont), fFirstHeadless(headless)
+   : CefApp(), CefBrowserProcessHandler(), fUseViewes(use_viewes), fFirstServer(serv), fFirstUrl(url), fFirstContent(cont), fFirstHeadless(headless)
 {
    fFirstRect.Set(0, 0, width, height);
 
@@ -148,12 +148,8 @@ void SimpleApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar)
 
 void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line)
 {
-   std::string name = process_type.ToString();
-   std::string prog = command_line->GetProgram().ToString();
-   // command_line->AppendSwitch("allow-file-access-from-files");
-   // command_line->AppendSwitch("disable-web-security");
-
-   // printf("OnBeforeCommandLineProcessing %s %s\n", name.c_str(), prog.c_str());
+//   command_line->AppendSwitch("allow-file-access-from-files");
+//   command_line->AppendSwitch("disable-web-security");
 //   if (fBatch) {
 //      command_line->AppendSwitch("disable-gpu");
 //      command_line->AppendSwitch("disable-gpu-compositing");
@@ -163,22 +159,13 @@ void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, Cef
 
 void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line)
 {
-   std::string newprog = fCefMain;
-   command_line->SetProgram(newprog);
-
-   // command_line->AppendSwitch("allow-file-access-from-files");
-   // command_line->AppendSwitch("disable-web-security");
-
-   // printf("OnBeforeChildProcessLaunch %s LastBatch %s\n", command_line->GetProgram().ToString().c_str(), fLastBatch ? "true" : "false");
-
+//   command_line->AppendSwitch("allow-file-access-from-files");
+//   command_line->AppendSwitch("disable-web-security");
 //   if (fLastBatch) {
 //      command_line->AppendSwitch("disable-webgl");
 //      command_line->AppendSwitch("disable-gpu");
 //      command_line->AppendSwitch("disable-gpu-compositing");
 //   }
-
-   // auto str = command_line->GetCommandLineString().ToString();
-   // printf("RUN %s\n", str.c_str());
 }
 
 void SimpleApp::OnContextInitialized()
