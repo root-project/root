@@ -87,3 +87,16 @@ void CreateTNtuple(const char *filename, const char *tuplename, int nentries, in
    f.Write();
    f.Close();
 }
+
+// Subclass of TTree in a namespace
+namespace Foo {
+class MyTree : public TTree {
+private:
+  int i;
+public:
+  MyTree() : i(0)
+  {
+    this->Branch("i", &i);
+  }
+};
+}
