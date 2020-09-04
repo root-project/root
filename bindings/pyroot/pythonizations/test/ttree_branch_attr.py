@@ -135,6 +135,10 @@ class TTreeBranchAttr(unittest.TestCase):
             self.assertEqual(ds.y, self.more)
             self.assertEqual(ds.z, 2*self.more)
 
+    def test_ttree_subclass_in_namespace(self):
+        t = ROOT.Foo.MyTree()
+        t.i
+
 
 if __name__ == '__main__':
     unittest.main()
