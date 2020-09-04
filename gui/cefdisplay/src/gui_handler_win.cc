@@ -23,6 +23,7 @@
 #include <string>
 
 #include "include/cef_browser.h"
+#include "include/cef_config.h"
 
 bool GuiHandler::PlatformInit()
 {
