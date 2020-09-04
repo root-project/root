@@ -43,7 +43,7 @@ PyObject *BoolNot(PyObject *value)
 // Get the TClass of the C++ object proxied by pyobj
 TClass *GetTClass(const CPyCppyy::CPPInstance *pyobj)
 {
-   return TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str());
+   return TClass::GetClass(Cppyy::GetScopedFinalName(pyobj->ObjectIsA()).c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////
