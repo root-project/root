@@ -318,7 +318,9 @@ sap.ui.define([
 
          gedFrame.addContent(  new sap.ui.core.HTML({content:"<hr/>"}));
          let list = new sap.m.List({});
-
+	 list.setMode("MultiSelect");
+	 list.setIncludeItemInSelection(true);
+	 list.addStyleClass("eveNoSelectionCheckBox");
          let items = el.items;
          for (let i = 0; i < items.length; ++i ) {
             let iid = "item_"+ i;
@@ -366,19 +368,6 @@ sap.ui.define([
 
 
             item.addContent(box);
-
-            item.attachPress(function(oEvent) {
-               console.log("Cell click: ", oEvent.getParameters(), oEvent);
-               console.log("amt clicj ", iid);
-               let esrc = oEvent.getSource();
-               if (esrc.hasStyleClass("eve_selected_item")) {
-                  oEvent.getSource().removeStyleClass("eve_selected_item");
-
-               }
-               else
-                  oEvent.getSource().addStyleClass("eve_selected_item");
-
-            });
             list.addItem(item);
 
 	 }
