@@ -126,10 +126,11 @@ ClassImp(RooSimWSTool::ObjSplitRule);
 
 using namespace std ;
 
+namespace {
 
 static Int_t init();
 
-static Int_t dummy = init() ;
+Int_t dummy = init() ;
 
 static Int_t init()
 {
@@ -140,6 +141,7 @@ static Int_t init()
   return 0 ;
 }
 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of SimWSTool on given workspace. All input is taken from the workspace

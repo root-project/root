@@ -45,9 +45,11 @@ using namespace std;
 
 ClassImp(RooClassFactory);
 
+namespace {
+
 static Int_t init();
 
-static Int_t dummy = init();
+Int_t dummy = init();
 
 static Int_t init()
 {
@@ -58,7 +60,7 @@ static Int_t init()
   return 0 ;
 }
 
-
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
