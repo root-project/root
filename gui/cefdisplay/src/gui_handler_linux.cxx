@@ -20,6 +20,7 @@
 
 #include "gui_handler.h"
 
+#include "include/cef_config.h"
 
 #ifdef CEF_X11
 

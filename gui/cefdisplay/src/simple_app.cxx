@@ -202,9 +202,11 @@ void SimpleApp::StartWindow(THttpServer *serv, const std::string &addr, const st
 
    std::string url;
 
-   // TODO: later one should be able both remote and local at the same time
+   //bool is_batch = false;
+
    if(addr.empty() && !cont.empty()) {
       url = fGuiHandler->AddBatchPage(cont);
+      // is_batch = true;
    } else if (serv) {
       url = fGuiHandler->MakePageUrl(serv, addr);
    } else {
@@ -235,16 +237,26 @@ void SimpleApp::StartWindow(THttpServer *serv, const std::string &addr, const st
 
       CefWindowInfo window_info;
 
+      // TODO: Seems to be, to configure window_info.SetAsWindowless,
+      // one should implement CefRenderHandler
+
       #if defined(OS_WIN)
          RECT wnd_rect = {rect.x, rect.y, rect.x + rect.width, rect.y + rect.height};
          if (!rect.IsEmpty()) window_info.SetAsChild(0, wnd_rect);
          // On Windows we need to specify certain flags that will be passed to
          // CreateWindowEx().
          window_info.SetAsPopup(0, "cefsimple");
+         //if (is_batch)
+         //   window_info.SetAsWindowless(GetDesktopWindow());
       #elif defined(OS_LINUX)
          if (!rect.IsEmpty()) window_info.SetAsChild(0, rect);
+         //if (is_batch)
+         //   window_info.SetAsWindowless(kNullWindowHandle);
       #else
-         if (!rect.IsEmpty()) window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
+         if (!rect.IsEmpty())
+            window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
+         //if (is_batch)
+         //   window_info.SetAsWindowless(kNullWindowHandle);
       #endif
 
       // Create the first browser window.
