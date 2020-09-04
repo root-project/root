@@ -659,6 +659,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     target_include_directories(${dictionary} PRIVATE
       ${incdirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
   else()
+    get_filename_component(dictionary_name ${dictionary} NAME)   
     add_custom_target(${dictionary} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
   endif()
 
