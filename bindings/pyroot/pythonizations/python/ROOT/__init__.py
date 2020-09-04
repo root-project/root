@@ -72,10 +72,11 @@ for _, module_name, _ in  pkgutil.walk_packages(pyz.__path__):
         module = importlib.import_module(pyz.__name__ + '.' + module_name)
 
 # Check if we are in the IPython shell
-try:
+if major == 3:
     import builtins
-except ImportError:
-    import __builtin__ as builtins # Py2
+else:
+    import __builtin__ as builtins  
+
 _is_ipython = hasattr(builtins, '__IPYTHON__')
 
 # Configure ROOT facade module
