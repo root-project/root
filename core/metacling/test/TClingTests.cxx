@@ -229,11 +229,12 @@ TEST_F(TClingTests, ClingLookupHelper) {
   gCling->GetFunction(cl, "RDataFrameTake<std::vector<float>>");
 }
 
+
 // Check that compiled and interpreted statics share the same address.
 TEST_F(TClingTests, ROOT10499) {
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
    EXPECT_EQ((void*)&std::cout, (void*)gInterpreter->Calc("&std::cout"));
    EXPECT_EQ((void*)&std::cerr, (void*)gInterpreter->Calc("&std::cerr"));
-#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
    // strangely enough, this works on the command prompt, but not in this test...
    EXPECT_EQ((void*)&errno, (void*)gInterpreter->Calc("&errno"));
 #endif
