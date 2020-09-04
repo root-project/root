@@ -8091,7 +8091,7 @@ void ASTReader::ReadLateParsedTemplates(
       FunctionDecl *FD =
           cast<FunctionDecl>(GetLocalDecl(*FMod, LateParsed[Idx++]));
 
-      auto LT = std::make_unique<LateParsedTemplate>();
+      auto LT = llvm::make_unique<LateParsedTemplate>();
       LT->D = GetLocalDecl(*FMod, LateParsed[Idx++]);
 
       ModuleFile *F = getOwningModuleFile(LT->D);
