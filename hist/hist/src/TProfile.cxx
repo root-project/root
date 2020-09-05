@@ -577,7 +577,7 @@ Bool_t TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
 
    //THE ALGORITHM COMPUTING THE ERRORS IS WRONG. HELP REQUIRED
    printf("WARNING!!: The algorithm in TProfile::Divide computing the errors is not accurate\n");
-   printf(" Instead of Divide(TProfile *h1, TProfile *h2, do:\n");
+   printf(" Instead of Divide(TProfile *h1, TProfile *h2), do:\n");
    printf("   TH1D *p1 = h1->ProjectionX();\n");
    printf("   TH1D *p2 = h2->ProjectionX();\n");
    printf("   p1->Divide(p2);\n");
