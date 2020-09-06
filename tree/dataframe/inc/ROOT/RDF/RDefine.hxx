@@ -61,33 +61,34 @@ class RDefine final : public RDefineBase {
    const ColumnNames_t fColumnNames;
    ValuesPerSlot_t fLastResults;
 
-   std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
+   std::vector<RDFInternal::RDFValueTuple_t> fValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 
-   template <std::size_t... S>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, NoneTag)
+   template <typename... ColTypes, std::size_t... S>
+   void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, NoneTag)
    {
-      fLastResults[slot] = fExpression(std::get<S>(fValues[slot])->Get(entry)...);
+      fLastResults[slot] = fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
    }
 
-   template <std::size_t... S>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, SlotTag)
+   template <typename... ColTypes, std::size_t... S>
+   void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, SlotTag)
    {
-      fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot])->Get(entry)...);
+      fLastResults[slot] = fExpression(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
    }
 
-   template <std::size_t... S>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, SlotAndEntryTag)
+   template <typename... ColTypes, std::size_t... S>
+   void
+   UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, SlotAndEntryTag)
    {
-      fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot])->Get(entry)...);
+      fLastResults[slot] = fExpression(slot, entry, fValues[slot][S]->template Get<ColTypes>(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
@@ -113,7 +114,7 @@ public:
       if (!fIsInitialized[slot]) {
          fIsInitialized[slot] = true;
          RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fDSValuePtrs};
-         RDFInternal::InitColumnReaders(slot, fValues[slot], r, TypeInd_t(), info);
+         RDFInternal::InitColumnReaders(slot, fValues[slot], r, ColumnTypes_t{}, info);
          fLastCheckedEntry[slot] = -1;
       }
    }
@@ -124,7 +125,7 @@ public:
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
-         UpdateHelper(slot, entry, TypeInd_t(), ExtraArgsTag{});
+         UpdateHelper(slot, entry, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
          fLastCheckedEntry[slot] = entry;
       }
    }
@@ -134,8 +135,10 @@ public:
    void ClearValueReaders(unsigned int slot) final
    {
       if (fIsInitialized[slot]) {
-         RDFInternal::ResetColumnReaders(fValues[slot], TypeInd_t());
+         for (auto &v : fValues[slot])
+            v->Reset();
          fIsInitialized[slot] = false;
+         fValues[slot].clear();
       }
    }
 };
