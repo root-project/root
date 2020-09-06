@@ -252,8 +252,6 @@ public:
    RDSColumnReader(void * DSValuePtr) : fDSValuePtr(static_cast<T **>(DSValuePtr)) {}
 };
 
-using RDFValueTuple_t = std::vector<std::unique_ptr<RColumnReaderBase>>;
-
 template <typename T>
 std::unique_ptr<RColumnReaderBase>
 MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader *r,
@@ -297,8 +295,8 @@ struct RColumnReadersInfo {
 
 /// Initialize a tuple of column readers.
 template <typename... ColTypes>
-void InitColumnReaders(unsigned int slot, RDFValueTuple_t &valueTuple, TTreeReader *r, TypeList<ColTypes...>,
-                       const RColumnReadersInfo &colInfo)
+void InitColumnReaders(unsigned int slot, std::vector<std::unique_ptr<RColumnReaderBase>> &colReaders, TTreeReader *r,
+                       TypeList<ColTypes...>, const RColumnReadersInfo &colInfo)
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
@@ -314,7 +312,7 @@ void InitColumnReaders(unsigned int slot, RDFValueTuple_t &valueTuple, TTreeRead
    // Construct the column readers
    int i = 0;
    (void)expander{
-      (valueTuple.emplace_back(InitColumnReadersHelper<ColTypes>(
+      (colReaders.emplace_back(InitColumnReadersHelper<ColTypes>(
           slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr, DSValuePtrsMap, r, colNames[i])),
        ++i)...,
       0};
