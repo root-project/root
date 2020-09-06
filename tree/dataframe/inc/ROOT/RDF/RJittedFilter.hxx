@@ -55,7 +55,6 @@ public:
    void ResetChildrenCount() final;
    void TriggerChildrenCount() final;
    void ResetReportCount() final;
-   void ClearValueReaders(unsigned int slot) final;
    void InitNode() final;
    void AddFilterName(std::vector<std::string> &filters) final;
    void ClearTask(unsigned int slot) final;

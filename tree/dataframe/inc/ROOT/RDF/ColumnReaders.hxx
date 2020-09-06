@@ -56,9 +56,6 @@ public:
       return *static_cast<T *>(GetImpl(entry));
    }
 
-   /// Perform clean-up operations if needed. Called at the end of a processing task.
-   virtual void Reset() {}
-
 private:
    virtual void *GetImpl(Long64_t entry) = 0;
 };
@@ -101,15 +98,15 @@ public:
    {
    }
 
-   /// Delete the TTreeReaderValue object.
+   /// The dtor resets the TTreeReaderValue object.
    //
-   // Without this call, a race condition is present in which a TTreeReader
+   // Otherwise a race condition is present in which a TTreeReader
    // and its TTreeReader{Value,Array}s can be deleted concurrently:
    // - Thread #1) a task ends and pushes back processing slot
    // - Thread #2) a task starts and overwrites thread-local TTreeReaderValues
    // - Thread #1) first task deletes TTreeReader
    // See https://github.com/root-project/root/commit/26e8ace6e47de6794ac9ec770c3bbff9b7f2e945
-   void Reset() final { fTreeValue.reset(); }
+   ~RTreeColumnReader() { fTreeValue.reset(); }
 };
 
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderArrays.
@@ -195,8 +192,8 @@ public:
    {
    }
 
-   /// Delete the TTreeReaderArray object.
-   void Reset() final { fTreeArray.reset(); }
+   /// See the other class template specializations for an explanation.
+   ~RTreeColumnReader() { fTreeArray.reset(); }
 };
 
 /// RTreeColumnReader specialization for arrays of boolean values read via TTreeReaderArrays.
@@ -236,8 +233,8 @@ public:
    {
    }
 
-   /// Delete the TTreeReaderArray object.
-   void Reset() final { fTreeArray.reset(); }
+   /// See the other class template specializations for an explanation.
+   ~RTreeColumnReader() { fTreeArray.reset(); }
 };
 
 /// Column reader type that deals with values read from RDataSources.

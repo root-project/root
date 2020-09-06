@@ -143,13 +143,6 @@ public:
       fPrevData.IncrChildrenCount();
    }
 
-   virtual void ClearValueReaders(unsigned int slot) final
-   {
-      for (auto &v : fValues[slot])
-         v->Reset();
-      fValues[slot].clear();
-   }
-
    void AddFilterName(std::vector<std::string> &filters)
    {
       fPrevData.AddFilterName(filters);
@@ -159,11 +152,10 @@ public:
 
    virtual void ClearTask(unsigned int slot) final
    {
-      for (auto &column : fDefines.GetColumns()) {
+      for (auto &column : fDefines.GetColumns())
          column.second->ClearValueReaders(slot);
-      }
 
-      ClearValueReaders(slot);
+      fValues[slot].clear();
    }
 
    std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph()
