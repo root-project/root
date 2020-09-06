@@ -36,14 +36,6 @@
 #include <vector>
 #include <utility>
 
-#define _USE_MATH_DEFINES // enable definition of M_PI
-#ifdef _WIN32
-// cmath does not expose M_PI on windows
-#include <math.h>
-#else
-#include <cmath>
-#endif
-
 #ifdef R__HAS_VDT
 #include <vdt/vdtMath.h>
 #endif

@@ -128,4 +128,8 @@ if(root7)
   target_sources(ROOTDataFrame PRIVATE src/RNTupleDS.cxx)
 endif(root7)
 
+if(MSVC)
+  target_compile_definitions(ROOTDataFrame PRIVATE _USE_MATH_DEFINES)
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
