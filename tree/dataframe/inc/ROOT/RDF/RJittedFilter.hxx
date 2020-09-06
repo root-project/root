@@ -57,7 +57,7 @@ public:
    void ResetReportCount() final;
    void InitNode() final;
    void AddFilterName(std::vector<std::string> &filters) final;
-   void ClearTask(unsigned int slot) final;
+   void FinaliseSlot(unsigned int slot) final;
    std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph();
 };
 
