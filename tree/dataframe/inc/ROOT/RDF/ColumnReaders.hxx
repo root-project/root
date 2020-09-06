@@ -64,13 +64,12 @@ private:
 };
 
 /// Column reader for defined (aka custom) columns.
-template <typename T>
 class R__CLING_PTRCHECK(off) RDefineReader final : public RColumnReaderBase {
    /// Non-owning reference to the node responsible for the custom column. Needed when querying custom values.
    RDFDetail::RDefineBase &fDefine;
 
    /// Non-owning ptr to the value of a custom column.
-   T *fCustomValuePtr = nullptr;
+   void *fCustomValuePtr = nullptr;
 
    /// The slot this value belongs to.
    unsigned int fSlot = std::numeric_limits<unsigned int>::max();
@@ -82,10 +81,10 @@ class R__CLING_PTRCHECK(off) RDefineReader final : public RColumnReaderBase {
    }
 
 public:
-   RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define)
-      : fDefine(define), fCustomValuePtr(static_cast<T *>(define.GetValuePtr(slot))), fSlot(slot)
+   RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define, const std::type_info &tid)
+      : fDefine(define), fCustomValuePtr(define.GetValuePtr(slot)), fSlot(slot)
    {
-      CheckDefine(define, typeid(T));
+      CheckDefine(define, tid);
    }
 };
 
@@ -260,7 +259,7 @@ MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader 
    using Ret_t = std::unique_ptr<RColumnReaderBase>;
 
    if (define != nullptr)
-      return Ret_t(new RDefineReader<T>(slot, *define));
+      return Ret_t(new RDefineReader(slot, *define, typeid(T)));
 
    if (DSValuePtrsPtr != nullptr) {
       auto &DSValuePtrs = *DSValuePtrsPtr;
