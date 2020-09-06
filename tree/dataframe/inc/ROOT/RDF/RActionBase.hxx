@@ -63,7 +63,6 @@ public:
    virtual void Initialize() = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
-   virtual void ClearValueReaders(unsigned int slot) = 0;
    virtual void FinalizeSlot(unsigned int) = 0;
    virtual void Finalize() = 0;
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a

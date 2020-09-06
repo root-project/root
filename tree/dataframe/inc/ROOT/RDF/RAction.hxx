@@ -113,18 +113,10 @@ public:
 
    void FinalizeSlot(unsigned int slot) final
    {
-      ClearValueReaders(slot);
-      for (auto &column : GetDefines().GetColumns()) {
+      for (auto &column : GetDefines().GetColumns())
          column.second->ClearValueReaders(slot);
-      }
-      fHelper.CallFinalizeTask(slot);
-   }
-
-   void ClearValueReaders(unsigned int slot)
-   {
-      for (auto &v : fValues[slot])
-         v->Reset();
       fValues[slot].clear();
+      fHelper.CallFinalizeTask(slot);
    }
 
    void Finalize() final
