@@ -522,7 +522,7 @@ void RLoopManager::CleanUpTask(unsigned int slot)
    for (auto &ptr : fBookedActions)
       ptr->FinalizeSlot(slot);
    for (auto &ptr : fBookedFilters)
-      ptr->ClearTask(slot);
+      ptr->FinaliseSlot(slot);
 }
 
 /// Add RDF nodes that require just-in-time compilation to the computation graph.

@@ -63,7 +63,7 @@ public:
       std::fill(fAccepted.begin(), fAccepted.end(), 0);
       std::fill(fRejected.begin(), fRejected.end(), 0);
    }
-   virtual void ClearTask(unsigned int slot) = 0;
+   virtual void FinaliseSlot(unsigned int slot) = 0;
    virtual void InitNode();
    virtual void AddFilterName(std::vector<std::string> &filters) = 0;
 };

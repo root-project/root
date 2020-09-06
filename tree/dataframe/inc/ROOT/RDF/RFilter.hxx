@@ -150,7 +150,7 @@ public:
       filters.push_back(name);
    }
 
-   virtual void ClearTask(unsigned int slot) final
+   virtual void FinaliseSlot(unsigned int slot) final
    {
       for (auto &column : fDefines.GetColumns())
          column.second->ClearValueReaders(slot);
