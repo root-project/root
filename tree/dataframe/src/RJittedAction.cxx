@@ -78,12 +78,6 @@ void RJittedAction::SetHasRun()
    return fConcreteAction->SetHasRun();
 }
 
-void RJittedAction::ClearValueReaders(unsigned int slot)
-{
-   R__ASSERT(fConcreteAction != nullptr);
-   return fConcreteAction->ClearValueReaders(slot);
-}
-
 std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::GetGraph()
 {
    R__ASSERT(fConcreteAction != nullptr);

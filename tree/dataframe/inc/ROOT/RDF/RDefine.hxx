@@ -136,10 +136,8 @@ public:
    void ClearValueReaders(unsigned int slot) final
    {
       if (fIsInitialized[slot]) {
-         for (auto &v : fValues[slot])
-            v->Reset();
-         fIsInitialized[slot] = false;
          fValues[slot].clear();
+         fIsInitialized[slot] = false;
       }
    }
 };
