@@ -37,8 +37,8 @@ void RJittedDefine::Update(unsigned int slot, Long64_t entry)
    fConcreteDefine->Update(slot, entry);
 }
 
-void RJittedDefine::ClearValueReaders(unsigned int slot)
+void RJittedDefine::FinaliseSlot(unsigned int slot)
 {
    R__ASSERT(fConcreteDefine != nullptr);
-   fConcreteDefine->ClearValueReaders(slot);
+   fConcreteDefine->FinaliseSlot(slot);
 }

@@ -153,7 +153,7 @@ public:
    virtual void FinaliseSlot(unsigned int slot) final
    {
       for (auto &column : fDefines.GetColumns())
-         column.second->ClearValueReaders(slot);
+         column.second->FinaliseSlot(slot);
 
       fValues[slot].clear();
    }

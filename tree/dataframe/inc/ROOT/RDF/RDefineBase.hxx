@@ -59,7 +59,7 @@ public:
    std::string GetName() const;
    std::string GetTypeName() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
-   virtual void ClearValueReaders(unsigned int slot) = 0;
+   virtual void FinaliseSlot(unsigned int slot) = 0;
    /// Return the unique identifier of this RDefineBase.
    unsigned int GetID() const { return fID; }
 };
