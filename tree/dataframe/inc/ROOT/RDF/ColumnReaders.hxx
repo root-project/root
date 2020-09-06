@@ -41,24 +41,31 @@ void CheckDefine(RDFDetail::RDefineBase &define, const std::type_info &tid);
 \class ROOT::Internal::RDF::RColumnReaderBase
 \ingroup dataframe
 \brief Pure virtual base class for all column reader types
-\tparam T The type of the column
 
 This pure virtual class provides a common base class for the different column reader types, e.g. RTreeColumnReader and
 RDSColumnReader.
 **/
-template <typename T>
 class RColumnReaderBase {
 public:
    virtual ~RColumnReaderBase() = default;
+
    /// Return the column value for the given entry. Called at most once per entry.
-   virtual T &Get(Long64_t entry) = 0;
+   template <typename T>
+   T &Get(Long64_t entry)
+   {
+      return *static_cast<T *>(GetImpl(entry));
+   }
+
    /// Perform clean-up operations if needed. Called at the end of a processing task.
    virtual void Reset() {}
+
+private:
+   virtual void *GetImpl(Long64_t entry) = 0;
 };
 
 /// Column reader for defined (aka custom) columns.
 template <typename T>
-class R__CLING_PTRCHECK(off) RDefineReader final : public RColumnReaderBase<T> {
+class R__CLING_PTRCHECK(off) RDefineReader final : public RColumnReaderBase {
    /// Non-owning reference to the node responsible for the custom column. Needed when querying custom values.
    RDFDetail::RDefineBase &fDefine;
 
@@ -67,33 +74,33 @@ class R__CLING_PTRCHECK(off) RDefineReader final : public RColumnReaderBase<T> {
 
    /// The slot this value belongs to.
    unsigned int fSlot = std::numeric_limits<unsigned int>::max();
+
+   void *GetImpl(Long64_t entry) final
+   {
+      fDefine.Update(fSlot, entry);
+      return fCustomValuePtr;
+   }
+
 public:
    RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define)
       : fDefine(define), fCustomValuePtr(static_cast<T *>(define.GetValuePtr(slot))), fSlot(slot)
    {
       CheckDefine(define, typeid(T));
    }
-
-   T &Get(Long64_t entry) final
-   {
-      fDefine.Update(fSlot, entry);
-      return *fCustomValuePtr;
-   }
 };
 
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderValues
 template <typename T>
-class R__CLING_PTRCHECK(off) RTreeColumnReader final : public RColumnReaderBase<T> {
+class R__CLING_PTRCHECK(off) RTreeColumnReader final : public RColumnReaderBase {
    std::unique_ptr<TTreeReaderValue<T>> fTreeValue;
 
+   void *GetImpl(Long64_t) final { return fTreeValue->Get(); }
 public:
    /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
    RTreeColumnReader(TTreeReader &r, const std::string &colName)
       : fTreeValue(std::make_unique<TTreeReaderValue<T>>(r, colName.c_str()))
    {
    }
-
-   T &Get(Long64_t) final { return **fTreeValue; }
 
    /// Delete the TTreeReaderValue object.
    //
@@ -110,7 +117,7 @@ public:
 ///
 /// TTreeReaderArrays are used whenever the RDF column type is RVec<T>.
 template <typename T>
-class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public RColumnReaderBase<RVec<T>> {
+class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public RColumnReaderBase {
    std::unique_ptr<TTreeReaderArray<T>> fTreeArray;
 
    /// Enumerator for the memory layout of the branch
@@ -118,7 +125,7 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public RColumnRe
 
    /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout.
    RVec<T> fRVec;
-   
+
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
    /// in contiguous memory.
    EStorageType fStorageType = EStorageType::kUnknown;
@@ -126,13 +133,7 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public RColumnRe
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-public:
-   RTreeColumnReader(TTreeReader &r, const std::string &colName)
-      : fTreeArray(std::make_unique<TTreeReaderArray<T>>(r, colName.c_str()))
-   {
-   }
-
-   RVec<T> &Get(Long64_t) final
+   void *GetImpl(Long64_t) final
    {
       auto &readerArray = *fTreeArray;
       // We only use TTreeReaderArrays to read columns that users flagged as type `RVec`, so we need to check
@@ -186,7 +187,13 @@ public:
             std::swap(fRVec, emptyVec);
          }
       }
-      return fRVec;
+      return &fRVec;
+   }
+
+public:
+   RTreeColumnReader(TTreeReader &r, const std::string &colName)
+      : fTreeArray(std::make_unique<TTreeReaderArray<T>>(r, colName.c_str()))
+   {
    }
 
    /// Delete the TTreeReaderArray object.
@@ -197,25 +204,19 @@ public:
 ///
 /// TTreeReaderArray<bool> is used whenever the RDF column type is RVec<bool>.
 template <>
-class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public RColumnReaderBase<RVec<bool>> {
+class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public RColumnReaderBase {
 
    std::unique_ptr<TTreeReaderArray<bool>> fTreeArray;
 
    /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout
    RVec<bool> fRVec;
 
-public:
-   RTreeColumnReader(TTreeReader &r, const std::string &colName)
-      : fTreeArray(std::make_unique<TTreeReaderArray<bool>>(r, colName.c_str()))
-   {
-   }
-
    // We always copy the contents of TTreeReaderArray<bool> into an RVec<bool> (never take a view into the memory
    // buffer) because the underlying memory buffer might be the one of a std::vector<bool>, which is not a contiguous
    // slab of bool values.
    // Note that this also penalizes the case in which the column type is actually bool[], but the possible performance
    // gains in this edge case is probably not worth the extra complication required to differentiate the two cases.
-   RVec<bool> &Get(Long64_t) final
+   void *GetImpl(Long64_t) final
    {
       auto &readerArray = *fTreeArray;
       const auto readerArraySize = readerArray.GetSize();
@@ -227,7 +228,13 @@ public:
          RVec<bool> emptyVec{};
          std::swap(fRVec, emptyVec);
       }
-      return fRVec;
+      return &fRVec;
+   }
+
+public:
+   RTreeColumnReader(TTreeReader &r, const std::string &colName)
+      : fTreeArray(std::make_unique<TTreeReaderArray<bool>>(r, colName.c_str()))
+   {
    }
 
    /// Delete the TTreeReaderArray object.
@@ -236,33 +243,23 @@ public:
 
 /// Column reader type that deals with values read from RDataSources.
 template <typename T>
-class R__CLING_PTRCHECK(off) RDSColumnReader final : public RColumnReaderBase<T> {
+class R__CLING_PTRCHECK(off) RDSColumnReader final : public RColumnReaderBase {
    T **fDSValuePtr = nullptr;
+
+   void *GetImpl(Long64_t) final { return *fDSValuePtr; }
 
 public:
    RDSColumnReader(void * DSValuePtr) : fDSValuePtr(static_cast<T **>(DSValuePtr)) {}
-
-   T &Get(Long64_t) final { return **fDSValuePtr; }
 };
 
-template <typename ColTypeList>
-struct RDFValueTuple {
-};
-
-template <typename... ColTypes>
-struct RDFValueTuple<TypeList<ColTypes...>> {
-   using type = std::tuple<std::unique_ptr<RColumnReaderBase<ColTypes>>...>;
-};
-
-template <typename ColTypeList>
-using RDFValueTuple_t = typename RDFValueTuple<ColTypeList>::type;
+using RDFValueTuple_t = std::vector<std::unique_ptr<RColumnReaderBase>>;
 
 template <typename T>
-std::unique_ptr<RColumnReaderBase<T>>
+std::unique_ptr<RColumnReaderBase>
 MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader *r,
                  const std::vector<void *> *DSValuePtrsPtr, const std::string &colName)
 {
-   using Ret_t = std::unique_ptr<RColumnReaderBase<T>>;
+   using Ret_t = std::unique_ptr<RColumnReaderBase>;
 
    if (define != nullptr)
       return Ret_t(new RDefineReader<T>(slot, *define));
@@ -276,16 +273,15 @@ MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader 
 }
 
 template <typename T>
-void InitColumnReadersHelper(std::unique_ptr<RColumnReaderBase<T>> &colReader, unsigned int slot,
-                             RDFDetail::RDefineBase *define,
-                             const std::map<std::string, std::vector<void *>> &DSValuePtrsMap, TTreeReader *r,
-                             const std::string &colName)
+std::unique_ptr<RColumnReaderBase>
+InitColumnReadersHelper(unsigned int slot, RDFDetail::RDefineBase *define,
+                        const std::map<std::string, std::vector<void *>> &DSValuePtrsMap, TTreeReader *r,
+                        const std::string &colName)
 {
    const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
    const std::vector<void *> *DSValuePtrsPtr = DSValuePtrsIt != DSValuePtrsMap.end() ? &DSValuePtrsIt->second : nullptr;
    R__ASSERT(define != nullptr || r != nullptr || DSValuePtrsPtr != nullptr);
-   auto newColReader = MakeColumnReader<T>(slot, define, r, DSValuePtrsPtr, colName);
-   colReader.swap(newColReader);
+   return MakeColumnReader<T>(slot, define, r, DSValuePtrsPtr, colName);
 }
 
 /// This type aggregates some of the arguments passed to InitColumnReaders.
@@ -300,8 +296,8 @@ struct RColumnReadersInfo {
 };
 
 /// Initialize a tuple of column readers.
-template <typename RDFValueTuple, std::size_t... S>
-void InitColumnReaders(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader *r, std::index_sequence<S...>,
+template <typename... ColTypes>
+void InitColumnReaders(unsigned int slot, RDFValueTuple_t &valueTuple, TTreeReader *r, TypeList<ColTypes...>,
                        const RColumnReadersInfo &colInfo)
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
@@ -316,23 +312,15 @@ void InitColumnReaders(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader
 
    // Hack to expand a parameter pack without c++17 fold expressions.
    // Construct the column readers
-   (void)expander{(InitColumnReadersHelper(std::get<S>(valueTuple), slot,
-                                           isDefine[S] ? customColMap.at(colNames[S]).get() : nullptr,
-                                           DSValuePtrsMap, r, colNames[S]),
-                   0)...,
-                  0};
+   int i = 0;
+   (void)expander{
+      (valueTuple.emplace_back(InitColumnReadersHelper<ColTypes>(
+          slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr, DSValuePtrsMap, r, colNames[i])),
+       ++i)...,
+      0};
 
    (void)slot;     // avoid _bogus_ "unused variable" warnings for slot on gcc 4.9
    (void)r;        // avoid "unused variable" warnings for r on gcc5.2
-}
-
-/// Call Reset on a tuple of column readers
-template <typename ValueTuple, std::size_t... S>
-void ResetColumnReaders(ValueTuple &values, std::index_sequence<S...>)
-{
-   // hack to expand a parameter pack without c++17 fold expressions.
-   int expander[] = {(std::get<S>(values)->Reset(), 0)..., 0};
-   (void)expander; // avoid "unused variable" warnings
 }
 
 } // namespace RDF

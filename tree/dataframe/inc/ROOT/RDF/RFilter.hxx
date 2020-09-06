@@ -56,7 +56,7 @@ class RFilter final : public RFilterBase {
    const ColumnNames_t fColumnNames;
    const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
    PrevDataFrame &fPrevData;
-   std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
+   std::vector<RDFInternal::RDFValueTuple_t> fValues;
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 
@@ -86,7 +86,7 @@ public:
             fLastResult[slot] = false;
          } else {
             // evaluate this filter, cache the result
-            auto passed = CheckFilterHelper(slot, entry, TypeInd_t());
+            auto passed = CheckFilterHelper(slot, entry, ColumnTypes_t{}, TypeInd_t{});
             passed ? ++fAccepted[slot] : ++fRejected[slot];
             fLastResult[slot] = passed;
          }
@@ -95,13 +95,13 @@ public:
       return fLastResult[slot];
    }
 
-   template <std::size_t... S>
-   bool CheckFilterHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>)
+   template <typename... ColTypes, std::size_t... S>
+   bool CheckFilterHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
-      return fFilter(std::get<S>(fValues[slot])->Get(entry)...);
+      return fFilter(fValues[slot][S]->template Get<ColTypes>(entry)...);
    }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
@@ -109,7 +109,7 @@ public:
       for (auto &bookedBranch : fDefines.GetColumns())
          bookedBranch.second->InitSlot(r, slot);
       RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fLoopManager->GetDSValuePtrs()};
-      RDFInternal::InitColumnReaders(slot, fValues[slot], r, TypeInd_t(), info);
+      RDFInternal::InitColumnReaders(slot, fValues[slot], r, ColumnTypes_t{}, info);
    }
 
    // recursive chain of `Report`s
@@ -144,7 +144,9 @@ public:
 
    virtual void ClearValueReaders(unsigned int slot) final
    {
-      RDFInternal::ResetColumnReaders(fValues[slot], TypeInd_t());
+      for (auto &v : fValues[slot])
+         v->Reset();
+      fValues[slot].clear();
    }
 
    void AddFilterName(std::vector<std::string> &filters)
