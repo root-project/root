@@ -56,7 +56,8 @@ class RFilter final : public RFilterBase {
    const ColumnNames_t fColumnNames;
    const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
    PrevDataFrame &fPrevData;
-   std::vector<RDFInternal::RDFValueTuple_t> fValues;
+   /// Column readers per slot and per input column
+   std::vector<std::vector<std::unique_ptr<RDFInternal::RColumnReaderBase>>> fValues;
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 

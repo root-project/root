@@ -51,7 +51,8 @@ class RAction : public RActionBase {
    Helper fHelper;
    const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
    PrevDataFrame &fPrevData;
-   std::vector<RDFValueTuple_t> fValues;
+   /// Column readers per slot and per input column
+   std::vector<std::vector<std::unique_ptr<RColumnReaderBase>>> fValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
