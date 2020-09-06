@@ -438,6 +438,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     ${installoptions}
 )
 
+if(MSVC)
+  target_compile_definitions(TMVA PRIVATE _USE_MATH_DEFINES)
+endif()
+
 if(vdt OR builtin_vdt)
   target_include_directories(TMVA PRIVATE ${VDT_INCLUDE_DIRS})
 endif()
