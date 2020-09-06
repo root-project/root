@@ -133,7 +133,7 @@ public:
 
    const std::type_info &GetTypeId() const { return typeid(ret_type); }
 
-   void ClearValueReaders(unsigned int slot) final
+   void FinaliseSlot(unsigned int slot) final
    {
       if (fIsInitialized[slot]) {
          fValues[slot].clear();

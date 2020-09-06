@@ -44,7 +44,7 @@ public:
    void *GetValuePtr(unsigned int slot) final;
    const std::type_info &GetTypeId() const final;
    void Update(unsigned int slot, Long64_t entry) final;
-   void ClearValueReaders(unsigned int slot) final;
+   void FinaliseSlot(unsigned int slot) final;
 };
 
 } // ns RDF
