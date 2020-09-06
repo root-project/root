@@ -61,7 +61,8 @@ class RDefine final : public RDefineBase {
    const ColumnNames_t fColumnNames;
    ValuesPerSlot_t fLastResults;
 
-   std::vector<RDFInternal::RDFValueTuple_t> fValues;
+   /// Column readers per slot and per input column
+   std::vector<std::vector<std::unique_ptr<RDFInternal::RColumnReaderBase>>> fValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
