@@ -165,7 +165,7 @@ private:
 
 protected:
    RNTupleDescriptor AttachImpl() final;
-   void UnzipClusterImpl(RCluster *cluster, TaskScheduleFunc_t taskScheduleFunc) final;
+   void UnzipClusterImpl(RCluster *cluster) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);

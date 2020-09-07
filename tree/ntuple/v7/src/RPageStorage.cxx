@@ -97,8 +97,8 @@ ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSource::GetColum
 
 void ROOT::Experimental::Detail::RPageSource::UnzipCluster(RCluster *cluster)
 {
-   if (fTaskScheduleFunc)
-      UnzipClusterImpl(cluster, fTaskScheduleFunc);
+   if (fTaskScheduler)
+      UnzipClusterImpl(cluster);
 }
 
 
