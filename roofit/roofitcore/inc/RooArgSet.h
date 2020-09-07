@@ -17,6 +17,7 @@
 #define ROO_ARG_SET
 
 #include "RooAbsCollection.h"
+#include "RooAbsArg.h"
 
 class RooArgList ;
 
