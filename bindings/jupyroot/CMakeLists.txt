@@ -72,8 +72,8 @@ foreach(val RANGE ${how_many_pythons})
   # Install library
   install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
                              RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
-                             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
-                             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+                             LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
+                             ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)
 
 endforeach()
 
