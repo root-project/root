@@ -49,9 +49,8 @@ void perceptualcolormap() {
    TH2D *h = new TH2D("h","Perceptual Colormap",200,-4,4,200,-4,4);
    h->SetStats(0);
 
-   Double_t a,b,c;
+   Double_t a,b;
    for (Int_t i=0;i<1000000;i++) {
-      c = gRandom->Rndm();
       gRandom->Rannor(a,b);
       h->Fill(a-1.5,b-1.5,0.1);
       h->Fill(a+2.,b-3.,0.07);
