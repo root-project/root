@@ -310,7 +310,7 @@ protected:
    void DoInitialize(EAddToList addToGlobList);
 
    void IntegrateForNormalization();
-   // tabulate the comulative function integral at  fNpx points. Used by GetRandom
+   // tabulate the cumulative function integral at  fNpx points. Used by GetRandom
    Bool_t ComputeCdfTable(Option_t * opt);
 
    virtual Double_t GetMinMaxNDim(Double_t *x , Bool_t findmax, Double_t epsilon = 0, Int_t maxiter = 0) const;

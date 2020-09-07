@@ -1078,12 +1078,12 @@ Double_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 2 random numbers along axis x and y distributed according
-/// the cell-contents of a 2-dim histogram
+/// to the cell-contents of this 2-dim histogram
 /// return a NaN if the histogram has a bin with negative content
 ///
-/// @param x  reference to random generated x value
-/// @param y  reference to random generated x value
-/// @param rng (optional) Random number generator pointer used (default is gRandom)
+/// @param[out] x  reference to random generated x value
+/// @param[out] y  reference to random generated x value
+/// @param[in] rng (optional) Random number generator pointer used (default is gRandom)
 
 void TH2::GetRandom2(Double_t &x, Double_t &y, TRandom * rng)
 {
