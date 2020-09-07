@@ -180,21 +180,14 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   RooArgSet anaIntSet, numIntSet ;
 
   // First determine subset of observables in intSet that are factorizable
-  TIterator* compIter = compSet.createIterator() ;
-  TIterator* intIter = intSet.createIterator() ;
-  RooAbsPdf* pdf ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)intIter->Next())) {
-    Int_t count(0) ;
-    compIter->Reset() ;
-    while((pdf=(RooAbsPdf*)compIter->Next())) {
-      if (pdf->dependsOn(*arg)) count++ ;
-    }
+  for (const auto arg : intSet) {
+    auto count = std::count_if(compSet.begin(), compSet.end(), [arg](const RooAbsArg* pdfAsArg){
+      auto pdf = static_cast<const RooAbsPdf*>(pdfAsArg);
+      return (pdf->dependsOn(*arg));
+    });
 
-    if (count==0) {
-    } else if (count==1) {
+    if (count==1) {
       anaIntSet.add(*arg) ;
-    } else {
     }    
   }
 
@@ -202,27 +195,28 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   RooArgSet prodSet ;
   numIntSet.add(intSet) ;
   
-  compIter->Reset() ;
-  while((pdf=(RooAbsPdf*)compIter->Next())) {
+  for (const auto pdfAsArg : compSet) {
+    auto pdf = static_cast<const RooAbsPdf*>(pdfAsArg);
+
     if (doFactorize && pdf->dependsOn(anaIntSet)) {
       RooArgSet anaSet ;
       Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,0,isetRangeName) ;
       if (code!=0) {
-	// Analytical integral, create integral object
-	RooAbsReal* pai = pdf->createIntegral(anaSet,isetRangeName) ;
-	pai->setOperMode(_operMode) ;
-	
-	// Add to integral to product
-	prodSet.add(*pai) ;
-	
-	// Remove analytically integratable observables from numeric integration list
-	numIntSet.remove(anaSet) ;
-	
-	// Declare ownership of integral
-	saveSet.addOwned(*pai) ;
+        // Analytical integral, create integral object
+        RooAbsReal* pai = pdf->createIntegral(anaSet,isetRangeName) ;
+        pai->setOperMode(_operMode) ;
+
+        // Add to integral to product
+        prodSet.add(*pai) ;
+
+        // Remove analytically integratable observables from numeric integration list
+        numIntSet.remove(anaSet) ;
+
+        // Declare ownership of integral
+        saveSet.addOwned(*pai) ;
       } else {
-	// Analytic integration of factorizable observable not possible, add straight pdf to product
-	prodSet.add(*pdf) ;
+        // Analytic integration of factorizable observable not possible, add straight pdf to product
+        prodSet.add(*pdf) ;
       }      
     } else {
       // Non-factorizable observables, add straight pdf to product
@@ -243,8 +237,8 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   prod->setExpensiveObjectCache(expensiveObjectCache()) ;
   prod->setOperMode(_operMode) ;
 
-  // Declare owndership of product
-  saveSet.addOwned(*prod) ;
+  // Declare ownership of product
+  saveSet.addOwned(*prod);
 
   // Create integral performing remaining numeric integration over (partial) analytic product
   RooAbsReal* ret = prod->createIntegral(numIntSet,isetRangeName) ;
@@ -252,9 +246,6 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 //   ret->Print("v") ;
   ret->setOperMode(_operMode) ;
   saveSet.addOwned(*ret) ;
-
-  delete compIter ;
-  delete intIter ;
 
   // Caller owners returned master integral object
   return ret ;
