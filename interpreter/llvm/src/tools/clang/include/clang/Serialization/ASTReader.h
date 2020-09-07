@@ -505,7 +505,8 @@ private:
     FunctionProtoType::ExceptionSpecInfo m_ESI;
     PendingExceptionSpecUpdateInfo(FunctionDecl *FD,
                                   FunctionProtoType::ExceptionSpecInfo ESI)
-      : m_FD(FD), m_ESI(ESI) { }
+      : m_FD(FD), m_ESI(ESI), ShouldUpdateESI(true) { }
+    PendingExceptionSpecUpdateInfo(FunctionDecl *FD) : m_FD(FD) { }
   };
   /// \brief Exception specification updates that have been loaded but not yet
   /// propagated across the relevant redeclaration chain. The map key is the
