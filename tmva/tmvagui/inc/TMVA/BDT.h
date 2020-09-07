@@ -43,30 +43,30 @@ namespace TMVA{
 
 
 
-   class StatDialogBDT {  
+   class StatDialogBDT {
 
       RQ_OBJECT("StatDialogBDT")
 
          public:
 
-      StatDialogBDT(TString dataset, const TGWindow* p, TString wfile, 
+      StatDialogBDT(TString dataset, const TGWindow* p, TString wfile,
                     TString methName = "BDT", Int_t itree = 0 );
       virtual ~StatDialogBDT() {
-         TMVA::DecisionTreeNode::fgIsTraining=false;
+         TMVA::DecisionTreeNode::SetIsTraining(false);
          fThis = 0;
          fMain->CloseWindow();
          fMain->Cleanup();
          if(gROOT->GetListOfCanvases()->FindObject(fCanvas))
-            delete fCanvas; 
+            delete fCanvas;
       }
-   
+
       // draw method
       void DrawTree(Int_t itree );
 
       void RaiseDialog() { if (fMain) { fMain->RaiseWindow(); fMain->Layout(); fMain->MapWindow(); } }
-   
+
    private:
-   
+
       TGMainFrame *fMain;
       Int_t        fItree;
       Int_t        fNtrees;
@@ -83,7 +83,7 @@ namespace TMVA{
 
       // draw methods
       TMVA::DecisionTree* ReadTree( TString * &vars, Int_t itree );
-      void                DrawNode( TMVA::DecisionTreeNode *n, 
+      void                DrawNode( TMVA::DecisionTreeNode *n,
                                     Double_t x, Double_t y, Double_t xscale,  Double_t yscale, TString* vars );
       void GetNtrees();
 
