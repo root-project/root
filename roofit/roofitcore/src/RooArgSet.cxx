@@ -299,7 +299,8 @@ RooAbsArg* RooArgSet::addClone(const RooAbsArg& var, Bool_t silent)
 /// When used as lvalue in assignment operations, the element contained in
 /// the list will not be changed, only the value of the existing element!
 RooAbsArg& RooArgSet::operator[](const TString& name) const
-{     
+{
+  std::cout << "operator[] called with " << name.Data() << std::endl;
   RooAbsArg* arg = find(name) ;
   if (!arg) {
     coutE(InputArguments) << "RooArgSet::operator[](" << GetName() << ") ERROR: no element named " << name << " in set" << endl ;

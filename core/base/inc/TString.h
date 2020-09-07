@@ -461,6 +461,10 @@ public:
    __attribute__((format(printf, 1, 2)))
 #endif
    ;
+   static bool& doPrint() {
+     static bool value = false;
+     return value;
+   }
 
    ClassDef(TString,2)  //Basic string class
 };

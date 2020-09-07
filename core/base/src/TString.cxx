@@ -102,6 +102,8 @@ TString::TString(Ssiz_t ic)
 
 TString::TString(const char *cs)
 {
+   if (doPrint())
+     printf("TString(%s)", cs);
    if (cs) {
       Ssiz_t n = strlen(cs);
       char *data = Init(n, n);

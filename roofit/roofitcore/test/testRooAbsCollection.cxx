@@ -32,11 +32,20 @@ TEST(RooArgSet, SubscriptOperator) {
   RooRealVar y("y", "y", 0.);
   RooArgSet theSet(x, y);
 
+  std::cout << "Call [0]." << std::endl;
   EXPECT_EQ(theSet[0], &x);
+  std::cout << "Call [1]." << std::endl;
+  EXPECT_EQ(theSet[1], &y);
+
+  TString::doPrint() = true;
+  TString testString("thisIsTheTestString");
+  std::cout << "Call [x]." << std::endl;
   EXPECT_EQ(&theSet["x"], &x);
+  std::cout << "Call [x] finished." << std::endl;
 
   // Silence error to come next:
   RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::InputArguments);
+  std::cout << "Call [nullptr]." << std::endl;
   EXPECT_THROW(theSet[nullptr], std::invalid_argument);
 }
 
