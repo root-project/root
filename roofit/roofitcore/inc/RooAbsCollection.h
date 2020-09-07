@@ -16,6 +16,7 @@
 #ifndef ROO_ABS_COLLECTION
 #define ROO_ABS_COLLECTION
 
+#include "TObject.h"
 #include "TString.h"
 #include "RooAbsArg.h"
 #include "RooPrintable.h"
