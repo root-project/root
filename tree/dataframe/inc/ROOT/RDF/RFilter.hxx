@@ -150,6 +150,7 @@ public:
       filters.push_back(name);
    }
 
+   /// Clean-up operations to be performed at the end of a task.
    virtual void FinaliseSlot(unsigned int slot) final
    {
       for (auto &column : fDefines.GetColumns())

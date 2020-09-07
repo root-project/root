@@ -111,6 +111,7 @@ public:
 
    void TriggerChildrenCount() final { fPrevData.IncrChildrenCount(); }
 
+   /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
    {
       for (auto &column : GetDefines().GetColumns())
@@ -119,6 +120,8 @@ public:
       fHelper.CallFinalizeTask(slot);
    }
 
+   /// Clean-up and finalize the action result (e.g. merging slot-local results).
+   /// It invokes the helper's Finalize method.
    void Finalize() final
    {
       fHelper.Finalize();
