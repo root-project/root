@@ -448,7 +448,7 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
       else
          callbuf << "((" << class_name << "*)obj)->";
    } else if (const NamedDecl *ND =
-                 dyn_cast<NamedDecl>(FD->getDeclContext())) {
+                 dyn_cast<NamedDecl>(GetDeclContext())) {
       // This is a namespace member.
       (void) ND;
       callbuf << class_name << "::";
@@ -577,6 +577,17 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
    buf << "}\n";
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Returns the DeclContext corresponding to fMethod's Decl.
+// \Note that this might be a FunctionDecl or a UsingShadowDecl; we use the
+// DeclContext of the UsingShadowDecl e.g. for constructing a derived class
+// object, even if invoking a function made available by a using declaration
+// of a constructor of a base class (ROOT-11010).
+
+const clang::DeclContext *TClingCallFunc::GetDeclContext() const {
+   return fMethod->GetDecl()->getDeclContext();
+}
+
 int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wrapper)
 {
    const FunctionDecl *FD = GetDecl();
@@ -587,11 +598,12 @@ int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wra
    //  Get the class or namespace name.
    //
    string class_name;
-   if (const TypeDecl *TD = dyn_cast<TypeDecl>(FD->getDeclContext())) {
+   const clang::DeclContext *DC = GetDeclContext();
+   if (const TypeDecl *TD = dyn_cast<TypeDecl>(DC)) {
       // This is a class, struct, or union member.
       QualType QT(TD->getTypeForDecl(), 0);
       ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
-   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(FD->getDeclContext())) {
+   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(DC)) {
       // This is a namespace member.
       raw_string_ostream stream(class_name);
       ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
@@ -2009,9 +2021,9 @@ TClingCallFunc::InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret) {
 
 TClingCallFunc::ExecWithRetFunc_t
 TClingCallFunc::InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret) {
-   if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD)) {
+   if (llvm::isa<CXXConstructorDecl>(FD)) {
       ASTContext &Context = FD->getASTContext();
-      const TypeDecl *TD = dyn_cast<TypeDecl>(CD->getDeclContext());
+      const TypeDecl *TD = dyn_cast<TypeDecl>(GetDeclContext());
       QualType ClassTy(TD->getTypeForDecl(), 0);
       QualType QT = Context.getLValueReferenceType(ClassTy);
       ret = cling::Value(QT, *fInterp);
