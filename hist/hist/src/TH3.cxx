@@ -1141,11 +1141,11 @@ Double_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 3 random numbers along axis x , y and z distributed according
-/// the cell-contents of a 3-dim histogram
-/// @param x  reference to random generated x value
-/// @param y  reference to random generated y value
-/// @param z  reference to random generated z value
-/// @param rng (optional) Random number generator pointer used (default is gRandom)
+/// to the cell-contents of this 3-dim histogram
+/// @param[out] x  reference to random generated x value
+/// @param[out] y  reference to random generated y value
+/// @param[out] z  reference to random generated z value
+/// @param[in] rng (optional) Random number generator pointer used (default is gRandom)
 
 void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z, TRandom * rng)
 {

@@ -2075,9 +2075,8 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// Compute the cumulative function at fNpx points between fXmin and fXmax
-///  Option controls if doin automatically or force using a log scale (option ="log")
-///  or linear (option = "lin")
+///  Compute the cumulative function at fNpx points between fXmin and fXmax.
+///  Option can be used to force a log scale (option = "log"), linear (option = "lin") or automatic if empty.
 Bool_t TF1::ComputeCdfTable(Option_t * option) {
 
    fIntegral.resize(fNpx + 1);
@@ -2159,13 +2158,14 @@ Bool_t TF1::ComputeCdfTable(Option_t * option) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a random number following this function shape
+/// Return a random number following this function shape.
 ///
-/// @param rng  Ranodm numjber generator. By default (or when passing a nullptr) the global gRandom is used
+/// @param rng  Random number generator. By default (or when passing a nullptr) the global gRandom is used
 /// @param option Option string which controls the binning used to compute the integral. Default mode is automatic depending of
 ///               xmax, xmin and Npx (function points).
-///               Possible values are: "LOG" to force usage of log scale for tabulating the integral
-///                                    "LIN" to force usage of linear scale when tabulating the integral
+///               Possible values are:
+///               -  "LOG" to force usage of log scale for tabulating the integral
+///               -  "LIN" to force usage of linear scale when tabulating the integral
 ///
 /// The distribution contained in the function fname (TF1) is integrated
 /// over the channel contents.
@@ -2230,10 +2230,10 @@ Double_t TF1::GetRandom(TRandom * rng, Option_t * option)
 ///   The parabolic approximation is very good as soon as the number
 ///   of bins is greater than 50.
 ///
-///  @param  xmin    : minimum value for  generated random numbers
-///  @param  xmax    : maximum value for  generated random numbers
-///  @param  rng     : (optional) random number generator pointer
-///  @param  option  : (optional) : `LOG` or `LIN` force usage of Log or Linear fo computing Cdf table
+///  @param  xmin    minimum value for  generated random numbers
+///  @param  xmax    maximum value for  generated random numbers
+///  @param  rng     (optional) random number generator pointer
+///  @param  option  (optional) : `LOG` or `LIN` to force the usage of a log or linear scale for computing the cumulative integral table
 ///
 ///  IMPORTANT NOTE
 ///
