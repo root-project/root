@@ -589,12 +589,9 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
 }
 
 
-void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(
-   RCluster *cluster, TaskScheduleFunc_t taskScheduleFunc)
+void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(RCluster *cluster)
 {
-   std::mutex fLockIsDone;
-   std::condition_variable fCvIsDone;
-   std::atomic<size_t> nTasks{cluster->GetNOnDiskPages()};
+   fTaskScheduler->Reset();
 
    const auto clusterId = cluster->GetId();
    const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
@@ -618,7 +615,6 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(
 
          auto taskFunc =
             [this, columnId, clusterId, firstInPage, onDiskPage,
-             &fLockIsDone, &fCvIsDone, &nTasks,
              element = allElements.back().get(),
              nElements = pi.fNElements,
              indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex
@@ -651,14 +647,9 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(
                   {
                      RPageAllocatorFile::DeletePage(page);
                   }, nullptr));
-
-               if (--nTasks == 0) {
-                  std::lock_guard<std::mutex> lockGuard(fLockIsDone);
-                  fCvIsDone.notify_one();
-               }
             };
 
-         taskScheduleFunc(taskFunc);
+         fTaskScheduler->AddTask(taskFunc);
 
          firstInPage += pi.fNElements;
          pageNo++;
@@ -667,6 +658,5 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(
 
    fCounters->fNPagePopulated.Add(cluster->GetNOnDiskPages());
 
-   std::unique_lock<std::mutex> lock(fLockIsDone);
-   fCvIsDone.wait(lock, [&]{ return nTasks == 0; });
+   fTaskScheduler->Wait();
 }

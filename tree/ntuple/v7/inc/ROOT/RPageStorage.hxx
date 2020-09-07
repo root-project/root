@@ -59,8 +59,21 @@ an ntuple.  Concrete implementations can use a TFile, a raw file, an object stor
 */
 // clang-format on
 class RPageStorage {
+public:
+   /// The interface of a task scheduler to schedule page (de)compression tasks
+   class RTaskScheduler {
+   public:
+      /// Start a new set of tasks
+      virtual void Reset() = 0;
+      /// Take a callable that represents a task
+      virtual void AddTask(const std::function<void(void)> &taskFunc) = 0;
+      /// Blocks until all scheduled tasks finished
+      virtual void Wait() = 0;
+   };
+
 protected:
    std::string fNTupleName;
+   RTaskScheduler *fTaskScheduler = nullptr;
 
 public:
    explicit RPageStorage(std::string_view name);
@@ -97,6 +110,8 @@ public:
 
    /// Returns an empty metrics.  Page storage implementations usually have their own metrics.
    virtual RNTupleMetrics &GetMetrics();
+
+   void SetTaskScheduler(RTaskScheduler *taskScheduler) { fTaskScheduler = taskScheduler; }
 };
 
 // clang-format off
@@ -178,13 +193,6 @@ class RPageSource : public RPageStorage {
 public:
    /// Derived from the model (fields) that are actually being requested at a given point in time
    using ColumnSet_t = std::unordered_set<DescriptorId_t>;
-   /// The interface of a task scheduler to schedule page decompression tasks: the task scheduler
-   /// is a callable that takes another callable (the actual task)
-   using TaskScheduleFunc_t = std::function<void(const std::function<void(void)> &)>;
-
-private:
-   /// Connects to the application's task scheduler, e.g. ThreadExecutor
-   TaskScheduleFunc_t fTaskScheduleFunc;
 
 protected:
    RNTupleReadOptions fOptions;
@@ -194,7 +202,7 @@ protected:
 
    virtual RNTupleDescriptor AttachImpl() = 0;
    // Only called if a task scheduler is set. No-op be default.
-   virtual void UnzipClusterImpl(RCluster * /* cluster */, TaskScheduleFunc_t /* scheduleTaskFunc */)
+   virtual void UnzipClusterImpl(RCluster * /* cluster */)
       { }
 
 public:
@@ -241,7 +249,6 @@ public:
    /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
    /// if implicit multi-threading is turned on.
    void UnzipCluster(RCluster *cluster);
-   void SetTaskScheduleFunc(TaskScheduleFunc_t f) { fTaskScheduleFunc = f; }
 };
 
 } // namespace Detail

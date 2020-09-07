@@ -37,6 +37,27 @@
 #include <utility>
 
 
+void ROOT::Experimental::RNTupleImtTaskScheduler::Reset()
+{
+   fTaskGroup = std::make_unique<TTaskGroup>();
+}
+
+
+void ROOT::Experimental::RNTupleImtTaskScheduler::AddTask(const std::function<void(void)> &taskFunc)
+{
+   fTaskGroup->Run(taskFunc);
+}
+
+
+void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
+{
+   fTaskGroup->Wait();
+}
+
+
+//------------------------------------------------------------------------------
+
+
 void ROOT::Experimental::RNTupleReader::ConnectModel(const RNTupleModel &model) {
    std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> fieldPtr2Id;
    fieldPtr2Id[model.GetFieldZero()] = fSource->GetDescriptor().GetFieldZeroId();
@@ -53,8 +74,7 @@ void ROOT::Experimental::RNTupleReader::InitPageSource()
 {
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled()) {
-      fUnzipTasks = std::make_unique<TTaskGroup>();
-      fSource->SetTaskScheduleFunc([this](const std::function<void()> &task) { fUnzipTasks->Run(task); });
+      fSource->SetTaskScheduler(&fUnzipTasks);
    }
 #endif
    fSource->Attach();
@@ -83,10 +103,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
 ROOT::Experimental::RNTupleReader::~RNTupleReader()
 {
 #ifdef R__USE_IMT
-   if (fUnzipTasks) {
-      fUnzipTasks->Wait();
-      fSource->SetTaskScheduleFunc(Detail::RPageSource::TaskScheduleFunc_t());
-   }
+   fSource->SetTaskScheduler(nullptr);
 #endif
 }
 
