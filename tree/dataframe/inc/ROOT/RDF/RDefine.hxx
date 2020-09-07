@@ -115,7 +115,7 @@ public:
       if (!fIsInitialized[slot]) {
          fIsInitialized[slot] = true;
          RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fDSValuePtrs};
-         RDFInternal::InitColumnReaders(slot, fValues[slot], r, ColumnTypes_t{}, info);
+         fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
          fLastCheckedEntry[slot] = -1;
       }
    }
