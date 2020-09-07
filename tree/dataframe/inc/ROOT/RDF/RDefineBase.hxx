@@ -54,11 +54,14 @@ public:
    RDefineBase &operator=(RDefineBase &&) = delete;
    virtual ~RDefineBase();
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
+   /// Return the (type-erased) address of the Define'd value for the given processing slot.
    virtual void *GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
    std::string GetName() const;
    std::string GetTypeName() const;
+   /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
+   /// Clean-up operations to be performed at the end of a task.
    virtual void FinaliseSlot(unsigned int slot) = 0;
    /// Return the unique identifier of this RDefineBase.
    unsigned int GetID() const { return fID; }

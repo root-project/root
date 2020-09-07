@@ -120,8 +120,10 @@ public:
       }
    }
 
+   /// Return the (type-erased) address of the Define'd value for the given processing slot.
    void *GetValuePtr(unsigned int slot) final { return static_cast<void *>(&fLastResults[slot]); }
 
+   /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
    void Update(unsigned int slot, Long64_t entry) final
    {
       if (entry != fLastCheckedEntry[slot]) {
@@ -133,6 +135,7 @@ public:
 
    const std::type_info &GetTypeId() const { return typeid(ret_type); }
 
+   /// Clean-up operations to be performed at the end of a task.
    void FinaliseSlot(unsigned int slot) final
    {
       if (fIsInitialized[slot]) {

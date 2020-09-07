@@ -50,6 +50,8 @@ public:
    virtual ~RColumnReaderBase() = default;
 
    /// Return the column value for the given entry. Called at most once per entry.
+   /// \tparam T The column type
+   /// \param entry The entry number
    template <typename T>
    T &Get(Long64_t entry)
    {
