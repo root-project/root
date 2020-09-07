@@ -39,9 +39,10 @@
 
 namespace clang {
 class BuiltinType;
+class CXXMethodDecl;
+class DeclContext;
 class Expr;
 class FunctionDecl;
-class CXXMethodDecl;
 }
 
 namespace cling {
@@ -205,6 +206,8 @@ public:
          fDecl = fMethod->GetTargetFunctionDecl();
       return fDecl;
    }
+
+   const clang::DeclContext *GetDeclContext() const;
 
    int get_wrapper_code(std::string &wrapper_name, std::string &wrapper);
 
