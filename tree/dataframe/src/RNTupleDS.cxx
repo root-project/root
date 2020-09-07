@@ -31,7 +31,7 @@
 namespace ROOT {
 namespace Experimental {
 
-void ROOT::Experimental::RNTupleDS::AddFields(const RNTupleDescriptor &desc, DescriptorId_t parentId)
+void RNTupleDS::AddFields(const RNTupleDescriptor &desc, DescriptorId_t parentId)
 {
    for (const auto& f : desc.GetFieldRange(parentId)) {
       fColumnNames.emplace_back(desc.GetQualifiedFieldName(f.GetId()));
@@ -43,7 +43,7 @@ void ROOT::Experimental::RNTupleDS::AddFields(const RNTupleDescriptor &desc, Des
 }
 
 
-ROOT::Experimental::RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
+RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
 {
    pageSource->Attach();
    const auto &descriptor = pageSource->GetDescriptor();
@@ -160,14 +160,13 @@ void RNTupleDS::SetNSlots(unsigned int nSlots)
       fValuePtrs[i].resize(nColumns, nullptr);
    }
 }
+} // ns Experimental
+} // ns ROOT
 
 
-RDataFrame MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName)
+ROOT::RDataFrame ROOT::Experimental::MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName)
 {
-   auto pageSource = Detail::RPageSource::Create(ntupleName, fileName);
+   auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(ntupleName, fileName);
    ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(std::move(pageSource)));
    return rdf;
 }
-
-} // ns Experimental
-} // ns ROOT
