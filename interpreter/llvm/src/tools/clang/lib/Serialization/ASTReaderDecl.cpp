@@ -3264,14 +3264,9 @@ void ASTDeclReader::attachPreviousDeclImpl(ASTReader &Reader,
     bool IsUnresolved = isUnresolvedExceptionSpec(FPT->getExceptionSpecType());
     bool WasUnresolved =
         isUnresolvedExceptionSpec(PrevFPT->getExceptionSpecType());
-    if (IsUnresolved != WasUnresolved) {
-      auto ResolvedFPT = IsUnresolved ? PrevFPT : FPT;
-      auto ResolvedFD = IsUnresolved ? PrevFD : FD;
-      auto ESI = ResolvedFPT->getExceptionSpecType();
+    if (IsUnresolved != WasUnresolved)
       Reader.PendingExceptionSpecUpdates.insert(
-          std::make_pair(Canon,
-                    ASTReader::PendingExceptionSpecUpdateInfo(ResolvedFD,ESI)));
-    }
+          std::make_pair(Canon, IsUnresolved ? PrevFD : FD));
   }
 }
 } // end namespace clang
@@ -4167,10 +4162,9 @@ void ASTDeclReader::UpdateDecl(Decl *D,
       if (isUnresolvedExceptionSpec(FPT->getExceptionSpecType())) {
         // When we get to the end of deserializing, see if there are other decls
         // that we need to propagate this exception specification onto.
-        ASTReader::PendingExceptionSpecUpdateInfo PESUI(FD, ESI);
-        PESUI.ShouldUpdateESI = true;
         Reader.PendingExceptionSpecUpdates.insert(
-          std::make_pair(FD->getCanonicalDecl(), PESUI));
+          std::make_pair(FD->getCanonicalDecl(),
+                         ASTReader::PendingExceptionSpecUpdateInfo(FD,ESI)));
       }
       break;
     }
