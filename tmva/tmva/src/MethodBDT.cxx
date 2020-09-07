@@ -1141,7 +1141,7 @@ void TMVA::MethodBDT::SetTuneParameters(std::map<TString,Double_t> tuneParameter
 
 void TMVA::MethodBDT::Train()
 {
-   TMVA::DecisionTreeNode::fgIsTraining=true;
+   TMVA::DecisionTreeNode::SetIsTraining(true);
 
    // fill the STL Vector with the event sample
    // (needs to be done here and cannot be done in "init" as the options need to be
@@ -1267,7 +1267,7 @@ void TMVA::MethodBDT::Train()
    Int_t itree=0;
    Bool_t continueBoost=kTRUE;
    //for (int itree=0; itree<fNTrees; itree++) {
-  
+
    while (itree < fNTrees && continueBoost){
      if (fExitFromTraining) break;
      fIPyCurrentIter = itree;
@@ -1329,9 +1329,9 @@ void TMVA::MethodBDT::Train()
             fForest.back()->SetMinLinCorrForFisher(fMinLinCorrForFisher);
             fForest.back()->SetUseExclusiveVars(fUseExclusiveVars);
          }
-         
+
          nNodesBeforePruning = fForest.back()->BuildTree(*fTrainSample);
-         
+
          if (fUseYesNoLeaf && !DoRegression() && fBoostType!="Grad") { // remove leaf nodes where both daughter nodes are of same type
             nNodesBeforePruning = fForest.back()->CleanTree();
          }
@@ -1399,7 +1399,7 @@ void TMVA::MethodBDT::Train()
             << nNodesAfterPruningCount/GetNTrees()
             << Endl;
    }
-   TMVA::DecisionTreeNode::fgIsTraining=false;
+   TMVA::DecisionTreeNode::SetIsTraining(false);
 
 
    // reset all previously stored/accumulated BOOST weights in the event sample
@@ -1586,7 +1586,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
 
    // NOTE: Set targets are also parallelised internally
    fRegressionLossFunctionBDTG->SetTargets(eventSample, fLossFunctionEventInfo);
-   
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -59,7 +59,7 @@ TMVA::StatDialogBDT::StatDialogBDT(TString dataset, const TGWindow* p, TString w
 
    fThis = this;
 
-   TMVA::DecisionTreeNode::fgIsTraining=true;
+   TMVA::DecisionTreeNode::SetIsTraining(true);
 
    // read number of decision trees from weight file
    GetNtrees();
