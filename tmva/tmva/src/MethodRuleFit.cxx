@@ -442,7 +442,7 @@ void TMVA::MethodRuleFit::InitEventSample( void )
 
 void TMVA::MethodRuleFit::Train( void )
 {
-   TMVA::DecisionTreeNode::fgIsTraining=true;
+   TMVA::DecisionTreeNode::SetIsTraining(true);
    // training of rules
 
   if(!IsSilentFile()) InitMonitorNtuple();
@@ -457,7 +457,7 @@ void TMVA::MethodRuleFit::Train( void )
       TrainTMVARuleFit();
    }
    fRuleFit.GetRuleEnsemblePtr()->ClearRuleMap();
-   TMVA::DecisionTreeNode::fgIsTraining=false;
+   TMVA::DecisionTreeNode::SetIsTraining(false);
    ExitFromTraining();
 }
 

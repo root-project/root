@@ -374,7 +374,7 @@ TMVA::MethodDT::~MethodDT( void )
 
 void TMVA::MethodDT::Train( void )
 {
-   TMVA::DecisionTreeNode::fgIsTraining=true;
+   TMVA::DecisionTreeNode::SetIsTraining(true);
    fTree = new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), 0,
                              fRandomisedTrees, fUseNvars, fUsePoissonNvars,fMaxDepth,0 );
    fTree->SetNVars(GetNvar());
@@ -394,7 +394,7 @@ void TMVA::MethodDT::Train( void )
    fTree->BuildTree(tmp);
    if (fPruneMethod != DecisionTree::kNoPruning) fTree->PruneTree();
 
-   TMVA::DecisionTreeNode::fgIsTraining=false;
+   TMVA::DecisionTreeNode::SetIsTraining(false);
    ExitFromTraining();
 }
 
