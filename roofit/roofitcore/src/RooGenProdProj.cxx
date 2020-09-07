@@ -173,7 +173,6 @@ RooGenProdProj::~RooGenProdProj()
 /// \return A RooAbsReal object representing the requested integral.
 ///
 /// The integration is factorized into components as much as possible and done analytically as far as possible.
-
 RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, 
 					 RooArgSet& saveSet, const char* isetRangeName, Bool_t doFactorize) 
 {
@@ -233,7 +232,19 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   } else {
     prodName = Form("%s_%s",GetName(),name) ;
   }
-  RooProduct* prod = new RooProduct(prodName,"product",prodSet) ;
+
+  // Create clones of the elements in prodSet. These need to be cloned
+  // because when caching optimisation lvl 2 is activated, pre-computed
+  // values are side-loaded into the elements.
+  // Those pre-cached values already contain normalisation constants, so
+  // the integral comes out wrongly. Therefore, we create here nodes that
+  // don't participate in any caching, which are used to compute integrals.
+  RooArgSet prodSetClone;
+  prodSet.snapshot(prodSetClone, false);
+  saveSet.addOwned(prodSetClone);
+  prodSetClone.releaseOwnership();
+
+  RooProduct* prod = new RooProduct(prodName, "product", prodSetClone);
   prod->setExpensiveObjectCache(expensiveObjectCache()) ;
   prod->setOperMode(_operMode) ;
 
