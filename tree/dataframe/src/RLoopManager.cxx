@@ -464,9 +464,7 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 
 /// Build TTreeReaderValues for all nodes
 /// This method loops over all filters, actions and other booked objects and
-/// calls their `InitColumnReaders` methods. It is called once per node per slot, before
-/// running the event loop. It also informs each node of the TTreeReader that
-/// a particular slot will be using.
+/// calls their `InitSlot` method, to get them ready for running a task.
 void RLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 {
    for (auto &ptr : fBookedActions)

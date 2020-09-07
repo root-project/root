@@ -269,10 +269,9 @@ MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader 
 }
 
 template <typename T>
-std::unique_ptr<RColumnReaderBase>
-InitColumnReadersHelper(unsigned int slot, RDFDetail::RDefineBase *define,
-                        const std::map<std::string, std::vector<void *>> &DSValuePtrsMap, TTreeReader *r,
-                        const std::string &colName)
+std::unique_ptr<RColumnReaderBase> MakeOneColumnReader(unsigned int slot, RDFDetail::RDefineBase *define,
+                                                       const std::map<std::string, std::vector<void *>> &DSValuePtrsMap,
+                                                       TTreeReader *r, const std::string &colName)
 {
    const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
    const std::vector<void *> *DSValuePtrsPtr = DSValuePtrsIt != DSValuePtrsMap.end() ? &DSValuePtrsIt->second : nullptr;
@@ -291,10 +290,12 @@ struct RColumnReadersInfo {
    const std::map<std::string, std::vector<void *>> &fDSValuePtrsMap;
 };
 
-/// Initialize a tuple of column readers.
+/// Create a group of column readers, one per type in the parameter pack.
+/// colInfo.fColNames and colInfo.fIsDefine are expected to have size equal to the parameter pack, and elements ordered
+/// accordingly, i.e. fIsDefine[0] refers to fColNames[0] which is of type "ColTypes[0]".
 template <typename... ColTypes>
-void InitColumnReaders(unsigned int slot, std::vector<std::unique_ptr<RColumnReaderBase>> &colReaders, TTreeReader *r,
-                       TypeList<ColTypes...>, const RColumnReadersInfo &colInfo)
+std::vector<std::unique_ptr<RColumnReaderBase>>
+MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo)
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
@@ -304,16 +305,15 @@ void InitColumnReaders(unsigned int slot, std::vector<std::unique_ptr<RColumnRea
 
    const auto &customColMap = customCols.GetColumns();
 
+   std::vector<std::unique_ptr<RColumnReaderBase>> ret;
    using expander = int[];
-
-   // Hack to expand a parameter pack without c++17 fold expressions.
-   // Construct the column readers
    int i = 0;
    (void)expander{
-      (colReaders.emplace_back(InitColumnReadersHelper<ColTypes>(
-          slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr, DSValuePtrsMap, r, colNames[i])),
+      (ret.emplace_back(MakeOneColumnReader<ColTypes>(slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr,
+                                                      DSValuePtrsMap, r, colNames[i])),
        ++i)...,
       0};
+   return ret;
 
    (void)slot;     // avoid _bogus_ "unused variable" warnings for slot on gcc 4.9
    (void)r;        // avoid "unused variable" warnings for r on gcc5.2
