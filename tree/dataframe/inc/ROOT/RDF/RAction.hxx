@@ -91,7 +91,7 @@ public:
          bookedBranch.second->InitSlot(r, slot);
       RDFInternal::RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetDefines(), fIsDefine.data(),
                                            fLoopManager->GetDSValuePtrs()};
-      RDFInternal::InitColumnReaders(slot, fValues[slot], r, ColumnTypes_t{}, info);
+      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
       fHelper.InitTask(r, slot);
    }
 

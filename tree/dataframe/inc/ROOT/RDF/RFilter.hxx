@@ -110,7 +110,7 @@ public:
       for (auto &bookedBranch : fDefines.GetColumns())
          bookedBranch.second->InitSlot(r, slot);
       RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fLoopManager->GetDSValuePtrs()};
-      RDFInternal::InitColumnReaders(slot, fValues[slot], r, ColumnTypes_t{}, info);
+      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
    }
 
    // recursive chain of `Report`s
