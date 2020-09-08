@@ -26,6 +26,9 @@ environ['CPPYY_API_PATH'] = 'none'
 environ['CPPYY_NO_ROOT_FILTER'] = '1'
 
 import cppyy
+if not 'ROOTSYS' in environ:
+    # Revert setting made by cppyy
+    cppyy.gbl.gROOT.SetBatch(False)
 
 # import libROOTPythonizations with Python version number
 import sys, importlib
