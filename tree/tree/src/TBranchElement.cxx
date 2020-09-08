@@ -540,6 +540,8 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                element->SetTitle(atitle.Data());
             }
             TString branchname( name );
+            if (branchname.EndsWith("."))
+               branchname.Remove(branchname.Length()-1);
             branchname += "_";
             SetTitle(branchname);
             leaf->SetName(branchname);
@@ -592,6 +594,8 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                   element->SetTitle(atitle.Data());
                }
                TString branchname (name);
+               if (branchname.EndsWith("."))
+                  branchname.Remove(branchname.Length()-1);
                branchname += "_";
                SetTitle(branchname);
                leaf->SetName(branchname);
@@ -731,8 +735,12 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
    fDirectory     = fTree->GetDirectory();
    fFileName      = "";
 
-   SetName(bname);
-   const char* name = GetName();
+   TString name( bname );
+   if (name[name.Length()-1]=='.') {
+      name.Remove(name.Length()-1);
+   }
+
+   SetName(name);
    SetTitle(name);
    //fClassName = fInfo->GetName();
    fCompress = compress;
@@ -773,7 +781,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
       // ===> create sub branches for each data member of a TClonesArray
       fClonesName = clonesClass->GetName();
       fClonesClass = clonesClass;
-      std::string branchname = name + std::string("_");
+      std::string branchname = name.Data() + std::string("_");
       SetTitle(branchname.c_str());
       leaf->SetName(branchname.c_str());
       leaf->SetTitle(branchname.c_str());
@@ -2740,6 +2748,23 @@ Int_t TBranchElement::GetExpectedType(TClass *&expectedClass,EDataType &expected
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the 'full' name of the branch.  In particular prefix  the mother's name
+/// when it does not end in a trailing dot and thus is not part of the branch name
+TString TBranchElement::GetFullName() const
+{
+   TBranchElement* mother = static_cast<TBranchElement*>(GetMother());
+   if (!mother || mother==this || mother->GetType() == 3 || mother->GetType() == 4) {
+      // The parent's name is already included in the name for split TClonesArray and STL collections
+      return fName;
+   }
+   TString motherName(mother->GetName());
+   if (motherName.Length() && (motherName[motherName.Length()-1] == '.')) {
+      return fName;
+   }
+   return motherName + "." + fName;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return icon name depending on type of branch element.
 
 const char* TBranchElement::GetIconName() const
@@ -3132,7 +3157,7 @@ void TBranchElement::InitializeOffsets()
       {
          TBranch *br = GetMother()->GetSubBranch( this );
          stlParentName = br->GetName();
-         stlParentName.Strip( TString::kTrailing, '.' );
+         stlParentName = stlParentName.Strip( TString::kTrailing, '.' );
 
          // We may ourself contain the 'Mother' branch name.
          // To avoid code duplication, we delegate the removal
