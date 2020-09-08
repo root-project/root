@@ -190,6 +190,7 @@ public:
    TClass                  *GetCurrentClass(); // Class referenced by transient description
    virtual Int_t            GetEntry(Long64_t entry = 0, Int_t getall = 0);
    virtual Int_t            GetExpectedType(TClass *&clptr,EDataType &type);
+   virtual TString          GetFullName() const;
            const char      *GetIconName() const;
            Int_t            GetID() const { return fID; }
            TStreamerInfo   *GetInfo() const;
