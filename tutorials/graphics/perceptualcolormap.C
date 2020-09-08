@@ -2,22 +2,22 @@
 /// \ingroup tutorial_graphics
 /// \notebook
 /// A “Perceptual” colormap explicitly identifies a fixed value in the data
-////
-/// On geographical plot this fixed point can be seen as the "sea level", and provides
-/// monotonic luminance variations above and below this fixed value. Unlike the rainbow
-/// colormap, this colormap provides  a faithful representation of the structures in the
-/// data.
+///
+/// On geographical plot this fixed point can, for instance, the "sea level". A perceptual
+/// colormap provides a monotonic luminance variations above and below this fixed value.
+/// Unlike the rainbow colormap, this colormap provides  a faithful representation of the
+/// structures in the data.
 ///
 /// This macro demonstrates how to produce the perceptual colormap shown on the figure 2
 /// in [this article](https://root.cern/blog/rainbow-color-map/).
 ///
-/// The function `Perceptual_Colormap` take two parameters as input:
+/// The function `Perceptual_Colormap` takes two parameters as input:
 ///   1. `h`, the `TH2D` to be drawn
 ///   2. `val_cut`, the Z value defining the "sea level"
 ///
 /// Having these parameters this function defines two color maps: one above `val_cut` and one
 /// below.
-////
+///
 /// \macro_image
 /// \macro_code
 ///
