@@ -79,7 +79,7 @@ using namespace std;
 static unsigned long long gWrapperSerial = 0LL;
 static const string kIndentString("   ");
 
-static map<const FunctionDecl *, void *> gWrapperStore;
+static map<const Decl *, void *> gWrapperStore;
 static map<const Decl *, void *> gCtorWrapperStore;
 static map<const Decl *, void *> gDtorWrapperStore;
 
@@ -1095,7 +1095,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
 {
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
-   const FunctionDecl *FD = GetDecl();
+   const Decl *D = GetFunctionOrShadowDecl();
    string wrapper_name;
    string wrapper;
 
@@ -1107,7 +1107,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    //
    void *F = compile_wrapper(wrapper_name, wrapper);
    if (F) {
-      gWrapperStore.insert(make_pair(FD, F));
+      gWrapperStore.insert(make_pair(D, F));
    } else {
       ::Error("TClingCallFunc::make_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -2253,10 +2253,10 @@ void *TClingCallFunc::InterfaceMethod()
       return 0;
    }
    if (!fWrapper) {
-      const FunctionDecl *decl = GetDecl();
+      const Decl *decl = GetFunctionOrShadowDecl();
 
       R__LOCKGUARD_CLING(gInterpreterMutex);
-      map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
+      map<const Decl *, void *>::iterator I = gWrapperStore.find(decl);
       if (I != gWrapperStore.end()) {
          fWrapper = (tcling_callfunc_Wrapper_t) I->second;
       } else {
@@ -2282,17 +2282,17 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
       return TInterpreter::CallFuncIFacePtr_t();
    }
    if (!fWrapper) {
-      const FunctionDecl *decl = GetDecl();
+      const Decl *decl = GetFunctionOrShadowDecl();
 
       R__LOCKGUARD_CLING(gInterpreterMutex);
-      map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
+      map<const Decl *, void *>::iterator I = gWrapperStore.find(decl);
       if (I != gWrapperStore.end()) {
          fWrapper = (tcling_callfunc_Wrapper_t) I->second;
       } else {
          fWrapper = make_wrapper();
       }
 
-      fReturnIsRecordType = decl->getReturnType().getCanonicalType()->isRecordType();
+      fReturnIsRecordType = GetDecl()->getReturnType().getCanonicalType()->isRecordType();
    }
    return TInterpreter::CallFuncIFacePtr_t(fWrapper);
 }
