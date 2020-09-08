@@ -202,20 +202,22 @@ public:
    void* InterfaceMethod();
    bool IsValid() const;
    TInterpreter::CallFuncIFacePtr_t IFacePtr();
+   const clang::DeclContext *GetDeclContext() const;
+
+   int get_wrapper_code(std::string &wrapper_name, std::string &wrapper);
+
    const clang::FunctionDecl *GetDecl() {
       if (!fDecl)
          fDecl = fMethod->GetTargetFunctionDecl();
       return fDecl;
    }
-
-   const clang::DeclContext *GetDeclContext() const;
-
-   int get_wrapper_code(std::string &wrapper_name, std::string &wrapper);
-
    const clang::FunctionDecl* GetDecl() const {
       if (fDecl)
          return fDecl;
       return fMethod->GetTargetFunctionDecl();
+   }
+   const clang::Decl *GetFunctionOrShadowDecl() const {
+      return fMethod->GetDecl();
    }
    void ResetArg();
    void SetArg(long arg);

@@ -248,20 +248,6 @@ namespace ROOT11010 {
 }
 )CODE");
 
-  TClassRef c("ROOT11010::Derived");
-  ASSERT_TRUE(c) << "Cannot find TClass for ROOT11010::Derived";
-
-  TFunction *f = (TFunction*)c->GetListOfMethods()->FindObject("Derived");
-  ASSERT_TRUE(f) << "Cannot find constructor for ROOT11010::Derived";
-
-  CallFunc_t* callf = gInterpreter->CallFunc_Factory();
-  MethodInfo_t* meth = gInterpreter->MethodInfo_Factory(f->GetDeclId());
-  gInterpreter->CallFunc_SetFunc(callf, meth);
-  gInterpreter->MethodInfo_Delete(meth);
-  const TInterpreter::CallFuncIFacePtr_t &faceptr = gInterpreter->CallFunc_IFacePtr(callf);
-  gInterpreter->CallFunc_Delete(callf);   // does not touch IFacePtr
-
-
   auto GetInt = [](const char* name) {
     auto *globals = gROOT->GetListOfGlobals();
     std::string fullname("ROOT11010");
@@ -269,39 +255,105 @@ namespace ROOT11010 {
     return *(int*)((TGlobal*)globals->FindObject(fullname.c_str()))->GetAddress();
   };
 
-  EXPECT_EQ(GetInt("baseMemCtorCalled"), 0);
-  EXPECT_EQ(GetInt("baseMemDtorCalled"), 0);
-  EXPECT_EQ(GetInt("baseCtorCalled"), 0);
-  EXPECT_EQ(GetInt("baseDtorCalled"), 0);
+  {
+    // ROOT-10789 take 2:
+    TClassRef c("ROOT11010::Base");
+    ASSERT_TRUE(c) << "Cannot find TClass for ROOT11010::Base";
+    TFunction *f = (TFunction*)c->GetListOfMethods()->FindObject("Base");
+    ASSERT_TRUE(f) << "Cannot find constructor for ROOT11010::Base";
 
-  EXPECT_EQ(GetInt("derivMemCtorCalled"), 0);
-  EXPECT_EQ(GetInt("derivMemDtorCalled"), 0);
-  EXPECT_EQ(GetInt("derivDtorCalled"), 0);
+    CallFunc_t* callf = gInterpreter->CallFunc_Factory();
+    MethodInfo_t* meth = gInterpreter->MethodInfo_Factory(f->GetDeclId());
+    gInterpreter->CallFunc_SetFunc(callf, meth);
+    gInterpreter->MethodInfo_Delete(meth);
+    const TInterpreter::CallFuncIFacePtr_t &faceptr = gInterpreter->CallFunc_IFacePtr(callf);
+    gInterpreter->CallFunc_Delete(callf);   // does not touch IFacePtr
 
-  void* argbuf[8];
-  void* objresult = nullptr;
-  std::string s("TheStringCtorArg");
-  argbuf[0] = &s;
-  faceptr.fGeneric(0, 1, argbuf, &objresult);
-  EXPECT_NE(objresult, nullptr);
+    EXPECT_EQ(GetInt("baseMemCtorCalled"), 0);
+    EXPECT_EQ(GetInt("baseMemDtorCalled"), 0);
+    EXPECT_EQ(GetInt("baseCtorCalled"), 0);
+    EXPECT_EQ(GetInt("baseDtorCalled"), 0);
 
-  EXPECT_EQ(GetInt("baseMemCtorCalled"), 1);
-  EXPECT_EQ(GetInt("baseMemDtorCalled"), 0);
-  EXPECT_EQ(GetInt("baseCtorCalled"), 1);
-  EXPECT_EQ(GetInt("baseDtorCalled"), 0);
+    EXPECT_EQ(GetInt("derivMemCtorCalled"), 0);
+    EXPECT_EQ(GetInt("derivMemDtorCalled"), 0);
+    EXPECT_EQ(GetInt("derivDtorCalled"), 0);
 
-  EXPECT_EQ(GetInt("derivMemCtorCalled"), 1);
-  EXPECT_EQ(GetInt("derivMemDtorCalled"), 0);
-  EXPECT_EQ(GetInt("derivDtorCalled"), 0);
+    void* argbuf[8];
+    void* objresult = nullptr;
+    std::string s("TheStringCtorArg");
+    argbuf[0] = &s;
+    faceptr.fGeneric(0, 1, argbuf, &objresult);
+    EXPECT_NE(objresult, nullptr);
 
-  c->Destructor(objresult);
+    EXPECT_EQ(GetInt("baseMemCtorCalled"), 1);
+    EXPECT_EQ(GetInt("baseMemDtorCalled"), 0);
+    EXPECT_EQ(GetInt("baseCtorCalled"), 1);
+    EXPECT_EQ(GetInt("baseDtorCalled"), 0);
 
-  EXPECT_EQ(GetInt("baseMemCtorCalled"), 1);
-  EXPECT_EQ(GetInt("baseMemDtorCalled"), 1);
-  EXPECT_EQ(GetInt("baseCtorCalled"), 1);
-  EXPECT_EQ(GetInt("baseDtorCalled"), 1);
+    EXPECT_EQ(GetInt("derivMemCtorCalled"), 0);
+    EXPECT_EQ(GetInt("derivMemDtorCalled"), 0);
+    EXPECT_EQ(GetInt("derivDtorCalled"), 0);
 
-  EXPECT_EQ(GetInt("derivMemCtorCalled"), 1);
-  EXPECT_EQ(GetInt("derivMemDtorCalled"), 1);
-  EXPECT_EQ(GetInt("derivDtorCalled"), 1);
+    c->Destructor(objresult);
+
+    EXPECT_EQ(GetInt("baseMemCtorCalled"), 1);
+    EXPECT_EQ(GetInt("baseMemDtorCalled"), 1);
+    EXPECT_EQ(GetInt("baseCtorCalled"), 1);
+    EXPECT_EQ(GetInt("baseDtorCalled"), 1);
+
+    EXPECT_EQ(GetInt("derivMemCtorCalled"), 0);
+    EXPECT_EQ(GetInt("derivMemDtorCalled"), 0);
+    EXPECT_EQ(GetInt("derivDtorCalled"), 0);
+  }
+
+  {
+    TClassRef c("ROOT11010::Derived");
+    ASSERT_TRUE(c) << "Cannot find TClass for ROOT11010::Derived";
+    TFunction *f = (TFunction*)c->GetListOfMethods()->FindObject("Derived");
+    ASSERT_TRUE(f) << "Cannot find constructor for ROOT11010::Derived";
+
+    CallFunc_t* callf = gInterpreter->CallFunc_Factory();
+    MethodInfo_t* meth = gInterpreter->MethodInfo_Factory(f->GetDeclId());
+    gInterpreter->CallFunc_SetFunc(callf, meth);
+    gInterpreter->MethodInfo_Delete(meth);
+    const TInterpreter::CallFuncIFacePtr_t &faceptr = gInterpreter->CallFunc_IFacePtr(callf);
+    gInterpreter->CallFunc_Delete(callf);   // does not touch IFacePtr
+
+
+    EXPECT_EQ(GetInt("baseMemCtorCalled"), 1);
+    EXPECT_EQ(GetInt("baseMemDtorCalled"), 1);
+    EXPECT_EQ(GetInt("baseCtorCalled"), 1);
+    EXPECT_EQ(GetInt("baseDtorCalled"), 1);
+
+    EXPECT_EQ(GetInt("derivMemCtorCalled"), 0);
+    EXPECT_EQ(GetInt("derivMemDtorCalled"), 0);
+    EXPECT_EQ(GetInt("derivDtorCalled"), 0);
+
+    void* argbuf[8];
+    void* objresult = nullptr;
+    std::string s("TheStringCtorArg");
+    argbuf[0] = &s;
+    faceptr.fGeneric(0, 1, argbuf, &objresult);
+    EXPECT_NE(objresult, nullptr);
+
+    EXPECT_EQ(GetInt("baseMemCtorCalled"), 2);
+    EXPECT_EQ(GetInt("baseMemDtorCalled"), 1);
+    EXPECT_EQ(GetInt("baseCtorCalled"), 2);
+    EXPECT_EQ(GetInt("baseDtorCalled"), 1);
+
+    EXPECT_EQ(GetInt("derivMemCtorCalled"), 1);
+    EXPECT_EQ(GetInt("derivMemDtorCalled"), 0);
+    EXPECT_EQ(GetInt("derivDtorCalled"), 0);
+
+    c->Destructor(objresult);
+
+    EXPECT_EQ(GetInt("baseMemCtorCalled"), 2);
+    EXPECT_EQ(GetInt("baseMemDtorCalled"), 2);
+    EXPECT_EQ(GetInt("baseCtorCalled"), 2);
+    EXPECT_EQ(GetInt("baseDtorCalled"), 2);
+
+    EXPECT_EQ(GetInt("derivMemCtorCalled"), 1);
+    EXPECT_EQ(GetInt("derivMemDtorCalled"), 1);
+    EXPECT_EQ(GetInt("derivDtorCalled"), 1);
+  }
 }
