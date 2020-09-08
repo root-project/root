@@ -195,23 +195,13 @@ set(BASE_SOURCES
   src/TVirtualX.cxx
 )
 
-if(CMAKE_CXX_STANDARD GREATER 11)
-  list(APPEND BASE_HEADERS ROOT/RLogger.hxx)
-  list(APPEND BASE_SOURCES v7/src/RLogger.cxx)
-  set(BASE_V7_INC ${CMAKE_SOURCE_DIR}/core/base/v7/inc)
-  # TLogger.hxx may be used without root7 flag, but is placed in v7/inc/,
-  # so we need to tell ROOT_INSTALL_HEADERS() where to find it
-  set(BASE_HEADER_DIRS inc/ v7/inc/)
-endif()
 
 if(root7)
+  set(BASE_V7_INC ${CMAKE_SOURCE_DIR}/core/base/v7/inc)
+  set(BASE_HEADER_DIRS inc/ v7/inc/)
   list(APPEND BASE_HEADERS
       ROOT/RDirectoryEntry.hxx
-      ROOT/RError.hxx
       ROOT/RIndexIter.hxx)
-  list(APPEND BASE_SOURCES
-       v7/src/RError.cxx)
-  ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()
 
 
