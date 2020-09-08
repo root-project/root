@@ -161,8 +161,8 @@ public:
    T *Get()
    {
       if (!fProxy) {
-         Error("TTreeReaderValue::Get()",
-               "Value reader not properly initialized, did you remember to call TTreeReader.Set(Next)Entry()?");
+         Error("TTreeReaderValue::Get()", "Value reader not properly initialized, did you call "
+                                          "TTreeReader::Set(Next)Entry() or TTreeReader::Next()?");
          return nullptr;
       }
       void *address = GetAddress(); // Needed to figure out if it's a pointer
