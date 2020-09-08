@@ -19,6 +19,7 @@
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h"
 
+#include <array>
 #include <deque>
 #include <type_traits>
 #include <vector>
@@ -62,7 +63,7 @@ class RDefine final : public RDefineBase {
    ValuesPerSlot_t fLastResults;
 
    /// Column readers per slot and per input column
-   std::vector<std::vector<std::unique_ptr<RDFInternal::RColumnReaderBase>>> fValues;
+   std::vector<std::array<std::unique_ptr<RDFInternal::RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
@@ -139,7 +140,8 @@ public:
    void FinaliseSlot(unsigned int slot) final
    {
       if (fIsInitialized[slot]) {
-         fValues[slot].clear();
+         for (auto &v : fValues[slot])
+            v.reset();
          fIsInitialized[slot] = false;
       }
    }
