@@ -19,6 +19,7 @@
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
 
+#include <array>
 #include <cassert>
 #include <cstring>
 #include <limits>
@@ -294,7 +295,7 @@ struct RColumnReadersInfo {
 /// colInfo.fColNames and colInfo.fIsDefine are expected to have size equal to the parameter pack, and elements ordered
 /// accordingly, i.e. fIsDefine[0] refers to fColNames[0] which is of type "ColTypes[0]".
 template <typename... ColTypes>
-std::vector<std::unique_ptr<RColumnReaderBase>>
+std::array<std::unique_ptr<RColumnReaderBase>, sizeof...(ColTypes)>
 MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo)
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
@@ -305,14 +306,9 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
 
    const auto &customColMap = customCols.GetColumns();
 
-   std::vector<std::unique_ptr<RColumnReaderBase>> ret;
-   using expander = int[];
-   int i = 0;
-   (void)expander{
-      (ret.emplace_back(MakeOneColumnReader<ColTypes>(slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr,
-                                                      DSValuePtrsMap, r, colNames[i])),
-       ++i)...,
-      0};
+   int i = -1;
+   std::array<std::unique_ptr<RColumnReaderBase>, sizeof...(ColTypes)> ret{(++i, MakeOneColumnReader<ColTypes>(
+      slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr, DSValuePtrsMap, r, colNames[i]))...};
    return ret;
 
    (void)slot;     // avoid _bogus_ "unused variable" warnings for slot on gcc 4.9
