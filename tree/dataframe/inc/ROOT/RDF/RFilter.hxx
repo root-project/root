@@ -57,7 +57,7 @@ class RFilter final : public RFilterBase {
    const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
    PrevDataFrame &fPrevData;
    /// Column readers per slot and per input column
-   std::vector<std::vector<std::unique_ptr<RDFInternal::RColumnReaderBase>>> fValues;
+   std::vector<std::array<std::unique_ptr<RDFInternal::RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 
@@ -156,7 +156,8 @@ public:
       for (auto &column : fDefines.GetColumns())
          column.second->FinaliseSlot(slot);
 
-      fValues[slot].clear();
+      for (auto &v : fValues[slot])
+         v.reset();
    }
 
    std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph()
