@@ -12,7 +12,7 @@ ROOT_OBJECT_LIBRARY(Zstd ${sources} BUILTINS ZSTD)
 target_compile_definitions(Zstd PRIVATE ${ZSTD_DEFINITIONS})
 target_include_directories(Zstd PRIVATE
    ${ZSTD_INCLUDE_DIR}
-   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
    ${CMAKE_BINARY_DIR}/ginclude
 )
 
