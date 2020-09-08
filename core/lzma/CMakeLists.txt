@@ -10,9 +10,9 @@
 
 ROOT_OBJECT_LIBRARY(Lzma src/ZipLZMA.c BUILTINS LZMA)
 
-target_include_directories(Lzma PRIVATE 
+target_include_directories(Lzma PRIVATE
    ${LIBLZMA_INCLUDE_DIR}
-   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
    ${CMAKE_BINARY_DIR}/ginclude
 )
 
