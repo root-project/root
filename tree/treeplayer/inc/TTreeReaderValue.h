@@ -158,16 +158,21 @@ public:
    /// The returned address is guaranteed to stay constant while a given TTree is being read from a given file,
    /// unless the branch addresses are manipulated directly (e.g. through TTree::SetBranchAddress()).
    /// The address might also change when the underlying TTree/TFile is switched, e.g. when a TChain switches files.
-   T* Get() {
-      if (!fProxy){
-         Error("TTreeReaderValue::Get()", "Value reader not properly initialized, did you remember to call TTreeReader.Set(Next)Entry()?");
+   T *Get()
+   {
+      if (!fProxy) {
+         Error("TTreeReaderValue::Get()",
+               "Value reader not properly initialized, did you remember to call TTreeReader.Set(Next)Entry()?");
          return nullptr;
       }
       void *address = GetAddress(); // Needed to figure out if it's a pointer
-      return fProxy->IsaPointer() ? *(T**)address : (T*)address; }
+      return fProxy->IsaPointer() ? *(T **)address : (T *)address;
+   }
+
    /// Return a pointer to the value of the current entry.
    /// Equivalent to Get().
    T* operator->() { return Get(); }
+
    /// Return a reference to the value of the current entry.
    /// Equivalent to dereferencing the pointer returned by Get(). Behavior is undefined if no entry has been loaded yet.
    /// Most likely a crash will occur.
