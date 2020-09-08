@@ -162,7 +162,12 @@ TMethodCall *TLeafElement::GetMethodCall(const char * /*name*/)
 
 TString TLeafElement::GetFullName() const
 {
-   return GetBranch()->GetFullName();
+   TBranchElement *br = static_cast<TBranchElement*>(GetBranch());
+   if (br->GetType() == 3 || br->GetType() == 4) {
+      //      return TString(br->GetFullName()) + "." + GetName() +  "_";
+      return TString(br->GetFullName()) + "_";
+   } else
+      return GetBranch()->GetFullName();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
