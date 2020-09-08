@@ -128,7 +128,7 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                ${winnt_objects})
 
 ROOT_OBJECT_LIBRARY(BaseTROOT ${CMAKE_SOURCE_DIR}/core/base/src/TROOT.cxx ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h)
-target_include_directories(BaseTROOT PRIVATE 
+target_include_directories(BaseTROOT PRIVATE
    ${CMAKE_SOURCE_DIR}/core/foundation/res
    ${CMAKE_SOURCE_DIR}/core/base/inc
    ${CMAKE_SOURCE_DIR}/core/clib/inc
@@ -186,6 +186,7 @@ target_include_directories(Core PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/co
 
 if(root7 OR CMAKE_CXX_STANDARD GREATER 11)
   target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
+  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/v7/inc>)
 endif()
 
 

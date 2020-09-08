@@ -36,7 +36,7 @@ ROOT_OBJECT_LIBRARY(Clib
 
 target_include_directories(Clib PRIVATE
    ${CMAKE_SOURCE_DIR}/core/clib/res
-   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
    ${CMAKE_BINARY_DIR}/ginclude
 )
 
