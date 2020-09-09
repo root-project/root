@@ -13,11 +13,13 @@
 #include <ROOT/REveProjectionBases.hxx>
 #include <ROOT/REveCompound.hxx>
 #include <ROOT/REveManager.hxx>
+#include <ROOT/REveSecondarySelectable.hxx>
 
 #include "TClass.h"
 #include "TColor.h"
 
 #include "json.hpp"
+#include <iostream>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -472,11 +474,14 @@ void REveSelection::UserUnPickedElement(REveElement* el)
 
 //==============================================================================
 
-void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& secondary_idcs)
+void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& in_secondary_idcs)
 {
    static const REveException eh("REveSelection::NewElementPicked ");
 
    REveElement *pel = nullptr, *el = nullptr;
+
+   // AMT the forth/last argument is optional and therefore need to be constant
+   std::set<int> secondary_idcs = in_secondary_idcs;
 
    if (id > 0)
    {
@@ -485,6 +490,14 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
      if ( ! pel) throw eh + "picked element id=" + id + " not found.";
 
      el = MapPickedToSelected(pel);
+
+     if (el != pel) {
+        REveSecondarySelectable* ss = dynamic_cast<REveSecondarySelectable*>(el);
+        if (ss) {
+           secondary = true;
+           secondary_idcs = ss->RefSelectedSet();
+        }
+     }
    }
 
    if (gDebug > 0) {
