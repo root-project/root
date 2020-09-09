@@ -13,7 +13,9 @@
 
 #include "ROOT/TExecutorBaseImpl.hxx"
 #include "ROOT/TSequentialExecutor.hxx"
+#ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
+#endif
 #include "ROOT/TProcessExecutor.hxx"
 #include "TROOT.h"
 #include "ExecutionPolicy.hxx"
