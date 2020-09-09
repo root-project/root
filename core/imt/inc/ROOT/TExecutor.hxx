@@ -20,6 +20,7 @@
 #include "TROOT.h"
 #include "ExecutionPolicy.hxx"
 #include <memory>
+#include <stdexcept>
 #include <thread>
 
 namespace ROOT{
@@ -45,6 +46,8 @@ public:
          case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             fProcPool = std::unique_ptr<ROOT::TProcessExecutor>(new ROOT::TProcessExecutor(nProcessingUnits));
             break;
+         default:
+            throw std::invalid_argument("kMultithread policy not available when ROOT is compiled without imt.");
       }
    }
 
@@ -124,6 +127,8 @@ private:
          case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             res = fProcPool->Map(func, nTimes);
             break;
+         default:
+            break;
       }
       return res;
    }
@@ -149,6 +154,8 @@ private:
          case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             res = fProcPool->Map(func, args);
             break;
+         default:
+            break;
       }
       return res;
    }
@@ -172,6 +179,8 @@ private:
 #endif
          case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             res = fProcPool->Map(func, nTimes, redfunc, nChunks);
+            break;
+         default:
             break;
       }
       return res;
@@ -200,6 +209,8 @@ private:
          case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             res = fProcPool->Map(func, args);
             break;
+         default:
+            break;
       }
       return res;
    }
@@ -224,6 +235,8 @@ private:
 #endif
          case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             res = fProcPool->Map(func, args, redfunc, nChunks);
+            break;
+         default:
             break;
       }
       return res;
@@ -250,6 +263,8 @@ private:
 #endif
          case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             res = fProcPool->Map(func, args, redfunc, nChunks);
+            break;
+         default:
             break;
       }
       return res;
