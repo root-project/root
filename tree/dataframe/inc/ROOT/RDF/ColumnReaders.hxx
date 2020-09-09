@@ -307,8 +307,9 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
    const auto &customColMap = customCols.GetColumns();
 
    int i = -1;
-   std::array<std::unique_ptr<RColumnReaderBase>, sizeof...(ColTypes)> ret{(++i, MakeOneColumnReader<ColTypes>(
-      slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr, DSValuePtrsMap, r, colNames[i]))...};
+   std::array<std::unique_ptr<RColumnReaderBase>, sizeof...(ColTypes)> ret{
+      {{(++i, MakeOneColumnReader<ColTypes>(slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr,
+                                            DSValuePtrsMap, r, colNames[i]))}...}};
    return ret;
 
    (void)slot;     // avoid _bogus_ "unused variable" warnings for slot on gcc 4.9
