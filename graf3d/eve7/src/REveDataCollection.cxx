@@ -37,12 +37,14 @@ Color_t  REveDataCollection::fgDefaultColor  = kBlue;
 REveDataCollection::REveDataCollection(const std::string& n, const std::string& t) :
    REveElement(n, t)
 {
+   fAlwaysSecSelect = true;
    fChildClass = TClass::GetClass<REveDataItem>();
 
    SetupDefaultColorAndTransparency(fgDefaultColor, true, true);
 
-   _handler_func = 0;
-   _handler_func_ids = 0;
+   _handler_collection_change = 0;
+   _handler_items_change = 0;
+   _handler_fillimp  = 0;
 }
 
 void REveDataCollection::AddItem(void *data_ptr, const std::string& /*n*/, const std::string& /*t*/)
@@ -94,13 +96,14 @@ void REveDataCollection::ApplyFilter()
       ids.push_back(idx++);
    }
    StampObjProps();
-   if (_handler_func_ids) _handler_func_ids( this , ids);
+   if (_handler_items_change) _handler_items_change( this , ids);
 }
 
 //______________________________________________________________________________
 
 void  REveDataCollection::StreamPublicMethods(nlohmann::json &j)
-{   struct PubMethods
+{
+   struct PubMethods
    {
       void FillJSON(TClass* c, nlohmann::json & arr)
       {
@@ -168,8 +171,6 @@ void  REveDataCollection::StreamPublicMethods(nlohmann::json &j)
 
 Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-
-
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
    j["fFilterExpr"] = fFilterExpr.Data();
    j["items"] =  nlohmann::json::array();
@@ -204,7 +205,7 @@ void REveDataCollection::SetMainColor(Color_t newv)
       chld->fColor = newv;
    }
 
-   if ( _handler_func_ids) _handler_func_ids( this , ids);
+   if ( _handler_items_change) _handler_items_change( this , ids);
 }
 
 //______________________________________________________________________________
@@ -218,7 +219,7 @@ Bool_t REveDataCollection::SetRnrState(Bool_t iRnrSelf)
       fItems[i]->SetRnrSelf(fRnrSelf);
    }
 
-   _handler_func_ids( this , ids);
+   _handler_items_change( this , ids);
 
    return ret;
 }
@@ -252,7 +253,7 @@ void REveDataCollection::ItemChanged(REveDataItem* iItem)
    {
       if (chld == iItem) {
          ids.push_back(idx);
-         _handler_func_ids( this , ids);
+         _handler_items_change( this , ids);
          return;
       }
       idx++;
@@ -265,6 +266,17 @@ void REveDataCollection::ItemChanged(Int_t idx)
 {
    Ids_t ids;
    ids.push_back(idx);
-   _handler_func_ids( this , ids);
+   _handler_items_change( this , ids);
+}
+
+//______________________________________________________________________________
+
+void REveDataCollection::FillImpliedSelectedSet( Set_t& impSelSet)
+{
+   _handler_fillimp( this ,  impSelSet);
+   /*
+   for (auto &e :impSelSet )
+      printf("set %s \n", e->GetCName());
+   */
 }
 

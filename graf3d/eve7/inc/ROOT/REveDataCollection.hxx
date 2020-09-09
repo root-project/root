@@ -14,6 +14,8 @@
 #define ROOT7_REveDataCollection
 
 #include <ROOT/REveElement.hxx>
+#include <ROOT/REveCompound.hxx>
+#include <ROOT/REveSecondarySelectable.hxx>
 
 #include <functional>
 #include <vector>
@@ -56,14 +58,16 @@ public:
 
 //==============================================================================
 
-class REveDataCollection : public REveElement
+class REveDataCollection : public REveElement,
+                           public REveSecondarySelectable
 {
 public:
    typedef std::vector<int> Ids_t;
 
 private:
-   std::function<void (REveDataCollection*)>               _handler_func;
-   std::function<void (REveDataCollection*, const Ids_t&)> _handler_func_ids;
+   std::function<void (REveDataCollection*)>               _handler_collection_change;
+   std::function<void (REveDataCollection*, const Ids_t&)> _handler_items_change;
+   std::function<void (REveDataCollection*, Set_t& impSel)> _handler_fillimp;
 
 public:
    static Color_t fgDefaultColor;
@@ -106,16 +110,22 @@ public:
    virtual void ItemChanged(REveDataItem *item);
    virtual void ItemChanged(Int_t idx);
 
-   void SetHandlerFunc (std::function<void (REveDataCollection*)> handler_func)
+   void FillImpliedSelectedSet(Set_t &impSelSet) override;
+
+   void SetCollectionChangeDelegate (std::function<void (REveDataCollection*)> handler_func)
    {
-      _handler_func = handler_func;
+      _handler_collection_change = handler_func;
    }
-   void SetHandlerFuncIds (std::function<void (REveDataCollection*, const Ids_t&)> handler_func)
+   void SetItemsChangeDelegate (std::function<void (REveDataCollection*, const Ids_t&)> handler_func)
    {
-      _handler_func_ids= handler_func;
+      _handler_items_change = handler_func;
+   }
+   void SetFillImpliedSelectedDelegate (std::function<void (REveDataCollection*, Set_t& impSelSet)> handler_func)
+   {
+      _handler_fillimp = handler_func;
    }
 };
-
+ 
 } // namespace Experimental
 } // namespace ROOT
 
