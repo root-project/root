@@ -11,9 +11,10 @@
 #ifndef ROOT_RACTION
 #define ROOT_RACTION
 
-#include "ROOT/RDF/ColumnReaders.hxx"
+#include "ROOT/RDF/ColumnReaderUtils.hxx"
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RActionBase.hxx"
+#include "ROOT/RDF/RColumnReaderBase.hxx"
 #include "ROOT/RDF/Utils.hxx" // ColumnNames_t, IsInternalColumn
 #include "ROOT/RDF/RLoopManager.hxx"
 

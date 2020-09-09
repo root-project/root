@@ -1,4 +1,4 @@
-// Author: Enrico Guiraud CERN 08/2020
+// Author: Enrico Guiraud CERN 09/2020
 
 /*************************************************************************
  * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
@@ -8,85 +8,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RDF_COLUMNREADERS
-#define ROOT_RDF_COLUMNREADERS
+#ifndef ROOT_RDF_RTREECOLUMNREADER
+#define ROOT_RDF_RTREECOLUMNREADER
 
-#include <ROOT/RDF/RDefineBase.hxx>
+#include "RColumnReaderBase.hxx"
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RVec.hxx>
-#include <ROOT/TypeTraits.hxx>
+#include <Rtypes.h>  // Long64_t, R__CLING_PTRCHECK
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
 
-#include <array>
-#include <cassert>
-#include <cstring>
-#include <limits>
 #include <memory>
 #include <string>
-#include <tuple>
-#include <typeinfo>
-#include <vector>
 
 namespace ROOT {
 namespace Internal {
 namespace RDF {
-
-using namespace ROOT::TypeTraits;
-namespace RDFDetail = ROOT::Detail::RDF;
-
-void CheckDefine(RDFDetail::RDefineBase &define, const std::type_info &tid);
-
-/**
-\class ROOT::Internal::RDF::RColumnReaderBase
-\ingroup dataframe
-\brief Pure virtual base class for all column reader types
-
-This pure virtual class provides a common base class for the different column reader types, e.g. RTreeColumnReader and
-RDSColumnReader.
-**/
-class RColumnReaderBase {
-public:
-   virtual ~RColumnReaderBase() = default;
-
-   /// Return the column value for the given entry. Called at most once per entry.
-   /// \tparam T The column type
-   /// \param entry The entry number
-   template <typename T>
-   T &Get(Long64_t entry)
-   {
-      return *static_cast<T *>(GetImpl(entry));
-   }
-
-private:
-   virtual void *GetImpl(Long64_t entry) = 0;
-};
-
-/// Column reader for defined (aka custom) columns.
-class R__CLING_PTRCHECK(off) RDefineReader final : public RColumnReaderBase {
-   /// Non-owning reference to the node responsible for the custom column. Needed when querying custom values.
-   RDFDetail::RDefineBase &fDefine;
-
-   /// Non-owning ptr to the value of a custom column.
-   void *fCustomValuePtr = nullptr;
-
-   /// The slot this value belongs to.
-   unsigned int fSlot = std::numeric_limits<unsigned int>::max();
-
-   void *GetImpl(Long64_t entry) final
-   {
-      fDefine.Update(fSlot, entry);
-      return fCustomValuePtr;
-   }
-
-public:
-   RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define, const std::type_info &tid)
-      : fDefine(define), fCustomValuePtr(define.GetValuePtr(slot)), fSlot(slot)
-   {
-      CheckDefine(define, tid);
-   }
-};
 
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderValues
 template <typename T>
@@ -240,84 +178,8 @@ public:
    ~RTreeColumnReader() { fTreeArray.reset(); }
 };
 
-/// Column reader type that deals with values read from RDataSources.
-template <typename T>
-class R__CLING_PTRCHECK(off) RDSColumnReader final : public RColumnReaderBase {
-   T **fDSValuePtr = nullptr;
-
-   void *GetImpl(Long64_t) final { return *fDSValuePtr; }
-
-public:
-   RDSColumnReader(void * DSValuePtr) : fDSValuePtr(static_cast<T **>(DSValuePtr)) {}
-};
-
-template <typename T>
-std::unique_ptr<RColumnReaderBase>
-MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader *r,
-                 const std::vector<void *> *DSValuePtrsPtr, const std::string &colName)
-{
-   using Ret_t = std::unique_ptr<RColumnReaderBase>;
-
-   if (define != nullptr)
-      return Ret_t(new RDefineReader(slot, *define, typeid(T)));
-
-   if (DSValuePtrsPtr != nullptr) {
-      auto &DSValuePtrs = *DSValuePtrsPtr;
-      return Ret_t(new RDSColumnReader<T>(DSValuePtrs[slot]));
-   }
-
-   return Ret_t(new RTreeColumnReader<T>(*r, colName));
-}
-
-template <typename T>
-std::unique_ptr<RColumnReaderBase> MakeOneColumnReader(unsigned int slot, RDFDetail::RDefineBase *define,
-                                                       const std::map<std::string, std::vector<void *>> &DSValuePtrsMap,
-                                                       TTreeReader *r, const std::string &colName)
-{
-   const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
-   const std::vector<void *> *DSValuePtrsPtr = DSValuePtrsIt != DSValuePtrsMap.end() ? &DSValuePtrsIt->second : nullptr;
-   R__ASSERT(define != nullptr || r != nullptr || DSValuePtrsPtr != nullptr);
-   return MakeColumnReader<T>(slot, define, r, DSValuePtrsPtr, colName);
-}
-
-/// This type aggregates some of the arguments passed to InitColumnReaders.
-/// We need to pass a single RColumnReadersInfo object rather than each argument separately because with too many
-/// arguments passed, gcc 7.5.0 and cling disagree on the ABI, which leads to the last function argument being read
-/// incorrectly from a compiled InitColumnReaders symbols when invoked from a jitted symbol.
-struct RColumnReadersInfo {
-   const std::vector<std::string> &fColNames;
-   const RBookedDefines &fCustomCols;
-   const bool *fIsDefine;
-   const std::map<std::string, std::vector<void *>> &fDSValuePtrsMap;
-};
-
-/// Create a group of column readers, one per type in the parameter pack.
-/// colInfo.fColNames and colInfo.fIsDefine are expected to have size equal to the parameter pack, and elements ordered
-/// accordingly, i.e. fIsDefine[0] refers to fColNames[0] which is of type "ColTypes[0]".
-template <typename... ColTypes>
-std::array<std::unique_ptr<RColumnReaderBase>, sizeof...(ColTypes)>
-MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo)
-{
-   // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
-   const auto &colNames = colInfo.fColNames;
-   const auto &customCols = colInfo.fCustomCols;
-   const bool *isDefine = colInfo.fIsDefine;
-   const auto &DSValuePtrsMap = colInfo.fDSValuePtrsMap;
-
-   const auto &customColMap = customCols.GetColumns();
-
-   int i = -1;
-   std::array<std::unique_ptr<RColumnReaderBase>, sizeof...(ColTypes)> ret{
-      {{(++i, MakeOneColumnReader<ColTypes>(slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr,
-                                            DSValuePtrsMap, r, colNames[i]))}...}};
-   return ret;
-
-   (void)slot;     // avoid _bogus_ "unused variable" warnings for slot on gcc 4.9
-   (void)r;        // avoid "unused variable" warnings for r on gcc5.2
-}
-
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT
 
-#endif // ROOT_RDF_COLUMNREADERS
+#endif
