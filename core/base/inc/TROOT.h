@@ -89,9 +89,6 @@ namespace ROOT {
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
    UInt_t GetThreadPoolSize();
-   #ifndef R__USE_IMT
-      using TExecutor = TSequentialExecutor;
-   #endif
 }
 
 class TROOT : public TDirectory {
