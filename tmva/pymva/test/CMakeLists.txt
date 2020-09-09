@@ -23,6 +23,9 @@ find_python_module(sklearn QUIET)
 
 # Enable tests based on available python modules
 if(PY_TORCH_FOUND)
+   configure_file(generatePyTorchModelClassification.py generatePyTorchModelClassification.py COPYONLY)
+   configure_file(generatePyTorchModelMulticlass.py generatePyTorchModelMulticlass.py COPYONLY)
+   configure_file(generatePyTorchModelRegression.py generatePyTorchModelRegression.py COPYONLY)
    # Test PyTorch: Binary classification
    ROOT_EXECUTABLE(testPyTorchClassification testPyTorchClassification.C
       LIBRARIES ${Libraries})
@@ -37,7 +40,7 @@ if(PY_TORCH_FOUND)
    ROOT_EXECUTABLE(testPyTorchMulticlass testPyTorchMulticlass.C
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-Torch-Multiclass COMMAND testPyTorchMulticlass)
-endif((PY_TORCH_FOUND)
+endif(PY_TORCH_FOUND)
 
 if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
    # Test PyKeras: Binary classification
