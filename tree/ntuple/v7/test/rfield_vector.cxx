@@ -31,6 +31,51 @@ TEST(RNTuple, ClassVector)
    }
 }
 
+
+TEST(RNTuple, InsideCollection)
+{
+   FileRaii fileGuard("test_ntuple_insidecollection.root");
+
+   auto modelWrite = RNTupleModel::Create();
+   auto wrKlassVec = modelWrite->MakeField<std::vector<CustomStruct>>("klassVec");
+   CustomStruct klass;
+   klass.a = 42.0;
+   klass.v1.emplace_back(1.0);
+   klass.v1.emplace_back(2.0);
+   wrKlassVec->emplace_back(klass);
+
+   {
+      RNTupleWriter ntuple(std::move(modelWrite),
+         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+      ntuple.Fill();
+   }
+
+   auto source = std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
+   source->Attach();
+   EXPECT_EQ(1U, source->GetNEntries());
+
+   auto idKlassVec = source->GetDescriptor().FindFieldId("klassVec");
+   ASSERT_NE(idKlassVec, ROOT::Experimental::kInvalidDescriptorId);
+   auto idKlass = source->GetDescriptor().FindFieldId("CustomStruct", idKlassVec);
+   ASSERT_NE(idKlass, ROOT::Experimental::kInvalidDescriptorId);
+   auto idA = source->GetDescriptor().FindFieldId("a", idKlass);
+   ASSERT_NE(idA, ROOT::Experimental::kInvalidDescriptorId);
+   auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("klassVec.a", "float"));
+   RFieldFuse::ConnectRecursively(idA, *source, *fieldInner);
+
+   auto field = std::make_unique<ROOT::Experimental::RVectorField>("klassVec", std::move(fieldInner));
+   RFieldFuse::Connect(idKlassVec, *source, *field);
+
+   auto value = field->GenerateValue();
+   field->Read(0, &value);
+   auto aVec = value.Get<std::vector<float>>();
+   EXPECT_EQ(1U, aVec->size());
+   EXPECT_EQ(42.0, (*aVec)[0]);
+   field->DestroyValue(value);
+}
+
+
+
 TEST(RNTuple, RVec)
 {
    FileRaii fileGuard("test_ntuple_rvec.root");
