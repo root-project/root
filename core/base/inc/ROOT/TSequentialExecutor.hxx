@@ -14,6 +14,7 @@
 #include "RConfigure.h"
 
 #include "ROOT/TExecutorBaseImpl.hxx"
+#include "ExecutionPolicy.hxx"
 #include <numeric>
 #include <vector>
 
@@ -22,6 +23,7 @@ namespace ROOT {
    class TSequentialExecutor: public TExecutorBaseImpl<TSequentialExecutor> {
    public:
       explicit TSequentialExecutor(){};
+      explicit TSequentialExecutor(ROOT::Internal::ExecutionPolicy, unsigned): TSequentialExecutor(){};
 
       TSequentialExecutor(TSequentialExecutor &) = delete;
       TSequentialExecutor &operator=(TSequentialExecutor &) = delete;
