@@ -34,7 +34,7 @@ class RJittedDefine : public RDefineBase {
 public:
    RJittedDefine(std::string_view name, std::string_view type, unsigned int nSlots,
                        const std::map<std::string, std::vector<void *>> &DSValuePtrs)
-      : RDefineBase(name, type, nSlots, RDFInternal::RBookedDefines(), DSValuePtrs)
+      : RDefineBase(name, type, nSlots, RDFInternal::RBookedDefines(), DSValuePtrs, nullptr)
    {
    }
 

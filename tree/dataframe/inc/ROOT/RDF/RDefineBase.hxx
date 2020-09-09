@@ -23,6 +23,9 @@
 class TTreeReader;
 
 namespace ROOT {
+namespace RDF {
+class RDataSource;
+}
 namespace Detail {
 namespace RDF {
 
@@ -42,13 +45,14 @@ protected:
    RDFInternal::RBookedDefines fDefines;
    std::deque<bool> fIsInitialized; // because vector<bool> is not thread-safe
    const std::map<std::string, std::vector<void *>> &fDSValuePtrs; // reference to RLoopManager's data member
+   ROOT::RDF::RDataSource *fDataSource; ///< non-owning ptr to the RDataSource, if any. Used to retrieve column readers.
 
    static unsigned int GetNextID();
 
 public:
    RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
-                     const RDFInternal::RBookedDefines &defines,
-                     const std::map<std::string, std::vector<void *>> &DSValuePtrs);
+               const RDFInternal::RBookedDefines &defines,
+               const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds);
 
    RDefineBase &operator=(const RDefineBase &) = delete;
    RDefineBase &operator=(RDefineBase &&) = delete;
