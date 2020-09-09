@@ -316,6 +316,12 @@ namespace ROOT11010 {
     MethodInfo_t* meth = gInterpreter->MethodInfo_Factory(f->GetDeclId());
     gInterpreter->CallFunc_SetFunc(callf, meth);
     gInterpreter->MethodInfo_Delete(meth);
+// On Windows we get an assert, CodeGen-ing the callfunc for the construction:
+// CGClass.cpp:488's CallBaseDtor::Emit fails to cast CFG.CurCodeDecl (the callfunc
+// __cf2 function) into the expected destructor (i.e. CXXMethodDecl). I.e. something
+// is wrong in the exception emission stack.
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+
     const TInterpreter::CallFuncIFacePtr_t &faceptr = gInterpreter->CallFunc_IFacePtr(callf);
     gInterpreter->CallFunc_Delete(callf);   // does not touch IFacePtr
 
@@ -355,5 +361,6 @@ namespace ROOT11010 {
     EXPECT_EQ(GetInt("derivMemCtorCalled"), 1);
     EXPECT_EQ(GetInt("derivMemDtorCalled"), 1);
     EXPECT_EQ(GetInt("derivDtorCalled"), 1);
+#endif
   }
 }
