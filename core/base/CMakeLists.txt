@@ -17,7 +17,6 @@ endif()
 
 set(BASE_HEADERS
   ROOT/TErrorDefaultHandler.hxx
-  ROOT/TExecutor.hxx
   ROOT/TSequentialExecutor.hxx
   ROOT/StringConv.hxx
   Buttons.h

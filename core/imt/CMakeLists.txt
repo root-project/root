@@ -20,13 +20,14 @@ target_include_directories(Clib PRIVATE
    ${CMAKE_BINARY_DIR}/ginclude
 )
 
-target_link_libraries(Imt PRIVATE Thread INTERFACE Core)
+target_link_libraries(Imt PRIVATE Thread INTERFACE Core MultiProc)
 
 if(imt)
   ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
     ROOT/TFuture.hxx
     ROOT/TTaskGroup.hxx
     ROOT/RTaskArena.hxx
+    ROOT/TExecutor.hxx
     ROOT/TThreadExecutor.hxx
     LINKDEF
       LinkDef.h
