@@ -83,7 +83,7 @@ def train(model, train_loader, val_loader, num_epochs, batch_size, optimizer, cr
             # print train statistics
             running_train_loss += train_loss.item()
             if i % 32 == 31:    # print every 32 mini-batches
-                print(f"[{epoch+1}, {i+1}] train loss: {running_train_loss / 32 :.3f}")
+                print("[{}, {}] train loss: {:.3f}".format(epoch+1, i+1, running_train_loss / 32))
                 running_train_loss = 0.0
 
         if schedule:
@@ -105,10 +105,10 @@ def train(model, train_loader, val_loader, num_epochs, batch_size, optimizer, cr
                best_val = save_best(model, curr_val, best_val)
 
             # print val statistics per epoch
-            print(f"[{epoch+1}] val loss: {curr_val :.3f}")
+            print("[{}] val loss: {:.3f}".format(epoch+1, curr_val))
             running_val_loss = 0.0
 
-    print(f"Finished Training on {epoch+1} Epochs!")
+    print("Finished Training on {} Epochs!".format(epoch+1))
 
     return model
 
