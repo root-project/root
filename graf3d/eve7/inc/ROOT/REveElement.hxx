@@ -329,7 +329,7 @@ public:
    void   SetPickable(Bool_t p) { fPickable = p; }
    void   SetPickableRecursively(Bool_t p);
 
-   REveElement* GetSelectionMaster();
+   virtual REveElement* GetSelectionMaster();
    void         SetSelectionMaster(REveElement *el) { fSelectionMaster = el; }
 
    virtual void FillImpliedSelectedSet(Set_t& impSelSet);
