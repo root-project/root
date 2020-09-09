@@ -43,7 +43,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RSnapshotOptions.hxx
     ROOT/RTrivialDS.hxx
     ROOT/RDF/ActionHelpers.hxx
-    ROOT/RDF/ColumnReaders.hxx
+    ROOT/RDF/ColumnReaderUtils.hxx
     ROOT/RDF/GraphNode.hxx
     ROOT/RDF/GraphUtils.hxx
     ROOT/RDF/HistoModels.hxx
@@ -53,6 +53,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RBookedDefines.hxx
     ROOT/RDF/RDefineBase.hxx
     ROOT/RDF/RDefine.hxx
+    ROOT/RDF/RDefineReader.hxx
+    ROOT/RDF/RDSColumnReader.hxx
+    ROOT/RDF/RColumnReaderBase.hxx
     ROOT/RDF/RCutFlowReport.hxx
     ROOT/RDF/RDisplay.hxx
     ROOT/RDF/RFilterBase.hxx
@@ -68,6 +71,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RRangeBase.hxx
     ROOT/RDF/RRange.hxx
     ROOT/RDF/RSlotStack.hxx
+    ROOT/RDF/RTreeColumnReader.hxx
     ROOT/RDF/Utils.hxx
     ROOT/RDF/PyROOTHelpers.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
@@ -77,9 +81,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDefineBase.cxx
     src/RCutFlowReport.cxx
     src/RDataFrame.cxx
+    src/RDefineReader.cxx
     src/RDFActionHelpers.cxx
     src/RDFBookedDefines.cxx
-    src/RDFColumnReaders.cxx
     src/RDFDisplay.cxx
     src/RDFGraphUtils.cxx
     src/RDFHistoModels.cxx
