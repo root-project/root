@@ -3,7 +3,10 @@
 // user include files
 #include <ROOT/REveDataCollection.hxx>
 #include <ROOT/REveCompound.hxx>
+#include <ROOT/REveScene.hxx>
 #include <assert.h>
+#include <TClass.h>
+#include "json.hpp"
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -162,6 +165,30 @@ REveDataSimpleProxyBuilder::ModelChanges(const REveDataCollection::Ids_t& iIds, 
    }
 }
 
+
+REveCompound*
+REveDataSimpleProxyBuilder::CreateCompound(bool set_color, bool propagate_color_to_all_children)
+{
+   REveCollectionCompound *c = new REveCollectionCompound(Collection());
+   c->CSCImplySelectAllChildren();
+   c->SetPickable(true);
+   if (set_color)
+   {
+      c->SetMainColor(Collection()->GetMainColor());
+      c->SetMainTransparency(Collection()->GetMainTransparency());
+   }
+   if (propagate_color_to_all_children)
+   {
+      c->CSCApplyMainColorToAllChildren();
+      c->CSCApplyMainTransparencyToAllChildren();
+   }
+   else
+   {
+      c->CSCApplyMainColorToMatchingChildren();
+      c->CSCApplyMainTransparencyToMatchingChildren();
+   }
+   return c;
+}
 //______________________________________________________________________________
 
 bool
@@ -171,9 +198,64 @@ REveDataSimpleProxyBuilder::VisibilityModelChanges(int idx, REveElement* iCompou
    bool returnValue = false;
    if (item->GetRnrSelf() && iCompound->NumChildren()==0)
    {
-      printf("REveDataSimpleProxyBuilder::VisibilityModelChanges BUILD %d \n", idx);
       Build(Collection()->GetDataPtr(idx), idx, iCompound, vc);
       returnValue=true;
    }
    return returnValue;
+}
+
+//______________________________________________________________________________
+
+void
+REveDataSimpleProxyBuilder::FillImpliedSelected(REveElement::Set_t& impSet, Product*p)
+{
+    REveElement* elms = p->m_elements;
+    for (auto &s: Collection()->RefSelectedSet()) {
+
+      auto it = elms->RefChildren().begin();
+      std::advance(it, s);
+      REveElement* comp = *it;
+      comp->FillImpliedSelectedSet(impSet);
+   }
+}
+
+//==============================================================================
+
+//==============================================================================
+
+//==============================================================================
+REveCollectionCompound::REveCollectionCompound(REveDataCollection* collection) : fCollection(collection)
+{
+   SetSelectionMaster(collection);
+   // deny destroy ??
+}
+
+//______________________________________________________________________________
+
+REveCollectionCompound::~REveCollectionCompound()
+{
+   // deny destroy ??
+}
+
+//______________________________________________________________________________
+
+
+REveElement* REveCollectionCompound::GetSelectionMaster()
+{
+   if (!fCollection->GetScene()->IsAcceptingChanges()) return fCollection;
+   fCollection->RefSelectedSet().clear();
+
+   auto m = GetMother();
+   int idx = 0;
+   for (auto &c : m->RefChildren()) {
+      REveElement* ctest = c;
+      if (ctest == this)
+      {
+         fCollection->RefSelectedSet().insert(idx);
+         break;
+      }
+      ++idx;
+   }
+
+   return fCollection;
 }
