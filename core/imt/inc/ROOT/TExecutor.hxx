@@ -50,6 +50,7 @@ public:
 
    TExecutor(TExecutor &) = delete;
    TExecutor &operator=(TExecutor &) = delete;
+   ROOT::Internal::ExecutionPolicy Policy(){ return fExecPolicy; }
 
    using TExecutorBaseImpl<TExecutor>::Map;
    template<class F, class Cond = noReferenceCond<F>>
