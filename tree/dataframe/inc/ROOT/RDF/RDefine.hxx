@@ -100,8 +100,8 @@ class RDefine final : public RDefineBase {
 public:
    RDefine(std::string_view name, std::string_view type, F expression, const ColumnNames_t &columns,
                  unsigned int nSlots, const RDFInternal::RBookedDefines &defines,
-                 const std::map<std::string, std::vector<void *>> &DSValuePtrs)
-      : RDefineBase(name, type, nSlots, defines, DSValuePtrs), fExpression(std::move(expression)),
+                 const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds)
+      : RDefineBase(name, type, nSlots, defines, DSValuePtrs, ds), fExpression(std::move(expression)),
         fColumnNames(columns), fLastResults(fNSlots), fValues(fNSlots), fIsDefine()
    {
       const auto nColumns = fColumnNames.size();
@@ -116,7 +116,7 @@ public:
    {
       if (!fIsInitialized[slot]) {
          fIsInitialized[slot] = true;
-         RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fDSValuePtrs};
+         RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fDSValuePtrs, fDataSource};
          fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
          fLastCheckedEntry[slot] = -1;
       }

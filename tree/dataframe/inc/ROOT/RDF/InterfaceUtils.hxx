@@ -340,8 +340,11 @@ void AddDSColumnsHelper(const std::string &colName, RLoopManager &lm, RDataSourc
       return;
 
    const auto valuePtrs = ds.GetColumnReaders<T>(colName);
-   std::vector<void*> typeErasedValuePtrs(valuePtrs.begin(), valuePtrs.end());
-   lm.AddDSValuePtrs(colName, std::move(typeErasedValuePtrs));
+   if (!valuePtrs.empty()) {
+      // we are using the old GetColumnReaders mechanism
+      std::vector<void*> typeErasedValuePtrs(valuePtrs.begin(), valuePtrs.end());
+      lm.AddDSValuePtrs(colName, std::move(typeErasedValuePtrs));
+   }
 }
 
 /// Take list of column names that must be defined, current map of custom columns, current list of defined column names,
@@ -429,7 +432,7 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
    const auto dummyType = "jittedCol_t";
    // use unique_ptr<RDefineBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
    jittedDefine->SetDefine(std::unique_ptr<RDefineBase>(
-      new NewCol_t(name, dummyType, std::forward<F>(f), cols, lm->GetNSlots(), *defines, lm->GetDSValuePtrs())));
+      new NewCol_t(name, dummyType, std::forward<F>(f), cols, lm->GetNSlots(), *defines, lm->GetDSValuePtrs(), ds)));
 
    // defines points to the columns structure in the heap, created before the jitted call so that the jitter can
    // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.

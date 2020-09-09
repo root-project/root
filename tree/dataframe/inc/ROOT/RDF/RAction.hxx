@@ -92,7 +92,7 @@ public:
       for (auto &bookedBranch : GetDefines().GetColumns())
          bookedBranch.second->InitSlot(r, slot);
       RDFInternal::RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetDefines(), fIsDefine.data(),
-                                           fLoopManager->GetDSValuePtrs()};
+                                           fLoopManager->GetDSValuePtrs(), fLoopManager->GetDataSource()};
       fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
       fHelper.InitTask(r, slot);
    }
