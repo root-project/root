@@ -4,6 +4,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TSystem.h"
+#include "TROOT.h"
 #include "TMVA/Factory.h"
 #include "TMVA/Reader.h"
 #include "TMVA/DataLoader.h"
@@ -22,7 +23,7 @@ int testPyTorchMulticlass(){
       std::cout << "Created " << fname << " for tests of the multiclass features" << std::endl;
    }
    TFile *input = TFile::Open(fname);
-   
+
    // Build model from python file
    std::cout << "Generate PyTorch model..." << std::endl;
    UInt_t ret;
