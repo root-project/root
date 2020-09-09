@@ -1,5 +1,5 @@
 // @(#)root/thread:$Id$
-// Author: Xavier Valls November 2017
+// Author: Xavier Valls September 2020
 
 /*************************************************************************
  * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
@@ -19,7 +19,6 @@
 #include "ExecutionPolicy.hxx"
 #include <memory>
 #include <thread>
-
 
 namespace ROOT{
 
@@ -161,8 +160,7 @@ private:
       std::vector<retType> res;;
       switch(fExecPolicy){
          case ROOT::Internal::ExecutionPolicy::kSerial:
-            //arbitrary value for the number of chunks so the returned vector is not big
-            res = fSeqPool->Map(func, nTimes, redfunc, 3);
+            res = fSeqPool->Map(func, nTimes, redfunc, 1);
             break;
 #ifdef R__USE_IMT
          case ROOT::Internal::ExecutionPolicy::kMultithread:
@@ -214,8 +212,7 @@ private:
       std::vector<retType> res;;
       switch(fExecPolicy){
          case ROOT::Internal::ExecutionPolicy::kSerial:
-            //arbitrary value for the number of chunks so the returned vector is not big
-            res = fSeqPool->Map(func, args, redfunc, 3);
+            res = fSeqPool->Map(func, args, redfunc, 1);
             break;
 #ifdef R__USE_IMT
          case ROOT::Internal::ExecutionPolicy::kMultithread:
@@ -241,8 +238,7 @@ private:
       std::vector<retType> res;;
       switch(fExecPolicy){
          case ROOT::Internal::ExecutionPolicy::kSerial:
-            //arbitrary value for the number of chunks so the returned vector is not big
-            res = fSeqPool->Map(func, args, redfunc, 3);
+            res = fSeqPool->Map(func, args, redfunc, 1);
             break;
 #ifdef R__USE_IMT
          case ROOT::Internal::ExecutionPolicy::kMultithread:
