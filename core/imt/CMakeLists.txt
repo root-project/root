@@ -20,7 +20,7 @@ target_include_directories(Clib PRIVATE
    ${CMAKE_BINARY_DIR}/ginclude
 )
 
-target_link_libraries(Imt PRIVATE Thread INTERFACE Core MultiProc)
+target_link_libraries(Imt PRIVATE Thread INTERFACE Core)
 
 if(imt)
   ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
@@ -36,6 +36,7 @@ if(imt)
     DEPENDENCIES
       Core
       Thread
+      MultiProc
     BUILTINS
       TBB
   )
@@ -52,6 +53,17 @@ if(imt)
   set_target_properties(Imt PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
 
   ROOT_ADD_TEST_SUBDIRECTORY(test)
+else()
+  ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
+    ROOT/TExecutor.hxx
+    LINKDEF
+      LinkDef.h
+    MODULE
+      Imt
+    DEPENDENCIES
+      Core
+      MultiProc
+  )
 endif()
 
 ROOT_INSTALL_HEADERS()
