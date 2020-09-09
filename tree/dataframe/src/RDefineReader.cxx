@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RDF/ColumnReaders.hxx>
+#include <ROOT/RDF/RDefineReader.hxx>
 #include <ROOT/RDF/RDefineBase.hxx>
 #include <ROOT/RDF/Utils.hxx> // TypeID2TypeName
 #include <TClass.h>
@@ -17,7 +17,7 @@
 #include <string>
 #include <typeinfo>
 
-void ROOT::Internal::RDF::CheckDefine(RDefineBase &define, const std::type_info &tid)
+void ROOT::Internal::RDF::CheckDefineType(RDefineBase &define, const std::type_info &tid)
 {
    const auto &colTId = define.GetTypeId();
 
