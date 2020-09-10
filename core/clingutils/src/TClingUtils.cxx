@@ -4185,7 +4185,7 @@ int dumpDeclForAssert(const clang::Decl& D, const char* commentStart) {
 llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::SourceLocation *loc)
 {
    clang::SourceManager& sourceManager = decl.getASTContext().getSourceManager();
-   clang::SourceLocation sourceLocation = decl.getLocEnd();
+   clang::SourceLocation sourceLocation = decl.getEndLoc();
 
    // If the location is a macro get the expansion location.
    sourceLocation = sourceManager.getExpansionRange(sourceLocation).getEnd();
@@ -4219,7 +4219,7 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
       } else if (FD->doesThisDeclarationHaveABody()) {
          // commentStart is at body's '}'
          // But we might end up e.g. at the ')' of a CPP macro
-         assert((decl.getLocEnd() != sourceLocation || *commentStart == '}'
+         assert((decl.getEndLoc() != sourceLocation || *commentStart == '}'
                  || dumpDeclForAssert(*FD, commentStart))
                 && "Expected macro or end of body at '}'");
          if (*commentStart) ++commentStart;
