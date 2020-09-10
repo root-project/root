@@ -256,5 +256,4 @@ target_link_libraries(Core
     ${CMAKE_THREAD_LIBS_INIT}
     ${corelinklibs}
 )
-
 add_dependencies(Core CLING)
