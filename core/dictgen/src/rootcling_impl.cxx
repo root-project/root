@@ -1985,7 +1985,8 @@ static bool InjectModuleUtilHeader(const char *argv0,
 /// If module is not a null pointer, we only write the given module to the
 /// given file and not the whole AST.
 /// Returns true if the AST was successfully written.
-static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstance, StringRef iSysRoot,
+static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compilerInstance,
+                     llvm::StringRef iSysRoot,
                      clang::Module *module = nullptr)
 {
    // From PCHGenerator and friends:
