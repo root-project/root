@@ -12,6 +12,13 @@ using ROOT::Experimental::RNTupleWriter;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::Detail::RPageSource;
 
+
+struct IMTRAII {
+   IMTRAII() { ROOT::EnableImplicitMT(); }
+   ~IMTRAII() { ROOT::DisableImplicitMT(); }
+};
+
+
 class RNTupleDSTest : public ::testing::Test {
 protected:
    std::string fFileName = "RNTupleDS_test.root";
@@ -41,6 +48,7 @@ protected:
       std::remove(fFileName.c_str());
    }
 };
+
 
 TEST_F(RNTupleDSTest, ColTypeNames)
 {
@@ -82,19 +90,35 @@ void ReadTest(const std::string &name, const std::string &fname) {
    EXPECT_EQ(sumnnlo.GetValue(), 16.f);
 }
 
+
 TEST_F(RNTupleDSTest, Read)
 {
    ReadTest(fNtplName, fFileName);
 }
 
-struct IMTRAII {
-   IMTRAII() { ROOT::EnableImplicitMT(); }
-   ~IMTRAII() { ROOT::DisableImplicitMT(); }
-};
 
 TEST_F(RNTupleDSTest, ReadMT)
 {
    IMTRAII _;
-
    ReadTest(fNtplName, fFileName);
+}
+
+
+void ReadRVecTest(const std::string &name, const std::string &fname) {
+   auto df = ROOT::Experimental::MakeNTupleDataFrame(name, fname);
+   auto sumjets = df.Sum<ROOT::RVec<float>>("jets");
+   EXPECT_EQ(sumjets.GetValue(), 3.f);
+}
+
+
+TEST_F(RNTupleDSTest, ReadRVec)
+{
+   ReadRVecTest(fNtplName, fFileName);
+}
+
+
+TEST_F(RNTupleDSTest, ReadRVecMT)
+{
+   IMTRAII _;
+   ReadRVecTest(fNtplName, fFileName);
 }
