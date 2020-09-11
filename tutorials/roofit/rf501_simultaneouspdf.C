@@ -112,7 +112,10 @@ void rf501_simultaneouspdf()
    // Plot "physics" slice of simultaneous pdf.
    // NBL You _must_ project the sample index category with data using ProjWData
    // as a RooSimultaneous makes no prediction on the shape in the index category
-   // and can thus not be integrated
+   // and can thus not be integrated.
+   // In other words: Since the PDF doesn't know the number of events in the different
+   // category states, it doesn't know how much of each component it has to project out.
+   // This information is read from the data.
    simPdf.plotOn(frame1, Slice(sample, "physics"), ProjWData(sample, combData));
    simPdf.plotOn(frame1, Slice(sample, "physics"), Components("px"), ProjWData(sample, combData), LineStyle(kDashed));
 

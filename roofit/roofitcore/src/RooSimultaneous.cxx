@@ -580,8 +580,8 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
 ////////////////////////////////////////////////////////////////////////////////
 /// Back-end for plotOn() implementation on RooSimultaneous which
 /// needs special handling because a RooSimultaneous PDF cannot
-/// project out its index category via integration, plotOn() will
-/// abort if this is requested without providing a projection dataset
+/// project out its index category via integration. plotOn() will
+/// abort if this is requested without providing a projection dataset.
 
 RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 {
