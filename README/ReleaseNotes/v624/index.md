@@ -44,6 +44,21 @@ The following people have contributed to this new version:
 
 ## Core Libraries
 
+Due to internal changes required to comply with the deprecation of Intel TBB's `task_scheduler_init` and related
+interfaces in recent TBB versions, as of v6.24 ROOT will not honor a maximum concurrency level set with
+`tbb::task_scheduler_init` but will require instead the usage of `tbb::global_control`:
+
+```cpp
+  //tbb::task_scheduler_init init(2); // does not affect the number of threads ROOT will use anymore
+
+  tbb::global_control c(tbb::global_control::max_allowed_parallelism, 2);
+  ROOT::TThreadExecutor p1;  // will use 2 threads
+  ROOT::TThreadExecutor p2(/*nThreads=*/8); // will still use 2 threads
+```
+
+Note that the preferred way to steer ROOT's concurrency level is still through `[ROOT::EnableImplicitMT](https://root.cern/doc/master/namespaceROOT.html#a06f2b8b216b615e5abbc872c9feff40f)` or by passing the appropriate parameter to executors' constructors, as in `[TThreadExecutor::TThreadExecutor](https://root.cern/doc/master/classROOT_1_1TThreadExecutor.html#ac7783d52c56cc7875d3954cf212247bb)`.
+
+See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-11014) for more context.
 
 ## I/O Libraries
 
