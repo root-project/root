@@ -197,9 +197,9 @@ bool testAddProfile1()
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TProfile* p1 = new TProfile("t1D1-p1", "p1-Title", numberOfBins, minRange, maxRange);
-   TProfile* p2 = new TProfile("t1D1-p2", "p2-Title", numberOfBins, minRange, maxRange);
-   TProfile* p3 = new TProfile("t1D1-p3", "p3=c1*p1+c2*p2", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("t1D1_p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p2 = new TProfile("t1D1_p2", "p2-Title", numberOfBins, minRange, maxRange);
+   TProfile* p3 = new TProfile("t1D1_p3", "p3=c1*p1+c2*p2", numberOfBins, minRange, maxRange);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -215,13 +215,13 @@ bool testAddProfile1()
       p3->Fill(x, y,  c2);
    }
 
-   TProfile* p4 = new TProfile("t1D1-p4", "p4=c1*p1+p2*c2", numberOfBins, minRange, maxRange);
+   TProfile* p4 = new TProfile("t1D1_p4", "p4=c1*p1+p2*c2", numberOfBins, minRange, maxRange);
    p4->Add(p1, p2, c1, c2);
 
    bool ret = equals("Add1DProfile1", p3, p4, cmpOptStats, 1E-13);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -350,20 +350,20 @@ bool testAddVarProf1()
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TProfile* p1 = new TProfile("t1D1-p1", "p1-Title", numberOfBins, v);
-   TProfile* p2 = new TProfile("t1D1-p2", "p2-Title", numberOfBins, v);
-   TProfile* p3 = new TProfile("t1D1-p3", "p3=c1*p1+c2*p2", numberOfBins, v);
+   TProfile* p1 = new TProfile("t1D1_p1", "p1-Title", numberOfBins, v);
+   TProfile* p2 = new TProfile("t1D1_p2", "p2-Title", numberOfBins, v);
+   TProfile* p3 = new TProfile("t1D1_p3", "p3=c1*p1+c2*p2", numberOfBins, v);
 
    FillProfiles(p1, p3, 1.0, c1);
    FillProfiles(p2, p3, 1.0, c2);
 
-   TProfile* p4 = new TProfile("t1D1-p4", "p4=c1*p1+p2*c2", numberOfBins, v);
+   TProfile* p4 = new TProfile("t1D1_p4", "p4=c1*p1+p2*c2", numberOfBins, v);
    p4->Add(p1, p2, c1, c2);
 
    bool ret = equals("AddVar1DProf1", p3, p4, cmpOptStats, 1E-13);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
 
    return ret;
 }
@@ -591,15 +591,15 @@ bool testAdd2DProfile1()
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TProfile2D* p1 = new TProfile2D("t2D1-p1", "p1",
+   TProfile2D* p1 = new TProfile2D("t2D1_p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile2D* p2 = new TProfile2D("t2D1-p2", "p2",
+   TProfile2D* p2 = new TProfile2D("t2D1_p2", "p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile2D* p3 = new TProfile2D("t2D1-p3", "p3=c1*p1+c2*p2",
+   TProfile2D* p3 = new TProfile2D("t2D1_p3", "p3=c1*p1+c2*p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -619,14 +619,14 @@ bool testAdd2DProfile1()
       p3->Fill(x, y, z, c2);
    }
 
-   TProfile2D* p4 = new TProfile2D("t2D1-p4", "p4=c1*p1+c2*p2",
+   TProfile2D* p4 = new TProfile2D("t2D1_p4", "p4=c1*p1+c2*p2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    p4->Add(p1, p2, c1, c2);
    bool ret = equals("Add2DProfile1", p3, p4, cmpOptStats , 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -677,15 +677,15 @@ bool testAdd2DProfile2()
 
    Double_t c2 = r.Rndm();
 
-   TProfile2D* p1 = new TProfile2D("t2D2-p1", "p1",
+   TProfile2D* p1 = new TProfile2D("t2D2_p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile2D* p2 = new TProfile2D("t2D2-p2", "p2",
+   TProfile2D* p2 = new TProfile2D("t2D2_p2", "p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile2D* p3 = new TProfile2D("t2D2-p3", "p3=p1+c2*p2",
+   TProfile2D* p3 = new TProfile2D("t2D2_p3", "p3=p1+c2*p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -707,8 +707,8 @@ bool testAdd2DProfile2()
 
    p1->Add(p2, c2);
    bool ret = equals("Add2DProfile2", p3, p1, cmpOptStats, 1E-10);
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -771,17 +771,17 @@ bool testAdd3DProfile1()
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TProfile3D* p1 = new TProfile3D("t3D1-p1", "p1",
+   TProfile3D* p1 = new TProfile3D("t3D1_p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile3D* p2 = new TProfile3D("t3D1-p2", "p2",
+   TProfile3D* p2 = new TProfile3D("t3D1_p2", "p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile3D* p3 = new TProfile3D("t3D1-p3", "p3=c1*p1+c2*p2",
+   TProfile3D* p3 = new TProfile3D("t3D1_p3", "p3=c1*p1+c2*p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -804,15 +804,15 @@ bool testAdd3DProfile1()
       p3->Fill(x, y, z, t,  c2);
    }
 
-   TProfile3D* p4 = new TProfile3D("t3D1-p4", "p4=c1*p1+c2*p2",
+   TProfile3D* p4 = new TProfile3D("t3D1_p4", "p4=c1*p1+c2*p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    p4->Add(p1, p2, c1, c2);
    bool ret = equals("Add3DProfile1", p3, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -868,17 +868,17 @@ bool testAdd3DProfile2()
 
    Double_t c2 = r.Rndm();
 
-   TProfile3D* p1 = new TProfile3D("t3D2-p1", "p1",
+   TProfile3D* p1 = new TProfile3D("t3D2_p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile3D* p2 = new TProfile3D("t3D2-p2", "p2",
+   TProfile3D* p2 = new TProfile3D("t3D2_p2", "p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile3D* p3 = new TProfile3D("t3D2-p3", "p3=p1+c2*p2",
+   TProfile3D* p3 = new TProfile3D("t3D2_p3", "p3=p1+c2*p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -903,8 +903,8 @@ bool testAdd3DProfile2()
 
    p1->Add(p2, c2);
    bool ret = equals("Add3DProfile2", p3, p1, cmpOptStats, 1E-10);
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -1869,8 +1869,8 @@ bool testDivideProf1()
    Double_t c1 = 1;//r.Rndm();
    Double_t c2 = 1;//r.Rndm();
 
-   TProfile* p1 = new TProfile("d1D1-p1", "p1-Title", numberOfBins, minRange, maxRange);
-   TProfile* p2 = new TProfile("d1D1-p2", "p2-Title", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("d1D1_p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p2 = new TProfile("d1D1_p2", "p2-Title", numberOfBins, minRange, maxRange);
 
    p1->Sumw2();p2->Sumw2();
 
@@ -1888,7 +1888,7 @@ bool testDivideProf1()
    }
 
 
-   TProfile* p3 = new TProfile("d1D1-p3", "p3=(c1*p1)/(c2*p2)", numberOfBins, minRange, maxRange);
+   TProfile* p3 = new TProfile("d1D1_p3", "p3=(c1*p1)/(c2*p2)", numberOfBins, minRange, maxRange);
    p3->Divide(p1, p2, c1, c2);
 
    // There is no Multiply method to tests. And the errors are wrongly
@@ -2410,7 +2410,7 @@ bool testAssignProfile1D()
 {
    // Tests the operator=() method for 1D Profiles
 
-   TProfile* p1 = new TProfile("=1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("=1D_p1", "p1-Title", numberOfBins, minRange, maxRange);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -2418,11 +2418,11 @@ bool testAssignProfile1D()
       p1->Fill(x, y, 1.0);
    }
 
-   TProfile* p2 = new TProfile("=1D-p2", "p2-Title", numberOfBins, minRange, maxRange);
+   TProfile* p2 = new TProfile("=1D_p2", "p2-Title", numberOfBins, minRange, maxRange);
    *p2 = *p1;
 
    bool ret = equals("Assign Oper Prof '='  1D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -2433,7 +2433,7 @@ bool testAssignProfileVar1D()
    Double_t v[numberOfBins+1];
    FillVariableRange(v);
 
-   TProfile* p1 = new TProfile("=1D-p1", "p1-Title", numberOfBins, v);
+   TProfile* p1 = new TProfile("=1D_p1", "p1-Title", numberOfBins, v);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -2441,11 +2441,11 @@ bool testAssignProfileVar1D()
       p1->Fill(x, y, 1.0);
    }
 
-   TProfile* p2 = new TProfile("=1D-p2", "p2-Title", numberOfBins, v);
+   TProfile* p2 = new TProfile("=1D_p2", "p2-Title", numberOfBins, v);
    *p2 = *p1;
 
    bool ret = equals("Assign Oper VarP '='  1D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -2496,7 +2496,7 @@ bool testCopyConstructorProfile1D()
 {
    // Tests the copy constructor for 1D Profiles
 
-   TProfile* p1 = new TProfile("cc1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("cc1D_p1", "p1-Title", numberOfBins, minRange, maxRange);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -2507,7 +2507,7 @@ bool testCopyConstructorProfile1D()
    TProfile* p2 = new TProfile(*p1);
 
    bool ret = equals("Copy Constructor Prof 1D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -2518,7 +2518,7 @@ bool testCopyConstructorProfileVar1D()
    Double_t v[numberOfBins+1];
    FillVariableRange(v);
 
-   TProfile* p1 = new TProfile("cc1D-p1", "p1-Title", numberOfBins, v);
+   TProfile* p1 = new TProfile("cc1D_p1", "p1-Title", numberOfBins, v);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -2529,7 +2529,7 @@ bool testCopyConstructorProfileVar1D()
    TProfile* p2 = new TProfile(*p1);
 
    bool ret = equals("Copy Constructor VarP 1D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -2580,7 +2580,7 @@ bool testCloneProfile1D()
 {
    // Tests the clone method for 1D Profiles
 
-   TProfile* p1 = new TProfile("cl1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("cl1D_p1", "p1-Title", numberOfBins, minRange, maxRange);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -2591,7 +2591,7 @@ bool testCloneProfile1D()
    TProfile* p2 = static_cast<TProfile*> ( p1->Clone() );
 
    bool ret = equals("Clone Function Prof   1D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -2602,7 +2602,7 @@ bool testCloneProfileVar1D()
    Double_t v[numberOfBins+1];
    FillVariableRange(v);
 
-   TProfile* p1 = new TProfile("cl1D-p1", "p1-Title", numberOfBins, v);
+   TProfile* p1 = new TProfile("cl1D_p1", "p1-Title", numberOfBins, v);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -2613,7 +2613,7 @@ bool testCloneProfileVar1D()
    TProfile* p2 = static_cast<TProfile*> ( p1->Clone() );
 
    bool ret = equals("Clone Function VarP   1D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -2647,7 +2647,7 @@ bool testAssignProfile2D()
 {
    // Tests the operator=() method for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("=2D-p1", "p1-Title",
+   TProfile2D* p1 = new TProfile2D("=2D_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -2658,13 +2658,13 @@ bool testAssignProfile2D()
       p1->Fill(x, y, z, 1.0);
    }
 
-   TProfile2D* p2 = new TProfile2D("=2D-p2", "p2-Title",
+   TProfile2D* p2 = new TProfile2D("=2D_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    *p2 = *p1;
 
    bool ret = equals("Assign Oper Prof '='  2D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -2696,7 +2696,7 @@ bool testCopyConstructorProfile2D()
 {
    // Tests the copy constructor for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("cc2D-p1", "p1-Title",
+   TProfile2D* p1 = new TProfile2D("cc2D_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -2710,7 +2710,7 @@ bool testCopyConstructorProfile2D()
    TProfile2D* p2 = new TProfile2D(*p1);
 
    bool ret = equals("Copy Constructor Prof 2D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -2741,7 +2741,7 @@ bool testCloneProfile2D()
 {
    // Tests the clone method for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("cl2D-p1", "p1-Title",
+   TProfile2D* p1 = new TProfile2D("cl2D_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -2755,7 +2755,7 @@ bool testCloneProfile2D()
    TProfile2D* p2 = static_cast<TProfile2D*> ( p1->Clone() );
 
    bool ret = equals("Clone Function Prof   2D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -2792,7 +2792,7 @@ bool testAssignProfile3D()
 {
    // Tests the operator=() method for 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("=3D-p1", "p1-Title",
+   TProfile3D* p1 = new TProfile3D("=3D_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -2805,14 +2805,14 @@ bool testAssignProfile3D()
       p1->Fill(x, y, z, t, 1.0);
    }
 
-   TProfile3D* p2 = new TProfile3D("=3D-p2", "p2-Title",
+   TProfile3D* p2 = new TProfile3D("=3D_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    *p2 = *p1;
 
    bool ret = equals("Assign Oper Prof '='  3D", p1, p2);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -2845,7 +2845,7 @@ bool testCopyConstructorProfile3D()
 {
    // Tests the copy constructor for 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("cc3D-p1", "p1-Title",
+   TProfile3D* p1 = new TProfile3D("cc3D_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -2861,7 +2861,7 @@ bool testCopyConstructorProfile3D()
    TProfile3D* p2 = new TProfile3D(*p1);
 
    bool ret = equals("Copy Constructor Prof 3D", p1, p2/*, cmpOptStats*/);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -2894,7 +2894,7 @@ bool testCloneProfile3D()
 {
    // Tests the clone method for 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("cl3D-p1", "p1-Title",
+   TProfile3D* p1 = new TProfile3D("cl3D_p1", "p1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -2910,7 +2910,7 @@ bool testCloneProfile3D()
    TProfile3D* p2 = static_cast<TProfile3D*> ( p1->Clone() );
 
    bool ret = equals("Clone Function Prof   3D", p1, p2);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -3000,7 +3000,7 @@ bool testWriteReadProfile1D()
 {
    // Tests the write and read methods for 1D Profiles
 
-   TProfile* p1 = new TProfile("wr1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("wr1D_p1", "p1-Title", numberOfBins, minRange, maxRange);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -3013,10 +3013,10 @@ bool testWriteReadProfile1D()
    f.Close();
 
    TFile f2("tmpHist.root");
-   TProfile* p2 = static_cast<TProfile*> ( f2.Get("wr1D-p1") );
+   TProfile* p2 = static_cast<TProfile*> ( f2.Get("wr1D_p1") );
 
    bool ret = equals("Read/Write Prof 1D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -3027,7 +3027,7 @@ bool testWriteReadProfileVar1D()
    Double_t v[numberOfBins+1];
    FillVariableRange(v);
 
-   TProfile* p1 = new TProfile("wr1D-p1", "p1-Title", numberOfBins, v);
+   TProfile* p1 = new TProfile("wr1D_p1", "p1-Title", numberOfBins, v);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -3040,10 +3040,10 @@ bool testWriteReadProfileVar1D()
    f.Close();
 
    TFile f2("tmpHist.root");
-   TProfile* p2 = static_cast<TProfile*> ( f2.Get("wr1D-p1") );
+   TProfile* p2 = static_cast<TProfile*> ( f2.Get("wr1D_p1") );
 
    bool ret = equals("Read/Write VarP 1D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -3079,7 +3079,7 @@ bool testWriteReadProfile2D()
 {
    // Tests the write and read methods for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("wr2D-p1", "p1-Title",
+   TProfile2D* p1 = new TProfile2D("wr2D_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -3095,10 +3095,10 @@ bool testWriteReadProfile2D()
    f.Close();
 
    TFile f2("tmpHist.root");
-   TProfile2D* p2 = static_cast<TProfile2D*> ( f2.Get("wr2D-p1") );
+   TProfile2D* p2 = static_cast<TProfile2D*> ( f2.Get("wr2D_p1") );
 
    bool ret = equals("Read/Write Prof 2D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -3136,7 +3136,7 @@ bool testWriteReadProfile3D()
 {
    // Tests the write and read methods for 3D Profile
 
-   TProfile3D* p1 = new TProfile3D("wr3D-p1", "p1-Title",
+   TProfile3D* p1 = new TProfile3D("wr3D_p1", "p1-Title",
                                  numberOfBins, minRange, maxRange,
                                  numberOfBins + 1, minRange, maxRange,
                                  numberOfBins + 2, minRange, maxRange);
@@ -3154,14 +3154,14 @@ bool testWriteReadProfile3D()
    f.Close();
 
    TFile f2("tmpHist.root");
-   TProfile3D* p2 = static_cast<TProfile3D*> ( f2.Get("wr3D-p1") );
+   TProfile3D* p2 = static_cast<TProfile3D*> ( f2.Get("wr3D_p1") );
 
    // In this particular case the statistics are not checked. The
    // Chi2Test is not properly implemented for the TProfile3D
    // class. If the cmpOptStats flag is set, then there will be a
    // crash.
    bool ret = equals("Read/Write Prof 3D", p1, p2);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -3313,9 +3313,9 @@ bool testMergeProf1D()
    p1->Merge(list);
 
    bool ret = equals("Merge1DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -3342,9 +3342,9 @@ bool testMergeProfVar1D()
    p1->Merge(list);
 
    bool ret = equals("Merge1DVarP", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -3405,16 +3405,16 @@ bool testMergeProf2D()
 {
    // Tests the merge method for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("merge2D-p1", "p1-Title",
+   TProfile2D* p1 = new TProfile2D("merge2D_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p2 = new TProfile2D("merge2D-p2", "p2-Title",
+   TProfile2D* p2 = new TProfile2D("merge2D_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p3 = new TProfile2D("merge2D-p3", "p3-Title",
+   TProfile2D* p3 = new TProfile2D("merge2D_p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p4 = new TProfile2D("merge2D-p4", "p4-Title",
+   TProfile2D* p4 = new TProfile2D("merge2D_p4", "p4-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -3449,9 +3449,9 @@ bool testMergeProf2D()
    p1->Merge(list);
 
    bool ret = equals("Merge2DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -3519,19 +3519,19 @@ bool testMergeProf3D()
 {
    // Tests the merge method for 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("merge3D-p1", "p1-Title",
+   TProfile3D* p1 = new TProfile3D("merge3D_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p2 = new TProfile3D("merge3D-p2", "p2-Title",
+   TProfile3D* p2 = new TProfile3D("merge3D_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p3 = new TProfile3D("merge3D-p3", "p3-Title",
+   TProfile3D* p3 = new TProfile3D("merge3D_p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p4 = new TProfile3D("merge3D-p4", "p4-Title",
+   TProfile3D* p4 = new TProfile3D("merge3D_p4", "p4-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -3570,9 +3570,9 @@ bool testMergeProf3D()
    p1->Merge(list);
 
    bool ret = equals("Merge3DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -3926,9 +3926,9 @@ bool testMergeProf1DLabelSame()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelSame1DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -3936,16 +3936,16 @@ bool testMergeProf2DLabelSame()
 {
    // Tests the merge with some equal labels method for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("merge2DLabelSame-p1", "p1-Title",
+   TProfile2D* p1 = new TProfile2D("merge2DLabelSame_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p2 = new TProfile2D("merge2DLabelSame-p2", "p2-Title",
+   TProfile2D* p2 = new TProfile2D("merge2DLabelSame_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p3 = new TProfile2D("merge2DLabelSame-p3", "p3-Title",
+   TProfile2D* p3 = new TProfile2D("merge2DLabelSame_p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p4 = new TProfile2D("merge2DLabelSame-p4", "p4-Title",
+   TProfile2D* p4 = new TProfile2D("merge2DLabelSame_p4", "p4-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -3988,9 +3988,9 @@ bool testMergeProf2DLabelSame()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelSame2DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -3998,19 +3998,19 @@ bool testMergeProf3DLabelSame()
 {
    // Tests the merge with some equal labels method for 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("merge3DLabelSame-p1", "p1-Title",
+   TProfile3D* p1 = new TProfile3D("merge3DLabelSame_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p2 = new TProfile3D("merge3DLabelSame-p2", "p2-Title",
+   TProfile3D* p2 = new TProfile3D("merge3DLabelSame_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p3 = new TProfile3D("merge3DLabelSame-p3", "p3-Title",
+   TProfile3D* p3 = new TProfile3D("merge3DLabelSame_p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p4 = new TProfile3D("merge3DLabelSame-p4", "p4-Title",
+   TProfile3D* p4 = new TProfile3D("merge3DLabelSame_p4", "p4-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -4057,9 +4057,9 @@ bool testMergeProf3DLabelSame()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelSame3DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -4264,10 +4264,10 @@ bool testMergeProf1DLabelDiff()
 {
    // Tests the merge with some different labels method for 1D Profiles
 
-   TProfile* p1 = new TProfile("merge1DLabelDiff-p1", "p1-Title", numberOfBins, minRange, maxRange);
-   TProfile* p2 = new TProfile("merge1DLabelDiff-p2", "p2-Title", numberOfBins, minRange, maxRange);
-   TProfile* p3 = new TProfile("merge1DLabelDiff-p3", "p3-Title", numberOfBins, minRange, maxRange);
-   TProfile* p4 = new TProfile("merge1DLabelDiff-p4", "p4-Title", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("merge1DLabelDiff_p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p2 = new TProfile("merge1DLabelDiff_p2", "p2-Title", numberOfBins, minRange, maxRange);
+   TProfile* p3 = new TProfile("merge1DLabelDiff_p3", "p3-Title", numberOfBins, minRange, maxRange);
+   TProfile* p4 = new TProfile("merge1DLabelDiff_p4", "p4-Title", numberOfBins, minRange, maxRange);
 
    // It does not work properly! Look, the bins with the same labels
    // are different ones and still the tests passes! This is not
@@ -4305,9 +4305,9 @@ bool testMergeProf1DLabelDiff()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelDiff1DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+      if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -4315,16 +4315,16 @@ bool testMergeProf2DLabelDiff()
 {
    // Tests the merge with some different labels method for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("merge2DLabelDiff-p1", "p1-Title",
+   TProfile2D* p1 = new TProfile2D("merge2DLabelDiff_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p2 = new TProfile2D("merge2DLabelDiff-p2", "p2-Title",
+   TProfile2D* p2 = new TProfile2D("merge2DLabelDiff_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p3 = new TProfile2D("merge2DLabelDiff-p3", "p3-Title",
+   TProfile2D* p3 = new TProfile2D("merge2DLabelDiff_p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p4 = new TProfile2D("merge2DLabelDiff-p4", "p4-Title",
+   TProfile2D* p4 = new TProfile2D("merge2DLabelDiff_p4", "p4-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -4367,9 +4367,9 @@ bool testMergeProf2DLabelDiff()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelDiff2DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -4377,19 +4377,19 @@ bool testMergeProf3DLabelDiff()
 {
    // Tests the merge with some different labels method for 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("merge3DLabelDiff-p1", "p1-Title",
+   TProfile3D* p1 = new TProfile3D("merge3DLabelDiff_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p2 = new TProfile3D("merge3DLabelDiff-p2", "p2-Title",
+   TProfile3D* p2 = new TProfile3D("merge3DLabelDiff_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p3 = new TProfile3D("merge3DLabelDiff-p3", "p3-Title",
+   TProfile3D* p3 = new TProfile3D("merge3DLabelDiff_p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p4 = new TProfile3D("merge3DLabelDiff-p4", "p4-Title",
+   TProfile3D* p4 = new TProfile3D("merge3DLabelDiff_p4", "p4-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -4436,9 +4436,9 @@ bool testMergeProf3DLabelDiff()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelDiff3DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -4630,10 +4630,10 @@ bool testMergeProf1DLabelAll()
 {
    // Tests the merge method with fully equally labelled 1D Profiles
 
-   TProfile* p1 = new TProfile("merge1DLabelAll-p1", "p1-Title", numberOfBins, minRange, maxRange);
-   TProfile* p2 = new TProfile("merge1DLabelAll-p2", "p2-Title", numberOfBins, minRange, maxRange);
-   TProfile* p3 = new TProfile("merge1DLabelAll-p3", "p3-Title", numberOfBins, minRange, maxRange);
-   TProfile* p4 = new TProfile("merge1DLabelAll-p4", "p4-Title", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("merge1DLabelAll_p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p2 = new TProfile("merge1DLabelAll_p2", "p2-Title", numberOfBins, minRange, maxRange);
+   TProfile* p3 = new TProfile("merge1DLabelAll_p3", "p3-Title", numberOfBins, minRange, maxRange);
+   TProfile* p4 = new TProfile("merge1DLabelAll_p4", "p4-Title", numberOfBins, minRange, maxRange);
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -4672,9 +4672,9 @@ bool testMergeProf1DLabelAll()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelAll1DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+      if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -4682,16 +4682,16 @@ bool testMergeProf2DLabelAll()
 {
    // Tests the merge method with fully equally labelled 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("merge2DLabelAll-p1", "p1-Title",
+   TProfile2D* p1 = new TProfile2D("merge2DLabelAll_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p2 = new TProfile2D("merge2DLabelAll-p2", "p2-Title",
+   TProfile2D* p2 = new TProfile2D("merge2DLabelAll_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p3 = new TProfile2D("merge2DLabelAll-p3", "p3-Title",
+   TProfile2D* p3 = new TProfile2D("merge2DLabelAll_p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p4 = new TProfile2D("merge2DLabelAll-p4", "p4-Title",
+   TProfile2D* p4 = new TProfile2D("merge2DLabelAll_p4", "p4-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -4735,9 +4735,9 @@ bool testMergeProf2DLabelAll()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelAll2DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -4745,19 +4745,19 @@ bool testMergeProf3DLabelAll()
 {
    // Tests the merge method with fully equally labelled 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("merge3DLabelAll-p1", "p1-Title",
+   TProfile3D* p1 = new TProfile3D("merge3DLabelAll_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p2 = new TProfile3D("merge3DLabelAll-p2", "p2-Title",
+   TProfile3D* p2 = new TProfile3D("merge3DLabelAll_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p3 = new TProfile3D("merge3DLabelAll-p3", "p3-Title",
+   TProfile3D* p3 = new TProfile3D("merge3DLabelAll_p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p4 = new TProfile3D("merge3DLabelAll-p4", "p4-Title",
+   TProfile3D* p4 = new TProfile3D("merge3DLabelAll_p4", "p4-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -4805,9 +4805,9 @@ bool testMergeProf3DLabelAll()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelAll3DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -5043,46 +5043,60 @@ bool testMergeProf1DLabelAllDiff()
 {
    // Tests the merge method with fully differently labelled 1D Profiles
 
-   TProfile* p1 = new TProfile("merge1DLabelAllDiff-p1", "p1-Title", numberOfBins, minRange, maxRange);
-   TProfile* p2 = new TProfile("merge1DLabelAllDiff-p2", "p2-Title", numberOfBins, minRange, maxRange);
-   TProfile* p3 = new TProfile("merge1DLabelAllDiff-p3", "p3-Title", numberOfBins, minRange, maxRange);
-   TProfile* p4 = new TProfile("merge1DLabelAllDiff-p4", "p4-Title", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("merge1DLabelAllDiff_p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p2 = new TProfile("merge1DLabelAllDiff_p2", "p2-Title", numberOfBins, minRange, maxRange);
+   TProfile* p3 = new TProfile("merge1DLabelAllDiff_p3", "p3-Title", numberOfBins, minRange, maxRange);
+   TProfile* p4 = new TProfile("merge1DLabelAllDiff_p4", "p4-Title", 2*numberOfBins, minRange, maxRange);
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+      Double_t y = r.Gaus(10+x, 1);
       p1->Fill(x, y, 1.0);
       p4->Fill(x, y, 1.0);
    }
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+      Double_t y = r.Gaus(20 + x, 2);
       p2->Fill(x, y, 1.0);
       p4->Fill(x, y, 1.0);
    }
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+      Double_t y = r.Uniform(30 + x, 3);
       p3->Fill(x, y, 1.0);
       p4->Fill(x, y, 1.0);
    }
 
-   // It does not work properly! Look, the bins with the same labels
-   // are different ones and still the tests passes! This is not
-   // consistent with TH1::Merge()
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      name << 1;
-      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      name << 2;
-      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      name << 3;
-      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
+   /// set diff labels in p1 and p2 but in p3 same labels as p2
+   for (Int_t i = 1; i <= numberOfBins; ++i) {
+      char letter = (char)((int)'a' + i - 1);
+      ostringstream name1, name2;
+      name1 << letter << 1;
+      p1->GetXaxis()->SetBinLabel(i, name1.str().c_str());
+      name2 << letter << 2;
+      p2->GetXaxis()->SetBinLabel(i, name2.str().c_str());
+      // use for h3 same label as for h2 to test the merging
+      p3->GetXaxis()->SetBinLabel(i, name2.str().c_str());
+      // we set the bin labels also in h4
+      p4->GetXaxis()->SetBinLabel(i, name1.str().c_str());
+      p4->GetXaxis()->SetBinLabel(i + numberOfBins, name2.str().c_str());
    }
+   // // It does not work properly! Look, the bins with the same labels
+   // // are different ones and still the tests passes! This is not
+   // // consistent with TH1::Merge()
+   // for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+   //    ostringstream name;
+   //    name << (char) ((int) 'a' + i - 1);
+   //    p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+   //    name << 1;
+   //    p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+   //    name << 2;
+   //    p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+   //    name << 2;
+   //    p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
+   // }
 
    TList *list = new TList;
    list->Add(p2);
@@ -5091,9 +5105,9 @@ bool testMergeProf1DLabelAllDiff()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelAllDiff1DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -5101,16 +5115,16 @@ bool testMergeProf2DLabelAllDiff()
 {
    // Tests the merge method with fully differently labelled 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("merge2DLabelAllDiff-p1", "p1-Title",
+   TProfile2D* p1 = new TProfile2D("merge2DLabelAllDiff_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p2 = new TProfile2D("merge2DLabelAllDiff-p2", "p2-Title",
+   TProfile2D* p2 = new TProfile2D("merge2DLabelAllDiff_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p3 = new TProfile2D("merge2DLabelAllDiff-p3", "p3-Title",
+   TProfile2D* p3 = new TProfile2D("merge2DLabelAllDiff_p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p4 = new TProfile2D("merge2DLabelAllDiff-p4", "p4-Title",
+   TProfile2D* p4 = new TProfile2D("merge2DLabelAllDiff_p4", "p4-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -5164,9 +5178,9 @@ bool testMergeProf2DLabelAllDiff()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelAllDiff2DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -5174,19 +5188,19 @@ bool testMergeProf3DLabelAllDiff()
 {
    // Tests the merge method with fully differently labelled 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("merge3DLabelAllDiff-p1", "p1-Title",
+   TProfile3D* p1 = new TProfile3D("merge3DLabelAllDiff_p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p2 = new TProfile3D("merge3DLabelAllDiff-p2", "p2-Title",
+   TProfile3D* p2 = new TProfile3D("merge3DLabelAllDiff_p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p3 = new TProfile3D("merge3DLabelAllDiff-p3", "p3-Title",
+   TProfile3D* p3 = new TProfile3D("merge3DLabelAllDiff_p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p4 = new TProfile3D("merge3DLabelAllDiff-p4", "p4-Title",
+   TProfile3D* p4 = new TProfile3D("merge3DLabelAllDiff_p4", "p4-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -5248,9 +5262,9 @@ bool testMergeProf3DLabelAllDiff()
    p1->Merge(list);
 
    bool ret = equals("MergeLabelAllDiff3DProf", p1, p4, cmpOptStats, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -5454,10 +5468,10 @@ bool testMergeProf1D_Diff(bool testEmpty = false)
 
    // Stats fail, for a reason I do not know :S
 
-   TProfile *p1 = new TProfile("merge1DDiff-p1","p1-Title",110,-110,0);
-   TProfile *p2 = new TProfile("merge1DDiff-p2","p2-Title",220,0,110);
-   TProfile *p3 = new TProfile("merge1DDiff-p3","p3-Title",330,-55,55);
-   TProfile *p4 = new TProfile("merge1DDiff-p4","p4-Title",220,-110,110);
+   TProfile *p1 = new TProfile("merge1DDiff_p1","p1-Title",110,-110,0);
+   TProfile *p2 = new TProfile("merge1DDiff_p2","p2-Title",220,0,110);
+   TProfile *p3 = new TProfile("merge1DDiff_p3","p3-Title",330,-55,55);
+   TProfile *p4 = new TProfile("merge1DDiff_p4","p4-Title",220,-110,110);
 
    if (!testEmpty) {
       for ( Int_t e = 0; e < nEvents; ++e ) {
@@ -5490,9 +5504,9 @@ bool testMergeProf1D_Diff(bool testEmpty = false)
 
    const char * testName = (!testEmpty) ? "MergeProf1D-Diff" : "MergeProf1D-DiffEmpty";
    bool ret = equals(testName, p1, p4, cmpOptNone , 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -5509,16 +5523,16 @@ bool testMergeProf2DDiff()
    // Tests the merge method with different binned 2D Profile
 
    // This tests fails! It should not!
-   TProfile2D *p1 = new TProfile2D("merge2DDiff-p1","p1-Title",
+   TProfile2D *p1 = new TProfile2D("merge2DDiff_p1","p1-Title",
                                    11,-110,0,
                                    11,-110,0);
-   TProfile2D *p2 = new TProfile2D("merge2DDiff-p2","p2-Title",
+   TProfile2D *p2 = new TProfile2D("merge2DDiff_p2","p2-Title",
                                    22,0,110,
                                    22,0,110);
-   TProfile2D *p3 = new TProfile2D("merge2DDiff-p3","p3-Title",
+   TProfile2D *p3 = new TProfile2D("merge2DDiff_p3","p3-Title",
                                    44,-55,55,
                                    44,-55,55);
-   TProfile2D *p4 = new TProfile2D("merge2DDiff-p4","p4-Title",
+   TProfile2D *p4 = new TProfile2D("merge2DDiff_p4","p4-Title",
                                    22,-110,110,
                                    22,-110,110);
 
@@ -5553,9 +5567,9 @@ bool testMergeProf2DDiff()
    p1->Merge(list);
 
    bool ret = equals("MergeDiff2DProf", p1, p4, cmpOptStats, 1E-8);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -5564,19 +5578,19 @@ bool testMergeProf3DDiff()
    // Tests the merge method with different binned 3D Profile
 
    // This tests fails! Segmentation Fault!!It should not!
-   TProfile3D *p1 = new TProfile3D("merge3DDiff-p1","p1-Title",
+   TProfile3D *p1 = new TProfile3D("merge3DDiff_p1","p1-Title",
                                    11,-110,0,
                                    11,-110,0,
                                    11,-110,0);
-   TProfile3D *p2 = new TProfile3D("merge3DDiff-p2","p2-Title",
+   TProfile3D *p2 = new TProfile3D("merge3DDiff_p2","p2-Title",
                                    22,0,110,
                                    22,0,110,
                                    22,0,110);
-   TProfile3D *p3 = new TProfile3D("merge3DDiff-p3","p3-Title",
+   TProfile3D *p3 = new TProfile3D("merge3DDiff_p3","p3-Title",
                                    44,-55,55,
                                    44,-55,55,
                                    44,-55,55);
-   TProfile3D *p4 = new TProfile3D("merge3DDiff-p4","p4-Title",
+   TProfile3D *p4 = new TProfile3D("merge3DDiff_p4","p4-Title",
                                    22,-110,110,
                                    22,-110,110,
                                    22,-110,110);
@@ -5617,9 +5631,9 @@ bool testMergeProf3DDiff()
    // exclude statistics in comparison since chi2 test will fail with low
    // bin statistics
    bool ret = equals("MergeDiff3DProf", p1, p4, cmpOptNone, 1E-10);
-   delete p1;
-   delete p2;
-   delete p3;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
+   if (cleanHistos) delete p3;
    return ret;
 }
 
@@ -6254,8 +6268,8 @@ bool testLabelsInflateProf1D()
    }
 
 
-   TProfile* p1 = new TProfile("tLI1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
-   TProfile* p2 = new TProfile("tLI1D-p2", "p2-Title", numberOfFills, minRange, maxRangeInflate);
+   TProfile* p1 = new TProfile("tLI1D_p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p2 = new TProfile("tLI1D_p2", "p2-Title", numberOfFills, minRange, maxRangeInflate);
 
    p1->GetXaxis()->SetTimeDisplay(1);
 
@@ -6271,7 +6285,7 @@ bool testLabelsInflateProf1D()
    }
 
    bool ret = equals("LabelsInflateProf1D", p1, p2);
-   delete p1;
+   if (cleanHistos) delete p1;
    return ret;
 }
 
@@ -6461,8 +6475,8 @@ bool testInterpolation3D()
 
 bool testScale1DProf()
 {
-   TProfile* p1 = new TProfile("scD1-p1", "p1-Title", numberOfBins, minRange, maxRange);
-   TProfile* p2 = new TProfile("scD1-p2", "p2=c1*p1", numberOfBins, minRange, maxRange);
+   TProfile* p1 = new TProfile("scD1_p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile* p2 = new TProfile("scD1_p2", "p2=c1*p1", numberOfBins, minRange, maxRange);
 
    Double_t c1 = r.Rndm();
 
@@ -6476,17 +6490,17 @@ bool testScale1DProf()
    p1->Scale(c1);
 
    int status = equals("testScale Prof 1D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return status;
 }
 
 bool testScale2DProf()
 {
-   TProfile2D* p1 = new TProfile2D("scD2-p1", "p1",
+   TProfile2D* p1 = new TProfile2D("scD2_p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile2D* p2 = new TProfile2D("scD2-p2", "p2=c1*p1",
+   TProfile2D* p2 = new TProfile2D("scD2_p2", "p2=c1*p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    Double_t c1 = r.Rndm();
@@ -6502,18 +6516,18 @@ bool testScale2DProf()
    p1->Scale(c1);
 
    int status = equals("testScale Prof 2D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return status;
 }
 
 bool testScale3DProf()
 {
-   TProfile3D* p1 = new TProfile3D("scD3-p1", "p1",
+   TProfile3D* p1 = new TProfile3D("scD3_p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile3D* p2 = new TProfile3D("scD3-p2", "p2=c1*p1",
+   TProfile3D* p2 = new TProfile3D("scD3_p2", "p2=c1*p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -6531,7 +6545,7 @@ bool testScale3DProf()
    p1->Scale(c1);
 
    int status = equals("testScale Prof 3D", p1, p2, cmpOptStats);
-   delete p1;
+   if (cleanHistos) delete p1;
    return status;
 }
 
@@ -8023,7 +8037,7 @@ bool testRefReadProf1D()
    bool ret = 0;
    TProfile* p1 = 0;
    if ( refFileOption == refFileWrite ) {
-      p1 = new TProfile("rr1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
+      p1 = new TProfile("rr1D_p1", "p1-Title", numberOfBins, minRange, maxRange);
 //      p1->Sumw2();
 
       for ( Int_t e = 0; e < nEvents; ++e ) {
@@ -8034,12 +8048,12 @@ bool testRefReadProf1D()
       p1->Write();
    } else {
       TH1::SetDefaultSumw2(false);
-      p1 = static_cast<TProfile*> ( refFile->Get("rr1D-p1") );
+      p1 = static_cast<TProfile*> ( refFile->Get("rr1D_p1") );
       if (!p1) {
-          Error("testRefReadProf1D","Error reading profile rr1D-p1 from file");
+          Error("testRefReadProf1D","Error reading profile rr1D_p1 from file");
           return kTRUE;  // true indicates a failure
       }
-      TProfile* p2 = new TProfile("rr1D-p2", "p2-Title", numberOfBins, minRange, maxRange);
+      TProfile* p2 = new TProfile("rr1D_p2", "p2-Title", numberOfBins, minRange, maxRange);
 //      p2->Sumw2();
 
       for ( Int_t e = 0; e < nEvents; ++e ) {
@@ -8104,7 +8118,7 @@ bool testRefReadProf2D()
    TProfile2D* p1 = 0;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
-      p1 = new TProfile2D("rr2D-p1", "p1-Title",
+      p1 = new TProfile2D("rr2D_p1", "p1-Title",
                                       numberOfBins, minRange, maxRange,
                                       numberOfBins, minRange, maxRange);
 
@@ -8116,12 +8130,12 @@ bool testRefReadProf2D()
       }
       p1->Write();
    } else {
-      p1 = static_cast<TProfile2D*> ( refFile->Get("rr2D-p1") );
+      p1 = static_cast<TProfile2D*> ( refFile->Get("rr2D_p1") );
       if (!p1) {
-          Error("testRefReadProf2D","Error reading profile rr2D-p1 from file");
+          Error("testRefReadProf2D","Error reading profile rr2D_p1 from file");
           return kTRUE;  // true indicates a failure
       }
-      TProfile2D* p2 = new TProfile2D("rr2D-p2", "p2-Title",
+      TProfile2D* p2 = new TProfile2D("rr2D_p2", "p2-Title",
                                       numberOfBins, minRange, maxRange,
                                       numberOfBins, minRange, maxRange);
 
@@ -8190,7 +8204,7 @@ bool testRefReadProf3D()
    TProfile3D* p1 = 0;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
-      p1 = new TProfile3D("rr3D-p1", "p1-Title",
+      p1 = new TProfile3D("rr3D_p1", "p1-Title",
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange);
@@ -8204,12 +8218,12 @@ bool testRefReadProf3D()
       }
       p1->Write();
    } else {
-      p1 = static_cast<TProfile3D*> ( refFile->Get("rr3D-p1") );
+      p1 = static_cast<TProfile3D*> ( refFile->Get("rr3D_p1") );
       if (!p1) {
-          Error("testRefReadProf3D","Error reading profile rr3D-p1 from file");
+          Error("testRefReadProf3D","Error reading profile rr3D_p1 from file");
           return kTRUE;  // true indicates a failure
       }
-      TProfile3D* p2 = new TProfile3D("rr3D-p2", "p2-Title",
+      TProfile3D* p2 = new TProfile3D("rr3D_p2", "p2-Title",
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange);
@@ -8321,8 +8335,8 @@ bool testIntegerRebinProfile()
    TProfile* p2 = static_cast<TProfile*>( p1->Rebin(rebin, "testIntegerRebin") );
 
    bool ret = equals("TestIntegerRebinProf", p2, p3, cmpOptStats );
-   delete p1;
-   delete p2;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
    return ret;
 }
 
@@ -8370,8 +8384,8 @@ bool testIntegerRebinNoNameProfile()
    TProfile* p2 = dynamic_cast<TProfile*>( p1->Clone() );
    p2->Rebin(rebin);
    bool ret = equals("TestIntRebNoNamProf", p2, p3, cmpOptStats);
-   delete p1;
-   delete p2;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
    return ret;
 }
 
@@ -8468,8 +8482,8 @@ bool testArrayRebinProfile()
    delete [] rebinArray;
 
    bool ret = equals("TestArrayRebinProf", p2, p3, cmpOptStats );
-   delete p1;
-   delete p2;
+   if (cleanHistos) delete p1;
+   if (cleanHistos) delete p2;
    return ret;
 }
 
@@ -9522,7 +9536,7 @@ public:
       delete n3;
 
       // profiles
-      delete p3;
+      if (cleanHistos) delete p3;
 
       delete p2XY;
       delete p2XZ;
