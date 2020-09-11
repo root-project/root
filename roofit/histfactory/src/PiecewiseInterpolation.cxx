@@ -29,8 +29,6 @@
 #include "RooAbsPdf.h"
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
-#include "RooNLLVar.h"
-#include "RooChi2Var.h"
 #include "RooRealVar.h"
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
