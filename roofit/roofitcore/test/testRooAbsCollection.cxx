@@ -52,7 +52,7 @@ TEST(RooArgSet, SubscriptOperator) {
   RooRealVar y("y", "y", 0.);
   RooArgSet theSet(x, y);
 
-  EXPECT_EQ(theSet[static_cast<std::size_t>(0u)], &x);
+  EXPECT_EQ(theSet[0], &x);
   EXPECT_EQ(theSet[1], &y);
 
   const RooAbsArg& xRef = theSet["x"];
