@@ -151,7 +151,7 @@ TEST_F(TestRooWorkspaceWithGaussian, ImportFromFile)
   EXPECT_TRUE(w.import("bogus:abc"));
   EXPECT_FALSE(hijack.str().empty());
 
-  hijack.str("");
+  hijack.stream().str("");
   ASSERT_TRUE(hijack.str().empty());
   EXPECT_TRUE(w.import( (spec.str()+"bogus").c_str()));
   EXPECT_FALSE(hijack.str().empty());

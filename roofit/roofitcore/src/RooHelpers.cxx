@@ -81,8 +81,7 @@ std::vector<std::string> tokenise(const std::string &str, const std::string &del
 /// \param[in] level Minimum level to hijack. Higher levels also get captured.
 /// \param[in] topics Topics to hijack. Use `|` to combine different topics, and cast to `RooFit::MsgTopic` if necessary.
 /// \param[in] objectName Only hijack messages from an object with the given name. Defaults to any object.
-HijackMessageStream::HijackMessageStream(RooFit::MsgLevel level, RooFit::MsgTopic topics, const char* objectName) :
-  std::ostringstream()
+HijackMessageStream::HijackMessageStream(RooFit::MsgLevel level, RooFit::MsgTopic topics, const char* objectName)
 {
   auto& msg = RooMsgService::instance();
   _oldKillBelow = msg.globalKillBelow();
@@ -95,7 +94,7 @@ HijackMessageStream::HijackMessageStream(RooFit::MsgLevel level, RooFit::MsgTopi
 
   _thisStream = msg.addStream(level,
       RooFit::Topic(topics),
-      RooFit::OutputStream(*this),
+      RooFit::OutputStream(_str),
       objectName ? RooFit::ObjectName(objectName) : RooCmdArg());
 }
 

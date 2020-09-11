@@ -55,16 +55,31 @@ class LocalChangeMsgLevel {
 };
 
 
+/// Wrap an object into a TObject. Sometimes needed to avoid reinterpret_cast or enable RTTI.
+template<typename T>
+struct WrapIntoTObject : public TObject {
+  WrapIntoTObject(T& obj) : _payload(&obj) { }
+  T* _payload;
+};
+
+
 /// Hijacks all messages with given level and topic (and optionally object name) while alive.
 /// Use this like an ostringstream afterwards. The messages can e.g. be retrieved using `str()`.
 /// Useful for unit tests / debugging.
-class HijackMessageStream : public std::ostringstream {
+class HijackMessageStream{
   public:
     HijackMessageStream(RooFit::MsgLevel level, RooFit::MsgTopic topics, const char* objectName = nullptr);
-
-    virtual ~HijackMessageStream();
+    template<typename T>
+    const HijackMessageStream& operator<<(const T& v) const {
+      _str << v;
+      return *this;
+    }
+    std::string str() { return _str.str(); }
+    std::ostringstream& stream() { return _str; };
+    ~HijackMessageStream();
 
   private:
+    std::ostringstream _str;
     RooFit::MsgLevel _oldKillBelow;
     std::vector<RooMsgService::StreamConfig> _oldConf;
     Int_t _thisStream;

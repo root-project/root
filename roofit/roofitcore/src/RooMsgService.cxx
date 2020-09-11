@@ -48,18 +48,17 @@ RooFit messages can be evaluated or suppressed.
 **/
 
 
-#include <sys/types.h>
-
-#include "RooFit.h"
-#include "RooAbsArg.h"
-#include "TClass.h"
-
 #include "RooMsgService.h"
+
+#include <sys/types.h>
+#include "RooAbsArg.h"
 #include "RooCmdArg.h"
 #include "RooCmdConfig.h"
 #include "RooGlobalFunc.h"
 #include "RooWorkspace.h"
+#include "RooHelpers.h"
 
+#include "TClass.h"
 #include "TSystem.h"
 
 #include <fstream>
@@ -233,7 +232,13 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   const char* outFile = pc.getString("outFile") ;
   Bool_t prefix = pc.getInt("prefix") ;
   Color_t color = static_cast<Color_t>(pc.getInt("color")) ;
-  ostream* os = reinterpret_cast<ostream*>(pc.getObject("outStream")) ;
+  auto wrapper = static_cast<RooHelpers::WrapIntoTObject<ostream>*>(pc.getObject("outStream"));
+  ostream* os = nullptr;
+  if (wrapper) {
+    os = wrapper->_payload;
+    delete wrapper;
+    wrapper = nullptr;
+  }
 
   // Create new stream object
   StreamConfig newStream ;
