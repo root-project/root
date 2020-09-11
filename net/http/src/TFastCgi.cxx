@@ -197,21 +197,22 @@ void *TFastCgi::run_func(void *args)
       count++;
 
       const char *inp_path = FCGX_GetParam("PATH_INFO", request.envp);
+      if (!inp_path) inp_path = FCGX_GetParam("SCRIPT_FILENAME", request.envp);
       const char *inp_query = FCGX_GetParam("QUERY_STRING", request.envp);
       const char *inp_method = FCGX_GetParam("REQUEST_METHOD", request.envp);
       const char *inp_length = FCGX_GetParam("CONTENT_LENGTH", request.envp);
 
       auto arg = std::make_shared<THttpCallArg>();
-      if (inp_path != 0)
+      if (inp_path)
          arg->SetPathAndFileName(inp_path);
-      if (inp_query != 0)
+      if (inp_query)
          arg->SetQuery(inp_query);
-      if (inp_method != 0)
+      if (inp_method)
          arg->SetMethod(inp_method);
       if (engine->fTopName.Length() > 0)
          arg->SetTopName(engine->fTopName.Data());
       int len = 0;
-      if (inp_length != 0)
+      if (inp_length)
          len = strtol(inp_length, NULL, 10);
       if (len > 0) {
          std::string buf;
