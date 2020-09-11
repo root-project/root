@@ -868,7 +868,7 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
 ///   <tr><td> 3 = RooFit::Hybrid <td> Follow strategy 0 for all RooSimultaneous components, except those with less than
 ///                     30 dataset entries, for which strategy 2 is followed.
 ///   </table>
-/// <tr><td> `BatchMode(bool on)`              <td> Batch evaluation mode. See createNLL().
+/// <tr><td> `BatchMode(bool on)`              <td> Batch evaluation mode. See fitTo().
 /// <tr><td> `Optimize(Bool_t flag)`           <td> Activate constant term optimization (on by default)
 /// <tr><td> `SplitRange(Bool_t flag)`         <td> Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed to
 ///                                               be `rangeName_indexState`, where `indexState` is the state of the master index category of the simultaneous fit.
