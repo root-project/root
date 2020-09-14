@@ -21,7 +21,7 @@
 #include "TFileInfo.h"
 #include "THashList.h"
 #include "TMPClient.h"
-#include "ROOT/TExecutorBaseImpl.hxx"
+#include "ROOT/TExecutorCRTP.hxx"
 #include "TMPWorkerExecutor.h"
 #include <algorithm> //std::generate
 #include <numeric> //std::iota
@@ -32,7 +32,7 @@
 
 namespace ROOT {
 
-class TProcessExecutor : public TExecutorBaseImpl<TProcessExecutor>, private TMPClient {
+class TProcessExecutor : public TExecutorCRTP<TProcessExecutor>, private TMPClient {
 public:
    explicit TProcessExecutor(unsigned nWorkers = 0); //default number of workers is the number of processors
    ~TProcessExecutor() = default;
@@ -41,7 +41,7 @@ public:
    TProcessExecutor &operator=(const TProcessExecutor &) = delete;
 
    // Map
-   using TExecutorBaseImpl<TProcessExecutor>::Map;
+   using TExecutorCRTP<TProcessExecutor>::Map;
    template<class F, class Cond = noReferenceCond<F>>
    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
@@ -52,13 +52,13 @@ public:
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
 
-   using TExecutorBaseImpl<TProcessExecutor>::MapReduce;
+   using TExecutorCRTP<TProcessExecutor>::MapReduce;
    template<class F, class R, class Cond = noReferenceCond<F>>
    auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
    template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
    auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
 
-   using TExecutorBaseImpl<TProcessExecutor>::Reduce;
+   using TExecutorCRTP<TProcessExecutor>::Reduce;
    template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
 
 private:
