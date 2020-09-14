@@ -35,11 +35,11 @@ using namespace ROOT::TypeTraits;
 namespace RDFDetail = ROOT::Detail::RDF;
 
 template <typename T>
-std::unique_ptr<RColumnReaderBase>
+std::unique_ptr<RDFDetail::RColumnReaderBase>
 MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader *r,
                  const std::vector<void *> *DSValuePtrsPtr, const std::string &colName)
 {
-   using Ret_t = std::unique_ptr<RColumnReaderBase>;
+   using Ret_t = std::unique_ptr<RDFDetail::RColumnReaderBase>;
 
    if (define != nullptr)
       return Ret_t(new RDefineReader(slot, *define, typeid(T)));
@@ -53,9 +53,10 @@ MakeColumnReader(unsigned int slot, RDFDetail::RDefineBase *define, TTreeReader 
 }
 
 template <typename T>
-std::unique_ptr<RColumnReaderBase> MakeOneColumnReader(unsigned int slot, RDFDetail::RDefineBase *define,
-                                                       const std::map<std::string, std::vector<void *>> &DSValuePtrsMap,
-                                                       TTreeReader *r, const std::string &colName)
+std::unique_ptr<RDFDetail::RColumnReaderBase>
+MakeOneColumnReader(unsigned int slot, RDFDetail::RDefineBase *define,
+                    const std::map<std::string, std::vector<void *>> &DSValuePtrsMap, TTreeReader *r,
+                    const std::string &colName)
 {
    const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
    const std::vector<void *> *DSValuePtrsPtr = DSValuePtrsIt != DSValuePtrsMap.end() ? &DSValuePtrsIt->second : nullptr;
@@ -78,7 +79,7 @@ struct RColumnReadersInfo {
 /// colInfo.fColNames and colInfo.fIsDefine are expected to have size equal to the parameter pack, and elements ordered
 /// accordingly, i.e. fIsDefine[0] refers to fColNames[0] which is of type "ColTypes[0]".
 template <typename... ColTypes>
-std::array<std::unique_ptr<RColumnReaderBase>, sizeof...(ColTypes)>
+std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)>
 MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo)
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
@@ -90,7 +91,7 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
    const auto &customColMap = customCols.GetColumns();
 
    int i = -1;
-   std::array<std::unique_ptr<RColumnReaderBase>, sizeof...(ColTypes)> ret{
+   std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)> ret{
       {{(++i, MakeOneColumnReader<ColTypes>(slot, isDefine[i] ? customColMap.at(colNames[i]).get() : nullptr,
                                             DSValuePtrsMap, r, colNames[i]))}...}};
    return ret;

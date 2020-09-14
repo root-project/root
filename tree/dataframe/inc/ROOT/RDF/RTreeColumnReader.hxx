@@ -28,7 +28,7 @@ namespace RDF {
 
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderValues
 template <typename T>
-class R__CLING_PTRCHECK(off) RTreeColumnReader final : public RColumnReaderBase {
+class R__CLING_PTRCHECK(off) RTreeColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<TTreeReaderValue<T>> fTreeValue;
 
    void *GetImpl(Long64_t) final { return fTreeValue->Get(); }
@@ -54,7 +54,7 @@ public:
 ///
 /// TTreeReaderArrays are used whenever the RDF column type is RVec<T>.
 template <typename T>
-class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public RColumnReaderBase {
+class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<TTreeReaderArray<T>> fTreeArray;
 
    /// Enumerator for the memory layout of the branch
@@ -141,7 +141,7 @@ public:
 ///
 /// TTreeReaderArray<bool> is used whenever the RDF column type is RVec<bool>.
 template <>
-class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public RColumnReaderBase {
+class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public ROOT::Detail::RDF::RColumnReaderBase {
 
    std::unique_ptr<TTreeReaderArray<bool>> fTreeArray;
 
