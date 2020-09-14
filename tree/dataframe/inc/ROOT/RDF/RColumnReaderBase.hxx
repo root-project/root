@@ -14,7 +14,7 @@
 #include <Rtypes.h>
 
 namespace ROOT {
-namespace Internal {
+namespace Detail {
 namespace RDF {
 
 /**
@@ -43,7 +43,7 @@ private:
 };
 
 } // namespace RDF
-} // namespace Internal
+} // namespace Detail
 } // namespace ROOT
 
 #endif
