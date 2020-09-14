@@ -49,6 +49,7 @@
 #@hasdavix@ R__HAS_DAVIX  /**/
 #@hasdataframe@ R__HAS_DATAFRAME /**/
 #@use_less_includes@ R__LESS_INCLUDES /**/
+#cmakedefine R__RF_ARCHITECTURE_SPECIFIC_LIBS /* Library multi versioning for RooFit */
 
 #if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
 #ifndef VECCORE_ENABLE_VC

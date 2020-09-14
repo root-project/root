@@ -470,4 +470,12 @@ foreach(incl ${fitcore_incl})
    target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${incl}>)
 endforeach()
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 5 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6)
+  # gcc 5 has a bug in that it fails to put its internal -lgcc into the right place when linking.
+  # We need it to check cpu flags in src/Initialisation.cxx
+  # Here, we add an explicit link instruction according to the workaround posted here:
+  # https://bugs.launchpad.net/ubuntu/+source/gcc-5/+bug/1568899
+  target_link_libraries(RooFitCore PRIVATE -lgcc_s -lgcc)
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
