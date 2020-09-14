@@ -13,14 +13,14 @@
 
 #include "RConfigure.h"
 
-#include "ROOT/TExecutorBaseImpl.hxx"
+#include "ROOT/TExecutorCRTP.hxx"
 #include "ExecutionPolicy.hxx"
 #include <numeric>
 #include <vector>
 
 namespace ROOT {
 
-   class TSequentialExecutor: public TExecutorBaseImpl<TSequentialExecutor> {
+   class TSequentialExecutor: public TExecutorCRTP<TSequentialExecutor> {
    public:
       explicit TSequentialExecutor(){};
       explicit TSequentialExecutor(ROOT::Internal::ExecutionPolicy, unsigned): TSequentialExecutor(){};
@@ -39,7 +39,7 @@ namespace ROOT {
       template<class F, class T>
       void Foreach(F func, std::vector<T> &args);
 
-      using TExecutorBaseImpl<TSequentialExecutor>::Map;
+      using TExecutorCRTP<TSequentialExecutor>::Map;
       template<class F, class Cond = noReferenceCond<F>>
       auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
       template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
@@ -51,13 +51,13 @@ namespace ROOT {
       // // the late return types also check at compile-time whether redfunc is compatible with func,
       // // other than checking that func is compatible with the type of arguments.
       // // a static_assert check in TSequentialExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
-      using TExecutorBaseImpl<TSequentialExecutor>::MapReduce;
+      using TExecutorCRTP<TSequentialExecutor>::MapReduce;
       template<class F, class R, class Cond = noReferenceCond<F>>
       auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
       template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
       auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
       
-      using TExecutorBaseImpl<TSequentialExecutor>::Reduce;
+      using TExecutorCRTP<TSequentialExecutor>::Reduce;
       template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
    };
 
