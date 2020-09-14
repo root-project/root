@@ -20,9 +20,9 @@
 // Until C++ runtime modules are universally used, we explicitly load the ntuple library.  Otherwise
 // triggering autoloading from the use of templated types would require an exhaustive enumeration
 // of "all" template instances in the LinkDef file.
-#ifdef __CLING__
+#include <Rtypes.h>
+
 R__LOAD_LIBRARY(ROOTNTuple)
-#endif
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RNTuple.hxx>
