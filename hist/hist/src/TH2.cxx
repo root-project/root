@@ -416,16 +416,21 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   Double_t x = fXaxis.GetBinCenter(binx);
-   Double_t y = fYaxis.GetBinCenter(biny);
+
    Double_t z= w;
    fTsumw   += z;
    fTsumw2  += z*z;
-   fTsumwx  += z*x;
-   fTsumwx2 += z*x*x;
-   fTsumwy  += z*y;
-   fTsumwy2 += z*y*y;
-   fTsumwxy += z*x*y;
+   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   if (labelBitMask != (TH1::kXaxis | TH1::kYaxis)) {
+      Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
+      Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
+      fTsumwx += z * x;
+      fTsumwx2 += z * x * x;
+      fTsumwy += z * y;
+      fTsumwy2 += z * y * y;
+      fTsumwx2 += z * x * x;
+   }
    return bin;
 }
 
@@ -460,15 +465,17 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
    if (biny == 0 || biny > fYaxis.GetNbins()) {
       if (!GetStatOverflowsBehaviour()) return -1;
    }
-   Double_t x = fXaxis.GetBinCenter(binx);
    Double_t z= w; //(w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
-   fTsumwx  += z*x;
-   fTsumwx2 += z*x*x;
    fTsumwy  += z*y;
    fTsumwy2 += z*y*y;
-   fTsumwxy += z*x*y;
+   if (!fXaxis.CanExtend() || !fXaxis.IsAlphanumeric()) {
+      Double_t x = fXaxis.GetBinCenter(binx);
+      fTsumwx += z * x;
+      fTsumwx2 += z * x * x;
+      fTsumwxy += z * x * y;
+   }
    return bin;
 }
 
@@ -503,15 +510,18 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
       if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   Double_t y = fYaxis.GetBinCenter(biny);
+
    Double_t z= w; //(w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
    fTsumwx  += z*x;
    fTsumwx2 += z*x*x;
-   fTsumwy  += z*y;
-   fTsumwy2 += z*y*y;
-   fTsumwxy += z*x*y;
+   if (!fYaxis.CanExtend() || !fYaxis.IsAlphanumeric()) {
+      Double_t y = fYaxis.GetBinCenter(biny);
+      fTsumwy += z * y;
+      fTsumwy2 += z * y * y;
+      fTsumwxy += z * x * y;
+   }
    return bin;
 }
 

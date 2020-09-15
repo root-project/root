@@ -3407,8 +3407,8 @@ Int_t TH1::Fill(const char *namex, Double_t w)
    Double_t z= w;
    fTsumw   += z;
    fTsumw2  += z*z;
-   // this make sense if the histogram is not expanding (no axis can be extended)
-   if (!CanExtendAllAxes()) {
+   // this make sense if the histogram is not expanding (the x axis cannot be extended)
+   if (!fXaxis.CanExtend() || !fXaxis.IsAlphanumeric()) {
       Double_t x = fXaxis.GetBinCenter(bin);
       fTsumwx  += z*x;
       fTsumwx2 += z*x*x;
@@ -6530,6 +6530,21 @@ UInt_t TH1::SetCanExtend(UInt_t extendBitMask)
    }
 
    return oldExtendBitMask;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Internal function used in TH1::Fill to see which axis is full alphanumeric
+/// i.e. can be extended and is alphanumeric
+UInt_t TH1::GetAxisLabelStatus() const
+{
+   UInt_t bitMask = kNoAxis;
+   if (fXaxis.CanExtend() && fXaxis.IsAlphanumeric() ) bitMask |= kXaxis;
+   if (GetDimension() > 1 && fYaxis.CanExtend() && fYaxis.IsAlphanumeric())
+      bitMask |= kYaxis;
+   if (GetDimension() > 2 && fZaxis.CanExtend() && fZaxis.IsAlphanumeric())
+      bitMask |= kZaxis;
+
+   return bitMask;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

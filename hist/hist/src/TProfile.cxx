@@ -689,16 +689,17 @@ Int_t TProfile::Fill(const char *namex, Double_t y)
    if (bin == 0 || bin > fXaxis.GetNbins()) {
       if (!GetStatOverflowsBehaviour()) return -1;
    }
-   Double_t x = fXaxis.GetBinCenter(bin);
    fTsumw++;
    fTsumw2++;
-   fTsumwx  += x;
-   fTsumwx2 += x*x;
-   fTsumwy  += y;
-   fTsumwy2 += y*y;
+   fTsumwy += y;
+   fTsumwy2 += y * y;
+   if (!fXaxis.CanExtend() || !fXaxis.IsAlphanumeric()) {
+      Double_t x = fXaxis.GetBinCenter(bin);
+      fTsumwx += x;
+      fTsumwx2 += x * x;
+   }
    return bin;
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill a Profile histogram with weights.
 
@@ -753,11 +754,13 @@ Int_t TProfile::Fill(const char *namex, Double_t y, Double_t w)
    if (bin == 0 || bin > fXaxis.GetNbins()) {
       if (!GetStatOverflowsBehaviour()) return -1;
    }
-   Double_t x = fXaxis.GetBinCenter(bin);
    fTsumw   += u;
    fTsumw2  += u*u;
-   fTsumwx  += u*x;
-   fTsumwx2 += u*x*x;
+   if (!fXaxis.CanExtend() || !fXaxis.IsAlphanumeric()) {
+      Double_t x = fXaxis.GetBinCenter(bin);
+      fTsumwx += u*x;
+      fTsumwx2 += u*x*x;
+   }
    fTsumwy  += u*y;
    fTsumwy2 += u*y*y;
    return bin;

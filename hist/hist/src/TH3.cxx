@@ -407,21 +407,26 @@ Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Double_
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
-   Double_t x = fXaxis.GetBinCenter(binx);
-   Double_t y = fYaxis.GetBinCenter(biny);
-   Double_t z = fZaxis.GetBinCenter(binz);
+
    Double_t v = w;
    fTsumw   += v;
    fTsumw2  += v*v;
-   fTsumwx  += v*x;
-   fTsumwx2 += v*x*x;
-   fTsumwy  += v*y;
-   fTsumwy2 += v*y*y;
-   fTsumwxy += v*x*y;
-   fTsumwz  += v*z;
-   fTsumwz2 += v*z*z;
-   fTsumwxz += v*x*z;
-   fTsumwyz += v*y*z;
+   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   if (labelBitMask != TH1::kAllAxes) {
+      Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
+      Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
+      Double_t z = (labelBitMask & TH1::kZaxis) ? 0 : fZaxis.GetBinCenter(binz);
+      fTsumwx += v * x;
+      fTsumwx2 += v * x * x;
+      fTsumwy += v * y;
+      fTsumwy2 += v * y * y;
+      fTsumwxy += v * x * y;
+      fTsumwz += v * z;
+      fTsumwz2 += v * z * z;
+      fTsumwxz += v * x * z;
+      fTsumwyz += v * y * z;
+   }
    return bin;
 }
 
@@ -452,20 +457,24 @@ Int_t TH3::Fill(const char *namex, Double_t y, const char *namez, Double_t w)
       if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
-   Double_t x = fXaxis.GetBinCenter(binx);
-   Double_t z = fZaxis.GetBinCenter(binz);
    Double_t v = w;
    fTsumw   += v;
    fTsumw2  += v*v;
-   fTsumwx  += v*x;
-   fTsumwx2 += v*x*x;
    fTsumwy  += v*y;
    fTsumwy2 += v*y*y;
-   fTsumwxy += v*x*y;
-   fTsumwz  += v*z;
-   fTsumwz2 += v*z*z;
-   fTsumwxz += v*x*z;
-   fTsumwyz += v*y*z;
+   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   if (labelBitMask != (TH1::kXaxis | TH1::kZaxis) ) {
+      Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
+      Double_t z = (labelBitMask & TH1::kZaxis) ? 0 : fZaxis.GetBinCenter(binz);
+      fTsumwx += v * x;
+      fTsumwx2 += v * x * x;
+      fTsumwxy += v * x * y;
+      fTsumwz += v * z;
+      fTsumwz2 += v * z * z;
+      fTsumwxz += v * x * z;
+      fTsumwyz += v * y * z;
+   }
    return bin;
 }
 
@@ -496,20 +505,24 @@ Int_t TH3::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
    if (binz == 0 || binz > fZaxis.GetNbins()) {
       if (!GetStatOverflowsBehaviour()) return -1;
    }
-   Double_t x = fXaxis.GetBinCenter(binx);
-   Double_t y = fYaxis.GetBinCenter(biny);
    Double_t v = w;
    fTsumw   += v;
    fTsumw2  += v*v;
-   fTsumwx  += v*x;
-   fTsumwx2 += v*x*x;
-   fTsumwy  += v*y;
-   fTsumwy2 += v*y*y;
-   fTsumwxy += v*x*y;
    fTsumwz  += v*z;
    fTsumwz2 += v*z*z;
-   fTsumwxz += v*x*z;
-   fTsumwyz += v*y*z;
+   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   if (labelBitMask != (TH1::kXaxis | TH1::kYaxis)) {
+      Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
+      Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
+      fTsumwx += v * x;
+      fTsumwx2 += v * x * x;
+      fTsumwy += v * y;
+      fTsumwy2 += v * y * y;
+      fTsumwxy += v * x * y;
+      fTsumwxz += v * x * z;
+      fTsumwyz += v * y * z;
+   }
    return bin;
 }
 
@@ -540,20 +553,23 @@ Int_t TH3::Fill(Double_t x, const char *namey, const char *namez, Double_t w)
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
-   Double_t y = fYaxis.GetBinCenter(biny);
-   Double_t z = fZaxis.GetBinCenter(binz);
+
+   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
+   Double_t z = (labelBitMask & TH1::kZaxis) ? 0 : fZaxis.GetBinCenter(binz);
    Double_t v = w;
-   fTsumw   += v;
-   fTsumw2  += v*v;
-   fTsumwx  += v*x;
-   fTsumwx2 += v*x*x;
-   fTsumwy  += v*y;
-   fTsumwy2 += v*y*y;
-   fTsumwxy += v*x*y;
-   fTsumwz  += v*z;
-   fTsumwz2 += v*z*z;
-   fTsumwxz += v*x*z;
-   fTsumwyz += v*y*z;
+   fTsumw += v;
+   fTsumw2 += v * v;
+   fTsumwx += v * x;
+   fTsumwx2 += v * x * x;
+   fTsumwy += v * y;
+   fTsumwy2 += v * y * y;
+   fTsumwxy += v * x * y;
+   fTsumwz += v * z;
+   fTsumwz2 += v * z * z;
+   fTsumwxz += v * x * z;
+   fTsumwyz += v * y * z;
    return bin;
 }
 
@@ -592,7 +608,8 @@ Int_t TH3::Fill(const char * namex, Double_t y, Double_t z, Double_t w)
       if (!GetStatOverflowsBehaviour())
          return -1;
    }
-   Double_t x = fXaxis.GetBinCenter(binx);
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
    Double_t v = w;
    fTsumw += v;
    fTsumw2 += v * v;
@@ -636,7 +653,8 @@ Int_t TH3::Fill(Double_t x, const char *namey, Double_t z, Double_t w)
    if (binz == 0 || binz > fZaxis.GetNbins()) {
       if (!GetStatOverflowsBehaviour()) return -1;
    }
-   Double_t y = fYaxis.GetBinCenter(biny);
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
    Double_t v = w;
    fTsumw   += v;
    fTsumw2  += v*v;
@@ -681,7 +699,8 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
       if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
-   Double_t z = fZaxis.GetBinCenter(binz);
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   Double_t z = (labelBitMask & TH1::kZaxis) ? 0 : fZaxis.GetBinCenter(binz);
    Double_t v = w;
    fTsumw   += v;
    fTsumw2  += v*v;
