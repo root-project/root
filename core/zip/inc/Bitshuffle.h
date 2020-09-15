@@ -36,8 +36,13 @@
   typedef unsigned short      uint16_t;
   typedef unsigned int        uint32_t;
   typedef   signed int        int32_t;
+  #if defined __x86_64__ && !defined __ILP32__
+  typedef unsigned long       uint64_t;
+  typedef long                int64_t;
+  #else
   typedef unsigned long long  uint64_t;
   typedef long long           int64_t;
+  #endif
 #endif
 
 #include <stdlib.h>
