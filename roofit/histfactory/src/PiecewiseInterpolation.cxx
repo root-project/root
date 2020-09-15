@@ -1,7 +1,7 @@
 /** \class PiecewiseInterpolation
  * \ingroup HistFactory
  * The PiecewiseInterpolation is a class that can morph distributions into each other, which
- * is useful to estimate systematic uncertainties. Given a nominal distribution and a one or
+ * is useful to estimate systematic uncertainties. Given a nominal distribution and one or
  * more altered or distorted ones, it computes a new shape depending on the value of the nuisance
  * parameters \f$ \alpha_i \f$:
  * \f[
