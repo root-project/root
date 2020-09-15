@@ -25,6 +25,7 @@
 #include "TError.h"
 #include "THashList.h"
 #include "TMath.h"
+#include "TH1Merger.h"
 
 class TProfileHelper {
 
@@ -182,6 +183,14 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
 
    TList inlist;
    inlist.AddAll(li);
+
+   // use TH1Merger class
+   TH1Merger merger(*p, *li, "");
+   Bool_t ret = merger();
+
+   return (ret) ? p->GetEntries() : -1;
+
+#ifdef OLD_PROFILE_MERGE
 
    TAxis newXAxis;
    TAxis newYAxis;
@@ -414,6 +423,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
       delete hclone;
    }
    return (Long64_t)nentries;
+#endif
 }
 
 template <typename T>
