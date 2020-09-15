@@ -1195,12 +1195,11 @@ Float_t TStyle::GetTitleSize( Option_t *axis) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Show the options from the current style
+/// Copy this style to gStyle.
 
-void TStyle::Paint(Option_t *option)
+void TStyle::Paint(Option_t *)
 {
-   gROOT->ProcessLine(Form("TStyleManager::PaintStyle((TStyle*)0x%lx,\"%s\")",
-                           (ULong_t)this,option));
+   Copy(*gStyle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
