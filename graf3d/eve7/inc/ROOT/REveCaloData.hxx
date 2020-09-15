@@ -14,6 +14,7 @@
 
 #include <vector>
 #include "ROOT/REveElement.hxx"
+#include "ROOT/REveSecondarySelectable.hxx"
 
 #include "TMath.h"
 
@@ -26,6 +27,7 @@ namespace Experimental {
 
 class REveCaloData: public REveElement,
                     public REveAuntAsList
+                    //public REveSecondarySelectable
 {
 public:
    struct SliceInfo_t
@@ -169,9 +171,6 @@ protected:
    vCellId_t    fCellsSelected;
    vCellId_t    fCellsHighlighted;
 
-   int          fSelectionSecondarySelectIdx;
-   int          fHighlightSecondarySelectIdx;
-
 public:
    REveCaloData(const char* n="REveCaloData", const char* t="");
    virtual ~REveCaloData() {}
@@ -199,7 +198,7 @@ public:
 
    virtual void    InvalidateUsersCellIdCache();
    virtual void    DataChanged();
-   virtual void    CellSelectionChanged(UInt_t selectionId, Int_t secSel);
+   virtual void    CellSelectionChanged(UInt_t selectionId, vCellId_t&);
 
    Int_t           GetNSlices()    const { return fSliceInfos.size(); }
    SliceInfo_t&    RefSliceInfo(Int_t s) { return fSliceInfos[s]; }
