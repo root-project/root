@@ -439,7 +439,7 @@ Int_t REveCaloViz::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    {
       j["sliceColors"].push_back(fData->GetSliceColor(i));
    }
-
+   j["fSecondarySelect"] = true;
    return ret;
 }
 
