@@ -17,7 +17,8 @@ from functools import partial
 
 __all__ = [
    'Cpp1LanguageFeatureTestCase',
-   'Cpp2ClassNamingTestCase'
+   'Cpp2ClassNamingTestCase',
+   'Cpp3UsingDeclarations',
 ]
 
 
@@ -426,6 +427,18 @@ class Cpp2ClassNamingTestCase( MyTestCase ):
 
       self.assert_( f1 is f2 )
       self.assertEqual( f1, f2 )
+
+
+
+### C++ language using declarations ===========================================
+class Cpp3UsingDeclarations( MyTestCase ):
+    def test1TGraphMultiErrorsSetLineColor(self):
+        """Test that a using function declaration is picked up by the overload resolution"""
+
+        # This line breaks with the following error if the using function declaration is not picked up
+        # TypeError: void TGraphMultiErrors::SetLineColor(int e, short lcolor) =>
+        #   TypeError: takes at least 2 arguments (1 given)
+        ROOT.TGraphMultiErrors().SetLineColor(0)
 
 
 ## actual test run
