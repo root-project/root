@@ -277,8 +277,6 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 
    fIter = TClingCXXRecMethIter(interp, DC, std::move(SpecFuncs));
    fIter.Init();
-
-   // Could trigger deserialization of decls.
 }
 
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
