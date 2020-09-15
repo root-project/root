@@ -30,13 +30,11 @@ set(FOUNDATION_SOURCES
   src/TError.cxx
 )
 
+set(FOUNDATION_HEADER_DIRS inc/)
+
 if(CMAKE_CXX_STANDARD GREATER 11)
   list(APPEND Foundation_dict_headers ROOT/RLogger.hxx)
-  list(APPEND FOUNDATION_SOURCES v7/src/RLogger.cxx)
-  set(FOUNDATION_V7_INC ${CMAKE_SOURCE_DIR}/core/foundation/v7/inc)
-  # TLogger.hxx may be used without root7 flag, but is placed in v7/inc/,
-  # so we need to tell ROOT_INSTALL_HEADERS() where to find it
-  set(FOUNDATION_HEADER_DIRS inc/ v7/inc/)
+  list(APPEND FOUNDATION_SOURCES src/RLogger.cxx)
 endif()
 
 if(root7)
@@ -44,6 +42,8 @@ if(root7)
     ROOT/RError.hxx)
   list(APPEND FOUNDATION_SOURCES
     v7/src/RError.cxx)
+  list(APPEND FOUNDATION_HEADER_DIRS v7/inc/)
+  set(FOUNDATION_V7_INC ${CMAKE_SOURCE_DIR}/core/foundation/v7/inc)
   ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()
 
