@@ -49,11 +49,11 @@ class DCIter {
    /// Do not return inline namespaces etc.
    bool AdvanceToFirstValidDecl();
 
-   /// Return true if fDeclIter has triggered an inline namespace
+   /// Return true if fDeclIter has triggered an inline or anonymous namespace / ...
    /// to be appended to fContexts.
    bool HandleInlineDeclContext();
 
-   /// Increement the iterator, possibly moving to the next context.
+   /// Increment the iterator, possibly moving to the next context.
    bool IterNext();
 
 public:
