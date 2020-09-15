@@ -81,7 +81,7 @@ public:
 
    Bool_t     CanExtend() const { return (fBits2 & kCanExtend);  }
    Bool_t     CanBeAlphanumeric() { return !(fBits2 & kNotAlpha); }
-   Bool_t     IsAlphanumeric() { return fBits2 & kAlphanumeric; }
+   Bool_t     IsAlphanumeric() const { return fBits2 & kAlphanumeric; }
    void       SetAlphanumeric(Bool_t alphanumeric = kTRUE);
    void       SetCanExtend(Bool_t canExtend) { fBits2 = canExtend ? (fBits2 | kCanExtend) : (fBits2 & ~kCanExtend); }
    void       SetNoAlphanumeric(Bool_t noalpha = kTRUE) {
@@ -227,4 +227,3 @@ inline void TAxis::SetNoExponent(Bool_t noExponent)
 
 
 #endif
-

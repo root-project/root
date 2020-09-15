@@ -642,9 +642,52 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Fill a Profile2D histogram with weights.
+
+Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
+{
+   if (fBuffer)  return BufferFill(x, y, z, w);
+
+   Int_t bin, binx, biny;
+
+   if (fZmin != fZmax) {
+      if (z < fZmin || z > fZmax || TMath::IsNaN(z)) return -1;
+   }
+
+   Double_t u = w;
+   fEntries++;
+   binx = fXaxis.FindBin(x);
+   biny = fYaxis.FindBin(y);
+   if (binx < 0 || biny < 0) return -1;
+   bin = biny * (fXaxis.GetNbins() + 2) + binx;
+   AddBinContent(bin, u * z);
+   fSumw2.fArray[bin] += u * z * z;
+   if (!fBinSumw2.fN && u != 1.0 && !TestBit(TH1::kIsNotW))
+      Sumw2(); // must be called before accumulating the entries
+   if (fBinSumw2.fN) fBinSumw2.fArray[bin] += u * u;
+   fBinEntries.fArray[bin] += u;
+
+   if (binx == 0 || binx > fXaxis.GetNbins()) {
+      if (!GetStatOverflowsBehaviour()) return -1;
+   }
+   if (biny == 0 || biny > fYaxis.GetNbins()) {
+      if (!GetStatOverflowsBehaviour()) return -1;
+   }
+   fTsumw += u;
+   fTsumw2 += u * u;
+   fTsumwx += u * x;
+   fTsumwx2 += u * x * x;
+   fTsumwy += u * y;
+   fTsumwy2 += u * y * y;
+   fTsumwxy += u * x * y;
+   fTsumwz += u * z;
+   fTsumwz2 += u * z * z;
+   return bin;
+}
+////////////////////////////////////////////////////////////////////////////////
 /// Fill a Profile2D histogram (no weights).
 
-Int_t TProfile2D::Fill(Double_t x, const char *namey, Double_t z)
+Int_t TProfile2D::Fill(Double_t x, const char *namey, Double_t z, Double_t w)
 {
    Int_t bin,binx,biny;
 
@@ -652,36 +695,44 @@ Int_t TProfile2D::Fill(Double_t x, const char *namey, Double_t z)
       if (z <fZmin || z> fZmax || TMath::IsNaN(z)) return -1;
    }
 
+   Double_t u = w;
    fEntries++;
    binx =fXaxis.FindBin(x);
    biny =fYaxis.FindBin(namey);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   AddBinContent(bin, z);
-   fSumw2.fArray[bin] += (Double_t)z*z;
-   fBinEntries.fArray[bin] += 1;
-   if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += 1;
+   AddBinContent(bin, u * z);
+   fSumw2.fArray[bin] += u * z * z;
+   if (!fBinSumw2.fN && u != 1.0 && !TestBit(TH1::kIsNotW))
+      Sumw2(); // must be called before accumulating the entries
+   if (fBinSumw2.fN) fBinSumw2.fArray[bin] += u * u;
+   fBinEntries.fArray[bin] += u;
+
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   Double_t y = fYaxis.GetBinCenter(biny);
-   ++fTsumw;
-   ++fTsumw2;
-   fTsumwx  += x;
-   fTsumwx2 += x*x;
-   fTsumwy  += y;
-   fTsumwy2 += y*y;
-   fTsumwxy += x*y;
-   fTsumwz  += z;
-   fTsumwz2 += z*z;
+
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
+
+   fTsumw += u;
+   fTsumw2 += u * u;
+   fTsumwx += u * x;
+   fTsumwx2 += u * x * x;
+   fTsumwy += u * y;
+   fTsumwy2 += u * y * y;
+   fTsumwxy += u * x * y;
+   fTsumwz += u * z;
+   fTsumwz2 += u * z * z;
+
    return bin;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill a Profile2D histogram (no weights).
 
-Int_t TProfile2D::Fill(const char *namex, const char *namey, Double_t z)
+Int_t TProfile2D::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
 {
    Int_t bin,binx,biny;
 
@@ -689,35 +740,44 @@ Int_t TProfile2D::Fill(const char *namex, const char *namey, Double_t z)
       if (z <fZmin || z> fZmax || TMath::IsNaN(z) ) return -1;
    }
 
+   Double_t u = w;
    fEntries++;
-   binx =fXaxis.FindBin(namex);
-   biny =fYaxis.FindBin(namey);
-   if (binx <0 || biny <0) return -1;
-   bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   AddBinContent(bin, z);
-   fSumw2.fArray[bin] += (Double_t)z*z;
-   fBinEntries.fArray[bin] += 1;
-   if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += 1;
+   binx = fXaxis.FindBin(namex);
+   biny = fYaxis.FindBin(namey);
+   if (binx < 0 || biny < 0)
+      return -1;
+   bin = biny * (fXaxis.GetNbins() + 2) + binx;
+   AddBinContent(bin, u * z);
+   fSumw2.fArray[bin] += u * z * z;
+   if (!fBinSumw2.fN && u != 1.0 && !TestBit(TH1::kIsNotW))
+      Sumw2(); // must be called before accumulating the entries
+   if (fBinSumw2.fN) fBinSumw2.fArray[bin] += u * u;
+   fBinEntries.fArray[bin] += u;
+
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   Double_t x = fYaxis.GetBinCenter(binx);
-   Double_t y = fYaxis.GetBinCenter(biny);
-   ++fTsumw;
-   ++fTsumw2;
-   fTsumwx  += x;
-   fTsumwx2 += x*x;
-   fTsumwy  += y;
-   fTsumwy2 += y*y;
-   fTsumwxy += x*y;
-   fTsumwz  += z;
-   fTsumwz2 += z*z;
+
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
+   Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
+
+   fTsumw += u;
+   fTsumw2 += u * u;
+   fTsumwx += u * x;
+   fTsumwx2 += u * x * x;
+   fTsumwy += u * y;
+   fTsumwy2 += u * y * y;
+   fTsumwxy += u * x * y;
+   fTsumwz += u * z;
+   fTsumwz2 += u * z * z;
+
    return bin;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill a Profile2D histogram (no weights).
 
-Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z)
+Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z, Double_t w)
 {
    Int_t bin,binx,biny;
 
@@ -725,20 +785,28 @@ Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z)
       if (z <fZmin || z> fZmax || TMath::IsNaN(z)) return -1;
    }
 
+   Double_t u = w;
    fEntries++;
    binx =fXaxis.FindBin(namex);
    biny =fYaxis.FindBin(y);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   AddBinContent(bin, z);
-   fSumw2.fArray[bin] += (Double_t)z*z;
-   fBinEntries.fArray[bin] += 1;
-   if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += 1;
+
+   AddBinContent(bin, u * z);
+   fSumw2.fArray[bin] += u * z * z;
+   if (!fBinSumw2.fN && u != 1.0 && !TestBit(TH1::kIsNotW))
+      Sumw2(); // must be called before accumulating the entries
+   if (fBinSumw2.fN) fBinSumw2.fArray[bin] += u * u;
+   fBinEntries.fArray[bin] += u;
+
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) {
       if (!GetStatOverflowsBehaviour()) return -1;
    }
-   Double_t x = fYaxis.GetBinCenter(binx);
+
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
+
    ++fTsumw;
    ++fTsumw2;
    fTsumwx  += x;
@@ -751,47 +819,7 @@ Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z)
    return bin;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Fill a Profile2D histogram with weights.
 
-Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
-{
-   if (fBuffer) return BufferFill(x,y,z,w);
-
-   Int_t bin,binx,biny;
-
-   if (fZmin != fZmax) {
-      if (z <fZmin || z> fZmax || TMath::IsNaN(z)) return -1;
-   }
-
-   Double_t u= w;
-   fEntries++;
-   binx =fXaxis.FindBin(x);
-   biny =fYaxis.FindBin(y);
-   if (binx <0 || biny <0) return -1;
-   bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   AddBinContent(bin, u*z);
-   fSumw2.fArray[bin] += u*z*z;
-   if (!fBinSumw2.fN && u != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();  // must be called before accumulating the entries
-   if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
-   fBinEntries.fArray[bin] += u;
-   if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!GetStatOverflowsBehaviour()) return -1;
-   }
-   if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!GetStatOverflowsBehaviour()) return -1;
-   }
-   fTsumw   += u;
-   fTsumw2  += u*u;
-   fTsumwx  += u*x;
-   fTsumwx2 += u*x*x;
-   fTsumwy  += u*y;
-   fTsumwy2 += u*y*y;
-   fTsumwxy += u*x*y;
-   fTsumwz  += u*z;
-   fTsumwz2 += u*z*z;
-   return bin;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return bin content of a Profile2D histogram.
