@@ -52,7 +52,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       this.invokeSceneMethod("processElementSelected"); //, indx);
    }
 
-
+   EveElemControl.prototype.DrawForSelection = function(sec_idcs, res)
+   {
+      res.geom.push(this.obj3d);
+   }
    //==============================================================================
    // EveElements
    //==============================================================================
@@ -480,12 +483,14 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       geobox.addAttribute( 'position', this.obj3d.geometry.getAttribute("position") );
 
       let protoIdcs = [0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0, 1, 2, 3, 1, 3, 0, 4, 7, 6, 4, 6, 5];
-      let idxOff = sec_idcs[0] * 8;
-      for (let i = 0; i < protoIdcs.length; i++)
-         protoIdcs[i] += idxOff;
+      let idxBuff = new Array(sec_idcs.length * protoIdcs.length);
+      for (let b = 0; b < sec_idcs.length; ++b) {
+         let idxOff = sec_idcs[b] * 8;
+         for (let i = 0; i < protoIdcs.length; i++)
+            idxBuff.push(idxOff + protoIdcs[i]);
+      }
 
-      geobox.setIndex( protoIdcs );
-
+      geobox.setIndex( idxBuff );
       let material = new THREE.MeshPhongMaterial({color:"purple", flatShading: true});
       let mesh     = new THREE.Mesh(geobox, material);
       res.geom.push(mesh);
@@ -915,7 +920,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
     }
 
     Calo3DControl.prototype.elementHighlighted = function(pidx)
-    {
+   {
         let idx = pidx;
         let calo =  this.obj3d.eve_el;
         let idxBuff = calo.render_data.idxBuff;
