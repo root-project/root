@@ -4811,7 +4811,7 @@ bool testMergeProf3DLabelAll()
    return ret;
 }
 
-bool testMerge1DLabelAllDiff()
+bool testMerge1DLabelAllDiffOld()
 {
    //LM: Dec 2010 : rmeake this test as
    // a test of histogram with some different labels not all filled
@@ -4859,6 +4859,75 @@ bool testMerge1DLabelAllDiff()
    h1->Merge(list);
    gErrorIgnoreLevel = prevErrorLevel;
 
+
+   bool ret = equals("MergeLabelAllDiff1D", h1, h4, cmpOptStats, 1E-10);
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
+   return ret;
+}
+
+bool testMerge1DLabelAllDiff()
+{
+   // Tests the merge method with fully differently labelled 1D Histograms
+
+   TH1D *h1 = new TH1D("merge1DLabelAllDiff_h1", "h1-Title", numberOfBins, minRange, maxRange);
+   TH1D *h2 = new TH1D("merge1DLabelAllDiff_h2", "h2-Title", numberOfBins, minRange, maxRange);
+   TH1D *h3 = new TH1D("merge1DLabelAllDiff_h3", "h3-Title", numberOfBins, minRange, maxRange);
+   TH1D *h4 = new TH1D("merge1DLabelAllDiff_h4", "h4-Title", 2 * numberOfBins, minRange, 2 * maxRange);
+
+   /// set diff labels in p1 and p2 but in p3 same labels as p2
+   for (Int_t i = 1; i <= numberOfBins; ++i) {
+      char letter = (char)((int)'a' + i - 1);
+      ostringstream name1, name2;
+      name1 << letter << 1;
+      h1->GetXaxis()->SetBinLabel(i, name1.str().c_str());
+      name2 << letter << 2;
+      h2->GetXaxis()->SetBinLabel(i, name2.str().c_str());
+      // use for h3 same label as for h2 to test the merging
+      h3->GetXaxis()->SetBinLabel(i, name2.str().c_str());
+      // we set the bin labels also in h4
+      h4->GetXaxis()->SetBinLabel(i, name1.str().c_str());
+      h4->GetXaxis()->SetBinLabel(i + numberOfBins, name2.str().c_str());
+   }
+
+   for (Int_t e = 0; e < nEvents * nEvents; ++e) {
+      Int_t ibin = r.Integer(numberOfBins);
+      Double_t x = ibin;
+      Double_t y = r.Gaus(10 + x, 1);
+      TString label = h1->GetXaxis()->GetLabels()->At(ibin)->GetName();
+      h1->Fill(label, y );
+      h4->Fill(label, y );
+   }
+
+   for (Int_t e = 0; e < nEvents * nEvents; ++e) {
+      Int_t ibin = r.Integer(numberOfBins);
+      Double_t x = ibin;
+      Double_t y = r.Gaus(20 + x, 2);
+      TString label = h2->GetXaxis()->GetLabels()->At(ibin)->GetName();
+      h2->Fill(label, y );
+      h4->Fill(label, y );
+   }
+
+   for (Int_t e = 0; e < nEvents * nEvents; ++e) {
+      Int_t ibin = r.Integer(numberOfBins);
+      Double_t x = ibin;
+      Double_t y = r.Gaus(30 + x, 3);
+      TString label = h3->GetXaxis()->GetLabels()->At(ibin)->GetName();
+      h3->Fill(label, y );
+      h4->Fill(label, y );
+   }
+
+   TList *list = new TList;
+   list->Add(h2);
+   list->Add(h3);
+
+   h1->Merge(list);
+
+   // make sure labels are ordered and also
+   // labels option should reset the statistics
+   // h1->LabelsOption("a", "x");
+   // h4->LabelsOption("a", "x");
 
    bool ret = equals("MergeLabelAllDiff1D", h1, h4, cmpOptStats, 1E-10);
    if (cleanHistos) delete h1;
@@ -5046,30 +5115,9 @@ bool testMergeProf1DLabelAllDiff()
    TProfile* p1 = new TProfile("merge1DLabelAllDiff_p1", "p1-Title", numberOfBins, minRange, maxRange);
    TProfile* p2 = new TProfile("merge1DLabelAllDiff_p2", "p2-Title", numberOfBins, minRange, maxRange);
    TProfile* p3 = new TProfile("merge1DLabelAllDiff_p3", "p3-Title", numberOfBins, minRange, maxRange);
-   TProfile* p4 = new TProfile("merge1DLabelAllDiff_p4", "p4-Title", 2*numberOfBins, minRange, maxRange);
+   TProfile* p4 = new TProfile("merge1DLabelAllDiff_p4", "p4-Title", 2*numberOfBins, minRange, 2*maxRange);
 
-   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
-      Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      Double_t y = r.Gaus(10+x, 1);
-      p1->Fill(x, y, 1.0);
-      p4->Fill(x, y, 1.0);
-   }
-
-   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
-      Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      Double_t y = r.Gaus(20 + x, 2);
-      p2->Fill(x, y, 1.0);
-      p4->Fill(x, y, 1.0);
-   }
-
-   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
-      Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      Double_t y = r.Uniform(30 + x, 3);
-      p3->Fill(x, y, 1.0);
-      p4->Fill(x, y, 1.0);
-   }
-
-   /// set diff labels in p1 and p2 but in p3 same labels as p2
+/// set diff labels in p1 and p2 but in p3 same labels as p2
    for (Int_t i = 1; i <= numberOfBins; ++i) {
       char letter = (char)((int)'a' + i - 1);
       ostringstream name1, name2;
@@ -5083,26 +5131,46 @@ bool testMergeProf1DLabelAllDiff()
       p4->GetXaxis()->SetBinLabel(i, name1.str().c_str());
       p4->GetXaxis()->SetBinLabel(i + numberOfBins, name2.str().c_str());
    }
-   // // It does not work properly! Look, the bins with the same labels
-   // // are different ones and still the tests passes! This is not
-   // // consistent with TH1::Merge()
-   // for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-   //    ostringstream name;
-   //    name << (char) ((int) 'a' + i - 1);
-   //    p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   //    name << 1;
-   //    p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   //    name << 2;
-   //    p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   //    name << 2;
-   //    p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   // }
+
+
+   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+      Int_t ibin = r.Integer(numberOfBins);
+      Double_t x = ibin;
+      Double_t y = r.Gaus(10+x, 1);
+      TString label = p1->GetXaxis()->GetLabels()->At(ibin)->GetName();
+      p1->Fill(label, y, 1.0);
+      p4->Fill(label, y, 1.0);
+   }
+
+   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+      Int_t ibin = r.Integer(numberOfBins);
+      Double_t x = ibin;
+      Double_t y = r.Gaus(20 + x, 2);
+      TString label = p2->GetXaxis()->GetLabels()->At(ibin)->GetName();
+      p2->Fill(label, y, 1.0);
+      p4->Fill(label, y, 1.0);
+   }
+
+   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+      Int_t ibin = r.Integer(numberOfBins);
+      Double_t x = ibin;
+      Double_t y = r.Gaus(30 + x, 3);
+      TString label = p3->GetXaxis()->GetLabels()->At(ibin)->GetName();
+      p3->Fill(label, y, 1.0);
+      p4->Fill(label, y, 1.0);
+   }
+
 
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
 
    p1->Merge(list);
+
+   // make sure labels are ordered and also
+   // labels option should reset the statistics
+   //p1->LabelsOption("a", "x");
+   //p4->LabelsOption("a", "x");
 
    bool ret = equals("MergeLabelAllDiff1DProf", p1, p4, cmpOptStats, 1E-10);
    if (cleanHistos) delete p1;
@@ -8037,7 +8105,7 @@ bool testRefReadProf1D()
    bool ret = 0;
    TProfile* p1 = 0;
    if ( refFileOption == refFileWrite ) {
-      p1 = new TProfile("rr1D_p1", "p1-Title", numberOfBins, minRange, maxRange);
+      p1 = new TProfile("rr1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
 //      p1->Sumw2();
 
       for ( Int_t e = 0; e < nEvents; ++e ) {
@@ -8048,7 +8116,7 @@ bool testRefReadProf1D()
       p1->Write();
    } else {
       TH1::SetDefaultSumw2(false);
-      p1 = static_cast<TProfile*> ( refFile->Get("rr1D_p1") );
+      p1 = static_cast<TProfile*> ( refFile->Get("rr1D-p1") );
       if (!p1) {
           Error("testRefReadProf1D","Error reading profile rr1D_p1 from file");
           return kTRUE;  // true indicates a failure
@@ -8118,7 +8186,7 @@ bool testRefReadProf2D()
    TProfile2D* p1 = 0;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
-      p1 = new TProfile2D("rr2D_p1", "p1-Title",
+      p1 = new TProfile2D("rr2D-p1", "p1-Title",
                                       numberOfBins, minRange, maxRange,
                                       numberOfBins, minRange, maxRange);
 
@@ -8130,7 +8198,7 @@ bool testRefReadProf2D()
       }
       p1->Write();
    } else {
-      p1 = static_cast<TProfile2D*> ( refFile->Get("rr2D_p1") );
+      p1 = static_cast<TProfile2D*> ( refFile->Get("rr2D-p1") );
       if (!p1) {
           Error("testRefReadProf2D","Error reading profile rr2D_p1 from file");
           return kTRUE;  // true indicates a failure
@@ -8204,7 +8272,7 @@ bool testRefReadProf3D()
    TProfile3D* p1 = 0;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
-      p1 = new TProfile3D("rr3D_p1", "p1-Title",
+      p1 = new TProfile3D("rr3D-p1", "p1-Title",
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange);
@@ -8218,7 +8286,7 @@ bool testRefReadProf3D()
       }
       p1->Write();
    } else {
-      p1 = static_cast<TProfile3D*> ( refFile->Get("rr3D_p1") );
+      p1 = static_cast<TProfile3D*> ( refFile->Get("rr3D-p1") );
       if (!p1) {
           Error("testRefReadProf3D","Error reading profile rr3D_p1 from file");
           return kTRUE;  // true indicates a failure
@@ -10434,6 +10502,7 @@ int stressHistogram(int testNumber = 0)
                                                         testMerge1DLabelAll,         testMergeProf1DLabelAll,
                                                         testMerge2DLabelAll,         testMergeProf2DLabelAll,
                                                         testMerge3DLabelAll,         testMergeProf3DLabelAll,
+                                                        testMerge1DLabelAllDiffOld,
                                                         testMerge1DLabelAllDiff,     testMergeProf1DLabelAllDiff,
                                                         testMerge2DLabelAllDiff,     testMergeProf2DLabelAllDiff,
                                                         testMerge3DLabelAllDiff,     testMergeProf3DLabelAllDiff,
