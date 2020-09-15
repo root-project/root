@@ -11,4 +11,13 @@ include_directories(
   ${CLING_INCLUDE_DIRS}
   )
 
-ROOT_ADD_GTEST(TClingTest TClingTests.cxx TClingCallFuncTests.cxx TClingMethodInfoTests.cxx LIBRARIES Core)
+ROOT_ADD_GTEST(
+  TClingTest
+
+  TClingTests.cxx
+  TClingCallFuncTests.cxx
+  TClingDataMemberInfoTests.cxx
+  TClingMethodInfoTests.cxx
+
+  LIBRARIES
+  Core)

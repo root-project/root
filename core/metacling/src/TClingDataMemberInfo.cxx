@@ -23,10 +23,15 @@ from the Clang C++ compiler, not CINT.
 #include "TClingDataMemberInfo.h"
 
 #include "TDictionary.h"
+#include "TClingClassInfo.h"
 #include "TClingTypeInfo.h"
 #include "TClingUtils.h"
 #include "TClassEdit.h"
 #include "TError.h"
+#include "TInterpreter.h"
+#include "TVirtualMutex.h"
+
+#include "cling/Interpreter/Interpreter.h"
 
 #include "clang/AST/Attr.h"
 #include "clang/AST/ASTContext.h"
@@ -45,41 +50,43 @@ from the Clang C++ compiler, not CINT.
 
 using namespace clang;
 
+bool TClingDataMemberIter::ShouldSkip(const clang::Decl *D) const
+{
+   const auto DK = D->getKind();
+   return !(DK == clang::Decl::Field || DK == clang::Decl::EnumConstant || DK == clang::Decl::Var);
+}
+
+bool TClingDataMemberIter::ShouldSkip(const clang::UsingShadowDecl *USD) const
+{
+   if (auto *VD = llvm::dyn_cast<clang::ValueDecl>(USD->getTargetDecl())) {
+      return ShouldSkip(VD);
+   }
+   // TODO: handle multi-level UsingShadowDecls.
+   return true;
+}
+
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            TClingClassInfo *ci)
-: TClingDeclInfo(nullptr), fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fContextIdx(0U), fIoType(""), fIoName("")
+: TClingDeclInfo(nullptr), fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp))
 {
-   if (!ci) {
-      // We are meant to iterate over the global namespace (well at least CINT did).
-      fClassInfo = new TClingClassInfo(interp);
-   } else {
-      fClassInfo = new TClingClassInfo(*ci);
-   }
-   if (fClassInfo->IsValid()) {
-      Decl *D = const_cast<Decl*>(fClassInfo->GetDecl());
 
-      clang::DeclContext *dc = llvm::cast<clang::DeclContext>(D);
-      dc->collectAllContexts(fContexts);
+   R__LOCKGUARD(gInterpreterMutex);
 
-      // Could trigger deserialization of decls.
-      cling::Interpreter::PushTransactionRAII RAII(interp);
-      fIter = llvm::cast<clang::DeclContext>(D)->decls_begin();
-      const TagDecl *TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(llvm::dyn_cast<TagDecl>(D));
-      if (TD)
-         fIter = TD->decls_begin();
-
-      // Move to first data member.
-      InternalNext();
-      fFirstTime = true;
+   if (!ci || !ci->IsValid()) {
+      return;
    }
 
+   auto *DC = llvm::dyn_cast<clang::DeclContext>(ci->GetDecl());
+
+   fIter = TClingDataMemberIter(interp, DC);
+   fIter.Init();
 }
 
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            const clang::ValueDecl *ValD,
                                            TClingClassInfo *ci)
-: TClingDeclInfo(ValD), fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp, ValD)), fFirstTime(true),
-  fTitle(""), fContextIdx(0U), fIoType(""), fIoName(""){
+: TClingDeclInfo(ValD), fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp))
+{
 
    using namespace llvm;
    const auto DC = ValD->getDeclContext();
@@ -106,7 +113,7 @@ void TClingDataMemberInfo::CheckForIoTypeAndName() const
 
    if (code == 0) return;
 
-   const Decl* decl = GetDecl();
+   const Decl* decl = GetTargetValueDecl();
 
    if (code == 3 || code == 2) ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"ioname",fIoName);
    if (code == 3 || code == 1) ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"iotype",fIoType);
@@ -118,7 +125,33 @@ TDictionary::DeclId_t TClingDataMemberInfo::GetDeclId() const
    if (!IsValid()) {
       return TDictionary::DeclId_t();
    }
-   return (const clang::Decl*)(GetDecl()->getCanonicalDecl());
+   if (auto *VD = GetAsValueDecl())
+      return (const clang::Decl*)(VD->getCanonicalDecl());
+   return (const clang::Decl*)(GetAsUsingShadowDecl()->getCanonicalDecl());
+}
+
+const clang::ValueDecl *TClingDataMemberInfo::GetAsValueDecl() const
+{
+   return dyn_cast<ValueDecl>(GetDecl());
+}
+
+const clang::UsingShadowDecl *TClingDataMemberInfo::GetAsUsingShadowDecl() const
+{
+   return dyn_cast<UsingShadowDecl>(GetDecl());
+}
+
+const clang::ValueDecl *TClingDataMemberInfo::GetTargetValueDecl() const
+{
+   const Decl *D = GetDecl();
+   do {
+      if (auto VD = dyn_cast<ValueDecl>(D))
+         return VD;
+   } while ((D = dyn_cast<UsingShadowDecl>(D)->getTargetDecl()));
+   return nullptr;
+}
+
+const clang::Type *TClingDataMemberInfo::GetClassAsType() const {
+   return fClassInfo ? fClassInfo->GetType() : nullptr;
 }
 
 int TClingDataMemberInfo::ArrayDim() const
@@ -126,8 +159,9 @@ int TClingDataMemberInfo::ArrayDim() const
    if (!IsValid()) {
       return -1;
    }
+   const clang::ValueDecl *VD = GetTargetValueDecl();
    // Sanity check the current data member.
-   clang::Decl::Kind DK = GetDecl()->getKind();
+   clang::Decl::Kind DK = VD->getKind();
    if (
        (DK != clang::Decl::Field) &&
        (DK != clang::Decl::Var) &&
@@ -142,7 +176,6 @@ int TClingDataMemberInfo::ArrayDim() const
    }
    // To get this information we must count the number
    // of array type nodes in the canonical type chain.
-   const clang::ValueDecl *VD = llvm::dyn_cast<clang::ValueDecl>(GetDecl());
    clang::QualType QT = VD->getType().getCanonicalType();
    int cnt = 0;
    while (1) {
@@ -173,6 +206,7 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
    if (!IsValid()) {
       return -1;
    }
+   const clang::ValueDecl *VD = GetTargetValueDecl();
    // Sanity check the current data member.
    clang::Decl::Kind DK = GetDecl()->getKind();
    if (
@@ -189,7 +223,6 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
    }
    // To get this information we must count the number
    // of array type nodes in the canonical type chain.
-   const clang::ValueDecl *VD = llvm::dyn_cast<clang::ValueDecl>(GetDecl());
    clang::QualType QT = VD->getType().getCanonicalType();
    int paran = ArrayDim();
    if ((dim < 0) || (dim >= paran)) {
@@ -235,75 +268,24 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
    return max;
 }
 
-int TClingDataMemberInfo::InternalNext()
+int TClingDataMemberInfo::Next()
 {
-   assert(!fDecl
-          && "This is a single decl, not an iterator!");
+   assert(!fDecl && "This is a single decl, not an iterator!");
 
-   fNameCache.clear(); // invalidate the cache.
-   bool increment = true;
-   // Move to next acceptable data member.
-   while (fFirstTime || *fIter) {
-      // Move to next decl in context.
-      if (fFirstTime) {
-         fFirstTime = false;
-      }
-      else if (increment) {
-         ++fIter;
-      } else {
-         increment = true;
-      }
+   ClearNames();
 
-      // Handle reaching end of current decl context.
-      if (!*fIter) {
-         if (fIterStack.size()) {
-            // End of current decl context, and we have more to go.
-            fIter = fIterStack.back();
-            fIterStack.pop_back();
-            continue;
-         }
-         while (!*fIter) {
-            // Check the next decl context (of namespace)
-            ++fContextIdx;
-            if (fContextIdx >= fContexts.size()) {
-               // Iterator is now invalid.
-               return 0;
-            }
-            clang::DeclContext *dc = fContexts[fContextIdx];
-            // Could trigger deserialization of decls.
-            cling::Interpreter::PushTransactionRAII RAII(fInterp);
-            fIter = dc->decls_begin();
-            if (*fIter) {
-               // Good, a non-empty context.
-               break;
-            }
-         }
-      }
-
-      // Valid decl, recurse into it, accept it, or reject it.
-      clang::Decl::Kind DK = fIter->getKind();
-      if (DK == clang::Decl::Enum) {
-         // We have an enum, recurse into these.
-         // Note: For C++11 we will have to check for a transparent context.
-         fIterStack.push_back(fIter);
-         cling::Interpreter::PushTransactionRAII RAII(fInterp);
-         fIter = llvm::dyn_cast<clang::DeclContext>(*fIter)->decls_begin();
-         increment = false; // avoid the next incrementation
-         continue;
-      }
-      if ((DK == clang::Decl::Field) || (DK == clang::Decl::EnumConstant) ||
-          (DK == clang::Decl::Var)) {
-         // Stop on class data members, enumerator values,
-         // and namespace variable members.
-         return 1;
-      }
-      // Collect internal `__cling_N5xxx' inline namespaces; they will be traversed later
-      if (auto NS = dyn_cast<NamespaceDecl>(*fIter)) {
-         if (NS->getDeclContext()->isTranslationUnit() && NS->isInlineNamespace())
-            fContexts.push_back(NS);
-      }
+   if (!fFirstTime && !fIter.IsValid()) {
+      // Iterator is already invalid.
+      return 0;
    }
-   return 0;
+   // Advance to the next decl.
+   if (fFirstTime) {
+      // The cint semantics are weird.
+      fFirstTime = false;
+   } else {
+      fIter.Next();
+   }
+   return fIter.IsValid();
 }
 
 long TClingDataMemberInfo::Offset()
@@ -314,7 +296,7 @@ long TClingDataMemberInfo::Offset()
       return -1L;
    }
 
-   const Decl *D = GetDecl();
+   const ValueDecl *D = GetTargetValueDecl();
    ASTContext& C = D->getASTContext();
    if (const FieldDecl *FldD = dyn_cast<FieldDecl>(D)) {
       // The current member is a non-static data member.
@@ -391,10 +373,15 @@ long TClingDataMemberInfo::Property() const
       return 0L;
    }
    long property = 0L;
+
+   // NOTE: this uses `GetDecl()`, to capture the access of the UsingShadowDecl,
+   // which is defined in the derived class and might differ from the access of the decl
+   // in the base class.
    const clang::Decl *declaccess = GetDecl();
-   if (declaccess->getDeclContext()->isTransparentContext()) {
-      declaccess = llvm::dyn_cast<clang::Decl>(declaccess->getDeclContext());
-      if (!declaccess) declaccess = GetDecl();
+   while (const auto *ctxtDecl = llvm::dyn_cast<clang::Decl>(declaccess->getDeclContext())) {
+      if (!declaccess->getDeclContext()->isTransparentContext())
+         break;
+      declaccess = ctxtDecl;
    }
    switch (declaccess->getAccess()) {
       case clang::AS_public:
@@ -417,7 +404,8 @@ long TClingDataMemberInfo::Property() const
          // IMPOSSIBLE
          break;
    }
-   if (const clang::VarDecl *vard = llvm::dyn_cast<clang::VarDecl>(GetDecl())) {
+   const clang::ValueDecl *vd = GetTargetValueDecl();
+   if (const clang::VarDecl *vard = llvm::dyn_cast<clang::VarDecl>(vd)) {
       if (vard->isConstexpr())
          property |= kIsConstexpr;
       if (vard->getStorageClass() == clang::SC_Static) {
@@ -427,13 +415,11 @@ long TClingDataMemberInfo::Property() const
          // considered to be 'static' in the CINT (and thus ROOT) scheme.
          property |= kIsStatic;
       }
-   }
-   if (llvm::isa<clang::EnumConstantDecl>(GetDecl())) {
+   } else if (llvm::isa<clang::EnumConstantDecl>(vd)) {
       // Enumeration constant are considered to be 'static' data member in
       // the CINT (and thus ROOT) scheme.
       property |= kIsStatic;
    }
-   const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl());
    clang::QualType qt = vd->getType();
    if (llvm::isa<clang::TypedefType>(qt)) {
       property |= kIsTypedef;
@@ -470,7 +456,7 @@ long TClingDataMemberInfo::TypeProperty() const
    if (!IsValid()) {
       return 0L;
    }
-   const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl());
+   const clang::ValueDecl *vd = GetTargetValueDecl();
    clang::QualType qt = vd->getType();
    return TClingTypeInfo(fInterp, qt).Property();
 }
@@ -481,14 +467,14 @@ int TClingDataMemberInfo::TypeSize() const
       return -1;
    }
 
+   const clang::ValueDecl *vd = GetTargetValueDecl();
    // Sanity check the current data member.
-   clang::Decl::Kind dk = GetDecl()->getKind();
+   clang::Decl::Kind dk = vd->getKind();
    if ((dk != clang::Decl::Field) && (dk != clang::Decl::Var) &&
        (dk != clang::Decl::EnumConstant)) {
       // Error, was not a data member, variable, or enumerator.
       return -1;
    }
-   const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl());
    clang::QualType qt = vd->getType();
    if (qt->isIncompleteType()) {
       // We cannot determine the size of forward-declared types.
@@ -511,22 +497,20 @@ const char *TClingDataMemberInfo::TypeName() const
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
-   if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl())) {
-      clang::QualType vdType = vd->getType();
-      // In CINT's version, the type name returns did *not* include any array
-      // information, ROOT's existing code depends on it.
-      while (vdType->isArrayType()) {
-         vdType = GetDecl()->getASTContext().getQualifiedType(vdType->getBaseElementTypeUnsafe(),vdType.getQualifiers());
-      }
-
-      // if (we_need_to_do_the_subst_because_the_class_is_a_template_instance_of_double32_t)
-      vdType = ROOT::TMetaUtils::ReSubstTemplateArg(vdType, fClassInfo->GetType() );
-
-      ROOT::TMetaUtils::GetFullyQualifiedTypeName(buf, vdType, *fInterp);
-
-      return buf.c_str();
+   const clang::ValueDecl *vd = GetTargetValueDecl();
+   clang::QualType vdType = vd->getType();
+   // In CINT's version, the type name returns did *not* include any array
+   // information, ROOT's existing code depends on it.
+   while (vdType->isArrayType()) {
+      vdType = GetDecl()->getASTContext().getQualifiedType(vdType->getBaseElementTypeUnsafe(),vdType.getQualifiers());
    }
-   return 0;
+
+   // if (we_need_to_do_the_subst_because_the_class_is_a_template_instance_of_double32_t)
+   vdType = ROOT::TMetaUtils::ReSubstTemplateArg(vdType, GetClassAsType() );
+
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(buf, vdType, *fInterp);
+
+   return buf.c_str();
 }
 
 const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
@@ -541,24 +525,22 @@ const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormaliz
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
-   if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl())) {
-      // if (we_need_to_do_the_subst_because_the_class_is_a_template_instance_of_double32_t)
-      clang::QualType vdType = ROOT::TMetaUtils::ReSubstTemplateArg(vd->getType(), fClassInfo->GetType());
+   const clang::ValueDecl *vd = GetTargetValueDecl();
+   // if (we_need_to_do_the_subst_because_the_class_is_a_template_instance_of_double32_t)
+   clang::QualType vdType = ROOT::TMetaUtils::ReSubstTemplateArg(vd->getType(), GetClassAsType());
 
-      ROOT::TMetaUtils::GetNormalizedName(buf, vdType, *fInterp, normCtxt);
+   ROOT::TMetaUtils::GetNormalizedName(buf, vdType, *fInterp, normCtxt);
 
-      // In CINT's version, the type name returns did *not* include any array
-      // information, ROOT's existing code depends on it.
-      // This might become part of the implementation of GetNormalizedName.
-      while (buf.length() && buf[buf.length()-1] == ']') {
-         size_t last = buf.rfind('['); // if this is not the bracket we are looking, the type is malformed.
-         if (last != std::string::npos) {
-            buf.erase(last);
-         }
+   // In CINT's version, the type name returns did *not* include any array
+   // information, ROOT's existing code depends on it.
+   // This might become part of the implementation of GetNormalizedName.
+   while (buf.length() && buf[buf.length()-1] == ']') {
+      size_t last = buf.rfind('['); // if this is not the bracket we are looking, the type is malformed.
+      if (last != std::string::npos) {
+         buf.erase(last);
       }
-      return buf.c_str();
    }
-   return 0;
+   return buf.c_str();
 }
 
 const char *TClingDataMemberInfo::Name() const
@@ -586,7 +568,7 @@ const char *TClingDataMemberInfo::Title()
    bool titleFound=false;
    // Try to get the comment either from the annotation or the header file if present
    std::string attribute_s;
-   const Decl* decl = GetDecl();
+   const Decl* decl = GetTargetValueDecl();
    for (Decl::attr_iterator attrIt = decl->attr_begin();
         attrIt!=decl->attr_end() && !titleFound ;++attrIt){
       if (0 == ROOT::TMetaUtils::extractAttrString(*attrIt, attribute_s) &&
@@ -596,11 +578,11 @@ const char *TClingDataMemberInfo::Title()
       }
    }
 
-   if (!titleFound && !GetDecl()->isFromASTFile()) {
+   if (!titleFound && !decl->isFromASTFile()) {
       // Try to get the comment from the header file if present
       // but not for decls from AST file, where rootcling would have
       // created an annotation
-      fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
+      fTitle = ROOT::TMetaUtils::GetComment(*GetTargetValueDecl()).str();
    }
 
    return fTitle.c_str();
@@ -614,7 +596,7 @@ llvm::StringRef TClingDataMemberInfo::ValidArrayIndex() const
    if (!IsValid()) {
       return llvm::StringRef();
    }
-   const clang::DeclaratorDecl *FD = llvm::dyn_cast<clang::DeclaratorDecl>(GetDecl());
+   const clang::DeclaratorDecl *FD = llvm::dyn_cast<clang::DeclaratorDecl>(GetTargetValueDecl());
    if (FD) return ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(*FD);
    else return llvm::StringRef();
 }
