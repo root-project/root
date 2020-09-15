@@ -304,7 +304,7 @@ const clang::FunctionDecl *TClingMethodInfo::GetAsFunctionDecl() const
 
 const clang::UsingShadowDecl *TClingMethodInfo::GetAsUsingShadowDecl() const
 {
-   return cast_or_null<UsingShadowDecl>(GetDecl());
+   return dyn_cast<UsingShadowDecl>(GetDecl());
 }
 
 const clang::FunctionDecl *TClingMethodInfo::GetTargetFunctionDecl() const
