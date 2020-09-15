@@ -429,7 +429,7 @@ int TClingMethodInfo::Next()
    } else {
       fIter.Next();
    }
-   return 1;
+   return fIter.IsValid();
 }
 
 long TClingMethodInfo::Property() const
