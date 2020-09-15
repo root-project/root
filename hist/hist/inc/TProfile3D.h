@@ -28,6 +28,7 @@ class TProfile3D : public TH3D {
 
 public:
    friend class TProfileHelper;
+   friend class TH1Merger;
 
 protected:
    TArrayD       fBinEntries;      //number of entries per bin

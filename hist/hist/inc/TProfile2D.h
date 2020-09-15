@@ -28,6 +28,7 @@ class TProfile2D : public TH2D {
 
 public:
    friend class TProfileHelper;
+   friend class TH1Merger;
 
 protected:
    TArrayD     fBinEntries;      //number of entries per bin
