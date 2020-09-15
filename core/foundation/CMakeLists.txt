@@ -14,6 +14,7 @@ set(Foundation_dict_headers
   TClassEdit.h
   TError.h
   ROOT/RIntegerSequence.hxx
+  ROOT/RLogger.hxx
   ROOT/RMakeUnique.hxx
   ROOT/RNotFn.hxx
   ROOT/RSpan.hxx
@@ -26,16 +27,12 @@ set(Foundation_dict_headers
 set(FOUNDATION_SOURCES
   src/FoundationUtils.cxx
   src/RConversionRuleParser.cxx
+  src/RLogger.cxx
   src/TClassEdit.cxx
   src/TError.cxx
 )
 
 set(FOUNDATION_HEADER_DIRS inc/)
-
-if(CMAKE_CXX_STANDARD GREATER 11)
-  list(APPEND Foundation_dict_headers ROOT/RLogger.hxx)
-  list(APPEND FOUNDATION_SOURCES src/RLogger.cxx)
-endif()
 
 if(root7)
   list(APPEND Foundation_dict_headers
