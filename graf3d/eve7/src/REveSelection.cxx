@@ -538,6 +538,14 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
                // erase duplicates
                for (auto &dit :  dup)
                   rec->f_sec_idcs.erase(dit);
+
+               secondary_idcs  = rec->f_sec_idcs;
+               if (!secondary_idcs.empty()) {
+                  AddNiece(el);
+                  rec = find_record(el);
+                  rec->f_is_sec   = true;
+                  rec->f_sec_idcs = secondary_idcs;
+               }
             }
             else
             {
@@ -566,12 +574,15 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
          {
             if (secondary)
             {
-               // Could check rec->is_secondary() and compare indices.
-               // if sets are identical, issue SelectionRepeated()
-               // else modify record for the new one, issue Repeated
-
-               rec->f_is_sec   = true;
-               rec->f_sec_idcs = secondary_idcs;
+                bool modified = (rec->f_sec_idcs != secondary_idcs);
+               RemoveNieces();
+               // re-adding is needed to refresh implied selected
+               if (modified) {
+                  AddNiece(el);
+                  rec = find_record(el);
+                  rec->f_is_sec   = true;
+                  rec->f_sec_idcs = secondary_idcs;
+               }
             }
             else
             {
