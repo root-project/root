@@ -12,7 +12,7 @@ Explain what isn't as good as it could and why
 
 ## Optional: share how it could be improved
 <!--
-If you already have an idea what we could then please tell us.
+If you already have an idea what we could improve, then please tell us.
 -->
 
 ## To Reproduce
