@@ -176,10 +176,10 @@ Histograms may also be created by:
  Axis titles can be specified in the title argument of the constructor.
  They must be separated by ";":
 ~~~ {.cpp}
-        TH1F* h=new TH1F("h", "Histogram title;X Axis;Y Axis;Z Axis", 100, 0, 1);
+        TH1F* h=new TH1F("h", "Histogram title;X Axis;Y Axis", 100, 0, 1);
 ~~~
  The histogram title and the axis titles can be any TLatex string, and
- are persist if a histogram is written to a file.
+ are persisted if a histogram is written to a file.
 
  Any title can be omitted:
 ~~~ {.cpp}
