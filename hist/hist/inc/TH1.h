@@ -138,6 +138,7 @@ protected:
    static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
    Bool_t   IsEmpty() const;
+   UInt_t GetAxisLabelStatus() const;
 
    inline static Double_t AutoP2GetPower2(Double_t x, Bool_t next = kTRUE);
    inline static Int_t AutoP2GetBins(Int_t n);
