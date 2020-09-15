@@ -659,7 +659,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     target_include_directories(${dictionary} PRIVATE
       ${incdirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
   else()
-    get_filename_component(dictionary_name ${dictionary} NAME)   
+    get_filename_component(dictionary_name ${dictionary} NAME)
     add_custom_target(${dictionary_name} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
   endif()
 
@@ -1681,11 +1681,12 @@ endfunction()
 #                        [WILLFAIL]
 #                        [COPY_TO_BUILDDIR file1 file2...] -- files to copy in the build directory
 #                        [LIBRARIES lib1 lib2...] -- Libraries to link against
-#                        [LABELS label1 label2...]) -- Labels to annotate the test
-#                        [INCLUDE_DIRS label1 label2...]) -- Extra target include directories
+#                        [LABELS label1 label2...] -- Labels to annotate the test
+#                        [INCLUDE_DIRS label1 label2...] -- Extra target include directories
+#                        [REPEATS number] -- Repeats testsuite `number` times, stopping at the first failure.
 
 function(ROOT_ADD_GTEST test_suite)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "REPEATS" "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
 
   # ROOTUnitTestSupport
   if(NOT TARGET ROOTUnitTestSupport)
@@ -1718,11 +1719,14 @@ function(ROOT_ADD_GTEST test_suite)
   if(ARG_LABELS)
     set(labels "LABELS ${ARG_LABELS}")
   endif()
+  if(ARG_REPEATS)
+    set(extra_command --gtest_repeat=${ARG_REPEATS} --gtest_break_on_failure)
+  endif()
 
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
   ROOT_ADD_TEST(
     gtest${mangled_name}
-    COMMAND ${test_suite}
+    COMMAND ${test_suite} ${extra_command}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
     COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR}
     ${willfail}
@@ -1791,7 +1795,7 @@ function(ROOT_ADD_PYUNITTEST name file)
   if(ARG_WILLFAIL)
     set(will_fail WILLFAIL)
   endif()
-  
+
   if(ARG_PYTHON_DEPS)
     list(APPEND labels python_runtime_deps)
   endif()
