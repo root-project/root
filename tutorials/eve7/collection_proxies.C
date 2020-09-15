@@ -29,7 +29,7 @@
 #include "TParticle.h"
 #include "TRandom.h"
 #include "TApplication.h"
-
+#include <iostream>
 
 namespace REX = ROOT::Experimental;
 
@@ -434,14 +434,18 @@ public:
       }
       m_builders.push_back(tableBuilder);
 
-      collection->SetHandlerFunc([&] (REveDataCollection* collection)
+      collection->SetCollectionChangeDelegate([&] (REveDataCollection* collection)
                                  {
                                     this->CollectionChanged( collection );
                                  });
 
-      collection->SetHandlerFuncIds([&] (REveDataCollection* collection, const REveDataCollection::Ids_t& ids)
+      collection->SetItemsChangeDelegate([&] (REveDataCollection* collection, const REveDataCollection::Ids_t& ids)
                                     {
                                        this->ModelChanged( collection, ids );
+                                    });
+      collection->SetFillImpliedSelectedDelegate([&] (REveDataCollection* collection, REveElement::Set_t& impSelSet)
+                                    {
+                                       this->FillImpliedSelected( collection,  impSelSet);
                                     });
    }
 
@@ -476,6 +480,20 @@ public:
          }
       }
    }
+
+   void FillImpliedSelected(REveDataCollection* collection, REveElement::Set_t& impSelSet)
+   {
+      if (m_inEventLoading) return;
+
+      for (auto proxy : m_builders)
+      {
+         if (proxy->Collection() == collection)
+         {
+            proxy->FillImpliedSelected(impSelSet);
+         }
+      }
+   }
+
 };
 
 
@@ -532,6 +550,7 @@ void collection_proxies(bool proj=true)
       trackCollection->SetFilterExpr("i.Pt() > 4.1 && std::abs(i.Eta()) < 1");
       xyManager->addCollection(trackCollection, true);
    }
+
 
    if (1)
    {
