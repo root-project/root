@@ -52,8 +52,8 @@ public:
       }
    }
 
-   TExecutor(TExecutor &) = delete;
-   TExecutor &operator=(TExecutor &) = delete;
+   TExecutor(const TExecutor &) = delete;
+   TExecutor &operator=(const TExecutor &) = delete;
    ROOT::Internal::ExecutionPolicy Policy(){ return fExecPolicy; }
 
    using TExecutorCRTP<TExecutor>::Map;

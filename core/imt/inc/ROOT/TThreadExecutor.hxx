@@ -37,8 +37,8 @@ namespace ROOT {
 
       explicit TThreadExecutor(UInt_t nThreads = 0u);
 
-      TThreadExecutor(TThreadExecutor &) = delete;
-      TThreadExecutor &operator=(TThreadExecutor &) = delete;
+      TThreadExecutor(const TThreadExecutor &) = delete;
+      TThreadExecutor &operator=(const TThreadExecutor &) = delete;
 
       template<class F>
       void Foreach(F func, unsigned nTimes, unsigned nChunks = 0);

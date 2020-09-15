@@ -25,8 +25,8 @@ namespace ROOT {
       explicit TSequentialExecutor(){};
       explicit TSequentialExecutor(ROOT::Internal::ExecutionPolicy, unsigned): TSequentialExecutor(){};
 
-      TSequentialExecutor(TSequentialExecutor &) = delete;
-      TSequentialExecutor &operator=(TSequentialExecutor &) = delete;
+      TSequentialExecutor(const TSequentialExecutor &) = delete;
+      TSequentialExecutor &operator=(const TSequentialExecutor &) = delete;
 
       template<class F>
       void Foreach(F func, unsigned nTimes);
