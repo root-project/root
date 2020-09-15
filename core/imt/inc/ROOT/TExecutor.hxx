@@ -11,6 +11,7 @@
 #ifndef ROOT_TExecutor
 #define ROOT_TExecutor
 
+#include <ROOT/RMakeUnique.hxx>
 #include "ROOT/TExecutorCRTP.hxx"
 #include "ROOT/TSequentialExecutor.hxx"
 #ifdef R__USE_IMT
@@ -36,15 +37,15 @@ public:
       fExecPolicy = execPolicy;
       switch(fExecPolicy) {
          case ROOT::Internal::ExecutionPolicy::kSerial:
-            fSeqPool = std::unique_ptr<ROOT::TSequentialExecutor>(new ROOT::TSequentialExecutor());
+            fSeqPool = std::make_unique<ROOT::TSequentialExecutor>();
             break;
 #ifdef R__USE_IMT
          case ROOT::Internal::ExecutionPolicy::kMultithread:
-            fThreadPool = std::unique_ptr<ROOT::TThreadExecutor>(new ROOT::TThreadExecutor(nProcessingUnits));
+            fThreadPool = std::make_unique<ROOT::TThreadExecutor>(nProcessingUnits);
             break;
 #endif
          case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-            fProcPool = std::unique_ptr<ROOT::TProcessExecutor>(new ROOT::TProcessExecutor(nProcessingUnits));
+            fProcPool = std::make_unique<ROOT::TProcessExecutor>(nProcessingUnits);
             break;
          default:
             throw std::invalid_argument("kMultithread policy not available when ROOT is compiled without imt.");
