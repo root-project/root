@@ -53,8 +53,8 @@ namespace ROOT {
 class TClingClassInfo;
 class TClingTypeInfo;
 
-/// Iteration over Special Functions
-
+/// Iterate over FunctionDecl and UsingShadowDecls of FunctionDecl, within a scope,
+/// recursing through "transparent" scopes (see DCIter::HandleInlineDeclContext()).
 class TClingCXXRecMethIter final: public TClingMemberIter {
 
 class SpecFuncIter {
