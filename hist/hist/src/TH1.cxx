@@ -68,9 +68,17 @@
 */
 
 /** \class TH1
-The TH1 histogram class.
+TH1 is the base class of all histogramm classes in ROOT. It provides the common interface for
+operations such as binning, filling, drawing, which will be detailed below.
 
-### The Histogram classes
+-# [Creating histograms](\ref creating-histograms)
+-# [Binning](\ref binning)
+-# [Filling histograms](\ref filling-histograms)
+-# [Operations on histograms](\ref operations-on-histograms)
+-# [Drawing histograms](\ref drawing-histograms)
+-# [Saving/reading histograms to/from a ROOT file](\ref saving-histograms)
+-# [Miscellaneous operations](\ref misc)
+
 ROOT supports the following histogram types:
 
   - 1-D histograms:
@@ -100,9 +108,8 @@ ROOT supports the following histogram types:
       approximate function of X, this function is displayed by a profile
       histogram with much better precision than by a scatter-plot.
 
-
-All histogram classes are derived from the base class TH1
-~~~ {.cpp}
+The inheritance hierarchy looks as follows:
+~~~
                                 TH1
                                  ^
                                  |
@@ -137,7 +144,9 @@ All histogram classes are derived from the base class TH1
       The TH*D classes also inherit from the array class TArrayD.
 ~~~
 
-#### Creating histograms
+
+\anchor creating-histograms
+## Creating histograms
 
 Histograms are created by invoking one of the constructors, e.g.
 ~~~ {.cpp}
@@ -150,17 +159,46 @@ Histograms may also be created by:
   -  making a projection from a 2-D or 3-D histogram, see below
   -  reading an histogram from a file
 
-  When an histogram is created, a reference to it is automatically added
+ When a histogram is created, a reference to it is automatically added
  to the list of in-memory objects for the current file or directory.
  This default behaviour can be changed by:
 ~~~ {.cpp}
-       h->SetDirectory(0);          for the current histogram h
-       TH1::AddDirectory(kFALSE);   sets a global switch disabling the reference
+       h->SetDirectory(0);          // for the current histogram h
+       TH1::AddDirectory(kFALSE);   // sets a global switch disabling the referencing
 ~~~
-     When the histogram is deleted, the reference to it is removed from
-     the list of objects in memory.
-     When a file is closed, all histograms in memory associated with this file
-     are automatically deleted.
+ When the histogram is deleted, the reference to it is removed from
+ the list of objects in memory.
+ When a file is closed, all histograms in memory associated with this file
+ are automatically deleted.
+
+### Labelling axes
+
+ Axis titles can be specified in the title argument of the constructor.
+ They must be separated by ";":
+~~~ {.cpp}
+        TH1F* h=new TH1F("h", "Histogram title;X Axis;Y Axis;Z Axis", 100, 0, 1);
+~~~
+ The histogram title and the axis titles can be any TLatex string, and
+ are persist if a histogram is written to a file.
+
+ Any title can be omitted:
+~~~ {.cpp}
+        TH1F* h=new TH1F("h", "Histogram title;;Y Axis", 100, 0, 1);
+        TH1F* h=new TH1F("h", ";;Y Axis", 100, 0, 1);
+~~~
+ The method SetTitle() has the same syntax:
+~~~ {.cpp}
+        h->SetTitle("Histogram title;Another X title Axis");
+~~~
+Alternatively, the title of each axis can be set directly:
+~~~ {.cpp}
+       h->GetXaxis()->SetTitle("X axis title");
+       h->GetYaxis()->SetTitle("Y axis title");
+~~~
+For bin labels see \ref binning.
+
+\anchor binning
+## Binning
 
 #### Fix or variable bin size
 
@@ -169,8 +207,8 @@ Histograms may also be created by:
  along Y or vice-versa. The functions to fill, manipulate, draw or access
  histograms are identical in both cases.
 
- Each histogram always contains 3 objects TAxis: fXaxis, fYaxis and fZaxis
- o access the axis parameters, do:
+ Each histogram always contains 3 axis objects of type TAxis: fXaxis, fYaxis and fZaxis.
+ To access the axis parameters, use:
 ~~~ {.cpp}
         TAxis *xaxis = h->GetXaxis(); etc.
         Double_t binCenter = xaxis->GetBinCenter(bin), etc.
@@ -267,7 +305,16 @@ When using the options 2 or 3 above, the labels are automatically
  The axis limits will be automatically computed when the buffer will
  be full or when the function BufferEmpty is called.
 
-#### Filling histograms
+#### Rebinning
+
+ At any time, an histogram can be rebinned via TH1::Rebin. This function
+ returns a new histogram with the rebinned contents.
+ If bin errors were stored, they are recomputed during the rebinning.
+
+
+
+\anchor filling-histograms
+## Filling histograms
 
  An histogram is typically filled with statements like:
 ~~~ {.cpp}
@@ -313,12 +360,7 @@ When using the options 2 or 3 above, the labels are automatically
  capacity (127 or 32767). Histograms of all types may have positive
  or/and negative bin contents.
 
-#### Rebinning
- At any time, an histogram can be rebinned via TH1::Rebin. This function
- returns a new histogram with the rebinned contents.
- If bin errors were stored, they are recomputed during the rebinning.
-
-#### Associated errors
+### Associated errors
  By default, for each bin, the sum of weights is computed at fill time.
  One can also call TH1::Sumw2 to force the storage and computation
  of the sum of the square of weights per bin.
@@ -330,7 +372,7 @@ When using the options 2 or 3 above, the labels are automatically
         Double_t error = h->GetBinError(bin);
 ~~~
 
-#### Associated functions
+### Associated functions
  One or more object (typically a TF1*) can be added to the list
  of functions (fFunctions) associated to each histogram.
  When TH1::Fit is invoked, the fitted function is added to this list.
@@ -340,7 +382,9 @@ When using the options 2 or 3 above, the labels are automatically
         TF1 *myfunc = h->GetFunction("myfunc");
 ~~~
 
-#### Operations on histograms
+
+\anchor operations-on-histograms
+## Operations on histograms
 
  Many types of operations are supported on histograms or between histograms
 
@@ -415,7 +459,9 @@ When using the options 2 or 3 above, the labels are automatically
  the normalization parameter via TH1::Scale(Double_t norm), where norm
  is the desired normalization divided by the integral of the histogram.
 
-#### Drawing histograms
+
+\anchor drawing-histograms
+## Drawing histograms
 
  Histograms are drawn via the THistPainter class. Each histogram has
  a pointer to its own painter (to be usable in a multithreaded program).
@@ -462,31 +508,16 @@ When using the options 2 or 3 above, the labels are automatically
  TAttLine, TAttFill, and TAttMarker.
  See the member functions of these classes for the list of options.
 
-#### Giving titles to the X, Y and Z axis
+#### Customising how axes are drawn
 
+ Use the functions of TAxis, such as
 ~~~ {.cpp}
-       h->GetXaxis()->SetTitle("X axis title");
-       h->GetYaxis()->SetTitle("Y axis title");
-~~~
- The histogram title and the axis titles can be any TLatex string.
- The titles are part of the persistent histogram.
- It is also possible to specify the histogram title and the axis
- titles at creation time. These titles can be given in the "title"
- parameter. They must be separated by ";":
-~~~ {.cpp}
-        TH1F* h=new TH1F("h", "Histogram title;X Axis;Y Axis;Z Axis", 100, 0, 1);
-~~~
- Any title can be omitted:
-~~~ {.cpp}
-        TH1F* h=new TH1F("h", "Histogram title;;Y Axis", 100, 0, 1);
-        TH1F* h=new TH1F("h", ";;Y Axis", 100, 0, 1);
-~~~
- The method SetTitle has the same syntax:
-~~~ {.cpp}
-        h->SetTitle("Histogram title;Another X title Axis");
+ histogram.GetXaxis()->SetTicks("+");
+ histogram.GetYaxis()->SetRangeUser(1., 5.);
 ~~~
 
-#### Saving/Reading histograms to/from a ROOT file
+\anchor saving-histograms
+## Saving/Reading histograms in ROOT files
 
  The following statements create a ROOT file and store an histogram
  on the file. Because TH1 derives from TNamed, the key identifier on
@@ -507,7 +538,9 @@ When using the options 2 or 3 above, the labels are automatically
         file->Write();
 ~~~
 
-#### Miscellaneous operations
+
+\anchor misc
+## Miscellaneous operations
 
 ~~~ {.cpp}
         TH1::KolmogorovTest(): statistical test of compatibility in shape
