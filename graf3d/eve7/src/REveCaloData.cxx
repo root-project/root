@@ -209,6 +209,34 @@ void REveCaloData::PrintCellsSelected()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Tell users (REveCaloViz instances using this data) that cell selection
+/// has changed and they should update selection cache if necessary.
+/// This is done by calling REveCaloViz::CellSelectionChanged().
+
+void REveCaloData::CellSelectionChanged(UInt_t selectionId, vCellId_t& sel_cells)
+{
+   StampObjProps();
+
+   REveCaloViz* calo;
+   for (auto &c : fNieces)
+   {
+      calo = dynamic_cast<REveCaloViz*>(c);
+      calo->CellSelectionChanged();
+   }
+
+   // multi not yet supported
+   bool multi = false;
+
+   REveSelection* selection = (REveSelection*) ROOT::Experimental::gEve->FindElementById(selectionId);
+
+   std::set<int> secondary_idcs;
+   for (vCellId_i i = sel_cells.begin(); i != sel_cells.end(); ++i)
+      secondary_idcs.insert((i->fSlice << 24) + i->fTower);
+
+   selection->NewElementPicked(GetElementId(), multi, true, secondary_idcs);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Process newly selected cells with given select-record.
 /// Secondary-select status is set.
 /// CellSelectionChanged() is called if needed.
@@ -236,7 +264,6 @@ void REveCaloData::ProcessSelection(vCellId_t& sel_cells, UInt_t selectionId, Bo
 
    bool isHighlight = selectionId == ROOT::Experimental::gEve->GetHighlight()->GetElementId();
    vCellId_t& cells = isHighlight ? fCellsHighlighted : fCellsSelected;
-   Int_t secSelectIdx  = isHighlight ? fHighlightSecondarySelectIdx : fSelectionSecondarySelectIdx;
 
    if (cells.empty())
    {
@@ -271,7 +298,6 @@ void REveCaloData::ProcessSelection(vCellId_t& sel_cells, UInt_t selectionId, Bo
             {
                helper::fill_cell_vec(cells, cs);
                recResult = "Modifying";
-               secSelectIdx = secSelectIdx ? 0 : 1;
             }
          }
          else
@@ -313,7 +339,7 @@ void REveCaloData::ProcessSelection(vCellId_t& sel_cells, UInt_t selectionId, Bo
 
    if (recResult != "None")
    {
-      CellSelectionChanged(selectionId, secSelectIdx);
+      CellSelectionChanged(selectionId, cells);
    }
 }
 
@@ -407,31 +433,6 @@ void REveCaloData::DataChanged()
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Tell users (REveCaloViz instances using this data) that cell selection
-/// has changed and they should update selection cache if necessary.
-/// This is done by calling REveCaloViz::CellSelectionChanged().
-
-void REveCaloData::CellSelectionChanged(UInt_t selectionId, Int_t secSelectIdx)
-{
-   StampObjProps();
-
-   REveCaloViz* calo;
-   for (auto &c : fNieces)
-   {
-      calo = dynamic_cast<REveCaloViz*>(c);
-      calo->CellSelectionChanged();
-   }
-
-   // multi not yet supported
-   bool multi = false;
-
-   REveSelection* selection = (REveSelection*) ROOT::Experimental::gEve->FindElementById(selectionId);
-
-   std::set<int> secondary_idcs;
-   secondary_idcs.insert(secSelectIdx);
-   selection->NewElementPicked(GetElementId(), multi, true, secondary_idcs);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -449,7 +450,6 @@ Int_t REveCaloData::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
       sarr.push_back(slice);
    }
    j["sliceInfos"] = sarr;
-
 
    if (!GetCellsSelected().empty())
    {
