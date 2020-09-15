@@ -115,7 +115,7 @@ private:
    template<class F, class Cond>
    auto TExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
       using retType = decltype(func());
-      std::vector<retType> res;;
+      std::vector<retType> res;
       switch(fExecPolicy){
          case ROOT::Internal::ExecutionPolicy::kSerial:
             res = fSeqPool->Map(func, nTimes);
@@ -171,7 +171,8 @@ private:
       std::vector<retType> res;;
       switch(fExecPolicy){
          case ROOT::Internal::ExecutionPolicy::kSerial:
-            res = fSeqPool->Map(func, nTimes, redfunc, 1);
+            (void) nChunks;
+            res = fSeqPool->Map(func, nTimes, redfunc);
             break;
 #ifdef R__USE_IMT
          case ROOT::Internal::ExecutionPolicy::kMultithread:
@@ -227,7 +228,8 @@ private:
       std::vector<retType> res;;
       switch(fExecPolicy){
          case ROOT::Internal::ExecutionPolicy::kSerial:
-            res = fSeqPool->Map(func, args, redfunc, 1);
+            (void) nChunks;
+            res = fSeqPool->Map(func, args, redfunc);
             break;
 #ifdef R__USE_IMT
          case ROOT::Internal::ExecutionPolicy::kMultithread:
@@ -255,7 +257,8 @@ private:
       std::vector<retType> res;;
       switch(fExecPolicy){
          case ROOT::Internal::ExecutionPolicy::kSerial:
-            res = fSeqPool->Map(func, args, redfunc, 1);
+            (void) nChunks;
+            res = fSeqPool->Map(func, args, redfunc);
             break;
 #ifdef R__USE_IMT
          case ROOT::Internal::ExecutionPolicy::kMultithread:
