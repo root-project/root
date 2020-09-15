@@ -273,10 +273,11 @@ void REveDataCollection::ItemChanged(Int_t idx)
 
 void REveDataCollection::FillImpliedSelectedSet( Set_t& impSelSet)
 {
-   _handler_fillimp( this ,  impSelSet);
    /*
-   for (auto &e :impSelSet )
-      printf("set %s \n", e->GetCName());
+   printf("REveDataCollection::FillImpliedSelectedSet colecction setsize %zu\n",  RefSelectedSet().size());
+   for (auto x :RefSelectedSet() )
+      printf("%d \n", x);
    */
+   _handler_fillimp( this ,  impSelSet);
 }
 
