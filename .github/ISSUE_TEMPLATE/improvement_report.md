@@ -7,7 +7,7 @@ labels: improvement
 
 ## Explain what you would like to see improved
 <!--
-Explain what isn't as good as it could and why
+Explain what isn't as good as it could be and why
 -->
 
 ## Optional: share how it could be improved
