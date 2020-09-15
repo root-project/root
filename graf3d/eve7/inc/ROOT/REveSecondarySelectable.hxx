@@ -46,8 +46,8 @@ public:
    Bool_t GetAlwaysSecSelect()   const { return fAlwaysSecSelect; }
    void   SetAlwaysSecSelect(Bool_t f) { fAlwaysSecSelect = f; }
 
-   const SelectionSet_t &RefSelectedSet()    const { return fSelectedSet; }
-   const SelectionSet_t &RefHighlightedSet() const { return fHighlightedSet; }
+   SelectionSet_t &RefSelectedSet()    { return fSelectedSet; }
+   SelectionSet_t &RefHighlightedSet() { return fHighlightedSet; }
 
    // XXXX
    // void   ProcessGLSelection(TGLSelectRecord& rec);
