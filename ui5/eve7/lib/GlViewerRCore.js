@@ -96,8 +96,8 @@ sap.ui.define([
          let a_light = new RC.AmbientLight(new RC.Color(0xffffff), 0.1);
          this.lights.add(a_light);
 
-         let light_class_3d = RC.PointLight; // RC.DirectionalLight;
-         let light_class_2d = RC.PointLight; // RC.DirectionalLight;
+         let light_class_3d = RC.PointLight; // RC.DirectionalLight; // RC.PointLight;
+         let light_class_2d = RC.DirectionalLight;
 
          if (this.controller.kind === "3D")
          {
@@ -117,7 +117,7 @@ sap.ui.define([
             for (let i = 1; i <= 4; ++i)
             {
                let l = this.lights.children[i];
-               l.add( new RC.IcoSphere(1, 1, 10.0, l.color.clone().multiplyScalar(0.8), false) );
+               l.add( new RC.IcoSphere(1, 1, 10.0, l.color.clone().multiplyScalar(0.5), false) );
             }
          }
          else
@@ -133,17 +133,23 @@ sap.ui.define([
             // Lights are positioned in resetRenderer.
          }
 
-         /*
-           let c = new RC.Cube(100, new RC.Color(1,.6,.2));
-           c.material = new RC.MeshPhongMaterial();
-           c.material.transparent = true;
-           c.material.opacity = 0.5;
-           c.material.depthWrite  = false;
-           this.scene.add(c);
-         */
-         let ss = new RC.Stripe([0,0,0, 50,50,50, 200,200,200]);
-         ss.material.lineWidth = 2.0;
-         this.scene.add(ss);
+         // Test objects
+         if (this.controller.kind === "3D")
+         {
+            /*
+              let c = new RC.Cube(100, new RC.Color(1,.6,.2));
+              c.material = new RC.MeshPhongMaterial();
+              c.material.transparent = true;
+              c.material.opacity = 0.5;
+              c.material.depthWrite  = false;
+              this.scene.add(c);
+            */
+
+            let ss = new RC.Stripe([0,0,0, 100,50,50, 100,200,200]);
+            ss.material.lineWidth = 20.0;
+            ss.material.color     = new RC.Color(0xff0000);
+            this.scene.add(ss);
+         }
 
          this.rot_center = new THREE.Vector3(0,0,0);
       },
@@ -228,11 +234,11 @@ sap.ui.define([
             {
                glc.scene.traverse( function( node ) {
 
-                  if ( node.material && node.material.linewidth )
+                  if ( node.lineWidth )
                   {
-                     if ( ! node.material.linewidth_orig) node.material.linewidth_orig = node.material.linewidth;
+                     if ( ! node.lineWidth_orig) node.lineWidth_orig = node.lineWidth;
 
-                     node.material.linewidth *= 1.2;
+                     node.lineWidth *= 1.2;
                   }
                });
             }
@@ -240,11 +246,11 @@ sap.ui.define([
             {
                glc.scene.traverse( function( node ) {
 
-                  if ( node.material && node.material.linewidth )
+                  if ( node.lineWidth )
                   {
-                     if ( ! node.material.linewidth_orig) node.material.linewidth_orig = node.material.linewidth;
+                     if ( ! node.lineWidth_orig) node.lineWidth_orig = node.lineWidth;
 
-                     node.material.linewidth *= 0.8;
+                     node.lineWidth *= 0.8;
                   }
                });
             }
@@ -252,9 +258,9 @@ sap.ui.define([
             {
                glc.scene.traverse( function( node ) {
 
-                  if ( node.material && node.material.linewidth && node.material.linewidth_orig )
+                  if ( node.lineWidth && node.lineWidth_orig )
                   {
-                     node.material.linewidth = node.material.linewidth_orig;
+                     node.lineWidth = node.lineWidth_orig;
                   }
                });
             }
@@ -307,10 +313,10 @@ sap.ui.define([
             this.controls.screenSpacePanning = true;
 
             let lc = this.lights.children;
-            lc[1].position.set( extR, extR, -extR);
-            lc[2].position.set(-extR, extR,  extR);
-            lc[3].position.set( extR, extR,  extR);
-            lc[4].position.set(-extR, extR, -extR);
+            lc[1].position.set( extR, extR, -extR); lc[1].decay = 4 * extR;
+            lc[2].position.set(-extR, extR,  extR); lc[2].decay = 4 * extR;
+            lc[3].position.set( extR, extR,  extR); lc[3].decay = 4 * extR;
+            lc[4].position.set(-extR, extR, -extR); lc[4].decay = 4 * extR;
 
             // console.log("resetThreejsRenderer 3D scene bbox ", sbbox, ", camera_pos ", posC, ", look_at ", this.rot_center);
          }
@@ -361,8 +367,7 @@ sap.ui.define([
          let w = this.get_width();
          let h = this.get_height();
 
-         // console.log("GlViewerRCore RESIZE ", w, h, "canvas=", this.canvas,
-         //             this.canvas.width, this.canvas.height);
+         //console.log("GlViewerRCore onResizeTimeout", w, h, "canvas=", this.canvas, this.canvas.width, this.canvas.height);
 
          this.canvas.width  = w;
          this.canvas.height = h;
@@ -377,6 +382,7 @@ sap.ui.define([
          //this.composer.reset();
 
          this.controls.update();
+         this.render();
       },
 
 
@@ -417,11 +423,13 @@ sap.ui.define([
          console.log("GLC::onMouseMoveTimeout", this, event, x, y);
 
          var pthis = this;
-         this.renderer.pick(x, y, function(r)
+         this.renderer.pick(x, y, function(id)
                             {
-                               let id = (r[0] << 16) + (r[1] << 8) + r[2];
                                let obj = pthis.get_manager().GetElement(id);
-                               console.log("pick result", r, id, obj);
+                               // As things are now, depth can not be known.
+                               // Render to FBO or texture would work.
+                               // let d   = pthis.renderer.pickedDepth;
+                               console.log("pick result", id, obj /* , d */);
                             }
                            );
          this.render();
