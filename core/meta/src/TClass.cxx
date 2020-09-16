@@ -3695,7 +3695,7 @@ TList *TClass::GetListOfDataMembers(Bool_t load /* = kTRUE */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return list containing the TEnums of a class.
+/// Return TListOfFunctionTemplates for a class.
 
 TList *TClass::GetListOfFunctionTemplates(Bool_t load /* = kTRUE */)
 {
