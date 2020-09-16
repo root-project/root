@@ -225,7 +225,9 @@ sap.ui.define([
          this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
 
          if (this.resize_tmout) clearTimeout(this.resize_tmout);
-         this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 100); // small latency
+
+         // MT 2020/09/09: On Chrome, delay up to 200ms gets executed immediately.
+         this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 250);
       },
 
       onResizeTimeout: function()
