@@ -15,7 +15,9 @@ def makeimage(MacroName, ImageName, OutDir, cp, py, batch):
 
     if py:
         sys.argv = [MacroName]
-        exec(open(MacroName).read(), globals())
+        globals_ = dict(globals())
+        globals_['__file__'] = MacroName
+        exec(open(MacroName).read(), globals_)
     else:
         ROOT.gInterpreter.ProcessLine(".x " + MacroName)
 
