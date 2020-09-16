@@ -6023,7 +6023,9 @@ TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
             if (mother != br) {
                const char *mothername = mother->GetName();
                UInt_t motherlen = strlen(mothername);
-               if (nbch > motherlen && strncmp(mothername,branchname,motherlen)==0 && (mothername[motherlen-1]=='.' || branchname[motherlen]=='.')) {
+               if (!strcmp(mothername, branchname)) {
+                  return leaf;
+               } else if (nbch > motherlen && strncmp(mothername,branchname,motherlen)==0 && (mothername[motherlen-1]=='.' || branchname[motherlen]=='.')) {
                   // The left part of the requested name match the name of the mother, let's see if the right part match the name of the branch.
                   if (strncmp(brname,branchname+motherlen+1,nbch-motherlen-1)) {
                      // No it does not
