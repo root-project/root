@@ -25,8 +25,8 @@
 ///
 /// ###ROOT::TExecutorCRTP::Map
 /// The two possible usages of the Map method are:\n
-/// * Map(F func, unsigned nTimes): func is executed nTimes with no arguments
-/// * Map(F func, T& args): func is executed on each element of the collection of arguments args
+/// * `Map(F func, unsigned nTimes)`: func is executed nTimes with no arguments
+/// * `Map(F func, T& args)`: func is executed on each element of the collection of arguments args
 ///
 /// For either signature, func is executed as many times as needed by a pool of
 /// nThreads threads; It defaults to the number of cores.\n
@@ -63,33 +63,29 @@ public:
    explicit TExecutorCRTP() = default;
    explicit TExecutorCRTP(size_t /* nThreads */ ){};
 
-   template< class F, class... T>
+   template< class F, class... T> // Don't allow mapping functions that return references. The resulting vector elements must be assignable, references aren't.
    using noReferenceCond = typename std::enable_if<"Function can't return a reference" && !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
 
-   // // Map
-   // //these late return types allow for a compile-time check of compatibility between function signatures and args,
-   // //and a compile-time check that the argument list implements a front() method (all STL sequence containers have it)
+   // Map
+   // These trailing return types allow for a compile time check of compatibility between function signatures and args,
+   // and a compile time check that the argument list implements a front() method (all STL sequence containers have it)
    template<class F, class Cond = noReferenceCond<F>>
    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
    auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-   /// \cond
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>;
-   /// \endcond
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
 
-   // // MapReduce
-   // // the late return types also check at compile-time whether redfunc is compatible with func,
-   // // other than checking that func is compatible with the type of arguments.
-   // // a static_assert check in TExecutorCRTP<subc>::Reduce is used to check that redfunc is compatible with the type returned by func
+   // MapReduce
+   // The trailing return types also check at compile time whether redfunc is compatible with func,
+   // other than checking that func is compatible with the type of arguments.
+   // a static_assert check in TExecutorCRTP<subc>::Reduce is used to check that redfunc is compatible with the type returned by func
    template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
    auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type;
-   /// \cond
    template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
    auto MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type;
-   /// \endcond
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    T* MapReduce(F func, std::vector<T*> &args);
 
@@ -103,9 +99,12 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////////
-/// Execute func (with no arguments) nTimes in parallel.
-/// A vector containg executions' results is returned.
-/// Functions that take more than zero arguments can be executed (with
+/// \brief Execute a function without arguments.
+///
+/// \param func Function to be executed.
+/// \param nTimes Number of times function should be called.
+/// \return A vector with the results of the function calls.
+/// Functions that take arguments can be executed (with
 /// fixed arguments) by wrapping them in a lambda or with std::bind.
 template<class subc> template<class F, class Cond>
 auto TExecutorCRTP<subc>::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
@@ -114,9 +113,11 @@ auto TExecutorCRTP<subc>::Map(F func, unsigned nTimes) -> std::vector<typename s
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Execute func in parallel, taking an element of a
-/// sequence as argument. Divides and groups the executions in nChunks with partial reduction;
-/// A vector containg partial reductions' results is returned.
+/// \brief Execute a function over a sequence of indexes.
+///
+/// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
+/// \param args Sequence of indexes to execute `func` on.
+/// \return A vector with the results of the function calls.
 template<class subc> template<class F, class INTEGER, class Cond>
 auto TExecutorCRTP<subc>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
@@ -124,9 +125,11 @@ auto TExecutorCRTP<subc>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<t
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Execute func in parallel, taking an element of the std::initializer_list
-/// as argument. Divides and groups the executions in nChunks with partial reduction;
-/// A vector containg partial reductions' results is returned.
+/// \brief Execute a function over the elements of an initializer_list.
+///
+/// \param func Function to be executed on the elements of the initializer_list passed as second parameter.
+/// \param args initializer_list for a vector to apply `func` on.
+/// \return A vector with the results of the function calls.
 template<class subc> template<class F, class T, class Cond>
 auto TExecutorCRTP<subc>::Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>
 {
@@ -136,11 +139,11 @@ auto TExecutorCRTP<subc>::Map(F func, std::initializer_list<T> args) -> std::vec
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Execute func in parallel, taking an element of an
-/// std::vector as argument.
-/// A vector containg executions' results is returned.
-// actual implementation of the Map method. all other calls with arguments eventually
-// call this one
+/// \brief Execute a function over the elements of a vector
+///
+/// \param func Function to be executed on the elements of the vector passed as second parameter.
+/// \param args vector of elements passed as an argument to `func`.
+/// \return A vector with the results of the function calls.
 template<class subc> template<class F, class T, class Cond>
 auto TExecutorCRTP<subc>::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
@@ -148,11 +151,12 @@ auto TExecutorCRTP<subc>::Map(F func, std::vector<T> &args) -> std::vector<typen
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// This method behaves just like Map, but an additional redfunc function
-/// must be provided. redfunc is applied to the vector Map would return and
-/// must return the same type as func. In practice, redfunc can be used to
-/// "squash" the vector returned by Map into a single object by merging,
-/// adding, mixing the elements of the vector.
+/// \brief Execute a function over a sequence of indexes (Map) and accumulate the results into a single value (Reduce).
+///
+/// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
+/// \param args Sequence of indexes to execute `func` on.
+/// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
+/// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template<class subc> template<class F, class INTEGER, class R, class Cond>
 auto TExecutorCRTP<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
 {
@@ -161,6 +165,13 @@ auto TExecutorCRTP<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc)
    return Derived().MapReduce(func, vargs, redfunc);
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// \brief Execute a function over the elements of an initializer_list (Map) and accumulate the results into a single value (Reduce).
+///
+/// \param func Function to be executed on the elements of the initializer_list passed as second parameter.
+/// \param args initializer_list for a vector to apply `func` on.
+/// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
+/// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutorCRTP<subc>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type
 {
@@ -168,6 +179,13 @@ auto TExecutorCRTP<subc>::MapReduce(F func, std::initializer_list<T> args, R red
    return Derived().MapReduce(func, vargs, redfunc);
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// \brief Execute a function over the elements of a vector (Map) and accumulate the results into a single value (Reduce).
+///
+/// \param func Function to be executed on the elements of the vector passed as second parameter.
+/// \param args vector of elements passed as an argument to `func`.
+/// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
+/// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template<class subc> template<class F, class T, class Cond>
 T* TExecutorCRTP<subc>::MapReduce(F func, std::vector<T*> &args)
 {
@@ -175,8 +193,9 @@ T* TExecutorCRTP<subc>::MapReduce(F func, std::vector<T*> &args)
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// "Reduce" an std::vector into a single object by using the object's Merge
-//Reduction for objects with the Merge() method
+/// \brief "Reduce" an std::vector into a single object by using the object's Merge method.
+///
+/// \param mergeObjs a vector of ROOT objects implementing the Merge method
 template<class subc> template<class T>
 T* TExecutorCRTP<subc>::Reduce(const std::vector<T*> &mergeObjs)
 {
