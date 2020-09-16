@@ -12,7 +12,9 @@
 
 #include "gtest/gtest.h"
 
-static bool gDeclarator = (ROOT::EnableThreadSafety(), gInterpreter->Declare("int f(int n) { int x = 0; for (auto i = 0u; i < n; ++i) ++x; return x; }"));
+static bool gDeclarator =
+   (ROOT::EnableThreadSafety(),
+    gInterpreter->Declare("int f(int n) { int x = 0; for (auto i = 0u; i < n; ++i) ++x; return x; }"));
 
 constexpr bool gDebugOrder = false;
 constexpr unsigned int nThreads = 16;
@@ -37,19 +39,17 @@ TEST(InterpreterLock, ConcurrentCalc)
 #ifdef R__USE_IMT
    ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++)
+      id.push_back(i);
    pool.Foreach(func, id);
 #else
    std::vector<std::thread> threads;
-   for (unsigned int i=0; i < nThreads; ++i) {
-      threads.emplace_back([&,i]{
-         func(i);
-      });
+   for (unsigned int i = 0; i < nThreads; ++i) {
+      threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
 #endif
 }
-
 
 TEST(InterpreterLock, ReadLocks)
 {
@@ -67,21 +67,19 @@ TEST(InterpreterLock, ReadLocks)
       gInterpreter->Calc("f(100000)");
       if (gDebugOrder)
          std::cerr << std::this_thread::get_id() << " : end" << std::endl;
-
    };
 #ifdef R__USE_IMT
    ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++)
+      id.push_back(i);
    pool.Foreach(func, id);
 #else
    std::vector<std::thread> threads;
-   for (unsigned int i=0; i < nThreads; ++i) {
-      threads.emplace_back([&,i]{
-         func(i);
-      });
+   for (unsigned int i = 0; i < nThreads; ++i) {
+      threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
 #endif
 }
 
@@ -99,21 +97,19 @@ TEST(InterpreterLock, BalancedUserReadLock)
       gInterpreter->Calc("R__READ_LOCKGUARD(ROOT::gCoreMutex); f(100000)");
       if (gDebugOrder)
          std::cerr << std::this_thread::get_id() << " : end" << std::endl;
-
    };
 #ifdef R__USE_IMT
    ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++)
+      id.push_back(i);
    pool.Foreach(func, id);
 #else
    std::vector<std::thread> threads;
-   for (unsigned int i=0; i < nThreads; ++i) {
-      threads.emplace_back([&,i]{
-         func(i);
-      });
+   for (unsigned int i = 0; i < nThreads; ++i) {
+      threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
 #endif
 }
 
@@ -131,21 +127,19 @@ TEST(InterpreterLock, BalancedUserWriteLock)
       gInterpreter->Calc("R__WRITE_LOCKGUARD(ROOT::gCoreMutex); f(100000)");
       if (gDebugOrder)
          std::cerr << std::this_thread::get_id() << " : end" << std::endl;
-
    };
 #ifdef R__USE_IMT
    ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++)
+      id.push_back(i);
    pool.Foreach(func, id);
 #else
    std::vector<std::thread> threads;
-   for (unsigned int i=0; i < nThreads; ++i) {
-      threads.emplace_back([&,i]{
-         func(i);
-      });
+   for (unsigned int i = 0; i < nThreads; ++i) {
+      threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
 #endif
 }
 
@@ -160,10 +154,10 @@ TEST(InterpreterLock, UnBalancedUserReadLock)
          std::cerr << std::this_thread::get_id() << " : middle" << std::endl;
 
       {
-            R__LOCKGUARD(gROOTMutex);
-            gInterpreter->Calc("R__READ_LOCKGUARD(ROOT::gCoreMutex); f(100000)");
-            if (gDebugOrder)
-               std::cerr << std::this_thread::get_id() << " : end" << std::endl;
+         R__LOCKGUARD(gROOTMutex);
+         gInterpreter->Calc("R__READ_LOCKGUARD(ROOT::gCoreMutex); f(100000)");
+         if (gDebugOrder)
+            std::cerr << std::this_thread::get_id() << " : end" << std::endl;
       }
 
       ROOT::gCoreMutex->ReadUnLock(nullptr);
@@ -171,16 +165,15 @@ TEST(InterpreterLock, UnBalancedUserReadLock)
 #ifdef R__USE_IMT
    ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++)
+      id.push_back(i);
    pool.Foreach(func, id);
 #else
    std::vector<std::thread> threads;
-   for (unsigned int i=0; i < nThreads; ++i) {
-      threads.emplace_back([&,i]{
-         func(i);
-      });
+   for (unsigned int i = 0; i < nThreads; ++i) {
+      threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
 #endif
 }
 
@@ -204,15 +197,14 @@ TEST(InterpreterLock, UnBalancedUserWriteLock)
 #ifdef R__USE_IMT
    ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++)
+      id.push_back(i);
    pool.Foreach(func, id);
 #else
    std::vector<std::thread> threads;
-   for (unsigned int i=0; i < nThreads; ++i) {
-      threads.emplace_back([&,i]{
-         func(i);
-      });
+   for (unsigned int i = 0; i < nThreads; ++i) {
+      threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
 #endif
 }
