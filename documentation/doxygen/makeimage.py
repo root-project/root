@@ -44,4 +44,4 @@ def makeimage(MacroName, ImageName, OutDir, cp, py, batch):
 
 if __name__ == "__main__":
     from sys import argv
-    makeimage(argv[1], argv[2], argv[3], bool(argv[4]), bool(argv[5]), bool(argv[6]))
+    makeimage(argv[1], argv[2], argv[3], int(argv[4]), int(argv[5]), int(argv[6]))
