@@ -48,7 +48,7 @@ public:
             fProcPool = std::make_unique<ROOT::TProcessExecutor>(nProcessingUnits);
             break;
          default:
-            throw std::invalid_argument("kMultithread policy not available when ROOT is compiled without imt.");
+            throw std::invalid_argument("kMultithread policy not available when ROOT is compiled with IMT=OFF.");
       }
    }
 
