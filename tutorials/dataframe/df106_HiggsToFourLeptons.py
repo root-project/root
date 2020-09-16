@@ -193,4 +193,5 @@ text.SetTextSize(0.04)
 text.DrawLatex(0.21, 0.80, "#sqrt{s} = 13 TeV, 10 fb^{-1}")
 
 # Save the plot
-c.SaveAs("HiggsToFourLeptons.pdf")
+c.SaveAs("df106_HiggsToFourLeptons.png")
+print("Saved figure to df106_HiggsToFourLeptons.png")

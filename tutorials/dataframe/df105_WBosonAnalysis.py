@@ -210,4 +210,4 @@ text.DrawLatex(0.21, 0.80, "#sqrt{{s}} = 13 TeV, {:.2f} fb^{{-1}}".format(lumi *
 
 # Save the plot
 c.SaveAs("df105_WBosonAnalysis.png")
-print("Save figure to df105_WBosonAnalysis.png")
+print("Saved figure to df105_WBosonAnalysis.png")

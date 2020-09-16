@@ -244,4 +244,4 @@ text.DrawLatex(0.21, 0.80, "#sqrt{{s}} = 13 TeV, {:.1f} fb^{{-1}}".format(lumi *
 
 # Save the plot
 c.SaveAs("df107_SingleTopAnalysis.png")
-print("Save figure to df107_SingleTopAnalysis.png")
+print("Saved figure to df107_SingleTopAnalysis.png")
