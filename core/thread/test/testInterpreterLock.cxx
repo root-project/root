@@ -1,4 +1,7 @@
+#include "RConfig.h"
+#ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
+#endif
 #include "TVirtualRWMutex.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
@@ -9,13 +12,14 @@
 
 #include "gtest/gtest.h"
 
-static auto gDeclarator =  gInterpreter->Declare("int f(int n) { int x = 0; for (auto i = 0u; i < n; ++i) ++x; return x; }");
+static bool gDeclarator = (ROOT::EnableThreadSafety(), gInterpreter->Declare("int f(int n) { int x = 0; for (auto i = 0u; i < n; ++i) ++x; return x; }"));
 
 constexpr bool gDebugOrder = false;
+constexpr unsigned int nThreads = 16;
 
 TEST(InterpreterLock, ConcurrentCalc)
 {
-   ASSERT_TRUE(gDeclarator);
+   ASSERT_TRUE(gDeclarator && gGlobalMutex);
    bool flag = true;
    auto func = [&](int) {
       gInterpreter->Calc("f(10)");
@@ -30,16 +34,26 @@ TEST(InterpreterLock, ConcurrentCalc)
          std::cerr << std::this_thread::get_id() << " : end" << std::endl;
       flag = true;
    };
+#ifdef R__USE_IMT
    ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < 16; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
    pool.Foreach(func, id);
+#else
+   std::vector<std::thread> threads;
+   for (unsigned int i=0; i < nThreads; ++i) {
+      threads.emplace_back([&,i]{
+         func(i);
+      });
+   }
+   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+#endif
 }
 
 
 TEST(InterpreterLock, ReadLocks)
 {
-   ASSERT_TRUE(gDeclarator);
+   ASSERT_TRUE(gDeclarator && gGlobalMutex);
    auto func = [&](int) {
       R__READ_LOCKGUARD(ROOT::gCoreMutex);
       if (gDebugOrder)
@@ -55,15 +69,25 @@ TEST(InterpreterLock, ReadLocks)
          std::cerr << std::this_thread::get_id() << " : end" << std::endl;
 
    };
-   ROOT::TThreadExecutor pool;
+#ifdef R__USE_IMT
+   ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < 16; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
    pool.Foreach(func, id);
+#else
+   std::vector<std::thread> threads;
+   for (unsigned int i=0; i < nThreads; ++i) {
+      threads.emplace_back([&,i]{
+         func(i);
+      });
+   }
+   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+#endif
 }
 
 TEST(InterpreterLock, BalancedUserReadLock)
 {
-   ASSERT_TRUE(gDeclarator);
+   ASSERT_TRUE(gDeclarator && gGlobalMutex);
    auto func = [&](int) {
       if (gDebugOrder)
          std::cerr << std::this_thread::get_id() << " : start" << std::endl;
@@ -77,15 +101,25 @@ TEST(InterpreterLock, BalancedUserReadLock)
          std::cerr << std::this_thread::get_id() << " : end" << std::endl;
 
    };
-   ROOT::TThreadExecutor pool;
+#ifdef R__USE_IMT
+   ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < 16; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
    pool.Foreach(func, id);
+#else
+   std::vector<std::thread> threads;
+   for (unsigned int i=0; i < nThreads; ++i) {
+      threads.emplace_back([&,i]{
+         func(i);
+      });
+   }
+   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+#endif
 }
 
 TEST(InterpreterLock, BalancedUserWriteLock)
 {
-   ASSERT_TRUE(gDeclarator);
+   ASSERT_TRUE(gDeclarator && gGlobalMutex);
    auto func = [&](int) {
       if (gDebugOrder)
          std::cerr << std::this_thread::get_id() << " : start" << std::endl;
@@ -99,15 +133,25 @@ TEST(InterpreterLock, BalancedUserWriteLock)
          std::cerr << std::this_thread::get_id() << " : end" << std::endl;
 
    };
-   ROOT::TThreadExecutor pool;
+#ifdef R__USE_IMT
+   ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < 16; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
    pool.Foreach(func, id);
+#else
+   std::vector<std::thread> threads;
+   for (unsigned int i=0; i < nThreads; ++i) {
+      threads.emplace_back([&,i]{
+         func(i);
+      });
+   }
+   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+#endif
 }
 
 TEST(InterpreterLock, UnBalancedUserReadLock)
 {
-   ASSERT_TRUE(gDeclarator);
+   ASSERT_TRUE(gDeclarator && gGlobalMutex);
    auto func = [&](int) {
       if (gDebugOrder)
          std::cerr << std::this_thread::get_id() << " : start" << std::endl;
@@ -124,15 +168,25 @@ TEST(InterpreterLock, UnBalancedUserReadLock)
 
       ROOT::gCoreMutex->ReadUnLock(nullptr);
    };
-   ROOT::TThreadExecutor pool;
+#ifdef R__USE_IMT
+   ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < 16; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
    pool.Foreach(func, id);
+#else
+   std::vector<std::thread> threads;
+   for (unsigned int i=0; i < nThreads; ++i) {
+      threads.emplace_back([&,i]{
+         func(i);
+      });
+   }
+   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+#endif
 }
 
 TEST(InterpreterLock, UnBalancedUserWriteLock)
 {
-   ASSERT_TRUE(gDeclarator);
+   ASSERT_TRUE(gDeclarator && gGlobalMutex);
    auto func = [&](int) {
       if (gDebugOrder)
          std::cerr << std::this_thread::get_id() << " : start" << std::endl;
@@ -147,8 +201,18 @@ TEST(InterpreterLock, UnBalancedUserWriteLock)
       ROOT::gCoreMutex->WriteUnLock(nullptr);
       ROOT::gCoreMutex->ReadUnLock(nullptr);
    };
-   ROOT::TThreadExecutor pool;
+#ifdef R__USE_IMT
+   ROOT::TThreadExecutor pool(32);
    std::vector<int> id;
-   for (auto i = 0u; i < 16; i++) id.push_back(i);
+   for (auto i = 0u; i < nThreads; i++) id.push_back(i);
    pool.Foreach(func, id);
+#else
+   std::vector<std::thread> threads;
+   for (unsigned int i=0; i < nThreads; ++i) {
+      threads.emplace_back([&,i]{
+         func(i);
+      });
+   }
+   std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
+#endif
 }
