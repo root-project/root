@@ -194,22 +194,16 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 
 void TDataMember::Init(bool afterReading)
 {
-   const char *t = 0;
    if (!afterReading) {
       // Initialize from fInfo
-      if (!fInfo || !gInterpreter->DataMemberInfo_IsValid(fInfo)) return;
-
-      fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
-      fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
-      fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fTrueTypeName));
-      SetName(gCling->DataMemberInfo_Name(fInfo));
-      t = gCling->DataMemberInfo_Title(fInfo);
-      SetTitle(t);
-   } else {
-      // We have read the persistent data members.
-      t = GetTitle();
+      if (!fInfo || !gInterpreter->DataMemberInfo_IsValid(fInfo))
+         return;
+      // Also sets names.
+      Property();
    }
-   if (t && t[0] != '!') SetBit(kObjIsPersistent);
+   const char *t = GetTitle();
+   if (t && t[0] != '!')
+      SetBit(kObjIsPersistent);
    fDataType = 0;
    if (IsBasic() || IsEnum()) {
       if (IsBasic()) {
