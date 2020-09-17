@@ -594,15 +594,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
     Calo2DControl.prototype = Object.create(EveElemControl.prototype);
 
-    Calo2DControl.prototype.DrawForSelection = function(sec_idcs, res)
+    Calo2DControl.prototype.DrawForSelection = function(sec_idcs, res, extra)
     {
-        var s = this.obj3d.scene;
-        var caloData = s.mgr.GetElement(this.obj3d.eve_el.dataId);
-        let dataSelection = res.sel_type ?  caloData.highlight : caloData.select;
         let cells;
-        for (let i = 0; i < dataSelection.length; i++) {
-            if (dataSelection[i].caloVizId ==  this.obj3d.eve_el.fElementId) {
-                cells = dataSelection[i].cells;
+        for (let i = 0; i < extra.length; i++) {
+            if (extra[i].caloVizId ==  this.obj3d.eve_el.fElementId) {
+                cells = extra[i].cells;
                 break;
             }
         }
@@ -823,15 +820,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
     Calo3DControl.prototype = Object.create(EveElemControl.prototype);
 
-    Calo3DControl.prototype.DrawForSelection = function(sec_idcs, res)
-    {
-        var s = this.obj3d.scene;
-        var caloData = s.mgr.GetElement(this.obj3d.eve_el.dataId);
-        let dataSelection = res.sel_type ?  caloData.highlight : caloData.select;
+   Calo3DControl.prototype.DrawForSelection = function(sec_idcs, res, extra)
+   {
         let cells;
-        for (let i = 0; i < dataSelection.length; i++) {
-            if (dataSelection[i].caloVizId ==  this.obj3d.eve_el.fElementId) {
-                cells = dataSelection[i].cells;
+        for (let i = 0; i < extra.length; i++) {
+            if (extra[i].caloVizId ==  this.obj3d.eve_el.fElementId) {
+                cells = extra[i].cells;
                 break;
             }
         }

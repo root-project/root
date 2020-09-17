@@ -352,6 +352,8 @@ public:
    void   CSCApplyMainTransparencyToAllChildren()      { fCSCBits |= kCSCBApplyMainTransparencyToAllChildren; }
    void   CSCApplyMainTransparencyToMatchingChildren() { fCSCBits |= kCSCBApplyMainTransparencyToMatchingChildren; }
 
+   virtual bool RequiresExtraSelectionData() const { return false; }
+   virtual void FillExtraSelectionData(nlohmann::json&, const std::set<int>&) const {}
 
    // Change-stamping and change bits
    //---------------------------------

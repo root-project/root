@@ -77,7 +77,7 @@ public:
 
    TClass* ProjectedClass(const REveProjection* p) const override;
    virtual Float_t GetValToHeight() const;
-   virtual void    CellSelectionChanged() {}
+   // virtual void    CellSelectionChanged() {}
 
    virtual void    SetScaleAbs(Bool_t x) { fScaleAbs = x; }
 
@@ -146,7 +146,7 @@ public:
    Bool_t  CellInEtaPhiRng (REveCaloData::CellData_t&) const;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   virtual void WriteCoreJsonSelection(nlohmann::json &j, bool) = 0;
+   virtual void WriteCoreJsonSelection(nlohmann::json &j,  REveCaloData::vCellId_t) = 0;
 };
 
 /**************************************************************************/
@@ -178,7 +178,7 @@ public:
    void ComputeBBox() override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   void WriteCoreJsonSelection(nlohmann::json &j, bool) override;
+   void WriteCoreJsonSelection(nlohmann::json &j,  REveCaloData::vCellId_t) override;
    void BuildRenderData() override;
 
    void    SetFrameWidth(Float_t w) { fFrameWidth = w; }
@@ -245,14 +245,12 @@ public:
    void UpdateProjection() override;
    void ComputeBBox() override;
 
-   void CellSelectionChanged() override;
-
    void    SetScaleAbs(Bool_t) override;
 
    Float_t GetValToHeight() const override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   void WriteCoreJsonSelection(nlohmann::json &j, bool) override;
+   void WriteCoreJsonSelection(nlohmann::json &j,  REveCaloData::vCellId_t) override;
    void BuildRenderData() override;
 
    void NewBinPicked(Int_t bin, Int_t slice, Int_t selectionId, Bool_t multi);
