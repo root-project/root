@@ -41,9 +41,16 @@ using namespace ROOT;
 
 #ifdef NDEBUG
 # define R__MAYBE_AssertReadCountLocIsFromCurrentThread(READERSCOUNTLOC)
+# define R__MAYBE_ASSERT_WITH_LOCAL_LOCK(where,msg,what)
 #else
 # define R__MAYBE_AssertReadCountLocIsFromCurrentThread(READERSCOUNTLOC) \
    AssertReadCountLocIsFromCurrentThread(READERSCOUNTLOC)
+#define R__MAYBE_ASSERT_WITH_LOCAL_LOCK(where, msg, what) \
+   {                                                      \
+      std::unique_lock<MutexT> lock(fMutex);              \
+      if (!(what))                                        \
+         Error(where, "%s", msg);                         \
+   }
 #endif
 
 Internal::UniqueLockRecurseCount::UniqueLockRecurseCount()
@@ -313,10 +320,16 @@ TReentrantRWLock<MutexT, RecurseCountsT>::Rewind(const State &earlierState) {
 
    auto hint = reinterpret_cast<TVirtualRWMutex::Hint_t *>(typedState.fReadersCountLoc);
    if (pStateDelta->fDeltaWriteRecurse != 0) {
+      R__MAYBE_ASSERT_WITH_LOCAL_LOCK("TReentrantRWLock::Rewind",
+                                      "Lock rewinded from a thread that does not own the Write lock",
+                                      fWriter && fRecurseCounts.IsNotCurrentWriter(local));
+
       // Claim a recurse-state +1 to be able to call Unlock() below.
       fRecurseCounts.fWriteRecurse = typedState.fWriteRecurse + 1;
       // Release this thread's write lock
       WriteUnLock(hint);
+   } else {
+      Error("TReentrantRWLock::Rewind", "has been called with no write lock held.");
    }
 
    if (pStateDelta->fDeltaReadersCount != 0) {
