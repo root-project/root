@@ -381,7 +381,7 @@ sap.ui.define([
       });
    }
 
-   EveScene.prototype.SelectElement = function(selection_obj, element_id, sec_idcs)
+   EveScene.prototype.SelectElement = function(selection_obj, element_id, sec_idcs, extra)
    {
       let obj3d = this.getObj3D( element_id );
       if (!obj3d) return;
@@ -414,7 +414,7 @@ sap.ui.define([
 
       opass.id2obj_map[element_id] = [];
       let ctrl = obj3d.get_ctrl();
-      ctrl.DrawForSelection(sec_idcs, res);
+      ctrl.DrawForSelection(sec_idcs, res, extra);
       opass.id2obj_map[element_id][selection_obj.fElementId] = res;
    }
 

@@ -432,13 +432,12 @@ Int_t REveCaloViz::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    // is not available. Maybe this is not necessary if EveElements have EveManager globaly available
 
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
-
    j["dataId"] = fData->GetElementId();
    j["sliceColors"] =  nlohmann::json::array();
    for (int i = 0; i < fData->GetNSlices(); ++i)
    {
       j["sliceColors"].push_back(fData->GetSliceColor(i));
-   }
+      }
    j["fSecondarySelect"] = true;
    return ret;
 }
@@ -668,11 +667,10 @@ Int_t REveCalo3D::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation for selection.
 
-void REveCalo3D::WriteCoreJsonSelection(nlohmann::json &j, bool isSel)
+void REveCalo3D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId_t cells)
 {
    // selection
    auto sarr = nlohmann::json::array();
-   auto cells = isSel ? fData->GetCellsSelected() : fData->GetCellsHighlighted();
    REveCaloData::CellData_t cellData;
    for (REveCaloData::vCellId_i i = cells.begin(); i != cells.end(); i++)
    {
@@ -906,15 +904,6 @@ void REveCalo2D::BuildCellIdCache()
    fCellIdCacheOK= kTRUE;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Sort selected cells in eta or phi bins for selection and highlight.
-
-void REveCalo2D::CellSelectionChanged()
-{
-   CellSelectionChangedInternal(fData->GetCellsSelected(), fCellListsSelected);
-   CellSelectionChangedInternal(fData->GetCellsHighlighted(), fCellListsHighlighted);
-}
-
 //////////////////////////////////////////////s//////////////////////////////////
 /// Sort selected cells in eta or phi bins.
 
@@ -1040,13 +1029,15 @@ Int_t REveCalo2D::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation for selection.
 
-void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, bool isSel)
+void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId_t cells)
 {
    static const REveException eh("REveCalo2D::WriteCoreJsonSelection ");
    auto sarr = nlohmann::json::array();
 
    // selection
-   auto cellLists = isSel ? fCellListsSelected : fCellListsHighlighted;
+   // auto cellLists = isSel ? fCellListsSelected : fCellListsHighlighted;
+   std::vector<REveCaloData::vCellId_t*> cellLists;
+   CellSelectionChangedInternal(cells, cellLists);
 
    if (IsRPhi()) {
       REveCaloData::CellData_t cellData;

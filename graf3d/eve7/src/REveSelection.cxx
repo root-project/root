@@ -673,7 +673,13 @@ Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
       rec["implied"]  = imp;
 
       // XXX if not empty / f_is_sec is false ???
-      for (auto &sec_id : i.second.f_sec_idcs) sec.push_back(sec_id);
+      for (auto &sec_id : i.second.f_sec_idcs)
+         sec.push_back(sec_id);
+
+      if (i.first->RequiresExtraSelectionData()) {
+         i.first->FillExtraSelectionData(rec["extra"], sec);
+      }
+
       rec["sec_idcs"] = sec;
 
       sel_list.push_back(rec);
