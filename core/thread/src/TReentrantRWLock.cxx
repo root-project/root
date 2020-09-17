@@ -327,7 +327,7 @@ TReentrantRWLock<MutexT, RecurseCountsT>::Rewind(const State &earlierState) {
       // but that's weird, that does not account to other change in fReaders during between
       // the snapshot and the rewind ... humm unless the lock held is a WriteLock
       // (the actual use case) in which case there is no other thread that can update fReaders
-      // and we also assume that the "user code" is balance and release all read locks it takes.
+      // and we also assume that the "user code" is balanced and release all read locks it takes.
       fReaders = typedState.fReadersCount + 1;
       // Release this thread's reader lock(s)
       ReadUnLock(hint);

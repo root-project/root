@@ -9385,12 +9385,12 @@ void TCling::ApplyToInterpreterMutex(void *delta)
          R__ASSERT(fInitialMutex.fRecurseCount == 0 && "Inconsistent state of fInitialMutex!  Another thread within Interpreter critical section.");
          std::swap(fInitialMutex, typedDelta->fInitialState);
       } else {
-         // This case happens whenever, EnableThreadSafety is first called from
+         // This case happens when EnableThreadSafety is first called from
          // the interpreter function we just handled.
-         // Since thread safetely was not enabled at the time we rewinded, there was
+         // Since thread safety was not enabled at the time we rewound, there was
          // no lock taken and even-though we should be locking the rest of this
          // interpreter handling/modifying code (since there might be threads in
-         // flight), we can't because there would be any lock guard to release the
+         // flight), we can't because there would not be any lock guard to release the
          // locks
          if (fInitialMutex || fInitialMutex.fRecurseCount !=0)
             Error("ApplyToInterpreterMutex",
