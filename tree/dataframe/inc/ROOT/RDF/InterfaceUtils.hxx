@@ -79,9 +79,8 @@ HeadNode_t CreateSnapshotRDF(const ColumnNames_t &validCols,
 
 std::string DemangleTypeIdName(const std::type_info &typeInfo);
 
-ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedDefines &defines, TTree *tree,
-                                    ROOT::RDF::RDataSource *dataSource, std::string_view columnNameRegexp,
-                                    std::string_view callerName);
+ColumnNames_t
+ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnNameRegexp, std::string_view callerName);
 
 /// An helper object that sets and resets gErrorIgnoreLevel via RAII.
 class RIgnoreErrorLevelRAII {
