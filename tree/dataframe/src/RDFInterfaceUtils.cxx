@@ -286,17 +286,6 @@ static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesRe
    }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/// Get all the top-level branches names, including the ones of the friend trees
-static ColumnNames_t GetTopLevelBranchNames(TTree &t)
-{
-   std::set<std::string> bNamesSet;
-   ColumnNames_t bNames;
-   std::set<TTree *> analysedTrees;
-   GetTopLevelBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
-   return bNames;
-}
-
 static bool IsValidCppVarName(const std::string &var)
 {
    if (var.empty())
@@ -324,6 +313,17 @@ static bool IsValidCppVarName(const std::string &var)
 namespace ROOT {
 namespace Internal {
 namespace RDF {
+
+///////////////////////////////////////////////////////////////////////////////
+/// Get all the top-level branches names, including the ones of the friend trees
+ColumnNames_t GetTopLevelBranchNames(TTree &t)
+{
+   std::set<std::string> bNamesSet;
+   ColumnNames_t bNames;
+   std::set<TTree *> analysedTrees;
+   GetTopLevelBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
+   return bNames;
+}
 
 // The set here is used as a registry, the real list, which keeps the order, is
 // the one in the vector
