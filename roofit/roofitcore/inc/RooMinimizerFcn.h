@@ -54,7 +54,7 @@ class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {
   void SetVerbose(Bool_t flag=kTRUE) { _verbose = flag ; }
 
   Double_t& GetMaxFCN() { return _maxFCN; }
-  Int_t GetNumInvalidNLL() { return _numBadNLL; }
+  Int_t GetNumInvalidNLL() const { return _numBadNLL; }
 
   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings>& parameters, 
 		     Bool_t optConst, Bool_t verbose);
