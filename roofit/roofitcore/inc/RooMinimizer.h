@@ -52,7 +52,7 @@ public:
   void setEvalErrorWall(Bool_t flag) { fitterFcn()->SetEvalErrorWall(flag); }
   void setOffsetting(Bool_t flag) ;
   void setMaxIterations(Int_t n) ;
-  void setMaxFunctionCalls(Int_t n) ; 
+  void setMaxFunctionCalls(Int_t n) ;
 
   RooFitResult* fit(const char* options) ;
 
