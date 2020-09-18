@@ -103,6 +103,8 @@ class RResultPtr {
 
    friend class ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper;
 
+   friend class RResultHandle;
+
    /// \cond HIDDEN_SYMBOLS
    template <typename V, bool hasBeginEnd = TTraits::HasBeginAndEnd<V>::value>
    struct RIterationHelper {
@@ -302,8 +304,15 @@ public:
 
    // clang-format off
    /// Check whether the result has already been computed
+   ///
+   /// ~~~{.cpp}
+   /// auto res = df.Count();
+   /// res.IsReady(); // false, access will trigger event loop
+   /// std::cout << *res << std::endl; // triggers event loop
+   /// res.IsReady(); // true
+   /// ~~~
    // clang-format on
-   bool IsReady()
+   bool IsReady() const
    {
       return fActionPtr->HasRun();
    }
