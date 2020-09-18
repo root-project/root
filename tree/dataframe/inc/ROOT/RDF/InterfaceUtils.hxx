@@ -67,6 +67,8 @@ using namespace ROOT::RDF;
 namespace TTraits = ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
 
+ColumnNames_t GetTopLevelBranchNames(TTree &t);
+
 using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
 HeadNode_t CreateSnapshotRDF(const ColumnNames_t &validCols,
                             std::string_view treeName,
