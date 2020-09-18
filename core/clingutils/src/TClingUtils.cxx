@@ -5504,8 +5504,9 @@ int ROOT::TMetaUtils::AST2SourceTools::GetDefArg(const clang::ParmVarDecl& par,
 
    // The value is an integer
    if (defArgType->isIntegerType()){
-      llvm::APSInt result;
-      defArgExprPtr->EvaluateAsInt(result,ctxt);
+      clang::Expr::EvalResult evalResult;
+      defArgExprPtr->EvaluateAsInt(evalResult, ctxt);
+      llvm::APSInt result = evalResult.Val.getInt();
       auto uintVal = *result.getRawData();
       if (result.isNegative()){
          long long int intVal=uintVal*-1;

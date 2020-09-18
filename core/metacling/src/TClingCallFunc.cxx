@@ -97,8 +97,9 @@ EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
 {
    // Evaluate an Expr* and return its cling::Value
    ASTContext &C = interp.getCI()->getASTContext();
-   APSInt res;
-   if (E->EvaluateAsInt(res, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
+   clang::Expr::EvalResult evalRes;
+   if (E->EvaluateAsInt(evalRes, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
+      APSInt res = evalRes.Val.getInt();
       // IntTy or maybe better E->getType()?
       V = cling::Value(C.IntTy, interp);
       // We must use the correct signedness otherwise the zero extension
