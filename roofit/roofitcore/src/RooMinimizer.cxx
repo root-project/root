@@ -625,12 +625,12 @@ void RooMinimizer::optimizeConst(Int_t flag)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save and return a RooFitResult snaphot of current minimizer status.
+/// Save and return a RooFitResult snapshot of current minimizer status.
 /// This snapshot contains the values of all constant parameters,
 /// the value of all floating parameters at RooMinimizer construction and
 /// after the last MINUIT operation, the MINUIT status, variance quality,
 /// EDM setting, number of calls with evaluation problems, the minimized
-/// function value and the full correlation matrix
+/// function value and the full correlation matrix.
 
 RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
 {
