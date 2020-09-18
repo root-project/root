@@ -54,7 +54,7 @@ public:
   void setRecoverFromNaNStrength(bool strength) { fitterFcn()->SetRecoverFromNaNStrength(strength); }
   void setOffsetting(Bool_t flag) ;
   void setMaxIterations(Int_t n) ;
-  void setMaxFunctionCalls(Int_t n) ; 
+  void setMaxFunctionCalls(Int_t n) ;
 
   RooFitResult* fit(const char* options) ;
 
