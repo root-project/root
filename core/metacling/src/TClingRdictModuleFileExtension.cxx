@@ -27,7 +27,7 @@
 #include "clang/Serialization/Module.h"
 
 #include "llvm/ADT/Hashing.h"
-#include "llvm/Bitcode/BitstreamWriter.h"
+#include "llvm/Bitstream/BitstreamWriter.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
