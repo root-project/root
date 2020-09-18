@@ -1076,7 +1076,7 @@ static bool HasASTFileOnDisk(clang::Module *M, const clang::Preprocessor &PP, st
    std::string ModuleFileName;
    if (!HSOpts.PrebuiltModulePaths.empty())
       // Load the module from *only* in the prebuilt module path.
-      ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M->Name, /*ModuleMapPath*/"", /*UsePrebuiltPath*/ true);
+      ModuleFileName = PP.getHeaderSearchInfo().getPrebuiltModuleFileName(M->Name);
    if (FullFileName)
       *FullFileName = ModuleFileName;
 
