@@ -14,6 +14,7 @@
 #define ROOT_RDF_HELPERS
 
 #include <ROOT/RDataFrame.hxx>
+#include <ROOT/RResultHandle.hxx>
 #include <ROOT/RDF/GraphUtils.hxx>
 #include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/TypeTraits.hxx>
@@ -146,6 +147,29 @@ RNode AsRNode(NodeType node)
 {
    return node;
 }
+
+// clang-format off
+/// Trigger the event loop of multiple RDataFrames concurrently
+/// \param[in] handles A vector of RResultHandles
+///
+/// This function triggers the event loop of all computation graphs which relate to the
+/// given RResultHandles. The advantage compared to running the event loop implicitly by accessing the
+/// RResultPtr is that the event loops will run concurrently. Therefore, the overall
+/// computation of all results is generally more efficient.
+/// It should be noted that user-defined operations (e.g., Filters and Defines) of the different RDataFrame graphs are assumed to be safe to call concurrently.
+///
+/// ~~~{.cpp}
+/// ROOT::RDataFrame df1("tree1", "file1.root");
+/// auto r1 = df1.Histo1D("var1");
+///
+/// ROOT::RDataFrame df2("tree2", "file2.root");
+/// auto r2 = df2.Sum("var2");
+///
+/// // RResultPtr -> RResultHandle conversion is automatic
+/// ROOT::RDF::RunGraphs({r1, r2});
+/// ~~~
+// clang-format on
+void RunGraphs(std::vector<RResultHandle> handles);
 
 } // namespace RDF
 } // namespace ROOT
