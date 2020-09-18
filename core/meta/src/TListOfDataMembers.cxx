@@ -225,6 +225,8 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
 {
    if (!id) return 0;
 
+   R__LOCKGUARD(gInterpreterMutex);
+   //need the Find and possible Add to be one atomic operation
    TDictionary *dm = Find(id);
    if (dm) return dm;
 
@@ -242,13 +244,10 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
       if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
    }
 
-   R__LOCKGUARD(gInterpreterMutex);
-
    DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(id,fClass ? fClass->GetClassInfo() : 0);
 
    // Let's see if this is a reload ...
    const char *name = gInterpreter->DataMemberInfo_Name(info);
-
    TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(name) : 0;
    if (update) {
       if (fClass) {
