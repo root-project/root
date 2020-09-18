@@ -356,9 +356,8 @@ std::string DemangleTypeIdName(const std::type_info &typeInfo)
    return tname;
 }
 
-ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedDefines &defines, TTree *tree,
-                                    ROOT::RDF::RDataSource *dataSource, std::string_view columnNameRegexp,
-                                    std::string_view callerName)
+ColumnNames_t
+ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnNameRegexp, std::string_view callerName)
 {
    const auto theRegexSize = columnNameRegexp.size();
    std::string theRegex(columnNameRegexp);
@@ -376,28 +375,9 @@ ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedDefines &defines, 
    // Since we support gcc48 and it does not provide in its stl std::regex,
    // we need to use TPRegexp
    TPRegexp regexp(theRegex);
-   for (auto &&colName : defines.GetNames()) {
+   for (auto &&colName : colNames) {
       if ((isEmptyRegex || 0 != regexp.Match(colName.c_str())) && !RDFInternal::IsInternalColumn(colName)) {
          selectedColumns.emplace_back(colName);
-      }
-   }
-
-   if (tree) {
-      auto branchNames = GetTopLevelBranchNames(*tree);
-      for (auto &branchName : branchNames) {
-         if (isEmptyRegex || 0 != regexp.Match(branchName.c_str())) {
-            selectedColumns.emplace_back(branchName);
-         }
-      }
-   }
-
-   if (dataSource) {
-      auto &dsColNames = dataSource->GetColumnNames();
-      for (auto &dsColName : dsColNames) {
-         if ((isEmptyRegex || 0 != regexp.Match(dsColName.c_str())) &&
-               !RDFInternal::IsInternalColumn(dsColName)) {
-            selectedColumns.emplace_back(dsColName);
-         }
       }
    }
 

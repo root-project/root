@@ -532,11 +532,16 @@ public:
                                                  std::string_view columnNameRegexp = "",
                                                  const RSnapshotOptions &options = RSnapshotOptions())
    {
-      auto selectedColumns = RDFInternal::ConvertRegexToColumns(fDefines,
-                                                                fLoopManager->GetTree(),
-                                                                fDataSource,
-                                                                columnNameRegexp,
-                                                                "Snapshot");
+      const auto definedColumns = fDefines.GetNames();
+      auto *tree = fLoopManager->GetTree();
+      const auto treeBranchNames = tree != nullptr ? RDFInternal::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
+      const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+      ColumnNames_t columnNames;
+      columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumns.size());
+      columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
+      columnNames.insert(columnNames.end(), treeBranchNames.begin(), treeBranchNames.end());
+      columnNames.insert(columnNames.end(), dsColumns.begin(), dsColumns.end());
+      const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
       return Snapshot(treename, filename, selectedColumns, options);
    }
    // clang-format on
@@ -650,9 +655,16 @@ public:
    /// is empty, all columns are selected. See the previous overloads for more information.
    RInterface<RLoopManager> Cache(std::string_view columnNameRegexp = "")
    {
-
-      auto selectedColumns = RDFInternal::ConvertRegexToColumns(fDefines, fLoopManager->GetTree(), fDataSource,
-                                                                columnNameRegexp, "Cache");
+      const auto definedColumns = fDefines.GetNames();
+      auto *tree = fLoopManager->GetTree();
+      const auto treeBranchNames = tree != nullptr ? RDFInternal::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
+      const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+      ColumnNames_t columnNames;
+      columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumns.size());
+      columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
+      columnNames.insert(columnNames.end(), treeBranchNames.begin(), treeBranchNames.end());
+      columnNames.insert(columnNames.end(), dsColumns.begin(), dsColumns.end());
+      const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Cache");
       return Cache(selectedColumns);
    }
 
@@ -2180,8 +2192,15 @@ public:
    /// See the previous overloads for further details.
    RResultPtr<RDisplay> Display(std::string_view columnNameRegexp = "", const int &nRows = 5)
    {
-      auto selectedColumns = RDFInternal::ConvertRegexToColumns(fDefines, fLoopManager->GetTree(), fDataSource,
-                                                                columnNameRegexp, "Display");
+      const auto definedColumns = GetDefinedColumnNames();
+      const auto treeBranchNames = RDFInternal::GetTopLevelBranchNames(*fLoopManager->GetTree());
+      const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+      ColumnNames_t columnNames;
+      columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumns.size());
+      columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
+      columnNames.insert(columnNames.end(), treeBranchNames.begin(), treeBranchNames.end());
+      columnNames.insert(columnNames.end(), dsColumns.begin(), dsColumns.end());
+      const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Display");
       return Display(selectedColumns, nRows);
    }
 
