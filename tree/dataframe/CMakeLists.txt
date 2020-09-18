@@ -39,6 +39,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDFHelpers.hxx
     ROOT/RLazyDS.hxx
     ROOT/RResultPtr.hxx
+    ROOT/RResultHandle.hxx
     ROOT/RRootDS.hxx
     ROOT/RSnapshotOptions.hxx
     ROOT/RTrivialDS.hxx
@@ -89,6 +90,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFHistoModels.cxx
     src/RDFInterfaceUtils.cxx
     src/RDFUtils.cxx
+    src/RDFHelpers.cxx
     src/RFilterBase.cxx
     src/RJittedAction.cxx
     src/RJittedDefine.cxx
