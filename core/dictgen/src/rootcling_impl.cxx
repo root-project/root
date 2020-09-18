@@ -66,7 +66,6 @@
 #include "cling/Interpreter/Value.h"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/Basic/Diagnostic.h"
-#include "clang/Basic/MemoryBufferCache.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
@@ -78,7 +77,6 @@
 #include "clang/Serialization/ASTWriter.h"
 #include "cling/Utils/AST.h"
 
-#include "llvm/Bitcode/BitstreamWriter.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/PrettyStackTrace.h"
