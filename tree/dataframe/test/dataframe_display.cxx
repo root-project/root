@@ -1,6 +1,9 @@
 /****** Run RDataFrame tests both with and without IMT enabled *******/
 #include <gtest/gtest.h>
 #include <ROOT/RDataFrame.hxx>
+#include <TTree.h>
+
+#include <utility> // std::pair
 
 using namespace ROOT;
 using namespace ROOT::RDF;
@@ -211,4 +214,18 @@ TEST(RDFDisplayTests, UniquePtr)
    const auto expected =
       "uptr                       | \nstd::unique_ptr -> nullptr | \n                           | \n";
    EXPECT_EQ(r->AsString(), expected);
+}
+
+
+// GitHub issue #6371
+TEST(RDFDisplayTests, SubBranch)
+{
+   auto p = std::make_pair(42, 84);
+   TTree t("t", "t");
+   t.Branch("p", &p, "a/I:b/I");
+   t.Fill();
+   ROOT::RDataFrame df(t);
+   const auto res = df.Display()->AsString();
+   const auto expected = "p.a | p.b | \n42  | 84  | \n    |     | \n";
+   EXPECT_EQ(res, expected);
 }
