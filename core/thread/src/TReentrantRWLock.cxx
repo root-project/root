@@ -48,6 +48,7 @@ using namespace ROOT;
 #define R__MAYBE_ASSERT_WITH_LOCAL_LOCK(where, msg, what) \
    {                                                      \
       std::unique_lock<MutexT> lock(fMutex);              \
+      auto local = fRecurseCounts.GetLocal();             \
       if (!(what))                                        \
          Error(where, "%s", msg);                         \
    }
@@ -322,7 +323,7 @@ TReentrantRWLock<MutexT, RecurseCountsT>::Rewind(const State &earlierState) {
    if (pStateDelta->fDeltaWriteRecurse != 0) {
       R__MAYBE_ASSERT_WITH_LOCAL_LOCK("TReentrantRWLock::Rewind",
                                       "Lock rewinded from a thread that does not own the Write lock",
-                                      fWriter && fRecurseCounts.IsNotCurrentWriter(local));
+                                      fWriter && fRecurseCounts.IsNotCurrentWriter(local));  // local defined in macro
 
       // Claim a recurse-state +1 to be able to call Unlock() below.
       fRecurseCounts.fWriteRecurse = typedState.fWriteRecurse + 1;
