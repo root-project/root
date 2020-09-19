@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-#                     The LLVM Compiler Infrastructure
-#
-# This file is distributed under the University of Illinois Open Source
-# License. See LICENSE.TXT for details.
+# Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+# See https://llvm.org/LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 """ This module is a collection of methods commonly used in this project. """
 import collections
 import functools
@@ -18,6 +17,9 @@ import sys
 ENVIRONMENT_KEY = 'INTERCEPT_BUILD'
 
 Execution = collections.namedtuple('Execution', ['pid', 'cwd', 'cmd'])
+
+CtuConfig = collections.namedtuple('CtuConfig', ['collect', 'analyze', 'dir',
+                                                 'extdef_map_cmd'])
 
 
 def duplicate_check(method):

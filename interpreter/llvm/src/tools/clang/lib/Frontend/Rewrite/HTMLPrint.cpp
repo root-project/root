@@ -1,9 +1,8 @@
 //===--- HTMLPrint.cpp - Source code -> HTML pretty-printing --------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -86,8 +85,7 @@ void HTMLPrinter::HandleTranslationUnit(ASTContext &Ctx) {
 
   // Emit the HTML.
   const RewriteBuffer &RewriteBuf = R.getEditBuffer(FID);
-  char *Buffer = (char*)malloc(RewriteBuf.size());
-  std::copy(RewriteBuf.begin(), RewriteBuf.end(), Buffer);
-  Out->write(Buffer, RewriteBuf.size());
-  free(Buffer);
+  std::unique_ptr<char[]> Buffer(new char[RewriteBuf.size()]);
+  std::copy(RewriteBuf.begin(), RewriteBuf.end(), Buffer.get());
+  Out->write(Buffer.get(), RewriteBuf.size());
 }

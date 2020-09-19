@@ -1,9 +1,8 @@
 //===- lib/Linker/LinkModules.cpp - Module Linker Implementation ----------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -329,8 +328,18 @@ bool ModuleLinker::shouldLinkFromSource(bool &LinkFromSrc,
 bool ModuleLinker::linkIfNeeded(GlobalValue &GV) {
   GlobalValue *DGV = getLinkedToGlobal(&GV);
 
-  if (shouldLinkOnlyNeeded() && !(DGV && DGV->isDeclaration()))
-    return false;
+  if (shouldLinkOnlyNeeded()) {
+    // Always import variables with appending linkage.
+    if (!GV.hasAppendingLinkage()) {
+      // Don't import globals unless they are referenced by the destination
+      // module.
+      if (!DGV)
+        return false;
+      // Don't import globals that are already defined in the destination module
+      if (!DGV->isDeclaration())
+        return false;
+    }
+  }
 
   if (DGV && !GV.hasLocalLinkage() && !GV.hasAppendingLinkage()) {
     auto *DGVar = dyn_cast<GlobalVariable>(DGV);

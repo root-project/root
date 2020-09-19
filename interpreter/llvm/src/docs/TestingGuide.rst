@@ -8,6 +8,7 @@ LLVM Testing Infrastructure Guide
 .. toctree::
    :hidden:
 
+   TestSuiteGuide
    TestSuiteMakefileGuide
 
 Overview
@@ -25,23 +26,27 @@ In order to use the LLVM testing infrastructure, you will need all of the
 software required to build LLVM, as well as `Python <http://python.org>`_ 2.7 or
 later.
 
-If you intend to run the :ref:`test-suite <test-suite-overview>`, you will also
-need a development version of zlib (zlib1g-dev is known to work on several Linux
-distributions).
-
-LLVM testing infrastructure organization
+LLVM Testing Infrastructure Organization
 ========================================
 
-The LLVM testing infrastructure contains two major categories of tests:
-regression tests and whole programs. The regression tests are contained
-inside the LLVM repository itself under ``llvm/test`` and are expected
-to always pass -- they should be run before every commit.
+The LLVM testing infrastructure contains three major categories of tests:
+unit tests, regression tests and whole programs. The unit tests and regression
+tests are contained inside the LLVM repository itself under ``llvm/unittests``
+and ``llvm/test`` respectively and are expected to always pass -- they should be
+run before every commit.
 
 The whole programs tests are referred to as the "LLVM test suite" (or
 "test-suite") and are in the ``test-suite`` module in subversion. For
 historical reasons, these tests are also referred to as the "nightly
 tests" in places, which is less ambiguous than "test-suite" and remains
 in use although we run them much more often than nightly.
+
+Unit tests
+----------
+
+Unit tests are written using `Google Test <https://github.com/google/googletest/blob/master/googletest/docs/primer.md>`_
+and `Google Mock <https://github.com/google/googletest/blob/master/googlemock/docs/ForDummies.md>`_
+and are located in the ``llvm/unittests`` directory.
 
 Regression tests
 ----------------
@@ -77,6 +82,8 @@ LLVM compiles, optimizes, and generates code.
 
 The test-suite is located in the ``test-suite`` Subversion module.
 
+See the :doc:`TestSuiteGuide` for details.
+
 Debugging Information tests
 ---------------------------
 
@@ -91,23 +98,36 @@ test suite for more information . This test suite is located in the
 Quick start
 ===========
 
-The tests are located in two separate Subversion modules. The
-regressions tests are in the main "llvm" module under the directory
-``llvm/test`` (so you get these tests for free with the main LLVM tree).
-Use ``make check-all`` to run the regression tests after building LLVM.
+The tests are located in two separate Subversion modules. The unit and
+regression tests are in the main "llvm" module under the directories
+``llvm/unittests`` and ``llvm/test`` (so you get these tests for free with the
+main LLVM tree). Use ``make check-all`` to run the unit and regression tests
+after building LLVM.
 
-The more comprehensive test suite that includes whole programs in C and C++
-is in the ``test-suite`` module. See :ref:`test-suite Quickstart
-<test-suite-quickstart>` for more information on running these tests.
+The ``test-suite`` module contains more comprehensive tests including whole C
+and C++ programs. See the :doc:`TestSuiteGuide` for details.
 
-Regression tests
-----------------
+Unit and Regression tests
+-------------------------
+
+To run all of the LLVM unit tests use the check-llvm-unit target:
+
+.. code-block:: bash
+
+    % make check-llvm-unit
 
 To run all of the LLVM regression tests use the check-llvm target:
 
 .. code-block:: bash
 
     % make check-llvm
+
+In order to get reasonable testing performance, build LLVM and subprojects
+in release mode, i.e.
+
+.. code-block:: bash
+
+    % cmake -DCMAKE_BUILD_TYPE="Release" -DLLVM_ENABLE_ASSERTIONS=On
 
 If you have `Clang <http://clang.llvm.org/>`_ checked out and built, you
 can run the LLVM and Clang tests simultaneously using:
@@ -145,15 +165,9 @@ or the :doc:`lit man page <CommandGuide/lit>`.
 Debugging Information tests
 ---------------------------
 
-To run debugging information tests simply checkout the tests inside
-clang/test directory.
-
-.. code-block:: bash
-
-    % cd clang/test
-    % svn co http://llvm.org/svn/llvm-project/debuginfo-tests/trunk debuginfo-tests
-
-These tests are already set up to run as part of clang regression tests.
+To run debugging information tests simply add the ``debuginfo-tests``
+project to your ``LLVM_ENABLE_PROJECTS`` define on the cmake
+command-line.
 
 Regression test structure
 =========================
@@ -460,7 +474,10 @@ RUN lines:
    Example: ``/home/user/llvm.build/test/MC/ELF/Output/foo_test.s.tmp``
 
 ``%T``
-   Directory of ``%t``.
+   Directory of ``%t``. Deprecated. Shouldn't be used, because it can be easily
+   misused and cause race conditions between tests.
+
+   Use ``rm -rf %t && mkdir %t`` instead if a temporary directory is necessary.
 
    Example: ``/home/user/llvm.build/test/MC/ELF/Output``
 
@@ -494,7 +511,7 @@ RUN lines:
    The suffix for the host platforms shared library files. This includes the
    period as the first character.
 
-   Example: ``.so`` (Linux), ``.dylib`` (OS X), ``.dll`` (Windows)
+   Example: ``.so`` (Linux), ``.dylib`` (macOS), ``.dll`` (Windows)
 
 ``%exeext``
    The suffix for the host platforms executable files. This includes the
@@ -582,65 +599,3 @@ the last RUN: line. This has two side effects:
 
 (b) it speeds things up for really big test cases by avoiding
     interpretation of the remainder of the file.
-
-.. _test-suite-overview:
-
-``test-suite`` Overview
-=======================
-
-The ``test-suite`` module contains a number of programs that can be
-compiled and executed. The ``test-suite`` includes reference outputs for
-all of the programs, so that the output of the executed program can be
-checked for correctness.
-
-``test-suite`` tests are divided into three types of tests: MultiSource,
-SingleSource, and External.
-
--  ``test-suite/SingleSource``
-
-   The SingleSource directory contains test programs that are only a
-   single source file in size. These are usually small benchmark
-   programs or small programs that calculate a particular value. Several
-   such programs are grouped together in each directory.
-
--  ``test-suite/MultiSource``
-
-   The MultiSource directory contains subdirectories which contain
-   entire programs with multiple source files. Large benchmarks and
-   whole applications go here.
-
--  ``test-suite/External``
-
-   The External directory contains Makefiles for building code that is
-   external to (i.e., not distributed with) LLVM. The most prominent
-   members of this directory are the SPEC 95 and SPEC 2000 benchmark
-   suites. The ``External`` directory does not contain these actual
-   tests, but only the Makefiles that know how to properly compile these
-   programs from somewhere else. When using ``LNT``, use the
-   ``--test-externals`` option to include these tests in the results.
-
-.. _test-suite-quickstart:
-
-``test-suite`` Quickstart
--------------------------
-
-The modern way of running the ``test-suite`` is focused on testing and
-benchmarking complete compilers using the
-`LNT <http://llvm.org/docs/lnt>`_ testing infrastructure.
-
-For more information on using LNT to execute the ``test-suite``, please
-see the `LNT Quickstart <http://llvm.org/docs/lnt/quickstart.html>`_
-documentation.
-
-``test-suite`` Makefiles
-------------------------
-
-Historically, the ``test-suite`` was executed using a complicated setup
-of Makefiles. The LNT based approach above is recommended for most
-users, but there are some testing scenarios which are not supported by
-the LNT approach. In addition, LNT currently uses the Makefile setup
-under the covers and so developers who are interested in how LNT works
-under the hood may want to understand the Makefile based setup.
-
-For more information on the ``test-suite`` Makefile setup, please see
-the :doc:`Test Suite Makefile Guide <TestSuiteMakefileGuide>`.

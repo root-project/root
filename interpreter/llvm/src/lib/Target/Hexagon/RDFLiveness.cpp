@@ -1,9 +1,8 @@
-//===--- RDFLiveness.cpp --------------------------------------------------===//
+//===- RDFLiveness.cpp ----------------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -25,14 +24,29 @@
 //
 #include "RDFLiveness.h"
 #include "RDFGraph.h"
+#include "RDFRegisters.h"
+#include "llvm/ADT/BitVector.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SetVector.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineDominanceFrontier.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineFunction.h"
-#include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/MachineInstr.h"
+#include "llvm/CodeGen/TargetRegisterInfo.h"
+#include "llvm/MC/LaneBitmask.h"
+#include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/Support/CommandLine.h"
-#include "llvm/Target/TargetRegisterInfo.h"
+#include "llvm/Support/Debug.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/raw_ostream.h"
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <iterator>
+#include <map>
+#include <utility>
+#include <vector>
 
 using namespace llvm;
 using namespace rdf;
@@ -42,11 +56,11 @@ static cl::opt<unsigned> MaxRecNest("rdf-liveness-max-rec", cl::init(25),
 
 namespace llvm {
 namespace rdf {
-  template<>
+
   raw_ostream &operator<< (raw_ostream &OS, const Print<Liveness::RefMap> &P) {
     OS << '{';
     for (auto &I : P.Obj) {
-      OS << ' ' << PrintReg(I.first, &P.G.getTRI()) << '{';
+      OS << ' ' << printReg(I.first, &P.G.getTRI()) << '{';
       for (auto J = I.second.begin(), E = I.second.end(); J != E; ) {
         OS << Print<NodeId>(J->first, P.G) << PrintLaneMaskOpt(J->second);
         if (++J != E)
@@ -57,8 +71,9 @@ namespace rdf {
     OS << " }";
     return OS;
   }
-} // namespace rdf
-} // namespace llvm
+
+} // end namespace rdf
+} // end namespace llvm
 
 // The order in the returned sequence is the order of reaching defs in the
 // upward traversal: the first def is the closest to the given reference RefA,
@@ -190,7 +205,7 @@ NodeList Liveness::getAllReachingDefs(RegisterRef RefRR,
   };
 
   std::vector<NodeId> Tmp(Owners.begin(), Owners.end());
-  std::sort(Tmp.begin(), Tmp.end(), Less);
+  llvm::sort(Tmp, Less);
 
   // The vector is a list of instructions, so that defs coming from
   // the same instruction don't need to be artificially ordered.
@@ -245,18 +260,16 @@ NodeList Liveness::getAllReachingDefs(RegisterRef RefRR,
   auto DeadP = [](const NodeAddr<DefNode*> DA) -> bool {
     return DA.Addr->getFlags() & NodeAttrs::Dead;
   };
-  RDefs.resize(std::distance(RDefs.begin(), remove_if(RDefs, DeadP)));
+  RDefs.resize(std::distance(RDefs.begin(), llvm::remove_if(RDefs, DeadP)));
 
   return RDefs;
 }
-
 
 std::pair<NodeSet,bool>
 Liveness::getAllReachingDefsRec(RegisterRef RefRR, NodeAddr<RefNode*> RefA,
       NodeSet &Visited, const NodeSet &Defs) {
   return getAllReachingDefsRecImpl(RefRR, RefA, Visited, Defs, 0, MaxRecNest);
 }
-
 
 std::pair<NodeSet,bool>
 Liveness::getAllReachingDefsRecImpl(RegisterRef RefRR, NodeAddr<RefNode*> RefA,
@@ -363,7 +376,6 @@ NodeAddr<RefNode*> Liveness::getNearestAliasedRef(RegisterRef RefRR,
   return NodeAddr<RefNode*>();
 }
 
-
 NodeSet Liveness::getAllReachedUses(RegisterRef RefRR,
       NodeAddr<DefNode*> DefA, const RegisterAggr &DefRRs) {
   NodeSet Uses;
@@ -409,7 +421,6 @@ NodeSet Liveness::getAllReachedUses(RegisterRef RefRR,
   }
   return Uses;
 }
-
 
 void Liveness::computePhiInfo() {
   RealUseMap.clear();
@@ -615,7 +626,7 @@ void Liveness::computePhiInfo() {
 
         // Collect the set PropUp of uses that are reached by the current
         // phi PA, and are not covered by any intervening def between the
-        // currently visited use UA and the the upward phi P.
+        // currently visited use UA and the upward phi P.
 
         if (MidDefs.hasCoverOf(UR))
           continue;
@@ -667,7 +678,6 @@ void Liveness::computePhiInfo() {
     }
   }
 }
-
 
 void Liveness::computeLiveIns() {
   // Populate the node-to-block map. This speeds up the calculations
@@ -801,8 +811,8 @@ void Liveness::computeLiveIns() {
       std::vector<RegisterRef> LV;
       for (auto I = B.livein_begin(), E = B.livein_end(); I != E; ++I)
         LV.push_back(RegisterRef(I->PhysReg, I->LaneMask));
-      std::sort(LV.begin(), LV.end());
-      dbgs() << "BB#" << B.getNumber() << "\t rec = {";
+      llvm::sort(LV);
+      dbgs() << printMBBReference(B) << "\t rec = {";
       for (auto I : LV)
         dbgs() << ' ' << Print<RegisterRef>(I, DFG);
       dbgs() << " }\n";
@@ -812,7 +822,7 @@ void Liveness::computeLiveIns() {
       const RegisterAggr &LG = LiveMap[&B];
       for (auto I = LG.rr_begin(), E = LG.rr_end(); I != E; ++I)
         LV.push_back(*I);
-      std::sort(LV.begin(), LV.end());
+      llvm::sort(LV);
       dbgs() << "\tcomp = {";
       for (auto I : LV)
         dbgs() << ' ' << Print<RegisterRef>(I, DFG);
@@ -821,7 +831,6 @@ void Liveness::computeLiveIns() {
     }
   }
 }
-
 
 void Liveness::resetLiveIns() {
   for (auto &B : DFG.getMF()) {
@@ -840,12 +849,10 @@ void Liveness::resetLiveIns() {
   }
 }
 
-
 void Liveness::resetKills() {
   for (auto &B : DFG.getMF())
     resetKills(&B);
 }
-
 
 void Liveness::resetKills(MachineBasicBlock *B) {
   auto CopyLiveIns = [this] (MachineBasicBlock *B, BitVector &LV) -> void {
@@ -871,7 +878,7 @@ void Liveness::resetKills(MachineBasicBlock *B) {
 
   for (auto I = B->rbegin(), E = B->rend(); I != E; ++I) {
     MachineInstr *MI = &*I;
-    if (MI->isDebugValue())
+    if (MI->isDebugInstr())
       continue;
 
     MI->clearKillInfo();
@@ -909,7 +916,6 @@ void Liveness::resetKills(MachineBasicBlock *B) {
   }
 }
 
-
 // Helper function to obtain the basic block containing the reaching def
 // of the given use.
 MachineBasicBlock *Liveness::getBlockWithRef(NodeId RN) const {
@@ -918,7 +924,6 @@ MachineBasicBlock *Liveness::getBlockWithRef(NodeId RN) const {
     return F->second;
   llvm_unreachable("Node id not in map");
 }
-
 
 void Liveness::traverse(MachineBasicBlock *B, RefMap &LiveIn) {
   // The LiveIn map, for each (physical) register, contains the set of live
@@ -956,7 +961,7 @@ void Liveness::traverse(MachineBasicBlock *B, RefMap &LiveIn) {
   }
 
   if (Trace) {
-    dbgs() << "\n-- BB#" << B->getNumber() << ": " << __func__
+    dbgs() << "\n-- " << printMBBReference(*B) << ": " << __func__
            << " after recursion into: {";
     for (auto I : *N)
       dbgs() << ' ' << I->getBlock()->getNumber();
@@ -1107,9 +1112,7 @@ void Liveness::traverse(MachineBasicBlock *B, RefMap &LiveIn) {
   }
 }
 
-
 void Liveness::emptify(RefMap &M) {
   for (auto I = M.begin(), E = M.end(); I != E; )
     I = I->second.empty() ? M.erase(I) : std::next(I);
 }
-

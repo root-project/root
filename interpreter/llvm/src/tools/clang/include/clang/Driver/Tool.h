@@ -1,9 +1,8 @@
 //===--- Tool.h - Compilation Tools -----------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -88,12 +87,12 @@ public:
   virtual bool hasIntegratedCPP() const = 0;
   virtual bool isLinkJob() const { return false; }
   virtual bool isDsymutilJob() const { return false; }
-  /// \brief Returns the level of support for response files of this tool,
+  /// Returns the level of support for response files of this tool,
   /// whether it accepts arguments to be passed via a file on disk.
   ResponseFileSupport getResponseFilesSupport() const {
     return ResponseSupport;
   }
-  /// \brief Returns which encoding the response file should use. This is only
+  /// Returns which encoding the response file should use. This is only
   /// relevant on Windows platforms where there are different encodings being
   /// accepted for different tools. On UNIX, UTF8 is universal.
   ///
@@ -108,11 +107,11 @@ public:
   llvm::sys::WindowsEncodingMethod getResponseFileEncoding() const {
     return ResponseEncoding;
   }
-  /// \brief Returns which prefix to use when passing the name of a response
+  /// Returns which prefix to use when passing the name of a response
   /// file as a parameter to this tool.
   const char *getResponseFileFlag() const { return ResponseFlag; }
 
-  /// \brief Does this tool have "good" standardized diagnostics, or should the
+  /// Does this tool have "good" standardized diagnostics, or should the
   /// driver add an additional "command failed" diagnostic on failures.
   virtual bool hasGoodDiagnostics() const { return false; }
 

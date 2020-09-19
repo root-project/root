@@ -1,9 +1,8 @@
 //===--- FrontendActions.cpp ----------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -130,10 +129,14 @@ bool FixItRecompile::BeginInvocation(CompilerInstance &CI) {
       FixItOpts->FixOnlyWarnings = FEOpts.FixOnlyWarnings;
       FixItRewriter Rewriter(CI.getDiagnostics(), CI.getSourceManager(),
                              CI.getLangOpts(), FixItOpts.get());
-      FixAction->Execute();
-  
+      if (llvm::Error Err = FixAction->Execute()) {
+        // FIXME this drops the error on the floor.
+        consumeError(std::move(Err));
+        return false;
+      }
+
       err = Rewriter.WriteFixedFiles(&RewrittenFiles);
-    
+
       FixAction->EndSourceFile();
       CI.setSourceManager(nullptr);
       CI.setFileManager(nullptr);
@@ -154,7 +157,7 @@ bool FixItRecompile::BeginInvocation(CompilerInstance &CI) {
   return true;
 }
 
-#ifdef CLANG_ENABLE_OBJC_REWRITER
+#if CLANG_ENABLE_OBJC_REWRITER
 
 std::unique_ptr<ASTConsumer>
 RewriteObjCAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {
@@ -181,7 +184,7 @@ RewriteObjCAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {
 void RewriteMacrosAction::ExecuteAction() {
   CompilerInstance &CI = getCompilerInstance();
   std::unique_ptr<raw_ostream> OS =
-      CI.createDefaultOutputFile(true, getCurrentFile());
+      CI.createDefaultOutputFile(true, getCurrentFileOrBufferName());
   if (!OS) return;
 
   RewriteMacrosInInput(CI.getPreprocessor(), OS.get());
@@ -190,7 +193,7 @@ void RewriteMacrosAction::ExecuteAction() {
 void RewriteTestAction::ExecuteAction() {
   CompilerInstance &CI = getCompilerInstance();
   std::unique_ptr<raw_ostream> OS =
-      CI.createDefaultOutputFile(false, getCurrentFile());
+      CI.createDefaultOutputFile(false, getCurrentFileOrBufferName());
   if (!OS) return;
 
   DoRewriteTest(CI.getPreprocessor(), OS.get());
@@ -238,7 +241,7 @@ public:
 
     // Rewrite the contents of the module in a separate compiler instance.
     CompilerInstance Instance(CI.getPCHContainerOperations(),
-                              &CI.getPreprocessor().getPCMCache());
+                              &CI.getModuleCache());
     Instance.setInvocation(
         std::make_shared<CompilerInvocation>(CI.getInvocation()));
     Instance.createDiagnostics(
@@ -265,7 +268,8 @@ public:
 
 bool RewriteIncludesAction::BeginSourceFileAction(CompilerInstance &CI) {
   if (!OutputStream) {
-    OutputStream = CI.createDefaultOutputFile(true, getCurrentFile());
+    OutputStream =
+        CI.createDefaultOutputFile(true, getCurrentFileOrBufferName());
     if (!OutputStream)
       return false;
   }

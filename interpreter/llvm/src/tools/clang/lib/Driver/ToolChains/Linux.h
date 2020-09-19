@@ -1,9 +1,8 @@
 //===--- Linux.h - Linux ToolChain Implementations --------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -27,7 +26,9 @@ public:
   void
   AddClangSystemIncludeArgs(const llvm::opt::ArgList &DriverArgs,
                             llvm::opt::ArgStringList &CC1Args) const override;
-  std::string findLibCxxIncludePath() const override;
+  void addLibCxxIncludePaths(
+      const llvm::opt::ArgList &DriverArgs,
+      llvm::opt::ArgStringList &CC1Args) const override;
   void addLibStdCxxIncludePaths(
       const llvm::opt::ArgList &DriverArgs,
       llvm::opt::ArgStringList &CC1Args) const override;
@@ -35,7 +36,10 @@ public:
                           llvm::opt::ArgStringList &CC1Args) const override;
   void AddIAMCUIncludeArgs(const llvm::opt::ArgList &DriverArgs,
                            llvm::opt::ArgStringList &CC1Args) const override;
+  CXXStdlibType GetDefaultCXXStdlibType() const override;
   bool isPIEDefault() const override;
+  bool isNoExecStackDefault() const override;
+  bool IsMathErrnoDefault() const override;
   SanitizerMask getSupportedSanitizers() const override;
   void addProfileRTLibs(const llvm::opt::ArgList &Args,
                         llvm::opt::ArgStringList &CmdArgs) const override;

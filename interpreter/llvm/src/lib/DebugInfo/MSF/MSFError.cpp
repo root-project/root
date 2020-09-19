@@ -1,9 +1,8 @@
 //===- MSFError.cpp - Error extensions for MSF files ------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -21,7 +20,6 @@ namespace {
 class MSFErrorCategory : public std::error_category {
 public:
   const char *name() const noexcept override { return "llvm.msf"; }
-
   std::string message(int Condition) const override {
     switch (static_cast<msf_error_code>(Condition)) {
     case msf_error_code::unspecified:
@@ -41,30 +39,9 @@ public:
     llvm_unreachable("Unrecognized msf_error_code");
   }
 };
-} // end anonymous namespace
+} // namespace
 
-static ManagedStatic<MSFErrorCategory> Category;
+static llvm::ManagedStatic<MSFErrorCategory> MSFCategory;
+const std::error_category &llvm::msf::MSFErrCategory() { return *MSFCategory; }
 
-char MSFError::ID = 0;
-
-MSFError::MSFError(msf_error_code C) : MSFError(C, "") {}
-
-MSFError::MSFError(const std::string &Context)
-    : MSFError(msf_error_code::unspecified, Context) {}
-
-MSFError::MSFError(msf_error_code C, const std::string &Context) : Code(C) {
-  ErrMsg = "MSF Error: ";
-  std::error_code EC = convertToErrorCode();
-  if (Code != msf_error_code::unspecified)
-    ErrMsg += EC.message() + "  ";
-  if (!Context.empty())
-    ErrMsg += Context;
-}
-
-void MSFError::log(raw_ostream &OS) const { OS << ErrMsg << "\n"; }
-
-const std::string &MSFError::getErrorMessage() const { return ErrMsg; }
-
-std::error_code MSFError::convertToErrorCode() const {
-  return std::error_code(static_cast<int>(Code), *Category);
-}
+char MSFError::ID;

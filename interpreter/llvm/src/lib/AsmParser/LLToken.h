@@ -1,9 +1,8 @@
 //===- LLToken.h - Token Codes for LLVM Assembly Files ----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -36,7 +35,9 @@ enum Kind {
   rparen,  // (  )
   exclaim, // !
   bar,     // |
+  colon,   // :
 
+  kw_vscale,
   kw_x,
   kw_true,
   kw_false,
@@ -44,6 +45,9 @@ enum Kind {
   kw_define,
   kw_global,
   kw_constant,
+
+  kw_dso_local,
+  kw_dso_preemptable,
 
   kw_private,
   kw_internal,
@@ -99,6 +103,8 @@ enum Kind {
   kw_nsz,
   kw_arcp,
   kw_contract,
+  kw_reassoc,
+  kw_afn,
   kw_fast,
   kw_nuw,
   kw_nsw,
@@ -108,6 +114,7 @@ enum Kind {
   kw_align,
   kw_addrspace,
   kw_section,
+  kw_partition,
   kw_alias,
   kw_ifunc,
   kw_module,
@@ -133,6 +140,7 @@ enum Kind {
   kw_arm_apcscc,
   kw_arm_aapcscc,
   kw_arm_aapcs_vfpcc,
+  kw_aarch64_vector_pcs,
   kw_msp430_intrcc,
   kw_avr_intrcc,
   kw_avr_signalcc,
@@ -153,7 +161,9 @@ enum Kind {
   kw_hhvm_ccc,
   kw_cxx_fast_tlscc,
   kw_amdgpu_vs,
+  kw_amdgpu_ls,
   kw_amdgpu_hs,
+  kw_amdgpu_es,
   kw_amdgpu_gs,
   kw_amdgpu_ps,
   kw_amdgpu_cs,
@@ -165,6 +175,8 @@ enum Kind {
   kw_alwaysinline,
   kw_argmemonly,
   kw_sanitize_address,
+  kw_sanitize_hwaddress,
+  kw_sanitize_memtag,
   kw_builtin,
   kw_byval,
   kw_inalloca,
@@ -184,6 +196,7 @@ enum Kind {
   kw_nobuiltin,
   kw_nocapture,
   kw_noduplicate,
+  kw_nofree,
   kw_noimplicitfloat,
   kw_noinline,
   kw_norecurse,
@@ -191,7 +204,10 @@ enum Kind {
   kw_nonnull,
   kw_noredzone,
   kw_noreturn,
+  kw_nosync,
+  kw_nocf_check,
   kw_nounwind,
+  kw_optforfuzzing,
   kw_optnone,
   kw_optsize,
   kw_readnone,
@@ -204,14 +220,19 @@ enum Kind {
   kw_sspreq,
   kw_sspstrong,
   kw_safestack,
+  kw_shadowcallstack,
   kw_sret,
   kw_sanitize_thread,
   kw_sanitize_memory,
+  kw_speculative_load_hardening,
+  kw_strictfp,
   kw_swifterror,
   kw_swiftself,
   kw_uwtable,
+  kw_willreturn,
   kw_writeonly,
   kw_zeroext,
+  kw_immarg,
 
   kw_type,
   kw_opaque,
@@ -255,6 +276,7 @@ enum Kind {
   kw_umin,
 
   // Instruction Opcodes (Opcode in UIntVal).
+  kw_fneg,
   kw_add,
   kw_fadd,
   kw_sub,
@@ -312,6 +334,7 @@ enum Kind {
   kw_catchret,
   kw_catchpad,
   kw_cleanuppad,
+  kw_callbr,
 
   kw_alloca,
   kw_load,
@@ -335,10 +358,85 @@ enum Kind {
   kw_uselistorder,
   kw_uselistorder_bb,
 
+  // Summary index keywords
+  kw_path,
+  kw_hash,
+  kw_gv,
+  kw_guid,
+  kw_name,
+  kw_summaries,
+  kw_flags,
+  kw_linkage,
+  kw_notEligibleToImport,
+  kw_live,
+  kw_dsoLocal,
+  kw_canAutoHide,
+  kw_function,
+  kw_insts,
+  kw_funcFlags,
+  kw_readNone,
+  kw_readOnly,
+  kw_noRecurse,
+  kw_returnDoesNotAlias,
+  kw_noInline,
+  kw_calls,
+  kw_callee,
+  kw_hotness,
+  kw_unknown,
+  kw_hot,
+  kw_critical,
+  kw_relbf,
+  kw_variable,
+  kw_vTableFuncs,
+  kw_virtFunc,
+  kw_aliasee,
+  kw_refs,
+  kw_typeIdInfo,
+  kw_typeTests,
+  kw_typeTestAssumeVCalls,
+  kw_typeCheckedLoadVCalls,
+  kw_typeTestAssumeConstVCalls,
+  kw_typeCheckedLoadConstVCalls,
+  kw_vFuncId,
+  kw_offset,
+  kw_args,
+  kw_typeid,
+  kw_typeidCompatibleVTable,
+  kw_summary,
+  kw_typeTestRes,
+  kw_kind,
+  kw_unsat,
+  kw_byteArray,
+  kw_inline,
+  kw_single,
+  kw_allOnes,
+  kw_sizeM1BitWidth,
+  kw_alignLog2,
+  kw_sizeM1,
+  kw_bitMask,
+  kw_inlineBits,
+  kw_wpdResolutions,
+  kw_wpdRes,
+  kw_indir,
+  kw_singleImpl,
+  kw_branchFunnel,
+  kw_singleImplName,
+  kw_resByArg,
+  kw_byArg,
+  kw_uniformRetVal,
+  kw_uniqueRetVal,
+  kw_virtualConstProp,
+  kw_info,
+  kw_byte,
+  kw_bit,
+  kw_varFlags,
+
   // Unsigned Valued tokens (UIntVal).
+  LabelID,    // 42:
   GlobalID,   // @42
   LocalVarID, // %42
   AttrGrpID,  // #42
+  SummaryID,  // ^42
 
   // String valued tokens (StrVal).
   LabelStr,         // foo:
@@ -353,8 +451,10 @@ enum Kind {
   DwarfLang,        // DW_LANG_foo
   DwarfCC,          // DW_CC_foo
   EmissionKind,     // lineTablesOnly
+  NameTableKind,    // GNU
   DwarfOp,          // DW_OP_foo
   DIFlag,           // DIFlagFoo
+  DISPFlag,         // DISPFlagFoo
   DwarfMacinfo,     // DW_MACINFO_foo
   ChecksumKind,     // CSK_foo
 

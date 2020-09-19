@@ -1,9 +1,8 @@
-//===-- llvm/CallingConvLower.h - Calling Conventions -----------*- C++ -*-===//
+//===- llvm/CallingConvLower.h - Calling Conventions ------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -18,11 +17,12 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
+#include "llvm/CodeGen/TargetCallingConv.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/MC/MCRegisterInfo.h"
-#include "llvm/Target/TargetCallingConv.h"
 
 namespace llvm {
+
 class CCState;
 class MVT;
 class TargetMachine;
@@ -145,7 +145,7 @@ public:
 
   bool needsCustom() const { return isCustom; }
 
-  unsigned getLocReg() const { assert(isRegLoc()); return Loc; }
+  Register getLocReg() const { assert(isRegLoc()); return Loc; }
   unsigned getLocMemOffset() const { assert(isMemLoc()); return Loc; }
   unsigned getExtraInfo() const { return Loc; }
   MVT getLocVT() const { return LocVT; }
@@ -200,6 +200,7 @@ private:
   unsigned MaxStackArgAlign;
   SmallVector<uint32_t, 16> UsedRegs;
   SmallVector<CCValAssign, 4> PendingLocs;
+  SmallVector<ISD::ArgFlagsTy, 4> PendingArgFlags;
 
   // ByValInfo and SmallVector<ByValInfo, 4> ByValRegs:
   //
@@ -302,7 +303,7 @@ public:
   /// CheckReturn - Analyze the return values of a function, returning
   /// true if the return can be performed without sret-demotion, and
   /// false otherwise.
-  bool CheckReturn(const SmallVectorImpl<ISD::OutputArg> &ArgsFlags,
+  bool CheckReturn(const SmallVectorImpl<ISD::OutputArg> &Outs,
                    CCAssignFn Fn);
 
   /// AnalyzeCallOperands - Analyze the outgoing arguments to a call,
@@ -503,8 +504,13 @@ public:
   }
 
   // Get list of pending assignments
-  SmallVectorImpl<llvm::CCValAssign> &getPendingLocs() {
+  SmallVectorImpl<CCValAssign> &getPendingLocs() {
     return PendingLocs;
+  }
+
+  // Get a list of argflags for pending assignments.
+  SmallVectorImpl<ISD::ArgFlagsTy> &getPendingArgFlags() {
+    return PendingArgFlags;
   }
 
   /// Compute the remaining unused register parameters that would be used for
@@ -550,7 +556,7 @@ public:
 
     // Sort the locations of the arguments according to their original position.
     SmallVector<CCValAssign, 16> TmpArgLocs;
-    std::swap(TmpArgLocs, Locs);
+    TmpArgLocs.swap(Locs);
     auto B = TmpArgLocs.begin(), E = TmpArgLocs.end();
     std::merge(B, B + NumFirstPassLocs, B + NumFirstPassLocs, E,
                std::back_inserter(Locs),
@@ -564,8 +570,6 @@ private:
   void MarkAllocated(unsigned Reg);
 };
 
-
-
 } // end namespace llvm
 
-#endif
+#endif // LLVM_CODEGEN_CALLINGCONVLOWER_H

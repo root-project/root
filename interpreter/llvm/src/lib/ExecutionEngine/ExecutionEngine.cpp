@@ -1,9 +1,8 @@
 //===-- ExecutionEngine.cpp - Common Implementation shared by EEs ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -49,14 +48,13 @@ STATISTIC(NumGlobals  , "Number of global vars initialized");
 ExecutionEngine *(*ExecutionEngine::MCJITCtor)(
     std::unique_ptr<Module> M, std::string *ErrorStr,
     std::shared_ptr<MCJITMemoryManager> MemMgr,
-
-    std::shared_ptr<JITSymbolResolver> Resolver,
+    std::shared_ptr<LegacyJITSymbolResolver> Resolver,
     std::unique_ptr<TargetMachine> TM) = nullptr;
 
 ExecutionEngine *(*ExecutionEngine::OrcMCJITReplacementCtor)(
-  std::string *ErrorStr, std::shared_ptr<MCJITMemoryManager> MemMgr,
-  std::shared_ptr<JITSymbolResolver> Resolver,
-  std::unique_ptr<TargetMachine> TM) = nullptr;
+    std::string *ErrorStr, std::shared_ptr<MCJITMemoryManager> MemMgr,
+    std::shared_ptr<LegacyJITSymbolResolver> Resolver,
+    std::unique_ptr<TargetMachine> TM) = nullptr;
 
 ExecutionEngine *(*ExecutionEngine::InterpCtor)(std::unique_ptr<Module> M,
                                                 std::string *ErrorStr) =nullptr;
@@ -97,14 +95,14 @@ ExecutionEngine::~ExecutionEngine() {
 }
 
 namespace {
-/// \brief Helper class which uses a value handler to automatically deletes the
+/// Helper class which uses a value handler to automatically deletes the
 /// memory block when the GlobalVariable is destroyed.
 class GVMemoryBlock final : public CallbackVH {
   GVMemoryBlock(const GlobalVariable *GV)
     : CallbackVH(const_cast<GlobalVariable*>(GV)) {}
 
 public:
-  /// \brief Returns the address the GlobalVariable should be written into.  The
+  /// Returns the address the GlobalVariable should be written into.  The
   /// GVMemoryBlock object prefixes that.
   static char *Create(const GlobalVariable *GV, const DataLayout& TD) {
     Type *ElTy = GV->getValueType();
@@ -215,7 +213,7 @@ void ExecutionEngine::addGlobalMapping(StringRef Name, uint64_t Addr) {
 
   assert(!Name.empty() && "Empty GlobalMapping symbol name!");
 
-  DEBUG(dbgs() << "JIT: Map \'" << Name  << "\' to [" << Addr << "]\n";);
+  LLVM_DEBUG(dbgs() << "JIT: Map \'" << Name << "\' to [" << Addr << "]\n";);
   uint64_t &CurVal = EEState.getGlobalAddressMap()[Name];
   assert((!CurVal || !Addr) && "GlobalMapping already established!");
   CurVal = Addr;
@@ -344,13 +342,14 @@ void *ArgvArray::reset(LLVMContext &C, ExecutionEngine *EE,
   unsigned PtrSize = EE->getDataLayout().getPointerSize();
   Array = make_unique<char[]>((InputArgv.size()+1)*PtrSize);
 
-  DEBUG(dbgs() << "JIT: ARGV = " << (void*)Array.get() << "\n");
+  LLVM_DEBUG(dbgs() << "JIT: ARGV = " << (void *)Array.get() << "\n");
   Type *SBytePtr = Type::getInt8PtrTy(C);
 
   for (unsigned i = 0; i != InputArgv.size(); ++i) {
     unsigned Size = InputArgv[i].size()+1;
     auto Dest = make_unique<char[]>(Size);
-    DEBUG(dbgs() << "JIT: ARGV[" << i << "] = " << (void*)Dest.get() << "\n");
+    LLVM_DEBUG(dbgs() << "JIT: ARGV[" << i << "] = " << (void *)Dest.get()
+                      << "\n");
 
     std::copy(InputArgv[i].begin(), InputArgv[i].end(), Dest.get());
     Dest[Size-1] = 0;
@@ -476,7 +475,7 @@ EngineBuilder::EngineBuilder() : EngineBuilder(nullptr) {}
 EngineBuilder::EngineBuilder(std::unique_ptr<Module> M)
     : M(std::move(M)), WhichEngine(EngineKind::Either), ErrorStr(nullptr),
       OptLevel(CodeGenOpt::Default), MemMgr(nullptr), Resolver(nullptr),
-      CMModel(CodeModel::JITDefault), UseOrcMCJITReplacement(false) {
+      UseOrcMCJITReplacement(false) {
 // IR module verification is enabled by default in debug builds, and disabled
 // by default in release builds.
 #ifndef NDEBUG
@@ -502,9 +501,9 @@ EngineBuilder::setMemoryManager(std::unique_ptr<MCJITMemoryManager> MM) {
   return *this;
 }
 
-EngineBuilder&
-EngineBuilder::setSymbolResolver(std::unique_ptr<JITSymbolResolver> SR) {
-  Resolver = std::shared_ptr<JITSymbolResolver>(std::move(SR));
+EngineBuilder &
+EngineBuilder::setSymbolResolver(std::unique_ptr<LegacyJITSymbolResolver> SR) {
+  Resolver = std::shared_ptr<LegacyJITSymbolResolver>(std::move(SR));
   return *this;
 }
 
@@ -532,7 +531,6 @@ ExecutionEngine *EngineBuilder::create(TargetMachine *TM) {
   // Unless the interpreter was explicitly selected or the JIT is not linked,
   // try making a JIT.
   if ((WhichEngine & EngineKind::JIT) && TheTM) {
-    Triple TT(M->getTargetTriple());
     if (!TM->getTarget().hasJIT()) {
       errs() << "WARNING: This target JIT is not designed for the host"
              << " you are running.  If bad things happen, please choose"
@@ -591,7 +589,7 @@ void *ExecutionEngine::getPointerToGlobal(const GlobalValue *GV) {
   return getPointerToGlobalIfAvailable(GV);
 }
 
-/// \brief Converts a Constant* into a GenericValue, including handling of
+/// Converts a Constant* into a GenericValue, including handling of
 /// ConstantExpr values.
 GenericValue ExecutionEngine::getConstantValue(const Constant *C) {
   // If its undefined, return the garbage.
@@ -904,6 +902,9 @@ GenericValue ExecutionEngine::getConstantValue(const Constant *C) {
     Result.IntVal = cast<ConstantInt>(C)->getValue();
     break;
   case Type::PointerTyID:
+    while (auto *A = dyn_cast<GlobalAlias>(C)) {
+      C = A->getAliasee();
+    }
     if (isa<ConstantPointerNull>(C))
       Result.PointerVal = nullptr;
     else if (const Function *F = dyn_cast<Function>(C))
@@ -1018,32 +1019,6 @@ GenericValue ExecutionEngine::getConstantValue(const Constant *C) {
   return Result;
 }
 
-/// StoreIntToMemory - Fills the StoreBytes bytes of memory starting from Dst
-/// with the integer held in IntVal.
-static void StoreIntToMemory(const APInt &IntVal, uint8_t *Dst,
-                             unsigned StoreBytes) {
-  assert((IntVal.getBitWidth()+7)/8 >= StoreBytes && "Integer too small!");
-  const uint8_t *Src = (const uint8_t *)IntVal.getRawData();
-
-  if (sys::IsLittleEndianHost) {
-    // Little-endian host - the source is ordered from LSB to MSB.  Order the
-    // destination from LSB to MSB: Do a straight copy.
-    memcpy(Dst, Src, StoreBytes);
-  } else {
-    // Big-endian host - the source is an array of 64 bit words ordered from
-    // LSW to MSW.  Each word is ordered from MSB to LSB.  Order the destination
-    // from MSB to LSB: Reverse the word order, but not the bytes in a word.
-    while (StoreBytes > sizeof(uint64_t)) {
-      StoreBytes -= sizeof(uint64_t);
-      // May not be aligned so use memcpy.
-      memcpy(Dst + StoreBytes, Src, sizeof(uint64_t));
-      Src += sizeof(uint64_t);
-    }
-
-    memcpy(Dst, Src + sizeof(uint64_t) - StoreBytes, StoreBytes);
-  }
-}
-
 void ExecutionEngine::StoreValueToMemory(const GenericValue &Val,
                                          GenericValue *Ptr, Type *Ty) {
   const unsigned StoreBytes = getDataLayout().getTypeStoreSize(Ty);
@@ -1089,33 +1064,6 @@ void ExecutionEngine::StoreValueToMemory(const GenericValue &Val,
   if (sys::IsLittleEndianHost != getDataLayout().isLittleEndian())
     // Host and target are different endian - reverse the stored bytes.
     std::reverse((uint8_t*)Ptr, StoreBytes + (uint8_t*)Ptr);
-}
-
-/// LoadIntFromMemory - Loads the integer stored in the LoadBytes bytes starting
-/// from Src into IntVal, which is assumed to be wide enough and to hold zero.
-static void LoadIntFromMemory(APInt &IntVal, uint8_t *Src, unsigned LoadBytes) {
-  assert((IntVal.getBitWidth()+7)/8 >= LoadBytes && "Integer too small!");
-  uint8_t *Dst = reinterpret_cast<uint8_t *>(
-                   const_cast<uint64_t *>(IntVal.getRawData()));
-
-  if (sys::IsLittleEndianHost)
-    // Little-endian host - the destination must be ordered from LSB to MSB.
-    // The source is ordered from LSB to MSB: Do a straight copy.
-    memcpy(Dst, Src, LoadBytes);
-  else {
-    // Big-endian - the destination is an array of 64 bit words ordered from
-    // LSW to MSW.  Each word must be ordered from MSB to LSB.  The source is
-    // ordered from MSB to LSB: Reverse the word order, but not the bytes in
-    // a word.
-    while (LoadBytes > sizeof(uint64_t)) {
-      LoadBytes -= sizeof(uint64_t);
-      // May not be aligned so use memcpy.
-      memcpy(Dst, Src + LoadBytes, sizeof(uint64_t));
-      Dst += sizeof(uint64_t);
-    }
-
-    memcpy(Dst + sizeof(uint64_t) - LoadBytes, Src, LoadBytes);
-  }
 }
 
 /// FIXME: document
@@ -1182,8 +1130,8 @@ void ExecutionEngine::LoadValueFromMemory(GenericValue &Result,
 }
 
 void ExecutionEngine::InitializeMemory(const Constant *Init, void *Addr) {
-  DEBUG(dbgs() << "JIT: Initializing " << Addr << " ");
-  DEBUG(Init->dump());
+  LLVM_DEBUG(dbgs() << "JIT: Initializing " << Addr << " ");
+  LLVM_DEBUG(Init->dump());
   if (isa<UndefValue>(Init))
     return;
 
@@ -1230,7 +1178,7 @@ void ExecutionEngine::InitializeMemory(const Constant *Init, void *Addr) {
     return;
   }
 
-  DEBUG(dbgs() << "Bad Type: " << *Init->getType() << "\n");
+  LLVM_DEBUG(dbgs() << "Bad Type: " << *Init->getType() << "\n");
   llvm_unreachable("Unknown constant type to initialize memory with!");
 }
 

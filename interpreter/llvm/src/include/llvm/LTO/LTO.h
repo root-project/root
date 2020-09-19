@@ -1,9 +1,8 @@
 //===-LTO.h - LLVM Link Time Optimizer ------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -19,9 +18,9 @@
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringSet.h"
-#include "llvm/Analysis/ObjectUtils.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/ModuleSummaryIndex.h"
+#include "llvm/IR/RemarkStreamer.h"
 #include "llvm/LTO/Config.h"
 #include "llvm/Linker/IRMover.h"
 #include "llvm/Object/IRSymtab.h"
@@ -41,18 +40,19 @@ class Module;
 class Target;
 class raw_pwrite_stream;
 
-/// Resolve Weak and LinkOnce values in the \p Index. Linkage changes recorded
-/// in the index and the ThinLTO backends must apply the changes to the Module
-/// via thinLTOResolveWeakForLinkerModule.
+/// Resolve linkage for prevailing symbols in the \p Index. Linkage changes
+/// recorded in the index and the ThinLTO backends must apply the changes to
+/// the module via thinLTOResolvePrevailingInModule.
 ///
 /// This is done for correctness (if value exported, ensure we always
 /// emit a copy), and compile-time optimization (allow drop of duplicates).
-void thinLTOResolveWeakForLinkerInIndex(
+void thinLTOResolvePrevailingInIndex(
     ModuleSummaryIndex &Index,
     function_ref<bool(GlobalValue::GUID, const GlobalValueSummary *)>
         isPrevailing,
     function_ref<void(StringRef, GlobalValue::GUID, GlobalValue::LinkageTypes)>
-        recordNewLinkage);
+        recordNewLinkage,
+    const DenseSet<GlobalValue::GUID> &GUIDPreservedSymbols);
 
 /// Update the linkages in the given \p Index to mark exported values
 /// as external and non-exported values as internal. The ThinLTO backends
@@ -60,6 +60,19 @@ void thinLTOResolveWeakForLinkerInIndex(
 void thinLTOInternalizeAndPromoteInIndex(
     ModuleSummaryIndex &Index,
     function_ref<bool(StringRef, GlobalValue::GUID)> isExported);
+
+/// Computes a unique hash for the Module considering the current list of
+/// export/import and other global analysis results.
+/// The hash is produced in \p Key.
+void computeLTOCacheKey(
+    SmallString<40> &Key, const lto::Config &Conf,
+    const ModuleSummaryIndex &Index, StringRef ModuleID,
+    const FunctionImporter::ImportMapTy &ImportList,
+    const FunctionImporter::ExportSetTy &ExportList,
+    const std::map<GlobalValue::GUID, GlobalValue::LinkageTypes> &ResolvedODR,
+    const GVSummaryMapTy &DefinedGlobals,
+    const std::set<GlobalValue::GUID> &CfiFunctionDefs = {},
+    const std::set<GlobalValue::GUID> &CfiFunctionDecls = {});
 
 namespace lto {
 
@@ -71,9 +84,14 @@ std::string getThinLTOOutputFile(const std::string &Path,
                                  const std::string &NewPrefix);
 
 /// Setup optimization remarks.
-Expected<std::unique_ptr<tool_output_file>>
-setupOptimizationRemarks(LLVMContext &Context, StringRef LTORemarksFilename,
-                         bool LTOPassRemarksWithHotness, int Count = -1);
+Expected<std::unique_ptr<ToolOutputFile>>
+setupOptimizationRemarks(LLVMContext &Context, StringRef RemarksFilename,
+                         StringRef RemarksPasses, StringRef RemarksFormat,
+                         bool RemarksWithHotness, int Count = -1);
+
+/// Setups the output file for saving statistics.
+Expected<std::unique_ptr<ToolOutputFile>>
+setupStatsFile(StringRef StatsFilename);
 
 class LTO;
 struct SymbolResolution;
@@ -98,6 +116,7 @@ private:
   std::vector<std::pair<size_t, size_t>> ModuleSymIndices;
 
   StringRef TargetTriple, SourceFileName, COFFLinkerOpts;
+  std::vector<StringRef> DependentLibraries;
   std::vector<StringRef> ComdatTable;
 
 public:
@@ -119,6 +138,7 @@ public:
     using irsymtab::Symbol::isWeak;
     using irsymtab::Symbol::isIndirect;
     using irsymtab::Symbol::getName;
+    using irsymtab::Symbol::getIRName;
     using irsymtab::Symbol::getVisibility;
     using irsymtab::Symbol::canBeOmittedFromSymbolTable;
     using irsymtab::Symbol::isTLS;
@@ -126,7 +146,9 @@ public:
     using irsymtab::Symbol::getCommonSize;
     using irsymtab::Symbol::getCommonAlignment;
     using irsymtab::Symbol::getCOFFWeakExternalFallback;
+    using irsymtab::Symbol::getSectionName;
     using irsymtab::Symbol::isExecutable;
+    using irsymtab::Symbol::isUsed;
   };
 
   /// A range over the symbols in this InputFile.
@@ -134,6 +156,9 @@ public:
 
   /// Returns linker options specified in the input file.
   StringRef getCOFFLinkerOpts() const { return COFFLinkerOpts; }
+
+  /// Returns dependent library specifiers from the input file.
+  ArrayRef<StringRef> getDependentLibraries() const { return DependentLibraries; }
 
   /// Returns the path to the InputFile.
   StringRef getName() const;
@@ -146,6 +171,9 @@ public:
 
   // Returns a table with all the comdats used by this file.
   ArrayRef<StringRef> getComdatTable() const { return ComdatTable; }
+
+  // Returns the only BitcodeModule from InputFile.
+  BitcodeModule &getSingleBitcodeModule();
 
 private:
   ArrayRef<Symbol> module_symbols(unsigned I) const {
@@ -170,8 +198,8 @@ public:
 /// the fly.
 ///
 /// Stream callbacks must be thread safe.
-typedef std::function<std::unique_ptr<NativeObjectStream>(unsigned Task)>
-    AddStreamFn;
+using AddStreamFn =
+    std::function<std::unique_ptr<NativeObjectStream>(unsigned Task)>;
 
 /// This is the type of a native object cache. To request an item from the
 /// cache, pass a unique string as the Key. For hits, the cached file will be
@@ -185,17 +213,16 @@ typedef std::function<std::unique_ptr<NativeObjectStream>(unsigned Task)>
 ///
 /// if (AddStreamFn AddStream = Cache(Task, Key))
 ///   ProduceContent(AddStream);
-typedef std::function<AddStreamFn(unsigned Task, StringRef Key)>
-    NativeObjectCache;
+using NativeObjectCache =
+    std::function<AddStreamFn(unsigned Task, StringRef Key)>;
 
 /// A ThinBackend defines what happens after the thin-link phase during ThinLTO.
 /// The details of this type definition aren't important; clients can only
 /// create a ThinBackend using one of the create*ThinBackend() functions below.
-typedef std::function<std::unique_ptr<ThinBackendProc>(
+using ThinBackend = std::function<std::unique_ptr<ThinBackendProc>(
     Config &C, ModuleSummaryIndex &CombinedIndex,
     StringMap<GVSummaryMapTy> &ModuleToDefinedGVSummaries,
-    AddStreamFn AddStream, NativeObjectCache Cache)>
-    ThinBackend;
+    AddStreamFn AddStream, NativeObjectCache Cache)>;
 
 /// This ThinBackend runs the individual backend jobs in-process.
 ThinBackend createInProcessThinBackend(unsigned ParallelismLevel);
@@ -209,10 +236,16 @@ ThinBackend createInProcessThinBackend(unsigned ParallelismLevel);
 /// appends ".thinlto.bc" and writes the index to that path. If
 /// ShouldEmitImportsFiles is true it also writes a list of imported files to a
 /// similar path with ".imports" appended instead.
+/// LinkedObjectsFile is an output stream to write the list of object files for
+/// the final ThinLTO linking. Can be nullptr.
+/// OnWrite is callback which receives module identifier and notifies LTO user
+/// that index file for the module (and optionally imports file) was created.
+using IndexWriteCallback = std::function<void(const std::string &)>;
 ThinBackend createWriteIndexesThinBackend(std::string OldPrefix,
                                           std::string NewPrefix,
                                           bool ShouldEmitImportsFiles,
-                                          std::string LinkedObjectsFile);
+                                          raw_fd_ostream *LinkedObjectsFile,
+                                          IndexWriteCallback OnWrite);
 
 /// This class implements a resolution-based interface to LLVM's LTO
 /// functionality. It supports regular LTO, parallel LTO code generation and
@@ -278,7 +311,6 @@ private:
 
     unsigned ParallelCodeGenParallelismLevel;
     LTOLLVMContext Ctx;
-    bool HasModule = false;
     std::unique_ptr<Module> CombinedModule;
     std::unique_ptr<IRMover> Mover;
 
@@ -319,6 +351,14 @@ private:
     bool VisibleOutsideSummary = false;
 
     bool UnnamedAddr = true;
+
+    /// True if module contains the prevailing definition.
+    bool Prevailing = false;
+
+    /// Returns true if module contains the prevailing definition and symbol is
+    /// an IR symbol. For example when module-level inline asm block is used,
+    /// symbol can be prevailing in module but have no IR name.
+    bool isPrevailingIRSymbol() const { return Prevailing && !IRName.empty(); }
 
     /// This field keeps track of the partition number of this global. The
     /// regular LTO object is partition 0, while each ThinLTO object has its own
@@ -372,9 +412,14 @@ private:
 
   Error runRegularLTO(AddStreamFn AddStream);
   Error runThinLTO(AddStreamFn AddStream, NativeObjectCache Cache,
-                   bool HasRegularLTO);
+                   const DenseSet<GlobalValue::GUID> &GUIDPreservedSymbols);
+
+  Error checkPartiallySplit();
 
   mutable bool CalledGetMaxTasks = false;
+
+  // Use Optional to distinguish false from not yet initialized.
+  Optional<bool> EnableSplitLTOUnit;
 };
 
 /// The resolution for a symbol. The linker must provide a SymbolResolution for

@@ -1,14 +1,13 @@
 //===-- WebAssemblyWasmObjectWriter.cpp - WebAssembly Wasm Writer ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file handles Wasm-specific object emission, converting LLVM's
+/// This file handles Wasm-specific object emission, converting LLVM's
 /// internal fixups into the appropriate relocations.
 ///
 //===----------------------------------------------------------------------===//
@@ -19,9 +18,11 @@
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCFixup.h"
 #include "llvm/MC/MCFixupKindInfo.h"
+#include "llvm/MC/MCObjectWriter.h"
+#include "llvm/MC/MCSectionWasm.h"
 #include "llvm/MC/MCSymbolWasm.h"
-#include "llvm/MC/MCWasmObjectWriter.h"
 #include "llvm/MC/MCValue.h"
+#include "llvm/MC/MCWasmObjectWriter.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/ErrorHandling.h"
 
@@ -41,60 +42,80 @@ private:
 WebAssemblyWasmObjectWriter::WebAssemblyWasmObjectWriter(bool Is64Bit)
     : MCWasmObjectTargetWriter(Is64Bit) {}
 
-// Test whether the given expression computes a function address.
-static bool IsFunctionExpr(const MCExpr *Expr) {
-  if (auto SyExp = dyn_cast<MCSymbolRefExpr>(Expr))
-    return cast<MCSymbolWasm>(SyExp->getSymbol()).isFunction();
+static const MCSection *getFixupSection(const MCExpr *Expr) {
+  if (auto SyExp = dyn_cast<MCSymbolRefExpr>(Expr)) {
+    if (SyExp->getSymbol().isInSection())
+      return &SyExp->getSymbol().getSection();
+    return nullptr;
+  }
 
-  if (auto BinOp = dyn_cast<MCBinaryExpr>(Expr))
-    return IsFunctionExpr(BinOp->getLHS()) != IsFunctionExpr(BinOp->getRHS());
+  if (auto BinOp = dyn_cast<MCBinaryExpr>(Expr)) {
+    auto SectionLHS = getFixupSection(BinOp->getLHS());
+    auto SectionRHS = getFixupSection(BinOp->getRHS());
+    return SectionLHS == SectionRHS ? nullptr : SectionLHS;
+  }
 
   if (auto UnOp = dyn_cast<MCUnaryExpr>(Expr))
-    return IsFunctionExpr(UnOp->getSubExpr());
+    return getFixupSection(UnOp->getSubExpr());
 
-  return false;
+  return nullptr;
 }
 
-static bool IsFunctionType(const MCValue &Target) {
+unsigned WebAssemblyWasmObjectWriter::getRelocType(const MCValue &Target,
+                                                   const MCFixup &Fixup) const {
   const MCSymbolRefExpr *RefA = Target.getSymA();
-  return RefA && RefA->getKind() == MCSymbolRefExpr::VK_WebAssembly_TYPEINDEX;
-}
+  assert(RefA);
+  auto& SymA = cast<MCSymbolWasm>(RefA->getSymbol());
 
-unsigned
-WebAssemblyWasmObjectWriter::getRelocType(const MCValue &Target,
-                                          const MCFixup &Fixup) const {
-  // WebAssembly functions are not allocated in the data address space. To
-  // resolve a pointer to a function, we must use a special relocation type.
-  bool IsFunction = IsFunctionExpr(Fixup.getValue());
+  MCSymbolRefExpr::VariantKind Modifier = Target.getAccessVariant();
+
+  switch (Modifier) {
+    case MCSymbolRefExpr::VK_GOT:
+      return wasm::R_WASM_GLOBAL_INDEX_LEB;
+    case MCSymbolRefExpr::VK_WASM_TBREL:
+      assert(SymA.isFunction());
+      return wasm::R_WASM_TABLE_INDEX_REL_SLEB;
+    case MCSymbolRefExpr::VK_WASM_MBREL:
+      assert(SymA.isData());
+      return wasm::R_WASM_MEMORY_ADDR_REL_SLEB;
+    case MCSymbolRefExpr::VK_WASM_TYPEINDEX:
+      return wasm::R_WASM_TYPE_INDEX_LEB;
+    default:
+      break;
+  }
 
   switch (unsigned(Fixup.getKind())) {
-  case WebAssembly::fixup_code_global_index:
-    return wasm::R_WEBASSEMBLY_GLOBAL_INDEX_LEB;
-  case WebAssembly::fixup_code_sleb128_i32:
-    if (IsFunction)
-      return wasm::R_WEBASSEMBLY_TABLE_INDEX_SLEB;
-    return wasm::R_WEBASSEMBLY_GLOBAL_ADDR_SLEB;
-  case WebAssembly::fixup_code_sleb128_i64:
+  case WebAssembly::fixup_sleb128_i32:
+    if (SymA.isFunction())
+      return wasm::R_WASM_TABLE_INDEX_SLEB;
+    return wasm::R_WASM_MEMORY_ADDR_SLEB;
+  case WebAssembly::fixup_sleb128_i64:
     llvm_unreachable("fixup_sleb128_i64 not implemented yet");
-  case WebAssembly::fixup_code_uleb128_i32:
-    if (IsFunctionType(Target))
-      return wasm::R_WEBASSEMBLY_TYPE_INDEX_LEB;
-    if (IsFunction)
-      return wasm::R_WEBASSEMBLY_FUNCTION_INDEX_LEB;
-    return wasm::R_WEBASSEMBLY_GLOBAL_ADDR_LEB;
+  case WebAssembly::fixup_uleb128_i32:
+    if (SymA.isGlobal())
+      return wasm::R_WASM_GLOBAL_INDEX_LEB;
+    if (SymA.isFunction())
+      return wasm::R_WASM_FUNCTION_INDEX_LEB;
+    if (SymA.isEvent())
+      return wasm::R_WASM_EVENT_INDEX_LEB;
+    return wasm::R_WASM_MEMORY_ADDR_LEB;
   case FK_Data_4:
-    if (IsFunction)
-      return wasm::R_WEBASSEMBLY_TABLE_INDEX_I32;
-    return wasm::R_WEBASSEMBLY_GLOBAL_ADDR_I32;
-  case FK_Data_8:
-    llvm_unreachable("FK_Data_8 not implemented yet");
+    if (SymA.isFunction())
+      return wasm::R_WASM_TABLE_INDEX_I32;
+    if (auto Section = static_cast<const MCSectionWasm *>(
+            getFixupSection(Fixup.getValue()))) {
+      if (Section->getKind().isText())
+        return wasm::R_WASM_FUNCTION_OFFSET_I32;
+      else if (!Section->isWasmData())
+        return wasm::R_WASM_SECTION_OFFSET_I32;
+    }
+    return wasm::R_WASM_MEMORY_ADDR_I32;
   default:
     llvm_unreachable("unimplemented fixup kind");
   }
 }
 
-MCObjectWriter *llvm::createWebAssemblyWasmObjectWriter(raw_pwrite_stream &OS,
-                                                        bool Is64Bit) {
-  MCWasmObjectTargetWriter *MOTW = new WebAssemblyWasmObjectWriter(Is64Bit);
-  return createWasmObjectWriter(MOTW, OS);
+std::unique_ptr<MCObjectTargetWriter>
+llvm::createWebAssemblyWasmObjectWriter(bool Is64Bit) {
+  return llvm::make_unique<WebAssemblyWasmObjectWriter>(Is64Bit);
 }

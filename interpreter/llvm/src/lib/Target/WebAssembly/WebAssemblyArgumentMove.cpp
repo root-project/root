@@ -1,14 +1,13 @@
 //===-- WebAssemblyArgumentMove.cpp - Argument instruction moving ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file moves ARGUMENT instructions after ScheduleDAG scheduling.
+/// This file moves ARGUMENT instructions after ScheduleDAG scheduling.
 ///
 /// Arguments are really live-in registers, however, since we use virtual
 /// registers and LLVM doesn't support live-in virtual registers, we're
@@ -60,12 +59,15 @@ public:
 } // end anonymous namespace
 
 char WebAssemblyArgumentMove::ID = 0;
+INITIALIZE_PASS(WebAssemblyArgumentMove, DEBUG_TYPE,
+                "Move ARGUMENT instructions for WebAssembly", false, false)
+
 FunctionPass *llvm::createWebAssemblyArgumentMove() {
   return new WebAssemblyArgumentMove();
 }
 
 bool WebAssemblyArgumentMove::runOnMachineFunction(MachineFunction &MF) {
-  DEBUG({
+  LLVM_DEBUG({
     dbgs() << "********** Argument Move **********\n"
            << "********** Function: " << MF.getName() << '\n';
   });
@@ -76,7 +78,7 @@ bool WebAssemblyArgumentMove::runOnMachineFunction(MachineFunction &MF) {
 
   // Look for the first NonArg instruction.
   for (MachineInstr &MI : EntryMBB) {
-    if (!WebAssembly::isArgument(MI)) {
+    if (!WebAssembly::isArgument(MI.getOpcode())) {
       InsertPt = MI;
       break;
     }
@@ -85,7 +87,7 @@ bool WebAssemblyArgumentMove::runOnMachineFunction(MachineFunction &MF) {
   // Now move any argument instructions later in the block
   // to before our first NonArg instruction.
   for (MachineInstr &MI : llvm::make_range(InsertPt, EntryMBB.end())) {
-    if (WebAssembly::isArgument(MI)) {
+    if (WebAssembly::isArgument(MI.getOpcode())) {
       EntryMBB.insert(InsertPt, MI.removeFromParent());
       Changed = true;
     }

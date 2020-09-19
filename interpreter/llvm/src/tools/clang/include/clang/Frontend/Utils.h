@@ -1,9 +1,8 @@
-//===--- Utils.h - Misc utilities for the front-end -------------*- C++ -*-===//
+//===- Utils.h - Misc utilities for the front-end ---------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -15,45 +14,49 @@
 #define LLVM_CLANG_FRONTEND_UTILS_H
 
 #include "clang/Basic/Diagnostic.h"
-#include "clang/Basic/VirtualFileSystem.h"
+#include "clang/Basic/LLVM.h"
+#include "clang/Frontend/DependencyOutputOptions.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
+#include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSet.h"
 #include "llvm/Option/OptSpecifier.h"
+#include "llvm/Support/VirtualFileSystem.h"
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <system_error>
 #include <utility>
+#include <vector>
 
 namespace llvm {
-class raw_fd_ostream;
+
 class Triple;
 
 namespace opt {
+
 class ArgList;
-}
-}
+
+} // namespace opt
+
+} // namespace llvm
 
 namespace clang {
-class ASTConsumer;
+
 class ASTReader;
 class CompilerInstance;
 class CompilerInvocation;
-class Decl;
-class DependencyOutputOptions;
 class DiagnosticsEngine;
-class DiagnosticOptions;
 class ExternalSemaSource;
-class FileManager;
+class FrontendOptions;
 class HeaderSearch;
 class HeaderSearchOptions;
-class IdentifierTable;
 class LangOptions;
 class PCHContainerReader;
 class Preprocessor;
 class PreprocessorOptions;
 class PreprocessorOutputOptions;
-class SourceManager;
-class Stmt;
-class TargetInfo;
-class FrontendOptions;
 
 /// Apply the header search options to get given HeaderSearch object.
 void ApplyHeaderSearchOptions(HeaderSearch &HS,
@@ -68,19 +71,20 @@ void InitializePreprocessor(Preprocessor &PP, const PreprocessorOptions &PPOpts,
                             const FrontendOptions &FEOpts);
 
 /// DoPrintPreprocessedInput - Implement -E mode.
-void DoPrintPreprocessedInput(Preprocessor &PP, raw_ostream* OS,
+void DoPrintPreprocessedInput(Preprocessor &PP, raw_ostream *OS,
                               const PreprocessorOutputOptions &Opts);
 
 /// An interface for collecting the dependencies of a compilation. Users should
 /// use \c attachToPreprocessor and \c attachToASTReader to get all of the
 /// dependencies.
-/// FIXME: Migrate DependencyFileGen and DependencyGraphGen to use this
-/// interface.
+/// FIXME: Migrate DependencyGraphGen to use this interface.
 class DependencyCollector {
 public:
+  virtual ~DependencyCollector();
+
   virtual void attachToPreprocessor(Preprocessor &PP);
   virtual void attachToASTReader(ASTReader &R);
-  llvm::ArrayRef<std::string> getDependencies() const { return Dependencies; }
+  ArrayRef<std::string> getDependencies() const { return Dependencies; }
 
   /// Called when a new file is seen. Return true if \p Filename should be added
   /// to the list of dependencies.
@@ -88,33 +92,61 @@ public:
   /// The default implementation ignores <built-in> and system files.
   virtual bool sawDependency(StringRef Filename, bool FromModule,
                              bool IsSystem, bool IsModuleFile, bool IsMissing);
+
   /// Called when the end of the main file is reached.
-  virtual void finishedMainFile() { }
+  virtual void finishedMainFile(DiagnosticsEngine &Diags) {}
+
   /// Return true if system files should be passed to sawDependency().
   virtual bool needSystemDependencies() { return false; }
-  virtual ~DependencyCollector();
 
-public: // implementation detail
+  // implementation detail
   /// Add a dependency \p Filename if it has not been seen before and
   /// sawDependency() returns true.
   void maybeAddDependency(StringRef Filename, bool FromModule, bool IsSystem,
                           bool IsModuleFile, bool IsMissing);
+
+protected:
+  /// Return true if the filename was added to the list of dependencies, false
+  /// otherwise.
+  bool addDependency(StringRef Filename);
+
 private:
   llvm::StringSet<> Seen;
   std::vector<std::string> Dependencies;
 };
 
-/// Builds a depdenency file when attached to a Preprocessor (for includes) and
+/// Builds a dependency file when attached to a Preprocessor (for includes) and
 /// ASTReader (for module imports), and writes it out at the end of processing
 /// a source file.  Users should attach to the ast reader whenever a module is
 /// loaded.
-class DependencyFileGenerator {
-  void *Impl; // Opaque implementation
-  DependencyFileGenerator(void *Impl);
+class DependencyFileGenerator : public DependencyCollector {
 public:
-  static DependencyFileGenerator *CreateAndAttachToPreprocessor(
-    Preprocessor &PP, const DependencyOutputOptions &Opts);
-  void AttachToASTReader(ASTReader &R);
+  DependencyFileGenerator(const DependencyOutputOptions &Opts);
+
+  void attachToPreprocessor(Preprocessor &PP) override;
+
+  void finishedMainFile(DiagnosticsEngine &Diags) override;
+
+  bool needSystemDependencies() final override { return IncludeSystemHeaders; }
+
+  bool sawDependency(StringRef Filename, bool FromModule, bool IsSystem,
+                     bool IsModuleFile, bool IsMissing) final override;
+
+protected:
+  void outputDependencyFile(llvm::raw_ostream &OS);
+
+private:
+  void outputDependencyFile(DiagnosticsEngine &Diags);
+
+  std::string OutputFile;
+  std::vector<std::string> Targets;
+  bool IncludeSystemHeaders;
+  bool PhonyTarget;
+  bool AddMissingHeaderDeps;
+  bool SeenMissingHeader;
+  bool IncludeModuleFiles;
+  DependencyOutputFormat OutputFormat;
+  unsigned InputFileIndex;
 };
 
 /// Collects the dependencies for imported modules into a directory.  Users
@@ -123,28 +155,30 @@ class ModuleDependencyCollector : public DependencyCollector {
   std::string DestDir;
   bool HasErrors = false;
   llvm::StringSet<> Seen;
-  vfs::YAMLVFSWriter VFSWriter;
-
+  llvm::vfs::YAMLVFSWriter VFSWriter;
   llvm::StringMap<std::string> SymLinkMap;
 
   bool getRealPath(StringRef SrcPath, SmallVectorImpl<char> &Result);
-  std::error_code copyToRoot(StringRef Src, StringRef Dst = "");
+  std::error_code copyToRoot(StringRef Src, StringRef Dst = {});
+
 public:
+  ModuleDependencyCollector(std::string DestDir)
+      : DestDir(std::move(DestDir)) {}
+  ~ModuleDependencyCollector() override { writeFileMap(); }
+
   StringRef getDest() { return DestDir; }
-  bool insertSeen(StringRef Filename) { return Seen.insert(Filename).second; }
-  void addFile(StringRef Filename, StringRef FileDst = "");
-  void addFileMapping(StringRef VPath, StringRef RPath) {
+  virtual bool insertSeen(StringRef Filename) { return Seen.insert(Filename).second; }
+  virtual void addFile(StringRef Filename, StringRef FileDst = {});
+
+  virtual void addFileMapping(StringRef VPath, StringRef RPath) {
     VFSWriter.addFileMapping(VPath, RPath);
   }
 
   void attachToPreprocessor(Preprocessor &PP) override;
   void attachToASTReader(ASTReader &R) override;
 
-  void writeFileMap();
-  bool hasErrors() { return HasErrors; }
-  ModuleDependencyCollector(std::string DestDir)
-      : DestDir(std::move(DestDir)) {}
-  ~ModuleDependencyCollector() { writeFileMap(); }
+  virtual void writeFileMap();
+  virtual bool hasErrors() { return HasErrors; }
 };
 
 /// AttachDependencyGraphGen - Create a dependency graph generator, and attach
@@ -167,11 +201,8 @@ void AttachDependencyGraphGen(Preprocessor &PP, StringRef OutputFile,
 void AttachHeaderIncludeGen(Preprocessor &PP,
                             const DependencyOutputOptions &DepOpts,
                             bool ShowAllHeaders = false,
-                            StringRef OutputPath = "",
+                            StringRef OutputPath = {},
                             bool ShowDepth = true, bool MSStyle = false);
-
-/// Cache tokens for use with PCH. Note that this requires a seekable stream.
-void CacheTokens(Preprocessor &PP, raw_pwrite_stream *OS);
 
 /// The ChainedIncludesSource class converts headers to chained PCHs in
 /// memory, mainly for testing.
@@ -188,7 +219,7 @@ std::unique_ptr<CompilerInvocation> createInvocationFromCommandLine(
     ArrayRef<const char *> Args,
     IntrusiveRefCntPtr<DiagnosticsEngine> Diags =
         IntrusiveRefCntPtr<DiagnosticsEngine>(),
-    IntrusiveRefCntPtr<vfs::FileSystem> VFS = nullptr);
+    IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS = nullptr);
 
 /// Return the value of the last argument as an integer, or a default. If Diags
 /// is non-null, emits an error if the argument is given, but non-integral.
@@ -213,14 +244,12 @@ inline uint64_t getLastArgUInt64Value(const llvm::opt::ArgList &Args,
   return getLastArgUInt64Value(Args, Id, Default, &Diags);
 }
 
-// When Clang->getFrontendOpts().DisableFree is set we don't delete some of the
-// global objects, but we don't want LeakDetectors to complain, so we bury them
-// in a globally visible array.
-void BuryPointer(const void *Ptr);
-template <typename T> void BuryPointer(std::unique_ptr<T> Ptr) {
-  BuryPointer(Ptr.release());
-}
+// Frontend timing utils
 
-} // end namespace clang
+/// If the user specifies the -ftime-report argument on an Clang command line
+/// then the value of this boolean will be true, otherwise false.
+extern bool FrontendTimesIsEnabled;
 
-#endif
+} // namespace clang
+
+#endif // LLVM_CLANG_FRONTEND_UTILS_H

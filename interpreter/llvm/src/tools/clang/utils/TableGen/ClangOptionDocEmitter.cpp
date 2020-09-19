@@ -1,9 +1,8 @@
 //===- ClangOptionDocEmitter.cpp - Documentation for command line flags ---===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 // FIXME: Once this has stabilized, consider moving it to LLVM.
 //
@@ -111,7 +110,7 @@ Documentation extractDocumentation(RecordKeeper &Records) {
 
   auto DocumentationForOption = [&](Record *R) -> DocumentedOption {
     auto &A = Aliases[R];
-    std::sort(A.begin(), A.end(), CompareByName);
+    llvm::sort(A, CompareByName);
     return {R, std::move(A)};
   };
 
@@ -120,7 +119,7 @@ Documentation extractDocumentation(RecordKeeper &Records) {
     Documentation D;
 
     auto &Groups = GroupsInGroup[R];
-    std::sort(Groups.begin(), Groups.end(), CompareByLocation);
+    llvm::sort(Groups, CompareByLocation);
     for (Record *G : Groups) {
       D.Groups.emplace_back();
       D.Groups.back().Group = G;
@@ -129,7 +128,7 @@ Documentation extractDocumentation(RecordKeeper &Records) {
     }
 
     auto &Options = OptionsInGroup[R];
-    std::sort(Options.begin(), Options.end(), CompareByName);
+    llvm::sort(Options, CompareByName);
     for (Record *O : Options)
       D.Options.push_back(DocumentationForOption(O));
 
@@ -245,19 +244,27 @@ void emitOptionWithArgs(StringRef Prefix, const Record *Option,
 void emitOptionName(StringRef Prefix, const Record *Option, raw_ostream &OS) {
   // Find the arguments to list after the option.
   unsigned NumArgs = getNumArgsForKind(Option->getValueAsDef("Kind"), Option);
+  bool HasMetaVarName = !Option->isValueUnset("MetaVarName");
 
   std::vector<std::string> Args;
-  if (!Option->isValueUnset("MetaVarName"))
+  if (HasMetaVarName)
     Args.push_back(Option->getValueAsString("MetaVarName"));
   else if (NumArgs == 1)
     Args.push_back("<arg>");
 
-  while (Args.size() < NumArgs) {
-    Args.push_back(("<arg" + Twine(Args.size() + 1) + ">").str());
-    // Use '--args <arg1> <arg2>...' if any number of args are allowed.
-    if (Args.size() == 2 && NumArgs == UnlimitedArgs) {
-      Args.back() += "...";
-      break;
+  // Fill up arguments if this option didn't provide a meta var name or it
+  // supports an unlimited number of arguments. We can't see how many arguments
+  // already are in a meta var name, so assume it has right number. This is
+  // needed for JoinedAndSeparate options so that there arent't too many
+  // arguments.
+  if (!HasMetaVarName || NumArgs == UnlimitedArgs) {
+    while (Args.size() < NumArgs) {
+      Args.push_back(("<arg" + Twine(Args.size() + 1) + ">").str());
+      // Use '--args <arg1> <arg2>...' if any number of args are allowed.
+      if (Args.size() == 2 && NumArgs == UnlimitedArgs) {
+        Args.back() += "...";
+        break;
+      }
     }
   }
 

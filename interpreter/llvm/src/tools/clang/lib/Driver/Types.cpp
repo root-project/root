@@ -1,9 +1,8 @@
 //===--- Types.cpp - Driver input & temporary type information ------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -102,6 +101,9 @@ bool types::isAcceptedByClang(ID Id) {
   case TY_CL:
   case TY_CUDA: case TY_PP_CUDA:
   case TY_CUDA_DEVICE:
+  case TY_HIP:
+  case TY_PP_HIP:
+  case TY_HIP_DEVICE:
   case TY_ObjC: case TY_PP_ObjC: case TY_PP_ObjC_Alias:
   case TY_CXX: case TY_PP_CXX:
   case TY_ObjCXX: case TY_PP_ObjCXX: case TY_PP_ObjCXX_Alias:
@@ -141,6 +143,9 @@ bool types::isCXX(ID Id) {
   case TY_ObjCXXHeader: case TY_PP_ObjCXXHeader:
   case TY_CXXModule: case TY_PP_CXXModule:
   case TY_CUDA: case TY_PP_CUDA: case TY_CUDA_DEVICE:
+  case TY_HIP:
+  case TY_PP_HIP:
+  case TY_HIP_DEVICE:
     return true;
   }
 }
@@ -166,6 +171,18 @@ bool types::isCuda(ID Id) {
   case TY_CUDA:
   case TY_PP_CUDA:
   case TY_CUDA_DEVICE:
+    return true;
+  }
+}
+
+bool types::isHIP(ID Id) {
+  switch (Id) {
+  default:
+    return false;
+
+  case TY_HIP:
+  case TY_PP_HIP:
+  case TY_HIP_DEVICE:
     return true;
   }
 }
@@ -221,6 +238,7 @@ types::ID types::lookupTypeForExtension(llvm::StringRef Ext) {
            .Case("fpp", TY_Fortran)
            .Case("FPP", TY_Fortran)
            .Case("gch", TY_PCH)
+           .Case("hip", TY_HIP)
            .Case("hpp", TY_CXXHeader)
            .Case("iim", TY_PP_CXXModule)
            .Case("lib", TY_Object)
@@ -293,9 +311,11 @@ ID types::lookupHeaderTypeForSourceType(ID Id) {
   default:
     return Id;
 
+  // FIXME: Handle preprocessed input types.
   case types::TY_C:
     return types::TY_CHeader;
   case types::TY_CXX:
+  case types::TY_CXXModule:
     return types::TY_CXXHeader;
   case types::TY_ObjC:
     return types::TY_ObjCHeader;

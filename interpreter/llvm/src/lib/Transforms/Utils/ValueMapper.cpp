@@ -1,9 +1,8 @@
 //===- ValueMapper.cpp - Interface shared by lib/Transforms/Utils ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,17 +12,37 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/Utils/ValueMapper.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/None.h"
+#include "llvm/ADT/Optional.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/IR/Argument.h"
+#include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CallSite.h"
+#include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DebugInfoMetadata.h"
+#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalAlias.h"
+#include "llvm/IR/GlobalObject.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/InlineAsm.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Operator.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Value.h"
+#include "llvm/Support/Casting.h"
+#include <cassert>
+#include <limits>
+#include <memory>
+#include <utility>
+
 using namespace llvm;
 
 // Out of line method to get vtable etc for class.
@@ -85,7 +104,6 @@ struct MappingContext {
       : VM(&VM), Materializer(Materializer) {}
 };
 
-class MDNodeMapper;
 class Mapper {
   friend class MDNodeMapper;
 
@@ -175,7 +193,7 @@ class MDNodeMapper {
   /// Data about a node in \a UniquedGraph.
   struct Data {
     bool HasChanged = false;
-    unsigned ID = ~0u;
+    unsigned ID = std::numeric_limits<unsigned>::max();
     TempMDNode Placeholder;
   };
 
@@ -316,7 +334,7 @@ private:
   void remapOperands(MDNode &N, OperandMapper mapOperand);
 };
 
-} // end namespace
+} // end anonymous namespace
 
 Value *Mapper::mapValue(const Value *V) {
   ValueToValueMapTy::iterator I = getVM().find(V);
@@ -518,13 +536,23 @@ Optional<Metadata *> MDNodeMapper::tryToMapOperand(const Metadata *Op) {
   return None;
 }
 
+static Metadata *cloneOrBuildODR(const MDNode &N) {
+  auto *CT = dyn_cast<DICompositeType>(&N);
+  // If ODR type uniquing is enabled, we would have uniqued composite types
+  // with identifiers during bitcode reading, so we can just use CT.
+  if (CT && CT->getContext().isODRUniquingDebugTypes() &&
+      CT->getIdentifier() != "")
+    return const_cast<DICompositeType *>(CT);
+  return MDNode::replaceWithDistinct(N.clone());
+}
+
 MDNode *MDNodeMapper::mapDistinctNode(const MDNode &N) {
   assert(N.isDistinct() && "Expected a distinct node");
   assert(!M.getVM().getMappedMD(&N) && "Expected an unmapped node");
-  DistinctWorklist.push_back(cast<MDNode>(
-      (M.Flags & RF_MoveDistinctMDs)
-          ? M.mapToSelf(&N)
-          : M.mapToMetadata(&N, MDNode::replaceWithDistinct(N.clone()))));
+  DistinctWorklist.push_back(
+      cast<MDNode>((M.Flags & RF_MoveDistinctMDs)
+                       ? M.mapToSelf(&N)
+                       : M.mapToMetadata(&N, cloneOrBuildODR(N))));
   return DistinctWorklist.back();
 }
 
@@ -579,6 +607,7 @@ void MDNodeMapper::remapOperands(MDNode &N, OperandMapper mapOperand) {
 }
 
 namespace {
+
 /// An entry in the worklist for the post-order traversal.
 struct POTWorklistEntry {
   MDNode *N;              ///< Current node.
@@ -590,7 +619,8 @@ struct POTWorklistEntry {
 
   POTWorklistEntry(MDNode &N) : N(&N), Op(N.op_begin()) {}
 };
-} // end namespace
+
+} // end anonymous namespace
 
 bool MDNodeMapper::createPOT(UniquedGraph &G, const MDNode &FirstN) {
   assert(G.Info.empty() && "Expected a fresh traversal");
@@ -653,7 +683,7 @@ void MDNodeMapper::UniquedGraph::propagateChanges() {
       if (D.HasChanged)
         continue;
 
-      if (none_of(N->operands(), [&](const Metadata *Op) {
+      if (llvm::none_of(N->operands(), [&](const Metadata *Op) {
             auto Where = Info.find(Op);
             return Where != Info.end() && Where->second.HasChanged;
           }))
@@ -752,10 +782,11 @@ struct MapMetadataDisabler {
   MapMetadataDisabler(ValueToValueMapTy &VM) : VM(VM) {
     VM.disableMapMetadata();
   }
+
   ~MapMetadataDisabler() { VM.enableMapMetadata(); }
 };
 
-} // end namespace
+} // end anonymous namespace
 
 Optional<Metadata *> Mapper::mapSimpleMetadata(const Metadata *MD) {
   // If the value already exists in the map, use it.
@@ -882,6 +913,21 @@ void Mapper::remapInstruction(Instruction *I) {
       Tys.push_back(TypeMapper->remapType(Ty));
     CS.mutateFunctionType(FunctionType::get(
         TypeMapper->remapType(I->getType()), Tys, FTy->isVarArg()));
+
+    LLVMContext &C = CS->getContext();
+    AttributeList Attrs = CS.getAttributes();
+    for (unsigned i = 0; i < Attrs.getNumAttrSets(); ++i) {
+      if (Attrs.hasAttribute(i, Attribute::ByVal)) {
+        Type *Ty = Attrs.getAttribute(i, Attribute::ByVal).getValueAsType();
+        if (!Ty)
+          continue;
+
+        Attrs = Attrs.removeAttribute(C, i, Attribute::ByVal);
+        Attrs = Attrs.addAttribute(
+            C, i, Attribute::getWithByValType(C, TypeMapper->remapType(Ty)));
+      }
+    }
+    CS.setAttributes(Attrs);
     return;
   }
   if (auto *AI = dyn_cast<AllocaInst>(I))
@@ -1037,11 +1083,13 @@ public:
   explicit FlushingMapper(void *pImpl) : M(*getAsMapper(pImpl)) {
     assert(!M.hasWorkToDo() && "Expected to be flushed");
   }
+
   ~FlushingMapper() { M.flush(); }
+
   Mapper *operator->() const { return &M; }
 };
 
-} // end namespace
+} // end anonymous namespace
 
 ValueMapper::ValueMapper(ValueToValueMapTy &VM, RemapFlags Flags,
                          ValueMapTypeRemapper *TypeMapper,

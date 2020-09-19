@@ -1,14 +1,13 @@
 //===-- examples/clang-interpreter/main.cpp - Clang C Interpreter Example -===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
-#include "clang/CodeGen/CodeGenAction.h"
 #include "clang/Basic/DiagnosticOptions.h"
+#include "clang/CodeGen/CodeGenAction.h"
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
 #include "clang/Driver/Tool.h"
@@ -18,7 +17,13 @@
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/MCJIT.h"
+#include "llvm/ExecutionEngine/Orc/CompileUtils.h"
+#include "llvm/ExecutionEngine/Orc/ExecutionUtils.h"
+#include "llvm/ExecutionEngine/Orc/IRCompileLayer.h"
+#include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
+#include "llvm/ExecutionEngine/SectionMemoryManager.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Mangler.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
@@ -26,7 +31,8 @@
 #include "llvm/Support/Path.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
-#include <memory>
+#include "llvm/Target/TargetMachine.h"
+
 using namespace clang;
 using namespace clang::driver;
 
@@ -35,51 +41,84 @@ using namespace clang::driver;
 // GetMainExecutable (since some platforms don't support taking the
 // address of main, and some platforms can't implement GetMainExecutable
 // without being given the address of a function in the main executable).
-std::string GetExecutablePath(const char *Argv0) {
-  // This just needs to be some symbol in the binary; C++ doesn't
-  // allow taking the address of ::main however.
-  void *MainAddr = (void*) (intptr_t) GetExecutablePath;
+std::string GetExecutablePath(const char *Argv0, void *MainAddr) {
   return llvm::sys::fs::getMainExecutable(Argv0, MainAddr);
 }
 
-static llvm::ExecutionEngine *
-createExecutionEngine(std::unique_ptr<llvm::Module> M, std::string *ErrorStr) {
-  return llvm::EngineBuilder(std::move(M))
-      .setEngineKind(llvm::EngineKind::Either)
-      .setErrorStr(ErrorStr)
-      .create();
-}
+namespace llvm {
+namespace orc {
 
-static int Execute(std::unique_ptr<llvm::Module> Mod, char *const *envp) {
-  llvm::InitializeNativeTarget();
-  llvm::InitializeNativeTargetAsmPrinter();
+class SimpleJIT {
+private:
+  ExecutionSession ES;
+  std::unique_ptr<TargetMachine> TM;
+  const DataLayout DL;
+  MangleAndInterner Mangle{ES, DL};
+  RTDyldObjectLinkingLayer ObjectLayer{ES, createMemMgr};
+  IRCompileLayer CompileLayer{ES, ObjectLayer, SimpleCompiler(*TM)};
 
-  llvm::Module &M = *Mod;
-  std::string Error;
-  std::unique_ptr<llvm::ExecutionEngine> EE(
-      createExecutionEngine(std::move(Mod), &Error));
-  if (!EE) {
-    llvm::errs() << "unable to make execution engine: " << Error << "\n";
-    return 255;
+  static std::unique_ptr<SectionMemoryManager> createMemMgr() {
+    return llvm::make_unique<SectionMemoryManager>();
   }
 
-  llvm::Function *EntryFn = M.getFunction("main");
-  if (!EntryFn) {
-    llvm::errs() << "'main' function not found in module.\n";
-    return 255;
+  SimpleJIT(std::unique_ptr<TargetMachine> TM, DataLayout DL,
+            DynamicLibrarySearchGenerator ProcessSymbolsGenerator)
+      : TM(std::move(TM)), DL(std::move(DL)) {
+    llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
+    ES.getMainJITDylib().setGenerator(std::move(ProcessSymbolsGenerator));
   }
 
-  // FIXME: Support passing arguments.
-  std::vector<std::string> Args;
-  Args.push_back(M.getModuleIdentifier());
+public:
+  static Expected<std::unique_ptr<SimpleJIT>> Create() {
+    auto JTMB = JITTargetMachineBuilder::detectHost();
+    if (!JTMB)
+      return JTMB.takeError();
 
-  EE->finalizeObject();
-  return EE->runFunctionAsMain(EntryFn, Args, envp);
-}
+    auto TM = JTMB->createTargetMachine();
+    if (!TM)
+      return TM.takeError();
 
-int main(int argc, const char **argv, char * const *envp) {
+    auto DL = (*TM)->createDataLayout();
+
+    auto ProcessSymbolsGenerator =
+        DynamicLibrarySearchGenerator::GetForCurrentProcess(
+            DL.getGlobalPrefix());
+
+    if (!ProcessSymbolsGenerator)
+      return ProcessSymbolsGenerator.takeError();
+
+    return std::unique_ptr<SimpleJIT>(new SimpleJIT(
+        std::move(*TM), std::move(DL), std::move(*ProcessSymbolsGenerator)));
+  }
+
+  const TargetMachine &getTargetMachine() const { return *TM; }
+
+  Error addModule(ThreadSafeModule M) {
+    return CompileLayer.add(ES.getMainJITDylib(), std::move(M));
+  }
+
+  Expected<JITEvaluatedSymbol> findSymbol(const StringRef &Name) {
+    return ES.lookup({&ES.getMainJITDylib()}, Mangle(Name));
+  }
+
+  Expected<JITTargetAddress> getSymbolAddress(const StringRef &Name) {
+    auto Sym = findSymbol(Name);
+    if (!Sym)
+      return Sym.takeError();
+    return Sym->getAddress();
+  }
+};
+
+} // end namespace orc
+} // end namespace llvm
+
+llvm::ExitOnError ExitOnErr;
+
+int main(int argc, const char **argv) {
+  // This just needs to be some symbol in the binary; C++ doesn't
+  // allow taking the address of ::main however.
   void *MainAddr = (void*) (intptr_t) GetExecutablePath;
-  std::string Path = GetExecutablePath(argv[0]);
+  std::string Path = GetExecutablePath(argv[0], MainAddr);
   IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
   TextDiagnosticPrinter *DiagClient =
     new TextDiagnosticPrinter(llvm::errs(), &*DiagOpts);
@@ -87,11 +126,16 @@ int main(int argc, const char **argv, char * const *envp) {
   IntrusiveRefCntPtr<DiagnosticIDs> DiagID(new DiagnosticIDs());
   DiagnosticsEngine Diags(DiagID, &*DiagOpts, DiagClient);
 
-  // Use ELF on windows for now.
-  std::string TripleStr = llvm::sys::getProcessTriple();
+  const std::string TripleStr = llvm::sys::getProcessTriple();
   llvm::Triple T(TripleStr);
+
+  // Use ELF on Windows-32 and MingW for now.
+#ifndef CLANG_INTERPRETER_COFF_FORMAT
   if (T.isOSBinFormatCOFF())
     T.setObjectFormat(llvm::Triple::ELF);
+#endif
+
+  ExitOnErr.setBanner("clang interpreter");
 
   Driver TheDriver(Path, T.str(), Diags);
   TheDriver.setTitle("clang interpreter");
@@ -126,7 +170,7 @@ int main(int argc, const char **argv, char * const *envp) {
   }
 
   // Initialize a compiler invocation object from the clang (-cc1) arguments.
-  const driver::ArgStringList &CCArgs = Cmd.getArguments();
+  const llvm::opt::ArgStringList &CCArgs = Cmd.getArguments();
   std::unique_ptr<CompilerInvocation> CI(new CompilerInvocation);
   CompilerInvocation::CreateFromArgs(*CI,
                                      const_cast<const char **>(CCArgs.data()),
@@ -163,12 +207,23 @@ int main(int argc, const char **argv, char * const *envp) {
   if (!Clang.ExecuteAction(*Act))
     return 1;
 
+  llvm::InitializeNativeTarget();
+  llvm::InitializeNativeTargetAsmPrinter();
+
   int Res = 255;
-  if (std::unique_ptr<llvm::Module> Module = Act->takeModule())
-    Res = Execute(std::move(Module), envp);
+  std::unique_ptr<llvm::LLVMContext> Ctx(Act->takeLLVMContext());
+  std::unique_ptr<llvm::Module> Module = Act->takeModule();
+
+  if (Module) {
+    auto J = ExitOnErr(llvm::orc::SimpleJIT::Create());
+
+    ExitOnErr(J->addModule(
+        llvm::orc::ThreadSafeModule(std::move(Module), std::move(Ctx))));
+    auto Main = (int (*)(...))ExitOnErr(J->getSymbolAddress("main"));
+    Res = Main();
+  }
 
   // Shutdown.
-
   llvm::llvm_shutdown();
 
   return Res;

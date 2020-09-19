@@ -1,9 +1,8 @@
 //===- ObjectFile.cpp - File format independent object file ---------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -57,26 +56,59 @@ uint64_t ObjectFile::getSymbolValue(DataRefImpl Ref) const {
   return getSymbolValueImpl(Ref);
 }
 
-std::error_code ObjectFile::printSymbolName(raw_ostream &OS,
-                                            DataRefImpl Symb) const {
+Error ObjectFile::printSymbolName(raw_ostream &OS, DataRefImpl Symb) const {
   Expected<StringRef> Name = getSymbolName(Symb);
   if (!Name)
-    return errorToErrorCode(Name.takeError());
+    return Name.takeError();
   OS << *Name;
-  return std::error_code();
+  return Error::success();
 }
 
 uint32_t ObjectFile::getSymbolAlignment(DataRefImpl DRI) const { return 0; }
 
 bool ObjectFile::isSectionBitcode(DataRefImpl Sec) const {
-  StringRef SectName;
-  if (!getSectionName(Sec, SectName))
-    return SectName == ".llvmbc";
+  if (Expected<StringRef> NameOrErr = getSectionName(Sec))
+    return *NameOrErr == ".llvmbc";
   return false;
+}
+
+bool ObjectFile::isSectionStripped(DataRefImpl Sec) const { return false; }
+
+bool ObjectFile::isBerkeleyText(DataRefImpl Sec) const {
+  return isSectionText(Sec);
+}
+
+bool ObjectFile::isBerkeleyData(DataRefImpl Sec) const {
+  return isSectionData(Sec);
 }
 
 section_iterator ObjectFile::getRelocatedSection(DataRefImpl Sec) const {
   return section_iterator(SectionRef(Sec, this));
+}
+
+Triple ObjectFile::makeTriple() const {
+  Triple TheTriple;
+  auto Arch = getArch();
+  TheTriple.setArch(Triple::ArchType(Arch));
+
+  // For ARM targets, try to use the build attributes to build determine
+  // the build target. Target features are also added, but later during
+  // disassembly.
+  if (Arch == Triple::arm || Arch == Triple::armeb)
+    setARMSubArch(TheTriple);
+
+  // TheTriple defaults to ELF, and COFF doesn't have an environment:
+  // the best we can do here is indicate that it is mach-o.
+  if (isMachO())
+    TheTriple.setObjectFormat(Triple::MachO);
+
+  if (isCOFF()) {
+    const auto COFFObj = dyn_cast<COFFObjectFile>(this);
+    if (COFFObj->getArch() == Triple::thumb)
+      TheTriple.setTriple("thumbv7-windows");
+  }
+
+  return TheTriple;
 }
 
 Expected<std::unique_ptr<ObjectFile>>
@@ -92,13 +124,15 @@ ObjectFile::createObjectFile(MemoryBufferRef Object, file_magic Type) {
   case file_magic::archive:
   case file_magic::macho_universal_binary:
   case file_magic::windows_resource:
+  case file_magic::pdb:
+  case file_magic::minidump:
     return errorCodeToError(object_error::invalid_file_type);
   case file_magic::elf:
   case file_magic::elf_relocatable:
   case file_magic::elf_executable:
   case file_magic::elf_shared_object:
   case file_magic::elf_core:
-    return errorOrToExpected(createELFObjectFile(Object));
+    return createELFObjectFile(Object);
   case file_magic::macho_object:
   case file_magic::macho_executable:
   case file_magic::macho_fixed_virtual_memory_shared_lib:
@@ -114,7 +148,11 @@ ObjectFile::createObjectFile(MemoryBufferRef Object, file_magic Type) {
   case file_magic::coff_object:
   case file_magic::coff_import_library:
   case file_magic::pecoff_executable:
-    return errorOrToExpected(createCOFFObjectFile(Object));
+    return createCOFFObjectFile(Object);
+  case file_magic::xcoff_object_32:
+    return createXCOFFObjectFile(Object, Binary::ID_XCOFF32);
+  case file_magic::xcoff_object_64:
+    return createXCOFFObjectFile(Object, Binary::ID_XCOFF64);
   case file_magic::wasm_object:
     return createWasmObjectFile(Object);
   }

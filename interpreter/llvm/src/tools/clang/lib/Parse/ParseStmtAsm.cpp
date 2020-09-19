@@ -1,13 +1,12 @@
 //===---- ParseStmtAsm.cpp - Assembly Statement Parser --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
-// This file implements parsing for GCC and Microsoft inline assembly. 
+// This file implements parsing for GCC and Microsoft inline assembly.
 //
 //===----------------------------------------------------------------------===//
 
@@ -54,54 +53,13 @@ public:
     assert(AsmToks.size() == AsmTokOffsets.size());
   }
 
-  void *LookupInlineAsmIdentifier(StringRef &LineBuf,
-                                  llvm::InlineAsmIdentifierInfo &Info,
-                                  bool IsUnevaluatedContext) override {
-    // Collect the desired tokens.
-    SmallVector<Token, 16> LineToks;
-    const Token *FirstOrigToken = nullptr;
-    findTokensForString(LineBuf, LineToks, FirstOrigToken);
-
-    unsigned NumConsumedToks;
-    ExprResult Result = TheParser.ParseMSAsmIdentifier(
-        LineToks, NumConsumedToks, &Info, IsUnevaluatedContext);
-
-    // If we consumed the entire line, tell MC that.
-    // Also do this if we consumed nothing as a way of reporting failure.
-    if (NumConsumedToks == 0 || NumConsumedToks == LineToks.size()) {
-      // By not modifying LineBuf, we're implicitly consuming it all.
-
-      // Otherwise, consume up to the original tokens.
-    } else {
-      assert(FirstOrigToken && "not using original tokens?");
-
-      // Since we're using original tokens, apply that offset.
-      assert(FirstOrigToken[NumConsumedToks].getLocation() ==
-             LineToks[NumConsumedToks].getLocation());
-      unsigned FirstIndex = FirstOrigToken - AsmToks.begin();
-      unsigned LastIndex = FirstIndex + NumConsumedToks - 1;
-
-      // The total length we've consumed is the relative offset
-      // of the last token we consumed plus its length.
-      unsigned TotalOffset =
-          (AsmTokOffsets[LastIndex] + AsmToks[LastIndex].getLength() -
-           AsmTokOffsets[FirstIndex]);
-      LineBuf = LineBuf.substr(0, TotalOffset);
-    }
-
-    // Initialize the "decl" with the lookup result.
-    Info.OpDecl = static_cast<void *>(Result.get());
-    return Info.OpDecl;
-  }
+  void LookupInlineAsmIdentifier(StringRef &LineBuf,
+                                 llvm::InlineAsmIdentifierInfo &Info,
+                                 bool IsUnevaluatedContext) override;
 
   StringRef LookupInlineAsmLabel(StringRef Identifier, llvm::SourceMgr &LSM,
                                  llvm::SMLoc Location,
-                                 bool Create) override {
-    SourceLocation Loc = translateLocation(LSM, Location);
-    LabelDecl *Label =
-      TheParser.getActions().GetOrCreateMSAsmLabel(Identifier, Loc, Create);
-    return Label->getMSAsmLabel();
-  }
+                                 bool Create) override;
 
   bool LookupInlineAsmField(StringRef Base, StringRef Member,
                             unsigned &Offset) override {
@@ -116,78 +74,132 @@ public:
 private:
   /// Collect the appropriate tokens for the given string.
   void findTokensForString(StringRef Str, SmallVectorImpl<Token> &TempToks,
-                           const Token *&FirstOrigToken) const {
-    // For now, assert that the string we're working with is a substring
-    // of what we gave to MC.  This lets us use the original tokens.
-    assert(!std::less<const char *>()(Str.begin(), AsmString.begin()) &&
-           !std::less<const char *>()(AsmString.end(), Str.end()));
+                           const Token *&FirstOrigToken) const;
 
-    // Try to find a token whose offset matches the first token.
-    unsigned FirstCharOffset = Str.begin() - AsmString.begin();
-    const unsigned *FirstTokOffset = std::lower_bound(
-        AsmTokOffsets.begin(), AsmTokOffsets.end(), FirstCharOffset);
+  SourceLocation translateLocation(const llvm::SourceMgr &LSM,
+                                   llvm::SMLoc SMLoc);
 
-    // For now, assert that the start of the string exactly
-    // corresponds to the start of a token.
-    assert(*FirstTokOffset == FirstCharOffset);
-
-    // Use all the original tokens for this line.  (We assume the
-    // end of the line corresponds cleanly to a token break.)
-    unsigned FirstTokIndex = FirstTokOffset - AsmTokOffsets.begin();
-    FirstOrigToken = &AsmToks[FirstTokIndex];
-    unsigned LastCharOffset = Str.end() - AsmString.begin();
-    for (unsigned i = FirstTokIndex, e = AsmTokOffsets.size(); i != e; ++i) {
-      if (AsmTokOffsets[i] >= LastCharOffset)
-        break;
-      TempToks.push_back(AsmToks[i]);
-    }
-  }
-
-  SourceLocation translateLocation(const llvm::SourceMgr &LSM, llvm::SMLoc SMLoc) {
-    // Compute an offset into the inline asm buffer.
-    // FIXME: This isn't right if .macro is involved (but hopefully, no
-    // real-world code does that).
-    const llvm::MemoryBuffer *LBuf =
-        LSM.getMemoryBuffer(LSM.FindBufferContainingLoc(SMLoc));
-    unsigned Offset = SMLoc.getPointer() - LBuf->getBufferStart();
-
-    // Figure out which token that offset points into.
-    const unsigned *TokOffsetPtr =
-        std::lower_bound(AsmTokOffsets.begin(), AsmTokOffsets.end(), Offset);
-    unsigned TokIndex = TokOffsetPtr - AsmTokOffsets.begin();
-    unsigned TokOffset = *TokOffsetPtr;
-
-    // If we come up with an answer which seems sane, use it; otherwise,
-    // just point at the __asm keyword.
-    // FIXME: Assert the answer is sane once we handle .macro correctly.
-    SourceLocation Loc = AsmLoc;
-    if (TokIndex < AsmToks.size()) {
-      const Token &Tok = AsmToks[TokIndex];
-      Loc = Tok.getLocation();
-      Loc = Loc.getLocWithOffset(Offset - TokOffset);
-    }
-    return Loc;
-  }
-
-  void handleDiagnostic(const llvm::SMDiagnostic &D) {
-    const llvm::SourceMgr &LSM = *D.getSourceMgr();
-    SourceLocation Loc = translateLocation(LSM, D.getLoc());
-    TheParser.Diag(Loc, diag::err_inline_ms_asm_parsing) << D.getMessage();
-  }
+  void handleDiagnostic(const llvm::SMDiagnostic &D);
 };
 }
 
+void ClangAsmParserCallback::LookupInlineAsmIdentifier(
+    StringRef &LineBuf, llvm::InlineAsmIdentifierInfo &Info,
+    bool IsUnevaluatedContext) {
+  // Collect the desired tokens.
+  SmallVector<Token, 16> LineToks;
+  const Token *FirstOrigToken = nullptr;
+  findTokensForString(LineBuf, LineToks, FirstOrigToken);
+
+  unsigned NumConsumedToks;
+  ExprResult Result = TheParser.ParseMSAsmIdentifier(LineToks, NumConsumedToks,
+                                                     IsUnevaluatedContext);
+
+  // If we consumed the entire line, tell MC that.
+  // Also do this if we consumed nothing as a way of reporting failure.
+  if (NumConsumedToks == 0 || NumConsumedToks == LineToks.size()) {
+    // By not modifying LineBuf, we're implicitly consuming it all.
+
+    // Otherwise, consume up to the original tokens.
+  } else {
+    assert(FirstOrigToken && "not using original tokens?");
+
+    // Since we're using original tokens, apply that offset.
+    assert(FirstOrigToken[NumConsumedToks].getLocation() ==
+           LineToks[NumConsumedToks].getLocation());
+    unsigned FirstIndex = FirstOrigToken - AsmToks.begin();
+    unsigned LastIndex = FirstIndex + NumConsumedToks - 1;
+
+    // The total length we've consumed is the relative offset
+    // of the last token we consumed plus its length.
+    unsigned TotalOffset =
+        (AsmTokOffsets[LastIndex] + AsmToks[LastIndex].getLength() -
+         AsmTokOffsets[FirstIndex]);
+    LineBuf = LineBuf.substr(0, TotalOffset);
+  }
+
+  // Initialize Info with the lookup result.
+  if (!Result.isUsable())
+    return;
+  TheParser.getActions().FillInlineAsmIdentifierInfo(Result.get(), Info);
+}
+
+StringRef ClangAsmParserCallback::LookupInlineAsmLabel(StringRef Identifier,
+                                                       llvm::SourceMgr &LSM,
+                                                       llvm::SMLoc Location,
+                                                       bool Create) {
+  SourceLocation Loc = translateLocation(LSM, Location);
+  LabelDecl *Label =
+      TheParser.getActions().GetOrCreateMSAsmLabel(Identifier, Loc, Create);
+  return Label->getMSAsmLabel();
+}
+
+void ClangAsmParserCallback::findTokensForString(
+    StringRef Str, SmallVectorImpl<Token> &TempToks,
+    const Token *&FirstOrigToken) const {
+  // For now, assert that the string we're working with is a substring
+  // of what we gave to MC.  This lets us use the original tokens.
+  assert(!std::less<const char *>()(Str.begin(), AsmString.begin()) &&
+         !std::less<const char *>()(AsmString.end(), Str.end()));
+
+  // Try to find a token whose offset matches the first token.
+  unsigned FirstCharOffset = Str.begin() - AsmString.begin();
+  const unsigned *FirstTokOffset =
+      llvm::lower_bound(AsmTokOffsets, FirstCharOffset);
+
+  // For now, assert that the start of the string exactly
+  // corresponds to the start of a token.
+  assert(*FirstTokOffset == FirstCharOffset);
+
+  // Use all the original tokens for this line.  (We assume the
+  // end of the line corresponds cleanly to a token break.)
+  unsigned FirstTokIndex = FirstTokOffset - AsmTokOffsets.begin();
+  FirstOrigToken = &AsmToks[FirstTokIndex];
+  unsigned LastCharOffset = Str.end() - AsmString.begin();
+  for (unsigned i = FirstTokIndex, e = AsmTokOffsets.size(); i != e; ++i) {
+    if (AsmTokOffsets[i] >= LastCharOffset)
+      break;
+    TempToks.push_back(AsmToks[i]);
+  }
+}
+
+SourceLocation
+ClangAsmParserCallback::translateLocation(const llvm::SourceMgr &LSM,
+                                          llvm::SMLoc SMLoc) {
+  // Compute an offset into the inline asm buffer.
+  // FIXME: This isn't right if .macro is involved (but hopefully, no
+  // real-world code does that).
+  const llvm::MemoryBuffer *LBuf =
+      LSM.getMemoryBuffer(LSM.FindBufferContainingLoc(SMLoc));
+  unsigned Offset = SMLoc.getPointer() - LBuf->getBufferStart();
+
+  // Figure out which token that offset points into.
+  const unsigned *TokOffsetPtr = llvm::lower_bound(AsmTokOffsets, Offset);
+  unsigned TokIndex = TokOffsetPtr - AsmTokOffsets.begin();
+  unsigned TokOffset = *TokOffsetPtr;
+
+  // If we come up with an answer which seems sane, use it; otherwise,
+  // just point at the __asm keyword.
+  // FIXME: Assert the answer is sane once we handle .macro correctly.
+  SourceLocation Loc = AsmLoc;
+  if (TokIndex < AsmToks.size()) {
+    const Token &Tok = AsmToks[TokIndex];
+    Loc = Tok.getLocation();
+    Loc = Loc.getLocWithOffset(Offset - TokOffset);
+  }
+  return Loc;
+}
+
+void ClangAsmParserCallback::handleDiagnostic(const llvm::SMDiagnostic &D) {
+  const llvm::SourceMgr &LSM = *D.getSourceMgr();
+  SourceLocation Loc = translateLocation(LSM, D.getLoc());
+  TheParser.Diag(Loc, diag::err_inline_ms_asm_parsing) << D.getMessage();
+}
+
 /// Parse an identifier in an MS-style inline assembly block.
-///
-/// \param CastInfo - a void* so that we don't have to teach Parser.h
-///   about the actual type.
 ExprResult Parser::ParseMSAsmIdentifier(llvm::SmallVectorImpl<Token> &LineToks,
                                         unsigned &NumLineToksConsumed,
-                                        void *CastInfo,
                                         bool IsUnevaluatedContext) {
-  llvm::InlineAsmIdentifierInfo &Info =
-      *(llvm::InlineAsmIdentifierInfo *)CastInfo;
-
   // Push a fake token on the end so that we don't overrun the token
   // stream.  We use ';' because it expression-parsing should never
   // overrun it.
@@ -200,7 +212,8 @@ ExprResult Parser::ParseMSAsmIdentifier(llvm::SmallVectorImpl<Token> &LineToks,
   // Also copy the current token over.
   LineToks.push_back(Tok);
 
-  PP.EnterTokenStream(LineToks, /*DisableMacroExpansions*/ true);
+  PP.EnterTokenStream(LineToks, /*DisableMacroExpansions*/ true,
+                      /*IsReinject*/ true);
 
   // Clear the current token and advance to the first token in LineToks.
   ConsumeAnyToken();
@@ -225,9 +238,9 @@ ExprResult Parser::ParseMSAsmIdentifier(llvm::SmallVectorImpl<Token> &LineToks,
                                  /*AllowDestructorName=*/false,
                                  /*AllowConstructorName=*/false,
                                  /*AllowDeductionGuide=*/false,
-                                 /*ObjectType=*/nullptr, TemplateKWLoc, Id);
+                                 /*ObjectType=*/nullptr, &TemplateKWLoc, Id);
     // Perform the lookup.
-    Result = Actions.LookupInlineAsmIdentifier(SS, TemplateKWLoc, Id, Info,
+    Result = Actions.LookupInlineAsmIdentifier(SS, TemplateKWLoc, Id,
                                                IsUnevaluatedContext);
   }
   // While the next two tokens are 'period' 'identifier', repeatedly parse it as
@@ -241,7 +254,7 @@ ExprResult Parser::ParseMSAsmIdentifier(llvm::SmallVectorImpl<Token> &LineToks,
     IdentifierInfo *Id = Tok.getIdentifierInfo();
     ConsumeToken(); // Consume the identifier.
     Result = Actions.LookupInlineAsmVarDeclField(Result.get(), Id->getName(),
-                                                 Info, Tok.getLocation());
+                                                 Tok.getLocation());
   }
 
   // Figure out how many tokens we are into LineToks.
@@ -564,7 +577,7 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
   if (buildMSAsmString(PP, AsmLoc, AsmToks, TokOffsets, AsmString))
     return StmtError();
 
-  TargetOptions TO = Actions.Context.getTargetInfo().getTargetOpts();
+  const TargetOptions &TO = Actions.Context.getTargetInfo().getTargetOpts();
   std::string FeaturesStr =
       llvm::join(TO.Features.begin(), TO.Features.end(), ",");
 
@@ -578,8 +591,7 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
 
   llvm::SourceMgr TempSrcMgr;
   llvm::MCContext Ctx(MAI.get(), MRI.get(), MOFI.get(), &TempSrcMgr);
-  MOFI->InitMCObjectFileInfo(TheTriple, /*PIC*/ false, llvm::CodeModel::Default,
-                             Ctx);
+  MOFI->InitMCObjectFileInfo(TheTriple, /*PIC*/ false, Ctx);
   std::unique_ptr<llvm::MemoryBuffer> Buffer =
       llvm::MemoryBuffer::getMemBuffer(AsmString, "<MS inline asm>");
 
@@ -624,7 +636,7 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
   // Filter out "fpsw" and "mxcsr". They aren't valid GCC asm clobber
   // constraints. Clang always adds fpsr to the clobber list anyway.
   llvm::erase_if(Clobbers, [](const std::string &C) {
-    return C == "fpsw" || C == "mxcsr";
+    return C == "fpsr" || C == "mxcsr";
   });
 
   // Build the vector of clobber StringRefs.
@@ -697,12 +709,12 @@ StmtResult Parser::ParseAsmStatement(bool &msAsm) {
 
   // Remember if this was a volatile asm.
   bool isVolatile = DS.getTypeQualifiers() & DeclSpec::TQ_volatile;
+  // Remember if this was a goto asm.
+  bool isGotoAsm = false;
 
-  // TODO: support "asm goto" constructs (PR#9295).
   if (Tok.is(tok::kw_goto)) {
-    Diag(Tok, diag::err_asm_goto_not_supported_yet);
-    SkipUntil(tok::r_paren, StopAtSemi);
-    return StmtError();
+    isGotoAsm = true;
+    ConsumeToken();
   }
 
   if (Tok.isNot(tok::l_paren)) {
@@ -740,7 +752,8 @@ StmtResult Parser::ParseAsmStatement(bool &msAsm) {
     return Actions.ActOnGCCAsmStmt(AsmLoc, /*isSimple*/ true, isVolatile,
                                    /*NumOutputs*/ 0, /*NumInputs*/ 0, nullptr,
                                    Constraints, Exprs, AsmString.get(),
-                                   Clobbers, T.getCloseLocation());
+                                   Clobbers, /*NumLabels*/ 0,
+                                   T.getCloseLocation());
   }
 
   // Parse Outputs, if present.
@@ -749,6 +762,12 @@ StmtResult Parser::ParseAsmStatement(bool &msAsm) {
     // In C++ mode, parse "::" like ": :".
     AteExtraColon = Tok.is(tok::coloncolon);
     ConsumeToken();
+
+    if (!AteExtraColon && isGotoAsm && Tok.isNot(tok::colon)) {
+      Diag(Tok, diag::err_asm_goto_cannot_have_output);
+      SkipUntil(tok::r_paren, StopAtSemi);
+      return StmtError();
+    }
 
     if (!AteExtraColon && ParseAsmOperandsOpt(Names, Constraints, Exprs))
       return StmtError();
@@ -776,12 +795,15 @@ StmtResult Parser::ParseAsmStatement(bool &msAsm) {
   unsigned NumInputs = Names.size() - NumOutputs;
 
   // Parse the clobbers, if present.
-  if (AteExtraColon || Tok.is(tok::colon)) {
-    if (!AteExtraColon)
+  if (AteExtraColon || Tok.is(tok::colon) || Tok.is(tok::coloncolon)) {
+    if (AteExtraColon)
+      AteExtraColon = false;
+    else {
+      AteExtraColon = Tok.is(tok::coloncolon);
       ConsumeToken();
-
+    }
     // Parse the asm-string list for clobbers if present.
-    if (Tok.isNot(tok::r_paren)) {
+    if (!AteExtraColon && isTokenStringLiteral()) {
       while (1) {
         ExprResult Clobber(ParseAsmStringLiteral());
 
@@ -795,11 +817,49 @@ StmtResult Parser::ParseAsmStatement(bool &msAsm) {
       }
     }
   }
+  if (!isGotoAsm && (Tok.isNot(tok::r_paren) || AteExtraColon)) {
+    Diag(Tok, diag::err_expected) << tok::r_paren;
+    SkipUntil(tok::r_paren, StopAtSemi);
+    return StmtError();
+  }
 
+  // Parse the goto label, if present.
+  unsigned NumLabels = 0;
+  if (AteExtraColon || Tok.is(tok::colon)) {
+    if (!AteExtraColon)
+      ConsumeToken();
+
+    while (true) {
+      if (Tok.isNot(tok::identifier)) {
+        Diag(Tok, diag::err_expected) << tok::identifier;
+        SkipUntil(tok::r_paren, StopAtSemi);
+        return StmtError();
+      }
+      LabelDecl *LD = Actions.LookupOrCreateLabel(Tok.getIdentifierInfo(),
+                                                  Tok.getLocation());
+      Names.push_back(Tok.getIdentifierInfo());
+      if (!LD) {
+        SkipUntil(tok::r_paren, StopAtSemi);
+        return StmtError();
+      }
+      ExprResult Res =
+          Actions.ActOnAddrLabel(Tok.getLocation(), Tok.getLocation(), LD);
+      Exprs.push_back(Res.get());
+      NumLabels++;
+      ConsumeToken();
+      if (!TryConsumeToken(tok::comma))
+        break;
+    }
+  } else if (isGotoAsm) {
+    Diag(Tok, diag::err_expected) << tok::colon;
+    SkipUntil(tok::r_paren, StopAtSemi);
+    return StmtError();
+  }
   T.consumeClose();
   return Actions.ActOnGCCAsmStmt(
       AsmLoc, false, isVolatile, NumOutputs, NumInputs, Names.data(),
-      Constraints, Exprs, AsmString.get(), Clobbers, T.getCloseLocation());
+      Constraints, Exprs, AsmString.get(), Clobbers, NumLabels,
+      T.getCloseLocation());
 }
 
 /// ParseAsmOperands - Parse the asm-operands production as used by

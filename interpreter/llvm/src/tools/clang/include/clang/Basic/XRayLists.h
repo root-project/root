@@ -1,9 +1,8 @@
 //===--- XRayLists.h - XRay automatic attribution ---------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -26,12 +25,13 @@ namespace clang {
 class XRayFunctionFilter {
   std::unique_ptr<llvm::SpecialCaseList> AlwaysInstrument;
   std::unique_ptr<llvm::SpecialCaseList> NeverInstrument;
+  std::unique_ptr<llvm::SpecialCaseList> AttrList;
   SourceManager &SM;
 
 public:
   XRayFunctionFilter(ArrayRef<std::string> AlwaysInstrumentPaths,
                      ArrayRef<std::string> NeverInstrumentPaths,
-                     SourceManager &SM);
+                     ArrayRef<std::string> AttrListPaths, SourceManager &SM);
 
   enum class ImbueAttribute {
     NONE,

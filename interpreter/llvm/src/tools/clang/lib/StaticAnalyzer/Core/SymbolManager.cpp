@@ -1,9 +1,8 @@
-//== SymbolManager.h - Management of Symbolic Values ------------*- C++ -*--==//
+//===- SymbolManager.h - Management of Symbolic Values --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,15 +12,27 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/StaticAnalyzer/Core/PathSensitive/SymbolManager.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Expr.h"
 #include "clang/Analysis/Analyses/LiveVariables.h"
+#include "clang/Analysis/AnalysisDeclContext.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/MemRegion.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/SVals.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/Store.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/SymExpr.h"
+#include "llvm/ADT/FoldingSet.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/Compiler.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
+#include <cassert>
 
 using namespace clang;
 using namespace ento;
 
-void SymExpr::anchor() { }
+void SymExpr::anchor() {}
 
 LLVM_DUMP_METHOD void SymExpr::dump() const {
   dumpToStream(llvm::errs());
@@ -31,14 +42,20 @@ void SymIntExpr::dumpToStream(raw_ostream &os) const {
   os << '(';
   getLHS()->dumpToStream(os);
   os << ") "
-     << BinaryOperator::getOpcodeStr(getOpcode()) << ' '
-     << getRHS().getZExtValue();
+     << BinaryOperator::getOpcodeStr(getOpcode()) << ' ';
+  if (getRHS().isUnsigned())
+    os << getRHS().getZExtValue();
+  else
+    os << getRHS().getSExtValue();
   if (getRHS().isUnsigned())
     os << 'U';
 }
 
 void IntSymExpr::dumpToStream(raw_ostream &os) const {
-  os << getLHS().getZExtValue();
+  if (getLHS().isUnsigned())
+    os << getLHS().getZExtValue();
+  else
+    os << getLHS().getSExtValue();
   if (getLHS().isUnsigned())
     os << 'U';
   os << ' '
@@ -65,7 +82,13 @@ void SymbolCast::dumpToStream(raw_ostream &os) const {
 }
 
 void SymbolConjured::dumpToStream(raw_ostream &os) const {
-  os << "conj_$" << getSymbolID() << '{' << T.getAsString() << '}';
+  os << "conj_$" << getSymbolID() << '{' << T.getAsString() << ", LC"
+     << LCtx->getID();
+  if (S)
+    os << ", S" << S->getID(LCtx->getDecl()->getASTContext());
+  else
+    os << ", no stmt";
+  os << ", #" << Count << '}';
 }
 
 void SymbolDerived::dumpToStream(raw_ostream &os) const {
@@ -82,7 +105,7 @@ void SymbolMetadata::dumpToStream(raw_ostream &os) const {
      << getRegion() << ',' << T.getAsString() << '}';
 }
 
-void SymbolData::anchor() { }
+void SymbolData::anchor() {}
 
 void SymbolRegionValue::dumpToStream(raw_ostream &os) const {
   os << "reg_$" << getSymbolID()
@@ -132,20 +155,13 @@ void SymExpr::symbol_iterator::expand() {
       itr.push_back(cast<IntSymExpr>(SE)->getRHS());
       return;
     case SymExpr::SymSymExprKind: {
-      const SymSymExpr *x = cast<SymSymExpr>(SE);
+      const auto *x = cast<SymSymExpr>(SE);
       itr.push_back(x->getLHS());
       itr.push_back(x->getRHS());
       return;
     }
   }
   llvm_unreachable("unhandled expansion case");
-}
-
-unsigned SymExpr::computeComplexity() const {
-  unsigned R = 0;
-  for (symbol_iterator I = symbol_begin(), E = symbol_end(); I != E; ++I)
-    R++;
-  return R;
 }
 
 const SymbolRegionValue*
@@ -186,7 +202,6 @@ const SymbolConjured* SymbolManager::conjureSymbol(const Stmt *E,
 const SymbolDerived*
 SymbolManager::getDerivedSymbol(SymbolRef parentSymbol,
                                 const TypedValueRegion *R) {
-
   llvm::FoldingSetNodeID profile;
   SymbolDerived::Profile(profile, parentSymbol, R);
   void *InsertPos;
@@ -221,7 +236,6 @@ const SymbolMetadata *
 SymbolManager::getMetadataSymbol(const MemRegion* R, const Stmt *S, QualType T,
                                  const LocationContext *LCtx,
                                  unsigned Count, const void *SymbolTag) {
-
   llvm::FoldingSetNodeID profile;
   SymbolMetadata::Profile(profile, R, S, T, LCtx, Count, SymbolTag);
   void *InsertPos;
@@ -376,30 +390,28 @@ void SymbolReaper::markDependentsLive(SymbolRef sym) {
   LI->second = HaveMarkedDependents;
 
   if (const SymbolRefSmallVectorTy *Deps = SymMgr.getDependentSymbols(sym)) {
-    for (SymbolRefSmallVectorTy::const_iterator I = Deps->begin(),
-                                                E = Deps->end(); I != E; ++I) {
-      if (TheLiving.find(*I) != TheLiving.end())
+    for (const auto I : *Deps) {
+      if (TheLiving.find(I) != TheLiving.end())
         continue;
-      markLive(*I);
+      markLive(I);
     }
   }
 }
 
 void SymbolReaper::markLive(SymbolRef sym) {
   TheLiving[sym] = NotProcessed;
-  TheDead.erase(sym);
   markDependentsLive(sym);
 }
 
 void SymbolReaper::markLive(const MemRegion *region) {
-  RegionRoots.insert(region);
+  RegionRoots.insert(region->getBaseRegion());
   markElementIndicesLive(region);
 }
 
 void SymbolReaper::markElementIndicesLive(const MemRegion *region) {
   for (auto SR = dyn_cast<SubRegion>(region); SR;
        SR = dyn_cast<SubRegion>(SR->getSuperRegion())) {
-    if (auto ER = dyn_cast<ElementRegion>(SR)) {
+    if (const auto ER = dyn_cast<ElementRegion>(SR)) {
       SVal Idx = ER->getIndex();
       for (auto SI = Idx.symbol_begin(), SE = Idx.symbol_end(); SI != SE; ++SI)
         markLive(*SI);
@@ -412,24 +424,20 @@ void SymbolReaper::markInUse(SymbolRef sym) {
     MetadataInUse.insert(sym);
 }
 
-bool SymbolReaper::maybeDead(SymbolRef sym) {
-  if (isLive(sym))
-    return false;
-
-  TheDead.insert(sym);
-  return true;
-}
-
 bool SymbolReaper::isLiveRegion(const MemRegion *MR) {
+  // TODO: For now, liveness of a memory region is equivalent to liveness of its
+  // base region. In fact we can do a bit better: say, if a particular FieldDecl
+  // is not used later in the path, we can diagnose a leak of a value within
+  // that field earlier than, say, the variable that contains the field dies.
+  MR = MR->getBaseRegion();
+
   if (RegionRoots.count(MR))
     return true;
 
-  MR = MR->getBaseRegion();
-
-  if (const SymbolicRegion *SR = dyn_cast<SymbolicRegion>(MR))
+  if (const auto *SR = dyn_cast<SymbolicRegion>(MR))
     return isLive(SR->getSymbol());
 
-  if (const VarRegion *VR = dyn_cast<VarRegion>(MR))
+  if (const auto *VR = dyn_cast<VarRegion>(MR))
     return isLive(VR, true);
 
   // FIXME: This is a gross over-approximation. What we really need is a way to
@@ -527,7 +535,7 @@ bool SymbolReaper::isLive(const VarRegion *VR, bool includeStoreBindings) const{
 
   if (!LCtx)
     return false;
-  const StackFrameContext *CurrentContext = LCtx->getCurrentStackFrame();
+  const StackFrameContext *CurrentContext = LCtx->getStackFrame();
 
   if (VarContext == CurrentContext) {
     // If no statement is provided, everything is live.
@@ -541,7 +549,7 @@ bool SymbolReaper::isLive(const VarRegion *VR, bool includeStoreBindings) const{
       return false;
 
     unsigned &cachedQuery =
-      const_cast<SymbolReaper*>(this)->includedRegionCache[VR];
+      const_cast<SymbolReaper *>(this)->includedRegionCache[VR];
 
     if (cachedQuery) {
       return cachedQuery == 1;

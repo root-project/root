@@ -1,9 +1,8 @@
 //===-- GlobalDCE.h - DCE unreachable internal functions ------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -35,7 +34,7 @@ private:
   SmallPtrSet<GlobalValue*, 32> AliveGlobals;
 
   /// Global -> Global that uses this global.
-  std::unordered_multimap<GlobalValue *, GlobalValue *> GVDependencies;
+  DenseMap<GlobalValue *, SmallPtrSet<GlobalValue *, 4>> GVDependencies;
 
   /// Constant -> Globals that use this global cache.
   std::unordered_map<Constant *, SmallPtrSet<GlobalValue *, 8>>

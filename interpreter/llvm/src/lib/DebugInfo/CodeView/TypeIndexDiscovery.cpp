@@ -1,9 +1,8 @@
 //===- TypeIndexDiscovery.cpp -----------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 #include "llvm/DebugInfo/CodeView/TypeIndexDiscovery.h"
@@ -58,7 +57,7 @@ static inline uint32_t getEncodedIntegerLength(ArrayRef<uint8_t> Data) {
       8,  // LF_UQUADWORD
   };
 
-  return Sizes[N - LF_NUMERIC];
+  return 2 + Sizes[N - LF_NUMERIC];
 }
 
 static inline uint32_t getCStringLength(ArrayRef<uint8_t> Data) {
@@ -364,13 +363,15 @@ static bool discoverTypeIndices(ArrayRef<uint8_t> Content, SymbolKind Kind,
   // values.  One idea is to define some structures representing these types
   // that would allow the use of offsetof().
   switch (Kind) {
-  case SymbolKind::S_GPROC32:
-  case SymbolKind::S_LPROC32:
   case SymbolKind::S_GPROC32_ID:
   case SymbolKind::S_LPROC32_ID:
   case SymbolKind::S_LPROC32_DPC:
   case SymbolKind::S_LPROC32_DPC_ID:
     Refs.push_back({TiRefKind::IndexRef, 24, 1}); // LF_FUNC_ID
+    break;
+  case SymbolKind::S_GPROC32:
+  case SymbolKind::S_LPROC32:
+    Refs.push_back({TiRefKind::TypeRef, 24, 1}); // Type
     break;
   case SymbolKind::S_UDT:
     Refs.push_back({TiRefKind::TypeRef, 0, 1}); // UDT
@@ -392,9 +393,13 @@ static bool discoverTypeIndices(ArrayRef<uint8_t> Content, SymbolKind Kind,
   case SymbolKind::S_LOCAL:
     Refs.push_back({TiRefKind::TypeRef, 0, 1}); // Type
     break;
+  case SymbolKind::S_REGISTER:
+    Refs.push_back({TiRefKind::TypeRef, 0, 1}); // Type
+    break;
   case SymbolKind::S_CONSTANT:
     Refs.push_back({TiRefKind::TypeRef, 0, 1}); // Type
     break;
+  case SymbolKind::S_BPREL32:
   case SymbolKind::S_REGREL32:
     Refs.push_back({TiRefKind::TypeRef, 4, 1}); // Type
     break;
@@ -403,6 +408,7 @@ static bool discoverTypeIndices(ArrayRef<uint8_t> Content, SymbolKind Kind,
     break;
   case SymbolKind::S_CALLERS:
   case SymbolKind::S_CALLEES:
+  case SymbolKind::S_INLINEES:
     // The record is a count followed by an array of type indices.
     Count = *reinterpret_cast<const ulittle32_t *>(Content.data());
     Refs.push_back({TiRefKind::IndexRef, 4, Count}); // Callees
@@ -411,8 +417,7 @@ static bool discoverTypeIndices(ArrayRef<uint8_t> Content, SymbolKind Kind,
     Refs.push_back({TiRefKind::IndexRef, 8, 1}); // ID of inlinee
     break;
   case SymbolKind::S_HEAPALLOCSITE:
-    // FIXME: It's not clear if this is a type or item reference.
-    Refs.push_back({TiRefKind::IndexRef, 8, 1}); // signature
+    Refs.push_back({TiRefKind::TypeRef, 8, 1}); // UDT allocated
     break;
 
   // Defranges don't have types, just registers and code offsets.
@@ -424,7 +429,7 @@ static bool discoverTypeIndices(ArrayRef<uint8_t> Content, SymbolKind Kind,
   case SymbolKind::S_DEFRANGE_SUBFIELD:
     break;
 
-  // No type refernces.
+  // No type references.
   case SymbolKind::S_LABEL32:
   case SymbolKind::S_OBJNAME:
   case SymbolKind::S_COMPILE:
@@ -433,6 +438,9 @@ static bool discoverTypeIndices(ArrayRef<uint8_t> Content, SymbolKind Kind,
   case SymbolKind::S_ENVBLOCK:
   case SymbolKind::S_BLOCK32:
   case SymbolKind::S_FRAMEPROC:
+  case SymbolKind::S_THUNK32:
+  case SymbolKind::S_FRAMECOOKIE:
+  case SymbolKind::S_UNAMESPACE:
     break;
   // Scope ending symbols.
   case SymbolKind::S_END:
@@ -450,23 +458,35 @@ void llvm::codeview::discoverTypeIndices(const CVType &Type,
   ::discoverTypeIndices(Type.content(), Type.kind(), Refs);
 }
 
-void llvm::codeview::discoverTypeIndices(const CVType &Type,
-                                         SmallVectorImpl<TypeIndex> &Indices) {
-
+static void resolveTypeIndexReferences(ArrayRef<uint8_t> RecordData,
+                                       ArrayRef<TiReference> Refs,
+                                       SmallVectorImpl<TypeIndex> &Indices) {
   Indices.clear();
 
-  SmallVector<TiReference, 4> Refs;
-  discoverTypeIndices(Type, Refs);
   if (Refs.empty())
     return;
 
-  BinaryStreamReader Reader(Type.content(), support::little);
+  RecordData = RecordData.drop_front(sizeof(RecordPrefix));
+
+  BinaryStreamReader Reader(RecordData, support::little);
   for (const auto &Ref : Refs) {
     Reader.setOffset(Ref.Offset);
     FixedStreamArray<TypeIndex> Run;
     cantFail(Reader.readArray(Run, Ref.Count));
     Indices.append(Run.begin(), Run.end());
   }
+}
+
+void llvm::codeview::discoverTypeIndices(const CVType &Type,
+                                         SmallVectorImpl<TypeIndex> &Indices) {
+  return discoverTypeIndices(Type.RecordData, Indices);
+}
+
+void llvm::codeview::discoverTypeIndices(ArrayRef<uint8_t> RecordData,
+                                         SmallVectorImpl<TypeIndex> &Indices) {
+  SmallVector<TiReference, 4> Refs;
+  discoverTypeIndices(RecordData, Refs);
+  resolveTypeIndexReferences(RecordData, Refs, Indices);
 }
 
 void llvm::codeview::discoverTypeIndices(ArrayRef<uint8_t> RecordData,
@@ -477,8 +497,26 @@ void llvm::codeview::discoverTypeIndices(ArrayRef<uint8_t> RecordData,
   ::discoverTypeIndices(RecordData.drop_front(sizeof(RecordPrefix)), K, Refs);
 }
 
-bool llvm::codeview::discoverTypeIndices(const CVSymbol &Sym,
-                                         SmallVectorImpl<TiReference> &Refs) {
+bool llvm::codeview::discoverTypeIndicesInSymbol(
+    const CVSymbol &Sym, SmallVectorImpl<TiReference> &Refs) {
   SymbolKind K = Sym.kind();
   return ::discoverTypeIndices(Sym.content(), K, Refs);
+}
+
+bool llvm::codeview::discoverTypeIndicesInSymbol(
+    ArrayRef<uint8_t> RecordData, SmallVectorImpl<TiReference> &Refs) {
+  const RecordPrefix *P =
+      reinterpret_cast<const RecordPrefix *>(RecordData.data());
+  SymbolKind K = static_cast<SymbolKind>(uint16_t(P->RecordKind));
+  return ::discoverTypeIndices(RecordData.drop_front(sizeof(RecordPrefix)), K,
+                               Refs);
+}
+
+bool llvm::codeview::discoverTypeIndicesInSymbol(
+    ArrayRef<uint8_t> RecordData, SmallVectorImpl<TypeIndex> &Indices) {
+  SmallVector<TiReference, 2> Refs;
+  if (!discoverTypeIndicesInSymbol(RecordData, Refs))
+    return false;
+  resolveTypeIndexReferences(RecordData, Refs, Indices);
+  return true;
 }

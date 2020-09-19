@@ -1,9 +1,8 @@
 //===-- MipsNaClELFStreamer.cpp - ELF Object Output for Mips NaCl ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -20,9 +19,12 @@
 #include "Mips.h"
 #include "MipsELFStreamer.h"
 #include "MipsMCNaCl.h"
+#include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAssembler.h"
+#include "llvm/MC/MCCodeEmitter.h"
 #include "llvm/MC/MCELFStreamer.h"
 #include "llvm/MC/MCInst.h"
+#include "llvm/MC/MCObjectWriter.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <cassert>
 
@@ -40,9 +42,11 @@ const unsigned LoadStoreStackMaskReg = Mips::T7;
 
 class MipsNaClELFStreamer : public MipsELFStreamer {
 public:
-  MipsNaClELFStreamer(MCContext &Context, MCAsmBackend &TAB,
-                      raw_pwrite_stream &OS, MCCodeEmitter *Emitter)
-      : MipsELFStreamer(Context, TAB, OS, Emitter) {}
+  MipsNaClELFStreamer(MCContext &Context, std::unique_ptr<MCAsmBackend> TAB,
+                      std::unique_ptr<MCObjectWriter> OW,
+                      std::unique_ptr<MCCodeEmitter> Emitter)
+      : MipsELFStreamer(Context, std::move(TAB), std::move(OW),
+                        std::move(Emitter)) {}
 
   ~MipsNaClELFStreamer() override = default;
 
@@ -139,8 +143,8 @@ private:
 public:
   /// This function is the one used to emit instruction data into the ELF
   /// streamer.  We override it to mask dangerous instructions.
-  void EmitInstruction(const MCInst &Inst, const MCSubtargetInfo &STI,
-                       bool) override {
+  void EmitInstruction(const MCInst &Inst,
+                       const MCSubtargetInfo &STI) override {
     // Sandbox indirect jumps.
     if (isIndirectJump(Inst)) {
       if (PendingCall)
@@ -255,11 +259,13 @@ bool baseRegNeedsLoadStoreMask(unsigned Reg) {
   return Reg != Mips::SP && Reg != Mips::T8;
 }
 
-MCELFStreamer *createMipsNaClELFStreamer(MCContext &Context, MCAsmBackend &TAB,
-                                         raw_pwrite_stream &OS,
-                                         MCCodeEmitter *Emitter,
+MCELFStreamer *createMipsNaClELFStreamer(MCContext &Context,
+                                         std::unique_ptr<MCAsmBackend> TAB,
+                                         std::unique_ptr<MCObjectWriter> OW,
+                                         std::unique_ptr<MCCodeEmitter> Emitter,
                                          bool RelaxAll) {
-  MipsNaClELFStreamer *S = new MipsNaClELFStreamer(Context, TAB, OS, Emitter);
+  MipsNaClELFStreamer *S = new MipsNaClELFStreamer(
+      Context, std::move(TAB), std::move(OW), std::move(Emitter));
   if (RelaxAll)
     S->getAssembler().setRelaxAll(true);
 

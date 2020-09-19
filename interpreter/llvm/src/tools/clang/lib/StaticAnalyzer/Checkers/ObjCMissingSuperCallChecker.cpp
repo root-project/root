@@ -1,9 +1,8 @@
 //==- ObjCMissingSuperCallChecker.cpp - Check missing super-calls in ObjC --==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprObjC.h"
@@ -81,7 +80,7 @@ private:
 
 }
 
-/// \brief Determine whether the given class has a superclass that we want
+/// Determine whether the given class has a superclass that we want
 /// to check. The name of the found superclass is stored in SuperclassName.
 ///
 /// \param D The declaration to check for superclasses.
@@ -222,6 +221,9 @@ void ento::registerObjCSuperCallChecker(CheckerManager &Mgr) {
   Mgr.registerChecker<ObjCSuperCallChecker>();
 }
 
+bool ento::shouldRegisterObjCSuperCallChecker(const LangOptions &LO) {
+  return true;
+}
 
 /*
  ToDo list for expanding this check in the future, the list is not exhaustive.

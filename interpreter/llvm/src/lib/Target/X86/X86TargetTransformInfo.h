@@ -1,9 +1,8 @@
 //===-- X86TargetTransformInfo.h - X86 specific TTI -------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 /// \file
@@ -21,7 +20,7 @@
 #include "X86TargetMachine.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/CodeGen/BasicTTIImpl.h"
-#include "llvm/Target/TargetLowering.h"
+#include "llvm/CodeGen/TargetLowering.h"
 
 namespace llvm {
 
@@ -36,6 +35,64 @@ class X86TTIImpl : public BasicTTIImplBase<X86TTIImpl> {
   const X86Subtarget *getST() const { return ST; }
   const X86TargetLowering *getTLI() const { return TLI; }
 
+  const FeatureBitset InlineFeatureIgnoreList = {
+      // This indicates the CPU is 64 bit capable not that we are in 64-bit
+      // mode.
+      X86::Feature64Bit,
+
+      // These features don't have any intrinsics or ABI effect.
+      X86::FeatureNOPL,
+      X86::FeatureCMPXCHG16B,
+      X86::FeatureLAHFSAHF,
+
+      // Codegen control options.
+      X86::FeatureFast11ByteNOP,
+      X86::FeatureFast15ByteNOP,
+      X86::FeatureFastBEXTR,
+      X86::FeatureFastHorizontalOps,
+      X86::FeatureFastLZCNT,
+      X86::FeatureFastPartialYMMorZMMWrite,
+      X86::FeatureFastScalarFSQRT,
+      X86::FeatureFastSHLDRotate,
+      X86::FeatureFastScalarShiftMasks,
+      X86::FeatureFastVectorShiftMasks,
+      X86::FeatureFastVariableShuffle,
+      X86::FeatureFastVectorFSQRT,
+      X86::FeatureLEAForSP,
+      X86::FeatureLEAUsesAG,
+      X86::FeatureLZCNTFalseDeps,
+      X86::FeatureBranchFusion,
+      X86::FeatureMacroFusion,
+      X86::FeatureMergeToThreeWayBranch,
+      X86::FeaturePadShortFunctions,
+      X86::FeaturePOPCNTFalseDeps,
+      X86::FeatureSSEUnalignedMem,
+      X86::FeatureSlow3OpsLEA,
+      X86::FeatureSlowDivide32,
+      X86::FeatureSlowDivide64,
+      X86::FeatureSlowIncDec,
+      X86::FeatureSlowLEA,
+      X86::FeatureSlowPMADDWD,
+      X86::FeatureSlowPMULLD,
+      X86::FeatureSlowSHLD,
+      X86::FeatureSlowTwoMemOps,
+      X86::FeatureSlowUAMem16,
+
+      // Perf-tuning flags.
+      X86::FeatureHasFastGather,
+      X86::FeatureSlowUAMem32,
+
+      // Based on whether user set the -mprefer-vector-width command line.
+      X86::FeaturePrefer256Bit,
+
+      // CPU name enums. These just follow CPU string.
+      X86::ProcIntelAtom,
+      X86::ProcIntelGLM,
+      X86::ProcIntelGLP,
+      X86::ProcIntelSLM,
+      X86::ProcIntelTRM,
+  };
+
 public:
   explicit X86TTIImpl(const X86TargetMachine *TM, const Function &F)
       : BaseT(TM, F.getParent()->getDataLayout()), ST(TM->getSubtargetImpl(F)),
@@ -45,6 +102,14 @@ public:
   /// @{
   TTI::PopcntSupportKind getPopcntSupport(unsigned TyWidth);
 
+  /// @}
+
+  /// \name Cache TTI Implementation
+  /// @{
+  llvm::Optional<unsigned> getCacheSize(
+    TargetTransformInfo::CacheLevel Level) const;
+  llvm::Optional<unsigned> getCacheAssociativity(
+    TargetTransformInfo::CacheLevel Level) const;
   /// @}
 
   /// \name Vector TTI Implementations
@@ -85,32 +150,57 @@ public:
                             ArrayRef<Value *> Args, FastMathFlags FMF,
                             unsigned VF = 1);
 
-  int getReductionCost(unsigned Opcode, Type *Ty, bool IsPairwiseForm);
+  int getArithmeticReductionCost(unsigned Opcode, Type *Ty,
+                                 bool IsPairwiseForm);
+
+  int getMinMaxReductionCost(Type *Ty, Type *CondTy, bool IsPairwiseForm,
+                             bool IsUnsigned);
 
   int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy,
                                  unsigned Factor, ArrayRef<unsigned> Indices,
-                                 unsigned Alignment, unsigned AddressSpace);
+                                 unsigned Alignment, unsigned AddressSpace,
+                                 bool UseMaskForCond = false,
+                                 bool UseMaskForGaps = false);
   int getInterleavedMemoryOpCostAVX512(unsigned Opcode, Type *VecTy,
                                  unsigned Factor, ArrayRef<unsigned> Indices,
-                                 unsigned Alignment, unsigned AddressSpace);
+                                 unsigned Alignment, unsigned AddressSpace,
+                                 bool UseMaskForCond = false,
+                                 bool UseMaskForGaps = false);
   int getInterleavedMemoryOpCostAVX2(unsigned Opcode, Type *VecTy,
                                  unsigned Factor, ArrayRef<unsigned> Indices,
-                                 unsigned Alignment, unsigned AddressSpace);
+                                 unsigned Alignment, unsigned AddressSpace,
+                                 bool UseMaskForCond = false,
+                                 bool UseMaskForGaps = false);
 
   int getIntImmCost(int64_t);
 
   int getIntImmCost(const APInt &Imm, Type *Ty);
 
+  unsigned getUserCost(const User *U, ArrayRef<const Value *> Operands);
+
   int getIntImmCost(unsigned Opcode, unsigned Idx, const APInt &Imm, Type *Ty);
   int getIntImmCost(Intrinsic::ID IID, unsigned Idx, const APInt &Imm,
                     Type *Ty);
+  bool isLSRCostLess(TargetTransformInfo::LSRCost &C1,
+                     TargetTransformInfo::LSRCost &C2);
+  bool canMacroFuseCmp();
   bool isLegalMaskedLoad(Type *DataType);
   bool isLegalMaskedStore(Type *DataType);
+  bool isLegalNTLoad(Type *DataType, unsigned Alignment);
+  bool isLegalNTStore(Type *DataType, unsigned Alignment);
   bool isLegalMaskedGather(Type *DataType);
   bool isLegalMaskedScatter(Type *DataType);
+  bool isLegalMaskedExpandLoad(Type *DataType);
+  bool isLegalMaskedCompressStore(Type *DataType);
+  bool hasDivRemOp(Type *DataType, bool IsSigned);
+  bool isFCmpOrdCheaperThanFCmpZero(Type *Ty);
   bool areInlineCompatible(const Function *Caller,
                            const Function *Callee) const;
-  bool expandMemCmp(Instruction *I, unsigned &MaxLoadSize);
+  bool areFunctionArgsABICompatible(const Function *Caller,
+                                    const Function *Callee,
+                                    SmallPtrSetImpl<Argument *> &Args) const;
+  TTI::MemCmpExpansionOptions enableMemCmpExpansion(bool OptSize,
+                                                    bool IsZeroCmp) const;
   bool enableInterleavedAccessVectorization();
 private:
   int getGSScalarCost(unsigned Opcode, Type *DataTy, bool VariableMask,

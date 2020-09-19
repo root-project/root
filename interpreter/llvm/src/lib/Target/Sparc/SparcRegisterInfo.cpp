@@ -1,9 +1,8 @@
 //===-- SparcRegisterInfo.cpp - SPARC Register Information ----------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -20,10 +19,10 @@
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
+#include "llvm/CodeGen/TargetInstrInfo.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Target/TargetInstrInfo.h"
 
 using namespace llvm;
 
@@ -94,6 +93,10 @@ BitVector SparcRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
         Reserved.set(*AI);
     }
   }
+
+  // Reserve ASR1-ASR31
+  for (unsigned n = 0; n < 31; n++)
+    Reserved.set(SP::ASR1 + n);
 
   return Reserved;
 }
@@ -185,7 +188,7 @@ SparcRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
       MachineInstr *StMI =
         BuildMI(*MI.getParent(), II, dl, TII.get(SP::STDFri))
         .addReg(FrameReg).addImm(0).addReg(SrcEvenReg);
-      replaceFI(MF, II, *StMI, dl, 0, Offset, FrameReg);
+      replaceFI(MF, *StMI, *StMI, dl, 0, Offset, FrameReg);
       MI.setDesc(TII.get(SP::STDFri));
       MI.getOperand(2).setReg(SrcOddReg);
       Offset += 8;
@@ -194,10 +197,10 @@ SparcRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
       unsigned DestReg     = MI.getOperand(0).getReg();
       unsigned DestEvenReg = getSubReg(DestReg, SP::sub_even64);
       unsigned DestOddReg  = getSubReg(DestReg, SP::sub_odd64);
-      MachineInstr *StMI =
+      MachineInstr *LdMI =
         BuildMI(*MI.getParent(), II, dl, TII.get(SP::LDDFri), DestEvenReg)
         .addReg(FrameReg).addImm(0);
-      replaceFI(MF, II, *StMI, dl, 1, Offset, FrameReg);
+      replaceFI(MF, *LdMI, *LdMI, dl, 1, Offset, FrameReg);
 
       MI.setDesc(TII.get(SP::LDDFri));
       MI.getOperand(0).setReg(DestOddReg);
@@ -209,7 +212,7 @@ SparcRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
 
 }
 
-unsigned SparcRegisterInfo::getFrameRegister(const MachineFunction &MF) const {
+Register SparcRegisterInfo::getFrameRegister(const MachineFunction &MF) const {
   return SP::I6;
 }
 

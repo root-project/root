@@ -1,9 +1,8 @@
-//===-- Mips16InstrInfo.h - Mips16 Instruction Information ------*- C++ -*-===//
+//===- Mips16InstrInfo.h - Mips16 Instruction Information -------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,9 +15,15 @@
 
 #include "Mips16RegisterInfo.h"
 #include "MipsInstrInfo.h"
+#include "llvm/CodeGen/MachineBasicBlock.h"
+#include "llvm/Support/MathExtras.h"
+#include <cstdint>
 
 namespace llvm {
+
+class MCInstrDesc;
 class MipsSubtarget;
+
 class Mips16InstrInfo : public MipsInstrInfo {
   const Mips16RegisterInfo RI;
 
@@ -73,7 +78,6 @@ public:
   void restoreFrame(unsigned SP, int64_t FrameSize, MachineBasicBlock &MBB,
                       MachineBasicBlock::iterator I) const;
 
-
   /// Adjust SP by Amount bytes.
   void adjustStackPtr(unsigned SP, int64_t Amount, MachineBasicBlock &MBB,
                       MachineBasicBlock::iterator I) const override;
@@ -81,7 +85,6 @@ public:
   /// Emit a series of instructions to load an immediate.
   // This is to adjust some FrameReg. We return the new register to be used
   // in place of FrameReg and the adjusted immediate field (&NewImm)
-  //
   unsigned loadImmediate(unsigned FrameReg, int64_t Imm, MachineBasicBlock &MBB,
                          MachineBasicBlock::iterator II, const DebugLoc &DL,
                          unsigned &NewImm) const;
@@ -92,17 +95,20 @@ public:
     return ((offset & 7) == 0) && isInt<11>(offset);
   }
 
-  //
   // build the proper one based on the Imm field
-  //
 
   const MCInstrDesc& AddiuSpImm(int64_t Imm) const;
 
   void BuildAddiuSpImm
     (MachineBasicBlock &MBB, MachineBasicBlock::iterator I, int64_t Imm) const;
 
-  unsigned getInlineAsmLength(const char *Str,
-                              const MCAsmInfo &MAI) const override;
+protected:
+  /// If the specific machine instruction is a instruction that moves/copies
+  /// value from one register to another register return true along with
+  /// @Source machine operand and @Destination machine operand.
+  bool isCopyInstrImpl(const MachineInstr &MI, const MachineOperand *&Source,
+                       const MachineOperand *&Destination) const override;
+
 private:
   unsigned getAnalyzableBrOpc(unsigned Opc) const override;
 
@@ -118,9 +124,8 @@ private:
   void adjustStackPtrBigUnrestricted(unsigned SP, int64_t Amount,
                                      MachineBasicBlock &MBB,
                                      MachineBasicBlock::iterator I) const;
-
 };
 
-}
+} // end namespace llvm
 
-#endif
+#endif // LLVM_LIB_TARGET_MIPS_MIPS16INSTRINFO_H

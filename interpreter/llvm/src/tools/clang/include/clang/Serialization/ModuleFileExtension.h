@@ -1,9 +1,8 @@
 //===-- ModuleFileExtension.h - Module File Extensions ----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -26,7 +25,7 @@ namespace clang {
 class ASTReader;
 class ASTWriter;
 class Sema;
-  
+
 namespace serialization {
   class ModuleFile;
 } // end namespace serialization
@@ -128,7 +127,7 @@ public:
 /// Abstract base class that reads a module file extension block from
 /// a module file.
 ///
-/// Subclasses 
+/// Subclasses
 class ModuleFileExtensionReader {
   ModuleFileExtension *Extension;
 

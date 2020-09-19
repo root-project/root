@@ -1,9 +1,8 @@
 //===--- TargetRegistry.cpp - Target registration -------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -72,7 +71,7 @@ const Target *TargetRegistry::lookupTarget(const std::string &TT,
   auto I = find_if(targets(), ArchMatch);
 
   if (I == targets().end()) {
-    Error = "No available targets are compatible with this triple.";
+    Error = "No available targets are compatible with triple \"" + TT + "\"";
     return nullptr;
   }
 
@@ -86,9 +85,9 @@ const Target *TargetRegistry::lookupTarget(const std::string &TT,
   return &*I;
 }
 
-void TargetRegistry::RegisterTarget(Target &T,
-                                    const char *Name,
+void TargetRegistry::RegisterTarget(Target &T, const char *Name,
                                     const char *ShortDesc,
+                                    const char *BackendName,
                                     Target::ArchMatchFnTy ArchMatchFn,
                                     bool HasJIT) {
   assert(Name && ShortDesc && ArchMatchFn &&
@@ -98,13 +97,14 @@ void TargetRegistry::RegisterTarget(Target &T,
   // convenience to some clients.
   if (T.Name)
     return;
-         
+
   // Add to the list of targets.
   T.Next = FirstTarget;
   FirstTarget = &T;
 
   T.Name = Name;
   T.ShortDesc = ShortDesc;
+  T.BackendName = BackendName;
   T.ArchMatchFn = ArchMatchFn;
   T.HasJIT = HasJIT;
 }
@@ -114,7 +114,7 @@ static int TargetArraySortFn(const std::pair<StringRef, const Target *> *LHS,
   return LHS->first.compare(RHS->first);
 }
 
-void TargetRegistry::printRegisteredTargetsForVersion() {
+void TargetRegistry::printRegisteredTargetsForVersion(raw_ostream &OS) {
   std::vector<std::pair<StringRef, const Target*> > Targets;
   size_t Width = 0;
   for (const auto &T : TargetRegistry::targets()) {
@@ -123,7 +123,6 @@ void TargetRegistry::printRegisteredTargetsForVersion() {
   }
   array_pod_sort(Targets.begin(), Targets.end(), TargetArraySortFn);
 
-  raw_ostream &OS = outs();
   OS << "  Registered Targets:\n";
   for (unsigned i = 0, e = Targets.size(); i != e; ++i) {
     OS << "    " << Targets[i].first;

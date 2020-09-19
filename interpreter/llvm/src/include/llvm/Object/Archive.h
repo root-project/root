@@ -1,9 +1,8 @@
 //===- Archive.h - ar archive file format -----------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,6 +15,7 @@
 
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/fallible_iterator.h"
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Support/Chrono.h"
@@ -91,9 +91,9 @@ public:
 
     const Archive *Parent;
     ArchiveMemberHeader Header;
-    /// \brief Includes header but not padding byte.
+    /// Includes header but not padding byte.
     StringRef Data;
-    /// \brief Offset from Data to the start of the file.
+    /// Offset from Data to the start of the file.
     uint16_t StartOfFile;
 
     Expected<bool> isThinMember() const;
@@ -143,43 +143,37 @@ public:
     getAsBinary(LLVMContext *Context = nullptr) const;
   };
 
-  class child_iterator {
+  class ChildFallibleIterator {
     Child C;
-    Error *E = nullptr;
 
   public:
-    child_iterator() : C(Child(nullptr, nullptr, nullptr)) {}
-    child_iterator(const Child &C, Error *E) : C(C), E(E) {}
+    ChildFallibleIterator() : C(Child(nullptr, nullptr, nullptr)) {}
+    ChildFallibleIterator(const Child &C) : C(C) {}
 
     const Child *operator->() const { return &C; }
     const Child &operator*() const { return C; }
 
-    bool operator==(const child_iterator &other) const {
+    bool operator==(const ChildFallibleIterator &other) const {
       // Ignore errors here: If an error occurred during increment then getNext
       // will have been set to child_end(), and the following comparison should
       // do the right thing.
       return C == other.C;
     }
 
-    bool operator!=(const child_iterator &other) const {
+    bool operator!=(const ChildFallibleIterator &other) const {
       return !(*this == other);
     }
 
-    // Code in loops with child_iterators must check for errors on each loop
-    // iteration.  And if there is an error break out of the loop.
-    child_iterator &operator++() { // Preincrement
-      assert(E && "Can't increment iterator with no Error attached");
-      ErrorAsOutParameter ErrAsOutParam(E);
-      if (auto ChildOrErr = C.getNext())
-        C = *ChildOrErr;
-      else {
-        C = C.getParent()->child_end().C;
-        *E = ChildOrErr.takeError();
-        E = nullptr;
-      }
-      return *this;
+    Error inc() {
+      auto NextChild = C.getNext();
+      if (!NextChild)
+        return NextChild.takeError();
+      C = std::move(*NextChild);
+      return Error::success();
     }
   };
+
+  using child_iterator = fallible_iterator<ChildFallibleIterator>;
 
   class Symbol {
     const Archive *Parent;
@@ -229,7 +223,7 @@ public:
 
   enum Kind {
     K_GNU,
-    K_MIPS64,
+    K_GNU64,
     K_BSD,
     K_DARWIN,
     K_DARWIN64,

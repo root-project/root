@@ -1,9 +1,8 @@
 //===-- TypeNodes.def - Metadata about Type AST nodes -----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -23,7 +22,7 @@
 //    NON_CANONICAL_TYPE(Class, Base) - A type that can show up
 //    anywhere in the AST but will never be a part of a canonical
 //    type. Clients that only need to deal with canonical types
-//    (ignoring, e.g., typedefs and other type alises used for
+//    (ignoring, e.g., typedefs and other type aliases used for
 //    pretty-printing) can ignore these types.
 //
 //    DEPENDENT_TYPE(Class, Base) - A type that will only show up
@@ -73,7 +72,9 @@ TYPE(IncompleteArray, ArrayType)
 TYPE(VariableArray, ArrayType)
 DEPENDENT_TYPE(DependentSizedArray, ArrayType)
 DEPENDENT_TYPE(DependentSizedExtVector, Type)
+DEPENDENT_TYPE(DependentAddressSpace, Type)
 TYPE(Vector, Type)
+DEPENDENT_TYPE(DependentVector, Type)
 TYPE(ExtVector, VectorType)
 ABSTRACT_TYPE(Function, Type)
 TYPE(FunctionProto, FunctionType)
@@ -81,6 +82,7 @@ TYPE(FunctionNoProto, FunctionType)
 DEPENDENT_TYPE(UnresolvedUsing, Type)
 NON_CANONICAL_TYPE(Paren, Type)
 NON_CANONICAL_TYPE(Typedef, Type)
+NON_CANONICAL_TYPE(MacroQualified, Type)
 NON_CANONICAL_TYPE(Adjusted, Type)
 NON_CANONICAL_TYPE(Decayed, AdjustedType)
 NON_CANONICAL_UNLESS_DEPENDENT_TYPE(TypeOfExpr, Type)

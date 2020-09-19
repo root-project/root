@@ -44,7 +44,7 @@ endmacro()
 
 macro(add_clang_library name)
   cmake_parse_arguments(ARG
-    "SHARED"
+    "SHARED;INSTALL_WITH_TOOLCHAIN"
     ""
     "ADDITIONAL_HEADERS"
     ${ARGN})
@@ -81,16 +81,26 @@ macro(add_clang_library name)
       )
   endif()
   if(ARG_SHARED)
-    set(ARG_ENABLE_SHARED SHARED)
+    set(LIBTYPE SHARED)
+  else()
+    # llvm_add_library ignores BUILD_SHARED_LIBS if STATIC is explicitly set,
+    # so we need to handle it here.
+    if(BUILD_SHARED_LIBS)
+      set(LIBTYPE SHARED OBJECT)
+    else()
+      set(LIBTYPE STATIC OBJECT)
+    endif()
+    set_property(GLOBAL APPEND PROPERTY CLANG_STATIC_LIBS ${name})
   endif()
-  llvm_add_library(${name} ${ARG_ENABLE_SHARED} ${ARG_UNPARSED_ARGUMENTS} ${srcs})
+  llvm_add_library(${name} ${LIBTYPE} ${ARG_UNPARSED_ARGUMENTS} ${srcs})
 
   if(TARGET ${name})
     target_link_libraries(${name} INTERFACE ${LLVM_COMMON_LIBS})
 
-    if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY OR ${name} STREQUAL "libclang")
-
+    if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY OR ARG_INSTALL_WITH_TOOLCHAIN)
+      set(export_to_clangtargets)
       if(${name} IN_LIST LLVM_DISTRIBUTION_COMPONENTS OR
+          "clang-libraries" IN_LIST LLVM_DISTRIBUTION_COMPONENTS OR
           NOT LLVM_DISTRIBUTION_COMPONENTS)
         set(export_to_clangtargets EXPORT ClangTargets)
         set_property(GLOBAL PROPERTY CLANG_HAS_EXPORTS True)
@@ -103,13 +113,13 @@ macro(add_clang_library name)
         ARCHIVE DESTINATION lib${LLVM_LIBDIR_SUFFIX}
         RUNTIME DESTINATION bin)
 
-      if (${ARG_SHARED} AND NOT CMAKE_CONFIGURATION_TYPES)
-        add_custom_target(install-${name}
-                          DEPENDS ${name}
-                          COMMAND "${CMAKE_COMMAND}"
-                                  -DCMAKE_INSTALL_COMPONENT=${name}
-                                  -P "${CMAKE_BINARY_DIR}/cmake_install.cmake")
+      if (NOT LLVM_ENABLE_IDE)
+        add_llvm_install_targets(install-${name}
+                                 DEPENDS ${name}
+                                 COMPONENT ${name})
       endif()
+
+      set_property(GLOBAL APPEND PROPERTY CLANG_LIBS ${name})
     endif()
     set_property(GLOBAL APPEND PROPERTY CLANG_EXPORTS ${name})
   else()
@@ -133,8 +143,10 @@ macro(add_clang_tool name)
   endif()
 
   add_clang_executable(${name} ${ARGN})
+  add_dependencies(${name} clang-resource-headers)
 
   if (CLANG_BUILD_TOOLS)
+    set(export_to_clangtargets)
     if(${name} IN_LIST LLVM_DISTRIBUTION_COMPONENTS OR
         NOT LLVM_DISTRIBUTION_COMPONENTS)
       set(export_to_clangtargets EXPORT ClangTargets)
@@ -146,12 +158,10 @@ macro(add_clang_tool name)
       RUNTIME DESTINATION bin
       COMPONENT ${name})
 
-    if(NOT CMAKE_CONFIGURATION_TYPES)
-      add_custom_target(install-${name}
-        DEPENDS ${name}
-        COMMAND "${CMAKE_COMMAND}"
-        -DCMAKE_INSTALL_COMPONENT=${name}
-        -P "${CMAKE_BINARY_DIR}/cmake_install.cmake")
+    if(NOT LLVM_ENABLE_IDE)
+      add_llvm_install_targets(install-${name}
+                               DEPENDS ${name}
+                               COMPONENT ${name})
     endif()
     set_property(GLOBAL APPEND PROPERTY CLANG_EXPORTS ${name})
   endif()
@@ -162,3 +172,12 @@ macro(add_clang_symlink name dest)
   # Always generate install targets
   llvm_install_symlink(${name} ${dest} ALWAYS_GENERATE)
 endmacro()
+
+function(clang_target_link_libraries target type)
+  if (CLANG_LINK_CLANG_DYLIB)
+    target_link_libraries(${target} ${type} clang-cpp)
+  else()
+    target_link_libraries(${target} ${type} ${ARGN})
+  endif()
+
+endfunction()

@@ -1,9 +1,8 @@
 //===-LTOCodeGenerator.cpp - LLVM Link Time Optimizer ---------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -21,7 +20,7 @@
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/CodeGen/ParallelCG.h"
-#include "llvm/CodeGen/RuntimeLibcalls.h"
+#include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/Config/config.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
@@ -33,6 +32,8 @@
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Mangler.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/PassTimingInfo.h"
+#include "llvm/IR/RemarkStreamer.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/InitializePasses.h"
 #include "llvm/LTO/LTO.h"
@@ -52,10 +53,7 @@
 #include "llvm/Support/ToolOutputFile.h"
 #include "llvm/Support/YAMLTraits.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Target/TargetLowering.h"
 #include "llvm/Target/TargetOptions.h"
-#include "llvm/Target/TargetRegisterInfo.h"
-#include "llvm/Target/TargetSubtargetInfo.h"
 #include "llvm/Transforms/IPO.h"
 #include "llvm/Transforms/IPO/Internalize.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
@@ -83,24 +81,30 @@ cl::opt<bool> LTODiscardValueNames(
 #endif
     cl::Hidden);
 
-cl::opt<bool> LTOStripInvalidDebugInfo(
-    "lto-strip-invalid-debug-info",
-    cl::desc("Strip invalid debug info metadata during LTO instead of aborting."),
-#ifdef NDEBUG
-    cl::init(true),
-#else
-    cl::init(false),
-#endif
+cl::opt<bool> RemarksWithHotness(
+    "lto-pass-remarks-with-hotness",
+    cl::desc("With PGO, include profile count in optimization remarks"),
     cl::Hidden);
 
 cl::opt<std::string>
-    LTORemarksFilename("lto-pass-remarks-output",
-                       cl::desc("Output filename for pass remarks"),
-                       cl::value_desc("filename"));
+    RemarksFilename("lto-pass-remarks-output",
+                    cl::desc("Output filename for pass remarks"),
+                    cl::value_desc("filename"));
 
-cl::opt<bool> LTOPassRemarksWithHotness(
-    "lto-pass-remarks-with-hotness",
-    cl::desc("With PGO, include profile count in optimization remarks"),
+cl::opt<std::string>
+    RemarksPasses("lto-pass-remarks-filter",
+                  cl::desc("Only record optimization remarks from passes whose "
+                           "names match the given regular expression"),
+                  cl::value_desc("regex"));
+
+cl::opt<std::string> RemarksFormat(
+    "lto-pass-remarks-format",
+    cl::desc("The format used for serializing remarks (default: YAML)"),
+    cl::value_desc("format"), cl::init("yaml"));
+
+cl::opt<std::string> LTOStatsFile(
+    "lto-stats-file",
+    cl::desc("Save statistics to the specified file"),
     cl::Hidden);
 }
 
@@ -132,6 +136,7 @@ void LTOCodeGenerator::initializeLTOPasses() {
   initializeArgPromotionPass(R);
   initializeJumpThreadingPass(R);
   initializeSROALegacyPassPass(R);
+  initializeAttributorLegacyPassPass(R);
   initializePostOrderFunctionAttrsLegacyPassPass(R);
   initializeReversePostOrderFunctionAttrsLegacyPassPass(R);
   initializeGlobalsAAWrapperPassPass(R);
@@ -141,7 +146,6 @@ void LTOCodeGenerator::initializeLTOPasses() {
   initializeMemCpyOptLegacyPassPass(R);
   initializeDCELegacyPassPass(R);
   initializeCFGSimplifyPassPass(R);
-  initializeLateCFGSimplifyPassPass(R);
 }
 
 void LTOCodeGenerator::setAsmUndefinedRefs(LTOModule *Mod) {
@@ -225,21 +229,21 @@ bool LTOCodeGenerator::writeMergedModules(StringRef Path) {
 
   // create output file
   std::error_code EC;
-  tool_output_file Out(Path, EC, sys::fs::F_None);
+  ToolOutputFile Out(Path, EC, sys::fs::F_None);
   if (EC) {
     std::string ErrMsg = "could not open bitcode file for writing: ";
-    ErrMsg += Path;
+    ErrMsg += Path.str() + ": " + EC.message();
     emitError(ErrMsg);
     return false;
   }
 
   // write bitcode to it
-  WriteBitcodeToFile(MergedModule.get(), Out.os(), ShouldEmbedUselists);
+  WriteBitcodeToFile(*MergedModule, Out.os(), ShouldEmbedUselists);
   Out.os().close();
 
   if (Out.os().has_error()) {
     std::string ErrMsg = "could not write bitcode file: ";
-    ErrMsg += Path;
+    ErrMsg += Path.str() + ": " + Out.os().error().message();
     emitError(ErrMsg);
     Out.os().clear_error();
     return false;
@@ -265,12 +269,14 @@ bool LTOCodeGenerator::compileOptimizedToFile(const char **Name) {
   }
 
   // generate object file
-  tool_output_file objFile(Filename, FD);
+  ToolOutputFile objFile(Filename, FD);
 
   bool genResult = compileOptimized(&objFile.os());
   objFile.os().close();
   if (objFile.os().has_error()) {
-    emitError((Twine("could not write object file: ") + Filename).str());
+    emitError((Twine("could not write object file: ") + Filename + ": " +
+               objFile.os().error().message())
+                  .str());
     objFile.os().clear_error();
     sys::fs::remove(Twine(Filename));
     return false;
@@ -368,9 +374,8 @@ bool LTOCodeGenerator::determineTarget() {
 }
 
 std::unique_ptr<TargetMachine> LTOCodeGenerator::createTargetMachine() {
-  return std::unique_ptr<TargetMachine>(
-      MArch->createTargetMachine(TripleStr, MCpu, FeatureStr, Options,
-                                 RelocModel, CodeModel::Default, CGOptLevel));
+  return std::unique_ptr<TargetMachine>(MArch->createTargetMachine(
+      TripleStr, MCpu, FeatureStr, Options, RelocModel, None, CGOptLevel));
 }
 
 // If a linkonce global is present in the MustPreserveSymbols, we need to make
@@ -482,11 +487,9 @@ void LTOCodeGenerator::restoreLinkageForExternals() {
     GV.setLinkage(I->second);
   };
 
-  std::for_each(MergedModule->begin(), MergedModule->end(), externalize);
-  std::for_each(MergedModule->global_begin(), MergedModule->global_end(),
-                externalize);
-  std::for_each(MergedModule->alias_begin(), MergedModule->alias_end(),
-                externalize);
+  llvm::for_each(MergedModule->functions(), externalize);
+  llvm::for_each(MergedModule->globals(), externalize);
+  llvm::for_each(MergedModule->aliases(), externalize);
 }
 
 void LTOCodeGenerator::verifyMergedModuleOnce() {
@@ -496,8 +499,7 @@ void LTOCodeGenerator::verifyMergedModuleOnce() {
   HasVerifiedInput = true;
 
   bool BrokenDebugInfo = false;
-  if (verifyModule(*MergedModule, &dbgs(),
-                   LTOStripInvalidDebugInfo ? &BrokenDebugInfo : nullptr))
+  if (verifyModule(*MergedModule, &dbgs(), &BrokenDebugInfo))
     report_fatal_error("Broken module found, compilation aborted!");
   if (BrokenDebugInfo) {
     emitWarning("Invalid debug info found, debug info will be stripped");
@@ -520,13 +522,22 @@ bool LTOCodeGenerator::optimize(bool DisableVerify, bool DisableInline,
   if (!this->determineTarget())
     return false;
 
-  auto DiagFileOrErr = lto::setupOptimizationRemarks(
-      Context, LTORemarksFilename, LTOPassRemarksWithHotness);
+  auto DiagFileOrErr =
+      lto::setupOptimizationRemarks(Context, RemarksFilename, RemarksPasses,
+                                    RemarksFormat, RemarksWithHotness);
   if (!DiagFileOrErr) {
     errs() << "Error: " << toString(DiagFileOrErr.takeError()) << "\n";
     report_fatal_error("Can't get an output file for the remarks");
   }
   DiagnosticOutputFile = std::move(*DiagFileOrErr);
+
+  // Setup output file to emit statistics.
+  auto StatsFileOrErr = lto::setupStatsFile(LTOStatsFile);
+  if (!StatsFileOrErr) {
+    errs() << "Error: " << toString(StatsFileOrErr.takeError()) << "\n";
+    report_fatal_error("Can't get an output file for the statistics");
+  }
+  StatsFile = std::move(StatsFileOrErr.get());
 
   // We always run the verifier once on the merged module, the `DisableVerify`
   // parameter only applies to subsequent verify.
@@ -594,9 +605,13 @@ bool LTOCodeGenerator::compileOptimized(ArrayRef<raw_pwrite_stream *> Out) {
                               [&]() { return createTargetMachine(); }, FileType,
                               ShouldRestoreGlobalsLinkage);
 
-  // If statistics were requested, print them out after codegen.
-  if (llvm::AreStatisticsEnabled())
-    llvm::PrintStatistics();
+  // If statistics were requested, save them to the specified file or
+  // print them out after codegen.
+  if (StatsFile)
+    PrintStatisticsJSON(StatsFile->os());
+  else if (AreStatisticsEnabled())
+    PrintStatistics();
+
   reportAndResetTimings();
 
   finishOptimizationRemarks();
@@ -623,12 +638,8 @@ void LTOCodeGenerator::parseCodeGenDebugOptions() {
   }
 }
 
-void LTOCodeGenerator::DiagnosticHandler(const DiagnosticInfo &DI,
-                                         void *Context) {
-  ((LTOCodeGenerator *)Context)->DiagnosticHandler2(DI);
-}
 
-void LTOCodeGenerator::DiagnosticHandler2(const DiagnosticInfo &DI) {
+void LTOCodeGenerator::DiagnosticHandler(const DiagnosticInfo &DI) {
   // Map the LLVM internal diagnostic severity to the LTO diagnostic severity.
   lto_codegen_diagnostic_severity_t Severity;
   switch (DI.getSeverity()) {
@@ -658,17 +669,29 @@ void LTOCodeGenerator::DiagnosticHandler2(const DiagnosticInfo &DI) {
   (*DiagHandler)(Severity, MsgStorage.c_str(), DiagContext);
 }
 
+namespace {
+struct LTODiagnosticHandler : public DiagnosticHandler {
+  LTOCodeGenerator *CodeGenerator;
+  LTODiagnosticHandler(LTOCodeGenerator *CodeGenPtr)
+      : CodeGenerator(CodeGenPtr) {}
+  bool handleDiagnostics(const DiagnosticInfo &DI) override {
+    CodeGenerator->DiagnosticHandler(DI);
+    return true;
+  }
+};
+}
+
 void
 LTOCodeGenerator::setDiagnosticHandler(lto_diagnostic_handler_t DiagHandler,
                                        void *Ctxt) {
   this->DiagHandler = DiagHandler;
   this->DiagContext = Ctxt;
   if (!DiagHandler)
-    return Context.setDiagnosticHandler(nullptr, nullptr);
+    return Context.setDiagnosticHandler(nullptr);
   // Register the LTOCodeGenerator stub in the LLVMContext to forward the
   // diagnostic to the external DiagHandler.
-  Context.setDiagnosticHandler(LTOCodeGenerator::DiagnosticHandler, this,
-                               /* RespectFilters */ true);
+  Context.setDiagnosticHandler(llvm::make_unique<LTODiagnosticHandler>(this),
+                               true);
 }
 
 namespace {

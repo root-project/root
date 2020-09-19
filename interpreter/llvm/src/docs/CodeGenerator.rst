@@ -566,7 +566,7 @@ MI bundle support does not change the physical representations of
 MachineBasicBlock and MachineInstr. All the MIs (including top level and nested
 ones) are stored as sequential list of MIs. The "bundled" MIs are marked with
 the 'InsideBundle' flag. A top level MI with the special BUNDLE opcode is used
-to represent the start of a bundle. It's legal to mix BUNDLE MIs with indiviual
+to represent the start of a bundle. It's legal to mix BUNDLE MIs with individual
 MIs that are not inside bundles nor represent bundles.
 
 MachineInstr passes should operate on a MI bundle as a single unit. Member
@@ -911,6 +911,31 @@ implement the legalization ("custom").
 A target implementation tells the legalizer which operations are not supported
 (and which of the above three actions to take) by calling the
 ``setOperationAction`` method in its ``TargetLowering`` constructor.
+
+If a target has legal vector types, it is expected to produce efficient machine
+code for common forms of the shufflevector IR instruction using those types.
+This may require custom legalization for SelectionDAG vector operations that
+are created from the shufflevector IR. The shufflevector forms that should be
+handled include:
+
+* Vector select --- Each element of the vector is chosen from either of the
+  corresponding elements of the 2 input vectors. This operation may also be
+  known as a "blend" or "bitwise select" in target assembly. This type of shuffle
+  maps directly to the ``shuffle_vector`` SelectionDAG node.
+
+* Insert subvector --- A vector is placed into a longer vector type starting
+  at index 0. This type of shuffle maps directly to the ``insert_subvector``
+  SelectionDAG node with the ``index`` operand set to 0.
+
+* Extract subvector --- A vector is pulled from a longer vector type starting
+  at index 0. This type of shuffle maps directly to the ``extract_subvector``
+  SelectionDAG node with the ``index`` operand set to 0.
+
+* Splat --- All elements of the vector have identical scalar elements. This
+  operation may also be known as a "broadcast" or "duplicate" in target assembly.
+  The shufflevector IR instruction may change the vector length, so this operation
+  may map to multiple SelectionDAG nodes including ``shuffle_vector``,
+  ``concat_vectors``, ``insert_subvector``, and ``extract_subvector``.
 
 Prior to the existence of the Legalize passes, we required that every target
 `selector`_ supported and handled every operator and type even if they are not
@@ -1578,6 +1603,17 @@ which lowers MCInst's into machine code bytes and relocations.  This is
 important if you want to support direct .o file emission, or would like to
 implement an assembler for your target.
 
+Emitting function stack size information
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A section containing metadata on function stack sizes will be emitted when
+``TargetLoweringObjectFile::StackSizesSection`` is not null, and
+``TargetOptions::EmitStackSizeSection`` is set (-stack-size-section). The
+section will contain an array of pairs of function symbol values (pointer size)
+and stack sizes (unsigned LEB128). The stack size values only include the space
+allocated in the function prologue. Functions with dynamic stack allocations are
+not included.
+
 VLIW Packetizer
 ---------------
 
@@ -2025,7 +2061,8 @@ Tail call optimization
 ----------------------
 
 Tail call optimization, callee reusing the stack of the caller, is currently
-supported on x86/x86-64 and PowerPC. It is performed if:
+supported on x86/x86-64, PowerPC, and WebAssembly. It is performed on x86/x86-64
+and PowerPC if:
 
 * Caller and callee have the calling convention ``fastcc``, ``cc 10`` (GHC
   calling convention) or ``cc 11`` (HiPE calling convention).
@@ -2052,6 +2089,10 @@ PowerPC constraints:
 
 * On ppc32/64 GOT/PIC only module-local calls (visibility = hidden or protected)
   are supported.
+
+On WebAssembly, tail calls are lowered to ``return_call`` and
+``return_call_indirect`` instructions whenever the 'tail-call' target attribute
+is enabled.
 
 Example:
 
@@ -2502,8 +2543,8 @@ When BPF_CLASS(code) == BPF_ALU or BPF_ALU64 or BPF_JMP,
 
 ::
 
-  BPF_X     0x0  use src_reg register as source operand
-  BPF_K     0x1  use 32 bit immediate as source operand
+  BPF_X     0x1  use src_reg register as source operand
+  BPF_K     0x0  use 32 bit immediate as source operand
 
 and four MSB bits store operation code
 
