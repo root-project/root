@@ -1,9 +1,8 @@
 //===--- CommentBriefParser.cpp - Dumb comment parser ---------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -122,8 +121,8 @@ std::string BriefParser::Parse() {
       if (Tok.is(tok::newline)) {
         ConsumeToken();
         // We found a paragraph end.  This ends the brief description if
-        // \\brief command or its equivalent was explicitly used.
-        // Stop scanning text because an explicit \\brief paragraph is the
+        // \command or its equivalent was explicitly used.
+        // Stop scanning text because an explicit \paragraph is the
         // preffered one.
         if (InBrief)
           break;

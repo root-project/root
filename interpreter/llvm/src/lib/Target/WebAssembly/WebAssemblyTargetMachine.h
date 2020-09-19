@@ -1,14 +1,13 @@
 // WebAssemblyTargetMachine.h - Define TargetMachine for WebAssembly -*- C++ -*-
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file declares the WebAssembly-specific subclass of
+/// This file declares the WebAssembly-specific subclass of
 /// TargetMachine.
 ///
 //===----------------------------------------------------------------------===//
@@ -28,10 +27,14 @@ class WebAssemblyTargetMachine final : public LLVMTargetMachine {
 public:
   WebAssemblyTargetMachine(const Target &T, const Triple &TT, StringRef CPU,
                            StringRef FS, const TargetOptions &Options,
-                           Optional<Reloc::Model> RM, CodeModel::Model CM,
-                           CodeGenOpt::Level OL);
+                           Optional<Reloc::Model> RM,
+                           Optional<CodeModel::Model> CM, CodeGenOpt::Level OL,
+                           bool JIT);
 
   ~WebAssemblyTargetMachine() override;
+
+  const WebAssemblySubtarget *getSubtargetImpl(std::string CPU,
+                                               std::string FS) const;
   const WebAssemblySubtarget *
   getSubtargetImpl(const Function &F) const override;
 
@@ -42,10 +45,17 @@ public:
     return TLOF.get();
   }
 
-  /// \brief Get the TargetIRAnalysis for this target.
-  TargetIRAnalysis getTargetIRAnalysis() override;
+  TargetTransformInfo getTargetTransformInfo(const Function &F) override;
 
   bool usesPhysRegsForPEI() const override { return false; }
+
+  yaml::MachineFunctionInfo *createDefaultFuncInfoYAML() const override;
+  yaml::MachineFunctionInfo *
+  convertFuncInfoToYAML(const MachineFunction &MF) const override;
+  bool parseMachineFunctionInfo(const yaml::MachineFunctionInfo &,
+                                PerFunctionMIParsingState &PFS,
+                                SMDiagnostic &Error,
+                                SMRange &SourceRange) const override;
 };
 
 } // end namespace llvm

@@ -1,9 +1,8 @@
-//===- ThreadSafety.h ------------------------------------------*- C++ --*-===//
+//===- ThreadSafety.h -------------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -19,11 +18,15 @@
 #ifndef LLVM_CLANG_ANALYSIS_ANALYSES_THREADSAFETY_H
 #define LLVM_CLANG_ANALYSIS_ANALYSES_THREADSAFETY_H
 
-#include "clang/Analysis/AnalysisContext.h"
 #include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/StringRef.h"
 
 namespace clang {
+
+class AnalysisDeclContext;
+class FunctionDecl;
+class NamedDecl;
+
 namespace threadSafety {
 
 class BeforeSet;
@@ -31,27 +34,44 @@ class BeforeSet;
 /// This enum distinguishes between different kinds of operations that may
 /// need to be protected by locks. We use this enum in error handling.
 enum ProtectedOperationKind {
-  POK_VarDereference, ///< Dereferencing a variable (e.g. p in *p = 5;)
-  POK_VarAccess, ///< Reading or writing a variable (e.g. x in x = 5;)
-  POK_FunctionCall, ///< Making a function call (e.g. fool())
-  POK_PassByRef, ///< Passing a guarded variable by reference.
-  POK_PtPassByRef,  ///< Passing a pt-guarded variable by reference.
+  /// Dereferencing a variable (e.g. p in *p = 5;)
+  POK_VarDereference,
+
+  /// Reading or writing a variable (e.g. x in x = 5;)
+  POK_VarAccess,
+
+  /// Making a function call (e.g. fool())
+  POK_FunctionCall,
+
+  /// Passing a guarded variable by reference.
+  POK_PassByRef,
+
+  /// Passing a pt-guarded variable by reference.
+  POK_PtPassByRef
 };
 
 /// This enum distinguishes between different kinds of lock actions. For
 /// example, it is an error to write a variable protected by shared version of a
 /// mutex.
 enum LockKind {
-  LK_Shared,    ///< Shared/reader lock of a mutex.
-  LK_Exclusive, ///< Exclusive/writer lock of a mutex.
-  LK_Generic    ///< Can be either Shared or Exclusive
+  /// Shared/reader lock of a mutex.
+  LK_Shared,
+
+  /// Exclusive/writer lock of a mutex.
+  LK_Exclusive,
+
+  /// Can be either Shared or Exclusive.
+  LK_Generic
 };
 
 /// This enum distinguishes between different ways to access (read or write) a
 /// variable.
 enum AccessKind {
-  AK_Read, ///< Reading a variable.
-  AK_Written ///< Writing a variable.
+  /// Reading a variable.
+  AK_Read,
+
+  /// Writing a variable.
+  AK_Written
 };
 
 /// This enum distinguishes between different situations where we warn due to
@@ -72,8 +92,9 @@ enum LockErrorKind {
 /// Handler class for thread safety warnings.
 class ThreadSafetyHandler {
 public:
-  typedef StringRef Name;
-  ThreadSafetyHandler() : IssueBetaWarnings(false) { }
+  using Name = StringRef;
+
+  ThreadSafetyHandler() = default;
   virtual ~ThreadSafetyHandler();
 
   /// Warn about lock expressions which fail to resolve to lockable objects.
@@ -98,18 +119,22 @@ public:
   /// \param Kind -- the capability's name parameter (role, mutex, etc).
   /// \param Expected -- the kind of lock expected.
   /// \param Received -- the kind of lock received.
-  /// \param Loc -- The SourceLocation of the Unlock.
+  /// \param LocLocked -- The SourceLocation of the Lock.
+  /// \param LocUnlock -- The SourceLocation of the Unlock.
   virtual void handleIncorrectUnlockKind(StringRef Kind, Name LockName,
                                          LockKind Expected, LockKind Received,
-                                         SourceLocation Loc) {}
+                                         SourceLocation LocLocked,
+                                         SourceLocation LocUnlock) {}
 
   /// Warn about lock function calls for locks which are already held.
   /// \param Kind -- the capability's name parameter (role, mutex, etc).
   /// \param LockName -- A StringRef name for the lock expression, to be printed
   /// in the error message.
-  /// \param Loc -- The location of the second lock expression.
+  /// \param LocLocked -- The location of the first lock expression.
+  /// \param LocDoubleLock -- The location of the second lock expression.
   virtual void handleDoubleLock(StringRef Kind, Name LockName,
-                                SourceLocation Loc) {}
+                                SourceLocation LocLocked,
+                                SourceLocation LocDoubleLock) {}
 
   /// Warn about situations where a mutex is sometimes held and sometimes not.
   /// The three situations are:
@@ -185,7 +210,6 @@ public:
   virtual void handleFunExcludesLock(StringRef Kind, Name FunName,
                                      Name LockName, SourceLocation Loc) {}
 
-
   /// Warn that L1 cannot be acquired before L2.
   virtual void handleLockAcquiredBefore(StringRef Kind, Name L1Name,
                                         Name L2Name, SourceLocation Loc) {}
@@ -204,10 +228,10 @@ public:
   void setIssueBetaWarnings(bool b) { IssueBetaWarnings = b; }
 
 private:
-  bool IssueBetaWarnings;
+  bool IssueBetaWarnings = false;
 };
 
-/// \brief Check a function's CFG for thread-safety violations.
+/// Check a function's CFG for thread-safety violations.
 ///
 /// We traverse the blocks in the CFG, compute the set of mutexes that are held
 /// at the end of each block, and issue warnings for thread safety violations.
@@ -218,9 +242,11 @@ void runThreadSafetyAnalysis(AnalysisDeclContext &AC,
 
 void threadSafetyCleanup(BeforeSet *Cache);
 
-/// \brief Helper function that returns a LockKind required for the given level
+/// Helper function that returns a LockKind required for the given level
 /// of access.
 LockKind getLockKindFromAccessKind(AccessKind AK);
 
-}} // end namespace clang::threadSafety
-#endif
+} // namespace threadSafety
+} // namespace clang
+
+#endif // LLVM_CLANG_ANALYSIS_ANALYSES_THREADSAFETY_H

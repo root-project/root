@@ -1,9 +1,8 @@
 //===- Symbolize.h ----------------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -36,33 +35,35 @@ using FunctionNameKind = DILineInfoSpecifier::FunctionNameKind;
 class LLVMSymbolizer {
 public:
   struct Options {
-    FunctionNameKind PrintFunctions;
-    bool UseSymbolTable : 1;
-    bool Demangle : 1;
-    bool RelativeAddresses : 1;
+    FunctionNameKind PrintFunctions = FunctionNameKind::LinkageName;
+    bool UseSymbolTable = true;
+    bool Demangle = true;
+    bool RelativeAddresses = false;
     std::string DefaultArch;
     std::vector<std::string> DsymHints;
-
-    Options(FunctionNameKind PrintFunctions = FunctionNameKind::LinkageName,
-            bool UseSymbolTable = true, bool Demangle = true,
-            bool RelativeAddresses = false, std::string DefaultArch = "")
-        : PrintFunctions(PrintFunctions), UseSymbolTable(UseSymbolTable),
-          Demangle(Demangle), RelativeAddresses(RelativeAddresses),
-          DefaultArch(std::move(DefaultArch)) {}
+    std::string FallbackDebugPath;
+    std::string DWPName;
   };
 
-  LLVMSymbolizer(const Options &Opts = Options()) : Opts(Opts) {}
+  LLVMSymbolizer() = default;
+  LLVMSymbolizer(const Options &Opts) : Opts(Opts) {}
 
   ~LLVMSymbolizer() {
     flush();
   }
 
+  Expected<DILineInfo> symbolizeCode(const ObjectFile &Obj,
+                                     object::SectionedAddress ModuleOffset);
   Expected<DILineInfo> symbolizeCode(const std::string &ModuleName,
-                                     uint64_t ModuleOffset);
-  Expected<DIInliningInfo> symbolizeInlinedCode(const std::string &ModuleName,
-                                                uint64_t ModuleOffset);
+                                     object::SectionedAddress ModuleOffset);
+  Expected<DIInliningInfo>
+  symbolizeInlinedCode(const std::string &ModuleName,
+                       object::SectionedAddress ModuleOffset);
   Expected<DIGlobal> symbolizeData(const std::string &ModuleName,
-                                   uint64_t ModuleOffset);
+                                   object::SectionedAddress ModuleOffset);
+  Expected<std::vector<DILocal>>
+  symbolizeFrame(const std::string &ModuleName,
+                 object::SectionedAddress ModuleOffset);
   void flush();
 
   static std::string
@@ -72,7 +73,11 @@ public:
 private:
   // Bundles together object file with code/data and object file with
   // corresponding debug info. These objects can be the same.
-  using ObjectPair = std::pair<ObjectFile *, ObjectFile *>;
+  using ObjectPair = std::pair<const ObjectFile *, const ObjectFile *>;
+
+  Expected<DILineInfo>
+  symbolizeCodeCommon(SymbolizableModule *Info,
+                      object::SectionedAddress ModuleOffset);
 
   /// Returns a SymbolizableModule or an error if loading debug info failed.
   /// Only one attempt is made to load a module, and errors during loading are
@@ -81,6 +86,11 @@ private:
   Expected<SymbolizableModule *>
   getOrCreateModuleInfo(const std::string &ModuleName);
 
+  Expected<SymbolizableModule *>
+  createModuleInfo(const ObjectFile *Obj,
+                   std::unique_ptr<DIContext> Context,
+                   StringRef ModuleName);
+
   ObjectFile *lookUpDsymFile(const std::string &Path,
                              const MachOObjectFile *ExeObj,
                              const std::string &ArchName);
@@ -88,11 +98,11 @@ private:
                                     const ObjectFile *Obj,
                                     const std::string &ArchName);
 
-  /// \brief Returns pair of pointers to object and debug object.
+  /// Returns pair of pointers to object and debug object.
   Expected<ObjectPair> getOrCreateObjectPair(const std::string &Path,
                                             const std::string &ArchName);
 
-  /// \brief Return a pointer to object file at specified path, for a specified
+  /// Return a pointer to object file at specified path, for a specified
   /// architecture (e.g. if path refers to a Mach-O universal binary, only one
   /// object file from it will be returned).
   Expected<ObjectFile *> getOrCreateObject(const std::string &Path,
@@ -100,14 +110,14 @@ private:
 
   std::map<std::string, std::unique_ptr<SymbolizableModule>> Modules;
 
-  /// \brief Contains cached results of getOrCreateObjectPair().
+  /// Contains cached results of getOrCreateObjectPair().
   std::map<std::pair<std::string, std::string>, ObjectPair>
       ObjectPairForPathArch;
 
-  /// \brief Contains parsed binary for each path, or parsing error.
+  /// Contains parsed binary for each path, or parsing error.
   std::map<std::string, OwningBinary<Binary>> BinaryForPath;
 
-  /// \brief Parsed object file for path/architecture pair, where "path" refers
+  /// Parsed object file for path/architecture pair, where "path" refers
   /// to Mach-O universal binary.
   std::map<std::pair<std::string, std::string>, std::unique_ptr<ObjectFile>>
       ObjectForUBPathAndArch;

@@ -1,9 +1,8 @@
 //=== PointerSubChecker.cpp - Pointer subtraction checker ------*- C++ -*--===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "clang/StaticAnalyzer/Core/CheckerManager.h"
@@ -39,10 +38,8 @@ void PointerSubChecker::checkPreStmt(const BinaryOperator *B,
   if (B->getOpcode() != BO_Sub)
     return;
 
-  ProgramStateRef state = C.getState();
-  const LocationContext *LCtx = C.getLocationContext();
-  SVal LV = state->getSVal(B->getLHS(), LCtx);
-  SVal RV = state->getSVal(B->getRHS(), LCtx);
+  SVal LV = C.getSVal(B->getLHS());
+  SVal RV = C.getSVal(B->getRHS());
 
   const MemRegion *LR = LV.getAsRegion();
   const MemRegion *RR = RV.getAsRegion();
@@ -74,4 +71,8 @@ void PointerSubChecker::checkPreStmt(const BinaryOperator *B,
 
 void ento::registerPointerSubChecker(CheckerManager &mgr) {
   mgr.registerChecker<PointerSubChecker>();
+}
+
+bool ento::shouldRegisterPointerSubChecker(const LangOptions &LO) {
+  return true;
 }

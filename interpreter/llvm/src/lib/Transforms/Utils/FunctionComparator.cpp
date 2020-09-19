@@ -1,9 +1,8 @@
 //===- FunctionComparator.h - Function Comparator -------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,13 +12,40 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/Utils/FunctionComparator.h"
-#include "llvm/ADT/SmallSet.h"
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/Hashing.h"
+#include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/IR/Attributes.h"
+#include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CallSite.h"
+#include "llvm/IR/Constant.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/InlineAsm.h"
+#include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Operator.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Value.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <utility>
 
 using namespace llvm;
 
@@ -87,6 +113,19 @@ int FunctionComparator::cmpAttrs(const AttributeList L,
     for (; LI != LE && RI != RE; ++LI, ++RI) {
       Attribute LA = *LI;
       Attribute RA = *RI;
+      if (LA.isTypeAttribute() && RA.isTypeAttribute()) {
+        if (LA.getKindAsEnum() != RA.getKindAsEnum())
+          return cmpNumbers(LA.getKindAsEnum(), RA.getKindAsEnum());
+
+        Type *TyL = LA.getValueAsType();
+        Type *TyR = RA.getValueAsType();
+        if (TyL && TyR)
+          return cmpTypes(TyL, TyR);
+
+        // Two pointers, at least one null, so the comparison result is
+        // independent of the value of a real pointer.
+        return cmpNumbers((uint64_t)TyL, (uint64_t)TyR);
+      }
       if (LA < RA)
         return -1;
       if (RA < LA)
@@ -160,7 +199,6 @@ int FunctionComparator::cmpOperandBundlesSchema(const Instruction *L,
 /// For more details see declaration comments.
 int FunctionComparator::cmpConstants(const Constant *L,
                                      const Constant *R) const {
-
   Type *TyL = L->getType();
   Type *TyR = R->getType();
 
@@ -226,8 +264,8 @@ int FunctionComparator::cmpConstants(const Constant *L,
   if (!L->isNullValue() && R->isNullValue())
     return -1;
 
-  auto GlobalValueL = const_cast<GlobalValue*>(dyn_cast<GlobalValue>(L));
-  auto GlobalValueR = const_cast<GlobalValue*>(dyn_cast<GlobalValue>(R));
+  auto GlobalValueL = const_cast<GlobalValue *>(dyn_cast<GlobalValue>(L));
+  auto GlobalValueR = const_cast<GlobalValue *>(dyn_cast<GlobalValue>(R));
   if (GlobalValueL && GlobalValueR) {
     return cmpGlobalValues(GlobalValueL, GlobalValueR);
   }
@@ -350,7 +388,7 @@ int FunctionComparator::cmpConstants(const Constant *L,
     }
   }
   default: // Unknown constant, abort.
-    DEBUG(dbgs() << "Looking at valueID " << L->getValueID() << "\n");
+    LLVM_DEBUG(dbgs() << "Looking at valueID " << L->getValueID() << "\n");
     llvm_unreachable("Constant ValueID not recognized.");
     return -1;
   }
@@ -384,8 +422,6 @@ int FunctionComparator::cmpTypes(Type *TyL, Type *TyR) const {
   switch (TyL->getTypeID()) {
   default:
     llvm_unreachable("Unknown type!");
-    // Fall through in Release mode.
-    LLVM_FALLTHROUGH;
   case Type::IntegerTyID:
     return cmpNumbers(cast<IntegerType>(TyL)->getBitWidth(),
                       cast<IntegerType>(TyR)->getBitWidth());
@@ -401,10 +437,9 @@ int FunctionComparator::cmpTypes(Type *TyL, Type *TyR) const {
   case Type::TokenTyID:
     return 0;
 
-  case Type::PointerTyID: {
+  case Type::PointerTyID:
     assert(PTyL && PTyR && "Both types must be pointers here.");
     return cmpNumbers(PTyL->getAddressSpace(), PTyR->getAddressSpace());
-  }
 
   case Type::StructTyID: {
     StructType *STyL = cast<StructType>(TyL);
@@ -534,31 +569,20 @@ int FunctionComparator::cmpOperations(const Instruction *L,
   }
   if (const CmpInst *CI = dyn_cast<CmpInst>(L))
     return cmpNumbers(CI->getPredicate(), cast<CmpInst>(R)->getPredicate());
-  if (const CallInst *CI = dyn_cast<CallInst>(L)) {
-    if (int Res = cmpNumbers(CI->getCallingConv(),
-                             cast<CallInst>(R)->getCallingConv()))
+  if (auto CSL = CallSite(const_cast<Instruction *>(L))) {
+    auto CSR = CallSite(const_cast<Instruction *>(R));
+    if (int Res = cmpNumbers(CSL.getCallingConv(), CSR.getCallingConv()))
       return Res;
-    if (int Res =
-            cmpAttrs(CI->getAttributes(), cast<CallInst>(R)->getAttributes()))
+    if (int Res = cmpAttrs(CSL.getAttributes(), CSR.getAttributes()))
       return Res;
-    if (int Res = cmpOperandBundlesSchema(CI, R))
+    if (int Res = cmpOperandBundlesSchema(L, R))
       return Res;
-    return cmpRangeMetadata(
-        CI->getMetadata(LLVMContext::MD_range),
-        cast<CallInst>(R)->getMetadata(LLVMContext::MD_range));
-  }
-  if (const InvokeInst *II = dyn_cast<InvokeInst>(L)) {
-    if (int Res = cmpNumbers(II->getCallingConv(),
-                             cast<InvokeInst>(R)->getCallingConv()))
-      return Res;
-    if (int Res =
-            cmpAttrs(II->getAttributes(), cast<InvokeInst>(R)->getAttributes()))
-      return Res;
-    if (int Res = cmpOperandBundlesSchema(II, R))
-      return Res;
-    return cmpRangeMetadata(
-        II->getMetadata(LLVMContext::MD_range),
-        cast<InvokeInst>(R)->getMetadata(LLVMContext::MD_range));
+    if (const CallInst *CI = dyn_cast<CallInst>(L))
+      if (int Res = cmpNumbers(CI->getTailCallKind(),
+                               cast<CallInst>(R)->getTailCallKind()))
+        return Res;
+    return cmpRangeMetadata(L->getMetadata(LLVMContext::MD_range),
+                            R->getMetadata(LLVMContext::MD_range));
   }
   if (const InsertValueInst *IVI = dyn_cast<InsertValueInst>(L)) {
     ArrayRef<unsigned> LIndices = IVI->getIndices();
@@ -637,7 +661,6 @@ int FunctionComparator::cmpOperations(const Instruction *L,
 // Read method declaration comments for more details.
 int FunctionComparator::cmpGEPs(const GEPOperator *GEPL,
                                 const GEPOperator *GEPR) const {
-
   unsigned int ASL = GEPL->getPointerAddressSpace();
   unsigned int ASR = GEPR->getPointerAddressSpace();
 
@@ -685,7 +708,7 @@ int FunctionComparator::cmpInlineAsm(const InlineAsm *L,
     return Res;
   if (int Res = cmpNumbers(L->getDialect(), R->getDialect()))
     return Res;
-  llvm_unreachable("InlineAsm blocks were not uniqued.");
+  assert(L->getFunctionType() != R->getFunctionType());
   return 0;
 }
 
@@ -843,8 +866,8 @@ int FunctionComparator::compare() {
     if (int Res = cmpBasicBlocks(BBL, BBR))
       return Res;
 
-    const TerminatorInst *TermL = BBL->getTerminator();
-    const TerminatorInst *TermR = BBR->getTerminator();
+    const Instruction *TermL = BBL->getTerminator();
+    const Instruction *TermR = BBR->getTerminator();
 
     assert(TermL->getNumSuccessors() == TermR->getNumSuccessors());
     for (unsigned i = 0, e = TermL->getNumSuccessors(); i != e; ++i) {
@@ -869,15 +892,19 @@ namespace {
 // buffer.
 class HashAccumulator64 {
   uint64_t Hash;
+
 public:
   // Initialize to random constant, so the state isn't zero.
   HashAccumulator64() { Hash = 0x6acaa36bef8325c5ULL; }
+
   void add(uint64_t V) {
-     Hash = llvm::hashing::detail::hash_16_bytes(Hash, V);
+     Hash = hashing::detail::hash_16_bytes(Hash, V);
   }
+
   // No finishing is required, because the entire hash value is used.
   uint64_t getHash() { return Hash; }
 };
+
 } // end anonymous namespace
 
 // A function hash is calculated by considering only the number of arguments and
@@ -896,7 +923,7 @@ FunctionComparator::FunctionHash FunctionComparator::functionHash(Function &F) {
   H.add(F.arg_size());
 
   SmallVector<const BasicBlock *, 8> BBs;
-  SmallSet<const BasicBlock *, 16> VisitedBBs;
+  SmallPtrSet<const BasicBlock *, 16> VisitedBBs;
 
   // Walk the blocks in the same order as FunctionComparator::cmpBasicBlocks(),
   // accumulating the hash of the function "structure." (BB and opcode sequence)
@@ -910,7 +937,7 @@ FunctionComparator::FunctionHash FunctionComparator::functionHash(Function &F) {
     for (auto &Inst : *BB) {
       H.add(Inst.getOpcode());
     }
-    const TerminatorInst *Term = BB->getTerminator();
+    const Instruction *Term = BB->getTerminator();
     for (unsigned i = 0, e = Term->getNumSuccessors(); i != e; ++i) {
       if (!VisitedBBs.insert(Term->getSuccessor(i)).second)
         continue;
@@ -919,5 +946,3 @@ FunctionComparator::FunctionHash FunctionComparator::functionHash(Function &F) {
   }
   return H.getHash();
 }
-
-

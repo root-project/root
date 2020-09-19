@@ -1,13 +1,14 @@
 //===-- SystemZAsmParser.cpp - Parse SystemZ assembly instructions --------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
+#include "MCTargetDesc/SystemZInstPrinter.h"
 #include "MCTargetDesc/SystemZMCTargetDesc.h"
+#include "TargetInfo/SystemZTargetInfo.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -243,6 +244,11 @@ public:
     return Kind == KindImmTLS;
   }
 
+  const ImmTLSOp getImmTLS() const {
+    assert(Kind == KindImmTLS && "Not a TLS immediate");
+    return ImmTLS;
+  }
+
   // Memory operands.
   bool isMem() const override {
     return Kind == KindMem;
@@ -268,6 +274,11 @@ public:
   }
   bool isMemDisp12Len8(RegisterKind RegKind) const {
     return isMemDisp12(BDLMem, RegKind) && inRange(Mem.Length.Imm, 1, 0x100);
+  }
+
+  const MemOp& getMem() const {
+    assert(Kind == KindMem && "Not a Mem operand");
+    return Mem;
   }
 
   // Override MCParsedAsmOperand.
@@ -425,7 +436,7 @@ public:
   SystemZAsmParser(const MCSubtargetInfo &sti, MCAsmParser &parser,
                    const MCInstrInfo &MII,
                    const MCTargetOptions &Options)
-    : MCTargetAsmParser(Options, sti), Parser(parser) {
+    : MCTargetAsmParser(Options, sti, MII), Parser(parser) {
     MCAsmParserExtension::Initialize(Parser);
 
     // Alias the .word directive to .short.
@@ -543,6 +554,7 @@ public:
 #define GET_REGISTER_MATCHER
 #define GET_SUBTARGET_FEATURE_NAME
 #define GET_MATCHER_IMPLEMENTATION
+#define GET_MNEMONIC_SPELL_CHECKER
 #include "SystemZGenAsmMatcher.inc"
 
 // Used for the .insn directives; contains information needed to parse the
@@ -622,8 +634,60 @@ static struct InsnMatchEntry InsnMatchTable[] = {
     { MCK_U48Imm, MCK_BDAddr64Disp12, MCK_BDAddr64Disp12, MCK_AnyReg } }
 };
 
+static void printMCExpr(const MCExpr *E, raw_ostream &OS) {
+  if (!E)
+    return;
+  if (auto *CE = dyn_cast<MCConstantExpr>(E))
+    OS << *CE;
+  else if (auto *UE = dyn_cast<MCUnaryExpr>(E))
+    OS << *UE;
+  else if (auto *BE = dyn_cast<MCBinaryExpr>(E))
+    OS << *BE;
+  else if (auto *SRE = dyn_cast<MCSymbolRefExpr>(E))
+    OS << *SRE;
+  else
+    OS << *E;
+}
+
 void SystemZOperand::print(raw_ostream &OS) const {
-  llvm_unreachable("Not implemented");
+  switch (Kind) {
+  case KindToken:
+    OS << "Token:" << getToken();
+    break;
+  case KindReg:
+    OS << "Reg:" << SystemZInstPrinter::getRegisterName(getReg());
+    break;
+  case KindImm:
+    OS << "Imm:";
+    printMCExpr(getImm(), OS);
+    break;
+  case KindImmTLS:
+    OS << "ImmTLS:";
+    printMCExpr(getImmTLS().Imm, OS);
+    if (getImmTLS().Sym) {
+      OS << ", ";
+      printMCExpr(getImmTLS().Sym, OS);
+    }
+    break;
+  case KindMem: {
+    const MemOp &Op = getMem();
+    OS << "Mem:" << *cast<MCConstantExpr>(Op.Disp);
+    if (Op.Base) {
+      OS << "(";
+      if (Op.MemKind == BDLMem)
+        OS << *cast<MCConstantExpr>(Op.Length.Imm) << ",";
+      else if (Op.MemKind == BDRMem)
+        OS << SystemZInstPrinter::getRegisterName(Op.Length.Reg) << ",";
+      if (Op.Index)
+        OS << SystemZInstPrinter::getRegisterName(Op.Index) << ",";
+      OS << SystemZInstPrinter::getRegisterName(Op.Base);
+      OS << ")";
+    }
+    break;
+  }
+  case KindInvalid:
+    break;
+  }
 }
 
 // Parse one register of the form %<prefix><number>.
@@ -1116,8 +1180,10 @@ bool SystemZAsmParser::parseOperand(OperandVector &Operands,
   // features to be available during the operand check, or else we will fail to
   // find the custom parser, and then we will later get an InvalidOperand error
   // instead of a MissingFeature errror.
-  uint64_t AvailableFeatures = getAvailableFeatures();
-  setAvailableFeatures(~(uint64_t)0);
+  FeatureBitset AvailableFeatures = getAvailableFeatures();
+  FeatureBitset All;
+  All.set();
+  setAvailableFeatures(All);
   OperandMatchResultTy ResTy = MatchOperandParserImpl(Operands, Mnemonic);
   setAvailableFeatures(AvailableFeatures);
   if (ResTy == MatchOperand_Success)
@@ -1168,7 +1234,9 @@ bool SystemZAsmParser::parseOperand(OperandVector &Operands,
   return false;
 }
 
-std::string SystemZMnemonicSpellCheck(StringRef S, uint64_t FBS);
+static std::string SystemZMnemonicSpellCheck(StringRef S,
+                                             const FeatureBitset &FBS,
+                                             unsigned VariantID = 0);
 
 bool SystemZAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
                                                OperandVector &Operands,
@@ -1178,8 +1246,9 @@ bool SystemZAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
   MCInst Inst;
   unsigned MatchResult;
 
+  FeatureBitset MissingFeatures;
   MatchResult = MatchInstructionImpl(Operands, Inst, ErrorInfo,
-                                     MatchingInlineAsm);
+                                     MissingFeatures, MatchingInlineAsm);
   switch (MatchResult) {
   case Match_Success:
     Inst.setLoc(IDLoc);
@@ -1187,17 +1256,15 @@ bool SystemZAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
     return false;
 
   case Match_MissingFeature: {
-    assert(ErrorInfo && "Unknown missing feature!");
+    assert(MissingFeatures.any() && "Unknown missing feature!");
     // Special case the error message for the very common case where only
     // a single subtarget feature is missing
     std::string Msg = "instruction requires:";
-    uint64_t Mask = 1;
-    for (unsigned I = 0; I < sizeof(ErrorInfo) * 8 - 1; ++I) {
-      if (ErrorInfo & Mask) {
+    for (unsigned I = 0, E = MissingFeatures.size(); I != E; ++I) {
+      if (MissingFeatures[I]) {
         Msg += " ";
-        Msg += getSubtargetFeatureName(ErrorInfo & Mask);
+        Msg += getSubtargetFeatureName(I);
       }
-      Mask <<= 1;
     }
     return Error(IDLoc, Msg);
   }
@@ -1216,7 +1283,7 @@ bool SystemZAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
   }
 
   case Match_MnemonicFail: {
-    uint64_t FBS = ComputeAvailableFeatures(getSTI().getFeatureBits());
+    FeatureBitset FBS = ComputeAvailableFeatures(getSTI().getFeatureBits());
     std::string Suggestion = SystemZMnemonicSpellCheck(
       ((SystemZOperand &)*Operands[0]).getToken(), FBS);
     return Error(IDLoc, "invalid instruction" + Suggestion,

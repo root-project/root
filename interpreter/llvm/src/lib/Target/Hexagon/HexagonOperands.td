@@ -1,9 +1,8 @@
 //===--- HexagonOperands.td -----------------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -28,18 +27,6 @@ def u64_0ImmOperand : AsmOperandClass { let Name = "u64_0Imm"; let RenderMethod 
 def u64_0Imm : Operand<i64> { let ParserMatchClass = u64_0ImmOperand; }
 def n1ConstOperand : AsmOperandClass { let Name = "n1Const"; }
 def n1Const : Operand<i32> { let ParserMatchClass = n1ConstOperand; }
-
-// This complex pattern exists only to create a machine instruction operand
-// of type "frame index". There doesn't seem to be a way to do that directly
-// in the patterns.
-def AddrFI : ComplexPattern<i32, 1, "SelectAddrFI", [frameindex], []>;
-
-// These complex patterns are not strictly necessary, since global address
-// folding will happen during DAG combining. For distinguishing between GA
-// and GP, pat frags with HexagonCONST32 and HexagonCONST32_GP can be used.
-def AddrGA : ComplexPattern<i32, 1, "SelectAddrGA", [], []>;
-def AddrGP : ComplexPattern<i32, 1, "SelectAddrGP", [], []>;
-
 
 def bblabel : Operand<i32>;
 def bbl     : SDNode<"ISD::BasicBlock", SDTPtrLeaf, [], "BasicBlockSDNode">;

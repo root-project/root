@@ -1,9 +1,8 @@
 //===-- InstrinsicInst.cpp - Intrinsic Instruction Wrappers ---------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,16 +13,18 @@
 // are all subclasses of the CallInst class.  Note that none of these classes
 // has state or virtual methods, which is an important part of this gross/neat
 // hack working.
-// 
+//
 // In some cases, arguments to intrinsics need to be generic and are defined as
 // type pointer to empty struct { }*.  To access the real item of interest the
-// cast instruction needs to be stripped away. 
+// cast instruction needs to be stripped away.
 //
 //===----------------------------------------------------------------------===//
 
 #include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/Operator.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
@@ -31,10 +32,11 @@
 using namespace llvm;
 
 //===----------------------------------------------------------------------===//
-/// DbgInfoIntrinsic - This is the common base class for debug info intrinsics
+/// DbgVariableIntrinsic - This is the common base class for debug info
+/// intrinsics for variables.
 ///
 
-Value *DbgInfoIntrinsic::getVariableLocation(bool AllowNullOp) const {
+Value *DbgVariableIntrinsic::getVariableLocation(bool AllowNullOp) const {
   Value *Op = getArgOperand(0);
   if (AllowNullOp && !Op)
     return nullptr;
@@ -46,6 +48,12 @@ Value *DbgInfoIntrinsic::getVariableLocation(bool AllowNullOp) const {
   // When the value goes to null, it gets replaced by an empty MDNode.
   assert(!cast<MDNode>(MD)->getNumOperands() && "Expected an empty MDNode");
   return nullptr;
+}
+
+Optional<uint64_t> DbgVariableIntrinsic::getFragmentSizeInBits() const {
+  if (auto Fragment = getExpression()->getFragmentInfo())
+    return Fragment->SizeInBits;
+  return getVariable()->getSizeInBits();
 }
 
 int llvm::Intrinsic::lookupLLVMIntrinsicByName(ArrayRef<const char *> NameTable,
@@ -95,45 +103,94 @@ Value *InstrProfIncrementInst::getStep() const {
   return ConstantInt::get(Type::getInt64Ty(Context), 1);
 }
 
-ConstrainedFPIntrinsic::RoundingMode
+Optional<ConstrainedFPIntrinsic::RoundingMode>
 ConstrainedFPIntrinsic::getRoundingMode() const {
   unsigned NumOperands = getNumArgOperands();
-  Metadata *MD = 
+  Metadata *MD =
       dyn_cast<MetadataAsValue>(getArgOperand(NumOperands - 2))->getMetadata();
   if (!MD || !isa<MDString>(MD))
-    return rmInvalid;
-  StringRef RoundingArg = cast<MDString>(MD)->getString();
+    return None;
+  return StrToRoundingMode(cast<MDString>(MD)->getString());
+}
 
+Optional<ConstrainedFPIntrinsic::RoundingMode>
+ConstrainedFPIntrinsic::StrToRoundingMode(StringRef RoundingArg) {
   // For dynamic rounding mode, we use round to nearest but we will set the
   // 'exact' SDNodeFlag so that the value will not be rounded.
-  return StringSwitch<RoundingMode>(RoundingArg)
+  return StringSwitch<Optional<RoundingMode>>(RoundingArg)
     .Case("round.dynamic",    rmDynamic)
     .Case("round.tonearest",  rmToNearest)
     .Case("round.downward",   rmDownward)
     .Case("round.upward",     rmUpward)
     .Case("round.towardzero", rmTowardZero)
-    .Default(rmInvalid);
+    .Default(None);
 }
 
-ConstrainedFPIntrinsic::ExceptionBehavior
+Optional<StringRef>
+ConstrainedFPIntrinsic::RoundingModeToStr(RoundingMode UseRounding) {
+  Optional<StringRef> RoundingStr = None;
+  switch (UseRounding) {
+  case ConstrainedFPIntrinsic::rmDynamic:
+    RoundingStr = "round.dynamic";
+    break;
+  case ConstrainedFPIntrinsic::rmToNearest:
+    RoundingStr = "round.tonearest";
+    break;
+  case ConstrainedFPIntrinsic::rmDownward:
+    RoundingStr = "round.downward";
+    break;
+  case ConstrainedFPIntrinsic::rmUpward:
+    RoundingStr = "round.upward";
+    break;
+  case ConstrainedFPIntrinsic::rmTowardZero:
+    RoundingStr = "round.tozero";
+    break;
+  }
+  return RoundingStr;
+}
+
+Optional<ConstrainedFPIntrinsic::ExceptionBehavior>
 ConstrainedFPIntrinsic::getExceptionBehavior() const {
   unsigned NumOperands = getNumArgOperands();
-  Metadata *MD = 
+  Metadata *MD =
       dyn_cast<MetadataAsValue>(getArgOperand(NumOperands - 1))->getMetadata();
   if (!MD || !isa<MDString>(MD))
-    return ebInvalid;
-  StringRef ExceptionArg = cast<MDString>(MD)->getString();
-  return StringSwitch<ExceptionBehavior>(ExceptionArg)
+    return None;
+  return StrToExceptionBehavior(cast<MDString>(MD)->getString());
+}
+
+Optional<ConstrainedFPIntrinsic::ExceptionBehavior>
+ConstrainedFPIntrinsic::StrToExceptionBehavior(StringRef ExceptionArg) {
+  return StringSwitch<Optional<ExceptionBehavior>>(ExceptionArg)
     .Case("fpexcept.ignore",  ebIgnore)
     .Case("fpexcept.maytrap", ebMayTrap)
     .Case("fpexcept.strict",  ebStrict)
-    .Default(ebInvalid);
+    .Default(None);
+}
+
+Optional<StringRef>
+ConstrainedFPIntrinsic::ExceptionBehaviorToStr(ExceptionBehavior UseExcept) {
+  Optional<StringRef> ExceptStr = None;
+  switch (UseExcept) {
+  case ConstrainedFPIntrinsic::ebStrict:
+    ExceptStr = "fpexcept.strict";
+    break;
+  case ConstrainedFPIntrinsic::ebIgnore:
+    ExceptStr = "fpexcept.ignore";
+    break;
+  case ConstrainedFPIntrinsic::ebMayTrap:
+    ExceptStr = "fpexcept.maytrap";
+    break;
+  }
+  return ExceptStr;
 }
 
 bool ConstrainedFPIntrinsic::isUnaryOp() const {
   switch (getIntrinsicID()) {
-    default: 
+    default:
       return false;
+    case Intrinsic::experimental_constrained_fptrunc:
+    case Intrinsic::experimental_constrained_fpext:
     case Intrinsic::experimental_constrained_sqrt:
     case Intrinsic::experimental_constrained_sin:
     case Intrinsic::experimental_constrained_cos:
@@ -144,6 +201,59 @@ bool ConstrainedFPIntrinsic::isUnaryOp() const {
     case Intrinsic::experimental_constrained_log2:
     case Intrinsic::experimental_constrained_rint:
     case Intrinsic::experimental_constrained_nearbyint:
+    case Intrinsic::experimental_constrained_ceil:
+    case Intrinsic::experimental_constrained_floor:
+    case Intrinsic::experimental_constrained_round:
+    case Intrinsic::experimental_constrained_trunc:
       return true;
   }
+}
+
+bool ConstrainedFPIntrinsic::isTernaryOp() const {
+  switch (getIntrinsicID()) {
+    default:
+      return false;
+    case Intrinsic::experimental_constrained_fma:
+      return true;
+  }
+}
+
+Instruction::BinaryOps BinaryOpIntrinsic::getBinaryOp() const {
+  switch (getIntrinsicID()) {
+    case Intrinsic::uadd_with_overflow:
+    case Intrinsic::sadd_with_overflow:
+    case Intrinsic::uadd_sat:
+    case Intrinsic::sadd_sat:
+      return Instruction::Add;
+    case Intrinsic::usub_with_overflow:
+    case Intrinsic::ssub_with_overflow:
+    case Intrinsic::usub_sat:
+    case Intrinsic::ssub_sat:
+      return Instruction::Sub;
+    case Intrinsic::umul_with_overflow:
+    case Intrinsic::smul_with_overflow:
+      return Instruction::Mul;
+    default:
+      llvm_unreachable("Invalid intrinsic");
+  }
+}
+
+bool BinaryOpIntrinsic::isSigned() const {
+  switch (getIntrinsicID()) {
+    case Intrinsic::sadd_with_overflow:
+    case Intrinsic::ssub_with_overflow:
+    case Intrinsic::smul_with_overflow:
+    case Intrinsic::sadd_sat:
+    case Intrinsic::ssub_sat:
+      return true;
+    default:
+      return false;
+  }
+}
+
+unsigned BinaryOpIntrinsic::getNoWrapKind() const {
+  if (isSigned())
+    return OverflowingBinaryOperator::NoSignedWrap;
+  else
+    return OverflowingBinaryOperator::NoUnsignedWrap;
 }

@@ -1,15 +1,15 @@
 //===- MinimalSymbolDumper.cpp -------------------------------- *- C++ --*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #include "MinimalSymbolDumper.h"
 
 #include "FormatUtil.h"
+#include "InputFile.h"
 #include "LinePrinter.h"
 
 #include "llvm/DebugInfo/CodeView/CVRecord.h"
@@ -18,23 +18,12 @@
 #include "llvm/DebugInfo/CodeView/LazyRandomTypeCollection.h"
 #include "llvm/DebugInfo/CodeView/SymbolRecord.h"
 #include "llvm/DebugInfo/CodeView/TypeRecord.h"
+#include "llvm/DebugInfo/PDB/Native/PDBStringTable.h"
 #include "llvm/Support/FormatVariadic.h"
 
 using namespace llvm;
 using namespace llvm::codeview;
 using namespace llvm::pdb;
-
-static StringRef getSymbolKindName(SymbolKind K) {
-  switch (K) {
-#define SYMBOL_RECORD(EnumName, value, name)                                   \
-  case EnumName:                                                               \
-    return #EnumName;
-#include "llvm/DebugInfo/CodeView/CodeViewSymbols.def"
-  default:
-    llvm_unreachable("Unknown symbol kind!");
-  }
-  return "";
-}
 
 static std::string formatLocalSymFlags(uint32_t IndentLevel,
                                        LocalSymFlags Flags) {
@@ -216,6 +205,8 @@ static std::string formatSourceLanguage(SourceLanguage Lang) {
     RETURN_CASE(SourceLanguage, JScript, "javascript");
     RETURN_CASE(SourceLanguage, MSIL, "msil");
     RETURN_CASE(SourceLanguage, HLSL, "hlsl");
+    RETURN_CASE(SourceLanguage, D, "d");
+    RETURN_CASE(SourceLanguage, Swift, "swift");
   }
   return formatUnknownEnum(Lang);
 }
@@ -269,6 +260,7 @@ static std::string formatMachineType(CPUType Cpu) {
     RETURN_CASE(CPUType, ARM_XMAC, "arm xmac");
     RETURN_CASE(CPUType, ARM_WMMX, "arm wmmx");
     RETURN_CASE(CPUType, ARM7, "arm 7");
+    RETURN_CASE(CPUType, ARM64, "arm64");
     RETURN_CASE(CPUType, Omni, "omni");
     RETURN_CASE(CPUType, Ia64, "intel itanium ia64");
     RETURN_CASE(CPUType, Ia64_2, "intel itanium ia64 2");
@@ -295,59 +287,39 @@ static std::string formatCookieKind(FrameCookieKind Kind) {
   return formatUnknownEnum(Kind);
 }
 
-static std::string formatRegisterId(RegisterId Id) {
-  switch (Id) {
-    RETURN_CASE(RegisterId, VFrame, "vframe");
-    RETURN_CASE(RegisterId, AL, "al");
-    RETURN_CASE(RegisterId, CL, "cl");
-    RETURN_CASE(RegisterId, DL, "dl");
-    RETURN_CASE(RegisterId, BL, "bl");
-    RETURN_CASE(RegisterId, AH, "ah");
-    RETURN_CASE(RegisterId, CH, "ch");
-    RETURN_CASE(RegisterId, DH, "dh");
-    RETURN_CASE(RegisterId, BH, "bh");
-    RETURN_CASE(RegisterId, AX, "ax");
-    RETURN_CASE(RegisterId, CX, "cx");
-    RETURN_CASE(RegisterId, DX, "dx");
-    RETURN_CASE(RegisterId, BX, "bx");
-    RETURN_CASE(RegisterId, SP, "sp");
-    RETURN_CASE(RegisterId, BP, "bp");
-    RETURN_CASE(RegisterId, SI, "si");
-    RETURN_CASE(RegisterId, DI, "di");
-    RETURN_CASE(RegisterId, EAX, "eax");
-    RETURN_CASE(RegisterId, ECX, "ecx");
-    RETURN_CASE(RegisterId, EDX, "edx");
-    RETURN_CASE(RegisterId, EBX, "ebx");
-    RETURN_CASE(RegisterId, ESP, "esp");
-    RETURN_CASE(RegisterId, EBP, "ebp");
-    RETURN_CASE(RegisterId, ESI, "esi");
-    RETURN_CASE(RegisterId, EDI, "edi");
-    RETURN_CASE(RegisterId, ES, "es");
-    RETURN_CASE(RegisterId, CS, "cs");
-    RETURN_CASE(RegisterId, SS, "ss");
-    RETURN_CASE(RegisterId, DS, "ds");
-    RETURN_CASE(RegisterId, FS, "fs");
-    RETURN_CASE(RegisterId, GS, "gs");
-    RETURN_CASE(RegisterId, IP, "ip");
-    RETURN_CASE(RegisterId, RAX, "rax");
-    RETURN_CASE(RegisterId, RBX, "rbx");
-    RETURN_CASE(RegisterId, RCX, "rcx");
-    RETURN_CASE(RegisterId, RDX, "rdx");
-    RETURN_CASE(RegisterId, RSI, "rsi");
-    RETURN_CASE(RegisterId, RDI, "rdi");
-    RETURN_CASE(RegisterId, RBP, "rbp");
-    RETURN_CASE(RegisterId, RSP, "rsp");
-    RETURN_CASE(RegisterId, R8, "r8");
-    RETURN_CASE(RegisterId, R9, "r9");
-    RETURN_CASE(RegisterId, R10, "r10");
-    RETURN_CASE(RegisterId, R11, "r11");
-    RETURN_CASE(RegisterId, R12, "r12");
-    RETURN_CASE(RegisterId, R13, "r13");
-    RETURN_CASE(RegisterId, R14, "r14");
-    RETURN_CASE(RegisterId, R15, "r15");
-  default:
-    return formatUnknownEnum(Id);
+static std::string formatRegisterId(RegisterId Id, CPUType Cpu) {
+  if (Cpu == CPUType::ARM64) {
+    switch (Id) {
+#define CV_REGISTERS_ARM64
+#define CV_REGISTER(name, val) RETURN_CASE(RegisterId, name, #name)
+#include "llvm/DebugInfo/CodeView/CodeViewRegisters.def"
+#undef CV_REGISTER
+#undef CV_REGISTERS_ARM64
+
+    default:
+      break;
+    }
+  } else {
+    switch (Id) {
+#define CV_REGISTERS_X86
+#define CV_REGISTER(name, val) RETURN_CASE(RegisterId, name, #name)
+#include "llvm/DebugInfo/CodeView/CodeViewRegisters.def"
+#undef CV_REGISTER
+#undef CV_REGISTERS_X86
+
+    default:
+      break;
+    }
   }
+  return formatUnknownEnum(Id);
+}
+
+static std::string formatRegisterId(uint16_t Reg16, CPUType Cpu) {
+  return formatRegisterId(RegisterId(Reg16), Cpu);
+}
+
+static std::string formatRegisterId(ulittle16_t &Reg16, CPUType Cpu) {
+  return formatRegisterId(uint16_t(Reg16), Cpu);
 }
 
 static std::string formatRange(LocalVariableAddrRange Range) {
@@ -377,25 +349,39 @@ Error MinimalSymbolDumper::visitSymbolBegin(codeview::CVSymbol &Record,
   // append to the existing line.
   P.formatLine("{0} | {1} [size = {2}]",
                fmt_align(Offset, AlignStyle::Right, 6),
-               getSymbolKindName(Record.Type), Record.length());
+               formatSymbolKind(Record.kind()), Record.length());
   P.Indent();
   return Error::success();
 }
 
 Error MinimalSymbolDumper::visitSymbolEnd(CVSymbol &Record) {
+  if (RecordBytes) {
+    AutoIndent Indent(P, 7);
+    P.formatBinary("bytes", Record.content(), 0);
+  }
   P.Unindent();
   return Error::success();
 }
 
-std::string MinimalSymbolDumper::typeIndex(TypeIndex TI) const {
-  if (TI.isSimple())
+std::string MinimalSymbolDumper::typeOrIdIndex(codeview::TypeIndex TI,
+                                               bool IsType) const {
+  if (TI.isSimple() || TI.isDecoratedItemId())
     return formatv("{0}", TI).str();
-  StringRef Name = Types.getTypeName(TI);
+  auto &Container = IsType ? Types : Ids;
+  StringRef Name = Container.getTypeName(TI);
   if (Name.size() > 32) {
     Name = Name.take_front(32);
     return formatv("{0} ({1}...)", TI, Name);
   } else
     return formatv("{0} ({1})", TI, Name);
+}
+
+std::string MinimalSymbolDumper::idIndex(codeview::TypeIndex TI) const {
+  return typeOrIdIndex(TI, false);
+}
+
+std::string MinimalSymbolDumper::typeIndex(TypeIndex TI) const {
+  return typeOrIdIndex(TI, true);
 }
 
 Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, BlockSym &Block) {
@@ -434,18 +420,27 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
                                             SectionSym &Section) {
   P.format(" `{0}`", Section.Name);
   AutoIndent Indent(P, 7);
-  P.formatLine("length = {0}, alignment = {1}, rva = {2}, section # = {3}, "
-               "characteristics = {4}",
+  P.formatLine("length = {0}, alignment = {1}, rva = {2}, section # = {3}",
                Section.Length, Section.Alignment, Section.Rva,
-               Section.SectionNumber, Section.Characteristics);
+               Section.SectionNumber);
+  P.printLine("characteristics =");
+  AutoIndent Indent2(P, 2);
+  P.printLine(formatSectionCharacteristics(P.getIndentLevel(),
+                                           Section.Characteristics, 1, "",
+                                           CharacteristicStyle::Descriptive));
   return Error::success();
 }
 
 Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, CoffGroupSym &CG) {
   P.format(" `{0}`", CG.Name);
   AutoIndent Indent(P, 7);
-  P.formatLine("length = {0}, addr = {1}, characteristics = {2}", CG.Size,
-               formatSegmentOffset(CG.Segment, CG.Offset), CG.Characteristics);
+  P.formatLine("length = {0}, addr = {1}", CG.Size,
+               formatSegmentOffset(CG.Segment, CG.Offset));
+  P.printLine("characteristics =");
+  AutoIndent Indent2(P, 2);
+  P.printLine(formatSectionCharacteristics(P.getIndentLevel(),
+                                           CG.Characteristics, 1, "",
+                                           CharacteristicStyle::Descriptive));
   return Error::success();
 }
 
@@ -483,6 +478,17 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
 Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, FileStaticSym &FS) {
   P.format(" `{0}`", FS.Name);
   AutoIndent Indent(P, 7);
+  if (SymGroup) {
+    Expected<StringRef> FileName =
+        SymGroup->getNameFromStringTable(FS.ModFilenameOffset);
+    if (FileName) {
+      P.formatLine("type = {0}, file name = {1} ({2}), flags = {3}",
+                   typeIndex(FS.Index), FS.ModFilenameOffset, *FileName,
+                   formatLocalSymFlags(P.getIndentLevel() + 9, FS.Flags));
+    }
+    return Error::success();
+  }
+
   P.formatLine("type = {0}, file name offset = {1}, flags = {2}",
                typeIndex(FS.Index), FS.ModFilenameOffset,
                formatLocalSymFlags(P.getIndentLevel() + 9, FS.Flags));
@@ -502,6 +508,7 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
   AutoIndent Indent(P, 7);
   SourceLanguage Lang = static_cast<SourceLanguage>(
       Compile2.Flags & CompileSym2Flags::SourceLanguageMask);
+  CompilationCPU = Compile2.Machine;
   P.formatLine("machine = {0}, ver = {1}, language = {2}",
                formatMachineType(Compile2.Machine), Compile2.Version,
                formatSourceLanguage(Lang));
@@ -522,6 +529,7 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
   AutoIndent Indent(P, 7);
   SourceLanguage Lang = static_cast<SourceLanguage>(
       Compile3.Flags & CompileSym3Flags::SourceLanguageMask);
+  CompilationCPU = Compile3.Machine;
   P.formatLine("machine = {0}, Ver = {1}, language = {2}",
                formatMachineType(Compile3.Machine), Compile3.Version,
                formatSourceLanguage(Lang));
@@ -570,10 +578,11 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
 Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
                                             DefRangeRegisterRelSym &Def) {
   AutoIndent Indent(P, 7);
-  P.formatLine("register = {0}, base ptr = {1}, offset in parent = {2}, has "
+  P.formatLine("register = {0}, offset = {1}, offset in parent = {2}, has "
                "spilled udt = {3}",
-               uint16_t(Def.Hdr.Register), int32_t(Def.Hdr.BasePointerOffset),
-               Def.offsetInParent(), Def.hasSpilledUDTMember());
+               formatRegisterId(Def.Hdr.Register, CompilationCPU),
+               int32_t(Def.Hdr.BasePointerOffset), Def.offsetInParent(),
+               Def.hasSpilledUDTMember());
   P.formatLine("range = {0}, gaps = {1}", formatRange(Def.Range),
                formatGaps(P.getIndentLevel() + 9, Def.Gaps));
   return Error::success();
@@ -584,8 +593,8 @@ Error MinimalSymbolDumper::visitKnownRecord(
   AutoIndent Indent(P, 7);
   P.formatLine("register = {0}, may have no name = {1}, range start = "
                "{2}, length = {3}",
-               uint16_t(DefRangeRegister.Hdr.Register),
-               uint16_t(DefRangeRegister.Hdr.MayHaveNoName),
+               formatRegisterId(DefRangeRegister.Hdr.Register, CompilationCPU),
+               bool(DefRangeRegister.Hdr.MayHaveNoName),
                formatSegmentOffset(DefRangeRegister.Range.ISectStart,
                                    DefRangeRegister.Range.OffsetStart),
                DefRangeRegister.Range.Range);
@@ -599,7 +608,7 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
   AutoIndent Indent(P, 7);
   bool NoName = !!(Def.Hdr.MayHaveNoName == 0);
   P.formatLine("register = {0}, may have no name = {1}, offset in parent = {2}",
-               uint16_t(Def.Hdr.Register), NoName,
+               formatRegisterId(Def.Hdr.Register, CompilationCPU), NoName,
                uint32_t(Def.Hdr.OffsetInParent));
   P.formatLine("range = {0}, gaps = {1}", formatRange(Def.Range),
                formatGaps(P.getIndentLevel() + 9, Def.Gaps));
@@ -626,8 +635,8 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, DefRangeSym &Def) {
 Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, FrameCookieSym &FC) {
   AutoIndent Indent(P, 7);
   P.formatLine("code offset = {0}, Register = {1}, kind = {2}, flags = {3}",
-               FC.CodeOffset, FC.Register, formatCookieKind(FC.CookieKind),
-               FC.Flags);
+               FC.CodeOffset, formatRegisterId(FC.Register, CompilationCPU),
+               formatCookieKind(FC.CookieKind), FC.Flags);
   return Error::success();
 }
 
@@ -640,6 +649,10 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, FrameProcSym &FP) {
                FP.BytesOfCalleeSavedRegisters,
                formatSegmentOffset(FP.SectionIdOfExceptionHandler,
                                    FP.OffsetOfExceptionHandler));
+  P.formatLine(
+      "local fp reg = {0}, param fp reg = {1}",
+      formatRegisterId(FP.getLocalFramePtrReg(CompilationCPU), CompilationCPU),
+      formatRegisterId(FP.getParamFramePtrReg(CompilationCPU), CompilationCPU));
   P.formatLine("flags = {0}",
                formatFrameProcedureOptions(P.getIndentLevel() + 9, FP.Flags));
   return Error::success();
@@ -656,13 +669,89 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
 
 Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, InlineSiteSym &IS) {
   AutoIndent Indent(P, 7);
-  auto Bytes = makeArrayRef(IS.AnnotationData);
-  StringRef Annotations(reinterpret_cast<const char *>(Bytes.begin()),
-                        Bytes.size());
-
-  P.formatLine("inlinee = {0}, parent = {1}, end = {2}", typeIndex(IS.Inlinee),
+  P.formatLine("inlinee = {0}, parent = {1}, end = {2}", idIndex(IS.Inlinee),
                IS.Parent, IS.End);
-  P.formatLine("annotations = {0}", toHex(Annotations));
+
+  // Break down the annotation byte code and calculate code and line offsets.
+  // FIXME: It would be helpful if we could look up the initial file and inlinee
+  // lines offset using the inlinee index above.
+  uint32_t CodeOffset = 0;
+  int32_t LineOffset = 0;
+  for (auto &Annot : IS.annotations()) {
+    P.formatLine("  {0}", fmt_align(toHex(Annot.Bytes), AlignStyle::Left, 9));
+
+    auto formatCodeOffset = [&](uint32_t Delta) {
+      CodeOffset += Delta;
+      P.format(" code 0x{0} (+0x{1})", utohexstr(CodeOffset), utohexstr(Delta));
+    };
+    auto formatCodeLength = [&](uint32_t Length) {
+      // Notably, changing the code length does not affect the code offset.
+      P.format(" code end 0x{0} (+0x{1})", utohexstr(CodeOffset + Length),
+               utohexstr(Length));
+    };
+    auto formatLineOffset = [&](int32_t Delta) {
+      LineOffset += Delta;
+      char Sign = Delta > 0 ? '+' : '-';
+      P.format(" line {0} ({1}{2})", LineOffset, Sign, std::abs(Delta));
+    };
+
+    // Use the opcode to interpret the integer values.
+    switch (Annot.OpCode) {
+    case BinaryAnnotationsOpCode::Invalid:
+      break;
+    case BinaryAnnotationsOpCode::CodeOffset:
+    case BinaryAnnotationsOpCode::ChangeCodeOffset:
+      formatCodeOffset(Annot.U1);
+      break;
+    case BinaryAnnotationsOpCode::ChangeLineOffset:
+      formatLineOffset(Annot.S1);
+      break;
+    case BinaryAnnotationsOpCode::ChangeCodeLength:
+      formatCodeLength(Annot.U1);
+      // Apparently this annotation updates the code offset. It's hard to make
+      // MSVC produce this opcode, but clang uses it, and debuggers seem to use
+      // this interpretation.
+      CodeOffset += Annot.U1;
+      break;
+    case BinaryAnnotationsOpCode::ChangeCodeOffsetAndLineOffset:
+      formatCodeOffset(Annot.U1);
+      formatLineOffset(Annot.S1);
+      break;
+    case BinaryAnnotationsOpCode::ChangeCodeLengthAndCodeOffset:
+      formatCodeOffset(Annot.U2);
+      formatCodeLength(Annot.U1);
+      break;
+
+    case BinaryAnnotationsOpCode::ChangeFile: {
+      uint32_t FileOffset = Annot.U1;
+      StringRef Filename = "<unknown>";
+      if (SymGroup) {
+        if (Expected<StringRef> MaybeFile =
+                SymGroup->getNameFromStringTable(FileOffset))
+          Filename = *MaybeFile;
+        else
+          return MaybeFile.takeError();
+      }
+      P.format(" setfile {0} 0x{1}", utohexstr(FileOffset));
+      break;
+    }
+
+    // The rest of these are hard to convince MSVC to emit, so they are not as
+    // well understood.
+    case BinaryAnnotationsOpCode::ChangeCodeOffsetBase:
+      formatCodeOffset(Annot.U1);
+      break;
+    case BinaryAnnotationsOpCode::ChangeLineEndDelta:
+    case BinaryAnnotationsOpCode::ChangeRangeKind:
+    case BinaryAnnotationsOpCode::ChangeColumnStart:
+    case BinaryAnnotationsOpCode::ChangeColumnEnd:
+      P.format(" {0} {1}", Annot.Name, Annot.U1);
+      break;
+    case BinaryAnnotationsOpCode::ChangeColumnEndDelta:
+      P.format(" {0} {1}", Annot.Name, Annot.S1);
+      break;
+    }
+  }
   return Error::success();
 }
 
@@ -671,7 +760,8 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
   P.format(" `{0}`", Register.Name);
   AutoIndent Indent(P, 7);
   P.formatLine("register = {0}, type = {1}",
-               formatRegisterId(Register.Register), typeIndex(Register.Index));
+               formatRegisterId(Register.Register, CompilationCPU),
+               typeIndex(Register.Index));
   return Error::success();
 }
 
@@ -725,9 +815,19 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, ProcSym &Proc) {
                Proc.Parent, Proc.End,
                formatSegmentOffset(Proc.Segment, Proc.CodeOffset),
                Proc.CodeSize);
-  // FIXME: It seems FunctionType is sometimes an id and sometimes a type.
+  bool IsType = true;
+  switch (Proc.getKind()) {
+  case SymbolRecordKind::GlobalProcIdSym:
+  case SymbolRecordKind::ProcIdSym:
+  case SymbolRecordKind::DPCProcIdSym:
+    IsType = false;
+    break;
+  default:
+    break;
+  }
   P.formatLine("type = `{0}`, debug start = {1}, debug end = {2}, flags = {3}",
-               typeIndex(Proc.FunctionType), Proc.DbgStart, Proc.DbgEnd,
+               typeOrIdIndex(Proc.FunctionType, IsType), Proc.DbgStart,
+               Proc.DbgEnd,
                formatProcSymFlags(P.getIndentLevel() + 9, Proc.Flags));
   return Error::success();
 }
@@ -740,7 +840,7 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
 Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, CallerSym &Caller) {
   AutoIndent Indent(P, 7);
   for (const auto &I : Caller.Indices) {
-    P.formatLine("callee: {0}", typeIndex(I));
+    P.formatLine("callee: {0}", idIndex(I));
   }
   return Error::success();
 }
@@ -749,9 +849,9 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
                                             RegRelativeSym &RegRel) {
   P.format(" `{0}`", RegRel.Name);
   AutoIndent Indent(P, 7);
-  P.formatLine("type = {0}, register = {1}, offset = {2}",
-               typeIndex(RegRel.Type), formatRegisterId(RegRel.Register),
-               RegRel.Offset);
+  P.formatLine(
+      "type = {0}, register = {1}, offset = {2}", typeIndex(RegRel.Type),
+      formatRegisterId(RegRel.Register, CompilationCPU), RegRel.Offset);
   return Error::success();
 }
 
@@ -768,5 +868,20 @@ Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR, UDTSym &UDT) {
   P.format(" `{0}`", UDT.Name);
   AutoIndent Indent(P, 7);
   P.formatLine("original type = {0}", UDT.Type);
+  return Error::success();
+}
+
+Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
+                                            UsingNamespaceSym &UN) {
+  P.format(" `{0}`", UN.Name);
+  return Error::success();
+}
+
+Error MinimalSymbolDumper::visitKnownRecord(CVSymbol &CVR,
+                                            AnnotationSym &Annot) {
+  AutoIndent Indent(P, 7);
+  P.formatLine("addr = {0}", formatSegmentOffset(Annot.Segment, Annot.CodeOffset));
+  P.formatLine("strings = {0}", typesetStringList(P.getIndentLevel() + 9 + 2,
+                                                   Annot.Strings));
   return Error::success();
 }

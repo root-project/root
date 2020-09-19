@@ -1,9 +1,8 @@
-//=-- ExplodedGraph.cpp - Local, Path-Sens. "Exploded Graph" -*- C++ -*------=//
+//===- ExplodedGraph.cpp - Local, Path-Sens. "Exploded Graph" -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,42 +12,35 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/StaticAnalyzer/Core/PathSensitive/ExplodedGraph.h"
+#include "clang/AST/Expr.h"
+#include "clang/AST/ExprObjC.h"
 #include "clang/AST/ParentMap.h"
 #include "clang/AST/Stmt.h"
+#include "clang/Analysis/ProgramPoint.h"
+#include "clang/Analysis/Support/BumpVector.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CallEvent.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState_Fwd.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/FoldingSet.h"
+#include "llvm/ADT/Optional.h"
+#include "llvm/ADT/PointerUnion.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/Statistic.h"
+#include "llvm/Support/Casting.h"
+#include <cassert>
+#include <memory>
 
 using namespace clang;
 using namespace ento;
 
 //===----------------------------------------------------------------------===//
-// Node auditing.
-//===----------------------------------------------------------------------===//
-
-// An out of line virtual method to provide a home for the class vtable.
-ExplodedNode::Auditor::~Auditor() {}
-
-#ifndef NDEBUG
-static ExplodedNode::Auditor* NodeAuditor = nullptr;
-#endif
-
-void ExplodedNode::SetAuditor(ExplodedNode::Auditor* A) {
-#ifndef NDEBUG
-  NodeAuditor = A;
-#endif
-}
-
-//===----------------------------------------------------------------------===//
 // Cleanup.
 //===----------------------------------------------------------------------===//
 
-ExplodedGraph::ExplodedGraph()
-  : NumNodes(0), ReclaimNodeInterval(0) {}
+ExplodedGraph::ExplodedGraph() = default;
 
-ExplodedGraph::~ExplodedGraph() {}
+ExplodedGraph::~ExplodedGraph() = default;
 
 //===----------------------------------------------------------------------===//
 // Node reclamation.
@@ -187,12 +179,9 @@ void ExplodedGraph::reclaimRecentlyAllocatedNodes() {
     return;
   ReclaimCounter = ReclaimNodeInterval;
 
-  for (NodeVector::iterator it = ChangedNodes.begin(), et = ChangedNodes.end();
-       it != et; ++it) {
-    ExplodedNode *node = *it;
+  for (const auto node : ChangedNodes)
     if (shouldCollect(node))
       collectNode(node);
-  }
   ChangedNodes.clear();
 }
 
@@ -210,16 +199,13 @@ void ExplodedGraph::reclaimRecentlyAllocatedNodes() {
 // 2. The group is empty, in which case the storage value is null.
 // 3. The group contains a single node.
 // 4. The group contains more than one node.
-typedef BumpVector<ExplodedNode *> ExplodedNodeVector;
-typedef llvm::PointerUnion<ExplodedNode *, ExplodedNodeVector *> GroupStorage;
+using ExplodedNodeVector = BumpVector<ExplodedNode *>;
+using GroupStorage = llvm::PointerUnion<ExplodedNode *, ExplodedNodeVector *>;
 
 void ExplodedNode::addPredecessor(ExplodedNode *V, ExplodedGraph &G) {
-  assert (!V->isSink());
+  assert(!V->isSink());
   Preds.addNode(V, G);
   V->Succs.addNode(this, G);
-#ifndef NDEBUG
-  if (NodeAuditor) NodeAuditor->AddEdge(V, this);
-#endif
 }
 
 void ExplodedNode::NodeGroup::replaceNode(ExplodedNode *node) {
@@ -296,6 +282,16 @@ ExplodedNode * const *ExplodedNode::NodeGroup::end() const {
   return Storage.getAddrOfPtr1() + 1;
 }
 
+int64_t ExplodedNode::getID(ExplodedGraph *G) const {
+  return G->getAllocator().identifyKnownAlignedObject<ExplodedNode>(this);
+}
+
+bool ExplodedNode::isTrivial() const {
+  return pred_size() == 1 && succ_size() == 1 &&
+         getFirstPred()->getState()->getID() == getState()->getID() &&
+         getFirstPred()->succ_size() == 1;
+}
+
 ExplodedNode *ExplodedGraph::getNode(const ProgramPoint &L,
                                      ProgramStateRef State,
                                      bool IsSink,
@@ -346,25 +342,22 @@ std::unique_ptr<ExplodedGraph>
 ExplodedGraph::trim(ArrayRef<const NodeTy *> Sinks,
                     InterExplodedGraphMap *ForwardMap,
                     InterExplodedGraphMap *InverseMap) const {
-
   if (Nodes.empty())
     return nullptr;
 
-  typedef llvm::DenseSet<const ExplodedNode*> Pass1Ty;
+  using Pass1Ty = llvm::DenseSet<const ExplodedNode *>;
   Pass1Ty Pass1;
 
-  typedef InterExplodedGraphMap Pass2Ty;
+  using Pass2Ty = InterExplodedGraphMap;
   InterExplodedGraphMap Pass2Scratch;
   Pass2Ty &Pass2 = ForwardMap ? *ForwardMap : Pass2Scratch;
 
   SmallVector<const ExplodedNode*, 10> WL1, WL2;
 
   // ===- Pass 1 (reverse DFS) -===
-  for (ArrayRef<const NodeTy *>::iterator I = Sinks.begin(), E = Sinks.end();
-       I != E; ++I) {
-    if (*I)
-      WL1.push_back(*I);
-  }
+  for (const auto Sink : Sinks)
+    if (Sink)
+      WL1.push_back(Sink);
 
   // Process the first worklist until it is empty.
   while (!WL1.empty()) {
@@ -445,4 +438,3 @@ ExplodedGraph::trim(ArrayRef<const NodeTy *> Sinks,
 
   return G;
 }
-

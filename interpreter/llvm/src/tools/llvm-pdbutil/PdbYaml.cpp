@@ -1,26 +1,18 @@
-//===- PdbYAML.cpp -------------------------------------------- *- C++ --*-===//
+//===-- PdbYaml.cpp ------------------------------------------- *- C++ --*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #include "PdbYaml.h"
 
 #include "llvm/ADT/StringExtras.h"
-#include "llvm/DebugInfo/CodeView/CVSymbolVisitor.h"
 #include "llvm/DebugInfo/CodeView/CVTypeVisitor.h"
-#include "llvm/DebugInfo/CodeView/DebugStringTableSubsection.h"
-#include "llvm/DebugInfo/CodeView/SymbolDeserializer.h"
-#include "llvm/DebugInfo/CodeView/SymbolVisitorCallbackPipeline.h"
-#include "llvm/DebugInfo/CodeView/TypeSerializer.h"
-#include "llvm/DebugInfo/CodeView/TypeVisitorCallbackPipeline.h"
 #include "llvm/DebugInfo/PDB/Native/PDBFile.h"
 #include "llvm/DebugInfo/PDB/Native/RawTypes.h"
 #include "llvm/DebugInfo/PDB/Native/TpiHashing.h"
-#include "llvm/DebugInfo/PDB/PDBExtras.h"
 #include "llvm/DebugInfo/PDB/PDBTypes.h"
 #include "llvm/ObjectYAML/CodeViewYAMLDebugSections.h"
 #include "llvm/ObjectYAML/CodeViewYAMLTypes.h"
@@ -58,6 +50,7 @@ template <> struct ScalarEnumerationTraits<llvm::pdb::PDB_Machine> {
     io.enumCase(Value, "SH3DSP", PDB_Machine::SH3DSP);
     io.enumCase(Value, "Thumb", PDB_Machine::Thumb);
     io.enumCase(Value, "WceMipsV2", PDB_Machine::WceMipsV2);
+    io.enumCase(Value, "Arm64", PDB_Machine::Arm64);
   }
 };
 
@@ -117,6 +110,7 @@ void MappingTraits<PdbObject>::mapping(IO &IO, PdbObject &Obj) {
   IO.mapOptional("DbiStream", Obj.DbiStream);
   IO.mapOptional("TpiStream", Obj.TpiStream);
   IO.mapOptional("IpiStream", Obj.IpiStream);
+  IO.mapOptional("PublicsStream", Obj.PublicsStream);
 }
 
 void MappingTraits<MSFHeaders>::mapping(IO &IO, MSFHeaders &Obj) {
@@ -168,6 +162,11 @@ void MappingTraits<PdbTpiStream>::mapping(IO &IO,
                                           pdb::yaml::PdbTpiStream &Obj) {
   IO.mapOptional("Version", Obj.Version, PdbTpiV80);
   IO.mapRequired("Records", Obj.Records);
+}
+
+void MappingTraits<PdbPublicsStream>::mapping(
+    IO &IO, pdb::yaml::PdbPublicsStream &Obj) {
+  IO.mapRequired("Records", Obj.PubSyms);
 }
 
 void MappingTraits<NamedStreamMapping>::mapping(IO &IO,

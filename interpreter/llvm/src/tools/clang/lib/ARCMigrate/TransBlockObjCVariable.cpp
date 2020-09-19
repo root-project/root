@@ -1,9 +1,8 @@
 //===--- TransBlockObjCVariable.cpp - Transformations to ARC mode ---------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -43,11 +42,11 @@ class RootBlockObjCVarRewriter :
 
   class BlockVarChecker : public RecursiveASTVisitor<BlockVarChecker> {
     VarDecl *Var;
-  
+
     typedef RecursiveASTVisitor<BlockVarChecker> base;
   public:
     BlockVarChecker(VarDecl *var) : Var(var) { }
-  
+
     bool TraverseImplicitCastExpr(ImplicitCastExpr *castE) {
       if (DeclRefExpr *
             ref = dyn_cast<DeclRefExpr>(castE->getSubExpr())) {
@@ -77,7 +76,7 @@ public:
 
   bool VisitBlockDecl(BlockDecl *block) {
     SmallVector<VarDecl *, 4> BlockVars;
-    
+
     for (const auto &I : block->captures()) {
       VarDecl *var = I.getVariable();
       if (I.isByRef() &&

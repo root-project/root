@@ -11,11 +11,13 @@ import os
 import platform
 import random
 import re
+import shlex
 import sys
 import time
 import argparse
 import tempfile
 import shutil
+from xml.sax.saxutils import quoteattr
 
 import lit.ProgressBar
 import lit.LitConfig
@@ -81,6 +83,18 @@ class TestingProgressDisplay(object):
                 print('%s: %s ' % (metric_name, value.format()))
             print("*" * 10)
 
+        # Report micro-tests, if present
+        if test.result.microResults:
+            items = sorted(test.result.microResults.items())
+            for micro_test_name, micro_test in items:
+                print("%s MICRO-TEST: %s" %
+                         ('*'*3, micro_test_name))
+   
+                if micro_test.metrics:
+                    sorted_metrics = sorted(micro_test.metrics.items())
+                    for metric_name, value in sorted_metrics:
+                        print('    %s:  %s ' % (metric_name, value.format()))
+
         # Ensure the output is flushed.
         sys.stdout.flush()
 
@@ -112,6 +126,25 @@ def write_test_results(run, lit_config, testing_time, output_path):
             test_data['metrics'] = metrics_data = {}
             for key, value in test.result.metrics.items():
                 metrics_data[key] = value.todata()
+
+        # Report micro-tests separately, if present
+        if test.result.microResults:
+            for key, micro_test in test.result.microResults.items():
+                # Expand parent test name with micro test name
+                parent_name = test.getFullName()
+                micro_full_name = parent_name + ':' + key
+
+                micro_test_data = {
+                    'name' : micro_full_name,
+                    'code' : micro_test.code.name,
+                    'output' : micro_test.output,
+                    'elapsed' : micro_test.elapsed }
+                if micro_test.metrics:
+                    micro_test_data['metrics'] = micro_metrics_data = {}
+                    for key, value in micro_test.metrics.items():
+                        micro_metrics_data[key] = value.todata()
+
+                tests_data.append(micro_test_data)
 
         tests_data.append(test_data)
 
@@ -289,11 +322,9 @@ def main_with_tmp(builtinParameters):
     debug_group.add_argument("--show-tests", dest="showTests",
                       help="Show all discovered tests",
                       action="store_true", default=False)
-    debug_group.add_argument("--use-processes", dest="executionStrategy",
-                      help="Run tests in parallel with processes (not threads)",
-                      action="store_const", const="PROCESSES")
 
-    opts = parser.parse_args()
+    opts = parser.parse_args(sys.argv[1:] +
+                             shlex.split(os.environ.get("LIT_OPTS", "")))
     args = opts.test_paths
 
     if opts.show_version:
@@ -305,9 +336,11 @@ def main_with_tmp(builtinParameters):
 
     if opts.numThreads is None:
         opts.numThreads = lit.util.detectCPUs()
+    elif opts.numThreads <= 0:
+        parser.error("Option '--threads' or '-j' requires positive integer")
 
-    if opts.maxFailures == 0:
-        parser.error("Setting --max-failures to 0 does not have any effect.")
+    if opts.maxFailures is not None and opts.maxFailures <= 0:
+        parser.error("Option '--max-failures' requires positive integer")
 
     if opts.echoAllCommands:
         opts.showOutput = True
@@ -472,11 +505,9 @@ def main_with_tmp(builtinParameters):
     except:
         pass
 
-    extra = ''
-    if len(run.tests) != numTotalTests:
-        extra = ' of %d' % numTotalTests
-    header = '-- Testing: %d%s tests, %d threads --'%(len(run.tests), extra,
-                                                      opts.numThreads)
+    extra = (' of %d' % numTotalTests) if (len(run.tests) != numTotalTests) else ''
+    threads = 'single process' if (opts.numThreads == 1) else ('%d threads' % opts.numThreads)
+    header = '-- Testing: %d%s tests, %s --' % (len(run.tests), extra, threads)
     progressBar = None
     if not opts.quiet:
         if opts.succinct and opts.useProgressBar:
@@ -564,24 +595,30 @@ def main_with_tmp(builtinParameters):
                 by_suite[suite] = {
                                    'passes'   : 0,
                                    'failures' : 0,
+                                   'skipped': 0,
                                    'tests'    : [] }
             by_suite[suite]['tests'].append(result_test)
             if result_test.result.code.isFailure:
                 by_suite[suite]['failures'] += 1
+            elif result_test.result.code == lit.Test.UNSUPPORTED:
+                by_suite[suite]['skipped'] += 1
             else:
                 by_suite[suite]['passes'] += 1
         xunit_output_file = open(opts.xunit_output_file, "w")
         xunit_output_file.write("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n")
         xunit_output_file.write("<testsuites>\n")
         for suite_name, suite in by_suite.items():
-            safe_suite_name = suite_name.replace(".", "-")
-            xunit_output_file.write("<testsuite name='" + safe_suite_name + "'")
-            xunit_output_file.write(" tests='" + str(suite['passes'] + 
-              suite['failures']) + "'")
-            xunit_output_file.write(" failures='" + str(suite['failures']) + 
-              "'>\n")
+            safe_suite_name = quoteattr(suite_name.replace(".", "-"))
+            xunit_output_file.write("<testsuite name=" + safe_suite_name)
+            xunit_output_file.write(" tests=\"" + str(suite['passes'] +
+              suite['failures'] + suite['skipped']) + "\"")
+            xunit_output_file.write(" failures=\"" + str(suite['failures']) + "\"")
+            xunit_output_file.write(" skipped=\"" + str(suite['skipped']) +
+              "\">\n")
+
             for result_test in suite['tests']:
-                xunit_output_file.write(result_test.getJUnitXML() + "\n")
+                result_test.writeJUnitXML(xunit_output_file)
+                xunit_output_file.write("\n")
             xunit_output_file.write("</testsuite>\n")
         xunit_output_file.write("</testsuites>")
         xunit_output_file.close()

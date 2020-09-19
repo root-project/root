@@ -1,9 +1,8 @@
 //===----- HexagonMCShuffler.cpp - MC bundle shuffling --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -15,12 +14,15 @@
 #define DEBUG_TYPE "hexagon-shuffle"
 
 #include "MCTargetDesc/HexagonMCShuffler.h"
-#include "Hexagon.h"
 #include "MCTargetDesc/HexagonMCInstrInfo.h"
-#include "MCTargetDesc/HexagonMCTargetDesc.h"
+#include "MCTargetDesc/HexagonShuffler.h"
+#include "llvm/MC/MCInst.h"
+#include "llvm/MC/MCInstrDesc.h"
+#include "llvm/MC/MCInstrInfo.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include <cassert>
 
 using namespace llvm;
 
@@ -34,7 +36,8 @@ void HexagonMCShuffler::init(MCInst &MCB) {
     // Copy the bundle for the shuffling.
     for (const auto &I : HexagonMCInstrInfo::bundleInstructions(MCB)) {
       MCInst &MI = *const_cast<MCInst *>(I.getInst());
-      DEBUG(dbgs() << "Shuffling: " << MCII.getName(MI.getOpcode()) << '\n');
+      LLVM_DEBUG(dbgs() << "Shuffling: " << MCII.getName(MI.getOpcode())
+                        << '\n');
       assert(!HexagonMCInstrInfo::getDesc(MCII, MI).isPseudo());
 
       if (!HexagonMCInstrInfo::isImmext(MI)) {
@@ -94,7 +97,7 @@ bool HexagonMCShuffler::reshuffleTo(MCInst &MCB) {
     copyTo(MCB);
     return true;
   }
-  DEBUG(MCB.dump());
+  LLVM_DEBUG(MCB.dump());
   return false;
 }
 
@@ -109,15 +112,16 @@ bool llvm::HexagonMCShuffle(MCContext &Context, bool Fatal,
 
   if (!HexagonMCInstrInfo::bundleSize(MCB)) {
     // There once was a bundle:
-    //    BUNDLE %D2<imp-def>, %R4<imp-def>, %R5<imp-def>, %D7<imp-def>, ...
-    //      * %D2<def> = IMPLICIT_DEF; flags:
-    //      * %D7<def> = IMPLICIT_DEF; flags:
+    //    BUNDLE implicit-def %d2, implicit-def %r4, implicit-def %r5,
+    //    implicit-def %d7, ...
+    //      * %d2 = IMPLICIT_DEF; flags:
+    //      * %d7 = IMPLICIT_DEF; flags:
     // After the IMPLICIT_DEFs were removed by the asm printer, the bundle
     // became empty.
-    DEBUG(dbgs() << "Skipping empty bundle");
+    LLVM_DEBUG(dbgs() << "Skipping empty bundle");
     return false;
   } else if (!HexagonMCInstrInfo::isBundle(MCB)) {
-    DEBUG(dbgs() << "Skipping stand-alone insn");
+    LLVM_DEBUG(dbgs() << "Skipping stand-alone insn");
     return false;
   }
 
@@ -128,21 +132,21 @@ bool
 llvm::HexagonMCShuffle(MCContext &Context, MCInstrInfo const &MCII,
                        MCSubtargetInfo const &STI, MCInst &MCB,
                        SmallVector<DuplexCandidate, 8> possibleDuplexes) {
-
   if (DisableShuffle)
     return false;
 
   if (!HexagonMCInstrInfo::bundleSize(MCB)) {
     // There once was a bundle:
-    //    BUNDLE %D2<imp-def>, %R4<imp-def>, %R5<imp-def>, %D7<imp-def>, ...
-    //      * %D2<def> = IMPLICIT_DEF; flags:
-    //      * %D7<def> = IMPLICIT_DEF; flags:
+    //    BUNDLE implicit-def %d2, implicit-def %r4, implicit-def %r5,
+    //    implicit-def %d7, ...
+    //      * %d2 = IMPLICIT_DEF; flags:
+    //      * %d7 = IMPLICIT_DEF; flags:
     // After the IMPLICIT_DEFs were removed by the asm printer, the bundle
     // became empty.
-    DEBUG(dbgs() << "Skipping empty bundle");
+    LLVM_DEBUG(dbgs() << "Skipping empty bundle");
     return false;
   } else if (!HexagonMCInstrInfo::isBundle(MCB)) {
-    DEBUG(dbgs() << "Skipping stand-alone insn");
+    LLVM_DEBUG(dbgs() << "Skipping stand-alone insn");
     return false;
   }
 
@@ -165,7 +169,7 @@ llvm::HexagonMCShuffle(MCContext &Context, MCInstrInfo const &MCII,
       break;
   }
 
-  if (doneShuffling == false) {
+  if (!doneShuffling) {
     HexagonMCShuffler MCS(Context, false, MCII, STI, MCB);
     doneShuffling = MCS.reshuffleTo(MCB); // shuffle
   }

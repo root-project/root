@@ -1,9 +1,8 @@
-//===--- HexagonConstPropagation.cpp --------------------------------------===//
+//===- HexagonConstPropagation.cpp ----------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -25,14 +24,17 @@
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/TargetRegisterInfo.h"
+#include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/Type.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Target/TargetRegisterInfo.h"
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -77,18 +79,21 @@ namespace {
 
   // A representation of a register as it can appear in a MachineOperand,
   // i.e. a pair register:subregister.
-  struct Register {
+
+  // FIXME: Use TargetInstrInfo::RegSubRegPair. Also duplicated in
+  // HexagonGenPredicate
+  struct RegisterSubReg {
     unsigned Reg, SubReg;
 
-    explicit Register(unsigned R, unsigned SR = 0) : Reg(R), SubReg(SR) {}
-    explicit Register(const MachineOperand &MO)
+    explicit RegisterSubReg(unsigned R, unsigned SR = 0) : Reg(R), SubReg(SR) {}
+    explicit RegisterSubReg(const MachineOperand &MO)
       : Reg(MO.getReg()), SubReg(MO.getSubReg()) {}
 
     void print(const TargetRegisterInfo *TRI = nullptr) const {
-      dbgs() << PrintReg(Reg, TRI, SubReg);
+      dbgs() << printReg(Reg, TRI, SubReg);
     }
 
-    bool operator== (const Register &R) const {
+    bool operator== (const RegisterSubReg &R) const {
       return (Reg == R.Reg) && (SubReg == R.SubReg);
     }
   };
@@ -167,10 +172,12 @@ namespace {
     bool convertToProperty();
   };
 
+#ifndef NDEBUG
   raw_ostream &operator<< (raw_ostream &os, const LatticeCell &L) {
     L.print(os);
     return os;
   }
+#endif
 
   class MachineConstEvaluator;
 
@@ -182,7 +189,7 @@ namespace {
 
     // Mapping: vreg -> cell
     // The keys are registers _without_ subregisters. This won't allow
-    // definitions in the form of "vreg:subreg<def> = ...". Such definitions
+    // definitions in the form of "vreg:subreg = ...". Such definitions
     // would be questionable from the point of view of SSA, since the "vreg"
     // could not be initialized in its entirety (specifically, an instruction
     // defining the "other part" of "vreg" would also count as a definition
@@ -224,7 +231,8 @@ namespace {
       void print(raw_ostream &os, const TargetRegisterInfo &TRI) const;
 
     private:
-      typedef std::map<unsigned,LatticeCell> MapType;
+      using MapType = std::map<unsigned, LatticeCell>;
+
       MapType Map;
       // To avoid creating "top" entries, return a const reference to
       // this cell in "get". Also, have a "Bottom" cell to return from
@@ -232,7 +240,8 @@ namespace {
       LatticeCell Top, Bottom;
 
     public:
-      typedef MapType::const_iterator const_iterator;
+      using const_iterator = MapType::const_iterator;
+
       const_iterator begin() const { return Map.begin(); }
       const_iterator end() const { return Map.end(); }
     };
@@ -254,10 +263,10 @@ namespace {
     MachineRegisterInfo      *MRI;
     MachineConstEvaluator    &MCE;
 
-    typedef std::pair<unsigned,unsigned> CFGEdge;
-    typedef std::set<CFGEdge> SetOfCFGEdge;
-    typedef std::set<const MachineInstr*> SetOfInstr;
-    typedef std::queue<CFGEdge> QueueOfCFGEdge;
+    using CFGEdge = std::pair<unsigned, unsigned>;
+    using SetOfCFGEdge = std::set<CFGEdge>;
+    using SetOfInstr = std::set<const MachineInstr *>;
+    using QueueOfCFGEdge = std::queue<CFGEdge>;
 
     LatticeCell     Bottom;
     CellMap         Cells;
@@ -273,7 +282,7 @@ namespace {
   public:
     MachineConstEvaluator(MachineFunction &Fn)
       : TRI(*Fn.getSubtarget().getRegisterInfo()),
-        MF(Fn), CX(Fn.getFunction()->getContext()) {}
+        MF(Fn), CX(Fn.getFunction().getContext()) {}
     virtual ~MachineConstEvaluator() = default;
 
     // The required interface:
@@ -291,10 +300,10 @@ namespace {
     // - A function "rewrite", that given the cell map after propagation,
     //   could rewrite instruction MI in a more beneficial form. Return
     //   "true" if a change has been made, "false" otherwise.
-    typedef MachineConstPropagator::CellMap CellMap;
+    using CellMap = MachineConstPropagator::CellMap;
     virtual bool evaluate(const MachineInstr &MI, const CellMap &Inputs,
                           CellMap &Outputs) = 0;
-    virtual bool evaluate(const Register &R, const LatticeCell &SrcC,
+    virtual bool evaluate(const RegisterSubReg &R, const LatticeCell &SrcC,
                           LatticeCell &Result) = 0;
     virtual bool evaluate(const MachineInstr &BrI, const CellMap &Inputs,
                           SetVector<const MachineBasicBlock*> &Targets,
@@ -337,17 +346,17 @@ namespace {
 
     // Helper functions.
 
-    bool getCell(const Register &R, const CellMap &Inputs, LatticeCell &RC);
+    bool getCell(const RegisterSubReg &R, const CellMap &Inputs, LatticeCell &RC);
     bool constToInt(const Constant *C, APInt &Val) const;
     bool constToFloat(const Constant *C, APFloat &Val) const;
     const ConstantInt *intToConst(const APInt &Val) const;
 
     // Compares.
-    bool evaluateCMPrr(uint32_t Cmp, const Register &R1, const Register &R2,
+    bool evaluateCMPrr(uint32_t Cmp, const RegisterSubReg &R1, const RegisterSubReg &R2,
           const CellMap &Inputs, bool &Result);
-    bool evaluateCMPri(uint32_t Cmp, const Register &R1, const APInt &A2,
+    bool evaluateCMPri(uint32_t Cmp, const RegisterSubReg &R1, const APInt &A2,
           const CellMap &Inputs, bool &Result);
-    bool evaluateCMPrp(uint32_t Cmp, const Register &R1, uint64_t Props2,
+    bool evaluateCMPrp(uint32_t Cmp, const RegisterSubReg &R1, uint64_t Props2,
           const CellMap &Inputs, bool &Result);
     bool evaluateCMPii(uint32_t Cmp, const APInt &A1, const APInt &A2,
           bool &Result);
@@ -356,52 +365,52 @@ namespace {
     bool evaluateCMPpp(uint32_t Cmp, uint32_t Props1, uint32_t Props2,
           bool &Result);
 
-    bool evaluateCOPY(const Register &R1, const CellMap &Inputs,
+    bool evaluateCOPY(const RegisterSubReg &R1, const CellMap &Inputs,
           LatticeCell &Result);
 
     // Logical operations.
-    bool evaluateANDrr(const Register &R1, const Register &R2,
+    bool evaluateANDrr(const RegisterSubReg &R1, const RegisterSubReg &R2,
           const CellMap &Inputs, LatticeCell &Result);
-    bool evaluateANDri(const Register &R1, const APInt &A2,
+    bool evaluateANDri(const RegisterSubReg &R1, const APInt &A2,
           const CellMap &Inputs, LatticeCell &Result);
     bool evaluateANDii(const APInt &A1, const APInt &A2, APInt &Result);
-    bool evaluateORrr(const Register &R1, const Register &R2,
+    bool evaluateORrr(const RegisterSubReg &R1, const RegisterSubReg &R2,
           const CellMap &Inputs, LatticeCell &Result);
-    bool evaluateORri(const Register &R1, const APInt &A2,
+    bool evaluateORri(const RegisterSubReg &R1, const APInt &A2,
           const CellMap &Inputs, LatticeCell &Result);
     bool evaluateORii(const APInt &A1, const APInt &A2, APInt &Result);
-    bool evaluateXORrr(const Register &R1, const Register &R2,
+    bool evaluateXORrr(const RegisterSubReg &R1, const RegisterSubReg &R2,
           const CellMap &Inputs, LatticeCell &Result);
-    bool evaluateXORri(const Register &R1, const APInt &A2,
+    bool evaluateXORri(const RegisterSubReg &R1, const APInt &A2,
           const CellMap &Inputs, LatticeCell &Result);
     bool evaluateXORii(const APInt &A1, const APInt &A2, APInt &Result);
 
     // Extensions.
-    bool evaluateZEXTr(const Register &R1, unsigned Width, unsigned Bits,
+    bool evaluateZEXTr(const RegisterSubReg &R1, unsigned Width, unsigned Bits,
           const CellMap &Inputs, LatticeCell &Result);
     bool evaluateZEXTi(const APInt &A1, unsigned Width, unsigned Bits,
           APInt &Result);
-    bool evaluateSEXTr(const Register &R1, unsigned Width, unsigned Bits,
+    bool evaluateSEXTr(const RegisterSubReg &R1, unsigned Width, unsigned Bits,
           const CellMap &Inputs, LatticeCell &Result);
     bool evaluateSEXTi(const APInt &A1, unsigned Width, unsigned Bits,
           APInt &Result);
 
     // Leading/trailing bits.
-    bool evaluateCLBr(const Register &R1, bool Zeros, bool Ones,
+    bool evaluateCLBr(const RegisterSubReg &R1, bool Zeros, bool Ones,
           const CellMap &Inputs, LatticeCell &Result);
     bool evaluateCLBi(const APInt &A1, bool Zeros, bool Ones, APInt &Result);
-    bool evaluateCTBr(const Register &R1, bool Zeros, bool Ones,
+    bool evaluateCTBr(const RegisterSubReg &R1, bool Zeros, bool Ones,
           const CellMap &Inputs, LatticeCell &Result);
     bool evaluateCTBi(const APInt &A1, bool Zeros, bool Ones, APInt &Result);
 
     // Bitfield extract.
-    bool evaluateEXTRACTr(const Register &R1, unsigned Width, unsigned Bits,
+    bool evaluateEXTRACTr(const RegisterSubReg &R1, unsigned Width, unsigned Bits,
           unsigned Offset, bool Signed, const CellMap &Inputs,
           LatticeCell &Result);
     bool evaluateEXTRACTi(const APInt &A1, unsigned Bits, unsigned Offset,
           bool Signed, APInt &Result);
     // Vector operations.
-    bool evaluateSplatr(const Register &R1, unsigned Bits, unsigned Count,
+    bool evaluateSplatr(const RegisterSubReg &R1, unsigned Bits, unsigned Count,
           const CellMap &Inputs, LatticeCell &Result);
     bool evaluateSplati(const APInt &A1, unsigned Bits, unsigned Count,
           APInt &Result);
@@ -458,6 +467,7 @@ bool LatticeCell::convertToProperty() {
   return true;
 }
 
+#ifndef NDEBUG
 void LatticeCell::print(raw_ostream &os) const {
   if (isProperty()) {
     os << "{ ";
@@ -495,6 +505,7 @@ void LatticeCell::print(raw_ostream &os) const {
   }
   os << " }";
 }
+#endif
 
 // "Meet" operation on two cells. This is the key of the propagation
 // algorithm.
@@ -597,19 +608,21 @@ uint32_t LatticeCell::properties() const {
   return Ps;
 }
 
+#ifndef NDEBUG
 void MachineConstPropagator::CellMap::print(raw_ostream &os,
       const TargetRegisterInfo &TRI) const {
   for (auto &I : Map)
-    dbgs() << "  " << PrintReg(I.first, &TRI) << " -> " << I.second << '\n';
+    dbgs() << "  " << printReg(I.first, &TRI) << " -> " << I.second << '\n';
 }
+#endif
 
 void MachineConstPropagator::visitPHI(const MachineInstr &PN) {
   const MachineBasicBlock *MB = PN.getParent();
   unsigned MBN = MB->getNumber();
-  DEBUG(dbgs() << "Visiting FI(BB#" << MBN << "): " << PN);
+  LLVM_DEBUG(dbgs() << "Visiting FI(" << printMBBReference(*MB) << "): " << PN);
 
   const MachineOperand &MD = PN.getOperand(0);
-  Register DefR(MD);
+  RegisterSubReg DefR(MD);
   assert(TargetRegisterInfo::isVirtualRegister(DefR.Reg));
 
   bool Changed = false;
@@ -631,12 +644,12 @@ Bottomize:
     const MachineBasicBlock *PB = PN.getOperand(i+1).getMBB();
     unsigned PBN = PB->getNumber();
     if (!EdgeExec.count(CFGEdge(PBN, MBN))) {
-      DEBUG(dbgs() << "  edge BB#" << PBN << "->BB#" << MBN
-                   << " not executable\n");
+      LLVM_DEBUG(dbgs() << "  edge " << printMBBReference(*PB) << "->"
+                        << printMBBReference(*MB) << " not executable\n");
       continue;
     }
     const MachineOperand &SO = PN.getOperand(i);
-    Register UseR(SO);
+    RegisterSubReg UseR(SO);
     // If the input is not a virtual register, we don't really know what
     // value it holds.
     if (!TargetRegisterInfo::isVirtualRegister(UseR.Reg))
@@ -647,9 +660,9 @@ Bottomize:
 
     LatticeCell SrcC;
     bool Eval = MCE.evaluate(UseR, Cells.get(UseR.Reg), SrcC);
-    DEBUG(dbgs() << "  edge from BB#" << PBN << ": "
-                 << PrintReg(UseR.Reg, &MCE.TRI, UseR.SubReg)
-                 << SrcC << '\n');
+    LLVM_DEBUG(dbgs() << "  edge from " << printMBBReference(*PB) << ": "
+                      << printReg(UseR.Reg, &MCE.TRI, UseR.SubReg) << SrcC
+                      << '\n');
     Changed |= Eval ? DefC.meet(SrcC)
                     : DefC.setBottom();
     Cells.update(DefR.Reg, DefC);
@@ -661,11 +674,11 @@ Bottomize:
 }
 
 void MachineConstPropagator::visitNonBranch(const MachineInstr &MI) {
-  DEBUG(dbgs() << "Visiting MI(BB#" << MI.getParent()->getNumber()
-               << "): " << MI);
+  LLVM_DEBUG(dbgs() << "Visiting MI(" << printMBBReference(*MI.getParent())
+                    << "): " << MI);
   CellMap Outputs;
   bool Eval = MCE.evaluate(MI, Cells, Outputs);
-  DEBUG({
+  LLVM_DEBUG({
     if (Eval) {
       dbgs() << "  outputs:";
       for (auto &I : Outputs)
@@ -679,7 +692,7 @@ void MachineConstPropagator::visitNonBranch(const MachineInstr &MI) {
   for (const MachineOperand &MO : MI.operands()) {
     if (!MO.isReg() || !MO.isDef())
       continue;
-    Register DefR(MO);
+    RegisterSubReg DefR(MO);
     // Only track virtual registers.
     if (!TargetRegisterInfo::isVirtualRegister(DefR.Reg))
       continue;
@@ -703,7 +716,7 @@ void MachineConstPropagator::visitNonBranch(const MachineInstr &MI) {
   }
 }
 
-// \brief Starting at a given branch, visit remaining branches in the block.
+// Starting at a given branch, visit remaining branches in the block.
 // Traverse over the subsequent branches for as long as the preceding one
 // can fall through. Add all the possible targets to the flow work queue,
 // including the potential fall-through to the layout-successor block.
@@ -718,8 +731,8 @@ void MachineConstPropagator::visitBranchesFrom(const MachineInstr &BrI) {
   while (It != End) {
     const MachineInstr &MI = *It;
     InstrExec.insert(&MI);
-    DEBUG(dbgs() << "Visiting " << (EvalOk ? "BR" : "br") << "(BB#"
-                 << MBN << "): " << MI);
+    LLVM_DEBUG(dbgs() << "Visiting " << (EvalOk ? "BR" : "br") << "("
+                      << printMBBReference(B) << "): " << MI);
     // Do not evaluate subsequent branches if the evaluation of any of the
     // previous branches failed. Keep iterating over the branches only
     // to mark them as executable.
@@ -753,22 +766,23 @@ void MachineConstPropagator::visitBranchesFrom(const MachineInstr &BrI) {
     // last one set "FallsThru", then add an edge to the layout successor
     // to the targets.
     Targets.clear();
-    DEBUG(dbgs() << "  failed to evaluate a branch...adding all CFG "
-                    "successors\n");
+    LLVM_DEBUG(dbgs() << "  failed to evaluate a branch...adding all CFG "
+                         "successors\n");
     for (const MachineBasicBlock *SB : B.successors())
       Targets.insert(SB);
   }
 
   for (const MachineBasicBlock *TB : Targets) {
     unsigned TBN = TB->getNumber();
-    DEBUG(dbgs() << "  pushing edge BB#" << MBN << " -> BB#" << TBN << "\n");
+    LLVM_DEBUG(dbgs() << "  pushing edge " << printMBBReference(B) << " -> "
+                      << printMBBReference(*TB) << "\n");
     FlowQ.push(CFGEdge(MBN, TBN));
   }
 }
 
 void MachineConstPropagator::visitUsesOf(unsigned Reg) {
-  DEBUG(dbgs() << "Visiting uses of " << PrintReg(Reg, &MCE.TRI)
-               << Cells.get(Reg) << '\n');
+  LLVM_DEBUG(dbgs() << "Visiting uses of " << printReg(Reg, &MCE.TRI)
+                    << Cells.get(Reg) << '\n');
   for (MachineInstr &MI : MRI->use_nodbg_instructions(Reg)) {
     // Do not process non-executable instructions. They can become exceutable
     // later (via a flow-edge in the work queue). In such case, the instruc-
@@ -788,7 +802,7 @@ bool MachineConstPropagator::computeBlockSuccessors(const MachineBasicBlock *MB,
       SetVector<const MachineBasicBlock*> &Targets) {
   MachineBasicBlock::const_iterator FirstBr = MB->end();
   for (const MachineInstr &MI : *MB) {
-    if (MI.isDebugValue())
+    if (MI.isDebugInstr())
       continue;
     if (MI.isBranch()) {
       FirstBr = MI.getIterator();
@@ -803,7 +817,7 @@ bool MachineConstPropagator::computeBlockSuccessors(const MachineBasicBlock *MB,
   for (MachineBasicBlock::const_iterator I = FirstBr; I != End; ++I) {
     const MachineInstr &MI = *I;
     // Can there be debug instructions between branches?
-    if (MI.isDebugValue())
+    if (MI.isDebugInstr())
       continue;
     if (!InstrExec.count(&MI))
       continue;
@@ -859,8 +873,10 @@ void MachineConstPropagator::propagate(MachineFunction &MF) {
     CFGEdge Edge = FlowQ.front();
     FlowQ.pop();
 
-    DEBUG(dbgs() << "Picked edge BB#" << Edge.first << "->BB#"
-                 << Edge.second << '\n');
+    LLVM_DEBUG(
+        dbgs() << "Picked edge "
+               << printMBBReference(*MF.getBlockNumbered(Edge.first)) << "->"
+               << printMBBReference(*MF.getBlockNumbered(Edge.second)) << '\n');
     if (Edge.first != EntryNum)
       if (EdgeExec.count(Edge))
         continue;
@@ -883,7 +899,7 @@ void MachineConstPropagator::propagate(MachineFunction &MF) {
     // If the successor block just became executable, visit all instructions.
     // To see if this is the first time we're visiting it, check the first
     // non-debug instruction to see if it is executable.
-    while (It != End && It->isDebugValue())
+    while (It != End && It->isDebugInstr())
       ++It;
     assert(It == End || !It->isPHI());
     // If this block has been visited, go on to the next one.
@@ -892,7 +908,7 @@ void MachineConstPropagator::propagate(MachineFunction &MF) {
     // For now, scan all non-branch instructions. Branches require different
     // processing.
     while (It != End && !It->isBranch()) {
-      if (!It->isDebugValue()) {
+      if (!It->isDebugInstr()) {
         InstrExec.insert(&*It);
         visitNonBranch(*It);
       }
@@ -914,7 +930,7 @@ void MachineConstPropagator::propagate(MachineFunction &MF) {
     }
   } // while (FlowQ)
 
-  DEBUG({
+  LLVM_DEBUG({
     dbgs() << "Cells after propagation:\n";
     Cells.print(dbgs(), MCE.TRI);
     dbgs() << "Dead CFG edges:\n";
@@ -923,7 +939,8 @@ void MachineConstPropagator::propagate(MachineFunction &MF) {
       for (const MachineBasicBlock *SB : B.successors()) {
         unsigned SN = SB->getNumber();
         if (!EdgeExec.count(CFGEdge(BN, SN)))
-          dbgs() << "  BB#" << BN << " -> BB#" << SN << '\n';
+          dbgs() << "  " << printMBBReference(B) << " -> "
+                 << printMBBReference(*SB) << '\n';
       }
     }
   });
@@ -1028,7 +1045,7 @@ bool MachineConstPropagator::rewrite(MachineFunction &MF) {
 // This is the constant propagation algorithm as described by Wegman-Zadeck.
 // Most of the terminology comes from there.
 bool MachineConstPropagator::run(MachineFunction &MF) {
-  DEBUG(MF.print(dbgs() << "Starting MachineConstPropagator\n", 0));
+  LLVM_DEBUG(MF.print(dbgs() << "Starting MachineConstPropagator\n", nullptr));
 
   MRI = &MF.getRegInfo();
 
@@ -1040,10 +1057,10 @@ bool MachineConstPropagator::run(MachineFunction &MF) {
   propagate(MF);
   bool Changed = rewrite(MF);
 
-  DEBUG({
+  LLVM_DEBUG({
     dbgs() << "End of MachineConstPropagator (Changed=" << Changed << ")\n";
     if (Changed)
-      MF.print(dbgs(), 0);
+      MF.print(dbgs(), nullptr);
   });
   return Changed;
 }
@@ -1051,7 +1068,7 @@ bool MachineConstPropagator::run(MachineFunction &MF) {
 // --------------------------------------------------------------------
 // Machine const evaluator.
 
-bool MachineConstEvaluator::getCell(const Register &R, const CellMap &Inputs,
+bool MachineConstEvaluator::getCell(const RegisterSubReg &R, const CellMap &Inputs,
       LatticeCell &RC) {
   if (!TargetRegisterInfo::isVirtualRegister(R.Reg))
     return false;
@@ -1077,8 +1094,8 @@ const ConstantInt *MachineConstEvaluator::intToConst(const APInt &Val) const {
   return ConstantInt::get(CX, Val);
 }
 
-bool MachineConstEvaluator::evaluateCMPrr(uint32_t Cmp, const Register &R1,
-      const Register &R2, const CellMap &Inputs, bool &Result) {
+bool MachineConstEvaluator::evaluateCMPrr(uint32_t Cmp, const RegisterSubReg &R1,
+      const RegisterSubReg &R2, const CellMap &Inputs, bool &Result) {
   assert(Inputs.has(R1.Reg) && Inputs.has(R2.Reg));
   LatticeCell LS1, LS2;
   if (!getCell(R1, Inputs, LS1) || !getCell(R2, Inputs, LS2))
@@ -1116,7 +1133,7 @@ bool MachineConstEvaluator::evaluateCMPrr(uint32_t Cmp, const Register &R1,
   return IsTrue || IsFalse;
 }
 
-bool MachineConstEvaluator::evaluateCMPri(uint32_t Cmp, const Register &R1,
+bool MachineConstEvaluator::evaluateCMPri(uint32_t Cmp, const RegisterSubReg &R1,
       const APInt &A2, const CellMap &Inputs, bool &Result) {
   assert(Inputs.has(R1.Reg));
   LatticeCell LS;
@@ -1143,7 +1160,7 @@ bool MachineConstEvaluator::evaluateCMPri(uint32_t Cmp, const Register &R1,
   return IsTrue || IsFalse;
 }
 
-bool MachineConstEvaluator::evaluateCMPrp(uint32_t Cmp, const Register &R1,
+bool MachineConstEvaluator::evaluateCMPrp(uint32_t Cmp, const RegisterSubReg &R1,
       uint64_t Props2, const CellMap &Inputs, bool &Result) {
   assert(Inputs.has(R1.Reg));
   LatticeCell LS;
@@ -1278,7 +1295,8 @@ bool MachineConstEvaluator::evaluateCMPpi(uint32_t Cmp, uint32_t Props,
 
 bool MachineConstEvaluator::evaluateCMPpp(uint32_t Cmp, uint32_t Props1,
       uint32_t Props2, bool &Result) {
-  typedef ConstantProperties P;
+  using P = ConstantProperties;
+
   if ((Props1 & P::NaN) && (Props2 & P::NaN))
     return false;
   if (!(Props1 & P::Finite) || !(Props2 & P::Finite))
@@ -1335,13 +1353,13 @@ bool MachineConstEvaluator::evaluateCMPpp(uint32_t Cmp, uint32_t Props1,
   return false;
 }
 
-bool MachineConstEvaluator::evaluateCOPY(const Register &R1,
+bool MachineConstEvaluator::evaluateCOPY(const RegisterSubReg &R1,
       const CellMap &Inputs, LatticeCell &Result) {
   return getCell(R1, Inputs, Result);
 }
 
-bool MachineConstEvaluator::evaluateANDrr(const Register &R1,
-      const Register &R2, const CellMap &Inputs, LatticeCell &Result) {
+bool MachineConstEvaluator::evaluateANDrr(const RegisterSubReg &R1,
+      const RegisterSubReg &R2, const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(R1.Reg) && Inputs.has(R2.Reg));
   const LatticeCell &L1 = Inputs.get(R2.Reg);
   const LatticeCell &L2 = Inputs.get(R2.Reg);
@@ -1371,7 +1389,7 @@ bool MachineConstEvaluator::evaluateANDrr(const Register &R1,
   return !Result.isBottom();
 }
 
-bool MachineConstEvaluator::evaluateANDri(const Register &R1,
+bool MachineConstEvaluator::evaluateANDri(const RegisterSubReg &R1,
       const APInt &A2, const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(R1.Reg));
   if (A2 == -1)
@@ -1407,8 +1425,8 @@ bool MachineConstEvaluator::evaluateANDii(const APInt &A1,
   return true;
 }
 
-bool MachineConstEvaluator::evaluateORrr(const Register &R1,
-      const Register &R2, const CellMap &Inputs, LatticeCell &Result) {
+bool MachineConstEvaluator::evaluateORrr(const RegisterSubReg &R1,
+      const RegisterSubReg &R2, const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(R1.Reg) && Inputs.has(R2.Reg));
   const LatticeCell &L1 = Inputs.get(R2.Reg);
   const LatticeCell &L2 = Inputs.get(R2.Reg);
@@ -1438,7 +1456,7 @@ bool MachineConstEvaluator::evaluateORrr(const Register &R1,
   return !Result.isBottom();
 }
 
-bool MachineConstEvaluator::evaluateORri(const Register &R1,
+bool MachineConstEvaluator::evaluateORri(const RegisterSubReg &R1,
       const APInt &A2, const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(R1.Reg));
   if (A2 == 0)
@@ -1474,8 +1492,8 @@ bool MachineConstEvaluator::evaluateORii(const APInt &A1,
   return true;
 }
 
-bool MachineConstEvaluator::evaluateXORrr(const Register &R1,
-      const Register &R2, const CellMap &Inputs, LatticeCell &Result) {
+bool MachineConstEvaluator::evaluateXORrr(const RegisterSubReg &R1,
+      const RegisterSubReg &R2, const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(R1.Reg) && Inputs.has(R2.Reg));
   LatticeCell LS1, LS2;
   if (!getCell(R1, Inputs, LS1) || !getCell(R2, Inputs, LS2))
@@ -1503,7 +1521,7 @@ bool MachineConstEvaluator::evaluateXORrr(const Register &R1,
   return !Result.isBottom();
 }
 
-bool MachineConstEvaluator::evaluateXORri(const Register &R1,
+bool MachineConstEvaluator::evaluateXORri(const RegisterSubReg &R1,
       const APInt &A2, const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(R1.Reg));
   LatticeCell LS1;
@@ -1536,7 +1554,7 @@ bool MachineConstEvaluator::evaluateXORii(const APInt &A1,
   return true;
 }
 
-bool MachineConstEvaluator::evaluateZEXTr(const Register &R1, unsigned Width,
+bool MachineConstEvaluator::evaluateZEXTr(const RegisterSubReg &R1, unsigned Width,
       unsigned Bits, const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(R1.Reg));
   LatticeCell LS1;
@@ -1567,7 +1585,7 @@ bool MachineConstEvaluator::evaluateZEXTi(const APInt &A1, unsigned Width,
   return true;
 }
 
-bool MachineConstEvaluator::evaluateSEXTr(const Register &R1, unsigned Width,
+bool MachineConstEvaluator::evaluateSEXTr(const RegisterSubReg &R1, unsigned Width,
       unsigned Bits, const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(R1.Reg));
   LatticeCell LS1;
@@ -1632,7 +1650,7 @@ bool MachineConstEvaluator::evaluateSEXTi(const APInt &A1, unsigned Width,
   return true;
 }
 
-bool MachineConstEvaluator::evaluateCLBr(const Register &R1, bool Zeros,
+bool MachineConstEvaluator::evaluateCLBr(const RegisterSubReg &R1, bool Zeros,
       bool Ones, const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(R1.Reg));
   LatticeCell LS1;
@@ -1667,7 +1685,7 @@ bool MachineConstEvaluator::evaluateCLBi(const APInt &A1, bool Zeros,
   return true;
 }
 
-bool MachineConstEvaluator::evaluateCTBr(const Register &R1, bool Zeros,
+bool MachineConstEvaluator::evaluateCTBr(const RegisterSubReg &R1, bool Zeros,
       bool Ones, const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(R1.Reg));
   LatticeCell LS1;
@@ -1702,7 +1720,7 @@ bool MachineConstEvaluator::evaluateCTBi(const APInt &A1, bool Zeros,
   return true;
 }
 
-bool MachineConstEvaluator::evaluateEXTRACTr(const Register &R1,
+bool MachineConstEvaluator::evaluateEXTRACTr(const RegisterSubReg &R1,
       unsigned Width, unsigned Bits, unsigned Offset, bool Signed,
       const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(R1.Reg));
@@ -1760,7 +1778,7 @@ bool MachineConstEvaluator::evaluateEXTRACTi(const APInt &A1, unsigned Bits,
   return true;
 }
 
-bool MachineConstEvaluator::evaluateSplatr(const Register &R1,
+bool MachineConstEvaluator::evaluateSplatr(const RegisterSubReg &R1,
       unsigned Bits, unsigned Count, const CellMap &Inputs,
       LatticeCell &Result) {
   assert(Inputs.has(R1.Reg));
@@ -1817,7 +1835,7 @@ namespace {
 
     bool evaluate(const MachineInstr &MI, const CellMap &Inputs,
           CellMap &Outputs) override;
-    bool evaluate(const Register &R, const LatticeCell &SrcC,
+    bool evaluate(const RegisterSubReg &R, const LatticeCell &SrcC,
           LatticeCell &Result) override;
     bool evaluate(const MachineInstr &BrI, const CellMap &Inputs,
           SetVector<const MachineBasicBlock*> &Targets, bool &FallsThru)
@@ -1832,7 +1850,7 @@ namespace {
           const MachineOperand &MO);
     void replaceWithNop(MachineInstr &MI);
 
-    bool evaluateHexRSEQ32(Register RL, Register RH, const CellMap &Inputs,
+    bool evaluateHexRSEQ32(RegisterSubReg RL, RegisterSubReg RH, const CellMap &Inputs,
           LatticeCell &Result);
     bool evaluateHexCompare(const MachineInstr &MI, const CellMap &Inputs,
           CellMap &Outputs);
@@ -1865,20 +1883,15 @@ namespace {
   public:
     static char ID;
 
-    HexagonConstPropagation() : MachineFunctionPass(ID) {
-      PassRegistry &Registry = *PassRegistry::getPassRegistry();
-      initializeHexagonConstPropagationPass(Registry);
-    }
+    HexagonConstPropagation() : MachineFunctionPass(ID) {}
 
     StringRef getPassName() const override {
       return "Hexagon Constant Propagation";
     }
 
     bool runOnMachineFunction(MachineFunction &MF) override {
-      const Function *F = MF.getFunction();
-      if (!F)
-        return false;
-      if (skipFunction(*F))
+      const Function &F = MF.getFunction();
+      if (skipFunction(F))
         return false;
 
       HexagonConstEvaluator HCE(MF);
@@ -1886,12 +1899,12 @@ namespace {
     }
   };
 
-  char HexagonConstPropagation::ID = 0;
-
 } // end anonymous namespace
 
-INITIALIZE_PASS(HexagonConstPropagation, "hcp", "Hexagon Constant Propagation",
-                false, false)
+char HexagonConstPropagation::ID = 0;
+
+INITIALIZE_PASS(HexagonConstPropagation, "hexagon-constp",
+  "Hexagon Constant Propagation", false, false)
 
 HexagonConstEvaluator::HexagonConstEvaluator(MachineFunction &Fn)
   : MachineConstEvaluator(Fn),
@@ -1911,14 +1924,14 @@ bool HexagonConstEvaluator::evaluate(const MachineInstr &MI,
     return false;
 
   unsigned Opc = MI.getOpcode();
-  Register DefR(MD);
+  RegisterSubReg DefR(MD);
   assert(!DefR.SubReg);
   if (!TargetRegisterInfo::isVirtualRegister(DefR.Reg))
     return false;
 
   if (MI.isCopy()) {
     LatticeCell RC;
-    Register SrcR(MI.getOperand(1));
+    RegisterSubReg SrcR(MI.getOperand(1));
     bool Eval = evaluateCOPY(SrcR, Inputs, RC);
     if (!Eval)
       return false;
@@ -1928,7 +1941,7 @@ bool HexagonConstEvaluator::evaluate(const MachineInstr &MI,
   if (MI.isRegSequence()) {
     unsigned Sub1 = MI.getOperand(2).getImm();
     unsigned Sub2 = MI.getOperand(4).getImm();
-    const TargetRegisterClass *DefRC = MRI->getRegClass(DefR.Reg);
+    const TargetRegisterClass &DefRC = *MRI->getRegClass(DefR.Reg);
     unsigned SubLo = HRI.getHexagonSubRegIndex(DefRC, Hexagon::ps_sub_lo);
     unsigned SubHi = HRI.getHexagonSubRegIndex(DefRC, Hexagon::ps_sub_hi);
     if (Sub1 != SubLo && Sub1 != SubHi)
@@ -1940,7 +1953,7 @@ bool HexagonConstEvaluator::evaluate(const MachineInstr &MI,
     const MachineOperand &OpLo = LoIs1 ? MI.getOperand(1) : MI.getOperand(3);
     const MachineOperand &OpHi = LoIs1 ? MI.getOperand(3) : MI.getOperand(1);
     LatticeCell RC;
-    Register SrcRL(OpLo), SrcRH(OpHi);
+    RegisterSubReg SrcRL(OpLo), SrcRH(OpHi);
     bool Eval = evaluateHexRSEQ32(SrcRL, SrcRH, Inputs, RC);
     if (!Eval)
       return false;
@@ -1962,7 +1975,7 @@ bool HexagonConstEvaluator::evaluate(const MachineInstr &MI,
     {
       const MachineOperand &VO = MI.getOperand(1);
       // The operand of CONST32 can be a blockaddress, e.g.
-      //   %vreg0<def> = CONST32 <blockaddress(@eat, %L)>
+      //   %0 = CONST32 <blockaddress(@eat, %l)>
       // Do this check for all instructions for safety.
       if (!VO.isImm())
         return false;
@@ -2009,6 +2022,8 @@ bool HexagonConstEvaluator::evaluate(const MachineInstr &MI,
     case Hexagon::A2_combineii:  // combine(#s8Ext, #s8)
     case Hexagon::A4_combineii:  // combine(#s8, #u6Ext)
     {
+      if (!MI.getOperand(1).isImm() || !MI.getOperand(2).isImm())
+        return false;
       uint64_t Hi = MI.getOperand(1).getImm();
       uint64_t Lo = MI.getOperand(2).getImm();
       uint64_t Res = (Hi << 32) | (Lo & 0xFFFFFFFF);
@@ -2025,7 +2040,7 @@ bool HexagonConstEvaluator::evaluate(const MachineInstr &MI,
       int64_t B = MI.getOperand(2).getImm();
       assert(B >=0 && B < 32);
       APInt A(32, (1ull << B), false);
-      Register R(MI.getOperand(1));
+      RegisterSubReg R(MI.getOperand(1));
       LatticeCell RC = Outputs.get(DefR.Reg);
       bool Eval = evaluateORri(R, A, Inputs, RC);
       if (!Eval)
@@ -2065,7 +2080,7 @@ bool HexagonConstEvaluator::evaluate(const MachineInstr &MI,
       using namespace Hexagon;
 
       bool Ones = (Opc == S2_ct1) || (Opc == S2_ct1p);
-      Register R1(MI.getOperand(1));
+      RegisterSubReg R1(MI.getOperand(1));
       assert(Inputs.has(R1.Reg));
       LatticeCell T;
       bool Eval = evaluateCTBr(R1, !Ones, Ones, Inputs, T);
@@ -2097,7 +2112,7 @@ bool HexagonConstEvaluator::evaluate(const MachineInstr &MI,
 
       bool OnlyZeros = (Opc == S2_cl0) || (Opc == S2_cl0p);
       bool OnlyOnes =  (Opc == S2_cl1) || (Opc == S2_cl1p);
-      Register R1(MI.getOperand(1));
+      RegisterSubReg R1(MI.getOperand(1));
       assert(Inputs.has(R1.Reg));
       LatticeCell T;
       bool Eval = evaluateCLBr(R1, !OnlyOnes, !OnlyZeros, Inputs, T);
@@ -2125,7 +2140,7 @@ bool HexagonConstEvaluator::evaluate(const MachineInstr &MI,
     {
       bool Signed = (Opc == Hexagon::S4_extract) ||
                     (Opc == Hexagon::S4_extractp);
-      Register R1(MI.getOperand(1));
+      RegisterSubReg R1(MI.getOperand(1));
       unsigned BW = getRegBitWidth(R1.Reg);
       unsigned Bits = MI.getOperand(2).getImm();
       unsigned Offset = MI.getOperand(3).getImm();
@@ -2176,7 +2191,7 @@ bool HexagonConstEvaluator::evaluate(const MachineInstr &MI,
   return true;
 }
 
-bool HexagonConstEvaluator::evaluate(const Register &R,
+bool HexagonConstEvaluator::evaluate(const RegisterSubReg &R,
       const LatticeCell &Input, LatticeCell &Result) {
   if (!R.SubReg) {
     Result = Input;
@@ -2192,7 +2207,8 @@ bool HexagonConstEvaluator::evaluate(const Register &R,
   if (Input.isBottom())
     return false;
 
-  typedef ConstantProperties P;
+  using P = ConstantProperties;
+
   if (Input.isProperty()) {
     uint32_t Ps = Input.properties();
     if (Ps & (P::Zero|P::NaN)) {
@@ -2266,7 +2282,7 @@ Undetermined:
 
   if (SimpleBranch) {
     const MachineOperand &MD = BrI.getOperand(0);
-    Register PR(MD);
+    RegisterSubReg PR(MD);
     // If the condition operand has a subregister, this is not something
     // we currently recognize.
     if (PR.SubReg)
@@ -2449,6 +2465,7 @@ APInt HexagonConstEvaluator::getCmpImm(unsigned Opc, unsigned OpX,
     case Hexagon::A4_cmpheqi:    // s8
     case Hexagon::C4_cmpneqi:   // s8
       Signed = true;
+      break;
     case Hexagon::A4_cmpbeqi:    // u8
       break;
     case Hexagon::C2_cmpgtui:      // u9
@@ -2487,7 +2504,7 @@ void HexagonConstEvaluator::replaceWithNop(MachineInstr &MI) {
     MI.RemoveOperand(0);
 }
 
-bool HexagonConstEvaluator::evaluateHexRSEQ32(Register RL, Register RH,
+bool HexagonConstEvaluator::evaluateHexRSEQ32(RegisterSubReg RL, RegisterSubReg RH,
       const CellMap &Inputs, LatticeCell &Result) {
   assert(Inputs.has(RL.Reg) && Inputs.has(RH.Reg));
   LatticeCell LSL, LSH;
@@ -2556,7 +2573,7 @@ bool HexagonConstEvaluator::evaluateHexCompare(const MachineInstr &MI,
     if (Computed) {
       // Only create a zero/non-zero cell. At this time there isn't really
       // much need for specific values.
-      Register DefR(MI.getOperand(0));
+      RegisterSubReg DefR(MI.getOperand(0));
       LatticeCell L = Outputs.get(DefR.Reg);
       uint32_t P = Result ? ConstantProperties::NonZero
                           : ConstantProperties::Zero;
@@ -2576,9 +2593,9 @@ bool HexagonConstEvaluator::evaluateHexCompare2(unsigned Opc,
   bool Reg1 = Src1.isReg(), Reg2 = Src2.isReg();
   bool Imm1 = Src1.isImm(), Imm2 = Src2.isImm();
   if (Reg1) {
-    Register R1(Src1);
+    RegisterSubReg R1(Src1);
     if (Reg2) {
-      Register R2(Src2);
+      RegisterSubReg R2(Src2);
       return evaluateCMPrr(Cmp, R1, R2, Inputs, Result);
     } else if (Imm2) {
       APInt A2 = getCmpImm(Opc, 2, Src2);
@@ -2587,7 +2604,7 @@ bool HexagonConstEvaluator::evaluateHexCompare2(unsigned Opc,
   } else if (Imm1) {
     APInt A1 = getCmpImm(Opc, 1, Src1);
     if (Reg2) {
-      Register R2(Src2);
+      RegisterSubReg R2(Src2);
       uint32_t NegCmp = Comparison::negate(Cmp);
       return evaluateCMPri(NegCmp, R2, A1, Inputs, Result);
     } else if (Imm2) {
@@ -2606,7 +2623,7 @@ bool HexagonConstEvaluator::evaluateHexLogical(const MachineInstr &MI,
     return false;
   const MachineOperand &Src1 = MI.getOperand(1);
   const MachineOperand &Src2 = MI.getOperand(2);
-  Register R1(Src1);
+  RegisterSubReg R1(Src1);
   bool Eval = false;
   LatticeCell RC;
   switch (Opc) {
@@ -2614,29 +2631,33 @@ bool HexagonConstEvaluator::evaluateHexLogical(const MachineInstr &MI,
       return false;
     case Hexagon::A2_and:
     case Hexagon::A2_andp:
-      Eval = evaluateANDrr(R1, Register(Src2), Inputs, RC);
+      Eval = evaluateANDrr(R1, RegisterSubReg(Src2), Inputs, RC);
       break;
     case Hexagon::A2_andir: {
+      if (!Src2.isImm())
+        return false;
       APInt A(32, Src2.getImm(), true);
       Eval = evaluateANDri(R1, A, Inputs, RC);
       break;
     }
     case Hexagon::A2_or:
     case Hexagon::A2_orp:
-      Eval = evaluateORrr(R1, Register(Src2), Inputs, RC);
+      Eval = evaluateORrr(R1, RegisterSubReg(Src2), Inputs, RC);
       break;
     case Hexagon::A2_orir: {
+      if (!Src2.isImm())
+        return false;
       APInt A(32, Src2.getImm(), true);
       Eval = evaluateORri(R1, A, Inputs, RC);
       break;
     }
     case Hexagon::A2_xor:
     case Hexagon::A2_xorp:
-      Eval = evaluateXORrr(R1, Register(Src2), Inputs, RC);
+      Eval = evaluateXORrr(R1, RegisterSubReg(Src2), Inputs, RC);
       break;
   }
   if (Eval) {
-    Register DefR(MI.getOperand(0));
+    RegisterSubReg DefR(MI.getOperand(0));
     Outputs.update(DefR.Reg, RC);
   }
   return Eval;
@@ -2645,7 +2666,7 @@ bool HexagonConstEvaluator::evaluateHexLogical(const MachineInstr &MI,
 bool HexagonConstEvaluator::evaluateHexCondMove(const MachineInstr &MI,
       const CellMap &Inputs, CellMap &Outputs) {
   // Dst0 = Cond1 ? Src2 : Src3
-  Register CR(MI.getOperand(1));
+  RegisterSubReg CR(MI.getOperand(1));
   assert(Inputs.has(CR.Reg));
   LatticeCell LS;
   if (!getCell(CR, Inputs, LS))
@@ -2660,7 +2681,7 @@ bool HexagonConstEvaluator::evaluateHexCondMove(const MachineInstr &MI,
     return false;
 
   const MachineOperand &ValOp = MI.getOperand(TakeOp);
-  Register DefR(MI.getOperand(0));
+  RegisterSubReg DefR(MI.getOperand(0));
   LatticeCell RC = Outputs.get(DefR.Reg);
 
   if (ValOp.isImm()) {
@@ -2673,7 +2694,7 @@ bool HexagonConstEvaluator::evaluateHexCondMove(const MachineInstr &MI,
     return true;
   }
   if (ValOp.isReg()) {
-    Register R(ValOp);
+    RegisterSubReg R(ValOp);
     const LatticeCell &LR = Inputs.get(R.Reg);
     LatticeCell LSR;
     if (!evaluate(R, LR, LSR))
@@ -2688,7 +2709,7 @@ bool HexagonConstEvaluator::evaluateHexCondMove(const MachineInstr &MI,
 bool HexagonConstEvaluator::evaluateHexExt(const MachineInstr &MI,
       const CellMap &Inputs, CellMap &Outputs) {
   // Dst0 = ext R1
-  Register R1(MI.getOperand(1));
+  RegisterSubReg R1(MI.getOperand(1));
   assert(Inputs.has(R1.Reg));
 
   unsigned Opc = MI.getOpcode();
@@ -2705,6 +2726,8 @@ bool HexagonConstEvaluator::evaluateHexExt(const MachineInstr &MI,
     case Hexagon::A2_sxtw:
       Bits = 32;
       break;
+    default:
+      llvm_unreachable("Unhandled extension opcode");
   }
 
   bool Signed = false;
@@ -2716,7 +2739,7 @@ bool HexagonConstEvaluator::evaluateHexExt(const MachineInstr &MI,
       break;
   }
 
-  Register DefR(MI.getOperand(0));
+  RegisterSubReg DefR(MI.getOperand(0));
   unsigned BW = getRegBitWidth(DefR.Reg);
   LatticeCell RC = Outputs.get(DefR.Reg);
   bool Eval = Signed ? evaluateSEXTr(R1, BW, Bits, Inputs, RC)
@@ -2730,8 +2753,8 @@ bool HexagonConstEvaluator::evaluateHexExt(const MachineInstr &MI,
 bool HexagonConstEvaluator::evaluateHexVector1(const MachineInstr &MI,
       const CellMap &Inputs, CellMap &Outputs) {
   // DefR = op R1
-  Register DefR(MI.getOperand(0));
-  Register R1(MI.getOperand(1));
+  RegisterSubReg DefR(MI.getOperand(0));
+  RegisterSubReg R1(MI.getOperand(1));
   assert(Inputs.has(R1.Reg));
   LatticeCell RC = Outputs.get(DefR.Reg);
   bool Eval;
@@ -2761,7 +2784,7 @@ bool HexagonConstEvaluator::rewriteHexConstDefs(MachineInstr &MI,
   AllDefs = false;
 
   // Some diagnostics.
-  // DEBUG({...}) gets confused with all this code as an argument.
+  // LLVM_DEBUG({...}) gets confused with all this code as an argument.
 #ifndef NDEBUG
   bool Debugging = DebugFlag && isCurrentDebugType(DEBUG_TYPE);
   if (Debugging) {
@@ -2769,13 +2792,13 @@ bool HexagonConstEvaluator::rewriteHexConstDefs(MachineInstr &MI,
     for (const MachineOperand &MO : MI.operands()) {
       if (!MO.isReg() || !MO.isUse() || MO.isImplicit())
         continue;
-      Register R(MO);
+      RegisterSubReg R(MO);
       if (!TargetRegisterInfo::isVirtualRegister(R.Reg))
         continue;
       HasUse = true;
       // PHIs can legitimately have "top" cells after propagation.
       if (!MI.isPHI() && !Inputs.has(R.Reg)) {
-        dbgs() << "Top " << PrintReg(R.Reg, &HRI, R.SubReg)
+        dbgs() << "Top " << printReg(R.Reg, &HRI, R.SubReg)
                << " in MI: " << MI;
         continue;
       }
@@ -2791,7 +2814,7 @@ bool HexagonConstEvaluator::rewriteHexConstDefs(MachineInstr &MI,
           if (!MO.isReg() || !MO.isUse() || MO.isImplicit())
             continue;
           unsigned R = MO.getReg();
-          dbgs() << PrintReg(R, &TRI) << ": " << Inputs.get(R) << "\n";
+          dbgs() << printReg(R, &TRI) << ": " << Inputs.get(R) << "\n";
         }
       }
     }
@@ -2837,7 +2860,8 @@ bool HexagonConstEvaluator::rewriteHexConstDefs(MachineInstr &MI,
     if (!L.isSingle()) {
       // If this a zero/non-zero cell, we can fold a definition
       // of a predicate register.
-      typedef ConstantProperties P;
+      using P = ConstantProperties;
+
       uint64_t Ps = L.properties();
       if (!(Ps & (P::Zero|P::NonZero)))
         continue;
@@ -2905,10 +2929,10 @@ bool HexagonConstEvaluator::rewriteHexConstDefs(MachineInstr &MI,
     ChangedNum++;
   }
 
-  DEBUG({
+  LLVM_DEBUG({
     if (!NewInstrs.empty()) {
       MachineFunction &MF = *MI.getParent()->getParent();
-      dbgs() << "In function: " << MF.getFunction()->getName() << "\n";
+      dbgs() << "In function: " << MF.getName() << "\n";
       dbgs() << "Rewrite: for " << MI << "  created " << *NewInstrs[0];
       for (unsigned i = 1; i < NewInstrs.size(); ++i)
         dbgs() << "          " << *NewInstrs[i];
@@ -2934,10 +2958,10 @@ bool HexagonConstEvaluator::rewriteHexConstUses(MachineInstr &MI,
     //   to   DefR += mpyi(R, #imm),
     //   or   DefR -= mpyi(R, #imm).
     {
-      Register DefR(MI.getOperand(0));
+      RegisterSubReg DefR(MI.getOperand(0));
       assert(!DefR.SubReg);
-      Register R2(MI.getOperand(2));
-      Register R3(MI.getOperand(3));
+      RegisterSubReg R2(MI.getOperand(2));
+      RegisterSubReg R3(MI.getOperand(3));
       assert(Inputs.has(R2.Reg) && Inputs.has(R3.Reg));
       LatticeCell LS2, LS3;
       // It is enough to get one of the input cells, since we will only try
@@ -2951,7 +2975,7 @@ bool HexagonConstEvaluator::rewriteHexConstUses(MachineInstr &MI,
       if (Zero) {
         // DefR == R1 (tied operands).
         MachineOperand &Acc = MI.getOperand(1);
-        Register R1(Acc);
+        RegisterSubReg R1(Acc);
         unsigned NewR = R1.Reg;
         if (R1.SubReg) {
           // Generate COPY. FIXME: Replace with the register:subregister.
@@ -2998,8 +3022,8 @@ bool HexagonConstEvaluator::rewriteHexConstUses(MachineInstr &MI,
 
     case Hexagon::A2_and:
     {
-      Register R1(MI.getOperand(1));
-      Register R2(MI.getOperand(2));
+      RegisterSubReg R1(MI.getOperand(1));
+      RegisterSubReg R2(MI.getOperand(2));
       assert(Inputs.has(R1.Reg) && Inputs.has(R2.Reg));
       LatticeCell LS1, LS2;
       unsigned CopyOf = 0;
@@ -3017,8 +3041,8 @@ bool HexagonConstEvaluator::rewriteHexConstUses(MachineInstr &MI,
       if (!CopyOf)
         return false;
       MachineOperand &SO = MI.getOperand(CopyOf);
-      Register SR(SO);
-      Register DefR(MI.getOperand(0));
+      RegisterSubReg SR(SO);
+      RegisterSubReg DefR(MI.getOperand(0));
       unsigned NewR = SR.Reg;
       if (SR.SubReg) {
         const TargetRegisterClass *RC = MRI->getRegClass(DefR.Reg);
@@ -3034,12 +3058,14 @@ bool HexagonConstEvaluator::rewriteHexConstUses(MachineInstr &MI,
 
     case Hexagon::A2_or:
     {
-      Register R1(MI.getOperand(1));
-      Register R2(MI.getOperand(2));
+      RegisterSubReg R1(MI.getOperand(1));
+      RegisterSubReg R2(MI.getOperand(2));
       assert(Inputs.has(R1.Reg) && Inputs.has(R2.Reg));
       LatticeCell LS1, LS2;
       unsigned CopyOf = 0;
-      typedef ConstantProperties P;
+
+      using P = ConstantProperties;
+
       if (getCell(R1, Inputs, LS1) && (LS1.properties() & P::Zero))
         CopyOf = 2;
       else if (getCell(R2, Inputs, LS2) && (LS2.properties() & P::Zero))
@@ -3047,8 +3073,8 @@ bool HexagonConstEvaluator::rewriteHexConstUses(MachineInstr &MI,
       if (!CopyOf)
         return false;
       MachineOperand &SO = MI.getOperand(CopyOf);
-      Register SR(SO);
-      Register DefR(MI.getOperand(0));
+      RegisterSubReg SR(SO);
+      RegisterSubReg DefR(MI.getOperand(0));
       unsigned NewR = SR.Reg;
       if (SR.SubReg) {
         const TargetRegisterClass *RC = MRI->getRegClass(DefR.Reg);
@@ -3070,7 +3096,7 @@ bool HexagonConstEvaluator::rewriteHexConstUses(MachineInstr &MI,
         MO.setIsKill(false);
   }
 
-  DEBUG({
+  LLVM_DEBUG({
     if (NewMI) {
       dbgs() << "Rewrite: for " << MI;
       if (NewMI != &MI)
@@ -3110,7 +3136,7 @@ bool HexagonConstEvaluator::rewriteHexBranch(MachineInstr &BrI,
   if (BrI.getOpcode() == Hexagon::J2_jump)
     return false;
 
-  DEBUG(dbgs() << "Rewrite(BB#" << B.getNumber() << "):" << BrI);
+  LLVM_DEBUG(dbgs() << "Rewrite(" << printMBBReference(B) << "):" << BrI);
   bool Rewritten = false;
   if (NumTargets > 0) {
     assert(!FallsThru && "This should have been checked before");
@@ -3128,7 +3154,7 @@ bool HexagonConstEvaluator::rewriteHexBranch(MachineInstr &BrI,
       BrI.setDesc(JD);
       while (BrI.getNumOperands() > 0)
         BrI.RemoveOperand(0);
-      // This ensures that all implicit operands (e.g. %R31<imp-def>, etc)
+      // This ensures that all implicit operands (e.g. implicit-def %r31, etc)
       // are present in the rewritten branch.
       for (auto &Op : NI->operands())
         BrI.addOperand(Op);

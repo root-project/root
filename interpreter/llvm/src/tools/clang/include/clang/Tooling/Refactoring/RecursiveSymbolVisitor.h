@@ -1,14 +1,13 @@
 //===--- RecursiveSymbolVisitor.h - Clang refactoring library -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief A wrapper class around \c RecursiveASTVisitor that visits each
+/// A wrapper class around \c RecursiveASTVisitor that visits each
 /// occurrences of a named symbol.
 ///
 //===----------------------------------------------------------------------===//
@@ -68,6 +67,18 @@ public:
 
   bool VisitMemberExpr(const MemberExpr *Expr) {
     return visit(Expr->getFoundDecl().getDecl(), Expr->getMemberLoc());
+  }
+
+  bool VisitOffsetOfExpr(const OffsetOfExpr *S) {
+    for (unsigned I = 0, E = S->getNumComponents(); I != E; ++I) {
+      const OffsetOfNode &Component = S->getComponent(I);
+      if (Component.getKind() == OffsetOfNode::Field) {
+        if (!visit(Component.getField(), Component.getEndLoc()))
+          return false;
+      }
+      // FIXME: Try to resolve dependent field references.
+    }
+    return true;
   }
 
   // Other visitors:

@@ -1,14 +1,13 @@
 //===--- FormatTokenLexer.cpp - Lex FormatTokens -------------*- C++ ----*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file implements FormatTokenLexer, which tokenizes a source file
+/// This file implements FormatTokenLexer, which tokenizes a source file
 /// into a FormatToken stream suitable for ClangFormat.
 ///
 //===----------------------------------------------------------------------===//
@@ -24,10 +23,10 @@ namespace clang {
 namespace format {
 
 FormatTokenLexer::FormatTokenLexer(const SourceManager &SourceMgr, FileID ID,
-                                   const FormatStyle &Style,
+                                   unsigned Column, const FormatStyle &Style,
                                    encoding::Encoding Encoding)
     : FormatTok(nullptr), IsFirstToken(true), StateStack({LexerState::NORMAL}),
-      Column(0), TrailingWhitespace(0), SourceMgr(SourceMgr), ID(ID),
+      Column(Column), TrailingWhitespace(0), SourceMgr(SourceMgr), ID(ID),
       Style(Style), IdentTable(getFormattingLangOpts(Style)),
       Keywords(IdentTable), Encoding(Encoding), FirstInLineIndex(0),
       FormattingDisabled(false), MacroBlockBeginRegex(Style.MacroBlockBegin),
@@ -37,8 +36,13 @@ FormatTokenLexer::FormatTokenLexer(const SourceManager &SourceMgr, FileID ID,
   Lex->SetKeepWhitespaceMode(true);
 
   for (const std::string &ForEachMacro : Style.ForEachMacros)
-    ForEachMacros.push_back(&IdentTable.get(ForEachMacro));
-  std::sort(ForEachMacros.begin(), ForEachMacros.end());
+    Macros.insert({&IdentTable.get(ForEachMacro), TT_ForEachMacro});
+  for (const std::string &StatementMacro : Style.StatementMacros)
+    Macros.insert({&IdentTable.get(StatementMacro), TT_StatementMacro});
+  for (const std::string &TypenameMacro : Style.TypenameMacros)
+    Macros.insert({&IdentTable.get(TypenameMacro), TT_TypenameMacro});
+  for (const std::string &NamespaceMacro : Style.NamespaceMacros)
+    Macros.insert({&IdentTable.get(NamespaceMacro), TT_NamespaceMacro});
 }
 
 ArrayRef<FormatToken *> FormatTokenLexer::lex() {
@@ -50,6 +54,8 @@ ArrayRef<FormatToken *> FormatTokenLexer::lex() {
       tryParseJSRegexLiteral();
       handleTemplateStrings();
     }
+    if (Style.Language == FormatStyle::LK_TextProto)
+      tryParsePythonComment();
     tryMergePreviousTokens();
     if (Tokens.back()->NewlinesBefore > 0 || Tokens.back()->IsMultiline)
       FirstInLineIndex = Tokens.size() - 1;
@@ -64,6 +70,21 @@ void FormatTokenLexer::tryMergePreviousTokens() {
     return;
   if (tryMergeLessLess())
     return;
+
+  if (Style.isCSharp()) {
+    if (tryMergeCSharpKeywordVariables())
+      return;
+    if (tryMergeCSharpVerbatimStringLiteral())
+      return;
+    if (tryMergeCSharpDoubleQuestion())
+      return;
+    if (tryMergeCSharpNullConditionals())
+      return;
+    static const tok::TokenKind JSRightArrow[] = {tok::equal, tok::greater};
+    if (tryMergeTokens(JSRightArrow, TT_JsFatArrow))
+      return;
+  }
+
   if (tryMergeNSStringLiteral())
     return;
 
@@ -93,17 +114,13 @@ void FormatTokenLexer::tryMergePreviousTokens() {
       Tokens.back()->Tok.setKind(tok::starequal);
       return;
     }
+    if (tryMergeJSPrivateIdentifier())
+      return;
   }
 
   if (Style.Language == FormatStyle::LK_Java) {
-    static const tok::TokenKind JavaRightLogicalShift[] = {tok::greater,
-                                                           tok::greater,
-                                                           tok::greater};
-    static const tok::TokenKind JavaRightLogicalShiftAssign[] = {tok::greater,
-                                                                 tok::greater,
-                                                                 tok::greaterequal};
-    if (tryMergeTokens(JavaRightLogicalShift, TT_BinaryOperator))
-      return;
+    static const tok::TokenKind JavaRightLogicalShiftAssign[] = {
+        tok::greater, tok::greater, tok::greaterequal};
     if (tryMergeTokens(JavaRightLogicalShiftAssign, TT_BinaryOperator))
       return;
   }
@@ -121,6 +138,118 @@ bool FormatTokenLexer::tryMergeNSStringLiteral() {
                             String->TokenText.end() - At->TokenText.begin());
   At->ColumnWidth += String->ColumnWidth;
   At->Type = TT_ObjCStringLiteral;
+  Tokens.erase(Tokens.end() - 1);
+  return true;
+}
+
+bool FormatTokenLexer::tryMergeJSPrivateIdentifier() {
+  // Merges #idenfier into a single identifier with the text #identifier
+  // but the token tok::identifier.
+  if (Tokens.size() < 2)
+    return false;
+  auto &Hash = *(Tokens.end() - 2);
+  auto &Identifier = *(Tokens.end() - 1);
+  if (!Hash->is(tok::hash) || !Identifier->is(tok::identifier))
+    return false;
+  Hash->Tok.setKind(tok::identifier);
+  Hash->TokenText =
+      StringRef(Hash->TokenText.begin(),
+                Identifier->TokenText.end() - Hash->TokenText.begin());
+  Hash->ColumnWidth += Identifier->ColumnWidth;
+  Hash->Type = TT_JsPrivateIdentifier;
+  Tokens.erase(Tokens.end() - 1);
+  return true;
+}
+
+// Search for verbatim or interpolated string literals @"ABC" or
+// $"aaaaa{abc}aaaaa" i and mark the token as TT_CSharpStringLiteral, and to
+// prevent splitting of @, $ and ".
+bool FormatTokenLexer::tryMergeCSharpVerbatimStringLiteral() {
+  if (Tokens.size() < 2)
+    return false;
+  auto &At = *(Tokens.end() - 2);
+  auto &String = *(Tokens.end() - 1);
+
+  // Look for $"aaaaaa" @"aaaaaa".
+  if (!(At->is(tok::at) || At->TokenText == "$") ||
+      !String->is(tok::string_literal))
+    return false;
+
+  if (Tokens.size() >= 2 && At->is(tok::at)) {
+    auto &Dollar = *(Tokens.end() - 3);
+    if (Dollar->TokenText == "$") {
+      // This looks like $@"aaaaa" so we need to combine all 3 tokens.
+      Dollar->Tok.setKind(tok::string_literal);
+      Dollar->TokenText =
+          StringRef(Dollar->TokenText.begin(),
+                    String->TokenText.end() - Dollar->TokenText.begin());
+      Dollar->ColumnWidth += (At->ColumnWidth + String->ColumnWidth);
+      Dollar->Type = TT_CSharpStringLiteral;
+      Tokens.erase(Tokens.end() - 2);
+      Tokens.erase(Tokens.end() - 1);
+      return true;
+    }
+  }
+
+  // Convert back into just a string_literal.
+  At->Tok.setKind(tok::string_literal);
+  At->TokenText = StringRef(At->TokenText.begin(),
+                            String->TokenText.end() - At->TokenText.begin());
+  At->ColumnWidth += String->ColumnWidth;
+  At->Type = TT_CSharpStringLiteral;
+  Tokens.erase(Tokens.end() - 1);
+  return true;
+}
+
+bool FormatTokenLexer::tryMergeCSharpDoubleQuestion() {
+  if (Tokens.size() < 2)
+    return false;
+  auto &FirstQuestion = *(Tokens.end() - 2);
+  auto &SecondQuestion = *(Tokens.end() - 1);
+  if (!FirstQuestion->is(tok::question) || !SecondQuestion->is(tok::question))
+    return false;
+  FirstQuestion->Tok.setKind(tok::question);
+  FirstQuestion->TokenText = StringRef(FirstQuestion->TokenText.begin(),
+                                       SecondQuestion->TokenText.end() -
+                                           FirstQuestion->TokenText.begin());
+  FirstQuestion->ColumnWidth += SecondQuestion->ColumnWidth;
+  FirstQuestion->Type = TT_CSharpNullCoalescing;
+  Tokens.erase(Tokens.end() - 1);
+  return true;
+}
+
+bool FormatTokenLexer::tryMergeCSharpKeywordVariables() {
+  if (Tokens.size() < 2)
+    return false;
+  auto &At = *(Tokens.end() - 2);
+  auto &Keyword = *(Tokens.end() - 1);
+  if (!At->is(tok::at))
+    return false;
+  if (!Keywords.isCSharpKeyword(*Keyword))
+    return false;
+
+  At->Tok.setKind(tok::identifier);
+  At->TokenText = StringRef(At->TokenText.begin(),
+                            Keyword->TokenText.end() - At->TokenText.begin());
+  At->ColumnWidth += Keyword->ColumnWidth;
+  At->Type = Keyword->Type;
+  Tokens.erase(Tokens.end() - 1);
+  return true;
+}
+
+// In C# merge the Identifier and the ? together e.g. arg?.
+bool FormatTokenLexer::tryMergeCSharpNullConditionals() {
+  if (Tokens.size() < 2)
+    return false;
+  auto &Identifier = *(Tokens.end() - 2);
+  auto &Question = *(Tokens.end() - 1);
+  if (!Identifier->isOneOf(tok::r_square, tok::identifier) ||
+      !Question->is(tok::question))
+    return false;
+  Identifier->TokenText =
+      StringRef(Identifier->TokenText.begin(),
+                Question->TokenText.end() - Identifier->TokenText.begin());
+  Identifier->ColumnWidth += Question->ColumnWidth;
   Tokens.erase(Tokens.end() - 1);
   return true;
 }
@@ -162,9 +291,8 @@ bool FormatTokenLexer::tryMergeTokens(ArrayRef<tok::TokenKind> Kinds,
     return false;
   unsigned AddLength = 0;
   for (unsigned i = 1; i < Kinds.size(); ++i) {
-    if (!First[i]->is(Kinds[i]) ||
-        First[i]->WhitespaceRange.getBegin() !=
-            First[i]->WhitespaceRange.getEnd())
+    if (!First[i]->is(Kinds[i]) || First[i]->WhitespaceRange.getBegin() !=
+                                       First[i]->WhitespaceRange.getEnd())
       return false;
     AddLength += First[i]->TokenText.size();
   }
@@ -335,6 +463,27 @@ void FormatTokenLexer::handleTemplateStrings() {
                            ? Lex->getSourceLocation(Offset + 1)
                            : SourceMgr.getLocForEndOfFile(ID);
   resetLexer(SourceMgr.getFileOffset(loc));
+}
+
+void FormatTokenLexer::tryParsePythonComment() {
+  FormatToken *HashToken = Tokens.back();
+  if (!HashToken->isOneOf(tok::hash, tok::hashhash))
+    return;
+  // Turn the remainder of this line into a comment.
+  const char *CommentBegin =
+      Lex->getBufferLocation() - HashToken->TokenText.size(); // at "#"
+  size_t From = CommentBegin - Lex->getBuffer().begin();
+  size_t To = Lex->getBuffer().find_first_of('\n', From);
+  if (To == StringRef::npos)
+    To = Lex->getBuffer().size();
+  size_t Len = To - From;
+  HashToken->Type = TT_LineComment;
+  HashToken->Tok.setKind(tok::comment);
+  HashToken->TokenText = Lex->getBuffer().substr(From, Len);
+  SourceLocation Loc = To < Lex->getBuffer().size()
+                           ? Lex->getSourceLocation(CommentBegin + Len)
+                           : SourceMgr.getLocForEndOfFile(ID);
+  resetLexer(SourceMgr.getFileOffset(Loc));
 }
 
 bool FormatTokenLexer::tryMerge_TMacro() {
@@ -529,17 +678,53 @@ FormatToken *FormatTokenLexer::getNextToken() {
     readRawToken(*FormatTok);
   }
 
+  // JavaScript and Java do not allow to escape the end of the line with a
+  // backslash. Backslashes are syntax errors in plain source, but can occur in
+  // comments. When a single line comment ends with a \, it'll cause the next
+  // line of code to be lexed as a comment, breaking formatting. The code below
+  // finds comments that contain a backslash followed by a line break, truncates
+  // the comment token at the backslash, and resets the lexer to restart behind
+  // the backslash.
+  if ((Style.Language == FormatStyle::LK_JavaScript ||
+       Style.Language == FormatStyle::LK_Java) &&
+      FormatTok->is(tok::comment) && FormatTok->TokenText.startswith("//")) {
+    size_t BackslashPos = FormatTok->TokenText.find('\\');
+    while (BackslashPos != StringRef::npos) {
+      if (BackslashPos + 1 < FormatTok->TokenText.size() &&
+          FormatTok->TokenText[BackslashPos + 1] == '\n') {
+        const char *Offset = Lex->getBufferLocation();
+        Offset -= FormatTok->TokenText.size();
+        Offset += BackslashPos + 1;
+        resetLexer(SourceMgr.getFileOffset(Lex->getSourceLocation(Offset)));
+        FormatTok->TokenText = FormatTok->TokenText.substr(0, BackslashPos + 1);
+        FormatTok->ColumnWidth = encoding::columnWidthWithTabs(
+            FormatTok->TokenText, FormatTok->OriginalColumn, Style.TabWidth,
+            Encoding);
+        break;
+      }
+      BackslashPos = FormatTok->TokenText.find('\\', BackslashPos + 1);
+    }
+  }
+
   // In case the token starts with escaped newlines, we want to
   // take them into account as whitespace - this pattern is quite frequent
   // in macro definitions.
   // FIXME: Add a more explicit test.
-  while (FormatTok->TokenText.size() > 1 && FormatTok->TokenText[0] == '\\' &&
-         FormatTok->TokenText[1] == '\n') {
+  while (FormatTok->TokenText.size() > 1 && FormatTok->TokenText[0] == '\\') {
+    unsigned SkippedWhitespace = 0;
+    if (FormatTok->TokenText.size() > 2 &&
+        (FormatTok->TokenText[1] == '\r' && FormatTok->TokenText[2] == '\n'))
+      SkippedWhitespace = 3;
+    else if (FormatTok->TokenText[1] == '\n')
+      SkippedWhitespace = 2;
+    else
+      break;
+
     ++FormatTok->NewlinesBefore;
-    WhitespaceLength += 2;
-    FormatTok->LastNewlineOffset = 2;
+    WhitespaceLength += SkippedWhitespace;
+    FormatTok->LastNewlineOffset = SkippedWhitespace;
     Column = 0;
-    FormatTok->TokenText = FormatTok->TokenText.substr(2);
+    FormatTok->TokenText = FormatTok->TokenText.substr(SkippedWhitespace);
   }
 
   FormatTok->WhitespaceRange = SourceRange(
@@ -605,12 +790,12 @@ FormatToken *FormatTokenLexer::getNextToken() {
   }
 
   if (Style.isCpp()) {
+    auto it = Macros.find(FormatTok->Tok.getIdentifierInfo());
     if (!(Tokens.size() > 0 && Tokens.back()->Tok.getIdentifierInfo() &&
           Tokens.back()->Tok.getIdentifierInfo()->getPPKeywordID() ==
               tok::pp_define) &&
-        std::find(ForEachMacros.begin(), ForEachMacros.end(),
-                  FormatTok->Tok.getIdentifierInfo()) != ForEachMacros.end()) {
-      FormatTok->Type = TT_ForEachMacro;
+        it != Macros.end()) {
+      FormatTok->Type = it->second;
     } else if (FormatTok->is(tok::identifier)) {
       if (MacroBlockBeginRegex.match(Text)) {
         FormatTok->Type = TT_MacroBlockBegin;
@@ -639,7 +824,9 @@ void FormatTokenLexer::readRawToken(FormatToken &Tok) {
     }
   }
 
-  if (Style.Language == FormatStyle::LK_JavaScript &&
+  if ((Style.Language == FormatStyle::LK_JavaScript ||
+       Style.Language == FormatStyle::LK_Proto ||
+       Style.Language == FormatStyle::LK_TextProto) &&
       Tok.is(tok::char_constant)) {
     Tok.Tok.setKind(tok::string_literal);
   }

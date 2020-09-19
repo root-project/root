@@ -1,9 +1,8 @@
 //===--- ASTTypeTraits.h ----------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -19,6 +18,7 @@
 #include "clang/AST/ASTFwd.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/NestedNameSpecifier.h"
+#include "clang/AST/OpenMPClause.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/TypeLoc.h"
@@ -38,62 +38,74 @@ struct PrintingPolicy;
 
 namespace ast_type_traits {
 
-/// \brief Kind identifier.
+/// Defines how we descend a level in the AST when we pass
+/// through expressions.
+enum TraversalKind {
+  /// Will traverse all child nodes.
+  TK_AsIs,
+
+  /// Will not traverse implicit casts and parentheses.
+  /// Corresponds to Expr::IgnoreParenImpCasts()
+  TK_IgnoreImplicitCastsAndParentheses
+};
+
+/// Kind identifier.
 ///
 /// It can be constructed from any node kind and allows for runtime type
 /// hierarchy checks.
 /// Use getFromNodeKind<T>() to construct them.
 class ASTNodeKind {
 public:
-  /// \brief Empty identifier. It matches nothing.
+  /// Empty identifier. It matches nothing.
   ASTNodeKind() : KindId(NKI_None) {}
 
-  /// \brief Construct an identifier for T.
+  /// Construct an identifier for T.
   template <class T>
   static ASTNodeKind getFromNodeKind() {
     return ASTNodeKind(KindToKindId<T>::Id);
   }
 
   /// \{
-  /// \brief Construct an identifier for the dynamic type of the node
+  /// Construct an identifier for the dynamic type of the node
   static ASTNodeKind getFromNode(const Decl &D);
   static ASTNodeKind getFromNode(const Stmt &S);
   static ASTNodeKind getFromNode(const Type &T);
+  static ASTNodeKind getFromNode(const OMPClause &C);
   /// \}
 
-  /// \brief Returns \c true if \c this and \c Other represent the same kind.
+  /// Returns \c true if \c this and \c Other represent the same kind.
   bool isSame(ASTNodeKind Other) const {
     return KindId != NKI_None && KindId == Other.KindId;
   }
 
-  /// \brief Returns \c true only for the default \c ASTNodeKind()
+  /// Returns \c true only for the default \c ASTNodeKind()
   bool isNone() const { return KindId == NKI_None; }
 
-  /// \brief Returns \c true if \c this is a base kind of (or same as) \c Other.
+  /// Returns \c true if \c this is a base kind of (or same as) \c Other.
   /// \param Distance If non-null, used to return the distance between \c this
   /// and \c Other in the class hierarchy.
   bool isBaseOf(ASTNodeKind Other, unsigned *Distance = nullptr) const;
 
-  /// \brief String representation of the kind.
+  /// String representation of the kind.
   StringRef asStringRef() const;
 
-  /// \brief Strict weak ordering for ASTNodeKind.
+  /// Strict weak ordering for ASTNodeKind.
   bool operator<(const ASTNodeKind &Other) const {
     return KindId < Other.KindId;
   }
 
-  /// \brief Return the most derived type between \p Kind1 and \p Kind2.
+  /// Return the most derived type between \p Kind1 and \p Kind2.
   ///
   /// Return ASTNodeKind() if they are not related.
   static ASTNodeKind getMostDerivedType(ASTNodeKind Kind1, ASTNodeKind Kind2);
 
-  /// \brief Return the most derived common ancestor between Kind1 and Kind2.
+  /// Return the most derived common ancestor between Kind1 and Kind2.
   ///
   /// Return ASTNodeKind() if they are not related.
   static ASTNodeKind getMostDerivedCommonAncestor(ASTNodeKind Kind1,
                                                   ASTNodeKind Kind2);
 
-  /// \brief Hooks for using ASTNodeKind as a key in a DenseMap.
+  /// Hooks for using ASTNodeKind as a key in a DenseMap.
   struct DenseMapInfo {
     // ASTNodeKind() is a good empty key because it is represented as a 0.
     static inline ASTNodeKind getEmptyKey() { return ASTNodeKind(); }
@@ -115,7 +127,7 @@ public:
   }
 
 private:
-  /// \brief Kind ids.
+  /// Kind ids.
   ///
   /// Includes all possible base and derived kinds.
   enum NodeKindId {
@@ -137,19 +149,22 @@ private:
     NKI_Type,
 #define TYPE(DERIVED, BASE) NKI_##DERIVED##Type,
 #include "clang/AST/TypeNodes.def"
+    NKI_OMPClause,
+#define OPENMP_CLAUSE(TextualSpelling, Class) NKI_##Class,
+#include "clang/Basic/OpenMPKinds.def"
     NKI_NumberOfKinds
   };
 
-  /// \brief Use getFromNodeKind<T>() to construct the kind.
+  /// Use getFromNodeKind<T>() to construct the kind.
   ASTNodeKind(NodeKindId KindId) : KindId(KindId) {}
 
-  /// \brief Returns \c true if \c Base is a base kind of (or same as) \c
+  /// Returns \c true if \c Base is a base kind of (or same as) \c
   ///   Derived.
   /// \param Distance If non-null, used to return the distance between \c Base
   /// and \c Derived in the class hierarchy.
   static bool isBaseOf(NodeKindId Base, NodeKindId Derived, unsigned *Distance);
 
-  /// \brief Helper meta-function to convert a kind T to its enum value.
+  /// Helper meta-function to convert a kind T to its enum value.
   ///
   /// This struct is specialized below for all known kinds.
   template <class T> struct KindToKindId {
@@ -158,11 +173,11 @@ private:
   template <class T>
   struct KindToKindId<const T> : KindToKindId<T> {};
 
-  /// \brief Per kind info.
+  /// Per kind info.
   struct KindInfo {
-    /// \brief The id of the parent kind, or None if it has no parent.
+    /// The id of the parent kind, or None if it has no parent.
     NodeKindId ParentId;
-    /// \brief Name of the kind.
+    /// Name of the kind.
     const char *Name;
   };
   static const KindInfo AllKindInfo[NKI_NumberOfKinds];
@@ -184,12 +199,15 @@ KIND_TO_KIND_ID(TypeLoc)
 KIND_TO_KIND_ID(Decl)
 KIND_TO_KIND_ID(Stmt)
 KIND_TO_KIND_ID(Type)
+KIND_TO_KIND_ID(OMPClause)
 #define DECL(DERIVED, BASE) KIND_TO_KIND_ID(DERIVED##Decl)
 #include "clang/AST/DeclNodes.inc"
 #define STMT(DERIVED, BASE) KIND_TO_KIND_ID(DERIVED)
 #include "clang/AST/StmtNodes.inc"
 #define TYPE(DERIVED, BASE) KIND_TO_KIND_ID(DERIVED##Type)
 #include "clang/AST/TypeNodes.def"
+#define OPENMP_CLAUSE(TextualSpelling, Class) KIND_TO_KIND_ID(Class)
+#include "clang/Basic/OpenMPKinds.def"
 #undef KIND_TO_KIND_ID
 
 inline raw_ostream &operator<<(raw_ostream &OS, ASTNodeKind K) {
@@ -197,7 +215,7 @@ inline raw_ostream &operator<<(raw_ostream &OS, ASTNodeKind K) {
   return OS;
 }
 
-/// \brief A dynamically typed AST node container.
+/// A dynamically typed AST node container.
 ///
 /// Stores an AST node in a type safe way. This allows writing code that
 /// works with different kinds of AST nodes, despite the fact that they don't
@@ -211,13 +229,13 @@ inline raw_ostream &operator<<(raw_ostream &OS, ASTNodeKind K) {
 /// the supported base types.
 class DynTypedNode {
 public:
-  /// \brief Creates a \c DynTypedNode from \c Node.
+  /// Creates a \c DynTypedNode from \c Node.
   template <typename T>
   static DynTypedNode create(const T &Node) {
     return BaseConverter<T>::create(Node);
   }
 
-  /// \brief Retrieve the stored node as type \c T.
+  /// Retrieve the stored node as type \c T.
   ///
   /// Returns NULL if the stored node does not have a type that is
   /// convertible to \c T.
@@ -234,7 +252,7 @@ public:
     return BaseConverter<T>::get(NodeKind, Storage.buffer);
   }
 
-  /// \brief Retrieve the stored node as type \c T.
+  /// Retrieve the stored node as type \c T.
   ///
   /// Similar to \c get(), but asserts that the type is what we are expecting.
   template <typename T>
@@ -244,7 +262,7 @@ public:
 
   ASTNodeKind getNodeKind() const { return NodeKind; }
 
-  /// \brief Returns a pointer that identifies the stored AST node.
+  /// Returns a pointer that identifies the stored AST node.
   ///
   /// Note that this is not supported by all AST nodes. For AST nodes
   /// that don't have a pointer-defined identity inside the AST, this
@@ -255,21 +273,21 @@ public:
                : nullptr;
   }
 
-  /// \brief Prints the node to the given output stream.
+  /// Prints the node to the given output stream.
   void print(llvm::raw_ostream &OS, const PrintingPolicy &PP) const;
 
-  /// \brief Dumps the node to the given output stream.
+  /// Dumps the node to the given output stream.
   void dump(llvm::raw_ostream &OS, SourceManager &SM) const;
 
-  /// \brief For nodes which represent textual entities in the source code,
+  /// For nodes which represent textual entities in the source code,
   /// return their SourceRange.  For all other nodes, return SourceRange().
   SourceRange getSourceRange() const;
 
   /// @{
-  /// \brief Imposes an order on \c DynTypedNode.
+  /// Imposes an order on \c DynTypedNode.
   ///
   /// Supports comparison of nodes that support memoization.
-  /// FIXME: Implement comparsion for other node types (currently
+  /// FIXME: Implement comparison for other node types (currently
   /// only Stmt, Decl, Type and NestedNameSpecifier return memoization data).
   bool operator<(const DynTypedNode &Other) const {
     if (!NodeKind.isSame(Other.NodeKind))
@@ -326,7 +344,7 @@ public:
   }
   /// @}
 
-  /// \brief Hooks for using DynTypedNode as a key in a DenseMap.
+  /// Hooks for using DynTypedNode as a key in a DenseMap.
   struct DenseMapInfo {
     static inline DynTypedNode getEmptyKey() {
       DynTypedNode Node;
@@ -368,10 +386,10 @@ public:
   };
 
 private:
-  /// \brief Takes care of converting from and to \c T.
+  /// Takes care of converting from and to \c T.
   template <typename T, typename EnablerT = void> struct BaseConverter;
 
-  /// \brief Converter that uses dyn_cast<T> from a stored BaseT*.
+  /// Converter that uses dyn_cast<T> from a stored BaseT*.
   template <typename T, typename BaseT> struct DynCastPtrConverter {
     static const T *get(ASTNodeKind NodeKind, const char Storage[]) {
       if (ASTNodeKind::getFromNodeKind<T>().isBaseOf(NodeKind))
@@ -391,7 +409,7 @@ private:
     }
   };
 
-  /// \brief Converter that stores T* (by pointer).
+  /// Converter that stores T* (by pointer).
   template <typename T> struct PtrConverter {
     static const T *get(ASTNodeKind NodeKind, const char Storage[]) {
       if (ASTNodeKind::getFromNodeKind<T>().isSame(NodeKind))
@@ -411,7 +429,7 @@ private:
     }
   };
 
-  /// \brief Converter that stores T (by value).
+  /// Converter that stores T (by value).
   template <typename T> struct ValueConverter {
     static const T *get(ASTNodeKind NodeKind, const char Storage[]) {
       if (ASTNodeKind::getFromNodeKind<T>().isSame(NodeKind))
@@ -432,7 +450,7 @@ private:
 
   ASTNodeKind NodeKind;
 
-  /// \brief Stores the data of the node.
+  /// Stores the data of the node.
   ///
   /// Note that we can store \c Decls, \c Stmts, \c Types,
   /// \c NestedNameSpecifiers and \c CXXCtorInitializer by pointer as they are
@@ -459,6 +477,11 @@ template <typename T>
 struct DynTypedNode::BaseConverter<
     T, typename std::enable_if<std::is_base_of<Type, T>::value>::type>
     : public DynCastPtrConverter<T, Type> {};
+
+template <typename T>
+struct DynTypedNode::BaseConverter<
+    T, typename std::enable_if<std::is_base_of<OMPClause, T>::value>::type>
+    : public DynCastPtrConverter<T, OMPClause> {};
 
 template <>
 struct DynTypedNode::BaseConverter<

@@ -1,9 +1,8 @@
 //===--- TransProtectedScope.cpp - Transformations to ARC mode ------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -46,7 +45,7 @@ struct CaseInfo {
     St_CannotFix,
     St_Fixed
   } State;
-  
+
   CaseInfo() : SC(nullptr), State(St_Unchecked) {}
   CaseInfo(SwitchCase *S, SourceRange Range)
     : SC(S), Range(Range), State(St_Unchecked) {}
@@ -73,12 +72,13 @@ public:
       Curr = Curr->getNextSwitchCase();
     }
 
-    SourceLocation NextLoc = S->getLocEnd();
+    SourceLocation NextLoc = S->getEndLoc();
     Curr = S->getSwitchCaseList();
     // We iterate over case statements in reverse source-order.
     while (Curr) {
-      Cases.push_back(CaseInfo(Curr,SourceRange(Curr->getLocStart(), NextLoc)));
-      NextLoc = Curr->getLocStart();
+      Cases.push_back(
+          CaseInfo(Curr, SourceRange(Curr->getBeginLoc(), NextLoc)));
+      NextLoc = Curr->getBeginLoc();
       Curr = Curr->getNextSwitchCase();
     }
     return true;

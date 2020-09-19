@@ -1,9 +1,8 @@
 //===- llvm/Support/Error.h - Recoverable error handling --------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,8 +13,9 @@
 #ifndef LLVM_SUPPORT_ERROR_H
 #define LLVM_SUPPORT_ERROR_H
 
-#include "llvm/ADT/SmallVector.h"
+#include "llvm-c/Error.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Config/abi-breaking.h"
@@ -24,6 +24,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/ErrorOr.h"
+#include "llvm/Support/Format.h"
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 #include <cassert>
@@ -154,9 +155,10 @@ private:
 /// they're moved-assigned or constructed from Success values that have already
 /// been checked. This enforces checking through all levels of the call stack.
 class LLVM_NODISCARD Error {
-  // ErrorList needs to be able to yank ErrorInfoBase pointers out of this
-  // class to add to the error list.
+  // Both ErrorList and FileError need to be able to yank ErrorInfoBase
+  // pointers out of this class to add to the error list.
   friend class ErrorList;
+  friend class FileError;
 
   // handleErrors needs to be able to set the Checked flag.
   template <typename... HandlerTs>
@@ -165,6 +167,9 @@ class LLVM_NODISCARD Error {
   // Expected<T> needs to be able to steal the payload when constructed from an
   // error.
   template <typename T> friend class Expected;
+
+  // wrap needs to be able to steal the payload.
+  friend LLVMErrorRef wrap(Error);
 
 protected:
   /// Create a success value. Prefer using 'Error::success()' for readability
@@ -246,18 +251,20 @@ public:
   }
 
 private:
+#if LLVM_ENABLE_ABI_BREAKING_CHECKS
+  // assertIsChecked() happens very frequently, but under normal circumstances
+  // is supposed to be a no-op.  So we want it to be inlined, but having a bunch
+  // of debug prints can cause the function to be too large for inlining.  So
+  // it's important that we define this function out of line so that it can't be
+  // inlined.
+  LLVM_ATTRIBUTE_NORETURN
+  void fatalUncheckedError() const;
+#endif
+
   void assertIsChecked() {
 #if LLVM_ENABLE_ABI_BREAKING_CHECKS
-    if (!getChecked() || getPtr()) {
-      dbgs() << "Program aborted due to an unhandled Error:\n";
-      if (getPtr())
-        getPtr()->log(dbgs());
-      else
-        dbgs()
-            << "Error value was Success. (Note: Success values must still be "
-               "checked prior to being destroyed).\n";
-      abort();
-    }
+    if (LLVM_UNLIKELY(!getChecked() || getPtr()))
+      fatalUncheckedError();
 #endif
   }
 
@@ -300,13 +307,21 @@ private:
     return Tmp;
   }
 
+  friend raw_ostream &operator<<(raw_ostream &OS, const Error &E) {
+    if (auto P = E.getPtr())
+      P->log(OS);
+    else
+      OS << "success";
+    return OS;
+  }
+
   ErrorInfoBase *Payload = nullptr;
 };
 
 /// Subclass of Error for the sole purpose of identifying the success path in
 /// the type system. This allows to catch invalid conversion to Expected<T> at
 /// compile time.
-class ErrorSuccess : public Error {};
+class ErrorSuccess final : public Error {};
 
 inline ErrorSuccess Error::success() { return ErrorSuccess(); }
 
@@ -328,6 +343,8 @@ template <typename ErrT, typename... ArgTs> Error make_error(ArgTs &&... Args) {
 template <typename ThisErrT, typename ParentErrT = ErrorInfoBase>
 class ErrorInfo : public ParentErrT {
 public:
+  using ParentErrT::ParentErrT; // inherit constructors
+
   static const void *classID() { return &ThisErrT::ID; }
 
   const void *dynamicClassID() const override { return &ThisErrT::ID; }
@@ -407,235 +424,6 @@ inline Error joinErrors(Error E1, Error E2) {
   return ErrorList::join(std::move(E1), std::move(E2));
 }
 
-/// Helper for testing applicability of, and applying, handlers for
-/// ErrorInfo types.
-template <typename HandlerT>
-class ErrorHandlerTraits
-    : public ErrorHandlerTraits<decltype(
-          &std::remove_reference<HandlerT>::type::operator())> {};
-
-// Specialization functions of the form 'Error (const ErrT&)'.
-template <typename ErrT> class ErrorHandlerTraits<Error (&)(ErrT &)> {
-public:
-  static bool appliesTo(const ErrorInfoBase &E) {
-    return E.template isA<ErrT>();
-  }
-
-  template <typename HandlerT>
-  static Error apply(HandlerT &&H, std::unique_ptr<ErrorInfoBase> E) {
-    assert(appliesTo(*E) && "Applying incorrect handler");
-    return H(static_cast<ErrT &>(*E));
-  }
-};
-
-// Specialization functions of the form 'void (const ErrT&)'.
-template <typename ErrT> class ErrorHandlerTraits<void (&)(ErrT &)> {
-public:
-  static bool appliesTo(const ErrorInfoBase &E) {
-    return E.template isA<ErrT>();
-  }
-
-  template <typename HandlerT>
-  static Error apply(HandlerT &&H, std::unique_ptr<ErrorInfoBase> E) {
-    assert(appliesTo(*E) && "Applying incorrect handler");
-    H(static_cast<ErrT &>(*E));
-    return Error::success();
-  }
-};
-
-/// Specialization for functions of the form 'Error (std::unique_ptr<ErrT>)'.
-template <typename ErrT>
-class ErrorHandlerTraits<Error (&)(std::unique_ptr<ErrT>)> {
-public:
-  static bool appliesTo(const ErrorInfoBase &E) {
-    return E.template isA<ErrT>();
-  }
-
-  template <typename HandlerT>
-  static Error apply(HandlerT &&H, std::unique_ptr<ErrorInfoBase> E) {
-    assert(appliesTo(*E) && "Applying incorrect handler");
-    std::unique_ptr<ErrT> SubE(static_cast<ErrT *>(E.release()));
-    return H(std::move(SubE));
-  }
-};
-
-/// Specialization for functions of the form 'Error (std::unique_ptr<ErrT>)'.
-template <typename ErrT>
-class ErrorHandlerTraits<void (&)(std::unique_ptr<ErrT>)> {
-public:
-  static bool appliesTo(const ErrorInfoBase &E) {
-    return E.template isA<ErrT>();
-  }
-
-  template <typename HandlerT>
-  static Error apply(HandlerT &&H, std::unique_ptr<ErrorInfoBase> E) {
-    assert(appliesTo(*E) && "Applying incorrect handler");
-    std::unique_ptr<ErrT> SubE(static_cast<ErrT *>(E.release()));
-    H(std::move(SubE));
-    return Error::success();
-  }
-};
-
-// Specialization for member functions of the form 'RetT (const ErrT&)'.
-template <typename C, typename RetT, typename ErrT>
-class ErrorHandlerTraits<RetT (C::*)(ErrT &)>
-    : public ErrorHandlerTraits<RetT (&)(ErrT &)> {};
-
-// Specialization for member functions of the form 'RetT (const ErrT&) const'.
-template <typename C, typename RetT, typename ErrT>
-class ErrorHandlerTraits<RetT (C::*)(ErrT &) const>
-    : public ErrorHandlerTraits<RetT (&)(ErrT &)> {};
-
-// Specialization for member functions of the form 'RetT (const ErrT&)'.
-template <typename C, typename RetT, typename ErrT>
-class ErrorHandlerTraits<RetT (C::*)(const ErrT &)>
-    : public ErrorHandlerTraits<RetT (&)(ErrT &)> {};
-
-// Specialization for member functions of the form 'RetT (const ErrT&) const'.
-template <typename C, typename RetT, typename ErrT>
-class ErrorHandlerTraits<RetT (C::*)(const ErrT &) const>
-    : public ErrorHandlerTraits<RetT (&)(ErrT &)> {};
-
-/// Specialization for member functions of the form
-/// 'RetT (std::unique_ptr<ErrT>) const'.
-template <typename C, typename RetT, typename ErrT>
-class ErrorHandlerTraits<RetT (C::*)(std::unique_ptr<ErrT>)>
-    : public ErrorHandlerTraits<RetT (&)(std::unique_ptr<ErrT>)> {};
-
-/// Specialization for member functions of the form
-/// 'RetT (std::unique_ptr<ErrT>) const'.
-template <typename C, typename RetT, typename ErrT>
-class ErrorHandlerTraits<RetT (C::*)(std::unique_ptr<ErrT>) const>
-    : public ErrorHandlerTraits<RetT (&)(std::unique_ptr<ErrT>)> {};
-
-inline Error handleErrorImpl(std::unique_ptr<ErrorInfoBase> Payload) {
-  return Error(std::move(Payload));
-}
-
-template <typename HandlerT, typename... HandlerTs>
-Error handleErrorImpl(std::unique_ptr<ErrorInfoBase> Payload,
-                      HandlerT &&Handler, HandlerTs &&... Handlers) {
-  if (ErrorHandlerTraits<HandlerT>::appliesTo(*Payload))
-    return ErrorHandlerTraits<HandlerT>::apply(std::forward<HandlerT>(Handler),
-                                               std::move(Payload));
-  return handleErrorImpl(std::move(Payload),
-                         std::forward<HandlerTs>(Handlers)...);
-}
-
-/// Pass the ErrorInfo(s) contained in E to their respective handlers. Any
-/// unhandled errors (or Errors returned by handlers) are re-concatenated and
-/// returned.
-/// Because this function returns an error, its result must also be checked
-/// or returned. If you intend to handle all errors use handleAllErrors
-/// (which returns void, and will abort() on unhandled errors) instead.
-template <typename... HandlerTs>
-Error handleErrors(Error E, HandlerTs &&... Hs) {
-  if (!E)
-    return Error::success();
-
-  std::unique_ptr<ErrorInfoBase> Payload = E.takePayload();
-
-  if (Payload->isA<ErrorList>()) {
-    ErrorList &List = static_cast<ErrorList &>(*Payload);
-    Error R;
-    for (auto &P : List.Payloads)
-      R = ErrorList::join(
-          std::move(R),
-          handleErrorImpl(std::move(P), std::forward<HandlerTs>(Hs)...));
-    return R;
-  }
-
-  return handleErrorImpl(std::move(Payload), std::forward<HandlerTs>(Hs)...);
-}
-
-/// Behaves the same as handleErrors, except that it requires that all
-/// errors be handled by the given handlers. If any unhandled error remains
-/// after the handlers have run, abort() will be called.
-template <typename... HandlerTs>
-void handleAllErrors(Error E, HandlerTs &&... Handlers) {
-  auto F = handleErrors(std::move(E), std::forward<HandlerTs>(Handlers)...);
-  // Cast 'F' to bool to set the 'Checked' flag if it's a success value:
-  (void)!F;
-}
-
-/// Check that E is a non-error, then drop it.
-inline void handleAllErrors(Error E) {
-  // Cast 'E' to a bool to set the 'Checked' flag if it's a success value:
-  (void)!E;
-}
-
-/// Log all errors (if any) in E to OS. If there are any errors, ErrorBanner
-/// will be printed before the first one is logged. A newline will be printed
-/// after each error.
-///
-/// This is useful in the base level of your program to allow clean termination
-/// (allowing clean deallocation of resources, etc.), while reporting error
-/// information to the user.
-void logAllUnhandledErrors(Error E, raw_ostream &OS, Twine ErrorBanner);
-
-/// Write all error messages (if any) in E to a string. The newline character
-/// is used to separate error messages.
-inline std::string toString(Error E) {
-  SmallVector<std::string, 2> Errors;
-  handleAllErrors(std::move(E), [&Errors](const ErrorInfoBase &EI) {
-    Errors.push_back(EI.message());
-  });
-  return join(Errors.begin(), Errors.end(), "\n");
-}
-
-/// Consume a Error without doing anything. This method should be used
-/// only where an error can be considered a reasonable and expected return
-/// value.
-///
-/// Uses of this method are potentially indicative of design problems: If it's
-/// legitimate to do nothing while processing an "error", the error-producer
-/// might be more clearly refactored to return an Optional<T>.
-inline void consumeError(Error Err) {
-  handleAllErrors(std::move(Err), [](const ErrorInfoBase &) {});
-}
-
-/// Helper for Errors used as out-parameters.
-///
-/// This helper is for use with the Error-as-out-parameter idiom, where an error
-/// is passed to a function or method by reference, rather than being returned.
-/// In such cases it is helpful to set the checked bit on entry to the function
-/// so that the error can be written to (unchecked Errors abort on assignment)
-/// and clear the checked bit on exit so that clients cannot accidentally forget
-/// to check the result. This helper performs these actions automatically using
-/// RAII:
-///
-///   @code{.cpp}
-///   Result foo(Error &Err) {
-///     ErrorAsOutParameter ErrAsOutParam(&Err); // 'Checked' flag set
-///     // <body of foo>
-///     // <- 'Checked' flag auto-cleared when ErrAsOutParam is destructed.
-///   }
-///   @endcode
-///
-/// ErrorAsOutParameter takes an Error* rather than Error& so that it can be
-/// used with optional Errors (Error pointers that are allowed to be null). If
-/// ErrorAsOutParameter took an Error reference, an instance would have to be
-/// created inside every condition that verified that Error was non-null. By
-/// taking an Error pointer we can just create one instance at the top of the
-/// function.
-class ErrorAsOutParameter {
-public:
-  ErrorAsOutParameter(Error *Err) : Err(Err) {
-    // Raise the checked bit if Err is success.
-    if (Err)
-      (void)!!*Err;
-  }
-
-  ~ErrorAsOutParameter() {
-    // Clear the checked bit.
-    if (Err && !*Err)
-      *Err = Error::success();
-  }
-
-private:
-  Error *Err;
-};
-
 /// Tagged union holding either a T or a Error.
 ///
 /// This class parallels ErrorOr, but replaces error_code with Error. Since
@@ -648,7 +436,7 @@ template <class T> class LLVM_NODISCARD Expected {
 
   static const bool isRef = std::is_reference<T>::value;
 
-  using wrap = ReferenceStorage<typename std::remove_reference<T>::type>;
+  using wrap = std::reference_wrapper<typename std::remove_reference<T>::type>;
 
   using error_type = std::unique_ptr<ErrorInfoBase>;
 
@@ -732,7 +520,7 @@ public:
       getErrorStorage()->~error_type();
   }
 
-  /// \brief Return false if there is an error.
+  /// Return false if there is an error.
   explicit operator bool() {
 #if LLVM_ENABLE_ABI_BREAKING_CHECKS
     Unchecked = HasError;
@@ -740,24 +528,24 @@ public:
     return !HasError;
   }
 
-  /// \brief Returns a reference to the stored T value.
+  /// Returns a reference to the stored T value.
   reference get() {
     assertIsChecked();
     return *getStorage();
   }
 
-  /// \brief Returns a const reference to the stored T value.
+  /// Returns a const reference to the stored T value.
   const_reference get() const {
     assertIsChecked();
     return const_cast<Expected<T> *>(this)->get();
   }
 
-  /// \brief Check that this Expected<T> is an error of type ErrT.
+  /// Check that this Expected<T> is an error of type ErrT.
   template <typename ErrT> bool errorIsA() const {
     return HasError && (*getErrorStorage())->template isA<ErrT>();
   }
 
-  /// \brief Take ownership of the stored error.
+  /// Take ownership of the stored error.
   /// After calling this the Expected<T> is in an indeterminate state that can
   /// only be safely destructed. No further calls (beside the destructor) should
   /// be made on the Expected<T> vaule.
@@ -768,25 +556,25 @@ public:
     return HasError ? Error(std::move(*getErrorStorage())) : Error::success();
   }
 
-  /// \brief Returns a pointer to the stored T value.
+  /// Returns a pointer to the stored T value.
   pointer operator->() {
     assertIsChecked();
     return toPointer(getStorage());
   }
 
-  /// \brief Returns a const pointer to the stored T value.
+  /// Returns a const pointer to the stored T value.
   const_pointer operator->() const {
     assertIsChecked();
     return toPointer(getStorage());
   }
 
-  /// \brief Returns a reference to the stored T value.
+  /// Returns a reference to the stored T value.
   reference operator*() {
     assertIsChecked();
     return *getStorage();
   }
 
-  /// \brief Returns a const reference to the stored T value.
+  /// Returns a const reference to the stored T value.
   const_reference operator*() const {
     assertIsChecked();
     return *getStorage();
@@ -861,19 +649,26 @@ private:
 #endif
   }
 
+#if LLVM_ENABLE_ABI_BREAKING_CHECKS
+  LLVM_ATTRIBUTE_NORETURN
+  LLVM_ATTRIBUTE_NOINLINE
+  void fatalUncheckedExpected() const {
+    dbgs() << "Expected<T> must be checked before access or destruction.\n";
+    if (HasError) {
+      dbgs() << "Unchecked Expected<T> contained error:\n";
+      (*getErrorStorage())->log(dbgs());
+    } else
+      dbgs() << "Expected<T> value was in success state. (Note: Expected<T> "
+                "values in success mode must still be checked prior to being "
+                "destroyed).\n";
+    abort();
+  }
+#endif
+
   void assertIsChecked() {
 #if LLVM_ENABLE_ABI_BREAKING_CHECKS
-    if (Unchecked) {
-      dbgs() << "Expected<T> must be checked before access or destruction.\n";
-      if (HasError) {
-        dbgs() << "Unchecked Expected<T> contained error:\n";
-        (*getErrorStorage())->log(dbgs());
-      } else
-        dbgs() << "Expected<T> value was in success state. (Note: Expected<T> "
-                  "values in success mode must still be checked prior to being "
-                  "destroyed).\n";
-      abort();
-    }
+    if (LLVM_UNLIKELY(Unchecked))
+      fatalUncheckedExpected();
 #endif
   }
 
@@ -885,6 +680,360 @@ private:
 #if LLVM_ENABLE_ABI_BREAKING_CHECKS
   bool Unchecked : 1;
 #endif
+};
+
+/// Report a serious error, calling any installed error handler. See
+/// ErrorHandling.h.
+LLVM_ATTRIBUTE_NORETURN void report_fatal_error(Error Err,
+                                                bool gen_crash_diag = true);
+
+/// Report a fatal error if Err is a failure value.
+///
+/// This function can be used to wrap calls to fallible functions ONLY when it
+/// is known that the Error will always be a success value. E.g.
+///
+///   @code{.cpp}
+///   // foo only attempts the fallible operation if DoFallibleOperation is
+///   // true. If DoFallibleOperation is false then foo always returns
+///   // Error::success().
+///   Error foo(bool DoFallibleOperation);
+///
+///   cantFail(foo(false));
+///   @endcode
+inline void cantFail(Error Err, const char *Msg = nullptr) {
+  if (Err) {
+    if (!Msg)
+      Msg = "Failure value returned from cantFail wrapped call";
+    llvm_unreachable(Msg);
+  }
+}
+
+/// Report a fatal error if ValOrErr is a failure value, otherwise unwraps and
+/// returns the contained value.
+///
+/// This function can be used to wrap calls to fallible functions ONLY when it
+/// is known that the Error will always be a success value. E.g.
+///
+///   @code{.cpp}
+///   // foo only attempts the fallible operation if DoFallibleOperation is
+///   // true. If DoFallibleOperation is false then foo always returns an int.
+///   Expected<int> foo(bool DoFallibleOperation);
+///
+///   int X = cantFail(foo(false));
+///   @endcode
+template <typename T>
+T cantFail(Expected<T> ValOrErr, const char *Msg = nullptr) {
+  if (ValOrErr)
+    return std::move(*ValOrErr);
+  else {
+    if (!Msg)
+      Msg = "Failure value returned from cantFail wrapped call";
+    llvm_unreachable(Msg);
+  }
+}
+
+/// Report a fatal error if ValOrErr is a failure value, otherwise unwraps and
+/// returns the contained reference.
+///
+/// This function can be used to wrap calls to fallible functions ONLY when it
+/// is known that the Error will always be a success value. E.g.
+///
+///   @code{.cpp}
+///   // foo only attempts the fallible operation if DoFallibleOperation is
+///   // true. If DoFallibleOperation is false then foo always returns a Bar&.
+///   Expected<Bar&> foo(bool DoFallibleOperation);
+///
+///   Bar &X = cantFail(foo(false));
+///   @endcode
+template <typename T>
+T& cantFail(Expected<T&> ValOrErr, const char *Msg = nullptr) {
+  if (ValOrErr)
+    return *ValOrErr;
+  else {
+    if (!Msg)
+      Msg = "Failure value returned from cantFail wrapped call";
+    llvm_unreachable(Msg);
+  }
+}
+
+/// Helper for testing applicability of, and applying, handlers for
+/// ErrorInfo types.
+template <typename HandlerT>
+class ErrorHandlerTraits
+    : public ErrorHandlerTraits<decltype(
+          &std::remove_reference<HandlerT>::type::operator())> {};
+
+// Specialization functions of the form 'Error (const ErrT&)'.
+template <typename ErrT> class ErrorHandlerTraits<Error (&)(ErrT &)> {
+public:
+  static bool appliesTo(const ErrorInfoBase &E) {
+    return E.template isA<ErrT>();
+  }
+
+  template <typename HandlerT>
+  static Error apply(HandlerT &&H, std::unique_ptr<ErrorInfoBase> E) {
+    assert(appliesTo(*E) && "Applying incorrect handler");
+    return H(static_cast<ErrT &>(*E));
+  }
+};
+
+// Specialization functions of the form 'void (const ErrT&)'.
+template <typename ErrT> class ErrorHandlerTraits<void (&)(ErrT &)> {
+public:
+  static bool appliesTo(const ErrorInfoBase &E) {
+    return E.template isA<ErrT>();
+  }
+
+  template <typename HandlerT>
+  static Error apply(HandlerT &&H, std::unique_ptr<ErrorInfoBase> E) {
+    assert(appliesTo(*E) && "Applying incorrect handler");
+    H(static_cast<ErrT &>(*E));
+    return Error::success();
+  }
+};
+
+/// Specialization for functions of the form 'Error (std::unique_ptr<ErrT>)'.
+template <typename ErrT>
+class ErrorHandlerTraits<Error (&)(std::unique_ptr<ErrT>)> {
+public:
+  static bool appliesTo(const ErrorInfoBase &E) {
+    return E.template isA<ErrT>();
+  }
+
+  template <typename HandlerT>
+  static Error apply(HandlerT &&H, std::unique_ptr<ErrorInfoBase> E) {
+    assert(appliesTo(*E) && "Applying incorrect handler");
+    std::unique_ptr<ErrT> SubE(static_cast<ErrT *>(E.release()));
+    return H(std::move(SubE));
+  }
+};
+
+/// Specialization for functions of the form 'void (std::unique_ptr<ErrT>)'.
+template <typename ErrT>
+class ErrorHandlerTraits<void (&)(std::unique_ptr<ErrT>)> {
+public:
+  static bool appliesTo(const ErrorInfoBase &E) {
+    return E.template isA<ErrT>();
+  }
+
+  template <typename HandlerT>
+  static Error apply(HandlerT &&H, std::unique_ptr<ErrorInfoBase> E) {
+    assert(appliesTo(*E) && "Applying incorrect handler");
+    std::unique_ptr<ErrT> SubE(static_cast<ErrT *>(E.release()));
+    H(std::move(SubE));
+    return Error::success();
+  }
+};
+
+// Specialization for member functions of the form 'RetT (const ErrT&)'.
+template <typename C, typename RetT, typename ErrT>
+class ErrorHandlerTraits<RetT (C::*)(ErrT &)>
+    : public ErrorHandlerTraits<RetT (&)(ErrT &)> {};
+
+// Specialization for member functions of the form 'RetT (const ErrT&) const'.
+template <typename C, typename RetT, typename ErrT>
+class ErrorHandlerTraits<RetT (C::*)(ErrT &) const>
+    : public ErrorHandlerTraits<RetT (&)(ErrT &)> {};
+
+// Specialization for member functions of the form 'RetT (const ErrT&)'.
+template <typename C, typename RetT, typename ErrT>
+class ErrorHandlerTraits<RetT (C::*)(const ErrT &)>
+    : public ErrorHandlerTraits<RetT (&)(ErrT &)> {};
+
+// Specialization for member functions of the form 'RetT (const ErrT&) const'.
+template <typename C, typename RetT, typename ErrT>
+class ErrorHandlerTraits<RetT (C::*)(const ErrT &) const>
+    : public ErrorHandlerTraits<RetT (&)(ErrT &)> {};
+
+/// Specialization for member functions of the form
+/// 'RetT (std::unique_ptr<ErrT>)'.
+template <typename C, typename RetT, typename ErrT>
+class ErrorHandlerTraits<RetT (C::*)(std::unique_ptr<ErrT>)>
+    : public ErrorHandlerTraits<RetT (&)(std::unique_ptr<ErrT>)> {};
+
+/// Specialization for member functions of the form
+/// 'RetT (std::unique_ptr<ErrT>) const'.
+template <typename C, typename RetT, typename ErrT>
+class ErrorHandlerTraits<RetT (C::*)(std::unique_ptr<ErrT>) const>
+    : public ErrorHandlerTraits<RetT (&)(std::unique_ptr<ErrT>)> {};
+
+inline Error handleErrorImpl(std::unique_ptr<ErrorInfoBase> Payload) {
+  return Error(std::move(Payload));
+}
+
+template <typename HandlerT, typename... HandlerTs>
+Error handleErrorImpl(std::unique_ptr<ErrorInfoBase> Payload,
+                      HandlerT &&Handler, HandlerTs &&... Handlers) {
+  if (ErrorHandlerTraits<HandlerT>::appliesTo(*Payload))
+    return ErrorHandlerTraits<HandlerT>::apply(std::forward<HandlerT>(Handler),
+                                               std::move(Payload));
+  return handleErrorImpl(std::move(Payload),
+                         std::forward<HandlerTs>(Handlers)...);
+}
+
+/// Pass the ErrorInfo(s) contained in E to their respective handlers. Any
+/// unhandled errors (or Errors returned by handlers) are re-concatenated and
+/// returned.
+/// Because this function returns an error, its result must also be checked
+/// or returned. If you intend to handle all errors use handleAllErrors
+/// (which returns void, and will abort() on unhandled errors) instead.
+template <typename... HandlerTs>
+Error handleErrors(Error E, HandlerTs &&... Hs) {
+  if (!E)
+    return Error::success();
+
+  std::unique_ptr<ErrorInfoBase> Payload = E.takePayload();
+
+  if (Payload->isA<ErrorList>()) {
+    ErrorList &List = static_cast<ErrorList &>(*Payload);
+    Error R;
+    for (auto &P : List.Payloads)
+      R = ErrorList::join(
+          std::move(R),
+          handleErrorImpl(std::move(P), std::forward<HandlerTs>(Hs)...));
+    return R;
+  }
+
+  return handleErrorImpl(std::move(Payload), std::forward<HandlerTs>(Hs)...);
+}
+
+/// Behaves the same as handleErrors, except that by contract all errors
+/// *must* be handled by the given handlers (i.e. there must be no remaining
+/// errors after running the handlers, or llvm_unreachable is called).
+template <typename... HandlerTs>
+void handleAllErrors(Error E, HandlerTs &&... Handlers) {
+  cantFail(handleErrors(std::move(E), std::forward<HandlerTs>(Handlers)...));
+}
+
+/// Check that E is a non-error, then drop it.
+/// If E is an error, llvm_unreachable will be called.
+inline void handleAllErrors(Error E) {
+  cantFail(std::move(E));
+}
+
+/// Handle any errors (if present) in an Expected<T>, then try a recovery path.
+///
+/// If the incoming value is a success value it is returned unmodified. If it
+/// is a failure value then it the contained error is passed to handleErrors.
+/// If handleErrors is able to handle the error then the RecoveryPath functor
+/// is called to supply the final result. If handleErrors is not able to
+/// handle all errors then the unhandled errors are returned.
+///
+/// This utility enables the follow pattern:
+///
+///   @code{.cpp}
+///   enum FooStrategy { Aggressive, Conservative };
+///   Expected<Foo> foo(FooStrategy S);
+///
+///   auto ResultOrErr =
+///     handleExpected(
+///       foo(Aggressive),
+///       []() { return foo(Conservative); },
+///       [](AggressiveStrategyError&) {
+///         // Implicitly conusme this - we'll recover by using a conservative
+///         // strategy.
+///       });
+///
+///   @endcode
+template <typename T, typename RecoveryFtor, typename... HandlerTs>
+Expected<T> handleExpected(Expected<T> ValOrErr, RecoveryFtor &&RecoveryPath,
+                           HandlerTs &&... Handlers) {
+  if (ValOrErr)
+    return ValOrErr;
+
+  if (auto Err = handleErrors(ValOrErr.takeError(),
+                              std::forward<HandlerTs>(Handlers)...))
+    return std::move(Err);
+
+  return RecoveryPath();
+}
+
+/// Log all errors (if any) in E to OS. If there are any errors, ErrorBanner
+/// will be printed before the first one is logged. A newline will be printed
+/// after each error.
+///
+/// This function is compatible with the helpers from Support/WithColor.h. You
+/// can pass any of them as the OS. Please consider using them instead of
+/// including 'error: ' in the ErrorBanner.
+///
+/// This is useful in the base level of your program to allow clean termination
+/// (allowing clean deallocation of resources, etc.), while reporting error
+/// information to the user.
+void logAllUnhandledErrors(Error E, raw_ostream &OS, Twine ErrorBanner = {});
+
+/// Write all error messages (if any) in E to a string. The newline character
+/// is used to separate error messages.
+inline std::string toString(Error E) {
+  SmallVector<std::string, 2> Errors;
+  handleAllErrors(std::move(E), [&Errors](const ErrorInfoBase &EI) {
+    Errors.push_back(EI.message());
+  });
+  return join(Errors.begin(), Errors.end(), "\n");
+}
+
+/// Consume a Error without doing anything. This method should be used
+/// only where an error can be considered a reasonable and expected return
+/// value.
+///
+/// Uses of this method are potentially indicative of design problems: If it's
+/// legitimate to do nothing while processing an "error", the error-producer
+/// might be more clearly refactored to return an Optional<T>.
+inline void consumeError(Error Err) {
+  handleAllErrors(std::move(Err), [](const ErrorInfoBase &) {});
+}
+
+/// Helper for converting an Error to a bool.
+///
+/// This method returns true if Err is in an error state, or false if it is
+/// in a success state.  Puts Err in a checked state in both cases (unlike
+/// Error::operator bool(), which only does this for success states).
+inline bool errorToBool(Error Err) {
+  bool IsError = static_cast<bool>(Err);
+  if (IsError)
+    consumeError(std::move(Err));
+  return IsError;
+}
+
+/// Helper for Errors used as out-parameters.
+///
+/// This helper is for use with the Error-as-out-parameter idiom, where an error
+/// is passed to a function or method by reference, rather than being returned.
+/// In such cases it is helpful to set the checked bit on entry to the function
+/// so that the error can be written to (unchecked Errors abort on assignment)
+/// and clear the checked bit on exit so that clients cannot accidentally forget
+/// to check the result. This helper performs these actions automatically using
+/// RAII:
+///
+///   @code{.cpp}
+///   Result foo(Error &Err) {
+///     ErrorAsOutParameter ErrAsOutParam(&Err); // 'Checked' flag set
+///     // <body of foo>
+///     // <- 'Checked' flag auto-cleared when ErrAsOutParam is destructed.
+///   }
+///   @endcode
+///
+/// ErrorAsOutParameter takes an Error* rather than Error& so that it can be
+/// used with optional Errors (Error pointers that are allowed to be null). If
+/// ErrorAsOutParameter took an Error reference, an instance would have to be
+/// created inside every condition that verified that Error was non-null. By
+/// taking an Error pointer we can just create one instance at the top of the
+/// function.
+class ErrorAsOutParameter {
+public:
+  ErrorAsOutParameter(Error *Err) : Err(Err) {
+    // Raise the checked bit if Err is success.
+    if (Err)
+      (void)!!*Err;
+  }
+
+  ~ErrorAsOutParameter() {
+    // Clear the checked bit.
+    if (Err && !*Err)
+      *Err = Error::success();
+  }
+
+private:
+  Error *Err;
 };
 
 /// Helper for Expected<T>s used as out-parameters.
@@ -915,6 +1064,8 @@ private:
 /// std::error_codes.
 class ECError : public ErrorInfo<ECError> {
   friend Error errorCodeToError(std::error_code);
+
+  virtual void anchor() override;
 
 public:
   void setErrorCode(std::error_code EC) { this->EC = EC; }
@@ -967,10 +1118,33 @@ template <typename T> ErrorOr<T> expectedToErrorOr(Expected<T> &&E) {
 /// StringError is useful in cases where the client is not expected to be able
 /// to consume the specific error message programmatically (for example, if the
 /// error message is to be presented to the user).
+///
+/// StringError can also be used when additional information is to be printed
+/// along with a error_code message. Depending on the constructor called, this
+/// class can either display:
+///    1. the error_code message (ECError behavior)
+///    2. a string
+///    3. the error_code message and a string
+///
+/// These behaviors are useful when subtyping is required; for example, when a
+/// specific library needs an explicit error type. In the example below,
+/// PDBError is derived from StringError:
+///
+///   @code{.cpp}
+///   Expected<int> foo() {
+///      return llvm::make_error<PDBError>(pdb_error_code::dia_failed_loading,
+///                                        "Additional information");
+///   }
+///   @endcode
+///
 class StringError : public ErrorInfo<StringError> {
 public:
   static char ID;
 
+  // Prints EC + S and converts to EC
+  StringError(std::error_code EC, const Twine &S = Twine());
+
+  // Prints S and converts to EC
   StringError(const Twine &S, std::error_code EC);
 
   void log(raw_ostream &OS) const override;
@@ -981,7 +1155,98 @@ public:
 private:
   std::string Msg;
   std::error_code EC;
+  const bool PrintMsgOnly = false;
 };
+
+/// Create formatted StringError object.
+template <typename... Ts>
+inline Error createStringError(std::error_code EC, char const *Fmt,
+                               const Ts &... Vals) {
+  std::string Buffer;
+  raw_string_ostream Stream(Buffer);
+  Stream << format(Fmt, Vals...);
+  return make_error<StringError>(Stream.str(), EC);
+}
+
+Error createStringError(std::error_code EC, char const *Msg);
+
+template <typename... Ts>
+inline Error createStringError(std::errc EC, char const *Fmt,
+                               const Ts &... Vals) {
+  return createStringError(std::make_error_code(EC), Fmt, Vals...);
+}
+
+/// This class wraps a filename and another Error.
+///
+/// In some cases, an error needs to live along a 'source' name, in order to
+/// show more detailed information to the user.
+class FileError final : public ErrorInfo<FileError> {
+
+  friend Error createFileError(const Twine &, Error);
+  friend Error createFileError(const Twine &, size_t, Error);
+
+public:
+  void log(raw_ostream &OS) const override {
+    assert(Err && !FileName.empty() && "Trying to log after takeError().");
+    OS << "'" << FileName << "': ";
+    if (Line.hasValue())
+      OS << "line " << Line.getValue() << ": ";
+    Err->log(OS);
+  }
+
+  Error takeError() { return Error(std::move(Err)); }
+
+  std::error_code convertToErrorCode() const override;
+
+  // Used by ErrorInfo::classID.
+  static char ID;
+
+private:
+  FileError(const Twine &F, Optional<size_t> LineNum,
+            std::unique_ptr<ErrorInfoBase> E) {
+    assert(E && "Cannot create FileError from Error success value.");
+    assert(!F.isTriviallyEmpty() &&
+           "The file name provided to FileError must not be empty.");
+    FileName = F.str();
+    Err = std::move(E);
+    Line = std::move(LineNum);
+  }
+
+  static Error build(const Twine &F, Optional<size_t> Line, Error E) {
+    return Error(
+        std::unique_ptr<FileError>(new FileError(F, Line, E.takePayload())));
+  }
+
+  std::string FileName;
+  Optional<size_t> Line;
+  std::unique_ptr<ErrorInfoBase> Err;
+};
+
+/// Concatenate a source file path and/or name with an Error. The resulting
+/// Error is unchecked.
+inline Error createFileError(const Twine &F, Error E) {
+  return FileError::build(F, Optional<size_t>(), std::move(E));
+}
+
+/// Concatenate a source file path and/or name with line number and an Error.
+/// The resulting Error is unchecked.
+inline Error createFileError(const Twine &F, size_t Line, Error E) {
+  return FileError::build(F, Optional<size_t>(Line), std::move(E));
+}
+
+/// Concatenate a source file path and/or name with a std::error_code 
+/// to form an Error object.
+inline Error createFileError(const Twine &F, std::error_code EC) {
+  return createFileError(F, errorCodeToError(EC));
+}
+
+/// Concatenate a source file path and/or name with line number and
+/// std::error_code to form an Error object.
+inline Error createFileError(const Twine &F, size_t Line, std::error_code EC) {
+  return createFileError(F, Line, errorCodeToError(EC));
+}
+
+Error createFileError(const Twine &F, ErrorSuccess) = delete;
 
 /// Helper for check-and-exit error handling.
 ///
@@ -1032,69 +1297,15 @@ private:
   std::function<int(const Error &)> GetExitCode;
 };
 
-/// Report a serious error, calling any installed error handler. See
-/// ErrorHandling.h.
-LLVM_ATTRIBUTE_NORETURN void report_fatal_error(Error Err,
-                                                bool gen_crash_diag = true);
-
-/// Report a fatal error if Err is a failure value.
-///
-/// This function can be used to wrap calls to fallible functions ONLY when it
-/// is known that the Error will always be a success value. E.g.
-///
-///   @code{.cpp}
-///   // foo only attempts the fallible operation if DoFallibleOperation is
-///   // true. If DoFallibleOperation is false then foo always returns
-///   // Error::success().
-///   Error foo(bool DoFallibleOperation);
-///
-///   cantFail(foo(false));
-///   @endcode
-inline void cantFail(Error Err) {
-  if (Err)
-    llvm_unreachable("Failure value returned from cantFail wrapped call");
+/// Conversion from Error to LLVMErrorRef for C error bindings.
+inline LLVMErrorRef wrap(Error Err) {
+  return reinterpret_cast<LLVMErrorRef>(Err.takePayload().release());
 }
 
-/// Report a fatal error if ValOrErr is a failure value, otherwise unwraps and
-/// returns the contained value.
-///
-/// This function can be used to wrap calls to fallible functions ONLY when it
-/// is known that the Error will always be a success value. E.g.
-///
-///   @code{.cpp}
-///   // foo only attempts the fallible operation if DoFallibleOperation is
-///   // true. If DoFallibleOperation is false then foo always returns an int.
-///   Expected<int> foo(bool DoFallibleOperation);
-///
-///   int X = cantFail(foo(false));
-///   @endcode
-template <typename T>
-T cantFail(Expected<T> ValOrErr) {
-  if (ValOrErr)
-    return std::move(*ValOrErr);
-  else
-    llvm_unreachable("Failure value returned from cantFail wrapped call");
-}
-
-/// Report a fatal error if ValOrErr is a failure value, otherwise unwraps and
-/// returns the contained reference.
-///
-/// This function can be used to wrap calls to fallible functions ONLY when it
-/// is known that the Error will always be a success value. E.g.
-///
-///   @code{.cpp}
-///   // foo only attempts the fallible operation if DoFallibleOperation is
-///   // true. If DoFallibleOperation is false then foo always returns a Bar&.
-///   Expected<Bar&> foo(bool DoFallibleOperation);
-///
-///   Bar &X = cantFail(foo(false));
-///   @endcode
-template <typename T>
-T& cantFail(Expected<T&> ValOrErr) {
-  if (ValOrErr)
-    return *ValOrErr;
-  else
-    llvm_unreachable("Failure value returned from cantFail wrapped call");
+/// Conversion from LLVMErrorRef to Error for C error bindings.
+inline Error unwrap(LLVMErrorRef ErrRef) {
+  return Error(std::unique_ptr<ErrorInfoBase>(
+      reinterpret_cast<ErrorInfoBase *>(ErrRef)));
 }
 
 } // end namespace llvm

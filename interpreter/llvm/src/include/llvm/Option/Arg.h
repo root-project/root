@@ -1,14 +1,13 @@
 //===- Arg.h - Parsed Argument Classes --------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief Defines the llvm::Arg class for parsed arguments.
+/// Defines the llvm::Arg class for parsed arguments.
 ///
 //===----------------------------------------------------------------------===//
 
@@ -28,36 +27,41 @@ namespace opt {
 
 class ArgList;
 
-/// \brief A concrete instance of a particular driver option.
+/// A concrete instance of a particular driver option.
 ///
 /// The Arg class encodes just enough information to be able to
 /// derive the argument values efficiently.
 class Arg {
 private:
-  /// \brief The option this argument is an instance of.
+  /// The option this argument is an instance of.
   const Option Opt;
 
-  /// \brief The argument this argument was derived from (during tool chain
+  /// The argument this argument was derived from (during tool chain
   /// argument translation), if any.
   const Arg *BaseArg;
 
-  /// \brief How this instance of the option was spelled.
+  /// How this instance of the option was spelled.
   StringRef Spelling;
 
-  /// \brief The index at which this argument appears in the containing
+  /// The index at which this argument appears in the containing
   /// ArgList.
   unsigned Index;
 
-  /// \brief Was this argument used to effect compilation?
+  /// Was this argument used to effect compilation?
   ///
   /// This is used for generating "argument unused" diagnostics.
   mutable unsigned Claimed : 1;
 
-  /// \brief Does this argument own its values?
+  /// Does this argument own its values?
   mutable unsigned OwnsValues : 1;
 
-  /// \brief The argument values, as C strings.
+  /// The argument values, as C strings.
   SmallVector<const char *, 2> Values;
+
+  /// If this arg was created through an alias, this is the original alias arg.
+  /// For example, *this might be "-finput-charset=utf-8" and Alias might
+  /// point to an arg representing "/source-charset:utf-8".
+  std::unique_ptr<Arg> Alias;
 
 public:
   Arg(const Option Opt, StringRef Spelling, unsigned Index,
@@ -71,10 +75,18 @@ public:
   ~Arg();
 
   const Option &getOption() const { return Opt; }
+
+  /// Returns the used prefix and name of the option:
+  /// For `--foo=bar`, returns `--foo=`.
+  /// This is often the wrong function to call:
+  /// * Use `getValue()` to get `bar`.
+  /// * Use `getAsString()` to get a string suitable for printing an Arg in
+  ///   a diagnostic.
   StringRef getSpelling() const { return Spelling; }
+
   unsigned getIndex() const { return Index; }
 
-  /// \brief Return the base argument which generated this arg.
+  /// Return the base argument which generated this arg.
   ///
   /// This is either the argument itself or the argument it was
   /// derived from during tool chain specific argument translation.
@@ -83,12 +95,17 @@ public:
   }
   void setBaseArg(const Arg *BaseArg) { this->BaseArg = BaseArg; }
 
+  /// Args are converted to their unaliased form.  For args that originally
+  /// came from an alias, this returns the alias the arg was produced from.
+  const Arg* getAlias() const { return Alias.get(); }
+  void setAlias(std::unique_ptr<Arg> Alias) { this->Alias = std::move(Alias); }
+
   bool getOwnsValues() const { return OwnsValues; }
   void setOwnsValues(bool Value) const { OwnsValues = Value; }
 
   bool isClaimed() const { return getBaseArg().Claimed; }
 
-  /// \brief Set the Arg claimed bit.
+  /// Set the Arg claimed bit.
   void claim() const { getBaseArg().Claimed = true; }
 
   unsigned getNumValues() const { return Values.size(); }
@@ -107,10 +124,10 @@ public:
     return false;
   }
 
-  /// \brief Append the argument onto the given array as strings.
+  /// Append the argument onto the given array as strings.
   void render(const ArgList &Args, ArgStringList &Output) const;
 
-  /// \brief Append the argument, render as an input, onto the given
+  /// Append the argument, render as an input, onto the given
   /// array as strings.
   ///
   /// The distinction is that some options only render their values
@@ -120,8 +137,10 @@ public:
   void print(raw_ostream &O) const;
   void dump() const;
 
-  /// \brief Return a formatted version of the argument and
-  /// its values, for debugging and diagnostics.
+  /// Return a formatted version of the argument and its values, for
+  /// diagnostics. Since this is for diagnostics, if this Arg was produced
+  /// through an alias, this returns the string representation of the alias
+  /// that the user wrote.
   std::string getAsString(const ArgList &Args) const;
 };
 

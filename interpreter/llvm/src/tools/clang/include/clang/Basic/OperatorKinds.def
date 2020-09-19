@@ -1,9 +1,8 @@
 //===--- OperatorKinds.def - C++ Overloaded Operator Database ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -89,6 +88,7 @@ OVERLOADED_OPERATOR(EqualEqual           , "=="  , equalequal         , false, t
 OVERLOADED_OPERATOR(ExclaimEqual         , "!="  , exclaimequal       , false, true , false)
 OVERLOADED_OPERATOR(LessEqual            , "<="  , lessequal          , false, true , false)
 OVERLOADED_OPERATOR(GreaterEqual         , ">="  , greaterequal       , false, true , false)
+OVERLOADED_OPERATOR(Spaceship            , "<=>" , spaceship          , false, true , false)
 OVERLOADED_OPERATOR(AmpAmp               , "&&"  , ampamp             , false, true , false)
 OVERLOADED_OPERATOR(PipePipe             , "||"  , pipepipe           , false, true , false)
 OVERLOADED_OPERATOR(PlusPlus             , "++"  , plusplus           , true , true , false)

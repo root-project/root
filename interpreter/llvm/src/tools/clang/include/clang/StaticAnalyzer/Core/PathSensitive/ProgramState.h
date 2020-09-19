@@ -1,9 +1,8 @@
 //== ProgramState.h - Path-sensitive "State" for tracking values -*- C++ -*--=//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -21,7 +20,6 @@
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState_Fwd.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/SValBuilder.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/Store.h"
-#include "clang/StaticAnalyzer/Core/PathSensitive/TaintTag.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/ImmutableMap.h"
 #include "llvm/Support/Allocator.h"
@@ -36,6 +34,7 @@ class ASTContext;
 
 namespace ento {
 
+class AnalysisManager;
 class CallEvent;
 class CallEventManager;
 
@@ -43,7 +42,6 @@ typedef std::unique_ptr<ConstraintManager>(*ConstraintManagerCreator)(
     ProgramStateManager &, SubEngine *);
 typedef std::unique_ptr<StoreManager>(*StoreManagerCreator)(
     ProgramStateManager &);
-typedef llvm::ImmutableMap<const SubRegion*, TaintTagType> TaintedSubRegions;
 
 //===----------------------------------------------------------------------===//
 // ProgramStateTrait - Traits used by the Generic Data Map of a ProgramState.
@@ -106,10 +104,14 @@ public:
 
   ~ProgramState();
 
+  int64_t getID() const;
+
   /// Return the ProgramStateManager associated with this state.
   ProgramStateManager &getStateManager() const {
     return *stateMgr;
   }
+
+  AnalysisManager &getAnalysisManager() const;
 
   /// Return the ConstraintManager.
   ConstraintManager &getConstraintManager() const;
@@ -177,20 +179,20 @@ public:
   ///
   /// This returns a new state with the added constraint on \p cond.
   /// If no new state is feasible, NULL is returned.
-  ProgramStateRef assume(DefinedOrUnknownSVal cond, bool assumption) const;
+  LLVM_NODISCARD ProgramStateRef assume(DefinedOrUnknownSVal cond,
+                                        bool assumption) const;
 
   /// Assumes both "true" and "false" for \p cond, and returns both
   /// corresponding states (respectively).
   ///
   /// This is more efficient than calling assume() twice. Note that one (but not
   /// both) of the returned states may be NULL.
-  std::pair<ProgramStateRef, ProgramStateRef>
+  LLVM_NODISCARD std::pair<ProgramStateRef, ProgramStateRef>
   assume(DefinedOrUnknownSVal cond) const;
 
-  ProgramStateRef assumeInBound(DefinedOrUnknownSVal idx,
-                               DefinedOrUnknownSVal upperBound,
-                               bool assumption,
-                               QualType IndexType = QualType()) const;
+  LLVM_NODISCARD ProgramStateRef
+  assumeInBound(DefinedOrUnknownSVal idx, DefinedOrUnknownSVal upperBound,
+                bool assumption, QualType IndexType = QualType()) const;
 
   /// Assumes that the value of \p Val is bounded with [\p From; \p To]
   /// (if \p assumption is "true") or it is fully out of this range
@@ -198,23 +200,30 @@ public:
   ///
   /// This returns a new state with the added constraint on \p cond.
   /// If no new state is feasible, NULL is returned.
-  ProgramStateRef assumeInclusiveRange(DefinedOrUnknownSVal Val,
-                                       const llvm::APSInt &From,
-                                       const llvm::APSInt &To,
-                                       bool assumption) const;
+  LLVM_NODISCARD ProgramStateRef assumeInclusiveRange(DefinedOrUnknownSVal Val,
+                                                      const llvm::APSInt &From,
+                                                      const llvm::APSInt &To,
+                                                      bool assumption) const;
 
   /// Assumes given range both "true" and "false" for \p Val, and returns both
   /// corresponding states (respectively).
   ///
   /// This is more efficient than calling assume() twice. Note that one (but not
   /// both) of the returned states may be NULL.
-  std::pair<ProgramStateRef, ProgramStateRef>
+  LLVM_NODISCARD std::pair<ProgramStateRef, ProgramStateRef>
   assumeInclusiveRange(DefinedOrUnknownSVal Val, const llvm::APSInt &From,
                        const llvm::APSInt &To) const;
 
-  /// \brief Check if the given SVal is constrained to zero or is a zero
+  /// Check if the given SVal is not constrained to zero and is not
+  ///        a zero constant.
+  ConditionTruthVal isNonNull(SVal V) const;
+
+  /// Check if the given SVal is constrained to zero or is a zero
   ///        constant.
   ConditionTruthVal isNull(SVal V) const;
+
+  /// \return Whether values \p Lhs and \p Rhs are equal.
+  ConditionTruthVal areEqual(SVal Lhs, SVal Rhs) const;
 
   /// Utility method for getting regions.
   const VarRegion* getRegion(const VarDecl *D, const LocationContext *LC) const;
@@ -225,21 +234,34 @@ public:
 
   /// Create a new state by binding the value 'V' to the statement 'S' in the
   /// state's environment.
-  ProgramStateRef BindExpr(const Stmt *S, const LocationContext *LCtx,
-                               SVal V, bool Invalidate = true) const;
+  LLVM_NODISCARD ProgramStateRef BindExpr(const Stmt *S,
+                                          const LocationContext *LCtx, SVal V,
+                                          bool Invalidate = true) const;
 
-  ProgramStateRef bindLoc(Loc location,
-                          SVal V,
-                          const LocationContext *LCtx,
-                          bool notifyChanges = true) const;
+  LLVM_NODISCARD ProgramStateRef bindLoc(Loc location, SVal V,
+                                         const LocationContext *LCtx,
+                                         bool notifyChanges = true) const;
 
-  ProgramStateRef bindLoc(SVal location, SVal V, const LocationContext *LCtx) const;
+  LLVM_NODISCARD ProgramStateRef bindLoc(SVal location, SVal V,
+                                         const LocationContext *LCtx) const;
 
-  ProgramStateRef bindDefault(SVal loc, SVal V, const LocationContext *LCtx) const;
+  /// Initializes the region of memory represented by \p loc with an initial
+  /// value. Once initialized, all values loaded from any sub-regions of that
+  /// region will be equal to \p V, unless overwritten later by the program.
+  /// This method should not be used on regions that are already initialized.
+  /// If you need to indicate that memory contents have suddenly become unknown
+  /// within a certain region of memory, consider invalidateRegions().
+  LLVM_NODISCARD ProgramStateRef
+  bindDefaultInitial(SVal loc, SVal V, const LocationContext *LCtx) const;
 
-  ProgramStateRef killBinding(Loc LV) const;
+  /// Performs C++ zero-initialization procedure on the region of memory
+  /// represented by \p loc.
+  LLVM_NODISCARD ProgramStateRef
+  bindDefaultZero(SVal loc, const LocationContext *LCtx) const;
 
-  /// \brief Returns the state with bindings for the given regions
+  LLVM_NODISCARD ProgramStateRef killBinding(Loc LV) const;
+
+  /// Returns the state with bindings for the given regions
   ///  cleared from the store.
   ///
   /// Optionally invalidates global regions as well.
@@ -257,14 +279,14 @@ public:
   ///        the call and should be considered directly invalidated.
   /// \param ITraits information about special handling for a particular
   ///        region/symbol.
-  ProgramStateRef
+  LLVM_NODISCARD ProgramStateRef
   invalidateRegions(ArrayRef<const MemRegion *> Regions, const Expr *E,
                     unsigned BlockCount, const LocationContext *LCtx,
                     bool CausesPointerEscape, InvalidatedSymbols *IS = nullptr,
                     const CallEvent *Call = nullptr,
                     RegionAndSymbolInvalidationTraits *ITraits = nullptr) const;
 
-  ProgramStateRef
+  LLVM_NODISCARD ProgramStateRef
   invalidateRegions(ArrayRef<SVal> Regions, const Expr *E,
                     unsigned BlockCount, const LocationContext *LCtx,
                     bool CausesPointerEscape, InvalidatedSymbols *IS = nullptr,
@@ -273,8 +295,15 @@ public:
 
   /// enterStackFrame - Returns the state for entry to the given stack frame,
   ///  preserving the current state.
-  ProgramStateRef enterStackFrame(const CallEvent &Call,
-                                  const StackFrameContext *CalleeCtx) const;
+  LLVM_NODISCARD ProgramStateRef enterStackFrame(
+      const CallEvent &Call, const StackFrameContext *CalleeCtx) const;
+
+  /// Get the lvalue for a base class object reference.
+  Loc getLValue(const CXXBaseSpecifier &BaseSpec, const SubRegion *Super) const;
+
+  /// Get the lvalue for a base class object reference.
+  Loc getLValue(const CXXRecordDecl *BaseClass, const SubRegion *Super,
+                bool IsVirtual) const;
 
   /// Get the lvalue for a variable reference.
   Loc getLValue(const VarDecl *D, const LocationContext *LC) const;
@@ -299,20 +328,26 @@ public:
 
   SVal getSValAsScalarOrLoc(const Stmt *Ex, const LocationContext *LCtx) const;
 
-  /// \brief Return the value bound to the specified location.
+  /// Return the value bound to the specified location.
   /// Returns UnknownVal() if none found.
   SVal getSVal(Loc LV, QualType T = QualType()) const;
 
   /// Returns the "raw" SVal bound to LV before any value simplfication.
   SVal getRawSVal(Loc LV, QualType T= QualType()) const;
 
-  /// \brief Return the value bound to the specified location.
+  /// Return the value bound to the specified location.
   /// Returns UnknownVal() if none found.
-  SVal getSVal(const MemRegion* R) const;
+  SVal getSVal(const MemRegion* R, QualType T = QualType()) const;
 
+  /// Return the value bound to the specified location, assuming
+  /// that the value is a scalar integer or an enumeration or a pointer.
+  /// Returns UnknownVal() if none found or the region is not known to hold
+  /// a value of such type.
   SVal getSValAsScalarOrLoc(const MemRegion *R) const;
 
-  /// \brief Visits the symbols reachable from the given SVal using the provided
+  using region_iterator = const MemRegion **;
+
+  /// Visits the symbols reachable from the given SVal using the provided
   /// SymbolVisitor.
   ///
   /// This is a convenience API. Consider using ScanReachableSymbols class
@@ -321,54 +356,14 @@ public:
   /// \sa ScanReachableSymbols
   bool scanReachableSymbols(SVal val, SymbolVisitor& visitor) const;
 
-  /// \brief Visits the symbols reachable from the SVals in the given range
-  /// using the provided SymbolVisitor.
-  bool scanReachableSymbols(const SVal *I, const SVal *E,
-                            SymbolVisitor &visitor) const;
-
-  /// \brief Visits the symbols reachable from the regions in the given
+  /// Visits the symbols reachable from the regions in the given
   /// MemRegions range using the provided SymbolVisitor.
-  bool scanReachableSymbols(const MemRegion * const *I,
-                            const MemRegion * const *E,
+  bool scanReachableSymbols(llvm::iterator_range<region_iterator> Reachable,
                             SymbolVisitor &visitor) const;
 
   template <typename CB> CB scanReachableSymbols(SVal val) const;
-  template <typename CB> CB scanReachableSymbols(const SVal *beg,
-                                                 const SVal *end) const;
-
   template <typename CB> CB
-  scanReachableSymbols(const MemRegion * const *beg,
-                       const MemRegion * const *end) const;
-
-  /// Create a new state in which the statement is marked as tainted.
-  ProgramStateRef addTaint(const Stmt *S, const LocationContext *LCtx,
-                               TaintTagType Kind = TaintTagGeneric) const;
-
-  /// Create a new state in which the value is marked as tainted.
-  ProgramStateRef addTaint(SVal V, TaintTagType Kind = TaintTagGeneric) const;
-
-  /// Create a new state in which the symbol is marked as tainted.
-  ProgramStateRef addTaint(SymbolRef S,
-                               TaintTagType Kind = TaintTagGeneric) const;
-
-  /// Create a new state in which the region symbol is marked as tainted.
-  ProgramStateRef addTaint(const MemRegion *R,
-                               TaintTagType Kind = TaintTagGeneric) const;
-
-  /// Create a new state in a which a sub-region of a given symbol is tainted.
-  /// This might be necessary when referring to regions that can not have an
-  /// individual symbol, e.g. if they are represented by the default binding of
-  /// a LazyCompoundVal.
-  ProgramStateRef addPartialTaint(SymbolRef ParentSym,
-                                  const SubRegion *SubRegion,
-                                  TaintTagType Kind = TaintTagGeneric) const;
-
-  /// Check if the statement is tainted in the current state.
-  bool isTainted(const Stmt *S, const LocationContext *LCtx,
-                 TaintTagType Kind = TaintTagGeneric) const;
-  bool isTainted(SVal V, TaintTagType Kind = TaintTagGeneric) const;
-  bool isTainted(SymbolRef Sym, TaintTagType Kind = TaintTagGeneric) const;
-  bool isTainted(const MemRegion *Reg, TaintTagType Kind=TaintTagGeneric) const;
+  scanReachableSymbols(llvm::iterator_range<region_iterator> Reachable) const;
 
   //==---------------------------------------------------------------------==//
   // Accessing the Generic Data Map (GDM).
@@ -376,8 +371,9 @@ public:
 
   void *const* FindGDM(void *K) const;
 
-  template<typename T>
-  ProgramStateRef add(typename ProgramStateTrait<T>::key_type K) const;
+  template <typename T>
+  LLVM_NODISCARD ProgramStateRef
+  add(typename ProgramStateTrait<T>::key_type K) const;
 
   template <typename T>
   typename ProgramStateTrait<T>::data_type
@@ -395,27 +391,31 @@ public:
   template <typename T>
   typename ProgramStateTrait<T>::context_type get_context() const;
 
-
-  template<typename T>
-  ProgramStateRef remove(typename ProgramStateTrait<T>::key_type K) const;
-
-  template<typename T>
-  ProgramStateRef remove(typename ProgramStateTrait<T>::key_type K,
-                        typename ProgramStateTrait<T>::context_type C) const;
   template <typename T>
-  ProgramStateRef remove() const;
+  LLVM_NODISCARD ProgramStateRef
+  remove(typename ProgramStateTrait<T>::key_type K) const;
 
-  template<typename T>
-  ProgramStateRef set(typename ProgramStateTrait<T>::data_type D) const;
+  template <typename T>
+  LLVM_NODISCARD ProgramStateRef
+  remove(typename ProgramStateTrait<T>::key_type K,
+         typename ProgramStateTrait<T>::context_type C) const;
 
-  template<typename T>
-  ProgramStateRef set(typename ProgramStateTrait<T>::key_type K,
-                     typename ProgramStateTrait<T>::value_type E) const;
+  template <typename T> LLVM_NODISCARD ProgramStateRef remove() const;
 
-  template<typename T>
-  ProgramStateRef set(typename ProgramStateTrait<T>::key_type K,
-                     typename ProgramStateTrait<T>::value_type E,
-                     typename ProgramStateTrait<T>::context_type C) const;
+  template <typename T>
+  LLVM_NODISCARD ProgramStateRef
+  set(typename ProgramStateTrait<T>::data_type D) const;
+
+  template <typename T>
+  LLVM_NODISCARD ProgramStateRef
+  set(typename ProgramStateTrait<T>::key_type K,
+      typename ProgramStateTrait<T>::value_type E) const;
+
+  template <typename T>
+  LLVM_NODISCARD ProgramStateRef
+  set(typename ProgramStateTrait<T>::key_type K,
+      typename ProgramStateTrait<T>::value_type E,
+      typename ProgramStateTrait<T>::context_type C) const;
 
   template<typename T>
   bool contains(typename ProgramStateTrait<T>::key_type key) const {
@@ -424,14 +424,14 @@ public:
   }
 
   // Pretty-printing.
-  void print(raw_ostream &Out, const char *nl = "\n",
-             const char *sep = "") const;
-  void printDOT(raw_ostream &Out) const;
-  void printTaint(raw_ostream &Out, const char *nl = "\n",
-                  const char *sep = "") const;
+  void printJson(raw_ostream &Out, const LocationContext *LCtx = nullptr,
+                 const char *NL = "\n", unsigned int Space = 0,
+                 bool IsDot = false) const;
+
+  void printDOT(raw_ostream &Out, const LocationContext *LCtx = nullptr,
+                unsigned int Space = 0) const;
 
   void dump() const;
-  void dumpTaint() const;
 
 private:
   friend void ProgramStateRetain(const ProgramState *state);
@@ -465,7 +465,6 @@ private:
   std::unique_ptr<ConstraintManager>   ConstraintMgr;
 
   ProgramState::GenericDataMap::Factory     GDMFactory;
-  TaintedSubRegions::Factory TSRFactory;
 
   typedef llvm::DenseMap<void*,std::pair<void*,void (*)(void*)> > GDMContextsTy;
   GDMContextsTy GDMContexts;
@@ -520,15 +519,15 @@ public:
   MemRegionManager& getRegionManager() {
     return svalBuilder->getRegionManager();
   }
-  const MemRegionManager& getRegionManager() const {
+  const MemRegionManager &getRegionManager() const {
     return svalBuilder->getRegionManager();
   }
 
   CallEventManager &getCallEventManager() { return *CallEventMgr; }
 
-  StoreManager& getStoreManager() { return *StoreMgr; }
-  ConstraintManager& getConstraintManager() { return *ConstraintMgr; }
-  SubEngine* getOwningEngine() { return Eng; }
+  StoreManager &getStoreManager() { return *StoreMgr; }
+  ConstraintManager &getConstraintManager() { return *ConstraintMgr; }
+  SubEngine &getOwningEngine() { return *Eng; }
 
   ProgramStateRef removeDeadBindings(ProgramStateRef St,
                                     const StackFrameContext *LCtx,
@@ -554,11 +553,15 @@ public:
   ProgramStateRef getPersistentStateWithGDM(ProgramStateRef FromState,
                                            ProgramStateRef GDMState);
 
-  bool haveEqualEnvironments(ProgramStateRef S1, ProgramStateRef S2) {
+  bool haveEqualConstraints(ProgramStateRef S1, ProgramStateRef S2) const {
+    return ConstraintMgr->haveEqualConstraints(S1, S2);
+  }
+
+  bool haveEqualEnvironments(ProgramStateRef S1, ProgramStateRef S2) const {
     return S1->Env == S2->Env;
   }
 
-  bool haveEqualStores(ProgramStateRef S1, ProgramStateRef S2) {
+  bool haveEqualStores(ProgramStateRef S1, ProgramStateRef S2) const {
     return S1->store == S2->store;
   }
 
@@ -631,10 +634,6 @@ public:
 
     return ProgramStateTrait<T>::MakeContext(p);
   }
-
-  void EndPath(ProgramStateRef St) {
-    ConstraintMgr->EndPath(St);
-  }
 };
 
 
@@ -701,6 +700,22 @@ inline ProgramStateRef ProgramState::bindLoc(SVal LV, SVal V, const LocationCont
   return this;
 }
 
+inline Loc ProgramState::getLValue(const CXXBaseSpecifier &BaseSpec,
+                                   const SubRegion *Super) const {
+  const auto *Base = BaseSpec.getType()->getAsCXXRecordDecl();
+  return loc::MemRegionVal(
+           getStateManager().getRegionManager().getCXXBaseObjectRegion(
+                                            Base, Super, BaseSpec.isVirtual()));
+}
+
+inline Loc ProgramState::getLValue(const CXXRecordDecl *BaseClass,
+                                   const SubRegion *Super,
+                                   bool IsVirtual) const {
+  return loc::MemRegionVal(
+           getStateManager().getRegionManager().getCXXBaseObjectRegion(
+                                                  BaseClass, Super, IsVirtual));
+}
+
 inline Loc ProgramState::getLValue(const VarDecl *VD,
                                const LocationContext *LC) const {
   return getStateManager().StoreMgr->getLValueVar(VD, LC);
@@ -758,9 +773,10 @@ inline SVal ProgramState::getRawSVal(Loc LV, QualType T) const {
   return getStateManager().StoreMgr->getBinding(getStore(), LV, T);
 }
 
-inline SVal ProgramState::getSVal(const MemRegion* R) const {
+inline SVal ProgramState::getSVal(const MemRegion* R, QualType T) const {
   return getStateManager().StoreMgr->getBinding(getStore(),
-                                                loc::MemRegionVal(R));
+                                                loc::MemRegionVal(R),
+                                                T);
 }
 
 inline BasicValueFactory &ProgramState::getBasicVals() const {
@@ -823,17 +839,10 @@ CB ProgramState::scanReachableSymbols(SVal val) const {
 }
 
 template <typename CB>
-CB ProgramState::scanReachableSymbols(const SVal *beg, const SVal *end) const {
+CB ProgramState::scanReachableSymbols(
+    llvm::iterator_range<region_iterator> Reachable) const {
   CB cb(this);
-  scanReachableSymbols(beg, end, cb);
-  return cb;
-}
-
-template <typename CB>
-CB ProgramState::scanReachableSymbols(const MemRegion * const *beg,
-                                 const MemRegion * const *end) const {
-  CB cb(this);
-  scanReachableSymbols(beg, end, cb);
+  scanReachableSymbols(Reachable, cb);
   return cb;
 }
 

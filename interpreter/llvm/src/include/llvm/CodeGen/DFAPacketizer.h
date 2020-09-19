@@ -1,9 +1,8 @@
 //===- llvm/CodeGen/DFAPacketizer.h - DFA Packetizer for VLIW ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 // This class implements a deterministic finite automaton (DFA) based
@@ -208,6 +207,13 @@ public:
 
   // Add a DAG mutation to be done before the packetization begins.
   void addMutation(std::unique_ptr<ScheduleDAGMutation> Mutation);
+
+  bool alias(const MachineInstr &MI1, const MachineInstr &MI2,
+             bool UseTBAA = true) const;
+
+private:
+  bool alias(const MachineMemOperand &Op1, const MachineMemOperand &Op2,
+             bool UseTBAA = true) const;
 };
 
 } // end namespace llvm

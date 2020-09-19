@@ -1,29 +1,96 @@
-//===--- ASTStructuralEquivalence.cpp - -------------------------*- C++ -*-===//
+//===- ASTStructuralEquivalence.cpp ---------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
 //  This file implement StructuralEquivalenceContext class and helper functions
 //  for layout matching.
 //
+// The structural equivalence check could have been implemented as a parallel
+// BFS on a pair of graphs.  That must have been the original approach at the
+// beginning.
+// Let's consider this simple BFS algorithm from the `s` source:
+// ```
+// void bfs(Graph G, int s)
+// {
+//   Queue<Integer> queue = new Queue<Integer>();
+//   marked[s] = true; // Mark the source
+//   queue.enqueue(s); // and put it on the queue.
+//   while (!q.isEmpty()) {
+//     int v = queue.dequeue(); // Remove next vertex from the queue.
+//     for (int w : G.adj(v))
+//       if (!marked[w]) // For every unmarked adjacent vertex,
+//       {
+//         marked[w] = true;
+//         queue.enqueue(w);
+//       }
+//   }
+// }
+// ```
+// Indeed, it has it's queue, which holds pairs of nodes, one from each graph,
+// this is the `DeclsToCheck` and it's pair is in `TentativeEquivalences`.
+// `TentativeEquivalences` also plays the role of the marking (`marked`)
+// functionality above, we use it to check whether we've already seen a pair of
+// nodes.
+//
+// We put in the elements into the queue only in the toplevel decl check
+// function:
+// ```
+// static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
+//                                      Decl *D1, Decl *D2);
+// ```
+// The `while` loop where we iterate over the children is implemented in
+// `Finish()`.  And `Finish` is called only from the two **member** functions
+// which check the equivalency of two Decls or two Types. ASTImporter (and
+// other clients) call only these functions.
+//
+// The `static` implementation functions are called from `Finish`, these push
+// the children nodes to the queue via `static bool
+// IsStructurallyEquivalent(StructuralEquivalenceContext &Context, Decl *D1,
+// Decl *D2)`.  So far so good, this is almost like the BFS.  However, if we
+// let a static implementation function to call `Finish` via another **member**
+// function that means we end up with two nested while loops each of them
+// working on the same queue. This is wrong and nobody can reason about it's
+// doing. Thus, static implementation functions must not call the **member**
+// functions.
+//
+// So, now `TentativeEquivalences` plays two roles. It is used to store the
+// second half of the decls which we want to compare, plus it plays a role in
+// closing the recursion. On a long term, we could refactor structural
+// equivalency to be more alike to the traditional BFS.
+//
 //===----------------------------------------------------------------------===//
 
 #include "clang/AST/ASTStructuralEquivalence.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTDiagnostic.h"
-#include "clang/AST/ASTImporter.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclFriend.h"
 #include "clang/AST/DeclObjC.h"
-#include "clang/AST/DeclVisitor.h"
-#include "clang/AST/StmtVisitor.h"
-#include "clang/AST/TypeVisitor.h"
-#include "clang/Basic/SourceManager.h"
-
-namespace {
+#include "clang/AST/DeclTemplate.h"
+#include "clang/AST/ExprCXX.h"
+#include "clang/AST/NestedNameSpecifier.h"
+#include "clang/AST/TemplateBase.h"
+#include "clang/AST/TemplateName.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/ExceptionSpecificationType.h"
+#include "clang/Basic/IdentifierTable.h"
+#include "clang/Basic/LLVM.h"
+#include "clang/Basic/SourceLocation.h"
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/APSInt.h"
+#include "llvm/ADT/None.h"
+#include "llvm/ADT/Optional.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/Compiler.h"
+#include "llvm/Support/ErrorHandling.h"
+#include <cassert>
+#include <utility>
 
 using namespace clang;
 
@@ -34,14 +101,86 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
 static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                      const TemplateArgument &Arg1,
                                      const TemplateArgument &Arg2);
+static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
+                                     NestedNameSpecifier *NNS1,
+                                     NestedNameSpecifier *NNS2);
+static bool IsStructurallyEquivalent(const IdentifierInfo *Name1,
+                                     const IdentifierInfo *Name2);
+
+static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
+                                     const DeclarationName Name1,
+                                     const DeclarationName Name2) {
+  if (Name1.getNameKind() != Name2.getNameKind())
+    return false;
+
+  switch (Name1.getNameKind()) {
+
+  case DeclarationName::Identifier:
+    return IsStructurallyEquivalent(Name1.getAsIdentifierInfo(),
+                                    Name2.getAsIdentifierInfo());
+
+  case DeclarationName::CXXConstructorName:
+  case DeclarationName::CXXDestructorName:
+  case DeclarationName::CXXConversionFunctionName:
+    return IsStructurallyEquivalent(Context, Name1.getCXXNameType(),
+                                    Name2.getCXXNameType());
+
+  case DeclarationName::CXXDeductionGuideName: {
+    if (!IsStructurallyEquivalent(
+            Context, Name1.getCXXDeductionGuideTemplate()->getDeclName(),
+            Name2.getCXXDeductionGuideTemplate()->getDeclName()))
+      return false;
+    return IsStructurallyEquivalent(Context,
+                                    Name1.getCXXDeductionGuideTemplate(),
+                                    Name2.getCXXDeductionGuideTemplate());
+  }
+
+  case DeclarationName::CXXOperatorName:
+    return Name1.getCXXOverloadedOperator() == Name2.getCXXOverloadedOperator();
+
+  case DeclarationName::CXXLiteralOperatorName:
+    return IsStructurallyEquivalent(Name1.getCXXLiteralIdentifier(),
+                                    Name2.getCXXLiteralIdentifier());
+
+  case DeclarationName::CXXUsingDirective:
+    return true; // FIXME When do we consider two using directives equal?
+
+  case DeclarationName::ObjCZeroArgSelector:
+  case DeclarationName::ObjCOneArgSelector:
+  case DeclarationName::ObjCMultiArgSelector:
+    return true; // FIXME
+  }
+
+  llvm_unreachable("Unhandled kind of DeclarationName");
+  return true;
+}
 
 /// Determine structural equivalence of two expressions.
 static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
-                                     Expr *E1, Expr *E2) {
+                                     const Expr *E1, const Expr *E2) {
   if (!E1 || !E2)
     return E1 == E2;
 
-  // FIXME: Actually perform a structural comparison!
+  if (auto *DE1 = dyn_cast<DependentScopeDeclRefExpr>(E1)) {
+    auto *DE2 = dyn_cast<DependentScopeDeclRefExpr>(E2);
+    if (!DE2)
+      return false;
+    if (!IsStructurallyEquivalent(Context, DE1->getDeclName(),
+                                  DE2->getDeclName()))
+      return false;
+    return IsStructurallyEquivalent(Context, DE1->getQualifier(),
+                                    DE2->getQualifier());
+  } else if (auto CastE1 = dyn_cast<ImplicitCastExpr>(E1)) {
+    auto *CastE2 = dyn_cast<ImplicitCastExpr>(E2);
+    if (!CastE2)
+      return false;
+    if (!IsStructurallyEquivalent(Context, CastE1->getType(),
+                                  CastE2->getType()))
+      return false;
+    return IsStructurallyEquivalent(Context, CastE1->getSubExpr(),
+                                    CastE2->getSubExpr());
+  }
+  // FIXME: Handle other kind of expressions!
   return true;
 }
 
@@ -114,6 +253,12 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     return I1 == E1 && I2 == E2;
   }
 
+  case TemplateName::AssumedTemplate: {
+    AssumedTemplateStorage *TN1 = N1.getAsAssumedTemplateName(),
+                           *TN2 = N1.getAsAssumedTemplateName();
+    return TN1->getDeclName() == TN2->getDeclName();
+  }
+
   case TemplateName::QualifiedTemplate: {
     QualifiedTemplateName *QN1 = N1.getAsQualifiedTemplateName(),
                           *QN2 = N2.getAsQualifiedTemplateName();
@@ -144,6 +289,7 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
            IsStructurallyEquivalent(Context, TS1->getReplacement(),
                                     TS2->getReplacement());
   }
+
   case TemplateName::SubstTemplateTemplateParmPack: {
     SubstTemplateTemplateParmPackStorage
         *P1 = N1.getAsSubstTemplateTemplateParmPack(),
@@ -169,10 +315,10 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     return true;
 
   case TemplateArgument::Type:
-    return Context.IsStructurallyEquivalent(Arg1.getAsType(), Arg2.getAsType());
+    return IsStructurallyEquivalent(Context, Arg1.getAsType(), Arg2.getAsType());
 
   case TemplateArgument::Integral:
-    if (!Context.IsStructurallyEquivalent(Arg1.getIntegralType(),
+    if (!IsStructurallyEquivalent(Context, Arg1.getIntegralType(),
                                           Arg2.getIntegralType()))
       return false;
 
@@ -180,7 +326,7 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                      Arg2.getAsIntegral());
 
   case TemplateArgument::Declaration:
-    return Context.IsStructurallyEquivalent(Arg1.getAsDecl(), Arg2.getAsDecl());
+    return IsStructurallyEquivalent(Context, Arg1.getAsDecl(), Arg2.getAsDecl());
 
   case TemplateArgument::NullPtr:
     return true; // FIXME: Is this correct?
@@ -229,11 +375,70 @@ static bool IsArrayStructurallyEquivalent(StructuralEquivalenceContext &Context,
   return true;
 }
 
+/// Determine structural equivalence based on the ExtInfo of functions. This
+/// is inspired by ASTContext::mergeFunctionTypes(), we compare calling
+/// conventions bits but must not compare some other bits.
+static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
+                                     FunctionType::ExtInfo EI1,
+                                     FunctionType::ExtInfo EI2) {
+  // Compatible functions must have compatible calling conventions.
+  if (EI1.getCC() != EI2.getCC())
+    return false;
+
+  // Regparm is part of the calling convention.
+  if (EI1.getHasRegParm() != EI2.getHasRegParm())
+    return false;
+  if (EI1.getRegParm() != EI2.getRegParm())
+    return false;
+
+  if (EI1.getProducesResult() != EI2.getProducesResult())
+    return false;
+  if (EI1.getNoCallerSavedRegs() != EI2.getNoCallerSavedRegs())
+    return false;
+  if (EI1.getNoCfCheck() != EI2.getNoCfCheck())
+    return false;
+
+  return true;
+}
+
+/// Check the equivalence of exception specifications.
+static bool IsEquivalentExceptionSpec(StructuralEquivalenceContext &Context,
+                                      const FunctionProtoType *Proto1,
+                                      const FunctionProtoType *Proto2) {
+
+  auto Spec1 = Proto1->getExceptionSpecType();
+  auto Spec2 = Proto2->getExceptionSpecType();
+
+  if (isUnresolvedExceptionSpec(Spec1) || isUnresolvedExceptionSpec(Spec2))
+    return true;
+
+  if (Spec1 != Spec2)
+    return false;
+  if (Spec1 == EST_Dynamic) {
+    if (Proto1->getNumExceptions() != Proto2->getNumExceptions())
+      return false;
+    for (unsigned I = 0, N = Proto1->getNumExceptions(); I != N; ++I) {
+      if (!IsStructurallyEquivalent(Context, Proto1->getExceptionType(I),
+                                    Proto2->getExceptionType(I)))
+        return false;
+    }
+  } else if (isComputedNoexcept(Spec1)) {
+    if (!IsStructurallyEquivalent(Context, Proto1->getNoexceptExpr(),
+                                  Proto2->getNoexceptExpr()))
+      return false;
+  }
+
+  return true;
+}
+
 /// Determine structural equivalence of two types.
 static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                      QualType T1, QualType T2) {
   if (T1.isNull() || T2.isNull())
     return T1.isNull() && T2.isNull();
+
+  QualType OrigT1 = T1;
+  QualType OrigT2 = T2;
 
   if (!Context.StrictTypeSpelling) {
     // We aren't being strict about token-to-token equivalence of types,
@@ -298,8 +503,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
 
   case Type::LValueReference:
   case Type::RValueReference: {
-    const ReferenceType *Ref1 = cast<ReferenceType>(T1);
-    const ReferenceType *Ref2 = cast<ReferenceType>(T2);
+    const auto *Ref1 = cast<ReferenceType>(T1);
+    const auto *Ref2 = cast<ReferenceType>(T2);
     if (Ref1->isSpelledAsLValue() != Ref2->isSpelledAsLValue())
       return false;
     if (Ref1->isInnerRef() != Ref2->isInnerRef())
@@ -311,8 +516,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::MemberPointer: {
-    const MemberPointerType *MemPtr1 = cast<MemberPointerType>(T1);
-    const MemberPointerType *MemPtr2 = cast<MemberPointerType>(T2);
+    const auto *MemPtr1 = cast<MemberPointerType>(T1);
+    const auto *MemPtr2 = cast<MemberPointerType>(T2);
     if (!IsStructurallyEquivalent(Context, MemPtr1->getPointeeType(),
                                   MemPtr2->getPointeeType()))
       return false;
@@ -323,8 +528,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::ConstantArray: {
-    const ConstantArrayType *Array1 = cast<ConstantArrayType>(T1);
-    const ConstantArrayType *Array2 = cast<ConstantArrayType>(T2);
+    const auto *Array1 = cast<ConstantArrayType>(T1);
+    const auto *Array2 = cast<ConstantArrayType>(T2);
     if (!llvm::APInt::isSameValue(Array1->getSize(), Array2->getSize()))
       return false;
 
@@ -340,8 +545,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     break;
 
   case Type::VariableArray: {
-    const VariableArrayType *Array1 = cast<VariableArrayType>(T1);
-    const VariableArrayType *Array2 = cast<VariableArrayType>(T2);
+    const auto *Array1 = cast<VariableArrayType>(T1);
+    const auto *Array2 = cast<VariableArrayType>(T2);
     if (!IsStructurallyEquivalent(Context, Array1->getSizeExpr(),
                                   Array2->getSizeExpr()))
       return false;
@@ -353,8 +558,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::DependentSizedArray: {
-    const DependentSizedArrayType *Array1 = cast<DependentSizedArrayType>(T1);
-    const DependentSizedArrayType *Array2 = cast<DependentSizedArrayType>(T2);
+    const auto *Array1 = cast<DependentSizedArrayType>(T1);
+    const auto *Array2 = cast<DependentSizedArrayType>(T2);
     if (!IsStructurallyEquivalent(Context, Array1->getSizeExpr(),
                                   Array2->getSizeExpr()))
       return false;
@@ -365,11 +570,36 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     break;
   }
 
+  case Type::DependentAddressSpace: {
+    const auto *DepAddressSpace1 = cast<DependentAddressSpaceType>(T1);
+    const auto *DepAddressSpace2 = cast<DependentAddressSpaceType>(T2);
+    if (!IsStructurallyEquivalent(Context, DepAddressSpace1->getAddrSpaceExpr(),
+                                  DepAddressSpace2->getAddrSpaceExpr()))
+      return false;
+    if (!IsStructurallyEquivalent(Context, DepAddressSpace1->getPointeeType(),
+                                  DepAddressSpace2->getPointeeType()))
+      return false;
+
+    break;
+  }
+
   case Type::DependentSizedExtVector: {
-    const DependentSizedExtVectorType *Vec1 =
-        cast<DependentSizedExtVectorType>(T1);
-    const DependentSizedExtVectorType *Vec2 =
-        cast<DependentSizedExtVectorType>(T2);
+    const auto *Vec1 = cast<DependentSizedExtVectorType>(T1);
+    const auto *Vec2 = cast<DependentSizedExtVectorType>(T2);
+    if (!IsStructurallyEquivalent(Context, Vec1->getSizeExpr(),
+                                  Vec2->getSizeExpr()))
+      return false;
+    if (!IsStructurallyEquivalent(Context, Vec1->getElementType(),
+                                  Vec2->getElementType()))
+      return false;
+    break;
+  }
+
+  case Type::DependentVector: {
+    const auto *Vec1 = cast<DependentVectorType>(T1);
+    const auto *Vec2 = cast<DependentVectorType>(T2);
+    if (Vec1->getVectorKind() != Vec2->getVectorKind())
+      return false;
     if (!IsStructurallyEquivalent(Context, Vec1->getSizeExpr(),
                                   Vec2->getSizeExpr()))
       return false;
@@ -381,8 +611,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
 
   case Type::Vector:
   case Type::ExtVector: {
-    const VectorType *Vec1 = cast<VectorType>(T1);
-    const VectorType *Vec2 = cast<VectorType>(T2);
+    const auto *Vec1 = cast<VectorType>(T1);
+    const auto *Vec2 = cast<VectorType>(T2);
     if (!IsStructurallyEquivalent(Context, Vec1->getElementType(),
                                   Vec2->getElementType()))
       return false;
@@ -394,8 +624,9 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::FunctionProto: {
-    const FunctionProtoType *Proto1 = cast<FunctionProtoType>(T1);
-    const FunctionProtoType *Proto2 = cast<FunctionProtoType>(T2);
+    const auto *Proto1 = cast<FunctionProtoType>(T1);
+    const auto *Proto2 = cast<FunctionProtoType>(T2);
+
     if (Proto1->getNumParams() != Proto2->getNumParams())
       return false;
     for (unsigned I = 0, N = Proto1->getNumParams(); I != N; ++I) {
@@ -405,22 +636,16 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     }
     if (Proto1->isVariadic() != Proto2->isVariadic())
       return false;
-    if (Proto1->getExceptionSpecType() != Proto2->getExceptionSpecType())
+
+    if (Proto1->getMethodQuals() != Proto2->getMethodQuals())
       return false;
-    if (Proto1->getExceptionSpecType() == EST_Dynamic) {
-      if (Proto1->getNumExceptions() != Proto2->getNumExceptions())
-        return false;
-      for (unsigned I = 0, N = Proto1->getNumExceptions(); I != N; ++I) {
-        if (!IsStructurallyEquivalent(Context, Proto1->getExceptionType(I),
-                                      Proto2->getExceptionType(I)))
-          return false;
-      }
-    } else if (isComputedNoexcept(Proto1->getExceptionSpecType())) {
-      if (!IsStructurallyEquivalent(Context, Proto1->getNoexceptExpr(),
-                                    Proto2->getNoexceptExpr()))
-        return false;
-    }
-    if (Proto1->getTypeQuals() != Proto2->getTypeQuals())
+
+    // Check exceptions, this information is lost in canonical type.
+    const auto *OrigProto1 =
+        cast<FunctionProtoType>(OrigT1.getDesugaredType(Context.FromCtx));
+    const auto *OrigProto2 =
+        cast<FunctionProtoType>(OrigT2.getDesugaredType(Context.ToCtx));
+    if (!IsEquivalentExceptionSpec(Context, OrigProto1, OrigProto2))
       return false;
 
     // Fall through to check the bits common with FunctionNoProtoType.
@@ -428,12 +653,13 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::FunctionNoProto: {
-    const FunctionType *Function1 = cast<FunctionType>(T1);
-    const FunctionType *Function2 = cast<FunctionType>(T2);
+    const auto *Function1 = cast<FunctionType>(T1);
+    const auto *Function2 = cast<FunctionType>(T2);
     if (!IsStructurallyEquivalent(Context, Function1->getReturnType(),
                                   Function2->getReturnType()))
       return false;
-    if (Function1->getExtInfo() != Function2->getExtInfo())
+    if (!IsStructurallyEquivalent(Context, Function1->getExtInfo(),
+                                  Function2->getExtInfo()))
       return false;
     break;
   }
@@ -443,7 +669,6 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                   cast<UnresolvedUsingType>(T1)->getDecl(),
                                   cast<UnresolvedUsingType>(T2)->getDecl()))
       return false;
-
     break;
 
   case Type::Attributed:
@@ -460,6 +685,13 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   case Type::Paren:
     if (!IsStructurallyEquivalent(Context, cast<ParenType>(T1)->getInnerType(),
                                   cast<ParenType>(T2)->getInnerType()))
+      return false;
+    break;
+
+  case Type::MacroQualified:
+    if (!IsStructurallyEquivalent(
+            Context, cast<MacroQualifiedType>(T1)->getUnderlyingType(),
+            cast<MacroQualifiedType>(T2)->getUnderlyingType()))
       return false;
     break;
 
@@ -486,7 +718,7 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   case Type::UnaryTransform:
     if (!IsStructurallyEquivalent(
             Context, cast<UnaryTransformType>(T1)->getUnderlyingType(),
-            cast<UnaryTransformType>(T1)->getUnderlyingType()))
+            cast<UnaryTransformType>(T2)->getUnderlyingType()))
       return false;
     break;
 
@@ -504,8 +736,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     break;
 
   case Type::DeducedTemplateSpecialization: {
-    auto *DT1 = cast<DeducedTemplateSpecializationType>(T1);
-    auto *DT2 = cast<DeducedTemplateSpecializationType>(T2);
+    const auto *DT1 = cast<DeducedTemplateSpecializationType>(T1);
+    const auto *DT2 = cast<DeducedTemplateSpecializationType>(T2);
     if (!IsStructurallyEquivalent(Context, DT1->getTemplateName(),
                                   DT2->getTemplateName()))
       return false;
@@ -523,8 +755,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     break;
 
   case Type::TemplateTypeParm: {
-    const TemplateTypeParmType *Parm1 = cast<TemplateTypeParmType>(T1);
-    const TemplateTypeParmType *Parm2 = cast<TemplateTypeParmType>(T2);
+    const auto *Parm1 = cast<TemplateTypeParmType>(T1);
+    const auto *Parm2 = cast<TemplateTypeParmType>(T2);
     if (Parm1->getDepth() != Parm2->getDepth())
       return false;
     if (Parm1->getIndex() != Parm2->getIndex())
@@ -537,10 +769,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::SubstTemplateTypeParm: {
-    const SubstTemplateTypeParmType *Subst1 =
-        cast<SubstTemplateTypeParmType>(T1);
-    const SubstTemplateTypeParmType *Subst2 =
-        cast<SubstTemplateTypeParmType>(T2);
+    const auto *Subst1 = cast<SubstTemplateTypeParmType>(T1);
+    const auto *Subst2 = cast<SubstTemplateTypeParmType>(T2);
     if (!IsStructurallyEquivalent(Context,
                                   QualType(Subst1->getReplacedParameter(), 0),
                                   QualType(Subst2->getReplacedParameter(), 0)))
@@ -552,10 +782,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::SubstTemplateTypeParmPack: {
-    const SubstTemplateTypeParmPackType *Subst1 =
-        cast<SubstTemplateTypeParmPackType>(T1);
-    const SubstTemplateTypeParmPackType *Subst2 =
-        cast<SubstTemplateTypeParmPackType>(T2);
+    const auto *Subst1 = cast<SubstTemplateTypeParmPackType>(T1);
+    const auto *Subst2 = cast<SubstTemplateTypeParmPackType>(T2);
     if (!IsStructurallyEquivalent(Context,
                                   QualType(Subst1->getReplacedParameter(), 0),
                                   QualType(Subst2->getReplacedParameter(), 0)))
@@ -565,11 +793,10 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
       return false;
     break;
   }
+
   case Type::TemplateSpecialization: {
-    const TemplateSpecializationType *Spec1 =
-        cast<TemplateSpecializationType>(T1);
-    const TemplateSpecializationType *Spec2 =
-        cast<TemplateSpecializationType>(T2);
+    const auto *Spec1 = cast<TemplateSpecializationType>(T1);
+    const auto *Spec2 = cast<TemplateSpecializationType>(T2);
     if (!IsStructurallyEquivalent(Context, Spec1->getTemplateName(),
                                   Spec2->getTemplateName()))
       return false;
@@ -584,8 +811,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::Elaborated: {
-    const ElaboratedType *Elab1 = cast<ElaboratedType>(T1);
-    const ElaboratedType *Elab2 = cast<ElaboratedType>(T2);
+    const auto *Elab1 = cast<ElaboratedType>(T1);
+    const auto *Elab2 = cast<ElaboratedType>(T2);
     // CHECKME: what if a keyword is ETK_None or ETK_typename ?
     if (Elab1->getKeyword() != Elab2->getKeyword())
       return false;
@@ -599,8 +826,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::InjectedClassName: {
-    const InjectedClassNameType *Inj1 = cast<InjectedClassNameType>(T1);
-    const InjectedClassNameType *Inj2 = cast<InjectedClassNameType>(T2);
+    const auto *Inj1 = cast<InjectedClassNameType>(T1);
+    const auto *Inj2 = cast<InjectedClassNameType>(T2);
     if (!IsStructurallyEquivalent(Context,
                                   Inj1->getInjectedSpecializationType(),
                                   Inj2->getInjectedSpecializationType()))
@@ -609,8 +836,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::DependentName: {
-    const DependentNameType *Typename1 = cast<DependentNameType>(T1);
-    const DependentNameType *Typename2 = cast<DependentNameType>(T2);
+    const auto *Typename1 = cast<DependentNameType>(T1);
+    const auto *Typename2 = cast<DependentNameType>(T2);
     if (!IsStructurallyEquivalent(Context, Typename1->getQualifier(),
                                   Typename2->getQualifier()))
       return false;
@@ -622,10 +849,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::DependentTemplateSpecialization: {
-    const DependentTemplateSpecializationType *Spec1 =
-        cast<DependentTemplateSpecializationType>(T1);
-    const DependentTemplateSpecializationType *Spec2 =
-        cast<DependentTemplateSpecializationType>(T2);
+    const auto *Spec1 = cast<DependentTemplateSpecializationType>(T1);
+    const auto *Spec2 = cast<DependentTemplateSpecializationType>(T2);
     if (!IsStructurallyEquivalent(Context, Spec1->getQualifier(),
                                   Spec2->getQualifier()))
       return false;
@@ -650,8 +875,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     break;
 
   case Type::ObjCInterface: {
-    const ObjCInterfaceType *Iface1 = cast<ObjCInterfaceType>(T1);
-    const ObjCInterfaceType *Iface2 = cast<ObjCInterfaceType>(T2);
+    const auto *Iface1 = cast<ObjCInterfaceType>(T1);
+    const auto *Iface2 = cast<ObjCInterfaceType>(T2);
     if (!IsStructurallyEquivalent(Context, Iface1->getDecl(),
                                   Iface2->getDecl()))
       return false;
@@ -659,8 +884,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::ObjCTypeParam: {
-    const ObjCTypeParamType *Obj1 = cast<ObjCTypeParamType>(T1);
-    const ObjCTypeParamType *Obj2 = cast<ObjCTypeParamType>(T2);
+    const auto *Obj1 = cast<ObjCTypeParamType>(T1);
+    const auto *Obj2 = cast<ObjCTypeParamType>(T2);
     if (!IsStructurallyEquivalent(Context, Obj1->getDecl(), Obj2->getDecl()))
       return false;
 
@@ -673,9 +898,10 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     }
     break;
   }
+
   case Type::ObjCObject: {
-    const ObjCObjectType *Obj1 = cast<ObjCObjectType>(T1);
-    const ObjCObjectType *Obj2 = cast<ObjCObjectType>(T2);
+    const auto *Obj1 = cast<ObjCObjectType>(T1);
+    const auto *Obj2 = cast<ObjCObjectType>(T2);
     if (!IsStructurallyEquivalent(Context, Obj1->getBaseType(),
                                   Obj2->getBaseType()))
       return false;
@@ -690,28 +916,25 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   case Type::ObjCObjectPointer: {
-    const ObjCObjectPointerType *Ptr1 = cast<ObjCObjectPointerType>(T1);
-    const ObjCObjectPointerType *Ptr2 = cast<ObjCObjectPointerType>(T2);
+    const auto *Ptr1 = cast<ObjCObjectPointerType>(T1);
+    const auto *Ptr2 = cast<ObjCObjectPointerType>(T2);
     if (!IsStructurallyEquivalent(Context, Ptr1->getPointeeType(),
                                   Ptr2->getPointeeType()))
       return false;
     break;
   }
 
-  case Type::Atomic: {
+  case Type::Atomic:
     if (!IsStructurallyEquivalent(Context, cast<AtomicType>(T1)->getValueType(),
                                   cast<AtomicType>(T2)->getValueType()))
       return false;
     break;
-  }
 
-  case Type::Pipe: {
+  case Type::Pipe:
     if (!IsStructurallyEquivalent(Context, cast<PipeType>(T1)->getElementType(),
                                   cast<PipeType>(T2)->getElementType()))
       return false;
     break;
-  }
-
   } // end switch
 
   return true;
@@ -720,7 +943,7 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
 /// Determine structural equivalence of two fields.
 static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                      FieldDecl *Field1, FieldDecl *Field2) {
-  RecordDecl *Owner2 = cast<RecordDecl>(Field2->getDeclContext());
+  const auto *Owner2 = cast<RecordDecl>(Field2->getDeclContext());
 
   // For anonymous structs/unions, match up the anonymous struct/union type
   // declarations directly, so that we don't go off searching for anonymous
@@ -737,10 +960,9 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   IdentifierInfo *Name2 = Field2->getIdentifier();
   if (!::IsStructurallyEquivalent(Name1, Name2)) {
     if (Context.Complain) {
-      Context.Diag2(Owner2->getLocation(),
-                    Context.ErrorOnTagTypeMismatch
-                        ? diag::err_odr_tag_type_inconsistent
-                        : diag::warn_odr_tag_type_inconsistent)
+      Context.Diag2(
+          Owner2->getLocation(),
+          Context.getApplicableDiagnostic(diag::err_odr_tag_type_inconsistent))
           << Context.ToCtx.getTypeDeclType(Owner2);
       Context.Diag2(Field2->getLocation(), diag::note_odr_field_name)
           << Field2->getDeclName();
@@ -753,10 +975,9 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   if (!IsStructurallyEquivalent(Context, Field1->getType(),
                                 Field2->getType())) {
     if (Context.Complain) {
-      Context.Diag2(Owner2->getLocation(),
-                    Context.ErrorOnTagTypeMismatch
-                        ? diag::err_odr_tag_type_inconsistent
-                        : diag::warn_odr_tag_type_inconsistent)
+      Context.Diag2(
+          Owner2->getLocation(),
+          Context.getApplicableDiagnostic(diag::err_odr_tag_type_inconsistent))
           << Context.ToCtx.getTypeDeclType(Owner2);
       Context.Diag2(Field2->getLocation(), diag::note_odr_field)
           << Field2->getDeclName() << Field2->getType();
@@ -768,10 +989,9 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
 
   if (Field1->isBitField() != Field2->isBitField()) {
     if (Context.Complain) {
-      Context.Diag2(Owner2->getLocation(),
-                    Context.ErrorOnTagTypeMismatch
-                        ? diag::err_odr_tag_type_inconsistent
-                        : diag::warn_odr_tag_type_inconsistent)
+      Context.Diag2(
+          Owner2->getLocation(),
+          Context.getApplicableDiagnostic(diag::err_odr_tag_type_inconsistent))
           << Context.ToCtx.getTypeDeclType(Owner2);
       if (Field1->isBitField()) {
         Context.Diag1(Field1->getLocation(), diag::note_odr_bit_field)
@@ -798,9 +1018,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     if (Bits1 != Bits2) {
       if (Context.Complain) {
         Context.Diag2(Owner2->getLocation(),
-                      Context.ErrorOnTagTypeMismatch
-                          ? diag::err_odr_tag_type_inconsistent
-                          : diag::warn_odr_tag_type_inconsistent)
+                      Context.getApplicableDiagnostic(
+                          diag::err_odr_tag_type_inconsistent))
             << Context.ToCtx.getTypeDeclType(Owner2);
         Context.Diag2(Field2->getLocation(), diag::note_odr_bit_field)
             << Field2->getDeclName() << Field2->getType() << Bits2;
@@ -814,15 +1033,78 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   return true;
 }
 
+/// Determine structural equivalence of two methods.
+static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
+                                     CXXMethodDecl *Method1,
+                                     CXXMethodDecl *Method2) {
+  bool PropertiesEqual =
+      Method1->getDeclKind() == Method2->getDeclKind() &&
+      Method1->getRefQualifier() == Method2->getRefQualifier() &&
+      Method1->getAccess() == Method2->getAccess() &&
+      Method1->getOverloadedOperator() == Method2->getOverloadedOperator() &&
+      Method1->isStatic() == Method2->isStatic() &&
+      Method1->isConst() == Method2->isConst() &&
+      Method1->isVolatile() == Method2->isVolatile() &&
+      Method1->isVirtual() == Method2->isVirtual() &&
+      Method1->isPure() == Method2->isPure() &&
+      Method1->isDefaulted() == Method2->isDefaulted() &&
+      Method1->isDeleted() == Method2->isDeleted();
+  if (!PropertiesEqual)
+    return false;
+  // FIXME: Check for 'final'.
+
+  if (auto *Constructor1 = dyn_cast<CXXConstructorDecl>(Method1)) {
+    auto *Constructor2 = cast<CXXConstructorDecl>(Method2);
+    if (!Constructor1->getExplicitSpecifier().isEquivalent(
+            Constructor2->getExplicitSpecifier()))
+      return false;
+  }
+
+  if (auto *Conversion1 = dyn_cast<CXXConversionDecl>(Method1)) {
+    auto *Conversion2 = cast<CXXConversionDecl>(Method2);
+    if (!Conversion1->getExplicitSpecifier().isEquivalent(
+            Conversion2->getExplicitSpecifier()))
+      return false;
+    if (!IsStructurallyEquivalent(Context, Conversion1->getConversionType(),
+                                  Conversion2->getConversionType()))
+      return false;
+  }
+
+  const IdentifierInfo *Name1 = Method1->getIdentifier();
+  const IdentifierInfo *Name2 = Method2->getIdentifier();
+  if (!::IsStructurallyEquivalent(Name1, Name2)) {
+    return false;
+    // TODO: Names do not match, add warning like at check for FieldDecl.
+  }
+
+  // Check the prototypes.
+  if (!::IsStructurallyEquivalent(Context,
+                                  Method1->getType(), Method2->getType()))
+    return false;
+
+  return true;
+}
+
+/// Determine structural equivalence of two lambda classes.
+static bool
+IsStructurallyEquivalentLambdas(StructuralEquivalenceContext &Context,
+                                CXXRecordDecl *D1, CXXRecordDecl *D2) {
+  assert(D1->isLambda() && D2->isLambda() &&
+         "Must be called on lambda classes");
+  if (!IsStructurallyEquivalent(Context, D1->getLambdaCallOperator(),
+                                D2->getLambdaCallOperator()))
+    return false;
+
+  return true;
+}
+
 /// Determine structural equivalence of two records.
 static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                      RecordDecl *D1, RecordDecl *D2) {
   if (D1->isUnion() != D2->isUnion()) {
     if (Context.Complain) {
-      Context.Diag2(D2->getLocation(),
-                    Context.ErrorOnTagTypeMismatch
-                        ? diag::err_odr_tag_type_inconsistent
-                        : diag::warn_odr_tag_type_inconsistent)
+      Context.Diag2(D2->getLocation(), Context.getApplicableDiagnostic(
+                                           diag::err_odr_tag_type_inconsistent))
           << Context.ToCtx.getTypeDeclType(D2);
       Context.Diag1(D1->getLocation(), diag::note_odr_tag_kind_here)
           << D1->getDeclName() << (unsigned)D1->getTagKind();
@@ -830,7 +1112,7 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     return false;
   }
 
-  if (D1->isAnonymousStructOrUnion() && D2->isAnonymousStructOrUnion()) {
+  if (!D1->getDeclName() && !D2->getDeclName()) {
     // If both anonymous structs/unions are in a record context, make sure
     // they occur in the same location in the context records.
     if (Optional<unsigned> Index1 =
@@ -846,10 +1128,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
 
   // If both declarations are class template specializations, we know
   // the ODR applies, so check the template and template arguments.
-  ClassTemplateSpecializationDecl *Spec1 =
-      dyn_cast<ClassTemplateSpecializationDecl>(D1);
-  ClassTemplateSpecializationDecl *Spec2 =
-      dyn_cast<ClassTemplateSpecializationDecl>(D2);
+  const auto *Spec1 = dyn_cast<ClassTemplateSpecializationDecl>(D1);
+  const auto *Spec2 = dyn_cast<ClassTemplateSpecializationDecl>(D2);
   if (Spec1 && Spec2) {
     // Check that the specialized templates are the same.
     if (!IsStructurallyEquivalent(Context, Spec1->getSpecializedTemplate(),
@@ -871,22 +1151,46 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     return false;
 
   // Compare the definitions of these two records. If either or both are
-  // incomplete, we assume that they are equivalent.
+  // incomplete (i.e. it is a forward decl), we assume that they are
+  // equivalent.
   D1 = D1->getDefinition();
   D2 = D2->getDefinition();
   if (!D1 || !D2)
     return true;
 
-  if (CXXRecordDecl *D1CXX = dyn_cast<CXXRecordDecl>(D1)) {
-    if (CXXRecordDecl *D2CXX = dyn_cast<CXXRecordDecl>(D2)) {
+  // If any of the records has external storage and we do a minimal check (or
+  // AST import) we assume they are equivalent. (If we didn't have this
+  // assumption then `RecordDecl::LoadFieldsFromExternalStorage` could trigger
+  // another AST import which in turn would call the structural equivalency
+  // check again and finally we'd have an improper result.)
+  if (Context.EqKind == StructuralEquivalenceKind::Minimal)
+    if (D1->hasExternalLexicalStorage() || D2->hasExternalLexicalStorage())
+      return true;
+
+  // If one definition is currently being defined, we do not compare for
+  // equality and we assume that the decls are equal.
+  if (D1->isBeingDefined() || D2->isBeingDefined())
+    return true;
+
+  if (auto *D1CXX = dyn_cast<CXXRecordDecl>(D1)) {
+    if (auto *D2CXX = dyn_cast<CXXRecordDecl>(D2)) {
       if (D1CXX->hasExternalLexicalStorage() &&
           !D1CXX->isCompleteDefinition()) {
         D1CXX->getASTContext().getExternalSource()->CompleteType(D1CXX);
       }
 
+      if (D1CXX->isLambda() != D2CXX->isLambda())
+        return false;
+      if (D1CXX->isLambda()) {
+        if (!IsStructurallyEquivalentLambdas(Context, D1CXX, D2CXX))
+          return false;
+      }
+
       if (D1CXX->getNumBases() != D2CXX->getNumBases()) {
         if (Context.Complain) {
-          Context.Diag2(D2->getLocation(), diag::warn_odr_tag_type_inconsistent)
+          Context.Diag2(D2->getLocation(),
+                        Context.getApplicableDiagnostic(
+                            diag::err_odr_tag_type_inconsistent))
               << Context.ToCtx.getTypeDeclType(D2);
           Context.Diag2(D2->getLocation(), diag::note_odr_number_of_bases)
               << D2CXX->getNumBases();
@@ -905,11 +1209,12 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                       Base2->getType())) {
           if (Context.Complain) {
             Context.Diag2(D2->getLocation(),
-                          diag::warn_odr_tag_type_inconsistent)
+                          Context.getApplicableDiagnostic(
+                              diag::err_odr_tag_type_inconsistent))
                 << Context.ToCtx.getTypeDeclType(D2);
-            Context.Diag2(Base2->getLocStart(), diag::note_odr_base)
+            Context.Diag2(Base2->getBeginLoc(), diag::note_odr_base)
                 << Base2->getType() << Base2->getSourceRange();
-            Context.Diag1(Base1->getLocStart(), diag::note_odr_base)
+            Context.Diag1(Base1->getBeginLoc(), diag::note_odr_base)
                 << Base1->getType() << Base1->getSourceRange();
           }
           return false;
@@ -919,22 +1224,68 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
         if (Base1->isVirtual() != Base2->isVirtual()) {
           if (Context.Complain) {
             Context.Diag2(D2->getLocation(),
-                          diag::warn_odr_tag_type_inconsistent)
+                          Context.getApplicableDiagnostic(
+                              diag::err_odr_tag_type_inconsistent))
                 << Context.ToCtx.getTypeDeclType(D2);
-            Context.Diag2(Base2->getLocStart(), diag::note_odr_virtual_base)
+            Context.Diag2(Base2->getBeginLoc(), diag::note_odr_virtual_base)
                 << Base2->isVirtual() << Base2->getSourceRange();
-            Context.Diag1(Base1->getLocStart(), diag::note_odr_base)
+            Context.Diag1(Base1->getBeginLoc(), diag::note_odr_base)
                 << Base1->isVirtual() << Base1->getSourceRange();
           }
           return false;
         }
       }
+
+      // Check the friends for consistency.
+      CXXRecordDecl::friend_iterator Friend2 = D2CXX->friend_begin(),
+                                     Friend2End = D2CXX->friend_end();
+      for (CXXRecordDecl::friend_iterator Friend1 = D1CXX->friend_begin(),
+                                          Friend1End = D1CXX->friend_end();
+           Friend1 != Friend1End; ++Friend1, ++Friend2) {
+        if (Friend2 == Friend2End) {
+          if (Context.Complain) {
+            Context.Diag2(D2->getLocation(),
+                          Context.getApplicableDiagnostic(
+                              diag::err_odr_tag_type_inconsistent))
+                << Context.ToCtx.getTypeDeclType(D2CXX);
+            Context.Diag1((*Friend1)->getFriendLoc(), diag::note_odr_friend);
+            Context.Diag2(D2->getLocation(), diag::note_odr_missing_friend);
+          }
+          return false;
+        }
+
+        if (!IsStructurallyEquivalent(Context, *Friend1, *Friend2)) {
+          if (Context.Complain) {
+            Context.Diag2(D2->getLocation(),
+                          Context.getApplicableDiagnostic(
+                              diag::err_odr_tag_type_inconsistent))
+                << Context.ToCtx.getTypeDeclType(D2CXX);
+            Context.Diag1((*Friend1)->getFriendLoc(), diag::note_odr_friend);
+            Context.Diag2((*Friend2)->getFriendLoc(), diag::note_odr_friend);
+          }
+          return false;
+        }
+      }
+
+      if (Friend2 != Friend2End) {
+        if (Context.Complain) {
+          Context.Diag2(D2->getLocation(),
+                        Context.getApplicableDiagnostic(
+                            diag::err_odr_tag_type_inconsistent))
+              << Context.ToCtx.getTypeDeclType(D2);
+          Context.Diag2((*Friend2)->getFriendLoc(), diag::note_odr_friend);
+          Context.Diag1(D1->getLocation(), diag::note_odr_missing_friend);
+        }
+        return false;
+      }
     } else if (D1CXX->getNumBases() > 0) {
       if (Context.Complain) {
-        Context.Diag2(D2->getLocation(), diag::warn_odr_tag_type_inconsistent)
+        Context.Diag2(D2->getLocation(),
+                      Context.getApplicableDiagnostic(
+                          diag::err_odr_tag_type_inconsistent))
             << Context.ToCtx.getTypeDeclType(D2);
         const CXXBaseSpecifier *Base1 = D1CXX->bases_begin();
-        Context.Diag1(Base1->getLocStart(), diag::note_odr_base)
+        Context.Diag1(Base1->getBeginLoc(), diag::note_odr_base)
             << Base1->getType() << Base1->getSourceRange();
         Context.Diag2(D2->getLocation(), diag::note_odr_missing_base);
       }
@@ -951,9 +1302,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     if (Field2 == Field2End) {
       if (Context.Complain) {
         Context.Diag2(D2->getLocation(),
-                      Context.ErrorOnTagTypeMismatch
-                          ? diag::err_odr_tag_type_inconsistent
-                          : diag::warn_odr_tag_type_inconsistent)
+                      Context.getApplicableDiagnostic(
+                          diag::err_odr_tag_type_inconsistent))
             << Context.ToCtx.getTypeDeclType(D2);
         Context.Diag1(Field1->getLocation(), diag::note_odr_field)
             << Field1->getDeclName() << Field1->getType();
@@ -968,10 +1318,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
 
   if (Field2 != Field2End) {
     if (Context.Complain) {
-      Context.Diag2(D2->getLocation(),
-                    Context.ErrorOnTagTypeMismatch
-                        ? diag::err_odr_tag_type_inconsistent
-                        : diag::warn_odr_tag_type_inconsistent)
+      Context.Diag2(D2->getLocation(), Context.getApplicableDiagnostic(
+                                           diag::err_odr_tag_type_inconsistent))
           << Context.ToCtx.getTypeDeclType(D2);
       Context.Diag2(Field2->getLocation(), diag::note_odr_field)
           << Field2->getDeclName() << Field2->getType();
@@ -986,6 +1334,14 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
 /// Determine structural equivalence of two enums.
 static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                      EnumDecl *D1, EnumDecl *D2) {
+
+  // Compare the definitions of these two enums. If either or both are
+  // incomplete (i.e. forward declared), we assume that they are equivalent.
+  D1 = D1->getDefinition();
+  D2 = D2->getDefinition();
+  if (!D1 || !D2)
+    return true;
+
   EnumDecl::enumerator_iterator EC2 = D2->enumerator_begin(),
                                 EC2End = D2->enumerator_end();
   for (EnumDecl::enumerator_iterator EC1 = D1->enumerator_begin(),
@@ -994,9 +1350,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     if (EC2 == EC2End) {
       if (Context.Complain) {
         Context.Diag2(D2->getLocation(),
-                      Context.ErrorOnTagTypeMismatch
-                          ? diag::err_odr_tag_type_inconsistent
-                          : diag::warn_odr_tag_type_inconsistent)
+                      Context.getApplicableDiagnostic(
+                          diag::err_odr_tag_type_inconsistent))
             << Context.ToCtx.getTypeDeclType(D2);
         Context.Diag1(EC1->getLocation(), diag::note_odr_enumerator)
             << EC1->getDeclName() << EC1->getInitVal().toString(10);
@@ -1011,9 +1366,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
         !IsStructurallyEquivalent(EC1->getIdentifier(), EC2->getIdentifier())) {
       if (Context.Complain) {
         Context.Diag2(D2->getLocation(),
-                      Context.ErrorOnTagTypeMismatch
-                          ? diag::err_odr_tag_type_inconsistent
-                          : diag::warn_odr_tag_type_inconsistent)
+                      Context.getApplicableDiagnostic(
+                          diag::err_odr_tag_type_inconsistent))
             << Context.ToCtx.getTypeDeclType(D2);
         Context.Diag2(EC2->getLocation(), diag::note_odr_enumerator)
             << EC2->getDeclName() << EC2->getInitVal().toString(10);
@@ -1026,10 +1380,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
 
   if (EC2 != EC2End) {
     if (Context.Complain) {
-      Context.Diag2(D2->getLocation(),
-                    Context.ErrorOnTagTypeMismatch
-                        ? diag::err_odr_tag_type_inconsistent
-                        : diag::warn_odr_tag_type_inconsistent)
+      Context.Diag2(D2->getLocation(), Context.getApplicableDiagnostic(
+                                           diag::err_odr_tag_type_inconsistent))
           << Context.ToCtx.getTypeDeclType(D2);
       Context.Diag2(EC2->getLocation(), diag::note_odr_enumerator)
           << EC2->getDeclName() << EC2->getInitVal().toString(10);
@@ -1047,7 +1399,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   if (Params1->size() != Params2->size()) {
     if (Context.Complain) {
       Context.Diag2(Params2->getTemplateLoc(),
-                    diag::err_odr_different_num_template_parameters)
+                    Context.getApplicableDiagnostic(
+                        diag::err_odr_different_num_template_parameters))
           << Params1->size() << Params2->size();
       Context.Diag1(Params1->getTemplateLoc(),
                     diag::note_odr_template_parameter_list);
@@ -1059,18 +1412,17 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
     if (Params1->getParam(I)->getKind() != Params2->getParam(I)->getKind()) {
       if (Context.Complain) {
         Context.Diag2(Params2->getParam(I)->getLocation(),
-                      diag::err_odr_different_template_parameter_kind);
+                      Context.getApplicableDiagnostic(
+                          diag::err_odr_different_template_parameter_kind));
         Context.Diag1(Params1->getParam(I)->getLocation(),
                       diag::note_odr_template_parameter_here);
       }
       return false;
     }
 
-    if (!Context.IsStructurallyEquivalent(Params1->getParam(I),
-                                          Params2->getParam(I))) {
-
+    if (!IsStructurallyEquivalent(Context, Params1->getParam(I),
+                                  Params2->getParam(I)))
       return false;
-    }
   }
 
   return true;
@@ -1081,7 +1433,9 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                      TemplateTypeParmDecl *D2) {
   if (D1->isParameterPack() != D2->isParameterPack()) {
     if (Context.Complain) {
-      Context.Diag2(D2->getLocation(), diag::err_odr_parameter_pack_non_pack)
+      Context.Diag2(D2->getLocation(),
+                    Context.getApplicableDiagnostic(
+                        diag::err_odr_parameter_pack_non_pack))
           << D2->isParameterPack();
       Context.Diag1(D1->getLocation(), diag::note_odr_parameter_pack_non_pack)
           << D1->isParameterPack();
@@ -1097,7 +1451,9 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                      NonTypeTemplateParmDecl *D2) {
   if (D1->isParameterPack() != D2->isParameterPack()) {
     if (Context.Complain) {
-      Context.Diag2(D2->getLocation(), diag::err_odr_parameter_pack_non_pack)
+      Context.Diag2(D2->getLocation(),
+                    Context.getApplicableDiagnostic(
+                        diag::err_odr_parameter_pack_non_pack))
           << D2->isParameterPack();
       Context.Diag1(D1->getLocation(), diag::note_odr_parameter_pack_non_pack)
           << D1->isParameterPack();
@@ -1106,10 +1462,11 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   }
 
   // Check types.
-  if (!Context.IsStructurallyEquivalent(D1->getType(), D2->getType())) {
+  if (!IsStructurallyEquivalent(Context, D1->getType(), D2->getType())) {
     if (Context.Complain) {
       Context.Diag2(D2->getLocation(),
-                    diag::err_odr_non_type_parameter_type_inconsistent)
+                    Context.getApplicableDiagnostic(
+                        diag::err_odr_non_type_parameter_type_inconsistent))
           << D2->getType() << D1->getType();
       Context.Diag1(D1->getLocation(), diag::note_odr_value_here)
           << D1->getType();
@@ -1125,7 +1482,9 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                      TemplateTemplateParmDecl *D2) {
   if (D1->isParameterPack() != D2->isParameterPack()) {
     if (Context.Complain) {
-      Context.Diag2(D2->getLocation(), diag::err_odr_parameter_pack_non_pack)
+      Context.Diag2(D2->getLocation(),
+                    Context.getApplicableDiagnostic(
+                        diag::err_odr_parameter_pack_non_pack))
           << D2->isParameterPack();
       Context.Diag1(D1->getLocation(), diag::note_odr_parameter_pack_non_pack)
           << D1->isParameterPack();
@@ -1138,17 +1497,76 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                   D2->getTemplateParameters());
 }
 
+static bool IsTemplateDeclCommonStructurallyEquivalent(
+    StructuralEquivalenceContext &Ctx, TemplateDecl *D1, TemplateDecl *D2) {
+  if (!IsStructurallyEquivalent(D1->getIdentifier(), D2->getIdentifier()))
+    return false;
+  if (!D1->getIdentifier()) // Special name
+    if (D1->getNameAsString() != D2->getNameAsString())
+      return false;
+  return IsStructurallyEquivalent(Ctx, D1->getTemplateParameters(),
+                                  D2->getTemplateParameters());
+}
+
 static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
                                      ClassTemplateDecl *D1,
                                      ClassTemplateDecl *D2) {
   // Check template parameters.
-  if (!IsStructurallyEquivalent(Context, D1->getTemplateParameters(),
-                                D2->getTemplateParameters()))
+  if (!IsTemplateDeclCommonStructurallyEquivalent(Context, D1, D2))
     return false;
 
   // Check the templated declaration.
-  return Context.IsStructurallyEquivalent(D1->getTemplatedDecl(),
-                                          D2->getTemplatedDecl());
+  return IsStructurallyEquivalent(Context, D1->getTemplatedDecl(),
+                                  D2->getTemplatedDecl());
+}
+
+static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
+                                     FunctionTemplateDecl *D1,
+                                     FunctionTemplateDecl *D2) {
+  // Check template parameters.
+  if (!IsTemplateDeclCommonStructurallyEquivalent(Context, D1, D2))
+    return false;
+
+  // Check the templated declaration.
+  return IsStructurallyEquivalent(Context, D1->getTemplatedDecl()->getType(),
+                                  D2->getTemplatedDecl()->getType());
+}
+
+static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
+                                     ConceptDecl *D1,
+                                     ConceptDecl *D2) {
+  // Check template parameters.
+  if (!IsTemplateDeclCommonStructurallyEquivalent(Context, D1, D2))
+    return false;
+
+  // Check the constraint expression.
+  return IsStructurallyEquivalent(Context, D1->getConstraintExpr(),
+                                  D2->getConstraintExpr());
+}
+
+static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
+                                     FriendDecl *D1, FriendDecl *D2) {
+  if ((D1->getFriendType() && D2->getFriendDecl()) ||
+      (D1->getFriendDecl() && D2->getFriendType())) {
+      return false;
+  }
+  if (D1->getFriendType() && D2->getFriendType())
+    return IsStructurallyEquivalent(Context,
+                                    D1->getFriendType()->getType(),
+                                    D2->getFriendType()->getType());
+  if (D1->getFriendDecl() && D2->getFriendDecl())
+    return IsStructurallyEquivalent(Context, D1->getFriendDecl(),
+                                    D2->getFriendDecl());
+  return false;
+}
+
+static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
+                                     FunctionDecl *D1, FunctionDecl *D2) {
+  // FIXME: Consider checking for function attributes as well.
+  if (!IsStructurallyEquivalent(Context, D1->getType(), D2->getType()))
+    return false;
+
+  return true;
 }
 
 /// Determine structural equivalence of two declarations.
@@ -1172,9 +1590,6 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   Context.DeclsToCheck.push_back(D1->getCanonicalDecl());
   return true;
 }
-} // namespace
-
-namespace clang {
 
 DiagnosticBuilder StructuralEquivalenceContext::Diag1(SourceLocation Loc,
                                                       unsigned DiagID) {
@@ -1199,7 +1614,7 @@ StructuralEquivalenceContext::findUntaggedStructOrUnionIndex(RecordDecl *Anon) {
   ASTContext &Context = Anon->getASTContext();
   QualType AnonTy = Context.getRecordType(Anon);
 
-  RecordDecl *Owner = dyn_cast<RecordDecl>(Anon->getDeclContext());
+  const auto *Owner = dyn_cast<RecordDecl>(Anon->getDeclContext());
   if (!Owner)
     return None;
 
@@ -1219,6 +1634,10 @@ StructuralEquivalenceContext::findUntaggedStructOrUnionIndex(RecordDecl *Anon) {
     // If the field looks like this:
     // struct { ... } A;
     QualType FieldType = F->getType();
+    // In case of nested structs.
+    while (const auto *ElabType = dyn_cast<ElaboratedType>(FieldType))
+      FieldType = ElabType->getNamedType();
+
     if (const auto *RecType = dyn_cast<RecordType>(FieldType)) {
       const RecordDecl *RecDecl = RecType->getDecl();
       if (RecDecl->getDeclContext() == Owner && !RecDecl->getIdentifier()) {
@@ -1233,20 +1652,225 @@ StructuralEquivalenceContext::findUntaggedStructOrUnionIndex(RecordDecl *Anon) {
   return Index;
 }
 
-bool StructuralEquivalenceContext::IsStructurallyEquivalent(Decl *D1,
-                                                            Decl *D2) {
+unsigned StructuralEquivalenceContext::getApplicableDiagnostic(
+    unsigned ErrorDiagnostic) {
+  if (ErrorOnTagTypeMismatch)
+    return ErrorDiagnostic;
+
+  switch (ErrorDiagnostic) {
+  case diag::err_odr_variable_type_inconsistent:
+    return diag::warn_odr_variable_type_inconsistent;
+  case diag::err_odr_variable_multiple_def:
+    return diag::warn_odr_variable_multiple_def;
+  case diag::err_odr_function_type_inconsistent:
+    return diag::warn_odr_function_type_inconsistent;
+  case diag::err_odr_tag_type_inconsistent:
+    return diag::warn_odr_tag_type_inconsistent;
+  case diag::err_odr_field_type_inconsistent:
+    return diag::warn_odr_field_type_inconsistent;
+  case diag::err_odr_ivar_type_inconsistent:
+    return diag::warn_odr_ivar_type_inconsistent;
+  case diag::err_odr_objc_superclass_inconsistent:
+    return diag::warn_odr_objc_superclass_inconsistent;
+  case diag::err_odr_objc_method_result_type_inconsistent:
+    return diag::warn_odr_objc_method_result_type_inconsistent;
+  case diag::err_odr_objc_method_num_params_inconsistent:
+    return diag::warn_odr_objc_method_num_params_inconsistent;
+  case diag::err_odr_objc_method_param_type_inconsistent:
+    return diag::warn_odr_objc_method_param_type_inconsistent;
+  case diag::err_odr_objc_method_variadic_inconsistent:
+    return diag::warn_odr_objc_method_variadic_inconsistent;
+  case diag::err_odr_objc_property_type_inconsistent:
+    return diag::warn_odr_objc_property_type_inconsistent;
+  case diag::err_odr_objc_property_impl_kind_inconsistent:
+    return diag::warn_odr_objc_property_impl_kind_inconsistent;
+  case diag::err_odr_objc_synthesize_ivar_inconsistent:
+    return diag::warn_odr_objc_synthesize_ivar_inconsistent;
+  case diag::err_odr_different_num_template_parameters:
+    return diag::warn_odr_different_num_template_parameters;
+  case diag::err_odr_different_template_parameter_kind:
+    return diag::warn_odr_different_template_parameter_kind;
+  case diag::err_odr_parameter_pack_non_pack:
+    return diag::warn_odr_parameter_pack_non_pack;
+  case diag::err_odr_non_type_parameter_type_inconsistent:
+    return diag::warn_odr_non_type_parameter_type_inconsistent;
+  }
+  llvm_unreachable("Diagnostic kind not handled in preceding switch");
+}
+
+bool StructuralEquivalenceContext::IsEquivalent(Decl *D1, Decl *D2) {
+
+  // Ensure that the implementation functions (all static functions in this TU)
+  // never call the public ASTStructuralEquivalence::IsEquivalent() functions,
+  // because that will wreak havoc the internal state (DeclsToCheck and
+  // TentativeEquivalences members) and can cause faulty behaviour. For
+  // instance, some leaf declarations can be stated and cached as inequivalent
+  // as a side effect of one inequivalent element in the DeclsToCheck list.
+  assert(DeclsToCheck.empty());
+  assert(TentativeEquivalences.empty());
+
   if (!::IsStructurallyEquivalent(*this, D1, D2))
     return false;
 
   return !Finish();
 }
 
-bool StructuralEquivalenceContext::IsStructurallyEquivalent(QualType T1,
-                                                            QualType T2) {
+bool StructuralEquivalenceContext::IsEquivalent(QualType T1, QualType T2) {
+  assert(DeclsToCheck.empty());
+  assert(TentativeEquivalences.empty());
   if (!::IsStructurallyEquivalent(*this, T1, T2))
     return false;
 
   return !Finish();
+}
+
+bool StructuralEquivalenceContext::CheckCommonEquivalence(Decl *D1, Decl *D2) {
+  // Check for equivalent described template.
+  TemplateDecl *Template1 = D1->getDescribedTemplate();
+  TemplateDecl *Template2 = D2->getDescribedTemplate();
+  if ((Template1 != nullptr) != (Template2 != nullptr))
+    return false;
+  if (Template1 && !IsStructurallyEquivalent(*this, Template1, Template2))
+    return false;
+
+  // FIXME: Move check for identifier names into this function.
+
+  return true;
+}
+
+bool StructuralEquivalenceContext::CheckKindSpecificEquivalence(
+    Decl *D1, Decl *D2) {
+  // FIXME: Switch on all declaration kinds. For now, we're just going to
+  // check the obvious ones.
+  if (auto *Record1 = dyn_cast<RecordDecl>(D1)) {
+    if (auto *Record2 = dyn_cast<RecordDecl>(D2)) {
+      // Check for equivalent structure names.
+      IdentifierInfo *Name1 = Record1->getIdentifier();
+      if (!Name1 && Record1->getTypedefNameForAnonDecl())
+        Name1 = Record1->getTypedefNameForAnonDecl()->getIdentifier();
+      IdentifierInfo *Name2 = Record2->getIdentifier();
+      if (!Name2 && Record2->getTypedefNameForAnonDecl())
+        Name2 = Record2->getTypedefNameForAnonDecl()->getIdentifier();
+      if (!::IsStructurallyEquivalent(Name1, Name2) ||
+          !::IsStructurallyEquivalent(*this, Record1, Record2))
+        return false;
+    } else {
+      // Record/non-record mismatch.
+      return false;
+    }
+  } else if (auto *Enum1 = dyn_cast<EnumDecl>(D1)) {
+    if (auto *Enum2 = dyn_cast<EnumDecl>(D2)) {
+      // Check for equivalent enum names.
+      IdentifierInfo *Name1 = Enum1->getIdentifier();
+      if (!Name1 && Enum1->getTypedefNameForAnonDecl())
+        Name1 = Enum1->getTypedefNameForAnonDecl()->getIdentifier();
+      IdentifierInfo *Name2 = Enum2->getIdentifier();
+      if (!Name2 && Enum2->getTypedefNameForAnonDecl())
+        Name2 = Enum2->getTypedefNameForAnonDecl()->getIdentifier();
+      if (!::IsStructurallyEquivalent(Name1, Name2) ||
+          !::IsStructurallyEquivalent(*this, Enum1, Enum2))
+        return false;
+    } else {
+      // Enum/non-enum mismatch
+      return false;
+    }
+  } else if (const auto *Typedef1 = dyn_cast<TypedefNameDecl>(D1)) {
+    if (const auto *Typedef2 = dyn_cast<TypedefNameDecl>(D2)) {
+      if (!::IsStructurallyEquivalent(Typedef1->getIdentifier(),
+                                      Typedef2->getIdentifier()) ||
+          !::IsStructurallyEquivalent(*this, Typedef1->getUnderlyingType(),
+                                      Typedef2->getUnderlyingType()))
+        return false;
+    } else {
+      // Typedef/non-typedef mismatch.
+      return false;
+    }
+  } else if (auto *ClassTemplate1 = dyn_cast<ClassTemplateDecl>(D1)) {
+    if (auto *ClassTemplate2 = dyn_cast<ClassTemplateDecl>(D2)) {
+      if (!::IsStructurallyEquivalent(*this, ClassTemplate1,
+                                      ClassTemplate2))
+        return false;
+    } else {
+      // Class template/non-class-template mismatch.
+      return false;
+    }
+  } else if (auto *FunctionTemplate1 = dyn_cast<FunctionTemplateDecl>(D1)) {
+    if (auto *FunctionTemplate2 = dyn_cast<FunctionTemplateDecl>(D2)) {
+      if (!::IsStructurallyEquivalent(*this, FunctionTemplate1,
+                                      FunctionTemplate2))
+        return false;
+    } else {
+      // Class template/non-class-template mismatch.
+      return false;
+    }
+  } else if (auto *ConceptDecl1 = dyn_cast<ConceptDecl>(D1)) {
+    if (auto *ConceptDecl2 = dyn_cast<ConceptDecl>(D2)) {
+      if (!::IsStructurallyEquivalent(*this, ConceptDecl1, ConceptDecl2))
+        return false;
+    } else {
+      // Concept/non-concept mismatch.
+      return false;
+    }
+  } else if (auto *TTP1 = dyn_cast<TemplateTypeParmDecl>(D1)) {
+    if (auto *TTP2 = dyn_cast<TemplateTypeParmDecl>(D2)) {
+      if (!::IsStructurallyEquivalent(*this, TTP1, TTP2))
+        return false;
+    } else {
+      // Kind mismatch.
+      return false;
+    }
+  } else if (auto *NTTP1 = dyn_cast<NonTypeTemplateParmDecl>(D1)) {
+    if (auto *NTTP2 = dyn_cast<NonTypeTemplateParmDecl>(D2)) {
+      if (!::IsStructurallyEquivalent(*this, NTTP1, NTTP2))
+        return false;
+    } else {
+      // Kind mismatch.
+      return false;
+    }
+  } else if (auto *TTP1 = dyn_cast<TemplateTemplateParmDecl>(D1)) {
+    if (auto *TTP2 = dyn_cast<TemplateTemplateParmDecl>(D2)) {
+      if (!::IsStructurallyEquivalent(*this, TTP1, TTP2))
+        return false;
+    } else {
+      // Kind mismatch.
+      return false;
+    }
+  } else if (auto *MD1 = dyn_cast<CXXMethodDecl>(D1)) {
+    if (auto *MD2 = dyn_cast<CXXMethodDecl>(D2)) {
+      if (!::IsStructurallyEquivalent(*this, MD1, MD2))
+        return false;
+    } else {
+      // Kind mismatch.
+      return false;
+    }
+  } else if (FunctionDecl *FD1 = dyn_cast<FunctionDecl>(D1)) {
+    if (FunctionDecl *FD2 = dyn_cast<FunctionDecl>(D2)) {
+      if (FD1->isOverloadedOperator()) {
+        if (!FD2->isOverloadedOperator())
+          return false;
+        if (FD1->getOverloadedOperator() != FD2->getOverloadedOperator())
+          return false;
+      }
+      if (!::IsStructurallyEquivalent(FD1->getIdentifier(),
+                                      FD2->getIdentifier()))
+        return false;
+      if (!::IsStructurallyEquivalent(*this, FD1, FD2))
+        return false;
+    } else {
+      // Kind mismatch.
+      return false;
+    }
+  } else if (FriendDecl *FrD1 = dyn_cast<FriendDecl>(D1)) {
+    if (FriendDecl *FrD2 = dyn_cast<FriendDecl>(D2)) {
+        if (!::IsStructurallyEquivalent(*this, FrD1, FrD2))
+          return false;
+    } else {
+      // Kind mismatch.
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool StructuralEquivalenceContext::Finish() {
@@ -1258,94 +1882,8 @@ bool StructuralEquivalenceContext::Finish() {
     Decl *D2 = TentativeEquivalences[D1];
     assert(D2 && "Unrecorded tentative equivalence?");
 
-    bool Equivalent = true;
-
-    // FIXME: Switch on all declaration kinds. For now, we're just going to
-    // check the obvious ones.
-    if (RecordDecl *Record1 = dyn_cast<RecordDecl>(D1)) {
-      if (RecordDecl *Record2 = dyn_cast<RecordDecl>(D2)) {
-        // Check for equivalent structure names.
-        IdentifierInfo *Name1 = Record1->getIdentifier();
-        if (!Name1 && Record1->getTypedefNameForAnonDecl())
-          Name1 = Record1->getTypedefNameForAnonDecl()->getIdentifier();
-        IdentifierInfo *Name2 = Record2->getIdentifier();
-        if (!Name2 && Record2->getTypedefNameForAnonDecl())
-          Name2 = Record2->getTypedefNameForAnonDecl()->getIdentifier();
-        if (!::IsStructurallyEquivalent(Name1, Name2) ||
-            !::IsStructurallyEquivalent(*this, Record1, Record2))
-          Equivalent = false;
-      } else {
-        // Record/non-record mismatch.
-        Equivalent = false;
-      }
-    } else if (EnumDecl *Enum1 = dyn_cast<EnumDecl>(D1)) {
-      if (EnumDecl *Enum2 = dyn_cast<EnumDecl>(D2)) {
-        // Check for equivalent enum names.
-        IdentifierInfo *Name1 = Enum1->getIdentifier();
-        if (!Name1 && Enum1->getTypedefNameForAnonDecl())
-          Name1 = Enum1->getTypedefNameForAnonDecl()->getIdentifier();
-        IdentifierInfo *Name2 = Enum2->getIdentifier();
-        if (!Name2 && Enum2->getTypedefNameForAnonDecl())
-          Name2 = Enum2->getTypedefNameForAnonDecl()->getIdentifier();
-        if (!::IsStructurallyEquivalent(Name1, Name2) ||
-            !::IsStructurallyEquivalent(*this, Enum1, Enum2))
-          Equivalent = false;
-      } else {
-        // Enum/non-enum mismatch
-        Equivalent = false;
-      }
-    } else if (TypedefNameDecl *Typedef1 = dyn_cast<TypedefNameDecl>(D1)) {
-      if (TypedefNameDecl *Typedef2 = dyn_cast<TypedefNameDecl>(D2)) {
-        if (!::IsStructurallyEquivalent(Typedef1->getIdentifier(),
-                                        Typedef2->getIdentifier()) ||
-            !::IsStructurallyEquivalent(*this, Typedef1->getUnderlyingType(),
-                                        Typedef2->getUnderlyingType()))
-          Equivalent = false;
-      } else {
-        // Typedef/non-typedef mismatch.
-        Equivalent = false;
-      }
-    } else if (ClassTemplateDecl *ClassTemplate1 =
-                   dyn_cast<ClassTemplateDecl>(D1)) {
-      if (ClassTemplateDecl *ClassTemplate2 = dyn_cast<ClassTemplateDecl>(D2)) {
-        if (!::IsStructurallyEquivalent(ClassTemplate1->getIdentifier(),
-                                        ClassTemplate2->getIdentifier()) ||
-            !::IsStructurallyEquivalent(*this, ClassTemplate1, ClassTemplate2))
-          Equivalent = false;
-      } else {
-        // Class template/non-class-template mismatch.
-        Equivalent = false;
-      }
-    } else if (TemplateTypeParmDecl *TTP1 =
-                   dyn_cast<TemplateTypeParmDecl>(D1)) {
-      if (TemplateTypeParmDecl *TTP2 = dyn_cast<TemplateTypeParmDecl>(D2)) {
-        if (!::IsStructurallyEquivalent(*this, TTP1, TTP2))
-          Equivalent = false;
-      } else {
-        // Kind mismatch.
-        Equivalent = false;
-      }
-    } else if (NonTypeTemplateParmDecl *NTTP1 =
-                   dyn_cast<NonTypeTemplateParmDecl>(D1)) {
-      if (NonTypeTemplateParmDecl *NTTP2 =
-              dyn_cast<NonTypeTemplateParmDecl>(D2)) {
-        if (!::IsStructurallyEquivalent(*this, NTTP1, NTTP2))
-          Equivalent = false;
-      } else {
-        // Kind mismatch.
-        Equivalent = false;
-      }
-    } else if (TemplateTemplateParmDecl *TTP1 =
-                   dyn_cast<TemplateTemplateParmDecl>(D1)) {
-      if (TemplateTemplateParmDecl *TTP2 =
-              dyn_cast<TemplateTemplateParmDecl>(D2)) {
-        if (!::IsStructurallyEquivalent(*this, TTP1, TTP2))
-          Equivalent = false;
-      } else {
-        // Kind mismatch.
-        Equivalent = false;
-      }
-    }
+    bool Equivalent =
+        CheckCommonEquivalence(D1, D2) && CheckKindSpecificEquivalence(D1, D2);
 
     if (!Equivalent) {
       // Note that these two declarations are not equivalent (and we already
@@ -1354,9 +1892,7 @@ bool StructuralEquivalenceContext::Finish() {
           std::make_pair(D1->getCanonicalDecl(), D2->getCanonicalDecl()));
       return true;
     }
-    // FIXME: Check other declaration kinds!
   }
 
   return false;
 }
-} // namespace clang

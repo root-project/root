@@ -1,9 +1,8 @@
 //===- DWARFDebugAbbrev.h ---------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -56,8 +55,9 @@ class DWARFDebugAbbrev {
   using DWARFAbbreviationDeclarationSetMap =
       std::map<uint64_t, DWARFAbbreviationDeclarationSet>;
 
-  DWARFAbbreviationDeclarationSetMap AbbrDeclSets;
+  mutable DWARFAbbreviationDeclarationSetMap AbbrDeclSets;
   mutable DWARFAbbreviationDeclarationSetMap::const_iterator PrevAbbrOffsetPos;
+  mutable Optional<DataExtractor> Data;
 
 public:
   DWARFDebugAbbrev();
@@ -66,9 +66,11 @@ public:
   getAbbreviationDeclarationSet(uint64_t CUAbbrOffset) const;
 
   void dump(raw_ostream &OS) const;
+  void parse() const;
   void extract(DataExtractor Data);
 
   DWARFAbbreviationDeclarationSetMap::const_iterator begin() const {
+    parse();
     return AbbrDeclSets.begin();
   }
 

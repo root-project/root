@@ -1,9 +1,8 @@
 //===- BytesOutputStyle.cpp ----------------------------------- *- C++ --*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -15,6 +14,7 @@
 
 #include "llvm/DebugInfo/CodeView/Formatters.h"
 #include "llvm/DebugInfo/CodeView/LazyRandomTypeCollection.h"
+#include "llvm/DebugInfo/MSF/MSFCommon.h"
 #include "llvm/DebugInfo/MSF/MappedBlockStream.h"
 #include "llvm/DebugInfo/PDB/Native/DbiStream.h"
 #include "llvm/DebugInfo/PDB/Native/InfoStream.h"
@@ -117,6 +117,11 @@ Error BytesOutputStyle::dump() {
           inconvertibleErrorCode());
 
     dumpByteRanges(R.Min, Max);
+    P.NewLine();
+  }
+
+  if (opts::bytes::Fpm) {
+    dumpFpm();
     P.NewLine();
   }
 
@@ -335,9 +340,7 @@ static void iterateOneModule(PDBFile &File, LinePrinter &P,
   if (ModiStream == kInvalidStreamIndex)
     return;
 
-  auto ModStreamData = MappedBlockStream::createIndexedStream(
-      File.getMsfLayout(), File.getMsfBuffer(), ModiStream,
-      File.getAllocator());
+  auto ModStreamData = File.createIndexedStream(ModiStream);
   ModuleDebugStreamRef ModStream(Modi, std::move(ModStreamData));
   if (auto EC = ModStream.reload()) {
     P.formatLine("Could not parse debug information.");
@@ -401,27 +404,6 @@ void BytesOutputStyle::dumpModuleC11() {
                  });
 }
 
-static std::string formatChunkKind(DebugSubsectionKind Kind) {
-  switch (Kind) {
-    RETURN_CASE(DebugSubsectionKind, None, "none");
-    RETURN_CASE(DebugSubsectionKind, Symbols, "symbols");
-    RETURN_CASE(DebugSubsectionKind, Lines, "lines");
-    RETURN_CASE(DebugSubsectionKind, StringTable, "strings");
-    RETURN_CASE(DebugSubsectionKind, FileChecksums, "checksums");
-    RETURN_CASE(DebugSubsectionKind, FrameData, "frames");
-    RETURN_CASE(DebugSubsectionKind, InlineeLines, "inlinee lines");
-    RETURN_CASE(DebugSubsectionKind, CrossScopeImports, "xmi");
-    RETURN_CASE(DebugSubsectionKind, CrossScopeExports, "xme");
-    RETURN_CASE(DebugSubsectionKind, ILLines, "il lines");
-    RETURN_CASE(DebugSubsectionKind, FuncMDTokenMap, "func md token map");
-    RETURN_CASE(DebugSubsectionKind, TypeMDTokenMap, "type md token map");
-    RETURN_CASE(DebugSubsectionKind, MergedAssemblyInput,
-                "merged assembly input");
-    RETURN_CASE(DebugSubsectionKind, CoffSymbolRVA, "coff symbol rva");
-  }
-  return formatUnknownEnum(Kind);
-}
-
 void BytesOutputStyle::dumpModuleC13() {
   printHeader(P, "Debug Chunks");
 
@@ -480,6 +462,13 @@ BytesOutputStyle::initializeTypes(uint32_t StreamIdx) {
   return *TypeCollection;
 }
 
+void BytesOutputStyle::dumpFpm() {
+  printHeader(P, "Free Page Map");
+
+  msf::MSFStreamLayout FpmLayout = File.getFpmStreamLayout();
+  P.formatMsfStreamBlocks(File, FpmLayout);
+}
+
 void BytesOutputStyle::dumpStreamBytes() {
   if (StreamPurposes.empty())
     discoverStreamPurposes(File, StreamPurposes);
@@ -495,7 +484,8 @@ void BytesOutputStyle::dumpStreamBytes() {
       P.formatLine("Stream {0}: Not present", Spec.SI);
       continue;
     }
-    P.formatMsfStreamData("Data", File, Spec.SI, StreamPurposes[Spec.SI],
-                          Spec.Begin, Spec.Size);
+    P.formatMsfStreamData("Data", File, Spec.SI,
+                          StreamPurposes[Spec.SI].getShortName(), Spec.Begin,
+                          Spec.Size);
   }
 }

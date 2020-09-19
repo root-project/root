@@ -2,6 +2,8 @@
 Writing an LLVM Pass
 ====================
 
+.. program:: opt
+
 .. contents::
     :local:
 
@@ -55,7 +57,7 @@ copy the following into ``CMakeLists.txt``:
 
 .. code-block:: cmake
 
-  add_llvm_loadable_module( LLVMHello
+  add_llvm_library( LLVMHello MODULE
     Hello.cpp
   
     PLUGIN_TOOL
@@ -77,7 +79,7 @@ This build script specifies that ``Hello.cpp`` file in the current directory
 is to be compiled and linked into a shared object ``$(LEVEL)/lib/LLVMHello.so`` that
 can be dynamically loaded by the :program:`opt` tool via its :option:`-load`
 option. If your operating system uses a suffix other than ``.so`` (such as
-Windows or Mac OS X), the appropriate extension will be used.
+Windows or macOS), the appropriate extension will be used.
 
 Now that we have the build scripts set up, we just need to write the code for
 the pass itself.
@@ -176,6 +178,18 @@ without modifying it then the third argument is set to ``true``; if a pass is
 an analysis pass, for example dominator tree pass, then ``true`` is supplied as
 the fourth argument.
 
+If we want to register the pass as a step of an existing pipeline, some extension
+points are provided, e.g. ``PassManagerBuilder::EP_EarlyAsPossible`` to apply our
+pass before any optimization, or ``PassManagerBuilder::EP_FullLinkTimeOptimizationLast``
+to apply it after Link Time Optimizations.
+
+.. code-block:: c++
+
+    static llvm::RegisterStandardPasses Y(
+        llvm::PassManagerBuilder::EP_EarlyAsPossible,
+        [](const llvm::PassManagerBuilder &Builder,
+           llvm::legacy::PassManagerBase &PM) { PM.add(new Hello()); });
+
 As a whole, the ``.cpp`` file looks like:
 
 .. code-block:: c++
@@ -183,9 +197,12 @@ As a whole, the ``.cpp`` file looks like:
   #include "llvm/Pass.h"
   #include "llvm/IR/Function.h"
   #include "llvm/Support/raw_ostream.h"
-  
+
+  #include "llvm/IR/LegacyPassManager.h"
+  #include "llvm/Transforms/IPO/PassManagerBuilder.h"
+
   using namespace llvm;
-  
+
   namespace {
   struct Hello : public FunctionPass {
     static char ID;
@@ -198,11 +215,16 @@ As a whole, the ``.cpp`` file looks like:
     }
   }; // end of struct Hello
   }  // end of anonymous namespace
-  
+
   char Hello::ID = 0;
   static RegisterPass<Hello> X("hello", "Hello World Pass",
                                false /* Only looks at CFG */,
                                false /* Analysis Pass */);
+
+  static RegisterStandardPasses Y(
+      PassManagerBuilder::EP_EarlyAsPossible,
+      [](const PassManagerBuilder &Builder,
+         legacy::PassManagerBase &PM) { PM.add(new Hello()); });
 
 Now that it's all together, compile the file with a simple "``gmake``" command
 from the top level of your build directory and you should get a new file
@@ -264,7 +286,7 @@ documentation to users of :program:`opt`.  Now that you have a working pass,
 you would go ahead and make it do the cool transformations you want.  Once you
 get it all working and tested, it may become useful to find out how fast your
 pass is.  The :ref:`PassManager <writing-an-llvm-pass-passmanager>` provides a
-nice command line option (:option:`--time-passes`) that allows you to get
+nice command line option (:option:`-time-passes`) that allows you to get
 information about the execution time of your pass along with the other passes
 you queue up.  For example:
 
@@ -1032,7 +1054,7 @@ implementation for the interface.
 Pass Statistics
 ===============
 
-The `Statistic <http://llvm.org/doxygen/Statistic_8h-source.html>`_ class is
+The `Statistic <http://llvm.org/doxygen/Statistic_8h_source.html>`_ class is
 designed to be an easy way to expose various success metrics from passes.
 These statistics are printed at the end of a run, when the :option:`-stats`
 command line option is enabled on the command line.  See the :ref:`Statistics
@@ -1043,7 +1065,7 @@ section <Statistic>` in the Programmer's Manual for details.
 What PassManager does
 ---------------------
 
-The `PassManager <http://llvm.org/doxygen/PassManager_8h-source.html>`_ `class
+The `PassManager <http://llvm.org/doxygen/PassManager_8h_source.html>`_ `class
 <http://llvm.org/doxygen/classllvm_1_1PassManager.html>`_ takes a list of
 passes, ensures their :ref:`prerequisites <writing-an-llvm-pass-interaction>`
 are set up correctly, and then schedules passes to run efficiently.  All of the

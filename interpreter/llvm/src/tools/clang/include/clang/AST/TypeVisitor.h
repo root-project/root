@@ -1,9 +1,8 @@
 //===--- TypeVisitor.h - Visitor for Type subclasses ------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -22,7 +21,7 @@ namespace clang {
   return static_cast<ImplClass*>(this)-> \
            Visit##CLASS(static_cast<const CLASS*>(T))
 
-/// \brief An operation on a type.
+/// An operation on a type.
 ///
 /// \tparam ImplClass Class implementing the operation. Must be inherited from
 ///         TypeVisitor.
@@ -65,7 +64,7 @@ template<typename ImplClass, typename RetTy=void>
 class TypeVisitor {
 public:
 
-  /// \brief Performs the operation associated with this visitor object.
+  /// Performs the operation associated with this visitor object.
   RetTy Visit(const Type *T) {
     // Top switch stmt: dispatch to VisitFooType for each FooType.
     switch (T->getTypeClass()) {
@@ -83,7 +82,7 @@ public:
 }
 #include "clang/AST/TypeNodes.def"
 
-  /// \brief Method called if \c ImpClass doesn't provide specific handler
+  /// Method called if \c ImpClass doesn't provide specific handler
   /// for some type class.
   RetTy VisitType(const Type*) { return RetTy(); }
 };

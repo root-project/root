@@ -1,9 +1,8 @@
 //===--- CharUnits.h - Character units for sizes and offsets ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -40,14 +39,14 @@ namespace clang {
       typedef int64_t QuantityType;
 
     private:
-      QuantityType Quantity;
+      QuantityType Quantity = 0;
 
       explicit CharUnits(QuantityType C) : Quantity(C) {}
 
     public:
 
       /// CharUnits - A default constructor.
-      CharUnits() : Quantity(0) {}
+      CharUnits() = default;
 
       /// Zero - Construct a CharUnits quantity of zero.
       static CharUnits Zero() {
@@ -61,7 +60,7 @@ namespace clang {
 
       /// fromQuantity - Construct a CharUnits quantity from a raw integer type.
       static CharUnits fromQuantity(QuantityType Quantity) {
-        return CharUnits(Quantity); 
+        return CharUnits(Quantity);
       }
 
       // Compound assignment.
@@ -87,7 +86,7 @@ namespace clang {
       CharUnits operator-- (int) {
         return CharUnits(Quantity--);
       }
-       
+
       // Comparison operators.
       bool operator== (const CharUnits &Other) const {
         return Quantity == Other.Quantity;
@@ -97,21 +96,21 @@ namespace clang {
       }
 
       // Relational operators.
-      bool operator<  (const CharUnits &Other) const { 
-        return Quantity <  Other.Quantity; 
+      bool operator<  (const CharUnits &Other) const {
+        return Quantity <  Other.Quantity;
       }
-      bool operator<= (const CharUnits &Other) const { 
+      bool operator<= (const CharUnits &Other) const {
         return Quantity <= Other.Quantity;
       }
-      bool operator>  (const CharUnits &Other) const { 
-        return Quantity >  Other.Quantity; 
+      bool operator>  (const CharUnits &Other) const {
+        return Quantity >  Other.Quantity;
       }
-      bool operator>= (const CharUnits &Other) const { 
-        return Quantity >= Other.Quantity; 
+      bool operator>= (const CharUnits &Other) const {
+        return Quantity >= Other.Quantity;
       }
 
       // Other predicates.
-      
+
       /// isZero - Test whether the quantity equals zero.
       bool isZero() const     { return Quantity == 0; }
 
@@ -172,7 +171,7 @@ namespace clang {
         return CharUnits(-Quantity);
       }
 
-      
+
       // Conversions.
 
       /// getQuantity - Get the raw integer representation of this quantity.
@@ -205,7 +204,7 @@ namespace clang {
   }; // class CharUnit
 } // namespace clang
 
-inline clang::CharUnits operator* (clang::CharUnits::QuantityType Scale, 
+inline clang::CharUnits operator* (clang::CharUnits::QuantityType Scale,
                                    const clang::CharUnits &CU) {
   return CU * Scale;
 }
@@ -223,8 +222,8 @@ template<> struct DenseMapInfo<clang::CharUnits> {
   static clang::CharUnits getTombstoneKey() {
     clang::CharUnits::QuantityType Quantity =
       DenseMapInfo<clang::CharUnits::QuantityType>::getTombstoneKey();
-    
-    return clang::CharUnits::fromQuantity(Quantity);    
+
+    return clang::CharUnits::fromQuantity(Quantity);
   }
 
   static unsigned getHashValue(const clang::CharUnits &CU) {
@@ -232,16 +231,12 @@ template<> struct DenseMapInfo<clang::CharUnits> {
     return DenseMapInfo<clang::CharUnits::QuantityType>::getHashValue(Quantity);
   }
 
-  static bool isEqual(const clang::CharUnits &LHS, 
+  static bool isEqual(const clang::CharUnits &LHS,
                       const clang::CharUnits &RHS) {
     return LHS == RHS;
   }
 };
 
-template <> struct isPodLike<clang::CharUnits> {
-  static const bool value = true;
-};
-  
 } // end namespace llvm
 
 #endif // LLVM_CLANG_AST_CHARUNITS_H

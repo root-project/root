@@ -1,14 +1,13 @@
 //===--- ExceptionSpecificationType.h ---------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief Defines the ExceptionSpecificationType enumeration and various
+/// Defines the ExceptionSpecificationType enumeration and various
 /// utility functions.
 ///
 //===----------------------------------------------------------------------===//
@@ -17,12 +16,13 @@
 
 namespace clang {
 
-/// \brief The various types of exception specifications that exist in C++11.
+/// The various types of exception specifications that exist in C++11.
 enum ExceptionSpecificationType {
   EST_None,             ///< no exception specification
   EST_DynamicNone,      ///< throw()
   EST_Dynamic,          ///< throw(T1, T2)
   EST_MSAny,            ///< Microsoft throw(...) extension
+  EST_NoThrow,          ///< Microsoft __declspec(nothrow) extension
   EST_BasicNoexcept,    ///< noexcept
   EST_DependentNoexcept,///< noexcept(expression), value-dependent
   EST_NoexceptFalse,    ///< noexcept(expression), evals to 'false'
@@ -42,14 +42,15 @@ inline bool isComputedNoexcept(ExceptionSpecificationType ESpecType) {
 }
 
 inline bool isNoexceptExceptionSpec(ExceptionSpecificationType ESpecType) {
-  return ESpecType == EST_BasicNoexcept || isComputedNoexcept(ESpecType);
+  return ESpecType == EST_BasicNoexcept || ESpecType == EST_NoThrow ||
+         isComputedNoexcept(ESpecType);
 }
 
 inline bool isUnresolvedExceptionSpec(ExceptionSpecificationType ESpecType) {
   return ESpecType == EST_Unevaluated || ESpecType == EST_Uninstantiated;
 }
 
-/// \brief Possible results from evaluation of a noexcept expression.
+/// Possible results from evaluation of a noexcept expression.
 enum CanThrowResult {
   CT_Cannot,
   CT_Dependent,

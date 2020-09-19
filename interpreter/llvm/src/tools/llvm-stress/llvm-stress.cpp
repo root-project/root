@@ -1,9 +1,8 @@
-//===-- llvm-stress.cpp - Generate random LL files to stress-test LLVM ----===//
+//===- llvm-stress.cpp - Generate random LL files to stress-test LLVM -----===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,32 +11,55 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Analysis/CallGraphSCCPass.h"
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/CallingConv.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/IRPrintingPasses.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instruction.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/LegacyPassManager.h"
-#include "llvm/IR/LegacyPassNameParser.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Value.h"
 #include "llvm/IR/Verifier.h"
-#include "llvm/Support/Debug.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/ManagedStatic.h"
-#include "llvm/Support/PluginLoader.h"
 #include "llvm/Support/PrettyStackTrace.h"
 #include "llvm/Support/ToolOutputFile.h"
+#include "llvm/Support/raw_ostream.h"
 #include <algorithm>
-#include <random>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <system_error>
 #include <vector>
 
 namespace llvm {
 
 static cl::opt<unsigned> SeedCL("seed",
   cl::desc("Seed used for randomness"), cl::init(0));
+
 static cl::opt<unsigned> SizeCL("size",
   cl::desc("The estimated size of the generated function (# of instrs)"),
   cl::init(100));
+
 static cl::opt<std::string>
 OutputFilename("o", cl::desc("Override output filename"),
                cl::value_desc("filename"));
@@ -45,6 +67,7 @@ OutputFilename("o", cl::desc("Override output filename"),
 static LLVMContext Context;
 
 namespace cl {
+
 template <> class parser<Type*> final : public basic_parser<Type*> {
 public:
   parser(Option &O) : basic_parser(O) {}
@@ -70,14 +93,15 @@ public:
 
   StringRef getValueName() const override { return "IR scalar type"; }
 };
-}
 
+} // end namespace cl
 
 static cl::list<Type*> AdditionalScalarTypes("types", cl::CommaSeparated,
   cl::desc("Additional IR scalar types "
            "(always includes i1, i8, i16, i32, i64, float and double)"));
 
 namespace {
+
 /// A utility class to provide a pseudo-random number generator which is
 /// the same across all platforms. This is somewhat close to the libc
 /// implementation. Note: This is not a cryptographically secure pseudorandom
@@ -111,9 +135,11 @@ public:
   }
 
   /// Make this like a C++11 random device
-  typedef uint32_t result_type;
+  using result_type = uint32_t ;
+
   static constexpr result_type min() { return 0; }
   static constexpr result_type max() { return 0x7ffff; }
+
   uint32_t operator()() {
     uint32_t Val = Rand();
     assert(Val <= max() && "Random value out of range");
@@ -149,18 +175,19 @@ Function *GenEmptyFunction(Module *M) {
 /// modifying and adding new random instructions.
 struct Modifier {
   /// Used to store the randomly generated values.
-  typedef std::vector<Value*> PieceTable;
+  using PieceTable = std::vector<Value *>;
 
 public:
   /// C'tor
-  Modifier(BasicBlock *Block, PieceTable *PT, Random *R):
-    BB(Block),PT(PT),Ran(R),Context(BB->getContext()) {}
+  Modifier(BasicBlock *Block, PieceTable *PT, Random *R)
+      : BB(Block), PT(PT), Ran(R), Context(BB->getContext()) {}
 
   /// virtual D'tor to silence warnings.
-  virtual ~Modifier() {}
+  virtual ~Modifier() = default;
 
   /// Add a new instruction.
   virtual void Act() = 0;
+
   /// Add N new instructions,
   virtual void ActN(unsigned n) {
     for (unsigned i=0; i<n; ++i)
@@ -249,7 +276,7 @@ protected:
 
   /// Pick a random type.
   Type *pickType() {
-    return (getRandom() & 1 ? pickVectorType() : pickScalarType());
+    return (getRandom() & 1) ? pickVectorType() : pickScalarType();
   }
 
   /// Pick a random pointer type.
@@ -298,16 +325,21 @@ protected:
 
   /// Basic block to populate
   BasicBlock *BB;
+
   /// Value table
   PieceTable *PT;
+
   /// Random number generator
   Random *Ran;
+
   /// Context
   LLVMContext &Context;
 };
 
 struct LoadModifier: public Modifier {
-  LoadModifier(BasicBlock *BB, PieceTable *PT, Random *R):Modifier(BB, PT, R) {}
+  LoadModifier(BasicBlock *BB, PieceTable *PT, Random *R)
+      : Modifier(BB, PT, R) {}
+
   void Act() override {
     // Try to use predefined pointers. If non-exist, use undef pointer value;
     Value *Ptr = getRandomPointerValue();
@@ -317,12 +349,14 @@ struct LoadModifier: public Modifier {
 };
 
 struct StoreModifier: public Modifier {
-  StoreModifier(BasicBlock *BB, PieceTable *PT, Random *R):Modifier(BB, PT, R) {}
+  StoreModifier(BasicBlock *BB, PieceTable *PT, Random *R)
+      : Modifier(BB, PT, R) {}
+
   void Act() override {
     // Try to use predefined pointers. If non-exist, use undef pointer value;
     Value *Ptr = getRandomPointerValue();
-    Type  *Tp = Ptr->getType();
-    Value *Val = getRandomValue(Tp->getContainedType(0));
+    PointerType *Tp = cast<PointerType>(Ptr->getType());
+    Value *Val = getRandomValue(Tp->getElementType());
     Type  *ValTy = Val->getType();
 
     // Do not store vectors of i1s because they are unsupported
@@ -335,7 +369,8 @@ struct StoreModifier: public Modifier {
 };
 
 struct BinModifier: public Modifier {
-  BinModifier(BasicBlock *BB, PieceTable *PT, Random *R):Modifier(BB, PT, R) {}
+  BinModifier(BasicBlock *BB, PieceTable *PT, Random *R)
+      : Modifier(BB, PT, R) {}
 
   void Act() override {
     Value *Val0 = getRandomVal();
@@ -349,7 +384,6 @@ struct BinModifier: public Modifier {
     // Don't handle i1 types.
     if (Val0->getType()->getScalarSizeInBits() == 1)
       return;
-
 
     bool isFloat = Val0->getType()->getScalarType()->isFloatingPointTy();
     Instruction* Term = BB->getTerminator();
@@ -379,7 +413,9 @@ struct BinModifier: public Modifier {
 
 /// Generate constant values.
 struct ConstModifier: public Modifier {
-  ConstModifier(BasicBlock *BB, PieceTable *PT, Random *R):Modifier(BB, PT, R) {}
+  ConstModifier(BasicBlock *BB, PieceTable *PT, Random *R)
+      : Modifier(BB, PT, R) {}
+
   void Act() override {
     Type *Ty = pickType();
 
@@ -428,7 +464,8 @@ struct ConstModifier: public Modifier {
 };
 
 struct AllocaModifier: public Modifier {
-  AllocaModifier(BasicBlock *BB, PieceTable *PT, Random *R):Modifier(BB, PT, R){}
+  AllocaModifier(BasicBlock *BB, PieceTable *PT, Random *R)
+      : Modifier(BB, PT, R) {}
 
   void Act() override {
     Type *Tp = pickType();
@@ -439,8 +476,8 @@ struct AllocaModifier: public Modifier {
 };
 
 struct ExtractElementModifier: public Modifier {
-  ExtractElementModifier(BasicBlock *BB, PieceTable *PT, Random *R):
-    Modifier(BB, PT, R) {}
+  ExtractElementModifier(BasicBlock *BB, PieceTable *PT, Random *R)
+      : Modifier(BB, PT, R) {}
 
   void Act() override {
     Value *Val0 = getRandomVectorValue();
@@ -453,9 +490,10 @@ struct ExtractElementModifier: public Modifier {
 };
 
 struct ShuffModifier: public Modifier {
-  ShuffModifier(BasicBlock *BB, PieceTable *PT, Random *R):Modifier(BB, PT, R) {}
-  void Act() override {
+  ShuffModifier(BasicBlock *BB, PieceTable *PT, Random *R)
+      : Modifier(BB, PT, R) {}
 
+  void Act() override {
     Value *Val0 = getRandomVectorValue();
     Value *Val1 = getRandomValue(Val0->getType());
 
@@ -480,8 +518,8 @@ struct ShuffModifier: public Modifier {
 };
 
 struct InsertElementModifier: public Modifier {
-  InsertElementModifier(BasicBlock *BB, PieceTable *PT, Random *R):
-    Modifier(BB, PT, R) {}
+  InsertElementModifier(BasicBlock *BB, PieceTable *PT, Random *R)
+      : Modifier(BB, PT, R) {}
 
   void Act() override {
     Value *Val0 = getRandomVectorValue();
@@ -493,13 +531,13 @@ struct InsertElementModifier: public Modifier {
               "I",  BB->getTerminator());
     return PT->push_back(V);
   }
-
 };
 
 struct CastModifier: public Modifier {
-  CastModifier(BasicBlock *BB, PieceTable *PT, Random *R):Modifier(BB, PT, R) {}
-  void Act() override {
+  CastModifier(BasicBlock *BB, PieceTable *PT, Random *R)
+      : Modifier(BB, PT, R) {}
 
+  void Act() override {
     Value *V = getRandomVal();
     Type *VTy = V->getType();
     Type *DestTy = pickScalarType();
@@ -558,7 +596,6 @@ struct CastModifier: public Modifier {
         return PT->push_back(
           new SIToFPInst(V, DestTy, "FC", BB->getTerminator()));
       return PT->push_back(new UIToFPInst(V, DestTy, "FC", BB->getTerminator()));
-
     }
 
     // Both floats.
@@ -574,38 +611,37 @@ struct CastModifier: public Modifier {
       // for which there is no defined conversion. So do nothing.
     }
   }
-
 };
 
 struct SelectModifier: public Modifier {
-  SelectModifier(BasicBlock *BB, PieceTable *PT, Random *R):
-    Modifier(BB, PT, R) {}
+  SelectModifier(BasicBlock *BB, PieceTable *PT, Random *R)
+      : Modifier(BB, PT, R) {}
 
   void Act() override {
     // Try a bunch of different select configuration until a valid one is found.
-      Value *Val0 = getRandomVal();
-      Value *Val1 = getRandomValue(Val0->getType());
+    Value *Val0 = getRandomVal();
+    Value *Val1 = getRandomValue(Val0->getType());
 
-      Type *CondTy = Type::getInt1Ty(Context);
+    Type *CondTy = Type::getInt1Ty(Context);
 
-      // If the value type is a vector, and we allow vector select, then in 50%
-      // of the cases generate a vector select.
-      if (Val0->getType()->isVectorTy() && (getRandom() % 1)) {
-        unsigned NumElem = cast<VectorType>(Val0->getType())->getNumElements();
-        CondTy = VectorType::get(CondTy, NumElem);
-      }
+    // If the value type is a vector, and we allow vector select, then in 50%
+    // of the cases generate a vector select.
+    if (Val0->getType()->isVectorTy() && (getRandom() % 1)) {
+      unsigned NumElem = cast<VectorType>(Val0->getType())->getNumElements();
+      CondTy = VectorType::get(CondTy, NumElem);
+    }
 
-      Value *Cond = getRandomValue(CondTy);
-      Value *V = SelectInst::Create(Cond, Val0, Val1, "Sl", BB->getTerminator());
-      return PT->push_back(V);
+    Value *Cond = getRandomValue(CondTy);
+    Value *V = SelectInst::Create(Cond, Val0, Val1, "Sl", BB->getTerminator());
+    return PT->push_back(V);
   }
 };
 
-
 struct CmpModifier: public Modifier {
-  CmpModifier(BasicBlock *BB, PieceTable *PT, Random *R):Modifier(BB, PT, R) {}
-  void Act() override {
+  CmpModifier(BasicBlock *BB, PieceTable *PT, Random *R)
+      : Modifier(BB, PT, R) {}
 
+  void Act() override {
     Value *Val0 = getRandomVal();
     Value *Val1 = getRandomValue(Val0->getType());
 
@@ -689,7 +725,7 @@ static void IntroduceControlFlow(Function *F, Random &R) {
   }
 }
 
-}
+} // end namespace llvm
 
 int main(int argc, char **argv) {
   using namespace llvm;
@@ -699,7 +735,7 @@ int main(int argc, char **argv) {
   cl::ParseCommandLineOptions(argc, argv, "llvm codegen stress-tester\n");
   llvm_shutdown_obj Y;
 
-  auto M = make_unique<Module>("/tmp/autogen.bc", Context);
+  auto M = llvm::make_unique<Module>("/tmp/autogen.bc", Context);
   Function *F = GenEmptyFunction(M.get());
 
   // Pick an initial seed value
@@ -710,13 +746,13 @@ int main(int argc, char **argv) {
   IntroduceControlFlow(F, R);
 
   // Figure out what stream we are supposed to write to...
-  std::unique_ptr<tool_output_file> Out;
+  std::unique_ptr<ToolOutputFile> Out;
   // Default to standard output.
   if (OutputFilename.empty())
     OutputFilename = "-";
 
   std::error_code EC;
-  Out.reset(new tool_output_file(OutputFilename, EC, sys::fs::F_None));
+  Out.reset(new ToolOutputFile(OutputFilename, EC, sys::fs::F_None));
   if (EC) {
     errs() << EC.message() << '\n';
     return 1;

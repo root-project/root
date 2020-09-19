@@ -1,9 +1,8 @@
 #!/usr/bin/env perl
 #
-#                     The LLVM Compiler Infrastructure
-#
-# This file is distributed under the University of Illinois Open Source
-# License. See LICENSE.TXT for details.
+# Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+# See https://llvm.org/LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #
 ##===----------------------------------------------------------------------===##
 #
@@ -51,12 +50,14 @@ my %Options = (
   OutputDir => undef,        # Parent directory to store HTML files.
   HtmlTitle => basename($CurrentDir)." - scan-build results",
   IgnoreErrors => 0,         # Ignore build errors.
+  KeepCC => 0,               # Do not override CC and CXX make variables
   ViewResults => 0,          # View results when the build terminates.
   ExitStatusFoundBugs => 0,  # Exit status reflects whether bugs were found
   ShowDescription => 0,      # Display the description of the defect in the list
   KeepEmpty => 0,            # Don't remove output directory even with 0 results.
   EnableCheckers => {},
   DisableCheckers => {},
+  Excludes => [],
   UseCC => undef,            # C compiler to use for compilation.
   UseCXX => undef,           # C++ compiler to use for compilation.
   AnalyzerTarget => undef,
@@ -419,6 +420,20 @@ sub ScanFile {
          # The file no longer exists: use the original path.
          $BugFile = $1;
       }
+
+      # Get just the path
+      my $p = dirname($BugFile);
+      # Check if the path is found in the list of exclude
+      if (grep { $p =~ m/$_/ } @{$Options{Excludes}}) {
+         if ($Options{Verbose}) {
+             Diag("File '$BugFile' deleted: part of an ignored directory.\n");
+         }
+
+       # File in an ignored directory. Remove it
+       unlink("$Dir/$FName");
+       return;
+      }
+
       UpdatePrefix($BugFile);
     }
     elsif (/<!-- BUGPATHLENGTH (.*) -->$/) {
@@ -1012,7 +1027,7 @@ sub RunXcodebuild {
   }
   close(DETECT_XCODE);
 
-  # If --override-compiler is explicitely requested, resort to the old
+  # If --override-compiler is explicitly requested, resort to the old
   # behavior regardless of Xcode version.
   if ($Options{OverrideCompiler}) {
     $oldBehavior = 1;
@@ -1062,6 +1077,7 @@ sub RunXcodebuild {
 sub RunBuildCommand {
   my $Args = shift;
   my $IgnoreErrors = shift;
+  my $KeepCC = shift;
   my $Cmd = $Args->[0];
   my $CCAnalyzer = shift;
   my $CXXAnalyzer = shift;
@@ -1077,7 +1093,7 @@ sub RunBuildCommand {
   if ($Cmd =~ /(.*\/?gcc[^\/]*$)/ or
       $Cmd =~ /(.*\/?cc[^\/]*$)/ or
       $Cmd =~ /(.*\/?llvm-gcc[^\/]*$)/ or
-      $Cmd =~ /(.*\/?clang$)/ or
+      $Cmd =~ /(.*\/?clang[^\/]*$)/ or
       $Cmd =~ /(.*\/?ccc-analyzer[^\/]*$)/) {
 
     if (!($Cmd =~ /ccc-analyzer/) and !defined $ENV{"CCC_CC"}) {
@@ -1099,8 +1115,10 @@ sub RunBuildCommand {
     unshift @$Args, $CXXAnalyzer;
   }
   elsif ($Cmd eq "make" or $Cmd eq "gmake" or $Cmd eq "mingw32-make") {
-    AddIfNotPresent($Args, "CC=$CCAnalyzer");
-    AddIfNotPresent($Args, "CXX=$CXXAnalyzer");
+    if (!$KeepCC) {
+      AddIfNotPresent($Args, "CC=$CCAnalyzer");
+      AddIfNotPresent($Args, "CXX=$CXXAnalyzer");
+    }
     if ($IgnoreErrors) {
       AddIfNotPresent($Args,"-k");
       AddIfNotPresent($Args,"-i");
@@ -1158,6 +1176,12 @@ OPTIONS:
    currently supports make and xcodebuild. This is a convenience option; one
    can specify this behavior directly using build options.
 
+ --keep-cc
+
+   Do not override CC and CXX make variables. Useful when running make in
+   autoconf-based (and similar) projects where configure can add extra flags
+   to those variables.
+
  --html-title [title]
  --html-title=[title]
 
@@ -1168,6 +1192,11 @@ OPTIONS:
 
    Display the description of defects in the list
 
+ -sarif
+
+  By default the output of scan-build is a set of HTML files. This option
+  outputs the results in SARIF format.
+ 
  -plist
 
    By default the output of scan-build is a set of HTML files. This option
@@ -1182,7 +1211,13 @@ OPTIONS:
 
    By default, the exit status of scan-build is the same as the executed build
    command. Specifying this option causes the exit status of scan-build to be 1
-   if it found potential bugs and 0 otherwise.
+   if it found potential bugs and the exit status of the build itself otherwise.
+
+ --exclude <path>
+
+   Do not run static analyzer against files found in this
+   directory (You can specify this option multiple times).
+   Could be useful when project contains 3rd party libraries.
 
  --use-cc [compiler path]
  --use-cc=[compiler path]
@@ -1236,7 +1271,7 @@ ADVANCED OPTIONS:
 
  -maxloop <loop count>
 
-   Specifiy the number of times a block can be visited before giving up.
+   Specify the number of times a block can be visited before giving up.
    Default is 4. Increase for more comprehensive coverage at a cost of speed.
 
  -internal-stats
@@ -1425,6 +1460,16 @@ sub ShellEscape {
 }
 
 ##----------------------------------------------------------------------------##
+# FindXcrun - searches for the 'xcrun' executable. Returns "" if not found.
+##----------------------------------------------------------------------------##
+
+sub FindXcrun {
+  my $xcrun = `which xcrun`;
+  chomp $xcrun;
+  return $xcrun;
+}
+
+##----------------------------------------------------------------------------##
 # FindClang - searches for 'clang' executable.
 ##----------------------------------------------------------------------------##
 
@@ -1433,6 +1478,16 @@ sub FindClang {
     $Clang = Cwd::realpath("$RealBin/bin/clang") if (-f "$RealBin/bin/clang");
     if (!defined $Clang || ! -x $Clang) {
       $Clang = Cwd::realpath("$RealBin/clang") if (-f "$RealBin/clang");
+      if (!defined $Clang || ! -x $Clang) {
+        # When an Xcode toolchain is present, look for a clang in the sibling bin
+        # of the parent of the bin directory. So if scan-build is at
+        # $TOOLCHAIN/usr/local/bin/scan-build look for clang at
+        # $TOOLCHAIN/usr/bin/clang.
+        my $has_xcode_toolchain = FindXcrun() ne "";
+        if ($has_xcode_toolchain && -f "$RealBin/../../bin/clang") {
+          $Clang = Cwd::realpath("$RealBin/../../bin/clang");
+        }
+      }
     }
     if (!defined $Clang || ! -x $Clang) {
       return "error: Cannot find an executable 'clang' relative to" .
@@ -1442,8 +1497,7 @@ sub FindClang {
   }
   else {
     if ($Options{AnalyzerDiscoveryMethod} =~ /^[Xx]code$/) {
-      my $xcrun = `which xcrun`;
-      chomp $xcrun;
+      my $xcrun = FindXcrun();
       if ($xcrun eq "") {
         return "Cannot find 'xcrun' to find 'clang' for analysis.\n";
       }
@@ -1529,6 +1583,12 @@ sub ProcessArgs {
     if ($arg eq "-k" or $arg eq "--keep-going") {
       shift @$Args;
       $Options{IgnoreErrors} = 1;
+      next;
+    }
+
+    if ($arg eq "--keep-cc") {
+      shift @$Args;
+      $Options{KeepCC} = 1;
       next;
     }
 
@@ -1628,6 +1688,12 @@ sub ProcessArgs {
       next;
     }
 
+    if ($arg eq "-sarif") {
+      shift @$Args;
+      $Options{OutputFormat} = "sarif";
+      next;
+    }
+
     if ($arg eq "-plist") {
       shift @$Args;
       $Options{OutputFormat} = "plist";
@@ -1679,6 +1745,15 @@ sub ProcessArgs {
       # Store $NumArgs to preserve the order the checkers were disabled.
       $Options{DisableCheckers}{$Checker} = $NumArgs;
       delete $Options{EnableCheckers}{$Checker};
+      next;
+    }
+
+    if ($arg eq "--exclude") {
+      shift @$Args;
+      my $arg = shift @$Args;
+      # Remove the trailing slash if any
+      $arg =~ s|/$||;
+      push @{$Options{Excludes}}, $arg;
       next;
     }
 
@@ -1797,13 +1872,13 @@ Diag("Using '$Clang' for static analysis\n");
 SetHtmlEnv(\@ARGV, $Options{OutputDir});
 
 my @AnalysesToRun;
-foreach (sort { $Options{EnableCheckers}{$a} <=> $Options{EnableCheckers}{$b} } 
-         keys %{$Options{EnableCheckers}}) { 
+foreach (sort { $Options{EnableCheckers}{$a} <=> $Options{EnableCheckers}{$b} }
+         keys %{$Options{EnableCheckers}}) {
   # Push checkers in order they were enabled.
   push @AnalysesToRun, "-analyzer-checker", $_;
 }
-foreach (sort { $Options{DisableCheckers}{$a} <=> $Options{DisableCheckers}{$b} } 
-         keys %{$Options{DisableCheckers}}) { 
+foreach (sort { $Options{DisableCheckers}{$a} <=> $Options{DisableCheckers}{$b} }
+         keys %{$Options{DisableCheckers}}) {
   # Push checkers in order they were disabled.
   push @AnalysesToRun, "-analyzer-disable-checker", $_;
 }
@@ -1838,13 +1913,16 @@ my %EnvVars = (
 );
 
 # Run the build.
-my $ExitStatus = RunBuildCommand(\@ARGV, $Options{IgnoreErrors}, $Cmd, $CmdCXX,
-                                \%EnvVars);
+my $ExitStatus = RunBuildCommand(\@ARGV, $Options{IgnoreErrors}, $Options{KeepCC},
+	                        $Cmd, $CmdCXX, \%EnvVars);
 
 if (defined $Options{OutputFormat}) {
-  if ($Options{OutputFormat} =~ /plist/) {
+  if ($Options{OutputFormat} =~ /plist/ ||
+      $Options{OutputFormat} =~ /sarif/) {
     Diag "Analysis run complete.\n";
-    Diag "Analysis results (plist files) deposited in '$Options{OutputDir}'\n";
+    Diag "Analysis results (" .
+      ($Options{OutputFormat} =~ /plist/ ? "plist" : "sarif") .
+      " files) deposited in '$Options{OutputDir}'\n";
   }
   if ($Options{OutputFormat} =~ /html/) {
     # Postprocess the HTML directory.
@@ -1862,7 +1940,7 @@ if (defined $Options{OutputFormat}) {
 
     if ($Options{ExitStatusFoundBugs}) {
       exit 1 if ($NumBugs > 0);
-      exit 0;
+      exit $ExitStatus;
     }
   }
 }
