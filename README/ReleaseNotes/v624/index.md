@@ -61,6 +61,9 @@ Note that the preferred way to steer ROOT's concurrency level is still through `
 
 See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-11014) for more context.
 
+### Interpreter
+- cling's LLVM is upgraded to version 9.0
+
 ## I/O Libraries
 
 
