@@ -1,16 +1,16 @@
 //===-- SIOptimizeExecMasking.cpp -----------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #include "AMDGPU.h"
 #include "AMDGPUSubtarget.h"
 #include "SIInstrInfo.h"
-#include "llvm/CodeGen/LiveIntervalAnalysis.h"
+#include "MCTargetDesc/AMDGPUMCTargetDesc.h"
+#include "llvm/ADT/SmallSet.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
@@ -56,13 +56,16 @@ char SIOptimizeExecMasking::ID = 0;
 char &llvm::SIOptimizeExecMaskingID = SIOptimizeExecMasking::ID;
 
 /// If \p MI is a copy from exec, return the register copied to.
-static unsigned isCopyFromExec(const MachineInstr &MI) {
+static unsigned isCopyFromExec(const MachineInstr &MI, const GCNSubtarget &ST) {
   switch (MI.getOpcode()) {
   case AMDGPU::COPY:
   case AMDGPU::S_MOV_B64:
-  case AMDGPU::S_MOV_B64_term: {
+  case AMDGPU::S_MOV_B64_term:
+  case AMDGPU::S_MOV_B32:
+  case AMDGPU::S_MOV_B32_term: {
     const MachineOperand &Src = MI.getOperand(1);
-    if (Src.isReg() && Src.getReg() == AMDGPU::EXEC)
+    if (Src.isReg() &&
+        Src.getReg() == (ST.isWave32() ? AMDGPU::EXEC_LO : AMDGPU::EXEC))
       return MI.getOperand(0).getReg();
   }
   }
@@ -71,17 +74,62 @@ static unsigned isCopyFromExec(const MachineInstr &MI) {
 }
 
 /// If \p MI is a copy to exec, return the register copied from.
-static unsigned isCopyToExec(const MachineInstr &MI) {
+static unsigned isCopyToExec(const MachineInstr &MI, const GCNSubtarget &ST) {
   switch (MI.getOpcode()) {
   case AMDGPU::COPY:
-  case AMDGPU::S_MOV_B64: {
+  case AMDGPU::S_MOV_B64:
+  case AMDGPU::S_MOV_B32: {
     const MachineOperand &Dst = MI.getOperand(0);
-    if (Dst.isReg() && Dst.getReg() == AMDGPU::EXEC)
+    if (Dst.isReg() &&
+        Dst.getReg() == (ST.isWave32() ? AMDGPU::EXEC_LO : AMDGPU::EXEC) &&
+        MI.getOperand(1).isReg())
       return MI.getOperand(1).getReg();
     break;
   }
   case AMDGPU::S_MOV_B64_term:
+  case AMDGPU::S_MOV_B32_term:
     llvm_unreachable("should have been replaced");
+  }
+
+  return AMDGPU::NoRegister;
+}
+
+/// If \p MI is a logical operation on an exec value,
+/// return the register copied to.
+static unsigned isLogicalOpOnExec(const MachineInstr &MI) {
+  switch (MI.getOpcode()) {
+  case AMDGPU::S_AND_B64:
+  case AMDGPU::S_OR_B64:
+  case AMDGPU::S_XOR_B64:
+  case AMDGPU::S_ANDN2_B64:
+  case AMDGPU::S_ORN2_B64:
+  case AMDGPU::S_NAND_B64:
+  case AMDGPU::S_NOR_B64:
+  case AMDGPU::S_XNOR_B64: {
+    const MachineOperand &Src1 = MI.getOperand(1);
+    if (Src1.isReg() && Src1.getReg() == AMDGPU::EXEC)
+      return MI.getOperand(0).getReg();
+    const MachineOperand &Src2 = MI.getOperand(2);
+    if (Src2.isReg() && Src2.getReg() == AMDGPU::EXEC)
+      return MI.getOperand(0).getReg();
+    break;
+  }
+  case AMDGPU::S_AND_B32:
+  case AMDGPU::S_OR_B32:
+  case AMDGPU::S_XOR_B32:
+  case AMDGPU::S_ANDN2_B32:
+  case AMDGPU::S_ORN2_B32:
+  case AMDGPU::S_NAND_B32:
+  case AMDGPU::S_NOR_B32:
+  case AMDGPU::S_XNOR_B32: {
+    const MachineOperand &Src1 = MI.getOperand(1);
+    if (Src1.isReg() && Src1.getReg() == AMDGPU::EXEC_LO)
+      return MI.getOperand(0).getReg();
+    const MachineOperand &Src2 = MI.getOperand(2);
+    if (Src2.isReg() && Src2.getReg() == AMDGPU::EXEC_LO)
+      return MI.getOperand(0).getReg();
+    break;
+  }
   }
 
   return AMDGPU::NoRegister;
@@ -105,6 +153,22 @@ static unsigned getSaveExecOp(unsigned Opc) {
     return AMDGPU::S_NOR_SAVEEXEC_B64;
   case AMDGPU::S_XNOR_B64:
     return AMDGPU::S_XNOR_SAVEEXEC_B64;
+  case AMDGPU::S_AND_B32:
+    return AMDGPU::S_AND_SAVEEXEC_B32;
+  case AMDGPU::S_OR_B32:
+    return AMDGPU::S_OR_SAVEEXEC_B32;
+  case AMDGPU::S_XOR_B32:
+    return AMDGPU::S_XOR_SAVEEXEC_B32;
+  case AMDGPU::S_ANDN2_B32:
+    return AMDGPU::S_ANDN2_SAVEEXEC_B32;
+  case AMDGPU::S_ORN2_B32:
+    return AMDGPU::S_ORN2_SAVEEXEC_B32;
+  case AMDGPU::S_NAND_B32:
+    return AMDGPU::S_NAND_SAVEEXEC_B32;
+  case AMDGPU::S_NOR_B32:
+    return AMDGPU::S_NOR_SAVEEXEC_B32;
+  case AMDGPU::S_XNOR_B32:
+    return AMDGPU::S_XNOR_SAVEEXEC_B32;
   default:
     return AMDGPU::INSTRUCTION_LIST_END;
   }
@@ -115,7 +179,8 @@ static unsigned getSaveExecOp(unsigned Opc) {
 // these is expected per block.
 static bool removeTerminatorBit(const SIInstrInfo &TII, MachineInstr &MI) {
   switch (MI.getOpcode()) {
-  case AMDGPU::S_MOV_B64_term: {
+  case AMDGPU::S_MOV_B64_term:
+  case AMDGPU::S_MOV_B32_term: {
     MI.setDesc(TII.get(AMDGPU::COPY));
     return true;
   }
@@ -125,10 +190,28 @@ static bool removeTerminatorBit(const SIInstrInfo &TII, MachineInstr &MI) {
     MI.setDesc(TII.get(AMDGPU::S_XOR_B64));
     return true;
   }
+  case AMDGPU::S_XOR_B32_term: {
+    // This is only a terminator to get the correct spill code placement during
+    // register allocation.
+    MI.setDesc(TII.get(AMDGPU::S_XOR_B32));
+    return true;
+  }
+  case AMDGPU::S_OR_B32_term: {
+    // This is only a terminator to get the correct spill code placement during
+    // register allocation.
+    MI.setDesc(TII.get(AMDGPU::S_OR_B32));
+    return true;
+  }
   case AMDGPU::S_ANDN2_B64_term: {
     // This is only a terminator to get the correct spill code placement during
     // register allocation.
     MI.setDesc(TII.get(AMDGPU::S_ANDN2_B64));
+    return true;
+  }
+  case AMDGPU::S_ANDN2_B32_term: {
+    // This is only a terminator to get the correct spill code placement during
+    // register allocation.
+    MI.setDesc(TII.get(AMDGPU::S_ANDN2_B32));
     return true;
   }
   default:
@@ -153,6 +236,7 @@ static MachineBasicBlock::reverse_iterator fixTerminators(
 
 static MachineBasicBlock::reverse_iterator findExecCopy(
   const SIInstrInfo &TII,
+  const GCNSubtarget &ST,
   MachineBasicBlock &MBB,
   MachineBasicBlock::reverse_iterator I,
   unsigned CopyToExec) {
@@ -160,7 +244,7 @@ static MachineBasicBlock::reverse_iterator findExecCopy(
 
   auto E = MBB.rend();
   for (unsigned N = 0; N <= InstLimit && I != E; ++I, ++N) {
-    unsigned CopyFromExec = isCopyFromExec(*I);
+    unsigned CopyFromExec = isCopyFromExec(*I, ST);
     if (CopyFromExec != AMDGPU::NoRegister)
       return I;
   }
@@ -169,8 +253,8 @@ static MachineBasicBlock::reverse_iterator findExecCopy(
 }
 
 // XXX - Seems LivePhysRegs doesn't work correctly since it will incorrectly
-// repor tthe register as unavailable because a super-register with a lane mask
-// as unavailable.
+// report the register as unavailable because a super-register with a lane mask
+// is unavailable.
 static bool isLiveOut(const MachineBasicBlock &MBB, unsigned Reg) {
   for (MachineBasicBlock *Succ : MBB.successors()) {
     if (Succ->isLiveIn(Reg))
@@ -181,9 +265,13 @@ static bool isLiveOut(const MachineBasicBlock &MBB, unsigned Reg) {
 }
 
 bool SIOptimizeExecMasking::runOnMachineFunction(MachineFunction &MF) {
-  const SISubtarget &ST = MF.getSubtarget<SISubtarget>();
+  if (skipFunction(MF.getFunction()))
+    return false;
+
+  const GCNSubtarget &ST = MF.getSubtarget<GCNSubtarget>();
   const SIRegisterInfo *TRI = ST.getRegisterInfo();
   const SIInstrInfo *TII = ST.getInstrInfo();
+  unsigned Exec = ST.isWave32() ? AMDGPU::EXEC_LO : AMDGPU::EXEC;
 
   // Optimize sequences emitted for control flow lowering. They are originally
   // emitted as the separate operations because spill code may need to be
@@ -202,19 +290,35 @@ bool SIOptimizeExecMasking::runOnMachineFunction(MachineFunction &MF) {
     if (I == E)
       continue;
 
-    unsigned CopyToExec = isCopyToExec(*I);
+    unsigned CopyToExec = isCopyToExec(*I, ST);
     if (CopyToExec == AMDGPU::NoRegister)
       continue;
 
     // Scan backwards to find the def.
     auto CopyToExecInst = &*I;
-    auto CopyFromExecInst = findExecCopy(*TII, MBB, I, CopyToExec);
-    if (CopyFromExecInst == E)
+    auto CopyFromExecInst = findExecCopy(*TII, ST, MBB, I, CopyToExec);
+    if (CopyFromExecInst == E) {
+      auto PrepareExecInst = std::next(I);
+      if (PrepareExecInst == E)
+        continue;
+      // Fold exec = COPY (S_AND_B64 reg, exec) -> exec = S_AND_B64 reg, exec
+      if (CopyToExecInst->getOperand(1).isKill() &&
+          isLogicalOpOnExec(*PrepareExecInst) == CopyToExec) {
+        LLVM_DEBUG(dbgs() << "Fold exec copy: " << *PrepareExecInst);
+
+        PrepareExecInst->getOperand(0).setReg(Exec);
+
+        LLVM_DEBUG(dbgs() << "into: " << *PrepareExecInst << '\n');
+
+        CopyToExecInst->eraseFromParent();
+      }
+
       continue;
+    }
 
     if (isLiveOut(MBB, CopyToExec)) {
       // The copied register is live out and has a second use in another block.
-      DEBUG(dbgs() << "Exec copy source register is live out\n");
+      LLVM_DEBUG(dbgs() << "Exec copy source register is live out\n");
       continue;
     }
 
@@ -225,18 +329,20 @@ bool SIOptimizeExecMasking::runOnMachineFunction(MachineFunction &MF) {
     for (MachineBasicBlock::iterator J
            = std::next(CopyFromExecInst->getIterator()), JE = I->getIterator();
          J != JE; ++J) {
-      if (SaveExecInst && J->readsRegister(AMDGPU::EXEC, TRI)) {
-        DEBUG(dbgs() << "exec read prevents saveexec: " << *J << '\n');
+      if (SaveExecInst && J->readsRegister(Exec, TRI)) {
+        LLVM_DEBUG(dbgs() << "exec read prevents saveexec: " << *J << '\n');
         // Make sure this is inserted after any VALU ops that may have been
         // scheduled in between.
         SaveExecInst = nullptr;
         break;
       }
 
+      bool ReadsCopyFromExec = J->readsRegister(CopyFromExec, TRI);
+
       if (J->modifiesRegister(CopyToExec, TRI)) {
         if (SaveExecInst) {
-          DEBUG(dbgs() << "Multiple instructions modify "
-                << PrintReg(CopyToExec, TRI) << '\n');
+          LLVM_DEBUG(dbgs() << "Multiple instructions modify "
+                            << printReg(CopyToExec, TRI) << '\n');
           SaveExecInst = nullptr;
           break;
         }
@@ -245,14 +351,27 @@ bool SIOptimizeExecMasking::runOnMachineFunction(MachineFunction &MF) {
         if (SaveExecOp == AMDGPU::INSTRUCTION_LIST_END)
           break;
 
-        if (J->readsRegister(CopyFromExec, TRI)) {
+        if (ReadsCopyFromExec) {
           SaveExecInst = &*J;
-          DEBUG(dbgs() << "Found save exec op: " << *SaveExecInst << '\n');
+          LLVM_DEBUG(dbgs() << "Found save exec op: " << *SaveExecInst << '\n');
           continue;
         } else {
-          DEBUG(dbgs() << "Instruction does not read exec copy: " << *J << '\n');
+          LLVM_DEBUG(dbgs()
+                     << "Instruction does not read exec copy: " << *J << '\n');
           break;
         }
+      } else if (ReadsCopyFromExec && !SaveExecInst) {
+        // Make sure no other instruction is trying to use this copy, before it
+        // will be rewritten by the saveexec, i.e. hasOneUse. There may have
+        // been another use, such as an inserted spill. For example:
+        //
+        // %sgpr0_sgpr1 = COPY %exec
+        // spill %sgpr0_sgpr1
+        // %sgpr2_sgpr3 = S_AND_B64 %sgpr0_sgpr1
+        //
+        LLVM_DEBUG(dbgs() << "Found second use of save inst candidate: " << *J
+                          << '\n');
+        break;
       }
 
       if (SaveExecInst && J->readsRegister(CopyToExec, TRI)) {
@@ -264,7 +383,7 @@ bool SIOptimizeExecMasking::runOnMachineFunction(MachineFunction &MF) {
     if (!SaveExecInst)
       continue;
 
-    DEBUG(dbgs() << "Insert save exec op: " << *SaveExecInst << '\n');
+    LLVM_DEBUG(dbgs() << "Insert save exec op: " << *SaveExecInst << '\n');
 
     MachineOperand &Src0 = SaveExecInst->getOperand(1);
     MachineOperand &Src1 = SaveExecInst->getOperand(2);
@@ -294,7 +413,7 @@ bool SIOptimizeExecMasking::runOnMachineFunction(MachineFunction &MF) {
     CopyToExecInst->eraseFromParent();
 
     for (MachineInstr *OtherInst : OtherUseInsts) {
-      OtherInst->substituteRegister(CopyToExec, AMDGPU::EXEC,
+      OtherInst->substituteRegister(CopyToExec, Exec,
                                     AMDGPU::NoSubRegister, *TRI);
     }
   }

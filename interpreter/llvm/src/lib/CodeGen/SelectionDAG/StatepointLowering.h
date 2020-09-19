@@ -1,9 +1,8 @@
-//===-- StatepointLowering.h - SDAGBuilder's statepoint code -*- C++ -*---===//
+//===- StatepointLowering.h - SDAGBuilder's statepoint code ---*- C++ -*---===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,11 +15,16 @@
 #define LLVM_LIB_CODEGEN_SELECTIONDAG_STATEPOINTLOWERING_H
 
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallBitVector.h"
-#include "llvm/CodeGen/SelectionDAG.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/CodeGen/SelectionDAGNodes.h"
+#include "llvm/CodeGen/ValueTypes.h"
+#include <cassert>
 
 namespace llvm {
+
+class CallInst;
 class SelectionDAGBuilder;
 
 /// This class tracks both per-statepoint and per-selectiondag information.
@@ -30,7 +34,7 @@ class SelectionDAGBuilder;
 /// works in concert with information in FunctionLoweringInfo.
 class StatepointLoweringState {
 public:
-  StatepointLoweringState() : NextSlotToAllocate(0) {}
+  StatepointLoweringState() = default;
 
   /// Reset all state tracking for a newly encountered safepoint.  Also
   /// performs some consistency checking.
@@ -62,14 +66,19 @@ public:
   /// before the next statepoint.  If we don't see it, we'll report
   /// an assertion.
   void scheduleRelocCall(const CallInst &RelocCall) {
-    PendingGCRelocateCalls.push_back(&RelocCall);
+    // We are not interested in lowering dead instructions.
+    if (!RelocCall.use_empty())
+      PendingGCRelocateCalls.push_back(&RelocCall);
   }
 
   /// Remove this gc_relocate from the list we're expecting to see
   /// before the next statepoint.  If we weren't expecting to see
   /// it, we'll report an assertion.
   void relocCallVisited(const CallInst &RelocCall) {
-    auto I = find(PendingGCRelocateCalls, &RelocCall);
+    // We are not interested in lowering dead instructions.
+    if (RelocCall.use_empty())
+      return;
+    auto I = llvm::find(PendingGCRelocateCalls, &RelocCall);
     assert(I != PendingGCRelocateCalls.end() &&
            "Visited unexpected gcrelocate call");
     PendingGCRelocateCalls.erase(I);
@@ -108,11 +117,12 @@ private:
   SmallBitVector AllocatedStackSlots;
 
   /// Points just beyond the last slot known to have been allocated
-  unsigned NextSlotToAllocate;
+  unsigned NextSlotToAllocate = 0;
 
   /// Keep track of pending gcrelocate calls for consistency check
   SmallVector<const CallInst *, 10> PendingGCRelocateCalls;
 };
+
 } // end namespace llvm
 
 #endif // LLVM_LIB_CODEGEN_SELECTIONDAG_STATEPOINTLOWERING_H

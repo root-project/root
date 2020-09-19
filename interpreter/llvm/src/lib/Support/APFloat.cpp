@@ -1,9 +1,8 @@
 //===-- APFloat.cpp - Implement APFloat class -----------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -19,6 +18,7 @@
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Config/llvm-config.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
@@ -113,6 +113,42 @@ namespace llvm {
   static const fltSemantics semPPCDoubleDoubleLegacy = {1023, -1022 + 53,
                                                         53 + 53, 128};
 
+  const llvm::fltSemantics &APFloatBase::EnumToSemantics(Semantics S) {
+    switch (S) {
+    case S_IEEEhalf:
+      return IEEEhalf();
+    case S_IEEEsingle:
+      return IEEEsingle();
+    case S_IEEEdouble:
+      return IEEEdouble();
+    case S_x87DoubleExtended:
+      return x87DoubleExtended();
+    case S_IEEEquad:
+      return IEEEquad();
+    case S_PPCDoubleDouble:
+      return PPCDoubleDouble();
+    }
+    llvm_unreachable("Unrecognised floating semantics");
+  }
+
+  APFloatBase::Semantics
+  APFloatBase::SemanticsToEnum(const llvm::fltSemantics &Sem) {
+    if (&Sem == &llvm::APFloat::IEEEhalf())
+      return S_IEEEhalf;
+    else if (&Sem == &llvm::APFloat::IEEEsingle())
+      return S_IEEEsingle;
+    else if (&Sem == &llvm::APFloat::IEEEdouble())
+      return S_IEEEdouble;
+    else if (&Sem == &llvm::APFloat::x87DoubleExtended())
+      return S_x87DoubleExtended;
+    else if (&Sem == &llvm::APFloat::IEEEquad())
+      return S_IEEEquad;
+    else if (&Sem == &llvm::APFloat::PPCDoubleDouble())
+      return S_PPCDoubleDouble;
+    else
+      llvm_unreachable("Unknown floating semantics");
+  }
+
   const fltSemantics &APFloatBase::IEEEhalf() {
     return semIEEEhalf;
   }
@@ -198,7 +234,10 @@ readExponent(StringRef::iterator begin, StringRef::iterator end)
   const unsigned int overlargeExponent = 24000;  /* FIXME.  */
   StringRef::iterator p = begin;
 
-  assert(p != end && "Exponent has no digits");
+  // Treat no exponent as 0 to match binutils
+  if (p == end || ((*p == '-' || *p == '+') && (p + 1) == end)) {
+    return 0;
+  }
 
   isNegative = (*p == '-');
   if (*p == '-' || *p == '+') {
@@ -1743,6 +1782,7 @@ IEEEFloat::opStatus IEEEFloat::remainder(const IEEEFloat &rhs) {
 IEEEFloat::opStatus IEEEFloat::mod(const IEEEFloat &rhs) {
   opStatus fs;
   fs = modSpecials(rhs);
+  unsigned int origSign = sign;
 
   while (isFiniteNonZero() && rhs.isFiniteNonZero() &&
          compareAbsoluteValue(rhs) != cmpLessThan) {
@@ -1750,10 +1790,12 @@ IEEEFloat::opStatus IEEEFloat::mod(const IEEEFloat &rhs) {
     if (compareAbsoluteValue(V) == cmpLessThan)
       V = scalbn(V, -1, rmNearestTiesToEven);
     V.sign = sign;
-  
+
     fs = subtract(V, rmNearestTiesToEven);
     assert(fs==opOK);
   }
+  if (isZero())
+    sign = origSign; // fmod requires this
   return fs;
 }
 
@@ -2543,12 +2585,12 @@ IEEEFloat::convertFromDecimalString(StringRef str, roundingMode rounding_mode) {
 }
 
 bool IEEEFloat::convertFromStringSpecials(StringRef str) {
-  if (str.equals("inf") || str.equals("INFINITY")) {
+  if (str.equals("inf") || str.equals("INFINITY") || str.equals("+Inf")) {
     makeInf(false);
     return true;
   }
 
-  if (str.equals("-inf") || str.equals("-INFINITY")) {
+  if (str.equals("-inf") || str.equals("-INFINITY") || str.equals("-Inf")) {
     makeInf(true);
     return true;
   }
@@ -3028,27 +3070,29 @@ double IEEEFloat::convertToDouble() const {
 /// does not support these bit patterns:
 ///  exponent = all 1's, integer bit 0, significand 0 ("pseudoinfinity")
 ///  exponent = all 1's, integer bit 0, significand nonzero ("pseudoNaN")
-///  exponent = 0, integer bit 1 ("pseudodenormal")
 ///  exponent!=0 nor all 1's, integer bit 0 ("unnormal")
-/// At the moment, the first two are treated as NaNs, the second two as Normal.
+///  exponent = 0, integer bit 1 ("pseudodenormal")
+/// At the moment, the first three are treated as NaNs, the last one as Normal.
 void IEEEFloat::initFromF80LongDoubleAPInt(const APInt &api) {
   assert(api.getBitWidth()==80);
   uint64_t i1 = api.getRawData()[0];
   uint64_t i2 = api.getRawData()[1];
   uint64_t myexponent = (i2 & 0x7fff);
   uint64_t mysignificand = i1;
+  uint8_t myintegerbit = mysignificand >> 63;
 
   initialize(&semX87DoubleExtended);
   assert(partCount()==2);
 
   sign = static_cast<unsigned int>(i2>>15);
-  if (myexponent==0 && mysignificand==0) {
+  if (myexponent == 0 && mysignificand == 0) {
     // exponent, significand meaningless
     category = fcZero;
   } else if (myexponent==0x7fff && mysignificand==0x8000000000000000ULL) {
     // exponent, significand meaningless
     category = fcInfinity;
-  } else if (myexponent==0x7fff && mysignificand!=0x8000000000000000ULL) {
+  } else if ((myexponent == 0x7fff && mysignificand != 0x8000000000000000ULL) ||
+             (myexponent != 0x7fff && myexponent != 0 && myintegerbit == 0)) {
     // exponent meaningless
     category = fcNaN;
     significandParts()[0] = mysignificand;
@@ -4363,10 +4407,7 @@ bool DoubleAPFloat::isLargest() const {
 
 bool DoubleAPFloat::isInteger() const {
   assert(Semantics == &semPPCDoubleDouble && "Unexpected Semantics");
-  APFloat Tmp(semPPCDoubleDoubleLegacy);
-  (void)Tmp.add(Floats[0], rmNearestTiesToEven);
-  (void)Tmp.add(Floats[1], rmNearestTiesToEven);
-  return Tmp.isInteger();
+  return Floats[0].isInteger() && Floats[1].isInteger();
 }
 
 void DoubleAPFloat::toString(SmallVectorImpl<char> &Str,
@@ -4413,8 +4454,9 @@ APFloat::Storage::Storage(IEEEFloat F, const fltSemantics &Semantics) {
     return;
   }
   if (usesLayout<DoubleAPFloat>(Semantics)) {
+    const fltSemantics& S = F.getSemantics();
     new (&Double)
-        DoubleAPFloat(Semantics, APFloat(std::move(F), F.getSemantics()),
+        DoubleAPFloat(Semantics, APFloat(std::move(F), S),
                       APFloat(semIEEEdouble));
     return;
   }
@@ -4440,8 +4482,10 @@ APFloat::APFloat(const fltSemantics &Semantics, StringRef S)
 
 APFloat::opStatus APFloat::convert(const fltSemantics &ToSemantics,
                                    roundingMode RM, bool *losesInfo) {
-  if (&getSemantics() == &ToSemantics)
+  if (&getSemantics() == &ToSemantics) {
+    *losesInfo = false;
     return opOK;
+  }
   if (usesLayout<IEEEFloat>(getSemantics()) &&
       usesLayout<IEEEFloat>(ToSemantics))
     return U.IEEE.convert(ToSemantics, RM, losesInfo);

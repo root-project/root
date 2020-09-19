@@ -1,9 +1,8 @@
 //===---- CheckerHelpers.cpp - Helper functions for checkers ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -15,12 +14,16 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
 
+namespace clang {
+
+namespace ento {
+
 // Recursively find any substatements containing macros
-bool clang::ento::containsMacro(const Stmt *S) {
-  if (S->getLocStart().isMacroID())
+bool containsMacro(const Stmt *S) {
+  if (S->getBeginLoc().isMacroID())
     return true;
 
-  if (S->getLocEnd().isMacroID())
+  if (S->getEndLoc().isMacroID())
     return true;
 
   for (const Stmt *Child : S->children())
@@ -31,7 +34,7 @@ bool clang::ento::containsMacro(const Stmt *S) {
 }
 
 // Recursively find any substatements containing enum constants
-bool clang::ento::containsEnum(const Stmt *S) {
+bool containsEnum(const Stmt *S) {
   const DeclRefExpr *DR = dyn_cast<DeclRefExpr>(S);
 
   if (DR && isa<EnumConstantDecl>(DR->getDecl()))
@@ -45,7 +48,7 @@ bool clang::ento::containsEnum(const Stmt *S) {
 }
 
 // Recursively find any substatements containing static vars
-bool clang::ento::containsStaticLocal(const Stmt *S) {
+bool containsStaticLocal(const Stmt *S) {
   const DeclRefExpr *DR = dyn_cast<DeclRefExpr>(S);
 
   if (DR)
@@ -61,7 +64,7 @@ bool clang::ento::containsStaticLocal(const Stmt *S) {
 }
 
 // Recursively find any substatements containing __builtin_offsetof
-bool clang::ento::containsBuiltinOffsetOf(const Stmt *S) {
+bool containsBuiltinOffsetOf(const Stmt *S) {
   if (isa<OffsetOfExpr>(S))
     return true;
 
@@ -74,7 +77,7 @@ bool clang::ento::containsBuiltinOffsetOf(const Stmt *S) {
 
 // Extract lhs and rhs from assignment statement
 std::pair<const clang::VarDecl *, const clang::Expr *>
-clang::ento::parseAssignment(const Stmt *S) {
+parseAssignment(const Stmt *S) {
   const VarDecl *VD = nullptr;
   const Expr *RHS = nullptr;
 
@@ -94,3 +97,18 @@ clang::ento::parseAssignment(const Stmt *S) {
 
   return std::make_pair(VD, RHS);
 }
+
+Nullability getNullabilityAnnotation(QualType Type) {
+  const auto *AttrType = Type->getAs<AttributedType>();
+  if (!AttrType)
+    return Nullability::Unspecified;
+  if (AttrType->getAttrKind() == attr::TypeNullable)
+    return Nullability::Nullable;
+  else if (AttrType->getAttrKind() == attr::TypeNonNull)
+    return Nullability::Nonnull;
+  return Nullability::Unspecified;
+}
+
+
+} // end namespace ento
+} // end namespace clang

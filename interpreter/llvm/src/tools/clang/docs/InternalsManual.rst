@@ -19,7 +19,7 @@ LLVM Support Library
 ====================
 
 The LLVM ``libSupport`` library provides many underlying libraries and
-`data-structures <http://llvm.org/docs/ProgrammersManual.html>`_, including
+`data-structures <https://llvm.org/docs/ProgrammersManual.html>`_, including
 command line option processing, various containers and a system abstraction
 layer, which is used for file system access.
 
@@ -49,12 +49,12 @@ when the code is incorrect or dubious.  In Clang, each diagnostic produced has
 (at the minimum) a unique ID, an English translation associated with it, a
 :ref:`SourceLocation <SourceLocation>` to "put the caret", and a severity
 (e.g., ``WARNING`` or ``ERROR``).  They can also optionally include a number of
-arguments to the dianostic (which fill in "%0"'s in the string) as well as a
+arguments to the diagnostic (which fill in "%0"'s in the string) as well as a
 number of source ranges that related to the diagnostic.
 
 In this section, we'll be giving examples produced by the Clang command line
 driver, but diagnostics can be :ref:`rendered in many different ways
-<DiagnosticClient>` depending on how the ``DiagnosticClient`` interface is
+<DiagnosticConsumer>` depending on how the ``DiagnosticConsumer`` interface is
 implemented.  A representative example of a diagnostic is:
 
 .. code-block:: text
@@ -188,7 +188,7 @@ Formatting a Diagnostic Argument
 Arguments to diagnostics are fully typed internally, and come from a couple
 different classes: integers, types, names, and random strings.  Depending on
 the class of the argument, it can be optionally formatted in different ways.
-This gives the ``DiagnosticClient`` information about what the argument means
+This gives the ``DiagnosticConsumer`` information about what the argument means
 without requiring it to use a specific presentation (consider this MVC for
 Clang :).
 
@@ -319,6 +319,32 @@ they should be discussed before they are added.  If you are creating a lot of
 repetitive diagnostics and/or have an idea for a useful formatter, please bring
 it up on the cfe-dev mailing list.
 
+**"sub" format**
+
+Example:
+  Given the following record definition of type ``TextSubstitution``:
+
+  .. code-block:: text
+
+    def select_ovl_candidate : TextSubstitution<
+      "%select{function|constructor}0%select{| template| %2}1">;
+
+  which can be used as
+
+  .. code-block:: text
+
+    def note_ovl_candidate : Note<
+      "candidate %sub{select_ovl_candidate}3,2,1 not viable">;
+
+  and will act as if it was written
+  ``"candidate %select{function|constructor}3%select{| template| %1}2 not viable"``.
+Description:
+  This format specifier is used to avoid repeating strings verbatim in multiple
+  diagnostics. The argument to ``%sub`` must name a ``TextSubstitution`` tblgen
+  record. The substitution must specify all arguments used by the substitution,
+  and the modifier indexes in the substitution are re-numbered accordingly. The
+  substituted text must itself be a valid format string before substitution.
+
 .. _internals-producing-diag:
 
 Producing the Diagnostic
@@ -387,7 +413,7 @@ exactly where those parentheses would be inserted into the source code.  The
 fix-it hints themselves describe what changes to make to the source code in an
 abstract manner, which the text diagnostic printer renders as a line of
 "insertions" below the caret line.  :ref:`Other diagnostic clients
-<DiagnosticClient>` might choose to render the code differently (e.g., as
+<DiagnosticConsumer>` might choose to render the code differently (e.g., as
 markup inline) or even give the user the ability to automatically fix the
 problem.
 
@@ -397,6 +423,9 @@ Fix-it hints on errors and warnings need to obey these rules:
   driver, they should only be used when it's very likely they match the user's
   intent.
 * Clang must recover from errors as if the fix-it had been applied.
+* Fix-it hints on a warning must not change the meaning of the code.
+  However, a hint may clarify the meaning as intentional, for example by adding
+  parentheses when the precedence of operators isn't obvious.
 
 If a fix-it can't obey these rules, put the fix-it on a note.  Fix-its on notes
 are not applied automatically.
@@ -420,26 +449,26 @@ Fix-it hints can be created with one of three constructors:
     Specifies that the code in the given source ``Range`` should be removed,
     and replaced with the given ``Code`` string.
 
-.. _DiagnosticClient:
+.. _DiagnosticConsumer:
 
-The ``DiagnosticClient`` Interface
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The ``DiagnosticConsumer`` Interface
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once code generates a diagnostic with all of the arguments and the rest of the
 relevant information, Clang needs to know what to do with it.  As previously
 mentioned, the diagnostic machinery goes through some filtering to map a
 severity onto a diagnostic level, then (assuming the diagnostic is not mapped
-to "``Ignore``") it invokes an object that implements the ``DiagnosticClient``
+to "``Ignore``") it invokes an object that implements the ``DiagnosticConsumer``
 interface with the information.
 
 It is possible to implement this interface in many different ways.  For
-example, the normal Clang ``DiagnosticClient`` (named
+example, the normal Clang ``DiagnosticConsumer`` (named
 ``TextDiagnosticPrinter``) turns the arguments into strings (according to the
 various formatting rules), prints out the file/line/column information and the
 string, then prints out the line of code, the source ranges, and the caret.
 However, this behavior isn't required.
 
-Another implementation of the ``DiagnosticClient`` interface is the
+Another implementation of the ``DiagnosticConsumer`` interface is the
 ``TextDiagnosticBuffer`` class, which is used when Clang is in ``-verify``
 mode.  Instead of formatting and printing out the diagnostics, this
 implementation just captures and remembers the diagnostics as they fly by.
@@ -493,11 +522,11 @@ source code of the program.  Important design points include:
 
 In practice, the ``SourceLocation`` works together with the ``SourceManager``
 class to encode two pieces of information about a location: its spelling
-location and its instantiation location.  For most tokens, these will be the
+location and its expansion location.  For most tokens, these will be the
 same.  However, for a macro expansion (or tokens that came from a ``_Pragma``
 directive) these will describe the location of the characters corresponding to
 the token and the location where the token was used (i.e., the macro
-instantiation point or the location of the ``_Pragma`` itself).
+expansion point or the location of the ``_Pragma`` itself).
 
 The Clang front-end inherently depends on the location of a token being tracked
 correctly.  If it is ever incorrect, the front-end may get confused and die.
@@ -508,7 +537,7 @@ token.  This concept maps directly to the "spelling location" for the token.
 ``SourceRange`` and ``CharSourceRange``
 ---------------------------------------
 
-.. mostly taken from http://lists.llvm.org/pipermail/cfe-dev/2010-August/010595.html
+.. mostly taken from https://lists.llvm.org/pipermail/cfe-dev/2010-August/010595.html
 
 Clang represents most source ranges by [first, last], where "first" and "last"
 each point to the beginning of their respective tokens.  For example consider
@@ -533,13 +562,9 @@ The clang Driver and library are documented :doc:`here <DriverInternals>`.
 Precompiled Headers
 ===================
 
-Clang supports two implementations of precompiled headers.  The default
-implementation, precompiled headers (:doc:`PCH <PCHInternals>`) uses a
+Clang supports precompiled headers (:doc:`PCH <PCHInternals>`), which  uses a
 serialized representation of Clang's internal data structures, encoded with the
-`LLVM bitstream format <http://llvm.org/docs/BitCodeFormat.html>`_.
-Pretokenized headers (:doc:`PTH <PTHInternals>`), on the other hand, contain a
-serialized representation of the tokens encountered when preprocessing a header
-(and anything that header includes).
+`LLVM bitstream format <https://llvm.org/docs/BitCodeFormat.html>`_.
 
 The Frontend Library
 ====================
@@ -795,7 +820,7 @@ preprocessor and notifies a client of the parsing progress.
 Historically, the parser used to talk to an abstract ``Action`` interface that
 had virtual methods for parse events, for example ``ActOnBinOp()``.  When Clang
 grew C++ support, the parser stopped supporting general ``Action`` clients --
-it now always talks to the :ref:`Sema libray <Sema>`.  However, the Parser
+it now always talks to the :ref:`Sema library <Sema>`.  However, the Parser
 still accesses AST objects only through opaque types like ``ExprResult`` and
 ``StmtResult``.  Only :ref:`Sema <Sema>` looks at the AST node contents of these
 wrappers.
@@ -804,6 +829,79 @@ wrappers.
 
 The AST Library
 ===============
+
+.. _ASTPhilosophy:
+
+Design philosophy
+-----------------
+
+Immutability
+^^^^^^^^^^^^
+
+Clang AST nodes (types, declarations, statements, expressions, and so on) are
+generally designed to be immutable once created. This provides a number of key
+benefits:
+
+  * Canonicalization of the "meaning" of nodes is possible as soon as the nodes
+    are created, and is not invalidated by later addition of more information.
+    For example, we :ref:`canonicalize types <CanonicalType>`, and use a
+    canonicalized representation of expressions when determining whether two
+    function template declarations involving dependent expressions declare the
+    same entity.
+  * AST nodes can be reused when they have the same meaning. For example, we
+    reuse ``Type`` nodes when representing the same type (but maintain separate
+    ``TypeLoc``\s for each instance where a type is written), and we reuse
+    non-dependent ``Stmt`` and ``Expr`` nodes across instantiations of a
+    template.
+  * Serialization and deserialization of the AST to/from AST files is simpler:
+    we do not need to track modifications made to AST nodes imported from AST
+    files and serialize separate "update records".
+
+There are unfortunately exceptions to this general approach, such as:
+
+  * A the first declaration of a redeclarable entity maintains a pointer to the
+    most recent declaration of that entity, which naturally needs to change as
+    more declarations are parsed.
+  * Name lookup tables in declaration contexts change after the namespace
+    declaration is formed.
+  * We attempt to maintain only a single declaration for an instantiation of a
+    template, rather than having distinct declarations for an instantiation of
+    the declaration versus the definition, so template instantiation often
+    updates parts of existing declarations.
+  * Some parts of declarations are required to be instantiated separately (this
+    includes default arguments and exception specifications), and such
+    instantiations update the existing declaration.
+
+These cases tend to be fragile; mutable AST state should be avoided where
+possible.
+
+As a consequence of this design principle, we typically do not provide setters
+for AST state. (Some are provided for short-term modifications intended to be
+used immediately after an AST node is created and before it's "published" as
+part of the complete AST, or where language semantics require after-the-fact
+updates.)
+
+Faithfulness
+^^^^^^^^^^^^
+
+The AST intends to provide a representation of the program that is faithful to
+the original source. We intend for it to be possible to write refactoring tools
+using only information stored in, or easily reconstructible from, the Clang AST.
+This means that the AST representation should either not desugar source-level
+constructs to simpler forms, or -- where made necessary by language semantics
+or a clear engineering tradeoff -- should desugar minimally and wrap the result
+in a construct representing the original source form.
+
+For example, ``CXXForRangeStmt`` directly represents the syntactic form of a
+range-based for statement, but also holds a semantic representation of the
+range declaration and iterator declarations. It does not contain a
+fully-desugared ``ForStmt``, however.
+
+Some AST nodes (for example, ``ParenExpr``) represent only syntax, and others
+(for example, ``ImplicitCastExpr``) represent only semantics, but most nodes
+will represent a combination of syntax and associated semantics. Inheritance
+is typically used when representing different (but related) syntaxes for nodes
+with the same or similar semantics.
 
 .. _Type:
 
@@ -866,6 +964,8 @@ with this: first, various semantic checks need to make judgements about the
 way to query whether two types are structurally identical to each other,
 ignoring typedefs.  The solution to both of these problems is the idea of
 canonical types.
+
+.. _CanonicalType:
 
 Canonical Types
 ^^^^^^^^^^^^^^^
@@ -1127,6 +1227,10 @@ the source code.  In the semantics-centric view, only the most recent "``f``"
 will be found by the lookup, since it effectively replaces the first
 declaration of "``f``".
 
+(Note that because ``f`` can be redeclared at block scope, or in a friend
+declaration, etc. it is possible that the declaration of ``f`` found by name
+lookup will not be the most recent one.)
+
 In the semantics-centric view, overloading of functions is represented
 explicitly.  For example, given two declarations of a function "``g``" that are
 overloaded, e.g.,
@@ -1291,7 +1395,7 @@ The transparent ``DeclContext``\ s are:
 Multiply-Defined Declaration Contexts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-C++ namespaces have the interesting --- and, so far, unique --- property that
+C++ namespaces have the interesting property that
 the namespace can be defined multiple times, and the declarations provided by
 each namespace definition are effectively merged (from the semantic point of
 view).  For example, the following two code snippets are semantically
@@ -1324,12 +1428,24 @@ range of iterators over declarations of "``f``".
 function ``DeclContext::getPrimaryContext`` retrieves the "primary" context for
 a given ``DeclContext`` instance, which is the ``DeclContext`` responsible for
 maintaining the lookup table used for the semantics-centric view.  Given a
-DeclContext, one can obtain the set of declaration contexts that are semanticaly
-connected to this declaration context, in source order, including this context
-(which will be the only result, for non-namespace contexts) via
+DeclContext, one can obtain the set of declaration contexts that are
+semantically connected to this declaration context, in source order, including
+this context (which will be the only result, for non-namespace contexts) via
 ``DeclContext::collectAllContexts``. Note that these functions are used
 internally within the lookup and insertion methods of the ``DeclContext``, so
 the vast majority of clients can ignore them.
+
+Because the same entity can be defined multiple times in different modules,
+it is also possible for there to be multiple definitions of (for instance)
+a ``CXXRecordDecl``, all of which describe a definition of the same class.
+In such a case, only one of those "definitions" is considered by Clang to be
+the definiition of the class, and the others are treated as non-defining
+declarations that happen to also contain member declarations. Corresponding
+members in each definition of such multiply-defined classes are identified
+either by redeclaration chains (if the members are ``Redeclarable``)
+or by simply a pointer to the canonical declaration (if the declarations
+are not ``Redeclarable`` -- in that case, a ``Mergeable`` base class is used
+instead).
 
 .. _CFG:
 
@@ -1342,7 +1458,7 @@ constructed for function bodies (usually an instance of ``CompoundStmt``), but
 can also be instantiated to represent the control-flow of any class that
 subclasses ``Stmt``, which includes simple expressions.  Control-flow graphs
 are especially useful for performing `flow- or path-sensitive
-<http://en.wikipedia.org/wiki/Data_flow_analysis#Sensitivities>`_ program
+<https://en.wikipedia.org/wiki/Data_flow_analysis#Sensitivities>`_ program
 analyses on a given function.
 
 Basic Blocks
@@ -1514,7 +1630,7 @@ use an i-c-e where one is required, but accepting the code unless running with
 Things get a little bit more tricky when it comes to compatibility with
 real-world source code.  Specifically, GCC has historically accepted a huge
 superset of expressions as i-c-e's, and a lot of real world code depends on
-this unfortuate accident of history (including, e.g., the glibc system
+this unfortunate accident of history (including, e.g., the glibc system
 headers).  GCC accepts anything its "fold" optimizer is capable of reducing to
 an integer constant, which means that the definition of what it accepts changes
 as its optimizer does.  One example is that GCC accepts things like "``case
@@ -1540,7 +1656,7 @@ Implementation Approach
 After trying several different approaches, we've finally converged on a design
 (Note, at the time of this writing, not all of this has been implemented,
 consider this a design goal!).  Our basic approach is to define a single
-recursive method evaluation method (``Expr::Evaluate``), which is implemented
+recursive evaluation method (``Expr::Evaluate``), which is implemented
 in ``AST/ExprConstant.cpp``.  Given an expression with "scalar" type (integer,
 fp, complex, or pointer) this method returns the following information:
 
@@ -1638,15 +1754,15 @@ and then the semantic handling of the attribute.
 Parsing of the attribute is determined by the various syntactic forms attributes
 can take, such as GNU, C++11, and Microsoft style attributes, as well as other
 information provided by the table definition of the attribute. Ultimately, the
-parsed representation of an attribute object is an ``AttributeList`` object.
+parsed representation of an attribute object is an ``ParsedAttr`` object.
 These parsed attributes chain together as a list of parsed attributes attached
 to a declarator or declaration specifier. The parsing of attributes is handled
 automatically by Clang, except for attributes spelled as keywords. When
 implementing a keyword attribute, the parsing of the keyword and creation of the
-``AttributeList`` object must be done manually.
+``ParsedAttr`` object must be done manually.
 
 Eventually, ``Sema::ProcessDeclAttributeList()`` is called with a ``Decl`` and
-an ``AttributeList``, at which point the parsed attribute can be transformed
+an ``ParsedAttr``, at which point the parsed attribute can be transformed
 into a semantic attribute. The process by which a parsed attribute is converted
 into a semantic attribute depends on the attribute definition and semantic
 requirements of the attribute. The end result, however, is that the semantic
@@ -1664,7 +1780,7 @@ semantic checking for some attributes, etc.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The first step to adding a new attribute to Clang is to add its definition to
 `include/clang/Basic/Attr.td
-<http://llvm.org/viewvc/llvm-project/cfe/trunk/include/clang/Basic/Attr.td?view=markup>`_.
+<https://github.com/llvm/llvm-project/blob/master/clang/include/clang/Basic/Attr.td>`_.
 This tablegen definition must derive from the ``Attr`` (tablegen, not
 semantic) type, or one of its derivatives. Most attributes will derive from the
 ``InheritableAttr`` type, which specifies that the attribute can be inherited by
@@ -1725,11 +1841,11 @@ subjects in the list, but a custom diagnostic parameter can also be specified in
 the ``SubjectList``. The diagnostics generated for subject list violations are
 either ``diag::warn_attribute_wrong_decl_type`` or
 ``diag::err_attribute_wrong_decl_type``, and the parameter enumeration is found
-in `include/clang/Sema/AttributeList.h
-<http://llvm.org/viewvc/llvm-project/cfe/trunk/include/clang/Sema/AttributeList.h?view=markup>`_
+in `include/clang/Sema/ParsedAttr.h
+<https://github.com/llvm/llvm-project/blob/master/clang/include/clang/Sema/ParsedAttr.h>`_
 If a previously unused Decl node is added to the ``SubjectList``, the logic used
 to automatically determine the diagnostic parameter in `utils/TableGen/ClangAttrEmitter.cpp
-<http://llvm.org/viewvc/llvm-project/cfe/trunk/utils/TableGen/ClangAttrEmitter.cpp?view=markup>`_
+<https://github.com/llvm/llvm-project/blob/master/clang/utils/TableGen/ClangAttrEmitter.cpp>`_
 may need to be updated.
 
 By default, all subjects in the SubjectList must either be a Decl node defined
@@ -1751,7 +1867,7 @@ All attributes must have some form of documentation associated with them.
 Documentation is table generated on the public web server by a server-side
 process that runs daily. Generally, the documentation for an attribute is a
 stand-alone definition in `include/clang/Basic/AttrDocs.td 
-<http://llvm.org/viewvc/llvm-project/cfe/trunk/include/clang/Basic/AttdDocs.td?view=markup>`_
+<https://github.com/llvm/llvm-project/blob/master/clang/include/clang/Basic/AttrDocs.td>`_
 that is named after the attribute being documented.
 
 If the attribute is not for public consumption, or is an implicitly-created
@@ -1802,7 +1918,7 @@ All arguments have a name and a flag that specifies whether the argument is
 optional. The associated C++ type of the argument is determined by the argument
 definition type. If the existing argument types are insufficient, new types can
 be created, but it requires modifying `utils/TableGen/ClangAttrEmitter.cpp
-<http://llvm.org/viewvc/llvm-project/cfe/trunk/utils/TableGen/ClangAttrEmitter.cpp?view=markup>`_
+<https://github.com/llvm/llvm-project/blob/master/clang/utils/TableGen/ClangAttrEmitter.cpp>`_
 to properly support the type.
 
 Other Properties
@@ -1814,7 +1930,7 @@ document, however a few deserve mention.
 If the parsed form of the attribute is more complex, or differs from the
 semantic form, the ``HasCustomParsing`` bit can be set to ``1`` for the class,
 and the parsing code in `Parser::ParseGNUAttributeArgs()
-<http://llvm.org/viewvc/llvm-project/cfe/trunk/lib/Parse/ParseDecl.cpp?view=markup>`_
+<https://github.com/llvm/llvm-project/blob/master/clang/lib/Parse/ParseDecl.cpp>`_
 can be updated for the special case. Note that this only applies to arguments
 with a GNU spelling -- attributes with a __declspec spelling currently ignore
 this flag and are handled by ``Parser::ParseMicrosoftDeclSpec``.
@@ -1823,7 +1939,7 @@ Note that setting this member to 1 will opt out of common attribute semantic
 handling, requiring extra implementation efforts to ensure the attribute
 appertains to the appropriate subject, etc.
 
-If the attribute should not be propagated from from a template declaration to an
+If the attribute should not be propagated from a template declaration to an
 instantiation of the template, set the ``Clone`` member to 0. By default, all
 attributes will be cloned to template instantiations.
 
@@ -1861,14 +1977,9 @@ requirements. To support this feature, an attribute inheriting from
 should be the same value between all arguments sharing a spelling, and
 corresponds to the parsed attribute's ``Kind`` enumerator. This allows
 attributes to share a parsed attribute kind, but have distinct semantic
-attribute classes. For instance, ``AttributeList::AT_Interrupt`` is the shared
+attribute classes. For instance, ``ParsedAttr`` is the shared
 parsed attribute kind, but ARMInterruptAttr and MSP430InterruptAttr are the
 semantic attributes generated.
-
-By default, when declarations are merging attributes, an attribute will not be
-duplicated. However, if an attribute can be duplicated during this merging
-stage, set ``DuplicatesAllowedWhileMerging`` to ``1``, and the attribute will
-be merged.
 
 By default, attribute arguments are parsed in an evaluated context. If the
 arguments for an attribute should be parsed in an unevaluated context (akin to
@@ -1882,7 +1993,7 @@ semantic attribute class object, with ``public`` access.
 Boilerplate
 ^^^^^^^^^^^
 All semantic processing of declaration attributes happens in `lib/Sema/SemaDeclAttr.cpp
-<http://llvm.org/viewvc/llvm-project/cfe/trunk/lib/Sema/SemaDeclAttr.cpp?view=markup>`_,
+<https://github.com/llvm/llvm-project/blob/master/clang/lib/Sema/SemaDeclAttr.cpp>`_,
 and generally starts in the ``ProcessDeclAttribute()`` function. If the
 attribute is a "simple" attribute -- meaning that it requires no custom semantic
 processing aside from what is automatically  provided, add a call to
@@ -1898,11 +2009,11 @@ correct minimum number of arguments are passed, etc.
 
 If the attribute adds additional warnings, define a ``DiagGroup`` in
 `include/clang/Basic/DiagnosticGroups.td
-<http://llvm.org/viewvc/llvm-project/cfe/trunk/include/clang/Basic/DiagnosticGroups.td?view=markup>`_
+<https://github.com/llvm/llvm-project/blob/master/clang/include/clang/Basic/DiagnosticGroups.td>`_
 named after the attribute's ``Spelling`` with "_"s replaced by "-"s. If there
 is only a single diagnostic, it is permissible to use ``InGroup<DiagGroup<"your-attribute">>``
 directly in `DiagnosticSemaKinds.td
-<http://llvm.org/viewvc/llvm-project/cfe/trunk/include/clang/Basic/DiagnosticSemaKinds.td?view=markup>`_
+<https://github.com/llvm/llvm-project/blob/master/clang/include/clang/Basic/DiagnosticSemaKinds.td>`_
 
 All semantic diagnostics generated for your attribute, including automatically-
 generated ones (such as subjects and argument counts), should have a
@@ -2037,7 +2148,7 @@ are similar.
    * ``CodeGenFunction`` contains functions ``ConvertType`` and
      ``ConvertTypeForMem`` that convert Clang's types (``clang::Type*`` or
      ``clang::QualType``) to LLVM types.  Use the former for values, and the
-     later for memory locations: test with the C++ "``bool``" type to check
+     latter for memory locations: test with the C++ "``bool``" type to check
      this.  If you find that you are having to use LLVM bitcasts to make the
      subexpressions of your expression have the type that your expression
      expects, STOP!  Go fix semantic analysis and the AST so that you don't
@@ -2054,7 +2165,7 @@ are similar.
      exception-handling directly.
    * Testing is extremely important in IR generation.  Use ``clang -cc1
      -emit-llvm`` and `FileCheck
-     <http://llvm.org/docs/CommandGuide/FileCheck.html>`_ to verify that you're
+     <https://llvm.org/docs/CommandGuide/FileCheck.html>`_ to verify that you're
      generating the right IR.
 
 #. Teach template instantiation how to cope with your AST node, which requires

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-#                     The LLVM Compiler Infrastructure
-#
-# This file is distributed under the University of Illinois Open Source
-# License. See LICENSE.TXT for details.
+# Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+# See https://llvm.org/LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 """ This module parses and validates arguments for command-line interfaces.
 
 It uses argparse module to create the command line parser. (This library is
@@ -12,14 +11,15 @@ earlier.)
 It also implements basic validation methods, related to the command.
 Validations are mostly calling specific help methods, or mangling values.
 """
+from __future__ import absolute_import, division, print_function
 
 import os
 import sys
 import argparse
 import logging
 import tempfile
-from libscanbuild import reconfigure_logging
-from libscanbuild.clang import get_checkers
+from libscanbuild import reconfigure_logging, CtuConfig
+from libscanbuild.clang import get_checkers, is_ctu_capable
 
 __all__ = ['parse_args_for_intercept_build', 'parse_args_for_analyze_build',
            'parse_args_for_scan_build']
@@ -98,6 +98,11 @@ def normalize_args_for_analyze(args, from_build_command):
         # add cdb parameter invisibly to make report module working.
         args.cdb = 'compile_commands.json'
 
+    # Make ctu_dir an abspath as it is needed inside clang
+    if not from_build_command and hasattr(args, 'ctu_phases') \
+            and hasattr(args.ctu_phases, 'dir'):
+        args.ctu_dir = os.path.abspath(args.ctu_dir)
+
 
 def validate_args_for_analyze(parser, args, from_build_command):
     """ Command line parsing is done by the argparse module, but semantic
@@ -121,6 +126,18 @@ def validate_args_for_analyze(parser, args, from_build_command):
         parser.error(message='missing build command')
     elif not from_build_command and not os.path.exists(args.cdb):
         parser.error(message='compilation database is missing')
+
+    # If the user wants CTU mode
+    if not from_build_command and hasattr(args, 'ctu_phases') \
+            and hasattr(args.ctu_phases, 'dir'):
+        # If CTU analyze_only, the input directory should exist
+        if args.ctu_phases.analyze and not args.ctu_phases.collect \
+                and not os.path.exists(args.ctu_dir):
+            parser.error(message='missing CTU directory')
+        # Check CTU capability via checking clang-extdef-mapping
+        if not is_ctu_capable(args.extdef_map_cmd):
+            parser.error(message="""This version of clang does not support CTU
+            functionality or clang-extdef-mapping command not found.""")
 
 
 def create_intercept_parser():
@@ -218,7 +235,15 @@ def create_analyze_parser(from_build_command):
         default='html',
         action='store_const',
         help="""Cause the results as a set of .html and .plist files.""")
-    # TODO: implement '-view '
+    format_group.add_argument(
+        '--plist-multi-file',
+        '-plist-multi-file',
+        dest='output_format',
+        const='plist-multi-file',
+        default='html',
+        action='store_const',
+        help="""Cause the results as a set of .plist files with extra
+        information on related files.""")
 
     advanced = parser.add_argument_group('advanced options')
     advanced.add_argument(
@@ -256,7 +281,7 @@ def create_analyze_parser(from_build_command):
         '-maxloop',
         metavar='<loop count>',
         type=int,
-        help="""Specifiy the number of times a block can be visited before
+        help="""Specify the number of times a block can be visited before
         giving up. Increase for more comprehensive coverage at a cost of
         speed.""")
     advanced.add_argument(
@@ -333,6 +358,51 @@ def create_analyze_parser(from_build_command):
     if from_build_command:
         parser.add_argument(
             dest='build', nargs=argparse.REMAINDER, help="""Command to run.""")
+    else:
+        ctu = parser.add_argument_group('cross translation unit analysis')
+        ctu_mutex_group = ctu.add_mutually_exclusive_group()
+        ctu_mutex_group.add_argument(
+            '--ctu',
+            action='store_const',
+            const=CtuConfig(collect=True, analyze=True,
+                            dir='', extdef_map_cmd=''),
+            dest='ctu_phases',
+            help="""Perform cross translation unit (ctu) analysis (both collect
+            and analyze phases) using default <ctu-dir> for temporary output.
+            At the end of the analysis, the temporary directory is removed.""")
+        ctu.add_argument(
+            '--ctu-dir',
+            metavar='<ctu-dir>',
+            dest='ctu_dir',
+            default='ctu-dir',
+            help="""Defines the temporary directory used between ctu
+            phases.""")
+        ctu_mutex_group.add_argument(
+            '--ctu-collect-only',
+            action='store_const',
+            const=CtuConfig(collect=True, analyze=False,
+                            dir='', extdef_map_cmd=''),
+            dest='ctu_phases',
+            help="""Perform only the collect phase of ctu.
+            Keep <ctu-dir> for further use.""")
+        ctu_mutex_group.add_argument(
+            '--ctu-analyze-only',
+            action='store_const',
+            const=CtuConfig(collect=False, analyze=True,
+                            dir='', extdef_map_cmd=''),
+            dest='ctu_phases',
+            help="""Perform only the analyze phase of ctu. <ctu-dir> should be
+            present and will not be removed after analysis.""")
+        ctu.add_argument(
+            '--use-extdef-map-cmd',
+            metavar='<path>',
+            dest='extdef_map_cmd',
+            default='clang-extdef-mapping',
+            help="""'%(prog)s' uses the 'clang-extdef-mapping' executable
+            relative to itself for generating external definition maps for
+            static analysis. One can override this behavior with this option
+            by using the 'clang-extdef-mapping' packaged with Xcode (on OS X)
+            or from the PATH.""")
     return parser
 
 

@@ -1,22 +1,8 @@
 /*===---- lwpintrin.h - LWP intrinsics -------------------------------------===
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+ * See https://llvm.org/LICENSE.txt for license information.
+ * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  *
  *===-----------------------------------------------------------------------===
  */
@@ -31,7 +17,7 @@
 /* Define the default attributes for the functions in this file. */
 #define __DEFAULT_FN_ATTRS __attribute__((__always_inline__, __nodebug__, __target__("lwp")))
 
-/// \brief Parses the LWPCB at the specified address and enables
+/// Parses the LWPCB at the specified address and enables
 ///        profiling if valid.
 ///
 /// \headerfile <x86intrin.h>
@@ -48,7 +34,7 @@ __llwpcb (void *__addr)
   __builtin_ia32_llwpcb(__addr);
 }
 
-/// \brief Flushes the LWP state to memory and returns the address of the LWPCB.
+/// Flushes the LWP state to memory and returns the address of the LWPCB.
 ///
 /// \headerfile <x86intrin.h>
 ///
@@ -58,12 +44,12 @@ __llwpcb (void *__addr)
 ///    Address to the current Lightweight Profiling Control Block (LWPCB).
 ///    If LWP is not currently enabled, returns NULL.
 static __inline__ void* __DEFAULT_FN_ATTRS
-__slwpcb ()
+__slwpcb (void)
 {
   return __builtin_ia32_slwpcb();
 }
 
-/// \brief Inserts programmed event record into the LWP event ring buffer
+/// Inserts programmed event record into the LWP event ring buffer
 ///        and advances the ring buffer pointer.
 ///
 /// \headerfile <x86intrin.h>
@@ -84,7 +70,7 @@ __slwpcb ()
   (__builtin_ia32_lwpins32((unsigned int) (DATA2), (unsigned int) (DATA1), \
                            (unsigned int) (FLAGS)))
 
-/// \brief Decrements the LWP programmed value sample event counter. If the result is 
+/// Decrements the LWP programmed value sample event counter. If the result is
 ///        negative, inserts an event record into the LWP event ring buffer in memory
 ///        and advances the ring buffer pointer.
 ///
@@ -104,7 +90,7 @@ __slwpcb ()
 
 #ifdef __x86_64__
 
-/// \brief Inserts programmed event record into the LWP event ring buffer
+/// Inserts programmed event record into the LWP event ring buffer
 ///        and advances the ring buffer pointer.
 ///
 /// \headerfile <x86intrin.h>
@@ -125,7 +111,7 @@ __slwpcb ()
   (__builtin_ia32_lwpins64((unsigned long long) (DATA2), (unsigned int) (DATA1), \
                            (unsigned int) (FLAGS)))
 
-/// \brief Decrements the LWP programmed value sample event counter. If the result is 
+/// Decrements the LWP programmed value sample event counter. If the result is
 ///        negative, inserts an event record into the LWP event ring buffer in memory
 ///        and advances the ring buffer pointer.
 ///

@@ -1,9 +1,8 @@
 //===--- Diagnostic.h - Framework for clang diagnostics tools --*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -27,13 +26,13 @@
 namespace clang {
 namespace tooling {
 
-/// \brief Represents the diagnostic message with the error message associated
+/// Represents the diagnostic message with the error message associated
 /// and the information on the location of the problem.
 struct DiagnosticMessage {
   DiagnosticMessage(llvm::StringRef Message = "");
 
-  /// \brief Constructs a diagnostic message with anoffset to the diagnostic
-  /// within the file where the problem occured.
+  /// Constructs a diagnostic message with anoffset to the diagnostic
+  /// within the file where the problem occurred.
   ///
   /// \param Loc Should be a file location, it is not meaningful for a macro
   /// location.
@@ -43,9 +42,12 @@ struct DiagnosticMessage {
   std::string Message;
   std::string FilePath;
   unsigned FileOffset;
+
+  /// Fixes for this diagnostic, grouped by file path.
+  llvm::StringMap<Replacements> Fix;
 };
 
-/// \brief Represents the diagnostic with the level of severity and possible
+/// Represents the diagnostic with the level of severity and possible
 /// fixes to be applied.
 struct Diagnostic {
   enum Level {
@@ -59,26 +61,22 @@ struct Diagnostic {
              StringRef BuildDirectory);
 
   Diagnostic(llvm::StringRef DiagnosticName, const DiagnosticMessage &Message,
-             const llvm::StringMap<Replacements> &Fix,
              const SmallVector<DiagnosticMessage, 1> &Notes, Level DiagLevel,
              llvm::StringRef BuildDirectory);
 
-  /// \brief Name identifying the Diagnostic.
+  /// Name identifying the Diagnostic.
   std::string DiagnosticName;
 
-  /// \brief Message associated to the diagnostic.
+  /// Message associated to the diagnostic.
   DiagnosticMessage Message;
 
-  /// \brief Fixes to apply, grouped by file path.
-  llvm::StringMap<Replacements> Fix;
-
-  /// \brief Potential notes about the diagnostic.
+  /// Potential notes about the diagnostic.
   SmallVector<DiagnosticMessage, 1> Notes;
 
-  /// \brief Diagnostic level. Can indicate either an error or a warning.
+  /// Diagnostic level. Can indicate either an error or a warning.
   Level DiagLevel;
 
-  /// \brief A build directory of the diagnostic source file.
+  /// A build directory of the diagnostic source file.
   ///
   /// It's an absolute path which is `directory` field of the source file in
   /// compilation database. If users don't specify the compilation database
@@ -88,12 +86,16 @@ struct Diagnostic {
   std::string BuildDirectory;
 };
 
-/// \brief Collection of Diagnostics generated from a single translation unit.
+/// Collection of Diagnostics generated from a single translation unit.
 struct TranslationUnitDiagnostics {
   /// Name of the main source for the translation unit.
   std::string MainSourceFile;
   std::vector<Diagnostic> Diagnostics;
 };
+
+/// Get the first fix to apply for this diagnostic.
+/// \returns nullptr if no fixes are attached to the diagnostic.
+const llvm::StringMap<Replacements> *selectFirstFix(const Diagnostic& D);
 
 } // end namespace tooling
 } // end namespace clang

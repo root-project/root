@@ -1,9 +1,8 @@
 //=== UndefResultChecker.cpp ------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,7 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "clang/StaticAnalyzer/Core/CheckerManager.h"
@@ -37,12 +36,11 @@ public:
 
 static bool isArrayIndexOutOfBounds(CheckerContext &C, const Expr *Ex) {
   ProgramStateRef state = C.getState();
-  const LocationContext *LCtx = C.getLocationContext();
 
   if (!isa<ArraySubscriptExpr>(Ex))
     return false;
 
-  SVal Loc = state->getSVal(Ex, LCtx);
+  SVal Loc = C.getSVal(Ex);
   if (!Loc.isValid())
     return false;
 
@@ -59,11 +57,24 @@ static bool isArrayIndexOutOfBounds(CheckerContext &C, const Expr *Ex) {
   return StOutBound && !StInBound;
 }
 
+static bool isShiftOverflow(const BinaryOperator *B, CheckerContext &C) {
+  return C.isGreaterOrEqual(
+      B->getRHS(), C.getASTContext().getIntWidth(B->getLHS()->getType()));
+}
+
+static bool isLeftShiftResultUnrepresentable(const BinaryOperator *B,
+                                             CheckerContext &C) {
+  SValBuilder &SB = C.getSValBuilder();
+  ProgramStateRef State = C.getState();
+  const llvm::APSInt *LHS = SB.getKnownValue(State, C.getSVal(B->getLHS()));
+  const llvm::APSInt *RHS = SB.getKnownValue(State, C.getSVal(B->getRHS()));
+  assert(LHS && RHS && "Values unknown, inconsistent state");
+  return (unsigned)RHS->getZExtValue() > LHS->countLeadingZeros();
+}
+
 void UndefResultChecker::checkPostStmt(const BinaryOperator *B,
                                        CheckerContext &C) const {
-  ProgramStateRef state = C.getState();
-  const LocationContext *LCtx = C.getLocationContext();
-  if (state->getSVal(B, LCtx).isUndef()) {
+  if (C.getSVal(B).isUndef()) {
 
     // Do not report assignments of uninitialized values inside swap functions.
     // This should allow to swap partially uninitialized structs
@@ -87,36 +98,85 @@ void UndefResultChecker::checkPostStmt(const BinaryOperator *B,
     const Expr *Ex = nullptr;
     bool isLeft = true;
 
-    if (state->getSVal(B->getLHS(), LCtx).isUndef()) {
+    if (C.getSVal(B->getLHS()).isUndef()) {
       Ex = B->getLHS()->IgnoreParenCasts();
       isLeft = true;
     }
-    else if (state->getSVal(B->getRHS(), LCtx).isUndef()) {
+    else if (C.getSVal(B->getRHS()).isUndef()) {
       Ex = B->getRHS()->IgnoreParenCasts();
       isLeft = false;
     }
 
     if (Ex) {
-      OS << "The " << (isLeft ? "left" : "right")
-         << " operand of '"
+      OS << "The " << (isLeft ? "left" : "right") << " operand of '"
          << BinaryOperator::getOpcodeStr(B->getOpcode())
          << "' is a garbage value";
       if (isArrayIndexOutOfBounds(C, Ex))
         OS << " due to array index out of bounds";
-    }
-    else {
+    } else {
       // Neither operand was undefined, but the result is undefined.
-      OS << "The result of the '"
-         << BinaryOperator::getOpcodeStr(B->getOpcode())
-         << "' expression is undefined";
+      if ((B->getOpcode() == BinaryOperatorKind::BO_Shl ||
+           B->getOpcode() == BinaryOperatorKind::BO_Shr) &&
+          C.isNegative(B->getRHS())) {
+        OS << "The result of the "
+           << ((B->getOpcode() == BinaryOperatorKind::BO_Shl) ? "left"
+                                                              : "right")
+           << " shift is undefined because the right operand is negative";
+        Ex = B->getRHS();
+      } else if ((B->getOpcode() == BinaryOperatorKind::BO_Shl ||
+                  B->getOpcode() == BinaryOperatorKind::BO_Shr) &&
+                 isShiftOverflow(B, C)) {
+
+        OS << "The result of the "
+           << ((B->getOpcode() == BinaryOperatorKind::BO_Shl) ? "left"
+                                                              : "right")
+           << " shift is undefined due to shifting by ";
+        Ex = B->getRHS();
+
+        SValBuilder &SB = C.getSValBuilder();
+        const llvm::APSInt *I =
+            SB.getKnownValue(C.getState(), C.getSVal(B->getRHS()));
+        if (!I)
+          OS << "a value that is";
+        else if (I->isUnsigned())
+          OS << '\'' << I->getZExtValue() << "\', which is";
+        else
+          OS << '\'' << I->getSExtValue() << "\', which is";
+
+        OS << " greater or equal to the width of type '"
+           << B->getLHS()->getType().getAsString() << "'.";
+      } else if (B->getOpcode() == BinaryOperatorKind::BO_Shl &&
+                 C.isNegative(B->getLHS())) {
+        OS << "The result of the left shift is undefined because the left "
+              "operand is negative";
+        Ex = B->getLHS();
+      } else if (B->getOpcode() == BinaryOperatorKind::BO_Shl &&
+                 isLeftShiftResultUnrepresentable(B, C)) {
+        ProgramStateRef State = C.getState();
+        SValBuilder &SB = C.getSValBuilder();
+        const llvm::APSInt *LHS =
+            SB.getKnownValue(State, C.getSVal(B->getLHS()));
+        const llvm::APSInt *RHS =
+            SB.getKnownValue(State, C.getSVal(B->getRHS()));
+        OS << "The result of the left shift is undefined due to shifting \'"
+           << LHS->getSExtValue() << "\' by \'" << RHS->getZExtValue()
+           << "\', which is unrepresentable in the unsigned version of "
+           << "the return type \'" << B->getLHS()->getType().getAsString()
+           << "\'";
+        Ex = B->getLHS();
+      } else {
+        OS << "The result of the '"
+           << BinaryOperator::getOpcodeStr(B->getOpcode())
+           << "' expression is undefined";
+      }
     }
     auto report = llvm::make_unique<BugReport>(*BT, OS.str(), N);
     if (Ex) {
       report->addRange(Ex->getSourceRange());
-      bugreporter::trackNullOrUndefValue(N, Ex, *report);
+      bugreporter::trackExpressionValue(N, Ex, *report);
     }
     else
-      bugreporter::trackNullOrUndefValue(N, B, *report);
+      bugreporter::trackExpressionValue(N, B, *report);
 
     C.emitReport(std::move(report));
   }
@@ -124,4 +184,8 @@ void UndefResultChecker::checkPostStmt(const BinaryOperator *B,
 
 void ento::registerUndefResultChecker(CheckerManager &mgr) {
   mgr.registerChecker<UndefResultChecker>();
+}
+
+bool ento::shouldRegisterUndefResultChecker(const LangOptions &LO) {
+  return true;
 }

@@ -1,9 +1,8 @@
-//===--- TransEmptyStatements.cpp - Transformations to ARC mode -----------===//
+//===-- TransEmptyStatementsAndDealloc.cpp - Transformations to ARC mode --===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -43,9 +42,8 @@ static bool isEmptyARCMTMacroStatement(NullStmt *S,
     return false;
 
   SourceManager &SM = Ctx.getSourceManager();
-  std::vector<SourceLocation>::iterator
-    I = std::upper_bound(MacroLocs.begin(), MacroLocs.end(), SemiLoc,
-                         BeforeThanCompare<SourceLocation>(SM));
+  std::vector<SourceLocation>::iterator I = llvm::upper_bound(
+      MacroLocs, SemiLoc, BeforeThanCompare<SourceLocation>(SM));
   --I;
   SourceLocation
       AfterMacroLoc = I->getLocWithOffset(getARCMTMacroName().size());
@@ -73,7 +71,7 @@ static bool isEmptyARCMTMacroStatement(NullStmt *S,
 
 namespace {
 
-/// \brief Returns true if the statement became empty due to previous
+/// Returns true if the statement became empty due to previous
 /// transformations.
 class EmptyChecker : public StmtVisitor<EmptyChecker, bool> {
   ASTContext &Ctx;
@@ -208,7 +206,7 @@ static void cleanupDeallocOrFinalize(MigrationPass &pass) {
     for (auto *MD : I->instance_methods()) {
       if (!MD->hasBody())
         continue;
-  
+
       if (MD->getMethodFamily() == OMF_dealloc) {
         DeallocM = MD;
       } else if (MD->isInstanceMethod() && MD->getSelector() == FinalizeSel) {

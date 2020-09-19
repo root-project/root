@@ -1,9 +1,8 @@
-//===---- LoopVectorize.h ---------------------------------------*- C++ -*-===//
+//===- LoopVectorize.h ------------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -25,6 +24,14 @@
 // 4. LoopVectorizationCostModel - A unit that checks for the profitability
 //    of vectorization. It decides on the optimal vector width, which
 //    can be one, if vectorization is not profitable.
+//
+// There is a development effort going on to migrate loop vectorizer to the
+// VPlan infrastructure and to introduce outer loop vectorization support (see
+// docs/Proposal/VectorizationPlan.rst and
+// http://lists.llvm.org/pipermail/llvm-dev/2017-December/119523.html). For this
+// purpose, we temporarily introduced the VPlan-native vectorization path: an
+// alternative vectorization path that is natively implemented on top of the
+// VPlan infrastructure. See EnableVPlanNativePath for enabling.
 //
 //===----------------------------------------------------------------------===//
 //
@@ -49,31 +56,78 @@
 #ifndef LLVM_TRANSFORMS_VECTORIZE_LOOPVECTORIZE_H
 #define LLVM_TRANSFORMS_VECTORIZE_LOOPVECTORIZE_H
 
-#include "llvm/ADT/MapVector.h"
 #include "llvm/Analysis/AliasAnalysis.h"
-#include "llvm/Analysis/AssumptionCache.h"
-#include "llvm/Analysis/BasicAliasAnalysis.h"
-#include "llvm/Analysis/BlockFrequencyInfo.h"
-#include "llvm/Analysis/DemandedBits.h"
-#include "llvm/Analysis/LoopAccessAnalysis.h"
-#include "llvm/Analysis/LoopInfo.h"
-#include "llvm/Analysis/OptimizationDiagnosticInfo.h"
-#include "llvm/Analysis/ScalarEvolution.h"
-#include "llvm/Analysis/TargetTransformInfo.h"
-#include "llvm/IR/Function.h"
 #include "llvm/IR/PassManager.h"
-#include "llvm/Transforms/Scalar/LoopPassManager.h"
 #include <functional>
 
 namespace llvm {
 
+class AssumptionCache;
+class BlockFrequencyInfo;
+class DemandedBits;
+class DominatorTree;
+class Function;
+class Loop;
+class LoopAccessInfo;
+class LoopInfo;
+class OptimizationRemarkEmitter;
+class ProfileSummaryInfo;
+class ScalarEvolution;
+class TargetLibraryInfo;
+class TargetTransformInfo;
+
+extern cl::opt<bool> EnableLoopInterleaving;
+extern cl::opt<bool> EnableLoopVectorization;
+
+struct LoopVectorizeOptions {
+  /// If false, consider all loops for interleaving.
+  /// If true, only loops that explicitly request interleaving are considered.
+  bool InterleaveOnlyWhenForced;
+
+  /// If false, consider all loops for vectorization.
+  /// If true, only loops that explicitly request vectorization are considered.
+  bool VectorizeOnlyWhenForced;
+
+  /// The current defaults when creating the pass with no arguments are:
+  /// EnableLoopInterleaving = true and EnableLoopVectorization = true. This
+  /// means that interleaving default is consistent with the cl::opt flag, while
+  /// vectorization is not.
+  /// FIXME: The default for EnableLoopVectorization in the cl::opt should be
+  /// set to true, and the corresponding change to account for this be made in
+  /// opt.cpp. The initializations below will become:
+  /// InterleaveOnlyWhenForced(!EnableLoopInterleaving)
+  /// VectorizeOnlyWhenForced(!EnableLoopVectorization).
+  LoopVectorizeOptions()
+      : InterleaveOnlyWhenForced(false), VectorizeOnlyWhenForced(false) {}
+  LoopVectorizeOptions(bool InterleaveOnlyWhenForced,
+                       bool VectorizeOnlyWhenForced)
+      : InterleaveOnlyWhenForced(InterleaveOnlyWhenForced),
+        VectorizeOnlyWhenForced(VectorizeOnlyWhenForced) {}
+
+  LoopVectorizeOptions &setInterleaveOnlyWhenForced(bool Value) {
+    InterleaveOnlyWhenForced = Value;
+    return *this;
+  }
+
+  LoopVectorizeOptions &setVectorizeOnlyWhenForced(bool Value) {
+    VectorizeOnlyWhenForced = Value;
+    return *this;
+  }
+};
+
 /// The LoopVectorize Pass.
 struct LoopVectorizePass : public PassInfoMixin<LoopVectorizePass> {
-  bool DisableUnrolling = false;
-  /// If true, consider all loops for vectorization.
-  /// If false, only loops that explicitly request vectorization are
-  /// considered.
-  bool AlwaysVectorize = true;
+  /// If false, consider all loops for interleaving.
+  /// If true, only loops that explicitly request interleaving are considered.
+  bool InterleaveOnlyWhenForced;
+
+  /// If false, consider all loops for vectorization.
+  /// If true, only loops that explicitly request vectorization are considered.
+  bool VectorizeOnlyWhenForced;
+
+  LoopVectorizePass(LoopVectorizeOptions Opts = {})
+      : InterleaveOnlyWhenForced(Opts.InterleaveOnlyWhenForced),
+        VectorizeOnlyWhenForced(Opts.VectorizeOnlyWhenForced) {}
 
   ScalarEvolution *SE;
   LoopInfo *LI;
@@ -86,6 +140,7 @@ struct LoopVectorizePass : public PassInfoMixin<LoopVectorizePass> {
   AssumptionCache *AC;
   std::function<const LoopAccessInfo &(Loop &)> *GetLAA;
   OptimizationRemarkEmitter *ORE;
+  ProfileSummaryInfo *PSI;
 
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 
@@ -95,10 +150,11 @@ struct LoopVectorizePass : public PassInfoMixin<LoopVectorizePass> {
                BlockFrequencyInfo &BFI_, TargetLibraryInfo *TLI_,
                DemandedBits &DB_, AliasAnalysis &AA_, AssumptionCache &AC_,
                std::function<const LoopAccessInfo &(Loop &)> &GetLAA_,
-               OptimizationRemarkEmitter &ORE);
+               OptimizationRemarkEmitter &ORE_, ProfileSummaryInfo *PSI_);
 
   bool processLoop(Loop *L);
 };
-}
+
+} // end namespace llvm
 
 #endif // LLVM_TRANSFORMS_VECTORIZE_LOOPVECTORIZE_H

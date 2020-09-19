@@ -1,13 +1,12 @@
-//===- ExternalASTSource.cpp - Abstract External AST Interface --*- C++ -*-===//
+//===- ExternalASTSource.cpp - Abstract External AST Interface ------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
-//  This file provides the default implementation of the ExternalASTSource 
+//  This file provides the default implementation of the ExternalASTSource
 //  interface, which enables construction of AST nodes from some external
 //  source.
 //
@@ -16,12 +15,16 @@
 #include "clang/AST/ExternalASTSource.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclarationName.h"
+#include "clang/Basic/IdentifierTable.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/Basic/Module.h"
+#include "llvm/ADT/None.h"
 #include "llvm/Support/ErrorHandling.h"
+#include <cstdint>
 
 using namespace clang;
 
-ExternalASTSource::~ExternalASTSource() { }
+ExternalASTSource::~ExternalASTSource() = default;
 
 uint32_t ExternalASTSource::getGeneration(const ASTContext &C) const {
   return C.getGeneration();
@@ -70,7 +73,7 @@ void ExternalASTSource::FinishedDeserializing() {}
 
 void ExternalASTSource::StartTranslationUnit(ASTConsumer *Consumer) {}
 
-void ExternalASTSource::PrintStats() { }
+void ExternalASTSource::PrintStats() {}
 
 bool ExternalASTSource::layoutRecordType(
     const RecordDecl *Record, uint64_t &Size, uint64_t &Alignment,

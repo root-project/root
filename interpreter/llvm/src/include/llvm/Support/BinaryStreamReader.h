@@ -1,9 +1,8 @@
 //===- BinaryStreamReader.h - Reads objects from a binary stream *- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -24,7 +23,7 @@
 
 namespace llvm {
 
-/// \brief Provides read only access to a subclass of `BinaryStream`.  Provides
+/// Provides read only access to a subclass of `BinaryStream`.  Provides
 /// bounds checking and helpers for writing certain common data types such as
 /// null-terminated strings, integers in various flavors of endianness, etc.
 /// Can be subclassed to provide reading of custom datatypes, although no
@@ -96,6 +95,18 @@ public:
     Dest = static_cast<T>(N);
     return Error::success();
   }
+
+  /// Read an unsigned LEB128 encoded value.
+  ///
+  /// \returns a success error code if the data was successfully read, otherwise
+  /// returns an appropriate error code.
+  Error readULEB128(uint64_t &Dest);
+
+  /// Read a signed LEB128 encoded value.
+  ///
+  /// \returns a success error code if the data was successfully read, otherwise
+  /// returns an appropriate error code.
+  Error readSLEB128(int64_t &Dest);
 
   /// Read a null terminated string from \p Dest.  Whether a copy occurs depends
   /// on the implementation of the underlying stream.  Updates the stream's
@@ -203,11 +214,12 @@ public:
   /// \returns a success error code if the data was successfully read, otherwise
   /// returns an appropriate error code.
   template <typename T, typename U>
-  Error readArray(VarStreamArray<T, U> &Array, uint32_t Size) {
+  Error readArray(VarStreamArray<T, U> &Array, uint32_t Size,
+                  uint32_t Skew = 0) {
     BinaryStreamRef S;
     if (auto EC = readStreamRef(S, Size))
       return EC;
-    Array.setUnderlyingStream(S);
+    Array.setUnderlyingStream(S, Skew);
     return Error::success();
   }
 

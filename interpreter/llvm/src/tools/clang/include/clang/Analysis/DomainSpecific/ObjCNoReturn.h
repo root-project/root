@@ -1,9 +1,8 @@
 //= ObjCNoReturn.h - Handling of Cocoa APIs known not to return --*- C++ -*---//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -21,7 +20,7 @@ namespace clang {
 
 class ASTContext;
 class ObjCMessageExpr;
-  
+
 class ObjCNoReturn {
   /// Cached "raise" selector.
   Selector RaiseSel;
@@ -36,7 +35,7 @@ class ObjCNoReturn {
 
 public:
   ObjCNoReturn(ASTContext &C);
-  
+
   /// Return true if the given message expression is known to never
   /// return.
   bool isImplicitNoReturn(const ObjCMessageExpr *ME);

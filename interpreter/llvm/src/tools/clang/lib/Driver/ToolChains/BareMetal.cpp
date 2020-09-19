@@ -1,9 +1,8 @@
-//===--- BaremMetal.cpp - Bare Metal ToolChain ------------------*- C++ -*-===//
+//===-- BareMetal.cpp - Bare Metal ToolChain --------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -13,13 +12,13 @@
 #include "InputInfo.h"
 #include "Gnu.h"
 
-#include "clang/Basic/VirtualFileSystem.h"
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
 #include "clang/Driver/DriverDiagnostic.h"
 #include "clang/Driver/Options.h"
 #include "llvm/Option/ArgList.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/VirtualFileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace llvm::opt;
@@ -65,14 +64,6 @@ Tool *BareMetal::buildLinker() const {
   return new tools::baremetal::Linker(*this);
 }
 
-std::string BareMetal::getThreadModel() const {
-  return "single";
-}
-
-bool BareMetal::isThreadModelSupported(const StringRef Model) const {
-  return Model == "single";
-}
-
 std::string BareMetal::getRuntimesDir() const {
   SmallString<128> Dir(getDriver().ResourceDir);
   llvm::sys::path::append(Dir, "lib", "baremetal");
@@ -103,16 +94,23 @@ void BareMetal::addClangTargetOptions(const ArgList &DriverArgs,
   CC1Args.push_back("-nostdsysteminc");
 }
 
-std::string BareMetal::findLibCxxIncludePath(CXXStdlibType LibType) const {
+void BareMetal::AddClangCXXStdlibIncludeArgs(
+    const ArgList &DriverArgs, ArgStringList &CC1Args) const {
+  if (DriverArgs.hasArg(options::OPT_nostdinc) ||
+      DriverArgs.hasArg(options::OPT_nostdlibinc) ||
+      DriverArgs.hasArg(options::OPT_nostdincxx))
+    return;
+
   StringRef SysRoot = getDriver().SysRoot;
   if (SysRoot.empty())
-    return "";
+    return;
 
-  switch (LibType) {
+  switch (GetCXXStdlibType(DriverArgs)) {
   case ToolChain::CST_Libcxx: {
     SmallString<128> Dir(SysRoot);
     llvm::sys::path::append(Dir, "include", "c++", "v1");
-    return Dir.str();
+    addSystemInclude(DriverArgs, CC1Args, Dir.str());
+    break;
   }
   case ToolChain::CST_Libstdcxx: {
     SmallString<128> Dir(SysRoot);
@@ -120,10 +118,11 @@ std::string BareMetal::findLibCxxIncludePath(CXXStdlibType LibType) const {
     std::error_code EC;
     Generic_GCC::GCCVersion Version = {"", -1, -1, -1, "", "", ""};
     // Walk the subdirs, and find the one with the newest gcc version:
-    for (vfs::directory_iterator LI =
-           getDriver().getVFS().dir_begin(Dir.str(), EC), LE;
+    for (llvm::vfs::directory_iterator
+             LI = getDriver().getVFS().dir_begin(Dir.str(), EC),
+             LE;
          !EC && LI != LE; LI = LI.increment(EC)) {
-      StringRef VersionText = llvm::sys::path::filename(LI->getName());
+      StringRef VersionText = llvm::sys::path::filename(LI->path());
       auto CandidateVersion = Generic_GCC::GCCVersion::Parse(VersionText);
       if (CandidateVersion.Major == -1)
         continue;
@@ -132,24 +131,12 @@ std::string BareMetal::findLibCxxIncludePath(CXXStdlibType LibType) const {
       Version = CandidateVersion;
     }
     if (Version.Major == -1)
-      return "";
+      return;
     llvm::sys::path::append(Dir, Version.Text);
-    return Dir.str();
+    addSystemInclude(DriverArgs, CC1Args, Dir.str());
+    break;
   }
   }
-  llvm_unreachable("unhandled LibType");
-}
-
-void BareMetal::AddClangCXXStdlibIncludeArgs(
-    const ArgList &DriverArgs, ArgStringList &CC1Args) const {
-  if (DriverArgs.hasArg(options::OPT_nostdinc) ||
-      DriverArgs.hasArg(options::OPT_nostdlibinc) ||
-      DriverArgs.hasArg(options::OPT_nostdincxx))
-    return;
-
-  std::string Path = findLibCxxIncludePath(GetCXXStdlibType(DriverArgs));
-  if (!Path.empty())
-    addSystemInclude(DriverArgs, CC1Args, Path);
 }
 
 void BareMetal::AddCXXStdlibLibArgs(const ArgList &Args,
@@ -192,10 +179,9 @@ void baremetal::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                             options::OPT_e, options::OPT_s, options::OPT_t,
                             options::OPT_Z_Flag, options::OPT_r});
 
+  if (TC.ShouldLinkCXXStdlib(Args))
+    TC.AddCXXStdlibLibArgs(Args, CmdArgs);
   if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
-    if (C.getDriver().CCCIsCXX())
-      TC.AddCXXStdlibLibArgs(Args, CmdArgs);
-
     CmdArgs.push_back("-lc");
     CmdArgs.push_back("-lm");
 

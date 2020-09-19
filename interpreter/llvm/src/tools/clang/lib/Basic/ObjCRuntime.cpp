@@ -1,9 +1,8 @@
-//===- ObjCRuntime.cpp - Objective-C Runtime Handling -----------*- C++ -*-===//
+//===- ObjCRuntime.cpp - Objective-C Runtime Handling ---------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -11,8 +10,13 @@
 // target Objective-C runtime.
 //
 //===----------------------------------------------------------------------===//
+
 #include "clang/Basic/ObjCRuntime.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/VersionTuple.h"
 #include "llvm/Support/raw_ostream.h"
+#include <cstddef>
+#include <string>
 
 using namespace clang;
 
@@ -22,7 +26,7 @@ std::string ObjCRuntime::getAsString() const {
     llvm::raw_string_ostream Out(Result);
     Out << *this;
   }
-  return Result;  
+  return Result;
 }
 
 raw_ostream &clang::operator<<(raw_ostream &out, const ObjCRuntime &value) {

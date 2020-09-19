@@ -1,13 +1,8 @@
-//===-- Thumb1FrameLowering.h - Thumb1-specific frame info stuff --*- C++ -*-=//
+//===- Thumb1FrameLowering.h - Thumb1-specific frame info stuff ---*- C++ -*-=//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
-//
-//===----------------------------------------------------------------------===//
-//
-//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -15,11 +10,11 @@
 #define LLVM_LIB_TARGET_ARM_THUMB1FRAMELOWERING_H
 
 #include "ARMFrameLowering.h"
-#include "Thumb1InstrInfo.h"
-#include "ThumbRegisterInfo.h"
-#include "llvm/Target/TargetFrameLowering.h"
 
 namespace llvm {
+
+class ARMSubtarget;
+class MachineFunction;
 
 class Thumb1FrameLowering : public ARMFrameLowering {
 public:
@@ -36,7 +31,7 @@ public:
                                  const TargetRegisterInfo *TRI) const override;
   bool restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
                                   MachineBasicBlock::iterator MI,
-                                  const std::vector<CalleeSavedInfo> &CSI,
+                                  std::vector<CalleeSavedInfo> &CSI,
                                   const TargetRegisterInfo *TRI) const override;
 
   bool hasReservedCallFrame(const MachineFunction &MF) const override;
@@ -88,6 +83,6 @@ private:
   bool emitPopSpecialFixUp(MachineBasicBlock &MBB, bool DoIt) const;
 };
 
-} // End llvm namespace
+} // end namespace llvm
 
-#endif
+#endif // LLVM_LIB_TARGET_ARM_THUMB1FRAMELOWERING_H

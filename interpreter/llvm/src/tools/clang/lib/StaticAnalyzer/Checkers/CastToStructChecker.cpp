@@ -1,9 +1,8 @@
 //=== CastToStructChecker.cpp ----------------------------------*- C++ -*--===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
@@ -78,7 +77,7 @@ bool CastToStructVisitor::VisitCastExpr(const CastExpr *CE) {
     // Don't warn for references
     const ValueDecl *VD = nullptr;
     if (const auto *SE = dyn_cast<DeclRefExpr>(U->getSubExpr()))
-      VD = dyn_cast<ValueDecl>(SE->getDecl());
+      VD = SE->getDecl();
     else if (const auto *SE = dyn_cast<MemberExpr>(U->getSubExpr()))
       VD = SE->getMemberDecl();
     if (!VD || VD->getType()->isReferenceType())
@@ -119,4 +118,8 @@ public:
 
 void ento::registerCastToStructChecker(CheckerManager &mgr) {
   mgr.registerChecker<CastToStructChecker>();
+}
+
+bool ento::shouldRegisterCastToStructChecker(const LangOptions &LO) {
+  return true;
 }

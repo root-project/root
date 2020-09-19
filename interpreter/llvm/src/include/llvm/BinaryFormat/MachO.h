@@ -1,9 +1,8 @@
 //===-- llvm/BinaryFormat/MachO.h - The MachO file format -------*- C++/-*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -335,6 +334,7 @@ enum {
   N_WEAK_DEF = 0x0080u,
   N_SYMBOL_RESOLVER = 0x0100u,
   N_ALT_ENTRY = 0x0200u,
+  N_COLD_FUNC = 0x0400u,
   // For undefined symbols coming from libraries, see GET_LIBRARY_ORDINAL()
   // as these are in the top 8 bits.
   SELF_LIBRARY_ORDINAL = 0x0,
@@ -481,12 +481,16 @@ enum RelocationInfoType {
 enum { VM_PROT_READ = 0x1, VM_PROT_WRITE = 0x2, VM_PROT_EXECUTE = 0x4 };
 
 // Values for platform field in build_version_command.
-enum {
+enum PlatformType {
   PLATFORM_MACOS = 1,
   PLATFORM_IOS = 2,
   PLATFORM_TVOS = 3,
   PLATFORM_WATCHOS = 4,
-  PLATFORM_BRIDGEOS = 5
+  PLATFORM_BRIDGEOS = 5,
+  PLATFORM_MACCATALYST = 6,
+  PLATFORM_IOSSIMULATOR = 7,
+  PLATFORM_TVOSSIMULATOR = 8,
+  PLATFORM_WATCHOSSIMULATOR = 9
 };
 
 // Values for tools enum in build_tool_version.
@@ -939,8 +943,13 @@ struct fat_arch_64 {
 // Structs from <mach-o/reloc.h>
 struct relocation_info {
   int32_t r_address;
+#if defined(BYTE_ORDER) && defined(BIG_ENDIAN) && (BYTE_ORDER == BIG_ENDIAN)
+  uint32_t r_type : 4,  r_extern : 1, r_length : 2, r_pcrel : 1,
+      r_symbolnum : 24;
+#else
   uint32_t r_symbolnum : 24, r_pcrel : 1, r_length : 2, r_extern : 1,
       r_type : 4;
+#endif
 };
 
 struct scattered_relocation_info {
@@ -1373,19 +1382,19 @@ inline void swapStruct(fvmlib_command &C) {
 
 // Get/Set functions from <mach-o/nlist.h>
 
-static inline uint16_t GET_LIBRARY_ORDINAL(uint16_t n_desc) {
+inline uint16_t GET_LIBRARY_ORDINAL(uint16_t n_desc) {
   return (((n_desc) >> 8u) & 0xffu);
 }
 
-static inline void SET_LIBRARY_ORDINAL(uint16_t &n_desc, uint8_t ordinal) {
+inline void SET_LIBRARY_ORDINAL(uint16_t &n_desc, uint8_t ordinal) {
   n_desc = (((n_desc)&0x00ff) | (((ordinal)&0xff) << 8));
 }
 
-static inline uint8_t GET_COMM_ALIGN(uint16_t n_desc) {
+inline uint8_t GET_COMM_ALIGN(uint16_t n_desc) {
   return (n_desc >> 8u) & 0x0fu;
 }
 
-static inline void SET_COMM_ALIGN(uint16_t &n_desc, uint8_t align) {
+inline void SET_COMM_ALIGN(uint16_t &n_desc, uint8_t align) {
   n_desc = ((n_desc & 0xf0ffu) | ((align & 0x0fu) << 8u));
 }
 
@@ -1393,7 +1402,8 @@ static inline void SET_COMM_ALIGN(uint16_t &n_desc, uint8_t align) {
 enum : uint32_t {
   // Capability bits used in the definition of cpu_type.
   CPU_ARCH_MASK = 0xff000000, // Mask for architecture bits
-  CPU_ARCH_ABI64 = 0x01000000 // 64 bit ABI
+  CPU_ARCH_ABI64 = 0x01000000, // 64 bit ABI
+  CPU_ARCH_ABI64_32 = 0x02000000, // ILP32 ABI on 64-bit hardware
 };
 
 // Constants for the cputype field.
@@ -1406,6 +1416,7 @@ enum CPUType {
   CPU_TYPE_MC98000 = 10, // Old Motorola PowerPC
   CPU_TYPE_ARM = 12,
   CPU_TYPE_ARM64 = CPU_TYPE_ARM | CPU_ARCH_ABI64,
+  CPU_TYPE_ARM64_32 = CPU_TYPE_ARM | CPU_ARCH_ABI64_32,
   CPU_TYPE_SPARC = 14,
   CPU_TYPE_POWERPC = 18,
   CPU_TYPE_POWERPC64 = CPU_TYPE_POWERPC | CPU_ARCH_ABI64
@@ -1449,15 +1460,13 @@ enum CPUSubTypeX86 {
   CPU_SUBTYPE_X86_ARCH1 = 4,
   CPU_SUBTYPE_X86_64_H = 8
 };
-static inline int CPU_SUBTYPE_INTEL(int Family, int Model) {
+inline int CPU_SUBTYPE_INTEL(int Family, int Model) {
   return Family | (Model << 4);
 }
-static inline int CPU_SUBTYPE_INTEL_FAMILY(CPUSubTypeX86 ST) {
+inline int CPU_SUBTYPE_INTEL_FAMILY(CPUSubTypeX86 ST) {
   return ((int)ST) & 0x0f;
 }
-static inline int CPU_SUBTYPE_INTEL_MODEL(CPUSubTypeX86 ST) {
-  return ((int)ST) >> 4;
-}
+inline int CPU_SUBTYPE_INTEL_MODEL(CPUSubTypeX86 ST) { return ((int)ST) >> 4; }
 enum { CPU_SUBTYPE_INTEL_FAMILY_MAX = 15, CPU_SUBTYPE_INTEL_MODEL_ALL = 0 };
 
 enum CPUSubTypeARM {
@@ -1476,7 +1485,12 @@ enum CPUSubTypeARM {
   CPU_SUBTYPE_ARM_V7EM = 16
 };
 
-enum CPUSubTypeARM64 { CPU_SUBTYPE_ARM64_ALL = 0 };
+enum CPUSubTypeARM64 {
+  CPU_SUBTYPE_ARM64_ALL = 0,
+  CPU_SUBTYPE_ARM64E = 2,
+};
+
+enum CPUSubTypeARM64_32 { CPU_SUBTYPE_ARM64_32_V8 = 1 };
 
 enum CPUSubTypeSPARC { CPU_SUBTYPE_SPARC_ALL = 0 };
 
@@ -1975,9 +1989,11 @@ const uint32_t PPC_THREAD_STATE_COUNT =
 // Define a union of all load command structs
 #define LOAD_COMMAND_STRUCT(LCStruct) LCStruct LCStruct##_data;
 
-union macho_load_command {
+LLVM_PACKED_START
+union alignas(4) macho_load_command {
 #include "llvm/BinaryFormat/MachO.def"
 };
+LLVM_PACKED_END
 
 } // end namespace MachO
 } // end namespace llvm

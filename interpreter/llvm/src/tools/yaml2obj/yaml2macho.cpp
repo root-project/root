@@ -1,14 +1,13 @@
 //===- yaml2macho - Convert YAML to a Mach object file --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief The Mach component of yaml2obj.
+/// The Mach component of yaml2obj.
 ///
 //===----------------------------------------------------------------------===//
 
@@ -263,6 +262,12 @@ Error MachOWriter::writeLoadCommands(raw_ostream &OS) {
   return Error::success();
 }
 
+static bool isVirtualSection(uint8_t type) {
+  return (type == MachO::S_ZEROFILL ||
+          type == MachO::S_GB_ZEROFILL ||
+          type == MachO::S_THREAD_LOCAL_ZEROFILL);
+}
+
 Error MachOWriter::writeSectionData(raw_ostream &OS) {
   bool FoundLinkEditSeg = false;
   for (auto &LC : Obj.LoadCommands) {
@@ -301,10 +306,16 @@ Error MachOWriter::writeSectionData(raw_ostream &OS) {
           } else if (0 == strncmp(&Sec.sectname[0], "__debug_line", 16)) {
             DWARFYAML::EmitDebugLine(OS, Obj.DWARF);
           }
-        } else {
-          // Fills section data with 0xDEADBEEF
-          Fill(OS, Sec.size, 0xDEADBEEFu);
+
+          continue;
         }
+
+        // Skip if it's a virtual section.
+        if (isVirtualSection(Sec.flags & MachO::SECTION_TYPE))
+          continue;
+
+        // Fill section data with 0xDEADBEEF
+        Fill(OS, Sec.size, 0xDEADBEEFu);
       }
       uint64_t segSize = is64Bit ? LC.Data.segment_command_64_data.filesize
                                  : LC.Data.segment_command_data.filesize;
@@ -417,10 +428,9 @@ Error MachOWriter::writeLinkEditData(raw_ostream &OS) {
     }
   }
 
-  std::sort(WriteQueue.begin(), WriteQueue.end(),
-            [](const writeOperation &a, const writeOperation &b) {
-              return a.first < b.first;
-            });
+  llvm::sort(WriteQueue, [](const writeOperation &a, const writeOperation &b) {
+    return a.first < b.first;
+  });
 
   for (auto writeOp : WriteQueue) {
     ZeroToOffset(OS, writeOp.first);

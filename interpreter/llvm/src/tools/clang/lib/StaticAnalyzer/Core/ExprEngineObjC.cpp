@@ -1,9 +1,8 @@
 //=-- ExprEngineObjC.cpp - ExprEngine support for Objective-C ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -42,6 +41,47 @@ void ExprEngine::VisitObjCAtSynchronizedStmt(const ObjCAtSynchronizedStmt *S,
   getCheckerManager().runCheckersForPreStmt(Dst, Pred, S, *this);
 }
 
+/// Generate a node in \p Bldr for an iteration statement using ObjC
+/// for-loop iterator.
+static void populateObjCForDestinationSet(
+    ExplodedNodeSet &dstLocation, SValBuilder &svalBuilder,
+    const ObjCForCollectionStmt *S, const Stmt *elem, SVal elementV,
+    SymbolManager &SymMgr, const NodeBuilderContext *currBldrCtx,
+    StmtNodeBuilder &Bldr, bool hasElements) {
+
+  for (ExplodedNode *Pred : dstLocation) {
+    ProgramStateRef state = Pred->getState();
+    const LocationContext *LCtx = Pred->getLocationContext();
+
+    SVal hasElementsV = svalBuilder.makeTruthVal(hasElements);
+
+    // FIXME: S is not an expression. We should not be binding values to it.
+    ProgramStateRef nextState = state->BindExpr(S, LCtx, hasElementsV);
+
+    if (auto MV = elementV.getAs<loc::MemRegionVal>())
+      if (const auto *R = dyn_cast<TypedValueRegion>(MV->getRegion())) {
+        // FIXME: The proper thing to do is to really iterate over the
+        //  container.  We will do this with dispatch logic to the store.
+        //  For now, just 'conjure' up a symbolic value.
+        QualType T = R->getValueType();
+        assert(Loc::isLocType(T));
+
+        SVal V;
+        if (hasElements) {
+          SymbolRef Sym = SymMgr.conjureSymbol(elem, LCtx, T,
+                                               currBldrCtx->blockCount());
+          V = svalBuilder.makeLoc(Sym);
+        } else {
+          V = svalBuilder.makeIntVal(0, T);
+        }
+
+        nextState = nextState->bindLoc(elementV, V, LCtx);
+      }
+
+    Bldr.generateNode(S, Pred, nextState);
+  }
+}
+
 void ExprEngine::VisitObjCForCollectionStmt(const ObjCForCollectionStmt *S,
                                             ExplodedNode *Pred,
                                             ExplodedNodeSet &Dst) {
@@ -72,60 +112,35 @@ void ExprEngine::VisitObjCForCollectionStmt(const ObjCForCollectionStmt *S,
   //    result in state splitting.
 
   const Stmt *elem = S->getElement();
+  const Stmt *collection = S->getCollection();
   ProgramStateRef state = Pred->getState();
-  SVal elementV;
+  SVal collectionV = state->getSVal(collection, Pred->getLocationContext());
 
-  if (const DeclStmt *DS = dyn_cast<DeclStmt>(elem)) {
+  SVal elementV;
+  if (const auto *DS = dyn_cast<DeclStmt>(elem)) {
     const VarDecl *elemD = cast<VarDecl>(DS->getSingleDecl());
     assert(elemD->getInit() == nullptr);
     elementV = state->getLValue(elemD, Pred->getLocationContext());
-  }
-  else {
+  } else {
     elementV = state->getSVal(elem, Pred->getLocationContext());
   }
 
+  bool isContainerNull = state->isNull(collectionV).isConstrainedTrue();
+
   ExplodedNodeSet dstLocation;
-  evalLocation(dstLocation, S, elem, Pred, state, elementV, nullptr, false);
+  evalLocation(dstLocation, S, elem, Pred, state, elementV, false);
 
   ExplodedNodeSet Tmp;
   StmtNodeBuilder Bldr(Pred, Tmp, *currBldrCtx);
 
-  for (ExplodedNodeSet::iterator NI = dstLocation.begin(),
-       NE = dstLocation.end(); NI!=NE; ++NI) {
-    Pred = *NI;
-    ProgramStateRef state = Pred->getState();
-    const LocationContext *LCtx = Pred->getLocationContext();
+  if (!isContainerNull)
+    populateObjCForDestinationSet(dstLocation, svalBuilder, S, elem, elementV,
+                                  SymMgr, currBldrCtx, Bldr,
+                                  /*hasElements=*/true);
 
-    // Handle the case where the container still has elements.
-    SVal TrueV = svalBuilder.makeTruthVal(1);
-    ProgramStateRef hasElems = state->BindExpr(S, LCtx, TrueV);
-
-    // Handle the case where the container has no elements.
-    SVal FalseV = svalBuilder.makeTruthVal(0);
-    ProgramStateRef noElems = state->BindExpr(S, LCtx, FalseV);
-
-    if (Optional<loc::MemRegionVal> MV = elementV.getAs<loc::MemRegionVal>())
-      if (const TypedValueRegion *R =
-          dyn_cast<TypedValueRegion>(MV->getRegion())) {
-        // FIXME: The proper thing to do is to really iterate over the
-        //  container.  We will do this with dispatch logic to the store.
-        //  For now, just 'conjure' up a symbolic value.
-        QualType T = R->getValueType();
-        assert(Loc::isLocType(T));
-        SymbolRef Sym = SymMgr.conjureSymbol(elem, LCtx, T,
-                                             currBldrCtx->blockCount());
-        SVal V = svalBuilder.makeLoc(Sym);
-        hasElems = hasElems->bindLoc(elementV, V, LCtx);
-
-        // Bind the location to 'nil' on the false branch.
-        SVal nilV = svalBuilder.makeIntVal(0, T);
-        noElems = noElems->bindLoc(elementV, nilV, LCtx);
-      }
-
-    // Create the new nodes.
-    Bldr.generateNode(S, Pred, hasElems);
-    Bldr.generateNode(S, Pred, noElems);
-  }
+  populateObjCForDestinationSet(dstLocation, svalBuilder, S, elem, elementV,
+                                SymMgr, currBldrCtx, Bldr,
+                                /*hasElements=*/false);
 
   // Finally, run any custom checkers.
   // FIXME: Eventually all pre- and post-checks should live in VisitStmt.
@@ -181,7 +196,8 @@ void ExprEngine::VisitObjCMessage(const ObjCMessageExpr *ME,
 
       // Receiver is definitely nil, so run ObjCMessageNil callbacks and return.
       if (nilState && !notNilState) {
-        StmtNodeBuilder Bldr(Pred, Dst, *currBldrCtx);
+        ExplodedNodeSet dstNil;
+        StmtNodeBuilder Bldr(Pred, dstNil, *currBldrCtx);
         bool HasTag = Pred->getLocation().getTag();
         Pred = Bldr.generateNode(ME, Pred, nilState, nullptr,
                                  ProgramPoint::PreStmtKind);
@@ -189,8 +205,12 @@ void ExprEngine::VisitObjCMessage(const ObjCMessageExpr *ME,
         (void)HasTag;
         if (!Pred)
           return;
-        getCheckerManager().runCheckersForObjCMessageNil(Dst, Pred,
+
+        ExplodedNodeSet dstPostCheckers;
+        getCheckerManager().runCheckersForObjCMessageNil(dstPostCheckers, Pred,
                                                          *Msg, *this);
+        for (auto I : dstPostCheckers)
+          finishArgumentConstruction(Dst, I, *Msg);
         return;
       }
 
@@ -251,8 +271,13 @@ void ExprEngine::VisitObjCMessage(const ObjCMessageExpr *ME,
     defaultEvalCall(Bldr, Pred, *UpdatedMsg);
   }
 
+  // If there were constructors called for object-type arguments, clean them up.
+  ExplodedNodeSet dstArgCleanup;
+  for (auto I : dstEval)
+    finishArgumentConstruction(dstArgCleanup, I, *Msg);
+
   ExplodedNodeSet dstPostvisit;
-  getCheckerManager().runCheckersForPostCall(dstPostvisit, dstEval,
+  getCheckerManager().runCheckersForPostCall(dstPostvisit, dstArgCleanup,
                                              *Msg, *this);
 
   // Finally, perform the post-condition check of the ObjCMessageExpr and store

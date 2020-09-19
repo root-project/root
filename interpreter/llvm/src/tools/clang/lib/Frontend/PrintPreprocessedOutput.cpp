@@ -1,9 +1,8 @@
 //===--- PrintPreprocessedOutput.cpp - Implement the -E mode --------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -130,7 +129,8 @@ public:
                           StringRef FileName, bool IsAngled,
                           CharSourceRange FilenameRange, const FileEntry *File,
                           StringRef SearchPath, StringRef RelativePath,
-                          const Module *Imported) override;
+                          const Module *Imported,
+                          SrcMgr::CharacteristicKind FileType) override;
   void Ident(SourceLocation Loc, StringRef str) override;
   void PragmaMessage(SourceLocation Loc, StringRef Namespace,
                      PragmaMessageKind Kind, StringRef Str) override;
@@ -143,6 +143,10 @@ public:
                      ArrayRef<int> Ids) override;
   void PragmaWarningPush(SourceLocation Loc, int Level) override;
   void PragmaWarningPop(SourceLocation Loc) override;
+  void PragmaExecCharsetPush(SourceLocation Loc, StringRef Str) override;
+  void PragmaExecCharsetPop(SourceLocation Loc) override;
+  void PragmaAssumeNonNullBegin(SourceLocation Loc) override;
+  void PragmaAssumeNonNullEnd(SourceLocation Loc) override;
 
   bool HandleFirstTokOnLine(Token &Tok);
 
@@ -157,7 +161,7 @@ public:
   }
   bool MoveToLine(unsigned LineNo);
 
-  bool AvoidConcat(const Token &PrevPrevTok, const Token &PrevTok, 
+  bool AvoidConcat(const Token &PrevPrevTok, const Token &PrevTok,
                    const Token &Tok) {
     return ConcatInfo.AvoidConcat(PrevPrevTok, PrevTok, Tok);
   }
@@ -245,7 +249,7 @@ PrintPPOutputPPCallbacks::startNewLineIfNeeded(bool ShouldUpdateCurrentLine) {
       ++CurLine;
     return true;
   }
-  
+
   return false;
 }
 
@@ -259,11 +263,11 @@ void PrintPPOutputPPCallbacks::FileChanged(SourceLocation Loc,
   // Unless we are exiting a #include, make sure to skip ahead to the line the
   // #include directive was at.
   SourceManager &SourceMgr = SM;
-  
+
   PresumedLoc UserLoc = SourceMgr.getPresumedLoc(Loc);
   if (UserLoc.isInvalid())
     return;
-  
+
   unsigned NewLine = UserLoc.getLine();
 
   if (Reason == PPCallbacks::EnterFile) {
@@ -278,7 +282,7 @@ void PrintPPOutputPPCallbacks::FileChanged(SourceLocation Loc,
     // off by one. We can do better by simply incrementing NewLine here.
     NewLine += 1;
   }
-  
+
   CurLine = NewLine;
 
   CurFilename.clear();
@@ -289,7 +293,7 @@ void PrintPPOutputPPCallbacks::FileChanged(SourceLocation Loc,
     startNewLineIfNeeded(/*ShouldUpdateCurrentLine=*/false);
     return;
   }
-  
+
   if (!Initialized) {
     WriteLineInfo(CurLine);
     Initialized = true;
@@ -318,15 +322,17 @@ void PrintPPOutputPPCallbacks::FileChanged(SourceLocation Loc,
   }
 }
 
-void PrintPPOutputPPCallbacks::InclusionDirective(SourceLocation HashLoc,
-                                                  const Token &IncludeTok,
-                                                  StringRef FileName,
-                                                  bool IsAngled,
-                                                  CharSourceRange FilenameRange,
-                                                  const FileEntry *File,
-                                                  StringRef SearchPath,
-                                                  StringRef RelativePath,
-                                                  const Module *Imported) {
+void PrintPPOutputPPCallbacks::InclusionDirective(
+    SourceLocation HashLoc,
+    const Token &IncludeTok,
+    StringRef FileName,
+    bool IsAngled,
+    CharSourceRange FilenameRange,
+    const FileEntry *File,
+    StringRef SearchPath,
+    StringRef RelativePath,
+    const Module *Imported,
+    SrcMgr::CharacteristicKind FileType) {
   // In -dI mode, dump #include directives prior to dumping their content or
   // interpretation.
   if (DumpIncludeDirectives) {
@@ -549,6 +555,40 @@ void PrintPPOutputPPCallbacks::PragmaWarningPop(SourceLocation Loc) {
   setEmittedDirectiveOnThisLine();
 }
 
+void PrintPPOutputPPCallbacks::PragmaExecCharsetPush(SourceLocation Loc,
+                                                     StringRef Str) {
+  startNewLineIfNeeded();
+  MoveToLine(Loc);
+  OS << "#pragma character_execution_set(push";
+  if (!Str.empty())
+    OS << ", " << Str;
+  OS << ')';
+  setEmittedDirectiveOnThisLine();
+}
+
+void PrintPPOutputPPCallbacks::PragmaExecCharsetPop(SourceLocation Loc) {
+  startNewLineIfNeeded();
+  MoveToLine(Loc);
+  OS << "#pragma character_execution_set(pop)";
+  setEmittedDirectiveOnThisLine();
+}
+
+void PrintPPOutputPPCallbacks::
+PragmaAssumeNonNullBegin(SourceLocation Loc) {
+  startNewLineIfNeeded();
+  MoveToLine(Loc);
+  OS << "#pragma clang assume_nonnull begin";
+  setEmittedDirectiveOnThisLine();
+}
+
+void PrintPPOutputPPCallbacks::
+PragmaAssumeNonNullEnd(SourceLocation Loc) {
+  startNewLineIfNeeded();
+  MoveToLine(Loc);
+  OS << "#pragma clang assume_nonnull end";
+  setEmittedDirectiveOnThisLine();
+}
+
 /// HandleFirstTokOnLine - When emitting a preprocessed file in -E mode, this
 /// is called for the first token on each new line.  If this really is the start
 /// of a new logical line, handle it and return true, otherwise return false.
@@ -624,7 +664,7 @@ struct UnknownPragmaHandler : public PragmaHandler {
                        bool RequireTokenExpansion)
       : Prefix(prefix), Callbacks(callbacks),
         ShouldExpandTokens(RequireTokenExpansion) {}
-  void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
+  void HandlePragma(Preprocessor &PP, PragmaIntroducer Introducer,
                     Token &PragmaTok) override {
     // Figure out what line we went to and insert the appropriate number of
     // newline characters.
@@ -638,7 +678,8 @@ struct UnknownPragmaHandler : public PragmaHandler {
       auto Toks = llvm::make_unique<Token[]>(1);
       Toks[0] = PragmaTok;
       PP.EnterTokenStream(std::move(Toks), /*NumToks=*/1,
-                          /*DisableMacroExpansion=*/false);
+                          /*DisableMacroExpansion=*/false,
+                          /*IsReinject=*/false);
       PP.Lex(PragmaTok);
     }
     Token PrevToken;
@@ -702,6 +743,12 @@ static void PrintPreprocessedTokens(Preprocessor &PP, Token &Tok,
       // -traditional-cpp the lexer keeps /all/ whitespace, including comments.
       SourceLocation StartLoc = Tok.getLocation();
       Callbacks->MoveToLine(StartLoc.getLocWithOffset(Tok.getLength()));
+    } else if (Tok.is(tok::eod)) {
+      // Don't print end of directive tokens, since they are typically newlines
+      // that mess up our line tracking. These come from unknown pre-processor
+      // directives or hash-prefixed comments in standalone assembly files.
+      PP.Lex(Tok);
+      continue;
     } else if (Tok.is(tok::annot_module_include)) {
       // PrintPPOutputPPCallbacks::InclusionDirective handles producing
       // appropriate output here. Ignore this token entirely.
@@ -723,12 +770,26 @@ static void PrintPreprocessedTokens(Preprocessor &PP, Token &Tok,
           reinterpret_cast<Module *>(Tok.getAnnotationValue()));
       PP.Lex(Tok);
       continue;
+    } else if (Tok.is(tok::annot_header_unit)) {
+      // This is a header-name that has been (effectively) converted into a
+      // module-name.
+      // FIXME: The module name could contain non-identifier module name
+      // components. We don't have a good way to round-trip those.
+      Module *M = reinterpret_cast<Module *>(Tok.getAnnotationValue());
+      std::string Name = M->getFullModuleName();
+      OS.write(Name.data(), Name.size());
+      Callbacks->HandleNewlinesInToken(Name.data(), Name.size());
+    } else if (Tok.isAnnotation()) {
+      // Ignore annotation tokens created by pragmas - the pragmas themselves
+      // will be reproduced in the preprocessed output.
+      PP.Lex(Tok);
+      continue;
     } else if (IdentifierInfo *II = Tok.getIdentifierInfo()) {
       OS << II->getName();
     } else if (Tok.isLiteral() && !Tok.needsCleaning() &&
                Tok.getLiteralData()) {
       OS.write(Tok.getLiteralData(), Tok.getLength());
-    } else if (Tok.getLength() < 256) {
+    } else if (Tok.getLength() < llvm::array_lengthof(Buffer)) {
       const char *TokPtr = Buffer;
       unsigned Len = PP.getSpelling(Tok, TokPtr);
       OS.write(TokPtr, Len);
@@ -739,12 +800,12 @@ static void PrintPreprocessedTokens(Preprocessor &PP, Token &Tok,
         Callbacks->HandleNewlinesInToken(TokPtr, Len);
     } else {
       std::string S = PP.getSpelling(Tok);
-      OS.write(&S[0], S.size());
+      OS.write(S.data(), S.size());
 
       // Tokens that can contain embedded newlines need to adjust our current
       // line number.
       if (Tok.getKind() == tok::comment || Tok.getKind() == tok::unknown)
-        Callbacks->HandleNewlinesInToken(&S[0], S.size());
+        Callbacks->HandleNewlinesInToken(S.data(), S.size());
     }
     Callbacks->setEmittedTokensOnThisLine();
 

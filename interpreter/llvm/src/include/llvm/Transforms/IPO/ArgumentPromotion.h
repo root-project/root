@@ -1,9 +1,8 @@
 //===- ArgumentPromotion.h - Promote by-reference arguments -----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,6 +11,7 @@
 
 #include "llvm/Analysis/CGSCCPassManager.h"
 #include "llvm/Analysis/LazyCallGraph.h"
+#include "llvm/IR/PassManager.h"
 
 namespace llvm {
 
@@ -21,11 +21,15 @@ namespace llvm {
 /// transform it and all of its callers to replace indirect arguments with
 /// direct (by-value) arguments.
 class ArgumentPromotionPass : public PassInfoMixin<ArgumentPromotionPass> {
+  unsigned MaxElements;
+
 public:
+  ArgumentPromotionPass(unsigned MaxElements = 3u) : MaxElements(MaxElements) {}
+
   PreservedAnalyses run(LazyCallGraph::SCC &C, CGSCCAnalysisManager &AM,
                         LazyCallGraph &CG, CGSCCUpdateResult &UR);
 };
 
-}
+} // end namespace llvm
 
-#endif
+#endif // LLVM_TRANSFORMS_IPO_ARGUMENTPROMOTION_H

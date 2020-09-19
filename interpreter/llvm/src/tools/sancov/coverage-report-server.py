@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 #===- symcov-report-server.py - Coverage Reports HTTP Serve --*- python -*--===#
 #
-#                     The LLVM Compiler Infrastructure
-#
-# This file is distributed under the University of Illinois Open Source
-# License. See LICENSE.TXT for details.
+# Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+# See https://llvm.org/LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #
 #===------------------------------------------------------------------------===#
 '''(EXPERIMENTAL) HTTP server to browse coverage reports from .symcov files.
@@ -21,6 +20,8 @@ Other options:
     --port port_number - specifies the port to use (8001)
     --host host_name - host name to bind server to (127.0.0.1)
 '''
+
+from __future__ import print_function
 
 import argparse
 import http.server
@@ -160,7 +161,7 @@ class ServerHandler(http.server.BaseHTTPRequestHandler):
 
             linemap = self.symcov_data.compute_linemap(filename)
 
-            with open(filepath, 'r') as f:
+            with open(filepath, 'r', encoding='utf8') as f:
                 content = "\n".join(
                         ["<span class='{cls}'>{line}&nbsp;</span>".format(
                             line=html.escape(line.rstrip()), 

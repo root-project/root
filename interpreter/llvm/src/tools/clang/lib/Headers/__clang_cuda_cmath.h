@@ -1,22 +1,8 @@
 /*===---- __clang_cuda_cmath.h - Device-side CUDA cmath support ------------===
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+ * See https://llvm.org/LICENSE.txt for license information.
+ * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  *
  *===-----------------------------------------------------------------------===
  */
@@ -44,12 +30,32 @@
 // implementation.  Declaring in the global namespace and pulling into namespace
 // std covers all of the known knowns.
 
+#ifdef _OPENMP
+#define __DEVICE__ static __attribute__((always_inline))
+#else
 #define __DEVICE__ static __device__ __inline__ __attribute__((always_inline))
+#endif
 
+// For C++ 17 we need to include noexcept attribute to be compatible
+// with the header-defined version. This may be removed once
+// variant is supported.
+#if defined(_OPENMP) && defined(__cplusplus) && __cplusplus >= 201703L
+#define __NOEXCEPT noexcept
+#else
+#define __NOEXCEPT
+#endif
+
+#if !(defined(_OPENMP) && defined(__cplusplus))
 __DEVICE__ long long abs(long long __n) { return ::llabs(__n); }
 __DEVICE__ long abs(long __n) { return ::labs(__n); }
 __DEVICE__ float abs(float __x) { return ::fabsf(__x); }
 __DEVICE__ double abs(double __x) { return ::fabs(__x); }
+#endif
+// TODO: remove once variat is supported.
+#if defined(_OPENMP) && defined(__cplusplus)
+__DEVICE__ const float abs(const float __x) { return ::fabsf((float)__x); }
+__DEVICE__ const double abs(const double __x) { return ::fabs((double)__x); }
+#endif
 __DEVICE__ float acos(float __x) { return ::acosf(__x); }
 __DEVICE__ float asin(float __x) { return ::asinf(__x); }
 __DEVICE__ float atan(float __x) { return ::atanf(__x); }
@@ -58,9 +64,11 @@ __DEVICE__ float ceil(float __x) { return ::ceilf(__x); }
 __DEVICE__ float cos(float __x) { return ::cosf(__x); }
 __DEVICE__ float cosh(float __x) { return ::coshf(__x); }
 __DEVICE__ float exp(float __x) { return ::expf(__x); }
-__DEVICE__ float fabs(float __x) { return ::fabsf(__x); }
+__DEVICE__ float fabs(float __x) __NOEXCEPT { return ::fabsf(__x); }
 __DEVICE__ float floor(float __x) { return ::floorf(__x); }
 __DEVICE__ float fmod(float __x, float __y) { return ::fmodf(__x, __y); }
+// TODO: remove when variant is supported
+#ifndef _OPENMP
 __DEVICE__ int fpclassify(float __x) {
   return __builtin_fpclassify(FP_NAN, FP_INFINITE, FP_NORMAL, FP_SUBNORMAL,
                               FP_ZERO, __x);
@@ -69,6 +77,7 @@ __DEVICE__ int fpclassify(double __x) {
   return __builtin_fpclassify(FP_NAN, FP_INFINITE, FP_NORMAL, FP_SUBNORMAL,
                               FP_ZERO, __x);
 }
+#endif
 __DEVICE__ float frexp(float __arg, int *__exp) {
   return ::frexpf(__arg, __exp);
 }
@@ -131,15 +140,6 @@ __DEVICE__ float ldexp(float __arg, int __exp) {
 __DEVICE__ float log(float __x) { return ::logf(__x); }
 __DEVICE__ float log10(float __x) { return ::log10f(__x); }
 __DEVICE__ float modf(float __x, float *__iptr) { return ::modff(__x, __iptr); }
-__DEVICE__ float nexttoward(float __from, double __to) {
-  return __builtin_nexttowardf(__from, __to);
-}
-__DEVICE__ double nexttoward(double __from, double __to) {
-  return __builtin_nexttoward(__from, __to);
-}
-__DEVICE__ float nexttowardf(float __from, double __to) {
-  return __builtin_nexttowardf(__from, __to);
-}
 __DEVICE__ float pow(float __base, float __exp) {
   return ::powf(__base, __exp);
 }
@@ -156,6 +156,10 @@ __DEVICE__ float sinh(float __x) { return ::sinhf(__x); }
 __DEVICE__ float sqrt(float __x) { return ::sqrtf(__x); }
 __DEVICE__ float tan(float __x) { return ::tanf(__x); }
 __DEVICE__ float tanh(float __x) { return ::tanhf(__x); }
+
+// Notably missing above is nexttoward.  We omit it because
+// libdevice doesn't provide an implementation, and we don't want to be in the
+// business of implementing tricky libm functions in this header.
 
 // Now we've defined everything we promised we'd define in
 // __clang_cuda_math_forward_declares.h.  We need to do two additional things to
@@ -295,13 +299,6 @@ ldexp(__T __x, int __exp) {
   return std::ldexp((double)__x, __exp);
 }
 
-template <typename __T>
-__DEVICE__ typename __clang_cuda_enable_if<std::numeric_limits<__T>::is_integer,
-                                           double>::type
-nexttoward(__T __from, double __to) {
-  return std::nexttoward((double)__from, __to);
-}
-
 template <typename __T1, typename __T2>
 __DEVICE__ typename __clang_cuda_enable_if<
     std::numeric_limits<__T1>::is_specialized &&
@@ -388,7 +385,6 @@ using ::lrint;
 using ::lround;
 using ::nearbyint;
 using ::nextafter;
-using ::nexttoward;
 using ::pow;
 using ::remainder;
 using ::remquo;
@@ -456,14 +452,15 @@ using ::lroundf;
 using ::modff;
 using ::nearbyintf;
 using ::nextafterf;
-using ::nexttowardf;
-using ::nexttowardf;
 using ::powf;
 using ::remainderf;
 using ::remquof;
 using ::rintf;
 using ::roundf;
+// TODO: remove once variant is supported
+#ifndef _OPENMP
 using ::scalblnf;
+#endif
 using ::scalbnf;
 using ::sinf;
 using ::sinhf;
@@ -482,6 +479,7 @@ _GLIBCXX_END_NAMESPACE_VERSION
 } // namespace std
 #endif
 
+#undef __NOEXCEPT
 #undef __DEVICE__
 
 #endif

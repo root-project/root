@@ -1,9 +1,8 @@
 //===--- ExternalSemaSource.h - External Sema Interface ---------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -39,15 +38,15 @@ class ValueDecl;
 class VarDecl;
 struct LateParsedTemplate;
 
-/// \brief A simple structure that captures a vtable use for the purposes of
+/// A simple structure that captures a vtable use for the purposes of
 /// the \c ExternalSemaSource.
 struct ExternalVTableUse {
   CXXRecordDecl *Record;
   SourceLocation Location;
   bool DefinitionRequired;
 };
-  
-/// \brief An abstract interface that should be implemented by
+
+/// An abstract interface that should be implemented by
 /// external AST sources that also provide information for semantic
 /// analysis.
 class ExternalSemaSource : public ExternalASTSource {
@@ -58,15 +57,15 @@ public:
 
   ~ExternalSemaSource() override;
 
-  /// \brief Initialize the semantic source with the Sema instance
+  /// Initialize the semantic source with the Sema instance
   /// being used to perform semantic analysis on the abstract syntax
   /// tree.
   virtual void InitializeSema(Sema &S) {}
 
-  /// \brief Inform the semantic consumer that Sema is no longer available.
+  /// Inform the semantic consumer that Sema is no longer available.
   virtual void ForgetSema() {}
 
-  /// \brief Load the contents of the global method pool for a given
+  /// Load the contents of the global method pool for a given
   /// selector.
   virtual void ReadMethodPool(Selector Sel);
 
@@ -74,12 +73,12 @@ public:
   /// selector if necessary.
   virtual void updateOutOfDateSelector(Selector Sel);
 
-  /// \brief Load the set of namespaces that are known to the external source,
+  /// Load the set of namespaces that are known to the external source,
   /// which will be used during typo correction.
   virtual void ReadKnownNamespaces(
                            SmallVectorImpl<NamespaceDecl *> &Namespaces);
 
-  /// \brief Load the set of used but not defined functions or variables with
+  /// Load the set of used but not defined functions or variables with
   /// internal linkage, or used but not defined internal functions.
   virtual void
   ReadUndefinedButUsed(llvm::MapVector<NamedDecl *, SourceLocation> &Undefined);
@@ -87,7 +86,7 @@ public:
   virtual void ReadMismatchingDeleteExpressions(llvm::MapVector<
       FieldDecl *, llvm::SmallVector<std::pair<SourceLocation, bool>, 4>> &);
 
-  /// \brief Do last resort, unqualified lookup on a LookupResult that
+  /// Do last resort, unqualified lookup on a LookupResult that
   /// Sema cannot find.
   ///
   /// \param R a LookupResult that is being recovered.
@@ -97,7 +96,7 @@ public:
   /// \return true to tell Sema to recover using the LookupResult.
   virtual bool LookupUnqualified(LookupResult &R, Scope *S) { return false; }
 
-  /// \brief Read the set of tentative definitions known to the external Sema
+  /// Read the set of tentative definitions known to the external Sema
   /// source.
   ///
   /// The external source should append its own tentative definitions to the
@@ -106,8 +105,8 @@ public:
   /// introduce the same declarations repeatedly.
   virtual void ReadTentativeDefinitions(
                                   SmallVectorImpl<VarDecl *> &TentativeDefs) {}
-  
-  /// \brief Read the set of unused file-scope declarations known to the
+
+  /// Read the set of unused file-scope declarations known to the
   /// external Sema source.
   ///
   /// The external source should append its own unused, filed-scope to the
@@ -116,8 +115,8 @@ public:
   /// introduce the same declarations repeatedly.
   virtual void ReadUnusedFileScopedDecls(
                  SmallVectorImpl<const DeclaratorDecl *> &Decls) {}
-  
-  /// \brief Read the set of delegating constructors known to the
+
+  /// Read the set of delegating constructors known to the
   /// external Sema source.
   ///
   /// The external source should append its own delegating constructors to the
@@ -127,7 +126,7 @@ public:
   virtual void ReadDelegatingConstructors(
                  SmallVectorImpl<CXXConstructorDecl *> &Decls) {}
 
-  /// \brief Read the set of ext_vector type declarations known to the
+  /// Read the set of ext_vector type declarations known to the
   /// external Sema source.
   ///
   /// The external source should append its own ext_vector type declarations to
@@ -136,7 +135,7 @@ public:
   /// introduce the same declarations repeatedly.
   virtual void ReadExtVectorDecls(SmallVectorImpl<TypedefNameDecl *> &Decls) {}
 
-  /// \brief Read the set of potentially unused typedefs known to the source.
+  /// Read the set of potentially unused typedefs known to the source.
   ///
   /// The external source should append its own potentially unused local
   /// typedefs to the given vector of declarations. Note that this routine may
@@ -145,34 +144,34 @@ public:
   virtual void ReadUnusedLocalTypedefNameCandidates(
       llvm::SmallSetVector<const TypedefNameDecl *, 4> &Decls) {}
 
-  /// \brief Read the set of referenced selectors known to the
+  /// Read the set of referenced selectors known to the
   /// external Sema source.
   ///
-  /// The external source should append its own referenced selectors to the 
-  /// given vector of selectors. Note that this routine 
-  /// may be invoked multiple times; the external source should take care not 
+  /// The external source should append its own referenced selectors to the
+  /// given vector of selectors. Note that this routine
+  /// may be invoked multiple times; the external source should take care not
   /// to introduce the same selectors repeatedly.
   virtual void ReadReferencedSelectors(
                  SmallVectorImpl<std::pair<Selector, SourceLocation> > &Sels) {}
 
-  /// \brief Read the set of weak, undeclared identifiers known to the
+  /// Read the set of weak, undeclared identifiers known to the
   /// external Sema source.
   ///
   /// The external source should append its own weak, undeclared identifiers to
-  /// the given vector. Note that this routine may be invoked multiple times; 
+  /// the given vector. Note that this routine may be invoked multiple times;
   /// the external source should take care not to introduce the same identifiers
   /// repeatedly.
   virtual void ReadWeakUndeclaredIdentifiers(
                  SmallVectorImpl<std::pair<IdentifierInfo *, WeakInfo> > &WI) {}
 
-  /// \brief Read the set of used vtables known to the external Sema source.
+  /// Read the set of used vtables known to the external Sema source.
   ///
   /// The external source should append its own used vtables to the given
   /// vector. Note that this routine may be invoked multiple times; the external
   /// source should take care not to introduce the same vtables repeatedly.
   virtual void ReadUsedVTables(SmallVectorImpl<ExternalVTableUse> &VTables) {}
 
-  /// \brief Read the set of pending instantiations known to the external
+  /// Read the set of pending instantiations known to the external
   /// Sema source.
   ///
   /// The external source should append its own pending instantiations to the
@@ -180,10 +179,10 @@ public:
   /// external source should take care not to introduce the same instantiations
   /// repeatedly.
   virtual void ReadPendingInstantiations(
-                 SmallVectorImpl<std::pair<ValueDecl *, 
+                 SmallVectorImpl<std::pair<ValueDecl *,
                                            SourceLocation> > &Pending) {}
 
-  /// \brief Read the set of late parsed template functions for this source.
+  /// Read the set of late parsed template functions for this source.
   ///
   /// The external source should insert its own late parsed template functions
   /// into the map. Note that this routine may be invoked multiple times; the
@@ -209,7 +208,7 @@ public:
     return TypoCorrection();
   }
 
-  /// \brief Produces a diagnostic note if the external source contains a
+  /// Produces a diagnostic note if the external source contains a
   /// complete definition for \p T.
   ///
   /// \param Loc the location at which a complete type was required but not
@@ -227,7 +226,7 @@ public:
   static bool classof(const ExternalASTSource *Source) {
     return Source->SemaSource;
   }
-}; 
+};
 
 } // end namespace clang
 

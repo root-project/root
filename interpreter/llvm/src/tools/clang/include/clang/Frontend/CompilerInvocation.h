@@ -1,20 +1,19 @@
-//===-- CompilerInvocation.h - Compiler Invocation Helper Data --*- C++ -*-===//
+//===- CompilerInvocation.h - Compiler Invocation Helper Data ---*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CLANG_FRONTEND_COMPILERINVOCATION_H_
-#define LLVM_CLANG_FRONTEND_COMPILERINVOCATION_H_
+#ifndef LLVM_CLANG_FRONTEND_COMPILERINVOCATION_H
+#define LLVM_CLANG_FRONTEND_COMPILERINVOCATION_H
 
+#include "clang/Basic/CodeGenOptions.h"
 #include "clang/Basic/DiagnosticOptions.h"
 #include "clang/Basic/FileSystemOptions.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/Basic/LangOptions.h"
-#include "clang/Basic/VirtualFileSystem.h"
-#include "clang/Frontend/CodeGenOptions.h"
 #include "clang/Frontend/DependencyOutputOptions.h"
 #include "clang/Frontend/FrontendOptions.h"
 #include "clang/Frontend/LangStandard.h"
@@ -22,25 +21,36 @@
 #include "clang/Frontend/PreprocessorOutputOptions.h"
 #include "clang/StaticAnalyzer/Core/AnalyzerOptions.h"
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
+#include "llvm/Support/VirtualFileSystem.h"
+#include <memory>
 #include <string>
 
 namespace llvm {
+
 class Triple;
 
 namespace opt {
+
 class ArgList;
-}
-}
+
+} // namespace opt
+
+namespace vfs {
+
+class FileSystem;
+
+} // namespace vfs
+
+} // namespace llvm
 
 namespace clang {
-class PreprocessorOptions;
-class HeaderSearchOptions;
-class TargetOptions;
-class LangOptions;
-class CompilerInvocation;
-class DiagnosticsEngine;
 
-/// \brief Fill out Opts based on the options given in Args.
+class DiagnosticsEngine;
+class HeaderSearchOptions;
+class PreprocessorOptions;
+class TargetOptions;
+
+/// Fill out Opts based on the options given in Args.
 ///
 /// Args must have been created from the OptTable returned by
 /// createCC1OptTable().
@@ -53,8 +63,6 @@ bool ParseDiagnosticArgs(DiagnosticOptions &Opts, llvm::opt::ArgList &Args,
                          bool DefaultShowOpt = true);
 
 class CompilerInvocationBase {
-  void operator=(const CompilerInvocationBase &) = delete;
-
 public:
   /// Options controlling the language variant.
   std::shared_ptr<LangOptions> LangOpts;
@@ -72,24 +80,24 @@ public:
   std::shared_ptr<PreprocessorOptions> PreprocessorOpts;
 
   CompilerInvocationBase();
-  ~CompilerInvocationBase();
-
   CompilerInvocationBase(const CompilerInvocationBase &X);
+  CompilerInvocationBase &operator=(const CompilerInvocationBase &) = delete;
+  ~CompilerInvocationBase();
 
   LangOptions *getLangOpts() { return LangOpts.get(); }
   const LangOptions *getLangOpts() const { return LangOpts.get(); }
 
   TargetOptions &getTargetOpts() { return *TargetOpts.get(); }
-  const TargetOptions &getTargetOpts() const {
-    return *TargetOpts.get();
-  }
+  const TargetOptions &getTargetOpts() const { return *TargetOpts.get(); }
 
   DiagnosticOptions &getDiagnosticOpts() const { return *DiagnosticOpts; }
 
   HeaderSearchOptions &getHeaderSearchOpts() { return *HeaderSearchOpts; }
+
   const HeaderSearchOptions &getHeaderSearchOpts() const {
     return *HeaderSearchOpts;
   }
+
   std::shared_ptr<HeaderSearchOptions> getHeaderSearchOptsPtr() const {
     return HeaderSearchOpts;
   }
@@ -97,7 +105,9 @@ public:
   std::shared_ptr<PreprocessorOptions> getPreprocessorOptsPtr() {
     return PreprocessorOpts;
   }
+
   PreprocessorOptions &getPreprocessorOpts() { return *PreprocessorOpts; }
+
   const PreprocessorOptions &getPreprocessorOpts() const {
     return *PreprocessorOpts;
   }
@@ -106,8 +116,8 @@ public:
 namespace vfs {
   class FileSystem;
 }
-  
-/// \brief Helper class for holding the data necessary to invoke the compiler.
+
+/// Helper class for holding the data necessary to invoke the compiler.
 ///
 /// This class is designed to represent an abstract "invocation" of the
 /// compiler, including data such as the include paths, the code generation
@@ -117,7 +127,7 @@ class CompilerInvocation : public CompilerInvocationBase {
   AnalyzerOptionsRef AnalyzerOpts;
 
   MigratorOptions MigratorOpts;
-  
+
   /// Options controlling IRgen and the backend.
   CodeGenOptions CodeGenOpts;
 
@@ -134,16 +144,16 @@ class CompilerInvocation : public CompilerInvocationBase {
   PreprocessorOutputOptions PreprocessorOutputOpts;
 
   /// List of overlay files
-  IntrusiveRefCntPtr<vfs::OverlayFileSystem> Overlay;
+  IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> Overlay;
 
 public:
   CompilerInvocation() : AnalyzerOpts(new AnalyzerOptions()),
-   Overlay(new vfs::OverlayFileSystem(vfs::getRealFileSystem())) {}
+    Overlay(new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem())) {}
 
   /// @name Utility Methods
   /// @{
 
-  /// \brief Create a compiler invocation from a list of input options.
+  /// Create a compiler invocation from a list of input options.
   /// \returns true on success.
   ///
   /// \param [out] Res - The resulting invocation.
@@ -155,7 +165,7 @@ public:
                              const char* const *ArgEnd,
                              DiagnosticsEngine &Diags);
 
-  /// \brief Get the directory where the compiler headers
+  /// Get the directory where the compiler headers
   /// reside, relative to the compiler binary (found by the passed in
   /// arguments).
   ///
@@ -165,7 +175,7 @@ public:
   /// executable), for finding the builtin compiler path.
   static std::string GetResourcesPath(const char *Argv0, void *MainAddr);
 
-  /// \brief Set language defaults for the given input language and
+  /// Set language defaults for the given input language and
   /// language standard in the given LangOptions object.
   ///
   /// \param Opts - The LangOptions object to set up.
@@ -176,61 +186,56 @@ public:
   static void setLangDefaults(LangOptions &Opts, InputKind IK,
                    const llvm::Triple &T, PreprocessorOptions &PPOpts,
                    LangStandard::Kind LangStd = LangStandard::lang_unspecified);
-  
-  /// \brief Retrieve a module hash string that is suitable for uniquely 
+
+  /// Retrieve a module hash string that is suitable for uniquely
   /// identifying the conditions under which the module was built.
   std::string getModuleHash() const;
-  
+
   /// @}
   /// @name Option Subgroups
   /// @{
 
-  AnalyzerOptionsRef getAnalyzerOpts() const {
-    return AnalyzerOpts;
-  }
+  AnalyzerOptionsRef getAnalyzerOpts() const { return AnalyzerOpts; }
 
   MigratorOptions &getMigratorOpts() { return MigratorOpts; }
-  const MigratorOptions &getMigratorOpts() const {
-    return MigratorOpts;
-  }
-  
+  const MigratorOptions &getMigratorOpts() const { return MigratorOpts; }
+
   CodeGenOptions &getCodeGenOpts() { return CodeGenOpts; }
-  const CodeGenOptions &getCodeGenOpts() const {
-    return CodeGenOpts;
-  }
+  const CodeGenOptions &getCodeGenOpts() const { return CodeGenOpts; }
 
   DependencyOutputOptions &getDependencyOutputOpts() {
     return DependencyOutputOpts;
   }
+
   const DependencyOutputOptions &getDependencyOutputOpts() const {
     return DependencyOutputOpts;
   }
 
-  void addOverlay(const IntrusiveRefCntPtr<vfs::FileSystem>& FS) {
+  void addOverlay(const IntrusiveRefCntPtr<llvm::vfs::FileSystem>& FS) {
     Overlay->pushOverlay(FS);
   }
 
-  IntrusiveRefCntPtr<vfs::OverlayFileSystem> &getOverlay() {
+  IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> &getOverlay() {
     return Overlay;
   }
 
-  const IntrusiveRefCntPtr<vfs::OverlayFileSystem> &getOverlay() const {
+  const IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> &getOverlay() const {
     return Overlay;
   }
 
   FileSystemOptions &getFileSystemOpts() { return FileSystemOpts; }
+
   const FileSystemOptions &getFileSystemOpts() const {
     return FileSystemOpts;
   }
 
   FrontendOptions &getFrontendOpts() { return FrontendOpts; }
-  const FrontendOptions &getFrontendOpts() const {
-    return FrontendOpts;
-  }
+  const FrontendOptions &getFrontendOpts() const { return FrontendOpts; }
 
   PreprocessorOutputOptions &getPreprocessorOutputOpts() {
     return PreprocessorOutputOpts;
   }
+
   const PreprocessorOutputOptions &getPreprocessorOutputOpts() const {
     return PreprocessorOutputOpts;
   }
@@ -238,15 +243,14 @@ public:
   /// @}
 };
 
-IntrusiveRefCntPtr<vfs::FileSystem>
+IntrusiveRefCntPtr<llvm::vfs::FileSystem>
 createVFSFromCompilerInvocation(const CompilerInvocation &CI,
                                 DiagnosticsEngine &Diags);
 
-IntrusiveRefCntPtr<vfs::FileSystem>
-createVFSFromCompilerInvocation(const CompilerInvocation &CI,
-                                DiagnosticsEngine &Diags,
-                                IntrusiveRefCntPtr<vfs::FileSystem> BaseFS);
+IntrusiveRefCntPtr<llvm::vfs::FileSystem> createVFSFromCompilerInvocation(
+    const CompilerInvocation &CI, DiagnosticsEngine &Diags,
+    IntrusiveRefCntPtr<llvm::vfs::FileSystem> BaseFS);
 
-} // end namespace clang
+} // namespace clang
 
-#endif
+#endif // LLVM_CLANG_FRONTEND_COMPILERINVOCATION_H

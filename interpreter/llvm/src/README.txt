@@ -1,4 +1,4 @@
-Low Level Virtual Machine (LLVM)
+The LLVM Compiler Infrastructure
 ================================
 
 This directory and its subdirectories contain source code for LLVM,
@@ -15,4 +15,3 @@ documentation setup.
 
 If you are writing a package for LLVM, see docs/Packaging.rst for our
 suggestions.
-

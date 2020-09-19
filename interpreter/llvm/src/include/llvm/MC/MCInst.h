@@ -1,9 +1,8 @@
 //===- llvm/MC/MCInst.h - MCInst class --------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -30,7 +29,7 @@ class MCInst;
 class MCInstPrinter;
 class raw_ostream;
 
-/// \brief Instances of this class represent operands of the MCInst class.
+/// Instances of this class represent operands of the MCInst class.
 /// This is a simple discriminated union.
 class MCOperand {
   enum MachineOperandType : unsigned char {
@@ -61,13 +60,13 @@ public:
   bool isExpr() const { return Kind == kExpr; }
   bool isInst() const { return Kind == kInst; }
 
-  /// \brief Returns the register number.
+  /// Returns the register number.
   unsigned getReg() const {
     assert(isReg() && "This is not a register operand!");
     return RegVal;
   }
 
-  /// \brief Set the register number.
+  /// Set the register number.
   void setReg(unsigned Reg) {
     assert(isReg() && "This is not a register operand!");
     RegVal = Reg;
@@ -150,22 +149,29 @@ public:
 
   void print(raw_ostream &OS) const;
   void dump() const;
+  bool isBareSymbolRef() const;
+  bool evaluateAsConstantImm(int64_t &Imm) const;
 };
 
-template <> struct isPodLike<MCOperand> { static const bool value = true; };
-
-/// \brief Instances of this class represent a single low-level machine
+/// Instances of this class represent a single low-level machine
 /// instruction.
 class MCInst {
   unsigned Opcode = 0;
   SMLoc Loc;
   SmallVector<MCOperand, 8> Operands;
+  // These flags could be used to pass some info from one target subcomponent
+  // to another, for example, from disassembler to asm printer. The values of
+  // the flags have any sense on target level only (e.g. prefixes on x86).
+  unsigned Flags = 0;
 
 public:
   MCInst() = default;
 
   void setOpcode(unsigned Op) { Opcode = Op; }
   unsigned getOpcode() const { return Opcode; }
+
+  void setFlags(unsigned F) { Flags = F; }
+  unsigned getFlags() const { return Flags; }
 
   void setLoc(SMLoc loc) { Loc = loc; }
   SMLoc getLoc() const { return Loc; }
@@ -181,6 +187,7 @@ public:
 
   void clear() { Operands.clear(); }
   void erase(iterator I) { Operands.erase(I); }
+  void erase(iterator First, iterator Last) { Operands.erase(First, Last); }
   size_t size() const { return Operands.size(); }
   iterator begin() { return Operands.begin(); }
   const_iterator begin() const { return Operands.begin(); }
@@ -194,10 +201,12 @@ public:
   void print(raw_ostream &OS) const;
   void dump() const;
 
-  /// \brief Dump the MCInst as prettily as possible using the additional MC
+  /// Dump the MCInst as prettily as possible using the additional MC
   /// structures, if given. Operators are separated by the \p Separator
   /// string.
   void dump_pretty(raw_ostream &OS, const MCInstPrinter *Printer = nullptr,
+                   StringRef Separator = " ") const;
+  void dump_pretty(raw_ostream &OS, StringRef Name,
                    StringRef Separator = " ") const;
 };
 

@@ -1,9 +1,8 @@
 //===-- FEntryInsertion.cpp - Patchable prologues for LLVM -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -15,11 +14,11 @@
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/Passes.h"
+#include "llvm/CodeGen/TargetFrameLowering.h"
+#include "llvm/CodeGen/TargetInstrInfo.h"
+#include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
-#include "llvm/Target/TargetFrameLowering.h"
-#include "llvm/Target/TargetInstrInfo.h"
-#include "llvm/Target/TargetSubtargetInfo.h"
 
 using namespace llvm;
 
@@ -36,15 +35,13 @@ struct FEntryInserter : public MachineFunctionPass {
 
 bool FEntryInserter::runOnMachineFunction(MachineFunction &MF) {
   const std::string FEntryName =
-      MF.getFunction()->getFnAttribute("fentry-call").getValueAsString();
+      MF.getFunction().getFnAttribute("fentry-call").getValueAsString();
   if (FEntryName != "true")
     return false;
 
   auto &FirstMBB = *MF.begin();
-  auto &FirstMI = *FirstMBB.begin();
-
   auto *TII = MF.getSubtarget().getInstrInfo();
-  BuildMI(FirstMBB, FirstMI, FirstMI.getDebugLoc(),
+  BuildMI(FirstMBB, FirstMBB.begin(), DebugLoc(),
           TII->get(TargetOpcode::FENTRY_CALL));
   return true;
 }

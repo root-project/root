@@ -1,9 +1,8 @@
 //===--- DirectoryLookup.h - Info for searching for headers -----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -24,7 +23,7 @@ class DirectoryEntry;
 class FileEntry;
 class HeaderSearch;
 class Module;
-  
+
 /// DirectoryLookup - This class represents one entry in the search list that
 /// specifies the search order for directories in \#include directives.  It
 /// represents either a directory, a framework, or a headermap.
@@ -54,14 +53,14 @@ private:
   /// LookupType - This indicates whether this DirectoryLookup object is a
   /// normal directory, a framework, or a headermap.
   unsigned LookupType : 2;
-  
-  /// \brief Whether this is a header map used when building a framework.
+
+  /// Whether this is a header map used when building a framework.
   unsigned IsIndexHeaderMap : 1;
 
-  /// \brief Whether we've performed an exhaustive search for module maps
+  /// Whether we've performed an exhaustive search for module maps
   /// within the subdirectories of this directory.
   unsigned SearchedAllModuleMaps : 1;
-  
+
 public:
   /// DirectoryLookup ctor - Note that this ctor *does not take ownership* of
   /// 'dir'.
@@ -118,11 +117,11 @@ public:
   /// isHeaderMap - Return true if this is a header map, not a normal directory.
   bool isHeaderMap() const { return getLookupType() == LT_HeaderMap; }
 
-  /// \brief Determine whether we have already searched this entire
+  /// Determine whether we have already searched this entire
   /// directory for module maps.
   bool haveSearchedAllModuleMaps() const { return SearchedAllModuleMaps; }
 
-  /// \brief Specify whether we have already searched all of the subdirectories
+  /// Specify whether we have already searched all of the subdirectories
   /// for module maps.
   void setSearchedAllModuleMaps(bool SAMM) {
     SearchedAllModuleMaps = SAMM;
@@ -134,16 +133,16 @@ public:
     return (SrcMgr::CharacteristicKind)DirCharacteristic;
   }
 
-  /// \brief Whether this describes a system header directory.
+  /// Whether this describes a system header directory.
   bool isSystemHeaderDirectory() const {
     return getDirCharacteristic() != SrcMgr::C_User;
   }
 
-  /// \brief Whether this header map is building a framework or not.
-  bool isIndexHeaderMap() const { 
-    return isHeaderMap() && IsIndexHeaderMap; 
+  /// Whether this header map is building a framework or not.
+  bool isIndexHeaderMap() const {
+    return isHeaderMap() && IsIndexHeaderMap;
   }
-  
+
   /// LookupFile - Lookup the specified file in this search path, returning it
   /// if it exists or returning null if not.
   ///
@@ -171,6 +170,9 @@ public:
   /// set to true if the file is located in a framework that has been
   /// user-specified to be treated as a system framework.
   ///
+  /// \param [out] IsFrameworkFound For a framework directory set to true if
+  /// specified '.framework' directory is found.
+  ///
   /// \param [out] MappedName if this is a headermap which maps the filename to
   /// a framework include ("Foo.h" -> "Foo/Foo.h"), set the new name to this
   /// vector and point Filename to it.
@@ -181,6 +183,7 @@ public:
                               Module *RequestingModule,
                               ModuleMap::KnownHeader *SuggestedModule,
                               bool &InUserSpecifiedSystemFramework,
+                              bool &IsFrameworkFound,
                               bool &HasBeenMapped,
                               SmallVectorImpl<char> &MappedName,
                               bool OpenFile = true) const;
@@ -192,7 +195,8 @@ private:
       SmallVectorImpl<char> *RelativePath,
       Module *RequestingModule,
       ModuleMap::KnownHeader *SuggestedModule,
-      bool &InUserSpecifiedSystemHeader) const;
+      bool &InUserSpecifiedSystemFramework,
+      bool &IsFrameworkFound) const;
 
 };
 

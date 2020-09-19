@@ -1,9 +1,8 @@
 //===- CodeView.h -----------------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -22,8 +21,8 @@
 namespace llvm {
 namespace codeview {
 
-/// Distinguishes individual records in .debug$T section or PDB type stream. The
-/// documentation and headers talk about this as the "leaf" type.
+/// Distinguishes individual records in .debug$T or .debug$P section or PDB type
+/// stream. The documentation and headers talk about this as the "leaf" type.
 enum class TypeRecordKind : uint16_t {
 #define TYPE_RECORD(lf_ename, value, name) name = value,
 #include "CodeViewTypes.def"
@@ -124,6 +123,7 @@ enum class CPUType : uint16_t {
   ARM_XMAC = 0x66,
   ARM_WMMX = 0x67,
   ARM7 = 0x68,
+  ARM64 = 0x69,
   Omni = 0x70,
   Ia64 = 0x80,
   Ia64_2 = 0x81,
@@ -157,7 +157,12 @@ enum SourceLanguage : uint8_t {
   Java = 0x0d,
   JScript = 0x0e,
   MSIL = 0x0f,
-  HLSL = 0x10
+  HLSL = 0x10,
+
+  /// The DMD & Swift compilers emit 'D' and 'S', respectively, for the CV
+  /// source language. Microsoft does not have enumerators for them yet.
+  D = 'D',
+  Swift = 'S',
 };
 
 /// These values correspond to the CV_call_e enumeration, and are documented
@@ -226,6 +231,8 @@ enum class FrameProcedureOptions : uint32_t {
   Inlined = 0x00000800,
   StrictSecurityChecks = 0x00001000,
   SafeBuffers = 0x00002000,
+  EncodedLocalBasePointerMask = 0x0000C000,
+  EncodedParamBasePointerMask = 0x00030000,
   ProfileGuidedOptimization = 0x00040000,
   ValidProfileCounts = 0x00080000,
   OptimizedForSpeed = 0x00100000,
@@ -297,6 +304,9 @@ enum class ModifierOptions : uint16_t {
 };
 CV_DEFINE_ENUM_CLASS_FLAGS_OPERATORS(ModifierOptions)
 
+// If the subsection kind has this bit set, then the linker should ignore it.
+enum : uint32_t { SubsectionIgnoreFlag = 0x80000000 };
+
 enum class DebugSubsectionKind : uint32_t {
   None = 0,
   Symbols = 0xf1,
@@ -351,7 +361,9 @@ enum class PointerOptions : uint32_t {
   Const = 0x00000400,
   Unaligned = 0x00000800,
   Restrict = 0x00001000,
-  WinRTSmartPointer = 0x00080000
+  WinRTSmartPointer = 0x00080000,
+  LValueRefThisPointer = 0x00100000,
+  RValueRefThisPointer = 0x00200000
 };
 CV_DEFINE_ENUM_CLASS_FLAGS_OPERATORS(PointerOptions)
 
@@ -500,56 +512,37 @@ enum class FrameCookieKind : uint8_t {
 
 // Corresponds to CV_HREG_e enum.
 enum class RegisterId : uint16_t {
-  Unknown = 0,
-  VFrame = 30006,
-  AL = 1,
-  CL = 2,
-  DL = 3,
-  BL = 4,
-  AH = 5,
-  CH = 6,
-  DH = 7,
-  BH = 8,
-  AX = 9,
-  CX = 10,
-  DX = 11,
-  BX = 12,
-  SP = 13,
-  BP = 14,
-  SI = 15,
-  DI = 16,
-  EAX = 17,
-  ECX = 18,
-  EDX = 19,
-  EBX = 20,
-  ESP = 21,
-  EBP = 22,
-  ESI = 23,
-  EDI = 24,
-  ES = 25,
-  CS = 26,
-  SS = 27,
-  DS = 28,
-  FS = 29,
-  GS = 30,
-  IP = 31,
-  RAX = 328,
-  RBX = 329,
-  RCX = 330,
-  RDX = 331,
-  RSI = 332,
-  RDI = 333,
-  RBP = 334,
-  RSP = 335,
-  R8 = 336,
-  R9 = 337,
-  R10 = 338,
-  R11 = 339,
-  R12 = 340,
-  R13 = 341,
-  R14 = 342,
-  R15 = 343,
+#define CV_REGISTERS_ALL
+#define CV_REGISTER(name, value) name = value,
+#include "CodeViewRegisters.def"
+#undef CV_REGISTER
+#undef CV_REGISTERS_ALL
 };
+
+// Register Ids are shared between architectures in CodeView. CPUType is needed
+// to map register Id to name.
+struct CPURegister {
+  CPURegister() = delete;
+  CPURegister(CPUType Cpu, codeview::RegisterId Reg) {
+    this->Cpu = Cpu;
+    this->Reg = Reg;
+  }
+  CPUType Cpu;
+  RegisterId Reg;
+};
+
+/// Two-bit value indicating which register is the designated frame pointer
+/// register. Appears in the S_FRAMEPROC record flags.
+enum class EncodedFramePtrReg : uint8_t {
+  None = 0,
+  StackPtr = 1,
+  FramePtr = 2,
+  BasePtr = 3,
+};
+
+RegisterId decodeFramePtrReg(EncodedFramePtrReg EncodedReg, CPUType CPU);
+
+EncodedFramePtrReg encodeFramePtrReg(RegisterId Reg, CPUType CPU);
 
 /// These values correspond to the THUNK_ORDINAL enumeration.
 enum class ThunkOrdinal : uint8_t {
@@ -572,7 +565,7 @@ enum LineFlags : uint16_t {
   LF_HaveColumns = 1, // CV_LINES_HAVE_COLUMNS
 };
 
-/// Data in the the SUBSEC_FRAMEDATA subection.
+/// Data in the SUBSEC_FRAMEDATA subection.
 struct FrameData {
   support::ulittle32_t RvaStart;
   support::ulittle32_t CodeSize;

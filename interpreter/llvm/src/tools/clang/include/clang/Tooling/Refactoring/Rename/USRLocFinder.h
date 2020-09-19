@@ -1,14 +1,13 @@
 //===--- USRLocFinder.h - Clang refactoring library -----------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief Provides functionality for finding all instances of a USR in a given
+/// Provides functionality for finding all instances of a USR in a given
 /// AST.
 ///
 //===----------------------------------------------------------------------===//
@@ -19,6 +18,7 @@
 #include "clang/AST/AST.h"
 #include "clang/Tooling/Core/Replacement.h"
 #include "clang/Tooling/Refactoring/AtomicChange.h"
+#include "clang/Tooling/Refactoring/Rename/SymbolOccurrences.h"
 #include "llvm/ADT/StringRef.h"
 #include <string>
 #include <vector>
@@ -38,10 +38,13 @@ std::vector<tooling::AtomicChange>
 createRenameAtomicChanges(llvm::ArrayRef<std::string> USRs,
                           llvm::StringRef NewName, Decl *TranslationUnitDecl);
 
-// FIXME: make this an AST matcher. Wouldn't that be awesome??? I agree!
-std::vector<SourceLocation>
-getLocationsOfUSRs(const std::vector<std::string> &USRs,
-                   llvm::StringRef PrevName, Decl *Decl);
+/// Finds the symbol occurrences for the symbol that's identified by the given
+/// USR set.
+///
+/// \return SymbolOccurrences that can be converted to AtomicChanges when
+/// renaming.
+SymbolOccurrences getOccurrencesOfUSRs(ArrayRef<std::string> USRs,
+                                       StringRef PrevName, Decl *Decl);
 
 } // end namespace tooling
 } // end namespace clang

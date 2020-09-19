@@ -4,19 +4,18 @@ if( WIN32 AND NOT CYGWIN )
 endif()
 
 include(CheckIncludeFile)
-include(CheckIncludeFileCXX)
 include(CheckLibraryExists)
 include(CheckSymbolExists)
 include(CheckFunctionExists)
-include(CheckCXXSourceCompiles)
-include(TestBigEndian)
+include(CheckStructHasMember)
+include(CheckCCompilerFlag)
 
 include(CheckCompilerVersion)
 include(HandleLLVMStdlib)
 
 if( UNIX AND NOT (BEOS OR HAIKU) )
   # Used by check_symbol_exists:
-  set(CMAKE_REQUIRED_LIBRARIES m)
+  list(APPEND CMAKE_REQUIRED_LIBRARIES "m")
 endif()
 # x86_64 FreeBSD 9.2 requires libcxxrt to be specified explicitly.
 if( CMAKE_SYSTEM MATCHES "FreeBSD-9.2-RELEASE" AND
@@ -24,49 +23,36 @@ if( CMAKE_SYSTEM MATCHES "FreeBSD-9.2-RELEASE" AND
   list(APPEND CMAKE_REQUIRED_LIBRARIES "cxxrt")
 endif()
 
-# Helper macros and functions
-macro(add_cxx_include result files)
-  set(${result} "")
-  foreach (file_name ${files})
-     set(${result} "${${result}}#include<${file_name}>\n")
-  endforeach()
-endmacro(add_cxx_include files result)
+# Do checks with _XOPEN_SOURCE and large-file API on AIX, because we will build
+# with those too.
+if (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "AIX")
+          list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_XOPEN_SOURCE=700")
+          list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_LARGE_FILE_API")
+endif()
 
-function(check_type_exists type files variable)
-  add_cxx_include(includes "${files}")
-  CHECK_CXX_SOURCE_COMPILES("
-    ${includes} ${type} typeVar;
-    int main() {
-        return 0;
-    }
-    " ${variable})
-endfunction()
+# Do checks with _FILE_OFFSET_BITS=64 on Solaris, because we will build
+# with those too.
+if (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
+          list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_FILE_OFFSET_BITS=64")
+endif()
 
 # include checks
-check_include_file(dirent.h HAVE_DIRENT_H)
 check_include_file(dlfcn.h HAVE_DLFCN_H)
 check_include_file(errno.h HAVE_ERRNO_H)
 check_include_file(fcntl.h HAVE_FCNTL_H)
-check_include_file(inttypes.h HAVE_INTTYPES_H)
 check_include_file(link.h HAVE_LINK_H)
-check_include_file(malloc.h HAVE_MALLOC_H)
 check_include_file(malloc/malloc.h HAVE_MALLOC_MALLOC_H)
-check_include_file(ndir.h HAVE_NDIR_H)
 if( NOT PURE_WINDOWS )
   check_include_file(pthread.h HAVE_PTHREAD_H)
 endif()
 check_include_file(signal.h HAVE_SIGNAL_H)
-check_include_file(stdint.h HAVE_STDINT_H)
-check_include_file(sys/dir.h HAVE_SYS_DIR_H)
 check_include_file(sys/ioctl.h HAVE_SYS_IOCTL_H)
 check_include_file(sys/mman.h HAVE_SYS_MMAN_H)
-check_include_file(sys/ndir.h HAVE_SYS_NDIR_H)
 check_include_file(sys/param.h HAVE_SYS_PARAM_H)
 check_include_file(sys/resource.h HAVE_SYS_RESOURCE_H)
 check_include_file(sys/stat.h HAVE_SYS_STAT_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)
 check_include_file(sys/types.h HAVE_SYS_TYPES_H)
-check_include_file(sys/uio.h HAVE_SYS_UIO_H)
 check_include_file(termios.h HAVE_TERMIOS_H)
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(valgrind/valgrind.h HAVE_VALGRIND_VALGRIND_H)
@@ -116,6 +102,9 @@ if( NOT PURE_WINDOWS )
   check_library_exists(rt clock_gettime "" HAVE_LIBRT)
 endif()
 
+# Check for libpfm.
+include(FindLibpfm)
+
 if(HAVE_LIBPTHREAD)
   # We want to find pthreads library and at the moment we do want to
   # have it reported as '-l<lib>' instead of '-pthread'.
@@ -126,39 +115,65 @@ if(HAVE_LIBPTHREAD)
   set(LLVM_PTHREAD_LIB ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
-# Don't look for these libraries on Windows. Also don't look for them if we're
-# using MSan, since uninstrumented third party code may call MSan interceptors
-# like strlen, leading to false positives.
-if( NOT PURE_WINDOWS AND NOT LLVM_USE_SANITIZER MATCHES "Memory.*")
-  if (LLVM_ENABLE_ZLIB)
-    find_package(ZLIB REQUIRED)
-    #check_library_exists(${ZLIB_LIBRARY} compress2 "" HAVE_LIBZ)
-    if (ZLIB_FOUND)
-      set(HAVE_LIBZ 1)
-    endif()
-  else()
-    set(HAVE_LIBZ 0)
-  endif()
-  # Skip libedit if using ASan as it contains memory leaks.
-  if (LLVM_ENABLE_LIBEDIT AND HAVE_HISTEDIT_H AND NOT LLVM_USE_SANITIZER MATCHES ".*Address.*")
-    check_library_exists(edit el_init "" HAVE_LIBEDIT)
-  else()
-    set(HAVE_LIBEDIT 0)
-  endif()
-  if(LLVM_ENABLE_TERMINFO)
-    set(HAVE_TERMINFO 0)
-    foreach(library tinfo terminfo curses ncurses ncursesw)
+# Don't look for these libraries if we're using MSan, since uninstrumented third
+# party code may call MSan interceptors like strlen, leading to false positives.
+if(NOT LLVM_USE_SANITIZER MATCHES "Memory.*")
+  set(HAVE_LIBZ 0)
+  if(LLVM_ENABLE_ZLIB)
+    foreach(library z zlib_static zlib)
       string(TOUPPER ${library} library_suffix)
-      check_library_exists(${library} setupterm "" HAVE_TERMINFO_${library_suffix})
-      if(HAVE_TERMINFO_${library_suffix})
-        set(HAVE_TERMINFO 1)
-        set(TERMINFO_LIBS "${library}")
+      check_library_exists(${library} compress2 "" HAVE_LIBZ_${library_suffix})
+      if(HAVE_LIBZ_${library_suffix})
+        set(HAVE_LIBZ 1)
+        set(ZLIB_LIBRARIES "${library}")
         break()
       endif()
     endforeach()
-  else()
-    set(HAVE_TERMINFO 0)
   endif()
+
+  # Don't look for these libraries on Windows.
+  if (NOT PURE_WINDOWS)
+    # Skip libedit if using ASan as it contains memory leaks.
+    if (LLVM_ENABLE_LIBEDIT AND HAVE_HISTEDIT_H AND NOT LLVM_USE_SANITIZER MATCHES ".*Address.*")
+      check_library_exists(edit el_init "" HAVE_LIBEDIT)
+    else()
+      set(HAVE_LIBEDIT 0)
+    endif()
+    if(LLVM_ENABLE_TERMINFO)
+      set(HAVE_TERMINFO 0)
+      foreach(library terminfo tinfo curses ncurses ncursesw)
+        string(TOUPPER ${library} library_suffix)
+        check_library_exists(${library} setupterm "" HAVE_TERMINFO_${library_suffix})
+        if(HAVE_TERMINFO_${library_suffix})
+          set(HAVE_TERMINFO 1)
+          set(TERMINFO_LIBS "${library}")
+          break()
+        endif()
+      endforeach()
+    else()
+      set(HAVE_TERMINFO 0)
+    endif()
+
+    find_library(ICONV_LIBRARY_PATH NAMES iconv libiconv libiconv-2 c)
+    set(LLVM_LIBXML2_ENABLED 0)
+    set(LIBXML2_FOUND 0)
+    if((LLVM_ENABLE_LIBXML2) AND ((CMAKE_SYSTEM_NAME MATCHES "Linux") AND (ICONV_LIBRARY_PATH) OR APPLE))
+      find_package(LibXml2)
+      if (LIBXML2_FOUND)
+        set(LLVM_LIBXML2_ENABLED 1)
+        if ((CMAKE_OSX_SYSROOT) AND (EXISTS ${CMAKE_OSX_SYSROOT}/${LIBXML2_INCLUDE_DIR}))
+          include_directories(${CMAKE_OSX_SYSROOT}/${LIBXML2_INCLUDE_DIR})
+        else()
+          include_directories(${LIBXML2_INCLUDE_DIR})
+        endif()
+        set(LIBXML2_LIBS "xml2")
+      endif()
+    endif()
+  endif()
+endif()
+
+if (LLVM_ENABLE_LIBXML2 STREQUAL "FORCE_ON" AND NOT LLVM_LIBXML2_ENABLED)
+  message(FATAL_ERROR "Failed to congifure libxml2")
 endif()
 
 check_library_exists(xar xar_open "" HAVE_LIBXAR)
@@ -171,6 +186,14 @@ check_symbol_exists(arc4random "stdlib.h" HAVE_DECL_ARC4RANDOM)
 find_package(Backtrace)
 set(HAVE_BACKTRACE ${Backtrace_FOUND})
 set(BACKTRACE_HEADER ${Backtrace_HEADER})
+
+# Prevent check_symbol_exists from using API that is not supported for a given
+# deployment target.
+check_c_compiler_flag("-Werror=unguarded-availability-new" "C_SUPPORTS_WERROR_UNGUARDED_AVAILABILITY_NEW")
+if(C_SUPPORTS_WERROR_UNGUARDED_AVAILABILITY_NEW)
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror=unguarded-availability-new")
+endif()
+
 check_symbol_exists(_Unwind_Backtrace "unwind.h" HAVE__UNWIND_BACKTRACE)
 check_symbol_exists(getpagesize unistd.h HAVE_GETPAGESIZE)
 check_symbol_exists(sysconf unistd.h HAVE_SYSCONF)
@@ -187,9 +210,6 @@ check_symbol_exists(posix_fallocate fcntl.h HAVE_POSIX_FALLOCATE)
 if( HAVE_SIGNAL_H AND NOT LLVM_USE_SANITIZER MATCHES ".*Address.*" AND NOT APPLE )
   check_symbol_exists(sigaltstack signal.h HAVE_SIGALTSTACK)
 endif()
-if( HAVE_SYS_UIO_H )
-  check_symbol_exists(writev sys/uio.h HAVE_WRITEV)
-endif()
 set(CMAKE_REQUIRED_DEFINITIONS "-D_LARGEFILE64_SOURCE")
 check_symbol_exists(lseek64 "sys/types.h;unistd.h" HAVE_LSEEK64)
 set(CMAKE_REQUIRED_DEFINITIONS "")
@@ -197,17 +217,10 @@ check_symbol_exists(mallctl malloc_np.h HAVE_MALLCTL)
 check_symbol_exists(mallinfo malloc.h HAVE_MALLINFO)
 check_symbol_exists(malloc_zone_statistics malloc/malloc.h
                     HAVE_MALLOC_ZONE_STATISTICS)
-check_symbol_exists(mkdtemp "stdlib.h;unistd.h" HAVE_MKDTEMP)
-check_symbol_exists(mkstemp "stdlib.h;unistd.h" HAVE_MKSTEMP)
-check_symbol_exists(mktemp "stdlib.h;unistd.h" HAVE_MKTEMP)
-check_symbol_exists(getcwd unistd.h HAVE_GETCWD)
-check_symbol_exists(gettimeofday sys/time.h HAVE_GETTIMEOFDAY)
 check_symbol_exists(getrlimit "sys/types.h;sys/time.h;sys/resource.h" HAVE_GETRLIMIT)
 check_symbol_exists(posix_spawn spawn.h HAVE_POSIX_SPAWN)
 check_symbol_exists(pread unistd.h HAVE_PREAD)
-check_symbol_exists(realpath stdlib.h HAVE_REALPATH)
 check_symbol_exists(sbrk unistd.h HAVE_SBRK)
-check_symbol_exists(strtoll stdlib.h HAVE_STRTOLL)
 check_symbol_exists(strerror string.h HAVE_STRERROR)
 check_symbol_exists(strerror_r string.h HAVE_STRERROR_R)
 check_symbol_exists(strerror_s string.h HAVE_DECL_STRERROR_S)
@@ -247,32 +260,29 @@ if( HAVE_DLFCN_H )
   endif()
 endif()
 
+CHECK_STRUCT_HAS_MEMBER("struct stat" st_mtimespec.tv_nsec
+    "sys/types.h;sys/stat.h" HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC)
+CHECK_STRUCT_HAS_MEMBER("struct stat" st_mtim.tv_nsec
+    "sys/types.h;sys/stat.h" HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC)
+
 check_symbol_exists(__GLIBC__ stdio.h LLVM_USING_GLIBC)
 if( LLVM_USING_GLIBC )
   add_definitions( -D_GNU_SOURCE )
+  list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE")
 endif()
 # This check requires _GNU_SOURCE
-if(HAVE_LIBPTHREAD)
-  check_library_exists(pthread pthread_getname_np "" HAVE_PTHREAD_GETNAME_NP)
-  check_library_exists(pthread pthread_setname_np "" HAVE_PTHREAD_SETNAME_NP)
-elseif(PTHREAD_IN_LIBC)
-  check_library_exists(c pthread_getname_np "" HAVE_PTHREAD_GETNAME_NP)
-  check_library_exists(c pthread_setname_np "" HAVE_PTHREAD_SETNAME_NP)
+check_symbol_exists(sched_getaffinity sched.h HAVE_SCHED_GETAFFINITY)
+check_symbol_exists(CPU_COUNT sched.h HAVE_CPU_COUNT)
+if (NOT PURE_WINDOWS)
+  if (LLVM_PTHREAD_LIB)
+    list(APPEND CMAKE_REQUIRED_LIBRARIES ${LLVM_PTHREAD_LIB})
+  endif()
+  check_symbol_exists(pthread_getname_np pthread.h HAVE_PTHREAD_GETNAME_NP)
+  check_symbol_exists(pthread_setname_np pthread.h HAVE_PTHREAD_SETNAME_NP)
+  if (LLVM_PTHREAD_LIB)
+    list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES ${LLVM_PTHREAD_LIB})
+  endif()
 endif()
-
-set(headers "sys/types.h")
-
-if (HAVE_INTTYPES_H)
-  set(headers ${headers} "inttypes.h")
-endif()
-
-if (HAVE_STDINT_H)
-  set(headers ${headers} "stdint.h")
-endif()
-
-check_type_exists(int64_t "${headers}" HAVE_INT64_T)
-check_type_exists(uint64_t "${headers}" HAVE_UINT64_T)
-check_type_exists(u_int64_t "${headers}" HAVE_U_INT64_T)
 
 # available programs checks
 function(llvm_find_program name)
@@ -325,6 +335,15 @@ else()
   unset(HAVE_FFI_H CACHE)
   unset(HAVE_FFI_CALL CACHE)
 endif( LLVM_ENABLE_FFI )
+
+# Whether we can use std::is_trivially_copyable to verify llvm::is_trivially_copyable.
+CHECK_CXX_SOURCE_COMPILES("
+#include <type_traits>
+struct T { int val; };
+static_assert(std::is_trivially_copyable<T>::value, \"ok\");
+int main() { return 0;}
+" HAVE_STD_IS_TRIVIALLY_COPYABLE)
+
 
 # Define LLVM_HAS_ATOMICS if gcc or MSVC atomic builtins are supported.
 include(CheckAtomic)
@@ -387,12 +406,16 @@ elseif (LLVM_NATIVE_ARCH MATCHES "sparc")
   set(LLVM_NATIVE_ARCH Sparc)
 elseif (LLVM_NATIVE_ARCH MATCHES "powerpc")
   set(LLVM_NATIVE_ARCH PowerPC)
+elseif (LLVM_NATIVE_ARCH MATCHES "ppc64le")
+  set(LLVM_NATIVE_ARCH PowerPC)
 elseif (LLVM_NATIVE_ARCH MATCHES "aarch64")
   set(LLVM_NATIVE_ARCH AArch64)
 elseif (LLVM_NATIVE_ARCH MATCHES "arm64")
   set(LLVM_NATIVE_ARCH AArch64)
 elseif (LLVM_NATIVE_ARCH MATCHES "arm")
   set(LLVM_NATIVE_ARCH ARM)
+elseif (LLVM_NATIVE_ARCH MATCHES "avr")
+  set(LLVM_NATIVE_ARCH AVR)
 elseif (LLVM_NATIVE_ARCH MATCHES "mips")
   set(LLVM_NATIVE_ARCH Mips)
 elseif (LLVM_NATIVE_ARCH MATCHES "xcore")
@@ -407,6 +430,10 @@ elseif (LLVM_NATIVE_ARCH MATCHES "wasm32")
   set(LLVM_NATIVE_ARCH WebAssembly)
 elseif (LLVM_NATIVE_ARCH MATCHES "wasm64")
   set(LLVM_NATIVE_ARCH WebAssembly)
+elseif (LLVM_NATIVE_ARCH MATCHES "riscv32")
+  set(LLVM_NATIVE_ARCH RISCV)
+elseif (LLVM_NATIVE_ARCH MATCHES "riscv64")
+  set(LLVM_NATIVE_ARCH RISCV)
 else ()
   message(FATAL_ERROR "Unknown architecture ${LLVM_NATIVE_ARCH}")
 endif ()
@@ -438,23 +465,6 @@ else ()
   # We don't have an disassembler for all architectures yet.
   if (EXISTS ${PROJECT_SOURCE_DIR}/lib/Target/${LLVM_NATIVE_ARCH}/Disassembler/CMakeLists.txt)
     set(LLVM_NATIVE_DISASSEMBLER LLVMInitialize${LLVM_NATIVE_ARCH}Disassembler)
-  endif ()
-endif ()
-
-if( MINGW )
-  set(HAVE_LIBPSAPI 1)
-  set(HAVE_LIBSHELL32 1)
-  # TODO: Check existence of libraries.
-  #   include(CheckLibraryExists)
-endif( MINGW )
-
-if (NOT HAVE_STRTOLL)
-  # Use _strtoi64 if strtoll is not available.
-  check_symbol_exists(_strtoi64 stdlib.h have_strtoi64)
-  if (have_strtoi64)
-    set(HAVE_STRTOLL 1)
-    set(strtoll "_strtoi64")
-    set(strtoull "_strtoui64")
   endif ()
 endif ()
 
@@ -535,10 +545,10 @@ else()
 endif()
 
 set(LLVM_BINDINGS "")
-if(WIN32)
+find_program(GO_EXECUTABLE NAMES go DOC "go executable")
+if(WIN32 OR NOT LLVM_ENABLE_BINDINGS)
   message(STATUS "Go bindings disabled.")
 else()
-  find_program(GO_EXECUTABLE NAMES go DOC "go executable")
   if(GO_EXECUTABLE STREQUAL "GO_EXECUTABLE-NOTFOUND")
     message(STATUS "Go bindings disabled.")
   else()
@@ -556,6 +566,20 @@ endif()
 find_program(GOLD_EXECUTABLE NAMES ${LLVM_DEFAULT_TARGET_TRIPLE}-ld.gold ld.gold ${LLVM_DEFAULT_TARGET_TRIPLE}-ld ld DOC "The gold linker")
 set(LLVM_BINUTILS_INCDIR "" CACHE PATH
 	"PATH to binutils/include containing plugin-api.h for gold plugin.")
+
+if(CMAKE_GENERATOR STREQUAL "Ninja")
+  execute_process(COMMAND ${CMAKE_MAKE_PROGRAM} --version
+    OUTPUT_VARIABLE NINJA_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(NINJA_VERSION ${NINJA_VERSION} CACHE STRING "Ninja version number" FORCE)
+  message(STATUS "Ninja version: ${NINJA_VERSION}")
+endif()
+
+if(CMAKE_GENERATOR STREQUAL "Ninja" AND
+    NOT "${NINJA_VERSION}" VERSION_LESS "1.9.0" AND
+    CMAKE_HOST_APPLE AND CMAKE_HOST_SYSTEM_VERSION VERSION_GREATER "15.6.0")
+  set(LLVM_TOUCH_STATIC_LIBRARIES ON)
+endif()
 
 if(CMAKE_HOST_APPLE AND APPLE)
   if(NOT CMAKE_XCRUN)
@@ -575,4 +599,70 @@ if(CMAKE_HOST_APPLE AND APPLE)
   endif()
 endif()
 
+# Keep the version requirements in sync with bindings/ocaml/README.txt.
+include(FindOCaml)
+include(AddOCaml)
+if(WIN32 OR NOT LLVM_ENABLE_BINDINGS)
+  message(STATUS "OCaml bindings disabled.")
+else()
+  find_package(OCaml)
+  if( NOT OCAML_FOUND )
+    message(STATUS "OCaml bindings disabled.")
+  else()
+    if( OCAML_VERSION VERSION_LESS "4.00.0" )
+      message(STATUS "OCaml bindings disabled, need OCaml >=4.00.0.")
+    else()
+      find_ocamlfind_package(ctypes VERSION 0.4 OPTIONAL)
+      if( HAVE_OCAML_CTYPES )
+        message(STATUS "OCaml bindings enabled.")
+        find_ocamlfind_package(oUnit VERSION 2 OPTIONAL)
+        set(LLVM_BINDINGS "${LLVM_BINDINGS} ocaml")
+
+        set(LLVM_OCAML_INSTALL_PATH "${OCAML_STDLIB_PATH}" CACHE STRING
+            "Install directory for LLVM OCaml packages")
+      else()
+        message(STATUS "OCaml bindings disabled, need ctypes >=0.4.")
+      endif()
+    endif()
+  endif()
+endif()
+
 string(REPLACE " " ";" LLVM_BINDINGS_LIST "${LLVM_BINDINGS}")
+
+function(find_python_module module)
+  string(REPLACE "." "_" module_name ${module})
+  string(TOUPPER ${module_name} module_upper)
+  set(FOUND_VAR PY_${module_upper}_FOUND)
+  if (DEFINED ${FOUND_VAR})
+    return()
+  endif()
+
+  execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "import ${module}"
+    RESULT_VARIABLE status
+    ERROR_QUIET)
+
+  if(status)
+    set(${FOUND_VAR} OFF CACHE BOOL "Failed to find python module '${module}'")
+    message(STATUS "Could NOT find Python module ${module}")
+  else()
+  set(${FOUND_VAR} ON CACHE BOOL "Found python module '${module}'")
+    message(STATUS "Found Python module ${module}")
+  endif()
+endfunction()
+
+set (PYTHON_MODULES
+  pygments
+  # Some systems still don't have pygments.lexers.c_cpp which was introduced in
+  # version 2.0 in 2014...
+  pygments.lexers.c_cpp
+  yaml
+  )
+foreach(module ${PYTHON_MODULES})
+  find_python_module(${module})
+endforeach()
+
+if(PY_PYGMENTS_FOUND AND PY_PYGMENTS_LEXERS_C_CPP_FOUND AND PY_YAML_FOUND)
+  set (LLVM_HAVE_OPT_VIEWER_MODULES 1)
+else()
+  set (LLVM_HAVE_OPT_VIEWER_MODULES 0)
+endif()

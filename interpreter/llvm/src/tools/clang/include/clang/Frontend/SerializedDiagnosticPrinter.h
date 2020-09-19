@@ -1,9 +1,8 @@
-//===--- SerializedDiagnosticPrinter.h - Serializer for diagnostics -------===//
+//===--- SerializedDiagnosticPrinter.h - Diagnostics serializer -*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,7 +11,7 @@
 
 #include "clang/Basic/LLVM.h"
 #include "clang/Frontend/SerializedDiagnostics.h"
-#include "llvm/Bitcode/BitstreamWriter.h"
+#include "llvm/Bitstream/BitstreamWriter.h"
 
 namespace llvm {
 class raw_ostream;
@@ -25,11 +24,11 @@ class DiagnosticOptions;
 
 namespace serialized_diags {
 
-/// \brief Returns a DiagnosticConsumer that serializes diagnostics to
+/// Returns a DiagnosticConsumer that serializes diagnostics to
 ///  a bitcode file.
 ///
 /// The created DiagnosticConsumer is designed for quick and lightweight
-/// transfer of of diagnostics to the enclosing build system (e.g., an IDE).
+/// transfer of diagnostics to the enclosing build system (e.g., an IDE).
 /// This allows wrapper tools for Clang to get diagnostics from Clang
 /// (via libclang) without needing to parse Clang's command line output.
 ///

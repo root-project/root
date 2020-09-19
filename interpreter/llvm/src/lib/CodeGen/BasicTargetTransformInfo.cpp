@@ -1,9 +1,8 @@
 //===- BasicTargetTransformInfo.cpp - Basic target-independent TTI impl ---===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 /// \file
@@ -15,21 +14,20 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Analysis/LoopInfo.h"
-#include "llvm/Analysis/TargetTransformInfo.h"
-#include "llvm/Analysis/TargetTransformInfoImpl.h"
 #include "llvm/CodeGen/BasicTTIImpl.h"
-#include "llvm/CodeGen/Passes.h"
+#include "llvm/CodeGen/TargetSubtargetInfo.h"
+#include "llvm/IR/Function.h"
 #include "llvm/Support/CommandLine.h"
-#include <utility>
+#include "llvm/Target/TargetMachine.h"
+
 using namespace llvm;
 
 // This flag is used by the template base class for BasicTTIImpl, and here to
 // provide a definition.
 cl::opt<unsigned>
-    llvm::PartialUnrollingThreshold("partial-unrolling-threshold", cl::init(0),
-                                    cl::desc("Threshold for partial unrolling"),
-                                    cl::Hidden);
+llvm::PartialUnrollingThreshold("partial-unrolling-threshold", cl::init(0),
+                                cl::desc("Threshold for partial unrolling"),
+                                cl::Hidden);
 
 BasicTTIImpl::BasicTTIImpl(const TargetMachine *TM, const Function &F)
     : BaseT(TM, F.getParent()->getDataLayout()), ST(TM->getSubtargetImpl(F)),

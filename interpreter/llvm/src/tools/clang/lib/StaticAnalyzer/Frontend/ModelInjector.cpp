@@ -1,15 +1,15 @@
 //===-- ModelInjector.cpp ---------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #include "ModelInjector.h"
 #include "clang/AST/Decl.h"
 #include "clang/Basic/IdentifierTable.h"
+#include "clang/Basic/Stack.h"
 #include "clang/Frontend/ASTUnit.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
@@ -47,7 +47,7 @@ void ModelInjector::onBodySynthesis(const NamedDecl *D) {
   FileID mainFileID = SM.getMainFileID();
 
   AnalyzerOptionsRef analyzerOpts = CI.getAnalyzerOpts();
-  llvm::StringRef modelPath = analyzerOpts->Config["model-path"];
+  llvm::StringRef modelPath = analyzerOpts->ModelPath;
 
   llvm::SmallString<128> fileName;
 
@@ -82,8 +82,6 @@ void ModelInjector::onBodySynthesis(const NamedDecl *D) {
 
   Instance.getDiagnostics().setSourceManager(&SM);
 
-  Instance.setVirtualFileSystem(&CI.getVirtualFileSystem());
-
   // The instance wants to take ownership, however DisableFree frontend option
   // is set to true to avoid double free issues
   Instance.setFileManager(&CI.getFileManager());
@@ -95,11 +93,10 @@ void ModelInjector::onBodySynthesis(const NamedDecl *D) {
 
   ParseModelFileAction parseModelFile(Bodies);
 
-  const unsigned ThreadStackSize = 8 << 20;
   llvm::CrashRecoveryContext CRC;
 
   CRC.RunSafelyOnThread([&]() { Instance.ExecuteAction(parseModelFile); },
-                        ThreadStackSize);
+                        DesiredStackSize);
 
   Instance.getPreprocessor().FinalizeForModelFile();
 
@@ -109,7 +106,7 @@ void ModelInjector::onBodySynthesis(const NamedDecl *D) {
 
   // The preprocessor enters to the main file id when parsing is started, so
   // the main file id is changed to the model file during parsing and it needs
-  // to be reseted to the former main file id after parsing of the model file
+  // to be reset to the former main file id after parsing of the model file
   // is done.
   SM.setMainFileID(mainFileID);
 }

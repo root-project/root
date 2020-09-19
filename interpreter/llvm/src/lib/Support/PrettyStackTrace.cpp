@@ -1,10 +1,9 @@
 //===- PrettyStackTrace.cpp - Pretty Crash Handling -----------------------===//
-// 
-//                     The LLVM Compiler Infrastructure
 //
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
-// 
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
 //===----------------------------------------------------------------------===//
 //
 // This file defines some helpful functions for dealing with the possibility of
@@ -15,12 +14,14 @@
 #include "llvm/Support/PrettyStackTrace.h"
 #include "llvm-c/ErrorHandling.h"
 #include "llvm/ADT/SmallString.h"
-#include "llvm/Config/config.h" // Get autoconf configuration settings
+#include "llvm/Config/config.h"
 #include "llvm/Support/Compiler.h"
+#include "llvm/Support/SaveAndRestore.h"
 #include "llvm/Support/Signals.h"
 #include "llvm/Support/Watchdog.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include <atomic>
 #include <cstdarg>
 #include <cstdio>
 #include <tuple>
@@ -34,13 +35,29 @@ using namespace llvm;
 // If backtrace support is not enabled, compile out support for pretty stack
 // traces.  This has the secondary effect of not requiring thread local storage
 // when backtrace support is disabled.
-#if defined(HAVE_BACKTRACE) && ENABLE_BACKTRACES
+#if ENABLE_BACKTRACES
 
 // We need a thread local pointer to manage the stack of our stack trace
 // objects, but we *really* cannot tolerate destructors running and do not want
 // to pay any overhead of synchronizing. As a consequence, we use a raw
 // thread-local variable.
 static LLVM_THREAD_LOCAL PrettyStackTraceEntry *PrettyStackTraceHead = nullptr;
+
+// The use of 'volatile' here is to ensure that any particular thread always
+// reloads the value of the counter. The 'std::atomic' allows us to specify that
+// this variable is accessed in an unsychronized way (it's not actually
+// synchronizing). This does technically mean that the value may not appear to
+// be the same across threads running simultaneously on different CPUs, but in
+// practice the worst that will happen is that we won't print a stack trace when
+// we could have.
+//
+// This is initialized to 1 because 0 is used as a sentinel for "not enabled on
+// the current thread". If the user happens to overflow an 'unsigned' with
+// SIGINFO requests, it's possible that some threads will stop responding to it,
+// but the program won't crash.
+static volatile std::atomic<unsigned> GlobalSigInfoGenerationCounter =
+    ATOMIC_VAR_INIT(1);
+static LLVM_THREAD_LOCAL unsigned ThreadLocalSigInfoGenerationCounter = 0;
 
 namespace llvm {
 PrettyStackTraceEntry *ReverseStackTrace(PrettyStackTraceEntry *Head) {
@@ -57,8 +74,9 @@ static void PrintStack(raw_ostream &OS) {
   // to fail if we crashed due to stack overflow), we do an up-front pass to
   // reverse the stack, then print it, then reverse it again.
   unsigned ID = 0;
-  PrettyStackTraceEntry *ReversedStack =
-      llvm::ReverseStackTrace(PrettyStackTraceHead);
+  SaveAndRestore<PrettyStackTraceEntry *> SavedStack{PrettyStackTraceHead,
+                                                     nullptr};
+  PrettyStackTraceEntry *ReversedStack = ReverseStackTrace(SavedStack.get());
   for (const PrettyStackTraceEntry *Entry = ReversedStack; Entry;
        Entry = Entry->getNextEntry()) {
     OS << ID++ << ".\t";
@@ -68,14 +86,17 @@ static void PrintStack(raw_ostream &OS) {
   llvm::ReverseStackTrace(ReversedStack);
 }
 
-/// PrintCurStackTrace - Print the current stack trace to the specified stream.
+/// Print the current stack trace to the specified stream.
+///
+/// Marked NOINLINE so it can be called from debuggers.
+LLVM_ATTRIBUTE_NOINLINE
 static void PrintCurStackTrace(raw_ostream &OS) {
   // Don't print an empty trace.
   if (!PrettyStackTraceHead) return;
-  
+
   // If there are pretty stack frames registered, walk and emit them.
   OS << "Stack dump:\n";
-  
+
   PrintStack(OS);
   OS.flush();
 }
@@ -85,10 +106,14 @@ static void PrintCurStackTrace(raw_ostream &OS) {
 //  If any clients of llvm try to link to libCrashReporterClient.a themselves,
 //  only one crash info struct will be used.
 extern "C" {
-CRASH_REPORTER_CLIENT_HIDDEN 
-struct crashreporter_annotations_t gCRAnnotations 
-        __attribute__((section("__DATA," CRASHREPORTER_ANNOTATIONS_SECTION))) 
+CRASH_REPORTER_CLIENT_HIDDEN
+struct crashreporter_annotations_t gCRAnnotations
+        __attribute__((section("__DATA," CRASHREPORTER_ANNOTATIONS_SECTION)))
+#if CRASHREPORTER_ANNOTATIONS_VERSION < 5
         = { CRASHREPORTER_ANNOTATIONS_VERSION, 0, 0, 0, 0, 0, 0 };
+#else
+        = { CRASHREPORTER_ANNOTATIONS_VERSION, 0, 0, 0, 0, 0, 0, 0 };
+#endif
 }
 #elif defined(__APPLE__) && HAVE_CRASHREPORTER_INFO
 extern "C" const char *__crashreporter_info__
@@ -110,25 +135,38 @@ static void CrashHandler(void *) {
     raw_svector_ostream Stream(TmpStr);
     PrintCurStackTrace(Stream);
   }
-  
+
   if (!TmpStr.empty()) {
 #ifdef HAVE_CRASHREPORTERCLIENT_H
     // Cast to void to avoid warning.
-    (void)CRSetCrashLogMessage(std::string(TmpStr.str()).c_str());
-#elif HAVE_CRASHREPORTER_INFO 
-    __crashreporter_info__ = strdup(std::string(TmpStr.str()).c_str());
+    (void)CRSetCrashLogMessage(TmpStr.c_str());
+#elif HAVE_CRASHREPORTER_INFO
+    __crashreporter_info__ = strdup(TmpStr.c_str());
 #endif
     errs() << TmpStr.str();
   }
-  
+
 #endif
 }
 
-// defined(HAVE_BACKTRACE) && ENABLE_BACKTRACES
-#endif
+static void printForSigInfoIfNeeded() {
+  unsigned CurrentSigInfoGeneration =
+      GlobalSigInfoGenerationCounter.load(std::memory_order_relaxed);
+  if (ThreadLocalSigInfoGenerationCounter == 0 ||
+      ThreadLocalSigInfoGenerationCounter == CurrentSigInfoGeneration) {
+    return;
+  }
+
+  PrintCurStackTrace(errs());
+  ThreadLocalSigInfoGenerationCounter = CurrentSigInfoGeneration;
+}
+
+#endif // ENABLE_BACKTRACES
 
 PrettyStackTraceEntry::PrettyStackTraceEntry() {
-#if defined(HAVE_BACKTRACE) && ENABLE_BACKTRACES
+#if ENABLE_BACKTRACES
+  // Handle SIGINFO first, because we haven't finished constructing yet.
+  printForSigInfoIfNeeded();
   // Link ourselves.
   NextEntry = PrettyStackTraceHead;
   PrettyStackTraceHead = this;
@@ -136,10 +174,12 @@ PrettyStackTraceEntry::PrettyStackTraceEntry() {
 }
 
 PrettyStackTraceEntry::~PrettyStackTraceEntry() {
-#if defined(HAVE_BACKTRACE) && ENABLE_BACKTRACES
+#if ENABLE_BACKTRACES
   assert(PrettyStackTraceHead == this &&
          "Pretty stack trace entry destruction is out of order");
   PrettyStackTraceHead = NextEntry;
+  // Handle SIGINFO first, because we already started destructing.
+  printForSigInfoIfNeeded();
 #endif
 }
 
@@ -171,7 +211,7 @@ void PrettyStackTraceProgram::print(raw_ostream &OS) const {
   OS << '\n';
 }
 
-#if defined(HAVE_BACKTRACE) && ENABLE_BACKTRACES
+#if ENABLE_BACKTRACES
 static bool RegisterCrashPrinter() {
   sys::AddSignalHandler(CrashHandler, nullptr);
   return false;
@@ -179,15 +219,37 @@ static bool RegisterCrashPrinter() {
 #endif
 
 void llvm::EnablePrettyStackTrace() {
-#if defined(HAVE_BACKTRACE) && ENABLE_BACKTRACES
+#if ENABLE_BACKTRACES
   // The first time this is called, we register the crash printer.
   static bool HandlerRegistered = RegisterCrashPrinter();
   (void)HandlerRegistered;
 #endif
 }
 
+void llvm::EnablePrettyStackTraceOnSigInfoForThisThread(bool ShouldEnable) {
+#if ENABLE_BACKTRACES
+  if (!ShouldEnable) {
+    ThreadLocalSigInfoGenerationCounter = 0;
+    return;
+  }
+
+  // The first time this is called, we register the SIGINFO handler.
+  static bool HandlerRegistered = []{
+    sys::SetInfoSignalFunction([]{
+      GlobalSigInfoGenerationCounter.fetch_add(1, std::memory_order_relaxed);
+    });
+    return false;
+  }();
+  (void)HandlerRegistered;
+
+  // Next, enable it for the current thread.
+  ThreadLocalSigInfoGenerationCounter =
+      GlobalSigInfoGenerationCounter.load(std::memory_order_relaxed);
+#endif
+}
+
 const void *llvm::SavePrettyStackState() {
-#if defined(HAVE_BACKTRACE) && ENABLE_BACKTRACES
+#if ENABLE_BACKTRACES
   return PrettyStackTraceHead;
 #else
   return nullptr;
@@ -195,7 +257,7 @@ const void *llvm::SavePrettyStackState() {
 }
 
 void llvm::RestorePrettyStackState(const void *Top) {
-#if defined(HAVE_BACKTRACE) && ENABLE_BACKTRACES
+#if ENABLE_BACKTRACES
   PrettyStackTraceHead =
       static_cast<PrettyStackTraceEntry *>(const_cast<void *>(Top));
 #endif

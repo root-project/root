@@ -1,9 +1,8 @@
-//===--- RewriteRope.h - Rope specialized for rewriter ----------*- C++ -*-===//
+//===- RewriteRope.h - Rope specialized for rewriter ------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,13 +15,13 @@
 
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/Support/Compiler.h"
 #include <cassert>
 #include <cstddef>
-#include <cstring>
 #include <iterator>
+#include <utility>
 
 namespace clang {
+
   //===--------------------------------------------------------------------===//
   // RopeRefCountString Class
   //===--------------------------------------------------------------------===//
@@ -58,11 +57,10 @@ namespace clang {
   /// different offsets) which is a nice constant time operation.
   struct RopePiece {
     llvm::IntrusiveRefCntPtr<RopeRefCountString> StrData;
-    unsigned StartOffs;
-    unsigned EndOffs;
+    unsigned StartOffs = 0;
+    unsigned EndOffs = 0;
 
-    RopePiece() : StrData(nullptr), StartOffs(0), EndOffs(0) {}
-
+    RopePiece() = default;
     RopePiece(llvm::IntrusiveRefCntPtr<RopeRefCountString> Str, unsigned Start,
               unsigned End)
         : StrData(std::move(Str)), StartOffs(Start), EndOffs(End) {}
@@ -88,18 +86,18 @@ namespace clang {
   class RopePieceBTreeIterator :
       public std::iterator<std::forward_iterator_tag, const char, ptrdiff_t> {
     /// CurNode - The current B+Tree node that we are inspecting.
-    const void /*RopePieceBTreeLeaf*/ *CurNode;
+    const void /*RopePieceBTreeLeaf*/ *CurNode = nullptr;
+
     /// CurPiece - The current RopePiece in the B+Tree node that we're
     /// inspecting.
-    const RopePiece *CurPiece;
+    const RopePiece *CurPiece = nullptr;
+
     /// CurChar - The current byte in the RopePiece we are pointing to.
-    unsigned CurChar;
+    unsigned CurChar = 0;
+
   public:
-    // begin iterator.
+    RopePieceBTreeIterator() = default;
     RopePieceBTreeIterator(const void /*RopePieceBTreeNode*/ *N);
-    // end iterator
-    RopePieceBTreeIterator()
-      : CurNode(nullptr), CurPiece(nullptr), CurChar(0) {}
 
     char operator*() const {
       return (*CurPiece)[CurChar];
@@ -119,7 +117,8 @@ namespace clang {
         MoveToNextPiece();
       return *this;
     }
-    inline RopePieceBTreeIterator operator++(int) { // Postincrement
+
+    RopePieceBTreeIterator operator++(int) { // Postincrement
       RopePieceBTreeIterator tmp = *this; ++*this; return tmp;
     }
 
@@ -136,13 +135,15 @@ namespace clang {
 
   class RopePieceBTree {
     void /*RopePieceBTreeNode*/ *Root;
-    void operator=(const RopePieceBTree &) = delete;
+
   public:
     RopePieceBTree();
     RopePieceBTree(const RopePieceBTree &RHS);
+    RopePieceBTree &operator=(const RopePieceBTree &) = delete;
     ~RopePieceBTree();
 
-    typedef RopePieceBTreeIterator iterator;
+    using iterator = RopePieceBTreeIterator;
+
     iterator begin() const { return iterator(Root); }
     iterator end() const { return iterator(); }
     unsigned size() const;
@@ -168,19 +169,18 @@ class RewriteRope {
   /// We allocate space for string data out of a buffer of size AllocChunkSize.
   /// This keeps track of how much space is left.
   llvm::IntrusiveRefCntPtr<RopeRefCountString> AllocBuffer;
-  unsigned AllocOffs;
   enum { AllocChunkSize = 4080 };
+  unsigned AllocOffs = AllocChunkSize;
 
 public:
-  RewriteRope() :  AllocBuffer(nullptr), AllocOffs(AllocChunkSize) {}
-  RewriteRope(const RewriteRope &RHS)
-    : Chunks(RHS.Chunks), AllocBuffer(nullptr), AllocOffs(AllocChunkSize) {
-  }
+  RewriteRope() = default;
+  RewriteRope(const RewriteRope &RHS) : Chunks(RHS.Chunks) {}
 
-  typedef RopePieceBTree::iterator iterator;
-  typedef RopePieceBTree::iterator const_iterator;
+  using iterator = RopePieceBTree::iterator;
+  using const_iterator = RopePieceBTree::iterator;
+
   iterator begin() const { return Chunks.begin(); }
-  iterator end() const  { return Chunks.end(); }
+  iterator end() const { return Chunks.end(); }
   unsigned size() const { return Chunks.size(); }
 
   void clear() {
@@ -209,6 +209,6 @@ private:
   RopePiece MakeRopeString(const char *Start, const char *End);
 };
 
-} // end namespace clang
+} // namespace clang
 
-#endif
+#endif // LLVM_CLANG_REWRITE_CORE_REWRITEROPE_H

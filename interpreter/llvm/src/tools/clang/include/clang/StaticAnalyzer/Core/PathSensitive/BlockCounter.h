@@ -1,9 +1,8 @@
 //==- BlockCounter.h - ADT for counting block visits ---------------*- C++ -*-//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -25,7 +24,7 @@ class StackFrameContext;
 namespace ento {
 
 /// \class BlockCounter
-/// \brief An abstract data type used to count the number of times a given
+/// An abstract data type used to count the number of times a given
 /// block has been visited along a path analyzed by CoreEngine.
 class BlockCounter {
   void *Data;
@@ -35,7 +34,7 @@ class BlockCounter {
 public:
   BlockCounter() : Data(nullptr) {}
 
-  unsigned getNumVisited(const StackFrameContext *CallSite, 
+  unsigned getNumVisited(const StackFrameContext *CallSite,
                          unsigned BlockID) const;
 
   class Factory {
@@ -45,7 +44,7 @@ public:
     ~Factory();
 
     BlockCounter GetEmptyCounter();
-    BlockCounter IncrementCount(BlockCounter BC, 
+    BlockCounter IncrementCount(BlockCounter BC,
                                   const StackFrameContext *CallSite,
                                   unsigned BlockID);
   };

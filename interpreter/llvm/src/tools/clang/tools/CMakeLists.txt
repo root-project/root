@@ -2,15 +2,21 @@ create_subdirectory_options(CLANG TOOL)
 
 add_clang_subdirectory(diagtool)
 add_clang_subdirectory(driver)
+add_clang_subdirectory(clang-diff)
 add_clang_subdirectory(clang-format)
 add_clang_subdirectory(clang-format-vs)
 add_clang_subdirectory(clang-fuzzer)
 add_clang_subdirectory(clang-import-test)
 add_clang_subdirectory(clang-offload-bundler)
+add_clang_subdirectory(clang-scan-deps)
 
 add_clang_subdirectory(c-index-test)
 
 add_clang_subdirectory(clang-rename)
+add_clang_subdirectory(clang-refactor)
+if(UNIX)
+  add_clang_subdirectory(clang-shlib)
+endif()
 
 if(CLANG_ENABLE_ARCMT)
   add_clang_subdirectory(arcmt-test)
@@ -19,6 +25,7 @@ endif()
 
 if(CLANG_ENABLE_STATIC_ANALYZER)
   add_clang_subdirectory(clang-check)
+  add_clang_subdirectory(clang-extdef-mapping)
   add_clang_subdirectory(scan-build)
   add_clang_subdirectory(scan-view)
 endif()
@@ -29,17 +36,6 @@ endif()
 # to keep the primary Clang repository small and focused.
 # It also may be included by LLVM_EXTERNAL_CLANG_TOOLS_EXTRA_SOURCE_DIR.
 add_llvm_external_project(clang-tools-extra extra)
-if(NOT builtin_llvm)
-  # FIXME: Builtin llvm does not provide utils such as FileCheck and not.
-  # Let's add them from our builtin llvm.
-  if (NOT TARGET FileCheck)
-    add_clang_subdirectory(../../../utils/FileCheck)
-  endif()
-  if (NOT TARGET not)
-    add_clang_subdirectory(../../../utils/not)
-  endif()
-  add_llvm_external_project(cling)
-endif(NOT builtin_llvm)
 
 # libclang may require clang-tidy in clang-tools-extra.
 add_clang_subdirectory(libclang)

@@ -12,7 +12,7 @@
 # It operates on the current, potentially unsaved buffer and does not create
 # or save any files. To revert a formatting, just undo.
 
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 import sublime
 import sublime_plugin
 import subprocess
@@ -24,7 +24,7 @@ binary = 'clang-format'
 # 'clang-format --help' for a list of supported styles. The default looks for
 # a '.clang-format' or '_clang-format' file to indicate the style that should be
 # used.
-style = 'file'
+style = None
 
 class ClangFormatCommand(sublime_plugin.TextCommand):
   def run(self, edit):
@@ -32,7 +32,9 @@ class ClangFormatCommand(sublime_plugin.TextCommand):
     if encoding == 'Undefined':
       encoding = 'utf-8'
     regions = []
-    command = [binary, '-style', style]
+    command = [binary]
+    if style:
+      command.extend(['-style', style])
     for region in self.view.sel():
       regions.append(region)
       region_offset = min(region.a, region.b)

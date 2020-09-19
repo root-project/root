@@ -1,9 +1,8 @@
 //===- CXString.cpp - Routines for manipulating CXStrings -----------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -96,7 +95,7 @@ CXString createRef(StringRef String) {
 
 CXString createDup(StringRef String) {
   CXString Result;
-  char *Spelling = static_cast<char *>(malloc(String.size() + 1));
+  char *Spelling = static_cast<char *>(llvm::safe_malloc(String.size() + 1));
   memmove(Spelling, String.data(), String.size());
   Spelling[String.size()] = 0;
   Result.data = Spelling;

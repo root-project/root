@@ -1,9 +1,8 @@
-//===- FunctionLoweringInfo.h - Lower functions from LLVM IR to CodeGen ---===//
+//===- FunctionLoweringInfo.h - Lower functions from LLVM IR ---*- C++ -*--===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,20 +13,21 @@
 
 #ifndef LLVM_CODEGEN_FUNCTIONLOWERINGINFO_H
 #define LLVM_CODEGEN_FUNCTIONLOWERINGINFO_H
-
 #include "llvm/ADT/APInt.h"
+#include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/IndexedMap.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/Analysis/LegacyDivergenceAnalysis.h"
 #include "llvm/CodeGen/ISDOpcodes.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
+#include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Value.h"
 #include "llvm/Support/KnownBits.h"
-#include "llvm/Target/TargetRegisterInfo.h"
 #include <cassert>
 #include <utility>
 #include <vector>
@@ -57,6 +57,7 @@ public:
   const TargetLowering *TLI;
   MachineRegisterInfo *RegInfo;
   BranchProbabilityInfo *BPI;
+  const LegacyDivergenceAnalysis *DA;
   /// CanLowerReturn - true iff the function's return value can be lowered to
   /// registers.
   bool CanLowerReturn;
@@ -71,52 +72,21 @@ public:
   /// MBBMap - A mapping from LLVM basic blocks to their machine code entry.
   DenseMap<const BasicBlock*, MachineBasicBlock *> MBBMap;
 
-  /// A map from swifterror value in a basic block to the virtual register it is
-  /// currently represented by.
-  DenseMap<std::pair<const MachineBasicBlock *, const Value *>, unsigned>
-      SwiftErrorVRegDefMap;
-
-  /// A list of upward exposed vreg uses that need to be satisfied by either a
-  /// copy def or a phi node at the beginning of the basic block representing
-  /// the predecessor(s) swifterror value.
-  DenseMap<std::pair<const MachineBasicBlock *, const Value *>, unsigned>
-      SwiftErrorVRegUpwardsUse;
-
-  /// A map from instructions that define/use a swifterror value to the virtual
-  /// register that represents that def/use.
-  llvm::DenseMap<PointerIntPair<const Instruction *, 1, bool>, unsigned>
-      SwiftErrorVRegDefUses;
-
-  /// The swifterror argument of the current function.
-  const Value *SwiftErrorArg;
-
-  using SwiftErrorValues = SmallVector<const Value*, 1>;
-  /// A function can only have a single swifterror argument. And if it does
-  /// have a swifterror argument, it must be the first entry in
-  /// SwiftErrorVals.
-  SwiftErrorValues SwiftErrorVals;
-
-  /// Get or create the swifterror value virtual register in
-  /// SwiftErrorVRegDefMap for this basic block.
-  unsigned getOrCreateSwiftErrorVReg(const MachineBasicBlock *,
-                                     const Value *);
-
-  /// Set the swifterror virtual register in the SwiftErrorVRegDefMap for this
-  /// basic block.
-  void setCurrentSwiftErrorVReg(const MachineBasicBlock *MBB, const Value *,
-                                unsigned);
-
-  /// Get or create the swifterror value virtual register for a def of a
-  /// swifterror by an instruction.
-  std::pair<unsigned, bool> getOrCreateSwiftErrorVRegDefAt(const Instruction *);
-  std::pair<unsigned, bool>
-  getOrCreateSwiftErrorVRegUseAt(const Instruction *, const MachineBasicBlock *,
-                                 const Value *);
-
   /// ValueMap - Since we emit code for the function a basic block at a time,
   /// we must remember which virtual registers hold the values for
   /// cross-basic-block values.
   DenseMap<const Value *, unsigned> ValueMap;
+
+  /// VirtReg2Value map is needed by the Divergence Analysis driven
+  /// instruction selection. It is reverted ValueMap. It is computed
+  /// in lazy style - on demand. It is used to get the Value corresponding
+  /// to the live in virtual register and is called from the
+  /// TargetLowerinInfo::isSDNodeSourceOfDivergence.
+  DenseMap<unsigned, const Value*> VirtReg2Value;
+
+  /// This method is called from TargetLowerinInfo::isSDNodeSourceOfDivergence
+  /// to get the Value corresponding to the live-in virtual register.
+  const Value * getValueFromVirtualReg(unsigned Vreg);
 
   /// Track virtual registers created for exception pointers.
   DenseMap<const Value *, unsigned> CatchPadExceptionPointers;
@@ -164,8 +134,14 @@ public:
   /// function arguments that are inserted after scheduling is completed.
   SmallVector<MachineInstr*, 8> ArgDbgValues;
 
+  /// Bitvector with a bit set if corresponding argument is described in
+  /// ArgDbgValues. Using arg numbers according to Argument numbering.
+  BitVector DescribedArgs;
+
   /// RegFixups - Registers which need to be replaced after isel is done.
   DenseMap<unsigned, unsigned> RegFixups;
+
+  DenseSet<unsigned> RegsWithFixups;
 
   /// StatepointStackSlots - A list of temporary stack slots (frame indices)
   /// used to spill values at a statepoint.  We store them here to enable
@@ -223,9 +199,11 @@ public:
     return ValueMap.count(V);
   }
 
-  unsigned CreateReg(MVT VT);
+  unsigned CreateReg(MVT VT, bool isDivergent = false);
 
-  unsigned CreateRegs(Type *Ty);
+  unsigned CreateRegs(const Value *V);
+
+  unsigned CreateRegs(Type *Ty, bool isDivergent = false);
 
   unsigned InitializeRegForValue(const Value *V) {
     // Tokens never live in vregs.
@@ -233,7 +211,8 @@ public:
       return 0;
     unsigned &R = ValueMap[V];
     assert(R == 0 && "Already initialized this value register!");
-    return R = CreateRegs(V->getType());
+    assert(VirtReg2Value.empty());
+    return R = CreateRegs(V);
   }
 
   /// GetLiveOutRegInfo - Gets LiveOutInfo for a register, returning NULL if the

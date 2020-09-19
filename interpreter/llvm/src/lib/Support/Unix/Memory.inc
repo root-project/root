@@ -1,9 +1,8 @@
 //===- Unix/Memory.cpp - Generic UNIX System Configuration ------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "Unix.h"
+#include "llvm/Config/config.h"
 #include "llvm/Support/DataTypes.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Process.h"
@@ -24,15 +24,19 @@
 #include <mach/mach.h>
 #endif
 
+#ifdef __Fuchsia__
+#include <zircon/syscalls.h>
+#endif
+
 #if defined(__mips__)
 #  if defined(__OpenBSD__)
 #    include <mips64/sysarch.h>
-#  else
+#  elif !defined(__FreeBSD__)
 #    include <sys/cachectl.h>
 #  endif
 #endif
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
 extern "C" void sys_icache_invalidate(const void *Addr, size_t len);
 #else
 extern "C" void __clear_cache(void *, void*);
@@ -41,7 +45,7 @@ extern "C" void __clear_cache(void *, void*);
 namespace {
 
 int getPosixProtectionFlags(unsigned Flags) {
-  switch (Flags) {
+  switch (Flags & llvm::sys::Memory::MF_RWE_MASK) {
   case llvm::sys::Memory::MF_READ:
     return PROT_READ;
   case llvm::sys::Memory::MF_WRITE:
@@ -54,14 +58,13 @@ int getPosixProtectionFlags(unsigned Flags) {
       llvm::sys::Memory::MF_EXEC:
     return PROT_READ | PROT_WRITE | PROT_EXEC;
   case llvm::sys::Memory::MF_EXEC:
-#if defined(__FreeBSD__)
+#if (defined(__FreeBSD__) || defined(__POWERPC__) || defined (__ppc__) || \
+     defined(_POWER) || defined(_ARCH_PPC))
     // On PowerPC, having an executable page that has no read permission
     // can have unintended consequences.  The function InvalidateInstruction-
     // Cache uses instructions dcbf and icbi, both of which are treated by
     // the processor as loads.  If the page has no read permissions,
     // executing these instructions will result in a segmentation fault.
-    // Somehow, this problem is not present on Linux, but it does happen
-    // on FreeBSD.
     return PROT_READ | PROT_EXEC;
 #else
     return PROT_EXEC;
@@ -87,206 +90,128 @@ Memory::allocateMappedMemory(size_t NumBytes,
   if (NumBytes == 0)
     return MemoryBlock();
 
-  static const size_t PageSize = Process::getPageSize();
-  const size_t NumPages = (NumBytes+PageSize-1)/PageSize;
-
-  int fd = -1;
-
-  int MMFlags = MAP_PRIVATE |
-#ifdef MAP_ANONYMOUS
-  MAP_ANONYMOUS
+  // On platforms that have it, we can use MAP_ANON to get a memory-mapped
+  // page without file backing, but we need a fallback of opening /dev/zero
+  // for strictly POSIX platforms instead.
+  int fd;
+#if defined(MAP_ANON)
+  fd = -1;
 #else
-  MAP_ANON
-#endif
-  ; // Ends statement above
-
-  int Protect = getPosixProtectionFlags(PFlags);
-
-  // Use any near hint and the page size to set a page-aligned starting address
-  uintptr_t Start = NearBlock ? reinterpret_cast<uintptr_t>(NearBlock->base()) +
-                                      NearBlock->size() : 0;
-  if (Start && Start % PageSize)
-    Start += PageSize - Start % PageSize;
-
-  void *Addr = ::mmap(reinterpret_cast<void*>(Start), PageSize*NumPages,
-                      Protect, MMFlags, fd, 0);
-  if (Addr == MAP_FAILED) {
-    if (NearBlock) //Try again without a near hint
-      return allocateMappedMemory(NumBytes, nullptr, PFlags, EC);
-
+  fd = open("/dev/zero", O_RDWR);
+  if (fd == -1) {
     EC = std::error_code(errno, std::generic_category());
     return MemoryBlock();
   }
+#endif
+
+  int MMFlags = MAP_PRIVATE;
+#if defined(MAP_ANON)
+  MMFlags |= MAP_ANON;
+#endif
+  int Protect = getPosixProtectionFlags(PFlags);
+
+#if defined(__NetBSD__) && defined(PROT_MPROTECT)
+  Protect |= PROT_MPROTECT(PROT_READ | PROT_WRITE | PROT_EXEC);
+#endif
+
+  // Use any near hint and the page size to set a page-aligned starting address
+  uintptr_t Start = NearBlock ? reinterpret_cast<uintptr_t>(NearBlock->base()) +
+                                      NearBlock->allocatedSize() : 0;
+  static const size_t PageSize = Process::getPageSizeEstimate();
+  const size_t NumPages = (NumBytes+PageSize-1)/PageSize;
+
+  if (Start && Start % PageSize)
+    Start += PageSize - Start % PageSize;
+
+  // FIXME: Handle huge page requests (MF_HUGE_HINT).
+  void *Addr = ::mmap(reinterpret_cast<void *>(Start), PageSize*NumPages, Protect,
+                      MMFlags, fd, 0);
+  if (Addr == MAP_FAILED) {
+    if (NearBlock) { //Try again without a near hint
+#if !defined(MAP_ANON)
+      close(fd);
+#endif
+      return allocateMappedMemory(NumBytes, nullptr, PFlags, EC);
+    }
+
+    EC = std::error_code(errno, std::generic_category());
+#if !defined(MAP_ANON)
+    close(fd);
+#endif
+    return MemoryBlock();
+  }
+
+#if !defined(MAP_ANON)
+  close(fd);
+#endif
 
   MemoryBlock Result;
   Result.Address = Addr;
-  Result.Size = NumPages*PageSize;
+  Result.AllocatedSize = PageSize*NumPages;
+  Result.Flags = PFlags;
 
-  if (PFlags & MF_EXEC)
-    Memory::InvalidateInstructionCache(Result.Address, Result.Size);
+  // Rely on protectMappedMemory to invalidate instruction cache.
+  if (PFlags & MF_EXEC) {
+    EC = Memory::protectMappedMemory (Result, PFlags);
+    if (EC != std::error_code())
+      return MemoryBlock();
+  }
 
   return Result;
 }
 
 std::error_code
 Memory::releaseMappedMemory(MemoryBlock &M) {
-  if (M.Address == nullptr || M.Size == 0)
+  if (M.Address == nullptr || M.AllocatedSize == 0)
     return std::error_code();
 
-  if (0 != ::munmap(M.Address, M.Size))
+  if (0 != ::munmap(M.Address, M.AllocatedSize))
     return std::error_code(errno, std::generic_category());
 
   M.Address = nullptr;
-  M.Size = 0;
+  M.AllocatedSize = 0;
 
   return std::error_code();
 }
 
 std::error_code
 Memory::protectMappedMemory(const MemoryBlock &M, unsigned Flags) {
-  static const size_t PageSize = Process::getPageSize();
-  if (M.Address == nullptr || M.Size == 0)
+  static const size_t PageSize = Process::getPageSizeEstimate();
+  if (M.Address == nullptr || M.AllocatedSize == 0)
     return std::error_code();
 
   if (!Flags)
     return std::error_code(EINVAL, std::generic_category());
 
   int Protect = getPosixProtectionFlags(Flags);
-
   uintptr_t Start = alignAddr((uint8_t *)M.Address - PageSize + 1, PageSize);
-  uintptr_t End = alignAddr((uint8_t *)M.Address + M.Size, PageSize);
+  uintptr_t End = alignAddr((uint8_t *)M.Address + M.AllocatedSize, PageSize);
+
+  bool InvalidateCache = (Flags & MF_EXEC);
+
+#if defined(__arm__) || defined(__aarch64__)
+  // Certain ARM implementations treat icache clear instruction as a memory read,
+  // and CPU segfaults on trying to clear cache on !PROT_READ page.  Therefore we need
+  // to temporarily add PROT_READ for the sake of flushing the instruction caches.
+  if (InvalidateCache && !(Protect & PROT_READ)) {
+    int Result = ::mprotect((void *)Start, End - Start, Protect | PROT_READ);
+    if (Result != 0)
+      return std::error_code(errno, std::generic_category());
+
+    Memory::InvalidateInstructionCache(M.Address, M.AllocatedSize);
+    InvalidateCache = false;
+  }
+#endif
+
   int Result = ::mprotect((void *)Start, End - Start, Protect);
 
   if (Result != 0)
     return std::error_code(errno, std::generic_category());
 
-  if (Flags & MF_EXEC)
-    Memory::InvalidateInstructionCache(M.Address, M.Size);
+  if (InvalidateCache)
+    Memory::InvalidateInstructionCache(M.Address, M.AllocatedSize);
 
   return std::error_code();
-}
-
-/// AllocateRWX - Allocate a slab of memory with read/write/execute
-/// permissions.  This is typically used for JIT applications where we want
-/// to emit code to the memory then jump to it.  Getting this type of memory
-/// is very OS specific.
-///
-MemoryBlock
-Memory::AllocateRWX(size_t NumBytes, const MemoryBlock* NearBlock,
-                    std::string *ErrMsg) {
-  if (NumBytes == 0) return MemoryBlock();
-
-  static const size_t PageSize = Process::getPageSize();
-  size_t NumPages = (NumBytes+PageSize-1)/PageSize;
-
-  int fd = -1;
-
-  int flags = MAP_PRIVATE |
-#ifdef MAP_ANONYMOUS
-  MAP_ANONYMOUS
-#else
-  MAP_ANON
-#endif
-  ;
-
-  void* start = NearBlock ? (unsigned char*)NearBlock->base() +
-                            NearBlock->size() : nullptr;
-
-#if defined(__APPLE__) && (defined(__arm__) || defined(__arm64__))
-  void *pa = ::mmap(start, PageSize*NumPages, PROT_READ|PROT_EXEC,
-                    flags, fd, 0);
-#elif defined(__NetBSD__) && defined(PROT_MPROTECT)
-  void *pa =
-      ::mmap(start, PageSize * NumPages,
-             PROT_READ | PROT_WRITE | PROT_MPROTECT(PROT_EXEC), flags, fd, 0);
-#else
-  void *pa = ::mmap(start, PageSize*NumPages, PROT_READ|PROT_WRITE|PROT_EXEC,
-                    flags, fd, 0);
-#endif
-  if (pa == MAP_FAILED) {
-    if (NearBlock) //Try again without a near hint
-      return AllocateRWX(NumBytes, nullptr);
-
-    MakeErrMsg(ErrMsg, "Can't allocate RWX Memory");
-    return MemoryBlock();
-  }
-
-#if defined(__APPLE__) && (defined(__arm__) || defined(__arm64__))
-  kern_return_t kr = vm_protect(mach_task_self(), (vm_address_t)pa,
-                                (vm_size_t)(PageSize*NumPages), 0,
-                                VM_PROT_READ | VM_PROT_EXECUTE | VM_PROT_COPY);
-  if (KERN_SUCCESS != kr) {
-    MakeErrMsg(ErrMsg, "vm_protect max RX failed");
-    return MemoryBlock();
-  }
-
-  kr = vm_protect(mach_task_self(), (vm_address_t)pa,
-                  (vm_size_t)(PageSize*NumPages), 0,
-                  VM_PROT_READ | VM_PROT_WRITE);
-  if (KERN_SUCCESS != kr) {
-    MakeErrMsg(ErrMsg, "vm_protect RW failed");
-    return MemoryBlock();
-  }
-#endif
-
-  MemoryBlock result;
-  result.Address = pa;
-  result.Size = NumPages*PageSize;
-
-  return result;
-}
-
-bool Memory::ReleaseRWX(MemoryBlock &M, std::string *ErrMsg) {
-  if (M.Address == nullptr || M.Size == 0) return false;
-  if (0 != ::munmap(M.Address, M.Size))
-    return MakeErrMsg(ErrMsg, "Can't release RWX Memory");
-  return false;
-}
-
-bool Memory::setWritable (MemoryBlock &M, std::string *ErrMsg) {
-#if defined(__APPLE__) && (defined(__arm__) || defined(__arm64__))
-  if (M.Address == 0 || M.Size == 0) return false;
-  Memory::InvalidateInstructionCache(M.Address, M.Size);
-  kern_return_t kr = vm_protect(mach_task_self(), (vm_address_t)M.Address,
-    (vm_size_t)M.Size, 0, VM_PROT_READ | VM_PROT_WRITE);
-  return KERN_SUCCESS == kr;
-#else
-  return true;
-#endif
-}
-
-bool Memory::setExecutable (MemoryBlock &M, std::string *ErrMsg) {
-  if (M.Address == nullptr || M.Size == 0) return false;
-  Memory::InvalidateInstructionCache(M.Address, M.Size);
-#if defined(__APPLE__) && (defined(__arm__) || defined(__arm64__))
-  kern_return_t kr = vm_protect(mach_task_self(), (vm_address_t)M.Address,
-    (vm_size_t)M.Size, 0, VM_PROT_READ | VM_PROT_EXECUTE | VM_PROT_COPY);
-  return KERN_SUCCESS == kr;
-#else
-  return true;
-#endif
-}
-
-bool Memory::setRangeWritable(const void *Addr, size_t Size) {
-#if defined(__APPLE__) && (defined(__arm__) || defined(__arm64__))
-  kern_return_t kr = vm_protect(mach_task_self(), (vm_address_t)Addr,
-                                (vm_size_t)Size, 0,
-                                VM_PROT_READ | VM_PROT_WRITE);
-  return KERN_SUCCESS == kr;
-#else
-  return true;
-#endif
-}
-
-bool Memory::setRangeExecutable(const void *Addr, size_t Size) {
-#if defined(__APPLE__) && (defined(__arm__) || defined(__arm64__))
-  kern_return_t kr = vm_protect(mach_task_self(), (vm_address_t)Addr,
-                                (vm_size_t)Size, 0,
-                                VM_PROT_READ | VM_PROT_EXECUTE | VM_PROT_COPY);
-  return KERN_SUCCESS == kr;
-#else
-  return true;
-#endif
 }
 
 /// InvalidateInstructionCache - Before the JIT can run a block of code
@@ -303,6 +228,11 @@ void Memory::InvalidateInstructionCache(const void *Addr,
        defined(__arm64__))
   sys_icache_invalidate(const_cast<void *>(Addr), Len);
 #  endif
+
+#elif defined(__Fuchsia__)
+
+  zx_status_t Status = zx_cache_flush(Addr, Len, ZX_CACHE_FLUSH_INSN);
+  assert(Status == ZX_OK && "cannot invalidate instruction cache");
 
 #else
 

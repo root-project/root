@@ -1,9 +1,8 @@
 //===- ProfileSummaryInfo.cpp - Global profile summary information --------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -30,7 +29,7 @@ using namespace llvm;
 // considered cold).
 
 static cl::opt<int> ProfileSummaryCutoffHot(
-    "profile-summary-cutoff-hot", cl::Hidden, cl::init(999000), cl::ZeroOrMore,
+    "profile-summary-cutoff-hot", cl::Hidden, cl::init(990000), cl::ZeroOrMore,
     cl::desc("A count is hot if it exceeds the minimum count to"
              " reach this percentile of total counts."));
 
@@ -39,18 +38,36 @@ static cl::opt<int> ProfileSummaryCutoffCold(
     cl::desc("A count is cold if it is below the minimum count"
              " to reach this percentile of total counts."));
 
-// Find the minimum count to reach a desired percentile of counts.
-static uint64_t getMinCountForPercentile(SummaryEntryVector &DS,
-                                         uint64_t Percentile) {
-  auto Compare = [](const ProfileSummaryEntry &Entry, uint64_t Percentile) {
+static cl::opt<unsigned> ProfileSummaryHugeWorkingSetSizeThreshold(
+    "profile-summary-huge-working-set-size-threshold", cl::Hidden,
+    cl::init(15000), cl::ZeroOrMore,
+    cl::desc("The code working set size is considered huge if the number of"
+             " blocks required to reach the -profile-summary-cutoff-hot"
+             " percentile exceeds this count."));
+
+// The next two options override the counts derived from summary computation and
+// are useful for debugging purposes.
+static cl::opt<int> ProfileSummaryHotCount(
+    "profile-summary-hot-count", cl::ReallyHidden, cl::ZeroOrMore,
+    cl::desc("A fixed hot count that overrides the count derived from"
+             " profile-summary-cutoff-hot"));
+
+static cl::opt<int> ProfileSummaryColdCount(
+    "profile-summary-cold-count", cl::ReallyHidden, cl::ZeroOrMore,
+    cl::desc("A fixed cold count that overrides the count derived from"
+             " profile-summary-cutoff-cold"));
+
+// Find the summary entry for a desired percentile of counts.
+static const ProfileSummaryEntry &getEntryForPercentile(SummaryEntryVector &DS,
+                                                        uint64_t Percentile) {
+  auto It = partition_point(DS, [=](const ProfileSummaryEntry &Entry) {
     return Entry.Cutoff < Percentile;
-  };
-  auto It = std::lower_bound(DS.begin(), DS.end(), Percentile, Compare);
+  });
   // The required percentile has to be <= one of the percentiles in the
   // detailed summary.
   if (It == DS.end())
     report_fatal_error("Desired percentile exceeds the maximum cutoff");
-  return It->MinCount;
+  return *It;
 }
 
 // The profile summary metadata may be attached either by the frontend or by
@@ -61,7 +78,14 @@ static uint64_t getMinCountForPercentile(SummaryEntryVector &DS,
 bool ProfileSummaryInfo::computeSummary() {
   if (Summary)
     return true;
-  auto *SummaryMD = M.getProfileSummary();
+  // First try to get context sensitive ProfileSummary.
+  auto *SummaryMD = M.getProfileSummary(/* IsCS */ true);
+  if (SummaryMD) {
+    Summary.reset(ProfileSummary::getFromMD(SummaryMD));
+    return true;
+  }
+  // This will actually return PSK_Instr or PSK_Sample summary.
+  SummaryMD = M.getProfileSummary(/* IsCS */ false);
   if (!SummaryMD)
     return false;
   Summary.reset(ProfileSummary::getFromMD(SummaryMD));
@@ -70,7 +94,8 @@ bool ProfileSummaryInfo::computeSummary() {
 
 Optional<uint64_t>
 ProfileSummaryInfo::getProfileCount(const Instruction *Inst,
-                                    BlockFrequencyInfo *BFI) {
+                                    BlockFrequencyInfo *BFI,
+                                    bool AllowSynthetic) {
   if (!Inst)
     return None;
   assert((isa<CallInst>(Inst) || isa<InvokeInst>(Inst)) &&
@@ -78,13 +103,15 @@ ProfileSummaryInfo::getProfileCount(const Instruction *Inst,
   if (hasSampleProfile()) {
     // In sample PGO mode, check if there is a profile metadata on the
     // instruction. If it is present, determine hotness solely based on that,
-    // since the sampled entry count may not be accurate.
+    // since the sampled entry count may not be accurate. If there is no
+    // annotated on the instruction, return None.
     uint64_t TotalCount;
     if (Inst->extractProfTotalWeight(TotalCount))
       return TotalCount;
+    return None;
   }
   if (BFI)
-    return BFI->getBlockProfileCount(Inst->getParent());
+    return BFI->getBlockProfileCount(Inst->getParent(), AllowSynthetic);
   return None;
 }
 
@@ -98,45 +125,65 @@ bool ProfileSummaryInfo::isFunctionEntryHot(const Function *F) {
   // FIXME: The heuristic used below for determining hotness is based on
   // preliminary SPEC tuning for inliner. This will eventually be a
   // convenience method that calls isHotCount.
-  return FunctionCount && isHotCount(FunctionCount.getValue());
+  return FunctionCount && isHotCount(FunctionCount.getCount());
 }
 
-/// Returns true if the function's entry or total call edge count is hot.
+/// Returns true if the function contains hot code. This can include a hot
+/// function entry count, hot basic block, or (in the case of Sample PGO)
+/// hot total call edge count.
 /// If it returns false, it either means it is not hot or it is unknown
-/// whether it is hot or not (for example, no profile data is available).
-bool ProfileSummaryInfo::isFunctionHotInCallGraph(const Function *F) {
+/// (for example, no profile data is available).
+bool ProfileSummaryInfo::isFunctionHotInCallGraph(const Function *F,
+                                                  BlockFrequencyInfo &BFI) {
   if (!F || !computeSummary())
     return false;
   if (auto FunctionCount = F->getEntryCount())
-    if (isHotCount(FunctionCount.getValue()))
+    if (isHotCount(FunctionCount.getCount()))
       return true;
 
-  uint64_t TotalCallCount = 0;
+  if (hasSampleProfile()) {
+    uint64_t TotalCallCount = 0;
+    for (const auto &BB : *F)
+      for (const auto &I : BB)
+        if (isa<CallInst>(I) || isa<InvokeInst>(I))
+          if (auto CallCount = getProfileCount(&I, nullptr))
+            TotalCallCount += CallCount.getValue();
+    if (isHotCount(TotalCallCount))
+      return true;
+  }
   for (const auto &BB : *F)
-    for (const auto &I : BB)
-      if (isa<CallInst>(I) || isa<InvokeInst>(I))
-        if (auto CallCount = getProfileCount(&I, nullptr))
-          TotalCallCount += CallCount.getValue();
-  return isHotCount(TotalCallCount);
+    if (isHotBlock(&BB, &BFI))
+      return true;
+  return false;
 }
 
-/// Returns true if the function's entry and total call edge count is cold.
+/// Returns true if the function only contains cold code. This means that
+/// the function entry and blocks are all cold, and (in the case of Sample PGO)
+/// the total call edge count is cold.
 /// If it returns false, it either means it is not cold or it is unknown
-/// whether it is cold or not (for example, no profile data is available).
-bool ProfileSummaryInfo::isFunctionColdInCallGraph(const Function *F) {
+/// (for example, no profile data is available).
+bool ProfileSummaryInfo::isFunctionColdInCallGraph(const Function *F,
+                                                   BlockFrequencyInfo &BFI) {
   if (!F || !computeSummary())
     return false;
   if (auto FunctionCount = F->getEntryCount())
-    if (!isColdCount(FunctionCount.getValue()))
+    if (!isColdCount(FunctionCount.getCount()))
       return false;
-  
-  uint64_t TotalCallCount = 0;
+
+  if (hasSampleProfile()) {
+    uint64_t TotalCallCount = 0;
+    for (const auto &BB : *F)
+      for (const auto &I : BB)
+        if (isa<CallInst>(I) || isa<InvokeInst>(I))
+          if (auto CallCount = getProfileCount(&I, nullptr))
+            TotalCallCount += CallCount.getValue();
+    if (!isColdCount(TotalCallCount))
+      return false;
+  }
   for (const auto &BB : *F)
-    for (const auto &I : BB) 
-      if (isa<CallInst>(I) || isa<InvokeInst>(I))
-        if (auto CallCount = getProfileCount(&I, nullptr))
-          TotalCallCount += CallCount.getValue();
-  return isColdCount(TotalCallCount);
+    if (!isColdBlock(&BB, &BFI))
+      return false;
+  return true;
 }
 
 /// Returns true if the function's entry is a cold. If it returns false, it
@@ -153,7 +200,7 @@ bool ProfileSummaryInfo::isFunctionEntryCold(const Function *F) {
   // FIXME: The heuristic used below for determining coldness is based on
   // preliminary SPEC tuning for inliner. This will eventually be a
   // convenience method that calls isHotCount.
-  return FunctionCount && isColdCount(FunctionCount.getValue());
+  return FunctionCount && isColdCount(FunctionCount.getCount());
 }
 
 /// Compute the hot and cold thresholds.
@@ -161,10 +208,26 @@ void ProfileSummaryInfo::computeThresholds() {
   if (!computeSummary())
     return;
   auto &DetailedSummary = Summary->getDetailedSummary();
-  HotCountThreshold =
-      getMinCountForPercentile(DetailedSummary, ProfileSummaryCutoffHot);
-  ColdCountThreshold =
-      getMinCountForPercentile(DetailedSummary, ProfileSummaryCutoffCold);
+  auto &HotEntry =
+      getEntryForPercentile(DetailedSummary, ProfileSummaryCutoffHot);
+  HotCountThreshold = HotEntry.MinCount;
+  if (ProfileSummaryHotCount.getNumOccurrences() > 0)
+    HotCountThreshold = ProfileSummaryHotCount;
+  auto &ColdEntry =
+      getEntryForPercentile(DetailedSummary, ProfileSummaryCutoffCold);
+  ColdCountThreshold = ColdEntry.MinCount;
+  if (ProfileSummaryColdCount.getNumOccurrences() > 0)
+    ColdCountThreshold = ProfileSummaryColdCount;
+  assert(ColdCountThreshold <= HotCountThreshold &&
+         "Cold count threshold cannot exceed hot count threshold!");
+  HasHugeWorkingSetSize =
+      HotEntry.NumCounts > ProfileSummaryHugeWorkingSetSizeThreshold;
+}
+
+bool ProfileSummaryInfo::hasHugeWorkingSetSize() {
+  if (!HasHugeWorkingSetSize)
+    computeThresholds();
+  return HasHugeWorkingSetSize && HasHugeWorkingSetSize.getValue();
 }
 
 bool ProfileSummaryInfo::isHotCount(uint64_t C) {
@@ -179,14 +242,26 @@ bool ProfileSummaryInfo::isColdCount(uint64_t C) {
   return ColdCountThreshold && C <= ColdCountThreshold.getValue();
 }
 
-bool ProfileSummaryInfo::isHotBB(const BasicBlock *B, BlockFrequencyInfo *BFI) {
-  auto Count = BFI->getBlockProfileCount(B);
+uint64_t ProfileSummaryInfo::getOrCompHotCountThreshold() {
+  if (!HotCountThreshold)
+    computeThresholds();
+  return HotCountThreshold ? HotCountThreshold.getValue() : UINT64_MAX;
+}
+
+uint64_t ProfileSummaryInfo::getOrCompColdCountThreshold() {
+  if (!ColdCountThreshold)
+    computeThresholds();
+  return ColdCountThreshold ? ColdCountThreshold.getValue() : 0;
+}
+
+bool ProfileSummaryInfo::isHotBlock(const BasicBlock *BB, BlockFrequencyInfo *BFI) {
+  auto Count = BFI->getBlockProfileCount(BB);
   return Count && isHotCount(*Count);
 }
 
-bool ProfileSummaryInfo::isColdBB(const BasicBlock *B,
+bool ProfileSummaryInfo::isColdBlock(const BasicBlock *BB,
                                   BlockFrequencyInfo *BFI) {
-  auto Count = BFI->getBlockProfileCount(B);
+  auto Count = BFI->getBlockProfileCount(BB);
   return Count && isColdCount(*Count);
 }
 
@@ -199,7 +274,12 @@ bool ProfileSummaryInfo::isHotCallSite(const CallSite &CS,
 bool ProfileSummaryInfo::isColdCallSite(const CallSite &CS,
                                         BlockFrequencyInfo *BFI) {
   auto C = getProfileCount(CS.getInstruction(), BFI);
-  return C && isColdCount(*C);
+  if (C)
+    return isColdCount(*C);
+
+  // In SamplePGO, if the caller has been sampled, and there is no profile
+  // annotated on the callsite, we consider the callsite as cold.
+  return hasSampleProfile() && CS.getCaller()->hasProfileData();
 }
 
 INITIALIZE_PASS(ProfileSummaryInfoWrapperPass, "profile-summary-info",

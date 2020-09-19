@@ -1,9 +1,8 @@
 //===-- WasmDumper.cpp - Wasm-specific object file dumper -----------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -23,29 +22,35 @@ using namespace object;
 namespace {
 
 static const EnumEntry<unsigned> WasmSymbolTypes[] = {
-#define ENUM_ENTRY(X) { #X, static_cast<unsigned>(WasmSymbol::SymbolType::X) }
-  ENUM_ENTRY(FUNCTION_IMPORT),
-  ENUM_ENTRY(FUNCTION_EXPORT),
-  ENUM_ENTRY(GLOBAL_IMPORT),
-  ENUM_ENTRY(GLOBAL_EXPORT),
-  ENUM_ENTRY(DEBUG_FUNCTION_NAME),
+#define ENUM_ENTRY(X)                                                          \
+  { #X, wasm::WASM_SYMBOL_TYPE_##X }
+    ENUM_ENTRY(FUNCTION), ENUM_ENTRY(DATA),  ENUM_ENTRY(GLOBAL),
+    ENUM_ENTRY(SECTION),  ENUM_ENTRY(EVENT),
 #undef ENUM_ENTRY
 };
 
 static const EnumEntry<uint32_t> WasmSectionTypes[] = {
-#define ENUM_ENTRY(X) { #X, wasm::WASM_SEC_##X }
-  ENUM_ENTRY(CUSTOM),
-  ENUM_ENTRY(TYPE),
-  ENUM_ENTRY(IMPORT),
-  ENUM_ENTRY(FUNCTION),
-  ENUM_ENTRY(TABLE),
-  ENUM_ENTRY(MEMORY),
-  ENUM_ENTRY(GLOBAL),
-  ENUM_ENTRY(EXPORT),
-  ENUM_ENTRY(START),
-  ENUM_ENTRY(ELEM),
-  ENUM_ENTRY(CODE),
-  ENUM_ENTRY(DATA),
+#define ENUM_ENTRY(X)                                                          \
+  { #X, wasm::WASM_SEC_##X }
+    ENUM_ENTRY(CUSTOM),   ENUM_ENTRY(TYPE),      ENUM_ENTRY(IMPORT),
+    ENUM_ENTRY(FUNCTION), ENUM_ENTRY(TABLE),     ENUM_ENTRY(MEMORY),
+    ENUM_ENTRY(GLOBAL),   ENUM_ENTRY(EVENT),     ENUM_ENTRY(EXPORT),
+    ENUM_ENTRY(START),    ENUM_ENTRY(ELEM),      ENUM_ENTRY(CODE),
+    ENUM_ENTRY(DATA),     ENUM_ENTRY(DATACOUNT),
+#undef ENUM_ENTRY
+};
+
+static const EnumEntry<unsigned> WasmSymbolFlags[] = {
+#define ENUM_ENTRY(X)                                                          \
+  { #X, wasm::WASM_SYMBOL_##X }
+  ENUM_ENTRY(BINDING_GLOBAL),
+  ENUM_ENTRY(BINDING_WEAK),
+  ENUM_ENTRY(BINDING_LOCAL),
+  ENUM_ENTRY(VISIBILITY_DEFAULT),
+  ENUM_ENTRY(VISIBILITY_HIDDEN),
+  ENUM_ENTRY(UNDEFINED),
+  ENUM_ENTRY(EXPORTED),
+  ENUM_ENTRY(EXPLICIT_NAME),
 #undef ENUM_ENTRY
 };
 
@@ -55,10 +60,8 @@ public:
       : ObjDumper(Writer), Obj(Obj) {}
 
   void printFileHeaders() override;
-  void printSections() override;
+  void printSectionHeaders() override;
   void printRelocations() override;
-  void printSymbols() override;
-  void printDynamicSymbols() override { llvm_unreachable("unimplemented"); }
   void printUnwindInfo() override { llvm_unreachable("unimplemented"); }
   void printStackMap() const override { llvm_unreachable("unimplemented"); }
 
@@ -67,6 +70,9 @@ protected:
   void printRelocation(const SectionRef &Section, const RelocationRef &Reloc);
 
 private:
+  void printSymbols() override;
+  void printDynamicSymbols() override { llvm_unreachable("unimplemented"); }
+
   const WasmObjectFile *Obj;
 };
 
@@ -81,11 +87,18 @@ void WasmDumper::printRelocation(const SectionRef &Section,
   Reloc.getTypeName(RelocTypeName);
   const wasm::WasmRelocation &WasmReloc = Obj->getWasmRelocation(Reloc);
 
+  StringRef SymName;
+  symbol_iterator SI = Reloc.getSymbol();
+  if (SI != Obj->symbol_end())
+    SymName = error(SI->getName());
+
   bool HasAddend = false;
   switch (RelocType) {
-  case wasm::R_WEBASSEMBLY_GLOBAL_ADDR_LEB:
-  case wasm::R_WEBASSEMBLY_GLOBAL_ADDR_SLEB:
-  case wasm::R_WEBASSEMBLY_GLOBAL_ADDR_I32:
+  case wasm::R_WASM_MEMORY_ADDR_LEB:
+  case wasm::R_WASM_MEMORY_ADDR_SLEB:
+  case wasm::R_WASM_MEMORY_ADDR_I32:
+  case wasm::R_WASM_FUNCTION_OFFSET_I32:
+  case wasm::R_WASM_SECTION_OFFSET_I32:
     HasAddend = true;
     break;
   default:
@@ -95,13 +108,19 @@ void WasmDumper::printRelocation(const SectionRef &Section,
     DictScope Group(W, "Relocation");
     W.printNumber("Type", RelocTypeName, RelocType);
     W.printHex("Offset", Reloc.getOffset());
-    W.printHex("Index", WasmReloc.Index);
+    if (!SymName.empty())
+      W.printString("Symbol", SymName);
+    else
+      W.printHex("Index", WasmReloc.Index);
     if (HasAddend)
       W.printNumber("Addend", WasmReloc.Addend);
   } else {
-    raw_ostream& OS = W.startLine();
-    OS << W.hex(Reloc.getOffset())
-       << " " << RelocTypeName << "[" << WasmReloc.Index << "]";
+    raw_ostream &OS = W.startLine();
+    OS << W.hex(Reloc.getOffset()) << " " << RelocTypeName << " ";
+    if (!SymName.empty())
+      OS << SymName;
+    else
+      OS << WasmReloc.Index;
     if (HasAddend)
       OS << " " << WasmReloc.Addend;
     OS << "\n";
@@ -142,24 +161,39 @@ void WasmDumper::printSymbols() {
     printSymbol(Symbol);
 }
 
-void WasmDumper::printSections() {
+void WasmDumper::printSectionHeaders() {
   ListScope Group(W, "Sections");
   for (const SectionRef &Section : Obj->sections()) {
     const WasmSection &WasmSec = Obj->getWasmSection(Section);
     DictScope SectionD(W, "Section");
     W.printEnum("Type", WasmSec.Type, makeArrayRef(WasmSectionTypes));
-    W.printNumber("Size", (uint64_t)WasmSec.Content.size());
+    W.printNumber("Size", static_cast<uint64_t>(WasmSec.Content.size()));
     W.printNumber("Offset", WasmSec.Offset);
     switch (WasmSec.Type) {
     case wasm::WASM_SEC_CUSTOM:
       W.printString("Name", WasmSec.Name);
       if (WasmSec.Name == "linking") {
         const wasm::WasmLinkingData &LinkingData = Obj->linkingData();
-        W.printNumber("DataSize", LinkingData.DataSize);
-        if (LinkingData.DataAlignment)
-          W.printNumber("DataAlignment", LinkingData.DataAlignment);
+        if (!LinkingData.InitFunctions.empty()) {
+          ListScope Group(W, "InitFunctions");
+          for (const wasm::WasmInitFunc &F : LinkingData.InitFunctions)
+            W.startLine() << F.Symbol << " (priority=" << F.Priority << ")\n";
+        }
       }
       break;
+    case wasm::WASM_SEC_DATA: {
+      ListScope Group(W, "Segments");
+      for (const WasmSegment &Segment : Obj->dataSegments()) {
+        const wasm::WasmDataSegment &Seg = Segment.Data;
+        DictScope Group(W, "Segment");
+        if (!Seg.Name.empty())
+          W.printString("Name", Seg.Name);
+        W.printNumber("Size", static_cast<uint64_t>(Seg.Content.size()));
+        if (Seg.Offset.Opcode == wasm::WASM_OPCODE_I32_CONST)
+          W.printNumber("Offset", Seg.Offset.Value.Int32);
+      }
+      break;
+    }
     case wasm::WASM_SEC_MEMORY:
       ListScope Group(W, "Memories");
       for (const wasm::WasmLimits &Memory : Obj->memories()) {
@@ -187,19 +221,31 @@ void WasmDumper::printSections() {
 void WasmDumper::printSymbol(const SymbolRef &Sym) {
   DictScope D(W, "Symbol");
   WasmSymbol Symbol = Obj->getWasmSymbol(Sym.getRawDataRefImpl());
-  W.printString("Name", Symbol.Name);
-  W.printEnum("Type", static_cast<unsigned>(Symbol.Type), makeArrayRef(WasmSymbolTypes));
-  W.printHex("Flags", Symbol.Flags);
+  W.printString("Name", Symbol.Info.Name);
+  W.printEnum("Type", Symbol.Info.Kind, makeArrayRef(WasmSymbolTypes));
+  W.printFlags("Flags", Symbol.Info.Flags, makeArrayRef(WasmSymbolFlags));
+
+  if (Symbol.Info.Flags & wasm::WASM_SYMBOL_UNDEFINED) {
+    W.printString("ImportName", Symbol.Info.ImportName);
+    W.printString("ImportModule", Symbol.Info.ImportModule);
+  }
+  if (Symbol.Info.Kind != wasm::WASM_SYMBOL_TYPE_DATA) {
+    W.printHex("ElementIndex", Symbol.Info.ElementIndex);
+  } else if (!(Symbol.Info.Flags & wasm::WASM_SYMBOL_UNDEFINED)) {
+    W.printHex("Offset", Symbol.Info.DataRef.Offset);
+    W.printHex("Segment", Symbol.Info.DataRef.Segment);
+    W.printHex("Size", Symbol.Info.DataRef.Size);
+  }
 }
 
-}
+} // namespace
 
 namespace llvm {
 
 std::error_code createWasmDumper(const object::ObjectFile *Obj,
                                  ScopedPrinter &Writer,
                                  std::unique_ptr<ObjDumper> &Result) {
-  const WasmObjectFile *WasmObj = dyn_cast<WasmObjectFile>(Obj);
+  const auto *WasmObj = dyn_cast<WasmObjectFile>(Obj);
   assert(WasmObj && "createWasmDumper called with non-wasm object");
 
   Result.reset(new WasmDumper(WasmObj, Writer));

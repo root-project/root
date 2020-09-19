@@ -1,9 +1,8 @@
 //===- FormatUtil.h ------------------------------------------- *- C++ --*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,6 +11,7 @@
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/DebugInfo/CodeView/CodeView.h"
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/FormatAdapters.h"
 #include "llvm/Support/FormatVariadic.h"
@@ -49,11 +49,25 @@ template <typename T> std::string formatUnknownEnum(T Value) {
 
 std::string formatSegmentOffset(uint16_t Segment, uint32_t Offset);
 
+enum class CharacteristicStyle {
+  HeaderDefinition, // format as windows header definition
+  Descriptive,      // format as human readable words
+};
+std::string formatSectionCharacteristics(
+    uint32_t IndentLevel, uint32_t C, uint32_t FlagsPerLine,
+    StringRef Separator,
+    CharacteristicStyle Style = CharacteristicStyle::HeaderDefinition);
+
 std::string typesetItemList(ArrayRef<std::string> Opts, uint32_t IndentLevel,
                             uint32_t GroupSize, StringRef Sep);
 
 std::string typesetStringList(uint32_t IndentLevel,
                               ArrayRef<StringRef> Strings);
+
+std::string formatChunkKind(codeview::DebugSubsectionKind Kind,
+                            bool Friendly = true);
+std::string formatSymbolKind(codeview::SymbolKind K);
+StringRef formatTypeLeafKind(codeview::TypeLeafKind K);
 
 /// Returns the number of digits in the given integer.
 inline int NumDigits(uint64_t N) {

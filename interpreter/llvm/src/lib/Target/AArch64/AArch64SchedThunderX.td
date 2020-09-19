@@ -1,9 +1,8 @@
 //==- AArch64SchedThunderX.td - Cavium ThunderX T8X Scheduling Definitions -*- tablegen -*-=//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -25,6 +24,11 @@ def ThunderXT8XModel : SchedMachineModel {
   let MispredictPenalty = 8;  // Branch mispredict penalty.
   let PostRAScheduler = 1;    // Use PostRA scheduler.
   let CompleteModel = 1;
+
+  list<Predicate> UnsupportedFeatures = SVEUnsupported.F;
+
+  // FIXME: Remove when all errors have been fixed.
+  let FullInstRWOverlapCheck = 0;
 }
 
 // Modeling each pipeline with BufferSize == 0 since T8X is in-order.
@@ -239,20 +243,20 @@ def : ReadAdvance<ReadID, 1, [WriteImm, WriteI,
 //---
 // Branch
 //---
-def : InstRW<[THXT8XWriteBR], (instregex "^B")>;
-def : InstRW<[THXT8XWriteBR], (instregex "^BL")>;
-def : InstRW<[THXT8XWriteBR], (instregex "^B.*")>;
+def : InstRW<[THXT8XWriteBR], (instregex "^B$")>;
+def : InstRW<[THXT8XWriteBR], (instregex "^BL$")>;
+def : InstRW<[THXT8XWriteBR], (instregex "^B..$")>;
 def : InstRW<[THXT8XWriteBR], (instregex "^CBNZ")>;
 def : InstRW<[THXT8XWriteBR], (instregex "^CBZ")>;
 def : InstRW<[THXT8XWriteBR], (instregex "^TBNZ")>;
 def : InstRW<[THXT8XWriteBR], (instregex "^TBZ")>;
-def : InstRW<[THXT8XWriteBRR], (instregex "^BR")>;
-def : InstRW<[THXT8XWriteBRR], (instregex "^BLR")>;
+def : InstRW<[THXT8XWriteBRR], (instregex "^BR$")>;
+def : InstRW<[THXT8XWriteBRR], (instregex "^BLR$")>;
 
 //---
 // Ret
 //---
-def : InstRW<[THXT8XWriteRET], (instregex "^RET")>;
+def : InstRW<[THXT8XWriteRET], (instregex "^RET$")>;
 
 //---
 // Miscellaneous

@@ -1,9 +1,8 @@
 //===- IndexTypeSourceInfo.cpp - Indexing types ---------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -37,7 +36,7 @@ public:
       Relations.emplace_back((unsigned)SymbolRole::RelationIBTypeOf, Parent);
     }
   }
-  
+
   bool shouldWalkTypesOfTypeLocs() const { return false; }
 
 #define TRY_TO(CALL_EXPR)                                                      \
@@ -45,6 +44,13 @@ public:
     if (!CALL_EXPR)                                                            \
       return false;                                                            \
   } while (0)
+
+  bool VisitTemplateTypeParmTypeLoc(TemplateTypeParmTypeLoc TTPL) {
+    SourceLocation Loc = TTPL.getNameLoc();
+    TemplateTypeParmDecl *TTPD = TTPL.getDecl();
+    return IndexCtx.handleReference(TTPD, Loc, Parent, ParentDC,
+                                    SymbolRoleSet());
+  }
 
   bool VisitTypedefTypeLoc(TypedefTypeLoc TL) {
     SourceLocation Loc = TL.getNameLoc();
@@ -100,7 +106,8 @@ public:
 
   bool VisitTagTypeLoc(TagTypeLoc TL) {
     TagDecl *D = TL.getDecl();
-    if (D->getParentFunctionOrMethod())
+    if (!IndexCtx.shouldIndexFunctionLocalSymbols() &&
+        D->getParentFunctionOrMethod())
       return true;
 
     if (TL.isDefinition()) {
@@ -126,18 +133,40 @@ public:
     return true;
   }
 
-  bool VisitTemplateSpecializationTypeLoc(TemplateSpecializationTypeLoc TL) {
-    if (const TemplateSpecializationType *T = TL.getTypePtr()) {
-      if (IndexCtx.shouldIndexImplicitTemplateInsts()) {
-        if (CXXRecordDecl *RD = T->getAsCXXRecordDecl())
-          IndexCtx.handleReference(RD, TL.getTemplateNameLoc(),
-                                   Parent, ParentDC, SymbolRoleSet(), Relations);
-      } else {
-        if (const TemplateDecl *D = T->getTemplateName().getAsTemplateDecl())
-          IndexCtx.handleReference(D, TL.getTemplateNameLoc(),
-                                   Parent, ParentDC, SymbolRoleSet(), Relations);
-      }
+  void HandleTemplateSpecializationTypeLoc(TemplateName TemplName,
+                                           SourceLocation TemplNameLoc,
+                                           CXXRecordDecl *ResolvedClass,
+                                           bool IsTypeAlias) {
+    // In presence of type aliases, the resolved class was never written in
+    // the code so don't report it.
+    if (!IsTypeAlias && ResolvedClass &&
+        (!ResolvedClass->isImplicit() ||
+         IndexCtx.shouldIndexImplicitInstantiation())) {
+      IndexCtx.handleReference(ResolvedClass, TemplNameLoc, Parent, ParentDC,
+                               SymbolRoleSet(), Relations);
+    } else if (const TemplateDecl *D = TemplName.getAsTemplateDecl()) {
+      IndexCtx.handleReference(D, TemplNameLoc, Parent, ParentDC,
+                               SymbolRoleSet(), Relations);
     }
+  }
+
+  bool VisitTemplateSpecializationTypeLoc(TemplateSpecializationTypeLoc TL) {
+    auto *T = TL.getTypePtr();
+    if (!T)
+      return true;
+    HandleTemplateSpecializationTypeLoc(
+        T->getTemplateName(), TL.getTemplateNameLoc(), T->getAsCXXRecordDecl(),
+        T->isTypeAlias());
+    return true;
+  }
+
+  bool VisitDeducedTemplateSpecializationTypeLoc(DeducedTemplateSpecializationTypeLoc TL) {
+    auto *T = TL.getTypePtr();
+    if (!T)
+      return true;
+    HandleTemplateSpecializationTypeLoc(
+        T->getTemplateName(), TL.getTemplateNameLoc(), T->getAsCXXRecordDecl(),
+        /*IsTypeAlias=*/false);
     return true;
   }
 
@@ -184,7 +213,7 @@ void IndexingContext::indexTypeSourceInfo(TypeSourceInfo *TInfo,
                                           bool isIBType) {
   if (!TInfo || TInfo->getTypeLoc().isNull())
     return;
-  
+
   indexTypeLoc(TInfo->getTypeLoc(), Parent, DC, isBase, isIBType);
 }
 

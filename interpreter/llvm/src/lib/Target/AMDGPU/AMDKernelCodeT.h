@@ -1,9 +1,8 @@
 //===-- AMDGPUKernelCodeT.h - Print AMDGPU assembly code ---------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 /// \file AMDKernelCodeT.h
@@ -127,8 +126,12 @@ enum amd_code_property_mask_t {
   AMD_CODE_PROPERTY_ENABLE_SGPR_GRID_WORKGROUP_COUNT_Z_WIDTH = 1,
   AMD_CODE_PROPERTY_ENABLE_SGPR_GRID_WORKGROUP_COUNT_Z = ((1 << AMD_CODE_PROPERTY_ENABLE_SGPR_GRID_WORKGROUP_COUNT_Z_WIDTH) - 1) << AMD_CODE_PROPERTY_ENABLE_SGPR_GRID_WORKGROUP_COUNT_Z_SHIFT,
 
-  AMD_CODE_PROPERTY_RESERVED1_SHIFT = 10,
-  AMD_CODE_PROPERTY_RESERVED1_WIDTH = 6,
+  AMD_CODE_PROPERTY_ENABLE_WAVEFRONT_SIZE32_SHIFT = 10,
+  AMD_CODE_PROPERTY_ENABLE_WAVEFRONT_SIZE32_WIDTH = 1,
+  AMD_CODE_PROPERTY_ENABLE_WAVEFRONT_SIZE32 = ((1 << AMD_CODE_PROPERTY_ENABLE_WAVEFRONT_SIZE32_WIDTH) - 1) << AMD_CODE_PROPERTY_ENABLE_WAVEFRONT_SIZE32_SHIFT,
+
+  AMD_CODE_PROPERTY_RESERVED1_SHIFT = 11,
+  AMD_CODE_PROPERTY_RESERVED1_WIDTH = 5,
   AMD_CODE_PROPERTY_RESERVED1 = ((1 << AMD_CODE_PROPERTY_RESERVED1_WIDTH) - 1) << AMD_CODE_PROPERTY_RESERVED1_SHIFT,
 
   /// Control wave ID base counter for GDS ordered-append. Used to set
@@ -198,7 +201,7 @@ enum amd_code_property_mask_t {
   AMD_CODE_PROPERTY_RESERVED2 = ((1 << AMD_CODE_PROPERTY_RESERVED2_WIDTH) - 1) << AMD_CODE_PROPERTY_RESERVED2_SHIFT
 };
 
-/// @brief The hsa_ext_control_directives_t specifies the values for the HSAIL
+/// The hsa_ext_control_directives_t specifies the values for the HSAIL
 /// control directives. These control how the finalizer generates code. This
 /// struct is used both as an argument to hsaFinalizeKernel to specify values for
 /// the control directives, and is used in HsaKernelCode to record the values of
@@ -551,14 +554,8 @@ typedef struct amd_kernel_code_s {
   int64_t kernel_code_prefetch_byte_offset;
   uint64_t kernel_code_prefetch_byte_size;
 
-  /// Number of bytes of scratch backing memory required for full
-  /// occupancy of target chip. This takes into account the number of
-  /// bytes of scratch per work-item, the wavefront size, the maximum
-  /// number of wavefronts per CU, and the number of CUs. This is an
-  /// upper limit on scratch. If the grid being dispatched is small it
-  /// may only need less than this. If the kernel uses no scratch, or
-  /// the Finalizer has not computed this value, it must be 0.
-  uint64_t max_scratch_backing_memory_byte_size;
+  /// Reserved. Must be 0.
+  uint64_t reserved0;
 
   /// Shader program settings for CS. Contains COMPUTE_PGM_RSRC1 and
   /// COMPUTE_PGM_RSRC2 registers.

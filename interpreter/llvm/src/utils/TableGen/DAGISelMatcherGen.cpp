@@ -1,9 +1,8 @@
 //===- DAGISelMatcherGen.cpp - Matcher generator --------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -33,12 +32,18 @@ static MVT::SimpleValueType getRegisterValueType(Record *R,
 
     if (!FoundRC) {
       FoundRC = true;
-      VT = RC.getValueTypeNum(0);
+      const ValueTypeByHwMode &VVT = RC.getValueTypeNum(0);
+      if (VVT.isSimple())
+        VT = VVT.getSimple().SimpleTy;
       continue;
     }
 
+#ifndef NDEBUG
     // If this occurs in multiple register classes, they all have to agree.
-    assert(VT == RC.getValueTypeNum(0));
+    const ValueTypeByHwMode &T = RC.getValueTypeNum(0);
+    assert((!T.isSimple() || T.getSimple().SimpleTy == VT) &&
+           "ValueType mismatch between register classes for this register");
+#endif
   }
   return VT;
 }
@@ -52,7 +57,7 @@ namespace {
     /// PatWithNoTypes - This is a clone of Pattern.getSrcPattern() that starts
     /// out with all of the types removed.  This allows us to insert type checks
     /// as we scan the tree.
-    TreePatternNode *PatWithNoTypes;
+    TreePatternNodePtr PatWithNoTypes;
 
     /// VariableMap - A map from variable names ('$dst') to the recorded operand
     /// number that they were captured as.  These are biased by 1 to make
@@ -95,28 +100,26 @@ namespace {
   public:
     MatcherGen(const PatternToMatch &pattern, const CodeGenDAGPatterns &cgp);
 
-    ~MatcherGen() {
-      delete PatWithNoTypes;
-    }
-
     bool EmitMatcherCode(unsigned Variant);
     void EmitResultCode();
 
     Matcher *GetMatcher() const { return TheMatcher; }
   private:
     void AddMatcher(Matcher *NewNode);
-    void InferPossibleTypes();
+    void InferPossibleTypes(unsigned ForceMode);
 
     // Matcher Generation.
-    void EmitMatchCode(const TreePatternNode *N, TreePatternNode *NodeNoTypes);
+    void EmitMatchCode(const TreePatternNode *N, TreePatternNode *NodeNoTypes,
+                       unsigned ForceMode);
     void EmitLeafMatchCode(const TreePatternNode *N);
     void EmitOperatorMatchCode(const TreePatternNode *N,
-                               TreePatternNode *NodeNoTypes);
+                               TreePatternNode *NodeNoTypes,
+                               unsigned ForceMode);
 
     /// If this is the first time a node with unique identifier Name has been
     /// seen, record it. Otherwise, emit a check to make sure this is the same
     /// node. Returns true if this is the first encounter.
-    bool recordUniqueNode(const std::string &Name);
+    bool recordUniqueNode(ArrayRef<std::string> Names);
 
     // Result Code Generation.
     unsigned getNamedArgumentSlot(StringRef Name) {
@@ -125,10 +128,6 @@ namespace {
              "Variable referenced but not defined and not caught earlier!");
       return VarMapEntry-1;
     }
-
-    /// GetInstPatternNode - Get the pattern for an instruction.
-    const TreePatternNode *GetInstPatternNode(const DAGInstruction &Ins,
-                                              const TreePatternNode *N);
 
     void EmitResultOperand(const TreePatternNode *N,
                            SmallVectorImpl<unsigned> &ResultOps);
@@ -164,17 +163,19 @@ MatcherGen::MatcherGen(const PatternToMatch &pattern,
   PatWithNoTypes->RemoveAllTypes();
 
   // If there are types that are manifestly known, infer them.
-  InferPossibleTypes();
+  InferPossibleTypes(Pattern.ForceMode);
 }
 
 /// InferPossibleTypes - As we emit the pattern, we end up generating type
 /// checks and applying them to the 'PatWithNoTypes' tree.  As we do this, we
 /// want to propagate implied types as far throughout the tree as possible so
 /// that we avoid doing redundant type checks.  This does the type propagation.
-void MatcherGen::InferPossibleTypes() {
+void MatcherGen::InferPossibleTypes(unsigned ForceMode) {
   // TP - Get *SOME* tree pattern, we don't care which.  It is only used for
   // diagnostics, which we know are impossible at this point.
   TreePattern &TP = *CGP.pf_begin()->second;
+  TP.getInfer().CodeGen = true;
+  TP.getInfer().ForceMode = ForceMode;
 
   bool MadeChange = true;
   while (MadeChange)
@@ -276,12 +277,34 @@ void MatcherGen::EmitLeafMatchCode(const TreePatternNode *N) {
     return;
   }
 
+  if (LeafRec->getName() == "immAllOnesV") {
+    // If this is the root of the dag we're matching, we emit a redundant opcode
+    // check to ensure that this gets folded into the normal top-level
+    // OpcodeSwitch.
+    if (N == Pattern.getSrcPattern()) {
+      const SDNodeInfo &NI = CGP.getSDNodeInfo(CGP.getSDNodeNamed("build_vector"));
+      AddMatcher(new CheckOpcodeMatcher(NI));
+    }
+    return AddMatcher(new CheckImmAllOnesVMatcher());
+  }
+  if (LeafRec->getName() == "immAllZerosV") {
+    // If this is the root of the dag we're matching, we emit a redundant opcode
+    // check to ensure that this gets folded into the normal top-level
+    // OpcodeSwitch.
+    if (N == Pattern.getSrcPattern()) {
+      const SDNodeInfo &NI = CGP.getSDNodeInfo(CGP.getSDNodeNamed("build_vector"));
+      AddMatcher(new CheckOpcodeMatcher(NI));
+    }
+    return AddMatcher(new CheckImmAllZerosVMatcher());
+  }
+
   errs() << "Unknown leaf kind: " << *N << "\n";
   abort();
 }
 
 void MatcherGen::EmitOperatorMatchCode(const TreePatternNode *N,
-                                       TreePatternNode *NodeNoTypes) {
+                                       TreePatternNode *NodeNoTypes,
+                                       unsigned ForceMode) {
   assert(!N->isLeaf() && "Not an operator?");
 
   if (N->getOperator()->isSubClassOf("ComplexPattern")) {
@@ -305,7 +328,7 @@ void MatcherGen::EmitOperatorMatchCode(const TreePatternNode *N,
   const SDNodeInfo &CInfo = CGP.getSDNodeInfo(N->getOperator());
 
   // If this is an 'and R, 1234' where the operation is AND/OR and the RHS is
-  // a constant without a predicate fn that has more that one bit set, handle
+  // a constant without a predicate fn that has more than one bit set, handle
   // this as a special case.  This is usually for targets that have special
   // handling of certain large constants (e.g. alpha with it's 8/16/32-bit
   // handling stuff).  Using these instructions is often far more efficient
@@ -316,8 +339,8 @@ void MatcherGen::EmitOperatorMatchCode(const TreePatternNode *N,
   // to handle this.
   if ((N->getOperator()->getName() == "and" ||
        N->getOperator()->getName() == "or") &&
-      N->getChild(1)->isLeaf() && N->getChild(1)->getPredicateFns().empty() &&
-      N->getPredicateFns().empty()) {
+      N->getChild(1)->isLeaf() && N->getChild(1)->getPredicateCalls().empty() &&
+      N->getPredicateCalls().empty()) {
     if (IntInit *II = dyn_cast<IntInit>(N->getChild(1)->getLeafValue())) {
       if (!isPowerOf2_32(II->getValue())) {  // Don't bother with single bits.
         // If this is at the root of the pattern, we emit a redundant
@@ -334,7 +357,7 @@ void MatcherGen::EmitOperatorMatchCode(const TreePatternNode *N,
 
         // Match the LHS of the AND as appropriate.
         AddMatcher(new MoveChildMatcher(0));
-        EmitMatchCode(N->getChild(0), NodeNoTypes->getChild(0));
+        EmitMatchCode(N->getChild(0), NodeNoTypes->getChild(0), ForceMode);
         AddMatcher(new MoveParentMatcher());
         return;
       }
@@ -433,30 +456,49 @@ void MatcherGen::EmitOperatorMatchCode(const TreePatternNode *N,
     // Get the code suitable for matching this child.  Move to the child, check
     // it then move back to the parent.
     AddMatcher(new MoveChildMatcher(OpNo));
-    EmitMatchCode(N->getChild(i), NodeNoTypes->getChild(i));
+    EmitMatchCode(N->getChild(i), NodeNoTypes->getChild(i), ForceMode);
     AddMatcher(new MoveParentMatcher());
   }
 }
 
-bool MatcherGen::recordUniqueNode(const std::string &Name) {
-  unsigned &VarMapEntry = VariableMap[Name];
-  if (VarMapEntry == 0) {
-    // If it is a named node, we must emit a 'Record' opcode.
-    AddMatcher(new RecordMatcher("$" + Name, NextRecordedOperandNo));
-    VarMapEntry = ++NextRecordedOperandNo;
-    return true;
+bool MatcherGen::recordUniqueNode(ArrayRef<std::string> Names) {
+  unsigned Entry = 0;
+  for (const std::string &Name : Names) {
+    unsigned &VarMapEntry = VariableMap[Name];
+    if (!Entry)
+      Entry = VarMapEntry;
+    assert(Entry == VarMapEntry);
   }
 
-  // If we get here, this is a second reference to a specific name.  Since
-  // we already have checked that the first reference is valid, we don't
-  // have to recursively match it, just check that it's the same as the
-  // previously named thing.
-  AddMatcher(new CheckSameMatcher(VarMapEntry-1));
-  return false;
+  bool NewRecord = false;
+  if (Entry == 0) {
+    // If it is a named node, we must emit a 'Record' opcode.
+    std::string WhatFor;
+    for (const std::string &Name : Names) {
+      if (!WhatFor.empty())
+        WhatFor += ',';
+      WhatFor += "$" + Name;
+    }
+    AddMatcher(new RecordMatcher(WhatFor, NextRecordedOperandNo));
+    Entry = ++NextRecordedOperandNo;
+    NewRecord = true;
+  } else {
+    // If we get here, this is a second reference to a specific name.  Since
+    // we already have checked that the first reference is valid, we don't
+    // have to recursively match it, just check that it's the same as the
+    // previously named thing.
+    AddMatcher(new CheckSameMatcher(Entry-1));
+  }
+
+  for (const std::string &Name : Names)
+    VariableMap[Name] = Entry;
+
+  return NewRecord;
 }
 
 void MatcherGen::EmitMatchCode(const TreePatternNode *N,
-                               TreePatternNode *NodeNoTypes) {
+                               TreePatternNode *NodeNoTypes,
+                               unsigned ForceMode) {
   // If N and NodeNoTypes don't agree on a type, then this is a case where we
   // need to do a type check.  Emit the check, apply the type to NodeNoTypes and
   // reinfer any correlated types.
@@ -465,27 +507,47 @@ void MatcherGen::EmitMatchCode(const TreePatternNode *N,
   for (unsigned i = 0, e = NodeNoTypes->getNumTypes(); i != e; ++i) {
     if (NodeNoTypes->getExtType(i) == N->getExtType(i)) continue;
     NodeNoTypes->setType(i, N->getExtType(i));
-    InferPossibleTypes();
+    InferPossibleTypes(ForceMode);
     ResultsToTypeCheck.push_back(i);
   }
 
   // If this node has a name associated with it, capture it in VariableMap. If
   // we already saw this in the pattern, emit code to verify dagness.
+  SmallVector<std::string, 4> Names;
   if (!N->getName().empty())
-    if (!recordUniqueNode(N->getName()))
+    Names.push_back(N->getName());
+
+  for (const ScopedName &Name : N->getNamesAsPredicateArg()) {
+    Names.push_back(("pred:" + Twine(Name.getScope()) + ":" + Name.getIdentifier()).str());
+  }
+
+  if (!Names.empty()) {
+    if (!recordUniqueNode(Names))
       return;
+  }
 
   if (N->isLeaf())
     EmitLeafMatchCode(N);
   else
-    EmitOperatorMatchCode(N, NodeNoTypes);
+    EmitOperatorMatchCode(N, NodeNoTypes, ForceMode);
 
   // If there are node predicates for this node, generate their checks.
-  for (unsigned i = 0, e = N->getPredicateFns().size(); i != e; ++i)
-    AddMatcher(new CheckPredicateMatcher(N->getPredicateFns()[i]));
+  for (unsigned i = 0, e = N->getPredicateCalls().size(); i != e; ++i) {
+    const TreePredicateCall &Pred = N->getPredicateCalls()[i];
+    SmallVector<unsigned, 4> Operands;
+    if (Pred.Fn.usesOperands()) {
+      TreePattern *TP = Pred.Fn.getOrigPatFragRecord();
+      for (unsigned i = 0; i < TP->getNumArgs(); ++i) {
+        std::string Name =
+            ("pred:" + Twine(Pred.Scope) + ":" + TP->getArgName(i)).str();
+        Operands.push_back(getNamedArgumentSlot(Name));
+      }
+    }
+    AddMatcher(new CheckPredicateMatcher(Pred.Fn, Operands));
+  }
 
   for (unsigned i = 0, e = ResultsToTypeCheck.size(); i != e; ++i)
-    AddMatcher(new CheckTypeMatcher(N->getType(ResultsToTypeCheck[i]),
+    AddMatcher(new CheckTypeMatcher(N->getSimpleType(ResultsToTypeCheck[i]),
                                     ResultsToTypeCheck[i]));
 }
 
@@ -509,7 +571,8 @@ bool MatcherGen::EmitMatcherCode(unsigned Variant) {
   }
 
   // Emit the matcher for the pattern structure and types.
-  EmitMatchCode(Pattern.getSrcPattern(), PatWithNoTypes);
+  EmitMatchCode(Pattern.getSrcPattern(), PatWithNoTypes.get(),
+                Pattern.ForceMode);
 
   // If the pattern has a predicate on it (e.g. only enabled when a subtarget
   // feature is around, do the check).
@@ -521,7 +584,7 @@ bool MatcherGen::EmitMatcherCode(unsigned Variant) {
   // because they are generally more expensive to evaluate and more difficult to
   // factor.
   for (unsigned i = 0, e = MatchedComplexPatterns.size(); i != e; ++i) {
-    const TreePatternNode *N = MatchedComplexPatterns[i].first;
+    auto N = MatchedComplexPatterns[i].first;
 
     // Remember where the results of this match get stuck.
     if (N->isLeaf()) {
@@ -606,7 +669,7 @@ void MatcherGen::EmitResultLeafAsOperand(const TreePatternNode *N,
   assert(N->isLeaf() && "Must be a leaf");
 
   if (IntInit *II = dyn_cast<IntInit>(N->getLeafValue())) {
-    AddMatcher(new EmitIntegerMatcher(II->getValue(), N->getType(0)));
+    AddMatcher(new EmitIntegerMatcher(II->getValue(), N->getSimpleType(0)));
     ResultOps.push_back(NextRecordedOperandNo++);
     return;
   }
@@ -617,14 +680,25 @@ void MatcherGen::EmitResultLeafAsOperand(const TreePatternNode *N,
     if (Def->isSubClassOf("Register")) {
       const CodeGenRegister *Reg =
         CGP.getTargetInfo().getRegBank().getReg(Def);
-      AddMatcher(new EmitRegisterMatcher(Reg, N->getType(0)));
+      AddMatcher(new EmitRegisterMatcher(Reg, N->getSimpleType(0)));
       ResultOps.push_back(NextRecordedOperandNo++);
       return;
     }
 
     if (Def->getName() == "zero_reg") {
-      AddMatcher(new EmitRegisterMatcher(nullptr, N->getType(0)));
+      AddMatcher(new EmitRegisterMatcher(nullptr, N->getSimpleType(0)));
       ResultOps.push_back(NextRecordedOperandNo++);
+      return;
+    }
+
+    if (Def->getName() == "undef_tied_input") {
+      std::array<MVT::SimpleValueType, 1> ResultVTs = {{ N->getSimpleType(0) }};
+      std::array<unsigned, 0> InstOps;
+      auto IDOperandNo = NextRecordedOperandNo++;
+      AddMatcher(new EmitNodeMatcher("TargetOpcode::IMPLICIT_DEF",
+                                     ResultVTs, InstOps, false, false, false,
+                                     false, -1, IDOperandNo));
+      ResultOps.push_back(IDOperandNo);
       return;
     }
 
@@ -650,28 +724,6 @@ void MatcherGen::EmitResultLeafAsOperand(const TreePatternNode *N,
 
   errs() << "unhandled leaf node: \n";
   N->dump();
-}
-
-/// GetInstPatternNode - Get the pattern for an instruction.
-///
-const TreePatternNode *MatcherGen::
-GetInstPatternNode(const DAGInstruction &Inst, const TreePatternNode *N) {
-  const TreePattern *InstPat = Inst.getPattern();
-
-  // FIXME2?: Assume actual pattern comes before "implicit".
-  TreePatternNode *InstPatNode;
-  if (InstPat)
-    InstPatNode = InstPat->getTree(0);
-  else if (/*isRoot*/ N == Pattern.getDstPattern())
-    InstPatNode = Pattern.getSrcPattern();
-  else
-    return nullptr;
-
-  if (InstPatNode && !InstPatNode->isLeaf() &&
-      InstPatNode->getOperator()->getName() == "set")
-    InstPatNode = InstPatNode->getChild(InstPatNode->getNumChildren()-1);
-
-  return InstPatNode;
 }
 
 static bool
@@ -711,25 +763,6 @@ EmitResultInstructionAsOperand(const TreePatternNode *N,
   CodeGenInstruction &II = CGT.getInstruction(Op);
   const DAGInstruction &Inst = CGP.getInstruction(Op);
 
-  // If we can, get the pattern for the instruction we're generating. We derive
-  // a variety of information from this pattern, such as whether it has a chain.
-  //
-  // FIXME2: This is extremely dubious for several reasons, not the least of
-  // which it gives special status to instructions with patterns that Pat<>
-  // nodes can't duplicate.
-  const TreePatternNode *InstPatNode = GetInstPatternNode(Inst, N);
-
-  // NodeHasChain - Whether the instruction node we're creating takes chains.
-  bool NodeHasChain = InstPatNode &&
-                      InstPatNode->TreeHasProperty(SDNPHasChain, CGP);
-
-  // Instructions which load and store from memory should have a chain,
-  // regardless of whether they happen to have an internal pattern saying so.
-  if (Pattern.getSrcPattern()->TreeHasProperty(SDNPHasChain, CGP)
-      && (II.hasCtrlDep || II.mayLoad || II.mayStore || II.canFoldAsLoad ||
-          II.hasSideEffects))
-      NodeHasChain = true;
-
   bool isRoot = N == Pattern.getDstPattern();
 
   // TreeHasOutGlue - True if this tree has glue.
@@ -761,18 +794,31 @@ EmitResultInstructionAsOperand(const TreePatternNode *N,
   // 'execute always' values. Match up the node operands to the instruction
   // operands to do this.
   unsigned ChildNo = 0;
+
+  // Similarly to the code in TreePatternNode::ApplyTypeConstraints, count the
+  // number of operands at the end of the list which have default values.
+  // Those can come from the pattern if it provides enough arguments, or be
+  // filled in with the default if the pattern hasn't provided them. But any
+  // operand with a default value _before_ the last mandatory one will be
+  // filled in with their defaults unconditionally.
+  unsigned NonOverridableOperands = NumFixedOperands;
+  while (NonOverridableOperands > NumResults &&
+         CGP.operandHasDefault(II.Operands[NonOverridableOperands-1].Rec))
+    --NonOverridableOperands;
+
   for (unsigned InstOpNo = NumResults, e = NumFixedOperands;
        InstOpNo != e; ++InstOpNo) {
     // Determine what to emit for this operand.
     Record *OperandNode = II.Operands[InstOpNo].Rec;
-    if (OperandNode->isSubClassOf("OperandWithDefaultOps") &&
-        !CGP.getDefaultOperand(OperandNode).DefaultOps.empty()) {
-      // This is a predicate or optional def operand; emit the
-      // 'default ops' operands.
+    if (CGP.operandHasDefault(OperandNode) &&
+        (InstOpNo < NonOverridableOperands || ChildNo >= N->getNumChildren())) {
+      // This is a predicate or optional def operand which the pattern has not
+      // overridden, or which we aren't letting it override; emit the 'default
+      // ops' operands.
       const DAGDefaultOperand &DefaultOp
         = CGP.getDefaultOperand(OperandNode);
       for (unsigned i = 0, e = DefaultOp.DefaultOps.size(); i != e; ++i)
-        EmitResultOperand(DefaultOp.DefaultOps[i], InstOps);
+        EmitResultOperand(DefaultOp.DefaultOps[i].get(), InstOps);
       continue;
     }
 
@@ -834,7 +880,7 @@ EmitResultInstructionAsOperand(const TreePatternNode *N,
   // Determine the result types.
   SmallVector<MVT::SimpleValueType, 4> ResultVTs;
   for (unsigned i = 0, e = N->getNumTypes(); i != e; ++i)
-    ResultVTs.push_back(N->getType(i));
+    ResultVTs.push_back(N->getSimpleType(i));
 
   // If this is the root instruction of a pattern that has physical registers in
   // its result pattern, add output VTs for them.  For example, X86 has:
@@ -881,6 +927,26 @@ EmitResultInstructionAsOperand(const TreePatternNode *N,
     NodeHasMemRefs =
       NodeIsUniqueLoadOrStore || (isRoot && (mayInstNodeLoadOrStore(N, CGP) ||
                                              NumNodesThatLoadOrStore != 1));
+  }
+
+  // Determine whether we need to attach a chain to this node.
+  bool NodeHasChain = false;
+  if (Pattern.getSrcPattern()->TreeHasProperty(SDNPHasChain, CGP)) {
+    // For some instructions, we were able to infer from the pattern whether
+    // they should have a chain.  Otherwise, attach the chain to the root.
+    //
+    // FIXME2: This is extremely dubious for several reasons, not the least of
+    // which it gives special status to instructions with patterns that Pat<>
+    // nodes can't duplicate.
+    if (II.hasChain_Inferred)
+      NodeHasChain = II.hasChain;
+    else
+      NodeHasChain = isRoot;
+    // Instructions which load and store from memory should have a chain,
+    // regardless of whether they happen to have a pattern saying so.
+    if (II.hasCtrlDep || II.mayLoad || II.mayStore || II.canFoldAsLoad ||
+        II.hasSideEffects)
+      NodeHasChain = true;
   }
 
   assert((!ResultVTs.empty() || TreeHasOutGlue || NodeHasChain) &&
@@ -978,9 +1044,16 @@ void MatcherGen::EmitResultCode() {
   }
 
   assert(Ops.size() >= NumSrcResults && "Didn't provide enough results");
-  Ops.resize(NumSrcResults);
+  SmallVector<unsigned, 8> Results(Ops);
 
-  AddMatcher(new CompleteMatchMatcher(Ops, Pattern));
+  // Apply result permutation.
+  for (unsigned ResNo = 0; ResNo < Pattern.getDstPattern()->getNumResults();
+       ++ResNo) {
+    Results[ResNo] = Ops[Pattern.getDstPattern()->getResultIndex(ResNo)];
+  }
+
+  Results.resize(NumSrcResults);
+  AddMatcher(new CompleteMatchMatcher(Results, Pattern));
 }
 
 

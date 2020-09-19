@@ -1,9 +1,8 @@
 //===-- SystemZISelLowering.h - SystemZ DAG lowering interface --*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,9 +15,10 @@
 #define LLVM_LIB_TARGET_SYSTEMZ_SYSTEMZISELLOWERING_H
 
 #include "SystemZ.h"
+#include "SystemZInstrInfo.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/SelectionDAG.h"
-#include "llvm/Target/TargetLowering.h"
+#include "llvm/CodeGen/TargetLowering.h"
 
 namespace llvm {
 namespace SystemZISD {
@@ -93,6 +93,19 @@ enum NodeType : unsigned {
   SDIVREM,
   UDIVREM,
 
+  // Add/subtract with overflow/carry.  These have the same operands as
+  // the corresponding standard operations, except with the carry flag
+  // replaced by a condition code value.
+  SADDO, SSUBO, UADDO, USUBO, ADDCARRY, SUBCARRY,
+
+  // Set the condition code from a boolean value in operand 0.
+  // Operand 1 is a mask of all condition-code values that may result of this
+  // operation, operand 2 is a mask of condition-code values that may result
+  // if the boolean is true.
+  // Note that this operation is always optimized away, we will never
+  // generate any code for it.
+  GET_CCMASK,
+
   // Use a series of MVCs to copy bytes from one memory location to another.
   // The operands are:
   // - the target address
@@ -142,11 +155,11 @@ enum NodeType : unsigned {
 
   // Transaction begin.  The first operand is the chain, the second
   // the TDB pointer, and the third the immediate control field.
-  // Returns chain and glue.
+  // Returns CC value and chain.
   TBEGIN,
   TBEGIN_NOFLOAT,
 
-  // Transaction end.  Just the chain operand.  Returns chain and glue.
+  // Transaction end.  Just the chain operand.  Returns CC value and chain.
   TEND,
 
   // Create a vector constant by filling byte N of the result with bit
@@ -268,6 +281,8 @@ enum NodeType : unsigned {
   VISTR_CC,
   VSTRC_CC,
   VSTRCZ_CC,
+  VSTRS_CC,
+  VSTRSZ_CC,
 
   // Test Data Class.
   //
@@ -308,18 +323,27 @@ enum NodeType : unsigned {
   // Operand 5: the width of the field in bits (8 or 16)
   ATOMIC_CMP_SWAPW,
 
-  // Byte swapping load.
-  //
-  // Operand 0: the address to load from
-  // Operand 1: the type of load (i16, i32, i64)
-  LRV,
+  // Atomic compare-and-swap returning CC value.
+  // Val, CC, OUTCHAIN = ATOMIC_CMP_SWAP(INCHAIN, ptr, cmp, swap)
+  ATOMIC_CMP_SWAP,
 
-  // Byte swapping store.
-  //
-  // Operand 0: the value to store
-  // Operand 1: the address to store to
-  // Operand 2: the type of store (i16, i32, i64)
-  STRV,
+  // 128-bit atomic load.
+  // Val, OUTCHAIN = ATOMIC_LOAD_128(INCHAIN, ptr)
+  ATOMIC_LOAD_128,
+
+  // 128-bit atomic store.
+  // OUTCHAIN = ATOMIC_STORE_128(INCHAIN, val, ptr)
+  ATOMIC_STORE_128,
+
+  // 128-bit atomic compare-and-swap.
+  // Val, CC, OUTCHAIN = ATOMIC_CMP_SWAP(INCHAIN, ptr, cmp, swap)
+  ATOMIC_CMP_SWAP_128,
+
+  // Byte swapping load/store.  Same operands as regular load/store.
+  LRV, STRV,
+
+  // Element swapping load/store.  Same operands as regular load/store.
+  VLER, VSTER,
 
   // Prefetch from the second operand using the 4-bit control code in
   // the first operand.  The code is 1 for a load prefetch and 2 for
@@ -360,7 +384,7 @@ public:
     // want to clobber the upper 32 bits of a GPR unnecessarily.
     return MVT::i32;
   }
-  TargetLoweringBase::LegalizeTypeAction getPreferredVectorAction(EVT VT)
+  TargetLoweringBase::LegalizeTypeAction getPreferredVectorAction(MVT VT)
     const override {
     // Widen subvectors to the full width rather than promoting integer
     // elements.  This is better because:
@@ -377,17 +401,20 @@ public:
       return TypeWidenVector;
     return TargetLoweringBase::getPreferredVectorAction(VT);
   }
+  bool isCheapToSpeculateCtlz() const override { return true; }
   EVT getSetCCResultType(const DataLayout &DL, LLVMContext &,
                          EVT) const override;
   bool isFMAFasterThanFMulAndFAdd(EVT VT) const override;
-  bool isFPImmLegal(const APFloat &Imm, EVT VT) const override;
+  bool isFPImmLegal(const APFloat &Imm, EVT VT,
+                    bool ForCodeSize) const override;
   bool isLegalICmpImmediate(int64_t Imm) const override;
   bool isLegalAddImmediate(int64_t Imm) const override;
   bool isLegalAddressingMode(const DataLayout &DL, const AddrMode &AM, Type *Ty,
-                             unsigned AS) const override;
-  bool isFoldableMemAccessOffset(Instruction *I, int64_t Offset) const override;
+                             unsigned AS,
+                             Instruction *I = nullptr) const override;
   bool allowsMisalignedMemoryAccesses(EVT VT, unsigned AS,
                                       unsigned Align,
+                                      MachineMemOperand::Flags Flags,
                                       bool *Fast) const override;
   bool isTruncateFree(Type *, Type *) const override;
   bool isTruncateFree(EVT, EVT) const override;
@@ -410,6 +437,8 @@ public:
       switch(ConstraintCode[0]) {
       default:
         break;
+      case 'o':
+        return InlineAsm::Constraint_o;
       case 'Q':
         return InlineAsm::Constraint_Q;
       case 'R':
@@ -448,6 +477,11 @@ public:
   EmitInstrWithCustomInserter(MachineInstr &MI,
                               MachineBasicBlock *BB) const override;
   SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
+  void LowerOperationWrapper(SDNode *N, SmallVectorImpl<SDValue> &Results,
+                             SelectionDAG &DAG) const override;
+  void ReplaceNodeResults(SDNode *N, SmallVectorImpl<SDValue>&Results,
+                          SelectionDAG &DAG) const override;
+  const MCPhysReg *getScratchRegisters(CallingConv::ID CC) const override;
   bool allowTruncateForTailCall(Type *, Type *) const override;
   bool mayBeEmittedAsTailCall(const CallInst *CI) const override;
   SDValue LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
@@ -467,6 +501,20 @@ public:
                       const SmallVectorImpl<SDValue> &OutVals, const SDLoc &DL,
                       SelectionDAG &DAG) const override;
   SDValue PerformDAGCombine(SDNode *N, DAGCombinerInfo &DCI) const override;
+
+  /// Determine which of the bits specified in Mask are known to be either
+  /// zero or one and return them in the KnownZero/KnownOne bitsets.
+  void computeKnownBitsForTargetNode(const SDValue Op,
+                                     KnownBits &Known,
+                                     const APInt &DemandedElts,
+                                     const SelectionDAG &DAG,
+                                     unsigned Depth = 0) const override;
+
+  /// Determine the number of bits in the operation that are sign bits.
+  unsigned ComputeNumSignBitsForTargetNode(SDValue Op,
+                                           const APInt &DemandedElts,
+                                           const SelectionDAG &DAG,
+                                           unsigned Depth) const override;
 
   ISD::NodeType getExtendForAtomicOps() const override {
     return ISD::ANY_EXTEND;
@@ -511,6 +559,8 @@ private:
   SDValue lowerUMUL_LOHI(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerSDIVREM(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerUDIVREM(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerXALUO(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerADDSUBCARRY(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerBITCAST(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerOR(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerCTPOP(SDValue Op, SelectionDAG &DAG) const;
@@ -526,6 +576,9 @@ private:
   SDValue lowerPREFETCH(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerINTRINSIC_W_CHAIN(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerINTRINSIC_WO_CHAIN(SDValue Op, SelectionDAG &DAG) const;
+  bool isVectorElementLoad(SDValue Op) const;
+  SDValue buildVector(SelectionDAG &DAG, const SDLoc &DL, EVT VT,
+                      SmallVectorImpl<SDValue> &Elems) const;
   SDValue lowerBUILD_VECTOR(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerVECTOR_SHUFFLE(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerSCALAR_TO_VECTOR(SDValue Op, SelectionDAG &DAG) const;
@@ -541,14 +594,25 @@ private:
                          bool Force) const;
   SDValue combineTruncateExtract(const SDLoc &DL, EVT TruncVT, SDValue Op,
                                  DAGCombinerInfo &DCI) const;
+  SDValue combineZERO_EXTEND(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineSIGN_EXTEND(SDNode *N, DAGCombinerInfo &DCI) const;
+  SDValue combineSIGN_EXTEND_INREG(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineMERGE(SDNode *N, DAGCombinerInfo &DCI) const;
+  bool canLoadStoreByteSwapped(EVT VT) const;
+  SDValue combineLOAD(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineSTORE(SDNode *N, DAGCombinerInfo &DCI) const;
+  SDValue combineVECTOR_SHUFFLE(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineEXTRACT_VECTOR_ELT(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineJOIN_DWORDS(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineFP_ROUND(SDNode *N, DAGCombinerInfo &DCI) const;
+  SDValue combineFP_EXTEND(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineBSWAP(SDNode *N, DAGCombinerInfo &DCI) const;
-  SDValue combineSHIFTROT(SDNode *N, DAGCombinerInfo &DCI) const;
+  SDValue combineBR_CCMASK(SDNode *N, DAGCombinerInfo &DCI) const;
+  SDValue combineSELECT_CCMASK(SDNode *N, DAGCombinerInfo &DCI) const;
+  SDValue combineGET_CCMASK(SDNode *N, DAGCombinerInfo &DCI) const;
+  SDValue combineIntDIVREM(SDNode *N, DAGCombinerInfo &DCI) const;
+
+  SDValue unwrapAddress(SDValue N) const override;
 
   // If the last instruction before MBBI in MBB was some form of COMPARE,
   // try to replace it with a COMPARE AND BRANCH just before MBBI.
@@ -560,11 +624,12 @@ private:
                                   MachineBasicBlock *Target) const;
 
   // Implement EmitInstrWithCustomInserter for individual operation types.
-  MachineBasicBlock *emitSelect(MachineInstr &MI, MachineBasicBlock *BB,
-                                unsigned LOCROpcode) const;
+  MachineBasicBlock *emitSelect(MachineInstr &MI, MachineBasicBlock *BB) const;
   MachineBasicBlock *emitCondStore(MachineInstr &MI, MachineBasicBlock *BB,
                                    unsigned StoreOpcode, unsigned STOCOpcode,
                                    bool Invert) const;
+  MachineBasicBlock *emitPair128(MachineInstr &MI,
+                                 MachineBasicBlock *MBB) const;
   MachineBasicBlock *emitExt128(MachineInstr &MI, MachineBasicBlock *MBB,
                                 bool ClearEven) const;
   MachineBasicBlock *emitAtomicLoadBinary(MachineInstr &MI,
@@ -589,8 +654,27 @@ private:
                                          MachineBasicBlock *MBB,
                                          unsigned Opcode) const;
 
+  MachineMemOperand::Flags getMMOFlags(const Instruction &I) const override;
   const TargetRegisterClass *getRepRegClassFor(MVT VT) const override;
 };
+
+struct SystemZVectorConstantInfo {
+private:
+  APInt IntBits;             // The 128 bits as an integer.
+  APInt SplatBits;           // Smallest splat value.
+  APInt SplatUndef;          // Bits correspoding to undef operands of the BVN.
+  unsigned SplatBitSize = 0;
+  bool isFP128 = false;
+
+public:
+  unsigned Opcode = 0;
+  SmallVector<unsigned, 2> OpVals;
+  MVT VecVT;
+  SystemZVectorConstantInfo(APFloat FPImm);
+  SystemZVectorConstantInfo(BuildVectorSDNode *BVN);
+  bool isVectorConstantLegal(const SystemZSubtarget &Subtarget);
+};
+
 } // end namespace llvm
 
 #endif

@@ -1,9 +1,8 @@
 //===- CXString.h - Routines for manipulating CXStrings -------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -40,15 +39,15 @@ typedef struct _CXCursorAndRangeVisitorBlock {
 
 #endif // !__has_feature(blocks)
 
-/// \brief The result of comparing two source ranges.
+/// The result of comparing two source ranges.
 enum RangeComparisonResult {
-  /// \brief Either the ranges overlap or one of the ranges is invalid.
+  /// Either the ranges overlap or one of the ranges is invalid.
   RangeOverlap,
 
-  /// \brief The first range ends before the second range starts.
+  /// The first range ends before the second range starts.
   RangeBefore,
 
-  /// \brief The first range starts after the second range ends.
+  /// The first range starts after the second range ends.
   RangeAfter
 };
 

@@ -1,9 +1,8 @@
 //===-- X86Disassembler.cpp - Disassembler for x86 and x86_64 -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -74,7 +73,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "MCTargetDesc/X86BaseInfo.h"
 #include "MCTargetDesc/X86MCTargetDesc.h"
+#include "TargetInfo/X86TargetInfo.h"
 #include "X86DisassemblerDecoder.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCDisassembler/MCDisassembler.h"
@@ -102,7 +103,7 @@ StringRef llvm::X86Disassembler::GetInstrName(unsigned Opcode,
   return MII->getName(Opcode);
 }
 
-#define debug(s) DEBUG(Debug(__FILE__, __LINE__, s));
+#define debug(s) LLVM_DEBUG(Debug(__FILE__, __LINE__, s));
 
 namespace llvm {
 
@@ -232,7 +233,26 @@ MCDisassembler::DecodeStatus X86GenericDisassembler::getInstruction(
     return Fail;
   } else {
     Size = InternalInstr.length;
-    return (!translateInstruction(Instr, InternalInstr, this)) ? Success : Fail;
+    bool Ret = translateInstruction(Instr, InternalInstr, this);
+    if (!Ret) {
+      unsigned Flags = X86::IP_NO_PREFIX;
+      if (InternalInstr.hasAdSize)
+        Flags |= X86::IP_HAS_AD_SIZE;
+      if (!InternalInstr.mandatoryPrefix) {
+        if (InternalInstr.hasOpSize)
+          Flags |= X86::IP_HAS_OP_SIZE;
+        if (InternalInstr.repeatPrefix == 0xf2)
+          Flags |= X86::IP_HAS_REPEAT_NE;
+        else if (InternalInstr.repeatPrefix == 0xf3 &&
+                 // It should not be 'pause' f3 90
+                 InternalInstr.opcode != 0x90)
+          Flags |= X86::IP_HAS_REPEAT;
+        if (InternalInstr.hasLockPrefix)
+          Flags |= X86::IP_HAS_LOCK;
+      }
+      Instr.setFlags(Flags);
+    }
+    return (!Ret) ? Success : Fail;
   }
 }
 
@@ -247,13 +267,10 @@ MCDisassembler::DecodeStatus X86GenericDisassembler::getInstruction(
 /// @param reg        - The Reg to append.
 static void translateRegister(MCInst &mcInst, Reg reg) {
 #define ENTRY(x) X86::x,
-  uint8_t llvmRegnums[] = {
-    ALL_REGS
-    0
-  };
+  static constexpr MCPhysReg llvmRegnums[] = {ALL_REGS};
 #undef ENTRY
 
-  uint8_t llvmRegnum = llvmRegnums[reg];
+  MCPhysReg llvmRegnum = llvmRegnums[reg];
   mcInst.addOperand(MCOperand::createReg(llvmRegnum));
 }
 
@@ -315,12 +332,12 @@ static bool translateSrcIndex(MCInst &mcInst, InternalInstruction &insn) {
   unsigned baseRegNo;
 
   if (insn.mode == MODE_64BIT)
-    baseRegNo = insn.prefixPresent[0x67] ? X86::ESI : X86::RSI;
+    baseRegNo = insn.hasAdSize ? X86::ESI : X86::RSI;
   else if (insn.mode == MODE_32BIT)
-    baseRegNo = insn.prefixPresent[0x67] ? X86::SI : X86::ESI;
+    baseRegNo = insn.hasAdSize ? X86::SI : X86::ESI;
   else {
     assert(insn.mode == MODE_16BIT);
-    baseRegNo = insn.prefixPresent[0x67] ? X86::ESI : X86::SI;
+    baseRegNo = insn.hasAdSize ? X86::ESI : X86::SI;
   }
   MCOperand baseReg = MCOperand::createReg(baseRegNo);
   mcInst.addOperand(baseReg);
@@ -340,12 +357,12 @@ static bool translateDstIndex(MCInst &mcInst, InternalInstruction &insn) {
   unsigned baseRegNo;
 
   if (insn.mode == MODE_64BIT)
-    baseRegNo = insn.prefixPresent[0x67] ? X86::EDI : X86::RDI;
+    baseRegNo = insn.hasAdSize ? X86::EDI : X86::RDI;
   else if (insn.mode == MODE_32BIT)
-    baseRegNo = insn.prefixPresent[0x67] ? X86::DI : X86::EDI;
+    baseRegNo = insn.hasAdSize ? X86::DI : X86::EDI;
   else {
     assert(insn.mode == MODE_16BIT);
-    baseRegNo = insn.prefixPresent[0x67] ? X86::EDI : X86::DI;
+    baseRegNo = insn.hasAdSize ? X86::EDI : X86::DI;
   }
   MCOperand baseReg = MCOperand::createReg(baseRegNo);
   mcInst.addOperand(baseReg);
@@ -429,211 +446,6 @@ static void translateImmediate(MCInst &mcInst, uint64_t immediate,
     case ENCODING_IO:
       break;
     }
-  } else if (type == TYPE_IMM3) {
-    // Check for immediates that printSSECC can't handle.
-    if (immediate >= 8) {
-      unsigned NewOpc;
-      switch (mcInst.getOpcode()) {
-      default: llvm_unreachable("unexpected opcode");
-      case X86::CMPPDrmi:  NewOpc = X86::CMPPDrmi_alt;  break;
-      case X86::CMPPDrri:  NewOpc = X86::CMPPDrri_alt;  break;
-      case X86::CMPPSrmi:  NewOpc = X86::CMPPSrmi_alt;  break;
-      case X86::CMPPSrri:  NewOpc = X86::CMPPSrri_alt;  break;
-      case X86::CMPSDrm:   NewOpc = X86::CMPSDrm_alt;   break;
-      case X86::CMPSDrr:   NewOpc = X86::CMPSDrr_alt;   break;
-      case X86::CMPSSrm:   NewOpc = X86::CMPSSrm_alt;   break;
-      case X86::CMPSSrr:   NewOpc = X86::CMPSSrr_alt;   break;
-      case X86::VPCOMBri:  NewOpc = X86::VPCOMBri_alt;  break;
-      case X86::VPCOMBmi:  NewOpc = X86::VPCOMBmi_alt;  break;
-      case X86::VPCOMWri:  NewOpc = X86::VPCOMWri_alt;  break;
-      case X86::VPCOMWmi:  NewOpc = X86::VPCOMWmi_alt;  break;
-      case X86::VPCOMDri:  NewOpc = X86::VPCOMDri_alt;  break;
-      case X86::VPCOMDmi:  NewOpc = X86::VPCOMDmi_alt;  break;
-      case X86::VPCOMQri:  NewOpc = X86::VPCOMQri_alt;  break;
-      case X86::VPCOMQmi:  NewOpc = X86::VPCOMQmi_alt;  break;
-      case X86::VPCOMUBri: NewOpc = X86::VPCOMUBri_alt; break;
-      case X86::VPCOMUBmi: NewOpc = X86::VPCOMUBmi_alt; break;
-      case X86::VPCOMUWri: NewOpc = X86::VPCOMUWri_alt; break;
-      case X86::VPCOMUWmi: NewOpc = X86::VPCOMUWmi_alt; break;
-      case X86::VPCOMUDri: NewOpc = X86::VPCOMUDri_alt; break;
-      case X86::VPCOMUDmi: NewOpc = X86::VPCOMUDmi_alt; break;
-      case X86::VPCOMUQri: NewOpc = X86::VPCOMUQri_alt; break;
-      case X86::VPCOMUQmi: NewOpc = X86::VPCOMUQmi_alt; break;
-      }
-      // Switch opcode to the one that doesn't get special printing.
-      mcInst.setOpcode(NewOpc);
-    }
-  } else if (type == TYPE_IMM5) {
-    // Check for immediates that printAVXCC can't handle.
-    if (immediate >= 32) {
-      unsigned NewOpc;
-      switch (mcInst.getOpcode()) {
-      default: llvm_unreachable("unexpected opcode");
-      case X86::VCMPPDrmi:   NewOpc = X86::VCMPPDrmi_alt;   break;
-      case X86::VCMPPDrri:   NewOpc = X86::VCMPPDrri_alt;   break;
-      case X86::VCMPPSrmi:   NewOpc = X86::VCMPPSrmi_alt;   break;
-      case X86::VCMPPSrri:   NewOpc = X86::VCMPPSrri_alt;   break;
-      case X86::VCMPSDrm:    NewOpc = X86::VCMPSDrm_alt;    break;
-      case X86::VCMPSDrr:    NewOpc = X86::VCMPSDrr_alt;    break;
-      case X86::VCMPSSrm:    NewOpc = X86::VCMPSSrm_alt;    break;
-      case X86::VCMPSSrr:    NewOpc = X86::VCMPSSrr_alt;    break;
-      case X86::VCMPPDYrmi:  NewOpc = X86::VCMPPDYrmi_alt;  break;
-      case X86::VCMPPDYrri:  NewOpc = X86::VCMPPDYrri_alt;  break;
-      case X86::VCMPPSYrmi:  NewOpc = X86::VCMPPSYrmi_alt;  break;
-      case X86::VCMPPSYrri:  NewOpc = X86::VCMPPSYrri_alt;  break;
-      case X86::VCMPPDZrmi:  NewOpc = X86::VCMPPDZrmi_alt;  break;
-      case X86::VCMPPDZrri:  NewOpc = X86::VCMPPDZrri_alt;  break;
-      case X86::VCMPPDZrrib: NewOpc = X86::VCMPPDZrrib_alt; break;
-      case X86::VCMPPSZrmi:  NewOpc = X86::VCMPPSZrmi_alt;  break;
-      case X86::VCMPPSZrri:  NewOpc = X86::VCMPPSZrri_alt;  break;
-      case X86::VCMPPSZrrib: NewOpc = X86::VCMPPSZrrib_alt; break;
-      case X86::VCMPPDZ128rmi:  NewOpc = X86::VCMPPDZ128rmi_alt;  break;
-      case X86::VCMPPDZ128rri:  NewOpc = X86::VCMPPDZ128rri_alt;  break;
-      case X86::VCMPPSZ128rmi:  NewOpc = X86::VCMPPSZ128rmi_alt;  break;
-      case X86::VCMPPSZ128rri:  NewOpc = X86::VCMPPSZ128rri_alt;  break;
-      case X86::VCMPPDZ256rmi:  NewOpc = X86::VCMPPDZ256rmi_alt;  break;
-      case X86::VCMPPDZ256rri:  NewOpc = X86::VCMPPDZ256rri_alt;  break;
-      case X86::VCMPPSZ256rmi:  NewOpc = X86::VCMPPSZ256rmi_alt;  break;
-      case X86::VCMPPSZ256rri:  NewOpc = X86::VCMPPSZ256rri_alt;  break;
-      case X86::VCMPSDZrm_Int:  NewOpc = X86::VCMPSDZrmi_alt;  break;
-      case X86::VCMPSDZrr_Int:  NewOpc = X86::VCMPSDZrri_alt;  break;
-      case X86::VCMPSDZrrb_Int: NewOpc = X86::VCMPSDZrrb_alt;  break;
-      case X86::VCMPSSZrm_Int:  NewOpc = X86::VCMPSSZrmi_alt;  break;
-      case X86::VCMPSSZrr_Int:  NewOpc = X86::VCMPSSZrri_alt;  break;
-      case X86::VCMPSSZrrb_Int: NewOpc = X86::VCMPSSZrrb_alt;  break;
-      }
-      // Switch opcode to the one that doesn't get special printing.
-      mcInst.setOpcode(NewOpc);
-    }
-  } else if (type == TYPE_AVX512ICC) {
-    if (immediate >= 8 || ((immediate & 0x3) == 3)) {
-      unsigned NewOpc;
-      switch (mcInst.getOpcode()) {
-      default: llvm_unreachable("unexpected opcode");
-      case X86::VPCMPBZ128rmi:    NewOpc = X86::VPCMPBZ128rmi_alt;    break;
-      case X86::VPCMPBZ128rmik:   NewOpc = X86::VPCMPBZ128rmik_alt;   break;
-      case X86::VPCMPBZ128rri:    NewOpc = X86::VPCMPBZ128rri_alt;    break;
-      case X86::VPCMPBZ128rrik:   NewOpc = X86::VPCMPBZ128rrik_alt;   break;
-      case X86::VPCMPBZ256rmi:    NewOpc = X86::VPCMPBZ256rmi_alt;    break;
-      case X86::VPCMPBZ256rmik:   NewOpc = X86::VPCMPBZ256rmik_alt;   break;
-      case X86::VPCMPBZ256rri:    NewOpc = X86::VPCMPBZ256rri_alt;    break;
-      case X86::VPCMPBZ256rrik:   NewOpc = X86::VPCMPBZ256rrik_alt;   break;
-      case X86::VPCMPBZrmi:       NewOpc = X86::VPCMPBZrmi_alt;       break;
-      case X86::VPCMPBZrmik:      NewOpc = X86::VPCMPBZrmik_alt;      break;
-      case X86::VPCMPBZrri:       NewOpc = X86::VPCMPBZrri_alt;       break;
-      case X86::VPCMPBZrrik:      NewOpc = X86::VPCMPBZrrik_alt;      break;
-      case X86::VPCMPDZ128rmi:    NewOpc = X86::VPCMPDZ128rmi_alt;    break;
-      case X86::VPCMPDZ128rmib:   NewOpc = X86::VPCMPDZ128rmib_alt;   break;
-      case X86::VPCMPDZ128rmibk:  NewOpc = X86::VPCMPDZ128rmibk_alt;  break;
-      case X86::VPCMPDZ128rmik:   NewOpc = X86::VPCMPDZ128rmik_alt;   break;
-      case X86::VPCMPDZ128rri:    NewOpc = X86::VPCMPDZ128rri_alt;    break;
-      case X86::VPCMPDZ128rrik:   NewOpc = X86::VPCMPDZ128rrik_alt;   break;
-      case X86::VPCMPDZ256rmi:    NewOpc = X86::VPCMPDZ256rmi_alt;    break;
-      case X86::VPCMPDZ256rmib:   NewOpc = X86::VPCMPDZ256rmib_alt;   break;
-      case X86::VPCMPDZ256rmibk:  NewOpc = X86::VPCMPDZ256rmibk_alt;  break;
-      case X86::VPCMPDZ256rmik:   NewOpc = X86::VPCMPDZ256rmik_alt;   break;
-      case X86::VPCMPDZ256rri:    NewOpc = X86::VPCMPDZ256rri_alt;    break;
-      case X86::VPCMPDZ256rrik:   NewOpc = X86::VPCMPDZ256rrik_alt;   break;
-      case X86::VPCMPDZrmi:       NewOpc = X86::VPCMPDZrmi_alt;       break;
-      case X86::VPCMPDZrmib:      NewOpc = X86::VPCMPDZrmib_alt;      break;
-      case X86::VPCMPDZrmibk:     NewOpc = X86::VPCMPDZrmibk_alt;     break;
-      case X86::VPCMPDZrmik:      NewOpc = X86::VPCMPDZrmik_alt;      break;
-      case X86::VPCMPDZrri:       NewOpc = X86::VPCMPDZrri_alt;       break;
-      case X86::VPCMPDZrrik:      NewOpc = X86::VPCMPDZrrik_alt;      break;
-      case X86::VPCMPQZ128rmi:    NewOpc = X86::VPCMPQZ128rmi_alt;    break;
-      case X86::VPCMPQZ128rmib:   NewOpc = X86::VPCMPQZ128rmib_alt;   break;
-      case X86::VPCMPQZ128rmibk:  NewOpc = X86::VPCMPQZ128rmibk_alt;  break;
-      case X86::VPCMPQZ128rmik:   NewOpc = X86::VPCMPQZ128rmik_alt;   break;
-      case X86::VPCMPQZ128rri:    NewOpc = X86::VPCMPQZ128rri_alt;    break;
-      case X86::VPCMPQZ128rrik:   NewOpc = X86::VPCMPQZ128rrik_alt;   break;
-      case X86::VPCMPQZ256rmi:    NewOpc = X86::VPCMPQZ256rmi_alt;    break;
-      case X86::VPCMPQZ256rmib:   NewOpc = X86::VPCMPQZ256rmib_alt;   break;
-      case X86::VPCMPQZ256rmibk:  NewOpc = X86::VPCMPQZ256rmibk_alt;  break;
-      case X86::VPCMPQZ256rmik:   NewOpc = X86::VPCMPQZ256rmik_alt;   break;
-      case X86::VPCMPQZ256rri:    NewOpc = X86::VPCMPQZ256rri_alt;    break;
-      case X86::VPCMPQZ256rrik:   NewOpc = X86::VPCMPQZ256rrik_alt;   break;
-      case X86::VPCMPQZrmi:       NewOpc = X86::VPCMPQZrmi_alt;       break;
-      case X86::VPCMPQZrmib:      NewOpc = X86::VPCMPQZrmib_alt;      break;
-      case X86::VPCMPQZrmibk:     NewOpc = X86::VPCMPQZrmibk_alt;     break;
-      case X86::VPCMPQZrmik:      NewOpc = X86::VPCMPQZrmik_alt;      break;
-      case X86::VPCMPQZrri:       NewOpc = X86::VPCMPQZrri_alt;       break;
-      case X86::VPCMPQZrrik:      NewOpc = X86::VPCMPQZrrik_alt;      break;
-      case X86::VPCMPUBZ128rmi:   NewOpc = X86::VPCMPUBZ128rmi_alt;   break;
-      case X86::VPCMPUBZ128rmik:  NewOpc = X86::VPCMPUBZ128rmik_alt;  break;
-      case X86::VPCMPUBZ128rri:   NewOpc = X86::VPCMPUBZ128rri_alt;   break;
-      case X86::VPCMPUBZ128rrik:  NewOpc = X86::VPCMPUBZ128rrik_alt;  break;
-      case X86::VPCMPUBZ256rmi:   NewOpc = X86::VPCMPUBZ256rmi_alt;   break;
-      case X86::VPCMPUBZ256rmik:  NewOpc = X86::VPCMPUBZ256rmik_alt;  break;
-      case X86::VPCMPUBZ256rri:   NewOpc = X86::VPCMPUBZ256rri_alt;   break;
-      case X86::VPCMPUBZ256rrik:  NewOpc = X86::VPCMPUBZ256rrik_alt;  break;
-      case X86::VPCMPUBZrmi:      NewOpc = X86::VPCMPUBZrmi_alt;      break;
-      case X86::VPCMPUBZrmik:     NewOpc = X86::VPCMPUBZrmik_alt;     break;
-      case X86::VPCMPUBZrri:      NewOpc = X86::VPCMPUBZrri_alt;      break;
-      case X86::VPCMPUBZrrik:     NewOpc = X86::VPCMPUBZrrik_alt;     break;
-      case X86::VPCMPUDZ128rmi:   NewOpc = X86::VPCMPUDZ128rmi_alt;   break;
-      case X86::VPCMPUDZ128rmib:  NewOpc = X86::VPCMPUDZ128rmib_alt;  break;
-      case X86::VPCMPUDZ128rmibk: NewOpc = X86::VPCMPUDZ128rmibk_alt; break;
-      case X86::VPCMPUDZ128rmik:  NewOpc = X86::VPCMPUDZ128rmik_alt;  break;
-      case X86::VPCMPUDZ128rri:   NewOpc = X86::VPCMPUDZ128rri_alt;   break;
-      case X86::VPCMPUDZ128rrik:  NewOpc = X86::VPCMPUDZ128rrik_alt;  break;
-      case X86::VPCMPUDZ256rmi:   NewOpc = X86::VPCMPUDZ256rmi_alt;   break;
-      case X86::VPCMPUDZ256rmib:  NewOpc = X86::VPCMPUDZ256rmib_alt;  break;
-      case X86::VPCMPUDZ256rmibk: NewOpc = X86::VPCMPUDZ256rmibk_alt; break;
-      case X86::VPCMPUDZ256rmik:  NewOpc = X86::VPCMPUDZ256rmik_alt;  break;
-      case X86::VPCMPUDZ256rri:   NewOpc = X86::VPCMPUDZ256rri_alt;   break;
-      case X86::VPCMPUDZ256rrik:  NewOpc = X86::VPCMPUDZ256rrik_alt;  break;
-      case X86::VPCMPUDZrmi:      NewOpc = X86::VPCMPUDZrmi_alt;      break;
-      case X86::VPCMPUDZrmib:     NewOpc = X86::VPCMPUDZrmib_alt;     break;
-      case X86::VPCMPUDZrmibk:    NewOpc = X86::VPCMPUDZrmibk_alt;    break;
-      case X86::VPCMPUDZrmik:     NewOpc = X86::VPCMPUDZrmik_alt;     break;
-      case X86::VPCMPUDZrri:      NewOpc = X86::VPCMPUDZrri_alt;      break;
-      case X86::VPCMPUDZrrik:     NewOpc = X86::VPCMPUDZrrik_alt;     break;
-      case X86::VPCMPUQZ128rmi:   NewOpc = X86::VPCMPUQZ128rmi_alt;   break;
-      case X86::VPCMPUQZ128rmib:  NewOpc = X86::VPCMPUQZ128rmib_alt;  break;
-      case X86::VPCMPUQZ128rmibk: NewOpc = X86::VPCMPUQZ128rmibk_alt; break;
-      case X86::VPCMPUQZ128rmik:  NewOpc = X86::VPCMPUQZ128rmik_alt;  break;
-      case X86::VPCMPUQZ128rri:   NewOpc = X86::VPCMPUQZ128rri_alt;   break;
-      case X86::VPCMPUQZ128rrik:  NewOpc = X86::VPCMPUQZ128rrik_alt;  break;
-      case X86::VPCMPUQZ256rmi:   NewOpc = X86::VPCMPUQZ256rmi_alt;   break;
-      case X86::VPCMPUQZ256rmib:  NewOpc = X86::VPCMPUQZ256rmib_alt;  break;
-      case X86::VPCMPUQZ256rmibk: NewOpc = X86::VPCMPUQZ256rmibk_alt; break;
-      case X86::VPCMPUQZ256rmik:  NewOpc = X86::VPCMPUQZ256rmik_alt;  break;
-      case X86::VPCMPUQZ256rri:   NewOpc = X86::VPCMPUQZ256rri_alt;   break;
-      case X86::VPCMPUQZ256rrik:  NewOpc = X86::VPCMPUQZ256rrik_alt;  break;
-      case X86::VPCMPUQZrmi:      NewOpc = X86::VPCMPUQZrmi_alt;      break;
-      case X86::VPCMPUQZrmib:     NewOpc = X86::VPCMPUQZrmib_alt;     break;
-      case X86::VPCMPUQZrmibk:    NewOpc = X86::VPCMPUQZrmibk_alt;    break;
-      case X86::VPCMPUQZrmik:     NewOpc = X86::VPCMPUQZrmik_alt;     break;
-      case X86::VPCMPUQZrri:      NewOpc = X86::VPCMPUQZrri_alt;      break;
-      case X86::VPCMPUQZrrik:     NewOpc = X86::VPCMPUQZrrik_alt;     break;
-      case X86::VPCMPUWZ128rmi:   NewOpc = X86::VPCMPUWZ128rmi_alt;   break;
-      case X86::VPCMPUWZ128rmik:  NewOpc = X86::VPCMPUWZ128rmik_alt;  break;
-      case X86::VPCMPUWZ128rri:   NewOpc = X86::VPCMPUWZ128rri_alt;   break;
-      case X86::VPCMPUWZ128rrik:  NewOpc = X86::VPCMPUWZ128rrik_alt;  break;
-      case X86::VPCMPUWZ256rmi:   NewOpc = X86::VPCMPUWZ256rmi_alt;   break;
-      case X86::VPCMPUWZ256rmik:  NewOpc = X86::VPCMPUWZ256rmik_alt;  break;
-      case X86::VPCMPUWZ256rri:   NewOpc = X86::VPCMPUWZ256rri_alt;   break;
-      case X86::VPCMPUWZ256rrik:  NewOpc = X86::VPCMPUWZ256rrik_alt;  break;
-      case X86::VPCMPUWZrmi:      NewOpc = X86::VPCMPUWZrmi_alt;      break;
-      case X86::VPCMPUWZrmik:     NewOpc = X86::VPCMPUWZrmik_alt;     break;
-      case X86::VPCMPUWZrri:      NewOpc = X86::VPCMPUWZrri_alt;      break;
-      case X86::VPCMPUWZrrik:     NewOpc = X86::VPCMPUWZrrik_alt;     break;
-      case X86::VPCMPWZ128rmi:    NewOpc = X86::VPCMPWZ128rmi_alt;    break;
-      case X86::VPCMPWZ128rmik:   NewOpc = X86::VPCMPWZ128rmik_alt;   break;
-      case X86::VPCMPWZ128rri:    NewOpc = X86::VPCMPWZ128rri_alt;    break;
-      case X86::VPCMPWZ128rrik:   NewOpc = X86::VPCMPWZ128rrik_alt;   break;
-      case X86::VPCMPWZ256rmi:    NewOpc = X86::VPCMPWZ256rmi_alt;    break;
-      case X86::VPCMPWZ256rmik:   NewOpc = X86::VPCMPWZ256rmik_alt;   break;
-      case X86::VPCMPWZ256rri:    NewOpc = X86::VPCMPWZ256rri_alt;    break;
-      case X86::VPCMPWZ256rrik:   NewOpc = X86::VPCMPWZ256rrik_alt;   break;
-      case X86::VPCMPWZrmi:       NewOpc = X86::VPCMPWZrmi_alt;       break;
-      case X86::VPCMPWZrmik:      NewOpc = X86::VPCMPWZrmik_alt;      break;
-      case X86::VPCMPWZrri:       NewOpc = X86::VPCMPWZrri_alt;       break;
-      case X86::VPCMPWZrrik:      NewOpc = X86::VPCMPWZrrik_alt;      break;
-      }
-      // Switch opcode to the one that doesn't get special printing.
-      mcInst.setOpcode(NewOpc);
-    }
   }
 
   switch (type) {
@@ -646,8 +458,6 @@ static void translateImmediate(MCInst &mcInst, uint64_t immediate,
   case TYPE_ZMM:
     mcInst.addOperand(MCOperand::createReg(X86::ZMM0 + (immediate >> 4)));
     return;
-  case TYPE_BNDR:
-    mcInst.addOperand(MCOperand::createReg(X86::BND0 + (immediate >> 4)));
   default:
     // operand is 64 bits wide.  Do nothing.
     break;
@@ -743,103 +553,7 @@ static bool translateRMMemory(MCInst &mcInst, InternalInstruction &insn,
 #undef ENTRY
       }
     } else {
-      baseReg = MCOperand::createReg(0);
-    }
-
-    // Check whether we are handling VSIB addressing mode for GATHER.
-    // If sibIndex was set to SIB_INDEX_NONE, index offset is 4 and
-    // we should use SIB_INDEX_XMM4|YMM4 for VSIB.
-    // I don't see a way to get the correct IndexReg in readSIB:
-    //   We can tell whether it is VSIB or SIB after instruction ID is decoded,
-    //   but instruction ID may not be decoded yet when calling readSIB.
-    uint32_t Opcode = mcInst.getOpcode();
-    bool IndexIs128 = (Opcode == X86::VGATHERDPDrm ||
-                       Opcode == X86::VGATHERDPDYrm ||
-                       Opcode == X86::VGATHERQPDrm ||
-                       Opcode == X86::VGATHERDPSrm ||
-                       Opcode == X86::VGATHERQPSrm ||
-                       Opcode == X86::VPGATHERDQrm ||
-                       Opcode == X86::VPGATHERDQYrm ||
-                       Opcode == X86::VPGATHERQQrm ||
-                       Opcode == X86::VPGATHERDDrm ||
-                       Opcode == X86::VPGATHERQDrm ||
-                       Opcode == X86::VGATHERDPDZ128rm ||
-                       Opcode == X86::VGATHERDPDZ256rm ||
-                       Opcode == X86::VGATHERDPSZ128rm ||
-                       Opcode == X86::VGATHERQPDZ128rm ||
-                       Opcode == X86::VGATHERQPSZ128rm ||
-                       Opcode == X86::VPGATHERDDZ128rm ||
-                       Opcode == X86::VPGATHERDQZ128rm ||
-                       Opcode == X86::VPGATHERDQZ256rm ||
-                       Opcode == X86::VPGATHERQDZ128rm ||
-                       Opcode == X86::VPGATHERQQZ128rm ||
-                       Opcode == X86::VSCATTERDPDZ128mr ||
-                       Opcode == X86::VSCATTERDPDZ256mr ||
-                       Opcode == X86::VSCATTERDPSZ128mr ||
-                       Opcode == X86::VSCATTERQPDZ128mr ||
-                       Opcode == X86::VSCATTERQPSZ128mr ||
-                       Opcode == X86::VPSCATTERDDZ128mr ||
-                       Opcode == X86::VPSCATTERDQZ128mr ||
-                       Opcode == X86::VPSCATTERDQZ256mr ||
-                       Opcode == X86::VPSCATTERQDZ128mr ||
-                       Opcode == X86::VPSCATTERQQZ128mr);
-    bool IndexIs256 = (Opcode == X86::VGATHERQPDYrm ||
-                       Opcode == X86::VGATHERDPSYrm ||
-                       Opcode == X86::VGATHERQPSYrm ||
-                       Opcode == X86::VGATHERDPDZrm ||
-                       Opcode == X86::VPGATHERDQZrm ||
-                       Opcode == X86::VPGATHERQQYrm ||
-                       Opcode == X86::VPGATHERDDYrm ||
-                       Opcode == X86::VPGATHERQDYrm ||
-                       Opcode == X86::VGATHERDPSZ256rm ||
-                       Opcode == X86::VGATHERQPDZ256rm ||
-                       Opcode == X86::VGATHERQPSZ256rm ||
-                       Opcode == X86::VPGATHERDDZ256rm ||
-                       Opcode == X86::VPGATHERQQZ256rm ||
-                       Opcode == X86::VPGATHERQDZ256rm ||
-                       Opcode == X86::VSCATTERDPDZmr ||
-                       Opcode == X86::VPSCATTERDQZmr ||
-                       Opcode == X86::VSCATTERDPSZ256mr ||
-                       Opcode == X86::VSCATTERQPDZ256mr ||
-                       Opcode == X86::VSCATTERQPSZ256mr ||
-                       Opcode == X86::VPSCATTERDDZ256mr ||
-                       Opcode == X86::VPSCATTERQQZ256mr ||
-                       Opcode == X86::VPSCATTERQDZ256mr ||
-                       Opcode == X86::VGATHERPF0DPDm ||
-                       Opcode == X86::VGATHERPF1DPDm ||
-                       Opcode == X86::VSCATTERPF0DPDm ||
-                       Opcode == X86::VSCATTERPF1DPDm);
-    bool IndexIs512 = (Opcode == X86::VGATHERQPDZrm ||
-                       Opcode == X86::VGATHERDPSZrm ||
-                       Opcode == X86::VGATHERQPSZrm ||
-                       Opcode == X86::VPGATHERQQZrm ||
-                       Opcode == X86::VPGATHERDDZrm ||
-                       Opcode == X86::VPGATHERQDZrm ||
-                       Opcode == X86::VSCATTERQPDZmr ||
-                       Opcode == X86::VSCATTERDPSZmr ||
-                       Opcode == X86::VSCATTERQPSZmr ||
-                       Opcode == X86::VPSCATTERQQZmr ||
-                       Opcode == X86::VPSCATTERDDZmr ||
-                       Opcode == X86::VPSCATTERQDZmr ||
-                       Opcode == X86::VGATHERPF0DPSm ||
-                       Opcode == X86::VGATHERPF0QPDm ||
-                       Opcode == X86::VGATHERPF0QPSm ||
-                       Opcode == X86::VGATHERPF1DPSm ||
-                       Opcode == X86::VGATHERPF1QPDm ||
-                       Opcode == X86::VGATHERPF1QPSm ||
-                       Opcode == X86::VSCATTERPF0DPSm ||
-                       Opcode == X86::VSCATTERPF0QPDm ||
-                       Opcode == X86::VSCATTERPF0QPSm ||
-                       Opcode == X86::VSCATTERPF1DPSm ||
-                       Opcode == X86::VSCATTERPF1QPDm ||
-                       Opcode == X86::VSCATTERPF1QPSm);
-    if (IndexIs128 || IndexIs256 || IndexIs512) {
-      unsigned IndexOffset = insn.sibIndex -
-                         (insn.addressSize == 8 ? SIB_INDEX_RAX:SIB_INDEX_EAX);
-      SIBIndex IndexBase = IndexIs512 ? SIB_INDEX_ZMM0 :
-                           IndexIs256 ? SIB_INDEX_YMM0 : SIB_INDEX_XMM0;
-      insn.sibIndex = (SIBIndex)(IndexBase +
-                           (insn.sibIndex == SIB_INDEX_NONE ? 4 : IndexOffset));
+      baseReg = MCOperand::createReg(X86::NoRegister);
     }
 
     if (insn.sibIndex != SIB_INDEX_NONE) {
@@ -858,7 +572,22 @@ static bool translateRMMemory(MCInst &mcInst, InternalInstruction &insn,
 #undef ENTRY
       }
     } else {
-      indexReg = MCOperand::createReg(0);
+      // Use EIZ/RIZ for a few ambiguous cases where the SIB byte is present,
+      // but no index is used and modrm alone should have been enough.
+      // -No base register in 32-bit mode. In 64-bit mode this is used to
+      //  avoid rip-relative addressing.
+      // -Any base register used other than ESP/RSP/R12D/R12. Using these as a
+      //  base always requires a SIB byte.
+      // -A scale other than 1 is used.
+      if (insn.sibScale != 1 ||
+          (insn.sibBase == SIB_BASE_NONE && insn.mode != MODE_64BIT) ||
+          (insn.sibBase != SIB_BASE_NONE &&
+           insn.sibBase != SIB_BASE_ESP && insn.sibBase != SIB_BASE_RSP &&
+           insn.sibBase != SIB_BASE_R12D && insn.sibBase != SIB_BASE_R12)) {
+        indexReg = MCOperand::createReg(insn.addressSize == 4 ? X86::EIZ :
+                                                                X86::RIZ);
+      } else
+        indexReg = MCOperand::createReg(X86::NoRegister);
     }
 
     scaleAmount = MCOperand::createImm(insn.sibScale);
@@ -875,12 +604,14 @@ static bool translateRMMemory(MCInst &mcInst, InternalInstruction &insn,
         tryAddingPcLoadReferenceComment(insn.startLocation +
                                         insn.displacementOffset,
                                         insn.displacement + pcrel, Dis);
-        baseReg = MCOperand::createReg(X86::RIP); // Section 2.2.1.6
+        // Section 2.2.1.6
+        baseReg = MCOperand::createReg(insn.addressSize == 4 ? X86::EIP :
+                                                               X86::RIP);
       }
       else
-        baseReg = MCOperand::createReg(0);
+        baseReg = MCOperand::createReg(X86::NoRegister);
 
-      indexReg = MCOperand::createReg(0);
+      indexReg = MCOperand::createReg(X86::NoRegister);
       break;
     case EA_BASE_BX_SI:
       baseReg = MCOperand::createReg(X86::BX);
@@ -899,7 +630,7 @@ static bool translateRMMemory(MCInst &mcInst, InternalInstruction &insn,
       indexReg = MCOperand::createReg(X86::DI);
       break;
     default:
-      indexReg = MCOperand::createReg(0);
+      indexReg = MCOperand::createReg(X86::NoRegister);
       switch (insn.eaBase) {
       default:
         debug("Unexpected eaBase");
@@ -963,12 +694,16 @@ static bool translateRM(MCInst &mcInst, const OperandSpecifier &operand,
   case TYPE_XMM:
   case TYPE_YMM:
   case TYPE_ZMM:
+  case TYPE_VK_PAIR:
   case TYPE_VK:
   case TYPE_DEBUGREG:
   case TYPE_CONTROLREG:
   case TYPE_BNDR:
     return translateRMRegister(mcInst, insn);
   case TYPE_M:
+  case TYPE_MVSIBX:
+  case TYPE_MVSIBY:
+  case TYPE_MVSIBZ:
     return translateRMMemory(mcInst, insn, Dis);
   }
 }
@@ -1034,6 +769,9 @@ static bool translateOperand(MCInst &mcInst, const OperandSpecifier &operand,
                        insn,
                        Dis);
     return false;
+  case ENCODING_IRC:
+    mcInst.addOperand(MCOperand::createImm(insn.RC));
+    return false;
   case ENCODING_SI:
     return translateSrcIndex(mcInst, insn);
   case ENCODING_DI:
@@ -1044,6 +782,9 @@ static bool translateOperand(MCInst &mcInst, const OperandSpecifier &operand,
   case ENCODING_RO:
   case ENCODING_Rv:
     translateRegister(mcInst, insn.opcodeRegister);
+    return false;
+  case ENCODING_CC:
+    mcInst.addOperand(MCOperand::createImm(insn.immediates[1]));
     return false;
   case ENCODING_FP:
     translateFPRegister(mcInst, insn.modRM & 7);

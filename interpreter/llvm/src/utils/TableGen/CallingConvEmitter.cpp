@@ -1,9 +1,8 @@
 //===- CallingConvEmitter.cpp - Generate calling conventions --------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -39,21 +38,27 @@ void CallingConvEmitter::run(raw_ostream &O) {
 
   // Emit prototypes for all of the non-custom CC's so that they can forward ref
   // each other.
-  for (unsigned i = 0, e = CCs.size(); i != e; ++i) {
-    if (!CCs[i]->getValueAsBit("Custom")) {
-      O << "static bool " << CCs[i]->getName()
-        << "(unsigned ValNo, MVT ValVT,\n"
-        << std::string(CCs[i]->getName().size() + 13, ' ')
-        << "MVT LocVT, CCValAssign::LocInfo LocInfo,\n"
-        << std::string(CCs[i]->getName().size() + 13, ' ')
+  for (Record *CC : CCs) {
+    if (!CC->getValueAsBit("Custom")) {
+      unsigned Pad = CC->getName().size();
+      if (CC->getValueAsBit("Entry")) {
+        O << "bool llvm::";
+        Pad += 12;
+      } else {
+        O << "static bool ";
+        Pad += 13;
+      }
+      O << CC->getName() << "(unsigned ValNo, MVT ValVT,\n"
+        << std::string(Pad, ' ') << "MVT LocVT, CCValAssign::LocInfo LocInfo,\n"
+        << std::string(Pad, ' ')
         << "ISD::ArgFlagsTy ArgFlags, CCState &State);\n";
     }
   }
 
   // Emit each non-custom calling convention description in full.
-  for (unsigned i = 0, e = CCs.size(); i != e; ++i) {
-    if (!CCs[i]->getValueAsBit("Custom"))
-      EmitCallingConv(CCs[i], O);
+  for (Record *CC : CCs) {
+    if (!CC->getValueAsBit("Custom"))
+      EmitCallingConv(CC, O);
   }
 }
 
@@ -62,12 +67,18 @@ void CallingConvEmitter::EmitCallingConv(Record *CC, raw_ostream &O) {
   ListInit *CCActions = CC->getValueAsListInit("Actions");
   Counter = 0;
 
-  O << "\n\nstatic bool " << CC->getName()
-    << "(unsigned ValNo, MVT ValVT,\n"
-    << std::string(CC->getName().size()+13, ' ')
-    << "MVT LocVT, CCValAssign::LocInfo LocInfo,\n"
-    << std::string(CC->getName().size()+13, ' ')
-    << "ISD::ArgFlagsTy ArgFlags, CCState &State) {\n";
+  O << "\n\n";
+  unsigned Pad = CC->getName().size();
+  if (CC->getValueAsBit("Entry")) {
+    O << "bool llvm::";
+    Pad += 12;
+  } else {
+    O << "static bool ";
+    Pad += 13;
+  }
+  O << CC->getName() << "(unsigned ValNo, MVT ValVT,\n"
+    << std::string(Pad, ' ') << "MVT LocVT, CCValAssign::LocInfo LocInfo,\n"
+    << std::string(Pad, ' ') << "ISD::ArgFlagsTy ArgFlags, CCState &State) {\n";
   // Emit all of the actions, in order.
   for (unsigned i = 0, e = CCActions->size(); i != e; ++i) {
     O << "\n";
@@ -97,7 +108,7 @@ void CallingConvEmitter::EmitAction(Record *Action,
       O << Action->getValueAsString("Predicate");
     } else {
       errs() << *Action;
-      PrintFatalError("Unknown CCPredicateAction!");
+      PrintFatalError(Action->getLoc(), "Unknown CCPredicateAction!");
     }
     
     O << ") {\n";
@@ -134,7 +145,8 @@ void CallingConvEmitter::EmitAction(Record *Action,
       ListInit *RegList = Action->getValueAsListInit("RegList");
       ListInit *ShadowRegList = Action->getValueAsListInit("ShadowRegList");
       if (!ShadowRegList->empty() && ShadowRegList->size() != RegList->size())
-        PrintFatalError("Invalid length of list of shadowed registers");
+        PrintFatalError(Action->getLoc(),
+                        "Invalid length of list of shadowed registers");
 
       if (RegList->size() == 1) {
         O << IndentStr << "if (unsigned Reg = State.AllocateReg(";
@@ -237,7 +249,8 @@ void CallingConvEmitter::EmitAction(Record *Action,
       MVT::SimpleValueType DestVT = getValueType(DestTy);
       O << IndentStr << "LocVT = " << getEnumName(DestVT) << ";\n";
       if (MVT(DestVT).isFloatingPoint()) {
-        PrintFatalError("CCPromoteToUpperBitsInType does not handle floating "
+        PrintFatalError(Action->getLoc(),
+                        "CCPromoteToUpperBitsInType does not handle floating "
                         "point");
       } else {
         O << IndentStr << "if (ArgFlags.isSExt())\n"
@@ -269,7 +282,7 @@ void CallingConvEmitter::EmitAction(Record *Action,
       O << IndentStr << IndentStr << "return false;\n";
     } else {
       errs() << *Action;
-      PrintFatalError("Unknown CCAction!");
+      PrintFatalError(Action->getLoc(), "Unknown CCAction!");
     }
   }
 }

@@ -1,6 +1,8 @@
 llvm-nm - list LLVM bitcode and object file's symbol table
 ==========================================================
 
+.. program:: llvm-nm
+
 SYNOPSIS
 --------
 
@@ -9,51 +11,105 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-The :program:`llvm-nm` utility lists the names of symbols from the LLVM bitcode
-files, object files, or :program:`ar` archives containing them, named on the
-command line.  Each symbol is listed along with some simple information about
-its provenance.  If no file name is specified, or *-* is used as a file name,
-:program:`llvm-nm` will process a file on its standard input stream.
+The :program:`llvm-nm` utility lists the names of symbols from LLVM bitcode
+files, object files, and archives. Each symbol is listed along with some simple
+information about its provenance. If no filename is specified, *a.out* is used
+as the input. If *-* is used as a filename, :program:`llvm-nm` will read a file
+from its standard input stream.
 
 :program:`llvm-nm`'s default output format is the traditional BSD :program:`nm`
-output format.  Each such output record consists of an (optional) 8-digit
+output format. Each such output record consists of an (optional) 8-digit
 hexadecimal address, followed by a type code character, followed by a name, for
-each symbol.  One record is printed per line; fields are separated by spaces.
+each symbol. One record is printed per line; fields are separated by spaces.
 When the address is omitted, it is replaced by 8 spaces.
 
-Type code characters currently supported, and their meanings, are as follows:
+The supported type code characters are as follows. Where both lower and
+upper-case characters are listed for the same meaning, a lower-case character
+represents a local symbol, whilst an upper-case character represents a global
+(external) symbol:
 
-U
+a, A
 
- Named object is referenced but undefined in this bitcode file
+ Absolute symbol.
+
+b, B
+
+ Unitialized data (bss) object.
 
 C
 
- Common (multiple definitions link together into one def)
+ Common symbol. Multiple definitions link together into one definition.
+
+d, D
+
+ Writable data object.
+
+i, I
+
+ COFF: .idata symbol or symbol in a section with IMAGE_SCN_LNK_INFO set.
+
+n
+
+ ELF: local symbol from non-alloc section.
+
+ COFF: debug symbol.
+
+N
+
+ ELF: debug section symbol, or global symbol from non-alloc section.
+
+s, S
+
+ COFF: section symbol.
+
+ Mach-O: absolute symbol or symbol from a section other than __TEXT_EXEC __text,
+ __TEXT __text, __DATA __data, or __DATA __bss.
+
+r, R
+
+ Read-only data object.
+
+t, T
+
+ Code (text) object.
+
+u
+
+ ELF: GNU unique symbol.
+
+U
+
+ Named object is undefined in this file.
+
+v
+
+ ELF: Undefined weak object. It is not a link failure if the object is not
+ defined.
+
+V
+
+ ELF: Defined weak object symbol. This definition will only be used if no
+ regular definitions exist in a link. If multiple weak definitions and no
+ regular definitons exist, one of the weak definitions will be used.
+
+w
+
+ Undefined weak symbol other than an ELF object symbol. It is not a link failure
+ if the symbol is not defined.
 
 W
 
- Weak reference (multiple definitions link together into zero or one definitions)
+ Defined weak symbol other than an ELF object symbol. This definition will only
+ be used if no regular definitions exist in a link. If multiple weak definitions
+ and no regular definitons exist, one of the weak definitions will be used.
 
-t
+\-
 
- Local function (text) object
-
-T
-
- Global function (text) object
-
-d
-
- Local data object
-
-D
-
- Global data object
+ Mach-O: N_STAB symbol.
 
 ?
 
- Something unrecognizable
+ Something unrecognizable.
 
 Because LLVM bitcode files typically contain objects that are not considered to
 have addresses until they are linked into an executable image or dynamically
@@ -66,23 +122,21 @@ OPTIONS
 
 .. program:: llvm-nm
 
-.. option:: -B    (default)
+.. option:: -B
 
- Use BSD output format.  Alias for `--format=bsd`.
-
-.. option:: -P
-
- Use POSIX.2 output format.  Alias for `--format=posix`.
+ Use BSD output format. Alias for ``--format=bsd``.
 
 .. option:: --debug-syms, -a
 
- Show all symbols, even debugger only.
+ Show all symbols, even those usually suppressed.
 
-.. option:: --defined-only
+.. option:: --defined-only, -U
 
- Print only symbols defined in this file (as opposed to
- symbols which may be referenced by objects in this file, but not
- defined in this file.)
+ Print only symbols defined in this file.
+
+.. option:: --demangle, -C
+
+ Demangle symbol names.
 
 .. option:: --dynamic, -D
 
@@ -90,25 +144,57 @@ OPTIONS
 
 .. option:: --extern-only, -g
 
- Print only symbols whose definitions are external; that is, accessible
- from other files.
+ Print only symbols whose definitions are external; that is, accessible from
+ other files.
 
-.. option:: --format=format, -f format
+.. option:: --format=<format>, -f
 
- Select an output format; *format* may be *sysv*, *posix*, or *bsd*.  The default
- is *bsd*.
+ Select an output format; *format* may be *sysv*, *posix*, *darwin*, or *bsd*.
+ The default is *bsd*.
 
-.. option:: -help
+.. option:: --help, -h
 
  Print a summary of command-line options and their meanings.
 
+.. option:: --help-list
+
+ Print an uncategorized summary of command-line options and their meanings.
+
+.. option:: --just-symbol-name, -j
+
+ Print just the symbol names.
+
+.. option:: -m
+
+ Use Darwin format. Alias for ``--format=darwin``.
+
+.. option:: --no-demangle
+
+ Don't demangle symbol names. This is the default.
+
+.. option:: --no-llvm-bc
+
+ Disable the LLVM bitcode reader.
+
 .. option:: --no-sort, -p
 
- Shows symbols in order encountered.
+ Show symbols in the order encountered.
+
+.. option:: --no-weak, -W
+
+ Don't print weak symbols.
 
 .. option:: --numeric-sort, -n, -v
 
  Sort symbols by address.
+
+.. option:: --portability, -P
+
+ Use POSIX.2 output format.  Alias for ``--format=posix``.
+
+.. option:: --print-armap, -M
+
+ Print the archive symbol table, in addition to the symbols.
 
 .. option:: --print-file-name, -A, -o
 
@@ -116,20 +202,68 @@ OPTIONS
 
 .. option:: --print-size, -S
 
- Show symbol size instead of address.
+ Show symbol size as well as address (not applicable for Mach-O).
+
+.. option:: --radix=<RADIX>, -t
+
+ Specify the radix of the symbol address(es). Values accepted are *d* (decimal),
+ *x* (hexadecimal) and *o* (octal).
+
+.. option:: --reverse-sort, -r
+
+ Sort symbols in reverse order.
 
 .. option:: --size-sort
 
  Sort symbols by size.
 
+.. option:: --special-syms
+
+ Ignored. For GNU compatibility only.
+
 .. option:: --undefined-only, -u
 
- Print only symbols referenced but not defined in this file.
+ Print only undefined symbols.
 
-.. option:: --radix=RADIX, -t
+.. option:: --version
 
- Specify the radix of the symbol address(es). Values accepted d(decimal),
- x(hexadecomal) and o(octal).
+ Display the version of this program. Does not stack with other commands.
+
+.. option:: --without-aliases
+
+ Exclude aliases from the output.
+
+.. option:: @<FILE>
+
+ Read command-line options from response file `<FILE>`.
+
+MACH-O SPECIFIC OPTIONS
+-----------------------
+
+.. option:: --add-dyldinfo
+
+ Add symbols from the dyldinfo, if they are not already in the symbol table.
+ This is the default.
+
+.. option:: --arch=<arch1[,arch2,...]>
+
+ Dump the symbols from the specified architecture(s).
+
+.. option:: --dyldinfo-only
+
+ Dump only symbols from the dyldinfo.
+
+.. option:: --no-dyldinfo
+
+ Do not add any symbols from the dyldinfo.
+
+.. option:: -s=<segment section>
+
+ Dump only symbols from this segment and section name.
+
+.. option:: -x
+
+ Print symbol entry in hex.
 
 BUGS
 ----
@@ -145,4 +279,5 @@ EXIT STATUS
 SEE ALSO
 --------
 
-llvm-dis, ar(1), nm(1)
+:manpage:`llvm-ar(1)`, :manpage:`llvm-objdump(1)`, :manpage:`llvm-readelf(1)`,
+:manpage:`llvm-readobj(1)`

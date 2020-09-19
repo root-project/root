@@ -1,9 +1,8 @@
-//===--- StmtGraphTraits.h - Graph Traits for the class Stmt ----*- C++ -*-===//
+//===- StmtGraphTraits.h - Graph Traits for the class Stmt ------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -21,13 +20,10 @@
 
 namespace llvm {
 
-//template <typename T> struct GraphTraits;
-
-
-template <> struct GraphTraits<clang::Stmt*> {
-  typedef clang::Stmt *                     NodeRef;
-  typedef clang::Stmt::child_iterator       ChildIteratorType;
-  typedef llvm::df_iterator<clang::Stmt*>   nodes_iterator;
+template <> struct GraphTraits<clang::Stmt *> {
+  using NodeRef = clang::Stmt *;
+  using ChildIteratorType = clang::Stmt::child_iterator;
+  using nodes_iterator = llvm::df_iterator<clang::Stmt *>;
 
   static NodeRef getEntryNode(clang::Stmt *S) { return S; }
 
@@ -50,11 +46,10 @@ template <> struct GraphTraits<clang::Stmt*> {
   }
 };
 
-
-template <> struct GraphTraits<const clang::Stmt*> {
-  typedef const clang::Stmt *                     NodeRef;
-  typedef clang::Stmt::const_child_iterator       ChildIteratorType;
-  typedef llvm::df_iterator<const clang::Stmt*>   nodes_iterator;
+template <> struct GraphTraits<const clang::Stmt *> {
+  using NodeRef = const clang::Stmt *;
+  using ChildIteratorType = clang::Stmt::const_child_iterator;
+  using nodes_iterator = llvm::df_iterator<const clang::Stmt *>;
 
   static NodeRef getEntryNode(const clang::Stmt *S) { return S; }
 
@@ -77,7 +72,6 @@ template <> struct GraphTraits<const clang::Stmt*> {
   }
 };
 
+} // namespace llvm
 
-} // end namespace llvm
-
-#endif
+#endif // LLVM_CLANG_AST_STMTGRAPHTRAITS_H

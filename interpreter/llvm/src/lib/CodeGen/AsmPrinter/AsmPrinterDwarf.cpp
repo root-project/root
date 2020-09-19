@@ -1,9 +1,8 @@
 //===-- AsmPrinterDwarf.cpp - AsmPrinter Dwarf Support --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,16 +11,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "ByteStreamer.h"
-#include "DwarfDebug.h"
-#include "DwarfExpression.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/BinaryFormat/Dwarf.h"
 #include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/CodeGen/DIE.h"
 #include "llvm/CodeGen/MachineFunction.h"
-#include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/MC/MCAsmInfo.h"
+#include "llvm/MC/MCDwarf.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSection.h"
 #include "llvm/MC/MCStreamer.h"
@@ -30,7 +27,6 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Target/TargetLoweringObjectFile.h"
 #include "llvm/Target/TargetMachine.h"
-#include "llvm/Target/TargetSubtargetInfo.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "asm-printer"
@@ -47,13 +43,17 @@ void AsmPrinter::EmitSLEB128(int64_t Value, const char *Desc) const {
   OutStreamer->EmitSLEB128IntValue(Value);
 }
 
-/// EmitULEB128 - emit the specified unsigned leb128 value.
-void AsmPrinter::EmitULEB128(uint64_t Value, const char *Desc,
-                             unsigned PadTo) const {
+void AsmPrinter::EmitULEB128(uint64_t Value, const char *Desc, unsigned PadTo) const {
   if (isVerbose() && Desc)
     OutStreamer->AddComment(Desc);
 
   OutStreamer->EmitULEB128IntValue(Value, PadTo);
+}
+
+/// Emit something like ".uleb128 Hi-Lo".
+void AsmPrinter::EmitLabelDifferenceAsULEB128(const MCSymbol *Hi,
+                                              const MCSymbol *Lo) const {
+  OutStreamer->emitAbsoluteSymbolDiffAsULEB128(Hi, Lo);
 }
 
 static const char *DecodeDWARFEncoding(unsigned Encoding) {
@@ -64,6 +64,10 @@ static const char *DecodeDWARFEncoding(unsigned Encoding) {
     return "omit";
   case dwarf::DW_EH_PE_pcrel:
     return "pcrel";
+  case dwarf::DW_EH_PE_uleb128:
+    return "uleb128";
+  case dwarf::DW_EH_PE_sleb128:
+    return "sleb128";
   case dwarf::DW_EH_PE_udata4:
     return "udata4";
   case dwarf::DW_EH_PE_udata8:
@@ -164,14 +168,38 @@ void AsmPrinter::emitDwarfSymbolReference(const MCSymbol *Label,
   EmitLabelDifference(Label, Label->getSection().getBeginSymbol(), 4);
 }
 
-void AsmPrinter::emitDwarfStringOffset(DwarfStringPoolEntryRef S) const {
+void AsmPrinter::emitDwarfStringOffset(DwarfStringPoolEntry S) const {
   if (MAI->doesDwarfUseRelocationsAcrossSections()) {
-    emitDwarfSymbolReference(S.getSymbol());
+    assert(S.Symbol && "No symbol available");
+    emitDwarfSymbolReference(S.Symbol);
     return;
   }
 
   // Just emit the offset directly; no need for symbol math.
-  EmitInt32(S.getOffset());
+  emitInt32(S.Offset);
+}
+
+void AsmPrinter::EmitDwarfOffset(const MCSymbol *Label, uint64_t Offset) const {
+  EmitLabelPlusOffset(Label, Offset, MAI->getCodePointerSize());
+}
+
+void AsmPrinter::EmitCallSiteOffset(const MCSymbol *Hi,
+                                    const MCSymbol *Lo,
+                                    unsigned Encoding) const {
+  // The least significant 3 bits specify the width of the encoding
+  if ((Encoding & 0x7) == dwarf::DW_EH_PE_uleb128)
+    EmitLabelDifferenceAsULEB128(Hi, Lo);
+  else
+    EmitLabelDifference(Hi, Lo, GetSizeOfEncodedValue(Encoding));
+}
+
+void AsmPrinter::EmitCallSiteValue(uint64_t Value,
+                                   unsigned Encoding) const {
+  // The least significant 3 bits specify the width of the encoding
+  if ((Encoding & 0x7) == dwarf::DW_EH_PE_uleb128)
+    EmitULEB128(Value);
+  else
+    OutStreamer->EmitIntValue(Value, GetSizeOfEncodedValue(Encoding));
 }
 
 //===----------------------------------------------------------------------===//
@@ -203,6 +231,9 @@ void AsmPrinter::emitCFIInstruction(const MCCFIInstruction &Inst) const {
   case MCCFIInstruction::OpWindowSave:
     OutStreamer->EmitCFIWindowSave();
     break;
+  case MCCFIInstruction::OpNegateRAState:
+    OutStreamer->EmitCFINegateRAState();
+    break;
   case MCCFIInstruction::OpSameValue:
     OutStreamer->EmitCFISameValue(Inst.getRegister());
     break;
@@ -211,6 +242,9 @@ void AsmPrinter::emitCFIInstruction(const MCCFIInstruction &Inst) const {
     break;
   case MCCFIInstruction::OpEscape:
     OutStreamer->EmitCFIEscape(Inst.getValues());
+    break;
+  case MCCFIInstruction::OpRestore:
+    OutStreamer->EmitCFIRestore(Inst.getRegister());
     break;
   }
 }
@@ -246,7 +280,7 @@ void AsmPrinter::emitDwarfDIE(const DIE &Die) const {
       emitDwarfDIE(Child);
 
     OutStreamer->AddComment("End Of Children Mark");
-    EmitInt8(0);
+    emitInt8(0);
   }
 }
 

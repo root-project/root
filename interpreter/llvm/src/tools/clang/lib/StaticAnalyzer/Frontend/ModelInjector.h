@@ -1,14 +1,13 @@
 //===-- ModelInjector.h -----------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file defines the clang::ento::ModelInjector class which implements the
+/// This file defines the clang::ento::ModelInjector class which implements the
 /// clang::CodeInjector interface. This class is responsible for injecting
 /// function definitions that were synthesized from model files.
 ///
@@ -43,7 +42,7 @@ public:
   Stmt *getBody(const ObjCMethodDecl *D) override;
 
 private:
-  /// \brief Synthesize a body for a declaration
+  /// Synthesize a body for a declaration
   ///
   /// This method first looks up the appropriate model file based on the
   /// model-path configuration option and the name of the declaration that is

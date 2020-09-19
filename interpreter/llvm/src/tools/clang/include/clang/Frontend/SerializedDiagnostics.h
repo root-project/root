@@ -1,26 +1,25 @@
 //===--- SerializedDiagnostics.h - Common data for serialized diagnostics -===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_CLANG_FRONTEND_SERIALIZE_DIAGNOSTICS_H_
 #define LLVM_CLANG_FRONTEND_SERIALIZE_DIAGNOSTICS_H_
 
-#include "llvm/Bitcode/BitCodes.h"
+#include "llvm/Bitstream/BitCodes.h"
 
 namespace clang {
 namespace serialized_diags {
 
 enum BlockIDs {
-  /// \brief A top-level block which represents any meta data associated
+  /// A top-level block which represents any meta data associated
   /// with the diagostics, including versioning of the format.
   BLOCK_META = llvm::bitc::FIRST_APPLICATION_BLOCKID,
 
-  /// \brief The this block acts as a container for all the information
+  /// The this block acts as a container for all the information
   /// for a specific diagnostic.
   BLOCK_DIAG
 };
@@ -37,7 +36,7 @@ enum RecordIDs {
   RECORD_LAST = RECORD_FIXIT
 };
 
-/// \brief A stable version of DiagnosticIDs::Level.
+/// A stable version of DiagnosticIDs::Level.
 ///
 /// Do not change the order of values in this enum, and please increment the
 /// serialized diagnostics version number when you add to it.
@@ -50,7 +49,7 @@ enum Level {
   Remark
 };
 
-/// \brief The serialized diagnostics version number.
+/// The serialized diagnostics version number.
 enum { VersionNumber = 2 };
 
 } // end serialized_diags namespace

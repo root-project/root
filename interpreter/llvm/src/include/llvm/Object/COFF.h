@@ -1,9 +1,8 @@
 //===- COFF.h - COFF object file implementation -----------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,16 +15,15 @@
 
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/BinaryFormat/COFF.h"
-#include "llvm/DebugInfo/CodeView/CVDebugRecord.h"
 #include "llvm/MC/SubtargetFeature.h"
 #include "llvm/Object/Binary.h"
+#include "llvm/Object/CVDebugRecord.h"
 #include "llvm/Object/Error.h"
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/BinaryByteStream.h"
 #include "llvm/Support/ConvertUTF.h"
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/ErrorOr.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -276,6 +274,9 @@ struct coff_symbol_generic {
   support::ulittle32_t Value;
 };
 
+struct coff_aux_section_definition;
+struct coff_aux_weak_external;
+
 class COFFSymbolRef {
 public:
   COFFSymbolRef() = default;
@@ -345,6 +346,25 @@ public:
 
   uint8_t getComplexType() const {
     return (getType() & 0xF0) >> COFF::SCT_COMPLEX_TYPE_SHIFT;
+  }
+
+  template <typename T> const T *getAux() const {
+    return CS16 ? reinterpret_cast<const T *>(CS16 + 1)
+                : reinterpret_cast<const T *>(CS32 + 1);
+  }
+
+  const coff_aux_section_definition *getSectionDefinition() const {
+    if (!getNumberOfAuxSymbols() ||
+        getStorageClass() != COFF::IMAGE_SYM_CLASS_STATIC)
+      return nullptr;
+    return getAux<coff_aux_section_definition>();
+  }
+
+  const coff_aux_weak_external *getWeakExternal() const {
+    if (!getNumberOfAuxSymbols() ||
+        getStorageClass() != COFF::IMAGE_SYM_CLASS_WEAK_EXTERNAL)
+      return nullptr;
+    return getAux<coff_aux_weak_external>();
   }
 
   bool isAbsolute() const {
@@ -439,11 +459,12 @@ struct coff_section {
     if (Characteristics & COFF::IMAGE_SCN_TYPE_NO_PAD)
       return 1;
 
-    // Bit [20:24] contains section alignment. Both 0 and 1 mean alignment 1.
+    // Bit [20:24] contains section alignment. 0 means use a default alignment
+    // of 16.
     uint32_t Shift = (Characteristics >> 20) & 0xF;
     if (Shift > 0)
       return 1U << (Shift - 1);
-    return 1;
+    return 16;
   }
 };
 
@@ -571,6 +592,8 @@ enum class coff_guard_flags : uint32_t {
   HasLongJmpTable = 0x00010000,
   FidTableHasFlags = 0x10000000, // Indicates that fid tables are 5 bytes
 };
+
+enum class frame_type : uint16_t { Fpo = 0, Trap = 1, Tss = 2, NonFpo = 3 };
 
 struct coff_load_config_code_integrity {
   support::ulittle16_t Flags;
@@ -730,6 +753,12 @@ struct coff_resource_dir_table {
   support::ulittle16_t NumberOfIDEntries;
 };
 
+struct debug_h_header {
+  support::ulittle32_t Magic;
+  support::ulittle16_t Version;
+  support::ulittle16_t HashAlgorithm;
+};
+
 class COFFObjectFile : public ObjectFile {
 private:
   friend class ImportDirectoryEntryRef;
@@ -753,7 +782,7 @@ private:
   const debug_directory *DebugDirectoryBegin;
   const debug_directory *DebugDirectoryEnd;
   // Either coff_load_configuration32 or coff_load_configuration64.
-  const void *LoadConfig;
+  const void *LoadConfig = nullptr;
 
   std::error_code getString(uint32_t offset, StringRef &Res) const;
 
@@ -855,6 +884,7 @@ public:
     assert(is64());
     return reinterpret_cast<const coff_load_configuration64 *>(LoadConfig);
   }
+  StringRef getRelocationTypeName(uint16_t Type) const;
 
 protected:
   void moveSymbolNext(DataRefImpl &Symb) const override;
@@ -867,13 +897,12 @@ protected:
   Expected<SymbolRef::Type> getSymbolType(DataRefImpl Symb) const override;
   Expected<section_iterator> getSymbolSection(DataRefImpl Symb) const override;
   void moveSectionNext(DataRefImpl &Sec) const override;
-  std::error_code getSectionName(DataRefImpl Sec,
-                                 StringRef &Res) const override;
+  Expected<StringRef> getSectionName(DataRefImpl Sec) const override;
   uint64_t getSectionAddress(DataRefImpl Sec) const override;
   uint64_t getSectionIndex(DataRefImpl Sec) const override;
   uint64_t getSectionSize(DataRefImpl Sec) const override;
-  std::error_code getSectionContents(DataRefImpl Sec,
-                                     StringRef &Res) const override;
+  Expected<ArrayRef<uint8_t>>
+  getSectionContents(DataRefImpl Sec) const override;
   uint64_t getSectionAlignment(DataRefImpl Sec) const override;
   bool isSectionCompressed(DataRefImpl Sec) const override;
   bool isSectionText(DataRefImpl Sec) const override;
@@ -907,7 +936,8 @@ public:
 
   uint8_t getBytesInAddress() const override;
   StringRef getFileFormatName() const override;
-  unsigned getArch() const override;
+  Triple::ArchType getArch() const override;
+  Expected<uint64_t> getStartAddress() const override;
   SubtargetFeatures getFeatures() const override { return SubtargetFeatures(); }
 
   import_directory_iterator import_directory_begin() const;
@@ -939,11 +969,16 @@ public:
       return nullptr;
     return reinterpret_cast<const dos_header *>(base());
   }
+  std::error_code getCOFFHeader(const coff_file_header *&Res) const;
+  std::error_code
+  getCOFFBigObjHeader(const coff_bigobj_file_header *&Res) const;
   std::error_code getPE32Header(const pe32_header *&Res) const;
   std::error_code getPE32PlusHeader(const pe32plus_header *&Res) const;
   std::error_code getDataDirectory(uint32_t index,
                                    const data_directory *&Res) const;
   std::error_code getSection(int32_t index, const coff_section *&Res) const;
+  std::error_code getSection(StringRef SectionName,
+                             const coff_section *&Res) const;
 
   template <typename coff_symbol_type>
   std::error_code getSymbol(uint32_t Index,
@@ -954,28 +989,28 @@ public:
     Res = reinterpret_cast<coff_symbol_type *>(getSymbolTable()) + Index;
     return std::error_code();
   }
-  ErrorOr<COFFSymbolRef> getSymbol(uint32_t index) const {
+  Expected<COFFSymbolRef> getSymbol(uint32_t index) const {
     if (SymbolTable16) {
       const coff_symbol16 *Symb = nullptr;
       if (std::error_code EC = getSymbol(index, Symb))
-        return EC;
+        return errorCodeToError(EC);
       return COFFSymbolRef(Symb);
     }
     if (SymbolTable32) {
       const coff_symbol32 *Symb = nullptr;
       if (std::error_code EC = getSymbol(index, Symb))
-        return EC;
+        return errorCodeToError(EC);
       return COFFSymbolRef(Symb);
     }
-    return object_error::parse_failed;
+    return errorCodeToError(object_error::parse_failed);
   }
 
   template <typename T>
   std::error_code getAuxSymbol(uint32_t index, const T *&Res) const {
-    ErrorOr<COFFSymbolRef> s = getSymbol(index);
-    if (std::error_code EC = s.getError())
-      return EC;
-    Res = reinterpret_cast<const T *>(s->getRawPtr());
+    Expected<COFFSymbolRef> S = getSymbol(index);
+    if (Error E = S.takeError())
+      return errorToErrorCode(std::move(E));
+    Res = reinterpret_cast<const T *>(S->getRawPtr());
     return std::error_code();
   }
 
@@ -985,6 +1020,8 @@ public:
 
   ArrayRef<uint8_t> getSymbolAuxData(COFFSymbolRef Symbol) const;
 
+  uint32_t getSymbolIndex(COFFSymbolRef Symbol) const;
+
   size_t getSymbolTableEntrySize() const {
     if (COFFHeader)
       return sizeof(coff_symbol16);
@@ -993,13 +1030,12 @@ public:
     llvm_unreachable("null symbol table pointer!");
   }
 
-  iterator_range<const coff_relocation *>
-  getRelocations(const coff_section *Sec) const;
+  ArrayRef<coff_relocation> getRelocations(const coff_section *Sec) const;
 
-  std::error_code getSectionName(const coff_section *Sec, StringRef &Res) const;
+  Expected<StringRef> getSectionName(const coff_section *Sec) const;
   uint64_t getSectionSize(const coff_section *Sec) const;
-  std::error_code getSectionContents(const coff_section *Sec,
-                                     ArrayRef<uint8_t> &Res) const;
+  Error getSectionContents(const coff_section *Sec,
+                           ArrayRef<uint8_t> &Res) const;
 
   uint64_t getImageBase() const;
   std::error_code getVaPtr(uint64_t VA, uintptr_t &Res) const;
@@ -1028,6 +1064,8 @@ public:
 
   bool isRelocatableObject() const override;
   bool is64() const { return PE32PlusHeader; }
+
+  StringRef mapDebugSectionName(StringRef Name) const override;
 
   static bool classof(const Binary *v) { return v->isCOFF(); }
 };
@@ -1145,7 +1183,7 @@ public:
   BaseRelocRef() = default;
   BaseRelocRef(const coff_base_reloc_block_header *Header,
                const COFFObjectFile *Owner)
-      : Header(Header), Index(0), OwningObject(Owner) {}
+      : Header(Header), Index(0) {}
 
   bool operator==(const BaseRelocRef &Other) const;
   void moveNext();
@@ -1156,7 +1194,6 @@ public:
 private:
   const coff_base_reloc_block_header *Header;
   uint32_t Index;
-  const COFFObjectFile *OwningObject = nullptr;
 };
 
 class ResourceSectionRef {
@@ -1164,16 +1201,17 @@ public:
   ResourceSectionRef() = default;
   explicit ResourceSectionRef(StringRef Ref) : BBS(Ref, support::little) {}
 
-  ErrorOr<ArrayRef<UTF16>> getEntryNameString(const coff_resource_dir_entry &Entry);
-  ErrorOr<const coff_resource_dir_table &>
+  Expected<ArrayRef<UTF16>>
+  getEntryNameString(const coff_resource_dir_entry &Entry);
+  Expected<const coff_resource_dir_table &>
   getEntrySubDir(const coff_resource_dir_entry &Entry);
-  ErrorOr<const coff_resource_dir_table &> getBaseTable();
+  Expected<const coff_resource_dir_table &> getBaseTable();
 
 private:
   BinaryByteStream BBS;
 
-  ErrorOr<const coff_resource_dir_table &> getTableAtOffset(uint32_t Offset);
-  ErrorOr<ArrayRef<UTF16>> getDirStringAtOffset(uint32_t Offset);
+  Expected<const coff_resource_dir_table &> getTableAtOffset(uint32_t Offset);
+  Expected<ArrayRef<UTF16>> getDirStringAtOffset(uint32_t Offset);
 };
 
 // Corresponds to `_FPO_DATA` structure in the PE/COFF spec.
@@ -1197,7 +1235,7 @@ struct FpoData {
   bool useBP() const { return (Attributes >> 10) & 1; }
 
   // cbFrame: frame pointer
-  int getFP() const { return Attributes >> 14; }
+  frame_type getFP() const { return static_cast<frame_type>(Attributes >> 14); }
 };
 
 } // end namespace object

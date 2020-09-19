@@ -1,9 +1,8 @@
 //== APSIntType.h - Simple record of the type of APSInts --------*- C++ -*--==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -16,7 +15,7 @@
 namespace clang {
 namespace ento {
 
-/// \brief A record of the "type" of an APSInt, used for conversions.
+/// A record of the "type" of an APSInt, used for conversions.
 class APSIntType {
   uint32_t BitWidth;
   bool IsUnsigned;
@@ -31,7 +30,7 @@ public:
   uint32_t getBitWidth() const { return BitWidth; }
   bool isUnsigned() const { return IsUnsigned; }
 
-  /// \brief Convert a given APSInt, in place, to match this type.
+  /// Convert a given APSInt, in place, to match this type.
   ///
   /// This behaves like a C cast: converting 255u8 (0xFF) to s16 gives
   /// 255 (0x00FF), and converting -1s8 (0xFF) to u16 gives 65535 (0xFFFF).
@@ -88,12 +87,12 @@ public:
   ///                       for 'unsigned char' (u8).
   RangeTestResultKind testInRange(const llvm::APSInt &Val,
                                   bool AllowMixedSign) const LLVM_READONLY;
-  
+
   bool operator==(const APSIntType &Other) const {
     return BitWidth == Other.BitWidth && IsUnsigned == Other.IsUnsigned;
   }
 
-  /// \brief Provide an ordering for finding a common conversion type.
+  /// Provide an ordering for finding a common conversion type.
   ///
   /// Unsigned integers are considered to be better conversion types than
   /// signed integers of the same width.
@@ -102,7 +101,7 @@ public:
            std::tie(Other.BitWidth, Other.IsUnsigned);
   }
 };
-    
+
 } // end ento namespace
 } // end clang namespace
 

@@ -1,22 +1,8 @@
 /*===---- prfchwintrin.h - PREFETCHW intrinsic -----------------------------===
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+ * See https://llvm.org/LICENSE.txt for license information.
+ * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  *
  *===-----------------------------------------------------------------------===
  */
@@ -28,8 +14,7 @@
 #ifndef __PRFCHWINTRIN_H
 #define __PRFCHWINTRIN_H
 
-#if defined(__PRFCHW__) || defined(__3dNOW__)
-/// \brief Loads a memory sequence containing the specified memory address into
+/// Loads a memory sequence containing the specified memory address into
 ///    all data cache levels. The cache-coherency state is set to exclusive.
 ///    Data can be read from and written to the cache line without additional
 ///    delay.
@@ -46,7 +31,7 @@ _m_prefetch(void *__P)
   __builtin_prefetch (__P, 0, 3 /* _MM_HINT_T0 */);
 }
 
-/// \brief Loads a memory sequence containing the specified memory address into
+/// Loads a memory sequence containing the specified memory address into
 ///    the L1 data cache and sets the cache-coherency to modified. This
 ///    provides a hint to the processor that the cache line will be modified.
 ///    It is intended for use when the cache line will be written to shortly
@@ -66,6 +51,5 @@ _m_prefetchw(void *__P)
 {
   __builtin_prefetch (__P, 1, 3 /* _MM_HINT_T0 */);
 }
-#endif
 
 #endif /* __PRFCHWINTRIN_H */

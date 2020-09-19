@@ -1,9 +1,8 @@
 // MacOSXAPIChecker.h - Checks proper use of various MacOS X APIs --*- C++ -*-//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -15,7 +14,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
@@ -83,7 +82,7 @@ void MacOSXAPIChecker::CheckDispatchOnce(CheckerContext &C, const CallExpr *CE,
   // that dispatch_once is a macro that wraps a call to _dispatch_once.
   // _dispatch_once is then a function which then calls the real dispatch_once.
   // Users do not care; they just want the warning at the top-level call.
-  if (CE->getLocStart().isMacroID()) {
+  if (CE->getBeginLoc().isMacroID()) {
     StringRef TrimmedFName = FName.ltrim('_');
     if (TrimmedFName != FName)
       FName = TrimmedFName;
@@ -173,4 +172,8 @@ void MacOSXAPIChecker::checkPreStmt(const CallExpr *CE,
 
 void ento::registerMacOSXAPIChecker(CheckerManager &mgr) {
   mgr.registerChecker<MacOSXAPIChecker>();
+}
+
+bool ento::shouldRegisterMacOSXAPIChecker(const LangOptions &LO) {
+  return true;
 }

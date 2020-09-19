@@ -1,9 +1,8 @@
 //===- CoverageMappingWriter.cpp - Code coverage mapping writer -----------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -35,7 +34,7 @@ void CoverageFilenamesSectionWriter::write(raw_ostream &OS) {
 
 namespace {
 
-/// \brief Gather only the expressions that are used by the mapping
+/// Gather only the expressions that are used by the mapping
 /// regions in this function.
 class CounterExpressionsMinimizer {
   ArrayRef<CounterExpression> Expressions;
@@ -74,7 +73,7 @@ public:
 
   ArrayRef<CounterExpression> getExpressions() const { return UsedExpressions; }
 
-  /// \brief Adjust the given counter to correctly transition from the old
+  /// Adjust the given counter to correctly transition from the old
   /// expression ids to the new expression ids.
   Counter adjust(Counter C) const {
     if (C.isExpression())
@@ -85,7 +84,7 @@ public:
 
 } // end anonymous namespace
 
-/// \brief Encode the counter.
+/// Encode the counter.
 ///
 /// The encoding uses the following format:
 /// Low 2 bits - Tag:
@@ -116,17 +115,23 @@ static void writeCounter(ArrayRef<CounterExpression> Expressions, Counter C,
 }
 
 void CoverageMappingWriter::write(raw_ostream &OS) {
+  // Check that we don't have any bogus regions.
+  assert(all_of(MappingRegions,
+                [](const CounterMappingRegion &CMR) {
+                  return CMR.startLoc() <= CMR.endLoc();
+                }) &&
+         "Source region does not begin before it ends");
+
   // Sort the regions in an ascending order by the file id and the starting
   // location. Sort by region kinds to ensure stable order for tests.
-  std::stable_sort(
-      MappingRegions.begin(), MappingRegions.end(),
-      [](const CounterMappingRegion &LHS, const CounterMappingRegion &RHS) {
-        if (LHS.FileID != RHS.FileID)
-          return LHS.FileID < RHS.FileID;
-        if (LHS.startLoc() != RHS.startLoc())
-          return LHS.startLoc() < RHS.startLoc();
-        return LHS.Kind < RHS.Kind;
-      });
+  llvm::stable_sort(MappingRegions, [](const CounterMappingRegion &LHS,
+                                       const CounterMappingRegion &RHS) {
+    if (LHS.FileID != RHS.FileID)
+      return LHS.FileID < RHS.FileID;
+    if (LHS.startLoc() != RHS.startLoc())
+      return LHS.startLoc() < RHS.startLoc();
+    return LHS.Kind < RHS.Kind;
+  });
 
   // Write out the fileid -> filename mapping.
   encodeULEB128(VirtualFileMapping.size(), OS);
@@ -164,6 +169,7 @@ void CoverageMappingWriter::write(raw_ostream &OS) {
     Counter Count = Minimizer.adjust(I->Count);
     switch (I->Kind) {
     case CounterMappingRegion::CodeRegion:
+    case CounterMappingRegion::GapRegion:
       writeCounter(MinExpressions, Count, OS);
       break;
     case CounterMappingRegion::ExpansionRegion: {

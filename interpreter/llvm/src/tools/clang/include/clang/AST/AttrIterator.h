@@ -1,9 +1,8 @@
-//===--- AttrIterator.h - Classes for attribute iteration -------*- C++ -*-===//
+//===- AttrIterator.h - Classes for attribute iteration ---------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -15,37 +14,25 @@
 #define LLVM_CLANG_AST_ATTRITERATOR_H
 
 #include "clang/Basic/LLVM.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/Support/Casting.h"
+#include <cassert>
+#include <cstddef>
 #include <iterator>
 
 namespace clang {
-  class ASTContext;
-  class Attr;
-}
 
-// Defined in ASTContext.h
-void *operator new(size_t Bytes, const clang::ASTContext &C,
-                   size_t Alignment = 8);
-// FIXME: Being forced to not have a default argument here due to redeclaration
-//        rules on default arguments sucks
-void *operator new[](size_t Bytes, const clang::ASTContext &C,
-                     size_t Alignment);
-
-// It is good practice to pair new/delete operators.  Also, MSVC gives many
-// warnings if a matching delete overload is not declared, even though the
-// throw() spec guarantees it will not be implicitly called.
-void operator delete(void *Ptr, const clang::ASTContext &C, size_t);
-void operator delete[](void *Ptr, const clang::ASTContext &C, size_t);
-
-namespace clang {
+class ASTContext;
+class Attr;
 
 /// AttrVec - A vector of Attr, which is how they are stored on the AST.
-typedef SmallVector<Attr *, 4> AttrVec;
+using AttrVec = SmallVector<Attr *, 4>;
 
 /// specific_attr_iterator - Iterates over a subrange of an AttrVec, only
 /// providing attributes that are of a specific type.
 template <typename SpecificAttr, typename Container = AttrVec>
 class specific_attr_iterator {
-  typedef typename Container::const_iterator Iterator;
+  using Iterator = typename Container::const_iterator;
 
   /// Current - The current, underlying iterator.
   /// In order to ensure we don't dereference an invalid iterator unless
@@ -67,14 +54,14 @@ class specific_attr_iterator {
   }
 
 public:
-  typedef SpecificAttr*             value_type;
-  typedef SpecificAttr*             reference;
-  typedef SpecificAttr*             pointer;
-  typedef std::forward_iterator_tag iterator_category;
-  typedef std::ptrdiff_t            difference_type;
+  using value_type = SpecificAttr *;
+  using reference = SpecificAttr *;
+  using pointer = SpecificAttr *;
+  using iterator_category = std::forward_iterator_tag;
+  using difference_type = std::ptrdiff_t;
 
-  specific_attr_iterator() : Current() { }
-  explicit specific_attr_iterator(Iterator i) : Current(i) { }
+  specific_attr_iterator() = default;
+  explicit specific_attr_iterator(Iterator i) : Current(i) {}
 
   reference operator*() const {
     AdvanceToNext();
@@ -99,7 +86,7 @@ public:
                          specific_attr_iterator Right) {
     assert((Left.Current == nullptr) == (Right.Current == nullptr));
     if (Left.Current < Right.Current)
-      Left.AdvanceToNext(Right.Current); 
+      Left.AdvanceToNext(Right.Current);
     else
       Right.AdvanceToNext(Left.Current);
     return Left.Current == Right.Current;
@@ -136,6 +123,6 @@ inline SpecificAttr *getSpecificAttr(const Container& container) {
     return nullptr;
 }
 
-}  // end namespace clang
+} // namespace clang
 
-#endif
+#endif // LLVM_CLANG_AST_ATTRITERATOR_H

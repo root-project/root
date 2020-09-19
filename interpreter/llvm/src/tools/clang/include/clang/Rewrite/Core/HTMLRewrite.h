@@ -1,9 +1,8 @@
 //==- HTMLRewrite.h - Translate source code into prettified HTML ---*- C++ -*-//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -31,7 +30,8 @@ namespace html {
   /// start/end tags are placed at the start/end of each line if the range is
   /// multiline.
   void HighlightRange(Rewriter &R, SourceLocation B, SourceLocation E,
-                      const char *StartTag, const char *EndTag);
+                      const char *StartTag, const char *EndTag,
+                      bool IsTokenRange = true);
 
   /// HighlightRange - Highlight a range in the source code with the specified
   /// start/end tags.  The Start/end of the range must be in the same file.

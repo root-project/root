@@ -1,9 +1,8 @@
 //===--- SemaConsumer.h - Abstract interface for AST semantics --*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -20,7 +19,7 @@
 namespace clang {
   class Sema;
 
-  /// \brief An abstract interface that should be implemented by
+  /// An abstract interface that should be implemented by
   /// clients that read ASTs and then require further semantic
   /// analysis of the entities in those ASTs.
   class SemaConsumer : public ASTConsumer {
@@ -30,12 +29,12 @@ namespace clang {
       ASTConsumer::SemaConsumer = true;
     }
 
-    /// \brief Initialize the semantic consumer with the Sema instance
+    /// Initialize the semantic consumer with the Sema instance
     /// being used to perform semantic analysis on the abstract syntax
     /// tree.
     virtual void InitializeSema(Sema &S) {}
 
-    /// \brief Inform the semantic consumer that Sema is no longer available.
+    /// Inform the semantic consumer that Sema is no longer available.
     virtual void ForgetSema() {}
 
     // isa/cast/dyn_cast support

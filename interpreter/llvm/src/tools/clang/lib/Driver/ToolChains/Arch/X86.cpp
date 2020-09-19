@@ -1,9 +1,8 @@
 //===--- X86.cpp - X86 Helpers for Tools ------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -23,12 +22,8 @@ using namespace llvm::opt;
 const char *x86::getX86TargetCPU(const ArgList &Args,
                                  const llvm::Triple &Triple) {
   if (const Arg *A = Args.getLastArg(clang::driver::options::OPT_march_EQ)) {
-    if (StringRef(A->getValue()) != "native") {
-      if (Triple.isOSDarwin() && Triple.getArchName() == "x86_64h")
-        return "core-avx2";
-
+    if (StringRef(A->getValue()) != "native")
       return A->getValue();
-    }
 
     // FIXME: Reject attempts to use -march=native unless the target matches
     // the host.
@@ -40,26 +35,29 @@ const char *x86::getX86TargetCPU(const ArgList &Args,
       return Args.MakeArgString(CPU);
   }
 
-  if (const Arg *A = Args.getLastArg(options::OPT__SLASH_arch)) {
-    // Mapping built by referring to X86TargetInfo::getDefaultFeatures().
+  if (const Arg *A = Args.getLastArgNoClaim(options::OPT__SLASH_arch)) {
+    // Mapping built by looking at lib/Basic's X86TargetInfo::initFeatureMap().
     StringRef Arch = A->getValue();
-    const char *CPU;
-    if (Triple.getArch() == llvm::Triple::x86) {
+    const char *CPU = nullptr;
+    if (Triple.getArch() == llvm::Triple::x86) {  // 32-bit-only /arch: flags.
       CPU = llvm::StringSwitch<const char *>(Arch)
                 .Case("IA32", "i386")
                 .Case("SSE", "pentium3")
                 .Case("SSE2", "pentium4")
-                .Case("AVX", "sandybridge")
-                .Case("AVX2", "haswell")
                 .Default(nullptr);
-    } else {
+    }
+    if (CPU == nullptr) {  // 32-bit and 64-bit /arch: flags.
       CPU = llvm::StringSwitch<const char *>(Arch)
                 .Case("AVX", "sandybridge")
                 .Case("AVX2", "haswell")
+                .Case("AVX512F", "knl")
+                .Case("AVX512", "skylake-avx512")
                 .Default(nullptr);
     }
-    if (CPU)
+    if (CPU) {
+      A->claim();
       return CPU;
+    }
   }
 
   // Select the default CPU if none was given (or detection failed).
@@ -101,8 +99,6 @@ const char *x86::getX86TargetCPU(const ArgList &Args,
     return "i486";
   case llvm::Triple::Haiku:
     return "i586";
-  case llvm::Triple::Bitrig:
-    return "i686";
   default:
     // Fallback to p4.
     return "pentium4";
@@ -139,32 +135,37 @@ void x86::getX86TargetFeatures(const Driver &D, const llvm::Triple &Triple,
     if (ArchType == llvm::Triple::x86_64) {
       Features.push_back("+sse4.2");
       Features.push_back("+popcnt");
+      Features.push_back("+cx16");
     } else
       Features.push_back("+ssse3");
   }
 
-  // Set features according to the -arch flag on MSVC.
-  if (Arg *A = Args.getLastArg(options::OPT__SLASH_arch)) {
-    StringRef Arch = A->getValue();
-    bool ArchUsed = false;
-    // First, look for flags that are shared in x86 and x86-64.
-    if (ArchType == llvm::Triple::x86_64 || ArchType == llvm::Triple::x86) {
-      if (Arch == "AVX" || Arch == "AVX2") {
-        ArchUsed = true;
-        Features.push_back(Args.MakeArgString("+" + Arch.lower()));
-      }
+  // Translate the high level `-mretpoline` flag to the specific target feature
+  // flags. We also detect if the user asked for retpoline external thunks but
+  // failed to ask for retpolines themselves (through any of the different
+  // flags). This is a bit hacky but keeps existing usages working. We should
+  // consider deprecating this and instead warn if the user requests external
+  // retpoline thunks and *doesn't* request some form of retpolines.
+  if (Args.hasArgNoClaim(options::OPT_mretpoline, options::OPT_mno_retpoline,
+                         options::OPT_mspeculative_load_hardening,
+                         options::OPT_mno_speculative_load_hardening)) {
+    if (Args.hasFlag(options::OPT_mretpoline, options::OPT_mno_retpoline,
+                     false)) {
+      Features.push_back("+retpoline-indirect-calls");
+      Features.push_back("+retpoline-indirect-branches");
+    } else if (Args.hasFlag(options::OPT_mspeculative_load_hardening,
+                            options::OPT_mno_speculative_load_hardening,
+                            false)) {
+      // On x86, speculative load hardening relies on at least using retpolines
+      // for indirect calls.
+      Features.push_back("+retpoline-indirect-calls");
     }
-    // Then, look for x86-specific flags.
-    if (ArchType == llvm::Triple::x86) {
-      if (Arch == "IA32") {
-        ArchUsed = true;
-      } else if (Arch == "SSE" || Arch == "SSE2") {
-        ArchUsed = true;
-        Features.push_back(Args.MakeArgString("+" + Arch.lower()));
-      }
-    }
-    if (!ArchUsed)
-      D.Diag(clang::diag::warn_drv_unused_argument) << A->getAsString(Args);
+  } else if (Args.hasFlag(options::OPT_mretpoline_external_thunk,
+                          options::OPT_mno_retpoline_external_thunk, false)) {
+    // FIXME: Add a warning about failing to specify `-mretpoline` and
+    // eventually switch to an error here.
+    Features.push_back("+retpoline-indirect-calls");
+    Features.push_back("+retpoline-indirect-branches");
   }
 
   // Now add any that the user explicitly requested on the command line,

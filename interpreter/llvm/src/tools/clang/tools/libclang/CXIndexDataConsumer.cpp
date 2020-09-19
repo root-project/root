@@ -1,9 +1,8 @@
 //===- CXIndexDataConsumer.cpp - Index data consumer for libclang----------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -148,15 +147,17 @@ public:
     return true;
   }
 };
+
+CXSymbolRole getSymbolRole(SymbolRoleSet Role) {
+  // CXSymbolRole mirrors low 9 bits of clang::index::SymbolRole.
+  return CXSymbolRole(static_cast<uint32_t>(Role) & ((1 << 9) - 1));
+}
 }
 
-bool CXIndexDataConsumer::handleDeclOccurence(const Decl *D,
-                                              SymbolRoleSet Roles,
-                                             ArrayRef<SymbolRelation> Relations,
-                                              FileID FID, unsigned Offset,
-                                              ASTNodeInfo ASTNode) {
-  SourceLocation Loc = getASTContext().getSourceManager()
-      .getLocForStartOfFile(FID).getLocWithOffset(Offset);
+bool CXIndexDataConsumer::handleDeclOccurence(
+    const Decl *D, SymbolRoleSet Roles, ArrayRef<SymbolRelation> Relations,
+    SourceLocation Loc, ASTNodeInfo ASTNode) {
+  Loc = getASTContext().getSourceManager().getFileLoc(Loc);
 
   if (Roles & (unsigned)SymbolRole::Reference) {
     const NamedDecl *ND = dyn_cast<NamedDecl>(D);
@@ -184,6 +185,7 @@ bool CXIndexDataConsumer::handleDeclOccurence(const Decl *D,
     if (Roles & (unsigned)SymbolRole::Implicit) {
       Kind = CXIdxEntityRef_Implicit;
     }
+    CXSymbolRole CXRole = getSymbolRole(Roles);
 
     CXCursor Cursor;
     if (ASTNode.OrigE) {
@@ -202,7 +204,7 @@ bool CXIndexDataConsumer::handleDeclOccurence(const Decl *D,
     }
     handleReference(ND, Loc, Cursor,
                     dyn_cast_or_null<NamedDecl>(ASTNode.Parent),
-                    ASTNode.ContainerDC, ASTNode.OrigE, Kind);
+                    ASTNode.ContainerDC, ASTNode.OrigE, Kind, CXRole);
 
   } else {
     const DeclContext *LexicalDC = ASTNode.ContainerDC;
@@ -219,10 +221,11 @@ bool CXIndexDataConsumer::handleDeclOccurence(const Decl *D,
 }
 
 bool CXIndexDataConsumer::handleModuleOccurence(const ImportDecl *ImportD,
+                                                const Module *Mod,
                                                 SymbolRoleSet Roles,
-                                                FileID FID,
-                                                unsigned Offset) {
-  IndexingDeclVisitor(*this, SourceLocation(), nullptr).Visit(ImportD);
+                                                SourceLocation Loc) {
+  if (Roles & (SymbolRoleSet)SymbolRole::Declaration)
+    IndexingDeclVisitor(*this, SourceLocation(), nullptr).Visit(ImportD);
   return !shouldAbort();
 }
 
@@ -305,7 +308,7 @@ AttrListInfo::AttrListInfo(const Decl *D, CXIndexDataConsumer &IdxCtx)
     const IBOutletCollectionAttr *
       IBAttr = cast<IBOutletCollectionAttr>(IBInfo.A);
     SourceLocation InterfaceLocStart =
-        IBAttr->getInterfaceLoc()->getTypeLoc().getLocStart();
+        IBAttr->getInterfaceLoc()->getTypeLoc().getBeginLoc();
     IBInfo.IBCollInfo.attrInfo = &IBInfo;
     IBInfo.IBCollInfo.classLoc = IdxCtx.getIndexLoc(InterfaceLocStart);
     IBInfo.IBCollInfo.objcClass = nullptr;
@@ -889,13 +892,14 @@ bool CXIndexDataConsumer::handleReference(const NamedDecl *D, SourceLocation Loc
                                       const NamedDecl *Parent,
                                       const DeclContext *DC,
                                       const Expr *E,
-                                      CXIdxEntityRefKind Kind) {
-  if (!D)
+                                      CXIdxEntityRefKind Kind,
+                                      CXSymbolRole Role) {
+  if (!D || !DC)
     return false;
 
   CXCursor Cursor = E ? MakeCXCursor(E, cast<Decl>(DC), CXTU)
                       : getRefCursor(D, Loc);
-  return handleReference(D, Loc, Cursor, Parent, DC, E, Kind);
+  return handleReference(D, Loc, Cursor, Parent, DC, E, Kind, Role);
 }
 
 bool CXIndexDataConsumer::handleReference(const NamedDecl *D, SourceLocation Loc,
@@ -903,11 +907,12 @@ bool CXIndexDataConsumer::handleReference(const NamedDecl *D, SourceLocation Loc
                                       const NamedDecl *Parent,
                                       const DeclContext *DC,
                                       const Expr *E,
-                                      CXIdxEntityRefKind Kind) {
+                                      CXIdxEntityRefKind Kind,
+                                      CXSymbolRole Role) {
   if (!CB.indexEntityReference)
     return false;
 
-  if (!D)
+  if (!D || !DC)
     return false;
   if (Loc.isInvalid())
     return false;
@@ -939,7 +944,8 @@ bool CXIndexDataConsumer::handleReference(const NamedDecl *D, SourceLocation Loc
                               getIndexLoc(Loc),
                               &RefEntity,
                               Parent ? &ParentEntity : nullptr,
-                              &Container };
+                              &Container,
+                              Role };
   CB.indexEntityReference(ClientData, &Info);
   return true;
 }
@@ -1258,6 +1264,7 @@ static CXIdxEntityKind getEntityKindFromSymbolKind(SymbolKind K, SymbolLanguage 
   case SymbolKind::Module:
   case SymbolKind::Macro:
   case SymbolKind::ClassProperty:
+  case SymbolKind::Using:
     return CXIdxEntity_Unexposed;
 
   case SymbolKind::Enum: return CXIdxEntity_Enum;
@@ -1303,11 +1310,11 @@ static CXIdxEntityKind getEntityKindFromSymbolKind(SymbolKind K, SymbolLanguage 
 
 static CXIdxEntityCXXTemplateKind
 getEntityKindFromSymbolProperties(SymbolPropertySet K) {
-  if (K & (unsigned)SymbolProperty::TemplatePartialSpecialization)
+  if (K & (SymbolPropertySet)SymbolProperty::TemplatePartialSpecialization)
     return CXIdxEntity_TemplatePartialSpecialization;
-  if (K & (unsigned)SymbolProperty::TemplateSpecialization)
+  if (K & (SymbolPropertySet)SymbolProperty::TemplateSpecialization)
     return CXIdxEntity_TemplateSpecialization;
-  if (K & (unsigned)SymbolProperty::Generic)
+  if (K & (SymbolPropertySet)SymbolProperty::Generic)
     return CXIdxEntity_Template;
   return CXIdxEntity_NonTemplate;
 }

@@ -1,9 +1,8 @@
 //==--- MacOSKeychainAPIChecker.cpp ------------------------------*- C++ -*-==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 // This checker flags misuses of KeyChainAPI. In particular, the password data
@@ -12,10 +11,11 @@
 // to be freed using a call to SecKeychainItemFreeContent.
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "clang/StaticAnalyzer/Core/CheckerManager.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/CallEvent.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramStateTrait.h"
@@ -29,6 +29,7 @@ namespace {
 class MacOSKeychainAPIChecker : public Checker<check::PreStmt<CallExpr>,
                                                check::PostStmt<CallExpr>,
                                                check::DeadSymbols,
+                                               check::PointerEscape,
                                                eval::Assume> {
   mutable std::unique_ptr<BugType> BT;
 
@@ -58,6 +59,10 @@ public:
   void checkPreStmt(const CallExpr *S, CheckerContext &C) const;
   void checkPostStmt(const CallExpr *S, CheckerContext &C) const;
   void checkDeadSymbols(SymbolReaper &SR, CheckerContext &C) const;
+  ProgramStateRef checkPointerEscape(ProgramStateRef State,
+                                     const InvalidatedSymbols &Escaped,
+                                     const CallEvent *Call,
+                                     PointerEscapeKind Kind) const;
   ProgramStateRef evalAssume(ProgramStateRef state, SVal Cond,
                              bool Assumption) const;
   void printState(raw_ostream &Out, ProgramStateRef State,
@@ -120,8 +125,7 @@ private:
   /// The bug visitor which allows us to print extra diagnostics along the
   /// BugReport path. For example, showing the allocation site of the leaked
   /// region.
-  class SecKeychainBugVisitor
-    : public BugReporterVisitorImpl<SecKeychainBugVisitor> {
+  class SecKeychainBugVisitor : public BugReporterVisitor {
   protected:
     // The allocated region symbol tracked by the main analysis.
     SymbolRef Sym;
@@ -136,7 +140,6 @@ private:
     }
 
     std::shared_ptr<PathDiagnosticPiece> VisitNode(const ExplodedNode *N,
-                                                   const ExplodedNode *PrevN,
                                                    BugReporterContext &BRC,
                                                    BugReport &BR) override;
   };
@@ -202,7 +205,7 @@ static bool isBadDeallocationArgument(const MemRegion *Arg) {
 static SymbolRef getAsPointeeSymbol(const Expr *Expr,
                                     CheckerContext &C) {
   ProgramStateRef State = C.getState();
-  SVal ArgV = State->getSVal(Expr, C.getLocationContext());
+  SVal ArgV = C.getSVal(Expr);
 
   if (Optional<loc::MemRegionVal> X = ArgV.getAs<loc::MemRegionVal>()) {
     StoreManager& SM = C.getStoreManager();
@@ -297,7 +300,7 @@ void MacOSKeychainAPIChecker::checkPreStmt(const CallExpr *CE,
 
   // Check the argument to the deallocator.
   const Expr *ArgExpr = CE->getArg(paramIdx);
-  SVal ArgSVal = State->getSVal(ArgExpr, C.getLocationContext());
+  SVal ArgSVal = C.getSVal(ArgExpr);
 
   // Undef is reported by another checker.
   if (ArgSVal.isUndef())
@@ -426,8 +429,7 @@ void MacOSKeychainAPIChecker::checkPostStmt(const CallExpr *CE,
     // allocated value symbol, since our diagnostics depend on the value
     // returned by the call. Ex: Data should only be freed if noErr was
     // returned during allocation.)
-    SymbolRef RetStatusSymbol =
-      State->getSVal(CE, C.getLocationContext()).getAsSymbol();
+    SymbolRef RetStatusSymbol = C.getSVal(CE).getAsSymbol();
     C.getSymbolManager().addSymbolDependency(V, RetStatusSymbol);
 
     // Track the allocated value in the checker state.
@@ -573,14 +575,52 @@ void MacOSKeychainAPIChecker::checkDeadSymbols(SymbolReaper &SR,
   C.addTransition(State, N);
 }
 
+ProgramStateRef MacOSKeychainAPIChecker::checkPointerEscape(
+    ProgramStateRef State, const InvalidatedSymbols &Escaped,
+    const CallEvent *Call, PointerEscapeKind Kind) const {
+  // FIXME: This branch doesn't make any sense at all, but it is an overfitted
+  // replacement for a previous overfitted code that was making even less sense.
+  if (!Call || Call->getDecl())
+    return State;
+
+  for (auto I : State->get<AllocatedData>()) {
+    SymbolRef Sym = I.first;
+    if (Escaped.count(Sym))
+      State = State->remove<AllocatedData>(Sym);
+
+    // This checker is special. Most checkers in fact only track symbols of
+    // SymbolConjured type, eg. symbols returned from functions such as
+    // malloc(). This checker tracks symbols returned as out-parameters.
+    //
+    // When a function is evaluated conservatively, the out-parameter's pointee
+    // base region gets invalidated with a SymbolConjured. If the base region is
+    // larger than the region we're interested in, the value we're interested in
+    // would be SymbolDerived based on that SymbolConjured. However, such
+    // SymbolDerived will never be listed in the Escaped set when the base
+    // region is invalidated because ExprEngine doesn't know which symbols
+    // were derived from a given symbol, while there can be infinitely many
+    // valid symbols derived from any given symbol.
+    //
+    // Hence the extra boilerplate: remove the derived symbol when its parent
+    // symbol escapes.
+    //
+    if (const auto *SD = dyn_cast<SymbolDerived>(Sym)) {
+      SymbolRef ParentSym = SD->getParentSymbol();
+      if (Escaped.count(ParentSym))
+        State = State->remove<AllocatedData>(Sym);
+    }
+  }
+  return State;
+}
+
 std::shared_ptr<PathDiagnosticPiece>
 MacOSKeychainAPIChecker::SecKeychainBugVisitor::VisitNode(
-    const ExplodedNode *N, const ExplodedNode *PrevN, BugReporterContext &BRC,
-    BugReport &BR) {
+    const ExplodedNode *N, BugReporterContext &BRC, BugReport &BR) {
   const AllocationState *AS = N->getState()->get<AllocatedData>(Sym);
   if (!AS)
     return nullptr;
-  const AllocationState *ASPrev = PrevN->getState()->get<AllocatedData>(Sym);
+  const AllocationState *ASPrev =
+      N->getFirstPred()->getState()->get<AllocatedData>(Sym);
   if (ASPrev)
     return nullptr;
 
@@ -620,4 +660,8 @@ void MacOSKeychainAPIChecker::printState(raw_ostream &Out,
 
 void ento::registerMacOSKeychainAPIChecker(CheckerManager &mgr) {
   mgr.registerChecker<MacOSKeychainAPIChecker>();
+}
+
+bool ento::shouldRegisterMacOSKeychainAPIChecker(const LangOptions &LO) {
+  return true;
 }

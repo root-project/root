@@ -1,9 +1,8 @@
 //===- CXCursor.cpp - Routines for manipulating CXCursors -----------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -61,6 +60,28 @@ static CXCursorKind GetCursorKind(const Attr *A) {
     case attr::Visibility: return CXCursor_VisibilityAttr;
     case attr::DLLExport: return CXCursor_DLLExport;
     case attr::DLLImport: return CXCursor_DLLImport;
+    case attr::NSReturnsRetained: return CXCursor_NSReturnsRetained;
+    case attr::NSReturnsNotRetained: return CXCursor_NSReturnsNotRetained;
+    case attr::NSReturnsAutoreleased: return CXCursor_NSReturnsAutoreleased;
+    case attr::NSConsumesSelf: return CXCursor_NSConsumesSelf;
+    case attr::NSConsumed: return CXCursor_NSConsumed;
+    case attr::ObjCException: return CXCursor_ObjCException;
+    case attr::ObjCNSObject: return CXCursor_ObjCNSObject;
+    case attr::ObjCIndependentClass: return CXCursor_ObjCIndependentClass;
+    case attr::ObjCPreciseLifetime: return CXCursor_ObjCPreciseLifetime;
+    case attr::ObjCReturnsInnerPointer: return CXCursor_ObjCReturnsInnerPointer;
+    case attr::ObjCRequiresSuper: return CXCursor_ObjCRequiresSuper;
+    case attr::ObjCRootClass: return CXCursor_ObjCRootClass;
+    case attr::ObjCSubclassingRestricted: return CXCursor_ObjCSubclassingRestricted;
+    case attr::ObjCExplicitProtocolImpl: return CXCursor_ObjCExplicitProtocolImpl;
+    case attr::ObjCDesignatedInitializer: return CXCursor_ObjCDesignatedInitializer;
+    case attr::ObjCRuntimeVisible: return CXCursor_ObjCRuntimeVisible;
+    case attr::ObjCBoxable: return CXCursor_ObjCBoxable;
+    case attr::FlagEnum: return CXCursor_FlagEnum;
+    case attr::Convergent: return CXCursor_ConvergentAttr;
+    case attr::WarnUnused: return CXCursor_WarnUnusedAttr;
+    case attr::WarnUnusedResult: return CXCursor_WarnUnusedResultAttr;
+    case attr::Aligned: return CXCursor_AlignedAttr;
   }
 
   return CXCursor_UnexposedAttr;
@@ -88,8 +109,8 @@ CXCursor cxcursor::MakeCXCursor(const Decl *D, CXTranslationUnit TU,
         RegionOfInterest.getBegin() == RegionOfInterest.getEnd()) {
       SmallVector<SourceLocation, 16> SelLocs;
       cast<ObjCMethodDecl>(D)->getSelectorLocs(SelLocs);
-      SmallVectorImpl<SourceLocation>::iterator
-        I=std::find(SelLocs.begin(), SelLocs.end(),RegionOfInterest.getBegin());
+      SmallVectorImpl<SourceLocation>::iterator I =
+          llvm::find(SelLocs, RegionOfInterest.getBegin());
       if (I != SelLocs.end())
         SelectorIdIndex = I - SelLocs.begin();
     }
@@ -223,16 +244,19 @@ CXCursor cxcursor::MakeCXCursor(const Stmt *S, const Decl *Parent,
   case Stmt::SEHLeaveStmtClass:
     K = CXCursor_SEHLeaveStmt;
     break;
-  
+
+  case Stmt::CoroutineBodyStmtClass:
+  case Stmt::CoreturnStmtClass:
+    K = CXCursor_UnexposedStmt;
+    break;
+
   case Stmt::ArrayTypeTraitExprClass:
   case Stmt::AsTypeExprClass:
   case Stmt::AtomicExprClass:
   case Stmt::BinaryConditionalOperatorClass:
   case Stmt::TypeTraitExprClass:
-  case Stmt::CoroutineBodyStmtClass:
   case Stmt::CoawaitExprClass:
   case Stmt::DependentCoawaitExprClass:
-  case Stmt::CoreturnStmtClass:
   case Stmt::CoyieldExprClass:
   case Stmt::CXXBindTemporaryExprClass:
   case Stmt::CXXDefaultArgExprClass:
@@ -258,6 +282,7 @@ CXCursor cxcursor::MakeCXCursor(const Stmt *S, const Decl *Parent,
   case Stmt::ParenListExprClass:
   case Stmt::PredefinedExprClass:
   case Stmt::ShuffleVectorExprClass:
+  case Stmt::SourceLocExprClass:
   case Stmt::ConvertVectorExprClass:
   case Stmt::VAArgExprClass:
   case Stmt::ObjCArrayLiteralClass:
@@ -305,6 +330,10 @@ CXCursor cxcursor::MakeCXCursor(const Stmt *S, const Decl *Parent,
     K = CXCursor_IntegerLiteral;
     break;
 
+  case Stmt::FixedPointLiteralClass:
+    K = CXCursor_FixedPointLiteral;
+    break;
+
   case Stmt::FloatingLiteralClass:
     K = CXCursor_FloatingLiteral;
     break;
@@ -320,6 +349,10 @@ CXCursor cxcursor::MakeCXCursor(const Stmt *S, const Decl *Parent,
   case Stmt::CharacterLiteralClass:
     K = CXCursor_CharacterLiteral;
     break;
+
+  case Stmt::ConstantExprClass:
+    return MakeCXCursor(cast<ConstantExpr>(S)->getSubExpr(),
+                        Parent, TU, RegionOfInterest);
 
   case Stmt::ParenExprClass:
     K = CXCursor_ParenExpr;
@@ -530,8 +563,8 @@ CXCursor cxcursor::MakeCXCursor(const Stmt *S, const Decl *Parent,
         RegionOfInterest.getBegin() == RegionOfInterest.getEnd()) {
       SmallVector<SourceLocation, 16> SelLocs;
       cast<ObjCMessageExpr>(S)->getSelectorLocs(SelLocs);
-      SmallVectorImpl<SourceLocation>::iterator
-        I=std::find(SelLocs.begin(), SelLocs.end(),RegionOfInterest.getBegin());
+      SmallVectorImpl<SourceLocation>::iterator I =
+          llvm::find(SelLocs, RegionOfInterest.getBegin());
       if (I != SelLocs.end())
         SelectorIdIndex = I - SelLocs.begin();
     }
@@ -683,6 +716,8 @@ CXCursor cxcursor::MakeCXCursor(const Stmt *S, const Decl *Parent,
   case Stmt::OMPTargetTeamsDistributeSimdDirectiveClass:
     K = CXCursor_OMPTargetTeamsDistributeSimdDirective;
     break;
+  case Stmt::BuiltinBitCastExprClass:
+    K = CXCursor_BuiltinBitCastExpr;
   }
 
   CXCursor C = { K, 0, { Parent, S, TU } };
@@ -986,10 +1021,6 @@ const Attr *cxcursor::getCursorAttr(CXCursor Cursor) {
   return static_cast<const Attr *>(Cursor.data[1]);
 }
 
-const Decl *cxcursor::getCursorParentDecl(CXCursor Cursor) {
-  return static_cast<const Decl *>(Cursor.data[0]);
-}
-
 ASTContext &cxcursor::getCursorContext(CXCursor Cursor) {
   return getCursorASTUnit(Cursor)->getASTContext();
 }
@@ -1142,6 +1173,9 @@ int clang_Cursor_getNumArguments(CXCursor C) {
     if (const CallExpr *CE = dyn_cast<CallExpr>(E)) {
       return CE->getNumArgs();
     }
+    if (const CXXConstructExpr *CE = dyn_cast<CXXConstructExpr>(E)) {
+      return CE->getNumArgs();
+    }
   }
 
   return -1;
@@ -1164,6 +1198,13 @@ CXCursor clang_Cursor_getArgument(CXCursor C, unsigned i) {
   if (clang_isExpression(C.kind)) {
     const Expr *E = cxcursor::getCursorExpr(C);
     if (const CallExpr *CE = dyn_cast<CallExpr>(E)) {
+      if (i < CE->getNumArgs()) {
+        return cxcursor::MakeCXCursor(CE->getArg(i),
+                                      getCursorDecl(C),
+                                      cxcursor::getCursorTU(C));
+      }
+    }
+    if (const CXXConstructExpr *CE = dyn_cast<CXXConstructExpr>(E)) {
       if (i < CE->getNumArgs()) {
         return cxcursor::MakeCXCursor(CE->getArg(i),
                                       getCursorDecl(C),
@@ -1196,19 +1237,19 @@ int clang_Cursor_getNumTemplateArguments(CXCursor C) {
 }
 
 enum CXGetTemplateArgumentStatus {
-  /** \brief The operation completed successfully */
+  /** The operation completed successfully */
   CXGetTemplateArgumentStatus_Success = 0,
 
-  /** \brief The specified cursor did not represent a FunctionDecl. */
+  /** The specified cursor did not represent a FunctionDecl. */
   CXGetTemplateArgumentStatus_CursorNotFunctionDecl = -1,
 
-  /** \brief The specified cursor was not castable to a FunctionDecl. */
+  /** The specified cursor was not castable to a FunctionDecl. */
   CXGetTemplateArgumentStatus_BadFunctionDeclCast = -2,
 
-  /** \brief A NULL FunctionTemplateSpecializationInfo was retrieved. */
+  /** A NULL FunctionTemplateSpecializationInfo was retrieved. */
   CXGetTemplateArgumentStatus_NullTemplSpecInfo = -3,
 
-  /** \brief An invalid (OOB) argument index was specified */
+  /** An invalid (OOB) argument index was specified */
   CXGetTemplateArgumentStatus_InvalidIndex = -4
 };
 
@@ -1390,16 +1431,16 @@ CXCompletionString clang_getCursorCompletionString(CXCursor cursor) {
     }
   } else if (kind == CXCursor_MacroDefinition) {
     const MacroDefinitionRecord *definition = getCursorMacroDefinition(cursor);
-    const IdentifierInfo *MacroInfo = definition->getName();
+    const IdentifierInfo *Macro = definition->getName();
     ASTUnit *unit = getCursorASTUnit(cursor);
-    CodeCompletionResult Result(MacroInfo);
-    CodeCompletionString *String
-      = Result.CreateCodeCompletionString(unit->getASTContext(),
-                                          unit->getPreprocessor(),
-                                          CodeCompletionContext::CCC_Other,
-                                 unit->getCodeCompletionTUInfo().getAllocator(),
-                                 unit->getCodeCompletionTUInfo(),
-                                 false);
+    CodeCompletionResult Result(
+        Macro,
+        unit->getPreprocessor().getMacroDefinition(Macro).getMacroInfo());
+    CodeCompletionString *String = Result.CreateCodeCompletionString(
+        unit->getASTContext(), unit->getPreprocessor(),
+        CodeCompletionContext::CCC_Other,
+        unit->getCodeCompletionTUInfo().getAllocator(),
+        unit->getCodeCompletionTUInfo(), false);
     return String;
   }
   return nullptr;
@@ -1469,17 +1510,17 @@ void clang_getOverriddenCursors(CXCursor cursor,
   assert(cxcursor::getCursorTU(backRefCursor) == TU);
   Vec->push_back(backRefCursor);
 
-  // Get the overriden cursors.
+  // Get the overridden cursors.
   cxcursor::getOverriddenCursors(cursor, *Vec);
   
-  // Did we get any overriden cursors?  If not, return Vec to the pool
+  // Did we get any overridden cursors?  If not, return Vec to the pool
   // of available cursor vectors.
   if (Vec->size() == 1) {
     pool.AvailableCursors.push_back(Vec);
     return;
   }
 
-  // Now tell the caller about the overriden cursors.
+  // Now tell the caller about the overridden cursors.
   assert(Vec->size() > 1);
   *overridden = &((*Vec)[1]);
   *num_overridden = Vec->size() - 1;

@@ -1,9 +1,8 @@
 //===- NumberObjectConversionChecker.cpp -------------------------*- C++ -*-==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -26,7 +25,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugReporter.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
@@ -77,7 +76,7 @@ void Callback::run(const MatchFinder::MatchResult &Result) {
     // to zero literals in non-pedantic mode.
     // FIXME: Introduce an AST matcher to implement the macro-related logic?
     bool MacroIndicatesWeShouldSkipTheCheck = false;
-    SourceLocation Loc = CheckIfNull->getLocStart();
+    SourceLocation Loc = CheckIfNull->getBeginLoc();
     if (Loc.isMacroID()) {
       StringRef MacroName = Lexer::getImmediateMacroName(
           Loc, ACtx.getSourceManager(), ACtx.getLangOpts());
@@ -87,9 +86,10 @@ void Callback::run(const MatchFinder::MatchResult &Result) {
         MacroIndicatesWeShouldSkipTheCheck = true;
     }
     if (!MacroIndicatesWeShouldSkipTheCheck) {
-      llvm::APSInt Result;
+      Expr::EvalResult EVResult;
       if (CheckIfNull->IgnoreParenCasts()->EvaluateAsInt(
-              Result, ACtx, Expr::SE_AllowSideEffects)) {
+              EVResult, ACtx, Expr::SE_AllowSideEffects)) {
+        llvm::APSInt Result = EVResult.Val.getInt();
         if (Result == 0) {
           if (!C->Pedantic)
             return;
@@ -270,8 +270,10 @@ void NumberObjectConversionChecker::checkASTCodeBody(const Decl *D,
                            hasRHS(SuspiciousNumberObjectExprM)));
 
   auto ConversionThroughBranchingM =
-      ifStmt(hasCondition(SuspiciousNumberObjectExprM))
-      .bind("pedantic");
+      ifStmt(allOf(
+          hasCondition(SuspiciousNumberObjectExprM),
+          unless(hasConditionVariableStatement(declStmt())
+      ))).bind("pedantic");
 
   auto ConversionThroughCallM =
       callExpr(hasAnyArgument(allOf(hasType(SuspiciousScalarTypeM),
@@ -344,5 +346,9 @@ void ento::registerNumberObjectConversionChecker(CheckerManager &Mgr) {
   NumberObjectConversionChecker *Chk =
       Mgr.registerChecker<NumberObjectConversionChecker>();
   Chk->Pedantic =
-      Mgr.getAnalyzerOptions().getBooleanOption("Pedantic", false, Chk);
+      Mgr.getAnalyzerOptions().getCheckerBooleanOption(Chk, "Pedantic");
+}
+
+bool ento::shouldRegisterNumberObjectConversionChecker(const LangOptions &LO) {
+  return true;
 }

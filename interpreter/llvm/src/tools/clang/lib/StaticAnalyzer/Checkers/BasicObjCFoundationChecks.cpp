@@ -1,9 +1,8 @@
 //== BasicObjCFoundationChecks.cpp - Simple Apple-Foundation checks -*- C++ -*--
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,14 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
-#include "SelectorExtras.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprObjC.h"
 #include "clang/AST/StmtObjC.h"
 #include "clang/Analysis/DomainSpecific/CocoaConventions.h"
+#include "clang/Analysis/SelectorExtras.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "clang/StaticAnalyzer/Core/CheckerManager.h"
@@ -36,6 +35,7 @@
 
 using namespace clang;
 using namespace ento;
+using namespace llvm;
 
 namespace {
 class APIMisuse : public BugType {
@@ -156,6 +156,11 @@ void NilArgChecker::warnIfNilArg(CheckerContext &C,
   if (!State->isNull(msg.getArgSVal(Arg)).isConstrainedTrue())
       return;
 
+  // NOTE: We cannot throw non-fatal errors from warnIfNilExpr,
+  // because it's called multiple times from some callers, so it'd cause
+  // an unwanted state split if two or more non-fatal errors are thrown
+  // within the same checker callback. For now we don't want to, but
+  // it'll need to be fixed if we ever want to.
   if (ExplodedNode *N = C.generateErrorNode()) {
     SmallString<128> sbuf;
     llvm::raw_svector_ostream os(sbuf);
@@ -208,7 +213,7 @@ void NilArgChecker::generateBugReport(ExplodedNode *N,
 
   auto R = llvm::make_unique<BugReport>(*BT, Msg, N);
   R->addRange(Range);
-  bugreporter::trackNullOrUndefValue(N, E, *R);
+  bugreporter::trackExpressionValue(N, E, *R);
   C.emitReport(std::move(R));
 }
 
@@ -436,8 +441,7 @@ void CFNumberChecker::checkPreStmt(const CallExpr *CE,
     return;
 
   // Get the value of the "theType" argument.
-  const LocationContext *LCtx = C.getLocationContext();
-  SVal TheTypeVal = state->getSVal(CE->getArg(1), LCtx);
+  SVal TheTypeVal = C.getSVal(CE->getArg(1));
 
   // FIXME: We really should allow ranges of valid theType values, and
   //   bifurcate the state appropriately.
@@ -457,7 +461,7 @@ void CFNumberChecker::checkPreStmt(const CallExpr *CE,
   // Look at the value of the integer being passed by reference.  Essentially
   // we want to catch cases where the value passed in is not equal to the
   // size of the type being created.
-  SVal TheValueExpr = state->getSVal(CE->getArg(2), LCtx);
+  SVal TheValueExpr = C.getSVal(CE->getArg(2));
 
   // FIXME: Eventually we should handle arbitrary locations.  We can do this
   //  by having an enhanced memory model that does low-level typing.
@@ -527,93 +531,59 @@ void CFNumberChecker::checkPreStmt(const CallExpr *CE,
 //===----------------------------------------------------------------------===//
 
 namespace {
-class CFRetainReleaseChecker : public Checker< check::PreStmt<CallExpr> > {
-  mutable std::unique_ptr<APIMisuse> BT;
-  mutable IdentifierInfo *Retain, *Release, *MakeCollectable, *Autorelease;
+class CFRetainReleaseChecker : public Checker<check::PreCall> {
+  mutable APIMisuse BT{this, "null passed to CF memory management function"};
+  CallDescription CFRetain{"CFRetain", 1},
+                  CFRelease{"CFRelease", 1},
+                  CFMakeCollectable{"CFMakeCollectable", 1},
+                  CFAutorelease{"CFAutorelease", 1};
 
 public:
-  CFRetainReleaseChecker()
-      : Retain(nullptr), Release(nullptr), MakeCollectable(nullptr),
-        Autorelease(nullptr) {}
-  void checkPreStmt(const CallExpr *CE, CheckerContext &C) const;
+  void checkPreCall(const CallEvent &Call, CheckerContext &C) const;
 };
 } // end anonymous namespace
 
-void CFRetainReleaseChecker::checkPreStmt(const CallExpr *CE,
+void CFRetainReleaseChecker::checkPreCall(const CallEvent &Call,
                                           CheckerContext &C) const {
-  // If the CallExpr doesn't have exactly 1 argument just give up checking.
-  if (CE->getNumArgs() != 1)
+  // TODO: Make this check part of CallDescription.
+  if (!Call.isGlobalCFunction())
     return;
-
-  ProgramStateRef state = C.getState();
-  const FunctionDecl *FD = C.getCalleeDecl(CE);
-  if (!FD)
-    return;
-
-  if (!BT) {
-    ASTContext &Ctx = C.getASTContext();
-    Retain = &Ctx.Idents.get("CFRetain");
-    Release = &Ctx.Idents.get("CFRelease");
-    MakeCollectable = &Ctx.Idents.get("CFMakeCollectable");
-    Autorelease = &Ctx.Idents.get("CFAutorelease");
-    BT.reset(new APIMisuse(
-        this, "null passed to CF memory management function"));
-  }
 
   // Check if we called CFRetain/CFRelease/CFMakeCollectable/CFAutorelease.
-  const IdentifierInfo *FuncII = FD->getIdentifier();
-  if (!(FuncII == Retain || FuncII == Release || FuncII == MakeCollectable ||
-        FuncII == Autorelease))
+  if (!(Call.isCalled(CFRetain) || Call.isCalled(CFRelease) ||
+        Call.isCalled(CFMakeCollectable) || Call.isCalled(CFAutorelease)))
     return;
 
-  // FIXME: The rest of this just checks that the argument is non-null.
-  // It should probably be refactored and combined with NonNullParamChecker.
-
   // Get the argument's value.
-  const Expr *Arg = CE->getArg(0);
-  SVal ArgVal = state->getSVal(Arg, C.getLocationContext());
+  SVal ArgVal = Call.getArgSVal(0);
   Optional<DefinedSVal> DefArgVal = ArgVal.getAs<DefinedSVal>();
   if (!DefArgVal)
     return;
 
-  // Get a NULL value.
-  SValBuilder &svalBuilder = C.getSValBuilder();
-  DefinedSVal zero =
-      svalBuilder.makeZeroVal(Arg->getType()).castAs<DefinedSVal>();
+  // Is it null?
+  ProgramStateRef state = C.getState();
+  ProgramStateRef stateNonNull, stateNull;
+  std::tie(stateNonNull, stateNull) = state->assume(*DefArgVal);
 
-  // Make an expression asserting that they're equal.
-  DefinedOrUnknownSVal ArgIsNull = svalBuilder.evalEQ(state, zero, *DefArgVal);
-
-  // Are they equal?
-  ProgramStateRef stateTrue, stateFalse;
-  std::tie(stateTrue, stateFalse) = state->assume(ArgIsNull);
-
-  if (stateTrue && !stateFalse) {
-    ExplodedNode *N = C.generateErrorNode(stateTrue);
+  if (!stateNonNull) {
+    ExplodedNode *N = C.generateErrorNode(stateNull);
     if (!N)
       return;
 
-    const char *description;
-    if (FuncII == Retain)
-      description = "Null pointer argument in call to CFRetain";
-    else if (FuncII == Release)
-      description = "Null pointer argument in call to CFRelease";
-    else if (FuncII == MakeCollectable)
-      description = "Null pointer argument in call to CFMakeCollectable";
-    else if (FuncII == Autorelease)
-      description = "Null pointer argument in call to CFAutorelease";
-    else
-      llvm_unreachable("impossible case");
+    SmallString<64> Str;
+    raw_svector_ostream OS(Str);
+    OS << "Null pointer argument in call to "
+       << cast<FunctionDecl>(Call.getDecl())->getName();
 
-    auto report = llvm::make_unique<BugReport>(*BT, description, N);
-    report->addRange(Arg->getSourceRange());
-    bugreporter::trackNullOrUndefValue(N, Arg, *report);
+    auto report = llvm::make_unique<BugReport>(BT, OS.str(), N);
+    report->addRange(Call.getArgSourceRange(0));
+    bugreporter::trackExpressionValue(N, Call.getArgExpr(0), *report);
     C.emitReport(std::move(report));
     return;
   }
 
   // From here on, we know the argument is non-null.
-  C.addTransition(stateFalse);
+  C.addTransition(stateNonNull);
 }
 
 //===----------------------------------------------------------------------===//
@@ -829,7 +799,7 @@ void VariadicMethodTypeChecker::checkPreObjCMessage(const ObjCMethodCall &msg,
 //===----------------------------------------------------------------------===//
 
 // The map from container symbol to the container count symbol.
-// We currently will remember the last countainer count symbol encountered.
+// We currently will remember the last container count symbol encountered.
 REGISTER_MAP_WITH_PROGRAMSTATE(ContainerCountMap, SymbolRef, SymbolRef)
 REGISTER_MAP_WITH_PROGRAMSTATE(ContainerNonEmptyMap, SymbolRef, bool)
 
@@ -977,8 +947,7 @@ assumeCollectionNonEmpty(CheckerContext &C, ProgramStateRef State,
   if (!State)
     return nullptr;
 
-  SymbolRef CollectionS =
-    State->getSVal(FCS->getCollection(), C.getLocationContext()).getAsSymbol();
+  SymbolRef CollectionS = C.getSVal(FCS->getCollection()).getAsSymbol();
   return assumeCollectionNonEmpty(C, State, CollectionS, Assumption);
 }
 
@@ -1166,7 +1135,7 @@ void ObjCLoopChecker::checkDeadSymbols(SymbolReaper &SymReaper,
 
 namespace {
 /// \class ObjCNonNilReturnValueChecker
-/// \brief The checker restricts the return values of APIs known to
+/// The checker restricts the return values of APIs known to
 /// never (or almost never) return 'nil'.
 class ObjCNonNilReturnValueChecker
   : public Checker<check::PostObjCMessage,
@@ -1206,7 +1175,7 @@ ProgramStateRef
 ObjCNonNilReturnValueChecker::assumeExprIsNonNull(const Expr *NonNullExpr,
                                                   ProgramStateRef State,
                                                   CheckerContext &C) const {
-  SVal Val = State->getSVal(NonNullExpr, C.getLocationContext());
+  SVal Val = C.getSVal(NonNullExpr);
   if (Optional<DefinedOrUnknownSVal> DV = Val.getAs<DefinedOrUnknownSVal>())
     return State->assume(*DV, true);
   return State;
@@ -1273,27 +1242,54 @@ void ento::registerNilArgChecker(CheckerManager &mgr) {
   mgr.registerChecker<NilArgChecker>();
 }
 
+bool ento::shouldRegisterNilArgChecker(const LangOptions &LO) {
+  return true;
+}
+
 void ento::registerCFNumberChecker(CheckerManager &mgr) {
   mgr.registerChecker<CFNumberChecker>();
+}
+
+bool ento::shouldRegisterCFNumberChecker(const LangOptions &LO) {
+  return true;
 }
 
 void ento::registerCFRetainReleaseChecker(CheckerManager &mgr) {
   mgr.registerChecker<CFRetainReleaseChecker>();
 }
 
+bool ento::shouldRegisterCFRetainReleaseChecker(const LangOptions &LO) {
+  return true;
+}
+
 void ento::registerClassReleaseChecker(CheckerManager &mgr) {
   mgr.registerChecker<ClassReleaseChecker>();
+}
+
+bool ento::shouldRegisterClassReleaseChecker(const LangOptions &LO) {
+  return true;
 }
 
 void ento::registerVariadicMethodTypeChecker(CheckerManager &mgr) {
   mgr.registerChecker<VariadicMethodTypeChecker>();
 }
 
+bool ento::shouldRegisterVariadicMethodTypeChecker(const LangOptions &LO) {
+  return true;
+}
+
 void ento::registerObjCLoopChecker(CheckerManager &mgr) {
   mgr.registerChecker<ObjCLoopChecker>();
 }
 
-void
-ento::registerObjCNonNilReturnValueChecker(CheckerManager &mgr) {
+bool ento::shouldRegisterObjCLoopChecker(const LangOptions &LO) {
+  return true;
+}
+
+void ento::registerObjCNonNilReturnValueChecker(CheckerManager &mgr) {
   mgr.registerChecker<ObjCNonNilReturnValueChecker>();
+}
+
+bool ento::shouldRegisterObjCNonNilReturnValueChecker(const LangOptions &LO) {
+  return true;
 }

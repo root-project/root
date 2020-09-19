@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
-#                     The LLVM Compiler Infrastructure
-#
-# This file is distributed under the University of Illinois Open Source
-# License. See LICENSE.TXT for details.
+# Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+# See https://llvm.org/LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 """ This module is responsible for the Clang executable.
 
 Since Clang command line interface is so rich, but this project is using only
 a subset of that, it makes sense to create a function specific wrapper. """
 
+import subprocess
 import re
 from libscanbuild import run_command
 from libscanbuild.shell import decode
 
-__all__ = ['get_version', 'get_arguments', 'get_checkers']
+__all__ = ['get_version', 'get_arguments', 'get_checkers', 'is_ctu_capable',
+           'get_triple_arch']
 
 # regex for activated checker
 ACTIVE_CHECKER_PATTERN = re.compile(r'^-analyzer-checker=(.*)$')
@@ -152,3 +153,26 @@ def get_checkers(clang, plugins):
         raise Exception('Could not query Clang for available checkers.')
 
     return checkers
+
+
+def is_ctu_capable(extdef_map_cmd):
+    """ Detects if the current (or given) clang and external definition mapping
+    executables are CTU compatible. """
+
+    try:
+        run_command([extdef_map_cmd, '-version'])
+    except (OSError, subprocess.CalledProcessError):
+        return False
+    return True
+
+
+def get_triple_arch(command, cwd):
+    """Returns the architecture part of the target triple for the given
+    compilation command. """
+
+    cmd = get_arguments(command, cwd)
+    try:
+        separator = cmd.index("-triple")
+        return cmd[separator + 1]
+    except (IndexError, ValueError):
+        return ""

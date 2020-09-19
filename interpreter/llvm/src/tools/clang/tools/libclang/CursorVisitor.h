@@ -1,9 +1,8 @@
 //===- CursorVisitor.h - CursorVisitor interface ----------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -55,44 +54,44 @@ class CursorVisitor : public DeclVisitor<CursorVisitor, bool>,
                       public TypeLocVisitor<CursorVisitor, bool>
 {
 public:
-  /// \brief Callback called after child nodes of a cursor have been visited.
+  /// Callback called after child nodes of a cursor have been visited.
   /// Return true to break visitation or false to continue.
   typedef bool (*PostChildrenVisitorTy)(CXCursor cursor,
                                         CXClientData client_data);
 
 private:
-  /// \brief The translation unit we are traversing.
+  /// The translation unit we are traversing.
   CXTranslationUnit TU;
   ASTUnit *AU;
 
-  /// \brief The parent cursor whose children we are traversing.
+  /// The parent cursor whose children we are traversing.
   CXCursor Parent;
 
-  /// \brief The declaration that serves at the parent of any statement or
+  /// The declaration that serves at the parent of any statement or
   /// expression nodes.
   const Decl *StmtParent;
 
-  /// \brief The visitor function.
+  /// The visitor function.
   CXCursorVisitor Visitor;
 
   PostChildrenVisitorTy PostChildrenVisitor;
 
-  /// \brief The opaque client data, to be passed along to the visitor.
+  /// The opaque client data, to be passed along to the visitor.
   CXClientData ClientData;
 
-  /// \brief Whether we should visit the preprocessing record entries last, 
+  /// Whether we should visit the preprocessing record entries last, 
   /// after visiting other declarations.
   bool VisitPreprocessorLast;
 
-  /// \brief Whether we should visit declarations or preprocessing record
+  /// Whether we should visit declarations or preprocessing record
   /// entries that are #included inside the \arg RegionOfInterest.
   bool VisitIncludedEntities;
   
-  /// \brief When valid, a source range to which the cursor should restrict
+  /// When valid, a source range to which the cursor should restrict
   /// its search.
   SourceRange RegionOfInterest;
 
-  /// \brief Whether we should only visit declarations and not preprocessing
+  /// Whether we should only visit declarations and not preprocessing
   /// record entries.
   bool VisitDeclsOnly;
 
@@ -110,7 +109,7 @@ private:
   using DeclVisitor<CursorVisitor, bool>::Visit;
   using TypeLocVisitor<CursorVisitor, bool>::Visit;
 
-  /// \brief Determine whether this particular source range comes before, comes
+  /// Determine whether this particular source range comes before, comes
   /// after, or overlaps the region of interest.
   ///
   /// \param R a half-open source range retrieved from the abstract syntax tree.
@@ -177,7 +176,7 @@ public:
 
   bool Visit(CXCursor Cursor, bool CheckedRegionOfInterest = false);
 
-  /// \brief Visit declarations and preprocessed entities for the file region
+  /// Visit declarations and preprocessed entities for the file region
   /// designated by \see RegionOfInterest.
   bool visitFileRegion();
   

@@ -1,9 +1,8 @@
 //===--- CommentBriefParser.h - Dumb comment parser -------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -24,7 +23,7 @@ namespace comments {
 ///
 /// Due to a variety of comment styles, it considers the following as "a brief
 /// description", in order of priority:
-/// \li a \\brief or \\short command,
+/// \li a \or \\short command,
 /// \li the first paragraph,
 /// \li a \\result or \\return or \\returns paragraph.
 class BriefParser {

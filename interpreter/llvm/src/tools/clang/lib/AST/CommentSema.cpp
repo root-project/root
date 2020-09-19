@@ -1,9 +1,8 @@
 //===--- CommentSema.cpp - Doxygen comment semantic analysis --------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -215,7 +214,7 @@ void Sema::checkContainerDecl(const BlockCommandComment *Comment) {
     << Comment->getSourceRange();
 }
 
-/// \brief Turn a string into the corresponding PassDirection or -1 if it's not
+/// Turn a string into the corresponding PassDirection or -1 if it's not
 /// valid.
 static int getParamPassDirection(StringRef Arg) {
   return llvm::StringSwitch<int>(Arg)
@@ -703,10 +702,9 @@ void Sema::checkDeprecatedCommand(const BlockCommandComment *Command) {
 
     SmallString<64> TextToInsert(" ");
     TextToInsert += AttributeSpelling;
-    Diag(FD->getLocEnd(),
-         diag::note_add_deprecation_attr)
-      << FixItHint::CreateInsertion(FD->getLocEnd().getLocWithOffset(1),
-                                    TextToInsert);
+    Diag(FD->getEndLoc(), diag::note_add_deprecation_attr)
+        << FixItHint::CreateInsertion(FD->getEndLoc().getLocWithOffset(1),
+                                      TextToInsert);
   }
 }
 
@@ -813,7 +811,7 @@ bool Sema::isAnyFunctionDecl() {
 }
 
 bool Sema::isFunctionOrMethodVariadic() {
-  if (!isAnyFunctionDecl() && !isObjCMethodDecl() && !isFunctionTemplateDecl())
+  if (!isFunctionDecl() || !ThisDeclInfo->CurrentDecl)
     return false;
   if (const FunctionDecl *FD =
         dyn_cast<FunctionDecl>(ThisDeclInfo->CurrentDecl))
@@ -824,6 +822,14 @@ bool Sema::isFunctionOrMethodVariadic() {
   if (const ObjCMethodDecl *MD =
         dyn_cast<ObjCMethodDecl>(ThisDeclInfo->CurrentDecl))
     return MD->isVariadic();
+  if (const TypedefNameDecl *TD =
+          dyn_cast<TypedefNameDecl>(ThisDeclInfo->CurrentDecl)) {
+    QualType Type = TD->getUnderlyingType();
+    if (Type->isFunctionPointerType() || Type->isBlockPointerType())
+      Type = Type->getPointeeType();
+    if (const auto *FT = Type->getAs<FunctionProtoType>())
+      return FT->isVariadic();
+  }
   return false;
 }
 

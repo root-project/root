@@ -1,9 +1,8 @@
 //===-- AVRInstrInfo.cpp - AVR Instruction Information --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -273,7 +272,7 @@ bool AVRInstrInfo::analyzeBranch(MachineBasicBlock &MBB,
 
   while (I != MBB.begin()) {
     --I;
-    if (I->isDebugValue()) {
+    if (I->isDebugInstr()) {
       continue;
     }
 
@@ -444,7 +443,7 @@ unsigned AVRInstrInfo::removeBranch(MachineBasicBlock &MBB,
 
   while (I != MBB.begin()) {
     --I;
-    if (I->isDebugValue()) {
+    if (I->isDebugInstr()) {
       continue;
     }
     //:TODO: add here the missing jmp instructions once they are implemented
@@ -488,7 +487,8 @@ unsigned AVRInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
   case TargetOpcode::KILL:
   case TargetOpcode::DBG_VALUE:
     return 0;
-  case TargetOpcode::INLINEASM: {
+  case TargetOpcode::INLINEASM:
+  case TargetOpcode::INLINEASM_BR: {
     const MachineFunction &MF = *MI.getParent()->getParent();
     const AVRTargetMachine &TM = static_cast<const AVRTargetMachine&>(MF.getTarget());
     const AVRSubtarget &STI = MF.getSubtarget<AVRSubtarget>();
@@ -537,8 +537,7 @@ bool AVRInstrInfo::isBranchOffsetInRange(unsigned BranchOp,
     llvm_unreachable("unexpected opcode!");
   case AVR::JMPk:
   case AVR::CALLk:
-    assert(BrOffset >= 0 && "offset must be absolute address");
-    return isUIntN(16, BrOffset);
+    return true;
   case AVR::RCALLk:
   case AVR::RJMPk:
     return isIntN(13, BrOffset);
@@ -554,6 +553,21 @@ bool AVRInstrInfo::isBranchOffsetInRange(unsigned BranchOp,
   case AVR::BRLTk:
     return isIntN(7, BrOffset);
   }
+}
+
+unsigned AVRInstrInfo::insertIndirectBranch(MachineBasicBlock &MBB,
+                                            MachineBasicBlock &NewDestBB,
+                                            const DebugLoc &DL,
+                                            int64_t BrOffset,
+                                            RegScavenger *RS) const {
+    // This method inserts a *direct* branch (JMP), despite its name.
+    // LLVM calls this method to fixup unconditional branches; it never calls
+    // insertBranch or some hypothetical "insertDirectBranch".
+    // See lib/CodeGen/RegisterRelaxation.cpp for details.
+    // We end up here when a jump is too long for a RJMP instruction.
+    auto &MI = *BuildMI(&MBB, DL, get(AVR::JMPk)).addMBB(&NewDestBB);
+
+    return getInstSizeInBytes(MI);
 }
 
 } // end of namespace llvm

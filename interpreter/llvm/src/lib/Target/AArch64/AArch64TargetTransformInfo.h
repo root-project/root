@@ -1,9 +1,8 @@
-//===-- AArch64TargetTransformInfo.h - AArch64 specific TTI -----*- C++ -*-===//
+//===- AArch64TargetTransformInfo.h - AArch64 specific TTI ------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 /// \file
@@ -18,17 +17,31 @@
 #define LLVM_LIB_TARGET_AARCH64_AARCH64TARGETTRANSFORMINFO_H
 
 #include "AArch64.h"
+#include "AArch64Subtarget.h"
 #include "AArch64TargetMachine.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/CodeGen/BasicTTIImpl.h"
-#include "llvm/Target/TargetLowering.h"
-#include <algorithm>
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Intrinsics.h"
+#include <cstdint>
 
 namespace llvm {
 
+class APInt;
+class Instruction;
+class IntrinsicInst;
+class Loop;
+class SCEV;
+class ScalarEvolution;
+class Type;
+class Value;
+class VectorType;
+
 class AArch64TTIImpl : public BasicTTIImplBase<AArch64TTIImpl> {
-  typedef BasicTTIImplBase<AArch64TTIImpl> BaseT;
-  typedef TargetTransformInfo TTI;
+  using BaseT = BasicTTIImplBase<AArch64TTIImpl>;
+  using TTI = TargetTransformInfo;
+
   friend BaseT;
 
   const AArch64Subtarget *ST;
@@ -117,6 +130,9 @@ public:
   int getCmpSelInstrCost(unsigned Opcode, Type *ValTy, Type *CondTy,
                          const Instruction *I = nullptr);
 
+  TTI::MemCmpExpansionOptions enableMemCmpExpansion(bool OptSize,
+                                                    bool IsZeroCmp) const;
+
   int getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
                       unsigned AddressSpace, const Instruction *I = nullptr);
 
@@ -132,7 +148,9 @@ public:
 
   int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy, unsigned Factor,
                                  ArrayRef<unsigned> Indices, unsigned Alignment,
-                                 unsigned AddressSpace);
+                                 unsigned AddressSpace,
+                                 bool UseMaskForCond = false,
+                                 bool UseMaskForGaps = false);
 
   bool
   shouldConsiderAddressTypePromotion(const Instruction &I,
@@ -150,11 +168,20 @@ public:
     return false;
   }
 
+  unsigned getGISelRematGlobalCost() const {
+    return 2;
+  }
+
   bool useReductionIntrinsic(unsigned Opcode, Type *Ty,
                              TTI::ReductionFlags Flags) const;
+
+  int getArithmeticReductionCost(unsigned Opcode, Type *Ty,
+                                 bool IsPairwiseForm);
+
+  int getShuffleCost(TTI::ShuffleKind Kind, Type *Tp, int Index, Type *SubTp);
   /// @}
 };
 
 } // end namespace llvm
 
-#endif
+#endif // LLVM_LIB_TARGET_AARCH64_AARCH64TARGETTRANSFORMINFO_H

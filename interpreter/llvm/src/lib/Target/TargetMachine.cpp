@@ -1,9 +1,8 @@
 //===-- TargetMachine.cpp - General Target Information ---------------------==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -13,7 +12,6 @@
 
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
-#include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalAlias.h"
 #include "llvm/IR/GlobalValue.h"
@@ -26,14 +24,8 @@
 #include "llvm/MC/MCSectionMachO.h"
 #include "llvm/MC/MCTargetOptions.h"
 #include "llvm/MC/SectionKind.h"
-#include "llvm/Target/TargetLowering.h"
 #include "llvm/Target/TargetLoweringObjectFile.h"
-#include "llvm/Target/TargetSubtargetInfo.h"
 using namespace llvm;
-
-cl::opt<bool> EnableIPRA("enable-ipra", cl::init(false), cl::Hidden,
-                         cl::desc("Enable interprocedural register allocation "
-                                  "to reduce load/store at procedure calls."));
 
 //---------------------------------------------------------------------------
 // TargetMachine Class
@@ -45,22 +37,15 @@ TargetMachine::TargetMachine(const Target &T, StringRef DataLayoutString,
     : TheTarget(T), DL(DataLayoutString), TargetTriple(TT), TargetCPU(CPU),
       TargetFS(FS), AsmInfo(nullptr), MRI(nullptr), MII(nullptr), STI(nullptr),
       RequireStructuredCFG(false), DefaultOptions(Options), Options(Options) {
-  if (EnableIPRA.getNumOccurrences())
-    this->Options.EnableIPRA = EnableIPRA;
 }
 
-TargetMachine::~TargetMachine() {
-  delete AsmInfo;
-  delete MRI;
-  delete MII;
-  delete STI;
-}
+TargetMachine::~TargetMachine() = default;
 
 bool TargetMachine::isPositionIndependent() const {
   return getRelocationModel() == Reloc::PIC_;
 }
 
-/// \brief Reset the target options based on the function's attributes.
+/// Reset the target options based on the function's attributes.
 // FIXME: This function needs to go away for a number of reasons:
 // a) global state on the TargetMachine is terrible in general,
 // b) these target options should be passed only on the function
@@ -120,6 +105,29 @@ static TLSModel::Model getSelectedTLSModel(const GlobalValue *GV) {
 
 bool TargetMachine::shouldAssumeDSOLocal(const Module &M,
                                          const GlobalValue *GV) const {
+  // If the IR producer requested that this GV be treated as dso local, obey.
+  if (GV && GV->isDSOLocal())
+    return true;
+
+  // If we are not supossed to use a PLT, we cannot assume that intrinsics are
+  // local since the linker can convert some direct access to access via plt.
+  if (M.getRtLibUseGOT() && !GV)
+    return false;
+
+  // According to the llvm language reference, we should be able to
+  // just return false in here if we have a GV, as we know it is
+  // dso_preemptable.  At this point in time, the various IR producers
+  // have not been transitioned to always produce a dso_local when it
+  // is possible to do so.
+  // In the case of intrinsics, GV is null and there is nowhere to put
+  // dso_local. Returning false for those will produce worse code in some
+  // architectures. For example, on x86 the caller has to set ebx before calling
+  // a plt.
+  // As a result we still have some logic in here to improve the quality of the
+  // generated code.
+  // FIXME: Add a module level metadata for whether intrinsics should be assumed
+  // local.
+
   Reloc::Model RM = getRelocationModel();
   const Triple &TT = getTargetTriple();
 
@@ -127,14 +135,38 @@ bool TargetMachine::shouldAssumeDSOLocal(const Module &M,
   if (GV && GV->hasDLLImportStorageClass())
     return false;
 
+  // On MinGW, variables that haven't been declared with DLLImport may still
+  // end up automatically imported by the linker. To make this feasible,
+  // don't assume the variables to be DSO local unless we actually know
+  // that for sure. This only has to be done for variables; for functions
+  // the linker can insert thunks for calling functions from another DLL.
+  if (TT.isWindowsGNUEnvironment() && TT.isOSBinFormatCOFF() && GV &&
+      GV->isDeclarationForLinker() && isa<GlobalVariable>(GV))
+    return false;
+
+  // On COFF, don't mark 'extern_weak' symbols as DSO local. If these symbols
+  // remain unresolved in the link, they can be resolved to zero, which is
+  // outside the current DSO.
+  if (TT.isOSBinFormatCOFF() && GV && GV->hasExternalWeakLinkage())
+    return false;
+
   // Every other GV is local on COFF.
-  // Make an exception for windows OS in the triple: Some firmwares builds use
+  // Make an exception for windows OS in the triple: Some firmware builds use
   // *-win32-macho triples. This (accidentally?) produced windows relocations
   // without GOT tables in older clang versions; Keep this behaviour.
-  if (TT.isOSBinFormatCOFF() || (TT.isOSWindows() && TT.isOSBinFormatMachO()))
+  // Some JIT users use *-win32-elf triples; these shouldn't use GOT tables
+  // either.
+  if (TT.isOSBinFormatCOFF() || TT.isOSWindows())
     return true;
 
-  if (GV && (GV->hasLocalLinkage() || !GV->hasDefaultVisibility()))
+  // Most PIC code sequences that assume that a symbol is local cannot
+  // produce a 0 if it turns out the symbol is undefined. While this
+  // is ABI and relocation depended, it seems worth it to handle it
+  // here.
+  if (GV && isPositionIndependent() && GV->hasExternalWeakLinkage())
+    return false;
+
+  if (GV && !GV->hasDefaultVisibility())
     return true;
 
   if (TT.isOSBinFormatMachO()) {
@@ -143,7 +175,12 @@ bool TargetMachine::shouldAssumeDSOLocal(const Module &M,
     return GV && GV->isStrongDefinitionForLinker();
   }
 
-  assert(TT.isOSBinFormatELF());
+  // Due to the AIX linkage model, any global with default visibility is
+  // considered non-local.
+  if (TT.isOSBinFormatXCOFF())
+    return false;
+
+  assert(TT.isOSBinFormatELF() || TT.isOSBinFormatWasm());
   assert(RM != Reloc::DynamicNoPIC);
 
   bool IsExecutable =
@@ -153,9 +190,16 @@ bool TargetMachine::shouldAssumeDSOLocal(const Module &M,
     if (GV && !GV->isDeclarationForLinker())
       return true;
 
+    // A symbol marked nonlazybind should not be accessed with a plt. If the
+    // symbol turns out to be external, the linker will convert a direct
+    // access to an access via the plt, so don't assume it is local.
+    const Function *F = dyn_cast_or_null<Function>(GV);
+    if (F && F->hasFnAttribute(Attribute::NonLazyBind))
+      return false;
+
     bool IsTLS = GV && GV->isThreadLocal();
     bool IsAccessViaCopyRelocs =
-        Options.MCOptions.MCPIECopyRelocations && GV && isa<GlobalVariable>(GV);
+        GV && Options.MCOptions.MCPIECopyRelocations && isa<GlobalVariable>(GV);
     Triple::ArchType Arch = TT.getArch();
     bool IsPPC =
         Arch == Triple::ppc || Arch == Triple::ppc64 || Arch == Triple::ppc64le;
@@ -164,8 +208,16 @@ bool TargetMachine::shouldAssumeDSOLocal(const Module &M,
       return true;
   }
 
-  // ELF supports preemption of other symbols.
+  // ELF & wasm support preemption of other symbols.
   return false;
+}
+
+bool TargetMachine::useEmulatedTLS() const {
+  // Returns Options.EmulatedTLS if the -emulated-tls or -no-emulated-tls
+  // was specified explicitly; otherwise uses target triple to decide default.
+  if (Options.ExplicitEmulatedTLS)
+    return Options.EmulatedTLS;
+  return getTargetTriple().hasDefaultEmulatedTLS();
 }
 
 TLSModel::Model TargetMachine::getTLSModel(const GlobalValue *GV) const {
@@ -200,10 +252,8 @@ CodeGenOpt::Level TargetMachine::getOptLevel() const { return OptLevel; }
 
 void TargetMachine::setOptLevel(CodeGenOpt::Level Level) { OptLevel = Level; }
 
-TargetIRAnalysis TargetMachine::getTargetIRAnalysis() {
-  return TargetIRAnalysis([](const Function &F) {
-    return TargetTransformInfo(F.getParent()->getDataLayout());
-  });
+TargetTransformInfo TargetMachine::getTargetTransformInfo(const Function &F) {
+  return TargetTransformInfo(F.getParent()->getDataLayout());
 }
 
 void TargetMachine::getNameWithPrefix(SmallVectorImpl<char> &Name,
@@ -224,4 +274,11 @@ MCSymbol *TargetMachine::getSymbol(const GlobalValue *GV) const {
   SmallString<128> NameStr;
   getNameWithPrefix(NameStr, GV, TLOF->getMangler());
   return TLOF->getContext().getOrCreateSymbol(NameStr);
+}
+
+TargetIRAnalysis TargetMachine::getTargetIRAnalysis() {
+  // Since Analysis can't depend on Target, use a std::function to invert the
+  // dependency.
+  return TargetIRAnalysis(
+      [this](const Function &F) { return this->getTargetTransformInfo(F); });
 }

@@ -1,9 +1,8 @@
 //===--- ASTCommon.cpp - Common stuff for ASTReader/ASTWriter----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,7 +15,7 @@
 #include "clang/AST/DeclObjC.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Serialization/ASTDeserializationListener.h"
-#include "llvm/ADT/StringExtras.h"
+#include "llvm/Support/DJB.h"
 
 using namespace clang;
 
@@ -91,11 +90,89 @@ serialization::TypeIdxFromBuiltin(const BuiltinType *BT) {
   case BuiltinType::LongDouble:
     ID = PREDEF_TYPE_LONGDOUBLE_ID;
     break;
+  case BuiltinType::ShortAccum:
+    ID = PREDEF_TYPE_SHORT_ACCUM_ID;
+    break;
+  case BuiltinType::Accum:
+    ID = PREDEF_TYPE_ACCUM_ID;
+    break;
+  case BuiltinType::LongAccum:
+    ID = PREDEF_TYPE_LONG_ACCUM_ID;
+    break;
+  case BuiltinType::UShortAccum:
+    ID = PREDEF_TYPE_USHORT_ACCUM_ID;
+    break;
+  case BuiltinType::UAccum:
+    ID = PREDEF_TYPE_UACCUM_ID;
+    break;
+  case BuiltinType::ULongAccum:
+    ID = PREDEF_TYPE_ULONG_ACCUM_ID;
+    break;
+  case BuiltinType::ShortFract:
+    ID = PREDEF_TYPE_SHORT_FRACT_ID;
+    break;
+  case BuiltinType::Fract:
+    ID = PREDEF_TYPE_FRACT_ID;
+    break;
+  case BuiltinType::LongFract:
+    ID = PREDEF_TYPE_LONG_FRACT_ID;
+    break;
+  case BuiltinType::UShortFract:
+    ID = PREDEF_TYPE_USHORT_FRACT_ID;
+    break;
+  case BuiltinType::UFract:
+    ID = PREDEF_TYPE_UFRACT_ID;
+    break;
+  case BuiltinType::ULongFract:
+    ID = PREDEF_TYPE_ULONG_FRACT_ID;
+    break;
+  case BuiltinType::SatShortAccum:
+    ID = PREDEF_TYPE_SAT_SHORT_ACCUM_ID;
+    break;
+  case BuiltinType::SatAccum:
+    ID = PREDEF_TYPE_SAT_ACCUM_ID;
+    break;
+  case BuiltinType::SatLongAccum:
+    ID = PREDEF_TYPE_SAT_LONG_ACCUM_ID;
+    break;
+  case BuiltinType::SatUShortAccum:
+    ID = PREDEF_TYPE_SAT_USHORT_ACCUM_ID;
+    break;
+  case BuiltinType::SatUAccum:
+    ID = PREDEF_TYPE_SAT_UACCUM_ID;
+    break;
+  case BuiltinType::SatULongAccum:
+    ID = PREDEF_TYPE_SAT_ULONG_ACCUM_ID;
+    break;
+  case BuiltinType::SatShortFract:
+    ID = PREDEF_TYPE_SAT_SHORT_FRACT_ID;
+    break;
+  case BuiltinType::SatFract:
+    ID = PREDEF_TYPE_SAT_FRACT_ID;
+    break;
+  case BuiltinType::SatLongFract:
+    ID = PREDEF_TYPE_SAT_LONG_FRACT_ID;
+    break;
+  case BuiltinType::SatUShortFract:
+    ID = PREDEF_TYPE_SAT_USHORT_FRACT_ID;
+    break;
+  case BuiltinType::SatUFract:
+    ID = PREDEF_TYPE_SAT_UFRACT_ID;
+    break;
+  case BuiltinType::SatULongFract:
+    ID = PREDEF_TYPE_SAT_ULONG_FRACT_ID;
+    break;
+  case BuiltinType::Float16:
+    ID = PREDEF_TYPE_FLOAT16_ID;
+    break;
   case BuiltinType::Float128:
     ID = PREDEF_TYPE_FLOAT128_ID;
     break;
   case BuiltinType::NullPtr:
     ID = PREDEF_TYPE_NULLPTR_ID;
+    break;
+  case BuiltinType::Char8:
+    ID = PREDEF_TYPE_CHAR8_ID;
     break;
   case BuiltinType::Char16:
     ID = PREDEF_TYPE_CHAR16_ID;
@@ -135,6 +212,11 @@ serialization::TypeIdxFromBuiltin(const BuiltinType *BT) {
     ID = PREDEF_TYPE_##Id##_ID; \
     break;
 #include "clang/Basic/OpenCLImageTypes.def"
+#define EXT_OPAQUE_TYPE(ExtType, Id, Ext) \
+  case BuiltinType::Id: \
+    ID = PREDEF_TYPE_##Id##_ID; \
+    break;
+#include "clang/Basic/OpenCLExtensionTypes.def"
   case BuiltinType::OCLSampler:
     ID = PREDEF_TYPE_SAMPLER_ID;
     break;
@@ -168,7 +250,7 @@ unsigned serialization::ComputeHash(Selector Sel) {
   unsigned R = 5381;
   for (unsigned I = 0; I != N; ++I)
     if (IdentifierInfo *II = Sel.getIdentifierInfoForSlot(I))
-      R = llvm::HashString(II->getName(), R);
+      R = llvm::djbHash(II->getName(), R);
   return R;
 }
 
@@ -228,7 +310,7 @@ serialization::getDefinitiveDeclContext(const DeclContext *DC) {
   default:
     llvm_unreachable("Unhandled DeclContext in AST reader");
   }
-  
+
   llvm_unreachable("Unhandled decl kind");
 }
 
@@ -305,11 +387,15 @@ bool serialization::isRedeclarableDeclKind(unsigned Kind) {
   case Decl::ClassScopeFunctionSpecialization:
   case Decl::Import:
   case Decl::OMPThreadPrivate:
+  case Decl::OMPAllocate:
+  case Decl::OMPRequires:
   case Decl::OMPCapturedExpr:
   case Decl::OMPDeclareReduction:
+  case Decl::OMPDeclareMapper:
   case Decl::BuiltinTemplate:
   case Decl::Decomposition:
   case Decl::Binding:
+  case Decl::Concept:
     return false;
 
   // These indirectly derive from Redeclarable<T> but are not actually
@@ -341,9 +427,21 @@ bool serialization::needsAnonymousDeclarationNumber(const NamedDecl *D) {
     return true;
   }
 
-  // Otherwise, we only care about anonymous class members.
+  // At block scope, we number everything that we need to deduplicate, since we
+  // can't just use name matching to keep things lined up.
+  // FIXME: This is only necessary for an inline function or a template or
+  // similar.
+  if (D->getLexicalDeclContext()->isFunctionOrMethod()) {
+    if (auto *VD = dyn_cast<VarDecl>(D))
+      return VD->isStaticLocal();
+    // FIXME: What about CapturedDecls (and declarations nested within them)?
+    return isa<TagDecl>(D) || isa<BlockDecl>(D);
+  }
+
+  // Otherwise, we only care about anonymous class members / block-scope decls.
+  // FIXME: We need to handle lambdas and blocks within inline / templated
+  // variables too.
   if (D->getDeclName() || !isa<CXXRecordDecl>(D->getLexicalDeclContext()))
     return false;
   return isa<TagDecl>(D) || isa<FieldDecl>(D);
 }
-

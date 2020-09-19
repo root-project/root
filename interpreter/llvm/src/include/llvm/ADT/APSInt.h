@@ -1,9 +1,8 @@
 //===-- llvm/ADT/APSInt.h - Arbitrary Precision Signed Int -----*- C++ -*--===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -43,6 +42,24 @@ public:
   /// \param Str the string to be interpreted.
   explicit APSInt(StringRef Str);
 
+  /// Determine sign of this APSInt.
+  ///
+  /// \returns true if this APSInt is negative, false otherwise
+  bool isNegative() const { return isSigned() && APInt::isNegative(); }
+
+  /// Determine if this APSInt Value is non-negative (>= 0)
+  ///
+  /// \returns true if this APSInt is non-negative, false otherwise
+  bool isNonNegative() const { return !isNegative(); }
+
+  /// Determine if this APSInt Value is positive.
+  ///
+  /// This tests if the value of this APSInt is positive (> 0). Note
+  /// that 0 is not a positive value.
+  ///
+  /// \returns true if this APSInt is positive.
+  bool isStrictlyPositive() const { return isNonNegative() && !isNullValue(); }
+
   APSInt &operator=(APInt RHS) {
     // Retain our current sign.
     APInt::operator=(std::move(RHS));
@@ -72,7 +89,7 @@ public:
   }
   using APInt::toString;
 
-  /// \brief Get the correctly-extended \c int64_t value.
+  /// Get the correctly-extended \c int64_t value.
   int64_t getExtValue() const {
     assert(getMinSignedBits() <= 64 && "Too many bits for int64_t");
     return isSigned() ? getSExtValue() : getZExtValue();
@@ -279,13 +296,13 @@ public:
                            : APInt::getSignedMinValue(numBits), Unsigned);
   }
 
-  /// \brief Determine if two APSInts have the same value, zero- or
+  /// Determine if two APSInts have the same value, zero- or
   /// sign-extending as needed.
   static bool isSameValue(const APSInt &I1, const APSInt &I2) {
     return !compareValues(I1, I2);
   }
 
-  /// \brief Compare underlying values of two numbers.
+  /// Compare underlying values of two numbers.
   static int compareValues(const APSInt &I1, const APSInt &I2) {
     if (I1.getBitWidth() == I2.getBitWidth() && I1.isSigned() == I2.isSigned())
       return I1.IsUnsigned ? I1.compare(I2) : I1.compareSigned(I2);

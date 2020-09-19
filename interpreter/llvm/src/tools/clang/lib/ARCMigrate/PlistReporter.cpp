@@ -1,9 +1,8 @@
 //===--- PlistReporter.cpp - ARC Migrate Tool Plist Reporter ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -81,7 +80,7 @@ void arcmt::writeARCDiagsToPlist(const std::string &outPath,
 
   for (ArrayRef<StoredDiagnostic>::iterator
          DI = diags.begin(), DE = diags.end(); DI != DE; ++DI) {
-    
+
     const StoredDiagnostic &D = *DI;
 
     if (D.getLevel() == DiagnosticsEngine::Ignored)
@@ -107,8 +106,7 @@ void arcmt::writeARCDiagsToPlist(const std::string &outPath,
       o << "   <key>ranges</key>\n";
       o << "   <array>\n";
       for (auto &R : D.getRanges()) {
-        CharSourceRange ExpansionRange(SM.getExpansionRange(R.getAsRange()),
-                                       R.isTokenRange());
+        CharSourceRange ExpansionRange = SM.getExpansionRange(R);
         EmitRange(o, SM, Lexer::getAsCharRange(ExpansionRange, SM, LangOpts),
                   FM, 4);
       }
@@ -122,5 +120,5 @@ void arcmt::writeARCDiagsToPlist(const std::string &outPath,
   o << " </array>\n";
 
   // Finish.
-  o << "</dict>\n</plist>";
+  o << "</dict>\n</plist>\n";
 }

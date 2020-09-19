@@ -1,9 +1,8 @@
-//== StoreRef.h - Smart pointer for store objects ---------------*- C++ -*--==//
+//===- StoreRef.h - Smart pointer for store objects -------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -18,34 +17,37 @@
 
 namespace clang {
 namespace ento {
-  
+
+class StoreManager;
+
 /// Store - This opaque type encapsulates an immutable mapping from
 ///  locations to values.  At a high-level, it represents the symbolic
 ///  memory model.  Different subclasses of StoreManager may choose
 ///  different types to represent the locations and values.
-typedef const void *Store;
-  
-class StoreManager;
-  
+using Store = const void *;
+
 class StoreRef {
   Store store;
   StoreManager &mgr;
+
 public:
-  StoreRef(Store, StoreManager &);
-  StoreRef(const StoreRef &);
-  StoreRef &operator=(StoreRef const &);
-  
+  StoreRef(Store store, StoreManager &smgr);
+  StoreRef(const StoreRef &sr);
+  StoreRef &operator=(StoreRef const &newStore);
+  ~StoreRef();
+
   bool operator==(const StoreRef &x) const {
     assert(&mgr == &x.mgr);
     return x.store == store;
   }
+
   bool operator!=(const StoreRef &x) const { return !operator==(x); }
-  
-  ~StoreRef();
-  
+
   Store getStore() const { return store; }
   const StoreManager &getStoreManager() const { return mgr; }
 };
 
-}}
-#endif
+} // namespace ento
+} // namespace clang
+
+#endif // LLVM_CLANG_STATICANALYZER_CORE_PATHSENSITIVE_STOREREF_H

@@ -1,9 +1,8 @@
 //== RangedConstraintManager.cpp --------------------------------*- C++ -*--==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,8 +11,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "RangedConstraintManager.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/RangedConstraintManager.h"
 
 namespace clang {
 
@@ -33,7 +32,7 @@ ProgramStateRef RangedConstraintManager::assumeSym(ProgramStateRef State,
     // We can only simplify expressions whose RHS is an integer.
 
     BinaryOperator::Opcode op = SIE->getOpcode();
-    if (BinaryOperator::isComparisonOp(op)) {
+    if (BinaryOperator::isComparisonOp(op) && op != BO_Cmp) {
       if (!Assumption)
         op = BinaryOperator::negateComparisonOp(op);
 
@@ -52,17 +51,18 @@ ProgramStateRef RangedConstraintManager::assumeSym(ProgramStateRef State,
     assert(BinaryOperator::isComparisonOp(Op));
 
     // For now, we only support comparing pointers.
-    assert(Loc::isLocType(SSE->getLHS()->getType()));
-    assert(Loc::isLocType(SSE->getRHS()->getType()));
-    QualType DiffTy = SymMgr.getContext().getPointerDiffType();
-    SymbolRef Subtraction =
-        SymMgr.getSymSymExpr(SSE->getRHS(), BO_Sub, SSE->getLHS(), DiffTy);
+    if (Loc::isLocType(SSE->getLHS()->getType()) &&
+        Loc::isLocType(SSE->getRHS()->getType())) {
+      QualType DiffTy = SymMgr.getContext().getPointerDiffType();
+      SymbolRef Subtraction =
+          SymMgr.getSymSymExpr(SSE->getRHS(), BO_Sub, SSE->getLHS(), DiffTy);
 
-    const llvm::APSInt &Zero = getBasicVals().getValue(0, DiffTy);
-    Op = BinaryOperator::reverseComparisonOp(Op);
-    if (!Assumption)
-      Op = BinaryOperator::negateComparisonOp(Op);
-    return assumeSymRel(State, Subtraction, Op, Zero);
+      const llvm::APSInt &Zero = getBasicVals().getValue(0, DiffTy);
+      Op = BinaryOperator::reverseComparisonOp(Op);
+      if (!Assumption)
+        Op = BinaryOperator::negateComparisonOp(Op);
+      return assumeSymRel(State, Subtraction, Op, Zero);
+    }
   }
 
   // If we get here, there's nothing else we can do but treat the symbol as
@@ -197,6 +197,11 @@ void RangedConstraintManager::computeAdjustment(SymbolRef &Sym,
         Adjustment = -Adjustment;
     }
   }
+}
+
+void *ProgramStateTrait<ConstraintRange>::GDMIndex() {
+  static int Index;
+  return &Index;
 }
 
 } // end of namespace ento

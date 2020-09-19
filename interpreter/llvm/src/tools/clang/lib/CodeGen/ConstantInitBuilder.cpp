@@ -1,9 +1,8 @@
 //===--- ConstantInitBuilder.cpp - Global initializer builder -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -166,7 +165,7 @@ void ConstantAggregateBuilderBase::getGEPIndicesTo(
   if (Parent) {
     Parent->getGEPIndicesTo(indices, Begin);
 
-  // Otherwise, add an index to drill into the first level of pointer. 
+  // Otherwise, add an index to drill into the first level of pointer.
   } else {
     assert(indices.empty());
     indices.push_back(llvm::ConstantInt::get(Builder.CGM.Int32Ty, 0));

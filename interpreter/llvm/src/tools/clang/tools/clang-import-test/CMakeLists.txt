@@ -1,7 +1,7 @@
 set(LLVM_LINK_COMPONENTS
-  core
-  support
-)
+  Core
+  Support
+  )
 
 if(NOT CLANG_BUILT_STANDALONE)
   set(tablegen_deps intrinsics_gen)
@@ -17,11 +17,14 @@ set(CLANG_IMPORT_TEST_LIB_DEPS
   clangAST
   clangBasic
   clangCodeGen
+  clangDriver
   clangFrontend
   clangLex
   clangParse
+  clangSerialization
   )
 
-target_link_libraries(clang-import-test
+clang_target_link_libraries(clang-import-test
+  PRIVATE
   ${CLANG_IMPORT_TEST_LIB_DEPS}
   )

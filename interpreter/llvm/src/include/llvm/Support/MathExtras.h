@@ -1,9 +1,8 @@
 //===-- llvm/Support/MathExtras.h - Useful math functions -------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -23,35 +22,43 @@
 #include <limits>
 #include <type_traits>
 
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif
-
 #ifdef __ANDROID_NDK__
 #include <android/api-level.h>
 #endif
 
+#ifdef _MSC_VER
+// Declare these intrinsics manually rather including intrin.h. It's very
+// expensive, and MathExtras.h is popular.
+// #include <intrin.h>
+extern "C" {
+unsigned char _BitScanForward(unsigned long *_Index, unsigned long _Mask);
+unsigned char _BitScanForward64(unsigned long *_Index, unsigned __int64 _Mask);
+unsigned char _BitScanReverse(unsigned long *_Index, unsigned long _Mask);
+unsigned char _BitScanReverse64(unsigned long *_Index, unsigned __int64 _Mask);
+}
+#endif
+
 namespace llvm {
-/// \brief The behavior an operation has on an input of 0.
+/// The behavior an operation has on an input of 0.
 enum ZeroBehavior {
-  /// \brief The returned value is undefined.
+  /// The returned value is undefined.
   ZB_Undefined,
-  /// \brief The returned value is numeric_limits<T>::max()
+  /// The returned value is numeric_limits<T>::max()
   ZB_Max,
-  /// \brief The returned value is numeric_limits<T>::digits
+  /// The returned value is numeric_limits<T>::digits
   ZB_Width
 };
 
 namespace detail {
 template <typename T, std::size_t SizeOfT> struct TrailingZerosCounter {
-  static std::size_t count(T Val, ZeroBehavior) {
+  static unsigned count(T Val, ZeroBehavior) {
     if (!Val)
       return std::numeric_limits<T>::digits;
     if (Val & 0x1)
       return 0;
 
     // Bisection method.
-    std::size_t ZeroBits = 0;
+    unsigned ZeroBits = 0;
     T Shift = std::numeric_limits<T>::digits >> 1;
     T Mask = std::numeric_limits<T>::max() >> Shift;
     while (Shift) {
@@ -68,7 +75,7 @@ template <typename T, std::size_t SizeOfT> struct TrailingZerosCounter {
 
 #if __GNUC__ >= 4 || defined(_MSC_VER)
 template <typename T> struct TrailingZerosCounter<T, 4> {
-  static std::size_t count(T Val, ZeroBehavior ZB) {
+  static unsigned count(T Val, ZeroBehavior ZB) {
     if (ZB != ZB_Undefined && Val == 0)
       return 32;
 
@@ -84,7 +91,7 @@ template <typename T> struct TrailingZerosCounter<T, 4> {
 
 #if !defined(_MSC_VER) || defined(_M_X64)
 template <typename T> struct TrailingZerosCounter<T, 8> {
-  static std::size_t count(T Val, ZeroBehavior ZB) {
+  static unsigned count(T Val, ZeroBehavior ZB) {
     if (ZB != ZB_Undefined && Val == 0)
       return 64;
 
@@ -101,7 +108,7 @@ template <typename T> struct TrailingZerosCounter<T, 8> {
 #endif
 } // namespace detail
 
-/// \brief Count number of 0's from the least significant bit to the most
+/// Count number of 0's from the least significant bit to the most
 ///   stopping at the first 1.
 ///
 /// Only unsigned integral types are allowed.
@@ -109,7 +116,7 @@ template <typename T> struct TrailingZerosCounter<T, 8> {
 /// \param ZB the behavior on an input of 0. Only ZB_Width and ZB_Undefined are
 ///   valid arguments.
 template <typename T>
-std::size_t countTrailingZeros(T Val, ZeroBehavior ZB = ZB_Width) {
+unsigned countTrailingZeros(T Val, ZeroBehavior ZB = ZB_Width) {
   static_assert(std::numeric_limits<T>::is_integer &&
                     !std::numeric_limits<T>::is_signed,
                 "Only unsigned integral types are allowed.");
@@ -118,12 +125,12 @@ std::size_t countTrailingZeros(T Val, ZeroBehavior ZB = ZB_Width) {
 
 namespace detail {
 template <typename T, std::size_t SizeOfT> struct LeadingZerosCounter {
-  static std::size_t count(T Val, ZeroBehavior) {
+  static unsigned count(T Val, ZeroBehavior) {
     if (!Val)
       return std::numeric_limits<T>::digits;
 
     // Bisection method.
-    std::size_t ZeroBits = 0;
+    unsigned ZeroBits = 0;
     for (T Shift = std::numeric_limits<T>::digits >> 1; Shift; Shift >>= 1) {
       T Tmp = Val >> Shift;
       if (Tmp)
@@ -137,7 +144,7 @@ template <typename T, std::size_t SizeOfT> struct LeadingZerosCounter {
 
 #if __GNUC__ >= 4 || defined(_MSC_VER)
 template <typename T> struct LeadingZerosCounter<T, 4> {
-  static std::size_t count(T Val, ZeroBehavior ZB) {
+  static unsigned count(T Val, ZeroBehavior ZB) {
     if (ZB != ZB_Undefined && Val == 0)
       return 32;
 
@@ -153,7 +160,7 @@ template <typename T> struct LeadingZerosCounter<T, 4> {
 
 #if !defined(_MSC_VER) || defined(_M_X64)
 template <typename T> struct LeadingZerosCounter<T, 8> {
-  static std::size_t count(T Val, ZeroBehavior ZB) {
+  static unsigned count(T Val, ZeroBehavior ZB) {
     if (ZB != ZB_Undefined && Val == 0)
       return 64;
 
@@ -170,7 +177,7 @@ template <typename T> struct LeadingZerosCounter<T, 8> {
 #endif
 } // namespace detail
 
-/// \brief Count number of 0's from the most significant bit to the least
+/// Count number of 0's from the most significant bit to the least
 ///   stopping at the first 1.
 ///
 /// Only unsigned integral types are allowed.
@@ -178,14 +185,14 @@ template <typename T> struct LeadingZerosCounter<T, 8> {
 /// \param ZB the behavior on an input of 0. Only ZB_Width and ZB_Undefined are
 ///   valid arguments.
 template <typename T>
-std::size_t countLeadingZeros(T Val, ZeroBehavior ZB = ZB_Width) {
+unsigned countLeadingZeros(T Val, ZeroBehavior ZB = ZB_Width) {
   static_assert(std::numeric_limits<T>::is_integer &&
                     !std::numeric_limits<T>::is_signed,
                 "Only unsigned integral types are allowed.");
   return llvm::detail::LeadingZerosCounter<T, sizeof(T)>::count(Val, ZB);
 }
 
-/// \brief Get the index of the first set bit starting from the least
+/// Get the index of the first set bit starting from the least
 ///   significant bit.
 ///
 /// Only unsigned integral types are allowed.
@@ -199,7 +206,7 @@ template <typename T> T findFirstSet(T Val, ZeroBehavior ZB = ZB_Max) {
   return countTrailingZeros(Val, ZB_Undefined);
 }
 
-/// \brief Create a bitmask with the N right-most bits set to 1, and all other
+/// Create a bitmask with the N right-most bits set to 1, and all other
 /// bits set to 0.  Only unsigned types are allowed.
 template <typename T> T maskTrailingOnes(unsigned N) {
   static_assert(std::is_unsigned<T>::value, "Invalid type!");
@@ -208,25 +215,25 @@ template <typename T> T maskTrailingOnes(unsigned N) {
   return N == 0 ? 0 : (T(-1) >> (Bits - N));
 }
 
-/// \brief Create a bitmask with the N left-most bits set to 1, and all other
+/// Create a bitmask with the N left-most bits set to 1, and all other
 /// bits set to 0.  Only unsigned types are allowed.
 template <typename T> T maskLeadingOnes(unsigned N) {
   return ~maskTrailingOnes<T>(CHAR_BIT * sizeof(T) - N);
 }
 
-/// \brief Create a bitmask with the N right-most bits set to 0, and all other
+/// Create a bitmask with the N right-most bits set to 0, and all other
 /// bits set to 1.  Only unsigned types are allowed.
 template <typename T> T maskTrailingZeros(unsigned N) {
   return maskLeadingOnes<T>(CHAR_BIT * sizeof(T) - N);
 }
 
-/// \brief Create a bitmask with the N left-most bits set to 0, and all other
+/// Create a bitmask with the N left-most bits set to 0, and all other
 /// bits set to 1.  Only unsigned types are allowed.
 template <typename T> T maskLeadingZeros(unsigned N) {
   return maskTrailingOnes<T>(CHAR_BIT * sizeof(T) - N);
 }
 
-/// \brief Get the index of the last set bit starting from the least
+/// Get the index of the last set bit starting from the least
 ///   significant bit.
 ///
 /// Only unsigned integral types are allowed.
@@ -243,7 +250,7 @@ template <typename T> T findLastSet(T Val, ZeroBehavior ZB = ZB_Max) {
          (std::numeric_limits<T>::digits - 1);
 }
 
-/// \brief Macro compressed bit reversal table for 256 bits.
+/// Macro compressed bit reversal table for 256 bits.
 ///
 /// http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
 static const unsigned char BitReverseTable256[256] = {
@@ -256,7 +263,7 @@ static const unsigned char BitReverseTable256[256] = {
 #undef R6
 };
 
-/// \brief Reverse the bits in \p Val.
+/// Reverse the bits in \p Val.
 template <typename T>
 T reverseBits(T Val) {
   unsigned char in[sizeof(Val)];
@@ -424,7 +431,7 @@ constexpr inline bool isPowerOf2_32(uint32_t Value) {
 
 /// Return true if the argument is a power of two > 0 (64 bit edition.)
 constexpr inline bool isPowerOf2_64(uint64_t Value) {
-  return Value && !(Value & (Value - int64_t(1L)));
+  return Value && !(Value & (Value - 1));
 }
 
 /// Return a byte-swapped representation of the 16-bit argument.
@@ -442,7 +449,7 @@ inline uint64_t ByteSwap_64(uint64_t Value) {
   return sys::SwapByteOrder_64(Value);
 }
 
-/// \brief Count the number of ones from the most significant bit to the first
+/// Count the number of ones from the most significant bit to the first
 /// zero bit.
 ///
 /// Ex. countLeadingOnes(0xFF0FFF00) == 8.
@@ -451,14 +458,14 @@ inline uint64_t ByteSwap_64(uint64_t Value) {
 /// \param ZB the behavior on an input of all ones. Only ZB_Width and
 /// ZB_Undefined are valid arguments.
 template <typename T>
-std::size_t countLeadingOnes(T Value, ZeroBehavior ZB = ZB_Width) {
+unsigned countLeadingOnes(T Value, ZeroBehavior ZB = ZB_Width) {
   static_assert(std::numeric_limits<T>::is_integer &&
                     !std::numeric_limits<T>::is_signed,
                 "Only unsigned integral types are allowed.");
-  return countLeadingZeros(~Value, ZB);
+  return countLeadingZeros<T>(~Value, ZB);
 }
 
-/// \brief Count the number of ones from the least significant bit to the first
+/// Count the number of ones from the least significant bit to the first
 /// zero bit.
 ///
 /// Ex. countTrailingOnes(0x00FF00FF) == 8.
@@ -467,11 +474,11 @@ std::size_t countLeadingOnes(T Value, ZeroBehavior ZB = ZB_Width) {
 /// \param ZB the behavior on an input of all ones. Only ZB_Width and
 /// ZB_Undefined are valid arguments.
 template <typename T>
-std::size_t countTrailingOnes(T Value, ZeroBehavior ZB = ZB_Width) {
+unsigned countTrailingOnes(T Value, ZeroBehavior ZB = ZB_Width) {
   static_assert(std::numeric_limits<T>::is_integer &&
                     !std::numeric_limits<T>::is_signed,
                 "Only unsigned integral types are allowed.");
-  return countTrailingZeros(~Value, ZB);
+  return countTrailingZeros<T>(~Value, ZB);
 }
 
 namespace detail {
@@ -505,7 +512,7 @@ template <typename T> struct PopulationCounter<T, 8> {
 };
 } // namespace detail
 
-/// \brief Count the number of set bits in a value.
+/// Count the number of set bits in a value.
 /// Ex. countPopulation(0xF000F000) = 8
 /// Returns 0 if the word is zero.
 template <typename T>
@@ -552,13 +559,18 @@ inline unsigned Log2_64_Ceil(uint64_t Value) {
 }
 
 /// Return the greatest common divisor of the values using Euclid's algorithm.
-inline uint64_t GreatestCommonDivisor64(uint64_t A, uint64_t B) {
+template <typename T>
+inline T greatestCommonDivisor(T A, T B) {
   while (B) {
-    uint64_t T = B;
+    T Tmp = B;
     B = A % B;
-    A = T;
+    A = Tmp;
   }
   return A;
+}
+
+inline uint64_t GreatestCommonDivisor64(uint64_t A, uint64_t B) {
+  return greatestCommonDivisor<uint64_t>(A, B);
 }
 
 /// This function takes a 64-bit integer and returns the bit equivalent double.
@@ -608,7 +620,7 @@ constexpr inline uint64_t MinAlign(uint64_t A, uint64_t B) {
   return (A | B) & (1 + ~(A | B));
 }
 
-/// \brief Aligns \c Addr to \c Alignment bytes, rounding up.
+/// Aligns \c Addr to \c Alignment bytes, rounding up.
 ///
 /// Alignment should be a power of two.  This method rounds up, so
 /// alignAddr(7, 4) == 8 and alignAddr(8, 4) == 8.
@@ -621,7 +633,7 @@ inline uintptr_t alignAddr(const void *Addr, size_t Alignment) {
   return (((uintptr_t)Addr + Alignment - 1) & ~(uintptr_t)(Alignment - 1));
 }
 
-/// \brief Returns the necessary adjustment for aligning \c Ptr to \c Alignment
+/// Returns the necessary adjustment for aligning \c Ptr to \c Alignment
 /// bytes, rounding up.
 inline size_t alignmentAdjustment(const void *Ptr, size_t Alignment) {
   return alignAddr(Ptr, Alignment) - (uintptr_t)Ptr;
@@ -685,6 +697,11 @@ inline uint64_t alignTo(uint64_t Value, uint64_t Align, uint64_t Skew = 0) {
 template <uint64_t Align> constexpr inline uint64_t alignTo(uint64_t Value) {
   static_assert(Align != 0u, "Align must be non-zero");
   return (Value + Align - 1) / Align * Align;
+}
+
+/// Returns the integer ceil(Numerator / Denominator).
+inline uint64_t divideCeil(uint64_t Numerator, uint64_t Denominator) {
+  return alignTo(Numerator, Denominator) / Denominator;
 }
 
 /// \c alignTo for contexts where a constant expression is required.

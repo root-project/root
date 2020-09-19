@@ -1,17 +1,16 @@
 //===- DWARFDebugRangeList.h ------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_DEBUGINFO_DWARF_DWARFDEBUGRANGELIST_H
 #define LLVM_DEBUGINFO_DWARF_DWARFDEBUGRANGELIST_H
 
+#include "llvm/DebugInfo/DWARF/DWARFAddressRange.h"
 #include "llvm/DebugInfo/DWARF/DWARFDataExtractor.h"
-#include "llvm/DebugInfo/DWARF/DWARFRelocMap.h"
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -19,15 +18,6 @@
 namespace llvm {
 
 class raw_ostream;
-
-struct DWARFAddressRange {
-  uint64_t LowPC;
-  uint64_t HighPC;
-  uint64_t SectionIndex;
-};
-
-/// DWARFAddressRangesVector - represents a set of absolute address ranges.
-using DWARFAddressRangesVector = std::vector<DWARFAddressRange>;
 
 class DWARFDebugRangeList {
 public:
@@ -79,13 +69,14 @@ public:
 
   void clear();
   void dump(raw_ostream &OS) const;
-  bool extract(const DWARFDataExtractor &data, uint32_t *offset_ptr);
+  Error extract(const DWARFDataExtractor &data, uint32_t *offset_ptr);
   const std::vector<RangeListEntry> &getEntries() { return Entries; }
 
   /// getAbsoluteRanges - Returns absolute address ranges defined by this range
   /// list. Has to be passed base address of the compile unit referencing this
   /// range list.
-  DWARFAddressRangesVector getAbsoluteRanges(uint64_t BaseAddress) const;
+  DWARFAddressRangesVector
+  getAbsoluteRanges(llvm::Optional<object::SectionedAddress> BaseAddr) const;
 };
 
 } // end namespace llvm

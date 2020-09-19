@@ -1,9 +1,8 @@
-//===-- Transform/Utils/BasicBlockUtils.h - BasicBlock Utils ----*- C++ -*-===//
+//===- Transform/Utils/BasicBlockUtils.h - BasicBlock Utils -----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -18,6 +17,7 @@
 // FIXME: Move to this file: BasicBlock::removePredecessor, BB::splitBasicBlock
 
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/Analysis/DomTreeUpdater.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/InstrTypes.h"
@@ -25,16 +25,48 @@
 
 namespace llvm {
 
-class MemoryDependenceResults;
+class BlockFrequencyInfo;
+class BranchProbabilityInfo;
 class DominatorTree;
-class LoopInfo;
+class DomTreeUpdater;
+class Function;
 class Instruction;
+class LoopInfo;
 class MDNode;
+class MemoryDependenceResults;
+class MemorySSAUpdater;
+class PostDominatorTree;
 class ReturnInst;
 class TargetLibraryInfo;
+class Value;
+
+/// Replace contents of every block in \p BBs with single unreachable
+/// instruction. If \p Updates is specified, collect all necessary DT updates
+/// into this vector. If \p KeepOneInputPHIs is true, one-input Phis in
+/// successors of blocks being deleted will be preserved.
+void DetatchDeadBlocks(ArrayRef <BasicBlock *> BBs,
+                       SmallVectorImpl<DominatorTree::UpdateType> *Updates,
+                       bool KeepOneInputPHIs = false);
 
 /// Delete the specified block, which must have no predecessors.
-void DeleteDeadBlock(BasicBlock *BB);
+void DeleteDeadBlock(BasicBlock *BB, DomTreeUpdater *DTU = nullptr,
+                     bool KeepOneInputPHIs = false);
+
+/// Delete the specified blocks from \p BB. The set of deleted blocks must have
+/// no predecessors that are not being deleted themselves. \p BBs must have no
+/// duplicating blocks. If there are loops among this set of blocks, all
+/// relevant loop info updates should be done before this function is called.
+/// If \p KeepOneInputPHIs is true, one-input Phis in successors of blocks
+/// being deleted will be preserved.
+void DeleteDeadBlocks(ArrayRef <BasicBlock *> BBs,
+                      DomTreeUpdater *DTU = nullptr,
+                      bool KeepOneInputPHIs = false);
+
+/// Delete all basic blocks from \p F that are not reachable from its entry
+/// node. If \p KeepOneInputPHIs is true, one-input Phis in successors of
+/// blocks being deleted will be preserved.
+bool EliminateUnreachableBlocks(Function &F, DomTreeUpdater *DTU = nullptr,
+                                bool KeepOneInputPHIs = false);
 
 /// We know that BB has one predecessor. If there are any single-entry PHI nodes
 /// in it, fold them away. This handles the case when all entries to the PHI
@@ -51,8 +83,9 @@ bool DeleteDeadPHIs(BasicBlock *BB, const TargetLibraryInfo *TLI = nullptr);
 
 /// Attempts to merge a block into its predecessor, if possible. The return
 /// value indicates success or failure.
-bool MergeBlockIntoPredecessor(BasicBlock *BB, DominatorTree *DT = nullptr,
+bool MergeBlockIntoPredecessor(BasicBlock *BB, DomTreeUpdater *DTU = nullptr,
                                LoopInfo *LI = nullptr,
+                               MemorySSAUpdater *MSSAU = nullptr,
                                MemoryDependenceResults *MemDep = nullptr);
 
 /// Replace all uses of an instruction (specified by BI) with a value, then
@@ -77,27 +110,37 @@ void ReplaceInstWithInst(Instruction *From, Instruction *To);
 /// during critical edge splitting.
 struct CriticalEdgeSplittingOptions {
   DominatorTree *DT;
+  PostDominatorTree *PDT;
   LoopInfo *LI;
+  MemorySSAUpdater *MSSAU;
   bool MergeIdenticalEdges = false;
-  bool DontDeleteUselessPHIs = false;
+  bool KeepOneInputPHIs = false;
   bool PreserveLCSSA = false;
+  bool IgnoreUnreachableDests = false;
 
   CriticalEdgeSplittingOptions(DominatorTree *DT = nullptr,
-                               LoopInfo *LI = nullptr)
-      : DT(DT), LI(LI) {}
+                               LoopInfo *LI = nullptr,
+                               MemorySSAUpdater *MSSAU = nullptr,
+                               PostDominatorTree *PDT = nullptr)
+      : DT(DT), PDT(PDT), LI(LI), MSSAU(MSSAU) {}
 
   CriticalEdgeSplittingOptions &setMergeIdenticalEdges() {
     MergeIdenticalEdges = true;
     return *this;
   }
 
-  CriticalEdgeSplittingOptions &setDontDeleteUselessPHIs() {
-    DontDeleteUselessPHIs = true;
+  CriticalEdgeSplittingOptions &setKeepOneInputPHIs() {
+    KeepOneInputPHIs = true;
     return *this;
   }
 
   CriticalEdgeSplittingOptions &setPreserveLCSSA() {
     PreserveLCSSA = true;
+    return *this;
+  }
+
+  CriticalEdgeSplittingOptions &setIgnoreUnreachableDests() {
+    IgnoreUnreachableDests = true;
     return *this;
   }
 };
@@ -118,8 +161,7 @@ struct CriticalEdgeSplittingOptions {
 /// IndirectBrInst.  Splitting these edges will almost always create an invalid
 /// program because the address of the new block won't be the one that is jumped
 /// to.
-///
-BasicBlock *SplitCriticalEdge(TerminatorInst *TI, unsigned SuccNum,
+BasicBlock *SplitCriticalEdge(Instruction *TI, unsigned SuccNum,
                               const CriticalEdgeSplittingOptions &Options =
                                   CriticalEdgeSplittingOptions());
 
@@ -139,7 +181,7 @@ inline bool SplitCriticalEdge(BasicBlock *Succ, pred_iterator PI,
                               const CriticalEdgeSplittingOptions &Options =
                                   CriticalEdgeSplittingOptions()) {
   bool MadeChange = false;
-  TerminatorInst *TI = (*PI)->getTerminator();
+  Instruction *TI = (*PI)->getTerminator();
   for (unsigned i = 0, e = TI->getNumSuccessors(); i != e; ++i)
     if (TI->getSuccessor(i) == Succ)
       MadeChange |= !!SplitCriticalEdge(TI, i, Options);
@@ -153,7 +195,7 @@ inline BasicBlock *
 SplitCriticalEdge(BasicBlock *Src, BasicBlock *Dst,
                   const CriticalEdgeSplittingOptions &Options =
                       CriticalEdgeSplittingOptions()) {
-  TerminatorInst *TI = Src->getTerminator();
+  Instruction *TI = Src->getTerminator();
   unsigned i = 0;
   while (true) {
     assert(i != TI->getNumSuccessors() && "Edge doesn't exist!");
@@ -171,14 +213,16 @@ unsigned SplitAllCriticalEdges(Function &F,
 
 /// Split the edge connecting specified block.
 BasicBlock *SplitEdge(BasicBlock *From, BasicBlock *To,
-                      DominatorTree *DT = nullptr, LoopInfo *LI = nullptr);
+                      DominatorTree *DT = nullptr, LoopInfo *LI = nullptr,
+                      MemorySSAUpdater *MSSAU = nullptr);
 
 /// Split the specified block at the specified instruction - everything before
 /// SplitPt stays in Old and everything starting with SplitPt moves to a new
 /// block. The two blocks are joined by an unconditional branch and the loop
 /// info is updated.
 BasicBlock *SplitBlock(BasicBlock *Old, Instruction *SplitPt,
-                       DominatorTree *DT = nullptr, LoopInfo *LI = nullptr);
+                       DominatorTree *DT = nullptr, LoopInfo *LI = nullptr,
+                       MemorySSAUpdater *MSSAU = nullptr);
 
 /// This method introduces at least one new basic block into the function and
 /// moves some of the predecessors of BB to be predecessors of the new block.
@@ -194,11 +238,11 @@ BasicBlock *SplitBlock(BasicBlock *Old, Instruction *SplitPt,
 /// no other analyses. In particular, it does not preserve LoopSimplify
 /// (because it's complicated to handle the case where one of the edges being
 /// split is an exit of a loop with other exits).
-///
 BasicBlock *SplitBlockPredecessors(BasicBlock *BB, ArrayRef<BasicBlock *> Preds,
                                    const char *Suffix,
                                    DominatorTree *DT = nullptr,
                                    LoopInfo *LI = nullptr,
+                                   MemorySSAUpdater *MSSAU = nullptr,
                                    bool PreserveLCSSA = false);
 
 /// This method transforms the landing pad, OrigBB, by introducing two new basic
@@ -212,21 +256,19 @@ BasicBlock *SplitBlockPredecessors(BasicBlock *BB, ArrayRef<BasicBlock *> Preds,
 /// no other analyses. In particular, it does not preserve LoopSimplify
 /// (because it's complicated to handle the case where one of the edges being
 /// split is an exit of a loop with other exits).
-///
-void SplitLandingPadPredecessors(BasicBlock *OrigBB,
-                                 ArrayRef<BasicBlock *> Preds,
-                                 const char *Suffix, const char *Suffix2,
-                                 SmallVectorImpl<BasicBlock *> &NewBBs,
-                                 DominatorTree *DT = nullptr,
-                                 LoopInfo *LI = nullptr,
-                                 bool PreserveLCSSA = false);
+void SplitLandingPadPredecessors(
+    BasicBlock *OrigBB, ArrayRef<BasicBlock *> Preds, const char *Suffix,
+    const char *Suffix2, SmallVectorImpl<BasicBlock *> &NewBBs,
+    DominatorTree *DT = nullptr, LoopInfo *LI = nullptr,
+    MemorySSAUpdater *MSSAU = nullptr, bool PreserveLCSSA = false);
 
 /// This method duplicates the specified return instruction into a predecessor
 /// which ends in an unconditional branch. If the return instruction returns a
 /// value defined by a PHI, propagate the right value into the return. It
 /// returns the new return instruction in the predecessor.
 ReturnInst *FoldReturnIntoUncondBranch(ReturnInst *RI, BasicBlock *BB,
-                                       BasicBlock *Pred);
+                                       BasicBlock *Pred,
+                                       DomTreeUpdater *DTU = nullptr);
 
 /// Split the containing block at the specified instruction - everything before
 /// SplitBefore stays in the old basic block, and the rest of the instructions
@@ -243,16 +285,18 @@ ReturnInst *FoldReturnIntoUncondBranch(ReturnInst *RI, BasicBlock *BB,
 ///   SplitBefore
 ///   Tail
 ///
-/// If Unreachable is true, then ThenBlock ends with
+/// If \p ThenBlock is not specified, a new block will be created for it.
+/// If \p Unreachable is true, the newly created block will end with
 /// UnreachableInst, otherwise it branches to Tail.
 /// Returns the NewBasicBlock's terminator.
 ///
 /// Updates DT and LI if given.
-TerminatorInst *SplitBlockAndInsertIfThen(Value *Cond, Instruction *SplitBefore,
-                                          bool Unreachable,
-                                          MDNode *BranchWeights = nullptr,
-                                          DominatorTree *DT = nullptr,
-                                          LoopInfo *LI = nullptr);
+Instruction *SplitBlockAndInsertIfThen(Value *Cond, Instruction *SplitBefore,
+                                       bool Unreachable,
+                                       MDNode *BranchWeights = nullptr,
+                                       DominatorTree *DT = nullptr,
+                                       LoopInfo *LI = nullptr,
+                                       BasicBlock *ThenBlock = nullptr);
 
 /// SplitBlockAndInsertIfThenElse is similar to SplitBlockAndInsertIfThen,
 /// but also creates the ElseBlock.
@@ -269,8 +313,8 @@ TerminatorInst *SplitBlockAndInsertIfThen(Value *Cond, Instruction *SplitBefore,
 ///   SplitBefore
 ///   Tail
 void SplitBlockAndInsertIfThenElse(Value *Cond, Instruction *SplitBefore,
-                                   TerminatorInst **ThenTerm,
-                                   TerminatorInst **ElseTerm,
+                                   Instruction **ThenTerm,
+                                   Instruction **ElseTerm,
                                    MDNode *BranchWeights = nullptr);
 
 /// Check whether BB is the merge point of a if-region.
@@ -283,6 +327,29 @@ void SplitBlockAndInsertIfThenElse(Value *Cond, Instruction *SplitBefore,
 /// instructions in them.
 Value *GetIfCondition(BasicBlock *BB, BasicBlock *&IfTrue,
                       BasicBlock *&IfFalse);
+
+// Split critical edges where the source of the edge is an indirectbr
+// instruction. This isn't always possible, but we can handle some easy cases.
+// This is useful because MI is unable to split such critical edges,
+// which means it will not be able to sink instructions along those edges.
+// This is especially painful for indirect branches with many successors, where
+// we end up having to prepare all outgoing values in the origin block.
+//
+// Our normal algorithm for splitting critical edges requires us to update
+// the outgoing edges of the edge origin block, but for an indirectbr this
+// is hard, since it would require finding and updating the block addresses
+// the indirect branch uses. But if a block only has a single indirectbr
+// predecessor, with the others being regular branches, we can do it in a
+// different way.
+// Say we have A -> D, B -> D, I -> D where only I -> D is an indirectbr.
+// We can split D into D0 and D1, where D0 contains only the PHIs from D,
+// and D1 is the D block body. We can then duplicate D0 as D0A and D0B, and
+// create the following structure:
+// A -> D0A, B -> D0A, I -> D0B, D0A -> D1, D0B -> D1
+// If BPI and BFI aren't non-null, BPI/BFI will be updated accordingly.
+bool SplitIndirectBrCriticalEdges(Function &F,
+                                  BranchProbabilityInfo *BPI = nullptr,
+                                  BlockFrequencyInfo *BFI = nullptr);
 
 } // end namespace llvm
 

@@ -5,7 +5,10 @@
 
 import collections
 import re
-import urllib2
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
 
 MATCHERS_FILE = '../../include/clang/ASTMatchers/ASTMatchers.h'
 
@@ -38,11 +41,11 @@ def esc(text):
   text = re.sub(r'>', '&gt;', text)
   def link_if_exists(m):
     name = m.group(1)
-    url = 'http://clang.llvm.org/doxygen/classclang_1_1%s.html' % name
+    url = 'https://clang.llvm.org/doxygen/classclang_1_1%s.html' % name
     if url not in doxygen_probes:
       try:
-        print 'Probing %s...' % url
-        urllib2.urlopen(url)
+        print('Probing %s...' % url)
+        urlopen(url)
         doxygen_probes[url] = True
       except:
         doxygen_probes[url] = False
@@ -95,7 +98,7 @@ def strip_doxygen(comment):
 def unify_arguments(args):
   """Gets rid of anything the user doesn't care about in the argument list."""
   args = re.sub(r'internal::', r'', args)
-  args = re.sub(r'const\s+(.*)&', r'\1 ', args)
+  args = re.sub(r'extern const\s+(.*)&', r'\1 ', args)
   args = re.sub(r'&', r' ', args)
   args = re.sub(r'(^|\s)M\d?(\s)', r'\1Matcher<*>\2', args)
   return args
@@ -150,11 +153,11 @@ def act_on_decl(declaration, comment, allowed_types):
                   comment, is_dyncast=True)
       return
 
-    # Parse the various matcher definition macros.
-    m = re.match(""".*AST_TYPE_MATCHER\(
-                       \s*([^\s,]+\s*),
-                       \s*([^\s,]+\s*)
-                     \)\s*;\s*$""", declaration, flags=re.X)
+    # Special case of type matchers:
+    #   AstTypeMatcher<ArgumentType> name
+    m = re.match(r""".*AstTypeMatcher\s*<
+                       \s*([^\s>]+)\s*>
+                       \s*([^\s;]+)\s*;\s*$""", declaration, flags=re.X)
     if m:
       inner, name = m.groups()
       add_matcher('Type', name, 'Matcher<%s>...' % inner,
@@ -165,7 +168,8 @@ def act_on_decl(declaration, comment, allowed_types):
       #             comment, is_dyncast=True)
       return
 
-    m = re.match(""".*AST_TYPE(LOC)?_TRAVERSE_MATCHER\(
+    # Parse the various matcher definition macros.
+    m = re.match(""".*AST_TYPE(LOC)?_TRAVERSE_MATCHER(?:_DECL)?\(
                        \s*([^\s,]+\s*),
                        \s*(?:[^\s,]+\s*),
                        \s*AST_POLYMORPHIC_SUPPORTED_TYPES\(([^)]*)\)
@@ -180,9 +184,9 @@ def act_on_decl(declaration, comment, allowed_types):
         raise Exception('Inconsistent documentation for: %s' % name)
       for result_type in result_types:
         add_matcher(result_type, name, 'Matcher<Type>', comment)
-        if loc:
-          add_matcher('%sLoc' % result_type, '%sLoc' % name, 'Matcher<TypeLoc>',
-                      comment)
+        # if loc:
+        #   add_matcher('%sLoc' % result_type, '%sLoc' % name, 'Matcher<TypeLoc>',
+        #               comment)
       return
 
     m = re.match(r"""^\s*AST_POLYMORPHIC_MATCHER(_P)?(.?)(?:_OVERLOAD)?\(
@@ -236,7 +240,7 @@ def act_on_decl(declaration, comment, allowed_types):
                        (?:,\s*([^\s,]+)\s*
                           ,\s*([^\s,]+)\s*)?
                        (?:,\s*\d+\s*)?
-                      \)\s*{\s*$""", declaration, flags=re.X)
+                      \)\s*{""", declaration, flags=re.X)
     if m:
       p, n, result, name = m.groups()[0:4]
       args = m.groups()[4:]
@@ -256,8 +260,8 @@ def act_on_decl(declaration, comment, allowed_types):
 
     # Parse ArgumentAdapting matchers.
     m = re.match(
-        r"""^.*ArgumentAdaptingMatcherFunc<.*>\s*(?:LLVM_ATTRIBUTE_UNUSED\s*)
-              ([a-zA-Z]*)\s*=\s*{};$""",
+        r"""^.*ArgumentAdaptingMatcherFunc<.*>\s*
+              ([a-zA-Z]*);$""",
         declaration, flags=re.X)
     if m:
       name = m.groups()[0]
@@ -267,7 +271,7 @@ def act_on_decl(declaration, comment, allowed_types):
     # Parse Variadic functions.
     m = re.match(
         r"""^.*internal::VariadicFunction\s*<\s*([^,]+),\s*([^,]+),\s*[^>]+>\s*
-              ([a-zA-Z]*)\s*=\s*{.*};$""",
+              ([a-zA-Z]*);$""",
         declaration, flags=re.X)
     if m:
       result, arg, name = m.groups()[:3]
@@ -276,15 +280,15 @@ def act_on_decl(declaration, comment, allowed_types):
 
     # Parse Variadic operator matchers.
     m = re.match(
-        r"""^.*VariadicOperatorMatcherFunc\s*<\s*([^,]+),\s*([^\s>]+)\s*>\s*
-              ([a-zA-Z]*)\s*=\s*{.*};$""",
+        r"""^.*VariadicOperatorMatcherFunc\s*<\s*([^,]+),\s*([^\s]+)\s*>\s*
+              ([a-zA-Z]*);$""",
         declaration, flags=re.X)
     if m:
       min_args, max_args, name = m.groups()[:3]
       if max_args == '1':
         add_matcher('*', name, 'Matcher<*>', comment)
         return
-      elif max_args == 'UINT_MAX':
+      elif max_args == 'std::numeric_limits<unsigned>::max()':
         add_matcher('*', name, 'Matcher<*>, ..., Matcher<*>', comment)
         return
 
@@ -306,14 +310,14 @@ def act_on_decl(declaration, comment, allowed_types):
       if not result_types:
         if not comment:
           # Only overloads don't have their own doxygen comments; ignore those.
-          print 'Ignoring "%s"' % name
+          print('Ignoring "%s"' % name)
         else:
-          print 'Cannot determine result type for "%s"' % name
+          print('Cannot determine result type for "%s"' % name)
       else:
         for result_type in result_types:
           add_matcher(result_type, name, args, comment)
     else:
-      print '*** Unparsable: "' + declaration + '" ***'
+      print('*** Unparsable: "' + declaration + '" ***')
 
 def sort_table(matcher_type, matcher_map):
   """Returns the sorted html table for the given row map."""
@@ -353,7 +357,7 @@ for line in open(MATCHERS_FILE).read().splitlines():
         allowed_types += [m.group(1)]
     continue
   if line.strip() and line.lstrip()[0] == '/':
-    comment += re.sub(r'/+\s?', '', line) + '\n'
+    comment += re.sub(r'^/+\s?', '', line) + '\n'
   else:
     declaration += ' ' + line
     if ((not line.strip()) or 

@@ -1,9 +1,8 @@
 //===--- RawCommentList.cpp - Processing raw comments -----------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -68,8 +67,8 @@ bool mergedCommentIsTrailingComment(StringRef Comment) {
 /// column.
 bool commentsStartOnSameColumn(const SourceManager &SM, const RawComment &R1,
                                const RawComment &R2) {
-  SourceLocation L1 = R1.getLocStart();
-  SourceLocation L2 = R2.getLocStart();
+  SourceLocation L1 = R1.getBeginLoc();
+  SourceLocation L2 = R2.getBeginLoc();
   bool Invalid = false;
   unsigned C1 = SM.getPresumedColumnNumber(L1, &Invalid);
   if (!Invalid) {
@@ -80,7 +79,7 @@ bool commentsStartOnSameColumn(const SourceManager &SM, const RawComment &R1,
 }
 } // unnamed namespace
 
-/// \brief Determines whether there is only whitespace in `Buffer` between `P`
+/// Determines whether there is only whitespace in `Buffer` between `P`
 /// and the previous line.
 /// \param Buffer The buffer to search in.
 /// \param P The offset from the beginning of `Buffer` to start from.
@@ -107,10 +106,10 @@ static bool isOrdinaryKind(RawComment::CommentKind K) {
 }
 
 RawComment::RawComment(const SourceManager &SourceMgr, SourceRange SR,
-                       bool Merged, bool ParseAllComments) :
+                       const CommentOptions &CommentOpts, bool Merged) :
     Range(SR), RawTextValid(false), BriefTextValid(false),
-    IsAttached(false), IsTrailingComment(false), IsAlmostTrailingComment(false),
-    ParseAllComments(ParseAllComments) {
+    IsAttached(false), IsTrailingComment(false),
+    IsAlmostTrailingComment(false) {
   // Extract raw comment text, if possible.
   if (SR.getBegin() == SR.getEnd() || getRawText(SourceMgr).empty()) {
     Kind = RCK_Invalid;
@@ -118,10 +117,11 @@ RawComment::RawComment(const SourceManager &SourceMgr, SourceRange SR,
   }
 
   // Guess comment kind.
-  std::pair<CommentKind, bool> K = getCommentKind(RawText, ParseAllComments);
+  std::pair<CommentKind, bool> K =
+      getCommentKind(RawText, CommentOpts.ParseAllComments);
 
   // Guess whether an ordinary comment is trailing.
-  if (ParseAllComments && isOrdinaryKind(K.first)) {
+  if (CommentOpts.ParseAllComments && isOrdinaryKind(K.first)) {
     FileID BeginFileID;
     unsigned BeginOffset;
     std::tie(BeginFileID, BeginOffset) =
@@ -270,21 +270,22 @@ static bool onlyWhitespaceBetween(SourceManager &SM,
 }
 
 void RawCommentList::addComment(const RawComment &RC,
+                                const CommentOptions &CommentOpts,
                                 llvm::BumpPtrAllocator &Allocator) {
   if (RC.isInvalid())
     return;
 
   // Check if the comments are not in source order.
   while (!Comments.empty() &&
-         !SourceMgr.isBeforeInTranslationUnit(Comments.back()->getLocStart(),
-                                              RC.getLocStart())) {
+         !SourceMgr.isBeforeInTranslationUnit(Comments.back()->getBeginLoc(),
+                                              RC.getBeginLoc())) {
     // If they are, just pop a few last comments that don't fit.
     // This happens if an \#include directive contains comments.
     Comments.pop_back();
   }
 
   // Ordinary comments are not interesting for us.
-  if (RC.isOrdinary())
+  if (RC.isOrdinary() && !CommentOpts.ParseAllComments)
     return;
 
   // If this is the first Doxygen comment, save it (because there isn't
@@ -314,11 +315,10 @@ void RawCommentList::addComment(const RawComment &RC,
        (C1.isTrailingComment() && !C2.isTrailingComment() &&
         isOrdinaryKind(C2.getKind()) &&
         commentsStartOnSameColumn(SourceMgr, C1, C2))) &&
-      onlyWhitespaceBetween(SourceMgr, C1.getLocEnd(), C2.getLocStart(),
+      onlyWhitespaceBetween(SourceMgr, C1.getEndLoc(), C2.getBeginLoc(),
                             /*MaxNewlinesAllowed=*/1)) {
-    SourceRange MergedRange(C1.getLocStart(), C2.getLocEnd());
-    *Comments.back() = RawComment(SourceMgr, MergedRange, true,
-                                  RC.isParseAllComments());
+    SourceRange MergedRange(C1.getBeginLoc(), C2.getEndLoc());
+    *Comments.back() = RawComment(SourceMgr, MergedRange, CommentOpts, true);
   } else {
     Comments.push_back(new (Allocator) RawComment(RC));
   }
@@ -333,4 +333,95 @@ void RawCommentList::addDeserializedComments(ArrayRef<RawComment *> Deserialized
              std::back_inserter(MergedComments),
              BeforeThanCompare<RawComment>(SourceMgr));
   std::swap(Comments, MergedComments);
+}
+
+std::string RawComment::getFormattedText(const SourceManager &SourceMgr,
+                                         DiagnosticsEngine &Diags) const {
+  llvm::StringRef CommentText = getRawText(SourceMgr);
+  if (CommentText.empty())
+    return "";
+
+  llvm::BumpPtrAllocator Allocator;
+  // We do not parse any commands, so CommentOptions are ignored by
+  // comments::Lexer. Therefore, we just use default-constructed options.
+  CommentOptions DefOpts;
+  comments::CommandTraits EmptyTraits(Allocator, DefOpts);
+  comments::Lexer L(Allocator, Diags, EmptyTraits, getSourceRange().getBegin(),
+                    CommentText.begin(), CommentText.end(),
+                    /*ParseCommands=*/false);
+
+  std::string Result;
+  // A column number of the first non-whitespace token in the comment text.
+  // We skip whitespace up to this column, but keep the whitespace after this
+  // column. IndentColumn is calculated when lexing the first line and reused
+  // for the rest of lines.
+  unsigned IndentColumn = 0;
+
+  // Processes one line of the comment and adds it to the result.
+  // Handles skipping the indent at the start of the line.
+  // Returns false when eof is reached and true otherwise.
+  auto LexLine = [&](bool IsFirstLine) -> bool {
+    comments::Token Tok;
+    // Lex the first token on the line. We handle it separately, because we to
+    // fix up its indentation.
+    L.lex(Tok);
+    if (Tok.is(comments::tok::eof))
+      return false;
+    if (Tok.is(comments::tok::newline)) {
+      Result += "\n";
+      return true;
+    }
+    llvm::StringRef TokText = L.getSpelling(Tok, SourceMgr);
+    bool LocInvalid = false;
+    unsigned TokColumn =
+        SourceMgr.getSpellingColumnNumber(Tok.getLocation(), &LocInvalid);
+    assert(!LocInvalid && "getFormattedText for invalid location");
+
+    // Amount of leading whitespace in TokText.
+    size_t WhitespaceLen = TokText.find_first_not_of(" \t");
+    if (WhitespaceLen == StringRef::npos)
+      WhitespaceLen = TokText.size();
+    // Remember the amount of whitespace we skipped in the first line to remove
+    // indent up to that column in the following lines.
+    if (IsFirstLine)
+      IndentColumn = TokColumn + WhitespaceLen;
+
+    // Amount of leading whitespace we actually want to skip.
+    // For the first line we skip all the whitespace.
+    // For the rest of the lines, we skip whitespace up to IndentColumn.
+    unsigned SkipLen =
+        IsFirstLine
+            ? WhitespaceLen
+            : std::min<size_t>(
+                  WhitespaceLen,
+                  std::max<int>(static_cast<int>(IndentColumn) - TokColumn, 0));
+    llvm::StringRef Trimmed = TokText.drop_front(SkipLen);
+    Result += Trimmed;
+    // Lex all tokens in the rest of the line.
+    for (L.lex(Tok); Tok.isNot(comments::tok::eof); L.lex(Tok)) {
+      if (Tok.is(comments::tok::newline)) {
+        Result += "\n";
+        return true;
+      }
+      Result += L.getSpelling(Tok, SourceMgr);
+    }
+    // We've reached the end of file token.
+    return false;
+  };
+
+  auto DropTrailingNewLines = [](std::string &Str) {
+    while (Str.back() == '\n')
+      Str.pop_back();
+  };
+
+  // Process first line separately to remember indent for the following lines.
+  if (!LexLine(/*IsFirstLine=*/true)) {
+    DropTrailingNewLines(Result);
+    return Result;
+  }
+  // Process the rest of the lines.
+  while (LexLine(/*IsFirstLine=*/false))
+    ;
+  DropTrailingNewLines(Result);
+  return Result;
 }

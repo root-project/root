@@ -1,9 +1,8 @@
 //===- MultiplexConsumer.cpp - AST Consumer for PCH Generation --*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -16,34 +15,10 @@
 #include "clang/Frontend/MultiplexConsumer.h"
 #include "clang/AST/ASTMutationListener.h"
 #include "clang/AST/DeclGroup.h"
-#include "clang/Serialization/ASTDeserializationListener.h"
 
 using namespace clang;
 
 namespace clang {
-
-// This ASTDeserializationListener forwards its notifications to a set of
-// child listeners.
-class MultiplexASTDeserializationListener
-    : public ASTDeserializationListener {
-public:
-  // Does NOT take ownership of the elements in L.
-  MultiplexASTDeserializationListener(
-      const std::vector<ASTDeserializationListener*>& L);
-  void ReaderInitialized(ASTReader *Reader) override;
-  void IdentifierRead(serialization::IdentID ID,
-                      IdentifierInfo *II) override;
-  void MacroRead(serialization::MacroID ID, MacroInfo *MI) override;
-  void TypeRead(serialization::TypeIdx Idx, QualType T) override;
-  void DeclRead(serialization::DeclID ID, const Decl *D) override;
-  void SelectorRead(serialization::SelectorID iD, Selector Sel) override;
-  void MacroDefinitionRead(serialization::PreprocessedEntityID,
-                           MacroDefinitionRecord *MD) override;
-  void ModuleRead(serialization::SubmoduleID ID, Module *Mod) override;
-
-private:
-  std::vector<ASTDeserializationListener *> Listeners;
-};
 
 MultiplexASTDeserializationListener::MultiplexASTDeserializationListener(
       const std::vector<ASTDeserializationListener*>& L)
@@ -116,20 +91,23 @@ public:
   void ResolvedExceptionSpec(const FunctionDecl *FD) override;
   void DeducedReturnType(const FunctionDecl *FD, QualType ReturnType) override;
   void ResolvedOperatorDelete(const CXXDestructorDecl *DD,
-                              const FunctionDecl *Delete) override;
+                              const FunctionDecl *Delete,
+                              Expr *ThisArg) override;
   void CompletedImplicitDefinition(const FunctionDecl *D) override;
-  void StaticDataMemberInstantiated(const VarDecl *D) override;
+  void InstantiationRequested(const ValueDecl *D) override;
+  void VariableDefinitionInstantiated(const VarDecl *D) override;
+  void FunctionDefinitionInstantiated(const FunctionDecl *D) override;
   void DefaultArgumentInstantiated(const ParmVarDecl *D) override;
   void DefaultMemberInitializerInstantiated(const FieldDecl *D) override;
   void AddedObjCCategoryToInterface(const ObjCCategoryDecl *CatD,
                                     const ObjCInterfaceDecl *IFD) override;
-  void FunctionDefinitionInstantiated(const FunctionDecl *D) override;
   void DeclarationMarkedUsed(const Decl *D) override;
   void DeclarationMarkedOpenMPThreadPrivate(const Decl *D) override;
+  void DeclarationMarkedOpenMPAllocate(const Decl *D, const Attr *A) override;
   void DeclarationMarkedOpenMPDeclareTarget(const Decl *D,
                                             const Attr *Attr) override;
   void RedefinedHiddenDefinition(const NamedDecl *D, Module *M) override;
-  void AddedAttributeToRecord(const Attr *Attr, 
+  void AddedAttributeToRecord(const Attr *Attr,
                               const RecordDecl *Record) override;
 
 private:
@@ -183,19 +161,28 @@ void MultiplexASTMutationListener::DeducedReturnType(const FunctionDecl *FD,
     Listeners[i]->DeducedReturnType(FD, ReturnType);
 }
 void MultiplexASTMutationListener::ResolvedOperatorDelete(
-    const CXXDestructorDecl *DD, const FunctionDecl *Delete) {
+    const CXXDestructorDecl *DD, const FunctionDecl *Delete, Expr *ThisArg) {
   for (auto *L : Listeners)
-    L->ResolvedOperatorDelete(DD, Delete);
+    L->ResolvedOperatorDelete(DD, Delete, ThisArg);
 }
 void MultiplexASTMutationListener::CompletedImplicitDefinition(
                                                         const FunctionDecl *D) {
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
     Listeners[i]->CompletedImplicitDefinition(D);
 }
-void MultiplexASTMutationListener::StaticDataMemberInstantiated(
-                                                             const VarDecl *D) {
+void MultiplexASTMutationListener::InstantiationRequested(const ValueDecl *D) {
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
-    Listeners[i]->StaticDataMemberInstantiated(D);
+    Listeners[i]->InstantiationRequested(D);
+}
+void MultiplexASTMutationListener::VariableDefinitionInstantiated(
+    const VarDecl *D) {
+  for (size_t i = 0, e = Listeners.size(); i != e; ++i)
+    Listeners[i]->VariableDefinitionInstantiated(D);
+}
+void MultiplexASTMutationListener::FunctionDefinitionInstantiated(
+    const FunctionDecl *D) {
+  for (auto &Listener : Listeners)
+    Listener->FunctionDefinitionInstantiated(D);
 }
 void MultiplexASTMutationListener::DefaultArgumentInstantiated(
                                                          const ParmVarDecl *D) {
@@ -213,11 +200,6 @@ void MultiplexASTMutationListener::AddedObjCCategoryToInterface(
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
     Listeners[i]->AddedObjCCategoryToInterface(CatD, IFD);
 }
-void MultiplexASTMutationListener::FunctionDefinitionInstantiated(
-    const FunctionDecl *D) {
-  for (auto &Listener : Listeners)
-    Listener->FunctionDefinitionInstantiated(D);
-}
 void MultiplexASTMutationListener::DeclarationMarkedUsed(const Decl *D) {
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
     Listeners[i]->DeclarationMarkedUsed(D);
@@ -226,6 +208,11 @@ void MultiplexASTMutationListener::DeclarationMarkedOpenMPThreadPrivate(
     const Decl *D) {
   for (size_t i = 0, e = Listeners.size(); i != e; ++i)
     Listeners[i]->DeclarationMarkedOpenMPThreadPrivate(D);
+}
+void MultiplexASTMutationListener::DeclarationMarkedOpenMPAllocate(
+    const Decl *D, const Attr *A) {
+  for (ASTMutationListener *L : Listeners)
+    L->DeclarationMarkedOpenMPAllocate(D, A);
 }
 void MultiplexASTMutationListener::DeclarationMarkedOpenMPDeclareTarget(
     const Decl *D, const Attr *Attr) {
@@ -237,9 +224,9 @@ void MultiplexASTMutationListener::RedefinedHiddenDefinition(const NamedDecl *D,
   for (auto *L : Listeners)
     L->RedefinedHiddenDefinition(D, M);
 }
-  
+
 void MultiplexASTMutationListener::AddedAttributeToRecord(
-                                                    const Attr *Attr, 
+                                                    const Attr *Attr,
                                                     const RecordDecl *Record) {
   for (auto *L : Listeners)
     L->AddedAttributeToRecord(Attr, Record);

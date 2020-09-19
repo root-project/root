@@ -1,9 +1,8 @@
 //===--- CommentSema.h - Doxygen comment semantic analysis ------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -55,7 +54,7 @@ class Sema {
   /// Contains a valid value if \c DeclInfo->IsFilled is true.
   llvm::StringMap<TParamCommandComment *> TemplateParameterDocs;
 
-  /// AST node for the \\brief command and its aliases.
+  /// AST node for the \command and its aliases.
   const BlockCommandComment *BriefCommand;
 
   /// AST node for the \\headerfile command.
@@ -187,15 +186,15 @@ public:
   void checkReturnsCommand(const BlockCommandComment *Command);
 
   /// Emit diagnostics about duplicate block commands that should be
-  /// used only once per comment, e.g., \\brief and \\returns.
+  /// used only once per comment, e.g., \and \\returns.
   void checkBlockCommandDuplicate(const BlockCommandComment *Command);
 
   void checkDeprecatedCommand(const BlockCommandComment *Comment);
-  
+
   void checkFunctionDeclVerbatimLine(const BlockCommandComment *Comment);
-  
+
   void checkContainerDeclVerbatimLine(const BlockCommandComment *Comment);
-  
+
   void checkContainerDecl(const BlockCommandComment *Comment);
 
   /// Resolve parameter names to parameter indexes in function declaration.

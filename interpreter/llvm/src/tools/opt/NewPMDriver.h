@@ -1,9 +1,8 @@
 //===- NewPMDriver.h - Function to drive opt with the new PM ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 /// \file
@@ -26,7 +25,7 @@ class StringRef;
 class LLVMContext;
 class Module;
 class TargetMachine;
-class tool_output_file;
+class ToolOutputFile;
 
 namespace opt_tool {
 enum OutputKind {
@@ -40,9 +39,16 @@ enum VerifierKind {
   VK_VerifyInAndOut,
   VK_VerifyEachPass
 };
+enum PGOKind {
+  NoPGO,
+  InstrGen,
+  InstrUse,
+  SampleUse
+};
+enum CSPGOKind { NoCSPGO, CSInstrGen, CSInstrUse };
 }
 
-/// \brief Driver function to run the new pass manager over a module.
+/// Driver function to run the new pass manager over a module.
 ///
 /// This function only exists factored away from opt.cpp in order to prevent
 /// inclusion of the new pass manager headers and the old headers into the same
@@ -52,12 +58,13 @@ enum VerifierKind {
 /// ThinLTOLinkOut is only used when OK is OK_OutputThinLTOBitcode, and can be
 /// nullptr.
 bool runPassPipeline(StringRef Arg0, Module &M, TargetMachine *TM,
-                     tool_output_file *Out, tool_output_file *ThinLinkOut,
-                     StringRef PassPipeline, opt_tool::OutputKind OK,
-                     opt_tool::VerifierKind VK,
+                     ToolOutputFile *Out, ToolOutputFile *ThinLinkOut,
+                     ToolOutputFile *OptRemarkFile, StringRef PassPipeline,
+                     opt_tool::OutputKind OK, opt_tool::VerifierKind VK,
                      bool ShouldPreserveAssemblyUseListOrder,
                      bool ShouldPreserveBitcodeUseListOrder,
-                     bool EmitSummaryIndex, bool EmitModuleHash);
-}
+                     bool EmitSummaryIndex, bool EmitModuleHash,
+                     bool EnableDebugify);
+} // namespace llvm
 
 #endif

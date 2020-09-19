@@ -1,9 +1,8 @@
 //===- ELFObjectFile.cpp - ELF object file implementation -----------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,6 +13,7 @@
 #include "llvm/Object/ELFObjectFile.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/BinaryFormat/ELF.h"
+#include "llvm/MC/MCInstrAnalysis.h"
 #include "llvm/MC/SubtargetFeature.h"
 #include "llvm/Object/ELF.h"
 #include "llvm/Object/ELFTypes.h"
@@ -23,6 +23,7 @@
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
+#include "llvm/Support/TargetRegistry.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -34,10 +35,29 @@
 using namespace llvm;
 using namespace object;
 
+const EnumEntry<unsigned> llvm::object::ElfSymbolTypes[NumElfSymbolTypes] = {
+    {"None", "NOTYPE", ELF::STT_NOTYPE},
+    {"Object", "OBJECT", ELF::STT_OBJECT},
+    {"Function", "FUNC", ELF::STT_FUNC},
+    {"Section", "SECTION", ELF::STT_SECTION},
+    {"File", "FILE", ELF::STT_FILE},
+    {"Common", "COMMON", ELF::STT_COMMON},
+    {"TLS", "TLS", ELF::STT_TLS},
+    {"GNU_IFunc", "IFUNC", ELF::STT_GNU_IFUNC}};
+
 ELFObjectFileBase::ELFObjectFileBase(unsigned int Type, MemoryBufferRef Source)
     : ObjectFile(Type, Source) {}
 
-ErrorOr<std::unique_ptr<ObjectFile>>
+template <class ELFT>
+static Expected<std::unique_ptr<ELFObjectFile<ELFT>>>
+createPtr(MemoryBufferRef Object) {
+  auto Ret = ELFObjectFile<ELFT>::create(Object);
+  if (Error E = Ret.takeError())
+    return std::move(E);
+  return make_unique<ELFObjectFile<ELFT>>(std::move(*Ret));
+}
+
+Expected<std::unique_ptr<ObjectFile>>
 ObjectFile::createELFObjectFile(MemoryBufferRef Obj) {
   std::pair<unsigned char, unsigned char> Ident =
       getElfArchType(Obj.getBuffer());
@@ -45,37 +65,29 @@ ObjectFile::createELFObjectFile(MemoryBufferRef Obj) {
       1ULL << countTrailingZeros(uintptr_t(Obj.getBufferStart()));
 
   if (MaxAlignment < 2)
-    return object_error::parse_failed;
+    return createError("Insufficient alignment");
 
-  std::error_code EC;
-  std::unique_ptr<ObjectFile> R;
   if (Ident.first == ELF::ELFCLASS32) {
     if (Ident.second == ELF::ELFDATA2LSB)
-      R.reset(new ELFObjectFile<ELFType<support::little, false>>(Obj, EC));
+      return createPtr<ELF32LE>(Obj);
     else if (Ident.second == ELF::ELFDATA2MSB)
-      R.reset(new ELFObjectFile<ELFType<support::big, false>>(Obj, EC));
+      return createPtr<ELF32BE>(Obj);
     else
-      return object_error::parse_failed;
+      return createError("Invalid ELF data");
   } else if (Ident.first == ELF::ELFCLASS64) {
     if (Ident.second == ELF::ELFDATA2LSB)
-      R.reset(new ELFObjectFile<ELFType<support::little, true>>(Obj, EC));
+      return createPtr<ELF64LE>(Obj);
     else if (Ident.second == ELF::ELFDATA2MSB)
-      R.reset(new ELFObjectFile<ELFType<support::big, true>>(Obj, EC));
+      return createPtr<ELF64BE>(Obj);
     else
-      return object_error::parse_failed;
-  } else {
-    return object_error::parse_failed;
+      return createError("Invalid ELF data");
   }
-
-  if (EC)
-    return EC;
-  return std::move(R);
+  return createError("Invalid ELF class");
 }
 
 SubtargetFeatures ELFObjectFileBase::getMIPSFeatures() const {
   SubtargetFeatures Features;
-  unsigned PlatformFlags;
-  getPlatformFlags(PlatformFlags);
+  unsigned PlatformFlags = getPlatformFlags();
 
   switch (PlatformFlags & ELF::EF_MIPS_ARCH) {
   case ELF::EF_MIPS_ARCH_1:
@@ -136,8 +148,7 @@ SubtargetFeatures ELFObjectFileBase::getMIPSFeatures() const {
 SubtargetFeatures ELFObjectFileBase::getARMFeatures() const {
   SubtargetFeatures Features;
   ARMAttributeParser Attributes;
-  std::error_code EC = getBuildAttributes(Attributes);
-  if (EC)
+  if (Error E = getBuildAttributes(Attributes))
     return SubtargetFeatures();
 
   // both ARMv7-M and R have to support thumb hardware div
@@ -183,9 +194,9 @@ SubtargetFeatures ELFObjectFileBase::getARMFeatures() const {
     default:
       break;
     case ARMBuildAttrs::Not_Allowed:
-      Features.AddFeature("vfp2", false);
-      Features.AddFeature("vfp3", false);
-      Features.AddFeature("vfp4", false);
+      Features.AddFeature("vfp2d16sp", false);
+      Features.AddFeature("vfp3d16sp", false);
+      Features.AddFeature("vfp4d16sp", false);
       break;
     case ARMBuildAttrs::AllowFPv2:
       Features.AddFeature("vfp2");
@@ -219,6 +230,24 @@ SubtargetFeatures ELFObjectFileBase::getARMFeatures() const {
     }
   }
 
+  if (Attributes.hasAttribute(ARMBuildAttrs::MVE_arch)) {
+    switch(Attributes.getAttributeValue(ARMBuildAttrs::MVE_arch)) {
+    default:
+      break;
+    case ARMBuildAttrs::Not_Allowed:
+      Features.AddFeature("mve", false);
+      Features.AddFeature("mve.fp", false);
+      break;
+    case ARMBuildAttrs::AllowMVEInteger:
+      Features.AddFeature("mve.fp", false);
+      Features.AddFeature("mve");
+      break;
+    case ARMBuildAttrs::AllowMVEIntegerAndFloat:
+      Features.AddFeature("mve.fp");
+      break;
+    }
+  }
+
   if (Attributes.hasAttribute(ARMBuildAttrs::DIV_use)) {
     switch(Attributes.getAttributeValue(ARMBuildAttrs::DIV_use)) {
     default:
@@ -237,12 +266,25 @@ SubtargetFeatures ELFObjectFileBase::getARMFeatures() const {
   return Features;
 }
 
+SubtargetFeatures ELFObjectFileBase::getRISCVFeatures() const {
+  SubtargetFeatures Features;
+  unsigned PlatformFlags = getPlatformFlags();
+
+  if (PlatformFlags & ELF::EF_RISCV_RVC) {
+    Features.AddFeature("c");
+  }
+
+  return Features;
+}
+
 SubtargetFeatures ELFObjectFileBase::getFeatures() const {
   switch (getEMachine()) {
   case ELF::EM_MIPS:
     return getMIPSFeatures();
   case ELF::EM_ARM:
     return getARMFeatures();
+  case ELF::EM_RISCV:
+    return getRISCVFeatures();
   default:
     return SubtargetFeatures();
   }
@@ -254,14 +296,12 @@ void ELFObjectFileBase::setARMSubArch(Triple &TheTriple) const {
     return;
 
   ARMAttributeParser Attributes;
-  std::error_code EC = getBuildAttributes(Attributes);
-  if (EC)
+  if (Error E = getBuildAttributes(Attributes))
     return;
 
   std::string Triple;
   // Default to ARM, but use the triple if it's been set.
-  if (TheTriple.getArch() == Triple::thumb ||
-      TheTriple.getArch() == Triple::thumbeb)
+  if (TheTriple.isThumb())
     Triple = "thumb";
   else
     Triple = "arm";
@@ -313,4 +353,70 @@ void ELFObjectFileBase::setARMSubArch(Triple &TheTriple) const {
     Triple += "eb";
 
   TheTriple.setArchName(Triple);
+}
+
+std::vector<std::pair<DataRefImpl, uint64_t>>
+ELFObjectFileBase::getPltAddresses() const {
+  std::string Err;
+  const auto Triple = makeTriple();
+  const auto *T = TargetRegistry::lookupTarget(Triple.str(), Err);
+  if (!T)
+    return {};
+  uint64_t JumpSlotReloc = 0;
+  switch (Triple.getArch()) {
+    case Triple::x86:
+      JumpSlotReloc = ELF::R_386_JUMP_SLOT;
+      break;
+    case Triple::x86_64:
+      JumpSlotReloc = ELF::R_X86_64_JUMP_SLOT;
+      break;
+    case Triple::aarch64:
+      JumpSlotReloc = ELF::R_AARCH64_JUMP_SLOT;
+      break;
+    default:
+      return {};
+  }
+  std::unique_ptr<const MCInstrInfo> MII(T->createMCInstrInfo());
+  std::unique_ptr<const MCInstrAnalysis> MIA(
+      T->createMCInstrAnalysis(MII.get()));
+  if (!MIA)
+    return {};
+  Optional<SectionRef> Plt = None, RelaPlt = None, GotPlt = None;
+  for (const SectionRef &Section : sections()) {
+    StringRef Name;
+    if (Section.getName(Name))
+      continue;
+    if (Name == ".plt")
+      Plt = Section;
+    else if (Name == ".rela.plt" || Name == ".rel.plt")
+      RelaPlt = Section;
+    else if (Name == ".got.plt")
+      GotPlt = Section;
+  }
+  if (!Plt || !RelaPlt || !GotPlt)
+    return {};
+  Expected<StringRef> PltContents = Plt->getContents();
+  if (!PltContents) {
+    consumeError(PltContents.takeError());
+    return {};
+  }
+  auto PltEntries = MIA->findPltEntries(Plt->getAddress(),
+                                        arrayRefFromStringRef(*PltContents),
+                                        GotPlt->getAddress(), Triple);
+  // Build a map from GOT entry virtual address to PLT entry virtual address.
+  DenseMap<uint64_t, uint64_t> GotToPlt;
+  for (const auto &Entry : PltEntries)
+    GotToPlt.insert(std::make_pair(Entry.second, Entry.first));
+  // Find the relocations in the dynamic relocation table that point to
+  // locations in the GOT for which we know the corresponding PLT entry.
+  std::vector<std::pair<DataRefImpl, uint64_t>> Result;
+  for (const auto &Relocation : RelaPlt->relocations()) {
+    if (Relocation.getType() != JumpSlotReloc)
+      continue;
+    auto PltEntryIter = GotToPlt.find(Relocation.getOffset());
+    if (PltEntryIter != GotToPlt.end())
+      Result.push_back(std::make_pair(
+          Relocation.getSymbol()->getRawDataRefImpl(), PltEntryIter->second));
+  }
+  return Result;
 }

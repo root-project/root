@@ -3,6 +3,7 @@
 set(LLVM_LINK_COMPONENTS support)
 
 add_clang_library(clangLex
+  DependencyDirectivesSourceMinimizer.cpp
   HeaderMap.cpp
   HeaderSearch.cpp
   Lexer.cpp
@@ -17,7 +18,6 @@ add_clang_library(clangLex
   PPExpressions.cpp
   PPLexerChange.cpp
   PPMacroExpansion.cpp
-  PTHLexer.cpp
   Pragma.cpp
   PreprocessingRecord.cpp
   Preprocessor.cpp

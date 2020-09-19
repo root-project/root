@@ -1,191 +1,359 @@
 //=- WebAssemblyFixIrreducibleControlFlow.cpp - Fix irreducible control flow -//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// \brief This file implements a pass that transforms irreducible control flow
-/// into reducible control flow. Irreducible control flow means multiple-entry
-/// loops; they appear as CFG cycles that are not recorded in MachineLoopInfo
-/// due to being unnatural.
+/// This file implements a pass that removes irreducible control flow.
+/// Irreducible control flow means multiple-entry loops, which this pass
+/// transforms to have a single entry.
 ///
 /// Note that LLVM has a generic pass that lowers irreducible control flow, but
 /// it linearizes control flow, turning diamonds into two triangles, which is
 /// both unnecessary and undesirable for WebAssembly.
 ///
-/// TODO: The transformation implemented here handles all irreducible control
-/// flow, without exponential code-size expansion, though it does so by creating
-/// inefficient code in many cases. Ideally, we should add other
-/// transformations, including code-duplicating cases, which can be more
-/// efficient in common cases, and they can fall back to this conservative
-/// implementation as needed.
+/// The big picture: We recursively process each "region", defined as a group
+/// of blocks with a single entry and no branches back to that entry. A region
+/// may be the entire function body, or the inner part of a loop, i.e., the
+/// loop's body without branches back to the loop entry. In each region we fix
+/// up multi-entry loops by adding a new block that can dispatch to each of the
+/// loop entries, based on the value of a label "helper" variable, and we
+/// replace direct branches to the entries with assignments to the label
+/// variable and a branch to the dispatch block. Then the dispatch block is the
+/// single entry in the loop containing the previous multiple entries. After
+/// ensuring all the loops in a region are reducible, we recurse into them. The
+/// total time complexity of this pass is:
+///
+///   O(NumBlocks * NumNestedLoops * NumIrreducibleLoops +
+///     NumLoops * NumLoops)
+///
+/// This pass is similar to what the Relooper [1] does. Both identify looping
+/// code that requires multiple entries, and resolve it in a similar way (in
+/// Relooper terminology, we implement a Multiple shape in a Loop shape). Note
+/// also that like the Relooper, we implement a "minimal" intervention: we only
+/// use the "label" helper for the blocks we absolutely must and no others. We
+/// also prioritize code size and do not duplicate code in order to resolve
+/// irreducibility. The graph algorithms for finding loops and entries and so
+/// forth are also similar to the Relooper. The main differences between this
+/// pass and the Relooper are:
+///
+///  * We just care about irreducibility, so we just look at loops.
+///  * The Relooper emits structured control flow (with ifs etc.), while we
+///    emit a CFG.
+///
+/// [1] Alon Zakai. 2011. Emscripten: an LLVM-to-JavaScript compiler. In
+/// Proceedings of the ACM international conference companion on Object oriented
+/// programming systems languages and applications companion (SPLASH '11). ACM,
+/// New York, NY, USA, 301-312. DOI=10.1145/2048147.2048224
+/// http://doi.acm.org/10.1145/2048147.2048224
 ///
 //===----------------------------------------------------------------------===//
 
 #include "MCTargetDesc/WebAssemblyMCTargetDesc.h"
 #include "WebAssembly.h"
-#include "WebAssemblyMachineFunctionInfo.h"
 #include "WebAssemblySubtarget.h"
-#include "llvm/ADT/PriorityQueue.h"
-#include "llvm/ADT/SCCIterator.h"
-#include "llvm/ADT/SetVector.h"
-#include "llvm/CodeGen/MachineDominators.h"
-#include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
-#include "llvm/CodeGen/MachineLoopInfo.h"
-#include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/CodeGen/Passes.h"
-#include "llvm/Support/Debug.h"
-#include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "wasm-fix-irreducible-control-flow"
 
 namespace {
+
+using BlockVector = SmallVector<MachineBasicBlock *, 4>;
+using BlockSet = SmallPtrSet<MachineBasicBlock *, 4>;
+
+// Calculates reachability in a region. Ignores branches to blocks outside of
+// the region, and ignores branches to the region entry (for the case where
+// the region is the inner part of a loop).
+class ReachabilityGraph {
+public:
+  ReachabilityGraph(MachineBasicBlock *Entry, const BlockSet &Blocks)
+      : Entry(Entry), Blocks(Blocks) {
+#ifndef NDEBUG
+    // The region must have a single entry.
+    for (auto *MBB : Blocks) {
+      if (MBB != Entry) {
+        for (auto *Pred : MBB->predecessors()) {
+          assert(inRegion(Pred));
+        }
+      }
+    }
+#endif
+    calculate();
+  }
+
+  bool canReach(MachineBasicBlock *From, MachineBasicBlock *To) const {
+    assert(inRegion(From) && inRegion(To));
+    auto I = Reachable.find(From);
+    if (I == Reachable.end())
+      return false;
+    return I->second.count(To);
+  }
+
+  // "Loopers" are blocks that are in a loop. We detect these by finding blocks
+  // that can reach themselves.
+  const BlockSet &getLoopers() const { return Loopers; }
+
+  // Get all blocks that are loop entries.
+  const BlockSet &getLoopEntries() const { return LoopEntries; }
+
+  // Get all blocks that enter a particular loop from outside.
+  const BlockSet &getLoopEnterers(MachineBasicBlock *LoopEntry) const {
+    assert(inRegion(LoopEntry));
+    auto I = LoopEnterers.find(LoopEntry);
+    assert(I != LoopEnterers.end());
+    return I->second;
+  }
+
+private:
+  MachineBasicBlock *Entry;
+  const BlockSet &Blocks;
+
+  BlockSet Loopers, LoopEntries;
+  DenseMap<MachineBasicBlock *, BlockSet> LoopEnterers;
+
+  bool inRegion(MachineBasicBlock *MBB) const { return Blocks.count(MBB); }
+
+  // Maps a block to all the other blocks it can reach.
+  DenseMap<MachineBasicBlock *, BlockSet> Reachable;
+
+  void calculate() {
+    // Reachability computation work list. Contains pairs of recent additions
+    // (A, B) where we just added a link A => B.
+    using BlockPair = std::pair<MachineBasicBlock *, MachineBasicBlock *>;
+    SmallVector<BlockPair, 4> WorkList;
+
+    // Add all relevant direct branches.
+    for (auto *MBB : Blocks) {
+      for (auto *Succ : MBB->successors()) {
+        if (Succ != Entry && inRegion(Succ)) {
+          Reachable[MBB].insert(Succ);
+          WorkList.emplace_back(MBB, Succ);
+        }
+      }
+    }
+
+    while (!WorkList.empty()) {
+      MachineBasicBlock *MBB, *Succ;
+      std::tie(MBB, Succ) = WorkList.pop_back_val();
+      assert(inRegion(MBB) && Succ != Entry && inRegion(Succ));
+      if (MBB != Entry) {
+        // We recently added MBB => Succ, and that means we may have enabled
+        // Pred => MBB => Succ.
+        for (auto *Pred : MBB->predecessors()) {
+          if (Reachable[Pred].insert(Succ).second) {
+            WorkList.emplace_back(Pred, Succ);
+          }
+        }
+      }
+    }
+
+    // Blocks that can return to themselves are in a loop.
+    for (auto *MBB : Blocks) {
+      if (canReach(MBB, MBB)) {
+        Loopers.insert(MBB);
+      }
+    }
+    assert(!Loopers.count(Entry));
+
+    // Find the loop entries - loopers reachable from blocks not in that loop -
+    // and those outside blocks that reach them, the "loop enterers".
+    for (auto *Looper : Loopers) {
+      for (auto *Pred : Looper->predecessors()) {
+        // Pred can reach Looper. If Looper can reach Pred, it is in the loop;
+        // otherwise, it is a block that enters into the loop.
+        if (!canReach(Looper, Pred)) {
+          LoopEntries.insert(Looper);
+          LoopEnterers[Looper].insert(Pred);
+        }
+      }
+    }
+  }
+};
+
+// Finds the blocks in a single-entry loop, given the loop entry and the
+// list of blocks that enter the loop.
+class LoopBlocks {
+public:
+  LoopBlocks(MachineBasicBlock *Entry, const BlockSet &Enterers)
+      : Entry(Entry), Enterers(Enterers) {
+    calculate();
+  }
+
+  BlockSet &getBlocks() { return Blocks; }
+
+private:
+  MachineBasicBlock *Entry;
+  const BlockSet &Enterers;
+
+  BlockSet Blocks;
+
+  void calculate() {
+    // Going backwards from the loop entry, if we ignore the blocks entering
+    // from outside, we will traverse all the blocks in the loop.
+    BlockVector WorkList;
+    BlockSet AddedToWorkList;
+    Blocks.insert(Entry);
+    for (auto *Pred : Entry->predecessors()) {
+      if (!Enterers.count(Pred)) {
+        WorkList.push_back(Pred);
+        AddedToWorkList.insert(Pred);
+      }
+    }
+
+    while (!WorkList.empty()) {
+      auto *MBB = WorkList.pop_back_val();
+      assert(!Enterers.count(MBB));
+      if (Blocks.insert(MBB).second) {
+        for (auto *Pred : MBB->predecessors()) {
+          if (!AddedToWorkList.count(Pred)) {
+            WorkList.push_back(Pred);
+            AddedToWorkList.insert(Pred);
+          }
+        }
+      }
+    }
+  }
+};
+
 class WebAssemblyFixIrreducibleControlFlow final : public MachineFunctionPass {
   StringRef getPassName() const override {
     return "WebAssembly Fix Irreducible Control Flow";
   }
 
-  void getAnalysisUsage(AnalysisUsage &AU) const override {
-    AU.setPreservesCFG();
-    AU.addRequired<MachineDominatorTree>();
-    AU.addPreserved<MachineDominatorTree>();
-    AU.addRequired<MachineLoopInfo>();
-    AU.addPreserved<MachineLoopInfo>();
-    MachineFunctionPass::getAnalysisUsage(AU);
-  }
-
   bool runOnMachineFunction(MachineFunction &MF) override;
 
-  bool VisitLoop(MachineFunction &MF, MachineLoopInfo &MLI, MachineLoop *Loop);
+  bool processRegion(MachineBasicBlock *Entry, BlockSet &Blocks,
+                     MachineFunction &MF);
+
+  void makeSingleEntryLoop(BlockSet &Entries, BlockSet &Blocks,
+                           MachineFunction &MF, const ReachabilityGraph &Graph);
 
 public:
   static char ID; // Pass identification, replacement for typeid
   WebAssemblyFixIrreducibleControlFlow() : MachineFunctionPass(ID) {}
 };
-} // end anonymous namespace
 
-char WebAssemblyFixIrreducibleControlFlow::ID = 0;
-FunctionPass *llvm::createWebAssemblyFixIrreducibleControlFlow() {
-  return new WebAssemblyFixIrreducibleControlFlow();
-}
+bool WebAssemblyFixIrreducibleControlFlow::processRegion(
+    MachineBasicBlock *Entry, BlockSet &Blocks, MachineFunction &MF) {
+  bool Changed = false;
 
-namespace {
+  // Remove irreducibility before processing child loops, which may take
+  // multiple iterations.
+  while (true) {
+    ReachabilityGraph Graph(Entry, Blocks);
 
-/// A utility for walking the blocks of a loop, handling a nested inner
-/// loop as a monolithic conceptual block.
-class MetaBlock {
-  MachineBasicBlock *Block;
-  SmallVector<MachineBasicBlock *, 2> Preds;
-  SmallVector<MachineBasicBlock *, 2> Succs;
+    bool FoundIrreducibility = false;
 
-public:
-  explicit MetaBlock(MachineBasicBlock *MBB)
-      : Block(MBB), Preds(MBB->pred_begin(), MBB->pred_end()),
-        Succs(MBB->succ_begin(), MBB->succ_end()) {}
-
-  explicit MetaBlock(MachineLoop *Loop) : Block(Loop->getHeader()) {
-    Loop->getExitBlocks(Succs);
-    for (MachineBasicBlock *Pred : Block->predecessors())
-      if (!Loop->contains(Pred))
-        Preds.push_back(Pred);
-  }
-
-  MachineBasicBlock *getBlock() const { return Block; }
-
-  const SmallVectorImpl<MachineBasicBlock *> &predecessors() const {
-    return Preds;
-  }
-  const SmallVectorImpl<MachineBasicBlock *> &successors() const {
-    return Succs;
-  }
-
-  bool operator==(const MetaBlock &MBB) { return Block == MBB.Block; }
-  bool operator!=(const MetaBlock &MBB) { return Block != MBB.Block; }
-};
-
-class SuccessorList final : public MetaBlock {
-  size_t Index;
-  size_t Num;
-
-public:
-  explicit SuccessorList(MachineBasicBlock *MBB)
-      : MetaBlock(MBB), Index(0), Num(successors().size()) {}
-
-  explicit SuccessorList(MachineLoop *Loop)
-      : MetaBlock(Loop), Index(0), Num(successors().size()) {}
-
-  bool HasNext() const { return Index != Num; }
-
-  MachineBasicBlock *Next() {
-    assert(HasNext());
-    return successors()[Index++];
-  }
-};
-
-} // end anonymous namespace
-
-bool WebAssemblyFixIrreducibleControlFlow::VisitLoop(MachineFunction &MF,
-                                                     MachineLoopInfo &MLI,
-                                                     MachineLoop *Loop) {
-  MachineBasicBlock *Header = Loop ? Loop->getHeader() : &*MF.begin();
-  SetVector<MachineBasicBlock *> RewriteSuccs;
-
-  // DFS through Loop's body, looking for for irreducible control flow. Loop is
-  // natural, and we stay in its body, and we treat any nested loops
-  // monolithically, so any cycles we encounter indicate irreducibility.
-  SmallPtrSet<MachineBasicBlock *, 8> OnStack;
-  SmallPtrSet<MachineBasicBlock *, 8> Visited;
-  SmallVector<SuccessorList, 4> LoopWorklist;
-  LoopWorklist.push_back(SuccessorList(Header));
-  OnStack.insert(Header);
-  Visited.insert(Header);
-  while (!LoopWorklist.empty()) {
-    SuccessorList &Top = LoopWorklist.back();
-    if (Top.HasNext()) {
-      MachineBasicBlock *Next = Top.Next();
-      if (Next == Header || (Loop && !Loop->contains(Next)))
-        continue;
-      if (LLVM_LIKELY(OnStack.insert(Next).second)) {
-        if (!Visited.insert(Next).second) {
-          OnStack.erase(Next);
-          continue;
+    for (auto *LoopEntry : Graph.getLoopEntries()) {
+      // Find mutual entries - all entries which can reach this one, and
+      // are reached by it (that always includes LoopEntry itself). All mutual
+      // entries must be in the same loop, so if we have more than one, then we
+      // have irreducible control flow.
+      //
+      // Note that irreducibility may involve inner loops, e.g. imagine A
+      // starts one loop, and it has B inside it which starts an inner loop.
+      // If we add a branch from all the way on the outside to B, then in a
+      // sense B is no longer an "inner" loop, semantically speaking. We will
+      // fix that irreducibility by adding a block that dispatches to either
+      // either A or B, so B will no longer be an inner loop in our output.
+      // (A fancier approach might try to keep it as such.)
+      //
+      // Note that we still need to recurse into inner loops later, to handle
+      // the case where the irreducibility is entirely nested - we would not
+      // be able to identify that at this point, since the enclosing loop is
+      // a group of blocks all of whom can reach each other. (We'll see the
+      // irreducibility after removing branches to the top of that enclosing
+      // loop.)
+      BlockSet MutualLoopEntries;
+      MutualLoopEntries.insert(LoopEntry);
+      for (auto *OtherLoopEntry : Graph.getLoopEntries()) {
+        if (OtherLoopEntry != LoopEntry &&
+            Graph.canReach(LoopEntry, OtherLoopEntry) &&
+            Graph.canReach(OtherLoopEntry, LoopEntry)) {
+          MutualLoopEntries.insert(OtherLoopEntry);
         }
-        MachineLoop *InnerLoop = MLI.getLoopFor(Next);
-        if (InnerLoop != Loop)
-          LoopWorklist.push_back(SuccessorList(InnerLoop));
-        else
-          LoopWorklist.push_back(SuccessorList(Next));
-      } else {
-        RewriteSuccs.insert(Top.getBlock());
       }
+
+      if (MutualLoopEntries.size() > 1) {
+        makeSingleEntryLoop(MutualLoopEntries, Blocks, MF, Graph);
+        FoundIrreducibility = true;
+        Changed = true;
+        break;
+      }
+    }
+    // Only go on to actually process the inner loops when we are done
+    // removing irreducible control flow and changing the graph. Modifying
+    // the graph as we go is possible, and that might let us avoid looking at
+    // the already-fixed loops again if we are careful, but all that is
+    // complex and bug-prone. Since irreducible loops are rare, just starting
+    // another iteration is best.
+    if (FoundIrreducibility) {
       continue;
     }
-    OnStack.erase(Top.getBlock());
-    LoopWorklist.pop_back();
+
+    for (auto *LoopEntry : Graph.getLoopEntries()) {
+      LoopBlocks InnerBlocks(LoopEntry, Graph.getLoopEnterers(LoopEntry));
+      // Each of these calls to processRegion may change the graph, but are
+      // guaranteed not to interfere with each other. The only changes we make
+      // to the graph are to add blocks on the way to a loop entry. As the
+      // loops are disjoint, that means we may only alter branches that exit
+      // another loop, which are ignored when recursing into that other loop
+      // anyhow.
+      if (processRegion(LoopEntry, InnerBlocks.getBlocks(), MF)) {
+        Changed = true;
+      }
+    }
+
+    return Changed;
   }
+}
 
-  // Most likely, we didn't find any irreducible control flow.
-  if (LLVM_LIKELY(RewriteSuccs.empty()))
-    return false;
+// Given a set of entries to a single loop, create a single entry for that
+// loop by creating a dispatch block for them, routing control flow using
+// a helper variable. Also updates Blocks with any new blocks created, so
+// that we properly track all the blocks in the region. But this does not update
+// ReachabilityGraph; this will be updated in the caller of this function as
+// needed.
+void WebAssemblyFixIrreducibleControlFlow::makeSingleEntryLoop(
+    BlockSet &Entries, BlockSet &Blocks, MachineFunction &MF,
+    const ReachabilityGraph &Graph) {
+  assert(Entries.size() >= 2);
 
-  DEBUG(dbgs() << "Irreducible control flow detected!\n");
+  // Sort the entries to ensure a deterministic build.
+  BlockVector SortedEntries(Entries.begin(), Entries.end());
+  llvm::sort(SortedEntries,
+             [&](const MachineBasicBlock *A, const MachineBasicBlock *B) {
+               auto ANum = A->getNumber();
+               auto BNum = B->getNumber();
+               return ANum < BNum;
+             });
 
-  // Ok. We have irreducible control flow! Create a dispatch block which will
-  // contains a jump table to any block in the problematic set of blocks.
+#ifndef NDEBUG
+  for (auto Block : SortedEntries)
+    assert(Block->getNumber() != -1);
+  if (SortedEntries.size() > 1) {
+    for (auto I = SortedEntries.begin(), E = SortedEntries.end() - 1; I != E;
+         ++I) {
+      auto ANum = (*I)->getNumber();
+      auto BNum = (*(std::next(I)))->getNumber();
+      assert(ANum != BNum);
+    }
+  }
+#endif
+
+  // Create a dispatch block which will contain a jump table to the entries.
   MachineBasicBlock *Dispatch = MF.CreateMachineBasicBlock();
   MF.insert(MF.end(), Dispatch);
-  MLI.changeLoopFor(Dispatch, Loop);
+  Blocks.insert(Dispatch);
 
   // Add the jump table.
   const auto &TII = *MF.getSubtarget<WebAssemblySubtarget>().getInstrInfo();
-  MachineInstrBuilder MIB = BuildMI(*Dispatch, Dispatch->end(), DebugLoc(),
-                                    TII.get(WebAssembly::BR_TABLE_I32));
+  MachineInstrBuilder MIB =
+      BuildMI(Dispatch, DebugLoc(), TII.get(WebAssembly::BR_TABLE_I32));
 
   // Add the register which will be used to tell the jump table which block to
   // jump to.
@@ -193,104 +361,141 @@ bool WebAssemblyFixIrreducibleControlFlow::VisitLoop(MachineFunction &MF,
   unsigned Reg = MRI.createVirtualRegister(&WebAssembly::I32RegClass);
   MIB.addReg(Reg);
 
-  // Collect all the blocks which need to have their successors rewritten,
-  // add the successors to the jump table, and remember their index.
+  // Compute the indices in the superheader, one for each bad block, and
+  // add them as successors.
   DenseMap<MachineBasicBlock *, unsigned> Indices;
-  SmallVector<MachineBasicBlock *, 4> SuccWorklist(RewriteSuccs.begin(),
-                                                   RewriteSuccs.end());
-  while (!SuccWorklist.empty()) {
-    MachineBasicBlock *MBB = SuccWorklist.pop_back_val();
-    auto Pair = Indices.insert(std::make_pair(MBB, 0));
-    if (!Pair.second)
-      continue;
+  for (auto *Entry : SortedEntries) {
+    auto Pair = Indices.insert(std::make_pair(Entry, 0));
+    assert(Pair.second);
 
     unsigned Index = MIB.getInstr()->getNumExplicitOperands() - 1;
-    DEBUG(dbgs() << "MBB#" << MBB->getNumber() << " has index " << Index
-                 << "\n");
-
     Pair.first->second = Index;
-    for (auto Pred : MBB->predecessors())
-      RewriteSuccs.insert(Pred);
 
-    MIB.addMBB(MBB);
-    Dispatch->addSuccessor(MBB);
-
-    MetaBlock Meta(MBB);
-    for (auto *Succ : Meta.successors())
-      if (Succ != Header && (!Loop || Loop->contains(Succ)))
-        SuccWorklist.push_back(Succ);
+    MIB.addMBB(Entry);
+    Dispatch->addSuccessor(Entry);
   }
 
-  // Rewrite the problematic successors for every block in RewriteSuccs.
-  // For simplicity, we just introduce a new block for every edge we need to
-  // rewrite. Fancier things are possible.
-  for (MachineBasicBlock *MBB : RewriteSuccs) {
-    DenseMap<MachineBasicBlock *, MachineBasicBlock *> Map;
-    for (auto *Succ : MBB->successors()) {
-      if (!Indices.count(Succ))
+  // Rewrite the problematic successors for every block that wants to reach
+  // the bad blocks. For simplicity, we just introduce a new block for every
+  // edge we need to rewrite. (Fancier things are possible.)
+
+  BlockVector AllPreds;
+  for (auto *Entry : SortedEntries) {
+    for (auto *Pred : Entry->predecessors()) {
+      if (Pred != Dispatch) {
+        AllPreds.push_back(Pred);
+      }
+    }
+  }
+
+  // This set stores predecessors within this loop.
+  DenseSet<MachineBasicBlock *> InLoop;
+  for (auto *Pred : AllPreds) {
+    for (auto *Entry : Pred->successors()) {
+      if (!Entries.count(Entry))
+        continue;
+      if (Graph.canReach(Entry, Pred)) {
+        InLoop.insert(Pred);
+        break;
+      }
+    }
+  }
+
+  // Record if each entry has a layout predecessor. This map stores
+  // <<Predecessor is within the loop?, loop entry>, layout predecessor>
+  std::map<std::pair<bool, MachineBasicBlock *>, MachineBasicBlock *>
+      EntryToLayoutPred;
+  for (auto *Pred : AllPreds)
+    for (auto *Entry : Pred->successors())
+      if (Entries.count(Entry) && Pred->isLayoutSuccessor(Entry))
+        EntryToLayoutPred[std::make_pair(InLoop.count(Pred), Entry)] = Pred;
+
+  // We need to create at most two routing blocks per entry: one for
+  // predecessors outside the loop and one for predecessors inside the loop.
+  // This map stores
+  // <<Predecessor is within the loop?, loop entry>, routing block>
+  std::map<std::pair<bool, MachineBasicBlock *>, MachineBasicBlock *> Map;
+  for (auto *Pred : AllPreds) {
+    bool PredInLoop = InLoop.count(Pred);
+    for (auto *Entry : Pred->successors()) {
+      if (!Entries.count(Entry) ||
+          Map.count(std::make_pair(InLoop.count(Pred), Entry)))
+        continue;
+      // If there exists a layout predecessor of this entry and this predecessor
+      // is not that, we rather create a routing block after that layout
+      // predecessor to save a branch.
+      if (EntryToLayoutPred.count(std::make_pair(PredInLoop, Entry)) &&
+          EntryToLayoutPred[std::make_pair(PredInLoop, Entry)] != Pred)
         continue;
 
-      MachineBasicBlock *Split = MF.CreateMachineBasicBlock();
-      MF.insert(MBB->isLayoutSuccessor(Succ) ? MachineFunction::iterator(Succ)
-                                             : MF.end(),
-                Split);
-      MLI.changeLoopFor(Split, Loop);
+      // This is a successor we need to rewrite.
+      MachineBasicBlock *Routing = MF.CreateMachineBasicBlock();
+      MF.insert(Pred->isLayoutSuccessor(Entry)
+                    ? MachineFunction::iterator(Entry)
+                    : MF.end(),
+                Routing);
+      Blocks.insert(Routing);
 
       // Set the jump table's register of the index of the block we wish to
       // jump to, and jump to the jump table.
-      BuildMI(*Split, Split->end(), DebugLoc(), TII.get(WebAssembly::CONST_I32),
-              Reg)
-          .addImm(Indices[Succ]);
-      BuildMI(*Split, Split->end(), DebugLoc(), TII.get(WebAssembly::BR))
-          .addMBB(Dispatch);
-      Split->addSuccessor(Dispatch);
-      Map[Succ] = Split;
+      BuildMI(Routing, DebugLoc(), TII.get(WebAssembly::CONST_I32), Reg)
+          .addImm(Indices[Entry]);
+      BuildMI(Routing, DebugLoc(), TII.get(WebAssembly::BR)).addMBB(Dispatch);
+      Routing->addSuccessor(Dispatch);
+      Map[std::make_pair(PredInLoop, Entry)] = Routing;
     }
+  }
+
+  for (auto *Pred : AllPreds) {
+    bool PredInLoop = InLoop.count(Pred);
     // Remap the terminator operands and the successor list.
-    for (MachineInstr &Term : MBB->terminators())
+    for (MachineInstr &Term : Pred->terminators())
       for (auto &Op : Term.explicit_uses())
         if (Op.isMBB() && Indices.count(Op.getMBB()))
-          Op.setMBB(Map[Op.getMBB()]);
-    for (auto Rewrite : Map)
-      MBB->replaceSuccessor(Rewrite.first, Rewrite.second);
+          Op.setMBB(Map[std::make_pair(PredInLoop, Op.getMBB())]);
+
+    for (auto *Succ : Pred->successors()) {
+      if (!Entries.count(Succ))
+        continue;
+      auto *Routing = Map[std::make_pair(PredInLoop, Succ)];
+      Pred->replaceSuccessor(Succ, Routing);
+    }
   }
 
   // Create a fake default label, because br_table requires one.
   MIB.addMBB(MIB.getInstr()
                  ->getOperand(MIB.getInstr()->getNumExplicitOperands() - 1)
                  .getMBB());
+}
 
-  return true;
+} // end anonymous namespace
+
+char WebAssemblyFixIrreducibleControlFlow::ID = 0;
+INITIALIZE_PASS(WebAssemblyFixIrreducibleControlFlow, DEBUG_TYPE,
+                "Removes irreducible control flow", false, false)
+
+FunctionPass *llvm::createWebAssemblyFixIrreducibleControlFlow() {
+  return new WebAssemblyFixIrreducibleControlFlow();
 }
 
 bool WebAssemblyFixIrreducibleControlFlow::runOnMachineFunction(
     MachineFunction &MF) {
-  DEBUG(dbgs() << "********** Fixing Irreducible Control Flow **********\n"
-                  "********** Function: "
-               << MF.getName() << '\n');
+  LLVM_DEBUG(dbgs() << "********** Fixing Irreducible Control Flow **********\n"
+                       "********** Function: "
+                    << MF.getName() << '\n');
 
-  bool Changed = false;
-  auto &MLI = getAnalysis<MachineLoopInfo>();
-
-  // Visit the function body, which is identified as a null loop.
-  Changed |= VisitLoop(MF, MLI, nullptr);
-
-  // Visit all the loops.
-  SmallVector<MachineLoop *, 8> Worklist(MLI.begin(), MLI.end());
-  while (!Worklist.empty()) {
-    MachineLoop *CurLoop = Worklist.pop_back_val();
-    Worklist.append(CurLoop->begin(), CurLoop->end());
-    Changed |= VisitLoop(MF, MLI, CurLoop);
+  // Start the recursive process on the entire function body.
+  BlockSet AllBlocks;
+  for (auto &MBB : MF) {
+    AllBlocks.insert(&MBB);
   }
 
-  // If we made any changes, completely recompute everything.
-  if (LLVM_UNLIKELY(Changed)) {
-    DEBUG(dbgs() << "Recomputing dominators and loops.\n");
+  if (LLVM_UNLIKELY(processRegion(&*MF.begin(), AllBlocks, MF))) {
+    // We rewrote part of the function; recompute relevant things.
     MF.getRegInfo().invalidateLiveness();
     MF.RenumberBlocks();
-    getAnalysis<MachineDominatorTree>().runOnMachineFunction(MF);
-    MLI.runOnMachineFunction(MF);
+    return true;
   }
 
-  return Changed;
+  return false;
 }

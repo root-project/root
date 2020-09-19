@@ -1,9 +1,8 @@
 //===- CheckerDocumentation.cpp - Documentation checker ---------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -12,7 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ClangSACheckers.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "clang/StaticAnalyzer/Core/CheckerManager.h"
@@ -42,6 +41,7 @@ class CheckerDocumentation : public Checker< check::PreStmt<ReturnStmt>,
                                        check::PreCall,
                                        check::PostCall,
                                        check::BranchCondition,
+                                       check::NewAllocator,
                                        check::Location,
                                        check::Bind,
                                        check::DeadSymbols,
@@ -58,7 +58,7 @@ class CheckerDocumentation : public Checker< check::PreStmt<ReturnStmt>,
                                        check::Event<ImplicitNullDerefEvent>,
                                        check::ASTDecl<FunctionDecl> > {
 public:
-  /// \brief Pre-visit the Statement.
+  /// Pre-visit the Statement.
   ///
   /// The method will be called before the analyzer core processes the
   /// statement. The notification is performed for every explored CFGElement,
@@ -71,7 +71,7 @@ public:
   /// check::PreStmt<ReturnStmt>
   void checkPreStmt(const ReturnStmt *DS, CheckerContext &C) const {}
 
-  /// \brief Post-visit the Statement.
+  /// Post-visit the Statement.
   ///
   /// The method will be called after the analyzer core processes the
   /// statement. The notification is performed for every explored CFGElement,
@@ -81,7 +81,7 @@ public:
   /// check::PostStmt<DeclStmt>
   void checkPostStmt(const DeclStmt *DS, CheckerContext &C) const;
 
-  /// \brief Pre-visit the Objective C message.
+  /// Pre-visit the Objective C message.
   ///
   /// This will be called before the analyzer core processes the method call.
   /// This is called for any action which produces an Objective-C message send,
@@ -90,13 +90,13 @@ public:
   /// check::PreObjCMessage
   void checkPreObjCMessage(const ObjCMethodCall &M, CheckerContext &C) const {}
 
-  /// \brief Post-visit the Objective C message.
+  /// Post-visit the Objective C message.
   /// \sa checkPreObjCMessage()
   ///
   /// check::PostObjCMessage
   void checkPostObjCMessage(const ObjCMethodCall &M, CheckerContext &C) const {}
 
-  /// \brief Visit an Objective-C message whose receiver is nil.
+  /// Visit an Objective-C message whose receiver is nil.
   ///
   /// This will be called when the analyzer core processes a method call whose
   /// receiver is definitely nil. In this case, check{Pre/Post}ObjCMessage and
@@ -105,7 +105,7 @@ public:
   /// check::ObjCMessageNil
   void checkObjCMessageNil(const ObjCMethodCall &M, CheckerContext &C) const {}
 
-  /// \brief Pre-visit an abstract "call" event.
+  /// Pre-visit an abstract "call" event.
   ///
   /// This is used for checkers that want to check arguments or attributed
   /// behavior for functions and methods no matter how they are being invoked.
@@ -117,16 +117,32 @@ public:
   /// check::PreCall
   void checkPreCall(const CallEvent &Call, CheckerContext &C) const {}
 
-  /// \brief Post-visit an abstract "call" event.
+  /// Post-visit an abstract "call" event.
   /// \sa checkPreObjCMessage()
   ///
   /// check::PostCall
   void checkPostCall(const CallEvent &Call, CheckerContext &C) const {}
 
-  /// \brief Pre-visit of the condition statement of a branch (such as IfStmt).
+  /// Pre-visit of the condition statement of a branch (such as IfStmt).
   void checkBranchCondition(const Stmt *Condition, CheckerContext &Ctx) const {}
 
-  /// \brief Called on a load from and a store to a location.
+  /// Post-visit the C++ operator new's allocation call.
+  ///
+  /// Execution of C++ operator new consists of the following phases: (1) call
+  /// default or overridden operator new() to allocate memory (2) cast the
+  /// return value of operator new() from void pointer type to class pointer
+  /// type, (3) assuming that the value is non-null, call the object's
+  /// constructor over this pointer, (4) declare that the value of the
+  /// new-expression is this pointer. This callback is called between steps
+  /// (2) and (3). Post-call for the allocator is called after step (1).
+  /// Pre-statement for the new-expression is called on step (4) when the value
+  /// of the expression is evaluated.
+  /// \param NE     The C++ new-expression that triggered the allocation.
+  /// \param Target The allocated region, casted to the class type.
+  void checkNewAllocator(const CXXNewExpr *NE, SVal Target,
+                         CheckerContext &) const {}
+
+  /// Called on a load from and a store to a location.
   ///
   /// The method will be called each time a location (pointer) value is
   /// accessed.
@@ -138,7 +154,7 @@ public:
   void checkLocation(SVal Loc, bool IsLoad, const Stmt *S,
                      CheckerContext &) const {}
 
-  /// \brief Called on binding of a value to a location.
+  /// Called on binding of a value to a location.
   ///
   /// \param Loc The value of the location (pointer).
   /// \param Val The value which will be stored at the location Loc.
@@ -147,12 +163,12 @@ public:
   /// check::Bind
   void checkBind(SVal Loc, SVal Val, const Stmt *S, CheckerContext &) const {}
 
-  /// \brief Called whenever a symbol becomes dead.
+  /// Called whenever a symbol becomes dead.
   ///
   /// This callback should be used by the checkers to aggressively clean
   /// up/reduce the checker state, which is important for reducing the overall
   /// memory usage. Specifically, if a checker keeps symbol specific information
-  /// in the sate, it can and should be dropped after the symbol becomes dead.
+  /// in the state, it can and should be dropped after the symbol becomes dead.
   /// In addition, reporting a bug as soon as the checker becomes dead leads to
   /// more precise diagnostics. (For example, one should report that a malloced
   /// variable is not freed right after it goes out of scope.)
@@ -164,20 +180,20 @@ public:
   void checkDeadSymbols(SymbolReaper &SR, CheckerContext &C) const {}
 
 
-  /// \brief Called when the analyzer core starts analyzing a function,
+  /// Called when the analyzer core starts analyzing a function,
   /// regardless of whether it is analyzed at the top level or is inlined.
   ///
   /// check::BeginFunction
   void checkBeginFunction(CheckerContext &Ctx) const {}
 
-  /// \brief Called when the analyzer core reaches the end of a
+  /// Called when the analyzer core reaches the end of a
   /// function being analyzed regardless of whether it is analyzed at the top
   /// level or is inlined.
   ///
   /// check::EndFunction
-  void checkEndFunction(CheckerContext &Ctx) const {}
+  void checkEndFunction(const ReturnStmt *RS, CheckerContext &Ctx) const {}
 
-  /// \brief Called after all the paths in the ExplodedGraph reach end of path
+  /// Called after all the paths in the ExplodedGraph reach end of path
   /// - the symbolic execution graph is fully explored.
   ///
   /// This callback should be used in cases when a checker needs to have a
@@ -190,16 +206,16 @@ public:
                         BugReporter &BR,
                         ExprEngine &Eng) const {}
 
-  /// \brief Called after analysis of a TranslationUnit is complete.
+  /// Called after analysis of a TranslationUnit is complete.
   ///
   /// check::EndOfTranslationUnit
   void checkEndOfTranslationUnit(const TranslationUnitDecl *TU,
                                  AnalysisManager &Mgr,
                                  BugReporter &BR) const {}
 
-  /// \brief Evaluates function call.
+  /// Evaluates function call.
   ///
-  /// The analysis core threats all function calls in the same way. However, some
+  /// The analysis core treats all function calls in the same way. However, some
   /// functions have special meaning, which should be reflected in the program
   /// state. This callback allows a checker to provide domain specific knowledge
   /// about the particular functions it knows about.
@@ -212,7 +228,7 @@ public:
   /// eval::Call
   bool evalCall(const CallExpr *CE, CheckerContext &C) const { return true; }
 
-  /// \brief Handles assumptions on symbolic values.
+  /// Handles assumptions on symbolic values.
   ///
   /// This method is called when a symbolic expression is assumed to be true or
   /// false. For example, the assumptions are performed when evaluating a
@@ -231,7 +247,7 @@ public:
   /// check::LiveSymbols
   void checkLiveSymbols(ProgramStateRef State, SymbolReaper &SR) const {}
 
-  /// \brief Called when the contents of one or more regions change.
+  /// Called when the contents of one or more regions change.
   ///
   /// This can occur in many different ways: an explicit bind, a blanket
   /// invalidation of the region contents, or by passing a region to a function
@@ -263,7 +279,7 @@ public:
     return State;
   }
 
-  /// \brief Called when pointers escape.
+  /// Called when pointers escape.
   ///
   /// This notifies the checkers about pointer escape, which occurs whenever
   /// the analyzer cannot track the symbol any more. For example, as a
@@ -283,7 +299,7 @@ public:
     return State;
   }
 
-  /// \brief Called when const pointers escape.
+  /// Called when const pointers escape.
   ///
   /// Note: in most cases checkPointerEscape callback is sufficient.
   /// \sa checkPointerEscape
@@ -297,7 +313,7 @@ public:
   /// check::Event<ImplicitNullDerefEvent>
   void checkEvent(ImplicitNullDerefEvent Event) const {}
 
-  /// \brief Check every declaration in the AST.
+  /// Check every declaration in the AST.
   ///
   /// An AST traversal callback, which should only be used when the checker is
   /// not path sensitive. It will be called for every Declaration in the AST and
