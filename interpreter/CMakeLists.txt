@@ -230,7 +230,7 @@ if(builtin_llvm)
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
-  find_program(LLVM_CONFIG NAMES "llvm-config" "llvm-config-5.0")
+  find_program(LLVM_CONFIG NAMES "llvm-config" "llvm-config-9.0")
   if(LLVM_CONFIG)
     message(STATUS "Found LLVM_CONFIG as ${LLVM_CONFIG}")
     set(CONFIG_COMMAND ${LLVM_CONFIG}
@@ -329,10 +329,10 @@ else()
   include(VersionFromVCS)
 
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "5\\.0(|\\.[0-9]+)")
+  if (${PACKAGE_VERSION} MATCHES "9\\.0(|\\.[0-9]+)")
     message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
   else()
-    message(FATAL_ERROR "LLVM version different from ROOT supported, please try 5.0.x")
+    message(FATAL_ERROR "LLVM version different from ROOT supported, please try 9.0.x")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
