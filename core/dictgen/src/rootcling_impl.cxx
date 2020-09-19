@@ -1992,7 +1992,7 @@ static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compiler
    // From PCHGenerator and friends:
    llvm::SmallVector<char, 128> buffer;
    llvm::BitstreamWriter stream(buffer);
-   clang::ASTWriter writer(stream, buffer, compilerInstance->getPCMCache(), /*Extensions=*/{});
+   clang::ASTWriter writer(stream, buffer, compilerInstance->getModuleCache(), /*Extensions=*/{});
    std::unique_ptr<llvm::raw_ostream> out =
       compilerInstance->createOutputFile(fileName, /*Binary=*/true,
                                          /*RemoveFileOnSignal=*/false, /*InFile*/ "",
