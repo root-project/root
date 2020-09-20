@@ -2192,14 +2192,7 @@ public:
    /// See the previous overloads for further details.
    RResultPtr<RDisplay> Display(std::string_view columnNameRegexp = "", const int &nRows = 5)
    {
-      const auto definedColumns = GetDefinedColumnNames();
-      const auto treeBranchNames = RDFInternal::GetTopLevelBranchNames(*fLoopManager->GetTree());
-      const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
-      ColumnNames_t columnNames;
-      columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumns.size());
-      columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
-      columnNames.insert(columnNames.end(), treeBranchNames.begin(), treeBranchNames.end());
-      columnNames.insert(columnNames.end(), dsColumns.begin(), dsColumns.end());
+      const auto columnNames = GetColumnNames();
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Display");
       return Display(selectedColumns, nRows);
    }
