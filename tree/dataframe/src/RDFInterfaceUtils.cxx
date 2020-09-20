@@ -370,7 +370,6 @@ ConvertRegexToColumns(const ColumnNames_t &colNames, std::string_view columnName
       theRegex = theRegex + "$";
 
    ColumnNames_t selectedColumns;
-   selectedColumns.reserve(32);
 
    // Since we support gcc48 and it does not provide in its stl std::regex,
    // we need to use TPRegexp
