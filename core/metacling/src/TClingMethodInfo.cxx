@@ -61,7 +61,7 @@ compiler, not CINT.
 using namespace clang;
 
 TClingCXXRecMethIter::SpecFuncIter::SpecFuncIter(cling::Interpreter *interp, clang::DeclContext *DC,
-                                                 llvm::SmallVectorImpl<clang::Decl *> &&specFuncs)
+                                                 llvm::SmallVectorImpl<clang::CXXMethodDecl *> &&specFuncs)
 {
    auto *CXXRD = llvm::dyn_cast<CXXRecordDecl>(DC);
    if (!CXXRD)
@@ -70,12 +70,12 @@ TClingCXXRecMethIter::SpecFuncIter::SpecFuncIter(cling::Interpreter *interp, cla
    // Could trigger deserialization of decls.
    cling::Interpreter::PushTransactionRAII RAII(interp);
 
-   auto emplaceSpecFunIfNeeded = [&](clang::Decl *D) {
+   auto emplaceSpecFunIfNeeded = [&](clang::CXXMethodDecl *D) {
       if (!D)
          return; // Handle "structor not found" case.
 
       if (std::find(CXXRD->decls_begin(), CXXRD->decls_end(), D) == CXXRD->decls_end()) {
-         fDefDataSpecFuns.emplace_back(llvm::dyn_cast<clang::FunctionDecl>(D));
+         fDefDataSpecFuns.emplace_back(D);
       }
    };
 
@@ -251,7 +251,7 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
    clang::Decl *D = const_cast<clang::Decl *>(ci->GetDecl());
    auto *DC = llvm::dyn_cast<clang::DeclContext>(D);
 
-   llvm::SmallVector<clang::Decl*, 8> SpecFuncs;
+   llvm::SmallVector<clang::CXXMethodDecl*, 8> SpecFuncs;
 
    if (auto *CXXRD = llvm::dyn_cast<CXXRecordDecl>(DC)) {
       // Initialize the CXXRecordDecl's special functions; could change the
@@ -265,8 +265,11 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 
       // Assemble special functions (or FunctionTemplate-s) that are synthesized from DefinitionData but
       // won't be enumerated as part of decls_begin()/decls_end().
-      auto Ctors = SemaRef.LookupConstructors(CXXRD);
-      SpecFuncs.append(Ctors.begin(), Ctors.end());
+      for (clang::NamedDecl *ctor : SemaRef.LookupConstructors(CXXRD)) {
+         // Filter out constructor templates, they are not functions we can iterate over:
+         if (auto *CXXCD = llvm::dyn_cast<clang::CXXConstructorDecl>(ctor))
+            SpecFuncs.emplace_back(CXXCD);
+      }
       SpecFuncs.emplace_back(SemaRef.LookupCopyingAssignment(CXXRD, /*Quals*/ 0, /*RValueThis*/ false, 0 /*ThisQuals*/));
       SpecFuncs.emplace_back(SemaRef.LookupMovingAssignment(CXXRD, /*Quals*/ 0, /*RValueThis*/ false, 0 /*ThisQuals*/));
       SpecFuncs.emplace_back(SemaRef.LookupDestructor(CXXRD));
