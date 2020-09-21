@@ -518,6 +518,8 @@ long TClingMethodInfo::ExtraProperty() const
       property |= kIsDestructor;
    if (fd->isInlined())
       property |= kIsInlined;
+   if (fd->getTemplatedKind() != clang::FunctionDecl::TK_NonTemplate)
+      property |= kIsTemplateSpec;
    return property;
 }
 

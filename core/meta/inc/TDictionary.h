@@ -124,7 +124,8 @@ enum EFunctionProperty {
    kIsConversion  = 0x00000002,
    kIsDestructor  = 0x00000004,
    kIsOperator    = 0x00000008,
-   kIsInlined     = 0x00000010
+   kIsInlined     = 0x00000010,
+   kIsTemplateSpec= 0x00000020
 };
 
 enum EClassProperty {
