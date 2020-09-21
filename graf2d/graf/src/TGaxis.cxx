@@ -1078,8 +1078,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (!gStyle->GetStripDecimals())   optionDecimals = 1;
    if (fAxis) {
       if (fAxis->GetLabels()) {
-         optionM    = 1;
-         optionText = 1;
+         optionM     = 1;
+         optionText  = 1;
+         optionNoopt = 1;
          ndiv = fAxis->GetLast()-fAxis->GetFirst()+1;
       }
       TList *ml = fAxis->GetModifiedLabels();
