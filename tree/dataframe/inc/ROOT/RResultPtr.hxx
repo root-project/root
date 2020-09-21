@@ -299,6 +299,14 @@ public:
       fLoopManager->RegisterCallback(everyNEvents, std::move(c));
       return *this;
    }
+
+   // clang-format off
+   /// Check whether the result has already been computed
+   // clang-format on
+   bool IsReady()
+   {
+      return fActionPtr->HasRun();
+   }
 };
 
 template <typename T>

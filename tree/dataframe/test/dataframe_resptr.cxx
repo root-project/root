@@ -64,3 +64,13 @@ TEST(RResultPtr, ImplConv)
    EXPECT_TRUE(m != nullptr);
    EXPECT_TRUE(hasRun);
 }
+
+TEST(RResultPtr, IsReady)
+{
+   ROOT::RDataFrame d(1);
+   auto p = d.Define("x", "rdfentry_").Sum("x");
+   EXPECT_FALSE(p.IsReady());
+
+   p.GetValue();
+   EXPECT_TRUE(p.IsReady());
+}
