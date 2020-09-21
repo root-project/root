@@ -58,14 +58,14 @@ class TClingTypeInfo;
 class TClingCXXRecMethIter final: public TClingMemberIter {
 
 class SpecFuncIter {
-   using Vec_t = llvm::SmallVector<clang::FunctionDecl *,4>;
+   using Vec_t = llvm::SmallVector<clang::CXXMethodDecl *,4>;
    Vec_t fDefDataSpecFuns; // Special functions materialized from DefinitionData.
    size_t fIDefDataSpecFuns = 0; // Current element in fDefDataSpecFuns.
 
 public:
    SpecFuncIter() = default;
    SpecFuncIter(cling::Interpreter *interp, clang::DeclContext *DC,
-                llvm::SmallVectorImpl<clang::Decl*> &&specFuncs);
+                llvm::SmallVectorImpl<clang::CXXMethodDecl*> &&specFuncs);
 
    bool IsValid() const { return fIDefDataSpecFuns < fDefDataSpecFuns.size(); }
 
@@ -101,7 +101,7 @@ protected:
 public:
    TClingCXXRecMethIter() = default;
    TClingCXXRecMethIter(cling::Interpreter *interp, clang::DeclContext *DC,
-                        llvm::SmallVectorImpl<clang::Decl*> &&specFuncs):
+                        llvm::SmallVectorImpl<clang::CXXMethodDecl*> &&specFuncs):
       TClingMemberIter(interp, DC), fSpecFuncIter(interp, DC, std::move(specFuncs)) {}
 
    const clang::Decl *Get() const final {
