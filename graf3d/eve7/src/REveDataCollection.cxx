@@ -31,26 +31,128 @@ namespace REX = ROOT::Experimental;
 Color_t  REveDataCollection::fgDefaultColor  = kBlue;
 
 //==============================================================================
+//==============================================================================
+
+REveDataItemList::REveDataItemList(const std::string& n, const std::string& t):
+   REveElement(n,t)
+{
+   fAlwaysSecSelect = true;
+   fChildClass = TClass::GetClass<REveDataItem>();
+
+   _handler_items_change = 0;
+   _handler_fillimp  = 0;
+}
+//______________________________________________________________________________
+
+void REveDataItemList::SetItemVisible(Int_t idx, Bool_t visible)
+{
+   fItems[idx]->fRnrSelf = visible;
+   ItemChanged(idx);
+   StampObjProps();
+}
+
+//______________________________________________________________________________
+
+void REveDataItemList::SetItemColorRGB(Int_t idx, UChar_t r, UChar_t g, UChar_t b)
+{
+   Color_t c = TColor::GetColor(r, g, b);
+   fItems[idx]->fColor = c;
+   ItemChanged(idx);
+   StampObjProps();
+}
+//______________________________________________________________________________
+
+void REveDataItemList::ItemChanged(REveDataItem* iItem)
+{
+   int idx = 0;
+   std::vector<int> ids;
+   for (auto & chld : fItems)
+   {
+      if (chld == iItem) {
+         ids.push_back(idx);
+          _handler_items_change( this , ids);
+         return;
+      }
+      idx++;
+   }
+}
+
+//______________________________________________________________________________
+
+void REveDataItemList::ItemChanged(Int_t idx)
+{
+   std::vector<int> ids;
+   ids.push_back(idx);
+   _handler_items_change( this , ids);
+}
+
+//______________________________________________________________________________
+
+void REveDataItemList::FillImpliedSelectedSet( Set_t& impSelSet)
+{
+   /*
+   printf("REveDataCollection::FillImpliedSelectedSet colecction setsize %zu\n",  RefSelectedSet().size());
+   for (auto x :RefSelectedSet() )
+      printf("%d \n", x);
+   */
+   _handler_fillimp( this ,  impSelSet);
+}
+
+//______________________________________________________________________________
+
+
+Int_t REveDataItemList::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
+   j["items"] =  nlohmann::json::array();
+   for (auto & chld : fItems)
+   {
+      nlohmann::json i;
+      i["fFiltered"] = chld->fFiltered;
+      i["fRnrSelf"] = chld->fRnrSelf;
+      i["fColor"] = chld->fColor;
+      j["items"].push_back(i);
+   }
+
+   return ret;
+}
+
+//______________________________________________________________________________
+
+Bool_t REveDataItemList::SetRnrState(Bool_t iRnrSelf)
+{
+   Bool_t ret = REveElement::SetRnrState(iRnrSelf);
+   std::vector<int> ids;
+
+   for (size_t i = 0; i < fItems.size(); ++i ) {
+      ids.push_back(i);
+      fItems[i]->SetRnrSelf(fRnrSelf);
+   }
+
+   _handler_items_change( this , ids);
+   StampVisibility();
+   StampObjProps();
+
+   return ret;
+}
+
+//==============================================================================
 // REveDataCollection
 //==============================================================================
 
 REveDataCollection::REveDataCollection(const std::string& n, const std::string& t) :
    REveElement(n, t)
 {
-   fAlwaysSecSelect = true;
-   fChildClass = TClass::GetClass<REveDataItem>();
+   fItemList = new REveDataItemList();
+   AddElement(fItemList);
 
    SetupDefaultColorAndTransparency(fgDefaultColor, true, true);
-
-   _handler_collection_change = 0;
-   _handler_items_change = 0;
-   _handler_fillimp  = 0;
 }
 
 void REveDataCollection::AddItem(void *data_ptr, const std::string& /*n*/, const std::string& /*t*/)
 {
    auto el = new REveDataItem(data_ptr, GetMainColor());
-   fItems.emplace_back(el);
+   fItemList->fItems.emplace_back(el);
 }
 
 //------------------------------------------------------------------------------
@@ -85,7 +187,7 @@ void REveDataCollection::ApplyFilter()
 {
    Ids_t ids;
    int idx = 0;
-   for (auto &ii : fItems)
+   for (auto &ii : fItemList->fItems)
    {
       bool res = fFilterFoo(ii->fDataPtr);
 
@@ -96,7 +198,7 @@ void REveDataCollection::ApplyFilter()
       ids.push_back(idx++);
    }
    StampObjProps();
-   if (_handler_items_change) _handler_items_change( this , ids);
+   if (fItemList->_handler_items_change) fItemList->_handler_items_change( fItemList , ids);
 }
 
 //______________________________________________________________________________
@@ -169,30 +271,11 @@ void  REveDataCollection::StreamPublicMethods(nlohmann::json &j)
 
 //______________________________________________________________________________
 
-Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
-{
-   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
-   j["fFilterExpr"] = fFilterExpr.Data();
-   j["items"] =  nlohmann::json::array();
-   for (auto & chld : fItems)
-   {
-      nlohmann::json i;
-      i["fFiltered"] = chld->fFiltered;
-      i["fRnrSelf"] = chld->fRnrSelf;
-      i["fColor"] = chld->fColor;
-      j["items"].push_back(i);
-   }
-
-   return ret;
-}
-
-//______________________________________________________________________________
-
 void REveDataCollection::SetMainColor(Color_t newv)
 {
    int idx = 0;
    Ids_t ids;
-   for (auto & chld : fItems)
+   for (auto & chld : fItemList->fItems)
    {
       chld->SetMainColor(newv);
       ids.push_back(idx);
@@ -200,12 +283,12 @@ void REveDataCollection::SetMainColor(Color_t newv)
    }
 
    REveElement::SetMainColor(newv);
-   for (auto & chld : fItems)
+   for (auto & chld : fItemList->fItems)
    {
       chld->fColor = newv;
    }
 
-   if ( _handler_items_change) _handler_items_change( this , ids);
+   if ( fItemList->_handler_items_change) fItemList->_handler_items_change( fItemList , ids);
 }
 
 //______________________________________________________________________________
@@ -216,68 +299,21 @@ Bool_t REveDataCollection::SetRnrState(Bool_t iRnrSelf)
    Ids_t ids;
    for (int i = 0; i < GetNItems(); ++i ) {
       ids.push_back(i);
-      fItems[i]->SetRnrSelf(fRnrSelf);
+      fItemList->fItems[i]->SetRnrSelf(fRnrSelf);
    }
 
-   _handler_items_change( this , ids);
+   fItemList->_handler_items_change( fItemList , ids);
 
    return ret;
 }
 
-//______________________________________________________________________________
-
-void REveDataCollection::SetItemVisible(Int_t idx, Bool_t visible)
-{
-   fItems[idx]->fRnrSelf = visible;
-   ItemChanged(idx);
-   StampObjProps();
-}
 
 //______________________________________________________________________________
 
-void REveDataCollection::SetItemColorRGB(Int_t idx, UChar_t r, UChar_t g, UChar_t b)
+Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   Color_t c = TColor::GetColor(r, g, b);
-   fItems[idx]->fColor = c;
-   ItemChanged(idx);
-   StampObjProps();
-}
-
-//______________________________________________________________________________
-
-void REveDataCollection::ItemChanged(REveDataItem* iItem)
-{
-   int idx = 0;
-   Ids_t ids;
-   for (auto & chld : fItems)
-   {
-      if (chld == iItem) {
-         ids.push_back(idx);
-         _handler_items_change( this , ids);
-         return;
-      }
-      idx++;
-   }
-}
-
-//______________________________________________________________________________
-
-void REveDataCollection::ItemChanged(Int_t idx)
-{
-   Ids_t ids;
-   ids.push_back(idx);
-   _handler_items_change( this , ids);
-}
-
-//______________________________________________________________________________
-
-void REveDataCollection::FillImpliedSelectedSet( Set_t& impSelSet)
-{
-   /*
-   printf("REveDataCollection::FillImpliedSelectedSet colecction setsize %zu\n",  RefSelectedSet().size());
-   for (auto x :RefSelectedSet() )
-      printf("%d \n", x);
-   */
-   _handler_fillimp( this ,  impSelSet);
+   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
+   j["fFilterExpr"] = fFilterExpr.Data();
+   return ret;
 }
 

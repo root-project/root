@@ -151,10 +151,11 @@ sap.ui.define([
             }
          }
 
-         for (var i = 0; i < this.collection.items.length; i++)
+         let itemList = this.collection.childs[0].items;
+         for (var i = 0; i < itemList.length; i++)
          {
             rowData[i].Name = this.collection.fName + " " + i;
-            rowData[i].Filtered =  this.collection.items[i].fFiltered === true ? 0 : 1;
+            rowData[i].Filtered =  itemList[i].fFiltered === true ? 0 : 1;
          }
 
          if (this.bindTableColumns) {

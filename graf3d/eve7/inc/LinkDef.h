@@ -143,6 +143,7 @@
 #pragma link C++ class ROOT::Experimental::REveViewContext+;
 #pragma link C++ class ROOT::Experimental::REveDataCollection+;
 #pragma link C++ class ROOT::Experimental::REveDataItem+;
+#pragma link C++ class ROOT::Experimental::REveDataItemList+;
 #pragma link C++ class ROOT::Experimental::REveDataProxyBuilderBase+;
 #pragma link C++ class ROOT::Experimental::REveDataSimpleProxyBuilder+;
 #pragma link C++ class ROOT::Experimental::REveDataTable+;

@@ -42,6 +42,7 @@ void
 REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
                                   REveElement* product, const REveViewContext* vc)
 {
+   // printf("REveDataSimpleProxyBuilder::Build %s %d\n", collection->GetCName(), collection->GetNItems());
    auto size = collection->GetNItems();
    auto pIdx = product->RefChildren().begin();
    for (int index = 0; index < size; ++index)
@@ -117,7 +118,7 @@ namespace
          if (c->GetMainColor() != p->GetMainColor())
          {
             c->SetMainColor(p->GetMainColor());
-            printf("apply color %d to %s\n", p->GetMainColor(), c->GetCName());
+            // printf("apply color %d to %s\n", p->GetMainColor(), c->GetCName());
          }
          applyColorAttrToChildren(c);
       }
@@ -127,11 +128,10 @@ namespace
 void
 REveDataSimpleProxyBuilder::ModelChanges(const REveDataCollection::Ids_t& iIds, Product* p)
 {
-   printf("REveDataSimple ProxyBuilderBase::ModelChanges >>>>> (%p)  %s \n", (void*)this, Collection()->GetCName());
+   // printf("REveDataSimple ProxyBuilderBase::ModelChanges >>>>> (%p)  %s \n", (void*)this, Collection()->GetCName());
    REveElement* elms = p->m_elements;
    assert(Collection() && static_cast<int>(Collection()->GetNItems()) <= elms->NumChildren() && "can not use default modelChanges implementation");
 
-   printf("N indices %d \n",(int)iIds.size());
    for (auto itemIdx: iIds)
    {
       const REveDataItem* item = Collection()->GetDataItem(itemIdx);
@@ -210,7 +210,7 @@ void
 REveDataSimpleProxyBuilder::FillImpliedSelected(REveElement::Set_t& impSet, Product*p)
 {
     REveElement* elms = p->m_elements;
-    for (auto &s: Collection()->RefSelectedSet()) {
+    for (auto &s: Collection()->GetItemList()->RefSelectedSet()) {
 
       auto it = elms->RefChildren().begin();
       std::advance(it, s);
@@ -242,8 +242,8 @@ REveCollectionCompound::~REveCollectionCompound()
 
 REveElement* REveCollectionCompound::GetSelectionMaster()
 {
-   if (!fCollection->GetScene()->IsAcceptingChanges()) return fCollection;
-   fCollection->RefSelectedSet().clear();
+   if (!fCollection->GetScene()->IsAcceptingChanges()) return fCollection->GetItemList();
+   fCollection->GetItemList()->RefSelectedSet().clear();
 
    auto m = GetMother();
    int idx = 0;
@@ -251,11 +251,11 @@ REveElement* REveCollectionCompound::GetSelectionMaster()
       REveElement* ctest = c;
       if (ctest == this)
       {
-         fCollection->RefSelectedSet().insert(idx);
+         fCollection->GetItemList()->RefSelectedSet().insert(idx);
          break;
       }
       ++idx;
    }
 
-   return fCollection;
+   return fCollection->GetItemList();
 }

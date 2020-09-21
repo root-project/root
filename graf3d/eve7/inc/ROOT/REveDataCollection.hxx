@@ -31,11 +31,8 @@ class REveDataItem;
 
 //==============================================================================
 // could be a nested class ???
-class REveDataItem
+struct REveDataItem
 {
-   friend class REveDataCollection;
-
-protected:
    void*    fDataPtr{nullptr};
 
    Bool_t   fRnrSelf{true};
@@ -43,13 +40,11 @@ protected:
    Bool_t   fFiltered{false};
 
 
-public:
    REveDataItem(void* d, Color_t c): fDataPtr(d), fColor(c){}
 
    Bool_t  GetRnrSelf() const { return fRnrSelf; }
    Color_t GetMainColor()   const { return fColor; }
    Bool_t  GetFiltered() const { return fFiltered; }
-
 
    void SetFiltered(Bool_t i) { fFiltered = i; }
    void SetMainColor(Color_t i) { fColor = i; }
@@ -57,24 +52,57 @@ public:
 };
 
 //==============================================================================
-
-class REveDataCollection : public REveElement,
-                           public REveSecondarySelectable
+class REveDataItemList: public REveElement,
+                        public REveSecondarySelectable
 {
+   friend class REveDataCollection;
+
+protected:
+   std::vector<REveDataItem*> fItems;
+
+   std::function<void (REveDataItemList*, const std::vector<int>&)> _handler_items_change;
+   std::function<void (REveDataItemList*, Set_t& impSel)> _handler_fillimp;
+
+public:
+
+   REveDataItemList(const std::string& n = "Items", const std::string& t = "");
+   virtual ~REveDataItemList() {}
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
+
+   virtual void ItemChanged(REveDataItem *item);
+   virtual void ItemChanged(Int_t idx);
+   void FillImpliedSelectedSet(Set_t &impSelSet) override;
+
+   void SetItemVisible(Int_t idx, Bool_t visible);
+   void SetItemColorRGB(Int_t idx, UChar_t r, UChar_t g, UChar_t b);
+
+   void SetItemsChangeDelegate (std::function<void (REveDataItemList*, const std::vector<int>&)> handler_func)
+   {
+      _handler_items_change = handler_func;
+   }
+   void SetFillImpliedSelectedDelegate (std::function<void (REveDataItemList*, Set_t& impSelSet)> handler_func)
+   {
+      _handler_fillimp = handler_func;
+   }
+   //std::function<void (REveDataItemList*, const std::vector<int>&)> _handler_items_change;
+   //std::function<void (REveDataItemList*, Set_t& impSel)> _handler_fillimp;
+
+   Bool_t SingleRnrState() const override { return kTRUE; }
+   Bool_t SetRnrState(Bool_t) override;
+};
+
+//==============================================================================
+
+class REveDataCollection : public REveElement
+{
+private:
+   REveDataItemList* fItemList{nullptr};
+
 public:
    typedef std::vector<int> Ids_t;
-
-private:
-   std::function<void (REveDataCollection*)>               _handler_collection_change;
-   std::function<void (REveDataCollection*, const Ids_t&)> _handler_items_change;
-   std::function<void (REveDataCollection*, Set_t& impSel)> _handler_fillimp;
-
-public:
    static Color_t fgDefaultColor;
 
    TClass *fItemClass{nullptr}; // so far only really need class name
-
-   std::vector<REveDataItem*> fItems;
 
    TString fFilterExpr;
    std::function<bool(void *)> fFilterFoo = [](void *) { return true; };
@@ -82,50 +110,34 @@ public:
    REveDataCollection(const std::string& n = "REveDataCollection", const std::string& t = "");
    virtual ~REveDataCollection() {}
 
+   void ReserveItems(Int_t items_size) { fItemList->fItems.reserve(items_size); }
+   void AddItem(void *data_ptr, const std::string& n, const std::string& t);
+   void ClearItems() { fItemList->fItems.clear(); }
+
    Bool_t SingleRnrState() const override { return kTRUE; }
    Bool_t SetRnrState(Bool_t) override;
 
-   void SetItemVisible(Int_t idx, Bool_t visible);
-   void SetItemColorRGB(Int_t idx, UChar_t r, UChar_t g, UChar_t b);
 
    TClass *GetItemClass() const { return fItemClass; }
-   void SetItemClass(TClass *cls) { fItemClass = cls; }
-
-   void ReserveItems(Int_t items_size) { fItems.reserve(items_size); }
-   void AddItem(void *data_ptr, const std::string& n, const std::string& t);
-   void ClearItems() { fItems.clear(); }
+   void SetItemClass(TClass *cls) { fItemClass = cls;
+  }
+   REveDataItemList* GetItemList() {return fItemList;}
 
    void SetFilterExpr(const TString &filter);
    void ApplyFilter();
 
-   Int_t GetNItems() const { return (Int_t)fItems.size(); }
-   void *GetDataPtr(Int_t i) const { return fItems[i]->fDataPtr; }
+   Int_t GetNItems() const { return (Int_t) fItemList->fItems.size(); }
+   void *GetDataPtr(Int_t i) const { return  fItemList->fItems[i]->fDataPtr; }
    //   const REveDataItem& RefDataItem(Int_t i) const { return fItems[i]; }
-    const REveDataItem* GetDataItem(Int_t i) const { return fItems[i]; }
+    const REveDataItem* GetDataItem(Int_t i) const { return  fItemList->fItems[i]; }
 
    void  StreamPublicMethods(nlohmann::json &cj);
    Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 
    void SetMainColor(Color_t) override;
-   virtual void ItemChanged(REveDataItem *item);
-   virtual void ItemChanged(Int_t idx);
 
-   void FillImpliedSelectedSet(Set_t &impSelSet) override;
-
-   void SetCollectionChangeDelegate (std::function<void (REveDataCollection*)> handler_func)
-   {
-      _handler_collection_change = handler_func;
-   }
-   void SetItemsChangeDelegate (std::function<void (REveDataCollection*, const Ids_t&)> handler_func)
-   {
-      _handler_items_change = handler_func;
-   }
-   void SetFillImpliedSelectedDelegate (std::function<void (REveDataCollection*, Set_t& impSelSet)> handler_func)
-   {
-      _handler_fillimp = handler_func;
-   }
 };
- 
+
 } // namespace Experimental
 } // namespace ROOT
 
