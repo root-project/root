@@ -1146,7 +1146,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// commands MIGRAD, HESSE in succession.
 /// \param[in] data  Data to fit the PDF to
 /// \param[in] arg1  One or more arguments to control the behaviour of the fit
-/// \return RooFitResult * with the fit status if option Save() is used, 0 otherwise.
+/// \return RooFitResult with fit status and parameters if option Save() is used, `nullptr` otherwise. The user takes ownership of the fit result.
 ///
 /// The following named arguments are supported
 ///
