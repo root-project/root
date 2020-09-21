@@ -369,3 +369,31 @@ namespace ROOT11010 {
 #endif
    }
 }
+
+TEST(TClingMethodInfo, TemplateFun)
+{
+   // PyROOT needs to know whether a ctor is a template, see clingwrapper.cxx:
+   // > // don't give in just yet, but rather get the full name through the symbol name,
+   // > // as eg. constructors do not receive their proper/full name from GetName()
+
+   gInterpreter->Declare(R"CODE(
+struct TemplateFun {
+   template <class T>
+   TemplateFun(int, T);
+
+   template <class T>
+   int NonCtor(float, T);
+};
+)CODE");
+
+   TClass *clTemplateFun = TClass::GetClass("TemplateFun");
+   ASSERT_NE(clTemplateFun, nullptr);
+
+   TFunction *funCtor = clTemplateFun->GetMethodWithPrototype("TemplateFun", "int, int");
+   ASSERT_NE(funCtor, nullptr);
+   EXPECT_EQ(funCtor->ExtraProperty() & kIsTemplateSpec, kIsTemplateSpec);
+
+   TFunction *funNonCtor = clTemplateFun->GetMethodWithPrototype("NonCtor", "float, int");
+   ASSERT_NE(funNonCtor, nullptr);
+   EXPECT_EQ(funNonCtor->ExtraProperty() & kIsTemplateSpec, kIsTemplateSpec);
+}
