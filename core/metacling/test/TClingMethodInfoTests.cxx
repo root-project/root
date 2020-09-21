@@ -145,6 +145,12 @@ namespace Split {
   int Two(int);
 }
 }
+struct BUG6359 {
+  template <class T>
+  BUG6359(int, T);
+};
+template <class T>
+inline BUG6359::BUG6359(int ,T) {}
 )CODE");
 
   struct FuncInfo_t{
@@ -197,6 +203,9 @@ namespace Split {
 
   checkClass("ROOT10789::Split", 4,
     {{"One", 1, 0}, {"Two", 2, 0}, {"Three", 1, 0}});
+
+  checkClass("BUG6359", 5,
+    {{"BUG6359", 2, 0}});
 }
 
 TEST(TClingMethodInfo, DerivedCtorROOT11010) {
@@ -222,7 +231,7 @@ namespace ROOT11010 {
     Base(std::string s) {
       ++ROOT11010baseCtorCalled;
       if (s != "TheStringCtorArg") {
-	       std::cerr << "THE CTOR ARG IS WRONG!" << s << std::endl;
+         std::cerr << "THE CTOR ARG IS WRONG!" << s << std::endl;
          throw 8714659826;
       }
     }
