@@ -127,9 +127,9 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 #---Load some basic macros which are needed later for the confiuration and build----------------
 include(SearchRootCoreDeps)
+include(CheckCompiler)
 include(RootBuildOptions)
 include(RootMacros)
-include(CheckCompiler)
 include(CheckAssembler)
 include(CheckIntrinsics)
 
