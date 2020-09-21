@@ -308,16 +308,17 @@ sap.ui.define([
 
       buildREveDataCollectionSetter : function(el)
       {
+         this.makeBoolSetter(el.fRnrSelf, "RnrSelf");
+         this.makeColorSetter(el.fMainColor, "MainColor");
+         this.makeStringSetter(el.fFilterExpr, "FilterExpr");
+
+      },
+      buildREveDataItemListSetter : function(el)
+      {
          let pthis = this;
          let gedFrame =  this.getView().byId("GED");
-
-         let thl = new HorizontalLayout();
-         this.makeColorSetter(el.fMainColor, "", "SetMainColorRGB", thl);
-         this.makeStringSetter(el.fFilterExpr, "FilterExpr", "SetFilterExpr", thl);
-         gedFrame.addContent(thl);
-
-         gedFrame.addContent(  new sap.ui.core.HTML({content:"<hr/>"}));
          let list = new sap.m.List({});
+         list.addStyleClass("eveSummaryItem");
 	 list.setMode("MultiSelect");
 	 list.setIncludeItemInSelection(true);
 	 list.addStyleClass("eveNoSelectionCheckBox");
@@ -325,11 +326,10 @@ sap.ui.define([
          for (let i = 0; i < items.length; ++i ) {
             let iid = "item_"+ i;
 	    var item  = new sap.m.CustomListItem( iid, {type:sap.m.ListType.Active});
-
+	    item.addStyleClass("sapUiTinyMargin");
             // item info
 	    let label = new sap.m.Label({text: iid});
-            label.addStyleClass("sapUiSmallMarginTop");
-            label.removeStyleClass("li");           
+            label.addStyleClass("sapUiTinyMarginBeginEnd");
 
             // rnr self
 	    let rb = new mCheckBox({
@@ -342,10 +342,11 @@ sap.ui.define([
                   pthis.mgr.SendMIR(mir, el.fElementId, el._typename );
                }
             });
-            rb.addStyleClass("sapUiTinyMargin");
+
+            rb.addStyleClass("sapUiTinyMarginEnd");
 
             let col_widget = new EVEColorButton( {
-               text : "itemcolor",
+               icon : "sap-icon://palette",
                background: JSROOT.Painter.root_colors[items[i].fColor],
                press: function () {
                   let oCPPop = new EVEColorPopup( {
@@ -359,7 +360,7 @@ sap.ui.define([
                   oCPPop.openBy(this);
                }
             });
-            col_widget.addStyleClass("sapUiTinyMargin");
+            col_widget.addStyleClass("sapUiTinyMarginBeginEnd");
 
 
             let box = new sap.m.HBox({
