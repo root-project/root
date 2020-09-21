@@ -68,8 +68,12 @@ void FillTree(const char *filename, const char *treeName, int nevents = 0)
    f.Close();
 }
 
+
 TEST_P(RDFSimpleTests, CreateEmpty)
 {
+#ifndef NDEBUG
+   THIS_THING_SHOULD_NOT_COMPILE;
+#endif
    RDataFrame tdf(10);
    auto c = tdf.Count();
    EXPECT_EQ(10U, *c);
