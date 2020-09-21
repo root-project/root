@@ -1113,7 +1113,7 @@ Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
 
 Bool_t RooDataSet::isWeighted() const
 { 
-    return store()->isWeighted() ;
+    return store() ? store()->isWeighted() : false;
 }
 
 
