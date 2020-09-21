@@ -343,6 +343,14 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
       Error("TPad", "illegal top right position: x=%f, y=%f", xup, yup);
       goto zombie;
    }
+   if (xup-xlow <= 0) {
+      Error("TPad", "illegal width: %f", xup-xlow);
+      goto zombie;
+   }
+   if (yup-ylow <= 0) {
+      Error("TPad", "illegal height: %f", yup-ylow);
+      goto zombie;
+   }
 
    fLogx = gStyle->GetOptLogx();
    fLogy = gStyle->GetOptLogy();
