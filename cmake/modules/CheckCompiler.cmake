@@ -106,7 +106,35 @@ include(CheckCCompilerFlag)
 
 #---C++ standard----------------------------------------------------------------------
 
-set(CMAKE_CXX_STANDARD 11 CACHE STRING "")
+# We want to set the default value of CMAKE_CXX_STANDARD to the compiler default,
+# so we check the value of __cplusplus.
+# This default value can be overridden by specifying one at the prompt.
+if (MSVC)
+   set(CXX_STANDARD_STRING 2011)
+else()
+   execute_process(COMMAND echo __cplusplus
+                   COMMAND ${CMAKE_CXX_COMPILER} -E -x c++ -
+                   COMMAND tail -n1
+                   OUTPUT_VARIABLE CXX_STANDARD_STRING
+                   OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+# Lexicographically compare the value of __cplusplus (e.g. "201703L" for C++17) to figure out
+# what standard CMAKE_CXX_COMPILER uses by default.
+# The standard values that __cplusplus takes are listed e.g. at
+# https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
+# but note that compilers might denote partial implementations of new standards (e.g. c++1z)
+# with other non-standard values.
+if (${CXX_STANDARD_STRING} STRGREATER "201703L")
+   set(CXX_STANDARD_STRING 20 CACHE STRING "")
+elseif(${CXX_STANDARD_STRING} STRGREATER "201402L")
+   set(CXX_STANDARD_STRING 17 CACHE STRING "")
+elseif(${CXX_STANDARD_STRING} STRGREATER "201103L")
+   set(CXX_STANDARD_STRING 14 CACHE STRING "")
+else()
+   # We stick to C++11 as a minimum value
+   set(CXX_STANDARD_STRING 11 CACHE STRING "")
+endif()
+set(CMAKE_CXX_STANDARD ${CXX_STANDARD_STRING} CACHE STRING "")
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "")
 
