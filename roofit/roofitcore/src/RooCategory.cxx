@@ -281,15 +281,20 @@ std::map<std::string, RooAbsCategory::value_type>& RooCategory::states() {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read object contents from given stream
-
+/// Read object contents from given stream. If token is a decimal digit, try to
+/// find a corresponding state for it. If that succeeds, the state denoted by this
+/// index is used. Otherwise, interpret it as a label.
 Bool_t RooCategory::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose) 
 {
   // Read single token
   RooStreamParser parser(is) ;
   TString token = parser.readToken() ;
 
-  return setLabel(token,verbose) ;
+  if (token.IsDec() && hasIndex(std::stoi(token.Data()))) {
+    return setIndex(std::stoi(token.Data()), verbose);
+  } else {
+    return setLabel(token,verbose) ;
+  }
 }
 
 
