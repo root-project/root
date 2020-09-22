@@ -5,6 +5,7 @@
 #include "RooDataHist.h"
 #include "RooRealVar.h"
 #include "RooHelpers.h"
+#include "RooCategory.h"
 
 #include <TFile.h>
 #include <TTree.h>
@@ -18,6 +19,8 @@
 #include <TRandom3.h>
 #include <TH1F.h>
 #include <TCut.h>
+
+#include <fstream>
 
 #include "gtest/gtest.h"
 
@@ -188,4 +191,25 @@ TEST(RooDataSet, IsOnHeap) {
 
   RooDataSet setStack;
   EXPECT_FALSE(setStack.IsOnHeap());
+}
+
+/// ROOT-10935. Cannot read a category from a text file if states are given as index instead of label.
+TEST(RooDataSet, ReadCategory) {
+  RooCategory cat("cat", "cat", {{"One", 1}, {"Two", 2}, {"Three", 3}});
+  cat.setRange("OneTwo", "One,Two");
+
+  RooRealVar x("x", "x", 0., 10.);
+
+  constexpr auto filename = "datasetWithCategory.txt";
+  std::ofstream file(filename);
+  file << "1. One\n" << "2. Two\n" << "3. 3" << std::endl;
+
+  auto dataset = RooDataSet::read(filename, RooArgList(x,cat));
+  EXPECT_EQ(dataset->numEntries(), 3);
+  for (int i=1; i < 4; ++i) {
+    EXPECT_EQ(static_cast<RooRealVar*>(dataset->get(i-1)->find("x"))->getVal(), i);
+    EXPECT_EQ(static_cast<RooCategory*>(dataset->get(i-1)->find("cat"))->getIndex(), i);
+  }
+
+  gSystem->Unlink(filename);
 }
