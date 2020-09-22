@@ -835,6 +835,41 @@ void TProfile3D::GetStats(Double_t *stats) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Reduce the number of bins for this axis to the number of bins having a label.
+
+void TProfile3D::LabelsDeflate(Option_t *ax)
+{
+   TProfileHelper::LabelsDeflate(this, ax);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Double the number of bins for axis.
+/// Refill histogram
+/// This function is called by TAxis::FindBin(const char *label)
+
+void TProfile3D::LabelsInflate(Option_t *ax)
+{
+   TProfileHelper::LabelsInflate(this, ax);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set option(s) to draw axis with labels.
+///
+/// option might have the following values:
+///
+///  - "a" sort by alphabetic order
+///  - ">" sort by decreasing values
+///  - "<" sort by increasing values
+///  - "h" draw labels horizontal
+///  - "v" draw labels vertical
+///  - "u" draw labels up (end of label right adjusted)
+///  - "d" draw labels down (start of label left adjusted)
+
+void TProfile3D::LabelsOption(Option_t */* option */, Option_t * /* ax */)
+{
+   Error("LabelsOption","Labels option function is not implemented for a TProfile3D");
+}
+////////////////////////////////////////////////////////////////////////////////
 /// Merge all histograms in the collection in this histogram.
 ///
 /// This function computes the min/max for the axes,
@@ -1073,7 +1108,7 @@ TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title,
    // Since no axis range is considered when doing the projection TProfile3D->TH3D
    // the resulting histogram will have the same axis as the parent one
    // we need afterwards to set the range in the 3D histogram to considered it later
-   // when doing the projection in a Profile2D 
+   // when doing the projection in a Profile2D
    if (fXaxis.TestBit(TAxis::kAxisRange) ) {
       h3dW->GetXaxis()->SetRange(fXaxis.GetFirst(),fXaxis.GetLast());
       h3dN->GetXaxis()->SetRange(fXaxis.GetFirst(),fXaxis.GetLast());
