@@ -343,6 +343,14 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
       Error("TPad", "illegal top right position: x=%f, y=%f", xup, yup);
       goto zombie;
    }
+   if (xup-xlow <= 0) {
+      Error("TPad", "illegal width: %f", xup-xlow);
+      goto zombie;
+   }
+   if (yup-ylow <= 0) {
+      Error("TPad", "illegal height: %f", yup-ylow);
+      goto zombie;
+   }
 
    fLogx = gStyle->GetOptLogx();
    fLogy = gStyle->GetOptLogy();
@@ -5938,6 +5946,24 @@ void TPad::SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup)
       Double_t y = ylow;
       ylow = yup;
       yup  = y;
+   }
+
+   // Check if the new pad position is valid.
+   if ((xlow < 0) || (xlow > 1) || (ylow < 0) || (ylow > 1)) {
+      Error("TPad", "illegal bottom left position: x=%f, y=%f", xlow, ylow);
+      return;
+   }
+   if ((xup < 0) || (xup > 1) || (yup < 0) || (yup > 1)) {
+      Error("TPad", "illegal top right position: x=%f, y=%f", xup, yup);
+      return;
+   }
+   if (xup-xlow <= 0) {
+      Error("TPad", "illegal width: %f", xup-xlow);
+      return;
+   }
+   if (yup-ylow <= 0) {
+      Error("TPad", "illegal height: %f", yup-ylow);
+      return;
    }
 
    fXlowNDC = xlow;
