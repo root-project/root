@@ -5346,9 +5346,20 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
    }
 
    Double_t entries = fEntries;
-   Int_t n = TMath::Min(axis->GetNbins(), labels->GetSize());
+   // Code works only if first n bins have labels if we uncomment following line
+   // but we don't want to support this special case
+   // Int_t n = TMath::Min(axis->GetNbins(), labels->GetSize());
+
+   // support only cases where each bin has a labels (should be when axis is alphanumeric)
+   Int_t n = labels->GetSize();
+   if (n != axis->GetNbins()) {
+      Error("LabelsOption", "axis %s of Histogram %s has bins without labels. Sorting is not supported in this case",
+            axis->GetName(), GetName());
+      return;
+   }
    std::vector<Int_t> a(n);
    std::vector<Int_t> b(n);
+
 
    Int_t i, j, k;
    std::vector<Double_t> cont;

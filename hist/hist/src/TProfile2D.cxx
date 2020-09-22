@@ -807,15 +807,16 @@ Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z, Double_t w)
    UInt_t labelBitMask = GetAxisLabelStatus();
    Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
 
-   ++fTsumw;
-   ++fTsumw2;
-   fTsumwx  += x;
-   fTsumwx2 += x*x;
-   fTsumwy  += y;
-   fTsumwy2 += y*y;
-   fTsumwxy += x*y;
-   fTsumwz  += z;
-   fTsumwz2 += z*z;
+   fTsumw += u;
+   fTsumw2 += u * u;
+   fTsumwx += u * x;
+   fTsumwx2 += u * x * x;
+   fTsumwy += u * y;
+   fTsumwy2 += u * y * y;
+   fTsumwxy += u * x * y;
+   fTsumwz += u * z;
+   fTsumwz2 += u * z * z;
+
    return bin;
 }
 
@@ -1041,115 +1042,127 @@ void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
    if (opt.Contains("<")) sort = 2;
    if (sort < 0) return;
 
-   Int_t nx = fXaxis.GetNbins()+2;
-   Int_t ny = fYaxis.GetNbins()+2;
-   Int_t n = TMath::Min(axis->GetNbins(), labels->GetSize());
-   Int_t *a = new Int_t[n+2];
-   Int_t i,j,k,bin;
-   Double_t *sumw   = new Double_t[nx*ny];
-   Double_t *errors = new Double_t[nx*ny];
-   Double_t *ent    = new Double_t[nx*ny];
-   THashList *labold = new THashList(labels->GetSize(),1);
+   // support only cases where each bin has a labels (should be when axis is alphanumeric)
+   Int_t n = labels->GetSize();
+   if (n != axis->GetNbins()) {
+      Error("LabelsOption", "axis %s of TProfile2D %s has bins without labels. Sorting is not supported in this case",
+            axis->GetName(),GetName());
+      return;
+   }
+   std::vector<Int_t> a(n);
+   Int_t i, j, k, ibin, bin;
+   std::vector<Double_t> sumw(fNcells);
+   std::vector<Double_t> errors(fNcells);
+   std::vector<Double_t> ent(fNcells);
+   std::vector<Double_t> binsw2;
+   if (fBinSumw2.fN)
+      binsw2.resize(fNcells);
+
+   Double_t entries = fEntries;
+   // delete buffer if it is there since bins will be reordered.
+   if (fBuffer)
+      BufferEmpty(1);
+
+   // number of bins to loop
+   Int_t nx = (axis == GetXaxis()) ? n + 1 : fXaxis.GetNbins() + 2;
+   Int_t ny = (axis == GetYaxis()) ? n + 1 : fYaxis.GetNbins() + 2;
+
+   // make a labelold list but ordered with bins
+   // (re-ordered original label list)
+   std::vector<TObject *> labold(n);
+   for (i = 0; i < n; i++)
+      labold[i] = nullptr;
    TIter nextold(labels);
    TObject *obj;
-   while ((obj=nextold())) {
-      labold->Add(obj);
+   while ((obj = nextold())) {
+      bin = obj->GetUniqueID();
+      if (bin>=1 && bin<=n)
+        labold[bin-1] = obj;
    }
+   // order now labold according to bin content
+
    labels->Clear();
+
+   std::vector<Double_t> pcont;
+   std::vector<Double_t> econt;
    if (sort > 0) {
-      //---sort by values of bins
-      Double_t *pcont = new Double_t[n+2];
-      for (i=0;i<=n;i++) pcont[i] = 0;
-      for (i=1;i<nx;i++) {
-         for (j=1;j<ny;j++) {
-            bin = i+nx*j;
-            sumw[bin]   = fArray[bin];
-            errors[bin] = fSumw2.fArray[bin];
-            ent[bin]    = fBinEntries.fArray[bin];
-            if (axis == GetXaxis()) k = i;
-            else                    k = j;
-            if (fBinEntries.fArray[bin] != 0) pcont[k-1] += fArray[bin]/fBinEntries.fArray[bin];
+      pcont.resize(n);
+      econt.resize(n);
+   }
+
+   for (i = 0; i < nx; i++) {
+      for (j = 0; j < ny; j++) {
+         bin = GetBin(i, j);
+         sumw[bin] = fArray[bin];
+         errors[bin] = fSumw2.fArray[bin];
+         ent[bin] = fBinEntries.fArray[bin];
+         if (fBinSumw2.fN)
+            binsw2[bin] = fBinSumw2.fArray[bin];
+         if (axis == GetXaxis())
+            k = i - 1;
+         else
+            k = j - 1;
+         //---when sorting by values of bins
+         if (sort > 0 && fBinEntries.fArray[bin] != 0 && k > 0 && k < n) {
+            pcont[k] += fArray[bin];
+            econt[k] += fBinEntries.fArray[bin];
          }
       }
-      if (sort ==1) TMath::Sort(n,pcont,a,kTRUE);  //sort by decreasing values
-      else          TMath::Sort(n,pcont,a,kFALSE); //sort by increasing values
-      delete [] pcont;
-      for (i=0;i<n;i++) {
-         obj = labold->At(a[i]);
-         labels->Add(obj);
-         obj->SetUniqueID(i+1);
+   }
+   // compute average of slize for ordering
+   if (sort > 0) {
+      for (k = 0; k < n; ++k) {
+         a[k] = k;
+         if (econt[k] > 0)
+            pcont[k] /= econt[k];
       }
-      for (i=1;i<nx;i++) {
-         for (j=1;j<ny;j++) {
-            bin = i+nx*j;
-            if (axis == GetXaxis()) {
-               fArray[bin] = sumw[a[i-1]+1+nx*j];
-               fSumw2.fArray[bin] = errors[a[i-1]+1+nx*j];
-               fBinEntries.fArray[bin] = ent[a[i-1]+1+nx*j];
-            } else {
-               fArray[bin] = sumw[i+nx*(a[j-1]+1)];
-               fSumw2.fArray[bin] = errors[i+nx*(a[j-1]+1)];
-               fBinEntries.fArray[bin] = ent[i+nx*(a[j-1]+1)];
-            }
-         }
-      }
+      if (sort == 1)
+         TMath::Sort(n, pcont.data(), a.data(), kTRUE); // sort by decreasing values
+      else
+         TMath::Sort(n, pcont.data(), a.data(), kFALSE); // sort by increasing values
    } else {
       //---alphabetic sort
-      const UInt_t kUsed = 1<<18;
-      TObject *objk=0;
-      a[0] = 0;
-      a[n+1] = n+1;
-      for (i=1;i<=n;i++) {
-         const char *label = "zzzzzzzzzzzz";
-         for (j=1;j<=n;j++) {
-            obj = labold->At(j-1);
-            if (!obj) continue;
-            if (obj->TestBit(kUsed)) continue;
-            //use strcasecmp for case non-sensitive sort (may be an option)
-            if (strcmp(label,obj->GetName()) < 0) continue;
-            objk = obj;
-            a[i] = j;
-            label = obj->GetName();
-         }
-         if (objk) {
-            objk->SetUniqueID(i);
-            labels->Add(objk);
-            objk->SetBit(kUsed);
-         }
+      // sort labels using vector of strings and TMath::Sort
+      // I need to array because labels order in list is not necessary that of the bins
+      std::vector<std::string> vecLabels(n);
+      for (i = 0; i < n; i++) {
+         vecLabels[i] = labold[i]->GetName();
+         a[i] = i;
       }
-      for (i=1;i<=n;i++) {
-         obj = labels->At(i-1);
-         if (!obj) continue;
-         obj->ResetBit(kUsed);
-      }
-      for (i=0;i<nx;i++) {
-         for (j=0;j<ny;j++) {
-            bin = i+nx*j;
-            sumw[bin]   = fArray[bin];
-            errors[bin] = fSumw2.fArray[bin];
-            ent[bin]    = fBinEntries.fArray[bin];
+      // sort in ascending order for strings
+      TMath::Sort(n, vecLabels.data(), a.data(), kFALSE);
+   }
+
+   // set the new labels
+   for (i = 0; i < n; i++) {
+      obj = labold[a[i]];
+      labels->Add(obj);
+      // set the corresponding bin. NB bin starts from 1
+      obj->SetUniqueID(i + 1);
+      if (gDebug)
+         std::cout << "bin " << i + 1 << " setting new labels for axis " << labold.at(a[i])->GetName() << " from "
+                   << a[i] << std::endl;
+   }
+   // set the new content
+   for (i = 0; i < nx; i++) {
+      for (j = 0; j < ny; j++) {
+         bin = GetBin(i, j);
+         if (axis == GetXaxis()) {
+            if (i == 0) break; // skip underflow in x
+            ibin = GetBin(a[i - 1] + 1, j);
+         } else {
+            if (j == 0) continue;  // skip underflow in y
+            ibin = GetBin(i, a[j-1] + 1);
          }
-      }
-      for (i=0;i<nx;i++) {
-         for (j=0;j<ny;j++) {
-            bin = i+nx*j;
-            if (axis == GetXaxis()) {
-               fArray[bin] = sumw[a[i]+nx*j];
-               fSumw2.fArray[bin] = errors[a[i]+nx*j];
-               fBinEntries.fArray[bin] = ent[a[i]+nx*j];
-            } else {
-               fArray[bin] = sumw[i+nx*a[j]];
-               fSumw2.fArray[bin] = errors[i+nx*a[j]];
-               fBinEntries.fArray[bin] = ent[i+nx*a[j]];
-            }
-         }
+         fArray[bin] = sumw[ibin];
+         fSumw2.fArray[bin] = errors[ibin];
+         fBinEntries.fArray[bin] = ent[ibin];
+         if (fBinSumw2.fN)
+            binsw2[bin] = fBinSumw2.fArray[ibin];
       }
    }
-   delete labold;
-   if (a)      delete [] a;
-   if (sumw)   delete [] sumw;
-   if (errors) delete [] errors;
-   if (ent)    delete [] ent;
+   ResetStats();
+   fEntries = entries;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

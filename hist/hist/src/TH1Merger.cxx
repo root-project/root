@@ -1025,6 +1025,19 @@ Bool_t TH1Merger::LabelMerge() {
       if (!fNoCheck && hist->GetEntries() > 0) CheckForDuplicateLabels(hist);
 
       // loop on bins of the histogram and do the merge
+      if (gDebug) {
+         // print bins original histogram
+         std::cout << "Bins of original histograms\n";
+         for (int ix = 1; ix <= fH0->GetXaxis()->GetNbins(); ++ix) {
+            for (int iy = 1; iy <= fH0->GetYaxis()->GetNbins(); ++iy) {
+               for (int iz = 1; iz <= fH0->GetZaxis()->GetNbins(); ++iz) {
+                  int i = fH0->GetBin(ix,iy,iz);
+                  std::cout << "bin" << ix << "," << iy << "," << iz
+                     << "  : " << fH0->RetrieveBinContent(i) /* << " , " << fH0->fBinEntries.fArray[i] */ << std::endl;
+               }
+            }
+         }
+      }
       for (Int_t ibin = 0; ibin < hist->fNcells; ibin++) {
 
          // if bin is empty we can skip it
@@ -1065,8 +1078,13 @@ Bool_t TH1Merger::LabelMerge() {
          // find corresponding case (in case bin is not overflow)
          // and see if for that axis we need to merge using labels or bin numbers
          if (ix == -1) {
-            if (mergeLabelsX)
+            if (mergeLabelsX) {
+               // std::cout << "find bin for label " << labelX << "  " << fH0->GetBinContent(1,1,1) << " nbins "
+               // << fH0->GetXaxis()->GetNbins() << std::endl;
                ix = fH0->fXaxis.FindBin(labelX);
+               // std::cout << "bin for label " << ix << "  " << fH0->GetBinContent(1,1,1) << " nbins "
+               // << fH0->GetXaxis()->GetNbins() << std::endl;
+            }
             else
                ix = FindFixBinNumber(binx, hist->fXaxis, fH0->fXaxis);
          }
@@ -1087,6 +1105,7 @@ Bool_t TH1Merger::LabelMerge() {
          if (gDebug)
             Info("TH1Merge::LabelMerge","Merge bin [%d,%d,%d] with label [%s,%s,%s] into bin [%d,%d,%d]",
                  binx,biny,binz,labelX,labelY,labelZ,ix,iy,iz);
+
 
          Int_t ib = fH0->GetBin(ix,iy,iz);
          if (ib < 0 || ib >= fH0->fNcells) {

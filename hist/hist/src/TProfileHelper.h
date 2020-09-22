@@ -609,9 +609,17 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
 // This function is called by TAxis::FindBin(const char *label)
 // Works only for the given axis
 
+   if (gDebug) Info("LabelsInflate","Inflate label for axis %s of profile %s",ax,p->GetName());
 
-   TAxis *axis = p->GetXaxis();
-   if (ax[0] == 'y' || ax[0] == 'Y') axis = p->GetYaxis();
+   Int_t iaxis = p->AxisChoice(ax);
+   TAxis *axis = 0;
+   if (iaxis == 1) axis = p->GetXaxis();
+   if (iaxis == 2) axis = p->GetYaxis();
+   if (iaxis == 3) axis = p->GetZaxis();
+   if (!axis) return;
+   // TAxis *axis = p->GetXaxis();
+   // if (ax[0] == 'y' || ax[0] == 'Y') axis = p->GetYaxis();
+
    T *hold = (T*)p->IsA()->New();;
    hold->SetDirectory(0);
    p->Copy(*hold);
@@ -634,23 +642,27 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
    p->fSumw2.Set(ncells);
    if (p->fBinSumw2.fN)  p->fBinSumw2.Set(ncells);
 
-   //now loop on all bins and refill
-   for (Int_t ibin =0; ibin < p->fN; ibin++)
-   {
-      Int_t binx, biny, binz;
-      p->GetBinXYZ(ibin, binx, biny, binz);
-      Int_t bin = hold->GetBin(binx, biny, binz);
+   p->Reset("ICE");  // reset content and error
 
-      if (p->IsBinUnderflow(ibin) || p->IsBinOverflow(ibin)) {
-         p->UpdateBinContent(ibin, 0.0);
-         p->fBinEntries.fArray[ibin] = 0.0;
-         p->fSumw2.fArray[ibin] = 0.0;
-         if (p->fBinSumw2.fN) p->fBinSumw2.fArray[ibin] = 0.0;
-      } else {
-         p->fArray[ibin] = hold->fArray[bin];
-         p->fBinEntries.fArray[ibin] = hold->fBinEntries.fArray[bin];
-         p->fSumw2.fArray[ibin] = hold->fSumw2.fArray[bin];
-         if (p->fBinSumw2.fN) p->fBinSumw2.fArray[ibin] = hold->fBinSumw2.fArray[bin];
+   //now loop on all old bins and refill excluding underflow/overflow in
+   // the axis that has the bin doubled
+   Int_t binx, biny, binz = 0;
+   for (Int_t ibin =0; ibin < hold->fNcells; ibin++) {
+      // get the binx,y,z values . The x-y-z (axis) bin values will stay the same between new-old after the expanding
+      hold->GetBinXYZ(ibin,binx,biny,binz);
+      Int_t bin = p->GetBin(binx,biny,binz);
+
+      // underflow and overflow will be cleaned up because their meaning has been altered
+      if (hold->IsBinUnderflow(ibin,iaxis) || hold->IsBinOverflow(ibin,iaxis)) {
+         if (gDebug && hold->fBinEntries.fArray[ibin] > 0) Info("LabelsInflate","Content for underflow/overflow of bin (%d,%d,%d) will be lost",binx,biny,binz);
+         continue;
+      }
+      else {
+         p->fArray[bin] = hold->fArray[ibin];
+         p->fBinEntries.fArray[bin] = hold->fBinEntries.fArray[ibin];
+         p->fSumw2.fArray[bin] = hold->fSumw2.fArray[ibin];
+         if (p->fBinSumw2.fN) p->fBinSumw2.fArray[bin] = hold->fBinSumw2.fArray[ibin];
+         if (gDebug) Info("LabelsInflate","Copy Content from bin (%d,%d,%d) from %d in %d (%f,%f)",binx,biny,binz, ibin, bin, hold->fArray[ibin],hold->fBinEntries.fArray[ibin] );
       }
    }
    delete hold;
