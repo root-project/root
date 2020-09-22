@@ -120,7 +120,6 @@ public:
    static Int_t FitOptionsMake(Option_t *option, Foption_t &Foption);
 
 private:
-   Int_t   AxisChoice(Option_t *axis) const;
    void    Build();
 
    TH1(const TH1&);
@@ -132,6 +131,8 @@ protected:
    TH1(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup);
    TH1(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins);
    TH1(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
+
+   Int_t            AxisChoice(Option_t *axis) const;
    virtual Int_t    BufferFill(Double_t x, Double_t w);
    virtual Bool_t   FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t& newMin, Double_t &newMax);
    virtual void     SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *option = "");
