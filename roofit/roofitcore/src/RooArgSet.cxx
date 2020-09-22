@@ -762,7 +762,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
   parser.setPunctuation("=") ;
   TString token ;
   Bool_t retVal(kFALSE) ;
-  
+
   // Conditional stack and related state variables
   // coverity[UNINIT]
   Bool_t anyCondTrue[100] ;
@@ -770,7 +770,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
   Bool_t lastLineWasElse=kFALSE ;
   Int_t condStackLevel=0 ;
   condStack[0]=kTRUE ;
-  
+
   // Prepare section processing
   TString sectionHdr("[") ;
   if (section) sectionHdr.Append(section) ;
@@ -783,7 +783,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
     if (is.eof() || is.fail() || parser.atEOF()) {
       break ;
     }
-    
+
     // Read next token until memEnd of file
     if (!reprocessToken) {
       token = parser.readToken() ;
@@ -798,18 +798,18 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
     // Process include directives
     if (!token.CompareTo("include")) {
       if (parser.atEOL()) {
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() 
-			      << "): no filename found after include statement" << endl ;
-	return kTRUE ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName()
+			          << "): no filename found after include statement" << endl ;
+        return kTRUE ;
       }
       TString filename = parser.readLine() ;
       ifstream incfs(filename) ;
       if (!incfs.good()) {
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): cannot open include file " << filename << endl ;
-	return kTRUE ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): cannot open include file " << filename << endl ;
+        return kTRUE ;
       }
       coutI(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): processing include file " 
-			    << filename << endl ;
+          << filename << endl ;
       if (readFromStream(incfs,compact,flagReadAtt,inSection?0:section,verbose)) return kTRUE ;
       continue ;
     }
@@ -819,13 +819,13 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
       TString hdr(token) ;
       const char* last = token.Data() + token.Length() -1 ;
       if (*last != ']') {
-	hdr.Append(" ") ;
-	hdr.Append(parser.readLine()) ;
+        hdr.Append(" ") ;
+        hdr.Append(parser.readLine()) ;
       }
-//       parser.putBackToken(token) ;
-//       token = parser.readLine() ;
+      //       parser.putBackToken(token) ;
+      //       token = parser.readLine() ;
       if (section) {
-	inSection = !sectionHdr.CompareTo(hdr) ;
+        inSection = !sectionHdr.CompareTo(hdr) ;
       }
       continue ;
     }
@@ -838,123 +838,123 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
 
     // Conditional statement evaluation
     if (!token.CompareTo("if")) {
-      
+
       // Extract conditional expressions and check validity
       TString expr = parser.readLine() ;
       RooFormula form(expr,expr,*this) ;
       if (!form.ok()) return kTRUE ;
-      
+
       // Evaluate expression
       Bool_t status = form.eval()?kTRUE:kFALSE ;
       if (lastLineWasElse) {
-	anyCondTrue[condStackLevel] |= status ;
-	lastLineWasElse=kFALSE ;
+        anyCondTrue[condStackLevel] |= status ;
+        lastLineWasElse=kFALSE ;
       } else {
-	condStackLevel++ ;
-	anyCondTrue[condStackLevel] = status ;
+        condStackLevel++ ;
+        anyCondTrue[condStackLevel] = status ;
       }
       condStack[condStackLevel] = status ;
-      
+
       if (verbose) cxcoutD(Eval) << "RooArgSet::readFromStream(" << GetName() 
-				 << "): conditional expression " << expr << " = " 
-				 << (condStack[condStackLevel]?"true":"false") << endl ;
+				     << "): conditional expression " << expr << " = "
+				     << (condStack[condStackLevel]?"true":"false") << endl ;
       continue ; // go to next line
     }
-    
+
     if (!token.CompareTo("else")) {
       // Must have seen an if statement before
       if (condStackLevel==0) {
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'else'" << endl ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'else'" << endl ;
       }
-      
+
       if (parser.atEOL()) {
-	// simple else: process if nothing else was true
-	condStack[condStackLevel] = !anyCondTrue[condStackLevel] ; 
-	parser.zapToEnd(kFALSE) ;
-	continue ;
+        // simple else: process if nothing else was true
+        condStack[condStackLevel] = !anyCondTrue[condStackLevel] ;
+        parser.zapToEnd(kFALSE) ;
+        continue ;
       } else {
-	// if anything follows it should be 'if'
-	token = parser.readToken() ;
-	if (token.CompareTo("if")) {
-	  coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): syntax error: 'else " << token << "'" << endl ;
-	  return kTRUE ;
-	} else {
-	  if (anyCondTrue[condStackLevel]) {
-	    // No need for further checking, true conditional already processed
-	    condStack[condStackLevel] = kFALSE ;
-	    parser.zapToEnd(kFALSE) ;
-	    continue ;
-	  } else {
-	    // Process as normal 'if' no true conditional was encountered 
-	    reprocessToken = kTRUE ;
-	    lastLineWasElse=kTRUE ;
-	    continue ;
-	  }
-	}
+        // if anything follows it should be 'if'
+        token = parser.readToken() ;
+        if (token.CompareTo("if")) {
+          coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): syntax error: 'else " << token << "'" << endl ;
+          return kTRUE ;
+        } else {
+          if (anyCondTrue[condStackLevel]) {
+            // No need for further checking, true conditional already processed
+            condStack[condStackLevel] = kFALSE ;
+            parser.zapToEnd(kFALSE) ;
+            continue ;
+          } else {
+            // Process as normal 'if' no true conditional was encountered
+            reprocessToken = kTRUE ;
+            lastLineWasElse=kTRUE ;
+            continue ;
+          }
+        }
       }	
     }
-    
+
     if (!token.CompareTo("endif")) {
       // Must have seen an if statement before
       if (condStackLevel==0) {
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'endif'" << endl ;
-	return kTRUE ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'endif'" << endl ;
+        return kTRUE ;
       }
-      
+
       // Decrease stack by one
       condStackLevel-- ;
       continue ;
     } 
-    
+
     // If current conditional is true
     if (condStack[condStackLevel]) {
-      
+
       // Process echo statements
       if (!token.CompareTo("echo")) {
-	TString message = parser.readLine() ;
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): >> " << message << endl ;
-	continue ;
+        TString message = parser.readLine() ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): >> " << message << endl ;
+        continue ;
       } 
-      
+
       // Process abort statements
       if (!token.CompareTo("abort")) {
-	TString message = parser.readLine() ;
-	coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): USER ABORT" << endl ;
-	return kTRUE ;
+        TString message = parser.readLine() ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): USER ABORT" << endl ;
+        return kTRUE ;
       } 
-      
+
       // Interpret the rest as <arg> = <value_expr> 
       RooAbsArg *arg ;
 
       if ((arg = find(token)) && !arg->getAttribute("Dynamic")) {
-	if (parser.expectToken("=",kTRUE)) {
-	  parser.zapToEnd(kTRUE) ;
-	  retVal=kTRUE ;
-	  coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() 
-				<< "): missing '=' sign: " << arg << endl ;
-	  continue ;
-	}
-	Bool_t argRet = arg->readFromStream(is,kFALSE,verbose) ;	
-	if (!argRet && flagReadAtt) arg->setAttribute(flagReadAtt,kTRUE) ;
-	retVal |= argRet ;
+        if (parser.expectToken("=",kTRUE)) {
+          parser.zapToEnd(kTRUE) ;
+          retVal=kTRUE ;
+          coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName()
+				    << "): missing '=' sign: " << arg << endl ;
+          continue ;
+        }
+        Bool_t argRet = arg->readFromStream(is,kFALSE,verbose) ;
+        if (!argRet && flagReadAtt) arg->setAttribute(flagReadAtt,kTRUE) ;
+        retVal |= argRet ;
       } else {
-	if (verbose) {
-	  coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): argument " 
-				<< token << " not in list, ignored" << endl ;
-	}
-	parser.zapToEnd(kTRUE) ;
+        if (verbose) {
+          coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): argument "
+              << token << " not in list, ignored" << endl ;
+        }
+        parser.zapToEnd(kTRUE) ;
       }
     } else {
       parser.readLine() ;
     }
   }
-  
+
   // Did we fully unwind the conditional stack?
   if (condStackLevel!=0) {
     coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): missing 'endif'" << endl ;
     return kTRUE ;
   }
-  
+
   return retVal ;
 }
 
