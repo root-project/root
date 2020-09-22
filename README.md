@@ -52,9 +52,9 @@ When citing ROOT, please use both the reference reported below and the DOI speci
 ## Screenshots
 These screenshots shows some of the plots (produced using ROOT) presented when the Higgs boson discovery was [announced at CERN](http://home.cern/topics/higgs-boson):
 
-![CMS Data MC Ratio Plot](https://d35c7d8c.web.cern.ch/sites/d35c7d8c.web.cern.ch/files/CMS04_1.png)
+![CMS Data MC Ratio Plot](https://root.cern/gallery/higgs_plots/CMS_Data_MC_Ratio_Plot.png)
 
-![Atlas P0 Trends](https://d35c7d8c.web.cern.ch/sites/d35c7d8c.web.cern.ch/files/Atlas06_0.png)
+![Atlas P0 Trends](https://root.cern/gallery/higgs_plots/Atlas_P0_Trends.png)
 
 See more screenshots on our [gallery](https://root.cern/gallery).
 
