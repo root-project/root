@@ -5948,6 +5948,24 @@ void TPad::SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup)
       yup  = y;
    }
 
+   // Check if the new pad position is valid.
+   if ((xlow < 0) || (xlow > 1) || (ylow < 0) || (ylow > 1)) {
+      Error("TPad", "illegal bottom left position: x=%f, y=%f", xlow, ylow);
+      return;
+   }
+   if ((xup < 0) || (xup > 1) || (yup < 0) || (yup > 1)) {
+      Error("TPad", "illegal top right position: x=%f, y=%f", xup, yup);
+      return;
+   }
+   if (xup-xlow <= 0) {
+      Error("TPad", "illegal width: %f", xup-xlow);
+      return;
+   }
+   if (yup-ylow <= 0) {
+      Error("TPad", "illegal height: %f", yup-ylow);
+      return;
+   }
+
    fXlowNDC = xlow;
    fYlowNDC = ylow;
    fXUpNDC  = xup;
