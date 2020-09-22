@@ -143,7 +143,7 @@ public:
              std::ostream &output = std::cout);
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
-   /// On I/O errors, raises an expection.
+   /// On I/O errors, raises an exception.
    void LoadEntry(NTupleSize_t index) { LoadEntry(index, *fModel->GetDefaultEntry()); }
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
    void LoadEntry(NTupleSize_t index, REntry &entry) {
