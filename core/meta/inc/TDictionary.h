@@ -83,16 +83,19 @@ enum EProperty {
    kIsCCompiled     = 0x00040000,
    kIsCPPCompiled   = kIsCCompiled,
    kIsCompiled      = kIsCCompiled,
+   // 0x00080000 is available
    kIsConstant      = 0x00100000,
    kIsVirtualBase   = 0x00200000,
    kIsConstPointer  = 0x00400000,
    kIsScopedEnum    = 0x00800000,
+   // 0x01000000 is available
    kIsConstexpr     = 0x02000000,
    kIsExplicit      = 0x04000000,
    kIsNamespace     = 0x08000000,
    kIsConstMethod   = 0x10000000,
-   kIsUsingVariable = 0x20000000,
+   kIsUsing         = 0x20000000,
    kIsDefinedInStd  = 0x40000000
+   // 0x80000000 is available
 };
 
 enum EFunctionProperty {

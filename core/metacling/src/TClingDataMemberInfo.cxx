@@ -404,6 +404,9 @@ long TClingDataMemberInfo::Property() const
          // IMPOSSIBLE
          break;
    }
+   if (llvm::isa<clang::UsingShadowDecl>(declaccess))
+      property |= kIsUsing;
+
    const clang::ValueDecl *vd = GetTargetValueDecl();
    if (const clang::VarDecl *vard = llvm::dyn_cast<clang::VarDecl>(vd)) {
       if (vard->isConstexpr())
