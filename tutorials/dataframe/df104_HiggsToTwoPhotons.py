@@ -207,7 +207,8 @@ text.DrawLatex(0.18, 0.84, "ATLAS")
 text.SetTextFont(42)
 text.DrawLatex(0.18 + 0.13, 0.84, "Open Data")
 text.SetTextSize(0.04)
-text.DrawLatex(0.18, 0.78, "#sqrt{s} = 13 TeV, 10 fb^{-1}");
+text.DrawLatex(0.18, 0.78, "#sqrt{s} = 13 TeV, 10 fb^{-1}")
 
 # Save the plot
-c.SaveAs("HiggsToTwoPhotons.pdf");
+c.SaveAs("df104_HiggsToTwoPhotons.png")
+print("Saved figure to df104_HiggsToTwoPhotons.png")
