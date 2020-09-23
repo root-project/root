@@ -1820,6 +1820,7 @@
       if (histo._typename.match(/^TH2/)) return 2;
       if (histo._typename.match(/^TProfile2D/)) return 2;
       if (histo._typename.match(/^TH3/)) return 3;
+      if (this.IsTH2Poly()) return 2;
       return 1;
    }
 
@@ -1919,14 +1920,11 @@
          // The only that could be done is update of content
 
          // check only stats bit, later other settings can be monitored
+         var statpainter = this.FindPainterFor(this.FindStat());
          if (histo.TestBit(JSROOT.TH1StatusBits.kNoStats) != obj.TestBit(JSROOT.TH1StatusBits.kNoStats)) {
             histo.fBits = obj.fBits;
-
-            var statpainter = this.FindPainterFor(this.FindStat());
             if (statpainter) statpainter.Enabled = !histo.TestBit(JSROOT.TH1StatusBits.kNoStats);
          }
-
-         // if (histo.TestBit(JSROOT.TH1StatusBits.kNoStats)) this.ToggleStat();
 
          // special treatment for webcanvas - also name can be changed
          if (this.snapid !== undefined)
@@ -2042,6 +2040,11 @@
                      newfuncs.push(func);
                   }
                }
+
+            if (statpainter) {
+               var indx = painters.indexOf(statpainter);
+               if (indx >= 0) painters.splice(indx, 1);
+            }
 
             // remove all function which are not found in new list of primitives
             if (pp && (painters.length > 0))
