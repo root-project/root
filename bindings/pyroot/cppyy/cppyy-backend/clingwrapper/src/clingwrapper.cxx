@@ -1684,19 +1684,8 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
 
     if (func) {
     // make sure we didn't match a non-templated overload
-        if (strstr(func->GetName(), "<"))
+        if (func->ExtraProperty() & kIsTemplateSpec)
             return (TCppMethod_t)new_CallWrapper(func);
-
-    // don't give in just yet, but rather get the full name through the symbol name,
-    // as eg. constructors do not receive their proper/full name from GetName()
-        int err;
-        char* truename = TClassEdit::DemangleName(func->GetMangledName(), err);
-        if (truename && err != -1) {
-            bool isTemplated = (bool)strstr(truename, "<");
-            free(truename);
-            if (isTemplated)
-                return (TCppMethod_t)new_CallWrapper(func);
-        }
 
     // disregard this non-templated method as it will be considered when appropriate
         return (TCppMethod_t)nullptr;
