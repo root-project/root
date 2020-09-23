@@ -34,14 +34,6 @@ const unsigned int idsSize=19;
 ClassImp(TListOfDataMembers);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TListOfDataMembers::TListOfDataMembers(TClass *cl /*=0*/) :
-   fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE), fLastLoadMarker(0)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TListOfDataMembers::~TListOfDataMembers()
@@ -474,7 +466,7 @@ void TListOfDataMembers::Load()
    }
 
    // Now we follow the ordinary pattern
-   DataMemberInfo_t *t = gInterpreter->DataMemberInfo_Factory(info);
+   DataMemberInfo_t *t = gInterpreter->DataMemberInfo_Factory(info, fSelection);
    while (gInterpreter->DataMemberInfo_Next(t)) {
       if (gInterpreter->DataMemberInfo_IsValid(t)) {
          // Get will check if there is already there or create a new one

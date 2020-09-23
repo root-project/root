@@ -50,23 +50,37 @@ from the Clang C++ compiler, not CINT.
 
 using namespace clang;
 
+namespace {
+   static bool IsRelevantKind(clang::Decl::Kind DK)
+   {
+      return DK == clang::Decl::Field || DK == clang::Decl::EnumConstant || DK == clang::Decl::Var;
+   }
+}
+
 bool TClingDataMemberIter::ShouldSkip(const clang::Decl *D) const
 {
-   const auto DK = D->getKind();
-   return !(DK == clang::Decl::Field || DK == clang::Decl::EnumConstant || DK == clang::Decl::Var);
+   if (!TDictionary::WantsRegularMembers(fSelection))
+      return true;
+
+   return !IsRelevantKind(D->getKind());
 }
 
 bool TClingDataMemberIter::ShouldSkip(const clang::UsingShadowDecl *USD) const
 {
+   if (!TDictionary::WantsUsingDecls(fSelection))
+      return true;
+
    if (auto *VD = llvm::dyn_cast<clang::ValueDecl>(USD->getTargetDecl())) {
-      return ShouldSkip(VD);
+      return !IsRelevantKind(VD->getKind());
    }
+
    // TODO: handle multi-level UsingShadowDecls.
    return true;
 }
 
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
-                                           TClingClassInfo *ci)
+                                           TClingClassInfo *ci,
+                                           TDictionary::EMemberSelection selection)
 : TClingDeclInfo(nullptr), fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp))
 {
 
@@ -78,7 +92,7 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
 
    auto *DC = llvm::dyn_cast<clang::DeclContext>(ci->GetDecl());
 
-   fIter = TClingDataMemberIter(interp, DC);
+   fIter = TClingDataMemberIter(interp, DC, selection);
    fIter.Init();
 }
 
@@ -94,10 +108,7 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
    assert((ci || isa<TranslationUnitDecl>(DC) ||
           ((DC->isTransparentContext() || DC->isInlineNamespace()) && isa<TranslationUnitDecl>(DC->getParent()) ) ||
            isa<EnumConstantDecl>(ValD)) && "Not TU?");
-   assert((isa<VarDecl>(ValD) ||
-           isa<FieldDecl>(ValD) ||
-           isa<EnumConstantDecl>(ValD) ||
-           isa<IndirectFieldDecl>(ValD)) &&
+   assert(IsRelevantKind(ValD->getKind()) &&
           "The decl should be either VarDecl or FieldDecl or EnumConstDecl");
 
 }
