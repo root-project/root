@@ -13,6 +13,7 @@
 *.o
 *.d
 *.pcm
+*.dwo
 *.so
 *.dll
 *.dylib
