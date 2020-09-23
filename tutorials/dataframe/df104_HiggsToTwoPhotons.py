@@ -79,6 +79,13 @@ for p in processes:
             "m_yy", "weight")
 
 # Run the event loop
+
+# RunGraphs allows to run the event loops of the separate RDataFrame graphs
+# concurrently. This results in an improved usage of the available resources
+# if each separate RDataFrame can not utilize all available resources, e.g.,
+# because not enough data is available.
+ROOT.RDF.RunGraphs([hists[s] for s in ["ggH", "VBF", "data"]])
+
 ggh = hists["ggH"].GetValue()
 vbf = hists["VBF"].GetValue()
 data = hists["data"].GetValue()
