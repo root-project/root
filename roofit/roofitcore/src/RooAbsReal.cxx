@@ -2690,14 +2690,16 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate error on self by propagated errors on parameters with correlations as given by fit result
-/// The linearly propagated error is calculated as follows
+/// Calculate error on self by *linearly* propagating errors on parameters using the covariance matrix
+/// from a fit result.
+/// The error is calculated as follows
 /// \f[
-///     \mathrm{error}(x) = F_a(x) * \mathrm{Corr}(a,a')  * F_{a'}^{\mathrm{T}}(x)
+///     \mathrm{error}^2(x) = F_\mathbf{a}(x) \cdot \mathrm{Cov}(\mathbf{a},\mathbf{a}') \cdot F_{\mathbf{a}'}^{\mathrm{T}}(x)
 /// \f]
-/// where \f$ F_a(x) = \frac{ f(x, a + \mathrm{d}a) - f(x, a - \mathrm{d}a) }{2} \f$,
-/// with \f$ f(x) \f$ this function and \f$ \mathrm{d}a \f$ taken from the fit result and
-/// \f$ \mathrm{Corr}(a,a') \f$ = the correlation matrix from the fit result
+/// where \f$ F_mathbf{a}(x) = \frac{ f(x, mathbf{a} + \mathrm{d}mathbf{a}) - f(x, mathbf{a} - \mathrm{d}mathbf{a}) }{2} \f$,
+/// with \f$ f(x) = \f$ `this` and \f$ \mathrm{d}mathbf{a} \f$ the vector of one-sigma uncertainties of all
+/// fit parameters taken from the fit result and
+/// \f$ \mathrm{Cov}(mathbf{a},mathbf{a}') \f$ = the covariance matrix from the fit result.
 ///
 
 Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset_in) const
