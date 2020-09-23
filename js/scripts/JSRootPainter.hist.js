@@ -1816,6 +1816,7 @@
       if (histo._typename.match(/^TH2/)) return 2;
       if (histo._typename.match(/^TProfile2D/)) return 2;
       if (histo._typename.match(/^TH3/)) return 3;
+      if (this.IsTH2Poly()) return 2;
       return 1;
    }
 
@@ -1915,14 +1916,11 @@
          // The only that could be done is update of content
 
          // check only stats bit, later other settings can be monitored
+         var statpainter = this.FindPainterFor(this.FindStat());
          if (histo.TestBit(JSROOT.TH1StatusBits.kNoStats) != obj.TestBit(JSROOT.TH1StatusBits.kNoStats)) {
             histo.fBits = obj.fBits;
-
-            var statpainter = this.FindPainterFor(this.FindStat());
             if (statpainter) statpainter.Enabled = !histo.TestBit(JSROOT.TH1StatusBits.kNoStats);
          }
-
-         // if (histo.TestBit(JSROOT.TH1StatusBits.kNoStats)) this.ToggleStat();
 
          // special treatment for webcanvas - also name can be changed
          if (this.snapid !== undefined)
@@ -2038,6 +2036,11 @@
                      newfuncs.push(func);
                   }
                }
+
+            if (statpainter) {
+               var indx = painters.indexOf(statpainter);
+               if (indx >= 0) painters.splice(indx, 1);
+            }
 
             // remove all function which are not found in new list of primitives
             if (pp && (painters.length > 0))
@@ -2607,6 +2610,27 @@
       this.Redraw();
    }
 
+   /** @summary Start dialog to modify range of axis where histogram values are displayed @private */
+   THistPainter.prototype.ChangeValuesRange = function() {
+      let curr;
+      if ((this.options.minimum != -1111) && (this.options.maximum != -1111))
+         curr = "[" + this.options.minimum + "," + this.options.maximum + "]";
+      else
+         curr = "[" + this.gminbin + "," + this.gmaxbin + "]";
+
+      let res = prompt("Enter min/max hist values or empty string to reset", curr);
+      res = res ? JSON.parse(res) : [];
+
+      if (!res || (typeof res != "object") || (res.length!=2) || isNaN(res[0]) || isNaN(res[1])) {
+         this.options.minimum = this.options.maximum = -1111;
+      } else {
+         this.options.minimum = res[0];
+         this.options.maximum = res[1];
+       }
+
+       this.RedrawPad();
+   }
+
    THistPainter.prototype.FillContextMenu = function(menu) {
 
       var histo = this.GetHisto(),
@@ -2625,6 +2649,8 @@
             menu.add("Y", "Y", this.ChangeUserRange);
             if (this.Dimension() > 2)
                menu.add("Z", "Z", this.ChangeUserRange);
+            else
+               menu.add("Values", this.ChangeValuesRange);
             menu.add("endsub:")
          }
 

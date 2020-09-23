@@ -8,6 +8,7 @@
 5. Fix in reading std::map member-wise
 6. Better handling of context menu position
 7. Support TASImage class - both PNG and binary content, including palette
+8. Let change TH2 values range via context menu
 
 
 ## Changes in 5.8.1
