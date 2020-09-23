@@ -439,13 +439,12 @@ long TClingMethodInfo::Property() const
    }
    long property = 0L;
    property |= kIsCompiled;
-   const clang::FunctionDecl *fd = GetTargetFunctionDecl();
-   if (fd->isConstexpr())
-      property |= kIsConstexpr;
+
    // NOTE: this uses `GetDecl()`, to capture the access of the UsingShadowDecl,
    // which is defined in the derived class and might differ from the access of fd
    // in the base class.
-   switch (GetDecl()->getAccess()) {
+   const Decl *declAccess = GetDecl();
+   switch (declAccess->getAccess()) {
       case clang::AS_public:
          property |= kIsPublic;
          break;
@@ -456,13 +455,19 @@ long TClingMethodInfo::Property() const
          property |= kIsPrivate;
          break;
       case clang::AS_none:
-         if (fd->getDeclContext()->isNamespace())
+         if (declAccess->getDeclContext()->isNamespace())
             property |= kIsPublic;
          break;
       default:
          // IMPOSSIBLE
          break;
    }
+   if (llvm::isa<UsingShadowDecl>(declAccess))
+      property |= kIsUsing;
+
+   const clang::FunctionDecl *fd = GetTargetFunctionDecl();
+   if (fd->isConstexpr())
+      property |= kIsConstexpr;
    if (fd->getStorageClass() == clang::SC_Static) {
       property |= kIsStatic;
    }
