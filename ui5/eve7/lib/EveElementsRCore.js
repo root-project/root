@@ -54,7 +54,25 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       return new RC.Color(JSROOT.Painter.getColor(root_col));
    }
 
-   function RcLineMaterial(color, opacity, line_width, props)
+   //------------------------------------------------------------------------------
+
+   function EveElements(rc)
+   {
+      console.log("EveElements -- RCore");
+
+      RC = rc;
+
+      this.POINT_SIZE_FAC = 1;
+      this.LINE_WIDTH_FAC = 1;
+   }
+
+   EveElements.prototype.SetupPointLineFacs = function (pf, lf)
+   {
+      this.POINT_SIZE_FAC = pf;
+      this.LINE_WIDTH_FAC = lf;
+   }
+
+   EveElements.prototype.RcLineMaterial = function (color, opacity, line_width, props)
    {
       let mat = new RC.MeshBasicMaterial; // StripeBasicMaterial
       mat._color = color;
@@ -66,7 +84,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       }
       if (line_width !== undefined)
       {
-         mat._lineWidth = line_width;
+         mat._lineWidth = this.LINE_WIDTH_FAC * line_width;
       }
       if (props !== undefined)
       {
@@ -75,7 +93,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       return mat;
    }
 
-   function RcFancyMaterial(color, opacity, props)
+   EveElements.prototype.RcFancyMaterial = function (color, opacity, props)
    {
       let mat = new RC.MeshPhongMaterial;
       // let mat = new RC.MeshBasicMaterial;
@@ -94,7 +112,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       return mat;
    }
 
-   function RcPickable(el, obj3d)
+   EveElements.prototype.RcPickable = function (el, obj3d)
    {
       if (el.fPickable) {
          obj3d.colorID = el.fElementId;
@@ -104,15 +122,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          // console.log("NOT Pickable for", el.fElementId, el.fName)
          return false;
       }
-   }
-
-   //------------------------------------------------------------------------------
-
-   function EveElements(rc)
-   {
-      console.log("EveElements -- RCore");
-
-      RC = rc;
    }
 
    EveElements.prototype.TestRnr = function (name, obj, rnr_data)
@@ -137,7 +146,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       let geo = new RC.Geometry();
       geo.vertices = new RC.BufferAttribute(rnr_data.vtxBuff, 3);
 
-      let size = 2 * hit.fMarkerSize; // scaled by distance down to half size (basic_template.vert)
+      let size = 2 * this.POINT_SIZE_FAC * hit.fMarkerSize; // scaled by distance down to half size (basic_template.vert)
       let col = RcCol(hit.fMarkerColor);
 
       let mat = new RC.MeshBasicMaterial;
@@ -155,7 +164,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
       // mesh.get_ctrl = function() { return new EveElemControl(this); }
 
-      RcPickable(hit, pnts);
+      this.RcPickable(hit, pnts);
       return pnts;
    }
 
@@ -169,7 +178,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       if (this.TestRnr("track", track, rnr_data)) return null;
 
       let N = rnr_data.vtxBuff.length / 3;
-      let track_width = track.fLineWidth || 1;
+      let track_width = 2 * (track.fLineWidth || 1) * this.LINE_WIDTH_FAC;
       let track_color = RcCol(track.fLineColor);
 
       if (JSROOT.browser.isWin) track_width = 1;  // not supported on windows
@@ -213,10 +222,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
       if (dash && (dash.length > 1))
       {
-         lineMaterial = RcLineMaterial(track_color, 1.0, track_width, { dashSize: parseInt(dash[0]), gapSize: parseInt(dash[1]) });
+         lineMaterial = this.RcLineMaterial(track_color, 1.0, track_width, { dashSize: parseInt(dash[0]), gapSize: parseInt(dash[1]) });
       } else
       {
-         lineMaterial = RcLineMaterial(track_color, 1.0, track_width);
+         lineMaterial = this.RcLineMaterial(track_color, 1.0, track_width);
       }
 
       let geom = new RC.Geometry();
@@ -232,7 +241,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
       //line.hightlightWidthScale = 2;
 
-      RcPickable(track, line);
+      this.RcPickable(track, line);
       return line;
    }
 
@@ -280,18 +289,18 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       let mcol = RcCol(jet.fMainColor);
       let lcol = RcCol(jet.fLineColor);
 
-      let mesh = new RC.Mesh(geo_body, RcFancyMaterial(mcol, 0.5, { side: RC.FRONT_AND_BACK_SIDE }));
+      let mesh = new RC.Mesh(geo_body, this.RcFancyMaterial(mcol, 0.5, { side: RC.FRONT_AND_BACK_SIDE }));
 
-      let line1 = new RC.Line(geo_rim, RcLineMaterial(lcol, 0.8, 2));
+      let line1 = new RC.Line(geo_rim, this.RcLineMaterial(lcol, 0.8, 4));
 
-      let line2 = new RC.Line(geo_rays, RcLineMaterial(lcol, 0.8, 0.5));
+      let line2 = new RC.Line(geo_rays, this.RcLineMaterial(lcol, 0.8, 1));
       line2.renderingPrimitive = RC.LINES;
 
       mesh.add(line1);
       mesh.add(line2);
 
       // mesh.get_ctrl = function () { return new EveElemControl(this); }
-      RcPickable(jet, mesh);
+      this.RcPickable(jet, mesh);
       return mesh;
    }
 
@@ -333,18 +342,18 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       // console.log("cols", fcol, lcol);
 
       // double-side material required for correct tracing of colors - otherwise points sequence should be changed
-      let mesh = new RC.Mesh(geo_body, RcFancyMaterial(fcol, 0.5));
+      let mesh = new RC.Mesh(geo_body, this.RcFancyMaterial(fcol, 0.5));
 
-      let line1 = new RC.Line(geo_rim, RcLineMaterial(lcol, 0.8, 2));
+      let line1 = new RC.Line(geo_rim, this.RcLineMaterial(lcol, 0.8, 2));
 
-      let line2 = new RC.Line(geo_rays, RcLineMaterial(lcol, 0.8, 0.5));
+      let line2 = new RC.Line(geo_rays, this.RcLineMaterial(lcol, 0.8, 0.5));
       line2.renderingPrimitive = RC.LINES;
 
       mesh.add(line1);
       mesh.add(line2);
 
       // mesh.get_ctrl = function () { return new EveElemControl(this); }
-      RcPickable(jet, mesh);
+      this.RcPickable(jet, mesh);
       return mesh;
    }
 
@@ -384,13 +393,13 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
       let fcol = RcCol(egs.fFillColor);
 
-      let material = RcFancyMaterial(fcol, 0.2);
+      let material = this.RcFancyMaterial(fcol, 0.2);
       material.side = RC.FRONT_AND_BACK_SIDE;
       material.specular = new RC.Color(1, 1, 1);
       material.shininess = 50;
 
       let mesh = new RC.Mesh(geom, material);
-      RcPickable(egs, mesh);
+      this.RcPickable(egs, mesh);
       return mesh;
    }
 
@@ -409,12 +418,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
       let fcol = RcCol(psp.fMainColor);
 
-      let material = RcFancyMaterial(fcol, 0.4);
+      let material = this.RcFancyMaterial(fcol, 0.4);
       material.side = RC.FRONT_AND_BACK_SIDE;
       material.specular = new RC.Color(1, 1, 1);
       material.shininess = 50;
 
-      let line_mat = RcLineMaterial(fcol);
+      let line_mat = this.RcLineMaterial(fcol);
 
       for (let ib_pos = 0; ib_pos < ib_len;)
       {
@@ -427,7 +436,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
             geo.computeVertexNormalsIdxRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
 
             let mesh = new RC.Mesh(geo, material);
-            RcPickable(psp, mesh);
+            this.RcPickable(psp, mesh);
             psp_ro.add(mesh);
 
             ib_pos += 2 + 3 * rnr_data.idxBuff[ib_pos + 1];
@@ -472,7 +481,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          buf[i] = rnr_data.vtxBuff[i];
       }
 
-      let line_mat = new RcLineMaterial(fcol);
+      let line_mat = new this.RcLineMaterial(fcol);
 
       let geom = new RC.Geometry();
       geom.vertices = new RC.BufferAttribute(buf, 3);
@@ -480,7 +489,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       let line = new RC.Line(geom, line_mat);
       line.renderingPrimitive = RC.LINES;
 
-      RcPickable(el, line);
+      this.RcPickable(el, line);
       obj3d.add(line);
 
       // ---------------- DUH, could share buffer attribute. XXXXX
@@ -508,7 +517,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       let marker = new RC.Point(p_geom, p_mat);
       marker.pickingMaterial.pointSize = 2 * el.fMarkerSize;;
 
-      RcPickable(el, marker);
+      this.RcPickable(el, marker);
       obj3d.add(marker);
 
       // ????

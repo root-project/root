@@ -1,3 +1,4 @@
+
 sap.ui.define([
    'rootui5/eve7/lib/GlViewer',
    'rootui5/eve7/lib/EveElementsRCore'
@@ -11,6 +12,12 @@ sap.ui.define([
    }
 
    var RC;
+   var RP;
+   var RendeQuTor;
+
+   const UseRenderQueue = true;//false;
+   const RQ_Mode = "Simple"; // "DirectToScreen | Simple | Full"
+   const RQ_SSAA = 1;
 
    GlViewerRCore.prototype = Object.assign(Object.create(GlViewer.prototype), {
 
@@ -30,14 +37,25 @@ sap.ui.define([
          // // console.log(window.location.pathname); // where are we loading from?
          // import("https://desire.physics.ucsd.edu/matevz/alja.github.io/rootui5/eve7/rnr_core/RenderCore.js").then((module) => {
 
-         import("../../eve7/rnr_core/RenderCore.js").then((module) => {
-            console.log("GlViewerRCore.onInit - RenderCore.js loaded");
+            import("../../eve7/rnr_core/RenderCore.js").then((module) => {
+               console.log("GlViewerRCore.onInit - RenderCore.js loaded");
 
-            RC = module;
+               RC = module;
+               if (UseRenderQueue)
+               {
+                  import("../../eve7/lib/RendeQuTor.js").then((module) => {
+                     console.log("GlViewerRCore.onInit - RenderPassesRCore.js loaded");
 
-            pthis.bootstrap();
-         });
-      },
+                     RP = module;
+                     RendeQuTor = RP.RendeQuTor;
+
+                     pthis.bootstrap();
+                  });
+               } else {
+                  pthis.bootstrap();
+               }
+            });
+         },
 
       bootstrap: function()
       {
@@ -76,15 +94,16 @@ sap.ui.define([
 
       createRCoreRenderer: function()
       {
-         var w = this.get_width();
-         var h = this.get_height();
+         let w = this.get_width();
+         let h = this.get_height();
 
          //this.canvas = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'canvas' );
          this.canvas = document.createElement('canvas');
+         this.canvas.id     = "rcore-canvas";
          this.canvas.width  = w;
          this.canvas.height = h;
 
-         this.renderer = new RC.MeshRenderer(this.canvas, RC.WEBGL2);
+         this.renderer = new RC.MeshRenderer(this.canvas, RC.WEBGL2, {antialias: false, stencil: true});
          this.renderer.clearColor = "#FFFFFFFF";
          this.renderer.addShaderLoaderUrls("rootui5sys/eve7/rnr_core/shaders");
 
@@ -144,7 +163,6 @@ sap.ui.define([
               c.material.depthWrite  = false;
               this.scene.add(c);
             */
-
             let ss = new RC.Stripe([0,0,0, 100,50,50, 100,200,200]);
             ss.material.lineWidth = 20.0;
             ss.material.color     = new RC.Color(0xff0000);
@@ -152,6 +170,26 @@ sap.ui.define([
          }
 
          this.rot_center = new THREE.Vector3(0,0,0);
+
+         if (UseRenderQueue)
+         {
+            this.rqt = new RendeQuTor(this.renderer, this.scene, this.camera);
+            if (RQ_Mode == "DirectToScreen")
+            {
+               this.rqt.initDirectToScreen();
+            }
+            else if (RQ_Mode == "Simple")
+            {
+               this.rqt.initSimple(RQ_SSAA);
+               this.creator.SetupPointLineFacs(RQ_SSAA, RQ_SSAA);
+            }
+            else
+            {
+               this.rqt.initFull(RQ_SSAA);
+               this.creator.SetupPointLineFacs(RQ_SSAA, RQ_SSAA);
+            }
+            this.rqt.updateViewport(w, h);
+         }
       },
 
       setupRCoreDomAndEventHandlers: function()
@@ -357,7 +395,20 @@ sap.ui.define([
       render: function()
       {
          // console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
+
+         if (UseRenderQueue)
+            this.rqt.render();
+         else
+            this.renderer.render( this.scene, this.camera );
+      },
+
+      render_for_picking: function()
+      {
+         // console.log("RENDER FOR PICKING", this.scene, this.camera, this.canvas, this.renderer);
+
          this.renderer.render( this.scene, this.camera );
+
+         // this.renderQueue.render();
       },
 
       //==============================================================================
@@ -376,8 +427,10 @@ sap.ui.define([
 
          this.renderer.updateViewport(w, h);
 
-         //this.outline_pass.setSize(w, h);
-         //this.fxaa_pass.uniforms.resolution.value.set(0.5 / w, 0.5 / h);
+         if (UseRenderQueue)
+         {
+            this.rqt.updateViewport(w, h);
+         }
 
          //this.composer.reset();
 
@@ -432,7 +485,9 @@ sap.ui.define([
                                console.log("pick result", id, obj /* , d */);
                             }
                            );
-         this.render();
+         this.render_for_picking();
+
+
          /*
          let mouse = new THREE.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
 
