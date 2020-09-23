@@ -3778,7 +3778,7 @@
 
          var sz2 = main.size_for_3d(2); // get size of DOM element as it will be embed
 
-         var sz = (can3d == 2) ? sz : main.size_for_3d(1);
+         var sz = (can3d == 2) ? sz2 : main.size_for_3d(1);
 
          // console.log('Render 3D', sz2);
 
@@ -3809,8 +3809,8 @@
 
          // add svg image
          item.img = item.prnt.insert("image",".primitives_layer")     // create image object
-                        .attr("x", sz2.x)
-                        .attr("y", sz2.y)
+                        .attr("x", sz.x)
+                        .attr("y", sz.y)
                         .attr("width", canvas.width)
                         .attr("height", canvas.height)
                         .attr("href", dataUrl);
