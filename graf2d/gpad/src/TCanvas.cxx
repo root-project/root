@@ -392,6 +392,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       ww       = -ww;
       SetBit(kMenuBar,0);
    }
+   if (wh <= 0) {
+      Error("Constructor", "Invalid canvas height: %d",wh);
+      return;
+   }
    fCw       = ww;
    fCh       = wh;
    fCanvasID = -1;
