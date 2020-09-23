@@ -781,7 +781,7 @@ void TEnv::SetValue(const char *name, Int_t value)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set or create a double resource value.
 
-void TEnv::SetValue(const char *name, double value)
+void TEnv::SetValue(const char *name, Double_t value)
 {
    SetValue(name, Form("%g", value));
 }
