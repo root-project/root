@@ -39,8 +39,8 @@ private:
    Bool_t     fIsLoaded; //! Mark whether Load was executed.
    ULong64_t  fLastLoadMarker; //! Represent interpreter state when we last did a full load.
 
-   TListOfDataMembers(const TListOfDataMembers&);              // not implemented
-   TListOfDataMembers& operator=(const TListOfDataMembers&);   // not implemented
+   TListOfDataMembers(const TListOfDataMembers&) = delete;
+   TListOfDataMembers& operator=(const TListOfDataMembers&) = delete;
 
    void       MapObject(TObject *obj);
    void       UnmapObject(TObject *obj);
