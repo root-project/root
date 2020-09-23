@@ -3789,7 +3789,7 @@
 
          var sz2 = main.size_for_3d(2); // get size of DOM element as it will be embed
 
-         var sz = (can3d == 2) ? sz : main.size_for_3d(1);
+         var sz = (can3d == 2) ? sz2 : main.size_for_3d(1);
 
          // console.log('Render 3D', sz2);
 

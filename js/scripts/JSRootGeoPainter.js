@@ -1027,7 +1027,7 @@
                menu.add("Browse", itemname, function(arg) { this.ActivateInBrowser([arg], true); });
 
                if (menu.painter._hpainter)
-                  menu.add("Inspect", itemname, function(arg) { this._hpainter.display(itemname, "inspect"); });
+                  menu.add("Inspect", itemname, function(arg) { this._hpainter.display(arg, "inspect"); });
 
                if (obj.geo_name) {
                   menu.add("Hide", n, function(indx) {
@@ -2605,7 +2605,7 @@
          return func(obj, opt, function(tracks) {
             if (tracks) {
                geo_painter.drawExtras(tracks, "", false); // FIXME: probably tracks should be remembered??
-               this.updateClipping(true);
+               geo_painter.updateClipping(true);
                geo_painter.Render3D(100);
             }
             JSROOT.CallBack(call_back); // finally callback
@@ -2724,7 +2724,7 @@
       } else if ((obj._typename === 'TEvePointSet') || (obj._typename === "ROOT::Experimental::TEvePointSet") || (obj._typename === "TPolyMarker3D")) {
          if (add_objects && !this.addExtra(obj, itemname)) return false;
          isany = this.drawHit(obj, itemname);
-      } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")) {
+      } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::REveGeoShapeExtract")) {
          if (add_objects && !this.addExtra(obj, itemname)) return false;
          isany = this.drawExtraShape(obj, itemname);
       }
@@ -4140,7 +4140,7 @@
          shape = obj; obj = null;
       } else if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
          shape = obj.fShape;
-      } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")) {
+      } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::REveGeoShapeExtract")) {
          shape = obj.fShape; is_eve = true;
       } else if (obj._typename === 'TGeoManager') {
          shape = obj.fMasterVolume.fShape;
@@ -4275,7 +4275,7 @@
    }
 
    JSROOT.GEO.provideVisStyle = function(obj) {
-      if ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::TEveGeoShapeExtract'))
+      if ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::REveGeoShapeExtract'))
          return obj.fRnrSelf ? " geovis_this" : "";
 
       var vis = !JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisNone) &&
@@ -4322,7 +4322,7 @@
       if (obj._typename.indexOf("TGeoVolume")===0) {
          volume = obj;
       } else
-      if ((obj._typename == "TEveGeoShapeExtract") || (obj._typename == "ROOT::Experimental::TEveGeoShapeExtract") ) {
+      if ((obj._typename == "TEveGeoShapeExtract") || (obj._typename == "ROOT::Experimental::REveGeoShapeExtract") ) {
          iseve = true;
          shape = obj.fShape;
          subnodes = obj.fElements ? obj.fElements.arr : null;
@@ -4438,7 +4438,7 @@
       if (!item._geoobj) return false;
 
       var obj = item._geoobj, vol = item._volume,
-          iseve = ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::TEveGeoShapeExtract'));
+          iseve = ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::REveGeoShapeExtract'));
 
       if (!vol && !iseve) return false;
 
@@ -4562,7 +4562,7 @@
          return false; // no need to update icon - we did it ourself
       }
 
-      if (hitem._geoobj && (( hitem._geoobj._typename == "TEveGeoShapeExtract") || ( hitem._geoobj._typename == "ROOT::Experimental::TEveGeoShapeExtract"))) {
+      if (hitem._geoobj && (( hitem._geoobj._typename == "TEveGeoShapeExtract") || ( hitem._geoobj._typename == "ROOT::Experimental::REveGeoShapeExtract"))) {
          hitem._geoobj.fRnrSelf = !hitem._geoobj.fRnrSelf;
 
          JSROOT.GEO.updateBrowserIcons(hitem._geoobj, hpainter);
@@ -4628,7 +4628,7 @@
       var isnode = (obj._typename.indexOf('TGeoNode') === 0),
           isvolume = (obj._typename.indexOf('TGeoVolume') === 0),
           ismanager = (obj._typename === 'TGeoManager'),
-          iseve = ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::TEveGeoShapeExtract')),
+          iseve = ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::REveGeoShapeExtract')),
           isoverlap = (obj._typename === 'TGeoOverlap');
 
       if (!isnode && !isvolume && !ismanager && !iseve && !isoverlap) return false;

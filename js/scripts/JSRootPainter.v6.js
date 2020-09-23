@@ -1077,7 +1077,7 @@
       var smin = 'scale_' + aname + 'min',
           smax = 'scale_' + aname + 'max';
 
-      var eps = (this[smax] - this[smin]) * 1e-7;
+      eps = (this[smax] - this[smin]) * 1e-7;
 
       if ((Math.abs(umin - this[smin]) > eps) || (Math.abs(umax - this[smax]) > eps)) {
          this["zoom_" + aname + "min"] = umin;
@@ -4035,7 +4035,7 @@
 
          var sz2 = main.size_for_3d(2); // get size of DOM element as it will be embed
 
-         var sz = (can3d == 2) ? sz : main.size_for_3d(1);
+         var sz = (can3d == 2) ? sz2 : main.size_for_3d(1);
 
          var canvas = main.renderer.domElement;
          main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately

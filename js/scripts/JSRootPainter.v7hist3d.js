@@ -1074,9 +1074,10 @@
           main = this.frame_painter(),
           axis_zmin = main.grz.domain()[0],
           axis_zmax = main.grz.domain()[1],
+          zmin, zmax,
           handle = this.PrepareDraw({ rounding: false, use3d: true, extra: 1 }),
           i1 = handle.i1, i2 = handle.i2, j1 = handle.j1, j2 = handle.j2, di = handle.stepi, dj = handle.stepj,
-          i, j, x1, x2, y1, y2, binz1, binz2, reduced, nobottom, notop,
+          i, j, k, vert, x1, x2, y1, y2, binz1, binz2, reduced, nobottom, notop,
           pthis = this,
           histo = this.GetHisto(),
           basehisto = histo ? histo.$baseh : null,
@@ -1128,13 +1129,14 @@
 
       for (var nlevel=0; nlevel<levels.length-1;++nlevel) {
 
-         var zmin = levels[nlevel], zmax = levels[nlevel+1],
-             z1 = 0, z2 = 0, numvertices = 0, num2vertices = 0;
+         zmin = levels[nlevel];
+         zmax = levels[nlevel+1];
 
          // artificially extend last level of color palette to maximal visible value
          if (palette && (nlevel==levels.length-2) && (zmax < axis_zmax)) zmax = axis_zmax;
 
-         var grzmin = main.grz(zmin), grzmax = main.grz(zmax);
+         var z1 = 0, z2 = 0, numvertices = 0, num2vertices = 0,
+             grzmin = main.grz(zmin), grzmax = main.grz(zmax);
 
          // now calculate size of buffer geometry for boxes
 
@@ -1403,7 +1405,7 @@
 
       // create boxes
       var lcolor = this.v7EvalColor("line_color", "lightblue");
-      material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) });
+      var material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) });
       if (!JSROOT.browser.isIE) material.linewidth = this.v7EvalAttr("line_width", 1);
 
       var line = JSROOT.Painter.createLineSegments(lpositions, material, uselineindx ? lindicies : null );
