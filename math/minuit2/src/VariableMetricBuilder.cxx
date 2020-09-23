@@ -30,7 +30,7 @@
 // #if defined(DEBUG) || defined(WARNINGMSG)
 // #endif
 
-
+#include <cmath>
 
 namespace ROOT {
 
@@ -357,7 +357,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 
       edm = Estimator().Estimate(g, s0.Error());
 
-      if (isnan(edm)) {
+      if (std::isnan(edm)) {
 #ifdef WARNINGMSG
         MN_INFO_MSG("VariableMetricBuilder: edm is NaN : exit iterations ");
 #endif
