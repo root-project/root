@@ -639,6 +639,68 @@ class Regression24CppPythonInheritance(MyTestCase):
       class MyDerived2(cppyy.gbl.MyClass2):
          pass
 
+   def test3ProtectedMethod(self):
+       """Test that protected method is injected in derived class without crash"""
+       # ROOT-10872
+       ROOT.gInterpreter.Declare("""
+       class CppAlg {
+       public:
+           virtual ~CppAlg() {}
+       protected:
+           int protectedMethod() { return 1; }
+       };
+       """)
+
+       class Alg(ROOT.CppAlg): pass
+
+       a = Alg()
+       self.assertEqual(a.protectedMethod(), 1)
+
+   def test4DerivedObjectDeletion(self):
+       """Test that derived object is deleted without a crash"""
+       # ROOT-11010
+       ROOT.gInterpreter.Declare("""
+       #include <string>
+
+       class CppAlg2 {
+       public:
+           CppAlg2(std::string name) : m_name(name) {}
+           virtual ~CppAlg2() {}
+       private:
+           std::string m_name;
+       };
+       """)
+
+       class Alg2(ROOT.CppAlg2):
+           def __init__(self, name):
+               super(Alg2, self).__init__(name)
+
+       a = Alg2('MyAlg')
+       del a   # should not crash
+
+   def test5BaseAndDerivedConstruction(self):
+       """Test that creation of base class object does not interfere with creation of derived"""
+       # ROOT-10789
+       ROOT.gInterpreter.Declare("""
+       #include <string>
+
+       class CppAlg3 {
+       public:
+           CppAlg3(std::string name) : m_name(name) {}
+           virtual ~CppAlg3() {}
+       private:
+           std::string m_name;
+       };
+       """)
+
+       b = ROOT.CppAlg3("MyAlgBase")
+
+       class Alg3(ROOT.CppAlg3):
+           def __init__(self, name):
+               super(Alg3, self).__init__(name)
+
+       d = Alg3('MyAlgDerived')
+
 
 ## actual test run
 if __name__ == '__main__':
