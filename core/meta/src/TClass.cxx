@@ -909,7 +909,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
    if (!classInfo)               return;
 
    //              Browse data members
-   DataMemberInfo_t *m = gCling->DataMemberInfo_Factory(classInfo);
+   DataMemberInfo_t *m = gCling->DataMemberInfo_Factory(classInfo, TDictionary::EMemberSelection::kNoUsingDecls);
    TString mname;
 
    int found=0;
@@ -1037,7 +1037,7 @@ TClass::TClass() :
    TDictionary(),
    fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fBase(0), fData(0), fUsingData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
@@ -1075,7 +1075,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    TDictionary(name),
    fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fBase(0), fData(0), fUsingData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
@@ -1122,7 +1122,7 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    TDictionary(name),
    fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fBase(0), fData(0), fUsingData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
@@ -1149,7 +1149,7 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
    TDictionary(name),
    fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fBase(0), fData(0), fUsingData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
@@ -1193,7 +1193,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    TDictionary(""),
    fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fBase(0), fData(0), fUsingData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
@@ -1243,7 +1243,7 @@ TClass::TClass(const char *name, Version_t cversion,
    TDictionary(name),
    fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fBase(0), fData(0), fUsingData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
@@ -1273,7 +1273,7 @@ TClass::TClass(const char *name, Version_t cversion,
    TDictionary(name),
    fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fBase(0), fData(0), fUsingData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0),
    fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
@@ -1638,9 +1638,13 @@ TClass::~TClass()
       (*fBase).Delete();
    delete fBase.load(); fBase = 0;
 
-   if (fData)
-      fData->Delete();
-   delete fData;   fData = 0;
+   if (fData.load())
+      (*fData).Delete();
+   delete fData.load();   fData = 0;
+
+   if (fUsingData.load())
+      (*fUsingData).Delete();
+   delete fUsingData.load();   fUsingData = 0;
 
    if (fEnums.load())
       (*fEnums).Delete();
@@ -3315,7 +3319,7 @@ DictFuncPtr_t  TClass::GetDict (const std::type_info& info)
 
 TDataMember *TClass::GetDataMember(const char *datamember) const
 {
-   if ((!(fData && fData->IsLoaded()) && !HasInterpreterInfo())
+   if ((!(fData.load() && (*fData).IsLoaded()) && !HasInterpreterInfo())
        || datamember == 0) return 0;
 
    // Strip off leading *'s and trailing [
@@ -3658,13 +3662,14 @@ TList *TClass::GetListOfEnums(Bool_t requestListLoading /* = kTRUE */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return list containing the TDataMembers of a class.
+/// Create the list containing the TDataMembers (of actual data members or members
+/// pulled in through using declarations) of a class.
 
-TList *TClass::GetListOfDataMembers(Bool_t load /* = kTRUE */)
+TList *TClass::CreateListOfDataMembers(std::atomic<TListOfDataMembers*> &data, TDictionary::EMemberSelection selection, bool load)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
-   if (!fData) {
+   if (!data) {
       if (fCanLoadClassInfo && fState == kHasTClassInit) {
          // NOTE: Add test to prevent redo if another thread has already done the work.
          // if (!fHasRootPcmInfo) {
@@ -3676,20 +3681,46 @@ TList *TClass::GetListOfDataMembers(Bool_t load /* = kTRUE */)
             // R__ASSERT(kFALSE);
 
             fHasRootPcmInfo = kTRUE;
-            return fData;
+            return data;
          }
       }
-      fData = new TListOfDataMembers(this);
+
+      data = new TListOfDataMembers(this, selection);
    }
-   if (Property() & (kIsClass|kIsStruct|kIsUnion)) {
+   if (IsClassStructOrUnion()) {
       // If the we have a class or struct or union, the order
       // of data members is the list is essential since it determines their
       // order on file.  So we must always load.  Also, the list is fixed
       // since the language does not allow to add members.
-      if (!fData->IsLoaded()) fData->Load();
+      if (!(*data).IsLoaded())
+         (*data).Load();
 
-   } else if (load) fData->Load();
-   return fData;
+   } else if (load) (*data).Load();
+   return data;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return list containing the TDataMembers of a class.
+
+TList *TClass::GetListOfDataMembers(Bool_t load /* = kTRUE */)
+{
+   // Fast path, no lock? Classes load at creation time.
+   if ((!load || IsClassStructOrUnion()) && fData)
+      return fData;
+
+   return CreateListOfDataMembers(fData, TDictionary::EMemberSelection::kNoUsingDecls, load);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return list containing the TDataMembers of using declarations of a class.
+
+TList *TClass::GetListOfUsingDataMembers(Bool_t load /* = kTRUE */)
+{
+   // Fast path, no lock? Classes load at creation time.
+   if ((!load || IsClassStructOrUnion()) && fUsingData)
+      return fUsingData;
+
+   return CreateListOfDataMembers(fUsingData, TDictionary::EMemberSelection::kOnlyUsingDecls, load);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4117,8 +4148,10 @@ void TClass::ResetCaches()
    R__ASSERT(!TestBit(kLoading) && "Resetting the caches does not make sense during loading!" );
 
    // Not owning lists, don't call Delete(), but unload
-   if (fData)
-      fData->Unload();
+   if (fData.load())
+      (*fData).Unload();
+   if (fUsingData.load())
+      (*fUsingData).Unload();
    if (fEnums.load())
       (*fEnums).Unload();
    if (fMethod.load())
@@ -6101,8 +6134,11 @@ void TClass::SetUnloaded()
    if (fMethod.load()) {
       (*fMethod).Unload();
    }
-   if (fData) {
-      fData->Unload();
+   if (fData.load()) {
+      (*fData).Unload();
+   }
+   if (fUsingData.load()) {
+      (*fUsingData).Unload();
    }
    if (fEnums.load()) {
       (*fEnums).Unload();
