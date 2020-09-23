@@ -440,6 +440,19 @@ class Cpp3UsingDeclarations( MyTestCase ):
         #   TypeError: takes at least 2 arguments (1 given)
         ROOT.TGraphMultiErrors().SetLineColor(0)
 
+    def test2TH1FConstructor(self):
+        """Test that the using declaration of a constructor is picked up by the overload resolution"""
+        # ROOT-10786
+
+        ROOT.gInterpreter.Declare("""
+        class MyTH1F : public TH1F {
+        public:
+            using TH1F::TH1F;
+        };
+        """)
+
+        h = ROOT.MyTH1F("name", "title", 100, 0, 100)
+
 
 ## actual test run
 if __name__ == '__main__':
