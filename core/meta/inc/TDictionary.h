@@ -210,6 +210,15 @@ public:
       kBitset            = ROOT::kSTLbitset
    };
 
+   /// Kinds of members to include in lists.
+   enum class EMemberSelection {
+      kNoUsingDecls,
+      kOnlyUsingDecls,
+      kAlsoUsingDecls
+   };
+   static bool WantsRegularMembers(EMemberSelection sel) { return sel != EMemberSelection::kOnlyUsingDecls; }
+   static bool WantsUsingDecls(EMemberSelection sel) { return sel != EMemberSelection::kNoUsingDecls; }
+
    typedef const void *DeclId_t;
    ClassDef(TDictionary,2)  //Interface to dictionary
 };

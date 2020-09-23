@@ -6019,7 +6019,7 @@ Int_t TCling::DeepAutoLoadImpl(const char *cls)
             if (classinfo && gInterpreter->ClassInfo_IsValid(classinfo)
                 && !(gInterpreter->ClassInfo_Property(classinfo) & kIsEnum))
             {
-               DataMemberInfo_t *memberinfo = gInterpreter->DataMemberInfo_Factory(classinfo);
+               DataMemberInfo_t *memberinfo = gInterpreter->DataMemberInfo_Factory(classinfo, TDictionary::EMemberSelection::kNoUsingDecls);
                while (gInterpreter->DataMemberInfo_Next(memberinfo)) {
                   auto membertypename = TClassEdit::GetLong64_Name(gInterpreter->TypeName(gInterpreter->DataMemberInfo_TypeTrueName(memberinfo)));
                   if (!(gInterpreter->DataMemberInfo_TypeProperty(memberinfo) & ::kIsFundamental)
@@ -8431,11 +8431,11 @@ void TCling::DataMemberInfo_Delete(DataMemberInfo_t* dminfo) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-DataMemberInfo_t* TCling::DataMemberInfo_Factory(ClassInfo_t* clinfo /*= 0*/) const
+DataMemberInfo_t* TCling::DataMemberInfo_Factory(ClassInfo_t* clinfo, TDictionary::EMemberSelection selection) const
 {
    R__LOCKGUARD(gInterpreterMutex);
    TClingClassInfo* TClingclass_info = (TClingClassInfo*) clinfo;
-   return (DataMemberInfo_t*) new TClingDataMemberInfo(GetInterpreterImpl(), TClingclass_info);
+   return (DataMemberInfo_t*) new TClingDataMemberInfo(GetInterpreterImpl(), TClingclass_info, selection);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

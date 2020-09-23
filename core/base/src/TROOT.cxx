@@ -1729,7 +1729,7 @@ TCollection *TROOT::GetListOfFunctionTemplates()
 TCollection *TROOT::GetListOfGlobals(Bool_t load)
 {
    if (!fGlobals) {
-      fGlobals = new TListOfDataMembers(0);
+      fGlobals = new TListOfDataMembers(nullptr, TDictionary::EMemberSelection::kAlsoUsingDecls);
       // We add to the list the "funcky-fake" globals.
 
       // provide special functor for gROOT, while ROOT::GetROOT() does not return reference

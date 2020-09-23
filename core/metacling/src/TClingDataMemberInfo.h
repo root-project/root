@@ -51,6 +51,8 @@ class TClingClassInfo;
 /// UsingShadowDecls thereof, within a scope, recursing through "transparent"
 /// scopes (see DCIter::HandleInlineDeclContext()).
 class TClingDataMemberIter final: public TClingMemberIter {
+   TDictionary::EMemberSelection fSelection = TDictionary::EMemberSelection::kNoUsingDecls;
+
 protected:
    // TODO:
    //const clang::Decl *
@@ -61,7 +63,10 @@ protected:
 
 public:
    TClingDataMemberIter() = default;
-   using TClingMemberIter::TClingMemberIter;
+   TClingDataMemberIter(cling::Interpreter *interp, clang::DeclContext *DC, TDictionary::EMemberSelection selection)
+      : TClingMemberIter(interp, DC), fSelection(selection)
+   {
+   }
 };
 
 class TClingDataMemberInfo final : public TClingDeclInfo {
@@ -95,7 +100,7 @@ public:
    explicit TClingDataMemberInfo(cling::Interpreter *interp)
       : TClingDeclInfo(nullptr), fInterp(interp) {}
 
-   TClingDataMemberInfo(cling::Interpreter *interp, TClingClassInfo *ci);
+   TClingDataMemberInfo(cling::Interpreter *interp, TClingClassInfo *ci, TDictionary::EMemberSelection selection);
 
    // Takes concrete decl and disables the iterator.
    // ValueDecl is the common base between enum constant, var decl and field decl

@@ -179,7 +179,8 @@ private:
    mutable ConvSIMap_t fConversionStreamerInfo; //Array of the streamer infos derived from another class.
    TList              *fRealData;        //linked list for persistent members including base classes
    std::atomic<TList*> fBase;            //linked list for base classes
-   TListOfDataMembers *fData;            //linked list for data members
+   std::atomic<TListOfDataMembers*> fData;            //linked list for data members; non-owning.
+   std::atomic<TListOfDataMembers*> fUsingData;//linked list for data members pulled in through using decls.
 
    std::atomic<TListOfEnums*> fEnums;        //linked list for the enums
    TListOfFunctionTemplates  *fFuncTemplate; //linked list for function templates [Not public until implemented as active list]
@@ -312,6 +313,9 @@ private:
    TClass(const TClass& tc) = delete;
    TClass& operator=(const TClass&) = delete;
 
+   bool IsClassStructOrUnion() const { return Property() & (kIsClass|kIsStruct|kIsUnion); }
+   TList *CreateListOfDataMembers(std::atomic<TListOfDataMembers*> &data, TDictionary::EMemberSelection selection, bool load);
+
 protected:
    TVirtualStreamerInfo *FindStreamerInfo(TObjArray *arr, UInt_t checksum) const;
    void GetMissingDictionariesForBaseClasses(TCollection &result, TCollection &visited, bool recurse);
@@ -401,6 +405,7 @@ public:
    TVirtualStreamerInfo     *GetLastReadInfo() const { return fLastReadInfo; }
    void                      SetLastReadInfo(TVirtualStreamerInfo *info) { fLastReadInfo = info; }
    TList             *GetListOfDataMembers(Bool_t load = kTRUE);
+   TList             *GetListOfUsingDataMembers(Bool_t load = kTRUE);
    TList             *GetListOfEnums(Bool_t load = kTRUE);
    TList             *GetListOfFunctionTemplates(Bool_t load = kTRUE);
    TList             *GetListOfBases();
