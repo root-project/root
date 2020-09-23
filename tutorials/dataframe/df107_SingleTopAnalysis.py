@@ -163,6 +163,12 @@ for s in samples:
 
 # Run the event loop and merge histograms of the respective processes
 
+# RunGraphs allows to run the event loops of the separate RDataFrame graphs
+# concurrently. This results in an improved usage of the available resources
+# if each separate RDataFrame can not utilize all available resources, e.g.,
+# because not enough data is available.
+ROOT.RDF.RunGraphs([histos[s] for s in samples])
+
 def merge_histos(label):
     h = None
     for i, d in enumerate(files[label]):
