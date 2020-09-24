@@ -15,6 +15,7 @@
 #include "TClassEdit.h"
 #include "TClass.h"
 #include "TError.h"
+#include "TEnum.h"
 #include "TROOT.h"
 #include "TInterpreter.h" // For gInterpreterMutex
 #include "Riostream.h"
@@ -388,10 +389,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
          // Try to avoid autoparsing.
 
          THashTable *typeTable = dynamic_cast<THashTable*>( gROOT->GetListOfTypes() );
-         THashList *enumTable = dynamic_cast<THashList*>( gROOT->GetListOfEnums() );
-
          assert(typeTable && "The type of the list of type has changed");
-         assert(enumTable && "The type of the list of enum has changed");
 
          TDataType *fundType = (TDataType *)typeTable->THashTable::FindObject( intype.c_str() );
          if (fundType && fundType->GetType() < 0x17 && fundType->GetType() > 0) {
@@ -405,7 +403,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
             } else {
                fSize = fundType->Size();
             }
-         } else if (enumTable->THashList::FindObject( intype.c_str() ) ) {
+         } else if (TEnum::GetEnum( intype.c_str(), TEnum::kNone) ) {
             // This is a known enum.
             fCase = kIsEnum;
             fSize = sizeof(Int_t);
