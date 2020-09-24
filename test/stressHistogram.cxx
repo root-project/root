@@ -5162,7 +5162,6 @@ bool testMerge3DLabelAllDiff()
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       TString label = h3->GetXaxis()->GetLabels()->At(r.Integer(nBins))->GetName();
-      Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       h3->Fill(label, y, z, 1.0);
@@ -5590,7 +5589,8 @@ bool testMergeProf3DLabelAllDiff()
 
    // for debugging save a copy of p1
    if (!cleanHistos)
-      auto p0 = (TProfile3D*) p1->Clone("merge3DLabelAllDiff_p0");
+      /* auto p0 = (TProfile3D*) */
+      p1->Clone("merge3DLabelAllDiff_p0");
 
    //p1->Reset();
 
@@ -6609,7 +6609,7 @@ bool testLabelProf1D()
    // build histogram with extra  labels to test also TH1::LabelsDeflate
 
    // test also case of labels not ordered (bug present in LabelsOptions before Sep2020)
-   bool shuffleLabels = false;
+   bool shuffleLabels = true;
 
    TProfile *p1 = new TProfile("lD1_p1", "p1-Title", 2 * numberOfBins, minRange, maxRange);
    int extraBins = 20;
@@ -6629,7 +6629,7 @@ bool testLabelProf1D()
       bins[i] = bin;
    }
    // set bin label in random order in bins to test ordering when labels are filled randomly
-   //std::shuffle(bins.begin(), bins.end(), std::default_random_engine{});
+   if (shuffleLabels) std::shuffle(bins.begin(), bins.end(), std::default_random_engine{});
    for (size_t i = 0; i < bins.size(); ++i) {
       p2->GetXaxis()->SetBinLabel(bins[i], vLabels[i].c_str());
    }
@@ -6688,7 +6688,7 @@ bool testLabelProf1D_2()
       bins[i] = bin;
    }
    // set bin label in random order in bins to test ordering when labels are filled randomly
-   // std::shuffle(bins.begin(), bins.end(), std::default_random_engine{});
+   if (shuffleLabels) std::shuffle(bins.begin(), bins.end(), std::default_random_engine{});
    for (size_t i = 0; i < bins.size(); ++i) {
       p2->GetXaxis()->SetBinLabel(bins[i], vLabels[i].c_str());
    }
@@ -7698,24 +7698,32 @@ bool testProfile2Extend() {
    // be sure to have some underflow/overflow before expanding
    // to test that case
    for (int i = 0; i <100; ++i) {
-      h1->Fill(-1,r.Uniform(0,10),r.Gaus(-10,1));
-      h2->Fill(-1,r.Uniform(0,10),r.Gaus(-10,1));
-      h1->Fill(11,r.Uniform(0,10),r.Gaus(100,1));
-      h2->Fill(11,r.Uniform(0,10),r.Gaus(100,1));
+      double x = -1;  // underflow in x
+      double y = r.Uniform(0, 10);
+      double z = r.Gaus(-10,1);
+      h1->Fill(x, y, z);
+      h2->Fill(x, y, z);
+   }
+   for (int i = 0; i < 100; ++i) {
+      double x = 11;   // overflow in x
+      double y = r.Uniform(0, 10);
+      double z = r.Gaus(100, 1);
+      h1->Fill(x, y, z);
+      h2->Fill(x, y, z);
    }
    for (int i = 0; i < 10*nEvents; ++i) {
       double x = r.Uniform(-1,11);
       double y = r.Gaus(10,3);
       double z = r.Gaus(10+2*(x+y),1);
-      if (y <= 0 || y >= 20) continue; // do not want overflow in h0
-      if (h1->GetYaxis()->GetBinWidth(1) < 2. && y > 10.) {
-         std::cout << "extending the histogram for " << x << " " << y << std::endl;
-      }
+      if (y <= 0 || y >= 20) continue; // do not want underflow/overflow in h2
+      // if (h1->GetYaxis()->GetBinWidth(1) < 2. && y > 10.) {
+      //    std::cout << "extending the histogram for " << x << " " << y << std::endl;
+      // }
       h1->Fill(x,y,z);
       h2->Fill(x,y,z);
 
    }
-   bool ret = equals("testprofile2extend", h1, h2, cmpOptStats, 1E-10);
+   bool ret = equals("testprofile2Extend", h1, h2, cmpOptStats, 1E-10);
    if (cleanHistos) delete h1;
    TProfile2D::Approximate(false);
    return ret;

@@ -442,6 +442,9 @@ T* TProfileHelper::ExtendAxis(T* p, Double_t x, TAxis *axis)
    if (!axis->CanExtend()) return 0;
    if (axis->GetXmin() >= axis->GetXmax()) return 0;
    if (axis->GetNbins() <= 0) return 0;
+   if (TMath::IsNaN(x)) { // x may be a NaN
+      return 0;
+   }
 
    Double_t xmin, xmax;
    if (!p->FindNewAxisLimits(axis, x, xmin, xmax))
@@ -452,30 +455,48 @@ T* TProfileHelper::ExtendAxis(T* p, Double_t x, TAxis *axis)
    R__ASSERT(hold);
    hold->SetDirectory(0);
    p->Copy(*hold);
-   //set new axis limits
+   //set new axis limits but keep same number of bins
    axis->SetLimits(xmin,xmax);
    if (p->fBinSumw2.fN) hold->Sumw2();
 
-   Int_t  nbinsx = p->fXaxis.GetNbins();
-   Int_t  nbinsy = p->fYaxis.GetNbins();
-   Int_t  nbinsz = p->fZaxis.GetNbins();
+   // total bins (inclusing underflow /overflow)
+   Int_t  nx = p->fXaxis.GetNbins() + 2;
+   Int_t  ny = (p->GetDimension() > 1) ? p->fYaxis.GetNbins() + 2 : 1;
+   Int_t  nz = (p->GetDimension() > 2) ? p->fZaxis.GetNbins() + 2 : 1;
+
+   Int_t iaxis = 0;
+   if (axis == p->GetXaxis()) iaxis = 1;
+   if (axis == p->GetYaxis()) iaxis = 2;
+   if (axis == p->GetZaxis()) iaxis = 3;
+   Bool_t firstw = kTRUE;
 
    //now loop on all bins and refill
    p->Reset("ICE"); //reset only Integral, contents and Errors
 
-   Double_t bx,by,bz;
+   // need to consider also underflow/overflow in the non-extending axes
+   Double_t xc,yc,zc;
    Int_t ix, iy, iz, binx, biny, binz;
-   for (binz=1;binz<=nbinsz;binz++) {
-      bz  = hold->GetZaxis()->GetBinCenter(binz);
-      iz  = p->fZaxis.FindFixBin(bz);
-      for (biny=1;biny<=nbinsy;biny++) {
-         by  = hold->GetYaxis()->GetBinCenter(biny);
-         iy  = p->fYaxis.FindFixBin(by);
-         for (binx=1;binx<=nbinsx;binx++) {
-            bx = hold->GetXaxis()->GetBinCenter(binx);
-            ix  = p->fXaxis.FindFixBin(bx);
-
+   for (binz=0;binz< nz;binz++) {
+      zc  = hold->GetZaxis()->GetBinCenter(binz);
+      iz  = p->fZaxis.FindFixBin(zc);
+      for (biny=0;biny<ny;biny++) {
+         yc  = hold->GetYaxis()->GetBinCenter(biny);
+         iy  = p->fYaxis.FindFixBin(yc);
+         for (binx=0;binx<nx;binx++) {
+            xc = hold->GetXaxis()->GetBinCenter(binx);
+            ix  = p->fXaxis.FindFixBin(xc);
             Int_t sourceBin = hold->GetBin(binx,biny,binz);
+            // skip empty bins
+            if (hold->fBinEntries.fArray[sourceBin] == 0) continue;
+            if (hold->IsBinUnderflow(sourceBin, iaxis) || hold->IsBinOverflow(sourceBin, iaxis)) {
+               if (firstw) {
+                  Warning("ExtendAxis",
+                          "Histogram %s has underflow or overflow in the %s that is extendable"
+                          " their content will be lost",p->GetName(),axis->GetName());
+                  firstw = kFALSE;
+               }
+               continue;
+            }
             Int_t destinationBin = p->GetBin(ix,iy,iz);
             p->AddBinContent(destinationBin, hold->fArray[sourceBin]);
             p->fBinEntries.fArray[destinationBin] += hold->fBinEntries.fArray[sourceBin];
