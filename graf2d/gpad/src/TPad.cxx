@@ -3057,6 +3057,7 @@ void TPad::FillCollideGrid(TObject *oi)
 
    // Fill the collide grid
    TList *l = GetListOfPrimitives();
+   if (!l) return;
    Int_t np = l->GetSize();
    TObject *o;
 
@@ -3104,6 +3105,7 @@ Bool_t TPad::Collide(Int_t i, Int_t j, Int_t w, Int_t h)
 ///
 /// \return `true` if the box could be placed, `false` if not.
 ///
+/// \param[in]  o        pointer to the box to be placed
 /// \param[in]  w        box width to be placed
 /// \param[in]  h        box height to be placed
 /// \param[out] xl       x position of the bottom left corner of the placed box
