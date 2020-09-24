@@ -42,7 +42,7 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
       return;
 
    // Find the unique event loops
-   auto sameGraph = [](const RResultHandle &a, const RResultHandle &b) { return a.fLoopManager != b.fLoopManager; };
+   auto sameGraph = [](const RResultHandle &a, const RResultHandle &b) { return a.fLoopManager < b.fLoopManager; };
    std::set<RResultHandle, decltype(sameGraph)> s(handles.begin(), handles.end(), sameGraph);
    std::vector<RResultHandle> uniqueLoops(s.begin(), s.end());
 
