@@ -318,22 +318,25 @@ sap.ui.define([
          let pthis = this;
          let gedFrame =  this.getView().byId("GED");
          let list = new sap.m.List({});
+
          list.addStyleClass("eveSummaryItem");
 	 list.setMode("MultiSelect");
 	 list.setIncludeItemInSelection(true);
 	 list.addStyleClass("eveNoSelectionCheckBox");
-         let items = el.items;
-         for (let i = 0; i < items.length; ++i ) {
+         let citems = el.items;
+         for (let i = 0; i < citems.length; ++i ) {
             let iid = "item_"+ i;
+            let fout = citems[i].fFiltered;
 	    var item  = new sap.m.CustomListItem( iid, {type:sap.m.ListType.Active});
 	    item.addStyleClass("sapUiTinyMargin");
+
             // item info
 	    let label = new sap.m.Label({text: iid});
             label.addStyleClass("sapUiTinyMarginBeginEnd");
 
             // rnr self
 	    let rb = new mCheckBox({
-               selected: items[i].fRnrSelf,
+               selected: citems[i].fRnrSelf,
                text: "RnrSelf",
                select: function(oEvent)
                {
@@ -347,7 +350,7 @@ sap.ui.define([
 
             let col_widget = new EVEColorButton( {
                icon : "sap-icon://palette",
-               background: JSROOT.Painter.root_colors[items[i].fColor],
+               background: JSROOT.Painter.root_colors[citems[i].fColor],
                press: function () {
                   let oCPPop = new EVEColorPopup( {
                      colorSelect: function(event) {
@@ -361,17 +364,42 @@ sap.ui.define([
                }
             });
             col_widget.addStyleClass("sapUiTinyMarginBeginEnd");
-
+            if (fout){
+               label.addStyleClass("eveTableCellUnfiltered");
+               rb.setEnabled(false);
+               col_widget.setEnabled(false);
+            }
 
             let box = new sap.m.HBox({
                items : [ label, rb, col_widget ]
             });
 
-
             item.addContent(box);
             list.addItem(item);
+         }
 
-	 }
+         list.attachItemPress(function(oEvent) {
+	    let p = oEvent.getParameters("item");
+	    let idx = p.listItem.sId.substring(5);
+            let secIdcs = [idx];
+            let is_multi = false;
+	    //
+	    // TODO : do this only 'Ctrl' key is not present.
+	    // Check for modifier key.
+	    {
+	       let selected = list.getSelectedItems();
+	       console.log("selected items ", selected, "idx = ",  idx);
+	       for (let s = 0; s < selected.length; s++) {
+		  if (selected[s].sId !=  p.listItem.sId)
+		     list.setSelectedItem(selected[s], false);
+	       }
+	    }
+            let fcall = "ProcessSelection(" + pthis.mgr.global_selection_id + `, ${is_multi}, true`;
+                              fcall += ", { " + secIdcs.join(", ")  + " }";
+                              fcall += ")";
+                              pthis.mgr.SendMIR(fcall, el.fElementId, el._typename);
+
+	 });
          gedFrame.addContent(list);
       },
 
