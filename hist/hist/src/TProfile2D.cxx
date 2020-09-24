@@ -1049,10 +1049,30 @@ void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
    // support only cases where each bin has a labels (should be when axis is alphanumeric)
    Int_t n = labels->GetSize();
    if (n != axis->GetNbins()) {
-      Error("LabelsOption", "axis %s of TProfile2D %s has bins without labels. Sorting is not supported in this case",
-            axis->GetName(),GetName());
-      return;
+      // check if labels are all consecutive and starts from the first bin
+      // in that case the current code will work fine
+      Int_t firstLabelBin = axis->GetNbins() + 1;
+      Int_t lastLabelBin = -1;
+      for (Int_t i = 0; i < n; ++i) {
+         Int_t bin = labels->At(i)->GetUniqueID();
+         if (bin < firstLabelBin)
+            firstLabelBin = bin;
+         if (bin > lastLabelBin)
+            lastLabelBin = bin;
+      }
+      if (firstLabelBin != 1 || lastLabelBin - firstLabelBin + 1 != n) {
+         Error("LabelsOption",
+               "%s of TProfile2D %s contains bins without labels. Sorting will not work correctly - return",
+               axis->GetName(), GetName());
+         return;
+      }
+      // case where label bins are consecutive starting from first bin will work
+      Warning(
+         "LabelsOption",
+         "axis %s of TProfile2D %s has extra following bins without labels. Sorting will work only for first label bins",
+         axis->GetName(), GetName());
    }
+
    std::vector<Int_t> a(n);
    Int_t i, j, k, ibin, bin;
    std::vector<Double_t> sumw(fNcells);
@@ -1062,7 +1082,6 @@ void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
    if (fBinSumw2.fN)
       binsw2.resize(fNcells);
 
-   Double_t entries = fEntries;
    // delete buffer if it is there since bins will be reordered.
    if (fBuffer)
       BufferEmpty(1);
@@ -1162,11 +1181,32 @@ void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
          fSumw2.fArray[bin] = errors[ibin];
          fBinEntries.fArray[bin] = ent[ibin];
          if (fBinSumw2.fN)
-            binsw2[bin] = fBinSumw2.fArray[ibin];
+            fBinSumw2.fArray[bin] = binsw2[ibin];
       }
    }
-   ResetStats();
-   fEntries = entries;
+   // need to set to zero the statistics if axis has been sorted
+   // see for example TH3::PutStats for definition of s vector
+   bool labelsAreSorted = kFALSE;
+   for (i = 0; i < n; ++i) {
+      if (a[i] != i) {
+         labelsAreSorted = kTRUE;
+         break;
+      }
+   }
+   if (labelsAreSorted) {
+      double s[TH1::kNstat];
+      GetStats(s);
+      if (axis == GetXaxis()) {
+         s[2] = 0; // fTsumwx
+         s[3] = 0; // fTsumwx2
+         s[6] = 0; // fTsumwxy
+      } else  {
+         s[4] = 0;  // fTsumwy
+         s[5] = 0;  // fTsumwy2
+         s[6] = 0;  // fTsumwxy
+      }
+      PutStats(s);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
