@@ -701,6 +701,42 @@ class Regression24CppPythonInheritance(MyTestCase):
 
        d = Alg3('MyAlgDerived')
 
+   def test6MultiInheritance(self):
+       """Test for a Python derived class in presence of multiple inheritance in C++"""
+       # 6376
+       cppyy.gbl.gInterpreter.Declare("""
+       #include <array>
+       #include <iostream>
+
+       struct Interface1 {
+         virtual int do_1()   = 0;
+         virtual ~Interface1() = default;
+       };
+
+       struct Interface2 {
+         virtual int do_2()   = 0;
+         virtual ~Interface2() = default;
+       };
+
+       struct Base : virtual public Interface1, virtual public Interface2 {};
+
+       struct Derived : Base, virtual public Interface2 {
+         int do_1() override { return 1; }
+         int do_2() override { return 2; }
+       };
+
+       int my_func( Interface2* i ) { return i->do_2(); }
+       """)
+
+       class PyDerived(cppyy.gbl.Derived): pass
+
+       i = PyDerived()
+       self.assertEqual(i.do_1(), 1)
+       self.assertEqual(i.do_2(), 2)
+
+       # Check there is no corruption in the invocation of i->do_2() inside my_func
+       self.assertEqual(cppyy.gbl.my_func(i), 2)
+
 
 ## actual test run
 if __name__ == '__main__':
