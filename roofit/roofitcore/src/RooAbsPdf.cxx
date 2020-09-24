@@ -2767,11 +2767,19 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 /// <tr><td> `Components(const RooArgSet& compSet)` <td> As above, but pass a RooArgSet of the components themselves.
 ///
 /// <tr><th> Type of argument                 <th> Projection control
-/// <tr><td> `Slice(const RooArgSet& set)`      <td>  Override default projection behaviour by omitting
-///               observables listed in set from the projection, resulting in a 'slice' plot. Slicing is mostly
-///               needed in discrete observables such as categories.
+/// <tr><td> `Slice(const RooArgSet& set)`     <td> Override default projection behaviour by omitting observables listed
+///                                    in set from the projection, i.e. by not integrating over these.
+///                                    Slicing is usually only sensible in discrete observables, by e.g. creating a slice
+///                                    of the PDF at the current value of the category observable.
+/// <tr><td> `Slice(RooCategory& cat, const char* label)`        <td> Override default projection behaviour by omitting the specified category
+///                                    observable from the projection, i.e., by not integrating over all states of this category.
+///                                    The slice is positioned at the given label value. Multiple Slice() commands can be given to specify slices
+///                                    in multiple observables, e.g.
+/// ```{.cpp}
+///   pdf.plotOn(frame, Slice(tagCategory, "2tag"), Slice(jetCategory, "3jet"));
+/// ```
 /// <tr><td> `Project(const RooArgSet& set)`    <td>  Override default projection behaviour by projecting
-///               over observables given in set and complete ignoring the default projection behavior. Advanced use only.
+///               over observables given in set, completely ignoring the default projection behavior. Advanced use only.
 /// <tr><td> `ProjWData(const RooAbsData& d)`   <td>  Override default projection _technique_ (integration). For observables
 ///               present in given dataset projection of PDF is achieved by constructing an average over all observable
 ///               values in given set. Consult RooFit plotting tutorial for further explanation of meaning & use of this technique
