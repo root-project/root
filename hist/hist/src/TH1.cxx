@@ -5353,9 +5353,9 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
    // support only cases where each bin has a labels (should be when axis is alphanumeric)
    Int_t n = labels->GetSize();
    if (n != axis->GetNbins()) {
-      Error("LabelsOption", "axis %s of Histogram %s has bins without labels. Sorting is not supported in this case",
+      Warning("LabelsOption", "axis %s of Histogram %s has bins without labels. Sorting might not work correctly",
             axis->GetName(), GetName());
-      return;
+      //return;
    }
    std::vector<Int_t> a(n);
    std::vector<Int_t> b(n);
@@ -5394,8 +5394,8 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
          for (i = 0; i < n; i++) {
             SetBinContent(i + 1, cont[b[a[i]] - 1]); // b[a[i]] returns bin number. .we need to subtract 1
             if (gDebug)
-               std::cout << "setting bin " << i + 1 << "value " << cont[b[a[i]] - 1] << " from bin " << b[a[i]]
-                         << "label " << labold->At(a[i])->GetName() << " a " << a[i] << std::endl;
+               Info("LabelsOption","setting bin %d value %f from bin %d label %s at pos %d ",
+                         i+1,cont[b[a[i]] - 1],b[a[i]],labold->At(a[i])->GetName(),a[i]);
             if (!errors.empty())
                SetBinError(i + 1, errors[b[a[i]] - 1]);
          }
@@ -7601,7 +7601,7 @@ void TH1::GetStats(Double_t *stats) const
    // in this case the statistics in x does not make any sense
    Bool_t labelHist =  ((const_cast<TAxis&>(fXaxis)).GetLabels() && fXaxis.CanExtend() );
    // fTsumw == 0 && fEntries > 0 is a special case when uses SetBinContent or calls ResetStats before
-   if ((fTsumw == 0 && fEntries > 0) || ( fXaxis.TestBit(TAxis::kAxisRange) && !labelHist) ) {
+   if ( (fTsumw == 0 && fEntries > 0) || fXaxis.TestBit(TAxis::kAxisRange) ) {
       for (bin=0;bin<4;bin++) stats[bin] = 0;
 
       Int_t firstBinX = fXaxis.GetFirst();

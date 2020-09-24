@@ -920,7 +920,11 @@ void TProfile::GetStats(Double_t *stats) const
 
    // Loop on bins
    Int_t bin, binx;
-   if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange)) {
+   // identify the case of labels with extension of axis range
+   // in this case the statistics in x does not make any sense
+   Bool_t labelHist =  ((const_cast<TAxis&>(fXaxis)).GetLabels() && fXaxis.CanExtend() );
+
+   if ( (fTsumw == 0 /* && fEntries > 0 */) || fXaxis.TestBit(TAxis::kAxisRange) ) {
       for (bin=0;bin<6;bin++) stats[bin] = 0;
       if (!fBinEntries.fArray) return;
       Int_t firstBinX = fXaxis.GetFirst();
@@ -933,7 +937,7 @@ void TProfile::GetStats(Double_t *stats) const
       for (binx = firstBinX; binx <= lastBinX; binx++) {
          Double_t w   = fBinEntries.fArray[binx];
          Double_t w2  = (fBinSumw2.fN ? fBinSumw2.fArray[binx] : w);
-         Double_t x   = fXaxis.GetBinCenter(binx);
+         Double_t x   = (!labelHist) ? fXaxis.GetBinCenter(binx) : 0;
          stats[0] += w;
          stats[1] += w2;
          stats[2] += w*x;
