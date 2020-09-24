@@ -4127,6 +4127,9 @@ bool testMerge1DLabelDiff()
    h1->Merge(list);
 
    // need to order the histo to compare them
+   h1->LabelsDeflate();
+   h4->LabelsDeflate();
+
    h1->LabelsOption("a");
    h4->LabelsOption("a");
 
@@ -6290,6 +6293,9 @@ bool testLabel1D()
    // test ordering label alphabetically
    h2->LabelsOption("a");
 
+   // reset stats so h2 will have a fake mean,stddev
+   h1->ResetStats();
+   h2->ResetStats();
 
    bool status = equals("testLabel1D", h1, h2, cmpOptStats, 1E-13);
    if (cleanHistos) delete h1;
@@ -6336,11 +6342,6 @@ bool testLabel2DX()
 
       h2->Fill( vLabels[binx-1].c_str(), h1->GetYaxis()->GetBinCenter(biny), 1.0);
    }
-   // labels in h1 are set in alphabetic order
-   // by setting labels in h1 we make its axis extendable
-   for (size_t i = 0; i < vLabels.size(); ++i ) {
-      h1->GetXaxis()->SetBinLabel(i+1, vLabels[i].c_str());
-   }
 
    // remove bins without labels
 
@@ -6351,6 +6352,9 @@ bool testLabel2DX()
    // test ordering label alphabetically
    h2->LabelsOption("a","x");
 
+   // reset stats so h2 will have a fake mean,stddev
+   h1->ResetStats();
+   h2->ResetStats();
 
    bool status = equals("testLabel2DX", h1, h2, cmpOptStats, 1E-10);
    if (cleanHistos) delete h1;
@@ -6394,6 +6398,8 @@ bool testLabel2DY()
       h2->Fill(  h1->GetXaxis()->GetBinCenter(binx), vLabels[biny-1].c_str(), 1.0);
    }
 
+   // axis of h2 is not extended, make it to have 0 statistics
+   h2->GetYaxis()->SetCanExtend(true);
    h2->LabelsDeflate("Y");
    // test ordering label in content ascending order
    h2->LabelsOption("<", "y");
@@ -6402,6 +6408,14 @@ bool testLabel2DY()
 
    // note in this test label axis (y) is not extendable because labels are matching the bins
    // and we can test also the Mean and RMS
+   // reset stats so h2 will have a fake mean,stddev
+
+   // by setting labels in h1 we make its axis extendable and we get zero statistics in Y
+   for (size_t i = 0; i < vLabels.size(); ++i) {
+      h1->GetYaxis()->SetBinLabel(i + 1, vLabels[i].c_str());
+   }
+   h1->ResetStats();
+   h2->ResetStats();
 
    bool status = equals("testLabel2DY", h1, h2, cmpOptStats, 1E-13);
    if (cleanHistos) delete h1;
@@ -6450,6 +6464,8 @@ bool testLabel3DX()
       h2->Fill( vLabels[binx-1].c_str(), yvalue, zvalue, 1.0);
    }
 
+   // axis of h2 is not extended, make it to have 0 statistics
+   h2->GetXaxis()->SetCanExtend(true);
    h2->LabelsDeflate("X");
 
    // test ordering label in content descending order
@@ -6459,10 +6475,12 @@ bool testLabel3DX()
 
    // reset statistics  in ref histogram to have consistent mean and std-dev
    // since h2 has its statistics reset
-   // fix problem of entries
-   Double_t nentries = h1->GetEntries();
+   // and fix problem of entries
+   for (size_t i = 0; i < bins.size(); ++i) {
+      h1->GetXaxis()->SetBinLabel(i+1, vLabels[i].c_str());
+   }
    h1->ResetStats();
-   h1->SetEntries(nentries);
+   h2->ResetStats();
 
    bool status = equals("testLabel3DX", h1, h2, cmpOptStats, 1E-13);
    if (cleanHistos) delete h1;
@@ -6502,8 +6520,10 @@ bool testLabel3DY()
    for (Int_t i = 0; i < h2->GetNbinsX() && i < (Int_t) bins.size(); ++i) {
       h2->GetXaxis()->SetBinLabel(i+1, vLabels[i].c_str());
    }
-   // make axis not extendable otehrwise statistics in X will be set to zero
+   // make axis not extendable otherwise statistics in X will be set to zero
    h2->GetXaxis()->SetCanExtend(kFALSE);
+   // but make y axis extendable
+   h2->GetYaxis()->SetCanExtend(kTRUE);
 
    // fill h1 with numbers and h2 using labels
    // since labels are ordered alphabetically
@@ -6519,20 +6539,22 @@ bool testLabel3DY()
       h2->Fill(vLabels[binx - 1].c_str(), vLabels[biny - 1].c_str(), zvalue, 1.0);
    }
 
-
-
+   h2->LabelsDeflate("Y");
    // test ordering label in content descending order
    h2->LabelsOption("<", "y");
    // test ordering label alphabetically
    h2->LabelsOption("a", "y");
-   h2->LabelsDeflate("Y");
+
 
    // reset statistics  in ref histogram to have consistent mean and std-dev
    // since h2 has its statistics reset
-   // fix problem of entries
-   Double_t nentries = h1->GetEntries();
+   // and fix problem of entries
+   for (size_t i = 0; i < bins.size(); ++i) {
+      h1->GetYaxis()->SetBinLabel(i+1, vLabels[i].c_str());
+   }
+
    h1->ResetStats();
-   h1->SetEntries(nentries);
+   h2->ResetStats();
 
    bool status = equals("testLabel3DY", h1, h2, cmpOptStats, 1E-13);
    if (cleanHistos)
@@ -6583,6 +6605,7 @@ bool testLabel3DZ()
       h2->Fill(xvalue, yvalue, vLabels[binz - 1].c_str(), 1.0);
    }
 
+   h2->GetZaxis()->SetCanExtend(kTRUE);
    h2->LabelsDeflate("Z");
 
    // test ordering label in content descending order
@@ -6592,10 +6615,12 @@ bool testLabel3DZ()
 
    // reset statistics  in ref histogram to have consistent mean and std-dev
    // since h2 has its statistics reset
-   // fix problem of entries
-   Double_t nentries = h1->GetEntries();
+   // and fix problem of entries
+   for (size_t i = 0; i < bins.size(); ++i) {
+      h1->GetZaxis()->SetBinLabel(i+1, vLabels[i].c_str());
+   }
    h1->ResetStats();
-   h1->SetEntries(nentries);
+   h2->ResetStats();
 
    bool status = equals("testLabel3DZ", h1, h2, cmpOptStats, 1E-13);
    if (cleanHistos)
@@ -6646,12 +6671,18 @@ bool testLabelProf1D()
       p2->Fill(vLabels[bin - 1].c_str(), y, 1.0);
    }
 
+   // set also labels in p1
+   for (size_t i = 0; i < bins.size(); ++i) {
+      p1->GetXaxis()->SetBinLabel(i+1, vLabels[i].c_str());
+   }
+
    // test ordering label in content ascending order
-   p2->LabelsOption("<", "x");
-   // test ordering label alphabetically
-   p1->LabelsOption("<", "x");
-   //p2->LabelsOption("a");
    p2->LabelsDeflate();
+   p2->LabelsOption(">", "x");
+   // test ordering label alphabetically
+   p1->LabelsOption(">", "x");
+   //p2->LabelsOption("a");
+
 
    bool status = equals("testLabelProf1D", p1, p2, cmpOptStats, 1E-13);
    if (cleanHistos)
@@ -6704,14 +6735,20 @@ bool testLabelProf1D_2()
       p2->Fill(vLabels[bin - 1].c_str(), y, 1.0);
    }
 
-   // test ordering label in content ascending order
-   p2->LabelsOption(">", "x");
-   // test ordering label alphabetically
-   p1->LabelsOption(">", "x");
-   // p2->LabelsOption("a");
-   p2->LabelsDeflate();
+   // set also labels in p1
+   for (size_t i = 0; i < bins.size(); ++i) {
+      p1->GetXaxis()->SetBinLabel(i + 1, vLabels[i].c_str());
+   }
 
-   bool status = equals("testLabelProf1D", p1, p2, cmpOptStats, 1E-13);
+   p2->LabelsDeflate();
+   // test ordering label in content ascending order
+   p2->LabelsOption("<", "x");
+   // test ordering label alphabetically
+   p1->LabelsOption("<", "x");
+   // p2->LabelsOption("a");
+
+
+   bool status = equals("testLabelProf1D_2", p1, p2, cmpOptStats, 1E-13);
    if (cleanHistos) delete p1;
    if (!defsumw2) TProfile::SetDefaultSumw2(false);
 
@@ -6766,6 +6803,7 @@ bool testLabelProf2DX()
    for (size_t i = 0; i < vLabels.size(); ++i) {
       h1->GetXaxis()->SetBinLabel(i + 1, vLabels[i].c_str());
    }
+   h1->ResetStats();
 
    //h2->LabelsDeflate();
 
@@ -6774,8 +6812,9 @@ bool testLabelProf2DX()
    // test ordering label alphabetically
    h2->LabelsOption("a", "x");
 
+   h2->ResetStats();
 
-   bool status = equals("testLabel2DX", h1, h2, cmpOptStats, 1E-10);
+   bool status = equals("testLabelProf2DX", h1, h2, cmpOptStats, 1E-10);
    if (cleanHistos)
       delete h1;
    return status;
@@ -6783,6 +6822,11 @@ bool testLabelProf2DX()
 
 bool testLabelProf2DY()
 {
+   bool precSumw2 = TProfile2D::GetDefaultSumw2();
+   TProfile2D::SetDefaultSumw2(true);
+   if (defaultEqualOptions == cmpOptDebug)
+      Info("testLabelProf2DY", "Set default sum2 from %d", precSumw2);
+
    // Tests labelling a 2D Histogram and  test ordering of labels in Y axis (TH1::LabelsOption)
    // build histogram with extra  labels to test also TH1::LabelsDeflate
 
@@ -6823,9 +6867,20 @@ bool testLabelProf2DY()
 
    h2->LabelsDeflate("Y");
    // test ordering label in content ascending order
-   h2->LabelsOption("<", "y");
+   //h2->LabelsOption("<", "y");
+
+   h2->Clone("h0");
+
    // then order labels alphabetically
    h2->LabelsOption("a", "y");
+   h2->GetYaxis()->SetCanExtend(true); // y axis was not exteded because had more bins . FOrce it
+   h2->ResetStats();
+
+   // by setting labels in h1 we make its axis extendable
+   for (size_t i = 0; i < vLabels.size(); ++i) {
+      h1->GetYaxis()->SetBinLabel(i + 1, vLabels[i].c_str());
+   }
+   h1->ResetStats();
 
    // note in this test label axis (y) is not extendable because labels are matching the bins
    // and we can test also the Mean and RMS
@@ -6833,6 +6888,7 @@ bool testLabelProf2DY()
    bool status = equals("testLabelProf2DY", h1, h2, cmpOptStats, 1E-13);
    if (cleanHistos)
       delete h1;
+   TProfile2D::SetDefaultSumw2(precSumw2);
    return status;
 }
 
@@ -11082,10 +11138,12 @@ int stressHistogram(int testNumber = 0)
                                            mergeExtTestPointer.data() };
    // Test 16
    // Label Tests
-   const unsigned int numberOfLabel = 5;
-   pointer2Test labelTestPointer[numberOfLabel] = { testLabel1D, testLabel2DX, testLabel2DY, testLabel3DX,
-                                                    testLabelsInflateProf1D
-   };
+   const unsigned int numberOfLabel = 11;
+   pointer2Test labelTestPointer[numberOfLabel] = {testLabel1D,  testLabel2DX, testLabel2DY,
+                                                   testLabel3DX, testLabel3DY, testLabel3DZ,
+                                                   testLabelProf1D, testLabelProf1D_2,
+                                                   testLabelProf2DX, testLabelProf2DY,
+                                                   testLabelsInflateProf1D};
    struct TTestSuite labelTestSuite = { numberOfLabel,
                                         "Label tests for 1D and 2D Histograms ............................",
                                         labelTestPointer };
