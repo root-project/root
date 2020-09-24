@@ -206,6 +206,11 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
         }
     }
 
+// add an offset calculator for the dispatch ptr as needed
+    code << "public:\n"
+         << "static size_t _dispatchptr_offset() { return (size_t)&(("
+         << derivedName << "*)(0x0))->m_self; }";
+
 // finish class declaration
     code << "};\n}";
 

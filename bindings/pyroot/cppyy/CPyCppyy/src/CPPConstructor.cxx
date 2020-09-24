@@ -97,8 +97,18 @@ PyObject* CPyCppyy::CPPConstructor::Call(
     // set m_self (TODO: get this from the compiler in case of some unorthodox padding
     // or if the inheritance hierarchy extends back into C++ land)
         if (address) {
-            ptrdiff_t self_address = address + Cppyy::SizeOf(GetScope());
-            new ((void*)self_address) DispatchPtr{(PyObject*)self};
+        // get the dispatcher class
+            PyObject *dispproxy = CPyCppyy::GetScopeProxy(disp);
+            if (!dispproxy) {
+                PyErr_SetString(PyExc_TypeError, "dispatcher proxy was never created");
+                return nullptr;
+            }
+
+            PyObject *pyoff = PyObject_CallMethod(dispproxy, (char*)"_dispatchptr_offset", nullptr);
+            size_t disp_offset = PyLong_AsSsize_t(pyoff);
+            Py_DECREF(pyoff);
+            Py_DECREF(dispproxy);
+            new ((void*)(address + disp_offset)) DispatchPtr{(PyObject*)self};
         }
     }
 
