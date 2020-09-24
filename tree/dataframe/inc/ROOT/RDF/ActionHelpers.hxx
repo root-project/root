@@ -772,7 +772,7 @@ public:
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs)
-         fMins[slot] = std::min(v, fMins[slot]);
+         fMins[slot] = std::min(static_cast<ResultType>(v), fMins[slot]);
    }
 
    void Initialize() { /* noop */}
@@ -822,7 +822,7 @@ public:
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs)
-         fMaxs[slot] = std::max((ResultType)v, fMaxs[slot]);
+         fMaxs[slot] = std::max(static_cast<ResultType>(v), fMaxs[slot]);
    }
 
    void Initialize() { /* noop */}
