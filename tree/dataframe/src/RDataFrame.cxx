@@ -54,7 +54,7 @@ You can directly see RDataFrame in action through its [code examples](https://ro
 - [More features](#more-features)
 - [Transformations](#transformations) -- manipulating data
 - [Actions](#actions) -- getting results
-- [Parallel execution](#parallel-execution) -- how to use it and common pitfalls
+- [Performance tips and parallel execution](#parallel-execution) -- how to use it and common pitfalls
 - [Class reference](#reference) -- most methods are implemented in the [RInterface](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html) base class
 
 ## <a name="cheatsheet"></a>Cheat sheet
@@ -818,7 +818,7 @@ Actions can be **instant** or **lazy**. Instant actions are executed as soon as 
 executed whenever the object they return is accessed for the first time. As a rule of thumb, actions with a return value
 are lazy, the others are instant.
 
-##  <a name="parallel-execution"></a>Parallel execution
+##  <a name="parallel-execution"></a>Performance tips and parallel execution
 As pointed out before in this document, `RDataFrame` can transparently perform multi-threaded event loops to speed up
 the execution of its actions. Users have to call `ROOT::EnableImplicitMT()` *before* constructing the `RDataFrame`
 object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct
@@ -855,6 +855,12 @@ Note that the same slot might be associated to different threads over the course
 will never receive the same slot at the same time.
 This extra parameter might facilitate writing safe parallel code by having each thread write/modify a different
 *processing slot*, e.g. a different element of a list. See [here](#generic-actions) for an example usage of `ForeachSlot`.
+
+### Parallel execution of multiple `RDataFrame` event loops
+A complex analysis may require multiple `RDatFrame` objects to compute all desired results. This poses the challenge that the
+event loops of each `RDataFrame` graph can be parallelized but run sequentially one after another. In the case of many threads
+you may encounter the problem that you run out of data to serve all available resources. To improve this scenario, the helper
+`ROOT::RDF::RunGraphs` allows you to process multiple `RDataFrame` graphs concurrently, which may improve the resource usage.
 
 <a name="reference"></a>
 */
