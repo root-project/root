@@ -448,3 +448,56 @@ TEST(RDataFrameInterface, ColumnWithSimpleStruct)
       EXPECT_DOUBLE_EQ(df.Mean(col).GetValue(), 42.); // jitted
    }
 }
+
+// Issue #6435
+TEST(RDataFrameInterface, MinMaxSumMeanStdDevOfScalar)
+{
+   auto df = ROOT::RDataFrame(4).Range(1, 0).Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"});
+   auto max = df.Max<int>("x");
+   auto jit_max = df.Max("x");
+   auto min = df.Min<int>("x");
+   auto jit_min = df.Min("x");
+   auto sum = df.Sum<int>("x");
+   auto jit_sum = df.Sum("x");
+   auto mean = df.Mean<int>("x");
+   auto jit_mean = df.Mean("x");
+   auto stddev = df.StdDev<int>("x");
+   auto jit_stddev = df.StdDev("x");
+
+   EXPECT_EQ(*max, 3);
+   EXPECT_DOUBLE_EQ(*jit_max, 3.f);
+   EXPECT_EQ(*min, 1);
+   EXPECT_DOUBLE_EQ(*jit_min, 1.f);
+   EXPECT_EQ(*sum, 6);
+   EXPECT_DOUBLE_EQ(*jit_sum, 6.f);
+   EXPECT_DOUBLE_EQ(*mean, 2);
+   EXPECT_DOUBLE_EQ(*jit_mean, 2);
+   EXPECT_DOUBLE_EQ(*stddev, 1.f);
+   EXPECT_DOUBLE_EQ(*jit_stddev, 1.f);
+}
+
+TEST(RDataFrameInterface, MinMaxSumMeanStdDevOfRVec)
+{
+   auto df = ROOT::RDataFrame(1).Define("x", [] { return ROOT::RVec<int>{1,2,3}; });
+   auto max = df.Max<ROOT::RVec<int>>("x");
+   auto jit_max = df.Max("x");
+   auto min = df.Min<ROOT::RVec<int>>("x");
+   auto jit_min = df.Min("x");
+   auto sum = df.Sum<ROOT::RVec<int>>("x");
+   auto jit_sum = df.Sum("x");
+   auto mean = df.Mean<ROOT::RVec<int>>("x");
+   auto jit_mean = df.Mean("x");
+   auto stddev = df.StdDev<ROOT::RVec<int>>("x");
+   auto jit_stddev = df.StdDev("x");
+
+   EXPECT_EQ(*max, 3);
+   EXPECT_DOUBLE_EQ(*jit_max, 3.f);
+   EXPECT_EQ(*min, 1);
+   EXPECT_DOUBLE_EQ(*jit_min, 1.f);
+   EXPECT_EQ(*sum, 6);
+   EXPECT_DOUBLE_EQ(*jit_sum, 6.f);
+   EXPECT_DOUBLE_EQ(*mean, 2);
+   EXPECT_DOUBLE_EQ(*jit_mean, 2);
+   EXPECT_DOUBLE_EQ(*stddev, 1.f);
+   EXPECT_DOUBLE_EQ(*jit_stddev, 1.f);
+}
