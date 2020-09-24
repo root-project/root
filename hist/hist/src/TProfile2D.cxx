@@ -916,8 +916,12 @@ void TProfile2D::GetStats(Double_t *stats) const
 {
    if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
 
+   // check for labels axis . In that case corresponsing statistics do not make sense and it is set to zero
+   Bool_t labelXaxis =  ((const_cast<TAxis&>(fXaxis)).GetLabels() && fXaxis.CanExtend() );
+   Bool_t labelYaxis =  ((const_cast<TAxis&>(fYaxis)).GetLabels() && fYaxis.CanExtend() );
+
    // Loop on bins
-   if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
+   if ( (fTsumw == 0 /* && fEntries > 0 */) || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
       Int_t bin, binx, biny;
       Double_t w, w2;
       Double_t x,y;
@@ -939,12 +943,12 @@ void TProfile2D::GetStats(Double_t *stats) const
          }
       }
       for (biny = firstBinY; biny <= lastBinY; biny++) {
-         y = fYaxis.GetBinCenter(biny);
+         y = (!labelYaxis) ? fYaxis.GetBinCenter(biny) : 0;
          for (binx = firstBinX; binx <= lastBinX; binx++) {
             bin = GetBin(binx,biny);
             w         = fBinEntries.fArray[bin];
             w2        = (fBinSumw2.fN ? fBinSumw2.fArray[bin] : w );
-            x         = fXaxis.GetBinCenter(binx);
+            x         = (!labelXaxis) ? fXaxis.GetBinCenter(binx) : 0;
             stats[0] += w;
             stats[1] += w2;
             stats[2] += w*x;

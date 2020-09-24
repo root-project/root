@@ -4072,6 +4072,80 @@ bool testMerge1DLabelDiff()
    TH1D* h3 = new TH1D("merge1DLabelDiff_h3", "h3-Title", numberOfBins, minRange, maxRange);
    TH1D* h4 = new TH1D("merge1DLabelDiff_h4", "h4-Title", numberOfBins, minRange, maxRange);
 
+   const char labels[10][5] = {"aaa","bbb","ccc","ddd","eee","fff","ggg","hhh","iii","lll"};
+
+   //choose random same labels (nbins -2)
+   int nL = numberOfBins-2;
+   bool addNonEmptyLabel = true; // if it is true test should fail
+   std::vector<TString> labels2(nL);
+   for (int i = 0; i < nL; ++i)
+      labels2[i] = labels[r.Integer(10)];
+
+   for ( Int_t e = 0; e < nEvents ; ++e ) {
+      int i = r.Integer( addNonEmptyLabel ? numberOfBins : nL);
+      if (i < nL)  {
+         h1->Fill(labels2[i], 1.0);
+         h4->Fill(labels2[i], 1.0);
+      }
+      else {
+         // add one empty label
+         h1->Fill("", 1.0);
+         h4->Fill("", 1.0);
+      }
+   }
+
+   for (int i = 0; i < nL; ++i)
+      labels2[i] = labels[r.Integer(10)];
+   for ( Int_t e = 0; e < nEvents ; ++e ) {
+      Int_t i = r.Integer(nL);
+      h2->Fill(labels2[i], 1.0);
+      h4->Fill(labels2[i],1.0);
+   }
+
+   for (int i = 0; i < nL; ++i)
+      labels2[i] = labels[r.Integer(10)];
+   for ( Int_t e = 0; e < nEvents ; ++e ) {
+      Int_t i = r.Integer(nL);
+      h3->Fill(labels2[i], 1.0);
+      h4->Fill(labels2[i], 1.0);
+   }
+
+   // remove empty labels
+   h2->LabelsDeflate();
+   h3->LabelsDeflate();
+
+   h2->LabelsOption("a");
+   h3->LabelsOption(">");
+
+
+   TList *list = new TList;
+   list->Add(h2);
+   list->Add(h3);
+
+   if (!cleanHistos) h1->Clone("merge1DLabelDiff_h0");
+
+   h1->Merge(list);
+
+   // need to order the histo to compare them
+   h1->LabelsOption("a");
+   h4->LabelsOption("a");
+
+   bool ret = equals("MergeLabelDiff1D", h1, h4, cmpOptStats, 1E-10);
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
+   return ret;
+}
+
+bool testMerge1DLabelDiffOld()
+{
+   // Tests the merge with some different labels  for 1D Histograms
+
+   TH1D* h1 = new TH1D("merge1DLabelDiff_h1", "h1-Title", numberOfBins, minRange, maxRange);
+   TH1D* h2 = new TH1D("merge1DLabelDiff_h2", "h2-Title", numberOfBins, minRange, maxRange);
+   TH1D* h3 = new TH1D("merge1DLabelDiff_h3", "h3-Title", numberOfBins, minRange, maxRange);
+   TH1D* h4 = new TH1D("merge1DLabelDiff_h4", "h4-Title", numberOfBins, minRange, maxRange);
+
    // This test fails, as expected! That is why it is not run in the tests suite.
    const char labels[10][5] = {"aaa","bbb","ccc","ddd","eee","fff","ggg","hhh","iii","lll"};
 
@@ -4132,6 +4206,7 @@ bool testMerge1DLabelDiff()
    if (cleanHistos) delete h3;
    return ret;
 }
+
 
 bool testMerge2DLabelDiff()
 {
@@ -5127,20 +5202,20 @@ bool testMerge3DLabelAllDiffWeight()
 
    TH3D* h1 = new TH3D("merge3DLabelAllDiff_h1", "h1-Title",
                                    nBins, minRange, maxRange,
-                                    1, minRange, maxRange,
-                                   1 , minRange, maxRange);
+                                    3, minRange, maxRange,
+                                   3 , minRange, maxRange);
    TH3D* h2 = new TH3D("merge3DLabelAllDiff_h2", "h2-Title",
                                    nBins, minRange, maxRange,
-                                    1, minRange, maxRange,
-                                   1 , minRange, maxRange);
+                                    3, minRange, maxRange,
+                                   3 , minRange, maxRange);
    TH3D* h3 = new TH3D("merge3DLabelAllDiff_h3", "h3-Title",
                                    nBins, minRange, maxRange,
-                                    1, minRange, maxRange,
-                                   1, minRange, maxRange);
+                                    3, minRange, maxRange,
+                                   3, minRange, maxRange);
    TH3D* h4 = new TH3D("merge3DLabelAllDiff_h4", "h4-Title",
                                    2*nBins, minRange, 2*maxRange-minRange,
-                                    1, minRange, maxRange,
-                                   1 , minRange, maxRange);
+                                    3, minRange, maxRange,
+                                   3 , minRange, maxRange);
 
 
 
@@ -5186,9 +5261,7 @@ bool testMerge3DLabelAllDiffWeight()
    }
 
    // the y axis will have the last bin without a label since it contains nBins+1
-   // need to sert bin labels after filling otherwise Fill will not work correctly
-   // on alphanumeric axis
-   bool orderLabelList = true;
+   bool orderLabelList = false;  // test also case that labels are not ordered
    for ( Int_t i = 1; i <= nBins; ++ i) {
       char letter = (char) ((int) 'a' + i - 1);
       ostringstream name1, name2;
@@ -5203,7 +5276,7 @@ bool testMerge3DLabelAllDiffWeight()
       h3->GetXaxis()->SetBinLabel(i, name2.str().c_str());
       //h3->GetYaxis()->SetBinLabel(i, ylabel);
 
-      std::cout << "setting bin label in h4 " << i+nBins << " : " << name2.str() << std::endl;
+      //std::cout << "setting bin label in h4 " << i+nBins << " : " << name2.str() << std::endl;
       h4->GetXaxis()->SetBinLabel(i, name1.str().c_str());
       if (!orderLabelList) h4->GetXaxis()->SetBinLabel(i+nBins, name2.str().c_str());
       // we set however label in p4 y axis
@@ -5228,6 +5301,10 @@ bool testMerge3DLabelAllDiffWeight()
    // need to reset statistics
    h1->ResetStats();
    h4->ResetStats();
+   // need to order labels for comparing histos
+
+   h1->LabelsOption("a","x");
+   h4->LabelsOption("a","x");
 
    bool ret = equals("MergeLabelAllDiff3DWeight", h1, h4, cmpOptStats, 1E-10);
    if (cleanHistos) delete h1;
@@ -5452,7 +5529,6 @@ bool testMergeProf3DLabelAllDiff()
    // profile3d has not yet filling with labels implemented.
    // test filling with x but be careful in filling reference histogram p4
 
-   int imerge = 3;
    for ( Int_t e = 0; e < 10*nEvents; ++e ) {
       Double_t x = r.Uniform(minRange, maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -5462,7 +5538,6 @@ bool testMergeProf3DLabelAllDiff()
       p4->Fill(x, y, z, t, 1.0);
    }
 
-if (imerge > 1) {
    for ( Int_t e = 0; e < 100*nEvents; ++e ) {
       //TString label = p2->GetXaxis()->GetLabels()->At(r.Integer(nBins))->GetName();
       Double_t x = r.Uniform(minRange, maxRange);
@@ -5473,9 +5548,7 @@ if (imerge > 1) {
       Double_t x4 = x + maxRange - minRange;
       p4->Fill(x4, y, z, t, 1.0);
    }
-}
 
-if (imerge > 2) {
    for ( Int_t e = 0; e < 10*nEvents; ++e ) {
       //TString label = p3->GetXaxis()->GetLabels()->At(r.Integer(nBins))->GetName();
       Double_t x = r.Uniform(minRange, maxRange);
@@ -5486,7 +5559,6 @@ if (imerge > 2) {
       Double_t x4 = x + maxRange - minRange;
       p4->Fill(x4, y, z, t, 1.0);
    }
-}
 
    // the y axis will have the last bin without a label since it contains nBins+1
    // need to sert bin labels after filling otherwise Fill will not work correctly
@@ -5517,32 +5589,19 @@ if (imerge > 2) {
    }
 
    // for debugging save a copy of p1
-   //if (!cleanHistos)
-   auto * p0 = (TProfile3D*) p1->Clone("merge3DLabelAllDiff_p0");
-   p1->Reset();
+   if (!cleanHistos)
+      auto p0 = (TProfile3D*) p1->Clone("merge3DLabelAllDiff_p0");
+
+   //p1->Reset();
 
    TList *list = new TList;
-   std::cout << p0->fArray[13] << std::endl;
-   list->Add(p0);
-   p1->Merge(list);
-   std::cout << p1->fArray[13] << std::endl;
+   //list->Add(p0);
+   //p1->Merge(list);
 
-   list->Clear();
-   if (imerge > 1){
 
    list->Add(p2);
-   p1->Merge(list);
-   std::cout << p1->fArray[17] << std::endl;
-   }
-   else {
-      //p4->LabelsDeflate();
-   }
-   if (imerge > 2) {
-   list->Clear();
    list->Add(p3);
    p1->Merge(list);
-   std::cout << p1->fArray[17] << std::endl;
-   }
 
    p1->ResetStats();
    p4->ResetStats();
@@ -6225,11 +6284,12 @@ bool testLabel1D()
       h2->Fill(vLabels[bin-1].c_str(), 1.0);
    }
 
+   h2->LabelsDeflate();
    // test ordering label in content ascending order
    h2->LabelsOption("<","x");
    // test ordering label alphabetically
    h2->LabelsOption("a");
-   h2->LabelsDeflate();
+
 
    bool status = equals("testLabel1D", h1, h2, cmpOptStats, 1E-13);
    if (cleanHistos) delete h1;
@@ -7215,10 +7275,10 @@ bool testH3Integral()
 
    TStopwatch w;
    int n = 1000000;
-   TH3D * h3 = new TH3D("h3","h3",50,-5,5, 50, -5, 5, 50, -5, 5);
+   TH3D * h3 = new TH3D("h3","h3",30,-4,4, 30, -4, 4, 30, -4, 4);
 
    //TF3 * gaus = new TF3("gaus3d",gaus3d,-5,5,-5,5,-5,5,7);
-   TF3 * gaus = new TF3("gaus3d",gaus3d,-5,5,-5,5,-5,5,7);
+   TF3 * gaus = new TF3("gaus3d",gaus3d,-4,4,-4,4,-4,4,7);
    gaus->SetParameters(100,0,1.3,1.,1.,-1,0.9);
    w.Start();
    h3->FillRandom("gaus3d",n);
@@ -7609,20 +7669,22 @@ bool testH2Extend() {
 }
 bool testProfileExtend() {
 
+   TProfile::SetDefaultSumw2(true);
    TProfile::Approximate(true);
    TProfile * h1 = new TProfile("h1","h1",10,0,10);
    TProfile * h0 = new TProfile("h0","h0",10,0,20);
    h1->SetCanExtend(TH1::kXaxis);
    for (int i = 0; i < nEvents; ++i) {
-      double x = gRandom->Gaus(10,3);
+      double x = gRandom->Gaus(10,4);
       double y = gRandom->Gaus(10+2*x,1);
       if (x <= 0 || x >= 20) continue; // do not want overflow in h0
-      h1->Fill(x,y);
-      h0->Fill(x,y);
+      h1->Fill(x,y,1);
+      h0->Fill(x,y,1);
    }
    bool ret = equals("testProfileextend", h1, h0, cmpOptStats, 1E-10);
    if (cleanHistos) delete h1;
    TProfile::Approximate(false);
+   TProfile::SetDefaultSumw2(true);
    return ret;
 
 }
@@ -7633,13 +7695,25 @@ bool testProfile2Extend() {
    TProfile2D * h1 = new TProfile2D("h1","h1",10,0,10,10,0,10);
    TProfile2D * h2 = new TProfile2D("h2","h0",10,0,10,10,0,20);
    h1->SetCanExtend(TH1::kYaxis);
+   // be sure to have some underflow/overflow before expanding
+   // to test that case
+   for (int i = 0; i <100; ++i) {
+      h1->Fill(-1,r.Uniform(0,10),r.Gaus(-10,1));
+      h2->Fill(-1,r.Uniform(0,10),r.Gaus(-10,1));
+      h1->Fill(11,r.Uniform(0,10),r.Gaus(100,1));
+      h2->Fill(11,r.Uniform(0,10),r.Gaus(100,1));
+   }
    for (int i = 0; i < 10*nEvents; ++i) {
       double x = r.Uniform(-1,11);
       double y = r.Gaus(10,3);
       double z = r.Gaus(10+2*(x+y),1);
       if (y <= 0 || y >= 20) continue; // do not want overflow in h0
+      if (h1->GetYaxis()->GetBinWidth(1) < 2. && y > 10.) {
+         std::cout << "extending the histogram for " << x << " " << y << std::endl;
+      }
       h1->Fill(x,y,z);
       h2->Fill(x,y,z);
+
    }
    bool ret = equals("testprofile2extend", h1, h2, cmpOptStats, 1E-10);
    if (cleanHistos) delete h1;
