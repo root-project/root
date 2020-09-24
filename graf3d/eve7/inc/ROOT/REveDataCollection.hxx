@@ -84,11 +84,11 @@ public:
    {
       _handler_fillimp = handler_func;
    }
-   //std::function<void (REveDataItemList*, const std::vector<int>&)> _handler_items_change;
-   //std::function<void (REveDataItemList*, Set_t& impSel)> _handler_fillimp;
-
+   
    Bool_t SingleRnrState() const override { return kTRUE; }
    Bool_t SetRnrState(Bool_t) override;
+
+   void ProcessSelection(ElementId_t id, bool multi, bool secondary, const std::set<int>& in_secondary_idcs);
 };
 
 //==============================================================================

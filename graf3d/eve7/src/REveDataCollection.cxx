@@ -11,6 +11,8 @@
 
 #include <ROOT/REveDataCollection.hxx>
 #include <ROOT/REveUtil.hxx>
+#include <ROOT/REveSelection.hxx>
+#include <ROOT/REveManager.hxx>
 
 #include "TROOT.h"
 #include "TMethod.h"
@@ -41,6 +43,7 @@ REveDataItemList::REveDataItemList(const std::string& n, const std::string& t):
 
    _handler_items_change = 0;
    _handler_fillimp  = 0;
+   SetupDefaultColorAndTransparency(REveDataCollection::fgDefaultColor, true, true);
 }
 //______________________________________________________________________________
 
@@ -92,7 +95,7 @@ void REveDataItemList::FillImpliedSelectedSet( Set_t& impSelSet)
 {
    /*
    printf("REveDataCollection::FillImpliedSelectedSet colecction setsize %zu\n",  RefSelectedSet().size());
-   for (auto x :RefSelectedSet() )
+   for (auto x : RefSelectedSet())
       printf("%d \n", x);
    */
    _handler_fillimp( this ,  impSelSet);
@@ -136,6 +139,14 @@ Bool_t REveDataItemList::SetRnrState(Bool_t iRnrSelf)
    return ret;
 }
 
+//______________________________________________________________________________
+void REveDataItemList::ProcessSelection(ElementId_t selectionId, bool multi, bool secondary, const std::set<int>& secondary_idcs)
+{
+   RefSelectedSet() = secondary_idcs;
+   REveSelection* selection = (REveSelection*) ROOT::Experimental::gEve->FindElementById(selectionId);
+   selection->NewElementPicked(GetElementId(), multi, secondary, secondary_idcs);
+}
+
 //==============================================================================
 // REveDataCollection
 //==============================================================================
@@ -143,7 +154,8 @@ Bool_t REveDataItemList::SetRnrState(Bool_t iRnrSelf)
 REveDataCollection::REveDataCollection(const std::string& n, const std::string& t) :
    REveElement(n, t)
 {
-   fItemList = new REveDataItemList();
+   std::string lname = n + "Items";
+   fItemList = new REveDataItemList(lname.c_str());
    AddElement(fItemList);
 
    SetupDefaultColorAndTransparency(fgDefaultColor, true, true);
@@ -180,7 +192,6 @@ void REveDataCollection::SetFilterExpr(const TString& filter)
    {
       std::cerr << "EveDataCollection::SetFilterExpr" << exc.what();
    }
-
 }
 
 void REveDataCollection::ApplyFilter()
@@ -198,6 +209,7 @@ void REveDataCollection::ApplyFilter()
       ids.push_back(idx++);
    }
    StampObjProps();
+   fItemList->StampObjProps();
    if (fItemList->_handler_items_change) fItemList->_handler_items_change( fItemList , ids);
 }
 
@@ -287,7 +299,8 @@ void REveDataCollection::SetMainColor(Color_t newv)
    {
       chld->fColor = newv;
    }
-
+   fItemList->StampObjProps();
+   fItemList->SetMainColor(newv);
    if ( fItemList->_handler_items_change) fItemList->_handler_items_change( fItemList , ids);
 }
 
@@ -302,6 +315,7 @@ Bool_t REveDataCollection::SetRnrState(Bool_t iRnrSelf)
       fItemList->fItems[i]->SetRnrSelf(fRnrSelf);
    }
 
+   fItemList->StampObjProps();
    fItemList->_handler_items_change( fItemList , ids);
 
    return ret;
