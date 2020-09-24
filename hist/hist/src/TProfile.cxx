@@ -1033,12 +1033,32 @@ void TProfile::LabelsOption(Option_t *option, Option_t * /*ax */)
    if (opt.Contains("<")) sort = 2;
    if (sort < 0) return;
 
-   //Int_t n = TMath::Min(fXaxis.GetNbins(), labels->GetSize());
-   // support only cases where each bin has a labels (should be when axis is alphanumeric)
+   // support only cases when first n bins have labels
    Int_t n = labels->GetSize();
-   if (n != fXaxis.GetNbins()) {
-      Error("LabelsOption", "x axis of profile %s has bins without labels. Sorting is not supported in this case",GetName());
-      return;
+   TAxis *axis = &fXaxis;
+   if (n != axis->GetNbins()) {
+      // check if labels are all consecutive and starts from the first bin
+      // in that case the current code will work fine
+      Int_t firstLabelBin = axis->GetNbins() + 1;
+      Int_t lastLabelBin = -1;
+      for (Int_t i = 0; i < n; ++i) {
+         Int_t bin = labels->At(i)->GetUniqueID();
+         if (bin < firstLabelBin)
+            firstLabelBin = bin;
+         if (bin > lastLabelBin)
+            lastLabelBin = bin;
+      }
+      if (firstLabelBin != 1 || lastLabelBin - firstLabelBin + 1 != n) {
+         Error("LabelsOption",
+               "%s of TProfile %s contains bins without labels. Sorting will not work correctly - return",
+               axis->GetName(), GetName());
+         return;
+      }
+      // case where label bins are consecutive starting from first bin will work
+      Warning(
+         "LabelsOption",
+         "axis %s of TProfile %s has extra following bins without labels. Sorting will work only for first label bins",
+         axis->GetName(), GetName());
    }
    std::vector<Int_t> a(n);
    Int_t i;
@@ -1049,7 +1069,6 @@ void TProfile::LabelsOption(Option_t *option, Option_t * /*ax */)
    std::vector<Double_t> binsw2;
    if (fBinSumw2.fN) binsw2.resize(n);
 
-   Double_t entries = fEntries;
    // delete buffer if it is there since bins will be reordered.
    if (fBuffer)
       BufferEmpty(1);
@@ -1063,7 +1082,8 @@ void TProfile::LabelsOption(Option_t *option, Option_t * /*ax */)
    TObject *obj;
    while ((obj=nextold())) {
       Int_t bin = obj->GetUniqueID();
-      labold[bin] = obj;
+      R__ASSERT(bin <= n);
+      labold[bin - 1] = obj;
    }
    // order now labold according to bin content
 
@@ -1131,9 +1151,23 @@ void TProfile::LabelsOption(Option_t *option, Option_t * /*ax */)
             fBinSumw2.fArray[i+1] = binsw2[a[i]];
       }
    }
-   // need to reset statistics after sorting
-   ResetStats();
-   fEntries = entries;
+   // need to set to zero the statistics if axis has been sorted
+   // see for example TH3::PutStats for definition of s vector
+   bool labelsAreSorted = kFALSE;
+   for (i = 0; i < n; ++i) {
+      if (a[i] != i) {
+         labelsAreSorted = kTRUE;
+         break;
+      }
+   }
+   if (labelsAreSorted) {
+      double s[TH1::kNstat];
+      GetStats(s);
+      // if (iaxis == 1) {
+      s[2] = 0; // fTsumwx
+      s[3] = 0; // fTsumwx2
+      PutStats(s);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
