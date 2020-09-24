@@ -6,18 +6,32 @@ sap.ui.define([
 
    "use strict";
 
-   function GlViewerRCore(viewer_class)
-   {
-      GlViewer.call(this, viewer_class);
-   }
-
    var RC;
    var RP;
    var RendeQuTor;
 
-   const UseRenderQueue = true;//false;
-   const RQ_Mode = "Simple"; // "DirectToScreen | Simple | Full"
-   const RQ_SSAA = 1;
+   function GlViewerRCore(viewer_class)
+   {
+      GlViewer.call(this, viewer_class);
+
+      const urlParams = new URLSearchParams(window.location.search);
+
+      console.log("XXXX", window.location.search, urlParams.get('UseRenderQueue'), urlParams.get('NoRenderQueue'));
+      this.UseRenderQueue = true;
+      if (urlParams.get('UseRenderQueue') != null) this.UseRenderQueue = true;
+      if (urlParams.get('NoRenderQueue' ) != null) this.UseRenderQueue = false;
+
+      if (this.UseRenderQueue)
+      {
+         let mode_mm = /^(?:Direct|Simple|Full)$/.exec(urlParams.get('RQ_Mode'));
+         let ssaa_mm = /^(1|2|4)$/.               exec(urlParams.get('RQ_SSAA'));
+
+         this.RQ_Mode = (mode_mm) ? mode_mm[0] : "Simple";
+         this.RQ_SSAA = (ssaa_mm) ? ssaa_mm[0] : 2;
+      }
+
+      console.log("UseRenderQueue", this.UseRenderQueue, "RQ_Mode", this.RQ_Mode, "RQ_SSAA", this.RQ_SSAA);
+   }
 
    GlViewerRCore.prototype = Object.assign(Object.create(GlViewer.prototype), {
 
@@ -41,7 +55,7 @@ sap.ui.define([
                console.log("GlViewerRCore.onInit - RenderCore.js loaded");
 
                RC = module;
-               if (UseRenderQueue)
+               if (this.UseRenderQueue)
                {
                   import("../../eve7/lib/RendeQuTor.js").then((module) => {
                      console.log("GlViewerRCore.onInit - RenderPassesRCore.js loaded");
@@ -55,7 +69,7 @@ sap.ui.define([
                   pthis.bootstrap();
                }
             });
-         },
+      },
 
       bootstrap: function()
       {
@@ -106,6 +120,7 @@ sap.ui.define([
          this.renderer = new RC.MeshRenderer(this.canvas, RC.WEBGL2, {antialias: false, stencil: true});
          this.renderer.clearColor = "#FFFFFFFF";
          this.renderer.addShaderLoaderUrls("rootui5sys/eve7/rnr_core/shaders");
+         this.renderer.addShaderLoaderUrls("rootui5sys/eve7/shaders");
 
          this.scene = new RC.Scene();
 
@@ -171,22 +186,22 @@ sap.ui.define([
 
          this.rot_center = new THREE.Vector3(0,0,0);
 
-         if (UseRenderQueue)
+         if (this.UseRenderQueue)
          {
             this.rqt = new RendeQuTor(this.renderer, this.scene, this.camera);
-            if (RQ_Mode == "DirectToScreen")
+            if (this.RQ_Mode == "Direct")
             {
                this.rqt.initDirectToScreen();
             }
-            else if (RQ_Mode == "Simple")
+            else if (this.RQ_Mode == "Simple")
             {
-               this.rqt.initSimple(RQ_SSAA);
-               this.creator.SetupPointLineFacs(RQ_SSAA, RQ_SSAA);
+               this.rqt.initSimple(this.RQ_SSAA);
+               this.creator.SetupPointLineFacs(this.RQ_SSAA, this.RQ_SSAA);
             }
             else
             {
-               this.rqt.initFull(RQ_SSAA);
-               this.creator.SetupPointLineFacs(RQ_SSAA, RQ_SSAA);
+               this.rqt.initFull(this.RQ_SSAA);
+               this.creator.SetupPointLineFacs(this.RQ_SSAA, this.RQ_SSAA);
             }
             this.rqt.updateViewport(w, h);
          }
@@ -396,7 +411,7 @@ sap.ui.define([
       {
          // console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
 
-         if (UseRenderQueue)
+         if (this.UseRenderQueue)
             this.rqt.render();
          else
             this.renderer.render( this.scene, this.camera );
@@ -427,7 +442,7 @@ sap.ui.define([
 
          this.renderer.updateViewport(w, h);
 
-         if (UseRenderQueue)
+         if (this.UseRenderQueue)
          {
             this.rqt.updateViewport(w, h);
          }

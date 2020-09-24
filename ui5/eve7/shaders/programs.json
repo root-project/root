@@ -1,0 +1,16 @@
+{
+    "custom_highPassReve": {
+        "description": "High Pass Filter fo REve.",
+        "shaders": {
+            "vertex": "custom/highPassReve.vert",
+            "fragment": "custom/highPassReve.frag"
+        }
+    },
+    "custom_lowPassReve": {
+        "description": "Low Pass Filter fo REve.",
+        "shaders": {
+            "vertex": "custom/post_process/lowPassReve.vert",
+            "fragment": "custom/post_process/lowPassReve.frag"
+        }
+    }
+}

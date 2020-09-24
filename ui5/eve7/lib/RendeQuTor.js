@@ -214,7 +214,7 @@ export class RendeQuTor
     {
         var pthis = this;
 
-        this.RP_HighPass_mat = new RC.CustomShaderMaterial("highPass");
+        this.RP_HighPass_mat = new RC.CustomShaderMaterial("highPassReve");
         this.RP_HighPass_mat.lights = false;
 
         this.RP_HighPass = new RC.RenderPass(
