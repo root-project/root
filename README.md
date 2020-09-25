@@ -87,8 +87,8 @@ Setup and run ROOT
 
 ## Help and Support
 - [Forum](https://root.cern/forum/)
-- [Issue tracker](https://sft.its.cern.ch/jira/projects/ROOT/issues/ROOT-5820?filter=allopenissues)
-- [Report a bug](https://root.cern/bugs) (Requires a [CERN lightweight account](https://account.cern.ch/account/Externals/RegisterAccount.aspx))
+- [Issue tracker](https://github.com/root-project/root/issues)
+  * [Jira issue tracker (it was used before Sept 2020)](https://sft.its.cern.ch/jira/projects/ROOT/issues/ROOT-5820?filter=allopenissues)
 - [Mailing lists](https://groups.cern.ch/group/root-dev/default.aspx)
 - [Documentation](https://root.cern/guides/reference-guide)
 - [Tutorials](https://root.cern/doc/master/group__Tutorials.html)
