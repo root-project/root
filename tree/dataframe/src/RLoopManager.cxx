@@ -385,13 +385,13 @@ void RLoopManager::RunDataSource()
    R__ASSERT(fDataSource != nullptr);
    fDataSource->Initialise();
    auto ranges = fDataSource->GetEntryRanges();
-   while (!ranges.empty()) {
+   while (!ranges.empty() && fNStopsReceived < fNChildren) {
       InitNodeSlots(nullptr, 0u);
       fDataSource->InitSlot(0u, 0ull);
       try {
          for (const auto &range : ranges) {
             auto end = range.second;
-            for (auto entry = range.first; entry < end; ++entry) {
+            for (auto entry = range.first; entry < end && fNStopsReceived < fNChildren; ++entry) {
                if (fDataSource->SetEntry(0u, entry)) {
                   RunAndCheckFilters(0u, entry);
                }
