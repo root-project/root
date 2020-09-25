@@ -73,6 +73,7 @@ elseif($ENV{PYTHIA8DATA})
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Pythia8 DEFAULT_MSG PYTHIA8_FOUND PYTHIA8_INCLUDE_DIR PYTHIA8_LIBRARY)
+find_package_handle_standard_args(Pythia8 FOUND_VAR PYTHIA8_FOUND
+                                          REQUIRED_VARS PYTHIA8_INCLUDE_DIR PYTHIA8_LIBRARY 
+                                          DEFAULT_MSG)
 mark_as_advanced(PYTHIA8_FOUND PYTHIA8_INCLUDE_DIR PYTHIA8_LIBRARY PYTHIA8_hepmcinterface_LIBRARY PYTHIA8_lhapdfdummy_LIBRARY)
-
