@@ -125,9 +125,11 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
             TString hFrameName(TString::Format("frame_class%d_",icls) + methodTitle);
             TObject *o = gROOT->FindObject(hFrameName);
             if(o) delete o;
-            TH2F* frame = new TH2F( hFrameName, ((TH1*)hists.First())->GetTitle(),
-                                    nb, xmin, xmax, nb, ymin, ymax );
-            frame->GetXaxis()->SetTitle( methodTitle + " response for "+classnames.at(icls));
+            TH1F* frame = new TH1F( hFrameName, ((TH1*)hists.First())->GetTitle(),
+                                    nb, xmin, xmax);
+            frame->SetMinimum(ymin);
+            frame->SetMaximum(ymax);
+            frame->GetXaxis()->SetTitle(methodTitle + " response for " + classnames.at(icls));
             frame->GetYaxis()->SetTitle("(1/N) dN^{ }/^{ }dx");
             TMVAGlob::SetFrameStyle( frame );
 
@@ -207,7 +209,7 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
                }
 
                ymax = histmax*maxMult;
-               frame->GetYaxis()->SetLimits( 0, ymax );
+               frame->SetMaximum( ymax );
 
                // for better visibility, plot thinner lines
                TMVAGlob::SetMultiClassStyle( &othists );
