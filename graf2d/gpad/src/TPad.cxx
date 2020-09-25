@@ -320,7 +320,7 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
 
    fViewer3D = nullptr;
 
-   fGLDevice = fCanvas->GetGLDevice();
+   if (fCanvas) fGLDevice = fCanvas->GetGLDevice();
    // Set default world coordinates to NDC [0,1]
    fX1 = 0;
    fX2 = 1;
