@@ -11,6 +11,8 @@ using namespace ROOT::RDF;
 
 auto fileName0 = "RCsvDS_test_headers.csv";
 auto fileName1 = "RCsvDS_test_noheaders.csv";
+auto fileName2 = "RCsvDS_test_empty.csv";
+
 
 TEST(RCsvDS, ColTypeNames)
 {
@@ -45,6 +47,14 @@ TEST(RCsvDS, ColNamesNoHeaders)
    EXPECT_STREQ("Col1", colNames[1].c_str());
    EXPECT_STREQ("Col2", colNames[2].c_str());
    EXPECT_STREQ("Col3", colNames[3].c_str());
+}
+
+TEST(RCsvDS, EmptyFile)
+{
+   // Cannot read headers
+   EXPECT_THROW(new RCsvDS(fileName2), std::runtime_error);
+   // Cannot infer column types
+   EXPECT_THROW(new RCsvDS(fileName2, false), std::runtime_error);
 }
 
 TEST(RCsvDS, EntryRanges)
