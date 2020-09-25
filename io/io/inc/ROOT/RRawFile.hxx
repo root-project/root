@@ -160,6 +160,8 @@ public:
    size_t Read(void *buffer, size_t nbytes);
    /// Change the cursor fFilePos
    void Seek(std::uint64_t offset);
+   /// Returns the offset for the next Read/Readln call
+   std::uint64_t GetFilePos() const { return fFilePos; }
    /// Returns the size of the file
    std::uint64_t GetSize();
    /// Returns the url of the file

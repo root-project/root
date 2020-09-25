@@ -47,6 +47,7 @@ TEST(RRawFile, Empty)
    auto f = RRawFile::Create("testEmpty");
    EXPECT_TRUE(f->GetFeatures() & RRawFile::kFeatureHasSize);
    EXPECT_EQ(0u, f->GetSize());
+   EXPECT_EQ(0u, f->GetFilePos());
    EXPECT_EQ(0u, f->Read(nullptr, 0));
    EXPECT_EQ(0u, f->ReadAt(nullptr, 0, 1));
    std::string line;
@@ -66,7 +67,12 @@ TEST(RRawFile, Basic)
    EXPECT_STREQ("bar", line.c_str());
    EXPECT_FALSE(f->Readln(line));
    auto clone = f->Clone();
-   /// file pointer is reset by clone
+   // file pointer is reset by clone
+   EXPECT_TRUE(clone->Readln(line));
+   EXPECT_STREQ("foo", line.c_str());
+   // Rinse and repeat
+   EXPECT_EQ(4U, clone->GetFilePos());
+   clone->Seek(0);
    EXPECT_TRUE(clone->Readln(line));
    EXPECT_STREQ("foo", line.c_str());
 
