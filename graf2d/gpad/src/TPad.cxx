@@ -604,6 +604,7 @@ TVirtualPad *TPad::cd(Int_t subpadnumber)
    if (!subpadnumber) {
       gPad = this;
       if (!gPad->IsBatch() && GetPainter()) GetPainter()->SelectDrawable(fPixmapID);
+      if (!fPrimitives) fPrimitives = new TList;
       return gPad;
    }
 
@@ -1304,7 +1305,7 @@ void TPad::Draw(Option_t *option)
    // pad cannot be in itself and it can only be in one other pad at a time
    if (!fPrimitives) fPrimitives = new TList;
    if (gPad != this) {
-      if (fMother && fMother->TestBit(kNotDeleted)) fMother->GetListOfPrimitives()->Remove(this);
+      if (fMother && fMother->TestBit(kNotDeleted)) if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
       TPad *oldMother = fMother;
       fCanvas = gPad->GetCanvas();
       //
@@ -3119,8 +3120,10 @@ Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t
 {
    FillCollideGrid(o);
 
-   Int_t iw = (int)(fCGnx*w);
-   Int_t ih = (int)(fCGny*h);
+   Double_t a1=std::min(std::abs(fCGnx*w), 1.0*std::numeric_limits<int>::max());
+   Double_t a2=std::min(std::abs(fCGny*h), 1.0*std::numeric_limits<int>::max());
+   Int_t iw = static_cast<int>(a1);
+   Int_t ih = static_cast<int>(a2);
 
    Int_t nxmax = fCGnx-iw-1;
    Int_t nymax = fCGny-ih-1;
@@ -3744,7 +3747,7 @@ void TPad::PaintModified()
 
 void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
-   if (!gPad->IsBatch()) {
+   if (!gPad->IsBatch()&&GetPainter()) {
       Int_t style0 = GetPainter()->GetFillStyle();
       Int_t style  = style0;
       if (option[0] == 's') {
@@ -3890,14 +3893,14 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
       return;
 
    // Paint the fill area with hatches
-   Int_t fillstyle = GetPainter()->GetFillStyle();
-   if (gPad->IsBatch() && gVirtualPS) fillstyle = gVirtualPS->GetFillStyle();
+   Int_t fillstyle = GetPainter()?GetPainter()->GetFillStyle():1;
+   if (gPad->IsBatch() && GetPainter() && gVirtualPS) fillstyle = gVirtualPS->GetFillStyle();
    if (fillstyle >= 3100 && fillstyle < 4000) {
       PaintFillAreaHatches(nn, &x.front(), &y.front(), fillstyle);
       return;
    }
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch()&&GetPainter())
       // invoke the graphics subsystem
       GetPainter()->DrawFillArea(n, &x.front(), &y.front());
 
@@ -4182,7 +4185,7 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       if (Clip(x,y,fX1,fY1,fX2,fY2) == 2) return;
    }
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch()&&GetPainter())
       GetPainter()->DrawLine(x[0], y[0], x[1], y[1]);
 
    if (gVirtualPS) {
@@ -4328,7 +4331,7 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       np++;
       if (i1 < 0) i1 = i;
       if (iclip == 0 && i < n-2) continue;
-      if (!gPad->IsBatch())
+      if (!gPad->IsBatch()&&GetPainter())
          GetPainter()->DrawPolyLine(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPS(np, &x[i1], &y[i1]);
@@ -4353,7 +4356,7 @@ void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
 {
    if (n <=0) return;
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch()&&GetPainter())
       GetPainter()->DrawPolyLineNDC(n, x, y);
 
    if (gVirtualPS) {
@@ -5536,9 +5539,10 @@ void TPad::ResizePad(Option_t *option)
    if (gPad->IsBatch())
       fPixmapID = 0;
    else {
-      GetPainter()->SetLineWidth(-1);
-      GetPainter()->SetTextSize(-1);
-
+      if (GetPainter()){
+        GetPainter()->SetLineWidth(-1);
+        GetPainter()->SetTextSize(-1);
+      }
       // create or re-create off-screen pixmap
       if (fPixmapID) {
          int w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1));
@@ -5561,7 +5565,7 @@ void TPad::ResizePad(Option_t *option)
             h = 10;
          }
          if (fPixmapID == -1) {      // this case is handled via the ctor
-            fPixmapID = GetPainter()->CreateDrawable(w, h);
+            if (GetPainter()) fPixmapID = GetPainter()->CreateDrawable(w, h);
          } else {
             if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
                Resized();
