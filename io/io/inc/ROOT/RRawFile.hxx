@@ -35,7 +35,8 @@ namespace Internal {
  * If the transport protocol part and the :// separator are missing, the default protocol is local file. Files are
  * opened when required (on reading, getting file size) and closed on object destruction.
  *
- * RRawFiles manage system respources and are therefore made non-copyable. They can be explicitly cloned though.
+ * RRawFiles manage system resources and are therefore made non-copyable. They can be explicitly cloned though.
+ * RRawFile are not thread-safe.
  */
 class RRawFile {
 public:
