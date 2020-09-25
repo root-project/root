@@ -34,7 +34,7 @@ protected:
 
 public:
    RTrivialDS(ULong64_t size, bool skipEvenEntries = false);
-   // This ctor produces a data-source that returns infinite entries
+   /// This ctor produces a data-source that returns infinite entries
    RTrivialDS();
    ~RTrivialDS();
    const std::vector<std::string> &GetColumnNames() const;
