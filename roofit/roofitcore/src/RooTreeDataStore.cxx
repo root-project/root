@@ -455,7 +455,10 @@ void RooTreeDataStore::createTree(const char* name, const char* title)
 void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, const char* /*rangeName*/, Int_t /*nStart*/, Int_t /*nStop*/) 
 {
   // Make our local copy of the tree, so we can safely loop through it.
-  std::unique_ptr<TTree> tClone( static_cast<TTree*>(t->Clone()) );
+  // We need a custom deleter, because if we don't deregister the Tree from the directory
+  // of the original, it tears it down at destruction time!
+  auto deleter = [](TTree* tree){tree->SetDirectory(nullptr); delete tree;};
+  std::unique_ptr<TTree, decltype(deleter)> tClone(static_cast<TTree*>(t->Clone()), deleter);
   tClone->SetDirectory(t->GetDirectory());
 
   // Clone list of variables  
