@@ -14,15 +14,20 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"
 
+#include <cstdint>
 #include <deque>
 #include <list>
 #include <map>
+#include <memory>
 #include <vector>
-#include <fstream>
 
 #include <TRegexp.h>
 
 namespace ROOT {
+
+namespace Internal {
+class RRawFile;
+}
 
 namespace RDF {
 
@@ -36,10 +41,10 @@ private:
    // Regular expressions for type inference
    static const TRegexp fgIntRegex, fgDoubleRegex1, fgDoubleRegex2, fgDoubleRegex3, fgTrueRegex, fgFalseRegex;
 
-   std::streampos fDataPos = 0;
+   std::uint64_t fDataPos = 0;
    bool fReadHeaders = false;
    unsigned int fNSlots = 0U;
-   std::ifstream fStream;
+   std::unique_ptr<ROOT::Internal::RRawFile> fCsvFile;
    const char fDelimiter;
    const Long64_t fLinesChunkSize;
    ULong64_t fEntryRangesRequested = 0ULL;
