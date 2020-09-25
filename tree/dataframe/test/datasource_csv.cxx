@@ -12,6 +12,8 @@ using namespace ROOT::RDF;
 auto fileName0 = "RCsvDS_test_headers.csv";
 auto fileName1 = "RCsvDS_test_noheaders.csv";
 auto fileName2 = "RCsvDS_test_empty.csv";
+auto fileName3 = "RCsvDS_test_win.csv";
+auto url0 = "http://root.cern.ch/files/test.txt";
 
 
 TEST(RCsvDS, ColTypeNames)
@@ -238,6 +240,23 @@ TEST(RCsvDS, MultipleEventLoops)
    EXPECT_EQ(6U, *tdf.Count());
    EXPECT_EQ(6U, *tdf.Count());
    EXPECT_EQ(6U, *tdf.Count());
+}
+
+TEST(RCsvDS, WindowsLinebreaks)
+{
+   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName3);
+   EXPECT_EQ(6U, *tdf.Count());
+}
+
+TEST(RCsvDS, Remote)
+{
+   (void)url0; // silence -Wunused-const-variable
+#ifdef R__HAS_DAVIX
+   auto tdf = ROOT::RDF::MakeCsvDataFrame(url0, false);
+   EXPECT_EQ(1U, *tdf.Count());
+#else
+   EXPECT_THROW(ROOT::RDF::MakeCsvDataFrame(url0, false), std::runtime_error);
+#endif
 }
 
 // NOW MT!-------------

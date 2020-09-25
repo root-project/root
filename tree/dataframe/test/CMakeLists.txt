@@ -46,6 +46,7 @@ ROOT_ADD_GTEST(datasource_trivial datasource_trivial.cxx LIBRARIES ROOTDataFrame
 configure_file(RCsvDS_test_headers.csv . COPYONLY)
 configure_file(RCsvDS_test_noheaders.csv . COPYONLY)
 configure_file(RCsvDS_test_empty.csv . COPYONLY)
+configure_file(RCsvDS_test_win.csv . COPYONLY)
 if(ARROW_FOUND)
   ROOT_ADD_GTEST(datasource_arrow datasource_arrow.cxx LIBRARIES ROOTDataFrame ${ARROW_SHARED_LIB})
   target_include_directories(datasource_arrow BEFORE PRIVATE ${ARROW_INCLUDE_DIR})
