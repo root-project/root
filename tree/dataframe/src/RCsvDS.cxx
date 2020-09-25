@@ -75,6 +75,7 @@ important to check both how much memory is available and the size of the CSV fil
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RCsvDS.hxx>
 #include <ROOT/RMakeUnique.hxx>
+#include <ROOT/RRawFile.hxx>
 #include <TError.h>
 
 #include <algorithm>
@@ -253,13 +254,13 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 
 ////////////////////////////////////////////////////////////////////////
 /// Constructor to create a CSV RDataSource for RDataFrame.
-/// \param[in] fileName Path of the CSV file.
+/// \param[in] fileName Path or URL of the CSV file.
 /// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
 RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize) // TODO: Let users specify types?
    : fReadHeaders(readHeaders),
-     fStream(std::string(fileName)),
+     fCsvFile(ROOT::Internal::RRawFile::Create(fileName)),
      fDelimiter(delimiter),
      fLinesChunkSize(linesChunkSize)
 {
@@ -267,7 +268,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
 
    // Read the headers if present
    if (fReadHeaders) {
-      if (std::getline(fStream, line) && !line.empty()) {
+      if (fCsvFile->Readln(line)) {
          FillHeaders(line);
       } else {
          std::string msg = "Error reading headers of CSV file ";
@@ -276,10 +277,10 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
       }
    }
 
-   fDataPos = fStream.tellg();
+   fDataPos = fCsvFile->GetFilePos();
    bool eof = false;
    do {
-      eof = !std::getline(fStream, line);
+      eof = !fCsvFile->Readln(line);
    } while (line.empty());
    if (!eof) {
       auto columns = ParseColumns(line);
@@ -293,7 +294,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
       InferColTypes(columns);
 
       // rewind
-      fStream.seekg(fDataPos);
+      fCsvFile->Seek(fDataPos);
    } else {
       std::string msg = "Could not infer column types of CSV file ";
       msg += fileName;
@@ -339,8 +340,7 @@ RCsvDS::~RCsvDS()
 
 void RCsvDS::Finalise()
 {
-   fStream.clear();
-   fStream.seekg(fDataPos);
+   fCsvFile->Seek(fDataPos);
    fProcessedLines = 0ULL;
    fEntryRangesRequested = 0ULL;
    FreeRecords();
@@ -359,7 +359,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
    FreeRecords();
 
    std::string line;
-   while ((-1LL == fLinesChunkSize || 0 != linesToRead) && std::getline(fStream, line)) {
+   while ((-1LL == fLinesChunkSize || 0 != linesToRead) && fCsvFile->Readln(line)) {
       if (line.empty()) continue; // skip empty lines
       fRecords.emplace_back();
       FillRecord(line, fRecords.back());
