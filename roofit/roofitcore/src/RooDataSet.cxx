@@ -1838,13 +1838,11 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
       if (file.peek() == '#') {
         if(debug) oocxcoutD(data.get(),DataHandling) << "skipping comment on line " << line << endl;
       } else {
-
         // Read single line
         Bool_t readError = variables.readFromStream(file,kTRUE,verbose) ;
         data->_vars = variables ;
 
-        // Stop at end of file or on read error
-        if(file.eof()) break ;
+        // Stop on read error
         if(!file.good()) {
           oocoutE(data.get(), DataHandling) << "RooDataSet::read(static): read error at line " << line << endl ;
           break;
@@ -1852,10 +1850,16 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 
         if (readError) {
           outOfRange++ ;
-          continue ;
+        } else {
+          blindCat->setIndex(haveBlindString) ;
+          data->fill(); // store this event
         }
-        blindCat->setIndex(haveBlindString) ;
-        data->fill(); // store this event
+      }
+
+      // Skip all white space (including empty lines).
+      while (isspace(file.peek())) {
+        char dummy;
+        file >> std::noskipws >> dummy >> std::skipws;
       }
     }
 
