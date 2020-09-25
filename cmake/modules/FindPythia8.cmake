@@ -68,8 +68,8 @@ endif()
 
 if(PYTHIA8_DATA)
   message(STATUS "Found Pythia8 data directory to be used in tutorials: ${PYTHIA8_DATA}")
-elseif($ENV{PYTHIA8DATA})
-  message(STATUS "Found Pythia8 data directory to be used in tutorials: $ENV{PYTHIA8DATA}")
+else()
+  message(STATUS "Pythia8 data directory used in tutorials will be found through environment variable PYTHIA8DATA")
 endif()
 
 include(FindPackageHandleStandardArgs)
