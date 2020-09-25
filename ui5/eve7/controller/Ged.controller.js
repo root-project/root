@@ -324,7 +324,20 @@ sap.ui.define([
 	 list.setIncludeItemInSelection(true);
 	 list.addStyleClass("eveNoSelectionCheckBox");
          let citems = el.items;
-         for (let i = 0; i < citems.length; ++i ) {
+
+         // CAUTION! This state is only valid for the last click event.
+	 // If the next itemPress is triggered by a keyboard or touch event, it will still
+	 // read this outdated ctrlKeyPressed information!!
+	 // So ALL events causing itemPress must clear/set ctrlKeyPressed 
+	 // or ctrlKeyPressed must be reset to false after a short timeout.
+	 //
+	 // Also, it is not tested whether for all types of events, the direct browser
+	 // event is coming BEFORE the itemPress event handler invocation!	 
+         var ctrlKeyPressed = false;
+         list.attachBrowserEvent("click", function(e) {
+	    ctrlKeyPressed = e.ctrlKey;
+	 });
+         let makeItem = function(i) {
             let iid = "item_"+ i;
             let fout = citems[i].fFiltered;
 	    var item  = new sap.m.CustomListItem( iid, {type:sap.m.ListType.Active});
@@ -376,16 +389,24 @@ sap.ui.define([
 
             item.addContent(box);
             list.addItem(item);
+            
+         };
+         
+         for (let i = 0; i < citems.length; ++i ) {
+            if (!citems[i].fFiltered)
+               makeItem(i);
          }
-
+         for (let i = 0; i < citems.length; ++i ) {
+            if (citems[i].fFiltered)
+               makeItem(i);
+         }
          list.attachItemPress(function(oEvent) {
 	    let p = oEvent.getParameters("item");
 	    let idx = p.listItem.sId.substring(5);
             let secIdcs = [idx];
             let is_multi = false;
-	    //
-	    // TODO : do this only 'Ctrl' key is not present.
-	    // Check for modifier key.
+
+            if(!ctrlKeyPressed)
 	    {
 	       let selected = list.getSelectedItems();
 	       console.log("selected items ", selected, "idx = ",  idx);
