@@ -40,7 +40,8 @@ def customLineJunkFilter(line):
                 'Welcome to JupyROOT 6.',
                 'FAILED TO establish the default connection to the WindowServer',
                 '"version": ',
-                '"pygments_lexer": "ipython']
+                '"pygments_lexer": "ipython',
+                '     "execution_count":']
     for junkLine in junkLines:
         if junkLine in line: return False
     return True
