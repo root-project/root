@@ -27,6 +27,7 @@
 #include <ROOT/TypeTraits.hxx>
 #include <TError.h> // gErrorIgnoreLevel
 #include <TH1.h>
+#include <TROOT.h> // IsImplicitMTEnabled
 
 #include <deque>
 #include <functional>
@@ -110,6 +111,7 @@ struct Mean{};
 struct Fill{};
 struct StdDev{};
 struct Display{};
+struct Snapshot{};
 }
 // clang-format on
 
@@ -233,6 +235,44 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
    return std::make_unique<Action_t>(Helper_t(d, prevNode), bl, prevNode, defines);
+}
+
+struct SnapshotHelperArgs {
+   std::string fFileName;
+   std::string fDirName;
+   std::string fTreeName;
+   std::vector<std::string> fOutputColNames;
+   ROOT::RDF::RSnapshotOptions fOptions;
+};
+
+// Snapshot action
+template <typename... ColTypes, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperArgs> &snapHelperArgs,
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Snapshot,
+            const RDFInternal::RBookedDefines &defines)
+{
+   const auto &filename = snapHelperArgs->fFileName;
+   const auto &dirname = snapHelperArgs->fDirName;
+   const auto &treename = snapHelperArgs->fTreeName;
+   const auto &outputColNames = snapHelperArgs->fOutputColNames;
+   const auto &options = snapHelperArgs->fOptions;
+
+   std::unique_ptr<RActionBase> actionPtr;
+   if (!ROOT::IsImplicitMTEnabled()) {
+      // single-thread snapshot
+      using Helper_t = SnapshotHelper<ColTypes...>;
+      using Action_t = RAction<Helper_t, PrevNodeType>;
+      actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options), colNames,
+                                   prevNode, defines));
+   } else {
+      // multi-thread snapshot
+      using Helper_t = SnapshotHelperMT<ColTypes...>;
+      using Action_t = RAction<Helper_t, PrevNodeType>;
+      actionPtr.reset(new Action_t(Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options),
+                                   colNames, prevNode, defines));
+   }
+   return actionPtr;
 }
 
 /****** end BuildAndBook ******/
