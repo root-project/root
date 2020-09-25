@@ -1034,13 +1034,14 @@ void TPad::Close(Option_t *)
 
          if (gPad == this) fMother->cd();
       }
-
-      if (fCanvas->GetPadSave() == this)
-         fCanvas->ClearPadSave();
-      if (fCanvas->GetSelectedPad() == this)
-         fCanvas->SetSelectedPad(0);
-      if (fCanvas->GetClickSelectedPad() == this)
-         fCanvas->SetClickSelectedPad(0);
+      if (fCanvas) {
+         if (fCanvas->GetPadSave() == this)
+            fCanvas->ClearPadSave();
+         if (fCanvas->GetSelectedPad() == this)
+            fCanvas->SetSelectedPad(0);
+         if (fCanvas->GetClickSelectedPad() == this)
+            fCanvas->SetClickSelectedPad(0);
+      }
    }
 
    fMother = nullptr;
