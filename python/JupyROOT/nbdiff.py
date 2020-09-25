@@ -45,12 +45,34 @@ def customLineJunkFilter(line):
         if junkLine in line: return False
     return True
 
+def removeCellMetadata(lines):
+    filteredLines = []
+    discardLine = False
+    for line in lines:
+        if '   "metadata": {' in line:
+            if line.endswith('},' + os.linesep): # empty metadata
+                continue
+            discardLine = True
+
+        if not discardLine:
+            filteredLines.append(line)
+
+        if discardLine and '   },' in line: # end of metadata
+            discardLine = False
+
+    return filteredLines
+
 def getFilteredLines(fileName):
     filteredLines = list(filter(customLineJunkFilter, open(fileName).readlines()))
+
     # Sometimes the jupyter server adds a new line at the end of the notebook
     # and nbconvert does not.
     lastLine = filteredLines[-1]
     if lastLine[-1] != "\n": filteredLines[-1] += "\n"
+
+    # Remove the metadata field of cells (contains specific execution timestamps)
+    filteredLines = removeCellMetadata(filteredLines)
+
     return filteredLines
 
 def compareNotebooks(inNBName,outNBName):
