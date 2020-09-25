@@ -861,7 +861,20 @@ A complex analysis may require multiple `RDatFrame` objects to compute all desir
 event loops of each `RDataFrame` graph can be parallelized but run sequentially one after another. In the case of many threads
 you may encounter the problem that you run out of data to serve all available resources. To improve this scenario, the helper
 `ROOT::RDF::RunGraphs` allows you to process multiple `RDataFrame` graphs concurrently, which may improve the resource usage.
+~~~{.cpp}
+ROOT::EnableImplicitMT();
+ROOT::RDataFrame df1("tree1", "f1.root");
+ROOT::RDataFrame df2("tree2", "f2.root");
+auto histo1 = df1.Histo1D("x");
+auto histo2 = df2.Histo1D("y");
 
+// just accessing result pointers, the event loops of separate RDataFrames run one after the other
+histo1->Draw(); // runs first multi-thread event loop
+histo2->Draw(); // runs second multi-thread event loop
+
+// with ROOT::RDF::RunGraphs, event loops for separate computation graphs can run concurrently
+ROOT::RDF::RunGraphs({histo1, histo2});
+~~~
 <a name="reference"></a>
 */
 // clang-format on
