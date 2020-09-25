@@ -281,7 +281,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
    bool eof = false;
    do {
       eof = !fCsvFile->Readln(line);
-   } while (line.empty());
+   } while (line.empty() && !eof);
    if (!eof) {
       auto columns = ParseColumns(line);
 
