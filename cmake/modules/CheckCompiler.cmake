@@ -246,11 +246,3 @@ check_cxx_source_compiles(
 #endif
 int main() {}
 " GLIBCXX_USE_CXX11_ABI)
-
-#---Print the final compiler flags--------------------------------------------------------------------
-message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
-message(STATUS "ROOT Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
-message(STATUS "ROOT Processor: ${CMAKE_SYSTEM_PROCESSOR}")
-message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
-message(STATUS "Build Type: '${CMAKE_BUILD_TYPE}' (flags = '${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}')")
-message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}")
