@@ -212,7 +212,7 @@ class XYJetProxyBuilder: public REveDataSimpleProxyBuilderTemplate<XYJet>
 
    void LocalModelChanges(int idx, REveElement* el, const REveViewContext* ctx) override
    {
-      printf("LocalModelChanges jet %s ( %s )\n", el->GetCName(), el->FirstChild()->GetCName());
+      // printf("LocalModelChanges jet %s ( %s )\n", el->GetCName(), el->FirstChild()->GetCName());
       REveJetCone* cone = dynamic_cast<REveJetCone*>(el->FirstChild());
       cone->SetLineColor(cone->GetMainColor());
    }
@@ -348,7 +348,6 @@ public:
          if (collection->GetName() == std::string(l->GetName()))
          {
             collection->ClearItems();
-            collection->DestroyElements();
 
             for (int i = 0; i <= l->GetLast(); ++i)
             {
@@ -434,16 +433,12 @@ public:
       }
       m_builders.push_back(tableBuilder);
 
-      collection->SetCollectionChangeDelegate([&] (REveDataCollection* collection)
-                                 {
-                                    this->CollectionChanged( collection );
-                                 });
 
-      collection->SetItemsChangeDelegate([&] (REveDataCollection* collection, const REveDataCollection::Ids_t& ids)
+      collection->GetItemList()->SetItemsChangeDelegate([&] (REveDataItemList* collection, const REveDataCollection::Ids_t& ids)
                                     {
                                        this->ModelChanged( collection, ids );
                                     });
-      collection->SetFillImpliedSelectedDelegate([&] (REveDataCollection* collection, REveElement::Set_t& impSelSet)
+      collection->GetItemList()->SetFillImpliedSelectedDelegate([&] (REveDataItemList* collection, REveElement::Set_t& impSelSet)
                                     {
                                        this->FillImpliedSelected( collection,  impSelSet);
                                     });
@@ -462,18 +457,14 @@ public:
       }
    }
 
-   void CollectionChanged(REveDataCollection* collection)
-   {
-      printf("collection changes not implemented %s!\n", collection->GetCName());
-   }
 
-   void ModelChanged(REveDataCollection* collection, const REveDataCollection::Ids_t& ids)
+   void ModelChanged(REveDataItemList* itemList, const REveDataCollection::Ids_t& ids)
    {
       if (m_inEventLoading) return;
 
       for (auto proxy : m_builders)
       {
-         if (proxy->Collection() == collection)
+         if (proxy->Collection()->GetItemList() == itemList)
          {
             // printf("Model changes check proxy %s: \n", proxy->Type().c_str());
             proxy->ModelChanges(ids);
@@ -481,13 +472,13 @@ public:
       }
    }
 
-   void FillImpliedSelected(REveDataCollection* collection, REveElement::Set_t& impSelSet)
+   void FillImpliedSelected(REveDataItemList* itemList, REveElement::Set_t& impSelSet)
    {
       if (m_inEventLoading) return;
 
       for (auto proxy : m_builders)
       {
-         if (proxy->Collection() == collection)
+         if (proxy->Collection()->GetItemList() == itemList)
          {
             proxy->FillImpliedSelected(impSelSet);
          }
