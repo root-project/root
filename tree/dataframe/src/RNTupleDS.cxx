@@ -36,7 +36,6 @@ void RNTupleDS::AddFields(const RNTupleDescriptor &desc, DescriptorId_t parentId
    for (const auto& f : desc.GetFieldRange(parentId)) {
       fColumnNames.emplace_back(desc.GetQualifiedFieldName(f.GetId()));
       fColumnTypes.emplace_back(f.GetTypeName());
-      fColumnFieldIds.emplace_back(f.GetId());
       if (f.GetStructure() == ENTupleStructure::kRecord)
          AddFields(desc, f.GetId());
    }
