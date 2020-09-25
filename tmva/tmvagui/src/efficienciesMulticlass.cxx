@@ -188,8 +188,11 @@ roccurvelist_t TMVA::getRocCurves(TDirectory *binDir, TString methodPrefix, TStr
             if (hname.Contains(graphNameRef) && hname.BeginsWith(methodPrefix) && !hname.Contains("Train")) {
 
                // Extract classname from plot name
-               UInt_t index = hname.Last('_');
-               TString classname = hname(index + 1, hname.Length() - (index + 1));
+               // classname is string after nameref
+               Int_t index = hname.Index(graphNameRef) + graphNameRef.Length();
+               TString classname = hname(index, hname.Length() - index);
+
+               //std::cout << "Found TGraph " << hname << " with classname " << classname << std::endl;
 
                rocCurves.push_back(std::make_tuple(methodTitle, classname, h));
             }
@@ -423,7 +426,7 @@ Int_t EfficiencyPlotWrapper::addGraph(TGraph *graph)
    }
 
    fCanvas->cd();
-   graph->DrawClone("");
+   graph->Draw("");
    fCanvas->Update();
 
    ++fNumMethods;
@@ -471,11 +474,14 @@ TCanvas *EfficiencyPlotWrapper::newEfficiencyCanvas(TString name, TString title,
    Double_t y1 = 0.0;
    Double_t y2 = 1.0;
 
-   TH2F *frame = new TH2F(Form("%s_%s", title.Data(), "frame"), title, 500, x1, x2, 500, y1, y2);
+   TH1F *frame = new TH1F(Form("%s_%s", title.Data(), "frame"), title, 500, x1, x2);
+   frame->SetMinimum(y1);
+   frame->SetMaximum(y2);
+
    frame->GetXaxis()->SetTitle(xtit);
    frame->GetYaxis()->SetTitle(ytit);
    TMVA::TMVAGlob::SetFrameStyle(frame, 1.0);
-   frame->DrawClone();
+   frame->Draw();
 
    return c;
 }
