@@ -1273,9 +1273,11 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 void TPad::DivideSquare(Int_t n, Float_t xmargin, Float_t ymargin, Int_t color)
 {
    Int_t w = 1, h = 1;
-   bool wider_than_higher=false;
-   if (fCanvas) wider_than_higher=(fCanvas->GetWindowWidth() > fCanvas->GetWindowHeight());
-   if (wider_than_higher) {
+   if (!fCanvas) {
+      Error("DivideSquare", "No canvas associated with this pad.");
+      return;
+   }
+   if (fCanvas->GetWindowWidth() > fCanvas->GetWindowHeight()) {
       w = TMath::Ceil(TMath::Sqrt(n));
       h = TMath::Floor(TMath::Sqrt(n));
       if (w*h < n) w++;
