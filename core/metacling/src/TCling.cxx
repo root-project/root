@@ -3941,6 +3941,8 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
    const char *classname = name;
 
    int storeAutoload = SetClassAutoLoading(autoload);
+   bool ispair = TClassEdit::IsStdPair(classname);
+   int storeAutoParse = ispair ? SetSuspendAutoParsing(true) : false;
 
    // First we want to check whether the decl exist, but _without_
    // generating any template instantiation. However, the lookup
@@ -3987,6 +3989,8 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
             if (ROOT::TMetaUtils::IsSTLCont(*tmpltDecl)) {
                // For STL Collection we return kUnknown.
                SetClassAutoLoading(storeAutoload);
+               if (ispair)
+                  SetSuspendAutoParsing(storeAutoParse);
                return kUnknown;
             }
          }
@@ -3994,6 +3998,8 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
       TClingClassInfo tci(GetInterpreterImpl(), *type);
       if (!tci.IsValid()) {
          SetClassAutoLoading(storeAutoload);
+         if (ispair)
+            SetSuspendAutoParsing(storeAutoParse);
          return kUnknown;
       }
       auto propertiesMask = isClassOrNamespaceOnly ? kIsClass | kIsStruct | kIsNamespace :
@@ -4021,6 +4027,8 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
 
          // We are now sure that the entry is not in fact an autoload entry.
          SetClassAutoLoading(storeAutoload);
+         if (ispair)
+            SetSuspendAutoParsing(storeAutoParse);
          if (hasClassDefInline)
             return kWithClassDefInline;
          else
@@ -4028,11 +4036,15 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
       } else {
          // We are now sure that the entry is not in fact an autoload entry.
          SetClassAutoLoading(storeAutoload);
+         if (ispair)
+            SetSuspendAutoParsing(storeAutoParse);
          return kUnknown;
       }
    }
 
    SetClassAutoLoading(storeAutoload);
+   if (ispair)
+      SetSuspendAutoParsing(storeAutoParse);
    if (decl)
       return kKnown;
    else
@@ -4045,6 +4057,8 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
    if (t.IsValid() && !(t.Property() & kIsFundamental)) {
       delete[] classname;
       SetClassAutoLoading(storeAutoload);
+      if (ispair)
+         SetSuspendAutoParsing(storeAutoParse);
       return kTRUE;
    }
    */
@@ -4056,6 +4070,8 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
 //   }
 
 //   SetClassAutoLoading(storeAutoload);
+//   if (ispair)
+//      SetSuspendAutoParsing(storeAutoParse);
 //   return (decl);
 }
 
