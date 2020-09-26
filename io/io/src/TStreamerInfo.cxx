@@ -311,7 +311,7 @@ void TStreamerInfo::Build()
    // this is a pair, otherwise, on some STL implementations, it can happen that
    // pair has mother classes which are an internal implementation detail and
    // would result in bogus messages printed on screen.
-   if (strncmp(fClass->GetName(), "pair<", 5)) {
+   if (!TClassEdit::IsStdPair(fClass->GetName())) {
       const bool isCollection = fClass->GetCollectionProxy();
       const bool isString = !strcmp(fClass->GetName(), "string");
       TBaseClass* base = 0;
@@ -3233,7 +3233,7 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
    // Here we skip he base classes in case this is a pair or STL collection,
    // otherwise, on some STL implementations, it can happen that pair has
    // base classes which are an internal implementation detail.
-   if (!fClass->GetCollectionProxy() && strncmp(fClass->GetName(), "pair<", 5)) {
+   if (!fClass->GetCollectionProxy() && !TClassEdit::IsStdPair(fClass->GetName())) {
       while ( (el=(TStreamerElement*)next())) { // loop over bases
          if (el->IsBase()) {
             name = el->GetName();
@@ -3858,7 +3858,7 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
       if (strncmp(include,"include\\",9)==0) {
          include += 9;
       }
-      if (strncmp(element->GetTypeName(),"pair<",strlen("pair<"))==0) {
+      if (TClassEdit::IsStdPair(element->GetTypeName())) {
          TMakeProject::AddInclude( fp, "utility", kTRUE, inclist);
       } else if (strncmp(element->GetTypeName(),"auto_ptr<",strlen("auto_ptr<"))==0) {
          TMakeProject::AddInclude( fp, "memory", kTRUE, inclist);
@@ -3884,7 +3884,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
 {
    // if (fClassVersion == -4) return 0;
    if ((fClass && fClass->GetCollectionType()) || TClassEdit::IsSTLCont(GetName())) return 0;
-   if (strncmp(GetName(),"pair<",strlen("pair<"))==0) return 0;
+   if (TClassEdit::IsStdPair(GetName())) return 0;
    if (strncmp(GetName(),"auto_ptr<",strlen("auto_ptr<"))==0) return 0;
 
    TClass *cl = TClass::GetClass(GetName());
