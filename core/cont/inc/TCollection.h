@@ -240,7 +240,7 @@ protected:
 
 public:
    TIter(const TCollection *col, Bool_t dir = kIterForward)
-         : fIterator(col ? col->MakeIterator(dir) : 0) { }
+         : fIterator(col ? col->MakeIterator(dir) : nullptr) { }
    TIter(TIterator *it) : fIterator(it) { }
    TIter(const TIter &iter);
    TIter &operator=(const TIter &rhs);

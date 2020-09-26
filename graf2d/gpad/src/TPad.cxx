@@ -457,7 +457,7 @@ void TPad::AutoExec()
    if (GetCrosshair()) DrawCrosshair();
 
    if (!fExecs) fExecs = new TList;
-   TIter next(fExecs);
+   TIter next(fExecs->MakeIterator());
    TExec *exec;
    while ((exec = (TExec*)next())) {
       exec->Exec();
@@ -653,7 +653,7 @@ void TPad::Clear(Option_t *option)
       getchar();
    }
 
-   if (!gPad->IsBatch()) GetPainter()->ClearDrawable();
+   if (!gPad->IsBatch()&&GetPainter()) GetPainter()->ClearDrawable();
    if (gVirtualPS && gPad == gPad->GetCanvas()) gVirtualPS->NewPage();
 
    PaintBorder(GetFillColor(), kTRUE);
@@ -956,6 +956,7 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
          x1 = x2; y1 = y2;
       }
 
+      if (nc2>0) {
       // Clip against the bottom boundary
       x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
       nc = 0;
@@ -979,6 +980,7 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
             }
          }
          x1 = x2; y1 = y2;
+      }
       }
    }
 
@@ -1017,7 +1019,7 @@ void TPad::Close(Option_t *)
 
    if (fPixmapID != -1) {
       if (gPad) {
-         if (!gPad->IsBatch())
+         if (!gPad->IsBatch()&&GetPainter())
             GetPainter()->DestroyDrawable(fPixmapID);
       }
       fPixmapID = -1;
@@ -1057,7 +1059,7 @@ void TPad::CopyPixmap()
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
 
-   if (fPixmapID != -1)
+   if (fPixmapID != -1&&GetPainter())
       GetPainter()->CopyDrawable(fPixmapID, px, py);
 
    if (this == gPad) HighLight(gPad->GetHighLightColor());
@@ -1316,7 +1318,7 @@ void TPad::Draw(Option_t *option)
    Paint();
 
    if (gPad->IsRetained() && gPad != this && fMother)
-      fMother->GetListOfPrimitives()->Add(this, option);
+      if(fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Add(this, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3237,6 +3239,7 @@ void TPad::FillCollideGridTGraph(TObject *o)
 {
    TGraph *g = (TGraph *)o;
 
+   if (fCGnx==0||fCGny==0) return;
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
 
@@ -3273,7 +3276,8 @@ void TPad::FillCollideGridTH1(TObject *o)
 
    TString name = h->GetName();
    if (name.Index("hframe") >= 0) return;
-
+   if (fCGnx==0||fCGny==0) return;
+   
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
 
@@ -3689,7 +3693,7 @@ void TPad::PaintModified()
    cd();
    if (IsModified() || IsTransparent()) {
       if ((fFillStyle < 3026) && (fFillStyle > 3000)) {
-         if (!gPad->IsBatch()) GetPainter()->ClearDrawable();
+         if (!gPad->IsBatch()&&GetPainter()) GetPainter()->ClearDrawable();
       }
       PaintBorder(GetFillColor(), kTRUE);
    }
@@ -3975,7 +3979,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    Int_t   lcs = 0;
 
    // Save the current line attributes
-   if (!gPad->IsBatch()) {
+   if (!gPad->IsBatch()&&GetPainter()) {
       lws = GetPainter()->GetLineWidth();
       lss = GetPainter()->GetLineStyle();
       lcs = GetPainter()->GetLineColor();
@@ -3988,7 +3992,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    }
 
    // Change the current line attributes to draw the hatches
-   if (!gPad->IsBatch()) {
+   if (!gPad->IsBatch()&&GetPainter()) {
       GetPainter()->SetLineStyle(1);
       GetPainter()->SetLineWidth(Short_t(lw));
       GetPainter()->SetLineColor(GetPainter()->GetFillColor());
@@ -4004,7 +4008,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    if (ang2[iAng2] != 5.) PaintHatches(dy, ang2[iAng2], nn, xx, yy);
 
    // Restore the line attributes
-   if (!gPad->IsBatch()) {
+   if (!gPad->IsBatch()&&GetPainter()) {
       GetPainter()->SetLineStyle(lss);
       GetPainter()->SetLineWidth(lws);
       GetPainter()->SetLineColor(lcs);
@@ -4201,7 +4205,7 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 void TPad::PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2)
 {
    static Double_t xw[2], yw[2];
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch()&&GetPainter())
       GetPainter()->DrawLineNDC(u1, v1, u2, v2);
 
    if (gVirtualPS) {
@@ -4278,7 +4282,7 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
       np++;
       if (i1 < 0) i1 = i;
       if (iclip == 0 && i < n-2) continue;
-      if (!gPad->IsBatch())
+      if (!gPad->IsBatch()&&GetPainter())
          GetPainter()->DrawPolyLine(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPS(np, &x[i1], &y[i1]);
@@ -4407,7 +4411,7 @@ void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
          if (i < n-1) continue;
       }
       if (np == 0) continue;
-      if (!gPad->IsBatch())
+      if (!gPad->IsBatch()&&GetPainter())
          GetPainter()->DrawPolyMarker(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPolyMarker(np, &x[i1], &y[i1]);
@@ -4438,7 +4442,7 @@ void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
          if (i < n-1) continue;
       }
       if (np == 0) continue;
-      if (!gPad->IsBatch())
+      if (!gPad->IsBatch()&&GetPainter())
          GetPainter()->DrawPolyMarker(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPolyMarker(np, &x[i1], &y[i1]);
@@ -4456,7 +4460,7 @@ void TPad::PaintText(Double_t x, Double_t y, const char *text)
 {
    Modified();
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch()&&GetPainter())
       GetPainter()->DrawText(x, y, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) gVirtualPS->Text(x, y, text);
@@ -4469,7 +4473,7 @@ void TPad::PaintText(Double_t x, Double_t y, const wchar_t *text)
 {
    Modified();
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch()&&GetPainter())
       GetPainter()->DrawText(x, y, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) gVirtualPS->Text(x, y, text);
@@ -4482,7 +4486,7 @@ void TPad::PaintTextNDC(Double_t u, Double_t v, const char *text)
 {
    Modified();
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch()&&GetPainter())
       GetPainter()->DrawTextNDC(u, v, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) {
@@ -4499,7 +4503,7 @@ void TPad::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 {
    Modified();
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch()&&GetPainter())
       GetPainter()->DrawTextNDC(u, v, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) {
@@ -4887,7 +4891,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       psname.Prepend("/");
       psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
-   if (!gPad->IsBatch() && fCanvas)
+   if (!gPad->IsBatch() && fCanvas&&GetPainter())
       GetPainter()->SelectDrawable(GetCanvasID());
 
    // Save pad/canvas in alternative formats
@@ -5210,7 +5214,7 @@ void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    // compute pad conversion coefficients
    ResizePad();
 
-   if (gPad == this)
+   if (gPad == this && GetPainter())
       GetPainter()->InvalidateCS();
 
    // emit signal
@@ -5248,8 +5252,10 @@ void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 
 void TPad::RecursiveRemove(TObject *obj)
 {
-   if (obj == fCanvas->GetSelected()) fCanvas->SetSelected(0);
-   if (obj == fCanvas->GetClickSelected()) fCanvas->SetClickSelected(0);
+   if (fCanvas) {
+     if (obj == fCanvas->GetSelected()) fCanvas->SetSelected(0);
+     if (obj == fCanvas->GetClickSelected()) fCanvas->SetClickSelected(0);
+   }
    if (obj == fView) fView = nullptr;
    if (!fPrimitives) return;
    Int_t nold = fPrimitives->GetSize();
@@ -5474,6 +5480,14 @@ void TPad::ResizePad(Option_t *option)
       Error("ResizePad", "Cannot resize pad. No current pad available.");
       return;
    }
+   if (gPad->GetWw()==0.0||gPad->GetWh()==0.0) {
+      Warning("ResizePad", "gPad has at leas one zero dimension.");
+      return;
+   }
+   if (fX1==fX2||fY1==fY2) {
+      Warning("ResizePad", "Pad has at leas one zero dimension.");
+      return;
+   }
 
    // Recompute subpad positions in case pad has been moved/resized
    TPad *parent = fMother;
@@ -5527,14 +5541,18 @@ void TPad::ResizePad(Option_t *option)
    // Coefficients to convert from canvas pixels to pad world coordinates
 
    // Resize all sub-pads
-   TObject *obj;
-   if (!fPrimitives) fPrimitives = new TList;
-   TIter    next(GetListOfPrimitives());
-   while ((obj = next())) {
-      if (obj->InheritsFrom(TPad::Class()))
-         ((TPad*)obj)->ResizePad(option);
+   TObject *obj=nullptr;
+   if (!fPrimitives)  { 
+     fPrimitives = new TList; 
+     }
+   else {
+     TList* l=GetListOfPrimitives();
+     TIter    next(l->MakeIterator());
+     while ((obj = next())) {
+        if (obj->InheritsFrom(TPad::Class()))
+           ((TPad*)obj)->ResizePad(option);
+     }
    }
-
    // Reset all current sizes
    if (gPad->IsBatch())
       fPixmapID = 0;
@@ -5567,7 +5585,7 @@ void TPad::ResizePad(Option_t *option)
          if (fPixmapID == -1) {      // this case is handled via the ctor
             if (GetPainter()) fPixmapID = GetPainter()->CreateDrawable(w, h);
          } else {
-            if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
+            if (gVirtualX) if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
                Resized();
                Modified(kTRUE);
             }

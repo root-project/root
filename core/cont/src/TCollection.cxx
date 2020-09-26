@@ -436,6 +436,7 @@ void TCollection::PrintCollectionHeader(Option_t*) const
 
 const char* TCollection::GetCollectionEntryName(TObject* entry) const
 {
+   if (!entry) {Error("GetCollectionEntryName","Object pointer is NULL"); return nullptr;}
    return entry->GetName();
 }
 
