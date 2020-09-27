@@ -458,13 +458,20 @@ if (builtin_cling)
   if(MSVC)
     set(CLING_CXXFLAGS "-DNOMINMAX -D_XKEYCHECK_H")
   else()
-    set(CLING_CXXFLAGS "-fvisibility=hidden -Wno-shadow -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long")
+    set(CLING_CXXFLAGS " -fvisibility=hidden -Wno-shadow -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long ")
   endif()
   if (CMAKE_COMPILER_IS_GNUCXX)
-    set(CLING_CXXFLAGS "${CLING_CXXFLAGS} -Wno-missing-field-initializers")
+    string(APPEND CLING_CXXFLAGS " -Wno-missing-field-initializers")
   endif()
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
+  string(APPEND CMAKE_CXX_FLAGS ${CLING_CXXFLAGS})
+  if (LLVM_ENABLE_PIC)
+    # FIXME: LLVM_ENABLE_PIC is ON by default, however not propagated to cling.
+    # FIXME: fPIC is required by the linker for libCling. Can we do that using
+    # cmake: set_property(TARGET clingInterpreter PROPERTY POSITION_INDEPENDENT_CODE ON)?
+    string(APPEND CMAKE_CXX_FLAGS " -fPIC")
+    string(APPEND CMAKE_C_FLAGS " -fPIC")
+  endif(LLVM_ENABLE_PIC)
   add_subdirectory(cling)
   add_dependencies(CLING ${CLING_LIBRARIES})
 
