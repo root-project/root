@@ -36,7 +36,9 @@ namespace Internal {
  * opened when required (on reading, getting file size) and closed on object destruction.
  *
  * RRawFiles manage system resources and are therefore made non-copyable. They can be explicitly cloned though.
- * RRawFile are not thread-safe.
+ *
+ * RRawFile objects are not thread-safe but conditionally safe / thread-friendly: different objects can be used
+ * by different threads concurrently and the same object can be used from different threads if protected by a mutex.
  */
 class RRawFile {
 public:
