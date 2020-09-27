@@ -38,11 +38,6 @@ target_include_directories(ClingUtils PRIVATE
 target_include_directories(ClingUtils SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
-# This is to avoid warnings coming from GCC 7 in llvm/src/include/llvm/ADT/DenseMap.h:1010
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-maybe-uninitialized)
-endif()
-
 ROOT_INSTALL_HEADERS()
 
 #### STL dictionary (replacement for cintdlls)##############################
