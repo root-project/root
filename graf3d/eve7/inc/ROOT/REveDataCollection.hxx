@@ -45,6 +45,7 @@ struct REveDataItem
    Bool_t  GetRnrSelf() const { return fRnrSelf; }
    Color_t GetMainColor()   const { return fColor; }
    Bool_t  GetFiltered() const { return fFiltered; }
+   Bool_t  GetVisible() const { return (!fFiltered) && fRnrSelf; }
 
    void SetFiltered(Bool_t i) { fFiltered = i; }
    void SetMainColor(Color_t i) { fColor = i; }
