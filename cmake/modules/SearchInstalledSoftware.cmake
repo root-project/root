@@ -516,7 +516,7 @@ endif()
 if(NOT WIN32 AND NOT APPLE)
   if(opengl AND NOT x11)
     message(STATUS "OpenGL was disabled, since it is required to have enabled x11 on Linux")
-    set(opengl OFF CACHE BOOL "OpenGL requires to have enabled x11" FORCE)
+    set(opengl OFF CACHE BOOL "OpenGL requires x11" FORCE)
   endif()
 endif()
 
