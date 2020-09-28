@@ -23,7 +23,7 @@ class REveElement;
 class REveDataSimpleProxyBuilder : public REveDataProxyBuilderBase
 {
 public:
-   REveDataSimpleProxyBuilder(const std::string &type);
+   REveDataSimpleProxyBuilder();
    virtual ~REveDataSimpleProxyBuilder();
 
 protected:
