@@ -5,6 +5,16 @@ title: ''
 labels: bug
 ---
 
+[ ] Checked for duplicates
+<!--
+Please search in
+* [GitHub](https://github.com/root-project/root/issues?q=is%3Aissue)
+* AND [Jira](https://sft.its.cern.ch/jira/issues/?jql=project %3D ROOT)
+for existing reports of your issue.
+
+If you find one, you are very welcome to add to the existing report, for instance "issue still exists in today's master".
+-->
+
 ## Describe the bug
 <!--
 A clear and concise description of what the wrong behavior is.
