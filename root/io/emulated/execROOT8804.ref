@@ -37,12 +37,9 @@ Warning in <TClass::Init>: no dictionary for class art::FileFormatVersion is ava
 Warning in <TClass::Init>: no dictionary for class art::FileIndex is available
 Warning in <TClass::Init>: no dictionary for class art::Transient<art::FileIndex::Transients> is available
 Warning in <TClass::Init>: no dictionary for class art::FileIndex::Element is available
-Warning in <TClass::Init>: no dictionary for class pair<const art::Hash<2>,art::ProcessHistory> is available
 Warning in <TClass::Init>: no dictionary for class art::ProductRegistry is available
-Warning in <TClass::Init>: no dictionary for class pair<art::BranchKey,art::BranchDescription> is available
 Warning in <TClass::Init>: no dictionary for class art::Parentage is available
 Warning in <TClass::Init>: no dictionary for class art::BranchChildren is available
-Warning in <TClass::Init>: no dictionary for class pair<art::BranchID,set<art::BranchID> > is available
 
 StreamerInfo for class: artdaq::QuickVec<ULong64_t>, version=5, checksum=0xf87044d1
   unsigned int   size_           offset=  8 type=13                     
