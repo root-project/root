@@ -95,12 +95,13 @@ namespace LHCb
 
     /// Operator overloading for ostream
     friend inline std::ostream& operator << ( std::ostream& str ,
-                                              const FastAllocVector<TYPE,ALLOC> & v )
+                                              const FastAllocVector<TYPE,ALLOC> & /*v*/ )
     {
 //       str << "[ ";
 //       for ( typename FastAllocVector<TYPE,ALLOC>::const_iterator i = v.begin(); i != v.end(); ++i )
 //       { str << *i << " "; }
 //       return str << "]";
+      return str;
     }
 
   };
