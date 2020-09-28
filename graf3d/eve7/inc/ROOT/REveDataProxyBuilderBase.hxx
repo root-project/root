@@ -42,7 +42,7 @@ public:
 
    // ---------- constructor/destructor  ---------------------
 
-   REveDataProxyBuilderBase(const std::string &type);
+   REveDataProxyBuilderBase();
    virtual ~REveDataProxyBuilderBase() {}
 
    virtual void SetCollection(REveDataCollection*);
@@ -66,8 +66,6 @@ public:
    bool GetHaveAWindow() const { return m_haveWindow; }
    void SetHaveAWindow(bool);
 
-   std::string Type() const { return m_type; }
-
    // const member functions
    virtual bool HaveSingleProduct() const { return true; }
 
@@ -89,11 +87,9 @@ protected:
    std::vector<Product*> m_products;
 
 private:
-   std::string              m_type;
    REveDataCollection *m_collection{nullptr};
 
    float                 m_layer;
-   // REveDataInteractionList*  m_interactionList;
    bool                  m_haveWindow;
    bool                  m_modelsChanged;
 };

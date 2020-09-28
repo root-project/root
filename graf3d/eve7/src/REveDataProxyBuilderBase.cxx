@@ -31,8 +31,7 @@ REveDataProxyBuilderBase::Product::Product(std::string iViewType, const REveView
 //______________________________________________________________________________
 
 
-REveDataProxyBuilderBase::REveDataProxyBuilderBase(const std::string &type):
-   m_type(type),
+REveDataProxyBuilderBase::REveDataProxyBuilderBase():
    m_collection(nullptr),
    m_haveWindow(false)
 {
