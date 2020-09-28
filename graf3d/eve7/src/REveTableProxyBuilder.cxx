@@ -8,7 +8,7 @@
 
 using namespace ROOT::Experimental;
 
-REveTableProxyBuilder::REveTableProxyBuilder() : REveDataProxyBuilderBase("Table"), fTable(nullptr)
+REveTableProxyBuilder::REveTableProxyBuilder() : REveDataProxyBuilderBase(), fTable(nullptr)
 {
     fTable = new REveDataTable("ProxyTable");
 }
