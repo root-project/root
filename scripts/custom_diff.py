@@ -82,8 +82,8 @@ def main():
     fromlines = open(fromfile).readlines()
     tolines = open(tofile).readlines()
   else:
-    fromlines = open(fromfile, 'U').readlines()
-    tolines = open(tofile, 'U').readlines()
+    fromlines = open(fromfile, 'r' if sys.version_info >= (3, 4) else 'U').readlines()
+    tolines = open(tofile, 'r' if sys.version_info >= (3, 4) else 'U').readlines()
 
   fromlines = filter(fromlines)
   tolines = filter(tolines)
