@@ -72,6 +72,7 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 - Snapshot now respects the basket size and split level of the original branch when copying branches to a new TTree.
 - For some `TTrees`, RDataFrame's `GetColumnNames` method returns multiple valid spellings for a given column. For example, leaf `"l"` under branch `"b"` might now be mentioned as `"l"` as well as `"b.l"`, while only one of the two spellings might have been recognized before.
 - Introduce `ROOT::RDF::RunGraphs`, which allows to compute the results of multiple RDataFrames concurrently while sharing the same thread pool. The computation may be more efficient than running the RDataFrames sequentially if an analysis consists of many RDataFrames, which don't have enough data to fully utilize the available resources.
+- CSV files can now be opened and processed from HTTP(S) locations
 
 ## Histogram Libraries
 
@@ -81,8 +82,8 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 - Update the definitions of the physical constants using the recommended 2018 values from NIST.
  - Use also the new SI definition of base units from 2019, where the Planck constant, the Boltzman constant , the elementary electric charge and the Avogadro constant are exact numerical values. See
  <https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units>. Note that with this new definition the functions `TMath::HUncertainty()`, `TMath::KUncertainty()`,
- `TMath::QeUncertainty()` and `TMath::NaUncertainty()` all return a  `0.0` value. 
- 
+ `TMath::QeUncertainty()` and `TMath::NaUncertainty()` all return a  `0.0` value.
+
 
 
 ## RooFit Libraries
