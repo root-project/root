@@ -215,6 +215,25 @@ TEST(RooDataSet, ReadCategory) {
   gSystem->Unlink(filename);
 }
 
+
+/// ROOT-8173. Reading negative exponents from file goes wrong.
+TEST(RooDataSet, ReadNegativeExponent) {
+  RooRealVar x("x", "x", 0., 10.);
+
+  constexpr auto filename = "datasetWithCategory.txt";
+  std::ofstream file(filename);
+  file << "2.E-1\n" << "2.E-2\n" << "2.E-3" << std::endl;
+
+  auto dataset = RooDataSet::read(filename, RooArgList(x));
+  ASSERT_EQ(dataset->numEntries(), 3);
+  const double solutions[] = { 2.E-1, 2.E-2, 2.E-3 };
+  for (int i=0; i < 3; ++i) {
+    EXPECT_EQ(static_cast<RooRealVar*>(dataset->get(i)->find("x"))->getVal(), solutions[i]);
+  }
+
+  gSystem->Unlink(filename);
+}
+
 /// root-project/root#6408: Importing from tree deletes the TFile with the original
 TEST(RooDataSet, CrashAfterImportFromTree) {
   TTree* tree = new TTree("tree", "tree");
