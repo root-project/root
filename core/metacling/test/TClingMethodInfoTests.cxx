@@ -384,6 +384,10 @@ struct TemplateFun {
    template <class T>
    int NonCtor(float, T);
 };
+class InheritTemplateFun: TemplateFun {
+public:
+    using TemplateFun::TemplateFun;
+};
 )CODE");
 
    TClass *clTemplateFun = TClass::GetClass("TemplateFun");
@@ -396,4 +400,20 @@ struct TemplateFun {
    TFunction *funNonCtor = clTemplateFun->GetMethodWithPrototype("NonCtor", "float, int");
    ASSERT_NE(funNonCtor, nullptr);
    EXPECT_EQ(funNonCtor->ExtraProperty() & kIsTemplateSpec, kIsTemplateSpec);
+
+
+   TClass *clInhTemplateFun = TClass::GetClass("InheritTemplateFun");
+   ASSERT_NE(clInhTemplateFun, nullptr);
+
+   // Fails because LookupHelper doesn't know how to instantiate function templates,
+   // even though at least the function template is made available to the derived
+   // class as per using decl. This is issue #6481.
+   //TFunction *funInhCtor = clInhTemplateFun->GetMethodWithPrototype("InheritTemplateFun", "int, int");
+   //ASSERT_NE(funInhCtor, nullptr);
+   //EXPECT_EQ(funInhCtor->ExtraProperty() & kIsTemplateSpec, kIsTemplateSpec);
+   //EXPECT_EQ(funInhCtor->Property() & kIsPrivate, kIsPrivate);
+
+   // Doesn't work either, as GetListOfFunctionTemplates() ignores using decls.
+   // Issue #6482
+   // clInhTemplateFun->GetListOfFunctionTemplates(true)->ls(); // FindObject("InheritTemplateFun")-
 }
