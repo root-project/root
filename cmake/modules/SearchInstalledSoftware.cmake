@@ -512,6 +512,14 @@ if(opengl)
     endif()
   endif()
 endif()
+# OpenGL should be working only with x11 (Linux),
+# in case when -Dall=ON -Dx11=OFF, we will just disable opengl.
+if(NOT WIN32 AND NOT APPLE)
+  if(opengl AND NOT x11)
+    message(STATUS "OpenGL was disabled, since it is requires x11 on Linux")
+    set(opengl OFF CACHE BOOL "OpenGL requires x11" FORCE)
+  endif()
+endif()
 
 #---Check for GLEW -------------------------------------------------------------------
 # Opengl is "must" requirement for Glew.
@@ -1590,7 +1598,7 @@ if(tmva)
     endif()
   endif()
   if (R_FOUND)
-    #Rmva is enable when r is found and tmva is on 
+    #Rmva is enable when r is found and tmva is on
     set(tmva-rmva ON)
   endif()
   if(tmva-rmva AND NOT R_FOUND)
