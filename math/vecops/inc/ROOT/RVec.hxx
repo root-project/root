@@ -1628,7 +1628,7 @@ T InvariantMass(const RVec<T>& pt, const RVec<T>& eta, const RVec<T>& phi, const
 /// RVec<float> phis {.1f, 3.02f, 2.2f};
 /// RVec<float> pts {15.5f, 34.32f, 12.95f};
 /// RVec<float> masses {105.65f, 105.65f, 105.65f};
-/// Construct<ROOT::Math::PtEtaPhiMVector> fourVects(etas, phis, pts, masses);
+/// auto fourVects = Construct<ROOT::Math::PtEtaPhiMVector>(pts, etas, phis, masses);
 /// cout << fourVects << endl;
 /// // { (15.5,0.3,0.1,105.65), (34.32,2.2,3.02,105.65), (12.95,1.32,2.2,105.65) }
 /// ~~~
