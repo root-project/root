@@ -269,6 +269,7 @@ sap.ui.define([
          let gedFrame =  this.getView().byId("GED");
          gedFrame.unbindElement();
          gedFrame.destroyContent();
+         this.secSelectList = 0;
 
          let t = this.editorElement._typename;
          if (t.indexOf("ROOT::Experimental::")==0) t = t.substring(20);
@@ -311,13 +312,13 @@ sap.ui.define([
          this.makeBoolSetter(el.fRnrSelf, "RnrSelf");
          this.makeColorSetter(el.fMainColor, "MainColor");
          this.makeStringSetter(el.fFilterExpr, "FilterExpr");
-
       },
       buildREveDataItemListSetter : function(el)
       {
          let pthis = this;
          let gedFrame =  this.getView().byId("GED");
          let list = new sap.m.List({});
+         this.secSelectList = list;
 
          list.addStyleClass("eveSummaryItem");
 	 list.setMode("MultiSelect");
@@ -328,15 +329,17 @@ sap.ui.define([
          // CAUTION! This state is only valid for the last click event.
 	 // If the next itemPress is triggered by a keyboard or touch event, it will still
 	 // read this outdated ctrlKeyPressed information!!
-	 // So ALL events causing itemPress must clear/set ctrlKeyPressed 
+	 // So ALL events causing itemPress must clear/set ctrlKeyPressed
 	 // or ctrlKeyPressed must be reset to false after a short timeout.
 	 //
 	 // Also, it is not tested whether for all types of events, the direct browser
-	 // event is coming BEFORE the itemPress event handler invocation!	 
+	 // event is coming BEFORE the itemPress event handler invocation!
          var ctrlKeyPressed = false;
          list.attachBrowserEvent("click", function(e) {
 	    ctrlKeyPressed = e.ctrlKey;
 	 });
+
+         let lastLabel = "item_"+ (citems.length -1)
          let makeItem = function(i) {
             let iid = "item_"+ i;
             let fout = citems[i].fFiltered;
@@ -370,7 +373,7 @@ sap.ui.define([
                         let rgb = this.parseRGB(event.getParameters().value);
                         let mir = "SetItemColorRGB(" + i + ", " + rgb.r + ", " + rgb.g +  ", " + rgb.b + ")";
                         pthis.mgr.SendMIR(mir, el.fElementId, el._typename );
-                        console.log("color mir -  .... ", mir);
+                        // console.log("color mir -  .... ", mir);
                      }
                   });
                   oCPPop.openBy(this);
@@ -389,9 +392,9 @@ sap.ui.define([
 
             item.addContent(box);
             list.addItem(item);
-            
+
          };
-         
+
          for (let i = 0; i < citems.length; ++i ) {
             if (!citems[i].fFiltered)
                makeItem(i);
@@ -604,6 +607,25 @@ sap.ui.define([
       updateGED: function(elementId) {
          if (this.ged_visible && this.editorElement && (this.editorElement.fElementId == elementId)) {
             this.buildEditor();
+         }
+      },
+
+      updateSecondarySelectionGED:function(elementId, sec_idcs) {
+         console.log("comapre ida \n", this.editorElement.fElementId,elementId );
+         console.log("update secondary select in ged ",sec_idcs , "sec select:",  this.secSelectList);
+         if (this.secSelectList && (this.editorElement.fElementId == elementId) )
+         {
+            let selected = this.secSelectList.getSelectedItems();
+	    for (let s = 0; s < selected.length; s++)
+	       this.secSelectList.setSelectedItem(selected[s], false);
+
+
+            for (let i =0; i < sec_idcs.length; ++i) {
+               let sid = "item_"+sec_idcs[i];
+               console.log("select ite, ", sec_idcs[i], "id ", sid);
+
+               this.secSelectList.setSelectedItemById(sid, true);
+            }
          }
       }
 
