@@ -45,6 +45,8 @@ protected:
 public:
    RObjectDrawable() : RDrawable("tobject") {}
 
+   virtual ~RObjectDrawable();
+
    RObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : RDrawable("tobject"), fObj(obj), fOpts(opt) {}
 
 };
