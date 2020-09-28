@@ -13,7 +13,7 @@ public:
       // fArray.push_back(123);
       // fArray.push_back(456);
    }
-   void Print(Option_t *option="") const {
+   void Print(Option_t * /*option*/ ="") const {
       std::cout << "MyClass::Print ver: " << ver << "\n";
    }
 
@@ -25,4 +25,3 @@ private:
 
    ClassDef(MyClass, 1)
 };
-
