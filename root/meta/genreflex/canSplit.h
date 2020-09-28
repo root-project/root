@@ -2,9 +2,8 @@
 
 class canSplit{
 private:
-double a;
-double b;
+  double a;
+  double b;
 
-ClassDef(canSplit,2)
-
+  ClassDefNV(canSplit,2)
 };
