@@ -515,7 +515,7 @@ endif()
 # in case when -Dall=ON -Dx11=OFF, we will just disable opengl.
 if(NOT WIN32 AND NOT APPLE)
   if(opengl AND NOT x11)
-    message(STATUS "OpenGL was disabled, since it is required to have enabled x11 on Linux")
+    message(STATUS "OpenGL was disabled, since it is requires x11 on Linux")
     set(opengl OFF CACHE BOOL "OpenGL requires x11" FORCE)
   endif()
 endif()
