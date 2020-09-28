@@ -3,11 +3,7 @@
 #include "Math/GenVector/PositionVector3D.h"
 #include "Math/Point3Dfwd.h"
 
-#if defined(R__MACOSX) || defined(_MSC_VER)
-#include <map>
-#else
-#include "hash_map"
-#endif
+#include <unordered_map>
 
 // Gaudi::XYZ point: this typedef should be fwd declared surrounded by its namespace
 namespace Gaudi {
@@ -83,13 +79,10 @@ namespace reco {
 
 // This is something that on linux produced invalid payloads. pair was for example
 // fwd declared within the __gnu_cxx namespace rather than std. And it was fwd declared,
-// strangely enough.
-#if defined(R__MACOSX) || defined(_MSC_VER)
-typedef std::map<int,int> MyMap;
-#else
-typedef __gnu_cxx::hash_map<int,int> MyMap;
-#endif
-
+// strangely enough
+// (This used to test with std::hash_map; let's assume unordered_map is similar
+// enough to still test the issue.)
+typedef std::unordered_map<int,int> MyMap;
 
 // This is to stress the scoping of tmplt arguments
 namespace ns {
