@@ -280,8 +280,10 @@ class RDataFrameAsNumpy(unittest.TestCase):
         npy = df.AsNumpy(["x"])
         arr = npy["x"]
 
-        pickle.dump(arr, open("rdataframe_asnumpy.pickle", "wb"))
-        arr2 = pickle.load(open("rdataframe_asnumpy.pickle", "rb"))
+        with open("rdataframe_asnumpy.pickle", "wb") as f:
+            pickle.dump(arr, f)
+        with open("rdataframe_asnumpy.pickle", "rb") as f:
+            arr2 = pickle.load(f)
         self.assertTrue(all(arr == arr2))
 
 
