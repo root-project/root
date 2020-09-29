@@ -1545,13 +1545,16 @@ TH1F *TGraph::GetHistogram() const
    if (fNpoints > npt) npt = fNpoints;
    const char *gname = GetName();
    if (!gname[0]) gname = "Graph";
+   // do not add the histogram to gDirectory
+   Bool_t addStatus = TH1::AddDirectoryStatus();
+   TH1::AddDirectory(kFALSE);
    ((TGraph*)this)->fHistogram = new TH1F(gname, GetTitle(), npt, rwxmin, rwxmax);
+   TH1::AddDirectory(addStatus);
    if (!fHistogram) return 0;
    fHistogram->SetMinimum(minimum);
    fHistogram->SetBit(TH1::kNoStats);
    fHistogram->SetMaximum(maximum);
    fHistogram->GetYaxis()->SetLimits(minimum, maximum);
-   fHistogram->SetDirectory(0);
    // Restore the axis attributes if needed
    if (historg) {
       fHistogram->GetXaxis()->SetTitle(historg->GetXaxis()->GetTitle());

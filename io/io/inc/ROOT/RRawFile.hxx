@@ -35,7 +35,8 @@ namespace Internal {
  * If the transport protocol part and the :// separator are missing, the default protocol is local file. Files are
  * opened when required (on reading, getting file size) and closed on object destruction.
  *
- * RRawFiles manage system respources and are therefore made non-copyable. They can be explicitly cloned though.
+ * RRawFiles manage system resources and are therefore made non-copyable. They can be explicitly cloned though.
+ * RRawFile are not thread-safe.
  */
 class RRawFile {
 public:
@@ -160,6 +161,8 @@ public:
    size_t Read(void *buffer, size_t nbytes);
    /// Change the cursor fFilePos
    void Seek(std::uint64_t offset);
+   /// Returns the offset for the next Read/Readln call
+   std::uint64_t GetFilePos() const { return fFilePos; }
    /// Returns the size of the file
    std::uint64_t GetSize();
    /// Returns the url of the file

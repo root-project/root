@@ -813,14 +813,7 @@ Bool_t TH1Merger::SameAxesMerge() {
          //Int_t nx = hist->GetXaxis()->GetNbins();
          // loop on bins of the histogram and do the merge
       for (Int_t ibin = 0; ibin < hist->fNcells; ibin++) {
-
-         Double_t cu = hist->RetrieveBinContent(ibin);
-         Double_t e1sq = TMath::Abs(cu);
-         if (fH0->fSumw2.fN) e1sq= hist->GetBinErrorSqUnchecked(ibin);
-
-         fH0->AddBinContent(ibin,cu);
-         if (fH0->fSumw2.fN) fH0->fSumw2.fArray[ibin] += e1sq;
-
+         MergeBin(hist, ibin, ibin);
       }
    }
    //copy merged stats
@@ -861,12 +854,8 @@ Bool_t TH1Merger::DifferentAxesMerge() {
       // loop on bins of the histogram and do the merge
       for (Int_t ibin = 0; ibin < hist->fNcells; ibin++) {
 
-         Double_t cu = hist->RetrieveBinContent(ibin);
-         Double_t e1sq = TMath::Abs(cu);
-         if (fH0->fSumw2.fN) e1sq= hist->GetBinErrorSqUnchecked(ibin);
-
          // if bin is empty we can skip it
-         if (cu == 0 && e1sq == 0) continue;
+         if (IsBinEmpty(hist,ibin)) continue;
 
          Int_t binx,biny,binz;
          hist->GetBinXYZ(ibin, binx, biny, binz);
@@ -912,8 +901,8 @@ Bool_t TH1Merger::DifferentAxesMerge() {
                   fH0->GetName(), ib,fH0->fNcells);
          }
 
-          fH0->AddBinContent(ib,cu);
-          if (fH0->fSumw2.fN) fH0->fSumw2.fArray[ib] += e1sq;
+         MergeBin(hist, ibin, ib);
+
       }
    }
    //copy merged stats
@@ -1036,14 +1025,23 @@ Bool_t TH1Merger::LabelMerge() {
       if (!fNoCheck && hist->GetEntries() > 0) CheckForDuplicateLabels(hist);
 
       // loop on bins of the histogram and do the merge
+      if (gDebug) {
+         // print bins original histogram
+         std::cout << "Bins of original histograms\n";
+         for (int ix = 1; ix <= fH0->GetXaxis()->GetNbins(); ++ix) {
+            for (int iy = 1; iy <= fH0->GetYaxis()->GetNbins(); ++iy) {
+               for (int iz = 1; iz <= fH0->GetZaxis()->GetNbins(); ++iz) {
+                  int i = fH0->GetBin(ix,iy,iz);
+                  std::cout << "bin" << ix << "," << iy << "," << iz
+                     << "  : " << fH0->RetrieveBinContent(i) /* << " , " << fH0->fBinEntries.fArray[i] */ << std::endl;
+               }
+            }
+         }
+      }
       for (Int_t ibin = 0; ibin < hist->fNcells; ibin++) {
 
-         Double_t cu = hist->RetrieveBinContent(ibin);
-         Double_t e1sq = cu;
-         if (fH0->fSumw2.fN) e1sq= hist->GetBinErrorSqUnchecked(ibin);
-
          // if bin is empty we can skip it
-         if (cu == 0 && e1sq == 0) continue;
+         if (IsBinEmpty(hist,ibin)) continue;
 
          Int_t binx,biny,binz;
          hist->GetBinXYZ(ibin, binx, biny, binz);
@@ -1080,8 +1078,13 @@ Bool_t TH1Merger::LabelMerge() {
          // find corresponding case (in case bin is not overflow)
          // and see if for that axis we need to merge using labels or bin numbers
          if (ix == -1) {
-            if (mergeLabelsX)
+            if (mergeLabelsX) {
+               // std::cout << "find bin for label " << labelX << "  " << fH0->GetBinContent(1,1,1) << " nbins "
+               // << fH0->GetXaxis()->GetNbins() << std::endl;
                ix = fH0->fXaxis.FindBin(labelX);
+               // std::cout << "bin for label " << ix << "  " << fH0->GetBinContent(1,1,1) << " nbins "
+               // << fH0->GetXaxis()->GetNbins() << std::endl;
+            }
             else
                ix = FindFixBinNumber(binx, hist->fXaxis, fH0->fXaxis);
          }
@@ -1103,14 +1106,14 @@ Bool_t TH1Merger::LabelMerge() {
             Info("TH1Merge::LabelMerge","Merge bin [%d,%d,%d] with label [%s,%s,%s] into bin [%d,%d,%d]",
                  binx,biny,binz,labelX,labelY,labelZ,ix,iy,iz);
 
+
          Int_t ib = fH0->GetBin(ix,iy,iz);
          if (ib < 0 || ib >= fH0->fNcells) {
             Fatal("TH1Merger::LabelMerge","Fatal error merging histogram %s - bin number is %d and array size is %d",
                   fH0->GetName(), ib,fH0->fNcells);
          }
 
-          fH0->AddBinContent(ib,cu);
-          if (fH0->fSumw2.fN) fH0->fSumw2.fArray[ib] += e1sq;
+         MergeBin(hist, ibin, ib);
       }
    }
    //copy merged stats
@@ -1118,4 +1121,52 @@ Bool_t TH1Merger::LabelMerge() {
    fH0->SetEntries(nentries);
 
    return kTRUE;
+}
+
+/// helper function for merging
+
+Bool_t TH1Merger::IsBinEmpty(const TH1 * hist, Int_t ibin) {
+   Double_t cu = hist->RetrieveBinContent(ibin);
+   Double_t e1sq = (hist->fSumw2.fN) ?  hist->GetBinErrorSqUnchecked(ibin) : cu;
+   return cu == 0 && e1sq == 0;
+}
+
+// merge input bin (ibin) of histograms hist ibin into current bin cbin of this histogram
+void TH1Merger::MergeBin(const TH1 *hist, Int_t ibin, Int_t cbin)
+{
+   if (!fIsProfileMerge) {
+      Double_t cu = hist->RetrieveBinContent(ibin);
+      fH0->AddBinContent(cbin, cu);
+      if (fH0->fSumw2.fN) {
+         Double_t e1sq = (hist->fSumw2.fN) ? hist->GetBinErrorSqUnchecked(ibin) : cu;
+         fH0->fSumw2.fArray[cbin] += e1sq;
+      }
+   } else {
+      if (fIsProfile1D)
+         MergeProfileBin(static_cast<const TProfile *> (hist), ibin, cbin);
+      else if (fIsProfile2D)
+         MergeProfileBin(static_cast<const TProfile2D *> (hist), ibin, cbin);
+      else if (fIsProfile3D)
+         MergeProfileBin(static_cast<const TProfile3D *> (hist), ibin, cbin);
+   }
+   return;
+}
+
+// merge profile input bin (ibin) of histograms hist ibin into current bin cbin of this histogram
+template<class TProfileType>
+void TH1Merger::MergeProfileBin(const TProfileType *h, Int_t hbin, Int_t pbin)
+{
+   TProfileType *p = static_cast<TProfileType *>(fH0);
+   p->fArray[pbin] += h->fArray[hbin];
+   p->fSumw2.fArray[pbin] += h->fSumw2.fArray[hbin];
+   p->fBinEntries.fArray[pbin] += h->fBinEntries.fArray[hbin];
+   if (p->fBinSumw2.fN) {
+      if (h->fBinSumw2.fN)
+         p->fBinSumw2.fArray[pbin] += h->fBinSumw2.fArray[hbin];
+      else
+         p->fBinSumw2.fArray[pbin] += h->fArray[hbin];
+   }
+   if (gDebug)
+      Info("TH1Merge::MergeProfileBin", "Merge bin %d of profile %s with content %f in bin %d - result is %f", hbin,
+           h->GetName(), h->fArray[hbin], pbin, p->fArray[pbin]);
 }

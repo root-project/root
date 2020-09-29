@@ -15,6 +15,7 @@
 #include <TH1F.h>
 #include <TCut.h>
 #include <TSystem.h>
+#include <ROOT/RMakeUnique.hxx>
 
 #include <TRandom3.h>
 #include <TH1F.h>
@@ -212,4 +213,49 @@ TEST(RooDataSet, ReadCategory) {
   }
 
   gSystem->Unlink(filename);
+}
+
+
+/// ROOT-8173. Reading negative exponents from file goes wrong.
+TEST(RooDataSet, ReadNegativeExponent) {
+  RooRealVar x("x", "x", 0., 10.);
+
+  constexpr auto filename = "datasetWithCategory.txt";
+  std::ofstream file(filename);
+  file << "2.E-1\n" << "2.E-2\n" << "2.E-3" << std::endl;
+
+  auto dataset = RooDataSet::read(filename, RooArgList(x));
+  ASSERT_EQ(dataset->numEntries(), 3);
+  const double solutions[] = { 2.E-1, 2.E-2, 2.E-3 };
+  for (int i=0; i < 3; ++i) {
+    EXPECT_EQ(static_cast<RooRealVar*>(dataset->get(i)->find("x"))->getVal(), solutions[i]);
+  }
+
+  gSystem->Unlink(filename);
+}
+
+/// root-project/root#6408: Importing from tree deletes the TFile with the original
+TEST(RooDataSet, CrashAfterImportFromTree) {
+  TTree* tree = new TTree("tree", "tree");
+  double var = 1;
+  tree->Branch("var", &var, "var/D");
+  var = 1;
+  tree->Fill();
+  var = 2;
+  tree->Fill();
+
+  auto roovar = std::make_unique<RooRealVar>("var", "var", 0, 10);
+  auto output_file = std::make_unique<TFile>("test.root", "RECREATE", "output_file");
+
+  ASSERT_TRUE(output_file->IsOpen());
+  auto data_set = std::make_unique<RooDataSet>("data_set", "data_set", tree, RooArgSet(*roovar));
+
+  // Would crash, since the TFile would be deleted by importing:
+  ASSERT_TRUE(output_file->IsOpen());
+
+  EXPECT_EQ(data_set->sumEntries(), 2.);
+  EXPECT_EQ(data_set->numEntries(), 2);
+  EXPECT_EQ(static_cast<RooRealVar*>(data_set->get(0)->find("var"))->getVal(), 1.);
+  EXPECT_EQ(static_cast<RooRealVar*>(data_set->get(1)->find("var"))->getVal(), 2.);
+
 }
