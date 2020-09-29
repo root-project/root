@@ -29,6 +29,7 @@ set(LLVM_TOOL_LLVM_AR_BUILD OFF CACHE BOOL "")
 set(CLANG_TOOL_CLANG_OFFLOAD_BUNDLER_BUILD OFF CACHE BOOL "")
 set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 
+# will be set again in case NOT builtin_llvm
 set(LLVM_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm/src")
 if (clad)
   set(CLING_BUILD_PLUGINS ON)
@@ -405,6 +406,8 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
   set( CLANG_BUILT_STANDALONE 1 )
   set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
 
+  # must be set before add_subdirectory(cling): it can change the value of LLVM_BINARY_DIR
+  set(LLVM_DIR "${LLVM_BINARY_DIR}")
   if (builtin_clang)
     # For builtin LLVM this is set in interpreter/llvm/src/CMakeLists.txt
     set(Clang_DIR ${LLVM_BINARY_DIR}/tools/clang/)
