@@ -286,6 +286,28 @@ class RDataFrameAsNumpy(unittest.TestCase):
             arr2 = pickle.load(f)
         self.assertTrue(all(arr == arr2))
 
+    def test_memory_adoption_fundamental_types(self):
+        """
+        Testing the adoption of the memory from the C++ side for fundamental types
+        """
+        df = ROOT.ROOT.RDataFrame(1).Define("x", "1.0")
+        npy = df.AsNumpy(["x"])
+        pyarr = npy["x"]
+        cpparr = pyarr.result_ptr.GetValue()
+        pyarr[0] = 42
+        self.assertTrue(cpparr[0] == pyarr[0])
+
+    def test_memory_adoption_complex_types(self):
+        """
+        Testing the adoption of the memory from the C++ side for complex types
+        """
+        df = ROOT.ROOT.RDataFrame(1).Define("x", "std::vector<float>({1, 2, 3})")
+        npy = df.AsNumpy(["x"])
+        pyarr = npy["x"]
+        cpparr = pyarr.result_ptr.GetValue()
+        pyarr[0][0] = 42
+        self.assertTrue(cpparr[0][0] == pyarr[0][0])
+
 
 if __name__ == '__main__':
     unittest.main()
