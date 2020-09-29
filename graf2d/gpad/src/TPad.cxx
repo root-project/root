@@ -3036,11 +3036,11 @@ void TPad::FillCollideGrid(TObject *oi)
    Int_t const cellSize = 10; // Sive of an individual grid cell in pixels.
 
    if (fCGnx == 0 && fCGny == 0) {
-      fCGnx = gPad->GetWw()/cellSize;
-      fCGny = gPad->GetWh()/cellSize;
+      fCGnx = (Int_t)(gPad->GetWw())/cellSize;
+      fCGny = (Int_t)(gPad->GetWh())/cellSize;
    } else {
-      Int_t CGnx = gPad->GetWw()/cellSize;
-      Int_t CGny = gPad->GetWh()/cellSize;
+      Int_t CGnx = (Int_t)(gPad->GetWw())/cellSize;
+      Int_t CGny = (Int_t)(gPad->GetWh())/cellSize;
       if (fCGnx != CGnx || fCGny != CGny) {
          fCGnx = CGnx;
          fCGny = CGny;
@@ -4044,8 +4044,8 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    cosb = cosa;
 
    // Values needed to compute the hatches in TRUE normalized space (NDC)
-   Int_t iw = gPad->GetWw();
-   Int_t ih = gPad->GetWh();
+   Int_t iw = (Int_t)gPad->GetWw();
+   Int_t ih = (Int_t)gPad->GetWh();
    Double_t x1p,y1p,x2p,y2p;
    gPad->GetPadPar(x1p,y1p,x2p,y2p);
    iw  = (Int_t)(iw*x2p)-(Int_t)(iw*x1p);
