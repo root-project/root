@@ -51,7 +51,7 @@ ROOTTEST_GENERATE_DICTIONARY(libno_autoparse_v10
                              no_autoparse.h
                              OPTIONS -DITEM_V10
                              LINKDEF no_autoparseLinkDef.h
-                             NO_ROOTMAP)
+                             NO_ROOTMAP NO_CXXMODULE)
 
 target_compile_definitions(libno_autoparse_v10libgen PUBLIC ITEM_V10)
 target_sources(libno_autoparse_v10libgen PRIVATE no_autoparse_writer.cxx)
@@ -60,7 +60,7 @@ ROOTTEST_GENERATE_DICTIONARY(libno_autoparse_v11
                              no_autoparse.h
                              OPTIONS -DITEM_V11
                              LINKDEF no_autoparseLinkDef.h
-                             NO_ROOTMAP)
+                             NO_ROOTMAP NO_CXXMODULE)
 
 target_compile_definitions(libno_autoparse_v11libgen PUBLIC ITEM_V11)
 target_sources(libno_autoparse_v11libgen PRIVATE no_autoparse_writer.cxx)
