@@ -2984,14 +2984,18 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    incPath.Prepend( file_location + ":" );
 
    Ssiz_t dot_pos = library.Last('.');
-   TString extension = library;
-   extension.Replace( 0, dot_pos+1, 0 , 0);
-   TString libname_noext = library;
-   if (dot_pos>=0) libname_noext.Remove( dot_pos );
+   TString extension, libname_noext = library;
+   if (dot_pos >= 0) {
+      libname_noext.Remove(dot_pos);
+      extension = library(dot_pos+1, library.Length()-dot_pos-1);
+   }
 
    // Extension of shared library is platform dependent!!
-   library.Replace( dot_pos, library.Length()-dot_pos,
-                    TString("_") + extension + "." + fSoExt );
+   TString suffix = TString("_") + extension + "." + fSoExt;
+   if (dot_pos >= 0)
+      library.Replace( dot_pos, library.Length()-dot_pos, suffix);
+   else
+      library.Append(suffix);
 
    TString libname ( BaseName( libname_noext ) );
    libname.Append("_").Append(extension);
