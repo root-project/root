@@ -268,12 +268,15 @@ endmacro(ROOTTEST_COMPILE_MACRO)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_DICTIONARY dictname)
-  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "" "LINKDEF;DEPENDS;OPTIONS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP;NO_CXXMODULE" "" "LINKDEF;DEPENDS;OPTIONS" ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
 
   if(ARG_NO_ROOTMAP)
     set(CMAKE_ROOTTEST_NOROOTMAP ON)
+  endif()
+  if(ARG_NO_CXXMODULE)
+    set(EXTRA_ARGS NO_CXXMODULE)
   endif()
 
   # roottest dictionaries do not need to be relocatable. Instead, allow
@@ -289,6 +292,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   endforeach()
 
   ROOT_GENERATE_DICTIONARY(${dictname} ${FULL_PATH_HEADERS}
+                           ${EXTRA_ARGS}
                            MODULE ${dictname}
                            LINKDEF ${ARG_LINKDEF}
                            OPTIONS ${ARG_OPTIONS}
