@@ -5461,9 +5461,11 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
                else
                   obj = nullptr;
             }
-            if (!obj)
+            if (!obj) {
                // this should not really happen
                R__ASSERT("LabelsOption - No corresponding bin found when ordering labels");
+               return;
+            }
 
             labels->Add(obj);
             if (gDebug)
@@ -5545,8 +5547,10 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
                else
                   obj = nullptr;
             }
-            if (!obj)
+            if (!obj) {
                R__ASSERT("LabelsOption - No corresponding bin found when ordering labels");
+               return;
+            }
             labels->Add(obj);
             if (gDebug)
                std::cout << " set label " << obj->GetName() << " to bin " << i + 1 << " from bin " << a[i] << "content "
