@@ -735,7 +735,7 @@ Double_t TProfileHelper::GetBinError(T* p, Int_t bin)
    if (err2 != 0 && neff < 5) test = eprim2*sum/err2;
    //Int_t cellLimit = (p->GetDimension() == 3)?1000404:10404;
    if (p->fgApproximate && (test < 1.e-4 || eprim2 <= 0)) {
-      Double_t stats[TH1::kNstat];
+      Double_t stats[TH1::kNstat] = {0};
       p->GetStats(stats);
       Double_t ssum = stats[0];
       // for 1D profile
