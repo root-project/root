@@ -28,7 +28,7 @@ using std::setw;
 // this macro plots the signal and background efficiencies
 // as a function of the MVA cut.
 
-TMVA::MethodInfo::~MethodInfo() 
+TMVA::MethodInfo::~MethodInfo()
 {
    delete sigE;
    delete bgdE;
@@ -39,25 +39,25 @@ TMVA::MethodInfo::~MethodInfo()
       delete canvas;
 }
 
-void TMVA::MethodInfo::SetResultHists() 
+void TMVA::MethodInfo::SetResultHists()
 {
    TString pname    = "purS_"         + methodTitle;
    TString epname   = "effpurS_"      + methodTitle;
    TString ssigname = "significance_" + methodTitle;
-   
+
    sigE = (TH1*)origSigE->Clone("sigEffi");
    bgdE = (TH1*)origBgdE->Clone("bgdEffi");
-   
+
    Int_t nbins = sigE->GetNbinsX();
    Double_t low = sigE->GetBinLowEdge(1);
    Double_t high = sigE->GetBinLowEdge(nbins+1);
    purS    = new TH1F(pname, pname, nbins, low, high);
    sSig    = new TH1F(ssigname, ssigname, nbins, low, high);
-   effpurS = new TH1F(epname, epname, nbins, low, high);        
-   
+   effpurS = new TH1F(epname, epname, nbins, low, high);
+
    // chop off useless stuff
    sigE->SetTitle( Form("Cut efficiencies for %s classifier", methodTitle.Data()) );
-   
+
    // set the histogram style
    TMVAGlob::SetSignalAndBackgroundStyle( sigE, bgdE );
    TMVAGlob::SetSignalAndBackgroundStyle( purS, bgdE );
@@ -68,7 +68,7 @@ void TMVA::MethodInfo::SetResultHists()
    sigE->SetLineWidth( 3 );
    bgdE->SetLineWidth( 3 );
    sSig->SetLineWidth( 3 );
-   
+
    // the purity and quality
    purS->SetFillStyle( 0 );
    purS->SetLineWidth( 2 );
@@ -78,17 +78,17 @@ void TMVA::MethodInfo::SetResultHists()
    effpurS->SetLineStyle( 6 );
 }
 
-void TMVA::StatDialogMVAEffs::SetNSignal() 
+void TMVA::StatDialogMVAEffs::SetNSignal()
 {
    fNSignal = fSigInput->GetNumber();
 }
 
-void TMVA::StatDialogMVAEffs::SetNBackground() 
+void TMVA::StatDialogMVAEffs::SetNBackground()
 {
    fNBackground = fBkgInput->GetNumber();
 }
 
-TString TMVA::StatDialogMVAEffs::GetFormula() 
+TString TMVA::StatDialogMVAEffs::GetFormula()
 {
    // replace all occurrence of S and B but only if neighbours are not alphanumerics
    auto replace_vars = [](TString & f, char oldLetter, char newLetter ) {
@@ -113,7 +113,7 @@ TString TMVA::StatDialogMVAEffs::GetFormula()
 }
 
 
-TString TMVA::StatDialogMVAEffs::GetLatexFormula() 
+TString TMVA::StatDialogMVAEffs::GetLatexFormula()
 {
    TString f = fFormula;
    f.ReplaceAll("(","{");
@@ -122,20 +122,22 @@ TString TMVA::StatDialogMVAEffs::GetLatexFormula()
    return f;
 }
 
-void TMVA::StatDialogMVAEffs::Redraw() 
+void TMVA::StatDialogMVAEffs::Redraw()
 {
+   SetNSignal();
+   SetNBackground();
    UpdateSignificanceHists();
    UpdateCanvases();
 }
 
-void TMVA::StatDialogMVAEffs::Close() 
+void TMVA::StatDialogMVAEffs::Close()
 {
    delete this;
 }
 
-TMVA::StatDialogMVAEffs::~StatDialogMVAEffs() 
+TMVA::StatDialogMVAEffs::~StatDialogMVAEffs()
 {
-   if (fInfoList) { 
+   if (fInfoList) {
       TIter next(fInfoList);
       MethodInfo *info(0);
       while ( (info = (MethodInfo*)next()) ) {
@@ -198,7 +200,7 @@ TMVA::StatDialogMVAEffs::StatDialogMVAEffs(TString ds,const TGWindow* p, Float_t
 
    fDrawButton = new TGTextButton(fButtons,"&Draw");
    fButtons->AddFrame(fDrawButton, new TGLayoutHints(kLHintsRight | kLHintsTop,15));
-  
+
    fMain->AddFrame(fButtons,new TGLayoutHints(kLHintsLeft | kLHintsBottom,5,5,5,5));
 
    fMain->SetWindowName("Significance");
@@ -212,12 +214,12 @@ TMVA::StatDialogMVAEffs::StatDialogMVAEffs(TString ds,const TGWindow* p, Float_t
 
 //   fDrawButton->Connect("Clicked()","TGNumberEntry",fSigInput, "ValueSet(Long_t)");
 //   fDrawButton->Connect("Clicked()","TGNumberEntry",fBkgInput, "ValueSet(Long_t)");
-   fDrawButton->Connect("Clicked()", "TMVA::StatDialogMVAEffs", this, "Redraw()");   
+   fDrawButton->Connect("Clicked()", "TMVA::StatDialogMVAEffs", this, "Redraw()");
 
    fCloseButton->Connect("Clicked()", "TMVA::StatDialogMVAEffs", this, "Close()");
 }
 
-void TMVA::StatDialogMVAEffs::UpdateCanvases() 
+void TMVA::StatDialogMVAEffs::UpdateCanvases()
 {
    if (fInfoList==0) return;
    if (fInfoList->First()==0) return;
@@ -236,14 +238,14 @@ void TMVA::StatDialogMVAEffs::UpdateCanvases()
    }
 }
 
-void TMVA::StatDialogMVAEffs::UpdateSignificanceHists() 
+void TMVA::StatDialogMVAEffs::UpdateSignificanceHists()
 {
    TFormula f("sigf",GetFormula());
    TIter next(fInfoList);
    MethodInfo* info(0);
    TString cname = "Classifier";
    if (cname.Length() >  maxLenTitle)  maxLenTitle = cname.Length();
-   TString str = Form( "%*s   (  #signal, #backgr.)  Optimal-cut  %s      NSig      NBkg   EffSig   EffBkg", 
+   TString str = Form( "%*s   (  #signal, #backgr.)  Optimal-cut  %s      NSig      NBkg   EffSig   EffBkg",
                        maxLenTitle, cname.Data(), GetFormulaString().Data() );
    cout << "--- " << setfill('=') << setw(str.Length()) << "" << setfill(' ') << endl;
    cout << "--- " << str << endl;
@@ -256,7 +258,7 @@ void TMVA::StatDialogMVAEffs::UpdateSignificanceHists()
          Float_t S = eS * fNSignal;
          Float_t B = info->origBgdE->GetBinContent( i ) * fNBackground;
          info->purS->SetBinContent( i, (S+B==0)?0:S/(S+B) );
-         
+
          Double_t sig = f.Eval(S,B);
          if (sig > maxSig) {
             maxSig    = sig;
@@ -267,7 +269,7 @@ void TMVA::StatDialogMVAEffs::UpdateSignificanceHists()
          info->sSig->SetBinContent( i, sig );
          info->effpurS->SetBinContent( i, eS*info->purS->GetBinContent( i ) );
       }
-      
+
       info->maxSignificance    = info->sSig->GetMaximum();
       info->maxSignificanceErr = (maxSigErr > 0) ? maxSigErr : 0;
       info->sSig->Scale(1/info->maxSignificance);
@@ -278,9 +280,9 @@ void TMVA::StatDialogMVAEffs::UpdateSignificanceHists()
    cout << "--- " << setfill('-') << setw(str.Length()) << "" << setfill(' ') << endl << endl;
 }
 
-void TMVA::StatDialogMVAEffs::ReadHistograms(TFile* file) 
+void TMVA::StatDialogMVAEffs::ReadHistograms(TFile* file)
 {
-   if (fInfoList) { 
+   if (fInfoList) {
       TIter next(fInfoList);
       MethodInfo *info(0);
       while ( (info = (MethodInfo*)next()) ) {
@@ -293,7 +295,7 @@ void TMVA::StatDialogMVAEffs::ReadHistograms(TFile* file)
 
    // search for the right histograms in full list of keys
    TIter next(file->GetDirectory(dataset.Data())->GetListOfKeys());
-   TKey *key(0);   
+   TKey *key(0);
    while( (key = (TKey*)next()) ) {
 
       if (!TString(key->GetName()).BeginsWith("Method_")) continue;
@@ -307,21 +309,21 @@ void TMVA::StatDialogMVAEffs::ReadHistograms(TFile* file)
       TKey *titkey;
       while((titkey = (TKey*)keyIt())) {
          if( ! gROOT->GetClass(titkey->GetClassName())->InheritsFrom("TDirectory") ) continue;
-        
+
          MethodInfo* info = new MethodInfo();
          TDirectory* titDir = (TDirectory *)titkey->ReadObj();
 
          TMVAGlob::GetMethodName(info->methodName,key);
-         TMVAGlob::GetMethodTitle(info->methodTitle,titDir);        
+         TMVAGlob::GetMethodTitle(info->methodTitle,titDir);
          if (info->methodTitle.Length() > maxLenTitle) maxLenTitle = info->methodTitle.Length();
          TString hname = "MVA_" + info->methodTitle;
-        
+
          cout << "--- Classifier: " << info->methodTitle << endl;
-        
+
          info->sig = dynamic_cast<TH1*>(titDir->Get( hname + "_S" ));
          info->bgd = dynamic_cast<TH1*>(titDir->Get( hname + "_B" ));
          info->origSigE = dynamic_cast<TH1*>(titDir->Get( hname + "_effS" ));
-         info->origBgdE = dynamic_cast<TH1*>(titDir->Get( hname + "_effB" ));      
+         info->origBgdE = dynamic_cast<TH1*>(titDir->Get( hname + "_effB" ));
          if (info->origSigE==0 || info->origBgdE==0) { delete info; continue; }
 
          info->SetResultHists();
@@ -331,7 +333,7 @@ void TMVA::StatDialogMVAEffs::ReadHistograms(TFile* file)
    return;
 }
 
-void TMVA::StatDialogMVAEffs::DrawHistograms() 
+void TMVA::StatDialogMVAEffs::DrawHistograms()
 {
    // counter variables
    Int_t countCanvas = 0;
@@ -345,9 +347,9 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
    while ( (info = (MethodInfo*)next()) ) {
 
       // create new canvas
-      TCanvas *c = new TCanvas( Form("canvas%d", countCanvas+1), 
-                                Form("Cut efficiencies for %s classifier",info->methodTitle.Data()), 
-                                countCanvas*50+200, countCanvas*20, width, Int_t(width*0.78) ); 
+      TCanvas *c = new TCanvas( Form("canvas%d", countCanvas+1),
+                                Form("Cut efficiencies for %s classifier",info->methodTitle.Data()),
+                                countCanvas*50+200, countCanvas*20, width, Int_t(width*0.78) );
       info->canvas = c;
 
       // draw grid
@@ -358,9 +360,9 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
       TStyle *TMVAStyle = gROOT->GetStyle("Plain"); // our style is based on Plain
       TMVAStyle->SetLineStyleString( 5, "[32 22]" );
       TMVAStyle->SetLineStyleString( 6, "[12 22]" );
-         
+
       c->SetTopMargin(.2);
-      
+
       // and the signal purity and quality
       info->effpurS->SetTitle("Cut efficiencies and optimal cut value");
       if (info->methodTitle.Contains("Cuts")) {
@@ -378,7 +380,7 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
       info->effpurS->SetMaximum(1.1);
       info->effpurS->Draw("histl");
 
-      info->purS->Draw("samehistl");      
+      info->purS->Draw("samehistl");
 
       // overlay signal and background histograms
       info->sigE->Draw("samehistl");
@@ -390,8 +392,8 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
       // redraw axes
       info->effpurS->Draw( "sameaxis" );
 
-      // Draw legend               
-      TLegend *legend1= new TLegend( c->GetLeftMargin(), 1 - c->GetTopMargin(), 
+      // Draw legend
+      TLegend *legend1= new TLegend( c->GetLeftMargin(), 1 - c->GetTopMargin(),
                                      c->GetLeftMargin() + 0.4, 1 - c->GetTopMargin() + 0.12 );
       legend1->SetFillStyle( 1 );
       legend1->AddEntry(info->sigE,"Signal efficiency","L");
@@ -400,7 +402,7 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
       legend1->SetBorderSize(1);
       legend1->SetMargin( 0.3 );
 
-      TLegend *legend2= new TLegend( c->GetLeftMargin() + 0.4, 1 - c->GetTopMargin(), 
+      TLegend *legend2= new TLegend( c->GetLeftMargin() + 0.4, 1 - c->GetTopMargin(),
                                      1 - c->GetRightMargin(), 1 - c->GetTopMargin() + 0.12 );
       legend2->SetFillStyle( 1 );
       legend2->AddEntry(info->purS,"Signal purity","L");
@@ -409,7 +411,7 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
       legend2->Draw("same");
       legend2->SetBorderSize(1);
       legend2->SetMargin( 0.3 );
-         
+
       // line to indicate maximum efficiency
       TLine* effline = new TLine( info->sSig->GetXaxis()->GetXmin(), 1, info->sSig->GetXaxis()->GetXmax(), 1 );
       effline->SetLineWidth( 1 );
@@ -425,14 +427,14 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
       tl.DrawLatex( 0.15, 0.19, "events the maximum "+GetLatexFormula()+" is");
 
       if (info->maxSignificanceErr > 0) {
-         info->line2 = tl.DrawLatex( 0.15, 0.15, Form("%5.2f +- %4.2f when cutting at %5.2f", 
-                                                      info->maxSignificance, 
-                                                      info->maxSignificanceErr, 
+         info->line2 = tl.DrawLatex( 0.15, 0.15, Form("%5.2f +- %4.2f when cutting at %5.2f",
+                                                      info->maxSignificance,
+                                                      info->maxSignificanceErr,
                                                       info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
       }
       else {
-         info->line2 = tl.DrawLatex( 0.15, 0.15, Form("%4.2f when cutting at %5.2f", 
-                                                      info->maxSignificance, 
+         info->line2 = tl.DrawLatex( 0.15, 0.15, Form("%4.2f when cutting at %5.2f",
+                                                      info->maxSignificance,
                                                       info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
       }
 
@@ -461,7 +463,7 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
       const Bool_t Save_Images = kTRUE;
 
       if (Save_Images) {
-         TMVAGlob::imgconv( c, Form("%s/plots/mvaeffs_%s",dataset.Data(), info->methodTitle.Data()) ); 
+         TMVAGlob::imgconv( c, Form("%s/plots/mvaeffs_%s",dataset.Data(), info->methodTitle.Data()) );
       }
       countCanvas++;
    }
@@ -472,45 +474,45 @@ void TMVA::StatDialogMVAEffs::PrintResults( const MethodInfo* info )
    Int_t maxbin = info->sSig->GetMaximumBin();
    if (info->line1 !=0 )
       info->line1->SetText( 0.15, 0.23, Form("For %1.0f signal and %1.0f background", fNSignal, fNBackground));
-   
+
    if (info->line2 !=0 ) {
       if (info->maxSignificanceErr > 0) {
-         info->line2->SetText( 0.15, 0.15, Form("%3.2g +- %3.2g when cutting at %3.2g", 
-                                                info->maxSignificance, 
-                                                info->maxSignificanceErr, 
+         info->line2->SetText( 0.15, 0.15, Form("%3.2g +- %3.2g when cutting at %3.2g",
+                                                info->maxSignificance,
+                                                info->maxSignificanceErr,
                                                 info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
       }
       else {
-         info->line2->SetText( 0.15, 0.15, Form("%3.4f when cutting at %3.4f", info->maxSignificance, 
+         info->line2->SetText( 0.15, 0.15, Form("%3.4f when cutting at %3.4f", info->maxSignificance,
                                                 info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
       }
 
    }
 
    if (info->maxSignificanceErr <= 0) {
-      TString opt = Form( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   %%10.6g  %%8.7g  %%8.7g %%8.4g %%8.4g", 
+      TString opt = Form( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   %%10.6g  %%8.7g  %%8.7g %%8.4g %%8.4g",
                           maxLenTitle );
-      cout << "--- " 
+      cout << "--- "
            << Form( opt.Data(),
-                    info->methodTitle.Data(), fNSignal, fNBackground, 
+                    info->methodTitle.Data(), fNSignal, fNBackground,
                     info->sSig->GetXaxis()->GetBinCenter( maxbin ),
                     info->maxSignificance,
-                    info->origSigE->GetBinContent( maxbin )*fNSignal,   
+                    info->origSigE->GetBinContent( maxbin )*fNSignal,
                     info->origBgdE->GetBinContent( maxbin )*fNBackground,
                     info->origSigE->GetBinContent( maxbin ),
                     info->origBgdE->GetBinContent( maxbin ) )
            << endl;
    }
    else {
-      TString opt = Form( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   (%%8.3g  +-%%6.3g)  %%8.7g  %%8.7g %%8.4g %%8.4g", 
+      TString opt = Form( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   (%%8.3g  +-%%6.3g)  %%8.7g  %%8.7g %%8.4g %%8.4g",
                           maxLenTitle );
-      cout << "--- " 
+      cout << "--- "
            << Form( opt.Data(),
-                    info->methodTitle.Data(), fNSignal, fNBackground, 
+                    info->methodTitle.Data(), fNSignal, fNBackground,
                     info->sSig->GetXaxis()->GetBinCenter( maxbin ),
                     info->maxSignificance,
                     info->maxSignificanceErr,
-                    info->origSigE->GetBinContent( maxbin )*fNSignal,   
+                    info->origSigE->GetBinContent( maxbin )*fNSignal,
                     info->origBgdE->GetBinContent( maxbin )*fNBackground,
                     info->origSigE->GetBinContent( maxbin ),
                     info->origBgdE->GetBinContent( maxbin ) )
@@ -518,7 +520,7 @@ void TMVA::StatDialogMVAEffs::PrintResults( const MethodInfo* info )
    }
 }
 
-void TMVA::mvaeffs(TString dataset, TString fin , 
+void TMVA::mvaeffs(TString dataset, TString fin ,
                    Bool_t useTMVAStyle, TString formula )
 {
    TMVAGlob::Initialize( useTMVAStyle );
@@ -530,7 +532,7 @@ void TMVA::mvaeffs(TString dataset, TString fin ,
       graphicsClient = new TGClient();
    }
 
-   StatDialogMVAEffs* gGui = new StatDialogMVAEffs(dataset, 
+   StatDialogMVAEffs* gGui = new StatDialogMVAEffs(dataset,
       graphicsClient->GetRoot(), 1000, 1000);
 
 
@@ -539,5 +541,5 @@ void TMVA::mvaeffs(TString dataset, TString fin ,
    gGui->SetFormula(formula);
    gGui->UpdateSignificanceHists();
    gGui->DrawHistograms();
-   gGui->RaiseDialog();   
+   gGui->RaiseDialog();
 }
