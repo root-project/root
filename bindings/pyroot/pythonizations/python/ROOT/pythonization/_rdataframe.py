@@ -76,7 +76,7 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None):
     for column in columns:
         cpp_reference = result_ptrs[column].GetValue()
         if hasattr(cpp_reference, "__array_interface__"):
-            tmp = numpy.array(cpp_reference) # This adopts the memory of the C++ object.
+            tmp = numpy.asarray(cpp_reference) # This adopts the memory of the C++ object.
             py_arrays[column] = ndarray(tmp, result_ptrs[column])
         else:
             tmp = numpy.empty(len(cpp_reference), dtype=numpy.object)
