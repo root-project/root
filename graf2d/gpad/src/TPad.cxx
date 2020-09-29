@@ -604,6 +604,7 @@ TVirtualPad *TPad::cd(Int_t subpadnumber)
    if (!subpadnumber) {
       gPad = this;
       if (!gPad->IsBatch() && GetPainter()) GetPainter()->SelectDrawable(fPixmapID);
+      if (!fPrimitives) fPrimitives = new TList;
       return gPad;
    }
 
