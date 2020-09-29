@@ -651,7 +651,7 @@ Int_t TSystem::SetFPEMask(Int_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute a command.
 
-int TSystem::Exec(const char*)
+int TSystem::Exec(const char *)
 {
    AbstractMethod("Exec");
    return -1;
@@ -660,7 +660,7 @@ int TSystem::Exec(const char*)
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a pipe.
 
-FILE *TSystem::OpenPipe(const char*, const char*)
+FILE *TSystem::OpenPipe(const char *, const char *)
 {
    AbstractMethod("OpenPipe");
    return nullptr;
@@ -823,7 +823,7 @@ Bool_t TSystem::ConsistentWith(const char *path, void *dirptr)
 /// -1 if the directory could not be created (either already exists or
 /// illegal path name).
 
-int TSystem::MakeDirectory(const char*)
+int TSystem::MakeDirectory(const char *)
 {
    AbstractMethod("MakeDirectory");
    return 0;
@@ -891,7 +891,7 @@ const char *TSystem::HomeDirectory(const char *)
 //////////////////////////////////////////////////////////////////////////////
 /// Return the user's home directory.
 
-std::string TSystem::GetHomeDirectory(const char*) const
+std::string TSystem::GetHomeDirectory(const char *) const
 {
    return std::string();
 }
@@ -936,7 +936,7 @@ const char *TSystem::BaseName(const char *name)
       if (name[0] == '/' && name[1] == '\0')
          return name;
       char *cp;
-      if ((cp = (char*)strrchr(name, '/')))
+      if ((cp = (char *)strrchr(name, '/')))
          return ++cp;
       return name;
    }
@@ -1459,7 +1459,7 @@ int TSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
 
 int TSystem::GetPathInfo(const char *, FileStat_t &)
 {
-   AbstractMethod("GetPathInfo(const char*, FileStat_t&)");
+   AbstractMethod("GetPathInfo(const char *, FileStat_t&)");
    return 1;
 }
 
@@ -1642,7 +1642,7 @@ UserGroup_t *TSystem::GetGroupInfo(const char * /*group*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set environment variable.
 
-void TSystem::Setenv(const char*, const char*)
+void TSystem::Setenv(const char *, const char *)
 {
    AbstractMethod("Setenv");
 }
@@ -1658,7 +1658,7 @@ void TSystem::Unsetenv(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get environment variable.
 
-const char *TSystem::Getenv(const char*)
+const char *TSystem::Getenv(const char *)
 {
    AbstractMethod("Getenv");
    return nullptr;
@@ -1788,7 +1788,7 @@ void TSystem::AddDynamicPath(const char *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the dynamic path (used to find shared libraries).
 
-const char* TSystem::GetDynamicPath()
+const char *TSystem::GetDynamicPath()
 {
    AbstractMethod("GetDynamicPath");
    return nullptr;
@@ -2371,7 +2371,7 @@ char *TSystem::GetServiceByPort(int)
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a connection to another host.
 
-int TSystem::OpenConnection(const char*, int, int, const char*)
+int TSystem::OpenConnection(const char *, int, int, const char *)
 {
    AbstractMethod("OpenConnection");
    return -1;
@@ -2836,7 +2836,7 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
 /// root[2] .x myfunc.C++(10,20);
 /// ~~~
 /// The user may sometimes try to compile a script before it has loaded all the
-/// needed shared libraries.  In this case we want to be helpfull and output a
+/// needed shared libraries.  In this case we want to be helpful and output a
 /// list of the unresolved symbols. So if the loading of the created shared
 /// library fails, we will try to build a executable that contains the
 /// script. The linker should then output a list of missing symbols.
@@ -2844,7 +2844,7 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
 /// To support this we provide a TSystem::SetMakeExe() function, that sets the
 /// directive telling how to create an executable. The loader will need
 /// to be informed of all the libraries available. The information about
-/// the libraries that has been loaded by .L and TSystem::Load() is accesible
+/// the libraries that has been loaded by .L and TSystem::Load() is accessible
 /// to the script compiler. However, the information about
 /// the libraries that have been selected at link time by the application
 /// builder (like the root libraries for root.exe) are not available and need
@@ -2975,7 +2975,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString file_dirname = GetDirName( filename_fullpath );
    // For some probably good reason, DirName on Windows returns the 'name' of
    // the directory, omitting the drive letter (even if there was one). In
-   // consequence the result is not useable as a 'root directory', we need to
+   // consequence the result is not usable as a 'root directory', we need to
    // add the drive letter if there was one..
    if (library.Length()>1 && isalpha(library[0]) && library[1]==':') {
       file_dirname.Prepend(library(0,2));
@@ -4044,7 +4044,7 @@ const char *TSystem::GetObjExt() const
 /// Set the location where ACLiC will create libraries and use as
 /// a scratch area.
 ///
-/// If isflast is flase, then the libraries are actually stored in
+/// If 'isflat' is false, then the libraries are actually stored in
 /// sub-directories of 'build_dir' including the full pathname of the
 /// script.  If the script is location at /full/path/name/macro.C
 /// the library will be located at 'build_dir+/full/path/name/macro_C.so'
@@ -4053,7 +4053,7 @@ const char *TSystem::GetObjExt() const
 /// mode there is a risk than 2 script of the same in different source
 /// directory will over-write each other.
 
-void TSystem::SetBuildDir(const char* build_dir, Bool_t isflat)
+void TSystem::SetBuildDir(const char *build_dir, Bool_t isflat)
 {
    fBuildDir = build_dir;
    if (isflat)
@@ -4268,7 +4268,7 @@ void TSystem::SetObjExt(const char *ObjExt)
 /// the arguments (including parenthesis) in arg
 /// and the I/O indirection in io
 
-TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
+TString TSystem::SplitAclicMode(const char *filename, TString &aclicMode,
                                 TString &arguments, TString &io) const
 {
    char *fname = Strip(filename);
