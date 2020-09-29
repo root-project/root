@@ -23,8 +23,10 @@
 #include <ROOT/REveTrackPropagator.hxx>
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveViewContext.hxx>
+#include <ROOT/REveBoxSet.hxx>
 
 #include "TGeoTube.h"
+#include "TROOT.h"
 #include "TList.h"
 #include "TParticle.h"
 #include "TRandom.h"
@@ -64,6 +66,19 @@ public:
 
    ClassDef(XYJet, 1);
 };
+
+class RecHit : public TObject
+{
+public:
+   float fX{0};
+   float fY{0};
+   float fZ{0};
+   float fPt{0};
+
+   RecHit(float pt, float x, float y, float z): fPt(pt), fX(x), fY(y), fZ(z) {}
+   ClassDef(RecHit, 1);
+};
+
 
 class Event
 {
@@ -128,6 +143,25 @@ public:
       m_data.push_back(list);
    }
 
+   void MakeRecHits(int N)
+   {
+      TRandom &r = *gRandom;
+      r.SetSeed(0);
+      TList* list = new TList();
+      list->SetName("RecHits");
+
+      for (int i = 1; i <= N; ++i)
+      {
+         float pt = r.Uniform(0.5, 10);
+         float x =  r.Uniform(-200, 200);
+         float y =  r.Uniform(-200, 200);
+         float z =  r.Uniform(-500, 500);
+         auto rechit = new RecHit(pt, x, y, z);
+         list->Add(rechit);
+      }
+      m_data.push_back(list);
+   }
+
    std::vector<TList*> m_data;
 
    void Clear()
@@ -142,6 +176,7 @@ public:
       Clear();
       MakeJets(4);
       MakeParticles(100);
+      MakeRecHits(1000);
       eventId++;
    }
 };
@@ -219,7 +254,7 @@ class XYJetProxyBuilder: public REveDataSimpleProxyBuilderTemplate<XYJet>
 };
 
 
-class TrackProxyBuilder : public REveDataSimpleProxyBuilderTemplate<TParticle>
+class TParticleProxyBuilder : public REveDataSimpleProxyBuilderTemplate<TParticle>
 {
    using REveDataSimpleProxyBuilderTemplate<TParticle>::Build;
 
@@ -229,6 +264,70 @@ class TrackProxyBuilder : public REveDataSimpleProxyBuilderTemplate<TParticle>
       auto track = new REveTrack((TParticle*)(x), 1, context->GetPropagator());
       track->MakeTrack();
       SetupAddElement(track, iItemHolder, true);
+   }
+};
+
+class RecHitProxyBuilder: public REveDataProxyBuilderBase
+{
+private:
+   void buildBoxSet(REveBoxSet* boxset) {
+      auto collection = Collection();
+      boxset->SetMainColor(collection->GetMainColor());
+      boxset->Reset(REveBoxSet::kBT_FreeBox, true, collection->GetNItems());
+      TRandom r(0);
+#define RND_BOX(x) (Float_t)r.Uniform(-(x), (x))
+      for (int h = 0; h < collection->GetNItems(); ++h)
+      {
+         RecHit* hit = (RecHit*)collection->GetDataPtr(h);
+         const REveDataItem* item = Collection()->GetDataItem(h);
+
+         if (!item->GetVisible())
+           continue;
+         Float_t x = hit->fX;
+         Float_t y = hit->fY;
+         Float_t z = hit->fZ;
+         Float_t a = hit->fPt;
+         Float_t d = 0.05;
+         Float_t verts[24] = {
+                              x - a + RND_BOX(d), y - a + RND_BOX(d), z - a + RND_BOX(d),
+                              x - a + RND_BOX(d), y + a + RND_BOX(d), z - a + RND_BOX(d),
+                              x + a + RND_BOX(d), y + a + RND_BOX(d), z - a + RND_BOX(d),
+                              x + a + RND_BOX(d), y - a + RND_BOX(d), z - a + RND_BOX(d),
+                              x - a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d),
+                              x - a + RND_BOX(d), y + a + RND_BOX(d), z + a + RND_BOX(d),
+                              x + a + RND_BOX(d), y + a + RND_BOX(d), z + a + RND_BOX(d),
+                              x + a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d) };
+         boxset->AddBox(verts);
+         boxset->DigitColor(item->GetVisible() ? collection->GetMainColor() : 0); // set color on the last one
+      }
+      boxset->StampObjProps();
+   }
+
+public:
+   using REveDataProxyBuilderBase::Build;
+   void Build(const REveDataCollection* collection, REveElement* product, const REveViewContext*)override
+   {
+      // printf("-------------------------FBOXSET proxy builder %d \n",  collection->GetNItems());
+      auto boxset = new REveBoxSet();
+      boxset->SetAlwaysSecSelect(1);
+      boxset->SetSelectionMaster(((REveDataCollection*)collection)->GetItemList());
+      buildBoxSet(boxset);
+      product->AddElement(boxset);
+   }
+
+   using REveDataProxyBuilderBase::FillImpliedSelected;
+   void FillImpliedSelected(REveElement::Set_t& impSet, Product* p) override
+   {
+      // printf("RecHit fill implioed ----------------- !!!%zu\n", Collection()->GetItemList()->RefSelectedSet().size());
+      impSet.insert(p->m_elements->FirstChild());
+   }
+
+   using REveDataProxyBuilderBase::ModelChanges;
+   void ModelChanges(const REveDataCollection::Ids_t& ids, Product* product) override
+   {
+      // We know there is only one element in this product
+      //  printf("RecHitProxyBuilder::model changes %zu\n", ids.size());
+      buildBoxSet((REveBoxSet*)product->m_elements->FirstChild());
    }
 };
 
@@ -282,6 +381,9 @@ public:
          column("etasize", 2, "i.GetEtaSize()").
          column("phisize", 2, "i.GetPhiSize()");
 
+      tableInfo->table("RecHit").
+         column("pt",     1, "i.fPt");
+
       m_viewContext->SetTableViewInfo(tableInfo);
 
       createScenesAndViews();
@@ -331,14 +433,10 @@ public:
    // this should be handeled with framefor plugins
    REveDataProxyBuilderBase* makeGLBuilderForType(TClass* c)
    {
-      std::string cn = c->GetName();
-      if (cn == "XYJet") {
-         return new XYJetProxyBuilder();
-      }
-      else
-      {
-         return new TrackProxyBuilder();
-      }
+      REveDataProxyBuilderBase * ptr = 0;
+      char* cmd = Form("*((REveDataProxyBuilderBase**) 0x%lx) = new %sProxyBuilder()", (unsigned long)&ptr, c->GetName());
+      gROOT->ProcessLine(cmd);
+      return ptr;
    }
 
    void LoadCurrentEvent(REveDataCollection* collection)
@@ -549,6 +647,14 @@ void collection_proxies(bool proj=true)
       jetCollection->SetItemClass(XYJet::Class());
       jetCollection->SetMainColor(kRed);
       xyManager->addCollection(jetCollection, false);
+   }
+
+   if (1)
+   {
+      REveDataCollection* hitCollection = new REveDataCollection("RecHits");
+      hitCollection->SetItemClass(RecHit::Class());
+      hitCollection->SetMainColor(kBlue);
+      xyManager->addCollection(hitCollection, false);
    }
 
    auto eventMng = new EventManager(event, xyManager);
