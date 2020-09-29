@@ -324,33 +324,24 @@ AutoDict_*.cxx
 
 # /root/io/geo/
 /root/io/geo/maketar
-/root/io/geo/\
 /root/io/geo/alice_all.C
 /root/io/geo/alice_itsd.C
 /root/io/geo/alice.root
-/root/io/geo/\
 /root/io/geo/atlas_all.C
 /root/io/geo/atlas_cryo.C
 /root/io/geo/atlas.root
-/root/io/geo/\
 /root/io/geo/cms_cmse.C
 /root/io/geo/cms.root
-/root/io/geo/\
 /root/io/geo/ams.C
 /root/io/geo/ams_all.C
-/root/io/geo/\
 /root/io/geo/btev.C
 /root/io/geo/btev_all.C
-/root/io/geo/\
 /root/io/geo/gem.C
 /root/io/geo/gem_all.C
-/root/io/geo/\
 /root/io/geo/hades_all.C
 /root/io/geo/hades.root
-/root/io/geo/\
 /root/io/geo/phenix.C
 /root/io/geo/phenix_all.C
-/root/io/geo/\
 /root/io/geo/lhcb.C
 /root/io/geo/lhcb_all.C
 /root/io/geo/lhcbfull_all.C
