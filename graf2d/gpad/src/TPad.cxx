@@ -3855,6 +3855,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 void TPad::CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y)
 {
    if (!start ||!stop ) return;
+   if (!start->GetListOfPrimitives()) return;
    TObject *obj=nullptr;
    if (!fPrimitives) fPrimitives = new TList;
    TIter next(start->GetListOfPrimitives()->MakeIterator());
@@ -5512,7 +5513,7 @@ void TPad::ResizePad(Option_t *option)
       fAbsHNDC     = fHNDC;
    }
    else {
-      if (parent->GetAbsWNDC()==0.0||parent->GetAbsWNDC()==0.0) {
+      if (parent->GetAbsWNDC()==0.0||parent->GetAbsWNDC()==0.0||fHNDC==0.0||fWNDC==0.0) {
        Warning("ResizePad", "parent pad has at leas one zero dimension.");
         return;
       }
