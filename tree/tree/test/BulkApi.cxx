@@ -90,7 +90,7 @@ void SimpleReadFunc(const char *filename, const char *treename)
 
    printf("Using inline bulk read APIs.\n");
    TBufferFile branchbuf(TBuffer::kWrite, 32 * 1024);
-   TTree *tree = dynamic_cast<TTree *>(hfile->Get(treename));
+   auto tree = hfile->Get<TTree>(treename);
    ASSERT_TRUE(tree);
 
    TBranch *branchF = tree->GetBranch("myFloat");
@@ -105,11 +105,11 @@ void SimpleReadFunc(const char *filename, const char *treename)
       ASSERT_GE(count, 0);
       events = events > count ? (events - count) : 0;
 
-      float *entry = reinterpret_cast<float *>(branchbuf.GetCurrent());
+      auto entry = reinterpret_cast<float *>(branchbuf.GetCurrent());
       for (Int_t idx = 0; idx < count; idx++) {
          idx_f++;
-         Int_t tmp = *reinterpret_cast<Int_t *>(&entry[idx]);
-         char *tmp_ptr = reinterpret_cast<char *>(&tmp);
+         auto tmp = *reinterpret_cast<Int_t *>(&entry[idx]);
+         auto tmp_ptr = reinterpret_cast<char *>(&tmp);
          frombuf(tmp_ptr, entry + idx);
 
          if (R__unlikely((evt_idx < 16000000) && (entry[idx] != idx_f))) {
@@ -143,7 +143,7 @@ void SimpleBulkReadFunc(const char *filename, const char *treename)
 
    printf("Using outlined bulk read APIs.\n");
    TBufferFile branchbuf(TBuffer::kWrite, 32 * 1024);
-   TTree *tree = dynamic_cast<TTree *>(hfile->Get(treename));
+   auto tree = hfile->Get<TTree>(treename);
    ASSERT_TRUE(tree);
 
    TBranch *branchF = tree->GetBranch("myFloat");
@@ -158,7 +158,7 @@ void SimpleBulkReadFunc(const char *filename, const char *treename)
       ASSERT_GE(count, 0);
       events = events > count ? (events - count) : 0;
 
-      float *entry = reinterpret_cast<float *>(branchbuf.GetCurrent());
+      auto entry = reinterpret_cast<float *>(branchbuf.GetCurrent());
       for (Int_t idx = 0; idx < count; idx++) {
          idx_f++;
          if (R__unlikely((evt_idx < 16000000) && (entry[idx] != idx_f))) {
