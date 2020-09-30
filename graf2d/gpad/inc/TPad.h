@@ -478,6 +478,7 @@ inline Int_t TPad::VtoPixel(Double_t v) const
 //______________________________________________________________________________
 inline Int_t TPad::XtoAbsPixel(Double_t x) const
 {
+   if (TMath::IsNaN(x)) return 0;
    Double_t val = fXtoAbsPixelk + x*fXtoPixel;
    if (val < -kMaxPixel) return -kMaxPixel;
    if (val >  kMaxPixel) return  kMaxPixel;
@@ -501,7 +502,7 @@ inline Int_t TPad::XtoPixel(Double_t x) const
 //______________________________________________________________________________
 inline Int_t TPad::YtoAbsPixel(Double_t y) const
 {
-   if (TMath::IsNaN(y)) return y;
+   if (TMath::IsNaN(y)) return 0;
    Double_t val = fYtoAbsPixelk + y*fYtoPixel;
    if (val < -kMaxPixel) return -kMaxPixel;
    if (val >  kMaxPixel) return  kMaxPixel;
@@ -512,6 +513,7 @@ inline Int_t TPad::YtoAbsPixel(Double_t y) const
 //______________________________________________________________________________
 inline Int_t TPad::YtoPixel(Double_t y) const
 {
+   if (TMath::IsNaN(y)) return 0;
    Double_t val;
    if (fAbsCoord) val = fYtoAbsPixelk + y*fYtoPixel;
    else           val = fYtoPixelk    + y*fYtoPixel;
