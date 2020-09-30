@@ -3233,7 +3233,7 @@ void TPad::FillCollideGridTFrame(TObject *o)
 void TPad::FillCollideGridTGraph(TObject *o)
 {
    TGraph *g = (TGraph *)o;
-
+   if (fCGnx==0||fCGny==0) return;
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
 
