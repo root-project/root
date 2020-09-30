@@ -1546,10 +1546,12 @@ TH1F *TGraph::GetHistogram() const
    const char *gname = GetName();
    if (!gname[0]) gname = "Graph";
    // do not add the histogram to gDirectory
-   Bool_t addStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
-   ((TGraph*)this)->fHistogram = new TH1F(gname, GetTitle(), npt, rwxmin, rwxmax);
-   TH1::AddDirectory(addStatus);
+   // use local TDirectory::TContect that will set temporarly gDirectory to a nullptr and
+   // will avoid that histogram is added in the global directory
+   {
+      TDirectory::TContext ctx(nullptr);
+      ((TGraph*)this)->fHistogram = new TH1F(gname, GetTitle(), npt, rwxmin, rwxmax);
+   }
    if (!fHistogram) return 0;
    fHistogram->SetMinimum(minimum);
    fHistogram->SetBit(TH1::kNoStats);
