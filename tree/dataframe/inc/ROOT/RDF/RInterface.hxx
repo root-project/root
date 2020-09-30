@@ -2279,8 +2279,8 @@ private:
 
       const auto nSlots = fLoopManager->GetNSlots();
 
-      auto action = RDFInternal::BuildAction<ColTypes...>(validColumnNames, r, nSlots, fProxiedPtr, ActionTag{},
-                                                             fDefines);
+      auto action =
+         RDFInternal::BuildAction<ColTypes...>(validColumnNames, r, nSlots, fProxiedPtr, ActionTag{}, fDefines);
       fLoopManager->Book(action.get());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
    }
