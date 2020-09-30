@@ -281,8 +281,6 @@ endforeach()
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir})
 
 add_subdirectory (interpreter)
-# Add the compilation flags from LLVM to the flags we use to compile cling-based tools.
-set(CLING_CXXFLAGS "${CLING_CXXFLAGS} ${ROOT_LLVM_FLAGS}")
 
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(cxxmodules)
