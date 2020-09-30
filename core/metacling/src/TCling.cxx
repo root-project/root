@@ -5402,7 +5402,7 @@ const char* TCling::TypeName(const char* typeDesc)
    return t;
 }
 
-static bool requiresRootMap(const char* rootmapfile, cling::Interpreter* interp)
+static bool requiresRootMap(const char* rootmapfile)
 {
    assert(rootmapfile && *rootmapfile);
 
@@ -5423,7 +5423,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
    if (!(rootmapfile && *rootmapfile))
       return 0;
 
-   if (!requiresRootMap(rootmapfile, GetInterpreterImpl()))
+   if (!requiresRootMap(rootmapfile))
       return 0; // success
 
    // For "class ", "namespace ", "typedef ", "header ", "enum ", "var " respectively
@@ -5541,9 +5541,9 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
 
 void TCling::InitRootmapFile(const char *name)
 {
-   assert(requiresRootMap(name, GetInterpreterImpl()) && "We have a module!");
+   assert(requiresRootMap(name) && "We have a module!");
 
-   if (!requiresRootMap(name, GetInterpreterImpl()))
+   if (!requiresRootMap(name))
       return;
 
    Bool_t ignore = fMapfile->IgnoreDuplicates(kFALSE);
@@ -5612,7 +5612,7 @@ namespace {
 
 Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 {
-   if (rootmapfile && *rootmapfile && !requiresRootMap(rootmapfile, GetInterpreterImpl()))
+   if (rootmapfile && *rootmapfile && !requiresRootMap(rootmapfile))
       return 0;
 
    R__LOCKGUARD(gInterpreterMutex);
