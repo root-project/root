@@ -5512,6 +5512,10 @@ void TPad::ResizePad(Option_t *option)
       fAbsHNDC     = fHNDC;
    }
    else {
+      if (parent->GetAbsWNDC()==0.0||parent->GetAbsWNDC()==0.0) {
+       Warning("ResizePad", "parent pad has at leas one zero dimension.");
+        return;
+      }
       fAbsXlowNDC  = fXlowNDC*parent->GetAbsWNDC() + parent->GetAbsXlowNDC();
       fAbsYlowNDC  = fYlowNDC*parent->GetAbsHNDC() + parent->GetAbsYlowNDC();
       fAbsWNDC     = fWNDC*parent->GetAbsWNDC();

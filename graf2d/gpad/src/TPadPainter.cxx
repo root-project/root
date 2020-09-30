@@ -647,8 +647,8 @@ void ConvertPoints(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y,
    dst.resize(nPoints);
 
    for (unsigned i = 0; i < nPoints; ++i) {
-      dst[i].fX = (SCoord_t)pad->XtoPixel(x[i]);
-      dst[i].fY = (SCoord_t)pad->YtoPixel(y[i]);
+      dst[i].fX = (SCoord_t)pad->XtoPixel(double(x[i]));
+      dst[i].fY = (SCoord_t)pad->YtoPixel(double(y[i]));
    }
 }
 
