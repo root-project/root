@@ -3190,7 +3190,7 @@ void TPad::LineNotFree(Int_t x1, Int_t x2, Int_t y1, Int_t y2)
 void TPad::FillCollideGridTBox(TObject *o)
 {
    TBox *b = (TBox *)o;
-
+   if (fCGnx==0||fCGny==0) return;
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
 
@@ -3207,7 +3207,7 @@ void TPad::FillCollideGridTBox(TObject *o)
 void TPad::FillCollideGridTFrame(TObject *o)
 {
    TFrame *f = (TFrame *)o;
-
+   if (fCGnx==0||fCGny==0) return;
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
 
@@ -3233,7 +3233,7 @@ void TPad::FillCollideGridTFrame(TObject *o)
 void TPad::FillCollideGridTGraph(TObject *o)
 {
    TGraph *g = (TGraph *)o;
-
+   if (fCGnx==0||fCGny==0) return;
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
 
