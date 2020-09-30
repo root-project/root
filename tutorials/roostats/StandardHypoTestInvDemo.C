@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// \brief Standard tutorial macro for performing an inverted  hypothesis test for computing an interval
+/// Standard tutorial macro for performing an inverted  hypothesis test for computing an interval
 ///
 /// This macro will perform a scan of the p-values for computing the interval or limit
 ///
