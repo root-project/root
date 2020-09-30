@@ -225,19 +225,6 @@ if(builtin_llvm)
     endif()
   endforeach()
   set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" PARENT_SCOPE)
-
-  #---Make LLVM compilation flags public---------------------------------------------------------------
-  # Extract the compilation flags from LLVM and make them public to the
-  # rest of ROOT so that we can compile against LLVM with matching flags.
-
-  # LLVM doesn't really give us a API to get this with an in-source build
-  # so we just use the normal way of doing this and read the llvm directory
-  # compilation properties.
-  get_directory_property(LLVM_DEFS DIRECTORY llvm/src COMPILE_DEFINITIONS)
-  # Turns DEFINE1;DEFINE2 to -DDEFINE1 -DDEFINE2
-  string (REPLACE ";" " -D" LLVM_DEFS ";${LLVM_DEFS}")
-  # CACHE variable that contains the additional flags that LLVM needs.
-  set(ROOT_LLVM_FLAGS "${LLVM_DEFS}" CACHE STRING "" FORCE)
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
@@ -454,13 +441,27 @@ add_custom_target(CLING)
 set(CLING_LIBRARIES clingInterpreter;clingMetaProcessor;clingUtils CACHE STRING "")
 if (builtin_cling)
 
+  # Extract the compilation flags from LLVM and make them public to the
+  # rest of ROOT so that we can compile against LLVM with matching flags.
+
+  # LLVM doesn't really give us a API to get this with an in-source build
+  # so we just use the normal way of doing this and read the llvm directory
+  # compilation properties.
+  get_directory_property(LLVM_DEFS DIRECTORY llvm/src COMPILE_DEFINITIONS)
+  # Turns DEFINE1;DEFINE2 to -DDEFINE1 -DDEFINE2
+  string (REPLACE ";" " -D" LLVM_DEFS ";${LLVM_DEFS}")
+
   # FIXME: Reduce the usage of CLING_CXXFLAGS by adding a cmake routine in
   # RootMacros.cmake for all cling-dependent libraries
   if(MSVC)
-    set(CLING_CXXFLAGS "-DNOMINMAX -D_XKEYCHECK_H")
+    set(CLING_CXXFLAGS " ${LLVM_DEFS} -DNOMINMAX -D_XKEYCHECK_H")
   else()
-    set(CLING_CXXFLAGS " -fvisibility=hidden -fno-strict-aliasing -Wwrite-strings ")
+    # FIXME: Work hard to remove -Wno-shadow and -Wno-unused-parameter
+    set(CLING_CXXFLAGS " ${LLVM_DEFS} -fvisibility=hidden -fno-strict-aliasing -Wwrite-strings -Wno-shadow -Wno-unused-parameter -Wno-deprecated-declarations")
   endif()
+
+  # Set the flags in the parent scope for the rest of the cling-based libraries in ROOT.
+  set(CLING_CXXFLAGS ${CLING_CXXFLAGS} PARENT_SCOPE)
 
   string(APPEND CMAKE_CXX_FLAGS ${CLING_CXXFLAGS})
   if (LLVM_ENABLE_PIC)

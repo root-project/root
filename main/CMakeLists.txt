@@ -75,9 +75,9 @@ configure_file(python/cmdLineUtils.py ${localruntimedir}/cmdLineUtils.py @ONLY)
 
 
 if(NOT MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS} -Wno-unused-parameter")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS} ")
 else()
-  set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS "-DNOMINMAX -D_XKEYCHECK_H")
+  set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS ${CLING_CXXFLAGS})
 endif()
 
 ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core)
