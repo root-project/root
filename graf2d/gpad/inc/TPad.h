@@ -14,6 +14,7 @@
 
 #include "TVirtualPad.h"
 #include "TAttBBox2D.h"
+#include "TMath.h"
 
 class TVirtualViewer3D;
 class TVirtualPadPainter;
@@ -500,7 +501,7 @@ inline Int_t TPad::XtoPixel(Double_t x) const
 //______________________________________________________________________________
 inline Int_t TPad::YtoAbsPixel(Double_t y) const
 {
-   if (TMath::IsNaN(x)) return y;
+   if (TMath::IsNaN(y)) return y;
    Double_t val = fYtoAbsPixelk + y*fYtoPixel;
    if (val < -kMaxPixel) return -kMaxPixel;
    if (val >  kMaxPixel) return  kMaxPixel;
