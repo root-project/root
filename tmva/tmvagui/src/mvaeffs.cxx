@@ -16,6 +16,8 @@
 #include "TMVA/mvaeffs.h"
 #include "TMVA/tmvaglob.h"
 #include "TROOT.h"
+#include "TError.h"
+#include "TApplication.h"
 
 #include <iomanip>
 #include <iostream>
@@ -175,7 +177,7 @@ TMVA::StatDialogMVAEffs::StatDialogMVAEffs(TString ds,const TGWindow* p, Float_t
    maxLenTitle(0)
 {
    // only in interactive mode
-   if (!gROOT->IsBatch()) {
+   if (p != nullptr) {
       UInt_t totalWidth = 500;
       UInt_t totalHeight = 300;
 
@@ -532,11 +534,14 @@ void TMVA::mvaeffs(TString dataset, TString fin, Float_t nsignal, Float_t nbackg
    TMVAGlob::Initialize( useTMVAStyle );
 
    TGClient *graphicsClient = TGClient::Instance();
-   if (!gROOT->IsBatch()) {
-      if (graphicsClient == nullptr) {
-         // When including mvaeffs in a stand-alone macro, the graphics subsystem
-         // is not initialised and `TGClient::Instance` is a nullptr.
-         graphicsClient = new TGClient();
+   if (graphicsClient == nullptr && !gROOT->IsBatch()) {
+      if (gApplication == nullptr)
+         // When using mvaeffs in a stand-alone macro, and batch mode is not set
+         Info("mvaeffs","GUI is not initialized, because TApplication is not started. Running as in batch mode");
+      else {
+         // gTAPPlication has started but `TGClient::Instance` is a nullptr. Should not happen
+         Error("mvaeffs", "TApplication is present but TGCLient instance is a nullptr");
+         return;
       }
    }
 
