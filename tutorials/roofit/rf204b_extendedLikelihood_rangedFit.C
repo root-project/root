@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-/// \brief This macro demonstrates how to set up a fit in two ranges
+/// This macro demonstrates how to set up a fit in two ranges
 /// such that it does not only fit the shapes in each region, but also
 /// takes into account the relative normalization of the two.
 ///

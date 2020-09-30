@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Basic functionality: plotting unbinned data with alternate and variable binnings
+## Basic functionality: plotting unbinned data with alternate and variable binnings
 ##
 ## \macro_code
 ##
@@ -14,7 +13,7 @@ import ROOT
 # Set up model
 # ---------------------
 
-# Build a B decay p.d.f with mixing
+# Build a B decay pdf with mixing
 dt = ROOT.RooRealVar("dt", "dt", -20, 20)
 dm = ROOT.RooRealVar("dm", "dm", 0.472)
 tau = ROOT.RooRealVar("tau", "tau", 1.547)
@@ -94,7 +93,7 @@ aframe = dt.frame(ROOT.RooFit.Range(-10, 10), ROOT.RooFit.Title(
 data.plotOn(aframe, ROOT.RooFit.Asymmetry(
     mixState), ROOT.RooFit.Binning(abins))
 
-# Plot corresponding property of p.d.f
+# Plot corresponding property of pdf
 bmix.plotOn(aframe, ROOT.RooFit.Asymmetry(mixState))
 
 # Adjust vertical range of plot to sensible values for an asymmetry

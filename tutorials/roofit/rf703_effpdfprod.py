@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Special p.d.f.'s: using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
+## Special pdf's: using a product of an (acceptance) efficiency and a pdf as pdf
 ##
 ## \macro_code
 ##

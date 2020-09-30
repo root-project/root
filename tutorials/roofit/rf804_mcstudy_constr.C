@@ -1,15 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Validation and MC studies: using RooMCStudy on models with constrains
+/// Validation and MC studies: using RooMCStudy on models with constrains
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -49,7 +47,7 @@ void rf804_mcstudy_constr()
    // Construct constraint on parameter f
    RooGaussian fconstraint("fconstraint", "fconstraint", f, RooConst(0.7), RooConst(0.1));
 
-   // Multiply constraint with p.d.f
+   // Multiply constraint with pdf
    RooProdPdf sumc("sumc", "sum with constraint", RooArgSet(sum, fconstraint));
 
    // S e t u p   t o y   s t u d y   w i t h   m o d e l
