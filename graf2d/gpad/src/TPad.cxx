@@ -3135,6 +3135,7 @@ Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t
          if (Collide(i,j,iw,ih)) {
             continue;
          } else {
+            if (fCGnx==0||fCGny==0) return  kFALSE;
             xl = (Double_t)(i)/(Double_t)(fCGnx);
             yb = (Double_t)(j)/(Double_t)(fCGny);
             return kTRUE;
@@ -3196,6 +3197,7 @@ void TPad::FillCollideGridTBox(TObject *o)
 {
    TBox *b = (TBox *)o;
    if (fCGnx==0||fCGny==0) return;
+
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
 
@@ -3213,6 +3215,7 @@ void TPad::FillCollideGridTFrame(TObject *o)
 {
    TFrame *f = (TFrame *)o;
    if (fCGnx==0||fCGny==0) return;
+
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
 
@@ -3277,7 +3280,7 @@ void TPad::FillCollideGridTH1(TObject *o)
    TString name = h->GetName();
    if (name.Index("hframe") >= 0) return;
    if (fCGnx==0||fCGny==0) return;
-   
+
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
 
@@ -3352,6 +3355,7 @@ void TPad::FillCollideGridTH1(TObject *o)
 
 void TPad::DrawCollideGrid()
 {
+   if (fCGnx==0||fCGny==0) return;
    auto box = new TBox();
    box->SetFillColorAlpha(kRed,0.5);
 
@@ -3845,6 +3849,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 
 void TPad::CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y)
 {
+   if (!start ||!stop ) return;
    TObject *obj;
    if (!fPrimitives) fPrimitives = new TList;
    TIter next(start->GetListOfPrimitives());
@@ -3864,7 +3869,7 @@ void TPad::CopyBackgroundPixmap(Int_t x, Int_t y)
 {
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
-   GetPainter()->CopyDrawable(GetPixmapID(), px-x, py-y);
+   if (GetPainter()) GetPainter()->CopyDrawable(GetPixmapID(), px-x, py-y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4928,8 +4933,10 @@ void TPad::Print(const char *filenam, Option_t *option)
          gPad->GetCanvas()->SetHighLightColor(-1);
          gPad->Modified();
          gPad->Update();
-         GetPainter()->SelectDrawable(wid);
-         GetPainter()->SaveImage(this, psname.Data(), gtype);
+         if (GetPainter()) {
+           GetPainter()->SelectDrawable(wid);
+           GetPainter()->SaveImage(this, psname.Data(), gtype);
+         }
          if (!gSystem->AccessPathName(psname.Data())) {
             Info("Print", "GIF file %s has been created", psname.Data());
          }
@@ -4943,7 +4950,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          gPad->Update();
          gVirtualX->Update(1);
          gSystem->Sleep(30); // synchronize
-         GetPainter()->SaveImage(this, psname, gtype);
+         if (GetPainter()) GetPainter()->SaveImage(this, psname, gtype);
          if (!gSystem->AccessPathName(psname)) {
             Info("Print", "file %s has been created", psname.Data());
          }
@@ -4956,7 +4963,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    //==============Save pad/canvas as a C++ script==============================
    if (strstr(opt,"cxx")) {
-      GetCanvas()->SaveSource(psname, "");
+      if (GetCanvas()) GetCanvas()->SaveSource(psname, "");
       return;
    }
 
@@ -4984,7 +4991,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
       Bool_t noScreen = kFALSE;
-      if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
+      if (GetCanvas() && !GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
          noScreen = kTRUE;
          GetCanvas()->SetBatch(kTRUE);
       }
