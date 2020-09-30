@@ -2162,7 +2162,12 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (pC) gPad->ShowGuidelines(this, event, '3', true);
          if (pD) gPad->ShowGuidelines(this, event, '4', true);
 
-         Modified(kTRUE);
+         //Modified(kTRUE);
+         
+            if (!fModified && kTRUE) Emit("Modified()");
+   fModified = kTRUE;
+         
+         
       }
 
       break;
@@ -3458,7 +3463,7 @@ void TPad::Paint(Option_t * /*option*/)
       if (GetGLDevice()!=-1 && gVirtualPS) {
          TPad *padsav = (TPad*)gPad;
          gPad = this;
-         gGLManager->PrintViewer(GetViewer3D());
+         if(gGLManager) gGLManager->PrintViewer(GetViewer3D());
          gPad = padsav;
       }
       return;
@@ -3474,7 +3479,7 @@ void TPad::Paint(Option_t * /*option*/)
    PaintBorder(GetFillColor(), kTRUE);
    PaintDate();
 
-   TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
+   TObjOptLink *lnk =  GetListOfPrimitives()?((TObjOptLink*)GetListOfPrimitives()->FirstLink()):nullptr;
    TObject *obj;
 
    Bool_t began3DScene = kFALSE;
@@ -3503,7 +3508,7 @@ void TPad::Paint(Option_t * /*option*/)
    // Close the 3D scene if we opened it. This must be done after modified
    // flag is cleared, as some viewers will invoke another paint by marking pad modified again
    if (began3DScene) {
-      fViewer3D->EndScene();
+      if(fViewer3D) fViewer3D->EndScene();
    }
 }
 
@@ -3741,7 +3746,7 @@ void TPad::PaintModified()
    // This must be done after modified flag is cleared, as some
    // viewers will invoke another paint by marking pad modified again
    if (began3DScene) {
-      fViewer3D->EndScene();
+      if(fViewer3D)fViewer3D->EndScene();
    }
 
    gVirtualPS = saveps;
@@ -3850,12 +3855,14 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 void TPad::CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y)
 {
    if (!start ||!stop ) return;
-   TObject *obj;
+   TObject *obj=nullptr;
    if (!fPrimitives) fPrimitives = new TList;
-   TIter next(start->GetListOfPrimitives());
+   TIter next(start->GetListOfPrimitives()->MakeIterator());
    while ((obj = next())) {
       if (obj->InheritsFrom(TPad::Class())) {
          if (obj == stop) break;
+         TPad* t=  dynamic_cast<TPad*>(obj);
+         if (!t) continue;
          ((TPad*)obj)->CopyBackgroundPixmap(x, y);
          ((TPad*)obj)->CopyBackgroundPixmaps((TPad*)obj, stop, x, y);
       }
@@ -6223,9 +6230,9 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    TPad *is_pad = dynamic_cast<TPad *>( object );
    TVirtualPad *padSave = 0;
    padSave = gPad;
-   if (is_pad) is_pad->GetMother()->cd();
+   if (is_pad && is_pad->GetMother()) is_pad->GetMother()->cd();
 
-   static TPad * tmpGuideLinePad;
+   static TPad * tmpGuideLinePad=nullptr;
 
    //delete all existing Guidelines and create new invisible pad
    if (tmpGuideLinePad) {
