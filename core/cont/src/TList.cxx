@@ -1120,7 +1120,7 @@ TObject *TListIter::Next()
          fCursor = fList->fFirst;
          fStarted = kTRUE;
       }
-      fCurCursor = fCursor;
+      if(fCurCursor!=fCursor)fCurCursor = fCursor;
       if (fCursor) {
          auto next = fCursor = fCursor->NextSP();
       }

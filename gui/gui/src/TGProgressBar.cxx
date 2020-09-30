@@ -270,7 +270,7 @@ void TGHProgressBar::DoRedraw()
    }
 
    fPosPix = Int_t(((Float_t)fWidth - (fBorderWidth << 1)) *
-             (fPos - fMin) / (fMax - fMin) +
+             (fPos - fMin) / std::max(1.0f,fMax - fMin) +
              fBorderWidth);
 
    Int_t pospix = fPosPix;
@@ -301,7 +301,7 @@ void TGHProgressBar::DoRedraw()
    if (fShowPos) {
       TString buf;
       if (fPercent)
-         buf = TString::Format("%d%%", Int_t((fPos-fMin)/(fMax-fMin)*100.));
+         buf = TString::Format("%d%%", Int_t((fPos-fMin)/std::max(1.0f,fMax-fMin)*100.));
       else
          buf = TString::Format(fFormat.Data(), fPos);
 
@@ -310,8 +310,8 @@ void TGHProgressBar::DoRedraw()
       gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
       UInt_t theight = max_ascent + max_descent;
 
-      x = (fWidth - twidth) >> 1;
-      y = (fHeight - theight) >> 1;
+      x = (Int_t)((fWidth - twidth)*0.5);
+      y = (Int_t)((fHeight - theight)*0.5);
 
       if (fDrawBar && fPosPix < Int_t(x+twidth))
          gVirtualX->ClearArea(fId, pospix, fBorderWidth,
@@ -366,7 +366,7 @@ void TGVProgressBar::DoRedraw()
    }
 
    fPosPix = Int_t(((Float_t)fHeight - (fBorderWidth << 1)) *
-             (fPos - fMin) / (fMax - fMin) +
+             (fPos - fMin) / std::max(1.0f,fMax - fMin) +
              fBorderWidth);
 
    if (fFillType == kSolidFill)
