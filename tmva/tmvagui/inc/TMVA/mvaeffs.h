@@ -16,7 +16,7 @@
 namespace TMVA{
 
    void mvaeffs(TString dataset, TString fin = "TMVA.root",
-                Float_t nSingal = 1000, Float_t nBackground = 1000,
+                Float_t nSignal = 1000, Float_t nBackground = 1000,
                 Bool_t useTMVAStyle = kTRUE, TString formula="S/sqrt(S+B)" );
 
    // this macro plots the signal and background efficiencies
