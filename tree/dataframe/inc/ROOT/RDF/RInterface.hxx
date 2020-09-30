@@ -2403,23 +2403,11 @@ private:
          treename = treename.substr(lastSlash + 1, treename.size());
       }
 
-      // add action node to functional graph and run event loop
-      std::unique_ptr<RDFInternal::RActionBase> actionPtr;
-      if (!ROOT::IsImplicitMTEnabled()) {
-         // single-thread snapshot
-         using Helper_t = RDFInternal::SnapshotHelper<ColumnTypes...>;
-         using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
-         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, validCols, columnList, options), validCols,
-                                      fProxiedPtr, fDefines));
-      } else {
-         // multi-thread snapshot
-         using Helper_t = RDFInternal::SnapshotHelperMT<ColumnTypes...>;
-         using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
-         actionPtr.reset(new Action_t(
-            Helper_t(fLoopManager->GetNSlots(), filename, dirname, treename, validCols, columnList, options), validCols,
-            fProxiedPtr, fDefines));
-      }
-
+      auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
+         std::string(filename), std::string(dirname), std::string(treename), columnList, options});
+      auto actionPtr =
+         RDFInternal::BuildAction<ColumnTypes...>(validCols, snapHelperArgs, fLoopManager->GetNSlots(), fProxiedPtr,
+                                                  RDFInternal::ActionTags::Snapshot{}, fDefines);
       fLoopManager->Book(actionPtr.get());
 
       return RDFInternal::CreateSnapshotRDF(validCols, fullTreename, filename, options.fLazy, *fLoopManager,
