@@ -1083,10 +1083,9 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
    // for an empty graph create histogram in [0,1][0,1]
    if (fNpoints <= 0) {
       if (!fHistogram) {
-         Bool_t add = TH1::AddDirectoryStatus();
-         TH1::AddDirectory(kFALSE);
+         // do not add the histogram to gDirectory
+         TDirectory::TContext ctx(nullptr);
          fHistogram = new TH2D(GetName(), GetTitle(), fNpx , 0., 1., fNpy, 0., 1.);
-         TH1::AddDirectory(add);
          fHistogram->SetBit(TH1::kNoStats);
       }
       return fHistogram;
@@ -1122,8 +1121,6 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
 
    // Book fHistogram if needed. It is not added in the current directory
    if (!fUserHisto) {
-      Bool_t add = TH1::AddDirectoryStatus();
-      TH1::AddDirectory(kFALSE);
       Double_t xmax  = GetXmaxE();
       Double_t ymax  = GetYmaxE();
       Double_t xmin  = GetXminE();
@@ -1154,12 +1151,12 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
          fHistogram->GetXaxis()->SetLimits(hxmin, hxmax);
          fHistogram->GetYaxis()->SetLimits(hymin, hymax);
       } else {
+         TDirectory::TContext ctx(nullptr); // to avoid adding fHistogram to gDirectory
          fHistogram = new TH2D(GetName(), GetTitle(),
                                fNpx , hxmin, hxmax,
                                fNpy, hymin, hymax);
          CreateInterpolator(oldInterp);
       }
-      TH1::AddDirectory(add);
       fHistogram->SetBit(TH1::kNoStats);
    } else {
       hxmin = fHistogram->GetXaxis()->GetXmin();
