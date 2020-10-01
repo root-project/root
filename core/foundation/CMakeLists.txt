@@ -44,7 +44,7 @@ if(root7)
   ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()
 
-ROOT_OBJECT_LIBRARY(Foundation ${FOUNDATION_SOURCES})
+ROOT_LINKER_LIBRARY(Foundation ${FOUNDATION_SOURCES})
 target_include_directories(Foundation PRIVATE
    ${FOUNDATION_V7_INC}
    ${CMAKE_SOURCE_DIR}/core/foundation/res
