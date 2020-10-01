@@ -484,8 +484,20 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       let protoIdcs = [0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0, 1, 2, 3, 1, 3, 0, 4, 7, 6, 4, 6, 5];
       let idxBuff = new Array(sec_idcs.length * protoIdcs.length);
+
+      let N = this.obj3d.eve_el.render_data.idxBuff.length / 2;
       for (let b = 0; b < sec_idcs.length; ++b) {
-         let idxOff = sec_idcs[b] * 8;
+         let idx = sec_idcs[b]
+         if (this.obj3d.eve_el.fDetIdsAsSecondaryIndices) {
+            for (let x = 0; x < N; ++x) {
+               if (this.obj3d.eve_el.render_data.idxBuff[x + N] === idx)
+               {
+                  idx=x;
+                  break;
+               }
+            }
+         }
+         let idxOff = idx * 8;
          for (let i = 0; i < protoIdcs.length; i++)
             idxBuff.push(idxOff + protoIdcs[i]);
       }
@@ -506,11 +518,21 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    {
       var t = this.obj3d.eve_el.fTitle || this.obj3d.eve_el.fName || "";
       var idx = this.extractIndex(intersect);
+      if (this.obj3d.eve_el.fDetIdsAsSecondaryIndices) {
+	 let N = this.obj3d.eve_el.render_data.idxBuff.length / 2;
+	 let id = this.obj3d.eve_el.render_data.idxBuff[N + idx];
+         return t + " idx=" + id;
+      }
       return t + " idx=" + idx;
    }
 
    BoxSetControl.prototype.elementSelected = function(indx)
    {
+       if (this.obj3d.eve_el.fDetIdsAsSecondaryIndices) {
+	  let N = this.obj3d.eve_el.render_data.idxBuff.length / 2;
+          indx = this.obj3d.eve_el.render_data.idxBuff[N + indx];
+       }
+
       this.invokeSceneMethod("processElementSelected", indx);
    }
 

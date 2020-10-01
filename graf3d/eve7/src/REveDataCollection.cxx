@@ -93,10 +93,11 @@ void REveDataItemList::ItemChanged(Int_t idx)
 
 void REveDataItemList::FillImpliedSelectedSet( Set_t& impSelSet)
 {
-   printf("REveDataCollection::FillImpliedSelectedSet colecction setsize %zu\n",  RefSelectedSet().size());
+   /*
+   printf("REveDataCollection::FillImpliedSelectedSet colecction setsize %zu\n",   RefSelectedSet().size());
    for (auto x : RefSelectedSet())
       printf("%d \n", x);
-
+   */
    _handler_fillimp( this ,  impSelSet);
 }
 
