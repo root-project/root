@@ -5,10 +5,10 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT io/minio package
+# CMakeLists.txt file for building ROOT io/iolite package
 ############################################################################
 
-ROOT_LINKER_LIBRARY(RMiniIO
+ROOT_LINKER_LIBRARY(ROOTIOLite
   src/RRawFile.cxx
   DEPENDENCIES
     Foundation

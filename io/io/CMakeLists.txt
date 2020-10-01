@@ -62,7 +62,7 @@ ROOT_LINKER_LIBRARY(RIO
   DEPENDENCIES
     Core
     Thread
-    RMiniIO
+    ROOTIOLite
 )
 
 target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)

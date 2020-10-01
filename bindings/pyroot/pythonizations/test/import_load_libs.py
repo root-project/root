@@ -33,7 +33,7 @@ class ImportLoadLibs(unittest.TestCase):
             'libTree',
             'libThread',
             'libRIO',
-            'libRMiniIO',
+            'libROOTIOLite',
             'libNet',
             'libImt',
             'libMathCore',
