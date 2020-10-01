@@ -43,10 +43,8 @@ class RooFitResult ;
 class RooAbsMoment ;
 class RooDerivative ;
 class RooVectorDataStore ;
-namespace RooHelpers {
-class BatchInterfaceAccessor;
-}
 namespace BatchHelpers {
+class BatchInterfaceAccessor;
 struct RunContext;
 }
 struct TreeReadBuffer; /// A space to attach TBranches
@@ -414,7 +412,7 @@ protected:
 
   //---------- Interface to access batch data ---------------------------
   //
-  friend class RooHelpers::BatchInterfaceAccessor;
+  friend class BatchHelpers::BatchInterfaceAccessor;
   void clearBatchMemory() {
     _batchData.clear();
     for (auto arg : _serverList) {
@@ -427,6 +425,7 @@ protected:
 
  private:
   void checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
+  void checkBatchComputation(const BatchHelpers::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
 
   const BatchHelpers::BatchData& batchData() const {
     return _batchData;
