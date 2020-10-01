@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief The Higgs to two photons analysis from the ATLAS Open Data 2020 release, with RDataFrame.
+## The Higgs to two photons analysis from the ATLAS Open Data 2020 release, with RDataFrame.
 ##
 ## This tutorial is the Higgs to two photons analysis from the ATLAS Open Data release in 2020
 ## (http://opendata.atlas.cern/release/2020/documentation/). The data was taken with the ATLAS detector
@@ -16,7 +16,7 @@
 ## \macro_output
 ##
 ## \date February 2020
-## \author Stefan Wunsch (KIT, CERN)
+## \author Stefan Wunsch
 
 import ROOT
 import os

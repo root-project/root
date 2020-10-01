@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -js
-/// \brief Show how NanoAOD files can be processed with RDataFrame.
+/// Show how NanoAOD files can be processed with RDataFrame.
 ///
 /// This tutorial illustrates how NanoAOD files can be processed with ROOT
 /// dataframes. The NanoAOD-like input files are filled with 66 mio. events
@@ -19,7 +19,7 @@
 /// \macro_output
 ///
 /// \date August 2018
-/// \author Stefan Wunsch (KIT, CERN)
+/// \author Stefan Wunsch
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"

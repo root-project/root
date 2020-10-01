@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook
-## \brief Read data from RDataFrame into Numpy arrays.
+## Read data from RDataFrame into Numpy arrays.
 ##
 ## \macro_code
 ## \macro_output

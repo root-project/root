@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -nodraw
-/// \brief Compare creation of a ROOT dataset with RDataFrame and TTree.
+/// Compare creation of a ROOT dataset with RDataFrame and TTree.
 ///
 /// This tutorial illustrates how simpler it can be to use a
 /// RDataFrame to create a dataset with respect to the usage

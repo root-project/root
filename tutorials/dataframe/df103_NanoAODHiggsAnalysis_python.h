@@ -6,7 +6,7 @@
 /// `ROOT.gInterpreter.Declare()` function.
 ///
 /// \date July 2019
-/// \author Stefan Wunsch (KIT, CERN), Vincenzo Eduardo Padulano (UniMiB, CERN)
+/// \authors Stefan Wunsch, Vincenzo Eduardo Padulano
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"
