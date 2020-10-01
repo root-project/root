@@ -197,12 +197,53 @@ BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const Colu
    TPRegexp re(R"(\breturn\b)");
    const bool hasReturnStmt = re.Match(expr) == 1;
 
+   static const std::vector<std::string> fundamentalTypes = {
+      "int",
+      "signed",
+      "signed int",
+      "Int_t",
+      "unsigned",
+      "unsigned int",
+      "UInt_t",
+      "double",
+      "Double_t",
+      "float",
+      "Float_t",
+      "char",
+      "Char_t",
+      "unsigned char",
+      "UChar_t",
+      "bool",
+      "Bool_t",
+      "short",
+      "short int",
+      "Short_t",
+      "long",
+      "long int",
+      "long long int",
+      "Long64_t",
+      "unsigned long",
+      "unsigned long int",
+      "ULong64_t",
+      "std::size_t",
+      "size_t",
+      "Ssiz_t"
+   };
+
    std::stringstream ss;
    ss << "[](";
    for (auto i = 0u; i < vars.size(); ++i) {
-      // We pass by reference to avoid expensive copies
-      // It can't be const reference in general, as users might want/need to call non-const methods on the values
-      ss << varTypes[i] << "& " << vars[i] << ", ";
+      std::string fullType;
+      const auto &type = varTypes[i];
+      if (std::find(fundamentalTypes.begin(), fundamentalTypes.end(), type) != fundamentalTypes.end()) {
+         // pass it by const value to help detect common mistakes such as if(x = 3)
+         fullType = "const " + type + " ";
+      } else {
+         // We pass by reference to avoid expensive copies
+         // It can't be const reference in general, as users might want/need to call non-const methods on the values
+         fullType = type + "& ";
+      }
+      ss << fullType << vars[i] << ", ";
    }
    if (!vars.empty())
       ss.seekp(-2, ss.cur);
