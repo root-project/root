@@ -13,11 +13,11 @@
 /// \class ROOT::TThreadExecutor
 /// \ingroup Parallelism
 /// \brief This class provides a simple interface to execute the same task
-/// multiple times in parallel, possibly with different arguments every
+/// multiple times in parallel threads, possibly with different arguments every
 /// time. This mimics the behaviour of python's pool.Map method.
 ///
 /// ### ROOT::TThreadExecutor::Map
-/// This class inherits its interfaces from ROOT::TExecutor\n.
+/// This class inherits its interfaces from ROOT::TExecutorCRTP\n.
 /// The two possible usages of the Map method are:\n
 /// * Map(F func, unsigned nTimes): func is executed nTimes with no arguments
 /// * Map(F func, T& args): func is executed on each element of the collection of arguments args
@@ -64,7 +64,7 @@
 /// the vector returned by Map due to optimization of the number of chunks.
 ///
 /// If this function is a binary operator, the "squashing" will be performed in parallel.
-/// This is exclusive to ROOT::TThreadExecutor and not any other ROOT::TExecutor-derived classes.\n
+/// This is exclusive to ROOT::TThreadExecutor and not any other ROOT::TExecutorCRTP-derived classes.\n
 /// An integer can be passed as the fourth argument indicating the number of chunks we want to divide our work in.
 /// This may be useful to avoid the overhead introduced when running really short tasks.
 ///
@@ -124,7 +124,7 @@ static T ParallelReduceHelper(const std::vector<T> &objs, const std::function<T(
 } // End NS Internal
 
 //////////////////////////////////////////////////////////////////////////
-/// Class constructor.
+/// \brief Class constructor.
 /// If the scheduler is active (e.g. because another TThreadExecutor is in flight, or ROOT::EnableImplicitMT() was
 /// called), work with the current pool of threads.
 /// If not, initialize the pool of threads, spawning nThreads. nThreads' default value, 0, initializes the
@@ -137,6 +137,14 @@ TThreadExecutor::TThreadExecutor(UInt_t nThreads)
    fTaskArenaW = ROOT::Internal::GetGlobalTaskArena(nThreads);
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// \brief Execute a function in parallel over the indices of a loop, delegating
+/// to tbb::parallel_for
+///
+/// \param start Start index of the loop.
+/// \param end End index of the loop.
+/// \param step Step size of the loop.
+/// \param f function to execute.
 void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step,
                                   const std::function<void(unsigned int i)> &f)
 {
@@ -147,18 +155,32 @@ void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned
    });
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// \brief "Reduce" in parallel an std::vector<double> into a single double value
+///
+/// \param objs A vector of elements to combine.
+/// \param redfunc Reduction function to combine the elements of the vector `objs`.
+/// \return A value result of combining the vector elements into a single object of the same type.
 double TThreadExecutor::ParallelReduce(const std::vector<double> &objs,
                                        const std::function<double(double a, double b)> &redfunc)
 {
    return fTaskArenaW->Access().execute([&] { return ROOT::Internal::ParallelReduceHelper<double>(objs, redfunc); });
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// \brief "Reduce" in parallel an std::vector<float> into a single float value
+///
+/// \param objs A vector of elements to combine.
+/// \param redfunc Reduction function to combine the elements of the vector `objs`.
+/// \return A value result of combining the vector elements into a single object of the same type.
 float TThreadExecutor::ParallelReduce(const std::vector<float> &objs,
                                       const std::function<float(float a, float b)> &redfunc)
 {
    return fTaskArenaW->Access().execute([&] { return ROOT::Internal::ParallelReduceHelper<float>(objs, redfunc); });
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// \brief Returns the number of worker threads in the task arena.
 unsigned TThreadExecutor::GetPoolSize()
 {
    return fTaskArenaW->TaskArenaSize();
