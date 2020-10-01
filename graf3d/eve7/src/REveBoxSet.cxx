@@ -95,8 +95,7 @@ void REveBoxSet::Reset(REveBoxSet::EBoxType_e boxType, Bool_t valIsCol, Int_t ch
    fBoxType      = boxType;
    fValueIsColor = valIsCol;
    fDefaultValue = valIsCol ? 0 : kMinInt;
-   if (fOwnIds)
-      ReleaseIds();
+   ReleaseIds();
    fPlex.Reset(SizeofAtom(fBoxType), chunkSize);
 }
 
@@ -106,8 +105,7 @@ void REveBoxSet::Reset(REveBoxSet::EBoxType_e boxType, Bool_t valIsCol, Int_t ch
 
 void REveBoxSet::Reset()
 {
-   if (fOwnIds)
-      ReleaseIds();
+   ReleaseIds();
    fPlex.Reset(SizeofAtom(fBoxType), TMath::Max(fPlex.N(), 64));
 }
 
@@ -390,7 +388,6 @@ void REveBoxSet::BuildRenderData()
    //
    if (fSingleColor == false)
    {
-
       REveChunkManager::iterator bi(fPlex);
       while (bi.next())
       {
@@ -418,6 +415,14 @@ void REveBoxSet::BuildRenderData()
 
             fRenderData->PushI(value);
          }
+      }
+   }
+
+   if (!fDigitIds.empty())
+   {
+      for (int i = 0; i < fPlex.N(); ++i)
+      {
+         fRenderData->PushI(GetId(i));
       }
    }
 }

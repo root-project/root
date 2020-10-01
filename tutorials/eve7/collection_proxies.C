@@ -298,8 +298,10 @@ private:
                               x + a + RND_BOX(d), y + a + RND_BOX(d), z + a + RND_BOX(d),
                               x + a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d) };
          boxset->AddBox(verts);
+         boxset->DigitId(h);         
          boxset->DigitColor(item->GetVisible() ? collection->GetMainColor() : 0); // set color on the last one
       }
+      boxset->GetPlex()->Refit();
       boxset->StampObjProps();
    }
 
@@ -310,6 +312,7 @@ public:
       // printf("-------------------------FBOXSET proxy builder %d \n",  collection->GetNItems());
       auto boxset = new REveBoxSet();
       boxset->SetAlwaysSecSelect(1);
+      boxset->SetDetIdsAsSecondaryIndices(true);
       boxset->SetSelectionMaster(((REveDataCollection*)collection)->GetItemList());
       buildBoxSet(boxset);
       product->AddElement(boxset);
@@ -640,7 +643,6 @@ void collection_proxies(bool proj=true)
       xyManager->addCollection(trackCollection, true);
    }
 
-
    if (1)
    {
       REveDataCollection* jetCollection = new REveDataCollection("XYJets");
@@ -654,6 +656,7 @@ void collection_proxies(bool proj=true)
       REveDataCollection* hitCollection = new REveDataCollection("RecHits");
       hitCollection->SetItemClass(RecHit::Class());
       hitCollection->SetMainColor(kBlue);
+      hitCollection->SetFilterExpr("i.fPt > 5");
       xyManager->addCollection(hitCollection, false);
    }
 
