@@ -667,7 +667,7 @@ fWeight(kDefWeight)
 {
    //check consistency of histograms
    if(CheckConsistency(passed,total)) {
-      // do not add cloned histogram to gDirectory
+      // do not add cloned histograms to gDirectory
       TDirectory::TContext ctx(nullptr);
       fTotalHistogram = (TH1*)total.Clone();
       fPassedHistogram = (TH1*)passed.Clone();
@@ -687,7 +687,7 @@ fWeight(kDefWeight)
       Error("TEfficiency(const TH1&,const TH1&)","histograms are not consistent -> results are useless");
       Warning("TEfficiency(const TH1&,const TH1&)","using two empty TH1D('h1','h1',10,0,10)");
 
-      // do not add cloned histogram to gDirectory
+      // do not add new created histograms to gDirectory
       TDirectory::TContext ctx(nullptr);
       fTotalHistogram = new TH1D("h1_total","h1 (total)",10,0,10);
       fPassedHistogram = new TH1D("h1_passed","h1 (passed)",10,0,10);
@@ -730,7 +730,7 @@ fPaintGraph(0),
 fPaintHisto(0),
 fWeight(kDefWeight)
 {
-   // do not add cloned histogram to gDirectory
+   // do not add new created histograms to gDirectory
    TDirectory::TContext ctx(nullptr);
    fTotalHistogram = new TH1D("total","total",nbins,xbins);
    fPassedHistogram = new TH1D("passed","passed",nbins,xbins);
@@ -768,7 +768,7 @@ fPaintGraph(0),
 fPaintHisto(0),
 fWeight(kDefWeight)
 {
-   // do not add cloned histogram to gDirectory
+   // do not add new created histograms to gDirectory
    TDirectory::TContext ctx(nullptr);
    fTotalHistogram = new TH1D("total","total",nbinsx,xlow,xup);
    fPassedHistogram = new TH1D("passed","passed",nbinsx,xlow,xup);
@@ -810,7 +810,7 @@ fPaintGraph(0),
 fPaintHisto(0),
 fWeight(kDefWeight)
 {
-   // do not add cloned histogram to gDirectory
+   // do not add new created histograms to gDirectory
    TDirectory::TContext ctx(nullptr);
    fTotalHistogram = new TH2D("total","total",nbinsx,xlow,xup,nbinsy,ylow,yup);
    fPassedHistogram = new TH2D("passed","passed",nbinsx,xlow,xup,nbinsy,ylow,yup);
@@ -852,7 +852,7 @@ fPaintGraph(0),
 fPaintHisto(0),
 fWeight(kDefWeight)
 {
-   // do not add cloned histogram to gDirectory
+   // do not add new created histograms to gDirectory
    TDirectory::TContext ctx(nullptr);
    fTotalHistogram = new TH2D("total","total",nbinsx,xbins,nbinsy,ybins);
    fPassedHistogram = new TH2D("passed","passed",nbinsx,xbins,nbinsy,ybins);
@@ -898,7 +898,7 @@ fPaintGraph(0),
 fPaintHisto(0),
 fWeight(kDefWeight)
 {
-   // do not add cloned histogram to gDirectory
+   // do not add new created histograms to gDirectory
    TDirectory::TContext ctx(nullptr);
    fTotalHistogram = new TH3D("total","total",nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup);
    fPassedHistogram = new TH3D("passed","passed",nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup);
@@ -944,7 +944,7 @@ fPaintGraph(0),
 fPaintHisto(0),
 fWeight(kDefWeight)
 {
-   // do not add cloned histogram to gDirectory
+   // do not add new created histograms to gDirectory
    TDirectory::TContext ctx(nullptr);
    fTotalHistogram = new TH3D("total","total",nbinsx,xbins,nbinsy,ybins,nbinsz,zbins);
    fPassedHistogram = new TH3D("passed","passed",nbinsx,xbins,nbinsy,ybins,nbinsz,zbins);
@@ -987,7 +987,7 @@ fWeight(rEff.fWeight)
    // copy TObject bits
    ((TObject&)rEff).Copy(*this);
 
-   // do not add cloned histogram to gDirectory
+   // do not add cloned histograms to gDirectory
    {
       TDirectory::TContext ctx(nullptr);
       fTotalHistogram = (TH1*)((rEff.fTotalHistogram)->Clone());
