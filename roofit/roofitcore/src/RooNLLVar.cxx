@@ -43,6 +43,7 @@ In extended mode, a
 #include "RooRealSumPdf.h"
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
+#include "RunContext.h"
 #ifdef ROOFIT_CHECK_CACHED_VALUES
 #include "BatchHelpers.h"
 #endif
@@ -442,18 +443,46 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute probabilites of all data events. Use faster batch interface.
+/// \param[in] stepSize Stride when moving through the dataset.
+///   \note For batch computations, the step size **must** be one.
+/// \param[in] firstEvent  First event to be processed.
+/// \param[in] lastEvent   First event not to be processed.
+/// \return Tuple with (Kahan sum of probabilities, carry of kahan sum, sum of weights)
 std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const
 {
   if (stepSize != 1) {
     throw std::invalid_argument(std::string("Error in ") + __FILE__ + ": Step size for batch computations can only be 1.");
   }
 
+#ifdef ROOFIT_NEW_BATCH_INTERFACE
+  auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
+  BatchHelpers::RunContext evalData = _dataClone->getBatches(firstEvent, lastEvent-firstEvent);
+
+  auto results = pdfClone->getLogValBatch(evalData, _normSet);
+#else
   auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
 
   auto results = pdfClone->getLogValBatch(firstEvent, lastEvent-firstEvent, _normSet);
-
+#endif
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
+
+#ifdef ROOFIT_NEW_BATCH_INTERFACE
+  for (std::size_t evtNo = firstEvent; evtNo < lastEvent; evtNo += (lastEvent-firstEvent)/100) {
+    _dataClone->get(evtNo);
+    assert(_dataClone->valid());
+    pdfClone->getValV(_normSet);
+    try {
+      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, evalData, evtNo, _normSet);
+    } catch (std::exception& e) {
+      std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
+          << e.what() << std::endl;
+    }
+  }
+
+#else
   for (std::size_t evtNo = firstEvent; evtNo < lastEvent; ++evtNo) {
     _dataClone->get(evtNo);
     assert(_dataClone->valid());
@@ -465,6 +494,8 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
           << e.what() << std::endl;
     }
   }
+#endif
+
 #endif
 
 
