@@ -778,8 +778,12 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
   
 }
 
-std::pair<const RooArgSet*, RooAddPdf::CacheElem*> RooAddPdf::getNormAndCache() const {
-  const RooArgSet* nset = _normSet ; 
+////////////////////////////////////////////////////////////////////////////////
+/// Look up projection cache and per-PDF norm sets. If a PDF doesn't have a special
+/// norm set, use the `defaultNorm`. If `defaultNorm == nullptr`, use the member
+/// _normSet.
+std::pair<const RooArgSet*, RooAddPdf::CacheElem*> RooAddPdf::getNormAndCache(const RooArgSet* defaultNorm) const {
+  const RooArgSet* nset = defaultNorm ? defaultNorm : _normSet;
 
   if (nset==0 || nset->getSize()==0) {
     if (_refCoefNorm.getSize()!=0) {
