@@ -21,7 +21,7 @@
 /// \macro_image
 ///
 /// \date June 2018
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 void df019_Cache()
 {

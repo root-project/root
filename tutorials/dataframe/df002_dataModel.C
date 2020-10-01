@@ -10,7 +10,7 @@
 /// \macro_image
 ///
 /// \date December 2016
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 using FourVector = ROOT::Math::XYZTVector;
 using FourVectorVec = std::vector<FourVector>;

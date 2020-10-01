@@ -10,7 +10,7 @@
 /// \macro_code
 ///
 /// \date August 2017
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 // ##This is the classic way of creating a ROOT dataset
 // The steps are:

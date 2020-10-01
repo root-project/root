@@ -7,7 +7,7 @@
 /// \macro_image
 ///
 /// \date December 2016
-/// \authors Axel Naumann, Danilo Piparo
+/// \authors Axel Naumann, Danilo Piparo (CERN)
 
 auto Select = [](ROOT::RDataFrame &dataFrame) {
    using Farray_t = ROOT::VecOps::RVec<float>;

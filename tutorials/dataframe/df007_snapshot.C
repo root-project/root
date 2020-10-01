@@ -9,7 +9,7 @@
 /// \macro_code
 ///
 /// \date April 2017
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.

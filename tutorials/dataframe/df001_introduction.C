@@ -11,7 +11,7 @@
 /// \macro_output
 ///
 /// \date December 2016
-/// \author Enrico Guiraud
+/// \author Enrico Guiraud (CERN)
 
 // ## Preparation
 

@@ -14,7 +14,7 @@
 /// \macro_code
 ///
 /// \date September 2017
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 int df010_trivialDataSource()
 {

@@ -10,7 +10,7 @@
 /// \macro_output
 ///
 /// \date July 2018
-/// \authors Enrico Guiraud, Danilo Piparo, Massimo Tumolo
+/// \authors Enrico Guiraud, Danilo Piparo (CERN), Massimo Tumolo (Politecnico di Torino)
 
 void df023_aggregate()
 {

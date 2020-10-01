@@ -10,7 +10,7 @@
 /// \macro_code
 ///
 /// \date September 2017
-/// \author Enrico Guiraud
+/// \author Enrico Guiraud (CERN)
 
 using namespace ROOT; // RDataFrame lives in here
 

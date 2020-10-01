@@ -9,7 +9,7 @@
 ## \macro_output
 ##
 ## \date March 2017
-## \author Danilo Piparo
+## \author Danilo Piparo (CERN)
 
 import ROOT
 

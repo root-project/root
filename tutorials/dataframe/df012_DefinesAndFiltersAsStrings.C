@@ -10,7 +10,7 @@
 /// \macro_output
 ///
 /// \date October 2017
-/// \author Guilherme Amadio
+/// \author Guilherme Amadio (CERN)
 
 void df012_DefinesAndFiltersAsStrings()
 {

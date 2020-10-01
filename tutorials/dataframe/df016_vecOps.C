@@ -10,7 +10,7 @@
 /// \macro_image
 ///
 /// \date February 2018
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 using ROOT::RDataFrame;
 using namespace ROOT::VecOps;

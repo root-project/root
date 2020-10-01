@@ -16,7 +16,7 @@
 ## \macro_output
 ##
 ## \date February 2020
-## \author Stefan Wunsch
+## \author Stefan Wunsch (KIT, CERN)
 
 import ROOT
 import os

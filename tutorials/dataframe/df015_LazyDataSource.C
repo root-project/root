@@ -17,7 +17,7 @@
 /// \macro_image
 ///
 /// \date February 2018
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 int df015_LazyDataSource()
 {

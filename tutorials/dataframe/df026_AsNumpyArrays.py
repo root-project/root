@@ -7,7 +7,7 @@
 ## \macro_output
 ##
 ## \date December 2018
-## \author Stefan Wunsch
+## \author Stefan Wunsch (KIT, CERN)
 
 import ROOT
 from sys import exit

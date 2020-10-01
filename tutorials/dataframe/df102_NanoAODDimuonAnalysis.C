@@ -19,7 +19,7 @@
 /// \macro_output
 ///
 /// \date August 2018
-/// \author Stefan Wunsch
+/// \author Stefan Wunsch (KIT, CERN)
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"

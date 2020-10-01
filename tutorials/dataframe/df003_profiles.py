@@ -11,7 +11,7 @@
 ## \macro_image
 ##
 ## \date February 2017
-## \author Danilo Piparo
+## \author Danilo Piparo (CERN)
 
 import ROOT
 

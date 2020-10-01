@@ -6,7 +6,7 @@
 /// \macro_code
 ///
 /// \date July 2018
-/// \author Enrico Guiraud
+/// \author Enrico Guiraud (CERN)
 
 void df020_helpers()
 {

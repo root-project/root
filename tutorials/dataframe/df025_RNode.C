@@ -12,7 +12,7 @@
 /// \macro_output
 ///
 /// \date June 2020
-/// \authors Danilo Piparo, Enrico Guiraud
+/// \authors Danilo Piparo, Enrico Guiraud (CERN)
 
 /// A generic function that takes an RDF object and applies a string filter
 ROOT::RDF::RNode AddFilter(ROOT::RDF::RNode node, string_view filterStr)

@@ -10,7 +10,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Danilo Piparo
+## \author Danilo Piparo (CERN)
 
 import ROOT
 

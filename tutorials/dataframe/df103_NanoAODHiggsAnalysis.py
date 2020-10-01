@@ -33,7 +33,7 @@
 ## \macro_output
 ##
 ## \date July 2019
-## \authors Stefan Wunsch, Vincenzo Eduardo Padulano
+## \authors Stefan Wunsch (KIT, CERN), Vincenzo Eduardo Padulano (UniMiB, CERN)
 
 import ROOT
 import os

@@ -8,7 +8,7 @@
 /// \macro_code
 ///
 /// \date June 2017
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 void df008_createDataSetFromScratch()
 {

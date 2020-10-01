@@ -17,7 +17,7 @@
 /// \macro_image
 ///
 /// \date October 2017
-/// \author Enric Tejedor
+/// \author Enric Tejedor (CERN)
 
 int df014_CSVDataSource()
 {

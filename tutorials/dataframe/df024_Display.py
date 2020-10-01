@@ -9,7 +9,7 @@
 ## \macro_output
 ##
 ## \date August 2018
-## \authors Enrico Guiraud, Danilo Piparo, Enric Tejedor Saavedra, Massimo Tumolo
+## \authors Enrico Guiraud, Danilo Piparo, Enric Tejedor Saavedra (CERN), Massimo Tumolo (Politecnico di Torino)
 
 import ROOT
 

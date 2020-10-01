@@ -10,7 +10,7 @@
 /// \macro_output
 ///
 /// \date April 2018
-/// \authors Enrico Guiraud, Danilo Piparo
+/// \authors Enrico Guiraud, Danilo Piparo (CERN)
 
 // This is a custom action which respects a well defined interface. It supports parallelism,
 // in the sense that it behaves correctly if implicit multi threading is enabled.

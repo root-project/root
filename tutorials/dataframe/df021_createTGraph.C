@@ -7,7 +7,7 @@
 /// \macro_image
 ///
 /// \date July 2018
-/// \authors Enrico Guiraud, Danilo Piparo, Massimo Tumolo
+/// \authors Enrico Guiraud, Danilo Piparo (CERN), Massimo Tumolo (Politecnico di Torino)
 
 
 

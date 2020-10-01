@@ -10,7 +10,7 @@
 ## \macro_image
 ##
 ## \date March 2018
-## \authors Danilo Piparo, Andre Vieira Silva
+## \authors Danilo Piparo (CERN), Andre Vieira Silva
 
 import ROOT
 
