@@ -702,9 +702,10 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
       }		
       if (coefSum==0.) {
         coutW(Eval) << "RooAddPdf::updateCoefCache(" << GetName() << ") WARNING: sum of coefficients is zero 0" << endl ;
-      } else {	
+      } else {
+        const double invCoefSum = 1./coefSum;
         for (int j=0; j < _coefList.getSize(); j++) {
-          myCoefCache[j] /= coefSum;
+          myCoefCache[j] *= invCoefSum;
         }
       }
     } else {
