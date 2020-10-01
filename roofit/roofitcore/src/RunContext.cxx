@@ -21,10 +21,25 @@
 
 namespace BatchHelpers {
 
+/// Check if there is a span of data corresponding to the variable in this proxy.
 RooSpan<const double> RunContext::getBatch(const RooArgProxy& proxy) const {
-  auto item = spans.find(static_cast<const RooAbsReal*>(proxy.absArg()));
+  return getBatch(static_cast<const RooAbsReal*>(proxy.absArg()));
+}
+
+/// Check if there is a span of data corresponding to the object passed as owner.
+RooSpan<const double> RunContext::getBatch(const RooAbsReal* owner) const {
+  const auto item = spans.find(owner);
   if (item != spans.end())
     return item->second;
+
+  return {};
+}
+
+/// Check if there is a writable span of data corresponding to the object passed as owner.
+RooSpan<double> RunContext::getWritableBatch(const RooAbsReal* owner) {
+  auto item = ownedMemory.find(owner);
+  if (item != ownedMemory.end())
+    return RooSpan<double>(item->second);
 
   return {};
 }
