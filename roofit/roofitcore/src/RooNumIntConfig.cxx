@@ -224,7 +224,7 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
   static RooArgSet dummy ;
   RooArgSet* config = (RooArgSet*) _configSets.FindObject(name) ;
   if (!config) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::getIntegrator: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::getConfigSection: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
     return dummy ;
   }
   return *config ;
