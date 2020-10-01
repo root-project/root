@@ -20,20 +20,20 @@
 ///
 /// \class ROOT::TExecutorCRTP
 /// \brief This class defines an interface to execute the same task
-/// multiple times in parallel, possibly with different arguments every
+/// multiple times, possibly in parallel and with different arguments every
 /// time. The classes implementing it mimic the behaviour of python's pool.Map method.
 ///
-/// ###ROOT::TExecutorCRTP::Map
+/// ###ROOT::TExecutorCRTP<subc>::Map
 /// The two possible usages of the Map method are:\n
 /// * `Map(F func, unsigned nTimes)`: func is executed nTimes with no arguments
 /// * `Map(F func, T& args)`: func is executed on each element of the collection of arguments args
 ///
 /// For either signature, func is executed as many times as needed by a pool of
-/// nThreads threads; It defaults to the number of cores.\n
+/// n workers; It defaults to the number of cores.\n
 /// A collection containing the result of each execution is returned.\n
 /// **Note:** the user is responsible for the deletion of any object that might
-/// be created upon execution of func, returned objects included. ROOT::TExecutorCRTP never
-/// deletes what it returns, it simply forgets it.\n
+/// be created upon execution of func, returned objects included. ROOT::TExecutorCRTP derived classes
+///  never delete what they return, they simply forget it.\n
 ///
 /// \param func
 /// \parblock
@@ -54,6 +54,22 @@
 /// #### Return value:
 /// An std::vector. The elements in the container
 /// will be the objects returned by func.
+///
+/// ### ROOT::TExecutorCRTP<subc>::MapReduce
+/// This set of methods behaves exactly like Map, but takes an additional
+/// function as a third argument. This function is applied to the set of
+/// objects returned by the corresponding Map execution to "squash" them
+/// to a single object. This function should be independent of the size of
+/// the vector returned by Map due to optimization of the number of chunks.
+///
+/// #### Examples:
+/// ~~~{.cpp}
+/// root[] ROOT::TProcessExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](std::vector<int> v) { return std::accumulate(v.begin(), v.end(), 0); })
+/// root[] ROOT::TThreadExecutor pool; auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
+/// ~~~
+///
+//////////////////////////////////////////////////////////////////////////
+
 
 namespace ROOT {
 
@@ -61,9 +77,11 @@ template<class subc>
 class TExecutorCRTP {
 public:
    explicit TExecutorCRTP() = default;
-   explicit TExecutorCRTP(size_t /* nThreads */ ){};
+   explicit TExecutorCRTP(size_t /* nWorkers */ ){};
 
-   template< class F, class... T> // Don't allow mapping functions that return references. The resulting vector elements must be assignable, references aren't.
+   /// type definition in used in templated functions for not allowing mapping functions that return references.
+   /// The resulting vector elements must be assignable, references aren't.
+   template< class F, class... T>
    using noReferenceCond = typename std::enable_if<"Function can't return a reference" && !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
 
    // Map
@@ -99,7 +117,7 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Execute a function without arguments.
+/// \brief Execute a function without arguments several times.
 ///
 /// \param func Function to be executed.
 /// \param nTimes Number of times function should be called.
@@ -142,7 +160,7 @@ auto TExecutorCRTP<subc>::Map(F func, std::initializer_list<T> args) -> std::vec
 /// \brief Execute a function over the elements of a vector
 ///
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
-/// \param args vector of elements passed as an argument to `func`.
+/// \param args Vector of elements passed as an argument to `func`.
 /// \return A vector with the results of the function calls.
 template<class subc> template<class F, class T, class Cond>
 auto TExecutorCRTP<subc>::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
@@ -183,7 +201,7 @@ auto TExecutorCRTP<subc>::MapReduce(F func, std::initializer_list<T> args, R red
 /// \brief Execute a function over the elements of a vector (Map) and accumulate the results into a single value (Reduce).
 ///
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
-/// \param args vector of elements passed as an argument to `func`.
+/// \param args Vector of elements passed as an argument to `func`.
 /// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template<class subc> template<class F, class T, class Cond>
@@ -195,7 +213,8 @@ T* TExecutorCRTP<subc>::MapReduce(F func, std::vector<T*> &args)
 //////////////////////////////////////////////////////////////////////////
 /// \brief "Reduce" an std::vector into a single object by using the object's Merge method.
 ///
-/// \param mergeObjs a vector of ROOT objects implementing the Merge method
+/// \param mergeObjs A vector of ROOT objects implementing the Merge method
+/// \return An object result of merging the vector elements into one.
 template<class subc> template<class T>
 T* TExecutorCRTP<subc>::Reduce(const std::vector<T*> &mergeObjs)
 {
