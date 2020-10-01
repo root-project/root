@@ -167,25 +167,12 @@ private:
    /// A vector containg partial reductions' results is returned.
    template<class F, class R, class Cond>
    auto TExecutor::Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type> {
-      using retType = decltype(func());
-      std::vector<retType> res;;
-      switch(fExecPolicy){
-         case ROOT::Internal::ExecutionPolicy::kSerial:
-            (void) nChunks;
-            res = fSeqPool->Map(func, nTimes, redfunc);
-            break;
 #ifdef R__USE_IMT
-         case ROOT::Internal::ExecutionPolicy::kMultithread:
-            res = fThreadPool->Map(func, nTimes, redfunc, nChunks);
-            break;
-#endif
-         case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-            res = fProcPool->Map(func, nTimes, redfunc, nChunks);
-            break;
-         default:
-            break;
+      if (fExecPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
+         return fThreadPool->Map(func, nTimes, redfunc, nChunks);
       }
-      return res;
+#endif
+      return Map(func, nTimes);
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -224,25 +211,12 @@ private:
    /// A vector containg partial reductions' results is returned.
    template<class F, class INTEGER, class R, class Cond>
    auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
-      using retType = decltype(func(args.front()));
-      std::vector<retType> res;;
-      switch(fExecPolicy){
-         case ROOT::Internal::ExecutionPolicy::kSerial:
-            (void) nChunks;
-            res = fSeqPool->Map(func, args, redfunc);
-            break;
 #ifdef R__USE_IMT
-         case ROOT::Internal::ExecutionPolicy::kMultithread:
-            res = fThreadPool->Map(func, args, redfunc, nChunks);
-            break;
-#endif
-         case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-            res = fProcPool->Map(func, args, redfunc, nChunks);
-            break;
-         default:
-            break;
+      if (fExecPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
+         return fThreadPool->Map(func, args, redfunc, nChunks);
       }
-      return res;
+#endif
+      return Map(func, args);
    }
 
    /// \cond
@@ -253,25 +227,12 @@ private:
    /// A vector containg partial reductions' results is returned.
    template<class F, class T, class R, class Cond>
    auto TExecutor::Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type> {
-      using retType = decltype(func(args.front()));
-      std::vector<retType> res;;
-      switch(fExecPolicy){
-         case ROOT::Internal::ExecutionPolicy::kSerial:
-            (void) nChunks;
-            res = fSeqPool->Map(func, args, redfunc);
-            break;
 #ifdef R__USE_IMT
-         case ROOT::Internal::ExecutionPolicy::kMultithread:
-            res = fThreadPool->Map(func, args, redfunc, nChunks);
-            break;
-#endif
-         case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-            res = fProcPool->Map(func, args, redfunc, nChunks);
-            break;
-         default:
-            break;
+      if (fExecPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
+         return fThreadPool->Map(func, args, redfunc, nChunks);
       }
-      return res;
+#endif
+      return Map(func, args);
    }
 
     //////////////////////////////////////////////////////////////////////////
