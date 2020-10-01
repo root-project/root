@@ -98,7 +98,7 @@ print("Events passing both: %s" %evts_cutb1_cutb1b2_result.GetValue())
 # Often, operations need to be carried out on quantities calculated starting
 # from the ones present in the columns. We'll create in this example a third
 # column the values of which are the sum of the *b1* and *b2* ones, entry by
-# entry. The way in which the new quantity is defined is via a run-able.
+# entry. The way in which the new quantity is defined is via a callable.
 # It is important to note two aspects at this point:
 # - The value is created on the fly only if the entry passed the existing
 # filters.
