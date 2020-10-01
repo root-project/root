@@ -49,6 +49,12 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None):
     Returns:
         dict: Dict with column names as keys and 1D numpy arrays with content as values
     """
+    # Sanitize input arguments
+    if isinstance(columns, str):
+        raise TypeError("The columns argument requires a list of strings")
+    if isinstance(exclude, str):
+        raise TypeError("The exclude argument requires a list of strings")
+
     # Import numpy and numpy.array derived class lazily
     try:
         import numpy
