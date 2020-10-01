@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Multidimensional models: projecting p.d.f and data slices in discrete observables
+## Multidimensional models: projecting pdf and data slices in discrete observables
 ##
 ## \macro_code
 ##

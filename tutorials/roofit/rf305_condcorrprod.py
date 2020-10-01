@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Multidimensional models: multi-dimensional p.d.f.s with conditional p.d.fs in product
+## Multidimensional models: multi-dimensional pdfs with conditional pdfs in product
 ##
 ## `pdf = gauss(x,f(y),sx | y ) * gauss(y,ms,sx)`    with `f(y) = a0 + a1*y`
 ##

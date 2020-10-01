@@ -1,15 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Special p.d.f.'s: using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
+/// Special pdf's: using a product of an (acceptance) efficiency and a pdf as pdf
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"

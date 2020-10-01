@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///
-///
-/// \brief Special p.d.f.'s: unbinned maximum likelihood fit of an efficiency eff(x) function
+/// Special pdf's: unbinned maximum likelihood fit of an efficiency eff(x) function
 /// to a dataset D(x,cut), cut is a category encoding a selection whose efficiency as function
 /// of x should be described by eff(x)
 ///
@@ -56,13 +54,13 @@ void rf702_efficiencyfit_2D(Bool_t flat = kFALSE)
    // C o n s t r u c t   c o n d i t i o n a l    e f f i c i e n c y   p d f   E ( c u t | x , y )
    // ---------------------------------------------------------------------------------------------
 
-   // Construct efficiency p.d.f eff(cut|x)
+   // Construct efficiency pdf eff(cut|x)
    RooEfficiency effPdf("effPdf", "effPdf", effFunc, cut, "accept");
 
    // G e n e r a t e   d a t a   ( x , y , c u t )   f r o m   a   t o y   m o d e l
    // -------------------------------------------------------------------------------
 
-   // Construct global shape p.d.f shape(x) and product model(x,cut) = eff(cut|x)*shape(x)
+   // Construct global shape pdf shape(x) and product model(x,cut) = eff(cut|x)*shape(x)
    // (These are _only_ needed to generate some toy MC here to be used later)
    RooPolynomial shapePdfX("shapePdfX", "shapePdfX", x, RooConst(flat ? 0 : -0.095));
    RooPolynomial shapePdfY("shapePdfY", "shapePdfY", y, RooConst(flat ? 0 : +0.095));
@@ -75,7 +73,7 @@ void rf702_efficiencyfit_2D(Bool_t flat = kFALSE)
    // F i t   c o n d i t i o n a l   e f f i c i e n c y   p d f   t o   d a t a
    // --------------------------------------------------------------------------
 
-   // Fit conditional efficiency p.d.f to data
+   // Fit conditional efficiency pdf to data
    effPdf.fitTo(*data, ConditionalObservables(RooArgSet(x, y)));
 
    // P l o t   f i t t e d ,   d a t a   e f f i c i e n c y

@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Validation and MC studies:
+/// Validation and MC studies:
 /// RooMCStudy - using separate fit and generator models, using the chi^2 calculator model
 /// Running a biased fit model against an optimal fit.
 ///
@@ -11,7 +9,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"

@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Special p.d.f.'s: using a p.d.f defined by a sum of real-valued amplitude components
+## Special pdf's: using a pdf defined by a sum of real-valued amplitude components
 ##
 ## \macro_code
 ##

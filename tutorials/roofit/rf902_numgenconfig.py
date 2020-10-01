@@ -1,9 +1,8 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-##
-## \brief Numeric algorithm tuning: configuration and customization of how MC sampling algorithms
-## on specific p.d.f.s are executed
+## Numeric algorithm tuning: configuration and customization of how MC sampling algorithms
+## on specific pdfs are executed
 ##
 ## \macro_code
 ##
@@ -16,7 +15,7 @@ import ROOT
 # Adjust global MC sampling strategy
 # ------------------------------------------------------------------
 
-# Example p.d.f. for use below
+# Example pdf for use below
 x = ROOT.RooRealVar("x", "x", 0, 10)
 model = ROOT.RooChebychev("model", "model", x, ROOT.RooArgList(
     ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(0.5), ROOT.RooFit.RooConst(-0.1)))

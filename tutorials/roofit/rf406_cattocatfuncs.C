@@ -1,14 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///
-///
-/// \brief Data and categories: demonstration of discrete-->discrete (invertible) functions
+/// Data and categories: demonstration of discrete-->discrete (invertible) functions
 ///
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"

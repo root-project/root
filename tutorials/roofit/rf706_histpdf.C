@@ -1,15 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Special p.d.f.'s: histogram-based p.d.f.s and functions
+/// Special pdf's: histogram-based pdfs and functions
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"

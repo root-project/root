@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Plot a PDF in disjunct ranges, and get normalisation right.
+/// Plot a PDF in disjunct ranges, and get normalisation right.
 ///
 /// Usually, when comparing a fit to data, one should first plot the data, and then the PDF.
 /// In this case, the PDF is automatically normalised to match the number of data events in the plot.
@@ -18,7 +16,7 @@
 /// \macro_code
 /// \macro_output
 ///
-/// \date 03/2020
+/// \date March 2020
 /// \author Stephan Hageboeck
 
 #include <RooDataSet.h>

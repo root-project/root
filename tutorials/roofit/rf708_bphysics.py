@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Special p.d.f.'s: special decay pdf for B physics with mixing and/or CP violation
+## Special pdf's: special decay pdf for B physics with mixing and/or CP violation
 ##
 ## \macro_code
 ##

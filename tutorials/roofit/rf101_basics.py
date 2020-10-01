@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief This tutorial illustrates the basic features of RooFit.
+## This tutorial illustrates the basic features of RooFit.
 ##
 ## \macro_code
 ##
@@ -19,11 +18,11 @@ x = ROOT.RooRealVar("x", "x", -10, 10)
 mean = ROOT.RooRealVar("mean", "mean of gaussian", 1, -10, 10)
 sigma = ROOT.RooRealVar("sigma", "width of gaussian", 1, 0.1, 10)
 
-# Build gaussian p.d.f in terms of x,mean and sigma
+# Build gaussian pdf in terms of x,mean and sigma
 gauss = ROOT.RooGaussian("gauss", "gaussian PDF", x, mean, sigma)
 
 # Construct plot frame in 'x'
-xframe = x.frame(ROOT.RooFit.Title("Gaussian p.d.f."))  # RooPlot
+xframe = x.frame(ROOT.RooFit.Title("Gaussian pdf"))  # RooPlot
 
 # Plot model and change parameter values
 # ---------------------------------------------------------------------------
@@ -42,9 +41,9 @@ gauss.plotOn(xframe, ROOT.RooFit.LineColor(ROOT.kRed))
 data = gauss.generate(ROOT.RooArgSet(x), 10000)  # ROOT.RooDataSet
 
 # Make a second plot frame in x and draw both the
-# data and the p.d.f in the frame
+# data and the pdf in the frame
 xframe2 = x.frame(ROOT.RooFit.Title(
-    "Gaussian p.d.f. with data"))  # RooPlot
+    "Gaussian pdf with data"))  # RooPlot
 data.plotOn(xframe2)
 gauss.plotOn(xframe2)
 

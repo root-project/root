@@ -1,14 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///
-///
-/// \brief Organization and simultaneous fits: RooArgSet and RooArgList tools and tricks
+/// Organization and simultaneous fits: RooArgSet and RooArgList tools and tricks
 ///
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"

@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Organization and simultaneous fits: using simultaneous p.d.f.s to describe simultaneous
+## Organization and simultaneous fits: using simultaneous pdfs to describe simultaneous
 ## fits to multiple datasets
 ##
 ## \macro_code

@@ -1,8 +1,7 @@
 ## \file rf505_asciicfg.py
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-##
-## \brief Organization and simultaneous fits: reading and writing ASCII configuration files
+## Organization and simultaneous fits: reading and writing ASCII configuration files
 ##
 ## \macro_code
 ##

@@ -1,14 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///
-///
-/// \brief Organisation and simultaneous fits: reading and writing ASCII configuration files
+/// Organisation and simultaneous fits: reading and writing ASCII configuration files
 ///
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"

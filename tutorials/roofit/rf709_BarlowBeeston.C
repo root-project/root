@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Implementing the Barlow-Beeston method for taking into account the statistical
+/// Implementing the Barlow-Beeston method for taking into account the statistical
 /// uncertainty of a Monte-Carlo fit template.
 ///
 /// \macro_image
@@ -12,7 +10,7 @@
 ///
 /// Based on a demo by Wouter Verkerke
 //
-/// \date 06/2019
+/// \date June 2019
 /// \author Stephan Hageboeck, CERN
 
 #include "RooRealVar.h"

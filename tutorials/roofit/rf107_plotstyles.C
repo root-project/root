@@ -1,15 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Basic functionality: various plotting styles of data, functions in a RooPlot
+/// Basic functionality: various plotting styles of data, functions in a RooPlot
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"

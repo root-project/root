@@ -1,16 +1,14 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///
-///
-/// \brief Data and categories: advanced options for importing data from ROOT TTree and THx histograms
+/// Data and categories: advanced options for importing data from ROOT TTree and THx histograms
 ///
 /// Basic import options are demonstrated in rf102_dataimport.C
 ///
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"

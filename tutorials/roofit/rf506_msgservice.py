@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-##
-## \brief Organization and simultaneous fits: tuning and customizing the ROOT.RooFit message logging facility
+## Organization and simultaneous fits: tuning and customizing the ROOT.RooFit message logging facility
 ##
 ## \macro_code
 ##
