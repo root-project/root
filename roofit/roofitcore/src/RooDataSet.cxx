@@ -89,6 +89,7 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 #include "RooSentinel.h"
 #include "RooTrace.h"
 #include "RooHelpers.h"
+#include "BatchHelpers.h"
 
 #include "TTree.h"
 #include "TH2.h"
@@ -1007,10 +1008,29 @@ Double_t RooDataSet::weightSquared() const
 }
 
 
-
-// See base class.
+////////////////////////////////////////////////////////////////////////////////
+/// \see RooAbsData::getWeightBatch().
 RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t len) const {
   return _dstore->getWeightBatch(first, len);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve batches of data for each real-valued variable in this dataset.
+/// \param first Index of first event that ends up in the batch.
+/// \param len   Number of events in each batch.
+/// \return RunContext object the pointer to an observable in this dataset is the
+/// key that points to a span of data for that observable.
+BatchHelpers::RunContext RooDataSet::getBatches(std::size_t begin, std::size_t len) const {
+  std::vector<RooSpan<const double>> batches = store()->getBatch(begin, len);
+  BatchHelpers::RunContext evalData;
+
+  for (unsigned int i=0; i < _varsNoWgt.size(); ++i) {
+    auto var = static_cast<RooRealVar*>(_varsNoWgt[i]);
+    evalData.spans[var] = batches[i];
+  }
+
+  return evalData;
 }
 
 
