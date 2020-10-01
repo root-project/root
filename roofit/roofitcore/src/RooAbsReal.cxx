@@ -85,6 +85,7 @@
 #include "RooHelpers.h"
 #include "BatchHelpers.h"
 #include "RunContext.h"
+#include "ValueChecking.h"
 
 #include "Compression.h"
 #include "Math/IFunction.h"
@@ -281,7 +282,7 @@ Double_t RooAbsReal::getValV(const RooArgSet* nset) const
   }
 
   if (isValueDirtyAndClear()) {
-    _value = traceEval(nset) ;
+    _value = traceEval(nullptr) ;
     //     clearValueDirty() ;
   }
   //   cout << "RooAbsReal::getValV(" << GetName() << ") writing _value = " << _value << endl ;
@@ -5045,11 +5046,6 @@ RooSpan<double> RooAbsReal::evaluateBatch(BatchHelpers::RunContext& evalData, co
 
 
 
-
-using RooHelpers::CachingError;
-using RooHelpers::FormatPdfTree;
-
-
 Double_t RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
 
   const bool tmpFast = _fast;
@@ -5149,3 +5145,74 @@ void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normS
   }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Walk through expression tree headed by the `this` object, and check a batch computation.
+///
+/// Check if the results in `evalData` for event `evtNo` are identical to the current value of the nodes.
+/// If a difference is found, an exception is thrown, and propagates up the expression tree. The tree is formatted
+/// to see where the computation error happened.
+/// @param evalData Data with results of batch computation. This is checked against the current value of the expression tree.
+/// @param evtNo    Event from `evalData` to check for.
+/// @param normSet  Optional normalisation set that was used in computation.
+/// @param relAccuracy Accuracy required for passing the check.
+void RooAbsReal::checkBatchComputation(const BatchHelpers::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet, double relAccuracy) const {
+  for (const auto server : _serverList) {
+    try {
+      auto realServer = dynamic_cast<RooAbsReal*>(server);
+      if (realServer)
+        realServer->checkBatchComputation(evalData, evtNo, normSet, relAccuracy);
+    } catch (CachingError& error) {
+      throw CachingError(std::move(error),
+          FormatPdfTree() << *this);
+    }
+  }
+
+  const auto item = evalData.spans.find(this);
+  if (item == evalData.spans.end())
+    return;
+
+  auto batch = item->second;
+  const double value = getVal(normSet);
+  const double batchVal = batch.size() == 1 ? batch[0] : batch[evtNo];
+  const double relDiff = value != 0. ? (value - batchVal)/value : value - batchVal;
+
+  if (fabs(relDiff) > relAccuracy && fabs(value) > 1.E-300) {
+    FormatPdfTree formatter;
+    formatter << "--> (Batch computation wrong:)\n";
+    printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress, kInline);
+    formatter << std::setprecision(17)
+    << "\n batch[" << std::setw(7) << evtNo-1 << "]=     " << (evtNo > 0 && evtNo - 1 < batch.size() ? std::to_string(batch[evtNo-1]) : "---")
+    << "\n batch[" << std::setw(7) << evtNo   << "]=     " << batchVal << " !!!"
+    << "\n expected ('value'): " << value
+    << "\n eval(unnorm.)     : " << evaluate()
+    << "\n delta         " <<                     " =     " << value - batchVal
+    << "\n rel delta     " <<                     " =     " << relDiff
+    << "\n _batch[" << std::setw(7) << evtNo+1 << "]=     " << (batch.size() > evtNo+1 ? std::to_string(batch[evtNo+1]) : "---");
+
+
+
+    formatter << "\nServers: ";
+    for (const auto server : _serverList) {
+      formatter << "\n - ";
+      server->printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress | kValue, kInline);
+      formatter << std::setprecision(17);
+
+      auto serverAsReal = dynamic_cast<RooAbsReal*>(server);
+      if (serverAsReal) {
+        auto serverBatch = evalData.spans.count(serverAsReal) != 0 ? evalData.spans.find(serverAsReal)->second : RooSpan<const double>();
+        if (serverBatch.size() > evtNo) {
+          formatter << "\n   _batch[" << evtNo-1 << "]=" << (serverBatch.size() > evtNo-1 ? std::to_string(serverBatch[evtNo-1]) : "---")
+                    << "\n   _batch[" << evtNo << "]=" << serverBatch[evtNo]
+                    << "\n   _batch[" << evtNo+1 << "]=" << (serverBatch.size() > evtNo+1 ? std::to_string(serverBatch[evtNo+1]) : "---");
+        }
+        else {
+          formatter << std::setprecision(17)
+          << "\n   getVal()=" << serverAsReal->getVal(normSet);
+        }
+      }
+    }
+
+    throw CachingError(formatter);
+  }
+}

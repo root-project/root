@@ -43,7 +43,9 @@ In extended mode, a
 #include "RooRealSumPdf.h"
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
-#include "RooHelpers.h"
+#ifdef ROOFIT_CHECK_CACHED_VALUES
+#include "BatchHelpers.h"
+#endif
 
 #include "Math/Util.h"
 
@@ -457,7 +459,7 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     assert(_dataClone->valid());
     pdfClone->getValV(_normSet);
     try {
-      RooHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, evtNo, _normSet);
+      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, evtNo, _normSet);
     } catch (std::exception& e) {
       std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
           << e.what() << std::endl;
