@@ -238,7 +238,7 @@ RooSpan<const double> RooRealBinding::getValBatch(std::vector<RooSpan<const doub
   assert(coordinates.front().size() == results.size());
 
   if (_clipInvalid) {
-    RooSpan<double> resultsWritable(_evalData->ownedMemory[_func]);
+    RooSpan<double> resultsWritable(_evalData->getWritableBatch(_func));
     assert(results.data() == resultsWritable.data());
     assert(results.size() == resultsWritable.size());
 
