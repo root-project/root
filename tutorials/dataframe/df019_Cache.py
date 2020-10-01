@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief Cache a processed RDataFrame in memory for further usage.
+## Cache a processed RDataFrame in memory for further usage.
 ##
 ## This tutorial shows how the content of a data frame can be cached in memory
 ## in form of a data frame. The content of the columns is stored in memory in
@@ -21,7 +21,7 @@
 ## \macro_image
 ##
 ## \date June 2018
-## \author Danilo Piparo
+## \author Danilo Piparo (CERN)
 
 import ROOT
 import os

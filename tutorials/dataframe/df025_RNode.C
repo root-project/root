@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// \brief Manipulate RDF objects in functions, loops and conditional branches.
+/// Manipulate RDF objects in functions, loops and conditional branches.
 ///
 /// Each RDataFrame object has its own type. It helps with performance,
 /// but sometimes it gets in the way of writing simple code that manages RDF objects.
@@ -12,8 +12,7 @@
 /// \macro_output
 ///
 /// \date June 2020
-/// \author Danilo Piparo
-/// \author Enrico Guiraud
+/// \authors Danilo Piparo, Enrico Guiraud (CERN)
 
 /// A generic function that takes an RDF object and applies a string filter
 ROOT::RDF::RNode AddFilter(ROOT::RDF::RNode node, string_view filterStr)

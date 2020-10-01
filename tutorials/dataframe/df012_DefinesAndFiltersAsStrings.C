@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -nodraw
-///
-/// \brief Use just-in-time-compiled Filters and Defines for quick prototyping.
+/// Use just-in-time-compiled Filters and Defines for quick prototyping.
 ///
 /// This tutorial illustrates how to save some typing when using RDataFrame
 /// by invoking functions that perform jit-compiling at runtime.
@@ -11,7 +10,7 @@
 /// \macro_output
 ///
 /// \date October 2017
-/// \author Guilherme Amadio
+/// \author Guilherme Amadio (CERN)
 
 void df012_DefinesAndFiltersAsStrings()
 {

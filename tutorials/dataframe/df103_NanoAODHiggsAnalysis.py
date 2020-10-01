@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief An example of complex analysis with RDataFrame: reconstructing the Higgs boson.
+## An example of complex analysis with RDataFrame: reconstructing the Higgs boson.
 ##
 ## This tutorial is a simplified but yet complex example of an analysis reconstructing the Higgs boson decaying to two Z
 ## bosons from events with four leptons. The data and simulated events are taken from CERN OpenData representing a
@@ -33,7 +33,7 @@
 ## \macro_output
 ##
 ## \date July 2019
-## \author Stefan Wunsch (KIT, CERN), Vincenzo Eduardo Padulano (UniMiB, CERN)
+## \authors Stefan Wunsch (KIT, CERN), Vincenzo Eduardo Padulano (UniMiB, CERN)
 
 import ROOT
 import os

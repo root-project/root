@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// \brief Process a CSV file with RDataFrame and the CSV data source.
+/// Process a CSV file with RDataFrame and the CSV data source.
 ///
 /// This tutorial illustrates how use the RDataFrame in combination with a
 /// RDataSource. In this case we use a RCsvDS. This data source allows to read
@@ -17,7 +17,7 @@
 /// \macro_image
 ///
 /// \date October 2017
-/// \author Enric Tejedor
+/// \author Enric Tejedor (CERN)
 
 int df014_CSVDataSource()
 {
