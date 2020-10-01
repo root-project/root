@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief Show how to work with non-flat data models, e.g. vectors of tracks.
+## Show how to work with non-flat data models, e.g. vectors of tracks.
 ##
 ## This tutorial shows the possibility to use data models which are more
 ## complex than flat ntuples with RDataFrame
@@ -10,7 +10,7 @@
 ## \macro_image
 ##
 ## \date May 2017
-## \author Danilo Piparo
+## \author Danilo Piparo (CERN)
 
 import ROOT
 

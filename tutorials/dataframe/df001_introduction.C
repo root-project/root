@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -nodraw
-/// \brief Basic RDataFrame usage.
+/// Basic RDataFrame usage.
 ///
 /// This tutorial illustrates the basic features of the RDataFrame class,
 /// a utility which allows to interact with data stored in TTrees following
@@ -11,7 +11,7 @@
 /// \macro_output
 ///
 /// \date December 2016
-/// \author Enrico Guiraud
+/// \author Enrico Guiraud (CERN)
 
 // ## Preparation
 
@@ -138,7 +138,7 @@ int df001_introduction()
    // Often, operations need to be carried out on quantities calculated starting
    // from the ones present in the columns. We'll create in this example a third
    // column the values of which are the sum of the *b1* and *b2* ones, entry by
-   // entry. The way in which the new quantity is defined is via a runable.
+   // entry. The way in which the new quantity is defined is via a callable.
    // It is important to note two aspects at this point:
    // - The value is created on the fly only if the entry passed the existing
    // filters.

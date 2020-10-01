@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -jss
-/// \brief Plot the ROOT downloads based on the version reading a remote sqlite3 file.
+/// Plot the ROOT downloads based on the version reading a remote sqlite3 file.
 ///
 /// This tutorial uses the Reduce method which allows to extract the minimum time
 /// stored in the SQlite3 database.

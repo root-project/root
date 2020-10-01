@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -nodraw
-/// \brief Compare creation of a ROOT dataset with RDataFrame and TTree.
+/// Compare creation of a ROOT dataset with RDataFrame and TTree.
 ///
 /// This tutorial illustrates how simpler it can be to use a
 /// RDataFrame to create a dataset with respect to the usage
@@ -10,7 +10,7 @@
 /// \macro_code
 ///
 /// \date August 2017
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 // ##This is the classic way of creating a ROOT dataset
 // The steps are:

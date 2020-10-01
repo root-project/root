@@ -1,14 +1,15 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief Write ROOT data with RDataFrame.
+## Write ROOT data with RDataFrame.
 ##
-## This tutorial shows how to write out datasets in ROOT formatusing the RDataFrame
+## This tutorial shows how to write out datasets in ROOT format using the RDataFrame
+##
 ## \macro_image
 ## \macro_code
 ##
 ## \date April 2017
-## \author Danilo Piparo
+## \author Danilo Piparo (CERN)
 
 import ROOT
 

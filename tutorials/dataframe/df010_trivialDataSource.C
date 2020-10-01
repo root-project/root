@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// \brief Use the "trivial data source", an example data source implementation.
+/// Use the "trivial data source", an example data source implementation.
 ///
 /// This tutorial illustrates how use the RDataFrame in combination with a
 /// RDataSource. In this case we use a RTrivialDS, which is nothing more
@@ -14,7 +14,7 @@
 /// \macro_code
 ///
 /// \date September 2017
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 int df010_trivialDataSource()
 {

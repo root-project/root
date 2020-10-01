@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -js
-/// \brief Plot the location of ROOT downloads reading a remote sqlite3 file.
+/// Plot the location of ROOT downloads reading a remote sqlite3 file.
 ///
 /// The world map is held by a TH2Poly histogram which, after filling, will show
 /// the world wide dispersion of ROOT's users.
@@ -38,6 +38,6 @@ void df028_SQliteIPLocation() {
 
    auto worldMapCanvas = new TCanvas();
    worldMapCanvas->SetLogz();
-   worldMap->SetTitle("ROOT Downloads per Location (GitHub exluded);Longitude;Latitude");
+   worldMap->SetTitle("ROOT Downloads per Location (GitHub excluded);Longitude;Latitude");
    worldMap->DrawClone("colz");
 }

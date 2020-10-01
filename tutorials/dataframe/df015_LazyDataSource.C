@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// \brief Use the lazy RDataFrame data source to concatenate computation graphs.
+/// Use the lazy RDataFrame data source to concatenate computation graphs.
 ///
 /// This tutorial illustrates how to take advantage of a *lazy data source*
 /// creating a data frame from columns of one or multiple parent dataframe(s),
@@ -17,7 +17,7 @@
 /// \macro_image
 ///
 /// \date February 2018
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 int df015_LazyDataSource()
 {
