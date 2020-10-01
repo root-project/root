@@ -4860,7 +4860,19 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
   setStringAttribute("CACHEPARAMINT",plist.c_str()) ;
 }
 
-
+namespace {
+/// Disable caching in expression tree.
+struct DisableCachingRAII {
+  DisableCachingRAII(bool oldState):
+  _oldState(oldState) {
+    RooAbsArg::setDirtyInhibit(true);
+  }
+  ~DisableCachingRAII() {
+    RooAbsArg::setDirtyInhibit(_oldState);
+  }
+  bool _oldState;
+};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate function for a batch of input data points. If not overridden by
@@ -4875,8 +4887,8 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
   RooArgSet allLeafs;
   leafNodeServerList(&allLeafs);
 
-  if (RooMsgService::instance().isActive(this, RooFit::Optimization, RooFit::INFO)) {
-    coutI(Optimization) << "The class " << IsA()->GetName() << " could benefit from implementing the faster batch evaluation interface."
+  if (RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
+    coutI(FastEvaluations) << "The class " << IsA()->GetName() << " could benefit from implementing the faster batch evaluation interface."
         << " If it is part of ROOT, consider requesting this on https://root.cern." << std::endl;
   }
 
@@ -4900,26 +4912,24 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
 
 
   auto output = _batchData.makeWritableBatchUnInit(begin, maxSize);
+  {
+    // Side track all caching that RooFit might think is necessary.
+    // When used with batch computations, we depend on computation
+    // graphs actually evaluating correctly, instead of having
+    // pre-calculated values side-loaded into nodes event-per-event.
+    DisableCachingRAII disableCaching(inhibitDirty());
 
-  // Side track all caching that RooFit might think is necessary.
-  // This yields wrong results when used with batch computations,
-  // since data are not loaded globally here, and the caches of
-  // objects are therefore not updated.
-  const bool oldInhibitState = inhibitDirty();
-  setDirtyInhibit(true);
+    for (std::size_t i = 0; i < output.size(); ++i) {
+      for (auto& tup : batchLeafs) {
+        RooRealVar* leaf = std::get<0>(tup);
+        auto batch = std::get<1>(tup);
 
-  for (std::size_t i = 0; i < output.size(); ++i) {
-    for (auto& tup : batchLeafs) {
-      RooRealVar* leaf = std::get<0>(tup);
-      auto batch = std::get<1>(tup);
+        leaf->setVal(batch[i]);
+      }
 
-      leaf->setVal(batch[i]);
+      output[i] = evaluate();
     }
-
-    output[i] = evaluate();
   }
-
-  setDirtyInhibit(oldInhibitState);
 
   // Reset values
   for (auto& tup : batchLeafs) {
