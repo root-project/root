@@ -1,6 +1,6 @@
 <img src="https://root-forum.cern.ch/uploads/default/original/2X/3/3fb82b650635bc6d61461f3c47f41786afad4548.png" align="right"  height="50"/>
 
-## About
+## About:-
 
 The ROOT system provides a set of OO frameworks with all the functionality
 needed to handle and analyze large amounts of data in a very efficient way.
@@ -49,7 +49,7 @@ When citing ROOT, please use both the reference reported below and the DOI speci
 ## Live Demo for CERN Users
 [![](https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
 
-## Screenshots
+## Screenshots:-
 These screenshots shows some of the plots (produced using ROOT) presented when the Higgs boson discovery was [announced at CERN](http://home.cern/topics/higgs-boson):
 
 ![CMS Data MC Ratio Plot](https://root.cern/gallery/higgs_plots/CMS_Data_MC_Ratio_Plot.png)
@@ -58,12 +58,12 @@ These screenshots shows some of the plots (produced using ROOT) presented when t
 
 See more screenshots on our [gallery](https://root.cern/gallery).
 
-## Download and Getting Started
+## Download and Getting Started:-
 See [root.cern download page](https://root.cern/downloading-root) for the latest binary releases.
 
 [Getting started with ROOT.](https://root.cern/getting-started)
 
-## Building
+## Building:-
 Clone the repo
 
     $ git clone https://github.com/root-project/root.git
@@ -85,15 +85,15 @@ Setup and run ROOT
 
 [More information](https://root.cern/building-root) regarding building.
 
-## Help and Support
+## Help and Support:-
 - [Forum](https://root.cern/forum/)
 - [Issue tracker](https://github.com/root-project/root/issues)
-  * [Previous now read-only Jira issue tracker](https://sft.its.cern.ch/jira/projects/ROOT/issues/ROOT-5820?filter=allopenissues)
+- [Previous now read-only Jira issue tracker](https://sft.its.cern.ch/jira/projects/ROOT/issues/ROOT-5820?filter=allopenissues)
 - [Mailing lists](https://groups.cern.ch/group/root-dev/default.aspx)
 - [Documentation](https://root.cern/guides/reference-guide)
 - [Tutorials](https://root.cern/doc/master/group__Tutorials.html)
 
-## Contribution Guidelines
+## Contribution Guidelines:-
 - [How to contribute](https://github.com/root-project/root/blob/master/CONTRIBUTING.md)
 - [Bug reporting guidelines](https://root.cern/guidelines-submitting-bug)
 - [Coding conventions](https://root.cern/coding-conventions)
