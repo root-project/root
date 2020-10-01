@@ -82,12 +82,15 @@ public:
   _span{beginIn, sizeIn}
   { }
 
-
+  /// Construct from a std::vector.
+  template<typename U = T,
+      typename = typename std::enable_if<std::is_const<U>::value, void>::type>
   constexpr RooSpan(const std::vector<typename std::remove_cv<T>::type>& vec) noexcept :
   _auxStorage{},
   _span{vec}
   { }
 
+  /// Construct from a std::vector.
   constexpr RooSpan(std::vector<typename std::remove_cv<T>::type>& vec) noexcept :
   _auxStorage{},
   _span{vec}
