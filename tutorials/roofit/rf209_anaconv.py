@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Addition and convolution: decay function p.d.fs with optional B physics effects (mixing
+## Addition and convolution: decay function pdfs with optional B physics effects (mixing
 ## and CP violation) that can be analytically convolved with e.g. Gaussian resolution functions
 ##
 ## ```
@@ -21,7 +20,7 @@ import ROOT
 # B-physics pdf with truth resolution
 # ---------------------------------------------------------------------
 
-# Variables of decay p.d.f.
+# Variables of decay pdf
 dt = ROOT.RooRealVar("dt", "dt", -10, 10)
 tau = ROOT.RooRealVar("tau", "tau", 1.548)
 
@@ -32,7 +31,7 @@ tm = ROOT.RooTruthModel("tm", "truth model", dt)
 decay_tm = ROOT.RooDecay("decay_tm", "decay", dt,
                          tau, tm, ROOT.RooDecay.DoubleSided)
 
-# Plot p.d.f. (dashed)
+# Plot pdf (dashed)
 frame = dt.frame(ROOT.RooFit.Title("Bdecay (x) resolution"))
 decay_tm.plotOn(frame, ROOT.RooFit.LineStyle(ROOT.kDashed))
 
@@ -48,7 +47,7 @@ gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 decay_gm1 = ROOT.RooDecay("decay_gm1", "decay",
                           dt, tau, gm1, ROOT.RooDecay.DoubleSided)
 
-# Plot p.d.f.
+# Plot pdf
 decay_gm1.plotOn(frame)
 
 # B-physics pdf with double Gaussian resolution
@@ -73,7 +72,7 @@ gmsum = ROOT.RooAddModel(
 decay_gmsum = ROOT.RooDecay(
     "decay_gmsum", "decay", dt, tau, gmsum, ROOT.RooDecay.DoubleSided)
 
-# Plot p.d.f. (red)
+# Plot pdf (red)
 decay_gmsum.plotOn(frame, ROOT.RooFit.LineColor(ROOT.kRed))
 
 # Draw all frames on canvas

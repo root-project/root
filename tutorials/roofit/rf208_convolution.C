@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Addition and convolution: one-dimensional numeric convolution
+/// Addition and convolution: one-dimensional numeric convolution
 ///
 /// ```
 /// pdf = landau(t) (x) gauss(t)
@@ -15,7 +13,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"

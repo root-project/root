@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-##
-## \brief Numeric algorithm tuning: configuration and customization of how numeric (partial) integrals are executed
+## Numeric algorithm tuning: configuration and customization of how numeric (partial) integrals are executed
 ##
 ## \macro_code
 ##
@@ -24,8 +23,8 @@ ROOT.RooAbsReal.defaultIntegratorConfig().Print("v")
 #
 # The relative epsilon (change as fraction of current best integral estimate) and
 # absolute epsilon (absolute change w.r.t last best integral estimate) can be specified
-# separately. For most p.d.f integrals the relative change criterium is the most important,
-# however for certain non-p.d.f functions that integrate out to zero a separate absolute
+# separately. For most pdf integrals the relative change criterium is the most important,
+# however for certain non-pdf functions that integrate out to zero a separate absolute
 # change criterium is necessary to declare convergence of the integral
 #
 # NB: ROOT.This change is for illustration only. In general the precision should be at least 1e-7
@@ -37,7 +36,7 @@ ROOT.RooAbsReal.defaultIntegratorConfig().setEpsRel(1e-6)
 # N u m e r i c   i n t e g r a t i o n   o f   l a n d a u   p d f
 # ------------------------------------------------------------------
 
-# Construct p.d.f without support for analytical integrator for
+# Construct pdf without support for analytical integrator for
 # demonstration purposes
 x = ROOT.RooRealVar("x", "x", -10, 10)
 landau = ROOT.RooLandau("landau", "landau", x,

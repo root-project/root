@@ -1,13 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// \brief Basic functionality: importing data from ROOT TTrees and THx histograms.
+/// Basic functionality: importing data from ROOT TTrees and THx histograms.
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -49,7 +49,7 @@ void rf102_dataimport()
    RooPlot *frame = x.frame(Title("Imported TH1 with Poisson error bars"));
    dh.plotOn(frame);
 
-   // Fit a Gaussian p.d.f to the data
+   // Fit a Gaussian pdf to the data
    RooRealVar mean("mean", "mean", 0, -10, 10);
    RooRealVar sigma("sigma", "sigma", 3, 0.1, 10);
    RooGaussian gauss("gauss", "gauss", x, mean, sigma);

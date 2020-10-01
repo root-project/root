@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Special p.d.f.'s: using non-parametric (multi-dimensional) kernel estimation p.d.f.s
+## Special pdf's: using non-parametric (multi-dimensional) kernel estimation pdfs
 ##
 ## \macro_code
 ##

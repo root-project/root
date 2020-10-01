@@ -1,15 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///
-///
-/// \brief Special p.d.f.'s: linear interpolation between p.d.f shapes using the 'Alex Read' algorithm
+/// Special pdf's: linear interpolation between pdf shapes using the 'Alex Read' algorithm
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
