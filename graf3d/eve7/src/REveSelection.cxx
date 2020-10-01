@@ -493,7 +493,7 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
 
      if (el != pel) {
         REveSecondarySelectable* ss = dynamic_cast<REveSecondarySelectable*>(el);
-        if (ss) {
+        if (!secondary && ss) {
            secondary = true;
            secondary_idcs = ss->RefSelectedSet();
         }
