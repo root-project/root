@@ -208,6 +208,35 @@ Double_t RooRealVar::getValV(const RooArgSet*) const
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve data column of this variable.
+/// \param inputData Struct with data arrays.
+/// \param normSet Ignored.
+/// 1. Check if `inputData` has a column of data registered for this variable (checks the pointer).
+/// 2. If not, check if there's an object with the same name, and use this object's values.
+/// 3. If there is no such object, return a batch of size one with the current value of the variable.
+/// For cases 2. and 3., the data column in `inputData` is associated to this object, so the next call can return it immediately.
+RooSpan<const double> RooRealVar::getValues(BatchHelpers::RunContext& inputData, const RooArgSet*) const {
+  auto item = inputData.spans.find(this);
+  if (item != inputData.spans.end()) {
+    return item->second;
+  }
+
+  for (const auto& var_span : inputData.spans) {
+    auto var = var_span.first;
+    if (strcmp(var->GetName(), GetName()) == 0) {
+      // A variable with the same name exists in the input data. Use their values as ours.
+      inputData.spans[this] = var_span.second;
+      return var_span.second;
+    }
+  }
+
+  auto output = inputData.makeBatch(this, 1);
+  output[0] = _value;
+
+  return output;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set value of variable to 'value'. If 'value' is outside
