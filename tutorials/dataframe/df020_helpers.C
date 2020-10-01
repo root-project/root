@@ -22,7 +22,7 @@ void df020_helpers()
    auto isOne = [] (int a) { return a == 1; };
    auto isNotOne = ROOT::RDF::Not(isOne);
 
-   // Both `isOne` and `isNotOne` are callable that we can use in `Filters`:
+   // Both `isOne` and `isNotOne` are callables that we can use in `Filters`:
    auto c1 = df.Filter(isOne, {"one"}).Count();
    auto c2 = df.Filter(isNotOne, {"two"}).Count();
    // Both counts are equal to the total number of entries, as both Filters always pass.
