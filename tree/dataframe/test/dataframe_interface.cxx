@@ -501,3 +501,28 @@ TEST(RDataFrameInterface, MinMaxSumMeanStdDevOfRVec)
    EXPECT_DOUBLE_EQ(*stddev, 1.f);
    EXPECT_DOUBLE_EQ(*jit_stddev, 1.f);
 }
+
+class Product {
+public:
+   Product() : _x(0), _y(0) {}
+   Product(double x, double y) : _x(x), _y(y) {}
+   ~Product() {}
+
+   double GetProduct() { return _x * _y; }
+
+private:
+   double _x, _y;
+};
+
+// ROOT-10273, using jitting when some non-jitted types are unknown to the intepreter
+TEST(RDataFrameInterface, JittingAndNonJittedTypes)
+{
+   auto df = ROOT::RDataFrame(10)
+                .Define("x", "1.")
+                .Define("y", "2.")
+                .Define("products", [](double x, double y) { return Product(x, y); }, {"x", "y"})
+                .Define("moreproducts", [](double x, double y) { return std::vector<Product>(10, Product(x, y)); },
+                        {"x", "y"});
+
+   df.Foreach([](Product &p) { EXPECT_EQ(p.GetProduct(), 2); }, {"products"});
+}
