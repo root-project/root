@@ -2789,7 +2789,7 @@ TFile* TTree::ChangeFile(TFile* file)
       if (newfile) newfile->Append(obj);
       file->Remove(obj);
    }
-   file->Delete();
+   file->TObject::Delete();
    file = 0;
    delete[] fname;
    fname = 0;
