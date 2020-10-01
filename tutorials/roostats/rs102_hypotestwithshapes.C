@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief A typical search for a new particle by studying an invariant mass distribution
+/// A typical search for a new particle by studying an invariant mass distribution
 ///
 /// The macro creates a simple signal model and two background models,
 /// which are added to a RooWorkspace.

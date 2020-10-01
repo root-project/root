@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief Example demonstrating usage of HybridCalcultor
+/// Example demonstrating usage of HybridCalcultor
 ///
 /// A hypothesis testing example based on number counting
 /// with background uncertainty.

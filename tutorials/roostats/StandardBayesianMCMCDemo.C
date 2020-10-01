@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief Standard demo of the Bayesian MCMC calculator
+/// Standard demo of the Bayesian MCMC calculator
 ///
 /// This is a standard demo that can be used with any ROOT file
 /// prepared in the standard way.  You specify:

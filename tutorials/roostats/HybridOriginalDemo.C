@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief Example on how to use the HybridCalculatorOriginal class
+/// Example on how to use the HybridCalculatorOriginal class
 ///
 /// With this example, you should get: CL_sb = 0.130 and CL_b = 0.946
 /// (if data had -2lnQ = -3.0742).

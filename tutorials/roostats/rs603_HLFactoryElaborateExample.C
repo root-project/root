@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief High Level Factory: creating a complex combined model.
+/// High Level Factory: creating a complex combined model.
 ///
 /// \macro_image
 /// \macro_output

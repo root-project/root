@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief Standard demo of the numerical Bayesian calculator
+/// Standard demo of the numerical Bayesian calculator
 ///
 /// This is a standard demo that can be used with any ROOT file
 /// prepared in the standard way.  You specify:
