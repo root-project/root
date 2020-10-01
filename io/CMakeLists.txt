@@ -5,6 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 add_subdirectory(io)  # special CMakeLists.txt
+add_subdirectory(minio)
 add_subdirectory(rootpcm)
 add_subdirectory(sql)
 add_subdirectory(xml)

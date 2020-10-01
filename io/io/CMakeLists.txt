@@ -21,8 +21,8 @@ if (uring)
 endif ()
 
 ROOT_LINKER_LIBRARY(RIO
-  src/RRawFile.cxx
   ${rawfile_local_sources}
+  src/RRawFileCreate.cxx
   src/TArchiveFile.cxx
   src/TBufferFile.cxx
   src/TBufferText.cxx
@@ -62,6 +62,7 @@ ROOT_LINKER_LIBRARY(RIO
   DEPENDENCIES
     Core
     Thread
+    RMiniIO
 )
 
 target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
@@ -82,7 +83,6 @@ if(uring)
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__RIO
-  ROOT/RRawFile.hxx
   ${rawfile_local_headers}
   ROOT/TBufferMerger.hxx
   TArchiveFile.h
