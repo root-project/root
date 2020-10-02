@@ -62,6 +62,20 @@ bool TClingDataMemberIter::ShouldSkip(const clang::Decl *D) const
    if (!TDictionary::WantsRegularMembers(fSelection))
       return true;
 
+   if (const auto *ND = llvm::dyn_cast<NamedDecl>(D)) {
+      // Skip unnamed declarations, e.g. in
+      //    struct S {
+      //       struct { int i; }
+      //    };
+      // the inner struct corresponds to an unnamed member variable,
+      // where only `S::i` should be exposed.
+      if (!ND->getIdentifier())
+         return true;
+   } else {
+      // TClingDataMemberIter only cares about NamedDecls.
+      return true;
+   }
+
    return !IsRelevantKind(D->getKind());
 }
 
