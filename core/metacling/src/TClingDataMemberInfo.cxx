@@ -399,16 +399,42 @@ long TClingDataMemberInfo::Property() const
    }
    long property = 0L;
 
+   // If the declaration is public in a private nested struct, make the declaration
+   // private nonetheless, as for outside access (e.g. ROOT I/O) it's private:
    // NOTE: this uses `GetDecl()`, to capture the access of the UsingShadowDecl,
    // which is defined in the derived class and might differ from the access of the decl
    // in the base class.
-   const clang::Decl *declaccess = GetDecl();
-   while (const auto *ctxtDecl = llvm::dyn_cast<clang::Decl>(declaccess->getDeclContext())) {
-      if (!declaccess->getDeclContext()->isTransparentContext())
-         break;
-      declaccess = ctxtDecl;
-   }
-   switch (declaccess->getAccess()) {
+   // TODO: move this somewhere such that TClingMethodInfo can use this, too.
+   const Decl *thisDecl = GetDecl();
+   clang::AccessSpecifier strictestAccess = thisDecl->getAccess();
+   const DeclContext *nonTransparentDC = thisDecl->getDeclContext();
+
+   auto getParentAccessAndNonTransparentDC = [&]() {
+      const Decl *declOrParent = thisDecl;
+      for (const auto *Parent = declOrParent->getDeclContext(); !llvm::isa<TranslationUnitDecl>(Parent);
+           Parent = declOrParent->getDeclContext()) {
+         if (!Parent->isTransparentContext()) {
+            if (const auto *RD = llvm::dyn_cast<clang::RecordDecl>(Parent)) {
+               if (!RD->isAnonymousStructOrUnion()) {
+                  nonTransparentDC = RD;
+                  break;
+               }
+            } else {
+               nonTransparentDC = Parent;
+               break;
+            }
+         }
+
+         declOrParent = llvm::dyn_cast<clang::Decl>(Parent);
+         if (strictestAccess < declOrParent->getAccess()) {
+            strictestAccess = declOrParent->getAccess();
+         }
+      }
+   };
+
+   getParentAccessAndNonTransparentDC();
+
+   switch (strictestAccess) {
       case clang::AS_public:
          property |= kIsPublic;
          break;
@@ -418,18 +444,14 @@ long TClingDataMemberInfo::Property() const
       case clang::AS_private:
          property |= kIsPrivate;
          break;
-      case clang::AS_none:
-         if (declaccess->getDeclContext()->isNamespace()) {
-            property |= kIsPublic;
-         } else {
-            // IMPOSSIBLE
-         }
+      case clang::AS_none: //?
+         property |= kIsPublic;
          break;
       default:
          // IMPOSSIBLE
          break;
    }
-   if (llvm::isa<clang::UsingShadowDecl>(declaccess))
+   if (llvm::isa<clang::UsingShadowDecl>(thisDecl))
       property |= kIsUsing;
 
    const clang::ValueDecl *vd = GetTargetValueDecl();
@@ -438,7 +460,7 @@ long TClingDataMemberInfo::Property() const
          property |= kIsConstexpr;
       if (vard->getStorageClass() == clang::SC_Static) {
          property |= kIsStatic;
-      } else if (declaccess->getDeclContext()->isNamespace()) {
+      } else if (nonTransparentDC->isNamespace()) {
          // Data members of a namespace are global variable which were
          // considered to be 'static' in the CINT (and thus ROOT) scheme.
          property |= kIsStatic;
