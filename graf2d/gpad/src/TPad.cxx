@@ -2286,7 +2286,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
 {
    if (!IsEditable()) return;
-
+   if (!axis) return;
    SetCursor(kHand);
 
    TView *view = GetView();
