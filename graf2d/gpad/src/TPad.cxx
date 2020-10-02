@@ -3265,7 +3265,7 @@ void TPad::FillCollideGridTGraph(TObject *o)
 void TPad::FillCollideGridTH1(TObject *o)
 {
    TH1 *h = (TH1 *)o;
-
+   if (fCGnx==0||fCGny==0) return;
    if (o->InheritsFrom(TH2::Class())) return;
    if (o->InheritsFrom(TH3::Class())) return;
 
@@ -3346,6 +3346,7 @@ void TPad::FillCollideGridTH1(TObject *o)
 
 void TPad::DrawCollideGrid()
 {
+   if (fCGnx==0||fCGny==0) return;
    auto box = new TBox();
    box->SetFillColorAlpha(kRed,0.5);
 
