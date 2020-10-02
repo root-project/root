@@ -50,7 +50,10 @@ public:
    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
 
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
-   unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
+
+   /// \deprecated Use GetPoolSize()
+   unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); } _R__DEPRECATED_626("Using GetPoolSize to unify the Executor's interfaces");
+   unsigned GetPoolSize() const { return TMPClient::GetNWorkers(); }
 
    using TExecutorCRTP<TProcessExecutor>::MapReduce;
    template<class F, class R, class Cond = noReferenceCond<F>>
@@ -103,7 +106,7 @@ auto TProcessExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std:
    fTaskType = ETask::kMap;
 
    //fork max(nTimes, fNWorkers) times
-   unsigned oldNWorkers = GetNWorkers();
+   unsigned oldNWorkers = GetPoolSize();
    if (nTimes < oldNWorkers)
       SetNWorkers(nTimes);
    TMPWorkerExecutor<F> worker(func);
@@ -147,7 +150,7 @@ auto TProcessExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename
 
    //fork max(args.size(), fNWorkers) times
    //N.B. from this point onwards, args is filled with undefined (but valid) values, since TMPWorkerExecutor moved its content away
-   unsigned oldNWorkers = GetNWorkers();
+   unsigned oldNWorkers = GetPoolSize();
    if (args.size() < oldNWorkers)
       SetNWorkers(args.size());
    TMPWorkerExecutor<F, T> worker(func, args);
@@ -204,7 +207,7 @@ auto TProcessExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename
    fTaskType= ETask::kMapRed;
 
    //fork max(nTimes, fNWorkers) times
-   unsigned oldNWorkers = GetNWorkers();
+   unsigned oldNWorkers = GetPoolSize();
    if (nTimes < oldNWorkers)
       SetNWorkers(nTimes);
    TMPWorkerExecutor<F, void, R> worker(func, redfunc);
@@ -246,7 +249,7 @@ auto TProcessExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typ
    fTaskType= ETask::kMapRedWithArg;
 
    //fork max(args.size(), fNWorkers) times
-   unsigned oldNWorkers = GetNWorkers();
+   unsigned oldNWorkers = GetPoolSize();
    if (args.size() < oldNWorkers)
       SetNWorkers(args.size());
    TMPWorkerExecutor<F, T, R> worker(func, args, redfunc);
