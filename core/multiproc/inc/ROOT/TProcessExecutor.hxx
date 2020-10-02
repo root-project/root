@@ -53,7 +53,12 @@ public:
 
    /// \deprecated Use GetPoolSize()
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); } _R__DEPRECATED_626("Using GetPoolSize to unify the Executor's interfaces");
-   unsigned GetPoolSize() const { return TMPClient::GetNWorkers(); }
+
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Return the number of pooled parallel workers.
+   ///
+   /// \return The number of workers in the pool.
+   unsigned GetPoolSize() { return TMPClient::GetNWorkers(); }
 
    using TExecutorCRTP<TProcessExecutor>::MapReduce;
    template<class F, class R, class Cond = noReferenceCond<F>>

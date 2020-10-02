@@ -109,6 +109,8 @@ public:
 
    template<class T> T* Reduce(const std::vector<T*> &mergeObjs);
 
+   unsigned GetPoolSize();
+
 private:
    inline subc & Derived()
    {
@@ -226,6 +228,16 @@ T* TExecutorCRTP<subc>::Reduce(const std::vector<T*> &mergeObjs)
    auto retHist = dynamic_cast<T*>((mergeObjs.front())->Clone());
    if (retHist) retHist->Merge(&l);
    return retHist;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// \brief Return the number of pooled workers.
+///
+/// \return The number of workers in the pool.
+template<class subc>
+unsigned TExecutorCRTP<subc>::GetPoolSize()
+{
+   return Derived().GetPoolSize();
 }
 
 } // end namespace ROOT

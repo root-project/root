@@ -149,6 +149,8 @@ auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typ
 using TExecutorCRTP<TExecutor>::Reduce;
 template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
+unsigned GetPoolSize();
+
 protected:
 template<class F, class R, class Cond = noReferenceCond<F>>
 auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type>;
@@ -412,6 +414,32 @@ auto TExecutor::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfun
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
    return redfunc(objs);
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// \brief Return the number of pooled workers.
+///
+/// \return The number of workers in the pool in the executor used as a backend.
+
+unsigned TExecutor::GetPoolSize()
+{
+   unsigned poolSize{0u};
+   switch(fExecPolicy){
+      case ROOT::Internal::ExecutionPolicy::kSerial:
+         poolSize = fSeqPool->GetPoolSize();
+         break;
+#ifdef R__USE_IMT
+      case ROOT::Internal::ExecutionPolicy::kMultithread:
+         poolSize = fThreadPool->GetPoolSize();
+         break;
+#endif
+      case ROOT::Internal::ExecutionPolicy::kMultiprocess:
+         poolSize = fProcPool->GetPoolSize();
+         break;
+      default:
+         break;
+   }
+   return poolSize;
 }
 
 } // namespace Internal
