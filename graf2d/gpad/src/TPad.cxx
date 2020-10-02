@@ -6485,6 +6485,7 @@ Int_t TPad::GetCrosshair() const
 
 void TPad::SetCrosshair(Int_t crhair)
 {
+   if (!fCanvas) return;
    fCrosshair = crhair;
    fCrosshairPos = 0;
 
