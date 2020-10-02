@@ -3275,7 +3275,7 @@ void TPad::FillCollideGridTGraph(TObject *o)
 void TPad::FillCollideGridTH1(TObject *o)
 {
    TH1 *h = (TH1 *)o;
-
+   if (fCGnx==0||fCGny==0) return;
    if (o->InheritsFrom(TH2::Class())) return;
    if (o->InheritsFrom(TH3::Class())) return;
 
