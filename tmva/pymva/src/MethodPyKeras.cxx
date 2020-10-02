@@ -80,6 +80,7 @@ void MethodPyKeras::DeclareOptions() {
    DeclareOptionRef(fNumEpochs, "NumEpochs", "Number of training epochs");
    DeclareOptionRef(fNumThreads, "NumThreads", "Number of CPU threads (only for Tensorflow backend)");
    DeclareOptionRef(fGpuOptions, "GpuOptions", "GPU options for tensorflow, such as allow_growth");
+   DeclareOptionRef(fUseTFKeras, "tf.keras", "Use tensorflow from Keras");
    DeclareOptionRef(fVerbose, "Verbose", "Keras verbosity during training");
    DeclareOptionRef(fContinueTraining, "ContinueTraining", "Load weights from previous training");
    DeclareOptionRef(fSaveBestOnly, "SaveBestOnly", "Store only weights with smallest validation loss");
@@ -167,11 +168,20 @@ void MethodPyKeras::ProcessOptions() {
    //  -  set up number of threads for CPU if NumThreads option was specified
 
    // check first if using tensorflow backend
-   if (GetKerasBackend() == kTensorFlow) {
+   if (GetKerasBackend() == kTensorFlow || UseTFKeras() ) {
       Log() << kINFO << "Using TensorFlow backend - setting special configuration options "  << Endl;
-      PyRunString("import tensorflow as tf");
-      PyRunString("from keras.backend import tensorflow_backend as K");
-
+      if (!UseTFKeras()) {
+         PyRunString("import tensorflow as tf", "Error importing tensorflow");
+         PyRunString("from keras.backend import tensorflow_backend as K");
+         // run these above lines also in global namespace to make them visible overall
+         PyRun_String("import tensorflow as tf", Py_single_input, fGlobalNS, fGlobalNS);
+         PyRun_String("from keras.backend import tensorflow_backend as K", Py_single_input, fGlobalNS, fGlobalNS);
+      } else {
+         //tf is already known since Init() is called before
+         PyRunString("K = tf.keras.backend");
+         PyRun_String("import tensorflow as tf", Py_single_input, fGlobalNS, fGlobalNS);
+         PyRun_String("K = tf.keras.backend", Py_single_input, fGlobalNS, fGlobalNS);
+      }
       // check tensorflow version
       PyRunString("tf_major_version = int(tf.__version__.split('.')[0])");
       //PyRunString("print(tf.__version__,'major is ',tf_major_version)");
@@ -239,9 +249,13 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
    else {
       filenameLoadModel = fFilenameModel;
    }
-   PyRunString("model = keras.models.load_model('"+filenameLoadModel+"')",
-               "Failed to load Keras model from file: "+filenameLoadModel);
-   Log() << kINFO << "Load model from file: " << filenameLoadModel << Endl;
+
+   Log() << kINFO << " Loading Keras Model " << Endl;
+
+   PyRunString("model = " + fKerasString + ".models.load_model('" + filenameLoadModel +
+                     "', custom_objects=load_model_custom_objects)", "Failed to load Keras model from file: " + filenameLoadModel);
+
+   Log() << kINFO << "Loaded model from file: " << filenameLoadModel << Endl;
 
 
    /*
@@ -281,8 +295,19 @@ void MethodPyKeras::Init() {
    // Import Keras
    // NOTE: sys.argv has to be cleared because otherwise TensorFlow breaks
    PyRunString("import sys; sys.argv = ['']", "Set sys.argv failed");
-   PyRunString("import keras", "Import Keras failed");
 
+   if (UseTFKeras()) {
+      Log() << kINFO << "Use Keras version from tensorflow : tf.keras" << Endl;
+      fKerasString = "tf.keras";
+      PyRunString("import tensorflow as tf", "Import tensorflow failed");
+   } else {
+      fKerasString = "keras";
+      PyRunString("import keras", "Import Keras failed");
+      // do import also in global namespace
+      auto ret = PyRun_String("import keras", Py_single_input, fGlobalNS, fGlobalNS);
+      if (!ret)
+        Log() << kFATAL << "Import Keras in global namespace failed " << Endl;
+   }
    // Set flag that model is not setup
    fModelIsSetup = false;
 }
@@ -406,7 +431,7 @@ void MethodPyKeras::Train() {
 
    // Callback: Save only weights with smallest validation loss
    if (fSaveBestOnly) {
-      PyRunString("callbacks.append(keras.callbacks.ModelCheckpoint('"+fFilenameTrainedModel+"', monitor='val_loss', verbose=verbose, save_best_only=True, mode='auto'))", "Failed to setup training callback: SaveBestOnly");
+      PyRunString("callbacks.append(" + fKerasString +".callbacks.ModelCheckpoint('"+fFilenameTrainedModel+"', monitor='val_loss', verbose=verbose, save_best_only=True, mode='auto'))", "Failed to setup training callback: SaveBestOnly");
       Log() << kINFO << "Option SaveBestOnly: Only model weights with smallest validation loss will be stored" << Endl;
    }
 
@@ -414,7 +439,7 @@ void MethodPyKeras::Train() {
    if (fTriesEarlyStopping>=0) {
       TString tries;
       tries.Form("%i", fTriesEarlyStopping);
-      PyRunString("callbacks.append(keras.callbacks.EarlyStopping(monitor='val_loss', patience="+tries+", verbose=verbose, mode='auto'))", "Failed to setup training callback: TriesEarlyStopping");
+      PyRunString("callbacks.append(" + fKerasString + ".callbacks.EarlyStopping(monitor='val_loss', patience="+tries+", verbose=verbose, mode='auto'))", "Failed to setup training callback: TriesEarlyStopping");
       Log() << kINFO << "Option TriesEarlyStopping: Training will stop after " << tries << " number of epochs with no improvement of validation loss" << Endl;
    }
 
@@ -435,7 +460,7 @@ void MethodPyKeras::Train() {
                   "Failed to setup scheduler function with string: "+fLearningRateSchedule,
                   Py_file_input);
       // Setup callback
-      PyRunString("callbacks.append(keras.callbacks.LearningRateScheduler(schedule))",
+      PyRunString("callbacks.append(" + fKerasString + ".callbacks.LearningRateScheduler(schedule))",
                   "Failed to setup training callback: LearningRateSchedule");
       Log() << kINFO << "Option LearningRateSchedule: Set learning rate during training: " << fLearningRateSchedule << Endl;
    }
@@ -444,7 +469,7 @@ void MethodPyKeras::Train() {
    if (fTensorBoard != "") {
       TString logdir = TString("'") + fTensorBoard + TString("'");
       PyRunString(
-         "callbacks.append(keras.callbacks.TensorBoard(log_dir=" + logdir +
+         "callbacks.append(" + fKerasString + ".callbacks.TensorBoard(log_dir=" + logdir +
             ", histogram_freq=0, batch_size=batchSize, write_graph=True, write_grads=False, write_images=False))",
          "Failed to setup training callback: TensorBoard");
       Log() << kINFO << "Option TensorBoard: Log files for training monitoring are stored in: " << logdir << Endl;
@@ -663,6 +688,10 @@ void MethodPyKeras::GetHelpMessage() const {
 
 MethodPyKeras::EBackendType MethodPyKeras::GetKerasBackend()  {
    // get the keras backend
+
+   // in case we use tf.keras backend is tensorflow
+   if (UseTFKeras())  return kTensorFlow;
+
    // check first if using tensorflow backend
    PyRunString("keras_backend_is_set =  keras.backend.backend() == \"tensorflow\"");
    PyObject * keras_backend = PyDict_GetItemString(fLocalNS,"keras_backend_is_set");
