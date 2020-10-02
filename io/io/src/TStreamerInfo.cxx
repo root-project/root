@@ -396,6 +396,9 @@ void TStreamerInfo::Build()
       if (!dm->IsPersistent()) {
          continue;
       }
+      if (dm->Property() & kIsUnionMember) {
+         continue;
+      }
       TMemberStreamer* streamer = 0;
       Int_t offset = GetDataMemberOffset(dm, streamer);
       if (offset == kMissing) {
