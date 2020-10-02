@@ -1,13 +1,13 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief Demonstrate Z_Bi = Z_Gamma
+/// Demonstrate Z_Bi = Z_Gamma
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 ///
-/// \author Kyle Cranmer & Wouter Verkerke
+/// \authors Kyle Cranmer & Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooProdPdf.h"

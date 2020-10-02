@@ -2279,8 +2279,8 @@ private:
 
       const auto nSlots = fLoopManager->GetNSlots();
 
-      auto action = RDFInternal::BuildAction<ColTypes...>(validColumnNames, r, nSlots, fProxiedPtr, ActionTag{},
-                                                             fDefines);
+      auto action =
+         RDFInternal::BuildAction<ColTypes...>(validColumnNames, r, nSlots, fProxiedPtr, ActionTag{}, fDefines);
       fLoopManager->Book(action.get());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
    }
@@ -2313,7 +2313,7 @@ private:
                                                tree, nSlots, fDefines, fDataSource, jittedActionOnHeap);
       fLoopManager->Book(jittedAction.get());
       fLoopManager->ToJitExec(toJit);
-      return MakeResultPtr(r, *fLoopManager, jittedAction);
+      return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }
 
    template <typename F, typename DefineType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>

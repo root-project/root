@@ -1,7 +1,6 @@
 /// \file
 /// \ingroup tutorial_FITS
 /// \notebook -draw
-///
 /// Open a FITS file and retrieve the first plane of the image array
 /// as a TImage object.
 ///

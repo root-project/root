@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// \brief Use RVecs to plot the transverse momentum of selected particles.
+/// Use RVecs to plot the transverse momentum of selected particles.
 ///
 /// This tutorial shows how VecOps can be used to slim down the programming
 /// model typically adopted in HEP for analysis.
@@ -14,7 +14,7 @@
 /// \macro_image
 ///
 /// \date March 2018
-/// \author Danilo Piparo, Andre Vieira Silva
+/// \authors Danilo Piparo (CERN), Andre Vieira Silva
 
 auto filename = gROOT->GetTutorialDir() + "/dataframe/df017_vecOpsHEP.root";
 auto treename = "myDataset";

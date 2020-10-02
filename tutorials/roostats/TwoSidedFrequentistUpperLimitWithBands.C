@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief TwoSidedFrequentistUpperLimitWithBands
+/// TwoSidedFrequentistUpperLimitWithBands
 ///
 ///
 /// This is a standard demo that can be used with any ROOT file
@@ -97,7 +97,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \author Kyle Cranmer,Contributions from Aaron Armbruster, Haoshuang Ji, Haichen Wang and Daniel Whiteson
+/// \authors Kyle Cranmer,Contributions from Aaron Armbruster, Haoshuang Ji, Haichen Wang and Daniel Whiteson
 
 #include "TFile.h"
 #include "TROOT.h"

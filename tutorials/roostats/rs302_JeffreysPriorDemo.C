@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief tutorial demonstrating and validates the RooJeffreysPrior class
+/// tutorial demonstrating and validates the RooJeffreysPrior class
 ///
 /// Jeffreys's prior is an 'objective prior' based on formal rules.
 /// It is calculated from the Fisher information matrix.
@@ -81,7 +81,7 @@ void rs302_JeffreysPriorDemo()
    pi.plotOn(plot);
    test->plotOn(plot, LineColor(kRed), LineStyle(kDashDotted));
    plot->Draw();
-   
+
    auto legend = plot->BuildLegend();
    legend->DrawClone();
 }
@@ -124,7 +124,7 @@ void TestJeffreysGaussMean()
    pi.plotOn(plot);
    test->plotOn(plot, LineColor(kRed), LineStyle(kDashDotted));
    plot->Draw();
-   
+
    auto legend = plot->BuildLegend();
    legend->DrawClone();
 }
@@ -173,7 +173,7 @@ void TestJeffreysGaussSigma()
    pi.plotOn(plot);
    test->plotOn(plot, LineColor(kRed), LineStyle(kDashDotted));
    plot->Draw();
-   
+
    auto legend = plot->BuildLegend();
    legend->DrawClone();
 }

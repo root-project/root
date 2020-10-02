@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief Standard demo of the ProfileInspector class
+/// Standard demo of the ProfileInspector class
 /// StandardProfileInspectorDemo
 ///
 /// This is a standard demo that can be used with any ROOT file

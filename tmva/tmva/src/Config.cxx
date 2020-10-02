@@ -70,6 +70,7 @@ TMVA::Config::Config() :
    fVariablePlotting.fNbinsMVAoutput   = 40;
    fVariablePlotting.fNbinsXOfROCCurve = 100;
    fVariablePlotting.fUsePaperStyle = 0;
+   fVariablePlotting.fPlotFormat = VariablePlotting::kPNG;  // format for plotting (use when fUsePaperStyle ==0)
 
    // IO names
    fIONames.fWeightFileDirPrefix = "";
