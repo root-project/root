@@ -71,6 +71,7 @@ enum EProperty {
    kIsAbstract      = 0x00000040,
    kIsVirtual       = 0x00000080,
    kIsPureVirtual   = 0x00000100,
+   kIsUnionMember   = 0x00000100,
    kIsPublic        = 0x00000200,
    kIsProtected     = 0x00000400,
    kIsPrivate       = 0x00000800,

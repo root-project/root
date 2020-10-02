@@ -494,6 +494,11 @@ long TClingDataMemberInfo::Property() const
          property |= kIsEnum;
       }
    }
+
+   if (const auto *RD = llvm::dyn_cast<RecordDecl>(thisDecl->getDeclContext())) {
+      if (RD->isUnion())
+         property |= kIsUnionMember;
+   }
    // We can't be a namespace, can we?
    //   if (dc->isNamespace() && !dc->isTranslationUnit()) {
    //      property |= kIsNamespace;
