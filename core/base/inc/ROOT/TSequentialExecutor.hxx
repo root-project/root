@@ -59,6 +59,12 @@ namespace ROOT {
       
       using TExecutorCRTP<TSequentialExecutor>::Reduce;
       template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
+
+      //////////////////////////////////////////////////////////////////////////
+      /// \brief Return the number of workers in the sequential executor: a single one.
+      ///
+      /// \return The number of workers in the pool, one.
+      unsigned GetPoolSize() { return 1u; }
    };
 
    /************ TEMPLATE METHODS IMPLEMENTATION ******************/
