@@ -2257,8 +2257,9 @@ void TVirtualX::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 /// \param [in] max        specifies the maximum number of names to be returned
 /// \param [in] count      returns the actual number of font names
 
-char **TVirtualX::ListFonts(const char * /*fontname*/, Int_t /*max*/, Int_t &/*count*/)
+char **TVirtualX::ListFonts(const char * /*fontname*/, Int_t /*max*/, Int_t & count)
 {
+   count=0;
    return 0;
 }
 
