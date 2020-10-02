@@ -58,7 +58,7 @@ int instHeaderTestMembers()
       printf("ClassInfo is invalid.\n");
       return 0;
    }
-   auto d = gInterpreter->DataMemberInfo_Factory(c);
+   auto d = gInterpreter->DataMemberInfo_Factory(c, TDictionary::EMemberSelection::kNoUsingDecls);
    while (gInterpreter->DataMemberInfo_Next(d)) {
       if (gInterpreter->DataMemberInfo_IsValid(d)) {
          printf("DataMember: %s\n",gInterpreter->DataMemberInfo_Name(d));
@@ -70,6 +70,3 @@ int instHeaderTestMembers()
 }
 
 #endif
-
-
-
