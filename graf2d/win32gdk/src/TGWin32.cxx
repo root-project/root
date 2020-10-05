@@ -3191,8 +3191,11 @@ void TGWin32::UpdateFillStyle()
             gFillPattern = NULL;
          }
          int stn = (fasi >= 1 && fasi <=25) ? fasi : 2;
+         char pattern[32];
+         for (int i=0;i<32;++i)
+            pattern[i] = ~gStipples[stn][i];
          gFillPattern = gdk_bitmap_create_from_data(GDK_ROOT_PARENT(),
-                                                    (const char *)gStipples[stn], 16, 16);
+                                                    (const char *)&pattern, 16, 16);
          gdk_gc_set_stipple(gGCfill, gFillPattern);
          current_fasi = fasi;
       }
