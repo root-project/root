@@ -9,7 +9,21 @@
 
 #include "gtest/gtest.h"
 
-namespace TEST_CATEGORY {
+// Fixture for all tests in this file. If parameter is true, run with implicit MT, else run sequentially
+class RDFRegressionTests : public ::testing::TestWithParam<bool> {
+protected:
+   RDFRegressionTests() : NSLOTS(GetParam() ? 4u : 1u)
+   {
+      if (GetParam())
+         ROOT::EnableImplicitMT(NSLOTS);
+   }
+   ~RDFRegressionTests()
+   {
+      if (GetParam())
+         ROOT::DisableImplicitMT();
+   }
+   const unsigned int NSLOTS;
+};
 
 void FillTree(const char *filename, const char *treeName, int nevents = 0)
 {
@@ -25,19 +39,15 @@ void FillTree(const char *filename, const char *treeName, int nevents = 0)
    t.Write();
    f.Close();
 }
-}
 
-TEST(TEST_CATEGORY, MultipleTriggerRun)
+TEST_P(RDFRegressionTests, MultipleTriggerRun)
 {
-   auto fileName = "dataframe_regression_0.root";
-   auto treeName = "t";
-#ifndef dataframe_regression_0_CREATED
-#define dataframe_regression_0_CREATED
+   const auto fileName = std::string("dataframe_regression_0") + std::to_string(GetParam()) + ".root";
+   const auto treeName = "t";
    {
       ROOT::RDataFrame tdf(1);
       tdf.Define("b1", []() { return 1U; }).Snapshot<unsigned int>(treeName, fileName, {"b1"});
    }
-#endif
 
    ROOT::RDataFrame d(treeName, fileName, {"b1"});
    int i = 0;
@@ -59,20 +69,18 @@ TEST(TEST_CATEGORY, MultipleTriggerRun)
    EXPECT_EQ(2, i) << "The filter was not correctly executed for the second time.";
 }
 
-TEST(TEST_CATEGORY, EmptyTree)
+TEST_P(RDFRegressionTests, EmptyTree)
 {
-   auto fileName = "dataframe_regression_2.root";
-   auto treeName = "t";
-#ifndef dataframe_regression_2_CREATED
-#define dataframe_regression_2_CREATED
+   const auto fileName = std::string("dataframe_regression_2") + std::to_string(GetParam()) + ".root";
+   const auto treeName = "t";
    {
-      TFile wf(fileName, "RECREATE");
+      TFile wf(fileName.c_str(), "RECREATE");
       TTree t(treeName, treeName);
       int a;
       t.Branch("a", &a);
       t.Write();
    }
-#endif
+
    ROOT::RDataFrame d(treeName, fileName, {"a"});
    auto min = d.Min<int>();
    auto max = d.Max<int>();
@@ -94,7 +102,7 @@ TEST(TEST_CATEGORY, EmptyTree)
 
 // check that rdfentry_ contains all expected values,
 // also in multi-thread runs over multiple ROOT files
-TEST(TEST_CATEGORY, UniqueEntryNumbers)
+TEST_P(RDFRegressionTests, UniqueEntryNumbers)
 {
    const auto treename = "t";
    const auto fname = "df_uniqueentrynumbers.root";
@@ -111,7 +119,7 @@ TEST(TEST_CATEGORY, UniqueEntryNumbers)
 }
 
 // ROOT-9731
-TEST(TEST_CATEGORY, ReadWriteVector3)
+TEST_P(RDFRegressionTests, ReadWriteVector3)
 {
    const std::string filename = "readwritetvector3.root";
    {
@@ -149,7 +157,7 @@ TEST(TEST_CATEGORY, ReadWriteVector3)
    gSystem->Unlink(filename.c_str());
 }
 
-TEST(TEST_CATEGORY, PolymorphicTBranchObject)
+TEST_P(RDFRegressionTests, PolymorphicTBranchObject)
 {
    const std::string filename = "polymorphictbranchobject.root";
    {
@@ -205,3 +213,11 @@ TEST(TEST_CATEGORY, PolymorphicTBranchObject)
    gSystem->Unlink(snap_fname.c_str());
    gSystem->Unlink(filename.c_str());
 }
+
+// run single-thread tests
+INSTANTIATE_TEST_SUITE_P(Seq, RDFRegressionTests, ::testing::Values(false));
+
+// run multi-thread tests
+#ifdef R__USE_IMT
+   INSTANTIATE_TEST_SUITE_P(MT, RDFRegressionTests, ::testing::Values(true));
+#endif
