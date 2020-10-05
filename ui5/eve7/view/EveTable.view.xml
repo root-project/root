@@ -26,7 +26,7 @@
         id="table"
 	sort="sortTable"
         class="sapUiNoMarginTop"
-        selectionMode="None"
+        selectionBehavior="RowOnly"
         editable="false"
         rowHeight="22"
         showColumnVisibilityMenu="true"
