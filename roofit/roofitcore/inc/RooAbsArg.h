@@ -177,7 +177,8 @@ public:
   ////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////
-  /// \name Client-Server Interface.
+  /// \anchor clientServerInterface
+  /// \name Client-Server Interface
   /// These functions allow RooFit to figure out who is serving values to whom.
   /// @{
 
@@ -369,12 +370,6 @@ public:
     return kTRUE ;
   }
 
-  //Debug hooks
-  static void verboseDirty(Bool_t flag) ;
-  void printDirty(Bool_t depth=kTRUE) const ;
-
-  static void setDirtyInhibit(Bool_t flag) ;
-
   virtual bool operator==(const RooAbsArg& other) const = 0 ;
   virtual bool isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const = 0 ;
 
@@ -390,9 +385,15 @@ public:
 
 
   enum ConstOpCode { Activate=0, DeActivate=1, ConfigChange=2, ValueChange=3 } ;
+  enum CacheMode { Always=0, NotAdvised=1, Never=2 } ;
+  enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
 
-
-  friend class RooMinuit ;
+  ////////////////////////////////////////////////////////////////////////////
+  /// \anchor optimisationInterface
+  /// \name Optimisation interface
+  /// These functions allow RooFit to optimise a computation graph, to keep track
+  /// of cached values, and to invalidate caches.
+  /// @{
 
   // Cache mode optimization (tracks changes & do lazy evaluation vs evaluate always)
   virtual void optimizeCacheMode(const RooArgSet& observables) ;
@@ -406,19 +407,9 @@ public:
 
   // constant term optimization
   virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
-  enum CacheMode { Always=0, NotAdvised=1, Never=2 } ;
+
   virtual CacheMode canNodeBeCached() const { return Always ; }
   virtual void setCacheAndTrackHints(RooArgSet& /*trackNodes*/ ) {} ;
-
-  void graphVizTree(const char* fileName, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
-  void graphVizTree(std::ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
-
-/*   TGraphStruct* graph(Bool_t useFactoryTag=kFALSE, Double_t textSize=0.03) ; */
-
-  void printComponentTree(const char* indent="",const char* namePat=0, Int_t nLevel=999) ;
-  void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0, RooAbsArg* client=0) ;
-  void printCompactTree(std::ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
-  virtual void printCompactTreeHook(std::ostream& os, const char *ind="") ;
 
   // Dirty state accessor
   inline Bool_t isShapeDirty() const {
@@ -488,19 +479,10 @@ public:
   Int_t numCaches() const ;
   RooAbsCache* getCache(Int_t index) const ;
 
-  enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
+  /// Query the operation mode of this node.
   inline OperMode operMode() const { return _operMode  ; }
+  /// Set the operation mode of this node.
   void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ;
-
-  Bool_t addOwnedComponents(const RooArgSet& comps) ;
-  const RooArgSet* ownedComponents() const { return _ownedComponents ; }
-
-  void setProhibitServerRedirect(Bool_t flag) { _prohibitServerRedirect = flag ; }
-
-  void setWorkspace(RooWorkspace &ws) { _myws = &ws; }
-
-  RooAbsProxy* getProxy(Int_t index) const ;
-  Int_t numProxies() const ;
 
   // Dirty state modifiers
   /// Mark the element dirty. This forces a re-evaluation when a value is requested.
@@ -516,18 +498,42 @@ public:
 
   void wireAllCaches() ;
 
+  RooExpensiveObjectCache& expensiveObjectCache() const ;
+  virtual void setExpensiveObjectCache(RooExpensiveObjectCache &cache) { _eocache = &cache; }
+
+  /// @}
+  ////////////////////////////////////////////////////////////////////////////
+
+  //Debug hooks
+  static void verboseDirty(Bool_t flag) ;
+  void printDirty(Bool_t depth=kTRUE) const ;
+  static void setDirtyInhibit(Bool_t flag) ;
+
+  void graphVizTree(const char* fileName, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
+  void graphVizTree(std::ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
+
+  void printComponentTree(const char* indent="",const char* namePat=0, Int_t nLevel=999) ;
+  void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0, RooAbsArg* client=0) ;
+  void printCompactTree(std::ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
+  virtual void printCompactTreeHook(std::ostream& os, const char *ind="") ;
+
+  Bool_t addOwnedComponents(const RooArgSet& comps) ;
+  const RooArgSet* ownedComponents() const { return _ownedComponents ; }
+
+  void setProhibitServerRedirect(Bool_t flag) { _prohibitServerRedirect = flag ; }
+
+  void setWorkspace(RooWorkspace &ws) { _myws = &ws; }
+
+  RooAbsProxy* getProxy(Int_t index) const ;
+  Int_t numProxies() const ;
+
+
   inline const TNamed* namePtr() const {
     return _namePtr ;
   }
 
   void SetName(const char* name) ;
   void SetNameTitle(const char *name, const char *title) ;
-
-
-
-
-  RooExpensiveObjectCache& expensiveObjectCache() const ;
-  virtual void setExpensiveObjectCache(RooExpensiveObjectCache &cache) { _eocache = &cache; }
 
   virtual Bool_t importWorkspaceHook(RooWorkspace &ws)
   {
