@@ -43,6 +43,12 @@ namespace RDF {
 const std::type_info &TypeName2TypeID(const std::string &name)
 {
    if (auto c = TClass::GetClass(name.c_str())) {
+      if (!c->GetTypeInfo()) {
+         std::string msg("Cannot extract type_info of type ");
+         msg += name.c_str();
+         msg += ".";
+         throw std::runtime_error(msg);
+      }
       return *c->GetTypeInfo();
    } else if (name == "char" || name == "Char_t")
       return typeid(char);

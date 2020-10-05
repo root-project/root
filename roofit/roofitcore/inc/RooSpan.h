@@ -19,6 +19,7 @@
 
 #include "ROOT/RSpan.hxx"
 #include <vector>
+#include <cassert>
 
 ////////////////////////////////////////////////////////////////////////////
 /// A simple container to hold a batch of data values.
