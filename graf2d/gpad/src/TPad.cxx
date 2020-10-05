@@ -1330,6 +1330,7 @@ void TPad::Draw(Option_t *option)
 
 void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
 {
+   if (!classobj) return;
    char dname[256];
    const Int_t kMAXLEVELS = 10;
    TClass *clevel[kMAXLEVELS], *cl, *cll;
@@ -2286,7 +2287,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
 {
    if (!IsEditable()) return;
-
+   if (!axis) return;
    SetCursor(kHand);
 
    TView *view = GetView();
@@ -3265,7 +3266,7 @@ void TPad::FillCollideGridTGraph(TObject *o)
 void TPad::FillCollideGridTH1(TObject *o)
 {
    TH1 *h = (TH1 *)o;
-
+   if (fCGnx==0||fCGny==0) return;
    if (o->InheritsFrom(TH2::Class())) return;
    if (o->InheritsFrom(TH3::Class())) return;
 
@@ -3346,6 +3347,7 @@ void TPad::FillCollideGridTH1(TObject *o)
 
 void TPad::DrawCollideGrid()
 {
+   if (fCGnx==0||fCGny==0) return;
    auto box = new TBox();
    box->SetFillColorAlpha(kRed,0.5);
 
@@ -3839,6 +3841,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 
 void TPad::CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y)
 {
+   if (!start) return;
    TObject *obj;
    if (!fPrimitives) fPrimitives = new TList;
    TIter next(start->GetListOfPrimitives());
@@ -6484,6 +6487,7 @@ Int_t TPad::GetCrosshair() const
 
 void TPad::SetCrosshair(Int_t crhair)
 {
+   if (!fCanvas) return;
    fCrosshair = crhair;
    fCrosshairPos = 0;
 

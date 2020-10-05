@@ -702,9 +702,10 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
       }		
       if (coefSum==0.) {
         coutW(Eval) << "RooAddPdf::updateCoefCache(" << GetName() << ") WARNING: sum of coefficients is zero 0" << endl ;
-      } else {	
+      } else {
+        const double invCoefSum = 1./coefSum;
         for (int j=0; j < _coefList.getSize(); j++) {
-          myCoefCache[j] /= coefSum;
+          myCoefCache[j] *= invCoefSum;
         }
       }
     } else {
@@ -778,8 +779,12 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
   
 }
 
-std::pair<const RooArgSet*, RooAddPdf::CacheElem*> RooAddPdf::getNormAndCache() const {
-  const RooArgSet* nset = _normSet ; 
+////////////////////////////////////////////////////////////////////////////////
+/// Look up projection cache and per-PDF norm sets. If a PDF doesn't have a special
+/// norm set, use the `defaultNorm`. If `defaultNorm == nullptr`, use the member
+/// _normSet.
+std::pair<const RooArgSet*, RooAddPdf::CacheElem*> RooAddPdf::getNormAndCache(const RooArgSet* defaultNorm) const {
+  const RooArgSet* nset = defaultNorm ? defaultNorm : _normSet;
 
   if (nset==0 || nset->getSize()==0) {
     if (_refCoefNorm.getSize()!=0) {

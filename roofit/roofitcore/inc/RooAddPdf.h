@@ -147,7 +147,7 @@ protected:
   mutable Int_t _coefErrCount ; //! Coefficient error counter
 
 private:
-  std::pair<const RooArgSet*, CacheElem*> getNormAndCache() const;
+  std::pair<const RooArgSet*, CacheElem*> getNormAndCache(const RooArgSet* defaultNorm = nullptr) const;
 
   ClassDef(RooAddPdf,3) // PDF representing a sum of PDFs
 };
