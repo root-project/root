@@ -16,6 +16,7 @@
 #include "MPCode.h"
 #include "MPSendRecv.h"
 #include "PoolUtils.h"
+#include "ROOT/RConfig.hxx" //R__DEPRECATED
 #include "TError.h"
 #include "TFileCollection.h"
 #include "TFileInfo.h"
@@ -52,7 +53,7 @@ public:
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
 
    /// \deprecated Use GetPoolSize()
-   unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); } _R__DEPRECATED_626("Using GetPoolSize to unify the Executor's interfaces");
+   unsigned GetNWorkers() const _R__DEPRECATED_626("Using GetPoolSize to unify the Executor's interfaces") { return TMPClient::GetNWorkers(); }
 
    //////////////////////////////////////////////////////////////////////////
    /// \brief Return the number of pooled parallel workers.
