@@ -87,6 +87,12 @@ if(ROOT_imt_FOUND)
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
 
+ROOTTEST_GENERATE_EXECUTABLE(tExecutor tExecutor.cxx LIBRARIES Core Imt MultiProc Net TreePlayer RIO Hist MathCore)
+
+ROOTTEST_ADD_TEST(tExecutor
+                  EXEC ${CMAKE_CURRENT_BINARY_DIR}/tExecutor
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_GENERATE_EXECUTABLE(current_dir current_dir.cpp LIBRARIES Core RIO Thread)
 
 ROOTTEST_ADD_TEST(current_dir
