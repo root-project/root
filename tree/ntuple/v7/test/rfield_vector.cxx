@@ -72,6 +72,8 @@ TEST(RNTuple, InsideCollection)
    EXPECT_EQ(1U, aVec->size());
    EXPECT_EQ(42.0, (*aVec)[0]);
    field->DestroyValue(value);
+   
+   // TODO: test reading of "klassVec.v1"
 }
 
 
