@@ -668,7 +668,7 @@ private:
 
   mutable Bool_t _prohibitServerRedirect ; //! Prohibit server redirects -- Debugging tool
 
-  mutable RooExpensiveObjectCache* _eocache ; // Pointer to global cache manager for any expensive components created by this object
+  mutable RooExpensiveObjectCache* _eocache{nullptr}; // Pointer to global cache manager for any expensive components created by this object
 
   mutable TNamed* _namePtr ; //! Do not persist. Pointer to global instance of string that matches object named
   Bool_t _isConstant ; //! Cached isConstant status
