@@ -67,6 +67,8 @@ TEST_P(RDFRegressionTests, MultipleTriggerRun)
 
    *dummy; // this should cause i to be incremented
    EXPECT_EQ(2, i) << "The filter was not correctly executed for the second time.";
+
+   gSystem->Unlink(fileName.c_str());
 }
 
 TEST_P(RDFRegressionTests, EmptyTree)
@@ -98,6 +100,8 @@ TEST_P(RDFRegressionTests, EmptyTree)
    EXPECT_EQ(*c, 0U);
    EXPECT_EQ(g->size(), 0U);
    EXPECT_EQ(fc.load(), 0);
+
+   gSystem->Unlink(fileName.c_str());
 }
 
 // check that rdfentry_ contains all expected values,
