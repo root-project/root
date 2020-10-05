@@ -70,47 +70,49 @@ namespace ROOT {
    /************ TEMPLATE METHODS IMPLEMENTATION ******************/
 
    //////////////////////////////////////////////////////////////////////////
-   /// Execute func (with no arguments) nTimes.
-   /// Functions that take more than zero arguments can be executed (with
-   /// fixed arguments) by wrapping them in a lambda or with std::bind.
+   /// \brief Execute a function without arguments several times, dividing the execution in nChunks.
+   ///
+   /// \param func Function to be executed.
+   /// \param nTimes Number of times function should be called.
    template<class F>
    void TSequentialExecutor::Foreach(F func, unsigned nTimes) {
       for (auto i = 0U; i < nTimes; ++i) func();
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// Execute func, taking an element of a
-   /// sequence as argument.
+   /// \brief Execute a function over a sequence of indexes, dividing the execution in nChunks.
+   ///
+   /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
+   /// \param args Sequence of indexes to execute `func` on.
    template<class F, class INTEGER>
    void TSequentialExecutor::Foreach(F func, ROOT::TSeq<INTEGER> args) {
-       for(auto i : args) func(i);
+         for(auto i : args) func(i);
    }
 
-   /// \cond
    //////////////////////////////////////////////////////////////////////////
-   /// Execute func, taking an element of a
-   /// initializer_list as argument.
+   /// \brief Execute a function over the elements of an initializer_list, dividing the execution in nChunks.
+   ///
+   /// \param func Function to be executed on the elements of the initializer_list passed as second parameter.
+   /// \param args initializer_list for a vector to apply `func` on.
    template<class F, class T>
    void TSequentialExecutor::Foreach(F func, std::initializer_list<T> args) {
-       std::vector<T> vargs(std::move(args));
-       Foreach(func, vargs);
+         std::vector<T> vargs(std::move(args));
+         Foreach(func, vargs);
    }
-   /// \endcond
 
    //////////////////////////////////////////////////////////////////////////
-   /// Execute func, taking an element of an
-   /// std::vector as argument.
+   /// \brief Execute a function over the elements of a vector, dividing the execution in nChunks.
+   ///
+   /// \param func Function to be executed on the elements of the vector passed as second parameter.
+   /// \param args Vector of elements passed as an argument to `func`.
    template<class F, class T>
    void TSequentialExecutor::Foreach(F func, std::vector<T> &args) {
-        unsigned int nToProcess = args.size();
-        for(auto i: ROOT::TSeqI(nToProcess)) func(args[i]);
+         unsigned int nToProcess = args.size();
+         for(auto i: ROOT::TSeqI(nToProcess)) func(args[i]);
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// Execute func (with no arguments) nTimes.
-   /// A vector containg executions' results is returned.
-   /// Functions that take more than zero arguments can be executed (with
-   /// fixed arguments) by wrapping them in a lambda or with std::bind.
+   /// \copydoc TExecutorCRTP::Map(F func,unsigned nTimes)
    template<class F, class Cond>
    auto TSequentialExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
       using retType = decltype(func());
@@ -120,9 +122,7 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// Execute func, taking an element of a
-   /// sequence as argument.
-   /// A vector containg executions' results is returned.
+   /// \copydoc TExecutorCRTP::Map(F func,ROOT::TSeq<INTEGER> args)
    template<class F, class INTEGER, class Cond>
    auto TSequentialExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
       using retType = decltype(func(*args.begin()));
@@ -132,11 +132,7 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// Execute func, taking an element of an
-   /// std::vector as argument.
-   /// A vector containg executions' results is returned.
-   // actual implementation of the Map method. all other calls with arguments eventually
-   // call this one
+   /// \copydoc TExecutorCRTP::Map(F func,std::vector<T> &args)
    template<class F, class T, class Cond>
    auto TSequentialExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
       // //check whether func is callable
@@ -147,19 +143,27 @@ namespace ROOT {
       return reslist;
    }
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \copydoc TExecutorCRTP::MapReduce(F func,unsigned nTimes,R redfunc)
    template<class F, class R, class Cond>
    auto TSequentialExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type {
       return Reduce(Map(func, nTimes), redfunc);
    }
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \copydoc TExecutorCRTP::MapReduce(F func,std::vector<T> &args,R redfunc)
    template<class F, class T, class R, class Cond>
    auto TSequentialExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
       return Reduce(Map(func, args), redfunc);
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// "Reduce" an std::vector into a single object by passing a
+   /// \brief "Reduce" an std::vector into a single object by passing a
    /// function as the second argument defining the reduction operation.
+   ///
+   /// \param objs A vector of elements to combine.
+   /// \param redfunc Reduction function to combine the elements of the vector `objs`
+   /// \return A value result of combining the vector elements into a single object of the same type.
    template<class T, class R>
    auto TSequentialExecutor::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
    {
