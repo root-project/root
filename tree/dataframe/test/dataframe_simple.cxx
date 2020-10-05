@@ -951,6 +951,11 @@ TEST_P(RDFSimpleTests, ChainWithDifferentTreeNames)
    gSystem->Unlink(fname2);
 }
 
+TEST_P(RDFSimpleTests, WritingToFundamentalType)
+{
+   EXPECT_THROW(ROOT::RDataFrame(1).Define("x", [] { return 1; }).Filter("x = 42"), std::runtime_error);
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
