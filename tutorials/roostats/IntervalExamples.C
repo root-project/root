@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// \brief Example showing confidence intervals with four techniques.
+/// Example showing confidence intervals with four techniques.
 ///
 /// An example that shows confidence intervals with four techniques.
 /// The model is a Normal Gaussian G(x|mu,sigma) with 100 samples of x.

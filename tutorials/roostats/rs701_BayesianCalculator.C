@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// \brief Bayesian calculator: basic exmple
+/// Bayesian calculator: basic exmple
 ///
 /// \macro_image
 /// \macro_output

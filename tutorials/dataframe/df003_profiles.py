@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief Use TProfiles with RDataFrame.
+## Use TProfiles with RDataFrame.
 ##
 ## This tutorial illustrates how to use TProfiles in combination with the
 ## RDataFrame. See the documentation of TProfile and TProfile2D to better
@@ -11,7 +11,7 @@
 ## \macro_image
 ##
 ## \date February 2017
-## \author Danilo Piparo
+## \author Danilo Piparo (CERN)
 
 import ROOT
 

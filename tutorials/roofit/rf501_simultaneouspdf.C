@@ -1,16 +1,14 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Organisation and simultaneous fits: using simultaneous p.d.f.s to describe simultaneous
+/// Organisation and simultaneous fits: using simultaneous pdfs to describe simultaneous
 /// fits to multiple datasets
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"

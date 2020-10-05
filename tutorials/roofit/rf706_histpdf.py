@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Special p.d.f.'s: histogram based p.d.f.s and functions
+## Special pdf's: histogram based pdfs and functions
 ##
 ## \macro_code
 ##

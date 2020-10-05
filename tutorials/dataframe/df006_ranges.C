@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// \brief Use Range to limit the amount of data processed.
+/// Use Range to limit the amount of data processed.
 ///
 /// This tutorial shows how to express the concept of ranges when working with the RDataFrame.
 ///
@@ -9,7 +9,7 @@
 /// \macro_output
 ///
 /// \date March 2017
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.

@@ -73,6 +73,8 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 - For some `TTrees`, RDataFrame's `GetColumnNames` method returns multiple valid spellings for a given column. For example, leaf `"l"` under branch `"b"` might now be mentioned as `"l"` as well as `"b.l"`, while only one of the two spellings might have been recognized before.
 - Introduce `ROOT::RDF::RunGraphs`, which allows to compute the results of multiple RDataFrames concurrently while sharing the same thread pool. The computation may be more efficient than running the RDataFrames sequentially if an analysis consists of many RDataFrames, which don't have enough data to fully utilize the available resources.
 - CSV files can now be opened and processed from HTTP(S) locations
+- Certain RDF-related types in the ROOT::Detail and ROOT::Internal namespaces have been renamed, most notably `RCustomColumn` is now `RDefine`. This does not impact code that only makes use of entities in the public ROOT namespace, and should not impact downstream code unless it was patching or reusing internal RDataFrame types.
+- Just-in-time compilation of string expressions passed to `Filter` and `Define` now generates functions that take fundamental types by const value (rather than by non-const reference as before). This will break code that was assigning to column values in string expressions: this is an intended side effect as we want to prevent non-expert users from performing assignments (=) rather than comparisons (==). Expert users can resort to compiled callables if they absolutely have to assign to column values (not recommended). See [ROOT-11009](https://sft.its.cern.ch/jira/browse/ROOT-11009) for further discussion.
 
 ## Histogram Libraries
 

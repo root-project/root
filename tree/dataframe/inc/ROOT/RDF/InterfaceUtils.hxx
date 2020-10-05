@@ -137,7 +137,7 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
 {
    using Helper_t = FillParHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(defines));
+   return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), defines);
 }
 
 // Histo1D filling (must handle the special case of distinguishing FillParHelper and FillHelper
@@ -151,11 +151,11 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
    if (hasAxisLimits) {
       using Helper_t = FillParHelper<::TH1D>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
-      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(defines));
+      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), defines);
    } else {
       using Helper_t = FillHelper;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
-      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), std::move(defines));
+      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), defines);
    }
 }
 
@@ -166,7 +166,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = FillTGraphHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(g, nSlots), bl, std::move(prevNode), std::move(defines));
+   return std::make_unique<Action_t>(Helper_t(g, nSlots), bl, std::move(prevNode), defines);
 }
 
 // Min action
@@ -177,7 +177,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = MinHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
-   return std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, std::move(prevNode), std::move(defines));
+   return std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, std::move(prevNode), defines);
 }
 
 // Max action
@@ -188,7 +188,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
-   return std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, std::move(prevNode), std::move(defines));
+   return std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, std::move(prevNode), defines);
 }
 
 // Sum action
@@ -199,7 +199,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = SumHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
-   return std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, std::move(prevNode), std::move(defines));
+   return std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, std::move(prevNode), defines);
 }
 
 // Mean action
@@ -210,7 +210,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = MeanHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
-   return std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, std::move(prevNode), std::move(defines));
+   return std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, std::move(prevNode), defines);
 }
 
 // Standard Deviation action
@@ -221,7 +221,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
-   return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, std::move(defines));
+   return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, defines);
 }
 
 // Display action
@@ -232,7 +232,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(d, prevNode), bl, prevNode, std::move(defines));
+   return std::make_unique<Action_t>(Helper_t(d, prevNode), bl, prevNode, defines);
 }
 
 /****** end BuildAndBook ******/

@@ -40,7 +40,6 @@ protected:
 };
 
 // Create file `filename` containing a test tree `treeName` with `nevents` events
-// TODO: create just one file at the beginning of the test execution, delete the file at test exit
 void FillTree(const char *filename, const char *treeName, int nevents = 0)
 {
    TFile f(filename, "RECREATE");
@@ -950,6 +949,11 @@ TEST_P(RDFSimpleTests, ChainWithDifferentTreeNames)
 
    gSystem->Unlink(fname1);
    gSystem->Unlink(fname2);
+}
+
+TEST_P(RDFSimpleTests, WritingToFundamentalType)
+{
+   EXPECT_THROW(ROOT::RDataFrame(1).Define("x", [] { return 1; }).Filter("x = 42"), std::runtime_error);
 }
 
 // run single-thread tests

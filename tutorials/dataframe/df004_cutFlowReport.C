@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// \brief Display cut/Filter efficiencies with RDataFrame.
+/// Display cut/Filter efficiencies with RDataFrame.
 ///
 /// This tutorial shows how to get information about the efficiency of the filters
 /// applied
@@ -10,7 +10,7 @@
 /// \macro_output
 ///
 /// \date December 2016
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 using FourVector = ROOT::Math::XYZTVector;
 using FourVectors = std::vector<FourVector>;

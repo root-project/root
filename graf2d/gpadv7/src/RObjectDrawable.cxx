@@ -21,6 +21,8 @@
 
 using namespace ROOT::Experimental;
 
+RObjectDrawable::~RObjectDrawable() {}
+
 std::unique_ptr<RDisplayItem> RObjectDrawable::Display(const RDisplayContext &ctxt)
 {
    if (GetVersion() > ctxt.GetLastVersion())

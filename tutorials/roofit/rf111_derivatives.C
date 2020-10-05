@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Basic functionality: numerical 1st,2nd and 3rd order derivatives w.r.t. observables and parameters
+/// Basic functionality: numerical 1st,2nd and 3rd order derivatives w.r.t. observables and parameters
 ///
 /// ```
 ///  pdf = gauss(x,m,s)
@@ -13,7 +11,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -34,7 +32,7 @@ void rf111_derivatives()
    RooRealVar mean("mean", "mean of gaussian", 1, -10, 10);
    RooRealVar sigma("sigma", "width of gaussian", 1, 0.1, 10);
 
-   // Build gaussian p.d.f in terms of x,mean and sigma
+   // Build gaussian pdf in terms of x,mean and sigma
    RooGaussian gauss("gauss", "gaussian PDF", x, mean, sigma);
 
    // C r e a t e   a n d   p l o t  d e r i v a t i v e s   w . r . t .   x
