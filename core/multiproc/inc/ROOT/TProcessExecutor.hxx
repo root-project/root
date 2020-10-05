@@ -98,10 +98,9 @@ private:
 /************ TEMPLATE METHODS IMPLEMENTATION ******************/
 
 //////////////////////////////////////////////////////////////////////////
-/// Execute func (with no arguments) nTimes in parallel.
-/// A vector containg executions' results is returned.
-/// Functions that take more than zero arguments can be executed (with
-/// fixed arguments) by wrapping them in a lambda or with std::bind.
+/// \brief Execute a function without arguments several times in parallel.
+///
+/// \copydetails TExecutorCRTP::Map(F func,unsigned nTimes)
 template<class F, class Cond>
 auto TProcessExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
 {
@@ -139,11 +138,9 @@ auto TProcessExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std:
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Execute func in parallel, taking an element of an
-/// std::vector as argument.
-/// A vector containg executions' results is returned.
-// actual implementation of the Map method. all other calls with arguments eventually
-// call this one
+/// \brief Execute a function over the elements of a vector in parallel
+///
+/// \copydetails TExecutorCRTP::Map(F func,unsigned nTimes,std::vector<T> &args)
 template<class F, class T, class Cond>
 auto TProcessExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
@@ -185,9 +182,9 @@ auto TProcessExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Execute func in parallel, taking an element of a
-/// sequence as argument.
-/// A vector containg executions' results is returned.
+/// \brief Execute a function over a sequence of indexes in parallel.
+///
+/// \copydetails TExecutorCRTP::Map(F func,ROOT::TSeq<INTEGER> args)
 template<class F, class INTEGER, class Cond>
 auto TProcessExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
@@ -198,11 +195,8 @@ auto TProcessExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<type
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// This method behaves just like Map, but an additional redfunc function
-/// must be provided. redfunc is applied to the vector Map would return and
-/// must return the same type as func. In practice, redfunc can be used to
-/// "squash" the vector returned by Map into a single object by merging,
-/// adding, mixing the elements of the vector.
+/// \brief Execute a function `nTimes` in parallel (Map) and accumulate the results into a single value (Reduce).
+/// \copydetails  ROOT::Internal::TExecutor::MapReduce(F func,unsigned nTimes,R redfunc)
 template<class F, class R, class Cond>
 auto TProcessExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
 {
@@ -239,11 +233,10 @@ auto TProcessExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// This method behaves just like Map, but an additional redfunc function
-/// must be provided. redfunc is applied to the vector Map would return and
-/// must return the same type as func. In practice, redfunc can be used to
-/// "squash" the vector returned by Map into a single object by merging,
-/// adding, mixing the elements of the vector.
+/// \brief Execute a function in parallel over the elements of a vector (Map) and accumulate the results into a single value (Reduce).
+/// Benefits from partial reduction into `nChunks` intermediate results.
+///
+/// \copydetails ROOT::Internal::TExecutor::MapReduce(F func,std::vector<T> &args,R redfunc,unsigned nChunks).
 template<class F, class T, class R, class Cond>
 auto TProcessExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
 {
@@ -282,8 +275,7 @@ auto TProcessExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typ
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// "Reduce" an std::vector into a single object by passing a
-/// function as the second argument defining the reduction operation.
+/// \copydoc ROOT::Internal::TExecutor::Reduce(const std::vector<T> &objs,R redfunc)
 template<class T, class R>
 T TProcessExecutor::Reduce(const std::vector<T> &objs, R redfunc)
 {

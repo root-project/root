@@ -83,8 +83,9 @@
 
 namespace ROOT {
 //////////////////////////////////////////////////////////////////////////
-/// Class constructor.
-/// nWorkers is the number of times this ROOT session will be forked, i.e.
+/// \brief Class constructor.
+///
+/// \param nWorkers Number of times this ROOT session will be forked, i.e.
 /// the number of workers that will be spawned.
 TProcessExecutor::TProcessExecutor(unsigned nWorkers) : TMPClient(nWorkers)
 {
