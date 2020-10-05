@@ -46,6 +46,40 @@ sap.ui.define([
             this.mgr.RegisterSceneReceiver(scene.fSceneId, this);
             this.onSceneCreate();
          }
+
+         // attach to changes in 'Collection' scene
+         let sceneList = this.mgr.childs[0].childs[2].childs;
+         for (let i = 0; i < sceneList.length; ++i)
+         {
+            if (sceneList[i].fName == "Collections")
+               this.mgr.RegisterSceneReceiver(sceneList[i].fElementId, this);
+         }
+
+         let table = this.getView().byId("table");
+         let pthis = this;
+         table.attachRowSelectionChange (function(d)	{
+            if (pthis.mgr.busyProcessingChanges)
+               return;
+
+	    let idx = d.getParameter("rowIndex");
+            var oData = table.getContextByIndex(idx);
+            if (oData) {
+               let ui =  oData.getPath().substring(6);
+               console.log("idx =", idx, "path idx = ", ui );
+
+               let itemList = pthis.collection.childs[0];
+               let secIdcs = [ui];
+               let fcall = "ProcessSelection(" + pthis.mgr.global_selection_id + `, false, true`;
+               fcall += ", { " + secIdcs.join(", ")  + " }";
+               fcall += ")";
+               pthis.mgr.SendMIR(fcall, itemList.fElementId, itemList._typename);
+            }
+            else
+            {
+               // console.log("attachRowSelectionChange no path ", oData);
+            }
+         });
+         this.table = table;
       },
       sortTable: function(e) {
 	   var col = e.mParameters.column;
@@ -102,7 +136,23 @@ sap.ui.define([
            else
                col.setSortOrder(sap.ui.table.SortOrder.Ascending);
 
-	   e.preventDefault();
+	 e.preventDefault();
+         this.updateSortMap();
+      },
+
+      updateSortMap() {
+         // update sorted/unsorted idx map
+         console.log("updateSortMap");
+         let oTable = this.getView().byId("table");
+         let nr = oTable.getModel().oData.rows.length;
+         if (!oTable.sortMap)
+            oTable.sortMap = new Map();
+
+         for (let r = 0; r < nr; ++r ) {
+            var oData = oTable.getContextByIndex(r);
+            let unsortedIdx = oData.sPath.substring(6);
+            oTable.sortMap[unsortedIdx] = r;
+         }
       },
 
       locateEveTable: function()
@@ -117,7 +167,6 @@ sap.ui.define([
             this.viewInfo = scene.childs[0];
          }
 
-         // console.log("table viewinfo", this.viewInfo  );
          this.collection = this.mgr.GetElement(this.viewInfo.fDisplayedCollection);
          // loop over products
          for (var i = 1; i < scene.childs.length; ++i) {
@@ -128,7 +177,6 @@ sap.ui.define([
                break;
             }
          }
-
       },
       getCellText : function(value, filtered) {
 	 return "<span class='" + (filtered ? "eveTableCellFiltered" : "eveTableCellUnfiltered") + "'>" + value + "</span>"
@@ -218,6 +266,7 @@ sap.ui.define([
             var data = model.getData();
             model.setData({"rows":rowData, "columns":data.columns});
          }
+         this.updateSortMap();
       },
       buildTableHeader: function()
       {
@@ -378,7 +427,7 @@ sap.ui.define([
             {
                var hl = new HorizontalLayout( {"width":"100%"});
                var titleIn = new mInput("titleEx", {placeholder:"Title", tooltip:"column title"});
-             titleIn.setWidth("100%");
+               titleIn.setWidth("100%");
                hl.addContent(titleIn);
 
                var precIn = new mInput("precisionEx", {placeholder:"Precision", type: sap.m.InputType.Number, constraints: {minimum:"0", maximum:"9"}});
@@ -412,8 +461,6 @@ sap.ui.define([
       },
 
       addColumn: function(event) {
-         // console.log("add column s", event.getSource(), this);
-         // console.log("add column p", this.data("controller"));
          var pthis = this.data("controller");
          var ws = pthis.editor.getContent();
 
@@ -448,21 +495,45 @@ sap.ui.define([
 
       sceneElementChange : function(el)
       {
-         // console.log("table sceneElementChange", el);
          if (el._typename == "ROOT::Experimental::REveTableViewInfo") {
             this.bindTableColumns = true;
          }
       },
 
       endChanges : function(oEvent) {
-         // console.log("table controller endChanges ",this.eveTable );
          this.locateEveTable();
          this.buildTableBody();
       },
 
       elementRemoved: function(elId) {
          var el = this.mgr.GetElement(elId);
-         // console.log("EveTable element removed ", el);
+      },
+
+      SelectElement: function(selection_obj, element_id, sec_idcs) {
+         let table = this.getView().byId("table");
+         if (selection_obj.fElementId == this.mgr.global_selection_id)
+         {
+            if (element_id == this.collection.childs[0].fElementId )
+            {
+               table.clearSelection();
+               for (let i = 0; i < sec_idcs.length; i++)
+               {
+                  let si = sec_idcs[i];
+                  let ui = si;
+
+                  if (this.table.sortMap) ui = this.table.sortMap[si];
+                  table.addSelectionInterval(ui, ui);
+               }
+            }
+         }
+      },
+
+
+      UnselectElement: function (selection_obj, element_id) {
+         if (selection_obj.fElementId == this.mgr.global_selection_id)
+         {
+            this.table.clearSelection();
+         }
       }
    });
 });
