@@ -3840,6 +3840,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 
 void TPad::CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y)
 {
+   if (!start) return;
    TObject *obj;
    if (!fPrimitives) fPrimitives = new TList;
    TIter next(start->GetListOfPrimitives());
