@@ -323,7 +323,7 @@ auto TExecutor::Map(F func, std::initializer_list<T> args, R redfunc, unsigned n
 
 
 //////////////////////////////////////////////////////////////////////////
-/// \copydoc TExecutorCRTP::MapReduce(F func,unsigned nTimes)
+/// \copydoc TExecutorCRTP::MapReduce(F func,unsigned nTimes,R redfunc)
 template<class F, class R, class Cond>
 auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type {
    return Reduce(Map(func, nTimes), redfunc);
@@ -379,7 +379,7 @@ auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsi
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \copydoc TExecutorCRTP::MapReduce(F func,ROOT::TSeq<INTEGER> args)
+/// \copydoc TExecutorCRTP::MapReduce(F func,ROOT::TSeq<INTEGER> args,R redfunc)
 template<class F, class T, class R, class Cond>
 auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
    return Reduce(Map(func, args), redfunc);
