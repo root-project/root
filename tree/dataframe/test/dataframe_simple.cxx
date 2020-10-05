@@ -40,7 +40,6 @@ protected:
 };
 
 // Create file `filename` containing a test tree `treeName` with `nevents` events
-// TODO: create just one file at the beginning of the test execution, delete the file at test exit
 void FillTree(const char *filename, const char *treeName, int nevents = 0)
 {
    TFile f(filename, "RECREATE");
