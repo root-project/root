@@ -69,8 +69,12 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view name
       err += name;
       err += "\" is ";
       err += fColumnTypes[colIdx];
+      if (fColumnTypes[colIdx] != fNormalizedColumnTypes[colIdx])
+         err += " (= " + fNormalizedColumnTypes[colIdx] + ")";
       err += " but ";
       err += demangled;
+      if (demangled != normalized)
+         err += " (= " + normalized + ")";
       err += " has been selected";
       throw std::runtime_error(err);
    }
