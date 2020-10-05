@@ -17,10 +17,17 @@
 /// time. This mimics the behaviour of python's pool.Map method.
 ///
 /// ### ROOT::TThreadExecutor::Map
-/// This class inherits its interfaces from ROOT::TExecutorCRTP\n.
+/// This class inherits its interfaces from ROOT::TExecutorCRTP\n, adapting them for multithreaded
+/// parallelism and extends them supporting:
+/// * Parallel `Foreach` operations.
+/// * Custom task granularity and partial reduction, by specifying reduction function
+/// and the number of chunks as extra parameters for the Map call. This is specially useful
+/// to reduce the size of intermediate results when dealing with a sizeable number of elements
+/// in the input data.
+///
 /// The two possible usages of the Map method are:\n
-/// * Map(F func, unsigned nTimes): func is executed nTimes with no arguments
-/// * Map(F func, T& args): func is executed on each element of the collection of arguments args
+/// * Map(F func, unsigned nTimes, [R redfunc, unsigned nChunks]): func is executed nTimes with no arguments
+/// * Map(F func, T& args, [R redfunc, unsigned nChunks]): func is executed on each element (or each chunk) of the collection of arguments args
 ///
 /// For either signature, func is executed as many times as needed by a pool of
 /// nThreads threads; It defaults to the number of cores.\n

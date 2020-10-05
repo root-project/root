@@ -107,7 +107,7 @@ namespace ROOT {
    /************ TEMPLATE METHODS IMPLEMENTATION ******************/
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a function without arguments several times, dividing the execution in nChunks.
+   /// \brief Execute a function without arguments several times in parallel, dividing the execution in nChunks.
    ///
    /// \param func Function to be executed.
    /// \param nTimes Number of times function should be called.
@@ -130,7 +130,7 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a function over a sequence of indexes, dividing the execution in nChunks.
+   /// \brief Execute a function in parallel over a sequence of indexes, dividing the execution in nChunks.
    ///
    /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
    /// \param args Sequence of indexes to execute `func` on.
@@ -156,7 +156,7 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a function over the elements of an initializer_list, dividing the execution in nChunks.
+   /// \brief Execute a function in parallel over the elements of an initializer_list, dividing the execution in nChunks.
    ///
    /// \param func Function to be executed on the elements of the initializer_list passed as second parameter.
    /// \param args initializer_list for a vector to apply `func` on.
@@ -168,7 +168,7 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a function over the elements of a vector, dividing the execution in nChunks.
+   /// \brief Execute a function in parallel over the elements of a vector, dividing the execution in nChunks.
    ///
    /// \param func Function to be executed on the elements of the vector passed as second parameter.
    /// \param args Vector of elements passed as an argument to `func`.
@@ -192,7 +192,7 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a function over the elements of a immutable vector, dividing the execution in nChunks.
+   /// \brief Execute a function in parallel over the elements of a immutable vector, dividing the execution in nChunks.
    ///
    /// \param func Function to be executed on the elements of the vector passed as second parameter.
    /// \param args Vector of elements passed as an argument to `func`.
