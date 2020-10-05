@@ -8,6 +8,63 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+r'''
+/**
+\class ROOT::VecOps::RVec
+\brief \parblock \endparblock
+\htmlonly
+<div class="pyrootbox">
+\endhtmlonly
+## PyROOT
+
+The ROOT::RVec class has additional features in Python, which allow to adopt memory
+from Numpy arrays and vice versa. The purpose of these features is the copyless
+interfacing of Python and C++ using their most common data containers, Numpy arrays
+and RVec with a std::vector interface.
+
+### Conversion of RVecs to Numpy arrays
+
+RVecs of fundamental types (int, float, ...) have in Python the `__array_interface__`
+attribute attached. This information allows Numpy to adopt the memory of RVecs without
+copying the content. You can find further documentation regarding the Numpy array interface
+[here](https://numpy.org/doc/stable/reference/arrays.interface.html). The following code example
+demonstrates the memory adoption mechanism using `numpy.asarray`.
+
+\code{.py}
+rvec = ROOT.RVec('double')((1, 2, 3))
+print(rvec) # { 1.0000000, 2.0000000, 3.0000000 }
+
+npy = numpy.asarray(rvec)
+print(npy) # [1. 2. 3.]
+
+rvec[0] = 42
+print(npy) # [42. 2. 3.]
+\endcode
+
+### Conversion of Numpy arrays to RVecs
+
+Data owned by Numpy arrays with fundamental types (int, float, ...) can be adopted by RVecs. To
+create an RVec from a Numpy array, ROOT offers the facility ROOT.VecOps.AsRVec, which performs
+a similar operation to `numpy.asarray`, but vice versa. A code example demonstrating the feature and
+the adoption of the data owned by the Numpy array is shown below.
+
+\code{.py}
+npy = numpy.array([1.0, 2.0, 3.0])
+print(npy) # [1. 2. 3.]
+
+rvec = ROOT.VecOps.AsRVec(npy)
+print(rvec) # { 1.0000000, 2.0000000, 3.0000000 }
+
+npy[0] = 42
+print(rvec) # { 42.000000, 2.0000000, 3.0000000 }
+\endcode
+
+\htmlonly
+</div>
+\endhtmlonly
+*/
+'''
+
 from ROOT import pythonization
 from libROOTPythonizations import GetEndianess, GetDataPointer, GetSizeOfType
 
