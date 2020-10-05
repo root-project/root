@@ -1330,6 +1330,7 @@ void TPad::Draw(Option_t *option)
 
 void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
 {
+   if (!classobj) return;
    char dname[256];
    const Int_t kMAXLEVELS = 10;
    TClass *clevel[kMAXLEVELS], *cl, *cll;
