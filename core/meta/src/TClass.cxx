@@ -269,37 +269,27 @@ TClass::ENewType &TClass__GetCallingNew() {
    return fgCallingNew;
 }
 
-struct ObjRepoValue {
-   ObjRepoValue(const TClass *what, Version_t version) : fClass(what),fVersion(version) {}
-   const TClass *fClass;
-   Version_t     fVersion;
-};
-
-static TVirtualMutex* gOVRMutex = 0;
-typedef std::multimap<void*, ObjRepoValue> RepoCont_t;
-static RepoCont_t gObjectVersionRepository;
-
-static void RegisterAddressInRepository(const char * /*where*/, void *location, const TClass *what)
+void TClass::RegisterAddressInRepository(const char * /*where*/, void *location, const TClass *what) const
 {
    // Register the object for special handling in the destructor.
 
    Version_t version = what->GetClassVersion();
-//    if (!gObjectVersionRepository.count(location)) {
+//    if (!fObjectVersionRepository.count(location)) {
 //       Info(where, "Registering address %p of class '%s' version %d", location, what->GetName(), version);
 //    } else {
 //       Warning(where, "Registering address %p again of class '%s' version %d", location, what->GetName(), version);
 //    }
    {
-      R__LOCKGUARD2(gOVRMutex);
-      gObjectVersionRepository.insert(RepoCont_t::value_type(location, RepoCont_t::mapped_type(what,version)));
+      R__LOCKGUARD2(fOVRMutex);
+      fObjectVersionRepository.insert(RepoCont_t::value_type(location, RepoCont_t::mapped_type(what,version)));
    }
 #if 0
    // This code could be used to prevent an address to be registered twice.
-   std::pair<RepoCont_t::iterator, Bool_t> tmp = gObjectVersionRepository.insert(RepoCont_t::value_type>(location, RepoCont_t::mapped_type(what,version)));
+   std::pair<RepoCont_t::iterator, Bool_t> tmp = fObjectVersionRepository.insert(RepoCont_t::value_type>(location, RepoCont_t::mapped_type(what,version)));
    if (!tmp.second) {
       Warning(where, "Reregistering an object of class '%s' version %d at address %p", what->GetName(), version, p);
-      gObjectVersionRepository.erase(tmp.first);
-      tmp = gObjectVersionRepository.insert(RepoCont_t::value_type>(location, RepoCont_t::mapped_type(what,version)));
+      fObjectVersionRepository.erase(tmp.first);
+      tmp = fObjectVersionRepository.insert(RepoCont_t::value_type>(location, RepoCont_t::mapped_type(what,version)));
       if (!tmp.second) {
          Warning(where, "Failed to reregister an object of class '%s' version %d at address %p", what->GetName(), version, location);
       }
@@ -307,18 +297,18 @@ static void RegisterAddressInRepository(const char * /*where*/, void *location, 
 #endif
 }
 
-static void UnregisterAddressInRepository(const char * /*where*/, void *location, const TClass *what)
+void TClass::UnregisterAddressInRepository(const char * /*where*/, void *location, const TClass *what) const
 {
    // Remove an address from the repository of address/object.
 
-   R__LOCKGUARD2(gOVRMutex);
-   RepoCont_t::iterator cur = gObjectVersionRepository.find(location);
-   for (; cur != gObjectVersionRepository.end();) {
+   R__LOCKGUARD2(fOVRMutex);
+   RepoCont_t::iterator cur = fObjectVersionRepository.find(location);
+   for (; cur != fObjectVersionRepository.end();) {
       RepoCont_t::iterator tmp = cur++;
       if ((tmp->first == location) && (tmp->second.fVersion == what->GetClassVersion())) {
          // -- We still have an address, version match.
          // Info(where, "Unregistering address %p of class '%s' version %d", location, what->GetName(), what->GetClassVersion());
-         gObjectVersionRepository.erase(tmp);
+         fObjectVersionRepository.erase(tmp);
       } else {
          // -- No address, version match, we've reached the end.
          break;
@@ -326,22 +316,22 @@ static void UnregisterAddressInRepository(const char * /*where*/, void *location
    }
 }
 
-static void MoveAddressInRepository(const char * /*where*/, void *oldadd, void *newadd, const TClass *what)
+void TClass::MoveAddressInRepository(const char * /*where*/, void *oldadd, void *newadd, const TClass *what) const
 {
    // Register in the repository that an object has moved.
 
    // Move not only the object itself but also any base classes or sub-objects.
    size_t objsize = what->Size();
    long delta = (char*)newadd - (char*)oldadd;
-   R__LOCKGUARD2(gOVRMutex);
-   RepoCont_t::iterator cur = gObjectVersionRepository.find(oldadd);
-   for (; cur != gObjectVersionRepository.end();) {
+   R__LOCKGUARD2(fOVRMutex);
+   RepoCont_t::iterator cur = fObjectVersionRepository.find(oldadd);
+   for (; cur != fObjectVersionRepository.end();) {
       RepoCont_t::iterator tmp = cur++;
       if (oldadd <= tmp->first && tmp->first < ( ((char*)oldadd) + objsize) ) {
          // The location is within the object, let's move it.
 
-         gObjectVersionRepository.insert(RepoCont_t::value_type(((char*)tmp->first)+delta, RepoCont_t::mapped_type(tmp->second.fClass,tmp->second.fVersion)));
-         gObjectVersionRepository.erase(tmp);
+         fObjectVersionRepository.insert(RepoCont_t::value_type(((char*)tmp->first)+delta, RepoCont_t::mapped_type(tmp->second.fClass,tmp->second.fVersion)));
+         fObjectVersionRepository.erase(tmp);
 
       } else {
          // -- No address, version match, we've reached the end.
@@ -5352,17 +5342,16 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
 
       // Was this object allocated through TClass?
       std::multiset<Version_t> knownVersions;
-      R__LOCKGUARD2(gOVRMutex);
-
       {
-         RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
-         if (iter == gObjectVersionRepository.end()) {
+         R__LOCKGUARD2(fOVRMutex);
+         RepoCont_t::iterator iter = fObjectVersionRepository.find(p);
+         if (iter == fObjectVersionRepository.end()) {
             // No, it wasn't, skip special version handling.
             //Error("Destructor2", "Attempt to delete unregistered object of class '%s' at address %p!", GetName(), p);
             inRepo = kFALSE;
          } else {
             //objVer = iter->second;
-            for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+            for (; (iter != fObjectVersionRepository.end()) && (iter->first == p); ++iter) {
                Version_t ver = iter->second.fVersion;
                knownVersions.insert(ver);
                if (ver == fClassVersion && this == iter->second.fClass) {
@@ -5391,7 +5380,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
             }
          }
       } else {
-         // The loaded class version is not the same as the version of the code
+         // The loaded class vers  ion is not the same as the version of the code
          // which was used to allocate this object.  The best we can do is use
          // the TVirtualStreamerInfo to try to free up some of the allocated memory.
          Error("Destructor", "Loaded class %s version %d is not registered for addr %p", GetName(), fClassVersion, p);
@@ -5467,14 +5456,14 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // Was this array object allocated through TClass?
       std::multiset<Version_t> knownVersions;
       {
-         R__LOCKGUARD2(gOVRMutex);
-         RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
-         if (iter == gObjectVersionRepository.end()) {
+         R__LOCKGUARD2(fOVRMutex);
+         RepoCont_t::iterator iter = fObjectVersionRepository.find(p);
+         if (iter == fObjectVersionRepository.end()) {
             // No, it wasn't, we cannot know what to do.
             //Error("DeleteArray", "Attempt to delete unregistered array object, element type '%s', at address %p!", GetName(), p);
             inRepo = kFALSE;
          } else {
-            for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+            for (; (iter != fObjectVersionRepository.end()) && (iter->first == p); ++iter) {
                Version_t ver = iter->second.fVersion;
                knownVersions.insert(ver);
                if (ver == fClassVersion && this == iter->second.fClass ) {
