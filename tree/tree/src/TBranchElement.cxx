@@ -5415,7 +5415,8 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
       if (fBranchOffset[i] != TStreamerInfo::kMissing && !(implied && abranch->TestBit(kAddressSet))) {
          abranch->SetAddressImpl(fObject + fBranchOffset[i], implied);
          abranch->SetBit(kAddressSet);
-         abranch->SetMakeClass(TestBit(kDecomposedObj));
+         if (TestBit(kDecomposedObj) != abranch->TestBit(kDecomposedObj))
+            abranch->SetMakeClass(TestBit(kDecomposedObj));
       } else {
          // When the member is missing, just leave the address alone
          // (since setting explicitly to 0 would trigger error/warning
