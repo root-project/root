@@ -5,7 +5,7 @@ title: ''
 labels: bug
 ---
 
-[ ] Checked for duplicates
+- [ ] Checked for duplicates
 <!--
 Please search in
 * [GitHub](https://github.com/root-project/root/issues?q=is%3Aissue)
