@@ -86,7 +86,7 @@ namespace TMVA {
       UInt_t fNumEpochs {0}; // Number of training epochs
       Int_t fNumThreads {0}; // Number of CPU threads (if 0 uses default values)
       Int_t fVerbose; // Keras verbosity during training
-      Bool_t fUseTFKeras;   // use Keras from Tensorflow
+      Bool_t fUseTFKeras { kFALSE};   // use Keras from Tensorflow (-1, default, 0 false, 1, true)
       Bool_t fContinueTraining; // Load weights from previous training
       Bool_t fSaveBestOnly; // Store only weights with smallest validation loss
       Int_t fTriesEarlyStopping; // Stop training if validation loss is not decreasing for several epochs
