@@ -779,7 +779,7 @@ void TCanvas::Close(Option_t *option)
 {
    TPad    *padsave = (TPad*)gPad;
    TCanvas *cansave = 0;
-   if (padsave) cansave = (TCanvas*)gPad->GetCanvas();
+   if (padsave && !IsBatch()) cansave = (TCanvas*)gPad->GetCanvas();
 
    if (fCanvasID != -1) {
 
