@@ -688,7 +688,6 @@ class Regression24CppPythonInheritance(MyTestCase):
        public:
            CppAlg3(std::string name) : m_name(name) {}
            virtual ~CppAlg3() {}
-       private:
            std::string m_name;
        };
        """)
@@ -699,7 +698,15 @@ class Regression24CppPythonInheritance(MyTestCase):
            def __init__(self, name):
                super(Alg3, self).__init__(name)
 
-       d = Alg3('MyAlgDerived')
+       test = 'MyAlgDerived'
+       d = Alg3(test)
+       self.assertEqual(test, d.m_name)
+
+       class Alg3_2(ROOT.CppAlg3):
+           pass
+
+       d2 = Alg3_2(test)
+       self.assertEqual(test, d2.m_name)
 
    def test6MultiInheritance(self):
        """Test for a Python derived class in presence of multiple inheritance in C++"""
