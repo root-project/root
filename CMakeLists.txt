@@ -133,6 +133,12 @@ include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
 
+#---Enable asserts------------------------------------------------------------------------------
+if(NOT asserts)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNDEBUG")
+endif()
+
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
   find_program(CCACHE_COMMAND NAMES ccache ccache-swig)
