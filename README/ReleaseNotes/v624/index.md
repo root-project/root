@@ -130,6 +130,7 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 ## Build, Configuration and Testing Infrastructure
 
 - a new cmake variable, `CMAKE_INSTALL_PYTHONDIR`, has been added: it allows customization of the installation directory of ROOT's python modules
+- The developer build option `asserts` is introduced to enable/disable asserts via the `NDEBUG` C/CXX flag. Asserts are always enabled for `CMAKE_BUILD_TYPE=Debug` and `dev=ON`. The previous behavior of the builds set via the `CMAKE_BUILD_TYPE` variable has not changed.
 
 ## PyROOT
 
