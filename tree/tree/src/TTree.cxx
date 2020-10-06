@@ -392,6 +392,7 @@ End_Macro
 #include "TLeafS.h"
 #include "TList.h"
 #include "TMath.h"
+#include "TMemFile.h"
 #include "TROOT.h"
 #include "TRealData.h"
 #include "TRegexp.h"
@@ -4703,8 +4704,9 @@ Int_t TTree::Fill()
    // to the case where the tree is in the top level directory.
    if (fDirectory)
       if (TFile *file = fDirectory->GetFile())
-         if ((TDirectory *)file == fDirectory && (file->GetEND() > fgMaxTreeSize))
-            ChangeFile(file);
+         if (static_cast<TDirectory *>(file) == fDirectory && (file->GetEND() > fgMaxTreeSize))
+            if (!(dynamic_cast<TMemFile *>(file)))
+               ChangeFile(file);
 
    return nerror == 0 ? nbytes : -1;
 }
