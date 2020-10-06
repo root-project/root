@@ -86,11 +86,11 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -bind_at_load -m64")
 
      # Select flags.
-     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG" CACHE STRING "Flags for a release build with debug info")
-     set(CMAKE_CXX_FLAGS_RELEASE        "-O2 -DNDEBUG"    CACHE STRING "Flags for a release build")
+     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g"          CACHE STRING "Flags for a release build with debug info")
+     set(CMAKE_CXX_FLAGS_RELEASE        "-O2"             CACHE STRING "Flags for a release build")
      set(CMAKE_CXX_FLAGS_DEBUG          "-g"              CACHE STRING "Flags for a debug build")
-     set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g -DNDEBUG" CACHE STRING "Flags for a release build with debug info")
-     set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG"    CACHE STRING "Flags for a release build")
+     set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g"          CACHE STRING "Flags for a release build with debug info")
+     set(CMAKE_C_FLAGS_RELEASE          "-O2"             CACHE STRING "Flags for a release build")
      set(CMAKE_C_FLAGS_DEBUG            "-g"              CACHE STRING "Flags for a debug build")
   elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common -Qunused-arguments")
@@ -106,7 +106,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
 
      set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -bind_at_load -m64")
      set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -bind_at_load -m64")
-     
+
      if(asan)
        # See also core/sanitizer/README.md for what's happening.
 
@@ -119,11 +119,11 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      endif()
 
      # Select flags.
-     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG" CACHE STRING "Flags for a release build with debug info")
-     set(CMAKE_CXX_FLAGS_RELEASE        "-O2 -DNDEBUG"    CACHE STRING "Flags for a release build")
+     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g"          CACHE STRING "Flags for a release build with debug info")
+     set(CMAKE_CXX_FLAGS_RELEASE        "-O2"             CACHE STRING "Flags for a release build")
      set(CMAKE_CXX_FLAGS_DEBUG          "-g"              CACHE STRING "Flags for a debug build")
-     set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g -DNDEBUG" CACHE STRING "Flags for a release build with debug info")
-     set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG"    CACHE STRING "Flags for a release build")
+     set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g"          CACHE STRING "Flags for a release build with debug info")
+     set(CMAKE_C_FLAGS_RELEASE          "-O2"             CACHE STRING "Flags for a release build")
      set(CMAKE_C_FLAGS_DEBUG            "-g"              CACHE STRING "Flags for a debug build")
   else()
     MESSAGE(FATAL_ERROR "There is no setup for this compiler with ID=${CMAKE_CXX_COMPILER_ID} up to now. Don't know what to do. Stop cmake at this point.")

@@ -191,6 +191,7 @@ option(rootbench "Build rootbench if rootbench exists in root or if it is a sibl
 option(roottest "Build roottest if roottest exists in root or if it is a sibling directory." OFF)
 option(testing "Enable testing with CTest" OFF)
 option(asan "Build ROOT with address sanitizer instrumentation" OFF)
+option(asserts "Enable asserts (is ON for CMAKE_BUILD_TYPE=Debug and dev=ON)" OFF)
 
 set(gcctoolchain "" CACHE PATH "Set path to GCC toolchain used to build llvm/clang")
 
@@ -359,8 +360,13 @@ endif()
 #---webgui by default always build together with root7-----------------------------------------
 set(webgui_defvalue ${root7_defvalue})
 
-#---Define at moment the options with the selected default values-----------------------------
+#---Define at moment the options with the selected default values------------------------------
 ROOT_APPLY_OPTIONS()
+
+#---Enable asserts for Debug builds and for the dev mode---------------------------------------
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR dev)
+  set(asserts ON CACHE BOOL "" FORCE)
+endif()
 
 #---roottest option implies testing
 if(roottest OR rootbench)
