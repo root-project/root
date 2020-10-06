@@ -318,14 +318,8 @@ private:
 
    TVirtualStreamerInfo     *GetStreamerInfoImpl(Int_t version, Bool_t silent) const;
 
-   struct ObjRepoValue {
-      ObjRepoValue(const TClass *what, Version_t version) : fClass(what),fVersion(version) {}
-      const TClass *fClass;
-      Version_t     fVersion;
-   };
-
    mutable TVirtualMutex *fOVRMutex = nullptr;
-   typedef std::multimap<void*, ObjRepoValue> RepoCont_t;
+   typedef std::multimap<void*, Version_t> RepoCont_t;
    mutable RepoCont_t fObjectVersionRepository;
 
    void UnregisterAddressInRepository(const char *where, void *location, const TClass *what) const;
