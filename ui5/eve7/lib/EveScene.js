@@ -409,10 +409,11 @@ sap.ui.define([
       if (estype == THREE.OutlinePass.selection_enum["highlight"] &&
           opass.id2obj_map[element_id][this.mgr.global_selection_id] !== undefined)
       {
+         if (!res.sec_sel)
          return;
       }
 
-      opass.id2obj_map[element_id] = [];
+      if (!res.sec_sel) opass.id2obj_map[element_id] = [];
       let ctrl = obj3d.get_ctrl();
       ctrl.DrawForSelection(sec_idcs, res, extra);
       opass.id2obj_map[element_id][selection_obj.fElementId] = res;
