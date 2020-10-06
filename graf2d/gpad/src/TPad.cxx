@@ -4888,7 +4888,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       psname.Prepend("/");
       psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
-   if (!gPad->IsBatch() && fCanvas&& GetPainter())
+   if (!gPad->IsBatch() && fCanvas && GetPainter())
       GetPainter()->SelectDrawable(GetCanvasID());
 
    // Save pad/canvas in alternative formats
@@ -5570,9 +5570,11 @@ void TPad::ResizePad(Option_t *option)
          if (fPixmapID == -1) {      // this case is handled via the ctor
             if (GetPainter()) fPixmapID = GetPainter()->CreateDrawable(w, h);
          } else {
-            if (gVirtualX) if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
-               Resized();
-               Modified(kTRUE);
+            if (gVirtualX) {
+               if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
+                  Resized();
+                  Modified(kTRUE);
+               }
             }
          }
       }
