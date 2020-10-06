@@ -250,8 +250,8 @@ void REveManager::DoRedraw3D()
    fWebWindow->Send(0, jobj.dump());
 
    // Process changes in scenes.
-   fScenes->ProcessSceneChanges();
    fWorld ->ProcessChanges();
+   fScenes->ProcessSceneChanges();
 
    jobj["content"] = "EndChanges";
    fWebWindow->Send(0, jobj.dump());
