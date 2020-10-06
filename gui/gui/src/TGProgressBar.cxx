@@ -310,8 +310,8 @@ void TGHProgressBar::DoRedraw()
       gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
       UInt_t theight = max_ascent + max_descent;
 
-      x = (fWidth - twidth) >> 1;
-      y = (fHeight - theight) >> 1;
+      x = (Int_t)((fWidth - twidth)*0.5);
+      y = (Int_t)((fHeight - theight)*0.5);
 
       if (fDrawBar && fPosPix < Int_t(x+twidth))
          gVirtualX->ClearArea(fId, pospix, fBorderWidth,
