@@ -653,7 +653,7 @@ void TPad::Clear(Option_t *option)
       getchar();
    }
 
-   if (!gPad->IsBatch()&& GetPainter()) GetPainter()->ClearDrawable();
+   if (!gPad->IsBatch() && GetPainter()) GetPainter()->ClearDrawable();
    if (gVirtualPS && gPad == gPad->GetCanvas()) gVirtualPS->NewPage();
 
    PaintBorder(GetFillColor(), kTRUE);
@@ -1017,7 +1017,7 @@ void TPad::Close(Option_t *)
 
    if (fPixmapID != -1) {
       if (gPad) {
-         if (!gPad->IsBatch()&& GetPainter())
+         if (!gPad->IsBatch() && GetPainter())
             GetPainter()->DestroyDrawable(fPixmapID);
       }
       fPixmapID = -1;
@@ -3689,7 +3689,7 @@ void TPad::PaintModified()
    cd();
    if (IsModified() || IsTransparent()) {
       if ((fFillStyle < 3026) && (fFillStyle > 3000)) {
-         if (!gPad->IsBatch()&& GetPainter()) GetPainter()->ClearDrawable();
+         if (!gPad->IsBatch() && GetPainter()) GetPainter()->ClearDrawable();
       }
       PaintBorder(GetFillColor(), kTRUE);
    }
@@ -3747,7 +3747,7 @@ void TPad::PaintModified()
 
 void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
-   if (!gPad->IsBatch()&& GetPainter()) {
+   if (!gPad->IsBatch() && GetPainter()) {
       Int_t style0 = GetPainter()->GetFillStyle();
       Int_t style  = style0;
       if (option[0] == 's') {
@@ -3901,7 +3901,7 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
       return;
    }
 
-   if (!gPad->IsBatch()&& GetPainter())
+   if (!gPad->IsBatch() && GetPainter())
       // invoke the graphics subsystem
       GetPainter()->DrawFillArea(n, &x.front(), &y.front());
 
@@ -3976,7 +3976,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    Int_t   lcs = 0;
 
    // Save the current line attributes
-   if (!gPad->IsBatch()&& GetPainter()) {
+   if (!gPad->IsBatch() && GetPainter()) {
       lws = GetPainter()->GetLineWidth();
       lss = GetPainter()->GetLineStyle();
       lcs = GetPainter()->GetLineColor();
@@ -3989,7 +3989,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    }
 
    // Change the current line attributes to draw the hatches
-   if (!gPad->IsBatch()&& GetPainter()) {
+   if (!gPad->IsBatch() && GetPainter()) {
       GetPainter()->SetLineStyle(1);
       GetPainter()->SetLineWidth(Short_t(lw));
       GetPainter()->SetLineColor(GetPainter()->GetFillColor());
@@ -4005,7 +4005,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    if (ang2[iAng2] != 5.) PaintHatches(dy, ang2[iAng2], nn, xx, yy);
 
    // Restore the line attributes
-   if (!gPad->IsBatch()&& GetPainter()) {
+   if (!gPad->IsBatch() && GetPainter()) {
       GetPainter()->SetLineStyle(lss);
       GetPainter()->SetLineWidth(lws);
       GetPainter()->SetLineColor(lcs);
@@ -4186,7 +4186,7 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       if (Clip(x,y,fX1,fY1,fX2,fY2) == 2) return;
    }
 
-   if (!gPad->IsBatch()&& GetPainter())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawLine(x[0], y[0], x[1], y[1]);
 
    if (gVirtualPS) {
@@ -4202,7 +4202,7 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 void TPad::PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2)
 {
    static Double_t xw[2], yw[2];
-   if (!gPad->IsBatch()&& GetPainter())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawLineNDC(u1, v1, u2, v2);
 
    if (gVirtualPS) {
@@ -4279,7 +4279,7 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
       np++;
       if (i1 < 0) i1 = i;
       if (iclip == 0 && i < n-2) continue;
-      if (!gPad->IsBatch()&& GetPainter())
+      if (!gPad->IsBatch() && GetPainter())
          GetPainter()->DrawPolyLine(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPS(np, &x[i1], &y[i1]);
@@ -4332,7 +4332,7 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       np++;
       if (i1 < 0) i1 = i;
       if (iclip == 0 && i < n-2) continue;
-      if (!gPad->IsBatch()&& GetPainter())
+      if (!gPad->IsBatch() && GetPainter())
          GetPainter()->DrawPolyLine(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPS(np, &x[i1], &y[i1]);
@@ -4357,7 +4357,7 @@ void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
 {
    if (n <=0) return;
 
-   if (!gPad->IsBatch()&& GetPainter())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawPolyLineNDC(n, x, y);
 
    if (gVirtualPS) {
@@ -4408,7 +4408,7 @@ void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
          if (i < n-1) continue;
       }
       if (np == 0) continue;
-      if (!gPad->IsBatch()&& GetPainter())
+      if (!gPad->IsBatch() && GetPainter())
          GetPainter()->DrawPolyMarker(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPolyMarker(np, &x[i1], &y[i1]);
@@ -4439,7 +4439,7 @@ void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
          if (i < n-1) continue;
       }
       if (np == 0) continue;
-      if (!gPad->IsBatch()&& GetPainter())
+      if (!gPad->IsBatch() && GetPainter())
          GetPainter()->DrawPolyMarker(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPolyMarker(np, &x[i1], &y[i1]);
@@ -4457,7 +4457,7 @@ void TPad::PaintText(Double_t x, Double_t y, const char *text)
 {
    Modified();
 
-   if (!gPad->IsBatch()&& GetPainter())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawText(x, y, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) gVirtualPS->Text(x, y, text);
@@ -4470,7 +4470,7 @@ void TPad::PaintText(Double_t x, Double_t y, const wchar_t *text)
 {
    Modified();
 
-   if (!gPad->IsBatch()&& GetPainter())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawText(x, y, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) gVirtualPS->Text(x, y, text);
@@ -4483,7 +4483,7 @@ void TPad::PaintTextNDC(Double_t u, Double_t v, const char *text)
 {
    Modified();
 
-   if (!gPad->IsBatch()&& GetPainter())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawTextNDC(u, v, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) {
@@ -4500,7 +4500,7 @@ void TPad::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 {
    Modified();
 
-   if (!gPad->IsBatch()&& GetPainter())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawTextNDC(u, v, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) {
