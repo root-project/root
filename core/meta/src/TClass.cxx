@@ -281,15 +281,15 @@ void TClass::RegisterAddressInRepository(const char * /*where*/, void *location,
 //    }
    {
       R__LOCKGUARD2(fOVRMutex);
-      fObjectVersionRepository.insert(RepoCont_t::value_type(location, RepoCont_t::mapped_type(what,version)));
+      fObjectVersionRepository.insert(RepoCont_t::value_type(location, version));
    }
 #if 0
    // This code could be used to prevent an address to be registered twice.
-   std::pair<RepoCont_t::iterator, Bool_t> tmp = fObjectVersionRepository.insert(RepoCont_t::value_type>(location, RepoCont_t::mapped_type(what,version)));
+   std::pair<RepoCont_t::iterator, Bool_t> tmp = fObjectVersionRepository.insert(RepoCont_t::value_type>(location, version));
    if (!tmp.second) {
       Warning(where, "Reregistering an object of class '%s' version %d at address %p", what->GetName(), version, p);
       fObjectVersionRepository.erase(tmp.first);
-      tmp = fObjectVersionRepository.insert(RepoCont_t::value_type>(location, RepoCont_t::mapped_type(what,version)));
+      tmp = fObjectVersionRepository.insert(RepoCont_t::value_type>(location, version));
       if (!tmp.second) {
          Warning(where, "Failed to reregister an object of class '%s' version %d at address %p", what->GetName(), version, location);
       }
@@ -305,7 +305,7 @@ void TClass::UnregisterAddressInRepository(const char * /*where*/, void *locatio
    RepoCont_t::iterator cur = fObjectVersionRepository.find(location);
    for (; cur != fObjectVersionRepository.end();) {
       RepoCont_t::iterator tmp = cur++;
-      if ((tmp->first == location) && (tmp->second.fVersion == what->GetClassVersion())) {
+      if ((tmp->first == location) && (tmp->second == what->GetClassVersion())) {
          // -- We still have an address, version match.
          // Info(where, "Unregistering address %p of class '%s' version %d", location, what->GetName(), what->GetClassVersion());
          fObjectVersionRepository.erase(tmp);
@@ -330,7 +330,7 @@ void TClass::MoveAddressInRepository(const char * /*where*/, void *oldadd, void 
       if (oldadd <= tmp->first && tmp->first < ( ((char*)oldadd) + objsize) ) {
          // The location is within the object, let's move it.
 
-         fObjectVersionRepository.insert(RepoCont_t::value_type(((char*)tmp->first)+delta, RepoCont_t::mapped_type(tmp->second.fClass,tmp->second.fVersion)));
+         fObjectVersionRepository.insert(RepoCont_t::value_type(((char*)tmp->first)+delta, tmp->second));
          fObjectVersionRepository.erase(tmp);
 
       } else {
@@ -5352,9 +5352,9 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
          } else {
             //objVer = iter->second;
             for (; (iter != fObjectVersionRepository.end()) && (iter->first == p); ++iter) {
-               Version_t ver = iter->second.fVersion;
+               Version_t ver = iter->second;
                knownVersions.insert(ver);
-               if (ver == fClassVersion && this == iter->second.fClass) {
+               if (ver == fClassVersion) {
                   verFound = kTRUE;
                }
             }
@@ -5464,9 +5464,9 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
             inRepo = kFALSE;
          } else {
             for (; (iter != fObjectVersionRepository.end()) && (iter->first == p); ++iter) {
-               Version_t ver = iter->second.fVersion;
+               Version_t ver = iter->second;
                knownVersions.insert(ver);
-               if (ver == fClassVersion && this == iter->second.fClass ) {
+               if (ver == fClassVersion) {
                   verFound = kTRUE;
                }
             }
