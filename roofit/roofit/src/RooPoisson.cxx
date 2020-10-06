@@ -43,8 +43,7 @@ RooPoisson::RooPoisson(const char *name, const char *title,
   RooAbsPdf(name,title),
   x("x","x",this,_x),
   mean("mean","mean",this,_mean),
-  _noRounding(noRounding),
-  _protectNegative(false)
+  _noRounding(noRounding)
 {
 }
 
