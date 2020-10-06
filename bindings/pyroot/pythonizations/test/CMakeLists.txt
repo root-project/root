@@ -48,6 +48,7 @@ endif()
 
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_operators th1_operators.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_th2 th2.py)
 
 # TGraph, TGraph2D and error subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tgraph_getters tgraph_getters.py)
