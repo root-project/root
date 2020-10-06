@@ -5338,10 +5338,10 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // destructor.
 
       Bool_t inRepo = kTRUE;
-      Bool_t verFound = kFALSE;
+      Bool_t currentVersion = kFALSE;
 
       // Was this object allocated through TClass?
-      std::multiset<Version_t> knownVersions;
+      Version_t objVer = -1;
       {
          R__LOCKGUARD2(fOVRMutex);
          RepoCont_t::iterator iter = fObjectVersionRepository.find(p);
@@ -5352,16 +5352,16 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
          } else {
             //objVer = iter->second;
             for (; (iter != fObjectVersionRepository.end()) && (iter->first == p); ++iter) {
-               Version_t ver = iter->second;
-               knownVersions.insert(ver);
-               if (ver == fClassVersion) {
-                  verFound = kTRUE;
+               objVer = iter->second;
+               if (objVer == fClassVersion) {
+                  currentVersion = kTRUE;
+                  break;
                }
             }
          }
       }
 
-      if (!inRepo || verFound) {
+      if (!inRepo || currentVersion) {
          // The object was allocated using code for the same class version
          // as is loaded now.  We may proceed without worry.
          TVirtualStreamerInfo* si = GetStreamerInfo();
@@ -5383,14 +5383,12 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
          // The loaded class vers  ion is not the same as the version of the code
          // which was used to allocate this object.  The best we can do is use
          // the TVirtualStreamerInfo to try to free up some of the allocated memory.
-         Error("Destructor", "Loaded class %s version %d is not registered for addr %p", GetName(), fClassVersion, p);
-#if 0
          TVirtualStreamerInfo* si = (TVirtualStreamerInfo*) fStreamerInfo->At(objVer);
          if (si) {
             si->Destructor(p, dtorOnly);
          } else {
-            Error("Destructor2", "No streamer info available for class '%s' version %d, cannot destruct object at addr: %p", GetName(), objVer, p);
-            Error("Destructor2", "length of fStreamerInfo is %d", fStreamerInfo->GetSize());
+            Error("Destructor", "No streamer info available for class '%s' version %d, cannot destruct object at addr: %p", GetName(), objVer, p);
+            Error("Destructor", "length of fStreamerInfo is %d", fStreamerInfo->GetSize());
             Int_t i = fStreamerInfo->LowerBound();
             for (Int_t v = 0; v < fStreamerInfo->GetSize(); ++v, ++i) {
                Error("Destructor2", "fStreamerInfo->At(%d): %p", i, fStreamerInfo->At(i));
@@ -5401,10 +5399,9 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
                }
             }
          }
-#endif
       }
 
-      if (inRepo && verFound && p) {
+      if (inRepo && p) {
          UnregisterAddressInRepository("TClass::Destructor",p,this);
       }
    } else {
@@ -5451,10 +5448,10 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // array destructor.
 
       Bool_t inRepo = kTRUE;
-      Bool_t verFound = kFALSE;
+      Bool_t currentVersion = kFALSE;
 
       // Was this array object allocated through TClass?
-      std::multiset<Version_t> knownVersions;
+      Version_t objVer = -1;
       {
          R__LOCKGUARD2(fOVRMutex);
          RepoCont_t::iterator iter = fObjectVersionRepository.find(p);
@@ -5464,16 +5461,15 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
             inRepo = kFALSE;
          } else {
             for (; (iter != fObjectVersionRepository.end()) && (iter->first == p); ++iter) {
-               Version_t ver = iter->second;
-               knownVersions.insert(ver);
-               if (ver == fClassVersion) {
-                  verFound = kTRUE;
+               objVer = iter->second;
+               if (objVer == fClassVersion) {
+                  currentVersion = kTRUE;
                }
             }
          }
       }
 
-      if (!inRepo || verFound) {
+      if (!inRepo || currentVersion) {
          // The object was allocated using code for the same class version
          // as is loaded now.  We may proceed without worry.
          TVirtualStreamerInfo* si = GetStreamerInfo();
@@ -5495,11 +5491,6 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
          // The loaded class version is not the same as the version of the code
          // which was used to allocate this array.  The best we can do is use
          // the TVirtualStreamerInfo to try to free up some of the allocated memory.
-         Error("DeleteArray", "Loaded class version %d is not registered for addr %p", fClassVersion, p);
-
-
-
-#if 0
          TVirtualStreamerInfo* si = (TVirtualStreamerInfo*) fStreamerInfo->At(objVer);
          if (si) {
             si->DeleteArray(ary, dtorOnly);
@@ -5516,13 +5507,10 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
                }
             }
          }
-#endif
-
-
       }
 
       // Deregister the object for special handling in the destructor.
-      if (inRepo && verFound && p) {
+      if (inRepo && p) {
          UnregisterAddressInRepository("TClass::DeleteArray",p,this);
       }
    } else {
