@@ -83,6 +83,11 @@ int ExecutorTest(T &executor) {
    if(redres5 != redtruth)
       return 10;
 
+   // const vector and functor class
+   std::vector<int> vargs3 = {0,0,0,0};
+   auto redres6 = executor.MapReduce(c, vargs3, redfunc);
+   if(redres6 != redtruth)
+      return 11;
 
    //TObject::Merge() reduction signature.
    TH1F *htot = new TH1F("htot", "htot", 10, 0, 1);
@@ -102,7 +107,7 @@ int ExecutorTest(T &executor) {
 
    for(auto i = 0; i<52; i++){
       if(htot->GetBinContent(i) != hred->GetBinContent(i))
-         return 11;
+         return 12;
    }
 
    delete htot;
@@ -117,13 +122,13 @@ int ExecutorTest(T &executor) {
    auto extrares1 = executor.Map([]() { return "42"; }, 25);
    for(auto c_str : extrares1)
       if(strcmp(c_str, "42") != 0)
-         return 12;
+         return 13;
 
    //returning a string
    auto extrares2 = executor.Map([]() { return std::string("fortytwo"); }, 25);
    for(auto str : extrares2)
       if(str != "fortytwo")
-         return 13;
+         return 14;
 
    return 0;
 }
