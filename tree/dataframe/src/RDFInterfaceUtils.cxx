@@ -370,24 +370,6 @@ ColumnNames_t GetTopLevelBranchNames(TTree &t)
 // the one in the vector
 class RActionBase;
 
-HeadNode_t CreateSnapshotRDF(const ColumnNames_t &validCols,
-                            std::string_view treeName,
-                            std::string_view fileName,
-                            bool isLazy,
-                            RLoopManager &loopManager,
-                            std::unique_ptr<RDFInternal::RActionBase> actionPtr)
-{
-   // create new RDF
-   ::TDirectory::TContext ctxt;
-   auto snapshotRDF = std::make_shared<ROOT::RDataFrame>(treeName, fileName, validCols);
-   auto snapshotRDFResPtr = MakeResultPtr(snapshotRDF, loopManager, std::move(actionPtr));
-
-   if (!isLazy) {
-      *snapshotRDFResPtr;
-   }
-   return snapshotRDFResPtr;
-}
-
 std::string DemangleTypeIdName(const std::type_info &typeInfo)
 {
    int dummy(0);
