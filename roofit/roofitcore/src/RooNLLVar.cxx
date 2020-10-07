@@ -215,7 +215,7 @@ RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a test statistic using several properties of the current instance. This is used to duplicate
 /// the test statistic in multi-processing scenarios.
-virtual RooAbsTestStatistic* RooNLLVar::create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
+RooAbsTestStatistic* RooNLLVar::create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
             const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
             Int_t nCPU, RooFit::MPSplit interleave, bool verbose, bool splitRange, bool binnedL) {
   auto testStat = new RooNLLVar(name, title,
