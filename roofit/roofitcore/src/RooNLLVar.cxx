@@ -56,6 +56,8 @@ ClassImp(RooNLLVar)
 
 RooArgSet RooNLLVar::_emptySet ;
 
+RooNLLVar::RooNLLVar()
+{ }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct likelihood from given p.d.f and (binned or unbinned dataset)
@@ -468,14 +470,20 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     throw std::invalid_argument(std::string("Error in ") + __FILE__ + ": Step size for batch computations can only be 1.");
   }
 
+  auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
+
 #ifdef ROOFIT_NEW_BATCH_INTERFACE
-  auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
-  BatchHelpers::RunContext evalData = _dataClone->getBatches(firstEvent, lastEvent-firstEvent);
+  // Create a RunContext that will own the memory where computation results are stored.
+  // Holding on to this struct in between function calls will make sure that the memory
+  // is only allocated once.
+  if (!_evalData) {
+    _evalData.reset(new BatchHelpers::RunContext);
+  }
+  _evalData->clear();
+  _dataClone->getBatches(*_evalData, firstEvent, lastEvent-firstEvent);
 
-  auto results = pdfClone->getLogValBatch(evalData, _normSet);
+  auto results = pdfClone->getLogValBatch(*_evalData, _normSet);
 #else
-  auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
-
   auto results = pdfClone->getLogValBatch(firstEvent, lastEvent-firstEvent, _normSet);
 #endif
 
@@ -487,7 +495,7 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     assert(_dataClone->valid());
     pdfClone->getValV(_normSet);
     try {
-      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, evalData, evtNo, _normSet);
+      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo, _normSet);
     } catch (std::exception& e) {
       std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
           << e.what() << std::endl;
