@@ -480,20 +480,16 @@ public:
    {
       const auto validCols = GetValidatedColumnNames(columnList.size(), columnList);
 
-      // TODO refactor this, it's shared with SnapshotImpl
-      const std::string fullTreename(treename);
-      // split name into directory and treename if needed
-      const auto lastSlash = treename.rfind('/');
-      std::string_view dirname = "";
-      if (std::string_view::npos != lastSlash) {
-         dirname = treename.substr(0, lastSlash);
-         treename = treename.substr(lastSlash + 1, treename.size());
-      }
+      const auto fullTreeName = treename;
+      const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
+      treename = parsedTreePath.fTreeName;
+      const auto &dirname = parsedTreePath.fDirName;
+
       auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
          std::string(filename), std::string(dirname), std::string(treename), columnList, options});
 
       ::TDirectory::TContext ctxt;
-      auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreename, filename, validCols);
+      auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, validCols);
 
       auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
          validCols, newRDF, snapHelperArgs, validCols.size());
@@ -2382,7 +2378,7 @@ private:
    /// is the address pointing to the storage of the read/created object in/by
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... ColumnTypes>
-   RResultPtr<RInterface<RLoopManager>> SnapshotImpl(std::string_view treename, std::string_view filename,
+   RResultPtr<RInterface<RLoopManager>> SnapshotImpl(std::string_view fullTreeName, std::string_view filename,
                                                      const ColumnNames_t &columnList, const RSnapshotOptions &options)
    {
       RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columnList.size());
@@ -2390,20 +2386,15 @@ private:
       const auto validCols = GetValidatedColumnNames(columnList.size(), columnList);
       CheckAndFillDSColumns(validCols, TTraits::TypeList<ColumnTypes...>());
 
-      const std::string fullTreename(treename);
-      // split name into directory and treename if needed
-      const auto lastSlash = treename.rfind('/');
-      std::string_view dirname = "";
-      if (std::string_view::npos != lastSlash) {
-         dirname = treename.substr(0, lastSlash);
-         treename = treename.substr(lastSlash + 1, treename.size());
-      }
+      const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
+      const auto &treename = parsedTreePath.fTreeName;
+      const auto &dirname = parsedTreePath.fDirName;
 
       auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
          std::string(filename), std::string(dirname), std::string(treename), columnList, options});
 
       ::TDirectory::TContext ctxt;
-      auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreename, filename, validCols);
+      auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, validCols);
 
       auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs);
 
