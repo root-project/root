@@ -637,17 +637,17 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
 // Jit and call something equivalent to "this->BuildAndBook<ColTypes...>(params...)"
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
-                           const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
-                           const unsigned int nSlots, const RDFInternal::RBookedDefines &customCols, RDataSource *ds,
-                           std::weak_ptr<RJittedAction> *jittedActionOnHeap)
+                           const std::type_info &helperArgType, const std::type_info &at, void *helperArgOnHeap,
+                           TTree *tree, const unsigned int nSlots, const RDFInternal::RBookedDefines &customCols,
+                           RDataSource *ds, std::weak_ptr<RJittedAction> *jittedActionOnHeap)
 {
    // retrieve type of result of the action as a string
-   auto actionResultTypeClass = TClass::GetClass(art);
-   if (!actionResultTypeClass) {
+   auto helperArgClass = TClass::GetClass(helperArgType);
+   if (!helperArgClass) {
       std::string exceptionText = "An error occurred while inferring the result type of an operation.";
       throw std::runtime_error(exceptionText.c_str());
    }
-   const auto actionResultTypeName = actionResultTypeClass->GetName();
+   const auto helperArgClassName = helperArgClass->GetName();
 
    // retrieve type of action as a string
    auto actionTypeClass = TClass::GetClass(at);
@@ -676,8 +676,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::R
          createAction_str << ", ";
       createAction_str << '"' << bl[i] << '"';
    }
-   createAction_str << "}, " << nSlots << ", reinterpret_cast<" << actionResultTypeName << "*>("
-                    << PrettyPrintAddr(rOnHeap)
+   createAction_str << "}, " << nSlots << ", reinterpret_cast<" << helperArgClassName << "*>("
+                    << PrettyPrintAddr(helperArgOnHeap)
                     << "), reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedAction>*>("
                     << PrettyPrintAddr(jittedActionOnHeap)
                     << "), reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesAddr << "));";
