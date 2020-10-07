@@ -2413,13 +2413,15 @@ private:
 
       auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
          std::string(filename), std::string(dirname), std::string(treename), columnList, options});
-      auto actionPtr =
-         RDFInternal::BuildAction<ColumnTypes...>(validCols, snapHelperArgs, fLoopManager->GetNSlots(), fProxiedPtr,
-                                                  RDFInternal::ActionTags::Snapshot{}, fDefines);
-      fLoopManager->Book(actionPtr.get());
 
-      return RDFInternal::CreateSnapshotRDF(validCols, fullTreename, filename, options.fLazy, *fLoopManager,
-                                            std::move(actionPtr));
+      ::TDirectory::TContext ctxt;
+      auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreename, filename, validCols);
+
+      auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs);
+
+      if (!options.fLazy)
+         *resPtr;
+      return resPtr;
    }
 
    ////////////////////////////////////////////////////////////////////////////

@@ -70,14 +70,6 @@ namespace RDFInternal = ROOT::Internal::RDF;
 
 ColumnNames_t GetTopLevelBranchNames(TTree &t);
 
-using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
-HeadNode_t CreateSnapshotRDF(const ColumnNames_t &validCols,
-                            std::string_view treeName,
-                            std::string_view fileName,
-                            bool isLazy,
-                            RLoopManager &loopManager,
-                            std::unique_ptr<RDFInternal::RActionBase> actionPtr);
-
 std::string DemangleTypeIdName(const std::type_info &typeInfo);
 
 ColumnNames_t
