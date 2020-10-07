@@ -650,7 +650,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::R
       std::string exceptionText = "An error occurred while inferring the action type of the operation.";
       throw std::runtime_error(exceptionText.c_str());
    }
-   const auto actionTypeName = actionTypeClass->GetName();
+   const std::string actionTypeName = actionTypeClass->GetName();
+   const std::string actionTypeNameBase = actionTypeName.substr(actionTypeName.rfind(':') + 1);
 
    auto definesCopy = new RDFInternal::RBookedDefines(customCols); // deleted in jitted CallBuildAction
    auto definesAddr = PrettyPrintAddr(definesCopy);
@@ -659,7 +660,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::R
    // just-in-time create an RAction object and it will assign it to its corresponding RJittedAction.
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::RDF::CallBuildAction<" << actionTypeName;
-   const auto columnTypeNames = GetValidatedArgTypes(bl, customCols, tree, ds, actionTypeName, /*vector2rvec=*/true);
+   const auto columnTypeNames =
+      GetValidatedArgTypes(bl, customCols, tree, ds, actionTypeNameBase, /*vector2rvec=*/true);
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
