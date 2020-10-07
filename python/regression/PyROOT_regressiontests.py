@@ -744,6 +744,23 @@ class Regression24CppPythonInheritance(MyTestCase):
        # Check there is no corruption in the invocation of i->do_2() inside my_func
        self.assertEqual(cppyy.gbl.my_func(i), 2)
 
+   def test7ConstructorDefaultArgs(self):
+       """Invocation of constructor with default arguments"""
+       # 6467
+       class MyTChain(ROOT.TChain):
+          def __init__(self, name):
+              # Invoke TChain(const char *name, const char *title="") constructor
+              super(MyTChain, self).__init__(name)
+
+       a = MyTChain("myname")
+
+       # Try also without redefining __init__
+       class MyTChain2(ROOT.TChain): pass
+
+       b = MyTChain2("myname")
+
+       self.assertEqual(a.GetName(), b.GetName())
+
 
 ## actual test run
 if __name__ == '__main__':
