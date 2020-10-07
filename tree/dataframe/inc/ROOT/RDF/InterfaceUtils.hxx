@@ -576,6 +576,13 @@ std::vector<std::string> GetFilterNames(const std::shared_ptr<NodeType> &node)
    return filterNames;
 }
 
+struct ParsedTreePath {
+   std::string fTreeName;
+   std::string fDirName;
+};
+
+ParsedTreePath ParseTreePath(std::string_view fullTreeName);
+
 // Check if a condition is true for all types
 template <bool...>
 struct TBoolPack;

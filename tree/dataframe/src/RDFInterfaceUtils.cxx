@@ -520,6 +520,19 @@ std::vector<std::string> GetFilterNames(const std::shared_ptr<RLoopManager> &loo
    return loopManager->GetFiltersNames();
 }
 
+ParsedTreePath ParseTreePath(std::string_view fullTreeName)
+{
+   // split name into directory and treename if needed
+   std::string_view dirName = "";
+   std::string_view treeName = fullTreeName;
+   const auto lastSlash = fullTreeName.rfind('/');
+   if (std::string_view::npos != lastSlash) {
+      dirName = treeName.substr(0, lastSlash);
+      treeName = treeName.substr(lastSlash + 1, treeName.size());
+   }
+   return {std::string(treeName), std::string(dirName)};
+}
+
 std::string PrettyPrintAddr(const void *const addr)
 {
    std::stringstream s;
