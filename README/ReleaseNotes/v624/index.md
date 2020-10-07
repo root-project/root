@@ -90,6 +90,12 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 
 ## RooFit Libraries
 
+### Improved recovery from invalid parameters
+When a function in RooFit is undefined (Poisson with negative mean, PDF with negative values, etc), RooFit can now pass information about the
+"badness" of the violation to the minimiser. The minimiser can use this to compute a gradient to find its way out of the undefined region.
+This can drastically improve its ability to recover when unstable fit models are used, for example RooPolynomial.
+
+For details, see the RooFit tutorial [rf612_recoverFromInvalidParameters.C](https://root.cern/doc/v624/rf612__recoverFromInvalidParameters_8C.html).
 
 ## 2D Graphics Libraries
 
