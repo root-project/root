@@ -658,8 +658,8 @@ Build type      ${CMAKE_BUILD_TYPE}
 Install path    ${CMAKE_INSTALL_PREFIX}
 Compiler        ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
 Compiler flags:
-C               ${CMAKE_C_FLAGS}
-C++             ${CMAKE_CXX_FLAGS}
+C               ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_${BUILD_TYPE}}
+C++             ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}}
 Linker flags:
 Executable      ${CMAKE_EXE_LINKER_FLAGS}
 Module          ${CMAKE_MODULE_LINKER_FLAGS}
