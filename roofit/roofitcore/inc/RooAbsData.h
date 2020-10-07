@@ -100,12 +100,12 @@ public:
   virtual const RooArgSet* get(Int_t index) const ;
 
   /// Retrieve batches of data for each real-valued variable in this dataset.
+  /// \param[out]  evalData Store references to all data batches in this struct.
   /// \param first Index of first event that ends up in the batch.
   /// \param len   Number of events in each batch.
   /// Needs to be overridden by derived classes. This implementation returns an empty RunContext.
-  virtual BatchHelpers::RunContext getBatches(std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const {
-    (void)first; (void)len;
-    return {};
+  virtual void getBatches(BatchHelpers::RunContext& evalData, std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const {
+    (void)evalData; (void)first; (void)len;
   }
   ////////////////////////////////////////////////////////////////////////////////
   /// Return event weights of all events in range [first, first+len).
