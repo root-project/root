@@ -449,14 +449,14 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
-template <typename ActionTag, typename... ColTypes, typename PrevNodeType, typename ActionResultType>
+template <typename ActionTag, typename... ColTypes, typename PrevNodeType, typename HelperArgType>
 void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const ColumnNames_t &cols,
-                     const unsigned int nSlots, std::weak_ptr<ActionResultType> *wkROnHeap,
+                     const unsigned int nSlots, std::weak_ptr<HelperArgType> *wkHelperArgOnHeap,
                      std::weak_ptr<RJittedAction> *wkJittedActionOnHeap,
                      RDFInternal::RBookedDefines *defines)
 {
-   if (wkROnHeap->expired()) {
-      delete wkROnHeap;
+   if (wkHelperArgOnHeap->expired()) {
+      delete wkHelperArgOnHeap;
       delete wkJittedActionOnHeap;
       // defines must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
       // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
@@ -465,7 +465,7 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
       return;
    }
 
-   const auto rOnHeap = wkROnHeap->lock();
+   const auto helperArgOnHeap = wkHelperArgOnHeap->lock();
    auto jittedActionOnHeap = wkJittedActionOnHeap->lock();
 
    // if we are here it means we are jitting, if we are jitting the loop manager must be alive
@@ -478,14 +478,14 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
       RDFInternal::AddDSColumns(cols, loopManager, *ds, ColTypes_t());
 
    auto actionPtr =
-      BuildAction<ColTypes...>(cols, std::move(rOnHeap), nSlots, std::move(prevNodePtr), ActionTag{}, *defines);
+      BuildAction<ColTypes...>(cols, std::move(helperArgOnHeap), nSlots, std::move(prevNodePtr), ActionTag{}, *defines);
    jittedActionOnHeap->SetAction(std::move(actionPtr));
 
    // defines points to the columns structure in the heap, created before the jitted call so that the jitter can
    // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
    delete defines;
 
-   delete wkROnHeap;
+   delete wkHelperArgOnHeap;
    delete prevNodeOnHeap;
    delete wkJittedActionOnHeap;
 }
