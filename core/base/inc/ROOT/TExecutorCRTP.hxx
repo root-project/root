@@ -108,6 +108,7 @@ public:
    T* MapReduce(F func, std::vector<T*> &args);
 
    template<class T> T* Reduce(const std::vector<T*> &mergeObjs);
+   template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
    unsigned GetPoolSize();
 
@@ -228,6 +229,21 @@ T* TExecutorCRTP<subc>::Reduce(const std::vector<T*> &mergeObjs)
    auto retHist = dynamic_cast<T*>((mergeObjs.front())->Clone());
    if (retHist) retHist->Merge(&l);
    return retHist;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// \brief "Reduce" an std::vector into a single object by passing a
+/// function as the second argument defining the reduction operation.
+///
+/// \param objs A vector of elements to combine.
+/// \param redfunc Reduction function to combine the elements of the vector `objs`
+/// \return A value result of combining the vector elements into a single object of the same type.
+template<class subc> template<class T, class R>
+auto TExecutorCRTP<subc>::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
+{
+   // check we can apply reduce to objs
+   static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
+   return redfunc(objs);
 }
 
 //////////////////////////////////////////////////////////////////////////

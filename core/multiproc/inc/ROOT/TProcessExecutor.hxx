@@ -68,7 +68,6 @@ public:
    auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
 
    using TExecutorCRTP<TProcessExecutor>::Reduce;
-   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
 
 private:
    template<class T> void Collect(std::vector<T> &reslist);
@@ -273,16 +272,6 @@ auto TProcessExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typ
    ReapWorkers();
    fTaskType= ETask::kNoTask;
    return Reduce(reslist, redfunc);
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// \copydoc ROOT::Internal::TExecutor::Reduce(const std::vector<T> &objs,R redfunc)
-template<class T, class R>
-T TProcessExecutor::Reduce(const std::vector<T> &objs, R redfunc)
-{
-   // check we can apply reduce to objs
-   static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
-   return redfunc(objs);
 }
 
 //////////////////////////////////////////////////////////////////////////

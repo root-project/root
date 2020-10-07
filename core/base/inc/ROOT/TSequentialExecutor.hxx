@@ -58,7 +58,6 @@ namespace ROOT {
       auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
       
       using TExecutorCRTP<TSequentialExecutor>::Reduce;
-      template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
       //////////////////////////////////////////////////////////////////////////
       /// \brief Return the number of workers in the sequential executor: a single one.
@@ -155,21 +154,6 @@ namespace ROOT {
    template<class F, class T, class R, class Cond>
    auto TSequentialExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
       return Reduce(Map(func, args), redfunc);
-   }
-
-   //////////////////////////////////////////////////////////////////////////
-   /// \brief "Reduce" an std::vector into a single object by passing a
-   /// function as the second argument defining the reduction operation.
-   ///
-   /// \param objs A vector of elements to combine.
-   /// \param redfunc Reduction function to combine the elements of the vector `objs`
-   /// \return A value result of combining the vector elements into a single object of the same type.
-   template<class T, class R>
-   auto TSequentialExecutor::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
-   {
-      // check we can apply reduce to objs
-      static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
-      return redfunc(objs);
    }
 
 } // namespace ROOT
