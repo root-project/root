@@ -478,40 +478,28 @@ public:
                                                  const ColumnNames_t &columnList,
                                                  const RSnapshotOptions &options = RSnapshotOptions())
    {
-      // Early return: if the list of columns is empty, just return an empty RDF
-      // If we proceed, the jitted call will not compile!
-      if (columnList.empty()) {
-         auto nEntries = *this->Count();
-         auto snapshotRDF = std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(nEntries));
-         return MakeResultPtr(snapshotRDF, *fLoopManager, nullptr);
+      const auto validCols = GetValidatedColumnNames(columnList.size(), columnList);
+
+      // TODO refactor this, it's shared with SnapshotImpl
+      const std::string fullTreename(treename);
+      // split name into directory and treename if needed
+      const auto lastSlash = treename.rfind('/');
+      std::string_view dirname = "";
+      if (std::string_view::npos != lastSlash) {
+         dirname = treename.substr(0, lastSlash);
+         treename = treename.substr(lastSlash + 1, treename.size());
       }
-      std::stringstream snapCall;
-      auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
-      RInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, *fLoopManager,
-                                                                                      fDefines, fDataSource);
+      auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
+         std::string(filename), std::string(dirname), std::string(treename), columnList, options});
 
-      // build a string equivalent to
-      // "resPtr = (RInterface<nodetype*>*)(this)->Snapshot<Ts...>(args...)"
-      RResultPtr<RInterface<RLoopManager>> resPtr;
-      snapCall << "*reinterpret_cast<ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>>*>("
-               << RDFInternal::PrettyPrintAddr(&resPtr)
-               << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase>*>("
-               << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Snapshot<";
+      ::TDirectory::TContext ctxt;
+      auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreename, filename, validCols);
 
-      const auto validColumnNames = GetValidatedColumnNames(columnList.size(), columnList);
-      const auto colTypes = GetValidatedArgTypes(validColumnNames, fDefines, fLoopManager->GetTree(), fDataSource,
-                                                 "Snapshot", /*vector2rvec=*/false);
+      auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
+         validCols, newRDF, snapHelperArgs, validCols.size());
 
-      for (auto &colType : colTypes)
-         snapCall << colType << ", ";
-      if (!colTypes.empty())
-         snapCall.seekp(-2, snapCall.cur); // remove the last ",
-      snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
-               << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-               << RDFInternal::PrettyPrintAddr(&columnList) << "),"
-               << "*reinterpret_cast<ROOT::RDF::RSnapshotOptions*>(" << RDFInternal::PrettyPrintAddr(&options) << "));";
-      // jit snapCall, return result
-      RDFInternal::InterpreterCalc(snapCall.str(), "Snapshot");
+      if (!options.fLazy)
+         *resPtr;
       return resPtr;
    }
 
