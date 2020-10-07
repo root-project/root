@@ -53,6 +53,21 @@ public:
     (void)dummy;
   };
 
+  /// Construct from iterators.
+  /// \tparam Iterator_t An iterator pointing to RooFit objects or references thereof.
+  /// \param beginIt Iterator to first element to add.
+  /// \param end Iterator to end of range to be added.
+  /// \param name Optional name of the collection.
+  template<typename Iterator_t,
+      typename value_type = typename std::iterator_traits<Iterator_t>::value_type,
+      typename = std::enable_if<std::is_convertible<const value_type*, const RooAbsArg*>::value> >
+  RooArgSet(Iterator_t beginIt, Iterator_t endIt, const char* name="") :
+  RooArgSet(name) {
+    for (auto it = beginIt; it != endIt; ++it) {
+      add(*it);
+    }
+  }
+
   RooArgSet(const RooArgSet& other, const char *name="");
 
   RooArgSet(const RooArgSet& set1, const RooArgSet& set2,
