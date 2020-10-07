@@ -78,19 +78,19 @@ public:
   explicit RooArgSet(const TCollection& tcoll, const char* name="") ;
   explicit RooArgSet(const char *name);
 
-  ~RooArgSet();
-  TObject* clone(const char* newname) const { return new RooArgSet(*this,newname); }
-  TObject* create(const char* newname) const { return new RooArgSet(newname); }
+  ~RooArgSet() override;
+  TObject* clone(const char* newname) const override { return new RooArgSet(*this,newname); }
+  TObject* create(const char* newname) const override { return new RooArgSet(newname); }
   RooArgSet& operator=(const RooArgSet& other) { RooAbsCollection::operator=(other) ; return *this ;}
 
   using RooAbsCollection::add;
-  virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE);
+  Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) override;
 
   using RooAbsCollection::addOwned;
-  virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
+  Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE) override;
 
   using RooAbsCollection::addClone;
-  virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE);
+  RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) override;
 
   using RooAbsCollection::operator[];
   RooAbsArg& operator[](const char* name) const;
@@ -148,7 +148,7 @@ private:
   static MemPool* memPool();
 #endif
   
-  ClassDef(RooArgSet,1) // Set of RooAbsArg objects
+  ClassDefOverride(RooArgSet,1) // Set of RooAbsArg objects
 };
 
 #endif
