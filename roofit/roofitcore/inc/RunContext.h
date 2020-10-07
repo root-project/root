@@ -37,7 +37,7 @@ struct RunContext {
   RooSpan<double> getWritableBatch(const RooAbsReal* owner);
   RooSpan<double> makeBatch(const RooAbsReal* owner, std::size_t size);
 
-  /// Clear computes values. Memory owned will stay intact.
+  /// Clear all computation results without freeing memory.
   void clear() { spans.clear(); rangeName = nullptr; }
 
   /// Once an object has computed its value(s), the span pointing to the results is registered here.
