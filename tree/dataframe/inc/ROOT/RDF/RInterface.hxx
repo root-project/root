@@ -2429,23 +2429,19 @@ private:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Implementation of cache
    template <typename... ColTypes, std::size_t... S>
-   RInterface<RLoopManager> CacheImpl(const ColumnNames_t &columnList, std::index_sequence<S...> s)
+   RInterface<RLoopManager> CacheImpl(const ColumnNames_t &columnList, std::index_sequence<S...>)
    {
       // Check at compile time that the columns types are copy constructible
       constexpr bool areCopyConstructible =
          RDFInternal::TEvalAnd<std::is_copy_constructible<ColTypes>::value...>::value;
       static_assert(areCopyConstructible, "Columns of a type which is not copy constructible cannot be cached yet.");
 
-      // We share bits and pieces with snapshot. De facto this is a snapshot
-      // in memory!
       RDFInternal::CheckTypesAndPars(sizeof...(ColTypes), columnList.size());
 
       auto colHolders = std::make_tuple(Take<ColTypes>(columnList[S])...);
       auto ds = std::make_unique<RLazyDS<ColTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
 
       RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnList));
-
-      (void)s; // Prevents unused warning
 
       return cachedRDF;
    }
