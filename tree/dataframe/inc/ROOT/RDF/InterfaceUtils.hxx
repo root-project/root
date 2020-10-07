@@ -477,8 +477,8 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
    if (ds != nullptr)
       RDFInternal::AddDSColumns(cols, loopManager, *ds, ColTypes_t());
 
-   auto actionPtr = BuildAction<ColTypes...>(cols, std::move(rOnHeap), nSlots, std::move(prevNodePtr), ActionTag{},
-                                                *defines);
+   auto actionPtr =
+      BuildAction<ColTypes...>(cols, std::move(rOnHeap), nSlots, std::move(prevNodePtr), ActionTag{}, *defines);
    jittedActionOnHeap->SetAction(std::move(actionPtr));
 
    // defines points to the columns structure in the heap, created before the jitted call so that the jitter can
