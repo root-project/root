@@ -8,20 +8,11 @@
 # CMakeLists.txt file for building ROOT io/io package
 ############################################################################
 
-if (WIN32)
-  set(rawfile_local_headers ROOT/RRawFileWin.hxx)
-  set(rawfile_local_sources src/RRawFileWin.cxx)
-else ()
-  set(rawfile_local_headers ROOT/RRawFileUnix.hxx)
-  set(rawfile_local_sources src/RRawFileUnix.cxx)
-endif ()
-
 if (uring)
   list(APPEND rawfile_local_headers ROOT/RIoUring.hxx)
 endif ()
 
 ROOT_LINKER_LIBRARY(RIO
-  ${rawfile_local_sources}
   src/RRawFileCreate.cxx
   src/TArchiveFile.cxx
   src/TBufferFile.cxx
@@ -125,6 +116,7 @@ ROOT_GENERATE_DICTIONARY(G__RIO
   DEPENDENCIES
     Core
     Thread
+    ROOTIOLite
 )
 
 # TStreamerInfoReadBuffer in O0 needs 6k on the stack. It is called

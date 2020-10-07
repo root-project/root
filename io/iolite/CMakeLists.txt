@@ -8,7 +8,14 @@
 # CMakeLists.txt file for building ROOT io/iolite package
 ############################################################################
 
+if (WIN32)
+  set(rawfile_local_sources src/RRawFileWin.cxx)
+else ()
+  set(rawfile_local_sources src/RRawFileUnix.cxx)
+endif ()
+
 ROOT_LINKER_LIBRARY(ROOTIOLite
+  ${rawfile_local_sources}
   src/RRawFile.cxx
   DEPENDENCIES
     Foundation
