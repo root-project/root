@@ -32,10 +32,8 @@ namespace ROOT {
       void Foreach(F func, unsigned nTimes);
       template<class F, class INTEGER>
       void Foreach(F func, ROOT::TSeq<INTEGER> args);
-      /// \cond
       template<class F, class T>
       void Foreach(F func, std::initializer_list<T> args);
-      /// \endcond
       template<class F, class T>
       void Foreach(F func, std::vector<T> &args);
 
