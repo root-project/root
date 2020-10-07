@@ -185,8 +185,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
 // sure the python object is properly carried, but they can only be generated
 // if the base class supports them
     if (has_default || !has_constructors)
-        code << "  " << derivedName << "() {}\n"
-             << "  " << derivedName << "(PyObject* pyobj) : m_self(pyobj) {}\n";
+        code << "  " << derivedName << "() {}\n";
     if (has_default || has_cctor || !has_constructors) {
         code << "  " << derivedName << "(const " << derivedName << "& other) : ";
         if (has_cctor)

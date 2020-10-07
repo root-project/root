@@ -41,19 +41,6 @@ PyObject* CPyCppyy::CPPConstructor::Call(
     if (!(args = this->PreProcessArgs(self, args, kwds)))
         return nullptr;
 
-    if (self->GetObject()) {
-        Py_DECREF(args);
-        PyErr_SetString(PyExc_ReferenceError,
-            "object already constructed; use __assign__ instead of __init__");
-        return nullptr;
-    }
-
-// translate the arguments
-    if (!this->ConvertAndSetArgs(args, ctxt)) {
-        Py_DECREF(args);
-        return nullptr;
-    }
-
 // verify existence of self (i.e. tp_new called)
     if (!self) {
         PyErr_Print();
@@ -61,55 +48,57 @@ PyObject* CPyCppyy::CPPConstructor::Call(
         return nullptr;
     }
 
+    if (self->GetObject()) {
+        Py_DECREF(args);
+        PyErr_SetString(PyExc_ReferenceError,
+            "object already constructed; use __assign__ instead of __init__");
+        return nullptr;
+    }
+
 // perform the call, nullptr 'this' makes the other side allocate the memory
     Cppyy::TCppScope_t disp = self->ObjectIsA(false /* check_smart */);
-    Cppyy::TCppMethod_t curMethod = GetMethod();
+    ptrdiff_t address = 0;
     if (GetScope() != disp) {
     // happens for Python derived types, which have a dispatcher inserted that
-    // is not otherwise user-visible: temporarily reset fMethod
-    // TODO: these lookups are slow and need caching
-        const std::string& dispName = Cppyy::GetFinalName(disp);
-    // select proper overload based on signature match
-        const std::string& sig =
-            (curMethod && PyTuple_GET_SIZE(args)) ? Cppyy::GetMethodSignature(curMethod, false, PyTuple_GET_SIZE(args)) : "()";
-        Cppyy::TCppMethod_t method = (Cppyy::TCppMethod_t)0;
-        const auto& v = Cppyy::GetMethodIndicesFromName(disp, dispName);
-        for (auto idx : v) {
-            Cppyy::TCppMethod_t mm = Cppyy::GetMethod(disp, idx);
-            if (Cppyy::GetMethodSignature(mm, false) == sig) {
-                method = mm;
-                break;
-            }
-        }
-
-        if (method) SetMethod(method);
-        else {
-            PyErr_Format(PyExc_TypeError, "no constructor available for \'%s\'",
-                Cppyy::GetScopedFinalName(this->GetScope()).c_str());
+    // is not otherwise user-visible: call it instead
+    // first, check whether we at least had a proper meta class, or whether that
+    // was also replaced user-side
+        if (!GetScope() || !disp) {
+            PyErr_SetString(PyExc_TypeError, "can not construct incomplete C++ class");
             return nullptr;
         }
-    }
-    ptrdiff_t address = (ptrdiff_t)this->Execute(nullptr, 0, ctxt);
-    if (GetMethod() != curMethod) {
-    // restore the original constructor
-        SetMethod(curMethod);
 
-    // set m_self (TODO: get this from the compiler in case of some unorthodox padding
-    // or if the inheritance hierarchy extends back into C++ land)
+    // get the dispatcher class
+        PyObject* dispproxy = CPyCppyy::GetScopeProxy(disp);
+        if (!dispproxy) {
+            PyErr_SetString(PyExc_TypeError, "dispatcher proxy was never created");
+            return nullptr;
+        }
+
+        PyObject* pyobj = PyObject_Call(dispproxy, args, kwds);
+        if (!pyobj)
+            return nullptr;
+
+    // retrieve the actual pointer, take over control, and set m_self
+        address = (ptrdiff_t)((CPPInstance*)pyobj)->GetObject();
         if (address) {
-        // get the dispatcher class
-            PyObject *dispproxy = CPyCppyy::GetScopeProxy(disp);
-            if (!dispproxy) {
-                PyErr_SetString(PyExc_TypeError, "dispatcher proxy was never created");
-                return nullptr;
-            }
-
-            PyObject *pyoff = PyObject_CallMethod(dispproxy, (char*)"_dispatchptr_offset", nullptr);
+            ((CPPInstance*)pyobj)->CppOwns();
+            PyObject* pyoff = PyObject_CallMethod(dispproxy, (char*)"_dispatchptr_offset", nullptr);
             size_t disp_offset = PyLong_AsSsize_t(pyoff);
             Py_DECREF(pyoff);
-            Py_DECREF(dispproxy);
             new ((void*)(address + disp_offset)) DispatchPtr{(PyObject*)self};
         }
+        Py_DECREF(pyobj);
+        Py_DECREF(dispproxy);
+
+    } else {
+    // translate the arguments
+        if (!this->ConvertAndSetArgs(args, ctxt)) {
+            Py_DECREF(args);
+            return nullptr;
+        }
+
+        address = (ptrdiff_t)this->Execute(nullptr, 0, ctxt);
     }
 
 // done with filtered args
