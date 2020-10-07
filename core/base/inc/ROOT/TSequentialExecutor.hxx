@@ -36,6 +36,8 @@ namespace ROOT {
       void Foreach(F func, std::initializer_list<T> args);
       template<class F, class T>
       void Foreach(F func, std::vector<T> &args);
+      template<class F, class T>
+      void Foreach(F func, const std::vector<T> &args);
 
       using TExecutorCRTP<TSequentialExecutor>::Map;
       template<class F, class Cond = noReferenceCond<F>>
@@ -44,6 +46,8 @@ namespace ROOT {
       auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
       template<class F, class T, class Cond = noReferenceCond<F, T>>
       auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+      template<class F, class T, class Cond = noReferenceCond<F, T>>
+      auto Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
 
       // // MapReduce
       // // the late return types also check at compile-time whether redfunc is compatible with func,
@@ -54,7 +58,9 @@ namespace ROOT {
       auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
       template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
       auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
-      
+      template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+      auto MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
+
       using TExecutorCRTP<TSequentialExecutor>::Reduce;
 
       //////////////////////////////////////////////////////////////////////////
@@ -109,6 +115,17 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a function over the elements of an immutable vector, dividing the execution in nChunks.
+   ///
+   /// \param func Function to be executed on the elements of the immutable vector passed as second parameter.
+   /// \param args Immutable vector of elements passed as an argument to `func`.
+   template<class F, class T>
+   void TSequentialExecutor::Foreach(F func, const std::vector<T> &args) {
+         unsigned int nToProcess = args.size();
+         for(auto i: ROOT::TSeqI(nToProcess)) func(args[i]);
+   }
+
+   //////////////////////////////////////////////////////////////////////////
    /// \copydoc TExecutorCRTP::Map(F func,unsigned nTimes)
    template<class F, class Cond>
    auto TSequentialExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
@@ -141,6 +158,18 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
+   /// \copydoc TExecutorCRTP::Map(F func,const std::vector<T> &args)
+   template<class F, class T, class Cond>
+   auto TSequentialExecutor::Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
+      // //check whether func is callable
+      using retType = decltype(func(args.front()));
+      unsigned int nToProcess = args.size();
+      std::vector<retType> reslist(nToProcess);
+      for(auto i: ROOT::TSeqI(nToProcess)) reslist[i] = func(args[i]);
+      return reslist;
+   }
+
+   //////////////////////////////////////////////////////////////////////////
    /// \copydoc TExecutorCRTP::MapReduce(F func,unsigned nTimes,R redfunc)
    template<class F, class R, class Cond>
    auto TSequentialExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type {
@@ -151,6 +180,13 @@ namespace ROOT {
    /// \copydoc TExecutorCRTP::MapReduce(F func,std::vector<T> &args,R redfunc)
    template<class F, class T, class R, class Cond>
    auto TSequentialExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
+      return Reduce(Map(func, args), redfunc);
+   }
+
+   //////////////////////////////////////////////////////////////////////////
+   /// \copydoc TExecutorCRTP::MapReduce(F func,const std::vector<T> &args,R redfunc)
+   template<class F, class T, class R, class Cond>
+   auto TSequentialExecutor::MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
       return Reduce(Map(func, args), redfunc);
    }
 
