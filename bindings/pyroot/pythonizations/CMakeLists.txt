@@ -20,6 +20,9 @@ if(dataframe)
         inc/RNumpyDS.hxx)
 endif()
 
+list(APPEND PYROOT_EXTRA_HEADERS
+     inc/TPyDispatcher.h)
+
 set(py_sources
   ROOT/__init__.py
   ROOT/_application.py
