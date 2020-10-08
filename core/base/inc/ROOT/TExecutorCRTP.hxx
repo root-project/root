@@ -79,6 +79,9 @@ public:
    explicit TExecutorCRTP() = default;
    explicit TExecutorCRTP(size_t /* nWorkers */ ){};
 
+   TExecutorCRTP(const TExecutorCRTP &) = delete;
+   TExecutorCRTP &operator=(const TExecutorCRTP &) = delete;
+
    /// type definition in used in templated functions for not allowing mapping functions that return references.
    /// The resulting vector elements must be assignable, references aren't.
    template< class F, class... T>
