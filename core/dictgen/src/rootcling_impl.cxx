@@ -4449,7 +4449,10 @@ int RootClingMain(int argc,
       std::copy(diagnosticPragmas.begin(),
                 diagnosticPragmas.end(),
                 std::ostream_iterator<std::string>(res, delim));
-      interp.declare(res.str());
+      if (interp.declare(res.str()) != cling::Interpreter::kSuccess) {
+         ROOT::TMetaUtils::Error(0, "Failed to parse -Wno-xyz flags as pragmas:\n%s", res.str().c_str());
+         return 1;
+      }
    }
 
    class IgnoringPragmaHandler: public clang::PragmaNamespace {
@@ -4496,8 +4499,12 @@ int RootClingMain(int argc,
       std::stringstream definesUndefinesStr;
       modGen.WritePPDefines(definesUndefinesStr);
       modGen.WritePPUndefines(definesUndefinesStr);
-      if (!definesUndefinesStr.str().empty())
-         interp.declare(definesUndefinesStr.str());
+      if (!definesUndefinesStr.str().empty()) {
+         if (interp.declare(definesUndefinesStr.str()) != cling::Interpreter::kSuccess) {
+            ROOT::TMetaUtils::Error(0, "Failed to parse -D, -U flags as preprocessor directives:\n%s", definesUndefinesStr.str().c_str());
+            return 1;
+         }
+      }
    }
 
    if (!InjectModuleUtilHeader(executableFileName, modGen, interp, true)
