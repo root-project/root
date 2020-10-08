@@ -84,6 +84,7 @@ namespace ROOT {
       auto MapReduce(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
 
       using TExecutorCRTP<TThreadExecutor>::Reduce;
+      template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
       template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
 
       unsigned GetPoolSize();
@@ -520,6 +521,16 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
+   /// \copydoc ROOT::Internal::TExecutor::Reduce(const std::vector<T> &objs,R redfunc)
+   template<class T, class R>
+   auto TThreadExecutor::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
+   {
+      // check we can apply reduce to objs
+      static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
+      return SeqReduce(objs, redfunc);
+   }
+
+   //////////////////////////////////////////////////////////////////////////
    /// \brief "Reduce" an std::vector into a single object in parallel by passing a
    /// binary function as the second argument defining the reduction operation.
    ///
@@ -535,7 +546,7 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief "Reduce", sequentially, an std::vector into a single object 
+   /// \brief "Reduce", sequentially, an std::vector into a single object
    ///
    /// \param objs A vector of elements to combine.
    /// \param redfunc Binary reduction function to combine the elements of the vector `objs`.
