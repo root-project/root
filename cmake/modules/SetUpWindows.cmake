@@ -50,12 +50,12 @@ elseif(MSVC)
   endif()
 
   #---Select compiler flags----------------------------------------------------------------
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -Z7"          CACHE STRING "Flags for release build with debug info" FORCE)
-  set(CMAKE_CXX_FLAGS_RELEASE        "-O2"              CACHE STRING "Flags for release build" FORCE)
-  set(CMAKE_CXX_FLAGS_DEBUG          "-Od -Z7"          CACHE STRING "Flags for a debug build" FORCE)
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -Z7"          CACHE STRING "Flags for release build with debug info" FORCE)
-  set(CMAKE_C_FLAGS_RELEASE          "-O2"              CACHE STRING "Flags for release build" FORCE)
-  set(CMAKE_C_FLAGS_DEBUG            "-Od -Z7"          CACHE STRING "Flags for a debug build" FORCE)
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -Z7")
+  set(CMAKE_CXX_FLAGS_RELEASE        "-O2")
+  set(CMAKE_CXX_FLAGS_DEBUG          "-Od -Z7")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -Z7")
+  set(CMAKE_C_FLAGS_RELEASE          "-O2")
+  set(CMAKE_C_FLAGS_DEBUG            "-Od -Z7")
 
   #---Set Linker flags----------------------------------------------------------------------
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
