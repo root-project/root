@@ -4334,26 +4334,24 @@ int RootClingMain(int argc,
       }
    }
 
-   if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
-      ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
-      return 1;
-   }
    if (!isGenreflex) { // rootcling
       // ROOTCINT uses to define a few header implicitly, we need to do it explicitly.
-      if (interp.declare("#include <assert.h>\n") != cling::Interpreter::kSuccess
-          || interp.declare("#include \"Rtypes.h\"\n"
-                            "#include \"TObject.h\"") != cling::Interpreter::kSuccess
+      if (interp.declare("#include <assert.h>\n"
+                         "#include \"Rtypes.h\"\n"
+                         "#include \"TObject.h\"") != cling::Interpreter::kSuccess
          ) {
          // There was an error.
-         ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
+         ROOT::TMetaUtils::Error(0, "Error loading the default rootcling header files.\n");
          return 1;
       }
    }
 
-   // For the list of 'opaque' typedef to also include string, we have to include it now.
-   interp.declare("#include <string>");
-   // For initializing TNormalizedCtxt.
-   interp.declare("#include <RtypesCore.h>");
+   if (interp.declare("#include <string>\n" // For the list of 'opaque' typedef to also include string.
+                      "#include <RtypesCore.h>\n" // For initializing TNormalizedCtxt.
+                      "namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
+      ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
+      return 1;
+   }
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
