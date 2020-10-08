@@ -136,17 +136,11 @@ auto Map(F func, const std::vector<T> &args) -> std::vector<typename std::result
 // // a static_assert check in TExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
 using TExecutorCRTP<TExecutor>::MapReduce;
 template<class F, class R, class Cond = noReferenceCond<F>>
-auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
-template<class F, class R, class Cond = noReferenceCond<F>>
 auto MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type;
 template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
 auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type;
 template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
 auto MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
-template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
-template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-auto MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
 template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
 auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
 template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
@@ -373,14 +367,6 @@ auto TExecutor::Map(F func, std::initializer_list<T> args, R redfunc, unsigned n
 
 
 //////////////////////////////////////////////////////////////////////////
-/// \copydoc TExecutorCRTP::MapReduce(F func,unsigned nTimes,R redfunc)
-template<class F, class R, class Cond>
-auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type {
-   return Reduce(Map(func, nTimes), redfunc);
-}
-
-
-//////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function `nTimes` (Map) and accumulate the results into a single value (Reduce).
 /// Benefits from partial reduction into `nChunks` intermediate results if the execution policy is multithreaded.
 /// Otherwise, it ignores the two last arguments and performs a normal Map operation.
@@ -426,20 +412,6 @@ auto TExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned 
 template<class F, class T, class R, class Cond>
 auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
    return Reduce(Map(func, args, redfunc, nChunks), redfunc);
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// \copydoc TExecutorCRTP::MapReduce(F func,std::vector<T> &args,R redfunc)
-template<class F, class T, class R, class Cond>
-auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
-   return Reduce(Map(func, args), redfunc);
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// \copydoc TExecutorCRTP::MapReduce(F func,const std::vector<T> &argss,R redfunc)
-template<class F, class T, class R, class Cond>
-auto TExecutor::MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
-   return Reduce(Map(func, args), redfunc);
 }
 
 //////////////////////////////////////////////////////////////////////////

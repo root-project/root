@@ -54,12 +54,6 @@ namespace ROOT {
       // // other than checking that func is compatible with the type of arguments.
       // // a static_assert check in TSequentialExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
       using TExecutorCRTP<TSequentialExecutor>::MapReduce;
-      template<class F, class R, class Cond = noReferenceCond<F>>
-      auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
-      template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-      auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
-      template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-      auto MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
 
       using TExecutorCRTP<TSequentialExecutor>::Reduce;
 
@@ -167,27 +161,6 @@ namespace ROOT {
       std::vector<retType> reslist(nToProcess);
       for(auto i: ROOT::TSeqI(nToProcess)) reslist[i] = func(args[i]);
       return reslist;
-   }
-
-   //////////////////////////////////////////////////////////////////////////
-   /// \copydoc TExecutorCRTP::MapReduce(F func,unsigned nTimes,R redfunc)
-   template<class F, class R, class Cond>
-   auto TSequentialExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type {
-      return Reduce(Map(func, nTimes), redfunc);
-   }
-
-   //////////////////////////////////////////////////////////////////////////
-   /// \copydoc TExecutorCRTP::MapReduce(F func,std::vector<T> &args,R redfunc)
-   template<class F, class T, class R, class Cond>
-   auto TSequentialExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
-      return Reduce(Map(func, args), redfunc);
-   }
-
-   //////////////////////////////////////////////////////////////////////////
-   /// \copydoc TExecutorCRTP::MapReduce(F func,const std::vector<T> &args,R redfunc)
-   template<class F, class T, class R, class Cond>
-   auto TSequentialExecutor::MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
-      return Reduce(Map(func, args), redfunc);
    }
 
 } // namespace ROOT
