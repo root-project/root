@@ -102,6 +102,8 @@ public:
    // The trailing return types also check at compile time whether redfunc is compatible with func,
    // other than checking that func is compatible with the type of arguments.
    // a static_assert check in TExecutorCRTP<subc>::Reduce is used to check that redfunc is compatible with the type returned by func
+   template<class F, class R, class Cond = noReferenceCond<F>>
+   auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
    template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
    auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type;
    template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
@@ -192,6 +194,20 @@ auto TExecutorCRTP<subc>::Map(F func, const std::vector<T> &args) -> std::vector
 }
 
 //////////////////////////////////////////////////////////////////////////
+/// \brief Execute a function without arguments several times (Map) and accumulate the results into a single value (Reduce).
+///
+/// \param func Function to be executed.
+/// \param nTimes Number of times function should be called.
+/// \return A vector with the results of the function calls.
+/// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
+/// \return A value result of "reducing" the vector returned by the Map operation into a single object.
+template<class subc> template<class F, class R, class Cond>
+auto TExecutorCRTP<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
+{
+   return Reduce(Map(func, nTimes));
+}
+
+//////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over a sequence of indexes (Map) and accumulate the results into a single value (Reduce).
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
@@ -203,7 +219,7 @@ auto TExecutorCRTP<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc)
 {
    std::vector<INTEGER> vargs(args.size());
    std::copy(args.begin(), args.end(), vargs.begin());
-   return Derived().MapReduce(func, vargs, redfunc);
+   return Reduce(Map(func, vargs), redfunc);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -217,7 +233,7 @@ template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutorCRTP<subc>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type
 {
    std::vector<T> vargs(std::move(args));
-   return Derived().MapReduce(func, vargs, redfunc);
+   return Reduce(Map(func, vargs), redfunc);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -230,7 +246,7 @@ auto TExecutorCRTP<subc>::MapReduce(F func, std::initializer_list<T> args, R red
 template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutorCRTP<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
 {
-   return Derived().MapReduce(func, args, redfunc);
+   return Reduce(Map(func, args), redfunc);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -243,7 +259,7 @@ auto TExecutorCRTP<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> 
 template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutorCRTP<subc>::MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
 {
-   return Derived().MapReduce(func, args, redfunc);
+   return Reduce(Map(func, args), redfunc);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -256,7 +272,7 @@ auto TExecutorCRTP<subc>::MapReduce(F func, const std::vector<T> &args, R redfun
 template<class subc> template<class F, class T, class Cond>
 T* TExecutorCRTP<subc>::MapReduce(F func, std::vector<T*> &args)
 {
-   return Derived().Reduce(Map(func, args));
+   return Reduce(Map(func, args));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -269,7 +285,7 @@ T* TExecutorCRTP<subc>::MapReduce(F func, std::vector<T*> &args)
 template<class subc> template<class F, class T, class Cond>
 T* TExecutorCRTP<subc>::MapReduce(F func, const std::vector<T*> &args)
 {
-   return Derived().Reduce(Map(func, args));
+   return Reduce(Map(func, args));
 }
 
 //////////////////////////////////////////////////////////////////////////
