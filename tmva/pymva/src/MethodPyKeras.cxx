@@ -15,6 +15,7 @@
 #include "TMVA/VariableTransformBase.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
+#include "TSystem.h"
 
 using namespace TMVA;
 
@@ -161,8 +162,6 @@ UInt_t TMVA::MethodPyKeras::GetNumValidationSamples()
 /// that is called from Factory::BookMethod
 void MethodPyKeras::ProcessOptions() {
 
-   std::cout << "process options....." << std::endl;
-
    // Set default filename for trained model if option is not used
    if (fFilenameTrainedModel.IsNull()) {
       fFilenameTrainedModel = GetWeightFileDir() + "/TrainedModel_" + GetName() + ".h5";
@@ -179,6 +178,11 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
    // initialize first Keras. This is done only here when class has
    // all state variable set from options or read from XML file
    // Import Keras
+
+   if (fUseTFKeras)
+      Log() << kINFO << "Setting up tf.keras" << Endl;
+   else
+      Log() << kINFO << "Setting up keras with " << gSystem->Getenv("KERAS_BACKEND") << " backend" << Endl;
 
    bool useTFBackend = kFALSE;
    bool kerasIsCompatible = kTRUE;
@@ -217,21 +221,21 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
       auto ret = PyRun_String("import tensorflow as tf", Py_single_input, fGlobalNS, fLocalNS);
       if (ret != nullptr) ret = PyRun_String("import tensorflow as tf", Py_single_input, fGlobalNS, fGlobalNS);
       if (ret == nullptr) {
-         Log() << kFATAL << "Importing tensorflow failed" << Endl;
+         Log() << kFATAL << "Importing TensorFlow failed" << Endl;
       }
       // check tensorflow version
       PyRunString("tf_major_version = int(tf.__version__.split('.')[0])");
       PyObject *pyTfVersion = PyDict_GetItemString(fLocalNS, "tf_major_version");
       int tfVersion = PyLong_AsLong(pyTfVersion);
-      Log() << kINFO << "Using Tensorflow version " << tfVersion << Endl;
+      Log() << kINFO << "Using TensorFlow version " << tfVersion << Endl;
 
       if (tfVersion < 2) {
          if (fUseTFKeras == 1) {
-            Log() << kWARNING << "Using an old Keras version. Cannot use tf.keras" << Endl;
+            Log() << kWARNING << "Using TensorFlow version 1.x which does not contain tf.keras - use then TensorFlow as Keras backend" << Endl;
             fUseTFKeras = kFALSE;
             // case when Keras was not found
             if (!kerasIsPresent) {
-               Log() << kFATAL << "Not a suitable tensorflow version is found " << Endl;
+               Log() << kFATAL << "Keras is not present and not a suitable TensorFlow version is found " << Endl;
                return;
             }
          }
@@ -239,7 +243,7 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
       else {
          // using version larger than 2.0 - can use tf.keras
          if (!kerasIsCompatible) {
-            Log() << kWARNING << "Keras version is not compatible with Tensorflow 2. Use instead tf.keras" << Endl;
+            Log() << kWARNING << "The Keras version is not compatible with TensorFlow 2. Use instead tf.keras" << Endl;
             fUseTFKeras = 1;
          }
       }
@@ -306,57 +310,11 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
       }
    }
 
-#if 0
-   if (UseTFKeras()) {
-
-      PyRunString("import tensorflow as tf", "Import tensorflow failed");
-   } else {
-      fKerasString = "keras";
-
-      PyRunString("import keras", "Import Keras failed");
-      // do import also in global namespace
-      auto ret = PyRun_String("import keras", Py_single_input, fGlobalNS, fGlobalNS);
-      if (!ret)
-        Log() << kERROR << "Import Keras in global namespace failed " << Endl;
-   }
-
-
-   if (UseTFKeras()) {
-      Log() << kINFO << "Use Keras version from tensorflow : tf.keras" << Endl;
-      fKerasString = "tf.keras";
-      PyRunString("import tensorflow as tf", "Import tensorflow failed");
-   } else {
-      fKerasString = "keras";
-      Log() << kINFO << "Use directly Keras " << Endl;
-      // auto ret = PyRun_String("import keras", Py_single_input, fGlobalNS, fLocalNS);
-      PyRunString("import keras", "Import Keras failed");
-      // do import also in global namespace
-      auto ret = PyRun_String("import keras", Py_single_input, fGlobalNS, fGlobalNS);
-      if (!ret)
-         Log() << kERROR << "Import Keras in global namespace failed " << Endl;
-   }
-
-   // set here some specific options for Tensorflow backend
-   //  -  when using tensorflow gpu set option to allow memory growth to avoid allocating all memory
-   //  -  set up number of threads for CPU if NumThreads option was specified
-
-   // check first if using tensorflow backend
-   if (GetKerasBackend() == kTensorFlow || UseTFKeras()) {
-      Log() << kINFO << "Using TensorFlow backend - setting special configuration options " << Endl;
-      if (!UseTFKeras()) {
-         PyRunString("import tensorflow as tf", "Error importing tensorflow");
-         PyRunString("from keras.backend import tensorflow_backend as K");
-         // run these above lines also in global namespace to make them visible overall
-         PyRun_String("import tensorflow as tf", Py_single_input, fGlobalNS, fGlobalNS);
-         PyRun_String("from keras.backend import tensorflow_backend as K", Py_single_input, fGlobalNS, fGlobalNS);
-
-#endif
-
    /*
     * Load Keras model from file
     */
 
-   Log() << kINFO << " Setup Keras Model " << Endl;
+   Log() << kINFO << " Loading Keras Model " << Endl;
 
    PyRunString("load_model_custom_objects=None");
 
@@ -374,9 +332,6 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
       PyRunString("print('custom objects for loading model : ',load_model_custom_objects)");
    }
 
-
-
-
    // Load initial model or already trained model
    TString filenameLoadModel;
    if (loadTrainedModel) {
@@ -385,8 +340,6 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
    else {
       filenameLoadModel = fFilenameModel;
    }
-
-   Log() << kINFO << " Loading Keras Model " << Endl;
 
    PyRunString("model = " + fKerasString + ".models.load_model('" + filenameLoadModel +
                      "', custom_objects=load_model_custom_objects)", "Failed to load Keras model from file: " + filenameLoadModel);
@@ -423,8 +376,6 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
 /// Note that option string are not yet filled with their values.
 /// This is done before ProcessOption method or after reading from XML file
 void MethodPyKeras::Init() {
-
-   std::cout << "Init MethodPyKeras " << std::endl;
 
    TMVA::Internal::PyGILRAII raii;
 
