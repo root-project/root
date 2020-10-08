@@ -135,8 +135,8 @@ include(CheckIntrinsics)
 
 #---Enable asserts------------------------------------------------------------------------------
 if(NOT asserts)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNDEBUG")
+  set(CMAKE_CXX_FLAGS_${BUILD_TYPE} "${CMAKE_CXX_FLAGS_${BUILD_TYPE}} -DNDEBUG")
+  set(CMAKE_C_FLAGS_${BUILD_TYPE} "${CMAKE_C_FLAGS_${BUILD_TYPE}} -DNDEBUG")
 endif()
 
 #---Enable CCache ------------------------------------------------------------------------------
