@@ -641,8 +641,11 @@ public:
          cacheCall.seekp(-2, cacheCall.cur);                         // remove the last ",
       cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                 << RDFInternal::PrettyPrintAddr(&columnList) << "));";
-      // jit cacheCall, return result
-      RDFInternal::InterpreterCalc(cacheCall.str(), "Cache");
+
+      // book the code to jit with the RLoopManager and trigger the event loop
+      fLoopManager->ToJitExec(cacheCall.str());
+      fLoopManager->Jit();
+
       return resRDF;
    }
 
