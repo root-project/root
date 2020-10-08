@@ -397,6 +397,7 @@ TPad::~TPad()
 
    // Required since we overload TObject::Hash.
    ROOT::CallRecursiveRemoveIfNeeded(*this);
+   if (this == gPad) gPad=nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
