@@ -1057,7 +1057,7 @@ void TPad::CopyPixmap()
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
 
-   if (fPixmapID != -1&& GetPainter())
+   if (fPixmapID != -1 && GetPainter())
       GetPainter()->CopyDrawable(fPixmapID, px, py);
 
    if (this == gPad) HighLight(gPad->GetHighLightColor());
@@ -6323,7 +6323,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                      bBBox = b->GetBBox();
 
                      //only when bounding boxes overlap in x or y direction
-                     if (((aBBox.fX<bBBox.fX)&&(bBBox.fX-aBBox.fX<=aBBox.fWidth))||((aBBox.fX>bBBox.fX)&&(aBBox.fX-bBBox.fX<=bBBox.fWidth))){ //BBoxes overlap in x direction
+                     if (((aBBox.fX<bBBox.fX) && (bBBox.fX-aBBox.fX<=aBBox.fWidth))||((aBBox.fX>bBBox.fX) && (aBBox.fX-bBBox.fX<=bBBox.fWidth))){ //BBoxes overlap in x direction
                         if ((aBBox.fY+aBBox.fHeight<bBBox.fY)||(bBBox.fY+bBBox.fHeight<aBBox.fY)) {//No overlap in Y-direction required
                            dField abDist = dField();
                            if (aBBox.fY>bBBox.fY) abDist = dField(a, b, TMath::Abs(aBBox.fY-(bBBox.fY+bBBox.fHeight)), 'y');
@@ -6331,7 +6331,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                            if ((b != cur)&&(a != cur)) otherDist.push_back(abDist);
                            else curDist.push_back(abDist);
                         }
-                     } else if (((aBBox.fY<bBBox.fY)&&(bBBox.fY-aBBox.fY<=aBBox.fHeight))||((aBBox.fY>bBBox.fY)&&(aBBox.fY-bBBox.fY<=bBBox.fHeight))) { //BBoxes overlap in y direction
+                     } else if (((aBBox.fY<bBBox.fY) && (bBBox.fY-aBBox.fY<=aBBox.fHeight))||((aBBox.fY>bBBox.fY) && (aBBox.fY-bBBox.fY<=bBBox.fHeight))) { //BBoxes overlap in y direction
                         if ((aBBox.fX+aBBox.fWidth<bBBox.fX)||(bBBox.fX+bBBox.fWidth<aBBox.fX)) {//No overlap in x-direction required
                            dField abDist = dField();
                            if (aBBox.fX>bBBox.fX) abDist = dField(a, b, TMath::Abs(aBBox.fX-(bBBox.fX+bBBox.fWidth)), 'x');
@@ -6347,7 +6347,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
          // Show equal distances
          for (UInt_t i = 0; i<curDist.size(); i++) {
             for (UInt_t j = 0; j<otherDist.size(); j++) {
-               if ((curDist[i].fdir == otherDist[j].fdir)&&(otherDist[j].fdir=='x')&&(TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
+               if ((curDist[i].fdir == otherDist[j].fdir) && (otherDist[j].fdir=='x') && (TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
                   if (cling && (!movedX) && (!resize)) {
                      if ((cur->GetBBoxCenter().fX < curDist[i].fb->GetBBoxCenter().fX)||(cur->GetBBoxCenter().fX < curDist[i].fa->GetBBoxCenter().fX))
                            cur->SetBBoxCenterX(cur->GetBBoxCenter().fX - otherDist[j].fdist + curDist[i].fdist);
@@ -6357,7 +6357,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                   DrawDist(curDist[i].fa->GetBBox(), curDist[i].fb->GetBBox(), 'x');
                   DrawDist(otherDist[j].fa->GetBBox(), otherDist[j].fb->GetBBox(), 'x');
                }
-               if ((curDist[i].fdir == otherDist[j].fdir)&&(otherDist[j].fdir=='y')&&(TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
+               if ((curDist[i].fdir == otherDist[j].fdir) && (otherDist[j].fdir=='y') && (TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
                   if (cling && (!movedY) && (!resize)) {
                      if ((cur->GetBBoxCenter().fY < curDist[i].fb->GetBBoxCenter().fY)||(cur->GetBBoxCenter().fY < curDist[i].fa->GetBBoxCenter().fY))
                            cur->SetBBoxCenterY(cur->GetBBoxCenter().fY - otherDist[j].fdist + curDist[i].fdist);
@@ -6370,7 +6370,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
             }
             for (UInt_t j = i; j<curDist.size(); j++) {
                if (i!=j) {
-                  if ((curDist[i].fdir == curDist[j].fdir)&&(curDist[j].fdir=='x')&&(TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
+                  if ((curDist[i].fdir == curDist[j].fdir) && (curDist[j].fdir=='x') && (TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
                      if (cling && (!movedX) && (!resize)) {
                         if ((cur->GetBBoxCenter().fX < curDist[i].fb->GetBBoxCenter().fX)||(cur->GetBBoxCenter().fX < curDist[i].fa->GetBBoxCenter().fX))
                               cur->SetBBoxCenterX(cur->GetBBoxCenter().fX - floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
@@ -6380,7 +6380,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                      DrawDist(curDist[j].fa->GetBBox(), curDist[j].fb->GetBBox(), 'x');
                   }
 
-                  if ((curDist[i].fdir == curDist[j].fdir)&&(curDist[j].fdir=='y')&&(TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
+                  if ((curDist[i].fdir == curDist[j].fdir) && (curDist[j].fdir=='y') && (TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
                      if (cling && (!movedY) && (!resize)) {
                         if ((cur->GetBBoxCenter().fY < curDist[i].fb->GetBBoxCenter().fY)||(cur->GetBBoxCenter().fY < curDist[i].fa->GetBBoxCenter().fY))
                               cur->SetBBoxCenterY(cur->GetBBoxCenter().fY - floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
