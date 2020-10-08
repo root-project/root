@@ -654,7 +654,7 @@ void TPad::Clear(Option_t *option)
       getchar();
    }
 
-   if (!gPad->IsBatch()) GetPainter()->ClearDrawable();
+   if (!gPad->IsBatch() && GetPainter()) GetPainter()->ClearDrawable();
    if (gVirtualPS && gPad == gPad->GetCanvas()) gVirtualPS->NewPage();
 
    PaintBorder(GetFillColor(), kTRUE);
@@ -1018,7 +1018,7 @@ void TPad::Close(Option_t *)
 
    if (fPixmapID != -1) {
       if (gPad) {
-         if (!gPad->IsBatch())
+         if (!gPad->IsBatch() && GetPainter())
             GetPainter()->DestroyDrawable(fPixmapID);
       }
       fPixmapID = -1;
@@ -1058,7 +1058,7 @@ void TPad::CopyPixmap()
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
 
-   if (fPixmapID != -1)
+   if (fPixmapID != -1 && GetPainter())
       GetPainter()->CopyDrawable(fPixmapID, px, py);
 
    if (this == gPad) HighLight(gPad->GetHighLightColor());
@@ -3690,7 +3690,7 @@ void TPad::PaintModified()
    cd();
    if (IsModified() || IsTransparent()) {
       if ((fFillStyle < 3026) && (fFillStyle > 3000)) {
-         if (!gPad->IsBatch()) GetPainter()->ClearDrawable();
+         if (!gPad->IsBatch() && GetPainter()) GetPainter()->ClearDrawable();
       }
       PaintBorder(GetFillColor(), kTRUE);
    }
@@ -3748,7 +3748,7 @@ void TPad::PaintModified()
 
 void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
-   if (!gPad->IsBatch()) {
+   if (!gPad->IsBatch() && GetPainter()) {
       Int_t style0 = GetPainter()->GetFillStyle();
       Int_t style  = style0;
       if (option[0] == 's') {
@@ -3895,14 +3895,14 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
       return;
 
    // Paint the fill area with hatches
-   Int_t fillstyle = GetPainter()->GetFillStyle();
-   if (gPad->IsBatch() && gVirtualPS) fillstyle = gVirtualPS->GetFillStyle();
+   Int_t fillstyle = GetPainter()?GetPainter()->GetFillStyle():1;
+   if (gPad->IsBatch() && GetPainter() && gVirtualPS) fillstyle = gVirtualPS->GetFillStyle();
    if (fillstyle >= 3100 && fillstyle < 4000) {
       PaintFillAreaHatches(nn, &x.front(), &y.front(), fillstyle);
       return;
    }
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch() && GetPainter())
       // invoke the graphics subsystem
       GetPainter()->DrawFillArea(n, &x.front(), &y.front());
 
@@ -3977,7 +3977,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    Int_t   lcs = 0;
 
    // Save the current line attributes
-   if (!gPad->IsBatch()) {
+   if (!gPad->IsBatch() && GetPainter()) {
       lws = GetPainter()->GetLineWidth();
       lss = GetPainter()->GetLineStyle();
       lcs = GetPainter()->GetLineColor();
@@ -3990,7 +3990,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    }
 
    // Change the current line attributes to draw the hatches
-   if (!gPad->IsBatch()) {
+   if (!gPad->IsBatch() && GetPainter()) {
       GetPainter()->SetLineStyle(1);
       GetPainter()->SetLineWidth(Short_t(lw));
       GetPainter()->SetLineColor(GetPainter()->GetFillColor());
@@ -4006,7 +4006,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    if (ang2[iAng2] != 5.) PaintHatches(dy, ang2[iAng2], nn, xx, yy);
 
    // Restore the line attributes
-   if (!gPad->IsBatch()) {
+   if (!gPad->IsBatch() && GetPainter()) {
       GetPainter()->SetLineStyle(lss);
       GetPainter()->SetLineWidth(lws);
       GetPainter()->SetLineColor(lcs);
@@ -4187,7 +4187,7 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       if (Clip(x,y,fX1,fY1,fX2,fY2) == 2) return;
    }
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawLine(x[0], y[0], x[1], y[1]);
 
    if (gVirtualPS) {
@@ -4203,7 +4203,7 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 void TPad::PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2)
 {
    static Double_t xw[2], yw[2];
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawLineNDC(u1, v1, u2, v2);
 
    if (gVirtualPS) {
@@ -4280,7 +4280,7 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
       np++;
       if (i1 < 0) i1 = i;
       if (iclip == 0 && i < n-2) continue;
-      if (!gPad->IsBatch())
+      if (!gPad->IsBatch() && GetPainter())
          GetPainter()->DrawPolyLine(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPS(np, &x[i1], &y[i1]);
@@ -4333,7 +4333,7 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       np++;
       if (i1 < 0) i1 = i;
       if (iclip == 0 && i < n-2) continue;
-      if (!gPad->IsBatch())
+      if (!gPad->IsBatch() && GetPainter())
          GetPainter()->DrawPolyLine(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPS(np, &x[i1], &y[i1]);
@@ -4358,7 +4358,7 @@ void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
 {
    if (n <=0) return;
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawPolyLineNDC(n, x, y);
 
    if (gVirtualPS) {
@@ -4409,7 +4409,7 @@ void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
          if (i < n-1) continue;
       }
       if (np == 0) continue;
-      if (!gPad->IsBatch())
+      if (!gPad->IsBatch() && GetPainter())
          GetPainter()->DrawPolyMarker(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPolyMarker(np, &x[i1], &y[i1]);
@@ -4440,7 +4440,7 @@ void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
          if (i < n-1) continue;
       }
       if (np == 0) continue;
-      if (!gPad->IsBatch())
+      if (!gPad->IsBatch() && GetPainter())
          GetPainter()->DrawPolyMarker(np, &x[i1], &y[i1]);
       if (gVirtualPS) {
          gVirtualPS->DrawPolyMarker(np, &x[i1], &y[i1]);
@@ -4458,7 +4458,7 @@ void TPad::PaintText(Double_t x, Double_t y, const char *text)
 {
    Modified();
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawText(x, y, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) gVirtualPS->Text(x, y, text);
@@ -4471,7 +4471,7 @@ void TPad::PaintText(Double_t x, Double_t y, const wchar_t *text)
 {
    Modified();
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawText(x, y, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) gVirtualPS->Text(x, y, text);
@@ -4484,7 +4484,7 @@ void TPad::PaintTextNDC(Double_t u, Double_t v, const char *text)
 {
    Modified();
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawTextNDC(u, v, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) {
@@ -4501,7 +4501,7 @@ void TPad::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 {
    Modified();
 
-   if (!gPad->IsBatch())
+   if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawTextNDC(u, v, text, TVirtualPadPainter::kClear);
 
    if (gVirtualPS) {
@@ -4889,7 +4889,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       psname.Prepend("/");
       psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
-   if (!gPad->IsBatch() && fCanvas)
+   if (!gPad->IsBatch() && fCanvas && GetPainter())
       GetPainter()->SelectDrawable(GetCanvasID());
 
    // Save pad/canvas in alternative formats
@@ -5212,7 +5212,7 @@ void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    // compute pad conversion coefficients
    ResizePad();
 
-   if (gPad == this)
+   if (gPad == this && GetPainter())
       GetPainter()->InvalidateCS();
 
    // emit signal
@@ -5250,8 +5250,10 @@ void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 
 void TPad::RecursiveRemove(TObject *obj)
 {
-   if (obj == fCanvas->GetSelected()) fCanvas->SetSelected(0);
-   if (obj == fCanvas->GetClickSelected()) fCanvas->SetClickSelected(0);
+   if (fCanvas) {
+     if (obj == fCanvas->GetSelected()) fCanvas->SetSelected(0);
+     if (obj == fCanvas->GetClickSelected()) fCanvas->SetClickSelected(0);
+   }
    if (obj == fView) fView = nullptr;
    if (!fPrimitives) return;
    Int_t nold = fPrimitives->GetSize();
@@ -5541,9 +5543,10 @@ void TPad::ResizePad(Option_t *option)
    if (gPad->IsBatch())
       fPixmapID = 0;
    else {
-      GetPainter()->SetLineWidth(-1);
-      GetPainter()->SetTextSize(-1);
-
+      if (GetPainter()){
+        GetPainter()->SetLineWidth(-1);
+        GetPainter()->SetTextSize(-1);
+      }
       // create or re-create off-screen pixmap
       if (fPixmapID) {
          int w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1));
@@ -5566,11 +5569,13 @@ void TPad::ResizePad(Option_t *option)
             h = 10;
          }
          if (fPixmapID == -1) {      // this case is handled via the ctor
-            fPixmapID = GetPainter()->CreateDrawable(w, h);
+            if (GetPainter()) fPixmapID = GetPainter()->CreateDrawable(w, h);
          } else {
-            if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
-               Resized();
-               Modified(kTRUE);
+            if (gVirtualX) {
+               if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
+                  Resized();
+                  Modified(kTRUE);
+               }
             }
          }
       }
@@ -6319,7 +6324,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                      bBBox = b->GetBBox();
 
                      //only when bounding boxes overlap in x or y direction
-                     if (((aBBox.fX<bBBox.fX)&&(bBBox.fX-aBBox.fX<=aBBox.fWidth))||((aBBox.fX>bBBox.fX)&&(aBBox.fX-bBBox.fX<=bBBox.fWidth))){ //BBoxes overlap in x direction
+                     if (((aBBox.fX<bBBox.fX) && (bBBox.fX-aBBox.fX<=aBBox.fWidth))||((aBBox.fX>bBBox.fX) && (aBBox.fX-bBBox.fX<=bBBox.fWidth))){ //BBoxes overlap in x direction
                         if ((aBBox.fY+aBBox.fHeight<bBBox.fY)||(bBBox.fY+bBBox.fHeight<aBBox.fY)) {//No overlap in Y-direction required
                            dField abDist = dField();
                            if (aBBox.fY>bBBox.fY) abDist = dField(a, b, TMath::Abs(aBBox.fY-(bBBox.fY+bBBox.fHeight)), 'y');
@@ -6327,7 +6332,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                            if ((b != cur)&&(a != cur)) otherDist.push_back(abDist);
                            else curDist.push_back(abDist);
                         }
-                     } else if (((aBBox.fY<bBBox.fY)&&(bBBox.fY-aBBox.fY<=aBBox.fHeight))||((aBBox.fY>bBBox.fY)&&(aBBox.fY-bBBox.fY<=bBBox.fHeight))) { //BBoxes overlap in y direction
+                     } else if (((aBBox.fY<bBBox.fY) && (bBBox.fY-aBBox.fY<=aBBox.fHeight))||((aBBox.fY>bBBox.fY) && (aBBox.fY-bBBox.fY<=bBBox.fHeight))) { //BBoxes overlap in y direction
                         if ((aBBox.fX+aBBox.fWidth<bBBox.fX)||(bBBox.fX+bBBox.fWidth<aBBox.fX)) {//No overlap in x-direction required
                            dField abDist = dField();
                            if (aBBox.fX>bBBox.fX) abDist = dField(a, b, TMath::Abs(aBBox.fX-(bBBox.fX+bBBox.fWidth)), 'x');
@@ -6343,7 +6348,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
          // Show equal distances
          for (UInt_t i = 0; i<curDist.size(); i++) {
             for (UInt_t j = 0; j<otherDist.size(); j++) {
-               if ((curDist[i].fdir == otherDist[j].fdir)&&(otherDist[j].fdir=='x')&&(TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
+               if ((curDist[i].fdir == otherDist[j].fdir) && (otherDist[j].fdir=='x') && (TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
                   if (cling && (!movedX) && (!resize)) {
                      if ((cur->GetBBoxCenter().fX < curDist[i].fb->GetBBoxCenter().fX)||(cur->GetBBoxCenter().fX < curDist[i].fa->GetBBoxCenter().fX))
                            cur->SetBBoxCenterX(cur->GetBBoxCenter().fX - otherDist[j].fdist + curDist[i].fdist);
@@ -6353,7 +6358,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                   DrawDist(curDist[i].fa->GetBBox(), curDist[i].fb->GetBBox(), 'x');
                   DrawDist(otherDist[j].fa->GetBBox(), otherDist[j].fb->GetBBox(), 'x');
                }
-               if ((curDist[i].fdir == otherDist[j].fdir)&&(otherDist[j].fdir=='y')&&(TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
+               if ((curDist[i].fdir == otherDist[j].fdir) && (otherDist[j].fdir=='y') && (TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
                   if (cling && (!movedY) && (!resize)) {
                      if ((cur->GetBBoxCenter().fY < curDist[i].fb->GetBBoxCenter().fY)||(cur->GetBBoxCenter().fY < curDist[i].fa->GetBBoxCenter().fY))
                            cur->SetBBoxCenterY(cur->GetBBoxCenter().fY - otherDist[j].fdist + curDist[i].fdist);
@@ -6366,7 +6371,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
             }
             for (UInt_t j = i; j<curDist.size(); j++) {
                if (i!=j) {
-                  if ((curDist[i].fdir == curDist[j].fdir)&&(curDist[j].fdir=='x')&&(TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
+                  if ((curDist[i].fdir == curDist[j].fdir) && (curDist[j].fdir=='x') && (TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
                      if (cling && (!movedX) && (!resize)) {
                         if ((cur->GetBBoxCenter().fX < curDist[i].fb->GetBBoxCenter().fX)||(cur->GetBBoxCenter().fX < curDist[i].fa->GetBBoxCenter().fX))
                               cur->SetBBoxCenterX(cur->GetBBoxCenter().fX - floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
@@ -6376,7 +6381,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                      DrawDist(curDist[j].fa->GetBBox(), curDist[j].fb->GetBBox(), 'x');
                   }
 
-                  if ((curDist[i].fdir == curDist[j].fdir)&&(curDist[j].fdir=='y')&&(TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
+                  if ((curDist[i].fdir == curDist[j].fdir) && (curDist[j].fdir=='y') && (TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
                      if (cling && (!movedY) && (!resize)) {
                         if ((cur->GetBBoxCenter().fY < curDist[i].fb->GetBBoxCenter().fY)||(cur->GetBBoxCenter().fY < curDist[i].fa->GetBBoxCenter().fY))
                               cur->SetBBoxCenterY(cur->GetBBoxCenter().fY - floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
