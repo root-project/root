@@ -1966,15 +1966,15 @@ static bool InjectModuleUtilHeader(const char *argv0,
       // This will duplicate the -D,-U from clingArgs - but as they are surrounded
       // by #ifndef there is no problem here.
       modGen.WriteUmbrellaHeader(out);
+      if (interp.declare(out.str()) != cling::Interpreter::kSuccess) {
+         const std::string &hdrName
+            = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
+         ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
+                                 hdrName.c_str());
+         return false;
+      }
    } else {
       modGen.WriteContentHeader(out);
-   }
-   if (interp.declare(out.str()) != cling::Interpreter::kSuccess) {
-      const std::string &hdrName
-         = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
-      ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
-                              hdrName.c_str());
-      return false;
    }
    return true;
 }
