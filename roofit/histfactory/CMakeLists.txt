@@ -81,6 +81,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
 ROOT_EXECUTABLE(hist2workspace
   MakeModelAndMeasurements.cxx
   hist2workspace.cxx
+  ${ROOT_RC_SCRIPT}
   LIBRARIES
     HistFactory
     RooStats
