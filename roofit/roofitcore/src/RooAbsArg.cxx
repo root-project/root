@@ -19,17 +19,50 @@
      \ingroup Roofitcore
 
 RooAbsArg is the common abstract base class for objects that
-represent a value (of arbitrary type) and "shape" that in general
-depends on (is a client of) other RooAbsArg subclasses. The only
-state information about a value that is maintained in this base
-class consists of named attributes and flags that track when either
-the value or the shape of this object changes. The meaning of shape
-depends on the client implementation but could be, for example, the
-allowed range of a value. The base class is also responsible for
-managing client/server links and propagating value/shape changes
-through an expression tree. RooAbsArg implements public interfaces
-for inspecting client/server relationships and
-setting/clearing/testing named attributes.
+represent a value and a "shape" in RooFit. Values or shapes usually depend on values
+or shapes of other RooAbsArg instances. Connecting several RooAbsArg in
+a computation graph models an expression tree that can be evaluated.
+
+### Building a computation graph of RooFit objects
+Therefore, RooAbsArg provides functionality to connect objects of type RooAbsArg into
+a computation graph to pass values between those objects.
+A value can e.g. be a real-valued number, (instances of RooAbsReal), or an integer, that is,
+catgory index (instances of RooAbsCategory). The third subclass of RooAbsArg is RooStringVar,
+but it is rarely used.
+
+The "shapes" that a RooAbsArg can possess can e.g. be the definition
+range of an observable, or how many states a category object has. In computations,
+values are expected to change often, while shapes remain mostly constant
+(unless e.g. a new range is set for an observable).
+
+Nodes of a computation graph are connected using instances of RooAbsProxy.
+If Node B declares a member `RooTemplateProxy<TypeOfNodeA>`, Node A will be
+registered as a server of values to Node B, and Node B will know that it is
+a client of node A. Using functions like dependsOn(), or getObservables()
+/ getParameters(), the relation of `A --> B` can be queried. Using graphVizTree(),
+one can create a visualisation of the expression tree.
+
+
+An instance of RooAbsArg can have named attributes. It also has flags
+to indicate that either its value or its shape were changed (= it is dirty).
+RooAbsArg provides functionality to manage client/server relations in
+a computation graph (\ref clientServerInterface), and helps propagating
+value/shape changes through the graph. RooAbsArg implements interfaces
+for inspecting client/server relationships (\ref clientServerInterface) and
+setting/clearing/querying named attributes.
+
+### Caching of values
+The values of nodes in the computation graph are cached in RooFit. If
+a value is used in two nodes of a graph, it doesn't need to be recomputed. If
+a node acquires a new value, it notifies its consumers ("clients") that
+their cached values are dirty. See the functions in \ref optimisationInterface
+for details.
+A node uses its isValueDirty() and isShapeDirty() functions to decide if a
+computation is necessary. Caching can be vetoed globally by setting a
+bit using setDirtyInhibit(). This will make computations slower, but all the
+nodes of the computation graph will be evaluated irrespective of whether their
+state is clean or dirty. Using setOperMode(), caching can also be enabled/disabled
+for single nodes.
 
 */
 
@@ -91,7 +124,7 @@ std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 
 RooAbsArg::RooAbsArg()
    : TNamed(), _deleteWatch(kFALSE), _valueDirty(kTRUE), _shapeDirty(kTRUE), _operMode(Auto), _fast(kFALSE), _ownedComponents(nullptr),
-     _prohibitServerRedirect(kFALSE), _eocache(0), _namePtr(0), _isConstant(kFALSE), _localNoInhibitDirty(kFALSE),
+     _prohibitServerRedirect(kFALSE), _namePtr(0), _isConstant(kFALSE), _localNoInhibitDirty(kFALSE),
      _myws(0)
 {
   _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
@@ -105,7 +138,7 @@ RooAbsArg::RooAbsArg()
 
 RooAbsArg::RooAbsArg(const char *name, const char *title)
    : TNamed(name, title), _deleteWatch(kFALSE), _valueDirty(kTRUE), _shapeDirty(kTRUE), _operMode(Auto), _fast(kFALSE),
-     _ownedComponents(0), _prohibitServerRedirect(kFALSE), _eocache(0), _namePtr(0), _isConstant(kFALSE),
+     _ownedComponents(0), _prohibitServerRedirect(kFALSE), _namePtr(0), _isConstant(kFALSE),
      _localNoInhibitDirty(kFALSE), _myws(0)
 {
   if (name == nullptr || strlen(name) == 0) {
@@ -122,7 +155,7 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
 RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
    : TNamed(other.GetName(), other.GetTitle()), RooPrintable(other), _boolAttrib(other._boolAttrib),
      _stringAttrib(other._stringAttrib), _deleteWatch(other._deleteWatch), _operMode(Auto), _fast(kFALSE),
-     _ownedComponents(0), _prohibitServerRedirect(kFALSE), _eocache(other._eocache), _namePtr(other._namePtr),
+     _ownedComponents(0), _prohibitServerRedirect(kFALSE), _namePtr(other._namePtr),
      _isConstant(other._isConstant), _localNoInhibitDirty(other._localNoInhibitDirty), _myws(0)
 {
   // Use name in argument, if supplied
@@ -164,7 +197,6 @@ RooAbsArg& RooAbsArg::operator=(const RooAbsArg& other) {
   _fast = other._fast;
   _ownedComponents = nullptr;
   _prohibitServerRedirect = other._prohibitServerRedirect;
-  _eocache = other._eocache;
   _namePtr = other._namePtr;
   _isConstant = other._isConstant;
   _localNoInhibitDirty = other._localNoInhibitDirty;
@@ -821,7 +853,7 @@ Bool_t RooAbsArg::observableOverlaps(const RooArgSet* nset, const RooAbsArg& tes
 ////////////////////////////////////////////////////////////////////////////////
 /// Mark this object as having changed its value, and propagate this status
 /// change to all of our clients. If the object is not in automatic dirty
-/// state propagation mode, this call has no effect
+/// state propagation mode, this call has no effect.
 
 void RooAbsArg::setValueDirty(const RooAbsArg* source)
 {
