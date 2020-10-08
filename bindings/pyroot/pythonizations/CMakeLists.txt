@@ -20,6 +20,9 @@ if(dataframe)
         inc/RNumpyDS.hxx)
 endif()
 
+list(APPEND PYROOT_EXTRA_HEADERS
+     inc/TPyDispatcher.h)
+
 set(py_sources
   ROOT/__init__.py
   ROOT/_application.py
@@ -31,8 +34,6 @@ set(py_sources
   ROOT/pythonization/_generic.py
   ROOT/pythonization/_rbdt.py
   ROOT/pythonization/_rooabscollection.py
-  ROOT/pythonization/_roodatahist.py
-  ROOT/pythonization/_roodataset.py
   ROOT/pythonization/_rooworkspace.py
   ROOT/pythonization/_rvec.py
   ROOT/pythonization/_stl_vector.py
@@ -45,7 +46,6 @@ set(py_sources
   ROOT/pythonization/_tfile.py
   ROOT/pythonization/_tgraph.py
   ROOT/pythonization/_th1.py
-  ROOT/pythonization/_th2.py
   ROOT/pythonization/_titer.py
   ROOT/pythonization/_tobject.py
   ROOT/pythonization/_tobjstring.py

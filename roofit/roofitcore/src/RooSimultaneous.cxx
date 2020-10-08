@@ -637,7 +637,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
       const char* slabel = tokenIndex >= catTokens.size() ? nullptr : catTokens[tokenIndex++].c_str();
 
       if (slabel) {
-        // Set the slice position to the value indicate by slabel
+        // Set the slice position to the value indicated by slabel
         scat->setLabel(slabel) ;
         // Add the slice category to the master slice set
         sliceSet->add(*scat,kFALSE) ;
@@ -708,15 +708,18 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     // Determine if all projected servers of the index category are in the projection dataset
     Bool_t allServers(kTRUE) ;
+    std::string missing;
     for (const auto server : projIdxServers) {
       if (!projData->get()->find(server->GetName())) {
         allServers=kFALSE ;
+        missing = server->GetName();
       }
     }
     
     if (!allServers) {      
       coutE(Plotting) << "RooSimultaneous::plotOn(" << GetName() 
-	   << ") ERROR: Projection dataset doesn't contain complete set of index category dependents" << endl ;
+	       << ") ERROR: Projection dataset doesn't contain complete set of index categories to do projection."
+	       << "\n\tcategory " << missing << " is missing." << endl ;
       return frame ;
     }
 
