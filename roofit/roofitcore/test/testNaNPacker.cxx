@@ -171,7 +171,12 @@ TEST(RooNaNPacker, FitParabola) {
     }
   }
 
-  EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
+  // This makes clang-tidy happy:
+  ASSERT_NE(fitResult1, nullptr);
+  ASSERT_NE(fitResult2, nullptr);
+  if (fitResult1 && fitResult2) { // makes clang-tidy happy
+    EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
+  }
 }
 
 /// Make coefficients of RooAddPdf sum to more than 1. Fitter should recover from this.
@@ -232,7 +237,12 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff) {
     }
   }
 
-  EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
+  // This makes clang-tidy happy:
+  ASSERT_NE(fitResult1, nullptr);
+  ASSERT_NE(fitResult2, nullptr);
+  if (fitResult1 && fitResult2) { // makes clang-tidy happy
+    EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
+  }
 }
 
 /// Make coefficients of RooRealSumPdf sum to more than 1. Fitter should recover from this.
@@ -286,10 +296,12 @@ TEST(RooNaNPacker, Interface_RooAbsPdf_fitTo_RooRealSumPdf_DegenerateCoeff) {
     }
   }
 
-  if (verbose) {
-    fitResult1->Print();
-    fitResult2->Print();
+  // This makes clang-tidy happy:
+  ASSERT_NE(fitResult1, nullptr);
+  ASSERT_NE(fitResult2, nullptr);
+
+  if (fitResult1 && fitResult2) { // makes clang-tidy happy
+    EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
   }
-  EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
 }
 
