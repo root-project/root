@@ -4,6 +4,10 @@ if(ROOT_pyroot_FOUND)
   else()
     set(legacy_pyroot False)
   endif()
-endif()
 
-ROOTTEST_ADD_TESTDIRS()
+  find_python_module(pytest REQUIRED)
+
+  if (PY_PYTEST_FOUND)
+    ROOTTEST_ADD_TESTDIRS()
+  endif()
+endif()

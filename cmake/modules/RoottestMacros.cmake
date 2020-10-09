@@ -1083,3 +1083,38 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     DEPENDS ${deplist}
     )
 endfunction(ROOTTEST_ADD_UNITTEST_DIR)
+
+#----------------------------------------------------------------------------
+# find_python_module(module [REQUIRED] [QUIET])
+#----------------------------------------------------------------------------
+function(find_python_module module)
+   CMAKE_PARSE_ARGUMENTS(ARG "REQUIRED;QUIET" "" "" ${ARGN})
+   string(TOUPPER ${module} module_upper)
+   if(NOT PY_${module_upper})
+      if(ARG_REQUIRED)
+         set(py_${module}_FIND_REQUIRED TRUE)
+      endif()
+      if(ARG_QUIET)
+         set(py_${module}_FIND_QUIETLY TRUE)
+      endif()
+      # A module's location is usually a directory, but for binary modules
+      # it's a .so file.
+      execute_process(COMMAND "${PYTHON_EXECUTABLE_Development_Main}" "-c"
+         "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
+         RESULT_VARIABLE _${module}_status
+         OUTPUT_VARIABLE _${module}_location
+         ERROR_VARIABLE _${module}_error
+         OUTPUT_STRIP_TRAILING_WHITESPACE
+         ERROR_STRIP_TRAILING_WHITESPACE)
+      if(NOT _${module}_status)
+         set(PY_${module_upper} ${_${module}_location} CACHE STRING "Location of Python module ${module}")
+         mark_as_advanced(PY_${module_upper})
+      else()
+         if(NOT ARG_QUIET)
+            message(STATUS "Failed to find Python module ${module}: ${_${module}_error}")
+          endif()
+      endif()
+   endif()
+   find_package_handle_standard_args(py_${module} DEFAULT_MSG PY_${module_upper})
+   set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
+endfunction()
