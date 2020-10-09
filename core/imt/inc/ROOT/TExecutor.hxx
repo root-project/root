@@ -17,7 +17,9 @@
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif
+#ifndef R__WIN32
 #include "ROOT/TProcessExecutor.hxx"
+#endif
 #include "TROOT.h"
 #include "ExecutionPolicy.hxx"
 #include <memory>
@@ -106,9 +108,11 @@ public:
             fThreadPool = std::make_unique<ROOT::TThreadExecutor>(nProcessingUnits);
             break;
 #endif
+#ifndef R__WIN32
          case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             fProcPool = std::make_unique<ROOT::TProcessExecutor>(nProcessingUnits);
             break;
+#endif
          default:
             throw std::invalid_argument("kMultithread policy not available when ROOT is compiled with IMT=OFF.");
       }
@@ -167,7 +171,9 @@ private:
 #ifdef R__USE_IMT
    std::unique_ptr<ROOT::TThreadExecutor> fThreadPool;
 #endif
+#ifndef R__WIN32
    std::unique_ptr<ROOT::TProcessExecutor> fProcPool;
+#endif
    std::unique_ptr<ROOT::TSequentialExecutor> fSeqPool;
 };
 
@@ -187,9 +193,11 @@ auto TExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result
          res = fThreadPool->Map(func, nTimes);
          break;
 #endif
+#ifndef R__WIN32
       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
          res = fProcPool->Map(func, nTimes);
          break;
+#endif
       default:
          break;
    }
@@ -212,9 +220,11 @@ auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename st
          res = fThreadPool->Map(func, args);
          break;
 #endif
+#ifndef R__WIN32
       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
          res = fProcPool->Map(func, args);
          break;
+#endif
       default:
          break;
    }
@@ -256,9 +266,11 @@ auto TExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::r
          res = fThreadPool->Map(func, args);
          break;
 #endif
+#ifndef R__WIN32
       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
          res = fProcPool->Map(func, args);
          break;
+#endif
       default:
          break;
    }
@@ -281,9 +293,11 @@ auto TExecutor::Map(F func, const std::vector<T> &args) -> std::vector<typename 
          res = fThreadPool->Map(func, args);
          break;
 #endif
+#ifndef R__WIN32
       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
          res = fProcPool->Map(func, args);
          break;
+#endif
       default:
          break;
    }
@@ -463,9 +477,11 @@ unsigned TExecutor::GetPoolSize()
          poolSize = fThreadPool->GetPoolSize();
          break;
 #endif
+#ifndef R__WIN32
       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
          poolSize = fProcPool->GetPoolSize();
          break;
+#endif
       default:
          break;
    }
