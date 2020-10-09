@@ -12,7 +12,6 @@
 if(WIN32)
   ROOT_EXECUTABLE(bindexplib
     win/bindexplib/bindexplib.cxx
-    ${ROOT_RC_SCRIPT}
   )
 endif()
 
@@ -24,7 +23,6 @@ ROOT_EXECUTABLE(rmkdepend
   rmkdepend/mainroot.cxx
   rmkdepend/parse.c
   rmkdepend/pr.c
-  ${ROOT_RC_SCRIPT}
 )
 
 if(NOT MSVC)

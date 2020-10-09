@@ -28,7 +28,7 @@ if(NOT builtin_clang)
   link_directories("${LLVM_LIBRARY_DIR}")
 endif()
 
-ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx ${ROOT_RC_SCRIPT}
+ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
                               $<TARGET_OBJECTS:Clib>
                               $<TARGET_OBJECTS:ClingUtils>
                               $<TARGET_OBJECTS:Dictgen>
