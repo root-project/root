@@ -32,6 +32,7 @@
 #include "TLeafF16.h"
 #include "TLeafI.h"
 #include "TLeafL.h"
+#include "TLeafG.h"
 #include "TLeafO.h"
 #include "TLeafObject.h"
 #include "TLeafS.h"
@@ -389,6 +390,11 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
             leaf = new TLeafD(this, leafname, leaftype);
          } else if (*leaftype == 'd') {
             leaf = new TLeafD32(this, leafname, leaftype);
+         } else if (*leaftype == 'G') {
+            leaf = new TLeafG(this, leafname, leaftype);
+         } else if (*leaftype == 'g') {
+            leaf = new TLeafG(this, leafname, leaftype);
+            leaf->SetUnsigned();
          }
          if (!leaf) {
             Error("TLeaf", "Illegal data type for %s/%s", name, leaflist);
