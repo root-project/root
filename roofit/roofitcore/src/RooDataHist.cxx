@@ -43,7 +43,7 @@ or RooStringVar objects, thus data can be binned in real and/or discrete dimensi
 #include "RooTreeDataStore.h"
 #include "RooVectorDataStore.h"
 #include "RooTrace.h"
-#include "RooTreeData.h"
+#include "RooFitLegacy/RooTreeData.h"
 #include "RooHelpers.h"
 #include "RooFormulaVar.h"
 #include "RooFormula.h"

@@ -40,7 +40,6 @@
 class TTree ;
 class RooArgSet ;
 class RooAbsCollection ;
-class RooTreeData ;
 class RooTreeDataStore ;
 class RooVectorDataStore ;
 class RooAbsData ;
@@ -629,7 +628,6 @@ private:
   friend class RooCompositeDataStore ;
   friend class RooTreeDataStore ;
   friend class RooVectorDataStore ;
-  friend class RooTreeData ;
   friend class RooDataSet ;
   friend class RooRealMPFE ;
   virtual void syncCache(const RooArgSet* nset=0) = 0 ;
