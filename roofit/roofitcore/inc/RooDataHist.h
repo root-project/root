@@ -93,7 +93,7 @@ public:
   virtual RooSpan<const double> getWeightBatch(std::size_t, std::size_t) const {
     //TODO
     std::cerr << "Retrieving weights in batches not yet implemented for RooDataHist." << std::endl;
-    assert(false);
+    throw std::logic_error("Retrieving weights in batches not yet implemented for RooDataHist.");
 
     return {};
   }
