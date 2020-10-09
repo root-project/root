@@ -81,7 +81,7 @@ class Memory1TestCase( MyTestCase ):
       del a
 
     # should no longer be accessible
-      self.assert_( not gROOT.FindObject( 'memtest_th1f' ) )
+      self.assertTrue( not gROOT.FindObject( 'memtest_th1f' ) )
 
    def set_mem_policy(self, callable_obj, pol):
       # Set the memory policy of the callable object received

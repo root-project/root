@@ -31,11 +31,11 @@ class Cpp1Cpp11StandardClassesTestCase( MyTestCase ):
       self.assertEqual( MyCounterClass.counter, 0 )
 
       ptr1 = CreateMyCounterClass()
-      self.assert_( not not ptr1 )
+      self.assertTrue( not not ptr1 )
       self.assertEqual( MyCounterClass.counter, 1 )
 
       ptr2 = CreateMyCounterClass()
-      self.assert_( not not ptr2 )
+      self.assertTrue( not not ptr2 )
       self.assertEqual( MyCounterClass.counter, 2 )
 
       del ptr2, ptr1
@@ -49,10 +49,10 @@ class Cpp2Cpp11LanguageConstructsTestCase( MyTestCase ):
       """Test usage and access of a const static enum defined in header"""
 
       # TODO: this will fail
-      # self.assert_( hasattr( PyTest, '_Lock_policy' ) )
+      # self.assertTrue( hasattr( PyTest, '_Lock_policy' ) )
       if not FIXCLING:
-         self.assert_( hasattr( PyTest, '_S_single' ) )
-         self.assert_( hasattr( PyTest, '__default_lock_policy' ) )
+         self.assertTrue( hasattr( PyTest, '_S_single' ) )
+         self.assertTrue( hasattr( PyTest, '__default_lock_policy' ) )
 
    def test02NULLPtrPassing( self ):
       """Allow the programmer to pass NULL in certain cases"""
