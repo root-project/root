@@ -6,14 +6,7 @@
 __all__ = [ 'pylong', 'maxvalue', 'MyTestCase', 'run_pytest', 'FIXCLING', 'check_cppyy_backend' ]
 
 import os, sys, unittest, warnings
-
-# avoid conflict wuth the local pytest and py modules and the one from LCG pytools
-warnings.filterwarnings('ignore', message=r'Module .*? is being added to sys\.path', append=True)
-
-
-# add local pytest dir to sys.path to make pytest available
-toplevel = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, os.path.join(toplevel, 'pytest'))
+import pytest
 
 
 if sys.hexversion >= 0x3000000:
@@ -43,19 +36,14 @@ if 'FIXCLING' in os.environ:
 
 
 def run_pytest(test_file=None):
-    # add local pytest dir to sys.path
-    toplevel = os.path.dirname(os.path.realpath(__file__))
-    sys.path.insert(0, os.path.join(toplevel, 'pytest'))
-    import pytest
-    import pytest_cov
     # file to run, if any (search used otherwise)
     if '-i' in sys.argv:
         args = filter(lambda x: not x in (test_file, '-i'), sys.argv)
     else:
-        args = ['--color=no', '--result-log=stdout', '--minimal=yes']
+        args = ['--color=no']
     if test_file: args += [test_file]
     # actual test run
-    return pytest.main(args, plugins=[pytest_cov])
+    return pytest.main(args)
 
 def check_cppyy_backend():
     # Helper function to check if CPPYY_BACKEND_LIBRARY
