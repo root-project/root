@@ -2368,16 +2368,6 @@ private:
       return *this; // never reached
    }
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Implementation of snapshot
-   /// \param[in] treename The name of the TTree
-   /// \param[in] filename The name of the TFile
-   /// \param[in] columnList The list of names of the branches to be written
-   /// The implementation exploits Foreach. The association of the addresses to
-   /// the branches takes place at the first event. This is possible because
-   /// since there are no copies, the address of the value passed by reference
-   /// is the address pointing to the storage of the read/created object in/by
-   /// the TTreeReaderValue/TemporaryBranch
    template <typename... ColumnTypes>
    RResultPtr<RInterface<RLoopManager>> SnapshotImpl(std::string_view fullTreeName, std::string_view filename,
                                                      const ColumnNames_t &columnList, const RSnapshotOptions &options)
