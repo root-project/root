@@ -76,7 +76,7 @@ public:
   virtual Double_t weight(Int_t index) const override;
   virtual Bool_t isWeighted() const override { return (_wgtVar!=0||_extWgtArray!=0) ; }
 
-  virtual std::vector<RooSpan<const double>> getBatch(std::size_t first, std::size_t last) const override;
+  BatchHelpers::RunContext getBatches(std::size_t first, std::size_t len) const override;
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
   // Change observable name
