@@ -39,21 +39,21 @@ class Cpp1OperatorsTestCase( MyTestCase ):
    def test1MathOperators( self ):
       """Test overloading of math operators"""
 
-      self.failUnlessEqual( Number(20) + Number(10), Number(30) )
-      self.failUnlessEqual( Number(20) + 10        , Number(30) )
-      self.failUnlessEqual( Number(20) - Number(10), Number(10) )
-      self.failUnlessEqual( Number(20) - 10        , Number(10) )
-      self.failUnlessEqual( Number(20) / Number(10), Number(2) )
-      self.failUnlessEqual( Number(20) / 10        , Number(2) )
-      self.failUnlessEqual( Number(20) * Number(10), Number(200) )
-      self.failUnlessEqual( Number(20) * 10        , Number(200) )
-      self.failUnlessEqual( Number(20) % 10        , Number(0) )
-      self.failUnlessEqual( Number(20) % Number(10), Number(0) )
-      self.failUnlessEqual( Number(5)  & Number(14), Number(4) )
-      self.failUnlessEqual( Number(5)  | Number(14), Number(15) )
-      self.failUnlessEqual( Number(5)  ^ Number(14), Number(11) )
-      self.failUnlessEqual( Number(5)  << 2, Number(20) )
-      self.failUnlessEqual( Number(20) >> 2, Number(5) )
+      self.assertEqual( Number(20) + Number(10), Number(30) )
+      self.assertEqual( Number(20) + 10        , Number(30) )
+      self.assertEqual( Number(20) - Number(10), Number(10) )
+      self.assertEqual( Number(20) - 10        , Number(10) )
+      self.assertEqual( Number(20) / Number(10), Number(2) )
+      self.assertEqual( Number(20) / 10        , Number(2) )
+      self.assertEqual( Number(20) * Number(10), Number(200) )
+      self.assertEqual( Number(20) * 10        , Number(200) )
+      self.assertEqual( Number(20) % 10        , Number(0) )
+      self.assertEqual( Number(20) % Number(10), Number(0) )
+      self.assertEqual( Number(5)  & Number(14), Number(4) )
+      self.assertEqual( Number(5)  | Number(14), Number(15) )
+      self.assertEqual( Number(5)  ^ Number(14), Number(11) )
+      self.assertEqual( Number(5)  << 2, Number(20) )
+      self.assertEqual( Number(20) >> 2, Number(5) )
 
    def test2UnaryMathOperators( self ):
       """Test overloading of unary math operators"""
