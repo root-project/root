@@ -25,6 +25,7 @@
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h" // for ULong64_t
+#include "TDirectory.h"
 #include "TH1.h"        // For Histo actions
 #include "TH2.h"        // For Histo actions
 #include "TH3.h"        // For Histo actions
