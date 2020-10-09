@@ -82,10 +82,10 @@ class Cpp1OperatorsTestCase( MyTestCase ):
       """Test implementation of operator bool"""
 
       n = Number(20)
-      self.assert_( n )
+      self.assertTrue( n )
 
       n = Number( 0 )
-      self.assert_( not n )
+      self.assertTrue( not n )
 
 
 ### Instance to builtin type converters test cases ===========================

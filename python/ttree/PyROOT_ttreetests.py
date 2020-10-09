@@ -213,13 +213,13 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       f = TFile( self.fname )
 
       myarray = f.Get( 'myarray' )
-      self.assert_( isinstance( myarray, TArrayI ) )
+      self.assertTrue( isinstance( myarray, TArrayI ) )
 
       if not legacy_pyroot:
          # New PyROOT does not implement a pythonisation for GetObject.
          # Just use the getattr syntax, which is much nicer
          arr = f.myarray
-         self.assert_( isinstance( arr, TArrayI ) )
+         self.assertTrue( isinstance( arr, TArrayI ) )
       else:
          myarray = MakeNullPointer( TArrayI )
          f.GetObject( 'myarray', myarray )
@@ -347,12 +347,12 @@ class TFileGetNonTObject( MyTestCase ):
 
       f = TFile( self.fname )
       self.assertEqual( f.GetKey( 'totalEvents' ).GetClassName(), 'TArrayI' )
-      self.assert_( f.Get( 'totalEvents' ) )
+      self.assertTrue( f.Get( 'totalEvents' ) )
       self.assertEqual( f.Get( 'totalEvents' ).GetSize(), 1 )
       self.assertEqual( f.totalEvents.GetSize(),          1 )
 
       # the following used to crash
-      self.assert_( not gDirectory.Get( "non_existent_stuff" ) )
+      self.assertTrue( not gDirectory.Get( "non_existent_stuff" ) )
 
 
 ## actual test run

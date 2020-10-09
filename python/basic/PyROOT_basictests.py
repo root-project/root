@@ -42,11 +42,11 @@ class Basic2SetupTestCase( MyTestCase ):
    def test1Globals( self ):
       """Test the availability of ROOT globals"""
 
-      self.assert_( gROOT )
-      self.assert_( gApplication )
-      self.assert_( gSystem )
-      self.assert_( gInterpreter )
-      self.assert_( gDirectory )
+      self.assertTrue( gROOT )
+      self.assertTrue( gApplication )
+      self.assertTrue( gSystem )
+      self.assertTrue( gInterpreter )
+      self.assertTrue( gDirectory )
 
    def test2AccessToGlobals( self ):
       """Test overwritability of ROOT globals"""
@@ -55,7 +55,7 @@ class Basic2SetupTestCase( MyTestCase ):
       oldval = ROOT.gDebug
 
       ROOT.gDebug = -1
-      self.assert_(gROOT.ProcessLine('gDebug == -1'))
+      self.assertTrue(gROOT.ProcessLine('gDebug == -1'))
 
       ROOT.gDebug = oldval
 
@@ -79,23 +79,23 @@ class Basic2SetupTestCase( MyTestCase ):
          ROOT.gInterpreter.Declare("int gMyOwnGlobal2 = 1;")
          self.assertEqual(ROOT.gMyOwnGlobal2, 1)
          ROOT.gMyOwnGlobal2 = -1
-         self.assert_(gROOT.ProcessLine('gMyOwnGlobal2 == -1'))
+         self.assertTrue(gROOT.ProcessLine('gMyOwnGlobal2 == -1'))
 
    def test4AutoLoading( self ):
       """Test auto-loading by retrieving a non-preloaded class"""
 
       t = TLorentzVector()
-      self.failUnless( isinstance( t, TLorentzVector ) )
+      self.assertTrue( isinstance( t, TLorentzVector ) )
 
    def test5MacroLoading( self ):
       """Test accessibility to macro classes"""
       gROOT.LoadMacro( 'SimpleClass.C' )
 
-      self.assert_( issubclass( ROOT.SimpleClass, ROOT.TheBase ) )
+      self.assertTrue( issubclass( ROOT.SimpleClass, ROOT.TheBase ) )
       self.assertEqual( ROOT.SimpleClass, ROOT.SimpleClass_t )
 
       c = ROOT.SimpleClass()
-      self.failUnless( isinstance( c, ROOT.SimpleClass ) )
+      self.assertTrue( isinstance( c, ROOT.SimpleClass ) )
       self.assertEqual( c.fData, c.GetData() )
 
       c.SetData( 13 )
@@ -108,8 +108,8 @@ class Basic3PythonLanguageTestCase( MyTestCase ):
    def test1HaveDocString( self ):
       """Test doc strings existence"""
 
-      self.assert_( hasattr( TCanvas, "__doc__" ) )
-      self.assert_( hasattr( TCanvas.__init__, "__doc__" ) )
+      self.assertTrue( hasattr( TCanvas, "__doc__" ) )
+      self.assertTrue( hasattr( TCanvas.__init__, "__doc__" ) )
 
    def test2BoundUnboundMethodCalls( self ):
       """Test (un)bound method calls"""
@@ -148,7 +148,7 @@ class Basic3PythonLanguageTestCase( MyTestCase ):
       import cppyy
       PyABC = cppyy.gbl.PyABC
 
-      self.assert_( PyABC.SomeOtherStruct.StructContainer is cppyy.gbl.std.vector('const PyABC::SomeStruct*') )
+      self.assertTrue( PyABC.SomeOtherStruct.StructContainer is cppyy.gbl.std.vector('const PyABC::SomeStruct*') )
 
 
 ### basic C++ argument basic (value/ref and compiled/interpreted) ============
@@ -305,8 +305,8 @@ class Basic5PythonizationTestCase( MyTestCase ):
       del l[2]
       self.assertEqual( list(l), ['a', 'b', 'z', 'e', 'f', 'g', 'h', 'i', 'j'] )
 
-      self.assert_( TObjString('b') in l )
-      self.assert_( not TObjString('x') in l )
+      self.assertTrue( TObjString('b') in l )
+      self.assertTrue( not TObjString('x') in l )
 
       self.assertEqual( list(l[2:6]),   ['z', 'e', 'f', 'g'] )
       self.assertEqual( list(l[2:6:2]), ['z', 'f'] )
@@ -423,7 +423,7 @@ class Basic5PythonizationTestCase( MyTestCase ):
       """C++ objects must be hashable"""
 
       a = TH1D("asd", "asd", 10, 0, 1)
-      self.assert_( hash(a) )
+      self.assertTrue( hash(a) )
 
 ### basic C++ return integer types  ============
 class Basic6ReturnValueTestCase( MyTestCase ):

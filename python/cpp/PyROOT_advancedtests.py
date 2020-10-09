@@ -207,9 +207,9 @@ class Cpp02TemplateLookup( MyTestCase ):
       except TypeError as e:
          if not legacy_pyroot:
             # The error message has changed in new Cppyy
-            self.assert_( "Template method resolution failed" in str(e) )
+            self.assertTrue( "Template method resolution failed" in str(e) )
          else:
-            self.assert_( "must be explicit" in str(e) )
+            self.assertTrue( "must be explicit" in str(e) )
 
       if not legacy_pyroot:
          # New cppyy needs square brackets for explicit instantiation here,
@@ -316,7 +316,7 @@ class Cpp02TemplateLookup( MyTestCase ):
          self.assertEqual( m.GetSizeOL[int]( 1 ),       m.GetIntSize() )
       num_new_inst += 1
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + num_new_inst )
-      self.assert_( 'GetSizeOL<int>' in dir(MyTemplatedMethodClass) )
+      self.assertTrue( 'GetSizeOL<int>' in dir(MyTemplatedMethodClass) )
       gzoi_id = id( MyTemplatedMethodClass.__dict__[ 'GetSizeOL<int>' ] )
 
     # second call should make no changes, but re-use
@@ -334,7 +334,7 @@ class Cpp02TemplateLookup( MyTestCase ):
        # so find it explicitly:
          if key[0:9] == 'GetSizeOL' and 'vector<double' in key:
             mname = key
-      self.assert_( mname in dir(MyTemplatedMethodClass) )
+      self.assertTrue( mname in dir(MyTemplatedMethodClass) )
       gzoi_id = id( MyTemplatedMethodClass.__dict__[ mname ] )
 
     # as above, no changes on 2nd call
@@ -505,11 +505,11 @@ class Cpp04HandlingAbstractClasses( MyTestCase ):
    def test1ClassHierarchy( self ):
       """Test abstract class in a hierarchy"""
 
-      self.assert_( issubclass( ROOT.MyConcreteClass, ROOT.MyAbstractClass ) )
+      self.assertTrue( issubclass( ROOT.MyConcreteClass, ROOT.MyAbstractClass ) )
 
       c = ROOT.MyConcreteClass()
-      self.assert_( isinstance( c, ROOT.MyConcreteClass ) )
-      self.assert_( isinstance( c, ROOT.MyAbstractClass ) )
+      self.assertTrue( isinstance( c, ROOT.MyConcreteClass ) )
+      self.assertTrue( isinstance( c, ROOT.MyAbstractClass ) )
 
    def test2Instantiation( self ):
       """Test non-instatiatability of abstract classes"""
@@ -548,9 +548,9 @@ class Cpp05AssignToRefArbitraryClass( MyTestCase ):
       except TypeError as e:
          if not legacy_pyroot:
             # Message has changed in new Cppyy
-            self.assert_( 'cannot assign' in str(e) )
+            self.assertTrue( 'cannot assign' in str(e) )
          else:
-            self.assert_( 'can not assign' in str(e) )
+            self.assertTrue( 'can not assign' in str(e) )
 
 
 ### Check availability of math conversions ===================================
@@ -579,10 +579,10 @@ class Cpp07GloballyOverloadedComparator( MyTestCase ):
 
       self.assertEqual( a, b )
       self.assertEqual( b, a )
-      self.assert_( a.__eq__( b ) )
-      self.assert_( b.__eq__( a ) )
-      self.assert_( a.__ne__( a ) )
-      self.assert_( b.__ne__( b ) )
+      self.assertTrue( a.__eq__( b ) )
+      self.assertTrue( b.__eq__( a ) )
+      self.assertTrue( a.__ne__( a ) )
+      self.assertTrue( b.__ne__( b ) )
       self.assertEqual( a.__eq__( b ), True )
       self.assertEqual( b.__eq__( a ), True )
       self.assertEqual( a.__eq__( a ), False )
@@ -595,10 +595,10 @@ class Cpp07GloballyOverloadedComparator( MyTestCase ):
 
       self.assertEqual( a, b )
       self.assertEqual( b, a )
-      self.assert_( a.__eq__( b ) )
-      self.assert_( b.__eq__( a ) )
-      self.assert_( a.__ne__( a ) )
-      self.assert_( b.__ne__( b ) )
+      self.assertTrue( a.__eq__( b ) )
+      self.assertTrue( b.__eq__( a ) )
+      self.assertTrue( a.__ne__( a ) )
+      self.assertTrue( b.__ne__( b ) )
       self.assertEqual( a.__eq__( b ), True )
       self.assertEqual( b.__eq__( a ), True )
       self.assertEqual( a.__eq__( a ), False )
@@ -681,7 +681,7 @@ class Cpp10StandardExceptions( MyTestCase ):
       """Access C++ standard exception objects from python"""
 
       e = std.runtime_error( "runtime pb!!" )
-      self.assert_( e )
+      self.assertTrue( e )
       self.assertEqual( e.what(), "runtime pb!!" )
 
    def test2ExceptionBoolValue(self):
@@ -714,8 +714,8 @@ class Cpp10StandardExceptions( MyTestCase ):
 
       handle = ROOT.test2Exception.Handle('int')()
 
-      self.assert_(not handle.returnsNull());
-      self.assert_(handle.returnsNotNull);
+      self.assertTrue(not handle.returnsNull());
+      self.assertTrue(handle.returnsNotNull);
 
 
 ### Test handing over of pointer variables from containers ===================
@@ -752,7 +752,7 @@ class Cpp12NamespaceLazyFunctions( MyTestCase ):
       cppyy.gbl.gInterpreter.ProcessLine(
          'namespace PyCpp12_ns_test1 { class PyCpp12_A {}; int PyCpp12_f() {return 32;}; }' )
 
-      self.assert_( cppyy.gbl.PyCpp12_ns_test1.PyCpp12_A() )
+      self.assertTrue( cppyy.gbl.PyCpp12_ns_test1.PyCpp12_A() )
       self.assertEqual( cppyy.gbl.PyCpp12_ns_test1.PyCpp12_f(), 32 )
 
    def test2NamespaceOverloadedLazyFunctions( self ):
@@ -765,7 +765,7 @@ class Cpp12NamespaceLazyFunctions( MyTestCase ):
           int PyCpp12_f(int n) {return 32*n;} \
           int PyCpp12_f() {return 32;}; }')
 
-      self.assert_( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_A() )
+      self.assertTrue( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_A() )
       self.assertEqual( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_f(2), 64 )
       self.assertEqual( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_f(),  32 )
 

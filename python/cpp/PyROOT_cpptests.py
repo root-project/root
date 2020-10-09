@@ -149,12 +149,12 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       t1 = TObject()
 
-      self.assert_( t1 )
-      self.assert_( not not t1 )
+      self.assertTrue( t1 )
+      self.assertTrue( not not t1 )
 
       t2 = gROOT.FindObject( "Nah, I don't exist" )
 
-      self.assert_( not t2 )
+      self.assertTrue( not t2 )
 
    def test09ElementAccess( self ):
       """Test access to elements in matrix and array objects."""
@@ -173,7 +173,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       """Test call to static function."""
 
       c1 = TROOT.Class()
-      self.assert_( not not c1 )
+      self.assertTrue( not not c1 )
 
       c2 = gROOT.Class()
 
@@ -312,10 +312,10 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       
       ad = addressof( s )
 
-      self.assert_( s == BindObject( co, s.__class__ ) )
-      self.assert_( s == BindObject( co, "TString" ) )
-      self.assert_( s == BindObject( ad, s.__class__ ) )
-      self.assert_( s == BindObject( ad, "TString" ) )
+      self.assertTrue( s == BindObject( co, s.__class__ ) )
+      self.assertTrue( s == BindObject( co, "TString" ) )
+      self.assertTrue( s == BindObject( ad, s.__class__ ) )
+      self.assertTrue( s == BindObject( ad, "TString" ) )
 
    def test15ObjectAndPointerComparisons( self ):
       """Verify object and pointer comparisons"""
@@ -346,8 +346,8 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual( l3, l4 )
       self.assertEqual( l4, l3 )
 
-      self.assert_( l3 != None )        # like this to ensure __ne__ is called
-      self.assert_( None != l3 )        # id.
+      self.assertTrue( l3 != None )        # like this to ensure __ne__ is called
+      self.assertTrue( None != l3 )        # id.
       self.assertNotEqual( l3, l5 )
       self.assertNotEqual( l5, l3 )
 
@@ -385,8 +385,8 @@ class Cpp2ClassNamingTestCase( MyTestCase ):
 
       z = ROOT.Z_()
 
-      self.assert_( hasattr( z, 'myint' ) )
-      self.assert_( z.GimeZ_( z ) )
+      self.assertTrue( hasattr( z, 'myint' ) )
+      self.assertTrue( z.GimeZ_( z ) )
 
    def test02DefaultCtorInNamespace( self ):
       """Check that constructor with default argument is found in namespace"""
@@ -411,8 +411,8 @@ class Cpp2ClassNamingTestCase( MyTestCase ):
       PR_NS_A = ROOT.PR_NS_A
 
       p = std.pair( std.vector( PR_NS_A.PR_ST_B ), std.vector( PR_NS_A.PR_NS_D.PR_ST_E ) )()
-      self.assert_( "vector<PR_NS_A::PR_ST_B>" in type(p.first).__name__ )
-      self.assert_( "vector<PR_NS_A::PR_NS_D::PR_ST_E>" in type(p.second).__name__ )
+      self.assertTrue( "vector<PR_NS_A::PR_ST_B>" in type(p.first).__name__ )
+      self.assertTrue( "vector<PR_NS_A::PR_NS_D::PR_ST_E>" in type(p.second).__name__ )
 
    def test04NamespacedTemplateIdentity( self ):
       """Identity of templated classes with and w/o std:: should match"""
@@ -425,7 +425,7 @@ class Cpp2ClassNamingTestCase( MyTestCase ):
       f1 = PR_LoKi.Functor(      "vector<const PR_HepMC::GenParticle*>",      "vector<double>" )
       f2 = PR_LoKi.Functor( "std::vector<const PR_HepMC::GenParticle*>", "std::vector<double>" )
 
-      self.assert_( f1 is f2 )
+      self.assertTrue( f1 is f2 )
       self.assertEqual( f1, f2 )
 
 

@@ -114,7 +114,7 @@ class Regression03OldCrashers( MyTestCase ):
       gROOT.LoadMacro( "Marco.C" )
       ns = ROOT.ns
 
-      self.assert_( ns.MyClass )
+      self.assertTrue( ns.MyClass )
 
    def test4VerifyNoLoop( self ):
       """Smart class that returns itself on dereference should not loop"""
@@ -438,7 +438,7 @@ class Regression14TPyException( MyTestCase ):
          e = ROOT.CPyCppyy.PyException()
       else:
          e = ROOT.PyROOT.TPyException()
-      self.assert_( e )
+      self.assertTrue( e )
       self.assertEqual( e.what(), "python exception" )
 
 
@@ -451,8 +451,8 @@ class Regression15ConsRef( MyTestCase ):
       for i in range(len(tnames)):
          gInterpreter.LoadText(
             "bool PyROOT_Regression_TakesRef%d(const %s& arg) { return arg; }" % (i, tnames[i]) )
-         self.assert_( not eval( "ROOT.PyROOT_Regression_TakesRef%d(0)" % (i,) ) )
-         self.assert_( eval( "ROOT.PyROOT_Regression_TakesRef%d(1)" % (i,) ) )
+         self.assertTrue( not eval( "ROOT.PyROOT_Regression_TakesRef%d(0)" % (i,) ) )
+         self.assertTrue( eval( "ROOT.PyROOT_Regression_TakesRef%d(1)" % (i,) ) )
       self.assertEqual( len(tnames)-1, i )
 
 
@@ -462,7 +462,7 @@ class Regression16NestedNamespace( MyTestCase ):
       """Test nested namespace lookup"""
 
       gROOT.ProcessLine('#include "NestedNamespace.h"')
-      self.assert_( ROOT.ABCDEFG.ABCD.Nested )
+      self.assertTrue( ROOT.ABCDEFG.ABCD.Nested )
 
 
 ### matrix access has to go through non-const lookup =========================
@@ -471,7 +471,7 @@ class Regression17MatrixD( MyTestCase ):
       """Matrix lookup has to be non-const to allow assigment"""
 
       m = TMatrixD( 5, 5 )
-      self.assert_( not 'const' in type(m[0]).__name__ )
+      self.assertTrue( not 'const' in type(m[0]).__name__ )
 
     # test assignment
       m[1][2] = 3.
