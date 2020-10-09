@@ -2679,14 +2679,22 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet& whatVars, const RooCmdAr
 /// \param[in] expectedData If set to true (false by default), the returned histogram returns the 'expected'
 /// data sample, i.e. no statistical fluctuations are present.
 /// \param[in] extended For each bin, generate Poisson(x, mu) events, where `mu` is chosen such that *on average*,
-/// one would obtain `nEvents` events. This means that the true number of events will fluctuate, but this process is much faster.
+/// one would obtain `nEvents` events. This means that the true number of events will fluctuate around the desired value,
+/// but the generation happens a lot faster.
 /// Especially if the PDF is sharply peaked, the multinomial event generation necessary to generate *exactly* `nEvents` events can
 /// be very slow.
 ///
-/// Any variables of this PDF that are not in whatVars will use their
-/// current values and be treated as fixed parameters. Returns zero
-/// in case of an error. The caller takes ownership of the returned
-/// dataset.
+/// The binning used for generation of events is the currently set binning for the variables.
+/// It can e.g. be changed using
+/// ```
+/// x.setBins(15);
+/// x.setRange(-5., 5.);
+/// pdf.generateBinned(RooArgSet(x), 1000);
+/// ```
+///
+/// Any variables of this PDF that are not in `whatVars` will use their
+/// current values and be treated as fixed parameters.
+/// \return RooDataHist* owned by the caller. Returns `nullptr` in case of an error.
 RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEvents, Bool_t expectedData, Bool_t extended) const
 {
   // Create empty RooDataHist
