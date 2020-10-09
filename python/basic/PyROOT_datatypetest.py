@@ -167,7 +167,7 @@ class TestClassDATATYPES:
         c.m_bool = 0;      assert c.get_bool() == False
         c.set_bool(0);     assert c.m_bool     == False
 
-        raises(ValueError, 'c.set_bool(10)')
+        raises(ValueError, c.set_bool, 10)
 
         # char types through functions
         c.set_char('c');     assert c.get_char_cr()  == 'c'; assert c.get_char_r()  == 'c'
@@ -202,13 +202,13 @@ class TestClassDATATYPES:
         # limits and checks
         if not self.legacy_pyroot:
            # This throws ValueError in new Cppyy
-           raises(ValueError,  'c.set_char("string")')
-           raises(ValueError,  'c.set_uchar("string")')
+           raises(ValueError,  c.set_char, "string")
+           raises(ValueError,  c.set_uchar, "string")
         else:
-           raises(TypeError,  'c.set_char("string")')
-           raises(TypeError,  'c.set_uchar("string")')
-        raises(ValueError, 'c.set_char(500)')
-        raises(ValueError, 'c.set_uchar(-1)')
+           raises(TypeError,  c.set_char, "string")
+           raises(TypeError,  c.set_uchar, "string")
+        raises(ValueError, c.set_char, 500)
+        raises(ValueError, c.set_uchar, -1)
         c.set_char_cr(-128); assert c.get_char()  == chr(0x80)
         assert c.get_char_r() == chr(0x80); assert c.get_char_cr()  == chr(0x80)
         c.set_char_cr(   -1); assert c.get_char()  ==  chr(0xFF)
@@ -508,9 +508,9 @@ class TestClassDATATYPES:
         c.m_double = -1
         assert round(c.m_double + 1.0, 8) == 0
 
-        raises(TypeError, c.m_double,  'c')
-        raises(TypeError, c.m_int,     -1.)
-        raises(TypeError, c.m_int,      1.)
+        raises(TypeError, c.__setattr__, 'm_double',  'c')
+        raises(TypeError, c.__setattr__, 'm_int',     -1.)
+        raises(TypeError, c.__setattr__, 'm_int',      1.)
 
         c.__destruct__()
 
@@ -590,7 +590,7 @@ class TestClassDATATYPES:
         import cppyy
         gbl = cppyy.gbl
 
-        raises(ReferenceError, 'gbl.g_pod.m_int')
+        raises(ReferenceError, gbl.g_pod.__getattribute__, 'm_int')
 
         c = gbl.CppyyTestPod()
         c.m_int = 42
