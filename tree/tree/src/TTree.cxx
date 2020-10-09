@@ -464,8 +464,8 @@ static char DataTypeToChar(EDataType datatype)
    case kDouble32_t: return 'd';
    case kFloat_t:    return 'F';
    case kFloat16_t:  return 'f';
-   case kLong_t:     return 0; // unsupported
-   case kULong_t:    return 0; // unsupported?
+   case kLong_t:     return 'G';
+   case kULong_t:    return 'g';
    case kchar:       return 0; // unsupported
    case kLong64_t:   return 'L';
    case kULong64_t:  return 'l';
