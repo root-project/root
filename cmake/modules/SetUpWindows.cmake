@@ -18,12 +18,12 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
   # Select flags.
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_RELEASE        "-O2 -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_DEBUG          "-g")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g -DNDEBUG")
-  set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG")
-  set(CMAKE_C_FLAGS_DEBUG            "-g")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g"           CACHE STRING "Flags for release build with debug info" FORCE)
+  set(CMAKE_CXX_FLAGS_RELEASE        "-O2"              CACHE STRING "Flags for release build" FORCE)
+  set(CMAKE_CXX_FLAGS_DEBUG          "-g"               CACHE STRING "Flags for a debug build" FORCE)
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g"           CACHE STRING "Flags for release build with debug info" FORCE)
+  set(CMAKE_C_FLAGS_RELEASE          "-O2"              CACHE STRING "Flags for release build" FORCE)
+  set(CMAKE_C_FLAGS_DEBUG            "-g"               CACHE STRING "Flags for a debug build" FORCE)
 elseif(MSVC)
   set(ROOT_ARCHITECTURE win32)
 

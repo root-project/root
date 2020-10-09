@@ -1966,15 +1966,15 @@ static bool InjectModuleUtilHeader(const char *argv0,
       // This will duplicate the -D,-U from clingArgs - but as they are surrounded
       // by #ifndef there is no problem here.
       modGen.WriteUmbrellaHeader(out);
+      if (interp.declare(out.str()) != cling::Interpreter::kSuccess) {
+         const std::string &hdrName
+            = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
+         ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
+                                 hdrName.c_str());
+         return false;
+      }
    } else {
       modGen.WriteContentHeader(out);
-   }
-   if (interp.declare(out.str()) != cling::Interpreter::kSuccess) {
-      const std::string &hdrName
-         = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
-      ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
-                              hdrName.c_str());
-      return false;
    }
    return true;
 }
@@ -4334,26 +4334,24 @@ int RootClingMain(int argc,
       }
    }
 
-   if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
-      ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
-      return 1;
-   }
    if (!isGenreflex) { // rootcling
       // ROOTCINT uses to define a few header implicitly, we need to do it explicitly.
-      if (interp.declare("#include <assert.h>\n") != cling::Interpreter::kSuccess
-          || interp.declare("#include \"Rtypes.h\"\n"
-                            "#include \"TObject.h\"") != cling::Interpreter::kSuccess
+      if (interp.declare("#include <assert.h>\n"
+                         "#include \"Rtypes.h\"\n"
+                         "#include \"TObject.h\"") != cling::Interpreter::kSuccess
          ) {
          // There was an error.
-         ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
+         ROOT::TMetaUtils::Error(0, "Error loading the default rootcling header files.\n");
          return 1;
       }
    }
 
-   // For the list of 'opaque' typedef to also include string, we have to include it now.
-   interp.declare("#include <string>");
-   // For initializing TNormalizedCtxt.
-   interp.declare("#include <RtypesCore.h>");
+   if (interp.declare("#include <string>\n" // For the list of 'opaque' typedef to also include string.
+                      "#include <RtypesCore.h>\n" // For initializing TNormalizedCtxt.
+                      "namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
+      ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
+      return 1;
+   }
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
@@ -4451,7 +4449,10 @@ int RootClingMain(int argc,
       std::copy(diagnosticPragmas.begin(),
                 diagnosticPragmas.end(),
                 std::ostream_iterator<std::string>(res, delim));
-      interp.declare(res.str());
+      if (interp.declare(res.str()) != cling::Interpreter::kSuccess) {
+         ROOT::TMetaUtils::Error(0, "Failed to parse -Wno-xyz flags as pragmas:\n%s", res.str().c_str());
+         return 1;
+      }
    }
 
    class IgnoringPragmaHandler: public clang::PragmaNamespace {
@@ -4498,8 +4499,12 @@ int RootClingMain(int argc,
       std::stringstream definesUndefinesStr;
       modGen.WritePPDefines(definesUndefinesStr);
       modGen.WritePPUndefines(definesUndefinesStr);
-      if (!definesUndefinesStr.str().empty())
-         interp.declare(definesUndefinesStr.str());
+      if (!definesUndefinesStr.str().empty()) {
+         if (interp.declare(definesUndefinesStr.str()) != cling::Interpreter::kSuccess) {
+            ROOT::TMetaUtils::Error(0, "Failed to parse -D, -U flags as preprocessor directives:\n%s", definesUndefinesStr.str().c_str());
+            return 1;
+         }
+      }
    }
 
    if (!InjectModuleUtilHeader(executableFileName, modGen, interp, true)

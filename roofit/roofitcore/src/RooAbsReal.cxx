@@ -1617,15 +1617,18 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// This function takes the following named arguments
 /// <table>
 /// <tr><th><th> Projection control
-/// <tr><td> `Slice(const RooArgSet& set)`     <td> Override default projection behaviour by omittting observables listed
-///                                    in set from the projection, resulting a 'slice' plot. Slicing is usually
-///                                    only sensible in discrete observables. The slice is position at the 'current'
-///                                    value of the observable objects
+/// <tr><td> `Slice(const RooArgSet& set)`     <td> Override default projection behaviour by omitting observables listed
+///                                    in set from the projection, i.e. by not integrating over these.
+///                                    Slicing is usually only sensible in discrete observables, by e.g. creating a slice
+///                                    of the PDF at the current value of the category observable.
 ///
-/// <tr><td> `Slice(RooCategory& cat, const char* label)`        <td> Override default projection behaviour by omittting specified category
-///                                    observable from the projection, resulting in a 'slice' plot. The slice is positioned
-///                                    at the given label value. Multiple Slice() commands can be given to specify slices
-///                                    in multiple observables
+/// <tr><td> `Slice(RooCategory& cat, const char* label)`        <td> Override default projection behaviour by omitting the specified category
+///                                    observable from the projection, i.e., by not integrating over all states of this category.
+///                                    The slice is positioned at the given label value. Multiple Slice() commands can be given to specify slices
+///                                    in multiple observables, e.g.
+/// ```{.cpp}
+///   pdf.plotOn(frame, Slice(tagCategory, "2tag"), Slice(jetCategory, "3jet"));
+/// ```
 ///
 /// <tr><td> `Project(const RooArgSet& set)`   <td> Override default projection behaviour by projecting over observables
 ///                                    given in the set, ignoring the default projection behavior. Advanced use only.
@@ -2690,14 +2693,16 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate error on self by propagated errors on parameters with correlations as given by fit result
-/// The linearly propagated error is calculated as follows
+/// Calculate error on self by *linearly* propagating errors on parameters using the covariance matrix
+/// from a fit result.
+/// The error is calculated as follows
 /// \f[
-///     \mathrm{error}(x) = F_a(x) * \mathrm{Corr}(a,a')  * F_{a'}^{\mathrm{T}}(x)
+///     \mathrm{error}^2(x) = F_\mathbf{a}(x) \cdot \mathrm{Cov}(\mathbf{a},\mathbf{a}') \cdot F_{\mathbf{a}'}^{\mathrm{T}}(x)
 /// \f]
-/// where \f$ F_a(x) = \frac{ f(x, a + \mathrm{d}a) - f(x, a - \mathrm{d}a) }{2} \f$,
-/// with \f$ f(x) \f$ this function and \f$ \mathrm{d}a \f$ taken from the fit result and
-/// \f$ \mathrm{Corr}(a,a') \f$ = the correlation matrix from the fit result
+/// where \f$ F_mathbf{a}(x) = \frac{ f(x, mathbf{a} + \mathrm{d}mathbf{a}) - f(x, mathbf{a} - \mathrm{d}mathbf{a}) }{2} \f$,
+/// with \f$ f(x) = \f$ `this` and \f$ \mathrm{d}mathbf{a} \f$ the vector of one-sigma uncertainties of all
+/// fit parameters taken from the fit result and
+/// \f$ \mathrm{Cov}(mathbf{a},mathbf{a}') \f$ = the covariance matrix from the fit result.
 ///
 
 Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset_in) const
@@ -4860,7 +4865,19 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
   setStringAttribute("CACHEPARAMINT",plist.c_str()) ;
 }
 
-
+namespace {
+/// Disable caching in expression tree.
+struct DisableCachingRAII {
+  DisableCachingRAII(bool oldState):
+  _oldState(oldState) {
+    RooAbsArg::setDirtyInhibit(true);
+  }
+  ~DisableCachingRAII() {
+    RooAbsArg::setDirtyInhibit(_oldState);
+  }
+  bool _oldState;
+};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate function for a batch of input data points. If not overridden by
@@ -4875,8 +4892,8 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
   RooArgSet allLeafs;
   leafNodeServerList(&allLeafs);
 
-  if (RooMsgService::instance().isActive(this, RooFit::Optimization, RooFit::INFO)) {
-    coutI(Optimization) << "The class " << IsA()->GetName() << " could benefit from implementing the faster batch evaluation interface."
+  if (RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
+    coutI(FastEvaluations) << "The class " << IsA()->GetName() << " could benefit from implementing the faster batch evaluation interface."
         << " If it is part of ROOT, consider requesting this on https://root.cern." << std::endl;
   }
 
@@ -4900,26 +4917,24 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
 
 
   auto output = _batchData.makeWritableBatchUnInit(begin, maxSize);
+  {
+    // Side track all caching that RooFit might think is necessary.
+    // When used with batch computations, we depend on computation
+    // graphs actually evaluating correctly, instead of having
+    // pre-calculated values side-loaded into nodes event-per-event.
+    DisableCachingRAII disableCaching(inhibitDirty());
 
-  // Side track all caching that RooFit might think is necessary.
-  // This yields wrong results when used with batch computations,
-  // since data are not loaded globally here, and the caches of
-  // objects are therefore not updated.
-  const bool oldInhibitState = inhibitDirty();
-  setDirtyInhibit(true);
+    for (std::size_t i = 0; i < output.size(); ++i) {
+      for (auto& tup : batchLeafs) {
+        RooRealVar* leaf = std::get<0>(tup);
+        auto batch = std::get<1>(tup);
 
-  for (std::size_t i = 0; i < output.size(); ++i) {
-    for (auto& tup : batchLeafs) {
-      RooRealVar* leaf = std::get<0>(tup);
-      auto batch = std::get<1>(tup);
+        leaf->setVal(batch[i]);
+      }
 
-      leaf->setVal(batch[i]);
+      output[i] = evaluate();
     }
-
-    output[i] = evaluate();
   }
-
-  setDirtyInhibit(oldInhibitState);
 
   // Reset values
   for (auto& tup : batchLeafs) {

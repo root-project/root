@@ -27,6 +27,7 @@
 #include <ROOT/TypeTraits.hxx>
 #include <TError.h> // gErrorIgnoreLevel
 #include <TH1.h>
+#include <TROOT.h> // IsImplicitMTEnabled
 
 #include <deque>
 #include <functional>
@@ -69,14 +70,6 @@ namespace RDFInternal = ROOT::Internal::RDF;
 
 ColumnNames_t GetTopLevelBranchNames(TTree &t);
 
-using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
-HeadNode_t CreateSnapshotRDF(const ColumnNames_t &validCols,
-                            std::string_view treeName,
-                            std::string_view fileName,
-                            bool isLazy,
-                            RLoopManager &loopManager,
-                            std::unique_ptr<RDFInternal::RActionBase> actionPtr);
-
 std::string DemangleTypeIdName(const std::type_info &typeInfo);
 
 ColumnNames_t
@@ -110,6 +103,7 @@ struct Mean{};
 struct Fill{};
 struct StdDev{};
 struct Display{};
+struct Snapshot{};
 }
 // clang-format on
 
@@ -233,6 +227,44 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
    return std::make_unique<Action_t>(Helper_t(d, prevNode), bl, prevNode, defines);
+}
+
+struct SnapshotHelperArgs {
+   std::string fFileName;
+   std::string fDirName;
+   std::string fTreeName;
+   std::vector<std::string> fOutputColNames;
+   ROOT::RDF::RSnapshotOptions fOptions;
+};
+
+// Snapshot action
+template <typename... ColTypes, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperArgs> &snapHelperArgs,
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Snapshot,
+            const RDFInternal::RBookedDefines &defines)
+{
+   const auto &filename = snapHelperArgs->fFileName;
+   const auto &dirname = snapHelperArgs->fDirName;
+   const auto &treename = snapHelperArgs->fTreeName;
+   const auto &outputColNames = snapHelperArgs->fOutputColNames;
+   const auto &options = snapHelperArgs->fOptions;
+
+   std::unique_ptr<RActionBase> actionPtr;
+   if (!ROOT::IsImplicitMTEnabled()) {
+      // single-thread snapshot
+      using Helper_t = SnapshotHelper<ColTypes...>;
+      using Action_t = RAction<Helper_t, PrevNodeType>;
+      actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options), colNames,
+                                   prevNode, defines));
+   } else {
+      // multi-thread snapshot
+      using Helper_t = SnapshotHelperMT<ColTypes...>;
+      using Action_t = RAction<Helper_t, PrevNodeType>;
+      actionPtr.reset(new Action_t(Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options),
+                                   colNames, prevNode, defines));
+   }
+   return actionPtr;
 }
 
 /****** end BuildAndBook ******/
@@ -409,14 +441,14 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
-template <typename ActionTag, typename... ColTypes, typename PrevNodeType, typename ActionResultType>
+template <typename ActionTag, typename... ColTypes, typename PrevNodeType, typename HelperArgType>
 void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const ColumnNames_t &cols,
-                     const unsigned int nSlots, std::weak_ptr<ActionResultType> *wkROnHeap,
+                     const unsigned int nSlots, std::weak_ptr<HelperArgType> *wkHelperArgOnHeap,
                      std::weak_ptr<RJittedAction> *wkJittedActionOnHeap,
                      RDFInternal::RBookedDefines *defines)
 {
-   if (wkROnHeap->expired()) {
-      delete wkROnHeap;
+   if (wkHelperArgOnHeap->expired()) {
+      delete wkHelperArgOnHeap;
       delete wkJittedActionOnHeap;
       // defines must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
       // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
@@ -425,7 +457,7 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
       return;
    }
 
-   const auto rOnHeap = wkROnHeap->lock();
+   const auto helperArgOnHeap = wkHelperArgOnHeap->lock();
    auto jittedActionOnHeap = wkJittedActionOnHeap->lock();
 
    // if we are here it means we are jitting, if we are jitting the loop manager must be alive
@@ -437,15 +469,15 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
    if (ds != nullptr)
       RDFInternal::AddDSColumns(cols, loopManager, *ds, ColTypes_t());
 
-   auto actionPtr = BuildAction<ColTypes...>(cols, std::move(rOnHeap), nSlots, std::move(prevNodePtr), ActionTag{},
-                                                *defines);
+   auto actionPtr =
+      BuildAction<ColTypes...>(cols, std::move(helperArgOnHeap), nSlots, std::move(prevNodePtr), ActionTag{}, *defines);
    jittedActionOnHeap->SetAction(std::move(actionPtr));
 
    // defines points to the columns structure in the heap, created before the jitted call so that the jitter can
    // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
    delete defines;
 
-   delete wkROnHeap;
+   delete wkHelperArgOnHeap;
    delete prevNodeOnHeap;
    delete wkJittedActionOnHeap;
 }
@@ -543,6 +575,13 @@ std::vector<std::string> GetFilterNames(const std::shared_ptr<NodeType> &node)
    node->AddFilterName(filterNames);
    return filterNames;
 }
+
+struct ParsedTreePath {
+   std::string fTreeName;
+   std::string fDirName;
+};
+
+ParsedTreePath ParseTreePath(std::string_view fullTreeName);
 
 // Check if a condition is true for all types
 template <bool...>

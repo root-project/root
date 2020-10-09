@@ -181,8 +181,17 @@ void TGedPatternFrame::SetFillStyle(TGGC* gc, Style_t fstyle)
             gVirtualX->DeletePixmap(fillPattern);
             fillPattern = 0;
          }
+#ifdef R__WIN32
+         char pattern[32];
+         // invert (flip) gStipples bitmap bits on Windows
+         for (int i=0;i<32;++i)
+            pattern[i] = ~gStipples[stn][i];
+         fillPattern = gVirtualX->CreateBitmap(gClient->GetDefaultRoot()->GetId(),
+                                               (const char *)&pattern, 16, 16);
+#else
          fillPattern = gVirtualX->CreateBitmap(gClient->GetDefaultRoot()->GetId(),
                                                (const char*)gStipples[stn], 16, 16);
+#endif
          gc->SetStipple(fillPattern);
          break;
       default:
