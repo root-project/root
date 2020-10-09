@@ -1522,7 +1522,12 @@ public:
       }
 
       if (!fileWritten) {
-         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+         if (std::none_of(fOutputFiles.begin(), fOutputFiles.end(), [] (const std::shared_ptr<ROOT::Experimental::TBufferMergerFile> ptr) { return bool(ptr); })) {
+            Warning("Snapshot",
+                    "No input entries (input TTree was empty or no entry passed the Filters). Output TTree is empty.");
+         } else {
+            Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+         }
       }
 
       // flush all buffers to disk by destroying the TBufferMerger
