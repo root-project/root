@@ -100,6 +100,12 @@ TEST_P(RDFSimpleTests, CreateZeroEntriesWithBranches)
 
 TEST_P(RDFSimpleTests, BuildWithTDirectory)
 {
+#ifdef NDEBUG
+   std::cerr << "NOOOOOOOOOO\n";
+#endif
+   std::cerr << "must always abort here\n";
+   R__ASSERT(false);
+
    auto filename = "dataframe_simple_1.root";
    auto treename = "t";
    // create input file (at most once per execution of the parametrized gtest)
