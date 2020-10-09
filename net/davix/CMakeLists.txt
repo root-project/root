@@ -9,16 +9,21 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+if(iolite)
+  set(RIOLITELIBS ROOTIOLite)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RDAVIX
   HEADERS
     ROOT/RRawFileDavix.hxx
     TDavixFile.h
     TDavixSystem.h
   SOURCES
-    src/RRawFileDavix
+    src/RRawFileDavix.cxx
     src/TDavixFile.cxx
     src/TDavixSystem.cxx
   LIBRARIES
+    ${RIOLITELIBS}
     Davix::Davix
   DEPENDENCIES
     Net

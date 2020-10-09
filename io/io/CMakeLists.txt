@@ -50,10 +50,10 @@ ROOT_LINKER_LIBRARY(RIO
   LIBRARIES
     ${CMAKE_DL_LIBS}
     ${ROOT_ATOMIC_LIBS}
+    ROOTIOLite
   DEPENDENCIES
     Core
     Thread
-    ROOTIOLite
 )
 
 target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
@@ -116,7 +116,6 @@ ROOT_GENERATE_DICTIONARY(G__RIO
   DEPENDENCIES
     Core
     Thread
-    ROOTIOLite
 )
 
 # TStreamerInfoReadBuffer in O0 needs 6k on the stack. It is called
