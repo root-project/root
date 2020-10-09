@@ -1311,6 +1311,8 @@ function(ROOT_EXECUTABLE executable)
   if(NOT (PROJECT_NAME STREQUAL "ROOT"))
     # only for non-ROOT executable use $ROOTSYS/include
     include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
+  elseif(MSVC)
+    set(exe_srcs ${exe_srcs} ${ROOT_RC_SCRIPT})
   endif()
   add_executable(${executable} ${_all} ${exe_srcs})
   target_link_libraries(${executable} ${ARG_LIBRARIES})
