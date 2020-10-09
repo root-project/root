@@ -18,12 +18,12 @@ int main() {
          return 1;
       }
    }
-#endif
 
    ROOT::Internal::TExecutor ex1{ROOT::Internal::ExecutionPolicy::kMultithread};
    if(ex1.Policy()!= ROOT::Internal::ExecutionPolicy::kMultithread) {
          return 2;
    }
+#endif
 
    ROOT::Internal::TExecutor ex2{ROOT::Internal::ExecutionPolicy::kMultiprocess};
    if(ex2.Policy()!= ROOT::Internal::ExecutionPolicy::kMultiprocess) {
@@ -39,8 +39,10 @@ int main() {
    auto res = 0;
    res = ExecutorTest(ex);
    if(res) return res;
+#ifdef R__USE_IMT
    res = ExecutorTest(ex1);
    if(res) return res+offset+4;
+#endif
    res = ExecutorTest(ex2);
    if(res) return res+2*offset+4;
    res = ExecutorTest(ex3);
