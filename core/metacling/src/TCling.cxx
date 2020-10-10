@@ -1926,10 +1926,7 @@ bool TCling::RegisterPrebuiltModulePath(const std::string &FullPath,
       llvm::sys::path::append(ModuleMapFileName, ModuleMapName);
       const FileEntry *FE = FM.getFile(ModuleMapFileName, /*openFile*/ false,
                                        /*CacheFailure*/ false);
-
-      // FIXME: Calling IsLoaded is slow! Replace this with the appropriate
-      // call to the clang::ModuleMap class.
-      if (FE && !this->IsLoaded(FE->getName().data())) {
+      if (FE) {
          if (!HS.loadModuleMapFile(FE, /*IsSystem*/ false))
             return true;
          Error("RegisterPrebuiltModulePath", "Could not load modulemap in %s", ModuleMapFileName.c_str());
