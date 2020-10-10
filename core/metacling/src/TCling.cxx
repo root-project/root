@@ -1605,7 +1605,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       cling::DynamicLibraryManager& DLM = *fInterpreter->getDynamicLibraryManager();
       // Make sure cling looks into ROOT's libdir, even if not part of LD_LIBRARY_PATH
       // e.g. because of an RPATH build.
-      DLM.addSearchPath(TROOT::GetLibDir().Data());
+      DLM.addSearchPath(TROOT::GetLibDir().Data(), /*isUser=*/true,
+                        /*prepend=*/true);
       auto ShouldPermanentlyIgnore = [](llvm::StringRef FileName) -> bool{
          llvm::StringRef stem = llvm::sys::path::stem(FileName);
          return stem.startswith("libNew") || stem.startswith("libcppyy_backend");
