@@ -158,6 +158,8 @@ TBranch::TBranch()
 ///            - `d` : a 24 bit truncated floating point (`Double32_t`)
 ///            - `L` : a 64 bit signed integer (`Long64_t`)
 ///            - `l` : a 64 bit unsigned integer (`ULong64_t`)
+///            - `G` : a long signed integer, stored as 64 bit (`Long_t`)
+///            - `g` : a long unsigned integer, stored as 64 bit (`ULong_t`)
 ///            - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
 ///
 ///         Arrays of values are supported with the following syntax:
