@@ -820,6 +820,7 @@ endif()
 if(WIN32)
   set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
   configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.bat ${thisrootbat} @ONLY)
+  configure_file(${CMAKE_SOURCE_DIR}/config/root.rc.in ${CMAKE_BINARY_DIR}/etc/root.rc @ONLY)
 endif()
 
 #--Local root-configure
