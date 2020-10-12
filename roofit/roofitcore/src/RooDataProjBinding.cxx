@@ -165,8 +165,9 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
 RooSpan<const double> RooDataProjBinding::getValues(std::vector<RooSpan<const double>> coordinates) const {
   assert(isValid());
 
-  std::vector<double> results;
-  results.reserve(coordinates.front().size());
+  if (!_batchBuffer)
+    _batchBuffer.reset(new std::vector<double>());
+  _batchBuffer->resize(coordinates.front().size());
 
   std::unique_ptr<double[]> xVec( new double[coordinates.size()] );
 
@@ -175,8 +176,8 @@ RooSpan<const double> RooDataProjBinding::getValues(std::vector<RooSpan<const do
       xVec.get()[dim] = coordinates[dim][i];
     }
 
-    this->operator()(xVec.get());
+    (*_batchBuffer)[i] = this->operator()(xVec.get());
   }
 
-  return std::move(results);
+  return {*_batchBuffer};
 }
