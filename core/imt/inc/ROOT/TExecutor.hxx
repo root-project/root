@@ -2,7 +2,7 @@
 // Author: Xavier Valls September 2020
 
 /*************************************************************************
- * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -152,7 +152,7 @@ auto MapReduce(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) 
 
 using TExecutorCRTP<TExecutor>::Reduce;
 
-unsigned GetPoolSize();
+unsigned GetPoolSize() const;
 
 protected:
 template<class F, class R, class Cond = noReferenceCond<F>>
@@ -465,7 +465,7 @@ auto TExecutor::MapReduce(F func, const std::vector<T> &args, R redfunc, unsigne
 ///
 /// \return The number of workers in the pool in the executor used as a backend.
 
-unsigned TExecutor::GetPoolSize()
+unsigned TExecutor::GetPoolSize() const
 {
    unsigned poolSize{0u};
    switch(fExecPolicy){

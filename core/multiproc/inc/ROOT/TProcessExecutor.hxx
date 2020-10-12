@@ -3,7 +3,7 @@
 // Modified: G Ganis Jan 2017
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -61,7 +61,7 @@ public:
    /// \brief Return the number of pooled parallel workers.
    ///
    /// \return The number of workers in the pool.
-   unsigned GetPoolSize() { return TMPClient::GetNWorkers(); }
+   unsigned GetPoolSize() const { return TMPClient::GetNWorkers(); }
 
    using TExecutorCRTP<TProcessExecutor>::MapReduce;
    template<class F, class R, class Cond = noReferenceCond<F>>

@@ -2,7 +2,7 @@
 // Author: Xavier Valls March 2016
 
 /*************************************************************************
- * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -123,7 +123,7 @@ public:
    template<class T> T* Reduce(const std::vector<T*> &mergeObjs);
    template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
-   unsigned GetPoolSize();
+   unsigned GetPoolSize() const; // must be implemented in derived class
 
 private:
    inline subc & Derived()
@@ -329,7 +329,7 @@ auto TExecutorCRTP<subc>::Reduce(const std::vector<T> &objs, R redfunc) -> declt
 ///
 /// \return The number of workers in the pool.
 template<class subc>
-unsigned TExecutorCRTP<subc>::GetPoolSize()
+unsigned TExecutorCRTP<subc>::GetPoolSize() const
 {
    return Derived().GetPoolSize();
 }
