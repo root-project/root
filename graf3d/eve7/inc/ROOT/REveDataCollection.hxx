@@ -16,6 +16,7 @@
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveCompound.hxx>
 #include <ROOT/REveSecondarySelectable.hxx>
+#include <ROOT/REveDataTable.hxx>
 
 #include <functional>
 #include <vector>
@@ -64,6 +65,9 @@ protected:
    std::function<void (REveDataItemList*, const std::vector<int>&)> _handler_items_change;
    std::function<void (REveDataItemList*, Set_t& impSel)> _handler_fillimp;
 
+   std::string    fTooltipTitle;
+   REveDataColumn fTooltipFunction;
+
 public:
 
    REveDataItemList(const std::string& n = "Items", const std::string& t = "");
@@ -85,11 +89,16 @@ public:
    {
       _handler_fillimp = handler_func;
    }
-   
+
    Bool_t SingleRnrState() const override { return kTRUE; }
    Bool_t SetRnrState(Bool_t) override;
 
    void ProcessSelection(ElementId_t id, bool multi, bool secondary, const std::set<int>& in_secondary_idcs);
+
+   void SetTooltipExpression(const std::string &title, const std::string &expr);
+
+   using REveElement::GetHighlightTooltip;
+   std::string GetHighlightTooltip(const std::set<int>& secondary_idcs) const override;
 };
 
 //==============================================================================
