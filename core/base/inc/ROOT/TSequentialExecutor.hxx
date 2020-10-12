@@ -2,7 +2,7 @@
 // Author: Xavier Valls November 2017
 
 /*************************************************************************
- * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -61,7 +61,7 @@ namespace ROOT {
       /// \brief Return the number of workers in the sequential executor: a single one.
       ///
       /// \return The number of workers in the pool, one.
-      unsigned GetPoolSize() { return 1u; }
+      unsigned GetPoolSize() const { return 1u; }
    };
 
    /************ TEMPLATE METHODS IMPLEMENTATION ******************/

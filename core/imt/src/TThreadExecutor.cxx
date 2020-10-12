@@ -189,7 +189,7 @@ float TThreadExecutor::ParallelReduce(const std::vector<float> &objs,
 //////////////////////////////////////////////////////////////////////////
 /// \brief Returns the number of worker threads in the task arena.
 /// \return the number of worker threads assigned to the task arena.
-unsigned TThreadExecutor::GetPoolSize()
+unsigned TThreadExecutor::GetPoolSize() const
 {
    return fTaskArenaW->TaskArenaSize();
 }
