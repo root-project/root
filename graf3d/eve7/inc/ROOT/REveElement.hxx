@@ -154,7 +154,7 @@ public:
    const std::string &GetTitle()  const { return fTitle; }
    const char* GetCTitle() const { return fTitle.c_str();  }
 
-   virtual std::string GetHighlightTooltip() const { return fTitle; }
+   virtual std::string GetHighlightTooltip(const std::set<int>&) const { return fTitle; }
 
    void SetName (const std::string &name);
    void SetTitle(const std::string &title);
