@@ -29,6 +29,9 @@
 #include "RooConstVar.h"
 #include "Math/Util.h"
 #include "RooHelpers.h"
+#ifdef ROOFIT_CHECK_CACHED_VALUES
+#include "BatchHelpers.h"
+#endif
 
 #include <numeric>
 #include <ctime>
@@ -321,7 +324,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
       try {
         *observables = *_dataUniform->get(i);
         _pdf->getVal(normSet);
-        RooHelpers::BatchInterfaceAccessor::checkBatchComputation(*_pdf, i, normSet, toleranceCompare);
+        BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*_pdf, i, normSet, toleranceCompare);
 
       } catch (std::exception& e) {
         std::cerr << "ERROR when checking batch computation for event " << i << ":\n"
