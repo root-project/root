@@ -39,6 +39,8 @@ bool gRhoZView = false;
 
 REX::REveManager *eveMng = nullptr;
 
+REX::REveProjectionManager* g_projMng = nullptr;
+REX::REveScene* g_projScene = nullptr;
 
 //==============================================================================
 //============== EMULATE FRAMEWORK CLASSES =====================================
@@ -176,7 +178,7 @@ public:
       Clear();
       MakeJets(4);
       MakeParticles(100);
-      MakeRecHits(1000);
+      MakeRecHits(20);
       eventId++;
    }
 };
@@ -298,7 +300,7 @@ private:
                               x + a + RND_BOX(d), y + a + RND_BOX(d), z + a + RND_BOX(d),
                               x + a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d) };
          boxset->AddBox(verts);
-         boxset->DigitId(h);         
+         boxset->DigitId(h);
          boxset->DigitColor(item->GetVisible() ? collection->GetMainColor() : 0); // set color on the last one
       }
       boxset->GetPlex()->Refit();
@@ -311,6 +313,7 @@ public:
    {
       // printf("-------------------------FBOXSET proxy builder %d \n",  collection->GetNItems());
       auto boxset = new REveBoxSet();
+      boxset->SetName(collection->GetCName());
       boxset->SetAlwaysSecSelect(1);
       boxset->SetDetIdsAsSecondaryIndices(true);
       boxset->SetSelectionMaster(((REveDataCollection*)collection)->GetItemList());
@@ -413,9 +416,11 @@ public:
          auto rhoZEventScene = eveMng->SpawnNewScene("RhoZ Scene","Projected");
          m_mngRhoZ = new REveProjectionManager(REveProjection::kPT_RhoZ);
          m_mngRhoZ->SetImportEmpty(true);
+         g_projMng = m_mngRhoZ;
          auto rhoZView = eveMng->SpawnNewViewer("RhoZ View", "");
          rhoZView->AddScene(rhoZEventScene);
          m_scenes.push_back(rhoZEventScene);
+         g_projScene = rhoZEventScene;
 
          auto pgeoScene = eveMng->SpawnNewScene("Projection Geometry","xxx");
          m_mngRhoZ->ImportElements(b1,pgeoScene );
@@ -519,6 +524,10 @@ public:
       tableBuilder->SetCollection(collection);
       REveElement* tablep = tableBuilder->CreateProduct("table-type", m_viewContext);
       auto tableMng =  m_viewContext->GetTableViewInfo();
+      auto tableEntries =  tableMng->RefTableEntries(collection->GetItemClass()->GetName());
+      auto te = tableEntries[0];
+      collection->GetItemList()->SetTooltipExpression(te.fName, te.fExpression);
+
       if (showInTable)
       {
          tableMng->SetDisplayedCollection(collection->GetElementId());
@@ -606,8 +615,12 @@ public:
 
    virtual void NextEvent()
    {
+      eveMng->DisableRedraw();
+      eveMng->GetSelection()->ClearSelection();
+      eveMng->GetHighlight()->ClearSelection();
       m_event->Create();
       m_xymng->NextEvent();
+      eveMng->EnableRedraw();
    }
 
    virtual void QuitRoot()
@@ -616,6 +629,44 @@ public:
       if (gApplication) gApplication->Terminate();
    }
 };
+
+void calorimeters()
+{
+   const char* histFile =
+      "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
+   const Double_t kR_min = 300;
+   const Double_t kR_max = 300;
+   const Double_t kZ_d   = 300;
+   TFile::SetCacheFileDir(".");
+   auto hf = TFile::Open(histFile, "CACHEREAD");
+   auto ecalHist = (TH2F*)hf->Get("ecalLego");
+   auto hcalHist = (TH2F*)hf->Get("hcalLego");
+   for (int i=0; i<100; ++i) {
+      double x, y;
+      gRandom->Rannor(x, y); x/=6; y/=6;
+      ecalHist->Fill(-0.1 + x, -.8 + y, 5 + gRandom->Uniform(2,3));
+      hcalHist->Fill(-0.1 + x, -.8 + y, 3 + gRandom->Uniform(1,2));
+   }
+   auto data = new REveCaloDataHist();
+   data->AddHistogram(ecalHist);
+   data->RefSliceInfo(0).Setup("ECAL", 0.f, kBlue);
+   data->AddHistogram(hcalHist);
+   data->RefSliceInfo(1).Setup("HCAL", 0.1, kRed);
+   eveMng->GetEventScene()->AddElement(data);
+
+   auto b1 = new REveGeoShape("Barrel 1");
+   b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
+   b1->SetMainColor(kCyan);
+   eveMng->GetGlobalScene()->AddElement(b1);
+
+   auto calo3d = new REveCalo3D(data);
+   calo3d->SetBarrelRadius(kR_max);
+   calo3d->SetEndCapPos(kZ_d);
+   calo3d->SetMaxTowerH(300);
+   eveMng->GetEventScene()->AddElement(calo3d);
+
+   REveCalo2D* calo2d = (REveCalo2D*) g_projMng->ImportElements(calo3d, g_projScene);
+}
 
 
 //==============================================================================
@@ -667,5 +718,7 @@ void collection_proxies(bool proj=true)
    eveMng->GetWorld()->AddCommand("QuitRoot",  "sap-icon://log",  eventMng, "QuitRoot()");
    eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", eventMng, "NextEvent()");
 
+
+   calorimeters();
    eveMng->Show();
 }
