@@ -56,7 +56,7 @@ public:
    /**
       Constructor from unbin data set and model function (pdf)
    */
-   LogLikelihoodFCN (const std::shared_ptr<UnBinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = false, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial) :
+   LogLikelihoodFCN (const std::shared_ptr<UnBinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = false, const ::ROOT::Internal::ExecutionPolicy &executionPolicy = ::ROOT::Internal::ExecutionPolicy::kSerial) :
       BaseFCN( data, func),
       fIsExtended(extended),
       fWeight(weight),
@@ -68,7 +68,7 @@ public:
       /**
       Constructor from unbin data set and model function (pdf) for object managed by users
    */
-   LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func, int weight = 0, bool extended = false, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial) :
+   LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func, int weight = 0, bool extended = false, const ::ROOT::Internal::ExecutionPolicy &executionPolicy = ::ROOT::Internal::ExecutionPolicy::kSerial) :
       BaseFCN(std::shared_ptr<UnBinData>(const_cast<UnBinData*>(&data), DummyDeleter<UnBinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fIsExtended(extended),
       fWeight(weight),
@@ -175,7 +175,7 @@ private:
 
    mutable std::vector<double> fGrad; // for derivatives
 
-   ROOT::Internal::ExecutionPolicy fExecutionPolicy; // Execution policy
+   ::ROOT::Internal::ExecutionPolicy fExecutionPolicy; // Execution policy
 };
       // define useful typedef's
       // using LogLikelihoodFunction_v = LogLikelihoodFCN<ROOT::Math::IMultiGenFunction, ROOT::Math::IParametricFunctionMultiDimTempl<T>>;
