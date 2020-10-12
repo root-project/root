@@ -198,7 +198,9 @@ sap.ui.define([
          if (item) {
             var color = this.GetSelectionColor(selection_obj);
             item.$().css("background-color", color);
+            if (this.ged && (this.mgr.global_selection_id == selection_obj.fElementId)) this.ged.getController().updateSecondarySelectionGED(element_id, sec_idcs);
          }
+
       },
 
       UnselectElement: function (selection_obj, element_id) {
@@ -208,6 +210,7 @@ sap.ui.define([
             var cc = item.$().css("background-color");
             if (cc == color)
                item.$().css("background-color", "");
+             if (this.ged && (this.mgr.global_selection_id == selection_obj.fElementId)) this.ged.getController().updateSecondarySelectionGED();
          }
       },
 
@@ -282,7 +285,16 @@ sap.ui.define([
 
       createModel: function() {
          this.summaryElements = {};
-         return this.createSummaryModel([], this.mgr.childs, "/");
+
+         /*
+         var src = this.mgr.childs[0].childs[2].childs;
+         for (var i = 0; i < src.length; i++) {
+            if (src[i].fName == "Collections")
+               src = src[i].childs;
+         }
+         */
+         let src = this.mgr.childs;
+         return this.createSummaryModel([], src, "/");
       },
 
       createSummaryModel: function(tgt, src, path) {
