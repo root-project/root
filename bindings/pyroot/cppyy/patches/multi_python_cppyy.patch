@@ -50,7 +50,7 @@ diff --git a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py b/bindings/pyr
 index b3b1b84..0d2fa35 100644
 --- a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
 +++ b/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
-@@ -50,6 +50,60 @@ from ._version import __version__
+@@ -50,6 +50,67 @@ from ._version import __version__
  
  import os, sys, sysconfig, warnings
  
@@ -106,7 +106,14 @@ index b3b1b84..0d2fa35 100644
 +        os.environ['CPPYY_BACKEND_LIBRARY'] += ver
 +else:
 +    clean_cbl = True
-+    os.environ['CPPYY_BACKEND_LIBRARY'] = 'libcppyy_backend' + py_version_str
++    if not any(var in os.environ for var in ('LD_LIBRARY_PATH','DYLD_LIBRARY_PATH')):
++        # macOS SIP can prevent DYLD_LIBRARY_PATH from having any effect.
++        # Set cppyy env variable here to make sure libraries are found.
++        _lib_dir = os.path.dirname(os.path.dirname(__file__))
++        _lcb_path = os.path.join(_lib_dir, 'libcppyy_backend')
++        os.environ['CPPYY_BACKEND_LIBRARY'] = _lcb_path + py_version_str
++    else:
++        os.environ['CPPYY_BACKEND_LIBRARY'] = 'libcppyy_backend' + py_version_str
 +
  if not 'CLING_STANDARD_PCH' in os.environ:
      local_pch = os.path.join(os.path.dirname(__file__), 'allDict.cxx.pch')
