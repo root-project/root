@@ -79,12 +79,10 @@ REveDataColumn::REveDataColumn(const std::string& n, const std::string& t) :
 {
 }
 
-void REveDataColumn::SetExpressionAndType(const std::string& expr, FieldType_e type)
-{
-   auto table = dynamic_cast<REveDataTable*>(fMother);
-   auto coll = table->GetCollection();
-   auto icls = coll->GetItemClass();
+//______________________________________________________________________________
 
+void REveDataColumn::SetExpressionAndType(const std::string& expr, FieldType_e type, TClass* icls)
+{
    fExpression = expr;
    fType       = type;
 
@@ -112,13 +110,22 @@ void REveDataColumn::SetExpressionAndType(const std::string& expr, FieldType_e t
       std::cerr << "REveDataColumn::SetExpressionAndType" << exc.what();
    }
 }
+//______________________________________________________________________________
+
+void REveDataColumn::SetExpressionAndType(const std::string& expr, FieldType_e type)
+{
+   auto table = dynamic_cast<REveDataTable*>(fMother);
+   auto coll = table->GetCollection();
+   auto icls = coll->GetItemClass();
+   SetExpressionAndType(expr, type, icls);
+}
 
 void REveDataColumn::SetPrecision(Int_t prec)
 {
    fPrecision = prec;
 }
 
-std::string REveDataColumn::EvalExpr(void *iptr)
+std::string REveDataColumn::EvalExpr(void *iptr) const
 {
    switch (fType)
    {
