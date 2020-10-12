@@ -8,13 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-# macOS SIP can prevent DYLD_LIBRARY_PATH from having any effect.
-# Set cppyy env variable here to make sure libraries are found.
-from os import environ, path
-if not any(var in environ for var in ('LD_LIBRARY_PATH','DYLD_LIBRARY_PATH')):
-    _lib_dir = path.dirname(path.dirname(__file__))
-    _lcb_path = path.join(_lib_dir, 'libcppyy_backend')
-    environ['CPPYY_BACKEND_LIBRARY'] = _lcb_path
+from os import environ
 
 # Prevent cppyy's check for the PCH
 environ['CLING_STANDARD_PCH'] = 'none'
