@@ -101,16 +101,16 @@ public:
       fExecPolicy = execPolicy;
       switch(fExecPolicy) {
          case ROOT::Internal::ExecutionPolicy::kSerial:
-            fSeqPool = std::make_unique<ROOT::TSequentialExecutor>();
+            fSequentialExecutor = std::make_unique<ROOT::TSequentialExecutor>();
             break;
 #ifdef R__USE_IMT
          case ROOT::Internal::ExecutionPolicy::kMultithread:
-            fThreadPool = std::make_unique<ROOT::TThreadExecutor>(nProcessingUnits);
+            fThreadExecutor = std::make_unique<ROOT::TThreadExecutor>(nProcessingUnits);
             break;
 #endif
 #ifndef R__WIN32
          case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-            fProcPool = std::make_unique<ROOT::TProcessExecutor>(nProcessingUnits);
+            fProcessExecutor = std::make_unique<ROOT::TProcessExecutor>(nProcessingUnits);
             break;
 #endif
          default:
@@ -169,12 +169,12 @@ auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> 
 private:
    ROOT::Internal::ExecutionPolicy fExecPolicy;
 #ifdef R__USE_IMT
-   std::unique_ptr<ROOT::TThreadExecutor> fThreadPool;
+   std::unique_ptr<ROOT::TThreadExecutor> fThreadExecutor;
 #endif
 #ifndef R__WIN32
-   std::unique_ptr<ROOT::TProcessExecutor> fProcPool;
+   std::unique_ptr<ROOT::TProcessExecutor> fProcessExecutor;
 #endif
-   std::unique_ptr<ROOT::TSequentialExecutor> fSeqPool;
+   std::unique_ptr<ROOT::TSequentialExecutor> fSequentialExecutor;
 };
 
 
@@ -186,16 +186,16 @@ auto TExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result
    std::vector<retType> res;
    switch(fExecPolicy){
       case ROOT::Internal::ExecutionPolicy::kSerial:
-         res = fSeqPool->Map(func, nTimes);
+         res = fSequentialExecutor->Map(func, nTimes);
          break;
 #ifdef R__USE_IMT
       case ROOT::Internal::ExecutionPolicy::kMultithread:
-         res = fThreadPool->Map(func, nTimes);
+         res = fThreadExecutor->Map(func, nTimes);
          break;
 #endif
 #ifndef R__WIN32
       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-         res = fProcPool->Map(func, nTimes);
+         res = fProcessExecutor->Map(func, nTimes);
          break;
 #endif
       default:
@@ -213,16 +213,16 @@ auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename st
 
    switch(fExecPolicy){
       case ROOT::Internal::ExecutionPolicy::kSerial:
-         res = fSeqPool->Map(func, args);
+         res = fSequentialExecutor->Map(func, args);
          break;
 #ifdef R__USE_IMT
       case ROOT::Internal::ExecutionPolicy::kMultithread:
-         res = fThreadPool->Map(func, args);
+         res = fThreadExecutor->Map(func, args);
          break;
 #endif
 #ifndef R__WIN32
       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-         res = fProcPool->Map(func, args);
+         res = fProcessExecutor->Map(func, args);
          break;
 #endif
       default:
@@ -244,7 +244,7 @@ template<class F, class R, class Cond>
 auto TExecutor::Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type> {
 #ifdef R__USE_IMT
    if (fExecPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
-      return fThreadPool->Map(func, nTimes, redfunc, nChunks);
+      return fThreadExecutor->Map(func, nTimes, redfunc, nChunks);
    }
 #endif
    return Map(func, nTimes);
@@ -259,16 +259,16 @@ auto TExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::r
    std::vector<retType> res;
    switch(fExecPolicy){
       case ROOT::Internal::ExecutionPolicy::kSerial:
-         res = fSeqPool->Map(func, args);
+         res = fSequentialExecutor->Map(func, args);
          break;
 #ifdef R__USE_IMT
       case ROOT::Internal::ExecutionPolicy::kMultithread:
-         res = fThreadPool->Map(func, args);
+         res = fThreadExecutor->Map(func, args);
          break;
 #endif
 #ifndef R__WIN32
       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-         res = fProcPool->Map(func, args);
+         res = fProcessExecutor->Map(func, args);
          break;
 #endif
       default:
@@ -286,16 +286,16 @@ auto TExecutor::Map(F func, const std::vector<T> &args) -> std::vector<typename 
    std::vector<retType> res;
    switch(fExecPolicy){
       case ROOT::Internal::ExecutionPolicy::kSerial:
-         res = fSeqPool->Map(func, args);
+         res = fSequentialExecutor->Map(func, args);
          break;
 #ifdef R__USE_IMT
       case ROOT::Internal::ExecutionPolicy::kMultithread:
-         res = fThreadPool->Map(func, args);
+         res = fThreadExecutor->Map(func, args);
          break;
 #endif
 #ifndef R__WIN32
       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-         res = fProcPool->Map(func, args);
+         res = fProcessExecutor->Map(func, args);
          break;
 #endif
       default:
@@ -317,7 +317,7 @@ template<class F, class INTEGER, class R, class Cond>
 auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
 #ifdef R__USE_IMT
    if (fExecPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
-      return fThreadPool->Map(func, args, redfunc, nChunks);
+      return fThreadExecutor->Map(func, args, redfunc, nChunks);
    }
 #endif
    return Map(func, args);
@@ -338,7 +338,7 @@ template<class F, class T, class R, class Cond>
 auto TExecutor::Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type> {
 #ifdef R__USE_IMT
    if (fExecPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
-      return fThreadPool->Map(func, args, redfunc, nChunks);
+      return fThreadExecutor->Map(func, args, redfunc, nChunks);
    }
 #endif
    return Map(func, args);
@@ -357,7 +357,7 @@ template<class F, class T, class R, class Cond>
 auto TExecutor::Map(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type> {
 #ifdef R__USE_IMT
    if (fExecPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
-      return fThreadPool->Map(func, args, redfunc, nChunks);
+      return fThreadExecutor->Map(func, args, redfunc, nChunks);
    }
 #endif
    return Map(func, args);
@@ -470,16 +470,16 @@ unsigned TExecutor::GetPoolSize() const
    unsigned poolSize{0u};
    switch(fExecPolicy){
       case ROOT::Internal::ExecutionPolicy::kSerial:
-         poolSize = fSeqPool->GetPoolSize();
+         poolSize = fSequentialExecutor->GetPoolSize();
          break;
 #ifdef R__USE_IMT
       case ROOT::Internal::ExecutionPolicy::kMultithread:
-         poolSize = fThreadPool->GetPoolSize();
+         poolSize = fThreadExecutor->GetPoolSize();
          break;
 #endif
 #ifndef R__WIN32
       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-         poolSize = fProcPool->GetPoolSize();
+         poolSize = fProcessExecutor->GetPoolSize();
          break;
 #endif
       default:
