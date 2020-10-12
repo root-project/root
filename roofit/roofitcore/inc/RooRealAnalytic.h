@@ -30,6 +30,9 @@ public:
 protected:
   Int_t _code;
 
+private:
+  mutable std::unique_ptr<std::vector<double>> _batchBuffer; //! Buffer for handing out spans.
+
   ClassDefOverride(RooRealAnalytic,0) // Function binding to an analytical integral of a RooAbsReal
 };
 

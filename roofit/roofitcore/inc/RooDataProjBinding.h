@@ -40,6 +40,7 @@ protected:
 
   RooSuperCategory* _superCat ;  // Supercategory constructed from _data's category variables
   Roo1DTable* _catTable ;        // Supercategory table generated from _data
+  mutable std::unique_ptr<std::vector<double>> _batchBuffer; //! Storage for handing out spans.
 
   ClassDef(RooDataProjBinding,0) // RealFunc/Dataset binding for data projection of a real function
 };
