@@ -63,9 +63,10 @@ public:
    virtual ~REveDataColumn() {}
 
    void SetExpressionAndType(const std::string &expr, FieldType_e type);
+   void SetExpressionAndType(const std::string &expr, FieldType_e type, TClass* c);
    void SetPrecision(Int_t prec);
 
-   std::string EvalExpr(void *iptr);
+   std::string EvalExpr(void *iptr) const;
 };
 
 
