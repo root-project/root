@@ -13,14 +13,14 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooGaussModel.h"
+#include "RooConstVar.h"
 #include "RooDecay.h"
 #include "RooLandau.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
 #include "TAxis.h"
-#include "TH2D.h"
+#include "TH1.h"
 using namespace RooFit;
 
 void rf306_condpereventerrors()
