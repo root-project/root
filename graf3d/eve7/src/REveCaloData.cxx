@@ -305,6 +305,34 @@ Float_t REveCaloData::EtaToTheta(Float_t eta)
       return 2*ATan(Exp(- Abs(eta)));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+std::string REveCaloData::GetHighlightTooltip(const std::set<int>& secondary_idcs) const
+{
+   std::string s;
+   CellData_t cellData;
+
+   Bool_t single = secondary_idcs.size() == 1;
+   Float_t sum = 0;
+
+
+   for (auto &id : secondary_idcs ) {
+
+      int slice = (id >> 24);
+      int tower = id & 0xffffff;
+      REveCaloData::CellId_t cell(tower, slice, 1.0f);
+      GetCellData(cell, cellData);
+
+      s += TString::Format("%s %.2f (%.3f, %.3f)",
+                           fSliceInfos[slice].fName.Data(), cellData.fValue,
+                           cellData.Eta(), cellData.Phi());
+
+      if (single) return s;
+      s += "\n";
+      sum += cellData.fValue;
+   }
+   s += TString::Format("Sum = %.2f", sum);
+   return s;
+}
 
 /** \class  REveCaloDataVec
 \ingroup REve
