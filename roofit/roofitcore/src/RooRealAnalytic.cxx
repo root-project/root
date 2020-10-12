@@ -56,8 +56,10 @@ RooSpan<const double> RooRealAnalytic::getValues(std::vector<RooSpan<const doubl
   assert(isValid());
   _ncall += coordinates.front().size();
 
-  std::vector<double> results;
-  results.reserve(coordinates.front().size());
+  if (!_batchBuffer)
+    _batchBuffer.reset(new std::vector<double>());
+  _batchBuffer->resize(coordinates.front().size());
+  RooSpan<double> results(*_batchBuffer);
 
   for (std::size_t i=0; i < coordinates.front().size(); ++i) {
     for (unsigned int dim=0; dim < coordinates.size(); ++dim) {
@@ -65,11 +67,12 @@ RooSpan<const double> RooRealAnalytic::getValues(std::vector<RooSpan<const doubl
     }
 
     if (_code == 0) {
-      results.push_back(_func->getVal(_nset));
+      results[i] = _func->getVal(_nset);
     } else {
-      results.push_back(_func->analyticalIntegralWN(_code,_nset,_rangeName?_rangeName->GetName():0));
+      results[i] = _func->analyticalIntegralWN(_code,_nset,_rangeName?_rangeName->GetName():0);
     }
   }
 
-  return std::move(results);
+  return results;
 }
+
