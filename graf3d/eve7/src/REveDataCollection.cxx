@@ -39,7 +39,6 @@ REveDataItemList::REveDataItemList(const std::string& n, const std::string& t):
    REveElement(n,t)
 {
    fAlwaysSecSelect = true;
-   fChildClass = TClass::GetClass<REveDataItem>();
 
    _handler_items_change = 0;
    _handler_fillimp  = 0;
@@ -146,6 +145,29 @@ void REveDataItemList::ProcessSelection(ElementId_t selectionId, bool multi, boo
    REveSelection* selection = (REveSelection*) ROOT::Experimental::gEve->FindElementById(selectionId);
    selection->NewElementPicked(GetElementId(), multi, secondary, secondary_idcs);
 }
+
+//______________________________________________________________________________
+std::string REveDataItemList::GetHighlightTooltip(const std::set<int>& secondary_idcs) const
+{
+   // print info for first selected index
+   int idx = *secondary_idcs.begin();
+   auto col = dynamic_cast<REveDataCollection*>(fMother);
+   void* data = col->GetDataPtr(idx);
+   std::string eval = fTooltipFunction.EvalExpr(data);
+   std::string tooltip = Form("%s %d\n%s = %s", col->GetCName(), idx, fTooltipTitle.c_str(), eval.c_str());
+   return tooltip;
+}
+
+//______________________________________________________________________________
+void REveDataItemList::SetTooltipExpression(const std::string &title, const std::string &expr)
+{
+   fTooltipTitle = title;
+   fTooltipFunction.SetPrecision(2);
+   auto col = dynamic_cast<REveDataCollection*>(fMother);
+   auto icls = col->GetItemClass();
+   fTooltipFunction.SetExpressionAndType(expr, REveDataColumn::FT_Double, icls);
+}
+
 
 //==============================================================================
 // REveDataCollection
