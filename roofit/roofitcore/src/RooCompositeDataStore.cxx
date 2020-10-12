@@ -511,3 +511,19 @@ void RooCompositeDataStore::dump()
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get the weights of the events in the range [first, first+len).
+/// This implementation will fill a vector with every event retrieved one by one
+/// (even if the weight is constant). Then, it returns a span.
+RooSpan<const double> RooCompositeDataStore::getWeightBatch(std::size_t first, std::size_t len) const {
+  if (!_weightBuffer) {
+    _weightBuffer.reset(new std::vector<double>());
+    _weightBuffer->reserve(len);
+
+    for (std::size_t i = 0; i < static_cast<std::size_t>(numEntries()); ++i) {
+      _weightBuffer->push_back(weight(i));
+    }
+  }
+
+  return {_weightBuffer->data() + first, len};
+}

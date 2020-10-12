@@ -76,6 +76,7 @@ public:
     std::vector<double> vec(first, last);
     return {RooSpan<const double>(vec)};
   }
+  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const;
 
   // Change observable name
   virtual Bool_t changeObservableName(const char* from, const char* to) ;
@@ -166,6 +167,7 @@ public:
   const Double_t* _extWgtErrLoArray{nullptr};    //! External weight array - low error
   const Double_t* _extWgtErrHiArray{nullptr};    //! External weight array - high error
   const Double_t* _extSumW2Array{nullptr};       //! External sum of weights array
+  mutable std::unique_ptr<std::vector<double>> _weightBuffer; //! Buffer for weights in case a batch of values is requested.
 
   mutable Double_t  _curWgt ;      // Weight of current event
   mutable Double_t  _curWgtErrLo ; // Weight of current event

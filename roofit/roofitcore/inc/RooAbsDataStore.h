@@ -54,7 +54,7 @@ public:
   virtual Bool_t isWeighted() const = 0 ;
 
   virtual std::vector<RooSpan<const double>> getBatch(std::size_t first, std::size_t len) const = 0;
-  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const;
+  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const = 0;
 
   // Change observable name
   virtual Bool_t changeObservableName(const char* from, const char* to) =0 ;
