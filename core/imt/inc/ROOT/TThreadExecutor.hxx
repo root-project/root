@@ -2,7 +2,7 @@
 // Author: Xavier Valls March 2016
 
 /*************************************************************************
- * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -87,7 +87,7 @@ namespace ROOT {
       template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
       template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
 
-      unsigned GetPoolSize();
+      unsigned GetPoolSize() const;
 
    protected:
       template<class F, class R, class Cond = noReferenceCond<F>>
