@@ -682,6 +682,10 @@ Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
 
       rec["sec_idcs"] = sec;
 
+      // stream tooltip in highlight type
+      if (!fIsMaster)
+         rec["tooltip"] = i.first->GetHighlightTooltip(i.second.f_sec_idcs);
+
       sel_list.push_back(rec);
    }
 
