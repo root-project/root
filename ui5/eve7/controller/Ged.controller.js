@@ -611,23 +611,23 @@ sap.ui.define([
       },
 
       updateSecondarySelectionGED:function(elementId, sec_idcs) {
-         console.log("comapre ida \n", this.editorElement.fElementId,elementId );
-         console.log("update secondary select in ged ",sec_idcs , "sec select:",  this.secSelectList);
-         if (this.secSelectList && (this.editorElement.fElementId == elementId) )
+         if (this.secSelectList)
          {
-            let selected = this.secSelectList.getSelectedItems();
-	    for (let s = 0; s < selected.length; s++)
-	       this.secSelectList.setSelectedItem(selected[s], false);
+            if (this.editorElement.fElementId == elementId){
+               let selected = this.secSelectList.getSelectedItems();
+               for (let s = 0; s < selected.length; s++)
+                  this.secSelectList.setSelectedItem(selected[s], false);
 
 
-            for (let i =0; i < sec_idcs.length; ++i) {
-               let sid = "item_"+sec_idcs[i];
-               console.log("select ite, ", sec_idcs[i], "id ", sid);
-
-               this.secSelectList.setSelectedItemById(sid, true);
+               for (let i =0; i < sec_idcs.length; ++i) {
+                  let sid = "item_"+sec_idcs[i];
+                  this.secSelectList.setSelectedItemById(sid, true);
+               }
             }
+            else
+               this.secSelectList.removeSelections();
          }
-      }
+   }
 
    });
    GedController.canEditClass = function(typename) {
