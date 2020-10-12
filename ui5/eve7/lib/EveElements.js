@@ -37,7 +37,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    EveElemControl.prototype.getTooltipText = function(intersect)
    {
       let el =  this.obj3d.eve_el;
-      return el.fTitle || el.fName || "";
+      return el.fName || el.fTitle || "";
    }
 
    EveElemControl.prototype.elementHighlighted = function(indx)
@@ -1207,7 +1207,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    StraightLineSetControl.prototype.getTooltipText = function(intersect)
    {
-      var t = this.obj3d.eve_el.fTitle || this.obj3d.eve_el.fName || "";
+      var t = this.obj3d.eve_el.fName || this.obj3d.eve_el.fTitle || "";
       var idx = this.extractIndex(intersect);
       return t + " idx=" + idx;
    }
