@@ -222,6 +222,9 @@ public:
 
    bool RequiresExtraSelectionData() const override { return true; };
    void FillExtraSelectionData(nlohmann::json&, const std::set<int>&) const override;
+
+   using REveElement::GetHighlightTooltip;
+   std::string GetHighlightTooltip(const std::set<int>& secondary_idcs) const override;
 };
 
 /**************************************************************************/
