@@ -5,7 +5,7 @@ find_package(LibXml2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 set(DAVIX_VERSION "0.6.7")
-set(DAVIX_URL "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix")
+set(DAVIX_URL "http://davix.web.cern.ch/davix/releases")
 set(DAVIX_URLHASH "SHA256=1694152a20a5c5e692c4bc545b2efbacec5274fb799e60725412ebae40cced3d")
 set(DAVIX_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/DAVIX-prefix)
 set(DAVIX_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
