@@ -468,14 +468,17 @@ void ReadWriteCarray(const char *outFileNameBase)
    auto size = 0;
    int v[maxArraySize];
    bool vb[maxArraySize];
+   long int vl[maxArraySize];
    t.Branch("size", &size, "size/I");
    t.Branch("v", v, "v[size]/I");
    t.Branch("vb", vb, "vb[size]/O");
+   t.Branch("vl", vl, "vl[size]/G");
 
    // Size 1
    size = 1;
    v[0] = 12;
    vb[0] = true;
+   vl[0] = 8589934592; // 2**33
    t.Fill();
 
    // Size 0 (see ROOT-9860)
@@ -487,6 +490,7 @@ void ReadWriteCarray(const char *outFileNameBase)
    for (auto i : ROOT::TSeqU(size)) {
       v[i] = 84;
       vb[i] = true;
+      vl[i] = 42;
    }
    t.Fill();
 
@@ -498,6 +502,9 @@ void ReadWriteCarray(const char *outFileNameBase)
    vb[0] = true;
    vb[1] = false;
    vb[2] = true;
+   vl[0] = -1;
+   vl[1] = 0;
+   vl[2] = 1;
    t.Fill();
 
    t.Write();
@@ -509,30 +516,36 @@ void ReadWriteCarray(const char *outFileNameBase)
       TTreeReader r(treename, &f2);
       TTreeReaderArray<int> rv(r, "v");
       TTreeReaderArray<bool> rvb(r, "vb");
+      TTreeReaderArray<long int> rvl(r, "vl");
 
       // Size 1
-      r.Next();
+      EXPECT_TRUE(r.Next());
       EXPECT_EQ(rv.GetSize(), 1u);
       EXPECT_EQ(rv[0], 12);
       EXPECT_EQ(rvb.GetSize(), 1u);
       EXPECT_TRUE(rvb[0]);
+      EXPECT_EQ(rvl.GetSize(), 1u);
+      EXPECT_EQ(rvl[0], 8589934592);
 
       // Size 0
-      r.Next();
+      EXPECT_TRUE(r.Next());
       EXPECT_EQ(rv.GetSize(), 0u);
       EXPECT_EQ(rvb.GetSize(), 0u);
+      EXPECT_EQ(rvl.GetSize(), 0u);
 
       // Size 100k
-      r.Next();
+      EXPECT_TRUE(r.Next());
       EXPECT_EQ(rv.GetSize(), 100000u);
       EXPECT_EQ(rvb.GetSize(), 100000u);
       for (auto e : rv)
          EXPECT_EQ(e, 84);
       for (auto e : rvb)
          EXPECT_TRUE(e);
+      for (auto e : rvl)
+         EXPECT_EQ(e, 42);
 
       // Size 3
-      r.Next();
+      EXPECT_TRUE(r.Next());
       EXPECT_EQ(rv.GetSize(), 3u);
       EXPECT_EQ(rv[0], 42);
       EXPECT_EQ(rv[1], 43);
@@ -541,6 +554,12 @@ void ReadWriteCarray(const char *outFileNameBase)
       EXPECT_TRUE(rvb[0]);
       EXPECT_FALSE(rvb[1]);
       EXPECT_TRUE(rvb[2]);
+      EXPECT_EQ(rvl.GetSize(), 3u);
+      EXPECT_EQ(rvl[0], -1);
+      EXPECT_EQ(rvl[1], 0);
+      EXPECT_EQ(rvl[2], 1);
+
+      EXPECT_FALSE(r.Next());
    };
 
    // read and write using RDataFrame
@@ -549,7 +568,8 @@ void ReadWriteCarray(const char *outFileNameBase)
    outputChecker(outfname1.c_str());
 
    const auto outfname2 = outFileNameBaseStr + "_out2.root";
-   RDataFrame(treename, fname).Snapshot<int, RVec<int>, RVec<bool>>(treename, outfname2, {"size", "v", "vb"});
+   RDataFrame(treename, fname)
+      .Snapshot<int, RVec<int>, RVec<bool>, RVec<long int>>(treename, outfname2, {"size", "v", "vb", "vl"});
    outputChecker(outfname2.c_str());
 
    gSystem->Unlink(fname.c_str());
