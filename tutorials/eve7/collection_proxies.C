@@ -422,7 +422,7 @@ public:
       return ptr;
    }
 
-   void LoadCurrentEvent(REveDataCollection* collection)
+   void SetDataItemsFromEvent(REveDataCollection* collection)
    {
       for (auto &l : fEvent->fData) {
          TIter next(l);
@@ -446,14 +446,14 @@ public:
        }
    }
 
-   void NextEvent()
+   void LoadEvent()
    {
       m_inEventLoading = true;
 
       for (auto &el: m_collections->RefChildren())
       {
          auto c = dynamic_cast<REveDataCollection *>(el);
-         LoadCurrentEvent(c);
+         SetDataItemsFromEvent(c);
       }
 
       for (auto proxy : m_builders)
@@ -469,7 +469,7 @@ public:
       m_collections->AddElement(collection);
 
       // load data
-      LoadCurrentEvent(collection);
+      SetDataItemsFromEvent(collection);
 
       // GL view types
       auto glBuilder = makeGLBuilderForType(collection->GetItemClass());
@@ -584,10 +584,10 @@ class EventManager : public REveElement
 {
 private:
    Event* fEvent;
-   CollectionManager* m_xymng;
+   CollectionManager* fCMng;
 
 public:
-   EventManager(Event* e, CollectionManager* m): fEvent(e), m_xymng(m) {}
+   EventManager(Event* e, CollectionManager* m): fEvent(e), fCMng(m) {}
 
    virtual ~EventManager() {}
 
@@ -597,7 +597,7 @@ public:
       eveMng->GetSelection()->ClearSelection();
       eveMng->GetHighlight()->ClearSelection();
       fEvent->Create();
-      m_xymng->NextEvent();
+      fCMng->LoadEvent();
       eveMng->EnableRedraw();
    }
 
