@@ -761,6 +761,15 @@ class Regression24CppPythonInheritance(MyTestCase):
 
        self.assertEqual(a.GetName(), b.GetName())
 
+   def test8ConstructorAllDefaultPars(self):
+       """Invocation of a constructor that has default values for all its parameters"""
+       # 6578
+       class pMainFrame(ROOT.TGMainFrame):
+           def __init__(self, parent, width, height ):
+               ROOT.TGMainFrame.__init__(self, parent, width, height)
+
+       window = pMainFrame(ROOT.gClient.GetRoot(), 200, 200)
+
 
 ## actual test run
 if __name__ == '__main__':
