@@ -453,8 +453,8 @@ std::unique_ptr<RooFitResult> PDFTest::runBatchFit(RooAbsPdf* pdf) {
       RooFit::BatchMode(true),
       RooFit::SumW2Error(false),
       RooFit::Optimize(1),
-      RooFit::PrintLevel(_printLevel), RooFit::Save()
-//      ,RooFit::NumCPU(8)
+      RooFit::PrintLevel(_printLevel), RooFit::Save(),
+      _multiProcess > 0 ? RooFit::NumCPU(_multiProcess) : RooCmdArg()
   );
   std::cout << batchTimer;
   EXPECT_NE(result, nullptr);
