@@ -200,13 +200,28 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
   RooArgSet* observables = _pdf->getObservables(*_dataUniform);
   RooArgSet* parameters  = _pdf->getParameters(*_dataUniform);
 
+#ifdef ROOFIT_NEW_BATCH_INTERFACE
+  BatchHelpers::RunContext evalData;
+  auto callBatchFunc = [compareLogs,&evalData,this](const RooAbsPdf& pdf, std::size_t maxSize, const RooArgSet* theNormSet)
+      -> RooSpan<const double> {
+    _dataUniform->getBatches(evalData, 0, maxSize);
+
+    if (compareLogs) {
+      return pdf.getLogProbabilities(evalData, theNormSet);
+    } else {
+      return pdf.getValues(evalData, theNormSet);
+    }
+  };
+#else
   auto callBatchFunc = [compareLogs](const RooAbsPdf& pdf, std::size_t maxSize, const RooArgSet* theNormSet)
       -> RooSpan<const double> {
-    if (compareLogs)
+    if (compareLogs) {
       return pdf.getLogValBatch(0, maxSize, theNormSet);
-    else
+    } else {
       return pdf.getValBatch(0, maxSize, theNormSet);
+    }
   };
+#endif
 
   auto callScalarFunc = [compareLogs](const RooAbsPdf& pdf, const RooArgSet* theNormSet) {
     if (compareLogs)
@@ -324,7 +339,12 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
       try {
         *observables = *_dataUniform->get(i);
         _pdf->getVal(normSet);
+
+#ifdef ROOFIT_NEW_BATCH_INTERFACE
+        BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*_pdf, evalData, i, normSet, toleranceCompare);
+#else
         BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*_pdf, i, normSet, toleranceCompare);
+#endif
 
       } catch (std::exception& e) {
         std::cerr << "ERROR when checking batch computation for event " << i << ":\n"
