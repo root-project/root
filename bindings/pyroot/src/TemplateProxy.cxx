@@ -387,6 +387,10 @@ namespace {
 
 } // unnamed namespace
 
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 //= PyROOT template proxy type ===============================================
 PyTypeObject TemplateProxy_Type = {
@@ -452,5 +456,9 @@ PyTypeObject TemplateProxy_Type = {
 #endif
 #endif
 };
+
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic pop
+#endif
 
 } // namespace PyROOT
