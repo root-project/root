@@ -24,6 +24,8 @@
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveViewContext.hxx>
 #include <ROOT/REveBoxSet.hxx>
+#include <ROOT/REveSelection.hxx>
+#include <ROOT/REveCalo.hxx>
 
 #include "TGeoTube.h"
 #include "TROOT.h"
@@ -31,35 +33,37 @@
 #include "TParticle.h"
 #include "TRandom.h"
 #include "TApplication.h"
+#include "TFile.h"
+#include "TH2F.h"
 #include <iostream>
 
-namespace REX = ROOT::Experimental;
+
 
 bool gRhoZView = false;
 
-REX::REveManager *eveMng = nullptr;
+ROOT::Experimental::REveManager *eveMng = nullptr;
 
-REX::REveProjectionManager* g_projMng = nullptr;
-REX::REveScene* g_projScene = nullptr;
+using namespace ROOT::Experimental;
+REveProjectionManager* g_projMng = nullptr;
+REveScene* g_projScene = nullptr;
 
 //==============================================================================
 //============== EMULATE FRAMEWORK CLASSES =====================================
 //==============================================================================
 
-using namespace ROOT::Experimental;
 
 // a demo class, can be provided from experiment framework
 class Jet : public TParticle
 {
 private:
-   float m_etaSize{0};
-   float m_phiSize{0};
+   float fEtaSize{0};
+   float fPhiSize{0};
 
 public:
-   float GetEtaSize() const { return m_etaSize; }
-   float GetPhiSize() const { return m_phiSize; }
-   void  SetEtaSize(float iEtaSize) { m_etaSize = iEtaSize; }
-   void  SetPhiSize(float iPhiSize) { m_phiSize = iPhiSize; }
+   float GetEtaSize() const { return fEtaSize; }
+   float GetPhiSize() const { return fPhiSize; }
+   void  SetEtaSize(float iEtaSize) { fEtaSize = iEtaSize; }
+   void  SetPhiSize(float iPhiSize) { fPhiSize = iPhiSize; }
 
   Jet(Int_t pdg, Int_t status, Int_t mother1, Int_t mother2, Int_t daughter1, Int_t daughter2,
         Double_t px, Double_t py, Double_t pz, Double_t etot) :
@@ -112,7 +116,7 @@ public:
          jet->SetPhiSize(r.Uniform(0.01, 0.3));
          list->Add(jet);
       }
-      m_data.push_back(list);
+      fData.push_back(list);
    }
 
    void MakeParticles(int N)
@@ -142,7 +146,7 @@ public:
 
          list->Add(particle);
       }
-      m_data.push_back(list);
+      fData.push_back(list);
    }
 
    void MakeRecHits(int N)
@@ -161,16 +165,16 @@ public:
          auto rechit = new RecHit(pt, x, y, z);
          list->Add(rechit);
       }
-      m_data.push_back(list);
+      fData.push_back(list);
    }
 
-   std::vector<TList*> m_data;
+   std::vector<TList*> fData;
 
    void Clear()
    {
-      for (auto &l : m_data)
+      for (auto &l : fData)
          delete l;
-      m_data.clear();
+      fData.clear();
    }
 
    void Create()
@@ -342,14 +346,13 @@ public:
 //== XY MANGER  ================================================================
 //==============================================================================
 
-class XYManager
+class CollectionManager
 {
 private:
-   Event                    *m_event{nullptr};
+   Event                    *fEvent{nullptr};
 
    std::vector<REveScene *>  m_scenes;
    REveViewContext          *m_viewContext {nullptr};
-   REveProjectionManager    *m_mngRhoZ     {nullptr};
 
    std::vector<REveDataProxyBuilderBase *> m_builders;
 
@@ -357,7 +360,7 @@ private:
    bool       m_inEventLoading {false};
 
 public:
-   XYManager(Event* event) : m_event(event)
+   CollectionManager(Event* event) : fEvent(event)
    {
       //view context
       float r = 300;
@@ -392,51 +395,23 @@ public:
 
       m_viewContext->SetTableViewInfo(tableInfo);
 
-      createScenesAndViews();
-   }
 
-   void createScenesAndViews()
-   {
-      // collections
+
+      for (auto &c : eveMng->GetScenes()->RefChildren()) {
+         if (c != eveMng->GetGlobalScene() && strncmp(c->GetCName(), "Geometry", 8) )
+         {
+            printf("Add scene %s\n", c->GetCName());
+            m_scenes.push_back((REveScene*)c);
+         }
+         if (!strncmp(c->GetCName(),"Table", 5))
+         c->AddElement(m_viewContext->GetTableViewInfo());
+
+      }
+
+     // collections
       m_collections = eveMng->SpawnNewScene("Collections", "Collections");
-
-      // 3D
-      m_scenes.push_back(eveMng->GetEventScene());
-
-      // Geometry
-      auto b1 = new REveGeoShape("Barrel 1");
-      float dr = 3;
-      b1->SetShape(new TGeoTube(m_viewContext->GetMaxR() , m_viewContext->GetMaxR() + dr, m_viewContext->GetMaxZ()));
-      b1->SetMainColor(kCyan);
-      eveMng->GetGlobalScene()->AddElement(b1);
-
-      // RhoZ
-      if (gRhoZView)
-      {
-         auto rhoZEventScene = eveMng->SpawnNewScene("RhoZ Scene","Projected");
-         m_mngRhoZ = new REveProjectionManager(REveProjection::kPT_RhoZ);
-         m_mngRhoZ->SetImportEmpty(true);
-         g_projMng = m_mngRhoZ;
-         auto rhoZView = eveMng->SpawnNewViewer("RhoZ View", "");
-         rhoZView->AddScene(rhoZEventScene);
-         m_scenes.push_back(rhoZEventScene);
-         g_projScene = rhoZEventScene;
-
-         auto pgeoScene = eveMng->SpawnNewScene("Projection Geometry","xxx");
-         m_mngRhoZ->ImportElements(b1,pgeoScene );
-         rhoZView->AddScene(pgeoScene);
-      }
-
-      // Table
-      if (1)
-      {
-         auto tableScene = eveMng->SpawnNewScene ("Tables", "Tables");
-         auto tableView  = eveMng->SpawnNewViewer("Table",  "Table View");
-         tableView->AddScene(tableScene);
-         tableScene->AddElement(m_viewContext->GetTableViewInfo());
-         m_scenes.push_back(tableScene);
-      }
    }
+
 
    // this should be handeled with framefor plugins
    REveDataProxyBuilderBase* makeGLBuilderForType(TClass* c)
@@ -449,7 +424,7 @@ public:
 
    void LoadCurrentEvent(REveDataCollection* collection)
    {
-      for (auto &l : m_event->m_data) {
+      for (auto &l : fEvent->fData) {
          TIter next(l);
          if (collection->GetName() == std::string(l->GetName()))
          {
@@ -504,11 +479,11 @@ public:
       {
          REveElement *product = glBuilder->CreateProduct(scene->GetTitle(), m_viewContext);
 
-         if (strncmp(scene->GetCTitle(), "Table", 5) == 0) continue;
+         if (strncmp(scene->GetCName(), "Tables", 5) == 0) continue;
 
          if (!strncmp(scene->GetCTitle(), "Projected", 8))
          {
-            m_mngRhoZ->ImportElements(product, scene);
+            g_projMng->ImportElements(product, scene);
          }
          else
          {
@@ -519,30 +494,33 @@ public:
       glBuilder->Build();
 
       // Table view types
+
       auto tableBuilder = new REveTableProxyBuilder();
       tableBuilder->SetHaveAWindow(true);
       tableBuilder->SetCollection(collection);
       REveElement* tablep = tableBuilder->CreateProduct("table-type", m_viewContext);
       auto tableMng =  m_viewContext->GetTableViewInfo();
-      auto tableEntries =  tableMng->RefTableEntries(collection->GetItemClass()->GetName());
-      auto te = tableEntries[0];
-      collection->GetItemList()->SetTooltipExpression(te.fName, te.fExpression);
-
       if (showInTable)
       {
          tableMng->SetDisplayedCollection(collection->GetElementId());
       }
-      tableMng->AddDelegate([=]() { tableBuilder->ConfigChanged(); });
-      for (REveScene* scene : m_scenes)
+
+      for (auto s : m_scenes)
       {
-         if (strncmp(scene->GetCTitle(), "Table", 5) == 0)
+         if (strncmp(s->GetCTitle(), "Table", 5) == 0)
          {
-            scene->AddElement(tablep);
+            s->AddElement(tablep);
             tableBuilder->Build(collection, tablep, m_viewContext );
          }
       }
+      tableMng->AddDelegate([=]() { tableBuilder->ConfigChanged(); });
       m_builders.push_back(tableBuilder);
 
+
+      // set tooltip expression for items
+      auto tableEntries =  tableMng->RefTableEntries(collection->GetItemClass()->GetName());
+      auto te = tableEntries[0];
+      collection->GetItemList()->SetTooltipExpression(te.fName, te.fExpression);
 
       collection->GetItemList()->SetItemsChangeDelegate([&] (REveDataItemList* collection, const REveDataCollection::Ids_t& ids)
                                     {
@@ -605,11 +583,11 @@ public:
 class EventManager : public REveElement
 {
 private:
-   Event* m_event;
-   XYManager* m_xymng;
+   Event* fEvent;
+   CollectionManager* m_xymng;
 
 public:
-   EventManager(Event* e, XYManager* m): m_event(e), m_xymng(m) {}
+   EventManager(Event* e, CollectionManager* m): fEvent(e), m_xymng(m) {}
 
    virtual ~EventManager() {}
 
@@ -618,7 +596,7 @@ public:
       eveMng->DisableRedraw();
       eveMng->GetSelection()->ClearSelection();
       eveMng->GetHighlight()->ClearSelection();
-      m_event->Create();
+      fEvent->Create();
       m_xymng->NextEvent();
       eveMng->EnableRedraw();
    }
@@ -682,8 +660,33 @@ void collection_proxies(bool proj=true)
 
    gRhoZView = true;
 
+   // RhoZ
+   if (gRhoZView)
+   {
+      auto rhoZEventScene = eveMng->SpawnNewScene("RhoZ Scene","Projected");
+      g_projMng = new REveProjectionManager(REveProjection::kPT_RhoZ);
+      g_projMng->SetImportEmpty(true);
+
+      auto rhoZView = eveMng->SpawnNewViewer("RhoZ View");
+      rhoZView->AddScene(rhoZEventScene);
+      g_projScene = rhoZEventScene;
+
+      auto pgeoScene = eveMng->SpawnNewScene("Geometry projected");
+      // g_projMng->ImportElements(b1,pgeoScene );
+      rhoZView->AddScene(pgeoScene);
+   }
+
+      // Table
+      if (1)
+      {
+         auto tableScene = eveMng->SpawnNewScene ("Tables", "Tables");
+         auto tableView  = eveMng->SpawnNewViewer("Table",  "Table View");
+         tableView->AddScene(tableScene);
+      }
+
+
    // debug settings
-   auto xyManager = new XYManager(event);
+   auto xyManager = new CollectionManager(event);
 
    if (1)
    {
@@ -706,7 +709,7 @@ void collection_proxies(bool proj=true)
    {
       REveDataCollection* hitCollection = new REveDataCollection("RecHits");
       hitCollection->SetItemClass(RecHit::Class());
-      hitCollection->SetMainColor(kBlue);
+      hitCollection->SetMainColor(kOrange);
       hitCollection->SetFilterExpr("i.fPt > 5");
       xyManager->addCollection(hitCollection, false);
    }
