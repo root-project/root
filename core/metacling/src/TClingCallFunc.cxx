@@ -986,7 +986,18 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
    //
    const FunctionDecl *FD = GetDecl();
    if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD)) {
-      (void) CD;
+      if (N <= 1 && llvm::isa<UsingShadowDecl>(GetFunctionOrShadowDecl())) {
+         auto SpecMemKind = fInterp->getSema().getSpecialMember(CD);
+         if ((N == 0 && SpecMemKind == clang::Sema::CXXDefaultConstructor) ||
+             (N == 1 &&
+              (SpecMemKind == clang::Sema::CXXCopyConstructor || SpecMemKind == clang::Sema::CXXMoveConstructor))) {
+            // Using declarations cannot inject special members; do not call them
+            // as such. This might happen by using `Base(Base&, int = 12)`, which
+            // is fine to be called as `Derived d(someBase, 42)` but not as
+            // copy constructor of `Derived`.
+            return;
+         }
+      }
       make_narg_ctor_with_return(N, class_name, buf, indent_level);
       return;
    }
