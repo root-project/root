@@ -417,3 +417,72 @@ public:
    // Issue #6482
    // clInhTemplateFun->GetListOfFunctionTemplates(true)->ls(); // FindObject("InheritTemplateFun")-
 }
+
+TEST(TClingMethodInfo, Ctors)
+{
+   gInterpreter->Declare(R"CODE(
+namespace BUG6578 {
+  struct Base1 {
+    Base1(int = 42) {}
+   protected:
+    Base1(const Base1&, std::string = "abc") {}
+  };
+
+  struct Base2 {
+    Base2() {}
+    Base2(const Base2&) {}
+    Base2(int, int) {}
+  };
+
+  class Derived: public Base1, protected Base2 {
+  private: // This is irrelevant - access of used ctors is defined by access of base class!
+    using Base1::Base1; // Base1(int), Base1(Base1&, string)
+  public: // This is irrelevant - access of used ctors is defined by access of base class!
+    using Base2::Base2; // Base2(int, int)
+    Derived(const Derived&) = delete;
+    // Derived()
+  };
+}
+)CODE");
+
+   TClassRef c("BUG6578::Derived");
+   ASSERT_TRUE(c) << "Cannot find TClass for BUG6578::Derived";
+
+   TListOfFunctions *methods = (TListOfFunctions*)c->GetListOfMethods();
+   ASSERT_TRUE(methods) << "Cannot find methods for BUG6578::Derived";
+
+   std::map<std::string, int /*properties*/> ctorsExpected {
+      {"(int = 42)", kIsPublic},
+      {"(const BUG6578::Base1&, string = \"abc\")", kIsProtected},
+      {"(int, int)", kIsProtected}
+   };
+
+   for (TMethod *meth: TRangeDynCast<TMethod>(*methods)) {
+      if (!(meth->ExtraProperty() & kIsConstructor))
+         continue;
+      auto iCtorExpected = ctorsExpected.find(meth->GetSignature());
+      EXPECT_FALSE(iCtorExpected == ctorsExpected.end())
+         << "Unexpected constructor overload " << meth->GetPrototype();
+      if (iCtorExpected != ctorsExpected.end()) {
+         EXPECT_EQ(meth->Property() & iCtorExpected->second, iCtorExpected->second)
+         << "Unexpected properties for " << meth->GetPrototype();
+         ctorsExpected.erase(iCtorExpected);
+
+         if (meth->Property() & kIsPublic) {
+            CallFunc_t *callf = gInterpreter->CallFunc_Factory();
+            MethodInfo_t *methInfo = gInterpreter->MethodInfo_Factory(meth->GetDeclId());
+            gInterpreter->CallFunc_SetFunc(callf, methInfo);
+            gInterpreter->MethodInfo_Delete(methInfo);
+            const TInterpreter::CallFuncIFacePtr_t &faceptr = gInterpreter->CallFunc_IFacePtr(callf);
+            gInterpreter->CallFunc_Delete(callf); // does not touch IFacePtr
+            EXPECT_NE(faceptr.fGeneric, nullptr);
+         }
+      }
+   }
+   EXPECT_EQ(ctorsExpected.size(), 0);
+   if (ctorsExpected.size()) {
+      std::cerr << "Expected constructors that were not found:\n";
+      for (auto &&iCtorExpected: ctorsExpected)
+         std::cerr << "   " << iCtorExpected.first << '\n';
+   }
+}
