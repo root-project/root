@@ -112,6 +112,11 @@ static PyNumberMethods nullptr_as_number = {
 
    };
 
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 static PyTypeObject PyNullPtr_t_Type = {
    PyVarObject_HEAD_INIT( &PyType_Type, 0 )
    "nullptr_t",        // tp_name
@@ -141,6 +146,10 @@ static PyTypeObject PyNullPtr_t_Type = {
 #endif
 #endif
 };
+
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic pop
+#endif
 
 PyObject _PyROOT_NullPtrStruct = {
   _PyObject_EXTRA_INIT

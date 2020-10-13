@@ -919,6 +919,11 @@ namespace {
       return result;
    }
 
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
    PyTypeObject VectorIter_Type = {
       PyVarObject_HEAD_INIT( &PyType_Type, 0 )
       (char*)"ROOT.vectoriter",  // tp_name
@@ -951,6 +956,10 @@ namespace {
 #endif
 #endif
    };
+
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic pop
+#endif
 
    static PyObject* vector_iter( PyObject* v ) {
       vectoriterobject* vi = PyObject_GC_New( vectoriterobject, &VectorIter_Type );

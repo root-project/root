@@ -35,6 +35,11 @@ PyObject* TTupleOfInstances_New(
    return arr;
 }
 
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 //= PyROOT custom tuple-like array type ======================================
 PyTypeObject TTupleOfInstances_Type = {
    PyVarObject_HEAD_INIT( &PyType_Type, 0 )
@@ -100,5 +105,9 @@ PyTypeObject TTupleOfInstances_Type = {
 #endif
 #endif
 };
+
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic pop
+#endif
 
 } // namespace PyROOT

@@ -390,6 +390,10 @@ PYROOT_STUB( div, /, PyStrings::gDiv )
 
 } // unnamed namespace
 
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 //= PyROOT object proxy type =================================================
 PyTypeObject ObjectProxy_Type = {
@@ -458,5 +462,9 @@ PyTypeObject ObjectProxy_Type = {
 #endif
 #endif
 };
+
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic pop
+#endif
 
 } // namespace PyROOT

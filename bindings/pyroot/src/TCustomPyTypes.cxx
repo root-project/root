@@ -12,6 +12,11 @@
 
 namespace PyROOT {
 
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 //= float type allowed for reference passing =================================
 PyTypeObject TCustomFloat_Type = {     // python float is a C/C++ double
    PyVarObject_HEAD_INIT( &PyType_Type, 0 )
@@ -349,5 +354,9 @@ PyTypeObject TCustomInstanceMethod_Type = {
 #endif
 #endif
 };
+
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic pop
+#endif
 
 } // namespace PyROOT

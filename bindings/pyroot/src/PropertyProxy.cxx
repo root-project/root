@@ -125,6 +125,10 @@ namespace {
 
 } // unnamed namespace
 
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 //= PyROOT property proxy type ===============================================
 PyTypeObject PropertyProxy_Type = {
@@ -190,6 +194,10 @@ PyTypeObject PropertyProxy_Type = {
 #endif
 #endif
 };
+
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic pop
+#endif
 
 } // namespace PyROOT
 
