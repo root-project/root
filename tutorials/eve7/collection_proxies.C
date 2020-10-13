@@ -49,7 +49,7 @@ REX::REveScene* g_projScene = nullptr;
 using namespace ROOT::Experimental;
 
 // a demo class, can be provided from experiment framework
-class XYJet : public TParticle
+class Jet : public TParticle
 {
 private:
    float m_etaSize{0};
@@ -61,12 +61,12 @@ public:
    void  SetEtaSize(float iEtaSize) { m_etaSize = iEtaSize; }
    void  SetPhiSize(float iPhiSize) { m_phiSize = iPhiSize; }
 
-  XYJet(Int_t pdg, Int_t status, Int_t mother1, Int_t mother2, Int_t daughter1, Int_t daughter2,
+  Jet(Int_t pdg, Int_t status, Int_t mother1, Int_t mother2, Int_t daughter1, Int_t daughter2,
         Double_t px, Double_t py, Double_t pz, Double_t etot) :
     TParticle(pdg, status, mother1, mother2, daughter1, daughter2, px, py, pz, etot,  0, 0, 0, 0)
   {}
 
-   ClassDef(XYJet, 1);
+   ClassDef(Jet, 1);
 };
 
 class RecHit : public TObject
@@ -96,7 +96,7 @@ public:
       TRandom &r = *gRandom;
       r.SetSeed(0);
       TList* list = new TList();
-      list->SetName("XYJets");
+      list->SetName("Jets");
       for (int i = 1; i <= N; ++i)
       {
          double pt  = r.Uniform(0.5, 10);
@@ -107,7 +107,7 @@ public:
          double py = pt * std::sin(phi);
          double pz = pt * (1. / (std::tan(2*std::atan(std::exp(-eta)))));
 
-         auto jet = new XYJet(0, 0, 0, 0, 0, 0, px, py, pz, std::sqrt(px*px + py*py + pz*pz + 80*80));
+         auto jet = new Jet(0, 0, 0, 0, 0, 0, px, py, pz, std::sqrt(px*px + py*py + pz*pz + 80*80));
          jet->SetEtaSize(r.Uniform(0.02, 0.2));
          jet->SetPhiSize(r.Uniform(0.01, 0.3));
          list->Add(jet);
@@ -120,7 +120,7 @@ public:
       TRandom &r = *gRandom;
       r.SetSeed(0);
       TList* list = new TList();
-      list->SetName("XYTracks");
+      list->SetName("Tracks");
       for (int i = 1; i <= N; ++i)
       {
          double pt  = r.Uniform(0.5, 10);
@@ -188,13 +188,13 @@ public:
 //== PROXY BUILDERS ============================================================
 //==============================================================================
 
-class XYJetProxyBuilder: public REveDataSimpleProxyBuilderTemplate<XYJet>
+class JetProxyBuilder: public REveDataSimpleProxyBuilderTemplate<Jet>
 {
    bool HaveSingleProduct() const override { return false; }
 
-   using REveDataSimpleProxyBuilderTemplate<XYJet>::BuildViewType;
+   using REveDataSimpleProxyBuilderTemplate<Jet>::BuildViewType;
 
-   void BuildViewType(const XYJet& dj, int idx, REveElement* iItemHolder,
+   void BuildViewType(const Jet& dj, int idx, REveElement* iItemHolder,
                       std::string viewType, const REveViewContext* context) override
    {
       auto jet = new REveJetCone();
@@ -381,7 +381,7 @@ public:
          column("eta", 3, "i.Eta()").
          column("phi", 3, "i.Phi()");
 
-      tableInfo->table("XYJet").
+      tableInfo->table("Jet").
          column("eta",     1, "i.Eta()").
          column("phi",     1, "i.Phi()").
          column("etasize", 2, "i.GetEtaSize()").
@@ -561,7 +561,7 @@ public:
       {
          for (auto &el : m_collections->RefChildren())
          {
-            if (el->GetName() == "XYTracks")
+            if (el->GetName() == "Tracks")
                mngTable->SetDisplayedCollection(el->GetElementId());
          }
       }
@@ -687,7 +687,7 @@ void collection_proxies(bool proj=true)
 
    if (1)
    {
-      REveDataCollection* trackCollection = new REveDataCollection("XYTracks");
+      REveDataCollection* trackCollection = new REveDataCollection("Tracks");
       trackCollection->SetItemClass(TParticle::Class());
       trackCollection->SetMainColor(kGreen);
       trackCollection->SetFilterExpr("i.Pt() > 4.1 && std::abs(i.Eta()) < 1");
@@ -696,9 +696,9 @@ void collection_proxies(bool proj=true)
 
    if (1)
    {
-      REveDataCollection* jetCollection = new REveDataCollection("XYJets");
-      jetCollection->SetItemClass(XYJet::Class());
-      jetCollection->SetMainColor(kRed);
+      REveDataCollection* jetCollection = new REveDataCollection("Jets");
+      jetCollection->SetItemClass(Jet::Class());
+      jetCollection->SetMainColor(kYellow);
       xyManager->addCollection(jetCollection, false);
    }
 
