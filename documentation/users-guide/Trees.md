@@ -585,6 +585,8 @@ The symbols used for the type are:
 -   `i`: a 32 bit unsigned integer
 -   `L`: a 64 bit signed integer
 -   `l`: a 64 bit unsigned integer
+-   `G`: a long signed integer, stored as 64 bit
+-   `g`: a long unsigned integer, stored as 64 bit
 -   `F`: a 32 bit floating point
 -   `D`: a 64 bit floating point
 -   `O`: [the letter 'o', not a zero] a boolean (Bool\_t)
