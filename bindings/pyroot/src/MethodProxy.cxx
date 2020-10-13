@@ -837,6 +837,10 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 //= PyROOT method proxy type =================================================
 PyTypeObject MethodProxy_Type = {
@@ -902,6 +906,10 @@ PyTypeObject MethodProxy_Type = {
 #endif
 #endif
 };
+
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic pop
+#endif
 
 } // namespace PyROOT
 
