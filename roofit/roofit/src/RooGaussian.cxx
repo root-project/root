@@ -99,43 +99,19 @@ void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
 /// \return A span with the computed values.
 
 RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  auto xData = x.getValBatch(begin, batchSize);
-  auto meanData = mean.getValBatch(begin, batchSize);
-  auto sigmaData = sigma.getValBatch(begin, batchSize);
-
-  //Now explicitly write down all possible template instantiations of compute() above:
-  const bool batchX = !xData.empty();
-  const bool batchMean = !meanData.empty();
-  const bool batchSigma = !sigmaData.empty();
-
-  if (!(batchX || batchMean || batchSigma)) {
+  EvaluateInfo info = getInfo( {&x, &mean, &sigma}, begin, batchSize );
+  if (info.nBatches == 0) {
     return {};
   }
-
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, info.size);
 
-  if (batchX && !batchMean && !batchSigma) {
-    compute(output, xData, BracketAdapter<double>(mean), BracketAdapter<double>(sigma));
+  if (info.nBatches==1 && !xData.empty()) {
+    compute(output, xData.data(), BracketAdapter<double>(mean), BracketAdapter<double>(sigma));
   }
-  else if (batchX && batchMean && !batchSigma) {
-    compute(output, xData, meanData, BracketAdapter<double>(sigma));
+  else {
+    compute(output, BracketAdapterWithMask(x,xData), BracketAdapterWithMask(mean,mean.getValBatch(begin,info.size)), BracketAdapterWithMask(sigma,sigma.getValBatch(begin,info.size)));
   }
-  else if (batchX && !batchMean && batchSigma) {
-    compute(output, xData, BracketAdapter<double>(mean), sigmaData);
-  }
-  else if (batchX && batchMean && batchSigma) {
-    compute(output, xData, meanData, sigmaData);
-  }
-  else if (!batchX && batchMean && !batchSigma) {
-    compute(output, BracketAdapter<double>(x), meanData, BracketAdapter<double>(sigma));
-  }
-  else if (!batchX && !batchMean && batchSigma) {
-    compute(output, BracketAdapter<double>(x), BracketAdapter<double>(mean), sigmaData);
-  }
-  else if (!batchX && batchMean && batchSigma) {
-    compute(output, BracketAdapter<double>(x), meanData, sigmaData);
-  }
-
   return output;
 }
 

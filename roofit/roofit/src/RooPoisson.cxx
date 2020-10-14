@@ -114,25 +114,20 @@ void compute(const size_t n, double* __restrict output, Tx x, TMean mean,
 /// Compute Poisson values in batches.
 RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
-  auto xData = x.getValBatch(begin, batchSize);
-  auto meanData = mean.getValBatch(begin, batchSize);
-  const bool batchX = !xData.empty();
-  const bool batchMean = !meanData.empty();
-
-  if (!batchX && !batchMean) {
+  
+  EvaluateInfo info = getInfo( {&x, &mean}, begin, batchSize );
+  if (info.nBatches == 0) {
     return {};
   }
-  batchSize = findSmallestBatch({ xData, meanData });
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
-  if (batchX && !batchMean ) {
-    compute(batchSize, output.data(), xData, BracketAdapter<double>(mean), _protectNegative, _noRounding);
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !xData.empty()) {
+    compute(info.size, output.data(), xData.data(), BracketAdapter<double> (mean), _protectNegative, _noRounding);
   }
-  else if (!batchX && batchMean ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), meanData, _protectNegative, _noRounding);
-  }
-  else if (batchX && batchMean ) {
-    compute(batchSize, output.data(), xData, meanData, _protectNegative, _noRounding);
+  else { 
+    compute(info.size, output.data(), BracketAdapterWithMask (x,xData), BracketAdapterWithMask (mean,mean.getValBatch(begin,info.size)), _protectNegative, _noRounding);
   }
   return output;
 }
