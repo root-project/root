@@ -108,25 +108,19 @@ void compute(size_t n, double* __restrict output, Tx x, Tc c) {
 
 RooSpan<double> RooExponential::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
-  auto xData = x.getValBatch(begin, batchSize);
-  auto cData = c.getValBatch(begin, batchSize);
-  const bool batchX = !xData.empty();
-  const bool batchC = !cData.empty();
-
-  if (!batchX && !batchC) {
+  EvaluateInfo info = getInfo( {&x, &c}, begin, batchSize );
+  if (info.nBatches == 0) {
     return {};
   }
-  batchSize = BatchHelpers::findSmallestBatch({ xData, cData });
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
-  if (batchX && !batchC ) {
-    compute(batchSize, output.data(), xData, BracketAdapter<double>(c));
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !xData.empty()) {
+    compute(info.size, output.data(), xData.data(), BracketAdapter<double>(c));
   }
-  else if (!batchX && batchC ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), cData);
-  }
-  else if (batchX && batchC ) {
-    compute(batchSize, output.data(), xData, cData);
+  else {
+    compute(info.size, output.data(), BracketAdapterWithMask(x, xData), BracketAdapterWithMask(c, c.getValBatch(begin, info.size)));
   }
   return output;
 }
