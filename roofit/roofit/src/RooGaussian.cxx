@@ -24,13 +24,11 @@ Plain Gaussian p.d.f
 
 #include "RooFit.h"
 #include "BatchHelpers.h"
-#include "RooAbsReal.h"
-#include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooMath.h"
 #include "RooHelpers.h"
-
 #include "RooVDTHeaders.h"
+#include "RooFitComputeInterface.h"
 
 using namespace BatchHelpers;
 using namespace std;
@@ -116,30 +114,9 @@ RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchS
 }
 
 
-
 RooSpan<double> RooGaussian::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
-  auto xData = x->getValues(evalData, normSet);
-  auto meanData = mean->getValues(evalData, normSet);
-  auto sigmaData = sigma->getValues(evalData, normSet);
-
-  std::size_t batchLength = BatchHelpers::findSmallestBatch({xData, meanData, sigmaData});
-  auto output = evalData.makeBatch(this, batchLength);
-
-  if (xData.size() >= 1 && meanData.size() == 1 && sigmaData.size() == 1) {
-    compute(output, xData,
-        BracketAdapter<double>(meanData[0]),
-        BracketAdapter<double>(sigmaData[0]));
-  }
-  else {
-    compute(output,
-        BracketAdapterWithMask(xData[0], xData),
-        BracketAdapterWithMask(meanData[0], meanData),
-        BracketAdapterWithMask(sigmaData[0], sigmaData));
-  }
-
-  return output;
+  return RooFitCompute::dispatch->computeGaussian(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -37,6 +37,7 @@ http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
+#include "RooFitComputeInterface.h"
 
 #include "TMath.h"
 
@@ -141,6 +142,7 @@ Double_t RooBernstein::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 namespace {
 //Author: Emmanouil Michalainas, CERN 16 AUGUST 2019  
 
@@ -213,6 +215,21 @@ RooSpan<double> RooBernstein::evaluateBatch(std::size_t begin, std::size_t batch
   const double xmax = _x.max();
   const double xmin = _x.min();
   compute(batchSize, xmax, xmin, output.data(), xData.data(), _coefList);
+  return output;
+}
+
+
+RooSpan<double> RooBernstein::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  RooSpan<const double> xData = _x->getValues(evalData, normSet);
+  const size_t batchSize = xData.size();  
+  RooSpan<double> output = evalData.makeBatch(this, batchSize);
+
+  const int nCoef = _coefList.size();
+  std::vector<double> coef(nCoef);
+  for (int i=0; i<nCoef; i++) {
+    coef[i] = static_cast<RooAbsReal&>(_coefList[i]).getVal();
+  }
+  RooFitCompute::dispatch->computeBernstein(batchSize, output.data(), xData.data(), _x.min(), _x.max(), coef);
   return output;
 }
 

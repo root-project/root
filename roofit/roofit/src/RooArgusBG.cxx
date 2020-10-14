@@ -31,6 +31,7 @@ RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
 #include "RooMath.h"
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
+#include "RooFitComputeInterface.h"
 
 #include "TMath.h"
 
@@ -89,6 +90,7 @@ Double_t RooArgusBG::evaluate() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Compute ArgusBG values for all data points in the batch(es).
 
 namespace {
 //Author: Emmanouil Michalainas, CERN 19 AUGUST 2019  
@@ -134,6 +136,13 @@ RooSpan<double> RooArgusBG::evaluateBatch(std::size_t begin, std::size_t batchSi
     BracketAdapterWithMask (p,p.getValBatch(begin,info.size)));
   }
   return output;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of Argus distribution.  
+RooSpan<double> RooArgusBG::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeArgusBG(this, evalData, m->getValues(evalData, normSet), m0->getValues(evalData, normSet), c->getValues(evalData, normSet), p->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
