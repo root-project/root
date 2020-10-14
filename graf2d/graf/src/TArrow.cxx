@@ -155,6 +155,7 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 
 void TArrow::Paint(Option_t *option)
 {
+   if (!gPad) return; 
    Option_t *opt;
    if (option && strlen(option)) opt = option;
    else                          opt = (char*)GetOption();
@@ -173,6 +174,7 @@ void TArrow::Paint(Option_t *option)
 void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                         Float_t arrowsize, Option_t *option)
 {
+   if (!gPad) return; 
    // Compute the gPad coordinates in TRUE normalized space (NDC)
    Int_t iw = gPad->GetWw();
    Int_t ih = gPad->GetWh();
