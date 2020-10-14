@@ -543,6 +543,7 @@ void TPolyLine::Paint(Option_t *option)
 
 void TPolyLine::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
+   if (!gPad) return;
    if (n <= 0) return;
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill area attributes only if necessary

@@ -110,6 +110,7 @@ void TPaveLabel::Paint(Option_t *option)
 void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                       const char *label ,Option_t *option)
 {
+   if (!gPad) return;
    Int_t nch = strlen(label);
 
    // Draw the pave
