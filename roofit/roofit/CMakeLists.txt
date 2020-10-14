@@ -133,6 +133,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooUniform.cxx
     src/RooVoigtian.cxx
     src/RooJohnson.cxx
+    src/RooFitComputeLib.cxx
+    src/Initialisation.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LINKDEF
@@ -145,6 +147,49 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     Matrix
     MathCore
 )
+
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+
+	ROOT_LINKER_LIBRARY(RooFitCompute_SSE4.1
+    	src/RooFitComputeLib.cxx
+  	TYPE 
+    	SHARED
+  	DEPENDENCIES
+    	RooFit
+	)
+	
+	
+	ROOT_LINKER_LIBRARY(RooFitCompute_AVX2
+    	src/RooFitComputeLib.cxx
+  	TYPE 
+    	SHARED
+  	DEPENDENCIES
+    	RooFit
+	)
+	
+	ROOT_LINKER_LIBRARY(RooFitCompute_AVX512f
+    	src/RooFitComputeLib.cxx
+  	TYPE 
+    	SHARED
+  	DEPENDENCIES
+    	RooFit
+	)
+	
+	# Add -fno-signaling-nans, -fno-trapping-math and -O3 to enable autovectorization
+	# of the RooFitComputeLibrary (especially needed for GCC).
+	target_compile_options(RooFitCompute_SSE4.1 PRIVATE $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:$<$<CXX_COMPILER_ID:GNU>:-fno-signaling-nans> -fno-trapping-math -O3>)
+	target_compile_options(RooFitCompute_AVX2 PRIVATE $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:$<$<CXX_COMPILER_ID:GNU>:-fno-signaling-nans> -fno-trapping-math -O3>)
+	target_compile_options(RooFitCompute_AVX512f PRIVATE $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:$<$<CXX_COMPILER_ID:GNU>:-fno-signaling-nans> -fno-trapping-math -O3>)
+	
+	target_compile_options(RooFitCompute_SSE4.1 PRIVATE -msse4 -DRF_ARCH=SSE4)
+	target_compile_options(RooFitCompute_AVX2 PRIVATE -mavx2 -DRF_ARCH=AVX2)
+	target_compile_options(RooFitCompute_AVX512f PRIVATE -mavx512f -DRF_ARCH=AVX512F)
+	
+	target_include_directories(RooFitCompute_SSE4.1 PRIVATE ${VDT_INCLUDE_DIR})
+	target_include_directories(RooFitCompute_AVX2 PRIVATE ${VDT_INCLUDE_DIR})
+	target_include_directories(RooFitCompute_AVX512f PRIVATE ${VDT_INCLUDE_DIR})
+	
+endif() #CMAKE_SYSTEM_NAME MATCHES "Linux"
 
 if(vdt AND NOT builtin_vdt)
   target_include_directories(RooFit PRIVATE ${VDT_INCLUDE_DIR})

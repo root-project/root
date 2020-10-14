@@ -38,7 +38,11 @@ void doBanner() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Inspect cpu capabilities, and load architecture-specific libraries for RooFitCore/RooFit computations.
 void loadComputeLibrary() {
+  
+#if defined(R__RF_ARCHITECTURE_SPECIFIC_LIBS) && (defined(__GNUC__) || defined(__clang__))
+
   std::vector<std::string> libNames;
+  
 //  libNames.push_back("libRooFitCoreCompute");
 //  libNames.push_back("libRooFitCompute");
 #ifdef R__HAS_MATHMORE
@@ -52,7 +56,6 @@ void loadComputeLibrary() {
   }
 
   std::string libSuffix;
-#if defined(R__RF_ARCHITECTURE_SPECIFIC_LIBS) && (defined(__GNUC__) || defined(__clang__))
   if (__builtin_cpu_supports("avx2")) {
     libSuffix = "_AVX2";
   } else if (__builtin_cpu_supports("avx")) {
@@ -67,7 +70,6 @@ void loadComputeLibrary() {
   }
 #endif
 
-#endif
 
   for (auto&& libName : libNames) {
     libName += libSuffix;
@@ -77,10 +79,16 @@ void loadComputeLibrary() {
       throw std::runtime_error("RooFit was unable to load its computation library " + libName);
     }
     // Library should not have been loaded before we tried to do it.
-    if (returnValue == 1) {
+    else if (returnValue == 1) {
       throw std::logic_error("RooFit computation library " + libName + " was loaded before RooFit initialisation began.");
     }
+    else {
+      std::cout << "INFO: Library " << libName << " loaded succesfully." << std::endl;
+    }
   }
+
+#endif //defined(R__RF_ARCHITECTURE_SPECIFIC_LIBS) && (defined(__GNUC__) || defined(__clang__))
+
 }
 
 
