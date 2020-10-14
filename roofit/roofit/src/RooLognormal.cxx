@@ -27,8 +27,6 @@ The parameterization here is physics driven and differs from the ROOT::Math::log
 
 #include "RooLognormal.h"
 #include "RooFit.h"
-#include "RooAbsReal.h"
-#include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooMath.h"
 #include "RooVDTHeaders.h"
@@ -113,39 +111,20 @@ void compute(	size_t batchSize,
 
 RooSpan<double> RooLognormal::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
-  auto xData = x.getValBatch(begin, batchSize);
-  auto m0Data = m0.getValBatch(begin, batchSize);
-  auto kData = k.getValBatch(begin, batchSize);
-  const bool batchX = !xData.empty();
-  const bool batchM0 = !m0Data.empty();
-  const bool batchK = !kData.empty();
-
-  if (!batchX && !batchM0 && !batchK) {
+  
+  EvaluateInfo info = getInfo( {&x, &m0, &k}, begin, batchSize );
+  if (info.nBatches == 0) {
     return {};
   }
-  batchSize = findSmallestBatch({ xData, m0Data, kData });
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
-  if (batchX && !batchM0 && !batchK ) {
-    compute(batchSize, output.data(), xData, BracketAdapter<double>(m0), BracketAdapter<double>(k));
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !xData.empty()) {
+    compute(info.size, output.data(), xData.data(), BracketAdapter<double> (m0), BracketAdapter<double> (k));
   }
-  else if (!batchX && batchM0 && !batchK ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), m0Data, BracketAdapter<double>(k));
-  }
-  else if (batchX && batchM0 && !batchK ) {
-    compute(batchSize, output.data(), xData, m0Data, BracketAdapter<double>(k));
-  }
-  else if (!batchX && !batchM0 && batchK ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), BracketAdapter<double>(m0), kData);
-  }
-  else if (batchX && !batchM0 && batchK ) {
-    compute(batchSize, output.data(), xData, BracketAdapter<double>(m0), kData);
-  }
-  else if (!batchX && batchM0 && batchK ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), m0Data, kData);
-  }
-  else if (batchX && batchM0 && batchK ) {
-    compute(batchSize, output.data(), xData, m0Data, kData);
+  else {
+    compute(info.size, output.data(), BracketAdapterWithMask (x,x.getValBatch(begin,info.size)), BracketAdapterWithMask (m0,m0.getValBatch(begin,info.size)), BracketAdapterWithMask (k,k.getValBatch(begin,info.size)));
   }
   return output;
 }

@@ -157,39 +157,30 @@ void compute(RooSpan<double> output, TMass mass, TMu mu, TLambda lambda, TGamma 
 /// \param[in] maxSize Maximal size of the batches. May return smaller batches depending on inputs.
 /// \return A span with the computed values.
 
-RooSpan<double> RooJohnson::evaluateBatch(std::size_t begin, std::size_t maxSize) const {
-  auto massData   = _mass.getValBatch(begin, maxSize);
-  auto muData     = _mu.getValBatch(begin, maxSize);
-  auto lambdaData = _lambda.getValBatch(begin, maxSize);
-  auto gammaData  = _gamma.getValBatch(begin, maxSize);
-  auto deltaData  = _delta.getValBatch(begin, maxSize);
-
-  maxSize = std::min({massData, muData, lambdaData, gammaData, deltaData},
-      [](const RooSpan<const double>& l, const RooSpan<const double>& r){
-    return l.size() != 0 && l.size() < r.size();
-  }).size();
-
-  if (maxSize == 0) {
+RooSpan<double> RooJohnson::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace BatchHelpers;
+  EvaluateInfo info = getInfo( {&_mass, &_mu, &_lambda, &_gamma, &_delta}, begin, batchSize );
+  if (info.nBatches == 0) {
     return {};
   }
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto massData = _mass.getValBatch(begin, info.size);
 
-  auto output = _batchData.makeWritableBatchUnInit(begin, maxSize);
-
-  if (!massData.empty()
-      && (muData.empty() && lambdaData.empty() && gammaData.empty() && deltaData.empty())) {
-    compute(output, massData, BracketAdapter<double>(_mu),
-        BracketAdapter<double>(_lambda), BracketAdapter<double>(_gamma),
-        BracketAdapter<double>(_delta), _massThreshold);
+  if (info.nBatches==1 && !massData.empty()) {
+    compute(output, massData.data(), 
+    BracketAdapter<double>(_mu), 
+    BracketAdapter<double>(_lambda), 
+    BracketAdapter<double>(_gamma), 
+    BracketAdapter<double>(_delta), _massThreshold);
   }
   else {
-    compute(output,
-        BracketAdapterWithMask(_mass, massData),
-        BracketAdapterWithMask(_mu, muData),
-        BracketAdapterWithMask(_lambda, lambdaData),
-        BracketAdapterWithMask(_gamma, gammaData),
-        BracketAdapterWithMask(_delta, deltaData), _massThreshold);
+    compute( output, 
+    BracketAdapterWithMask (_mass,massData), 
+    BracketAdapterWithMask (_mu,_mu.getValBatch(begin,info.size)), 
+    BracketAdapterWithMask (_lambda,_lambda.getValBatch(begin,info.size)), 
+    BracketAdapterWithMask (_gamma,_gamma.getValBatch(begin,info.size)), 
+    BracketAdapterWithMask (_delta,_delta.getValBatch(begin,info.size)), _massThreshold);
   }
-
   return output;
 }
 

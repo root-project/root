@@ -31,7 +31,6 @@ that models a non-relativistic Breit-Wigner shape
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "BatchHelpers.h"
-// #include "RooFitTools/RooRandom.h"
 
 using namespace std;
 
@@ -84,39 +83,22 @@ void compute(	size_t batchSize,
 
 RooSpan<double> RooBreitWigner::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
-  auto xData = x.getValBatch(begin, batchSize);
-  auto meanData = mean.getValBatch(begin, batchSize);
-  auto widthData = width.getValBatch(begin, batchSize);
-  const bool batchX = !xData.empty();
-  const bool batchMean = !meanData.empty();
-  const bool batchWidth = !widthData.empty();
-
-  if (!batchX && !batchMean && !batchWidth) {
+  EvaluateInfo info = getInfo( {&x, &mean, &width}, begin, batchSize );
+  if (info.nBatches == 0) {
     return {};
   }
-  batchSize = findSmallestBatch({ xData, meanData, widthData });
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
-  if (batchX && !batchMean && !batchWidth ) {
-    compute(batchSize, output.data(), xData, BracketAdapter<double>(mean), BracketAdapter<double>(width));
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, info.size);
+  
+  if (info.nBatches==1 && !xData.empty()) {
+    compute(batchSize, output.data(), xData.data(), BracketAdapter<double> (mean), BracketAdapter<double> (width));
   }
-  else if (!batchX && batchMean && !batchWidth ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), meanData, BracketAdapter<double>(width));
-  }
-  else if (batchX && batchMean && !batchWidth ) {
-    compute(batchSize, output.data(), xData, meanData, BracketAdapter<double>(width));
-  }
-  else if (!batchX && !batchMean && batchWidth ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), BracketAdapter<double>(mean), widthData);
-  }
-  else if (batchX && !batchMean && batchWidth ) {
-    compute(batchSize, output.data(), xData, BracketAdapter<double>(mean), widthData);
-  }
-  else if (!batchX && batchMean && batchWidth ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), meanData, widthData);
-  }
-  else if (batchX && batchMean && batchWidth ) {
-    compute(batchSize, output.data(), xData, meanData, widthData);
+  else {
+    compute(batchSize, output.data(), 
+    BracketAdapterWithMask (x,xData), 
+    BracketAdapterWithMask (mean,mean.getValBatch(begin,info.size)), 
+    BracketAdapterWithMask (width,width.getValBatch(begin,info.size)) );
   }
   return output;
 }

@@ -175,39 +175,22 @@ void compute(	size_t batchSize,
 
 RooSpan<double> RooLandau::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
-  auto xData = x.getValBatch(begin, batchSize);
-  auto meanData = mean.getValBatch(begin, batchSize);
-  auto sigmaData = sigma.getValBatch(begin, batchSize);
-  const bool batchX = !xData.empty();
-  const bool batchMean = !meanData.empty();
-  const bool batchSigma = !sigmaData.empty();
-
-  if (!batchX && !batchMean && !batchSigma) {
+  EvaluateInfo info = getInfo( {&x, &mean, &sigma}, begin, batchSize );
+  if (info.nBatches == 0) {
     return {};
   }
-  batchSize = BatchHelpers::findSmallestBatch({ xData, meanData, sigmaData });
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
-  if (batchX && !batchMean && !batchSigma ) {
-    compute(batchSize, output.data(), xData, BracketAdapter<double>(mean), BracketAdapter<double>(sigma));
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !xData.empty()) {
+    compute(info.size, output.data(), xData.data(), BracketAdapter<double> (mean), BracketAdapter<double> (sigma));
   }
-  else if (!batchX && batchMean && !batchSigma ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), meanData, BracketAdapter<double>(sigma));
-  }
-  else if (batchX && batchMean && !batchSigma ) {
-    compute(batchSize, output.data(), xData, meanData, BracketAdapter<double>(sigma));
-  }
-  else if (!batchX && !batchMean && batchSigma ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), BracketAdapter<double>(mean), sigmaData);
-  }
-  else if (batchX && !batchMean && batchSigma ) {
-    compute(batchSize, output.data(), xData, BracketAdapter<double>(mean), sigmaData);
-  }
-  else if (!batchX && batchMean && batchSigma ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), meanData, sigmaData);
-  }
-  else if (batchX && batchMean && batchSigma ) {
-    compute(batchSize, output.data(), xData, meanData, sigmaData);
+  else {
+    compute(info.size, output.data(), 
+    BracketAdapterWithMask (x,xData), 
+    BracketAdapterWithMask (mean,mean.getValBatch(begin,info.size)), 
+    BracketAdapterWithMask (sigma,sigma.getValBatch(begin,info.size)));
   }
   return output;
 }

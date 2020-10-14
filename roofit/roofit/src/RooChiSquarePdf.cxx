@@ -102,30 +102,24 @@ void compute(	size_t batchSize,
 };
 
 RooSpan<double> RooChiSquarePdf::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  
   using namespace BatchHelpers;
-  auto _xData = _x.getValBatch(begin, batchSize);
-  auto _ndofData = _ndof.getValBatch(begin, batchSize);
-  const bool batch_x = !_xData.empty();
-  const bool batch_ndof = !_ndofData.empty();
-
-  if (!batch_x && !batch_ndof) {
+  EvaluateInfo info = getInfo( {&_x, &_ndof}, begin, batchSize );
+  if (info.nBatches == 0) {
     return {};
   }
-  batchSize = findSmallestBatch({ _xData, _ndofData });
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
-  if (batch_x && !batch_ndof ) {
-    compute(batchSize, output.data(), _xData, BracketAdapter<double>(_ndof));
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto _xData = _x.getValBatch(begin, batchSize);
+
+  if (info.nBatches==1 && !_xData.empty()) {
+    compute(info.size, output.data(), _xData, BracketAdapter<double>(_ndof));
   }
-  else if (!batch_x && batch_ndof ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(_x), _ndofData);
-  }
-  else if (batch_x && batch_ndof ) {
-    compute(batchSize, output.data(), _xData, _ndofData);
-  }
+  else {
+    compute(info.size, output.data(), BracketAdapterWithMask(_x, _xData), BracketAdapterWithMask(_ndof, _ndof.getValBatch(begin, batchSize)));
+  }  
   return output;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// No analytical calculation available (yet) of integrals over subranges
