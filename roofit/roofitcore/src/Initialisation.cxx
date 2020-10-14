@@ -44,7 +44,7 @@ void loadComputeLibrary() {
   std::vector<std::string> libNames;
   
 //  libNames.push_back("libRooFitCoreCompute");
-//  libNames.push_back("libRooFitCompute");
+    libNames.push_back("libRooFitCompute");
 #ifdef R__HAS_MATHMORE
 //  libNames.push_back("libRooFitMoreCompute");
 #endif

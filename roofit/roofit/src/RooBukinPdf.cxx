@@ -33,6 +33,7 @@ http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
 #include "RooHelpers.h"
+#include "RooFitComputeInterface.h"
 
 #include <cmath>
 using namespace std;
@@ -219,3 +220,11 @@ RooSpan<double> RooBukinPdf::evaluateBatch(std::size_t begin, std::size_t batchS
   }
   return output;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////
+///
+RooSpan<double> RooBukinPdf::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeBukin(this, evalData, x->getValues(evalData, normSet), Xp->getValues(evalData, normSet), sigp->getValues(evalData, normSet), xi->getValues(evalData, normSet), rho1->getValues(evalData, normSet), rho2->getValues(evalData, normSet));
+}
+
