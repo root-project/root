@@ -154,7 +154,7 @@ public:
    virtual ~RFieldBase();
 
    ///// Copies the field and its sub fields using a possibly new name and a new, unconnected set of columns
-   virtual RFieldBase *Clone(std::string_view newName) = 0;
+   virtual RFieldBase *Clone(std::string_view newName) const = 0;
 
    /// Factory method to resurrect a field from the stored on-disk type information
    static RFieldBase *Create(const std::string &fieldName, const std::string &typeName);
@@ -260,7 +260,7 @@ public:
 class RFieldZero : public Detail::RFieldBase {
 public:
    RFieldZero() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { }
-   RFieldBase* Clone(std::string_view newName);
+   RFieldBase* Clone(std::string_view newName) const;
 
    void GenerateColumnsImpl() final {}
    using Detail::RFieldBase::GenerateValue;
@@ -289,7 +289,7 @@ public:
    RClassField(RClassField&& other) = default;
    RClassField& operator =(RClassField&& other) = default;
    ~RClassField() = default;
-   RFieldBase* Clone(std::string_view newName) final;
+   RFieldBase* Clone(std::string_view newName) const final;
 
    void GenerateColumnsImpl() final;
    using Detail::RFieldBase::GenerateValue;
@@ -317,7 +317,7 @@ public:
    RVectorField(RVectorField&& other) = default;
    RVectorField& operator =(RVectorField&& other) = default;
    ~RVectorField() = default;
-   RFieldBase* Clone(std::string_view newName) final;
+   RFieldBase* Clone(std::string_view newName) const final;
 
    void GenerateColumnsImpl() final;
    using Detail::RFieldBase::GenerateValue;
@@ -354,7 +354,7 @@ public:
    RArrayField(RArrayField &&other) = default;
    RArrayField& operator =(RArrayField &&other) = default;
    ~RArrayField() = default;
-   RFieldBase *Clone(std::string_view newName) final;
+   RFieldBase *Clone(std::string_view newName) const final;
 
    void GenerateColumnsImpl() final;
    using Detail::RFieldBase::GenerateValue;
@@ -393,7 +393,7 @@ public:
    RVariantField(RVariantField &&other) = default;
    RVariantField& operator =(RVariantField &&other) = default;
    ~RVariantField() = default;
-   RFieldBase *Clone(std::string_view newName) final;
+   RFieldBase *Clone(std::string_view newName) const final;
 
    void GenerateColumnsImpl() final;
    using Detail::RFieldBase::GenerateValue;
@@ -441,7 +441,7 @@ public:
    RCollectionField(RCollectionField&& other) = default;
    RCollectionField& operator =(RCollectionField&& other) = default;
    ~RCollectionField() = default;
-   RFieldBase* Clone(std::string_view newName) final;
+   RFieldBase* Clone(std::string_view newName) const final;
 
    void GenerateColumnsImpl() final;
 
@@ -472,7 +472,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+   RFieldBase* Clone(std::string_view newName) const final { return new RField(newName); }
 
    void GenerateColumnsImpl() final;
 
@@ -518,7 +518,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase *Clone(std::string_view newName) final { return new RField(newName); }
+   RFieldBase *Clone(std::string_view newName) const final { return new RField(newName); }
 
    void GenerateColumnsImpl() final;
 
@@ -555,7 +555,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+   RFieldBase* Clone(std::string_view newName) const final { return new RField(newName); }
 
    void GenerateColumnsImpl() final;
 
@@ -593,7 +593,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+   RFieldBase* Clone(std::string_view newName) const final { return new RField(newName); }
 
    void GenerateColumnsImpl() final;
 
@@ -630,7 +630,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+   RFieldBase* Clone(std::string_view newName) const final { return new RField(newName); }
 
    void GenerateColumnsImpl() final;
 
@@ -667,7 +667,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+   RFieldBase* Clone(std::string_view newName) const final { return new RField(newName); }
 
    void GenerateColumnsImpl() final;
 
@@ -704,7 +704,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+   RFieldBase* Clone(std::string_view newName) const final { return new RField(newName); }
 
    void GenerateColumnsImpl() final;
 
@@ -741,7 +741,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+   RFieldBase* Clone(std::string_view newName) const final { return new RField(newName); }
 
    void GenerateColumnsImpl() final;
 
@@ -788,7 +788,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+   RFieldBase* Clone(std::string_view newName) const final { return new RField(newName); }
 
    void GenerateColumnsImpl() final;
 
@@ -930,7 +930,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase* Clone(std::string_view newName) final { return new RField(newName); }
+   RFieldBase* Clone(std::string_view newName) const final { return new RField(newName); }
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -1010,7 +1010,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase* Clone(std::string_view newName) final {
+   RFieldBase* Clone(std::string_view newName) const final {
       auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
       return new RField<ROOT::VecOps::RVec<ItemT>>(newName, std::unique_ptr<Detail::RFieldBase>(newItemField));
    }
@@ -1097,7 +1097,7 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() = default;
-   RFieldBase* Clone(std::string_view newName) final {
+   RFieldBase* Clone(std::string_view newName) const final {
       return new RField<ROOT::VecOps::RVec<bool>>(newName);
    }
 
