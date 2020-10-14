@@ -420,9 +420,9 @@ void TPrincipal::AddRow(const Double_t *p)
    }
    else {
 
-      Double_t invnp = 1. / Double_t(fNumberOfDataPoints);
-      Double_t invnpM1 = 1. /(Double_t(fNumberOfDataPoints - 1));
-      Double_t cor = 1. - invnp;
+      const Double_t invnp = 1. / Double_t(fNumberOfDataPoints);
+      const Double_t invnpM1 = 1. /(Double_t(fNumberOfDataPoints - 1));
+      const Double_t cor = 1. - invnp;
       // use directly vector array for faster element access
       Double_t * meanValues = fMeanValues.GetMatrixArray();
       Double_t * covMatrix =  fCovarianceMatrix.GetMatrixArray();
@@ -430,11 +430,11 @@ void TPrincipal::AddRow(const Double_t *p)
 
          meanValues[i] *= cor;
          meanValues[i] += p[i] * invnp;
-         Double_t t1 = (p[i] - meanValues[i]) * invnpM1;
+         const Double_t t1 = (p[i] - meanValues[i]) * invnpM1;
 
          // Setting Matrix (lower triangle) elements
          for (j = 0; j < i + 1; j++) {
-            Int_t index = i * fNumberOfVariables + j;
+            const Int_t index = i * fNumberOfVariables + j;
             covMatrix[index] *= cor;
             covMatrix[index] += t1 * (p[j] - meanValues[j]);
          }
