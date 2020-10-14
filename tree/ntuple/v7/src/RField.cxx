@@ -322,7 +322,7 @@ void ROOT::Experimental::Detail::RFieldBase::RSchemaIterator::Advance()
 //------------------------------------------------------------------------------
 
 
-ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldZero::Clone(std::string_view /*newName*/)
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldZero::Clone(std::string_view /*newName*/) const
 {
    Detail::RFieldBase* result = new RFieldZero();
    for (auto &f : fSubFields) {
@@ -542,7 +542,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
    }
 }
 
-ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RClassField::Clone(std::string_view newName)
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RClassField::Clone(std::string_view newName) const
 {
    return new RClassField(newName, GetType());
 }
@@ -638,7 +638,7 @@ ROOT::Experimental::RVectorField::RVectorField(
    Attach(std::move(itemField));
 }
 
-ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RVectorField::Clone(std::string_view newName)
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RVectorField::Clone(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
    return new RVectorField(newName, std::unique_ptr<Detail::RFieldBase>(newItemField));
@@ -822,7 +822,7 @@ ROOT::Experimental::RArrayField::RArrayField(
    Attach(std::move(itemField));
 }
 
-ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RArrayField::Clone(std::string_view newName)
+ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RArrayField::Clone(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
    return new RArrayField(newName, std::unique_ptr<Detail::RFieldBase>(newItemField), fArrayLength);
@@ -931,7 +931,7 @@ ROOT::Experimental::RVariantField::RVariantField(
    fTagOffset = (fMaxItemSize < fMaxAlignment) ? fMaxAlignment : fMaxItemSize;
 }
 
-ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RVariantField::Clone(std::string_view newName)
+ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RVariantField::Clone(std::string_view newName) const
 {
    auto nFields = fSubFields.size();
    std::vector<Detail::RFieldBase *> itemFields;
@@ -1050,7 +1050,7 @@ void ROOT::Experimental::RCollectionField::GenerateColumnsImpl()
 }
 
 
-ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RCollectionField::Clone(std::string_view /*newName*/)
+ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RCollectionField::Clone(std::string_view /*newName*/) const
 {
    // TODO(jblomer)
    return nullptr;
