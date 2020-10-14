@@ -13,23 +13,14 @@ Poisson pdf
 **/
 
 #include "RooPoisson.h"
-
-#include "RooAbsReal.h"
-#include "RooAbsCategory.h"
-
 #include "RooRandom.h"
 #include "RooMath.h"
-#include "TMath.h"
-#include "Math/ProbFuncMathCore.h"
 #include "RooNaNPacker.h"
-
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
+#include "RooFitComputeInterface.h"
 
-#include <limits>
-#include <cmath>
-
-using namespace std;
+#include "Math/ProbFuncMathCore.h"
 
 ClassImp(RooPoisson);
 
@@ -132,6 +123,11 @@ RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t batchSi
   return output;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooPoisson::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computePoisson(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), _protectNegative, _noRounding);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -21,6 +21,7 @@ Here we also implement the analytic integral.
 #include "RooRealVar.h"
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
+#include "RooFitComputeInterface.h"
 
 #include "TMath.h"
 
@@ -119,6 +120,12 @@ RooSpan<double> RooChiSquarePdf::evaluateBatch(std::size_t begin, std::size_t ba
     compute(info.size, output.data(), BracketAdapterWithMask(_x, _xData), BracketAdapterWithMask(_ndof, _ndof.getValBatch(begin, batchSize)));
   }  
   return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooChiSquarePdf::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeChiSquare(this, evalData, _x->getValues(evalData, normSet), _ndof->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

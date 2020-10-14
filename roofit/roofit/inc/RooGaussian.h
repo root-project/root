@@ -18,9 +18,8 @@
 
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
-#include "RooTrace.h"
 
-class RooRealVar;
+class RooAbsReal;
 
 class RooGaussian : public RooAbsPdf {
 public:

@@ -26,6 +26,7 @@ Landau distribution p.d.f
 #include "RooFit.h"
 #include "RooRandom.h"
 #include "BatchHelpers.h"
+#include "RooFitComputeInterface.h"
 
 #include "TMath.h"
 
@@ -172,7 +173,6 @@ void compute(	size_t batchSize,
 /// \param[in] begin Index of the batch to be computed.
 /// \param[in] batchSize Size of each batch. The last batch may be smaller.
 /// \return A span with the computed values.
-
 RooSpan<double> RooLandau::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
   using namespace BatchHelpers;
   EvaluateInfo info = getInfo( {&x, &mean, &sigma}, begin, batchSize );
@@ -193,6 +193,12 @@ RooSpan<double> RooLandau::evaluateBatch(std::size_t begin, std::size_t batchSiz
     BracketAdapterWithMask (sigma,sigma.getValBatch(begin,info.size)));
   }
   return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooLandau::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeLandau(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
