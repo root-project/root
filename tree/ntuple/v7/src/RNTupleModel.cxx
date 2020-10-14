@@ -43,9 +43,9 @@ ROOT::Experimental::RNTupleModel::RNTupleModel()
 ROOT::Experimental::RNTupleModel* ROOT::Experimental::RNTupleModel::Clone()
 {
    auto cloneModel = new RNTupleModel();
-   auto cloneFieldZero = static_cast<RFieldZero*>(fFieldZero->Clone(""));
-   cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(cloneFieldZero);
-   cloneModel->fDefaultEntry = std::unique_ptr<REntry>(cloneFieldZero->GenerateEntry());
+   auto cloneFieldZero = fFieldZero->Clone("");
+   cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(cloneFieldZero.release()));
+   cloneModel->fDefaultEntry = std::unique_ptr<REntry>(cloneModel->fFieldZero->GenerateEntry());
    return cloneModel;
 }
 
