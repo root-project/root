@@ -580,14 +580,15 @@ if __name__ == '__main__':
     main()
 ~~~
 
-- Inheritance of Python classes from C++ classes is not working in some cases. This is described
+- Fixed in 6.22/04, true for 6.22/00 and 6.22/02: ~~Inheritance of Python classes from C++ classes
+is not working in some cases. This is described
 in [ROOT-10789](https://sft.its.cern.ch/jira/browse/ROOT-10789) and
 [ROOT-10582](https://sft.its.cern.ch/jira/browse/ROOT-10582).
 This affects the creation of GUIs from Python, e.g. in the
 [Python GUI tutorial](https://root.cern.ch/doc/master/gui__ex_8py.html), where the inheritance
 from `TGMainFrame` is not working at the moment. Future releases of ROOT will fix these
 issues and provide a way to program GUIs from Python, including a replacement for TPyDispatcher,
-which is no longer provided.
+which is no longer provided.~~
 
 - When iterating over an `std::vector<std::string>` from Python, the elements returned by
 the iterator are no longer of type Python `str`, but `cppyy.gbl.std.string`. This is an
@@ -855,6 +856,17 @@ Published on August 17, 2020
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10987'>ROOT-10987</a>] RooFit's caching can lead to wrong results when batch computations used.
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10022'>ROOT-10022</a>] [DF] Add support for `TBranchObjects` (e.g. branches containing `TH2F`)
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10967'>ROOT-10967</a>] [PyROOT] Improve pretty printing to respect existing C++ methods
+
+
+## Release 6.22/04
+
+### PyROOT
+
+- Several issues related with Python-C++ inheritance have been fixed. One of these issues affected the programming of GUIs from Python
+because of an error when inheriting from `TGMainFrame` (see [ROOT-10826](https://sft.its.cern.ch/jira/browse/ROOT-10826)); such error is
+no longer there and GUIs can be programmed again from Python, using the `TPyDispatcher` class as before. Moreover, the inheritance from
+`TSelector` has been fixed too, which makes it possible to extend `TSelector` by directly inheriting from it, instead of using the
+`TPySelector` class that was provided in the old PyROOT (see [ROOT-11025](https://sft.its.cern.ch/jira/browse/ROOT-11025)).
 
 ## HEAD of the v6-22-00-patches branch
 
