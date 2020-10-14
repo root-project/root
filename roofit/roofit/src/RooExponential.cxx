@@ -30,6 +30,8 @@ range and values of the arguments.
 #include "RooRealVar.h"
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
+#include "RooFitComputeInterface.h"
+
 
 #include <cmath>
 
@@ -124,3 +126,10 @@ RooSpan<double> RooExponential::evaluateBatch(std::size_t begin, std::size_t bat
   }
   return output;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooExponential::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeExponential(this, evalData, x->getValues(evalData, normSet), c->getValues(evalData, normSet));
+}
+

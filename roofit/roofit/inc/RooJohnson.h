@@ -58,6 +58,7 @@ private:
 
   Double_t evaluate() const override;
   RooSpan<double> evaluateBatch(std::size_t begin, std::size_t end) const override;
+  RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const override;
 
   ClassDefOverride(RooJohnson,1)
 };

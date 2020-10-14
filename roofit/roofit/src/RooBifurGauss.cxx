@@ -28,6 +28,7 @@ side of maximum value
 #include "RooMath.h"
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
+#include "RooFitComputeInterface.h"
 
 #include "TMath.h"
 
@@ -81,6 +82,7 @@ Double_t RooBifurGauss::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 namespace {
 //Author: Emmanouil Michalainas, CERN 20 AUGUST 2019  
 
@@ -129,6 +131,13 @@ RooSpan<double> RooBifurGauss::evaluateBatch(std::size_t begin, std::size_t batc
     BracketAdapterWithMask (sigmaR,sigmaR.getValBatch(begin,info.size)));
   }
   return output;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooBifurGauss::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeBifurGauss(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigmaL->getValues(evalData, normSet), sigmaR->getValues(evalData, normSet));
 }
 
 

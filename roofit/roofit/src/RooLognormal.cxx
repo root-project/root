@@ -26,21 +26,14 @@ The parameterization here is physics driven and differs from the ROOT::Math::log
 **/
 
 #include "RooLognormal.h"
-#include "RooFit.h"
 #include "RooRandom.h"
 #include "RooMath.h"
 #include "RooVDTHeaders.h"
 #include "RooHelpers.h"
 #include "BatchHelpers.h"
+#include "RooFitComputeInterface.h"
 
-#include "TMath.h"
-#include "TClass.h"
-#include <Math/SpecFuncMathCore.h>
 #include <Math/PdfFuncMathCore.h>
-#include <Math/ProbFuncMathCore.h>
-
-#include <cmath>
-using namespace std;
 
 ClassImp(RooLognormal);
 
@@ -97,7 +90,7 @@ void compute(	size_t batchSize,
               double * __restrict output,
               Tx X, Tm0 M0, Tk K)
 {
-  const double rootOf2pi = std::sqrt(2 * M_PI);
+  const double rootOf2pi = TMath::Sqrt(2 * M_PI);
   for (size_t i=0; i<batchSize; i++) {
     double lnxOverM0 = _rf_fast_log(X[i]/M0[i]);
     double lnk = _rf_fast_log(K[i]);
@@ -129,6 +122,12 @@ RooSpan<double> RooLognormal::evaluateBatch(std::size_t begin, std::size_t batch
   return output;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooLognormal::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeLognormal(this, evalData, x->getValues(evalData, normSet), m0->getValues(evalData, normSet), k->getValues(evalData, normSet));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

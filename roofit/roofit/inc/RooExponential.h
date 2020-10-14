@@ -39,9 +39,9 @@ protected:
   RooRealProxy c;
 
   Double_t evaluate() const override;
-
   RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const override;
-
+  RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const override;
+  
 private:
   ClassDefOverride(RooExponential,1) // Exponential PDF
 };

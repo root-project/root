@@ -34,11 +34,10 @@ RooPolynomial::RooPolynomial(const char*, const char*, RooAbsReal&, const RooArg
 #include "RooArgList.h"
 #include "RooMsgService.h"
 #include "BatchHelpers.h"
+#include "RooFitComputeInterface.h"
+#include "RunContext.h"
 
 #include "TError.h"
-
-#include <cmath>
-#include <cassert>
 #include <vector>
 using namespace std;
 
@@ -227,7 +226,25 @@ RooSpan<double> RooPolynomial::evaluateBatch(std::size_t begin, std::size_t batc
   }
   
   compute(batchSize, _lowestOrder, output.data(), xData.data(), coefList);
-  
+  return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooPolynomial::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  RooSpan<const double> xData = _x->getValues(evalData, normSet);
+  int batchSize = xData.size();  
+  RooSpan<double> output = evalData.makeBatch(this, batchSize);
+
+  const int nCoef = _coefList.getSize();
+  const RooArgSet* listNormSet = _coefList.nset();
+  std::vector<BatchHelpers::BracketAdapterWithMask> coefList;
+  for (int i=0; i<nCoef; i++) {
+    auto valBatch = static_cast<RooAbsReal&>(_coefList[i]).getValues(evalData, listNormSet);
+    coefList.emplace_back(valBatch);
+  }
+
+  RooFitCompute::dispatch->computePolynomial(batchSize, output.data(), xData.data(), _lowestOrder, coefList);
   return output;
 }
 

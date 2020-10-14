@@ -45,22 +45,16 @@ RooPoison(N,mu) and treating the function as a PDF in mu.
 
 #include "RooGamma.h"
 
-#include "RooAbsReal.h"
-#include "RooRealVar.h"
 #include "RooRandom.h"
-#include "RooMath.h"
 #include "RooHelpers.h"
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
+#include "RooFitComputeInterface.h"
 
 #include "TMath.h"
-#include <Math/SpecFuncMathCore.h>
-#include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
 
-#include <iostream>
 #include <cmath>
-using namespace std;
 
 ClassImp(RooGamma);
 
@@ -170,6 +164,12 @@ RooSpan<double> RooGamma::evaluateBatch(std::size_t begin, std::size_t batchSize
     BracketAdapterWithMask (mu,mu.getValBatch(begin,info.size)));
   }
   return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooGamma::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeGamma(this, evalData, x->getValues(evalData, normSet), gamma->getValues(evalData, normSet), beta->getValues(evalData, normSet), mu->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

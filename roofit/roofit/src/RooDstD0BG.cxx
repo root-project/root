@@ -38,6 +38,7 @@ D*-D0 mass difference distributions. It computes
 #include "RooAbsFunc.h"
 #include "RooVDTHeaders.h"
 #include "BatchHelpers.h"
+#include "RooFitComputeInterface.h"
 
 #include "TMath.h"
 
@@ -127,6 +128,13 @@ RooSpan<double> RooDstD0BG::evaluateBatch(std::size_t begin, std::size_t batchSi
   }
   return output;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooDstD0BG::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeDstD0BG(this, evalData, dm->getValues(evalData, normSet), dm0->getValues(evalData, normSet), C->getValues(evalData, normSet), A->getValues(evalData, normSet), B->getValues(evalData, normSet));
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// if (matchArgs(allVars,analVars,dm)) return 1 ;

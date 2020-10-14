@@ -32,6 +32,7 @@ the selectFastAlgorithm() method.
 #include "RooMath.h"
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
+#include "RooFitComputeInterface.h"
 
 #include <cmath>
 #include <complex>
@@ -157,5 +158,9 @@ RooSpan<double> RooVoigtian::evaluateBatch(std::size_t begin, std::size_t batchS
     BracketAdapterWithMask (sigma,sigma.getValBatch(begin,info.size)));
   }
   return output;
+}
+
+RooSpan<double> RooVoigtian::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeVoigtian(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), width->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
 }
 

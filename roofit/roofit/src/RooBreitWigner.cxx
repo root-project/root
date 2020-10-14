@@ -31,6 +31,7 @@ that models a non-relativistic Breit-Wigner shape
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "BatchHelpers.h"
+#include "RooFitComputeInterface.h"
 
 using namespace std;
 
@@ -101,6 +102,12 @@ RooSpan<double> RooBreitWigner::evaluateBatch(std::size_t begin, std::size_t bat
     BracketAdapterWithMask (width,width.getValBatch(begin,info.size)) );
   }
   return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooBreitWigner::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeBreitWigner(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), width->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

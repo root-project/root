@@ -30,6 +30,7 @@ Function taken from H. Ikeda et al. NIM A441 (2000), p. 401 (Belle Collaboration
 #include "RooRealVar.h"
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
+#include "RooFitComputeInterface.h"
 
 #include "TMath.h"
 
@@ -151,6 +152,12 @@ RooSpan<double> RooNovosibirsk::evaluateBatch(std::size_t begin, std::size_t bat
     BracketAdapterWithMask (tail,tail.getValBatch(begin,info.size)));
   }
   return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooNovosibirsk::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeNovosibirsk(this, evalData, x->getValues(evalData, normSet), peak->getValues(evalData, normSet), width->getValues(evalData, normSet), tail->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

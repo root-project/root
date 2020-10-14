@@ -27,6 +27,7 @@ PDF implementing the Crystal Ball line shape.
 #include "RooMath.h"
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
+#include "RooFitComputeInterface.h"
 
 #include "TMath.h"
 
@@ -145,6 +146,12 @@ RooSpan<double> RooCBShape::evaluateBatch(std::size_t begin, std::size_t batchSi
     BracketAdapterWithMask (n,n.getValBatch(begin,info.size)));
   }
   return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooCBShape::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeCBShape(this, evalData, m->getValues(evalData, normSet), m0->getValues(evalData, normSet), sigma->getValues(evalData, normSet), alpha->getValues(evalData, normSet), n->getValues(evalData, normSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

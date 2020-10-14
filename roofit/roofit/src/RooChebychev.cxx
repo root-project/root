@@ -29,6 +29,7 @@ starts with the coefficient that goes with \f$ T_1(x)=x \f$ (i.e. the linear ter
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooNameReg.h"
+#include "RooFitComputeInterface.h"
 
 #include <cmath>
 
@@ -235,6 +236,26 @@ RooSpan<double> RooChebychev::evaluateBatch(std::size_t begin, std::size_t batch
   return output;
 }
 ////////////////////////////////////////////////////////////////////////////////
+
+RooSpan<double> RooChebychev::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+
+  RooSpan<const double> xData = _x->getValues(evalData, normSet);  
+  size_t batchSize = xData.size();
+  RooSpan<double> output = evalData.makeBatch(this, batchSize);
+  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName() : nullptr);
+  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName() : nullptr);
+
+  const size_t nCoef = _coefList.size();
+  std::vector<double> coef(nCoef);
+  for (size_t i=0; i<nCoef; i++) {
+    coef[i] = static_cast<const RooAbsReal &>(_coefList[i]).getVal();
+  }
+  RooFitCompute::dispatch->computeChebychev(batchSize, output.data(), xData.data(), xmin, xmax, coef);
+  return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /* rangeName */) const
 {
