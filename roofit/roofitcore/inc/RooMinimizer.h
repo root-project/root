@@ -50,6 +50,8 @@ public:
   void setEps(Double_t eps) ;
   void optimizeConst(Int_t flag) ;
   void setEvalErrorWall(Bool_t flag) { fitterFcn()->SetEvalErrorWall(flag); }
+  /// \copydoc RooMinimizerFcn::SetRecoverFromNaNStrength()
+  void setRecoverFromNaNStrength(double strength) { fitterFcn()->SetRecoverFromNaNStrength(strength); }
   void setOffsetting(Bool_t flag) ;
   void setMaxIterations(Int_t n) ;
   void setMaxFunctionCalls(Int_t n) ;

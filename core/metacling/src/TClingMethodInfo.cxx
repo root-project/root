@@ -37,6 +37,7 @@ compiler, not CINT.
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
@@ -106,11 +107,16 @@ bool TClingCXXRecMethIter::ShouldSkip(const clang::UsingShadowDecl *USD) const
 {
    if (auto *FD = llvm::dyn_cast<clang::FunctionDecl>(USD->getTargetDecl())) {
       if (const auto *CXXMD = llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
-         if (GetInterpreter()->getSema().getSpecialMember(CXXMD) != clang::Sema::CXXInvalid) {
+         auto SpecMemKind = GetInterpreter()->getSema().getSpecialMember(CXXMD);
+         if ((SpecMemKind == clang::Sema::CXXDefaultConstructor && CXXMD->getNumParams() == 0) ||
+             ((SpecMemKind == clang::Sema::CXXCopyConstructor || SpecMemKind == clang::Sema::CXXMoveConstructor) &&
+              CXXMD->getNumParams() == 1)) {
             // This is a special member pulled in through a using decl. Special
             // members of derived classes cannot be replaced; ignore this using decl,
             // and keep only the (still possibly compiler-generated) special member of the
             // derived class.
+            // NOTE that e.g. `Klass(int = 0)` has SpecMemKind == clang::Sema::CXXDefaultConstructor,
+            // yet this signature must be exposed, so check the argument count.
             return true;
          }
       }
@@ -444,7 +450,35 @@ long TClingMethodInfo::Property() const
    // which is defined in the derived class and might differ from the access of fd
    // in the base class.
    const Decl *declAccess = GetDecl();
-   switch (declAccess->getAccess()) {
+   if (llvm::isa<UsingShadowDecl>(declAccess))
+      property |= kIsUsing;
+
+   const clang::FunctionDecl *fd = GetTargetFunctionDecl();
+   clang::AccessSpecifier Access = clang::AS_public;
+   if (!declAccess->getDeclContext()->isNamespace())
+      Access = declAccess->getAccess();
+
+   if ((property & kIsUsing) && llvm::isa<CXXConstructorDecl>(fd)) {
+      Access = clang::AS_public;
+      clang::CXXRecordDecl *typeCXXRD = llvm::cast<RecordType>(Type()->GetQualType())->getAsCXXRecordDecl();
+      clang::CXXBasePaths basePaths;
+      if (typeCXXRD->isDerivedFrom(llvm::dyn_cast<CXXRecordDecl>(fd->getDeclContext()), basePaths)) {
+         // Access of the ctor is access of the base inheritance, and
+         // cannot be overruled by the access of the using decl.
+
+         for (auto el: basePaths) {
+            if (el.Access > Access)
+               Access = el.Access;
+         }
+      } else {
+         Error("Property()", "UsingDecl of ctor not shadowing a base ctor!");
+      }
+
+      // But a private ctor stays private:
+      if (fd->getAccess() > Access)
+         Access = fd->getAccess();
+   }
+   switch (Access) {
       case clang::AS_public:
          property |= kIsPublic;
          break;
@@ -462,10 +496,7 @@ long TClingMethodInfo::Property() const
          // IMPOSSIBLE
          break;
    }
-   if (llvm::isa<UsingShadowDecl>(declAccess))
-      property |= kIsUsing;
 
-   const clang::FunctionDecl *fd = GetTargetFunctionDecl();
    if (fd->isConstexpr())
       property |= kIsConstexpr;
    if (fd->getStorageClass() == clang::SC_Static) {

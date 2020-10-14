@@ -20,7 +20,7 @@ namespace RDF {
 
 /// Column reader type that deals with values read from RDataSources.
 template <typename T>
-class R__CLING_PTRCHECK(off) RDSColumnReader final : public RColumnReaderBase {
+class R__CLING_PTRCHECK(off) RDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    T **fDSValuePtr = nullptr;
 
    void *GetImpl(Long64_t) final { return *fDSValuePtr; }

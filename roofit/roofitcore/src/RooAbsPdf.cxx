@@ -170,6 +170,7 @@ called for each data event.
 #include "RooMinimizer.h"
 #include "RooRealIntegral.h"
 #include "RooWorkspace.h"
+#include "RooNaNPacker.h"
 
 #include "RooHelpers.h"
 #include "RooVDTHeaders.h"
@@ -284,12 +285,8 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
     _normSet = 0 ;
     Double_t val = evaluate() ;
     _normSet = tmp ;
-    Bool_t error = traceEvalPdf(val) ;
 
-    if (error) {
-      return 0 ;
-    }
-    return val ;
+    return TMath::IsNaN(val) ? 0. : val;
   }
 
 
@@ -303,26 +300,32 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
   if (isValueDirty() || nsetChanged || _norm->isValueDirty()) {
 
     // Evaluate numerator
-    Double_t rawVal = evaluate() ;
-    Bool_t error = traceEvalPdf(rawVal) ; // Error checking and printing
+    const double rawVal = evaluate();
 
     // Evaluate denominator
-    Double_t normVal(_norm->getVal()) ;
+    const double normVal = _norm->getVal();
 
     if (normVal < 0. || (normVal == 0. && rawVal != 0)) {
-      //Unreasonable normalisations. A zero integral can be tolerated if the function vanishes.
-      error=kTRUE ;
-      std::stringstream msg;
-      msg << "p.d.f normalization integral is zero or negative: " << normVal;
-      logEvalError(msg.str().c_str());
+      //Unreasonable normalisations. A zero integral can be tolerated if the function vanishes, though.
+      const std::string msg = "p.d.f normalization integral is zero or negative: " + std::to_string(normVal);
+      logEvalError(msg.c_str());
+      clearValueAndShapeDirty();
+      return _value = RooNaNPacker::packFloatIntoNaN(-normVal + (rawVal < 0. ? -rawVal : 0.));
     }
 
-    // Raise global error flag if problems occur
-    if (error || (rawVal == 0. && normVal == 0.)) {
-      _value = 0 ;
-    } else {
-      _value = rawVal / normVal ;
+    if (rawVal < 0.) {
+      logEvalError(Form("p.d.f value is less than zero (%f), trying to recover", rawVal));
+      clearValueAndShapeDirty();
+      return _value = RooNaNPacker::packFloatIntoNaN(-rawVal);
     }
+
+    if (TMath::IsNaN(rawVal)) {
+      logEvalError("p.d.f value is Not-a-Number");
+      clearValueAndShapeDirty();
+      return _value = rawVal;
+    }
+
+    _value = (rawVal == 0. && normVal == 0.) ? 0. : rawVal / normVal;
 
     clearValueAndShapeDirty();
   }
@@ -396,6 +399,55 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxS
   const auto ret = _batchData.getBatch(begin, maxSize);
 
   return ret;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute batch of values for given input data, and normalise by integrating over
+/// the observables in `nset`. Store result in `evalData`, and return a span pointing to
+/// it.
+///
+/// If `nset` is `nullptr`, unnormalised values
+/// are returned. All elements of `nset` must be lvalues.
+///
+/// \param[in/out]  evalData Object holding data that should be used in computations.
+/// Each array of data is identified by the pointer to the RooFit object that this data belongs to.
+/// The object that this function is called on will store its results here as well.
+/// \param[in] normSet   If not nullptr, normalise results by integrating over
+/// the variables in this set. The normalisation is only computed once, and applied
+/// to the full batch.
+/// \return RooSpan with probabilities. The memory of this span is owned by `evalData`.
+RooSpan<const double> RooAbsPdf::getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  auto item = evalData.spans.find(this);
+  if (item != evalData.spans.end()) {
+    return item->second;
+  }
+
+  auto outputs = evaluateSpan(evalData, normSet);
+  assert(evalData.spans.count(this) > 0);
+
+  if (normSet != nullptr) {
+    if (normSet != _normSet || _norm == nullptr) {
+      syncNormalization(normSet);
+    }
+    // Evaluate denominator
+    const double normVal = _norm->getVal();
+
+    if (normVal < 0.
+        || (normVal == 0. && std::any_of(outputs.begin(), outputs.end(), [](double val){return val != 0;}))) {
+      logEvalError(Form("p.d.f normalization integral is zero or negative."
+          "\n\tInt(%s) = %f", GetName(), normVal));
+    }
+
+    if (normVal != 1. && normVal > 0.) {
+      const double invNorm = 1./normVal;
+      for (double& val : outputs) { //CHECK_VECTORISE
+        val *= invNorm;
+      }
+    }
+  }
+
+  return outputs;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -666,8 +718,7 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 
   if(prob < 0) {
     logEvalError("getLogVal() top-level p.d.f evaluates to a negative number") ;
-
-    return std::numeric_limits<double>::quiet_NaN();
+    return RooNaNPacker::packFloatIntoNaN(-prob);
   }
 
   if(prob == 0) {
@@ -679,7 +730,7 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
   if (TMath::IsNaN(prob)) {
     logEvalError("getLogVal() top-level p.d.f evaluates to NaN") ;
 
-    return -std::numeric_limits<double>::infinity();
+    return prob;
   }
 
   return log(prob);
@@ -1077,7 +1128,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
      // retrieve from cache
      const RooArgSet *constr =
         _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()));
-     coutI(Minimization) << "createNLL picked up cached consraints from workspace with " << constr->getSize()
+     coutI(Minimization) << "createNLL picked up cached constraints from workspace with " << constr->getSize()
                          << " entries" << endl;
      allConstraints.add(*constr);
 
@@ -1216,6 +1267,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// <tr><td> `EvalErrorWall(bool flag=true)`    <td>  When parameters are in disallowed regions (e.g. PDF is negative), return very high value to fitter
 ///                                                  to force it out of that region. This can, however, mean that the fitter gets lost in this region. If
 ///                                                  this happens, try switching it off.
+/// <tr><td> `RecoverFromUndefinedRegions(double strength)` <td> When PDF is invalid (e.g. parameter in undefined region), try to direct minimiser away from that region.
+///                                                              `strength` controls the magnitude of the penalty term. Leaving out this argument defaults to 10. Switch off with `strength = 0.`.
 /// <tr><td> `FitOptions(const char* optStr)`  <td>  \deprecated Steer fit with classic options string (for backward compatibility).
 ///                                                \attention Use of this option excludes use of any of the new style steering options.
 ///
@@ -1291,6 +1344,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
       "CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood,BatchMode");
 
   pc.defineDouble("prefit", "Prefit",0,0);
+  pc.defineDouble("RecoverFromUndefinedRegions", "RecoverFromUndefinedRegions",0,10.);
   pc.defineString("fitOpt","FitOptions",0,"") ;
   pc.defineInt("optConst","Optimize",0,2) ;
   pc.defineInt("verbose","Verbose",0,0) ;
@@ -1332,6 +1386,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   // Decode command line arguments
   Double_t prefit = pc.getDouble("prefit");
+  const double recoverFromNaN = pc.getDouble("RecoverFromUndefinedRegions");
   const char* fitOpt = pc.getString("fitOpt",0,kTRUE) ;
   Int_t optConst = pc.getInt("optConst") ;
   Int_t verbose  = pc.getInt("verbose") ;
@@ -1450,6 +1505,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     m.setMinimizerType(minType) ;
 
     m.setEvalErrorWall(doEEWall) ;
+    m.setRecoverFromNaNStrength(recoverFromNaN);
     if (doWarn==0) {
       // m.setNoWarn() ; WVE FIX THIS
     }

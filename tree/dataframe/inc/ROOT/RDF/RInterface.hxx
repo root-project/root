@@ -2210,9 +2210,9 @@ private:
       using NewColEntry_t =
          RDFDetail::RDefine<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
 
-      auto entryColumn =
-         std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen), ColumnNames_t{},
-                                         fLoopManager->GetNSlots(), newCols, fLoopManager->GetDSValuePtrs());
+      auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
+                                                         ColumnNames_t{}, fLoopManager->GetNSlots(), newCols,
+                                                         fLoopManager->GetDSValuePtrs(), fDataSource);
       newCols.AddName(entryColName);
       newCols.AddColumn(entryColumn, entryColName);
 
@@ -2222,9 +2222,9 @@ private:
       auto slotColGen = [](unsigned int slot) { return slot; };
       using NewColSlot_t = RDFDetail::RDefine<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>;
 
-      auto slotColumn =
-         std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
-                                        fLoopManager->GetNSlots(), newCols, fLoopManager->GetDSValuePtrs());
+      auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
+                                                       fLoopManager->GetNSlots(), newCols,
+                                                       fLoopManager->GetDSValuePtrs(), fDataSource);
       newCols.AddName(slotColName);
       newCols.AddColumn(slotColumn, slotColName);
 
@@ -2343,7 +2343,7 @@ private:
       using NewCol_t = RDFDetail::RDefine<F, DefineType>;
       auto newColumn =
          std::make_shared<NewCol_t>(name, retTypeName, std::forward<F>(expression), validColumnNames,
-                                    fLoopManager->GetNSlots(), fDefines, fLoopManager->GetDSValuePtrs());
+                                    fLoopManager->GetNSlots(), fDefines, fLoopManager->GetDSValuePtrs(), fDataSource);
 
       RDFInternal::RBookedDefines newCols(fDefines);
       newCols.AddName(name);

@@ -18,9 +18,9 @@
 #define ROOFIT_ROOFITCORE_INC_BATCHHELPERS_H_
 
 #include "RooRealProxy.h"
+#include "RooSpan.h"
 
 #include <vector>
-#include <RooSpan.h>
 
 class RooArgSet;
 
@@ -44,7 +44,7 @@ struct EvaluateInfo {
   size_t size, nBatches;
 };
   
-size_t findSize(std::vector< RooSpan<const double> > parameters);
+size_t findSmallestBatch(const std::vector< RooSpan<const double> >& parameters);
 
 EvaluateInfo getInfo(std::vector<const RooRealProxy*> parameters, size_t begin, size_t batchSize);
 EvaluateInfo init(std::vector< RooRealProxy > parameters, 
@@ -90,7 +90,7 @@ class BracketAdapterWithMask {
     _isBatch(!batch.empty()),
     _payload(payload),
     _pointer(batch.empty() ? &_payload : batch.data()),
-    _mask(batch.empty() ? 0 : ~static_cast<size_t>(0))
+    _mask(batch.size() > 1 ? ~static_cast<size_t>(0): 0)
     {
     }
     
@@ -129,6 +129,25 @@ class BracketAdapterWithMask {
     const double _payload;
     const double* __restrict const _pointer;
     const size_t _mask;
+};
+
+
+/// Helper class to access a batch-related part of RooAbsReal's interface, which should not leak to the outside world.
+class BatchInterfaceAccessor {
+  public:
+    static void clearBatchMemory(RooAbsReal& theReal) {
+      theReal.clearBatchMemory();
+    }
+
+    static void checkBatchComputation(const RooAbsReal& theReal, std::size_t evtNo,
+        const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) {
+      theReal.checkBatchComputation(evtNo, normSet, relAccuracy);
+    }
+
+    static void checkBatchComputation(const RooAbsReal& theReal, const BatchHelpers::RunContext& evalData, std::size_t evtNo,
+        const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) {
+      theReal.checkBatchComputation(evalData, evtNo, normSet, relAccuracy);
+    }
 };
 
 }

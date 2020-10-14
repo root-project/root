@@ -108,6 +108,8 @@ public:
     std::vector<double> vec(first, last);
     return {RooSpan<const double>(vec)};
   }
+  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const;
+
 
  protected:
 
@@ -117,6 +119,7 @@ public:
   RooCategory* _indexCat ;
   mutable RooAbsDataStore* _curStore ; //! Datastore associated with current event
   mutable Int_t _curIndex ; //! Index associated with current event
+  mutable std::unique_ptr<std::vector<double>> _weightBuffer; //! Buffer for weights in case a batch of values is requested.
   Bool_t _ownComps ; //! 
 
   ClassDef(RooCompositeDataStore,1) // Composite Data Storage class

@@ -28,6 +28,7 @@
 #include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
 #include "RooMinimizer.h"
+#include "RooNaNPacker.h"
 
 #include "TClass.h"
 #include "TMatrixDSym.h"
@@ -44,7 +45,6 @@ RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
   _maxFCN(-std::numeric_limits<double>::infinity()), _numBadNLL(0),
   _printEvalErrors(10),
   _nDim(0), _logfile(0),
-  _doEvalErrorWall(true),
   _verbose(verbose)
 {
   
@@ -91,6 +91,8 @@ RooMinimizerFcn::RooMinimizerFcn(const RooMinimizerFcn& other) : ROOT::Math::IBa
   _funct(other._funct),
   _context(other._context),
   _maxFCN(other._maxFCN),
+  _funcOffset(other._funcOffset),
+  _recoverFromNaNStrength(other._recoverFromNaNStrength),
   _numBadNLL(other._numBadNLL),
   _printEvalErrors(other._printEvalErrors),
   _evalCounter(other._evalCounter),
@@ -507,10 +509,17 @@ double RooMinimizerFcn::DoEval(const double *x) const {
     _numBadNLL++ ;
 
     if (_doEvalErrorWall) {
-      fvalue = _maxFCN+1;
+      const double badness = RooNaNPacker::unpackNaN(fvalue);
+      fvalue = (std::isfinite(_maxFCN) ? _maxFCN : 0.) + _recoverFromNaNStrength * badness;
     }
-
   } else {
+    if (_evalCounter > 0 && _evalCounter == _numBadNLL) {
+      // This is the first time we get a valid function value; while before, the
+      // function was always invalid. For invalid  cases, we returned values > 0.
+      // Now, we offset valid values such that they are < 0.
+      _funcOffset = -fvalue;
+    }
+    fvalue += _funcOffset;
     _maxFCN = std::max(fvalue, _maxFCN);
   }
       

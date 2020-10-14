@@ -257,6 +257,13 @@ void RLoopManager::CheckIndexedFriends()
    }
 }
 
+struct RSlotRAII {
+   RSlotStack &fSlotStack;
+   unsigned int fSlot;
+   RSlotRAII(RSlotStack &slotStack) : fSlotStack(slotStack), fSlot(slotStack.GetSlot()) {}
+   ~RSlotRAII() { fSlotStack.ReturnSlot(fSlot); }
+};
+
 /// Run event loop with no source files, in parallel.
 void RLoopManager::RunEmptySourceMT()
 {
@@ -280,7 +287,8 @@ void RLoopManager::RunEmptySourceMT()
 
    // Each task will generate a subrange of entries
    auto genFunction = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
-      auto slot = slotStack.GetSlot();
+      RSlotRAII slotRAII(slotStack);
+      auto slot = slotRAII.fSlot;
       InitNodeSlots(nullptr, slot);
       try {
          for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
@@ -293,7 +301,6 @@ void RLoopManager::RunEmptySourceMT()
          throw;
       }
       CleanUpTask(slot);
-      slotStack.ReturnSlot(slot);
    };
 
    ROOT::TThreadExecutor pool;
@@ -330,7 +337,8 @@ void RLoopManager::RunTreeProcessorMT()
    std::atomic<ULong64_t> entryCount(0ull);
 
    tp->Process([this, &slotStack, &entryCount](TTreeReader &r) -> void {
-      auto slot = slotStack.GetSlot();
+      RSlotRAII slotRAII(slotStack);
+      auto slot = slotRAII.fSlot;
       InitNodeSlots(&r, slot);
       const auto entryRange = r.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
       const auto nEntries = entryRange.second - entryRange.first;
@@ -346,7 +354,6 @@ void RLoopManager::RunTreeProcessorMT()
          throw;
       }
       CleanUpTask(slot);
-      slotStack.ReturnSlot(slot);
    });
 #endif // no-op otherwise (will not be called)
 }
@@ -419,7 +426,8 @@ void RLoopManager::RunDataSourceMT()
 
    // Each task works on a subrange of entries
    auto runOnRange = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
-      const auto slot = slotStack.GetSlot();
+      RSlotRAII slotRAII(slotStack);
+      const auto slot = slotRAII.fSlot;
       InitNodeSlots(nullptr, slot);
       fDataSource->InitSlot(slot, range.first);
       const auto end = range.second;
@@ -436,7 +444,6 @@ void RLoopManager::RunDataSourceMT()
       }
       CleanUpTask(slot);
       fDataSource->FinaliseSlot(slot);
-      slotStack.ReturnSlot(slot);
    };
 
    fDataSource->Initialise();

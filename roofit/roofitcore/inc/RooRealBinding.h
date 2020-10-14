@@ -17,11 +17,14 @@
 #define ROO_REAL_BINDING
 
 #include "RooAbsFunc.h"
-#include <list>
+#include "RooSpan.h"
+#include <vector>
+#include <memory>
 
 class RooAbsRealLValue;
 class RooAbsReal;
 class RooArgSet;
+namespace BatchHelpers{ struct RunContext; }
 
 class RooRealBinding : public RooAbsFunc {
 public:
@@ -30,6 +33,7 @@ public:
   virtual ~RooRealBinding();
 
   virtual Double_t operator()(const Double_t xvector[]) const;
+  virtual RooSpan<const double> getValues(std::vector<RooSpan<const double>> coordinates) const;
   virtual Double_t getMinLimit(UInt_t dimension) const;
   virtual Double_t getMaxLimit(UInt_t dimension) const;
 
@@ -52,9 +56,10 @@ protected:
   mutable Double_t* _xsave ;
   const TNamed* _rangeName ; //!
   
-  mutable std::list<RooAbsReal*> _compList ; //!
-  mutable std::list<Double_t>    _compSave ; //!
+  mutable std::vector<RooAbsReal*> _compList ; //!
+  mutable std::vector<Double_t>    _compSave ; //!
   mutable Double_t _funcSave ; //!
+  mutable std::unique_ptr<BatchHelpers::RunContext> _evalData; /// Memory for batch evaluations
   
   ClassDef(RooRealBinding,0) // Function binding to RooAbsReal object
 };
