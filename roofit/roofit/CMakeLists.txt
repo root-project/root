@@ -133,6 +133,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooUniform.cxx
     src/RooVoigtian.cxx
     src/RooJohnson.cxx
+    src/RooFitComputeDispatch.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LINKDEF
@@ -146,8 +147,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     MathCore
 )
 
+ROOT_LINKER_LIBRARY(RooFitCompute src/RooFitComputeLib.cxx TYPE SHARED DEPENDENCIES RooFit)
+
 if(vdt AND NOT builtin_vdt)
   target_include_directories(RooFit PRIVATE ${VDT_INCLUDE_DIR})
+  target_include_directories(RooFitCompute PRIVATE ${VDT_INCLUDE_DIR})
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

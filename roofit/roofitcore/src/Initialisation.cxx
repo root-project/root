@@ -39,35 +39,35 @@ void doBanner() {
 /// Inspect cpu capabilities, and load architecture-specific libraries for RooFitCore/RooFit computations.
 void loadComputeLibrary() {
   std::vector<std::string> libNames;
-//  libNames.push_back("libRooFitCoreCompute");
-//  libNames.push_back("libRooFitCompute");
-#ifdef R__HAS_MATHMORE
-//  libNames.push_back("libRooFitMoreCompute");
-#endif
-  {
-    // Try to load HistFactory compute library as well. Need to check first if it exists.
-    TString libName("libHistFactory");
-//    if (gSystem->FindDynamicLibrary(libName, true) != nullptr)
-//      libNames.push_back("libHistFactoryCompute");
-  }
+  //~  libNames.push_back("libRooFitCoreCompute");
+  libNames.push_back("libRooFitCompute");
+//~  #ifdef R__HAS_MATHMORE
+  //~  libNames.push_back("libRooFitMoreCompute");
+//~  #endif
+  //~  {
+    //~  // Try to load HistFactory compute library as well. Need to check first if it exists.
+    //~  TString libName("libHistFactory");
+    //~  if (gSystem->FindDynamicLibrary(libName, true) != nullptr)
+      //~  libNames.push_back("libHistFactoryCompute");
+  //~  }
 
   std::string libSuffix;
-#if defined(R__RF_ARCHITECTURE_SPECIFIC_LIBS) && (defined(__GNUC__) || defined(__clang__))
-  if (__builtin_cpu_supports("avx2")) {
-    libSuffix = "_AVX2";
-  } else if (__builtin_cpu_supports("avx")) {
-    libSuffix = "_AVX";
-  } else if (__builtin_cpu_supports("sse4.1")) {
-    libSuffix = "_SSE4.1";
-  }
+//~  #if defined(R__RF_ARCHITECTURE_SPECIFIC_LIBS) && (defined(__GNUC__) || defined(__clang__))
+  //~  if (__builtin_cpu_supports("avx2")) {
+    //~  libSuffix = "_AVX2";
+  //~  } else if (__builtin_cpu_supports("avx")) {
+    //~  libSuffix = "_AVX";
+  //~  } else if (__builtin_cpu_supports("sse4.1")) {
+    //~  libSuffix = "_SSE4.1";
+  //~  }
 
-#if __GNUC__ > 5 || defined(__clang__)
-  if (__builtin_cpu_supports("avx512f")) {
-    libSuffix = "_AVX512f";
-  }
-#endif
+//~  #if __GNUC__ > 5 || defined(__clang__)
+  //~  if (__builtin_cpu_supports("avx512f")) {
+    //~  libSuffix = "_AVX512f";
+  //~  }
+//~  #endif
 
-#endif
+//~  #endif
 
   for (auto&& libName : libNames) {
     libName += libSuffix;
