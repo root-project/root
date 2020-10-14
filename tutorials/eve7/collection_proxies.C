@@ -38,14 +38,13 @@
 #include <iostream>
 
 
-
-bool gRhoZView = false;
+const Double_t kR_min = 300;
+const Double_t kR_max = 299;
+const Double_t kZ_d   = 300;
 
 ROOT::Experimental::REveManager *eveMng = nullptr;
-
+ROOT::Experimental::REveProjectionManager* g_projMng = nullptr;
 using namespace ROOT::Experimental;
-REveProjectionManager* g_projMng = nullptr;
-REveScene* g_projScene = nullptr;
 
 //==============================================================================
 //============== EMULATE FRAMEWORK CLASSES =====================================
@@ -55,11 +54,10 @@ REveScene* g_projScene = nullptr;
 // a demo class, can be provided from experiment framework
 class Jet : public TParticle
 {
-private:
+public:
    float fEtaSize{0};
    float fPhiSize{0};
 
-public:
    float GetEtaSize() const { return fEtaSize; }
    float GetPhiSize() const { return fPhiSize; }
    void  SetEtaSize(float iEtaSize) { fEtaSize = iEtaSize; }
@@ -91,9 +89,26 @@ class Event
 public:
    int eventId{0};
    int N_tracks{0};
-   int N_jets{0};
-
-   Event() = default;
+   int N_jets{0};   
+   std::vector<TList*> fListData;
+   
+   REveCaloDataHist* fCaloData{nullptr};
+   
+   Event()
+   {
+      TFile::SetCacheFileDir(".");
+       const char* histFile =
+      "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
+      auto hf = TFile::Open(histFile, "CACHEREAD");
+      auto ecalHist = (TH2F*)hf->Get("ecalLego");
+      auto hcalHist = (TH2F*)hf->Get("hcalLego");
+      fCaloData = new REveCaloDataHist();
+      fCaloData->AddHistogram(ecalHist);
+      fCaloData->RefSliceInfo(0).Setup("ECAL", 0.f, kBlue);
+      fCaloData->AddHistogram(hcalHist);
+      fCaloData->RefSliceInfo(1).Setup("HCAL", 0.1, kRed);
+      eveMng->GetEventScene()->AddElement(fCaloData);
+   }
 
    void MakeJets(int N)
    {
@@ -116,7 +131,7 @@ public:
          jet->SetPhiSize(r.Uniform(0.01, 0.3));
          list->Add(jet);
       }
-      fData.push_back(list);
+      fListData.push_back(list);
    }
 
    void MakeParticles(int N)
@@ -136,7 +151,6 @@ public:
          double pz = pt * (1. / (std::tan(2*std::atan(std::exp(-eta)))));
 
          // printf("Event::MakeParticles %2d: pt=%.2f, eta=%.2f, phi=%.2f\n", i, pt, eta, phi);
-
          auto particle = new TParticle(0, 0, 0, 0, 0, 0,
                                        px, py, pz, std::sqrt(px*px + py*py + pz*pz + 80*80),
                                        0, 0, 0, 0 );
@@ -146,7 +160,7 @@ public:
 
          list->Add(particle);
       }
-      fData.push_back(list);
+      fListData.push_back(list);
    }
 
    void MakeRecHits(int N)
@@ -165,16 +179,14 @@ public:
          auto rechit = new RecHit(pt, x, y, z);
          list->Add(rechit);
       }
-      fData.push_back(list);
+      fListData.push_back(list);
    }
-
-   std::vector<TList*> fData;
 
    void Clear()
    {
-      for (auto &l : fData)
+      for (auto &l : fListData)
          delete l;
-      fData.clear();
+      fListData.clear();
    }
 
    void Create()
@@ -183,6 +195,27 @@ public:
       MakeJets(4);
       MakeParticles(100);
       MakeRecHits(20);
+
+      // refill calo data from jet list
+      TList* jlist = fListData[0];
+      auto  ecalHist = fCaloData->GetHist(0);      
+      auto  hcalHist = fCaloData->GetHist(1);
+      ecalHist->Reset();
+      hcalHist->Reset();
+      for (int i = 0; i <= jlist->GetLast(); ++i) {
+         const Jet* j = (Jet*)jlist->At(i);
+         float offX = j->Eta();
+         float offY = j->Phi() > TMath::Pi() ? j->Phi() -  TMath::TwoPi() :  j->Phi();
+         for (int k=0; k<100; ++k) {
+            double x, y, v;
+            x = gRandom->Uniform(-j->GetEtaSize(), j->GetEtaSize());
+            y = gRandom->Uniform(-j->GetPhiSize(),j->GetPhiSize());
+            v = j->Pt();
+            ecalHist->Fill(offX + x, offY + y, v + gRandom->Uniform(2,3));
+            hcalHist->Fill(offX + x, offY + y, v + gRandom->Uniform(1,2));
+         }
+      }
+      fCaloData->DataChanged();
       eventId++;
    }
 };
@@ -343,7 +376,7 @@ public:
 
 
 //==============================================================================
-//== XY MANGER  ================================================================
+//== COLLECTION MANGER  ================================================================
 //==============================================================================
 
 class CollectionManager
@@ -395,8 +428,6 @@ public:
 
       m_viewContext->SetTableViewInfo(tableInfo);
 
-
-
       for (auto &c : eveMng->GetScenes()->RefChildren()) {
          if (c != eveMng->GetGlobalScene() && strncmp(c->GetCName(), "Geometry", 8) )
          {
@@ -408,7 +439,6 @@ public:
 
       }
 
-     // collections
       m_collections = eveMng->SpawnNewScene("Collections", "Collections");
    }
 
@@ -424,7 +454,7 @@ public:
 
    void SetDataItemsFromEvent(REveDataCollection* collection)
    {
-      for (auto &l : fEvent->fData) {
+      for (auto &l : fEvent->fListData) {
          TIter next(l);
          if (collection->GetName() == std::string(l->GetName()))
          {
@@ -461,6 +491,7 @@ public:
          proxy->Build();
       }
 
+      fEvent->fCaloData->DataChanged();
       m_inEventLoading = false;
    }
 
@@ -493,8 +524,7 @@ public:
       m_builders.push_back(glBuilder);
       glBuilder->Build();
 
-      // Table view types
-
+      // Tables
       auto tableBuilder = new REveTableProxyBuilder();
       tableBuilder->SetHaveAWindow(true);
       tableBuilder->SetCollection(collection);
@@ -608,44 +638,6 @@ public:
    }
 };
 
-void calorimeters()
-{
-   const char* histFile =
-      "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
-   const Double_t kR_min = 300;
-   const Double_t kR_max = 300;
-   const Double_t kZ_d   = 300;
-   TFile::SetCacheFileDir(".");
-   auto hf = TFile::Open(histFile, "CACHEREAD");
-   auto ecalHist = (TH2F*)hf->Get("ecalLego");
-   auto hcalHist = (TH2F*)hf->Get("hcalLego");
-   for (int i=0; i<100; ++i) {
-      double x, y;
-      gRandom->Rannor(x, y); x/=6; y/=6;
-      ecalHist->Fill(-0.1 + x, -.8 + y, 5 + gRandom->Uniform(2,3));
-      hcalHist->Fill(-0.1 + x, -.8 + y, 3 + gRandom->Uniform(1,2));
-   }
-   auto data = new REveCaloDataHist();
-   data->AddHistogram(ecalHist);
-   data->RefSliceInfo(0).Setup("ECAL", 0.f, kBlue);
-   data->AddHistogram(hcalHist);
-   data->RefSliceInfo(1).Setup("HCAL", 0.1, kRed);
-   eveMng->GetEventScene()->AddElement(data);
-
-   auto b1 = new REveGeoShape("Barrel 1");
-   b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
-   b1->SetMainColor(kCyan);
-   eveMng->GetGlobalScene()->AddElement(b1);
-
-   auto calo3d = new REveCalo3D(data);
-   calo3d->SetBarrelRadius(kR_max);
-   calo3d->SetEndCapPos(kZ_d);
-   calo3d->SetMaxTowerH(300);
-   eveMng->GetEventScene()->AddElement(calo3d);
-
-   REveCalo2D* calo2d = (REveCalo2D*) g_projMng->ImportElements(calo3d, g_projScene);
-}
-
 
 //==============================================================================
 //== main() ====================================================================
@@ -654,66 +646,61 @@ void calorimeters()
 void collection_proxies(bool proj=true)
 {
    eveMng = REveManager::Create();
-
    auto event = new Event();
    event->Create();
 
-   gRhoZView = true;
+   // create scenes and views
+   REveScene* rhoZEventScene = nullptr;
+   
+   auto b1 = new REveGeoShape("Barrel 1");
+   b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
+   b1->SetMainColor(kCyan);
+   eveMng->GetGlobalScene()->AddElement(b1);
+  
+   rhoZEventScene = eveMng->SpawnNewScene("RhoZ Scene","Projected");
+   g_projMng = new REveProjectionManager(REveProjection::kPT_RhoZ);
+   g_projMng->SetImportEmpty(true);
 
-   // RhoZ
-   if (gRhoZView)
-   {
-      auto rhoZEventScene = eveMng->SpawnNewScene("RhoZ Scene","Projected");
-      g_projMng = new REveProjectionManager(REveProjection::kPT_RhoZ);
-      g_projMng->SetImportEmpty(true);
+   auto rhoZView = eveMng->SpawnNewViewer("RhoZ View");
+   rhoZView->AddScene(rhoZEventScene);
+   auto pgeoScene = eveMng->SpawnNewScene("Geometry projected");
+   rhoZView->AddScene(pgeoScene);
+   g_projMng->ImportElements(b1, pgeoScene);
 
-      auto rhoZView = eveMng->SpawnNewViewer("RhoZ View");
-      rhoZView->AddScene(rhoZEventScene);
-      g_projScene = rhoZEventScene;
+   auto tableScene = eveMng->SpawnNewScene ("Tables", "Tables");
+   auto tableView  = eveMng->SpawnNewViewer("Table",  "Table View");
+   tableView->AddScene(tableScene);
 
-      auto pgeoScene = eveMng->SpawnNewScene("Geometry projected");
-      // g_projMng->ImportElements(b1,pgeoScene );
-      rhoZView->AddScene(pgeoScene);
-   }
-
-      // Table
-      if (1)
-      {
-         auto tableScene = eveMng->SpawnNewScene ("Tables", "Tables");
-         auto tableView  = eveMng->SpawnNewViewer("Table",  "Table View");
-         tableView->AddScene(tableScene);
-      }
-
-
-   // debug settings
+   // create event data from list
    auto xyManager = new CollectionManager(event);
 
-   if (1)
-   {
-      REveDataCollection* trackCollection = new REveDataCollection("Tracks");
-      trackCollection->SetItemClass(TParticle::Class());
-      trackCollection->SetMainColor(kGreen);
-      trackCollection->SetFilterExpr("i.Pt() > 4.1 && std::abs(i.Eta()) < 1");
-      xyManager->addCollection(trackCollection, true);
-   }
+   REveDataCollection* trackCollection = new REveDataCollection("Tracks");
+   trackCollection->SetItemClass(TParticle::Class());
+   trackCollection->SetMainColor(kGreen);
+   trackCollection->SetFilterExpr("i.Pt() > 4.1 && std::abs(i.Eta()) < 1");
+   xyManager->addCollection(trackCollection, true);
 
-   if (1)
-   {
-      REveDataCollection* jetCollection = new REveDataCollection("Jets");
-      jetCollection->SetItemClass(Jet::Class());
-      jetCollection->SetMainColor(kYellow);
-      xyManager->addCollection(jetCollection, false);
-   }
+   REveDataCollection* jetCollection = new REveDataCollection("Jets");
+   jetCollection->SetItemClass(Jet::Class());
+   jetCollection->SetMainColor(kYellow);
+   xyManager->addCollection(jetCollection, false);
 
-   if (1)
-   {
-      REveDataCollection* hitCollection = new REveDataCollection("RecHits");
-      hitCollection->SetItemClass(RecHit::Class());
-      hitCollection->SetMainColor(kOrange);
-      hitCollection->SetFilterExpr("i.fPt > 5");
-      xyManager->addCollection(hitCollection, false);
-   }
+   REveDataCollection* hitCollection = new REveDataCollection("RecHits");
+   hitCollection->SetItemClass(RecHit::Class());
+   hitCollection->SetMainColor(kOrange + 7);
+   hitCollection->SetFilterExpr("i.fPt > 5");
+   xyManager->addCollection(hitCollection, false);
 
+   // add calorimeters
+   auto calo3d = new REveCalo3D(event->fCaloData);
+   calo3d->SetBarrelRadius(kR_max);
+   calo3d->SetEndCapPos(kZ_d);
+   calo3d->SetMaxTowerH(300);
+   eveMng->GetEventScene()->AddElement(calo3d);
+   REveCalo2D* calo2d = (REveCalo2D*) g_projMng->ImportElements(calo3d, rhoZEventScene);
+
+
+   // event navigation
    auto eventMng = new EventManager(event, xyManager);
    eventMng->SetName("EventManager");
    eveMng->GetWorld()->AddElement(eventMng);
@@ -721,7 +708,5 @@ void collection_proxies(bool proj=true)
    eveMng->GetWorld()->AddCommand("QuitRoot",  "sap-icon://log",  eventMng, "QuitRoot()");
    eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", eventMng, "NextEvent()");
 
-
-   calorimeters();
    eveMng->Show();
 }
