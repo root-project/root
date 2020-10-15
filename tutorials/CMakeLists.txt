@@ -110,7 +110,11 @@ if(NOT ROOT_roofit_FOUND)
                    roofit/*.py)
 else()
   if(MSVC AND NOT win_broken_tests)
-    set(roofit_veto roofit/rf401_importttreethx.C)
+    set(roofit_veto roofit/rf104_classfactory.C
+                    roofit/rf104_classfactory.py
+                    roofit/rf401_importttreethx.C
+                    roofit/rf512_wsfactory_oper.C
+    )
   endif()
 endif()
 
