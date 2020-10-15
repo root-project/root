@@ -55,6 +55,7 @@ Int_t REveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
       jarr.push_back(row);
    }
    j["body"] = jarr;
+   fCollection->StreamPublicMethods(j);
    j["fCollectionId"] = fCollection->GetElementId();
    return ret;
 }
