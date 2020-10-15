@@ -45,7 +45,7 @@ sap.ui.define(['sap/ui/core/Component',
          for (var k = cmds.length-1; k>=0; --k) {
             var btn = new mButton({
                icon: cmds[k].icon,
-               tooltip: cmds[k].name,
+               text: cmds[k].name,
                press: this.executeCommand.bind(this, cmds[k])
             });
             toolbar.insertContentLeft(btn, 0);
