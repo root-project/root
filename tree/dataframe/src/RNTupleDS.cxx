@@ -39,25 +39,22 @@ class RNTupleColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
    std::unique_ptr<RFieldBase> fField;
+   DescriptorId_t fFieldId;
    RFieldValue fValue;
    Long64_t fLastEntry; ///< Last entry number that was read
 
-   std::unique_ptr<RFieldBase> MakeField(const std::string &colName, RPageSource &source)
+public:
+   RNTupleColumnReader(std::unique_ptr<RFieldBase> f, DescriptorId_t fieldId)
+      : fField(std::move(f)), fFieldId(fieldId), fValue(fField->GenerateValue()), fLastEntry(-1)
    {
-      const auto &descriptor = source.GetDescriptor();
-      const auto fieldId = descriptor.FindFieldId(colName);
-      const auto &fieldDescriptor = descriptor.GetFieldDescriptor(fieldId);
-      auto fieldBasePtr = fieldDescriptor.CreateField(descriptor);
-      fieldBasePtr->ConnectPageStorage(source);
-      for (auto &f : *fieldBasePtr)
-         f.ConnectPageStorage(source);
-      return fieldBasePtr;
    }
 
-public:
-   RNTupleColumnReader(const std::string &colName, RPageSource &source)
-      : fField(MakeField(colName, source)), fValue(fField->GenerateValue()), fLastEntry(-1)
-   {
+   std::unique_ptr<RNTupleColumnReader> Clone() const {
+      return std::make_unique<RNTupleColumnReader>(fField->Clone(fField->GetName()), fFieldId);
+   }
+
+   void Connect(RPageSource &source) {
+      Detail::RFieldFuse::ConnectRecursively(fFieldId, source, *fField);
    }
 
    void *GetImpl(Long64_t entry) final
@@ -71,13 +68,23 @@ public:
 };
 } // namespace Detail
 
-void RNTupleDS::AddFields(const RNTupleDescriptor &desc, DescriptorId_t parentId)
+
+RNTupleDS::~RNTupleDS() = default;
+
+
+void RNTupleDS::AddRecord(const RNTupleDescriptor &desc, DescriptorId_t parentId)
 {
    for (const auto& f : desc.GetFieldRange(parentId)) {
       fColumnNames.emplace_back(desc.GetQualifiedFieldName(f.GetId()));
       fColumnTypes.emplace_back(f.GetTypeName());
+
+      auto field = Detail::RFieldBase::Create(f.GetFieldName(), f.GetTypeName());
+      auto columnReader = std::make_unique<Detail::RNTupleColumnReader>(std::move(field), f.GetId());
+      columnReader->Connect(*fSources[0]);
+      fColumnReaderPrototypes.emplace_back(std::move(columnReader));
+
       if (f.GetStructure() == ENTupleStructure::kRecord)
-         AddFields(desc, f.GetId());
+         AddRecord(desc, f.GetId());
    }
 }
 
@@ -86,10 +93,9 @@ RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
 {
    pageSource->Attach();
    const auto &descriptor = pageSource->GetDescriptor();
-
-   AddFields(descriptor, descriptor.GetFieldZeroId());
-
    fSources.emplace_back(std::move(pageSource));
+
+   AddRecord(descriptor, descriptor.GetFieldZeroId());
 }
 
 RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const std::type_info & /* ti */)
@@ -101,7 +107,11 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* n
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
 RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info & /*tid*/)
 {
-   return std::make_unique<ROOT::Experimental::Detail::RNTupleColumnReader>(std::string(name), *fSources[slot]);
+   // TODO(jblomer): check incoming type
+   const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
+   auto clone = fColumnReaderPrototypes[index]->Clone();
+   clone->Connect(*fSources[slot]);
+   return clone;
 }
 
 bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
