@@ -633,12 +633,6 @@ public:
       fCMng->LoadEvent();
       eveMng->EnableRedraw();
    }
-
-   virtual void QuitRoot()
-   {
-      printf("Quit ROOT\n");
-      if (gApplication) gApplication->Terminate();
-   }
 };
 
 
@@ -708,7 +702,6 @@ void collection_proxies(bool proj=true)
    eventMng->SetName("EventManager");
    eveMng->GetWorld()->AddElement(eventMng);
 
-   eveMng->GetWorld()->AddCommand("QuitRoot",  "sap-icon://log",  eventMng, "QuitRoot()");
    eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", eventMng, "NextEvent()");
 
    eveMng->Show();
