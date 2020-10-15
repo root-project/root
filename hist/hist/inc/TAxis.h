@@ -169,7 +169,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Center axis labels. If center = kTRUE axis labels will be centered
-/// (hori axes only) on the bin center default is to center on the primary tick marks
+/// (horizontal axes only) on the bin center. Default is to center on the primary tick marks
 /// This option does not make sense if there are more bins than tick marks
 
 inline void TAxis::CenterLabels(Bool_t center)
