@@ -19,8 +19,16 @@
 \class RooVectorDataStore
 \ingroup Roofitcore
 
-RooVectorDataStore is the abstract base class for data collection that
-use a TTree as internal storage mechanism
+RooVectorDataStore uses std::vectors to store data columns. Each of these vectors
+is associated to an instance of a RooAbsReal, whose values it represents. Those
+RooAbsReal are the observables of the dataset.
+In addition to the observables, a data column can be bound to a different instance
+of a RooAbsReal (e.g., the column "x" can be bound to the observable "x" of a computation
+graph using attachBuffers()). In this case, a get() operation writes the value of
+the requested column into the bound real.
+
+As a faster alternative to loading values one-by-one, one can use the function getBatches(),
+which returns spans pointing directly to the data.
 **/
 
 #include "RooVectorDataStore.h"
@@ -37,10 +45,8 @@ use a TTree as internal storage mechanism
 #include "RooHelpers.h"
 #include "RunContext.h"
 
-#include "TTree.h"
-#include "TChain.h"
-#include "TBuffer.h"
 #include "TList.h"
+#include "TBuffer.h"
 
 #include <iomanip>
 using namespace std;
