@@ -153,19 +153,33 @@ std::string REveDataItemList::GetHighlightTooltip(const std::set<int>& secondary
    int idx = *secondary_idcs.begin();
    auto col = dynamic_cast<REveDataCollection*>(fMother);
    void* data = col->GetDataPtr(idx);
-   std::string eval = fTooltipFunction.EvalExpr(data);
-   std::string tooltip = Form("%s %d\n%s = %s", col->GetCName(), idx, fTooltipTitle.c_str(), eval.c_str());
-   return tooltip;
+   std::string name = col->GetName();
+   auto li = name.size();
+   if (li && name[li-1] == 's')
+   {
+      name = name.substr(0, li-1);
+   }
+
+   std::string res =  Form("%s %d",  name.c_str(), idx);
+
+   for (auto &t : fTooltipExpressions) {
+      std::string eval = t.fTooltipFunction.EvalExpr(data);
+      res +=  Form("\n  %s = %s", t.fTooltipTitle.c_str(), eval.c_str());
+   }
+
+   return res;
 }
 
 //______________________________________________________________________________
-void REveDataItemList::SetTooltipExpression(const std::string &title, const std::string &expr)
+void REveDataItemList::AddTooltipExpression(const std::string &title, const std::string &expr)
 {
-   fTooltipTitle = title;
-   fTooltipFunction.SetPrecision(2);
+   TTip tt;
+   tt.fTooltipTitle = title;
+   tt.fTooltipFunction.SetPrecision(2);
    auto col = dynamic_cast<REveDataCollection*>(fMother);
    auto icls = col->GetItemClass();
-   fTooltipFunction.SetExpressionAndType(expr, REveDataColumn::FT_Double, icls);
+   tt.fTooltipFunction.SetExpressionAndType(expr, REveDataColumn::FT_Double, icls);
+   fTooltipExpressions.push_back(tt);
 }
 
 
@@ -237,7 +251,7 @@ void REveDataCollection::ApplyFilter()
 
 //______________________________________________________________________________
 
-void  REveDataCollection::StreamPublicMethods(nlohmann::json &j)
+void  REveDataCollection::StreamPublicMethods(nlohmann::json &j) const
 {
    struct PubMethods
    {

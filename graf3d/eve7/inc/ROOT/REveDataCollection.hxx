@@ -59,17 +59,20 @@ class REveDataItemList: public REveElement,
 {
    friend class REveDataCollection;
 
-protected:
-   std::vector<REveDataItem*> fItems;
+public:
+   struct TTip {
+      std::string    fTooltipTitle;
+      REveDataColumn fTooltipFunction;
+   };
 
+private:
+   std::vector<REveDataItem*> fItems;
    std::function<void (REveDataItemList*, const std::vector<int>&)> _handler_items_change;
    std::function<void (REveDataItemList*, Set_t& impSel)> _handler_fillimp;
 
-   std::string    fTooltipTitle;
-   REveDataColumn fTooltipFunction;
+   std::vector<TTip> fTooltipExpressions;
 
 public:
-
    REveDataItemList(const std::string& n = "Items", const std::string& t = "");
    virtual ~REveDataItemList() {}
    Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
@@ -95,7 +98,7 @@ public:
 
    void ProcessSelection(ElementId_t id, bool multi, bool secondary, const std::set<int>& in_secondary_idcs);
 
-   void SetTooltipExpression(const std::string &title, const std::string &expr);
+   void AddTooltipExpression(const std::string &title, const std::string &expr);
 
    using REveElement::GetHighlightTooltip;
    std::string GetHighlightTooltip(const std::set<int>& secondary_idcs) const override;
@@ -141,7 +144,7 @@ public:
    //   const REveDataItem& RefDataItem(Int_t i) const { return fItems[i]; }
     const REveDataItem* GetDataItem(Int_t i) const { return  fItemList->fItems[i]; }
 
-   void  StreamPublicMethods(nlohmann::json &cj);
+   void  StreamPublicMethods(nlohmann::json &cj) const;
    Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 
    void SetMainColor(Color_t) override;

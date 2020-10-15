@@ -549,8 +549,11 @@ public:
 
       // set tooltip expression for items
       auto tableEntries =  tableMng->RefTableEntries(collection->GetItemClass()->GetName());
-      auto te = tableEntries[0];
-      collection->GetItemList()->SetTooltipExpression(te.fName, te.fExpression);
+      int N  = TMath::Min(int(tableEntries.size()), 3);
+      for (int t = 0; t < N; t++) {
+         auto te = tableEntries[t];
+         collection->GetItemList()->AddTooltipExpression(te.fName, te.fExpression);
+      }
 
       collection->GetItemList()->SetItemsChangeDelegate([&] (REveDataItemList* collection, const REveDataCollection::Ids_t& ids)
                                     {
