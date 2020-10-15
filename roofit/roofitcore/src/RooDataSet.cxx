@@ -916,11 +916,13 @@ void RooDataSet::initialize(const char* wgtVarName)
   if (wgtVarName) {
     RooAbsArg* wgt = _varsNoWgt.find(wgtVarName) ;
     if (!wgt) {
-      coutW(DataHandling) << "RooDataSet::RooDataSet(" << GetName() << ") WARNING: designated weight variable " 
+      coutE(DataHandling) << "RooDataSet::RooDataSet(" << GetName() << "): designated weight variable "
 			  << wgtVarName << " not found in set of variables, no weighting will be assigned" << endl ;
+      throw std::invalid_argument("RooDataSet::initialize() weight variable could not be initialised.");
     } else if (!dynamic_cast<RooRealVar*>(wgt)) {
-      coutW(DataHandling) << "RooDataSet::RooDataSet(" << GetName() << ") WARNING: designated weight variable " 
+      coutE(DataHandling) << "RooDataSet::RooDataSet(" << GetName() << "): designated weight variable "
 			  << wgtVarName << " is not of type RooRealVar, no weighting will be assigned" << endl ;
+      throw std::invalid_argument("RooDataSet::initialize() weight variable could not be initialised.");
     } else {
       _varsNoWgt.remove(*wgt) ;
       _wgtVar = (RooRealVar*) wgt ;

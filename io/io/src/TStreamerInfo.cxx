@@ -52,6 +52,7 @@ element type.
 #include "TArrayS.h"
 #include "TArrayL.h"
 #include "TError.h"
+#include "TEnum.h"
 #include "TRef.h"
 #include "TProcessID.h"
 #include "TSystem.h"
@@ -311,7 +312,7 @@ void TStreamerInfo::Build()
    // this is a pair, otherwise, on some STL implementations, it can happen that
    // pair has mother classes which are an internal implementation detail and
    // would result in bogus messages printed on screen.
-   if (strncmp(fClass->GetName(), "pair<", 5)) {
+   if (!TClassEdit::IsStdPair(fClass->GetName())) {
       const bool isCollection = fClass->GetCollectionProxy();
       const bool isString = !strcmp(fClass->GetName(), "string");
       TBaseClass* base = 0;
@@ -699,11 +700,11 @@ void TStreamerInfo::Build()
 /// Check if built and consistent with the class dictionary.
 /// This method is called by TFile::ReadStreamerInfo.
 
-void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
+void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
-   fClass = TClass::GetClass(GetName());
+   fClass = TClass::GetClass(GetName(), load);
    if (!fClass) {
       // fClassVersion should have been a Version_t and/or Version_t
       // should have been an Int_t.  Changing the on-file format
@@ -3233,7 +3234,7 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
    // Here we skip he base classes in case this is a pair or STL collection,
    // otherwise, on some STL implementations, it can happen that pair has
    // base classes which are an internal implementation detail.
-   if (!fClass->GetCollectionProxy() && strncmp(fClass->GetName(), "pair<", 5)) {
+   if (!fClass->GetCollectionProxy() && !TClassEdit::IsStdPair(fClass->GetName())) {
       while ( (el=(TStreamerElement*)next())) { // loop over bases
          if (el->IsBase()) {
             name = el->GetName();
@@ -3858,7 +3859,7 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
       if (strncmp(include,"include\\",9)==0) {
          include += 9;
       }
-      if (strncmp(element->GetTypeName(),"pair<",strlen("pair<"))==0) {
+      if (TClassEdit::IsStdPair(element->GetTypeName())) {
          TMakeProject::AddInclude( fp, "utility", kTRUE, inclist);
       } else if (strncmp(element->GetTypeName(),"auto_ptr<",strlen("auto_ptr<"))==0) {
          TMakeProject::AddInclude( fp, "memory", kTRUE, inclist);
@@ -3884,7 +3885,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
 {
    // if (fClassVersion == -4) return 0;
    if ((fClass && fClass->GetCollectionType()) || TClassEdit::IsSTLCont(GetName())) return 0;
-   if (strncmp(GetName(),"pair<",strlen("pair<"))==0) return 0;
+   if (TClassEdit::IsStdPair(GetName())) return 0;
    if (strncmp(GetName(),"auto_ptr<",strlen("auto_ptr<"))==0) return 0;
 
    TClass *cl = TClass::GetClass(GetName());
@@ -5549,4 +5550,135 @@ TClassStreamer*
 TStreamerInfo::GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl )
 {
    return TCollectionProxyFactory::GenExplicitClassStreamer(info, cl);
+}
+
+//
+// Utility functions
+//
+static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std::string &dmFull, Int_t offset)
+{
+   // Create a TStreamerElement for the type 'dmFull' and whose data member name is 'dmName'.
+
+   TString s1( TClassEdit::ShortType(dmFull.c_str(),0) );
+   TString dmType( TClassEdit::ShortType(dmFull.c_str(),1) );
+   Bool_t dmIsPtr = (s1 != dmType);
+   const char *dmTitle = "Emulation";
+
+   TDataType *dt = gROOT->GetType(dmType);
+   if (dt && dt->GetType() > 0 ) {  // found a basic type
+      Int_t dsize,dtype;
+      dtype = dt->GetType();
+      dsize = dt->Size();
+      if (dmIsPtr && dtype != kCharStar) {
+         Error("Pair Emulation Building","%s is not yet supported in pair emulation",
+               dmFull.c_str());
+         return 0;
+      } else {
+         TStreamerElement *el = new TStreamerBasicType(dmName,dmTitle,offset,dtype,dmFull.c_str());
+         el->SetSize(dsize);
+         return el;
+      }
+   } else {
+
+      static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
+      if (strcmp(dmType,"string") == 0 || strcmp(dmType,"std::string") == 0 || strcmp(dmType,full_string_name)==0 ) {
+         return new TStreamerSTLstring(dmName,dmTitle,offset,dmFull.c_str(),dmIsPtr);
+      }
+      if (TClassEdit::IsSTLCont(dmType)) {
+         return new TStreamerSTL(dmName,dmTitle,offset,dmFull.c_str(),dmFull.c_str(),dmIsPtr);
+      }
+      TClass *clm = TClass::GetClass(dmType);
+      if (!clm) {
+         if (TEnum::GetEnum(dmType, TEnum::kNone)) {
+            Int_t dtype = kInt_t;
+            return new TStreamerBasicType(dmName,dmTitle,offset,dtype,dmFull.c_str());
+         }
+         return nullptr;
+         // either we have an Emulated enum or a really unknown class!
+         // let's just claim its an enum :(
+         //Int_t dtype = kInt_t;
+         //return new TStreamerBasicType(dmName,dmTitle,offset,dtype,dmFull.c_str());
+      }
+      // a pointer to a class
+      if ( dmIsPtr ) {
+         if (clm->IsTObject()) {
+            return new TStreamerObjectPointer(dmName,dmTitle,offset,dmFull.c_str());
+         } else {
+            return new TStreamerObjectAnyPointer(dmName,dmTitle,offset,dmFull.c_str());
+         }
+      }
+      // a class
+      if (clm->IsTObject()) {
+         return new TStreamerObject(dmName,dmTitle,offset,dmFull.c_str());
+      } else if(clm == TString::Class() && !dmIsPtr) {
+         return new TStreamerString(dmName,dmTitle,offset);
+      } else {
+         return new TStreamerObjectAny(dmName,dmTitle,offset,dmFull.c_str());
+      }
+   }
+}
+
+// \brief Generate the TClass and TStreamerInfo for the requested pair.
+// This creates a TVirtualStreamerInfo for the pair and trigger the BuildCheck/Old to
+// provoke the creation of the corresponding TClass.  This relies on the dictionary for
+// std::pair<const int, int> to already exist (or the interpreter information being available)
+// as it is used as a template.
+TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firstname, const std::string &secondname)
+{
+   // Generate a TStreamerInfo for a std::pair<fname,sname>
+   // This TStreamerInfo is then used as if it was read from a file to generate
+   // and emulated TClass.
+
+   TStreamerInfo *i = (TStreamerInfo*)TClass::GetClass("pair<const int,int>")->GetStreamerInfo()->Clone();
+   std::string pname = "pair<" + firstname + "," + secondname;
+   pname += (pname[pname.length()-1]=='>') ? " >" : ">";
+   i->SetName(pname.c_str());
+   i->SetClass(nullptr);
+   i->GetElements()->Delete();
+   TStreamerElement *fel = R__CreateEmulatedElement("first", firstname, 0);
+   Int_t size = 0;
+   if (fel) {
+      i->GetElements()->Add( fel );
+
+      size = fel->GetSize();
+      Int_t sp = sizeof(void *);
+      //align the non-basic data types (required on alpha and IRIX!!)
+      if (size%sp != 0) size = size - size%sp + sp;
+   } else {
+      delete i;
+      return 0;
+   }
+   TStreamerElement *second = R__CreateEmulatedElement("second", secondname, size);
+   if (second) {
+      i->GetElements()->Add( second );
+   } else {
+      delete i;
+      return 0;
+   }
+   Int_t oldlevel = gErrorIgnoreLevel;
+   // Hide the warning about the missing pair dictionary.
+   gErrorIgnoreLevel = kError;
+   i->BuildCheck(nullptr, kFALSE); // Skipping the loading part (it would leads to infinite recursion on this very routine)
+   gErrorIgnoreLevel = oldlevel;
+   i->BuildOld();
+   return i;
+}
+
+TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &pairclassname)
+{
+   const static int pairlen = strlen("pair<");
+   if (pairclassname.compare(0, pairlen, "pair<") != 0) {
+      Error("GenerateInfoForPair", "The class name passed is not a pair: %s", pairclassname.c_str());
+      return nullptr;
+   }
+
+   std::vector<std::string> inside;
+   int nested = 0;
+   int num = TClassEdit::GetSplit(pairclassname.c_str(), inside, nested);
+   if (num != 4) {
+      Error("GenerateInfoForPair", "Could not find the pair arguments in %s", pairclassname.c_str());
+      return nullptr;
+   }
+
+   return GenerateInfoForPair(inside[1], inside[2]);
 }

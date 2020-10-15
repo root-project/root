@@ -189,7 +189,7 @@ public:
    TStreamerInfo(TClass *cl);
    virtual            ~TStreamerInfo();
    void                Build();
-   void                BuildCheck(TFile *file = 0);
+   void                BuildCheck(TFile *file = 0, Bool_t load = kTRUE);
    void                BuildEmulated(TFile *file);
    void                BuildOld();
    virtual Bool_t      BuildFor( const TClass *cl );
@@ -275,6 +275,14 @@ private:
    Int_t               WriteBufferSTLPtrs( TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset);
 public:
    virtual void        Update(const TClass *oldClass, TClass *newClass);
+
+   // \brief Generate the TClass and TStreamerInfo for the requested pair.
+   // This creates a TVirtualStreamerInfo for the pair and trigger the BuildCheck/Old to
+   // provokes the creation of the corresponding TClass.  This relies on the dictionary for
+   // std::pair<const int, int> to already exist (or the interpreter information being available)
+   // as it is used as a template.
+   virtual TVirtualStreamerInfo *GenerateInfoForPair(const std::string &pairclassname);
+   virtual TVirtualStreamerInfo *GenerateInfoForPair(const std::string &firstname, const std::string &secondname);
 
    virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name, Bool_t silent);
    virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name, Bool_t silent);

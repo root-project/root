@@ -54,6 +54,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TDatime.h"
+#include "TEnum.h"
 #include "TError.h"
 #include "TExMap.h"
 #include "TFunctionTemplate.h"
@@ -169,6 +170,12 @@ namespace {
 }
 
 std::atomic<Int_t> TClass::fgClassCount;
+
+static bool IsFromRootCling() {
+  // rootcling also uses TCling for generating the dictionary ROOT files.
+  const static bool foundSymbol = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+  return foundSymbol;
+}
 
 // Implementation of the TDeclNameRegistry
 
@@ -1108,7 +1115,7 @@ TClass::TClass(const char *name, Bool_t silent) :
       ::Fatal("TClass::TClass", "gInterpreter not initialized");
 
    gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
-   if (!silent && !fClassInfo && fName.First('@')==kNPOS)
+   if (!silent && !fClassInfo && !TClassEdit::IsArtificial(name))
       ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
    ResetBit(kLoading);
 
@@ -1339,7 +1346,11 @@ void TClass::Init(const char *name, Version_t cversion,
       return;
    }
    // Always strip the default STL template arguments (from any template argument or the class name)
-   fName           = TClassEdit::ShortType(name, TClassEdit::kDropStlDefault).c_str();
+   if (TClassEdit::IsArtificial(name))
+      fName        = name; // We can assume that the artificial class name is already normalized.
+   else
+      fName        = TClassEdit::ShortType(name, TClassEdit::kDropStlDefault).c_str();
+
    fClassVersion   = cversion;
    fDeclFileName   = dfil ? dfil : "";
    fImplFileName   = ifil ? ifil : "";
@@ -1444,7 +1455,7 @@ void TClass::Init(const char *name, Version_t cversion,
    // We need to check if the class it is not fwd declared for the cases where we
    // created a TClass directly in the kForwardDeclared state. Indeed in those cases
    // fClassInfo will always be nullptr.
-   if (fState!=kForwardDeclared && !fClassInfo) {
+   if (fState!=kForwardDeclared && !fClassInfo && !TClassEdit::IsArtificial(fName)) {
 
       if (fState == kHasTClassInit) {
          // If the TClass is being generated from a ROOT dictionary,
@@ -1482,7 +1493,7 @@ void TClass::Init(const char *name, Version_t cversion,
          }
       }
    }
-   if (!silent && (!fClassInfo && !fCanLoadClassInfo) && !isStl && fName.First('@')==kNPOS &&
+   if (!silent && (!fClassInfo && !fCanLoadClassInfo) && !isStl && !TClassEdit::IsArtificial(fName) &&
        !TClassEdit::IsInterpreterDetail(fName.Data()) ) {
       if (fState == kHasTClassInit) {
          if (fImplFileLine == -1 && fClassVersion == 0) {
@@ -1599,7 +1610,7 @@ void TClass::Init(const char *name, Version_t cversion,
             fStreamer =  TVirtualStreamerInfo::Factory()->GenEmulatedClassStreamer( GetName(), silent );
          }
       }
-   } else if (!strncmp(GetName(),"std::pair<",10) || !strncmp(GetName(),"pair<",5) ) {
+   } else if (TClassEdit::IsStdPair(GetName())) {
       // std::pairs have implicit conversions
       GetSchemaRules(kTRUE);
    }
@@ -2018,7 +2029,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
    // and those for which the user explicitly requested a dictionary.
    if (!isTransient && GetState() != kHasTClassInit
        && TClassEdit::IsStdClass(GetName())
-       && strncmp(GetName(), "pair<", 5) != 0) {
+       && !TClassEdit::IsStdPair(GetName())) {
       Error("BuildRealData", "Inspection for %s not supported!", GetName());
    }
 
@@ -2307,14 +2318,6 @@ Bool_t TClass::CanSplit() const
          { This->fCanSplit = 0; return kFALSE; }
       if (!valueClass->CanSplit()) { This->fCanSplit = 0; return kFALSE; }
       if (valueClass->GetCollectionProxy() != 0) { This->fCanSplit = 0; return kFALSE; }
-
-      Int_t stl = -TClassEdit::IsSTLCont(GetName(), 0);
-      if ((stl==ROOT::kSTLmap || stl==ROOT::kSTLmultimap)
-          && !valueClass->HasDataMemberInfo())
-      {
-         This->fCanSplit = 0;
-         return kFALSE;
-      }
 
       This->fCanSplit = 1;
       return kTRUE;
@@ -2974,6 +2977,15 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       load = kTRUE;
    }
 
+   if (TClassEdit::IsArtificial(name)) {
+      // If there is a @ symbol (followed by a version number) then this is a synthetic class name created
+      // from an already normalized name for the purpose of supporting schema evolution.
+      // There is no dictionary or interpreter information about this kind of class, the only
+      // (undesirable) side-effect of doing the search would be a waste of CPU time and potential
+      // auto-loading or auto-parsing based on the scope of the name.
+      return cl;
+   }
+
    // To avoid spurious auto parsing, let's check if the name as-is is
    // known in the TClassTable.
    DictFuncPtr_t dict = TClassTable::GetDictNorm(name);
@@ -3034,6 +3046,15 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 //                 altcl->GetName(), name, normalizedName.c_str());
 //   }
 
+   // We want to avoid auto-parsing due to intentionally missing dictionary for std::pair.
+   // However, we don't need this special treatement in rootcling (there is no auto-parsing)
+   // and we want to make that the TClass for the pair goes through the regular creation
+   // mechanism (i.e. in rootcling they should be in kInterpreted state and never in
+   // kEmulated state) so that they have proper interpreter (ClassInfo) information which
+   // will be used to create the TProtoClass (if one is requested for the pair).
+   const bool ispair = TClassEdit::IsStdPair(normalizedName) && !IsFromRootCling();
+   const bool ispairbase = TClassEdit::IsStdPairBase(normalizedName) && !IsFromRootCling();
+
    TClass *loadedcl = 0;
    if (checkTable) {
       loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
@@ -3041,8 +3062,11 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       if (gInterpreter->AutoLoad(normalizedName.c_str(),kTRUE)) {
          loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
       }
+      auto e = TEnum::GetEnum(normalizedName.c_str(), TEnum::kNone);
+      if (e)
+         return nullptr;
       // Maybe this was a typedef: let's try to see if this is the case
-      if (!loadedcl){
+      if (!loadedcl && !ispair && !ispairbase) {
          if (TDataType* theDataType = gROOT->GetType(normalizedName.c_str())){
             // We have a typedef: we get the name of the underlying type
             auto underlyingTypeName = theDataType->GetTypeName();
@@ -3065,13 +3089,17 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    // TClass if we have one.
    if (cl) return cl;
 
-   if (TClassEdit::IsSTLCont( normalizedName.c_str() )) {
+   if (ispair) {
+      auto pairinfo = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(normalizedName);
+      return pairinfo ? pairinfo->GetClass() : nullptr;
+
+   } else if (TClassEdit::IsSTLCont( normalizedName.c_str() )) {
 
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
    }
 
    // Check the interpreter only after autoparsing the template if any.
-   {
+   if (!ispairbase) {
       std::string::size_type posLess = normalizedName.find('<');
       if (posLess != std::string::npos) {
          gCling->AutoParse(normalizedName.substr(0, posLess).c_str());
@@ -3636,9 +3664,7 @@ TList *TClass::GetListOfEnums(Bool_t requestListLoading /* = kTRUE */)
          return fEnums.load();
       }
 
-      static bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
-
-      if (fromRootCling) // rootcling is single thread (this save some space in the rootpcm).
+      if (IsFromRootCling()) // rootcling is single thread (this save some space in the rootpcm).
          fEnums = new TListOfEnums(this);
       else
          fEnums = new TListOfEnumsWithLock(this);
@@ -4028,7 +4054,7 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
 
    THashTable visited;
 
-   if (strncmp(fName, "pair<", 5) == 0) {
+   if (TClassEdit::IsStdPair(fName)) {
       GetMissingDictionariesForPairElements(result, visited, recurse);
       return;
    }
@@ -6375,7 +6401,7 @@ UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
    // otherwise, on some STL implementations, it can happen that pair has
    // base classes which are an internal implementation detail.
    TList *tlb = ((TClass*)this)->GetListOfBases();
-   if (tlb && !GetCollectionProxy() && strncmp(GetName(), "pair<", 5)) {
+   if (tlb && !GetCollectionProxy() && !TClassEdit::IsStdPair(GetName())) {
       // Loop over bases if not a proxied collection or a pair
 
       TIter nextBase(tlb);
