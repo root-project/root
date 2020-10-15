@@ -1693,15 +1693,15 @@ End_Macro
 
 The following contour options are supported:
 
-| Option   | Description                                                           |
-|----------|-----------------------------------------------------------------------|
-| "CONT"   | Draw a contour plot (same as CONT0).                                  |
-| "CONT0"  | Draw a contour plot using surface colors to distinguish contours.     |
-| "CONT1"  | Draw a contour plot using the line colors to distinguish contours.    |
-| "CONT2"  | Draw a contour plot using the line styles to distinguish contours.    |
-| "CONT3"  | Draw a contour plot using the same line style for all contours.       |
-| "CONT4"  | Draw a contour plot using surface colors (`SURF` option at theta = 0).|
-| "CONT5"  | Draw a contour plot using Delaunay triangles.                         |
+| Option   | Description                                                                 |
+|----------|-----------------------------------------------------------------------------|
+| "CONT"   | Draw a contour plot (same as CONT0).                                        |
+| "CONT0"  | Draw a contour plot using surface colors to distinguish contours.           |
+| "CONT1"  | Draw a contour plot using the line colors to distinguish contours.          |
+| "CONT2"  | Draw a contour plot using the line styles (1 to 5) to distinguish contours. |
+| "CONT3"  | Draw a contour plot using the same line style for all contours.             |
+| "CONT4"  | Draw a contour plot using surface colors (`SURF` option at theta = 0).      |
+| "CONT5"  | Draw a contour plot using Delaunay triangles.                               |
 
 
 
@@ -1747,7 +1747,7 @@ End_Macro
 
 The following example shows a 2D histogram plotted with the option
 `CONT2`. The option `CONT2` draws a contour plot using the
-line styles to distinguish contours.
+line styles (1 to 5) to distinguish contours.
 
 Begin_Macro(source)
 {
