@@ -241,7 +241,6 @@ sap.ui.define([
                      }
                   }),
                   showFilterMenuEntry: true,
-                  width: "100px"
                });
             });
 
