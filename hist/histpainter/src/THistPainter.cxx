@@ -1693,15 +1693,15 @@ End_Macro
 
 The following contour options are supported:
 
-| Option   | Description                                                       |
-|----------|-------------------------------------------------------------------|
-| "CONT"   | Draw a contour plot (same as CONT0).|
-| "CONT0"  | Draw a contour plot using surface colors to distinguish contours.|
-| "CONT1"  | Draw a contour plot using the line colors to distinguish contours.|
-| "CONT2"  | Draw a contour plot using the line styles to distinguish contours.|
-| "CONT3"  | Draw a contour plot solid lines for all contours.|
+| Option   | Description                                                           |
+|----------|-----------------------------------------------------------------------|
+| "CONT"   | Draw a contour plot (same as CONT0).                                  |
+| "CONT0"  | Draw a contour plot using surface colors to distinguish contours.     |
+| "CONT1"  | Draw a contour plot using the line colors to distinguish contours.    |
+| "CONT2"  | Draw a contour plot using the line styles to distinguish contours.    |
+| "CONT3"  | Draw a contour plot using the same line style for all contours.       |
 | "CONT4"  | Draw a contour plot using surface colors (`SURF` option at theta = 0).|
-| "CONT5"  | Draw a contour plot using Delaunay triangles.|
+| "CONT5"  | Draw a contour plot using Delaunay triangles.                         |
 
 
 
@@ -1764,7 +1764,7 @@ Begin_Macro(source)
 End_Macro
 
 The following example shows a 2D histogram plotted with the option
-`CONT3`. The option `CONT3` draws contour plot solid lines for
+`CONT3`. The option `CONT3` draws contour plot using the same line style for
 all contours.
 
 Begin_Macro(source)
@@ -1777,6 +1777,7 @@ Begin_Macro(source)
       hcont3->Fill(px-1,5*py);
       hcont3->Fill(2+0.5*px,2*py-10.,0.1);
    }
+   hcont3->SetLineStyle(kDotted);
    hcont3->Draw("CONT3");
 }
 End_Macro
