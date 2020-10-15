@@ -20,12 +20,12 @@ sap.ui.define([
 
    return Controller.extend("rootui5.eve7.controller.EveTable", {
 
-      onInit : function() {
+      onInit: function () {
          var data = this.getView().getViewData();
          // console.log("VIEW DATA", data);
 
          var id = this.getView().getId();
-         console.log("eve.GL.onInit id = ", id );
+         console.log("eve.GL.onInit id = ", id);
 
          this._load_scripts = true;
          this._render_html = false;
@@ -35,13 +35,13 @@ sap.ui.define([
          this.kind = data.kind;
 
          var rh = this.mgr.handle.GetUserArgs("TableRowHeight");
-         if (rh && (rh>0))
+         if (rh && (rh > 0))
             this.getView().byId("table").setRowHeight(rh);
 
          this.bindTableColumns = true;
          var element = this.mgr.GetElement(this.eveViewerId);
          // loop over scene and add dependency
-         for (var k=0;k<element.childs.length;++k) {
+         for (var k = 0; k < element.childs.length; ++k) {
             var scene = element.childs[k];
             this.mgr.RegisterSceneReceiver(scene.fSceneId, this);
             this.onSceneCreate();
@@ -49,94 +49,92 @@ sap.ui.define([
 
          // attach to changes in 'Collection' scene
          let sceneList = this.mgr.childs[0].childs[2].childs;
-         for (let i = 0; i < sceneList.length; ++i)
-         {
+         for (let i = 0; i < sceneList.length; ++i) {
             if (sceneList[i].fName == "Collections")
                this.mgr.RegisterSceneReceiver(sceneList[i].fElementId, this);
          }
 
          let table = this.getView().byId("table");
          let pthis = this;
-         table.attachRowSelectionChange (function(d)	{
+         table.attachRowSelectionChange(function (d) {
             if (pthis.mgr.busyProcessingChanges)
                return;
 
-	    let idx = d.getParameter("rowIndex");
+            let idx = d.getParameter("rowIndex");
             var oData = table.getContextByIndex(idx);
             if (oData) {
-               let ui =  oData.getPath().substring(6);
-               console.log("idx =", idx, "path idx = ", ui );
+               let ui = oData.getPath().substring(6);
+               console.log("idx =", idx, "path idx = ", ui);
 
                let itemList = pthis.collection.childs[0];
                let secIdcs = [ui];
                let fcall = "ProcessSelection(" + pthis.mgr.global_selection_id + `, false, true`;
-               fcall += ", { " + secIdcs.join(", ")  + " }";
+               fcall += ", { " + secIdcs.join(", ") + " }";
                fcall += ")";
                pthis.mgr.SendMIR(fcall, itemList.fElementId, itemList._typename);
             }
-            else
-            {
+            else {
                // console.log("attachRowSelectionChange no path ", oData);
             }
          });
          this.table = table;
       },
-      sortTable: function(e) {
-	   var col = e.mParameters.column;
-	   var colId = col.getId();
 
-	   var col = e.mParameters.column;
-	   var bDescending = (e.mParameters.sortOrder ==  sap.ui.core.SortOrder.Descending);
-	   var sv = bDescending;
+      sortTable: function (e) {
+         var col = e.mParameters.column;
+         var colId = col.getId();
 
-	   var oSorter0 = new sap.ui.model.Sorter({
-	       path: "Filtered",
-	       descending: true
-	   });
+         var col = e.mParameters.column;
+         var bDescending = (e.mParameters.sortOrder == sap.ui.core.SortOrder.Descending);
+         var sv = bDescending;
 
-	   var oSorter1 = new sap.ui.model.Sorter({
-	       path: col.mProperties.sortProperty,
-	       descending: sv
-	   });
+         var oSorter0 = new sap.ui.model.Sorter({
+            path: "Filtered",
+            descending: true
+         });
 
-          if ( col.mProperties.sortProperty === "Name")
-          {
-             let off = this.collection.fName.length;
-             oSorter1.fnCompare = function(value1In, value2In) {
+         var oSorter1 = new sap.ui.model.Sorter({
+            path: col.mProperties.sortProperty,
+            descending: sv
+         });
+
+         if (col.mProperties.sortProperty === "Name") {
+            let off = this.collection.fName.length;
+            oSorter1.fnCompare = function (value1In, value2In) {
                let value1 = value1In.substring(off);
                let value2 = value2In.substring(off);
-	       value2 = parseInt(value2);
-	       value1 = parseInt(value1);
-	       if (value1 < value2) return -1;
-	       if (value1 == value2) return 0;
-	       if (value1 > value2) return 1;
-	     };
-          }
-          else {
-	   oSorter1.fnCompare = function(value1, value2) {
-	       value2 = parseFloat(value2);
-	       value1 = parseFloat(value1);
-	       if (value1 < value2) return -1;
-	       if (value1 == value2) return 0;
-	       if (value1 > value2) return 1;
-	   };
-          }
-          var oTable = this.getView().byId("table");
-	  var oItemsBinding = oTable.getBinding("rows");
-          // Do one-level sort on Filtered entry
-          if ( col.mProperties.sortProperty === "Filtered")
-               oItemsBinding.sort([oSorter1]);
-          else
-	   oItemsBinding.sort([oSorter0, oSorter1]);
+               value2 = parseInt(value2);
+               value1 = parseInt(value1);
+               if (value1 < value2) return -1;
+               if (value1 == value2) return 0;
+               if (value1 > value2) return 1;
+            };
+         }
+         else {
+            oSorter1.fnCompare = function (value1, value2) {
+               value2 = parseFloat(value2);
+               value1 = parseFloat(value1);
+               if (value1 < value2) return -1;
+               if (value1 == value2) return 0;
+               if (value1 > value2) return 1;
+            };
+         }
+         var oTable = this.getView().byId("table");
+         var oItemsBinding = oTable.getBinding("rows");
+         // Do one-level sort on Filtered entry
+         if (col.mProperties.sortProperty === "Filtered")
+            oItemsBinding.sort([oSorter1]);
+         else
+            oItemsBinding.sort([oSorter0, oSorter1]);
 
-          // show indicators in column header
-           col.setSorted(true);
-           if (sv)
-               col.setSortOrder(sap.ui.table.SortOrder.Descending);
-           else
-               col.setSortOrder(sap.ui.table.SortOrder.Ascending);
+         // show indicators in column header
+         col.setSorted(true);
+         if (sv)
+            col.setSortOrder(sap.ui.table.SortOrder.Descending);
+         else
+            col.setSortOrder(sap.ui.table.SortOrder.Ascending);
 
-	 e.preventDefault();
+         e.preventDefault();
          this.updateSortMap();
       },
 
@@ -155,8 +153,7 @@ sap.ui.define([
          }
       },
 
-      locateEveTable: function()
-      {
+      locateEveTable: function () {
          this.eveTable = 0;
          var element = this.mgr.GetElement(this.eveViewerId);
          var sceneInfo = element.childs[0];
@@ -173,23 +170,24 @@ sap.ui.define([
             var product = scene.childs[i];
             if (product.childs && product.childs.length && product.childs[0].fCollectionId == this.viewInfo.fDisplayedCollection) {
                // console.log("table found  ",product.childs[0] );
-               this.eveTable =  product.childs[0];
+               this.eveTable = product.childs[0];
                break;
             }
          }
       },
-      getCellText : function(value, filtered) {
-	 return "<span class='" + (filtered ? "eveTableCellFiltered" : "eveTableCellUnfiltered") + "'>" + value + "</span>"
+
+      getCellText: function (value, filtered) {
+         return "<span class='" + (filtered ? "eveTableCellFiltered" : "eveTableCellUnfiltered") + "'>" + value + "</span>"
       },
-      buildTableBody: function()
-      {
+
+      buildTableBody: function () {
          var oTable = this.getView().byId("table");
 
          // row definition
          var rowData = this.eveTable.body;
 
          // parse to float -- AMT in future data should be streamed as floats
-         for (var r=0; r < rowData.length; r++) {
+         for (var r = 0; r < rowData.length; r++) {
             var xr = rowData[r];
             for (var xri = 0; xri < xr.length; xri++) {
                var nv = parseFloat(xr[i]);
@@ -200,24 +198,24 @@ sap.ui.define([
          }
 
          let itemList = this.collection.childs[0].items;
-         for (var i = 0; i < itemList.length; i++)
-         {
+         for (var i = 0; i < itemList.length; i++) {
             rowData[i].Name = this.collection.fName + " " + i;
-            rowData[i].Filtered =  itemList[i].fFiltered === true ? 0 : 1;
+            rowData[i].Filtered = itemList[i].fFiltered === true ? 0 : 1;
          }
 
          if (this.bindTableColumns) {
             // column definition
+
+            console.log("bind table columns ");
             var columnData = [];
 
-            columnData.push({columnName:"Name"});
-            columnData.push({columnName:"Filtered"});
+            columnData.push({ columnName: "Name" });
+            columnData.push({ columnName: "Filtered" });
 
             var eveColumns = this.eveTable.childs;
-            for (var i = 0; i < eveColumns.length; i++)
-            {
+            for (var i = 0; i < eveColumns.length; i++) {
                var cname = eveColumns[i].fName;
-               columnData.push({columnName : cname});
+               columnData.push({ columnName: cname });
             }
 
             // table model
@@ -228,60 +226,67 @@ sap.ui.define([
             });
             oTable.setModel(oModel);
 
-	     var pthis = this;
-             oTable.bindAggregation("columns", "/columns", function(sId, oContext) {
-                 return new sap.ui.table.Column(sId, {
-	             label: "{columnName}",
-	             sortProperty: "{columnName}",
-		     template: new FormattedText({
-		         htmlText: {
-			     parts: [
-			         {path: oContext.getProperty("columnName")},
-			         {path: "Filtered"}
-			     ],
-			     formatter: pthis.getCellText
-		         }
-		     }),
-                     showFilterMenuEntry: true,
-                     width: "100px"
+            var pthis = this;
+            oTable.bindAggregation("columns", "/columns", function (sId, oContext) {
+               return new sap.ui.table.Column(sId, {
+                  label: "{columnName}",
+                  sortProperty: "{columnName}",
+                  template: new FormattedText({
+                     htmlText: {
+                        parts: [
+                           { path: oContext.getProperty("columnName") },
+                           { path: "Filtered" }
+                        ],
+                        formatter: pthis.getCellText
+                     }
+                  }),
+                  showFilterMenuEntry: true,
+                  width: "100px"
                });
             });
 
-	     // bind the Table items to the data collection
-	     var oBinding = oTable.bindRows({
-		 path : "/rows",
-		 sorter: [
-		     new sap.ui.model.Sorter({
-			 path: 'Filtered',
-			 descending: true
-		     })
-		 ]
+            // bind the Table items to the data collection
+            var oBinding = oTable.bindRows({
+               path: "/rows",
+               sorter: [
+                  new sap.ui.model.Sorter({
+                     path: 'Filtered',
+                     descending: true
+                  })
+               ]
 
-	     });
+            });
+
+            if (sap.ui.getCore().byId("inputExp")) {
+               let ent = sap.ui.getCore().byId("inputExp");
+               let sm = ent.getModel();
+               sm.setData(this.eveTable.fPublicFunctions);
+               console.log("SHOULD UPDATE SUGGESTION DATA")
+            }
+
             this.bindTableColumns = false;
          }
-         else
-         {
+         else {
             var model = oTable.getModel();
             var data = model.getData();
-            model.setData({"rows":rowData, "columns":data.columns});
+            model.setData({ "rows": rowData, "columns": data.columns });
          }
          this.updateSortMap();
       },
-      buildTableHeader: function()
-      {
+      
+      buildTableHeader: function () {
          var oModel = new JSONModel();
          var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
          var clist = this.mgr.GetElement(collection.fMotherId);
          // console.log("collection list ", clist);
 
-	 var mData = {
-	    "itemx": [
-	    ]};
+         var mData = {
+            "itemx": [
+            ]
+         };
 
-         for (var i = 0; i < clist.childs.length; i++)
-         {
-            mData.itemx.push({"text" :clist.childs[i].fName, "key": clist.childs[i].fName, "collectionEveId":clist.childs[i].fElementId });
+         for (var i = 0; i < clist.childs.length; i++) {
+            mData.itemx.push({ "text": clist.childs[i].fName, "key": clist.childs[i].fName, "collectionEveId": clist.childs[i].fElementId });
          }
          oModel.setData(mData);
          this.getView().setModel(oModel, "collections");
@@ -291,41 +296,41 @@ sap.ui.define([
          combo.data("controller", this);
       },
 
-      onLoadScripts: function() {
+      onLoadScripts: function () {
          this._load_scripts = true;
          this.checkScenes();
       },
 
       // function called from GuiPanelController
-      onExit : function() {
+      onExit: function () {
          if (this.mgr) this.mgr.Unregister(this);
       },
 
-      onSceneCreate: function(element, id) {
+      onSceneCreate: function (element, id) {
          console.log("EveTable onSceneChanged", id);
          this.locateEveTable();
          this.buildTableHeader();
          this.buildTableBody(true);
       },
 
-      UpdateMgr : function(mgr) {
+      UpdateMgr: function (mgr) {
          var elem = mgr.map[this.eveViewerId];
-         var scene = mgr.map[ elem.fMotherId];
+         var scene = mgr.map[elem.fMotherId];
          this.mgr = mgr;
       },
 
-      onAfterRendering: function() {
+      onAfterRendering: function () {
          this._render_html = true;
          this.checkScenes();
       },
 
-      checkScenes: function() {
+      checkScenes: function () {
       },
 
-      toggleTableEdit: function() {
+      toggleTableEdit: function () {
          var header = sap.ui.getCore().byId("EveViewer21--header");
          if (!this.editor) {
-            this.editor = new VerticalLayout("tableEdit", {"width":"100%"});
+            this.editor = new VerticalLayout("tableEdit", { "width": "100%" });
 
             header.addContent(this.editor);
 
@@ -333,22 +338,22 @@ sap.ui.define([
             {
                var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
                var exprIn = new sap.m.Input("inputExp", {
-    		  placeholder: "Start expression with \"i.\" to access object",
-    		  showValueHelp: true,
-    		  showTableSuggestionValueHelp: false,
-    		  width: "100%",
-    		  maxSuggestionWidth: "500px",
-    		  showSuggestion: true,
-    		  valueHelpRequest: function (oEvent) {
+                  placeholder: "Start expression with \"i.\" to access object",
+                  showValueHelp: true,
+                  showTableSuggestionValueHelp: false,
+                  width: "100%",
+                  maxSuggestionWidth: "500px",
+                  showSuggestion: true,
+                  valueHelpRequest: function (oEvent) {
                      MessageBox.alert("Write any valid expression.\n Using \"i.\" convetion to access an object in collection. Below is an example:\ni.GetPdgCode() + 2");
-    		  },
-    		  suggestionItemSelected: function(oEvent){
-    		     var oItem = oEvent.getParameter("selectedRow");
-    		     console.log("sap.m.Input id with suggestion: selected item text is ------ " , oItem.getCells());
+                  },
+                  suggestionItemSelected: function (oEvent) {
+                     var oItem = oEvent.getParameter("selectedRow");
+                     console.log("sap.m.Input id with suggestion: selected item text is ------ ", oItem.getCells());
                      // fill in title if empty
                      var it = sap.ui.getCore().byId("titleEx");
                      if ((it.getValue() && it.getValue().length) == false) {
-                        var v =  oItem.getCells()[0].getText().substring(2);
+                        var v = oItem.getCells()[0].getText().substring(2);
                         var t = v.split("(");
                         it.setValue(t[0]);
                      }
@@ -361,76 +366,75 @@ sap.ui.define([
                         else
                            ip.setValue("3");
                      }
-    		  },
-    		  suggestionColumns : [
-    		     new sap.m.Column({
-    			styleClass : "f",
-    			hAlign : "Begin",
-    			header : new sap.m.Label({
-                           text : "Funcname"
-    			})
-    		     }),
-    		     new sap.m.Column({
-    			hAlign : "Center",
-    			styleClass : "r",
-    			popinDisplay : "Inline",
-    			header : new sap.m.Label({
-    			   text : "Return"
-    			}),
-    			minScreenWidth : "Tablet",
-    			demandPopin : true
-    		     }),
+                  },
+                  suggestionColumns: [
+                     new sap.m.Column({
+                        styleClass: "f",
+                        hAlign: "Begin",
+                        header: new sap.m.Label({
+                           text: "Funcname"
+                        })
+                     }),
+                     new sap.m.Column({
+                        hAlign: "Center",
+                        styleClass: "r",
+                        popinDisplay: "Inline",
+                        header: new sap.m.Label({
+                           text: "Return"
+                        }),
+                        minScreenWidth: "Tablet",
+                        demandPopin: true
+                     }),
 
-    		     new sap.m.Column({
-    			hAlign : "End",
-    			styleClass : "c",
-    			width : "30%",
-    			popinDisplay : "Inline",
-    			header : new sap.m.Label({
-                           text : "Class"
-    			}),
-    			minScreenWidth : "400px",
-    			demandPopin : true
-    		     })
-    		  ]
-    	       }).addStyleClass("inputRight");
+                     new sap.m.Column({
+                        hAlign: "End",
+                        styleClass: "c",
+                        width: "30%",
+                        popinDisplay: "Inline",
+                        header: new sap.m.Label({
+                           text: "Class"
+                        }),
+                        minScreenWidth: "400px",
+                        demandPopin: true
+                     })
+                  ]
+               }).addStyleClass("inputRight");
 
 
                exprIn.setModel(oModel);
 
-    	       var oTableItemTemplate = new sap.m.ColumnListItem({
-    		  type : "Active",
-    		  vAlign : "Middle",
-    		  cells : [
-    		     new sap.m.Label({
-    			text : "{f}"
-    		     }),
+               var oTableItemTemplate = new sap.m.ColumnListItem({
+                  type: "Active",
+                  vAlign: "Middle",
+                  cells: [
                      new sap.m.Label({
-    			text: "{r}"
-    		     }),
+                        text: "{f}"
+                     }),
                      new sap.m.Label({
-    			text : "{c}"
-    		     })
-    		  ]
-    	       });
-    	       var oModel = new sap.ui.model.json.JSONModel();
-               var oSuggestionData = collection.fPublicFunctions;
-               console.log("suggested data ",oSuggestionData );
-    	       oModel.setData(oSuggestionData);
-    	       exprIn.setModel(oModel);
-    	       exprIn.bindAggregation("suggestionRows", "/", oTableItemTemplate);
+                        text: "{r}"
+                     }),
+                     new sap.m.Label({
+                        text: "{c}"
+                     })
+                  ]
+               });
+               var oModel = new sap.ui.model.json.JSONModel();
+               var oSuggestionData = this.eveTable.fPublicFunctions;
+               oModel.setData(oSuggestionData);
+               exprIn.setModel(oModel);
+               exprIn.bindAggregation("suggestionRows", "/", oTableItemTemplate);
 
                this.editor.addContent(exprIn);
             }
 
             // title & prec
             {
-               var hl = new HorizontalLayout( {"width":"100%"});
-               var titleIn = new mInput("titleEx", {placeholder:"Title", tooltip:"column title"});
+               var hl = new HorizontalLayout({ "width": "100%" });
+               var titleIn = new mInput("titleEx", { placeholder: "Title", tooltip: "column title" });
                titleIn.setWidth("100%");
                hl.addContent(titleIn);
 
-               var precIn = new mInput("precisionEx", {placeholder:"Precision", type: sap.m.InputType.Number, constraints: {minimum:"0", maximum:"9"}});
+               var precIn = new mInput("precisionEx", { placeholder: "Precision", type: sap.m.InputType.Number, constraints: { minimum: "0", maximum: "9" } });
                precIn.setWidth("100%");
                hl.addContent(precIn);
 
@@ -440,7 +444,7 @@ sap.ui.define([
             //  button actions
             {
                var ll = new HorizontalLayout();
-               var addBut = new mButton("AddCol", {text:"Add", press: this.addColumn});
+               var addBut = new mButton("AddCol", { text: "Add", press: this.addColumn });
                addBut.data("controller", this);
                ll.addContent(addBut);
                this.editor.visible = true;
@@ -460,7 +464,7 @@ sap.ui.define([
          }
       },
 
-      addColumn: function(event) {
+      addColumn: function (event) {
          var pthis = this.data("controller");
          var ws = pthis.editor.getContent();
 
@@ -468,70 +472,68 @@ sap.ui.define([
          if (!expr) {
             alert("need a new column expression");
          }
-         var hl =  ws[1].getContent();
+         var hl = ws[1].getContent();
          var title = hl[0].getProperty("value");
          if (!title) {
             title = expr;
          }
 
          pthis.mgr.SendMIR("AddNewColumnToCurrentCollection( \"" + expr + "\", \"" + title + "\" )",
-                           pthis.viewInfo.fElementId, pthis.viewInfo._typename);
+            pthis.viewInfo.fElementId, pthis.viewInfo._typename);
 
          // reset values
          sap.ui.getCore().byId("titleEx").setValue("");
          sap.ui.getCore().byId("precisionEx").setValue("");
       },
 
-      collectionChanged: function(oEvent) {
+      collectionChanged: function (oEvent) {
          // console.log("collectionChanged ", oEvent.getSource());
          var model = oEvent.oSource.getSelectedItem().getBindingContext("collections");
          var path = model.getPath();
          var entry = model.getProperty(path);
          var coll = entry.collectionEveId;
-         var mng =  this.viewInfo;
+         var mng = this.viewInfo;
 
          this.mgr.SendMIR("SetDisplayedCollection(" + coll + ")", mng.fElementId, mng._typename);
       },
 
-      sceneElementChange : function(el)
-      {
+      sceneElementChange: function (el) {
          if (el._typename == "ROOT::Experimental::REveTableViewInfo") {
             this.bindTableColumns = true;
          }
       },
 
-      endChanges : function(oEvent) {
-         this.locateEveTable();
-         this.buildTableBody();
+      endChanges: function (oEvent) {
+         if (this.bindTableColumns) {
+            this.locateEveTable();
+            this.buildTableBody();
+         }
       },
 
-      elementRemoved: function(elId) {
+      elementRemoved: function (elId) {
          var el = this.mgr.GetElement(elId);
       },
 
-      SelectElement: function(selection_obj, element_id, sec_idcs) {
+      SelectElement: function (selection_obj, element_id, sec_idcs) {
          let table = this.getView().byId("table");
-         if (selection_obj.fElementId == this.mgr.global_selection_id)
-         {
-            if (element_id == this.collection.childs[0].fElementId )
-            {
+         if (selection_obj.fElementId == this.mgr.global_selection_id) {
+            if (element_id == this.collection.childs[0].fElementId) {
                table.clearSelection();
-               for (let i = 0; i < sec_idcs.length; i++)
-               {
+               for (let i = 0; i < sec_idcs.length; i++) {
                   let si = sec_idcs[i];
                   let ui = si;
 
                   if (this.table.sortMap) ui = this.table.sortMap[si];
                   table.addSelectionInterval(ui, ui);
                }
+               this.buildTableBody();
             }
          }
       },
 
 
       UnselectElement: function (selection_obj, element_id) {
-         if (selection_obj.fElementId == this.mgr.global_selection_id)
-         {
+         if (selection_obj.fElementId == this.mgr.global_selection_id) {
             this.table.clearSelection();
          }
       }
