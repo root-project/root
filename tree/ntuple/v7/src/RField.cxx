@@ -151,39 +151,40 @@ ROOT::Experimental::Detail::RFieldBase::~RFieldBase()
 {
 }
 
-ROOT::Experimental::Detail::RFieldBase*
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
    std::string normalizedType(GetNormalizedType(typeName));
 
-   if (normalizedType == "ROOT::Experimental::ClusterSize_t") return new RField<ClusterSize_t>(fieldName);
-   if (normalizedType == "bool") return new RField<bool>(fieldName);
-   if (normalizedType == "std::uint8_t") return new RField<std::uint8_t>(fieldName);
-   if (normalizedType == "std::int32_t") return new RField<std::int32_t>(fieldName);
-   if (normalizedType == "std::uint32_t") return new RField<std::uint32_t>(fieldName);
-   if (normalizedType == "std::uint64_t") return new RField<std::uint64_t>(fieldName);
-   if (normalizedType == "float") return new RField<float>(fieldName);
-   if (normalizedType == "double") return new RField<double>(fieldName);
-   if (normalizedType == "std::string") return new RField<std::string>(fieldName);
-   if (normalizedType == "std::vector<bool>") return new RField<std::vector<bool>>(fieldName);
+   if (normalizedType == "ROOT::Experimental::ClusterSize_t") return std::make_unique<RField<ClusterSize_t>>(fieldName);
+   if (normalizedType == "bool") return std::make_unique<RField<bool>>(fieldName);
+   if (normalizedType == "std::uint8_t") return std::make_unique<RField<std::uint8_t>>(fieldName);
+   if (normalizedType == "std::int32_t") return std::make_unique<RField<std::int32_t>>(fieldName);
+   if (normalizedType == "std::uint32_t") return std::make_unique<RField<std::uint32_t>>(fieldName);
+   if (normalizedType == "std::uint64_t") return std::make_unique<RField<std::uint64_t>>(fieldName);
+   if (normalizedType == "float") return std::make_unique<RField<float>>(fieldName);
+   if (normalizedType == "double") return std::make_unique<RField<double>>(fieldName);
+   if (normalizedType == "std::string") return std::make_unique<RField<std::string>>(fieldName);
+   if (normalizedType == "std::vector<bool>") return std::make_unique<RField<std::vector<bool>>>(fieldName);
    if (normalizedType.substr(0, 12) == "std::vector<") {
       std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
       auto itemField = Create(GetNormalizedType(itemTypeName), itemTypeName);
-      return new RVectorField(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
+      return std::make_unique<RVectorField>(fieldName, std::move(itemField));
    }
    // For the time being, we silently read RVec fields as std::vector
-   if (normalizedType == "ROOT::VecOps::RVec<bool>") return new RField<ROOT::VecOps::RVec<bool>>(fieldName);
+   if (normalizedType == "ROOT::VecOps::RVec<bool>")
+      return std::make_unique<RField<ROOT::VecOps::RVec<bool>>>(fieldName);
    if (normalizedType.substr(0, 19) == "ROOT::VecOps::RVec<") {
       std::string itemTypeName = normalizedType.substr(19, normalizedType.length() - 20);
       auto itemField = Create(GetNormalizedType(itemTypeName), itemTypeName);
-      return new RVectorField(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
+      return std::make_unique<RVectorField>(fieldName, std::move(itemField));
    }
    if (normalizedType.substr(0, 11) == "std::array<") {
       auto arrayDef = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
       R__ASSERT(arrayDef.size() == 2);
       auto arrayLength = std::stoi(arrayDef[1]);
       auto itemField = Create(GetNormalizedType(arrayDef[0]), arrayDef[0]);
-      return new RArrayField(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField), arrayLength);
+      return std::make_unique<RArrayField>(fieldName, std::move(itemField), arrayLength);
    }
 #if __cplusplus >= 201703L
    if (normalizedType.substr(0, 13) == "std::variant<") {
@@ -192,14 +193,14 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
          items.emplace_back(Create("variant" + std::to_string(i), innerTypes[i]));
       }
-      return new RVariantField(fieldName, items);
+      return std::make_unique<RVariantField>(fieldName, items);
    }
 #endif
    // TODO: create an RCollectionField?
-   if (normalizedType == ":Collection:") return new RField<ClusterSize_t>(fieldName);
+   if (normalizedType == ":Collection:") return std::make_unique<RField<ClusterSize_t>>(fieldName);
    auto cl = TClass::GetClass(normalizedType.c_str());
    if (cl != nullptr) {
-      return new RClassField(fieldName, normalizedType);
+      return std::make_unique<RClassField>(fieldName, normalizedType);
    }
    R__ERROR_HERE("NTuple") << "Field " << fieldName << " has unknown type " << normalizedType;
    R__ASSERT(false);
@@ -537,7 +538,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
       //printf("Now looking at %s %s\n", dataMember->GetName(), dataMember->GetFullTypeName());
       auto subField = Detail::RFieldBase::Create(dataMember->GetName(), dataMember->GetFullTypeName());
       fMaxAlignment = std::max(fMaxAlignment, subField->GetAlignment());
-      Attach(std::unique_ptr<Detail::RFieldBase>(subField));
+      Attach(std::move(subField));
    }
 }
 
