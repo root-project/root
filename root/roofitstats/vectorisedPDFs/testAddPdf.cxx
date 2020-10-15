@@ -76,7 +76,7 @@ class TestGaussPlusGaussPlusExp : public PDFTest
 {
   protected:
     TestGaussPlusGaussPlusExp() :
-      PDFTest("Gauss + Gauss + Exp", 100000)
+      PDFTest("Gauss + Gauss + Exp", 100001)
     {
       auto x = new RooRealVar("x", "x", 0., 100.);
 
@@ -131,4 +131,23 @@ COMPARE_FIXED_VALUES_NORM_LOG(TestGaussPlusGaussPlusExp, CompareFixedValuesNormL
 FIT_TEST_SCALAR(TestGaussPlusGaussPlusExp, DISABLED_Scalar) // Save time
 FIT_TEST_BATCH(TestGaussPlusGaussPlusExp, DISABLED_Batch)   // Save time
 FIT_TEST_BATCH_VS_SCALAR(TestGaussPlusGaussPlusExp, CompareBatchScalar)
+
+
+
+
+class TestGaussPlusGaussPlusExp_MP : public TestGaussPlusGaussPlusExp {
+public:
+  TestGaussPlusGaussPlusExp_MP() : TestGaussPlusGaussPlusExp() {
+    _multiProcess = 2;
+  }
+};
+
+COMPARE_FIXED_VALUES_UNNORM(TestGaussPlusGaussPlusExp_MP, CompareFixedValuesUnnorm)
+COMPARE_FIXED_VALUES_NORM(TestGaussPlusGaussPlusExp_MP, CompareFixedValuesNorm)
+COMPARE_FIXED_VALUES_NORM_LOG(TestGaussPlusGaussPlusExp_MP, CompareFixedValuesNormLog)
+
+
+FIT_TEST_SCALAR(TestGaussPlusGaussPlusExp_MP, DISABLED_Scalar) // Save time
+FIT_TEST_BATCH(TestGaussPlusGaussPlusExp_MP, DISABLED_Batch)   // Save time
+FIT_TEST_BATCH_VS_SCALAR(TestGaussPlusGaussPlusExp_MP, CompareBatchScalar)
 

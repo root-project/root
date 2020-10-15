@@ -191,6 +191,10 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
   if (!_dataUniform)
     makeUniformData();
 
+  if (nChunks == 0) {
+    nChunks = 1;
+  }
+
   const RooArgSet* normSet = nullptr;
   std::string timerSuffix = normalise ? " norm " :" unnorm ";
   if (compareLogs) timerSuffix = " (logs)" + timerSuffix;
@@ -201,24 +205,25 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
   RooArgSet* parameters  = _pdf->getParameters(*_dataUniform);
 
 #ifdef ROOFIT_NEW_BATCH_INTERFACE
-  BatchHelpers::RunContext evalData;
-  auto callBatchFunc = [compareLogs,&evalData,this](const RooAbsPdf& pdf, std::size_t maxSize, const RooArgSet* theNormSet)
+  std::vector<BatchHelpers::RunContext> evalData;
+  auto callBatchFunc = [compareLogs,&evalData,this](const RooAbsPdf& pdf, std::size_t begin, std::size_t len, const RooArgSet* theNormSet)
       -> RooSpan<const double> {
-    _dataUniform->getBatches(evalData, 0, maxSize);
+    evalData.emplace_back();
+    _dataUniform->getBatches(evalData.back(), begin, len);
 
     if (compareLogs) {
-      return pdf.getLogProbabilities(evalData, theNormSet);
+      return pdf.getLogProbabilities(evalData.back(), theNormSet);
     } else {
-      return pdf.getValues(evalData, theNormSet);
+      return pdf.getValues(evalData.back(), theNormSet);
     }
   };
 #else
-  auto callBatchFunc = [compareLogs](const RooAbsPdf& pdf, std::size_t maxSize, const RooArgSet* theNormSet)
+  auto callBatchFunc = [compareLogs](const RooAbsPdf& pdf, std::size_t begin, std::size_t len, const RooArgSet* theNormSet)
       -> RooSpan<const double> {
     if (compareLogs) {
-      return pdf.getLogValBatch(0, maxSize, theNormSet);
+      return pdf.getLogValBatch(begin, len, theNormSet);
     } else {
-      return pdf.getValBatch(0, maxSize, theNormSet);
+      return pdf.getValBatch(begin, len, theNormSet);
     }
   };
 #endif
@@ -230,34 +235,45 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
       return pdf.getVal(theNormSet);
   };
 
-
+#ifndef ROOFIT_NEW_BATCH_INTERFACE
   // Batch run
   _dataUniform->attachBuffers(*observables);
   *parameters = _parameters;
+#endif
 
   if (normalise) {
     normSet = &_variables;
 
   }
 
+  std::vector<RooSpan<const double>> batchResults;
   MyTimer batchTimer("Evaluate batch" + timerSuffix + _name);
   __itt_resume();
-  if (nChunks != 1)
-    std::cerr << __FILE__ << ":" << __LINE__ << " Implement this!" << std::endl;
-  auto outputsBatch = callBatchFunc(*_pdf, _dataUniform->sumEntries(), normSet);
+  const std::size_t chunkSize = _dataUniform->numEntries() / nChunks + (_dataUniform->numEntries() % nChunks != 0);
+  for (unsigned int chunk = 0; chunk < nChunks; ++chunk) {
+    auto outputsBatch = callBatchFunc(*_pdf,
+        chunkSize * chunk,
+        chunk+1 < nChunks ? chunkSize : _dataUniform->numEntries() / nChunks,
+        normSet);
+    batchResults.push_back(outputsBatch);
+  }
   __itt_pause();
   if (runTimer)
     std::cout << batchTimer;
 
-  ASSERT_TRUE(outputsBatch.size() == _dataUniform->sumEntries());
+  const auto totalSize = std::accumulate(batchResults.begin(),  batchResults.end(), 0,
+      [](std::size_t acc, const RooSpan<const double>& span){ return acc + span.size(); });
+  ASSERT_EQ(totalSize, _dataUniform->numEntries());
 
-  const double front = outputsBatch[0];
-  const bool allEqual = std::all_of(outputsBatch.begin(), outputsBatch.end(),
-      [front](double val){
-    return val == front;
-  });
-  ASSERT_FALSE(allEqual) << "All return values of batch run equal. "
-      << outputsBatch[0] << " " << outputsBatch[1] << " " << outputsBatch[2];
+  for (auto& outputsBatch : batchResults) {
+    const double front = outputsBatch[0];
+    const bool allEqual = std::all_of(outputsBatch.begin(), outputsBatch.end(),
+        [front](double val){
+      return val == front;
+    });
+    ASSERT_FALSE(allEqual) << "All return values of batch run equal. "
+        << outputsBatch[0] << " " << outputsBatch[1] << " " << outputsBatch[2];
+  }
 
   _dataUniform->resetBuffers();
 
@@ -265,7 +281,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
 
 
   // Scalar run
-  std::vector<double> outputsScalar(_dataUniform->sumEntries(), -1.);
+  std::vector<double> outputsScalar(_dataUniform->numEntries(), -1.);
   if (normalise) {
     //      normSet = new RooArgSet(*observables);
     normSet = &_variables;
@@ -274,7 +290,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
 
   {
     MyTimer singleTimer("Evaluate scalar" + timerSuffix + _name);
-    for (unsigned int i=0; i < _dataUniform->sumEntries(); ++i) {
+    for (int i=0; i < _dataUniform->numEntries(); ++i) {
       *observables = *_dataUniform->get(i);
       outputsScalar[i] = callScalarFunc(*_pdf, normSet);
     }
@@ -307,9 +323,18 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
   maximalError = 0.0;
   ROOT::Math::KahanSum<> sumDiffs;
   ROOT::Math::KahanSum<> sumVars;
-  for (unsigned int i=0; i < outputsBatch.size(); ++i) {
-    const double relDiff = outputsBatch[i] != 0. ?
-        (outputsScalar[i]-outputsBatch[i])/outputsBatch[i]
+  auto currentBatch = batchResults.begin();
+  unsigned int currentBatchIndex = 0;
+  for (std::size_t i=0; i < outputsScalar.size(); ++i, ++currentBatchIndex) {
+    if (currentBatchIndex >= currentBatch->size()) {
+      ++currentBatch;
+      ASSERT_TRUE(currentBatch != batchResults.end());
+      currentBatchIndex = 0;
+    }
+    const double batchVal = (*currentBatch)[currentBatchIndex];
+
+    const double relDiff = batchVal != 0. ?
+        (outputsScalar[i]-batchVal)/batchVal
         : outputsScalar[i];
 
     maximalError = std::max(maximalError,fabs(relDiff));
@@ -327,7 +352,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
         observables->printStream(std::cout, RooPrintable::kValue | RooPrintable::kName, RooPrintable::kStandard, "  ");
         _parameters.Print("V");
         std::cout << "\n\tscalar   = " << outputsScalar[i] << "\tpdf->getVal() = " << _pdf->getVal()
-                        << "\n\tbatch    = " << outputsBatch[i]
+                        << "\n\tbatch    = " << batchVal
                                                              << "\n\trel diff = " << relDiff << std::endl;
       }
       ++nOff;
@@ -341,7 +366,9 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
         _pdf->getVal(normSet);
 
 #ifdef ROOFIT_NEW_BATCH_INTERFACE
-        BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*_pdf, evalData, i, normSet, toleranceCompare);
+        BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*_pdf,
+            evalData[currentBatch-batchResults.begin()],
+            currentBatchIndex, normSet, toleranceCompare);
 #else
         BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*_pdf, i, normSet, toleranceCompare);
 #endif
@@ -356,9 +383,9 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
 
   EXPECT_LT(nOff, 5u);
   EXPECT_EQ(nFarOff, 0u);
-  EXPECT_GT(sumDiffs/outputsBatch.size(), -toleranceCompare) << "Batch outputs biased towards negative.";
-  EXPECT_LT(sumDiffs/outputsBatch.size(), toleranceCompare)  << "Batch outputs biased towards positive.";
-  EXPECT_LT(sqrt(sumVars/outputsBatch.size()), toleranceCompare) << "High standard deviation for batch results vs scalar.";
+  EXPECT_GT(sumDiffs/outputsScalar.size(), -toleranceCompare) << "Batch outputs biased towards negative.";
+  EXPECT_LT(sumDiffs/outputsScalar.size(), toleranceCompare)  << "Batch outputs biased towards positive.";
+  EXPECT_LT(sqrt(sumVars/outputsScalar.size()), toleranceCompare) << "High standard deviation for batch results vs scalar.";
 }
 
 
@@ -519,8 +546,8 @@ std::unique_ptr<RooFitResult> PDFTest::runScalarFit(RooAbsPdf* pdf) {
   auto result = pdf->fitTo(*_dataFit,
       RooFit::BatchMode(false),
       RooFit::SumW2Error(false),
-      RooFit::PrintLevel(_printLevel), RooFit::Save()
-//      ,RooFit::NumCPU(8)
+      RooFit::PrintLevel(_printLevel), RooFit::Save(),
+      _multiProcess > 0 ? RooFit::NumCPU(_multiProcess) : RooCmdArg()
   );
   std::cout << singleTimer;
   EXPECT_NE(result, nullptr);

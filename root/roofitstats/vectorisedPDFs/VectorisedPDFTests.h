@@ -92,11 +92,8 @@ class PDFTestWeightedData : public PDFTest {
     TEST_F(TEST_CLASS, TEST_NAME) {\
   resetParameters();\
   double relativeError, maximalRelativeError=0.0;\
-  compareFixedValues(relativeError, false, false);\
-  maximalRelativeError = std::max(maximalRelativeError,relativeError);\
   \
   for (unsigned int i=0; i<5 && !HasFailure(); ++i) {\
-    randomiseParameters(1337+i);\
     std::stringstream str;\
     str << "Parameter set " << i;\
     for (auto par : _parameters) {\
@@ -104,8 +101,10 @@ class PDFTestWeightedData : public PDFTest {
       str << "\n\t" << p->GetName() << "\t" << p->getVal();\
     }\
     SCOPED_TRACE(str.str());\
-    compareFixedValues(relativeError, false, false, false);\
-      maximalRelativeError = std::max(maximalRelativeError,relativeError);\
+    compareFixedValues(relativeError, false, false, false, _multiProcess);\
+    maximalRelativeError = std::max(maximalRelativeError,relativeError);\
+    \
+    randomiseParameters(1337+i);\
   }\
   std::cout << "\nMaximal relative error (scalar vs batch) is: " << maximalRelativeError << "\n\n";\
 }
@@ -115,11 +114,8 @@ class PDFTestWeightedData : public PDFTest {
     TEST_F(TEST_CLASS, TEST_NAME) {\
   resetParameters();\
   double relativeError, maximalRelativeError=0.0;\
-  compareFixedValues(relativeError, true, false);\
-  maximalRelativeError = std::max(maximalRelativeError,relativeError);\
   \
   for (unsigned int i=0; i<5 && !HasFailure(); ++i) {\
-    randomiseParameters(1337+i);\
     std::stringstream str;\
     str << "Parameter set " << i;\
     for (auto par : _parameters) {\
@@ -127,8 +123,10 @@ class PDFTestWeightedData : public PDFTest {
       str << "\n\t" << p->GetName() << "\t" << p->getVal();\
     }\
     SCOPED_TRACE(str.str());\
-    compareFixedValues(relativeError, true, false, false);\
+    compareFixedValues(relativeError, true, false, false, _multiProcess);\
     maximalRelativeError = std::max(maximalRelativeError,relativeError);\
+    \
+    randomiseParameters(1337+i);\
   }\
   std::cout << "\nMaximal relative error (scalar vs batch) is: " << maximalRelativeError << "\n\n";\
 }
@@ -138,11 +136,8 @@ class PDFTestWeightedData : public PDFTest {
     TEST_F(TEST_CLASS, TEST_NAME) {\
   resetParameters();\
   double relativeError, maximalRelativeError=0.0;\
-  compareFixedValues(relativeError, true, true);\
-  maximalRelativeError = std::max(maximalRelativeError,relativeError);\
   \
   for (unsigned int i=0; i<5 && !HasFailure(); ++i) {\
-    randomiseParameters(1337+i);\
     std::stringstream str;\
     str << "Parameter set " << i;\
     for (auto par : _parameters) {\
@@ -150,8 +145,10 @@ class PDFTestWeightedData : public PDFTest {
       str << "\n\t" << p->GetName() << "\t" << p->getVal();\
     }\
     SCOPED_TRACE(str.str());\
-    compareFixedValues(relativeError, true, true, false);\
+    compareFixedValues(relativeError, true, true, false, _multiProcess);\
     maximalRelativeError = std::max(maximalRelativeError,relativeError);\
+    \
+    randomiseParameters(1337+i);\
   }\
   std::cout << "\nMaximal relative error (scalar vs batch) is: " << maximalRelativeError << "\n\n";\
 }
