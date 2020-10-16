@@ -473,7 +473,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::unique_ptr<Detail::RFieldBase>(new RField(newName));
+      return std::make_unique<RField>(newName);
    }
 
    void GenerateColumnsImpl() final;
@@ -521,7 +521,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::unique_ptr<Detail::RFieldBase>(new RField(newName));
+      return std::make_unique<RField>(newName);
    }
 
    void GenerateColumnsImpl() final;
@@ -560,7 +560,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::unique_ptr<Detail::RFieldBase>(new RField(newName));
+      return std::make_unique<RField>(newName);
    }
 
    void GenerateColumnsImpl() final;
@@ -600,7 +600,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::unique_ptr<Detail::RFieldBase>(new RField(newName));
+      return std::make_unique<RField>(newName);
    }
 
    void GenerateColumnsImpl() final;
@@ -639,7 +639,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::unique_ptr<Detail::RFieldBase>(new RField(newName));
+      return std::make_unique<RField>(newName);
    }
 
    void GenerateColumnsImpl() final;
@@ -678,7 +678,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::unique_ptr<Detail::RFieldBase>(new RField(newName));
+      return std::make_unique<RField>(newName);
    }
 
    void GenerateColumnsImpl() final;
@@ -717,7 +717,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::unique_ptr<Detail::RFieldBase>(new RField(newName));
+      return std::make_unique<RField>(newName);
    }
 
    void GenerateColumnsImpl() final;
@@ -756,7 +756,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::unique_ptr<Detail::RFieldBase>(new RField(newName));
+      return std::make_unique<RField>(newName);
    }
 
    void GenerateColumnsImpl() final;
@@ -805,7 +805,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::unique_ptr<Detail::RFieldBase>(new RField(newName));
+      return std::make_unique<RField>(newName);
    }
 
    void GenerateColumnsImpl() final;
@@ -949,7 +949,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::unique_ptr<Detail::RFieldBase>(new RField(newName));
+      return std::make_unique<RField>(newName);
    }
 
    using Detail::RFieldBase::GenerateValue;
@@ -1032,7 +1032,7 @@ public:
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
       auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-      return std::unique_ptr<RFieldBase>(new RField<ROOT::VecOps::RVec<ItemT>>(newName, std::move(newItemField)));
+      return std::make_unique<RField<ROOT::VecOps::RVec<ItemT>>>(newName, std::move(newItemField));
    }
 
    void GenerateColumnsImpl() final {
@@ -1118,7 +1118,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() = default;
    std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::unique_ptr<Detail::RFieldBase>(new RField<ROOT::VecOps::RVec<bool>>(newName));
+      return std::make_unique<RField<ROOT::VecOps::RVec<bool>>>(newName);
    }
 
    void GenerateColumnsImpl() final {
