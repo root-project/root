@@ -279,8 +279,7 @@
             // make it easy - copy statistics without axes
             horigin.fStatistics = hobj.fStatistics;
 
-
-            histo.fTitle = obj.fTitle;
+            origin.fTitle = obj.fTitle;
          }
       }
 
@@ -2286,9 +2285,10 @@
             currx[colindx] = handle.grx[i];
             curry[colindx] = handle.gry[j+dj];
 
-            colPaths[colindx] += "v" + (handle.gry[j] - handle.gry[j+dj]) +
-                                 "h" + (handle.grx[i+di] - handle.grx[i]) +
-                                 "v" + (handle.gry[j+dj] - handle.gry[j]) + "z";
+            var dy = (handle.gry[j] - handle.gry[j+dj]) || 1,
+                dx = (handle.grx[i+di] - handle.grx[i]) || 1;
+
+            colPaths[colindx] += "v"+dy + "h"+dx + "v"+(-dy) + "z";
          }
       }
 

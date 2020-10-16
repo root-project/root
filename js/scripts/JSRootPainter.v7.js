@@ -4021,14 +4021,6 @@
       }
    }
 
-   RPadPainter.prototype.RemoveButtons = function() {
-      var group = this.svg_layer("btns_layer", this.this_pad_name);
-      if (!group.empty()) {
-         group.selectAll("*").remove();
-         group.property("nextx", null);
-      }
-   }
-
    RPadPainter.prototype.AddButton = function(_btn, _tooltip, _funcname, _keyname) {
       if (!JSROOT.gStyle.ToolBar || JSROOT.BatchMode) return;
 

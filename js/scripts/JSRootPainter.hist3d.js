@@ -214,13 +214,14 @@
          if (intersects)
             for (var n=0;n<intersects.length;++n) {
                var mesh = intersects[n].object;
-               if (mesh.zoom) { kind = mesh.zoom; break; }
+               if (mesh.zoom) { kind = mesh.zoom; p = obj_painter.frame_painter(); break; }
                if (mesh.painter && typeof mesh.painter.ShowContextMenu === 'function') {
                   p = mesh.painter; break;
                }
             }
 
-         p.ShowContextMenu(kind, pos);
+         if (typeof p.ShowContextMenu == 'function')
+            p.ShowContextMenu(kind, pos);
       }
    }
 
@@ -333,7 +334,10 @@
    JSROOT.TFramePainter.prototype.BinHighlight3D = function(tip, selfmesh) {
 
       var changed = false, tooltip_mesh = null, changed_self = true,
-          want_remove = !tip || (tip.x1===undefined) || !this.enable_highlight;
+          want_remove = !tip || (tip.x1===undefined) || !this.enable_highlight,
+          mainp = this.main_painter();
+
+      if (mainp && !mainp.IsUserTooltipCallback()) mainp = null;
 
       if (this.tooltip_selfmesh) {
          changed_self = (this.tooltip_selfmesh !== selfmesh)
@@ -351,7 +355,7 @@
 
       if (want_remove) {
          if (changed) this.Render3D();
-         this.ProvideUserTooltip(null);
+         if (mainp && changed) mainp.ProvideUserTooltip(null);
          return;
       }
 
@@ -411,8 +415,8 @@
       if (changed && tip.$painter && (typeof tip.$painter.RedrawProjection == 'function'))
          tip.$painter.RedrawProjection(tip.ix-1, tip.ix, tip.iy-1, tip.iy);
 
-      if (this.GetObject())
-         this.ProvideUserTooltip({ obj: this.GetObject(),  name: this.GetObject().fName,
+      if (changed && mainp && mainp.GetObject())
+         mainp.ProvideUserTooltip({ obj: mainp.GetObject(),  name: mainp.GetObject().fName,
                                    bin: tip.bin, cont: tip.value,
                                    binx: tip.ix, biny: tip.iy, binz: tip.iz,
                                    grx: (tip.x1+tip.x2)/2, gry: (tip.y1+tip.y2)/2, grz: (tip.z1+tip.z2)/2 });
