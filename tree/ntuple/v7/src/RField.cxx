@@ -326,7 +326,7 @@ void ROOT::Experimental::Detail::RFieldBase::RSchemaIterator::Advance()
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RFieldZero::Clone(std::string_view /*newName*/) const
 {
-   auto result = std::unique_ptr<Detail::RFieldBase>(new RFieldZero());
+   auto result = std::make_unique<RFieldZero>();
    for (auto &f : fSubFields)
       result->Attach(f->Clone(f->GetName()));
    return result;
@@ -545,7 +545,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RClassField::Clone(std::string_view newName) const
 {
-   return std::unique_ptr<Detail::RFieldBase>(new RClassField(newName, GetType()));
+   return std::make_unique<RClassField>(newName, GetType());
 }
 
 void ROOT::Experimental::RClassField::AppendImpl(const Detail::RFieldValue& value) {
@@ -643,7 +643,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RVectorField::Clone(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return std::unique_ptr<Detail::RFieldBase>(new RVectorField(newName, std::move(newItemField)));
+   return std::make_unique<RVectorField>(newName, std::move(newItemField));
 }
 
 void ROOT::Experimental::RVectorField::AppendImpl(const Detail::RFieldValue& value) {
@@ -828,7 +828,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RArrayField::Clone(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return std::unique_ptr<Detail::RFieldBase>(new RArrayField(newName, std::move(newItemField), fArrayLength));
+   return std::make_unique<RArrayField>(newName, std::move(newItemField), fArrayLength);
 }
 
 void ROOT::Experimental::RArrayField::AppendImpl(const Detail::RFieldValue& value) {
@@ -943,7 +943,7 @@ ROOT::Experimental::RVariantField::Clone(std::string_view newName) const
       // TODO(jblomer): use unique_ptr in RVariantField constructor
       itemFields.emplace_back(fSubFields[i]->Clone(fSubFields[i]->GetName()).release());
    }
-   return std::unique_ptr<Detail::RFieldBase>(new RVariantField(newName, itemFields));
+   return std::make_unique<RVariantField>(newName, itemFields);
 }
 
 std::uint32_t ROOT::Experimental::RVariantField::GetTag(void *variantPtr) const
