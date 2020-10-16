@@ -72,7 +72,7 @@ TEST(RNTuple, InsideCollection)
    EXPECT_EQ(1U, aVec->size());
    EXPECT_EQ(42.0, (*aVec)[0]);
    field->DestroyValue(value);
-   
+
    // TODO: test reading of "klassVec.v1"
 }
 
@@ -145,7 +145,7 @@ TEST(RNTuple, BoolVector)
    wrBoolRVec->push_back(true);
    wrBoolRVec->push_back(false);
 
-   auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
+   auto modelRead = modelWrite->Clone();
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
