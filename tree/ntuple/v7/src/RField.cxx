@@ -333,9 +333,9 @@ ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::RFieldZero::Clone(st
 }
 
 
-ROOT::Experimental::REntry* ROOT::Experimental::RFieldZero::GenerateEntry()
+std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RFieldZero::GenerateEntry() const
 {
-   auto entry = new REntry();
+   auto entry = std::make_unique<REntry>();
    for (auto& f : fSubFields) {
       entry->AddValue(f->GenerateValue());
    }

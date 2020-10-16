@@ -45,7 +45,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    auto cloneModel = std::make_unique<RNTupleModel>();
    auto cloneFieldZero = static_cast<RFieldZero*>(fFieldZero->Clone(""));
    cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(cloneFieldZero);
-   cloneModel->fDefaultEntry = std::unique_ptr<REntry>(cloneFieldZero->GenerateEntry());
+   cloneModel->fDefaultEntry = cloneFieldZero->GenerateEntry();
    return cloneModel;
 }
 
