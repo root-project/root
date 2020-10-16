@@ -461,6 +461,21 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
       }
    }
 
+   if (usePyTorchCNN) {
+
+      Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model");
+      // execute
+      gSystem->Exec("python PyTorch_Generate_CNN_Model.py");
+
+      // book PyKeras method only if Keras model could be created
+      Info("TMVA_CNN_Classification", "Booking PyTorch CNN model");
+      factory.BookMethod(
+        loader, TMVA::Types::kPyTorch, "PyTorch",
+        "H:!V:VarTransform=None:FilenameModel=PyTorchModelCNN.pt:"
+        "FilenameTrainedModel=PyTorchTrainedModelCNN.pt:NumEpochs=20:BatchSize=100:UserCode=PyTorch_Generate_CNN_Model.py");
+   }
+
+
    ////  ## Train Methods
 
    factory.TrainAllMethods();
