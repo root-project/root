@@ -137,6 +137,18 @@ void REveElement::assign_element_id_recurisvely()
       c->assign_element_id_recurisvely();
 }
 
+std::string REveElement::GetHighlightTooltip(const std::set<int>& iSet) const
+{
+   std::string res = fTitle;
+   if (res.empty())
+      res = fName;
+
+   if (!iSet.empty())
+      res = TString::Format("%s idx=%d", res.c_str(), *iSet.begin());
+
+   return res;
+}
+
 void REveElement::assign_scene_recursively(REveScene* s)
 {
    assert(fScene == nullptr);
