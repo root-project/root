@@ -338,8 +338,6 @@ Int_t REveBoxSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    Int_t ret = REveDigitSet::WriteCoreJson(j, rnr_offset);
    j["boxType"] = int(fBoxType);
 
-   printf(" WriteCoreJsonMAIN color %d \n", GetMainColor());
-
    return ret;
 }
 
