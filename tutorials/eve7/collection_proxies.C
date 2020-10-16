@@ -431,7 +431,6 @@ public:
       for (auto &c : eveMng->GetScenes()->RefChildren()) {
          if (c != eveMng->GetGlobalScene() && strncmp(c->GetCName(), "Geometry", 8) )
          {
-            printf("Add scene %s\n", c->GetCName());
             m_scenes.push_back((REveScene*)c);
          }
          if (!strncmp(c->GetCName(),"Table", 5))
@@ -440,16 +439,6 @@ public:
       }
 
       m_collections = eveMng->SpawnNewScene("Collections", "Collections");
-   }
-
-
-   // this should be handeled with framefor plugins
-   REveDataProxyBuilderBase* makeGLBuilderForType(TClass* c)
-   {
-      REveDataProxyBuilderBase * ptr = 0;
-      char* cmd = Form("*((REveDataProxyBuilderBase**) 0x%lx) = new %sProxyBuilder()", (unsigned long)&ptr, c->GetName());
-      gROOT->ProcessLine(cmd);
-      return ptr;
    }
 
    void SetDataItemsFromEvent(REveDataCollection* collection)
@@ -502,8 +491,11 @@ public:
       // load data
       SetDataItemsFromEvent(collection);
 
-      // GL view types
-      auto glBuilder = makeGLBuilderForType(collection->GetItemClass());
+      // create builder from classname
+      REveDataProxyBuilderBase* glBuilder = 0;
+      char* cmd = Form("*((REveDataProxyBuilderBase**) 0x%lx) = new %sProxyBuilder()", (unsigned long)&glBuilder, collection->GetItemClass()->GetName());
+      gROOT->ProcessLine(cmd);
+
       glBuilder->SetCollection(collection);
       glBuilder->SetHaveAWindow(true);
       for (auto scene : m_scenes)
@@ -669,24 +661,24 @@ void collection_proxies(bool proj=true)
    tableView->AddScene(tableScene);
 
    // create event data from list
-   auto xyManager = new CollectionManager(event);
+   auto collectionMng = new CollectionManager(event);
 
    REveDataCollection* trackCollection = new REveDataCollection("Tracks");
    trackCollection->SetItemClass(TParticle::Class());
    trackCollection->SetMainColor(kGreen);
    trackCollection->SetFilterExpr("i.Pt() > 4.1 && std::abs(i.Eta()) < 1");
-   xyManager->addCollection(trackCollection, true);
+   collectionMng->addCollection(trackCollection, true);
 
    REveDataCollection* jetCollection = new REveDataCollection("Jets");
    jetCollection->SetItemClass(Jet::Class());
    jetCollection->SetMainColor(kYellow);
-   xyManager->addCollection(jetCollection, false);
+   collectionMng->addCollection(jetCollection, false);
 
    REveDataCollection* hitCollection = new REveDataCollection("RecHits");
    hitCollection->SetItemClass(RecHit::Class());
    hitCollection->SetMainColor(kOrange + 7);
    hitCollection->SetFilterExpr("i.fPt > 5");
-   xyManager->addCollection(hitCollection, false);
+   collectionMng->addCollection(hitCollection, false);
 
    // add calorimeters
    auto calo3d = new REveCalo3D(event->fCaloData);
@@ -698,7 +690,7 @@ void collection_proxies(bool proj=true)
 
 
    // event navigation
-   auto eventMng = new EventManager(event, xyManager);
+   auto eventMng = new EventManager(event, collectionMng);
    eventMng->SetName("EventManager");
    eveMng->GetWorld()->AddElement(eventMng);
 
