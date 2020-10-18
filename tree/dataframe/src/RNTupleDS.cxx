@@ -36,12 +36,12 @@ namespace Detail {
 
 class RRDFCardinalityField : public ROOT::Experimental::Detail::RFieldBase {
 public:
-   ROOT::Experimental::RField<ClusterSize_t> fIndexField;
+   ROOT::Experimental::RField<ClusterSize_t> fOffsetField;
 
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t::ValueType"; }
    explicit RRDFCardinalityField(std::string_view name)
      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
-     , fIndexField(name)
+     , fOffsetField(name)
    {
    }
    RRDFCardinalityField(RRDFCardinalityField&& other) = default;
@@ -67,7 +67,7 @@ public:
                        ROOT::Experimental::Detail::RFieldValue *value) final
    {
       RClusterIndex collectionStart;
-      fIndexField.GetCollectionInfo(globalIndex, &collectionStart, value->Get<ClusterSize_t>());
+      fOffsetField.GetCollectionInfo(globalIndex, &collectionStart, value->Get<ClusterSize_t>());
    }
 };
 
@@ -134,7 +134,7 @@ public:
 
    void Connect(RPageSource &source) final {
       auto cardinalityField = dynamic_cast<RRDFCardinalityField *>(fField.get());
-      Detail::RFieldFuse::Connect(fFieldId, source, cardinalityField->fIndexField);
+      Detail::RFieldFuse::Connect(fFieldId, source, cardinalityField->fOffsetField);
    }
 };
 
