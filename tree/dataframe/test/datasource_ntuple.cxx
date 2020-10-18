@@ -47,7 +47,7 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    RNTupleDS tds(std::move(fPageSource));
 
    auto colNames = tds.GetColumnNames();
-   ASSERT_EQ(colNames.size(), 5);
+   ASSERT_EQ(7, colNames.size());
 
    EXPECT_TRUE(tds.HasColumn("pt"));
    EXPECT_TRUE(tds.HasColumn("energy"));
@@ -55,6 +55,7 @@ TEST_F(RNTupleDSTest, ColTypeNames)
 
    EXPECT_STREQ("std::string", tds.GetTypeName("tag").c_str());
    EXPECT_STREQ("float", tds.GetTypeName("energy").c_str());
+   EXPECT_STREQ("ROOT::Experimental::ClusterSize_t::ValueType", tds.GetTypeName("#jets").c_str());
 }
 
 
@@ -64,6 +65,7 @@ void ReadTest(const std::string &name, const std::string &fname) {
    auto count = df.Count();
    auto sumpt = df.Sum<float>("pt");
    auto tag = df.Take<std::string>("tag");
+   auto njets = df.Take<std::string>("#jets");
    auto sumjets = df.Sum<std::vector<float>>("jets");
    auto sumvec = [](float red, const std::vector<std::vector<float>> &nnlo) {
       auto sum = 0.f;
@@ -78,6 +80,8 @@ void ReadTest(const std::string &name, const std::string &fname) {
    EXPECT_DOUBLE_EQ(sumpt.GetValue(), 42.f);
    EXPECT_EQ(tag.GetValue().size(), 1ull);
    EXPECT_EQ(tag.GetValue()[0], "xyz");
+   EXPECT_EQ(1ull, njets.GetValue().size());
+   //EXPECT_EQ(2u, njets.GetValue()[0]);
    EXPECT_EQ(sumjets.GetValue(), 3.f);
    EXPECT_EQ(sumnnlo.GetValue(), 16.f);
 }

@@ -33,7 +33,47 @@
 namespace ROOT {
 namespace Experimental {
 namespace Detail {
-class RNTupleColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
+
+class RRDFCardinalityField : public ROOT::Experimental::Detail::RFieldBase {
+public:
+   ROOT::Experimental::RField<ClusterSize_t> fIndexField;
+
+   static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t::ValueType"; }
+   explicit RRDFCardinalityField(std::string_view name)
+     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
+     , fIndexField(name)
+   {
+   }
+   RRDFCardinalityField(RRDFCardinalityField&& other) = default;
+   RRDFCardinalityField& operator =(RRDFCardinalityField&& other) = default;
+   ~RRDFCardinalityField() = default;
+   std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
+      return std::make_unique<RRDFCardinalityField>(newName);
+   }
+
+   void GenerateColumnsImpl() final { }
+
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final
+   {
+      return Detail::RFieldValue(this, static_cast<ClusterSize_t *>(where));
+   }
+   Detail::RFieldValue CaptureValue(void *where) final
+   {
+      return Detail::RFieldValue(true /* captureFlag */, this, where);
+   }
+   size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
+
+   void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex,
+                       ROOT::Experimental::Detail::RFieldValue *value) final
+   {
+      RClusterIndex collectionStart;
+      fIndexField.GetCollectionInfo(globalIndex, &collectionStart, value->Get<ClusterSize_t>());
+   }
+};
+
+
+class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
+protected:
    using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
    using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
@@ -48,14 +88,10 @@ public:
       : fField(std::move(f)), fFieldId(fieldId), fValue(fField->GenerateValue()), fLastEntry(-1)
    {
    }
+   virtual ~RNTupleColumnReader() { fField->DestroyValue(fValue); }
 
-   std::unique_ptr<RNTupleColumnReader> Clone() const {
-      return std::make_unique<RNTupleColumnReader>(fField->Clone(fField->GetName()), fFieldId);
-   }
-
-   void Connect(RPageSource &source) {
-      Detail::RFieldFuse::ConnectRecursively(fFieldId, source, *fField);
-   }
+   virtual std::unique_ptr<RNTupleColumnReader> Clone() const = 0;
+   virtual void Connect(RPageSource &source) = 0;
 
    void *GetImpl(Long64_t entry) final
    {
@@ -66,25 +102,75 @@ public:
       return fValue.GetRawPtr();
    }
 };
+
+
+class RNTupleScalarColumnReader : public RNTupleColumnReader {
+public:
+   RNTupleScalarColumnReader(std::unique_ptr<RFieldBase> f, DescriptorId_t fieldId)
+      : RNTupleColumnReader(std::move(f), fieldId)
+   {
+   }
+
+   std::unique_ptr<RNTupleColumnReader> Clone() const final {
+      return std::make_unique<RNTupleScalarColumnReader>(fField->Clone(fField->GetName()), fFieldId);
+   }
+
+   void Connect(RPageSource &source) final {
+      Detail::RFieldFuse::ConnectRecursively(fFieldId, source, *fField);
+   }
+};
+
+
+class RNTupleCardinalityColumnReader : public RNTupleColumnReader {
+public:
+   RNTupleCardinalityColumnReader(std::unique_ptr<RFieldBase> f, DescriptorId_t fieldId)
+      : RNTupleColumnReader(std::move(f), fieldId)
+   {
+   }
+
+   std::unique_ptr<RNTupleColumnReader> Clone() const final {
+      return std::make_unique<RNTupleCardinalityColumnReader>(fField->Clone(fField->GetName()), fFieldId);
+   }
+
+   void Connect(RPageSource &source) final {
+      auto cardinalityField = dynamic_cast<RRDFCardinalityField *>(fField.get());
+      Detail::RFieldFuse::Connect(fFieldId, source, cardinalityField->fIndexField);
+   }
+};
+
 } // namespace Detail
 
 
 RNTupleDS::~RNTupleDS() = default;
 
 
-void RNTupleDS::AddRecord(const RNTupleDescriptor &desc, DescriptorId_t parentId)
+void RNTupleDS::AddCollection(const RNTupleDescriptor &desc, DescriptorId_t collectionId)
 {
-   for (const auto& f : desc.GetFieldRange(parentId)) {
+   auto qualifiedName = desc.GetQualifiedFieldName(collectionId);
+   fColumnNames.emplace_back(std::string("#") + qualifiedName);
+   fColumnTypes.emplace_back(Detail::RRDFCardinalityField::TypeName());
+
+   auto field = std::make_unique<Detail::RRDFCardinalityField>(qualifiedName);
+   auto columnReader = std::make_unique<Detail::RNTupleCardinalityColumnReader>(std::move(field), collectionId);
+   fColumnReaderPrototypes.emplace_back(std::move(columnReader));
+}
+
+
+void RNTupleDS::AddRecord(const RNTupleDescriptor &desc, DescriptorId_t recordId)
+{
+   for (const auto& f : desc.GetFieldRange(recordId)) {
       fColumnNames.emplace_back(desc.GetQualifiedFieldName(f.GetId()));
       fColumnTypes.emplace_back(f.GetTypeName());
 
       auto field = Detail::RFieldBase::Create(f.GetFieldName(), f.GetTypeName());
-      auto columnReader = std::make_unique<Detail::RNTupleColumnReader>(std::move(field), f.GetId());
-      columnReader->Connect(*fSources[0]);
+      auto columnReader = std::make_unique<Detail::RNTupleScalarColumnReader>(std::move(field), f.GetId());
       fColumnReaderPrototypes.emplace_back(std::move(columnReader));
 
-      if (f.GetStructure() == ENTupleStructure::kRecord)
+      if (f.GetStructure() == ENTupleStructure::kRecord) {
          AddRecord(desc, f.GetId());
+      } else if (f.GetStructure() == ENTupleStructure::kCollection) {
+         AddCollection(desc, f.GetId());
+      }
    }
 }
 
