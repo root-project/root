@@ -875,7 +875,10 @@ void THStack::Paint(Option_t *choptin)
       if (nostack && fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
       else {
          if (gPad->GetLogy())           fHistogram->SetMaximum(themax*(1+0.2*TMath::Log10(themax/themin)));
-         else                           fHistogram->SetMaximum((1+gStyle->GetHistTopMargin())*themax);
+         else {
+            if (fMaximum != -1111)      fHistogram->SetMaximum(themax);
+            else                        fHistogram->SetMaximum((1+gStyle->GetHistTopMargin())*themax);
+         }
       }
       if (nostack && fMinimum != -1111) fHistogram->SetMinimum(fMinimum);
       else {

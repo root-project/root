@@ -1,6 +1,6 @@
 # JSROOT changelog
 
-## Changes in dev
+## Changes in 5.9.0
 1. Support RX and RY drawing option together with COL of TH2
 2. Add support of #overline, #underline, #strike into TLatex parsing (#196)
 3. Add support of TGeoTessellated shape
@@ -9,6 +9,15 @@
 6. Better handling of context menu position
 7. Support TASImage class - both PNG and binary content, including palette
 8. Let change TH2 values range via context menu
+9. Fix problem with TH2 col drawing when bins size too small
+
+
+## Changes in 5.8.2
+1. Fix - tooltip handling for TH2 Error draw
+2. Fix - use proper "fixed" position for enlarged drawing
+3. Fix - correctly extract TF1 parameter names
+4. Fix - keep stat box when update histogram drawing
+5. Fix - context menu for axes in 3D drawings
 
 
 ## Changes in 5.8.1
