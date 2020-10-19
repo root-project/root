@@ -35,6 +35,7 @@
 #include <type_traits>
 #include <vector>
 #include <utility>
+#include <tuple>
 
 #define _USE_MATH_DEFINES // enable definition of M_PI
 #ifdef _WIN32
