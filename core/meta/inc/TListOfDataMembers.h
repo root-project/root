@@ -32,12 +32,13 @@ class TDataMember;
 class TListOfDataMembers : public THashList
 {
 private:
-   TClass    *fClass = nullptr;    //! Context of this list.  Not owned.
+   TClass           *fClass = nullptr;    //! Context of this list.  Not owned.
 
-   TExMap    *fIds = nullptr;      //! Map from DeclId_t to TDataMember*
-   THashList *fUnloaded = nullptr; //! Holder of TDataMember for unloaded DataMembers.
-   ULong64_t  fLastLoadMarker = 0; //! Represent interpreter state when we last did a full load.
-   Bool_t     fIsLoaded = kFALSE;  //! Mark whether Load was executed.
+   TExMap           *fIds = nullptr;      //! Map from DeclId_t to TDataMember*
+   THashList        *fUnloaded = nullptr; //! Holder of TDataMember for unloaded DataMembers.
+   ULong64_t         fLastLoadMarker = 0; //! Represent interpreter state when we last did a full load.
+   std::atomic<bool> fIsLoaded{kFALSE};  //! Mark whether Load was executed.
+
    TDictionary::EMemberSelection fSelection = TDictionary::EMemberSelection::kNoUsingDecls; //! Whether the list should contain regular data members or only using decls or both.
 
    TListOfDataMembers(const TListOfDataMembers&) = delete;
