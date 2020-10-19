@@ -35,6 +35,7 @@
 #include <type_traits>
 #include <vector>
 #include <utility>
+#include <tuple>
 
 #ifdef R__HAS_VDT
 #include <vdt/vdtMath.h>
