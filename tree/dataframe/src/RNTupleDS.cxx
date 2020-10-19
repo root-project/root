@@ -39,16 +39,16 @@ public:
    ROOT::Experimental::RField<ClusterSize_t> fOffsetField;
 
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t::ValueType"; }
-   explicit RRDFCardinalityField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
-     , fOffsetField(name)
+   RRDFCardinalityField()
+     : Detail::RFieldBase("", TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
+     , fOffsetField("")
    {
    }
    RRDFCardinalityField(RRDFCardinalityField&& other) = default;
    RRDFCardinalityField& operator =(RRDFCardinalityField&& other) = default;
    ~RRDFCardinalityField() = default;
-   std::unique_ptr<Detail::RFieldBase> Clone(std::string_view newName) const final {
-      return std::make_unique<RRDFCardinalityField>(newName);
+   std::unique_ptr<Detail::RFieldBase> Clone(std::string_view /* newName */) const final {
+      return std::make_unique<RRDFCardinalityField>();
    }
 
    void GenerateColumnsImpl() final { }
@@ -69,6 +69,13 @@ public:
       RClusterIndex collectionStart;
       fOffsetField.GetCollectionInfo(globalIndex, &collectionStart, value->Get<ClusterSize_t>());
    }
+
+   void ReadInClusterImpl(const ROOT::Experimental::RClusterIndex &clusterIndex,
+                          ROOT::Experimental::Detail::RFieldValue *value) final
+   {
+      RClusterIndex collectionStart;
+      fOffsetField.GetCollectionInfo(clusterIndex, &collectionStart, value->Get<ClusterSize_t>());
+   }
 };
 
 
@@ -79,13 +86,13 @@ protected:
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
    std::unique_ptr<RFieldBase> fField;
-   DescriptorId_t fFieldId;
+   std::vector<DescriptorId_t> fSkeinIDs;
    RFieldValue fValue;
    Long64_t fLastEntry; ///< Last entry number that was read
 
 public:
-   RNTupleColumnReader(std::unique_ptr<RFieldBase> f, DescriptorId_t fieldId)
-      : fField(std::move(f)), fFieldId(fieldId), fValue(fField->GenerateValue()), fLastEntry(-1)
+   RNTupleColumnReader(std::unique_ptr<RFieldBase> f, const std::vector<DescriptorId_t> &skeinIDs)
+      : fField(std::move(f)), fSkeinIDs(skeinIDs), fValue(fField->GenerateValue()), fLastEntry(-1)
    {
    }
    virtual ~RNTupleColumnReader() { fField->DestroyValue(fValue); }
@@ -104,37 +111,47 @@ public:
 };
 
 
-class RNTupleScalarColumnReader : public RNTupleColumnReader {
+class RNTupleCardinalityColumnReader : public RNTupleColumnReader {
 public:
-   RNTupleScalarColumnReader(std::unique_ptr<RFieldBase> f, DescriptorId_t fieldId)
-      : RNTupleColumnReader(std::move(f), fieldId)
+   RNTupleCardinalityColumnReader(std::unique_ptr<RFieldBase> f, const std::vector<DescriptorId_t> &skeinIDs)
+      : RNTupleColumnReader(std::move(f), skeinIDs)
    {
    }
 
    std::unique_ptr<RNTupleColumnReader> Clone() const final {
-      return std::make_unique<RNTupleScalarColumnReader>(fField->Clone(fField->GetName()), fFieldId);
+      return std::make_unique<RNTupleCardinalityColumnReader>(fField->Clone(fField->GetName()), fSkeinIDs);
    }
 
    void Connect(RPageSource &source) final {
-      Detail::RFieldFuse::ConnectRecursively(fFieldId, source, *fField);
+      auto f = fField.get();
+      for (unsigned i = 0; i < fSkeinIDs.size() - 1; ++i) {
+         Detail::RFieldFuse::Connect(fSkeinIDs[i], source, *f);
+         f = f->GetSubFields()[0];
+      }
+      auto cardinalityField = dynamic_cast<RRDFCardinalityField *>(f);
+      Detail::RFieldFuse::Connect(fSkeinIDs.back(), source, cardinalityField->fOffsetField);
    }
 };
 
 
-class RNTupleCardinalityColumnReader : public RNTupleColumnReader {
+class RNTupleProjectionColumnReader : public RNTupleColumnReader {
 public:
-   RNTupleCardinalityColumnReader(std::unique_ptr<RFieldBase> f, DescriptorId_t fieldId)
-      : RNTupleColumnReader(std::move(f), fieldId)
+   RNTupleProjectionColumnReader(std::unique_ptr<RFieldBase> f, const std::vector<DescriptorId_t> &skeinIDs)
+      : RNTupleColumnReader(std::move(f), skeinIDs)
    {
    }
 
    std::unique_ptr<RNTupleColumnReader> Clone() const final {
-      return std::make_unique<RNTupleCardinalityColumnReader>(fField->Clone(fField->GetName()), fFieldId);
+      return std::make_unique<RNTupleProjectionColumnReader>(fField->Clone(fField->GetName()), fSkeinIDs);
    }
 
    void Connect(RPageSource &source) final {
-      auto cardinalityField = dynamic_cast<RRDFCardinalityField *>(fField.get());
-      Detail::RFieldFuse::Connect(fFieldId, source, cardinalityField->fOffsetField);
+      auto f = fField.get();
+      for (unsigned i = 0; i < fSkeinIDs.size() - 1; ++i) {
+         Detail::RFieldFuse::Connect(fSkeinIDs[i], source, *f);
+         f = f->GetSubFields()[0];
+      }
+      Detail::RFieldFuse::ConnectRecursively(fSkeinIDs.back(), source, *f);
    }
 };
 
@@ -144,34 +161,55 @@ public:
 RNTupleDS::~RNTupleDS() = default;
 
 
-void RNTupleDS::AddCollection(const RNTupleDescriptor &desc, DescriptorId_t collectionId)
+void RNTupleDS::AddProjection(
+   const RNTupleDescriptor &desc, std::string_view colName, DescriptorId_t fieldId,
+   std::vector<DescriptorId_t> skeinIDs)
 {
-   auto qualifiedName = desc.GetQualifiedFieldName(collectionId);
-   fColumnNames.emplace_back(std::string("#") + qualifiedName);
-   fColumnTypes.emplace_back(Detail::RRDFCardinalityField::TypeName());
-
-   auto field = std::make_unique<Detail::RRDFCardinalityField>(qualifiedName);
-   auto columnReader = std::make_unique<Detail::RNTupleCardinalityColumnReader>(std::move(field), collectionId);
-   fColumnReaderPrototypes.emplace_back(std::move(columnReader));
-}
-
-
-void RNTupleDS::AddRecord(const RNTupleDescriptor &desc, DescriptorId_t recordId)
-{
-   for (const auto& f : desc.GetFieldRange(recordId)) {
-      fColumnNames.emplace_back(desc.GetQualifiedFieldName(f.GetId()));
-      fColumnTypes.emplace_back(f.GetTypeName());
-
-      auto field = Detail::RFieldBase::Create(f.GetFieldName(), f.GetTypeName());
-      auto columnReader = std::make_unique<Detail::RNTupleScalarColumnReader>(std::move(field), f.GetId());
-      fColumnReaderPrototypes.emplace_back(std::move(columnReader));
-
-      if (f.GetStructure() == ENTupleStructure::kRecord) {
-         AddRecord(desc, f.GetId());
-      } else if (f.GetStructure() == ENTupleStructure::kCollection) {
-         AddCollection(desc, f.GetId());
+   const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
+   if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
+      skeinIDs.emplace_back(fieldId);
+      // There should only be one sub field but it's easiest to access via the sub field range
+      for (const auto& f : desc.GetFieldRange(fieldDesc.GetId())) {
+         AddProjection(desc, colName, f.GetId(), skeinIDs);
+      }
+      return;
+   } else if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
+      for (const auto& f : desc.GetFieldRange(fieldDesc.GetId())) {
+         auto innerName = colName.empty() ? f.GetFieldName() : (std::string(colName) + "." + f.GetFieldName());
+         AddProjection(desc, innerName, f.GetId(), skeinIDs);
       }
    }
+
+   // TODO(jblomer): return RResult from RFieldBase::Create and skip/warn if type is unknown
+   if (fieldDesc.GetTypeName().empty())
+      return;
+
+   std::unique_ptr<Detail::RFieldBase> valueField;
+   valueField = Detail::RFieldBase::Create("", fieldDesc.GetTypeName());
+   std::unique_ptr<Detail::RFieldBase> cardinalityField;
+   if (!skeinIDs.empty())
+      cardinalityField = std::make_unique<Detail::RRDFCardinalityField>();
+
+   std::string typeName;
+   for (unsigned int i = 0; i < skeinIDs.size(); ++i) {
+      valueField = std::make_unique<ROOT::Experimental::RVectorField>("", std::move(valueField));
+      if (i < skeinIDs.size() - 1)
+         cardinalityField = std::make_unique<ROOT::Experimental::RVectorField>("", std::move(cardinalityField));
+   }
+
+   if (cardinalityField) {
+      fColumnNames.emplace_back(std::string("#") + std::string(colName));
+      fColumnTypes.emplace_back(cardinalityField->GetType());
+      auto cardColReader =
+         std::make_unique<Detail::RNTupleCardinalityColumnReader>(std::move(cardinalityField), skeinIDs);
+      fColumnReaderPrototypes.emplace_back(std::move(cardColReader));
+   }
+
+   skeinIDs.emplace_back(fieldId);
+   fColumnNames.emplace_back(colName);
+   fColumnTypes.emplace_back(valueField->GetType());
+   auto valColReader = std::make_unique<Detail::RNTupleProjectionColumnReader>(std::move(valueField), skeinIDs);
+   fColumnReaderPrototypes.emplace_back(std::move(valColReader));
 }
 
 
@@ -181,7 +219,7 @@ RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
    const auto &descriptor = pageSource->GetDescriptor();
    fSources.emplace_back(std::move(pageSource));
 
-   AddRecord(descriptor, descriptor.GetFieldZeroId());
+   AddProjection(descriptor, "", descriptor.GetFieldZeroId(), std::vector<DescriptorId_t>());
 }
 
 RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const std::type_info & /* ti */)

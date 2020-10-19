@@ -26,4 +26,7 @@ TEST(RNTuple, RDF)
    ROOT::EnableImplicitMT();
    auto rdf = ROOT::Experimental::MakeNTupleDataFrame("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(42.0, *rdf.Min("pt"));
+   auto s = rdf.Take<std::string>("klass.s");
+   EXPECT_EQ(1ull, s.GetValue().size());
+   EXPECT_EQ(std::string("abc"), s.GetValue()[0]);
 }

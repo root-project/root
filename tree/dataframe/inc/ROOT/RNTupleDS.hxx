@@ -54,8 +54,10 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    unsigned fNSlots = 0;
    bool fHasSeenAllRanges = false;
 
-   void AddCollection(const RNTupleDescriptor &desc, DescriptorId_t collectionId);
-   void AddRecord(const RNTupleDescriptor &desc, DescriptorId_t recordId);
+   void AddProjection(const RNTupleDescriptor &desc,
+                      std::string_view colName,
+                      DescriptorId_t fieldId,
+                      std::vector<DescriptorId_t> skeinIDs);
 
 public:
    explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);

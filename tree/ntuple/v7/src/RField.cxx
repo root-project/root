@@ -251,10 +251,9 @@ void ROOT::Experimental::Detail::RFieldBase::Attach(
 }
 
 
-std::vector<const ROOT::Experimental::Detail::RFieldBase *>
-ROOT::Experimental::Detail::RFieldBase::GetSubFields() const
+std::vector<ROOT::Experimental::Detail::RFieldBase *> ROOT::Experimental::Detail::RFieldBase::GetSubFields() const
 {
-   std::vector<const RFieldBase *> result;
+   std::vector<RFieldBase *> result;
    for (const auto &f : fSubFields) {
       result.emplace_back(f.get());
    }
