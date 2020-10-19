@@ -94,7 +94,27 @@ void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_lis
     double min = -std::numeric_limits<double>::max(), double max = std::numeric_limits<double>::max(),
     bool limitsInAllowedRange = false, std::string extraMessage = "");
 
+
+/// Disable all caches for sub-branches in an expression tree.
+/// This is helpful when an expression with cached sub-branches needs to be integrated numerically.
+struct DisableCachingRAII {
+  /// Inhibit all dirty-state propagation, and assume every node as dirty.
+  /// \param[in] oldState Restore this state when going out of scope.
+  DisableCachingRAII(bool oldState):
+  _oldState(oldState) {
+    RooAbsArg::setDirtyInhibit(true);
+  }
+
+  ~DisableCachingRAII() {
+    RooAbsArg::setDirtyInhibit(_oldState);
+  }
+  bool _oldState;
+};
+
+
+
 }
+
 
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOHELPERS_H_ */
