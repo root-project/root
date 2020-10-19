@@ -353,4 +353,4 @@
 #pragma link C++ options=nomap class std::map<string,TH1*>+ ;
 #pragma link off class RooErrorHandler+ ;
 #endif 
- 
+#pragma link C++ class RooBinSamplingPdf+; 
