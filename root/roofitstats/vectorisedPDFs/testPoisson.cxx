@@ -69,7 +69,7 @@ class TestPoissonOddMeanNoRounding : public PDFTest
 {
   protected:
     TestPoissonOddMeanNoRounding() :
-      PDFTest("PoissonOddMeanNoRounding", 1000)
+      PDFTest("PoissonOddMeanNoRounding", 100000)
   {
       auto x = new RooRealVar("x", "x", 0., 100);
       auto mean = new RooRealVar("mean", "Mean of Poisson", 7.8529298854862928, 0., 10);
