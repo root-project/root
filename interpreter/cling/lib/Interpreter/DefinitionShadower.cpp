@@ -92,10 +92,6 @@ namespace cling {
     for (auto Prev : Previous) {
       if (Prev == D)
         continue;
-#ifdef CLING_ONLY_SHADOW_USER_DECLS
-      if (!isClingShadowNamespace(Prev->getDeclContext()))
-        continue;
-#endif
       if (isDefinition(Prev) && !isDefinition(D))
         continue;
       // If the found declaration is a function overload, do not invalidate it.
@@ -159,10 +155,17 @@ namespace cling {
 
   ASTTransformer::Result DefinitionShadower::Transform(Decl* D) {
     Transaction *T = getTransaction();
-    const CompilationOptions &CO = T->getCompilationOpts();
+    if (!T->getCompilationOpts().EnableShadowing)
+      return Result(D, true);
+
+    // For variable templates, Transform() is invoked with a VarDecl; get the
+    // corresponding VarTemplateDecl.
+    if (auto VD = dyn_cast<VarDecl>(D))
+      if (auto VTD = VD->getDescribedVarTemplate())
+        D = VTD;
+
     // Disable definition shadowing for some specific cases.
-    if (!CO.EnableShadowing
-        || D->getLexicalDeclContext() != m_TU || D->isInvalidDecl()
+    if (D->getLexicalDeclContext() != m_TU || D->isInvalidDecl()
         || isa<UsingDirectiveDecl>(D) || isa<UsingDecl>(D) || isa<NamespaceDecl>(D)
         || isInstantiationOrSpecialization(D)
         || !typedInClingPrompt(FullSourceLoc{D->getLocation(),
