@@ -25,10 +25,7 @@
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnLineSearch.h"
 #include "Minuit2/MnParabolaPoint.h"
-
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
-#endif
 
 
 namespace ROOT {
@@ -144,6 +141,8 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const MnFcn& mfcn, const Grad
    // Interface used by all the others for the minimization using the base MinimumBuilder class
    // According to the contained type of MinimumBuilder the right type will be used
 
+   MnPrintPrefix mnprintprefix("ModularFunctionMinimizer");
+
    const MinimumBuilder & mb = Builder();
    //std::cout << typeid(&mb).Name() << std::endl;
    double effective_toler = toler * mfcn.Up();   // scale tolerance with Up()
@@ -154,19 +153,13 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const MnFcn& mfcn, const Grad
    // check if maxfcn is already exhausted
    // case already reached call limit
    if(mfcn.NumOfCalls() >= maxfcn) {
-#ifdef WARNINGMSG
-      MN_INFO_MSG("ModularFunctionMinimizer: Stop before iterating - call limit already exceeded");
-#endif
+      MnPrint::Warn("Stop before iterating - call limit already exceeded");
+
       return FunctionMinimum(seed, std::vector<MinimumState>(1, seed.State()), mfcn.Up(), FunctionMinimum::MnReachedCallLimit());
    }
 
-
-
-
    return mb.Minimum(mfcn, gc, seed, strategy, maxfcn, effective_toler);
 }
-
-
 
 
    }  // namespace Minuit2

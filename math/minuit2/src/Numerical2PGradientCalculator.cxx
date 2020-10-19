@@ -15,11 +15,8 @@
 #include "Minuit2/MinimumParameters.h"
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MnStrategy.h"
-
-
-//#define DEBUG
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
+
 #ifdef _OPENMP
 #include <omp.h>
 #include <iomanip>
@@ -27,9 +24,9 @@
 #define DEBUG_MP
 #endif
 #endif
-#endif
 
-#include <math.h>
+#include <cmath>
+#include <cassert>
 
 #include "Minuit2/MPIProcess.h"
 
@@ -76,9 +73,9 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    //    std::cout<<"########### Numerical2PDerivative"<<std::endl;
    //    std::cout<<"initial grd: "<<Gradient.Grad()<<std::endl;
    //    std::cout<<"position: "<<par.Vec()<<std::endl;
+   MnPrintPrefix mnprintprefix("Numerical2PGradientCalculator");
 
    assert(par.IsValid());
-
 
    double fcnmin = par.Fval();
    //   std::cout<<"fval: "<<fcnmin<<std::endl;
@@ -86,7 +83,9 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    double eps2 = Precision().Eps2();
    double eps = Precision().Eps();
 
-   double dfmin = 8.*eps2*(fabs(fcnmin)+Fcn().Up());
+   MnPrint::Debug("Assumed precision eps", eps, "eps2", eps2);
+
+   double dfmin = 8.*eps2*(std::fabs(fcnmin)+Fcn().Up());
    double vrysml = 8.*eps*eps;
    //   double vrysml = std::max(1.e-4, eps2);
    //    std::cout<<"dfmin= "<<dfmin<<std::endl;
@@ -104,12 +103,8 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    MPIProcess mpiproc(n,0);
 #endif
 
-#ifdef DEBUG
-   std::cout << "Calculating Gradient at x =   " << par.Vec() << std::endl;
-   int pr = std::cout.precision(13);
-   std::cout << "fcn(x) = " << fcnmin << std::endl;
-   std::cout.precision(pr);
-#endif
+   MnPrint::Debug("Calculating gradient around value",
+     fcnmin, "at point", par.Vec());
 
 #ifndef _OPENMP
    // for serial execution this can be outside the loop
@@ -143,23 +138,23 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 #endif
 
       double xtf = x(i);
-      double epspri = eps2 + fabs(grd(i)*eps2);
+      double epspri = eps2 + std::fabs(grd(i)*eps2);
       double stepb4 = 0.;
       for(unsigned int j = 0; j < ncycle; j++)  {
-         double optstp = sqrt(dfmin/(fabs(g2(i))+epspri));
-         double step = std::max(optstp, fabs(0.1*gstep(i)));
+         double optstp = std::sqrt(dfmin/(std::fabs(g2(i))+epspri));
+         double step = std::max(optstp, std::fabs(0.1*gstep(i)));
          //       std::cout<<"step: "<<step;
          if(Trafo().Parameter(Trafo().ExtOfInt(i)).HasLimits()) {
             if(step > 0.5) step = 0.5;
          }
-         double stpmax = 10.*fabs(gstep(i));
+         double stpmax = 10.*std::fabs(gstep(i));
          if(step > stpmax) step = stpmax;
          //       std::cout<<" "<<step;
-         double stpmin = std::max(vrysml, 8.*fabs(eps2*x(i)));
+         double stpmin = std::max(vrysml, 8.*std::fabs(eps2*x(i)));
          if(step < stpmin) step = stpmin;
          //       std::cout<<" "<<step<<std::endl;
          //       std::cout<<"step: "<<step<<std::endl;
-         if(fabs((step-stepb4)/step) < StepTolerance()) {
+         if(std::fabs((step-stepb4)/step) < StepTolerance()) {
             //    std::cout<<"(step-stepb4)/step"<<std::endl;
             //    std::cout<<"j= "<<j<<std::endl;
             //    std::cout<<"step= "<<step<<std::endl;
@@ -182,14 +177,14 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
          grd(i) = 0.5*(fs1 - fs2)/step;
          g2(i) = (fs1 + fs2 - 2.*fcnmin)/step/step;
 
-#ifdef DEBUG
-         pr = std::cout.precision(13);
-         std::cout << "cycle " << j << " x " << x(i) << " step " << step << " f1 " << fs1 << " f2 " << fs2
-                   << " grd " << grd(i) << " g2 " << g2(i) << std::endl;
-         std::cout.precision(pr);
-#endif
+         MnPrint::Debug([&](std::ostream& os) {
+           const int pr = os.precision(13);
+           os << "cycle " << j << " x " << x(i) << " step " << step << " f1 "
+              << fs1 << " f2 " << fs2 << " grd " << grd(i) << " g2 " << g2(i);
+           os.precision(pr);
+         });
 
-         if(fabs(grdb4-grd(i))/(fabs(grd(i))+dfmin/step) < GradTolerance())  {
+         if(std::fabs(grdb4-grd(i))/(std::fabs(grd(i))+dfmin/step) < GradTolerance())  {
             //    std::cout<<"j= "<<j<<std::endl;
             //    std::cout<<"step= "<<step<<std::endl;
             //    std::cout<<"fs1, fs2: "<<fs1<<" "<<fs2<<std::endl;
@@ -202,7 +197,11 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 #ifdef DEBUG_MP
 #pragma omp critical
       {
-         std::cout << "Gradient for thread " << ith << "  " << i << "  " << std::setprecision(15)  << grd(i) << "  " << g2(i) << std::endl;
+         MnPrint::Debug([](std::ostream& os) {
+           const int pr = os.precision(15);
+           os << "Gradient for thread " << ith << "  " << i << "  "
+              << grd(i) << "  " << g2(i);
+         });
       }
 #endif
 
@@ -210,13 +209,12 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
       //     vgrd2(i) = g2;
       //     vgstp(i) = gstep;
 
-
-#ifdef DEBUG
-      pr = std::cout.precision(13);
-      int iext = Trafo().ExtOfInt(i);
-      std::cout << "Parameter " << Trafo().Name(iext) << " Gradient =   " << grd(i) << " g2 = " << g2(i) << " step " << gstep(i) << std::endl;
-      std::cout.precision(pr);
-#endif
+      MnPrint::Debug([&](std::ostream& os) {
+        const int pr = os.precision(13);
+        const int iext = Trafo().ExtOfInt(i);
+        os << "Parameter " << Trafo().Name(iext) << " Gradient " << grd(i) << " g2 " << g2(i) << " step " << gstep(i);
+        os.precision(pr);
+      });
    }
 
 #ifndef _OPENMP
@@ -225,11 +223,7 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    mpiproc.SyncVector(gstep);
 #endif
 
-#ifdef DEBUG
-   std::cout << "Calculated Gradient at x =   " << par.Vec() << std::endl;
-   std::cout << "fcn(x) = " << fcnmin << std::endl;
-   std::cout << "Computed gradient in N2PGC " << grd << std::endl;
-#endif
+   MnPrint::Debug("Calculated gradient", grd);
 
    return FunctionGradient(grd, g2, gstep);
 }

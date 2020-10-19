@@ -172,6 +172,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/MnPlot.cxx
       src/MnPosDef.cxx
       src/MnPrint.cxx
+      src/MnPrintImpl.cxx
       src/MnScan.cxx
       src/MnSeedGenerator.cxx
       src/MnStrategy.cxx
@@ -249,7 +250,7 @@ if(minuit2_mpi)
 endif()
 
 if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-  add_definitions(-DWARNINGMSG -DUSE_ROOT_ERROR)
+  add_definitions(-DUSE_ROOT_ERROR)
   ROOT_ADD_TEST_SUBDIRECTORY(test)
 else()
   include(StandAlone.cmake)

@@ -12,20 +12,11 @@
 
 #include "Minuit2/MnConfig.h"
 
-//#define DEBUG
-//#define WARNINGMSG
-
-#include <iostream>
+#include <sstream>
+#include <utility>
+#include <cassert>
 #include <string>
-
-#ifdef DEBUG
-#ifndef WARNINGMSG
-#define WARNINGMSG
-#endif
-#endif
-
-
-
+#include <ios>
 
 namespace ROOT {
 
@@ -69,107 +60,141 @@ std::ostream& operator<<(std::ostream&, const MinosError&);
 class ContoursError;
 std::ostream& operator<<(std::ostream&, const ContoursError&);
 
+// std::pair<double, double> is used by MnContour
+std::ostream& operator<<(std::ostream& os, const std::pair<double,double> & point);
 
-// class define static print level values
+/* Design notes: 1) We want to delay the costly conversion from object references to
+   strings to a point after we have decided whether or not to
+   show that string to the user at all. 2) We want to offer a customization point for
+   external libraries that want to replace the MnPrint logging. The actual
+   implementation is in a separate file, MnPrintImpl.cxx file that external libraries
+   can replace with their own implementation.
+*/
 
+// scope guard to set common prefix for all messages in local scope
+class MnPrintPrefix {
+public:
+  MnPrintPrefix(const char* prefix);
+  ~MnPrintPrefix();
+private:
+  const char* fSave;
+};
+
+// scope guard to temporarily switch global verbosity level to a local one
+class MnPrintLocalLevel {
+public:
+  MnPrintLocalLevel(int level);
+  ~MnPrintLocalLevel();
+private:
+  int fSave;
+};
+
+// static logging class which manages global verbosity level
 class MnPrint {
 
 public:
+   // want this to be an enum class for strong typing...
+   enum class Verbosity {
+      Error = 0,
+      Warn = 1,
+      Info = 2,
+      Debug = 3
+   };
+
+   // ...but also want the values accessible from MnPrint scope for convenience
+   static constexpr auto eError = Verbosity::Error;
+   static constexpr auto eWarn = Verbosity::Warn;
+   static constexpr auto eInfo = Verbosity::Info;
+   static constexpr auto eDebug = Verbosity::Debug;
+
+   // used for one-line printing of fcn minimum state
+   class Oneline {
+   public:
+     Oneline(double fcn, double edm, int ncalls, int iter=-1);
+     Oneline(const MinimumState & state, int iter=-1);
+     Oneline(const FunctionMinimum& fmin, int iter=-1);
+
+   private:
+     double fFcn, fEdm;
+     int fNcalls, fIter;
+
+     friend std::ostream& operator<<(std::ostream& os, const Oneline& x);
+   };
+
    // set print level and return the previous one
    static int SetLevel(int level);
 
    // return current level
    static int Level();
 
-   // print current minimization state
-   static void PrintState(std::ostream & os, const MinimumState & state, const char * msg, int iter = -1);
+   template <class... Ts>
+   static void Log(Verbosity level, const char* prefix, const Ts&... args) {
+     if (Level() < static_cast<int>(level))
+       return;
+     std::ostringstream os;
+     assert(prefix); // prefix must be always set
+     os << prefix;
+     if (sizeof...(Ts))
+        os << ":";
+     StreamArgs(os, args...);
+     Impl(level, os.str());
+   }
 
-   // print current minimization state
-   static void PrintState(std::ostream & os, double fcn, double edm, int ncalls, const char * msg, int iter = -1);
+   template <class... Ts>
+   static void Error(const Ts&... args) {
+     Log(eError, Prefix(), args...);
+   }
 
-   // print FCN value with right precision adding optionally end line
-   static void PrintFcn(std::ostream & os, double value, bool endline = true);
+   template <class... Ts>
+   static void Warn(const Ts&... args) {
+     Log(eWarn, Prefix(), args...);
+   }
+
+   template <class... Ts>
+   static void Info(const Ts&... args) {
+     Log(eInfo, Prefix(), args...);
+   }
+
+   template <class... Ts>
+   static void Debug(const Ts&... args) {
+     Log(eDebug, Prefix(), args...);
+   }
+
+ private:
+
+   static const char* Prefix();
+
+   // see MnPrintImpl.cxx
+   static void Impl(Verbosity level, const std::string& s);
+
+   // TMP to handle lambda argument correctly, exploiting overload resolution rules
+   template <class T>
+   static auto HandleLambda(std::ostream& os, const T& t, int) -> decltype(t(os), void()) { t(os); }
+
+   template <class T>
+   static void HandleLambda(std::ostream& os, const T& t, float) {
+     os << t;
+   }
+
+   static void StreamArgs(std::ostringstream&) {}
+
+   // end of recursion
+   template <class T>
+   static void StreamArgs(std::ostringstream& os, const T& t) {
+     os << " ";
+     HandleLambda(os, t, 0);
+   }
+
+   template <class T, class... Ts>
+   static void StreamArgs(std::ostringstream& os, const T& t, const Ts&... ts) {
+     os << " " << t;
+     StreamArgs(os, ts...);
+   }
+
+   friend class MnPrintPrefix;
 };
 
-
-
-  }  // namespace Minuit2
-
-}  // namespace ROOT
-
-
-// macro to report messages
-
-#ifndef USE_ROOT_ERROR
-
-#ifndef MNLOG
-#define MN_OS std::cerr
-#else
-#define MN_OS MNLOG
-#endif
-
-#define MN_INFO_MSG(str) \
-   if (MnPrint::Level() > 0) MN_OS << "Info: " << str    \
-       << std::endl;
-#define MN_ERROR_MSG(str) \
-   if (MnPrint::Level() >= 0) MN_OS << "Error: " << str \
-       << std::endl;
-# define MN_INFO_VAL(x) \
-   if (MnPrint::Level() > 0) MN_OS << "Info: " << #x << " = " << (x) << std::endl;
-# define MN_ERROR_VAL(x) \
-   if (MnPrint::Level() >= 0) MN_OS << "Error: " << #x << " = " << (x) << std::endl;
-
-
-// same giving a location
-
-#define MN_INFO_MSG2(loc,str) \
-  if (MnPrint::Level() > 0) MN_OS << "Info in " << loc << " : " << str \
-       << std::endl;
-#define MN_ERROR_MSG2(loc,str) \
-   if (MnPrint::Level() >= 0) MN_OS << "Error in " << loc << " : " << str \
-       << std::endl;
-# define MN_INFO_VAL2(loc,x) \
-   if (MnPrint::Level() > 0) MN_OS << "Info in " << loc << " : " << #x << " = " << (x) << std::endl;
-# define MN_ERROR_VAL2(loc,x) \
-   if (MnPrint::Level() >= 0) MN_OS << "Error in " << loc << " : " << #x << " = " << (x) << std::endl;
-
-
-
-#else
-// use ROOT error reporting system
-#include "TError.h"
-#include "Math/Util.h"
-
-// this first two should be used only with string literals to
-// avoid warning produced by the format in TError
-#define  MN_INFO_MSG(str) \
-   ::Info("Minuit2",str);
-#define  MN_ERROR_MSG(str) \
-   ::Error("Minuit2",str);
-# define MN_INFO_VAL(x) \
-   {std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-      ::Info("Minuit2","%s",str.c_str() );}
-# define MN_ERROR_VAL(x) \
-   {std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Error("Minuit2","%s",str.c_str() );}
-
-# define MN_INFO_MSG2(loc,txt) \
-   {std::string str = std::string(loc) + std::string(" : ") + std::string(txt); \
-   ::Info("Minuit2","%s",str.c_str() );}
-# define MN_ERROR_MSG2(loc,txt) \
-   {std::string str = std::string(loc) + std::string(" : ") + std::string(txt); \
-   ::Error("Minuit2","%s",str.c_str() );}
-
-# define MN_INFO_VAL2(loc,x) \
-   {std::string str = std::string(loc) + std::string(" : ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Info("Minuit2","%s",str.c_str() );}
-# define MN_ERROR_VAL2(loc,x) \
-   {std::string str = std::string(loc) + std::string(" : ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Error("Minuit2","%s",str.c_str() );}
-
-
-
-#endif
-
+} // ns Minuit2
+} // ns ROOT
 
 #endif  // ROOT_Minuit2_MnPrint

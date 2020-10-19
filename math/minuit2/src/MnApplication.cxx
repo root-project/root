@@ -11,11 +11,8 @@
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/ModularFunctionMinimizer.h"
 #include "Minuit2/FCNGradientBase.h"
-
-
-#ifdef DEBUG
 #include "Minuit2/MnPrint.h"
-#endif
+
 
 namespace ROOT {
 
@@ -35,6 +32,7 @@ MnApplication::MnApplication(const FCNGradientBase& fcn, const MnUserParameterSt
 
 FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler) {
    // constructor from macfcn calls and tolerance
+   MnPrintPrefix mnprintprefix("MnApplication");
 
    assert(fState.IsValid());
    unsigned int npar = VariableParameters();
@@ -58,27 +56,27 @@ FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler) {
       fNumCall += min.NFcn();
       fState = min.UserState();
 
-#ifdef DEBUG
 //       std::cout << "Initial MIGRAD state is " << MnUserParameterState( min.States()[0], min.Up(), min.Seed().Trafo() ) << std::endl;
-      std::cout << "State resulting from Migrad. Total Function calls  " << fNumCall  << fState << std::endl;
       const std::vector<ROOT::Minuit2::MinimumState>& iterationStates =  min.States();
-      std::cout << "Number of iterations " << iterationStates.size() << std::endl;
-      for (unsigned int i = 0; i <  iterationStates.size(); ++i) {
-         //std::cout << iterationStates[i] << std::endl;
-         const ROOT::Minuit2::MinimumState & st =  iterationStates[i];
-         std::cout << "----------> Iteration " << i << std::endl;
-         int pr = std::cout.precision(18);
-         std::cout << "            FVAL = " << st.Fval()
-                   << " Edm = " << st.Edm() << " Nfcn = " << st.NFcn() << std::endl;
-         std::cout.precision(pr);
-         std::cout << "            Error matrix change = " << st.Error().Dcovar()
-                   << std::endl;
-         std::cout << "            Internal parameters : ";
-         for (int j = 0; j < st.size() ; ++j)
-            std::cout << " p" << j << " = " << st.Vec()(j);
-         std::cout << std::endl;
-      }
-#endif
+      MnPrint::Debug("State resulting from Migrad after",
+        iterationStates.size(), "iterations:", fState);
+
+      MnPrint::Debug([&](std::ostream& os) {
+        for (unsigned int i = 0; i <  iterationStates.size(); ++i) {
+           //std::cout << iterationStates[i] << std::endl;
+           const ROOT::Minuit2::MinimumState & st =  iterationStates[i];
+           os << "\n----------> Iteration " << i << '\n';
+           int pr = os.precision(18);
+           os << "            FVAL = " << st.Fval()
+              << " Edm = " << st.Edm() << " Nfcn = " << st.NFcn() << '\n';
+           os.precision(pr);
+           os << "            Error matrix change = " << st.Error().Dcovar()
+              << '\n';
+           os << "            Internal parameters : ";
+           for (int j = 0; j < st.size() ; ++j)
+              os << " p" << j << " = " << st.Vec()(j);
+        }
+      });
 
       return min;
    }

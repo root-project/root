@@ -21,6 +21,7 @@
 // #endif
 
 #include <cmath>
+#include <cassert>
 #include <vector>
 
 namespace ROOT {
@@ -88,12 +89,13 @@ private:
 
 template<class Function>
 void FumiliFCNAdapter<Function>::EvaluateAll( const std::vector<double> & v) {
+   MnPrintPrefix mnprintprefix("FumiliFCNAdaptor");
 
    //typedef FumiliFCNAdapter::Function Function;
 
    //evaluate all elements
    unsigned int npar = Dimension();
-   if (npar != v.size() ) std::cout << "npar = " << npar << "  " << v.size() << std::endl;
+   if (npar != v.size() ) MnPrint::Error("npar", npar, "v.size()", v.size());
    assert(npar == v.size());
    //must distinguish case of likelihood or LS
 
@@ -153,7 +155,7 @@ void FumiliFCNAdapter<Function>::EvaluateAll( const std::vector<double> & v) {
       }
    }
    else {
-      MN_ERROR_MSG("FumiliFCNAdapter: type of fit method is not supported, it must be chi2 or log-likelihood");
+      MnPrint::Error("type of fit method is not supported, it must be chi2 or log-likelihood");
    }
 }
 

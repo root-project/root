@@ -45,7 +45,7 @@ int main() {
   }
   double mean = x/norm;
   double rms2 = x2/norm - mean*mean;
-  double rms = rms2 > 0. ? sqrt(rms2) : 1.;
+  double rms = rms2 > 0. ? std::sqrt(rms2) : 1.;
 
 
   // create parameters

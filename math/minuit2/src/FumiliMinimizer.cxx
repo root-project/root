@@ -37,6 +37,8 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase& fcn, const MnUserParame
    // Minimize using Fumili. Create seed and Fumili gradient calculator.
    // The FCNBase passed must be a FumiliFCNBase type otherwise method will fail !
 
+   MnPrintPrefix mnprintprefix("FumiliMinimizer");
+
    MnUserFcn mfcn(fcn, st.Trafo());
    Numerical2PGradientCalculator gc(mfcn, st.Trafo(), strategy);
 
@@ -53,15 +55,14 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase& fcn, const MnUserParame
 
    FumiliFCNBase * fumiliFcn = dynamic_cast< FumiliFCNBase *>( const_cast<FCNBase *>(&fcn) );
    if ( !fumiliFcn ) {
-      MN_ERROR_MSG("FumiliMinimizer: Error : wrong FCN type. Try to use default minimizer");
+      MnPrint::Error("Wrong FCN type; try to use default minimizer");
       return  FunctionMinimum(mnseeds, fcn.Up() );
    }
 
 
    FumiliGradientCalculator fgc(*fumiliFcn, st.Trafo(), npar);
-#ifdef DEBUG
-   std::cout << "Minuit::Minimize using FumiliMinimizer" << std::endl;
-#endif
+   MnPrint::Debug("Using FumiliMinimizer");
+
    return ModularFunctionMinimizer::Minimize(mfcn, fgc, mnseeds, strategy, maxfcn, toler);
 }
 
@@ -84,15 +85,14 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNGradientBase& fcn, const MnUs
 
    FumiliFCNBase * fumiliFcn = dynamic_cast< FumiliFCNBase *>( const_cast<FCNGradientBase *>(&fcn) );
    if ( !fumiliFcn ) {
-      MN_ERROR_MSG("FumiliMinimizer: Error : wrong FCN type. Try to use default minimizer");
+      MnPrint::Error("wrong FCN type; try to use default minimizer");
       return  FunctionMinimum(mnseeds, fcn.Up() );
    }
 
 
    FumiliGradientCalculator fgc(*fumiliFcn, st.Trafo(), npar);
-#ifdef DEBUG
-   std::cout << "Minuit::Minimize using FumiliMinimizer" << std::endl;
-#endif
+   MnPrint::Debug("using FumiliMinimizer");
+
    return ModularFunctionMinimizer::Minimize(mfcn, fgc, mnseeds, strategy, maxfcn, toler);
 
 }

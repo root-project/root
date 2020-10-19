@@ -15,12 +15,9 @@
 #include "Minuit2/MnLineSearch.h"
 #include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/VariableMetricEDMEstimator.h"
+#include "Minuit2/MnPrint.h"
 
 #include <cmath>
-//#define DEBUG
-#ifdef DEBUG
-#include <iostream>
-#endif
 
 namespace ROOT {
 
@@ -36,6 +33,7 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
 //   Recalculate the gradients for all the Parameter after the correction and
 //   continue iteration in case the second derivatives are still negative
 //
+   MnPrintPrefix mnprintprefix("NegativeG2LineSearch");
 
    bool negG2 = HasNegativeG2(st.Gradient(), prec);
    if(!negG2) return st;
@@ -49,10 +47,10 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
       iterate = false;
       for(unsigned int i = 0; i < n; i++) {
 
-#ifdef DEBUG
-         std::cout << "negative G2 - iter " << iter << " param " << i << "   " << pa.Vec()(i) << "  grad2 " << dgrad.G2()(i) << " grad " << dgrad.Vec()(i)
-                   << " grad step " << dgrad.Gstep()(i) << " step size " << pa.Dirin()(i) << std::endl;
-#endif
+         MnPrint::Debug("negative G2 - iter", iter, "param", i, pa.Vec()(i),
+           "grad2", dgrad.G2()(i), "grad", dgrad.Vec()(i),
+           "grad step", dgrad.Gstep()(i), "step size", pa.Dirin()(i));
+
          if(dgrad.G2()(i) <= 0) {
 
             // check also the gradient (if it is zero ) I can skip the param)
@@ -72,29 +70,23 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
 
             // if using sec derivative information
             // double g2del = step(i)*step(i) * dgrad.G2()(i);
-            bool debugLS = false;
 
-#ifdef DEBUG
-            std::cout << "step(i) " << step(i) << " gdel " << gdel << std::endl;
+            MnPrint::Debug("step(i)", step(i), "gdel", gdel);
 //            std::cout << " g2del " << g2del << std::endl;
-            debugLS = true;
-#endif
-            MnParabolaPoint pp = lsearch(fcn, pa, step, gdel, prec,debugLS);
+
+            MnParabolaPoint pp = lsearch(fcn, pa, step, gdel, prec);
 
 
-
-#ifdef DEBUG
-            std::cout << "\nLine search result " << pp.X() << " f(0)  " << pa.Fval() << " f(1) " << pp.Y() << std::endl;
-#endif
+            MnPrint::Debug("Line search result", pp.X(), "f(0)", pa.Fval(), "f(1)", pp.Y());
 
             step *= pp.X();
             pa = MinimumParameters(pa.Vec() + step, pp.Y());
 
             dgrad = gc(pa, dgrad);
 
-#ifdef DEBUG
-            std::cout << "Line search - iter" << iter << " param " << i << "   " << pa.Vec()(i) << " step " << step(i) << " new grad2 " << dgrad.G2()(i) << " new grad " <<  dgrad.Vec()(i) << " grad step " << dgrad.Gstep()(i) << std::endl;
-#endif
+            MnPrint::Debug("Line search - iter", iter, "param", i, pa.Vec()(i),
+              "step", step(i), "new grad2", dgrad.G2()(i),
+              "new grad", dgrad.Vec()(i), "grad step", dgrad.Gstep()(i));
 
             iterate = true;
             break;
@@ -104,13 +96,13 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
 
    MnAlgebraicSymMatrix mat(n);
    for(unsigned int i = 0; i < n; i++)
-      mat(i,i) = (fabs(dgrad.G2()(i)) > prec.Eps2() ? 1./dgrad.G2()(i) : 1.);
+      mat(i,i) = (std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1./dgrad.G2()(i) : 1.);
 
    MinimumError err(mat, 1.);
    double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
 
    if (edm < 0) {
-      err = MinimumError(mat, MinimumError::MnNotPosDef() ); 
+      err = MinimumError(mat, MinimumError::MnNotPosDef() );
    }
 
    return MinimumState(pa, err, dgrad, edm, fcn.NumOfCalls());
@@ -128,10 +120,6 @@ bool NegativeG2LineSearch::HasNegativeG2(const FunctionGradient& grad, const MnM
 
    return false;
 }
-
-
-
-
 
 
 

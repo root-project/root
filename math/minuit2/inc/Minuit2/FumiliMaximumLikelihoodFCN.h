@@ -11,18 +11,15 @@
 #define ROOT_Minuit2_FumiliMaximumLikelihoodFCN
 
 #include "FumiliFCNBase.h"
-#include <vector>
-#include <cmath>
-#include <float.h>
 #include "Minuit2/ParametricFunction.h"
 #include "Math/Util.h"
+#include <vector>
+#include <cassert>
 
 namespace ROOT {
 
    namespace Minuit2 {
 
-
-//#include <iostream>
 
 /**
 

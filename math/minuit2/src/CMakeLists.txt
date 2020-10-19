@@ -214,12 +214,6 @@ target_include_directories(
     $<INSTALL_INTERFACE:include/Minuit2>
     )
 
-target_compile_definitions(
-    Minuit2
-    PRIVATE
-    WARNINGMSG
-    )
-
 target_compile_features(Minuit2 PUBLIC cxx_nullptr cxx_nonstatic_member_init)
 set_target_properties(Minuit2 PROPERTIES CXX_EXTENSIONS OFF)
 

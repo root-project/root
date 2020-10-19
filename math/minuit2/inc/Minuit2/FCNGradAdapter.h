@@ -11,13 +11,9 @@
 #define ROOT_Minuit2_FCNGradAdapter
 
 #include "Minuit2/FCNGradientBase.h"
+#include "Minuit2/MnPrint.h"
 
 #include <vector>
-
-//#define DEBUG
-#ifdef DEBUG
-#include <iostream>
-#endif
 
 namespace ROOT {
 
@@ -61,12 +57,11 @@ public:
    std::vector<double> Gradient(const std::vector<double>& v) const {
       fFunc.Gradient(&v[0], &fGrad[0]);
 
-#ifdef DEBUG
-      std::cout << " gradient in FCNAdapter = { " ;
-      for (unsigned int i = 0; i < fGrad.size(); ++i)
-         std::cout << fGrad[i] << "\t";
-      std::cout << "}" << std::endl;
-#endif
+      MnPrint::Log(MnPrint::eDebug, "FCNGradAdapter", [&](std::ostream& os) {
+        os << "gradient in FCNAdapter = {";
+        for (unsigned int i = 0; i < fGrad.size(); ++i)
+           os << fGrad[i] << (i == fGrad.size() - 1 ? '}' : '\t');
+      });
       return fGrad;
    }
    // forward interface

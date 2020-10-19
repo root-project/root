@@ -14,11 +14,10 @@
 #include "Minuit2/MinimumParameters.h"
 #include "Minuit2/FumiliChi2FCN.h"
 #include "Minuit2/FumiliMaximumLikelihoodFCN.h"
+#include "Minuit2/MnPrint.h"
 
 //to compare with N2P calculator
-//#define DEBUG 1
 #ifdef DEBUG
-#include "Minuit2/MnPrint.h"
 #include "Minuit2/Numerical2PGradientCalculator.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnUserFcn.h"
@@ -107,8 +106,10 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters& p
    Numerical2PGradientCalculator gc(MnUserFcn(fFcn,fTransformation), fTransformation, MnStrategy(1));
    FunctionGradient g2 = gc(par);
 
-   std::cout << "Fumili Gradient " << v << std::endl;
-   std::cout << "Minuit Gradient " << g2.Vec() << std::endl;
+   MnPrint::Log(MnPrint::eDebug, "FumiliGradientCalculator\n",
+     "Fumili Gradient", v, '\n',
+     "Minuit Gradient", g2.Vec()
+   );
 #endif
 
    // store calculated Hessian

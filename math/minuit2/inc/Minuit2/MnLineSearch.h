@@ -52,12 +52,12 @@ public:
 
   ~MnLineSearch() {}
 
-  MnParabolaPoint operator()(const MnFcn&, const MinimumParameters&, const MnAlgebraicVector&, double, const MnMachinePrecision&, bool debug = false) const;
+  MnParabolaPoint operator()(const MnFcn&, const MinimumParameters&, const MnAlgebraicVector&, double, const MnMachinePrecision&) const;
 
 #ifdef USE_OTHER_LS
-  MnParabolaPoint CubicSearch(const MnFcn&, const MinimumParameters&, const MnAlgebraicVector&, double, double, const MnMachinePrecision&, bool debug = false) const;
+  MnParabolaPoint CubicSearch(const MnFcn&, const MinimumParameters&, const MnAlgebraicVector&, double, double, const MnMachinePrecision&) const;
 
-  MnParabolaPoint BrentSearch(const MnFcn&, const MinimumParameters&, const MnAlgebraicVector&, double, double, const MnMachinePrecision&, bool debug = false) const;
+  MnParabolaPoint BrentSearch(const MnFcn&, const MinimumParameters&, const MnAlgebraicVector&, double, double, const MnMachinePrecision&) const;
 #endif
 
 private:

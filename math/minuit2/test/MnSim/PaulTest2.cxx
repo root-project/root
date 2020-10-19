@@ -81,17 +81,17 @@ int main() {
   double rms2 = x2/norm - mean*mean;
 
   std::cout<<"initial mean: "<<mean<<std::endl;
-  std::cout<<"initial sigma: "<<sqrt(rms2)<<std::endl;
+  std::cout<<"initial sigma: "<<std::sqrt(rms2)<<std::endl;
   std::cout<<"initial area: "<<area<<std::endl;
   std::vector<double> init_val(3);
   init_val[0] = mean;
-  init_val[1] = sqrt(rms2);
+  init_val[1] = std::sqrt(rms2);
   init_val[2] = area;
   std::cout<<"initial fval: "<<fFCN(init_val)<<std::endl;
 
   MnUserParameters upar;
   upar.Add("mean", mean, 1.);
-  upar.Add("sigma", sqrt(rms2), 1.);
+  upar.Add("sigma", std::sqrt(rms2), 1.);
   upar.Add("area", area, 10.);
 
   MnMigrad migrad(fFCN, upar);
