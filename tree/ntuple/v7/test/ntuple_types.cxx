@@ -11,7 +11,7 @@ TEST(RNTuple, TypeName) {
 
 TEST(RNTuple, CreateField)
 {
-   auto field = std::unique_ptr<RFieldBase>(RFieldBase::Create("test", "vector<unsigned int>"));
+   auto field = RFieldBase::Create("test", "vector<unsigned int>").Unwrap();
    EXPECT_STREQ("std::vector<std::uint32_t>", field->GetType().c_str());
    auto value = field->GenerateValue();
    field->DestroyValue(value);
