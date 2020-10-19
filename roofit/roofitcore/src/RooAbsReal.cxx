@@ -4891,19 +4891,6 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
   setStringAttribute("CACHEPARAMINT",plist.c_str()) ;
 }
 
-namespace {
-/// Disable caching in expression tree.
-struct DisableCachingRAII {
-  DisableCachingRAII(bool oldState):
-  _oldState(oldState) {
-    RooAbsArg::setDirtyInhibit(true);
-  }
-  ~DisableCachingRAII() {
-    RooAbsArg::setDirtyInhibit(_oldState);
-  }
-  bool _oldState;
-};
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate function for a batch of input data points. If not overridden by
@@ -4947,7 +4934,7 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
     // When used with batch computations, we depend on computation
     // graphs actually evaluating correctly, instead of having
     // pre-calculated values side-loaded into nodes event-per-event.
-    DisableCachingRAII disableCaching(inhibitDirty());
+    RooHelpers::DisableCachingRAII disableCaching(inhibitDirty());
 
     for (std::size_t i = 0; i < output.size(); ++i) {
       for (auto& tup : batchLeafs) {
@@ -5020,7 +5007,7 @@ RooSpan<double> RooAbsReal::evaluateSpan(BatchHelpers::RunContext& evalData, con
     // When used with batch computations, we depend on computation
     // graphs actually evaluating correctly, instead of having
     // pre-calculated values side-loaded into nodes event-per-event.
-    DisableCachingRAII disableCaching(inhibitDirty());
+    RooHelpers::DisableCachingRAII disableCaching(inhibitDirty());
 
     // For each event, assign values to the leaves, and run the single-value computation.
     for (std::size_t i=0; i < outputData.size(); ++i) {
