@@ -45,8 +45,8 @@ class TestJohnson : public PDFTest
         _parameters.addOwned(*par);
       }
 
-      _toleranceCompareBatches = 5.E-13;
-      _toleranceCompareLogs = 6.E-13;
+      _toleranceCompareBatches = 6.E-12;
+      _toleranceCompareLogs = 6.E-12;
 
       // For i686
       _toleranceCorrelation = 5.E-4;
@@ -87,8 +87,8 @@ class TestJohnsonInMassAndMu : public PDFTest
         _parameters.addOwned(*par);
       }
 
-      _toleranceCompareBatches = 7.E-13;
-      _toleranceCompareLogs = 1.E-13;
+      _toleranceCompareBatches = 6.E-12;
+      _toleranceCompareLogs = 6.E-12;
       //      _printLevel = 2;
 //      _toleranceParameter = 5.E-5;
       _toleranceCorrelation = 1.5E-3;
@@ -133,8 +133,8 @@ class TestJohnsonWithFormulaParameters : public PDFTest
 
       _otherObjects.addOwned(*delta);
 
-      _toleranceCompareBatches = 2.E-12;
-      _toleranceCompareLogs = 5.E-14;
+      _toleranceCompareBatches = 6.E-12;
+      _toleranceCompareLogs = 6.E-12;
       _toleranceParameter = 3.E-5;
       // For i686:
       _toleranceCorrelation = 1.5E-3;

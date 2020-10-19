@@ -92,6 +92,8 @@ class PDFTestWeightedData : public PDFTest {
     TEST_F(TEST_CLASS, TEST_NAME) {\
   resetParameters();\
   double relativeError, maximalRelativeError=0.0;\
+  compareFixedValues(relativeError, false, false, true);\
+  maximalRelativeError = std::max(maximalRelativeError,relativeError);\
   \
   for (unsigned int i=0; i<5 && !HasFailure(); ++i) {\
     std::stringstream str;\

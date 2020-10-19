@@ -17,6 +17,7 @@
 #include "VectorisedPDFTests.h"
 #include "RooBukinPdf.h"
 
+#include "RooNumIntConfig.h"
 
 class TestBukin : public PDFTest
 {
@@ -46,7 +47,13 @@ class TestBukin : public PDFTest
       for (auto par : {Xp, sigp}) {
         _parameters.addOwned(*par);
       }
-    _toleranceParameter = 3e-5;
+      _toleranceParameter = 3e-5;
+      _toleranceCompareBatches = 2.5e-14;
+      //_toleranceCompareLogs{2.E-14};
+
+      // make the integrator slightly more precise (1e-6 -> 1e-7) to reduce inaccuracy in fitting
+      RooAbsReal::defaultIntegratorConfig()->setEpsAbs(1e-7);
+      RooAbsReal::defaultIntegratorConfig()->setEpsRel(1e-7);
 
   }
 };
