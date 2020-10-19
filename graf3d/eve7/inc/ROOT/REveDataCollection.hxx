@@ -27,26 +27,25 @@ class TClass;
 namespace ROOT {
 namespace Experimental {
 
-class REveDataItem;
-
-
 //==============================================================================
-// could be a nested class ???
-struct REveDataItem
+class REveDataItem
 {
+private:
    void*    fDataPtr{nullptr};
 
    Bool_t   fRnrSelf{true};
    Color_t  fColor{0};
    Bool_t   fFiltered{false};
 
-
+public:
    REveDataItem(void* d, Color_t c): fDataPtr(d), fColor(c){}
 
    Bool_t  GetRnrSelf() const { return fRnrSelf; }
    Color_t GetMainColor()   const { return fColor; }
    Bool_t  GetFiltered() const { return fFiltered; }
    Bool_t  GetVisible() const { return (!fFiltered) && fRnrSelf; }
+
+   void*  GetDataPtr() { return fDataPtr; } 
 
    void SetFiltered(Bool_t i) { fFiltered = i; }
    void SetMainColor(Color_t i) { fColor = i; }
@@ -140,9 +139,8 @@ public:
    void ApplyFilter();
 
    Int_t GetNItems() const { return (Int_t) fItemList->fItems.size(); }
-   void *GetDataPtr(Int_t i) const { return  fItemList->fItems[i]->fDataPtr; }
-   //   const REveDataItem& RefDataItem(Int_t i) const { return fItems[i]; }
-    const REveDataItem* GetDataItem(Int_t i) const { return  fItemList->fItems[i]; }
+   void *GetDataPtr(Int_t i) const { return  fItemList->fItems[i]->GetDataPtr(); }
+   const REveDataItem* GetDataItem(Int_t i) const { return  fItemList->fItems[i]; }
 
    void  StreamPublicMethods(nlohmann::json &cj) const;
    Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
