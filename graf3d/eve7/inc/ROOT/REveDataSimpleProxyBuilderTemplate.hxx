@@ -12,7 +12,7 @@ template <typename T>
 class REveDataSimpleProxyBuilderTemplate : public REveDataSimpleProxyBuilder {
 
 public:
-   REveDataSimpleProxyBuilderTemplate() : REveDataSimpleProxyBuilder("GL")
+   REveDataSimpleProxyBuilderTemplate() : REveDataSimpleProxyBuilder()
    {
    }
 

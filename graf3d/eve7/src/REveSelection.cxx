@@ -13,11 +13,13 @@
 #include <ROOT/REveProjectionBases.hxx>
 #include <ROOT/REveCompound.hxx>
 #include <ROOT/REveManager.hxx>
+#include <ROOT/REveSecondarySelectable.hxx>
 
 #include "TClass.h"
 #include "TColor.h"
 
 #include "json.hpp"
+#include <iostream>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -472,11 +474,14 @@ void REveSelection::UserUnPickedElement(REveElement* el)
 
 //==============================================================================
 
-void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& secondary_idcs)
+void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& in_secondary_idcs)
 {
    static const REveException eh("REveSelection::NewElementPicked ");
 
    REveElement *pel = nullptr, *el = nullptr;
+
+   // AMT the forth/last argument is optional and therefore need to be constant
+   std::set<int> secondary_idcs = in_secondary_idcs;
 
    if (id > 0)
    {
@@ -485,6 +490,14 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
      if ( ! pel) throw eh + "picked element id=" + id + " not found.";
 
      el = MapPickedToSelected(pel);
+
+     if (el != pel) {
+        REveSecondarySelectable* ss = dynamic_cast<REveSecondarySelectable*>(el);
+        if (!secondary && ss) {
+           secondary = true;
+           secondary_idcs = ss->RefSelectedSet();
+        }
+     }
    }
 
    if (gDebug > 0) {
@@ -525,6 +538,14 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
                // erase duplicates
                for (auto &dit :  dup)
                   rec->f_sec_idcs.erase(dit);
+
+               secondary_idcs  = rec->f_sec_idcs;
+               if (!secondary_idcs.empty()) {
+                  AddNiece(el);
+                  rec = find_record(el);
+                  rec->f_is_sec   = true;
+                  rec->f_sec_idcs = secondary_idcs;
+               }
             }
             else
             {
@@ -553,12 +574,15 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
          {
             if (secondary)
             {
-               // Could check rec->is_secondary() and compare indices.
-               // if sets are identical, issue SelectionRepeated()
-               // else modify record for the new one, issue Repeated
-
-               rec->f_is_sec   = true;
-               rec->f_sec_idcs = secondary_idcs;
+                bool modified = (rec->f_sec_idcs != secondary_idcs);
+               RemoveNieces();
+               // re-adding is needed to refresh implied selected
+               if (modified) {
+                  AddNiece(el);
+                  rec = find_record(el);
+                  rec->f_is_sec   = true;
+                  rec->f_sec_idcs = secondary_idcs;
+               }
             }
             else
             {
@@ -649,8 +673,18 @@ Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
       rec["implied"]  = imp;
 
       // XXX if not empty / f_is_sec is false ???
-      for (auto &sec_id : i.second.f_sec_idcs) sec.push_back(sec_id);
+      for (auto &sec_id : i.second.f_sec_idcs)
+         sec.push_back(sec_id);
+
+      if (i.first->RequiresExtraSelectionData()) {
+         i.first->FillExtraSelectionData(rec["extra"], sec);
+      }
+
       rec["sec_idcs"] = sec;
+
+      // stream tooltip in highlight type
+      if (!fIsMaster)
+         rec["tooltip"] = i.first->GetHighlightTooltip(i.second.f_sec_idcs);
 
       sel_list.push_back(rec);
    }

@@ -14,6 +14,7 @@
 
 #include <vector>
 #include "ROOT/REveElement.hxx"
+#include "ROOT/REveSecondarySelectable.hxx"
 
 #include "TMath.h"
 
@@ -25,7 +26,8 @@ namespace ROOT {
 namespace Experimental {
 
 class REveCaloData: public REveElement,
-                    public REveAuntAsList
+                    public REveAuntAsList,
+                    public REveSecondarySelectable
 {
 public:
    struct SliceInfo_t
@@ -166,20 +168,9 @@ protected:
 
    Float_t      fEps;
 
-   vCellId_t    fCellsSelected;
-   vCellId_t    fCellsHighlighted;
-
-   int          fSelectionSecondarySelectIdx;
-   int          fHighlightSecondarySelectIdx;
-
 public:
    REveCaloData(const char* n="REveCaloData", const char* t="");
    virtual ~REveCaloData() {}
-
-   virtual void UnSelected();
-   virtual void UnHighlighted();
-
-   std::string GetHighlightTooltip() const override;
 
    void    FillImpliedSelectedSet(Set_t& impSelSet) override;
 
@@ -187,9 +178,6 @@ public:
                                Float_t phi,    Float_t phiRng,
                                vCellId_t &out) const = 0;
 
-   vCellId_t&      GetCellsSelected()    { return fCellsSelected; }
-   vCellId_t&      GetCellsHighlighted() { return fCellsHighlighted; }
-   void            PrintCellsSelected();
    void            ProcessSelection(vCellId_t& sel_cells, UInt_t selectionId, Bool_t multi);
 
    virtual void    Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const = 0;
@@ -199,7 +187,6 @@ public:
 
    virtual void    InvalidateUsersCellIdCache();
    virtual void    DataChanged();
-   virtual void    CellSelectionChanged(UInt_t selectionId, Int_t secSel);
 
    Int_t           GetNSlices()    const { return fSliceInfos.size(); }
    SliceInfo_t&    RefSliceInfo(Int_t s) { return fSliceInfos[s]; }
@@ -230,8 +217,14 @@ public:
    void     SetWrapTwoPi(Bool_t w) { fWrapTwoPi=w; }
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   
+
    static  Float_t EtaToTheta(Float_t eta);
+
+   bool RequiresExtraSelectionData() const override { return true; };
+   void FillExtraSelectionData(nlohmann::json&, const std::set<int>&) const override;
+
+   using REveElement::GetHighlightTooltip;
+   std::string GetHighlightTooltip(const std::set<int>& secondary_idcs) const override;
 };
 
 /**************************************************************************/

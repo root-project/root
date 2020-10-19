@@ -85,12 +85,11 @@ See also:
 REveDigitSet::REveDigitSet(const char* n, const char* t) :
    REveElement     (n, t),
 
-   fDigitIds       (0),
    fDefaultValue   (kMinInt),
    fValueIsColor   (kFALSE),
    fSingleColor    (kFALSE),
    fAntiFlick      (kTRUE),
-   fOwnIds         (kFALSE),
+   fDetIdsAsSecondaryIndices         (kFALSE),
    fPlex           (),
    fLastDigit      (0),
    fLastIdx        (-1),
@@ -123,9 +122,8 @@ REveDigitSet::~REveDigitSet()
 {
    SetFrame(0);
    SetPalette(0);
-   if (fOwnIds)
+   if (fDetIdsAsSecondaryIndices)
       ReleaseIds();
-   delete fDigitIds;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,15 +142,7 @@ REveDigitSet::DigitBase_t* REveDigitSet::NewDigit()
 
 void REveDigitSet::ReleaseIds()
 {
-   if (fDigitIds)
-   {
-      const Int_t N = fDigitIds->GetSize();
-
-      for (Int_t i = 0; i < N; ++i)
-         delete fDigitIds->At(i);
-
-      fDigitIds->Expand(0);
-   }
+   fDigitIds.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,58 +311,21 @@ void REveDigitSet::DigitColor(UChar_t* rgba)
    x[0] = rgba[0]; x[1] = rgba[1]; x[2] = rgba[2]; x[3] = rgba[3];
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Set external object reference for the last digit added.
-
-void REveDigitSet::DigitId(TObject* id)
-{
-   DigitId(fLastIdx, id);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set user-data for the last digit added.
+/// Set external id for the last added digit.
 
-void REveDigitSet::DigitUserData(void* ud)
+void REveDigitSet::DigitId(Int_t n)
 {
-   fLastDigit->fUserData = ud;
+   fDigitIds.push_back(n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set external object reference for digit n.
 
-void REveDigitSet::DigitId(Int_t n, TObject* id)
+Int_t REveDigitSet::GetId(Int_t n) const
 {
-   if (!fDigitIds)
-      fDigitIds = new TRefArray;
-
-   if (fOwnIds && n < fDigitIds->GetSize() && fDigitIds->At(n))
-      delete fDigitIds->At(n);
-
-   fDigitIds->AddAtAndExpand(id, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set user-data for digit n.
-
-void REveDigitSet::DigitUserData(Int_t n, void* ud)
-{
-   GetDigit(n)->fUserData = ud;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return external TObject associated with digit n.
-
-TObject* REveDigitSet::GetId(Int_t n) const
-{
-   return fDigitIds ? fDigitIds->At(n) : 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get user-data associated with digit n.
-
-void* REveDigitSet::GetUserData(Int_t n) const
-{
-   return GetDigit(n)->fUserData;
+   return fDigitIds[n];
 }
 
 /*
@@ -478,6 +431,7 @@ Int_t REveDigitSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["fSingleColor"] = fSingleColor;
    j["fAntiFlick"] = GetAntiFlick();
    j["fSecondarySelect"] = fAlwaysSecSelect;
+   j["fDetIdsAsSecondaryIndices"] = fDetIdsAsSecondaryIndices;
 
    return ret;
 }
