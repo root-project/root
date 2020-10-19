@@ -3733,7 +3733,11 @@ TList *TClass::CreateListOfDataMembers(std::atomic<TListOfDataMembers*> &data, T
 TList *TClass::GetListOfDataMembers(Bool_t load /* = kTRUE */)
 {
    // Fast path, no lock? Classes load at creation time.
-   if ((!load || IsClassStructOrUnion()) && fData)
+   if (IsClassStructOrUnion()) {
+      auto data = fData.load();
+      if (data && data->IsLoaded())
+         return data;
+   } else if (!load && fData)
       return fData;
 
    return CreateListOfDataMembers(fData, TDictionary::EMemberSelection::kNoUsingDecls, load);
