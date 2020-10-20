@@ -3553,7 +3553,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
 
    Double_t frameXs[7] = {}, frameYs[7] = {};
 
-   if (!IsBatch()) {
+   if (!IsBatch() && GetPainter()) {
       // Draw top&left part of the box
       frameXs[0] = xl;           frameYs[0] = yl;
       frameXs[1] = xl + realBsX; frameYs[1] = yl + realBsY;
@@ -3734,7 +3734,7 @@ void TPad::PaintModified()
    // This must be done after modified flag is cleared, as some
    // viewers will invoke another paint by marking pad modified again
    if (began3DScene) {
-      fViewer3D->EndScene();
+      if(fViewer3D) fViewer3D->EndScene();
    }
 
    gVirtualPS = saveps;
@@ -3862,7 +3862,7 @@ void TPad::CopyBackgroundPixmap(Int_t x, Int_t y)
 {
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
-   GetPainter()->CopyDrawable(GetPixmapID(), px-x, py-y);
+   if(GetPainter()) GetPainter()->CopyDrawable(GetPixmapID(), px-x, py-y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4926,8 +4926,10 @@ void TPad::Print(const char *filenam, Option_t *option)
          gPad->GetCanvas()->SetHighLightColor(-1);
          gPad->Modified();
          gPad->Update();
-         GetPainter()->SelectDrawable(wid);
-         GetPainter()->SaveImage(this, psname.Data(), gtype);
+         if (GetPainter()){
+           GetPainter()->SelectDrawable(wid);
+           GetPainter()->SaveImage(this, psname.Data(), gtype);
+         }
          if (!gSystem->AccessPathName(psname.Data())) {
             Info("Print", "GIF file %s has been created", psname.Data());
          }
@@ -4941,7 +4943,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          gPad->Update();
          gVirtualX->Update(1);
          gSystem->Sleep(30); // synchronize
-         GetPainter()->SaveImage(this, psname, gtype);
+         if(GetPainter()) GetPainter()->SaveImage(this, psname, gtype);
          if (!gSystem->AccessPathName(psname)) {
             Info("Print", "file %s has been created", psname.Data());
          }
@@ -6204,7 +6206,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    TPad *is_pad = dynamic_cast<TPad *>( object );
    TVirtualPad *padSave = 0;
    padSave = gPad;
-   if (is_pad) is_pad->GetMother()->cd();
+   if (is_pad && is_pad->GetMother()) is_pad->GetMother()->cd();
 
    static TPad * tmpGuideLinePad;
 
