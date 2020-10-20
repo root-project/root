@@ -232,23 +232,21 @@ public:
 
   // Support for extended maximum likelihood, switched off by default
   enum ExtendMode { CanNotBeExtended, CanBeExtended, MustBeExtended } ;
-  virtual ExtendMode extendMode() const { 
-    // Returns ability of p.d.f to provided extended likelihood terms. Possible
-    // answers are CanNotBeExtended, CanBeExtended or MustBeExtended. This
-    // default implementation always return CanNotBeExtended
-    return CanNotBeExtended ; 
-  } 
-  inline Bool_t canBeExtended() const { 
-    // If true p.d.f can provide extended likelihood term
+  /// Returns ability of PDF to provide extended likelihood terms. Possible
+  /// answers are in the enumerator RooAbsPdf::ExtendMode.
+  /// This default implementation always returns CanNotBeExtended.
+  virtual ExtendMode extendMode() const { return CanNotBeExtended; }
+  /// If true, PDF can provide extended likelihood term.
+  inline Bool_t canBeExtended() const {
     return (extendMode() != CanNotBeExtended) ; 
   }
-  inline Bool_t mustBeExtended() const { 
-    // If true p.d.f must extended likelihood term
+  /// If true PDF must provide extended likelihood term.
+  inline Bool_t mustBeExtended() const {
     return (extendMode() == MustBeExtended) ; 
   }
   virtual Double_t expectedEvents(const RooArgSet* nset) const ; 
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { 
-    // Return expecteded number of p.d.fs to be used in calculated of extended likelihood
+  /// Return expected number of events to be used in calculation of extended likelihood.
+  virtual Double_t expectedEvents(const RooArgSet& nset) const {
     return expectedEvents(&nset) ; 
   }
 
