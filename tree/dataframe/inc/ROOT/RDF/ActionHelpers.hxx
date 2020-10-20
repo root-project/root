@@ -210,9 +210,10 @@ public:
    void Exec(unsigned int slot, const T &vs)
    {
       auto &thisBuf = fBuffers[slot];
-      for (auto &v : vs) {
-         UpdateMinMax(slot, v);
-         thisBuf.emplace_back(v); // TODO: Can be optimised in case T == BufEl_t
+      // range-based for results in warnings on some compilers due to vector<bool>'s custom reference type
+      for (auto v = vs.begin(); v != vs.end(); ++v) {
+         UpdateMinMax(slot, *v);
+         thisBuf.emplace_back(*v); // TODO: Can be optimised in case T == BufEl_t
       }
    }
 
@@ -329,8 +330,8 @@ public:
    void Exec(unsigned int slot, const X0 &x0s)
    {
       auto thisSlotH = fObjects[slot];
-      for (auto &x0 : x0s) {
-         thisSlotH->Fill(x0); // TODO: Can be optimised in case T == vector<double>
+      for (auto x0 = x0s.begin(); x0 != x0s.end(); x0++) {
+         thisSlotH->Fill(*x0); // TODO: Can be optimised in case T == vector<double>
       }
    }
 
