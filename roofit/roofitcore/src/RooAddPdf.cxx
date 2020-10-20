@@ -1287,8 +1287,7 @@ std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xl
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If all components that depend on obs are binned that so is the product
-
+/// If all components that depend on obs are binned, so is their sum.
 Bool_t RooAddPdf::isBinnedDistribution(const RooArgSet& obs) const 
 {
   for (const auto arg : _pdfList) {
