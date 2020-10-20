@@ -20,13 +20,13 @@
  * and a binned distribution.
  * When RooFit is used to fit binned data, and the PDF is continuous, it takes the probability density
  * at the bin centre as a proxy for the probability averaged (integrated) over the entire bin. This is
- * correct only if the second derivative of the function vanishes.
+ * correct only if the second derivative of the function vanishes, though.
  *
  * For PDFs that have larger curvatures, the RooBinSamplingPdf can be used. It integrates the PDF in each
- * bin using an adaptive integrator. This usually requires 31 times more function evaluations, but significantly
+ * bin using an adaptive integrator. This usually requires 21 times more function evaluations, but significantly
  * reduces biases due to better sampling of the PDF. The integrator can be accessed from the outside
- * using integrator(). This can be used to change the integration rules, so less function evaluations are
- * required.
+ * using integrator(). This can be used to change the integration rules, so less/more function evaluations are
+ * performed. The target precision of the integrator can be set in the constructor.
  *
  * \note This feature is currently limited to one-dimensional PDFs.
  *
@@ -35,14 +35,39 @@
  * - Manually wrap a PDF:
  * ```
  *   RooBinSamplingPdf binSampler("<name>", "title", <binned observable of PDF>, <original PDF> [, <precision for integrator>]);
+ *   binSampler.fitTo(data);
  * ```
- *   This PDF can be used instead of the original for fits.
- * - Instruct test statistics to carry out this wrapping internally:
+ *   When a PDF is wrapped with a RooBinSamplingPDF, just use the bin sampling PDF instead of the original one for fits
+ *   or plotting etc. Note that the binning will be taken from the observable.
+ * - Instruct test statistics to carry out this wrapping automatically:
  * ```
  *   pdf.fitTo(data, IntegrateBinsPrecision(<precision>));
  * ```
- *   This method is especially useful when used with a simultaneous PDF, since each component will automatically be wrapped if
- *   its observable is binned.
+ *   This method is especially useful when used with a simultaneous PDF, since each component will automatically be wrapped,
+ *   depending on the value of `precision`:
+ *   - `precision < 0.`: None of the PDFs are touched, bin sampling is off.
+ *   - `precision = 0.`: Continuous PDFs that are fit to a RooDataHist are wrapped into a RooBinSamplingPdf. The target precision
+ *      forwarded to the integrator is 1.E-4 (the default argument of the constructor).
+ *   - `precision > 0.`: All continuous PDFs are automatically wrapped into a RooBinSamplingPdf. The `'precision'` is used for all
+ *      integrators.
+ *
+ * ### Simulating a binned fit using RooDataSet
+ *   Some frameworks use unbinned data (RooDataSet) to simulate binned datasets. By adding one entry for each bin centre with the
+ *   appropriate weight, one can achieve the same result as fitting with RooDataHist. In this case, however, RooFit cannot
+ *   auto-detect that a binned fit is running, and that an integration over the bin is desired (note that there are no bins to
+ *   integrate over in this kind of dataset).
+ *
+ *   In this case, `IntegrateBins(>0.)` needs to be used, and the desired binning needs to be assigned to the observable
+ *   of the dataset:
+ *   ```
+ *     RooRealVar x("x", "x", 0., 5.);
+ *     x.setBins(10);
+ *
+ *     // <create dataset and model>
+ *
+ *     model.fitTo(data, IntegrateBins(>0.));
+ *   ```
+ *
  *   \see RooAbsPdf::fitTo()
  *   \see IntegrateBinsPrecision()
  *
