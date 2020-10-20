@@ -53,6 +53,7 @@ combined in the main thread.
 #include "TTimeStamp.h"
 #include "TClass.h"
 #include <string>
+#include <stdexcept>
 
 using namespace std;
 
@@ -324,7 +325,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       break ;
       
     case RooFit::Hybrid:
-      throw(std::string("this should never happen")) ;
+      throw std::logic_error("this should never happen");
       break ;
     }
 
@@ -500,14 +501,13 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 				      const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
 {
 
-  RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->indexCat();
+  RooAbsCategoryLValue& simCat = const_cast<RooAbsCategoryLValue&>(simpdf->indexCat());
 
   TString simCatName(simCat.GetName());
   TList* dsetList = const_cast<RooAbsData*>(data)->split(simCat,processEmptyDataSets());
   if (!dsetList) {
     coutE(Fitting) << "RooAbsTestStatistic::initSimMode(" << GetName() << ") ERROR: index category of simultaneous pdf is missing in dataset, aborting" << endl;
-    throw std::string("RooAbsTestStatistic::initSimMode() ERROR, index category of simultaneous pdf is missing in dataset, aborting");
-    //RooErrorHandler::softAbort() ;
+    throw std::runtime_error("RooAbsTestStatistic::initSimMode() ERROR, index category of simultaneous pdf is missing in dataset, aborting");
   }
 
   // Count number of used states
