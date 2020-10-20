@@ -32,6 +32,7 @@
 #include "TLeafF16.h"
 #include "TLeafI.h"
 #include "TLeafL.h"
+#include "TLeafG.h"
 #include "TLeafO.h"
 #include "TLeafObject.h"
 #include "TLeafS.h"
@@ -157,6 +158,8 @@ TBranch::TBranch()
 ///            - `d` : a 24 bit truncated floating point (`Double32_t`)
 ///            - `L` : a 64 bit signed integer (`Long64_t`)
 ///            - `l` : a 64 bit unsigned integer (`ULong64_t`)
+///            - `G` : a long signed integer, stored as 64 bit (`Long_t`)
+///            - `g` : a long unsigned integer, stored as 64 bit (`ULong_t`)
 ///            - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
 ///
 ///         Arrays of values are supported with the following syntax:
@@ -389,6 +392,11 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
             leaf = new TLeafD(this, leafname, leaftype);
          } else if (*leaftype == 'd') {
             leaf = new TLeafD32(this, leafname, leaftype);
+         } else if (*leaftype == 'G') {
+            leaf = new TLeafG(this, leafname, leaftype);
+         } else if (*leaftype == 'g') {
+            leaf = new TLeafG(this, leafname, leaftype);
+            leaf->SetUnsigned();
          }
          if (!leaf) {
             Error("TLeaf", "Illegal data type for %s/%s", name, leaflist);
