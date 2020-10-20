@@ -458,7 +458,7 @@ void TPad::AutoExec()
    if (GetCrosshair()) DrawCrosshair();
 
    if (!fExecs) fExecs = new TList;
-   TIter next(fExecs->MakeIterator());
+   TIter next(fExecs);
    TExec *exec;
    while ((exec = (TExec*)next())) {
       exec->Exec();
@@ -3129,10 +3129,8 @@ Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t
 {
    FillCollideGrid(o);
 
-   Double_t a1=std::min(std::abs(fCGnx*w), 1.0*std::numeric_limits<int>::max());
-   Double_t a2=std::min(std::abs(fCGny*h), 1.0*std::numeric_limits<int>::max());
-   Int_t iw = static_cast<int>(a1);
-   Int_t ih = static_cast<int>(a2);
+   Int_t iw = (int)(fCGnx*w);
+   Int_t ih = (int)(fCGny*h);
 
    Int_t nxmax = fCGnx-iw-1;
    Int_t nymax = fCGny-ih-1;
@@ -3142,7 +3140,6 @@ Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t
          if (Collide(i,j,iw,ih)) {
             continue;
          } else {
-            if (fCGnx==0||fCGny==0) return  kFALSE;
             xl = (Double_t)(i)/(Double_t)(fCGnx);
             yb = (Double_t)(j)/(Double_t)(fCGny);
             return kTRUE;
@@ -3283,7 +3280,6 @@ void TPad::FillCollideGridTH1(TObject *o)
 
    TString name = h->GetName();
    if (name.Index("hframe") >= 0) return;
-   if (fCGnx==0||fCGny==0) return;
 
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
@@ -3745,7 +3741,7 @@ void TPad::PaintModified()
    // This must be done after modified flag is cleared, as some
    // viewers will invoke another paint by marking pad modified again
    if (began3DScene) {
-      if(fViewer3D)fViewer3D->EndScene();
+      if(fViewer3D) fViewer3D->EndScene();
    }
 
    gVirtualPS = saveps;
@@ -5571,6 +5567,7 @@ void TPad::ResizePad(Option_t *option)
            ((TPad*)obj)->ResizePad(option);
      }
    }
+
    // Reset all current sizes
    if (gPad->IsBatch())
       fPixmapID = 0;
@@ -6215,6 +6212,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    if ((event == kArrowKeyRelease) || (event == kArrowKeyPress) ||
        !gEnv->GetValue("Canvas.ShowGuideLines", 0)) return;
    R__LOCKGUARD(gROOTMutex);
+
    std::vector<dField> curDist;
    std::vector<dField> otherDist;
    Int_t pMX, pMY;
