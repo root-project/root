@@ -889,3 +889,16 @@ TObject* RooCmdConfig::decodeObjOnTheFly(const char* callerID, const char* cmdAr
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
   return (TObject*) pc.getObject("theObj") ;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find a given double in a list of RooCmdArg.
+/// Should only be used to initialise base classes in constructors.
+double RooCmdConfig::decodeDoubleOnTheFly(const char* callerID, const char* cmdArgName, int idx, double defVal,
+    std::initializer_list<std::reference_wrapper<const RooCmdArg>> args) {
+  RooCmdConfig pc(callerID);
+  pc.allowUndefined();
+  pc.defineDouble("theDouble", cmdArgName, idx, defVal);
+  pc.process(args.begin(), args.end());
+  return pc.getDouble("theDouble");
+}
