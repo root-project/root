@@ -82,5 +82,15 @@ ROOTTEST_ADD_TEST(execReadSimplePair
                   MACRO execReadSimplePair.C
                   OUTREF execReadSimplePair.ref)
 
+ROOTTEST_GENERATE_DICTIONARY(libdatamemberload
+                             datamemberload.h
+                             LINKDEF datamemberloadLinkDef.h
+                             NO_ROOTMAP NO_CXXMODULE)
+
+ROOTTEST_ADD_TEST(datamemberload
+                  MACRO datamemberload.C
+                  COPY_TO_BUILDDIR datamemberload.h
+                  DEPENDS libdatamemberload-build)
+
 
 ROOTTEST_ADD_TESTDIRS()
