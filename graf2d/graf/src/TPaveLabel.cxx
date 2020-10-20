@@ -142,17 +142,8 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
       if (TMath::Abs(textsize -0.99) < 0.001) automat = 1;
       if (textsize == 0)   { textsize = 0.99; automat = 1;}
       Int_t ypixel      = TMath::Abs(gPad->YtoPixel(y1) - gPad->YtoPixel(y2));
-      if (hh>0.0001)
-        labelsize = textsize*ypixel/hh;
-      else
-        labelsize = textsize*ypixel/10;
-      if (wh < hh) 
-      {
-        if (wh>0.0001)
-          labelsize = textsize*ypixel/wh;
-        else
-          labelsize = textsize*ypixel/10;
-      }
+      labelsize = textsize*ypixel/hh;
+      if (wh < hh) labelsize *= hh/wh;
    }
    TLatex latex;
    latex.SetTextAngle(GetTextAngle());
