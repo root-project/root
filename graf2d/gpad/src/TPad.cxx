@@ -957,7 +957,6 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
          x1 = x2; y1 = y2;
       }
 
-      if (nc2>0) {
       // Clip against the bottom boundary
       x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
       nc = 0;
@@ -981,7 +980,6 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
             }
          }
          x1 = x2; y1 = y2;
-      }
       }
    }
 
@@ -3474,7 +3472,7 @@ void TPad::Paint(Option_t * /*option*/)
    PaintBorder(GetFillColor(), kTRUE);
    PaintDate();
 
-   TObjOptLink *lnk =  GetListOfPrimitives()?((TObjOptLink*)GetListOfPrimitives()->FirstLink()):nullptr;
+   TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
    TObject *obj;
 
    Bool_t began3DScene = kFALSE;
@@ -3503,7 +3501,7 @@ void TPad::Paint(Option_t * /*option*/)
    // Close the 3D scene if we opened it. This must be done after modified
    // flag is cleared, as some viewers will invoke another paint by marking pad modified again
    if (began3DScene) {
-      if(fViewer3D) fViewer3D->EndScene();
+      fViewer3D->EndScene();
    }
 }
 
@@ -4966,7 +4964,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    //==============Save pad/canvas as a C++ script==============================
    if (strstr(opt,"cxx")) {
-      if (GetCanvas()) GetCanvas()->SaveSource(psname, "");
+      GetCanvas()->SaveSource(psname, "");
       return;
    }
 
@@ -4994,7 +4992,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
       Bool_t noScreen = kFALSE;
-      if (GetCanvas() && !GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
+      if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
          noScreen = kTRUE;
          GetCanvas()->SetBatch(kTRUE);
       }
@@ -5555,17 +5553,12 @@ void TPad::ResizePad(Option_t *option)
    // Coefficients to convert from canvas pixels to pad world coordinates
 
    // Resize all sub-pads
-   TObject *obj=nullptr;
-   if (!fPrimitives)  { 
-     fPrimitives = new TList; 
-     }
-   else {
-     TList* l=GetListOfPrimitives();
-     TIter    next(l->MakeIterator());
-     while ((obj = next())) {
-        if (obj->InheritsFrom(TPad::Class()))
-           ((TPad*)obj)->ResizePad(option);
-     }
+   TObject *obj;
+   if (!fPrimitives) fPrimitives = new TList;
+   TIter    next(GetListOfPrimitives());
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TPad::Class()))
+         ((TPad*)obj)->ResizePad(option);
    }
 
    // Reset all current sizes
