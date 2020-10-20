@@ -166,18 +166,13 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, const RooArgSet& projDeps, const char* rangeName, 
-				       const char* addCoefRangeName) 
-{
-  RooArgSet obs(*indata.get()) ;
-  obs.remove(projDeps,kTRUE,kTRUE) ;
-
-
+				       const char* addCoefRangeName) {
   // ******************************************************************
   // *** PART 1 *** Clone incoming pdf, attach to each other *
   // ******************************************************************
 
   // Clone FUNC
-  _funcClone = (RooAbsReal*) real.cloneTree() ;
+  _funcClone = static_cast<RooAbsReal*>(real.cloneTree());
   _funcCloneSet = 0 ;
 
   // Attach FUNC to data set  
@@ -191,7 +186,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   RooArgSet* origParams = (RooArgSet*) real.getParameters(indata) ;
   _funcClone->recursiveRedirectServers(*origParams) ;
 
-    // Mark all projected dependents as such
+  // Mark all projected dependents as such
   if (projDeps.getSize()>0) {
     RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(projDeps) ;
     projDataDeps->setAttribAll("projectedDependent") ;
@@ -204,7 +199,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // are changed
   RooProdPdf* pdfWithCons = dynamic_cast<RooProdPdf*>(_funcClone) ;
   if (pdfWithCons) {
-    
+
     RooArgSet* connPars = pdfWithCons->getConnectedParameters(*indata.get()) ;
     // Add connected parameters as servers
     _paramSet.removeAll() ;
@@ -238,7 +233,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // ******************************************************************
   // *** PART 2 *** Clone and adjust incoming data, attach to PDF     *
   // ******************************************************************
-  
+
   // Check if the fit ranges of the dependents in the data and in the FUNC are consistent
   const RooArgSet* dataDepSet = indata.get() ;
   for (const auto arg : *_funcObsSet) {
@@ -248,41 +243,40 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     if (!realReal) continue ;
     RooRealVar* datReal = dynamic_cast<RooRealVar*>(dataDepSet->find(realReal->GetName())) ;
     if (!datReal) continue ;
-    
+
     // Check that range of observables in pdf is equal or contained in range of observables in data
- 
-   if (!realReal->getBinning().lowBoundFunc() && realReal->getMin()<(datReal->getMin()-1e-6)) {
+
+    if (!realReal->getBinning().lowBoundFunc() && realReal->getMin()<(datReal->getMin()-1e-6)) {
       coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR minimum of FUNC observable " << arg->GetName() 
-			    << "(" << realReal->getMin() << ") is smaller than that of " 
-			    << arg->GetName() << " in the dataset (" << datReal->getMin() << ")" << endl ;
+			        << "(" << realReal->getMin() << ") is smaller than that of "
+			        << arg->GetName() << " in the dataset (" << datReal->getMin() << ")" << endl ;
       RooErrorHandler::softAbort() ;
       return ;
     }
-    
+
     if (!realReal->getBinning().highBoundFunc() && realReal->getMax()>(datReal->getMax()+1e-6)) {
       coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR maximum of FUNC observable " << arg->GetName() 
-			    << " is larger than that of " << arg->GetName() << " in the dataset" << endl ;
+			        << " is larger than that of " << arg->GetName() << " in the dataset" << endl ;
       RooErrorHandler::softAbort() ;
       return ;
     }
-    
   }
-  
+
   // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from realDepSet ranges
   if (rangeName && strlen(rangeName)) {
     _dataClone = indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName)) ;
-//     cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << endl ;
+    //     cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << endl ;
   } else {
     _dataClone = (RooAbsData*) indata.Clone() ;
   }
   _ownData = kTRUE ;  
- 
+
 
   // ******************************************************************
   // *** PART 3 *** Make adjustments for fit ranges, if specified     *
   // ****************************************************************** 
 
-  RooArgSet* origObsSet = real.getObservables(indata) ;
+  std::unique_ptr<RooArgSet> origObsSet( real.getObservables(indata) );
   RooArgSet* dataObsSet = (RooArgSet*) _dataClone->get() ;
   if (rangeName && strlen(rangeName)) {    
     cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing test statistic for sub-range named " << rangeName << endl ;    
@@ -307,7 +301,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
         // Adjust range of data observable to those of given named range
         RooRealVar* dataObs = (RooRealVar*) dataObsSet->find(realObs->GetName()) ;
         dataObs->setRange(realObs->getMin(rangeName),realObs->getMax(rangeName)) ;
-       
+
         // Keep track of list of fit ranges in string attribute fit range of original p.d.f.
         if (!_splitRange) {
           const std::string fitRangeName = std::string("fit_") + GetName();
@@ -329,7 +323,11 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     if (!observablesKnowRange)
       coutW(Fitting) << "None of the fit observables seem to know the range '" << rangeName << "'. This means that the full range will be used." << std::endl;
   }
-  delete origObsSet ;
+
+
+  // ******************************************************************
+  // *** PART 3.2 *** Binned fits                                     *
+  // ******************************************************************
 
   // If dataset is binned, activate caching of bins that are invalid because the're outside the
   // updated range definition (WVE need to add virtual interface here)
@@ -337,21 +335,21 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   if (tmph) {
     tmph->cacheValidEntries() ;
   }
-        
+
   // Fix RooAddPdf coefficients to original normalization range
   if (rangeName && strlen(rangeName)) {
-    
+
     // WVE Remove projected dependents from normalization
     _funcClone->fixAddCoefNormalization(*_dataClone->get(),kFALSE) ;
-    
+
     if (addCoefRangeName && strlen(addCoefRangeName)) {
       cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() 
-		       << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
+		           << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
       _funcClone->fixAddCoefRange(addCoefRangeName,kFALSE) ;
     } else {
-	cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() 
-			 << ") fixing interpretation of coefficients of any RooAddPdf to full domain of observables " << endl ;
-	_funcClone->fixAddCoefRange(Form("NormalizationRangeFor%s",rangeName),kFALSE) ;
+      cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName()
+			     << ") fixing interpretation of coefficients of any RooAddPdf to full domain of observables " << endl ;
+      _funcClone->fixAddCoefRange(Form("NormalizationRangeFor%s",rangeName),kFALSE) ;
     }
   }
 
@@ -371,7 +369,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   if (projDeps.getSize()>0) {
 
     _projDeps = (RooArgSet*) projDeps.snapshot(kFALSE) ;
-    
+
     //RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
     _normSet->remove(*_projDeps,kTRUE,kTRUE) ;
 
@@ -383,15 +381,12 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
 
   coutI(Optimization) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") optimizing internal clone of p.d.f for likelihood evaluation." 
-			<< "Lazy evaluation and associated change tracking will disabled for all nodes that depend on observables" << endl ;
+      << "Lazy evaluation and associated change tracking will disabled for all nodes that depend on observables" << endl ;
 
 
   // *********************************************************************
   // *** PART 4 *** Finalization and activation of optimization          *
   // *********************************************************************
-
-  //_origFunc = _func ;
-  //_origData = _data ;
 
   // Redirect pointers of base class to clone 
   _func = _funcClone ;
@@ -399,14 +394,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   _funcClone->getVal(_normSet) ;
 
-//   cout << "ROATS::ctor(" << GetName() << ") funcClone structure dump BEFORE opt" << endl ;
-//   _funcClone->Print("t") ;
-
   optimizeCaching() ;
-
-
-//   cout << "ROATS::ctor(" << GetName() << ") funcClone structure dump AFTER opt" << endl ;
-//   _funcClone->Print("t") ;
 
 }
 
