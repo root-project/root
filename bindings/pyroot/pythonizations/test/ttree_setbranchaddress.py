@@ -20,7 +20,7 @@ class TTreeSetBranchAddress(unittest.TestCase):
     filename  = 'treesetbranchaddress.root'
     treename  = 'mytree'
     tuplename = 'mytuple'
-    nentries  = 1
+    nentries  = 2
     arraysize = 10
     more      = 10
 
@@ -161,7 +161,23 @@ class TTreeSetBranchAddress(unittest.TestCase):
         
             for i in range(ncols):
                 self.assertEqual(cs[i][0], i*self.more)
-                
+
+    def test_class_with_array_member(self):
+        # 6468
+        f,t,c = self.get_tree_and_chain()
+
+        for ds in t,c:
+            mc = ROOT.MyClass()
+            ds.SetBranchAddress('clarrmember', mc)
+
+            ds.GetEntry(0)
+            self.assertEqual(mc.foo[0], 0.)
+            self.assertEqual(mc.foo[1], 1.)
+
+            ds.GetEntry(1)
+            self.assertEqual(mc.foo[0], 1.)
+            self.assertEqual(mc.foo[1], 2.)
+
 
 if __name__ == '__main__':
     unittest.main()
