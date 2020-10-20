@@ -473,6 +473,7 @@ void TQObject::CollectClassSignalLists(TList& list, TClass* cls)
 
 void TQObject::HighPriority(const char *signal_name, const char *slot_name)
 {
+   if (!fListOfSignals) return;
    TQConnectionList *clist = (TQConnectionList*)
       fListOfSignals->FindObject(signal_name);
 
@@ -499,6 +500,7 @@ void TQObject::HighPriority(const char *signal_name, const char *slot_name)
 
 void TQObject::LowPriority(const char *signal_name, const char *slot_name)
 {
+   if (!fListOfSignals) return;
    TQConnectionList *clist = (TQConnectionList*)
       fListOfSignals->FindObject(signal_name);
 
