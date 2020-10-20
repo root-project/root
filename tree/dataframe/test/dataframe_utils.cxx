@@ -4,6 +4,10 @@
 
 #include "gtest/gtest.h"
 
+#include <stdexcept>
+#include <typeinfo>
+#include <vector>
+
 namespace RDFInt = ROOT::Internal::RDF;
 
 // Thanks clang-format...
@@ -154,7 +158,7 @@ TEST(RDataFrameUtils, CheckExistingDefineDataSource)
 
 TEST(RDataFrameUtils, CheckTypesAndPars)
 {
-   EXPECT_ANY_THROW(RDFInt::CheckTypesAndPars(5, 4));  
+   EXPECT_ANY_THROW(RDFInt::CheckTypesAndPars(5, 4));
 }
 
 TEST(RDataFrameUtils, SelectColumnsNNamesDiffersRequiredNames)
@@ -257,4 +261,14 @@ TEST(RDataFrameUtils, ValueType)
    static_assert(std::is_same<RDFInt::ValueType<float>::value_type, float>::value, "");
    struct Foo {};
    static_assert(std::is_same<RDFInt::ValueType<Foo>::value_type, Foo>::value, "");
+}
+
+TEST(RDataFrameUtils, TypeName2TypeID)
+{
+   EXPECT_EQ(typeid(float), RDFInt::TypeName2TypeID("float"));
+   EXPECT_EQ(typeid(std::vector<float>), RDFInt::TypeName2TypeID("std::vector<float>"));
+   EXPECT_THROW(RDFInt::TypeName2TypeID("float *"), std::runtime_error);
+   EXPECT_THROW(RDFInt::TypeName2TypeID("float &"), std::runtime_error);
+   // TODO(jblomer): Ideally, we would want the next one not to throw an exception
+   EXPECT_THROW(RDFInt::TypeName2TypeID("std::vector<std::vector<float>>"), std::runtime_error);
 }

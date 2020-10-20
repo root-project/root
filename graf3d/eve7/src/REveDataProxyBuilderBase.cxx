@@ -31,10 +31,8 @@ REveDataProxyBuilderBase::Product::Product(std::string iViewType, const REveView
 //______________________________________________________________________________
 
 
-REveDataProxyBuilderBase::REveDataProxyBuilderBase(const std::string &type):
-   m_type(type),
+REveDataProxyBuilderBase::REveDataProxyBuilderBase():
    m_collection(nullptr),
-   //   m_interactionList(0),
    m_haveWindow(false)
 {
 }
@@ -66,18 +64,6 @@ void REveDataProxyBuilderBase::SetCollection(REveDataCollection* c)
 {
    m_collection = c;
 }
-
-//------------------------------------------------------------------------------
-
-/*
-void
-REveDataProxyBuilderBase::SetInteractionList(REveDataInteractionList* l, const std::string& purpose )
-{
-   // Called if willHandleInteraction() returns false. Purpose ignored by default.
-
-   m_interactionList = l;
-}
-*/
 
 //------------------------------------------------------------------------------
 
@@ -223,64 +209,23 @@ REveDataProxyBuilderBase::CreateProduct( std::string viewType, const REveViewCon
    return product->m_elements;
 }
 
-//------------------------------------------------------------------------------
-
-namespace
-{
-   void applyColorAttrToChildren(REveElement* p) {
-      for (auto &it: p->RefChildren())
-      {
-         REveElement* c = it;
-         if (c->GetMainColor() != p->GetMainColor())
-         {
-            c->SetMainColor(p->GetMainColor());
-            // printf("apply color %d to %s\n", p->GetMainColor(), c->GetCName());
-         }
-         applyColorAttrToChildren(c);
-      }
-   }
-}
-
-void
-REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds, Product* p)
-{
-   printf("REveDataProxyBuilderBase::ModelChanges  %s \n",  m_collection->GetCName());
-   REveElement* elms = p->m_elements;
-   assert(m_collection && static_cast<int>(m_collection->GetNItems()) <= elms->NumChildren() && "can not use default modelChanges implementation");
-
-   for (auto itemIdx: iIds)
-   {
-      REveDataItem *item = m_collection->GetDataItem(itemIdx);
-
-      // printf("Edit compound for item index %d \n", itemIdx);
-      // imitate FWInteractionList::modelChanges
-      auto itElement = elms->RefChildren().begin();
-      std::advance(itElement, itemIdx);
-      REveElement* comp = *itElement;
-      bool visible = (!item->GetFiltered()) && item->GetRnrSelf();
-      comp->SetRnrSelf(visible);
-      comp->SetRnrChildren(visible);
-
-      if (item->GetMainColor() != comp->GetMainColor()) comp->SetMainColor(item->GetMainColor());
-      applyColorAttrToChildren(comp);
-
-      if (VisibilityModelChanges(itemIdx, comp, p->m_viewContext))
-      {
-         elms->ProjectChild(comp);
-         printf("---REveDataProxyBuilderBase project child\n");
-      }
-      else
-      {
-         LocalModelChanges(itemIdx, comp, p->m_viewContext);
-      }
-   }
-}
+//______________________________________________________________________________
 
 void
 REveDataProxyBuilderBase::LocalModelChanges(int, REveElement*, const REveViewContext*)
 {
    // Nothing to be done in base class.
    // Visibility, main color and main transparency are handled automatically throught compound.
+}
+//------------------------------------------------------------------------------
+
+void
+REveDataProxyBuilderBase::FillImpliedSelected( REveElement::Set_t& impSet)
+{
+   for (auto &prod: m_products)
+   {
+      FillImpliedSelected(impSet, prod);
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -299,6 +244,7 @@ REveDataProxyBuilderBase::ModelChanges(const REveDataCollection::Ids_t& iIds)
   }
 }
 
+
 //______________________________________________________________________________
 void
 REveDataProxyBuilderBase::CollectionChanged(const REveDataCollection* /*iItem*/)
@@ -311,7 +257,7 @@ REveDataProxyBuilderBase::CollectionChanged(const REveDataCollection* /*iItem*/)
 //------------------------------------------------------------------------------
 
 void
-REveDataProxyBuilderBase::SetupAddElement(REveElement* el, REveElement* parent, bool color) const
+REveDataProxyBuilderBase::SetupAddElement(REveElement* el, REveElement* parent, bool color)
 {
    SetupElement(el, color);
    // AMT -- this temprary to get right tooltip
@@ -323,7 +269,7 @@ REveDataProxyBuilderBase::SetupAddElement(REveElement* el, REveElement* parent, 
     objects being drawn.
   */
 void
-REveDataProxyBuilderBase::SetupElement(REveElement* el, bool color) const
+REveDataProxyBuilderBase::SetupElement(REveElement* el, bool color)
 {
    el->CSCTakeMotherAsMaster();
    el->SetPickable(true);
@@ -337,31 +283,6 @@ REveDataProxyBuilderBase::SetupElement(REveElement* el, bool color) const
    }
 }
 
-
-
-REveCompound*
-REveDataProxyBuilderBase::CreateCompound(bool set_color, bool propagate_color_to_all_children) const
-{
-   REveCompound *c = new REveCompound();
-   c->CSCImplySelectAllChildren();
-   c->SetPickable(true);
-   if (set_color)
-   {
-      c->SetMainColor(m_collection->GetMainColor());
-      c->SetMainTransparency(m_collection->GetMainTransparency());
-   }
-   if (propagate_color_to_all_children)
-   {
-      c->CSCApplyMainColorToAllChildren();
-      c->CSCApplyMainTransparencyToAllChildren();
-   }
-   else
-   {
-      c->CSCApplyMainColorToMatchingChildren();
-      c->CSCApplyMainTransparencyToMatchingChildren();
-   }
-   return c;
-}
 
 //------------------------------------------------------------------------------
 
@@ -390,7 +311,6 @@ void REveDataProxyBuilderBase::CollectionBeingDestroyed(const REveDataCollection
 
    for (auto &prod: m_products)
    {
-
       // (*i)->m_scaleConnection.disconnect();
       delete prod;
    }

@@ -1,14 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///
-///
-/// \brief Numeric algorithm tuning: configuration and customization of how numeric (partial) integrals are executed
+/// Numeric algorithm tuning: configuration and customization of how numeric (partial) integrals are executed
 ///
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -37,8 +35,8 @@ void rf901_numintconfig()
    //
    // The relative epsilon (change as fraction of current best integral estimate) and
    // absolute epsilon (absolute change w.r.t last best integral estimate) can be specified
-   // separately. For most p.d.f integrals the relative change criterium is the most important,
-   // however for certain non-p.d.f functions that integrate out to zero a separate absolute
+   // separately. For most pdf integrals the relative change criterium is the most important,
+   // however for certain non-pdf functions that integrate out to zero a separate absolute
    // change criterium is necessary to declare convergence of the integral
    //
    // NB: This change is for illustration only. In general the precision should be at least 1e-7
@@ -50,7 +48,7 @@ void rf901_numintconfig()
    // N u m e r i c   i n t e g r a t i o n   o f   l a n d a u   p d f
    // ------------------------------------------------------------------
 
-   // Construct p.d.f without support for analytical integrator for demonstration purposes
+   // Construct pdf without support for analytical integrator for demonstration purposes
    RooRealVar x("x", "x", -10, 10);
    RooLandau landau("landau", "landau", x, RooConst(0), RooConst(0.1));
 

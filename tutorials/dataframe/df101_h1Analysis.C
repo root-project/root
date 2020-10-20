@@ -1,13 +1,13 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// \brief Show how to express ROOT's standard H1 analysis with RDataFrame.
+/// Show how to express ROOT's standard H1 analysis with RDataFrame.
 ///
 /// \macro_code
 /// \macro_image
 ///
 /// \date December 2016
-/// \author Axel Naumann, Danilo Piparo (CERN)
+/// \authors Axel Naumann, Danilo Piparo (CERN)
 
 auto Select = [](ROOT::RDataFrame &dataFrame) {
    using Farray_t = ROOT::VecOps::RVec<float>;

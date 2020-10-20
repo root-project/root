@@ -89,6 +89,7 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 #include "RooSentinel.h"
 #include "RooTrace.h"
 #include "RooHelpers.h"
+#include "BatchHelpers.h"
 
 #include "TTree.h"
 #include "TH2.h"
@@ -915,11 +916,13 @@ void RooDataSet::initialize(const char* wgtVarName)
   if (wgtVarName) {
     RooAbsArg* wgt = _varsNoWgt.find(wgtVarName) ;
     if (!wgt) {
-      coutW(DataHandling) << "RooDataSet::RooDataSet(" << GetName() << ") WARNING: designated weight variable " 
+      coutE(DataHandling) << "RooDataSet::RooDataSet(" << GetName() << "): designated weight variable "
 			  << wgtVarName << " not found in set of variables, no weighting will be assigned" << endl ;
+      throw std::invalid_argument("RooDataSet::initialize() weight variable could not be initialised.");
     } else if (!dynamic_cast<RooRealVar*>(wgt)) {
-      coutW(DataHandling) << "RooDataSet::RooDataSet(" << GetName() << ") WARNING: designated weight variable " 
+      coutE(DataHandling) << "RooDataSet::RooDataSet(" << GetName() << "): designated weight variable "
 			  << wgtVarName << " is not of type RooRealVar, no weighting will be assigned" << endl ;
+      throw std::invalid_argument("RooDataSet::initialize() weight variable could not be initialised.");
     } else {
       _varsNoWgt.remove(*wgt) ;
       _wgtVar = (RooRealVar*) wgt ;
@@ -1007,10 +1010,25 @@ Double_t RooDataSet::weightSquared() const
 }
 
 
-
-// See base class.
+////////////////////////////////////////////////////////////////////////////////
+/// \see RooAbsData::getWeightBatch().
 RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t len) const {
   return _dstore->getWeightBatch(first, len);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write information to retrieve data columns into `evalData.spans`.
+/// All spans belonging to variables of this dataset are overwritten. Spans to other
+/// variables remain intact.
+/// \param[out] evalData Store references to all data batches in this struct's `spans`.
+/// The key to retrieve an item is the pointer of the variable that owns the data.
+/// \param first Index of first event that ends up in the batch.
+/// \param len   Number of events in each batch.
+void RooDataSet::getBatches(BatchHelpers::RunContext& evalData, std::size_t begin, std::size_t len) const {
+  for (auto&& batch : store()->getBatches(begin, len).spans) {
+    evalData.spans[batch.first] = std::move(batch.second);
+  }
 }
 
 

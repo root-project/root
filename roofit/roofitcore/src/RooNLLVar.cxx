@@ -30,10 +30,6 @@ In extended mode, a
 
 #include "RooNLLVar.h"
 
-#include "RooFit.h"
-#include "Riostream.h"
-#include "TMath.h"
-
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
@@ -43,8 +39,14 @@ In extended mode, a
 #include "RooRealSumPdf.h"
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
-#include "RooHelpers.h"
+#include "RooNaNPacker.h"
+#include "RunContext.h"
 
+#ifdef ROOFIT_CHECK_CACHED_VALUES
+#include "BatchHelpers.h"
+#endif
+
+#include "TMath.h"
 #include "Math/Util.h"
 
 #include <algorithm>
@@ -53,6 +55,8 @@ ClassImp(RooNLLVar)
 
 RooArgSet RooNLLVar::_emptySet ;
 
+RooNLLVar::RooNLLVar()
+{ }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct likelihood from given p.d.f and (binned or unbinned dataset)
@@ -209,6 +213,18 @@ RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create a test statistic using several properties of the current instance. This is used to duplicate
+/// the test statistic in multi-processing scenarios.
+RooAbsTestStatistic* RooNLLVar::create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
+            const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
+            Int_t nCPU, RooFit::MPSplit interleave, bool verbose, bool splitRange, bool binnedL) {
+  auto testStat = new RooNLLVar(name, title,
+      dynamic_cast<RooAbsPdf&>(pdf), adata,
+      projDeps, _extended, rangeName, addCoefRangeName, nCPU, interleave, verbose, splitRange, false, binnedL);
+  testStat->batchMode(_batchEvaluations);
+  return testStat;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -440,6 +456,13 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute probabilites of all data events. Use faster batch interface.
+/// \param[in] stepSize Stride when moving through the dataset.
+///   \note For batch computations, the step size **must** be one.
+/// \param[in] firstEvent  First event to be processed.
+/// \param[in] lastEvent   First event not to be processed.
+/// \return Tuple with (Kahan sum of probabilities, carry of kahan sum, sum of weights)
 std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const
 {
   if (stepSize != 1) {
@@ -448,21 +471,49 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
 
   auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
 
-  auto results = pdfClone->getLogValBatch(firstEvent, lastEvent-firstEvent, _normSet);
+#ifdef ROOFIT_NEW_BATCH_INTERFACE
+  // Create a RunContext that will own the memory where computation results are stored.
+  // Holding on to this struct in between function calls will make sure that the memory
+  // is only allocated once.
+  if (!_evalData) {
+    _evalData.reset(new BatchHelpers::RunContext);
+  }
+  _evalData->clear();
+  _dataClone->getBatches(*_evalData, firstEvent, lastEvent-firstEvent);
 
+  auto results = pdfClone->getLogProbabilities(*_evalData, _normSet);
+#else
+  auto results = pdfClone->getLogValBatch(firstEvent, lastEvent-firstEvent, _normSet);
+#endif
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
-  for (std::size_t evtNo = firstEvent; evtNo < lastEvent; ++evtNo) {
+
+#ifdef ROOFIT_NEW_BATCH_INTERFACE
+  for (std::size_t evtNo = firstEvent; evtNo < lastEvent; evtNo += (lastEvent-firstEvent)/100) {
     _dataClone->get(evtNo);
     assert(_dataClone->valid());
     pdfClone->getValV(_normSet);
     try {
-      RooHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, evtNo, _normSet);
+      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet);
     } catch (std::exception& e) {
       std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
           << e.what() << std::endl;
     }
   }
+#else
+  for (std::size_t evtNo = firstEvent; evtNo < lastEvent; ++evtNo) {
+    _dataClone->get(evtNo);
+    assert(_dataClone->valid());
+    pdfClone->getValV(_normSet);
+    try {
+      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, evtNo, _normSet);
+    } catch (std::exception& e) {
+      std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
+          << e.what() << std::endl;
+    }
+  }
+#endif
+
 #endif
 
 
@@ -502,6 +553,10 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     }
   }
 
+  if (std::isnan(kahanProb.Sum())) {
+    // Some events with evaluation errors. Return "badness" of errors.
+    return std::tuple<double, double, double>{RooNaNPacker::accumulatePayloads(results.begin(), results.end()), 0., sumOfWeights};
+  }
 
   return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), sumOfWeights};
 }
@@ -512,6 +567,7 @@ std::tuple<double, double, double> RooNLLVar::computeScalar(std::size_t stepSize
 
   ROOT::Math::KahanSum<double> kahanWeight;
   ROOT::Math::KahanSum<double> kahanProb;
+  RooNaNPacker packedNaN(0.f);
 
   for (auto i=firstEvent; i<lastEvent; i+=stepSize) {
     _dataClone->get(i) ;
@@ -526,6 +582,12 @@ std::tuple<double, double, double> RooNLLVar::computeScalar(std::size_t stepSize
 
     kahanWeight.Add(eventWeight);
     kahanProb.Add(term);
+    packedNaN.accumulate(term);
+  }
+
+  if (packedNaN.getPayload() != 0.) {
+    // Some events with evaluation errors. Return "badness" of errors.
+    return std::tuple<double, double, double>{packedNaN._payload, 0., kahanWeight.Sum()};
   }
 
   return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};

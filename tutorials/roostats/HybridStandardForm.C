@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief A hypothesis testing example based on number counting  with background uncertainty.
+/// A hypothesis testing example based on number counting  with background uncertainty.
 ///
 /// A hypothesis testing example based on number counting
 /// with background uncertainty.

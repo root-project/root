@@ -239,8 +239,6 @@
       this.Enabled = true;
       this.UseContextMenu = true;
       this.UseTextColor = false; // indicates if text color used, enabled menu entry
-      this.FirstRun = 1; // counter required to correctly complete drawing
-      this.AssignFinishPave();
    }
 
    TPavePainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -254,6 +252,7 @@
          delete this.FinishPave; // no need for that callback
          this.DrawingReady();
       }
+      this.FirstRun = 1; // counter required to correctly complete drawing
       this.FinishPave = func.bind(this);
    }
 
@@ -445,6 +444,7 @@
 
       this.DrawText({ align: pave.fTextAlign, width: _width, height: _height, text: pave.fLabel, color: this.get_color(pave.fTextColor) });
 
+      this.FirstRun++;
       this.FinishTextDrawing(null, this.FinishPave);
    }
 
@@ -526,6 +526,7 @@
 
       if (lpath) this.draw_g.append("svg:path").attr("d",lpath).call(this.lineatt.func);
 
+      this.FirstRun++;
       this.FinishTextDrawing(undefined, this.FinishPave);
 
       this.draw_g.classed("most_upper_primitives", true); // this primitive will remain on top of list
@@ -540,8 +541,6 @@
           pp = this.pad_painter(),
           individual_positioning = false,
           draw_header = (pt.fLabel.length>0);
-
-      if (draw_header) this.FirstRun++; // increment finish counter
 
       if (!text_g) text_g = this.draw_g;
 
@@ -578,14 +577,15 @@
                      this.UseTextColor = true;
                   }
 
-                  this.StartTextDrawing(pt.fTextFont, (entry.fTextSize || pt.fTextSize) * can_height, text_g);
+                  let sub_g = text_g.append("svg:g");
+
+                  this.StartTextDrawing(pt.fTextFont, (entry.fTextSize || pt.fTextSize) * can_height, sub_g);
 
                   this.DrawText({ align: entry.fTextAlign || pt.fTextAlign, x: lx, y: ly, text: entry.fTitle, color: jcolor,
-                                  latex: (entry._typename == "TText") ? 0 : 1,  draw_g: text_g, fast: fast_draw });
-
-                  this.FinishTextDrawing(text_g, this.FinishPave);
+                                  latex: (entry._typename == "TText") ? 0 : 1,  draw_g: sub_g, fast: fast_draw });
 
                   this.FirstRun++;
+                  this.FinishTextDrawing(sub_g, this.FinishPave);
 
                } else {
                   lines.push(entry); // make as before
@@ -621,12 +621,7 @@
          }
       }
 
-      if (individual_positioning) {
-
-         // we should call FinishPave
-         if (this.FinishPave) this.FinishPave();
-
-      } else {
+      if (!individual_positioning) {
 
          // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
          var stepy = height / nlines, has_head = false, margin_x = pt.fMargin * width, max_font_size = 0;
@@ -660,6 +655,7 @@
             this.DrawText(arg);
          }
 
+         this.FirstRun++;
          this.FinishTextDrawing(text_g, this.FinishPave);
       }
 
@@ -679,6 +675,7 @@
 
          this.DrawText({ align: 22, x: x, y: y, width: w, height: h, text: pt.fLabel, color: tcolor, draw_g: lbl_g });
 
+         this.FirstRun++;
          this.FinishTextDrawing(lbl_g, this.FinishPave);
 
          this.UseTextColor = true;
@@ -843,6 +840,7 @@
       }
 
       // rescale after all entries are shown
+      this.FirstRun++;
       this.FinishTextDrawing(this.draw_g, this.FinishPave);
    }
 
@@ -1007,8 +1005,6 @@
          this.draw_g.select(".axis_zoom")
                     .on("mousedown", startRectSel)
                     .on("dblclick", function() { pthis.frame_painter().Unzoom("z"); });
-
-      if (this.FinishPave) this.FinishPave();
    }
 
    TPavePainter.prototype.FillContextMenu = function(menu) {
@@ -1311,6 +1307,8 @@
 
       painter.SetDivId(divid, 2, onpad);
 
+      painter.AssignFinishPave();
+
       if ((pave.fName === "title") && (pave._typename === "TPaveText")) {
          var tpainter = painter.FindPainterFor(null, "title");
          if (tpainter && (tpainter !== painter)) {
@@ -1370,8 +1368,9 @@
 
       painter.DrawPave(opt);
 
-      // drawing ready handled in special painters, if not exists - drawing is done
-      return painter.PaveDrawFunc ? painter : painter.DrawingReady();
+      painter.FinishPave(); // call finish pave at least once
+
+      return painter;
    }
 
    /** @summary Produce and draw TLegend object for the specified divid
@@ -2158,10 +2157,7 @@
       if (!this.is_main_painter() || this.options.Same) return;
 
       var fp = this.frame_painter();
-      if (!fp) return;
-
-      fp.DrawAxes(false, this.options.Axis < 0, this.options.AxisPos, this.options.Zscale);
-      fp.DrawGrids();
+      if (fp) fp.DrawAxes(false, this.options.Axis < 0, this.options.AxisPos, this.options.Zscale);
    }
 
    THistPainter.prototype.ToggleTitle = function(arg) {
@@ -2860,7 +2856,9 @@
       }
 
       if (histo.fContour && (histo.fContour.length>1) && histo.TestBit(JSROOT.TH1StatusBits.kUserContour)) {
-         this.fContour = JSROOT.clone(histo.fContour);
+         this.fContour = [];
+         for (let n = 0; n < histo.fContour.length; ++n)
+            this.fContour.push(histo.fContour[n]);
          this.fCustomContour = true;
          this.colzmin = zmin;
          this.colzmax = zmax;
@@ -3884,8 +3882,12 @@
          }
       }
 
-      var h0 = height + 3, gry0 = Math.round(pmain.gry(0));
-      if (gry0 <= 0) h0 = -3; else if (gry0 < height) h0 = gry0;
+      var fill_for_interactive = !JSROOT.BatchMode && this.fillatt.empty() && draw_hist && (JSROOT.gStyle.Tooltip > 0) && !draw_markers && !show_line,
+          h0 = height + 3;
+      if (!fill_for_interactive) {
+         var gry0 = Math.round(pmain.gry(0));
+         if (gry0 <= 0) h0 = -3; else if (gry0 < height) h0 = gry0;
+      }
       var close_path = "L"+currx+","+h0 + "L"+startx+","+h0 + "Z";
 
       if (draw_markers || show_line) {
@@ -3919,7 +3921,7 @@
       }
 
       if ((res.length > 0) && draw_hist) {
-         if (!this.fillatt.empty())
+         if (!this.fillatt.empty() || fill_for_interactive)
             res += close_path;
          this.draw_g.append("svg:path")
                     .attr("d", res)
@@ -4828,7 +4830,7 @@
 
          dx = handle.grx[i+1] - handle.grx[i];
          x1 = Math.round(handle.grx[i] + dx*handle.xbar1);
-         dx = Math.round(dx*(handle.xbar2-handle.xbar1));
+         dx = Math.round(dx*(handle.xbar2-handle.xbar1)) || 1;
 
          for (j = handle.j1; j < handle.j2; ++j) {
             binz = histo.getBinContent(i + 1, j + 1);
@@ -4841,7 +4843,7 @@
 
             dy = handle.gry[j]-handle.gry[j+1];
             y2 = Math.round(handle.gry[j+1] + dy*handle.ybar1);
-            dy = Math.round(dy*(handle.ybar2-handle.ybar1));
+            dy = Math.round(dy*(handle.ybar2-handle.ybar1)) || 1;
 
             cmd1 = "M"+x1+","+y2;
             if (colPaths[colindx] === undefined) {

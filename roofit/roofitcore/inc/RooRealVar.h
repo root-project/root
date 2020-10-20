@@ -17,6 +17,7 @@
 #define ROO_REAL_VAR
 
 #include "RooAbsRealLValue.h"
+#include "RunContext.h"
 
 #include "TString.h"
 
@@ -58,6 +59,7 @@ public:
   RooSpan<const double> getValBatch(std::size_t begin, std::size_t batchSize, const RooArgSet* = nullptr) const final {
     return _batchData.getBatch(begin, batchSize);
   }
+  RooSpan<const double> getValues(BatchHelpers::RunContext& inputData, const RooArgSet*) const final;
 
   virtual void setVal(Double_t value);
   virtual void setVal(Double_t value, const char* rangeName);

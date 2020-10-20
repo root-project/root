@@ -482,7 +482,10 @@ sap.ui.define([
 
          this.ttip.style.display= "block";
       },
-
+      remoteToolTip: function (msg)
+      {
+         this.ttip_text.innerHTML = msg;
+      },
       getRelativeOffsets: function(elem)
       {
          // Based on:

@@ -46,6 +46,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     TLeaf.h
     TLeafI.h
     TLeafL.h
+    TLeafG.h
     TLeafObject.h
     TLeafO.h
     TLeafS.h
@@ -98,6 +99,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     src/TLeafF16.cxx
     src/TLeafI.cxx
     src/TLeafL.cxx
+    src/TLeafG.cxx
     src/TLeafObject.cxx
     src/TLeafO.cxx
     src/TLeafS.cxx

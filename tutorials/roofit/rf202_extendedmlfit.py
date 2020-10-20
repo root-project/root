@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Addition and convolution: setting up an extended maximum likelihood fit
+## Addition and convolution: setting up an extended maximum likelihood fit
 ##
 ## \macro_code
 ##
@@ -26,12 +25,12 @@ sigma2 = ROOT.RooRealVar("sigma2", "width of gaussians", 1)
 sig1 = ROOT.RooGaussian("sig1", "Signal component 1", x, mean, sigma1)
 sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 
-# Build Chebychev polynomial p.d.f.
+# Build Chebychev polynomial pdf
 a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
 a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0., 1.)
 bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
 
-# Sum the signal components into a composite signal p.d.f.
+# Sum the signal components into a composite signal pdf
 sig1frac = ROOT.RooRealVar(
     "sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.)
 sig = ROOT.RooAddPdf(
@@ -65,7 +64,7 @@ data = model.generate(ROOT.RooArgSet(x))
 # Fit model to data, ML term automatically included
 model.fitTo(data)
 
-# Plot data and PDF overlaid, expected number of events for p.d.f projection normalization
+# Plot data and PDF overlaid, expected number of events for pdf projection normalization
 # rather than observed number of events (==data.numEntries())
 xframe = x.frame(ROOT.RooFit.Title("extended ML fit example"))
 data.plotOn(xframe)
@@ -86,7 +85,7 @@ model.plotOn(
         ROOT.kDotted), ROOT.RooFit.Normalization(
             1.0, ROOT.RooAbsReal.RelativeExpected))
 
-# Print structure of composite p.d.f.
+# Print structure of composite pdf
 model.Print("t")
 
 
@@ -94,13 +93,13 @@ model.Print("t")
 # ---------------------------------------------------------------------
 
 # Associated nsig/nbkg as expected number of events with sig/bkg
-esig = ROOT.RooExtendPdf("esig", "extended signal p.d.f", sig, nsig)
-ebkg = ROOT.RooExtendPdf("ebkg", "extended background p.d.f", bkg, nbkg)
+esig = ROOT.RooExtendPdf("esig", "extended signal pdf", sig, nsig)
+ebkg = ROOT.RooExtendPdf("ebkg", "extended background pdf", bkg, nbkg)
 
 # Sum extended components without coefs
 # -------------------------------------------------------------------------
 
-# Construct sum of two extended p.d.f. (no coefficients required)
+# Construct sum of two extended pdf (no coefficients required)
 model2 = ROOT.RooAddPdf("model2", "(g1+g2)+a", ROOT.RooArgList(ebkg, esig))
 
 # Draw the frame on the canvas

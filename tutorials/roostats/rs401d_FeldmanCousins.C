@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// \brief Neutrino Oscillation Example from Feldman & Cousins
+/// Neutrino Oscillation Example from Feldman & Cousins
 ///
 /// This tutorial shows a more complex example using the FeldmanCousins utility
 /// to create a confidence interval for a toy neutrino oscillation experiment.

@@ -92,7 +92,7 @@ TEST(RNTuple, WriteRead)
    auto wrKlass = modelWrite->MakeField<CustomStruct>("klass");
    wrKlass->s = "abc";
 
-   auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
+   auto modelRead = modelWrite->Clone();
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
@@ -152,7 +152,7 @@ TEST(RNTuple, Clusters)
    wrFourVec->at(2) = 2.0;
    wrFourVec->at(3) = 3.0;
 
-   auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
+   auto modelRead = modelWrite->Clone();
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),

@@ -28,6 +28,7 @@
 #include "RooFitResult.h"
 #include "RooAbsPdf.h"
 #include "RooFormulaVar.h"
+#include "RooHelpers.h"
 #include "TH1.h"
 
 using namespace std;
@@ -210,6 +211,9 @@ namespace RooFit {
   RooCmdArg Integrate(Bool_t flag)                       { return RooCmdArg("Integrate",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Minimizer(const char* type, const char* alg) { return RooCmdArg("Minimizer",0,0,0,0,type,alg,0,0) ; }
   RooCmdArg Offset(Bool_t flag)                          { return RooCmdArg("OffsetLikelihood",flag,0,0,0,0,0,0,0) ; }
+  /// When parameters are chosen such that a PDF is undefined, try to indicate to the minimiser how to leave this region.
+  /// \param strength Strength of hints for minimiser. Set to zero to switch off.
+  RooCmdArg RecoverFromUndefinedRegions(double strength) { return RooCmdArg("RecoverFromUndefinedRegions",0,0,strength,0,0,0,0,0) ; }
 
   
   // RooAbsPdf::paramOn arguments
@@ -300,7 +304,7 @@ namespace RooFit {
   RooCmdArg ClassName(const char* name)     { return RooCmdArg("ClassName",0,0,0,0,name,0,0,0) ; }
   RooCmdArg BaseClassName(const char* name) { return RooCmdArg("BaseClassName",0,0,0,0,name,0,0,0) ; }
   RooCmdArg TagName(const char* name)     { return RooCmdArg("LabelName",0,0,0,0,name,0,0,0) ; }
-   RooCmdArg OutputStream(ostream& os)    { return RooCmdArg("OutputStream",0,0,0,0,0,0,reinterpret_cast<TObject*>(&os),0) ; }
+  RooCmdArg OutputStream(ostream& os)    { return RooCmdArg("OutputStream",0,0,0,0,0,0,new RooHelpers::WrapIntoTObject<ostream>(os),0) ; }
   RooCmdArg Prefix(Bool_t flag)          { return RooCmdArg("Prefix",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Color(Color_t color)         { return RooCmdArg("Color",color,0,0,0,0,0,0,0) ; }
 

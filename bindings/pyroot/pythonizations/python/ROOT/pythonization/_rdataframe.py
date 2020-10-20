@@ -49,6 +49,12 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None):
     Returns:
         dict: Dict with column names as keys and 1D numpy arrays with content as values
     """
+    # Sanitize input arguments
+    if isinstance(columns, str):
+        raise TypeError("The columns argument requires a list of strings")
+    if isinstance(exclude, str):
+        raise TypeError("The exclude argument requires a list of strings")
+
     # Import numpy and numpy.array derived class lazily
     try:
         import numpy
@@ -76,7 +82,7 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None):
     for column in columns:
         cpp_reference = result_ptrs[column].GetValue()
         if hasattr(cpp_reference, "__array_interface__"):
-            tmp = numpy.array(cpp_reference) # This adopts the memory of the C++ object.
+            tmp = numpy.asarray(cpp_reference) # This adopts the memory of the C++ object.
             py_arrays[column] = ndarray(tmp, result_ptrs[column])
         else:
             tmp = numpy.empty(len(cpp_reference), dtype=numpy.object)

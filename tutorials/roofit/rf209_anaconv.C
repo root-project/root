@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Addition and convolution: decay function p.d.fs with optional B physics effects (mixing and CP violation)
+/// Addition and convolution: decay function pdfs with optional B physics effects (mixing and CP violation)
 ///
 /// that can be analytically convolved with e.g. Gaussian resolution functions
 ///
@@ -17,7 +15,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -37,7 +35,7 @@ void rf209_anaconv()
    // B - p h y s i c s   p d f   w i t h   t r u t h   r e s o l u t i o n
    // ---------------------------------------------------------------------
 
-   // Variables of decay p.d.f.
+   // Variables of decay pdf
    RooRealVar dt("dt", "dt", -10, 10);
    RooRealVar tau("tau", "tau", 1.548);
 
@@ -47,7 +45,7 @@ void rf209_anaconv()
    // Construct decay(t) (x) delta(t)
    RooDecay decay_tm("decay_tm", "decay", dt, tau, tm1, RooDecay::DoubleSided);
 
-   // Plot p.d.f. (dashed)
+   // Plot pdf (dashed)
    RooPlot *frame = dt.frame(Title("Bdecay (x) resolution"));
    decay_tm.plotOn(frame, LineStyle(kDashed));
 
@@ -62,7 +60,7 @@ void rf209_anaconv()
    // Construct decay(t) (x) gauss1(t)
    RooDecay decay_gm1("decay_gm1", "decay", dt, tau, gm1, RooDecay::DoubleSided);
 
-   // Plot p.d.f.
+   // Plot pdf
    decay_gm1.plotOn(frame);
 
    // B - p h y s i c s   p d f   w i t h   d o u b l e   G a u s s i a n   r e s o l u t i o n
@@ -80,7 +78,7 @@ void rf209_anaconv()
    // Construct decay(t) (x) (f*gm1 + (1-f)*gm2)
    RooDecay decay_gmsum("decay_gmsum", "decay", dt, tau, gmsum, RooDecay::DoubleSided);
 
-   // Plot p.d.f. (red)
+   // Plot pdf (red)
    decay_gmsum.plotOn(frame, LineColor(kRed));
 
    // Draw all frames on canvas

@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Multidimensional models: making 2/3 dimensional plots of p.d.f.s and datasets
+## Multidimensional models: making 2/3 dimensional plots of pdfs and datasets
 ##
 ## \macro_code
 ##

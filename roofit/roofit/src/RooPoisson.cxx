@@ -21,6 +21,7 @@ Poisson pdf
 #include "RooMath.h"
 #include "TMath.h"
 #include "Math/ProbFuncMathCore.h"
+#include "RooNaNPacker.h"
 
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
@@ -42,8 +43,7 @@ RooPoisson::RooPoisson(const char *name, const char *title,
   RooAbsPdf(name,title),
   x("x","x",this,_x),
   mean("mean","mean",this,_mean),
-  _noRounding(noRounding),
-  _protectNegative(false)
+  _noRounding(noRounding)
 {
 }
 
@@ -65,8 +65,11 @@ RooPoisson::RooPoisson(const char *name, const char *title,
 Double_t RooPoisson::evaluate() const
 {
   Double_t k = _noRounding ? x : floor(x);
-  if(_protectNegative && mean<0)
-    return 1e-3;
+  if(_protectNegative && mean<0) {
+    RooNaNPacker np;
+    np.setPayload(-mean);
+    return np._payload;
+  }
   return TMath::Poisson(k,mean) ;
 }
 
@@ -119,7 +122,7 @@ RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t batchSi
   if (!batchX && !batchMean) {
     return {};
   }
-  batchSize = findSize({ xData, meanData });
+  batchSize = findSmallestBatch({ xData, meanData });
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
   if (batchX && !batchMean ) {

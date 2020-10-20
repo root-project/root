@@ -154,7 +154,7 @@ public:
    const std::string &GetTitle()  const { return fTitle; }
    const char* GetCTitle() const { return fTitle.c_str();  }
 
-   virtual std::string GetHighlightTooltip() const { return fTitle; }
+   virtual std::string GetHighlightTooltip(const std::set<int>&) const;
 
    void SetName (const std::string &name);
    void SetTitle(const std::string &title);
@@ -329,7 +329,7 @@ public:
    void   SetPickable(Bool_t p) { fPickable = p; }
    void   SetPickableRecursively(Bool_t p);
 
-   REveElement* GetSelectionMaster();
+   virtual REveElement* GetSelectionMaster();
    void         SetSelectionMaster(REveElement *el) { fSelectionMaster = el; }
 
    virtual void FillImpliedSelectedSet(Set_t& impSelSet);
@@ -352,6 +352,8 @@ public:
    void   CSCApplyMainTransparencyToAllChildren()      { fCSCBits |= kCSCBApplyMainTransparencyToAllChildren; }
    void   CSCApplyMainTransparencyToMatchingChildren() { fCSCBits |= kCSCBApplyMainTransparencyToMatchingChildren; }
 
+   virtual bool RequiresExtraSelectionData() const { return false; }
+   virtual void FillExtraSelectionData(nlohmann::json&, const std::set<int>&) const {}
 
    // Change-stamping and change bits
    //---------------------------------

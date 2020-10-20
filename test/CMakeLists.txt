@@ -435,3 +435,9 @@ if (NOT cxxmodules)
     )
   endif()
 endif()
+
+#--canary tests------------------------------------------------------------------------------------
+if(asserts AND NOT MSVC)
+  ROOT_EXECUTABLE(checkAssertsNDEBUG checkAssertsNDEBUG.cxx LIBRARIES Core)
+  ROOT_ADD_TEST(checkAssertsNDEBUG COMMAND checkAssertsNDEBUG)
+endif()

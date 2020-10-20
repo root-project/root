@@ -43,6 +43,12 @@ namespace RDF {
 const std::type_info &TypeName2TypeID(const std::string &name)
 {
    if (auto c = TClass::GetClass(name.c_str())) {
+      if (!c->GetTypeInfo()) {
+         std::string msg("Cannot extract type_info of type ");
+         msg += name.c_str();
+         msg += ".";
+         throw std::runtime_error(msg);
+      }
       return *c->GetTypeInfo();
    } else if (name == "char" || name == "Char_t")
       return typeid(char);
@@ -246,10 +252,14 @@ char TypeName2ROOTTypeName(const std::string &b)
       return 'F';
    if (b == "Double_t" || b == "double")
       return 'D';
-   if (b == "Long64_t" || b == "long" || b == "long int")
+   if (b == "Long64_t" || b == "long long" || b == "long long int")
       return 'L';
-   if (b == "ULong64_t" || b == "unsigned long" || b == "unsigned long int")
+   if (b == "ULong64_t" || b == "unsigned long long" || b == "unsigned long long int")
       return 'l';
+   if (b == "Long_t" || b == "long" || b == "long int")
+      return 'G';
+   if (b == "ULong_t" || b == "unsigned long" || b == "unsigned long int")
+      return 'g';
    if (b == "Bool_t" || b == "bool")
       return 'O';
    return ' ';

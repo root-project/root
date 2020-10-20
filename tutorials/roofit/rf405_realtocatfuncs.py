@@ -1,8 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Data and categories: demonstration of real-discrete mapping functions
+## Data and categories: demonstration of real-discrete mapping functions
 ##
 ## \macro_code
 ##

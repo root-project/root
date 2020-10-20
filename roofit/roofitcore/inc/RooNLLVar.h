@@ -23,12 +23,15 @@
 #include <utility>
 
 class RooRealSumPdf ;
+namespace BatchHelpers {
+struct RunContext;
+}
 
 class RooNLLVar : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooNLLVar() { _first = kTRUE ; }
+  RooNLLVar();
   RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& data,
 	    const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(),
 	    const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
@@ -49,9 +52,7 @@ public:
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
 				      const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, Bool_t binnedL=kFALSE) {
-    return new RooNLLVar(name,title,(RooAbsPdf&)pdf,adata,projDeps,_extended,rangeName, addCoefRangeName, nCPU, interleave,verbose,splitRange,kFALSE,binnedL) ;
-  }
+				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, Bool_t binnedL=kFALSE);
   
   virtual ~RooNLLVar();
 
@@ -77,15 +78,16 @@ private:
   std::tuple<double, double, double> computeScalar(
         std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
 
-  Bool_t _extended ;
+  Bool_t _extended{false};
   bool _batchEvaluations{false};
-  Bool_t _weightSq ; // Apply weights squared?
-  mutable Bool_t _first ; //!
-  Double_t _offsetSaveW2; //!
-  Double_t _offsetCarrySaveW2; //!
+  Bool_t _weightSq{false}; // Apply weights squared?
+  mutable Bool_t _first{true}; //!
+  Double_t _offsetSaveW2{false}; //!
+  Double_t _offsetCarrySaveW2{false}; //!
 
   mutable std::vector<Double_t> _binw ; //!
-  mutable RooRealSumPdf* _binnedPdf ; //!
+  mutable RooRealSumPdf* _binnedPdf{nullptr}; //!
+  mutable std::unique_ptr<BatchHelpers::RunContext> _evalData; //! Struct to store function evaluation workspaces.
    
   ClassDef(RooNLLVar,3) // Function representing (extended) -log(L) of p.d.f and dataset
 };

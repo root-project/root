@@ -237,3 +237,35 @@ TEST(TTreeReaderArray, ROOT10397)
    EXPECT_EQ(xr.GetSize(), 7);
    EXPECT_EQ(zr.GetSize(), 13 - 7);
 }
+
+TEST(TTreeReaderArray, LongIntArray)
+{
+   const auto fname = "TTreeReaderArrayLongIntArray.root";
+   {
+      TFile f(fname, "recreate");
+      long int G[3] = {std::numeric_limits<long int>::min(), 42, std::numeric_limits<long int>::max()};
+      int size = 2;
+      unsigned long int *g = new unsigned long int[size];
+      g[0] = 42;
+      g[1] = std::numeric_limits<unsigned long int>::max();
+      TTree t("t", "t");
+      t.Branch("G", G, "G[3]/G");
+      t.Branch("n", &size);
+      t.Branch("g", g, "g[n]/g");
+      t.Fill();
+      t.Write();
+   }
+
+   TFile f(fname);
+   TTreeReader r("t", &f);
+   TTreeReaderArray<long int> rG(r, "G");
+   TTreeReaderArray<unsigned long int> rg(r, "g");
+   EXPECT_TRUE(r.Next());
+   ASSERT_EQ(rG.GetSize(), 3);
+   EXPECT_EQ(rG[0], std::numeric_limits<long int>::min());
+   EXPECT_EQ(rG[1], 42);
+   ASSERT_EQ(rg.GetSize(), 2);
+   EXPECT_EQ(rg[0], 42);
+   EXPECT_EQ(rg[1], std::numeric_limits<unsigned long int>::max());
+   EXPECT_FALSE(r.Next());
+}

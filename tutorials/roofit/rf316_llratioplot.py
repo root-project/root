@@ -1,9 +1,8 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
-## \brief Multidimensional models: using the likelihood ratio techique to construct a signal
-## enhanced one-dimensional projection of a multi-dimensional p.d.f.
+## Multidimensional models: using the likelihood ratio techique to construct a signal
+## enhanced one-dimensional projection of a multi-dimensional pdf
 ##
 ## \macro_code
 ##

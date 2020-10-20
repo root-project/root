@@ -230,7 +230,7 @@ RooCmdArg CloneData(Bool_t flag) ;
 RooCmdArg Integrate(Bool_t flag) ;
 RooCmdArg Minimizer(const char* type, const char* alg=0) ;
 RooCmdArg Offset(Bool_t flag=kTRUE) ;
-
+RooCmdArg RecoverFromUndefinedRegions(double strength);
 /** @} */
 
 // RooAbsPdf::paramOn arguments
@@ -342,10 +342,10 @@ RooCmdArg MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,
  
 RooConstVar& RooConst(Double_t val) ; 
 
+// End group CmdArgs:
 /**
  * @}
  */
-
 }
 
 namespace RooFitShortHand {

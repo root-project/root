@@ -133,6 +133,12 @@ include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
 
+#---Enable asserts------------------------------------------------------------------------------
+if(NOT asserts)
+  set(CMAKE_CXX_FLAGS_${BUILD_TYPE} "${CMAKE_CXX_FLAGS_${BUILD_TYPE}} -DNDEBUG")
+  set(CMAKE_C_FLAGS_${BUILD_TYPE} "${CMAKE_C_FLAGS_${BUILD_TYPE}} -DNDEBUG")
+endif()
+
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
   find_program(CCACHE_COMMAND NAMES ccache ccache-swig)
@@ -643,7 +649,12 @@ if(testing)
   endif()
 endif()
 
-cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.10.0")
+  if (${CMAKE_MINIMUM_REQUIRED_VERSION} VERSION_GREATER_EQUAL "3.10.0")
+    message(FATAL_ERROR "Remove this condition")
+  endif()
+  cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
+endif()
 
 message(STATUS "ROOT Configuration \n
 System          ${CMAKE_SYSTEM}
@@ -652,8 +663,8 @@ Build type      ${CMAKE_BUILD_TYPE}
 Install path    ${CMAKE_INSTALL_PREFIX}
 Compiler        ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
 Compiler flags:
-C               ${CMAKE_C_FLAGS}
-C++             ${CMAKE_CXX_FLAGS}
+C               ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_${BUILD_TYPE}}
+C++             ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}}
 Linker flags:
 Executable      ${CMAKE_EXE_LINKER_FLAGS}
 Module          ${CMAKE_MODULE_LINKER_FLAGS}

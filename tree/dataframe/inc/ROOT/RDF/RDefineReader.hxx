@@ -27,7 +27,7 @@ namespace RDFDetail = ROOT::Detail::RDF;
 void CheckDefineType(RDFDetail::RDefineBase &define, const std::type_info &tid);
 
 /// Column reader for defined (aka custom) columns.
-class R__CLING_PTRCHECK(off) RDefineReader final : public RColumnReaderBase {
+class R__CLING_PTRCHECK(off) RDefineReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    /// Non-owning reference to the node responsible for the custom column. Needed when querying custom values.
    RDFDetail::RDefineBase &fDefine;
 

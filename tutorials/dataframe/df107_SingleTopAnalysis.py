@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief A single top analysis using the ATLAS Open Data release of 2020, with RDataFrame.
+## A single top analysis using the ATLAS Open Data release of 2020, with RDataFrame.
 ##
 ## This tutorial is the analysis of single top production adapted from the ATLAS Open Data release in 2020
 ## (http://opendata.atlas.cern/release/2020/documentation/). The data was recorded with the ATLAS detector

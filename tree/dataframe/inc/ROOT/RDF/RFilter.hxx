@@ -58,7 +58,7 @@ class RFilter final : public RFilterBase {
    const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
    PrevDataFrame &fPrevData;
    /// Column readers per slot and per input column
-   std::vector<std::array<std::unique_ptr<RDFInternal::RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 
@@ -110,7 +110,8 @@ public:
    {
       for (auto &bookedBranch : fDefines.GetColumns())
          bookedBranch.second->InitSlot(r, slot);
-      RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fLoopManager->GetDSValuePtrs()};
+      RDFInternal::RColumnReadersInfo info{fColumnNames, fDefines, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
+                                           fLoopManager->GetDataSource()};
       fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
    }
 
