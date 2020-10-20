@@ -381,13 +381,12 @@ sap.ui.define([
       });
    }
 
-   EveScene.prototype.SelectElement = function(selection_obj, element_id, sec_idcs)
+   EveScene.prototype.SelectElement = function(selection_obj, element_id, sec_idcs, extra)
    {
       let obj3d = this.getObj3D( element_id );
-      if ( ! obj3d) return;
+      if (!obj3d) return;
 
       let opass = this.glctrl.viewer.outline_pass;
-
       opass.id2obj_map[element_id] = opass.id2obj_map[element_id] || [];
 
       if (opass.id2obj_map[element_id][selection_obj.fElementId] !== undefined)
@@ -397,34 +396,31 @@ sap.ui.define([
 
       let stype  = selection_obj.fName.endsWith("Selection") ? "select" : "highlight";
       let estype = THREE.OutlinePass.selection_enum[stype];
-
-      // console.log("EveScene.SelectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.glctrl.viewer.outline_pass.id2obj_map);
+      let oe = this.mgr.GetElement(element_id);
+      // console.log("EveScene.SelectElement ", selection_obj.fName, oe.fName, selection_obj.fElementId, this.glctrl.viewer.outline_pass.id2obj_map);
 
       let res = {
          "sel_type" : estype,
-         "sec_sel"  : false,
+         "sec_sel"  : (oe.fSecondarySelect && sec_idcs.length > 0) ? true: false,
          "geom"     : []
       };
 
-      if (sec_idcs === undefined || sec_idcs.length == 0)
+      // exit if you try to highlight an object that has already been selected
+      if (estype == THREE.OutlinePass.selection_enum["highlight"] &&
+          opass.id2obj_map[element_id][this.mgr.global_selection_id] !== undefined)
       {
-         // exit if you try to highlight an object that has already been selected
-         if (estype == THREE.OutlinePass.selection_enum["highlight"] &&
-            opass.id2obj_map[element_id][this.mgr.global_selection_id] !== undefined)
-         {
-            return;
-         }
+         if (!res.sec_sel)
+         return;
+      }
 
-         opass.id2obj_map[element_id] = [];
-         res.geom.push(obj3d);
-      }
-      else
-      {
-         let ctrl = obj3d.get_ctrl();
-         ctrl.DrawForSelection(sec_idcs, res);
-         res.sec_sel = true;
-      }
+      if (!res.sec_sel) opass.id2obj_map[element_id] = [];
+      let ctrl = obj3d.get_ctrl();
+      ctrl.DrawForSelection(sec_idcs, res, extra);
       opass.id2obj_map[element_id][selection_obj.fElementId] = res;
+
+      if (stype == "highlight" && selection_obj.sel_list) {
+         this.glctrl.viewer.remoteToolTip(selection_obj.sel_list[0].tooltip);
+      }
    }
 
    EveScene.prototype.UnselectElement = function(selection_obj, element_id)

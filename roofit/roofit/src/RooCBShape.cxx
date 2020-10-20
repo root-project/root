@@ -112,7 +112,7 @@ void compute(	size_t batchSize,
       output[i] -= 0.5*A[i]*A[i];
     }
   }
-  
+
   for (size_t i=0; i<batchSize; i++) {
     output[i] = _rf_fast_exp(output[i]);
   }
@@ -228,11 +228,11 @@ Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
 
 Int_t RooCBShape::getMaxVal(const RooArgSet& vars) const
 {
-  RooArgSet dummy ;
+   RooArgSet dummy ;
 
   if (matchArgs(vars,dummy,m)) {
-    return 1 ;
-  }
+     return 1 ;
+   }
   return 0 ;
 }
 
@@ -243,5 +243,6 @@ Double_t RooCBShape::maxVal(Int_t code) const
   R__ASSERT(code==1) ;
 
   // The maximum value for given (m0,alpha,n,sigma)
-  return 1.0 ;
+  // is 1./ Integral in the variable range
+  return 1.0/analyticalIntegral(1) ;
 }

@@ -744,7 +744,7 @@ void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
 void TText::PaintText(Double_t x, Double_t y, const char *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintText(x,y,text);
+   if (gPad) gPad->PaintText(x,y,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -753,7 +753,7 @@ void TText::PaintText(Double_t x, Double_t y, const char *text)
 void TText::PaintText(Double_t x, Double_t y, const wchar_t *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintText(x,y,text);
+   if (gPad) gPad->PaintText(x,y,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -762,7 +762,7 @@ void TText::PaintText(Double_t x, Double_t y, const wchar_t *text)
 void TText::PaintTextNDC(Double_t u, Double_t v, const char *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintTextNDC(u,v,text);
+   if (gPad) gPad->PaintTextNDC(u,v,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -771,7 +771,7 @@ void TText::PaintTextNDC(Double_t u, Double_t v, const char *text)
 void TText::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintTextNDC(u,v,text);
+   if (gPad) gPad->PaintTextNDC(u,v,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

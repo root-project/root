@@ -197,12 +197,53 @@ BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const Colu
    TPRegexp re(R"(\breturn\b)");
    const bool hasReturnStmt = re.Match(expr) == 1;
 
+   static const std::vector<std::string> fundamentalTypes = {
+      "int",
+      "signed",
+      "signed int",
+      "Int_t",
+      "unsigned",
+      "unsigned int",
+      "UInt_t",
+      "double",
+      "Double_t",
+      "float",
+      "Float_t",
+      "char",
+      "Char_t",
+      "unsigned char",
+      "UChar_t",
+      "bool",
+      "Bool_t",
+      "short",
+      "short int",
+      "Short_t",
+      "long",
+      "long int",
+      "long long int",
+      "Long64_t",
+      "unsigned long",
+      "unsigned long int",
+      "ULong64_t",
+      "std::size_t",
+      "size_t",
+      "Ssiz_t"
+   };
+
    std::stringstream ss;
    ss << "[](";
    for (auto i = 0u; i < vars.size(); ++i) {
-      // We pass by reference to avoid expensive copies
-      // It can't be const reference in general, as users might want/need to call non-const methods on the values
-      ss << varTypes[i] << "& " << vars[i] << ", ";
+      std::string fullType;
+      const auto &type = varTypes[i];
+      if (std::find(fundamentalTypes.begin(), fundamentalTypes.end(), type) != fundamentalTypes.end()) {
+         // pass it by const value to help detect common mistakes such as if(x = 3)
+         fullType = "const " + type + " ";
+      } else {
+         // We pass by reference to avoid expensive copies
+         // It can't be const reference in general, as users might want/need to call non-const methods on the values
+         fullType = type + "& ";
+      }
+      ss << fullType << vars[i] << ", ";
    }
    if (!vars.empty())
       ss.seekp(-2, ss.cur);
@@ -328,24 +369,6 @@ ColumnNames_t GetTopLevelBranchNames(TTree &t)
 // The set here is used as a registry, the real list, which keeps the order, is
 // the one in the vector
 class RActionBase;
-
-HeadNode_t CreateSnapshotRDF(const ColumnNames_t &validCols,
-                            std::string_view treeName,
-                            std::string_view fileName,
-                            bool isLazy,
-                            RLoopManager &loopManager,
-                            std::unique_ptr<RDFInternal::RActionBase> actionPtr)
-{
-   // create new RDF
-   ::TDirectory::TContext ctxt;
-   auto snapshotRDF = std::make_shared<ROOT::RDataFrame>(treeName, fileName, validCols);
-   auto snapshotRDFResPtr = MakeResultPtr(snapshotRDF, loopManager, std::move(actionPtr));
-
-   if (!isLazy) {
-      *snapshotRDFResPtr;
-   }
-   return snapshotRDFResPtr;
-}
 
 std::string DemangleTypeIdName(const std::type_info &typeInfo)
 {
@@ -497,6 +520,19 @@ std::vector<std::string> GetFilterNames(const std::shared_ptr<RLoopManager> &loo
    return loopManager->GetFiltersNames();
 }
 
+ParsedTreePath ParseTreePath(std::string_view fullTreeName)
+{
+   // split name into directory and treename if needed
+   std::string_view dirName = "";
+   std::string_view treeName = fullTreeName;
+   const auto lastSlash = fullTreeName.rfind('/');
+   if (std::string_view::npos != lastSlash) {
+      dirName = treeName.substr(0, lastSlash);
+      treeName = treeName.substr(lastSlash + 1, treeName.size());
+   }
+   return {std::string(treeName), std::string(dirName)};
+}
+
 std::string PrettyPrintAddr(const void *const addr)
 {
    std::stringstream s;
@@ -596,17 +632,17 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
 // Jit and call something equivalent to "this->BuildAndBook<ColTypes...>(params...)"
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
-                           const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
-                           const unsigned int nSlots, const RDFInternal::RBookedDefines &customCols, RDataSource *ds,
-                           std::weak_ptr<RJittedAction> *jittedActionOnHeap)
+                           const std::type_info &helperArgType, const std::type_info &at, void *helperArgOnHeap,
+                           TTree *tree, const unsigned int nSlots, const RDFInternal::RBookedDefines &customCols,
+                           RDataSource *ds, std::weak_ptr<RJittedAction> *jittedActionOnHeap)
 {
    // retrieve type of result of the action as a string
-   auto actionResultTypeClass = TClass::GetClass(art);
-   if (!actionResultTypeClass) {
+   auto helperArgClass = TClass::GetClass(helperArgType);
+   if (!helperArgClass) {
       std::string exceptionText = "An error occurred while inferring the result type of an operation.";
       throw std::runtime_error(exceptionText.c_str());
    }
-   const auto actionResultTypeName = actionResultTypeClass->GetName();
+   const auto helperArgClassName = helperArgClass->GetName();
 
    // retrieve type of action as a string
    auto actionTypeClass = TClass::GetClass(at);
@@ -614,7 +650,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::R
       std::string exceptionText = "An error occurred while inferring the action type of the operation.";
       throw std::runtime_error(exceptionText.c_str());
    }
-   const auto actionTypeName = actionTypeClass->GetName();
+   const std::string actionTypeName = actionTypeClass->GetName();
+   const std::string actionTypeNameBase = actionTypeName.substr(actionTypeName.rfind(':') + 1);
 
    auto definesCopy = new RDFInternal::RBookedDefines(customCols); // deleted in jitted CallBuildAction
    auto definesAddr = PrettyPrintAddr(definesCopy);
@@ -623,7 +660,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::R
    // just-in-time create an RAction object and it will assign it to its corresponding RJittedAction.
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::RDF::CallBuildAction<" << actionTypeName;
-   const auto columnTypeNames = GetValidatedArgTypes(bl, customCols, tree, ds, actionTypeName, /*vector2rvec=*/true);
+   const auto columnTypeNames =
+      GetValidatedArgTypes(bl, customCols, tree, ds, actionTypeNameBase, /*vector2rvec=*/true);
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
@@ -635,8 +673,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::R
          createAction_str << ", ";
       createAction_str << '"' << bl[i] << '"';
    }
-   createAction_str << "}, " << nSlots << ", reinterpret_cast<" << actionResultTypeName << "*>("
-                    << PrettyPrintAddr(rOnHeap)
+   createAction_str << "}, " << nSlots << ", reinterpret_cast<" << helperArgClassName << "*>("
+                    << PrettyPrintAddr(helperArgOnHeap)
                     << "), reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedAction>*>("
                     << PrettyPrintAddr(jittedActionOnHeap)
                     << "), reinterpret_cast<ROOT::Internal::RDF::RBookedDefines*>(" << definesAddr << "));";

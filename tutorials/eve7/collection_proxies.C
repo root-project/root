@@ -6,9 +6,7 @@
 ///
 
 
-#include "ROOT/REveDataClasses.hxx"
-//#include "ROOT/REveDataProxyBuilderBase.hxx"
-//#include "ROOT/REveDataSimpleProxyBuilder.hxx"
+#include "ROOT/REveDataTable.hxx"
 #include "ROOT/REveDataSimpleProxyBuilderTemplate.hxx"
 #include "ROOT/REveManager.hxx"
 #include "ROOT/REveScalableStraightLineSet.hxx"
@@ -25,63 +23,99 @@
 #include <ROOT/REveTrackPropagator.hxx>
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveViewContext.hxx>
+#include <ROOT/REveBoxSet.hxx>
+#include <ROOT/REveSelection.hxx>
+#include <ROOT/REveCalo.hxx>
 
 #include "TGeoTube.h"
+#include "TROOT.h"
 #include "TList.h"
 #include "TParticle.h"
 #include "TRandom.h"
 #include "TApplication.h"
+#include "TFile.h"
+#include "TH2F.h"
+#include <iostream>
 
 
-namespace REX = ROOT::Experimental;
+const Double_t kR_min = 300;
+const Double_t kR_max = 299;
+const Double_t kZ_d   = 300;
 
-bool gRhoZView = false;
-
-REX::REveManager *eveMng = nullptr;
-
+ROOT::Experimental::REveManager *eveMng = nullptr;
+ROOT::Experimental::REveProjectionManager* g_projMng = nullptr;
+using namespace ROOT::Experimental;
 
 //==============================================================================
 //============== EMULATE FRAMEWORK CLASSES =====================================
 //==============================================================================
 
-using namespace ROOT::Experimental;
 
 // a demo class, can be provided from experiment framework
-class XYJet : public TParticle
+class Jet : public TParticle
 {
-private:
-   float m_etaSize{0};
-   float m_phiSize{0};
-
 public:
-   float GetEtaSize() const { return m_etaSize; }
-   float GetPhiSize() const { return m_phiSize; }
-   void  SetEtaSize(float iEtaSize) { m_etaSize = iEtaSize; }
-   void  SetPhiSize(float iPhiSize) { m_phiSize = iPhiSize; }
+   float fEtaSize{0};
+   float fPhiSize{0};
 
-  XYJet(Int_t pdg, Int_t status, Int_t mother1, Int_t mother2, Int_t daughter1, Int_t daughter2,
+   float GetEtaSize() const { return fEtaSize; }
+   float GetPhiSize() const { return fPhiSize; }
+   void  SetEtaSize(float iEtaSize) { fEtaSize = iEtaSize; }
+   void  SetPhiSize(float iPhiSize) { fPhiSize = iPhiSize; }
+
+  Jet(Int_t pdg, Int_t status, Int_t mother1, Int_t mother2, Int_t daughter1, Int_t daughter2,
         Double_t px, Double_t py, Double_t pz, Double_t etot) :
     TParticle(pdg, status, mother1, mother2, daughter1, daughter2, px, py, pz, etot,  0, 0, 0, 0)
   {}
 
-   ClassDef(XYJet, 1);
+   ClassDef(Jet, 1);
 };
+
+class RecHit : public TObject
+{
+public:
+   float fX{0};
+   float fY{0};
+   float fZ{0};
+   float fPt{0};
+
+   RecHit(float pt, float x, float y, float z): fPt(pt), fX(x), fY(y), fZ(z) {}
+   ClassDef(RecHit, 1);
+};
+
 
 class Event
 {
 public:
    int eventId{0};
    int N_tracks{0};
-   int N_jets{0};
-
-   Event() = default;
+   int N_jets{0};   
+   std::vector<TList*> fListData;
+   
+   REveCaloDataHist* fCaloData{nullptr};
+   
+   Event()
+   {
+      TFile::SetCacheFileDir(".");
+       const char* histFile =
+      "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
+      auto hf = TFile::Open(histFile, "CACHEREAD");
+      auto ecalHist = (TH2F*)hf->Get("ecalLego");
+      auto hcalHist = (TH2F*)hf->Get("hcalLego");
+      fCaloData = new REveCaloDataHist();
+      fCaloData->AddHistogram(ecalHist);
+      fCaloData->RefSliceInfo(0).Setup("ECAL", 0.f, kBlue);
+      fCaloData->AddHistogram(hcalHist);
+      fCaloData->RefSliceInfo(1).Setup("HCAL", 0.1, kRed);
+      eveMng->GetEventScene()->AddElement(fCaloData);
+   }
 
    void MakeJets(int N)
    {
       TRandom &r = *gRandom;
       r.SetSeed(0);
       TList* list = new TList();
-      list->SetName("XYJets");
+      list->SetName("Jets");
       for (int i = 1; i <= N; ++i)
       {
          double pt  = r.Uniform(0.5, 10);
@@ -92,12 +126,12 @@ public:
          double py = pt * std::sin(phi);
          double pz = pt * (1. / (std::tan(2*std::atan(std::exp(-eta)))));
 
-         auto jet = new XYJet(0, 0, 0, 0, 0, 0, px, py, pz, std::sqrt(px*px + py*py + pz*pz + 80*80));
+         auto jet = new Jet(0, 0, 0, 0, 0, 0, px, py, pz, std::sqrt(px*px + py*py + pz*pz + 80*80));
          jet->SetEtaSize(r.Uniform(0.02, 0.2));
          jet->SetPhiSize(r.Uniform(0.01, 0.3));
          list->Add(jet);
       }
-      m_data.push_back(list);
+      fListData.push_back(list);
    }
 
    void MakeParticles(int N)
@@ -105,7 +139,7 @@ public:
       TRandom &r = *gRandom;
       r.SetSeed(0);
       TList* list = new TList();
-      list->SetName("XYTracks");
+      list->SetName("Tracks");
       for (int i = 1; i <= N; ++i)
       {
          double pt  = r.Uniform(0.5, 10);
@@ -117,7 +151,6 @@ public:
          double pz = pt * (1. / (std::tan(2*std::atan(std::exp(-eta)))));
 
          // printf("Event::MakeParticles %2d: pt=%.2f, eta=%.2f, phi=%.2f\n", i, pt, eta, phi);
-
          auto particle = new TParticle(0, 0, 0, 0, 0, 0,
                                        px, py, pz, std::sqrt(px*px + py*py + pz*pz + 80*80),
                                        0, 0, 0, 0 );
@@ -127,16 +160,33 @@ public:
 
          list->Add(particle);
       }
-      m_data.push_back(list);
+      fListData.push_back(list);
    }
 
-   std::vector<TList*> m_data;
+   void MakeRecHits(int N)
+   {
+      TRandom &r = *gRandom;
+      r.SetSeed(0);
+      TList* list = new TList();
+      list->SetName("RecHits");
+
+      for (int i = 1; i <= N; ++i)
+      {
+         float pt = r.Uniform(0.5, 10);
+         float x =  r.Uniform(-200, 200);
+         float y =  r.Uniform(-200, 200);
+         float z =  r.Uniform(-500, 500);
+         auto rechit = new RecHit(pt, x, y, z);
+         list->Add(rechit);
+      }
+      fListData.push_back(list);
+   }
 
    void Clear()
    {
-      for (auto &l : m_data)
+      for (auto &l : fListData)
          delete l;
-      m_data.clear();
+      fListData.clear();
    }
 
    void Create()
@@ -144,6 +194,28 @@ public:
       Clear();
       MakeJets(4);
       MakeParticles(100);
+      MakeRecHits(20);
+
+      // refill calo data from jet list
+      TList* jlist = fListData[0];
+      auto  ecalHist = fCaloData->GetHist(0);      
+      auto  hcalHist = fCaloData->GetHist(1);
+      ecalHist->Reset();
+      hcalHist->Reset();
+      for (int i = 0; i <= jlist->GetLast(); ++i) {
+         const Jet* j = (Jet*)jlist->At(i);
+         float offX = j->Eta();
+         float offY = j->Phi() > TMath::Pi() ? j->Phi() -  TMath::TwoPi() :  j->Phi();
+         for (int k=0; k<100; ++k) {
+            double x, y, v;
+            x = gRandom->Uniform(-j->GetEtaSize(), j->GetEtaSize());
+            y = gRandom->Uniform(-j->GetPhiSize(),j->GetPhiSize());
+            v = j->Pt();
+            ecalHist->Fill(offX + x, offY + y, v + gRandom->Uniform(2,3));
+            hcalHist->Fill(offX + x, offY + y, v + gRandom->Uniform(1,2));
+         }
+      }
+      fCaloData->DataChanged();
       eventId++;
    }
 };
@@ -153,13 +225,13 @@ public:
 //== PROXY BUILDERS ============================================================
 //==============================================================================
 
-class XYJetProxyBuilder: public REveDataSimpleProxyBuilderTemplate<XYJet>
+class JetProxyBuilder: public REveDataSimpleProxyBuilderTemplate<Jet>
 {
    bool HaveSingleProduct() const override { return false; }
 
-   using REveDataSimpleProxyBuilderTemplate<XYJet>::BuildViewType;
+   using REveDataSimpleProxyBuilderTemplate<Jet>::BuildViewType;
 
-   void BuildViewType(const XYJet& dj, int idx, REveElement* iItemHolder,
+   void BuildViewType(const Jet& dj, int idx, REveElement* iItemHolder,
                       std::string viewType, const REveViewContext* context) override
    {
       auto jet = new REveJetCone();
@@ -214,14 +286,14 @@ class XYJetProxyBuilder: public REveDataSimpleProxyBuilderTemplate<XYJet>
 
    void LocalModelChanges(int idx, REveElement* el, const REveViewContext* ctx) override
    {
-      printf("LocalModelChanges jet %s ( %s )\n", el->GetCName(), el->FirstChild()->GetCName());
+      // printf("LocalModelChanges jet %s ( %s )\n", el->GetCName(), el->FirstChild()->GetCName());
       REveJetCone* cone = dynamic_cast<REveJetCone*>(el->FirstChild());
       cone->SetLineColor(cone->GetMainColor());
    }
 };
 
 
-class TrackProxyBuilder : public REveDataSimpleProxyBuilderTemplate<TParticle>
+class TParticleProxyBuilder : public REveDataSimpleProxyBuilderTemplate<TParticle>
 {
    using REveDataSimpleProxyBuilderTemplate<TParticle>::Build;
 
@@ -234,19 +306,86 @@ class TrackProxyBuilder : public REveDataSimpleProxyBuilderTemplate<TParticle>
    }
 };
 
-
-//==============================================================================
-//== XY MANGER  ================================================================
-//==============================================================================
-
-class XYManager
+class RecHitProxyBuilder: public REveDataProxyBuilderBase
 {
 private:
-   Event                    *m_event{nullptr};
+   void buildBoxSet(REveBoxSet* boxset) {
+      auto collection = Collection();
+      boxset->SetMainColor(collection->GetMainColor());
+      boxset->Reset(REveBoxSet::kBT_FreeBox, true, collection->GetNItems());
+      TRandom r(0);
+#define RND_BOX(x) (Float_t)r.Uniform(-(x), (x))
+      for (int h = 0; h < collection->GetNItems(); ++h)
+      {
+         RecHit* hit = (RecHit*)collection->GetDataPtr(h);
+         const REveDataItem* item = Collection()->GetDataItem(h);
+
+         if (!item->GetVisible())
+           continue;
+         Float_t x = hit->fX;
+         Float_t y = hit->fY;
+         Float_t z = hit->fZ;
+         Float_t a = hit->fPt;
+         Float_t d = 0.05;
+         Float_t verts[24] = {
+                              x - a + RND_BOX(d), y - a + RND_BOX(d), z - a + RND_BOX(d),
+                              x - a + RND_BOX(d), y + a + RND_BOX(d), z - a + RND_BOX(d),
+                              x + a + RND_BOX(d), y + a + RND_BOX(d), z - a + RND_BOX(d),
+                              x + a + RND_BOX(d), y - a + RND_BOX(d), z - a + RND_BOX(d),
+                              x - a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d),
+                              x - a + RND_BOX(d), y + a + RND_BOX(d), z + a + RND_BOX(d),
+                              x + a + RND_BOX(d), y + a + RND_BOX(d), z + a + RND_BOX(d),
+                              x + a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d) };
+         boxset->AddBox(verts);
+         boxset->DigitId(h);
+         boxset->DigitColor(item->GetVisible() ? collection->GetMainColor() : 0); // set color on the last one
+      }
+      boxset->GetPlex()->Refit();
+      boxset->StampObjProps();
+   }
+
+public:
+   using REveDataProxyBuilderBase::Build;
+   void Build(const REveDataCollection* collection, REveElement* product, const REveViewContext*)override
+   {
+      // printf("-------------------------FBOXSET proxy builder %d \n",  collection->GetNItems());
+      auto boxset = new REveBoxSet();
+      boxset->SetName(collection->GetCName());
+      boxset->SetAlwaysSecSelect(1);
+      boxset->SetDetIdsAsSecondaryIndices(true);
+      boxset->SetSelectionMaster(((REveDataCollection*)collection)->GetItemList());
+      buildBoxSet(boxset);
+      product->AddElement(boxset);
+   }
+
+   using REveDataProxyBuilderBase::FillImpliedSelected;
+   void FillImpliedSelected(REveElement::Set_t& impSet, Product* p) override
+   {
+      // printf("RecHit fill implioed ----------------- !!!%zu\n", Collection()->GetItemList()->RefSelectedSet().size());
+      impSet.insert(p->m_elements->FirstChild());
+   }
+
+   using REveDataProxyBuilderBase::ModelChanges;
+   void ModelChanges(const REveDataCollection::Ids_t& ids, Product* product) override
+   {
+      // We know there is only one element in this product
+      //  printf("RecHitProxyBuilder::model changes %zu\n", ids.size());
+      buildBoxSet((REveBoxSet*)product->m_elements->FirstChild());
+   }
+};
+
+
+//==============================================================================
+//== COLLECTION MANGER  ================================================================
+//==============================================================================
+
+class CollectionManager
+{
+private:
+   Event                    *fEvent{nullptr};
 
    std::vector<REveScene *>  m_scenes;
    REveViewContext          *m_viewContext {nullptr};
-   REveProjectionManager    *m_mngRhoZ     {nullptr};
 
    std::vector<REveDataProxyBuilderBase *> m_builders;
 
@@ -254,7 +393,7 @@ private:
    bool       m_inEventLoading {false};
 
 public:
-   XYManager(Event* event) : m_event(event)
+   CollectionManager(Event* event) : fEvent(event)
    {
       //view context
       float r = 300;
@@ -278,79 +417,37 @@ public:
          column("eta", 3, "i.Eta()").
          column("phi", 3, "i.Phi()");
 
-      tableInfo->table("XYJet").
+      tableInfo->table("Jet").
          column("eta",     1, "i.Eta()").
          column("phi",     1, "i.Phi()").
          column("etasize", 2, "i.GetEtaSize()").
          column("phisize", 2, "i.GetPhiSize()");
 
+      tableInfo->table("RecHit").
+         column("pt",     1, "i.fPt");
+
       m_viewContext->SetTableViewInfo(tableInfo);
 
-      createScenesAndViews();
-   }
+      for (auto &c : eveMng->GetScenes()->RefChildren()) {
+         if (c != eveMng->GetGlobalScene() && strncmp(c->GetCName(), "Geometry", 8) )
+         {
+            m_scenes.push_back((REveScene*)c);
+         }
+         if (!strncmp(c->GetCName(),"Table", 5))
+         c->AddElement(m_viewContext->GetTableViewInfo());
 
-   void createScenesAndViews()
-   {
-      // collections
+      }
+
       m_collections = eveMng->SpawnNewScene("Collections", "Collections");
-
-      // 3D
-      m_scenes.push_back(eveMng->GetEventScene());
-
-      // Geometry
-      auto b1 = new REveGeoShape("Barrel 1");
-      float dr = 3;
-      b1->SetShape(new TGeoTube(m_viewContext->GetMaxR() , m_viewContext->GetMaxR() + dr, m_viewContext->GetMaxZ()));
-      b1->SetMainColor(kCyan);
-      eveMng->GetGlobalScene()->AddElement(b1);
-
-      // RhoZ
-      if (gRhoZView)
-      {
-         auto rhoZEventScene = eveMng->SpawnNewScene("RhoZ Scene","Projected");
-         m_mngRhoZ = new REveProjectionManager(REveProjection::kPT_RhoZ);
-         m_mngRhoZ->SetImportEmpty(true);
-         auto rhoZView = eveMng->SpawnNewViewer("RhoZ View", "");
-         rhoZView->AddScene(rhoZEventScene);
-         m_scenes.push_back(rhoZEventScene);
-
-         auto pgeoScene = eveMng->SpawnNewScene("Projection Geometry","xxx");
-         m_mngRhoZ->ImportElements(b1,pgeoScene );
-         rhoZView->AddScene(pgeoScene);
-      }
-
-      // Table
-      if (1)
-      {
-         auto tableScene = eveMng->SpawnNewScene ("Tables", "Tables");
-         auto tableView  = eveMng->SpawnNewViewer("Table",  "Table View");
-         tableView->AddScene(tableScene);
-         tableScene->AddElement(m_viewContext->GetTableViewInfo());
-         m_scenes.push_back(tableScene);
-      }
    }
 
-   // this should be handeled with framefor plugins
-   REveDataProxyBuilderBase* makeGLBuilderForType(TClass* c)
+   void SetDataItemsFromEvent(REveDataCollection* collection)
    {
-      std::string cn = c->GetName();
-      if (cn == "XYJet") {
-         return new XYJetProxyBuilder();
-      }
-      else
-      {
-         return new TrackProxyBuilder();
-      }
-   }
-
-   void LoadCurrentEvent(REveDataCollection* collection)
-   {
-      for (auto &l : m_event->m_data) {
+      for (auto &l : fEvent->fListData) {
          TIter next(l);
          if (collection->GetName() == std::string(l->GetName()))
          {
             collection->ClearItems();
-            collection->DestroyElements();
 
             for (int i = 0; i <= l->GetLast(); ++i)
             {
@@ -368,14 +465,14 @@ public:
        }
    }
 
-   void NextEvent()
+   void LoadEvent()
    {
       m_inEventLoading = true;
 
       for (auto &el: m_collections->RefChildren())
       {
          auto c = dynamic_cast<REveDataCollection *>(el);
-         LoadCurrentEvent(c);
+         SetDataItemsFromEvent(c);
       }
 
       for (auto proxy : m_builders)
@@ -383,6 +480,7 @@ public:
          proxy->Build();
       }
 
+      fEvent->fCaloData->DataChanged();
       m_inEventLoading = false;
    }
 
@@ -391,21 +489,24 @@ public:
       m_collections->AddElement(collection);
 
       // load data
-      LoadCurrentEvent(collection);
+      SetDataItemsFromEvent(collection);
 
-      // GL view types
-      auto glBuilder = makeGLBuilderForType(collection->GetItemClass());
+      // create builder from classname
+      REveDataProxyBuilderBase* glBuilder = 0;
+      char* cmd = Form("*((REveDataProxyBuilderBase**) 0x%lx) = new %sProxyBuilder()", (unsigned long)&glBuilder, collection->GetItemClass()->GetName());
+      gROOT->ProcessLine(cmd);
+
       glBuilder->SetCollection(collection);
       glBuilder->SetHaveAWindow(true);
       for (auto scene : m_scenes)
       {
          REveElement *product = glBuilder->CreateProduct(scene->GetTitle(), m_viewContext);
 
-         if (strncmp(scene->GetCTitle(), "Table", 5) == 0) continue;
+         if (strncmp(scene->GetCName(), "Tables", 5) == 0) continue;
 
          if (!strncmp(scene->GetCTitle(), "Projected", 8))
          {
-            m_mngRhoZ->ImportElements(product, scene);
+            g_projMng->ImportElements(product, scene);
          }
          else
          {
@@ -415,7 +516,7 @@ public:
       m_builders.push_back(glBuilder);
       glBuilder->Build();
 
-      // Table view types
+      // Tables
       auto tableBuilder = new REveTableProxyBuilder();
       tableBuilder->SetHaveAWindow(true);
       tableBuilder->SetCollection(collection);
@@ -425,25 +526,34 @@ public:
       {
          tableMng->SetDisplayedCollection(collection->GetElementId());
       }
-      tableMng->AddDelegate([=]() { tableBuilder->ConfigChanged(); });
-      for (REveScene* scene : m_scenes)
+
+      for (auto s : m_scenes)
       {
-         if (strncmp(scene->GetCTitle(), "Table", 5) == 0)
+         if (strncmp(s->GetCTitle(), "Table", 5) == 0)
          {
-            scene->AddElement(tablep);
+            s->AddElement(tablep);
             tableBuilder->Build(collection, tablep, m_viewContext );
          }
       }
+      tableMng->AddDelegate([=]() { tableBuilder->ConfigChanged(); });
       m_builders.push_back(tableBuilder);
 
-      collection->SetHandlerFunc([&] (REveDataCollection* collection)
-                                 {
-                                    this->CollectionChanged( collection );
-                                 });
 
-      collection->SetHandlerFuncIds([&] (REveDataCollection* collection, const REveDataCollection::Ids_t& ids)
+      // set tooltip expression for items
+      auto tableEntries =  tableMng->RefTableEntries(collection->GetItemClass()->GetName());
+      int N  = TMath::Min(int(tableEntries.size()), 3);
+      for (int t = 0; t < N; t++) {
+         auto te = tableEntries[t];
+         collection->GetItemList()->AddTooltipExpression(te.fName, te.fExpression);
+      }
+
+      collection->GetItemList()->SetItemsChangeDelegate([&] (REveDataItemList* collection, const REveDataCollection::Ids_t& ids)
                                     {
                                        this->ModelChanged( collection, ids );
+                                    });
+      collection->GetItemList()->SetFillImpliedSelectedDelegate([&] (REveDataItemList* collection, REveElement::Set_t& impSelSet)
+                                    {
+                                       this->FillImpliedSelected( collection,  impSelSet);
                                     });
    }
 
@@ -454,30 +564,40 @@ public:
       {
          for (auto &el : m_collections->RefChildren())
          {
-            if (el->GetName() == "XYTracks")
+            if (el->GetName() == "Tracks")
                mngTable->SetDisplayedCollection(el->GetElementId());
          }
       }
    }
 
-   void CollectionChanged(REveDataCollection* collection)
-   {
-      printf("collection changes not implemented %s!\n", collection->GetCName());
-   }
 
-   void ModelChanged(REveDataCollection* collection, const REveDataCollection::Ids_t& ids)
+   void ModelChanged(REveDataItemList* itemList, const REveDataCollection::Ids_t& ids)
    {
       if (m_inEventLoading) return;
 
       for (auto proxy : m_builders)
       {
-         if (proxy->Collection() == collection)
+         if (proxy->Collection()->GetItemList() == itemList)
          {
             // printf("Model changes check proxy %s: \n", proxy->Type().c_str());
             proxy->ModelChanges(ids);
          }
       }
    }
+
+   void FillImpliedSelected(REveDataItemList* itemList, REveElement::Set_t& impSelSet)
+   {
+      if (m_inEventLoading) return;
+
+      for (auto proxy : m_builders)
+      {
+         if (proxy->Collection()->GetItemList() == itemList)
+         {
+            proxy->FillImpliedSelected(impSelSet);
+         }
+      }
+   }
+
 };
 
 
@@ -488,24 +608,22 @@ public:
 class EventManager : public REveElement
 {
 private:
-   Event* m_event;
-   XYManager* m_xymng;
+   Event* fEvent;
+   CollectionManager* fCMng;
 
 public:
-   EventManager(Event* e, XYManager* m): m_event(e), m_xymng(m) {}
+   EventManager(Event* e, CollectionManager* m): fEvent(e), fCMng(m) {}
 
    virtual ~EventManager() {}
 
    virtual void NextEvent()
    {
-      m_event->Create();
-      m_xymng->NextEvent();
-   }
-
-   virtual void QuitRoot()
-   {
-      printf("Quit ROOT\n");
-      if (gApplication) gApplication->Terminate();
+      eveMng->DisableRedraw();
+      eveMng->GetSelection()->ClearSelection();
+      eveMng->GetHighlight()->ClearSelection();
+      fEvent->Create();
+      fCMng->LoadEvent();
+      eveMng->EnableRedraw();
    }
 };
 
@@ -517,37 +635,65 @@ public:
 void collection_proxies(bool proj=true)
 {
    eveMng = REveManager::Create();
-
    auto event = new Event();
    event->Create();
 
-   gRhoZView = true;
+   // create scenes and views
+   REveScene* rhoZEventScene = nullptr;
+   
+   auto b1 = new REveGeoShape("Barrel 1");
+   b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
+   b1->SetMainColor(kCyan);
+   eveMng->GetGlobalScene()->AddElement(b1);
+  
+   rhoZEventScene = eveMng->SpawnNewScene("RhoZ Scene","Projected");
+   g_projMng = new REveProjectionManager(REveProjection::kPT_RhoZ);
+   g_projMng->SetImportEmpty(true);
 
-   // debug settings
-   auto xyManager = new XYManager(event);
+   auto rhoZView = eveMng->SpawnNewViewer("RhoZ View");
+   rhoZView->AddScene(rhoZEventScene);
+   auto pgeoScene = eveMng->SpawnNewScene("Geometry projected");
+   rhoZView->AddScene(pgeoScene);
+   g_projMng->ImportElements(b1, pgeoScene);
 
-   if (1)
-   {
-      REveDataCollection* trackCollection = new REveDataCollection("XYTracks");
-      trackCollection->SetItemClass(TParticle::Class());
-      trackCollection->SetMainColor(kGreen);
-      trackCollection->SetFilterExpr("i.Pt() > 4.1 && std::abs(i.Eta()) < 1");
-      xyManager->addCollection(trackCollection, true);
-   }
+   auto tableScene = eveMng->SpawnNewScene ("Tables", "Tables");
+   auto tableView  = eveMng->SpawnNewViewer("Table",  "Table View");
+   tableView->AddScene(tableScene);
 
-   if (1)
-   {
-      REveDataCollection* jetCollection = new REveDataCollection("XYJets");
-      jetCollection->SetItemClass(XYJet::Class());
-      jetCollection->SetMainColor(kRed);
-      xyManager->addCollection(jetCollection, false);
-   }
+   // create event data from list
+   auto collectionMng = new CollectionManager(event);
 
-   auto eventMng = new EventManager(event, xyManager);
+   REveDataCollection* trackCollection = new REveDataCollection("Tracks");
+   trackCollection->SetItemClass(TParticle::Class());
+   trackCollection->SetMainColor(kGreen);
+   trackCollection->SetFilterExpr("i.Pt() > 4.1 && std::abs(i.Eta()) < 1");
+   collectionMng->addCollection(trackCollection, true);
+
+   REveDataCollection* jetCollection = new REveDataCollection("Jets");
+   jetCollection->SetItemClass(Jet::Class());
+   jetCollection->SetMainColor(kYellow);
+   collectionMng->addCollection(jetCollection, false);
+
+   REveDataCollection* hitCollection = new REveDataCollection("RecHits");
+   hitCollection->SetItemClass(RecHit::Class());
+   hitCollection->SetMainColor(kOrange + 7);
+   hitCollection->SetFilterExpr("i.fPt > 5");
+   collectionMng->addCollection(hitCollection, false);
+
+   // add calorimeters
+   auto calo3d = new REveCalo3D(event->fCaloData);
+   calo3d->SetBarrelRadius(kR_max);
+   calo3d->SetEndCapPos(kZ_d);
+   calo3d->SetMaxTowerH(300);
+   eveMng->GetEventScene()->AddElement(calo3d);
+   REveCalo2D* calo2d = (REveCalo2D*) g_projMng->ImportElements(calo3d, rhoZEventScene);
+
+
+   // event navigation
+   auto eventMng = new EventManager(event, collectionMng);
    eventMng->SetName("EventManager");
    eveMng->GetWorld()->AddElement(eventMng);
 
-   eveMng->GetWorld()->AddCommand("QuitRoot",  "sap-icon://log",  eventMng, "QuitRoot()");
    eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", eventMng, "NextEvent()");
 
    eveMng->Show();

@@ -92,6 +92,7 @@ static PyMethodDef gPyROOTMethods[] = {
 #define QuoteIdent(ident) #ident
 #define QuoteMacro(macro) QuoteIdent(macro)
 #define LIBROOTPYZ_NAME "libROOTPythonizations" QuoteMacro(PY_MAJOR_VERSION) "_" QuoteMacro(PY_MINOR_VERSION)
+#define LIBCPPYY_NAME "libcppyy" QuoteMacro(PY_MAJOR_VERSION) "_" QuoteMacro(PY_MINOR_VERSION)
 
 #define CONCAT(a, b, c, d) a##b##c##d
 #define LIBROOTPYZ_INIT_FUNCTION(a, b, c, d) CONCAT(a, b, c, d)
@@ -145,6 +146,9 @@ LIBROOTPYZ_INIT_FUNCTION(extern "C" void initlibROOTPythonizations, PY_MAJOR_VER
 
    // keep gRootModule, but do not increase its reference count even as it is borrowed,
    // or a self-referencing cycle would be created
+
+   // Make sure libcppyy has been imported
+   PyImport_ImportModule(LIBCPPYY_NAME);
 
    // setup PyROOT
    PyROOT::Init();

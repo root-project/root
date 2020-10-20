@@ -37,7 +37,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    EveElemControl.prototype.getTooltipText = function(intersect)
    {
       let el =  this.obj3d.eve_el;
-      return el.fTitle || el.fName || "";
+      return el.fName || el.fTitle || "";
    }
 
    EveElemControl.prototype.elementHighlighted = function(indx)
@@ -52,7 +52,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       this.invokeSceneMethod("processElementSelected"); //, indx);
    }
 
-
+   EveElemControl.prototype.DrawForSelection = function(sec_idcs, res)
+   {
+      res.geom.push(this.obj3d);
+   }
    //==============================================================================
    // EveElements
    //==============================================================================
@@ -480,12 +483,26 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       geobox.addAttribute( 'position', this.obj3d.geometry.getAttribute("position") );
 
       let protoIdcs = [0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0, 1, 2, 3, 1, 3, 0, 4, 7, 6, 4, 6, 5];
-      let idxOff = sec_idcs[0] * 8;
-      for (let i = 0; i < protoIdcs.length; i++)
-         protoIdcs[i] += idxOff;
+      let idxBuff = new Array(sec_idcs.length * protoIdcs.length);
 
-      geobox.setIndex( protoIdcs );
+      let N = this.obj3d.eve_el.render_data.idxBuff.length / 2;
+      for (let b = 0; b < sec_idcs.length; ++b) {
+         let idx = sec_idcs[b]
+         if (this.obj3d.eve_el.fDetIdsAsSecondaryIndices) {
+            for (let x = 0; x < N; ++x) {
+               if (this.obj3d.eve_el.render_data.idxBuff[x + N] === idx)
+               {
+                  idx=x;
+                  break;
+               }
+            }
+         }
+         let idxOff = idx * 8;
+         for (let i = 0; i < protoIdcs.length; i++)
+            idxBuff.push(idxOff + protoIdcs[i]);
+      }
 
+      geobox.setIndex( idxBuff );
       let material = new THREE.MeshPhongMaterial({color:"purple", flatShading: true});
       let mesh     = new THREE.Mesh(geobox, material);
       res.geom.push(mesh);
@@ -501,11 +518,21 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    {
       var t = this.obj3d.eve_el.fTitle || this.obj3d.eve_el.fName || "";
       var idx = this.extractIndex(intersect);
+      if (this.obj3d.eve_el.fDetIdsAsSecondaryIndices) {
+	 let N = this.obj3d.eve_el.render_data.idxBuff.length / 2;
+	 let id = this.obj3d.eve_el.render_data.idxBuff[N + idx];
+         return t + " idx=" + id;
+      }
       return t + " idx=" + idx;
    }
 
    BoxSetControl.prototype.elementSelected = function(indx)
    {
+       if (this.obj3d.eve_el.fDetIdsAsSecondaryIndices) {
+	  let N = this.obj3d.eve_el.render_data.idxBuff.length / 2;
+          indx = this.obj3d.eve_el.render_data.idxBuff[N + indx];
+       }
+
       this.invokeSceneMethod("processElementSelected", indx);
    }
 
@@ -589,15 +616,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
     Calo2DControl.prototype = Object.create(EveElemControl.prototype);
 
-    Calo2DControl.prototype.DrawForSelection = function(sec_idcs, res)
+    Calo2DControl.prototype.DrawForSelection = function(sec_idcs, res, extra)
     {
-        var s = this.obj3d.scene;
-        var caloData = s.mgr.GetElement(this.obj3d.eve_el.dataId);
-        let dataSelection = res.sel_type ?  caloData.highlight : caloData.select;
         let cells;
-        for (let i = 0; i < dataSelection.length; i++) {
-            if (dataSelection[i].caloVizId ==  this.obj3d.eve_el.fElementId) {
-                cells = dataSelection[i].cells;
+        for (let i = 0; i < extra.length; i++) {
+            if (extra[i].caloVizId ==  this.obj3d.eve_el.fElementId) {
+                cells = extra[i].cells;
                 break;
             }
         }
@@ -818,15 +842,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
     Calo3DControl.prototype = Object.create(EveElemControl.prototype);
 
-    Calo3DControl.prototype.DrawForSelection = function(sec_idcs, res)
-    {
-        var s = this.obj3d.scene;
-        var caloData = s.mgr.GetElement(this.obj3d.eve_el.dataId);
-        let dataSelection = res.sel_type ?  caloData.highlight : caloData.select;
+   Calo3DControl.prototype.DrawForSelection = function(sec_idcs, res, extra)
+   {
         let cells;
-        for (let i = 0; i < dataSelection.length; i++) {
-            if (dataSelection[i].caloVizId ==  this.obj3d.eve_el.fElementId) {
-                cells = dataSelection[i].cells;
+        for (let i = 0; i < extra.length; i++) {
+            if (extra[i].caloVizId ==  this.obj3d.eve_el.fElementId) {
+                cells = extra[i].cells;
                 break;
             }
         }
@@ -915,7 +936,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
     }
 
     Calo3DControl.prototype.elementHighlighted = function(pidx)
-    {
+   {
         let idx = pidx;
         let calo =  this.obj3d.eve_el;
         let idxBuff = calo.render_data.idxBuff;
@@ -1186,7 +1207,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    StraightLineSetControl.prototype.getTooltipText = function(intersect)
    {
-      var t = this.obj3d.eve_el.fTitle || this.obj3d.eve_el.fName || "";
+      var t = this.obj3d.eve_el.fName || this.obj3d.eve_el.fTitle || "";
       var idx = this.extractIndex(intersect);
       return t + " idx=" + idx;
    }

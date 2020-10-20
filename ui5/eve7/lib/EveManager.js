@@ -536,6 +536,7 @@ sap.ui.define([], function() {
       sel.sel_list.forEach(function(rec) {
          let iset = new Set(rec.sec_idcs);
          let x    = { "valid": true, "implied": rec.implied, "set": iset };
+         x.extra = rec.extra;
          newMap.set(rec.primary, x);
       });
 
@@ -597,14 +598,14 @@ sap.ui.define([], function() {
             continue;
          }
          changedSet.add(iel.fSceneId);
-         this.SelectElement(sel, id, secIdcs);
+         this.SelectElement(sel, id, secIdcs, value.extra);
 
          for (var imp of value.implied)
          {
             if (JSROOT.EVE.DebugSelection)
                console.log("Sel impl", imp, this.GetElement(imp), this.GetElement(imp).fSceneId);
 
-            this.SelectElement(sel, imp, secIdcs);
+            this.SelectElement(sel, imp, secIdcs, value.extra);
             changedSet.add(this.GetElement(imp).fSceneId);
          }
       }
@@ -638,7 +639,7 @@ sap.ui.define([], function() {
       // So, we need something like reapply selections after new scenes arrive.
    }
 
-   EveManager.prototype.SelectElement = function(selection_obj, element_id, sec_idcs)
+   EveManager.prototype.SelectElement = function(selection_obj, element_id, sec_idcs, extra)
    {
       let element = this.GetElement(element_id);
       if ( ! element) return;
@@ -647,7 +648,7 @@ sap.ui.define([], function() {
       if (scene.$receivers) {
          for (let r of scene.$receivers)
          {
-            r.SelectElement(selection_obj, element_id, sec_idcs);
+            r.SelectElement(selection_obj, element_id, sec_idcs, extra);
          }
       }
 

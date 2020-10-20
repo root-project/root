@@ -61,7 +61,7 @@ public:
    RNTupleModel& operator =(const RNTupleModel&) = delete;
    ~RNTupleModel() = default;
 
-   RNTupleModel* Clone();
+   std::unique_ptr<RNTupleModel> Clone() const;
    static std::unique_ptr<RNTupleModel> Create() { return std::make_unique<RNTupleModel>(); }
 
    /// Creates a new field and a corresponding tree value that is managed by a shared pointer.

@@ -77,3 +77,8 @@
   border-radius: 3px;
   white-space:   pre;
 }
+
+
+.eveNoSelectionCheckBox .sapMLIBSelectM {
+   display: none;
+}

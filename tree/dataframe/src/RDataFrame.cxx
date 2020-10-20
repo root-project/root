@@ -556,6 +556,11 @@ dataFrame.Min<MyNumber_t>("myObject"); // OK, "myObject" is deduced to be of typ
 Deducing types at runtime requires the just-in-time compilation of the relevant actions, which has a small runtime
 overhead, so specifying the type of the columns as template parameters to the action is good practice when performance is a goal.
 
+When deducing types at runtime, fundamental types are read as constant values, i.e. it is not possible to write to column values
+from Filters or Defines. This is typically perfectly fine and avoids certain common mistakes such as typing `x = 0` rather than `x == 0`.
+Classes and other complex types are read by non-constant references to avoid copies and to permit calls to non-const member functions.
+Note that calling non-const member functions will often not be thread-safe.
+
 ### Generic actions
 `RDataFrame` strives to offer a comprehensive set of standard actions that can be performed on each event. At the same
 time, it **allows users to execute arbitrary code (i.e. a generic action) inside the event loop** through the `Foreach`

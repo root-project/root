@@ -43,8 +43,9 @@ class RooFitResult ;
 class RooAbsMoment ;
 class RooDerivative ;
 class RooVectorDataStore ;
-namespace RooHelpers {
+namespace BatchHelpers {
 class BatchInterfaceAccessor;
+struct RunContext;
 }
 struct TreeReadBuffer; /// A space to attach TBranches
 
@@ -108,6 +109,7 @@ public:
   virtual Double_t getValV(const RooArgSet* normalisationSet = nullptr) const ;
 
   virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t maxSize, const RooArgSet* normSet = nullptr) const;
+  virtual RooSpan<const double> getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
 
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
 
@@ -406,10 +408,11 @@ protected:
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual Double_t evaluate() const = 0;
   virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t maxSize) const;
+  virtual RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
 
   //---------- Interface to access batch data ---------------------------
   //
-  friend class RooHelpers::BatchInterfaceAccessor;
+  friend class BatchHelpers::BatchInterfaceAccessor;
   void clearBatchMemory() {
     _batchData.clear();
     for (auto arg : _serverList) {
@@ -422,6 +425,7 @@ protected:
 
  private:
   void checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
+  void checkBatchComputation(const BatchHelpers::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
 
   const BatchHelpers::BatchData& batchData() const {
     return _batchData;
