@@ -191,7 +191,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto innerTypes = TokenizeTypeList(normalizedType.substr(13, normalizedType.length() - 14));
       std::vector<RFieldBase *> items;
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
-         items.emplace_back(Create("variant" + std::to_string(i), innerTypes[i]));
+         // TODO(jblomer): use unique pointers in variant field constructor
+         items.emplace_back(Create("variant" + std::to_string(i), innerTypes[i]).release());
       }
       return std::make_unique<RVariantField>(fieldName, items);
    }
