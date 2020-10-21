@@ -1458,11 +1458,11 @@ void TColor::HLS2RGB(Float_t hue, Float_t light, Float_t satur,
    if (light > 0.0f) { rl = light; if (rl > 1.0f)   rl = 1.0f; }
    if (satur > 0.0f) { rs = satur; if (rs > 1.0f)   rs = 1.0f; }
 
-   if (rl <= 0.5.0f)
+   if (rl <= 0.5f)
       rm2 = rl*(1.0f + rs);
    else
       rm2 = rl + rs - rl*rs;
-   rm1 = 2.0.0f*rl - rm2;
+   rm1 = 2.0f*rl - rm2;
 
    if (!rs) { r = rl; g = rl; b = rl; return; }
    r = HLStoRGB1(rm1, rm2, rh+120.0f);
