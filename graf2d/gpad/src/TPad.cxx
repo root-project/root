@@ -1306,7 +1306,8 @@ void TPad::Draw(Option_t *option)
    // pad cannot be in itself and it can only be in one other pad at a time
    if (!fPrimitives) fPrimitives = new TList;
    if (gPad != this) {
-      if (fMother && fMother->TestBit(kNotDeleted)) if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
+      if (fMother && fMother->TestBit(kNotDeleted)) 
+            if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
       TPad *oldMother = fMother;
       fCanvas = gPad->GetCanvas();
       //
@@ -1317,7 +1318,7 @@ void TPad::Draw(Option_t *option)
    Paint();
 
    if (gPad->IsRetained() && gPad != this && fMother)
-      if(fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Add(this, option);
+      if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Add(this, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3456,7 +3457,7 @@ void TPad::Paint(Option_t * /*option*/)
       if (GetGLDevice()!=-1 && gVirtualPS) {
          TPad *padsav = (TPad*)gPad;
          gPad = this;
-         if(gGLManager) gGLManager->PrintViewer(GetViewer3D());
+         if (gGLManager) gGLManager->PrintViewer(GetViewer3D());
          gPad = padsav;
       }
       return;
