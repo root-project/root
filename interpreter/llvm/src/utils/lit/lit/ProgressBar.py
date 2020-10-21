@@ -106,10 +106,6 @@ class TerminalController:
         try: curses.setupterm()
         except: return
 
-        # We want unicode output and have unicode input.
-        reload(sys)
-        sys.setdefaultencoding('utf8')
-
         # Look up numeric capabilities.
         self.COLS = curses.tigetnum('cols')
         self.LINES = curses.tigetnum('lines')
