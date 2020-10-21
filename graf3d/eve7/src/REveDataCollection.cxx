@@ -48,7 +48,7 @@ REveDataItemList::REveDataItemList(const std::string& n, const std::string& t):
 
 void REveDataItemList::SetItemVisible(Int_t idx, Bool_t visible)
 {
-   fItems[idx]->fRnrSelf = visible;
+   fItems[idx]->SetRnrSelf(visible);
    ItemChanged(idx);
    StampObjProps();
 }
@@ -58,7 +58,7 @@ void REveDataItemList::SetItemVisible(Int_t idx, Bool_t visible)
 void REveDataItemList::SetItemColorRGB(Int_t idx, UChar_t r, UChar_t g, UChar_t b)
 {
    Color_t c = TColor::GetColor(r, g, b);
-   fItems[idx]->fColor = c;
+   fItems[idx]->SetMainColor(c);
    ItemChanged(idx);
    StampObjProps();
 }
@@ -110,9 +110,9 @@ Int_t REveDataItemList::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    for (auto & chld : fItems)
    {
       nlohmann::json i;
-      i["fFiltered"] = chld->fFiltered;
-      i["fRnrSelf"] = chld->fRnrSelf;
-      i["fColor"] = chld->fColor;
+      i["fFiltered"] = chld->GetFiltered();
+      i["fRnrSelf"] = chld->GetRnrSelf();
+      i["fColor"] = chld->GetMainColor();
       j["items"].push_back(i);
    }
 
@@ -236,7 +236,7 @@ void REveDataCollection::ApplyFilter()
    int idx = 0;
    for (auto &ii : fItemList->fItems)
    {
-      bool res = fFilterFoo(ii->fDataPtr);
+      bool res = fFilterFoo(ii->GetDataPtr());
 
       // printf("Item:%s -- filter result = %d\n", ii.fItemPtr->GetElementName(), res);
 
@@ -333,7 +333,7 @@ void REveDataCollection::SetMainColor(Color_t newv)
    REveElement::SetMainColor(newv);
    for (auto & chld : fItemList->fItems)
    {
-      chld->fColor = newv;
+      chld->SetMainColor(newv);
    }
    fItemList->StampObjProps();
    fItemList->SetMainColor(newv);
