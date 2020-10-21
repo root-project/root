@@ -1,3 +1,4 @@
+// REQUIRES: clingDemoPlugin
 // RUN: cat %s | %cling -fplugin=%cling_obj_root/tools/plugins/example/libclingDemoPlugin%shlibext | FileCheck %s
 
 // CHECK:Action::ParseArgs
