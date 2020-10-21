@@ -1473,9 +1473,8 @@ void TClass::Init(const char *name, Version_t cversion,
          fCanLoadClassInfo = kTRUE;
          // Here we check and grab the info from the rootpcm.
          TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
-         if (proto && proto->FillTClass(this)) {
-            fHasRootPcmInfo = kTRUE;
-         }
+         if (proto)
+            proto->FillTClass(this);
       }
       if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
          gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
@@ -3591,16 +3590,11 @@ TList *TClass::GetListOfBases()
          if (fState == kHasTClassInit) {
 
             R__LOCKGUARD(gInterpreterMutex);
-            // NOTE: Add test to prevent redo if another thread has already done the work.
-            // if (!fHasRootPcmInfo) {
-
-            // The bases are in our ProtoClass; we don't need the class info.
-            TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
-            if (proto && proto->FillTClass(this)) {
-               // Not sure this code is still needed
-               // R__ASSERT(kFALSE);
-
-               fHasRootPcmInfo = kTRUE;
+            if (!fHasRootPcmInfo) {
+               // The bases are in our ProtoClass; we don't need the class info.
+               TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
+               if (proto)
+                  proto->FillTClass(this);
             }
          }
          // We test again on fCanLoadClassInfo has another thread may have executed it.
@@ -3699,16 +3693,9 @@ TList *TClass::CreateListOfDataMembers(std::atomic<TListOfDataMembers*> &data, T
 
    if (!data) {
       if (fCanLoadClassInfo && fState == kHasTClassInit) {
-         // NOTE: Add test to prevent redo if another thread has already done the work.
-         // if (!fHasRootPcmInfo) {
-
          // The members are in our ProtoClass; we don't need the class info.
          TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
          if (proto && proto->FillTClass(this)) {
-            // Not sure this code is still needed
-            // R__ASSERT(kFALSE);
-
-            fHasRootPcmInfo = kTRUE;
             return data;
          }
       }
