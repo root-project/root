@@ -33,7 +33,7 @@ public:
   RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 			 const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0,
 			 Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE,
-			 Bool_t cloneInputData=kTRUE) ;
+			 Bool_t cloneInputData = true, double integrateOverBinsPrecision = -1.);
   RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=0);
   virtual ~RooAbsOptTestStatistic();
 
@@ -55,6 +55,8 @@ public:
   Bool_t isSealed() const { return _sealed ; }
   const char* sealNotice() const { return _sealNotice.Data() ; }
 
+private:
+  void setUpBinSampling();
 
 protected:
 
@@ -87,8 +89,9 @@ protected:
   RooAbsReal* _origFunc ; // Original function 
   RooAbsData* _origData ; // Original data 
   Bool_t      _optimized ; //!
+  double      _integrateBinsPrecision{-1.}; // Precision for finer sampling of bins.
 
-  ClassDef(RooAbsOptTestStatistic,4) // Abstract base class for optimized test statistics
+  ClassDef(RooAbsOptTestStatistic,5) // Abstract base class for optimized test statistics
 };
 
 #endif
