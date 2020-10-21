@@ -38,36 +38,44 @@ void doBanner() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Inspect cpu capabilities, and load architecture-specific libraries for RooFitCore/RooFit computations.
 void loadComputeLibrary() {
+
   std::vector<std::string> libNames;
-  //~  libNames.push_back("libRooFitCoreCompute");
   libNames.push_back("libRooFitCompute");
-//~  #ifdef R__HAS_MATHMORE
-  //~  libNames.push_back("libRooFitMoreCompute");
-//~  #endif
-  //~  {
-    //~  // Try to load HistFactory compute library as well. Need to check first if it exists.
-    //~  TString libName("libHistFactory");
-    //~  if (gSystem->FindDynamicLibrary(libName, true) != nullptr)
-      //~  libNames.push_back("libHistFactoryCompute");
-  //~  }
 
   std::string libSuffix;
-//~  #if defined(R__RF_ARCHITECTURE_SPECIFIC_LIBS) && (defined(__GNUC__) || defined(__clang__))
-  //~  if (__builtin_cpu_supports("avx2")) {
-    //~  libSuffix = "_AVX2";
-  //~  } else if (__builtin_cpu_supports("avx")) {
-    //~  libSuffix = "_AVX";
-  //~  } else if (__builtin_cpu_supports("sse4.1")) {
-    //~  libSuffix = "_SSE4.1";
-  //~  }
 
-//~  #if __GNUC__ > 5 || defined(__clang__)
-  //~  if (__builtin_cpu_supports("avx512f")) {
-    //~  libSuffix = "_AVX512f";
-  //~  }
-//~  #endif
+#ifdef R__RF_ARCHITECTURE_SPECIFIC_LIBS
 
-//~  #endif
+  __builtin_cpu_init();
+  if (__builtin_cpu_supports("avx2")) {
+    libSuffix = "_AVX2";
+  } else if (__builtin_cpu_supports("avx")) {
+    libSuffix = "_AVX";
+  } else if (__builtin_cpu_supports("sse4.1")) {
+    libSuffix = "_SSE4.1";
+  }
+
+#if __GNUC__ > 5 || defined(__clang__)
+  //skylake-avx512 support
+  if (__builtin_cpu_supports("avx512cd") && __builtin_cpu_supports("avx512vl") && __builtin_cpu_supports("avx512bw") && __builtin_cpu_supports("avx512dq"))  {
+    libSuffix = "_AVX512";
+  }
+#endif
+
+  if (gEnv->GetValue("RooFit.LoadOptimisedComputationLibrary", 1) == 0) {
+    libSuffix = "";
+    if (gDebug>0) {
+      std::cout << "In roofitcore/Initialisation.cxx:loadComputeLibrary(): RooFit.LoadOptimisedComputationLibrary is set to 0, using generic RooFitCompute library." << std::endl;
+    }
+  }
+
+#else //R__RF_ARCHITECTURE_SPECIFIC_LIBS not defined
+
+  if (gDebug>0) {
+    std::cout << "In roofitcore/Initialisation.cxx:loadComputeLibrary(): Architecture specifics libraries not supported." << std::endl;
+  }
+
+#endif //R__RF_ARCHITECTURE_SPECIFIC_LIBS
 
   for (auto&& libName : libNames) {
     libName += libSuffix;
@@ -75,10 +83,11 @@ void loadComputeLibrary() {
 
     if (returnValue == -1 || returnValue == -2) {
       throw std::runtime_error("RooFit was unable to load its computation library " + libName);
-    }
-    // Library should not have been loaded before we tried to do it.
-    if (returnValue == 1) {
+    } else if (returnValue == 1) {
+      // Library should not have been loaded before we tried to do it.
       throw std::logic_error("RooFit computation library " + libName + " was loaded before RooFit initialisation began.");
+    } else if (gDebug>0) {
+      std::cout << "In roofitcore/Initialisation.cxx:loadComputeLibrary(): Library " + libName + " was loaded successfully" << std::endl;
     }
   }
 }

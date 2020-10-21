@@ -148,6 +148,35 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
 )
 
 ROOT_LINKER_LIBRARY(RooFitCompute src/RooFitComputeLib.cxx TYPE SHARED DEPENDENCIES RooFit)
+if (roofit-arch-libs)
+  ROOT_LINKER_LIBRARY(RooFitCompute_SSE4.1  src/RooFitComputeLib.cxx TYPE SHARED DEPENDENCIES RooFit)
+  ROOT_LINKER_LIBRARY(RooFitCompute_AVX     src/RooFitComputeLib.cxx TYPE SHARED DEPENDENCIES RooFit)
+  ROOT_LINKER_LIBRARY(RooFitCompute_AVX2    src/RooFitComputeLib.cxx TYPE SHARED DEPENDENCIES RooFit)
+
+  set(common-flags $<$<CXX_COMPILER_ID:GNU>:-fno-signaling-nans>)
+  list(APPEND common-flags $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>: -fno-trapping-math -O3>)
+  
+  target_compile_options(RooFitCompute_SSE4.1  PRIVATE ${common-flags} -msse4    -DRF_ARCH=SSE4)
+  target_compile_options(RooFitCompute_AVX     PRIVATE ${common-flags} -mavx     -DRF_ARCH=AVX )
+  target_compile_options(RooFitCompute_AVX2    PRIVATE ${common-flags} -mavx2    -DRF_ARCH=AVX2)
+
+  if(vdt AND NOT builtin_vdt)
+    target_include_directories(RooFitCompute_SSE4.1    PRIVATE ${VDT_INCLUDE_DIR})
+    target_include_directories(RooFitCompute_AVX       PRIVATE ${VDT_INCLUDE_DIR})
+    target_include_directories(RooFitCompute_AVX2      PRIVATE ${VDT_INCLUDE_DIR})
+  endif()
+
+  # AVX512 is only supported in gcc 6+
+  # We focus on AVX512 capable processors that support at least the skylake-avx512 instruction sets.
+  if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6)
+    ROOT_LINKER_LIBRARY(RooFitCompute_AVX512  src/RooFitComputeLib.cxx TYPE SHARED DEPENDENCIES RooFit)
+    target_compile_options(RooFitCompute_AVX512  PRIVATE ${common-flags} -march=skylake-avx512 -DRF_ARCH=AVX512)
+    if(vdt AND NOT builtin_vdt)
+      target_include_directories(RooFitCompute_AVX512 PRIVATE ${VDT_INCLUDE_DIR})
+    endif()
+  endif()
+
+endif() #roofit-arch-libs
 
 if(vdt AND NOT builtin_vdt)
   target_include_directories(RooFit PRIVATE ${VDT_INCLUDE_DIR})

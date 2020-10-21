@@ -4,6 +4,10 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
+if(ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_64 AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  set(roofit-arch-libs ON)
+endif()
+
 add_subdirectory(roofitcore)
 add_subdirectory(roofit)
 if(mathmore)
