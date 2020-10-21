@@ -489,15 +489,15 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
 #ifdef ROOFIT_CHECK_CACHED_VALUES
 
 #ifdef ROOFIT_NEW_BATCH_INTERFACE
-  for (std::size_t evtNo = firstEvent; evtNo < lastEvent; evtNo += (lastEvent-firstEvent)/100) {
+  for (std::size_t evtNo = firstEvent; evtNo < std::min(lastEvent, firstEvent + 10); ++evtNo) {
     _dataClone->get(evtNo);
     assert(_dataClone->valid());
-    pdfClone->getValV(_normSet);
     try {
       BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet);
     } catch (std::exception& e) {
       std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
           << e.what() << std::endl;
+      assert(false);
     }
   }
 #else
