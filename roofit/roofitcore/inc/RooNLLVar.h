@@ -40,12 +40,12 @@ public:
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 	    Bool_t extended, const char* rangeName=0, const char* addCoefRangeName=0, 
 	    Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, 
-	    Bool_t cloneData=kTRUE, Bool_t binnedL=kFALSE) ;
+	    Bool_t cloneData=kTRUE, Bool_t binnedL=kFALSE, double integrateBinsPrecision = -1.) ;
   
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 	    const RooArgSet& projDeps, Bool_t extended=kFALSE, const char* rangeName=0, 
 	    const char* addCoefRangeName=0, Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, 
-	    Bool_t cloneData=kTRUE, Bool_t binnedL=kFALSE) ;
+	    Bool_t cloneData=kTRUE, Bool_t binnedL=kFALSE, double integrateBinsPrecision = -1.) ;
 
   RooNLLVar(const RooNLLVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooNLLVar(*this,newname); }

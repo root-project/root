@@ -1026,6 +1026,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineInt("BatchMode", "BatchMode", 0, 0);
+  pc.defineDouble("IntegrateBins", "IntegrateBins", 0, -1.);
   pc.defineMutex("Range","RangeWithName") ;
 //  pc.defineMutex("Constrain","Constrained") ;
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
@@ -1138,7 +1139,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
     auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",
         *this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,interl,
-        verbose,splitr,cloneData);
+        verbose,splitr,cloneData,/*binnedL=*/false, pc.getDouble("IntegrateBins"));
     theNLL->batchMode(pc.getInt("BatchMode"));
     nll = theNLL;
   } else {
@@ -1148,7 +1149,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     for (const auto& token : tokens) {
       auto nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token.c_str()),"-log(likelihood)",
           *this,data,projDeps,ext,token.c_str(),addCoefRangeName,numcpu,interl,
-          verbose,splitr,cloneData);
+          verbose,splitr,cloneData, /*binnedL=*/false, pc.getDouble("IntegrateBins"));
       nllComp->batchMode(pc.getInt("BatchMode"));
       nllList.add(*nllComp) ;
     }
@@ -1377,7 +1378,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooLinkedList fitCmdList(cmdList) ;
   RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,"
       "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
-      "CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood,BatchMode");
+      "CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood,BatchMode,IntegrateBins");
 
   pc.defineDouble("prefit", "Prefit",0,0);
   pc.defineDouble("RecoverFromUndefinedRegions", "RecoverFromUndefinedRegions",0,10.);
