@@ -483,5 +483,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_G
 endif()
 
 target_compile_options(RooFitCore PUBLIC -DROOFIT_NEW_BATCH_INTERFACE)
+if(roofit-arch-libs)
+  target_compile_options(RooFitCore PUBLIC -DR__RF_ARCHITECTURE_SPECIFIC_LIBS)
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
