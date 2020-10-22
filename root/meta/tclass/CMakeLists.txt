@@ -92,5 +92,20 @@ ROOTTEST_ADD_TEST(datamemberload
                   COPY_TO_BUILDDIR datamemberload.h
                   DEPENDS libdatamemberload-build)
 
+ROOTTEST_GENERATE_DICTIONARY(libInitOrderDups
+                             InitOrderDups.h
+                             LINKDEF InitOrderDupsLinkDef.h
+                             NO_ROOTMAP NO_CXXMODULE)
+
+ROOTTEST_GENERATE_DICTIONARY(libInitOrder
+                             InitOrder.h
+                             LINKDEF InitOrderLinkDef.h
+                             NO_ROOTMAP NO_CXXMODULE)
+
+ROOTTEST_ADD_TEST(execInitOrder
+                  MACRO execInitOrder.cxx+
+                  COPY_TO_BUILDDIR InitOrder.h
+                  OUTREF execInitOrder.ref
+                  DEPENDS libInitOrder-build libInitOrderDups-build)
 
 ROOTTEST_ADD_TESTDIRS()
