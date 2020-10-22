@@ -39,7 +39,6 @@
 
 #include "Riostream.h"
 
-#include "json.hpp"
 #include <sstream>
 #include <iostream>
 

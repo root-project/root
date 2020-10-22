@@ -27,7 +27,6 @@
 
 #include <cassert>
 #include <iostream>
-#include "json.hpp"
 
 using namespace ROOT::Experimental;
 

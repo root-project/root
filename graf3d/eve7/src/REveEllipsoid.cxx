@@ -8,8 +8,6 @@
 
 #include <cassert>
 
-#include "json.hpp"
-
 using namespace ROOT::Experimental;
 
 

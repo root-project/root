@@ -12,8 +12,6 @@
 #include <ROOT/REveShape.hxx>
 #include "Riostream.h"
 
-#include "json.hpp"
-
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
