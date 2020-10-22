@@ -184,20 +184,20 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    } else if (normalizedType.substr(0, 12) == "std::vector<") {
       std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
       auto itemField = Create(GetNormalizedType(itemTypeName), itemTypeName);
-      result = std::make_unique<RVectorField>(fieldName, std::move(itemField.Unwrap()));
+      result = std::make_unique<RVectorField>(fieldName, itemField.Unwrap());
    } else if (normalizedType == "ROOT::VecOps::RVec<bool>") {
       result = std::make_unique<RField<ROOT::VecOps::RVec<bool>>>(fieldName);
    } else if (normalizedType.substr(0, 19) == "ROOT::VecOps::RVec<") {
       // For the time being, we silently read RVec fields as std::vector
       std::string itemTypeName = normalizedType.substr(19, normalizedType.length() - 20);
       auto itemField = Create(GetNormalizedType(itemTypeName), itemTypeName);
-      result = std::make_unique<RVectorField>(fieldName, std::move(itemField.Unwrap()));
+      result = std::make_unique<RVectorField>(fieldName, itemField.Unwrap());
    } else if (normalizedType.substr(0, 11) == "std::array<") {
       auto arrayDef = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
       R__ASSERT(arrayDef.size() == 2);
       auto arrayLength = std::stoi(arrayDef[1]);
       auto itemField = Create(GetNormalizedType(arrayDef[0]), arrayDef[0]);
-      result = std::make_unique<RArrayField>(fieldName, std::move(itemField.Unwrap()), arrayLength);
+      result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
    }
 #if __cplusplus >= 201703L
    if (normalizedType.substr(0, 13) == "std::variant<") {
