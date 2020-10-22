@@ -41,7 +41,7 @@
  *   or plotting etc. Note that the binning will be taken from the observable.
  * - Instruct test statistics to carry out this wrapping automatically:
  * ```
- *   pdf.fitTo(data, IntegrateBinsPrecision(<precision>));
+ *   pdf.fitTo(data, IntegrateBins(<precision>));
  * ```
  *   This method is especially useful when used with a simultaneous PDF, since each component will automatically be wrapped,
  *   depending on the value of `precision`:
@@ -69,7 +69,7 @@
  *   ```
  *
  *   \see RooAbsPdf::fitTo()
- *   \see IntegrateBinsPrecision()
+ *   \see IntegrateBins()
  *
  *
  * \htmlonly <style>div.image img[src="RooBinSamplingPdf_OFF.png"]{width:15cm;}</style> \endhtmlonly
