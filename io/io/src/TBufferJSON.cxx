@@ -129,7 +129,7 @@ class Container {
 #include "TEmulatedCollectionProxy.h"
 #include "snprintf.h"
 
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 
 ClassImp(TBufferJSON);
 

@@ -15,8 +15,6 @@
 
 #include "TRefArray.h"
 
-#include "json.hpp"
-
 using namespace::ROOT::Experimental;
 
 /** \class REveDigitSet

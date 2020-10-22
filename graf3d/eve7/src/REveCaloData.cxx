@@ -28,8 +28,6 @@
 #include <algorithm>
 #include <set>
 
-#include "json.hpp"
-
 using namespace ROOT::Experimental;
 
 /** \class  REveCaloData::CellGeom_t
