@@ -10,8 +10,6 @@
  *************************************************************************/
 
 #include <ROOT/REveShape.hxx>
-#include "Riostream.h"
-
 
 using namespace ROOT::Experimental;
 
