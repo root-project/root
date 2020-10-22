@@ -1,6 +1,16 @@
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2020
+
+/*************************************************************************
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT7_REveDataProxySimpleBuilderTemplate
 #define ROOT7_REveDataProxySimpleBuilderTemplate
-
 
 #include <ROOT/REveDataSimpleProxyBuilder.hxx>
 
@@ -49,7 +59,7 @@ private:
    const REveDataSimpleProxyBuilderTemplate& operator=(const REveDataSimpleProxyBuilderTemplate&); // stop default
 };
 
-
 } // namespace Experimental
 } // namespace ROOT
+
 #endif
