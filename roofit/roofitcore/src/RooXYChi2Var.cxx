@@ -15,19 +15,20 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// Class RooXYChi2Var implements a simple chi^2 calculation from a unbinned
-// dataset with values x,y with errors on y (and optionally on x) and a function.
-// The function can be either a RooAbsReal, or an extended RooAbsPdf where
-// the function value is calculated as the probability density times the
-// expected number of events
-// The chi^2 is calculated as
-//
-//              / (Data[y]-) - func \+2
-//  Sum[point] |  ------------------ |
-//              \     Data[ErrY]    /
-//
-//
+/// \class RooXYChi2Var
+/// RooXYChi2Var implements a simple chi^2 calculation from an unbinned
+/// dataset with values x,y with errors on y (and optionally on x) and a function.
+/// The function can be either a RooAbsReal, or an extended RooAbsPdf where
+/// the function value is calculated as the probability density times the
+/// expected number of events.
+/// The chi^2 is calculated as
+/// ```
+///
+///              / (Data[y]-) - func \+2
+///  Sum[point] |  ------------------ |
+///              \     Data[ErrY]    /
+/// ```
+///
 
 #include "RooFit.h"
 
@@ -39,10 +40,11 @@
 
 #include "RooRealVar.h"
 
-//#include "RooGaussKronrodIntegrator1D.h"
 #include "RooAbsDataStore.h"
 #include "RooRealBinding.h"
 #include "RooNumIntFactory.h"
+
+#include <stdexcept>
 
 using namespace std;
 
@@ -142,7 +144,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPd
   _funcInt(0)
 {
   if (!extPdf.canBeExtended()) {
-    throw(string(Form("RooXYChi2Var::ctor(%s) ERROR: Input p.d.f. must be an extendible",GetName()))) ;
+    throw std::runtime_error(Form("RooXYChi2Var::RooXYChi2Var(%s) ERROR: Input p.d.f. must be extendible",GetName()));
   }
   _yvar = 0 ;
   initialize() ;
@@ -176,7 +178,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPd
   _funcInt(0)
 {
   if (!extPdf.canBeExtended()) {
-    throw(string(Form("RooXYChi2Var::ctor(%s) ERROR: Input p.d.f. must be an extendible",GetName()))) ;
+    throw std::runtime_error(Form("RooXYChi2Var::ctor(%s) ERROR: Input p.d.f. must be an extendible",GetName()));
   }
   _yvar = (RooRealVar*) _dataClone->get()->find(yvar.GetName()) ;
   initialize() ;
