@@ -80,7 +80,6 @@ if(NOT builtin_nlohmannjson)
 endif()
 
 if(builtin_nlohmannjson)
-  list(APPEND ROOT_BUILTINS nlohmann_json)
   add_subdirectory(builtins/nlohmann)
 endif()
 
