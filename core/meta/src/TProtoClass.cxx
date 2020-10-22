@@ -164,6 +164,22 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    if (cl->fRealData || cl->fBase.load() || cl->fData.load() || cl->fEnums.load() || cl->fCanSplit >= 0 ||
        cl->fProperty != (-1)) {
 
+      if (cl->fState == TClass::kHasTClassInit)
+         // The class has dictionary, has gone through some initialization and is now being requested
+         // to be filled by a TProtoClass.
+         // This can be due to:
+         //   (a) A duplicate dictionary for a class (with or without a rootpcm associated with)
+         //   (b) The TClass was created before the registration of the rootpcm ** and ** it was
+         //       attempted to be used before this registration
+
+         // This is technically an error
+         // but we either already warned that there is a 2nd dictionary for the class (in TClassTable::Add)
+         // or this is the same (but now emptied) TProtoClass instance as before.
+         // We return false, since we are doing no actual change to the TClass instance and thus
+         // if a caller was hoping for 'improvement' in the state of the TClass instance, it did not
+         // happen.
+         return kFALSE;
+
       if (cl->GetCollectionType() != ROOT::kNotSTL) {
          // We are in the case of collection, duplicate dictionary are allowed
          // (and even somewhat excepted since they can be auto asked for).
