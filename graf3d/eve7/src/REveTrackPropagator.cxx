@@ -16,7 +16,6 @@
 #include "TMath.h"
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REveMagField
 \ingroup REve

@@ -13,7 +13,6 @@
 #include <ROOT/REveScene.hxx>
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REveSceneInfo
 \ingroup REve

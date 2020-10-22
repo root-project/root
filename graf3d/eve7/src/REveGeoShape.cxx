@@ -80,7 +80,7 @@ it gets forwarded to geo-manager and this tesselation detail is
 used when creating the buffer passed to GL.
 */
 
-TGeoManager *REX::REveGeoShape::fgGeoManager = init_geo_mangeur();
+TGeoManager *REveGeoShape::fgGeoManager = init_geo_mangeur();
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return static geo-manager that is used internally to make shapes
