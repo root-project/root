@@ -28,15 +28,14 @@
 #include "TGeoMatrix.h"
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REveGeoPolyShape
 \ingroup REve
 Description of REveGeoPolyShape
 */
 
-Bool_t REX::REveGeoPolyShape::fgAutoEnforceTriangles = kTRUE;
-Bool_t REX::REveGeoPolyShape::fgAutoCalculateNormals = kFALSE;
+Bool_t REveGeoPolyShape::fgAutoEnforceTriangles = kTRUE;
+Bool_t REveGeoPolyShape::fgAutoCalculateNormals = kFALSE;
 
 void   REveGeoPolyShape::SetAutoEnforceTriangles(Bool_t f) { fgAutoEnforceTriangles = f; }
 Bool_t REveGeoPolyShape::GetAutoEnforceTriangles()         { return fgAutoEnforceTriangles; }

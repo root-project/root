@@ -14,7 +14,6 @@
 
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REveShape
 \ingroup REve

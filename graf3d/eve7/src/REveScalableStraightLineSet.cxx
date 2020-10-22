@@ -8,7 +8,6 @@ to be scaled in accordance with an external object.
 */
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -17,9 +17,7 @@
 
 #include <cassert>
 
-
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 
 REveDataProxyBuilderBase::Product::Product(std::string iViewType, const REveViewContext* c) : m_viewType(iViewType), m_viewContext(c), m_elements(0)

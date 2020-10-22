@@ -4,11 +4,10 @@
 #include <ROOT/REveDataCollection.hxx>
 #include <ROOT/REveCompound.hxx>
 #include <ROOT/REveScene.hxx>
-#include <assert.h>
+#include <cassert>
 #include <TClass.h>
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 REveDataSimpleProxyBuilder::REveDataSimpleProxyBuilder()
 {

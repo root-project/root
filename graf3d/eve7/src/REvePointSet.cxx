@@ -21,7 +21,6 @@
 
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REvePointSet
 \ingroup REve

@@ -14,7 +14,6 @@
 #include "TTree.h"
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REveVSD
 \ingroup REve
