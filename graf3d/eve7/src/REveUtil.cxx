@@ -38,7 +38,7 @@ namespace REX = ROOT::Experimental;
 Standard utility functions for Eve.
 */
 
-TObjArray* REX::REveUtil::fgDefaultColors = nullptr;
+TObjArray *REveUtil::fgDefaultColors = nullptr;
 
 namespace
 {
