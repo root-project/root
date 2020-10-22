@@ -3602,7 +3602,8 @@ TList *TClass::GetListOfBases()
             LoadClassInfo();
          }
       }
-      if (!fClassInfo) return 0;
+      if (!fClassInfo)
+         return nullptr;
 
       if (!gInterpreter)
          Fatal("GetListOfBases", "gInterpreter not initialized");
@@ -3695,9 +3696,8 @@ TList *TClass::CreateListOfDataMembers(std::atomic<TListOfDataMembers*> &data, T
       if (fCanLoadClassInfo && fState == kHasTClassInit) {
          // The members are in our ProtoClass; we don't need the class info.
          TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
-         if (proto && proto->FillTClass(this)) {
+         if (proto && proto->FillTClass(this))
             return data;
-         }
       }
 
       data = new TListOfDataMembers(this, selection);
