@@ -99,6 +99,8 @@ For details, see the RooFit tutorial [rf612_recoverFromInvalidParameters.C](http
 
 ## 2D Graphics Libraries
 
+- Add the method `AddPoint`to `TGraph(x,y)` and `TGraph2D(x,y,z)`. equivalent to `SetPoint(g->GetN(),x,y)`and `SetPoint(g->GetN(),x,y,z)`
+
 
 ## 3D Graphics Libraries
 
