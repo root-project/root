@@ -72,7 +72,7 @@ RooNLLVar::RooNLLVar()
 ///  Verbose()                | Verbose output of GOF framework classes
 ///  CloneData()              | Clone input dataset for internal use (default is kTRUE)
 ///  BatchMode()              | Evaluate batches of data events (faster if PDFs support it)
-
+///  IntegrateBins() | Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
 RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& indata,
 		     const RooCmdArg& arg1, const RooCmdArg& arg2,const RooCmdArg& arg3,
 		     const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6,

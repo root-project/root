@@ -88,7 +88,8 @@ RooArgSet RooChi2Var::_emptySet ;
 ///  Range()      <td> Fit only selected region
 ///  <tr><td>
 ///  Verbose()    <td> Verbose output of GOF framework
-
+///  <tr><td>
+///  IntegrateBins() | Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
 RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata,
 		       const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
 		       const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
