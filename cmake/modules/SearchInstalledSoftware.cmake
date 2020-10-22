@@ -475,12 +475,14 @@ if(mathmore OR builtin_gsl)
     endforeach()
     if(CMAKE_OSX_SYSROOT)
       set(_gsl_cppflags "-isysroot ${CMAKE_OSX_SYSROOT}")
+      set(_gsl_ldflags  "-isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
     ExternalProject_Add(
       GSL
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
       URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
       URL_HASH SHA256=0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d
+      SOURCE_DIR GSL-src # prevent "<gsl/...>" vs GSL/ macOS warning
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
@@ -488,6 +490,7 @@ if(mathmore OR builtin_gsl)
                         CC=${CMAKE_C_COMPILER}
                         CFLAGS=${CMAKE_C_FLAGS}
                         CPPFLAGS=${_gsl_cppflags}
+                        LDFLAGS=${_gsl_ldflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${GSL_LIBRARIES}
     )
@@ -1189,6 +1192,7 @@ if(builtin_tbb)
     # it can happen that a "-isysroot" switch is added without an argument.
     if(APPLE AND CMAKE_OSX_SYSROOT)
       set(_tbb_cxxflags "${_tbb_cxxflags} -isysroot ${CMAKE_OSX_SYSROOT}")
+      set(_tbb_ldflags "${_tbb_ldflags} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
@@ -1198,7 +1202,7 @@ if(builtin_tbb)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       PATCH_COMMAND sed -i -e "/clang -v/s@-v@--version@" build/macos.inc
       CONFIGURE_COMMAND ""
-      BUILD_COMMAND make ${_tbb_compiler} cpp0x=1 "CXXFLAGS=${_tbb_cxxflags}" CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
+      BUILD_COMMAND make ${_tbb_compiler} cpp0x=1 "CXXFLAGS=${_tbb_cxxflags}" CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER} "LDFLAGS=${_tbb_ldflags}"
       INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
       INSTALL_COMMAND ""
