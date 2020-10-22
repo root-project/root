@@ -27,7 +27,6 @@
 #include "TROOT.h"
 #include "TColor.h"
 
-#include "json.hpp"
 #include <cassert>
 
 

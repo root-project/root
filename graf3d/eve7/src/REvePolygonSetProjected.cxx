@@ -18,7 +18,6 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
-#include "json.hpp"
 #include <cassert>
 
 using namespace ROOT::Experimental;

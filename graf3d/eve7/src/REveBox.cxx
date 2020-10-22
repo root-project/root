@@ -14,7 +14,6 @@
 #include "ROOT/REveBox.hxx"
 #include "ROOT/REveProjectionManager.hxx"
 #include <ROOT/REveRenderData.hxx>
-#include "json.hpp"
 
 using namespace ROOT::Experimental;
 

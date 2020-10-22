@@ -12,8 +12,6 @@
 #include <ROOT/REveSceneInfo.hxx>
 #include <ROOT/REveScene.hxx>
 
-#include "json.hpp"
-
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 

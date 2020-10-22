@@ -6,7 +6,6 @@
 #include <ROOT/REveScene.hxx>
 #include <assert.h>
 #include <TClass.h>
-#include "json.hpp"
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;

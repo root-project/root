@@ -17,8 +17,6 @@
 #include <ROOT/REveClient.hxx>
 #include <ROOT/RWebWindow.hxx>
 
-#include "json.hpp"
-
 #include <cassert>
 
 

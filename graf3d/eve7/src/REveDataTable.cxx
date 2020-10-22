@@ -1,7 +1,6 @@
 #include <ROOT/REveDataTable.hxx>
 #include <ROOT/REveDataCollection.hxx>
 #include <TClass.h>
-#include <json.hpp>
 #include <sstream>
 #include <TROOT.h>
 

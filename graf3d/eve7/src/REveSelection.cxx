@@ -18,7 +18,6 @@
 #include "TClass.h"
 #include "TColor.h"
 
-#include "json.hpp"
 #include <iostream>
 
 using namespace ROOT::Experimental;

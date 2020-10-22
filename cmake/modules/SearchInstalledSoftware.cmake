@@ -65,6 +65,26 @@ if(builtin_zlib)
   add_subdirectory(builtins/zlib)
 endif()
 
+#---Check for nlohmann/json.hpp---------------------------------------------------------
+if(NOT builtin_nlohmannjson)
+  message(STATUS "Looking for nlohmann/json.hpp")
+  if(fail-on-missing)
+    find_package(nlohmann_json REQUIRED)
+  else()
+    find_package(nlohmann_json)
+    if(NOT nlohmann_json_FOUND)
+      message(STATUS "nlohmann/json.hpp not found. Switching on builtin_nlohmannjson option")
+      set(builtin_nlohmannjson ON CACHE BOOL "Enabled because nlohmann/json.hpp not found" FORCE)
+    endif()
+  endif()
+endif()
+
+if(builtin_nlohmannjson)
+  list(APPEND ROOT_BUILTINS nlohmann_json)
+  add_subdirectory(builtins/nlohmann)
+endif()
+
+
 #---Check for Unuran ------------------------------------------------------------------
 if(unuran AND NOT builtin_unuran)
   message(STATUS "Looking for Unuran")

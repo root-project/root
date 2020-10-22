@@ -37,8 +37,6 @@
 #include "TGeoMatrix.h"
 #include "TVirtualGeoPainter.h"
 
-#include "json.hpp"
-
 
 namespace
 {
