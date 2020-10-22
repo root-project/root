@@ -1,16 +1,24 @@
-# Fuctional nlohman_json library target to get proper dependency
+# Fictional nlohman_json library target to get proper include path
 
 add_library(nlohmann_json INTERFACE)
 add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
 
 target_include_directories(nlohmann_json INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/builtins>)
 
-# configure_file(json.hpp ${CMAKE_BINARY_DIR}/ginclude/nlohmann/json.hpp COPYONLY)
+# file only used when ACLiC or ROOT macros will include REve headers,
+# it is not used for ROOT compilation
+
+add_custom_command(
+     OUTPUT ${CMAKE_BINARY_DIR}/include/nlohmann/json.hpp
+     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/builtins/nlohmann/json.hpp ${CMAKE_BINARY_DIR}/include/nlohmann/json.hpp
+     COMMENT "Copying nlohmann/json.hpp header to ${CMAKE_BINARY_DIR}/include"
+     DEPENDS ${CMAKE_SOURCE_DIR}/builtins/nlohmann/json.hpp)
+
+add_custom_target(builtin_nlohmann_json_incl DEPENDS ${CMAKE_BINARY_DIR}/include/nlohmann/json.hpp)
+
+set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS builtin_nlohmann_json_incl)
 
 install(FILES ${CMAKE_SOURCE_DIR}/builtins/nlohmann/json.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nlohmann/)
-
-set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS nlohmann_json::nlohmann_json)
-
 
 export(TARGETS nlohmann_json
         NAMESPACE nlohmann_json::
