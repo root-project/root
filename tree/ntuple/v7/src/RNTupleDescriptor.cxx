@@ -765,7 +765,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
    auto model = std::make_unique<RNTupleModel>();
    for (const auto &topDesc : GetTopLevelFields()) {
       auto field = Detail::RFieldBase::Create(topDesc.GetFieldName(), topDesc.GetTypeName());
-      model->AddField(std::unique_ptr<Detail::RFieldBase>(field));
+      model->AddField(std::move(field));
    }
    return model;
 }

@@ -53,7 +53,8 @@ RooSpan<double> RunContext::getWritableBatch(const RooAbsReal* owner) {
 /// Create a writable batch. If the RunContext already owns memory for the object
 /// `owner`, just resize the memory. If it doesn't exist yet, allocate it.
 /// \warning The memory will be uninitialised, so every entry **must** be overwritten.
-/// On first use, all values are initialised to `-inf` to help detect such errors.
+/// On first use, all values are initialised to `NaN` to help detect such errors.
+///
 /// A read-only reference to the memory will be stored in `spans`.
 /// \param owner RooFit object whose value should be written into the memory.
 /// \param size Requested size of the span.
@@ -63,7 +64,10 @@ RooSpan<double> RunContext::makeBatch(const RooAbsReal* owner, std::size_t size)
   auto item = ownedMemory.find(owner);
   if (item == ownedMemory.end() || item->second.size() != size) {
     std::vector<double>& data = ownedMemory[owner];
-    data.resize(size, -std::numeric_limits<double>::infinity());
+    data.resize(size, std::numeric_limits<double>::quiet_NaN());
+#ifndef NDEBUG
+    data.assign(size, std::numeric_limits<double>::quiet_NaN());
+#endif
     spans[owner] = RooSpan<const double>(data);
     return {data};
   }

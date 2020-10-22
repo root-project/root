@@ -50,7 +50,7 @@ class RNTupleColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
       const auto typeName = fieldDescriptor.GetTypeName();
       auto fieldBasePtr = Detail::RFieldBase::Create(fieldDescriptor.GetFieldName(), typeName);
       Detail::RFieldFuse::ConnectRecursively(fieldId, source, *fieldBasePtr);
-      return std::unique_ptr<RFieldBase>(fieldBasePtr);
+      return fieldBasePtr;
    }
 
 public:
