@@ -114,8 +114,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       var track_width = track.fLineWidth || 1;
       var track_color = jsrp.getColor(track.fLineColor) || "rgb(255,0,255)";
 
-      if (JSROOT.browser.isWin) track_width = 1;  // not supported on windows
-
       var buf = new Float32Array((N-1) * 6), pos = 0;
       for (var k=0;k<(N-1);++k) {
          buf[pos]   = rnrData.vtxBuff[k*3];
