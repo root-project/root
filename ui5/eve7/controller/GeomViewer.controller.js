@@ -129,13 +129,13 @@ sap.ui.define(['sap/ui/core/Component',
             }, this);
          }
 
-         JSROOT.AssertPrerequisites("geom", function() {
-            sap.ui.define(['rootui5/eve7/lib/EveElements'], function(EveElements) {
+         JSROOT.require("geom").then(() => {
+            sap.ui.define(['rootui5/eve7/lib/EveElements'], EveElements => {
                this.creator = new EveElements();
                this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
                this.checkSendRequest();
-            }.bind(this));
-         }.bind(this));
+            });
+         });
       },
 
       /** invoked when visibility checkbox clicked */

@@ -36,7 +36,7 @@ sap.ui.define([
 
          ResizeHandler.register(this.getView(), this.onResize.bind(this));
 
-         JSROOT.AssertPrerequisites("geom", this.onLoadScripts.bind(this));
+         JSROOT.require("geom").then(() => this.onLoadScripts());
       },
 
       onLoadScripts: function()
@@ -51,7 +51,7 @@ sap.ui.define([
          let args = oEvent.getParameter("arguments");
 
          console.log('ON MATCHED', args.viewName);
-         
+
          console.log('MORE DATA', JSROOT.$eve7tmp);
 
          console.log('COMPONENT DATA', Component.getOwnerComponentFor(this.getView()).getComponentData());
