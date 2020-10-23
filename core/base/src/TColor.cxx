@@ -1476,11 +1476,11 @@ void TColor::HLS2RGB(Float_t hue, Float_t light, Float_t satur,
 Float_t TColor::HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei)
 {
    Float_t hue = huei;
-   if (hue > 360.0f) hue = hue - 360.0f;
-   if (hue < 0.0f)   hue = hue + 360.0f;
-   if (hue < 60.0f ) return rn1 + (rn2-rn1)*hue/60.0f;
-   if (hue < 180.0f) return rn2;
-   if (hue < 240.0f) return rn1 + (rn2-rn1)*(240.0f-hue)/60.0f;
+   if (hue > 360) hue = hue - 360.0f;
+   if (hue < 0)   hue = hue + 360.0f;
+   if (hue < 60 ) return rn1 + (rn2-rn1)*hue/60.0f;
+   if (hue < 180) return rn2;
+   if (hue < 240) return rn1 + (rn2-rn1)*(240.0f-hue)/60.0f;
    return rn1;
 }
 
