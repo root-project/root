@@ -28,8 +28,8 @@ if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(testRooAbsReal testRooAbsReal.cxx
     LIBRARIES RooFitCore
     COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooAbsReal_1.root ${CMAKE_CURRENT_SOURCE_DIR}/testRooAbsReal_2.root)
+  ROOT_ADD_GTEST(testRooNLLVar testRooNLLVar.cxx LIBRARIES RooFitCore)
 endif()
 ROOT_ADD_GTEST(testRooProductPdf testRooProductPdf.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testNaNPacker testNaNPacker.cxx LIBRARIES RooFitCore)
-ROOT_ADD_GTEST(testRooNLLVar testRooNLLVar.cxx LIBRARIES RooFitCore)
 
