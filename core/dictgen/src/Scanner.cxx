@@ -670,7 +670,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
    const ClassSelectionRule *selectedFromTypedef = typedefNameDecl ? fSelectionRules.IsDeclSelected(typedefNameDecl) : 0;
 
-   const ClassSelectionRule *selectedFromRecDecl = fSelectionRules.IsDeclSelected(recordDecl);
+   const ClassSelectionRule *selectedFromRecDecl = fSelectionRules.IsDeclSelected(recordDecl, false /* exclude typedef rules*/);
 
    const ClassSelectionRule *selected = typedefNameDecl ? selectedFromTypedef : selectedFromRecDecl;
 
