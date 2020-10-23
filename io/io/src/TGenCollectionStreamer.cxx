@@ -62,7 +62,7 @@ TVirtualCollectionProxy* TGenCollectionStreamer::Generate() const
 }
 
 template <typename T>
-static T* getaddress(TGenCollectionProxy::StreamHelper &itm);
+T* getaddress(TGenCollectionProxy::StreamHelper &itm);
 
 template <>
 bool* getaddress<bool>(TGenCollectionProxy::StreamHelper &itm)
