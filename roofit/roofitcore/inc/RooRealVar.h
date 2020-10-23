@@ -165,9 +165,9 @@ public:
   void installSharedProp(std::shared_ptr<RooRealVarSharedProperties>&& prop);
 
   virtual void setExpensiveObjectCache(RooExpensiveObjectCache&) { ; } // variables don't need caches 
+  static RooRealVarSharedProperties& _nullProp(); // Null property
+  static std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>>& _sharedPropList(); // List of properties shared among clones of a variable
   
-  static std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>> _sharedPropList; // List of properties shared among clones of a variable
-  static const std::unique_ptr<RooRealVarSharedProperties> _nullProp ; // Null property
   std::shared_ptr<RooRealVarSharedProperties> _sharedProp; //! Shared binnings associated with this instance
 
   ClassDef(RooRealVar,7) // Real-valued variable
