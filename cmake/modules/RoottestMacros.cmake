@@ -306,6 +306,9 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictname}.cxx)
   set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
+  if(MSVC)
+    set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  endif()
   target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
 
   set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
@@ -383,6 +386,9 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictionary}.cxx)
   set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
+  if(MSVC)
+    set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  endif()
 
   if(ARG_LIBNAME)
     set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
