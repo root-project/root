@@ -767,7 +767,8 @@ sap.ui.define([], function() {
       this.handle.Inject([msg1, msg2, msg3]);
    }
 
-   /** used to intercept SetRnrSelf call @private */
+   /** @summary used to intercept SetRnrSelf call
+     * @private */
    EveManager.prototype._intercept_SetRnrSelf = function(flag) {
       var messages = [{ content: "BeginChanges" }];
 
@@ -787,12 +788,12 @@ sap.ui.define([], function() {
       this.handle.Inject(messages);
    }
 
-   /** used to intercept SetMainColorRGB @private */
+   /** @summary used to intercept SetMainColorRGB
+     * @private */
    EveManager.prototype._intercept_SetMainColorRGB = function(colr, colg, colb) {
       var messages = [{ content: "BeginChanges" }];
 
-      var newColor = JSROOT.Painter.root_colors.length;
-      JSROOT.Painter.root_colors.push("rgb(" + colr + "," + colg + "," + colb + ")");
+      var newColor = JSROOT.Painter.addColor("rgb(" + colr + "," + colg + "," + colb + ")");
 
       var mirElem = this.GetElement(this._intercept_id);
       var msg = { arr: [ JSROOT.extend({changeBit:1}, mirElem) ],
