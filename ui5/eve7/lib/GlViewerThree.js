@@ -101,7 +101,7 @@ sap.ui.define([
 
          this.raycaster = new THREE.Raycaster();
          this.raycaster.params.Points.threshold = 4;   // ???
-         this.raycaster.linePrecision           = 2.5; // ???
+         this.raycaster.params.Line.threshold = 2.5;   // new three.js r121
 
          // Lights are positioned in resetRenderer
 
