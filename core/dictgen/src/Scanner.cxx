@@ -692,8 +692,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       if (!fSelectionRules.IsSelectionXMLFile()) return true;
    }
 
-   if (fSelectionRules.IsSelectionXMLFile() && selected->IsFromTypedef()) {
-      if (!IsElementPresent(fSelectedTypedefs, typedefNameDecl))
+   if (selected->IsFromTypedef()) {
+      if (typedefNameDecl && !IsElementPresent(fSelectedTypedefs, typedefNameDecl))
          fSelectedTypedefs.push_back(typedefNameDecl);
       return true;
    }
