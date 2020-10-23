@@ -180,12 +180,10 @@ void RNTupleDS::AddProjection(
       }
    }
 
-   // TODO(jblomer): return RResult from RFieldBase::Create and skip/warn if type is unknown
-   if (fieldDesc.GetTypeName().empty())
+   auto fieldOrException = Detail::RFieldBase::Create("", fieldDesc.GetTypeName());
+   if (!fieldOrException)
       return;
-
-   std::unique_ptr<Detail::RFieldBase> valueField;
-   valueField = Detail::RFieldBase::Create("", fieldDesc.GetTypeName());
+   auto valueField = fieldOrException.Unwrap();
    std::unique_ptr<Detail::RFieldBase> cardinalityField;
    if (!skeinIDs.empty())
       cardinalityField = std::make_unique<Detail::RRDFCardinalityField>();
