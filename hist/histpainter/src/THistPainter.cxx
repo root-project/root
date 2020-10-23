@@ -250,7 +250,7 @@ using `TH1::GetOption`:
 | "BAR"    | Like option "B", but bars can be drawn with a 3D effect.|
 | "HBAR"   | Like option "BAR", but bars are drawn horizontally.|
 | "C"      | Draw a smooth Curve through the histogram bins.|
-| "E0"     | Draw error bars. Markers are drawn for bins with 0 contents. Combined with E1 and E2 it avoid error bars clipping|
+| "E0"     | Draw error bars. Markers are drawn for bins with 0 contents. Combined with E1 or E2 it avoids error bars clipping|
 | "E1"     | Draw error bars with perpendicular lines at the edges.|
 | "E2"     | Draw error bars with rectangles.|
 | "E3"     | Draw a fill area through the end points of the vertical error bars.|
@@ -669,7 +669,7 @@ to `gStyle->SetOptFit(111)`
 | "E2"     | Error rectangles are drawn.|
 | "E3"     | A filled area is drawn through the end points of the vertical error bars.|
 | "E4"     | A smoothed filled area is drawn through the end points of the vertical error bars.|
-| "E0"     | Draw error bars. Markers are drawn for bins with 0 contents. Combined with E1 and E2 it avoid error bars clipping|
+| "E0"     | Draw error bars. Markers are drawn for bins with 0 contents. Combined with E1 or E2 it avoids error bars clipping|
 | "E5"     | Like E3 but ignore the bins with 0 contents.|
 | "E6"     | Like E4 but ignore the bins with 0 contents.|
 | "X0"     | When used with one of the "E" option, it suppress the error bar along X as `gStyle->SetErrorX(0)` would do.|

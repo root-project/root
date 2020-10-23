@@ -101,7 +101,7 @@ For details, see the RooFit tutorial [rf612_recoverFromInvalidParameters.C](http
 
 - Add the method `AddPoint`to `TGraph(x,y)` and `TGraph2D(x,y,z)`. equivalent to `SetPoint(g->GetN(),x,y)`and `SetPoint(g->GetN(),x,y,z)`
 - Option `E0` draws error bars and markers are drawn for bins with 0 contents. Now, combined
-  with options E1 and E2, it avoid error bars clipping.
+  with options E1 and E2, it avoids error bars clipping.
 
 ## 3D Graphics Libraries
 
