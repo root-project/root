@@ -72,7 +72,7 @@ void Convert() {
 
       // Hand over ownership of the field to the ntuple model.  This will also create a memory location attached
       // to the model's default entry, that will be used to place the data supposed to be written
-      model->AddField(std::unique_ptr<RFieldBase>(field));
+      model->AddField(std::move(field));
 
       // We connect the model's default entry's memory location for the new field to the branch, so that we can
       // fill the ntuple with the data read from the TTree
