@@ -1453,12 +1453,12 @@ void TColor::HLS2RGB(Float_t hue, Float_t light, Float_t satur,
 {
 
    Float_t rh, rl, rs, rm1, rm2;
-   rh = rl = rs = 0.0f;
-   if (hue   > 0.0f) { rh = hue;   if (rh > 360.0f) rh = 360.0f; }
-   if (light > 0.0f) { rl = light; if (rl > 1.0f)   rl = 1.0f; }
-   if (satur > 0.0f) { rs = satur; if (rs > 1.0f)   rs = 1.0f; }
+   rh = rl = rs = 0;
+   if (hue   > 0) { rh = hue;   if (rh > 360) rh = 360; }
+   if (light > 0) { rl = light; if (rl > 1)   rl = 1; }
+   if (satur > 0) { rs = satur; if (rs > 1)   rs = 1; }
 
-   if (rl <= 0.5f)
+   if (rl <= 0.5)
       rm2 = rl*(1.0f + rs);
    else
       rm2 = rl + rs - rl*rs;
@@ -1592,11 +1592,11 @@ void TColor::RGB2HLS(Float_t rr, Float_t gg, Float_t bb,
                      Float_t &hue, Float_t &light, Float_t &satur)
 {
    Float_t rnorm, gnorm, bnorm, minval, maxval, msum, mdiff, r, g, b;
-   minval = maxval =0.0f ;
-   r = g = b = 0.0f;
-   if (rr > 0.0f) { r = rr; if (r > 1.0f) r = 1.0f; }
-   if (gg > 0.0f) { g = gg; if (g > 1.0f) g = 1.0f; }
-   if (bb > 0.0f) { b = bb; if (b > 1.0f) b = 1.0f; }
+   minval = maxval =0 ;
+   r = g = b = 0;
+   if (rr > 0) { r = rr; if (r > 1) r = 1; }
+   if (gg > 0) { g = gg; if (g > 1) g = 1; }
+   if (bb > 0) { b = bb; if (b > 1) b = 1; }
 
    minval = r;
    if (g < minval) minval = g;
@@ -1605,7 +1605,7 @@ void TColor::RGB2HLS(Float_t rr, Float_t gg, Float_t bb,
    if (g > maxval) maxval = g;
    if (b > maxval) maxval = b;
 
-   rnorm = gnorm = bnorm = 0.0f;
+   rnorm = gnorm = bnorm = 0;
    mdiff = maxval - minval;
    msum  = maxval + minval;
    light = 0.5f * msum;
@@ -1614,11 +1614,11 @@ void TColor::RGB2HLS(Float_t rr, Float_t gg, Float_t bb,
       gnorm = (maxval - g)/mdiff;
       bnorm = (maxval - b)/mdiff;
    } else {
-      satur = hue = 0.0f;
+      satur = hue = 0;
       return;
    }
 
-   if (light < 0.5f)
+   if (light < 0.5)
       satur = mdiff/msum;
    else
       satur = mdiff/(2.0f - msum);
@@ -1630,7 +1630,7 @@ void TColor::RGB2HLS(Float_t rr, Float_t gg, Float_t bb,
    else
       hue = 60.0f * (4.0f + gnorm - rnorm);
 
-   if (hue > 360.0f)
+   if (hue > 360)
       hue = hue - 360.0f;
 }
 
@@ -1660,8 +1660,8 @@ void TColor::RGB2HSV(Float_t r, Float_t g, Float_t b,
    if (max != 0) {
       satur = delta/max;
    } else {
-      satur = 0.0f;
-      hue   = -1.0f;
+      satur = 0;
+      hue   = -1;
       return;
    }
 
@@ -1706,7 +1706,7 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
    fGreen = g;
    fBlue  = b;
 
-   if (fRed < 0.0f) return;
+   if (fRed < 0) return;
 
    RGBtoHLS(r, g, b, fHue, fLight, fSaturation);
 
@@ -2028,12 +2028,12 @@ ULong_t TColor::Number2Pixel(Int_t ci)
 
 ULong_t TColor::RGB2Pixel(Float_t r, Float_t g, Float_t b)
 {
-   if (r < 0) r = 0.0f;
-   if (g < 0) g = 0.0f;
-   if (b < 0) b = 0.0f;
-   if (r > 1) r = 1.0f;
-   if (g > 1) g = 1.0f;
-   if (b > 1) b = 1.0f;
+   if (r < 0) r = 0;
+   if (g < 0) g = 0;
+   if (b < 0) b = 0;
+   if (r > 1) r = 1;
+   if (g > 1) g = 1;
+   if (b > 1) b = 1;
 
    ColorStruct_t color;
    color.fRed   = UShort_t(r * 65535);
