@@ -28,10 +28,10 @@ sap.ui.define([
          oController.object = obj;
          d3.select(oController.getView().getDomRef()).style('overflow','hidden');
 
-         JSROOT.draw(oController.getView().getDomRef(), oController.object, options, function(painter) {
+         JSROOT.draw(oController.getView().getDomRef(), oController.object, options).then(painter => {
             console.log("object painting finished");
             oController.object_painter = painter;
-            oController.get_callbacks.forEach(function(cb) { JSROOT.CallBack(cb,painter); });
+            oController.get_callbacks.forEach(cb => JSROOT.CallBack(cb,painter));
             oController.get_callbacks = [];
          });
       },
@@ -43,19 +43,15 @@ sap.ui.define([
             return;
          }
 
-         var oController = this;
          if (model.object) {
-            oController.drawObject(model.object, model.opt);
+            this.drawObject(model.object, model.opt);
          } else if (model.jsonfilename) {
-            JSROOT.NewHttpRequest(model.jsonfilename, 'object', function(obj) {
-               oController.drawObject(obj, model.opt);
-            }).send();
+            JSROOT.httpRequest(model.jsonfilename, 'object')
+                  .then(obj => this.drawObject(obj, model.opt));
          } else if (model.filename) {
-            JSROOT.OpenFile(model.filename, function(file) {
-               file.ReadObject(model.itemname, function(obj) {
-                  oController.drawObject(obj, model.opt);
-               });
-            });
+            JSROOT.openFile(model.filename)
+                  .then(file => file.ReadObject(model.itemname))
+                  .then(obj => this.drawObject(obj, model.opt));
          }
       },
 

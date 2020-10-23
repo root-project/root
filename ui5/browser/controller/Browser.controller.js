@@ -1147,7 +1147,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var painter = null;
 
          if (kind == "root7") {
-            painter = new JSROOT.v7.TCanvasPainter(null);
+            painter = new JSROOT.v7.RCanvasPainter(null);
          } else {
             painter = new JSROOT.TCanvasPainter(null);
          }
