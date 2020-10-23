@@ -52,9 +52,20 @@ ClassImp(RooRealVar);
 
 Bool_t RooRealVar::_printScientific(kFALSE) ;
 Int_t  RooRealVar::_printSigDigits(5) ;
-std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>> RooRealVar::_sharedPropList;
-const std::unique_ptr<RooRealVarSharedProperties> RooRealVar::_nullProp(new RooRealVarSharedProperties("00000000-0000-0000-0000-000000000000"));
 
+/// Return a reference to a map of weak pointers to RooRealVarSharedProperties.
+std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>>& RooRealVar::_sharedPropList() 
+{
+  static std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>> sharedPropList;
+  return sharedPropList; 
+}
+
+/// Return a dummy object to use when properties are not initialised.
+RooRealVarSharedProperties& RooRealVar::_nullProp()
+{
+  static const std::unique_ptr<RooRealVarSharedProperties> nullProp(new RooRealVarSharedProperties("00000000-0000-0000-0000-000000000000"));
+  return *nullProp; 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -1252,7 +1263,7 @@ void RooRealVar::Streamer(TBuffer &R__b)
     if (_sharedProp) {
       _sharedProp->Streamer(R__b) ;
     } else {
-      _nullProp->Streamer(R__b) ;
+      _nullProp().Streamer(R__b) ;
     }
     R__b.SetByteCount(R__c, kTRUE);
 
@@ -1276,13 +1287,13 @@ std::shared_ptr<RooRealVarSharedProperties> RooRealVar::sharedProp() const {
 /// and share the existing.
 /// `nullptr` and properties equal to the RooRealVar::_nullProp will not be installed.
 void RooRealVar::installSharedProp(std::shared_ptr<RooRealVarSharedProperties>&& prop) {
-  if (prop == nullptr || (*prop == *_nullProp)) {
+  if (prop == nullptr || (*prop == _nullProp())) {
     _sharedProp = nullptr;
     return;
   }
 
 
-  auto& weakPtr = _sharedPropList[prop->asString().Data()];
+  auto& weakPtr = _sharedPropList()[prop->asString().Data()];
   std::shared_ptr<RooRealVarSharedProperties> existingProp;
   if ( (existingProp = weakPtr.lock()) ) {
     // Property exists, discard incoming
@@ -1303,9 +1314,9 @@ void RooRealVar::deleteSharedProperties()
 {
   _sharedProp.reset();
 
-  for (auto it = _sharedPropList.begin(); it != _sharedPropList.end();) {
+  for (auto it = _sharedPropList().begin(); it != _sharedPropList().end();) {
     if (it->second.expired()) {
-      it = _sharedPropList.erase(it);
+      it = _sharedPropList().erase(it);
     } else {
       ++it;
     }
