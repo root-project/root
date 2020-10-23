@@ -12,6 +12,8 @@ sap.ui.define(['sap/ui/core/Component',
 
    "use strict";
 
+   let geo = null; // naming convention for JSROOT.GEO
+
    var geomColorBox = CoreControl.extend("rootui5.eve7.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
 
       // the control API:
@@ -129,7 +131,8 @@ sap.ui.define(['sap/ui/core/Component',
             }, this);
          }
 
-         JSROOT.require("geom").then(() => {
+         JSROOT.require("geom").then(_geo => {
+            geo = _geo;
             sap.ui.define(['rootui5/eve7/lib/EveElements'], EveElements => {
                this.creator = new EveElements();
                this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
@@ -257,7 +260,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (!this.standalone) {
             var req = geo_stack ? geo_stack : [];
             // avoid multiple time submitting same request
-            if (JSROOT.GEO.IsSameStack(this._last_highlight_req, req)) return;
+            if (geo.IsSameStack(this._last_highlight_req, req)) return;
             this._last_highlight_req = req;
             return this.sendViewerRequest("HIGHL", { stack: req });
          }
@@ -343,7 +346,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
 
          if (recreate) {
-            this.geo_clones = new JSROOT.GEO.ClonedNodes(null, nodes);
+            this.geo_clones = new geo.ClonedNodes(null, nodes);
             this.geo_clones.name_prefix = this.geo_clones.GetNodeName(0);
             // normally only need when making selection, not used in geo viewer
             // this.geo_clones.SetMaxVisNodes(draw_msg.maxvisnodes);
@@ -360,8 +363,8 @@ sap.ui.define(['sap/ui/core/Component',
             nsegm = this.geom_model.getProperty("/cfg/nsegm");
 
          if (nsegm) {
-            old_gradpersegm = JSROOT.GEO.GradPerSegm;
-            JSROOT.GEO.GradPerSegm = 360 / Math.max(nsegm,6);
+            old_gradpersegm = geo.GradPerSegm;
+            geo.GradPerSegm = 360 / Math.max(nsegm,6);
          }
 
          for (var cnt = 0; cnt < draw_msg.visibles.length; ++cnt) {
@@ -375,7 +378,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
 
          if (old_gradpersegm)
-            JSROOT.GEO.GradPerSegm = old_gradpersegm;
+            geo.GradPerSegm = old_gradpersegm;
 
          return true;
       },
@@ -392,7 +395,7 @@ sap.ui.define(['sap/ui/core/Component',
 
          if (rd.shape) {
             // case when TGeoShape provided as is
-            g = JSROOT.GEO.createGeometry(rd.shape);
+            g = geo.createGeometry(rd.shape);
          } else {
 
             if (!rd.raw || (rd.raw.length==0)) {
@@ -428,7 +431,7 @@ sap.ui.define(['sap/ui/core/Component',
             _typename: "$$Shape$$", // indicate that shape can be used as is
             ready: true,
             geom: g,
-            nfaces: JSROOT.GEO.numGeometryFaces(g)
+            nfaces: geo.numGeometryFaces(g)
          };
       },
 
@@ -790,7 +793,7 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_painter.changedGlobalTransparency(function(node) {
                if (node.stack)
                   for (var n=0;n<visibles.length;++n)
-                     if (JSROOT.GEO.IsSameStack(node.stack, visibles[n].stack))
+                     if (geo.IsSameStack(node.stack, visibles[n].stack))
                         return 0;
                return dflt;
             });
