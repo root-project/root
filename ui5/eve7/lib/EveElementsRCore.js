@@ -136,7 +136,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       var geom = this.makeEveGeometry(rnr_data);
 
-      var fcol = new RC.Color(JSROOT.Painter.root_colors[egs.fFillColor]);
+      var fcol = new RC.Color(JSROOT.Painter.getColor(egs.fFillColor));
 
       // var material = new RC.MeshPhongMaterial({// side: THREE.DoubleSide,
       //                     depthWrite: false, color:fcol, transparent: true, opacity: 0.2 });
@@ -163,7 +163,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       var psp_ro = new RC.Group(),
           ib_len = rnr_data.idxBuff.length,
-          fcol   = new RC.Color(JSROOT.Painter.root_colors[psp.fMainColor]);
+          fcol   = new RC.Color(JSROOT.Painter.getColor(psp.fMainColor));
 
       for (var ib_pos = 0; ib_pos < ib_len; )
       {
