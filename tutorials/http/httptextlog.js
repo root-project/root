@@ -50,7 +50,7 @@
 
    function DrawMsgList(divid, lst, opt) {
 
-      var painter = new JSROOT.TBasePainter();
+      var painter = new JSROOT.BasePainter();
       painter.SetDivId(divid);
 
       painter.Draw = function(lst) {
