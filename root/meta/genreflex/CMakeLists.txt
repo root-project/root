@@ -130,13 +130,11 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(MyClass_v2 MyClass_v2.h SELECTION MyClass_v2
 ROOTTEST_ADD_TEST(escapedQuotesWriteTree
                   MACRO execwriteTree.C
                   OUTREF execwriteTree.ref
-                  ${WILLFAIL_ON_WIN32}
                   DEPENDS ${GENERATE_REFLEX_TEST} escapedQuotesRootmapGen)
 
 ROOTTEST_ADD_TEST(escapedQuotesreadTree
                   MACRO execreadTree.C
                   OUTREF execreadTree.ref
-                  ${WILLFAIL_ON_WIN32}
                   DEPENDS escapedQuotesWriteTree)
 
 ROOTTEST_ADD_TEST(classSelectedTwice

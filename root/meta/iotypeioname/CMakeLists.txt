@@ -9,5 +9,4 @@ ROOTTEST_ADD_AUTOMACROS(DEPENDS ${GENERATE_REFLEX_TEST}
 ROOTTEST_ADD_TEST(execionameiotype
                   MACRO execionameiotype.C
                   DEPENDS ${GENERATE_REFLEX_TEST}
-                  OUTREF execionameiotype.ref
-                  ${WILLFAIL_ON_WIN32})
+                  OUTREF execionameiotype.ref)
