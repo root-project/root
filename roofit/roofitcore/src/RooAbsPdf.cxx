@@ -186,6 +186,7 @@ called for each data event.
 
 #include <iostream>
 #include <string>
+#include <cmath>
 
 using namespace std;
 
@@ -2703,7 +2704,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
       if (expectedData || extended) {
         nEvents = expectedEvents(&whatVars) ;
       } else {
-        nEvents = Int_t(expectedEvents(&whatVars)+0.5) ;
+        nEvents = std::round(expectedEvents(&whatVars));
       }
     }
   }
