@@ -1,5 +1,30 @@
 # JSROOT changelog
 
+## Changes in v6
+
+1. Skip IE support
+2. Upgrade d3.js to v6.1.1, due to significant changes in API skip support of older versions
+3. Make heavy use of Promise class
+4. Provide JSROOT.httpRequest() function, which returns Promise instance
+5. JSROOT.draw/JSROOT.redraw also returns Promise, skip callback parameter
+6. JSROOT.OpenFile() returns Promise, if callback specified, old API will be working
+7. Upgrade three.js to r121:
+   - SoftwareRenderer was deprecated
+   - WebGL used both for browser and node.js (via headless-gl)
+   - Keep use of SVGRendered as backup solution
+   - support r3d_gl, r3d_img, r3d_svg rendering options for TGeo and histos
+8. Deprecate bower package manager
+9. Upgrade MathJax.js to version 3.1.1, reliably works in browser and node.js!
+10. Provide new code loader via JSROOT.require. It uses require.js when available or emulate behaviour
+    either with plain scripts loading or via node.js require(). Introducing clean dependencies in JSROOT code.
+    Deprecates old JSROOT.AssertPrerequisites function
+11. All latex/mathjax related methods moved to special JSRoot.latex.js script, only loaded when required
+12. Do not use classes - they are not performant enough compare to Object.prototype
+13. Improve TH2 col drawings for large number of bins - up to factor 5 faster
+14. Rename JSROOT scripts to follow common naming convention
+15. Support openui5 sap.ui.require loader if openui5 loaded before JSRootCore.js script
+
+
 ## Changes in 5.9.0
 1. Support RX and RY drawing option together with COL of TH2
 2. Add support of #overline, #underline, #strike into TLatex parsing (#196)

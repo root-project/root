@@ -3,7 +3,6 @@
 <html lang="en">
 <head>
    <meta charset="UTF-8">
-   <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <title></title>
    <script src="$jsrootsys/scripts/JSRootCore.js" type="text/javascript"></script>
    <style>
@@ -20,16 +19,16 @@
 </body>
 
 <script id="data" type='text/javascript'>
-   var main_object = JSROOT.JSONR_unref($draw_object);
+   var main_object = JSROOT.parse($draw_object);
 </script>
 
 <script type='text/javascript'>
    JSROOT.BatchMode = true;
 
-   JSROOT.draw("drawing", main_object, "", function(painter) {
+   JSROOT.draw("drawing", main_object, "").then(painter => {
       d3.select("#data").remove();
       if ("$draw_kind" != "draw")
-         painter.ProduceImage(true, "$draw_kind", function(res) {
+         painter.ProduceImage(true, "$draw_kind", res => {
             var elem = d3.select("#drawing").attr("style", null);
             if ("$draw_kind" == "svg")
                elem.html(res);

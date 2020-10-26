@@ -1,25 +1,9 @@
-/// @file JSRootPainter.hierarchy.js
+/// @file JSRoot.hierarchy.js
 /// Hierarchy display functionality
 
-(function( factory ) {
-   if ( typeof define === "function" && define.amd ) {
-      define( ['JSRootCore', 'd3', 'JSRootPainter'], factory );
-   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
-       factory(require("./JSRootCore.js"), require("d3"), require("./JSRootPainter.js"));
-   } else {
-      if (typeof d3 != 'object')
-         throw new Error('This extension requires d3.js', 'JSRootPainter.hierarchy.js');
-      if (typeof JSROOT == 'undefined')
-         throw new Error('JSROOT is not defined', 'JSRootPainter.hierarchy.js');
-      if (typeof JSROOT.Painter != 'object')
-         throw new Error('JSROOT.Painter not defined', 'JSRootPainter.hierarchy.js');
-      factory(JSROOT, d3);
-   }
-} (function(JSROOT, d3) {
+JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    "use strict";
-
-   JSROOT.sources.push("hierarchy");
 
    // ===========================================================================================
 
@@ -27,7 +11,7 @@
    function drawList(divid, lst, opt, callback) {
       if (!lst || !lst.arr) return JSROOT.CallBack(callback);
 
-      var obj = {
+      let obj = {
         divid: divid,
         lst: lst,
         opt: opt,
@@ -35,12 +19,10 @@
         callback: callback,
         draw_next: function() {
            while (++this.indx < this.lst.arr.length) {
-              var handle = { func: this.draw_bind },
-                  item = this.lst.arr[this.indx],
+              let item = this.lst.arr[this.indx],
                   opt = (this.lst.opt && this.lst.opt[this.indx]) ? this.lst.opt[this.indx] : this.opt;
               if (!item) continue;
-              JSROOT.draw(this.divid, item, opt, handle);
-              if (!handle.completed) return;
+              return JSROOT.draw(this.divid, item, opt).then(this.draw_bind); // reenter loop via callback
            }
 
            return JSROOT.CallBack(this.callback);
@@ -62,8 +44,8 @@
 
       item._childs = [];
 
-      for ( var i = 0; i < obj.fFolders.arr.length; ++i) {
-         var chld = obj.fFolders.arr[i];
+      for ( let i = 0; i < obj.fFolders.arr.length; ++i) {
+         let chld = obj.fFolders.arr[i];
          item._childs.push( {
             _name : chld.fName,
             _kind : "ROOT." + chld._typename,
@@ -85,8 +67,8 @@
 
       // item._childs = [];
 
-      for ( var i = 0; i < obj.fTasks.arr.length; ++i) {
-         var chld = obj.fTasks.arr[i];
+      for ( let i = 0; i < obj.fTasks.arr.length; ++i) {
+         let chld = obj.fTasks.arr[i];
          item._childs.push( {
             _name : chld.fName,
             _kind : "ROOT." + chld._typename,
@@ -97,28 +79,28 @@
    }
 
    function ListHierarchy(folder, lst) {
-      if (!JSROOT.IsRootCollection(lst)) return false;
+      if (!JSROOT.isRootCollection(lst)) return false;
 
       if ((lst.arr === undefined) || (lst.arr.length === 0)) {
          folder._more = false;
          return true;
       }
 
-      var do_context = false, prnt = folder;
+      let do_context = false, prnt = folder;
       while (prnt) {
          if (prnt._do_context) do_context = true;
          prnt = prnt._parent;
       }
 
       // if list has objects with similar names, create cycle number for them
-      var ismap = (lst._typename == 'TMap'), names = [], cnt = [], cycle = [];
+      let ismap = (lst._typename == 'TMap'), names = [], cnt = [], cycle = [];
 
-      for (var i = 0; i < lst.arr.length; ++i) {
-         var obj = ismap ? lst.arr[i].first : lst.arr[i];
+      for (let i = 0; i < lst.arr.length; ++i) {
+         let obj = ismap ? lst.arr[i].first : lst.arr[i];
          if (!obj) continue; // for such objects index will be used as name
-         var objname = obj.fName || obj.name;
+         let objname = obj.fName || obj.name;
          if (!objname) continue;
-         var indx = names.indexOf(objname);
+         let indx = names.indexOf(objname);
          if (indx>=0) {
             cnt[indx]++;
          } else {
@@ -128,10 +110,10 @@
       }
 
       folder._childs = [];
-      for ( var i = 0; i < lst.arr.length; ++i) {
-         var obj = ismap ? lst.arr[i].first : lst.arr[i];
+      for ( let i = 0; i < lst.arr.length; ++i) {
+         let obj = ismap ? lst.arr[i].first : lst.arr[i];
 
-         var item;
+         let item;
 
          if (!obj || !obj._typename) {
             item = {
@@ -150,7 +132,7 @@
            };
 
            switch(obj._typename) {
-              case 'TColor': item._value = JSROOT.Painter.MakeColorRGB(obj); break;
+              case 'TColor': item._value = jsrp.getRGBfromTColor(obj); break;
               case 'TText': item._value = obj.fTitle; break;
               case 'TLatex': item._value = obj.fTitle; break;
               case 'TObjString': item._value = obj.fString; break;
@@ -165,7 +147,7 @@
               item._name = i.toString();
            } else {
               // if there are several such names, add cycle number to the item name
-              var indx = names.indexOf(obj.fName);
+              let indx = names.indexOf(obj.fName);
               if ((indx>=0) && (cnt[indx]>1)) {
                  item._cycle = cycle[indx]++;
                  item._keyname = item._name;
@@ -185,10 +167,10 @@
 
       folder._childs = [];
 
-      for (var i = 0; i < keys.length; ++i) {
-         var key = keys[i];
+      for (let i = 0; i < keys.length; ++i) {
+         let key = keys[i];
 
-         var item = {
+         let item = {
             _name : key.fName + ";" + key.fCycle,
             _cycle : key.fCycle,
             _kind : "ROOT." + key.fClassName,
@@ -204,9 +186,9 @@
             item._realname = key.fRealName + ";" + key.fCycle;
 
          if (key.fClassName == 'TDirectory' || key.fClassName == 'TDirectoryFile') {
-            var dir = null;
-            if ((dirname!=null) && (file!=null)) dir = file.GetDir(dirname + key.fName);
-            if (dir == null) {
+            let dir = null;
+            if (dirname && file) dir = file.GetDir(dirname + key.fName);
+            if (!dir) {
                item._more = true;
                item._expand = function(node, obj) {
                   // one can get expand call from child objects - ignore them
@@ -236,11 +218,11 @@
 
       top._childs = [];
 
-      var proto = Object.prototype.toString.apply(obj);
+      let proto = Object.prototype.toString.apply(obj);
 
       if (proto === '[object DataView]') {
 
-         var item = {
+         let item = {
              _parent: top,
              _name: 'size',
              _value: obj.byteLength.toString(),
@@ -248,9 +230,9 @@
          };
 
          top._childs.push(item);
-         var namelen = (obj.byteLength < 10) ? 1 : JSROOT.log10(obj.byteLength);
+         let namelen = (obj.byteLength < 10) ? 1 : Math.log10(obj.byteLength);
 
-         for (var k=0;k<obj.byteLength;++k) {
+         for (let k=0;k<obj.byteLength;++k) {
             if (k % 16 === 0) {
                item = {
                  _parent: top,
@@ -262,7 +244,7 @@
                top._childs.push(item);
             }
 
-            var val = obj.getUint8(k).toString(16);
+            let val = obj.getUint8(k).toString(16);
             while (val.length<2) val = "0"+val;
             if (item._value.length>0)
                item._value += (k%4===0) ? " | " : " ";
@@ -273,22 +255,22 @@
       }
 
       // check nosimple property in all parents
-      var nosimple = true, do_context = false, prnt = top;
+      let nosimple = true, do_context = false, prnt = top;
       while (prnt) {
          if (prnt._do_context) do_context = true;
          if ('_nosimple' in prnt) { nosimple = prnt._nosimple; break; }
          prnt = prnt._parent;
       }
 
-      var isarray = (proto.lastIndexOf('Array]') == proto.length-6) && (proto.indexOf('[object')==0) && !isNaN(obj.length),
-          compress = isarray && (obj.length > JSROOT.gStyle.HierarchyLimit),  arrcompress = false;
+      let isarray = (proto.lastIndexOf('Array]') == proto.length-6) && (proto.indexOf('[object')==0) && !isNaN(obj.length),
+          compress = isarray && (obj.length > JSROOT.settings.HierarchyLimit),  arrcompress = false;
 
       if (isarray && (top._name==="Object") && !top._parent) top._name = "Array";
 
       if (compress) {
          arrcompress = true;
-         for (var k=0;k<obj.length;++k) {
-            var typ = typeof obj[k];
+         for (let k=0;k<obj.length;++k) {
+            let typ = typeof obj[k];
             if ((typ === 'number') || (typ === 'boolean') || (typ=='string' && (obj[k].length<16))) continue;
             arrcompress = false; break;
          }
@@ -307,13 +289,13 @@
       }
 
       if (arrcompress) {
-         for (var k=0;k<obj.length;) {
+         for (let k=0;k<obj.length;) {
 
-            var nextk = Math.min(k+10,obj.length), allsame = true, prevk = k;
+            let nextk = Math.min(k+10,obj.length), allsame = true, prevk = k;
 
             while (allsame) {
                allsame = true;
-               for (var d=prevk;d<nextk;++d)
+               for (let d=prevk;d<nextk;++d)
                   if (obj[k]!==obj[d]) allsame = false;
 
                if (allsame) {
@@ -329,13 +311,13 @@
                }
             }
 
-            var item = { _parent: top, _name: k+".."+(nextk-1), _vclass: 'h_value_num' };
+            let item = { _parent: top, _name: k+".."+(nextk-1), _vclass: 'h_value_num' };
 
             if (allsame) {
                item._value = obj[k].toString();
             } else {
                item._value = "";
-               for (var d=k;d<nextk;++d)
+               for (let d=k;d<nextk;++d)
                   item._value += ((d===k) ? "[ " : ", ") + obj[d].toString();
                item._value += " ]";
             }
@@ -347,11 +329,11 @@
          return true;
       }
 
-      var lastitem, lastkey, lastfield, cnt;
+      let lastitem, lastkey, lastfield, cnt;
 
-      for (var key in obj) {
+      for (let key in obj) {
          if ((key == '_typename') || (key[0]=='$')) continue;
-         var fld = obj[key];
+         let fld = obj[key];
          if (typeof fld == 'function') continue;
          if (args && args.exclude && (args.exclude.indexOf(key)>=0)) continue;
 
@@ -360,7 +342,7 @@
             if (cnt>0) lastitem._name += ".." + lastkey;
          }
 
-         var item = { _parent: top, _name: key };
+         let item = { _parent: top, _name: key };
 
          if (compress) { lastitem = item;  lastkey = key; lastfield = fld; cnt = 0; }
 
@@ -370,7 +352,7 @@
             continue;
          }
 
-         var simple = false;
+         let simple = false;
 
          if (typeof fld == 'object') {
 
@@ -412,7 +394,7 @@
                }
 
                // check if object already shown in hierarchy (circular dependency)
-               var curr = top, inparent = false;
+               let curr = top, inparent = false;
                while (curr && !inparent) {
                   inparent = (curr._obj === fld);
                   curr = curr._parent;
@@ -428,12 +410,12 @@
                   item._more = false;
 
                   switch(fld._typename) {
-                     case 'TColor': item._value = JSROOT.Painter.MakeColorRGB(fld); break;
+                     case 'TColor': item._value = jsrp.getRGBfromTColor(fld); break;
                      case 'TText': item._value = fld.fTitle; break;
                      case 'TLatex': item._value = fld.fTitle; break;
                      case 'TObjString': item._value = fld.fString; break;
                      default:
-                        if (JSROOT.IsRootCollection(fld) && (typeof fld.arr === "object")) {
+                        if (JSROOT.isRootCollection(fld) && (typeof fld.arr === "object")) {
                            item._value = fld.arr.length ? "[...]" : "[]";
                            item._title += ", size:"  + fld.arr.length;
                            if (fld.arr.length>0) item._more = true;
@@ -476,10 +458,71 @@
       return true;
    }
 
+   /** @summary Parse string value as array.
+    * @desc It could be just simple string:  "value" or
+    * array with or without string quotes:  [element], ['elem1',elem2]
+    * @private */
+   let ParseAsArray = val => {
+
+      let res = [];
+
+      if (typeof val != 'string') return res;
+
+      val = val.trim();
+      if (val=="") return res;
+
+      // return as array with single element
+      if ((val.length<2) || (val[0]!='[') || (val[val.length-1]!=']')) {
+         res.push(val); return res;
+      }
+
+      // try to split ourself, checking quotes and brackets
+      let nbr = 0, nquotes = 0, ndouble = 0, last = 1;
+
+      for (let indx = 1; indx < val.length; ++indx) {
+         if (nquotes > 0) {
+            if (val[indx]==="'") nquotes--;
+            continue;
+         }
+         if (ndouble > 0) {
+            if (val[indx]==='"') ndouble--;
+            continue;
+         }
+         switch (val[indx]) {
+            case "'": nquotes++; break;
+            case '"': ndouble++; break;
+            case "[": nbr++; break;
+            case "]": if (indx < val.length - 1) { nbr--; break; }
+            case ",":
+               if (nbr === 0) {
+                  let sub =  val.substring(last, indx).trim();
+                  if ((sub.length>1) && (sub[0]==sub[sub.length-1]) && ((sub[0]=='"') || (sub[0]=="'")))
+                     sub = sub.substr(1, sub.length-2);
+                  res.push(sub);
+                  last = indx+1;
+               }
+               break;
+         }
+      }
+
+      if (res.length === 0)
+         res.push(val.substr(1, val.length-2).trim());
+
+      return res;
+   }
+
    // =================================================================================================
 
-   /// special layout with three different areas for browser (left), status line (bottom) and central drawing
-   /// Main application is normal browser in JSROOT, but later one should be able to use it in ROOT6 canvas
+
+   /**
+     * @summary special layout with three different areas for browser (left), status line (bottom) and central drawing
+     * Main application is normal browser in JSROOT, but later one should be able to use it in ROOT6 canvas
+     *
+     * @class
+     * @memberof JSROOT
+     * @private
+     */
+
    function BrowserLayout(id, hpainter, objpainter) {
       this.gui_div = id;
       this.hpainter = hpainter; // painter for brwoser area (if any)
@@ -503,10 +546,10 @@
       }
    }
 
-   /// method used to create basic elements
-   /// should be called only once
+   /** @summary method used to create basic elements
+     * @desc should be called only once */
    BrowserLayout.prototype.Create = function(with_browser) {
-      var main = this.main();
+      let main = this.main();
 
       main.append("div").attr("id", this.drawing_divid())
                         .classed("jsroot_draw_area", true)
@@ -516,11 +559,11 @@
    }
 
    BrowserLayout.prototype.CreateBrowserBtns = function() {
-      var br = this.main().select(".jsroot_browser");
+      let br = this.main().select(".jsroot_browser");
       if (br.empty()) return;
-      var btns = br.append("div").classed("jsroot_browser_btns", true).classed("jsroot", true);
+      let btns = br.append("div").classed("jsroot_browser_btns", true).classed("jsroot", true);
       btns.style('position',"absolute").style("left","7px").style("top","7px");
-      if (JSROOT.touches) btns.style('opacity','0.2'); // on touch devices should be always visible
+      if (JSROOT.browser.touches) btns.style('opacity','0.2'); // on touch devices should be always visible
       return btns;
    }
 
@@ -529,7 +572,7 @@
    }
 
    BrowserLayout.prototype.SetBrowserContent = function(guiCode) {
-      var main = d3.select("#" + this.gui_div + " .jsroot_browser");
+      let main = d3.select("#" + this.gui_div + " .jsroot_browser");
       if (main.empty()) return;
 
       main.insert('div', ".jsroot_browser_btns").classed('jsroot_browser_area', true)
@@ -540,13 +583,13 @@
    }
 
    BrowserLayout.prototype.HasContent = function() {
-      var main = d3.select("#" + this.gui_div + " .jsroot_browser");
+      let main = d3.select("#" + this.gui_div + " .jsroot_browser");
       if (main.empty()) return false;
       return !main.select(".jsroot_browser_area").empty();
    }
 
    BrowserLayout.prototype.DeleteContent = function() {
-      var main = d3.select("#" + this.gui_div + " .jsroot_browser");
+      let main = d3.select("#" + this.gui_div + " .jsroot_browser");
       if (main.empty()) return;
 
       main.selectAll("*").remove();
@@ -554,10 +597,10 @@
    }
 
    BrowserLayout.prototype.HasStatus = function() {
-      var main = d3.select("#"+this.gui_div+" .jsroot_browser");
+      let main = d3.select("#"+this.gui_div+" .jsroot_browser");
       if (main.empty()) return false;
 
-      var id = this.gui_div + "_status",
+      let id = this.gui_div + "_status",
           line = d3.select("#"+id);
 
       return !line.empty();
@@ -565,26 +608,53 @@
 
    BrowserLayout.prototype.CreateStatusLine = function(height, mode) {
       if (!this.gui_div) return '';
-      var pthis = this;
-      JSROOT.AssertPrerequisites('jq2d', function() {
-         pthis.CreateStatusLine(height, mode);
-      });
+      JSROOT.require('jq2d').then(() => this.CreateStatusLine(height, mode));
       return this.gui_div + "_status";
    }
 
-   // =========== painter of hierarchical structures =================================
+   // ==============================================================================
+
+
+   /** @summary central function for expand of all online items
+     * @private */
+   function OnlineHierarchy(node, obj) {
+      if (obj && node && ('_childs' in obj)) {
+
+         for (let n=0;n<obj._childs.length;++n)
+            if (obj._childs[n]._more || obj._childs[n]._childs)
+               obj._childs[n]._expand = OnlineHierarchy;
+
+         node._childs = obj._childs;
+         obj._childs = null;
+         return true;
+      }
+
+      return false;
+   }
+
+   // ==============================================================
 
    JSROOT.hpainter = null; // global pointer
 
-   // HierarchyPainter
+   /**
+     * @summary Painter of hierarchical structures
+     *
+     * @class
+     * @memberof JSROOT
+     * @extends JSROOT.BasePainter
+     * @param {string} name - painter name
+     * @param {string|object} frameid - place when painter drawn
+     * @param {string} backgr - background color
+     * @private
+     */
 
    function HierarchyPainter(name, frameid, backgr) {
-      JSROOT.TBasePainter.call(this);
+      JSROOT.BasePainter.call(this);
       this.name = name;
       this.h = null; // hierarchy
       this.with_icons = true;
       this.background = backgr;
-      this.files_monitoring = (frameid == null); // by default files monitored when nobrowser option specified
+      this.files_monitoring = !frameid; // by default files monitored when nobrowser option specified
       this.nobrowser = (frameid === null);
       if (!this.nobrowser) this.SetDivId(frameid); // this is required to be able cleanup painter
 
@@ -593,22 +663,24 @@
          JSROOT.hpainter = this;
    }
 
-   HierarchyPainter.prototype = Object.create(JSROOT.TBasePainter.prototype);
+   HierarchyPainter.prototype = Object.create(JSROOT.BasePainter.prototype);
 
+   /** @summary Cleanup hierarchy painter */
    HierarchyPainter.prototype.Cleanup = function() {
       // clear drawing and browser
       this.clear(true);
 
-      JSROOT.TBasePainter.prototype.Cleanup.call(this);
+      JSROOT.BasePainter.prototype.Cleanup.call(this);
 
       if (JSROOT.hpainter === this)
          JSROOT.hpainter = null;
    }
 
+   /** @summary Create file hierarchy */
    HierarchyPainter.prototype.FileHierarchy = function(file) {
-      var painter = this;
+      let painter = this;
 
-      var folder = {
+      let folder = {
          _name : file.fFileName,
          _title : (file.fTitle ? (file.fTitle + ", path ") : "")  + file.fFullURL,
          _kind : "ROOT.TFile",
@@ -619,7 +691,7 @@
          // this is central get method, item or itemname can be used
          _get : function(item, itemname, callback) {
 
-            var fff = this; // file item
+            let fff = this; // file item
 
             if (item && item._readobj)
                return JSROOT.CallBack(callback, item, item._readobj);
@@ -629,20 +701,20 @@
             function ReadFileObject(file) {
                if (!fff._file) fff._file = file;
 
-               if (file == null) return JSROOT.CallBack(callback, item, null);
+               if (!file) return JSROOT.CallBack(callback, item, null);
 
-               file.ReadObject(itemname, function(obj) {
+               file.ReadObject(itemname).then(obj => {
 
                   // if object was read even when item did not exist try to reconstruct new hierarchy
                   if (!item && obj) {
                      // first try to found last read directory
-                     var d = painter.Find({name:itemname, top:fff, last_exists:true, check_keys:true });
+                     let d = painter.Find({name:itemname, top:fff, last_exists:true, check_keys:true });
                      if ((d!=null) && ('last' in d) && (d.last!=fff)) {
                         // reconstruct only subdir hierarchy
-                        var dir = file.GetDir(painter.itemFullName(d.last, fff));
+                        let dir = file.GetDir(painter.itemFullName(d.last, fff));
                         if (dir) {
                            d.last._name = d.last._keyname;
-                           var dirname = painter.itemFullName(d.last, fff);
+                           let dirname = painter.itemFullName(d.last, fff);
                            KeysHierarchy(d.last, dir.fKeys, file, dirname + "/");
                         }
                      } else {
@@ -663,8 +735,8 @@
             }
 
             if (fff._file) ReadFileObject(fff._file); else
-            if (fff._localfile) new JSROOT.TLocalFile(fff._localfile, ReadFileObject); else
-            if (fff._fullurl) new JSROOT.TFile(fff._fullurl, ReadFileObject);
+            if (fff._localfile) JSROOT.openFile(fff._localfile).then(f => ReadFileObject(f)); else
+            if (fff._fullurl) JSROOT.openFile(fff._fullurl).then(f => ReadFileObject(f));
          }
       };
 
@@ -676,9 +748,7 @@
    /** @summary Iterate over all items in hierarchy
     * @param {function} callback - function called for every item
     * @param {object} [top = null] - top item to start from
-    * @private
-    */
-
+    * @private */
    HierarchyPainter.prototype.ForEach = function(callback, top) {
 
       if (!top) top = this.h;
@@ -686,7 +756,7 @@
       function each_item(item) {
          callback(item);
          if ('_childs' in item)
-            for (var n = 0; n < item._childs.length; ++n) {
+            for (let n = 0; n < item._childs.length; ++n) {
                item._childs[n]._parent = item;
                each_item(item._childs[n]);
             }
@@ -702,23 +772,21 @@
     * @param {boolean} [arg.last_exists = false] -  when specified last parent element will be returned
     * @param {boolean} [arg.check_keys = false] - check TFile keys with cycle suffix
     * @param {object} [arg.top = null] - element to start search from
-    * @private
-    */
-
+    * @private */
    HierarchyPainter.prototype.Find = function(arg) {
 
       function find_in_hierarchy(top, fullname) {
 
          if (!fullname || (fullname.length == 0) || !top) return top;
 
-         var pos = fullname.length;
+         let pos = fullname.length;
 
          if (!top._parent && (top._kind !== 'TopFolder') && (fullname.indexOf(top._name)===0)) {
             // it is allowed to provide item name, which includes top-parent like file.root/folder/item
             // but one could skip top-item name, if there are no other items
             if (fullname === top._name) return top;
 
-            var len = top._name.length;
+            let len = top._name.length;
             if (fullname[len] == "/") {
                fullname = fullname.substr(len+1);
                pos = fullname.length;
@@ -736,24 +804,24 @@
 
          while (pos > 0) {
             // we try to find element with slashes inside - start from full name
-            var localname = (pos >= fullname.length) ? fullname : fullname.substr(0, pos);
+            let localname = (pos >= fullname.length) ? fullname : fullname.substr(0, pos);
 
             if (top._childs) {
                // first try to find direct matched item
-               for (var i = 0; i < top._childs.length; ++i)
+               for (let i = 0; i < top._childs.length; ++i)
                   if (top._childs[i]._name == localname)
                      return process_child(top._childs[i]);
 
                // if first child online, check its elements
                if ((top._kind === 'TopFolder') && (top._childs[0]._online!==undefined))
-                  for (var i = 0; i < top._childs[0]._childs.length; ++i)
+                  for (let i = 0; i < top._childs[0]._childs.length; ++i)
                      if (top._childs[0]._childs[i]._name == localname)
                         return process_child(top._childs[0]._childs[i], true);
 
                // if allowed, try to found item with key
                if (arg.check_keys) {
-                  var newest = null;
-                  for (var i = 0; i < top._childs.length; ++i) {
+                  let newest = null;
+                  for (let i = 0; i < top._childs.length; ++i) {
                     if (top._childs[i]._keyname === localname) {
                        if (!newest || (newest._cycle < top._childs[i]._cycle)) newest = top._childs[i];
                     }
@@ -761,7 +829,7 @@
                   if (newest) return process_child(newest);
                }
 
-               var allow_index = arg.allow_index;
+               let allow_index = arg.allow_index;
                if ((localname[0] === '[') && (localname[localname.length-1] === ']') &&
                    !isNaN(parseInt(localname.substr(1,localname.length-2)))) {
                   allow_index = true;
@@ -770,7 +838,7 @@
 
                // when search for the elements it could be allowed to check index
                if (allow_index) {
-                  var indx = parseInt(localname);
+                  let indx = parseInt(localname);
                   if (!isNaN(indx) && (indx>=0) && (indx<top._childs.length))
                      return process_child(top._childs[indx]);
                }
@@ -783,7 +851,7 @@
              // if did not found element with given name we just generate it
              if (top._childs === undefined) top._childs = [];
              pos = fullname.indexOf("/");
-             var child = { _name: ((pos < 0) ? fullname : fullname.substr(0, pos)) };
+             let child = { _name: ((pos < 0) ? fullname : fullname.substr(0, pos)) };
              top._childs.push(child);
              return process_child(child);
          }
@@ -791,7 +859,7 @@
          return (arg.last_exists && top) ? { last: top, rest: fullname } : null;
       }
 
-      var top = this.h, itemname = "";
+      let top = this.h, itemname = "";
 
       if (arg === null) return null; else
       if (typeof arg == 'string') { itemname = arg; arg = {}; } else
@@ -809,7 +877,7 @@
 
       if (node && node._kind ==='TopFolder') return "__top_folder__";
 
-      var res = "";
+      let res = "";
 
       while (node) {
          // online items never includes top-level folder
@@ -825,19 +893,20 @@
       return res;
    }
 
+    /** @summary Eexecutes item marked as 'Command'
+      * @desc If command requires additional arguments, they could be specified as extra arguments
+      * Or they will be requested interactive
+      * @param {String} itemname - name of command item
+      * @param {Function} callback - function called with command result */
    HierarchyPainter.prototype.ExecuteCommand = function(itemname, callback) {
-      // execute item marked as 'Command'
-      // If command requires additional arguments, they could be specified as extra arguments
-      // Or they will be requested interactive
 
-      var hitem = this.Find(itemname),
+      let hitem = this.Find(itemname),
           url = this.GetOnlineItemUrl(hitem) + "/cmd.json",
-          pthis = this,
           d3node = d3.select((typeof callback == 'function') ? undefined : callback);
 
       if ('_numargs' in hitem)
-         for (var n = 0; n < hitem._numargs; ++n) {
-            var argname = "arg" + (n+1), argvalue = null;
+         for (let n = 0; n < hitem._numargs; ++n) {
+            let argname = "arg" + (n+1), argvalue = null;
             if (n+2<arguments.length) argvalue = arguments[n+2];
             if (!argvalue && (typeof callback == 'object'))
                argvalue = prompt("Input argument " + argname + " for command " + hitem._name, "");
@@ -850,33 +919,32 @@
          if (hitem && hitem._title) d3node.attr('title', "Executing " + hitem._title);
       }
 
-      JSROOT.NewHttpRequest(url, 'text', function(res) {
-         if (typeof callback == 'function') return callback(res);
-         if (d3node.empty()) return;
-         var col = ((res!=null) && (res!='false')) ? 'green' : 'red';
-         if (hitem && hitem._title) d3node.attr('title', hitem._title + " lastres=" + res);
-         d3node.style('background', col);
-         setTimeout(function() { d3node.style('background', ''); }, 2000);
-         if ((col == 'green') && ('_hreload' in hitem)) pthis.reload();
-         if ((col == 'green') && ('_update_item' in hitem)) pthis.updateItems(hitem._update_item.split(";"));
-      }).send();
+      if (typeof callback != 'function')
+         callback = res => {
+            if (d3node.empty()) return;
+            let col = ((res!=null) && (res!='false')) ? 'green' : 'red';
+            if (hitem && hitem._title) d3node.attr('title', hitem._title + " lastres=" + res);
+            d3node.style('background', col);
+            setTimeout(() => d3node.style('background', ''), 2000);
+            if ((col == 'green') && ('_hreload' in hitem)) this.reload();
+            if ((col == 'green') && ('_update_item' in hitem)) this.updateItems(hitem._update_item.split(";"));
+         }
+
+      JSROOT.httpRequest(url, 'text').then(callback, callback);
    }
 
    HierarchyPainter.prototype.RefreshHtml = function(callback) {
       if (!this.divid) return JSROOT.CallBack(callback);
-      var hpainter = this;
-      JSROOT.AssertPrerequisites('jq2d', function() {
-          hpainter.RefreshHtml(callback);
-      });
+      JSROOT.require('jq2d').then(() => this.RefreshHtml(callback));
    }
 
+   /** @summary Get object item with specified name
+     * @desc depending from provided option, same item can generate different object types */
    HierarchyPainter.prototype.get = function(arg, call_back, options) {
-      // get object item with specified name
-      // depending from provided option, same item can generate different object types
 
       if (arg===null) return JSROOT.CallBack(call_back, null, null);
 
-      var itemname, item, hpainter = this;
+      let itemname, item;
 
       if (typeof arg === 'string') {
          itemname = arg;
@@ -897,24 +965,24 @@
            else item = this.Find( { name: itemname, allow_index: true, check_keys: true } );
 
       // if item not found, try to find nearest parent which could allow us to get inside
-      var d = (item!=null) ? null : this.Find({ name: itemname, last_exists: true, check_keys: true, allow_index: true });
+      let d = (item!=null) ? null : this.Find({ name: itemname, last_exists: true, check_keys: true, allow_index: true });
 
       // if item not found, try to expand hierarchy central function
       // implements not process get in central method of hierarchy item (if exists)
       // if last_parent found, try to expand it
       if ((d !== null) && ('last' in d) && (d.last !== null)) {
-         var parentname = this.itemFullName(d.last);
+         let parentname = this.itemFullName(d.last);
 
          // this is indication that expand does not give us better path to searched item
          if ((typeof arg == 'object') && ('rest' in arg))
             if ((arg.rest == d.rest) || (arg.rest.length <= d.rest.length))
                return JSROOT.CallBack(call_back);
 
-         return this.expand(parentname, function(res) {
+         return this.expand(parentname, res => {
             if (!res) JSROOT.CallBack(call_back);
-            var newparentname = hpainter.itemFullName(d.last);
+            let newparentname = this.itemFullName(d.last);
             if (newparentname.length>0) newparentname+="/";
-            hpainter.get( { name: newparentname + d.rest, rest: d.rest }, call_back, options);
+            this.get( { name: newparentname + d.rest, rest: d.rest }, call_back, options);
          }, null, true);
       }
 
@@ -922,7 +990,7 @@
          return JSROOT.CallBack(call_back, item, item._obj);
 
       // normally search _get method in the parent items
-      var curr = item;
+      let curr = item;
       while (curr) {
          if (('_get' in curr) && (typeof curr._get == 'function'))
             return curr._get(item, null, call_back, options);
@@ -943,19 +1011,17 @@
    }
 
    HierarchyPainter.prototype.player = function(itemname, option, call_back) {
-      var item = this.Find(itemname);
+      let item = this.Find(itemname);
 
       if (!item || !item._player) return JSROOT.CallBack(call_back, null);
 
-      var hpainter = this;
+      JSROOT.require(item._prereq || '').then(() => {
 
-      JSROOT.AssertPrerequisites(item._prereq || '', function() {
-
-         var player_func = JSROOT.findFunction(item._player);
+         let player_func = JSROOT.findFunction(item._player);
          if (!player_func) return JSROOT.CallBack(call_back, null);
 
-         hpainter.CreateDisplay(function(mdi) {
-            var res = mdi ? player_func(hpainter, itemname, option) : null;
+         this.CreateDisplay(mdi => {
+            let res = mdi ? player_func(this, itemname, option) : null;
             JSROOT.CallBack(call_back, res);
          });
       });
@@ -966,19 +1032,19 @@
       if (item._player) return true;
       if (item._can_draw !== undefined) return item._can_draw;
       if (drawopt == 'inspect') return true;
-      var handle = JSROOT.getDrawHandle(item._kind, drawopt);
+      let handle = JSROOT.getDrawHandle(item._kind, drawopt);
       return handle && (('func' in handle) || ('draw_field' in handle));
    }
 
    HierarchyPainter.prototype.isItemDisplayed = function(itemname) {
-      var mdi = this.GetDisplay();
+      let mdi = this.GetDisplay();
       if (!mdi) return false;
 
       return mdi.FindFrame(itemname) !== null;
    }
 
    HierarchyPainter.prototype.display = function(itemname, drawopt, call_back) {
-      var h = this,
+      let h = this,
           painter = null,
           updating = false,
           item = null,
@@ -999,7 +1065,11 @@
             respainter.SetItemName(display_itemname, updating ? null : drawopt, h); // mark painter as created from hierarchy
             if (item && !item._painter) item._painter = respainter;
          }
-         JSROOT.CallBack(call_back, respainter || painter, display_itemname);
+
+         // prevent calling many times
+         let f = call_back;
+         call_back = null;
+         JSROOT.CallBack(f, respainter || painter, display_itemname);
       }
 
       h.CreateDisplay(function(mdi) {
@@ -1021,16 +1091,16 @@
 
          if (item && !h.canDisplay(item, drawopt)) return display_callback();
 
-         var divid = "";
+         let divid = "";
          if ((typeof(drawopt)=='string') && (drawopt.indexOf("divid:")>=0)) {
-            var pos = drawopt.indexOf("divid:");
+            let pos = drawopt.indexOf("divid:");
             divid = drawopt.slice(pos+6);
             drawopt = drawopt.slice(0, pos);
          }
 
          if (!updating) JSROOT.progress("Loading " + display_itemname);
 
-         h.get(display_itemname, function(resitem, obj) {
+         h.get(display_itemname, (resitem, obj) => {
 
             if (!updating) JSROOT.progress();
 
@@ -1041,16 +1111,18 @@
 
             if (!updating) JSROOT.progress("Drawing " + display_itemname);
 
-            if (divid.length > 0)
-               return (updating ? JSROOT.redraw : JSROOT.draw)(divid, obj, drawopt, display_callback);
+            if (divid.length > 0) {
+               let draw_func = updating ? JSROOT.redraw : JSROOT.draw;
+               return draw_func(divid, obj, drawopt).then(display_callback).catch(() => display_callback(null));
+            }
 
-            mdi.ForEachPainter(function(p, frame) {
+            mdi.ForEachPainter((p, frame) => {
                if (p.GetItemName() != display_itemname) return;
                // verify that object was drawn with same option as specified now (if any)
                if (!updating && (drawopt!=null) && (p.GetItemDrawOpt()!=drawopt)) return;
                mdi.ActivateFrame(frame);
 
-               var handle = null;
+               let handle = null;
                if (obj._typename) handle = JSROOT.getDrawHandle("ROOT." + obj._typename);
                if (handle && handle.draw_field && obj[handle.draw_field])
                   obj = obj[handle.draw_field];
@@ -1061,77 +1133,76 @@
             if (painter) return display_callback();
 
             if (updating) {
-               JSROOT.console("something went wrong - did not found painter when doing update of " + display_itemname);
+               console.warn(`something went wrong - did not found painter when doing update of ${display_itemname}`);
                return display_callback();
             }
 
-            var frame = mdi.FindFrame(frame_name, true);
+            let frame = mdi.FindFrame(frame_name, true);
             d3.select(frame).html("");
             mdi.ActivateFrame(frame);
 
-            JSROOT.draw(d3.select(frame).attr("id"), obj, drawopt, display_callback);
+            JSROOT.draw(d3.select(frame).attr("id"), obj, drawopt).then(display_callback).catch(() => display_callback(null));
 
-            if (JSROOT.gStyle.DragAndDrop)
+            if (JSROOT.settings.DragAndDrop)
                h.enable_dropping(frame, display_itemname);
 
          }, drawopt);
       });
    }
 
-   HierarchyPainter.prototype.enable_dragging = function(element, itemname) {
+   HierarchyPainter.prototype.enable_dragging = function(/*element, itemname*/) {
       // here is not defined - implemented with jquery
    }
 
-   HierarchyPainter.prototype.enable_dropping = function(frame, itemname) {
+   HierarchyPainter.prototype.enable_dropping = function(/*frame, itemname*/) {
       // here is not defined - implemented with jquery
    }
 
    HierarchyPainter.prototype.dropitem = function(itemname, divid, opt, call_back) {
-      var h = this;
-
       if (opt && typeof opt === 'function') { call_back = opt; opt = ""; }
       if (opt===undefined) opt = "";
 
-      function drop_callback(drop_painter) {
-         if (drop_painter && (typeof drop_painter === 'object')) drop_painter.SetItemName(itemname, null, h);
+      let drop_callback = drop_painter => {
+         if (drop_painter && (typeof drop_painter === 'object')) drop_painter.SetItemName(itemname, null, this);
          JSROOT.CallBack(call_back);
       }
 
       if (itemname == "$legend")
-         return JSROOT.AssertPrerequisites("v6;hist", function() {
-            var res = JSROOT.Painter.produceLegend(divid, opt);
+         return JSROOT.require("hist").then(() => {
+            let res = jsrp.produceLegend(divid, opt);
             JSROOT.CallBack(drop_callback, res);
          });
 
-      h.get(itemname, function(item, obj) {
+      this.get(itemname, (item, obj) => {
 
          if (!obj) return JSROOT.CallBack(call_back);
 
-         var main_painter = JSROOT.GetMainPainter(divid);
+         let main_painter = JSROOT.get_main_painter(divid);
 
          if (main_painter && (typeof main_painter.PerformDrop === 'function'))
-            return main_painter.PerformDrop(obj, itemname, item, opt, drop_callback);
+            return main_painter.PerformDrop(obj, itemname, item, opt).then(drop_callback);
 
          if (main_painter && main_painter.accept_drops)
-            return JSROOT.draw(divid, obj, "same " + opt, drop_callback);
+            return JSROOT.draw(divid, obj, "same " + opt).then(drop_callback);
 
-         h.CleanupFrame(divid);
-         return JSROOT.draw(divid, obj, opt, drop_callback);
+         this.CleanupFrame(divid);
+         return JSROOT.draw(divid, obj, opt).then(drop_callback);
       });
 
       return true;
    }
 
-   /** Argument is item name or array of string with items name
-     *only already drawn items will be update with same draw option */
+   /** @summary Update items
+     * @desc Argument is item name or array of string with items name
+     * only already drawn items will be update with same draw option */
    HierarchyPainter.prototype.updateItems = function(items) {
 
       if (!this.disp || !items) return;
 
-      var draw_items = [], draw_options = [];
+      let draw_items = [], draw_options = [];
 
-      this.disp.ForEachPainter(function(p) {
-         var itemname = p.GetItemName();
+      this.disp.ForEachPainter(p => {
+         let itemname = p.GetItemName();
          if (!itemname || (draw_items.indexOf(itemname)>=0)) return;
          if (typeof items == 'array') {
             if (items.indexOf(itemname) < 0) return;
@@ -1147,29 +1218,30 @@
    }
 
 
-   /** Method can be used to fetch new objects and update all existing drawings
+   /** @summary Update all elements
+     * @desc Method can be used to fetch new objects and update all existing drawings
      * if only_auto_items specified, only automatic items will be updated */
-   HierarchyPainter.prototype.updateAll = function(only_auto_items, only_items) {
+   HierarchyPainter.prototype.updateAll = function(only_auto_items /*, only_items*/) {
 
       if (!this.disp) return;
 
       if (only_auto_items === "monitoring") only_auto_items = !this._monitoring_on;
 
-      var allitems = [], options = [], hpainter = this;
+      let allitems = [], options = [];
 
       // first collect items
-      this.disp.ForEachPainter(function(p) {
-         var itemname = p.GetItemName(),
+      this.disp.ForEachPainter(p => {
+         let itemname = p.GetItemName(),
              drawopt = p.GetItemDrawOpt();
          if ((typeof itemname != 'string') || (allitems.indexOf(itemname)>=0)) return;
 
-         var item = hpainter.Find(itemname), forced = false;
+         let item = this.Find(itemname), forced = false;
          if (!item || ('_not_monitor' in item) || ('_player' in item)) return;
 
          if ('_always_monitor' in item) {
             forced = true;
          } else {
-            var handle = JSROOT.getDrawHandle(item._kind);
+            let handle = JSROOT.getDrawHandle(item._kind);
             if (handle && ('monitor' in handle)) {
                if ((handle.monitor===false) || (handle.monitor=='never')) return;
                if (handle.monitor==='always') forced = true;
@@ -1182,12 +1254,10 @@
          }
       }, true); // only visible panels are considered
 
-      var painter = this;
-
       // force all files to read again (normally in non-browser mode)
       if (this.files_monitoring && !only_auto_items)
-         this.ForEachRootFile(function(item) {
-            painter.ForEach(function(fitem) { delete fitem._readobj; }, item);
+         this.ForEachRootFile(item => {
+            this.ForEach(fitem => { delete fitem._readobj; }, item);
             delete item._file;
          });
 
@@ -1195,11 +1265,12 @@
          this.displayAll(allitems, options);
    }
 
+   /** @summary Display all provided elements */
    HierarchyPainter.prototype.displayAll = function(items, options, call_back) {
 
       if (!items || (items.length == 0)) return JSROOT.CallBack(call_back);
 
-      var h = this;
+      let h = this;
 
       if (!options) options = [];
       while (options.length < items.length)
@@ -1209,21 +1280,21 @@
          h.clear();
          d3.select("#" + h.disp_frameid).html("<h2>Start I/O test</h2>")
 
-         var tm0 = new Date();
-         return h.get(items[0], function(item, obj) {
-            var tm1 = new Date();
+         let tm0 = new Date();
+         return h.get(items[0], function(/*item, obj*/) {
+            let tm1 = new Date();
             d3.select("#" + h.disp_frameid).append("h2").html("Item " + items[0] + " reading time = " + (tm1.getTime() - tm0.getTime()) + "ms");
             return JSROOT.CallBack(call_back);
          });
       }
 
-      var dropitems = new Array(items.length), dropopts = new Array(items.length), images = new Array(items.length);
+      let dropitems = new Array(items.length), dropopts = new Array(items.length), images = new Array(items.length);
 
       // First of all check that items are exists, look for cycle extension and plus sign
-      for (var i = 0; i < items.length; ++i) {
+      for (let i = 0; i < items.length; ++i) {
          dropitems[i] = dropopts[i] = null;
 
-         var item = items[i], can_split = true;
+         let item = items[i], can_split = true;
 
          if (item && item.indexOf("img:")==0) { images[i] = true; continue; }
 
@@ -1232,11 +1303,11 @@
             can_split = false;
          }
 
-         var elem = h.Find({ name: items[i], check_keys: true });
+         let elem = h.Find({ name: items[i], check_keys: true });
          if (elem) { items[i] = h.itemFullName(elem); continue; }
 
          if (can_split && (items[i][0]=='[') && (items[i][items[i].length-1]==']')) {
-            dropitems[i] = JSROOT.ParseAsArray(items[i]);
+            dropitems[i] = ParseAsArray(items[i]);
             items[i] = dropitems[i].shift();
          } else
          if (can_split && (items[i].indexOf("+") > 0)) {
@@ -1246,8 +1317,8 @@
 
          if (dropitems[i] && dropitems[i].length > 0) {
             // allow to specify _same_ item in different file
-            for (var j = 0; j < dropitems[i].length; ++j) {
-               var pos = dropitems[i][j].indexOf("_same_");
+            for (let j = 0; j < dropitems[i].length; ++j) {
+               let pos = dropitems[i][j].indexOf("_same_");
                if ((pos>0) && (h.Find(dropitems[i][j])===null))
                   dropitems[i][j] = dropitems[i][j].substr(0,pos) + items[i].substr(pos);
 
@@ -1256,7 +1327,7 @@
             }
 
             if ((options[i][0] == "[") && (options[i][options[i].length-1] == "]")) {
-               dropopts[i] = JSROOT.ParseAsArray(options[i]);
+               dropopts[i] = ParseAsArray(options[i]);
                options[i] = dropopts[i].shift();
             } else
             if (options[i].indexOf("+") > 0) {
@@ -1270,7 +1341,7 @@
          }
 
          // also check if subsequent items has _same_, than use name from first item
-         var pos = items[i].indexOf("_same_");
+         let pos = items[i].indexOf("_same_");
          if ((pos>0) && !h.Find(items[i]) && (i>0))
             items[i] = items[i].substr(0,pos) + items[0].substr(pos);
 
@@ -1279,9 +1350,9 @@
       }
 
       // now check that items can be displayed
-      for (var n = items.length-1; n>=0; --n) {
+      for (let n = items.length-1; n>=0; --n) {
          if (images[n]) continue;
-         var hitem = h.Find(items[n]);
+         let hitem = h.Find(items[n]);
          if (!hitem || h.canDisplay(hitem, options[n])) continue;
          // try to expand specified item
          h.expand(items[n], null, null, true);
@@ -1292,12 +1363,12 @@
 
       if (items.length == 0) return JSROOT.CallBack(call_back);
 
-      var frame_names = new Array(items.length), items_wait = new Array(items.length);
-      for (var n=0; n < items.length;++n) {
+      let frame_names = new Array(items.length), items_wait = new Array(items.length);
+      for (let n=0; n < items.length;++n) {
          items_wait[n] = 0;
-         var fname = items[n], k = 0;
+         let fname = items[n], k = 0;
          if (items.indexOf(fname) < n) items_wait[n] = true; // if same item specified, one should wait first drawing before start next
-         var p = options[n].indexOf("frameid:");
+         let p = options[n].indexOf("frameid:");
          if (p>=0) {
             fname = options[n].substr(p+8);
             options[n] = options[n].substr(0,p);
@@ -1310,12 +1381,12 @@
 
       // now check if several same items present - select only one for the drawing
       // if draw option includes 'main', such item will be drawn first
-      for (var n=0; n<items.length;++n) {
+      for (let n=0; n<items.length;++n) {
          if (items_wait[n] !== 0) continue;
-         var found_main = n;
-         for (var k=0; k<items.length;++k)
+         let found_main = n;
+         for (let k=0; k<items.length;++k)
             if ((items[n]===items[k]) && (options[k].indexOf('main')>=0)) found_main = k;
-         for (var k=0; k<items.length;++k)
+         for (let k=0; k<items.length;++k)
             if (items[n]===items[k]) items_wait[k] = (found_main != k);
       }
 
@@ -1323,7 +1394,7 @@
          if (!mdi) return JSROOT.CallBack(call_back);
 
          // Than create empty frames for each item
-         for (var i = 0; i < items.length; ++i)
+         for (let i = 0; i < items.length; ++i)
             if (options[i].indexOf('update:')!==0) {
                mdi.CreateFrame(frame_names[i]);
                options[i] += "::_display_on_frame_::"+frame_names[i];
@@ -1336,9 +1407,9 @@
             dropitems[indx] = null; // mark that all drop items are processed
             items[indx] = null; // mark item as ready
 
-            var isany = false;
+            let isany = false;
 
-            for (var cnt = 0; cnt < items.length; ++cnt) {
+            for (let cnt = 0; cnt < items.length; ++cnt) {
                if (dropitems[cnt]) isany = true;
                if (items[cnt]===null) continue; // ignore completed item
                isany = true;
@@ -1356,67 +1427,64 @@
          }
 
          // We start display of all items parallel, but only if they are not the same
-         for (var i = 0; i < items.length; ++i)
+         for (let i = 0; i < items.length; ++i)
             if (!items_wait[i])
                h.display(items[i], options[i], DropNextItem.bind(h,i));
       });
    }
 
+   /** @summary Reload hierarhcy and refresh html code */
    HierarchyPainter.prototype.reload = function() {
-      var hpainter = this;
       if ('_online' in this.h)
-         this.OpenOnline(this.h._online, function() {
-            hpainter.RefreshHtml();
-         });
+         this.OpenOnline(this.h._online,() => this.RefreshHtml());
    }
 
    HierarchyPainter.prototype.UpdateTreeNode = function() {
       // dummy function, will be redefined when jquery part loaded
    }
 
+   /** @summary activate (select) specified item
+     * @param {boolean} [force] - if specified, all required sub-levels will be opened */
    HierarchyPainter.prototype.activate = function(items, force) {
-      // activate (select) specified item
-      // if force specified, all required sub-levels will be opened
 
       if (typeof items == 'string') items = [ items ];
 
-      var active = [],  // array of elements to activate
-          painter = this, // painter itself
+      let active = [],  // array of elements to activate
           update = []; // array of elements to update
-      this.ForEach(function(item) { if (item._background) { active.push(item); delete item._background; } });
+      this.ForEach(item => { if (item._background) { active.push(item); delete item._background; } });
 
-      function mark_active() {
-         if (typeof painter.UpdateBackground !== 'function') return;
+      let mark_active = () => {
+         if (typeof this.UpdateBackground !== 'function') return;
 
-         for (var n=update.length-1;n>=0;--n)
-            painter.UpdateTreeNode(update[n]);
+         for (let n=update.length-1;n>=0;--n)
+            this.UpdateTreeNode(update[n]);
 
-         for (var n=0;n<active.length;++n)
-            painter.UpdateBackground(active[n], force);
+         for (let n=0;n<active.length;++n)
+            this.UpdateBackground(active[n], force);
       }
 
-      function find_next(itemname, prev_found) {
+      let find_next = (itemname, prev_found) => {
          if (itemname === undefined) {
             // extract next element
             if (items.length == 0) return mark_active();
             itemname = items.shift();
          }
 
-         var hitem = painter.Find(itemname);
+         let hitem = this.Find(itemname);
 
          if (!hitem) {
-            var d = painter.Find({ name: itemname, last_exists: true, check_keys: true, allow_index: true });
+            let d = this.Find({ name: itemname, last_exists: true, check_keys: true, allow_index: true });
             if (!d || !d.last) return find_next();
-            d.now_found = painter.itemFullName(d.last);
+            d.now_found = this.itemFullName(d.last);
 
             if (force) {
 
                // if after last expand no better solution found - skip it
                if ((prev_found!==undefined) && (d.now_found === prev_found)) return find_next();
 
-               return painter.expand(d.now_found, function(res) {
+               return this.expand(d.now_found, res => {
                   if (!res) return find_next();
-                  var newname = painter.itemFullName(d.last);
+                  let newname = this.itemFullName(d.last);
                   if (newname.length>0) newname+="/";
                   find_next(newname + d.rest, d.now_found);
                });
@@ -1427,7 +1495,7 @@
          if (hitem) {
             // check that item is visible (opened), otherwise should enable parent
 
-            var prnt = hitem._parent;
+            let prnt = hitem._parent;
             while (prnt) {
                if (!prnt._isopen) {
                   if (force) {
@@ -1456,15 +1524,16 @@
       find_next();
    }
 
+   /** @summary expand specified item */
    HierarchyPainter.prototype.expand = function(itemname, call_back, d3cont, silent) {
-      var hpainter = this, hitem = this.Find(itemname);
+      let hitem = this.Find(itemname);
 
       if (!hitem && d3cont) return JSROOT.CallBack(call_back);
 
-      function DoExpandItem(_item, _obj, _name) {
-         if (!_name) _name = hpainter.itemFullName(_item);
+      let DoExpandItem = (_item, _obj, _name) => {
+         if (!_name) _name = this.itemFullName(_item);
 
-         var handle = _item._expand ? null : JSROOT.getDrawHandle(_item._kind, "::expand");
+         let handle = _item._expand ? null : JSROOT.getDrawHandle(_item._kind, "::expand");
 
          if (_obj && handle && handle.expand_item) {
             _obj = _obj[handle.expand_item]; // just take specified field from the object
@@ -1473,7 +1542,7 @@
          }
 
          if (handle && handle.expand) {
-            JSROOT.AssertPrerequisites(handle.prereq, function() {
+            JSROOT.require(handle.prereq).then(() => {
                _item._expand = JSROOT.findFunction(handle.expand);
                if (_item._expand) return DoExpandItem(_item, _obj, _name);
                JSROOT.CallBack(call_back);
@@ -1487,9 +1556,9 @@
                _item._isopen = true;
                if (_item._parent && !_item._parent._isopen) {
                   _item._parent._isopen = true; // also show parent
-                  if (!silent) hpainter.UpdateTreeNode(_item._parent);
+                  if (!silent) this.UpdateTreeNode(_item._parent);
                } else {
-                  if (!silent) hpainter.UpdateTreeNode(_item, d3cont);
+                  if (!silent) this.UpdateTreeNode(_item, d3cont);
                }
                JSROOT.CallBack(call_back, _item);
                return true;
@@ -1500,9 +1569,9 @@
             _item._isopen = true;
             if (_item._parent && !_item._parent._isopen) {
                _item._parent._isopen = true; // also show parent
-               if (!silent) hpainter.UpdateTreeNode(_item._parent);
+               if (!silent) this.UpdateTreeNode(_item._parent);
             } else {
-               if (!silent) hpainter.UpdateTreeNode(_item, d3cont);
+               if (!silent) this.UpdateTreeNode(_item, d3cont);
             }
             JSROOT.CallBack(call_back, _item);
             return true;
@@ -1517,7 +1586,7 @@
 
          if (hitem._childs && hitem._isopen) {
             hitem._isopen = false;
-            if (!silent) hpainter.UpdateTreeNode(hitem, d3cont);
+            if (!silent) this.UpdateTreeNode(hitem, d3cont);
             return JSROOT.CallBack(call_back);
          }
 
@@ -1526,7 +1595,7 @@
 
       JSROOT.progress("Loading " + itemname);
 
-      this.get(itemname, function(item, obj) {
+      this.get(itemname, (item, obj) => {
 
          JSROOT.progress();
 
@@ -1556,38 +1625,36 @@
          return JSROOT.CallBack(call_back, this.h);
 
       if (this.h._childs)
-         for (var n = 0; n < this.h._childs.length; ++n) {
-            var item = this.h._childs[n];
+         for (let n = 0; n < this.h._childs.length; ++n) {
+            let item = this.h._childs[n];
             if ('_jsonfile' in item) JSROOT.CallBack(call_back, item);
          }
    }
 
    HierarchyPainter.prototype.OpenJsonFile = function(filepath, call_back) {
-      var isfileopened = false;
+      let isfileopened = false;
       this.ForEachJsonFile(function(item) { if (item._jsonfile==filepath) isfileopened = true; });
       if (isfileopened) return JSROOT.CallBack(call_back);
 
-      var pthis = this;
-      JSROOT.NewHttpRequest(filepath, 'object', function(res) {
-         if (!res) return JSROOT.CallBack(call_back);
-         var h1 = { _jsonfile: filepath, _kind: "ROOT." + res._typename, _jsontmp: res, _name: filepath.split("/").pop() };
+      JSROOT.httpRequest(filepath, 'object').then(res => {
+         let h1 = { _jsonfile: filepath, _kind: "ROOT." + res._typename, _jsontmp: res, _name: filepath.split("/").pop() };
          if (res.fTitle) h1._title = res.fTitle;
          h1._get = function(item,itemname,callback) {
             if (item._jsontmp)
                return JSROOT.CallBack(callback, item, item._jsontmp);
-            JSROOT.NewHttpRequest(item._jsonfile, 'object', function(res) {
+            JSROOT.httpRequest(item._jsonfile, 'object').then(function(res) {
                item._jsontmp = res;
                JSROOT.CallBack(callback, item, item._jsontmp);
-            }).send();
+            });
          }
-         if (pthis.h == null) pthis.h = h1; else
-         if (pthis.h._kind == 'TopFolder') pthis.h._childs.push(h1); else {
-            var h0 = pthis.h, topname = ('_jsonfile' in h0) ? "Files" : "Items";
-            pthis.h = { _name: topname, _kind: 'TopFolder', _childs : [h0, h1] };
+         if (!this.h) this.h = h1; else
+         if (this.h._kind == 'TopFolder') this.h._childs.push(h1); else {
+            let h0 = this.h, topname = ('_jsonfile' in h0) ? "Files" : "Items";
+            this.h = { _name: topname, _kind: 'TopFolder', _childs : [h0, h1] };
          }
 
-         pthis.RefreshHtml(call_back);
-      }).send(null);
+         this.RefreshHtml(call_back);
+      }).catch(function() { JSROOT.CallBack(call_back); });
    }
 
    HierarchyPainter.prototype.ForEachRootFile = function(call_back) {
@@ -1596,8 +1663,8 @@
          return JSROOT.CallBack(call_back, this.h);
 
       if (this.h._childs)
-         for (var n = 0; n < this.h._childs.length; ++n) {
-            var item = this.h._childs[n];
+         for (let n = 0; n < this.h._childs.length; ++n) {
+            let item = this.h._childs[n];
             if ((item._kind == 'ROOT.TFile') && ('_fullurl' in item))
                JSROOT.CallBack(call_back, item);
          }
@@ -1606,37 +1673,33 @@
    HierarchyPainter.prototype.OpenRootFile = function(filepath, call_back) {
       // first check that file with such URL already opened
 
-      var isfileopened = false;
+      let isfileopened = false;
       this.ForEachRootFile(function(item) { if (item._fullurl===filepath) isfileopened = true; });
       if (isfileopened) return JSROOT.CallBack(call_back);
 
-      var pthis = this;
-
       JSROOT.progress("Opening " + filepath + " ...");
-      JSROOT.OpenFile(filepath, function(file) {
-         JSROOT.progress();
-         if (!file) {
-            // make CORS warning
-            if (!d3.select("#gui_fileCORS").style("background","red").empty())
-               setTimeout(function() { d3.select("#gui_fileCORS").style("background",''); }, 5000);
-            return JSROOT.CallBack(call_back, false);
-         }
 
-         var h1 = pthis.FileHierarchy(file);
+      JSROOT.openFile(filepath).then(file => {
+
+         let h1 = this.FileHierarchy(file);
          h1._isopen = true;
-         if (pthis.h == null) {
-            pthis.h = h1;
-            if (pthis._topname) h1._name = pthis._topname;
-         } else
-         if (pthis.h._kind == 'TopFolder') {
-            pthis.h._childs.push(h1);
+         if (!this.h) {
+            this.h = h1;
+            if (this._topname) h1._name = this._topname;
+         } else if (this.h._kind == 'TopFolder') {
+            this.h._childs.push(h1);
          }  else {
-            var h0 = pthis.h, topname = (h0._kind == "ROOT.TFile") ? "Files" : "Items";
-            pthis.h = { _name: topname, _kind: 'TopFolder', _childs : [h0, h1], _isopen: true };
+            let h0 = this.h, topname = (h0._kind == "ROOT.TFile") ? "Files" : "Items";
+            this.h = { _name: topname, _kind: 'TopFolder', _childs : [h0, h1], _isopen: true };
          }
 
-         pthis.RefreshHtml(call_back);
-      });
+         this.RefreshHtml(call_back);
+      }).catch(() => {
+         // make CORS warning
+         if (!d3.select("#gui_fileCORS").style("background","red").empty())
+             setTimeout(function() { d3.select("#gui_fileCORS").style("background",''); }, 5000);
+         JSROOT.CallBack(call_back, false);
+      }).finally(() => JSROOT.progress());
    }
 
    HierarchyPainter.prototype.ApplyStyle = function(style, call_back) {
@@ -1651,26 +1714,24 @@
 
       if (typeof style === 'string') {
 
-         var hpainter = this,
-             item = this.Find( { name: style, allow_index: true, check_keys: true } );
+         let item = this.Find({ name: style, allow_index: true, check_keys: true });
 
          if (item!==null)
-            return this.get(item, function(item2, obj) { hpainter.ApplyStyle(obj, call_back); });
+            return this.get(item, (item2, obj) => this.ApplyStyle(obj, call_back));
 
          if (style.indexOf('.json') > 0)
-            return JSROOT.NewHttpRequest(style, 'object', function(res) {
-               hpainter.ApplyStyle(res, call_back);
-            }).send(null);
+            return JSROOT.httpRequest(style, 'object')
+                         .then(res => this.ApplyStyle(res, call_back));
       }
 
       return JSROOT.CallBack(call_back);
    }
 
    HierarchyPainter.prototype.GetFileProp = function(itemname) {
-      var item = this.Find(itemname);
-      if (item == null) return null;
+      let item = this.Find(itemname);
+      if (!item) return null;
 
-      var subname = item._name;
+      let subname = item._name;
       while (item._parent) {
          item = item._parent;
          if ('_file' in item)
@@ -1685,17 +1746,10 @@
       return null;
    }
 
-   JSROOT.MarkAsStreamerInfo = function(h,item,obj) {
-      // this function used on THttpServer to mark streamer infos list
-      // as fictional TStreamerInfoList class, which has special draw function
-      if (obj && (obj._typename=='TList'))
-         obj._typename = 'TStreamerInfoList';
-   }
-
    HierarchyPainter.prototype.GetOnlineItemUrl = function(item) {
       // returns URL, which could be used to request item from the online server
       if (typeof item == "string") item = this.Find(item);
-      var prnt = item;
+      let prnt = item;
       while (prnt && (prnt._online===undefined)) prnt = prnt._parent;
       return prnt ? (prnt._online + this.itemFullName(item, prnt)) : null;
    }
@@ -1707,29 +1761,27 @@
    HierarchyPainter.prototype.GetOnlineItem = function(item, itemname, callback, option) {
       // method used to request object from the http server
 
-      var url = itemname, h_get = false, req = "", req_kind = "object", pthis = this, draw_handle = null;
+      let url = itemname, h_get = false, req = "", req_kind = "object", draw_handle = null;
 
       if (option === 'hierarchy_expand') { h_get = true; option = undefined; }
 
       if (item) {
          url = this.GetOnlineItemUrl(item);
-         var func = null;
+         let func = null;
          if ('_kind' in item) draw_handle = JSROOT.getDrawHandle(item._kind);
 
          if (h_get) {
             req = 'h.json?compact=3';
-            item._expand = JSROOT.Painter.OnlineHierarchy; // use proper expand function
-         } else
-         if ('_make_request' in item) {
+            item._expand = OnlineHierarchy; // use proper expand function
+         } else if ('_make_request' in item) {
             func = JSROOT.findFunction(item._make_request);
-         } else
-         if ((draw_handle!=null) && ('make_request' in draw_handle)) {
+         } else if ((draw_handle!=null) && ('make_request' in draw_handle)) {
             func = draw_handle.make_request;
          }
 
          if (typeof func == 'function') {
             // ask to make request
-            var dreq = func(pthis, item, url, option);
+            let dreq = func(this, item, url, option);
             // result can be simple string or object with req and kind fields
             if (dreq!=null)
                if (typeof dreq == 'string') req = dreq; else {
@@ -1744,7 +1796,7 @@
 
       if (!itemname && item && ('_cached_draw_object' in this) && (req.length == 0)) {
          // special handling for drawGUI when cashed
-         var obj = this._cached_draw_object;
+         let obj = this._cached_draw_object;
          delete this._cached_draw_object;
          return JSROOT.CallBack(callback, item, obj);
       }
@@ -1754,9 +1806,9 @@
       if (url.length > 0) url += "/";
       url += req;
 
-      var itemreq = JSROOT.NewHttpRequest(url, req_kind, function(obj) {
+      let itemreq = JSROOT.NewHttpRequest(url, req_kind, obj => {
 
-         var func = null;
+         let func = null;
 
          if (!h_get && item && ('_after_request' in item)) {
             func = JSROOT.findFunction(item._after_request);
@@ -1764,7 +1816,7 @@
             func = draw_handle.after_request;
 
          if (typeof func == 'function') {
-            var res = func(pthis, item, obj, option, itemreq);
+            let res = func(this, item, obj, option, itemreq);
             if ((res!=null) && (typeof res == "object")) obj = res;
          }
 
@@ -1774,94 +1826,73 @@
       itemreq.send(null);
    }
 
-   JSROOT.Painter.OnlineHierarchy = function(node, obj) {
-      // central function for expand of all online items
-
-      if (obj && node && ('_childs' in obj)) {
-
-         for (var n=0;n<obj._childs.length;++n)
-            if (obj._childs[n]._more || obj._childs[n]._childs)
-               obj._childs[n]._expand = JSROOT.Painter.OnlineHierarchy;
-
-         node._childs = obj._childs;
-         obj._childs = null;
-         return true;
-      }
-
-      return false;
-   }
-
    HierarchyPainter.prototype.OpenOnline = function(server_address, user_callback) {
-      var painter = this;
+      let AdoptHierarchy = result => {
+         this.h = result;
+         if (!result) return;
 
-      function AdoptHierarchy(result) {
-         painter.h = result;
-         if (painter.h == null) return;
-
-         if (('_title' in painter.h) && (painter.h._title!='')) document.title = painter.h._title;
+         if (('_title' in this.h) && (this.h._title!='')) document.title = this.h._title;
 
          result._isopen = true;
 
          // mark top hierarchy as online data and
-         painter.h._online = server_address;
+         this.h._online = server_address;
 
-         painter.h._get = function(item, itemname, callback, option) {
-            painter.GetOnlineItem(item, itemname, callback, option);
+         this.h._get = (item, itemname, callback, option) => {
+            this.GetOnlineItem(item, itemname, callback, option);
          }
 
-         painter.h._expand = JSROOT.Painter.OnlineHierarchy;
+         this.h._expand = OnlineHierarchy;
 
-         var scripts = "", modules = "";
-         painter.ForEach(function(item) {
-            if ('_childs' in item) item._expand = JSROOT.Painter.OnlineHierarchy;
+         let scripts = [], modules = [];
+         this.ForEach(function(item) {
+            if ('_childs' in item) item._expand = OnlineHierarchy;
 
             if ('_autoload' in item) {
-               var arr = item._autoload.split(";");
-               for (var n = 0; n < arr.length; ++n)
+               let arr = item._autoload.split(";");
+               for (let n = 0; n < arr.length; ++n)
                   if ((arr[n].length>3) &&
                       ((arr[n].lastIndexOf(".js")==arr[n].length-3) ||
                       (arr[n].lastIndexOf(".css")==arr[n].length-4))) {
-                     if (scripts.indexOf(arr[n])<0) scripts+=arr[n]+";";
+                     if (!scripts.find(elem => elem == arr[n])) scripts.push(arr[n]);
                   } else {
-                     if (modules.indexOf(arr[n])<0) modules+=arr[n]+";";
+                     if (arr[n] && !modules.find(elem => elem ==arr[n])) modules.push(arr[n]);
                   }
             }
          });
 
-         if (scripts.length > 0) scripts = "user:" + scripts;
+         JSROOT.require(modules)
+               .then(() => JSROOT.loadScript(scripts))
+               .then(() => {
+                  this.ForEach(item => {
+                     if (!('_drawfunc' in item) || !('_kind' in item)) return;
+                     let typename = "kind:" + item._kind;
+                     if (item._kind.indexOf('ROOT.')==0) typename = item._kind.slice(5);
+                     let drawopt = item._drawopt;
+                     if (!JSROOT.canDraw(typename) || drawopt)
+                        JSROOT.addDrawFunc({ name: typename, func: item._drawfunc, script: item._drawscript, opt: drawopt });
+                  });
 
-         // use AssertPrerequisites, while it protect us from race conditions
-         JSROOT.AssertPrerequisites(modules + scripts, function() {
-
-            painter.ForEach(function(item) {
-               if (!('_drawfunc' in item) || !('_kind' in item)) return;
-               var typename = "kind:" + item._kind;
-               if (item._kind.indexOf('ROOT.')==0) typename = item._kind.slice(5);
-               var drawopt = item._drawopt;
-               if (!JSROOT.canDraw(typename) || (drawopt!=null))
-                  JSROOT.addDrawFunc({ name: typename, func: item._drawfunc, script: item._drawscript, opt: drawopt });
-            });
-
-            JSROOT.CallBack(user_callback, painter);
-         });
+                  JSROOT.CallBack(user_callback, this);
+               });
       }
 
       if (!server_address) server_address = "";
 
       if (typeof server_address == 'object') {
-         var h = server_address;
+         let h = server_address;
          server_address = "";
          return AdoptHierarchy(h);
       }
 
-      JSROOT.NewHttpRequest(server_address + "h.json?compact=3", 'object', AdoptHierarchy).send(null);
+      JSROOT.httpRequest(server_address + "h.json?compact=3", 'object').then(AdoptHierarchy);
    }
 
    HierarchyPainter.prototype.GetOnlineProp = function(itemname) {
-      var item = this.Find(itemname);
+      let item = this.Find(itemname);
       if (!item) return null;
 
-      var subname = item._name;
+      let subname = item._name;
       while (item._parent) {
          item = item._parent;
 
@@ -1879,24 +1910,23 @@
 
    HierarchyPainter.prototype.FillOnlineMenu = function(menu, onlineprop, itemname) {
 
-      var painter = this,
-          node = this.Find(itemname),
+      let node = this.Find(itemname),
           sett = JSROOT.getDrawSettings(node._kind, 'nosame;noinspect'),
           handle = JSROOT.getDrawHandle(node._kind),
           root_type = (typeof node._kind == 'string') ? node._kind.indexOf("ROOT.") == 0 : false;
 
       if (sett.opts && (node._can_draw !== false)) {
          sett.opts.push('inspect');
-         menu.addDrawMenu("Draw", sett.opts, function(arg) { painter.display(itemname, arg); });
+         menu.addDrawMenu("Draw", sett.opts, arg => this.display(itemname, arg));
       }
 
       if (!node._childs && (node._more !== false) && (node._more || root_type || sett.expand))
-         menu.add("Expand", function() { painter.expand(itemname); });
+         menu.add("Expand", () => this.expand(itemname));
 
       if (handle && ('execute' in handle))
-         menu.add("Execute", function() { painter.ExecuteCommand(itemname, menu.tree_node); });
+         menu.add("Execute", () => this.ExecuteCommand(itemname, menu.tree_node));
 
-      var drawurl = onlineprop.server + onlineprop.itemname + "/draw.htm", separ = "?";
+      let drawurl = onlineprop.server + onlineprop.itemname + "/draw.htm", separ = "?";
       if (this.IsMonitoring()) {
          drawurl += separ + "monitoring=" + this.MonitoringInterval();
          separ = "&";
@@ -1911,7 +1941,7 @@
          });
 
       if ('_player' in node)
-         menu.add("Player", function() { painter.player(itemname); });
+         menu.add("Player", () => this.player(itemname));
    }
 
    HierarchyPainter.prototype.Adopt = function(h) {
@@ -1919,7 +1949,7 @@
       this.RefreshHtml();
    }
 
-   /** Configures monitoring interval
+   /** @summary Configures monitoring interval
     * @param interval - repetition interval in ms
     * @param flag - initial monitoring state
     * @private */
@@ -1943,7 +1973,8 @@
          this._runMonitoring();
    }
 
-   /** Runs monitoring event loop, @private */
+   /** @summary Runs monitoring event loop
+     * @private */
    HierarchyPainter.prototype._runMonitoring = function(arg) {
       if ((arg == "cleanup") || !this.IsMonitoring()) {
          if (this._monitoring_handle) {
@@ -1973,17 +2004,17 @@
       this._monitoring_handle = setTimeout(this._runMonitoring.bind(this,"frame"), this.MonitoringInterval());
    }
 
-   /** Returns configured monitoring interval in ms */
-   HierarchyPainter.prototype.MonitoringInterval = function(val) {
+   /** @summary Returns configured monitoring interval in ms */
+   HierarchyPainter.prototype.MonitoringInterval = function() {
       return this._monitoring_interval || 3000;
    }
 
-   /** Enable/disable monitoring */
+   /** @summary Enable/disable monitoring */
    HierarchyPainter.prototype.EnableMonitoring = function(on) {
       this.SetMonitoring(undefined, on);
    }
 
-   /** Returns true when monitoring is enabled */
+   /** @summary Returns true when monitoring is enabled */
    HierarchyPainter.prototype.IsMonitoring = function() {
       return this._monitoring_on;
    }
@@ -2020,7 +2051,7 @@
          delete this.disp;
       }
 
-      var plainarr = [];
+      let plainarr = [];
 
       this.ForEach(function(item) {
          delete item._painter; // remove reference on the painter
@@ -2034,7 +2065,7 @@
          this.EnableMonitoring(false);
          // simplify work for javascript and delete all (ok, most of) cross-references
          this.select_main().html("");
-         plainarr.forEach(function(d) { delete d._parent; delete d._childs; delete d._obj; delete d._d3cont; });
+         plainarr.forEach(d => { delete d._parent; delete d._childs; delete d._obj; delete d._d3cont; });
          delete this.h;
       }
    }
@@ -2046,7 +2077,7 @@
    HierarchyPainter.prototype.CleanupFrame = function(divid) {
       // hook to perform extra actions when frame is cleaned
 
-      var lst = JSROOT.cleanup(divid);
+      let lst = JSROOT.cleanup(divid);
 
       // we remove all painters references from items
       if (lst && (lst.length>0))
@@ -2055,10 +2086,8 @@
          });
    }
 
-   /** \brief Creates configured JSROOT.MDIDisplay object
-    *
-    * @param callback - called when mdi object created
-    */
+   /** @summary Creates configured JSROOT.MDIDisplay object
+    * @param callback - called when mdi object created */
    HierarchyPainter.prototype.CreateDisplay = function(callback) {
 
       if ('disp' in this) {
@@ -2068,14 +2097,14 @@
       }
 
       // check that we can found frame where drawing should be done
-      if (document.getElementById(this.disp_frameid) == null)
+      if (!document.getElementById(this.disp_frameid))
          return JSROOT.CallBack(callback, null);
 
       if ((this.disp_kind == "simple") ||
           ((this.disp_kind.indexOf("grid") == 0) && (this.disp_kind.indexOf("gridi") < 0)))
            this.disp = new GridDisplay(this.disp_frameid, this.disp_kind);
       else
-         return JSROOT.AssertPrerequisites('jq2d', this.CreateDisplay.bind(this, callback));
+         return JSROOT.require('jq2d').then(this.CreateDisplay.bind(this, callback));
 
       if (this.disp)
          this.disp.CleanupFrame = this.CleanupFrame.bind(this);
@@ -2083,12 +2112,10 @@
       JSROOT.CallBack(callback, this.disp);
    }
 
-   /** \brief If possible, creates custom JSROOT.MDIDisplay for given item
-   *
+   /** @summary If possible, creates custom JSROOT.MDIDisplay for given item
    * @param itemname - name of item, for which drawing is created
    * @param custom_kind - display kind
-   * @param callback - callback function, called when mdi object created
-   */
+   * @param callback - callback function, called when mdi object created */
    HierarchyPainter.prototype.CreateCustomDisplay = function(itemname, custom_kind, callback) {
 
       if (this.disp_kind != "simple")
@@ -2098,7 +2125,7 @@
 
       // check if display can be erased
       if (this.disp) {
-         var num = this.disp.NumDraw();
+         let num = this.disp.NumDraw();
          if ((num>1) || ((num==1) && !this.disp.FindFrame(itemname)))
             return this.CreateDisplay(callback);
          this.disp.Reset();
@@ -2110,14 +2137,14 @@
 
    HierarchyPainter.prototype.updateOnOtherFrames = function(painter, obj) {
       // function should update object drawings for other painters
-      var mdi = this.disp, handle = null, isany = false;
+      let mdi = this.disp, handle = null, isany = false;
       if (!mdi) return false;
 
       if (obj._typename) handle = JSROOT.getDrawHandle("ROOT." + obj._typename);
       if (handle && handle.draw_field && obj[handle.draw_field])
          obj = obj[handle.draw_field];
 
-      mdi.ForEachPainter(function(p, frame) {
+      mdi.ForEachPainter((p, frame) => {
          if ((p===painter) || (p.GetItemName() != painter.GetItemName())) return;
          mdi.ActivateFrame(frame);
          if (p.RedrawObject(obj)) isany = true;
@@ -2131,37 +2158,59 @@
 
    HierarchyPainter.prototype.StartGUI = function(gui_div, gui_call_back, url) {
 
-      function GetOption(opt) {
-         var res = JSROOT.GetUrlOption(opt, url);
+      let d = JSROOT.decodeUrl(url);
+
+      let GetOption = (opt) => {
+         let res = d.get(opt, null);
          if (!res && gui_div && !gui_div.empty() && gui_div.node().hasAttribute(opt)) res = gui_div.attr(opt);
          return res;
       }
 
-      function GetOptionAsArray(opt) {
-         var res = JSROOT.GetUrlOptionAsArray(opt, url);
-         if (res.length>0 || !gui_div || gui_div.empty()) return res;
+      let GetUrlOptionAsArray = (opt) => {
+
+         let res = [];
+
          while (opt.length>0) {
-            var separ = opt.indexOf(";");
-            var part = separ>0 ? opt.substr(0, separ) : opt;
+            let separ = opt.indexOf(";");
+            let part = (separ>0) ? opt.substr(0, separ) : opt;
+
             if (separ>0) opt = opt.substr(separ+1); else opt = "";
 
-            var canarray = true;
+            let canarray = true;
+            if (part[0]=='#') { part = part.substr(1); canarray = false; }
+
+            let val = d.get(part,null);
+
+            if (canarray) res = res.concat(ParseAsArray(val));
+                     else if (val!==null) res.push(val);
+         }
+         return res;
+      }
+
+      let GetOptionAsArray = (opt) => {
+         let res = GetUrlOptionAsArray(opt);
+         if (res.length>0 || !gui_div || gui_div.empty()) return res;
+         while (opt.length>0) {
+            let separ = opt.indexOf(";");
+            let part = separ>0 ? opt.substr(0, separ) : opt;
+            if (separ>0) opt = opt.substr(separ+1); else opt = "";
+
+            let canarray = true;
             if (part[0]=='#') { part = part.substr(1); canarray = false; }
             if (part==='files') continue; // special case for normal UI
 
             if (!gui_div.node().hasAttribute(part)) continue;
 
-            var val = gui_div.attr(part);
+            let val = gui_div.attr(part);
 
-            if (canarray) res = res.concat(JSROOT.ParseAsArray(val));
+            if (canarray) res = res.concat(ParseAsArray(val));
             else if (val!==null) res.push(val);
          }
          return res;
       }
 
-      var hpainter = this,
-          prereq = GetOption('prereq') || "",
-          filesdir = JSROOT.GetUrlOption("path", url) || "", // path used in normal gui
+      let prereq = GetOption('prereq') || "",
+          filesdir = d.get("path") || "", // path used in normal gui
           filesarr = GetOptionAsArray("#file;files"),
           localfile = GetOption("localfile"),
           jsonarr = GetOptionAsArray("#json;jsons"),
@@ -2185,14 +2234,14 @@
 
       if (title) document.title = title;
 
-      var load = GetOption("load");
-      if (load) prereq += ";io;2d;load:" + load;
+      let load = GetOption("load");
+      if (load) prereq += ";io;gpad;";
 
       if (expanditems.length==0 && (GetOption("expand")==="")) expanditems.push("");
 
       if (filesdir) {
-         for (var i=0;i<filesarr.length;++i) filesarr[i] = filesdir + filesarr[i];
-         for (var i=0;i<jsonarr.length;++i) jsonarr[i] = filesdir + jsonarr[i];
+         for (let i=0;i<filesarr.length;++i) filesarr[i] = filesdir + filesarr[i];
+         for (let i=0;i<jsonarr.length;++i) jsonarr[i] = filesdir + jsonarr[i];
       }
 
       if ((itemsarr.length==0) && GetOption("item")==="") itemsarr.push("");
@@ -2231,64 +2280,74 @@
 
       if (this.start_without_browser) browser_kind = "";
 
-      if (status || browser_kind) prereq = "jq2d;" + prereq;
+      if (status || browser_kind) prereq += "jq2d;";
 
       this._topname = GetOption("topname");
 
-      function OpenAllFiles(res) {
-         if (browser_kind) { hpainter.CreateBrowser(browser_kind); browser_kind = ""; }
-         if (status!==null) { hpainter.CreateStatusLine(statush, status); status = null; }
-         if (jsonarr.length>0)
-            hpainter.OpenJsonFile(jsonarr.shift(), OpenAllFiles);
-         else if (filesarr.length>0)
-            hpainter.OpenRootFile(filesarr.shift(), OpenAllFiles);
-         else if ((localfile!==null) && (typeof hpainter.SelectLocalFile == 'function')) {
-            localfile = null; hpainter.SelectLocalFile(OpenAllFiles);
-         } else if (expanditems.length>0)
-            hpainter.expand(expanditems.shift(), OpenAllFiles);
-         else if (style.length>0)
-            hpainter.ApplyStyle(style.shift(), OpenAllFiles);
-         else
-            hpainter.displayAll(itemsarr, optionsarr, function() {
-               hpainter.RefreshHtml();
-               hpainter.SetMonitoring(monitor);
+      let OpenAllFiles = () => {
+         if (prereq || load) {
+            // load first prerequicities and then special script
+            let req = prereq;
+            prereq = "";
+            if (!req) { req = load; load = ""; }
+            return JSROOT.require(req).then(OpenAllFiles);
+         }
+
+         if (browser_kind) { this.CreateBrowser(browser_kind); browser_kind = ""; }
+         if (status!==null) { this.CreateStatusLine(statush, status); status = null; }
+         if (jsonarr.length > 0)
+            this.OpenJsonFile(jsonarr.shift(), OpenAllFiles);
+         else if (filesarr.length > 0)
+            this.OpenRootFile(filesarr.shift(), OpenAllFiles);
+         else if ((localfile!==null) && (typeof this.SelectLocalFile == 'function')) {
+            localfile = null; this.SelectLocalFile(OpenAllFiles);
+         } else if (expanditems.length > 0)
+            this.expand(expanditems.shift(), OpenAllFiles);
+         else if (style.length > 0)
+            this.ApplyStyle(style.shift(), OpenAllFiles);
+         else {
+            this.RefreshHtml();
+            this.displayAll(itemsarr, optionsarr, () => {
+               if (itemsarr) this.RefreshHtml();
+               this.SetMonitoring(monitor);
                JSROOT.CallBack(gui_call_back);
            });
+         }
       }
 
-      function AfterOnlineOpened() {
+      let AfterOnlineOpened = () => {
          // check if server enables monitoring
 
-         if (!hpainter.exclude_browser && !browser_configured && ('_browser' in hpainter.h)) {
-            browser_kind = hpainter.h._browser;
+         if (!this.exclude_browser && !browser_configured && ('_browser' in this.h)) {
+            browser_kind = this.h._browser;
             if (browser_kind==="no") browser_kind = ""; else
-            if (browser_kind==="off") { browser_kind = ""; status = null; hpainter.exclude_browser = true; }
+            if (browser_kind==="off") { browser_kind = ""; status = null; this.exclude_browser = true; }
          }
 
-         if (('_monitoring' in hpainter.h) && !monitor)
-            monitor = hpainter.h._monitoring;
+         if (('_monitoring' in this.h) && !monitor)
+            monitor = this.h._monitoring;
 
-         if (('_loadfile' in hpainter.h) && (filesarr.length==0))
-            filesarr = JSROOT.ParseAsArray(hpainter.h._loadfile);
+         if (('_loadfile' in this.h) && (filesarr.length==0))
+            filesarr = ParseAsArray(this.h._loadfile);
 
-         if (('_drawitem' in hpainter.h) && (itemsarr.length==0)) {
-            itemsarr = JSROOT.ParseAsArray(hpainter.h._drawitem);
-            optionsarr = JSROOT.ParseAsArray(hpainter.h._drawopt);
+         if (('_drawitem' in this.h) && (itemsarr.length==0)) {
+            itemsarr = ParseAsArray(this.h._drawitem);
+            optionsarr = ParseAsArray(this.h._drawopt);
          }
 
-         if (('_layout' in hpainter.h) && !layout && ((hpainter.is_online != "draw") || (itemsarr.length > 1)))
-            hpainter.disp_kind = hpainter.h._layout;
+         if (('_layout' in this.h) && !layout && ((this.is_online != "draw") || (itemsarr.length > 1)))
+            this.disp_kind = this.h._layout;
 
-         if (('_toptitle' in hpainter.h) && hpainter.exclude_browser && document)
-            document.title = hpainter.h._toptitle;
+         if (('_toptitle' in this.h) && this.exclude_browser && document)
+            document.title = this.h._toptitle;
 
          if (gui_div)
-            hpainter.PrepareGuiDiv(gui_div, hpainter.disp_kind);
+            this.PrepareGuiDiv(gui_div, this.disp_kind);
 
          OpenAllFiles();
       }
 
-      var h0 = null;
+      let h0 = null;
       if (this.is_online) {
          if (typeof GetCachedHierarchy == 'function') h0 = GetCachedHierarchy();
          if (typeof h0 !== 'object') h0 = "";
@@ -2300,8 +2359,7 @@
       if (gui_div)
          this.PrepareGuiDiv(gui_div, this.disp_kind);
 
-      if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, OpenAllFiles);
-      else OpenAllFiles();
+      OpenAllFiles();
    }
 
    HierarchyPainter.prototype.PrepareGuiDiv = function(myDiv, layout) {
@@ -2313,18 +2371,20 @@
       this.brlayout.Create(!this.exclude_browser);
 
       if (!this.exclude_browser) {
-         var btns = this.brlayout.CreateBrowserBtns();
+         let btns = this.brlayout.CreateBrowserBtns();
 
-         JSROOT.ToolbarIcons.CreateSVG(btns, JSROOT.ToolbarIcons.diamand, 15, "toggle fix-pos browser")
-                            .style("margin","3px").on("click", this.CreateBrowser.bind(this, "fix", true));
+         JSROOT.require(['interactive']).then(inter => {
+            inter.ToolbarIcons.CreateSVG(btns, inter.ToolbarIcons.diamand, 15, "toggle fix-pos browser")
+                               .style("margin","3px").on("click", () => this.CreateBrowser("fix", true));
 
-         if (!this.float_browser_disabled)
-            JSROOT.ToolbarIcons.CreateSVG(btns, JSROOT.ToolbarIcons.circle, 15, "toggle float browser")
-                               .style("margin","3px").on("click", this.CreateBrowser.bind(this, "float", true));
+            if (!this.float_browser_disabled)
+               inter.ToolbarIcons.CreateSVG(btns, inter.ToolbarIcons.circle, 15, "toggle float browser")
+                                  .style("margin","3px").on("click", () => this.CreateBrowser("float", true));
 
-         if (!this.status_disabled)
-            JSROOT.ToolbarIcons.CreateSVG(btns, JSROOT.ToolbarIcons.three_circles, 15, "toggle status line")
-                               .style("margin","3px").on("click", this.CreateStatusLine.bind(this, 0, "toggle"));
+            if (!this.status_disabled)
+               inter.ToolbarIcons.CreateSVG(btns, inter.ToolbarIcons.three_circles, 15, "toggle status line")
+                                  .style("margin","3px").on("click", () => this.CreateStatusLine(0, "toggle"));
+          });
       }
 
       this.SetDisplay(layout, this.brlayout.drawing_divid());
@@ -2336,18 +2396,26 @@
    }
 
    HierarchyPainter.prototype.CreateBrowser = function(browser_kind, update_html, call_back) {
-      if (!this.gui_div) return;
-
-      var hpainter = this;
-      JSROOT.AssertPrerequisites('jq2d', function() {
-          hpainter.CreateBrowser(browser_kind, update_html, call_back);
-      });
+      if (this.gui_div)
+         JSROOT.require('jq2d').then(() => this.CreateBrowser(browser_kind, update_html, call_back));
    }
 
    // ======================================================================================
 
+   /** @summary tag item in hierarchy painter as streamer info
+     * @desc this function used on THttpServer to mark streamer infos list
+     * as fictional TStreamerInfoList class, which has special draw function
+     * @private */
+   JSROOT.MarkAsStreamerInfo = function(h,item,obj) {
+      if (obj && (obj._typename=='TList'))
+         obj._typename = 'TStreamerInfoList';
+   }
+
+   /** @summary Build gui without visisble hierarchy browser
+     * @desc avoid loading of jquery part
+     * @private */
    JSROOT.BuildNobrowserGUI = function() {
-      var myDiv = d3.select('#simpleGUI'),
+      let myDiv = d3.select('#simpleGUI'),
           online = false, drawing = false;
 
       if (myDiv.empty()) {
@@ -2358,11 +2426,11 @@
       }
 
       if (myDiv.attr("ignoreurl") === "true")
-         JSROOT.gStyle.IgnoreUrlOptions = true;
+         JSROOT.settings.IgnoreUrlOptions = true;
 
-      JSROOT.Painter.readStyleFromURL();
+      jsrp.readStyleFromURL();
 
-      var guisize = JSROOT.GetUrlOption("divsize");
+      let d = JSROOT.decodeUrl(), guisize = d.get("divsize");
       if (guisize) {
          guisize = guisize.split("x");
          if (guisize.length != 2) guisize = null;
@@ -2376,43 +2444,48 @@
          myDiv.style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
       }
 
-      var hpainter = new JSROOT.HierarchyPainter('root', null);
+      let hpainter = new JSROOT.HierarchyPainter('root', null);
 
       if (online) hpainter.is_online = drawing ? "draw" : "online";
       if (drawing) hpainter.exclude_browser = true;
 
       hpainter.start_without_browser = true; // indicate that browser not required at the beginning
 
-      hpainter.StartGUI(myDiv, function() {
-         if (!drawing) return;
+      return new Promise(resolveFunc => {
 
-         var func = JSROOT.findFunction('GetCachedObject');
-         var obj = (typeof func == 'function') ? JSROOT.JSONR_unref(func()) : null;
-         if (obj) hpainter._cached_draw_object = obj;
-         var opt = JSROOT.GetUrlOption("opt") || "";
+         hpainter.StartGUI(myDiv, () => {
+            if (!drawing) return resolveFunc(hpainter);
 
-         if (JSROOT.GetUrlOption("websocket")!==null) opt+=";websocket";
+            let func = JSROOT.findFunction('GetCachedObject');
+            let obj = (typeof func == 'function') ? JSROOT.parse(func()) : null;
+            if (obj) hpainter._cached_draw_object = obj;
+            let opt = d.get("opt", "");
 
-         hpainter.display("", opt);
+            if (d.has("websocket")) opt+=";websocket";
+
+            hpainter.display("", opt, () => resolveFunc(hpainter));
+         });
       });
    }
 
-   JSROOT.Painter.drawStreamerInfo = function(divid, lst) {
-      var painter = new JSROOT.HierarchyPainter('sinfo', divid, 'white');
+   /** @summary Display streamer info
+     * @private */
+   jsrp.drawStreamerInfo = function(divid, lst) {
+      let painter = new JSROOT.HierarchyPainter('sinfo', divid, 'white');
 
       painter.h = { _name : "StreamerInfo", _childs : [] };
 
-      for ( var i = 0; i < lst.arr.length; ++i) {
-         var entry = lst.arr[i]
+      for (let i = 0; i < lst.arr.length; ++i) {
+         let entry = lst.arr[i]
 
          if (entry._typename == "TList") continue;
 
          if (typeof (entry.fName) == 'undefined') {
-            JSROOT.console("strange element in StreamerInfo with type " + entry._typename);
+            console.warn(`strange element in StreamerInfo with type ${entry._typename}`);
             continue;
          }
 
-         var item = {
+         let item = {
             _name : entry.fName + ";" + entry.fClassVersion,
             _kind : "class " + entry.fName,
             _title : "class:" + entry.fName + ' version:' + entry.fClassVersion + ' checksum:' + entry.fCheckSum,
@@ -2425,15 +2498,15 @@
          painter.h._childs.push(item);
 
          if (typeof entry.fElements == 'undefined') continue;
-         for ( var l = 0; l < entry.fElements.arr.length; ++l) {
-            var elem = entry.fElements.arr[l];
+         for ( let l = 0; l < entry.fElements.arr.length; ++l) {
+            let elem = entry.fElements.arr[l];
             if (!elem || !elem.fName) continue;
-            var info = elem.fTypeName + " " + elem.fName,
+            let info = elem.fTypeName + " " + elem.fName,
                 title = elem.fTypeName + " type:" + elem.fType;
             if (elem.fArrayDim===1)
                info += "[" + elem.fArrayLength + "]";
             else
-               for (var dim=0;dim<elem.fArrayDim;++dim)
+               for (let dim=0;dim<elem.fArrayDim;++dim)
                   info+="[" + elem.fMaxIndex[dim] + "]";
             if (elem.fBaseVersion===4294967295) info += ":-1"; else
             if (elem.fBaseVersion!==undefined) info += ":" + elem.fBaseVersion;
@@ -2457,11 +2530,13 @@
 
    // ======================================================================================
 
-   JSROOT.Painter.drawInspector = function(divid, obj) {
+   /** @summary Display inspector
+     * @private */
+   jsrp.drawInspector = function(divid, obj) {
 
       JSROOT.cleanup(divid);
 
-      var painter = new JSROOT.HierarchyPainter('inspector', divid, 'white');
+      let painter = new JSROOT.HierarchyPainter('inspector', divid, 'white');
       painter.default_by_click = "expand"; // default action
       painter.with_icons = false;
       painter.h = { _name: "Object", _title: "", _click_action: "expand", _nosimple: false, _do_context: true };
@@ -2482,11 +2557,11 @@
       // painter.select_main().style('overflow','auto');
 
       painter.fill_context = function(menu, hitem) {
-         var sett = JSROOT.getDrawSettings(hitem._kind, 'nosame');
+         let sett = JSROOT.getDrawSettings(hitem._kind, 'nosame');
          if (sett.opts)
             menu.addDrawMenu("nosub:Draw", sett.opts, function(arg) {
                if (!hitem || !hitem._obj) return;
-               var obj = hitem._obj, divid = this.divid;
+               let obj = hitem._obj, divid = this.divid;
                if (this.removeInspector) {
                   divid = this.select_main().node().parentNode;
                   this.removeInspector();
@@ -2498,7 +2573,7 @@
             });
       }
 
-      if (JSROOT.IsRootCollection(obj)) {
+      if (JSROOT.isRootCollection(obj)) {
          painter.h._name = obj.name || obj._typename;
          ListHierarchy(painter.h, obj);
       } else {
@@ -2509,387 +2584,372 @@
          painter.DrawingReady();
       });
 
-      return painter;
+      return painter.Promise();
    }
 
    // ================================================================
 
    // MDIDisplay - class to manage multiple document interface for drawings
 
-   function MDIDisplay(frameid) {
-      JSROOT.TBasePainter.call(this);
-      this.frameid = frameid;
-      this.SetDivId(frameid);
-      this.select_main().property('mdi', this);
-      this.CleanupFrame = JSROOT.cleanup; // use standard cleanup function by default
-      this.active_frame_title = ""; // keep title of active frame
-   }
+   class MDIDisplay extends JSROOT.BasePainter {
+      constructor(frameid) {
+         super();
+         this.frameid = frameid;
+         this.SetDivId(frameid);
+         this.select_main().property('mdi', this);
+         this.CleanupFrame = JSROOT.cleanup; // use standard cleanup function by default
+         this.active_frame_title = ""; // keep title of active frame
+      }
 
-   MDIDisplay.prototype = Object.create(JSROOT.TBasePainter.prototype);
+      BeforeCreateFrame(title) { this.active_frame_title = title; }
 
-   MDIDisplay.prototype.BeforeCreateFrame = function(title) {
-      this.active_frame_title = title;
-   }
+      /** method dedicated to iterate over existing panels
+        * @param {function} userfunc is called with arguments (frame)
+        * @param {boolean} only_visible let select only visible frames */
+      ForEachFrame(/* userfunc, only_visible */) { console.warn("ForEachFrame not implemented in MDIDisplay"); }
 
-   MDIDisplay.prototype.ForEachFrame = function(userfunc, only_visible) {
-      // method dedicated to iterate over existing panels
-      // provided userfunc is called with arguments (frame)
+      /** method dedicated to iterate over existing panles
+        * @param {function} userfunc is called with arguments (painter, frame)
+        * @param {boolean} only_visible let select only visible frames */
+      ForEachPainter(userfunc, only_visible) {
 
-      console.warn("ForEachFrame not implemented in MDIDisplay");
-   }
+         this.ForEachFrame(frame => {
+            let dummy = new JSROOT.ObjectPainter();
+            dummy.SetDivId(frame, -1);
+            dummy.ForEachPainter(painter => userfunc(painter, frame));
+         }, only_visible);
+      }
 
-   MDIDisplay.prototype.ForEachPainter = function(userfunc, only_visible) {
-      // method dedicated to iterate over existing panles
-      // provided userfunc is called with arguments (painter, frame)
+      NumDraw() {
+         let cnt = 0;
+         this.ForEachFrame(() => ++cnt);
+         return cnt;
+      }
 
-      this.ForEachFrame(function(frame) {
-         var dummy = new JSROOT.TObjectPainter();
-         dummy.SetDivId(frame, -1);
-         dummy.ForEachPainter(function(painter) { userfunc(painter, frame); });
-      }, only_visible);
-   }
+      FindFrame(searchtitle, force) {
+         let found_frame = null;
 
-   MDIDisplay.prototype.NumDraw = function() {
-      var cnt = 0;
-      this.ForEachFrame(function() { ++cnt; });
-      return cnt;
-   }
+         this.ForEachFrame(frame => {
+            if (d3.select(frame).attr('frame_title') == searchtitle)
+               found_frame = frame;
+         });
 
-   MDIDisplay.prototype.FindFrame = function(searchtitle, force) {
-      var found_frame = null;
+         if (!found_frame && force)
+            found_frame = this.CreateFrame(searchtitle);
 
-      this.ForEachFrame(function(frame) {
-         if (d3.select(frame).attr('frame_title') == searchtitle)
-            found_frame = frame;
-      });
+         return found_frame;
+      }
 
-      if ((found_frame == null) && force)
-         found_frame = this.CreateFrame(searchtitle);
+      ActivateFrame(frame) { this.active_frame_title = d3.select(frame).attr('frame_title'); }
 
-      return found_frame;
-   }
+      GetActiveFrame() { return this.FindFrame(this.active_frame_title); }
 
-   MDIDisplay.prototype.ActivateFrame = function(frame) {
-      this.active_frame_title = d3.select(frame).attr('frame_title');
-   }
+      CheckMDIResize(only_frame_id, size) {
+         // perform resize for each frame
+         let resized_frame = null;
 
-   MDIDisplay.prototype.GetActiveFrame = function() {
-      return this.FindFrame(this.active_frame_title);
-   }
+         this.ForEachPainter((painter, frame) => {
 
-   MDIDisplay.prototype.CheckMDIResize = function(only_frame_id, size) {
-      // perform resize for each frame
-      var resized_frame = null;
+            if (only_frame_id && (d3.select(frame).attr('id') != only_frame_id)) return;
 
-      this.ForEachPainter(function(painter, frame) {
+            if ((painter.GetItemName()!==null) && (typeof painter.CheckResize == 'function')) {
+               // do not call resize for many painters on the same frame
+               if (resized_frame === frame) return;
+               painter.CheckResize(size);
+               resized_frame = frame;
+            }
+         });
+      }
 
-         if (only_frame_id && (d3.select(frame).attr('id') != only_frame_id)) return;
+      Reset() {
+         this.active_frame_title = "";
 
-         if ((painter.GetItemName()!==null) && (typeof painter.CheckResize == 'function')) {
-            // do not call resize for many painters on the same frame
-            if (resized_frame === frame) return;
-            painter.CheckResize(size);
-            resized_frame = frame;
-         }
-      });
-   }
+         this.ForEachFrame(this.CleanupFrame);
 
-   MDIDisplay.prototype.Reset = function() {
+         this.select_main().html("").property('mdi', null);
+      }
 
-      this.active_frame_title = "";
+      Draw(title, obj, drawopt) {
+         // draw object with specified options
+         if (!obj) return;
 
-      this.ForEachFrame(this.CleanupFrame);
+         if (!JSROOT.canDraw(obj._typename, drawopt)) return;
 
-      this.select_main().html("").property('mdi', null);
-   }
+         let frame = this.FindFrame(title, true);
 
-   MDIDisplay.prototype.Draw = function(title, obj, drawopt) {
-      // draw object with specified options
-      if (!obj) return;
+         this.ActivateFrame(frame);
 
-      if (!JSROOT.canDraw(obj._typename, drawopt)) return;
-
-      var frame = this.FindFrame(title, true);
-
-      this.ActivateFrame(frame);
-
-      return JSROOT.redraw(frame, obj, drawopt);
-   }
+         return JSROOT.redraw(frame, obj, drawopt);
+      }
+   } // class MDIDisplay
 
 
    // ==================================================
 
-   function CustomDisplay() {
-      JSROOT.MDIDisplay.call(this, "dummy");
-      this.frames = {}; // array of configured frames
-   }
-
-   CustomDisplay.prototype = Object.create(MDIDisplay.prototype);
-
-   CustomDisplay.prototype.AddFrame = function(divid, itemname) {
-      if (!(divid in this.frames)) this.frames[divid] = "";
-
-      this.frames[divid] += (itemname + ";");
-   }
-
-   CustomDisplay.prototype.ForEachFrame = function(userfunc,  only_visible) {
-      var ks = Object.keys(this.frames);
-      for (var k = 0; k < ks.length; ++k) {
-         var node = d3.select("#"+ks[k]);
-         if (!node.empty())
-            JSROOT.CallBack(userfunc, node.node());
+   class CustomDisplay extends MDIDisplay {
+      constructor() {
+         super("dummy");
+         this.frames = {}; // array of configured frames
       }
-   }
 
-   CustomDisplay.prototype.CreateFrame = function(title) {
+      AddFrame(divid, itemname) {
+         if (!(divid in this.frames)) this.frames[divid] = "";
 
-      this.BeforeCreateFrame(title);
-
-      var ks = Object.keys(this.frames);
-      for (var k = 0; k < ks.length; ++k) {
-         var items = this.frames[ks[k]];
-         if (items.indexOf(title+";")>=0)
-            return d3.select("#"+ks[k]).node();
+         this.frames[divid] += (itemname + ";");
       }
-      return null;
-   }
 
-   CustomDisplay.prototype.Reset = function() {
-      MDIDisplay.prototype.Reset.call(this);
-      this.ForEachFrame(function(frame) {
-         d3.select(frame).html("");
-      });
-   }
+      ForEachFrame(userfunc /* ,  only_visible */) {
+         let ks = Object.keys(this.frames);
+         for (let k = 0; k < ks.length; ++k) {
+            let node = d3.select("#"+ks[k]);
+            if (!node.empty())
+               JSROOT.CallBack(userfunc, node.node());
+         }
+      }
+
+      CreateFrame(title) {
+         this.BeforeCreateFrame(title);
+
+         let ks = Object.keys(this.frames);
+         for (let k = 0; k < ks.length; ++k) {
+            let items = this.frames[ks[k]];
+            if (items.indexOf(title+";")>=0)
+               return d3.select("#"+ks[k]).node();
+         }
+         return null;
+      }
+
+      Reset() {
+         super.Reset();
+         this.ForEachFrame(frame => d3.select(frame).html(""));
+      }
+   } // class CustomDisplay
 
    // ================================================
 
-   function GridDisplay(frameid, kind, kind2) {
-      // following kinds are supported
-      //  vertical or horizontal - only first letter matters, defines basic orientation
-      //   'x' in the name disable interactive separators
-      //   v4 or h4 - 4 equal elements in specified direction
-      //   v231 -  created 3 vertical elements, first divided on 2, second on 3 and third on 1 part
-      //   v23_52 - create two vertical elements with 2 and 3 subitems, size ratio 5:2
-      //   gridNxM - normal grid layout without interactive separators
-      //   gridiNxM - grid layout with interactive separators
-      //   simple - no layout, full frame used for object drawings
+   class GridDisplay extends MDIDisplay {
 
-      JSROOT.MDIDisplay.call(this, frameid);
+      constructor(frameid, kind, kind2) {
+         // following kinds are supported
+         //  vertical or horizontal - only first letter matters, defines basic orientation
+         //   'x' in the name disable interactive separators
+         //   v4 or h4 - 4 equal elements in specified direction
+         //   v231 -  created 3 vertical elements, first divided on 2, second on 3 and third on 1 part
+         //   v23_52 - create two vertical elements with 2 and 3 subitems, size ratio 5:2
+         //   gridNxM - normal grid layout without interactive separators
+         //   gridiNxM - grid layout with interactive separators
+         //   simple - no layout, full frame used for object drawings
 
-      this.framecnt = 0;
-      this.getcnt = 0;
-      this.groups = [];
-      this.vertical = kind && (kind[0] == 'v');
-      this.use_separarators = !kind || (kind.indexOf("x")<0);
-      this.simple_layout = false;
+         super(frameid);
 
-      this.select_main().style('overflow','hidden');
+         this.framecnt = 0;
+         this.getcnt = 0;
+         this.groups = [];
+         this.vertical = kind && (kind[0] == 'v');
+         this.use_separarators = !kind || (kind.indexOf("x")<0);
+         this.simple_layout = false;
 
-      if (kind === "simple") {
-         this.simple_layout = true;
-         this.use_separarators = false;
-         this.framecnt = 1;
-         return;
-      }
+         this.select_main().style('overflow','hidden');
 
-      var num = 2, arr = undefined, sizes = undefined;
-
-      if ((kind.indexOf("grid") == 0) || kind2) {
-         if (kind2) kind = kind + "x" + kind2;
-               else kind = kind.substr(4).trim();
-         this.use_separarators = false;
-         if (kind[0]==="i") {
-            this.use_separarators = true;
-            kind = kind.substr(1);
-         }
-
-         var separ = kind.indexOf("x"), sizex = 3, sizey = 3;
-
-         if (separ > 0) {
-            sizey = parseInt(kind.substr(separ + 1));
-            sizex = parseInt(kind.substr(0, separ));
-         } else {
-            sizex = sizey = parseInt(kind);
-         }
-
-         if (isNaN(sizex)) sizex = 3;
-         if (isNaN(sizey)) sizey = 3;
-
-         if (sizey>1) {
-            this.vertical = true;
-            num = sizey;
-            if (sizex>1) {
-               arr = new Array(num);
-               for (var k=0;k<num;++k) arr[k] = sizex;
-            }
-         } else
-         if (sizex > 1) {
-            this.vertical = false;
-            num = sizex;
-         } else {
+         if (kind === "simple") {
             this.simple_layout = true;
             this.use_separarators = false;
             this.framecnt = 1;
             return;
          }
-         kind = "";
-      }
 
-      if (kind && kind.indexOf("_")>0) {
-         var arg = parseInt(kind.substr(kind.indexOf("_")+1), 10);
-         if (!isNaN(arg) && (arg>10)) {
-            kind = kind.substr(0, kind.indexOf("_"));
-            sizes = [];
-            while (arg>0) {
-               sizes.unshift(Math.max(arg % 10, 1));
-               arg = Math.round((arg-sizes[0])/10);
-               if (sizes[0]===0) sizes[0]=1;
+         let num = 2, arr = undefined, sizes = undefined;
+
+         if ((kind.indexOf("grid") == 0) || kind2) {
+            if (kind2) kind = kind + "x" + kind2;
+                  else kind = kind.substr(4).trim();
+            this.use_separarators = false;
+            if (kind[0]==="i") {
+               this.use_separarators = true;
+               kind = kind.substr(1);
+            }
+
+            let separ = kind.indexOf("x"), sizex = 3, sizey = 3;
+
+            if (separ > 0) {
+               sizey = parseInt(kind.substr(separ + 1));
+               sizex = parseInt(kind.substr(0, separ));
+            } else {
+               sizex = sizey = parseInt(kind);
+            }
+
+            if (isNaN(sizex)) sizex = 3;
+            if (isNaN(sizey)) sizey = 3;
+
+            if (sizey>1) {
+               this.vertical = true;
+               num = sizey;
+               if (sizex>1) {
+                  arr = new Array(num);
+                  for (let k=0;k<num;++k) arr[k] = sizex;
+               }
+            } else
+            if (sizex > 1) {
+               this.vertical = false;
+               num = sizex;
+            } else {
+               this.simple_layout = true;
+               this.use_separarators = false;
+               this.framecnt = 1;
+               return;
+            }
+            kind = "";
+         }
+
+         if (kind && kind.indexOf("_")>0) {
+            let arg = parseInt(kind.substr(kind.indexOf("_")+1), 10);
+            if (!isNaN(arg) && (arg>10)) {
+               kind = kind.substr(0, kind.indexOf("_"));
+               sizes = [];
+               while (arg>0) {
+                  sizes.unshift(Math.max(arg % 10, 1));
+                  arg = Math.round((arg-sizes[0])/10);
+                  if (sizes[0]===0) sizes[0]=1;
+               }
             }
          }
-      }
 
-      kind = kind ? parseInt(kind.replace( /^\D+/g, ''), 10) : 0;
-      if (kind && (kind>1)) {
-         if (kind<10) {
-            num = kind;
-         } else {
-            arr = [];
-            while (kind>0) {
-               arr.unshift(kind % 10);
-               kind = Math.round((kind-arr[0])/10);
-               if (arr[0]==0) arr[0]=1;
+         kind = kind ? parseInt(kind.replace( /^\D+/g, ''), 10) : 0;
+         if (kind && (kind>1)) {
+            if (kind<10) {
+               num = kind;
+            } else {
+               arr = [];
+               while (kind>0) {
+                  arr.unshift(kind % 10);
+                  kind = Math.round((kind-arr[0])/10);
+                  if (arr[0]==0) arr[0]=1;
+               }
+               num = arr.length;
             }
-            num = arr.length;
          }
+
+         if (sizes && (sizes.length!==num)) sizes = undefined;
+
+         if (!this.simple_layout)
+            this.CreateGroup(this, this.select_main(), num, arr, sizes);
       }
 
-      if (sizes && (sizes.length!==num)) sizes = undefined;
+      CreateGroup(handle, main, num, childs, sizes) {
 
-      if (!this.simple_layout)
-         this.CreateGroup(this, this.select_main(), num, arr, sizes);
-   }
+         if (!sizes) sizes = new Array(num);
+         let sum1 = 0, sum2 = 0;
+         for (let n=0;n<num;++n) sum1 += (sizes[n] || 1);
+         for (let n=0;n<num;++n) {
+            sizes[n] = Math.round(100 * (sizes[n] || 1) / sum1);
+            sum2 += sizes[n];
+            if (n==num-1) sizes[n] += (100-sum2); // make 100%
+         }
 
-   GridDisplay.prototype = Object.create(MDIDisplay.prototype);
+         for (let cnt = 0; cnt<num; ++cnt) {
+            let group = { id: cnt, drawid: -1, position: 0, size: sizes[cnt] };
+            if (cnt>0) group.position = handle.groups[cnt-1].position + handle.groups[cnt-1].size;
+            group.position0 = group.position;
 
-   GridDisplay.prototype.CreateGroup = function(handle, main, num, childs, sizes) {
+            if (!childs || !childs[cnt] || childs[cnt]<2) group.drawid = this.framecnt++;
 
-      if (!sizes) sizes = new Array(num);
-      var sum1 = 0, sum2 = 0;
-      for (var n=0;n<num;++n) sum1 += (sizes[n] || 1);
-      for (var n=0;n<num;++n) {
-         sizes[n] = Math.round(100 * (sizes[n] || 1) / sum1);
-         sum2 += sizes[n];
-         if (n==num-1) sizes[n] += (100-sum2); // make 100%
+            handle.groups.push(group);
+
+            let elem = main.append("div").attr('groupid', group.id);
+
+            if (handle.vertical)
+               elem.style('float', 'bottom').style('height',group.size+'%').style('width','100%');
+            else
+               elem.style('float', 'left').style('width',group.size+'%').style('height','100%');
+
+            if (group.drawid>=0) {
+               elem.classed('jsroot_newgrid', true);
+               if (typeof this.frameid === 'string')
+                  elem.attr('id', this.frameid + "_" + group.drawid);
+            } else {
+               elem.style('display','flex').style('flex-direction', handle.vertical ? "row" : "column");
+            }
+
+            if (childs && (childs[cnt]>1)) {
+               group.vertical = !handle.vertical;
+               group.groups = [];
+               elem.style('overflow','hidden');
+               this.CreateGroup(group, elem, childs[cnt]);
+            }
+         }
+
+         if (this.use_separarators && this.CreateSeparator)
+            for (let cnt=1;cnt<num;++cnt)
+               this.CreateSeparator(handle, main, handle.groups[cnt]);
       }
 
-      for (var cnt = 0; cnt<num; ++cnt) {
-         var group = { id: cnt, drawid: -1, position: 0, size: sizes[cnt] };
-         if (cnt>0) group.position = handle.groups[cnt-1].position + handle.groups[cnt-1].size;
-         group.position0 = group.position;
-
-         if (!childs || !childs[cnt] || childs[cnt]<2) group.drawid = this.framecnt++;
-
-         handle.groups.push(group);
-
-         var elem = main.append("div").attr('groupid', group.id);
-
-         if (handle.vertical)
-            elem.style('float', 'bottom').style('height',group.size+'%').style('width','100%');
+      ForEachFrame(userfunc /*, only_visible */) {
+         if (this.simple_layout)
+            userfunc(this.GetFrame());
          else
-            elem.style('float', 'left').style('width',group.size+'%').style('height','100%');
+            this.select_main().selectAll('.jsroot_newgrid').each(function() {
+               userfunc(d3.select(this).node());
+            });
+      }
 
-         if (group.drawid>=0) {
-            elem.classed('jsroot_newgrid', true);
-            if (typeof this.frameid === 'string')
-               elem.attr('id', this.frameid + "_" + group.drawid);
-         } else {
-            elem.style('display','flex').style('flex-direction', handle.vertical ? "row" : "column");
+      GetActiveFrame() {
+         if (this.simple_layout) return this.GetFrame();
+
+         let found = super.GetActiveFrame();
+         if (found) return found;
+
+         this.ForEachFrame(frame => { if (!found) found = frame; }, true);
+
+         return found;
+      }
+
+      ActivateFrame(frame) { this.active_frame_title = d3.select(frame).attr('frame_title'); }
+
+      GetFrame(id) {
+         if (this.simple_layout)
+            return this.select_main('origin').node();
+         let res = null;
+         this.select_main().selectAll('.jsroot_newgrid').each(function() {
+            if (id-- === 0) res = this;
+         });
+         return res;
+      }
+
+      NumGridFrames() { return this.framecnt; }
+
+      CreateFrame(title) {
+         this.BeforeCreateFrame(title);
+
+         let frame = null, maxloop = this.framecnt || 2;
+
+         while (!frame && maxloop--) {
+            frame = this.GetFrame(this.getcnt);
+            if (!this.simple_layout && this.framecnt)
+               this.getcnt = (this.getcnt+1) % this.framecnt;
+
+            if (d3.select(frame).classed("jsroot_fixed_frame")) frame = null;
          }
 
-         if (childs && (childs[cnt]>1)) {
-            group.vertical = !handle.vertical;
-            group.groups = [];
-            elem.style('overflow','hidden');
-            this.CreateGroup(group, elem, childs[cnt]);
+         if (frame) {
+            this.CleanupFrame(frame);
+            d3.select(frame).attr('frame_title', title);
          }
+
+         return frame;
       }
 
-      if (this.use_separarators && this.CreateSeparator)
-         for (var cnt=1;cnt<num;++cnt)
-            this.CreateSeparator(handle, main, handle.groups[cnt]);
-   }
-
-   GridDisplay.prototype.ForEachFrame = function(userfunc, only_visible) {
-      if (this.simple_layout)
-         userfunc(this.GetFrame());
-      else
-      this.select_main().selectAll('.jsroot_newgrid').each(function() {
-         userfunc(d3.select(this).node());
-      });
-   }
-
-   GridDisplay.prototype.GetActiveFrame = function() {
-      if (this.simple_layout) return this.GetFrame();
-
-      var found = MDIDisplay.prototype.GetActiveFrame.call(this);
-      if (found) return found;
-
-      this.ForEachFrame(function(frame) {
-         if (!found) found = frame;
-      }, true);
-
-      return found;
-   }
-
-   GridDisplay.prototype.ActivateFrame = function(frame) {
-      this.active_frame_title = d3.select(frame).attr('frame_title');
-   }
-
-   GridDisplay.prototype.GetFrame = function(id) {
-      if (this.simple_layout)
-         return this.select_main('origin').node();
-      var res = null;
-      this.select_main().selectAll('.jsroot_newgrid').each(function() {
-         if (id-- === 0) res = this;
-      });
-      return res;
-   }
-
-   GridDisplay.prototype.NumGridFrames = function() {
-      return this.framecnt;
-   }
-
-   GridDisplay.prototype.CreateFrame = function(title) {
-      this.BeforeCreateFrame(title);
-
-      var frame = null, maxloop = this.framecnt || 2;
-
-      while (!frame && maxloop--) {
-         frame = this.GetFrame(this.getcnt);
-         if (!this.simple_layout && this.framecnt)
-            this.getcnt = (this.getcnt+1) % this.framecnt;
-
-         if (d3.select(frame).classed("jsroot_fixed_frame")) frame = null;
-      }
-
-      if (frame) {
-         this.CleanupFrame(frame);
-         d3.select(frame).attr('frame_title', title);
-      }
-
-      return frame;
-   }
+   } // class GridDisplay
 
 
    // export all functions and classes
 
-   JSROOT.Painter.drawList = drawList;
+   jsrp.drawList = drawList;
 
-   JSROOT.Painter.FolderHierarchy = FolderHierarchy;
-   JSROOT.Painter.ObjectHierarchy = ObjectHierarchy;
-   JSROOT.Painter.TaskHierarchy = TaskHierarchy;
-   JSROOT.Painter.ListHierarchy = ListHierarchy;
-   JSROOT.Painter.KeysHierarchy = KeysHierarchy;
+   jsrp.FolderHierarchy = FolderHierarchy;
+   jsrp.ObjectHierarchy = ObjectHierarchy;
+   jsrp.TaskHierarchy = TaskHierarchy;
+   jsrp.ListHierarchy = ListHierarchy;
+   jsrp.KeysHierarchy = KeysHierarchy;
 
    JSROOT.BrowserLayout = BrowserLayout;
    JSROOT.HierarchyPainter = HierarchyPainter;
@@ -2900,4 +2960,4 @@
 
    return JSROOT;
 
-}));
+});

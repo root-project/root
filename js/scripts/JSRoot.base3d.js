@@ -1,203 +1,171 @@
-/// @file JSRoot3DPainter.js
+/// @file JSRoot.base3d.js
 /// JavaScript ROOT 3D graphics
 
-(function( factory ) {
-   if ( typeof define === "function" && define.amd ) {
-      define( ['JSRootPainter', 'd3', 'threejs', 'threejs_all'], factory );
-   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
-      var jsroot = require("./JSRootCore.js");
-      factory(jsroot, require("d3"), require("three"), require("./three.extra.min.js"),
-              jsroot.nodejs || (typeof document=='undefined') ? jsroot.nodejs_document : document);
-   } else {
-      if (typeof JSROOT == 'undefined')
-         throw new Error('JSROOT is not defined', 'JSRoot3DPainter.js');
-      if (typeof d3 != 'object')
-         throw new Error('This extension requires d3.js', 'JSRoot3DPainter.js');
-      if (typeof THREE == 'undefined')
-         throw new Error('THREE is not defined', 'JSRoot3DPainter.js');
-      factory(JSROOT, d3, THREE);
-   }
-} (function(JSROOT, d3, THREE, THREE_MORE, document) {
+JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
    "use strict";
 
-   JSROOT.sources.push("3d");
-
-   if ((typeof document=='undefined') && (typeof window=='object')) document = window.document;
-
-   if (typeof JSROOT.Painter != 'object')
-      throw new Error('JSROOT.Painter is not defined', 'JSRoot3DPainter.js');
-
-   /** Returns true if WebGL can be used
-   *
-   * This can be situation of Node.js without "canvas" module
-   * @author alteredq / http://alteredqualia.com/
-   * @author mr.doob / http://mrdoob.com/
-   * @private
-   */
-
-   JSROOT.Painter.TestWebGL = function() {
-
-      if (JSROOT.gStyle.NoWebGL || JSROOT.nodejs) return false;
-
-      if ('_Detect_WebGL' in this) return this._Detect_WebGL;
-
-      try {
-         var canvas = document.createElement( 'canvas' );
-         this._Detect_WebGL = !! ( window.WebGLRenderingContext && ( canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' ) ) );
-         //res = !!window.WebGLRenderingContext &&  !!document.createElement('canvas').getContext('experimental-webgl');
-       } catch (e) {
-          this._Detect_WebGL = false;
-       }
-
-       return this._Detect_WebGL;
-   }
-
-   /** Returns true if SVGRenderer must be used.
-   *
-   * This can be situation of Node.js without "canvas" module
-   *
-   * @private
-   */
-
-   JSROOT.Painter.UseSVGFor3D = function() {
-      if (!JSROOT.nodejs) return false;
-
-      if (this._Detect_UseSVGFor3D !== undefined)
-         return this._Detect_UseSVGFor3D;
-
-      var nodejs_canvas = null;
-
-      try {
-          nodejs_canvas = require('canvas');
-      } catch (er) {
-          nodejs_canvas = null;
-      }
-
-      this._Detect_UseSVGFor3D = !nodejs_canvas;
-      return this._Detect_UseSVGFor3D;
-   }
-
-   /** Creates renderer for the 3D frawngs
+   /** Creates renderer for the 3D drawings
     *
-    * width and height - dimension of canvas for rendering
-    * usesvg - if SVGRenderer should be used
-    * makeimage - if normal renderer used, one can convert canvas into <image>, but without interactivity
-    * usewebgl - if WebGL should be used
-    * args  - parameters for WebGLRenderer (if used)
+    * @param {value} width - rendering width
+    * @param {value} height - rendering height
+    * @param {value} render3d - render type, see JSROOT.constants.Render3D
+    * @param {object} args - different arguments for creating 3D renderer
     * @private
     */
 
-   JSROOT.Painter.Create3DRenderer = function(width, height, usesvg, makeimage, usewebgl, args) {
-      var res = {
-         renderer: null,
-         dom: null,
-         usesvg: usesvg,
-         usesvgimg: usesvg && JSROOT.gStyle.ImageSVG
-      }
+   jsrp.Create3DRenderer = function(width, height, render3d, args) {
+
+      let rc = JSROOT.constants.Render3D;
+
+      render3d = jsrp.GetRender3DKind(render3d);
 
       if (!args) args = { antialias: true, alpha: true };
 
-      if (JSROOT.nodejs) {
-         res.usewebgl = false;
-      } else if (usewebgl !== undefined) {
-         res.usewebgl = usewebgl;
-      } else {
-         res.usewebgl = JSROOT.Painter.TestWebGL();
-      }
-
       // solves problem with toDataUrl in headless mode of chrome
       // found https://stackoverflow.com/questions/48011613
-      if (JSROOT.BatchMode && JSROOT.browser.isChromeHeadless && res.usewebgl)
+      if (JSROOT.BatchMode && JSROOT.browser.isChromeHeadless && (kind == rc.WebGLImage))
          args.premultipliedAlpha = false;
 
-      if (usesvg) {
+      let need_workaround = false, renderer,
+          doc = JSROOT.get_document();
 
-         var nodejs_canvas = null;
+      if (render3d == rc.WebGL) {
+         // interactive WebGL Rendering
+         renderer = new THREE.WebGLRenderer(args);
 
-         if (JSROOT.nodejs && res.usesvgimg) {
-            try {
-               nodejs_canvas = require('canvas');
-            } catch (er) {
-               nodejs_canvas = null;
-               res.usesvgimg = false;
-               JSROOT.gStyle.ImageSVG = false; // no need to try once again
-            }
-         }
+      } else if (render3d == rc.SVG) {
+         // SVG rendering
+         renderer = THREE.CreateSVGRenderer(false, 0, doc);
 
-         if (res.usesvgimg) {
-
-            if (nodejs_canvas) {
-               args.canvas = new nodejs_canvas(width, height);
-               args.canvas.style = {};
-            }
-
-            res.renderer = res.usewebgl ? new THREE.WebGLRenderer(args) : new THREE.SoftwareRenderer(args);
+         if (JSROOT.BatchMode) {
+            need_workaround = true;
          } else {
-            // this.renderer = new THREE.SVGRenderer({ precision: 0, astext: true });
-            res.renderer = THREE.CreateSVGRenderer(false, 0, document);
+            renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            // d3.select(renderer.jsroot_dom).attr("width", width).attr("height", height);
          }
+      } else if (JSROOT.nodejs) {
+         // try to use WebGL inside node.js - need to create headless context
+         let gl = require('gl')(1, 1, { preserveDrawingBuffer: true });
 
-         if (res.usesvgimg || (res.renderer.makeOuterHTML !== undefined)) {
-            // this is indication of new three.js functionality
-            if (!JSROOT.svg_workaround) JSROOT.svg_workaround = [];
-            res.renderer.workaround_id = JSROOT.svg_workaround.length;
-            JSROOT.svg_workaround[res.renderer.workaround_id] = "<svg></svg>"; // dummy, need to be replaced
+         const { createCanvas } = require('canvas');
 
-            // replace DOM element in renderer
-            res.dom = document.createElementNS( 'http://www.w3.org/2000/svg', 'path');
-            res.dom.setAttribute('jsroot_svg_workaround', res.renderer.workaround_id);
-         }
+         args.canvas = createCanvas(width, height);
+         args.canvas.addEventListener = function() { }; // dummy
+         args.canvas.style = {};
+
+         args.context = gl;
+
+         renderer = new THREE.WebGLRenderer(args);
+
+         renderer.jsroot_output = new THREE.WebGLRenderTarget(width, height);
+
+         renderer.setRenderTarget(renderer.jsroot_output);
+
+         need_workaround = true;
       } else {
-         res.renderer = res.usewebgl ? new THREE.WebGLRenderer(args) : new THREE.SoftwareRenderer(args);
+         renderer = new THREE.WebGLRenderer(args);
+         if (JSROOT.BatchMode) {
+            need_workaround = true;
+         } else {
+            renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
+            d3.select(renderer.jsroot_dom).attr("width", width).attr("height", height);
+         }
+      }
+
+      if (need_workaround) {
+         if (!JSROOT.svg_workaround) JSROOT.svg_workaround = [];
+         renderer.workaround_id = JSROOT.svg_workaround.length;
+         JSROOT.svg_workaround[renderer.workaround_id] = "<svg></svg>"; // dummy, provided in AfterRender3D
+
+         // replace DOM element in renderer
+         renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
+         renderer.jsroot_dom.setAttribute('jsroot_svg_workaround', renderer.workaround_id);
+      } else if (!renderer.jsroot_dom) {
+         renderer.jsroot_dom = renderer.domElement;
       }
 
       // res.renderer.setClearColor("#000000", 1);
       // res.renderer.setClearColor(0x0, 0);
-      res.renderer.setSize(width, height);
+      renderer.setSize(width, height);
+      renderer.jsroot_render3d = render3d;
 
-      if (!res.dom) {
-         res.dom = res.renderer.domElement;
-         if (!usesvg && makeimage) {
-            res.dom = res.renderer.svgImage = document.createElementNS('http://www.w3.org/2000/svg','image');
-            d3.select(res.dom).attr("width", width)
-                              .attr("height", height);
-         }
-      }
+      renderer.setJSROOTSize = jsrp.Set3DSize;
 
-      return res;
+      return renderer;
    }
 
-   JSROOT.Painter.AfterRender3D = function(renderer) {
-      if (renderer.svgImage) {
-         var dataUrl = renderer.domElement.toDataURL("image/png");
-         var attrname = JSROOT.nodejs ? "xlink_href_nodejs" : "xlink:href";
-         d3.select(renderer.svgImage).attr(attrname, dataUrl);
-      }
+   jsrp.Set3DSize = function(width, height) {
+      if ((this.jsroot_render3d === JSROOT.constants.Render3D.WebGLImage) && !JSROOT.BatchMode && !JSROOT.nodejs)
+        return d3.select(this.jsroot_dom).attr("width", width).attr("height", height);
+   }
 
-      // when using SVGrenderer producing text output, provide result
-      if (renderer.workaround_id !== undefined) {
-         if (typeof renderer.makeOuterHTML == 'function') {
+   jsrp.BeforeRender3D = function(renderer) {
+      // cleanup previous rendering, from SVG renderer
+      if (renderer.clearHTML) renderer.clearHTML();
+   }
+
+   jsrp.AfterRender3D = function(renderer) {
+
+      let rc = JSROOT.constants.Render3D;
+      if (renderer.jsroot_render3d == rc.WebGL) return;
+
+      if (renderer.jsroot_render3d == rc.SVG) {
+         // case of SVGRenderer
+         if (JSROOT.BatchMode) {
             JSROOT.svg_workaround[renderer.workaround_id] = renderer.makeOuterHTML();
          } else {
-            var canvas = renderer.domElement;
-            var dataUrl = canvas.toDataURL("image/png");
-            var svg = '<image width="' + canvas.width + '" height="' + canvas.height + '" xlink:href="' + dataUrl + '"></image>';
-            JSROOT.svg_workaround[renderer.workaround_id] = svg;
+            let parent = renderer.jsroot_dom.parentNode;
+            if (parent) {
+               parent.innerHTML = renderer.makeOuterHTML();
+               renderer.jsroot_dom = parent.firstChild;
+            }
          }
+      } else if (JSROOT.nodejs) {
+         // this is WebGL rendering in node.js
+         let canvas = renderer.domElement,
+            context = canvas.getContext('2d');
+
+         let pixels = new Uint8Array(4 * canvas.width * canvas.height);
+         renderer.readRenderTargetPixels(renderer.jsroot_output, 0, 0, canvas.width, canvas.height, pixels);
+
+         // small code to flip Y scale
+         let indx1 = 0, indx2 = (canvas.height - 1) * 4 * canvas.width, k, d;
+         while (indx1 < indx2) {
+            for  (k = 0; k < 4 * canvas.width; ++k) {
+               d = pixels[indx1 + k]; pixels[indx1 + k] = pixels[indx2 + k]; pixels[indx2 + k] = d;
+            }
+            indx1 += 4 * canvas.width;
+            indx2 -= 4 * canvas.width;
+         }
+
+         let imageData = context.createImageData( canvas.width, canvas.height );
+         imageData.data.set( pixels );
+         context.putImageData( imageData, 0, 0 );
+
+         let dataUrl = canvas.toDataURL("image/png");
+         let svg = '<image width="' + canvas.width + '" height="' + canvas.height + '" xlink:href="' + dataUrl + '"></image>';
+         JSROOT.svg_workaround[renderer.workaround_id] = svg;
+      } else if (JSROOT.BatchMode) {
+         // this is conversion of WebGL context into svg image
+         let dataUrl = renderer.domElement.toDataURL("image/png");
+         let svg = '<image width="' + canvas.width + '" height="' + canvas.height + '" xlink:href="' + dataUrl + '"></image>';
+         JSROOT.svg_workaround[renderer.workaround_id] = svg;
+      } else {
+         let dataUrl = renderer.domElement.toDataURL("image/png");
+         d3.select(renderer.jsroot_dom).attr("xlink:href", dataUrl);
       }
    }
 
-   JSROOT.Painter.ProcessSVGWorkarounds = function(svg) {
+   jsrp.ProcessSVGWorkarounds = function(svg) {
       if (!JSROOT.svg_workaround) return svg;
-      for (var k=0;k<JSROOT.svg_workaround.length;++k)
+      for (let k = 0;  k < JSROOT.svg_workaround.length; ++k)
          svg = svg.replace('<path jsroot_svg_workaround="' + k + '"></path>', JSROOT.svg_workaround[k]);
       JSROOT.svg_workaround = undefined;
       return svg;
    }
 
-
-   JSROOT.Painter.TooltipFor3D = function(prnt, canvas) {
+   jsrp.TooltipFor3D = function(prnt, canvas) {
       this.tt = null;
       this.cont = null;
       this.lastlbl = '';
@@ -215,10 +183,10 @@
       // extract position from event - can be used to process it later when event is gone
       this.extract_pos = function(e) {
          if (typeof e == 'object' && (e.u !== undefined) && (e.l !== undefined)) return e;
-         var res = { u: 0, l: 0 };
+         let res = { u: 0, l: 0 };
          if (this.abspos) {
-            res.l = JSROOT.browser.isIE ? (e.clientX + document.documentElement.scrollLeft) : e.pageX;
-            res.u = JSROOT.browser.isIE ? (e.clientY + document.documentElement.scrollTop) : e.pageY;
+            res.l = e.pageX;
+            res.u = e.pageY;
          } else {
             res.l = e.offsetX;
             res.u = e.offsetY;
@@ -235,9 +203,9 @@
 
          if (!this.tt) return;
 
-         var pos = this.extract_pos(e);
+         let pos = this.extract_pos(e);
          if (!this.abspos) {
-            var rect1 = this.parent.getBoundingClientRect(),
+            let rect1 = this.parent.getBoundingClientRect(),
                 rect2 = this.canvas.getBoundingClientRect();
 
             if ((rect1.left !== undefined) && (rect2.left!== undefined)) pos.l += (rect2.left-rect1.left);
@@ -252,16 +220,16 @@
 
             // one should find parent with non-static position,
             // all absolute coordinates calculated relative to such node
-            var abs_parent = this.parent;
+            let abs_parent = this.parent;
             while (abs_parent) {
-               var style = getComputedStyle(abs_parent);
+               let style = getComputedStyle(abs_parent);
                if (!style || (style.position !== 'static')) break;
                if (!abs_parent.parentNode || (abs_parent.parentNode.nodeType != 1)) break;
                abs_parent = abs_parent.parentNode;
             }
 
             if (abs_parent && (abs_parent !== this.parent)) {
-               var rect0 = abs_parent.getBoundingClientRect();
+               let rect0 = abs_parent.getBoundingClientRect();
                pos.l += (rect1.left - rect0.left);
                pos.u += (rect1.top - rect0.top);
             }
@@ -271,8 +239,7 @@
          this.tt.style.left = (pos.l + 3) + 'px';
       };
 
-      this.show = function(v, mouse_pos, status_func) {
-         // if (JSROOT.gStyle.Tooltip <= 0) return;
+      this.show = function(v /*, mouse_pos, status_func*/) {
          if (!v || (v==="")) return this.hide();
 
          if (v && (typeof v =='object') && (v.lines || v.line)) {
@@ -281,8 +248,8 @@
             if (v.line) {
                v = v.line;
             } else {
-               var res = v.lines[0];
-               for (var n=1;n<v.lines.length;++n) res+= "<br/>" + v.lines[n];
+               let res = v.lines[0];
+               for (let n=1;n<v.lines.length;++n) res+= "<br/>" + v.lines[n];
                v = res;
             }
          }
@@ -300,8 +267,6 @@
             this.cont.innerHTML = v;
             this.lastlbl = v;
             this.tt.style.width = 'auto'; // let it be automatically resizing...
-            if (JSROOT.browser.isIE)
-               this.tt.style.width = this.tt.offsetWidth;
          }
       };
 
@@ -317,13 +282,13 @@
    }
 
 
-   /** @brief Create OrbitControl for painter */
-   JSROOT.Painter.CreateOrbitControl = function(painter, camera, scene, renderer, lookat) {
+   /** @summary Create OrbitControl for painter */
+   jsrp.CreateOrbitControl = function(painter, camera, scene, renderer, lookat) {
 
-      if (JSROOT.gStyle.Zooming && JSROOT.gStyle.ZoomWheel)
+      if (JSROOT.settings.Zooming && JSROOT.settings.ZoomWheel)
          renderer.domElement.addEventListener( 'wheel', control_mousewheel);
 
-      var enable_zoom = JSROOT.gStyle.Zooming && JSROOT.gStyle.ZoomMouse,
+      let enable_zoom = JSROOT.settings.Zooming && JSROOT.settings.ZoomMouse,
           enable_select = typeof painter.ProcessMouseClick == "function";
 
       if (enable_zoom || enable_select) {
@@ -331,7 +296,7 @@
          renderer.domElement.addEventListener( 'mouseup', control_mouseup);
       }
 
-      var control = new THREE.OrbitControls(camera, renderer.domElement);
+      let control = new THREE.OrbitControls(camera, renderer.domElement);
 
       control.enableDamping = false;
       control.dampingFactor = 1.0;
@@ -344,14 +309,15 @@
          control.update();
       }
 
-      control.tooltip = new JSROOT.Painter.TooltipFor3D(painter.select_main().node(), renderer.domElement);
+      control.tooltip = new jsrp.TooltipFor3D(painter.select_main().node(), renderer.domElement);
 
       control.painter = painter;
       control.camera = camera;
       control.scene = scene;
       control.renderer = renderer;
       control.raycaster = new THREE.Raycaster();
-      control.raycaster.linePrecision = 10;
+      control.raycaster.params.Line.threshold = 10;
+      control.raycaster.params.Points.threshold = 5;
       control.mouse_zoom_mesh = null; // zoom mesh, currently used in the zooming
       control.block_ctxt = false; // require to block context menu command appearing after control ends, required in chrome which inject contextmenu when key released
       control.block_mousemove = false; // when true, tooltip or cursor will not react on mouse move
@@ -363,7 +329,7 @@
       control.enable_select = enable_select;
 
       control.Cleanup = function() {
-         if (JSROOT.gStyle.Zooming && JSROOT.gStyle.ZoomWheel)
+         if (JSROOT.settings.Zooming && JSROOT.settings.ZoomWheel)
             this.domElement.removeEventListener( 'wheel', control_mousewheel);
          if (this.enable_zoom || this.enable_select) {
             this.domElement.removeEventListener( 'mousedown', control_mousedown);
@@ -403,7 +369,7 @@
 
       control.GetOriginDirectionIntersects = function(origin, direction) {
          this.raycaster.set(origin, direction);
-         var intersects = this.raycaster.intersectObjects(this.scene.children, true);
+         let intersects = this.raycaster.intersectObjects(this.scene.children, true);
          // painter may want to filter intersects
          if (typeof this.painter.FilterIntersects == 'function')
             intersects = this.painter.FilterIntersects(intersects);
@@ -412,16 +378,18 @@
 
       control.GetMouseIntersects = function(mouse) {
          // domElement gives correct coordinate with canvas render, but isn't always right for webgl renderer
-         var sz = (this.renderer instanceof THREE.WebGLRenderer) ?
+         if (!this.renderer) return [];
+
+         let sz = (this.renderer instanceof THREE.WebGLRenderer) ?
                      this.renderer.getSize(new THREE.Vector2()) :
                      this.renderer.domElement;
 
-         var pnt = { x: mouse.x / sz.width * 2 - 1, y: -mouse.y / sz.height * 2 + 1 };
+         let pnt = { x: mouse.x / sz.width * 2 - 1, y: -mouse.y / sz.height * 2 + 1 };
 
          this.camera.updateMatrix();
          this.camera.updateMatrixWorld();
          this.raycaster.setFromCamera( pnt, this.camera );
-         var intersects = this.raycaster.intersectObjects(this.scene.children, true);
+         let intersects = this.raycaster.intersectObjects(this.scene.children, true);
 
          // painter may want to filter intersects
          if (typeof this.painter.FilterIntersects == 'function')
@@ -431,10 +399,10 @@
       }
 
       control.DetectZoomMesh = function(evnt) {
-         var mouse = this.GetMousePos(evnt, {});
-         var intersects = this.GetMouseIntersects(mouse);
+         let mouse = this.GetMousePos(evnt, {});
+         let intersects = this.GetMouseIntersects(mouse);
          if (intersects)
-            for (var n=0;n<intersects.length;++n)
+            for (let n=0;n<intersects.length;++n)
                if (intersects[n].object.zoom)
                   return intersects[n];
 
@@ -442,7 +410,7 @@
       }
 
       control.ProcessDblClick = function(evnt) {
-         var intersect = this.DetectZoomMesh(evnt);
+         let intersect = this.DetectZoomMesh(evnt);
          if (intersect && this.painter) {
             this.painter.Unzoom(intersect.object.use_y_for_z ? "y" : intersect.object.zoom);
          } else {
@@ -493,7 +461,7 @@
             this.ContextMenu(this.mouse_ctxt, this.GetMouseIntersects(this.mouse_ctxt));
       }
 
-      control.ContextMenu = function(pos, intersects) {
+      control.ContextMenu = function(/* pos, intersects */) {
          // do nothing, function called when context menu want to be activated
       }
 
@@ -520,7 +488,7 @@
          if (this.mouse_zoom_mesh) {
             // when working with zoom mesh, need special handling
 
-            var zoom2 = this.DetectZoomMesh(evnt), pnt2 = null;
+            let zoom2 = this.DetectZoomMesh(evnt), pnt2 = null;
 
             if (zoom2 && (zoom2.object === this.mouse_zoom_mesh.object)) {
                pnt2 = zoom2.point;
@@ -560,13 +528,13 @@
          // remove handle - allow to trigger new timeout
          delete this.tmout_handle;
 
-         var mouse = this.tmout_mouse,
+         let mouse = this.tmout_mouse,
              intersects = this.GetMouseIntersects(mouse),
              tip = this.ProcessMouseMove(intersects),
              status_func = this.painter.GetShowStatusFunc();
 
          if (tip && status_func) {
-            var name = "", title = "", coord = "", info = "";
+            let name = "", title = "", coord = "", info = "";
             if (mouse) coord = mouse.x.toFixed(0)+ "," + mouse.y.toFixed(0);
             if (typeof tip == "string") {
                info = tip;
@@ -587,7 +555,7 @@
          } else {
             this.tooltip.hide();
             if (intersects)
-               for (var n=0;n<intersects.length;++n)
+               for (let n=0;n<intersects.length;++n)
                   if (intersects[n].object.zoom) this.cursor_changed = true;
          }
 
@@ -612,14 +580,14 @@
       function control_mousewheel(evnt) {
          // try to handle zoom extra
 
-         if (JSROOT.Painter.IsRender3DFired(control.painter) || control.mouse_zoom_mesh) {
+         if (jsrp.IsRender3DFired(control.painter) || control.mouse_zoom_mesh) {
             evnt.preventDefault();
             evnt.stopPropagation();
             evnt.stopImmediatePropagation();
             return; // already fired redraw, do not react on the mouse wheel
          }
 
-         var intersect = control.DetectZoomMesh(evnt);
+         let intersect = control.DetectZoomMesh(evnt);
          if (!intersect) return;
 
          evnt.preventDefault();
@@ -627,7 +595,7 @@
          evnt.stopImmediatePropagation();
 
          if (control.painter && (typeof control.painter.AnalyzeMouseWheelEvent == 'function')) {
-            var kind = intersect.object.zoom,
+            let kind = intersect.object.zoom,
                 position = intersect.point[kind],
                 item = { name: kind, ignore: false };
 
@@ -676,11 +644,11 @@
 
          if (control.mouse_zoom_mesh && control.mouse_zoom_mesh.point2 && control.painter.Get3DZoomCoord) {
 
-            var kind = control.mouse_zoom_mesh.object.zoom,
+            let kind = control.mouse_zoom_mesh.object.zoom,
                 pos1 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point, kind),
                 pos2 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point2, kind);
 
-            if (pos1>pos2) { var v = pos1; pos1 = pos2; pos2 = v; }
+            if (pos1>pos2) { let v = pos1; pos1 = pos2; pos2 = v; }
 
             if ((kind==="z") && control.mouse_zoom_mesh.object.use_y_for_z) kind="y";
 
@@ -702,13 +670,13 @@
 
          if (control.enable_select && control.mouse_select_pnt) {
 
-            var pnt = control.GetMousePos(evnt, {});
+            let pnt = control.GetMousePos(evnt, {});
 
-            var same_pnt = (pnt.x == control.mouse_select_pnt.x) && (pnt.y == control.mouse_select_pnt.y);
+            let same_pnt = (pnt.x == control.mouse_select_pnt.x) && (pnt.y == control.mouse_select_pnt.y);
             delete control.mouse_select_pnt;
 
             if (same_pnt) {
-               var intersects = control.GetMouseIntersects(pnt);
+               let intersects = control.GetMouseIntersects(pnt);
                control.painter.ProcessMouseClick(pnt, intersects, evnt);
             }
          }
@@ -721,7 +689,7 @@
       if (painter && painter.options && painter.options.mouse_click) {
          control.ProcessClick = function(mouse) {
             if (typeof this.ProcessSingleClick == 'function') {
-               var intersects = this.GetMouseIntersects(mouse);
+               let intersects = this.GetMouseIntersects(mouse);
                this.ProcessSingleClick(intersects);
             }
          }
@@ -738,9 +706,9 @@
          }.bind(control);
       }
 
-      control.addEventListener( 'change', control.ChangeEvent.bind(control));
-      control.addEventListener( 'start', control.StartEvent.bind(control));
-      control.addEventListener( 'end', control.EndEvent.bind(control));
+      control.addEventListener('change', control.ChangeEvent.bind(control));
+      control.addEventListener('start', control.StartEvent.bind(control));
+      control.addEventListener('end', control.EndEvent.bind(control));
 
       control.lstn_contextmenu = control.MainProcessContextMenu.bind(control);
       control.lstn_dblclick = control.MainProcessDblClick.bind(control);
@@ -761,12 +729,12 @@
     * Simplify JS engine to remove it from memory
     * @private */
 
-   JSROOT.Painter.DisposeThreejsObject = function(obj, only_childs) {
+   jsrp.DisposeThreejsObject = function(obj, only_childs) {
       if (!obj) return;
 
       if (obj.children) {
-         for (var i = 0; i < obj.children.length; i++)
-            JSROOT.Painter.DisposeThreejsObject(obj.children[i]);
+         for (let i = 0; i < obj.children.length; i++)
+            jsrp.DisposeThreejsObject(obj.children[i]);
       }
 
       if (only_childs) {
@@ -799,25 +767,25 @@
       obj = undefined;
    }
 
-   JSROOT.Painter.createLineSegments = function(arr, material, index, only_geometry) {
+   jsrp.createLineSegments = function(arr, material, index, only_geometry) {
       // prepare geometry for THREE.LineSegments
       // If required, calculate lineDistance attribute for dashed geometries
 
-      var geom = new THREE.BufferGeometry();
+      let geom = new THREE.BufferGeometry();
 
-      geom.addAttribute( 'position', arr instanceof Float32Array ? new THREE.BufferAttribute( arr, 3 ) : new THREE.Float32BufferAttribute( arr, 3 ) );
+      geom.setAttribute( 'position', arr instanceof Float32Array ? new THREE.BufferAttribute( arr, 3 ) : new THREE.Float32BufferAttribute( arr, 3 ) );
       if (index) geom.setIndex(  new THREE.BufferAttribute(index, 1) );
 
       if (material.isLineDashedMaterial) {
 
-         var v1 = new THREE.Vector3(),
+         let v1 = new THREE.Vector3(),
              v2 = new THREE.Vector3(),
              d = 0, distances = null;
 
          if (index) {
             distances = new Float32Array(index.length);
-            for (var n=0; n<index.length; n+=2) {
-               var i1 = index[n], i2 = index[n+1];
+            for (let n=0; n<index.length; n+=2) {
+               let i1 = index[n], i2 = index[n+1];
                v1.set(arr[i1],arr[i1+1],arr[i1+2]);
                v2.set(arr[i2],arr[i2+1],arr[i2+2]);
                distances[n] = d;
@@ -826,7 +794,7 @@
             }
          } else {
             distances = new Float32Array(arr.length/3);
-            for (var n=0; n<arr.length; n+=6) {
+            for (let n=0; n<arr.length; n+=6) {
                v1.set(arr[n],arr[n+1],arr[n+2]);
                v2.set(arr[n+3],arr[n+4],arr[n+5]);
                distances[n/3] = d;
@@ -834,13 +802,13 @@
                distances[n/3+1] = d;
             }
          }
-         geom.addAttribute( 'lineDistance', new THREE.BufferAttribute(distances, 1) );
+         geom.setAttribute( 'lineDistance', new THREE.BufferAttribute(distances, 1) );
       }
 
       return only_geometry ? geom : new THREE.LineSegments(geom, material);
    }
 
-   JSROOT.Painter.Box3D = {
+   jsrp.Box3D = {
        Vertices: [ new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 0),
                    new THREE.Vector3(1, 0, 1), new THREE.Vector3(1, 0, 0),
                    new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 1, 1),
@@ -851,12 +819,12 @@
    };
 
    // these segments address vertices from the mesh, we can use positions from box mesh
-   JSROOT.Painter.Box3D.MeshSegments = (function() {
-      var box3d = JSROOT.Painter.Box3D,
+   jsrp.Box3D.MeshSegments = (function() {
+      let box3d = jsrp.Box3D,
           arr = new Int32Array(box3d.Segments.length);
 
-      for (var n=0;n<arr.length;++n) {
-         for (var k=0;k<box3d.Indexes.length;++k)
+      for (let n=0;n<arr.length;++n) {
+         for (let k=0;k<box3d.Indexes.length;++k)
             if (box3d.Segments[n] === box3d.Indexes[k]) {
                arr[n] = k; break;
             }
@@ -864,7 +832,7 @@
       return arr;
    })();
 
-   JSROOT.Painter.IsRender3DFired = function(painter) {
+   jsrp.IsRender3DFired = function(painter) {
       if (!painter || painter.renderer === undefined) return false;
 
       return painter.render_tmout !== undefined; // when timeout configured, object is prepared for rendering
@@ -876,13 +844,13 @@
 
    InteractiveControl.prototype.cleanup = function() {}
 
-   InteractiveControl.prototype.extractIndex = function(intersect) { return undefined; }
+   InteractiveControl.prototype.extractIndex = function(/*intersect*/) { return undefined; }
 
-   InteractiveControl.prototype.setSelected = function(col, indx) {}
+   InteractiveControl.prototype.setSelected = function(/*col, indx*/) {}
 
-   InteractiveControl.prototype.setHighlight = function(col, indx) {}
+   InteractiveControl.prototype.setHighlight = function(/*col, indx*/) {}
 
-   InteractiveControl.prototype.checkHighlightIndex = function(indx) { return undefined; }
+   InteractiveControl.prototype.checkHighlightIndex = function(/*indx*/) { return undefined; }
 
    // ==============================================================================
 
@@ -907,7 +875,7 @@
    }
 
    PointsControl.prototype.setSelected = function(col, indx) {
-      var m = this.mesh;
+      let m = this.mesh;
       if ((m.select_col == col) && (m.select_indx == indx)) {
          console.log("Reset selection");
          col = null; indx = undefined;
@@ -919,7 +887,7 @@
    }
 
    PointsControl.prototype.setHighlight = function(col, indx) {
-      var m = this.mesh;
+      let m = this.mesh;
       m.h_index = indx;
       if (col)
          this.createSpecial(col, indx);
@@ -929,20 +897,20 @@
    }
 
    PointsControl.prototype.createSpecial = function(color, index) {
-      var m = this.mesh;
+      let m = this.mesh;
       if (!color) {
          if (m.js_special) {
             m.remove(m.js_special);
-            JSROOT.Painter.DisposeThreejsObject(m.js_special);
+            jsrp.DisposeThreejsObject(m.js_special);
             delete m.js_special;
          }
          return;
       }
 
       if (!m.js_special) {
-         var geom = new THREE.BufferGeometry();
-         geom.addAttribute( 'position', m.geometry.getAttribute("position"));
-         var material = new THREE.PointsMaterial( { size: m.material.size*2, color: color } );
+         let geom = new THREE.BufferGeometry();
+         geom.setAttribute( 'position', m.geometry.getAttribute("position"));
+         let material = new THREE.PointsMaterial( { size: m.material.size*2, color: color } );
          material.sizeAttenuation = m.material.sizeAttenuation;
 
          m.js_special = new THREE.Points(geom, material);
@@ -961,7 +929,7 @@
 
       this.pos = new Float32Array(size*3);
       this.geom = new THREE.BufferGeometry();
-      this.geom.addAttribute( 'position', new THREE.BufferAttribute( this.pos, 3 ) );
+      this.geom.setAttribute( 'position', new THREE.BufferAttribute( this.pos, 3 ) );
       this.indx = 0;
    }
 
@@ -979,7 +947,7 @@
 
    PointsCreator.prototype.Complete = function(arg) {
 
-      var material;
+      let material;
 
       if (this.texture) {
          if ((arg == 'loaded') && this.texture.onUpdate) this.texture.onUpdate( this.texture );
@@ -992,13 +960,15 @@
 
       this._did_create = true;
 
-      var pnts = new THREE.Points(this.geom, material);
+      let pnts = new THREE.Points(this.geom, material);
       pnts.nvertex = 1;
 
-      if (!this.callback)
-         return pnts;
+      let cb = this.callback;
+      delete this.callback;
 
-      JSROOT.CallBack(this.callback, pnts);
+      if (cb) JSROOT.CallBack(cb, pnts);
+
+      return pnts;
    }
 
    PointsCreator.prototype.CreatePoints = function(args) {
@@ -1020,15 +990,17 @@
       if (!args.style || (this.k !== 1) || JSROOT.BatchMode)
          return this.Complete();
 
-      var handler = new JSROOT.TAttMarkerHandler({ style: args.style, color: args.color, size: 8 });
+      let doc = JSROOT.get_document();
 
-      var plainSVG = '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">' +
+      let handler = new JSROOT.TAttMarkerHandler({ style: args.style, color: args.color, size: 8 });
+
+      let plainSVG = '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">' +
                      '<path d="' + handler.create(32,32) + '" stroke="' + handler.getStrokeColor() + '" fill="' + handler.getFillColor() + '"/></svg>';
 
       this.texture = new THREE.Texture();
       this.texture.needsUpdate = true;
       this.texture.format = THREE.RGBAFormat;
-      this.texture.image = document.createElement('img');
+      this.texture.image = doc.createElement('img');
 
       this.texture.image.onload = this.Complete.bind(this,'loaded')
 
@@ -1043,9 +1015,9 @@
    function Create3DLineMaterial(painter, obj) {
       if (!painter || !obj) return null;
 
-      var lcolor = painter.get_color(obj.fLineColor),
+      let lcolor = painter.get_color(obj.fLineColor),
           material = null,
-          style = obj.fLineStyle ? JSROOT.Painter.root_line_styles[obj.fLineStyle] : "",
+          style = obj.fLineStyle ? jsrp.root_line_styles[obj.fLineStyle] : "",
           dash = style ? style.split(",") : [];
 
       if (dash && dash.length>=2)
@@ -1053,7 +1025,7 @@
       else
          material = new THREE.LineBasicMaterial({ color: lcolor });
 
-      if (obj.fLineWidth && (obj.fLineWidth>1) && !JSROOT.browser.isIE) material.linewidth = obj.fLineWidth;
+      if ((obj.fLineWidth !== undefined) && (obj.fLineWidth > 1)) material.linewidth = obj.fLineWidth;
 
       return material;
    }
@@ -1061,29 +1033,29 @@
    // ============================================================================================================
 
    function drawPolyLine3D() {
-      var line = this.GetObject(),
+      let line = this.GetObject(),
           main = this.frame_painter();
 
       if (!main || !main.mode3d || !main.toplevel || !line) return;
 
-      var fN, fP, fOption, pnts = [];
+      let fN, fP, pnts = [];
 
       if (line._blob && (line._blob.length==4)) {
          // workaround for custom streamer for JSON, should be resolved
          fN = line._blob[1];
          fP = line._blob[2];
-         fOption = line._blob[3];
+         // fOption = line._blob[3];
       } else {
          fN = line.fN;
          fP = line.fP;
-         fOption = line.fOption;
+         // fOption = line.fOption;
       }
 
-      for (var n=3;n<3*fN;n+=3)
+      for (let n = 3; n < 3*fN; n += 3)
          pnts.push(main.grx(fP[n-3]), main.gry(fP[n-2]), main.grz(fP[n-1]),
                    main.grx(fP[n]), main.gry(fP[n+1]), main.grz(fP[n+2]));
 
-      var lines = JSROOT.Painter.createLineSegments(pnts, Create3DLineMaterial(this, line));
+      let lines = jsrp.createLineSegments(pnts, Create3DLineMaterial(this, line));
 
       main.toplevel.add(lines);
    }
@@ -1091,16 +1063,16 @@
    // ==============================================================================================
 
 
+   jsrp.PointsCreator = PointsCreator;
+   jsrp.InteractiveControl = InteractiveControl;
+   jsrp.PointsControl = PointsControl;
 
-   JSROOT.Painter.PointsCreator = PointsCreator;
-   JSROOT.Painter.InteractiveControl = InteractiveControl;
-   JSROOT.Painter.PointsControl = PointsControl;
+   jsrp.drawPolyLine3D = drawPolyLine3D;
 
-   JSROOT.Painter.drawPolyLine3D = drawPolyLine3D;
+   jsrp.Create3DLineMaterial = Create3DLineMaterial;
 
-   JSROOT.Painter.Create3DLineMaterial = Create3DLineMaterial;
+   if (JSROOT.nodejs) module.exports = THREE;
+   return THREE;
 
-   return JSROOT;
-
-}));
+});
 

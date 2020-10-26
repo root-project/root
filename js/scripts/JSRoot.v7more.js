@@ -1,30 +1,12 @@
-/// @file JSRootPainter.v7more.js
+/// @file JSRoot.v7more.js
 /// JavaScript ROOT v7 graphics for different classes
 
-(function( factory ) {
-   if ( typeof define === "function" && define.amd ) {
-      define( ['JSRootPainter', 'd3'], factory );
-   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
-       factory(require("./JSRootCore.js"), require("d3"));
-   } else {
-      if (typeof d3 != 'object')
-         throw new Error('This extension requires d3.js', 'JSRootPainter.v7hist.js');
-      if (typeof JSROOT == 'undefined')
-         throw new Error('JSROOT is not defined', 'JSRootPainter.v7hist.js');
-      if (typeof JSROOT.Painter != 'object')
-         throw new Error('JSROOT.Painter not defined', 'JSRootPainter.v7hist.js');
-      factory(JSROOT, d3);
-   }
-} (function(JSROOT, d3) {
+JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
    "use strict";
 
-   JSROOT.sources.push("v7more");
-
-   // =================================================================================
-
    function drawText() {
-      var text         = this.GetObject(),
+      let text         = this.GetObject(),
           pp           = this.pad_painter(),
           use_frame    = false,
           p            = pp.GetCoordinate(text.fPos),
@@ -36,7 +18,7 @@
 
       this.CreateG(use_frame);
 
-      var arg = { align: text_align, x: p.x, y: p.y, text: text.fText, rotate: text_angle, color: text_color, latex: 1 };
+      let arg = { align: text_align, x: p.x, y: p.y, text: text.fText, rotate: text_angle, color: text_color, latex: 1 };
 
       // if (text.fTextAngle) arg.rotate = -text.fTextAngle;
       // if (text._typename == 'TLatex') { arg.latex = 1; fact = 0.9; } else
@@ -54,7 +36,7 @@
 
    function drawLine() {
 
-       var line         = this.GetObject(),
+       let line         = this.GetObject(),
            pp           = this.pad_painter(),
            p1           = pp.GetCoordinate(line.fP1),
            p2           = pp.GetCoordinate(line.fP2),
@@ -73,14 +55,14 @@
            .style("stroke", line_color)
            .attr("stroke-width", line_width)
 //        .attr("stroke-opacity", line_opacity)
-           .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style]);
+           .style("stroke-dasharray", jsrp.root_line_styles[line_style]);
    }
 
    // =================================================================================
 
    function drawBox() {
 
-       var box          = this.GetObject(),
+       let box          = this.GetObject(),
            pp           = this.pad_painter(),
            p1           = pp.GetCoordinate(box.fP1),
            p2           = pp.GetCoordinate(box.fP2),
@@ -107,13 +89,13 @@
         .style("stroke", line_color)
         .attr("stroke-width", line_width)
         .attr("fill", fill_color)
-        .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style]);
+        .style("stroke-dasharray", jsrp.root_line_styles[line_style]);
    }
 
    // =================================================================================
 
    function drawMarker() {
-       var marker       = this.GetObject(),
+       let marker       = this.GetObject(),
            pp           = this.pad_painter(),
            p            = pp.GetCoordinate(marker.fP),
            marker_size  = this.v7EvalAttr( "marker_size", 1),
@@ -133,8 +115,8 @@
    // =================================================================================
 
    function drawLegendContent() {
-      var legend     = this.GetObject(),
-          text_size  = this.v7EvalAttr( "legend_text_size", 20),
+      let legend     = this.GetObject(),
+          // text_size  = this.v7EvalAttr( "legend_text_size", 20),
           text_angle = -1 * this.v7EvalAttr( "legend_text_angle", 0),
           text_align = this.v7EvalAttr( "legend_text_align", 12),
           text_color = this.v7EvalColor( "legend_text_color", "black"),
@@ -148,8 +130,7 @@
 
       if (!nlines || !pp) return;
 
-      var arg = { align: text_align, rotate: text_angle, color: text_color, latex: 1 },
-          stepy = height / nlines, posy = 0, margin_x = 0.02 * width;
+      let stepy = height / nlines, posy = 0, margin_x = 0.02 * width;
 
       this.StartTextDrawing(text_font, height/(nlines * 1.2));
 
@@ -159,8 +140,8 @@
          posy += stepy;
       }
 
-      for (var i=0; i<legend.fEntries.length; ++i) {
-         var objp = null, entry = legend.fEntries[i];
+      for (let i=0; i<legend.fEntries.length; ++i) {
+         let objp = null, entry = legend.fEntries[i];
 
          this.DrawText({ align: text_align, rotate: text_angle, color: text_color, latex: 1,
                          width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + width*0.25, y: posy, text: entry.fLabel });
@@ -168,7 +149,7 @@
          if (entry.fDrawableId != "custom") {
             objp = pp.FindSnap(entry.fDrawableId, true);
          } else if (entry.fDrawable.fIO) {
-            objp = new JSROOT.TObjectPainter(entry.fDrawable.fIO);
+            objp = new JSROOT.ObjectPainter(entry.fDrawable.fIO);
             if (entry.fLine) objp.createv7AttLine();
             if (entry.fFill) objp.createv7AttFill();
             if (entry.fMarker) objp.createv7AttMarker();
@@ -204,7 +185,7 @@
    }
 
    function drawLegend(divid, legend, opt) {
-      var painter = new JSROOT.v7.RPavePainter(legend, opt, "legend");
+      let painter = new JSROOT.v7.RPavePainter(legend, opt, "legend");
 
       painter.SetDivId(divid);
 
@@ -218,8 +199,8 @@
    // =================================================================================
 
    function drawPaveTextContent() {
-      var pavetext   = this.GetObject(),
-          text_size  = this.v7EvalAttr( "pavetext_text_size", 20),
+      let pavetext   = this.GetObject(),
+          // text_size  = this.v7EvalAttr( "pavetext_text_size", 20),
           text_angle = -1 * this.v7EvalAttr( "pavetext_text_angle", 0),
           text_align = this.v7EvalAttr( "pavetext_text_align", 12),
           text_color = this.v7EvalColor( "pavetext_text_color", "black"),
@@ -230,12 +211,12 @@
 
       if (!nlines) return;
 
-      var stepy = height / nlines, posy = 0, margin_x = 0.02 * width;
+      let stepy = height / nlines, posy = 0, margin_x = 0.02 * width;
 
       this.StartTextDrawing(text_font, height/(nlines * 1.2));
 
-      for (var i=0; i < pavetext.fText.length; ++i) {
-         var line = pavetext.fText[i];
+      for (let i=0; i < pavetext.fText.length; ++i) {
+         let line = pavetext.fText[i];
 
          this.DrawText({ align: text_align, rotate: text_angle, color: text_color, latex: 1,
                          width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: line });
@@ -246,7 +227,7 @@
    }
 
    function drawPaveText(divid, pave, opt) {
-      var painter = new JSROOT.v7.RPavePainter(pave, opt, "pavetext");
+      let painter = new JSROOT.v7.RPavePainter(pave, opt, "pavetext");
 
       painter.SetDivId(divid);
 
@@ -269,4 +250,4 @@
 
    return JSROOT;
 
-}));
+});
