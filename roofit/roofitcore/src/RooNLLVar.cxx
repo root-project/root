@@ -72,7 +72,7 @@ RooNLLVar::RooNLLVar()
 ///  Verbose()                | Verbose output of GOF framework classes
 ///  CloneData()              | Clone input dataset for internal use (default is kTRUE)
 ///  BatchMode()              | Evaluate batches of data events (faster if PDFs support it)
-
+///  IntegrateBins() | Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
 RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& indata,
 		     const RooCmdArg& arg1, const RooCmdArg& arg2,const RooCmdArg& arg3,
 		     const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6,
@@ -86,7 +86,8 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 			 RooFit::BulkPartition,
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","CloneData",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
+			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","CloneData",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 RooCmdConfig::decodeDoubleOnTheFly("RooNLLVar::RooNLLVar", "IntegrateBins", 0, -1., {arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9}))
 {
   RooCmdConfig pc("RooNLLVar::RooNLLVar") ;
   pc.allowUndefined() ;
@@ -117,8 +118,10 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
 		     Bool_t extended, const char* rangeName, const char* addCoefRangeName,
-		     Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL) :
-  RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
+		     Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL,
+		     double integrateBinsPrecision) :
+  RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData,
+      integrateBinsPrecision),
   _extended(extended),
   _weightSq(kFALSE),
   _first(kTRUE), _offsetSaveW2(0.), _offsetCarrySaveW2(0.)
@@ -162,8 +165,10 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
 		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,const char* addCoefRangeName,
-		     Int_t nCPU,RooFit::MPSplit interleave,Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL) :
-  RooAbsOptTestStatistic(name,title,pdf,indata,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
+		     Int_t nCPU,RooFit::MPSplit interleave,Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL,
+		     double integrateBinsPrecision) :
+  RooAbsOptTestStatistic(name,title,pdf,indata,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData,
+      integrateBinsPrecision),
   _extended(extended),
   _weightSq(kFALSE),
   _first(kTRUE), _offsetSaveW2(0.), _offsetCarrySaveW2(0.)
@@ -221,7 +226,8 @@ RooAbsTestStatistic* RooNLLVar::create(const char *name, const char *title, RooA
             Int_t nCPU, RooFit::MPSplit interleave, bool verbose, bool splitRange, bool binnedL) {
   auto testStat = new RooNLLVar(name, title,
       dynamic_cast<RooAbsPdf&>(pdf), adata,
-      projDeps, _extended, rangeName, addCoefRangeName, nCPU, interleave, verbose, splitRange, false, binnedL);
+      projDeps, _extended, rangeName, addCoefRangeName, nCPU, interleave, verbose, splitRange, false, binnedL,
+      _integrateBinsPrecision);
   testStat->batchMode(_batchEvaluations);
   return testStat;
 }

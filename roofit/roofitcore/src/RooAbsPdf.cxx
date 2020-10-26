@@ -975,6 +975,15 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
 /// <tr><td> `CloneData(Bool flag)`           <td> Use clone of dataset in NLL (default is true)
 /// <tr><td> `Offset(Bool_t)`                 <td> Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
 ///                                              This can improve numeric stability in simultaneous fits with components with large likelihood values
+/// <tr><td> `IntegrateBins(double precision)` <td> In binned fits, integrate the PDF over the bins instead of using the probability density at the bin centre.
+///                                                 This can reduce the bias observed when fitting functions with high curvature to binned data.
+///                                                 - precision > 0: Activate bin integration everywhere. Use precision between 0.01 and 1.E-6, depending on binning.
+///                                                   Note that a low precision such as 0.01 might yield identical results to 1.E-4, since the integrator might reach 1.E-4 already in its first
+///                                                   integration step. If lower precision is desired (more speed), a RooBinSamplingPdf has to be created manually, and its integrator
+///                                                   has to be manipulated directly.
+///                                                 - precision = 0: Activate bin integration only for continuous PDFs fit to a RooDataHist.
+///                                                 - precision < 0: Deactivate.
+///                                                 \see RooBinSamplingPdf
 /// </table>
 ///
 ///
@@ -1026,6 +1035,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineInt("BatchMode", "BatchMode", 0, 0);
+  pc.defineDouble("IntegrateBins", "IntegrateBins", 0, -1.);
   pc.defineMutex("Range","RangeWithName") ;
 //  pc.defineMutex("Constrain","Constrained") ;
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
@@ -1138,7 +1148,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
     auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",
         *this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,interl,
-        verbose,splitr,cloneData);
+        verbose,splitr,cloneData,/*binnedL=*/false, pc.getDouble("IntegrateBins"));
     theNLL->batchMode(pc.getInt("BatchMode"));
     nll = theNLL;
   } else {
@@ -1148,7 +1158,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     for (const auto& token : tokens) {
       auto nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token.c_str()),"-log(likelihood)",
           *this,data,projDeps,ext,token.c_str(),addCoefRangeName,numcpu,interl,
-          verbose,splitr,cloneData);
+          verbose,splitr,cloneData, /*binnedL=*/false, pc.getDouble("IntegrateBins"));
       nllComp->batchMode(pc.getInt("BatchMode"));
       nllList.add(*nllComp) ;
     }
@@ -1280,6 +1290,15 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 ///                                                          implemented for the PDFs of the model, likelihood computations are 2x to 10x faster.
 ///                                                          The relative difference of the single log-likelihoods w.r.t. the legacy mode is usually better than 1.E-12,
 ///                                                          and fit parameters usually agree to better than 1.E-6.
+/// <tr><td> `IntegrateBins(double precision)` <td> In binned fits, integrate the PDF over the bins instead of using the probability density at the bin centre.
+///                                                 This can reduce the bias observed when fitting functions with high curvature to binned data.
+///                                                 - precision > 0: Activate bin integration everywhere. Use precision between 0.01 and 1.E-6, depending on binning.
+///                                                   Note that a low precision such as 0.01 might yield identical results to 1.E-4, since the integrator might reach 1.E-4 already in its first
+///                                                   integration step. If lower precision is desired (more speed), a RooBinSamplingPdf has to be created manually, and its integrator
+///                                                   has to be manipulated directly.
+///                                                 - precision = 0: Activate bin integration only for continuous PDFs fit to a RooDataHist.
+///                                                 - precision < 0: Deactivate.
+///                                                 \see RooBinSamplingPdf
 ///
 /// <tr><th><th> Options to control flow of fit procedure
 /// <tr><td> `Minimizer(type,algo)`   <td>  Choose minimization package and algorithm to use. Default is MINUIT/MIGRAD through the RooMinimizer interface,
@@ -1377,7 +1396,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooLinkedList fitCmdList(cmdList) ;
   RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,"
       "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
-      "CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood,BatchMode");
+      "CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood,BatchMode,IntegrateBins");
 
   pc.defineDouble("prefit", "Prefit",0,0);
   pc.defineDouble("RecoverFromUndefinedRegions", "RecoverFromUndefinedRegions",0,10.);
@@ -1922,7 +1941,7 @@ RooFitResult* RooAbsPdf::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdLi
 
   // Pull arguments to be passed to chi2 construction from list
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize,ProjectedObservables,AddCoefRange,SplitRange,DataError,Extended") ;
+  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize,ProjectedObservables,AddCoefRange,SplitRange,DataError,Extended,IntegrateBins") ;
 
   RooAbsReal* chi2 = createChi2(data,chi2CmdList) ;
   RooFitResult* ret = chi2FitDriver(*chi2,fitCmdList) ;

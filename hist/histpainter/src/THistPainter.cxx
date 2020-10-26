@@ -250,7 +250,7 @@ using `TH1::GetOption`:
 | "BAR"    | Like option "B", but bars can be drawn with a 3D effect.|
 | "HBAR"   | Like option "BAR", but bars are drawn horizontally.|
 | "C"      | Draw a smooth Curve through the histogram bins.|
-| "E0"     | Draw error bars. Markers are drawn for bins with 0 contents.|
+| "E0"     | Draw error bars. Markers are drawn for bins with 0 contents. Combined with E1 or E2 it avoids error bars clipping|
 | "E1"     | Draw error bars with perpendicular lines at the edges.|
 | "E2"     | Draw error bars with rectangles.|
 | "E3"     | Draw a fill area through the end points of the vertical error bars.|
@@ -669,7 +669,10 @@ to `gStyle->SetOptFit(111)`
 | "E2"     | Error rectangles are drawn.|
 | "E3"     | A filled area is drawn through the end points of the vertical error bars.|
 | "E4"     | A smoothed filled area is drawn through the end points of the vertical error bars.|
-| "E0"     | Draw also bins with null contents.|
+| "E0"     | Draw error bars. Markers are drawn for bins with 0 contents. Combined with E1 or E2 it avoids error bars clipping|
+| "E5"     | Like E3 but ignore the bins with 0 contents.|
+| "E6"     | Like E4 but ignore the bins with 0 contents.|
+| "X0"     | When used with one of the "E" option, it suppress the error bar along X as `gStyle->SetErrorX(0)` would do.|
 
 Begin_Macro(source)
 {
@@ -4296,13 +4299,13 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"E")) {
       if (hdim == 1) {
          Hoption.Error = 1;
-         if (strstr(chopt,"E0"))  Hoption.Error = 10;
          if (strstr(chopt,"E1"))  Hoption.Error = 11;
          if (strstr(chopt,"E2"))  Hoption.Error = 12;
          if (strstr(chopt,"E3"))  Hoption.Error = 13;
          if (strstr(chopt,"E4"))  Hoption.Error = 14;
          if (strstr(chopt,"E5"))  Hoption.Error = 15;
          if (strstr(chopt,"E6"))  Hoption.Error = 16;
+         if (strstr(chopt,"E0"))  Hoption.Error += 40;
          if (strstr(chopt,"X0")) {
             if (Hoption.Error == 1)  Hoption.Error += 20;
             Hoption.Error += 10;
@@ -6256,9 +6259,9 @@ void THistPainter::PaintErrors(Option_t *)
    Double_t *xline = 0;
    Double_t *yline = 0;
    option0 = option1 = option2 = option3 = option4 = optionE = optionEX0 = optionI0 = 0;
+   if (Hoption.Error >= 40) {Hoption.Error -=40; option0 = 1;}
    if (Int_t(Hoption.Error/10) == 2) {optionEX0 = 1; Hoption.Error -= 10;}
    if (Hoption.Error == 31) {optionEX0 = 1; Hoption.Error = 1;}
-   if (Hoption.Error == 10) option0 = 1;
    if (Hoption.Error == 11) option1 = 1;
    if (Hoption.Error == 12) option2 = 1;
    if (Hoption.Error == 13) option3 = 1;
@@ -6426,7 +6429,11 @@ void THistPainter::PaintErrors(Option_t *)
       if (!symbolsize || !errormarker) drawmarker = kFALSE;
 
       //  draw the error rectangles
-      if (option2) gPad->PaintBox(xi1,yi3,xi2,yi4);
+      if (option2) {
+         if (yi3 >= ymax) goto L30;
+         if (yi4 <= ymin) goto L30;
+         gPad->PaintBox(xi1,yi3,xi2,yi4);
+      }
 
       //  keep points for fill area drawing
       if (option3) {
@@ -6466,10 +6473,13 @@ void THistPainter::PaintErrors(Option_t *)
       //          draw line at the end of the error bars
 
       if (option1 && drawmarker) {
-         if (yi3 < yi1-s2y) gPad->PaintLine(xi3 - bxsize,yi3,xi3 + bxsize,yi3);
-         if (yi4 > yi1+s2y) gPad->PaintLine(xi3 - bxsize,yi4,xi3 + bxsize,yi4);
-         if (xi1 < xi3-s2x) gPad->PaintLine(xi1,yi1 - bysize,xi1,yi1 + bysize);
-         if (xi2 > xi3+s2x) gPad->PaintLine(xi2,yi1 - bysize,xi2,yi1 + bysize);
+
+         if (yi3 < yi1-s2y && yi3 < ymax && yi3 > ymin) gPad->PaintLine(xi3 - bxsize, yi3         , xi3 + bxsize, yi3);
+         if (yi4 > yi1+s2y && yi4 < ymax && yi4 > ymin) gPad->PaintLine(xi3 - bxsize, yi4         , xi3 + bxsize, yi4);
+         if (yi1 <= ymax && yi1 >= ymin) {
+            if (xi1 < xi3-s2x) gPad->PaintLine(xi1         , yi1 - bysize, xi1         , yi1 + bysize);
+            if (xi2 > xi3+s2x) gPad->PaintLine(xi2         , yi1 - bysize, xi2         , yi1 + bysize);
+         }
       }
 
       //          draw the marker

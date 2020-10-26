@@ -66,6 +66,12 @@ ROOT_LINKER_LIBRARY(RIO
 
 target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
 
+if(builtin_nlohmannjson)
+   target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
+else()
+   target_link_libraries(RIO PRIVATE nlohmann_json::nlohmann_json)
+endif()
+
 if(root7)
   set(RIO_EXTRA_HEADERS ROOT/RFile.hxx)
   target_sources(RIO PRIVATE v7/src/RFile.cxx)

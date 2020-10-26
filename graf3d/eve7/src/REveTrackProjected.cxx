@@ -15,11 +15,8 @@
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveRenderData.hxx>
 
-#include "json.hpp"
-
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REveTrackProjected
 \ingroup REve

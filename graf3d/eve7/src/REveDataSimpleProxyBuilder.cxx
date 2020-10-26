@@ -1,15 +1,23 @@
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2020
+
+/*************************************************************************
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <ROOT/REveDataSimpleProxyBuilder.hxx>
 
-// user include files
 #include <ROOT/REveDataCollection.hxx>
 #include <ROOT/REveCompound.hxx>
 #include <ROOT/REveScene.hxx>
-#include <assert.h>
+#include <cassert>
 #include <TClass.h>
-#include "json.hpp"
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 REveDataSimpleProxyBuilder::REveDataSimpleProxyBuilder()
 {

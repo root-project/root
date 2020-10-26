@@ -88,18 +88,21 @@ RooArgSet RooChi2Var::_emptySet ;
 ///  Range()      <td> Fit only selected region
 ///  <tr><td>
 ///  Verbose()    <td> Verbose output of GOF framework
-
+///  <tr><td>
+///  IntegrateBins() | Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
 RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata,
 		       const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
 		       const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
 		       const RooCmdArg& arg7,const RooCmdArg& arg8,const RooCmdArg& arg9) :
   RooAbsOptTestStatistic(name,title,func,hdata,_emptySet,
 			 RooCmdConfig::decodeStringOnTheFly("RooChi2Var::RooChi2Var","RangeWithName",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9).c_str(),
-			 0,
+			 /*addCoefRangeName=*/0,
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooFit::Interleave,
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 0)
+			 /*splitCutRange=*/0,
+			 /*cloneInputData=*/false,
+			 RooCmdConfig::decodeDoubleOnTheFly("RooChi2Var::RooChi2Var", "IntegrateBins", 0, -1., {arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9}))
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;  

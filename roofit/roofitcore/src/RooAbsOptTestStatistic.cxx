@@ -59,7 +59,8 @@ parallelized calculation of test statistics.
 #include "RooProduct.h"
 #include "RooRealSumPdf.h"
 #include "RooTrace.h"
-#include "RooVectorDataStore.h" 
+#include "RooVectorDataStore.h"
+#include "RooBinSamplingPdf.h"
 
 using namespace std;
 
@@ -92,26 +93,36 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If 
-/// rangeName is not null, only events in the dataset inside the range will be used in the test
-/// statistic calculation. If addCoefRangeName is not null, all RooAddPdf component of 'real' will be
-/// instructed to fix their fraction definitions to the given named range. If nCPU is greater than
-/// 1 the test statistic calculation will be paralellized over multiple processes. By default the data
-/// is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
-/// of the data). For binned data this approach may be suboptimal as the number of bins with >0 entries
-/// in each processing block many vary greatly thereby distributing the workload rather unevenly.
-/// If interleave is set to true, the interleave partitioning strategy is used where each partition
-/// i takes all bins for which (ibin % ncpu == i) which is more likely to result in an even workload.
-/// If splitCutRange is true, a different rangeName constructed as rangeName_{catName} will be used
-/// as range definition for each index state of a RooSimultaneous
-
+/// Create a test statistic, and optimise its calculation.
+/// \param[in] name Name of the instance.
+/// \param[in] title Title (for e.g. plotting).
+/// \param[in] real Function to evaluate.
+/// \param[in] indata Dataset for which to compute test statistic.
+/// \param[in] projDeps A set of projected observables.
+/// \param[in] rangeName If not null, only events in the dataset inside the range will be used in the test
+/// statistic calculation.
+/// \param[in] addCoefRangeName If not null, all RooAddPdf components of `real` will be
+/// instructed to fix their fraction definitions to the given named range.
+/// \param[in] nCPU If > 1, the test statistic calculation will be parallelised over multiple processes. By default, the data
+/// is split with 'bulk' partitioning (each process calculates a contiguous block of fraction 1/nCPU
+/// of the data). For binned data, this approach may be suboptimal as the number of bins with >0 entries
+/// in each processing block may vary greatly; thereby distributing the workload rather unevenly.
+/// \param[in] interleave Strategy how to distribute events among workers. If an interleave partitioning strategy is used where each partition
+/// i takes all bins for which (ibin % ncpu == i), an even distribution of work is more likely.
+/// \param[in] splitCutRange If true, a different rangeName constructed as `rangeName_{catName}` will be used
+/// as range definition for each index state of a RooSimultaneous.
+/// \param[in] cloneInputData Not used. Data is always cloned.
+/// \param[in] integrateOverBinsPrecision If > 0, PDF in binned fits are integrated over the bins. This sets the precision. If = 0,
+/// only unbinned PDFs fit to RooDataHist are integrated. If < 0, PDFs are never integrated.
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& indata,
 					       const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
-					       Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange, Bool_t /*cloneInputData*/) : 
+					       Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange, Bool_t /*cloneInputData*/,
+					       double integrateOverBinsPrecision) :
   RooAbsTestStatistic(name,title,real,indata,projDeps,rangeName, addCoefRangeName, nCPU, interleave, verbose, splitCutRange),
   _projDeps(0),
   _sealed(kFALSE), 
-  _optimized(kFALSE)
+  _optimized(kFALSE),
+  _integrateBinsPrecision(integrateOverBinsPrecision)
 {
   // Don't do a thing in master mode
 
@@ -138,7 +149,8 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 /// Copy constructor
 
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name) : 
-  RooAbsTestStatistic(other,name), _sealed(other._sealed), _sealNotice(other._sealNotice), _optimized(kFALSE)
+  RooAbsTestStatistic(other,name), _sealed(other._sealed), _sealNotice(other._sealNotice), _optimized(kFALSE),
+  _integrateBinsPrecision(other._integrateBinsPrecision)
 {
   // Don't do a thing in master mode
   if (operMode()!=Slave) {    
@@ -335,6 +347,9 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   if (tmph) {
     tmph->cacheValidEntries() ;
   }
+
+  setUpBinSampling();
+
 
   // Fix RooAddPdf coefficients to original normalization range
   if (rangeName && strlen(rangeName)) {
@@ -786,3 +801,60 @@ const RooAbsData& RooAbsOptTestStatistic::data() const
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Inspect PDF to find out if we are doing a binned fit to a 1-dimensional unbinned PDF.
+/// If this is the case, enable finer sampling of bins by wrapping PDF into a RooBinSamplingPdf.
+/// The member _integrateBinsPrecision decides how we act:
+/// - < 0: Don't do anything.
+/// - = 0: Only enable feature if fitting unbinned PDF to RooDataHist.
+/// - > 0: Enable as requested.
+void RooAbsOptTestStatistic::setUpBinSampling() {
+  if (_integrateBinsPrecision < 0.)
+    return;
+
+  std::unique_ptr<RooArgSet> funcObservables( _funcClone->getObservables(*_dataClone) );
+  const bool oneDimAndBinned = (1 == std::count_if(funcObservables->begin(), funcObservables->end(), [](const RooAbsArg* arg) {
+    auto var = dynamic_cast<const RooRealVar*>(arg);
+    return var && var->numBins() > 1;
+  }));
+
+  if (!oneDimAndBinned) {
+    if (_integrateBinsPrecision > 0.) {
+      coutE(Fitting) << "Integration over bins was requested, but this is currently only implemented for 1-D fits." << std::endl;
+    }
+    return;
+  }
+
+  // Find the real-valued observable. We don't care about categories.
+  auto theObs = std::find_if(funcObservables->begin(), funcObservables->end(), [](const RooAbsArg* arg){
+    return dynamic_cast<const RooAbsRealLValue*>(arg);
+  });
+  assert(theObs != funcObservables->end());
+
+  RooBinSamplingPdf* newPdf = nullptr;
+
+  if (_integrateBinsPrecision > 0.) {
+    // User forced integration. Let just apply it.
+    newPdf = new RooBinSamplingPdf((std::string(_funcClone->GetName()) + "_binSampling").c_str(),
+        _funcClone->GetTitle(),
+        *static_cast<RooAbsRealLValue*>(*theObs),
+        *static_cast<RooAbsPdf*>(_funcClone),
+        _integrateBinsPrecision);
+  } else if (dynamic_cast<RooDataHist*>(_dataClone) != nullptr
+      && _integrateBinsPrecision == 0.
+      && !_funcClone->isBinnedDistribution(*_dataClone->get())) {
+    // User didn't forbid integration, and it seems appropriate with a RooDataHist.
+    coutW(Fitting) << "The PDF '" << _funcClone->GetName() << "' is continuous, but fit to binned data. In contrast to ROOT < v6.24,\n"
+        << "RooFit will integrate it in each bin to correct a bias due to poor sampling of the PDF.\n"
+        << "This can be disabled by fitting with \"IntegrateBins(-1.)\"." << std::endl;
+    newPdf = new RooBinSamplingPdf((std::string(_funcClone->GetName()) + "_binSampling").c_str(),
+        _funcClone->GetTitle(),
+        *static_cast<RooAbsRealLValue*>(*theObs),
+        *static_cast<RooAbsPdf*>(_funcClone));
+  }
+
+  if (newPdf) {
+    newPdf->addOwnedComponents(*_funcClone);
+    _funcClone = newPdf;
+  }
+}

@@ -198,6 +198,7 @@ RooCmdArg Extended(Bool_t flag=kTRUE) ;
 RooCmdArg DataError(Int_t) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
 RooCmdArg BatchMode(bool flag=true);
+RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments
 RooCmdArg PrefitDataFraction(Double_t data_ratio = 0.0) ;

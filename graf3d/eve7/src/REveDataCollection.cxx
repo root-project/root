@@ -22,12 +22,9 @@
 #include "TList.h"
 #include "TBaseClass.h"
 
-#include "json.hpp"
 #include <sstream>
 
-
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 
 Color_t  REveDataCollection::fgDefaultColor  = kBlue;

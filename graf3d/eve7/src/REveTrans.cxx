@@ -16,8 +16,6 @@
 #include "TClass.h"
 #include "TMath.h"
 
-#include "Riostream.h"
-
 #include <cctype>
 
 #define F00  0
@@ -41,7 +39,6 @@
 #define F33 15
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REveTrans
 \ingroup REve

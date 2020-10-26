@@ -24,11 +24,8 @@
 #include <algorithm>
 #include <functional>
 
-#include "json.hpp"
-
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REveTrack
 \ingroup REve

@@ -4380,12 +4380,13 @@ RooMultiGenFunction* RooAbsReal::iGenFunction(const RooArgSet& observables, cons
 /// The following named arguments are supported
 ///
 /// <table>
-/// <tr><th> <th> Options to control construction of -log(L)
+/// <tr><th> <th> Options to control construction of chi2
 /// <tr><td> `Range(const char* name)`         <td> Fit only data inside range with given name
 /// <tr><td> `Range(Double_t lo, Double_t hi)` <td> Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 ///                                               Multiple comma separated range names can be specified.
 /// <tr><td> `NumCPU(int num)`                 <td> Parallelize NLL calculation on num CPUs
 /// <tr><td> `Optimize(Bool_t flag)`           <td> Activate constant term optimization (on by default)
+/// <tr><td> `IntegrateBins()`                 <td> Integrate PDF within each bin. This sets the desired precision.
 ///
 /// <tr><th> <th> Options to control flow of fit procedure
 /// <tr><td> `InitialHesse(Bool_t flag)`      <td> Flag controls if HESSE before MIGRAD as well, off by default
@@ -4434,7 +4435,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
 
   // Pull arguments to be passed to chi2 construction from list
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize") ;
+  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize,IntegrateBins") ;
 
   RooAbsReal* chi2 = createChi2(data,chi2CmdList) ;
   RooFitResult* ret = chi2FitDriver(*chi2,fitCmdList) ;
@@ -4457,6 +4458,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
 ///  | `DataError(RooAbsData::ErrorType)`  | Choose between Poisson errors and Sum-of-weights errors
 ///  | `NumCPU(Int_t)`                     | Activate parallel processing feature on N processes
 ///  | `Range()`                           | Calculate \f$ \chi^2 \f$ only in selected region
+///  | `IntegrateBins()` | Integrate PDF within each bin. This sets the desired precision.
 ///
 /// \param data Histogram with data
 /// \return \f$ \chi^2 \f$ variable
