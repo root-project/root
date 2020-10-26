@@ -4,7 +4,7 @@ sap.ui.define([
    'rootui5/eve7/lib/OrbitControlsEve',
    'rootui5/eve7/lib/OutlinePass',
    'rootui5/eve7/lib/FXAAShader'
-],  function(GlViewer, EveElements) {
+], function(GlViewer, EveElements) {
 
    "use strict";
 

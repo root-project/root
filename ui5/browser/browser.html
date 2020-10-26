@@ -18,14 +18,12 @@
 
         function InitUI(handle) {
 
-           sap.ui.require(["sap/ui/core/mvc/XMLView"], function(XMLView) {
+           sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
               XMLView.create({
                  id: "TopBrowserId",
                  viewName: "rootui5.browser.view.Browser",
                  viewData: { conn_handle: handle }
-              }).then(function(oView) {
-                 oView.placeAt("BrowserDiv");
-              });
+              }).then(oView => oView.placeAt("BrowserDiv"));
            });
 
         }

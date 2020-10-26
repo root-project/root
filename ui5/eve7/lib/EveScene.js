@@ -2,9 +2,7 @@
 
 // TODO: add dependency from JSROOT components
 
-sap.ui.define([
-    'rootui5/eve7/lib/EveManager'
-], function(EveManager) {
+sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    "use strict";
 

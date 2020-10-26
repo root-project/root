@@ -2,11 +2,10 @@ sap.ui.define([
    'sap/ui/core/Component',
    'sap/ui/core/UIComponent',
    'sap/ui/core/mvc/Controller',
-   'sap/ui/model/json/JSONModel',
    "sap/ui/core/ResizeHandler",
    'rootui5/eve7/lib/EveManager',
    'rootui5/eve7/lib/EveScene'
-], function (Component, UIComponent, Controller, JSONModel, ResizeHandler, EveManager, EveScene) {
+], function (Component, UIComponent, Controller, ResizeHandler, EveManager, EveScene) {
 
    "use strict";
 
