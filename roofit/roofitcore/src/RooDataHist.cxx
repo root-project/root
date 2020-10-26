@@ -735,7 +735,7 @@ void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
 
   // We got legacy data from an I/O operation.
   if (_arrSize > 0 && _wgt) {
-    assert(_arrSize == arrSize);
+    assert(_arrSize == static_cast<Int_t>(arrSize));
 
     auto restoreData = [](double*& src, std::vector<double>& dest, Int_t theSize) {
       dest.assign(src, src + theSize);
