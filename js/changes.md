@@ -23,6 +23,7 @@
 13. Improve TH2 col drawings for large number of bins - up to factor 5 faster
 14. Rename JSROOT scripts to follow common naming convention
 15. Support openui5 sap.ui.require loader if openui5 loaded before JSRootCore.js script
+16. Update jquery to 3.5.1, openui5 to 1.82.2
 
 
 ## Changes in 5.9.0
