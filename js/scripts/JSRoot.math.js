@@ -1,54 +1,31 @@
-/** @file JSRootMath.js
+/** @file JSRoot.math.js
   * Special mathematical functions */
 
-/** @namespace JSROOT.Math
-  * Holder of mathematical functions, analogue to TMath class of ROOT */
-
-(function( factory ) {
-   if ( typeof define === "function" && define.amd ) {
-      define( ['JSRootCore'], factory );
-   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
-       factory(require("./JSRootCore.js"));
-   } else {
-      if (typeof JSROOT == 'undefined')
-         throw new Error("This extension requires JSRootCore.js", "JSRootMath.js");
-      if (typeof JSROOT.Math == "object")
-         throw new Error("This JSROOT Math already loaded", "JSRootMath.js");
-      factory(JSROOT);
-   }
-} (function(JSROOT) {
-   // math methods for Javascript ROOT
+JSROOT.define([], () =>  {
 
    "use strict";
 
-   JSROOT.sources.push("math");
+   let mth = {};
 
-   JSROOT.Math = {};
-
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.lgam = function( x ) {
-      var p, q, u, w, z, i, sgngam = 1;
-      var kMAXLGM  = 2.556348e305;
-      var LS2PI  =  0.91893853320467274178;
-
-      var A = [
+   /** @memberof JSROOT.Math */
+   mth.lgam = function( x ) {
+      let p, q, u, w, z, i, sgngam = 1;
+      const kMAXLGM = 2.556348e305,
+            LS2PI = 0.91893853320467274178,
+      A = [
          8.11614167470508450300E-4,
          -5.95061904284301438324E-4,
          7.93650340457716943945E-4,
          -2.77777777730099687205E-3,
          8.33333333333331927722E-2
-      ];
-
-      var B = [
+      ], B = [
          -1.37825152569120859100E3,
          -3.88016315134637840924E4,
          -3.31612992738871184744E5,
          -1.16237097492762307383E6,
          -1.72173700820839662146E6,
          -8.53555664245765465627E5
-      ];
-
-      var C = [
+      ], C = [
       /* 1.00000000000000000000E0, */
          -3.51815701436523470549E2,
          -1.70642106651881159223E4,
@@ -59,14 +36,14 @@
       ];
 
       if (x >= Number.POSITIVE_INFINITY)
-         return(Number.POSITIVE_INFINITY);
+         return Number.POSITIVE_INFINITY;
 
       if ( x < -34.0 ) {
          q = -x;
-         w = this.lgam(q);
+         w = mth.lgam(q);
          p = Math.floor(q);
          if ( p==q )//_unur_FP_same(p,q)
-            return (Number.POSITIVE_INFINITY);
+            return Number.POSITIVE_INFINITY;
          i = Math.round(p);
          if ( (i & 1) == 0 )
             sgngam = -1;
@@ -79,9 +56,9 @@
          }
          z = q * Math.sin( Math.PI * z );
          if ( z < 1e-300 )
-            return (Number.POSITIVE_INFINITY);
+            return Number.POSITIVE_INFINITY;
          z = Math.log(Math.PI) - Math.log( z ) - w;
-         return( z );
+         return z;
       }
       if ( x < 13.0 ) {
          z = 1.0;
@@ -94,7 +71,7 @@
          }
          while ( u < 2.0 ) {
             if ( u < 1e-300 )
-               return (Number.POSITIVE_INFINITY);
+               return Number.POSITIVE_INFINITY;
             z /= u;
             p += 1.0;
             u = x + p;
@@ -106,18 +83,18 @@
          else
             sgngam = 1;
          if ( u == 2.0 )
-            return( Math.log(z) );
+            return Math.log(z);
          p -= 2.0;
          x = x + p;
-         p = x * this.Polynomialeval(x, B, 5 ) / this.Polynomial1eval( x, C, 6);
-         return( Math.log(z) + p );
+         p = x * mth.Polynomialeval(x, B, 5 ) / mth.Polynomial1eval( x, C, 6);
+         return Math.log(z) + p;
       }
       if ( x > kMAXLGM )
          return( sgngam * Number.POSITIVE_INFINITY );
 
       q = ( x - 0.5 ) * Math.log(x) - x + LS2PI;
       if ( x > 1.0e8 )
-         return( q );
+         return q;
 
       p = 1.0/(x*x);
       if ( x >= 1000.0 )
@@ -125,58 +102,54 @@
                - 2.7777777777777777777778e-3) *p
                + 0.0833333333333333333333) / x;
       else
-         q += this.Polynomialeval( p, A, 4 ) / x;
-      return( q );
-   };
+         q += mth.Polynomialeval( p, A, 4 ) / x;
+      return q;
+   }
 
    /**
     * calculates a value of a polynomial of the form:
     * a[0]x^N+a[1]x^(N-1) + ... + a[N]
     *
-    * @memberOf JSROOT.Math
+    * @memberof JSROOT.Math
     */
-   JSROOT.Math.Polynomialeval = function(x, a, N) {
+   mth.Polynomialeval = function(x, a, N) {
       if (N==0) return a[0];
-      else {
-         var pom = a[0];
-         for (var i=1; i <= N; ++i)
-            pom = pom *x + a[i];
-         return pom;
-      }
-   };
+
+      let pom = a[0];
+      for (let i=1; i <= N; ++i)
+         pom = pom *x + a[i];
+      return pom;
+   }
 
    /**
     * calculates a value of a polynomial of the form:
     * x^N+a[0]x^(N-1) + ... + a[N-1]
     *
-    * @memberOf JSROOT.Math
+    * @memberof JSROOT.Math
     */
-   JSROOT.Math.Polynomial1eval = function(x, a, N) {
+   mth.Polynomial1eval = function(x, a, N) {
       if (N==0) return a[0];
-      else {
-         var pom = x + a[0];
-         for (var i=1; i < N; ++i)
-            pom = pom *x + a[i];
-         return pom;
-      }
-   };
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.ndtri = function( y0 ) {
+      let pom = x + a[0];
+      for (let i=1; i < N; ++i)
+         pom = pom *x + a[i];
+      return pom;
+   }
+
+   /** @memberof JSROOT.Math */
+   mth.ndtri = function( y0 ) {
       if ( y0 <= 0.0 )
-         return( Number.NEGATIVE_INFINITY );
+         return Number.NEGATIVE_INFINITY;
       if ( y0 >= 1.0 )
-         return( Number.POSITIVE_INFINITY );
+         return Number.POSITIVE_INFINITY;
 
-      var P0 = new Array(
+      const P0 = [
            -5.99633501014107895267E1,
             9.80010754185999661536E1,
            -5.66762857469070293439E1,
             1.39312609387279679503E1,
            -1.23916583867381258016E0
-      );
-
-      var Q0 = new Array(
+      ], Q0 = [
             1.95448858338141759834E0,
             4.67627912898881538453E0,
             8.63602421390890590575E1,
@@ -185,9 +158,7 @@
            -8.20372256168333339912E1,
             1.59056225126211695515E1,
            -1.18331621121330003142E0
-      );
-
-      var P1 = new Array(
+      ], P1 = [
             4.05544892305962419923E0,
             3.15251094599893866154E1,
             5.71628192246421288162E1,
@@ -197,9 +168,7 @@
            -1.40256079171354495875E-1,
            -3.50424626827848203418E-2,
            -8.57456785154685413611E-4
-      );
-
-      var Q1 = new Array(
+      ], Q1 = [
             1.57799883256466749731E1,
             4.53907635128879210584E1,
             4.13172038254672030440E1,
@@ -208,9 +177,7 @@
            -1.42182922854787788574E-1,
            -3.80806407691578277194E-2,
            -9.33259480895457427372E-4
-      );
-
-      var P2 = new Array(
+      ], P2 = [
             3.23774891776946035970E0,
             6.91522889068984211695E0,
             3.93881025292474443415E0,
@@ -220,9 +187,7 @@
             3.01581553508235416007E-4,
             2.65806974686737550832E-6,
             6.23974539184983293730E-9
-      );
-
-      var Q2 = new Array(
+      ], Q2 = [
             6.02427039364742014255E0,
             3.67983563856160859403E0,
             1.37702099489081330271E0,
@@ -231,46 +196,42 @@
             3.28014464682127739104E-4,
             2.89247864745380683936E-6,
             6.79019408009981274425E-9
-      );
+      ], s2pi = 2.50662827463100050242e0, dd = 0.13533528323661269189;
 
-      var s2pi = 2.50662827463100050242e0;
-      var code = 1;
-      var y = y0;
-      var x, z, y2, x0, x1;
+      let code = 1, y = y0, x, z, y2, x0, x1;
 
-      if ( y > (1.0 - 0.13533528323661269189) ) {
+      if ( y > (1.0 - dd) ) {
          y = 1.0 - y;
          code = 0;
       }
-      if ( y > 0.13533528323661269189 ) {
+      if ( y > dd ) {
          y = y - 0.5;
          y2 = y * y;
-         x = y + y * (y2 * this.Polynomialeval( y2, P0, 4)/ this.Polynomial1eval( y2, Q0, 8 ));
+         x = y + y * (y2 * mth.Polynomialeval( y2, P0, 4)/ mth.Polynomial1eval( y2, Q0, 8 ));
          x = x * s2pi;
-         return(x);
+         return x;
       }
       x = Math.sqrt( -2.0 * Math.log(y) );
       x0 = x - Math.log(x)/x;
       z = 1.0/x;
       if ( x < 8.0 )
-         x1 = z * this.Polynomialeval( z, P1, 8 )/ this.Polynomial1eval( z, Q1, 8 );
+         x1 = z * mth.Polynomialeval( z, P1, 8 )/ mth.Polynomial1eval( z, Q1, 8 );
       else
-         x1 = z * this.Polynomialeval( z, P2, 8 )/ this.Polynomial1eval( z, Q2, 8 );
+         x1 = z * mth.Polynomialeval( z, P2, 8 )/ mth.Polynomial1eval( z, Q2, 8 );
       x = x0 - x1;
       if ( code != 0 )
          x = -x;
-      return( x );
-   };
+      return x;
+   }
 
-   JSROOT.Math.normal_quantile = function(z, sigma) {
-      return  sigma * JSROOT.Math.ndtri(z);
-   };
+   mth.normal_quantile = function(z, sigma) {
+      return  sigma * mth.ndtri(z);
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.igam = function(a,x) {
-      var kMACHEP = 1.11022302462515654042363166809e-16;
-      var kMAXLOG = 709.782712893383973096206318587;
-      var ans, ax, c, r;
+   /** @memberof JSROOT.Math */
+   mth.igam = function(a,x) {
+      const kMACHEP = 1.11022302462515654042363166809e-16,
+            kMAXLOG = 709.782712893383973096206318587;
 
       // LM: for negative values returns 1.0 instead of zero
       // This is correct if a is a negative integer since Gamma(-n) = +/- inf
@@ -279,41 +240,33 @@
       if (x <= 0)  return 0.0;
 
       if( (x > 1.0) && (x > a ) )
-         return 1.0 - this.igamc(a,x);
+         return 1.0 - mth.igamc(a,x);
 
       /* Compute  x**a * exp(-x) / gamma(a)  */
-      ax = a * Math.log(x) - x - this.lgam(a);
+      let ax = a * Math.log(x) - x - mth.lgam(a);
       if( ax < -kMAXLOG )
          return 0.0;
 
       ax = Math.exp(ax);
 
       /* power series */
-      r = a;
-      c = 1.0;
-      ans = 1.0;
+      let r = a, c = 1.0, ans = 1.0;
 
-      do
-      {
+      do {
          r += 1.0;
          c *= x/r;
          ans += c;
-      }
-      while( c/ans > kMACHEP );
+      } while( c/ans > kMACHEP );
 
       return ans * ax/a;
-   };
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.igamc = function(a,x) {
-      var kMACHEP = 1.11022302462515654042363166809e-16;
-      var kMAXLOG = 709.782712893383973096206318587;
-
-      var kBig = 4.503599627370496e15;
-      var kBiginv =  2.22044604925031308085e-16;
-
-      var ans, ax, c, yc, r, t, y, z;
-      var pk, pkm1, pkm2, qk, qkm1, qkm2;
+   /** @memberof JSROOT.Math */
+   mth.igamc = function(a,x) {
+      const kMACHEP = 1.11022302462515654042363166809e-16,
+            kMAXLOG = 709.782712893383973096206318587,
+            kBig = 4.503599627370496e15,
+            kBiginv =  2.22044604925031308085e-16;
 
       // LM: for negative values returns 0.0
       // This is correct if a is a negative integer since Gamma(-n) = +/- inf
@@ -322,26 +275,26 @@
       if (x <= 0) return 1.0;
 
       if( (x < 1.0) || (x < a) )
-         return ( 1.0 - JSROOT.Math.igam(a,x) );
+         return ( 1.0 - mth.igam(a,x) );
 
-      ax = a * Math.log(x) - x - JSROOT.Math.lgam(a);
+      let ax = a * Math.log(x) - x - mth.lgam(a);
       if( ax < -kMAXLOG )
-         return( 0.0 );
+         return 0.0;
 
       ax = Math.exp(ax);
 
       /* continued fraction */
-      y = 1.0 - a;
-      z = x + y + 1.0;
-      c = 0.0;
-      pkm2 = 1.0;
-      qkm2 = x;
-      pkm1 = x + 1.0;
-      qkm1 = z * x;
-      ans = pkm1/qkm1;
+      let y = 1.0 - a,
+          z = x + y + 1.0,
+          c = 0.0,
+          pkm2 = 1.0,
+          qkm2 = x,
+          pkm1 = x + 1.0,
+          qkm1 = z * x,
+          ans = pkm1/qkm1,
+          yc, r, t, pk,  qk;
 
-      do
-      {
+      do {
          c += 1.0;
          y += 1.0;
          z += 2.0;
@@ -367,17 +320,13 @@
             qkm2 *= kBiginv;
             qkm1 *= kBiginv;
          }
-      }
-      while( t > kMACHEP );
+      } while( t > kMACHEP );
 
       return ans * ax;
-   };
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.igami = function(a, y0) {
-      var x0, x1, x, yl, yh, y, d, lgm, dithresh, i, dir,
-          kMACHEP = 1.11022302462515654042363166809e-16;
-
+   /** @memberof JSROOT.Math */
+   mth.igami = function(a, y0) {
       // check the domain
       if (a <= 0) {
          alert("igami : Wrong domain for parameter a (must be > 0)");
@@ -389,25 +338,21 @@
       if (y0 >= 1) {
          return 0;
       }
-      /* bound the solution */
-      var kMAXNUM = Number.MAX_VALUE;
-      x0 = kMAXNUM;
-      yl = 0;
-      x1 = 0;
-      yh = 1.0;
-      dithresh = 5.0 * kMACHEP;
+      const kMACHEP = 1.11022302462515654042363166809e-16,
+            kMAXNUM = Number.MAX_VALUE;
+      let x0 = kMAXNUM, x1 = 0, x, yl = 0, yh = 1, y, d, lgm, dithresh = 5.0 * kMACHEP, i, dir;
 
       /* approximation to inverse function */
       d = 1.0/(9.0*a);
-      y = ( 1.0 - d - this.ndtri(y0) * Math.sqrt(d) );
+      y = ( 1.0 - d - mth.ndtri(y0) * Math.sqrt(d) );
       x = a * y * y * y;
 
-      lgm = this.lgam(a);
+      lgm = mth.lgam(a);
 
       for( i=0; i<10; ++i ) {
          if ( x > x0 || x < x1 )
             break;
-         y = this.igamc(a,x);
+         y = mth.igamc(a,x);
          if ( y < yl || y > yh )
             break;
          if ( y < y0 ) {
@@ -426,7 +371,7 @@
          /* compute the step to the next approximation of x */
          d = (y - y0)/d;
          if ( Math.abs(d/x) < kMACHEP )
-            return( x );
+            return x;
          x = x - d;
       }
       /* Resort to interval halving if Newton iteration did not converge. */
@@ -436,7 +381,7 @@
             x = 1.0;
          while ( x0 == kMAXNUM ) {
             x = (1.0 + d) * x;
-            y = this.igamc( a, x );
+            y = mth.igamc( a, x );
             if ( y < y0 ) {
                x0 = x;
                yl = y;
@@ -450,7 +395,7 @@
 
       for( i=0; i<400; ++i ) {
          x = x1  +  d * (x0 - x1);
-         y = this.igamc( a, x );
+         y = mth.igamc( a, x );
          lgm = (x0 - x1)/(x1 + x0);
          if ( Math.abs(lgm) < dithresh )
             break;
@@ -487,45 +432,40 @@
          }
       }
       return x;
-   };
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.gamma_quantile_c = function(z, alpha, theta) {
-      return theta * this.igami( alpha, z);
-   };
+   /** @memberof JSROOT.Math */
+   mth.gamma_quantile_c = function(z, alpha, theta) {
+      return theta * mth.igami( alpha, z);
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.gamma_quantile = function(z, alpha, theta) {
-      return theta * this.igami( alpha, 1.- z);
-   };
+   /** @memberof JSROOT.Math */
+   mth.gamma_quantile = function(z, alpha, theta) {
+      return theta * mth.igami( alpha, 1.- z);
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.log10 = function(n) {
-      return Math.log(n) / Math.log(10);
-   };
-
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.landau_pdf = function(x, xi, x0) {
+   /** @memberof JSROOT.Math */
+   mth.landau_pdf = function(x, xi, x0) {
       // LANDAU pdf : algorithm from CERNLIB G110 denlan
       // same algorithm is used in GSL
       if (x0===undefined) x0 = 0;
       if (xi <= 0) return 0;
-      var v = (x - x0)/xi;
-      var u, ue, us, denlan;
-      var p1 = new Array(0.4259894875,-0.1249762550, 0.03984243700, -0.006298287635,   0.001511162253);
-      var q1 = new Array(1.0         ,-0.3388260629, 0.09594393323, -0.01608042283,    0.003778942063);
-      var p2 = new Array(0.1788541609, 0.1173957403, 0.01488850518, -0.001394989411,   0.0001283617211);
-      var q2 = new Array(1.0         , 0.7428795082, 0.3153932961,   0.06694219548,    0.008790609714);
-      var p3 = new Array(0.1788544503, 0.09359161662,0.006325387654, 0.00006611667319,-0.000002031049101);
-      var q3 = new Array(1.0         , 0.6097809921, 0.2560616665,   0.04746722384,    0.006957301675);
-      var p4 = new Array(0.9874054407, 118.6723273,  849.2794360,   -743.7792444,      427.0262186);
-      var q4 = new Array(1.0         , 106.8615961,  337.6496214,    2016.712389,      1597.063511);
-      var p5 = new Array(1.003675074,  167.5702434,  4789.711289,    21217.86767,     -22324.94910);
-      var q5 = new Array(1.0         , 156.9424537,  3745.310488,    9834.698876,      66924.28357);
-      var p6 = new Array(1.000827619,  664.9143136,  62972.92665,    475554.6998,     -5743609.109);
-      var q6 = new Array(1.0         , 651.4101098,  56974.73333,    165917.4725,     -2815759.939);
-      var a1 = new Array(0.04166666667,-0.01996527778, 0.02709538966);
-      var a2 = new Array(-1.845568670,-4.284640743);
+      const v = (x - x0)/xi;
+      let u, ue, us, denlan;
+      const p1 = [0.4259894875,-0.1249762550, 0.03984243700, -0.006298287635,   0.001511162253],
+            q1 = [1.0         ,-0.3388260629, 0.09594393323, -0.01608042283,    0.003778942063],
+            p2 = [0.1788541609, 0.1173957403, 0.01488850518, -0.001394989411,   0.0001283617211],
+            q2 = [1.0         , 0.7428795082, 0.3153932961,   0.06694219548,    0.008790609714],
+            p3 = [0.1788544503, 0.09359161662,0.006325387654, 0.00006611667319,-0.000002031049101],
+            q3 = [1.0         , 0.6097809921, 0.2560616665,   0.04746722384,    0.006957301675],
+            p4 = [0.9874054407, 118.6723273,  849.2794360,   -743.7792444,      427.0262186],
+            q4 = [1.0         , 106.8615961,  337.6496214,    2016.712389,      1597.063511],
+            p5 = [1.003675074,  167.5702434,  4789.711289,    21217.86767,     -22324.94910],
+            q5 = [1.0         , 156.9424537,  3745.310488,    9834.698876,      66924.28357],
+            p6 = [1.000827619,  664.9143136,  62972.92665,    475554.6998,     -5743609.109],
+            q6 = [1.0         , 651.4101098,  56974.73333,    165917.4725,     -2815759.939],
+            a1 = [0.04166666667,-0.01996527778, 0.02709538966],
+            a2 = [-1.845568670,-4.284640743];
 
       if (v < -5.5) {
          u   = Math.exp(v+1.0);
@@ -561,64 +501,64 @@
          denlan = u*u*(1+(a2[0]+a2[1]*u)*u);
       }
       return denlan/xi;
-   };
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.Landau = function(x, mpv, sigma, norm) {
+   /** @memberof JSROOT.Math */
+   mth.Landau = function(x, mpv, sigma, norm) {
       if (sigma <= 0) return 0;
-      var den = JSROOT.Math.landau_pdf((x - mpv) / sigma, 1, 0);
+      const den = mth.landau_pdf((x - mpv) / sigma, 1, 0);
       if (!norm) return den;
       return den/sigma;
-   };
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.inc_gamma_c = function(a,x) {
-      return JSROOT.Math.igamc(a,x);
-   };
+   /** @memberof JSROOT.Math */
+   mth.inc_gamma_c = function(a,x) {
+      return mth.igamc(a,x);
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.inc_gamma = function(a,x) {
-      return JSROOT.Math.igam(a,x);
-   };
+   /** @memberof JSROOT.Math */
+   mth.inc_gamma = function(a,x) {
+      return mth.igam(a,x);
+   }
 
-   JSROOT.Math.lgamma = function(z) {
-      return JSROOT.Math.lgam(z);
-   };
+   mth.lgamma = function(z) {
+      return mth.lgam(z);
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.inc_gamma = function(a,x) {
-      return JSROOT.Math.igam(a,x);
-   };
+   /** @memberof JSROOT.Math */
+   mth.inc_gamma = function(a,x) {
+      return mth.igam(a,x);
+   }
 
-   JSROOT.Math.lgamma = function(z) {
-      return JSROOT.Math.lgam(z);
-   };
+   mth.lgamma = function(z) {
+      return mth.lgam(z);
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.chisquared_cdf_c = function(x,r,x0) {
+   /** @memberof JSROOT.Math */
+   mth.chisquared_cdf_c = function(x,r,x0) {
       if (x0===undefined) x0 = 0;
-      return JSROOT.Math.inc_gamma_c ( 0.5 * r , 0.5*(x-x0) );
-   };
+      return mth.inc_gamma_c ( 0.5 * r , 0.5*(x-x0) );
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.chisquared_cdf = function(x,r,x0) {
+   /** @memberof JSROOT.Math */
+   mth.chisquared_cdf = function(x,r,x0) {
       if (x0===undefined) x0 = 0;
-      return JSROOT.Math.inc_gamma ( 0.5 * r , 0.5*(x-x0) );
-   };
+      return mth.inc_gamma ( 0.5 * r , 0.5*(x-x0) );
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.chisquared_pdf = function(x,r,x0) {
+   /** @memberof JSROOT.Math */
+   mth.chisquared_pdf = function(x,r,x0) {
       if (x0===undefined) x0 = 0;
       if ((x-x0) < 0) return 0.0;
-      var a = r/2 -1.;
+      const a = r/2 -1.;
       // let return inf for case x  = x0 and treat special case of r = 2 otherwise will return nan
       if (x == x0 && a == 0) return 0.5;
 
-      return Math.exp ((r/2 - 1) * Math.log((x-x0)/2) - (x-x0)/2 - JSROOT.Math.lgamma(r/2))/2;
-   };
+      return Math.exp ((r/2 - 1) * Math.log((x-x0)/2) - (x-x0)/2 - mth.lgamma(r/2))/2;
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.Prob = function(chi2, ndf) {
+   /** @memberof JSROOT.Math */
+   mth.Prob = function(chi2, ndf) {
       if (ndf <= 0) return 0; // Set CL to zero in case ndf<=0
 
       if (chi2 <= 0) {
@@ -626,57 +566,56 @@
          else          return 1;
       }
 
-      return JSROOT.Math.chisquared_cdf_c(chi2,ndf,0);
-   };
+      return mth.chisquared_cdf_c(chi2,ndf,0);
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.Gaus = function(x, mean, sigma) {
+   /** @memberof JSROOT.Math */
+   mth.Gaus = function(x, mean, sigma) {
       return Math.exp(-0.5 * Math.pow((x-mean) / sigma, 2));
-   };
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.BreitWigner = function(x, mean, gamma) {
+   /** @memberof JSROOT.Math */
+   mth.BreitWigner = function(x, mean, gamma) {
       return gamma/((x-mean)*(x-mean) + gamma*gamma/4) / 2 / Math.PI;
    }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.gaus = function(f, x, i) {
+   /** @memberof JSROOT.Math */
+   mth.gaus = function(f, x, i) {
       // function used when gaus(0) used in the TFormula
       return f.GetParValue(i+0) * Math.exp(-0.5 * Math.pow((x-f.GetParValue(i+1)) / f.GetParValue(i+2), 2));
-   };
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.gausn = function(f, x, i) {
-      return JSROOT.Math.gaus(f, x, i)/(Math.sqrt(2 * Math.PI) * f.GetParValue(i+2));
-   };
+   /** @memberof JSROOT.Math */
+   mth.gausn = function(f, x, i) {
+      return mth.gaus(f, x, i)/(Math.sqrt(2 * Math.PI) * f.GetParValue(i+2));
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.gausxy = function(f, x, y, i) {
+   /** @memberof JSROOT.Math */
+   mth.gausxy = function(f, x, y, i) {
       // function used when xygaus(0) used in the TFormula
 
       return f.GetParValue(i+0) * Math.exp(-0.5 * Math.pow((x-f.GetParValue(i+1)) / f.GetParValue(i+2), 2))
                                 * Math.exp(-0.5 * Math.pow((y-f.GetParValue(i+3)) / f.GetParValue(i+4), 2));
-   };
+   }
 
-
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.expo = function(f, x, i) {
+   /** @memberof JSROOT.Math */
+   mth.expo = function(f, x, i) {
       return Math.exp(f.GetParValue(i+0) + f.GetParValue(i+1) * x);
-   };
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.landau = function(f, x, i) {
-      return JSROOT.Math.Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), false);
-   };
+   /** @memberof JSROOT.Math */
+   mth.landau = function(f, x, i) {
+      return mth.Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), false);
+   }
 
-   /** @memberOf JSROOT.Math */
-   JSROOT.Math.landaun = function(f, x, i) {
-      return JSROOT.Math.Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), true);
-   };
+   /** @memberof JSROOT.Math */
+   mth.landaun = function(f, x, i) {
+      return mth.Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), true);
+   }
 
    // =========================================================================
 
-   JSROOT.getMoreMethods = function(m,typename, obj) {
+   JSROOT.getMoreMethods = function(m, typename /*, obj*/) {
       // different methods which are typically used in TTree::Draw
 
       if (typename.indexOf("ROOT::Math::LorentzVector")===0) {
@@ -702,7 +641,7 @@
          m.R = m.P = function() { return Math.sqrt(this.P2()); }
          m.Mag2 = m.M2 = function() { return this.fT*this.fT - this.fX*this.fX - this.fY*this.fY - this.fZ*this.fZ; }
          m.Mag = m.M = function() {
-            var mm = this.M2();
+            let mm = this.M2();
             if (mm >= 0) return Math.sqrt(mm);
             return -Math.sqrt(-mm);
          }
@@ -713,6 +652,8 @@
       }
    }
 
-   return JSROOT;
+   JSROOT.Math = mth;
+   if (JSROOT.nodejs) module.exports = mth;
 
-}));
+   return mth;
+});
