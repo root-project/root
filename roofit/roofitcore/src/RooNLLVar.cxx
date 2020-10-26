@@ -44,6 +44,7 @@ In extended mode, a
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
 #include "BatchHelpers.h"
+#include <iomanip>
 #endif
 
 #include "TMath.h"
