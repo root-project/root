@@ -2202,7 +2202,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.createAttFill({ attr: this.pad });
 
-      if ((rect.width<=lmt) || (rect.height<=lmt)) {
+      if ((rect.width <= lmt) || (rect.height <= lmt)) {
          svg.style("display", "none");
          console.warn("Hide canvas while geometry too small w=" + rect.width + " h=" + rect.height);
          rect.width = 200; rect.height = 100; // just to complete drawing
@@ -3560,9 +3560,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    TCanvasPainter.prototype = Object.create(TPadPainter.prototype);
 
-   TCanvasPainter.prototype.ChangeLayout = function(layout_kind, call_back) {
+   /** @summary Changes layout
+     * @returns {Promise} indicating when finished */
+   TCanvasPainter.prototype.ChangeLayout = function(layout_kind) {
       let current = this.get_layout_kind();
-      if (current == layout_kind) return JSROOT.CallBack(call_back, true);
+      if (current == layout_kind)
+         return Promise.resolve(true);
 
       let origin = this.select_main('origin'),
           sidebar = origin.select('.side_panel'),
@@ -3582,10 +3585,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             main.node().appendChild(lst[k]);
          this.set_layout_kind(layout_kind);
          JSROOT.resize(main.node());
-         return JSROOT.CallBack(call_back, true);
+         return Promise.resolve(true);
       }
 
-      JSROOT.require("jq2d").then(() => {
+      return JSROOT.require("jq2d").then(() => {
 
          let grid = new JSROOT.GridDisplay(origin.node(), layout_kind);
 
@@ -3612,24 +3615,26 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // resize main drawing and let draw extras
          JSROOT.resize(main.node());
 
-         JSROOT.CallBack(call_back, true);
+         return true;
       });
    }
 
-   TCanvasPainter.prototype.ToggleProjection = function(kind, call_back) {
+   /** @summary Toggle projection
+     * @return {Promise} indicating when ready */
+   TCanvasPainter.prototype.ToggleProjection = function(kind) {
       delete this.proj_painter;
 
       if (kind) this.proj_painter = 1; // just indicator that drawing can be preformed
 
       if (this.ShowUI5ProjectionArea)
-         return this.ShowUI5ProjectionArea(kind, call_back);
+         return this.ShowUI5ProjectionArea(kind);
 
       let layout = 'simple';
 
       if (kind == "X") layout = 'vert2_31'; else
       if (kind == "Y") layout = 'horiz2_13';
 
-      this.ChangeLayout(layout, call_back);
+      return this.ChangeLayout(layout);
    }
 
    TCanvasPainter.prototype.DrawProjection = function(kind,hist) {
