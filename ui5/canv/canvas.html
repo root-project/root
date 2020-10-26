@@ -7,7 +7,7 @@
       <title>ROOT7 TCanvas</title>
       <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
    </head>
-   
+
    <style>
       html { height: 100%; }
       body { min-height: 100%; margin: 0; overflow: hidden }
@@ -26,12 +26,12 @@
          loading scripts...
       </div>
    </body>
-   
+
    <script type='text/javascript'>
-   
+
       function InitV7Canvas(handle, args) {
 
-         var painter = new JSROOT.v7.TCanvasPainter(null);
+         var painter = new JSROOT.v7.RCanvasPainter(null);
          painter.use_openui = true;
          painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
          if (painter.batch_mode) JSROOT.BatchMode = true;
@@ -45,9 +45,9 @@
 
             painter._window_handle = handle;
             painter.use_openui = true;
-            
+
             return JSROOT.AssertPrerequisites('openui5', function() {
-               
+
                sap.ui.require(["sap/ui/core/ComponentContainer"], function(ComponentContainer) {
                   new ComponentContainer({
                      name: "rootui5.canv",
@@ -61,7 +61,7 @@
                      height: "100%"
                   }).placeAt("CanvasDiv")
                });
-               
+
             });
 
          }
@@ -72,7 +72,7 @@
 
          if (!painter.batch_mode) JSROOT.RegisterForResize(painter);
       }
-      
+
       JSROOT.ConnectWebWindow({
          prereq: "2d;v7;",
          prereq_logdiv: "CanvasDiv",
