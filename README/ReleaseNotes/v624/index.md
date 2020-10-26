@@ -32,6 +32,7 @@ The following people have contributed to this new version:
  Vincenzo Eduardo Padulano, Bicocca/SFT,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
+ Andrea Sciandra, SCIPP-UCSC/Atlas, \
  Oksana Shadura, UNL/CMS,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Matevz Tadel, UCSD/CMS,\
@@ -89,6 +90,10 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 
 
 ## RooFit Libraries
+
+### Unbiased binned fits
+When RooFit performs binned fits, it takes the probability density at the bin centre as a proxy for the probability in the bin. This can lead to a bias.
+To alleviate this, the new class [RooBinSamplingPdf](https://root.cern/doc/v624/classRooBinSamplingPdf.html) has been added to RooFit.
 
 ### Improved recovery from invalid parameters
 When a function in RooFit is undefined (Poisson with negative mean, PDF with negative values, etc), RooFit can now pass information about the
