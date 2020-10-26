@@ -53,7 +53,7 @@ public:
   
   // Parameter value and error accessors
   virtual Double_t getValV(const RooArgSet* nset=0) const ;
-  RooSpan<const double> getValues(RooBatchCompute::RunContext& inputData, const RooArgSet*) const final;
+  RooSpan<const double> getValues(RooBatchCompute::RunContext& inputData, const RooArgSet* = nullptr) const final;
 
   virtual void setVal(Double_t value);
   virtual void setVal(Double_t value, const char* rangeName);
