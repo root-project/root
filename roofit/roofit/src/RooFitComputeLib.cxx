@@ -11,6 +11,13 @@
 using namespace BatchHelpers;
 
 namespace RooFitCompute {
+  /**
+   * \brief Contains the part of the code of the RooFitCompute Library that needs to be compiled for every different cpu architecture.
+   *
+   * RF_ARCH is a macro that is defined by cmake. The macro gets a different name for each copy of the library, namely SSE4, AVX, AVX2, AVX512.
+   * This ensures that name clashes are avoided.
+   * \see RooFitComputeInterface, RooFitComputeClass, dispatch
+   */
   namespace RF_ARCH {
 
     struct ArgusBGComputer {
@@ -653,6 +660,8 @@ namespace RooFitCompute {
           size_t batchSize=SIZE_MAX;
           bool canDoHighPerf=true;
         };
+        /// Small helping function that determines the sizes of the batches and decides
+        /// wether to run the High performing or the Generic computation function.
         AnalysisInfo analyseInputSpans(std::vector<RooSpan<const double>> parameters)
         {
           AnalysisInfo ret;
@@ -667,6 +676,8 @@ namespace RooFitCompute {
           return ret;
         }
 
+        /// Templated function that works for every PDF: does the necessary preprocessing and launches
+        /// the correct overload of the actual computing function.
         template <class Computer_t, typename Arg_t, typename... Args_t>
         RooSpan<double> startComputation(const RooAbsReal* caller, RunContext& evalData, Computer_t computer, Arg_t first, Args_t... rest)
         {
@@ -742,6 +753,7 @@ namespace RooFitCompute {
         }
     }; // End class RooFitComputeClass
 
+    /// Create a static object to trigger the constructor which overwrites the dispatch pointer.
     static RooFitComputeClass computeObj;
 
   } //End namespace RF_ARCH
