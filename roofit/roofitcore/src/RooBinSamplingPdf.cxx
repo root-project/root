@@ -118,6 +118,17 @@ RooBinSamplingPdf::RooBinSamplingPdf(const char *name, const char *title, RooAbs
 }
 
 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Copy a RooBinSamplingPdf.
+ /// \param[in] other PDF to copy.
+ /// \param[in] name Optionally rename the copy.
+ RooBinSamplingPdf::RooBinSamplingPdf(const RooBinSamplingPdf& other, const char* name) :
+   RooAbsPdf(other, name),
+   _pdf("inputPdf", this, other._pdf),
+   _observable("observable", this, other._observable),
+   _relEpsilon(other._relEpsilon) { }
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Integrate the PDF over the current bin of the observable.
 double RooBinSamplingPdf::evaluate() const {
