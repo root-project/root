@@ -501,7 +501,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       this.logx = (this.x_kind === "log");
 
       this.grx.domain([ xmin, xmax ]).range([ grminx, grmaxx ]);
-      this.x_handle = new JSROOT.RAxisPainter(true, "x_");
+      this.x_handle = new JSROOT.v7.RAxisPainter(true, "x_");
       this.x_handle.SetAxisConfig("xaxis", this.x_kind, this.grx, this.xmin, this.xmax, xmin, xmax);
       this.x_handle.CreateFormatFuncs();
       this.scale_xmin = xmin; this.scale_xmax = xmax;
@@ -526,7 +526,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       this.logy = (this.y_kind === "log");
 
       this.gry.domain([ ymin, ymax ]).range([ grminy, grmaxy ]);
-      this.y_handle = new JSROOT.RAxisPainter(true, "y_");
+      this.y_handle = new JSROOT.v7.RAxisPainter(true, "y_");
       this.y_handle.SetAxisConfig("yaxis", this.y_kind, this.gry, this.ymin, this.ymax, ymin, ymax);
       this.y_handle.CreateFormatFuncs();
       this.scale_ymin = ymin; this.scale_ymax = ymax;
