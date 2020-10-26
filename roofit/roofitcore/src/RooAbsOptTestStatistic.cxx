@@ -844,9 +844,8 @@ void RooAbsOptTestStatistic::setUpBinSampling() {
       && _integrateBinsPrecision == 0.
       && !_funcClone->isBinnedDistribution(*_dataClone->get())) {
     // User didn't forbid integration, and it seems appropriate with a RooDataHist.
-    coutW(Fitting) << "The PDF '" << _funcClone->GetName() << "' is continuous, but fit to binned data. In contrast to ROOT < v6.24,\n"
-        << "RooFit will integrate it in each bin to correct a bias due to poor sampling of the PDF.\n"
-        << "This can be disabled by fitting with \"IntegrateBins(-1.)\"." << std::endl;
+    coutI(Fitting) << "The PDF '" << _funcClone->GetName() << "' is continuous, but fit to binned data.\n"
+        << "RooFit will integrate it in each bin using the RooBinSamplingPdf." << std::endl;
     newPdf = new RooBinSamplingPdf((std::string(_funcClone->GetName()) + "_binSampling").c_str(),
         _funcClone->GetTitle(),
         *static_cast<RooAbsRealLValue*>(*theObs),
