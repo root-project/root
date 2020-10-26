@@ -2622,7 +2622,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
 
       // Expected data, multiply p.d.f by nEvents
       Double_t w=hist->weight()*nEvents ;
-      hist->set(w,sqrt(w)) ;
+      hist->set(i, w, sqrt(w));
 
     } else if (extended) {
 
