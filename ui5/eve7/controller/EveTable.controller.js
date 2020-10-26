@@ -1,20 +1,20 @@
 sap.ui.define([
    'sap/ui/core/mvc/Controller',
    'sap/ui/model/json/JSONModel',
-   'sap/ui/commons/CheckBox',
-   'sap/ui/commons/Menu',
-   'sap/ui/commons/MenuItem',
-   'sap/ui/core/Item',
-   'sap/ui/table/Column',
+   'sap/ui/model/Sorter',
+   'sap/m/Column',
+   'sap/m/ColumnListItem',
    'sap/m/Input',
+   'sap/m/Label',
    'sap/m/Button',
    "sap/m/FormattedText",
-   "sap/ui/core/ResizeHandler",
    "sap/ui/layout/VerticalLayout",
    "sap/ui/layout/HorizontalLayout",
+   "sap/ui/table/Column",
    "sap/m/MessageBox"
-], function (Controller, JSONModel, CheckBox, Menu, MenuItem, coreItem, Column,
-             mInput, mButton, FormattedText, ResizeHandler, VerticalLayout, HorizontalLayout, MessageBox) {
+], function (Controller, JSONModel, Sorter,
+             mColumn, mColumnListItem, mInput, mLabel, mButton,
+             FormattedText, VerticalLayout, HorizontalLayout, tableColumn, MessageBox) {
 
    "use strict";
 
@@ -88,12 +88,12 @@ sap.ui.define([
          var bDescending = (e.mParameters.sortOrder == sap.ui.core.SortOrder.Descending);
          var sv = bDescending;
 
-         var oSorter0 = new sap.ui.model.Sorter({
+         var oSorter0 = new Sorter({
             path: "Filtered",
             descending: true
          });
 
-         var oSorter1 = new sap.ui.model.Sorter({
+         var oSorter1 = new Sorter({
             path: col.mProperties.sortProperty,
             descending: sv
          });
@@ -228,7 +228,7 @@ sap.ui.define([
 
             var pthis = this;
             oTable.bindAggregation("columns", "/columns", function (sId, oContext) {
-               return new sap.ui.table.Column(sId, {
+               return new tableColumn(sId, {
                   label: "{columnName}",
                   sortProperty: "{columnName}",
                   template: new FormattedText({
@@ -248,7 +248,7 @@ sap.ui.define([
             var oBinding = oTable.bindRows({
                path: "/rows",
                sorter: [
-                  new sap.ui.model.Sorter({
+                  new Sorter({
                      path: 'Filtered',
                      descending: true
                   })
@@ -272,7 +272,7 @@ sap.ui.define([
          }
          this.updateSortMap();
       },
-      
+
       buildTableHeader: function () {
          var oModel = new JSONModel();
          var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
@@ -336,7 +336,7 @@ sap.ui.define([
             // expression row
             {
                var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
-               var exprIn = new sap.m.Input("inputExp", {
+               var exprIn = new mInput("inputExp", {
                   placeholder: "Start expression with \"i.\" to access object",
                   showValueHelp: true,
                   showTableSuggestionValueHelp: false,
@@ -367,30 +367,30 @@ sap.ui.define([
                      }
                   },
                   suggestionColumns: [
-                     new sap.m.Column({
+                     new mColumn({
                         styleClass: "f",
                         hAlign: "Begin",
-                        header: new sap.m.Label({
+                        header: new mLabel({
                            text: "Funcname"
                         })
                      }),
-                     new sap.m.Column({
+                     new mColumn({
                         hAlign: "Center",
                         styleClass: "r",
                         popinDisplay: "Inline",
-                        header: new sap.m.Label({
+                        header: new mLabel({
                            text: "Return"
                         }),
                         minScreenWidth: "Tablet",
                         demandPopin: true
                      }),
 
-                     new sap.m.Column({
+                     new mColumn({
                         hAlign: "End",
                         styleClass: "c",
                         width: "30%",
                         popinDisplay: "Inline",
-                        header: new sap.m.Label({
+                        header: new mLabel({
                            text: "Class"
                         }),
                         minScreenWidth: "400px",
@@ -402,22 +402,22 @@ sap.ui.define([
 
                exprIn.setModel(oModel);
 
-               var oTableItemTemplate = new sap.m.ColumnListItem({
+               var oTableItemTemplate = new mColumnListItem({
                   type: "Active",
                   vAlign: "Middle",
                   cells: [
-                     new sap.m.Label({
+                     new mLabel({
                         text: "{f}"
                      }),
-                     new sap.m.Label({
+                     new mLabel({
                         text: "{r}"
                      }),
-                     new sap.m.Label({
+                     new mLabel({
                         text: "{c}"
                      })
                   ]
                });
-               var oModel = new sap.ui.model.json.JSONModel();
+               var oModel = new JSONModel();
                var oSuggestionData = this.eveTable.fPublicFunctions;
                oModel.setData(oSuggestionData);
                exprIn.setModel(oModel);
