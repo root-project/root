@@ -2607,7 +2607,8 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
 /// | `Name(const char* name)`  | Name of the output dataset
 /// | `Verbose(Bool_t flag)`    | Print informational messages during event generation
 /// | `NumEvent(int nevt)`      | Generate specified number of events
-/// | `Extended()`              | The actual number of events generated will be sampled from a Poisson distribution with mu=nevt. For use with extended maximum likelihood fits
+/// | `Extended()`              | The actual number of events generated will be sampled from a Poisson distribution with mu=nevt.
+/// This can be *much* faster for peaked PDFs, but the number of events is not exactly what was requested.
 /// | `ExpectedData()`          | Return a binned dataset _without_ statistical fluctuations (also aliased as Asimov())
 ///
 
@@ -2670,17 +2671,21 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet& whatVars, const RooCmdAr
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a new dataset containing the specified variables with
-/// events sampled from our distribution. Generate the specified
-/// number of events or else try to use expectedEvents() if nEvents <= 0.
+/// events sampled from our distribution.
 ///
-/// If expectedData is kTRUE (it is kFALSE by default), the returned histogram returns the 'expected'
+/// \param[in] whatVars Variables that values should be generated for.
+/// \param[in] nEvents  How many events to generate. If `nEvents <=0`, use the value returned by expectedEvents() as target.
+/// \param[in] expectedData If set to true (false by default), the returned histogram returns the 'expected'
 /// data sample, i.e. no statistical fluctuations are present.
+/// \param[in] extended For each bin, generate Poisson(x, mu) events, where `mu` is chosen such that *on average*,
+/// one would obtain `nEvents` events. This means that the true number of events will fluctuate, but this process is much faster.
+/// Especially if the PDF is sharply peaked, the multinomial event generation necessary to generate *exactly* `nEvents` events can
+/// be very slow.
 ///
 /// Any variables of this PDF that are not in whatVars will use their
 /// current values and be treated as fixed parameters. Returns zero
 /// in case of an error. The caller takes ownership of the returned
 /// dataset.
-
 RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEvents, Bool_t expectedData, Bool_t extended) const
 {
   // Create empty RooDataHist
@@ -2745,6 +2750,8 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
     Int_t wgt = (histOutSum>nEvents) ? -1 : 1 ;
 
     // Perform simple binned accept/reject procedure to get to exact event count
+    std::size_t counter = 0;
+    bool havePrintedInfo = false;
     while(nEvtExtra>0) {
 
       Int_t ibinRand = RooRandom::randomGenerator()->Integer(hist->numEntries()) ;
@@ -2763,6 +2770,12 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
           }
         }
         nEvtExtra-- ;
+      }
+
+      if ((counter++ > 10*nEvents || nEvents > 1.E7) && !havePrintedInfo) {
+        havePrintedInfo = true;
+        coutP(Generation) << "RooAbsPdf::generateBinned(" << GetName() << ") Performing costly accept/reject sampling. If this takes too long, use "
+            << "extended mode to speed up the process." << std::endl;
       }
     }
 
