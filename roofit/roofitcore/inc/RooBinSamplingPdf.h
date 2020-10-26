@@ -33,9 +33,7 @@ public:
       double epsilon = 1.E-4);
   virtual ~RooBinSamplingPdf() {};
 
-  RooBinSamplingPdf(const RooBinSamplingPdf& other, const char* name = 0) :
-    RooAbsPdf(other, name),
-    _pdf("inputPdf", this, other._pdf) { }
+  RooBinSamplingPdf(const RooBinSamplingPdf& other, const char* name = 0);
 
   virtual TObject* clone(const char* newname) const override {
     return new RooBinSamplingPdf(*this, newname);
