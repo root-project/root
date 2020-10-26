@@ -1,22 +1,17 @@
 sap.ui.define([
-   'jquery.sap.global',
    'sap/ui/core/mvc/Controller',
    'sap/ui/core/Component',
    'sap/ui/model/json/JSONModel',
    'sap/ui/core/mvc/XMLView',
-   'sap/ui/core/Fragment',
    'sap/m/MessageToast',
    'sap/m/Dialog',
    'sap/m/List',
    'sap/m/InputListItem',
    'sap/m/Input',
    'sap/m/Button',
-   'sap/m/Label',
    'sap/ui/layout/Splitter',
-   'sap/ui/layout/SplitterLayoutData',
-   'sap/ui/unified/Menu',
-   'sap/ui/unified/MenuItem'
-], function (jQuery, Controller, Component, JSONModel, XMLView, Fragment, MessageToast, Dialog, List, InputListItem, Input, Button, Label, Splitter, SplitterLayoutData, Menu, MenuItem) {
+   'sap/ui/layout/SplitterLayoutData'
+], function (Controller, Component, JSONModel, XMLView, MessageToast, Dialog, List, InputListItem, Input, Button, Splitter, SplitterLayoutData) {
    "use strict";
 
    var CController = Controller.extend("rootui5.canv.controller.Canvas", {
@@ -31,7 +26,7 @@ sap.ui.define([
          var model = new JSONModel({ GedIcon: "", StatusIcon: "", ToolbarIcon: "", TooltipIcon: "sap-icon://accept",
                                      StatusLbl1:"", StatusLbl2:"", StatusLbl3:"", StatusLbl4:"" });
          this.getView().setModel(model);
-         
+
          var vd = this.getView().getViewData();
          var cp = vd ? vd.canvas_painter : null;
 
@@ -294,9 +289,12 @@ sap.ui.define([
 
          // first need to remove existing
          if (curr) {
+            console.log('REMOVE CURRENT AREA', curr);
             this.cleanupIfGed();
             split.removeContentArea(split.getContentAreas()[0]);
          }
+
+         console.log("showPanelInLeftArea", panel_name);
 
          this.getView().getModel().setProperty("/LeftArea", panel_name);
          this.getView().getModel().setProperty("/GedIcon", (panel_name=="Ged") ? "sap-icon://accept" : "");
@@ -311,12 +309,15 @@ sap.ui.define([
          var viewName = panel_name;
          if (viewName.indexOf(".") < 0) viewName = "rootui5.canv.view." + panel_name;
 
+         var can_elem = this.getView().byId("MainPanel");
+
          XMLView.create({
             viewName: viewName,
             viewData: { handle: panel_handle, masterPanel: this },
             layoutData: oLd,
             height: (panel_name == "Panel") ? "100%" : undefined
-         }).then(function(oView) {
+         }).then(oView => {
+            can_elem.getController().preserveCanvasContent();
             split.insertContentArea(oView, 0);
             JSROOT.CallBack(call_back, true);
          });
@@ -422,7 +423,7 @@ sap.ui.define([
 
          this.bottomVisible = !this.bottomVisible;
 
-         if (this.bottomVisible == false) {
+         if (!this.bottomVisible) {
             // vertical splitter exists - toggle it
 
             var vsplit = cont[cont.length-1];
