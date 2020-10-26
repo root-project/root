@@ -2,10 +2,8 @@ sap.ui.define([
    'sap/ui/core/mvc/Controller',
    'sap/ui/model/json/JSONModel',
    'sap/ui/core/Fragment',
-   'sap/m/Dialog',
-   'sap/m/Button',
    'sap/ui/core/HTML'
-], function (Controller, JSONModel, Fragment, Dialog, Button, HTML) {
+], function (Controller, JSONModel, Fragment, HTML) {
    "use strict";
 
    return Controller.extend("rootui5.canv.controller.Ged", {
