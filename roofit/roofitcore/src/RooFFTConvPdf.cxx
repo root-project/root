@@ -580,7 +580,7 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
     while (j>=N2) j-= N2 ;
 
     iter->Next() ;
-    cacheHist.set(aux.fftc2r->GetPointReal(j)) ;    
+    cacheHist.set(i, aux.fftc2r->GetPointReal(j), 0.);
   }
   delete iter ;
 

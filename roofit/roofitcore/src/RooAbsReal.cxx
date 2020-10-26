@@ -1298,7 +1298,7 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
     if (correctForBinSize) {
       binVal*= hist->binVolume() ;
     }
-    hist->set(binVal) ;
+    hist->set(i, binVal, 0.);
   }
 
   delete cloneSet ;
