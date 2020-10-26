@@ -148,11 +148,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
 )
 
 ROOT_LINKER_LIBRARY(RooFitCompute src/RooFitComputeLib.cxx TYPE SHARED DEPENDENCIES RooFit)
+
+# RooFitComputeLib.cxx is already included in the RooFit package once, as a default architecture generic implementation.
+# If roofit-arch-libs is enabled (see CMakeLists.txt in the parent directory), we want to compile the file again as a seperate library.
+# For each copy we give the corresponding flags and at runtime, when cpu detection takes place the correct library is loaded dynamically.
 if (roofit-arch-libs)
   ROOT_LINKER_LIBRARY(RooFitCompute_SSE4.1  src/RooFitComputeLib.cxx TYPE SHARED DEPENDENCIES RooFit)
   ROOT_LINKER_LIBRARY(RooFitCompute_AVX     src/RooFitComputeLib.cxx TYPE SHARED DEPENDENCIES RooFit)
   ROOT_LINKER_LIBRARY(RooFitCompute_AVX2    src/RooFitComputeLib.cxx TYPE SHARED DEPENDENCIES RooFit)
 
+  # Add -fno-signaling-nans, -fno-trapping-math and -O3 to enable autovectorization
+  # of the RooFitComputeLibrary (especially needed for GCC).
   set(common-flags $<$<CXX_COMPILER_ID:GNU>:-fno-signaling-nans>)
   list(APPEND common-flags $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>: -fno-trapping-math -O3>)
   

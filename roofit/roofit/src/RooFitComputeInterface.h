@@ -12,6 +12,13 @@ namespace BatchHelpers {
 }
 
 namespace RooFitCompute {
+  /**
+   * \brief The interface which should be implemented to provide optimised evaluateSpan() functionality for RooFit PDF classes.
+   *
+   * This interface contains the signatures of the compute functions of every PDF that has an optimised implementation available.
+   * These are the functions that perform the actual computations in batches.
+   * \see dispatch, RooFitComputeClass, RF_ARCH
+   */ 
   class RooFitComputeInterface {
   public:
     virtual ~RooFitComputeInterface() = default;
