@@ -1363,8 +1363,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    }
 
+   /** @summary axes can be drawn only for main histogram  */
    RFramePainter.prototype.DrawAxes = function() {
-      // axes can be drawn only for main histogram
 
       if (this.axes_drawn) return Promise.resolve(true);
 
@@ -2335,8 +2335,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
            .style("bottom", 0);
       }
 
-      // console.log('CANVAS SVG width = ' + rect.width + " height = " + rect.height);
-
       svg.attr("viewBox", "0 0 " + rect.width + " " + rect.height)
          .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
          .property('height_factor', factor)
@@ -2390,8 +2388,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.ShowButtons();
    }
 
+   /** @summary Create SVG element for the pad
+     * @returns true when pad is displayed and all its items should be redrawn */
    RPadPainter.prototype.CreatePadSvg = function(only_resize) {
-      // returns true when pad is displayed and all its items should be redrawn
 
       if (!this.has_canvas) {
          this.CreateCanvasSvg(only_resize ? 2 : 0);
@@ -2403,7 +2402,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           width = svg_parent.property("draw_width"),
           height = svg_parent.property("draw_height"),
           pad_enlarged = svg_can.property("pad_enlarged"),
-          pad_visible = !pad_enlarged || (pad_enlarged === this.pad),
+          pad_visible = true,
           w = width, h = height, x = 0, y = 0,
           svg_pad = null, svg_rect = null, btns = null;
 
@@ -2414,7 +2413,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          h = Math.round(height * this.pad.fSize.fVert.fArr[0]);
       }
 
-      if (pad_enlarged === this.pad) { w = width; h = height; x = y = 0; }
+      if (pad_enlarged) {
+         pad_visible = false;
+         if (pad_enlarged === this.pad)
+            pad_visible = true;
+         else
+            this.ForEachPainterInPad(pp => { if (pp.GetObject() == pad_enlarged) pad_visible = true; }, "pads");
+
+         if (pad_visible) { w = width; h = height; x = y = 0; }
+      }
 
       if (only_resize) {
          svg_pad = this.svg_pad(this.this_pad_name);
@@ -2451,9 +2458,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.createAttLine({ attr: this.pad, color0: this.pad.fBorderMode == 0 ? 'none' : '' });
 
-      svg_pad
-              //.attr("transform", "translate(" + x + "," + y + ")") // is not handled for SVG
-             .attr("display", pad_visible ? null : "none")
+      svg_pad.attr("display", pad_visible ? null : "none")
              .attr("viewBox", "0 0 " + w + " " + h) // due to svg
              .attr("preserveAspectRatio", "none")   // due to svg, we do not preserve relative ratio
              .attr("x", x)    // due to svg
@@ -3410,9 +3415,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       RPadPainter.prototype.Cleanup.call(this);
    }
 
-   RCanvasPainter.prototype.ChangeLayout = function(layout_kind, call_back) {
+   /** @summary Changes layout
+     * @returns {Promise} indicating when finished */
+   RCanvasPainter.prototype.ChangeLayout = function(layout_kind) {
       let current = this.get_layout_kind();
-      if (current == layout_kind) return JSROOT.CallBack(call_back, true);
+      if (current == layout_kind)
+         return Promise.resolve(true);
 
       let origin = this.select_main('origin'),
           sidebar = origin.select('.side_panel'),
@@ -3432,10 +3440,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             main.node().appendChild(lst[k]);
          this.set_layout_kind(layout_kind);
          JSROOT.resize(main.node());
-         return JSROOT.CallBack(call_back, true);
+         return Promise.resolve(true);
       }
 
-      JSROOT.require("jq2d").then(() => {
+      return JSROOT.require("jq2d").then(() => {
 
          let grid = new JSROOT.GridDisplay(origin.node(), layout_kind);
 
@@ -3462,24 +3470,26 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // resize main drawing and let draw extras
          JSROOT.resize(main.node());
 
-         JSROOT.CallBack(call_back, true);
+         return true;
       });
    }
 
-   RCanvasPainter.prototype.ToggleProjection = function(kind, call_back) {
+   /** @summary Toggle projection
+     * @return {Promise} indicating when ready */
+   RCanvasPainter.prototype.ToggleProjection = function(kind) {
       delete this.proj_painter;
 
       if (kind) this.proj_painter = 1; // just indicator that drawing can be preformed
 
       if (this.ShowUI5ProjectionArea)
-         return this.ShowUI5ProjectionArea(kind, call_back);
+         return this.ShowUI5ProjectionArea(kind);
 
       let layout = 'simple';
 
       if (kind == "X") layout = 'vert2_31'; else
       if (kind == "Y") layout = 'horiz2_13';
 
-      this.ChangeLayout(layout, call_back);
+      return this.ChangeLayout(layout);
    }
 
    RCanvasPainter.prototype.DrawProjection = function(kind,hist) {
@@ -3626,7 +3636,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             });
          } else if (cmd.indexOf("ADDPANEL:") == 0) {
             let relative_path = cmd.substr(9);
-            console.log('request panel = ' + relative_path);
             if (!this.ShowUI5Panel) {
                handle.Send(reply + "false");
             } else {
@@ -3638,17 +3647,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                   cpainter: this,
 
                   OnWebsocketOpened: function() {
-                     console.log('Panel socket connected');
                   },
 
                   OnWebsocketMsg: function(panel_handle, msg) {
-
                      let panel_name = (msg.indexOf("SHOWPANEL:")==0) ? msg.substr(10) : "";
-                     console.log('Panel get message ' + msg + " show " + panel_name);
-
-                     this.cpainter.ShowUI5Panel(panel_name, panel_handle, function(res) {
-                        handle.Send(reply + (res ? "true" : "false"));
-                     });
+                     this.cpainter.ShowUI5Panel(panel_name, panel_handle)
+                                  .then(res => handle.Send(reply + (res ? "true" : "false")));
                   },
 
                   OnWebsocketClosed: function() {

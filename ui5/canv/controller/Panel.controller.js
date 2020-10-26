@@ -74,15 +74,25 @@ sap.ui.define([
          return this.object_painter;
       },
 
-      onAfterRendering: function() {
-         console.log('Panel On after rendering', this.getView().getId(), typeof this.after_render_callback);
+      getRenderPromise: function() {
+         if (this.rendering_perfromed)
+            return Promise.resolve(true);
 
-         if (this.after_render_callback) {
-            JSROOT.CallBack(this.after_render_callback);
-            delete this.after_render_callback;
+         return new Promise(resolve => {
+            if (!this.funcs) this.funcs = [];
+            this.funcs.push(resolve);
+         });
+      },
+
+      onAfterRendering: function() {
+         this.rendering_perfromed = true;
+
+         if (this.funcs) {
+            let arr = this.funcs;
+            delete this.funcs;
+            arr.forEach(func => func(true));
          }
 
-         this.rendering_perfromed = true;
          if (this.panel_data) this.drawModel(this.panel_data);
       },
 

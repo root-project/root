@@ -4350,7 +4350,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.projection_width = width;
 
       let canp = this.canv_painter();
-      if (canp) canp.ToggleProjection(new_proj, this.RedrawProjection.bind(this, "toggling", new_proj));
+      if (canp) canp.ToggleProjection(new_proj).then(() => this.RedrawProjection("toggling", new_proj));
    }
 
    TH2Painter.prototype.RedrawProjection = function(ii1, ii2, jj1, jj2) {
