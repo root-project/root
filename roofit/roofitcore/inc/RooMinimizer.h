@@ -31,7 +31,6 @@
 
 #include "RooMinimizerFcn.h"
 #include "RooGradMinimizerFcn.h"
-#include "TestStatistics/MinuitFcnGrad.h"
 #include "TestStatistics/RooAbsL.h"
 
 #include "RooSentinel.h"
@@ -47,10 +46,11 @@ class RooRealVar;
 class RooArgSet;
 class TH2F;
 class RooPlot;
-// this one is necessary due to circular include dependencies
 namespace RooFit {
 namespace TestStatistics {
-class MinuitFcnGrad;
+class MinuitFcnGrad;  // this one is necessary due to circular include dependencies
+class LikelihoodJob;
+class LikelihoodGradientJob;
 }
 } // namespace RooFit
 
@@ -60,9 +60,9 @@ public:
 
    RooMinimizer(RooAbsReal &function);
    template <typename MinimizerFcn = RooMinimizerFcn>
-   static std::unique_ptr<RooMinimizer> make_minimizer(RooAbsReal &function);
+   static std::unique_ptr<RooMinimizer> create(RooAbsReal &function);
    template <typename LikelihoodWrapperT = RooFit::TestStatistics::LikelihoodJob, typename LikelihoodGradientWrapperT = RooFit::TestStatistics::LikelihoodGradientJob>
-   static std::unique_ptr<RooMinimizer> make_minimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood);
+   static std::unique_ptr<RooMinimizer> create(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood);
 
    virtual ~RooMinimizer();
 
@@ -176,6 +176,11 @@ private:
    ClassDef(RooMinimizer, 1) // RooFit interface to ROOT::Fit::Fitter
 };
 
+
+// include here to avoid circular dependency issues in class definitions
+#include "TestStatistics/MinuitFcnGrad.h"
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct MINUIT interface to given function. Function can be anything,
 /// but is typically a -log(likelihood) implemented by RooNLLVar or a chi^2
@@ -245,11 +250,7 @@ RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> like
    _theFitter->Config().SetMinimizer(_minimizerType.c_str());
    setEps(1.0); // default tolerance
 
-   LikelihoodWrapperT * likelihood_wrapper = new LikelihoodWrapperT(likelihood, this);
-   LikelihoodGradientWrapperT * gradient_wrapper = new LikelihoodGradientWrapperT(likelihood, this);
-
-   // note: MinuitFcnGrad will (and must) take ownership of the likelihood wrappers!
-   _fcn = new RooFit::TestStatistics::MinuitFcnGrad(likelihood_wrapper, gradient_wrapper, this, _verbose);
+   _fcn = RooFit::TestStatistics::MinuitFcnGrad::create<LikelihoodWrapperT, LikelihoodGradientWrapperT>(likelihood, this, _verbose);
 
    // default max number of calls
    _theFitter->Config().MinimizerOptions().SetMaxIterations(500 * _fcn->get_nDim());
@@ -274,13 +275,13 @@ RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> like
 
 // static function
 template <typename MinimizerFcn>
-std::unique_ptr<RooMinimizer> RooMinimizer::make_minimizer(RooAbsReal &function) {
+std::unique_ptr<RooMinimizer> RooMinimizer::create(RooAbsReal &function) {
    return std::unique_ptr<RooMinimizer>(new RooMinimizer(function, static_cast<MinimizerFcn*>(nullptr)));
 }
 
 // static function
 template <typename LikelihoodWrapperT, typename LikelihoodGradientWrapperT>
-std::unique_ptr<RooMinimizer> RooMinimizer::make_minimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood) {
+std::unique_ptr<RooMinimizer> RooMinimizer::create(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood) {
    return std::unique_ptr<RooMinimizer>(new RooMinimizer(likelihood, static_cast<LikelihoodWrapperT*>(nullptr),
                                                          static_cast<LikelihoodGradientWrapperT*>(nullptr)));
 }

@@ -37,6 +37,7 @@ private:
    std::queue <JobTask> _queue;
    std::size_t N_tasks = 0;  // total number of received tasks
    std::size_t N_tasks_completed = 0;
+   std::size_t N_tasks_at_workers = 0;
 };
 
 } // namespace MultiProcess

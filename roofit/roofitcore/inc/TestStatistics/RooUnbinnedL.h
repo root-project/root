@@ -33,7 +33,6 @@ class RooUnbinnedL :
 public:
    RooUnbinnedL(RooAbsPdf* pdf, RooAbsData* data, bool do_offset, double offset, double offset_carry, bool extended);
    RooUnbinnedL(const RooUnbinnedL &other);
-   virtual ~RooUnbinnedL();
    void set_apply_weight_squared(bool flag);
 
 private:
@@ -46,7 +45,6 @@ private:
    mutable bool _first = true;       //!
    double _offset_save_weight_squared = 0;      //!
    double _offset_carry_save_weight_squared = 0; //!
-   RooArgSet *_normSet;      // Pointer to set with observables used for normalization
    mutable double _evalCarry = 0;   //! carry of Kahan sum in evaluatePartition
 };
 

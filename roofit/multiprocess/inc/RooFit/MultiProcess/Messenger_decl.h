@@ -100,6 +100,8 @@ public:
    void set_send_flag(int flag);
 
 private:
+   void debug_print(std::string s);
+
    // push
    std::vector<ZmqLingeringSocketPtr<>> qw_push;
    ZmqLingeringSocketPtr<> this_worker_qw_push;
@@ -151,6 +153,7 @@ std::ostream &operator<<(std::ostream &out, const M2Q value);
 std::ostream &operator<<(std::ostream &out, const Q2M value);
 std::ostream &operator<<(std::ostream &out, const Q2W value);
 std::ostream &operator<<(std::ostream &out, const W2Q value);
+std::ostream &operator<<(std::ostream &out, const X2X value);
 
 } // namespace MultiProcess
 } // namespace RooFit

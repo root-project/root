@@ -29,10 +29,18 @@ namespace TestStatistics {
 
 // forward declaration
 class RooAbsL;
+struct WrapperCalculationCleanFlags;
+
+enum class LikelihoodType {
+   unbinned,
+   binned,
+   constraint,
+   multi
+};
 
 class LikelihoodWrapper {
 public:
-   LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood, RooMinimizer* minimizer);
+   LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, RooMinimizer* minimizer);
    virtual ~LikelihoodWrapper() = default;
    virtual LikelihoodWrapper* clone() const = 0;
 
@@ -44,7 +52,6 @@ public:
    virtual void synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings);
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
-   RooArgSet* getParameters();
    void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt);
 
    double defaultErrorLevel() const;
@@ -56,8 +63,10 @@ public:
    virtual void enable_offsetting(bool flag);
 
 protected:
-   std::shared_ptr<RooAbsL> likelihood;
+   std::shared_ptr<RooAbsL> likelihood_;
    RooMinimizer* _minimizer;
+//   RooAbsMinimizerFcn* _minimizer_fcn;
+   std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean_;
 };
 
 }

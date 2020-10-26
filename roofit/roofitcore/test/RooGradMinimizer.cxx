@@ -80,7 +80,7 @@ TEST(GradMinimizer, Gaussian1D)
 
       *values = *savedValues;
 
-      std::unique_ptr<RooMinimizer> m1 = RooMinimizer::make_minimizer<RooGradMinimizerFcn>(*nll);
+      std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
       m1->setMinimizerType("Minuit2");
 
       m1->setStrategy(0);
@@ -143,7 +143,7 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer)
    // when c++17 support arrives, change to this:
    // auto [nll, _] = generate_1D_gaussian_pdf_nll(w, 10000);
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::make_minimizer<RooGradMinimizerFcn>(*nll);
+   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
    m1->setMinimizerType("Minuit2");
 
    m1->setStrategy(0);
@@ -446,7 +446,7 @@ TEST(GradMinimizer, GaussianND)
 
    // --------
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::make_minimizer<RooGradMinimizerFcn>(*(nll.get()));
+   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooGradMinimizerFcn>(*(nll.get()));
 
    m1->setStrategy(0);
    m1->setPrintLevel(-1);
@@ -515,7 +515,7 @@ TEST(GradMinimizerReverse, GaussianND)
 
    // --------
 
-   std::unique_ptr<RooMinimizer> m0 = RooMinimizer::make_minimizer<RooGradMinimizerFcn>(*nll);
+   std::unique_ptr<RooMinimizer> m0 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
 
    m0->setMinimizerType("Minuit2");
 
@@ -709,7 +709,7 @@ TEST(GradMinimizer, BranchingPDF)
 
    // --------
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::make_minimizer<RooGradMinimizerFcn>(*nll);
+   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
 
    m1->setStrategy(0);
    m1->setPrintLevel(-1);
@@ -834,7 +834,7 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspace)
 
    all_values.Print("v");
 
-   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::make_minimizer<RooGradMinimizerFcn>(*nll);
+   std::unique_ptr<RooMinimizer> m1 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
    m1->setMinimizerType("Minuit2");
 
    m1->setStrategy(0);
@@ -907,7 +907,7 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspaceGradMinimizer
    RooDataSet *data = static_cast<RooDataSet *>(w.data(""));
    auto nll = sum.createNLL(*data);
 
-   std::unique_ptr<RooMinimizer> m0 = RooMinimizer::make_minimizer<RooGradMinimizerFcn>(*nll);
+   std::unique_ptr<RooMinimizer> m0 = RooMinimizer::create<RooGradMinimizerFcn>(*nll);
    m0->setMinimizerType("Minuit2");
    m0->setStrategy(0);
    m0->migrad();

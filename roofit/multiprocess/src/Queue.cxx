@@ -73,7 +73,7 @@ bool Queue::process_master_message(M2Q message)
    case M2Q::retrieve: {
       // retrieve task results after queue is empty and all
       // tasks have been completed
-      if (_queue.empty() && N_tasks_completed == 0) {
+      if (_queue.empty() && N_tasks_at_workers == 0 && N_tasks_completed == 0) {
          JobManager::instance()->messenger().send_from_queue_to_master(Q2M::retrieve_rejected); // handshake message: no tasks enqueued, premature retrieve!
       } else if (_queue.empty() && N_tasks_completed == N_tasks) {
          JobManager::instance()->results_from_queue_to_master();
@@ -97,6 +97,7 @@ bool Queue::process_master_message(M2Q message)
       auto ix = JobManager::instance()->messenger().receive_from_master_on_queue<std::size_t>();
       auto val = JobManager::instance()->messenger().receive_from_master_on_queue<double>();
       auto is_constant = JobManager::instance()->messenger().receive_from_master_on_queue<bool>();
+//      std::cout << "\ngot ix = " << ix << ", job_id = " << job_id << ", val = " << val << ", is_constant = " << is_constant << " in queue loop from M2Q::update_real" << std::endl;
       for (std::size_t worker_ix = 0; worker_ix < JobManager::instance()->process_manager().N_workers(); ++worker_ix) {
          JobManager::instance()->messenger().send_from_queue_to_worker(worker_ix, Q2W::update_real, job_id, ix, val, is_constant);
       }
@@ -127,7 +128,9 @@ void Queue::process_worker_message(std::size_t this_worker_id, W2Q message)
       JobTask job_task;
       bool popped = pop(job_task);
       if (popped) {
+         // Note: below two commands should be run atomically for thread safety (if that ever becomes an issue)
          JobManager::instance()->messenger().send_from_queue_to_worker(this_worker_id, Q2W::dequeue_accepted, job_task.first, job_task.second);
+         ++N_tasks_at_workers;
       } else {
          JobManager::instance()->messenger().send_from_queue_to_worker(this_worker_id, Q2W::dequeue_rejected);
       }
@@ -141,6 +144,7 @@ void Queue::process_worker_message(std::size_t this_worker_id, W2Q message)
       JobManager::get_job_object(job_object_id)->receive_task_result_on_queue(task, this_worker_id);
       JobManager::instance()->messenger().send_from_queue_to_worker(this_worker_id, Q2W::result_received);
       N_tasks_completed++;
+      --N_tasks_at_workers;
       break;
    }
    }

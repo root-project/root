@@ -16,6 +16,7 @@
 
 #include <memory> // shared_ptr
 #include <Fit/ParameterSettings.h>
+#include <Math/IFunctionfwd.h>
 #include "Math/MinimizerOptions.h"
 
 // forward declaration
@@ -26,10 +27,11 @@ namespace TestStatistics {
 
 // forward declaration
 class RooAbsL;
+struct WrapperCalculationCleanFlags;
 
 class LikelihoodGradientWrapper {
 public:
-   LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood, RooMinimizer* minimizer);
+   LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, std::size_t N_dim, RooMinimizer* minimizer);
    virtual ~LikelihoodGradientWrapper() = default;
    virtual LikelihoodGradientWrapper* clone() const = 0;
 
@@ -39,11 +41,14 @@ public:
 
    // synchronize minimizer settings with calculators in child classes
    virtual void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions &options);
-   virtual void synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) = 0;
+   virtual void synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings);
+   virtual void synchronize_parameter_settings(ROOT::Math::IMultiGenFunction* function, const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) = 0;
 
 protected:
    std::shared_ptr<RooAbsL> likelihood;
    RooMinimizer* _minimizer;
+   std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean;
+//   MinuitFcnGrad* _minimizer_fcn;
 };
 
 } // namespace TestStatistics

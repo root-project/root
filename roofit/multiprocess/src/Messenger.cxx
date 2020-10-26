@@ -14,6 +14,7 @@
  */
 
 #include <csignal>  // sigprocmask etc
+#include <cstdio>  // sprintf
 
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/Messenger.h"
@@ -312,10 +313,7 @@ void Messenger::send_from_queue_to_worker(std::size_t /*this_worker_id*/) {}
 
 void Messenger::send_from_queue_to_master() {}
 
-void Messenger::send_from_master_to_queue()
-{
-   send_from_queue_to_master();
-}
+void Messenger::send_from_master_to_queue() {}
 
 void Messenger::set_send_flag(int flag) {
    if (flag == 0 || flag == ZMQ_DONTWAIT || flag == ZMQ_SNDMORE || flag == (ZMQ_DONTWAIT | ZMQ_SNDMORE)) {
@@ -330,38 +328,41 @@ void Messenger::set_send_flag(int flag) {
 #define PROCESS_VAL(p) case(p): s = #p; break;
 
 std::ostream& operator<<(std::ostream& out, const M2Q value){
-   const char* s = 0;
+   std::string s;
    switch(value){
    PROCESS_VAL(M2Q::terminate);
    PROCESS_VAL(M2Q::enqueue);
    PROCESS_VAL(M2Q::retrieve);
    PROCESS_VAL(M2Q::update_real);
    PROCESS_VAL(M2Q::update_bool);
+   default: s = std::to_string(static_cast<int>(value));
    }
    return out << s;
 }
 
 std::ostream& operator<<(std::ostream& out, const Q2M value){
-   const char* s = 0;
+   std::string s;
    switch(value){
    PROCESS_VAL(Q2M::retrieve_rejected);
    PROCESS_VAL(Q2M::retrieve_accepted);
    PROCESS_VAL(Q2M::retrieve_later);
+   default: s = std::to_string(static_cast<int>(value));
    }
    return out << s;
 }
 
 std::ostream& operator<<(std::ostream& out, const W2Q value){
-   const char* s = 0;
+   std::string s;
    switch(value){
    PROCESS_VAL(W2Q::dequeue);
    PROCESS_VAL(W2Q::send_result);
+   default: s = std::to_string(static_cast<int>(value));
    }
    return out << s;
 }
 
 std::ostream& operator<<(std::ostream& out, const Q2W value){
-   const char* s = 0;
+   std::string s;
    switch(value){
    PROCESS_VAL(Q2W::terminate);
    PROCESS_VAL(Q2W::dequeue_rejected);
@@ -369,11 +370,27 @@ std::ostream& operator<<(std::ostream& out, const Q2W value){
    PROCESS_VAL(Q2W::update_real);
    PROCESS_VAL(Q2W::result_received);
    PROCESS_VAL(Q2W::update_bool);
+   default: s = std::to_string(static_cast<int>(value));
+   }
+   return out << s;
+}
+
+std::ostream& operator<<(std::ostream& out, const X2X value){
+   std::string s;
+   switch(value){
+   PROCESS_VAL(X2X::ping);
+   PROCESS_VAL(X2X::pong);
+   default: s = std::to_string(static_cast<int>(value));
    }
    return out << s;
 }
 
 #undef PROCESS_VAL
+
+void Messenger::debug_print(std::string s)
+{
+//   std::cerr << s << std::endl;
+}
 
 } // namespace MultiProcess
 } // namespace RooFit

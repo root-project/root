@@ -528,6 +528,8 @@ Bool_t RooAbsMinimizerFcn::SetPdfParamVal(const Int_t &index, const Double_t &va
 {
    RooRealVar *par = (RooRealVar *)_floatParamVec[index];
 
+//   std::cout << "RooAbsMinimizerFcn::SetPdfParamVal, (par->getVal() != value): " << (par->getVal() != value) << std::endl;
+
    if (par->getVal() != value) {
       if (_verbose)
          std::cout << par->GetName() << "=" << value << ", ";

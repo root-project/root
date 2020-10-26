@@ -59,30 +59,30 @@ namespace RooFit {
       }
     }
 
-    void GradMinimizerFcn::update_real(std::size_t ix, double val, bool /*is_constant*/)  {
-      if (get_manager()->is_worker()) {
-        // ix is defined in "flat" FunctionGradient space ix_dim * size + ix_component
-        switch (ix / NDim()) {
+    void GradMinimizerFcn::update_real(std::size_t ix, double val, bool /*is_constant*/)
+    {
+       if (get_manager()->is_worker()) {
+          // ix is defined in "flat" FunctionGradient space ix_dim * size + ix_component
+          switch (ix / NDim()) {
           case 0: {
-            mutable_grad()(ix % NDim()) = val;
-            break;
+             _grad[ix % NDim()].derivative = val;
+             break;
           }
           case 1: {
-            mutable_g2()(ix % NDim()) = val;
-            break;
+             _grad[ix % NDim()].second_derivative = val;
+             break;
           }
           case 2: {
-            mutable_gstep()(ix % NDim()) = val;
-            break;
+             _grad[ix % NDim()].step_size = val;
+             break;
           }
           case 3: {
-            sync_parameter(val, ix % NDim());
-            break;
+             sync_parameter(val, ix % NDim());
+             break;
           }
-          default:
-            throw std::runtime_error("ix out of range in GradMinimizerFcn::update_real!");
-        }
-      }
+          default: throw std::runtime_error("ix out of range in GradMinimizerFcn::update_real!");
+          }
+       }
     }
 
     // END SYNCHRONIZATION FROM MASTER TO WORKERS
@@ -91,20 +91,21 @@ namespace RooFit {
     // SYNCHRONIZATION FROM WORKERS TO MASTER
 
     void GradMinimizerFcn::send_back_task_result_from_worker(std::size_t task) {
-      get_manager()->send_from_worker_to_queue(id, task, _grad.Grad()(task), _grad.G2()(task), _grad.Gstep()(task));
+      get_manager()->send_from_worker_to_queue(id, task, _grad[task].derivative, _grad[task].second_derivative, _grad[task].step_size);
     }
 
-    void GradMinimizerFcn::receive_task_result_on_queue(std::size_t task, std::size_t worker_id) {
-      completed_task_ids.push_back(task);
-      mutable_grad()(task)  = get_manager()->receive_from_worker_on_queue<double>(worker_id);
-      mutable_g2()(task)    = get_manager()->receive_from_worker_on_queue<double>(worker_id);
-      mutable_gstep()(task) = get_manager()->receive_from_worker_on_queue<double>(worker_id);
+    void GradMinimizerFcn::receive_task_result_on_queue(std::size_t task, std::size_t worker_id)
+    {
+       completed_task_ids.push_back(task);
+       _grad[task].derivative = get_manager()->receive_from_worker_on_queue<double>(worker_id);
+       _grad[task].second_derivative = get_manager()->receive_from_worker_on_queue<double>(worker_id);
+       _grad[task].step_size = get_manager()->receive_from_worker_on_queue<double>(worker_id);
     }
 
     void GradMinimizerFcn::send_back_results_from_queue_to_master() {
       get_manager()->send_from_queue_to_master(completed_task_ids.size());
       for (auto task : completed_task_ids) {
-        get_manager()->send_from_queue_to_master(task, _grad.Grad()(task), _grad.G2()(task), _grad.Gstep()(task));
+        get_manager()->send_from_queue_to_master(task, _grad[task].derivative, _grad[task].second_derivative, _grad[task].step_size);
       }
     }
 
@@ -112,14 +113,15 @@ namespace RooFit {
       completed_task_ids.clear();
     }
 
-    void GradMinimizerFcn::receive_results_on_master() {
-      std::size_t N_completed_tasks = get_manager()->receive_from_queue_on_master<std::size_t>();
-      for (unsigned int sync_ix = 0u; sync_ix < N_completed_tasks; ++sync_ix) {
-        std::size_t task = get_manager()->receive_from_queue_on_master<std::size_t>();
-        mutable_grad()(task) = get_manager()->receive_from_queue_on_master<double>();
-        mutable_g2()(task) = get_manager()->receive_from_queue_on_master<double>();
-        mutable_gstep()(task) = get_manager()->receive_from_queue_on_master<double>();
-      }
+    void GradMinimizerFcn::receive_results_on_master()
+    {
+       std::size_t N_completed_tasks = get_manager()->receive_from_queue_on_master<std::size_t>();
+       for (unsigned int sync_ix = 0u; sync_ix < N_completed_tasks; ++sync_ix) {
+          std::size_t task = get_manager()->receive_from_queue_on_master<std::size_t>();
+          _grad[task].derivative = get_manager()->receive_from_queue_on_master<double>();
+          _grad[task].second_derivative = get_manager()->receive_from_queue_on_master<double>();
+          _grad[task].step_size = get_manager()->receive_from_queue_on_master<double>();
+       }
     }
 
     // END SYNCHRONIZATION FROM WORKERS TO MASTER

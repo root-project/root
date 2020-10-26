@@ -48,7 +48,7 @@
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose)
    : RooAbsMinimizerFcn(RooArgList(*funct->getParameters(RooArgSet())), context, verbose),
-     _grad(get_nDim()), _grad_params(get_nDim()), _gradf(_grad), _funct(funct),
+     _grad(get_nDim()), _grad_params(get_nDim()), _funct(funct),
      has_been_calculated(get_nDim())
 {
    // TODO: added "parameters" after rewrite in april 2020, check if correct
@@ -60,7 +60,7 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *contex
 }
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(const RooGradMinimizerFcn &other)
-   : RooAbsMinimizerFcn(other), _grad(other._grad), _grad_params(other._grad_params), _gradf(other._gradf, _grad), _funct(other._funct),
+   : RooAbsMinimizerFcn(other), _grad(other._grad), _grad_params(other._grad_params), _gradf(other._gradf), _funct(other._funct),
      has_been_calculated(other.has_been_calculated), none_have_been_calculated(other.none_have_been_calculated)
 {
 }
@@ -73,14 +73,18 @@ ROOT::Math::IMultiGradFunction *RooGradMinimizerFcn::Clone() const
 void RooGradMinimizerFcn::synchronize_gradient_parameter_settings(
    std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) const
 {
-   _gradf.SetInitialGradient(_context->getMultiGenFcn(), parameter_settings);
+   _gradf.SetInitialGradient(_context->getMultiGenFcn(), parameter_settings, _grad);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define DEBUG_STREAM(var) << " " #var "=" << var
+#include <sys/types.h>
+#include <unistd.h>
+
 double RooGradMinimizerFcn::DoEval(const double *x) const
 {
-   Bool_t parameters_changed = kFALSE;
+      Bool_t parameters_changed = kFALSE;
 
    // Set the parameter values for this iteration
    for (unsigned index = 0; index < NDim(); index++) {
@@ -88,10 +92,14 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
       parameters_changed |= SetPdfParamVal(index, x[index]);
    }
 
+//   std::cout << "RooGradMinimizerFcn::DoEval @ PID" << getpid() << ": " DEBUG_STREAM(parameters_changed);
+
    // Calculate the function for these parameters
    RooAbsReal::setHideOffset(kFALSE);
    double fvalue = _funct->getVal();
    RooAbsReal::setHideOffset(kTRUE);
+
+//   std::cout DEBUG_STREAM(fvalue) << std::endl;
 
    if (!parameters_changed) {
       return fvalue;
@@ -210,8 +218,9 @@ void RooGradMinimizerFcn::run_derivator(unsigned int i_component) const
    // check whether the derivative was already calculated for this set of parameters
    if (!has_been_calculated[i_component]) {
       // Calculate the derivative etc for these parameters
-      std::tie(mutable_grad()(i_component), mutable_g2()(i_component), mutable_gstep()(i_component)) =
-         _gradf.partial_derivative(_context->getMultiGenFcn(), _grad_params.data(), _context->fitter()->Config().ParamsSettings(), i_component);
+      _grad[i_component] =
+         _gradf.partial_derivative(_context->getMultiGenFcn(), _grad_params.data(),
+                                   _context->fitter()->Config().ParamsSettings(), i_component, _grad[i_component]);
       has_been_calculated[i_component] = true;
       none_have_been_calculated = false;
    }
@@ -221,7 +230,7 @@ double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int i_compone
 {
    sync_parameters(x);
    run_derivator(i_component);
-   return _grad.Grad()(i_component);
+   return _grad[i_component].derivative;
 }
 
 bool RooGradMinimizerFcn::hasG2ndDerivative() const
@@ -238,14 +247,14 @@ double RooGradMinimizerFcn::DoSecondDerivative(const double *x, unsigned int i_c
 {
    sync_parameters(x);
    run_derivator(i_component);
-   return _grad.G2()(i_component);
+   return _grad[i_component].second_derivative;
 }
 
 double RooGradMinimizerFcn::DoStepSize(const double *x, unsigned int i_component) const
 {
    sync_parameters(x);
    run_derivator(i_component);
-   return _grad.Gstep()(i_component);
+   return _grad[i_component].step_size;
 }
 
 bool RooGradMinimizerFcn::returnsInMinuit2ParameterSpace() const
@@ -315,19 +324,6 @@ void RooGradMinimizerFcn::set_ncycles(unsigned int ncycles) const
 void RooGradMinimizerFcn::set_error_level(double error_level) const
 {
    _gradf.set_error_level(error_level);
-}
-
-ROOT::Minuit2::MnAlgebraicVector &RooGradMinimizerFcn::mutable_grad() const
-{
-   return const_cast<ROOT::Minuit2::MnAlgebraicVector &>(_grad.Grad());
-}
-ROOT::Minuit2::MnAlgebraicVector &RooGradMinimizerFcn::mutable_g2() const
-{
-   return const_cast<ROOT::Minuit2::MnAlgebraicVector &>(_grad.G2());
-}
-ROOT::Minuit2::MnAlgebraicVector &RooGradMinimizerFcn::mutable_gstep() const
-{
-   return const_cast<ROOT::Minuit2::MnAlgebraicVector &>(_grad.Gstep());
 }
 
 std::string RooGradMinimizerFcn::getFunctionName() const

@@ -147,7 +147,9 @@ void ProcessManager::initialize_processes(bool cpu_pinning) {
 #endif
    }
 
-//      identify_processes();
+#ifndef NDEBUG
+   identify_processes();
+#endif  // NDEBUG
 
    initialized = true;
 }
@@ -263,11 +265,11 @@ std::size_t ProcessManager::N_workers() const {
 void ProcessManager::identify_processes() const {
    // identify yourselves (for debugging)
    if (!(_is_master || _is_queue)) {
-      std::cout << "I'm a worker, PID " << getpid() << std::endl;
+      printf("I'm a worker, PID %d\n", getpid());
    } else if (_is_master) {
-      std::cout << "I'm master, PID " << getpid() << std::endl;
+      printf("I'm master, PID %d\n", getpid());
    } else if (_is_queue) {
-      std::cout << "I'm queue, PID " << getpid() << std::endl;
+      printf("I'm queue, PID %d\n", getpid());
    }
 }
 

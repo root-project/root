@@ -30,22 +30,25 @@ namespace RooFit {
 namespace TestStatistics {
 
 
-LikelihoodJob::LikelihoodJob(std::shared_ptr<RooAbsL> _likelihood, RooMinimizer *minimizer)
-  : LikelihoodWrapper(std::move(_likelihood), minimizer)
+LikelihoodJob::LikelihoodJob(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, RooMinimizer *minimizer)
+  : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean), minimizer)
 {
    init_vars();
    // determine likelihood type
-   if (dynamic_cast<RooUnbinnedL*>(_likelihood.get()) != nullptr) {
+   if (dynamic_cast<RooUnbinnedL*>(likelihood_.get()) != nullptr) {
       likelihood_type = LikelihoodType::unbinned;
-   } else if (dynamic_cast<RooBinnedL*>(_likelihood.get()) != nullptr) {
+   } else if (dynamic_cast<RooBinnedL*>(likelihood_.get()) != nullptr) {
       likelihood_type = LikelihoodType::binned;
-   } else if (dynamic_cast<RooMultiL*>(_likelihood.get()) != nullptr) {
+   } else if (dynamic_cast<RooMultiL*>(likelihood_.get()) != nullptr) {
       likelihood_type = LikelihoodType::multi;
-   } else if (dynamic_cast<RooConstraintL*>(_likelihood.get()) != nullptr) {
+   } else if (dynamic_cast<RooConstraintL*>(likelihood_.get()) != nullptr) {
       likelihood_type = LikelihoodType::constraint;
    } else {
-      throw std::logic_error("in LikelihoodJob constructor: _likelihood is not of a valid subclass!");
+      throw std::logic_error("in LikelihoodJob constructor: likelihood is not of a valid subclass!");
    }
+   // Note to future maintainers: take care when storing the minimizer_fcn pointer. The
+   // RooAbsMinimizerFcn subclasses may get cloned inside MINUIT, which means the pointer
+   // should also somehow be updated in this class.
 }
 
 LikelihoodJob* LikelihoodJob::clone() const {
@@ -64,7 +67,7 @@ void LikelihoodJob::init_vars() {
    _saveVars.removeAll() ;
 
    // Retrieve non-constant parameters
-   auto vars = std::make_unique<RooArgSet>(*getParameters());  // TODO: make sure this is the right list of parameters, compare to original implementation in RooRealMPFE.cxx
+   auto vars = std::make_unique<RooArgSet>(*likelihood_->getParameters());  // TODO: make sure this is the right list of parameters, compare to original implementation in RooRealMPFE.cxx
    RooArgList varList(*vars);
 
    // Save in lists
@@ -96,7 +99,7 @@ void LikelihoodJob::update_bool(std::size_t ix, bool value) {
    } else if (get_manager()->process_manager().is_worker()) {
       switch(ix) {
       case 0: {
-         likelihood->enable_offsetting(value);
+         likelihood_->enable_offsetting(value);
          break;
       }
       default: {
@@ -207,7 +210,7 @@ void LikelihoodJob::receive_results_on_master() {
 void LikelihoodJob::evaluate_task(std::size_t task) {
    assert(get_manager()->process_manager().is_worker());
 
-   std::size_t N_events = likelihood->numDataEntries();
+   std::size_t N_events = likelihood_->numDataEntries();
 
    // used to have multiple modes here, but only kept "bulk" mode; dropped interleaved, single_event and all_events from old MultiProcess::NLLVar
    std::size_t first = N_events * task / get_manager()->process_manager().N_workers();
@@ -215,11 +218,11 @@ void LikelihoodJob::evaluate_task(std::size_t task) {
 
    switch (likelihood_type) {
    case LikelihoodType::unbinned: {
-      result = likelihood->evaluate_partition(first, last, 0, 0);
+      result = likelihood_->evaluate_partition(first, last, 0, 0);
       break;
    }
    case LikelihoodType::binned: {
-      result = likelihood->evaluate_partition(0, 0, first, last);
+      result = likelihood_->evaluate_partition(0, 0, first, last);
       break;
    }
    default: {
@@ -227,12 +230,12 @@ void LikelihoodJob::evaluate_task(std::size_t task) {
       break;
    }
    }
-   carry = likelihood->get_carry();
+   carry = likelihood_->get_carry();
 }
 
 void LikelihoodJob::enable_offsetting(bool flag) {
    update_bool(0, flag);
-   likelihood->enable_offsetting(flag);
+   likelihood_->enable_offsetting(flag);
 }
 
 }

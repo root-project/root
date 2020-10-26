@@ -13,35 +13,19 @@
  */
 
 #include "RooMsgService.h"
-#include "RooMinimizer.h"
 #include "RooAbsPdf.h"
 #include "TestStatistics/MinuitFcnGrad.h"
+#include "RooMinimizer.h"
+
+#define DEBUG_STREAM(var) << " " #var "=" << var
+#include <sys/types.h>
+#include <unistd.h>
 
 namespace RooFit {
 namespace TestStatistics {
 
-// Note: MinuitFcnGrad takes ownership of the wrappers, i.e. it will destroy them when it dies!
-MinuitFcnGrad::MinuitFcnGrad(LikelihoodWrapper *_likelihood, LikelihoodGradientWrapper *_gradient,
-                             RooMinimizer* context, bool verbose)
-   : RooAbsMinimizerFcn(RooArgList(*likelihood->getParameters()), context, verbose),
-   likelihood(_likelihood), gradient(_gradient)
-{
-   auto parameters = _context->fitter()->Config().ParamsSettings();
-   synchronize_parameter_settings(parameters, kTRUE, verbose);
-   likelihood->synchronize_parameter_settings(parameters);
-   gradient->synchronize_parameter_settings(parameters);
-
-   std::cerr << "Possibly the following code (see code) does not give the same values as the code it replaced from "
-                "RooGradMinimizerFcn (commented out below), make sure!"
-             << std::endl;
-   //      set_strategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
-   //      set_error_level(ROOT::Math::MinimizerOptions::DefaultErrorDef());
-   likelihood->synchronize_with_minimizer(ROOT::Math::MinimizerOptions());
-   gradient->synchronize_with_minimizer(ROOT::Math::MinimizerOptions());
-}
-
-MinuitFcnGrad::MinuitFcnGrad(const MinuitFcnGrad & other)
-: RooAbsMinimizerFcn(other), likelihood(other.likelihood->clone()), gradient(other.gradient->clone()) {};
+//MinuitFcnGrad::MinuitFcnGrad(const MinuitFcnGrad &other)
+//   : RooAbsMinimizerFcn(other), likelihood(other.likelihood->clone()), gradient(other.gradient->clone()){};
 
 // IMultiGradFunction overrides necessary for Minuit: DoEval, Gradient, G2ndDerivative and GStepSize
 // The likelihood and gradient wrappers do the actual calculations.
@@ -50,11 +34,16 @@ double MinuitFcnGrad::DoEval(const double *x) const
 {
    Bool_t parameters_changed = set_roofit_parameter_values(x);
 
+   std::cout << "MinuitFcnGrad::DoEval @ PID" << getpid() << ": " DEBUG_STREAM(parameters_changed);
+
    // Calculate the function for these parameters
    RooAbsReal::setHideOffset(kFALSE);
    likelihood->evaluate();
    double fvalue = likelihood->return_result();
+   calculation_is_clean->likelihood = true;
    RooAbsReal::setHideOffset(kTRUE);
+
+   std::cout DEBUG_STREAM(fvalue) << std::endl;
 
    if (!parameters_changed) {
       return fvalue;
@@ -105,8 +94,8 @@ double MinuitFcnGrad::DoEval(const double *x) const
 
    // Optional logging
    if (_verbose) {
-      std::cout << "\nprevFCN" << (likelihood->is_offsetting() ? "-offset" : "") << " = " << std::setprecision(10) << fvalue
-                << std::setprecision(4) << "  ";
+      std::cout << "\nprevFCN" << (likelihood->is_offsetting() ? "-offset" : "") << " = " << std::setprecision(10)
+                << fvalue << std::setprecision(4) << "  ";
       std::cout.flush();
    }
 
@@ -117,7 +106,6 @@ double MinuitFcnGrad::DoEval(const double *x) const
    //#endif
    return fvalue;
 }
-
 
 /// Parameters here are the variables in the likelihood, i.e. the parameters
 /// of the PDF that can vary given the observables in the dataset that constrains
@@ -132,12 +120,17 @@ bool MinuitFcnGrad::set_roofit_parameter_values(const double *x) const
       a_parameter_has_been_updated |= update_this_parameter;
    }
 
+   if(a_parameter_has_been_updated) {
+      std::cout << "setting stuff back to false" << std::endl;
+      calculation_is_clean->set_all(false);
+   }
+
    return a_parameter_has_been_updated;
 }
 
-
 void MinuitFcnGrad::Gradient(const double *x, double *grad) const
 {
+   std::cout << "MinuitFcnGrad::Gradient x[0] = " << x[0] << std::endl;
    set_roofit_parameter_values(x);
    gradient->fill_gradient(grad);
 }
@@ -194,8 +187,8 @@ bool MinuitFcnGrad::returnsInMinuit2ParameterSpace() const
    return true;
 }
 
-
-void MinuitFcnGrad::optimizeConstantTerms(bool constStatChange, bool constValChange) {
+void MinuitFcnGrad::optimizeConstantTerms(bool constStatChange, bool constValChange)
+{
    if (constStatChange) {
 
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
@@ -211,7 +204,6 @@ void MinuitFcnGrad::optimizeConstantTerms(bool constStatChange, bool constValCha
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
 }
-
 
 Bool_t
 MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, Bool_t optConst, Bool_t verbose)
@@ -241,20 +233,24 @@ void MinuitFcnGrad::setOptimizeConst(Int_t flag)
 
    if (_optConst && !flag) {
       if (_context->getPrintLevel() > -1)
-         oocoutI(_context, Minimization) << "MinuitFcnGrad::setOptimizeConst: deactivating const optimization" << std::endl;
+         oocoutI(_context, Minimization) << "MinuitFcnGrad::setOptimizeConst: deactivating const optimization"
+                                         << std::endl;
       likelihood->constOptimizeTestStatistic(RooAbsArg::DeActivate, true);
       _optConst = flag;
    } else if (!_optConst && flag) {
       if (_context->getPrintLevel() > -1)
-         oocoutI(_context, Minimization) << "MinuitFcnGrad::setOptimizeConst: activating const optimization" << std::endl;
+         oocoutI(_context, Minimization) << "MinuitFcnGrad::setOptimizeConst: activating const optimization"
+                                         << std::endl;
       likelihood->constOptimizeTestStatistic(RooAbsArg::Activate, flag > 1);
       _optConst = flag;
    } else if (_optConst && flag) {
       if (_context->getPrintLevel() > -1)
-         oocoutI(_context, Minimization) << "MinuitFcnGrad::setOptimizeConst: const optimization already active" << std::endl;
+         oocoutI(_context, Minimization) << "MinuitFcnGrad::setOptimizeConst: const optimization already active"
+                                         << std::endl;
    } else {
       if (_context->getPrintLevel() > -1)
-         oocoutI(_context, Minimization) << "MinuitFcnGrad::setOptimizeConst: const optimization wasn't active" << std::endl;
+         oocoutI(_context, Minimization) << "MinuitFcnGrad::setOptimizeConst: const optimization wasn't active"
+                                         << std::endl;
    }
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);

@@ -39,29 +39,28 @@
 
 //#include <MultiProcess/TaskManager.h>
 
+#define DEBUG_STREAM(var) << " " #var "=" << var
+
 namespace RooFit {
 
-NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(ROOT::Minuit2::FunctionGradient &grad,
-                                                     bool always_exactly_mimic_minuit2)
-   : fG(grad), _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
+NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(bool always_exactly_mimic_minuit2)
+   : _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
 {
 }
 
-NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(ROOT::Minuit2::FunctionGradient &grad, double step_tolerance,
-                                                     double grad_tolerance, unsigned int ncycles, double error_level,
-                                                     bool always_exactly_mimic_minuit2)
+NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(double step_tolerance, double grad_tolerance, unsigned int ncycles,
+                                                     double error_level, bool always_exactly_mimic_minuit2)
    : fStepTolerance(step_tolerance), fGradTolerance(grad_tolerance), fNCycles(ncycles), Up(error_level),
-     fG(grad), _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
+     _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
 {
 }
 
 // deep copy constructor
-NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDerivatorMinuit2 &other,
-                                                     ROOT::Minuit2::FunctionGradient &grad)
+NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDerivatorMinuit2 &other)
    : fStepTolerance(other.fStepTolerance), fGradTolerance(other.fGradTolerance), fNCycles(other.fNCycles), Up(other.Up),
-     fVal(other.fVal), fG(grad), vx(other.vx), vx_external(other.vx_external), dfmin(other.dfmin),
-     vrysml(other.vrysml), precision(other.precision),
-     _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2), vx_fVal_cache(other.vx_fVal_cache)
+     fVal(other.fVal), vx(other.vx), vx_external(other.vx_external), dfmin(other.dfmin), vrysml(other.vrysml),
+     precision(other.precision), _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2),
+     vx_fVal_cache(other.vx_fVal_cache)
 {
 }
 
@@ -114,15 +113,22 @@ void NumericalDerivatorMinuit2::setup_differentiate(const ROOT::Math::IBaseFunct
    }
    t4 = get_time();
 
+//   std::cout << "setup_differentiate: ";
+
    std::copy(cx, cx + function->NDim(), vx.data());
    t5 = get_time();
+
+//   std::cout DEBUG_STREAM(function->NDim());
 
    // convert to Minuit external parameters
    for (unsigned i = 0; i < function->NDim(); i++) {
       vx_external[i] = Int2ext(parameters[i], vx[i]);
+//      std::cout DEBUG_STREAM(i) DEBUG_STREAM(vx[i]) DEBUG_STREAM(vx_external[i]);
    }
 
    t6 = get_time();
+
+//   std::cout DEBUG_STREAM((vx != vx_fVal_cache));
 
    if (vx != vx_fVal_cache) {
       //#ifndef NDEBUG
@@ -130,6 +136,7 @@ void NumericalDerivatorMinuit2::setup_differentiate(const ROOT::Math::IBaseFunct
       //#endif
       vx_fVal_cache = vx;
       fVal = (*function)(vx_external.data()); // value of function at given points
+//      std::cout DEBUG_STREAM(fVal);
                                               //#ifndef NDEBUG
       //      std::cout << "NumericalDerivatorMinuit2::setup_differentiate, fVal evaluations: " << fVal_eval_counter
       //      << std::endl;
@@ -140,6 +147,7 @@ void NumericalDerivatorMinuit2::setup_differentiate(const ROOT::Math::IBaseFunct
    dfmin = 8. * precision.Eps2() * (std::abs(fVal) + Up);
    vrysml = 8. * precision.Eps() * precision.Eps();
 
+//   std::cout DEBUG_STREAM(dfmin) DEBUG_STREAM(vrysml) << std::endl;
    t8 = get_time();
 
    //    if (RooFit::MultiProcess::TaskManager::is_instantiated()) {
@@ -153,34 +161,37 @@ void NumericalDerivatorMinuit2::setup_differentiate(const ROOT::Math::IBaseFunct
    //    }
 }
 
-std::tuple<double, double, double>
+MinuitDerivatorElement
 NumericalDerivatorMinuit2::partial_derivative(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
                                               const std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                                              unsigned int i_component)
+                                              unsigned int i_component, MinuitDerivatorElement previous)
 {
    setup_differentiate(function, x, parameters);
-   do_fast_partial_derivative(function, parameters, i_component);
-   return {fG.Grad()(i_component), fG.G2()(i_component), fG.Gstep()(i_component)};
+   return fast_partial_derivative(function, parameters, i_component, previous);
 }
 
 // leaves the parameter setup to the caller
-void NumericalDerivatorMinuit2::do_fast_partial_derivative(const ROOT::Math::IBaseFunctionMultiDim *function,
-                                                           const std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                                                           unsigned int ix)
+MinuitDerivatorElement NumericalDerivatorMinuit2::fast_partial_derivative(const ROOT::Math::IBaseFunctionMultiDim *function,
+                                                        const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                                        unsigned int ix, const MinuitDerivatorElement& previous)
 {
+   MinuitDerivatorElement deriv {previous};
+
    double xtf = vx[ix];
-   double epspri = precision.Eps2() + std::abs(fG.Grad()(ix) * precision.Eps2());
+   double epspri = precision.Eps2() + std::abs(deriv.derivative * precision.Eps2());
    double step_old = 0.;
+//   std::cout << "xtf = " << xtf << " epspri = " << epspri << " fNCycles = " << fNCycles << std::endl;
+
    for (unsigned int j = 0; j < fNCycles; ++j) {
-      double optstp = std::sqrt(dfmin / (std::abs(fG.G2()(ix)) + epspri));
-      double step = std::max(optstp, std::abs(0.1 * fG.Gstep()(ix)));
+      double optstp = std::sqrt(dfmin / (std::abs(deriv.second_derivative) + epspri));
+      double step = std::max(optstp, std::abs(0.1 * deriv.step_size));
 
       if (parameters[ix].IsBound()) {
          if (step > 0.5)
             step = 0.5;
       }
 
-      double stpmax = 10. * std::abs(fG.Gstep()(ix));
+      double stpmax = 10. * std::abs(deriv.step_size);
       if (step > stpmax)
          step = stpmax;
 
@@ -190,52 +201,77 @@ void NumericalDerivatorMinuit2::do_fast_partial_derivative(const ROOT::Math::IBa
       if (std::abs((step - step_old) / step) < fStepTolerance) {
          break;
       }
-      mutable_gstep()(ix) = step;
+      deriv.step_size = step;
       step_old = step;
       vx[ix] = xtf + step;
       vx_external[ix] = Int2ext(parameters[ix], vx[ix]);
       double fs1 = (*function)(vx_external.data());
+
+//      std::cout << "j = " << j << ", optstp = " << optstp << ", step = " << step << ", stpmax = " << stpmax << ", stpmin = " << stpmin
+//                << ", step_old = " << step_old << ", vx[ix] = " << vx[ix] << ", vx_external[ix] = " << vx_external[ix]
+//                << ", fs1 = " << fs1;
+
       vx[ix] = xtf - step;
       vx_external[ix] = Int2ext(parameters[ix], vx[ix]);
       double fs2 = (*function)(vx_external.data());
+
+//      std::cout << ", vx[ix] = " << vx[ix] << ", vx_external[ix] = " << vx_external[ix] << ", fs2 = " << fs2;
+
       vx[ix] = xtf;
       vx_external[ix] = Int2ext(parameters[ix], vx[ix]);
 
-      double fGrd_old = fG.Grad()(ix);
-      mutable_grad()(ix) = 0.5 * (fs1 - fs2) / step;
+      double fGrd_old = deriv.derivative;
+      deriv.derivative = 0.5 * (fs1 - fs2) / step;
 
-      mutable_g2()(ix) = (fs1 + fs2 - 2. * fVal) / step / step;
+      deriv.second_derivative = (fs1 + fs2 - 2. * fVal) / step / step;
 
-      if (std::abs(fGrd_old - fG.Grad()(ix)) / (std::abs(fG.Grad()(ix)) + dfmin / step) < fGradTolerance) {
+//      std::cout << ", vx[ix] = " << vx[ix] << ", vx_external[ix] = " << vx_external[ix] << ", fGrd_old = " << fGrd_old
+//                << ", deriv.derivative = " << deriv.derivative << ", deriv.second_derivative = " << deriv.second_derivative
+//                << std::endl;
+
+      if (std::abs(fGrd_old - deriv.derivative) / (std::abs(deriv.derivative) + dfmin / step) < fGradTolerance) {
          break;
       }
+
+//      std::cout << "can we go another round" << std::endl;
    }
+//   std::cout << "ix " << ix << ": grad = " << deriv.derivative << " g2 = " << deriv.second_derivative << " gstep = " << deriv.step_size
+//             << std::endl;
+
+   return deriv;
 }
 
-std::tuple<double, double, double>
-NumericalDerivatorMinuit2::operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x, const std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                                      unsigned int i_component)
+MinuitDerivatorElement
+NumericalDerivatorMinuit2::operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
+                                      const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                      unsigned int i_component, const MinuitDerivatorElement& previous)
 {
-   return partial_derivative(function, x, parameters, i_component);
+   return partial_derivative(function, x, parameters, i_component, previous);
 }
 
-ROOT::Minuit2::FunctionGradient
-NumericalDerivatorMinuit2::Differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx, const std::vector<ROOT::Fit::ParameterSettings> &parameters)
+std::vector<MinuitDerivatorElement>
+NumericalDerivatorMinuit2::Differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
+                                         const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                         const std::vector<MinuitDerivatorElement>& previous_gradient)
 {
    setup_differentiate(function, cx, parameters);
 
+   std::vector<MinuitDerivatorElement> gradient;
+   gradient.reserve(function->NDim());
+
    for (unsigned int ix = 0; ix < function->NDim(); ++ix) {
-      do_fast_partial_derivative(function, parameters, ix);
+      gradient.emplace_back(fast_partial_derivative(function, parameters, ix, previous_gradient[ix]));
    }
 
-   return fG;
+   return gradient;
 }
 
-ROOT::Minuit2::FunctionGradient
-NumericalDerivatorMinuit2::operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x, const std::vector<ROOT::Fit::ParameterSettings> &parameters)
-{
-   return NumericalDerivatorMinuit2::Differentiate(function, x, parameters);
-}
+//ROOT::Minuit2::FunctionGradient
+//NumericalDerivatorMinuit2::operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
+//                                      const std::vector<ROOT::Fit::ParameterSettings> &parameters)
+//{
+//   return NumericalDerivatorMinuit2::Differentiate(function, x, parameters);
+//}
 
 double NumericalDerivatorMinuit2::Int2ext(const ROOT::Fit::ParameterSettings &parameter, double val) const
 {
@@ -325,7 +361,8 @@ double NumericalDerivatorMinuit2::GStepInt2Ext(const ROOT::Fit::ParameterSetting
 // This function was not implemented as in Minuit2. Now it copies the behavior
 // of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
 void NumericalDerivatorMinuit2::SetInitialGradient(const ROOT::Math::IBaseFunctionMultiDim *function,
-                                                   const std::vector<ROOT::Fit::ParameterSettings> &parameters)
+                                                   const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                                                   std::vector<MinuitDerivatorElement>& gradient)
 {
    // set an initial gradient using some given steps
    // (used in the first iteration)
@@ -355,19 +392,30 @@ void NumericalDerivatorMinuit2::SetInitialGradient(const ROOT::Math::IBaseFuncti
       // However, we do need var below, so let's calculate it using Ext2int:
       double var = Ext2int(*parameter, sav);
 
+//      std::cout DEBUG_STREAM(ix) DEBUG_STREAM(werr) DEBUG_STREAM(sav) DEBUG_STREAM(var);
+
       if (_always_exactly_mimic_minuit2) {
          // this transformation can lose a few bits, but Minuit2 does it too
          sav = Int2ext(*parameter, var);
       }
 
       double sav2 = sav + werr;
+
+//      std::cout DEBUG_STREAM(sav) DEBUG_STREAM(sav2);
+
       if (parameter->HasUpperLimit() && sav2 > parameter->UpperLimit()) {
          sav2 = parameter->UpperLimit();
       }
 
       double var2 = Ext2int(*parameter, sav2);
       double vplu = var2 - var;
+
+//      std::cout DEBUG_STREAM(sav2) DEBUG_STREAM(var2) DEBUG_STREAM(vplu);
+
       sav2 = sav - werr;
+
+//      std::cout DEBUG_STREAM(sav2);
+
       if (parameter->HasLowerLimit() && sav2 < parameter->LowerLimit()) {
          sav2 = parameter->LowerLimit();
       }
@@ -381,14 +429,18 @@ void NumericalDerivatorMinuit2::SetInitialGradient(const ROOT::Math::IBaseFuncti
       double gstep = std::max(gsmin, 0.1 * dirin);
       double grd = g2 * dirin;
 
+//      std::cout DEBUG_STREAM(sav2) DEBUG_STREAM(var2) DEBUG_STREAM(vmin) DEBUG_STREAM(gsmin) DEBUG_STREAM(dirin) DEBUG_STREAM(g2) DEBUG_STREAM(gstep) DEBUG_STREAM(grd);
+
       if (parameter->IsBound()) {
          if (gstep > 0.5)
             gstep = 0.5;
       }
 
-      mutable_grad()(ix) = grd;
-      mutable_g2()(ix) = g2;
-      mutable_gstep()(ix) = gstep;
+      gradient[ix].derivative = grd;
+      gradient[ix].second_derivative = g2;
+      gradient[ix].step_size = gstep;
+
+//      std::cout DEBUG_STREAM(gstep) DEBUG_STREAM(gradient[ix].derivative) DEBUG_STREAM(gradient[ix].second_derivative) DEBUG_STREAM(gradient[ix].step_size) << std::endl;
    }
 
    t2 = get_time();
@@ -422,19 +474,6 @@ void NumericalDerivatorMinuit2::set_ncycles(unsigned int ncycles)
 void NumericalDerivatorMinuit2::set_error_level(double error_level)
 {
    Up = error_level;
-}
-
-ROOT::Minuit2::MnAlgebraicVector &NumericalDerivatorMinuit2::mutable_grad() const
-{
-   return const_cast<ROOT::Minuit2::MnAlgebraicVector &>(fG.Grad());
-}
-ROOT::Minuit2::MnAlgebraicVector &NumericalDerivatorMinuit2::mutable_g2() const
-{
-   return const_cast<ROOT::Minuit2::MnAlgebraicVector &>(fG.G2());
-}
-ROOT::Minuit2::MnAlgebraicVector &NumericalDerivatorMinuit2::mutable_gstep() const
-{
-   return const_cast<ROOT::Minuit2::MnAlgebraicVector &>(fG.Gstep());
 }
 
 } // namespace RooFit

@@ -16,7 +16,6 @@
 
 #include <vector>
 #include "Math/MinimizerOptions.h"
-#include <Minuit2/FunctionGradient.h>
 #include <RooFit/MultiProcess/Job.h>
 #include <TestStatistics/LikelihoodGradientWrapper.h>
 #include <NumericalDerivatorMinuit2.h>
@@ -27,7 +26,7 @@ namespace TestStatistics {
 
 class LikelihoodGradientJob : public MultiProcess::Job, public LikelihoodGradientWrapper {
 public:
-   LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood, RooMinimizer* minimizer);
+   LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, std::size_t N_dim, RooMinimizer* minimizer);
    LikelihoodGradientJob* clone() const override;
    LikelihoodGradientJob(const LikelihoodGradientJob& other);
 
@@ -47,18 +46,10 @@ public:
    };
 
 private:
-   // accessors for the const data members of _grad
-   // TODO: find out why FunctionGradient keeps its data const.. but work around it in the meantime
-   ROOT::Minuit2::MnAlgebraicVector& mutable_grad() const;
-   ROOT::Minuit2::MnAlgebraicVector& mutable_g2() const;
-   ROOT::Minuit2::MnAlgebraicVector& mutable_gstep() const;
-
    // TODO: are mutables here still necessary?
    // mutables below are because ROOT::Math::IMultiGradFunction::DoDerivative is const
 
-   // CAUTION: do not move _grad below _gradf, as it is needed for _gradf construction
-   mutable ROOT::Minuit2::FunctionGradient _grad;
-   // CAUTION: do not move _gradf above _function and _grad, as they are needed for _gradf construction
+   mutable std::vector<RooFit::MinuitDerivatorElement> _grad;
    mutable RooFit::NumericalDerivatorMinuit2 _gradf;
 
    void run_derivator(unsigned int i_component) const;
@@ -69,7 +60,7 @@ private:
    // ----- END PASTE UIT RooGradientFunction.h -----
    // ----- END PASTE UIT RooGradientFunction.h -----
 
-   void synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
+   void synchronize_parameter_settings(ROOT::Math::IMultiGenFunction* function, const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 
    void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options) override;
    void set_strategy(int istrat);

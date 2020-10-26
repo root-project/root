@@ -31,6 +31,10 @@ public:
    RooAbsL() = default;
    RooAbsL(RooAbsPdf *pdf, RooAbsData *data, bool do_offset, double offset, double offset_carry, std::size_t N_events,
            std::size_t N_components);
+   RooAbsL(const RooAbsL& other);
+   ~RooAbsL();
+
+   void init_clones(RooAbsPdf& inpdf, RooAbsData& indata);
 
    virtual double evaluate_partition(std::size_t events_begin, std::size_t events_end, std::size_t components_begin,
                                      std::size_t components_end) = 0;
@@ -57,8 +61,9 @@ public:
 
 protected:
    virtual void optimize_pdf();
-   RooAbsPdf *pdf = nullptr;
-   RooAbsData *data = nullptr;
+   std::unique_ptr<RooAbsPdf> pdf;
+   std::unique_ptr<RooAbsData> data;
+   RooArgSet *_normSet;      // Pointer to set with observables used for normalization
    bool _do_offset = false;
    double _offset = 0;
    double _offset_carry = 0;

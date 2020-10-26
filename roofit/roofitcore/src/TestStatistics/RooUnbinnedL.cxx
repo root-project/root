@@ -40,26 +40,15 @@ namespace TestStatistics {
 RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, bool do_offset, double offset, double offset_carry,
                            bool extended)
    : RooAbsL(pdf, data, do_offset, offset, offset_carry, data->numEntries(), 1), _extended(extended)
-{
-   // Store normalization set
-   _normSet = (RooArgSet *)data->get()->snapshot(kFALSE);
-}
+{}
 
 RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
-   : RooAbsL(other.pdf, other.data, other._do_offset, other._offset, other._offset_carry, other.N_events,
-             other.N_components),
+   : RooAbsL(other),
      _extended(other._extended), apply_weight_squared(other.apply_weight_squared), _first(other._first),
      _offset_save_weight_squared(other._offset_save_weight_squared),
      _offset_carry_save_weight_squared(other._offset_carry_save_weight_squared), _evalCarry(other._evalCarry)
-{
-   // Store normalization set
-   _normSet = other._normSet ? ((RooArgSet *)other._normSet->snapshot()) : 0;
-}
+{}
 
-RooUnbinnedL::~RooUnbinnedL()
-{
-   delete _normSet;
-}
 
 bool RooUnbinnedL::processEmptyDataSets() const
 {

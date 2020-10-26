@@ -194,6 +194,7 @@ void JobManager::activate()
    if (process_manager().is_queue()) {
       queue().loop();
 //      JobManager::instance()->process_manager().terminate_workers();
+      std::cout << "queue loop ended" << std::endl;
       JobManager::instance()->messenger().close_master_queue_connection(false);
       JobManager::instance()->messenger().close_queue_worker_connections(true);
       std::_Exit(0);
@@ -201,6 +202,7 @@ void JobManager::activate()
 
    if (!is_worker_loop_running() && process_manager().is_worker()) {
       RooFit::MultiProcess::worker_loop();
+      std::cout << "worker loop ended" << std::endl;
       messenger().close_queue_worker_connections(true);
       std::_Exit(0);
    }

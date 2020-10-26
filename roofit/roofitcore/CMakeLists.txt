@@ -251,6 +251,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         TestStatistics/LikelihoodGradientWrapper.h
         TestStatistics/LikelihoodJob.h
         TestStatistics/LikelihoodWrapper.h
+        TestStatistics/LikelihoodSerial.h
 #        TestStatistics/Minimizer.h
 #        TestStatistics/MinimizerFcn.h
 #        TestStatistics/MinimizerType.h
@@ -493,6 +494,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/TestStatistics/LikelihoodGradientWrapper.cxx
         src/TestStatistics/LikelihoodJob.cxx
         src/TestStatistics/LikelihoodWrapper.cxx
+        src/TestStatistics/LikelihoodSerial.cxx
 #        src/TestStatistics/Minimizer.cxx
 #        src/TestStatistics/MinimizerFcn.cxx
 #        src/TestStatistics/MinimizerType.cxx

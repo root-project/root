@@ -22,7 +22,6 @@
 
 //#include "Fit/FitResult.h"
 #include "Minuit2/MnStrategy.h"
-#include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MnMatrix.h"  // MnAlgebraicVector
 //#include "TMatrixDSym.h"
 #include "Math/IFunction.h"  // IMultiGradFunction
@@ -73,13 +72,6 @@ public:
       ExactlyMinuit2, AlmostMinuit2
    };
 
-protected:
-   // accessors for the const data members of _grad
-   // TODO: find out why FunctionGradient keeps its data const.. but work around it in the meantime
-   ROOT::Minuit2::MnAlgebraicVector& mutable_grad() const;
-   ROOT::Minuit2::MnAlgebraicVector& mutable_g2() const;
-   ROOT::Minuit2::MnAlgebraicVector& mutable_gstep() const;
-
 private:
    // IMultiGradFunction overrides
    double DoEval(const double *x) const override;
@@ -92,11 +84,9 @@ private:
    // members
    // mutable because ROOT::Math::IMultiGradFunction::DoDerivative is const
 protected:
-   // CAUTION: do not move _grad below _gradf, as it is needed for _gradf construction
-   mutable ROOT::Minuit2::FunctionGradient _grad;
+   mutable std::vector<RooFit::MinuitDerivatorElement> _grad;
    mutable std::vector<double> _grad_params;
 private:
-   // CAUTION: do not move _gradf above _grad, as it is needed for _gradf construction
    mutable RooFit::NumericalDerivatorMinuit2 _gradf;
    RooAbsReal *_funct;
    mutable std::vector<bool> has_been_calculated;

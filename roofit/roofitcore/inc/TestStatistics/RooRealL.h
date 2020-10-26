@@ -45,7 +45,7 @@ private:
    // TODO: we need to track the clean/dirty state in this wrapper. See the old RooRealMPFE implementation for how that can be done automatically using the RooListProxy.
    RooListProxy _vars;    // Variables
 
-   ClassDef(RooRealL, 0);
+   ClassDefOverride(RooRealL, 0);
 };
 
 }

@@ -26,16 +26,9 @@
 namespace RooFit {
 namespace TestStatistics {
 
-enum class LikelihoodType {
-   unbinned,
-   binned,
-   constraint,
-   multi
-};
-
 class LikelihoodJob : public MultiProcess::Job, public LikelihoodWrapper {
 public:
-   LikelihoodJob(std::shared_ptr<RooAbsL> _likelihood, RooMinimizer *minimizer);
+   LikelihoodJob(std::shared_ptr<RooAbsL> _likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, RooMinimizer *minimizer);
    LikelihoodJob* clone() const override;
 
    void init_vars();

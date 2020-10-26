@@ -30,37 +30,41 @@
 #include "Minuit2/SqrtLowParameterTransformation.h"
 #include "Minuit2/MnMachinePrecision.h"
 
-#include "Minuit2/FunctionGradient.h"
-
 namespace RooFit {
+
+// Holds all necessary derivatives and associated numbers (per parameter) used in the NumericalDerivatorMinuit2 class.
+struct MinuitDerivatorElement {
+   double derivative;
+   double second_derivative;
+   double step_size;
+};
 
 class NumericalDerivatorMinuit2 {
 public:
-   explicit NumericalDerivatorMinuit2(ROOT::Minuit2::FunctionGradient &grad, bool always_exactly_mimic_minuit2 = true);
-   NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other, ROOT::Minuit2::FunctionGradient &grad);
-   NumericalDerivatorMinuit2(ROOT::Minuit2::FunctionGradient &grad, double step_tolerance, double grad_tolerance,
-                             unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2 = true);
+   explicit NumericalDerivatorMinuit2(bool always_exactly_mimic_minuit2 = true);
+   NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other);
+   NumericalDerivatorMinuit2(double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level,
+                             bool always_exactly_mimic_minuit2 = true);
    virtual ~NumericalDerivatorMinuit2();
 
    void setup_differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *cx,
                             const std::vector<ROOT::Fit::ParameterSettings> &parameters);
-   ROOT::Minuit2::FunctionGradient Differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
-                                                 const std::vector<ROOT::Fit::ParameterSettings> &parameters);
-   ROOT::Minuit2::FunctionGradient operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
-                                              const std::vector<ROOT::Fit::ParameterSettings> &parameters);
+   std::vector<MinuitDerivatorElement>
+   Differentiate(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
+                 const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                 const std::vector<MinuitDerivatorElement>& previous_gradient);
 
-   std::tuple<double, double, double>
+   MinuitDerivatorElement
    partial_derivative(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
-                      const std::vector<ROOT::Fit::ParameterSettings> &parameters, unsigned int i_component);
-   void do_fast_partial_derivative(const ROOT::Math::IBaseFunctionMultiDim *function,
-                                   const std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                                   unsigned int i_component);
-   std::tuple<double, double, double> operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
+                      const std::vector<ROOT::Fit::ParameterSettings> &parameters, unsigned int i_component, MinuitDerivatorElement previous);
+   MinuitDerivatorElement fast_partial_derivative(const ROOT::Math::IBaseFunctionMultiDim *function,
+                                const std::vector<ROOT::Fit::ParameterSettings> &parameters, unsigned int i_component, const MinuitDerivatorElement& previous);
+   MinuitDerivatorElement operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
                                                  const std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                                                 unsigned int i_component);
+                                                 unsigned int i_component, const MinuitDerivatorElement& previous);
 
    double GetFValue() const { return fVal; }
-   const double *GetG2() const { return fG.G2().Data(); }
+   //   const double *GetG2() const { return fG.G2().Data(); }
    void SetStepTolerance(double value);
    void SetGradTolerance(double value);
    void SetNCycles(int value);
@@ -72,7 +76,8 @@ public:
    double GStepInt2Ext(const ROOT::Fit::ParameterSettings &parameter, double val) const;
 
    void SetInitialGradient(const ROOT::Math::IBaseFunctionMultiDim *function,
-                           const std::vector<ROOT::Fit::ParameterSettings> &parameters);
+                           const std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                           std::vector<MinuitDerivatorElement>& gradient);
 
    void set_step_tolerance(double step_tolerance);
    void set_grad_tolerance(double grad_tolerance);
@@ -85,13 +90,6 @@ private:
    unsigned int fNCycles = 2;
    double Up = 1;
    double fVal = 0;
-
-   ROOT::Minuit2::FunctionGradient &fG;
-
-   // TODO: find out why FunctionGradient keeps its data const.. but work around it in the meantime
-   ROOT::Minuit2::MnAlgebraicVector &mutable_grad() const;
-   ROOT::Minuit2::MnAlgebraicVector &mutable_g2() const;
-   ROOT::Minuit2::MnAlgebraicVector &mutable_gstep() const;
 
    std::vector<double> vx, vx_external;
    double dfmin;
