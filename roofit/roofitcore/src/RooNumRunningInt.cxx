@@ -173,9 +173,9 @@ void RooNumRunningInt::RICacheElem::calculate(Bool_t cdfmode)
   for (int i=0 ; i<nbins ; i++) {
     hist()->get(i) ;
     if (cdfmode) {
-      hist()->set(_ay[i]/_ay[nbins-1]) ;
+      hist()->set(i, _ay[i]/_ay[nbins-1], 0.);
     } else {
-      hist()->set(_ay[i]*binv) ;
+      hist()->set(i, _ay[i]*binv, 0.);
     }
   }
 

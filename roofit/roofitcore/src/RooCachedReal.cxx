@@ -151,7 +151,7 @@ void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) cons
   for (Int_t i=0 ; i<cache.hist()->numEntries() ; i++) {
     const RooArgSet* obs = cache.hist()->get(i) ;
     Double_t binVal = cache.sourceClone()->getVal(obs) ;
-    cache.hist()->set(binVal) ;
+    cache.hist()->set(i, binVal, 0.);
   }
 
   // Delete source clone if we don't cache it
