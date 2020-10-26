@@ -688,6 +688,10 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
    if (selectedFromTypedef) {
       if (!IsElementPresent(fSelectedTypedefs, typedefNameDecl))
          fSelectedTypedefs.push_back(typedefNameDecl);
+      // Don't generate a dictionary for the class underlying a typedef found
+      // for a file name match (eg. "defined_in")
+      if (!selectedFromRecDecl && selectedFromTypedef->HasAttributeFileName())
+         return true;
    }
 
    if (selected->IsFromTypedef()) {
