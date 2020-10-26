@@ -2696,9 +2696,9 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
 
       // Don't round in expectedData or extended mode
       if (expectedData || extended) {
-	nEvents = expectedEvents(&whatVars) ;
+        nEvents = expectedEvents(&whatVars) ;
       } else {
-	nEvents = Int_t(expectedEvents(&whatVars)+0.5) ;
+        nEvents = Int_t(expectedEvents(&whatVars)+0.5) ;
       }
     }
   }
@@ -2728,7 +2728,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
       // Regular mode, fill array of weights with Poisson(pdf*nEvents), but to not fill
       // histogram yet.
       if (hist->weight()>histMax) {
-	histMax = hist->weight() ;
+        histMax = hist->weight() ;
       }
       histOut[i] = RooRandom::randomGenerator()->Poisson(hist->weight()*nEvents) ;
       histOutSum += histOut[i] ;
@@ -2752,17 +2752,17 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
       Double_t ranY = RooRandom::randomGenerator()->Uniform(histMax) ;
 
       if (ranY<hist->weight()) {
-	if (wgt==1) {
-	  histOut[ibinRand]++ ;
-	} else {
-	  // If weight is negative, prior bin content must be at least 1
-	  if (histOut[ibinRand]>0) {
-	    histOut[ibinRand]-- ;
-	  } else {
-	    continue ;
-	  }
-	}
-	nEvtExtra-- ;
+        if (wgt==1) {
+          histOut[ibinRand]++ ;
+        } else {
+          // If weight is negative, prior bin content must be at least 1
+          if (histOut[ibinRand]>0) {
+            histOut[ibinRand]-- ;
+          } else {
+            continue ;
+          }
+        }
+        nEvtExtra-- ;
       }
     }
 
