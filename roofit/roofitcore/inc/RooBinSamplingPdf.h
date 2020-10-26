@@ -117,7 +117,7 @@ private:
 
   mutable std::unique_ptr<ROOT::Math::IntegratorOneDim> _integrator{nullptr}; //! Integrator used to sample bins.
   mutable std::vector<double> _binBoundaries; //! Workspace to store data for bin sampling
-  mutable const RooArgSet* _normSetForIntegrator{nullptr}; //!
+  mutable const RooArgSet* _normSetForIntegrator{nullptr}; //! Normalisation set for operator() calls.
 
   ClassDefOverride(RooBinSamplingPdf,1)
 };
