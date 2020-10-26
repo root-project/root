@@ -141,7 +141,7 @@ double RooBinSamplingPdf::evaluate() const {
   {
     // Important: When the integrator samples x, caching of sub-tree values needs to be off.
     RooHelpers::DisableCachingRAII disableCaching(inhibitDirty());
-    result = integrate(_normSet, low, high);
+    result = integrate(_normSet, low, high) / (high-low);
   }
 
   _observable->setVal(oldX);
@@ -170,7 +170,7 @@ RooSpan<double> RooBinSamplingPdf::evaluateSpan(BatchHelpers::RunContext& evalDa
     const unsigned int bin = std::distance(boundaries.begin(), upperIt) - 1;
     assert(bin < boundaries.size());
 
-    results[i] = integrate(normSet, boundaries[bin], boundaries[bin+1]);
+    results[i] = integrate(normSet, boundaries[bin], boundaries[bin+1]) / (boundaries[bin+1]-boundaries[bin]);
   }
 
   return results;
