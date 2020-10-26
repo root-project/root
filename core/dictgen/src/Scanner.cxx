@@ -688,8 +688,6 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
    if (selectedFromTypedef) {
       if (!IsElementPresent(fSelectedTypedefs, typedefNameDecl))
          fSelectedTypedefs.push_back(typedefNameDecl);
-      // Early exit here if we are not in presence of XML
-      if (!fSelectionRules.IsSelectionXMLFile()) return true;
    }
 
    if (selected->IsFromTypedef()) {
