@@ -87,13 +87,10 @@ public:
   Int_t minTrialSamples(const RooArgSet& arGenObs) const override { return _pdf->minTrialSamples(arGenObs); }
 
   // Plotting and binning hints
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const override { return _pdf->isBinnedDistribution(obs); }
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
-    return _pdf->binBoundaries(obs, xlo, xhi);
-  }
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
-    return _pdf->plotSamplingHint(obs, xlo, xhi);
-  }
+  /// Returns true, since this PDF is meant to be binned.
+  bool isBinnedDistribution(const RooArgSet& /*obs*/) const override { return true; }
+  std::list<double>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override;
 
   ROOT::Math::IntegratorOneDim& integrator() const;
 

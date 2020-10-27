@@ -200,6 +200,56 @@ RooSpan<const double> RooBinSamplingPdf::binBoundaries() const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return a list of all bin boundaries, so the PDF is plotted correctly.
+/// \param[in] obs Observable to generate the boundaries for.
+/// \param[in] xlo Beginning of range to create list of boundaries for.
+/// \param[in] xhi End of range to create to create list of boundaries for.
+/// \return Pointer to a list to be deleted by caller.
+std::list<double>* RooBinSamplingPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const {
+  if (obs.namePtr() != _observable->namePtr()) {
+    coutE(Plotting) << "RooBinSamplingPdf::binBoundaries(" << GetName() << "): observable '" << obs.GetName()
+        << "' is not the observable of this PDF ('" << _observable->GetName() << "')." << std::endl;
+    return nullptr;
+  }
+
+  auto list = new std::list<double>;
+  for (double val : binBoundaries()) {
+    if (xlo <= val && val < xhi)
+      list->push_back(val);
+  }
+
+  return list;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a list of all bin centres, so the PDF is plotted correctly.
+/// \param[in] obs Observable to generate the sampling hint for.
+/// \param[in] xlo Beginning of range to create sampling hint for.
+/// \param[in] xhi End of range to create sampling hint for.
+/// \return Pointer to a list to be deleted by caller.
+std::list<double>* RooBinSamplingPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const {
+  if (obs.namePtr() != _observable->namePtr()) {
+    coutE(Plotting) << "RooBinSamplingPdf::plotSamplingHint(" << GetName() << "): observable '" << obs.GetName()
+        << "' is not the observable of this PDF ('" << _observable->GetName() << "')." << std::endl;
+    return nullptr;
+  }
+
+  auto binCentres = new std::list<double>;
+  const auto& binning = obs.getBinning();
+
+  for (unsigned int bin=0; bin < static_cast<unsigned int>(binning.numBins()); ++bin) {
+    const double centre = binning.binCenter(bin);
+
+    if (xlo <= centre && centre < xhi)
+      binCentres->push_back(centre);
+  }
+
+  return binCentres;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return reference to the integrator that's used to sample the bins.
 /// This can be used to alter the integration method or sampling accuracy.
 /// \see ROOT::Math::IntegratorOneDim::SetOptions to alter integration options.
