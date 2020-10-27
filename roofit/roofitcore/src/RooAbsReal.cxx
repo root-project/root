@@ -3845,6 +3845,26 @@ void RooAbsReal::clearEvalErrorLog()
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve bin boundaries if this distribution is binned in `obs`.
+/// \param[in] obs Observable to retrieve boundaries for.
+/// \param[in] xlo Beginning of range.
+/// \param[in] xhi End of range.
+/// \return The caller owns the returned list.
+std::list<Double_t>* RooAbsReal::binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const {
+  return nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Interface for returning an optional hint for initial sampling points when constructing a curve projected on observable `obs`.
+/// \param[in] obs Observable to retrieve sampling hint for.
+/// \param[in] xlo Beginning of range.
+/// \param[in] xhi End of range.
+/// \return The caller owns the returned list.
+std::list<Double_t>* RooAbsReal::plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const {
+  return nullptr;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print all outstanding logged evaluation error on the given ostream. If maxPerNode
