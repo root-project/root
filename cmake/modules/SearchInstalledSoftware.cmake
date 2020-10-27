@@ -1792,8 +1792,17 @@ endif()
 
 #------------------------------------------------------------------------------------
 if(webgui)
-  if(builtin_openui5)
-     ExternalProject_Add(
+  if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core-nojQuery.js")
+     # create symbolic link on existing openui5 installation
+     # should be used only for debug purposes to be able try different openui5 version
+     $ cannot be used for installation purposes
+     message(STATUS "openui5 - use from $ENV{OPENUI5DIR}, only for debug purposes")
+     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/ui5)
+     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+        $ENV{OPENUI5DIR} ${CMAKE_BINARY_DIR}/ui5/distribution)
+  else()
+    if(builtin_openui5)
+      ExternalProject_Add(
         OPENUI5
         URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
         URL_HASH SHA256=0cde25387047163fe2ed5f32eb7224628be10c3b6afa07d0b2a42002543909c2
@@ -1801,8 +1810,8 @@ if(webgui)
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
         SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
-  else()
-     ExternalProject_Add(
+    else()
+      ExternalProject_Add(
         OPENUI5
         URL https://github.com/SAP/openui5/releases/download/1.82.2/openui5-runtime-1.82.2.zip
         URL_HASH SHA256=b405fa6a3a3621879e8efe80eb193c1071f2bdf37a8ecc8c057194a09635eaff
@@ -1810,8 +1819,9 @@ if(webgui)
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
         SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
+    endif()
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
   endif()
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
 endif()
 
 #------------------------------------------------------------------------------------
