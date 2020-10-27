@@ -1792,14 +1792,25 @@ endif()
 
 #------------------------------------------------------------------------------------
 if(webgui)
-  ExternalProject_Add(
-     OPENUI5
-     URL ${CMAKE_SOURCE_DIR}/gui/webdisplay/res/openui5.tar.gz
-     URL_HASH SHA256=0cde25387047163fe2ed5f32eb7224628be10c3b6afa07d0b2a42002543909c2
-     CONFIGURE_COMMAND ""
-     BUILD_COMMAND ""
-     INSTALL_COMMAND ""
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
+  if(builtin_openui5)
+     ExternalProject_Add(
+        OPENUI5
+        URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
+        URL_HASH SHA256=0cde25387047163fe2ed5f32eb7224628be10c3b6afa07d0b2a42002543909c2
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
+  else()
+     ExternalProject_Add(
+        OPENUI5
+        URL https://github.com/SAP/openui5/releases/download/1.82.2/openui5-runtime-1.82.2.zip
+        URL_HASH SHA256=b405fa6a3a3621879e8efe80eb193c1071f2bdf37a8ecc8c057194a09635eaff
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
+  endif()
   install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
 endif()
 
