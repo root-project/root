@@ -110,6 +110,54 @@ This can drastically improve its ability to recover when unstable fit models are
 
 For details, see the RooFit tutorial [rf612_recoverFromInvalidParameters.C](https://root.cern/doc/v624/rf612__recoverFromInvalidParameters_8C.html).
 
+### Modernised RooDataHist
+RooDataHist was partially modernised to improve const-correctness, to reduce side effects as well as its memory footprint, and to make
+it ready for RooFit's faster batch evaluations.
+Derived classes that directly access protected members might need to be updated. This holds especially for direct accesses to `_curWeight`,
+`_curWeightErrLo`, etc, which have been removed. (It doesn't make sense to write to these members from const functions when the same information
+can be retrieved using an index access operator of an array.) All similar accesses in derived classes should be replaced by the getters `get_curWeight()`
+or better `get_wgt(i)`, which were also supported in ROOT \<v6.24. More details on what happened:
+- Reduced side effects. This code produces undefined behaviour because the side effect of `get(i)`, i.e., loading the new weight into `_curWeight`
+  is not guaranteed to happen before `weight()` is called:
+```
+  processEvent(dataHist.get(i), dataHist.weight()); // Dangerous! Order of evaluation is not guaranteed.
+```
+  With the modernised interface, one would use:
+```
+  processEvent(dataHist.get(i), dataHist.weight(i));
+```
+  To modernise old code, one should replace patterns like `h.get(i); h.func()` by `h.func(i);`. One may `#define R__SUGGEST_NEW_INTERFACE` to switch on
+  deprecation warnings for the functions in question.
+  Similarly, the bin content can now be set using an index, making prior loading of a certain coordinate unnecessary:
+```
+   for (int i=0 ; i<hist->numEntries() ; i++) {
+-    hist->get(i) ;
+-    hist->set(hist->weight() / sum);
++    hist->set(i, hist->weight(i) / sum, 0.);
+   }
+```
+- More const correctness. `calcTreeIndex()` doesn't rely on side effects, any more. Instead of overwriting the internal
+  coordinates with new values:
+```
+  // In a RooDataHist subclass:
+  _vars = externalCoordinates;
+  auto index = calcTreeIndex();
+
+  // Or from the outside:
+  auto index = dataHist.getIndex(externalCoordinates); // Side effect: Active bin is now `index`.
+```
+  coordinates are now passed into calcTreeIndex without side effects:
+```
+  // In a subclass:
+  auto index = calcTreeIndex(externalCoordinates, fast=<true/false>); // No side effect
+
+  // From the outside:
+  auto index = dataHist.getIndex(externalCoordinates); // No side effect
+```
+  This will allow for marking more functions const, or for lying less about const correctness.
+- RooDataHist now supports fits with RooFit's faster `BatchMode()`.
+- Lower memory footprint. If weight errors are not needed, RooDataHist now allocates only 40% of the memory that the old implementation used.
+
 ## 2D Graphics Libraries
 
 - Add the method `AddPoint`to `TGraph(x,y)` and `TGraph2D(x,y,z)`, equivalent to `SetPoint(g->GetN(),x,y)`and `SetPoint(g->GetN(),x,y,z)`
