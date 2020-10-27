@@ -151,19 +151,28 @@ public:
 
   /// Return weight of last bin that was requested with get().
   /// \deprecated Use the safer weight(std::size_t) const.
-  Double_t weight() const override { return get_curWeight(); }
+  Double_t weight() const override
+  R__SUGGEST_ALTERNATIVE("Use the safer weight(std::size_t) const.")
+  { return get_curWeight(); }
   /// Return squared weight of last bin that was requested with get().
   /// \deprecated Use the safer weightSquared(std::size_t) const.
-  Double_t weightSquared() const override { return get_curSumW2(); }
+  Double_t weightSquared()
+  R__SUGGEST_ALTERNATIVE("Use the safer weightSquared(std::size_t) const.")
+  const override { return get_curSumW2(); }
   /// Return volume of current bin. \deprecated Use binVolume(std::size_t) const.
-  Double_t binVolume() const { return _binvVec[_curIndex]; }
+  Double_t binVolume()
+  R__SUGGEST_ALTERNATIVE("Use binVolume(std::size_t) const.")
+  const { return _binvVec[_curIndex]; }
   /// Write `weight` into current bin. \deprecated Use set(std::size_t,double,double)
-  void set(Double_t weight, Double_t wgtErr=-1);
+  void set(Double_t weight, Double_t wgtErr=-1)
+  R__SUGGEST_ALTERNATIVE("Use set(std::size_t,double,double).");
 
   /// Return true if currently loaded coordinate is considered valid within
   /// the current range definitions of all observables.
   /// \deprecated Use the safer valid(std::size_t) const.
-  bool valid() const override { return _curIndex <= _wgtVec.size() && (_maskedWeights.empty() || _maskedWeights[_curIndex] != 0.);}
+  bool valid() const override
+  R__SUGGEST_ALTERNATIVE("Use valid(std::size_t).")
+  { return _curIndex <= _wgtVec.size() && (_maskedWeights.empty() || _maskedWeights[_curIndex] != 0.);}
 
   void dump2();
 
