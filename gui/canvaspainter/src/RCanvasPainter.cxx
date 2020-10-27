@@ -722,7 +722,7 @@ RCanvasPainter::FindPrimitive(const RCanvas &can, const std::string &id, const R
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Method called when GUI sends file to save on local disk
-/// File coded with base64 coding
+/// File data coded with base64 coding beside SVG format
 
 void RCanvasPainter::SaveCreatedFile(std::string &reply)
 {
@@ -735,13 +735,22 @@ void RCanvasPainter::SaveCreatedFile(std::string &reply)
    std::string fname(reply, 0, pos);
    reply.erase(0, pos + 1);
 
-   TString binary = TBase64::Decode(reply.c_str());
+   Bool_t isSvg = (fname.length() > 4) && ((fname.rfind(".svg") == fname.length()-4) || (fname.rfind(".SVG") == fname.length()-4));
+
+   int file_len = 0;
 
    std::ofstream ofs(fname, std::ios::binary);
-   ofs.write(binary.Data(), binary.Length());
+   if (isSvg) {
+      ofs << reply;
+      file_len = reply.length();
+   } else {
+      TString binary = TBase64::Decode(reply.c_str());
+      ofs.write(binary.Data(), binary.Length());
+      file_len = binary.Length();
+   }
    ofs.close();
 
-   R__INFO_HERE("CanvasPainter") << " Save file from GUI " << fname << " len " << binary.Length();
+   R__INFO_HERE("CanvasPainter") << " Save file from GUI " << fname << " len " << file_len;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
