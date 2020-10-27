@@ -2526,6 +2526,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return stats;
    }
 
+   /** @summary Add function to histogram list of functions */
    THistPainter.prototype.AddFunction = function(obj, asfirst) {
       let histo = this.GetObject();
       if (!histo || !obj) return;
@@ -2539,15 +2540,14 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          histo.fFunctions.Add(obj);
    }
 
-   /** @summary Method draws next function from the functions list */
-   THistPainter.prototype.DrawNextFunction = function(indx, callback, painter) {
-
-      if (painter && (typeof painter == "object"))
-         painter.child_painter_id = this.hist_painter_id;
+   /** @summary Method draws next function from the functions list
+     * @returns {Promise} fulfilled when drawing is ready */
+   THistPainter.prototype.DrawNextFunction = function(indx) {
 
       let histo = this.GetHisto();
       if (!this.options.Func || !histo.fFunctions ||
-          (indx >= histo.fFunctions.arr.length)) return JSROOT.CallBack(callback);
+          (indx >= histo.fFunctions.arr.length))
+             return Promise.resolve(true);
 
       let func = histo.fFunctions.arr[indx],
           opt = histo.fFunctions.opt[indx],
@@ -2566,10 +2566,14 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
       }
 
-      if (do_draw)
-         JSROOT.draw(this.divid, func, opt).then(this.DrawNextFunction.bind(this, indx+1, callback));
-      else
-         this.DrawNextFunction(indx+1, callback);
+      if (!do_draw)
+         return this.DrawNextFunction(indx+1);
+
+      return JSROOT.draw(this.divid, func, opt).then(painter => {
+         if (painter && (typeof painter == "object"))
+            painter.child_painter_id = this.hist_painter_id;
+         return this.DrawNextFunction(indx+1);
+      });
    }
 
    /** @summary Unzoom user range if any */
@@ -3209,7 +3213,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
    /** @summary Scan content of 1-D histogram
     * @desc Detect min/max values for x and y axis
-    * @param when_axis_changed - true when only zooming was changed, some checks may be skipped */
+    * @param {boolean} when_axis_changed - true when zooming was changed, some checks may be skipped */
    TH1Painter.prototype.ScanContent = function(when_axis_changed) {
 
       if (when_axis_changed && !this.nbinsx) when_axis_changed = false;
@@ -4286,15 +4290,15 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       painter.CreateStat(); // only when required
 
-      painter.CallDrawFunc().then(() => {
-         painter.DrawNextFunction(0, () => {
-            if (!painter.options.Mode3D && painter.options.AutoZoom) painter.AutoZoom();
-            painter.FillToolbar();
-            painter.DrawingReady();
-         });
-      });
-
-      return painter;
+      return painter.CallDrawFunc()
+            .then(() => painter.DrawNextFunction(0))
+            .then(() => {
+               if (!painter.options.Mode3D && painter.options.AutoZoom)
+                  painter.AutoZoom();
+               painter.FillToolbar();
+               painter.DrawingReady();
+               return painter;
+            });
    }
 
    // ========================================================================
@@ -6244,17 +6248,16 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       painter.CreateStat(); // only when required
 
-      painter.CallDrawFunc().then(() => {
-         painter.DrawNextFunction(0, ()=> {
-            if (!painter.Mode3D && painter.options.AutoZoom) painter.AutoZoom();
+      return painter.CallDrawFunc()
+                    .then(() => painter.DrawNextFunction(0))
+                    .then(()=> {
+         if (!painter.Mode3D && painter.options.AutoZoom) painter.AutoZoom();
             painter.FillToolbar();
-            if (painter.options.Project && !painter.mode3d)
-               painter.ToggleProjection(painter.options.Project);
-            painter.DrawingReady();
-         });
+         if (painter.options.Project && !painter.mode3d)
+              painter.ToggleProjection(painter.options.Project);
+          painter.DrawingReady();
+          return painter;
       });
-
-      return painter;
    }
 
    // =================================================================================
