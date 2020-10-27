@@ -1325,7 +1325,7 @@ void RooDataHist::add(const RooArgSet& row, Double_t wgt, Double_t sumw2)
   _wgtVec[idx] += wgt ;  
   if (!_sumw2Vec.empty()) _sumw2Vec[idx] += (sumw2 > 0 ? sumw2 : wgt*wgt);
 
-  _cache_sum_valid = kInvalid;
+  _cache_sum_valid = false;
 }
 
 
@@ -1351,7 +1351,7 @@ void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErrLo, Dou
   _errLoVec[idx] = wgtErrLo ;  
   _errHiVec[idx] = wgtErrHi ;  
 
-  _cache_sum_valid = kInvalid;
+  _cache_sum_valid = false;
 }
 
 
@@ -1376,7 +1376,7 @@ void RooDataHist::set(std::size_t binNumber, double wgt, double wgtErr) {
   if (!_errHiVec.empty()) _errHiVec[binNumber] = wgtErr;
   if (!_sumw2Vec.empty()) _sumw2Vec[binNumber] = wgtErr*wgtErr;
 
-  _cache_sum_valid = kInvalid;
+  _cache_sum_valid = false;
 }
 
 
@@ -1452,7 +1452,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
     delete tmp ;
   } 
 
-  _cache_sum_valid = kInvalid;
+  _cache_sum_valid = false;
 }
 
 
@@ -1469,26 +1469,22 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize, Bool_t inverseBinCor) const
   checkInit() ;
 
   // Check if result was cached
-  CacheSumState_t cache_code = !correctForBinSize ? kValid : (inverseBinCor ? kValidInvBinCorr : kValidCorrectForBinSize);
-  if (_cache_sum_valid==cache_code) {
+  const CacheSumState_t cache_code = !correctForBinSize ? kNoBinCorrection : (inverseBinCor ? kInverseBinCorr : kCorrectForBinSize);
+  if (_cache_sum_valid == static_cast<Int_t>(cache_code)) {
     return _cache_sum ;
   }
 
-  Double_t total(0), carry(0);
+  ROOT::Math::KahanSum<double> sum;
   for (std::size_t i=0 ; i < _binvVec.size() ; i++) {
-    
-    Double_t theBinVolume = correctForBinSize ? (inverseBinCor ? 1/_binvVec[i] : _binvVec[i]) : 1.0 ;
-    Double_t y = get_wgt(i) * theBinVolume - carry;
-    Double_t t = total + y;
-    carry = (t - total) - y;
-    total = t;
+    const double theBinVolume = correctForBinSize ? (inverseBinCor ? 1/_binvVec[i] : _binvVec[i]) : 1.0 ;
+    sum += get_wgt(i) * theBinVolume;
   }
 
   // Store result in cache
-  _cache_sum_valid=cache_code ;
-  _cache_sum = total ;
+  _cache_sum_valid = cache_code;
+  _cache_sum = sum;
 
-  return total ;
+  return sum;
 }
 
 
@@ -1797,7 +1793,7 @@ void RooDataHist::reset()
 
   registerWeightArraysToDataStore();
 
-  _cache_sum_valid = kInvalid;
+  _cache_sum_valid = false;
 }
 
 
@@ -1844,7 +1840,7 @@ void RooDataHist::setAllWeights(Double_t value)
     _wgtVec[i] = value ;
   }
 
-  _cache_sum_valid = kInvalid;
+  _cache_sum_valid = false;
 }
 
 

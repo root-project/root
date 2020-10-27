@@ -80,7 +80,7 @@ public:
   Double_t sumEntries() const override;
   Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const override;
 
-  /// Always returns true as all histograms have in principle events weight != 1.
+  /// Always returns true as all histograms use event weights.
   Bool_t isWeighted() const override { return true; }
   Bool_t isNonPoissonWeighted() const override ;
 
@@ -177,6 +177,9 @@ protected:
   friend class RooDataHistSliceIter ;
 
   std::size_t calcTreeIndex(const RooArgSet& coords, bool fast) const;
+  /// Legacy overload to calculate the tree index from the current value of `_vars`.
+  /// \deprecated Use calcTreeIndex(const RooArgSet&,bool) const.
+  Int_t calcTreeIndex() const { return static_cast<Int_t>(calcTreeIndex(_vars, true)); }
 
   void setAllWeights(Double_t value) ;
  
@@ -236,8 +239,8 @@ protected:
   std::vector<const RooAbsBinning*> _lvbins ; //! List of used binnings associated with lvalues
   mutable std::vector<std::vector<Double_t> > _binbounds; //! list of bin bounds per dimension
 
-  enum CacheSumState_t{kInvalid, kValid, kValidCorrectForBinSize, kValidInvBinCorr};
-  mutable CacheSumState_t _cache_sum_valid{kInvalid}; //! Is cache sum valid
+  enum CacheSumState_t{kInvalid = 0, kNoBinCorrection = 1, kCorrectForBinSize = 2, kInverseBinCorr = 3};
+  mutable Int_t _cache_sum_valid{0}; //! Is cache sum valid? Needs to stay Int_t to not destroy subclasses.
   mutable Double_t _cache_sum{0.}; //! Cache for sum of entries ;
 
 
