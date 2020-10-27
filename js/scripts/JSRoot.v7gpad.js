@@ -2179,10 +2179,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       JSROOT.ObjectPainter.prototype.Cleanup.call(this);
    }
 
-   /** @summary Cleanup primitives from pad - selector lets define which painters to remove
-    * @private
-    */
+   /** @summary Returns frame painter inside the pad
+    * @private */
+   RPadPainter.prototype.frame_painter = function() {
+      return this.frame_painter_ref;
+   }
 
+   /** @summary Cleanup primitives from pad - selector lets define which painters to remove
+    * @private */
    RPadPainter.prototype.CleanPrimitives = function(selector) {
       if (!selector || (typeof selector !== 'function')) return;
 
@@ -2841,12 +2845,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // will be used in SetDivId to assign style to painter
          this.next_rstyle = lst[indx].fStyle || this.rstyle;
 
-         if (snap._typename === "ROOT::Experimental::RObjectDisplayItem")
+         if (snap._typename === "ROOT::Experimental::RObjectDisplayItem") {
             if (!this.frame_painter())
-               return JSROOT.draw(this.divid, { _typename: "TFrame", $dummy: true }, "").then(function() {
-                  draw_callback("workaround"); // call function with "workaround" as argument
-               });
-
+               return JSROOT.draw(this.divid, { _typename: "TFrame", $dummy: true }, "")
+                            .then(() => draw_callback("workaround")); // call function with "workaround" as argument
+         }
 
          // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
          JSROOT.draw(this.divid, snap.fDrawable || snap.fObject || snap, snap.fOption || "").then(draw_callback);
@@ -3072,7 +3075,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             btns.remove();
          }
 
-         let main = pp.frame_painter_ref;
+         let main = pp.frame_painter();
          if (!main || (typeof main.Render3D !== 'function')) return;
 
          let can3d = main.access_3d_kind();

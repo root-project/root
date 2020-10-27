@@ -2186,10 +2186,11 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Returns frame painter in current pad
+    * @desc Pad has direct reference on frame if any
     * @private */
    ObjectPainter.prototype.frame_painter = function() {
       let pp = this.pad_painter();
-      return pp ? pp.frame_painter_ref : null;
+      return pp ? pp.frame_painter() : null;
    }
 
    /** @summary Returns property of the frame painter

@@ -1597,7 +1597,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    TFramePainter.prototype.Redraw = function(/* reason */) {
-
       let pp = this.pad_painter();
       if (pp) pp.frame_painter_ref = this; // keep direct reference to the frame painter
 
@@ -2015,6 +2014,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       jsrp.SelectActivePad({ pp: this, active: false });
 
       JSROOT.ObjectPainter.prototype.Cleanup.call(this);
+   }
+
+   /** @summary Returns frame painter inside the pad
+     * @private */
+   TPadPainter.prototype.frame_painter = function() {
+      return this.frame_painter_ref;
    }
 
    /** @summary Cleanup primitives from pad - selector lets define which painters to remove */
@@ -3098,7 +3103,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!r) return false;
 
-      let main = this.frame_painter_ref,
+      let main = this.frame_painter(),
           p = this.svg_pad(this.this_pad_name);
 
       r.ranges = main && main.ranges_set ? true : false; // indicate that ranges are assigned
@@ -3168,11 +3173,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           case "xaxis":
           case "yaxis":
           case "zaxis":
-             selp = this.frame_painter_ref;
+             selp = this.frame_painter();
              selkind = name[0];
              break;
           case "frame":
-             selp = this.frame_painter_ref;
+             selp = this.frame_painter();
              break;
           default: {
              let indx = parseInt(name);
@@ -3233,7 +3238,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             btns.remove();
          }
 
-         let main = pp.frame_painter_ref;
+         let main = pp.frame_painter();
          if (!main || (typeof main.Render3D !== 'function')) return;
 
          let can3d = main.access_3d_kind();
@@ -3456,7 +3461,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    TPadPainter.prototype.DrawingReady = function(res_painter) {
 
-      let main = this.frame_painter_ref;
+      let main = this.frame_painter();
 
       if (main && main.mode3d && typeof main.Render3D == 'function') main.Render3D(-2222);
 
@@ -3645,7 +3650,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let canv = JSROOT.Create("TCanvas"),
              pad = this.root_pad(),
-             main = this.frame_painter_ref, drawopt;
+             main = this.frame_painter(), drawopt;
 
          if (kind == "X") {
             canv.fLeftMargin = pad.fLeftMargin;
