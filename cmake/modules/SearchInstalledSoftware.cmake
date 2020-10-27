@@ -1795,7 +1795,7 @@ if(webgui)
   if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core-nojQuery.js")
      # create symbolic link on existing openui5 installation
      # should be used only for debug purposes to be able try different openui5 version
-     $ cannot be used for installation purposes
+     # cannot be used for installation purposes
      message(STATUS "openui5 - use from $ENV{OPENUI5DIR}, only for debug purposes")
      file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/ui5)
      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
