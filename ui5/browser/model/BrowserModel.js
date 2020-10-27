@@ -1,8 +1,7 @@
 sap.ui.define([
     "sap/ui/model/json/JSONModel",
-    "rootui5/browser/model/BrowserListBinding",
-    "sap/base/Log"
-], function(JSONModel, BrowserListBinding, Log) {
+    "rootui5/browser/model/BrowserListBinding"
+], function(JSONModel, BrowserListBinding) {
    "use strict";
 
     var hRootModel = JSONModel.extend("rootui5.browser.model.BrowserModel", {
@@ -76,8 +75,6 @@ sap.ui.define([
         },
 
         bindTree: function(sPath, oContext, aFilters, mParameters, aSorters) {
-           Log.warning("root.model.hModel#bindTree() " + sPath);
-
            console.log('BINDING TREE!!!!!!!!!!!!! ' + sPath);
 
            this.oBinding = new BrowserListBinding(this, sPath, oContext, aFilters, mParameters, aSorters);

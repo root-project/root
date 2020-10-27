@@ -1,22 +1,17 @@
 sap.ui.define([
-   'jquery.sap.global',
    'sap/ui/core/mvc/Controller',
    'sap/ui/core/Component',
    'sap/ui/model/json/JSONModel',
    'sap/ui/core/mvc/XMLView',
-   'sap/ui/core/Fragment',
    'sap/m/MessageToast',
    'sap/m/Dialog',
    'sap/m/List',
    'sap/m/InputListItem',
    'sap/m/Input',
    'sap/m/Button',
-   'sap/m/Label',
    'sap/ui/layout/Splitter',
-   'sap/ui/layout/SplitterLayoutData',
-   'sap/ui/unified/Menu',
-   'sap/ui/unified/MenuItem'
-], function (jQuery, Controller, Component, JSONModel, XMLView, Fragment, MessageToast, Dialog, List, InputListItem, Input, Button, Label, Splitter, SplitterLayoutData, Menu, MenuItem) {
+   'sap/ui/layout/SplitterLayoutData'
+], function (Controller, Component, JSONModel, XMLView, MessageToast, Dialog, List, InputListItem, Input, Button, Splitter, SplitterLayoutData) {
    "use strict";
 
    var CController = Controller.extend("rootui5.canv.controller.Canvas", {
@@ -31,7 +26,7 @@ sap.ui.define([
          var model = new JSONModel({ GedIcon: "", StatusIcon: "", ToolbarIcon: "", TooltipIcon: "sap-icon://accept",
                                      StatusLbl1:"", StatusLbl2:"", StatusLbl3:"", StatusLbl4:"" });
          this.getView().setModel(model);
-         
+
          var vd = this.getView().getViewData();
          var cp = vd ? vd.canvas_painter : null;
 
@@ -286,14 +281,16 @@ sap.ui.define([
          this.showGeEditor(!this.isGedEditor());
       },
 
-      showPanelInLeftArea: function(panel_name, panel_handle, call_back) {
+      showPanelInLeftArea: function(panel_name, panel_handle) {
 
          var split = this.getView().byId("MainAreaSplitter");
          var curr = this.getView().getModel().getProperty("/LeftArea");
-         if (!split || (curr === panel_name)) return JSROOT.CallBack(call_back, false);
+         if (!split || (curr === panel_name))
+            return Promise.resolve(false);
 
          // first need to remove existing
          if (curr) {
+            console.log('REMOVE CURRENT AREA', curr);
             this.cleanupIfGed();
             split.removeContentArea(split.getContentAreas()[0]);
          }
@@ -301,7 +298,8 @@ sap.ui.define([
          this.getView().getModel().setProperty("/LeftArea", panel_name);
          this.getView().getModel().setProperty("/GedIcon", (panel_name=="Ged") ? "sap-icon://accept" : "");
 
-         if (!panel_handle || !panel_name) return JSROOT.CallBack(call_back, false);
+         if (!panel_handle || !panel_name)
+            return Promise.resolve(false);
 
          var oLd = new SplitterLayoutData({
             resizable : true,
@@ -311,24 +309,28 @@ sap.ui.define([
          var viewName = panel_name;
          if (viewName.indexOf(".") < 0) viewName = "rootui5.canv.view." + panel_name;
 
-         XMLView.create({
+         var can_elem = this.getView().byId("MainPanel");
+
+         return XMLView.create({
             viewName: viewName,
             viewData: { handle: panel_handle, masterPanel: this },
             layoutData: oLd,
             height: (panel_name == "Panel") ? "100%" : undefined
-         }).then(function(oView) {
+         }).then(oView => {
+            // workaround, while CanvasPanel.onBeforeRendering called too late
+            can_elem.getController().preserveCanvasContent();
             split.insertContentArea(oView, 0);
-            JSROOT.CallBack(call_back, true);
+            return true;
          });
 
       },
 
       // TODO: sync with showPanelInLeftArea, it is more or less same
-      showLeftArea: function(panel_name, call_back) {
+      showLeftArea: function(panel_name) {
          var split = this.getView().byId("MainAreaSplitter");
          var curr = this.getView().getModel().getProperty("/LeftArea");
          if (!split || (curr === panel_name))
-            return JSROOT.CallBack(call_back, null);
+            return Promise.resolve(null);
 
          // first need to remove existing
          if (curr) {
@@ -339,7 +341,7 @@ sap.ui.define([
          this.getView().getModel().setProperty("/LeftArea", panel_name);
          this.getView().getModel().setProperty("/GedIcon", (panel_name=="Ged") ? "sap-icon://accept" : "");
 
-         if (!panel_name) return JSROOT.CallBack(call_back, null);
+         if (!panel_name) return Promise.resolve(null);
 
          var oLd = new SplitterLayoutData({
             resizable: true,
@@ -351,12 +353,17 @@ sap.ui.define([
          var viewName = "rootui5.canv.view." + panel_name;
          if (panel_name == "FitPanel") viewName = "rootui5.fitpanel.view.FitPanel";
 
-         XMLView.create({
+         var can_elem = this.getView().byId("MainPanel");
+
+         return XMLView.create({
             viewName: viewName,
             viewData: { masterPanel: this },
             layoutData: oLd,
             height: (panel_name == "Panel") ? "100%" : undefined
          }).then(function(oView) {
+
+            // workaround, while CanvasPanel.onBeforeRendering called too late
+            can_elem.getController().preserveCanvasContent();
 
             split.insertContentArea(oView, 0);
 
@@ -368,7 +375,7 @@ sap.ui.define([
                }
             }
 
-            JSROOT.CallBack(call_back, oView.getController());
+            return oView.getController();
          });
       },
 
@@ -392,37 +399,34 @@ sap.ui.define([
             JSROOT.CallBack(call_back, null);
       },
 
-      showProjectionArea : function(kind, call_back) {
-         this.showBottomArea((kind == "X"), function(bottom) {
-            this.showLeftArea(kind == "Y" ? "Panel" : "", function(left) {
+      showProjectionArea : function(kind) {
+         this.showBottomArea(kind == "X")
+             .then(bottom => this.showLeftArea(kind == "Y" ? "Panel" : ""))
+             .then(left => {
 
                var ctrl = bottom || left;
 
                if (!ctrl || ctrl.getView().getDomRef())
-                  return JSROOT.CallBack(call_back, !!ctrl);
+                  return Promise.resolve(!!ctrl);
 
-               if (ctrl.rendering_perfromed) console.log('Rendering already done');
-
-               // FIXME: one should have much easier way to get callback when rendering done
-               ctrl.after_render_callback = call_back;
+               return ctrl.getRenderPromise();
             });
-         }.bind(this));
       },
 
-      showBottomArea : function(is_on, call_back) {
+      showBottomArea : function(is_on) {
 
          if (this.bottomVisible == is_on)
-            return JSROOT.CallBack(call_back, this.getBottomController());
+            return Promise.resolve(this.getBottomController());
 
          var split = this.getView().byId("MainAreaSplitter");
 
-         if (!split) return JSROOT.CallBack(call_back, null);
+         if (!split) return Promise.resolve(null);
 
          var cont = split.getContentAreas();
 
          this.bottomVisible = !this.bottomVisible;
 
-         if (this.bottomVisible == false) {
+         if (!this.bottomVisible) {
             // vertical splitter exists - toggle it
 
             var vsplit = cont[cont.length-1];
@@ -430,7 +434,7 @@ sap.ui.define([
             vsplit.destroyContentAreas();
             split.removeContentArea(vsplit);
             split.addContentArea(main);
-            return JSROOT.CallBack(call_back, null);
+            return Promise.resolve(null);
          }
 
          // remove panel with normal drawing
@@ -446,13 +450,13 @@ sap.ui.define([
             size      : "200px"
          });
 
-         XMLView.create({
+         return XMLView.create({
             viewName : "rootui5.canv.view.Panel",
             layoutData: oLd,
             height: "100%"
-         }).then(function(oView) {
+         }).then(oView => {
             vsplit.addContentArea(oView);
-            JSROOT.CallBack(call_back, oView.getController());
+            return oView.getController();
          });
 
       },

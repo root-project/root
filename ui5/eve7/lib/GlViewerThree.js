@@ -4,7 +4,7 @@ sap.ui.define([
    'rootui5/eve7/lib/OrbitControlsEve',
    'rootui5/eve7/lib/OutlinePass',
    'rootui5/eve7/lib/FXAAShader'
-],  function(GlViewer, EveElements) {
+], function(GlViewer, EveElements) {
 
    "use strict";
 
@@ -24,10 +24,10 @@ sap.ui.define([
          let gh = mgr.GetElement(mgr.global_highlight_id);
 
          if (gs && gh) {
-            sa[0].visibleEdgeColor.setStyle(JSROOT.Painter.root_colors[gs.fVisibleEdgeColor]);
-            sa[0].hiddenEdgeColor .setStyle(JSROOT.Painter.root_colors[gs.fHiddenEdgeColor]);
-            sa[1].visibleEdgeColor.setStyle(JSROOT.Painter.root_colors[gh.fVisibleEdgeColor]);
-            sa[1].hiddenEdgeColor .setStyle(JSROOT.Painter.root_colors[gh.fHiddenEdgeColor]);
+            sa[0].visibleEdgeColor.setStyle(JSROOT.Painter.getColor(gs.fVisibleEdgeColor));
+            sa[0].hiddenEdgeColor .setStyle(JSROOT.Painter.getColor(gs.fHiddenEdgeColor));
+            sa[1].visibleEdgeColor.setStyle(JSROOT.Painter.getColor(gh.fVisibleEdgeColor));
+            sa[1].hiddenEdgeColor .setStyle(JSROOT.Painter.getColor(gh.fHiddenEdgeColor));
          }
       },
 
@@ -101,7 +101,7 @@ sap.ui.define([
 
          this.raycaster = new THREE.Raycaster();
          this.raycaster.params.Points.threshold = 4;   // ???
-         this.raycaster.linePrecision           = 2.5; // ???
+         this.raycaster.params.Line.threshold = 2.5;   // new three.js r121
 
          // Lights are positioned in resetRenderer
 

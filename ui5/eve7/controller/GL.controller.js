@@ -2,11 +2,10 @@ sap.ui.define([
    'sap/ui/core/Component',
    'sap/ui/core/UIComponent',
    'sap/ui/core/mvc/Controller',
-   'sap/ui/model/json/JSONModel',
    "sap/ui/core/ResizeHandler",
    'rootui5/eve7/lib/EveManager',
    'rootui5/eve7/lib/EveScene'
-], function (Component, UIComponent, Controller, JSONModel, ResizeHandler, EveManager, EveScene) {
+], function (Component, UIComponent, Controller, ResizeHandler, EveManager, EveScene) {
 
    "use strict";
 
@@ -36,7 +35,7 @@ sap.ui.define([
 
          ResizeHandler.register(this.getView(), this.onResize.bind(this));
 
-         JSROOT.AssertPrerequisites("geom", this.onLoadScripts.bind(this));
+         JSROOT.require("geom").then(() => this.onLoadScripts());
       },
 
       onLoadScripts: function()
@@ -51,7 +50,7 @@ sap.ui.define([
          let args = oEvent.getParameter("arguments");
 
          console.log('ON MATCHED', args.viewName);
-         
+
          console.log('MORE DATA', JSROOT.$eve7tmp);
 
          console.log('COMPONENT DATA', Component.getOwnerComponentFor(this.getView()).getComponentData());

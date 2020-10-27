@@ -8,7 +8,7 @@ sap.ui.define([
    "sap/m/Text",
    "sap/m/Button",
    "sap/ui/layout/SplitterLayoutData",
-   "rootui5/eve7/controller/Ged.controller",
+   "rootui5/eve7/controller/Ged.controller"
 ], function(Controller, JSONModel, XMLView, CustomTreeItem,
             FlexBox, mCheckBox, mText, mButton, SplitterLayoutData, GedController) {
 
@@ -278,7 +278,7 @@ sap.ui.define([
             }
 
             if (elem.fMainColor) {
-               newelem.fMainColor = JSROOT.Painter.root_colors[elem.fMainColor];
+               newelem.fMainColor = JSROOT.Painter.getColor(elem.fMainColor);
             }
          }
       },

@@ -28,10 +28,10 @@ sap.ui.define([
          oController.object = obj;
          d3.select(oController.getView().getDomRef()).style('overflow','hidden');
 
-         JSROOT.draw(oController.getView().getDomRef(), oController.object, options, function(painter) {
+         JSROOT.draw(oController.getView().getDomRef(), oController.object, options).then(painter => {
             console.log("object painting finished");
             oController.object_painter = painter;
-            oController.get_callbacks.forEach(function(cb) { JSROOT.CallBack(cb,painter); });
+            oController.get_callbacks.forEach(cb => JSROOT.CallBack(cb,painter));
             oController.get_callbacks = [];
          });
       },
@@ -43,19 +43,15 @@ sap.ui.define([
             return;
          }
 
-         var oController = this;
          if (model.object) {
-            oController.drawObject(model.object, model.opt);
+            this.drawObject(model.object, model.opt);
          } else if (model.jsonfilename) {
-            JSROOT.NewHttpRequest(model.jsonfilename, 'object', function(obj) {
-               oController.drawObject(obj, model.opt);
-            }).send();
+            JSROOT.httpRequest(model.jsonfilename, 'object')
+                  .then(obj => this.drawObject(obj, model.opt));
          } else if (model.filename) {
-            JSROOT.OpenFile(model.filename, function(file) {
-               file.ReadObject(model.itemname, function(obj) {
-                  oController.drawObject(obj, model.opt);
-               });
-            });
+            JSROOT.openFile(model.filename)
+                  .then(file => file.ReadObject(model.itemname))
+                  .then(obj => this.drawObject(obj, model.opt));
          }
       },
 
@@ -78,15 +74,25 @@ sap.ui.define([
          return this.object_painter;
       },
 
-      onAfterRendering: function() {
-         console.log('Panel On after rendering', this.getView().getId(), typeof this.after_render_callback);
+      getRenderPromise: function() {
+         if (this.rendering_perfromed)
+            return Promise.resolve(true);
 
-         if (this.after_render_callback) {
-            JSROOT.CallBack(this.after_render_callback);
-            delete this.after_render_callback;
+         return new Promise(resolve => {
+            if (!this.funcs) this.funcs = [];
+            this.funcs.push(resolve);
+         });
+      },
+
+      onAfterRendering: function() {
+         this.rendering_perfromed = true;
+
+         if (this.funcs) {
+            let arr = this.funcs;
+            delete this.funcs;
+            arr.forEach(func => func(true));
          }
 
-         this.rendering_perfromed = true;
          if (this.panel_data) this.drawModel(this.panel_data);
       },
 
