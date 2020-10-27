@@ -269,9 +269,7 @@ void TGHProgressBar::DoRedraw()
       TGFrame::DoRedraw();
    }
 
-   fPosPix = Int_t(((Float_t)fWidth - (fBorderWidth << 1)) *
-             (fPos - fMin) / (fMax - fMin) +
-             fBorderWidth);
+   fPosPix = (Int_t)((fWidth - 2.0*fBorderWidth ) *(fPos - fMin) / (fMax - fMin)) + fBorderWidth;
 
    Int_t pospix = fPosPix;
 
@@ -365,9 +363,7 @@ void TGVProgressBar::DoRedraw()
       TGFrame::DoRedraw();
    }
 
-   fPosPix = Int_t(((Float_t)fHeight - (fBorderWidth << 1)) *
-             (fPos - fMin) / (fMax - fMin) +
-             fBorderWidth);
+    fPosPix = (Int_t)((fHeight - 2.0f*fBorderWidth) *(fPos - fMin) / (fMax - fMin)) + fBorderWidth;
 
    if (fFillType == kSolidFill)
       gVirtualX->FillRectangle(fId, fBarColorGC(), fBorderWidth,
