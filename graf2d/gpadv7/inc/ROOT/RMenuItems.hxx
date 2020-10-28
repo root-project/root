@@ -15,7 +15,7 @@
 
 #include <ROOT/RDrawableRequest.hxx>
 
-class TClass;
+#include "TClass.h"
 
 namespace ROOT {
 namespace Experimental {
@@ -31,9 +31,10 @@ namespace Detail {
 
 class RMenuItem {
 protected:
-   std::string fName;  ///<  name of the menu item
-   std::string fTitle; ///<  title of menu item
-   std::string fExec;  ///< execute when item is activated
+   std::string fName;       ///< name of the menu item
+   std::string fTitle;      ///< title of menu item
+   std::string fExec;       ///< execute when item is activated
+   std::string fClassName;  ///< class to which belongs menu item
 public:
    /** Default constructor */
    RMenuItem() = default;
@@ -41,7 +42,7 @@ public:
    /** Create menu item with the name and title
     *  name used to display item in the object context menu,
     *  title shown as hint info for that item  */
-   RMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fExec() {}
+   RMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title) {}
 
    /** virtual destructor need for vtable, used when vector of RMenuItem* is stored */
    virtual ~RMenuItem() = default;
@@ -49,6 +50,9 @@ public:
    /** Set execution string with all required arguments,
     * which will be executed when menu item is selected  */
    void SetExec(const std::string &exec) { fExec = exec; }
+
+   /** Set class name for menu item, will be used to group items together */
+   void SetClassName(const std::string &clname) { fClassName = clname; }
 
    /** Returns menu item name */
    const std::string &GetName() const { return fName; }
@@ -173,17 +177,19 @@ public:
 
    void Add(std::unique_ptr<Detail::RMenuItem> &&item) { fItems.emplace_back(std::move(item)); }
 
-   void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec)
+   void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec, const TClass *cl = nullptr)
    {
       auto item = std::make_unique<Detail::RMenuItem>(name, title);
       item->SetExec(exec);
+      if (cl) item->SetClassName(cl->GetName());
       Add(std::move(item));
    }
 
-   void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle)
+   void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle, const TClass *cl = nullptr)
    {
       auto item = std::make_unique<Detail::RCheckedMenuItem>(name, title, checked);
       item->SetExec(toggle);
+      if (cl) item->SetClassName(cl->GetName());
       Add(std::move(item));
    }
 

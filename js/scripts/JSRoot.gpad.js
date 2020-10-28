@@ -3828,7 +3828,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let obj_painter = this.FindSnap(msg.substr(5));
          console.log('GET EDIT ' + msg.substr(5) +  ' found ' + !!obj_painter);
          if (obj_painter)
-            this.ShowSection("Editor", true, () => {
+            this.ShowSection("Editor", true).then(() => {
                if (this.pad_events_receiver)
                   this.pad_events_receiver({ what: "select", padpainter: this, painter: obj_painter });
             });
@@ -3885,10 +3885,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.ProcessChanges("sbits", this);
    }
 
-   /** Function used to activate GED */
-   TCanvasPainter.prototype.ActivateGed = function(objpainter, kind, mode, callback) {
+   /** @summary Function used to activate GED
+     * @returns {Promise} when GED is there */
+   TCanvasPainter.prototype.ActivateGed = function(objpainter, kind, mode) {
       if (this.testUI5() || !this.brlayout)
-         return JSROOT.CallBack(callback);
+         return Promise.resolve(false);
 
       if (this.brlayout.HasContent()) {
          if ((mode === "toggle") || (mode === false))
@@ -3896,23 +3897,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          else
             this.SelectObjectPainter(objpainter);
 
-         JSROOT.CallBack(callback, true);
+         return Promise.resolve(true);
       }
 
       if (mode === false)
-         return JSROOT.CallBack(callback);
-
-      // keep all callbacks until initialization is performed
-      if (this._ged_callbacks !== undefined) {
-         this._ged_callbacks.push(callback);
-         return;
-      }
-
-      this._ged_callbacks = [ callback ];
+         return Promise.resolve(false);
 
       let btns = this.brlayout.CreateBrowserBtns();
 
-      JSROOT.require(['interactive']).then(inter => {
+      JSROOT.require('interactive').then(inter => {
 
          inter.ToolbarIcons.CreateSVG(btns, inter.ToolbarIcons.diamand, 15, "toggle fix-pos mode")
                             .style("margin","3px").on("click", () => this.brlayout.Toggle('fix'));
@@ -3929,56 +3922,55 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.brlayout.SetBrowserTitle("GED");
       this.brlayout.ToggleBrowserKind(kind || "float");
 
-      JSROOT.require('openui5').then(() => {
+      return new Promise(resolveFunc => {
 
-         d3.select("#ged_placeholder").text("");
+         JSROOT.require('openui5').then(() => {
 
-         sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/core/mvc/XMLView"],
-                       function(JSONModel,XMLView) {
+            d3.select("#ged_placeholder").text("");
 
-            let oModel = new JSONModel({ handle: null });
+            sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/core/mvc/XMLView"], (JSONModel,XMLView) => {
 
-            XMLView.create({
-               viewName : "rootui5.canv.view.Ged"
-            }).then(function(oGed) {
+               let oModel = new JSONModel({ handle: null });
 
-               oGed.setModel(oModel);
+               XMLView.create({
+                  viewName: "rootui5.canv.view.Ged"
+               }).then(oGed => {
 
-               oGed.placeAt("ged_placeholder");
+                  oGed.setModel(oModel);
 
-               this.ged_view = oGed;
+                  oGed.placeAt("ged_placeholder");
 
-               // TODO: should be moved into Ged controller - it must be able to detect canvas painter itself
-               this.RegisterForPadEvents(oGed.getController().padEventsReceiver.bind(oGed.getController()));
+                  this.ged_view = oGed;
 
-               this.SelectObjectPainter(objpainter);
+                  // TODO: should be moved into Ged controller - it must be able to detect canvas painter itself
+                  this.RegisterForPadEvents(oGed.getController().padEventsReceiver.bind(oGed.getController()));
 
-               this.ProcessChanges("sbits", this);
+                  this.SelectObjectPainter(objpainter);
 
-               // finally invoke all callbacks
-               let arr = this._ged_callbacks;
-               delete this._ged_callbacks;
-               arr.forEach(func => func(true));
+                  this.ProcessChanges("sbits", this);
+
+                  resolveFunc(true);
+               });
             });
          });
       });
    }
 
-   TCanvasPainter.prototype.ShowSection = function(that, on, callback) {
+   TCanvasPainter.prototype.ShowSection = function(that, on) {
       if (this.testUI5())
-         return JSROOT.CallBack(callback);
+         return Promise.resolve(false);
 
       console.log('Show section ' + that + ' flag = ' + on);
 
       switch(that) {
          case "Menu": break;
          case "StatusBar": this.ActivateStatusBar(on); break;
-         case "Editor": this.ActivateGed(this, null, !!on, callback); callback = null; break;
+         case "Editor": return this.ActivateGed(this, null, !!on);
          case "ToolBar": break;
          case "ToolTips": this.SetTooltipAllowed(on); break;
 
       }
-      JSROOT.CallBack(callback, true);
+      return Promise.resolve(true);
    }
 
    TCanvasPainter.prototype.CompeteCanvasSnapDrawing = function() {
@@ -3995,8 +3987,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.ShowSection("ToolTips", this.pad.TestBit(TCanvasStatusBits.kShowToolTips));
    }
 
-   /** Method informs that something was changed in the canvas
-     * used to update information on the server (when used with web6gui)
+   /** @summary Method informs that something was changed in the canvas
+     * @desc used to update information on the server (when used with web6gui)
      * @private */
    TCanvasPainter.prototype.ProcessChanges = function(kind, painter, subelem) {
       // check if we could send at least one message more - for some meaningful actions
@@ -4039,9 +4031,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          console.log("Sending " + msg.length + "  " + msg.substr(0,40));
          this._websocket.Send(msg);
       }
-
    }
 
+   /** @summary Select active pad on the canvas */
    TCanvasPainter.prototype.SelectActivePad = function(pad_painter, obj_painter, click_pos) {
       if ((this.snapid === undefined) || !pad_painter) return; // only interactive canvas
 
@@ -4080,7 +4072,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return bits;
    }
 
-   /// produce JSON for TCanvas, which can be used to display canvas once again
+   /**  @summary produce JSON for TCanvas, which can be used to display canvas once again */
    TCanvasPainter.prototype.ProduceJSON = function() {
 
       let canv = this.GetObject(),

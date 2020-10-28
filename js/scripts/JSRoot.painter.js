@@ -1714,13 +1714,11 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.AssignObject = function(obj) { this.draw_object = ((obj !== undefined) && (typeof obj == 'object')) ? obj : null; }
 
    /** @summary Assign snapid to the painter
-   *
-   * @desc Identifier used to communicate with server side and identifies object on the server
-   * @private */
+    * @desc Identifier used to communicate with server side and identifies object on the server
+    * @private */
    ObjectPainter.prototype.AssignSnapId = function(id) { this.snapid = id; }
 
    /** @summary Generic method to cleanup painter.
-    *
     * @desc Remove object drawing and in case of main painter - also main HTML components */
    ObjectPainter.prototype.Cleanup = function() {
 
@@ -1762,10 +1760,8 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.GetClassName = function() { return (this.draw_object ? this.draw_object._typename : "") || ""; }
 
    /** @summary Checks if drawn object matches with provided typename
-    *
     * @param {string} arg - typename
-    * @param {string} arg._typename - if arg is object, use its typename
-    */
+    * @param {string} arg._typename - if arg is object, use its typename */
    ObjectPainter.prototype.MatchObjectType = function(arg) {
       if (!arg || !this.draw_object) return false;
       if (typeof arg === 'string') return (this.draw_object._typename === arg);
@@ -1773,8 +1769,7 @@ JSROOT.define(['d3'], (d3) => {
       return this.draw_object._typename.match(arg);
    }
 
-   /** @summary Changes item name.
-    *
+   /** @summary Change item name
     * @desc When available, used for svg:title proprty
     * @private */
    ObjectPainter.prototype.SetItemName = function(name, opt, hpainter) {
@@ -1925,7 +1920,6 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated.
-    *
     * @desc Redirects to {@link JSROOT.TPadPainter.CheckCanvasResize}
     * @private */
    ObjectPainter.prototype.CheckResize = function(arg) {
@@ -2124,11 +2118,9 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Return functor, which can convert x and y coordinates into pixels, used for drawing
-    *
-    * Produce functor can convert x and y value by calling func.x(x) and func.y(y)
-    *  @param {boolean} isndc - if NDC coordinates will be used
-    *  @private
-    */
+    * @desc Produce functor can convert x and y value by calling func.x(x) and func.y(y)
+    * @param {boolean} isndc - if NDC coordinates will be used
+    * @private */
    ObjectPainter.prototype.AxisToSvgFunc = function(isndc) {
       let func = { isndc: isndc }, use_frame = this.draw_g && this.draw_g.property('in_frame');
       if (use_frame) func.main = this.frame_painter();
@@ -2454,7 +2446,6 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Returns main object painter on the pad.
-    *
     * @desc Normally this is first histogram drawn on the pad, which also draws all axes
     * @param {boolean} [not_store = undefined] - if true, prevent temporary store of main painter reference
     * @param {string} [pad_name = undefined] - when specified, returns main painter from specified pad */
@@ -2493,8 +2484,7 @@ JSROOT.define(['d3'], (d3) => {
     * @param {string|object} divid - id of div element or directly DOMElement
     * @param {number} [kind = 0] - kind of object drawn with painter
     * @param {string} [pad_name = undefined] - when specified, subpad name used for object drawin
-    * @private
-    */
+    * @private */
    ObjectPainter.prototype.SetDivId = function(divid, kind, pad_name) {
 
       if (divid !== undefined) {
@@ -2583,8 +2573,7 @@ JSROOT.define(['d3'], (d3) => {
     * See {@link JSROOT.TAttMarkerHandler} for more info.
     * Instance assigned as this.markeratt data member, recognized by GED editor
     * @param {object} args - either TAttMarker or see arguments of {@link JSROOT.TAttMarkerHandler}
-    * @returns created handler
-    */
+    * @returns created handler */
    ObjectPainter.prototype.createAttMarker = function(args) {
       if (!args || (typeof args !== 'object')) args = { std: true }; else
          if (args.fMarkerColor !== undefined && args.fMarkerStyle !== undefined && args.fMarkerSize !== undefined) args = { attr: args, std: false };
@@ -2608,8 +2597,7 @@ JSROOT.define(['d3'], (d3) => {
    * @desc Can be used to produce lines in painter.
    * See {@link JSROOT.TAttLineHandler} for more info.
    * Instance assigned as this.lineatt data member, recognized by GED editor
-   * @param {object} args - either TAttLine or see constructor arguments of {@link JSROOT.TAttLineHandler}
-   */
+   * @param {object} args - either TAttLine or see constructor arguments of {@link JSROOT.TAttLineHandler} */
    ObjectPainter.prototype.createAttLine = function(args) {
       if (!args || (typeof args !== 'object')) args = { std: true }; else
          if (args.fLineColor !== undefined && args.fLineStyle !== undefined && args.fLineWidth !== undefined) args = { attr: args, std: false };
@@ -2791,6 +2779,35 @@ JSROOT.define(['d3'], (d3) => {
 
       return menu.size() > 0;
    }
+
+   /** @summary Produce exec string for WebCanas to set color value
+    * @desc Color can be id or string, but should belong to list of known colors
+    * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
+    * @private */
+   ObjectPainter.prototype.GetColorExec = function(col, method) {
+      let id = -1, arr = jsrp.root_colors;
+      if (typeof col == "string") {
+         if (!col || (col == "none")) id = 0; else
+            for (let k = 1; k < arr.length; ++k)
+               if (arr[k] == col) { id = k; break; }
+         if ((id < 0) && (col.indexOf("rgb") == 0)) id = 9999;
+      } else if (!isNaN(col) && arr[col]) {
+         id = col;
+         col = arr[id];
+      }
+
+      if (id < 0) return "";
+
+      if (id >= 50) {
+         // for higher color numbers ensure that such color exists
+         let c = d3.color(col);
+         id = "TColor::GetColor(" + c.r + "," + c.g + "," + c.b + ")";
+      }
+
+      return "exec:" + method + "(" + id + ")";
+   }
+
+
 
    /** @summary returns function used to display object status
     * @private */
