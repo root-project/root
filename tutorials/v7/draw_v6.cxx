@@ -82,9 +82,9 @@ void draw_v6()
 
    std::cout << "This message appear normally before second async update" << std::endl;
 
-   // request to create PNG file
-   // canvas->SaveAs("draw_v6.png");
+   // create SVG file
+   canvas->SaveAs("draw_v6.svg");
 
-   // and then create SVG file
-   // canvas->SaveAs("draw_v6.svg");
+   // create PNG file
+   canvas->SaveAs("draw_v6.png");
 }

@@ -100,12 +100,12 @@
 
    /** @summary JSROOT version id
      * @desc For the JSROOT release the string in format "major.minor.patch" like "6.0.0"
-     *       For the ROOT release is string is "ROOT major.minor.patch" like "ROOT 6.24.00" */
+     *       For the ROOT release string is "ROOT major.minor.patch" like "ROOT 6.24.00" */
    JSROOT.version_id = "pre6";
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year */
-   JSROOT.version_date = "27/10/2020";
+   JSROOT.version_date = "28/10/2020";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date} */

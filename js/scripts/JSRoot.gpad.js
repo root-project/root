@@ -2200,6 +2200,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (this._fixed_size) {
             render_to.style("overflow","auto");
             rect = { width: this.pad.fCw, height: this.pad.fCh };
+            if (!rect.width || !rect.height)
+               rect = this.get_visible_rect(render_to);
          } else {
             rect = this.check_main_resize(2, new_size, factor);
          }
@@ -3310,6 +3312,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let svg = '<svg width="' + width + '" height="' + height + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">' +
                  elem.node().innerHTML +
                  '</svg>';
+
+      if (jsrp.ProcessSVGWorkarounds)
+         svg = jsrp.ProcessSVGWorkarounds(svg);
+
+      svg = jsrp.CompressSVG(svg);
 
       if (file_format == "svg") {
          reconstruct();

@@ -809,7 +809,7 @@ try_again:
          }
       } else {
 
-         auto p1 = dumpcont.find(";base64,");
+         auto p1 = dumpcont.rfind(";base64,");
          auto p2 = dumpcont.rfind("></div>");
 
          if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {

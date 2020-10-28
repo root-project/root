@@ -3799,6 +3799,28 @@ JSROOT.define(['d3'], (d3) => {
       return canp ? canp.ProduceJSON() : "";
    }
 
+   /** @summary Compress SVG code, produced from JSROOT drawing
+     * @desc removes extra info or empty elements
+     * @private */
+   jsrp.CompressSVG = function(svg) {
+
+      // let s = 'try class="abc cdf" second class="kkk aaa" third';
+      // s = s.replace(/ class=\"[a-z0-9 ]*\"/g, "");
+
+      svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g, "url(#$1)")        // decode all URL
+               .replace(/ class=\"\w*\"/g, "")                                // remove all classes
+               .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g, "")  // remove all empty groups with transform
+               .replace(/<g><\/g>/g, "");                                     // remove all empty groups
+
+      // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
+      svg = svg.replace(/<svg x=\"0\" y=\"0\" overflow=\"hidden\" width=\"\d+\" height=\"\d+\" viewBox=\"0 0 \d+ \d+\"><\/svg>/g, "")
+
+      if (svg.indexOf("xlink:href") < 0)
+         svg = svg.replace(/ xmlns:xlink=\"http:\/\/www.w3.org\/1999\/xlink\"/g, "");
+
+      return svg;
+   }
+
    /** @summary Create SVG image for provided object.
     *
     * @desc Function especially useful in Node.js environment to generate images for
@@ -3831,27 +3853,19 @@ JSROOT.define(['d3'], (d3) => {
 
             let has_workarounds = jsrp.ProcessSVGWorkarounds && JSROOT.svg_workaround;
 
-            main.select('svg').attr("xmlns", "http://www.w3.org/2000/svg")
-               .attr("xmlns:xlink", "http://www.w3.org/1999/xlink")
-               .attr("width", args.width)
-               .attr("height", args.height)
-               .attr("style", null).attr("class", null).attr("x", null).attr("y", null);
+            main.select('svg')
+                .attr("xmlns", "http://www.w3.org/2000/svg")
+                .attr("xmlns:xlink", "http://www.w3.org/1999/xlink")
+                .attr("width", args.width)
+                .attr("height", args.height)
+                .attr("style", null).attr("class", null).attr("x", null).attr("y", null);
 
             let svg = main.html();
 
             if (has_workarounds)
                svg = jsrp.ProcessSVGWorkarounds(svg);
 
-            svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g, "url(#$1)")  // decode all URL
-               .replace(/ class=\"\w*\"/g, "")                                // remove all classes
-               .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g, "")  // remove all empty groups with transform
-               .replace(/<g><\/g>/g, "");                                     // remove all empty groups
-
-            // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
-            svg = svg.replace(/<svg x=\"0\" y=\"0\" overflow=\"hidden\" width=\"\d+\" height=\"\d+\" viewBox=\"0 0 \d+ \d+\"><\/svg>/g, "")
-
-            if (svg.indexOf("xlink:href") < 0)
-               svg = svg.replace(/ xmlns:xlink=\"http:\/\/www.w3.org\/1999\/xlink\"/g, "");
+            svg = jsrp.CompressSVG(svg);
 
             main.remove();
 
