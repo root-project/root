@@ -3245,9 +3245,9 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::paramOn(%s)",GetName())) ;
   pc.defineString("label","Label",0,"") ;
-  pc.defineDouble("xmin","Layout",0,0.50) ;
-  pc.defineDouble("xmax","Layout",1,0.99) ;
-  pc.defineInt("ymaxi","Layout",0,Int_t(0.95*10000)) ;
+  pc.defineDouble("xmin","Layout",0,0.65) ;
+  pc.defineDouble("xmax","Layout",1,0.9) ;
+  pc.defineInt("ymaxi","Layout",0,Int_t(0.9*10000)) ;
   pc.defineInt("showc","ShowConstants",0,0) ;
   pc.defineObject("params","Parameters",0,0) ;
   pc.defineString("formatStr","Format",0,"NELU") ;
@@ -3349,11 +3349,10 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
   if(!box) return 0;
   box->SetName(Form("%s_paramBox",GetName())) ;
   box->SetFillColor(0);
-  box->SetBorderSize(1);
+  box->SetBorderSize(0);
   box->SetTextAlign(12);
   box->SetTextSize(0.04F);
-  box->SetFillStyle(1001);
-  box->SetFillColor(0);
+  box->SetFillStyle(0);
 
   for (const auto param : params) {
     auto var = static_cast<const RooRealVar*>(param);
