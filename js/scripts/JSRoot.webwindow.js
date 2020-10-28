@@ -574,12 +574,13 @@ JSROOT.define([], () => {
     * @param {string} [arg.openui5libs] - list of openui5 libraries loaded, default is "sap.m, sap.ui.layout, sap.ui.unified"
     * @param {string} [arg.socket_kind] - kind of connection longpoll|websocket, detected automatically from URL
     * @param {object} arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
-    * @param {string} arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned as arg.first_msg
+    * @param {string} arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned in handle.first_msg
     * @param {string} [arg.prereq2] - second part of prerequcities, which is loaded parallel to connecting with WebWindow
     * @returns {Promise} ready-to-use WebWindowHandle instance
     */
 
    JSROOT.connectWebWindow = function(arg) {
+
       if (typeof arg == 'function') arg = { callback: arg }; else
          if (!arg || (typeof arg != 'object')) arg = {};
 
@@ -648,10 +649,9 @@ JSROOT.define([], () => {
                OnWebsocketOpened: () => { }, // dummy function when websocket connected
 
                OnWebsocketMsg: (handle, msg) => {
-                  // console.log('Get message ' + msg + ' handle ' + !!handle);
                   if (msg.indexOf(arg.first_recv) != 0)
                      return handle.Close();
-                  arg.first_msg = msg.substr(arg.first_recv.length);
+                  handle.first_msg = msg.substr(arg.first_recv.length);
 
                   if (!arg.prereq2) resolveFunc(handle);
                },
@@ -670,7 +670,7 @@ JSROOT.define([], () => {
          if (arg.prereq2) {
             JSROOT.require(arg.prereq2).then(() => {
                delete arg.prereq2; // indicate that func is loaded
-               if (!arg.first_recv || arg.first_msg) resolveFunc(handle);
+               if (!arg.first_recv || handle.first_msg) resolveFunc(handle);
             });
          } else if (!arg.first_recv) {
             resolveFunc(handle);

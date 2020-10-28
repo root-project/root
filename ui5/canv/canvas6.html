@@ -1,4 +1,3 @@
-<!--  this file used for ROOT6 Canvas display with TWebWindow -->
 <!DOCTYPE html>
 <html lang="en">
    <head>
@@ -28,45 +27,52 @@
 
    <script type='text/javascript'>
 
+      let url = JSROOT.decodeUrl(),
+          is_batch = url.has("batch_mode"),
+          is_ui5 = !url.has("noopenui") && !is_batch,
+          _prereq = 'v6';
+
+      if (is_batch) JSROOT.BatchMode = true;
+
+      if (is_ui5)
+         _prereq += ";openui5";
+      else if (!is_batch)
+         _prereq += ";jq2d";  // jq2d need for BrowserLayout
+
       JSROOT.connectWebWindow({
-         prereq: "v6",
+         prereq: _prereq,
          prereq_logdiv: "CanvasDiv",
          // openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
       }).then(handle => {
-         let painter = new JSROOT.TCanvasPainter(null),
-             url = JSROOT.decodeUrl();
+         let painter = new JSROOT.TCanvasPainter(null);
 
          painter.online_canvas = true;
-         painter.use_openui = !url.has("noopenui");
-         painter.batch_mode = url.has("batch_mode");
-         if (painter.batch_mode) JSROOT.BatchMode = true;
+         painter.use_openui = is_ui5;
+         painter.batch_mode = is_batch;
 
          if (window) {
             window.onbeforeunload = painter.WindowBeforeUnloadHanlder.bind(painter);
             if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
          }
 
-         if (painter.use_openui && !painter.batch_mode) {
+         if (is_ui5) {
 
             painter._window_handle = handle;
 
-            JSROOT.require('openui5').then(() => {
-
-               sap.ui.require(["sap/ui/core/ComponentContainer"], function(ComponentContainer) {
-                  new ComponentContainer({
-                     name: "rootui5.canv",
-                     manifest: true,
-                     async: true,
-                     settings: {
-                        componentData: {
-                           canvas_painter: painter
-                        }
-                     },
-                     height: "100%"
-                  }).placeAt("CanvasDiv")
-               });
-
+            sap.ui.require(["sap/ui/core/ComponentContainer"], function(ComponentContainer) {
+               new ComponentContainer({
+                  name: "rootui5.canv",
+                  manifest: true,
+                  async: true,
+                  settings: {
+                     componentData: {
+                        canvas_painter: painter
+                     }
+                  },
+                  height: "100%"
+               }).placeAt("CanvasDiv")
             });
+
          } else {
 
             painter.SetDivId("CanvasDiv", -1); // just assign id, nothing else happens
