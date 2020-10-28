@@ -2849,6 +2849,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.next_rstyle = lst[indx].fStyle || this.rstyle;
 
          if (snap._typename === "ROOT::Experimental::RObjectDisplayItem") {
+
+            // identifier used in RObjectDrawable
+            let webSnapIds = { kNone: 0,  kObject: 1, kColors: 4, kStyle: 5 };
+
+            if (snap.fKind == webSnapIds.kStyle) {
+               JSROOT.extend(JSROOT.gStyle, snap.fObject);
+               continue;
+            }
+
             if (!this.frame_painter())
                return JSROOT.draw(this.divid, { _typename: "TFrame", $dummy: true }, "")
                             .then(() => draw_callback("workaround")); // call function with "workaround" as argument

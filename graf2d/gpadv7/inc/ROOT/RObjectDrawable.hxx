@@ -27,10 +27,16 @@ class RPadBase;
 */
 
 class RObjectDrawable final : public RDrawable {
+private:
 
-   Internal::RIOShared<TObject> fObj; ///< The object to be painted
+   enum {
+      kNone = 0,     ///< empty container
+      kObject = 1,   ///< plain object
+   };
 
-   std::string fOpts;  ///< drawing options
+   int fKind{kNone};                   ///< object kind
+   Internal::RIOShared<TObject> fObj;  ///< The object to be painted
+   std::string fOpts;                  ///< drawing options
 
 protected:
 
@@ -43,12 +49,19 @@ protected:
    void Execute(const std::string &) final;
 
 public:
+   // special kinds, see TWebSnapshot enums
+   enum EKind {
+      kColors = 4,   ///< list of ROOT colors
+      kStyle = 5     ///< instance of TStyle object
+   };
+
    RObjectDrawable() : RDrawable("tobject") {}
 
    virtual ~RObjectDrawable();
 
-   RObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : RDrawable("tobject"), fObj(obj), fOpts(opt) {}
+   RObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt = "") : RDrawable("tobject"), fKind(kObject), fObj(obj), fOpts(opt) {}
 
+   RObjectDrawable(EKind kind) : RDrawable("tobject"), fKind(kind) {}
 };
 
 } // namespace Experimental

@@ -13,6 +13,7 @@
 #include <ROOT/RMenuItems.hxx>
 
 #include "TROOT.h"
+#include "TStyle.h"
 
 #include <exception>
 #include <sstream>
@@ -25,19 +26,26 @@ RObjectDrawable::~RObjectDrawable() {}
 
 std::unique_ptr<RDisplayItem> RObjectDrawable::Display(const RDisplayContext &ctxt)
 {
-   if (GetVersion() > ctxt.GetLastVersion())
-      return std::make_unique<RObjectDisplayItem>(fObj.get(), fOpts);
+   if (GetVersion() > ctxt.GetLastVersion()) {
+      if (fKind == kStyle)
+         return std::make_unique<RObjectDisplayItem>(fKind, gStyle, fOpts);
+      else
+         return std::make_unique<RObjectDisplayItem>(fKind, fObj.get(), fOpts);
+   }
    return nullptr;
 }
 
 void RObjectDrawable::PopulateMenu(RMenuItems &items)
 {
    // fill context menu items for the ROOT class
-   items.PopulateObjectMenu(fObj.get(), fObj.get()->IsA());
+   if (fKind == kObject)
+      items.PopulateObjectMenu(fObj.get(), fObj.get()->IsA());
 }
 
 void RObjectDrawable::Execute(const std::string &exec)
 {
+   if (fKind != kObject) return;
+
    TObject *obj = fObj.get();
 
    std::stringstream cmd;
