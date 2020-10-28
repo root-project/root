@@ -1514,19 +1514,20 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   Int_t*  refBin = new Int_t[_vars.getSize()] ;
 
   for (unsigned int i = 0; i < _vars.size(); ++i) {
-    const auto arg = _vars[i];
+    const RooAbsArg*    arg   = _vars[i];
+    const RooAbsLValue* argLv = _lvvars[i]; // Same as above, but cross-cast
 
     if (sumSet.find(*arg)) {
       mask[i] = kFALSE ;
     } else {
       mask[i] = kTRUE ;
-      refBin[i] = dynamic_cast<RooAbsLValue*>(arg)->getBin();
+      refBin[i] = argLv->getBin();
     }
   }
     
   // Loop over entire data set, skipping masked entries
   ROOT::Math::KahanSum<double> total;
-  for (Int_t ibin=0; ibin < _wgtVec.size(); ++ibin) {
+  for (Int_t ibin=0; ibin < _arrSize; ++ibin) {
 
     std::size_t tmpibin = ibin;
     Bool_t skip(kFALSE) ;
@@ -1592,17 +1593,18 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
   std::vector<Double_t> rangeHi(_vars.getSize(), +std::numeric_limits<Double_t>::infinity());
 
   for (std::size_t i = 0; i < _vars.size(); ++i) {
-    const auto arg = _vars[i];
+    const RooAbsArg* arg = _vars[i];
+    const RooAbsLValue* argLV = _lvvars[i]; // Same object as above, but cross cast
+
     RooAbsArg* sumsetv = sumSet.find(*arg);
     RooAbsArg* slicesetv = sliceSet.find(*arg);
     mask[i] = !sumsetv;
     if (mask[i]) {
-      auto argLV = dynamic_cast<const RooAbsLValue*>(arg);
       assert(argLV);
       refBin[i] = argLV->getBin();
     }
 
-	auto it = ranges.find(sumsetv ? sumsetv : slicesetv);
+    auto it = ranges.find(sumsetv ? sumsetv : slicesetv);
     if (ranges.end() != it) {
       rangeLo[i] = it->second.first;
       rangeHi[i] = it->second.second;
@@ -1677,16 +1679,15 @@ const std::vector<double>& RooDataHist::calculatePartialBinVolume(const RooArgSe
 
   // Recalculate partial bin volume cache
   for (Int_t ibin=0; ibin < _arrSize ;ibin++) {
-    Int_t j(0), idx(0), tmp(ibin) ;
+    Int_t idx(0), tmp(ibin) ;
     Double_t theBinVolume(1) ;
-    for (const auto absArg : _vars) {
-      auto arg = dynamic_cast<const RooAbsLValue*>(absArg);
-      if (!arg)
-        break;
+    for (unsigned int j=0; j < _lvvars.size(); ++j) {
+      const RooAbsLValue* arg = _lvvars[j];
+      assert(arg);
 
-      idx  = tmp / _idxMult[j] ;
-      tmp -= idx*_idxMult[j++] ;
-      if (selDim[j-1]) {
+      idx  = tmp / _idxMult[j];
+      tmp -= idx*_idxMult[j];
+      if (selDim[j]) {
         theBinVolume *= arg->getBinWidth(idx) ;
       }
     }
