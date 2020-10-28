@@ -205,7 +205,7 @@ protected:
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
                   std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max(), Bool_t copyCache=kTRUE) override;
   Double_t interpolateDim(RooRealVar& dim, const RooAbsBinning* binning, Double_t xval, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) ;
-  void calculatePartialBinVolume(const RooArgSet& dimSet) const ;
+  const std::vector<double>& calculatePartialBinVolume(const RooArgSet& dimSet) const ;
   void checkBinBounds() const;
 
   void adjustBinning(const RooArgList& vars, const TH1& href, Int_t* offset=0) ;
@@ -242,7 +242,6 @@ protected:
  
   mutable std::size_t _curIndex{std::numeric_limits<std::size_t>::max()}; // Current index
 
-  mutable std::vector<Double_t>* _pbinv ; //! Partial bin volume array
   mutable RooCacheManager<std::vector<Double_t> > _pbinvCacheMgr ; //! Cache manager for arrays of partial bin volumes
   std::vector<RooAbsLValue*> _lvvars ; //! List of observables casted as RooAbsLValue
   std::vector<std::unique_ptr<const RooAbsBinning>> _lvbins ; //! List of used binnings associated with lvalues
