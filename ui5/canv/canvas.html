@@ -1,4 +1,3 @@
-<!--  this file used for ROOT7 RCanvas display -->
 <!DOCTYPE html>
 <html lang="en">
    <head>
@@ -28,42 +27,43 @@
 
    <script type='text/javascript'>
 
+      let batch_mode = JSROOT.decodeUrl().has("batch_mode"),
+          _prereq = "v7";
+
+      if (batch_mode)
+        JSROOT.BatchMode = true;
+      else
+        _prereq += ";openui5";
+
       JSROOT.connectWebWindow({
-         prereq: "v7",
-         prereq_logdiv: "CanvasDiv",
+         prereq: _prereq,
+         prereq_logdiv: "CanvasDiv"
          // openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
       }).then(handle => {
          let painter = new JSROOT.v7.RCanvasPainter(null);
-         painter.use_openui = true;
-         painter.batch_mode = JSROOT.decodeUrl().has("batch_mode");
-         if (painter.batch_mode) JSROOT.BatchMode = true;
+         painter.batch_mode = batch_mode;
 
          if (window) {
             window.onbeforeunload = painter.WindowBeforeUnloadHanlder.bind(painter);
             if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
          }
 
-         if (painter.use_openui && !painter.batch_mode) {
-
-            painter._window_handle = handle;
+         if (!batch_mode) {
             painter.use_openui = true;
+            painter._window_handle = handle;
 
-            JSROOT.require('openui5').then(() => {
-
-               sap.ui.require(["sap/ui/core/ComponentContainer"], function(ComponentContainer) {
-                  new ComponentContainer({
-                     name: "rootui5.canv",
-                     manifest: true,
-                     async: true,
-                     settings: {
-                        componentData: {
-                           canvas_painter: painter
-                        }
-                     },
-                     height: "100%"
-                  }).placeAt("CanvasDiv")
-               });
-
+            sap.ui.require(["sap/ui/core/ComponentContainer"], ComponentContainer => {
+               new ComponentContainer({
+                  name: "rootui5.canv",
+                  manifest: true,
+                  async: true,
+                  settings: {
+                     componentData: {
+                        canvas_painter: painter
+                     }
+                  },
+                  height: "100%"
+               }).placeAt("CanvasDiv")
             });
 
          } else {
@@ -72,7 +72,7 @@
 
             painter.UseWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
 
-            if (!painter.batch_mode) JSROOT.RegisterForResize(painter);
+            if (!batch_mode) JSROOT.RegisterForResize(painter);
          }
       });
 

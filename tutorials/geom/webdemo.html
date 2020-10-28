@@ -87,7 +87,7 @@
      AddButton("AUTOROTATE ON/OFF","autorotate()","Toggle autorotation ON/OFF");
      AddButton("Quit","quit()","Quit ROOT seesion");
 
-     JSROOT.ConnectWebWindow({
+     JSROOT.connectWebWindow({
        receiver: {
           // method called when connection to server is established
           OnWebsocketOpened: function(handle) {
