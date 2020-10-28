@@ -576,7 +576,6 @@ JSROOT.define([], () => {
     * @param {object} arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
     * @param {string} arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned as arg.first_msg
     * @param {string} [arg.prereq2] - second part of prerequcities, which is loaded parallel to connecting with WebWindow
-    * @param {function} arg.callback - function which is called with WebWindowHandle or when establish connection and get first portion of data
     * @returns {Promise} ready-to-use WebWindowHandle instance
     */
 
@@ -677,11 +676,6 @@ JSROOT.define([], () => {
             resolveFunc(handle);
          }
       });
-
-      // if callback specified, old API is used, callback getting handler and arg again
-      // TODO: remove it once all RWebWindow implementations in ROOT adjusted
-      if (arg.callback)
-         return promise.then(h => arg.callback(h, arg));
 
       return promise;
    }
