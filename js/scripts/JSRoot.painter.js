@@ -3804,11 +3804,11 @@ JSROOT.define(['d3'], (d3) => {
      * @private */
    jsrp.CompressSVG = function(svg) {
 
-      // let s = 'try class="abc cdf" second class="kkk aaa" third';
-      // s = s.replace(/ class=\"[a-z0-9 ]*\"/g, "");
-
       svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g, "url(#$1)")        // decode all URL
                .replace(/ class=\"\w*\"/g, "")                                // remove all classes
+               .replace(/ pad=\"\w*\"/g, "")                                  // remove all pad ids
+               .replace(/ title=\"\"/g, "")                                   // remove all empty titles
+               .replace(/<g objname=\"\w*\" objtype=\"\w*\"/g, "<g")          // remove object ids
                .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g, "")  // remove all empty groups with transform
                .replace(/<g><\/g>/g, "");                                     // remove all empty groups
 
@@ -3847,11 +3847,11 @@ JSROOT.define(['d3'], (d3) => {
 
          main.style("width", args.width + "px").style("height", args.height + "px");
 
-         JSROOT.svg_workaround = undefined;
+         JSROOT._.svg_3ds = undefined;
 
          return JSROOT.draw(main.node(), args.object, args.option || "").then(() => {
 
-            let has_workarounds = jsrp.ProcessSVGWorkarounds && JSROOT.svg_workaround;
+            let has_workarounds = JSROOT._.svg_3ds && jsrp.ProcessSVGWorkarounds;
 
             main.select('svg')
                 .attr("xmlns", "http://www.w3.org/2000/svg")

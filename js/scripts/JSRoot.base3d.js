@@ -64,9 +64,9 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       }
 
       if (need_workaround) {
-         if (!JSROOT.svg_workaround) JSROOT.svg_workaround = [];
-         renderer.workaround_id = JSROOT.svg_workaround.length;
-         JSROOT.svg_workaround[renderer.workaround_id] = "<svg></svg>"; // dummy, provided in AfterRender3D
+         if (!JSROOT._.svg_3ds) JSROOT._.svg_3ds = [];
+         renderer.workaround_id = JSROOT._.svg_3ds.length;
+         JSROOT._.svg_3ds[renderer.workaround_id] = "<svg></svg>"; // dummy, provided in AfterRender3D
 
          // replace DOM element in renderer
          renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -103,7 +103,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       if (renderer.jsroot_render3d == rc.SVG) {
          // case of SVGRenderer
          if (JSROOT.BatchMode) {
-            JSROOT.svg_workaround[renderer.workaround_id] = renderer.makeOuterHTML();
+            JSROOT._.svg_3ds[renderer.workaround_id] = renderer.makeOuterHTML();
          } else {
             let parent = renderer.jsroot_dom.parentNode;
             if (parent) {
@@ -135,7 +135,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
          let dataUrl = canvas.toDataURL("image/png"),
              svg = '<image width="' + canvas.width + '" height="' + canvas.height + '" xlink:href="' + dataUrl + '"></image>';
-         JSROOT.svg_workaround[renderer.workaround_id] = svg;
+         JSROOT._.svg_3ds[renderer.workaround_id] = svg;
       } else {
          let dataUrl = renderer.domElement.toDataURL("image/png");
          d3.select(renderer.jsroot_dom).attr("xlink:href", dataUrl);
@@ -143,10 +143,10 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
    }
 
    jsrp.ProcessSVGWorkarounds = function(svg) {
-      if (!JSROOT.svg_workaround) return svg;
-      for (let k = 0;  k < JSROOT.svg_workaround.length; ++k)
-         svg = svg.replace('<path jsroot_svg_workaround="' + k + '"></path>', JSROOT.svg_workaround[k]);
-      JSROOT.svg_workaround = undefined;
+      if (!JSROOT._.svg_3ds) return svg;
+      for (let k = 0;  k < JSROOT._.svg_3ds.length; ++k)
+         svg = svg.replace('<path jsroot_svg_workaround="' + k + '"></path>', JSROOT._.svg_3ds[k]);
+      JSROOT._.svg_3ds = undefined;
       return svg;
    }
 
