@@ -137,8 +137,8 @@ public:
                            const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
   virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
-			   Option_t *options = "NELU", Double_t xmin=0.50,
-			   Double_t xmax= 0.99,Double_t ymax=0.95) ;
+			   Option_t *options = "NELU", Double_t xmin=0.65,
+			   Double_t xmax = 0.9, Double_t ymax = 0.9) ;
 
   // Built-in generator support
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
