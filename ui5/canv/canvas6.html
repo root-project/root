@@ -3,11 +3,10 @@
 <html lang="en">
    <head>
       <meta charset="UTF-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
       <title>ROOT6 TCanvas</title>
       <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
    </head>
-   
+
    <style>
       html { height: 100%; }
       body { min-height: 100%; margin: 0; overflow: hidden }
@@ -26,16 +25,20 @@
          loading scripts...
       </div>
    </body>
-   
+
    <script type='text/javascript'>
-   
-      function InitV6Canvas(handle, args) {
-         
-         var painter = new JSROOT.TCanvasPainter(null);
-         
+
+      JSROOT.connectWebWindow({
+         prereq: "v6",
+         prereq_logdiv: "CanvasDiv",
+         // openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
+      }).then(handle => {
+         let painter = new JSROOT.TCanvasPainter(null),
+             url = JSROOT.decodeUrl();
+
          painter.online_canvas = true;
-         painter.use_openui = (JSROOT.GetUrlOption("noopenui") === null); 
-         painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
+         painter.use_openui = !url.has("noopenui");
+         painter.batch_mode = url.has("batch_mode");
          if (painter.batch_mode) JSROOT.BatchMode = true;
 
          if (window) {
@@ -46,9 +49,9 @@
          if (painter.use_openui && !painter.batch_mode) {
 
             painter._window_handle = handle;
-            
-            return JSROOT.AssertPrerequisites('openui5', function() {
-               
+
+            JSROOT.require('openui5').then(() => {
+
                sap.ui.require(["sap/ui/core/ComponentContainer"], function(ComponentContainer) {
                   new ComponentContainer({
                      name: "rootui5.canv",
@@ -62,20 +65,15 @@
                      height: "100%"
                   }).placeAt("CanvasDiv")
                });
-               
+
             });
+         } else {
+
+            painter.SetDivId("CanvasDiv", -1); // just assign id, nothing else happens
+
+            painter.UseWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
          }
 
-         painter.SetDivId("CanvasDiv", -1); // just assign id, nothing else happens
-
-         painter.UseWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
-      }
-      
-      JSROOT.ConnectWebWindow({
-         prereq: "jq2d;v6;",
-         prereq_logdiv: "CanvasDiv",
-         // openui5src: "https://openui5.hana.ondemand.com/",
-         callback: InitV6Canvas
       });
 
    </script>

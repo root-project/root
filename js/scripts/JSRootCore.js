@@ -2168,16 +2168,14 @@
       if (arg.openui5src) JSROOT.openui5src = arg.openui5src;
       if (arg.openui5libs) JSROOT.openui5libs = arg.openui5libs;
       if (arg.openui5theme) JSROOT.openui5theme = arg.openui5theme;
+      if (!arg.ignoreUrl) {
+         let url = JSROOT.decodeUrl();
+         if (url.has('nogl')) JSROOT.settings.Render3D = JSROOT.constants.Render3D.SVG;
+         if (url.has('libs')) JSROOT._.use_full_libs = true;
+      }
 
       let prereq = "webwindow;";
-      // FIXME: remove for JSROOT v7 once ROOT code is adjusted
-      if (arg && arg.prereq)
-         if (arg.prereq == "openui5")
-            prereq += "painter;openui5"; // because of eve7 app, should be fixed there
-         else
-            prereq += arg.prereq.replace(/;v6;v7/g, ";gpad;v7gpad").replace(/2d;v7;/g, "v7gpad;").replace(/2d;v6;/g, "gpad;");
-
-      console.log('Loading', prereq)
+      if (arg && arg.prereq) prereq += arg.prereq;
 
       return JSROOT.require(prereq).then(() => {
          if (arg && arg.prereq_logdiv && document) {
@@ -2263,8 +2261,6 @@
 
    JSROOT.JSONR_unref = JSROOT.parse;
    JSROOT.MakeSVG = JSROOT.makeSVG;
-   JSROOT.ConnectWebWindow = JSROOT.connectWebWindow;
-
 
    JSROOT._ = _;
    JSROOT.browser = browser;
