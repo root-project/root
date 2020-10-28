@@ -118,13 +118,15 @@ public:
 class RObjectDisplayItem : public RDisplayItem {
 protected:
 
+   int fKind;                              ///< object kind
    const TObject *fObject{nullptr};        ///< ROOT6 object
    std::string fOption;                    ///< drawing options
 
 public:
 
-   RObjectDisplayItem(const TObject *obj, const std::string &opt)
+   RObjectDisplayItem(int kind, const TObject *obj, const std::string &opt)
    {
+      fKind = kind;
       fObject = obj;
       fOption = opt;
    }
