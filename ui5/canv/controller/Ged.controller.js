@@ -91,12 +91,17 @@ sap.ui.define([
 
          if (obj) {
             if ((data._kind === "TAttLine") && (obj.fLineColor!==undefined) && (obj.fLineStyle!==undefined) && (obj.fLineWidth!==undefined)) {
-               if (item == "attline/width") exec = "exec:SetLineWidth(" + pars.value + ")";
-               else if (item == "attline/style") exec = "exec:SetLineStyle(" + pars.value + ")";
-               else if (item == "attline/color") exec = data._painter.GetColorExec(pars.value, "SetLineColor");
+               if (item == "attline/width")
+                  exec = "exec:SetLineWidth(" + pars.value + ")";
+               else if (item == "attline/style")
+                  exec = "exec:SetLineStyle(" + pars.value + ")";
+               else if (item == "attline/color")
+                  exec = data._painter.GetColorExec(pars.value, "SetLineColor");
             } else if ((data._kind === "TAttFill") && (obj.fFillColor!==undefined) && (obj.fFillStyle!==undefined))  {
-               if (item == "attfill/pattern") exec = "exec:SetFillStyle(" + pars.value + ")";
-               else if (item == "attfill/color") exec = data._painter.GetColorExec(pars.value, "SetFillColor");
+               if (item == "attfill/pattern")
+                  exec = "exec:SetFillStyle(" + pars.value + ")";
+               else if (item == "attfill/color")
+                  exec = data._painter.GetColorExec(pars.value, "SetFillColor");
             }
          }
 

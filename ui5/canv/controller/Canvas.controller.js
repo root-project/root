@@ -84,17 +84,19 @@ sap.ui.define([
 
       },
 
+      /** @summary function used to activate GED in full canvas */
       openuiActivateGed: function(painter, kind, mode) {
-         // function used to activate GED in full canvas
-
-         this.showGeEditor(true);
 
          var canvp = this.getCanvasPainter();
 
-         canvp.SelectObjectPainter(painter);
+         return this.showGeEditor(true).then(() => {
+            canvp.SelectObjectPainter(painter);
 
-         if (typeof canvp.ProcessChanges == 'function')
-            canvp.ProcessChanges("sbits", canvp);
+            if (typeof canvp.ProcessChanges == 'function')
+               canvp.ProcessChanges("sbits", canvp);
+
+            return true;
+         });
       },
 
       getCanvasPainter : function(also_without_websocket) {
@@ -260,7 +262,7 @@ sap.ui.define([
       },
 
       showGeEditor : function(new_state) {
-         this.showLeftArea(new_state ? "Ged" : "");
+         return this.showLeftArea(new_state ? "Ged" : "");
       },
 
       cleanupIfGed: function() {
@@ -360,7 +362,7 @@ sap.ui.define([
             viewData: { masterPanel: this },
             layoutData: oLd,
             height: (panel_name == "Panel") ? "100%" : undefined
-         }).then(function(oView) {
+         }).then(oView => {
 
             // workaround, while CanvasPanel.onBeforeRendering called too late
             can_elem.getController().preserveCanvasContent();
@@ -536,10 +538,11 @@ sap.ui.define([
          switch(that) {
             case "Menu": this.setShowMenu(on); break;
             case "StatusBar": this.toggleShowStatus(on); break;
-            case "Editor": this.showGeEditor(on); break;
+            case "Editor": return this.showGeEditor(on);
             case "ToolBar": this.toggleToolBar(on); break;
             case "ToolTips": this.toggleToolTip(on); break;
          }
+         return Promise.resolve(true);
       }
    });
 

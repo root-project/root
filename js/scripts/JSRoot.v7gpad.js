@@ -3762,6 +3762,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }, painter, call_back);
    }
 
+   /** @summary Submit executable command for given painter */
    RCanvasPainter.prototype.SubmitExec = function(painter, exec /*, snapid */) {
       console.log('SubmitExec', exec, painter.snapid);
 
@@ -3775,7 +3776,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }, painter);
    }
 
-   /** Process reply from request to RDrawable */
+   /** @summary Process reply from request to RDrawable */
    RCanvasPainter.prototype.ProcessDrawableReply = function(msg) {
       let reply = JSROOT.parse(msg);
       if (!reply || !reply.reqid || !this._submreq) return false;
@@ -3807,6 +3808,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          case "ToolBar": break;
          case "ToolTips": this.SetTooltipAllowed(on); break;
       }
+      return Promise.resolve(true);
    }
 
    RCanvasPainter.prototype.CompeteCanvasSnapDrawing = function() {
@@ -3836,6 +3838,42 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.ShowSection("ToolTips", this.pad.TestBit(TCanvasStatusBits.kShowToolTips));
    }
 
+
+   /** @summary Method informs that something was changed in the canvas
+     * @desc used to update information on the server (when used with web6gui)
+     * @private */
+   RCanvasPainter.prototype.ProcessChanges = function(kind, painter, subelem) {
+      // check if we could send at least one message more - for some meaningful actions
+      if (!this._websocket || !this._websocket.CanSend(2) || (typeof kind !== "string")) return;
+
+      let msg = "";
+      if (!painter) painter = this;
+      switch (kind) {
+         case "sbits":
+            console.log("Status bits in RCanvas are changed - that to do?");
+            // msg = "STATUSBITS:" + this.GetStatusBits();
+            break;
+         case "frame": // when moving frame
+         case "zoom":  // when changing zoom inside frame
+            console.log("Frame moved or zoom is changed - that to do?");
+            break;
+         case "pave_moved":
+            console.log('TPave is moved inside RCanvas - that to do?')
+            break;
+         default:
+            if ((kind.substr(0,5) == "exec:") && painter && painter.snapid) {
+               this.SubmitExec(painter, kind.substr(5));
+            } else {
+               console.log("UNPROCESSED CHANGES", kind);
+            }
+      }
+
+      if (msg) {
+         console.log("RCanvas::ProcessChanges want ro send  " + msg.length + "  " + msg.substr(0,40));
+      }
+   }
+
+   /** @summary returns true when event status area exist for the canvas */
    RCanvasPainter.prototype.HasEventStatus = function() {
       return this.has_event_status;
    }
