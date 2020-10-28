@@ -207,7 +207,6 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
    /** @summary Set frame activity flag
     * @private */
-
    JSROOT.TFramePainter.prototype.SetActive = function(on) {
       if (this.control)
          this.control.enableKeys = on && JSROOT.key_handling;
@@ -221,7 +220,6 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
      *   - -2222 rendering performed only if there were previous calls, which causes timeout activation
      * @param {number} tmout - specifies delay, after which actual rendering will be invoked
      * @private */
-
    JSROOT.TFramePainter.prototype.Render3D = function(tmout) {
 
       if (tmout === -1111) {

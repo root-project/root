@@ -1436,7 +1436,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
               System: jsrp.Coord.kCARTESIAN,
               AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
               HighRes: 0, Zero: true, Palette: 0, BaseLine: false,
-              Optimize: JSROOT.settings.OptimizeDraw, Mode3D: false,
+              Optimize: JSROOT.settings.OptimizeDraw,
+              Mode3D: false,
+              Render3D: JSROOT.constants.Render3D.Default,
               FrontBox: true, BackBox: true,
               _pmc: false, _plc: false, _pfc: false, need_fillcol: false,
               minimum: -1111, maximum: -1111, ymin: 0, ymax: 0 });
