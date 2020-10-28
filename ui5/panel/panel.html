@@ -28,21 +28,20 @@
 
    <script type='text/javascript'>
 
-      let connect_args = {
+      JSROOT.connectWebWindow({
          prereq_logdiv: "PanelDiv",
-    	   // openui5src: "jsroot",
-    	   // openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
-    	   // openui5libs: "sap.ui.core, sap.ui.layout, sap.m",
+         // openui5src: "jsroot",
+         // openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
+         // openui5libs: "sap.ui.core, sap.ui.layout, sap.m",
          first_recv: "SHOWPANEL:",
          prereq2: "openui5",
          callback: ShowOpenui5Panel
-      };
+      }).then(handle => {
 
-      JSROOT.connectWebWindow(connect_args).then(handle => {
+         if (!handle || !sap) return false;
 
-         let viewName = connect_args.first_msg;
-
-         if (!handle || !viewName || !sap) return false;
+         let viewName = handle.first_msg;
+         if (!viewName) return false;
 
          if ((viewName.indexOf("rootui5.") !== 0) && (viewName.indexOf("jsroot.") !== 0) && (viewName.indexOf("sap.") !== 0)) {
             let p = viewName.indexOf(".");

@@ -2243,7 +2243,8 @@
       return this;
    }
 
-   // FIXME: for backward compatibility, will be removed in v6.2
+   /// FIXME: for backward compatibility, will be removed in v6.2
+
    JSROOT.GetUrlOption = function(opt, url, dflt) {
       return JSROOT.decodeUrl(url).get(opt, dflt === undefined ? null : dflt);
    }
@@ -2261,6 +2262,8 @@
 
    JSROOT.JSONR_unref = JSROOT.parse;
    JSROOT.MakeSVG = JSROOT.makeSVG;
+
+   /// end of backward compatibility block
 
    JSROOT._ = _;
    JSROOT.browser = browser;

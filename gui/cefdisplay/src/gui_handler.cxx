@@ -207,7 +207,7 @@ protected:
 
    void CheckWSPageContent(THttpWSHandler *) override
    {
-      std::string search = "JSROOT.ConnectWebWindow({";
+      std::string search = "JSROOT.connectWebWindow({";
       std::string replace = search + "platform:\"cef3\",socket_kind:\"longpoll\",";
 
       ReplaceAllinContent(search, replace, true);

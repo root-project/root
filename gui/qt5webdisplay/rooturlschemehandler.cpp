@@ -78,7 +78,7 @@ protected:
 
    void CheckWSPageContent(THttpWSHandler *) override
    {
-      std::string search = "JSROOT.ConnectWebWindow({";
+      std::string search = "JSROOT.connectWebWindow({";
       std::string replace = search + "platform:\"qt5\",socket_kind:\"rawlongpoll\",";
 
       ReplaceAllinContent(search, replace, true);
