@@ -36,6 +36,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
      * @private */
    JSROOT.TFramePainter.prototype.Create3DScene = function(arg, render3d) {
 
+      let pp = this.pad_painter();
+
       if ((arg!==undefined) && (arg < 0)) {
 
          if (!this.mode3d) return;
@@ -43,7 +45,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          //if (typeof this.TestAxisVisibility === 'function')
          this.TestAxisVisibility(null, this.toplevel);
 
-         this.clear_3d_canvas();
+         if (pp) pp.clear_3d_canvas();
 
          jsrp.DisposeThreejsObject(this.scene);
          if (this.control) this.control.Cleanup();
@@ -94,7 +96,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       }
 
       render3d = jsrp.GetRender3DKind(render3d);
-      let sz = this.size_for_3d(undefined, render3d);
+      let sz = pp.size_for_3d(undefined, render3d);
 
       this.size_z3d = 100;
       this.size_xy3d = (sz.height > 10) && (sz.width > 10) ? Math.round(sz.width/sz.height*this.size_z3d) : this.size_z3d;
@@ -125,7 +127,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       this.renderer = jsrp.Create3DRenderer(this.scene_width, this.scene_height, render3d);
 
       this.webgl = (render3d === JSROOT.constants.Render3D.WebGL);
-      this.add_3d_canvas(sz, this.renderer.jsroot_dom, this.webgl);
+      pp.add_3d_canvas(sz, this.renderer.jsroot_dom, this.webgl);
 
       this.first_render_tm = 0;
       this.enable_highlight = false;
@@ -286,9 +288,10 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
    /** @summary Check is 3D drawing need to be resized */
    JSROOT.TFramePainter.prototype.Resize3D = function() {
 
-      let sz = this.size_for_3d(this.access_3d_kind());
+      let pp = this.pad_painter(),
+          sz = pp.size_for_3d(pp.access_3d_kind());
 
-      this.apply_3d_size(sz);
+      pp.apply_3d_size(sz);
 
       if ((this.scene_width === sz.width) && (this.scene_height === sz.height)) return false;
 
