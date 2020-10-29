@@ -272,11 +272,10 @@ bool InterpreterStress::stressReflection() {
    // This is fast
    int ntimes = fNtimes * 800;
 
-#if !defined(__CINT__) && !defined(__CLING__)
    TString macro(fBinary);
    macro += ".cxx";
    gInterpreter->LoadMacro(macro);
-#endif
+
    int numfuncs = Klass::last_klf - Klass::first_klf + 1;
    bool success = true;
    for (Int_t i = 0; success && i < ntimes; ++i) {
