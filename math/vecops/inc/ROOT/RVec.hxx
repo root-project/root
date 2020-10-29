@@ -16,6 +16,12 @@
 #define ROOT_RVEC
 
 #ifdef _WIN32
+   #ifndef M_PI
+      #ifndef _USE_MATH_DEFINES
+         #define _USE_MATH_DEFINES
+      #endif
+      #include <math.h>
+   #endif
    #define _VECOPS_USE_EXTERN_TEMPLATES false
 #else
    #define _VECOPS_USE_EXTERN_TEMPLATES true
