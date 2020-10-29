@@ -13,9 +13,6 @@ if(NOT root7)
   return()
 endif()
 
-if(iolite)
-  set(RIOLITELIBS ROOTIOLite)
-endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
 HEADERS
@@ -66,8 +63,6 @@ SOURCES
   v7/src/RPageStorageFile.cxx
 LINKDEF
   LinkDef.h
-LIBRARIES
-  ${RIOLITELIBS}
 DEPENDENCIES
   RIO
   ROOTVecOps

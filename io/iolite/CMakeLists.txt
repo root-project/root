@@ -14,29 +14,23 @@ else ()
   set(rawfile_local_sources src/RRawFileUnix.cxx)
 endif ()
 
+if (uring)
+  set(rawfile_local_headers ROOT/RIoUring.hxx)
+endif ()
 
-if(iolite)
-  ROOT_LINKER_LIBRARY(ROOTIOLite
+
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTIOLite
+  STAGE1
+  HEADERS
+    ${rawfile_local_headers}
+    ROOT/RRawFile.hxx
+    ROOT/RRawFileUnix.hxx
+    ROOT/RRawFileWin.hxx
+  SOURCES
     ${rawfile_local_sources}
     src/RRawFile.cxx
-    DEPENDENCIES
-      Foundation
+  LIBRARIES
+    Foundation
+  DEPENDENCIES
+    Core
   )
-
-  ROOT_INSTALL_HEADERS()
-else()
-  ROOT_STANDARD_LIBRARY_PACKAGE(ROOTIOLite
-    STAGE1
-    HEADERS
-      ROOT/RRawFile.hxx
-      ROOT/RRawFileUnix.hxx
-      ROOT/RRawFileWin.hxx
-    SOURCES
-      ${rawfile_local_sources}
-      src/RRawFile.cxx
-    DICTIONARY_OPTIONS
-      -writeEmptyRootPCM
-    DEPENDENCIES
-      Core
-    )
-endif()

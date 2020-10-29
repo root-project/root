@@ -9,9 +9,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(iolite)
-  set(RIOLITELIBS ROOTIOLite)
-endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RDAVIX
   HEADERS
@@ -23,7 +20,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RDAVIX
     src/TDavixFile.cxx
     src/TDavixSystem.cxx
   LIBRARIES
-    ${RIOLITELIBS}
     Davix::Davix
   DEPENDENCIES
     Net
