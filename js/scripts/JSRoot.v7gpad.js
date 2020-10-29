@@ -2848,7 +2848,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // will be used in SetDivId to assign style to painter
          this.next_rstyle = lst[indx].fStyle || this.rstyle;
 
-         if (snap._typename === "ROOT::Experimental::RObjectDisplayItem") {
+         if (snap._typename === "ROOT::Experimental::TObjectDisplayItem") {
 
             // identifier used in RObjectDrawable
             let webSnapIds = { kNone: 0,  kObject: 1, kColors: 4, kStyle: 5, kPalette: 6 };
