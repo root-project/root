@@ -2403,7 +2403,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return true;
       }
 
-      let svg_parent = this.svg_pad(),
+      let svg_parent = this.svg_pad(this.pad_name),
           svg_can = this.svg_canvas(),
           width = svg_parent.property("draw_width"),
           height = svg_parent.property("draw_height"),
@@ -2706,7 +2706,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    RPadPainter.prototype.RedrawByResize = function() {
-      if (this.access_3d_kind() === 1) return true;
+      if (this.access_3d_kind() === JSROOT.constants.Embed3D.Overlay) return true;
 
       for (let i = 0; i < this.painters.length; ++i)
          if (typeof this.painters[i].RedrawByResize === 'function')
@@ -2826,7 +2826,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             let padpainter = new RPadPainter(subpad, false);
             padpainter.DecodeOptions("");
-            padpainter.SetDivId(this.divid); // pad painter will be registered in the canvas painters list
+            padpainter.SetDivId(this.divid); // pad painter will be registered in parent painters list
             padpainter.AssignSnapId(snap.fObjectID);
             padpainter.rstyle = snap.fStyle;
 
@@ -2838,7 +2838,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             // we select current pad, where all drawing is performed
             let prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
 
-            padpainter.DrawNextSnap(snap.fPrimitives, -1, function() {
+            padpainter.DrawNextSnap(snap.fPrimitives, -1, () => {
                padpainter.CurrentPadName(prev_name);
                draw_callback(padpainter);
             });
@@ -3113,11 +3113,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let main = pp.frame_painter();
          if (!main || (typeof main.Render3D !== 'function')) return;
 
-         let can3d = main.access_3d_kind();
+         let can3d = pp.access_3d_kind();
 
          if ((can3d !== JSROOT.constants.Embed3D.Overlay) && (can3d !== JSROOT.constants.Embed3D.Embed)) return;
 
-         let sz2 = main.size_for_3d(JSROOT.constants.Embed3D.Embed); // get size and position of DOM element as it will be embed
+         let sz2 = pp.size_for_3d(JSROOT.constants.Embed3D.Embed); // get size and position of DOM element as it will be embed
 
          let canvas = main.renderer.domElement;
          main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
@@ -3794,12 +3794,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Submit executable command for given painter */
-   RCanvasPainter.prototype.SubmitExec = function(painter, exec /*, snapid */) {
-      console.log('SubmitExec', exec, painter.snapid);
+   RCanvasPainter.prototype.SubmitExec = function(painter, exec, subelem) {
+      console.log('SubmitExec', exec, painter.snapid, subelem);
 
       // snapid is intentionally ignored - only painter.snapid has to be used
-
       if (!this._websocket) return;
+
+      if (subelem) {
+         if ((subelem == "xaxis") || (subelem == "yaxis") || (subelem == "zaxis"))
+            exec = subelem + "#" + exec;
+         else
+            return console.log(`not recoginzed subelem ${subelem} in SubmitExec`);
+       }
 
       this.SubmitDrawableRequest("", {
          _typename: "ROOT::Experimental::RDrawableExecRequest",
@@ -3893,7 +3899,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             break;
          default:
             if ((kind.substr(0,5) == "exec:") && painter && painter.snapid) {
-               this.SubmitExec(painter, kind.substr(5));
+               this.SubmitExec(painter, kind.substr(5), subelem);
             } else {
                console.log("UNPROCESSED CHANGES", kind);
             }

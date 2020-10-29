@@ -103,8 +103,20 @@ void TObjectDrawable::Execute(const std::string &exec)
 
    TObject *obj = fObj.get();
 
+   std::string sub, ex = exec;
+   if (ex.compare(0, 6, "xaxis#") == 0) {
+      ex.erase(0,6);
+      ex.insert(0, "GetXaxis()->");
+   } else if (ex.compare(0, 6, "yaxis#") == 0) {
+      ex.erase(0,6);
+      ex.insert(0, "GetYaxis()->");
+   } else if (ex.compare(0, 6, "zaxis#") == 0) {
+      ex.erase(0,6);
+      ex.insert(0, "GetZaxis()->");
+   }
+
    std::stringstream cmd;
-   cmd << "((" << obj->ClassName() << "* ) " << std::hex << std::showbase << (size_t)obj << ")->" << exec << ";";
+   cmd << "((" << obj->ClassName() << "* ) " << std::hex << std::showbase << (size_t)obj << ")->" << ex << ";";
    std::cout << "TObjectDrawable::Execute Obj " << obj->GetName() << "Cmd " << cmd.str() << std::endl;
    gROOT->ProcessLine(cmd.str().c_str());
 }
