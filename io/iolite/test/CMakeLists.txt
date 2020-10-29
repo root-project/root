@@ -9,4 +9,4 @@
 ############################################################################
 
 
-ROOT_ADD_GTEST(RRawFile RRawFile.cxx LIBRARIES ROOTIOLite Foundation)
+ROOT_ADD_GTEST(RRawFile RRawFile.cxx LIBRARIES ROOTIOLite ROOTFoundation)

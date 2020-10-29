@@ -155,7 +155,7 @@ endif()
 add_subdirectory(rootcling_stage1)
 
 #-------------------------------------------------------------------------------
-ROOT_LINKER_LIBRARY(Core $<TARGET_OBJECTS:BaseTROOT> ${objectlibs} DEPENDENCIES Foundation BUILTINS LZMA)
+ROOT_LINKER_LIBRARY(Core $<TARGET_OBJECTS:BaseTROOT> ${objectlibs} DEPENDENCIES ROOTFoundation BUILTINS LZMA)
 
 if (libcxx AND NOT APPLE)
   # In case we use libcxx and glibc together there is a mismatch of the

@@ -30,7 +30,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTIOLite
     ${rawfile_local_sources}
     src/RRawFile.cxx
   LIBRARIES
-    Foundation
+    ROOTFoundation
   DEPENDENCIES
     Core
   )

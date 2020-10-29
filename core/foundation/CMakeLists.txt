@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -44,8 +44,8 @@ if(root7)
   ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()
 
-ROOT_LINKER_LIBRARY(Foundation ${FOUNDATION_SOURCES})
-target_include_directories(Foundation PRIVATE
+ROOT_LINKER_LIBRARY(ROOTFoundation ${FOUNDATION_SOURCES})
+target_include_directories(ROOTFoundation PRIVATE
    ${FOUNDATION_V7_INC}
    ${CMAKE_SOURCE_DIR}/core/foundation/res
    ${CMAKE_BINARY_DIR}/ginclude
@@ -59,7 +59,7 @@ target_include_directories(Foundation_Stage1 PRIVATE
 )
 
 if(MSVC)
-   target_include_directories(Foundation PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+   target_include_directories(ROOTFoundation PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
    target_include_directories(Foundation_Stage1 PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
 endif()
 

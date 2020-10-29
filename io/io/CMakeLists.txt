@@ -52,8 +52,6 @@ ROOT_LINKER_LIBRARY(RIO
     ROOTIOLite
 )
 
-#target_link_libraries(RIO PUBLIC Foundation)
-
 target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
 
 if(builtin_nlohmannjson)
