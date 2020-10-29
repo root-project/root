@@ -12,6 +12,7 @@
 #include <ROOT/RDrawable.hxx>
 
 class TObject;
+class TColor;
 
 namespace ROOT {
 namespace Experimental {
@@ -38,6 +39,8 @@ private:
    Internal::RIOShared<TObject> fObj;  ///< The object to be painted
    std::string fOpts;                  ///< drawing options
 
+   const char *GetColorCode(TColor *col);
+
 protected:
 
    void CollectShared(Internal::RIOSharedVector_t &vect) final { vect.emplace_back(&fObj); }
@@ -52,16 +55,17 @@ public:
    // special kinds, see TWebSnapshot enums
    enum EKind {
       kColors = 4,   ///< list of ROOT colors
-      kStyle = 5     ///< instance of TStyle object
+      kStyle = 5,    ///< instance of TStyle object
+      kPalette = 6   ///< list of colors from palette
    };
 
    RObjectDrawable() : RDrawable("tobject") {}
 
-   virtual ~RObjectDrawable();
+   virtual ~RObjectDrawable() = default;
 
    RObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt = "") : RDrawable("tobject"), fKind(kObject), fObj(obj), fOpts(opt) {}
 
-   RObjectDrawable(EKind kind) : RDrawable("tobject"), fKind(kind) {}
+   RObjectDrawable(EKind kind, const std::string &opt = "");
 };
 
 } // namespace Experimental

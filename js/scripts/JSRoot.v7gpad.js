@@ -2851,10 +2851,32 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (snap._typename === "ROOT::Experimental::RObjectDisplayItem") {
 
             // identifier used in RObjectDrawable
-            let webSnapIds = { kNone: 0,  kObject: 1, kColors: 4, kStyle: 5 };
+            let webSnapIds = { kNone: 0,  kObject: 1, kColors: 4, kStyle: 5, kPalette: 6 };
 
             if (snap.fKind == webSnapIds.kStyle) {
                JSROOT.extend(JSROOT.gStyle, snap.fObject);
+               continue;
+            }
+
+            if (snap.fKind == webSnapIds.kColors) {
+               let ListOfColors = [], arr = snap.fObject.arr;
+               for (let n = 0; n < arr.length; ++n) {
+                  let name = arr[n].fString, p = name.indexOf("=");
+                  if (p > 0)
+                     ListOfColors[parseInt(name.substr(0,p))] =name.substr(p+1);
+               }
+
+               this.root_colors = ListOfColors;
+               // set global list of colors
+               // jsrp.adoptRootColors(ListOfColors);
+               continue;
+            }
+
+            if (snap.fKind == webSnapIds.kPalette) {
+               let arr = snap.fObject.arr, palette = [];
+               for (let n = 0; n < arr.length; ++n)
+                  palette[n] =  arr[n].fString;
+               this.custom_palette = new JSROOT.ColorPalette(palette);
                continue;
             }
 

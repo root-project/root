@@ -55,13 +55,17 @@ void draw_v6()
       }
    }
 
-   auto style = std::shared_ptr<TStyle>((TStyle *)gStyle->Clone());
+   gStyle->SetPalette(kRainBow);
 
    auto canvas = RCanvas::Create("RCanvas showing a v6 objects");
 
    // place copy of gStyle object, will be applied on JSROOT side
    // set on the canvas before any other object is drawn
    canvas->Draw<RObjectDrawable>(RObjectDrawable::kStyle);
+
+   // copy custom palette to canvas, will be used for col drawings
+   // style object does not include color settings
+   canvas->Draw<RObjectDrawable>(RObjectDrawable::kPalette);
 
    // Divide canvas on 2x2 sub-pads to show different draw options
    auto subpads = canvas->Divide(2,2);
