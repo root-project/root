@@ -42,7 +42,7 @@ sap.ui.define([
       },
 
       addFragment : function(page, kind, model) {
-         var fragm = this.gedFragments[kind];
+         let fragm = this.gedFragments[kind];
 
          if (!fragm)
             return Fragment.load({
@@ -56,7 +56,7 @@ sap.ui.define([
 
          fragm.ged_fragment = true; // mark as ged fragment
 
-         var html = new HTML();
+         let html = new HTML();
          html.setContent("<hr>");
          html.setTooltip(kind);
          page.addContent(html);
@@ -68,7 +68,7 @@ sap.ui.define([
       /// function called when user changes model property
       /// data object includes _kind, _painter and _handle (optionally)
       modelPropertyChange : function(evnt, data) {
-         var pars = evnt.getParameters();
+         let pars = evnt.getParameters();
          console.log('Model property changes', pars.path, pars.value, data._kind);
 
          if (data._handle) {
@@ -80,7 +80,7 @@ sap.ui.define([
             data._handle.changed = true;
          }
 
-         var exec = "", item = pars.path.substr(1), obj;
+         let exec = "", item = pars.path.substr(1), obj;
 
          if (data._painter) {
             obj = data._painter.snapid ? data._painter.GetObject() : null;
@@ -111,9 +111,38 @@ sap.ui.define([
             this.currentPadPainter.Redraw();
       },
 
+      processAxisModelChange: function(evnt, data) {
+         console.log('Change axis values');
+
+         let pars = evnt.getParameters(),
+             item = pars.path.substr(1),
+             exec = "", painter = data._painter,
+             axis = painter.GetObject();
+
+         // while axis painter is temporary object, we should not try change it attributes
+
+         if (!this.currentPadPainter) return;
+
+         if (item == "axiscolor") {
+            axis.fAxisColor = this.currentPadPainter.add_color(pars.value);
+            exec = painter.GetColorExec(pars.value, "SetAxisColor");
+         }
+
+         // FIXME in JSROOT: should work without extra args
+         let main = this.currentPadPainter.main_painter(true, this.currentPadPainter.this_pad_name);
+
+         if (main && main.snapid) {
+            console.log('Invoke interactive redraw ', main.snapid, painter.name)
+            main.InteractiveRedraw("pad", exec, painter.name);
+         } else {
+            console.log('pad', this.currentPadPainter.this_pad_name, this.currentPadPainter.pad_name, 'iscan', this.currentPadPainter.iscan)
+            console.log('Do have main = ', main ? main.smapid : "---")
+            this.currentPadPainter.Redraw();
+         }
+      },
+
       processHistModelChange : function(evnt, data) {
-         var pars = evnt.getParameters(), opts = data.options;
-         console.log('Hist model changes', pars.path, pars.value);
+         let pars = evnt.getParameters(), opts = data.options;
 
          opts.Mode3D = opts.Mode3Dindx > 0;
          opts.Lego = parseInt(opts.Lego);
@@ -131,65 +160,61 @@ sap.ui.define([
          this.currentPadPainter = padpainter;
          this.currentPainter = painter;
 
-         var obj = painter.GetObject();
+         let obj = painter.GetObject();
 
-         this.getView().getModel().setProperty("/SelectedClass", obj ? obj._typename : painter.GetTipName());
+         let selectedClass = obj ? obj._typename : painter.GetTipName();
 
-         var oPage = this.getView().byId("ged_page");
+         this.getView().getModel().setProperty("/SelectedClass", selectedClass);
+
+         let oPage = this.getView().byId("ged_page");
          oPage.removeAllContent();
 
          if (painter.lineatt && painter.lineatt.used && !painter.lineatt.not_standard) {
-            var model = new JSONModel( { attline: painter.lineatt } );
+            let model = new JSONModel( { attline: painter.lineatt } );
             model.attachPropertyChange({ _kind: "TAttLine", _painter: painter, _handle: painter.lineatt }, this.modelPropertyChange, this);
 
             this.addFragment(oPage, "TAttLine", model);
          }
 
          if (painter.fillatt && painter.fillatt.used) {
-            var model = new JSONModel( { attfill: painter.fillatt } );
+            let model = new JSONModel( { attfill: painter.fillatt } );
             model.attachPropertyChange({ _kind: "TAttFill", _painter: painter, _handle: painter.fillatt }, this.modelPropertyChange, this);
 
             this.addFragment(oPage, "TAttFill", model);
          }
 
          if (painter.markeratt && painter.markeratt.used) {
-            var model = new JSONModel( { attmark: painter.markeratt } );
+            let model = new JSONModel( { attmark: painter.markeratt } );
             model.attachPropertyChange({ _kind: "TAttMarker", _painter: painter, _handle: painter.markeratt }, this.modelPropertyChange, this);
 
             this.addFragment(oPage, "TAttMarker", model);
          }
 
          if (typeof painter.processTitleChange == 'function') {
-            var obj = painter.processTitleChange("check");
-            if (obj) {
-               var model = new JSONModel( { tnamed: obj } );
+            let tobj = painter.processTitleChange("check");
+            if (tobj) {
+               let model = new JSONModel( { tnamed: tobj } );
                model.attachPropertyChange( {}, painter.processTitleChange, painter );
                this.addFragment(oPage, "TNamed", model);
             }
+         }
 
-            if (typeof painter.GetHisto == 'function') {
+         if (selectedClass == "TAxis") {
+            let model = new JSONModel( { axiscolor: painter.lineatt.color } );
+            this.addFragment(oPage, "Axis", model);
+            model.attachPropertyChange({ _kind: "TAxis", _painter: painter, _place: painter.name }, this.processAxisModelChange, this);
+         }
 
-               // this object used to copy ged setting from options and back,
-               // do not (yet) allow to change options directly
+         if (typeof painter.GetHisto == 'function') {
 
-/*               if (painter.ged === undefined)
-                  painter.ged = { ndim: painter.Dimension(), Errors: 0, Style: 0, Contor: 1, Lego: 2 };
+            painter.options.Mode3Dindx = painter.options.Mode3D ? 1 : 0;
 
-               painter.ged.mode3d = painter.mode3d ? 1 : 0;
-               painter.ged.markers = painter.options.Mark;
-               painter.ged.bar = painter.options.Bar;
-               painter.ged.Lego = painter.options.Lego;
-*/
+            let model = new JSONModel( { opts : painter.options } );
 
-               painter.options.Mode3Dindx = painter.options.Mode3D ? 1 : 0;
+            // model.attachPropertyChange({}, painter.processTitleChange, painter);
+            this.addFragment(oPage, "Hist", model);
 
-               var model = new JSONModel( { opts : painter.options } );
-
-               // model.attachPropertyChange({}, painter.processTitleChange, painter);
-               this.addFragment(oPage, "Hist", model);
-
-               model.attachPropertyChange({ options: painter.options }, this.processHistModelChange, this);
-            }
+            model.attachPropertyChange({ options: painter.options }, this.processHistModelChange, this);
          }
       },
 
@@ -198,12 +223,12 @@ sap.ui.define([
 
          console.log('GED sees selected object redraw');
 
-         var page = this.getView().byId("ged_page");
-         var cont = page.getContent();
+         let page = this.getView().byId("ged_page");
+         let cont = page.getContent();
 
-         for (var n=0;n<cont.length;++n)
+         for (let n = 0; n < cont.length; ++n)
             if (cont[n] && cont[n].ged_fragment) {
-               var model = cont[n].getModel();
+               let model = cont[n].getModel();
 
                model.refresh();
             }
