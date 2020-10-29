@@ -407,8 +407,11 @@ protected:
 
 
   // Internal consistency checking (needed by RooDataSet)
-  virtual Bool_t isValid() const ;
-  virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ;
+  /// Check if current value is valid.
+  virtual bool isValid() const { return isValidReal(_value); }
+  /// Interface function to check if given value is a valid value for this object. Returns true unless overridden.
+  virtual bool isValidReal(double /*value*/, bool printError = false) const { (void)printError; return true; }
+
 
   // Function evaluation and error tracing
   Double_t traceEval(const RooArgSet* set) const ;
