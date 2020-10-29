@@ -1903,10 +1903,13 @@ JSROOT.define(['d3'], (d3) => {
 
       let cp = this.canv_painter();
       if (!cp) return null;
-      if (cp.custom_palette && !palettedid) return cp.custom_palette;
+      if (cp.custom_palette && !palettedid)
+         return cp.custom_palette;
 
-      if (force && jsrp.GetColorPalette)
+      if (force && jsrp.GetColorPalette) {
+         console.log('Create palette !!!!');
          cp.custom_palette = jsrp.GetColorPalette(palettedid);
+       }
 
       return cp.custom_palette;
    }
