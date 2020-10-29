@@ -6,7 +6,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RObjectDrawable.hxx>
+#include <ROOT/TObjectDrawable.hxx>
 
 #include <ROOT/RDisplayItem.hxx>
 #include <ROOT/RLogger.hxx>
@@ -25,7 +25,7 @@
 
 using namespace ROOT::Experimental;
 
-RObjectDrawable::RObjectDrawable(EKind kind, const std::string &opt) : RDrawable("tobject"), fKind(kind), fOpts(opt)
+TObjectDrawable::TObjectDrawable(EKind kind, const std::string &opt) : RDrawable("tobject"), fKind(kind), fOpts(opt)
 {
    switch (fKind) {
       case kColors: {
@@ -69,7 +69,7 @@ RObjectDrawable::RObjectDrawable(EKind kind, const std::string &opt) : RDrawable
 ////////////////////////////////////////////////////////////////////
 /// Convert TColor to RGB string for using with SVG
 
-const char *RObjectDrawable::GetColorCode(TColor *col)
+const char *TObjectDrawable::GetColorCode(TColor *col)
 {
    static TString code;
 
@@ -82,22 +82,22 @@ const char *RObjectDrawable::GetColorCode(TColor *col)
 }
 
 
-std::unique_ptr<RDisplayItem> RObjectDrawable::Display(const RDisplayContext &ctxt)
+std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ctxt)
 {
    if (GetVersion() > ctxt.GetLastVersion())
-      return std::make_unique<RObjectDisplayItem>(fKind, fObj.get(), fOpts);
+      return std::make_unique<TObjectDisplayItem>(fKind, fObj.get(), fOpts);
 
    return nullptr;
 }
 
-void RObjectDrawable::PopulateMenu(RMenuItems &items)
+void TObjectDrawable::PopulateMenu(RMenuItems &items)
 {
    // fill context menu items for the ROOT class
    if (fKind == kObject)
       items.PopulateObjectMenu(fObj.get(), fObj.get()->IsA());
 }
 
-void RObjectDrawable::Execute(const std::string &exec)
+void TObjectDrawable::Execute(const std::string &exec)
 {
    if (fKind != kObject) return;
 
@@ -105,6 +105,6 @@ void RObjectDrawable::Execute(const std::string &exec)
 
    std::stringstream cmd;
    cmd << "((" << obj->ClassName() << "* ) " << std::hex << std::showbase << (size_t)obj << ")->" << exec << ";";
-   std::cout << "RObjectDrawable::Execute Obj " << obj->GetName() << "Cmd " << cmd.str() << std::endl;
+   std::cout << "TObjectDrawable::Execute Obj " << obj->GetName() << "Cmd " << cmd.str() << std::endl;
    gROOT->ProcessLine(cmd.str().c_str());
 }

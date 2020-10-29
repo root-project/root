@@ -21,7 +21,7 @@
 #pragma link C++ class ROOT::Experimental::RDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RDrawableDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RIndirectDisplayItem+;
-#pragma link C++ class ROOT::Experimental::RObjectDisplayItem+;
+#pragma link C++ class ROOT::Experimental::TObjectDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RDrawableReply+;
 #pragma link C++ class ROOT::Experimental::RDrawableRequest+;
 #pragma link C++ class ROOT::Experimental::RDrawableExecRequest+;
@@ -38,7 +38,7 @@
 #pragma link C++ class ROOT::Experimental::Detail::RArgsMenuItem+;
 #pragma link C++ class ROOT::Experimental::RMenuItems+;
 #pragma link C++ class ROOT::Experimental::RDrawableMenuRequest+;
-#pragma link C++ class ROOT::Experimental::RObjectDrawable+;
+#pragma link C++ class ROOT::Experimental::TObjectDrawable+;
 #pragma link C++ class ROOT::Experimental::RPadUserAxisBase+;
 #pragma link C++ class ROOT::Experimental::RPadCartesianUserAxis+;
 #pragma link C++ class ROOT::Experimental::RPadExtent+;

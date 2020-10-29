@@ -6,8 +6,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RObjectDrawable
-#define ROOT7_RObjectDrawable
+#ifndef ROOT7_TObjectDrawable
+#define ROOT7_TObjectDrawable
 
 #include <ROOT/RDrawable.hxx>
 
@@ -19,7 +19,7 @@ namespace Experimental {
 
 class RPadBase;
 
-/** \class RObjectDrawable
+/** \class TObjectDrawable
 \ingroup GpadROOT7
 \brief Provides v7 drawing facilities for TObject types (TGraph etc).
 \author Sergey Linev
@@ -27,7 +27,7 @@ class RPadBase;
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RObjectDrawable final : public RDrawable {
+class TObjectDrawable final : public RDrawable {
 private:
 
    enum {
@@ -59,13 +59,13 @@ public:
       kPalette = 6   ///< list of colors from palette
    };
 
-   RObjectDrawable() : RDrawable("tobject") {}
+   TObjectDrawable() : RDrawable("tobject") {}
 
-   virtual ~RObjectDrawable() = default;
+   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt = "") : RDrawable("tobject"), fKind(kObject), fObj(obj), fOpts(opt) {}
 
-   RObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt = "") : RDrawable("tobject"), fKind(kObject), fObj(obj), fOpts(opt) {}
+   TObjectDrawable(EKind kind, const std::string &opt = "");
 
-   RObjectDrawable(EKind kind, const std::string &opt = "");
+   virtual ~TObjectDrawable() = default;
 };
 
 } // namespace Experimental

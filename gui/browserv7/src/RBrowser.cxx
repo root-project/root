@@ -24,7 +24,6 @@
 
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMakeUnique.hxx>
-#include <ROOT/RObjectDrawable.hxx>
 #include <ROOT/RFileDialog.hxx>
 #include <ROOT/RCanvas.hxx>
 

@@ -18,12 +18,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RObjectDrawable.hxx>
+#include <ROOT/TObjectDrawable.hxx>
+#include <ROOT/RPad.hxx>
 #include <ROOT/RCanvas.hxx>
 #include "TH1.h"
 #include "TH2.h"
 #include "TGraph.h"
 #include "TMath.h"
+#include "TStyle.h"
 
 #include <iostream>
 
@@ -61,23 +63,23 @@ void draw_v6()
 
    // place copy of gStyle object, will be applied on JSROOT side
    // set on the canvas before any other object is drawn
-   canvas->Draw<RObjectDrawable>(RObjectDrawable::kStyle);
+   canvas->Draw<TObjectDrawable>(TObjectDrawable::kStyle);
 
    // copy custom palette to canvas, will be used for col drawings
    // style object does not include color settings
-   canvas->Draw<RObjectDrawable>(RObjectDrawable::kPalette);
+   canvas->Draw<TObjectDrawable>(TObjectDrawable::kPalette);
 
    // Divide canvas on 2x2 sub-pads to show different draw options
    auto subpads = canvas->Divide(2,2);
 
-   subpads[0][0]->Draw<RObjectDrawable>(gr, "AL");
+   subpads[0][0]->Draw<TObjectDrawable>(gr, "AL");
 
-   subpads[0][1]->Draw<RObjectDrawable>(th1, "");
+   subpads[0][1]->Draw<TObjectDrawable>(th1, "");
 
-   subpads[1][0]->Draw<RObjectDrawable>(th2, "colz");
+   subpads[1][0]->Draw<TObjectDrawable>(th2, "colz");
 
    // show same object again, but with other draw options
-   subpads[1][1]->Draw<RObjectDrawable>(th2, "lego2");
+   subpads[1][1]->Draw<TObjectDrawable>(th2, "lego2");
 
    canvas->Show(); // new window in default browser should popup and async update will be triggered
 
