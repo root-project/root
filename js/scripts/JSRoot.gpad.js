@@ -2811,9 +2811,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (snap.fKind === webSnapIds.kColors) {
 
             let ListOfColors = [], arr = snap.fSnapshot.fOper.split(";");
-            for (let n=0;n<arr.length;++n) {
+            for (let n = 0; n < arr.length; ++n) {
                let name = arr[n], p = name.indexOf(":");
-               if (p>0) {
+               if (p > 0) {
                   ListOfColors[parseInt(name.substr(0,p))] = "rgb(" + name.substr(p+1) + ")";
                } else {
                   p = name.indexOf("=");

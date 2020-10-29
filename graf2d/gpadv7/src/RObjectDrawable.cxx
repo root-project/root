@@ -14,6 +14,9 @@
 
 #include "TROOT.h"
 #include "TStyle.h"
+#include "TColor.h"
+#include "TObjArray.h"
+#include "TObjString.h"
 
 #include <exception>
 #include <sstream>
@@ -22,16 +25,68 @@
 
 using namespace ROOT::Experimental;
 
-RObjectDrawable::~RObjectDrawable() {}
+RObjectDrawable::RObjectDrawable(EKind kind, const std::string &opt) : RDrawable("tobject"), fKind(kind), fOpts(opt)
+{
+   switch (fKind) {
+      case kColors: {
+         // convert list of colors into strings
+         auto arr = std::make_shared<TObjArray>();
+         arr->SetOwner(kTRUE);
+
+         auto cols = gROOT->GetListOfColors();
+         for (int n = 0; n <= cols->GetLast(); ++n) {
+            auto col = dynamic_cast<TColor *>(cols->At(n));
+            if (!col) continue;
+            auto code = TString::Format("%d=%s", n, GetColorCode(col));
+            arr->Add(new TObjString(code));
+         }
+
+         fObj = arr;
+
+         break;
+      }
+      case kStyle: {  // create copy of gStyle
+         fObj = std::make_shared<TStyle>(*gStyle);
+         break;
+      }
+      case kPalette: { // copy color palette
+
+         auto arr = std::make_shared<TObjArray>();
+         arr->SetOwner(kTRUE);
+
+         auto palette = TColor::GetPalette();
+         for (int n = 0; n < palette.GetSize(); ++n) {
+            auto col = gROOT->GetColor(palette[n]);
+            arr->Add(new TObjString(GetColorCode(col)));
+         }
+
+         fObj = arr;
+         break;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////
+/// Convert TColor to RGB string for using with SVG
+
+const char *RObjectDrawable::GetColorCode(TColor *col)
+{
+   static TString code;
+
+   if (col->GetAlpha() == 1)
+      code.Form("rgb(%d,%d,%d)", (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()));
+   else
+      code.Form("rgba(%d,%d,%d,%5.3f)", (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()), col->GetAlpha());
+
+   return code.Data();
+}
+
 
 std::unique_ptr<RDisplayItem> RObjectDrawable::Display(const RDisplayContext &ctxt)
 {
-   if (GetVersion() > ctxt.GetLastVersion()) {
-      if (fKind == kStyle)
-         return std::make_unique<RObjectDisplayItem>(fKind, gStyle, fOpts);
-      else
-         return std::make_unique<RObjectDisplayItem>(fKind, fObj.get(), fOpts);
-   }
+   if (GetVersion() > ctxt.GetLastVersion())
+      return std::make_unique<RObjectDisplayItem>(fKind, fObj.get(), fOpts);
+
    return nullptr;
 }
 
