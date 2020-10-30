@@ -118,18 +118,22 @@ public:
 class TObjectDisplayItem : public RDisplayItem {
 protected:
 
-   int fKind;                              ///< object kind
+   int fKind{0};                           ///< object kind
    const TObject *fObject{nullptr};        ///< ROOT6 object
    std::string fOption;                    ///< drawing options
+   bool fOwner{false};                     ///<! if object must be deleted
 
 public:
 
-   TObjectDisplayItem(int kind, const TObject *obj, const std::string &opt)
+   TObjectDisplayItem(int kind, const TObject *obj, const std::string &opt, bool owner = false)
    {
       fKind = kind;
       fObject = obj;
       fOption = opt;
+      fOwner = owner;
    }
+
+   virtual ~TObjectDisplayItem();
 
 };
 

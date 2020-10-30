@@ -41,6 +41,8 @@ private:
 
    const char *GetColorCode(TColor *col);
 
+   std::unique_ptr<TObject> CreateSpecials(int kind);
+
 protected:
 
    void CollectShared(Internal::RIOSharedVector_t &vect) final { vect.emplace_back(&fObj); }
@@ -63,7 +65,7 @@ public:
 
    TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt = "") : RDrawable("tobject"), fKind(kObject), fObj(obj), fOpts(opt) {}
 
-   TObjectDrawable(EKind kind, const std::string &opt = "");
+   TObjectDrawable(EKind kind, bool persistent = false);
 
    virtual ~TObjectDrawable() = default;
 };

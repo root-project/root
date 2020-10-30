@@ -11,6 +11,7 @@
 #include "ROOT/RDrawable.hxx"
 
 #include "TString.h"
+#include "TObject.h"
 
 using namespace ROOT::Experimental;
 
@@ -58,6 +59,14 @@ RIndirectDisplayItem::RIndirectDisplayItem(const RDrawable &dr)
    fAttr = &dr.fAttr;
    fCssClass = &dr.fCssClass;
    fId = &dr.fId;
+}
+
+
+///////////////////////////////////////////////////////////
+/// destructor
+TObjectDisplayItem::~TObjectDisplayItem()
+{
+   if (fOwner) delete fObject;
 }
 
 
