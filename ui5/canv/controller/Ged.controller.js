@@ -112,28 +112,74 @@ sap.ui.define([
       },
 
       processAxisModelChange: function(evnt, data) {
-         console.log('Change axis values');
-
          let pars = evnt.getParameters(),
              item = pars.path.substr(1),
              exec = "", painter = data._painter,
-             axis = painter.GetObject();
+             axis = painter.GetObject(),
+             kind = painter.name;
 
          // while axis painter is temporary object, we should not try change it attributes
 
-         if (!this.currentPadPainter) return;
+         if (!this.currentPadPainter || !axis) return;
 
-         if (item == "axiscolor") {
-            axis.fAxisColor = this.currentPadPainter.add_color(pars.value);
-            exec = painter.GetColorExec(pars.value, "SetAxisColor");
+         if ((typeof kind == 'string') && (kind.indexOf("axis")==1)) kind = kind.substr(0,1);
+
+         console.log(`Change axis ${kind} item ${item} value ${pars.value}`);
+
+         switch(item) {
+            case "axis/fTitle":
+               exec = `exec:SetTitle("${pars.value}")`;
+               break;
+            case "axiscolor":
+               axis.fAxisColor = this.currentPadPainter.add_color(pars.value);
+               exec = painter.GetColorExec(pars.value, "SetAxisColor");
+               break;
+            case "color_label":
+               axis.fLabelColor = this.currentPadPainter.add_color(pars.value);
+               exec = painter.GetColorExec(pars.value, "SetLabelColor");
+               break;
+            case "center_label":
+               axis.InvertBit(JSROOT.EAxisBits.kCenterLabels);
+               exec = `exec:CenterLabels(${pars.value ? true : false})`;
+               break;
+            case "vert_label":
+               axis.InvertBit(JSROOT.EAxisBits.kLabelsVert);
+               exec = `exec:SetBit(TAxis::kLabelsVert,${pars.value ? true : false})`;
+               break;
+            case "axis/fLabelOffset":
+               exec = `exec:SetLabelOffset(${pars.value})`;
+               break;
+            case "axis/fLabelSize":
+               exec = `exec:SetLabelOffset(${pars.value})`;
+               break;
+            case "color_title":
+               axis.fLabelColor = this.currentPadPainter.add_color(pars.value);
+               exec = painter.GetColorExec(pars.value, "SetTitleColor");
+               break;
+            case "center_title":
+               axis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
+               exec = `exec:CenterTitle(${pars.value ? true : false})`;
+               break;
+            case "rotate_title":
+               axis.InvertBit(JSROOT.EAxisBits.kRotateTitle);
+               exec = `exec:RotateTitle(${pars.value ? true : false})`;
+               break;
+            case "axis/fTickLength":
+               exec = `exec:SetTickLength(${pars.value})`;
+               break;
+            case "axis/fTitleOffset":
+               exec = `exec:SetTitleOffset(${pars.value})`;
+               break;
+            case "axis/fTitleSize":
+               exec = `exec:SetTitleSize(${pars.value})`;
+               break;
          }
 
-         // FIXME in JSROOT: should work without extra args
-         let main = this.currentPadPainter.main_painter(true, this.currentPadPainter.this_pad_name);
+         let main = this.currentPadPainter.main_painter(true);
 
          if (main && main.snapid) {
-            console.log('Invoke interactive redraw ', main.snapid, painter.name)
-            main.InteractiveRedraw("pad", exec, painter.name);
+            console.log('Invoke interactive redraw ', main.snapid, kind)
+            main.InteractiveRedraw("pad", exec, kind);
          } else {
             console.log('pad', this.currentPadPainter.this_pad_name, this.currentPadPainter.pad_name, 'iscan', this.currentPadPainter.iscan)
             console.log('Do have main = ', main ? main.smapid : "---")
@@ -200,7 +246,18 @@ sap.ui.define([
          }
 
          if (selectedClass == "TAxis") {
-            let model = new JSONModel( { axiscolor: painter.lineatt.color } );
+            console.log('place', place)
+            
+            let model = new JSONModel( { 
+                axis: obj,
+                axiscolor: painter.lineatt.color, 
+                color_label: padpainter.get_color(obj.fLabelColor), 
+                center_label: obj.TestBit(JSROOT.EAxisBits.kCenterLabels),
+                vert_label: obj.TestBit(JSROOT.EAxisBits.kLabelsVert),
+                color_title: padpainter.get_color(obj.fTitleColor),
+                center_title: obj.TestBit(JSROOT.EAxisBits.kCenterTitle),
+                rotate_title: obj.TestBit(JSROOT.EAxisBits.kRotateTitle),
+             });
             this.addFragment(oPage, "Axis", model);
             model.attachPropertyChange({ _kind: "TAxis", _painter: painter, _place: painter.name }, this.processAxisModelChange, this);
          }
