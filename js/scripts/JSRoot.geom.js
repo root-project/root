@@ -3030,6 +3030,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          // activate worker
          if (this.ctrl.use_worker > 0) this.startWorker();
 
+         jsrp.Assign3DHandler(this);
+
          let size = this.size_for_3d(this._webgl ? undefined : 3);
 
          this._fit_main_area = (size.can3d === -1);
