@@ -23,17 +23,17 @@ A RooProduct represents the product of a given set of RooAbsReal objects.
 
 **/
 
-
-#include <cmath>
-#include <memory>
-
 #include "RooProduct.h"
+
 #include "RooNameReg.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
-#include "RooErrorHandler.h"
 #include "RooMsgService.h"
+#include "RunContext.h"
 #include "RooTrace.h"
+
+#include <cmath>
+#include <memory>
 
 using namespace std ;
 
@@ -381,6 +381,45 @@ Double_t RooProduct::evaluate() const
   }
   
   return prod ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate product of input functions for all points found in `evalData`.
+RooSpan<double> RooProduct::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  RooSpan<double> prod;
+
+  assert(_compRSet.nset() == normSet);
+
+  for (const auto item : _compRSet) {
+    auto rcomp = static_cast<const RooAbsReal*>(item);
+    auto componentValues = rcomp->getValues(evalData, normSet);
+
+    if (prod.empty()) {
+      prod = evalData.makeBatch(this, componentValues.size());
+      for (auto& val : prod) val = 1.;
+    } else if (prod.size() == 1 && componentValues.size() > 1) {
+      const double val = prod[0];
+      prod = evalData.makeBatch(this, componentValues.size());
+      std::fill(prod.begin(), prod.end(), val);
+    }
+    assert(prod.size() == componentValues.size() || componentValues.size() == 1);
+
+    for (unsigned int i = 0; i < prod.size(); ++i) {
+      prod[i] *= componentValues.size() == 1 ? componentValues[0] : componentValues[i];
+    }
+  }
+
+  for (const auto item : _compCSet) {
+    auto ccomp = static_cast<const RooAbsCategory*>(item);
+    const int catIndex = ccomp->getCurrentIndex();
+
+    for (unsigned int i = 0; i < prod.size(); ++i) {
+      prod[i] *= catIndex;
+    }
+  }
+
+  return prod;
 }
 
 
