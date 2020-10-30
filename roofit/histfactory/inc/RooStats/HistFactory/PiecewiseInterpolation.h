@@ -37,6 +37,11 @@ public:
   PiecewiseInterpolation(const PiecewiseInterpolation& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new PiecewiseInterpolation(*this, newname); }
 
+  /// Return pointer to the nominal hist function.
+  const RooAbsReal* nominalHist() const {
+    return &_nominal.arg();
+  }
+
   //  virtual Double_t defaultErrorLevel() const ;
 
   //  void printMetaArgs(std::ostream& os) const ;
