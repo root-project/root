@@ -40,8 +40,7 @@ fi
 EXPLLINKLIBS="\$LinkedLibs"
 
 if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosx64" ] || \
-   [ "$ARCH" = "macosxicc" ]; then
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
+   [ "$ARCH" = "macosxicc" ] || [ "$ARCH" = "macosxarm64" ]; then
    SOEXT="so"
    if [ "x`echo $SOFLAGS | grep -- '-install_name'`" != "x" ]; then
       # If install_name is specified, remove it.
