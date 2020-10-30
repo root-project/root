@@ -431,7 +431,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE) # point to directories outside the b
 
 # Check whether to add RPATH to the installation (the build tree always has the RPATH enabled)
 if(rpath)
-  set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR}) # install LIBDIR
+  set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR} CACHE INTERNAL "") # install LIBDIR
   set(CMAKE_SKIP_INSTALL_RPATH FALSE)          # don't skip the full RPATH for the install tree
 elseif(APPLE)
   set(CMAKE_INSTALL_NAME_DIR "@rpath")
