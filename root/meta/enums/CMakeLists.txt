@@ -67,3 +67,13 @@ ROOTTEST_ADD_TEST(duplicateEnums
                   MACRO execduplicateEnums.C
                   OUTREF execduplicateEnums.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
+
+ROOTTEST_GENERATE_DICTIONARY(libenumSize
+                  enumSize.h
+                  LINKDEF enumSizeLinkDef.h
+                  NO_ROOTMAP NO_CXXMODULE)
+
+ROOTTEST_ADD_TEST(enumSize
+                  MACRO execenumSize.C
+                  OUTREF execenumSize.ref
+                  DEPENDS ${GENERATE_DICTIONARY_TEST})
