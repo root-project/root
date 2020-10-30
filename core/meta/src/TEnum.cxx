@@ -99,17 +99,6 @@ Long_t TEnum::Property() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the unterlying integer type of the enum:
-///     enum E { kOne }; //  ==> int
-///     enum F: long; //  ==> long
-/// Returns kNumDataTypes if the enum is unknown / invalid.
-
-EDataType TEnum::GetUnderlyingType() const
-{
-   return fUnderlyingType;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 TDictionary::DeclId_t TEnum::GetDeclId() const
 {
