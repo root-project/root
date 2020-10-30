@@ -526,12 +526,8 @@ ifeq ($(PLATFORM),win32)
 		$(MT_EXE)
 		@echo "$@ done"
 else
-ifeq ($(HASTHREAD),yes)
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lThread $(OutPutOpt)$@
 		@echo "$@ done"
-else
-		@echo "This version of ROOT has no thread support, $@ not built"
-endif
 endif
 
 $(QPRANDOM):    $(QPRANDOMO)
