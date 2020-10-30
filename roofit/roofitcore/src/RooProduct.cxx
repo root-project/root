@@ -325,10 +325,9 @@ Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 
 Double_t RooProduct::calculate(const RooArgList& partIntList) const
 {
-  RooAbsReal *term(0);
   Double_t val=1;
-  RooFIter i = partIntList.fwdIterator() ;
-  while((term=(RooAbsReal*)i.next())) {
+  for (const auto arg : partIntList) {
+    const auto term = static_cast<const RooAbsReal*>(arg);
     double x = term->getVal();
     val*= x;
   }
