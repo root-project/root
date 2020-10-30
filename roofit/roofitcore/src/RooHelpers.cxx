@@ -89,26 +89,45 @@ HijackMessageStream::HijackMessageStream(RooFit::MsgLevel level, RooFit::MsgTopi
 {
   auto& msg = RooMsgService::instance();
   _oldKillBelow = msg.globalKillBelow();
-  msg.setGlobalKillBelow(level);
+  if (_oldKillBelow > level)
+    msg.setGlobalKillBelow(level);
+
+  std::vector<RooMsgService::StreamConfig> tmpStreams;
   for (int i = 0; i < msg.numStreams(); ++i) {
     _oldConf.push_back(msg.getStream(i));
-    msg.getStream(i).removeTopic(topics);
-    msg.setStreamStatus(i, true);
+    if (msg.getStream(i).match(level, topics, static_cast<RooAbsArg*>(nullptr))) {
+      tmpStreams.push_back(msg.getStream(i));
+      msg.setStreamStatus(i, false);
+    }
   }
 
   _thisStream = msg.addStream(level,
       RooFit::Topic(topics),
       RooFit::OutputStream(_str),
       objectName ? RooFit::ObjectName(objectName) : RooCmdArg());
+
+  for (RooMsgService::StreamConfig& st : tmpStreams) {
+    msg.addStream(st.minLevel,
+        RooFit::Topic(st.topic),
+        RooFit::OutputStream(*st.os),
+        RooFit::ObjectName(st.objectName.c_str()),
+        RooFit::ClassName(st.className.c_str()),
+        RooFit::BaseClassName(st.baseClassName.c_str()),
+        RooFit::TagName(st.tagName.c_str()));
+  }
 }
 
+/// Deregister the hijacked stream and restore the stream state of all previous streams.
 HijackMessageStream::~HijackMessageStream() {
   auto& msg = RooMsgService::instance();
   msg.setGlobalKillBelow(_oldKillBelow);
   for (unsigned int i = 0; i < _oldConf.size(); ++i) {
     msg.getStream(i) = _oldConf[i];
   }
-  msg.deleteStream(_thisStream);
+
+  while (_thisStream < msg.numStreams()) {
+    msg.deleteStream(_thisStream);
+  }
 }
 
 
