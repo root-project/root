@@ -1,0 +1,4 @@
+enum EOnlyShort : short { 
+  kSomeShortValue
+};
+
