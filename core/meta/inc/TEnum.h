@@ -37,6 +37,7 @@ private:
    ClassInfo_t *fInfo;          //!interpreter information, owned by TEnum
    TClass      *fClass;         //!owning class
    std::string  fQualName;      // fully qualified type name
+   EDataType    fUnderlyingType;// Type (size) used to store the enum in memory
 
    enum EBits {
      kBitIsScopedEnum = BIT(14) ///< The enum is an enum class.
@@ -50,7 +51,7 @@ public:
                        kALoadAndInterpLookup = 3
                       };
 
-   TEnum(): fInfo(nullptr), fClass(nullptr) {}
+   TEnum(): fInfo(nullptr), fClass(nullptr), fUnderlyingType(kInt_t) {}
    TEnum(const char *name, DeclId_t declid, TClass *cls);
    virtual ~TEnum();
 

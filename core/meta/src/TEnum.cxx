@@ -36,7 +36,7 @@ ClassImp(TEnum);
 /// in TROOT::GetListOfGlobals).
 
 TEnum::TEnum(const char *name, DeclId_t declid, TClass *cls)
-   : fInfo(nullptr), fClass(cls)
+   : fInfo(nullptr), fClass(cls), fUnderlyingType(kInt_t)
 {
    SetName(name);
    if (cls) {
@@ -106,9 +106,7 @@ Long_t TEnum::Property() const
 
 EDataType TEnum::GetUnderlyingType() const
 {
-   if (fInfo)
-      return gInterpreter->ClassInfo_GetUnderlyingType(fInfo);
-   return kNumDataTypes;
+   return fUnderlyingType;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,8 +132,10 @@ void TEnum::Update(DeclId_t id)
 
    fInfo = gInterpreter->ClassInfo_Factory(id);
 
-   if (fInfo)
+   if (fInfo) {
       SetBit(kBitIsScopedEnum, gInterpreter->ClassInfo_IsScopedEnum(fInfo));
+      fUnderlyingType = gInterpreter->ClassInfo_GetUnderlyingType(fInfo);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
