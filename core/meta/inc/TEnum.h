@@ -60,7 +60,13 @@ public:
    const TSeqCollection *GetConstants() const { return &fConstantList; }
    const TEnumConstant  *GetConstant(const char *name) const { return (TEnumConstant *)fConstantList.FindObject(name); }
    DeclId_t              GetDeclId() const;
-   EDataType             GetUnderlyingType() const;
+
+   /// Get the unterlying integer type of the enum:
+   ///     enum E { kOne }; //  ==> int
+   ///     enum F: long; //  ==> long
+   /// Returns kNumDataTypes if the enum is unknown / invalid.
+   EDataType             GetUnderlyingType() const { return fUnderlyingType; };
+
    Bool_t                IsValid();
    Long_t                Property() const;
    void                  SetClass(TClass *cl) { fClass = cl; }
