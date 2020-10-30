@@ -98,6 +98,10 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
   }
   setYAxisLabel(data.GetYaxis()->GetTitle());
 
+  if (correctForBinWidth && etype == RooAbsData::Poisson) {
+    coutW(Plotting) << "Cannot apply a bin width correction and use Poisson errors. Not correcting for bin width." << std::endl;
+  }
+
   // initialize our contents from the input histogram's contents
   Int_t nbin= data.GetNbinsX();
   for(Int_t bin= 1; bin <= nbin; bin++) {
