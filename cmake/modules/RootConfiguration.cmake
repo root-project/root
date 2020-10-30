@@ -839,6 +839,9 @@ set(etcdir $ROOTSYS/etc)
 set(tutdir $ROOTSYS/tutorials)
 set(mandir $ROOTSYS/man)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY NEWLINE_STYLE UNIX)
+if(MSVC)
+  configure_file(${CMAKE_SOURCE_DIR}/config/root-config.bat.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config.bat @ONLY)
+endif()
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh
