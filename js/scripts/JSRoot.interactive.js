@@ -184,7 +184,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             gapy = 10,  // y coordinate, taking into account all gaps
             gapminx = -1111, gapmaxx = -1111,
             minhinty = -frame_shift.y,
-            maxhinty = this.pad_height("") - frame_rect.y - frame_shift.y;
+            maxhinty = this.canv_painter().pad_height() - frame_rect.y - frame_shift.y;
 
          function FindPosInGap(y) {
             for (let n = 0; (n < hints.length) && (y < maxhinty); ++n) {
@@ -469,7 +469,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                   handle.acc_y1 += evnt.dy;
 
                drag_rect.attr("x", Math.min(Math.max(handle.acc_x1, 0), handle.pad_w))
-                  .attr("y", Math.min(Math.max(handle.acc_y1, 0), handle.pad_h));
+                        .attr("y", Math.min(Math.max(handle.acc_y1, 0), handle.pad_h));
 
             }).on("end", function(evnt) {
                if (!drag_rect) return;
@@ -484,7 +484,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                      let rrr = resize_se.node().getBoundingClientRect();
                      pthis.ShowContextMenu('main', { clientX: rrr.left, clientY: rrr.top });
                   } else if (callback.canselect && (spent <= 600)) {
-                     pthis.canv_painter().SelectObjectPainter(pthis);
+                     let cp = pthis.canv_painter();
+                     if (cp) cp.SelectObjectPainter(pthis);
                   }
                }
             });
@@ -1494,7 +1495,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       ToggleButtonsVisibility: function(action) {
-         let group = this.svg_layer("btns_layer", this.this_pad_name),
+         let group = this.svg_layer("btns_layer"),
              btn = group.select("[name='Toggle']");
 
          if (btn.empty()) return;
@@ -1529,7 +1530,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       FindButton: function(keyname) {
-         let group = this.svg_layer("btns_layer", this.this_pad_name), found_func = "";
+         let group = this.svg_layer("btns_layer"), found_func = "";
          if (!group.empty())
             group.selectAll("svg").each(function() {
                if (d3.select(this).attr("key") === keyname)
@@ -1540,7 +1541,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       RemoveButtons: function() {
-         let group = this.svg_layer("btns_layer", this.this_pad_name);
+         let group = this.svg_layer("btns_layer");
          if (!group.empty()) {
             group.selectAll("*").remove();
             group.property("nextx", null);
@@ -1548,7 +1549,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       ShowButtons: function() {
-         let group = this.svg_layer("btns_layer", this.this_pad_name);
+         let group = this.svg_layer("btns_layer");
          if (group.empty()) return;
 
          // clean all previous buttons
@@ -1600,7 +1601,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          group.property("nextx", x);
 
-         this.AlignBtns(group, this.pad_width(this.this_pad_name), this.pad_height(this.this_pad_name));
+         this.AlignBtns(group, this.pad_width(), this.pad_height());
 
          if (group.property('vertical'))
             ctrl.attr("y", x);

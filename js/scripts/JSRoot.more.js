@@ -2280,9 +2280,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                                .attr("cy",0)
                                .style("fill", "none")
                                .style("pointer-events","visibleFill")
-                               .on('mouseenter', () => this.MouseEvent('enter'))
-                               .on('mousemove', () => this.MouseEvent('move'))
-                               .on('mouseleave', () => this.MouseEvent('leave'));
+                               .on('mouseenter', evnt => this.MouseEvent('enter', evnt))
+                               .on('mousemove', evnt => this.MouseEvent('move', evnt))
+                               .on('mouseleave', evnt => this.MouseEvent('leave', evnt));
 
          interactive.attr("rx", this.szx).attr("ry", this.szy);
 
