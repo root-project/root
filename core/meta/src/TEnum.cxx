@@ -36,7 +36,7 @@ ClassImp(TEnum);
 /// in TROOT::GetListOfGlobals).
 
 TEnum::TEnum(const char *name, DeclId_t declid, TClass *cls)
-   : fInfo(nullptr), fClass(cls), fUnderlyingType(kInt_t)
+   : fClass(cls)
 {
    SetName(name);
    if (cls) {
