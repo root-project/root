@@ -2226,13 +2226,19 @@ TH1F *TMVA::Factory::EvaluateImportance(DataLoader *loader, VIType vitype, Types
       return EvaluateImportanceShort(loader, theMethod, methodTitle, theOption);
    else if (vitype == VIType::kAll)
       return EvaluateImportanceAll(loader, theMethod, methodTitle, theOption);
-   else if (vitype == VIType::kRandom && nbits > 10) {
-      return EvaluateImportanceRandom(loader, pow(2, nbits), theMethod, methodTitle, theOption);
-   } else {
-      std::cerr << "Error in Variable Importance: Random mode require more that 10 variables in the dataset."
-                << std::endl;
-      return nullptr;
+   else if (vitype == VIType::kRandom) {
+      if ( nbits > 10 && nbits < 30) {
+         // limit nbits to less than 30 to avoid error converting from double to uint and also cannot deal with too many combinations
+         return EvaluateImportanceRandom(loader, static_cast<UInt_t>( pow(2, nbits) ), theMethod, methodTitle, theOption);
+      } else if (nbits < 10)  {
+         Log() << kERROR << "Error in Variable Importance: Random mode require more that 10 variables in the dataset."
+                << Endl;
+      } else if (nbits > 30) {
+         Log() << kERROR << "Error in Variable Importance: Number of variables is too large for Random mode"
+                  << Endl;
+      }
    }
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2248,7 +2254,15 @@ TH1F *TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMe
    const int nbits = loader->GetDataSetInfo().GetNVariables();
    std::vector<TString> varNames = loader->GetDataSetInfo().GetListOfVariables();
 
-   uint64_t range = pow(2, nbits);
+   if (nbits > 60) {
+      Log() << kERROR << "Number of combinations is too large , is 2^" << nbits << Endl;
+      return nullptr;
+   }
+   if (nbits > 20) {
+      Log() << kWARNING << "Number of combinations is very large , is 2^" << nbits << Endl;
+   }
+   uint64_t range = static_cast<uint64_t>(pow(2, nbits));
+
 
    // vector to save importances
    std::vector<Double_t> importances(nbits);
@@ -2328,12 +2342,15 @@ TH1F *TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMe
    return GetImportance(nbits, importances, varNames);
 }
 
-static long int sum(long int i)
+static uint64_t sum(uint64_t i)
 {
-   long int _sum = 0;
-   for (long int n = 0; n < i; n++)
-      _sum += pow(2, n);
-   return _sum;
+   // add a limit for overflows
+   if (i > 62) return 0;
+   return static_cast<uint64_t>( std::pow(2, i + 1)) - 1;
+   // uint64_t _sum = 0;
+   // for (uint64_t n = 0; n < i; n++)
+   //    _sum += pow(2, n);
+   // return _sum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2348,6 +2365,10 @@ TH1F *TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA the
    const int nbits = loader->GetDataSetInfo().GetNVariables();
    std::vector<TString> varNames = loader->GetDataSetInfo().GetListOfVariables();
 
+   if (nbits > 60) {
+      Log() << kERROR << "Number of combinations is too large , is 2^" << nbits << Endl;
+      return nullptr;
+   }
    long int range = sum(nbits);
    //   std::cout<<range<<std::endl;
    // vector to save importances
