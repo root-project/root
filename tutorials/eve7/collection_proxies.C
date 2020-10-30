@@ -112,21 +112,16 @@ class Event
 public:
    int eventId{0};
    int N_tracks{0};
-   int N_jets{0};   
+   int N_jets{0};
    std::vector<TList*> fListData;
-   
+
    REveCaloDataHist* fCaloData{nullptr};
-   
+
    Event()
    {
       auto baseHist = new TH2F("dummy", "dummy", fw3dlego::xbins_n - 1, fw3dlego::xbins, 72, -TMath::Pi(), TMath::Pi());
-      //auto hcalHist = new TH2F("HCAL", "HCAL", fw3dlego::xbins_n - 1, fw3dlego::xbins, 72, -TMath::Pi(), TMath::Pi());
-      
       fCaloData = new REveCaloDataHist();
       fCaloData->AddHistogram(baseHist);
-      //      fCaloData->RefSliceInfo(0).Setup("ECAL", 0.f, kBlue);
-      // fCaloData->AddHistogram(hcalHist);
-      //fCaloData->RefSliceInfo(1).Setup("HCAL", 0.1, kRed);
       eveMng->GetEventScene()->AddElement(fCaloData);
    }
 
@@ -405,7 +400,7 @@ private:
    REveCaloDataHist* fCaloData {nullptr};
    TH2F*             fHist {nullptr};
    int               fSliceIndex {-1};
-   
+
    void assertSlice() {
       if (!fHist) {
          Bool_t status = TH1::AddDirectoryStatus();
@@ -427,22 +422,32 @@ private:
 
 public:
    CaloTowerProxyBuilder(REveCaloDataHist* cd) : fCaloData(cd) {}
-   
+
    using REveDataProxyBuilderBase::Build;
    void Build(const REveDataCollection* collection, REveElement* product, const REveViewContext*)override
    {
       assertSlice();
       fHist->Reset();
-      for (int h = 0; h < collection->GetNItems(); ++h)
+      if (collection->GetRnrSelf())
       {
-         CaloTower* tower = (CaloTower*)collection->GetDataPtr(h);
-         const REveDataItem* item = Collection()->GetDataItem(h);
+fCaloData->RefSliceInfo(fSliceIndex)
+            .Setup(Collection()->GetCName(),
+                   0.,
+                   Collection()->GetMainColor(),
+                   Collection()->GetMainTransparency());
 
-         if (!item->GetVisible())
-            continue;
-         fHist->Fill(tower->fEta, tower->fPhi, tower->fEt);
+
+         for (int h = 0; h < collection->GetNItems(); ++h)
+         {
+            CaloTower* tower = (CaloTower*)collection->GetDataPtr(h);
+            const REveDataItem* item = Collection()->GetDataItem(h);
+
+            if (!item->GetVisible())
+               continue;
+            fHist->Fill(tower->fEta, tower->fPhi, tower->fEt);
+         }
       }
-      fCaloData->DataChanged();      
+      fCaloData->DataChanged();
    }
 
    using REveDataProxyBuilderBase::FillImpliedSelected;
@@ -453,8 +458,9 @@ public:
   using REveDataProxyBuilderBase::ModelChanges;
    void ModelChanges(const REveDataCollection::Ids_t& ids, Product* product) override
    {
+      Build();
    }
-   
+
 }; // CaloTowerProxyBuilder
 
 //==============================================================================
@@ -507,7 +513,7 @@ public:
 
       tableInfo->table("RecHit").
          column("pt",     1, "i.fPt");
-      
+
       tableInfo->table("CaloTower").
          column("eta",  2, "i.fEta").
          column("phi",  2, "i.fPhi").
@@ -721,12 +727,12 @@ void collection_proxies(bool proj=true)
 
    // create scenes and views
    REveScene* rhoZEventScene = nullptr;
-   
+
    auto b1 = new REveGeoShape("Barrel 1");
    b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
    b1->SetMainColor(kCyan);
    eveMng->GetGlobalScene()->AddElement(b1);
-  
+
    rhoZEventScene = eveMng->SpawnNewScene("RhoZ Scene","Projected");
    g_projMng = new REveProjectionManager(REveProjection::kPT_RhoZ);
    g_projMng->SetImportEmpty(true);
