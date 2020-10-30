@@ -1715,6 +1715,7 @@ TGeoVolume *TGeoVolume::CloneVolume() const
    TGeoVolume *vol = new TGeoVolume(GetName(), fShape, fMedium);
    Int_t i;
    // copy volume attributes
+   vol->SetTitle(GetTitle());
    vol->SetLineColor(GetLineColor());
    vol->SetLineStyle(GetLineStyle());
    vol->SetLineWidth(GetLineWidth());
@@ -2851,6 +2852,7 @@ TGeoVolume *TGeoVolumeAssembly::CloneVolume() const
    vol->SetOption(fOption);
    vol->SetNumber(fNumber);
    vol->SetNtotal(fNtotal);
+   vol->SetTitle(GetTitle());
    return vol;
 }
 

@@ -743,6 +743,7 @@ TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
 {
    TGeoNodeMatrix *node = new TGeoNodeMatrix(fVolume, fMatrix);
    node->SetName(GetName());
+   node->SetTitle(GetTitle());
    // set the mother
    node->SetMotherVolume(fMother);
    // set the copy number
@@ -821,6 +822,7 @@ TGeoNode *TGeoNodeOffset::MakeCopyNode() const
 {
    TGeoNodeOffset *node = new TGeoNodeOffset(fVolume, GetIndex(), fOffset);
    node->SetName(GetName());
+   node->SetTitle(GetTitle());
    // set the mother
    node->SetMotherVolume(fMother);
    // set the copy number
