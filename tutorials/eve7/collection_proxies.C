@@ -42,6 +42,19 @@ const Double_t kR_min = 300;
 const Double_t kR_max = 299;
 const Double_t kZ_d   = 300;
 
+
+namespace fw3dlego {
+  const int xbins_n = 83;
+  const double xbins[xbins_n] = {
+      -5.191, -4.889, -4.716, -4.538, -4.363, -4.191, -4.013, -3.839, -3.664, -3.489, -3.314, -3.139, -2.964, -2.853,
+      -2.650, -2.500, -2.322, -2.172, -2.043, -1.930, -1.830, -1.740, -1.653, -1.566, -1.479, -1.392, -1.305, -1.218,
+      -1.131, -1.044, -0.957, -0.870, -0.783, -0.696, -0.609, -0.522, -0.435, -0.348, -0.261, -0.174, -0.087, 0.000,
+      0.087,  0.174,  0.261,  0.348,  0.435,  0.522,  0.609,  0.696,  0.783,  0.870,  0.957,  1.044,  1.131,  1.218,
+      1.305,  1.392,  1.479,  1.566,  1.653,  1.740,  1.830,  1.930,  2.043,  2.172,  2.322,  2.500,  2.650,  2.853,
+      2.964,  3.139,  3.314,  3.489,  3.664,  3.839,  4.013,  4.191,  4.363,  4.538,  4.716,  4.889,  5.191};
+}  // namespace fw3dlego
+
+
 ROOT::Experimental::REveManager *eveMng = nullptr;
 ROOT::Experimental::REveProjectionManager* g_projMng = nullptr;
 using namespace ROOT::Experimental;
@@ -83,6 +96,16 @@ public:
    ClassDef(RecHit, 1);
 };
 
+class CaloTower : public TObject
+{
+public:
+   float fEta{0};
+   float fPhi{0};
+   float fEt{0};
+
+   CaloTower(float eta, float phi, float et): fEta(eta), fPhi(phi), fEt(et) {}
+   ClassDef(CaloTower, 1);
+};
 
 class Event
 {
@@ -96,17 +119,14 @@ public:
    
    Event()
    {
-      TFile::SetCacheFileDir(".");
-       const char* histFile =
-      "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
-      auto hf = TFile::Open(histFile, "CACHEREAD");
-      auto ecalHist = (TH2F*)hf->Get("ecalLego");
-      auto hcalHist = (TH2F*)hf->Get("hcalLego");
+      auto baseHist = new TH2F("dummy", "dummy", fw3dlego::xbins_n - 1, fw3dlego::xbins, 72, -TMath::Pi(), TMath::Pi());
+      //auto hcalHist = new TH2F("HCAL", "HCAL", fw3dlego::xbins_n - 1, fw3dlego::xbins, 72, -TMath::Pi(), TMath::Pi());
+      
       fCaloData = new REveCaloDataHist();
-      fCaloData->AddHistogram(ecalHist);
-      fCaloData->RefSliceInfo(0).Setup("ECAL", 0.f, kBlue);
-      fCaloData->AddHistogram(hcalHist);
-      fCaloData->RefSliceInfo(1).Setup("HCAL", 0.1, kRed);
+      fCaloData->AddHistogram(baseHist);
+      //      fCaloData->RefSliceInfo(0).Setup("ECAL", 0.f, kBlue);
+      // fCaloData->AddHistogram(hcalHist);
+      //fCaloData->RefSliceInfo(1).Setup("HCAL", 0.1, kRed);
       eveMng->GetEventScene()->AddElement(fCaloData);
    }
 
@@ -198,10 +218,12 @@ public:
 
       // refill calo data from jet list
       TList* jlist = fListData[0];
-      auto  ecalHist = fCaloData->GetHist(0);      
-      auto  hcalHist = fCaloData->GetHist(1);
-      ecalHist->Reset();
-      hcalHist->Reset();
+      TList* elist = new TList();
+      elist->SetName("ECAL");
+      fListData.push_back(elist);
+      TList* hlist = new TList();
+      hlist->SetName("HCAL");
+      fListData.push_back(hlist);
       for (int i = 0; i <= jlist->GetLast(); ++i) {
          const Jet* j = (Jet*)jlist->At(i);
          float offX = j->Eta();
@@ -211,8 +233,10 @@ public:
             x = gRandom->Uniform(-j->GetEtaSize(), j->GetEtaSize());
             y = gRandom->Uniform(-j->GetPhiSize(),j->GetPhiSize());
             v = j->Pt();
-            ecalHist->Fill(offX + x, offY + y, v + gRandom->Uniform(2,3));
-            hcalHist->Fill(offX + x, offY + y, v + gRandom->Uniform(1,2));
+            auto etower = new CaloTower(offX + x, offY + y, v + gRandom->Uniform(2,3));
+            elist->Add(etower);
+            auto htower = new CaloTower(offX + x, offY + y, v + gRandom->Uniform(1,2));
+            hlist->Add(htower);
          }
       }
       fCaloData->DataChanged();
@@ -372,8 +396,66 @@ public:
       //  printf("RecHitProxyBuilder::model changes %zu\n", ids.size());
       buildBoxSet((REveBoxSet*)product->m_elements->FirstChild());
    }
-};
+}; // RecHitProxyBuilder
 
+
+class CaloTowerProxyBuilder: public REveDataProxyBuilderBase
+{
+private:
+   REveCaloDataHist* fCaloData {nullptr};
+   TH2F*             fHist {nullptr};
+   int               fSliceIndex {-1};
+   
+   void assertSlice() {
+      if (!fHist) {
+         Bool_t status = TH1::AddDirectoryStatus();
+
+         TH1::AddDirectory(kFALSE);  //Keeps histogram from going into memory
+         fHist = new TH2F("caloHist", "caloHist", fw3dlego::xbins_n - 1, fw3dlego::xbins, 72, -M_PI, M_PI);
+         TH1::AddDirectory(status);
+         fSliceIndex = fCaloData->AddHistogram(fHist);
+
+         fCaloData->RefSliceInfo(fSliceIndex)
+            .Setup(Collection()->GetCName(),
+                   0.,
+                   Collection()->GetMainColor(),
+                   Collection()->GetMainTransparency());
+
+
+      }
+   }
+
+public:
+   CaloTowerProxyBuilder(REveCaloDataHist* cd) : fCaloData(cd) {}
+   
+   using REveDataProxyBuilderBase::Build;
+   void Build(const REveDataCollection* collection, REveElement* product, const REveViewContext*)override
+   {
+      assertSlice();
+      fHist->Reset();
+      for (int h = 0; h < collection->GetNItems(); ++h)
+      {
+         CaloTower* tower = (CaloTower*)collection->GetDataPtr(h);
+         const REveDataItem* item = Collection()->GetDataItem(h);
+
+         if (!item->GetVisible())
+            continue;
+         fHist->Fill(tower->fEta, tower->fPhi, tower->fEt);
+      }
+      fCaloData->DataChanged();      
+   }
+
+   using REveDataProxyBuilderBase::FillImpliedSelected;
+   void FillImpliedSelected(REveElement::Set_t& impSet, Product* p) override
+   {
+   }
+
+  using REveDataProxyBuilderBase::ModelChanges;
+   void ModelChanges(const REveDataCollection::Ids_t& ids, Product* product) override
+   {
+   }
+   
+}; // CaloTowerProxyBuilder
 
 //==============================================================================
 //== COLLECTION MANGER  ================================================================
@@ -425,6 +507,11 @@ public:
 
       tableInfo->table("RecHit").
          column("pt",     1, "i.fPt");
+      
+      tableInfo->table("CaloTower").
+         column("eta",  2, "i.fEta").
+         column("phi",  2, "i.fPhi").
+         column("Et",   2, "i.fEt");
 
       m_viewContext->SetTableViewInfo(tableInfo);
 
@@ -484,18 +571,12 @@ public:
       m_inEventLoading = false;
    }
 
-   void addCollection(REveDataCollection* collection, bool showInTable)
+   void addCollection(REveDataCollection* collection, REveDataProxyBuilderBase* glBuilder, bool showInTable = false)
    {
       m_collections->AddElement(collection);
 
       // load data
       SetDataItemsFromEvent(collection);
-
-      // create builder from classname
-      REveDataProxyBuilderBase* glBuilder = 0;
-      char* cmd = Form("*((REveDataProxyBuilderBase**) 0x%lx) = new %sProxyBuilder()", (unsigned long)&glBuilder, collection->GetItemClass()->GetName());
-      gROOT->ProcessLine(cmd);
-
       glBuilder->SetCollection(collection);
       glBuilder->SetHaveAWindow(true);
       for (auto scene : m_scenes)
@@ -667,18 +748,18 @@ void collection_proxies(bool proj=true)
    trackCollection->SetItemClass(TParticle::Class());
    trackCollection->SetMainColor(kGreen);
    trackCollection->SetFilterExpr("i.Pt() > 4.1 && std::abs(i.Eta()) < 1");
-   collectionMng->addCollection(trackCollection, true);
+   collectionMng->addCollection(trackCollection, new TParticleProxyBuilder(), true);
 
    REveDataCollection* jetCollection = new REveDataCollection("Jets");
    jetCollection->SetItemClass(Jet::Class());
    jetCollection->SetMainColor(kYellow);
-   collectionMng->addCollection(jetCollection, false);
+   collectionMng->addCollection(jetCollection, new JetProxyBuilder());
 
    REveDataCollection* hitCollection = new REveDataCollection("RecHits");
    hitCollection->SetItemClass(RecHit::Class());
    hitCollection->SetMainColor(kOrange + 7);
    hitCollection->SetFilterExpr("i.fPt > 5");
-   collectionMng->addCollection(hitCollection, false);
+   collectionMng->addCollection(hitCollection, new RecHitProxyBuilder());
 
    // add calorimeters
    auto calo3d = new REveCalo3D(event->fCaloData);
@@ -688,6 +769,16 @@ void collection_proxies(bool proj=true)
    eveMng->GetEventScene()->AddElement(calo3d);
    REveCalo2D* calo2d = (REveCalo2D*) g_projMng->ImportElements(calo3d, rhoZEventScene);
 
+
+   REveDataCollection* ecalCollection = new REveDataCollection("ECAL");
+   ecalCollection->SetItemClass(CaloTower::Class());
+   ecalCollection->SetMainColor(kRed);
+   collectionMng->addCollection(ecalCollection, new CaloTowerProxyBuilder(event->fCaloData));
+
+   REveDataCollection* hcalCollection = new REveDataCollection("HCAL");
+   hcalCollection->SetItemClass(CaloTower::Class());
+   hcalCollection->SetMainColor(kBlue);
+   collectionMng->addCollection(hcalCollection, new CaloTowerProxyBuilder(event->fCaloData));
 
    // event navigation
    auto eventMng = new EventManager(event, collectionMng);
