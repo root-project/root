@@ -22,48 +22,14 @@
 #include <sstream>
 #include <iostream>
 
-
 using namespace ROOT::Experimental;
 
-TObjectDrawable::TObjectDrawable(EKind kind, const std::string &opt) : RDrawable("tobject"), fKind(kind), fOpts(opt)
+TObjectDrawable::TObjectDrawable(EKind kind, bool persistent) : RDrawable("tobject"), fKind(kind)
 {
-   switch (fKind) {
-      case kColors: {
-         // convert list of colors into strings
-         auto arr = std::make_shared<TObjArray>();
-         arr->SetOwner(kTRUE);
+   if (!persistent) return;
 
-         auto cols = gROOT->GetListOfColors();
-         for (int n = 0; n <= cols->GetLast(); ++n) {
-            auto col = dynamic_cast<TColor *>(cols->At(n));
-            if (!col) continue;
-            auto code = TString::Format("%d=%s", n, GetColorCode(col));
-            arr->Add(new TObjString(code));
-         }
-
-         fObj = arr;
-
-         break;
-      }
-      case kStyle: {  // create copy of gStyle
-         fObj = std::make_shared<TStyle>(*gStyle);
-         break;
-      }
-      case kPalette: { // copy color palette
-
-         auto arr = std::make_shared<TObjArray>();
-         arr->SetOwner(kTRUE);
-
-         auto palette = TColor::GetPalette();
-         for (int n = 0; n < palette.GetSize(); ++n) {
-            auto col = gROOT->GetColor(palette[n]);
-            arr->Add(new TObjString(GetColorCode(col)));
-         }
-
-         fObj = arr;
-         break;
-      }
-   }
+   fOpts = "persistent";
+   fObj = CreateSpecials(kind);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -81,11 +47,60 @@ const char *TObjectDrawable::GetColorCode(TColor *col)
    return code.Data();
 }
 
+////////////////////////////////////////////////////////////////////
+/// Create instance of requested special object
+
+std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
+{
+   switch (kind) {
+      case kColors: {
+         // convert list of colors into strings
+         auto arr = std::make_unique<TObjArray>();
+         arr->SetOwner(kTRUE);
+
+         auto cols = gROOT->GetListOfColors();
+         for (int n = 0; n <= cols->GetLast(); ++n) {
+            auto col = dynamic_cast<TColor *>(cols->At(n));
+            if (!col) continue;
+            auto code = TString::Format("%d=%s", n, GetColorCode(col));
+            arr->Add(new TObjString(code));
+         }
+
+         return arr;
+      }
+      case kStyle: {  // create copy of gStyle
+         return std::make_unique<TStyle>(*gStyle);
+      }
+      case kPalette: { // copy color palette
+
+         auto arr = std::make_unique<TObjArray>();
+         arr->SetOwner(kTRUE);
+
+         auto palette = TColor::GetPalette();
+         for (int n = 0; n < palette.GetSize(); ++n) {
+            auto col = gROOT->GetColor(palette[n]);
+            arr->Add(new TObjString(GetColorCode(col)));
+         }
+
+         return arr;
+      }
+   }
+   return nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////
+/// Create display item which will be delivered to the client
 
 std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ctxt)
 {
-   if (GetVersion() > ctxt.GetLastVersion())
-      return std::make_unique<TObjectDisplayItem>(fKind, fObj.get(), fOpts);
+   if (GetVersion() > ctxt.GetLastVersion()) {
+      if ((fKind == kObject) || (fOpts == "persistent"))
+         return std::make_unique<TObjectDisplayItem>(fKind, fObj.get(), fOpts);
+
+      auto specials = CreateSpecials(fKind);
+      return std::make_unique<TObjectDisplayItem>(fKind, specials.release(), fOpts, true);
+   }
 
    return nullptr;
 }
