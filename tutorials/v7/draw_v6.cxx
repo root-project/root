@@ -65,6 +65,10 @@ void draw_v6()
    // set on the canvas before any other object is drawn
    canvas->Draw<TObjectDrawable>(TObjectDrawable::kStyle);
 
+   // copy all existing ROOT colors, required when colors was modified
+   // or when colors should be possible from client side
+   canvas->Draw<TObjectDrawable>(TObjectDrawable::kColors);
+
    // copy custom palette to canvas, will be used for col drawings
    // style object does not include color settings
    canvas->Draw<TObjectDrawable>(TObjectDrawable::kPalette);
@@ -95,8 +99,8 @@ void draw_v6()
    std::cout << "This message appear normally before second async update" << std::endl;
 
    // create SVG file
-   canvas->SaveAs("draw_v6.svg");
+   // canvas->SaveAs("draw_v6.svg");
 
    // create PNG file
-   canvas->SaveAs("draw_v6.png");
+   // canvas->SaveAs("draw_v6.png");
 }
