@@ -2132,8 +2132,7 @@ namespace HistFactory{
       ModelConfig * config = (ModelConfig *) chs[i]->obj("ModelConfig");
       obsList.add(*config->GetObservables());
     }
-    cxcoutI(HistFactory) <<"full list of observables:"<<endl;
-    cxcoutI(HistFactory) << obsList;
+    cxcoutI(HistFactory) <<"full list of observables:\n" << obsList << std::endl;
 
     RooArgSet globalObs;
     stringstream channelString;
