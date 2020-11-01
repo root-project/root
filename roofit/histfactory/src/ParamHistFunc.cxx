@@ -35,35 +35,22 @@
  */
 
 
-#include <sstream>
-#include <math.h>
-#include <stdexcept>
-#include <iostream>
-
-#include "TH1.h"
-
-#include "RooFit.h"
 #include "RooStats/HistFactory/ParamHistFunc.h"
-#include "RooAbsReal.h"
-#include "RooAbsPdf.h"
 
 #include "RooConstVar.h"
 #include "RooBinning.h"
 #include "RooErrorHandler.h"
-
-#include "RooGaussian.h"
-#include "RooHistFunc.h"
 #include "RooArgSet.h"
-#include "RooNLLVar.h"
-#include "RooChi2Var.h"
 #include "RooMsgService.h"
-
-// Forward declared:
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooWorkspace.h"
 
-//using namespace std;
+#include "TH1.h"
+
+#include <sstream>
+#include <stdexcept>
+#include <iostream>
 
 ClassImp(ParamHistFunc);
 
@@ -168,14 +155,13 @@ Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
       oocoutE(static_cast<TObject*>(nullptr), InputArguments) <<  errorMsg << std::endl;
       throw std::runtime_error(errorMsg);
     }
-    RooRealVar* var = (RooRealVar*) comp;
+    auto var = static_cast<RooRealVar*>(comp);
 
     Int_t varNumBins = var->numBins();
     numBins *= varNumBins;
   }
 
   return numBins;
-
 }
 
 
@@ -204,26 +190,11 @@ ParamHistFunc::~ParamHistFunc()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the index of the gamma parameter associated
-/// with the current bin.
-/// This number is the "RooDataSet" style index
-/// and it must be because it uses the RooDataSet method directly
-/// This is intended to be fed into the getParameter(Int_t) method:
-///
-/// RooRealVar currentParam = getParameter( getCurrentBin() );
-Int_t ParamHistFunc::getCurrentBin() const {
-  Int_t dataSetIndex = _dataSet.getIndex( _dataVars, true ); // calcTreeIndex();
-  return dataSetIndex;
-
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get the parameter associate with the
-/// input RooDataHist style index
+/// Get the parameter associated with the index.
+/// The index follows RooDataHist indexing conventions.
 /// It uses the binMap to convert the RooDataSet style index
 /// into the TH1 style index (which is how they are stored
-/// internally in the '_paramSet' vector
+/// internally in the '_paramSet' vector).
 RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
 
   auto const& n = _numBinsPerDim;
@@ -284,9 +255,7 @@ void ParamHistFunc::setShape( TH1* shape ) {
       TH1BinNumber++;
     }
 
-    //RooRealVar& var = dynamic_cast<RooRealVar&>(getParameter(i));
-    RooRealVar& var = dynamic_cast<RooRealVar&>(_paramSet[i]);
-    var.setVal( shape->GetBinContent(TH1BinNumber) );
+    static_cast<RooRealVar&>(_paramSet[i]).setVal( shape->GetBinContent(TH1BinNumber) );
   }
 
 }
@@ -325,7 +294,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
   }
 
   else if( numVars == 1 ) {
- 
+
     // For each bin, create a RooRealVar
     for( Int_t i = 0; i < numBins; ++i) {
 
@@ -347,42 +316,42 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
   }
 
   else if( numVars == 2 ) {
- 
+
     // Create a vector of indices
     // all starting at 0
     std::vector< Int_t > Indices(numVars, 0);
 
     RooRealVar* varx = (RooRealVar*) vars.at(0);
     RooRealVar* vary = (RooRealVar*) vars.at(1);
-    
+
     // For each bin, create a RooRealVar
     for( Int_t j = 0; j < vary->numBins(); ++j) {
       for( Int_t i = 0; i < varx->numBins(); ++i) {
 
-	// Ordering is important:
-	// To match TH1, list goes over x bins
-	// first, then y
+        // Ordering is important:
+        // To match TH1, list goes over x bins
+        // first, then y
 
-	std::stringstream VarNameStream;
-	VarNameStream << Prefix << "_bin_" << i << "_" << j;
-	std::string VarName = VarNameStream.str();
+        std::stringstream VarNameStream;
+        VarNameStream << Prefix << "_bin_" << i << "_" << j;
+        std::string VarName = VarNameStream.str();
 
-	RooRealVar gamma( VarName.c_str(), VarName.c_str(), 1.0 ); 
-	// "Hard-Code" a minimum of 0.0
-	gamma.setMin( 0.0 );
-	gamma.setConstant( false );
-	  
-	w.import( gamma, RooFit::RecycleConflictNodes() );
-	RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName.c_str() );
-	  
-	paramSet.add( *gamma_wspace );
-	  
+        RooRealVar gamma( VarName.c_str(), VarName.c_str(), 1.0 );
+        // "Hard-Code" a minimum of 0.0
+        gamma.setMin( 0.0 );
+        gamma.setConstant( false );
+
+        w.import( gamma, RooFit::RecycleConflictNodes() );
+        RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName.c_str() );
+
+        paramSet.add( *gamma_wspace );
+
       }
     }
   }
 
   else if( numVars == 3 ) {
- 
+
     // Create a vector of indices
     // all starting at 0
     std::vector< Int_t > Indices(numVars, 0);
@@ -390,31 +359,31 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     RooRealVar* varx = (RooRealVar*) vars.at(0);
     RooRealVar* vary = (RooRealVar*) vars.at(1);
     RooRealVar* varz = (RooRealVar*) vars.at(2);
-    
+
     // For each bin, create a RooRealVar
     for( Int_t k = 0; k < varz->numBins(); ++k) {
       for( Int_t j = 0; j < vary->numBins(); ++j) {
-	for( Int_t i = 0; i < varx->numBins(); ++i) {
-	  
-	  // Ordering is important:
-	  // To match TH1, list goes over x bins
-	  // first, then y, then z
+        for( Int_t i = 0; i < varx->numBins(); ++i) {
 
-	  std::stringstream VarNameStream;
-	  VarNameStream << Prefix << "_bin_" << i << "_" << j << "_" << k;
-	  std::string VarName = VarNameStream.str();
-	
-	  RooRealVar gamma( VarName.c_str(), VarName.c_str(), 1.0 ); 
-	  // "Hard-Code" a minimum of 0.0
-	  gamma.setMin( 0.0 );
-	  gamma.setConstant( false );
-	  
-	  w.import( gamma, RooFit::RecycleConflictNodes() );
-	  RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName.c_str() );
-	  
-	  paramSet.add( *gamma_wspace );
-	
-	}
+          // Ordering is important:
+          // To match TH1, list goes over x bins
+          // first, then y, then z
+
+          std::stringstream VarNameStream;
+          VarNameStream << Prefix << "_bin_" << i << "_" << j << "_" << k;
+          std::string VarName = VarNameStream.str();
+
+          RooRealVar gamma( VarName.c_str(), VarName.c_str(), 1.0 );
+          // "Hard-Code" a minimum of 0.0
+          gamma.setMin( 0.0 );
+          gamma.setConstant( false );
+
+          w.import( gamma, RooFit::RecycleConflictNodes() );
+          RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName.c_str() );
+
+          paramSet.add( *gamma_wspace );
+
+        }
       }
     }
   }
@@ -471,9 +440,6 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 /// Store them in a list
 RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBins, 
 					 Double_t gamma_min, Double_t gamma_max) {
-
-
-  // _paramSet.add( createParamSet() );
 
   // Get the number of bins
   // in the nominal histogram
@@ -535,6 +501,15 @@ ParamHistFunc::NumBins ParamHistFunc::getNumBinsPerDim(RooArgSet const& vars) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the index of the gamma parameter associated with the current bin.
+/// e.g. `RooRealVar& currentParam = getParameter( getCurrentBin() );`
+Int_t ParamHistFunc::getCurrentBin() const {
+  // We promise that our coordinates and the data hist coordinates have same layout.
+  return _dataSet.getIndex(_dataVars, /*fast=*/true);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// return 0 for success
 /// return 1 for failure
 /// Check that the elements 
@@ -582,36 +557,27 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // If so, add them to the 
   // list of params
 
-  RooFIter paramIter = params.fwdIterator() ;
-  RooAbsArg* comp ;
-  while((comp = (RooAbsArg*) paramIter.next())) {
-    if (!dynamic_cast<RooRealVar*>(comp)) {
+  for (const auto comp : params) {
+    if (!dynamic_cast<const RooRealVar*>(comp)) {
       auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
-                      + comp->GetName() + " in paramater list is not of type RooRealVar";
+                      + comp->GetName() + " in parameter list is not of type RooRealVar.";
       coutE(InputArguments) <<  errorMsg << std::endl;
       throw std::runtime_error(errorMsg);
     }
 
     _paramSet.add( *comp );
-
   }
   
   return 0;
-
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Find the bin corresponding to the current value of the observable, and evaluate
+/// the associated parameter.
 Double_t ParamHistFunc::evaluate() const 
 {
-  // Find the bin cooresponding to the current
-  // value of the RooRealVar:
-
-  RooRealVar* param = (RooRealVar*) &(getParameter());
-  Double_t value = param->getVal();
-  return value;
-  
+  return getParameter().getVal();
 }
 
 
