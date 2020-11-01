@@ -542,7 +542,7 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
   lumiStr.ReplaceAll(' ', TString());
   */
 
-  cxcoutIHF << "Parsing file: " << filen ;
+  cxcoutIHF << "Parsing file: " << filen << std::endl;
 
   TDOMParser xmlparser;
 
