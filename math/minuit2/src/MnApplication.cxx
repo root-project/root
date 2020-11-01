@@ -32,7 +32,7 @@ MnApplication::MnApplication(const FCNGradientBase& fcn, const MnUserParameterSt
 
 FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler) {
    // constructor from macfcn calls and tolerance
-   MnPrintPrefix mnprintprefix("MnApplication");
+   MnPrint print("MnApplication");
 
    assert(fState.IsValid());
    unsigned int npar = VariableParameters();
@@ -58,10 +58,10 @@ FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler) {
 
 //       std::cout << "Initial MIGRAD state is " << MnUserParameterState( min.States()[0], min.Up(), min.Seed().Trafo() ) << std::endl;
       const std::vector<ROOT::Minuit2::MinimumState>& iterationStates =  min.States();
-      MnPrint::Debug("State resulting from Migrad after",
+      print.Debug("State resulting from Migrad after",
         iterationStates.size(), "iterations:", fState);
 
-      MnPrint::Debug([&](std::ostream& os) {
+      print.Debug([&](std::ostream& os) {
         for (unsigned int i = 0; i <  iterationStates.size(); ++i) {
            //std::cout << iterationStates[i] << std::endl;
            const ROOT::Minuit2::MinimumState & st =  iterationStates[i];

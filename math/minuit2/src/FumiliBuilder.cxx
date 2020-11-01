@@ -37,14 +37,12 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    // top level function to find minimum from a given initial seed
    // iterate on a minimum search in case of first attempt is not successful
 
-   MnPrintPrefix mnprintprefix("FumiliBuilder");
-   // synchronize print levels
-   MnPrintLocalLevel mnprintlocallevel(PrintLevel());
+   MnPrint print("FumiliBuilder", PrintLevel());
 
    edmval *= 0.0001;
    //edmval *= 0.1; // use small factor for Fumili
 
-   MnPrint::Debug("Convergence when edm <", edmval);
+   print.Debug("Convergence when edm <", edmval);
 
    if(seed.Parameters().Vec().size() == 0) {
       return FunctionMinimum(seed, fcn.Up());
@@ -56,7 +54,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    FunctionMinimum min(seed, fcn.Up() );
 
    if(edm < 0.) {
-      MnPrint::Warn("Initial matrix not pos.def.");
+      print.Warn("Initial matrix not pos.def.");
       return min;
    }
 
@@ -66,7 +64,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 
    result.push_back( seed.State() );
 
-   MnPrint::Info("Start iterating until Edm is <", edmval, '\n',
+   print.Info("Start iterating until Edm is <", edmval, '\n',
       "Initial state", MnPrint::Oneline(seed.State()));
 
    if (TraceIter() ) TraceIteration(result.size()-1, result.back() );
@@ -90,7 +88,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       if (ipass > 0) {
          if(!min.IsValid()) {
 
-            MnPrint::Warn("FunctionMinimum is invalid");
+            print.Warn("FunctionMinimum is invalid");
 
             return min;
          }
@@ -99,12 +97,12 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       // resulting edm of minimization
       edm = result.back().Edm();
 
-      MnPrint::Debug("Approximate Edm", edm, "npass", ipass);
+      print.Debug("Approximate Edm", edm, "npass", ipass);
 
       // call always Hesse (error matrix from Fumili is never accurate since is approximate)
 
-      MnPrint::Debug("FumiliBuilder will verify convergence and Error matrix; "
-         "dcov =", min.Error().Dcovar());
+      print.Debug("FumiliBuilder will verify convergence and Error matrix; "
+         "dcov", min.Error().Dcovar());
 
 //       // recalculate the gradient using the numerical gradient calculator
 //       Numerical2PGradientCalculator ngc(fcn, min.Seed().Trafo(), strategy);
@@ -114,21 +112,21 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(),maxfcn);
       result.push_back( st );
 
-      MnPrint::Info("After Hessian");
+      print.Info("After Hessian");
       if (TraceIter() ) TraceIteration(result.size()-1, result.back() );
 
       // check edm
       edm = st.Edm();
 
-      MnPrint::Debug("Edm", edm, "State", st);
+      print.Debug("Edm", edm, "State", st);
 
       // break the loop if edm is NOT getting smaller
       if (ipass > 0 && edm >= edmprev) {
-         MnPrint::Warn("Stop iterations, no improvements after Hesse; current Edm", edm, "previous value", edmprev);
+         print.Warn("Stop iterations, no improvements after Hesse; current Edm", edm, "previous value", edmprev);
          break;
       }
       if (edm > edmval) {
-         MnPrint::Debug("Tolerance not sufficient, continue minimization; Edm", edm, "Requested", edmval);
+         print.Debug("Tolerance not sufficient, continue minimization; Edm", edm, "Requested", edmval);
       }
       else {
          // Case when edm < edmval after Heasse but min is flagged eith a  bad edm:
@@ -200,9 +198,9 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 
    double edm = initialState.Edm();
 
-   MnPrintPrefix mnprintprefix("FumiliBuilder");
+   MnPrint print("FumiliBuilder");
 
-   MnPrint::Debug("Initial State:",
+   print.Debug("Initial State:",
       "\n  Parameter", initialState.Vec(),
       "\n  Gradient", initialState.Gradient().Vec(),
       "\n  Inv Hessian", initialState.Error().InvHessian(),
@@ -224,21 +222,21 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 
       step = -1.*s0.Error().InvHessian()*s0.Gradient().Vec();
 
-      MnPrint::Debug("Iteration -", result.size(),
+      print.Debug("Iteration -", result.size(),
         "\n  Fval", s0.Fval(), "numOfCall", fcn.NumOfCalls(),
         "\n  Internal Parameter values", s0.Vec(),
         "\n  Newton step", step);
 
       double gdel = inner_product(step, s0.Gradient().Grad());
       if(gdel > 0.) {
-         MnPrint::Warn("Matrix not pos.def, gdel =", gdel, " > 0");
+         print.Warn("Matrix not pos.def, gdel =", gdel, " > 0");
 
          MnPosDef psdf;
          s0 = psdf(s0, prec);
          step = -1.*s0.Error().InvHessian()*s0.Gradient().Vec();
          gdel = inner_product(step, s0.Gradient().Grad());
 
-         MnPrint::Warn("After correction, gdel =", gdel);
+         print.Warn("After correction, gdel =", gdel);
 
          if(gdel > 0.) {
             result.push_back(s0);
@@ -276,11 +274,11 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
          p =  MinimumParameters(s0.Vec() + pp.X()*step, pp.Y() );
       }
 
-      MnPrint::Debug("Before Gradient", fcn.NumOfCalls());
+      print.Debug("Before Gradient", fcn.NumOfCalls());
 
       FunctionGradient g = gc(p, s0.Gradient());
 
-      MnPrint::Debug("After Gradient", fcn.NumOfCalls());
+      print.Debug("After Gradient", fcn.NumOfCalls());
 
       //FunctionGradient g = gc(s0.Parameters(), s0.Gradient());
 
@@ -293,7 +291,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       edm = Estimator().Estimate(g, s0.Error());
 
 
-      MnPrint::Debug("Updated new point:",
+      print.Debug("Updated new point:",
          "\n  FVAL     ", p.Fval(),
          "\n  Parameter", p.Vec(),
          "\n  Gradient", g.Vec(),
@@ -302,7 +300,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
          "\n  Edm", edm);
 
       if(edm < 0.) {
-         MnPrint::Warn("Matrix not pos.def., Edm < 0");
+         print.Warn("Matrix not pos.def., Edm < 0");
 
          MnPosDef psdf;
          s0 = psdf(s0, prec);
@@ -324,14 +322,14 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
          if ( edm < 0.1 ) break;
       }
 
-      MnPrint::Debug("finish iteration -", result.size(), "lambda =", lambda,
+      print.Debug("finish iteration -", result.size(), "lambda =", lambda,
         "f1 =", p.Fval(), "f0 =", s0.Fval(), "num of calls =", fcn.NumOfCalls(),
         "edm =", edm);
 
       result.push_back(MinimumState(p, e, g, edm, fcn.NumOfCalls()));
       if (TraceIter() ) TraceIteration(result.size()-1, result.back() );
 
-      MnPrint::Info(MnPrint::Oneline(result.back(), result.size()));
+      print.Info(MnPrint::Oneline(result.back(), result.size()));
 
       edm *= (1. + 3.*e.Dcovar());
 
@@ -341,28 +339,28 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 
 
    if(fcn.NumOfCalls() >= maxfcn) {
-      MnPrint::Warn("Call limit exceeded");
+      print.Warn("Call limit exceeded");
 
       return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnReachedCallLimit());
    }
 
    if(edm > edmval) {
       if(edm < std::fabs(prec.Eps2()*result.back().Fval())) {
-         MnPrint::Warn("Machine accuracy limits further improvement");
+         print.Warn("Machine accuracy limits further improvement");
 
          return FunctionMinimum(seed, result, fcn.Up());
       } else if(edm < 10*edmval) {
          return FunctionMinimum(seed, result, fcn.Up());
       } else {
 
-         MnPrint::Warn("No convergence; Edm", edm, "is above tolerance", 10 * edmval);
+         print.Warn("No convergence; Edm", edm, "is above tolerance", 10 * edmval);
 
          return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnAboveMaxEdm());
       }
    }
    //   std::cout<<"result.back().Error().Dcovar()= "<<result.back().Error().Dcovar()<<std::endl;
 
-   MnPrint::Debug("Exiting successfully",
+   print.Debug("Exiting successfully",
       "Ncalls", fcn.NumOfCalls(), "FCN", result.back().Fval(),
       "Edm", edm, "Requested", edmval);
 

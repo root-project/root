@@ -30,7 +30,7 @@ MinimumState MnPosDef::operator()(const MinimumState& st, const MnMachinePrecisi
 }
 
 MinimumError MnPosDef::operator()(const MinimumError& e, const MnMachinePrecision& prec) const {
-   MnPrintPrefix mnprintprefix("MnPosDef");
+   MnPrint print("MnPosDef");
 
    // make error matrix positive defined returning a new corrected minimum error state
 
@@ -49,7 +49,7 @@ MinimumError MnPosDef::operator()(const MinimumError& e, const MnMachinePrecisio
 
    for(unsigned int i = 0; i < err.Nrow(); i++) {
       if(err(i,i) <= 0 /* prec.Eps2() */ )
-         MnPrint::Warn(
+         print.Warn(
            "non-positive diagonal element in covariance matrix[", i, "] =",
            err(i, i));
 
@@ -61,7 +61,7 @@ MinimumError MnPosDef::operator()(const MinimumError& e, const MnMachinePrecisio
       dg = 0.5 + epspdf - dgmin;
       //     dg = 0.5*(1. + epspdf - dgmin);
 
-      MnPrint::Warn("Added to diagonal of Error matrix a value", dg);
+      print.Warn("Added to diagonal of Error matrix a value", dg);
 
       //std::cout << "Error matrix " << err << std::endl;
    }
@@ -90,7 +90,7 @@ MinimumError MnPosDef::operator()(const MinimumError& e, const MnMachinePrecisio
    for(unsigned int i = 0; i < err.Nrow(); i++)
       err(i,i) *= (1. + padd);
 
-   MnPrint::Debug([&](std::ostream& os) {
+   print.Debug([&](std::ostream& os) {
      os << "Eigenvalues:";
      for (unsigned i = 0; i < err.Nrow(); ++i)
         os << "\n  " << eval(i);
@@ -98,7 +98,7 @@ MinimumError MnPosDef::operator()(const MinimumError& e, const MnMachinePrecisio
 
    //   std::cout<<"MnPosDef final matrix: "<<err<<std::endl;
 
-   MnPrint::Warn("Matrix forced pos-def by adding to diagonal", padd);
+   print.Warn("Matrix forced pos-def by adding to diagonal", padd);
 
    return MinimumError(err, MinimumError::MnMadePosDef());
 }

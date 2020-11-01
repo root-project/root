@@ -60,7 +60,8 @@ int mnxerbla(const char* srname, int info) {
 
 /*     .. Executable Statements .. */
 
-   MnPrint::Warn("On entry to", srname, "Parameter number", info, "had an illegal Value");
+   MnPrint print("mnxerbla");
+   print.Warn("On entry to", srname, "Parameter number", info, "had an illegal Value");
 
    /*     End of XERBLA */
 

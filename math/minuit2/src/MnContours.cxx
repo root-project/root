@@ -36,7 +36,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    unsigned int maxcalls = 100*(npoints+5)*(fMinimum.UserState().VariableParameters()+1);
    unsigned int nfcn = 0;
 
-   MnPrintPrefix mnprintprefix("MnContours");
+   MnPrint print("MnContours");
 
    std::vector<std::pair<double,double> > result; result.reserve(npoints);
    std::vector<MnUserParameterState> states;
@@ -55,7 +55,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    MinosError mex = minos.Minos(px);
    nfcn += mex.NFcn();
    if(!mex.IsValid()) {
-      MnPrint::Error("unable to find first two points");
+      print.Error("unable to find first two points");
       return ContoursError(px, py, result, mex, mex, nfcn);
    }
    std::pair<double,double> ex = mex();
@@ -63,7 +63,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    MinosError mey = minos.Minos(py);
    nfcn += mey.NFcn();
    if(!mey.IsValid()) {
-      MnPrint::Error("unable to find second two points");
+      print.Error("unable to find second two points");
       return ContoursError(px, py, result, mex, mey, nfcn);
    }
    std::pair<double,double> ey = mey();
@@ -75,7 +75,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    FunctionMinimum exy_up = migrad();
    nfcn += exy_up.NFcn();
    if(!exy_up.IsValid()) {
-      MnPrint::Error("unable to find Upper y Value for x Parameter", px);
+      print.Error("unable to find Upper y Value for x Parameter", px);
       return ContoursError(px, py, result, mex, mey, nfcn);
    }
 
@@ -83,7 +83,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    FunctionMinimum exy_lo = migrad();
    nfcn += exy_lo.NFcn();
    if(!exy_lo.IsValid()) {
-      MnPrint::Error("unable to find Lower y Value for x Parameter", px);
+      print.Error("unable to find Lower y Value for x Parameter", px);
       return ContoursError(px, py, result, mex, mey, nfcn);
    }
 
@@ -94,7 +94,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    FunctionMinimum eyx_up = migrad1();
    nfcn += eyx_up.NFcn();
    if(!eyx_up.IsValid()) {
-      MnPrint::Error("unable to find Upper x Value for y Parameter", py);
+      print.Error("unable to find Upper x Value for y Parameter", py);
       return ContoursError(px, py, result, mex, mey, nfcn);
    }
 
@@ -102,7 +102,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    FunctionMinimum eyx_lo = migrad1();
    nfcn += eyx_lo.NFcn();
    if(!eyx_lo.IsValid()) {
-      MnPrint::Error("unable to find Lower x Value for y Parameter", py);
+      print.Error("unable to find Lower x Value for y Parameter", py);
       return ContoursError(px, py, result, mex, mey, nfcn);
    }
 
@@ -117,7 +117,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
 
    MnUserParameterState upar = fMinimum.UserState();
 
-   MnPrint::Info("List of found points", '\n',
+   print.Info("List of found points", '\n',
      "  Parameter x is", upar.Name(px), '\n',
      "  Parameter y is", upar.Name(py), '\n',
      result[0], '\n',
@@ -158,7 +158,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
 L300:
 
       if(nfcn > maxcalls) {
-         MnPrint::Error("maximum number of function calls exhausted");
+         print.Error("maximum number of function calls exhausted");
          return ContoursError(px, py, result, mex, mey, nfcn);
       }
 
@@ -177,7 +177,7 @@ L300:
       if(!opt.IsValid()) {
          //       if(a1 > 0.5) {
          if(sca < 0.) {
-            MnPrint::Error("unable to find point on Contour", i+1, '\n',
+            print.Error("unable to find point on Contour", i+1, '\n',
               "found only", i ,"points");
             return ContoursError(px, py, result, mex, mey, nfcn);
          }
@@ -190,15 +190,15 @@ L300:
       double aopt = opt.Value();
       if(idist2 == result.begin()) {
          result.emplace_back(xmidcr+(aopt)*xdircr, ymidcr + (aopt)*ydircr);
-         MnPrint::Info(result.back());
+         print.Info(result.back());
       }
       else {
          result.insert(idist2, {xmidcr+(aopt)*xdircr, ymidcr + (aopt)*ydircr});
-         MnPrint::Info(*idist2);
+         print.Info(*idist2);
       }
    }
 
-   MnPrint::Info("Number of contour points =", result.size());
+   print.Info("Number of contour points =", result.size());
 
    return ContoursError(px, py, result, mex, mey, nfcn);
 }

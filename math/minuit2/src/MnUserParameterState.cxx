@@ -159,13 +159,13 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
 MnUserCovariance MnUserParameterState::Hessian() const {
    // invert covariance matrix and return Hessian
    // need to copy in a MnSymMatrix
-   MnPrintPrefix mnprintprefix("MnUserParameterState::Hessian");
+   MnPrint print("MnUserParameterState::Hessian");
 
    MnAlgebraicSymMatrix mat(fCovariance.Nrow() );
    std::copy(fCovariance.Data().begin(), fCovariance.Data().end(), mat.Data() );
    int ifail = Invert(mat);
    if(ifail != 0) {
-      MnPrint::Warn("Inversion failed; return diagonal matrix");
+      print.Warn("Inversion failed; return diagonal matrix");
 
       MnUserCovariance tmp(fCovariance.Nrow());
       for(unsigned int i = 0; i < fCovariance.Nrow(); i++) {
@@ -202,7 +202,7 @@ const MinuitParameter& MnUserParameterState::Parameter(unsigned int i) const {
 }
 
 void MnUserParameterState::Add(const std::string & name, double val, double err) {
-   MnPrintPrefix mnprintprefix("MnUserParameterState::Add");
+   MnPrint print("MnUserParameterState::Add");
 
    //add free Parameter
    if ( fParameters.Add(name, val, err) ) {
@@ -216,7 +216,7 @@ void MnUserParameterState::Add(const std::string & name, double val, double err)
       int i = Index(name);
       SetValue(i,val);
       if (Parameter(i).IsConst() ) {
-         MnPrint::Warn("Cannot modify status of constant parameter", name);
+         print.Warn("Cannot modify status of constant parameter", name);
          return;
       }
       SetError(i,err);
@@ -227,7 +227,7 @@ void MnUserParameterState::Add(const std::string & name, double val, double err)
 }
 
 void MnUserParameterState::Add(const std::string & name, double val, double err, double low, double up) {
-   MnPrintPrefix mnprintprefix("MnUserParameterState::Add");
+   MnPrint print("MnUserParameterState::Add");
 
    //add limited Parameter
    if ( fParameters.Add(name, val, err, low, up) ) {
@@ -240,7 +240,7 @@ void MnUserParameterState::Add(const std::string & name, double val, double err,
       int i = Index(name);
       SetValue(i,val);
       if (Parameter(i).IsConst() ) {
-         MnPrint::Warn("Cannot modify status of constant parameter", name);
+         print.Warn("Cannot modify status of constant parameter", name);
          return;
       }
       SetError(i,err);

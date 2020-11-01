@@ -79,7 +79,7 @@ void MnHesse::operator()(const FCNBase& fcn, FunctionMinimum& min, unsigned int 
 MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, const MnUserTransformation& trafo, unsigned int maxcalls) const {
    // internal interface from MinimumState and MnUserTransformation
    // Function who does the real Hessian calculations
-   MnPrintPrefix mnprintprefix("MnHesse");
+   MnPrint print("MnHesse");
 
    const MnMachinePrecision& prec = trafo.Precision();
    // make sure starting at the right place
@@ -111,7 +111,7 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
 
    MnAlgebraicVector x = st.Parameters().Vec();
 
-   MnPrint::Debug("Gradient is",
+   print.Debug("Gradient is",
      st.Gradient().IsAnalytical() ? "analytical" : "numerical",
      "\n  point:", x,
      "\n  fcn  :", amin,
@@ -127,7 +127,7 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
       double d = std::fabs(gst(i));
       if(d < dmin) d = dmin;
 
-      MnPrint::Debug("Derivative parameter", i, "d =", d, "dmin =", dmin);
+      print.Debug("Derivative parameter", i, "d =", d, "dmin =", dmin);
 
       for(unsigned int icyc = 0; icyc < Ncycles(); icyc++) {
          double sag = 0.;
@@ -141,7 +141,7 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
             x(i) = xtf;
             sag = 0.5*(fs1+fs2-2.*amin);
 
-            MnPrint::Debug("cycle", icyc, "mul", multpy,
+            print.Debug("cycle", icyc, "mul", multpy,
               "\tsag =", sag, "d =", d);
 
             //  Now as F77 Minuit - check that sag is not zero
@@ -158,7 +158,7 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
 L26:
          // get parameter name for i
          // (need separate scope for avoiding compl error when declaring name)
-         MnPrint::Warn("2nd derivative zero for parameter",
+         print.Warn("2nd derivative zero for parameter",
            trafo.Name( trafo.ExtOfInt(i)),"; MnHesse fails and will return diagonal matrix");
 
          for(unsigned int j = 0; j < n; j++) {
@@ -180,7 +180,7 @@ L30:
          if(trafo.Parameter(i).HasLimits()) d = std::min(0.5, d);
          if(d < dmin) d = dmin;
 
-         MnPrint::Debug("g1 =", grd(i), "g2 =", g2(i), "step =", gst(i),
+         print.Debug("g1 =", grd(i), "g2 =", g2(i), "step =", gst(i),
                 "d =", d, "diffd =", std::fabs(d-dlast)/d, "diffg2 =",
                 std::fabs(g2(i)-g2bfor)/g2(i));
 
@@ -194,7 +194,7 @@ L30:
       if(mfcn.NumOfCalls()  > maxcalls) {
 
          //std::cout<<"maxcalls " << maxcalls << " " << mfcn.NumOfCalls() << "  " <<   st.NFcn() << std::endl;
-         MnPrint::Warn("Maximum number of allowed function calls exhausted; will return diagonal matrix");
+         print.Warn("Maximum number of allowed function calls exhausted; will return diagonal matrix");
 
          for(unsigned int j = 0; j < n; j++) {
             double tmp = g2(j) < prec.Eps2() ? 1. : 1./g2(j);
@@ -206,7 +206,7 @@ L30:
 
    }
 
-   MnPrint::Debug("Second derivatives", g2);
+   print.Debug("Second derivatives", g2);
 
    if(fStrategy.Strategy() > 0) {
       // refine first derivative
@@ -256,18 +256,18 @@ L30:
 
    //verify if matrix pos-def (still 2nd derivative)
 
-   MnPrint::Debug("Original error matrix", vhmat);
+   print.Debug("Original error matrix", vhmat);
 
    MinimumError tmpErr = MnPosDef()(MinimumError(vhmat,1.), prec);
    vhmat = tmpErr.InvHessian();
 
-   MnPrint::Debug("PosDef error matrix", vhmat);
+   print.Debug("PosDef error matrix", vhmat);
 
 
    int ifail = Invert(vhmat);
    if(ifail != 0) {
 
-      MnPrint::Warn("Matrix inversion fails; will return diagonal matrix");
+      print.Warn("Matrix inversion fails; will return diagonal matrix");
 
       MnAlgebraicSymMatrix tmpsym(vhmat.Nrow());
       for(unsigned int j = 0; j < n; j++) {
@@ -292,7 +292,7 @@ L30:
    MinimumError err(vhmat, 0.);
    double edm = estim.Estimate(gr, err);
 
-   MnPrint::Debug("Hessian is ACCURATE. New state:",
+   print.Debug("Hessian is ACCURATE. New state:",
     "\n  First derivative:", grd,
     "\n  Second derivative:", g2,
     "\n  Gradient step:", gst,

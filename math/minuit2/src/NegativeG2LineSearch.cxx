@@ -33,7 +33,7 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
 //   Recalculate the gradients for all the Parameter after the correction and
 //   continue iteration in case the second derivatives are still negative
 //
-   MnPrintPrefix mnprintprefix("NegativeG2LineSearch");
+   MnPrint print("NegativeG2LineSearch");
 
    bool negG2 = HasNegativeG2(st.Gradient(), prec);
    if(!negG2) return st;
@@ -47,7 +47,7 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
       iterate = false;
       for(unsigned int i = 0; i < n; i++) {
 
-         MnPrint::Debug("negative G2 - iter", iter, "param", i, pa.Vec()(i),
+         print.Debug("negative G2 - iter", iter, "param", i, pa.Vec()(i),
            "grad2", dgrad.G2()(i), "grad", dgrad.Vec()(i),
            "grad step", dgrad.Gstep()(i), "step size", pa.Dirin()(i));
 
@@ -71,20 +71,20 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
             // if using sec derivative information
             // double g2del = step(i)*step(i) * dgrad.G2()(i);
 
-            MnPrint::Debug("step(i)", step(i), "gdel", gdel);
+            print.Debug("step(i)", step(i), "gdel", gdel);
 //            std::cout << " g2del " << g2del << std::endl;
 
             MnParabolaPoint pp = lsearch(fcn, pa, step, gdel, prec);
 
 
-            MnPrint::Debug("Line search result", pp.X(), "f(0)", pa.Fval(), "f(1)", pp.Y());
+            print.Debug("Line search result", pp.X(), "f(0)", pa.Fval(), "f(1)", pp.Y());
 
             step *= pp.X();
             pa = MinimumParameters(pa.Vec() + step, pp.Y());
 
             dgrad = gc(pa, dgrad);
 
-            MnPrint::Debug("Line search - iter", iter, "param", i, pa.Vec()(i),
+            print.Debug("Line search - iter", iter, "param", i, pa.Vec()(i),
               "step", step(i), "new grad2", dgrad.G2()(i),
               "new grad", dgrad.Vec()(i), "grad step", dgrad.Gstep()(i));
 

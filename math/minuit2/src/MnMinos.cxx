@@ -26,12 +26,12 @@ MnMinos::MnMinos(const FCNBase& fcn, const FunctionMinimum& min, unsigned int st
    fMinimum(min),
    fStrategy(MnStrategy(stra))
 {
-   MnPrintPrefix mnprintprefix("MnMinos");
+   MnPrint print("MnMinos");
 
    // construct from FCN + Minimum
    // check if Error definition  has been changed, in case re-update errors
    if (fcn.Up() != min.Up() ) {
-      MnPrint::Warn("MnMinos: UP value has changed, need to update FunctionMinimum class");
+      print.Warn("MnMinos: UP value has changed, need to update FunctionMinimum class");
    }
 }
 
@@ -40,12 +40,12 @@ MnMinos::MnMinos(const FCNBase& fcn, const FunctionMinimum& min,  const MnStrate
    fMinimum(min),
    fStrategy(stra)
 {
-   MnPrintPrefix mnprintprefix("MnMinos");
+   MnPrint print("MnMinos");
 
    // construct from FCN + Minimum
    // check if Error definition  has been changed, in case re-update errors
    if (fcn.Up() != min.Up() ) {
-      MnPrint::Warn("UP value has changed, need to update FunctionMinimum class");
+      print.Warn("UP value has changed, need to update FunctionMinimum class");
    }
 }
 
@@ -79,17 +79,17 @@ double MnMinos::Upper(unsigned int par, unsigned int maxcalls, double toler) con
 MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls, double toler) const {
    // do full minos error anlysis (lower + upper) for parameter par
 
-   MnPrintPrefix mnprintprefix("MnMinos");
+   MnPrint print("MnMinos");
 
    MnCross up = Upval(par, maxcalls,toler);
 
-   MnPrint::Debug("Function calls to find upper error", up.NFcn());
+   print.Debug("Function calls to find upper error", up.NFcn());
 
    MnCross lo = Loval(par, maxcalls,toler);
 
-   MnPrint::Debug("Function calls to find lower error", lo.NFcn());
+   print.Debug("Function calls to find lower error", lo.NFcn());
 
-   MnPrint::Debug("return Minos error", lo.Value(), ",", up.Value());
+   print.Debug("return Minos error", lo.Value(), ",", up.Value());
 
    return MinosError(par, fMinimum.UserState().Value(par), lo, up);
 }
@@ -103,9 +103,9 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
 
    assert(direction == 1 || direction == -1);
 
-   MnPrintPrefix mnprintprefix("MnMinos");
+   MnPrint print("MnMinos");
 
-   MnPrint::Info(
+   print.Info(
       "Determination of", direction == 1 ? "upper" : "lower",
       "Minos error for parameter", par);
 
@@ -163,7 +163,7 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
          unew = std::max(unew, upar.Parameter(ext).LowerLimit());
       }
 
-      MnPrint::Debug("Parameter", ext, "is set from", upar.Value(ext), "to", unew);
+      print.Debug("Parameter", ext, "is set from", upar.Value(ext), "to", unew);
 
       upar.SetValue(ext, unew);
    }
@@ -171,33 +171,33 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
    upar.Fix(par);
    upar.SetValue(par, val);
 
-   MnPrint::Debug("Parameter", par, "is fixed and set from",
+   print.Debug("Parameter", par, "is fixed and set from",
       fMinimum.UserState().Value(par), "to", val, "delta =", err);
 
    MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);
    MnCross aopt = cross(para, xmid, xdir, toler, maxcalls);
 
-   MnPrint::Debug("aopt value found from MnFunctionCross =", aopt.Value());
+   print.Debug("aopt value found from MnFunctionCross =", aopt.Value());
 
    const char * par_name = upar.Name(par);
    if(aopt.AtMaxFcn())
-      MnPrint::Warn("maximum number of function calls exceeded for Parameter", par_name);
+      print.Warn("maximum number of function calls exceeded for Parameter", par_name);
    if(aopt.NewMinimum())
-      MnPrint::Warn("new Minimum found while looking for Parameter", par_name);
+      print.Warn("new Minimum found while looking for Parameter", par_name);
    if (direction ==1) {
       if(aopt.AtLimit())
-         MnPrint::Warn("parameter", par_name, "is at Upper limit");
+         print.Warn("parameter", par_name, "is at Upper limit");
       if(!aopt.IsValid())
-         MnPrint::Warn("could not find Upper Value for Parameter", par_name);
+         print.Warn("could not find Upper Value for Parameter", par_name);
    }
    else {
       if(aopt.AtLimit())
-         MnPrint::Warn("parameter", par_name, "is at Lower limit");
+         print.Warn("parameter", par_name, "is at Lower limit");
       if(!aopt.IsValid())
-         MnPrint::Warn("could not find Lower Value for Parameter",par_name);
+         print.Warn("could not find Lower Value for Parameter",par_name);
    }
 
-   MnPrint::Info("end of Minos scan for", direction == 1 ? "up" : "low",
+   print.Info("end of Minos scan for", direction == 1 ? "up" : "low",
       "interval for parameter", upar.Name(par));
 
    return aopt;

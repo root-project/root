@@ -37,7 +37,7 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase& fcn, const MnUserParame
    // Minimize using Fumili. Create seed and Fumili gradient calculator.
    // The FCNBase passed must be a FumiliFCNBase type otherwise method will fail !
 
-   MnPrintPrefix mnprintprefix("FumiliMinimizer");
+   MnPrint print("FumiliMinimizer");
 
    MnUserFcn mfcn(fcn, st.Trafo());
    Numerical2PGradientCalculator gc(mfcn, st.Trafo(), strategy);
@@ -55,13 +55,13 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase& fcn, const MnUserParame
 
    FumiliFCNBase * fumiliFcn = dynamic_cast< FumiliFCNBase *>( const_cast<FCNBase *>(&fcn) );
    if ( !fumiliFcn ) {
-      MnPrint::Error("Wrong FCN type; try to use default minimizer");
+      print.Error("Wrong FCN type; try to use default minimizer");
       return  FunctionMinimum(mnseeds, fcn.Up() );
    }
 
 
    FumiliGradientCalculator fgc(*fumiliFcn, st.Trafo(), npar);
-   MnPrint::Debug("Using FumiliMinimizer");
+   print.Debug("Using FumiliMinimizer");
 
    return ModularFunctionMinimizer::Minimize(mfcn, fgc, mnseeds, strategy, maxfcn, toler);
 }
@@ -69,6 +69,9 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase& fcn, const MnUserParame
 
 
 FunctionMinimum FumiliMinimizer::Minimize(const FCNGradientBase& fcn, const MnUserParameterState& st, const MnStrategy& strategy, unsigned int maxfcn, double toler) const {
+
+   MnPrint print("FumiliMinimizer::Minimize");
+
    // Minimize using Fumili. Case of interface is a FCNGradientBase.
    // Normally other method is used  - probably this could be removed (t.b.i.)
 
@@ -85,13 +88,13 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNGradientBase& fcn, const MnUs
 
    FumiliFCNBase * fumiliFcn = dynamic_cast< FumiliFCNBase *>( const_cast<FCNGradientBase *>(&fcn) );
    if ( !fumiliFcn ) {
-      MnPrint::Error("wrong FCN type; try to use default minimizer");
+      print.Error("Wrong FCN type; try to use default minimizer");
       return  FunctionMinimum(mnseeds, fcn.Up() );
    }
 
 
    FumiliGradientCalculator fgc(*fumiliFcn, st.Trafo(), npar);
-   MnPrint::Debug("using FumiliMinimizer");
+   print.Debug("Using FumiliMinimizer");
 
    return ModularFunctionMinimizer::Minimize(mfcn, fgc, mnseeds, strategy, maxfcn, toler);
 

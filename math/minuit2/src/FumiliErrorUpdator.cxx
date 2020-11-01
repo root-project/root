@@ -59,7 +59,7 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState& s0,
    FumiliGradientCalculator * fgc = dynamic_cast< FumiliGradientCalculator *>( const_cast<GradientCalculator *>(&gc) );
    assert(fgc != 0);
 
-   MnPrintPrefix mnprintprefix("FumiliErrorUpdator");
+   MnPrint print("FumiliErrorUpdator");
 
    // get Hessian from Gradient calculator
 
@@ -85,7 +85,7 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState& s0,
 
    int ifail = Invert(h);
    if(ifail != 0) {
-      MnPrint::Warn("inversion fails; return diagonal matrix");
+      print.Warn("inversion fails; return diagonal matrix");
 
       for(unsigned int i = 0; i < h.Nrow(); i++) {
          h(i,i) = 1./h(i,i);

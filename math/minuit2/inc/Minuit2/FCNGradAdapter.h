@@ -57,7 +57,7 @@ public:
    std::vector<double> Gradient(const std::vector<double>& v) const {
       fFunc.Gradient(&v[0], &fGrad[0]);
 
-      MnPrint::Log(MnPrint::eDebug, "FCNGradAdapter", [&](std::ostream& os) {
+      MnPrint("FCNGradAdapter").Debug([&](std::ostream& os) {
         os << "gradient in FCNAdapter = {";
         for (unsigned int i = 0; i < fGrad.size(); ++i)
            os << fGrad[i] << (i == fGrad.size() - 1 ? '}' : '\t');

@@ -39,8 +39,8 @@ FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameter
       }
    }
 
-   MnPrint::Log(MnPrint::eDebug, "AnalyticalGradientCalculator",
-     "User given gradient in Minuit2", v);
+   MnPrint print("AnalyticalGradientCalculator");
+   print.Debug("User given gradient in Minuit2", v);
 
    return FunctionGradient(v);
 }

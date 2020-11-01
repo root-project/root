@@ -98,21 +98,21 @@ MinimumError BFGSErrorUpdator::Update(const MinimumState& s0,
    double gvg = similarity(dg, v0);   // this is y^T B^-1 y
 
 
-   MnPrintPrefix mnprintprefix("BFGSErrorUpdator");
-   MnPrint::Debug("dx =", dx, "dg =", dg, "delgam =", delgam, "gvg = ", gvg);
+   MnPrint print("BFGSErrorUpdator");
+   print.Debug("dx", dx, "dg", dg, "delgam", delgam, "gvg", gvg);
 
    if (delgam == 0 ) {
-      MnPrint::Warn("delgam = 0 : cannot update - return same matrix");
+      print.Warn("delgam = 0 : cannot update - return same matrix");
       return s0.Error();
    }
 
    if (delgam < 0) {
-     MnPrint::Warn("delgam < 0 : first derivatives increasing along search line");
+     print.Warn("delgam < 0 : first derivatives increasing along search line");
    }
 
    if (gvg <= 0 ) {
       // since v0 is pos def this gvg can be only = 0 if  dg = 0 - should never be here
-      MnPrint::Warn("gvg <= 0");
+      print.Warn("gvg <= 0");
       //return s0.Error();
    }
 
@@ -141,7 +141,7 @@ MinimumError BFGSErrorUpdator::Update(const MinimumState& s0,
 
    double dcov = 0.5*(s0.Error().Dcovar() + sum_upd/sum_of_elements(vUpd));
 
-   MnPrint::Debug("dcov =", dcov);
+   print.Debug("dcov", dcov);
 
    return MinimumError(vUpd, dcov);
 }

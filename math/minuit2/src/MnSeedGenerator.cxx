@@ -42,13 +42,13 @@ namespace ROOT {
 
 MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculator& gc, const MnUserParameterState& st, const MnStrategy& stra) const {
 
-   MnPrintPrefix mnprintprefix("MnSeedGenerator");
+   MnPrint print("MnSeedGenerator");
 
    // find seed (initial minimization point) using the calculated gradient
-   unsigned int n = st.VariableParameters();
+   const unsigned int n = st.VariableParameters();
    const MnMachinePrecision& prec = st.Precision();
 
-   MnPrint::Debug(n, "free parameters, FCN pointer", &fcn);
+   print.Debug(n, "free parameters, FCN pointer", &fcn);
 
    // initial starting values
    MnAlgebraicVector x(n);
@@ -72,29 +72,29 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
    double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
    MinimumState state(pa, err, dgrad, edm, fcn.NumOfCalls());
 
-   MnPrint::Info("Initial state:", state);
+   print.Info("Initial state:", state);
 
    NegativeG2LineSearch ng2ls;
    if(ng2ls.HasNegativeG2(dgrad, prec)) {
-      MnPrint::Debug("Negative G2 Found",
+      print.Debug("Negative G2 Found",
         "\n  point:", x,
         "\n  grad :", dgrad.Grad(),
         "\n  g2   :", dgrad.G2());
 
       state = ng2ls(fcn, state, gc, prec);
 
-      MnPrint::Info("Negative G2 found - new state:", state);
+      print.Info("Negative G2 found - new state:", state);
    }
 
 
    if(stra.Strategy() == 2 && !st.HasCovariance()) {
       //calculate full 2nd derivative
 
-      MnPrint::Debug("calling MnHesse");
+      print.Debug("calling MnHesse");
 
       MinimumState tmp = MnHesse(stra)(fcn, state, st.Trafo());
 
-      MnPrint::Info("run Hesse - new state:", tmp);
+      print.Info("run Hesse - new state:", tmp);
 
       return MinimumSeed(tmp, st.Trafo());
    }
@@ -104,6 +104,8 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
 
 
 MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradientCalculator& gc, const MnUserParameterState& st, const MnStrategy& stra) const {
+   MnPrint print("MnSeedGenerator");
+
    // find seed (initial point for minimization) using analytical gradient
    unsigned int n = st.VariableParameters();
    const MnMachinePrecision& prec = st.Precision();
@@ -127,7 +129,7 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
          if(std::fabs(hgrd.first.Grad()(i) - grd.Grad()(i)) > hgrd.second(i)) {
             int externalParameterIndex = st.Trafo().ExtOfInt(i);
             const char * parameter_name = st.Trafo().Name(externalParameterIndex);
-            MnPrint::Warn("gradient discrepancy of external Parameter too large:"
+            print.Warn("Gradient discrepancy of external Parameter too large:"
               "parameter_name =", parameter_name,
               "externalParameterIndex =", externalParameterIndex,
               "internal =", i
@@ -136,7 +138,7 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
          }
       }
       if(!good) {
-         MnPrint::Error("Minuit does not accept user specified Gradient. To force acceptance, override 'virtual bool CheckGradient() const' of FCNGradientBase.h in the derived class.");
+         print.Error("Minuit does not accept user specified Gradient. To force acceptance, override 'virtual bool CheckGradient() const' of FCNGradientBase.h in the derived class.");
 
          assert(good);
       }

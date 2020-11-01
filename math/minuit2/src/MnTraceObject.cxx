@@ -18,11 +18,12 @@ namespace ROOT {
    namespace Minuit2 {
 
       void MnTraceObject::operator() (int iter, const MinimumState & state) {
+         MnPrint print("MnTraceObject");
 
-         MnPrint::Debug(MnPrint::Oneline(state, iter));
+         print.Debug(MnPrint::Oneline(state, iter));
          if (!fUserState) return;
 
-         MnPrint::Debug([&](std::ostream& os) {
+         print.Debug([&](std::ostream& os) {
            // print also parameters and derivatives
            os << "\n\t" << std::setw(12) << "  " << "  "
               << std::setw(12)  << " ext value " << "  "

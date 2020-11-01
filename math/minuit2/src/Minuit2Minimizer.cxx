@@ -187,11 +187,10 @@ bool Minuit2Minimizer::SetVariable(unsigned int ivar, const std::string & name, 
    // value is set for corresponding variable name
 
 //    std::cout << " add parameter " << name << "  " <<  val << " step " << step << std::endl;
+   MnPrint print("Minuit2Minimizer::SetVariable", PrintLevel());
 
    if (step <= 0) {
-      std::string txtmsg = "Parameter " + name + "  has zero or invalid step size - consider it as constant ";
-      MnPrint::Log(MnPrint::eInfo,
-         "Minuit2Minimizer::SetVariable", txtmsg);
+      print.Info("Parameter", name, "has zero or invalid step size - consider it as constant");
       fState.Add(name.c_str(), val);
    }
    else
@@ -199,11 +198,7 @@ bool Minuit2Minimizer::SetVariable(unsigned int ivar, const std::string & name, 
 
    unsigned int minuit2Index = fState.Index(name.c_str() );
    if ( minuit2Index != ivar) {
-      std::string txtmsg("Wrong index used for the variable " + name);
-      MnPrint::Log(MnPrint::eInfo,
-         "Minuit2Minimizer::SetVariable", txtmsg);
-      MnPrint::Log(MnPrint::eInfo,
-         "Minuit2Minimizer::SetVariable", minuit2Index);
+      print.Warn("Wrong index", minuit2Index, "used for the variable", name);
       ivar = minuit2Index;
       return false;
    }
@@ -325,7 +320,8 @@ bool Minuit2Minimizer::ReleaseVariable(unsigned int ivar) {
 bool Minuit2Minimizer::IsFixedVariable(unsigned int ivar) const {
    // query if variable is fixed
    if (ivar >= fState.MinuitParameters().size() ) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer","wrong variable index");
+      MnPrint print("Minuit2Minimizer", PrintLevel());
+      print.Error("Wrong variable index");
       return false;
    }
    return (fState.Parameter(ivar).IsFixed() || fState.Parameter(ivar).IsConst() );
@@ -334,7 +330,8 @@ bool Minuit2Minimizer::IsFixedVariable(unsigned int ivar) const {
 bool Minuit2Minimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & varObj) const {
    // retrieve variable settings (all set info on the variable)
    if (ivar >= fState.MinuitParameters().size() ) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer","wrong variable index");
+      MnPrint print("Minuit2Minimizer", PrintLevel());
+      print.Error("Wrong variable index");
       return false;
    }
    const MinuitParameter & par = fState.Parameter(ivar);
@@ -365,8 +362,8 @@ void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
       // for Fumili the fit method function interface is required
       const ROOT::Math::FitMethodFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
       if (!fcnfunc) {
-         MnPrint::Log(MnPrint::eError,
-            "Minuit2Minimizer: Wrong Fit method function for Fumili");
+         MnPrint print("Minuit2Minimizer", PrintLevel());
+         print.Error("Wrong Fit method function for Fumili");
          return;
       }
       fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction> (*fcnfunc, fDim, ErrorDef() );
@@ -384,8 +381,8 @@ void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func)
       // for Fumili the fit method function interface is required
       const ROOT::Math::FitMethodGradFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction*>(&func);
       if (!fcnfunc) {
-         MnPrint::Log(MnPrint::eError,
-            "Minuit2Minimizer: Wrong Fit method function for Fumili");
+         MnPrint print("Minuit2Minimizer", PrintLevel());
+         print.Error("Wrong Fit method function for Fumili");
          return;
       }
       fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction> (*fcnfunc, fDim, ErrorDef() );
@@ -395,8 +392,11 @@ void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func)
 bool Minuit2Minimizer::Minimize() {
    // perform the minimization
    // store a copy of FunctionMinimum
+
+   MnPrint print("Minuit2Minimizer::Minimize", PrintLevel());
+
    if (!fMinuitFCN) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer::Minimize","FCN function has not been set");
+      print.Error("FCN function has not been set");
       return false;
   }
 
@@ -407,13 +407,13 @@ bool Minuit2Minimizer::Minimize() {
    fMinimum = 0;
 
 
-   int maxfcn = MaxFunctionCalls();
-   double tol = Tolerance();
-   int strategyLevel = Strategy();
+   const int maxfcn = MaxFunctionCalls();
+   const double tol = Tolerance();
+   const int strategyLevel = Strategy();
    fMinuitFCN->SetErrorDef(ErrorDef() );
 
-   int printLevel = PrintLevel();
-   if (printLevel >=1) {
+   const int printLevel = PrintLevel();
+   if (PrintLevel() >=1) {
       // print the real number of maxfcn used (defined in ModularFuncitonMinimizer)
       int maxfcn_used = maxfcn;
       if (maxfcn_used == 0) {
@@ -426,11 +426,11 @@ bool Minuit2Minimizer::Minimize() {
    }
 
    // internal minuit messages
-   MnPrint::SetLevel(printLevel );
    fMinimizer->Builder().SetPrintLevel(printLevel);
 
    // switch off Minuit2 printing
-   int prev_level = (printLevel <= 0 ) ?   TurnOffPrintInfoLevel() : -2;
+   const int prev_level = (printLevel <= 0 ) ?   TurnOffPrintInfoLevel() : -2;
+   const int prevGlobalLevel = MnPrint::SetGlobalLevel(printLevel);
 
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
@@ -468,7 +468,7 @@ bool Minuit2Minimizer::Minimize() {
       strategy.SetHessianG2Tolerance(hessStepTol);
 
       int storageLevel = 1;
-      bool ret = minuit2Opt->GetValue("StorageLevel",storageLevel);
+      bool ret = minuit2Opt->GetValue("StorageLevel", storageLevel);
       if (ret) SetStorageLevel(storageLevel);
 
       if (printLevel > 0) {
@@ -529,6 +529,7 @@ bool Minuit2Minimizer::Minimize() {
 
    // -2 is the highest low invalid value for gErrorIgnoreLevel
    if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
+   MnPrint::SetGlobalLevel(prevGlobalLevel);
 
    // copy minimum state (parameter values and errors)
    fState = fMinimum->UserState();
@@ -592,13 +593,12 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
       fStatus = 4;
    }
 
-
+   MnPrint print("Minuit2Minimizer::Minimize", debugLevel);
    bool validMinimum = min.IsValid();
    if (validMinimum) {
       // print a warning message in case something is not ok
       if (fStatus != 0 && debugLevel > 0)
-         MnPrint::Log(MnPrint::eWarn,
-           "Minuit2Minimizer::Minimize", txt);
+         print.Warn(txt);
    }
    else {
       // minimum is not valid when state is not valid and edm is over max or has passed call limits
@@ -607,8 +607,7 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
          txt = "unknown failure";
          fStatus = 6;
       }
-      std::string msg = "Minimization did NOT converge, " + txt;
-      MnPrint::Log(MnPrint::eWarn, "Minuit2Minimizer::Minimize", msg);
+      print.Warn("Minimization did NOT converge,", txt);
    }
 
    if (debugLevel >= 1) PrintResults();
@@ -787,6 +786,7 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
       return false;
    }
 
+   MnPrint print("Minuit2Minimizer::GetMinosError", PrintLevel());
 
    // to run minos I need function minimum class
    // redo minimization from current state
@@ -794,12 +794,12 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
 //       GetMinimizer()->Minimize(*GetFCN(),fState, ROOT::Minuit2::MnStrategy(strategy), MaxFunctionCalls(), Tolerance());
 //    fState = min.UserState();
    if (fMinimum == 0) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer::GetMinosErrors:  failed - no function minimum existing");
+      print.Error("Failed - no function minimum existing");
       return false;
    }
 
    if (!fMinimum->IsValid() ) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer::MINOS failed due to invalid function minimum");
+      print.Error("Failed - invalid function minimum");
       return false;
    }
 
@@ -813,22 +813,19 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // run again the Minimization in case of a new minimum
    // bit 8 is set
    if ((mstatus & 8) != 0) {
-
-      MnPrint::Log(MnPrint::eInfo, "Minuit2Minimizer::GetMinosError",
-                   "Found a new minimum: run again the Minimization  starting from the new  point ");
-      if (PrintLevel() > 1) {
-         std::cout << "New minimum point found by MINOS: " << std::endl;
-         std::cout << "FVAL  = " << fState.Fval() << std::endl;
-         for (auto & par : fState.MinuitParameters() ) {
-            std::cout << par.Name() << "\t  = " << par.Value() << std::endl;
-         }
-      }
+      print.Info([&](std::ostream& os) {
+        os << "Found a new minimum: run again the Minimization starting from the new point";
+        os << "\nFVAL  = " << fState.Fval();
+        for (auto & par : fState.MinuitParameters() ) {
+           os << '\n' << par.Name() << "\t  = " << par.Value();
+        }
+      });
       // release parameter that was fixed in the returned state from Minos
       ReleaseVariable(i);
       bool ok = Minimize();
       if (!ok)  return false;
       // run again Minos from new Minimum (also lower error needs to be re-computed)
-      MnPrint::Log(MnPrint::eInfo, "Minuit2Minimizer::GetMinosError", "Run now again Minos from the new found Minimum");
+      print.Info("Run now again Minos from the new found Minimum");
       mstatus = RunMinosError(i, errLow, errUp, runopt);
 
       // do not reset new minimum bit to flag for other parameters
@@ -844,16 +841,14 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
 
 
 int Minuit2Minimizer::RunMinosError(unsigned int i, double & errLow, double & errUp, int runopt) {
-   // switch off Minuit2 printing
 
    bool runLower = runopt != 2;
    bool runUpper = runopt != 1;
 
-   int debugLevel = PrintLevel();
-   // internal minuit messages
-   MnPrint::SetLevel( debugLevel );
-
-   int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2;
+   const int debugLevel = PrintLevel();
+   // switch off Minuit2 printing
+   const int prev_level = (debugLevel <= 0 ) ?   TurnOffPrintInfoLevel() : -2;
+   const int prevGlobalLevel = MnPrint::SetGlobalLevel( debugLevel );
 
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
@@ -901,7 +896,9 @@ int Minuit2Minimizer::RunMinosError(unsigned int i, double & errLow, double & er
 
    ROOT::Minuit2::MinosError me(i, fMinimum->UserState().Value(i),low, up);
 
+   // restore global print level
    if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
+   MnPrint::SetGlobalLevel(prevGlobalLevel);
 
    // debug result of Minos
    // print error message in Minos
@@ -940,30 +937,24 @@ int Minuit2Minimizer::RunMinosError(unsigned int i, double & errLow, double & er
       }
    }
 
+   MnPrint print("RunMinosError", PrintLevel());
    bool lowerInvalid =  (runLower && !me.LowerValid() );
    bool upperInvalid =  (runUpper && !me.UpperValid() );
    // print message in case of invalid error also in printLevel0
    if (lowerInvalid) {
-      std::string msg_txt = std::string("Invalid lower error for parameter ") + std::string(fMinimum->UserState().Name(i));
-      MnPrint::Log(MnPrint::eWarn, "Minuit2Minimizer::GetMinosErrors", msg_txt);
+      print.Warn("Invalid lower error for parameter", fMinimum->UserState().Name(i));
    }
    if (upperInvalid) {
-      std::string msg_txt = std::string("Invalid upper error for parameter ") + std::string(fMinimum->UserState().Name(i));
-      MnPrint::Log(MnPrint::eWarn,
-         "Minuit2Minimizer::GetMinosErrors", msg_txt);
+      print.Warn("Invalid upper error for parameter", fMinimum->UserState().Name(i));
    }
    // print also case it is lower/upper limit
    if (me.AtLowerLimit()) {
-      std::string msg_txt = std::string("Lower error for parameter ") + std::string(fMinimum->UserState().Name(i)) +
-                            std::string(" is at the Lower limit !");
-      MnPrint::Log(MnPrint::eWarn,
-         "Minuit2Minimizer::GetMinosErrors", msg_txt);
+      print.Warn("Lower error for parameter", fMinimum->UserState().Name(i),
+        "is at the Lower limit!");
    }
    if (me.AtUpperLimit()) {
-      std::string msg_txt = std::string("Upper error for parameter ") + std::string(fMinimum->UserState().Name(i)) +
-                            std::string(" is at the Upper limit !");
-      MnPrint::Log(MnPrint::eWarn,
-         "Minuit2Minimizer::GetMinosErrors", msg_txt);
+      print.Warn("Upper error for parameter", fMinimum->UserState().Name(i),
+        "is at the Upper limit!");
    }
 
    int mstatus = 0;
@@ -1014,20 +1005,20 @@ bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
    // if xmin=0 && xmax == 0  by default scan around 2 sigma of the error
    // if the errors  are also zero then scan from min and max of parameter range
 
+   MnPrint print("Minuit2Minimizer::Scan", PrintLevel());
    if (!fMinuitFCN) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer::Scan"," Function must be set before using Scan");
+      print.Error("Function must be set before using Scan");
       return false;
    }
 
    if ( ipar > fState.MinuitParameters().size() ) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer::Scan"," Invalid number. Minimizer variables must be set before using Scan");
+      print.Error("Invalid number; minimizer variables must be set before using Scan");
       return false;
    }
 
    // switch off Minuit2 printing
-   int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2;
-
-   MnPrint::SetLevel( PrintLevel() );
+   const int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2;
+   const int prevGlobalLevel = MnPrint::SetGlobalLevel( PrintLevel() );
 
 
    // set the precision if needed
@@ -1039,10 +1030,12 @@ bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
    // first value is param value
    std::vector<std::pair<double, double> > result = scan(ipar, nstep-1, xmin, xmax);
 
+   // restore global print level
    if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
+   MnPrint::SetGlobalLevel(prevGlobalLevel);
 
    if (result.size() != nstep) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer::Scan"," Invalid result from MnParameterScan");
+      print.Error("Invalid result from MnParameterScan");
       return false;
    }
    // sort also the returned points in x
@@ -1057,10 +1050,8 @@ bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
    // what to do if a new minimum has been found ?
    // use that as new minimum
    if (scan.Fval() < amin ) {
-      MnPrint::Log(MnPrint::eInfo, "Minuit2Minimizer::Scan",
-         "A new minimum has been found");
+      print.Info("A new minimum has been found");
       fState.SetValue(ipar, scan.Parameters().Value(ipar) );
-
    }
 
 
@@ -1070,15 +1061,16 @@ bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
 bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned int & npoints, double * x, double * y) {
    // contour plot for parameter i and j
    // need a valid FunctionMinimum otherwise exits
+
+   MnPrint print("Minuit2Minimizer::Contour", PrintLevel());
+
    if (fMinimum == 0) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer::Contour",
-         "no function minimum existing. Must minimize function before");
+      print.Error("No function minimum existing; must minimize function before");
       return false;
    }
 
    if (!fMinimum->IsValid() ) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer::Contour",
-         "Invalid function minimum");
+      print.Error("Invalid function minimum");
       return false;
    }
    assert(fMinuitFCN);
@@ -1089,16 +1081,11 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
       fMinimum->SetErrorDef(ErrorDef() );
    }
 
-   if ( PrintLevel() >= 1 )
-      MnPrint::Log(MnPrint::eInfo,
-         "Minuit2Minimizer::Contour - computing contours - ",
-         ErrorDef());
+   print.Info("Computing contours -", ErrorDef());
 
    // switch off Minuit2 printing (for level of  0,1)
-   int prev_level = (PrintLevel() <= 1 ) ?   TurnOffPrintInfoLevel() : -2;
-
-   // decrease print-level to have too many messages
-   MnPrint::SetLevel( PrintLevel() -1 );
+   const int prev_level = (PrintLevel() <= 1 ) ?   TurnOffPrintInfoLevel() : -2;
+   const int prevGlobalLevel = MnPrint::SetGlobalLevel( PrintLevel() -1 );
 
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
@@ -1106,13 +1093,14 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
    // eventually one should specify tolerance in contours
    MnContours contour(*fMinuitFCN, *fMinimum, Strategy() );
 
+   // restore global print level
    if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
+   MnPrint::SetGlobalLevel(prevGlobalLevel);
 
    // compute the contour
    std::vector<std::pair<double,double> >  result = contour(ipar,jpar, npoints);
    if (result.size() != npoints) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer::Contour",
-         "Invalid result from MnContours");
+      print.Error("Invalid result from MnContours");
       return false;
    }
    for (unsigned int i = 0; i < npoints; ++i ) {
@@ -1120,13 +1108,7 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
       y[i] = result[i].second;
    }
 
-   // restore print level
-   MnPrint::SetLevel( PrintLevel() );
-
-
    return true;
-
-
 }
 
 bool Minuit2Minimizer::Hesse( ) {
@@ -1135,27 +1117,25 @@ bool Minuit2Minimizer::Hesse( ) {
    // in case a function minimum exists and is valid the result will be
    // appended in the function minimum
 
+   MnPrint print("Minuit2Minimizer::Hesse", PrintLevel());
+
    if (!fMinuitFCN) {
-      MnPrint::Log(MnPrint::eError, "Minuit2Minimizer::Hesse",
-         "FCN function has not been set");
+      print.Error("FCN function has not been set");
       return false;
    }
 
-   int strategy = Strategy();
-   int maxfcn = MaxFunctionCalls();
+   const int strategy = Strategy();
+   const int maxfcn = MaxFunctionCalls();
+   print.Info("Using max-calls", maxfcn);
 
    // switch off Minuit2 printing
-   int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2;
-
-   MnPrint::SetLevel( PrintLevel() );
+   const int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2;
+   const int prevGlobalLevel = MnPrint::SetGlobalLevel( PrintLevel() );
 
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
 
    ROOT::Minuit2::MnHesse hesse( strategy );
-
-   if (PrintLevel() >= 1)
-      std::cout << "Minuit2Minimizer::Hesse using max-calls " << maxfcn << std::endl;
 
    // case when function minimum exists
    if (fMinimum) {
@@ -1177,7 +1157,9 @@ bool Minuit2Minimizer::Hesse( ) {
       fState = hesse( *fMinuitFCN, fState, maxfcn);
    }
 
+   // restore global print level
    if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
+   MnPrint::SetGlobalLevel(prevGlobalLevel);
 
    if (PrintLevel() >= 3) {
       std::cout << "Minuit2Minimizer::Hesse  - State returned from Hesse " << std::endl;
@@ -1200,18 +1182,15 @@ bool Minuit2Minimizer::Hesse( ) {
          if (fMinimum->Error().InvertFailed() ) hstatus = 2;
          else if (!(fMinimum->Error().IsPosDef()) ) hstatus = 3;
       }
-      if (PrintLevel() > 0) {
-         std::string msg = "Hesse failed - matrix is " + covStatusType;
-         MnPrint::Log(MnPrint::eWarn, "Minuit2Minimizer::Hesse", msg);
-         MnPrint::Log(MnPrint::eWarn, "MInuit2Minimizer::Hesse", hstatus);
-      }
+
+      print.Warn("Hesse failed - matrix is", covStatusType);
+      print.Warn(hstatus);
+
       fStatus += 100*hstatus;
       return false;
    }
-   if (PrintLevel() > 0) {
-      std::string msg = "Hesse is valid - matrix is " + covStatusType;
-      MnPrint::Log(MnPrint::eInfo, "Minuit2Minimizer::Hesse", msg);
-   }
+
+   print.Info("Hesse is valid - matrix is", covStatusType);
 
    return true;
 }

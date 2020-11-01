@@ -19,12 +19,12 @@ namespace ROOT {
 
 MnGlobalCorrelationCoeff::MnGlobalCorrelationCoeff(const MnAlgebraicSymMatrix& cov) : fGlobalCC(std::vector<double>()), fValid(true) {
    // constructor: calculate global correlation given a symmetric matrix
-   MnPrintPrefix mnprintprefix("MnGlobalCorrelationCoeff");
+   MnPrint print("MnGlobalCorrelationCoeff");
 
    MnAlgebraicSymMatrix inv(cov);
    int ifail = Invert(inv);
    if(ifail != 0) {
-      MnPrint::Warn("inversion of matrix fails");
+      print.Warn("inversion of matrix fails");
       fValid = false;
    } else {
 

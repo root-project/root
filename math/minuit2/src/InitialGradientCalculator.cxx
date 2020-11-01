@@ -33,9 +33,9 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters& 
    unsigned int n = Trafo().VariableParameters();
    assert(n == par.Vec().size());
 
-   MnPrintPrefix mnprintprefix("InitialGradientCalculator");
+   MnPrint print("InitialGradientCalculator");
 
-   MnPrint::Debug("Calculating initital gradient at point", par.Vec());
+   print.Debug("Calculating initital gradient at point", par.Vec());
 
    MnAlgebraicVector gr(n), gr2(n), gst(n);
 
@@ -74,7 +74,7 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters& 
       gr2(i) = g2;
       gst(i) = gstep;
 
-      MnPrint::Debug("Computed initial gradient for parameter", Trafo().Name(exOfIn),
+      print.Debug("Computed initial gradient for parameter", Trafo().Name(exOfIn),
         "value", var, "[", vmin, ",", vplu, "]",
         "dirin", dirin, "grd", grd, "g2", g2);
 

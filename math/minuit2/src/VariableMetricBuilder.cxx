@@ -46,14 +46,14 @@ void VariableMetricBuilder::AddResult( std::vector<MinimumState>& result, const 
    //  }
    if (TraceIter() ) TraceIteration(result.size()-1, result.back() );
    else {
-      MnPrint::Info(MnPrint::Oneline(result.back(), result.size()-1));
+      MnPrint print("VariableMetricBuilder", PrintLevel());
+      print.Info(MnPrint::Oneline(result.back(), result.size()-1));
    }
 }
 
 
 FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientCalculator& gc, const MinimumSeed& seed, const MnStrategy& strategy, unsigned int maxfcn, double edmval) const {
-   MnPrintPrefix mnprintprefix("VariableMetricBuilder");
-   MnPrintLocalLevel mnprintlocallevel(PrintLevel());
+   MnPrint print("VariableMetricBuilder", PrintLevel());
 
    // top level function to find minimum from a given initial seed
    // iterate on a minimum search in case of first attempt is not successful
@@ -80,7 +80,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    FunctionMinimum min(seed, fcn.Up() );
 
    if(edm < 0.) {
-      MnPrint::Warn("Initial matrix not pos.def.");
+      print.Warn("Initial matrix not pos.def.");
 
       //assert(!seed.Error().IsPosDef());
       return min;
@@ -94,7 +94,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 
 
    // do actual iterations
-   MnPrint::Info("Start iterating until Edm is <", edmval, "with call limit =", maxfcn);
+   print.Info("Start iterating until Edm is <", edmval, "with call limit =", maxfcn);
 
    AddResult( result, seed.State());
 
@@ -108,20 +108,20 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 
       iterate = false;
 
-      MnPrint::Debug(ipass > 0 ? "Continue" : "Start", "iterating...");
+      print.Debug(ipass > 0 ? "Continue" : "Start", "iterating...");
 
       min = Minimum(fcn, gc, seed, result, maxfcn_eff, edmval);
 
       // if max function call reached exits
       if ( min.HasReachedCallLimit() ) {
-         MnPrint::Warn("FunctionMinimum is invalid, reached function call limit");
+         print.Warn("FunctionMinimum is invalid, reached function call limit");
          return min;
       }
 
       // second time check for validity of function Minimum
       if (ipass > 0) {
          if(!min.IsValid()) {
-            MnPrint::Warn("FunctionMinimum is invalid after second try");
+            print.Warn("FunctionMinimum is invalid after second try");
             return min;
          }
       }
@@ -133,19 +133,19 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       if( (strategy.Strategy() == 2) ||
           (strategy.Strategy() == 1 && min.Error().Dcovar() > 0.05) ) {
 
-         MnPrint::Debug(
+         print.Debug(
            "MnMigrad will verify convergence and Error matrix; dcov =", min.Error().Dcovar());
 
          MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(),maxfcn);
 
-         MnPrint::Info("After Hessian");
+         print.Info("After Hessian");
 
          AddResult( result, st);
 
          // check new edm
          edm = st.Edm();
 
-         MnPrint::Debug("New Edm", edm, "Requested", edmval);
+         print.Debug("New Edm", edm, "Requested", edmval);
 
          if (edm > edmval) {
             // be careful with machine precision and avoid too small edm
@@ -154,12 +154,12 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
             if (edm >= machineLimit)   {
                iterate = true;
 
-               MnPrint::Warn(
+               print.Warn(
                  "Tolerance not sufficient, continue minimization; "
                  "Edm", edm, "Required", edmval);
             }
             else {
-               MnPrint::Warn(
+               print.Warn(
                  "Reached machine accuracy limit; Edm", edm, "is smaller than machine limit", machineLimit, "while", edmval, "was requested"
                );
             }
@@ -182,17 +182,17 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    // and check edm (add a factor of 10 in tolerance )
    if (edm > 10*edmval) {
       min.Add( result.back(), FunctionMinimum::MnAboveMaxEdm() );
-      MnPrint::Warn("No convergence; Edm", edm, "is above tolerance", 10 * edmval);
+      print.Warn("No convergence; Edm", edm, "is above tolerance", 10 * edmval);
    }
    else {
       // check if minimum has edm above max before
       if ( min.IsAboveMaxEdm() ) {
-         MnPrint::Warn("Edm has been re-computed after Hesse; Edm", edm, "is now within tolerance");
+         print.Warn("Edm has been re-computed after Hesse; Edm", edm, "is now within tolerance");
       }
       min.Add( result.back()  );
    }
 
-   MnPrint::Debug("Minimum found", min);
+   print.Debug("Minimum found", min);
 
    return min;
 }
@@ -205,8 +205,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    // after the modification when I iterate on this functions, so it can be called many times,
    //  the seed is used here only to get precision and construct the returned FunctionMinimum object
 
-   MnPrintPrefix mnprintprefix("VariableMetricBuilder");
-   MnPrintLocalLevel mnprintlocallevel(PrintLevel());
+   MnPrint print("VariableMetricBuilder", PrintLevel());
 
    const MnMachinePrecision& prec = seed.Precision();
 
@@ -216,7 +215,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 
    double edm = initialState.Edm();
 
-   MnPrint::Debug("Initial State:",
+   print.Debug("Initial State:",
       "\n  Parameter:", initialState.Vec(),
       "\n  Gradient:", initialState.Gradient().Vec(),
       "\n  InvHessian:", initialState.Error().InvHessian(),
@@ -238,14 +237,14 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 
       step = -1.*s0.Error().InvHessian()*s0.Gradient().Vec();
 
-      MnPrint::Debug(
+      print.Debug(
         "Iteration", result.size(), "Fval", s0.Fval(), "numOfCall", fcn.NumOfCalls(),
         "\n  Internal parameters", s0.Vec(),
         "\n  Newton step", step);
 
       // check if derivatives are not zero
       if ( inner_product(s0.Gradient().Vec(),s0.Gradient().Vec() )  <= 0 )  {
-         MnPrint::Debug("all derivatives are zero - return current status");
+         print.Debug("all derivatives are zero - return current status");
          break;
       }
 
@@ -254,7 +253,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 
 
       if(gdel > 0.) {
-         MnPrint::Warn("Matrix not pos.def, gdel =", gdel, "> 0");
+         print.Warn("Matrix not pos.def, gdel =", gdel, "> 0");
 
          MnPosDef psdf;
          s0 = psdf(s0, prec);
@@ -264,7 +263,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          // #endif
          gdel = inner_product(step, s0.Gradient().Grad());
 
-         MnPrint::Warn("gdel =", gdel);
+         print.Warn("gdel =", gdel);
 
          if(gdel > 0.) {
             AddResult(result, s0);
@@ -278,7 +277,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       // <= needed for case 0 <= 0
       if(std::fabs(pp.Y() - s0.Fval()) <= std::fabs(s0.Fval())*prec.Eps() ) {
 
-         MnPrint::Warn("No improvement in line search");
+         print.Warn("No improvement in line search");
 
          // no improvement exit   (is it really needed LM ? in vers. 1.22 tried alternative )
          // add new state when only fcn changes
@@ -292,7 +291,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 
       }
 
-      MnPrint::Debug("Result after line search :",
+      print.Debug("Result after line search :",
         "\n  x =", pp.X(),
         "\n  Old Fval =", s0.Fval(),
         "\n  New Fval =", pp.Y(),
@@ -307,19 +306,19 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       edm = Estimator().Estimate(g, s0.Error());
 
       if (std::isnan(edm)) {
-        MnPrint::Warn("Edm is NaN; stop iterations");
+        print.Warn("Edm is NaN; stop iterations");
         AddResult(result, s0);
         return FunctionMinimum(seed, result, fcn.Up());
       }
 
       if(edm < 0.) {
-         MnPrint::Warn("Matrix not pos.def., try to make pos.def.");
+         print.Warn("Matrix not pos.def., try to make pos.def.");
 
          MnPosDef psdf;
          s0 = psdf(s0, prec);
          edm = Estimator().Estimate(g, s0.Error());
          if(edm < 0.) {
-            MnPrint::Warn("Matrix still not pos.def.; stop iterations");
+            print.Warn("Matrix still not pos.def.; stop iterations");
 
             AddResult(result, s0);
 
@@ -328,7 +327,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       }
       MinimumError e = ErrorUpdator().Update(s0, p, g);
 
-      MnPrint::Debug("Updated new point:",
+      print.Debug("Updated new point:",
         "\n  Parameter:", p.Vec(),
         "\n  Gradient:", g.Vec(),
         "\n  InvHessian:", e.Matrix(),
@@ -346,7 +345,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       // correct edm
       edm *= (1. + 3.*e.Dcovar());
 
-      MnPrint::Debug("Dcovar =", e.Dcovar(), "\tCorrected edm =", edm);
+      print.Debug("Dcovar =", e.Dcovar(), "\tCorrected edm =", edm);
 
    } while(edm > edmval && fcn.NumOfCalls() < maxfcn);  // end of iteration loop
 
@@ -356,27 +355,27 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 
 
    if(fcn.NumOfCalls() >= maxfcn) {
-      MnPrint::Warn("Call limit exceeded");
+      print.Warn("Call limit exceeded");
 
       return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnReachedCallLimit());
    }
 
    if(edm > edmval) {
       if(edm < std::fabs(prec.Eps2()*result.back().Fval())) {
-         MnPrint::Warn("Machine accuracy limits further improvement");
+         print.Warn("Machine accuracy limits further improvement");
 
          return FunctionMinimum(seed, result, fcn.Up());
       } else if(edm < 10*edmval) {
          return FunctionMinimum(seed, result, fcn.Up());
       } else {
-         MnPrint::Warn("Iterations finish without convergence; Edm", edm, "Requested", edmval);
+         print.Warn("Iterations finish without convergence; Edm", edm, "Requested", edmval);
 
          return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnAboveMaxEdm());
       }
    }
    //   std::cout<<"result.back().Error().Dcovar()= "<<result.back().Error().Dcovar()<<std::endl;
 
-   MnPrint::Debug("Exiting successfully;",
+   print.Debug("Exiting successfully;",
      "Ncalls", fcn.NumOfCalls(), "FCN", result.back().Fval(),
      "Edm", edm, "Requested", edmval);
 

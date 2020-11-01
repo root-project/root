@@ -31,7 +31,7 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
    // in case of delgam > gvg (PHI > 1) use rank one formula
    // see  par 4.10 pag 30
 
-   MnPrintPrefix mnprintprefix("DavidonErrorUpdator");
+   MnPrint print("DavidonErrorUpdator");
 
    const MnAlgebraicSymMatrix& v0 = s0.Error().InvHessian();
    MnAlgebraicVector dx = p1.Vec() - s0.Vec();
@@ -40,20 +40,20 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
    double delgam = inner_product(dx, dg);
    double gvg = similarity(dg, v0);
 
-   MnPrint::Debug("dx", dx, "dg", dg, "delgam", delgam, "gvg", gvg);
+   print.Debug("dx", dx, "dg", dg, "delgam", delgam, "gvg", gvg);
 
    if (delgam == 0 ) {
-      MnPrint::Warn("delgam = 0 : cannot update - return same matrix");
+      print.Warn("delgam = 0 : cannot update - return same matrix");
       return s0.Error();
    }
 
    if (delgam < 0) {
-      MnPrint::Warn("delgam < 0 : first derivatives increasing along search line");
+      print.Warn("delgam < 0 : first derivatives increasing along search line");
    }
 
    if (gvg <= 0 ) {
       // since v0 is pos def this gvg can be only = 0 if  dg = 0 - should never be here
-      MnPrint::Warn("gvg <= 0 : cannot update - return same matrix");
+      print.Warn("gvg <= 0 : cannot update - return same matrix");
       return s0.Error();
    }
 

@@ -25,7 +25,7 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
    assert(cov.Nrow() > 0);
    assert(n < cov.Nrow());
 
-   MnPrintPrefix mnprintprefix("MnCovarianceSqueeze");
+   MnPrint print("MnCovarianceSqueeze");
 
    MnAlgebraicSymMatrix hess(cov.Nrow());
    for(unsigned int i = 0; i < cov.Nrow(); i++) {
@@ -37,7 +37,7 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
    int ifail = Invert(hess);
 
    if(ifail != 0) {
-      MnPrint::Warn("inversion failed; return diagonal matrix;");
+      print.Warn("inversion failed; return diagonal matrix;");
       MnUserCovariance result(cov.Nrow() - 1);
       for(unsigned int i = 0, j =0; i < cov.Nrow(); i++) {
          if(i == n) continue;
@@ -51,7 +51,7 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
 
    ifail = Invert(squeezed);
    if(ifail != 0) {
-      MnPrint::Warn("back-inversion failed; return diagonal matrix;");
+      print.Warn("back-inversion failed; return diagonal matrix;");
       MnUserCovariance result(squeezed.Nrow());
       for(unsigned int i = 0; i < squeezed.Nrow(); i++) {
          result(i,i) = 1./squeezed(i,i);
@@ -64,7 +64,7 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
 
 MinimumError MnCovarianceSqueeze::operator()(const MinimumError& err, unsigned int n) const {
 
-   MnPrintPrefix mnprintprefix("MnCovarianceSqueeze");
+   MnPrint print("MnCovarianceSqueeze");
 
    // squueze the minimum error class
    // Remove index-row on the Hessian matrix and the get the new correct error matrix
@@ -73,7 +73,7 @@ MinimumError MnCovarianceSqueeze::operator()(const MinimumError& err, unsigned i
    MnAlgebraicSymMatrix squeezed = (*this)(hess, n);
    int ifail = Invert(squeezed);
    if(ifail != 0) {
-      MnPrint::Warn("MinimumError inversion fails; return diagonal matrix.");
+      print.Warn("MinimumError inversion fails; return diagonal matrix.");
 
       MnAlgebraicSymMatrix tmp(squeezed.Nrow());
       for(unsigned int i = 0; i < squeezed.Nrow(); i++) {

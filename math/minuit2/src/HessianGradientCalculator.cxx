@@ -66,7 +66,7 @@ std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaG
    // calculate gradient for Hessian
    assert(par.IsValid());
 
-   MnPrintPrefix mnprintprefix("HessianGradientCalculator");
+   MnPrint print("HessianGradientCalculator");
 
    MnAlgebraicVector x = par.Vec();
    MnAlgebraicVector grd = Gradient.Grad();
@@ -129,7 +129,7 @@ std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaG
 
       dgrd(i) = std::max(dgmin, std::fabs(grdold-grdnew));
 
-      MnPrint::Debug("HGC Param :", i, "\t new g1 =", grd(i), "gstep =", d,
+      print.Debug("HGC Param :", i, "\t new g1 =", grd(i), "gstep =", d,
         "dgrd =", dgrd(i));
 
    }

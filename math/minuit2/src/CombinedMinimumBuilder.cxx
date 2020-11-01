@@ -22,17 +22,17 @@ FunctionMinimum CombinedMinimumBuilder::Minimum(const MnFcn& fcn, const Gradient
    // find minimum using combined method
    // (Migrad then if fails try Simplex and then Migrad again)
 
-   MnPrintPrefix mnprintprefix("CombinedMinimumBuilder");
+   MnPrint print("CombinedMinimumBuilder");
 
    FunctionMinimum min = fVMMinimizer.Builder().Minimum(fcn, gc, seed, strategy, maxfcn, edmval);
 
    if(!min.IsValid()) {
-      MnPrint::Warn("Migrad method fails, will try with simplex method first");
+      print.Warn("Migrad method fails, will try with simplex method first");
 
       MnStrategy str(2);
       FunctionMinimum min1 = fSimplexMinimizer.Builder().Minimum(fcn, gc, seed, str, maxfcn, edmval);
       if(!min1.IsValid()) {
-         MnPrint::Warn("Both Migrad and Simplex methods failed");
+         print.Warn("Both Migrad and Simplex methods failed");
 
          return min1;
       }
@@ -41,7 +41,7 @@ FunctionMinimum CombinedMinimumBuilder::Minimum(const MnFcn& fcn, const Gradient
       FunctionMinimum min2 = fVMMinimizer.Builder().Minimum(fcn, gc, seed1, str, maxfcn, edmval);
       if(!min2.IsValid()) {
 
-         MnPrint::Warn("Both migrad and method failed also at 2nd attempt; return simplex Minimum");
+         print.Warn("Both migrad and method failed also at 2nd attempt; return simplex Minimum");
          return min1;
       }
 

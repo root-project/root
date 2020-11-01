@@ -25,8 +25,8 @@ MnAlgebraicSymMatrix BasicMinimumError::Hessian() const {
    MnAlgebraicSymMatrix tmp(fMatrix);
    int ifail = Invert(tmp);
    if(ifail != 0) {
-      MnPrint::Log(MnPrint::eWarn,
-        "BasicMinimumError::Hessian: inversion fails; return diagonal matrix");
+      MnPrint print("BasicMinimumError::Hessian");
+      print.Warn("Inversion fails; return diagonal matrix");
       MnAlgebraicSymMatrix tmp2(fMatrix.Nrow());
       for(unsigned int i = 0; i < fMatrix.Nrow(); i++) {
          tmp2(i,i) = 1./fMatrix(i,i);

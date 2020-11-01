@@ -15,13 +15,9 @@
 #include "Minuit2/FumiliChi2FCN.h"
 #include "Minuit2/FumiliMaximumLikelihoodFCN.h"
 #include "Minuit2/MnPrint.h"
-
-//to compare with N2P calculator
-#ifdef DEBUG
 #include "Minuit2/Numerical2PGradientCalculator.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnUserFcn.h"
-#endif
 
 namespace ROOT {
 
@@ -99,18 +95,15 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters& p
       }
    }
 
-#ifdef DEBUG
-   // compare with other Gradient
-   //   // calculate Gradient using Minuit method
+   MnPrint print("FumiliGradientCalculator");
+   print.Debug([&](std::ostream& os) {
+     // compare Fumili with Minuit gradient
 
-   Numerical2PGradientCalculator gc(MnUserFcn(fFcn,fTransformation), fTransformation, MnStrategy(1));
-   FunctionGradient g2 = gc(par);
+     Numerical2PGradientCalculator gc(MnUserFcn(fFcn,fTransformation), fTransformation, MnStrategy(1));
+     FunctionGradient g2 = gc(par);
 
-   MnPrint::Log(MnPrint::eDebug, "FumiliGradientCalculator\n",
-     "Fumili Gradient", v, '\n',
-     "Minuit Gradient", g2.Vec()
-   );
-#endif
+     print.Debug("Fumili Gradient", v, "\nMinuit Gradient", g2.Vec());
+   });
 
    // store calculated Hessian
    fHessian = h;
