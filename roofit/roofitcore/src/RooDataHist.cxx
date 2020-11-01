@@ -972,7 +972,7 @@ RooDataHist::~RooDataHist()
 /// \param[in] fast If the variables in `coord` and the ones of the data hist have the
 /// same size and layout, `fast` can be set to skip checking that all variables are
 /// present in `coord`.
-Int_t RooDataHist::getIndex(const RooArgSet& coord, Bool_t fast) const {
+Int_t RooDataHist::getIndex(const RooAbsCollection& coord, Bool_t fast) const {
   checkInit() ;
   return calcTreeIndex(coord, fast);
 }
@@ -982,10 +982,10 @@ Int_t RooDataHist::getIndex(const RooArgSet& coord, Bool_t fast) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the bin index corresponding to the coordinates passed as argument.
-/// \param[in] coords Coordinates. Is `fast == false`, these can be partial.
+/// \param[in] coords Coordinates. If `fast == false`, these can be partial.
 /// \param[in] fast   Promise that the coordinates in `coords` have the same order
 /// as the internal coordinates. In this case, values are looked up only by index.
-std::size_t RooDataHist::calcTreeIndex(const RooArgSet& coords, bool fast) const
+std::size_t RooDataHist::calcTreeIndex(const RooAbsCollection& coords, bool fast) const
 {
   // With fast, caller promises that layout of "coords" is identical to our internal "vars"
   assert(!fast || _vars.size() == coords.size());
@@ -1007,6 +1007,8 @@ std::size_t RooDataHist::calcTreeIndex(const RooArgSet& coords, bool fast) const
       // Variable is not in external coordinates. Use current internal value.
       theVar = internalVar;
     }
+    // If fast is on, users promise that the sets have the same layout
+    assert(!fast || strcmp(internalVar->GetName(), theVar->GetName()) == 0);
 
     if (binning) {
       assert(dynamic_cast<const RooAbsReal*>(theVar));
