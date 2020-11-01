@@ -128,7 +128,23 @@ public:
   void SetName(const char *name) override;
   void SetNameTitle(const char *name, const char* title) override;
 
-  Int_t getIndex(const RooArgSet& coord, Bool_t fast = false) const;
+  Int_t getIndex(const RooAbsCollection& coord, Bool_t fast = false) const;
+  /// \copydoc getIndex(const RooAbsCollection&,Bool_t) const
+  ///
+  /// \note This overload only exists because there is an implicit conversion from RooAbsArg
+  /// to RooArgSet, and this needs to remain supported. This enables code like
+  /// ```
+  /// RooRealVar x(...);
+  /// dataHist.getIndex(x);
+  /// ```
+  /// It is, however, recommended to use
+  /// ```
+  /// dataHist.getIndex(RooArgSet(x));
+  /// ```
+  /// in this case.
+  Int_t getIndex(const RooArgSet& coord, Bool_t fast = false) const {
+    return getIndex(static_cast<const RooAbsCollection&>(coord), fast);
+  }
 
   void removeSelfFromDir() { removeFromDir(this) ; }
 
@@ -188,7 +204,7 @@ protected:
   friend class RooAbsCachedReal ;
   friend class RooDataHistSliceIter ;
 
-  std::size_t calcTreeIndex(const RooArgSet& coords, bool fast) const;
+  std::size_t calcTreeIndex(const RooAbsCollection& coords, bool fast) const;
   /// Legacy overload to calculate the tree index from the current value of `_vars`.
   /// \deprecated Use calcTreeIndex(const RooArgSet&,bool) const.
   Int_t calcTreeIndex() const { return static_cast<Int_t>(calcTreeIndex(_vars, true)); }
