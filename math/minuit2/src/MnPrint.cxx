@@ -74,7 +74,7 @@ std::ostream &operator<<(std::ostream &os, const MnPrint::Oneline &x)
    if (x.fIter >= 0)
       os << std::setw(4) << x.fIter << " - ";
    const int pr = os.precision(PRECISION);
-   os << "FCN = " << std::setw(WIDTH) << x.fFcn << " Edm = " << std::setw(12) << x.fEdm << " NCalls = " << std::setw(6)
+   os << "FCN = " << std::setw(WIDTH) << x.fFcn << " Edm = " << std::setw(WIDTH) << x.fEdm << " NCalls = " << std::setw(6)
       << x.fNcalls;
    os.precision(pr);
    return os;
@@ -113,13 +113,13 @@ std::ostream &operator<<(std::ostream &os, const LASymMatrix &matrix)
 std::ostream &operator<<(std::ostream &os, const MnUserParameters &par)
 {
    // print the MnUserParameter object
-   os << "\n Pos |    Name    |  type   |      Value       |    Error +/-";
+   os << "\n  Pos |    Name    |  type   |      Value       |    Error +/-";
 
    int pr = os.precision();
 
    const double eps2 = par.Precision().Eps2();
    for (auto &&p : par.Parameters()) {
-      os << "\n" << std::setw(4) << p.Number() << " | " << std::setw(10) << p.Name() << " |";
+      os << "\n" << std::setw(5) << p.Number() << " | " << std::setw(10) << p.Name() << " |";
       if (p.IsConst())
          os << "  const  |";
       else if (p.IsFixed())
@@ -130,17 +130,16 @@ std::ostream &operator<<(std::ostream &os, const MnUserParameters &par)
          os << "  free   |";
       os.precision(PRECISION);
       os.width(WIDTH);
-      os << p.Value() << " |" << std::setw(12);
-      if (p.Error() > 0)
-         os << p.Error();
-      else
-         os << "";
-      if (p.HasLimits() && p.Error() > 0) {
-         if (std::fabs(p.Value() - p.LowerLimit()) < eps2) {
-            os << " (at lower limit)";
-         } else if (std::fabs(p.Value() - p.UpperLimit()) < eps2) {
-            os << " (at upper limit)";
-         }
+      os << p.Value() << " | " << std::setw(12);
+      if (p.Error() > 0) {
+        os << p.Error();
+        if (p.HasLimits()) {
+           if (std::fabs(p.Value() - p.LowerLimit()) < eps2) {
+              os << " (at lower limit)";
+           } else if (std::fabs(p.Value() - p.UpperLimit()) < eps2) {
+              os << " (at upper limit)";
+           }
+        }
       }
    }
    os.precision(pr);

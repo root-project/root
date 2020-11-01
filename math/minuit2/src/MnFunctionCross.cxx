@@ -110,9 +110,10 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
 
    print.Info(
       [&](std::ostream& os) {
-        os << "Run Migrad fixing parameters :";
+        os << "Run Migrad with fixed parameters:";
         for (unsigned i = 0; i < npar; ++i)
-          os << "\n\t" << fState.Name(par[i]) << " #" << par[i] << " to " << pmid[i];
+          os << "\n  Pos " << par[i] << ": " << fState.Name(par[i])
+             << " = " << pmid[i];
       });
 
    for (unsigned int i = 0; i < npar; i++)
@@ -125,7 +126,7 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
 
    print.Info(
      "Result after Migrad",
-     MnPrint::Oneline(min0), '\n',
+     MnPrint::Oneline(min0),
      min0.UserState().Parameters());
 
    // case a new minimum is found
@@ -161,10 +162,10 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
 
    print.Info(
       [&](std::ostream& os) {
-        os << "Run Migrad again (#2) :";
+        os << "Run Migrad again (2nd) with fixed parameters:";
         for (unsigned i = 0; i < npar; ++i)
-          os << "\n\t parameter - " << i << " fixed to "
-             << pmid[i] + (aopt)*pdir[i] << '\n';
+          os << "\n  Pos " << par[i] << ": " << fState.Name(par[i])
+             << " = " << pmid[i] + (aopt)*pdir[i];
       });
 
    for (unsigned int i = 0; i < npar; i++)
@@ -175,7 +176,7 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
 
    print.Info(
      "Result after 2nd Migrad",
-     MnPrint::Oneline(min1), '\n',
+     MnPrint::Oneline(min1),
      min1.UserState().Parameters());
 
    if (min1.Fval() < fFval - tlf) // case of new minimum found
@@ -214,8 +215,9 @@ L300:
             print.Info([&](std::ostream& os) {
               os << "Run Migrad again (iteration " << it << " ) :";
               for (unsigned i = 0; i < npar; ++i)
-                os << "\n\t - parameter " << i
-                   << " fixed to " << pmid[i] + (aopt)*pdir[i];
+                os << "\n  parameter " << par[i]
+                   << " (" << fState.Name(par[i]) << ") fixed to "
+                   << pmid[i] + (aopt)*pdir[i];
             });
 
             for(unsigned int i = 0; i < npar; i++)
@@ -249,11 +251,11 @@ L300:
 
 L460:
 
-      // dfda > 0: we have two points with the right slope
+   // dfda > 0: we have two points with the right slope
 
-      aopt = alsb[1] + (aim-flsb[1])/dfda;
+   aopt = alsb[1] + (aim-flsb[1])/dfda;
 
-      print.Debug("dfda > 0 : aopt", aopt);
+   print.Debug("dfda > 0 : aopt", aopt);
 
    double fdist = std::min(std::fabs(aim  - flsb[0]), std::fabs(aim  - flsb[1]));
    double adist = std::min(std::fabs(aopt - alsb[0]), std::fabs(aopt - alsb[1]));
@@ -273,10 +275,10 @@ L460:
    }
 
    print.Info([&](std::ostream& os) {
-     os << "Run Migrad again (#3) :";
+     os << "Run Migrad again (3rd) with fixed parameters:";
      for (unsigned i = 0; i < npar; ++i)
-       os << "\n\t - parameter " << i << " fixed to "
-          << pmid[i] + (aopt)*pdir[i];
+     os << "\n  Pos " << par[i] << ": " << fState.Name(par[i])
+        << " = " << pmid[i] + (aopt)*pdir[i];
    });
 
    for(unsigned int i = 0; i < npar; i++)
@@ -285,7 +287,7 @@ L460:
    FunctionMinimum min2 = migrad(maxcalls, mgr_tlr);
    nfcn += min2.NFcn();
 
-   print.Info("Result after Migrad (#3):", MnPrint::Oneline(min2), '\n',
+   print.Info("Result after Migrad (3rd):", MnPrint::Oneline(min2),
       min2.UserState().Parameters());
 
    if (min2.Fval() < fFval - tlf) // case of new minimum found
@@ -477,7 +479,7 @@ L500:
          nfcn += min2.NFcn();
 
          print.Info("Result after new Migrad:", MnPrint::Oneline(min2),
-            '\n', min2.UserState().Parameters());
+            min2.UserState().Parameters());
 
          if(min2.Fval() < fFval - tlf) // case of new minimum found
             return MnCross(min2.UserState(), nfcn, MnCross::CrossNewMin());

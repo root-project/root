@@ -40,7 +40,7 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
    double delgam = inner_product(dx, dg);
    double gvg = similarity(dg, v0);
 
-   print.Debug("dx", dx, "dg", dg, "delgam", delgam, "gvg", gvg);
+   print.Debug("\ndx", dx, "\ndg", dg, "\ndelgam", delgam, "gvg", gvg);
 
    if (delgam == 0 ) {
       print.Warn("delgam = 0 : cannot update - return same matrix");
