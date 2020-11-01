@@ -79,7 +79,11 @@ public:
   virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(std::ostream& os, Bool_t compact) ;  
 
-  RooAbsArg& operator[](Int_t idx) const ; 
+  /// Access element by index.
+  RooAbsArg& operator[](Int_t idx) const {
+    assert(0 <= idx && idx < static_cast<Int_t>(_list.size()));
+    return *_list[idx];
+  }
 
 private:
   void processArg(const RooAbsArg& arg) { add(arg); }
