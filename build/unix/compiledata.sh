@@ -40,20 +40,11 @@ fi
 EXPLLINKLIBS="\$LinkedLibs"
 
 if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosx64" ] || \
-   [ "$ARCH" = "macosxicc" ]; then
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
+   [ "$ARCH" = "macosxicc" ] || [ "$ARCH" = "macosxarm64" ]; then
    SOEXT="so"
-   if [ $macosx_minor -ge 5 ]; then
-      if [ "x`echo $SOFLAGS | grep -- '-install_name'`" != "x" ]; then
-         # If install_name is specified, remove it.
-         SOFLAGS="$OPT -dynamiclib -single_module -Wl,-dead_strip_dylibs"
-      fi
-   elif [ $macosx_minor -ge 3 ]; then
-      SOFLAGS="-bundle $OPT -undefined dynamic_lookup"
-      EXPLLINKLIBS=""
-   else
-      SOFLAGS="-bundle $OPT -undefined suppress"
-      EXPLLINKLIBS=""
+   if [ "x`echo $SOFLAGS | grep -- '-install_name'`" != "x" ]; then
+      # If install_name is specified, remove it.
+      SOFLAGS="$OPT -dynamiclib -single_module -Wl,-dead_strip_dylibs"
    fi
 elif [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
     # If soname is specified, add the library name.

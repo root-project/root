@@ -1473,9 +1473,8 @@ void TClass::Init(const char *name, Version_t cversion,
          fCanLoadClassInfo = kTRUE;
          // Here we check and grab the info from the rootpcm.
          TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
-         if (proto && proto->FillTClass(this)) {
-            fHasRootPcmInfo = kTRUE;
-         }
+         if (proto)
+            proto->FillTClass(this);
       }
       if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
          gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
@@ -3591,16 +3590,11 @@ TList *TClass::GetListOfBases()
          if (fState == kHasTClassInit) {
 
             R__LOCKGUARD(gInterpreterMutex);
-            // NOTE: Add test to prevent redo if another thread has already done the work.
-            // if (!fHasRootPcmInfo) {
-
-            // The bases are in our ProtoClass; we don't need the class info.
-            TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
-            if (proto && proto->FillTClass(this)) {
-               // Not sure this code is still needed
-               // R__ASSERT(kFALSE);
-
-               fHasRootPcmInfo = kTRUE;
+            if (!fHasRootPcmInfo) {
+               // The bases are in our ProtoClass; we don't need the class info.
+               TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
+               if (proto && proto->FillTClass(this))
+                  return fBase;
             }
          }
          // We test again on fCanLoadClassInfo has another thread may have executed it.
@@ -3608,7 +3602,8 @@ TList *TClass::GetListOfBases()
             LoadClassInfo();
          }
       }
-      if (!fClassInfo) return 0;
+      if (!fClassInfo)
+         return nullptr;
 
       if (!gInterpreter)
          Fatal("GetListOfBases", "gInterpreter not initialized");
@@ -3699,18 +3694,10 @@ TList *TClass::CreateListOfDataMembers(std::atomic<TListOfDataMembers*> &data, T
 
    if (!data) {
       if (fCanLoadClassInfo && fState == kHasTClassInit) {
-         // NOTE: Add test to prevent redo if another thread has already done the work.
-         // if (!fHasRootPcmInfo) {
-
          // The members are in our ProtoClass; we don't need the class info.
          TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
-         if (proto && proto->FillTClass(this)) {
-            // Not sure this code is still needed
-            // R__ASSERT(kFALSE);
-
-            fHasRootPcmInfo = kTRUE;
+         if (proto && proto->FillTClass(this))
             return data;
-         }
       }
 
       data = new TListOfDataMembers(this, selection);
@@ -5896,14 +5883,18 @@ void TClass::PostLoadCheck()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set TObject::fBits and fStreamerType to cache information about the
-/// class.  The bits are
+/// Returns the properties of the TClass as a bit field stored as a `Long_t` value.
+///
+/// The bit values used for the return value are defined in the enum EProperty (in TDictionary.h)
+///
+/// Also sets `TObject::fBits` and `fStreamerType` to cache information about the
+/// class.  The bits stored in `TObject::fBits` are
 /// ~~~ {.cpp}
 ///    kIsTObject : the class inherits from TObject
 ///    kStartWithTObject:  TObject is the left-most class in the inheritance tree
 ///    kIsForeign : the class doe not have a Streamer method
 /// ~~~
-/// The value of fStreamerType are
+/// The value of `fStreamerType` are
 /// ~~~ {.cpp}
 ///    kTObject : the class inherits from TObject
 ///    kForeign : the class does not have a Streamer method
@@ -5911,6 +5902,9 @@ void TClass::PostLoadCheck()
 ///    kExternal: the class has a free standing way of streaming itself
 ///    kEmulatedStreamer: the class is missing its shared library.
 /// ~~~
+///
+/// Implementation note: the data member fProperty has the value -1
+/// until it is initialized.
 
 Long_t TClass::Property() const
 {
