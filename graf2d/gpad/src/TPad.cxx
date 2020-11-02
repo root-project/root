@@ -2164,11 +2164,8 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (pD) gPad->ShowGuidelines(this, event, '4', true);
 
          //Modified(kTRUE);
-         
-            if (!fModified && kTRUE) Emit("Modified()");
-   fModified = kTRUE;
-         
-         
+         if (!fModified && kTRUE) Emit("Modified()");
+         fModified = kTRUE;
       }
 
       break;
@@ -3848,11 +3845,11 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 
 void TPad::CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y)
 {
-   if (!start ||!stop ) return;
-   if (!start->GetListOfPrimitives()) return;
-   TObject *obj=nullptr;
+   if (!start) return;
+   TObject *obj;
    if (!fPrimitives) fPrimitives = new TList;
-   TIter next(start->GetListOfPrimitives()->MakeIterator());
+   if (!start->GetListOfPrimitives()) return;
+   TIter next(start->GetListOfPrimitives());
    while ((obj = next())) {
       if (obj->InheritsFrom(TPad::Class())) {
          if (obj == stop) break;
@@ -6231,7 +6228,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    if (is_pad) 
      if (is_pad->GetMother()) is_pad->GetMother()->cd();
 
-   static TPad * tmpGuideLinePad=nullptr;
+   static TPad * tmpGuideLinePad;
 
    //delete all existing Guidelines and create new invisible pad
    if (tmpGuideLinePad) {

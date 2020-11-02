@@ -270,7 +270,7 @@ void TGHProgressBar::DoRedraw()
    }
 
    fPosPix = Int_t(((Float_t)fWidth - (fBorderWidth << 1)) *
-             (fPos - fMin) / std::max(1.0f,fMax - fMin) +
+             (fPos - fMin) / (fMax - fMin) +
              fBorderWidth);
 
    Int_t pospix = fPosPix;
@@ -301,7 +301,7 @@ void TGHProgressBar::DoRedraw()
    if (fShowPos) {
       TString buf;
       if (fPercent)
-         buf = TString::Format("%d%%", Int_t((fPos-fMin)/std::max(1.0f,fMax-fMin)*100.));
+         buf = TString::Format("%d%%", Int_t((fPos-fMin)/(fMax-fMin)*100.));
       else
          buf = TString::Format(fFormat.Data(), fPos);
 
@@ -366,7 +366,7 @@ void TGVProgressBar::DoRedraw()
    }
 
    fPosPix = Int_t(((Float_t)fHeight - (fBorderWidth << 1)) *
-             (fPos - fMin) / std::max(1.0f,fMax - fMin) +
+             (fPos - fMin) / (fMax - fMin) +
              fBorderWidth);
 
    if (fFillType == kSolidFill)
