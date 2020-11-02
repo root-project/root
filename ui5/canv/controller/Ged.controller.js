@@ -36,6 +36,7 @@ sap.ui.define([
          // remove references
          this.currentPainter = null;
          this.currentPadPainter = null;
+         this.currentPlace = undefined;
 
          // TODO: deregsiter for all events
 
@@ -114,9 +115,10 @@ sap.ui.define([
       processAxisModelChange: function(evnt, data) {
          let pars = evnt.getParameters(),
              item = pars.path.substr(1),
-             exec = "", painter = data._painter,
-             axis = painter.GetObject(),
-             kind = painter.name;
+             exec = "", 
+             painter = this.currentPainter,
+             kind = this.currentPlace,
+             axis = painter.GetObject(kind);
 
          // while axis painter is temporary object, we should not try change it attributes
 
@@ -175,7 +177,8 @@ sap.ui.define([
                break;
          }
 
-         let main = this.currentPadPainter.main_painter(true);
+         // TAxis belongs to main painter like TH1, therefore submit commands there
+         let main = this.currentPainter.main_painter(true);
 
          if (main && main.snapid) {
             console.log('Invoke interactive redraw ', main.snapid, kind)
@@ -198,6 +201,25 @@ sap.ui.define([
          if (this.currentPadPainter)
             this.currentPadPainter.InteractiveRedraw("pad","drawopt");
       },
+      
+      setAxisModel : function(model) {
+         let obj =  this.currentPainter.GetObject(this.currentPlace),
+             painter = this.currentPlace == "xaxis" ? this.currentPainter.x_handle : this.currentPainter.y_handle;  
+        
+         let data = {
+             specialRefresh: 'setAxisModel', 
+             axis: obj,
+             axiscolor: painter.lineatt.color, 
+             color_label: this.currentPadPainter.get_color(obj.fLabelColor), 
+             center_label: obj.TestBit(JSROOT.EAxisBits.kCenterLabels),
+             vert_label: obj.TestBit(JSROOT.EAxisBits.kLabelsVert),
+             color_title: this.currentPadPainter.get_color(obj.fTitleColor),
+             center_title: obj.TestBit(JSROOT.EAxisBits.kCenterTitle),
+             rotate_title: obj.TestBit(JSROOT.EAxisBits.kRotateTitle),
+         };
+        
+         model.setData(data);
+      },
 
       onObjectSelect : function(padpainter, painter, place) {
 
@@ -205,8 +227,11 @@ sap.ui.define([
 
          this.currentPadPainter = padpainter;
          this.currentPainter = painter;
-
-         let obj = painter.GetObject();
+         this.currentPlace = place;
+         
+         let obj = painter.GetObject(place);
+         if (place == "xaxis" && painter.x_handle) painter = painter.x_handle; else
+         if (place == "yaxis" && painter.y_handle) painter = painter.y_handle;
 
          let selectedClass = obj ? obj._typename : painter.GetTipName();
 
@@ -239,7 +264,7 @@ sap.ui.define([
          if (typeof painter.processTitleChange == 'function') {
             let tobj = painter.processTitleChange("check");
             if (tobj) {
-               let model = new JSONModel( { tnamed: tobj } );
+               let model = new JSONModel({ tnamed: tobj });
                model.attachPropertyChange( {}, painter.processTitleChange, painter );
                this.addFragment(oPage, "TNamed", model);
             }
@@ -248,25 +273,17 @@ sap.ui.define([
          if (selectedClass == "TAxis") {
             console.log('place', place)
             
-            let model = new JSONModel( { 
-                axis: obj,
-                axiscolor: painter.lineatt.color, 
-                color_label: padpainter.get_color(obj.fLabelColor), 
-                center_label: obj.TestBit(JSROOT.EAxisBits.kCenterLabels),
-                vert_label: obj.TestBit(JSROOT.EAxisBits.kLabelsVert),
-                color_title: padpainter.get_color(obj.fTitleColor),
-                center_title: obj.TestBit(JSROOT.EAxisBits.kCenterTitle),
-                rotate_title: obj.TestBit(JSROOT.EAxisBits.kRotateTitle),
-             });
+            let model = new JSONModel({}); 
+            this.setAxisModel(model); 
             this.addFragment(oPage, "Axis", model);
-            model.attachPropertyChange({ _kind: "TAxis", _painter: painter, _place: painter.name }, this.processAxisModelChange, this);
+            model.attachPropertyChange({ _kind: "TAxis" }, this.processAxisModelChange, this);
          }
 
          if (typeof painter.GetHisto == 'function') {
 
             painter.options.Mode3Dindx = painter.options.Mode3D ? 1 : 0;
 
-            let model = new JSONModel( { opts : painter.options } );
+            let model = new JSONModel({ opts : painter.options });
 
             // model.attachPropertyChange({}, painter.processTitleChange, painter);
             this.addFragment(oPage, "Hist", model);
@@ -278,7 +295,7 @@ sap.ui.define([
       onObjectRedraw : function(padpainter, painter) {
          if ((this.currentPadPainter !== padpainter) || (this.currentPainter !== painter)) return;
 
-         console.log('GED sees selected object redraw');
+         // console.log('GED sees selected object redraw');
 
          let page = this.getView().byId("ged_page");
          let cont = page.getContent();
@@ -286,18 +303,29 @@ sap.ui.define([
          for (let n = 0; n < cont.length; ++n)
             if (cont[n] && cont[n].ged_fragment) {
                let model = cont[n].getModel();
-
-               model.refresh();
+               
+               let func = model.getProperty("/specialRefresh");
+               if (func)
+                  this[func](model);
+               else
+                  model.refresh();
             }
+      },
+      
+      onPadRedraw : function(padpainter) {
+         if (this.currentPadPainter === padpainter)
+            this.onObjectRedraw(this.currentPadPainter, this.currentPainter);
       },
 
       padEventsReceiver : function(evnt) {
          if (!evnt) return;
 
          if (evnt.what == "select")
-            this.onObjectSelect(evnt.padpainter, evnt.painter);
+            this.onObjectSelect(evnt.padpainter, evnt.painter, evnt.place);
          else if (evnt.what == "redraw")
             this.onObjectRedraw(evnt.padpainter, evnt.painter);
+         else if (evnt.what == "padredraw") 
+            this.onPadRedraw(evnt.padpainter);
       }
 
    });

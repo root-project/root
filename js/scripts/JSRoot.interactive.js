@@ -484,8 +484,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                      let rrr = resize_se.node().getBoundingClientRect();
                      pthis.ShowContextMenu('main', { clientX: rrr.left, clientY: rrr.top });
                   } else if (callback.canselect && (spent <= 600)) {
-                     let cp = pthis.canv_painter();
-                     if (cp) cp.SelectObjectPainter(pthis);
+                     let pp = pthis.pad_painter();
+                     if (pp) pp.SelectObjectPainter(pthis);
                   }
                }
             });
@@ -596,8 +596,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                evnt.sourceEvent.stopPropagation();
                if (this.moveEnd)
                   this.moveEnd(not_changed);
-               let cp = this.canv_painter();
-               if (cp) cp.SelectObjectPainter(this);
+               let pp = this.pad_painter();
+               if (pp) pp.SelectObjectPainter(this);
             }.bind(painter));
 
          painter.draw_g
@@ -778,8 +778,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return true; // just process any key press
       },
 
-      /** Function called when frame is clicked and object selection can be performed
-        * such event can be used to select */
+      /** @summary Function called when frame is clicked and object selection can be performed
+        * @desc such event can be used to select */
       ProcessFrameClick: function(pnt, dblckick) {
 
          let pp = this.pad_painter();
@@ -935,12 +935,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                   break;
                case 2: {
                   let pp = this.pad_painter();
-                  if (pp) pp.SelectObjectPainter(this.x_handle);
+                  if (pp) pp.SelectObjectPainter(this, null, "xaxis");
                   break;
                }
                case 3: {
                   let pp = this.pad_painter();
-                  if (pp) pp.SelectObjectPainter(this.y_handle);
+                  if (pp) pp.SelectObjectPainter(this, null, "yaxis");
                   break;
                }
             }
