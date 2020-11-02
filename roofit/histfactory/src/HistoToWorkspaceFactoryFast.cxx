@@ -1979,7 +1979,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       if(!model) cout <<"failed to find model for channel"<<endl;
       //      cout << "int = " << model->createIntegral(*obsN)->getVal() << endl;;
       models.push_back(model);
-      globalObs.add(*ch->set("globalObservables"));
+      globalObs.add(*ch->set("globalObservables"), /*silent=*/true); // silent because observables might exist in other channel.
 
       //      constrainedParams->add( * ch->set("constrainedParams") );
       pdfMap[channel_name]=model;
