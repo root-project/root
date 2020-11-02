@@ -166,6 +166,14 @@ std::string TMVA::MsgLogger::GetFormattedSource() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// returns the maximum source size
+
+UInt_t TMVA::MsgLogger::GetMaxSourceSize()
+{
+   return static_cast<UInt_t>(fgMaxSourceSize);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// the full logger prefix
 
 std::string TMVA::MsgLogger::GetPrintedSource() const
