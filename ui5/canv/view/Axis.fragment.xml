@@ -5,7 +5,6 @@
        xmlns:core="sap.ui.core">
    <VBox>
       <Input
-         id="titleInput"
          type="Text"
          placeholder="Enter title ..."
          valueStateText="Edit axis title"

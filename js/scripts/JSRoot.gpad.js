@@ -921,6 +921,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Returns frame painter - object itself */
    TFramePainter.prototype.frame_painter = function() { return this; }
+   
+   /** @summary Returns frame or sub-objects, used in GED editor */
+   TFramePainter.prototype.GetObject = function(place) {
+      if (place === "xaxis") return this.xaxis;
+      if (place === "yaxis") return this.yaxis;
+      return JSROOT.ObjectPainter.prototype.GetObject.call(this);
+   }
 
    /** @summary Set active flag for frame - can block some events
     * @private */
@@ -2079,36 +2086,38 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
-   /// Retrive different event when object selected or pad is redrawn
+   /** @summary register for pad events receiver
+     * @desc in pad painter, while pad may be drawn without canvas
+     * @private */
    TPadPainter.prototype.RegisterForPadEvents = function(receiver) {
       this.pad_events_receiver = receiver;
    }
+   
+   /** @summary Generate pad events, normally handled by GED 
+    * @desc in pad painter, while pad may be drawn without canvas
+     * @private */
+   TPadPainter.prototype.PadEvent = function(_what, _padpainter, _painter, _position, _place) {
+      
+      if ((_what == "select") && (typeof this.SelectActivePad == 'function'))
+         this.SelectActivePad(_padpainter, _painter, _position);
+      
+      if (this.pad_events_receiver)
+         this.pad_events_receiver({ what: _what, padpainter:  _padpainter, painter: _painter, position: _position, place: _place });
+   }
 
-   /** @summary method redirect call to pad events receiver, in some cases */
-   TPadPainter.prototype.SelectObjectPainter = function(_painter, pos) {
+   /** @summary method redirect call to pad events receiver */
+   TPadPainter.prototype.SelectObjectPainter = function(_painter, pos, _place) {
       let istoppad = (this.iscan || !this.has_canvas),
-          canp = istoppad ? this : this.canv_painter(),
-          p_p = (_painter instanceof TPadPainter) ? _painter : _painter.pad_painter();
+          canp = istoppad ? this : this.canv_painter();
+      
+      if (_painter === undefined) _painter = this;
 
       if (pos && !istoppad)
          this.CalcAbsolutePosition(this.svg_pad(), pos);
 
-      jsrp.SelectActivePad({ pp: p_p, active: true });
+      jsrp.SelectActivePad({ pp: this, active: true });
 
-      if (typeof canp.SelectActivePad == "function")
-         canp.SelectActivePad(p_p, _painter, pos);
-
-      if (canp.pad_events_receiver)
-         canp.pad_events_receiver({ what: "select", padpainter: p_p, painter: _painter, position: pos });
-   }
-
-   /// method redirect call to pad events receiver
-   TPadPainter.prototype.InteractiveObjectRedraw = function(_painter) {
-      let canp = (this.iscan || !this.has_canvas) ? this : this.canv_painter(),
-          pp = _painter instanceof TPadPainter ? _painter : _painter.pad_painter();
-
-      if (canp && canp.pad_events_receiver)
-         canp.pad_events_receiver({ what: "redraw", padpainter: pp, painter: _painter });
+      if (canp) canp.PadEvent("select", this, _painter, pos, _place);
    }
 
    /** @summary Called by framework when pad is supposed to be active and get focus
@@ -2185,7 +2194,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!JSROOT.BatchMode)
             frect.style("pointer-events", "visibleFill")
                  .on("dblclick", this.EnlargePad.bind(this))
-                 .on("click", this.SelectObjectPainter.bind(this, this, null))
+                 .on("click", () => this.SelectObjectPainter())
                  .on("mouseenter", this.ShowObjectStatus.bind(this));
 
          svg.append("svg:g").attr("class","primitives_layer");
@@ -2349,7 +2358,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!JSROOT.BatchMode)
             svg_rect.attr("pointer-events", "visibleFill") // get events also for not visible rect
                     .on("dblclick", this.EnlargePad.bind(this))
-                    .on("click", this.SelectObjectPainter.bind(this, this, null))
+                    .on("click", () => this.SelectObjectPainter())
                     .on("mouseenter", this.ShowObjectStatus.bind(this));
       }
 
@@ -2616,6 +2625,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          });
    }
 
+   /** @summary redraw pad */
    TPadPainter.prototype.Redraw = function(reason) {
 
       // prevent redrawing
@@ -2629,23 +2639,27 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       } else {
          showsubitems = this.CreatePadSvg(true);
       }
-
+      
       // even sub-pad is not visible, we should redraw sub-sub-pads to hide them as well
       for (let i = 0; i < this.painters.length; ++i) {
          let sub = this.painters[i];
          if (showsubitems || sub.this_pad_name) sub.Redraw(reason);
       }
+      
+      if (jsrp.GetActivePad() === this) {
+         let canp = this.canv_painter();
+         if (canp) canp.PadEvent("padredraw", this );
+      }
    }
 
    TPadPainter.prototype.NumDrawnSubpads = function() {
-      if (this.painters === undefined) return 0;
+      if (!this.painters) return 0;
 
       let num = 0;
 
-      for (let i = 0; i < this.painters.length; ++i) {
-         let obj = this.painters[i].GetObject();
-         if (obj && (obj._typename === "TPad")) num++;
-      }
+      for (let i = 0; i < this.painters.length; ++i) 
+         if (this.painters[i] instanceof TPadPainter) 
+            num++; 
 
       return num;
    }
@@ -2875,7 +2889,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             return;
          }
 
-         // here the case of normal drawing, will be handled in promisecan be improved
+         // here the case of normal drawing, will be handled in promise
          if ((snap.fKind === webSnapIds.kObject) || (snap.fKind === webSnapIds.kSVG))
             return JSROOT.draw(this.divid, snap.fSnapshot, snap.fOption).then(draw_callback);
       }
@@ -3047,6 +3061,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.DrawNextSnap(snap.fPrimitives, -1, () => {
          this.CurrentPadName(prev_name);
+         if (jsrp.GetActivePad() === this) {
+            let canp = this.canv_painter();
+
+            if (canp) canp.PadEvent("padredraw", this);
+         }
+         
          JSROOT.CallBack(call_back, this);
       });
    }
@@ -3838,10 +3858,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let obj_painter = this.FindSnap(msg.substr(5));
          console.log('GET EDIT ' + msg.substr(5) +  ' found ' + !!obj_painter);
          if (obj_painter)
-            this.ShowSection("Editor", true).then(() => {
-               if (this.pad_events_receiver)
-                  this.pad_events_receiver({ what: "select", padpainter: this, painter: obj_painter });
-            });
+            this.ShowSection("Editor", true)
+                .then(() => this.PadEvent("select", obj_painter.pad_painter(), obj_painter));
 
       } else {
          console.log("unrecognized msg " + msg);
@@ -3902,10 +3920,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return Promise.resolve(false);
 
       if (this.brlayout.HasContent()) {
-         if ((mode === "toggle") || (mode === false))
+         if ((mode === "toggle") || (mode === false)) {
             this.RemoveGed();
-         else
-            this.SelectObjectPainter(objpainter);
+         } else {
+            let pp = objpainter ? objpainter.pad_painter() : null;
+            if (pp) pp.SelectObjectPainter(objpainter);
+         }
 
          return Promise.resolve(true);
       }
@@ -3955,7 +3975,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                   // TODO: should be moved into Ged controller - it must be able to detect canvas painter itself
                   this.RegisterForPadEvents(oGed.getController().padEventsReceiver.bind(oGed.getController()));
 
-                  this.SelectObjectPainter(objpainter);
+                  let pp = objpainter ? objpainter.pad_painter() : null;
+                  if (pp) pp.SelectObjectPainter(objpainter);
 
                   this.ProcessChanges("sbits", this);
 
@@ -3965,6 +3986,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          });
       });
    }
+  
 
    TCanvasPainter.prototype.ShowSection = function(that, on) {
       if (this.testUI5())

@@ -2441,12 +2441,12 @@ JSROOT.define(['d3'], (d3) => {
       }
 
       // inform GED that something changes
-      let pp = this.pad_painter();
-      if (pp && (typeof pp.InteractiveObjectRedraw == 'function'))
-         pp.InteractiveObjectRedraw(this);
+      let pp = this.pad_painter(), canp = this.canv_painter();
+       
+      if (canp && (typeof canp.PadEvent == 'function'))
+         canp.PadEvent("redraw", pp, this, null, subelem);
 
       // inform server that drawopt changes
-      let canp = this.canv_painter();
       if (canp && (typeof canp.ProcessChanges == 'function'))
          canp.ProcessChanges(info, this, subelem);
    }
@@ -2950,10 +2950,10 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Set active pad painter
     *
-    * @desc Should be used to handle key press events, which are global in the web browser
+    * @desc Normally be used to handle key press events, which are global in the web browser
     * @param {object} args - functions arguments
     * @param {object} args.pp - pad painter
-    * @param {boolean} [args.active = false] - is pad activated or not
+    * @param {boolean} [args.active] - is pad activated or not
     * @private */
    jsrp.SelectActivePad = function(args) {
       if (args.active) {
