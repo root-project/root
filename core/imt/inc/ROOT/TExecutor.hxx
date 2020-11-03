@@ -11,7 +11,8 @@
 #ifndef ROOT_TExecutor
 #define ROOT_TExecutor
 
-#include <ROOT/RMakeUnique.hxx>
+#include "ROOT/RConfig.hxx"
+#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TExecutorCRTP.hxx"
 #include "ROOT/TSequentialExecutor.hxx"
 #ifdef R__USE_IMT
