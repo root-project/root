@@ -1485,7 +1485,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   textaxis->SetTextAlign(12);
                   s = 3;
                }
-               if (autotoff) {
+               if (autotoff && (gPad->GetWw()*gPad->GetWNDC() != 0.0)) {
                   UInt_t w,h;
                   textaxis->SetText(0.,0., fAxis->GetBinLabel(i));
                   textaxis->GetBoundingBox(w,h);
@@ -1974,7 +1974,7 @@ L110:
                      if (fNModLabs) ChangeLabelAttributes(k+1, nlabels, textaxis, chtemp);
                      typolabel = chtemp;
                      if (!optionTime) typolabel.ReplaceAll("-", "#minus");
-                     if (autotoff) {
+                     if (autotoff && (gPad->GetWw()*gPad->GetWNDC() != 0.0)) {
                         UInt_t w,h;
                         textaxis->SetText(0.,0., typolabel.Data());
                         textaxis->GetBoundingBox(w,h);
@@ -2180,7 +2180,7 @@ L110:
                }
                typolabel = chtemp;
                typolabel.ReplaceAll("-", "#minus");
-               if (autotoff) {
+               if (autotoff && (gPad->GetWw()*gPad->GetWNDC() != 0.0)) {
                   UInt_t w,h;
                   textaxis->SetText(0.,0., typolabel.Data());
                   textaxis->GetBoundingBox(w,h);
