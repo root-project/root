@@ -114,7 +114,8 @@ public:
             break;
 #endif
          default:
-            throw std::invalid_argument("kMultithread policy not available when ROOT is compiled with IMT=OFF.");
+            throw std::invalid_argument(
+               "Invalid execution policy. Potential issues: * kMultithread policy not available when ROOT is compiled with IMT=OFF.\n * kMultiprocess policy not available in Windows");
       }
    }
 
