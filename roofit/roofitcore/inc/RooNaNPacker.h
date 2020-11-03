@@ -86,6 +86,11 @@ struct RooNaNPacker {
     return isNaNWithPayload(_payload) ? unpackNaN(_payload) : 0.;
   }
 
+  /// Retrieve a NaN with the current float payload packed into the mantissa.
+  double getNaNWithPayload() const {
+    return _payload;
+  }
+
   /// Test if this struct has a float packed into its mantissa.
   bool isNaNWithPayload() const {
     return isNaNWithPayload(_payload);

@@ -525,37 +525,58 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
       return eventWeights[i];
   };
 
-  //Sum the event weights
-  double sumOfWeights;
-  if (eventWeights.empty()) {
-    sumOfWeights = (lastEvent - firstEvent) * _dataClone->weight();
-  } else {
-    ROOT::Math::KahanSum<double, 4u> kahanWeight;
-    for (std::size_t i = 0; i < eventWeights.size(); ++i) {
-      kahanWeight.AddIndexed(retrieveWeight(i), i);
-    }
-    sumOfWeights = kahanWeight.Sum();
-  }
-
-  //Sum the probabilities
+  //Sum the event weights and probabilities
   ROOT::Math::KahanSum<double, 4u> kahanProb;
+  ROOT::Math::KahanSum<double, 4u> kahanWeight;
   if (eventWeights.empty()) {
-    const double weight = _dataClone->weight();
-    for (std::size_t i = 0; i < results.size(); ++i) {
-      kahanProb.AddIndexed(-weight * results[i], i);
+    for (std::size_t i = 0; i < lastEvent - firstEvent; ++i) {
+      _dataClone->get(firstEvent + i); //side effect on weight()
+      const double weight = _dataClone->weight();
+      kahanProb   += -weight * results[i];
+      kahanWeight += weight;
     }
   } else {
-    for (std::size_t i = 0; i < results.size(); ++i) {
-      kahanProb.AddIndexed(-retrieveWeight(i) * results[i], i);
+    assert(results.size() == eventWeights.size());
+    for (std::size_t i = 0; i < results.size(); ++i) { //CHECK_VECTORISE
+      const double weight = retrieveWeight(i);
+      kahanProb.AddIndexed(-weight * results[i], i);
+      kahanWeight.AddIndexed(weight, i);
     }
   }
 
   if (std::isnan(kahanProb.Sum())) {
+    // Special handling of evaluation errors.
+    // We can recover if the bin/event that results in NaN has a weight of zero:
+    ROOT::Math::KahanSum<double, 4u> kahanSanitised;
+    RooNaNPacker nanPacker;
+    for (std::size_t i = 0; i < results.size(); ++i) {
+      double weight;
+      if (eventWeights.empty()) {
+        _dataClone->get(firstEvent + i); // //side effect on weight()
+        weight = _dataClone->weight();
+      } else {
+        weight = retrieveWeight(i);
+      }
+
+      if (weight == 0.)
+        continue;
+
+      if (std::isnan(results[i])) {
+        nanPacker.accumulate(results[i]);
+      } else {
+        kahanSanitised += -weight * results[i];
+      }
+    }
+
     // Some events with evaluation errors. Return "badness" of errors.
-    return std::tuple<double, double, double>{RooNaNPacker::accumulatePayloads(results.begin(), results.end()), 0., sumOfWeights};
+    if (nanPacker.getPayload() > 0.) {
+      return std::tuple<double, double, double>{nanPacker.getNaNWithPayload(), 0., kahanWeight.Sum()};
+    } else {
+      return std::tuple<double, double, double>{kahanSanitised.Sum(), kahanSanitised.Carry(), kahanWeight.Sum()};
+    }
   }
 
-  return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), sumOfWeights};
+  return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};
 }
 
 
@@ -584,7 +605,7 @@ std::tuple<double, double, double> RooNLLVar::computeScalar(std::size_t stepSize
 
   if (packedNaN.getPayload() != 0.) {
     // Some events with evaluation errors. Return "badness" of errors.
-    return std::tuple<double, double, double>{packedNaN._payload, 0., kahanWeight.Sum()};
+    return std::tuple<double, double, double>{packedNaN.getNaNWithPayload(), 0., kahanWeight.Sum()};
   }
 
   return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};
