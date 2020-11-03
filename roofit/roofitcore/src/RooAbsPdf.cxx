@@ -723,25 +723,32 @@ RooSpan<const double> RooAbsPdf::getLogProbabilities(RooBatchCompute::RunContext
 {
   auto pdfValues = getValues(evalData, normSet);
 
-  if (checkInfNaNNeg(pdfValues)) {
-    logBatchComputationErrors(pdfValues, 0);
-  }
-
   evalData.logProbabilities.resize(pdfValues.size());
   RooSpan<double> output( evalData.logProbabilities );
 
-  for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
-    const double prob = pdfValues[i];
+  if (checkInfNaNNeg(pdfValues)) {
+    logBatchComputationErrors(pdfValues, 0);
 
-    double theLog = RooBatchCompute::fast_log(prob);
+    for (std::size_t i = 0; i < pdfValues.size(); ++i) {
+      const double prob = pdfValues[i];
+      double theLog = RooBatchCompute::fast_log(prob);
 
-    if (prob < 0) {
-      theLog = std::numeric_limits<double>::quiet_NaN();
-    } else if (prob == 0 || TMath::IsNaN(prob)) {
-      theLog = -std::numeric_limits<double>::infinity();
+      if (prob <= 0.) {
+        // Pass magnitude of undershoot to minimiser:
+        theLog = RooNaNPacker::packFloatIntoNaN(-prob);
+      } else if (std::isnan(prob)) {
+        theLog = prob;
+      }
+
+      output[i] = theLog;
     }
 
-    output[i] = theLog;
+    return output;
+  }
+
+  for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
+    const double prob = pdfValues[i];
+    output[i] = RooBatchCompute::fast_log(prob);;
   }
 
   return output;
