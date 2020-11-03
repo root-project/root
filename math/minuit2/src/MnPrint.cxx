@@ -175,10 +175,10 @@ std::ostream &operator<<(std::ostream &os, const MnGlobalCorrelationCoeff &coeff
 {
    // print the global correlation coefficient
    const int pr = os.precision(6);
-   for (unsigned int i = 0; i < coeff.GlobalCC().size(); i++) {
+   for (auto&& x : coeff.GlobalCC()) {
       os << '\n';
       os.width(6 + 7);
-      os << coeff.GlobalCC()[i];
+      os << x;
    }
    os.precision(pr);
    return os;
