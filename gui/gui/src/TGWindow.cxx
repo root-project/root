@@ -127,6 +127,14 @@ TGWindow::~TGWindow()
 
 void TGWindow::SetWindowName(const char *name)
 {
+#ifdef R__MACOSX
+   // MacOS fails to find the drawable of GetDefaultRootWindow(), only subsequent
+   // windows ids can be found. See discussion here:
+   // https://github.com/root-project/root/pull/6757#discussion_r518776154
+   if (fId == gVirtualX->GetDefaultRootWindow())
+      return;
+#endif
+
    if (!name && gDebug > 0) {
       // set default frame names only when in debug mode
       TString wname = ClassName();
