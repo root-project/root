@@ -72,8 +72,6 @@ public:
    /// construct from FCNGradientBase + MnUserParameterState + MnStrategy
    MnMigrad(const FCNGradientBase& fcn, const MnUserParameterState& par, const MnStrategy& str) : MnApplication(fcn, MnUserParameterState(par), str), fMinimizer(VariableMetricMinimizer()) {}
 
-   MnMigrad(const MnMigrad& migr) : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer) {}
-
    ~MnMigrad() {}
 
    ModularFunctionMinimizer& Minimizer() {return fMinimizer;}
