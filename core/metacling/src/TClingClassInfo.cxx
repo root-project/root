@@ -837,7 +837,7 @@ EDataType TClingClassInfo::GetUnderlyingType() const
    if (auto ED = llvm::dyn_cast<EnumDecl>(GetDecl())) {
       R__LOCKGUARD(gInterpreterMutex);
       auto Ty = ED->getIntegerType().getTypePtrOrNull();
-      if (auto BTy = llvm::dyn_cast<BuiltinType>(Ty)) {
+      if (auto BTy = llvm::dyn_cast_or_null<BuiltinType>(Ty)) {
          switch (BTy->getKind()) {
          case BuiltinType::Bool:
             return kBool_t;
