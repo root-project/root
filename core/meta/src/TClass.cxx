@@ -5380,7 +5380,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
             }
          }
       } else {
-         // The loaded class vers  ion is not the same as the version of the code
+         // The loaded class version is not the same as the version of the code
          // which was used to allocate this object.  The best we can do is use
          // the TVirtualStreamerInfo to try to free up some of the allocated memory.
          TVirtualStreamerInfo* si = (TVirtualStreamerInfo*) fStreamerInfo->At(objVer);
