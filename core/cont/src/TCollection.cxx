@@ -287,7 +287,7 @@ void TCollection::Draw(Option_t *option)
    TObject *object;
 
    while ((object = next())) {
-      object->Draw(option);
+      if (object) object->Draw(option);
    }
 }
 
@@ -300,7 +300,7 @@ void TCollection::Dump() const
    TObject *object;
 
    while ((object = next())) {
-      object->Dump();
+      if (object) object->Dump();
    }
 }
 
@@ -315,7 +315,9 @@ TObject *TCollection::FindObject(const char *name) const
    TObject *obj;
 
    while ((obj = next()))
-      if (!strcmp(name, obj->GetName())) return obj;
+      if (obj) {
+       if (!strcmp(name, obj->GetName())) return obj;
+      }
    return 0;
 }
 
@@ -340,7 +342,9 @@ TObject *TCollection::FindObject(const TObject *obj) const
    TObject *ob;
 
    while ((ob = next()))
-      if (ob->IsEqual(obj)) return ob;
+      if (ob) {
+        if (ob->IsEqual(obj)) return ob;
+      }
    return 0;
 }
 
@@ -393,6 +397,7 @@ void TCollection::ls(Option_t *option) const
 
    TROOT::IncreaseDirLevel();
    while ((object = next())) {
+      if (!object) continue;
       if (star) {
          TString s = object->GetName();
          if (s != option && s.Index(re) == kNPOS) continue;
@@ -407,7 +412,11 @@ void TCollection::ls(Option_t *option) const
 Bool_t TCollection::Notify()
 {
    Bool_t success = true;
-   for (auto obj : *this) success &= obj->Notify();
+   for (auto obj : *this) {
+     if (obj) {
+       success &= obj->Notify();
+     }
+   }
    return success;
 }
 
