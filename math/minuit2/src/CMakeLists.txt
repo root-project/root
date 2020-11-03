@@ -160,6 +160,7 @@ set(MINUIT2_SOURCES
     MnPlot.cxx
     MnPosDef.cxx
     MnPrint.cxx
+    MnPrintImpl.cxx
     MnScan.cxx
     MnSeedGenerator.cxx
     MnStrategy.cxx
