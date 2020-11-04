@@ -5481,7 +5481,14 @@ void TPad::ResizePad(Option_t *option)
       Error("ResizePad", "Cannot resize pad. No current pad available.");
       return;
    }
-
+   if (gPad->GetWw()==0.0||gPad->GetWh()==0.0) {
+      Warning("ResizePad", "gPad has at least one zero dimension.");
+      return;
+   }
+   if (fX1==fX2||fY1==fY2) {
+      Warning("ResizePad", "The pad has at least one zero dimension.");
+      return;
+   }
    // Recompute subpad positions in case pad has been moved/resized
    TPad *parent = fMother;
    if (this == gPad->GetCanvas()) {
@@ -5491,6 +5498,10 @@ void TPad::ResizePad(Option_t *option)
       fAbsHNDC     = fHNDC;
    }
    else {
+      if (parent->GetAbsWNDC()==0.0||parent->GetAbsWNDC()==0.0||fHNDC==0.0||fWNDC==0.0) {
+       Warning("ResizePad", "The parent pad has at least one zero dimension.");
+        return;
+      }
       fAbsXlowNDC  = fXlowNDC*parent->GetAbsWNDC() + parent->GetAbsXlowNDC();
       fAbsYlowNDC  = fYlowNDC*parent->GetAbsHNDC() + parent->GetAbsYlowNDC();
       fAbsWNDC     = fWNDC*parent->GetAbsWNDC();
