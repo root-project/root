@@ -188,7 +188,7 @@ public:
    TStreamerInfo();
    TStreamerInfo(TClass *cl);
    virtual            ~TStreamerInfo();
-   void                Build();
+   void                Build(Bool_t isTransient = kFALSE);
    void                BuildCheck(TFile *file = 0, Bool_t load = kTRUE);
    void                BuildEmulated(TFile *file);
    void                BuildOld();
