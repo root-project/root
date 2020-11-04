@@ -5136,6 +5136,18 @@ void TStreamerInfo::PrintValueSTL(const char *name, TVirtualCollectionProxy *con
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Replace the TClass this streamerInfo is pointing to (belongs to)
+
+void TStreamerInfo::SetClass(TClass *newcl)
+{
+   if (newcl) {
+      // This is mostly (but not only) for the artificial "This" streamerElement for an stl collection.
+      Update(fClass, newcl);
+   }
+   fClass = newcl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TStreamerInfo.
 
 void TStreamerInfo::Streamer(TBuffer &R__b)
