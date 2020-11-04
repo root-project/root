@@ -1838,7 +1838,7 @@ static bool R__MatchFilename(const char *left, const char *right)
 /// to `-lFOO` such that it can be passed to the linker.
 /// This is a unique feature of macOS 11.
 
-static bool R__LibExistsInDylibCache(const char *lib)
+static bool R__LibExistsInDylibCache(TString &lib)
 {
 #if !defined(R__MACOSX)
    (void) lib; // suppress warning
@@ -1855,9 +1855,13 @@ static bool R__LibExistsInDylibCache(const char *lib)
    if (std::ifstream cacheMap{mapfile}) {
       std::string line;
       while (getline(cacheMap, line)) {
-         if (line.find(lib, 0) != std::string::npos) {
-           cacheMap.close();
-           return true;
+         if (line.find(lib) != std::string::npos) {
+            lib.ReplaceAll("/usr/lib/lib","-l");
+            lib.ReplaceAll(".dylib","");
+            // skip these Big Sur libs as we cannot link with them
+            if (lib == "-loah" || lib == "-lRosetta")
+               lib = "";
+            return true;
          }
       }
       cacheMap.close();
