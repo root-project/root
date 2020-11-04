@@ -4100,7 +4100,6 @@ void TClass::ReplaceWith(TClass *newcl) const
    TIter nextClass(gROOT->GetListOfClasses());
    TClass *acl;
    TVirtualStreamerInfo *info;
-   TList tobedeleted;
 
    // Since we are in the process of replacing a TClass by a TClass
    // coming from a dictionary, there is no point in loading any
@@ -4116,10 +4115,6 @@ void TClass::ReplaceWith(TClass *newcl) const
       }
    }
 
-   TIter delIter( &tobedeleted );
-   while ((acl = (TClass*)delIter())) {
-      delete acl;
-   }
    gInterpreter->UnRegisterTClassUpdate(this);
 }
 
