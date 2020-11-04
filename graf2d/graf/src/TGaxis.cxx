@@ -1485,11 +1485,12 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   textaxis->SetTextAlign(12);
                   s = 3;
                }
-               if (autotoff && (gPad->GetWw()*gPad->GetWNDC() != 0.0)) {
+               if (autotoff) {
                   UInt_t w,h;
                   textaxis->SetText(0.,0., fAxis->GetBinLabel(i));
                   textaxis->GetBoundingBox(w,h);
-                  toffset = TMath::Max(toffset,(double)w/((double)gPad->GetWw()*gPad->GetWNDC()));
+                  double scale=gPad->GetWw()*gPad->GetWNDC();
+                  if (scale>0.0) toffset = TMath::Max(toffset,(double)w/scale);
                }
                textaxis->PaintLatex(xmin + s*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                     fAxis->GetBinCenter(i),
@@ -1974,11 +1975,12 @@ L110:
                      if (fNModLabs) ChangeLabelAttributes(k+1, nlabels, textaxis, chtemp);
                      typolabel = chtemp;
                      if (!optionTime) typolabel.ReplaceAll("-", "#minus");
-                     if (autotoff && (gPad->GetWw()*gPad->GetWNDC() != 0.0)) {
+                     if (autotoff) {
                         UInt_t w,h;
                         textaxis->SetText(0.,0., typolabel.Data());
                         textaxis->GetBoundingBox(w,h);
-                        toffset = TMath::Max(toffset,(double)w/((double)gPad->GetWw()*gPad->GetWNDC()));
+                        double scale=gPad->GetWw()*gPad->GetWNDC();
+                        if (scale>0.0) toffset = TMath::Max(toffset,(double)w/scale);
                      }
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
@@ -2180,11 +2182,12 @@ L110:
                }
                typolabel = chtemp;
                typolabel.ReplaceAll("-", "#minus");
-               if (autotoff && (gPad->GetWw()*gPad->GetWNDC() != 0.0)) {
+               if (autotoff) {
                   UInt_t w,h;
                   textaxis->SetText(0.,0., typolabel.Data());
                   textaxis->GetBoundingBox(w,h);
-                  toffset = TMath::Max(toffset,(double)w/((double)gPad->GetWw()*gPad->GetWNDC()));
+                  double scale=gPad->GetWw()*gPad->GetWNDC();
+                  if (scale>0.0) toffset = TMath::Max(toffset,(double)w/scale);
                }
                textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                                     gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
