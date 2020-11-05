@@ -5499,8 +5499,8 @@ void TPad::ResizePad(Option_t *option)
    }
    else {
       if (parent->GetAbsWNDC()==0.0||parent->GetAbsWNDC()==0.0||fHNDC==0.0||fWNDC==0.0) {
-       Warning("ResizePad", "The parent pad has at least one zero dimension.");
-        return;
+         Warning("ResizePad", "The parent pad has at least one zero dimension.");
+         return;
       }
       fAbsXlowNDC  = fXlowNDC*parent->GetAbsWNDC() + parent->GetAbsXlowNDC();
       fAbsYlowNDC  = fYlowNDC*parent->GetAbsHNDC() + parent->GetAbsYlowNDC();
@@ -7200,4 +7200,3 @@ void TPad::SetBBoxY2(const Int_t y)
    fHNDC = fYUpNDC - fYlowNDC;
    ResizePad();
 }
-
