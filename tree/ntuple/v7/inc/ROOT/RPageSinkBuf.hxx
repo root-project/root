@@ -66,6 +66,7 @@ private:
 protected:
    void CreateImpl(const RNTupleModel &model) final;
    RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
+   RClusterDescriptor::RLocator CommitSealedPageImpl(DescriptorId_t columnId, const RSealedPage &sealedPage) final;
    RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) final;
    void CommitDatasetImpl() final;
 
