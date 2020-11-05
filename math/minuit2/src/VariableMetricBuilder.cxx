@@ -218,7 +218,6 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
    MnAlgebraicVector prevStep(initialState.Gradient().Vec().size());
 
    MinimumState s0 = result.back();
-   assert(s0.IsValid());
 
    do {
 
