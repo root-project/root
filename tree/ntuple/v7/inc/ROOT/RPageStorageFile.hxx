@@ -92,8 +92,6 @@ public:
    void ReleasePage(RPage &page) final;
 
    RNTupleMetrics &GetMetrics() final { return fMetrics; }
-
-   void Merge(const std::vector<std::unique_ptr<RPageSourceFile>>& sources);
 };
 
 
