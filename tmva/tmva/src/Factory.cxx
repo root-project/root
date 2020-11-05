@@ -2325,7 +2325,7 @@ TH1F *TMVA::Factory::EvaluateImportanceAll(DataLoader *loader, Types::EMVA theMe
             // need at least one variable
             // NOTE: if sub-seed is zero then is the special case
             // that count in xbitset is 1
-            Double_t ny = log(x - y) / 0.693147;
+            uint32_t ny = static_cast<uint32_t>( log(x - y) / 0.693147 ) ;
             if (y == 0) {
                importances[ny] = SROC - 0.5;
                continue;
@@ -2425,7 +2425,7 @@ TH1F *TMVA::Factory::EvaluateImportanceShort(DataLoader *loader, Types::EMVA the
          // need at least one variable
          // NOTE: if sub-seed is zero then is the special case
          // that count in xbitset is 1
-         Double_t ny = log(x - y) / 0.693147;
+         uint32_t ny = static_cast<uint32_t>(log(x - y) / 0.693147);
          if (y == 0) {
             importances[ny] = SROC - 0.5;
             continue;
