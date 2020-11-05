@@ -13,6 +13,7 @@
 #include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
 #include "TTreeReader.h"
+#include "TTree.h" // For MaxTreeSizeRAII. Revert when #6640 will be solved.
 
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
@@ -29,6 +30,7 @@
 #include <unordered_map>
 #include <vector>
 #include <set>
+#include <limits> // For MaxTreeSizeRAII. Revert when #6640 will be solved.
 
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
@@ -202,6 +204,25 @@ static void ThrowIfNSlotsChanged(unsigned int nSlots)
       throw std::runtime_error(msg);
    }
 }
+
+/**
+\struct MaxTreeSizeRAII
+\brief Scope-bound change of `TTree::fgMaxTreeSize`.
+
+This RAII object stores the current value result of `TTree::GetMaxTreeSize`,
+changes it to maximum at construction time and restores it back at destruction
+time. Needed for issue #6523 and should be reverted when #6640 will be solved.
+*/
+struct MaxTreeSizeRAII {
+   Long64_t fOldMaxTreeSize;
+
+   MaxTreeSizeRAII() : fOldMaxTreeSize(TTree::GetMaxTreeSize())
+   {
+      TTree::SetMaxTreeSize(std::numeric_limits<Long64_t>::max());
+   }
+
+   ~MaxTreeSizeRAII() { TTree::SetMaxTreeSize(fOldMaxTreeSize); }
+};
 
 } // anonymous namespace
 
@@ -560,6 +581,9 @@ void RLoopManager::EvalChildrenCounts()
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
 void RLoopManager::Run()
 {
+   // Change value of TTree::GetMaxTreeSize only for this scope. Revert when #6640 will be solved.
+   MaxTreeSizeRAII ctxtmts;
+
    ThrowIfNSlotsChanged(GetNSlots());
 
    Jit();
