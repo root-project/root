@@ -33,6 +33,7 @@
 #include "TVirtualX.h"
 #include "TApplication.h"
 #include "TError.h"
+#include "TSystem.h"
 
 ClassImp(TGWindow);
 ClassImp(TGUnknownWindowHandler);
@@ -57,7 +58,7 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
       ::Error("TGWindow::TGWindow",
               "gClient and gApplication are nullptr!\n"
               "Please add a TApplication instance in the main() function of your application\n");
-      std::exit(EXIT_FAILURE);
+      gSystem->Exit(1);
    }
 
    if (!p && gClient) {
