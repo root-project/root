@@ -176,6 +176,20 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
 }
 
 
+void ROOT::Experimental::Detail::RPageSinkFile::Merge(
+   const std::vector<std::unique_ptr<RPageSourceFile>>& sources)
+{
+   std::cout << "\n\ngot " << sources.size() << " files to merge\n";
+   std::cout << "merge target is:\n";
+   fDescriptorBuilder.GetDescriptor().PrintInfo(std::cout);
+
+   for (std::size_t i = 0; i < sources.size(); ++i) {
+      const auto& desc = sources[i]->GetDescriptor();
+      desc.PrintInfo(std::cout);
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
