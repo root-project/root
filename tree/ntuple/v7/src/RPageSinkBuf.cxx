@@ -43,6 +43,16 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
 }
 
 ROOT::Experimental::RClusterDescriptor::RLocator
+ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(
+   DescriptorId_t columnId, const RSealedPage &sealedPage)
+{
+   fInnerSink->CommitSealedPage(columnId, sealedPage);
+   // we're feeding bad locators to fOpenPageRanges but it should not matter
+   // because they never get written out
+   return RClusterDescriptor::RLocator{};
+}
+
+ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::NTupleSize_t nEntries)
 {
    for (auto &bufColumn : fBufferedColumns) {
