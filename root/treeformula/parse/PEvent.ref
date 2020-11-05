@@ -100,5 +100,5 @@ Processing runPEvent.C...
 97   56
 98   37
 99   18
-Warning in <TTreePlayer::StartViewer>: viewer cannot run in batch mode
+Warning in <TTreePlayer::StartViewer>: The tree viewer cannot run in batch mode
 Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
