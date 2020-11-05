@@ -53,6 +53,7 @@ using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
 using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
 using RColumnModel = ROOT::Experimental::RColumnModel;
+using RClusterIndex = ROOT::Experimental::RClusterIndex;
 using RDanglingFieldDescriptor = ROOT::Experimental::RDanglingFieldDescriptor;
 using RException = ROOT::Experimental::RException;
 template <class T>
