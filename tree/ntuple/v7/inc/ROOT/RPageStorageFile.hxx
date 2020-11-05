@@ -16,7 +16,6 @@
 #ifndef ROOT7_RPageStorageFile
 #define ROOT7_RPageStorageFile
 
-#include <ROOT/RClusterPool.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
@@ -42,7 +41,6 @@ namespace Detail {
 class RCluster;
 class RClusterPool;
 class RPageAllocatorHeap;
-class RPageSourceFile;
 class RPagePool;
 
 
