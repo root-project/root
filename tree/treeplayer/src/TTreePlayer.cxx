@@ -24,6 +24,7 @@ extra libraries (Histogram, display, etc).
 #include <fstream>
 
 #include "TROOT.h"
+#include "TApplication.h"
 #include "TSystem.h"
 #include "TFile.h"
 #include "TEventList.h"
@@ -2947,8 +2948,14 @@ void TTreePlayer::SetEstimate(Long64_t n)
 
 void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
 {
+   if (!gApplication)
+      TApplication::CreateApplication();
+   // make sure that the Gpad and GUI libs are loaded
+   TApplication::NeedGraphicsLibs();
+   if (gApplication)
+      gApplication->InitializeGraphics();
    if (gROOT->IsBatch()) {
-      Warning("StartViewer", "viewer cannot run in batch mode");
+      Warning("StartViewer", "The tree viewer cannot run in batch mode");
       return;
    }
 
