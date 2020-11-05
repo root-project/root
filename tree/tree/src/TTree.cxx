@@ -394,6 +394,7 @@ End_Macro
 #include "TLeafS.h"
 #include "TList.h"
 #include "TMath.h"
+#include "TMemFile.h"
 #include "TROOT.h"
 #include "TRealData.h"
 #include "TRegexp.h"
@@ -2682,27 +2683,26 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
 /// If the current file contains other objects like TH1 and TTree,
 /// these objects are automatically moved to the new file.
 ///
-/// IMPORTANT NOTE:
-///
-/// Be careful when writing the final Tree header to the file!
-///
-/// Don't do:
+/// \warning Be careful when writing the final Tree header to the file!
+///      Don't do:
 /// ~~~ {.cpp}
 ///     TFile *file = new TFile("myfile.root","recreate");
 ///     TTree *T = new TTree("T","title");
-///     T->Fill(); //loop
+///     T->Fill(); // Loop
 ///     file->Write();
 ///     file->Close();
 /// ~~~
-/// but do the following:
+/// \warning but do the following:
 /// ~~~ {.cpp}
 ///     TFile *file = new TFile("myfile.root","recreate");
 ///     TTree *T = new TTree("T","title");
-///     T->Fill(); //loop
-///     file = T->GetCurrentFile(); //to get the pointer to the current file
+///     T->Fill(); // Loop
+///     file = T->GetCurrentFile(); // To get the pointer to the current file
 ///     file->Write();
 ///     file->Close();
 /// ~~~
+///
+/// \note This method is never called if the input file is a `TMemFile` or derivate.
 
 TFile* TTree::ChangeFile(TFile* file)
 {
@@ -4525,9 +4525,14 @@ void TTree::DropBuffers(Int_t)
 /// Note that the user can decide to call FlushBaskets and AutoSave in her event loop
 /// base on the number of events written instead of the number of bytes written.
 ///
-/// Note that calling FlushBaskets too often increases the IO time.
+/// \note Calling `TTree::FlushBaskets` too often increases the IO time. 
+/// 
+/// \note Calling `TTree::AutoSave` too often increases the IO time and also the
+///       file size.
 ///
-/// Note that calling AutoSave too often increases the IO time and also the file size.
+/// \note This method calls `TTree::ChangeFile` when the tree reaches a size
+///       greater than `TTree::fgMaxTreeSize`. This doesn't happen if the tree is
+///       attached to a `TMemFile` or derivate.
 
 Int_t TTree::Fill()
 {
@@ -4707,8 +4712,10 @@ Int_t TTree::Fill()
    // to the case where the tree is in the top level directory.
    if (fDirectory)
       if (TFile *file = fDirectory->GetFile())
-         if ((TDirectory *)file == fDirectory && (file->GetEND() > fgMaxTreeSize))
-            ChangeFile(file);
+         if (static_cast<TDirectory *>(file) == fDirectory && (file->GetEND() > fgMaxTreeSize))
+            // Changing file clashes with the design of TMemFile and derivates, see #6523.
+            if (!(dynamic_cast<TMemFile *>(file)))
+               ChangeFile(file);
 
    return nerror == 0 ? nbytes : -1;
 }
