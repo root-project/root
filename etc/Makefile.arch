@@ -49,8 +49,8 @@ ROOTGLIBS    := $(shell $(RC) --glibs)
 ROOTCLING    := rootcling
 
 ifeq ($(PLATFORM),macosx)
-MACOSX_MAJOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1 | sed -e 's/^[[:space:]]*//')
-MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+MACOSX_MAJOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1))
+MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
 ifeq ($(MACOSX_DEPLOYMENT_TARGET),)
 MACOSXTARGET := $(MACOSX_MAJOR).$(MACOSX_MINOR)
 else
