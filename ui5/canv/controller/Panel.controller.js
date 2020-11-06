@@ -15,24 +15,26 @@ sap.ui.define([
          this.rendering_perfromed = false;
       },
 
-      drawObject: function(obj, options, call_back) {
+      drawObject: function(obj, options) {
 
-         if (call_back) this.get_callbacks.push(call_back);
+         return new Promise(resolveFunc => {
+            this.draw_callbacks.push(resolveFunc);
 
-         if (!this.rendering_perfromed) {
-            this.panel_data = { object: obj, opt: options };
-            return;
-         }
+            if (!this.rendering_perfromed) {
+               this.panel_data = { object: obj, opt: options };
+               return;
+            }
 
-         var oController = this;
-         oController.object = obj;
-         d3.select(oController.getView().getDomRef()).style('overflow','hidden');
+            this.object = obj;
+            d3.select(this.getView().getDomRef()).style('overflow','hidden');
 
-         JSROOT.draw(oController.getView().getDomRef(), oController.object, options).then(painter => {
-            console.log("object painting finished");
-            oController.object_painter = painter;
-            oController.get_callbacks.forEach(cb => JSROOT.CallBack(cb,painter));
-            oController.get_callbacks = [];
+            JSROOT.draw(this.getView().getDomRef(), obj, options).then(painter => {
+               console.log("object painting finished");
+               this.object_painter = painter;
+               let arr = this.draw_callbacks;
+               this.draw_callbacks = [];
+               arr.forEach(cb => cb(painter));
+            });
          });
       },
 
@@ -56,22 +58,20 @@ sap.ui.define([
       },
 
       /** method to access object painter
-         if object already painted and exists, it will be returned as result
-         but it may take time to complete object drawing, therefore callback function should be used like
-            var panel = sap.ui.getCore().byId("YourPanelId");
-            var object_painter = null;
-            panel.getController().getPainter(funciton(painter) {
+          Promise is used while painting may be not finished when painter is requested
+            let panel = sap.ui.getCore().byId("YourPanelId");
+            let object_painter = null;
+            panel.getController().getPainter().then(painter => {
                object_painter = painter;
             });
       */
-      getPainter: function(call_back) {
-
-         if (this.object_painter) {
-            JSROOT.CallBack(call_back, this.object_painter);
-         } else if (call_back) {
-            this.get_callbacks.push(call_back);
-         }
-         return this.object_painter;
+      getPainter: function() {
+         return new Promise(resolveFunc => {
+            if (this.object_painter)
+               resolveFunc(this.object_painter);
+            else
+               this.draw_callbacks.push(resolveFunc);
+         });
       },
 
       getRenderPromise: function() {
@@ -110,15 +110,15 @@ sap.ui.define([
 
       onInit: function() {
 
-         this.get_callbacks = []; // list of callbacks
+         this.draw_callbacks = []; // list of callbacks
 
          this.rendering_perfromed = false;
 
-         var id = this.getView().getId();
+         let id = this.getView().getId();
 
          console.log("Initialization of JSROOT Panel", id);
 
-         var oModel = sap.ui.getCore().getModel(id);
+         let oModel = sap.ui.getCore().getModel(id);
          if (!oModel && (id.indexOf("__xmlview0--")==0)) oModel = sap.ui.getCore().getModel(id.substr(12));
 
          if (oModel)
