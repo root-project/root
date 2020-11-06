@@ -503,6 +503,8 @@ struct AxisConfigToType<RAxisConfig::kEquidistant> {
  */
 class RAxisGrow: public RAxisEquidistant {
 public:
+   RAxisGrow() = default;
+
    /// Initialize a RAxisGrow.
    /// \param[in] title - axis title used for graphics and text representation.
    /// \param nbins - number of bins in the axis, excluding under- and overflow
@@ -740,6 +742,8 @@ private:
    std::unordered_map<std::string, int /*bin number*/> fLabelsIndex;
 
 public:
+   RAxisLabels() = default;
+
    /// Construct a RAxisLables from a `vector` of `string_view`s, with title.
    explicit RAxisLabels(std::string_view title, const std::vector<std::string_view> &labels)
       : RAxisGrow(title, labels.size(), 0., static_cast<double>(labels.size()))

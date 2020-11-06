@@ -15,6 +15,10 @@
 #include <ROOT/RCanvas.hxx>
 #include <ROOT/RAxisDrawable.hxx>
 
+// macro must be here while cling is not capable to load
+// library automatically for outlined function see ROOT-10336
+R__LOAD_LIBRARY(libROOTHistDraw)
+
 void draw_axes()
 {
    using namespace ROOT::Experimental;
@@ -22,9 +26,21 @@ void draw_axes()
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("RAxis examples");
 
-   auto axis = canvas->Draw<RAxisDrawable>();
+   RAxisEquidistant axis1("regular", 10, 0., 100.);
+   auto draw1 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis1);
+   draw1->SetP1({0.1_normal,0.9_normal}).SetP2({0.4_normal,0.9_normal});
+   canvas->Draw(draw1);
 
-   axis->SetP1({0.1_normal,0.1_normal}).SetP2({0.9_normal,0.1_normal});
+   RAxisIrregular axis2("irregular", {0., 1., 2., 3., 10.});
+   auto draw2 = std::make_shared<RAxisDrawable<RAxisIrregular>>(axis2);
+   draw2->SetP1({0.1_normal,0.7_normal}).SetP2({0.4_normal,0.7_normal});
+   canvas->Draw(draw2);
+
+   std::vector<std::string> labels = {"first", "second", "third", "forth", "fifth"};
+   RAxisLabels axis3("labels", labels);
+   auto draw3 = std::make_shared<RAxisDrawable<RAxisLabels>>(axis3);
+   draw3->SetP1({0.1_normal,0.5_normal}).SetP2({0.4_normal,0.5_normal});
+   canvas->Draw(draw3);
 
    canvas->SetSize(1000, 800);
 

@@ -10,6 +10,8 @@
 #define ROOT7_RAxisDrawable
 
 #include <ROOT/RDrawable.hxx>
+#include <ROOT/RAxis.hxx>
+#include <ROOT/RLogger.hxx>
 #include <ROOT/RAttrAxis.hxx>
 #include <ROOT/RPadPos.hxx>
 
@@ -24,17 +26,33 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
+template<typename AxisType = RAxisEquidistant>
 class RAxisDrawable : public RDrawable {
 
-   RPadPos fP1;                            ///< axis begin
-   RPadPos fP2;                            ///< axis end
+   AxisType fAxis;                        ///< axis object to draw
+   RPadPos fP1;                           ///< axis begin
+   RPadPos fP2;                           ///< axis end
    RAttrAxis fAttrAxis{this, "axis_"};    ///<! axis attributes
 
 public:
 
-   RAxisDrawable() : RDrawable("line") {}
+   RAxisDrawable() : RDrawable("axis") {}
 
    RAxisDrawable(const RPadPos& p1, const RPadPos& p2) : RAxisDrawable() { fP1 = p1; fP2 = p2; }
+
+   /*
+   RAxisDrawable(const RAxisConfig &cfg) : RAxisDrawable()
+   {
+      switch (cfg.GetKind()) {
+         case RAxisConfig::kEquidistant: fAxis = Internal::AxisConfigToType<RAxisConfig::kEquidistant>()(cfg); break;
+         case RAxisConfig::kGrow: fAxis = Internal::AxisConfigToType<RAxisConfig::kGrow>()(cfg); break;
+         case RAxisConfig::kIrregular: fAxis = Internal::AxisConfigToType<RAxisConfig::kIrregular>()(cfg); break;
+         default: R__ERROR_HERE("HIST") << "Unhandled axis kind";
+      }
+   }
+   */
+
+   RAxisDrawable(const AxisType &axis) : RAxisDrawable() { fAxis = axis; }
 
    RAxisDrawable &SetP1(const RPadPos& p1) { fP1 = p1; return *this; }
    RAxisDrawable &SetP2(const RPadPos& p2) { fP2 = p2; return *this; }

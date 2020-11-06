@@ -49,7 +49,8 @@
 #pragma link C++ class ROOT::Experimental::RHist2StatBox+;
 #pragma link C++ class ROOT::Experimental::RHist3StatBox+;
 
-#pragma link C++ class ROOT::Experimental::RAxisDrawable+;
-
+#pragma link C++ class ROOT::Experimental::RAxisDrawable<ROOT::Experimental::RAxisEquidistant>+;
+#pragma link C++ class ROOT::Experimental::RAxisDrawable<ROOT::Experimental::RAxisIrregular>+;
+#pragma link C++ class ROOT::Experimental::RAxisDrawable<ROOT::Experimental::RAxisLabels>+;
 
 #endif
