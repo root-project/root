@@ -13,6 +13,7 @@
 #include <ROOT/RAttrLine.hxx>
 #include <ROOT/RAttrText.hxx>
 #include <ROOT/RAttrValue.hxx>
+#include <ROOT/RPadLength.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -33,13 +34,17 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<double>   fMax{this, "max", 1.};           ///<! axis max
    RAttrValue<double>   fZoomMin{this, "zoommin", 0.};   ///<! axis zoom min
    RAttrValue<double>   fZoomMax{this, "zoommax", 0.};   ///<! axis zoom max
-   RAttrValue<bool>     fLog{this, "log", false};        ///<! log scale
+   RAttrValue<int>      fLog{this, "log", 0};            ///<! log scale
    RAttrValue<bool>     fInvert{this, "invert", false};  ///<! invert scale
+   RAttrValue<std::string> fTitle{this, "title", ""};                     ///<! axis title
+   RAttrValue<std::string> fTitlePos{this, "title_position", "right"};    ///<! axis title position
+   RAttrValue<RPadLength>  fTitleOffset{this, "title_offset", 0.2_normal};  ///<! axis title offset
 
    R__ATTR_CLASS(RAttrAxis, "axis_", AddDefaults(fAttrLine).AddDefaults(fAttrText)
                                     .AddDefaults(fMin).AddDefaults(fMax)
                                     .AddDefaults(fZoomMin).AddDefaults(fZoomMax)
-                                    .AddDefaults(fLog).AddDefaults(fInvert));
+                                    .AddDefaults(fLog).AddDefaults(fInvert)
+                                    .AddDefaults(fTitle).AddDefaults(fTitlePos).AddDefaults(fTitleOffset));
 
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
    RAttrAxis &SetAttrLine(const RAttrLine &line) { fAttrLine = line; return *this; }
@@ -70,11 +75,24 @@ class RAttrAxis : public RAttrBase {
    RAttrAxis &SetZoomMinMax(double min, double max) { SetZoomMin(min); SetZoomMax(max); return *this; }
    void ClearZoomMinMax() { fZoomMin.Clear(); fZoomMax.Clear(); }
 
-   RAttrAxis &SetLog(bool on = true) { fLog = on; return *this; }
-   bool GetLog() const { return fLog; }
+   RAttrAxis &SetLog(int base = 10) { fLog = base; return *this; }
+   int GetLog() const { return fLog; }
 
    RAttrAxis &SetInvert(bool on = true) { fInvert = on; return *this; }
    bool GetInvert() const { return fInvert; }
+
+   RAttrAxis &SetTitle(const std::string &title) { fTitle = title; return *this; }
+   std::string GetTitle() const { return fTitle; }
+
+   RAttrAxis &SetTitlePos(const std::string &pos) { fTitlePos = pos; return *this; }
+   RAttrAxis &SetTitleLeft() { return SetTitlePos("left"); }
+   RAttrAxis &SetTitleCenter() { return SetTitlePos("center"); }
+   RAttrAxis &SetTitleRight() { return SetTitlePos("right"); }
+   std::string GetTitlePos() const { return fTitlePos; }
+
+   RAttrAxis &SetTitleOffset(const RPadLength &len) { fTitleOffset = len; return *this; }
+   RPadLength GetTitleOffset() const { return fTitleOffset; }
+
 };
 
 } // namespace Experimental
