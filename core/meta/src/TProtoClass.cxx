@@ -96,6 +96,8 @@ TProtoClass::TProtoClass(TClass* cl):
       // - foreach base: base class's data members.
       for (auto realDataObj: *cl->GetListOfRealData()) {
          TRealData *rd = (TRealData*)realDataObj;
+         if (!rd->GetDataMember())
+            continue;
          TProtoRealData protoRealData(rd);
 
          if (TClass* clRD = rd->GetDataMember()->GetClass())
@@ -396,6 +398,7 @@ TProtoClass::TProtoRealData::TProtoRealData(const TRealData* rd):
    fStatusFlag(0)
 {
    TDataMember * dm = rd->GetDataMember();
+   assert(rd->GetDataMember());
    TClass * cl = dm->GetClass();
    assert(cl != NULL);
    fDMIndex = DataMemberIndex(cl,dm->GetName());
