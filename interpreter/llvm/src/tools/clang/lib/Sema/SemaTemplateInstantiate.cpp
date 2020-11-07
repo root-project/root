@@ -2235,19 +2235,13 @@ Sema::InstantiateClass(SourceLocation PointOfInstantiation,
   // Exit the scope of this instantiation.
   SavedContext.pop();
 
-  if (!Instantiation->isInvalidDecl()) {
-    Consumer.HandleTagDeclDefinition(Instantiation);
+  Consumer.HandleTagDeclDefinition(Instantiation);
 
-    // Always emit the vtable for an explicit instantiation definition
-    // of a polymorphic class template specialization. Otherwise, eagerly
-    // instantiate only constexpr virtual functions in preparation for their use
-    // in constant evaluation.
-    if (TSK == TSK_ExplicitInstantiationDefinition)
-      MarkVTableUsed(PointOfInstantiation, Instantiation, true);
-    else if (MightHaveConstexprVirtualFunctions)
-      MarkVirtualMembersReferenced(PointOfInstantiation, Instantiation,
-                                   /*ConstexprOnly*/ true);
-  }
+  // Always emit the vtable for an explicit instantiation definition
+  // of a polymorphic class template specialization.
+  if (!Instantiation->isInvalidDecl() &&
+      TSK == TSK_ExplicitInstantiationDefinition)
+    MarkVTableUsed(PointOfInstantiation, Instantiation, true);
 
   return Instantiation->isInvalidDecl();
 }
