@@ -71,12 +71,6 @@ public:
   /// can be defined in declspecs).
   virtual void HandleTagDeclDefinition(TagDecl *D) {}
 
-  /// HandleInvalidTagDeclDefinition - This callback is invoked each time a TagDecl
-  /// (e.g. struct, union, enum, class) end up invalid after attempting completion.
-  /// This allows the client to record (and possibly remove from the AST) the
-  /// decl.
-  virtual void HandleInvalidTagDeclDefinition(TagDecl *D) {}
-
   /// This callback is invoked the first time each TagDecl is required to
   /// be complete.
   virtual void HandleTagDeclRequiredDefinition(const TagDecl *D) {}
