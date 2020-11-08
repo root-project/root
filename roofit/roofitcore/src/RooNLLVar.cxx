@@ -496,6 +496,9 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
 
   for (std::size_t evtNo = firstEvent; evtNo < std::min(lastEvent, firstEvent + 10); ++evtNo) {
     _dataClone->get(evtNo);
+    if (_dataClone->weight() == 0.) // 0-weight events are not cached, so cannot compare against them.
+      continue;
+
     assert(_dataClone->valid());
     try {
       // Cross check results with strict tolerance and complain
