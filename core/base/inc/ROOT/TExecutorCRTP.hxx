@@ -28,6 +28,8 @@
 /// * `Map(F func, unsigned nTimes)`: func is executed nTimes with no arguments
 /// * `Map(F func, T& args)`: func is executed on each element of the collection of arguments args
 ///
+/// The Map function forwards the call to MapImpl, to be implemented by the child classes.
+///
 /// For either signature, func is executed as many times as needed by a pool of
 /// n workers; It defaults to the number of cores.\n
 /// A collection containing the result of each execution is returned.\n
@@ -75,6 +77,7 @@ namespace ROOT {
 
 template<class subc>
 class TExecutorCRTP {
+friend subc;
 public:
    explicit TExecutorCRTP() = default;
    explicit TExecutorCRTP(size_t /* nWorkers */ ){};
@@ -123,13 +126,33 @@ public:
    template<class T> T* Reduce(const std::vector<T*> &mergeObjs);
    template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
-   unsigned GetPoolSize() const; // must be implemented in derived class
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Return the number of pooled workers.
+   ///
+   /// \return The number of workers in the pool.
+   unsigned GetPoolSize() const = delete; // must be implemented in derived class
 
 private:
+
    inline subc & Derived()
    {
      return *static_cast<subc*>(this);
    }
+
+   /// Implementation of the Map method, left to the derived classes
+   template<class F, class Cond = noReferenceCond<F>>
+   auto MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> = delete;
+   /// Implementation of the Map method, left to the derived classes
+   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+   /// Implementation of the Map method, left to the derived classes
+   auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> = delete;
+   /// Implementation of the Map method, left to the derived classes
+   template<class F, class T, class Cond = noReferenceCond<F, T>>
+   auto MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> = delete;
+   /// Implementation of the Map method, left to the derived classes
+   template<class F, class T, class Cond = noReferenceCond<F, T>>
+   auto MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> = delete;
+
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -143,7 +166,7 @@ private:
 template<class subc> template<class F, class Cond>
 auto TExecutorCRTP<subc>::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
 {
-   return Derived().Map(func, nTimes);
+   return Derived().MapImpl(func, nTimes);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -155,7 +178,7 @@ auto TExecutorCRTP<subc>::Map(F func, unsigned nTimes) -> std::vector<typename s
 template<class subc> template<class F, class INTEGER, class Cond>
 auto TExecutorCRTP<subc>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
-   return Derived().Map(func, args);
+   return Derived().MapImpl(func, args);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -173,7 +196,7 @@ auto TExecutorCRTP<subc>::Map(F func, std::initializer_list<T> args) -> std::vec
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Execute a function over the elements of a vector
+/// \brief Execute a function over the elements of a vector.
 ///
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Vector of elements passed as an argument to `func`.
@@ -181,11 +204,12 @@ auto TExecutorCRTP<subc>::Map(F func, std::initializer_list<T> args) -> std::vec
 template<class subc> template<class F, class T, class Cond>
 auto TExecutorCRTP<subc>::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
-   return Derived().Map(func, args);
+   return Derived().MapImpl(func, args);
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over the elements of an immutable vector
+
 ///
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Vector of elements passed as an argument to `func`.
@@ -193,7 +217,7 @@ auto TExecutorCRTP<subc>::Map(F func, std::vector<T> &args) -> std::vector<typen
 template<class subc> template<class F, class T, class Cond>
 auto TExecutorCRTP<subc>::Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
-   return Derived().Map(func, args);
+   return Derived().MapImpl(func, args);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -322,16 +346,6 @@ auto TExecutorCRTP<subc>::Reduce(const std::vector<T> &objs, R redfunc) -> declt
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
    return redfunc(objs);
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// \brief Return the number of pooled workers.
-///
-/// \return The number of workers in the pool.
-template<class subc>
-unsigned TExecutorCRTP<subc>::GetPoolSize() const
-{
-   return Derived().GetPoolSize();
 }
 
 } // end namespace ROOT
