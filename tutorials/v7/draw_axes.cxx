@@ -69,6 +69,14 @@ void draw_axes()
    draw6->AttrAxis().SetTitle("reverse");
    canvas->Draw(draw6);
 
+   RAxisEquidistant axis7("regular", 10, 0., 100.);
+   auto draw7 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis7);
+   draw7->SetP1({0.6_normal,0.9_normal}).SetP2({0.9_normal,0.9_normal});
+   draw7->AttrAxis().SetTicksBoth().SetTicksSize(0.05_normal)
+                     .SetTitle("both side ticks").SetTitleCenter();
+   canvas->Draw(draw7);
+
+
    canvas->SetSize(1000, 800);
 
    // requires Chrome browser, runs in headless mode

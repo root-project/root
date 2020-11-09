@@ -37,14 +37,18 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<int>      fLog{this, "log", 0};            ///<! log scale
    RAttrValue<bool>     fInvert{this, "invert", false};  ///<! invert scale
    RAttrValue<std::string> fTitle{this, "title", ""};                     ///<! axis title
-   RAttrValue<std::string> fTitlePos{this, "title_position", "right"};    ///<! axis title position
+   RAttrValue<std::string> fTitlePos{this, "title_position", "right"};    ///<! axis title position - left, right, center
    RAttrValue<RPadLength>  fTitleOffset{this, "title_offset", 0.2_normal};  ///<! axis title offset
+
+   RAttrValue<std::string> fTicksSide{this, "ticks_side", "normal"};     ///<! ticks position - normal, invert, both
+   RAttrValue<RPadLength>  fTicksSize{this, "ticks_size", 0.03_normal};  ///<! ticks size
 
    R__ATTR_CLASS(RAttrAxis, "axis_", AddDefaults(fAttrLine).AddDefaults(fAttrText)
                                     .AddDefaults(fMin).AddDefaults(fMax)
                                     .AddDefaults(fZoomMin).AddDefaults(fZoomMax)
                                     .AddDefaults(fLog).AddDefaults(fInvert)
-                                    .AddDefaults(fTitle).AddDefaults(fTitlePos).AddDefaults(fTitleOffset));
+                                    .AddDefaults(fTitle).AddDefaults(fTitlePos).AddDefaults(fTitleOffset)
+                                    .AddDefaults(fTicksSide).AddDefaults(fTicksSize));
 
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
    RAttrAxis &SetAttrLine(const RAttrLine &line) { fAttrLine = line; return *this; }
@@ -92,6 +96,16 @@ class RAttrAxis : public RAttrBase {
 
    RAttrAxis &SetTitleOffset(const RPadLength &len) { fTitleOffset = len; return *this; }
    RPadLength GetTitleOffset() const { return fTitleOffset; }
+
+   RAttrAxis &SetTicksSize(const RPadLength &sz) { fTicksSize = sz; return *this; }
+   RPadLength GetTicksSize() const { return fTicksSize; }
+
+   RAttrAxis &SetTicksSide(const std::string &side) { fTicksSide = side; return *this; }
+   RAttrAxis &SetTicksNormal() { return SetTicksSide("normal"); }
+   RAttrAxis &SetTicksInvert() { return SetTicksSide("invert"); }
+   RAttrAxis &SetTicksBoth() { return SetTicksSide("both"); }
+   std::string GetTicksSide() const { return fTicksSide; }
+
 
 };
 
