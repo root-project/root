@@ -1861,7 +1861,7 @@ TGeoVolume *TGeoVolume::MakeReflectedVolume(const char *newname) const
    // Reflect the shape (if any) and connect it.
    if (fShape) {
       TGeoShape *reflected_shape =
-         TGeoScaledShape::MakeScaledShape("", fShape, new TGeoScale(1.,1.,-1.));
+         TGeoScaledShape::MakeScaledShape(fShape->GetName(), fShape, new TGeoScale(1.,1.,-1.));
       vol->SetShape(reflected_shape);
    }
    // Reflect the daughters.
