@@ -26,6 +26,8 @@
 #include <iostream>
 #include <string>
 
+int printLevel = 0;
+
 // Class to encapsulate the types that define how the gradient test is
 // performed; it also stores information strings about the types.
 //    DataType defines how to instantiate the gradient evaluation: Double_t,
@@ -292,13 +294,15 @@ struct GradientTestEvaluation {
          fFitter->Gradient(fModel->fParams, solution);
       end = std::chrono::system_clock::now();
 
-      // std::cout << "Gradient is : " << fFitter->NDim() << "  ";
-      //  for (unsigned int i = 0; i < fNumParams ; ++i)
-      //    std::cout << "  " << solution[i];
-      // std::cout << std::endl;
-
-
       std::chrono::duration<Double_t> timeElapsed = end - start;
+
+      if (printLevel > 0) {
+         std::cout << "Gradient is : " << fFitter->NDim() << "  ";
+         for (unsigned int i = 0; i < fNumParams; ++i)
+            std::cout << "  " << solution[i];
+         std::cout << std::endl;
+         std::cout << "elapsed time is " << timeElapsed.count() << std::endl;
+      }
 
       return timeElapsed.count() / fNumRepetitions;
 
@@ -446,7 +450,7 @@ typedef ::testing::Types<VectorialSerial1D, VectorialSerial2D> TestTypes;
 #  ifdef R__USE_IMT
 typedef ::testing::Types<ScalarMultithread1D, ScalarMultithread2D> TestTypes;
 #  else
-typedef ::testing::Types<> TestTypes;
+typedef ::testing::Types<ScalarSerial1D,ScalarSerial2D> TestTypes;
 #  endif
 #endif
 
@@ -506,3 +510,27 @@ TYPED_TEST(PoissonLikelihoodGradientTest, PoissonLikelihoodGradient)
    }
 }
 
+// add main() to avoid a linking error
+int main(int argc, char **argv)
+{
+
+   // Parse command line arguments
+   for (Int_t i = 1; i < argc; i++) {
+      std::string arg = argv[i];
+      if (arg == "-v") {
+         std::cout << "---running in verbose mode" << std::endl;
+         printLevel = 1;
+      } else if (arg == "-vv") {
+         std::cout << "---running in very verbose mode" << std::endl;
+         printLevel = 2;
+      } else if (arg == "-vvv") {
+         std::cout << "---running in very very verbose mode" << std::endl;
+         printLevel = 3;
+      }
+   }
+
+   // This allows the user to override the flag on the command line.
+   ::testing::InitGoogleTest(&argc, argv);
+
+   return RUN_ALL_TESTS();
+}

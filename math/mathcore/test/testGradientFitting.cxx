@@ -289,8 +289,8 @@ INSTANTIATE_TYPED_TEST_SUITE_P(GradientFitting, GradientFittingTest, TestTypes);
 
 int main(int argc, char** argv) {
 
-// Disables elapsed time by default.
-  //::testing::GTEST_FLAG(print_time) = false;
+   // Disables elapsed time by default.
+   //::testing::GTEST_FLAG(print_time) = false;
 
    // Parse command line arguments
    for (Int_t i = 1 ;  i < argc ; i++) {
