@@ -5437,8 +5437,8 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
    if (fRootmapFiles->FindObject(rootmapfileNoBackslash.c_str()))
       return -1;
 
-   if (uniqueString)
-      uniqueString->Append(std::string("\n#line 1 \"Forward declarations from ") + rootmapfileNoBackslash + "\"\n");
+   // Line 1 is `{ decls }`
+   std::string lineDirective = std::string("\n#line 2 \"Forward declarations from ") + rootmapfileNoBackslash + "\"\n";
 
    std::ifstream file(rootmapfileNoBackslash);
    std::string line;
@@ -5464,7 +5464,9 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
                      rootmapfileNoBackslash.c_str());
                return -4;
             }
-            uniqueString->Append(line);
+            if (!lineDirective.empty())
+               uniqueString->Append(lineDirective);
+            uniqueString->Append(line + '\n');
          }
       }
       const char firstChar = line[0];
