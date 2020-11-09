@@ -1,6 +1,14 @@
 { decls }
-template <typename T, int I, typename TAG, typename TDEF, int IDEF> class Template ;
-namespace ANamespace { template <typename T, int I, typename TAG, typename TDEF, int IDEF> class Template ; } 
+class TagClassWithoutDefinition;
+template <typename T, int, typename TAG, typename TDEF, int> class Template;
+template <> class Template<float,0,TagClassWithoutDefinition,float,0>;
+template <> class Template<int,0,TagClassWithoutDefinition,int,0>;
+template <> class Template<int,1,TagClassWithoutDefinition,int,1>;
+template <> class Template<short,0,TagClassWithoutDefinition,int,1>;
+namespace ANamespace {  }
+namespace ANamespace { template <typename T, int, typename TAG, typename TDEF, int> class Template; }
+template <> class ANamespace::Template<int,0,TagClassWithoutDefinition,int,0>;
+template <> class ANamespace::Template<int,1,TagClassWithoutDefinition,int,1>;
 
 [libCore.so]
 class NotReal
