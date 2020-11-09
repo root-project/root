@@ -2476,7 +2476,13 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
       if (llvm::isa<clang::ClassTemplateSpecializationDecl>(rDecl)) {
          fwdDeclaration = "";
          retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(*rDecl, interpreter, fwdDeclaration);
-         if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
+         if (retCode == 0) {
+            std::string fwdDeclarationTemplateSpec;
+            retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclIfTmplSpec(*rDecl, interpreter, fwdDeclarationTemplateSpec, normalizedName);
+            fwdDeclaration += '\n' + fwdDeclarationTemplateSpec;
+         }
+         if (retCode == 0)
+            ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
       }
 
 
