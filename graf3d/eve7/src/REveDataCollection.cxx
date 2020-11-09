@@ -157,13 +157,18 @@ std::string REveDataItemList::GetHighlightTooltip(const std::set<int>& secondary
       name = name.substr(0, li-1);
    }
 
-   std::string res =  Form("%s %d",  name.c_str(), idx);
-
-   for (auto &t : fTooltipExpressions) {
-      std::string eval = t.fTooltipFunction.EvalExpr(data);
-      res +=  Form("\n  %s = %s", t.fTooltipTitle.c_str(), eval.c_str());
+   std::string res;
+   for (auto &z : secondary_idcs)
+   {
+      idx = z;
+      data = col->GetDataPtr(idx);
+      res +=  Form("%s %d",  name.c_str(), idx);
+      for (auto &t : fTooltipExpressions) {
+         std::string eval = t.fTooltipFunction.EvalExpr(data);
+         res +=  Form("\n  %s = %s", t.fTooltipTitle.c_str(), eval.c_str());
+      }
+      res += "\n";
    }
-
    return res;
 }
 
