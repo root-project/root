@@ -89,46 +89,8 @@ Double_t RooExponential::analyticalIntegral(Int_t code, const char* rangeName) c
       / constant;
 }
 
-
-namespace {
-
-template<class Tx, class Tc>
-void compute(size_t n, double* __restrict output, Tx x, Tc c) {
-
-  for (size_t i = 0; i < n; ++i) { //CHECK_VECTORISE
-    output[i] = _rf_fast_exp(x[i]*c[i]);
-  }
-}
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Evaluate the exponential without normalising it on the given batch.
-/// \param[in] begin Index of the batch to be computed.
-/// \param[in] batchSize Size of each batch. The last batch may be smaller.
-/// \return A span with the computed values.
-
-RooSpan<double> RooExponential::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
-  EvaluateInfo info = getInfo( {&x, &c}, begin, batchSize );
-  if (info.nBatches == 0) {
-    return {};
-  }
-
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  auto xData = x.getValBatch(begin, info.size);
-
-  if (info.nBatches==1 && !xData.empty()) {
-    compute(info.size, output.data(), xData.data(), BracketAdapter<double>(c));
-  }
-  else {
-    compute(info.size, output.data(), BracketAdapterWithMask(x, xData), BracketAdapterWithMask(c, c.getValBatch(begin, info.size)));
-  }
-  return output;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
+/// Compute multiple values of Exponential distribution.  
 RooSpan<double> RooExponential::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
   return RooFitCompute::dispatch->computeExponential(this, evalData, x->getValues(evalData, normSet), c->getValues(evalData, normSet));
 }
