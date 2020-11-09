@@ -124,62 +124,62 @@ public:
       }
    }
 
-TExecutor(const TExecutor &) = delete;
-TExecutor &operator=(const TExecutor &) = delete;
+   TExecutor(const TExecutor &) = delete;
+   TExecutor &operator=(const TExecutor &) = delete;
 
-/// Return the execution policy the executor is set to
-ROOT::Internal::ExecutionPolicy Policy(){ return fExecPolicy; }
+   /// Return the execution policy the executor is set to
+   ROOT::Internal::ExecutionPolicy Policy(){ return fExecPolicy; }
 
-// Map
-//
-using TExecutorCRTP<TExecutor>::Map;
+   // Map
+   //
+   using TExecutorCRTP<TExecutor>::Map;
 
-// MapReduce
-// the late return types also check at compile-time whether redfunc is compatible with func,
-// other than checking that func is compatible with the type of arguments.
-// a static_assert check in TExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
-using TExecutorCRTP<TExecutor>::MapReduce;
-template<class F, class R, class Cond = noReferenceCond<F>>
-auto MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type;
-template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
-auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type;
-template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-auto MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
-template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
-template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-auto MapReduce(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
+   // MapReduce
+   // the late return types also check at compile-time whether redfunc is compatible with func,
+   // other than checking that func is compatible with the type of arguments.
+   // a static_assert check in TExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
+   using TExecutorCRTP<TExecutor>::MapReduce;
+   template<class F, class R, class Cond = noReferenceCond<F>>
+   auto MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type;
+   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
+   auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
 
-// Reduce
-//
-using TExecutorCRTP<TExecutor>::Reduce;
+   // Reduce
+   //
+   using TExecutorCRTP<TExecutor>::Reduce;
 
 unsigned GetPoolSize() const;
 
 protected:
-// Implementation of the Map functions declared in the parent class (TExecutorCRTP)
-//
-template<class F, class Cond = noReferenceCond<F>>
-auto MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
-template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-template<class F, class T, class Cond = noReferenceCond<F, T>>
-auto MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-template<class F, class T, class Cond = noReferenceCond<F, T>>
-auto MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+   // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
+   //
+   template<class F, class Cond = noReferenceCond<F>>
+   auto MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
+   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+   auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+   template<class F, class T, class Cond = noReferenceCond<F, T>>
+   auto MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+   template<class F, class T, class Cond = noReferenceCond<F, T>>
+   auto MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
 
-// Extension of the Map interfaces with chunking, specific to this class and
-// only available from a MapReduce call.
-template<class F, class R, class Cond = noReferenceCond<F>>
-auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type>;
-template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
-auto Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-auto Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
-template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-auto Map(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
-template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
+   // Extension of the Map interfaces with chunking, specific to this class and
+   // only available from a MapReduce call.
+   template<class F, class R, class Cond = noReferenceCond<F>>
+   auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type>;
+   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
+   auto Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto Map(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
 
 private:
    ROOT::Internal::ExecutionPolicy fExecPolicy;
