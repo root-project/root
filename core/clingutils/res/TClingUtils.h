@@ -878,6 +878,12 @@ int FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl,
 int FwdDeclFromTmplDecl(const clang::TemplateDecl& tmplDecl,
                         const cling::Interpreter& interpreter,
                         std::string& defString);
+
+//______________________________________________________________________________
+int FwdDeclIfTmplSpec(const clang::RecordDecl& recordDecl,
+                      const cling::Interpreter& interpreter,
+                      std::string& defString,
+                      const std::string &normalizedName);
 //______________________________________________________________________________
 int GetDefArg(const clang::ParmVarDecl& par, std::string& valAsString, const clang::PrintingPolicy& pp);
 
