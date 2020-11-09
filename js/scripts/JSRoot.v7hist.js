@@ -2124,17 +2124,18 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           res = { name: "histo", entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0,0,0,0,0,0,0,0,0], xmax: 0, ymax:0, wmax: null };
 
       let xleft = this.GetSelectIndex("x", "left"),
-      xright = this.GetSelectIndex("x", "right"),
-      yleft = this.GetSelectIndex("y", "left"),
-      yright = this.GetSelectIndex("y", "right"),
-      xi, yi, xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y");
+          xright = this.GetSelectIndex("x", "right"),
+          yleft = this.GetSelectIndex("y", "left"),
+          yright = this.GetSelectIndex("y", "right"),
+          xi, yi, xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y");
 
-      for (xi = 0; xi <= this.nbinsx + 1; ++xi) {
-         xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
+      // TODO: account underflow/overflow bins, now stored in different array and only by histogram itself
+      for (xi = 1; xi <= this.nbinsx; ++xi) {
+         xside = (xi <= xleft+1) ? 0 : (xi > xright+1 ? 2 : 1);
          xx = xaxis.GetBinCoord(xi - 0.5);
 
-         for (yi = 0; yi <= this.nbinsy + 1; ++yi) {
-            yside = (yi <= yleft) ? 0 : (yi > yright ? 2 : 1);
+         for (yi = 1; yi <= this.nbinsy; ++yi) {
+            yside = (yi <= yleft+1) ? 0 : (yi > yright+1 ? 2 : 1);
             yy = yaxis.GetBinCoord(yi - 0.5);
 
             zz = histo.getBinContent(xi, yi);
