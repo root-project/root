@@ -96,4 +96,3 @@ JSROOT.define(['jquery', 'jquery-ui'], () => {
    });
 
 });
-

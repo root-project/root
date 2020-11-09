@@ -803,7 +803,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TGraphPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
    TGraphPainter.prototype.Redraw = function() {
-      this.DrawBins();
+      this.DrawGraph();
    }
 
    TGraphPainter.prototype.Cleanup = function() {
@@ -943,9 +943,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Create histogram for graph
+     * @descgraph bins should be created when calling this function
+     * @param {boolean} only_set_ranges - when specified, just assign ranges
+     * @private */
    TGraphPainter.prototype.CreateHistogram = function(only_set_ranges) {
-      // bins should be created when calling this function
-
       let xmin = this.xmin, xmax = this.xmax, ymin = this.ymin, ymax = this.ymax, set_x = true, set_y = true;
 
       if (xmin >= xmax) xmax = xmin+1;
@@ -1016,7 +1018,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       this.CreateHistogram(arg);
       let hpainter = this.main_painter();
-      if (hpainter) hpainter.CreateAxisFuncs(false);
+      if (hpainter) hpainter.ExtractAxesProperties(1); // just to enforce ranges extraction
 
       return true;
    }
@@ -1063,10 +1065,10 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          lines.push("x = " + pmain.AxisAsText("x", d.x));
          lines.push("y = " + pmain.AxisAsText("y", d.y));
 
-         if (this.options.Errors && (pmain.x_kind=='normal') && ('exlow' in d) && ((d.exlow!=0) || (d.exhigh!=0)))
+         if (this.options.Errors && (pmain.x_handle.kind=='normal') && ('exlow' in d) && ((d.exlow!=0) || (d.exhigh!=0)))
             lines.push("error x = -" + pmain.AxisAsText("x", d.exlow) + "/+" + pmain.AxisAsText("x", d.exhigh));
 
-         if ((this.options.Errors || (this.options.EF > 0)) && (pmain.y_kind=='normal') && ('eylow' in d) && ((d.eylow!=0) || (d.eyhigh!=0)))
+         if ((this.options.Errors || (this.options.EF > 0)) && (pmain.y_handle.kind=='normal') && ('eylow' in d) && ((d.eylow!=0) || (d.eyhigh!=0)))
             lines.push("error y = -" + pmain.AxisAsText("y", d.eylow) + "/+" + pmain.AxisAsText("y", d.eyhigh));
       }
       return lines;
@@ -1101,7 +1103,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return pmain.pad ? pmain : null;
    }
 
-   TGraphPainter.prototype.DrawBins = function() {
+   /** @summary draw TGraph as SVG */
+   TGraphPainter.prototype.DrawGraph = function() {
 
       let pmain = this.get_main(),
           w = this.frame_width(),
@@ -1745,7 +1748,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
    }
 
-   /** Perform moving */
+   /** @summary Perform moving */
    TGraphPainter.prototype.moveDrag = function(dx,dy) {
       this.pos_dx += dx;
       this.pos_dy += dy;
@@ -1755,14 +1758,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       } else {
          let main = this.frame_painter();
          if (main && this.move_bin) {
-            this.move_bin.x = main.RevertX(this.move_x0 + this.pos_dx);
-            this.move_bin.y = main.RevertY(this.move_y0 + this.pos_dy);
-            this.DrawBins();
+            this.move_bin.x = main.RevertAxis("x", this.move_x0 + this.pos_dx);
+            this.move_bin.y = main.RevertAxis("y", this.move_y0 + this.pos_dy);
+            this.DrawGraph();
          }
       }
    }
 
-   /** Complete moving */
+   /** @summary Complete moving */
    TGraphPainter.prototype.moveEnd = function(not_changed) {
       let exec = "";
 
@@ -1774,13 +1777,13 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          if (main && this.bins && !not_changed) {
             for (let k=0;k<this.bins.length;++k) {
                let bin = this.bins[k];
-               bin.x = main.RevertX(main.grx(bin.x) + this.pos_dx);
-               bin.y = main.RevertY(main.gry(bin.y) + this.pos_dy);
+               bin.x = main.RevertAxis("x", main.grx(bin.x) + this.pos_dx);
+               bin.y = main.RevertAxis("y", main.gry(bin.y) + this.pos_dy);
                exec += "SetPoint(" + bin.indx + "," + bin.x + "," + bin.y + ");;";
                if ((bin.indx == 0) && this.MatchObjectType('TCutG'))
                   exec += "SetPoint(" + (this.GetObject().fNpoints-1) + "," + bin.x + "," + bin.y + ");;";
             }
-            this.DrawBins();
+            this.DrawGraph();
          }
       } else {
          exec = "SetPoint(" + this.move_bin.indx + "," + this.move_bin.x + "," + this.move_bin.y + ")";
@@ -1816,8 +1819,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
          if (method.fName == 'InsertPoint') {
             let main = this.frame_painter(),
-                userx = main && main.RevertX ? main.RevertX(pnt.x) : 0,
-                usery = main && main.RevertY ? main.RevertY(pnt.y) : 0;
+                userx = main ? main.RevertAxis("x", pnt.x) : 0,
+                usery = main ? main.RevertAxis("y", pnt.y) : 0;
             canp.ShowMessage('InsertPoint(' + userx.toFixed(3) + ',' + usery.toFixed(3) + ') not yet implemented');
          } else if (this.args_menu_id && hint && (hint.binindx !== undefined)) {
             this.WebCanvasExec("RemovePoint(" + hint.binindx + ")", this.args_menu_id);
@@ -1971,7 +1974,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       let graph = this.GetObject();
 
       if (!graph.fFunctions || (indx >= graph.fFunctions.arr.length))
-         return JSROOT.CallBack(callback);
+         return JSROOT.callBack(callback);
 
       let func = graph.fFunctions.arr[indx], opt = graph.fFunctions.opt[indx];
 
@@ -1989,7 +1992,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          hpainter.$secondary = true;
       }
       this.SetDivId(divid);
-      this.DrawBins();
+      this.DrawGraph();
       if (this.TestEditable() && !JSROOT.BatchMode)
          JSROOT.require(['interactive'])
                .then(inter => inter.DragMoveHandler.AddMove(this));
@@ -2321,7 +2324,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TGraphPolarPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
    TGraphPolarPainter.prototype.Redraw = function() {
-      this.DrawBins();
+      this.DrawGraphPolar();
    }
 
    TGraphPolarPainter.prototype.DecodeOptions = function(opt) {
@@ -2341,7 +2344,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       this.OptionsStore(opt);
    }
 
-   TGraphPolarPainter.prototype.DrawBins = function() {
+   TGraphPolarPainter.prototype.DrawGraphPolar = function() {
       let graph = this.GetObject(),
           main = this.main_painter();
 
@@ -2513,7 +2516,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
    TGraphPolarPainter.prototype.PerformDrawing = function(divid) {
       this.SetDivId(divid);
-      this.DrawBins();
+      this.DrawGraphPolar();
       this.DrawingReady();
       return this; // will be value resolved by Promise and getting painter
    }
@@ -2646,7 +2649,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       if ((pnt === null) || !spline || !main) {
          cleanup = true;
       } else {
-         xx = main.RevertX(pnt.x);
+         xx = main.RevertAxis("x", pnt.x);
          indx = this.FindX(xx);
          knot = spline.fPoly[indx];
          yy = this.Eval(knot, xx);
@@ -2883,7 +2886,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (!lst || (indx >= lst.arr.length)) {
          delete this._doing_primitives;
-         return JSROOT.CallBack(callback);
+         return JSROOT.callBack(callback);
       }
 
       // handle use to invoke callback only when necessary
@@ -3252,15 +3255,16 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return histo;
    }
 
-   TMultiGraphPainter.prototype.DrawAxis = function(callback) {
-      // draw special histogram
+   /** @summary draw speical histogram for axis
+     * @return {Promise} when ready */
+   TMultiGraphPainter.prototype.DrawAxis = function() {
 
       let mgraph = this.GetObject(),
           histo = this.ScanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, this.root_pad());
 
       // histogram painter will be first in the pad, will define axis and
       // interactive actions
-      JSROOT.draw(this.divid, histo, "AXIS").then(callback);
+      return JSROOT.draw(this.divid, histo, "AXIS");
    }
 
    TMultiGraphPainter.prototype.DrawNextFunction = function(indx, callback) {
@@ -3269,7 +3273,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       let mgraph = this.GetObject();
 
       if (!mgraph.fFunctions || (indx >= mgraph.fFunctions.arr.length))
-         return JSROOT.CallBack(callback);
+         return JSROOT.callBack(callback);
 
       JSROOT.draw(this.divid, mgraph.fFunctions.arr[indx], mgraph.fFunctions.opt[indx])
             .then(this.DrawNextFunction.bind(this, indx+1, callback));
@@ -3321,7 +3325,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       painter._pmc = d.check("PMC");
 
       if (d.check("A") || !painter.main_painter()) {
-         painter.DrawAxis(function(hpainter) {
+         painter.DrawAxis().then(hpainter => {
             painter.firstpainter = hpainter;
             painter.SetDivId(divid);
             painter.DrawNextGraph(0, d.remain());

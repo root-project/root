@@ -2121,7 +2121,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
          function ProcessBlobs(blobs) {
             if (!blobs || ((places.length > 2) && (blobs.length * 2 !== places.length)))
-               return JSROOT.CallBack(baskets_call_back, null);
+               return JSROOT.callBack(baskets_call_back, null);
 
             let n = 0;
 
@@ -2167,14 +2167,14 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
             if (ExtractPlaces())
                handle.file.ReadBuffer(places, filename, ReadProgress).then(ProcessBlobs).catch(() => ProcessBlobs(null));
             else
-               JSROOT.CallBack(baskets_call_back, bitems);
+               JSROOT.callBack(baskets_call_back, bitems);
          }
 
          // extract places where to read
          if (ExtractPlaces())
             handle.file.ReadBuffer(places, filename, ReadProgress).then(ProcessBlobs).catch(() => ProcessBlobs(null));
          else
-            JSROOT.CallBack(baskets_call_back, null);
+            JSROOT.callBack(baskets_call_back, null);
       }
 
       function ReadNextBaskets() {
