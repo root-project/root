@@ -25,6 +25,8 @@ class THStack;
 namespace ROOT {
 namespace Experimental {
 
+class REveCaloDataSelector;
+
 class REveCaloData: public REveElement,
                     public REveAuntAsList,
                     public REveSecondarySelectable
@@ -168,6 +170,8 @@ protected:
 
    Float_t      fEps;
 
+   REveCaloDataSelector* fSelector {nullptr};
+
 public:
    REveCaloData(const char* n="REveCaloData", const char* t="");
    virtual ~REveCaloData() {}
@@ -215,6 +219,9 @@ public:
 
    Bool_t   GetWrapTwoPi() const { return fWrapTwoPi; }
    void     SetWrapTwoPi(Bool_t w) { fWrapTwoPi=w; }
+
+   void     SetSelector(REveCaloDataSelector* iSelector) { fSelector = iSelector; }
+   REveCaloDataSelector* GetSelector() { return fSelector; }
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 
@@ -315,6 +322,15 @@ public:
    TH2F*    GetHist(Int_t slice) const;
 
    Int_t   AddHistogram(TH2F* hist);
+};
+/**************************************************************************/
+/**************************************************************************/
+
+class REveCaloDataSelector
+{
+public:
+   virtual void ProcessSelection( REveCaloData::vCellId_t& sel_cells, UInt_t selectionId, Bool_t multi) = 0;
+   virtual void GetCellsFromSecondaryIndices(const std::set<int>&, REveCaloData::vCellId_t& out) = 0;
 };
 
 } // namespace Experimental
