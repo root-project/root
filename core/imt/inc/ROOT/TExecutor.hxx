@@ -87,6 +87,10 @@ namespace ROOT{
 
 namespace Internal{
 class TExecutor: public TExecutorCRTP<TExecutor> {
+   friend TExecutorCRTP;
+#ifdef R__USE_IMT
+   friend TThreadExecutor;
+#endif
 public:
 
    /// \brief Class constructor. Sets the default execution policy and initializes the corresponding executor.
@@ -126,20 +130,14 @@ TExecutor &operator=(const TExecutor &) = delete;
 /// Return the execution policy the executor is set to
 ROOT::Internal::ExecutionPolicy Policy(){ return fExecPolicy; }
 
+// Map
+//
 using TExecutorCRTP<TExecutor>::Map;
-template<class F, class Cond = noReferenceCond<F>>
-auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
-template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-template<class F, class T, class Cond = noReferenceCond<F, T>>
-auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-template<class F, class T, class Cond = noReferenceCond<F, T>>
-auto Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
 
-// // MapReduce
-// // the late return types also check at compile-time whether redfunc is compatible with func,
-// // other than checking that func is compatible with the type of arguments.
-// // a static_assert check in TExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
+// MapReduce
+// the late return types also check at compile-time whether redfunc is compatible with func,
+// other than checking that func is compatible with the type of arguments.
+// a static_assert check in TExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
 using TExecutorCRTP<TExecutor>::MapReduce;
 template<class F, class R, class Cond = noReferenceCond<F>>
 auto MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type;
@@ -152,11 +150,26 @@ auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typ
 template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
 auto MapReduce(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
 
+// Reduce
+//
 using TExecutorCRTP<TExecutor>::Reduce;
 
 unsigned GetPoolSize() const;
 
 protected:
+// Implementation of the Map functions declared in the parent class (TExecutorCRTP)
+//
+template<class F, class Cond = noReferenceCond<F>>
+auto MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
+template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+template<class F, class T, class Cond = noReferenceCond<F, T>>
+auto MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+template<class F, class T, class Cond = noReferenceCond<F, T>>
+auto MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+
+// Extension of the Map interfaces with chunking, specific to this class and
+// only available from a MapReduce call.
 template<class F, class R, class Cond = noReferenceCond<F>>
 auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type>;
 template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
@@ -185,9 +198,12 @@ private:
 
 
 //////////////////////////////////////////////////////////////////////////
-/// \copydoc TExecutorCRTP::Map(F func,unsigned nTimes)
+/// \brief Execute a function without arguments several times.
+/// Implementation of the Map method.
+///
+/// \copydetails TExecutorCRTP::Map(F func,unsigned nTimes)
 template<class F, class Cond>
-auto TExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
+auto TExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
    using retType = decltype(func());
    std::vector<retType> res;
    switch(fExecPolicy){
@@ -207,9 +223,12 @@ auto TExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \copydoc TExecutorCRTP::Map(F func,ROOT::TSeq<INTEGER> args)
+/// \brief Execute a function over a sequence of indexes.
+/// Implementation of the Map method.
+///
+/// \copydetails TExecutorCRTP::Map(F func,ROOT::TSeq<INTEGER> args)
 template<class F, class INTEGER, class Cond>
-auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
+auto TExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
    using retType = decltype(func(args.front()));
    std::vector<retType> res;
 
@@ -247,9 +266,12 @@ auto TExecutor::Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \copydoc TExecutorCRTP::Map(F func,std::vector<T> &args)
+/// \brief Execute a function over the elements of a vector.
+/// Implementation of the Map method.
+///
+/// \copydetails TExecutorCRTP::Map(F func,std::vector<T> &args)
 template<class F, class T, class Cond>
-auto TExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
+auto TExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
    // //check whether func is callable
    using retType = decltype(func(args.front()));
    std::vector<retType> res;
@@ -270,9 +292,12 @@ auto TExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::r
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \copydoc TExecutorCRTP::Map(F func,const std::vector<T> &args)
+/// \brief Execute a function over the elements of an immutable vector.
+/// Implementation of the Map method.
+///
+/// \copydetails TExecutorCRTP::Map(F func,const std::vector<T> &args)
 template<class F, class T, class Cond>
-auto TExecutor::Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
+auto TExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
    // //check whether func is callable
    using retType = decltype(func(args.front()));
    std::vector<retType> res;

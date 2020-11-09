@@ -33,6 +33,7 @@
 namespace ROOT {
 
    class TThreadExecutor: public TExecutorCRTP<TThreadExecutor> {
+      friend TExecutorCRTP;
    public:
 
       explicit TThreadExecutor(UInt_t nThreads = 0u);
@@ -40,6 +41,8 @@ namespace ROOT {
       TThreadExecutor(const TThreadExecutor &) = delete;
       TThreadExecutor &operator=(const TThreadExecutor &) = delete;
 
+      // ForEach
+      //
       template<class F>
       void Foreach(F func, unsigned nTimes, unsigned nChunks = 0);
       template<class F, class INTEGER>
@@ -51,20 +54,18 @@ namespace ROOT {
       template<class F, class T>
       void Foreach(F func, const std::vector<T> &args, unsigned nChunks = 0);
 
+      // Map
+      //
       using TExecutorCRTP<TThreadExecutor>::Map;
-      template<class F, class Cond = noReferenceCond<F>>
-      auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
-      template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-      auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-      template<class F, class T, class Cond = noReferenceCond<F, T>>
-      auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-      template<class F, class T, class Cond = noReferenceCond<F, T>>
-      auto Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
 
-      // // MapReduce
-      // // the late return types also check at compile-time whether redfunc is compatible with func,
-      // // other than checking that func is compatible with the type of arguments.
-      // // a static_assert check in TThreadExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
+      // MapReduce
+      //
+      // We need to reimplement the MapReduce interfaces to allow for parallel reduction, defined in
+      // this class but not in the base class.
+      //
+      // the late return types also check at compile-time whether redfunc is compatible with func,
+      // other than checking that func is compatible with the type of arguments.
+      // a static_assert check in TThreadExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
       using TExecutorCRTP<TThreadExecutor>::MapReduce;
       template<class F, class R, class Cond = noReferenceCond<F>>
       auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
@@ -90,6 +91,19 @@ namespace ROOT {
       unsigned GetPoolSize() const;
 
    protected:
+      // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
+      //
+      template<class F, class Cond = noReferenceCond<F>>
+      auto MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
+      template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+      auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+      template<class F, class T, class Cond = noReferenceCond<F, T>>
+      auto MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+      template<class F, class T, class Cond = noReferenceCond<F, T>>
+      auto MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+
+      // Extension of the Map interfaces with chunking, specific to this class and
+      // only available from a MapReduce call.
       template<class F, class R, class Cond = noReferenceCond<F>>
       auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type>;
       template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
@@ -100,7 +114,9 @@ namespace ROOT {
       auto Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
       template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
       auto Map(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
+
    private:
+      // Functions that interface with the parallel library used as a backend
       void   ParallelFor(unsigned start, unsigned end, unsigned step, const std::function<void(unsigned int i)> &f);
       double ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc);
       float  ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc);
@@ -224,10 +240,11 @@ namespace ROOT {
 
    //////////////////////////////////////////////////////////////////////////
    /// \brief Execute a function without arguments several times in parallel.
+   /// Implementation of the Map method.
    ///
    /// \copydetails TExecutorCRTP::Map(F func,unsigned nTimes)
    template<class F, class Cond>
-   auto TThreadExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
+   auto TThreadExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
       using retType = decltype(func());
       std::vector<retType> reslist(nTimes);
       auto lambda = [&](unsigned int i)
@@ -241,10 +258,11 @@ namespace ROOT {
 
    //////////////////////////////////////////////////////////////////////////
    /// \brief Execute a function over a sequence of indexes in parallel.
+   /// Implementation of the Map method.
    ///
    /// \copydetails TExecutorCRTP::Map(F func,ROOT::TSeq<INTEGER> args)
    template<class F, class INTEGER, class Cond>
-   auto TThreadExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
+   auto TThreadExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
       unsigned start = *args.begin();
       unsigned end = *args.end();
       unsigned seqStep = args.step();
@@ -291,11 +309,12 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a function over the elements of a vector in parallel
+   /// \brief Execute a function over the elements of a vector in parallel.
+   /// Implementation of the Map method.
    ///
    /// \copydetails TExecutorCRTP::Map(F func,std::vector<T> &args)
    template<class F, class T, class Cond>
-   auto TThreadExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
+   auto TThreadExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
       // //check whether func is callable
       using retType = decltype(func(args.front()));
 
@@ -313,11 +332,12 @@ namespace ROOT {
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a function over the elements of a vector in parallel
+   /// \brief Execute a function over the elements of a vector in parallel.
+   /// Implementation of the Map method.
    ///
    /// \copydetails TExecutorCRTP::Map(F func,const std::vector<T> &args)
    template<class F, class T, class Cond>
-   auto TThreadExecutor::Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
+   auto TThreadExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
       // //check whether func is callable
       using retType = decltype(func(args.front()));
 
@@ -549,7 +569,7 @@ namespace ROOT {
    /// \brief "Reduce", sequentially, an std::vector into a single object
    ///
    /// \param objs A vector of elements to combine.
-   /// \param redfunc Binary reduction function to combine the elements of the vector `objs`.
+   /// \param redfunc Reduction function to combine the elements of the vector `objs`.
    /// \return A value result of combining the vector elements into a single object of the same type.
    template<class T, class R>
    auto TThreadExecutor::SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))

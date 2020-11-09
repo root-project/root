@@ -34,6 +34,7 @@
 namespace ROOT {
 
 class TProcessExecutor : public TExecutorCRTP<TProcessExecutor>, private TMPClient {
+   friend TExecutorCRTP;
 public:
    explicit TProcessExecutor(unsigned nWorkers = 0); //default number of workers is the number of processors
    ~TProcessExecutor() = default;
@@ -42,15 +43,23 @@ public:
    TProcessExecutor &operator=(const TProcessExecutor &) = delete;
 
    // Map
+   //
    using TExecutorCRTP<TProcessExecutor>::Map;
-   template<class F, class Cond = noReferenceCond<F>>
-   auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
-   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-   auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
-   auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
-   auto Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+
+   // MapReduce
+   // Redefinition of the MapReduce classes of the base class, to adapt them to
+   // TProcessExecutor's logic
+   using TExecutorCRTP<TProcessExecutor>::MapReduce;
+   template<class F, class R, class Cond = noReferenceCond<F>>
+   auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
+
+   // Reduce
+   //
+   using TExecutorCRTP<TProcessExecutor>::Reduce;
 
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
 
@@ -63,15 +72,17 @@ public:
    /// \return The number of workers in the pool.
    unsigned GetPoolSize() const { return TMPClient::GetNWorkers(); }
 
-   using TExecutorCRTP<TProcessExecutor>::MapReduce;
-   template<class F, class R, class Cond = noReferenceCond<F>>
-   auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
-
-   using TExecutorCRTP<TProcessExecutor>::Reduce;
+protected:
+   // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
+   //
+   template<class F, class Cond = noReferenceCond<F>>
+   auto MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
+   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
+   auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+   template<class F, class T, class Cond = noReferenceCond<F, T>>
+   auto MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+   template<class F, class T, class Cond = noReferenceCond<F, T>>
+   auto MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
 
 private:
    template<class T> void Collect(std::vector<T> &reslist);
@@ -103,10 +114,11 @@ private:
 
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function without arguments several times in parallel.
+/// Implementation of the Map method.
 ///
 /// \copydetails TExecutorCRTP::Map(F func,unsigned nTimes)
 template<class F, class Cond>
-auto TProcessExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
+auto TProcessExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
 {
    using retType = decltype(func());
    //prepare environment
@@ -143,10 +155,11 @@ auto TProcessExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std:
 
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over the elements of a vector in parallel
+/// Implementation of the Map method.
 ///
 /// \copydetails TExecutorCRTP::Map(F func,std::vector<T> &args)
 template<class F, class T, class Cond>
-auto TProcessExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
+auto TProcessExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    //check whether func is callable
    using retType = decltype(func(args.front()));
@@ -187,10 +200,11 @@ auto TProcessExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename
 
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over the elements of an immutable vector in parallel
+/// Implementation of the Map method.
 ///
 /// \copydetails TExecutorCRTP::Map(F func,const std::vector<T> &args)
 template<class F, class T, class Cond>
-auto TProcessExecutor::Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
+auto TProcessExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    //check whether func is callable
    using retType = decltype(func(args.front()));
@@ -231,10 +245,11 @@ auto TProcessExecutor::Map(F func, const std::vector<T> &args) -> std::vector<ty
 
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over a sequence of indexes in parallel.
+/// Implementation of the Map method.
 ///
 /// \copydetails TExecutorCRTP::Map(F func,ROOT::TSeq<INTEGER> args)
 template<class F, class INTEGER, class Cond>
-auto TProcessExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
+auto TProcessExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
    std::vector<INTEGER> vargs(args.size());
    std::copy(args.begin(), args.end(), vargs.begin());
