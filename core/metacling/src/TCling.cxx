@@ -5585,8 +5585,8 @@ namespace {
 
    class ExtVisibleStorageAdder: public RecursiveASTVisitor<ExtVisibleStorageAdder>{
       // This class is to be considered an helper for AutoLoading.
-      // It is a recursive visitor is used to inspect namespaces coming from
-      // forward declarations in rootmaps and to set the external visible
+      // It is a recursive visitor is used to inspect namespaces and specializations
+      // coming from forward declarations in rootmaps and to set the external visible
       // storage flag for them.
    public:
       ExtVisibleStorageAdder(std::unordered_set<const NamespaceDecl*>& nsSet): fNSSet(nsSet) {};
@@ -5599,9 +5599,24 @@ namespace {
          fNSSet.insert(nsDecl);
          return true;
       }
+      bool VisitClassTemplateSpecializationDecl(ClassTemplateSpecializationDecl* specDecl) {
+         // We want to enable the external lookup for this specialization
+         // because we can provide a definition for it!
+         if (specDecl->getTemplateSpecializationKind() == TSK_ExplicitSpecialization)
+            //SpecSet.insert(specDecl);
+            specDecl->setHasExternalLexicalStorage();
+
+         // No need to recurse. On the contrary, recursing is actively harmful:
+         // NOTE: must not recurse to prevent this visitor from triggering loading from
+         // the external AST source (i.e. autoloading). This would be triggered right here,
+         // before autoloading is even set up, as rootmap file parsing happens before that.
+         // Even if autoloading is off and has no effect, triggering loading from external
+         // AST source resets the flag setHasExternalLexicalStorage(), hiding this specialization
+         // from subsequent autoloads!
+         return false;
+      }
    private:
       std::unordered_set<const NamespaceDecl*>& fNSSet;
-
    };
 }
 
@@ -5772,13 +5787,13 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
                "Problems in %s declaring '%s' were encountered.", rootmapfile, uniqueString.Data()) ;
    }
 
-   if (T){
+   if (T) {
       ExtVisibleStorageAdder evsAdder(fNSFromRootmaps);
       for (auto declIt = T->decls_begin(); declIt < T->decls_end(); ++declIt) {
          if (declIt->m_DGR.isSingleDecl()) {
             if (Decl* D = declIt->m_DGR.getSingleDecl()) {
-               if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(D)) {
-                  evsAdder.TraverseDecl(NSD);
+               if (clang::isa<TagDecl>(D) || clang::isa<NamespaceDecl>(D)) {
+                  evsAdder.TraverseDecl(D);
                }
             }
          }
