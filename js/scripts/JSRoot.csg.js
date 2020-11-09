@@ -874,4 +874,3 @@ JSROOT.define(['three'], function(THREE) {
    return ThreeBSP;
 
 });
-

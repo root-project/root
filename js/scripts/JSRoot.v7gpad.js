@@ -7,10 +7,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    JSROOT.v7 = {}; // placeholder for v7-relevant code
 
-   /** Evaluate attributes using fAttr storage and configured RStyle */
+   /** @summary Evaluate attributes using fAttr storage and configured RStyle */
    JSROOT.ObjectPainter.prototype.v7EvalAttr = function(name, dflt) {
       let obj = this.GetObject();
       if (!obj) return dflt;
+      if (this.cssprefix) name = this.cssprefix + name;
 
       if (obj.fAttr && obj.fAttr.m) {
          let value = obj.fAttr.m[name];
@@ -19,7 +20,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (this.rstyle && this.rstyle.fBlocks) {
          let blks = this.rstyle.fBlocks;
-         for (let k=0;k<blks.length;++k) {
+         for (let k = 0; k < blks.length; ++k) {
             let block = blks[k];
 
             let match = (this.csstype && (block.selector == this.csstype)) ||
@@ -38,12 +39,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    JSROOT.ObjectPainter.prototype.v7SetAttr = function(name, value) {
       let obj = this.GetObject();
+      if (this.cssprefix) name = this.cssprefix + name;
 
       if (obj && obj.fAttr && obj.fAttr.m)
          obj.fAttr.m[name] = { v: value };
    }
 
-   /** Decode pad length from string, return pixel value */
+   /** @summary Decode pad length from string, return pixel value */
    JSROOT.ObjectPainter.prototype.v7EvalLength = function(name, sizepx, dflt) {
       if (sizepx <= 0) sizepx = 1;
 
@@ -243,14 +245,62 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    // ================================================================================
 
-   function RAxisPainter(embedded, cssprefix) {
-      let dummy = JSROOT.Create("TAxis"); // just dummy before all attributes are implemented
+   /** @summary assign methods for the RAxis objects
+     * @private */
+   JSROOT.v7.AssignRAxisMethods = function(axis) {
+      if ((axis._typename == "ROOT::Experimental::RAxisEquidistant") || (axis._typename == "ROOT::Experimental::RAxisLabels")) {
+         if (axis.fInvBinWidth === 0) {
+            axis.$dummy = true;
+            axis.fInvBinWidth = 1;
+            axis.fNBinsNoOver = 0;
+            axis.fLow = 0;
+         }
 
-      JSROOT.ObjectPainter.call(this, dummy);
+         axis.min = axis.fLow;
+         axis.max = axis.fLow + axis.fNBinsNoOver/axis.fInvBinWidth;
+         axis.GetNumBins = function() { return this.fNBinsNoOver; }
+         axis.GetBinCoord = function(bin) { return this.fLow + bin/this.fInvBinWidth; }
+         axis.FindBin = function(x,add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); }
+      } else if (axis._typename == "ROOT::Experimental::RAxisIrregular") {
+         axis.min = axis.fBinBorders[0];
+         axis.max = axis.fBinBorders[axis.fBinBorders.length - 1];
+         axis.GetNumBins = function() { return this.fBinBorders.length; }
+         axis.GetBinCoord = function(bin) {
+            let indx = Math.round(bin);
+            if (indx <= 0) return this.fBinBorders[0];
+            if (indx >= this.fBinBorders.length) return this.fBinBorders[this.fBinBorders.length - 1];
+            if (indx==bin) return this.fBinBorders[indx];
+            let indx2 = (bin < indx) ? indx - 1 : indx + 1;
+            return this.fBinBorders[indx] * Math.abs(bin-indx2) + this.fBinBorders[indx2] * Math.abs(bin-indx);
+         }
+         axis.FindBin = function(x,add) {
+            for (let k = 1; k < this.fBinBorders.length; ++k)
+               if (x < this.fBinBorders[k]) return Math.floor(k-1+add);
+            return this.fBinBorders.length - 1;
+         }
+      }
 
-      this.embedded = embedded; // indicate that painter embedded into the histo painter
-      this.csstype = "frame"; // for the moment only via frame one can set axis attributes
-      this.cssprefix = cssprefix;
+      // to support some code from ROOT6 drawing
+
+      axis.GetBinCenter = function(bin) { return this.GetBinCoord(bin-0.5); }
+      axis.GetBinLowEdge = function(bin) { return this.GetBinCoord(bin-1); }
+   }
+
+
+   function RAxisPainter(arg1, axis, cssprefix) {
+      let drawable = cssprefix ? arg1.GetObject() : arg1;
+      this.axis = axis;
+      JSROOT.ObjectPainter.call(this, drawable);
+      if (cssprefix) { // drawing from the frame
+         this.embedded = true; // indicate that painter embedded into the histo painter
+         axis = JSROOT.Create("TAxis"); // just dummy before all attributes are implemented
+         this.csstype = arg1.csstype; // for the moment only via frame one can set axis attributes
+         this.cssprefix = cssprefix;
+         this.rstyle = arg1.rstyle;
+      } else {
+         this.csstype = "axis";
+         this.cssprefix = "axis_";
+      }
 
       this.name = "yaxis";
       this.kind = "normal";
@@ -269,60 +319,84 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    RAxisPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
    RAxisPainter.prototype.Cleanup = function() {
-
       this.ticks = [];
-      this.func = null;
       delete this.format;
+      delete this.axis;
+      delete this.gr;
+      delete this.func;
 
       JSROOT.ObjectPainter.prototype.Cleanup.call(this);
    }
 
-   RAxisPainter.prototype.SetAxisConfig = function(name, kind, func, min, max, smin, smax) {
-      this.name = name;
-      this.kind = kind;
-      this.func = func;
+   RAxisPainter.prototype.ConvertDate = function(v) {
+      return new Date(this.timeoffset + v*1000);
+   }
 
+   /** @summary Convert graphical point back into axis value */
+   RAxisPainter.prototype.RevertPoint = function(pnt) {
+      let value = this.func.invert(pnt);
+      return (this.kind == "time") ?  (value - this.timeoffset) / 1000 : value;
+   }
+
+   RAxisPainter.prototype.ConfigureAxis = function(name, min, max, smin, smax, vertical, range, opts) {
+      if (!opts) opts = {};
+      this.name = name;
       this.full_min = min;
       this.full_max = max;
+      this.kind = "normal";
+      this.vertical = vertical;
+      this.log = this.v7EvalAttr("log", 0);
+      this.reverse = opts.reverse || false;
+      this.swap_side = opts.swap_side || false;
+
+      if (this.axis && this.axis._timedisplay) {
+         this.kind = 'time';
+         this.timeoffset = jsrp.getTimeOffset(/*this.histo.fXaxis*/);
+      } else {
+         this.kind = (this.axis && this.axis.fLabelsIndex) ? 'labels' : 'normal';
+      }
+
+      if (this.kind == 'time') {
+         this.func = d3.scaleTime().domain([this.ConvertDate(smin), this.ConvertDate(smax)]);
+      } else if (this.log) {
+
+         if (smax <= 0) smax = 1;
+         if ((smin <= 0) || (smin >= smax))
+            smin = smax * 0.0001;
+         let base = 10;
+         if (this.log == 2) base = 2;
+                       else this.log = 1; // FIXME: let use more log base in the future
+         this.func = d3.scaleLog().base(base).domain([smin,smax]);
+      } else {
+         this.func = d3.scaleLinear().domain([smin,smax]);
+      }
+
       this.scale_min = smin;
       this.scale_max = smax;
-   }
 
-   RAxisPainter.prototype.format10Exp = function(order, value) {
-      let res = "";
-      if (value) {
-         value = Math.round(value/Math.pow(10,order));
-         if ((value!=0) && (value!=1)) res = value.toString() + (JSROOT.settings.Latex ? "#times" : "x");
+      if (this.vertical ^ this.reverse) {
+         let d = range[0]; range[0] = range[1]; range[1] = d;
       }
-      res += "10";
-      if (JSROOT.settings.Latex > JSROOT.constants.Latex.Symbols)
-         return res + "^{" + order + "}";
-      const superscript_symbols = {
-            '0': '\u2070', '1': '\xB9', '2': '\xB2', '3': '\xB3', '4': '\u2074', '5': '\u2075',
-            '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079', '-': '\u207B'
-         };
-      let str = order.toString();
-      for (let n = 0; n < str.length; ++n)
-         res += superscript_symbols[str[n]];
-      return res;
-   }
 
-   RAxisPainter.prototype.CreateFormatFuncs = function() {
+      this.func.range(range);
 
-      let axis = this.GetObject(),
-          is_gaxis = (axis && axis._typename === 'TGaxis');
+      if (this.kind == 'time')
+         this.gr = val => this.func(this.ConvertDate(val));
+      else if (this.log)
+         this.gr = val => (val < this.scale_xmin) ? (this.vertical ? this.func.range()[0]+5 : -5) : this.func(val);
+      else
+         this.gr = this.func;
+
 
       delete this.format;// remove formatting func
 
-      let ndiv = 508;
-      if (is_gaxis) ndiv = axis.fNdiv; else
-      if (axis) ndiv = Math.max(axis.fNdivisions, 4);
+      let ndiv = this.v7EvalAttr("ndiv", 508);
 
       this.nticks = ndiv % 100;
       this.nticks2 = (ndiv % 10000 - this.nticks) / 100;
       this.nticks3 = Math.floor(ndiv/10000);
 
-      if (axis && !is_gaxis && (this.nticks > 7)) this.nticks = 7;
+      if (this.nticks > 7) this.nticks = 7;
 
       let gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
       if (gr_range<=0) gr_range = 100;
@@ -341,34 +415,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (tf2!==tf1)
             this.tfunc2 = d3.timeFormat(tf2);
 
-         this.format = function(d, asticks) {
-            return asticks ? this.tfunc1(d) : this.tfunc2(d);
-         }
+         this.format = this.formatTime;
 
-      } else if (this.kind == 'log') {
+      } else if (this.log) {
          if (this.nticks2 > 1) {
             this.nticks *= this.nticks2; // all log ticks (major or minor) created centrally
             this.nticks2 = 1;
          }
-         this.noexp = axis ? axis.TestBit(JSROOT.EAxisBits.kNoExponent) : false;
+         this.noexp = this.v7EvalAttr("noexp", false);
          if ((this.scale_max < 300) && (this.scale_min > 0.3)) this.noexp = true;
-         this.moreloglabels = axis ? axis.TestBit(JSROOT.EAxisBits.kMoreLogLabels) : false;
+         this.moreloglabels = this.v7EvalAttr("moreloglbls", false);
 
-         this.format = function(d, asticks, notickexp_fmt) {
-            let val = parseFloat(d), rnd = Math.round(val);
-            if (!asticks)
-               return ((rnd === val) && (Math.abs(rnd)<1e9)) ? rnd.toString() : JSROOT.FFormat(val, notickexp_fmt || JSROOT.gStyle.fStatFormat);
-
-            if (val <= 0) return null;
-            let vlog = Math.log10(val);
-            if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog))<0.001)) {
-               if (!this.noexp && !notickexp_fmt)
-                  return this.format10Exp(Math.floor(vlog+0.01), val);
-
-               return (vlog<0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
-            }
-            return null;
-         }
+         this.format = this.formatLog;
       } else if (this.kind == 'labels') {
          this.nticks = 50; // for text output allow max 50 names
          let scale_range = this.scale_max - this.scale_min;
@@ -376,66 +434,112 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.nticks = Math.round(scale_range);
          this.nticks2 = 1;
 
-         this.regular_labels = true;
-
-         if (axis && axis.fNbins && axis.fLabels) {
-            if ((axis.fNbins != Math.round(axis.fXmax - axis.fXmin)) ||
-                (axis.fXmin != 0) || (axis.fXmax != axis.fNbins)) {
-               this.regular_labels = false;
-            }
-         }
-
-         this.axis = axis;
-
-         this.format = function(d) {
-            let indx = parseFloat(d);
-            if (!this.regular_labels)
-               indx = (indx - this.axis.fXmin)/(this.axis.fXmax - this.axis.fXmin) * this.axis.fNbins;
-            indx = Math.round(indx);
-            if ((indx<0) || (indx>=this.axis.fNbins)) return null;
-            for (let i = 0; i < this.axis.fLabels.arr.length; ++i) {
-               let tstr = this.axis.fLabels.arr[i];
-               if (tstr.fUniqueID === indx+1) return tstr.fString;
-            }
-            return null;
-         }
+         this.format = this.formatLabels;
       } else {
 
          this.order = 0;
          this.ndig = 0;
 
-         this.format = function(d, asticks, fmt) {
-            let val = parseFloat(d);
-            if (asticks && this.order) val = val / Math.pow(10, this.order);
-
-            if (val === Math.round(val))
-               return (Math.abs(val)<1e9) ? val.toFixed(0) : val.toExponential(4);
-
-            if (asticks) return (this.ndig>10) ? val.toExponential(this.ndig-11) : val.toFixed(this.ndig);
-
-            return JSROOT.FFormat(val, fmt || JSROOT.gStyle.fStatFormat);
-         }
+         this.format = this.formatNormal;
       }
+   }
+
+   RAxisPainter.prototype.formatTime = function(d, asticks) {
+      return asticks ? this.tfunc1(d) : this.tfunc2(d);
+   }
+
+   RAxisPainter.prototype.formatLabels = function(d) {
+      let indx = Math.round(d);
+      if ((indx < 0) || (indx >= this.axis.fNBinsNoOver)) return null;
+      for (let i = 0; i < this.axis.fLabelsIndex.length; ++i) {
+         let pair = this.axis.fLabelsIndex[i];
+         if (pair.second === indx) return pair.first;
+      }
+      return null;
+   }
+
+   RAxisPainter.prototype.formatLog = function(d, asticks, fmt) {
+      let val = parseFloat(d), rnd = Math.round(val);
+      if (!asticks)
+         return ((rnd === val) && (Math.abs(rnd)<1e9)) ? rnd.toString() : JSROOT.FFormat(val, fmt || JSROOT.gStyle.fStatFormat);
+
+      if (val <= 0) return null;
+      let vlog = Math.log10(val), base = 10;
+      if (this.log == 2) { base = 2; vlog = vlog / Math.log10(2); }
+      if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog))<0.001)) {
+         if (!this.noexp && (asticks != 2))
+            return this.formatExp(base, Math.floor(vlog+0.01), val);
+
+         return (vlog<0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
+      }
+      return null;
+   }
+
+   RAxisPainter.prototype.formatNormal = function(d, asticks, fmt) {
+      let val = parseFloat(d);
+      if (asticks && this.order) val = val / Math.pow(10, this.order);
+
+      if (val === Math.round(val))
+         return (Math.abs(val)<1e9) ? val.toFixed(0) : val.toExponential(4);
+
+      if (asticks) return (this.ndig>10) ? val.toExponential(this.ndig-11) : val.toFixed(this.ndig);
+
+      return JSROOT.FFormat(val, fmt || JSROOT.gStyle.fStatFormat);
+   }
+
+
+   /** @summary Assign often used members of frame painter
+     * @private */
+   RAxisPainter.prototype.AssignFrameMembers = function(fp, axis) {
+      fp["gr"+axis] = this.gr;                    // fp.grx
+      fp["log"+axis] = this.log;                  // fp.logx
+      fp["scale_"+axis+"min"] = this.scale_min;   // fp.scale_xmin
+      fp["scale_"+axis+"max"] = this.scale_max;   // fp.scale_xmax
+   }
+
+   RAxisPainter.prototype.formatExp = function(base, order, value) {
+      let res = "";
+      if (value) {
+         value = Math.round(value/Math.pow(base,order));
+         if ((value!=0) && (value!=1)) res = value.toString() + (JSROOT.settings.Latex ? "#times" : "x");
+      }
+      res += base.toString();
+      if (JSROOT.settings.Latex > JSROOT.constants.Latex.Symbols)
+         return res + "^{" + order + "}";
+      const superscript_symbols = {
+            '0': '\u2070', '1': '\xB9', '2': '\xB2', '3': '\xB3', '4': '\u2074', '5': '\u2075',
+            '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079', '-': '\u207B'
+         };
+      let str = order.toString();
+      for (let n = 0; n < str.length; ++n)
+         res += superscript_symbols[str[n]];
+      return res;
+   }
+
+   /** @summary Convert "raw" axis value into text */
+   RAxisPainter.prototype.AxisAsText = function(value, fmt) {
+      if (this.kind == 'time')
+         value = this.ConvertDate(value);
+      if (this.format)
+         return this.format(value, false, fmt);
+      return value.toPrecision(4);
    }
 
    RAxisPainter.prototype.ProduceTicks = function(ndiv, ndiv2) {
       if (!this.noticksopt) {
-         let arr = this.func.ticks(ndiv * (ndiv2 || 1));
-         // FIXME: workaround - prvent creation too much log ticks when min >= 1, but this should be checked differently
-         if ((this.kind == "log") && (arr.length > 30) && this.scale_min > 0.8)
-             arr = this.func.ticks(10);
-         return arr;
+         let total = ndiv * (ndiv2 || 1);
+         return this.log ? jsrp.PoduceLogTicks(this.func, total) : this.func.ticks(total);
       }
 
       if (ndiv2) ndiv = (ndiv-1) * ndiv2;
       let dom = this.func.domain(), ticks = [];
-      for (let n=0;n<=ndiv;++n)
+      for (let n = 0; n <= ndiv; ++n)
          ticks.push((dom[0]*(ndiv-n) + dom[1]*n)/ndiv);
       return ticks;
    }
 
+   /** @summary Creates array with minor/middle/major ticks */
    RAxisPainter.prototype.CreateTicks = function(only_major_as_array, optionNoexp, optionNoopt, optionInt) {
-      // function used to create array with minor/middle/major ticks
 
       if (optionNoopt && this.nticks && (this.kind == "normal")) this.noticksopt = true;
 
@@ -450,15 +554,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return res;
       }
 
-      if ((this.kind == 'labels') && !this.regular_labels) {
-         handle.lbl_pos = [];
-         for (let n=0;n<this.axis.fNbins;++n) {
-            let x = this.axis.fXmin + n / this.axis.fNbins * (this.axis.fXmax - this.axis.fXmin);
-            if ((x >= this.scale_min) && (x < this.scale_max)) handle.lbl_pos.push(x);
-         }
-      }
-
-      if (this.nticks2 > 1) {
+      if ((this.nticks2 > 1) && (this.log != 2)) {
          handle.minor = handle.middle = this.ProduceTicks(handle.major.length, this.nticks2);
 
          let gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
@@ -466,8 +562,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // avoid black filling by middle-size
          if ((handle.middle.length <= handle.major.length) || (handle.middle.length > gr_range/3.5)) {
             handle.minor = handle.middle = handle.major;
-         } else
-         if ((this.nticks3 > 1) && (this.kind !== 'log'))  {
+         } else if ((this.nticks3 > 1) && !this.log)  {
             handle.minor = this.ProduceTicks(handle.middle.length, this.nticks3);
             if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7)) handle.minor = handle.middle;
          }
@@ -511,7 +606,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // at the moment when drawing labels, we can try to find most optimal text representation for them
 
-      if ((this.kind == "normal") && (handle.major.length > 0)) {
+      if ((this.kind == "normal") && !this.log && (handle.major.length > 0)) {
 
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
@@ -577,15 +672,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    RAxisPainter.prototype.IsCenterLabels = function() {
       if (this.kind === 'labels') return true;
       if (this.kind === 'log') return false;
-      let axis = this.GetObject();
-      return axis && axis.TestBit(JSROOT.EAxisBits.kCenterLabels);
+      return this.v7EvalAttr("labels_center", false);
    }
 
+   /** @summary Add interactive elements to draw axes title */
    RAxisPainter.prototype.AddTitleDrag = function(title_g, vertical, offset_k, reverse, axis_length) {
-      if (!JSROOT.settings.MoveResize) return;
+      if (!JSROOT.settings.MoveResize || JSROOT.BatchMode) return;
 
       let drag_rect = null,
-          acc_x, acc_y, new_x, new_y, sign_0, alt_pos,
+          acc_x, acc_y, new_x, new_y, sign_0, alt_pos, curr_indx,
           drag_move = d3.drag().subject(Object);
 
       drag_move
@@ -595,17 +690,36 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             evnt.sourceEvent.stopPropagation();
 
             let box = title_g.node().getBBox(), // check that elements visible, request precise value
-                axis = this.GetObject();
+                axis = this.GetObject(),
+                title_length = vertical ? box.height : box.width,
+                opposite = axis.TestBit(JSROOT.EAxisBits.kOppositeTitle);
 
             new_x = acc_x = title_g.property('shift_x');
             new_y = acc_y = title_g.property('shift_y');
 
-            sign_0 = vertical ? (acc_x>0) : (acc_y>0); // sign should remain
+            sign_0 = vertical ? (acc_x > 0) : (acc_y > 0); // sign should remain
+
+            alt_pos = vertical ? [axis_length, axis_length/2, 0] : [0, axis_length/2, axis_length]; // possible positions
+            let off = vertical ? -title_length/2 : title_length/2;
+            if (this.title_align == "middle") {
+               alt_pos[0] +=  off;
+               alt_pos[2] -=  off;
+            } else if (this.title_align == "begin") {
+               alt_pos[1] -= off;
+               alt_pos[2] -= 2*off;
+            } else { // end
+               alt_pos[0] += 2*off;
+               alt_pos[1] += off;
+            }
 
             if (axis.TestBit(JSROOT.EAxisBits.kCenterTitle))
-               alt_pos = (reverse === vertical) ? axis_length : 0;
+               curr_indx = 1;
+            else if (reverse ^ opposite)
+               curr_indx = 0;
             else
-               alt_pos = Math.round(axis_length/2);
+               curr_indx = 2;
+
+            alt_pos[curr_indx] = vertical ? acc_y : acc_x;
 
             drag_rect = title_g.append("rect")
                  .classed("zoom", true)
@@ -625,18 +739,22 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                acc_y += evnt.dy;
 
                let set_x = title_g.property('shift_x'),
-                   set_y = title_g.property('shift_y');
+                   set_y = title_g.property('shift_y'),
+                   p = vertical ? acc_y : acc_x, besti = 0;
+
+               for (let i=1; i<3; ++i)
+                  if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti])) besti = i;
 
                if (vertical) {
                   set_x = acc_x;
-                  if (Math.abs(acc_y - set_y) > Math.abs(acc_y - alt_pos)) set_y = alt_pos;
+                  set_y = alt_pos[besti];
                } else {
                   set_y = acc_y;
-                  if (Math.abs(acc_x - set_x) > Math.abs(acc_x - alt_pos)) set_x = alt_pos;
+                  set_x = alt_pos[besti];
                }
 
-               if (sign_0 === (vertical ? (set_x>0) : (set_y>0))) {
-                  new_x = set_x; new_y = set_y;
+               if (sign_0 === (vertical ? (set_x > 0) : (set_y > 0))) {
+                  new_x = set_x; new_y = set_y; curr_indx = besti;
                   title_g.attr('transform', 'translate(' + new_x + ',' + new_y +  ')');
                }
 
@@ -649,10 +767,23 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                title_g.property('shift_x', new_x)
                       .property('shift_y', new_y);
 
-               let axis = this.GetObject();
+               let axis = this.GetObject(), abits = JSROOT.EAxisBits;
+
+               function set_bit(bit, on) {
+                  if (axis.TestBit(bit) != on) axis.InvertBit(bit);
+               }
 
                axis.fTitleOffset = (vertical ? new_x : new_y) / offset_k;
-               if ((vertical ? new_y : new_x) === alt_pos) axis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
+               if (curr_indx == 1) {
+                  set_bit(abits.kCenterTitle, true);
+                  set_bit(abits.kOppositeTitle, false);
+               } else if (curr_indx == 0) {
+                  set_bit(abits.kCenterTitle, false);
+                  set_bit(abits.kOppositeTitle, true);
+               } else {
+                  set_bit(abits.kCenterTitle, false);
+                  set_bit(abits.kOppositeTitle, false);
+               }
 
                drag_rect.remove();
                drag_rect = null;
@@ -661,15 +792,20 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       title_g.style("cursor", "move").call(drag_move);
    }
 
-   RAxisPainter.prototype.DrawAxis = function(vertical, layer, w, h, transform, reverse, second_shift, disable_axis_drawing, max_text_width) {
-      let axis = this.GetObject(), chOpt = "",
-          is_gaxis = false,
+   /** @summary Performs axis drawing
+     * @returns {Promise} which resolved when drawing is completed */
+   RAxisPainter.prototype.DrawAxis = function(layer, w, h, transform, second_shift, disable_axis_drawing, max_text_width) {
+      let chOpt = "",
           axis_g = layer, tickSize = 0.03,
           scaling_size = 100, draw_lines = true,
           pad_w = this.pad_width() || 10,
           pad_h = this.pad_height() || 10,
           resolveFunc, totalTextCallbacks = 0, totalDone = false,
-          promise = new Promise(resolve => { resolveFunc = resolve; });
+          promise = new Promise(resolve => { resolveFunc = resolve; }),
+          vertical = this.vertical || false,
+          swap_side = this.swap_side || false;
+
+      // create dummy until all attributes are repplaced
 
       let checkTextCallBack = (is_callback) => {
           if (is_callback) totalTextCallbacks--; else totalDone = true;
@@ -679,21 +815,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       };
 
-      this.vertical = vertical;
-
-      function myXor(a,b) { return ( a && !b ) || (!a && b); }
-
       // shift for second ticks set (if any)
       if (!second_shift) second_shift = 0; else
       if (this.invert_side) second_shift = -second_shift;
 
-      this.createv7AttLine(this.cssprefix + "line_");
+      this.createv7AttLine("line_");
 
-      chOpt = myXor(vertical, this.invert_side) ? "-S" : "+S";
-      tickSize = axis.fTickLength;
+      chOpt = (vertical ^ this.invert_side) ? "-S" : "+S";
+      tickSize = this.v7EvalAttr("ticklength", 0.03);
       scaling_size = (vertical ? pad_w : pad_h);
 
-      if (!is_gaxis || (this.name === "zaxis")) {
+      if (this.embedded || (this.name === "zaxis")) {
          axis_g = layer.select("." + this.name + "_container");
          if (axis_g.empty())
             axis_g = layer.append("svg:g").attr("class",this.name + "_container");
@@ -712,8 +844,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let side = 1, ticks_plusminus = 0,
           text_scaling_size = Math.min(pad_w, pad_h),
-          optionPlus = (chOpt.indexOf("+")>=0),
-          optionMinus = (chOpt.indexOf("-")>=0),
           optionSize = (chOpt.indexOf("S")>=0),
           // optionY = (chOpt.indexOf("Y")>=0),
           // optionUp = (chOpt.indexOf("0")>=0),
@@ -721,20 +851,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           optionUnlab = (chOpt.indexOf("U")>=0),  // no labels
           optionNoopt = (chOpt.indexOf("N")>=0),  // no ticks position optimization
           optionInt = (chOpt.indexOf("I")>=0),    // integer labels
-          optionNoexp = axis.TestBit(JSROOT.EAxisBits.kNoExponent);
+          optionNoexp = this.v7EvalAttr("noexp", false),
+          ticksSide = this.v7EvalAttr("ticks_side", "normal");
 
-      if (is_gaxis && axis.TestBit(JSROOT.EAxisBits.kTickPlus)) optionPlus = true;
-      if (is_gaxis && axis.TestBit(JSROOT.EAxisBits.kTickMinus)) optionMinus = true;
+      if (ticksSide == "both") { side = 1; ticks_plusminus = 1; } else
+      if (ticksSide == "invert") { side = (swap_side ^ vertical) ? 1 : -1; } else
+      if (ticksSide == "normal") { side = (swap_side ^ vertical) ? -1 : 1; }
 
-      if (optionPlus && optionMinus) { side = 1; ticks_plusminus = 1; } else
-      if (optionMinus) { side = myXor(reverse,vertical) ? 1 : -1; } else
-      if (optionPlus) { side = myXor(reverse,vertical) ? -1 : 1; }
-
-      tickSize = Math.round((optionSize ? tickSize : 0.03) * scaling_size);
-
+      tickSize = this.v7EvalLength("ticks_size", scaling_size, 0.02)
       if (this.max_tick_size && (tickSize > this.max_tick_size)) tickSize = this.max_tick_size;
-
-      this.CreateFormatFuncs();
 
       let res = "", res2 = "", lastpos = 0, lasth = 0;
 
@@ -753,7 +878,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (handle.kind == 1) {
             // if not showing labels, not show large tick
-            if (!('format' in this) || (this.format(handle.tick,true)!==null)) h1 = tickSize;
+            if ((this.kind == "labels") || (this.format(handle.tick,true) !== null)) h1 = tickSize;
             this.ticks.push(handle.grpos); // keep graphical positions of major ticks
          }
 
@@ -781,16 +906,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if ((second_shift!==0) && (res2.length>0) && !disable_axis_drawing  && draw_lines)
          axis_g.append("svg:path").attr("d", res2).call(this.lineatt.func);
 
-      let labelsize = Math.round( (axis.fLabelSize < 1) ? axis.fLabelSize * text_scaling_size : axis.fLabelSize);
-      if ((labelsize <= 0) || (Math.abs(axis.fLabelOffset) > 1.1)) optionUnlab = true; // disable labels when size not specified
+      let fLabelSize = this.v7EvalAttr("label_size", 0.03);
+      let fLabelOffset = this.v7EvalAttr("label_offset", 0.01);
+
+      let labelsize = Math.round( (fLabelSize < 1) ? fLabelSize * text_scaling_size : fLabelSize);
+      if ((labelsize <= 0) || (Math.abs(fLabelOffset) > 1.1)) optionUnlab = true; // disable labels when size not specified
 
       // draw labels (on both sides, when needed)
       if (!disable_axis_drawing && !optionUnlab) {
 
-         let label_color = this.get_color(axis.fLabelColor),
-             labeloffset = Math.round(axis.fLabelOffset*text_scaling_size /*+ 0.5*labelsize*/),
+         let label_color = this.v7EvalColor("label_color", "black"),
+             labeloffset = Math.round(fLabelOffset*text_scaling_size),
              center_lbls = this.IsCenterLabels(),
-             rotate_lbls = axis.TestBit(JSROOT.EAxisBits.kLabelsVert),
+             rotate_lbls = this.v7EvalAttr("label_vert", false),
              textscale = 1, maxtextlen = 0, lbls_tilt = false, labelfont = null,
              label_g = [ axis_g.append("svg:g").attr("class","axis_labels") ],
              lbl_pos = handle.lbl_pos || handle.major,
@@ -803,7 +931,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          function process_drawtext_ready(painter) {
             let textwidth = this.result_width;
 
-            if (textwidth && ((!vertical && !rotate_lbls) || (vertical && rotate_lbls)) && (painter.kind != 'log')) {
+            if (textwidth && ((!vertical && !rotate_lbls) || (vertical && rotate_lbls)) && !painter.log) {
                let maxwidth = this.gap_before*0.45 + this.gap_after*0.45;
                if (!this.gap_before) maxwidth = 0.9*this.gap_after; else
                if (!this.gap_after) maxwidth = 0.9*this.gap_before;
@@ -835,7 +963,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             let lastpos = 0,
                 fix_coord = vertical ? -labeloffset*side : (labeloffset+2)*side + ticks_plusminus*tickSize;
 
-            labelfont = new JSROOT.FontHandler(axis.fLabelFont, labelsize);
+            labelfont = new JSROOT.FontHandler(this.v7EvalAttr("label_font", 41), labelsize);
 
             this.StartTextDrawing(labelfont, 'font', label_g[lcnt]);
 
@@ -888,9 +1016,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                this.DrawText({ color: label_color,
                                x: vertical ? side*5 : w+5,
                                y: this.has_obstacle ? fix_coord : (vertical ? -3 : -3*side),
-                               align: vertical ? ((side<0) ? 30 : 10) : ( myXor(this.has_obstacle, (side<0)) ? 13 : 10 ),
+                               align: vertical ? ((side<0) ? 30 : 10) : ((this.has_obstacle ^ (side < 0)) ? 13 : 10),
                                latex: 1,
-                               text: '#times' + this.format10Exp(this.order),
+                               text: '#times' + this.formatExp(10, this.order),
                                draw_g: label_g[lcnt]
                });
 
@@ -928,47 +1056,53 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              .attr("width", w).attr("height", labelsize + 3);
       }
 
-      if ((axis.fTitle.length > 0) && !disable_axis_drawing) {
+      let fTitle = this.v7EvalAttr("title", "");
+      if (fTitle && !disable_axis_drawing) {
          let title_g = axis_g.append("svg:g").attr("class", "axis_title"),
-             title_fontsize = (axis.fTitleSize >= 1) ? axis.fTitleSize : Math.round(axis.fTitleSize * text_scaling_size),
-             title_offest_k = 1.6*(axis.fTitleSize<1 ? axis.fTitleSize : axis.fTitleSize/(this.canv_painter().pad_height() || 10)),
-             center = axis.TestBit(JSROOT.EAxisBits.kCenterTitle),
-             rotate = axis.TestBit(JSROOT.EAxisBits.kRotateTitle) ? -1 : 1,
-             title_color = this.get_color(axis.fTitleColor),
+             fTitleSize = this.v7EvalAttr("title_size", 0.03),
+             fTitleOffset = this.v7EvalAttr("title_offset", this.vertical ? 0.5 : 1.5),
+             title_fontsize = (fTitleSize >= 1) ? fTitleSize : Math.round(fTitleSize * text_scaling_size),
+             title_offest_k = 1.6*(fTitleSize < 1 ? fTitleSize : fTitleSize/(this.canv_painter().pad_height() || 10)),
+             title_position = this.v7EvalAttr("title_position", false),
+             center = (title_position == "center"),
+             opposite = (title_position == "left"),
+             rotate = this.v7EvalAttr("title_rotate", false) ? -1 : 1,
+             title_color = this.v7EvalColor("title_color", "black"),
              shift_x = 0, shift_y = 0;
 
-         this.StartTextDrawing(axis.fTitleFont, title_fontsize, title_g);
+         this.StartTextDrawing(this.v7EvalAttr("title_font", 41), title_fontsize, title_g);
 
-         let myxor = ((rotate<0) && !reverse) || ((rotate>=0) && reverse);
+         let xor_reverse = swap_side ^ opposite, myxor = (rotate < 0) ^ xor_reverse;
+         this.title_align = center ? "middle" : (myxor ? "begin" : "end");
 
          if (vertical) {
             title_offest_k *= -side*pad_w;
 
-            shift_x = Math.round(title_offest_k*axis.fTitleOffset);
+            shift_x = Math.round(title_offest_k*fTitleOffset);
 
-            if ((this.name == "zaxis") && is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
+            if ((this.name == "zaxis") && ('getBoundingClientRect' in axis_g.node())) {
                // special handling for color palette labels - draw them always on right side
                let rect = axis_g.node().getBoundingClientRect();
                if (shift_x < rect.width - tickSize) shift_x = Math.round(rect.width - tickSize);
             }
 
-            shift_y = Math.round(center ? h/2 : (reverse ? h : 0));
+            shift_y = Math.round(center ? h/2 : (xor_reverse ? h : 0));
 
-            this.DrawText({ align: (center ? "middle" : (myxor ? "begin" : "end" )) + ";middle",
+            this.DrawText({ align: this.title_align+";middle",
                             rotate: (rotate<0) ? 90 : 270,
-                            text: axis.fTitle, color: title_color, draw_g: title_g });
+                            text: fTitle, color: title_color, draw_g: title_g });
          } else {
             title_offest_k *= side*pad_h;
 
-            shift_x = Math.round(center ? w/2 : (reverse ? 0 : w));
-            shift_y = Math.round(title_offest_k*axis.fTitleOffset);
-            this.DrawText({ align: (center ? 'middle' : (myxor ? 'begin' : 'end')) + ";middle",
+            shift_x = Math.round(center ? w/2 : (xor_reverse ? 0 : w));
+            shift_y = Math.round(title_offest_k*fTitleOffset);
+            this.DrawText({ align: this.title_align+";middle",
                             rotate: (rotate<0) ? 180 : 0,
-                            text: axis.fTitle, color: title_color, draw_g: title_g });
+                            text: fTitle, color: title_color, draw_g: title_g });
          }
 
          let axis_rect = null;
-         if (vertical && (axis.fTitleOffset == 0) && ('getBoundingClientRect' in axis_g.node()))
+         if (vertical && (fTitleOffset == 0) && ('getBoundingClientRect' in axis_g.node()))
             axis_rect = axis_g.node().getBoundingClientRect();
 
          totalTextCallbacks++;
@@ -987,7 +1121,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          });
 
 
-         this.AddTitleDrag(title_g, vertical, title_offest_k, reverse, vertical ? h : w);
+         this.AddTitleDrag(title_g, vertical, title_offest_k, swap_side, vertical ? h : w);
       }
 
       this.position = 0;
@@ -1006,56 +1140,40 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    RAxisPainter.prototype.Redraw = function() {
 
-      let gaxis = this.GetObject(),
-          x1 = this.AxisToSvg("x", gaxis.fX1),
-          y1 = this.AxisToSvg("y", gaxis.fY1),
-          x2 = this.AxisToSvg("x", gaxis.fX2),
-          y2 = this.AxisToSvg("y", gaxis.fY2),
-          w = x2 - x1, h = y1 - y2,
+      let drawable = this.GetObject(),
+          pp   = this.pad_painter(),
+          p1   = pp.GetCoordinate(drawable.fP1),
+          p2   = pp.GetCoordinate(drawable.fP2),
+          w = p2.x - p1.x, h = p1.y - p2.y,
           vertical = Math.abs(w) < Math.abs(h),
-          func = null, reverse = false, kind = "normal",
-          min = gaxis.fWmin, max = gaxis.fWmax,
-          domain_min = min, domain_max = max;
+          sz = vertical ? h : w,
+          reverse = false,
+          min = this.axis.min,
+          max = this.axis.max,
+          pos_x = p1.x, pos_y = p2.y;
 
-      if (gaxis.fChopt.indexOf("t")>=0) {
-         func = d3.scaleTime();
-         kind = "time";
-         this.toffset = jsrp.getTimeOffset(gaxis);
-         domain_min = new Date(this.toffset + min*1000);
-         domain_max = new Date(this.toffset + max*1000);
-      } else if (gaxis.fChopt.indexOf("G")>=0) {
-         func = d3.scaleLog();
-         kind = "log";
-      } else {
-         func = d3.scaleLinear();
-         kind = "normal";
+      if (sz < 0) {
+          reverse = true;
+          sz = -sz;
+          if (vertical) pos_y = p1.y; else pos_x = p2.x;
       }
-
-      func.domain([domain_min, domain_max]);
-
-      if (vertical) {
-         if (h > 0) {
-            func.range([h,0]);
-         } else {
-            let d = y1; y1 = y2; y2 = d;
-            h = -h; reverse = true;
-            func.range([0,h]);
-         }
-      } else {
-         if (w > 0) {
-            func.range([0,w]);
-         } else {
-            let d = x1; x1 = x2; x2 = d;
-            w = -w; reverse = true;
-            func.range([w,0]);
-         }
-      }
-
-      this.SetAxisConfig(vertical ? "yaxis" : "xaxis", kind, func, min, max, min, max);
+      this.ConfigureAxis("axis", min, max, min, max, vertical, [0, sz], { reverse: reverse });
 
       this.CreateG();
 
-      this.DrawAxis(vertical, this.draw_g, w, h, "translate(" + x1 + "," + y2 +")", reverse);
+      return this.DrawAxis(this.draw_g, Math.abs(w), Math.abs(h), "translate(" + pos_x + "," + pos_y +")");
+   }
+
+   let drawRAxis = (divid, obj /*, opt*/) => {
+      JSROOT.v7.AssignRAxisMethods(obj.fAxis);
+
+      let painter = new RAxisPainter(obj, obj.fAxis);
+
+      painter.SetDivId(divid);
+
+      painter.disable_zooming = true;
+
+      return painter.Redraw().then(() => painter);
    }
 
    // ==========================================================================================
@@ -1104,8 +1222,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       JSROOT.ObjectPainter.call(this, tframe);
       this.csstype = "frame";
       this.mode3d = false;
-      this.x_kind = 'normal'; // 'normal', 'log', 'time', 'labels'
-      this.y_kind = 'normal'; // 'normal', 'log', 'time', 'labels'
       this.xmin = this.xmax = 0; // no scale specified, wait for objects drawing
       this.ymin = this.ymax = 0; // no scale specified, wait for objects drawing
       this.axes_drawn = false;
@@ -1174,6 +1290,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Rcalculate frame ranges using specified projection functions
+     * @desc Not yet used in v7 */
    RFramePainter.prototype.RecalculateRange = function(Proj) {
       this.projection = Proj || 0;
 
@@ -1266,29 +1384,23 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Converts "raw" axis value into text */
    RFramePainter.prototype.AxisAsText = function(axis, value) {
-      if (axis == "x") {
-         if (this.x_kind == 'time')
-            value = this.ConvertX(value);
-         if (this.x_handle && ('format' in this.x_handle))
-            return this.x_handle.format(value, false, JSROOT.settings.XValuesFormat);
-      } else if (axis == "y") {
-         if (this.y_kind == 'time')
-            value = this.ConvertY(value);
-         if (this.y_handle && ('format' in this.y_handle))
-            return this.y_handle.format(value, false, JSROOT.settings.YValuesFormat);
-      } else {
-         if (this.z_handle && ('format' in this.z_handle))
-            return this.z_handle.format(value, false, JSROOT.settings.ZValuesFormat);
-      }
+      let handle = this[axis+"_handle"];
+
+      if (handle)
+         return handle.AxisAsText(value, JSROOT.settings[axis.toUpperCase() + "ValuesFormat"]);
 
       return value.toPrecision(4);
    }
 
-
    /** @summary Set axes ranges for drawing, check configured attributes if range already specified */
-   RFramePainter.prototype.SetAxesRanges = function(xmin, xmax, ymin, ymax, zmin, zmax) {
+   RFramePainter.prototype.SetAxesRanges = function(xaxis, xmin, xmax, yaxis, ymin, ymax, zaxis, zmin, zmax) {
       if (this.axes_drawn) return;
+
+      this.xaxis = xaxis;
+      this.yaxis = yaxis;
+      this.zaxis = zaxis;
 
       let min, max;
 
@@ -1360,44 +1472,63 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             }
          }
       }
-
    }
 
-   /** @summary axes can be drawn only for main histogram  */
+   /** @summary Draw configured axes on the frame
+     * @desc axes can be drawn only for main histogram  */
    RFramePainter.prototype.DrawAxes = function() {
 
-      if (this.axes_drawn) return Promise.resolve(true);
-
-      if ((this.xmin==this.xmax) || (this.ymin==this.ymax)) return Promise.resolve(false);
+      if (this.axes_drawn || (this.xmin==this.xmax) || (this.ymin==this.ymax))
+         return Promise.resolve(false);
 
       this.CleanupAxes();
-      this.CleanXY();
 
-      this.CreateXY();
+      // this is former CreateXY function
 
-      let layer = this.svg_frame().select(".axis_layer"),
-          w = this.frame_width(), h = this.frame_height();
+      this.swap_xy = false;
 
-      this.x_handle = new RAxisPainter(true, "x_");
+      let w = this.frame_width(), h = this.frame_height();
+
+      this.scale_xmin = this.xmin;
+      this.scale_xmax = this.xmax;
+
+      this.scale_ymin = this.ymin;
+      this.scale_ymax = this.ymax;
+
+      if (this.zoom_xmin != this.zoom_xmax) {
+         this.scale_xmin = this.zoom_xmin;
+         this.scale_xmax = this.zoom_xmax;
+      }
+
+      if (this.zoom_ymin != this.zoom_ymax) {
+         this.scale_ymin = this.zoom_ymin;
+         this.scale_ymax = this.zoom_ymax;
+      }
+
+      this.RecalculateRange(0);
+
+      this.x_handle = new RAxisPainter(this, this.xaxis, "x_");
       this.x_handle.SetDivId(this.divid, -1);
       this.x_handle.pad_name = this.pad_name;
       this.x_handle.rstyle = this.rstyle;
 
-      this.x_handle.SetAxisConfig("xaxis",
-                                  (this.logx && (this.x_kind !== "time")) ? "log" : this.x_kind,
-                                  this.x, this.xmin, this.xmax, this.scale_xmin, this.scale_xmax);
-      this.x_handle.invert_side = false;
-      this.x_handle.lbls_both_sides = false;
-      this.x_handle.has_obstacle = false;
+      this.x_handle.ConfigureAxis("xaxis", this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, false, [0,w], { reverse: false });
+      this.x_handle.AssignFrameMembers(this,"x");
 
-      this.y_handle = new RAxisPainter(true, "y_");
+      this.y_handle = new RAxisPainter(this, this.yaxis, "y_");
       this.y_handle.SetDivId(this.divid, -1);
       this.y_handle.pad_name = this.pad_name;
       this.y_handle.rstyle = this.rstyle;
 
-      this.y_handle.SetAxisConfig("yaxis",
-                                  (this.logy && this.y_kind !== "time") ? "log" : this.y_kind,
-                                  this.y, this.ymin, this.ymax, this.scale_ymin, this.scale_ymax);
+      this.y_handle.ConfigureAxis("yaxis", this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, true, [0,h], { reverse: false });
+      this.y_handle.AssignFrameMembers(this,"y");
+
+      let layer = this.svg_frame().select(".axis_layer");
+
+      this.x_handle.invert_side = false;
+      this.x_handle.lbls_both_sides = false;
+      this.x_handle.has_obstacle = false;
+
       this.y_handle.invert_side = false; // ((this.options.AxisPos % 10) === 1) || (pad.fTicky > 1);
       this.y_handle.lbls_both_sides = false;
 
@@ -1411,13 +1542,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (!disable_axis_draw) {
-         let promise1 = draw_horiz.DrawAxis(false, layer, w, h,
+         let promise1 = draw_horiz.DrawAxis(layer, w, h,
                                             draw_horiz.invert_side ? undefined : "translate(0," + h + ")",
-                                            false, show_second_ticks ? -h : 0, disable_axis_draw);
+                                            show_second_ticks ? -h : 0, disable_axis_draw);
 
-         let promise2 = draw_vertical.DrawAxis(true, layer, w, h,
+         let promise2 = draw_vertical.DrawAxis(layer, w, h,
                                                draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
-                                               false, show_second_ticks ? w : 0, disable_axis_draw,
+                                               show_second_ticks ? w : 0, disable_axis_draw,
                                                draw_vertical.invert_side ? 0 : this.frame_x());
 
          return Promise.all([promise1, promise2]).then(() => {
@@ -1457,15 +1588,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.RedrawPad();
    }
 
-   RFramePainter.prototype.CleanXY = function() {
-      // remove all kinds of X/Y function for axes transformation
-      delete this.x; delete this.grx;
-      delete this.ConvertX; delete this.RevertX;
-      delete this.y; delete this.gry;
-      delete this.ConvertY; delete this.RevertY;
-      delete this.z; delete this.grz;
-   }
-
    RFramePainter.prototype.CleanupAxes = function() {
       // remove all axes drawings
       if (this.x_handle) {
@@ -1487,6 +1609,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.draw_g.select(".axis_layer").selectAll("*").remove();
       }
       this.axes_drawn = false;
+
+      delete this.grx;
+      delete this.gry;
+      delete this.grz;
    }
 
    /** @summary Removes all drawn elements of the frame
@@ -1497,7 +1623,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.Create3DScene(-1);
 
       this.CleanupAxes();
-      this.CleanXY();
 
       this.xmin = this.xmax = 0;
       this.ymin = this.ymax = 0;
@@ -1534,6 +1659,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          window.removeEventListener('keydown', this.keys_handler, false);
          this.keys_handler = null;
       }
+
+      delete this.xaxis;
+      delete this.yaxis;
+      delete this.zaxis;
 
       this.draw_g = null;
       delete this._click_handler;
@@ -1841,8 +1970,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       menu.add("Unzoom", this.Unzoom.bind(this, kind));
 
-      if (this[kind+"_kind"] == "normal")
-         menu.addchk(this["log"+kind], "SetLog"+kind, this.ToggleLog.bind(this, kind));
+      //if (this[kind+"_kind"] == "normal")
+      //   menu.addchk(this["log"+kind], "SetLog"+kind, this.ToggleLog.bind(this, kind));
 
       // here should be all axes attributes in offline
    }
@@ -1871,8 +2000,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.add("Unzoom Z", this.Unzoom.bind(this,"z"));
       menu.add("Unzoom all", this.Unzoom.bind(this,"xyz"));
 
-      menu.addchk(this.logx, "SetLogx", this.ToggleLog.bind(this,"x"));
-      menu.addchk(this.logy, "SetLogy", this.ToggleLog.bind(this,"y"));
+      // menu.addchk(this.logx, "SetLogx", this.ToggleLog.bind(this,"x"));
+      // menu.addchk(this.logy, "SetLogy", this.ToggleLog.bind(this,"y"));
       // if (this.Dimension() == 2)
       //   menu.addchk(pad.fLogz, "SetLogz", this.ToggleLog.bind(main,"z"));
       menu.add("separator");
@@ -1887,6 +2016,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       menu.add("Save as frame.svg", function() { this.pad_painter().SaveAs("svg", 'frame', 'frame.svg'); });
 
       return true;
+   }
+
+   /** @summary Convert graphical coordinate into axis value */
+   RFramePainter.prototype.RevertAxis = function(axis, pnt) {
+      let handle = this[axis+"_handle"];
+      return handle ? handle.RevertPoint(pnt) : 0;
    }
 
    /** @summary Show axis status message
@@ -1905,7 +2040,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (this.swap_xy) id = 1-id;
 
-      let axis_value = (axis_name=="x") ? this.RevertX(m[id]) : this.RevertY(m[id]);
+      let axis_value = this.RevertAxis(axis_name, m[id]);
 
       status_func(hint_name, hint_title, axis_name + " : " + this.AxisAsText(axis_name, axis_value), m[0]+","+m[1]);
    }
@@ -1933,187 +2068,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
-   /** @summary Create x,y objects which maps user coordinates into pixels
-     * @desc While only first painter really need such object, all others just reuse it
-     * following functions are introduced
-     *     this.GetBin[X/Y]  return bin coordinate
-     *     this.Convert[X/Y]  converts root value in JS date when date scale is used
-     *     this.[x,y]  these are d3.scale objects
-     *    this.gr[x,y]  converts root scale into graphical value
-     *    this.Revert[X/Y]  converts graphical coordinates to user coordinates
-     * @private */
-   RFramePainter.prototype.CreateXY = function() {
-
-      this.swap_xy = false;
-      this.reverse_x = false;
-      this.reverse_y = false;
-
-      // if (this.options.BarStyle>=20) this.swap_xy = true;
-      this.logx = this.logy = this.logz = false;
-
-      this.logx = !!this.v7EvalAttr("x_log");
-      this.logy = !!this.v7EvalAttr("y_log");
-      this.logz = !!this.v7EvalAttr("z_log");
-
-      let w = this.frame_width(), h = this.frame_height();
-
-      this.scale_xmin = this.xmin;
-      this.scale_xmax = this.xmax;
-
-      this.scale_ymin = this.ymin;
-      this.scale_ymax = this.ymax;
-
-      // if (opts.extra_y_space) {
-      //    let log_scale = this.swap_xy ? pad.fLogx : pad.fLogy;
-      //    if (log_scale && (this.scale_ymax > 0))
-      //       this.scale_ymax = Math.exp(Math.log(this.scale_ymax)*1.1);
-      //    else
-      //       this.scale_ymax += (this.scale_ymax - this.scale_ymin) * 0.1;
-      // }
-
-      this.RecalculateRange(0);
-
-      if (this._xaxis_timedisplay) {
-         this.x_kind = 'time';
-         this.timeoffsetx = jsrp.getTimeOffset(/*this.histo.fXaxis*/);
-         this.ConvertX = function(x) { return new Date(this.timeoffsetx + x*1000); };
-         this.RevertX = function(grx) { return (this.x.invert(grx) - this.timeoffsetx) / 1000; };
-      } else {
-         this.x_kind = 'normal'; // (this.histo.fXaxis.fLabels==null) ? 'normal' : 'labels';
-         this.ConvertX = function(x) { return x; };
-         this.RevertX = function(grx) { return this.x.invert(grx); };
-      }
-
-      if (this.zoom_xmin != this.zoom_xmax) {
-         this.scale_xmin = this.zoom_xmin;
-         this.scale_xmax = this.zoom_xmax;
-      }
-
-      if (this.x_kind == 'time') {
-         this.x = d3.scaleTime();
-      } else if (this.logx) {
-         if (this.scale_xmax <= 0) this.scale_xmax = 1;
-         if ((this.scale_xmin <= 0) || (this.scale_xmin >= this.scale_xmax))
-            this.scale_xmin = this.scale_xmax * 0.0001;
-
-         this.x = d3.scaleLog();
-      } else {
-         this.x = d3.scaleLinear();
-      }
-
-      let gr_range_x = this.reverse_x ? [ w, 0 ] : [ 0, w ],
-          gr_range_y = this.reverse_y ? [ 0, h ] : [ h, 0 ];
-
-      this.x.domain([this.ConvertX(this.scale_xmin), this.ConvertX(this.scale_xmax)])
-            .range(this.swap_xy ? gr_range_y : gr_range_x);
-
-      if (this.x_kind == 'time') {
-         // we emulate scale functionality
-         this.grx = function(val) { return this.x(this.ConvertX(val)); }
-      } else if (this.logx) {
-         this.grx = function(val) { return (val < this.scale_xmin) ? (this.swap_xy ? this.x.range()[0]+5 : -5) : this.x(val); }
-      } else {
-         this.grx = this.x;
-      }
-
-      if (this.zoom_ymin != this.zoom_ymax) {
-         this.scale_ymin = this.zoom_ymin;
-         this.scale_ymax = this.zoom_ymax;
-      }
-
-      if (this._yaxis_timedisplay) {
-         this.y_kind = 'time';
-         this.timeoffsety = jsrp.getTimeOffset(/*this.histo.fYaxis*/);
-         this.ConvertY = function(y) { return new Date(this.timeoffsety + y*1000); };
-         this.RevertY = function(gry) { return (this.y.invert(gry) - this.timeoffsety) / 1000; };
-      } else {
-         this.y_kind = 'normal'; // !this.histo.fYaxis.fLabels ? 'normal' : 'labels';
-         this.ConvertY = function(y) { return y; };
-         this.RevertY = function(gry) { return this.y.invert(gry); };
-      }
-
-      if (this.logy) {
-         if (this.scale_ymax <= 0) this.scale_ymax = 1;
-         if ((this.scale_ymin <= 0) || (this.scale_ymin >= this.scale_ymax))
-            this.scale_ymin = 3e-4 * this.scale_ymax;
-
-         this.y = d3.scaleLog();
-      } else if (this.y_kind == 'time') {
-         this.y = d3.scaleTime();
-      } else {
-         this.y = d3.scaleLinear()
-      }
-
-      this.y.domain([ this.ConvertY(this.scale_ymin), this.ConvertY(this.scale_ymax) ])
-            .range(this.swap_xy ? gr_range_x : gr_range_y);
-
-      if (this.y_kind=='time') {
-         // we emulate scale functionality
-         this.gry = function(val) { return this.y(this.ConvertY(val)); }
-      } else if (this.logy) {
-         // make protection for log
-         this.gry = function(val) { return (val < this.scale_ymin) ? (this.swap_xy ? -5 : this.y.range()[0]+5) : this.y(val); }
-      } else {
-         this.gry = this.y;
-      }
-
-      // this.SetRootPadRange();
-   }
-
-   /** Set selected range back to TPad object */
+   /** @summary Set selected range back to pad object - to be implemented */
    RFramePainter.prototype.SetRootPadRange = function(/* pad, is3d */) {
       // TODO: change of pad range and send back to root application
-/*
-      if (!pad || this.options.Same) return;
-
-      if (is3d) {
-         // this is fake values, algorithm should be copied from TView3D class of ROOT
-         pad.fLogx = pad.fLogy = 0;
-         pad.fUxmin = pad.fUymin = -0.9;
-         pad.fUxmax = pad.fUymax = 0.9;
-      } else {
-         pad.fLogx = (this.swap_xy ? this.logy : this.logx) ? 1 : 0;
-         pad.fUxmin = this.scale_xmin;
-         pad.fUxmax = this.scale_xmax;
-         pad.fLogy = (this.swap_xy ? this.logx : this.logy) ? 1 : 0;
-         pad.fUymin = this.scale_ymin;
-         pad.fUymax = this.scale_ymax;
-      }
-
-      if (pad.fLogx) {
-         pad.fUxmin = Math.log10(pad.fUxmin);
-         pad.fUxmax = Math.log10(pad.fUxmax);
-      }
-      if (pad.fLogy) {
-         pad.fUymin = Math.log10(pad.fUymin);
-         pad.fUymax = Math.log10(pad.fUymax);
-      }
-
-      let rx = pad.fUxmax - pad.fUxmin,
-          mx = 1 - pad.fLeftMargin - pad.fRightMargin,
-          ry = pad.fUymax - pad.fUymin,
-          my = 1 - pad.fBottomMargin - pad.fTopMargin;
-
-      if (mx <= 0) mx = 0.01; // to prevent overflow
-      if (my <= 0) my = 0.01;
-
-      pad.fX1 = pad.fUxmin - rx/mx*pad.fLeftMargin;
-      pad.fX2 = pad.fUxmax + rx/mx*pad.fRightMargin;
-      pad.fY1 = pad.fUymin - ry/my*pad.fBottomMargin;
-      pad.fY2 = pad.fUymax + ry/my*pad.fTopMargin;
-     */
    }
 
+   /** @summary Toggle log scale on the specified axes */
    RFramePainter.prototype.ToggleLog = function(axis) {
-      let curr  = this["log" + axis];
-
-      // do not allow log scale for labels
-      if (!curr) {
-         let kind = this[axis+"_kind"];
-         if (this.swap_xy && axis==="x") kind = this["y_kind"]; else
-         if (this.swap_xy && axis==="y") kind = this["x_kind"];
-         if (kind === "labels") return;
-      }
+      let handle = this[axis+"_handle"];
+      if (!handle || (handle.kind == "labels")) return;
 
       if (this.v7CommMode() == JSROOT.v7.CommMode.kOffline) {
          this.v7SetAttr(axis + "_log", !curr);
@@ -2160,7 +2123,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return JSROOT.ObjectPainter.prototype.svg_pad.call(this, pad_name);
    }
 
-   /** @summary cleanup only pad itself, all child elements will be collected and cleanup separately */ 
+   /** @summary cleanup only pad itself, all child elements will be collected and cleanup separately */
    RPadPainter.prototype.Cleanup = function() {
 
       for (let k = 0; k < this.painters.length; ++k)
@@ -2226,14 +2189,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    RPadPainter.prototype.RegisterForPadEvents = function(receiver) {
       this.pad_events_receiver = receiver;
    }
-   
-   /** @summary Generate pad events, normally handled by GED 
+
+   /** @summary Generate pad events, normally handled by GED
      * @desc in pad painter, while pad may be drawn without canvas
      * @private */
    RPadPainter.prototype.PadEvent = function(_what, _padpainter, _painter, _position, _place) {
       if ((_what == "select") && (typeof this.SelectActivePad == 'function'))
          this.SelectActivePad(_padpainter, _painter, _position);
-      
+
       if (this.pad_events_receiver)
          this.pad_events_receiver({ what: _what, padpainter:  _padpainter, painter: _painter, position: _position, place: _place });
    }
@@ -2243,7 +2206,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let istoppad = (this.iscan || !this.has_canvas),
           canp = istoppad ? this : this.canv_painter();
-          
+
       if (_painter === undefined) _painter = this;
 
       if (pos && !istoppad)
@@ -2253,7 +2216,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       canp.PadEvent("select", this, _painter, pos, _place);
    }
-   
+
    /** @summary Called by framework when pad is supposed to be active and get focus
     * @private */
    RPadPainter.prototype.SetActive = function(on) {
@@ -2577,7 +2540,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             delete this._lasttm_tm;
          }
 
-         return JSROOT.CallBack(callback);
+         return JSROOT.callBack(callback);
       }
 
       // handle used to invoke callback only when necessary
@@ -2667,7 +2630,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    RPadPainter.prototype.PadContextMenu = function(evnt) {
-      if (evnt.stopPropagation) { 
+      if (evnt.stopPropagation) {
          // this is normal event processing and not emulated jsroot event
          // for debug purposes keep original context menu for small region in top-left corner
          let pos = d3.pointer(evnt, this.svg_pad().node());
@@ -2705,13 +2668,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       } else {
          showsubitems = this.CreatePadSvg(true);
       }
-      
+
       // even sub-pad is not visible, we should redraw sub-sub-pads to hide them as well
       for (let i = 0; i < this.painters.length; ++i) {
          let sub = this.painters[i];
          if (showsubitems || sub.this_pad_name) sub.Redraw(reason);
       }
-      
+
       if (jsrp.GetActivePad() === this) {
          let canp = this.canv_painter();
          if (canp) canp.PadEvent("padredraw", this);
@@ -2723,9 +2686,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let num = 0;
 
-      for (let i = 0; i < this.painters.length; ++i) 
-         if (this.painters[i] instanceof RPadPainter) 
-            num++; 
+      for (let i = 0; i < this.painters.length; ++i)
+         if (this.painters[i] instanceof RPadPainter)
+            num++;
 
       return num;
    }
@@ -2812,7 +2775,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!lst || indx >= lst.length) {
             delete this._doing_pad_draw;
             delete this._snaps_map;
-            return JSROOT.CallBack(call_back, this);
+            return JSROOT.callBack(call_back, this);
          }
 
          let snap = lst[indx],
@@ -3036,13 +2999,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.DrawNextSnap(snap.fPrimitives, -1, () => {
          this.CurrentPadName(prev_name);
-         
+
          if (jsrp.GetActivePad() === this) {
             let canp = this.canv_painter();
 
             if (canp) canp.PadEvent("padredraw", this);
          }
-         
+
          call_back(this);
       });
    }
@@ -3567,48 +3530,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return this.ChangeLayout(layout);
    }
 
-   RCanvasPainter.prototype.DrawProjection = function(kind,hist) {
-      if (!this.proj_painter) return; // ignore drawing if projection not configured
-
-      if (this.proj_painter === 1) {
-
-         let canv = JSROOT.Create("TCanvas"), pad = this.root_pad(), main = this.main_painter(), drawopt;
-
-         if (kind == "X") {
-            canv.fLeftMargin = pad.fLeftMargin;
-            canv.fRightMargin = pad.fRightMargin;
-            canv.fLogx = main.logx ? 1 : 0;
-            canv.fUxmin = main.logx ? Math.log10(main.scale_xmin) : main.scale_xmin;
-            canv.fUxmax = main.logx ? Math.log10(main.scale_xmax) : main.scale_xmax;
-            drawopt = "fixframe";
-         } else {
-            canv.fBottomMargin = pad.fBottomMargin;
-            canv.fTopMargin = pad.fTopMargin;
-            canv.fLogx = main.logy ? 1 : 0;
-            canv.fUxmin = main.logy ? Math.log10(main.scale_ymin) : main.scale_ymin;
-            canv.fUxmax = main.logy ? Math.log10(main.scale_ymax) : main.scale_ymax;
-            drawopt = "rotate";
-         }
-
-         canv.fPrimitives.Add(hist, "hist");
-
-         if (this.DrawInUI5ProjectionArea) {
-            // copy frame attributes
-            this.DrawInUI5ProjectionArea(canv, drawopt, painter => { this.proj_painter = painter; })
-         } else {
-            this.DrawInSidePanel(canv, drawopt, painter => { this.proj_painter = painter; })
-         }
-      } else {
-         let hp = this.proj_painter.main_painter();
-         if (hp) hp.UpdateObject(hist, "hist");
-         this.proj_painter.RedrawPad();
-      }
+   RCanvasPainter.prototype.DrawProjection = function( /*kind,hist*/) {
+      // dummy for the moment
    }
 
-   RCanvasPainter.prototype.DrawInSidePanel = function(canv, opt, call_back) {
+   RCanvasPainter.prototype.DrawInsidePanel = function(canv, opt) {
       let side = this.select_main('origin').select(".side_panel");
-      if (side.empty()) return JSROOT.CallBack(call_back, null);
-      JSROOT.draw(side.node(), canv, opt).then(call_back);
+      if (side.empty()) return Promise.resolve(null);
+      return JSROOT.draw(side.node(), canv, opt);
    }
 
    RCanvasPainter.prototype.ShowMessage = function(msg) {
@@ -3964,7 +3893,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       jsrp.SelectActivePad({ pp: painter, active: false });
 
-      painter.DrawPrimitives(0, function() {
+      painter.DrawPrimitives(0, () => {
          painter.AddPadButtons();
          painter.ShowButtons();
          painter.DrawingReady();
@@ -4408,19 +4337,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           .style("stroke", "black")
           .attr("fill", "none");
 
-      let z = null, z_kind = "normal";
-
-      if (framep && framep.logz) {
-         z = d3.scaleLog();
-         z_kind = "log";
-      } else {
-         z = d3.scaleLinear();
-      }
-      z.domain([zmin, zmax]).range([palette_height,0]);
+      this.z_handle.ConfigureAxis("zaxis", zmin, zmax, zmin, zmax, true, [0, palette_height], { reverse: false });
 
       for (let i=0;i<contour.length-1;++i) {
-         let z0 = z(contour[i]),
-             z1 = z(contour[i+1]),
+         let z0 = this.z_handle.gr(contour[i]),
+             z1 = this.z_handle.gr(contour[i+1]),
              col = palette.getContourColor((contour[i]+contour[i+1])/2);
 
          let r = g_btns.append("svg:rect")
@@ -4444,11 +4365,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             r.on("dblclick", function() { framep.Unzoom("z"); });
       }
 
-      this.z_handle.SetAxisConfig("zaxis", z_kind, z, zmin, zmax, zmin, zmax);
-
       this.z_handle.max_tick_size = Math.round(palette_width*0.3);
 
-      this.z_handle.DrawAxis(true, this.draw_g, palette_width, palette_height, "translate(" + palette_width + ", 0)");
+      this.z_handle.DrawAxis(this.draw_g, palette_width, palette_height, "translate(" + palette_width + ", 0)");
 
       if (JSROOT.BatchMode) return;
 
@@ -4464,29 +4383,29 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let moveRectSel = evnt => {
 
             if (!doing_zoom) return;
+            evnt.preventDefault();
 
-            let m = d3.pointer(evnt);
+            let m = d3.pointer(evnt, this.draw_g.node());
 
-            if (m[1] < sel1) sel1 = m[1]; else sel2 = m[1];
+            sel2 = Math.min(Math.max(m[1], 0), palette_height);
 
-            zoom_rect.attr("y", sel1)
-                    .attr("height", Math.abs(sel2-sel1));
+            zoom_rect.attr("y", Math.min(sel1, sel2))
+                     .attr("height", Math.abs(sel2-sel1));
          }
 
          let endRectSel = evnt => {
             if (!doing_zoom) return;
 
             evnt.preventDefault();
-            this.draw_g.on("mousemove.colzoomRect", null)
-                       .on("mouseup.colzoomRect", null);
+            d3.select(window).on("mousemove.colzoomRect", null)
+                             .on("mouseup.colzoomRect", null);
             zoom_rect.remove();
             zoom_rect = null;
             doing_zoom = false;
 
-            let zmin = Math.min(z.invert(sel1), z.invert(sel2)),
-                zmax = Math.max(z.invert(sel1), z.invert(sel2));
+            let z = this.z_handle.gr, z1 = z.invert(sel1), z2 = z.invert(sel2);
 
-            this.frame_painter().Zoom("z", zmin, zmax);
+            this.frame_painter().Zoom("z", Math.min(z1, z2), Math.max(z1, z2));
          }
 
          let startRectSel = evnt => {
@@ -4495,8 +4414,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             doing_zoom = true;
 
             evnt.preventDefault();
+            evnt.stopPropagation();
 
-            let origin = d3.pointer(evnt);
+            let origin = d3.pointer(evnt, this.draw_g.node());
 
             sel1 = sel2 = origin[1];
 
@@ -4507,12 +4427,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                  .attr("x", "0")
                  .attr("width", palette_width)
                  .attr("y", sel1)
-                 .attr("height", 5);
+                 .attr("height", 1);
 
-            this.draw_g.on("mousemove.colzoomRect", moveRectSel)
-                       .on("mouseup.colzoomRect", endRectSel, true);
-
-            evnt.stopPropagation();
+            d3.select(window).on("mousemove.colzoomRect", moveRectSel)
+                             .on("mouseup.colzoomRect", endRectSel, true);
          }
 
          this.draw_g.select(".axis_zoom")
@@ -4528,7 +4446,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       painter.CreateG(false);
 
-      painter.z_handle = new JSROOT.v7.RAxisPainter(true, "z_");
+      painter.z_handle = new RAxisPainter(painter, null, "z_");
       painter.z_handle.SetDivId(divid, -1);
       painter.z_handle.pad_name = painter.pad_name;
       painter.z_handle.invert_side = true;
@@ -4553,7 +4471,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPave", icon: "img_pavetext", func: drawPave, opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLegend", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLegend", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPaveText", icon: "img_pavetext", prereq: "v7more", func: "JSROOT.v7.drawPaveText", opt: "" });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RFrame", icon: "img_frame", func: "JSROOT.v7.drawFrame", opt: "" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RFrame", icon: "img_frame", func: drawFrame, opt: "" });
+   JSROOT.addDrawFunc({ name: /^ROOT::Experimental::RAxisDrawable/, icon: "img_frame", func: drawRAxis, opt: "" });
 
    JSROOT.v7.RAxisPainter = RAxisPainter;
    JSROOT.v7.RFramePainter = RFramePainter;
@@ -4561,6 +4480,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    JSROOT.v7.RPadPainter = RPadPainter;
    JSROOT.v7.RCanvasPainter = RCanvasPainter;
    JSROOT.v7.RPavePainter = RPavePainter;
+   JSROOT.v7.drawRAxis = drawRAxis;
    JSROOT.v7.drawFrame = drawFrame;
    JSROOT.v7.drawPad = drawPad;
    JSROOT.v7.drawCanvas = drawCanvas;

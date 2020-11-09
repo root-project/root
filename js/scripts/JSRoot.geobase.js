@@ -3761,4 +3761,3 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
    return geo;
 });
-

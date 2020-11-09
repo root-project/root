@@ -384,7 +384,7 @@ JSROOT.define(['d3'], (d3) => {
       if ((typeof args == 'object') && (typeof args.fMarkerStyle == 'number')) args = { attr: args };
 
       if (args.attr) {
-         if (args.color === undefined) 
+         if (args.color === undefined)
             args.color = args.painter ? args.painter.get_color(args.attr.fMarkerColor) : jsrp.getColor(args.attr.fMarkerColor);
          if (!args.style || (args.style < 0)) args.style = args.attr.fMarkerStyle;
          if (!args.size) args.size = args.attr.fMarkerSize;
@@ -991,9 +991,14 @@ JSROOT.define(['d3'], (d3) => {
           fontName = jsrp.root_fonts[indx] || "";
 
       while (fontName.length > 0) {
-         if (fontName[0] === 'b') this.weight = "bold"; else
-            if (fontName[0] === 'i') this.style = "italic"; else
-               if (fontName[0] === 'o') this.style = "oblique"; else break;
+         if (fontName[0] === 'b')
+            this.weight = "bold";
+         else if (fontName[0] === 'i')
+            this.style = "italic";
+         else if (fontName[0] === 'o')
+            this.style = "oblique";
+         else
+            break;
          fontName = fontName.substr(1);
       }
 
@@ -1308,7 +1313,7 @@ JSROOT.define(['d3'], (d3) => {
          delete this._reject_callbacks_;
 
          while (callbacks.length)
-            JSROOT.CallBack(callbacks.shift(), res_painter);
+            JSROOT.callBack(callbacks.shift(), res_painter);
       }
       return this;
    }
@@ -1322,7 +1327,7 @@ JSROOT.define(['d3'], (d3) => {
    BasePainter.prototype.WhenReady = function(resolveFunc, rejectFunc) {
       if (typeof resolveFunc !== 'function') return;
       if ('_ready_called_' in this)
-         return JSROOT.CallBack(resolveFunc, this);
+         return JSROOT.callBack(resolveFunc, this);
       if (!this._ready_callbacks_)
          this._ready_callbacks_ = [resolveFunc];
       else
@@ -2070,19 +2075,13 @@ JSROOT.define(['d3'], (d3) => {
    *  @param {number} coord - graphics coordiante.
    *  @param {boolean} ndc - kind of return value
    *  @returns {number} value of requested coordiantes
-   *  @private
-   */
+   *  @private */
    ObjectPainter.prototype.SvgToAxis = function(axis, coord, ndc) {
-      let use_frame = this.draw_g && this.draw_g.property('in_frame'),
-         main = use_frame ? this.frame_painter() : null;
+      let use_frame = this.draw_g && this.draw_g.property('in_frame');
 
-      if (use_frame) main = this.frame_painter();
-
-      if (use_frame && main) {
-         return (axis == "y") ? main.RevertY(coord - (use_frame ? 0 : main.frame_y()))
-            : main.RevertX(coord - (use_frame ? 0 : main.frame_x()));
-      } else if (use_frame) {
-         return 0; // in principal error, while frame calculation requested
+      if (use_frame) {
+         let main = this.frame_painter();
+         return main ? main.RevertAxis(axis, coord) : 0;
       }
 
       let value = (axis == "y") ? (1 - coord / this.pad_height()) : coord / this.pad_width();
@@ -2324,9 +2323,9 @@ JSROOT.define(['d3'], (d3) => {
 
       let handler = args.std ? this.markeratt : null;
 
-      if (!handler) 
+      if (!handler)
          handler = new TAttMarkerHandler(args);
-      else if (!handler.changed || args.force) 
+      else if (!handler.changed || args.force)
          handler.SetArgs(args);
 
       if (args.std) this.markeratt = handler;
@@ -2343,9 +2342,9 @@ JSROOT.define(['d3'], (d3) => {
    * Instance assigned as this.lineatt data member, recognized by GED editor
    * @param {object} args - either TAttLine or see constructor arguments of {@link JSROOT.TAttLineHandler} */
    ObjectPainter.prototype.createAttLine = function(args) {
-      if (!args || (typeof args !== 'object')) 
-         args = { std: true }; 
-      else if (args.fLineColor !== undefined && args.fLineStyle !== undefined && args.fLineWidth !== undefined) 
+      if (!args || (typeof args !== 'object'))
+         args = { std: true };
+      else if (args.fLineColor !== undefined && args.fLineStyle !== undefined && args.fLineWidth !== undefined)
          args = { attr: args, std: false };
 
       if (args.std === undefined) args.std = true;
@@ -2353,9 +2352,9 @@ JSROOT.define(['d3'], (d3) => {
 
       let handler = args.std ? this.lineatt : null;
 
-      if (!handler) 
+      if (!handler)
          handler = new TAttLineHandler(args);
-      else if (!handler.changed || args.force) 
+      else if (!handler.changed || args.force)
          handler.SetArgs(args);
 
       if (args.std) this.lineatt = handler;
@@ -2391,9 +2390,9 @@ JSROOT.define(['d3'], (d3) => {
       if (!args.svg) args.svg = this.svg_canvas();
       if (args.painter === undefined) args.painter = this;
 
-      if (!handler) 
+      if (!handler)
          handler = new TAttFillHandler(args);
-      else if (!handler.changed || args.force) 
+      else if (!handler.changed || args.force)
          handler.SetArgs(args);
 
       if (args.std) this.fillatt = handler;
@@ -2442,7 +2441,7 @@ JSROOT.define(['d3'], (d3) => {
 
       // inform GED that something changes
       let pp = this.pad_painter(), canp = this.canv_painter();
-       
+
       if (canp && (typeof canp.PadEvent == 'function'))
          canp.PadEvent("redraw", pp, this, null, subelem);
 
@@ -2807,7 +2806,7 @@ JSROOT.define(['d3'], (d3) => {
       draw_g.node().text_callback = null;
 
       // if specified, call ready function
-      JSROOT.CallBack(call_ready);
+      JSROOT.callBack(call_ready);
       return 0;
    }
 
@@ -2837,11 +2836,16 @@ JSROOT.define(['d3'], (d3) => {
          align = arg.align.split(";");
          if (align.length == 1) align.push('middle');
       } else if (typeof arg.align == 'number') {
-         if ((arg.align / 10) >= 3) align[0] = 'end'; else
-            if ((arg.align / 10) >= 2) align[0] = 'middle';
-         if ((arg.align % 10) == 0) align[1] = 'bottom'; else
-            if ((arg.align % 10) == 1) align[1] = 'bottom-base'; else
-               if ((arg.align % 10) == 3) align[1] = 'top';
+         if ((arg.align / 10) >= 3)
+            align[0] = 'end';
+         else if ((arg.align / 10) >= 2)
+            align[0] = 'middle';
+         if ((arg.align % 10) == 0)
+            align[1] = 'bottom';
+         else if ((arg.align % 10) == 1)
+            align[1] = 'bottom-base';
+         else if ((arg.align % 10) == 3)
+            align[1] = 'top';
       }
 
       arg.draw_g = arg.draw_g || this.draw_g;
@@ -2948,6 +2952,34 @@ JSROOT.define(['d3'], (d3) => {
 
    // ===========================================================
 
+   /** @summary Produce ticks for d3.scaleLog
+     * @desc Fixing following problem, described [here]{@link https://stackoverflow.com/questions/64649793}
+     * @private */
+   jsrp.PoduceLogTicks = function(func, number) {
+      function linearArray(arr) {
+         let sum1 = 0, sum2 = 0;
+         for (let k=1;k<arr.length;++k) {
+            let diff = (arr[k] - arr[k-1]);
+            sum1 += diff;
+            sum2 += diff*diff;
+         }
+         let mean = sum1/(arr.length-1);
+         let dev = sum2/(arr.length-1) - mean*mean;
+         if (dev <= 0) return true;
+         if (Math.abs(mean) < 1e-100) return false;
+         return Math.sqrt(dev)/mean < 1e-10;
+      }
+
+      let arr = func.ticks(number);
+      while ((number > 4) && linearArray(arr)) {
+          number = Math.round(number*0.8);
+          arr = func.ticks(number);
+      }
+
+      return arr;
+   }
+
+
    /** @summary Set active pad painter
     *
     * @desc Normally be used to handle key press events, which are global in the web browser
@@ -2980,6 +3012,7 @@ JSROOT.define(['d3'], (d3) => {
    // =====================================================================
 
    JSROOT.EAxisBits = {
+      kDecimals: JSROOT.BIT(7),
       kTickPlus: JSROOT.BIT(9),
       kTickMinus: JSROOT.BIT(10),
       kAxisRange: JSROOT.BIT(11),
@@ -2994,7 +3027,7 @@ JSROOT.define(['d3'], (d3) => {
       kLabelsUp: JSROOT.BIT(21),
       kIsInteger: JSROOT.BIT(22),
       kMoreLogLabels: JSROOT.BIT(23),
-      kDecimals: JSROOT.BIT(11)
+      kOppositeTitle: JSROOT.BIT(32) // atrificial bit, not possible to set in ROOT
    };
 
    // ================= painter of raw text ========================================

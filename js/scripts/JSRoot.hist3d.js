@@ -514,76 +514,22 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
       // this.TestAxisVisibility = HPainter_TestAxisVisibility;
 
-      if (pad && pad.fLogx) {
-         if (xmax <= 0) xmax = 1.;
-         if ((xmin <= 0) && this.xaxis)
-            for (let i=0;i<this.xaxis.fNbins;++i) {
-               xmin = Math.max(xmin, this.xaxis.GetBinLowEdge(i+1));
-               if (xmin>0) break;
-            }
-         if (xmin <= 0) xmin = 1e-4*xmax;
-         this.grx = d3.scaleLog();
-         this.x_kind = "log";
-      } else {
-         this.grx = d3.scaleLinear();
-         if (this.xaxis && this.xaxis.fLabels) this.x_kind = "labels";
-                                          else this.x_kind = "normal";
-      }
-
-      this.logx = (this.x_kind === "log");
-
-      this.grx.domain([ xmin, xmax ]).range([ grminx, grmaxx ]);
       this.x_handle = new JSROOT.TAxisPainter(this.xaxis);
-      this.x_handle.SetAxisConfig("xaxis", this.x_kind, this.grx, this.xmin, this.xmax, xmin, xmax);
-      this.x_handle.CreateFormatFuncs();
-      this.scale_xmin = xmin; this.scale_xmax = xmax;
+      this.x_handle.ConfigureAxis("xaxis", this.xmin, this.xmax, xmin, xmax, false, [grminx, grmaxx],
+                                       { log: pad ? pad.fLogx : 0 });
+      this.x_handle.AssignFrameMembers(this,"x");
 
-      if (pad && pad.fLogy && !opts.use_y_for_z) {
-         if (ymax <= 0) ymax = 1.;
-         if ((ymin <= 0) && this.yaxis)
-            for (let i=0;i<this.yaxis.fNbins;++i) {
-               ymin = Math.max(ymin, this.yaxis.GetBinLowEdge(i+1));
-               if (ymin>0) break;
-            }
-
-         if (ymin <= 0) ymin = 1e-4*ymax;
-         this.gry = d3.scaleLog();
-         this.y_kind = "log";
-      } else {
-         this.gry = d3.scaleLinear();
-         if (this.yaxis && this.yaxis.fLabels) this.y_kind = "labels";
-                                          else this.y_kind = "normal";
-      }
-
-      this.logy = (this.y_kind === "log");
-
-      this.gry.domain([ ymin, ymax ]).range([ grminy, grmaxy ]);
       this.y_handle = new JSROOT.TAxisPainter(this.yaxis);
-      this.y_handle.SetAxisConfig("yaxis", this.y_kind, this.gry, this.ymin, this.ymax, ymin, ymax);
-      this.y_handle.CreateFormatFuncs();
-      this.scale_ymin = ymin; this.scale_ymax = ymax;
-
-      if (pad && pad.fLogz) {
-         if (zmax <= 0) zmax = 1;
-         if (zmin <= 0) zmin = 1e-4*zmax;
-         this.grz = d3.scaleLog();
-         this.z_kind = "log";
-      } else {
-         this.grz = d3.scaleLinear();
-         this.z_kind = "normal";
-         if (this.zaxis && this.zaxis.fLabels && (opts.ndim === 3)) this.z_kind = "labels";
-      }
-
-      this.logz = (this.z_kind === "log");
-
-      this.grz.domain([ zmin, zmax ]).range([ grminz, grmaxz ]);
-
-      this.SetRootPadRange(pad, true); // set some coordinates typical for 3D projections in ROOT
+      this.y_handle.ConfigureAxis("yaxis", this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy],
+                                      { log: pad && !opts.use_y_for_z ? pad.fLogx : 0 });
+      this.y_handle.AssignFrameMembers(this,"y");
 
       this.z_handle = new JSROOT.TAxisPainter(this.zaxis);
-      this.z_handle.SetAxisConfig("zaxis", this.z_kind, this.grz, this.zmin, this.zmax, zmin, zmax);
-      this.z_handle.CreateFormatFuncs();
-      this.scale_zmin = zmin; this.scale_zmax = zmax;
+      this.z_handle.ConfigureAxis("zaxis", this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
+                                       { log: pad ? pad.fLogz : 0 });
+      this.z_handle.AssignFrameMembers(this,"z");
+
+      this.SetRootPadRange(pad, true); // set some coordinates typical for 3D projections in ROOT
 
       this.x_handle.debug = true;
 
@@ -604,9 +550,13 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       while (xticks.next()) {
          let grx = xticks.grpos,
             is_major = (xticks.kind===1),
-            lbl = this.x_handle.format(xticks.tick, true, true);
-         if (xticks.last_major()) { if (!xaxis || !xaxis.fTitle) lbl = "x"; } else
-            if (lbl === null) { is_major = false; lbl = ""; }
+            lbl = this.x_handle.format(xticks.tick, 2);
+
+         if (xticks.last_major()) {
+            if (!xaxis || !xaxis.fTitle) lbl = "x";
+         } else if (lbl === null) {
+            is_major = false; lbl = "";
+         }
 
          if (is_major && lbl && (lbl.length>0)) {
             let text3d = new THREE.TextGeometry(lbl, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
@@ -636,7 +586,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       if (xaxis && xaxis.fTitle) {
          let text3d = new THREE.TextGeometry(xaxis.fTitle, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
          text3d.computeBoundingBox();
-         text3d.center = (xaxis.TestBit(JSROOT.EAxisBits.kCenterTitle));
+         text3d.center = xaxis.TestBit(JSROOT.EAxisBits.kCenterTitle);
          text3d.gry = 2; // factor 2 shift
          text3d.grx = (grminx + grmaxx)/2; // default position for centered title
          lbls.push(text3d);
@@ -810,9 +760,13 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       while (yticks.next()) {
          let gry = yticks.grpos,
              is_major = (yticks.kind===1),
-             lbl = this.y_handle.format(yticks.tick, true, true);
-         if (yticks.last_major()) { if (!yaxis || !yaxis.fTitle) lbl = "y"; }  else
-            if (lbl === null) { is_major = false; lbl = ""; }
+             lbl = this.y_handle.format(yticks.tick, 2);
+
+         if (yticks.last_major()) {
+            if (!yaxis || !yaxis.fTitle) lbl = "y";
+         }  else if (lbl === null) {
+            is_major = false; lbl = "";
+         }
 
          if (is_major) {
             let text3d = new THREE.TextGeometry(lbl, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
@@ -912,7 +866,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       while (zticks.next()) {
          let grz = zticks.grpos,
             is_major = (zticks.kind == 1),
-            lbl = this.z_handle.format(zticks.tick, true, true);
+            lbl = this.z_handle.format(zticks.tick, 2);
+
          if (lbl === null) { is_major = false; lbl = ""; }
 
          if (is_major && lbl) {
@@ -1096,8 +1051,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
           // reduced vertices
           rvertices = [ new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(1, 1, 0), new THREE.Vector3(1, 0, 0) ],
           main = this.frame_painter(),
-          axis_zmin = main.grz.domain()[0],
-          axis_zmax = main.grz.domain()[1],
+          axis_zmin = main.z_handle.gr.domain()[0],
+          axis_zmax = main.z_handle.gr.domain()[1],
           zmin, zmax,
           handle = this.PrepareColorDraw({ rounding: false, use3d: true, extra: 1 }),
           i1 = handle.i1, i2 = handle.i2, j1 = handle.j1, j2 = handle.j2,
@@ -1622,8 +1577,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
           main = this.frame_painter(),
           handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 1, middle: 0.5 }),
           i,j, x1, y1, x2, y2, z11, z12, z21, z22,
-          axis_zmin = main.grz.domain()[0];
-          // axis_zmax = main.grz.domain()[1];
+          axis_zmin = main.z_handle.gr.domain()[0];
+          // axis_zmax = main.z_handle.gr.domain()[1];
 
       // first adjust ranges
 
@@ -2022,8 +1977,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       let main = this.frame_painter(),
           histo = this.GetHisto(),
           handle = this.PrepareColorDraw({ rounding: false, use3d: true, extra: 1 }),
-          zmin = main.grz.domain()[0],
-          zmax = main.grz.domain()[1],
+          zmin = main.z_handle.gr.domain()[0],
+          zmax = main.z_handle.gr.domain()[1],
           i, j, bin, binz, binerr, x1, y1, x2, y2, z1, z2,
           nsegments = 0, lpos = null, binindx = null, lindx = 0;
 
@@ -2124,8 +2079,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
    JSROOT.TH2Painter.prototype.DrawPolyLego = function() {
       let histo = this.GetHisto(),
           pmain = this.frame_painter(),
-          axis_zmin = pmain.grz.domain()[0],
-          axis_zmax = pmain.grz.domain()[1],
+          axis_zmin = pmain.z_handle.gr.domain()[0],
+          axis_zmax = pmain.z_handle.gr.domain()[1],
           colindx, bin, i, len = histo.fBins.arr.length,
           z0 = pmain.grz(axis_zmin), z1 = z0;
 
@@ -2332,6 +2287,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
    TH3Painter.prototype = Object.create(JSROOT.THistPainter.prototype);
 
+   /** @summary Scan TH3 histogram content */
    TH3Painter.prototype.ScanContent = function(when_axis_changed) {
 
       // no need to rescan histogram while result does not depend from axis selection
@@ -2339,21 +2295,9 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
       let histo = this.GetObject();
 
-      this.nbinsx = histo.fXaxis.fNbins;
-      this.nbinsy = histo.fYaxis.fNbins;
-      this.nbinsz = histo.fZaxis.fNbins;
-
-      this.xmin = histo.fXaxis.fXmin;
-      this.xmax = histo.fXaxis.fXmax;
-
-      this.ymin = histo.fYaxis.fXmin;
-      this.ymax = histo.fYaxis.fXmax;
-
-      this.zmin = histo.fZaxis.fXmin;
-      this.zmax = histo.fZaxis.fXmax;
+      this.ExtractAxesProperties(3);
 
       // global min/max, used at the moment in 3D drawing
-
       this.gminbin = this.gmaxbin = histo.getBinContent(1,1,1);
 
       for (let i = 0; i < this.nbinsx; ++i)
@@ -2365,8 +2309,6 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
             }
 
       this.draw_content = this.gmaxbin > 0;
-
-      this.CreateAxisFuncs(true, true);
    }
 
    TH3Painter.prototype.CountStat = function() {
@@ -2490,20 +2432,9 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
       lines.push(this.GetTipName());
 
-      if (pmain.x_kind == 'labels')
-         lines.push("x = " + pmain.AxisAsText("x", histo.fXaxis.GetBinLowEdge(ix+1)) + "  xbin=" + (ix+1));
-      else
-         lines.push("x = [" + pmain.AxisAsText("x", histo.fXaxis.GetBinLowEdge(ix+1)) + ", " + pmain.AxisAsText("x", histo.fXaxis.GetBinLowEdge(ix+2)) + ")   xbin=" + (ix+1));
-
-      if (pmain.y_kind == 'labels')
-         lines.push("y = " + pmain.AxisAsText("y", histo.fYaxis.GetBinLowEdge(iy+1))  + "  ybin=" + (iy+1));
-      else
-         lines.push("y = [" + pmain.AxisAsText("y", histo.fYaxis.GetBinLowEdge(iy+1)) + ", " + pmain.AxisAsText("y", histo.fYaxis.GetBinLowEdge(iy+2)) + ")  ybin=" + (iy+1));
-
-      if (pmain.z_kind == 'labels')
-         lines.push("z = " + pmain.AxisAsText("z", histo.fZaxis.GetBinLowEdge(iz+1))  + "  zbin=" + (iz+1));
-      else
-         lines.push("z = [" + pmain.AxisAsText("z", histo.fZaxis.GetBinLowEdge(iz+1)) + ", " + pmain.AxisAsText("z", histo.fZaxis.GetBinLowEdge(iz+2)) + ")  zbin=" + (iz+1));
+      lines.push("x = " + this.GetAxisBinTip("x", histo.fXaxis, ix) + "  xbin=" + (ix+1));
+      lines.push("y = " + this.GetAxisBinTip("y", histo.fYaxis, iy) + "  ybin=" + (iy+1));
+      lines.push("z = " + this.GetAxisBinTip("z", histo.fZaxis, iz) + "  zbin=" + (iz+1));
 
       let binz = histo.getBinContent(ix+1, iy+1, iz+1);
       if (binz === Math.round(binz))

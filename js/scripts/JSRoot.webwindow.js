@@ -432,7 +432,7 @@ JSROOT.define([], () => {
 
          if (pthis.state != 0) return;
 
-         if (!first_time) console.log("try connect window again" + (new Date()).getTime());
+         if (!first_time) console.log("try connect window again " + new Date().toString());
 
          if (pthis._websocket) pthis._websocket.close();
          delete pthis._websocket;

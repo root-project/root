@@ -48,9 +48,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       if (histo && (!histo.getBinContent || force)) {
          if (histo.fAxes._2) {
-            this.ProvideAxisMethods(histo.fAxes._0);
-            this.ProvideAxisMethods(histo.fAxes._1);
-            this.ProvideAxisMethods(histo.fAxes._2);
+            JSROOT.v7.AssignRAxisMethods(histo.fAxes._0);
+            JSROOT.v7.AssignRAxisMethods(histo.fAxes._1);
+            JSROOT.v7.AssignRAxisMethods(histo.fAxes._2);
             histo.getBin = function(x, y, z) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1) + this.fAxes._0.GetNumBins()*this.fAxes._1.GetNumBins()*(z-1); }
             // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x, y, z) { return this.fStatistics.fBinContent[this.getBin(x, y, z)]; }
@@ -61,8 +61,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
             }
          } else if (histo.fAxes._1) {
-            this.ProvideAxisMethods(histo.fAxes._0);
-            this.ProvideAxisMethods(histo.fAxes._1);
+            JSROOT.v7.AssignRAxisMethods(histo.fAxes._0);
+            JSROOT.v7.AssignRAxisMethods(histo.fAxes._1);
             histo.getBin = function(x, y) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1); }
             // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; }
@@ -73,7 +73,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
             }
          } else {
-            this.ProvideAxisMethods(histo.fAxes._0);
+            JSROOT.v7.AssignRAxisMethods(histo.fAxes._0);
             histo.getBin = function(x) { return x-1; }
             // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x) { return this.fStatistics.fBinContent[x-1]; }
@@ -90,9 +90,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
          if (!histo.getBinContent || force) {
             if (histo.fAxes.length == 3) {
-               this.ProvideAxisMethods(histo.fAxes[0]);
-               this.ProvideAxisMethods(histo.fAxes[1]);
-               this.ProvideAxisMethods(histo.fAxes[2]);
+               JSROOT.v7.AssignRAxisMethods(histo.fAxes[0]);
+               JSROOT.v7.AssignRAxisMethods(histo.fAxes[1]);
+               JSROOT.v7.AssignRAxisMethods(histo.fAxes[2]);
 
                histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
                histo.dx = histo.fIndicies[0] + 1;
@@ -120,8 +120,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
 
             } else if (histo.fAxes.length == 2) {
-               this.ProvideAxisMethods(histo.fAxes[0]);
-               this.ProvideAxisMethods(histo.fAxes[1]);
+               JSROOT.v7.AssignRAxisMethods(histo.fAxes[0]);
+               JSROOT.v7.AssignRAxisMethods(histo.fAxes[1]);
 
                histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
                histo.dx = histo.fIndicies[0] + 1;
@@ -143,7 +143,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                histo.getBinContent = function(x, y) { return this.fBinContent[this.getBin0(x, y)]; }
                histo.getBinError = function(x, y) { return Math.sqrt(Math.abs(this.getBinContent(x, y))); }
             } else {
-               this.ProvideAxisMethods(histo.fAxes[0]);
+               JSROOT.v7.AssignRAxisMethods(histo.fAxes[0]);
                histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
                histo.dx = histo.fIndicies[0] + 1;
                histo.stepx = histo.fIndicies[2];
@@ -193,13 +193,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return 1;
    }
 
+   /** @summary Scan histogram content
+     * @abstract */
    RHistPainter.prototype.ScanContent = function(/*when_axis_changed*/) {
       // function will be called once new histogram or
       // new histogram content is assigned
       // one should find min,max,nbins, maxcontent values
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
-
-      alert("HistPainter.prototype.ScanContent not implemented");
    }
 
    RHistPainter.prototype.DrawAxes = function() {
@@ -212,7 +212,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          main.xmin = main.xmax = 0;
          main.ymin = main.ymax = 0;
          main.zmin = main.zmax = 0;
-         main.SetAxesRanges(this.xmin, this.xmax, this.ymin, this.ymax, this.zmin, this.zmax);
+         main.SetAxesRanges(this.GetAxis("x"), this.xmin, this.xmax, this.GetAxis("y"), this.ymin, this.ymax, this.GetAxis("z"), this.zmin, this.zmax);
       }
 
       return main.DrawAxes();
@@ -292,63 +292,34 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
 
       if (axis && !axis.GetBinCoord)
-         this.ProvideAxisMethods(axis);
+         JSROOT.v7.AssignRAxisMethods(axis);
 
       return axis;
    }
 
-   RHistPainter.prototype.ProvideAxisMethods = function(axis) {
-
-      if (axis._typename == "ROOT::Experimental::RAxisEquidistant") {
-         axis.min = axis.fLow;
-         axis.max = axis.fLow + axis.fNBinsNoOver/axis.fInvBinWidth;
-         axis.GetNumBins = function() { return this.fNBinsNoOver; }
-         axis.GetBinCoord = function(bin) { return this.fLow + bin/this.fInvBinWidth; }
-         axis.FindBin = function(x,add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); }
-
-      } else {
-         axis.min = axis.fBinBorders[0];
-         axis.max = axis.fBinBorders[axis.fBinBorders.length - 1];
-         axis.GetNumBins = function() { return this.fBinBorders.length; }
-         axis.GetBinCoord = function(bin) {
-            let indx = Math.round(bin);
-            if (indx <= 0) return this.fBinBorders[0];
-            if (indx >= this.fBinBorders.length) return this.fBinBorders[this.fBinBorders.length - 1];
-            if (indx==bin) return this.fBinBorders[indx];
-            let indx2 = (bin < indx) ? indx - 1 : indx + 1;
-            return this.fBinBorders[indx] * Math.abs(bin-indx2) + this.fBinBorders[indx2] * Math.abs(bin-indx);
-         }
-         axis.FindBin = function(x,add) {
-            for (let k = 1; k < this.fBinBorders.length; ++k)
-               if (x < this.fBinBorders[k]) return Math.floor(k-1+add);
-            return this.fBinBorders.length - 1;
-         }
-      }
-
-      // to support some code from ROOT6 drawing
-
-      axis.GetBinCenter = function(bin) { return this.GetBinCoord(bin-0.5); }
-      axis.GetBinLowEdge = function(bin) { return this.GetBinCoord(bin-1); }
-   }
-
-   RHistPainter.prototype.CreateAxisFuncs = function(with_y_axis, with_z_axis) {
-      // here functions are defined to convert index to axis value and back
-      // introduced to support non-equidistant bins
+   /** @summary Extract axes ranges and bins numbers
+     * @desc Also here ensured that all axes objects got their necessary methods */
+   RHistPainter.prototype.ExtractAxesProperties = function(ndim) {
 
       let histo = this.GetHisto();
       if (!histo) return;
 
+      this.nbinsx = this.nbinsy = this.nbinsz = 0;
+
       let axis = this.GetAxis("x");
+      this.nbinsx = axis.GetNumBins();
       this.xmin = axis.min;
       this.xmax = axis.max;
 
-      if (!with_y_axis || !this.nbinsy) return;
+      if (ndim < 2) return;
       axis = this.GetAxis("y");
+      this.nbinsy = axis.GetNumBins();
       this.ymin = axis.min;
       this.ymax = axis.max;
 
-      if (!with_z_axis || !this.nbinsz) return;
+      if (ndim < 3) return;
       axis = this.GetAxis("z");
+      this.nbinsz = axis.GetNumBins();
       this.zmin = axis.min;
       this.zmax = axis.max;
    }
@@ -362,11 +333,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
 
       return Promise.resolve(false);
-   }
-
-
-   RHistPainter.prototype.DrawBins = function() {
-      alert("HistPainter.DrawBins not implemented");
    }
 
    RHistPainter.prototype.ProcessItemReply = function(reply, req) {
@@ -894,11 +860,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       if (!this.nbinsx && when_axis_changed) when_axis_changed = false;
 
-      if (!when_axis_changed) {
-         this.nbinsx = this.GetAxis("x").GetNumBins();
-         this.nbinsy = 0;
-         this.CreateAxisFuncs(false);
-      }
+      if (!when_axis_changed)
+         this.ExtractAxesProperties(1);
 
       let hmin = 0, hmin_nz = 0, hmax = 0, hsum = 0;
 
@@ -1199,9 +1162,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                  .call(this.fillatt.func);
    }
 
-   RH1Painter.prototype.DrawBins = function() {
-      // new method, create svg:path expression ourself directly from histogram
-      // all points will be used, compress expression when too large
+   /** @summary Draw 1D histogram as SVG */
+   RH1Painter.prototype.Draw1DBins = function() {
 
       let width = this.frame_width(), height = this.frame_height();
 
@@ -1479,6 +1441,26 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          this.FinishTextDrawing(this.draw_g);
    }
 
+   /** @summary Get tip text for axis bin */
+   RHistPainter.prototype.GetAxisBinTip = function(name, bin, step) {
+      let pmain = this.frame_painter(),
+          handle = pmain[name+"_handle"],
+          axis = this.GetAxis(name),
+          x1 = axis.GetBinCoord(bin);
+
+
+      if (handle.kind === 'labels')
+         return pmain.AxisAsText(name, x1);
+
+      let x2 = axis.GetBinCoord(bin+(step || 1));
+
+      if (handle.kind === 'time')
+         return pmain.AxisAsText(name, (x1+x2)/2);
+
+      return "[" + pmain.AxisAsText(name, x1) + ", " + pmain.AxisAsText(name, x2) + ")";
+   }
+
+
    RH1Painter.prototype.GetBinTips = function(bin) {
       let tips = [],
           name = this.GetTipName(),
@@ -1489,19 +1471,15 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           x1 = xaxis.GetBinCoord(bin),
           x2 = xaxis.GetBinCoord(bin+di),
           cont = histo.getBinContent(bin+1),
-          xlbl = "", xnormal = false;
+          xlbl = this.GetAxisBinTip("x", bin, di);
 
       if (name.length>0) tips.push(name);
-
-      if (pmain.x_kind === 'labels') xlbl = pmain.AxisAsText("x", x1); else
-      if (pmain.x_kind === 'time') xlbl = pmain.AxisAsText("x", (x1+x2)/2); else
-        { xnormal = true; xlbl = "[" + pmain.AxisAsText("x", x1) + ", " + pmain.AxisAsText("x", x2) + ")"; }
 
       if (this.options.Error || this.options.Mark) {
          tips.push("x = " + xlbl);
          tips.push("y = " + pmain.AxisAsText("y", cont));
          if (this.options.Error) {
-            if (xnormal) tips.push("error x = " + ((x2 - x1) / 2).toPrecision(4));
+            if (xlbl[0] == "[") tips.push("error x = " + ((x2 - x1) / 2).toPrecision(4));
             tips.push("error y = " + histo.getBinError(bin + 1).toPrecision(4));
          }
       } else {
@@ -1828,7 +1806,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                  .then(res2 => {
                      if (!res2) return false;
                      // called when bins received from server, must be reentrant
-                     this.DrawBins();
+                     this.Draw1DBins();
                      this.UpdateStatWebCanvas();
                      return this.AddInteractive();
                      });
@@ -2077,6 +2055,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       if (isany) this.frame_painter().Zoom(xmin, xmax, ymin, ymax);
    }
 
+   /** @summary Scan content of 2-dim histogram */
    RH2Painter.prototype.ScanContent = function(when_axis_changed) {
 
       // no need to rescan histogram while result does not depend from axis selection
@@ -2084,12 +2063,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       let i, j, histo = this.GetHisto();
 
-      this.nbinsx = this.GetAxis("x").GetNumBins();
-      this.nbinsy = this.GetAxis("y").GetNumBins();
-
-      // used in CreateXY method
-
-      this.CreateAxisFuncs(true);
+      this.ExtractAxesProperties(2);
 
       if (this.IsTH2Poly()) {
          this.gminposbin = null;
@@ -3221,7 +3195,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return handle;
    }
 
-   RH2Painter.prototype.DrawBins = function() {
+   /** @summary Draw RH2 bins in 2D mode */
+   RH2Painter.prototype.Draw2DBins = function() {
 
       if (!this.draw_content)
          return this.RemoveDrawG();
@@ -3263,8 +3238,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    RH2Painter.prototype.GetBinTips = function (i, j) {
-      let lines = [], pmain = this.frame_painter(),
-           xaxis = this.GetAxis("y"), yaxis = this.GetAxis("y"),
+      let lines = [],
            histo = this.GetHisto(),
            binz = histo.getBinContent(i+1,j+1),
            di = 1, dj = 1;
@@ -3275,16 +3249,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
 
       lines.push(this.GetTipName() || "histo<2>");
-
-      if (pmain.x_kind == 'labels')
-         lines.push("x = " + pmain.AxisAsText("x", xaxis.GetBinCoord(i)));
-      else
-         lines.push("x = [" + pmain.AxisAsText("x", xaxis.GetBinCoord(i)) + ", " + pmain.AxisAsText("x", xaxis.GetBinCoord(i+di)) + ")");
-
-      if (pmain.y_kind == 'labels')
-         lines.push("y = " + pmain.AxisAsText("y", yaxis.GetBinCoord(j)));
-      else
-         lines.push("y = [" + pmain.AxisAsText("y", yaxis.GetBinCoord(j)) + ", " + pmain.AxisAsText("y", yaxis.GetBinCoord(j+dj)) + ")");
+      lines.push("x = " + this.GetAxisBinTip("x", i, di));
+      lines.push("y = " + this.GetAxisBinTip("y", j, dj));
 
       lines.push("bin = " + i + ", " + j);
 
@@ -3606,7 +3572,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                  .then(res2 => {
                     // called when bins received from server, must be reentrant
                     if (!res2) return false;
-                    this.DrawBins();
+                    this.Draw2DBins();
                     this.UpdateStatWebCanvas();
                     return this.AddInteractive();
                  });

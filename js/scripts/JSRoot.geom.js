@@ -1128,13 +1128,11 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       if (clip[0].enabled || clip[1].enabled || clip[2].enabled) {
          let clippedIntersects = [];
 
-         function myXor(a,b) { return ( a && !b ) || (!a && b); }
-
          for (let i = 0; i < intersects.length; ++i) {
             let point = intersects[i].point, special = (intersects[i].object.type == "Points"), clipped = true;
 
-            if (clip[0].enabled && myXor(this._clipPlanes[0].normal.dot(point) > this._clipPlanes[0].constant, special)) clipped = false;
-            if (clip[1].enabled && myXor(this._clipPlanes[1].normal.dot(point) > this._clipPlanes[1].constant, special)) clipped = false;
+            if (clip[0].enabled && ((this._clipPlanes[0].normal.dot(point) > this._clipPlanes[0].constant) ^ special)) clipped = false;
+            if (clip[1].enabled && ((this._clipPlanes[1].normal.dot(point) > this._clipPlanes[1].constant) ^ special)) clipped = false;
             if (clip[2].enabled && (this._clipPlanes[2].normal.dot(point) > this._clipPlanes[2].constant)) clipped = false;
 
             if (!clipped) clippedIntersects.push(intersects[i]);
@@ -2476,7 +2474,11 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       return this;
    }
 
-   /** @summary Handle drop operation */
+   /** @summary Handle drop operation
+     * @desc opt parameter can include function name like opt$func_name
+     * Such function should be possible to find via {@link JSROOT.findFunction}
+     * Function has to return Promise with objects to draw on geometry
+     * By default function with name "extract_geo_tracks" is checked */
    TGeoPainter.prototype.PerformDrop = function(obj, itemname, hitem, opt) {
 
       if (obj && (obj.$kind==='TTree')) {
@@ -2484,7 +2486,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          let funcname = "extract_geo_tracks";
 
-         if (opt && opt.indexOf("$")>0) {
+         if (opt && opt.indexOf("$") > 0) {
             funcname = opt.substr(0, opt.indexOf("$"));
             opt = opt.substr(opt.indexOf("$")+1);
          }
@@ -2493,15 +2495,13 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          if (!func) return Promise.reject(Error(`Function ${funcname} not found`));
 
-         return new Promise(resolve => {
-            func(obj, opt, tracks => {
-               if (tracks) {
-                  this.drawExtras(tracks, "", false); // FIXME: probably tracks should be remembered??
-                  this.updateClipping(true);
-                  this.Render3D(100);
-               }
-               resolve(this);
-            });
+         return func(obj, opt).then(tracks => {
+            if (tracks) {
+               this.drawExtras(tracks, "", false); // FIXME: probably tracks should be remembered??
+               this.updateClipping(true);
+               this.Render3D(100);
+            }
+            return this;
          });
       }
 
@@ -2843,7 +2843,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       if (this.geo_manager) name_prefix = draw_obj.fName;
 
       if (!script_name || (script_name.length<3) || (geo.NodeKind(draw_obj)!==0))
-         return JSROOT.CallBack(call_back, draw_obj, name_prefix);
+         return call_back(draw_obj, name_prefix);
 
       let painter = this;
 
@@ -2894,7 +2894,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       JSROOT.progress('Loading macro ' + script_name);
 
-      JSROOT.httpRequest(script_name, "text").then(res => {
+      return JSROOT.httpRequest(script_name, "text").then(res => {
          let lines = res.split('\n');
 
          function ProcessNextLine(indx) {
@@ -2932,13 +2932,13 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                }
             }
 
-            JSROOT.CallBack(call_back, draw_obj, name_prefix);
+            call_back(draw_obj, name_prefix);
          }
 
          ProcessNextLine(0);
 
-      }).catch(function() {
-         JSROOT.CallBack(call_back, draw_obj, name_prefix);
+      }).catch(() => {
+         call_back(draw_obj, name_prefix);
       });
    }
 
@@ -4079,7 +4079,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          painter.addExtra(extras, extras_path);
       }
 
-      painter.checkScript(painter.ctrl.script_name, painter.prepareObjectDraw.bind(painter));
+      painter.checkScript(painter.ctrl.script_name, (obj,prefix) => painter.prepareObjectDraw(obj, prefix));
 
       return painter;
    }
@@ -4184,7 +4184,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       // mark object as belong to the hierarchy, require to
       if (item._geoobj) item._geoobj.$geoh = true;
 
-      JSROOT.CallBack(callback, item, item._geoobj);
+      JSROOT.callBack(callback, item, item._geoobj);
    }
 
 
@@ -4290,10 +4290,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       }
 
       item._get = function(item, itemname, callback) {
-         if ('_geoobj' in item)
-            return JSROOT.CallBack(callback, item, item._geoobj);
-
-         JSROOT.CallBack(callback, item, null);
+         JSROOT.callBack(callback, item, item._geoobj || null);
       }
 
       item._expand = function(node, lst) {
