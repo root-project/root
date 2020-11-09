@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year */
-   JSROOT.version_date = "2/11/2020";
+   JSROOT.version_date = "9/11/2020";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date} */
@@ -739,7 +739,7 @@
    /** @summary Define JSROOT module
      * @desc Should be only used for JSROOT modules
      * @param {Array|string} req - requirements, see {@link JSROOT.require} for more details
-     * @param {Function} factoryFunc - called when requirements are fulfilled
+     * @param {Function} factoryFunc - called when requirements are fulfilled, with requested modules
      * @private */
    JSROOT.define = function(req, factoryFunc) {
       jsroot_require(req, factoryFunc);
@@ -747,9 +747,9 @@
 
    /** @summary Generate mask for given bit
     * @param {number} n bit number
-    * @returns {Number} produced make
+    * @returns {Number} produced mask
     * @private */
-   JSROOT.BIT = function(n) { return 1 << (n); }
+   JSROOT.BIT = function(n) { return 1 << n; }
 
    /**
     * @summary Seed simple random generator
@@ -1133,17 +1133,13 @@
       return (typeof elem == 'function') ? elem : null;
    }
 
-   /**
-    * @summary Generic method to invoke callback function.
-    *
+   /** @summary Generic method to invoke callback function.
     * @param {object|function|string} func either normal function or container like
     * { obj: object_pointer, func: name of method to call } or just function name, which can be found with {@link JSROOT.findFunction}
     * @param arg1 first optional argument of callback
-    * @param arg2 second optional argument of callback
-    *
-    * @private
-    */
-   JSROOT.CallBack = function(func, arg1, arg2) {
+    * @param arg2 second optional argument of callback */
+
+   JSROOT.callBack = function(func, arg1, arg2) {
 
       if (typeof func == 'string') func = JSROOT.findFunction(func);
 
@@ -1415,7 +1411,7 @@
       return JSROOT.require(requirements)
                    .then(() => JSROOT.require(user_scripts))
                    .then(() => { if (_.debug_output) { _.debug_output.innerHTML = ""; delete _.debug_output; } })
-                   .then(() => JSROOT.CallBack(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'JSROOT.BuildSimpleGUI'));
+                   .then(() => JSROOT.callBack(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'JSROOT.BuildSimpleGUI'));
    }
 
    /** @summary Create some ROOT classes
@@ -1545,7 +1541,7 @@
             break;
          case 'TH2':
             JSROOT.Create("TH1", obj);
-            JSROOT.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy: 0});
+            JSROOT.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy: 0 });
             break;
          case 'TH2I':
          case 'TH2F':
@@ -1683,7 +1679,7 @@
             JSROOT.Create("TObject", obj);
             JSROOT.Create("TAttLine", obj);
             JSROOT.Create("TAttMarker", obj);
-            JSROOT.extend(obj, { fGeoAtt:0, fNpoints: 0, fPoints: [] });
+            JSROOT.extend(obj, { fGeoAtt: 0, fNpoints: 0, fPoints: [] });
             break;
       }
 
@@ -2238,7 +2234,7 @@
       if (prereq || onload)
          window_on_load().then(() => JSROOT.require(prereq))
                          .then(() => JSROOT.loadScript(user))
-                         .then(() => JSROOT.CallBack(onload));
+                         .then(() => JSROOT.callBack(onload));
 
       return this;
    }
@@ -2246,22 +2242,36 @@
    /// FIXME: for backward compatibility, will be removed in v6.2
 
    JSROOT.GetUrlOption = function(opt, url, dflt) {
+      console.warn('Using obsolete JSROOT.GetUrlOption, change to JSROOT.decodeUrl');
       return JSROOT.decodeUrl(url).get(opt, dflt === undefined ? null : dflt);
    }
 
    JSROOT.AssertPrerequisites = function(req, callback) {
-      console.log('JSROOT.AssertPrerequisites', req);
+      console.warn('Using obsolete JSROOT.AssertPrerequisites, change to JSROOT.require');
       req = req.replace(/2d;v7;/g, "v7gpad;").replace(/2d;v6;/g, "gpad;").replace(/more2d;/g, 'more;').replace(/2d;/g, 'gpad;').replace(/;v6;v7/g, ";gpad;v7gpad");
       JSROOT.require(req).then(callback);
    }
 
    JSROOT.OpenFile = function(filename, callback) {
+      console.warn('Using obsolete JSROOT.OpenFile function, change to JSROOT.openFile');
       let res = JSROOT.openFile(filename);
       return !callback ? res : res.then(callback);
    }
 
-   JSROOT.JSONR_unref = JSROOT.parse;
-   JSROOT.MakeSVG = JSROOT.makeSVG;
+   JSROOT.JSONR_unref = function(arg) {
+      console.warn('Using obsolete JSROOT.JSONR_unref function, change to JSROOT.parse');
+      return JSROOT.parse(arg);
+   }
+
+   JSROOT.MakeSVG = function(args) {
+      console.warn('Using obsolete JSROOT.MakeSVG function, change to JSROOT.makeSVG');
+      return JSROOT.makeSVG(args);
+   }
+
+   JSROOT.CallBack = function(func, arg1, arg2) {
+      console.warn('Using obsolete JSROOT.CallBack function, change to JSROOT.callBack');
+      return JSROOT.callBack(func, arg1, arg2);
+   }
 
    /// end of backward compatibility block
 
@@ -2272,4 +2282,3 @@
    return JSROOT;
 
 }));
-

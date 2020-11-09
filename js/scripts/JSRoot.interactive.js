@@ -849,8 +849,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.zoom_origin[1] = this.zoom_curr[1];
          }
 
-         frame.on("mousemove.zoomRect", this.moveRectSel.bind(this))
-              .on("mouseup.zoomRect", this.endRectSel.bind(this), true);
+         d3.select(window).on("mousemove.zoomRect", this.moveRectSel.bind(this))
+                          .on("mouseup.zoomRect", this.endRectSel.bind(this), true);
 
          this.zoom_rect = null;
 
@@ -865,7 +865,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if ((this.zoom_kind == 0) || (this.zoom_kind > 100)) return;
 
          evnt.preventDefault();
-         let m = d3.pointer(evnt);
+         let m = d3.pointer(evnt, this.svg_frame().node());
 
          m[0] = Math.max(0, Math.min(this.frame_width(), m[0]));
          m[1] = Math.max(0, Math.min(this.frame_height(), m[1]));
@@ -893,10 +893,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          evnt.preventDefault();
 
-         this.svg_frame().on("mousemove.zoomRect", null)
-                         .on("mouseup.zoomRect", null);
+         d3.select(window).on("mousemove.zoomRect", null)
+                          .on("mouseup.zoomRect", null);
 
-         let m = d3.pointer(evnt), changed = [true, true];
+         let m = d3.pointer(evnt, this.svg_frame().node()), changed = [true, true];
          m[0] = Math.max(0, Math.min(this.frame_width(), m[0]));
          m[1] = Math.max(0, Math.min(this.frame_height(), m[1]));
 
@@ -910,14 +910,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              idx = this.swap_xy ? 1 : 0, idy = 1 - idx;
 
          if (changed[idx] && (Math.abs(this.zoom_curr[idx] - this.zoom_origin[idx]) > 10)) {
-            xmin = Math.min(this.RevertX(this.zoom_origin[idx]), this.RevertX(this.zoom_curr[idx]));
-            xmax = Math.max(this.RevertX(this.zoom_origin[idx]), this.RevertX(this.zoom_curr[idx]));
+            xmin = Math.min(this.RevertAxis("x", this.zoom_origin[idx]), this.RevertAxis("x", this.zoom_curr[idx]));
+            xmax = Math.max(this.RevertAxis("x", this.zoom_origin[idx]), this.RevertAxis("x", this.zoom_curr[idx]));
             isany = true;
          }
 
          if (changed[idy] && (Math.abs(this.zoom_curr[idy] - this.zoom_origin[idy]) > 10)) {
-            ymin = Math.min(this.RevertY(this.zoom_origin[idy]), this.RevertY(this.zoom_curr[idy]));
-            ymax = Math.max(this.RevertY(this.zoom_origin[idy]), this.RevertY(this.zoom_curr[idy]));
+            ymin = Math.min(this.RevertAxis("y", this.zoom_origin[idy]), this.RevertAxis("y", this.zoom_curr[idy]));
+            ymax = Math.max(this.RevertAxis("y", this.zoom_origin[idy]), this.RevertAxis("y", this.zoom_curr[idy]));
             isany = true;
          }
 
@@ -1122,14 +1122,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (this.zoom_kind === 103) changed[0] = false;
 
          if (changed[xid] && (Math.abs(this.zoom_curr[xid] - this.zoom_origin[xid]) > 10)) {
-            xmin = Math.min(this.RevertX(this.zoom_origin[xid]), this.RevertX(this.zoom_curr[xid]));
-            xmax = Math.max(this.RevertX(this.zoom_origin[xid]), this.RevertX(this.zoom_curr[xid]));
+            xmin = Math.min(this.RevertAxis("x", this.zoom_origin[xid]), this.RevertAxis("x", this.zoom_curr[xid]));
+            xmax = Math.max(this.RevertAxis("x", this.zoom_origin[xid]), this.RevertAxis("x", this.zoom_curr[xid]));
             isany = true;
          }
 
          if (changed[yid] && (Math.abs(this.zoom_curr[yid] - this.zoom_origin[yid]) > 10)) {
-            ymin = Math.min(this.RevertY(this.zoom_origin[yid]), this.RevertY(this.zoom_curr[yid]));
-            ymax = Math.max(this.RevertY(this.zoom_origin[yid]), this.RevertY(this.zoom_curr[yid]));
+            ymin = Math.min(this.RevertAxis("y", this.zoom_origin[yid]), this.RevertAxis("y", this.zoom_curr[yid]));
+            ymax = Math.max(this.RevertAxis("y", this.zoom_origin[yid]), this.RevertAxis("y", this.zoom_curr[yid]));
             isany = true;
          }
 
@@ -1721,7 +1721,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let canvp = this.canv_painter();
 
       if (!this.snapid || !canvp || canvp._readonly || !canvp._websocket)
-         return JSROOT.CallBack(call_back);
+         return JSROOT.callBack(call_back);
 
       function DoExecMenu(arg) {
          let execp = this.exec_painter || this,
@@ -1787,7 +1787,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (lastclname) _menu.add("endsub:");
          }
 
-         JSROOT.CallBack(_call_back);
+         JSROOT.callBack(_call_back);
       }
 
       let reqid = this.snapid;

@@ -9,7 +9,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /// function use to draw all items from TList or TObjArray inserted into the TCanvas list of primitives
    function drawList(divid, lst, opt, callback) {
-      if (!lst || !lst.arr) return JSROOT.CallBack(callback);
+      if (!lst || !lst.arr) return JSROOT.callBack(callback);
 
       let obj = {
         divid: divid,
@@ -25,7 +25,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               return JSROOT.draw(this.divid, item, opt).then(this.draw_bind); // reenter loop via callback
            }
 
-           return JSROOT.CallBack(this.callback);
+           return JSROOT.callBack(this.callback);
         }
       }
 
@@ -694,14 +694,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             let fff = this; // file item
 
             if (item && item._readobj)
-               return JSROOT.CallBack(callback, item, item._readobj);
+               return JSROOT.callBack(callback, item, item._readobj);
 
             if (item!=null) itemname = painter.itemFullName(item, fff);
 
             function ReadFileObject(file) {
                if (!fff._file) fff._file = file;
 
-               if (!file) return JSROOT.CallBack(callback, item, null);
+               if (!file) return JSROOT.callBack(callback, item, null);
 
                file.ReadObject(itemname).then(obj => {
 
@@ -730,7 +730,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                      if ('_expand' in item) item._name = item._keyname;
                   }
 
-                  JSROOT.CallBack(callback, item, obj);
+                  JSROOT.callBack(callback, item, obj);
                });
             }
 
@@ -934,7 +934,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    HierarchyPainter.prototype.RefreshHtml = function(callback) {
-      if (!this.divid) return JSROOT.CallBack(callback);
+      if (!this.divid) return JSROOT.callBack(callback);
       JSROOT.require('jq2d').then(() => this.RefreshHtml(callback));
    }
 
@@ -942,7 +942,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @desc depending from provided option, same item can generate different object types */
    HierarchyPainter.prototype.get = function(arg, call_back, options) {
 
-      if (arg===null) return JSROOT.CallBack(call_back, null, null);
+      if (arg===null) return JSROOT.callBack(call_back, null, null);
 
       let itemname, item;
 
@@ -956,7 +956,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if ((typeof itemname == 'string') && (itemname.indexOf("img:")==0))
-         return JSROOT.CallBack(call_back, null, {
+         return JSROOT.callBack(call_back, null, {
             _typename: "TJSImage", // artificial class, can be created by users
             fName: itemname.substr(4)
          });
@@ -976,10 +976,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // this is indication that expand does not give us better path to searched item
          if ((typeof arg == 'object') && ('rest' in arg))
             if ((arg.rest == d.rest) || (arg.rest.length <= d.rest.length))
-               return JSROOT.CallBack(call_back);
+               return JSROOT.callBack(call_back);
 
          return this.expand(parentname, res => {
-            if (!res) JSROOT.CallBack(call_back);
+            if (!res) JSROOT.callBack(call_back);
             let newparentname = this.itemFullName(d.last);
             if (newparentname.length>0) newparentname+="/";
             this.get( { name: newparentname + d.rest, rest: d.rest }, call_back, options);
@@ -987,7 +987,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if ((item !== null) && (typeof item._obj == 'object'))
-         return JSROOT.CallBack(call_back, item, item._obj);
+         return JSROOT.callBack(call_back, item, item._obj);
 
       // normally search _get method in the parent items
       let curr = item;
@@ -997,7 +997,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          curr = ('_parent' in curr) ? curr._parent : null;
       }
 
-      JSROOT.CallBack(call_back, item, null);
+      JSROOT.callBack(call_back, item, null);
    }
 
    HierarchyPainter.prototype.draw = function(divid, obj, drawopt) {
@@ -1013,16 +1013,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    HierarchyPainter.prototype.player = function(itemname, option, call_back) {
       let item = this.Find(itemname);
 
-      if (!item || !item._player) return JSROOT.CallBack(call_back, null);
+      if (!item || !item._player) return JSROOT.callBack(call_back, null);
 
       JSROOT.require(item._prereq || '').then(() => {
 
          let player_func = JSROOT.findFunction(item._player);
-         if (!player_func) return JSROOT.CallBack(call_back, null);
+         if (!player_func) return JSROOT.callBack(call_back, null);
 
          this.CreateDisplay(mdi => {
             let res = mdi ? player_func(this, itemname, option) : null;
-            JSROOT.CallBack(call_back, res);
+            JSROOT.callBack(call_back, res);
          });
       });
    }
@@ -1069,7 +1069,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // prevent calling many times
          let f = call_back;
          call_back = null;
-         JSROOT.CallBack(f, respainter || painter, display_itemname);
+         JSROOT.callBack(f, respainter || painter, display_itemname);
       }
 
       h.CreateDisplay(function(mdi) {
@@ -1164,18 +1164,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let drop_callback = drop_painter => {
          if (drop_painter && (typeof drop_painter === 'object')) drop_painter.SetItemName(itemname, null, this);
-         JSROOT.CallBack(call_back);
+         JSROOT.callBack(call_back);
       }
 
       if (itemname == "$legend")
          return JSROOT.require("hist").then(() => {
             let res = jsrp.produceLegend(divid, opt);
-            JSROOT.CallBack(drop_callback, res);
+            JSROOT.callBack(drop_callback, res);
          });
 
       this.get(itemname, (item, obj) => {
 
-         if (!obj) return JSROOT.CallBack(call_back);
+         if (!obj) return JSROOT.callBack(call_back);
 
          let main_painter = JSROOT.get_main_painter(divid);
 
@@ -1268,7 +1268,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Display all provided elements */
    HierarchyPainter.prototype.displayAll = function(items, options, call_back) {
 
-      if (!items || (items.length == 0)) return JSROOT.CallBack(call_back);
+      if (!items || (items.length == 0)) return JSROOT.callBack(call_back);
 
       let h = this;
 
@@ -1284,7 +1284,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return h.get(items[0], function(/*item, obj*/) {
             let tm1 = new Date();
             d3.select("#" + h.disp_frameid).append("h2").html("Item " + items[0] + " reading time = " + (tm1.getTime() - tm0.getTime()) + "ms");
-            return JSROOT.CallBack(call_back);
+            return JSROOT.callBack(call_back);
          });
       }
 
@@ -1361,7 +1361,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          dropitems.splice(n, 1);
       }
 
-      if (items.length == 0) return JSROOT.CallBack(call_back);
+      if (items.length == 0) return JSROOT.callBack(call_back);
 
       let frame_names = new Array(items.length), items_wait = new Array(items.length);
       for (let n=0; n < items.length;++n) {
@@ -1391,7 +1391,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       h.CreateDisplay(function(mdi) {
-         if (!mdi) return JSROOT.CallBack(call_back);
+         if (!mdi) return JSROOT.callBack(call_back);
 
          // Than create empty frames for each item
          for (let i = 0; i < items.length; ++i)
@@ -1421,7 +1421,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             // only when items drawn and all sub-items dropped, one could perform call-back
             if (!isany && call_back) {
-               JSROOT.CallBack(call_back);
+               JSROOT.callBack(call_back);
                call_back = null;
             }
          }
@@ -1528,7 +1528,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    HierarchyPainter.prototype.expand = function(itemname, call_back, d3cont, silent) {
       let hitem = this.Find(itemname);
 
-      if (!hitem && d3cont) return JSROOT.CallBack(call_back);
+      if (!hitem && d3cont) return JSROOT.callBack(call_back);
 
       let DoExpandItem = (_item, _obj, _name) => {
          if (!_name) _name = this.itemFullName(_item);
@@ -1545,7 +1545,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             JSROOT.require(handle.prereq).then(() => {
                _item._expand = JSROOT.findFunction(handle.expand);
                if (_item._expand) return DoExpandItem(_item, _obj, _name);
-               JSROOT.CallBack(call_back);
+               JSROOT.callBack(call_back);
             });
             return true;
          }
@@ -1560,7 +1560,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                } else {
                   if (!silent) this.UpdateTreeNode(_item, d3cont);
                }
-               JSROOT.CallBack(call_back, _item);
+               JSROOT.callBack(call_back, _item);
                return true;
             }
          }
@@ -1573,7 +1573,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             } else {
                if (!silent) this.UpdateTreeNode(_item, d3cont);
             }
-            JSROOT.CallBack(call_back, _item);
+            JSROOT.callBack(call_back, _item);
             return true;
          }
 
@@ -1582,12 +1582,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (hitem) {
          // item marked as it cannot be expanded, also top item cannot be changed
-         if ((hitem._more === false) || (!hitem._parent && hitem._childs)) return JSROOT.CallBack(call_back);
+         if ((hitem._more === false) || (!hitem._parent && hitem._childs)) return JSROOT.callBack(call_back);
 
          if (hitem._childs && hitem._isopen) {
             hitem._isopen = false;
             if (!silent) this.UpdateTreeNode(hitem, d3cont);
-            return JSROOT.CallBack(call_back);
+            return JSROOT.callBack(call_back);
          }
 
          if (hitem._obj && DoExpandItem(hitem, hitem._obj, itemname)) return;
@@ -1601,7 +1601,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (obj && DoExpandItem(item, obj)) return;
 
-         JSROOT.CallBack(call_back);
+         JSROOT.callBack(call_back);
       }, "hierarchy_expand" ); // indicate that we getting element for expand, can handle it differently
 
    }
@@ -1622,29 +1622,29 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    HierarchyPainter.prototype.ForEachJsonFile = function(call_back) {
       if (!this.h) return;
       if ('_jsonfile' in this.h)
-         return JSROOT.CallBack(call_back, this.h);
+         return JSROOT.callBack(call_back, this.h);
 
       if (this.h._childs)
          for (let n = 0; n < this.h._childs.length; ++n) {
             let item = this.h._childs[n];
-            if ('_jsonfile' in item) JSROOT.CallBack(call_back, item);
+            if ('_jsonfile' in item) JSROOT.callBack(call_back, item);
          }
    }
 
    HierarchyPainter.prototype.OpenJsonFile = function(filepath, call_back) {
       let isfileopened = false;
       this.ForEachJsonFile(function(item) { if (item._jsonfile==filepath) isfileopened = true; });
-      if (isfileopened) return JSROOT.CallBack(call_back);
+      if (isfileopened) return JSROOT.callBack(call_back);
 
       JSROOT.httpRequest(filepath, 'object').then(res => {
          let h1 = { _jsonfile: filepath, _kind: "ROOT." + res._typename, _jsontmp: res, _name: filepath.split("/").pop() };
          if (res.fTitle) h1._title = res.fTitle;
          h1._get = function(item,itemname,callback) {
             if (item._jsontmp)
-               return JSROOT.CallBack(callback, item, item._jsontmp);
+               return JSROOT.callBack(callback, item, item._jsontmp);
             JSROOT.httpRequest(item._jsonfile, 'object').then(function(res) {
                item._jsontmp = res;
-               JSROOT.CallBack(callback, item, item._jsontmp);
+               JSROOT.callBack(callback, item, item._jsontmp);
             });
          }
          if (!this.h) this.h = h1; else
@@ -1654,19 +1654,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          this.RefreshHtml(call_back);
-      }).catch(function() { JSROOT.CallBack(call_back); });
+      }).catch(function() { JSROOT.callBack(call_back); });
    }
 
    HierarchyPainter.prototype.ForEachRootFile = function(call_back) {
       if (!this.h) return;
       if ((this.h._kind == "ROOT.TFile") && this.h._file)
-         return JSROOT.CallBack(call_back, this.h);
+         return JSROOT.callBack(call_back, this.h);
 
       if (this.h._childs)
          for (let n = 0; n < this.h._childs.length; ++n) {
             let item = this.h._childs[n];
             if ((item._kind == 'ROOT.TFile') && ('_fullurl' in item))
-               JSROOT.CallBack(call_back, item);
+               JSROOT.callBack(call_back, item);
          }
    }
 
@@ -1675,7 +1675,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let isfileopened = false;
       this.ForEachRootFile(function(item) { if (item._fullurl===filepath) isfileopened = true; });
-      if (isfileopened) return JSROOT.CallBack(call_back);
+      if (isfileopened) return JSROOT.callBack(call_back);
 
       JSROOT.progress("Opening " + filepath + " ...");
 
@@ -1698,18 +1698,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // make CORS warning
          if (!d3.select("#gui_fileCORS").style("background","red").empty())
              setTimeout(function() { d3.select("#gui_fileCORS").style("background",''); }, 5000);
-         JSROOT.CallBack(call_back, false);
+         JSROOT.callBack(call_back, false);
       }).finally(() => JSROOT.progress());
    }
 
    HierarchyPainter.prototype.ApplyStyle = function(style, call_back) {
       if (!style)
-         return JSROOT.CallBack(call_back);
+         return JSROOT.callBack(call_back);
 
       if (typeof style === 'object') {
          if (style._typename === "TStyle")
             JSROOT.extend(JSROOT.gStyle, style);
-         return JSROOT.CallBack(call_back);
+         return JSROOT.callBack(call_back);
       }
 
       if (typeof style === 'string') {
@@ -1724,7 +1724,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                          .then(res => this.ApplyStyle(res, call_back));
       }
 
-      return JSROOT.CallBack(call_back);
+      return JSROOT.callBack(call_back);
    }
 
    HierarchyPainter.prototype.GetFileProp = function(itemname) {
@@ -1798,7 +1798,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // special handling for drawGUI when cashed
          let obj = this._cached_draw_object;
          delete this._cached_draw_object;
-         return JSROOT.CallBack(callback, item, obj);
+         return JSROOT.callBack(callback, item, obj);
       }
 
       if (req.length == 0) req = 'root.json.gz?compact=23';
@@ -1820,7 +1820,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if ((res!=null) && (typeof res == "object")) obj = res;
          }
 
-         JSROOT.CallBack(callback, item, obj);
+         JSROOT.callBack(callback, item, obj);
       });
 
       itemreq.send(null);
@@ -1873,7 +1873,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                         JSROOT.addDrawFunc({ name: typename, func: item._drawfunc, script: item._drawscript, opt: drawopt });
                   });
 
-                  JSROOT.CallBack(user_callback, this);
+                  JSROOT.callBack(user_callback, this);
                });
       }
 
@@ -2091,14 +2091,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    HierarchyPainter.prototype.CreateDisplay = function(callback) {
 
       if ('disp' in this) {
-         if ((this.disp.NumDraw() > 0) || (this.disp_kind == "custom")) return JSROOT.CallBack(callback, this.disp);
+         if ((this.disp.NumDraw() > 0) || (this.disp_kind == "custom")) return JSROOT.callBack(callback, this.disp);
          this.disp.Reset();
          delete this.disp;
       }
 
       // check that we can found frame where drawing should be done
       if (!document.getElementById(this.disp_frameid))
-         return JSROOT.CallBack(callback, null);
+         return JSROOT.callBack(callback, null);
 
       if ((this.disp_kind == "simple") ||
           ((this.disp_kind.indexOf("grid") == 0) && (this.disp_kind.indexOf("gridi") < 0)))
@@ -2109,7 +2109,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (this.disp)
          this.disp.CleanupFrame = this.CleanupFrame.bind(this);
 
-      JSROOT.CallBack(callback, this.disp);
+      JSROOT.callBack(callback, this.disp);
    }
 
    /** @summary If possible, creates custom JSROOT.MDIDisplay for given item
@@ -2310,7 +2310,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.displayAll(itemsarr, optionsarr, () => {
                if (itemsarr) this.RefreshHtml();
                this.SetMonitoring(monitor);
-               JSROOT.CallBack(gui_call_back);
+               JSROOT.callBack(gui_call_back);
            });
          }
       }
@@ -2703,7 +2703,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          for (let k = 0; k < ks.length; ++k) {
             let node = d3.select("#"+ks[k]);
             if (!node.empty())
-               JSROOT.CallBack(userfunc, node.node());
+               JSROOT.callBack(userfunc, node.node());
          }
       }
 
