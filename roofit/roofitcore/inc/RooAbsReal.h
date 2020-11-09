@@ -108,7 +108,9 @@ public:
 
   virtual Double_t getValV(const RooArgSet* normalisationSet = nullptr) const ;
 
-  virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t maxSize, const RooArgSet* normSet = nullptr) const;
+  /// \deprecated getValBatch() has been removed in favour of the faster getValues(). If your code is affected
+  /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
+  virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t maxSize, const RooArgSet* normSet = nullptr) = delete;
   virtual RooSpan<const double> getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
 
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
@@ -404,7 +406,9 @@ protected:
 
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual Double_t evaluate() const = 0;
-  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t maxSize) const;
+  /// \deprecated evaluatedBatch() has been removed in favour of the faster evaluateSpan(). If your code is affected
+  /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
+  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t maxSize) = delete;
   virtual RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
 
   //---------- Interface to access batch data ---------------------------

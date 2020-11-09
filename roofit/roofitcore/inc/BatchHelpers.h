@@ -46,7 +46,6 @@ struct EvaluateInfo {
   
 size_t findSmallestBatch(const std::vector< RooSpan<const double> >& parameters);
 
-EvaluateInfo getInfo(std::vector<const RooRealProxy*> parameters, size_t begin, size_t batchSize);
 EvaluateInfo init(std::vector< RooRealProxy > parameters, 
                   std::vector<  ArrayWrapper* > wrappers,
                   std::vector< double*> arrays,

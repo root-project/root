@@ -440,7 +440,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooXYChi2Var.cxx
     src/RooHelpers.cxx
     src/BatchData.cxx
-    src/BatchHelpers.cxx
     src/RooWrapperPdf.cxx
     src/RunContext.cxx
     src/RooBinSamplingPdf.cxx
