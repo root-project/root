@@ -35,7 +35,7 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<double>   fZoomMin{this, "zoommin", 0.};   ///<! axis zoom min
    RAttrValue<double>   fZoomMax{this, "zoommax", 0.};   ///<! axis zoom max
    RAttrValue<int>      fLog{this, "log", 0};            ///<! log scale
-   RAttrValue<bool>     fInvert{this, "invert", false};  ///<! invert scale
+   RAttrValue<bool>     fReverse{this, "reverse", false};  ///<! reverse scale, chagge min/max values
    RAttrValue<std::string> fTitle{this, "title", ""};                     ///<! axis title
    RAttrValue<std::string> fTitlePos{this, "title_position", "right"};    ///<! axis title position - left, right, center
    RAttrValue<RPadLength>  fTitleOffset{this, "title_offset", 0.2_normal};  ///<! axis title offset
@@ -43,12 +43,17 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<std::string> fTicksSide{this, "ticks_side", "normal"};     ///<! ticks position - normal, invert, both
    RAttrValue<RPadLength>  fTicksSize{this, "ticks_size", 0.03_normal};  ///<! ticks size
 
+   RAttrValue<std::string> fEndingStyle{this, "ending_style", ""};         ///<! axis ending style - none, arrow, circle
+   RAttrValue<RPadLength>  fEndingSize{this, "ending_size", 0.02_normal};  ///<! axis ending size
+
+
    R__ATTR_CLASS(RAttrAxis, "axis_", AddDefaults(fAttrLine).AddDefaults(fAttrText)
                                     .AddDefaults(fMin).AddDefaults(fMax)
                                     .AddDefaults(fZoomMin).AddDefaults(fZoomMax)
-                                    .AddDefaults(fLog).AddDefaults(fInvert)
+                                    .AddDefaults(fLog).AddDefaults(fReverse)
                                     .AddDefaults(fTitle).AddDefaults(fTitlePos).AddDefaults(fTitleOffset)
-                                    .AddDefaults(fTicksSide).AddDefaults(fTicksSize));
+                                    .AddDefaults(fTicksSide).AddDefaults(fTicksSize)
+                                    .AddDefaults(fEndingStyle).AddDefaults(fEndingSize));
 
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
    RAttrAxis &SetAttrLine(const RAttrLine &line) { fAttrLine = line; return *this; }
@@ -82,8 +87,8 @@ class RAttrAxis : public RAttrBase {
    RAttrAxis &SetLog(int base = 10) { fLog = base; return *this; }
    int GetLog() const { return fLog; }
 
-   RAttrAxis &SetInvert(bool on = true) { fInvert = on; return *this; }
-   bool GetInvert() const { return fInvert; }
+   RAttrAxis &SetReverse(bool on = true) { fReverse = on; return *this; }
+   bool GetReverse() const { return fReverse; }
 
    RAttrAxis &SetTitle(const std::string &title) { fTitle = title; return *this; }
    std::string GetTitle() const { return fTitle; }
@@ -106,6 +111,13 @@ class RAttrAxis : public RAttrBase {
    RAttrAxis &SetTicksBoth() { return SetTicksSide("both"); }
    std::string GetTicksSide() const { return fTicksSide; }
 
+   RAttrAxis &SetEndingSize(const RPadLength &sz) { fEndingSize = sz; return *this; }
+   RPadLength GetEndingSize() const { return fEndingSize; }
+
+   RAttrAxis &SetEndingStyle(const std::string &st) { fEndingStyle = st; return *this; }
+   RAttrAxis &SetEndingArrow() { return SetEndingStyle("arrow"); }
+   RAttrAxis &SetEndingCircle() { return SetEndingStyle("cicrle"); }
+   std::string GetEndingStyle() const { return fEndingStyle; }
 
 };
 

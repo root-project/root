@@ -14,6 +14,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RAttrAxis.hxx>
 #include <ROOT/RPadPos.hxx>
+#include <ROOT/RPadLength.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -30,15 +31,14 @@ template<typename AxisType = RAxisEquidistant>
 class RAxisDrawable : public RDrawable {
 
    AxisType fAxis;                        ///< axis object to draw
-   RPadPos fP1;                           ///< axis begin
-   RPadPos fP2;                           ///< axis end
+   RPadPos fPos;                          ///< axis start point
+   RPadLength fLength;                    ///< axis size
+   bool fVertical{false};                 ///< is vertical axis
    RAttrAxis fAttrAxis{this, "axis_"};    ///<! axis attributes
 
 public:
 
    RAxisDrawable() : RDrawable("axis") {}
-
-   RAxisDrawable(const RPadPos& p1, const RPadPos& p2) : RAxisDrawable() { fP1 = p1; fP2 = p2; }
 
    /*
    RAxisDrawable(const RAxisConfig &cfg) : RAxisDrawable()
@@ -54,11 +54,13 @@ public:
 
    RAxisDrawable(const AxisType &axis) : RAxisDrawable() { fAxis = axis; }
 
-   RAxisDrawable &SetP1(const RPadPos& p1) { fP1 = p1; return *this; }
-   RAxisDrawable &SetP2(const RPadPos& p2) { fP2 = p2; return *this; }
+   RAxisDrawable &SetVertical(bool vertical = true) { fVertical = vertical; return *this; }
+   RAxisDrawable &SetPos(const RPadPos& pos) { fPos = pos; return *this; }
+   RAxisDrawable &SetLength(const RPadLength& len) { fLength = len; return *this; }
 
-   const RPadPos& GetP1() const { return fP1; }
-   const RPadPos& GetP2() const { return fP2; }
+   bool IsVertical() const { return fVertical; }
+   const RPadPos& GetPos() const { return fPos; }
+   const RPadLength& GetLength() const { return fLength; }
 
    const RAttrAxis &GetAttrAxis() const { return fAttrAxis; }
    RAxisDrawable &SetAttrAxis(const RAttrAxis &attr) { fAttrAxis = attr; return *this; }
