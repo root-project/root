@@ -161,7 +161,6 @@ TStreamerInfo::TStreamerInfo()
    fOldVersion = Class()->GetClassVersion();
    fNVirtualInfoLoc = 0;
    fVirtualInfoLoc = 0;
-   fLiveCount = 0;
 
    fReadObjectWise = 0;
    fReadMemberWise = 0;
@@ -196,7 +195,6 @@ TStreamerInfo::TStreamerInfo(TClass *cl)
    fOldVersion = Class()->GetClassVersion();
    fNVirtualInfoLoc = 0;
    fVirtualInfoLoc = 0;
-   fLiveCount = 0;
 
    fReadObjectWise = 0;
    fReadMemberWise = 0;
@@ -4815,7 +4813,6 @@ void* TStreamerInfo::New(void *obj)
    for(int nbase = 0; nbase < fNVirtualInfoLoc; ++nbase) {
       *(TStreamerInfo**)(p + fVirtualInfoLoc[nbase]) = this;
    }
-   ++fLiveCount;
    return p;
 }
 
@@ -4996,7 +4993,6 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
    if (!dtorOnly) {
       delete[] p;
    }
-   --fLiveCount;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
