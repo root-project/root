@@ -78,6 +78,8 @@ class TestGaussWeighted : public PDFTestWeightedData
       for (auto par : {mean, sigma}) {
         _parameters.addOwned(*par);
       }
+
+      _multiProcess = 4;
   }
 };
 
