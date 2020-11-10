@@ -3,6 +3,8 @@
 # file only used when ACLiC or ROOT macros will include REve headers,
 # it is not used for ROOT compilation
 
+set(nlohmann_json_VERSION "3.9.1" PARENT_SCOPE)
+
 add_custom_command(
      OUTPUT ${CMAKE_BINARY_DIR}/include/nlohmann/json.hpp
      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/builtins/nlohmann/json.hpp ${CMAKE_BINARY_DIR}/include/nlohmann/json.hpp
