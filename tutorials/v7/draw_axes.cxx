@@ -41,7 +41,7 @@ void draw_axes()
    RAxisIrregular axis2("irregular", {0., 1., 2., 3., 10.});
    auto draw2 = std::make_shared<RAxisDrawable<RAxisIrregular>>(axis2);
    draw2->SetPos({0.1_normal,0.7_normal}).SetLength(0.3_normal);
-   draw2->AttrAxis().SetTitle("irregular").SetTitleCenter();
+   draw2->AttrAxis().SetTitle("irregular").SetTitleCenter().LabelsAttr().SetSize(0.04).SetColor(RColor::kRed);
    canvas->Draw(draw2);
 
    std::vector<std::string> labels = {"first", "second", "third", "forth", "fifth"};
@@ -54,7 +54,7 @@ void draw_axes()
    RAxisEquidistant axis4("log10", 10, 0.1, 100.);
    auto draw4 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis4);
    draw4->SetPos({0.1_normal,0.3_normal}).SetLength(0.3_normal);
-   draw4->AttrAxis().SetLog(10).SetTitle("log10 scale").SetTitleCenter();
+   draw4->AttrAxis().SetLog(10).SetTitle("log10 scale").SetTitleCenter().TitleAttr().SetFont(12).SetColor(RColor::kGreen);
    canvas->Draw(draw4);
 
    RAxisEquidistant axis5("log2", 10, 0.125, 128.001);
@@ -66,7 +66,7 @@ void draw_axes()
    RAxisEquidistant axis6("reverse", 10, 0., 10.);
    auto draw6 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis6);
    draw6->SetVertical().SetPos({0.5_normal,0.9_normal}).SetLength(-0.8_normal);
-   draw6->AttrAxis().SetTitle("reverse");
+   draw6->AttrAxis().SetTitle("reverse").SetEndingArrow();
    canvas->Draw(draw6);
 
    RAxisEquidistant axis7("regular", 10, 0., 100.);
@@ -76,12 +76,19 @@ void draw_axes()
                     .SetTitle("both side ticks").SetTitleCenter();
    canvas->Draw(draw7);
 
+   RAxisEquidistant axis8("regular", 10, 0., 100.);
+   auto draw8 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis8);
+   draw8->SetPos({0.6_normal,0.7_normal}).SetLength(0.3_normal);
+   draw8->AttrAxis().SetTitle("center labels").SetLabelsCenter();
+   canvas->Draw(draw8);
+
+
 
    RAxisEquidistant axis11("varrow", 10, 0., 100.);
    auto draw11 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis11);
    draw11->SetVertical().SetPos({0.95_normal,0.1_normal}).SetLength(0.8_normal);
-   draw11->AttrAxis().SetTitle("vertical arrow").SetTitleCenter()
-                     .SetTicksBoth().SetTicksSize(0.01_normal)
+   draw11->AttrAxis().SetTitle("vertical axis with arrow").SetTitleCenter()
+                     .SetTicksBoth().SetTicksSize(0.01_normal).SetTicksColor(RColor::kBlue)
                      .SetEndingArrow().SetEndingSize(0.01_normal);
    canvas->Draw(draw11);
 

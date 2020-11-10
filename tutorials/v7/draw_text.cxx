@@ -21,7 +21,7 @@
 #include "ROOT/RText.hxx"
 #include "ROOT/RPadPos.hxx"
 
-void text()
+void draw_text()
 {
    using namespace ROOT::Experimental;
 
