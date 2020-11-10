@@ -586,7 +586,7 @@
 /*---- unlikely / likely expressions -----------------------------------------*/
 // These are meant to use in cases like:
 //   if (R__unlikely(expression)) { ... }
-// in performance-critical sessions.  R__unlikely / R__likely provide hints to
+// in performance-critical sections.  R__unlikely / R__likely provide hints to
 // the compiler code generation to heavily optimize one side of a conditional,
 // causing the other branch to have a heavy performance cost.
 //
