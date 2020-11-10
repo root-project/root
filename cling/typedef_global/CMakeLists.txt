@@ -9,11 +9,13 @@ ROOTTEST_ADD_TEST(scopeTest
                   OUTREF output.ref-cling
                   OUTCNV scopeTest_conversion.sh
                   DEPENDS ${depends}
-                  LABELS roottest regression cling)
+                  LABELS roottest regression cling
+                  COPY_TO_BUILDDIR helper.h)
 
 ROOTTEST_ADD_TEST(scopeTest2
                   MACRO rungood.C
                   OUTREF output.ref-cling
                   OUTCNV scopeTest_conversion.sh
                   DEPENDS ${depends}
-                  LABELS roottest regression cling)
+                  LABELS roottest regression cling
+                  COPY_TO_BUILDDIR helper.h)
