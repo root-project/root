@@ -106,7 +106,6 @@ private:
    Version_t         fOldVersion;        ///<! Version of the TStreamerInfo object read from the file
    Int_t             fNVirtualInfoLoc;   ///<! Number of virtual info location to update.
    ULong_t          *fVirtualInfoLoc;    ///<![fNVirtualInfoLoc] Location of the pointer to the TStreamerInfo inside the object (when emulated)
-   std::atomic<ULong_t> fLiveCount;      ///<! Number of outstanding pointer to this StreamerInfo.
    TStreamerInfoActions::TActionSequence *fReadObjectWise;        ///<! List of read action resulting from the compilation.
    TStreamerInfoActions::TActionSequence *fReadMemberWise;        ///<! List of read action resulting from the compilation for use in member wise streaming.
    TStreamerInfoActions::TActionSequence *fReadMemberWiseVecPtr;  ///<! List of read action resulting from the compilation for use in member wise streaming.
