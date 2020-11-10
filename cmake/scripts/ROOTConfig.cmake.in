@@ -85,6 +85,13 @@ foreach(_opt ${_root_enabled_options})
 endforeach()
 
 #----------------------------------------------------------------------------
+# Find external packages which were used in ROOT
+if (NOT ROOT_builtin_nlohmannjson_FOUND)
+  include(CMakeFindDependencyMacro)
+  find_dependency(nlohmann_json @nlohmann_json_VERSION@)
+endif()
+
+#----------------------------------------------------------------------------
 # Now set them to ROOT_LIBRARIES
 set(ROOT_LIBRARIES)
 if(MSVC)
