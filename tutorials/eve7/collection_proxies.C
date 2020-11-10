@@ -129,7 +129,7 @@ public:
    void SetActiveSlice(int a) { fActiveSlice = a; }
 
    using REveCaloDataSelector::ProcessSelection;
-   virtual void ProcessSelection(REveCaloData::vCellId_t& sel_cells, UInt_t selectionId, Bool_t multi)
+   void ProcessSelection(REveCaloData::vCellId_t& sel_cells, UInt_t selectionId, Bool_t multi) override
    {
       fActiveSlice = sel_cells.front().fSlice;
       REveDataCollection* collection = nullptr;
@@ -158,7 +158,7 @@ public:
    }
 
    using REveCaloDataSelector::GetCellsFromSecondaryIndices;
-   virtual void GetCellsFromSecondaryIndices(const std::set<int>& idcs, REveCaloData::vCellId_t& out)
+   void GetCellsFromSecondaryIndices(const std::set<int>& idcs, REveCaloData::vCellId_t& out) override
    {
       REveDataCollection* collection = nullptr;
       for (auto &si : fSliceInfos)
