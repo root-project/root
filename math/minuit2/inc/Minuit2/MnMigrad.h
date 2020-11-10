@@ -81,10 +81,6 @@ private:
 
    VariableMetricMinimizer fMinimizer;
 
-private:
-
-   //forbidden assignment of migrad (const FCNBase& = )
-   MnMigrad& operator=(const MnMigrad&) {return *this;}
 };
 
   }  // namespace Minuit2
