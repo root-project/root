@@ -125,7 +125,7 @@ private:
 
 public:
    REveCaloTowerSelector(REveCaloDataHist* cd) : fCaloData(cd){}
-   void AddSliceInfo(REveDataCollection* c, int s) { fSliceInfos.push_back(SliceInfo(c,s)); }
+   void AddSliceInfo(REveDataCollection* c, int s) { fSliceInfos.emplace_back(c,s); }
    void SetActiveSlice(int a) { fActiveSlice = a; }
 
    using REveCaloDataSelector::ProcessSelection;
