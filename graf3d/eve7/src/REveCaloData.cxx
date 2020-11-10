@@ -143,7 +143,7 @@ void REveCaloData::ProcessSelection(vCellId_t& sel_cells, UInt_t selectionId, Bo
    }
    else
    {
-      REveSelection* selection = (REveSelection*) ROOT::Experimental::gEve->FindElementById(selectionId);
+      REveSelection* selection = dynamic_cast<REveSelection*> (ROOT::Experimental::gEve->FindElementById(selectionId));
 
       std::set<int> secondary_idcs;
       for (vCellId_i i = sel_cells.begin(); i != sel_cells.end(); ++i)
