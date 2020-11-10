@@ -204,7 +204,6 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
   RooArgSet* observables = _pdf->getObservables(*_dataUniform);
   RooArgSet* parameters  = _pdf->getParameters(*_dataUniform);
 
-#ifdef ROOFIT_NEW_BATCH_INTERFACE
   std::vector<BatchHelpers::RunContext> evalData;
   auto callBatchFunc = [compareLogs,&evalData,this](const RooAbsPdf& pdf, std::size_t begin, std::size_t len, const RooArgSet* theNormSet)
       -> RooSpan<const double> {
@@ -217,16 +216,6 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
       return pdf.getValues(evalData.back(), theNormSet);
     }
   };
-#else
-  auto callBatchFunc = [compareLogs](const RooAbsPdf& pdf, std::size_t begin, std::size_t len, const RooArgSet* theNormSet)
-      -> RooSpan<const double> {
-    if (compareLogs) {
-      return pdf.getLogValBatch(begin, len, theNormSet);
-    } else {
-      return pdf.getValBatch(begin, len, theNormSet);
-    }
-  };
-#endif
 
   auto callScalarFunc = [compareLogs](const RooAbsPdf& pdf, const RooArgSet* theNormSet) {
     if (compareLogs)
@@ -235,15 +224,8 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
       return pdf.getVal(theNormSet);
   };
 
-#ifndef ROOFIT_NEW_BATCH_INTERFACE
-  // Batch run
-  _dataUniform->attachBuffers(*observables);
-  *parameters = _parameters;
-#endif
-
   if (normalise) {
     normSet = &_variables;
-
   }
 
   std::vector<RooSpan<const double>> batchResults;
@@ -365,13 +347,9 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
         *observables = *_dataUniform->get(i);
         _pdf->getVal(normSet);
 
-#ifdef ROOFIT_NEW_BATCH_INTERFACE
         BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*_pdf,
             evalData[currentBatch-batchResults.begin()],
             currentBatchIndex, normSet, toleranceCompare);
-#else
-        BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*_pdf, i, normSet, toleranceCompare);
-#endif
 
       } catch (std::exception& e) {
         ADD_FAILURE() << " ERROR when checking batch computation for event " << i << ":\n"
