@@ -170,7 +170,7 @@ protected:
 
    Float_t      fEps;
 
-   REveCaloDataSelector* fSelector {nullptr};
+   std::unique_ptr<REveCaloDataSelector> fSelector {nullptr};
 
 public:
    REveCaloData(const char* n="REveCaloData", const char* t="");
@@ -220,8 +220,8 @@ public:
    Bool_t   GetWrapTwoPi() const { return fWrapTwoPi; }
    void     SetWrapTwoPi(Bool_t w) { fWrapTwoPi=w; }
 
-   void     SetSelector(REveCaloDataSelector* iSelector) { fSelector = iSelector; }
-   REveCaloDataSelector* GetSelector() { return fSelector; }
+   void     SetSelector(REveCaloDataSelector* iSelector) { fSelector.reset(iSelector); }
+   REveCaloDataSelector* GetSelector() { return fSelector.get(); }
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 
