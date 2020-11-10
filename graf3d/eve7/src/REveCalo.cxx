@@ -942,7 +942,7 @@ void REveCalo2D::CellSelectionChangedInternal(REveCaloData::vCellId_t& inputCell
                if (!outputCellLists[bin])
                   outputCellLists[bin] = new REveCaloData::vCellId_t();
 
-               outputCellLists[bin]->push_back(REveCaloData::CellId_t((*i).fTower, (*i).fSlice, (*j).fFraction));
+               outputCellLists[bin]->emplace_back((*i).fTower, (*i).fSlice, (*j).fFraction);
             }
          }
       }
