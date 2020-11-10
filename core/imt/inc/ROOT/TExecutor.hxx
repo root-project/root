@@ -95,14 +95,14 @@ public:
 
    /// \brief Class constructor. Sets the default execution policy and initializes the corresponding executor.
    /// Defaults to multithreaded execution policy if ROOT is compiled with IMT=ON and IsImplicitMTEnabled. Otherwise it defaults to a serial execution policy
-   /// \param nProcessingUnits [optional] Number of parallel processing units, only taken into account if the execution policy is kMultithread
-   explicit TExecutor(unsigned nProcessingUnits = 0) :
-      TExecutor(ROOT::IsImplicitMTEnabled() ? ROOT::Internal::ExecutionPolicy::kMultithread : ROOT::Internal::ExecutionPolicy::kSerial, nProcessingUnits) {}
+   /// \param nWorkers [optional] Number of parallel workers, only taken into account if the execution policy is kMultithread
+   explicit TExecutor(unsigned nWorkers = 0) :
+      TExecutor(ROOT::IsImplicitMTEnabled() ? ROOT::Internal::ExecutionPolicy::kMultithread : ROOT::Internal::ExecutionPolicy::kSerial, nWorkers) {}
 
    /// \brief Class constructor. Sets the execution policy and initializes the corresponding executor.
    /// \param execPolicy Execution policy(kMultithread, kMultiprocess, kSerial) to process the data
-   /// \param nProcessingUnits [optional] Number of parallel processing units, only taken into account if the execution policy is kMultithread
-   explicit TExecutor(ROOT::Internal::ExecutionPolicy execPolicy, unsigned nProcessingUnits = 0) : fExecPolicy(execPolicy) {
+   /// \param nWorkers [optional] Number of parallel workers, only taken into account if the execution policy is kMultithread
+   explicit TExecutor(ROOT::Internal::ExecutionPolicy execPolicy, unsigned nWorkers = 0) : fExecPolicy(execPolicy) {
       fExecPolicy = execPolicy;
       switch(fExecPolicy) {
          case ROOT::Internal::ExecutionPolicy::kSerial:
@@ -110,12 +110,12 @@ public:
             break;
 #ifdef R__USE_IMT
          case ROOT::Internal::ExecutionPolicy::kMultithread:
-            fThreadExecutor = std::make_unique<ROOT::TThreadExecutor>(nProcessingUnits);
+            fThreadExecutor = std::make_unique<ROOT::TThreadExecutor>(nWorkers);
             break;
 #endif
 #ifndef R__WIN32
          case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-            fProcessExecutor = std::make_unique<ROOT::TProcessExecutor>(nProcessingUnits);
+            fProcessExecutor = std::make_unique<ROOT::TProcessExecutor>(nWorkers);
             break;
 #endif
          default:
