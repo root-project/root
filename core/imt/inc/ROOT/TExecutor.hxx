@@ -194,6 +194,40 @@ private:
    #define fProcessExecutor fSequentialExecutor
 #endif
    std::unique_ptr<ROOT::TSequentialExecutor> fSequentialExecutor;
+
+   /// \brief Helper class to get the correct return type from the Map function,
+   /// necessary to infer the ResolveExecutorAndMap function type
+   template<class F, class T>
+   struct MapRetType {
+      using type = typename std::result_of<F(typename T::value_type)>::type;
+   };
+
+   template<class F>
+   struct MapRetType<F, unsigned> {
+      using type = typename std::result_of<F()>::type;
+   };
+
+
+   /// \brief Function called from Map to select and execute the correct Executor
+   /// according to the set Execution Policy.
+   template<class F, class T>
+   auto ResolveExecutorAndMap(F func, T args) -> std::vector<typename MapRetType<F, T>::type> {
+      std::vector<typename MapRetType<F, T>::type> res;
+      switch(fExecPolicy) {
+         case ROOT::Internal::ExecutionPolicy::kSerial:
+            res = fSequentialExecutor->Map(func, args);
+            break;
+         case ROOT::Internal::ExecutionPolicy::kMultithread:
+            res = fThreadExecutor->Map(func, args);
+            break;
+         case ROOT::Internal::ExecutionPolicy::kMultiprocess:
+            res = fProcessExecutor->Map(func, args);
+            break;
+         default:
+            break;
+      }
+      return res;
+   }
 };
 
 
@@ -204,22 +238,7 @@ private:
 /// \copydetails TExecutorCRTP::Map(F func,unsigned nTimes)
 template<class F, class Cond>
 auto TExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
-   using retType = decltype(func());
-   std::vector<retType> res;
-   switch(fExecPolicy){
-      case ROOT::Internal::ExecutionPolicy::kSerial:
-         res = fSequentialExecutor->Map(func, nTimes);
-         break;
-      case ROOT::Internal::ExecutionPolicy::kMultithread:
-         res = fThreadExecutor->Map(func, nTimes);
-         break;
-      case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-         res = fProcessExecutor->Map(func, nTimes);
-         break;
-      default:
-         break;
-   }
-   return res;
+   return ResolveExecutorAndMap(func, nTimes);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -229,23 +248,7 @@ auto TExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<typename std::re
 /// \copydetails TExecutorCRTP::Map(F func,ROOT::TSeq<INTEGER> args)
 template<class F, class INTEGER, class Cond>
 auto TExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
-   using retType = decltype(func(args.front()));
-   std::vector<retType> res;
-
-   switch(fExecPolicy){
-      case ROOT::Internal::ExecutionPolicy::kSerial:
-         res = fSequentialExecutor->Map(func, args);
-         break;
-      case ROOT::Internal::ExecutionPolicy::kMultithread:
-         res = fThreadExecutor->Map(func, args);
-         break;
-      case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-         res = fProcessExecutor->Map(func, args);
-         break;
-      default:
-         break;
-   }
-   return res;
+   return ResolveExecutorAndMap(func, args);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -272,23 +275,7 @@ auto TExecutor::Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std
 /// \copydetails TExecutorCRTP::Map(F func,std::vector<T> &args)
 template<class F, class T, class Cond>
 auto TExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
-   // //check whether func is callable
-   using retType = decltype(func(args.front()));
-   std::vector<retType> res;
-   switch(fExecPolicy){
-      case ROOT::Internal::ExecutionPolicy::kSerial:
-         res = fSequentialExecutor->Map(func, args);
-         break;
-      case ROOT::Internal::ExecutionPolicy::kMultithread:
-         res = fThreadExecutor->Map(func, args);
-         break;
-      case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-         res = fProcessExecutor->Map(func, args);
-         break;
-      default:
-         break;
-   }
-   return res;
+   return ResolveExecutorAndMap(func, args);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -298,23 +285,7 @@ auto TExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<typename st
 /// \copydetails TExecutorCRTP::Map(F func,const std::vector<T> &args)
 template<class F, class T, class Cond>
 auto TExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
-   // //check whether func is callable
-   using retType = decltype(func(args.front()));
-   std::vector<retType> res;
-   switch(fExecPolicy){
-      case ROOT::Internal::ExecutionPolicy::kSerial:
-         res = fSequentialExecutor->Map(func, args);
-         break;
-      case ROOT::Internal::ExecutionPolicy::kMultithread:
-         res = fThreadExecutor->Map(func, args);
-         break;
-      case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-         res = fProcessExecutor->Map(func, args);
-         break;
-      default:
-         break;
-   }
-   return res;
+   return ResolveExecutorAndMap(func, args);
 }
 
 //////////////////////////////////////////////////////////////////////////
