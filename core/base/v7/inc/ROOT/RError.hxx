@@ -18,6 +18,7 @@
 
 #include <ROOT/RConfig.hxx> // for R__[un]likely
 #include <ROOT/RLogger.hxx> // for R__LOG_PRETTY_FUNCTION
+#include <ROOT/RMakeUnique.hxx>
 
 #include <cstddef>
 #include <memory>
