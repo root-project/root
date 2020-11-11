@@ -269,6 +269,24 @@ TClass::ENewType &TClass__GetCallingNew() {
    return fgCallingNew;
 }
 
+struct TClass__GetCallingNewRAII
+{
+   TClass::ENewType &fCurrentValue;
+   TClass::ENewType  fOldValue;
+
+   TClass__GetCallingNewRAII(TClass::ENewType newvalue) :
+      fCurrentValue(TClass__GetCallingNew()),
+      fOldValue(fCurrentValue)
+   {
+      fCurrentValue = newvalue;
+   }
+
+   ~TClass__GetCallingNewRAII()
+   {
+      fCurrentValue = fOldValue;
+   }
+};
+
 void TClass::RegisterAddressInRepository(const char * /*where*/, void *location, const TClass *what) const
 {
    // Register the object for special handling in the destructor.
@@ -4964,9 +4982,10 @@ TClass::ObjectPtr TClass::NewObject(ENewType defConstructor, Bool_t quiet) const
       // so there is a dictionary and it was generated
       // by rootcint, so there should be a default
       // constructor we can call through the wrapper.
-      TClass__GetCallingNew() = defConstructor;
-      p = fNew(0);
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = fNew(0);
+      }
       if (!p && !quiet) {
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
@@ -4980,9 +4999,10 @@ TClass::ObjectPtr TClass::NewObject(ENewType defConstructor, Bool_t quiet) const
       // library is loaded and there will be a default
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
-      TClass__GetCallingNew() = defConstructor;
-      p = gCling->ClassInfo_New(GetClassInfo());
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = gCling->ClassInfo_New(GetClassInfo());
+      }
       if (!p && !quiet) {
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
@@ -4991,9 +5011,10 @@ TClass::ObjectPtr TClass::NewObject(ENewType defConstructor, Bool_t quiet) const
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
-      TClass__GetCallingNew() = defConstructor;
-      p = fCollectionProxy->NewObject();
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = fCollectionProxy->NewObject();
+      }
       if (!p && !quiet) {
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
@@ -5023,9 +5044,10 @@ TClass::ObjectPtr TClass::NewObject(ENewType defConstructor, Bool_t quiet) const
          return 0;
       }
 
-      TClass__GetCallingNew() = defConstructor;
-      p = { sinfo->New(), sinfo};
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = { sinfo->New(), sinfo};
+      }
 
       // FIXME: Mistake?  See note above at the GetObjectStat() call.
       // Allow TObject's to be registered again.
@@ -5074,9 +5096,10 @@ TClass::ObjectPtr TClass::NewObject(void *arena, ENewType defConstructor) const
       // so there is a dictionary and it was generated
       // by rootcint, so there should be a default
       // constructor we can call through the wrapper.
-      TClass__GetCallingNew() = defConstructor;
-      p = fNew(arena);
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = fNew(arena);
+      }
       if (!p) {
          Error("New with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
@@ -5089,9 +5112,10 @@ TClass::ObjectPtr TClass::NewObject(void *arena, ENewType defConstructor) const
       // library is loaded and there will be a default
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
-      TClass__GetCallingNew() = defConstructor;
-      p = gCling->ClassInfo_New(GetClassInfo(),arena);
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = gCling->ClassInfo_New(GetClassInfo(),arena);
+      }
       if (!p) {
          Error("New with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
@@ -5099,9 +5123,10 @@ TClass::ObjectPtr TClass::NewObject(void *arena, ENewType defConstructor) const
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
-      TClass__GetCallingNew() = defConstructor;
-      p = fCollectionProxy->NewObject(arena);
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = fCollectionProxy->NewObject(arena);
+      }
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
@@ -5125,9 +5150,10 @@ TClass::ObjectPtr TClass::NewObject(void *arena, ENewType defConstructor) const
          return 0;
       }
 
-      TClass__GetCallingNew() = defConstructor;
-      p = { sinfo->New(arena), sinfo };
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = { sinfo->New(arena), sinfo };
+      }
 
       // ???BUG???
       // Allow TObject's to be registered again.
@@ -5173,9 +5199,10 @@ TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, ENewType defConstruct
       // so there is a dictionary and it was generated
       // by rootcint, so there should be a default
       // constructor we can call through the wrapper.
-      TClass__GetCallingNew() = defConstructor;
-      p = fNewArray(nElements, 0);
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = fNewArray(nElements, 0);
+      }
       if (!p) {
          Error("NewArray", "cannot create object of class %s version %d", GetName(), fClassVersion);
       }
@@ -5188,9 +5215,10 @@ TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, ENewType defConstruct
       // library is loaded and there will be a default
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
-      TClass__GetCallingNew() = defConstructor;
-      p = gCling->ClassInfo_New(GetClassInfo(),nElements);
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = gCling->ClassInfo_New(GetClassInfo(),nElements);
+      }
       if (!p) {
          Error("NewArray", "cannot create object of class %s version %d", GetName(), fClassVersion);
       }
@@ -5198,9 +5226,10 @@ TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, ENewType defConstruct
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
-      TClass__GetCallingNew() = defConstructor;
-      p = fCollectionProxy->NewObjectArray(nElements);
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = fCollectionProxy->NewObjectArray(nElements);
+      }
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
@@ -5224,9 +5253,10 @@ TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, ENewType defConstruct
          return 0;
       }
 
-      TClass__GetCallingNew() = defConstructor;
-      p = { sinfo->NewArray(nElements), sinfo };
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = { sinfo->NewArray(nElements), sinfo };
+      }
 
       // ???BUG???
       // Allow TObject's to be registered again.
@@ -5270,9 +5300,10 @@ TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, void *arena, ENewType
       // so there is a dictionary and it was generated
       // by rootcint, so there should be a default
       // constructor we can call through the wrapper.
-      TClass__GetCallingNew() = defConstructor;
-      p = fNewArray(nElements, arena);
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = fNewArray(nElements, arena);
+      }
       if (!p) {
          Error("NewArray with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
@@ -5285,9 +5316,10 @@ TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, void *arena, ENewType
       // call, or the class is interpreted and we will call the default
       // constructor that way, or no default constructor is available and
       // we fail.
-      TClass__GetCallingNew() = defConstructor;
-      p = gCling->ClassInfo_New(GetClassInfo(),nElements, arena);
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = gCling->ClassInfo_New(GetClassInfo(),nElements, arena);
+      }
       if (!p) {
          Error("NewArray with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
@@ -5295,9 +5327,10 @@ TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, void *arena, ENewType
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
-      TClass__GetCallingNew() = defConstructor;
-      p = fCollectionProxy->NewObjectArray(nElements, arena);
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = fCollectionProxy->NewObjectArray(nElements, arena);
+      }
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
@@ -5321,9 +5354,10 @@ TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, void *arena, ENewType
          return 0;
       }
 
-      TClass__GetCallingNew() = defConstructor;
-      p = { sinfo->NewArray(nElements, arena), sinfo };
-      TClass__GetCallingNew() = kRealNew;
+      {
+         TClass__GetCallingNewRAII callingNew(defConstructor);
+         p = { sinfo->NewArray(nElements, arena), sinfo };
+      }
 
       // ???BUG???
       // Allow TObject's to be registered again.
