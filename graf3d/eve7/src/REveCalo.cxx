@@ -679,6 +679,7 @@ void REveCalo3D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId
          nlohmann::json jsc;
          jsc["t"] = i->fTower;
          jsc["s"] = i->fSlice;
+         jsc["f"] = i->fFraction;
          sarr.push_back(jsc);
       }
    }
@@ -941,7 +942,7 @@ void REveCalo2D::CellSelectionChangedInternal(REveCaloData::vCellId_t& inputCell
                if (!outputCellLists[bin])
                   outputCellLists[bin] = new REveCaloData::vCellId_t();
 
-               outputCellLists[bin]->push_back(REveCaloData::CellId_t((*i).fTower, (*i).fSlice, (*i).fFraction));
+               outputCellLists[bin]->emplace_back((*i).fTower, (*i).fSlice, (*j).fFraction);
             }
          }
       }

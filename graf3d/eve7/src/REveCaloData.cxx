@@ -134,22 +134,25 @@ REveCaloData::REveCaloData(const char* n, const char* t):
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process newly selected cells with given select-record.
-/// Secondary-select status is set.
-/// CellSelectionChanged() is called if needed.
 
 void REveCaloData::ProcessSelection(vCellId_t& sel_cells, UInt_t selectionId, Bool_t multiple)
 {
-   REveSelection* selection = (REveSelection*) ROOT::Experimental::gEve->FindElementById(selectionId);
-
-   std::set<int> secondary_idcs;
-   for (vCellId_i i = sel_cells.begin(); i != sel_cells.end(); ++i)
+   if (fSelector)
    {
-      int id = (i->fSlice << 24) + i->fTower;
-      // printf("set set unique ID (%d, %d) -> [%d]\n",i->fSlice,  i->fTower, id);
-      secondary_idcs.insert(id);
+      fSelector->ProcessSelection(sel_cells, selectionId, multiple);
    }
+   else
+   {
+      REveSelection* selection = dynamic_cast<REveSelection*> (ROOT::Experimental::gEve->FindElementById(selectionId));
 
-   selection->NewElementPicked(GetElementId(), multiple, true, secondary_idcs);
+      std::set<int> secondary_idcs;
+      for (vCellId_i i = sel_cells.begin(); i != sel_cells.end(); ++i)
+      {
+         int id = (i->fSlice << 24) + i->fTower;
+         secondary_idcs.insert(id);
+      }
+      selection->NewElementPicked(GetElementId(), multiple, true, secondary_idcs);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,16 +282,22 @@ void  REveCaloData::FillExtraSelectionData(nlohmann::json& j, const std::set<int
 {
    vCellId_t cells;
 
-   for (auto &id : secondary_idcs ) {
-
-      int s = (id >> 24);
-      int t = id & 0xffffff;
-      REveCaloData::CellId_t cell(t, s, 1.0f);
-      cells.push_back(cell);
+   if (fSelector)
+   {
+      fSelector->GetCellsFromSecondaryIndices(secondary_idcs, cells);
    }
+   else
+   {
+      for (auto &id : secondary_idcs ) {
 
-    for (auto &c : fNieces)
-         ((REveCaloViz*)c)->WriteCoreJsonSelection(j, cells);
+         int s = (id >> 24);
+         int t = id & 0xffffff;
+         REveCaloData::CellId_t cell(t, s, 1.0f);
+         cells.push_back(cell);
+      }
+   }
+   for (auto &c : fNieces)
+      ((REveCaloViz*)c)->WriteCoreJsonSelection(j, cells);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

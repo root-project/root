@@ -667,13 +667,18 @@ Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
 
       rec["primary"] = i.first->GetElementId();
 
-      // XXX if not empty ???
-      for (auto &imp_el : i.second.f_implied) imp.push_back(imp_el->GetElementId());
-      rec["implied"]  = imp;
-
       // XXX if not empty / f_is_sec is false ???
       for (auto &sec_id : i.second.f_sec_idcs)
          sec.push_back(sec_id);
+
+      // XXX if not empty ???
+      for (auto &imp_el : i.second.f_implied) {
+         imp.push_back(imp_el->GetElementId());
+         imp_el->FillExtraSelectionData(rec["extra"], sec);
+
+      }
+      rec["implied"]  = imp;
+
 
       if (i.first->RequiresExtraSelectionData()) {
          i.first->FillExtraSelectionData(rec["extra"], sec);

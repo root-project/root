@@ -362,7 +362,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          let prl = pthis.mgr.GetElement(rec.primary);
          if (prl && prl.fSceneId == pthis.id)
          {
-            pthis.SelectElement(selection_obj, rec.primary, rec.sec_idcs);
+            pthis.SelectElement(selection_obj, rec.primary, rec.sec_idcs, rec.extra );
          }
          else // XXXXX why else ... should we not process all of them?!!!!
          {
@@ -372,7 +372,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                if (eli && eli.fSceneId == pthis.id)
                {
                   // console.log("CHECK select IMPLIED", pthis);
-                  pthis.SelectElement(selection_obj, impId, rec.sec_idcs);
+                  pthis.SelectElement(selection_obj, impId, rec.sec_idcs, rec.extra);
                }
             }
          }

@@ -523,7 +523,7 @@ sap.ui.define([], function() {
       var oldMap = new Map();
       sel.prev_sel_list.forEach(function(rec) {
          let iset = new Set(rec.sec_idcs);
-         let x    = { "valid": true, "implied": rec.implied, "set": iset };
+         let x    = { "valid": true, "implied": rec.implied, "set": iset, "extra": rec.extra };
          oldMap.set(rec.primary, x);
       });
 
@@ -535,8 +535,7 @@ sap.ui.define([], function() {
       var newMap = new Map();
       sel.sel_list.forEach(function(rec) {
          let iset = new Set(rec.sec_idcs);
-         let x    = { "valid": true, "implied": rec.implied, "set": iset };
-         x.extra = rec.extra;
+         let x    = { "valid": true, "implied": rec.implied, "set": iset, "extra": rec.extra };
          newMap.set(rec.primary, x);
       });
 
