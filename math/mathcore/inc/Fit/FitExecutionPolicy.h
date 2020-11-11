@@ -4,7 +4,8 @@
 namespace ROOT {
 namespace Fit {
 
-using ExecutionPolicy = _R__DEPRECATED_626("Using GetPoolSize to unify the Executor's interfaces") ROOT::Internal::ExecutionPolicy;
+using ExecutionPolicy = _R__DEPRECATED_626("ROOT::Fit::ExecutionPolicy is being deprecated."
+"Use ROOT::Internal::ExecutionPolicy instead.") ROOT::Internal::ExecutionPolicy;
 
 
 } // ROOT ns
