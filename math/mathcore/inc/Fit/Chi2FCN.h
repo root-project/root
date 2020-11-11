@@ -63,7 +63,7 @@ public:
    /**
       Constructor from data set (binned ) and model function
    */
-   Chi2FCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, const ::ROOT::Internal::ExecutionPolicy &executionPolicy = ::ROOT::Internal::ExecutionPolicy::kSerial) :
+   Chi2FCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, const ::ROOT::Internal::ExecutionPolicy &executionPolicy = ::ROOT::Internal::ExecutionPolicy::kSequential) :
       BaseFCN( data, func),
       fNEffPoints(0),
       fGrad ( std::vector<double> ( func->NPar() ) ),
@@ -74,7 +74,7 @@ public:
       Same Constructor from data set (binned ) and model function but now managed by the user
       we clone the function but not the data
    */
-   Chi2FCN ( const BinData & data, const IModelFunction & func, const ::ROOT::Internal::ExecutionPolicy &executionPolicy = ::ROOT::Internal::ExecutionPolicy::kSerial) :
+   Chi2FCN ( const BinData & data, const IModelFunction & func, const ::ROOT::Internal::ExecutionPolicy &executionPolicy = ::ROOT::Internal::ExecutionPolicy::kSequential) :
       BaseFCN(std::shared_ptr<BinData>(const_cast<BinData*>(&data), DummyDeleter<BinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fNEffPoints(0),
       fGrad ( std::vector<double> ( func.NPar() ) ),

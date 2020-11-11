@@ -3,10 +3,23 @@
 
 namespace ROOT {
 namespace Fit {
+namespace ExecutionPolicy {
 
-using ExecutionPolicy = _R__DEPRECATED_626("ROOT::Fit::ExecutionPolicy is being deprecated."
-"Use ROOT::Internal::ExecutionPolicy instead.") ROOT::Internal::ExecutionPolicy;
+constexpr ROOT::Internal::ExecutionPolicy
+   _R__DEPRECATED_626("ROOT::Fit::ExecutionPolicy is being deprecated."
+                      "Use ROOT::Internal::ExecutionPolicy::kMultiThread instead.")
+      kMultithread = ROOT::Internal::ExecutionPolicy::kMultiThread;
 
+constexpr ROOT::Internal::ExecutionPolicy
+   _R__DEPRECATED_626("ROOT::Fit::ExecutionPolicy is being deprecated."
+                      "Use ROOT::Internal::ExecutionPolicy::kMultiProcess instead.")
+      kMultiprocess = ROOT::Internal::ExecutionPolicy::kMultiProcess;
 
-} // ROOT ns
+constexpr ROOT::Internal::ExecutionPolicy _R__DEPRECATED_626(
+   "ROOT::Fit::ExecutionPolicy is being deprecated."
+   "Use ROOT::Internal::ExecutionPolicy::kSequential instead.")
+      kSerial = ROOT::Internal::ExecutionPolicy::kSequential;
+
+} // namespace ExecutionPolicy
 } // Fit ns
+} // namespace ROOT

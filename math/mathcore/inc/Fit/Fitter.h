@@ -139,7 +139,7 @@ public:
                                                     std::is_same<Function, int>::value),
                                                   Function>::type>
    bool Fit(const Data &data, const Function &func,
-            const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial)
+            const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential)
    {
       SetFunction(func);
       return Fit(data, executionPolicy);
@@ -148,11 +148,11 @@ public:
    /**
        Fit a binned data set using a least square fit (default method)
    */
-   bool Fit(const BinData & data, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial) {
+   bool Fit(const BinData & data, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential) {
       SetData(data);
       return DoLeastSquareFit(executionPolicy);
    }
-   bool Fit(const std::shared_ptr<BinData> & data, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial) {
+   bool Fit(const std::shared_ptr<BinData> & data, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential) {
       SetData(data);
       return DoLeastSquareFit(executionPolicy);
    }
@@ -167,7 +167,7 @@ public:
    /**
        fit an unbinned data set using loglikelihood method
    */
-   bool Fit(const UnBinData & data, bool extended = false, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial) {
+   bool Fit(const UnBinData & data, bool extended = false, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
@@ -176,24 +176,24 @@ public:
       Binned Likelihood fit. Default is extended
     */
    bool LikelihoodFit(const BinData &data, bool extended = true,
-                      const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial) {
+                      const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential) {
       SetData(data);
       return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
 
    bool LikelihoodFit(const std::shared_ptr<BinData> &data, bool extended = true,
-                      const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial) {
+                      const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential) {
       SetData(data);
       return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
    /**
       Unbinned Likelihood fit. Default is not extended
     */
-   bool LikelihoodFit(const UnBinData & data, bool extended = false, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial) {
+   bool LikelihoodFit(const UnBinData & data, bool extended = false, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
-   bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial) {
+   bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
@@ -460,11 +460,11 @@ protected:
 
 
    /// least square fit
-   bool DoLeastSquareFit(const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial);
+   bool DoLeastSquareFit(const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential);
    /// binned likelihood fit
-   bool DoBinnedLikelihoodFit(bool extended = true, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial);
+   bool DoBinnedLikelihoodFit(bool extended = true, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential);
    /// un-binned likelihood fit
-   bool DoUnbinnedLikelihoodFit( bool extended = false, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial);
+   bool DoUnbinnedLikelihoodFit( bool extended = false, const ROOT::Internal::ExecutionPolicy &executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential);
    /// linear least square fit
    bool DoLinearFit();
 

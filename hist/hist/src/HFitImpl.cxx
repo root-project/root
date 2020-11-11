@@ -685,7 +685,7 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
    //   - Decode list of options into fitOption (used by both TGraph and TH1)
    //  works for both histograms and graph depending on the enum FitObjectType defined in HFit
    if(ROOT::IsImplicitMTEnabled()) {
-      fitOption.ExecPolicy = ROOT::Internal::ExecutionPolicy::kMultithread;
+      fitOption.ExecPolicy = ROOT::Internal::ExecutionPolicy::kMultiThread;
    }
 
    if (option == 0) return;
@@ -715,12 +715,12 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       // }
 
       if (opt.Contains("SERIAL")) {
-         fitOption.ExecPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
+         fitOption.ExecPolicy = ROOT::Internal::ExecutionPolicy::kSequential;
          opt.ReplaceAll("SERIAL","");
       }
 
       if (opt.Contains("MULTITHREAD")) {
-         fitOption.ExecPolicy = ROOT::Internal::ExecutionPolicy::kMultithread;
+         fitOption.ExecPolicy = ROOT::Internal::ExecutionPolicy::kMultiThread;
          opt.ReplaceAll("MULTITHREAD","");
       }
 
