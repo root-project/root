@@ -4929,7 +4929,21 @@ const void *TClass::DynamicCast(const TClass *cl, const void *obj, Bool_t up)
 
 void *TClass::New(ENewType defConstructor, Bool_t quiet) const
 {
-   void* p = 0;
+   auto obj = NewObject(defConstructor, quiet);
+   if (obj.GetPtr() && obj.GetAllocator()) {
+      // Register the object for special handling in the destructor.
+      RegisterAddressInRepository("TClass::New", obj.GetPtr(), this);
+   }
+   return obj.GetPtr();
+}
+
+// See TClass:New
+// returns a TClass::ObjectPtr which remembers if the object was allocated
+// via a TStreamerInfo.
+
+TClass::ObjectPtr TClass::NewObject(ENewType defConstructor, Bool_t quiet) const
+{
+   ObjectPtr p{nullptr};
 
    if (fNew) {
       // We have the new operator wrapper function,
@@ -4964,7 +4978,7 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
       TClass__GetCallingNew() = defConstructor;
-      p = fCollectionProxy->New();
+      p = fCollectionProxy->NewObject();
       TClass__GetCallingNew() = kRealNew;
       if (!p && !quiet) {
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
@@ -4996,7 +5010,7 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
       }
 
       TClass__GetCallingNew() = defConstructor;
-      p = sinfo->New();
+      p = { sinfo->New(), sinfo};
       TClass__GetCallingNew() = kRealNew;
 
       // FIXME: Mistake?  See note above at the GetObjectStat() call.
@@ -5005,12 +5019,11 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
          SetObjectStat(statsave);
       }
 
-      // Register the object for special handling in the destructor.
-      if (p) {
-         RegisterAddressInRepository("New",p,this);
-      } else {
+      if (!p) {
          Error("New", "Failed to construct class '%s' using streamer info", GetName());
       }
+
+      return p;
    } else {
       Fatal("New", "This cannot happen!");
    }
@@ -5025,7 +5038,22 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
 
 void *TClass::New(void *arena, ENewType defConstructor) const
 {
-   void* p = 0;
+   auto obj = NewObject(arena, defConstructor);
+   if (obj.GetPtr() && obj.GetAllocator()) {
+      // Register the object for special handling in the destructor.
+      RegisterAddressInRepository("TClass::New with placement", obj.GetPtr(), this);
+   }
+   return obj.GetPtr();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to a newly allocated object of this class.
+/// The class must have a default constructor. For meaning of
+/// defConstructor, see TClass::IsCallingNew().
+
+TClass::ObjectPtr TClass::NewObject(void *arena, ENewType defConstructor) const
+{
+   ObjectPtr p{nullptr};
 
    if (fNew) {
       // We have the new operator wrapper function,
@@ -5058,7 +5086,7 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
       TClass__GetCallingNew() = defConstructor;
-      p = fCollectionProxy->New(arena);
+      p = fCollectionProxy->NewObject(arena);
       TClass__GetCallingNew() = kRealNew;
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
@@ -5084,7 +5112,7 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       }
 
       TClass__GetCallingNew() = defConstructor;
-      p = sinfo->New(arena);
+      p = { sinfo->New(arena), sinfo };
       TClass__GetCallingNew() = kRealNew;
 
       // ???BUG???
@@ -5093,10 +5121,6 @@ void *TClass::New(void *arena, ENewType defConstructor) const
          SetObjectStat(statsave);
       }
 
-      // Register the object for special handling in the destructor.
-      if (p) {
-         RegisterAddressInRepository("TClass::New with placement",p,this);
-      }
    } else {
       Error("New with placement", "This cannot happen!");
    }
@@ -5112,7 +5136,23 @@ void *TClass::New(void *arena, ENewType defConstructor) const
 
 void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
 {
-   void* p = 0;
+   auto obj = NewObjectArray(nElements, defConstructor);
+   if (obj.GetPtr() && obj.GetAllocator()) {
+      // Register the object for special handling in the destructor.
+      RegisterAddressInRepository("TClass::NewArray", obj.GetPtr(), this);
+   }
+   return obj.GetPtr();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to a newly allocated array of objects
+/// of this class.
+/// The class must have a default constructor. For meaning of
+/// defConstructor, see TClass::IsCallingNew().
+
+TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, ENewType defConstructor) const
+{
+   ObjectPtr p{nullptr};
 
    if (fNewArray) {
       // We have the new operator wrapper function,
@@ -5145,7 +5185,7 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
       TClass__GetCallingNew() = defConstructor;
-      p = fCollectionProxy->NewArray(nElements);
+      p = fCollectionProxy->NewObjectArray(nElements);
       TClass__GetCallingNew() = kRealNew;
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
@@ -5171,7 +5211,7 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       }
 
       TClass__GetCallingNew() = defConstructor;
-      p = sinfo->NewArray(nElements);
+      p = { sinfo->NewArray(nElements), sinfo };
       TClass__GetCallingNew() = kRealNew;
 
       // ???BUG???
@@ -5180,10 +5220,6 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
          SetObjectStat(statsave);
       }
 
-      // Register the object for special handling in the destructor.
-      if (p) {
-         RegisterAddressInRepository("TClass::NewArray",p,this);
-      }
    } else {
       Error("NewArray", "This cannot happen!");
    }
@@ -5198,7 +5234,22 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
 
 void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) const
 {
-   void* p = 0;
+   auto obj = NewObjectArray(nElements, arena, defConstructor);
+   if (obj.GetPtr() && obj.GetAllocator()) {
+      // Register the object for special handling in the destructor.
+      RegisterAddressInRepository("TClass::NewArray with placement", obj.GetPtr(), this);
+   }
+   return obj.GetPtr();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to a newly allocated object of this class.
+/// The class must have a default constructor. For meaning of
+/// defConstructor, see TClass::IsCallingNew().
+
+TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, void *arena, ENewType defConstructor) const
+{
+   ObjectPtr p{nullptr};
 
    if (fNewArray) {
       // We have the new operator wrapper function,
@@ -5231,7 +5282,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
       TClass__GetCallingNew() = defConstructor;
-      p = fCollectionProxy->NewArray(nElements, arena);
+      p = fCollectionProxy->NewObjectArray(nElements, arena);
       TClass__GetCallingNew() = kRealNew;
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
@@ -5257,7 +5308,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       }
 
       TClass__GetCallingNew() = defConstructor;
-      p = sinfo->NewArray(nElements, arena);
+      p = { sinfo->NewArray(nElements, arena), sinfo };
       TClass__GetCallingNew() = kRealNew;
 
       // ???BUG???
@@ -5271,10 +5322,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
          // use the streamer info to destroy them.
       }
 
-      // Register the object for special handling in the destructor.
-      if (p) {
-         RegisterAddressInRepository("TClass::NewArray with placement",p,this);
-      }
+      return p;
    } else {
       Error("NewArray with placement", "This cannot happen!");
    }
@@ -5396,6 +5444,22 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Explicitly call destructor for object.
+
+void TClass::Destructor(TClass::ObjectPtr obj, Bool_t dtorOnly)
+{
+   // Do nothing if passed a null pointer.
+   if (obj.GetPtr() == 0)
+      return;
+
+   if (obj.GetAllocator()) {
+      obj.GetAllocator()->Destructor(obj.GetPtr(), dtorOnly);
+   } else {
+      Destructor(obj.GetPtr(), dtorOnly);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Explicitly call operator delete[] for an array.
 
 void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
@@ -5450,6 +5514,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
                objVer = iter->second;
                if (objVer == fClassVersion) {
                   currentVersion = kTRUE;
+                  break;
                }
             }
          }
@@ -5501,6 +5566,21 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       }
    } else {
       Error("DeleteArray", "This cannot happen! (class '%s')", GetName());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitly call operator delete[] for an array.
+
+void TClass::DeleteArray(TClass::ObjectPtr obj, Bool_t dtorOnly)
+{
+   // Do nothing if passed a null pointer.
+   if (obj.GetPtr() == 0) return;
+
+   if (obj.GetAllocator()) {
+      obj.GetAllocator()->DeleteArray(obj.GetPtr(), dtorOnly);
+   } else {
+      DeleteArray(obj.GetPtr(), dtorOnly);
    }
 }
 
