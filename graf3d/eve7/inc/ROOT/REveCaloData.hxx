@@ -160,8 +160,8 @@ private:
 protected:
    vSliceInfo_t fSliceInfos;
 
-   TAxis*       fEtaAxis;
-   TAxis*       fPhiAxis;
+   TAxis       *fEtaAxis{nullptr};
+   TAxis       *fPhiAxis{nullptr};
 
    Bool_t       fWrapTwoPi;
 
@@ -170,7 +170,7 @@ protected:
 
    Float_t      fEps;
 
-   std::unique_ptr<REveCaloDataSelector> fSelector {nullptr};
+   std::unique_ptr<REveCaloDataSelector> fSelector;
 
 public:
    REveCaloData(const char* n="REveCaloData", const char* t="");
@@ -298,7 +298,7 @@ private:
    REveCaloDataHist& operator=(const REveCaloDataHist&) = delete;
 
 protected:
-   THStack*    fHStack;
+   THStack*    fHStack{nullptr};
 
 public:
    REveCaloDataHist();
@@ -323,6 +323,7 @@ public:
 
    Int_t   AddHistogram(TH2F* hist);
 };
+
 /**************************************************************************/
 /**************************************************************************/
 
@@ -331,6 +332,7 @@ class REveCaloDataSelector
 public:
    virtual void ProcessSelection( REveCaloData::vCellId_t& sel_cells, UInt_t selectionId, Bool_t multi) = 0;
    virtual void GetCellsFromSecondaryIndices(const std::set<int>&, REveCaloData::vCellId_t& out) = 0;
+   virtual ~REveCaloDataSelector() = default;
 };
 
 } // namespace Experimental
