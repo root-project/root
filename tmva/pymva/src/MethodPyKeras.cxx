@@ -206,7 +206,11 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
             int kerasMajorVersion = PyLong_AsLong(pyKerasMajorVersion);
             int kerasMinorVersion = PyLong_AsLong(pyKerasMinorVersion);
             Log() << kINFO << "Using Keras version " << kerasMajorVersion << "." << kerasMinorVersion << Endl;
-            kerasIsCompatible = (kerasMajorVersion >= 2 && kerasMinorVersion >= 3);
+            // only version 2.3 is latest multi-backend version.
+            // version 2.4 is just tf.keras and should not be used in standalone and will not work in this workflow
+            // see https://github.com/keras-team/keras/releases/tag/2.4.0
+            // for example variable  keras.backend.tensorflow_backend will not exist anymore in keras 2.4
+            kerasIsCompatible = (kerasMajorVersion >= 2 && kerasMinorVersion == 3);
 
          }
       } else {
