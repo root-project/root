@@ -10,23 +10,13 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
           pp           = this.pad_painter(),
           use_frame    = false,
           p            = pp.GetCoordinate(text.fPos),
-          text_size    = this.v7EvalAttr( "text_size", 12),
-          text_angle   = -1 * this.v7EvalAttr( "text_angle", 0),
-          text_align   = this.v7EvalAttr( "text_align", 22),
-          text_color   = this.v7EvalColor( "text_color", "black"),
-          text_font    = this.v7EvalAttr( "text_font", 41);
+          textFont     = this.v7EvalFont("text", { size: 12, color: "black", align: 22 });
 
       this.CreateG(use_frame);
 
-      let arg = { align: text_align, x: p.x, y: p.y, text: text.fText, rotate: text_angle, color: text_color, latex: 1 };
+      this.StartTextDrawing(textFont, 'font');
 
-      // if (text.fTextAngle) arg.rotate = -text.fTextAngle;
-      // if (text._typename == 'TLatex') { arg.latex = 1; fact = 0.9; } else
-      // if (text._typename == 'TMathText') { arg.latex = 2; fact = 0.8; }
-
-      this.StartTextDrawing(text_font, text_size);
-
-      this.DrawText(arg);
+      this.DrawText({ x: p.x, y: p.y, text: text.fText, latex: 1 });
 
       this.FinishTextDrawing();
    }

@@ -1023,6 +1023,32 @@ JSROOT.define(['d3'], (d3) => {
          selection.attr("font-style", this.style);
    }
 
+   /** @summary Set text color (optional) */
+   FontHandler.prototype.setColor = function(color) {
+      this.color = color;
+   }
+
+   /** @summary Set text align (optional) */
+   FontHandler.prototype.setAlign = function(align) {
+      this.align = align;
+   }
+
+   /** @summary Set text angle (optional) */
+   FontHandler.prototype.setAngle = function(angle) {
+      this.angle = angle;
+   }
+
+   /** @summary Allign angle to step raster, add optional offset */
+   FontHandler.prototype.roundAngle = function(step, offset) {
+      this.angle = parseInt(this.angle || 0);
+      if (isNaN(this.angle)) this.angle = 0;
+      this.angle = Math.round(this.angle/step) * step + (offset || 0);
+      if (this.angle < 0)
+         this.angle += 360;
+      else if (this.angle >= 360)
+         this.angle -= 360;
+   }
+
    /** @summary Clears all font-related attributes */
    FontHandler.prototype.clearFont = function(selection) {
       selection.attr("font-family", null)
@@ -2682,7 +2708,7 @@ JSROOT.define(['d3'], (d3) => {
     * are there good solution?
     * @private */
    ObjectPainter.prototype.GetBoundarySizes = function(elem) {
-      if (elem === null) { console.warn('empty node in GetBoundarySizes'); return { width: 0, height: 0 }; }
+      if (!elem) { console.warn('empty node in GetBoundarySizes'); return { width: 0, height: 0 }; }
       let box = elem.getBoundingClientRect(); // works always, but returns sometimes results in ex values, which is difficult to use
       if (parseFloat(box.width) > 0) box = elem.getBBox(); // check that elements visible, request precise value
       let res = { width: parseInt(box.width), height: parseInt(box.height) };
@@ -2692,7 +2718,18 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Finish text drawing
-    * @desc Should be called to complete all text drawing operations */
+    * @returns {Promise} when done
+    * @private */
+   ObjectPainter.prototype.FinishTextPromise = function(draw_g) {
+      return new Promise(resolveFunc => {
+          this.FinishTextDrawing(draw_g, resolveFunc);
+      });
+   }
+
+   /** @summary Finish text drawing
+    * @desc Should be called to complete all text drawing operations
+    * @param {function} call_ready - callback function
+    * @private */
    ObjectPainter.prototype.FinishTextDrawing = function(draw_g, call_ready, checking_mathjax) {
       if (!draw_g) draw_g = this.draw_g;
 
@@ -2705,13 +2742,14 @@ JSROOT.define(['d3'], (d3) => {
       let all_args = draw_g.property('all_args'), missing = 0;
       if (!all_args) {
          console.log('Text drawing is finished - why?????');
-         return 0;
+         all_args = [];
       }
 
       all_args.forEach(arg => { if (!arg.ready) missing++; });
 
       if (missing > 0) {
-         if (call_ready) draw_g.node().text_callback = call_ready;
+         if (typeof call_ready == 'function')
+            draw_g.node().text_callback = call_ready;
          return 0;
       }
 
@@ -2830,6 +2868,17 @@ JSROOT.define(['d3'], (d3) => {
 
       if (!arg.text) arg.text = "";
 
+      arg.draw_g = arg.draw_g || this.draw_g;
+
+      let font = arg.draw_g.property('text_font');
+      arg.font = font; // use in latex conversion
+
+      if (font) {
+         if (font.color && !arg.color) arg.color = font.color;
+         if (font.align && !arg.align) arg.align = font.align;
+         if (font.angle && !arg.rotate) arg.rotate = font.angle;
+      }
+
       let align = ['start', 'middle'];
 
       if (typeof arg.align == 'string') {
@@ -2848,7 +2897,6 @@ JSROOT.define(['d3'], (d3) => {
             align[1] = 'top';
       }
 
-      arg.draw_g = arg.draw_g || this.draw_g;
       if (arg.latex === undefined) arg.latex = 1; //  latex 0-text, 1-latex, 2-math
       arg.align = align;
       arg.x = arg.x || 0;
@@ -2874,15 +2922,11 @@ JSROOT.define(['d3'], (d3) => {
       arg.draw_g.property('all_args').push(arg);
       arg.ready = false; // indicates if drawing is ready for post-processing
 
-      let font = arg.draw_g.property('text_font'),
-          use_mathjax = (arg.latex == 2);
+      let use_mathjax = (arg.latex == 2);
 
       if (arg.latex === 1)
          use_mathjax = (JSROOT.settings.Latex == JSROOT.constants.Latex.AlwaysMathJax) ||
                        ((JSROOT.settings.Latex == JSROOT.constants.Latex.MathJax) && arg.text.match(/[#{\\]/g));
-
-      arg.font = font; // use in latex conversion
-
 
       if (!use_mathjax || arg.nomathjax) {
 
@@ -2942,6 +2986,7 @@ JSROOT.define(['d3'], (d3) => {
       if (arg.scale) this.TextScaleFactor(1. * arg.box.height / arg.height, arg.draw_g);
 
       arg.result_width = arg.box.width;
+      arg.result_height = arg.box.height;
 
       // in some cases
       if (typeof arg.post_process == 'function')

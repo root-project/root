@@ -90,7 +90,7 @@ onmessage = function(e) {
 
       // first mark all visible flags
       clones.SetVisibleFlags(e.data.flags);
-      delete e.data.falgs;
+      delete e.data.flags;
 
       clones.ProduceIdShits();
 

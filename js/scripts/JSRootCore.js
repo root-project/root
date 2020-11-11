@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year */
-   JSROOT.version_date = "9/11/2020";
+   JSROOT.version_date = "11/11/2020";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date} */
@@ -2241,35 +2241,43 @@
 
    /// FIXME: for backward compatibility, will be removed in v6.2
 
+   let _warned = {};
+   function warnOnce(msg) {
+      if (!_warned[msg]) {
+         console.warn(msg);
+         _warned[msg] = true;
+      }
+   }
+
    JSROOT.GetUrlOption = function(opt, url, dflt) {
-      console.warn('Using obsolete JSROOT.GetUrlOption, change to JSROOT.decodeUrl');
+      warnOnce('Using obsolete JSROOT.GetUrlOption, change to JSROOT.decodeUrl');
       return JSROOT.decodeUrl(url).get(opt, dflt === undefined ? null : dflt);
    }
 
    JSROOT.AssertPrerequisites = function(req, callback) {
-      console.warn('Using obsolete JSROOT.AssertPrerequisites, change to JSROOT.require');
+      warnOnce('Using obsolete JSROOT.AssertPrerequisites, change to JSROOT.require');
       req = req.replace(/2d;v7;/g, "v7gpad;").replace(/2d;v6;/g, "gpad;").replace(/more2d;/g, 'more;').replace(/2d;/g, 'gpad;').replace(/;v6;v7/g, ";gpad;v7gpad");
       JSROOT.require(req).then(callback);
    }
 
    JSROOT.OpenFile = function(filename, callback) {
-      console.warn('Using obsolete JSROOT.OpenFile function, change to JSROOT.openFile');
+      warnOnce('Using obsolete JSROOT.OpenFile function, change to JSROOT.openFile');
       let res = JSROOT.openFile(filename);
       return !callback ? res : res.then(callback);
    }
 
    JSROOT.JSONR_unref = function(arg) {
-      console.warn('Using obsolete JSROOT.JSONR_unref function, change to JSROOT.parse');
+      warnOnce('Using obsolete JSROOT.JSONR_unref function, change to JSROOT.parse');
       return JSROOT.parse(arg);
    }
 
    JSROOT.MakeSVG = function(args) {
-      console.warn('Using obsolete JSROOT.MakeSVG function, change to JSROOT.makeSVG');
+      warnOnce('Using obsolete JSROOT.MakeSVG function, change to JSROOT.makeSVG');
       return JSROOT.makeSVG(args);
    }
 
    JSROOT.CallBack = function(func, arg1, arg2) {
-      console.warn('Using obsolete JSROOT.CallBack function, change to JSROOT.callBack');
+      warnOnce('Using obsolete JSROOT.CallBack function, change to JSROOT.callBack');
       return JSROOT.callBack(func, arg1, arg2);
    }
 
