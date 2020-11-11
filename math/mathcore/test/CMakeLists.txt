@@ -81,6 +81,11 @@ ROOT_ADD_GTEST(GradientUnit testGradient.cxx
 ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx
   LIBRARIES Core MathCore Hist RIO Tree GenVector)
 
+ROOT_ADD_GTEST(MulmodUnit mulmod.cxx)
+
+ROOT_ADD_GTEST(RanluxppEngineTests RanluxppEngine.cxx
+        LIBRARIES Core MathCore)
+
 if(veccore AND vc)
   ROOT_ADD_GTEST(VectorizedTMathUnit testVectorizedTMath.cxx
         LIBRARIES Core MathCore)
