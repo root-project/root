@@ -132,6 +132,22 @@ public:
                         // in ROOT Meta w/o interpreter information
    };
 
+   class ObjectPtr
+   {
+      void *fPtr = nullptr;
+
+      TVirtualStreamerInfo *fAllocator = nullptr;
+
+   public:
+      ObjectPtr(void *ptr, TVirtualStreamerInfo *allocator = nullptr) : fPtr(ptr), fAllocator(allocator) {}
+
+      void *GetPtr() const { return fPtr; }
+
+      TVirtualStreamerInfo *GetAllocator() const { return fAllocator; }
+
+      operator bool() const { return fPtr != nullptr; }
+   };
+
 private:
 
 
@@ -506,6 +522,10 @@ public:
    void              *New(void *arena, ENewType defConstructor = kClassNew) const;
    void              *NewArray(Long_t nElements, ENewType defConstructor = kClassNew) const;
    void              *NewArray(Long_t nElements, void *arena, ENewType defConstructor = kClassNew) const;
+   ObjectPtr          NewObject(ENewType defConstructor = kClassNew, Bool_t quiet = kFALSE) const;
+   ObjectPtr          NewObject(void *arena, ENewType defConstructor = kClassNew) const;
+   ObjectPtr          NewObjectArray(Long_t nElements, ENewType defConstructor = kClassNew) const;
+   ObjectPtr          NewObjectArray(Long_t nElements, void *arena, ENewType defConstructor = kClassNew) const;
    virtual void       PostLoadCheck();
    Long_t             Property() const;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
@@ -570,7 +590,9 @@ public:
 
    Int_t              Browse(void *obj, TBrowser *b) const;
    void               DeleteArray(void *ary, Bool_t dtorOnly = kFALSE);
+   void               DeleteArray(ObjectPtr ary, Bool_t dtorOnly = kFALSE);
    void               Destructor(void *obj, Bool_t dtorOnly = kFALSE);
+   void               Destructor(ObjectPtr obj, Bool_t dtorOnly = kFALSE);
    void              *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    const void        *DynamicCast(const TClass *base, const void *obj, Bool_t up = kTRUE);
    Bool_t             IsFolder(void *obj) const;

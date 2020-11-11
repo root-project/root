@@ -94,6 +94,14 @@ public:
       // Execute the container constructor
       return fClass.GetClass()==0 ? 0 : fClass->New(arena);
    }
+   virtual TClass::ObjectPtr NewObject() const {
+      // Return a new container object
+      return fClass.GetClass()==0 ? TClass::ObjectPtr{nullptr, nullptr} : fClass->NewObject();
+   }
+   virtual TClass::ObjectPtr NewObject(void *arena) const {
+      // Execute the container constructor
+      return fClass.GetClass()==0 ? TClass::ObjectPtr{nullptr, nullptr} : fClass->NewObject(arena);
+   }
 
    virtual void     *NewArray(Int_t nElements) const {
       // Return a new container object
@@ -102,6 +110,14 @@ public:
    virtual void     *NewArray(Int_t nElements, void *arena) const {
       // Execute the container constructor
       return fClass.GetClass()==0 ? 0 : fClass->NewArray(nElements, arena);
+   }
+   virtual TClass::ObjectPtr NewObjectArray(Int_t nElements) const {
+      // Return a new container object
+      return fClass.GetClass()==0 ? TClass::ObjectPtr{nullptr, nullptr}: fClass->NewObjectArray(nElements);
+   }
+   virtual TClass::ObjectPtr NewObjectArray(Int_t nElements, void *arena) const {
+      // Execute the container constructor
+      return fClass.GetClass()==0 ? TClass::ObjectPtr{nullptr, nullptr} : fClass->NewObjectArray(nElements, arena);
    }
 
    virtual void      Destructor(void *p, Bool_t dtorOnly = kFALSE) const {
