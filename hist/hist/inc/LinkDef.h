@@ -67,6 +67,8 @@
 #pragma link C++ class TH2F-;
 #pragma link C++ class TH2Poly+;
 #pragma link C++ class TH2PolyBin+;
+#pragma link C++ class THistRange+;
+#pragma link C++ class TBinIterator+;
 #pragma link C++ class TProfile2Poly+;
 #pragma link C++ class TProfile2PolyBin+;
 #pragma link C++ class TH2S-;
