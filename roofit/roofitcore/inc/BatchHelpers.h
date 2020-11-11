@@ -134,15 +134,6 @@ class BracketAdapterWithMask {
 /// Helper class to access a batch-related part of RooAbsReal's interface, which should not leak to the outside world.
 class BatchInterfaceAccessor {
   public:
-    static void clearBatchMemory(RooAbsReal& theReal) {
-      theReal.clearBatchMemory();
-    }
-
-    static void checkBatchComputation(const RooAbsReal& theReal, std::size_t evtNo,
-        const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) {
-      theReal.checkBatchComputation(evtNo, normSet, relAccuracy);
-    }
-
     static void checkBatchComputation(const RooAbsReal& theReal, const BatchHelpers::RunContext& evalData, std::size_t evtNo,
         const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) {
       theReal.checkBatchComputation(evalData, evtNo, normSet, relAccuracy);

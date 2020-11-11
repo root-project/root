@@ -223,7 +223,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooXYChi2Var.h
     RooHelpers.h
     RooSpan.h
-    BatchData.h
     BatchHelpers.h
     RooVDTHeaders.h
     RooWrapperPdf.h
@@ -439,7 +438,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooWorkspace.cxx
     src/RooXYChi2Var.cxx
     src/RooHelpers.cxx
-    src/BatchData.cxx
     src/RooWrapperPdf.cxx
     src/RunContext.cxx
     src/RooBinSamplingPdf.cxx

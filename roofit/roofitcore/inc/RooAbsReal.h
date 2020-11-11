@@ -23,7 +23,6 @@
 #include "RooArgList.h"
 #include "RooGlobalFunc.h"
 #include "RooSpan.h"
-#include "BatchData.h"
 #include <map>
 
 class RooArgList ;
@@ -414,23 +413,9 @@ protected:
   //---------- Interface to access batch data ---------------------------
   //
   friend class BatchHelpers::BatchInterfaceAccessor;
-  void clearBatchMemory() {
-    _batchData.clear();
-    for (auto arg : _serverList) {
-      //TODO get rid of this cast?
-      auto absReal = dynamic_cast<RooAbsReal*>(arg);
-      if (absReal)
-        absReal->clearBatchMemory();
-    }
-  }
-
+  
  private:
-  void checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
   void checkBatchComputation(const BatchHelpers::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
-
-  const BatchHelpers::BatchData& batchData() const {
-    return _batchData;
-  }
 
   /// Debug version of getVal(), which is slow and does error checking.
   Double_t _DEBUG_getVal(const RooArgSet* normalisationSet) const;
@@ -453,7 +438,6 @@ protected:
   Double_t _plotMax ;       // Maximum of plot range
   Int_t    _plotBins ;      // Number of plot bins
   mutable Double_t _value ; // Cache for current value of object
-  mutable BatchHelpers::BatchData _batchData; //! Value storage for batches of events
   TString  _unit ;          // Unit for objects value
   TString  _label ;         // Plot label for objects value
   Bool_t   _forceNumInt ;   // Force numerical integration if flag set

@@ -496,8 +496,6 @@ void RooAbsReal::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TSt
   if(!unit.IsNull()) unit.Prepend(' ');
   //os << indent << "  Value = " << getVal() << unit << endl;
   os << endl << indent << "  Plot label is \"" << getPlotLabel() << "\"" << "\n";
-
-  _batchData.print(os, indent.Data());
 }
 
 
@@ -3254,8 +3252,6 @@ void RooAbsReal::attachToVStore(RooVectorDataStore& vstore)
 {
   RooVectorDataStore::RealVector* rv = vstore.addReal(this) ;
   rv->setBuffer(this,&_value) ;
-
-  _batchData.attachForeignStorage(rv->data());
 }
 
 
@@ -5021,66 +5017,6 @@ Double_t RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
   }
 
   return ret;
-}
-
-
-void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet, double relAccuracy) const {
-  for (const auto server : _serverList) {
-    try {
-      auto realServer = dynamic_cast<RooAbsReal*>(server);
-      if (realServer)
-        realServer->checkBatchComputation(evtNo, normSet, relAccuracy);
-    } catch (CachingError& error) {
-      throw CachingError(std::move(error),
-          FormatPdfTree() << *this);
-    }
-  }
-
-  if (!_allBatchesDirty && _batchData.status(evtNo) >= BatchHelpers::BatchData::kReady) {
-    RooSpan<const double> batch = _batchData.getBatch(evtNo, 1);
-    RooSpan<const double> enclosingBatch = _batchData.getBatch(evtNo-1, 3);
-    const double batchVal = batch[0];
-    const double relDiff = _value != 0. ? (_value - batchVal)/_value : _value - batchVal;
-
-    if (fabs(relDiff) > relAccuracy && fabs(_value) > 1.E-300) {
-      FormatPdfTree formatter;
-      formatter << "--> (Batch computation wrong here:)\n";
-      printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress, kInline);
-      formatter << std::setprecision(17)
-          << "\n _batch[" << std::setw(7) << evtNo-1 << "]=     " << (enclosingBatch.empty() ? 0 : enclosingBatch[0])
-          << "\n _batch[" << std::setw(7) << evtNo   << "]=     " << batchVal << " !!!"
-          << "\n expected ('_value'): " << _value
-          << "\n delta         " <<                     " =     " << _value - batchVal
-          << "\n rel delta     " <<                     " =     " << relDiff
-          << "\n _batch[" << std::setw(7) << evtNo+1 << "]=     " << (enclosingBatch.empty() ? 0 : enclosingBatch[2]);
-
-      formatter << "\n" << std::left << std::setw(24) << "evaluate(unnorm.)" << '=' << evaluate();
-
-      formatter << "\nServers: ";
-      for (const auto server : _serverList) {
-        formatter << "\n - ";
-        server->printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress | kValue, kInline);
-        formatter << std::setprecision(17);
-
-        auto serverAsReal = dynamic_cast<RooAbsReal*>(server);
-        if (serverAsReal) {
-          const BatchHelpers::BatchData& serverBatchData = serverAsReal->batchData();
-          RooSpan<const double> theBatch = serverBatchData.getBatch(evtNo-1, 3);
-          if (!theBatch.empty()) {
-            formatter << "\n   _batch[" << evtNo-1 << "]=" << theBatch[0]
-                                                                       << "\n   _batch[" << evtNo << "]=" << theBatch[1]
-                                                                                                                      << "\n   _batch[" << evtNo+1 << "]=" << theBatch[2];
-          }
-          else {
-            formatter << std::setprecision(17)
-                << "\n   getVal()=" << serverAsReal->getVal(normSet);
-          }
-        }
-      }
-
-      throw CachingError(formatter);
-    }
-  }
 }
 
 
