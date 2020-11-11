@@ -1572,7 +1572,7 @@ void TClass::Init(const char *name, Version_t cversion,
    if (fClassInfo) {
       SetTitle(gCling->ClassInfo_Title(fClassInfo));
       if ( fDeclFileName == 0 || fDeclFileName[0] == '\0' ) {
-	fDeclFileName = kUndeterminedClassInfoName;
+         fDeclFileName = kUndeterminedClassInfoName;
          // Missing interface:
          // fDeclFileLine = gInterpreter->ClassInfo_FileLine( fClassInfo );
 
