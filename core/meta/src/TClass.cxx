@@ -4991,8 +4991,9 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
          SetObjectStat(kFALSE);
       }
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
-      if (!sinfo && !quiet) {
-         Error("New", "Cannot construct class '%s' version %d, no streamer info available!", GetName(), fClassVersion);
+      if (!sinfo) {
+         if (!quiet)
+            Error("New", "Cannot construct class '%s' version %d, no streamer info available!", GetName(), fClassVersion);
          return 0;
       }
 
