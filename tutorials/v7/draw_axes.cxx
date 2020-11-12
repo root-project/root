@@ -15,6 +15,8 @@
 #include <ROOT/RCanvas.hxx>
 #include <ROOT/RAxisDrawable.hxx>
 
+#include "TDatime.h"
+
 // macro must be here while cling is not capable to load
 // library automatically for outlined function see ROOT-10336
 R__LOAD_LIBRARY(libROOTGpadv7)
@@ -27,41 +29,49 @@ void draw_axes()
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("RAxis examples");
 
-   auto draw0 = canvas->Draw<RAxisDrawable>(RPadPos(0.05_normal,0.1_normal), true, 0.8_normal);
-   draw0->AttrAxis().SetMin(0).SetMax(100).SetTitle("vertical");
+   auto x1 = 0.08_normal, w1 = 0.36_normal, x2 = 0.57_normal, w2 = 0.36_normal;
 
-   auto draw1 = canvas->Draw<RAxisDrawable>(RPadPos(0.1_normal,0.9_normal), false, 0.3_normal);
-   draw1->AttrAxis().SetMin(0).SetMax(100).SetTitle("regular").SetTitleCenter();
+   auto draw0 = canvas->Draw<RAxisDrawable>(RPadPos(0.03_normal,0.1_normal), true, 0.8_normal);
+   draw0->AttrAxis().SetMinMax(0, 100).SetTitle("vertical").SetTicksInvert().SetTicksSize(0.02_normal);
 
-/*   RAxisIrregular axis2("irregular", {0., 1., 2., 3., 10.});
-   auto draw2 = std::make_shared<RAxisDrawable<RAxisIrregular>>(axis2);
-   draw2->SetPos({0.1_normal,0.7_normal}).SetLength(0.3_normal);
-   draw2->AttrAxis().SetTitle("irregular").SetTitleCenter().LabelsAttr().SetSize(0.04).SetColor(RColor::kRed);
-   canvas->Draw(draw2);
-*/
+   auto draw1 = canvas->Draw<RAxisDrawable>(RPadPos(x1, 0.9_normal), false, w1);
+   draw1->AttrAxis().SetMinMax(0, 100).SetTitle("horizontal").SetTitleCenter();
 
-   std::vector<std::string> labels = {"first", "second", "third", "forth", "fifth"};
-   auto draw3 = canvas->Draw<RAxisLabelsDrawable>(RPadPos(0.1_normal,0.5_normal), false, 0.3_normal, labels);
-   draw3->AttrAxis().SetTitle("labels");
-
-   auto draw4 = canvas->Draw<RAxisDrawable>(RPadPos(0.1_normal,0.3_normal), false, 0.3_normal);
-   draw4->AttrAxis().SetMin(1).SetMax(100).SetLog(10).SetTitle("log10 scale").SetTitleCenter().TitleAttr().SetFont(12).SetColor(RColor::kGreen);
-
-   auto draw5 = canvas->Draw<RAxisDrawable>(RPadPos(0.1_normal,0.1_normal), false, 0.3_normal);
-   draw5->AttrAxis().SetMin(0.125).SetMax(128.001).SetLog(2).SetTitle("log2 scale").SetTitleCenter();
-
-   auto draw6 = canvas->Draw<RAxisDrawable>(RPadPos(0.5_normal,0.9_normal), true, -0.8_normal);
-   draw6->AttrAxis().SetMin(0).SetMax(10).SetTitle("reverse").SetEndingArrow();
-
-   auto draw7 = canvas->Draw<RAxisDrawable>(RPadPos(0.6_normal,0.9_normal), false, 0.3_normal);
-   draw7->AttrAxis().SetMin(0).SetMax(100).SetTicksBoth().SetTicksSize(0.02_normal)
+   auto draw2 = canvas->Draw<RAxisDrawable>(RPadPos(x1, 0.7_normal), false, w1);
+   draw2->AttrAxis().SetMinMax(0, 100).SetTicksBoth().SetTicksSize(0.02_normal)
                     .SetTitle("both side ticks").SetTitleCenter();
 
-   auto draw8 = canvas->Draw<RAxisDrawable>(RPadPos(0.6_normal,0.7_normal), false, 0.3_normal);
-   draw8->AttrAxis().SetMin(0).SetMax(100).SetTitle("center labels").SetLabelsCenter();
+   auto draw3 = canvas->Draw<RAxisDrawable>(RPadPos(x1, 0.5_normal), false, w1);
+   draw3->AttrAxis().SetMinMax(0, 100).SetTitle("center labels").SetLabelsCenter();
 
-   auto draw11 = canvas->Draw<RAxisDrawable>(RPadPos(0.95_normal,0.1_normal), true, 0.8_normal);
-   draw11->AttrAxis().SetMin(0).SetMax(100).SetTitle("vertical axis with arrow").SetTitleCenter()
+   auto draw4 = canvas->Draw<RAxisDrawable>(RPadPos(x1, 0.3_normal), false, w1);
+   draw4->AttrAxis().SetMinMax(TDatime(2020,11,12,9,0,0).Convert(), TDatime(2020,11,12,12,0,0).Convert())
+                    .SetTimeDisplay("%d/%m/%y %H:%M").SetTitle("time display").LabelsAttr().SetSize(0.01).SetColor(RColor::kRed);
+
+   std::vector<std::string> labels = {"first", "second", "third", "forth", "fifth"};
+   auto draw5 = canvas->Draw<RAxisLabelsDrawable>(RPadPos(x1, 0.1_normal), false, w1, labels);
+   draw5->AttrAxis().SetTitle("labels, swap ticks side").SetTitleLeft().SetTicksInvert();
+
+   auto draw6 = canvas->Draw<RAxisDrawable>(RPadPos(0.5_normal,0.9_normal), true, -0.8_normal);
+   draw6->AttrAxis().SetMinMax(0, 10).SetTitle("vertical negative length").SetEndingArrow();
+
+   auto draw7 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.9_normal), false, w2);
+   draw7->AttrAxis().SetMinMax(1, 100).SetLog(10).SetTitle("log10 scale").SetTitleCenter().TitleAttr().SetFont(12).SetColor(RColor::kGreen);
+
+   auto draw8 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.7_normal), false, w2);
+   draw8->AttrAxis().SetMinMax(0.125, 128.001).SetLog(2).SetTitle("log2 scale").SetTitleCenter();
+
+   auto draw9 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.5_normal), false, w2);
+   draw9->AttrAxis().SetMinMax(1, 100).SetLog(2.7182).SetTitle("ln scale").SetTitleCenter();
+
+   auto draw10 = canvas->Draw<RAxisDrawable>(RPadPos(x2+w2, 0.3_normal), false, -w2);
+   draw10->AttrAxis().SetMinMax(0, 100).SetTitle("horizontal negative length").SetTitleCenter().SetEndingArrow();
+
+   auto draw11 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.1_normal), false, w2);
+   draw11->AttrAxis().SetMinMax(0, 100).SetReverse().SetTitle("horizontal reverse").SetTitleCenter().SetEndingArrow();
+
+   auto draw12 = canvas->Draw<RAxisDrawable>(RPadPos(0.97_normal, 0.1_normal), true, 0.8_normal);
+   draw12->AttrAxis().SetMinMax(0, 100).SetTitle("vertical axis with arrow").SetTitleCenter()
                      .SetTicksBoth().SetTicksSize(0.01_normal).SetTicksColor(RColor::kBlue)
                      .SetEndingArrow().SetEndingSize(0.01_normal);
 
