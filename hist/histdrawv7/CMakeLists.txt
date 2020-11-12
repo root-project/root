@@ -10,12 +10,10 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHistDraw
   HEADERS
-    ROOT/RAxisDrawable.hxx
     ROOT/RHistDisplayItem.hxx
     ROOT/RHistDrawable.hxx
     ROOT/RHistStatBox.hxx
   SOURCES
-    src/RAxisDrawable.cxx
     src/RHistDisplayItem.cxx
     src/RHistDrawable.cxx
     src/RHistStatBox.cxx

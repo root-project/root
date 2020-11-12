@@ -40,8 +40,6 @@
 #pragma link C++ class ROOT::Experimental::RAxisBase+;
 #pragma link C++ class ROOT::Experimental::RAxisEquidistant+;
 #pragma link C++ class ROOT::Experimental::RAxisIrregular+;
-#pragma link C++ class ROOT::Experimental::RAxisGrow+;
-#pragma link C++ class ROOT::Experimental::RAxisLabels+;
 #pragma link C++ class tuple<ROOT::Experimental::RAxisEquidistant>+;
 #pragma link C++ class tuple<ROOT::Experimental::RAxisIrregular>+;
 #pragma link C++ class tuple<ROOT::Experimental::RAxisEquidistant,ROOT::Experimental::RAxisIrregular>+;

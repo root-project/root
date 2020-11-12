@@ -17,7 +17,8 @@
 
 // macro must be here while cling is not capable to load
 // library automatically for outlined function see ROOT-10336
-R__LOAD_LIBRARY(libROOTHistDraw)
+R__LOAD_LIBRARY(libROOTGpadv7)
+
 
 void draw_axes()
 {
@@ -26,71 +27,43 @@ void draw_axes()
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("RAxis examples");
 
-   RAxisEquidistant axis0("vertical", 10, 0., 10.);
-   auto draw0 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis0);
-   draw0->SetVertical().SetPos({0.05_normal,0.1_normal}).SetLength(0.8_normal);
-   draw0->AttrAxis().SetTitle("vertical");
-   canvas->Draw(draw0);
+   auto draw0 = canvas->Draw<RAxisDrawable>(RPadPos(0.05_normal,0.1_normal), true, 0.8_normal);
+   draw0->AttrAxis().SetMin(0).SetMax(100).SetTitle("vertical");
 
-   RAxisEquidistant axis1("regular", 10, 0., 100.);
-   auto draw1 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis1);
-   draw1->SetPos({0.1_normal,0.9_normal}).SetLength(0.3_normal);
-   draw1->AttrAxis().SetTitle("regular").SetTitleCenter();
-   canvas->Draw(draw1);
+   auto draw1 = canvas->Draw<RAxisDrawable>(RPadPos(0.1_normal,0.9_normal), false, 0.3_normal);
+   draw1->AttrAxis().SetMin(0).SetMax(100).SetTitle("regular").SetTitleCenter();
 
-   RAxisIrregular axis2("irregular", {0., 1., 2., 3., 10.});
+/*   RAxisIrregular axis2("irregular", {0., 1., 2., 3., 10.});
    auto draw2 = std::make_shared<RAxisDrawable<RAxisIrregular>>(axis2);
    draw2->SetPos({0.1_normal,0.7_normal}).SetLength(0.3_normal);
    draw2->AttrAxis().SetTitle("irregular").SetTitleCenter().LabelsAttr().SetSize(0.04).SetColor(RColor::kRed);
    canvas->Draw(draw2);
+*/
 
    std::vector<std::string> labels = {"first", "second", "third", "forth", "fifth"};
-   RAxisLabels axis3("labels", labels);
-   auto draw3 = std::make_shared<RAxisDrawable<RAxisLabels>>(axis3);
-   draw3->SetPos({0.1_normal,0.5_normal}).SetLength(0.3_normal);
-   draw3->AttrAxis().SetTitle("labels").SetTitleCenter();
-   canvas->Draw(draw3);
+   auto draw3 = canvas->Draw<RAxisLabelsDrawable>(RPadPos(0.1_normal,0.5_normal), false, 0.3_normal, labels);
+   draw3->AttrAxis().SetTitle("labels");
 
-   RAxisEquidistant axis4("log10", 10, 0.1, 100.);
-   auto draw4 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis4);
-   draw4->SetPos({0.1_normal,0.3_normal}).SetLength(0.3_normal);
-   draw4->AttrAxis().SetLog(10).SetTitle("log10 scale").SetTitleCenter().TitleAttr().SetFont(12).SetColor(RColor::kGreen);
-   canvas->Draw(draw4);
+   auto draw4 = canvas->Draw<RAxisDrawable>(RPadPos(0.1_normal,0.3_normal), false, 0.3_normal);
+   draw4->AttrAxis().SetMin(1).SetMax(100).SetLog(10).SetTitle("log10 scale").SetTitleCenter().TitleAttr().SetFont(12).SetColor(RColor::kGreen);
 
-   RAxisEquidistant axis5("log2", 10, 0.125, 128.001);
-   auto draw5 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis5);
-   draw5->SetPos({0.1_normal,0.1_normal}).SetLength(0.3_normal);
-   draw5->AttrAxis().SetLog(2).SetTitle("log2 scale").SetTitleCenter();
-   canvas->Draw(draw5);
+   auto draw5 = canvas->Draw<RAxisDrawable>(RPadPos(0.1_normal,0.1_normal), false, 0.3_normal);
+   draw5->AttrAxis().SetMin(0.125).SetMax(128.001).SetLog(2).SetTitle("log2 scale").SetTitleCenter();
 
-   RAxisEquidistant axis6("reverse", 10, 0., 10.);
-   auto draw6 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis6);
-   draw6->SetVertical().SetPos({0.5_normal,0.9_normal}).SetLength(-0.8_normal);
-   draw6->AttrAxis().SetTitle("reverse").SetEndingArrow();
-   canvas->Draw(draw6);
+   auto draw6 = canvas->Draw<RAxisDrawable>(RPadPos(0.5_normal,0.9_normal), true, -0.8_normal);
+   draw6->AttrAxis().SetMin(0).SetMax(10).SetTitle("reverse").SetEndingArrow();
 
-   RAxisEquidistant axis7("regular", 10, 0., 100.);
-   auto draw7 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis7);
-   draw7->SetPos({0.6_normal,0.9_normal}).SetLength(0.3_normal);
-   draw7->AttrAxis().SetTicksBoth().SetTicksSize(0.02_normal)
+   auto draw7 = canvas->Draw<RAxisDrawable>(RPadPos(0.6_normal,0.9_normal), false, 0.3_normal);
+   draw7->AttrAxis().SetMin(0).SetMax(100).SetTicksBoth().SetTicksSize(0.02_normal)
                     .SetTitle("both side ticks").SetTitleCenter();
-   canvas->Draw(draw7);
 
-   RAxisEquidistant axis8("regular", 10, 0., 100.);
-   auto draw8 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis8);
-   draw8->SetPos({0.6_normal,0.7_normal}).SetLength(0.3_normal);
-   draw8->AttrAxis().SetTitle("center labels").SetLabelsCenter();
-   canvas->Draw(draw8);
+   auto draw8 = canvas->Draw<RAxisDrawable>(RPadPos(0.6_normal,0.7_normal), false, 0.3_normal);
+   draw8->AttrAxis().SetMin(0).SetMax(100).SetTitle("center labels").SetLabelsCenter();
 
-
-
-   RAxisEquidistant axis11("varrow", 10, 0., 100.);
-   auto draw11 = std::make_shared<RAxisDrawable<RAxisEquidistant>>(axis11);
-   draw11->SetVertical().SetPos({0.95_normal,0.1_normal}).SetLength(0.8_normal);
-   draw11->AttrAxis().SetTitle("vertical axis with arrow").SetTitleCenter()
+   auto draw11 = canvas->Draw<RAxisDrawable>(RPadPos(0.95_normal,0.1_normal), true, 0.8_normal);
+   draw11->AttrAxis().SetMin(0).SetMax(100).SetTitle("vertical axis with arrow").SetTitleCenter()
                      .SetTicksBoth().SetTicksSize(0.01_normal).SetTicksColor(RColor::kBlue)
                      .SetEndingArrow().SetEndingSize(0.01_normal);
-   canvas->Draw(draw11);
 
    canvas->SetSize(1000, 800);
 
