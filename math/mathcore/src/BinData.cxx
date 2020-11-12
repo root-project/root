@@ -221,7 +221,7 @@ namespace ROOT {
       copy constructors
     */
     BinData::BinData(const BinData &rhs)
-      : FitData(),
+      : FitData(rhs),
       fDataPtr(nullptr),
       fDataErrorPtr(nullptr), fDataErrorHighPtr(nullptr), fDataErrorLowPtr(nullptr),
       fpTmpCoordErrorVector(nullptr), fpTmpBinEdgeVector(nullptr)
