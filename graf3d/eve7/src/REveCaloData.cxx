@@ -630,9 +630,8 @@ void  REveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
 
    }
    newY.push_back(binY.back()); // overflow
-
-   fEtaAxis.reset(new TAxis(newX.size()-1, &newX[0]));
-   fPhiAxis.reset(new TAxis(newY.size()-1, &newY[0]));
+   fEtaAxis = std::make_unique<TAxis>(newX.size()-1, &newX[0]);
+   fEtaAxis = std::make_unique<TAxis>(newY.size()-1, &newY[0]);
    fEtaAxis->SetNdivisions(510);
    fPhiAxis->SetNdivisions(510);
 }
@@ -808,9 +807,9 @@ void REveCaloDataHist::GetCellData(const REveCaloData::CellId_t &id,
 
 Int_t REveCaloDataHist::AddHistogram(TH2F* hist)
 {
-    if (!fEtaAxis) {
-      fEtaAxis.reset(hist->GetXaxis());
-      fPhiAxis.reset(hist->GetYaxis());
+   if (!fEtaAxis) {
+      fEtaAxis.reset(new TAxis(*hist->GetXaxis()));
+      fPhiAxis.reset(new TAxis(*hist->GetYaxis()));
    }
    fHStack->Add(hist);
    fSliceInfos.push_back(SliceInfo_t());
