@@ -2174,9 +2174,7 @@ const char *TSystem::GetLinkedLibraries()
 ///  - S: shared libraries loaded at the start of the executable, because
 ///       they were specified on the link line.
 ///  - D: shared libraries dynamically loaded after the start of the program.
-/// For MacOS only:
-///  - L: list the .dylib rather than the .so (this is intended for linking)
-///       This options is not the default
+///  - L: this option is ignored, and available for backward compatibility.
 
 const char *TSystem::GetLibraries(const char *regexp, const char *options,
                                   Bool_t isRegexp)
@@ -2323,39 +2321,6 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    }
    fListLibs = maclibs;
 }
-#endif
-
-#if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5)
-   if (so2dylib) {
-      TString libs2 = fListLibs;
-      TString maclibs;
-
-      static TRegexp separator("[^ \\t\\s]+");
-      static TRegexp user_so("\\.so$");
-
-      Ssiz_t start, index, end;
-      start = index = end = 0;
-
-      while ((start < libs2.Length()) && (index != kNPOS)) {
-         index = libs2.Index(separator, &end, start);
-         if (index >= 0) {
-            // Change .so into .dylib and remove the
-            // path info if it is not accessible
-            TString s = libs2(index, end);
-            if (s.Index(user_so) != kNPOS) {
-               s.ReplaceAll(".so",".dylib");
-               if ( GetPathInfo( s, 0, (Long_t*)0, 0, 0 ) != 0 ) {
-                  s.Replace( 0, s.Last('/')+1, 0, 0);
-                  s.Replace( 0, s.Last('\\')+1, 0, 0);
-               }
-            }
-            if (!maclibs.IsNull()) maclibs.Append(" ");
-            maclibs.Append(s);
-         }
-         start += end+1;
-      }
-      fListLibs = maclibs;
-   }
 #endif
 
    return fListLibs.Data();
