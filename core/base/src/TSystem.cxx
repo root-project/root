@@ -1833,45 +1833,6 @@ static bool R__MatchFilename(const char *left, const char *right)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if lib is in the dynamic linker cache, returns true if it is, and if so,
-/// modifies the library file name parameter `lib` from `/usr/lib/libFOO.dylib`
-/// to `-lFOO` such that it can be passed to the linker.
-/// This is a unique feature of macOS 11.
-
-static bool R__LibExistsInDylibCache(TString &lib)
-{
-#if !defined(R__MACOSX)
-   (void) lib; // suppress warning
-   return false;
-#else
-   const char *mapfile = nullptr;
-#if __x86_64__
-   mapfile = "/System/Library/dyld/dyld_shared_cache_x86_64.map";
-#elif __arm64__
-   mapfile = "/System/Library/dyld/dyld_shared_cache_arm64e.map";
-#else
-   #error unsupported architecture
-#endif
-   if (std::ifstream cacheMap{mapfile}) {
-      std::string line;
-      while (getline(cacheMap, line)) {
-         if (line.find(lib) != std::string::npos) {
-            lib.ReplaceAll("/usr/lib/lib","-l");
-            lib.ReplaceAll(".dylib","");
-            // skip these Big Sur libs as we cannot link with them
-            if (lib == "-loah" || lib == "-lRosetta")
-               lib = "";
-            return true;
-         }
-      }
-      cacheMap.close();
-      return false;
-   }
-   return false;
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Load a shared library. Returns 0 on successful loading, 1 in
 /// case lib was already loaded, -1 in case lib does not exist
 /// or in case of error and -2 in case of version mismatch.
@@ -3725,7 +3686,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    Bool_t collectingSingleLibraryNameTokens = kFALSE;
    for (auto tokenObj : *linkLibrariesNoQuotes.Tokenize(" ")) {
       singleLibrary = ((TObjString*)tokenObj)->GetString();
-      if (singleLibrary[0]=='-' || !AccessPathName(singleLibrary) || R__LibExistsInDylibCache(singleLibrary)) {
+      if (singleLibrary[0]=='-' || !AccessPathName(singleLibrary)) {
          if (collectingSingleLibraryNameTokens) {
             librariesWithQuotes.Chop();
             librariesWithQuotes += "\" \"" + singleLibrary + "\"";

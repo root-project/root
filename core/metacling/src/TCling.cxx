@@ -3089,6 +3089,45 @@ Bool_t TCling::IsLoaded(const char* filename) const
    return kFALSE;
 }
 
+
+#if defined(R__MACOSX)
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if lib is in the dynamic linker cache, returns true if it is, and if so,
+/// modifies the library file name parameter `lib` from `/usr/lib/libFOO.dylib`
+/// to `-lFOO` such that it can be passed to the linker.
+/// This is a unique feature of macOS 11.
+
+static bool R__UpdateLibFileForLinking(TString &lib)
+{
+   const char *mapfile = nullptr;
+#if __x86_64__
+   mapfile = "/System/Library/dyld/dyld_shared_cache_x86_64.map";
+#elif __arm64__
+   mapfile = "/System/Library/dyld/dyld_shared_cache_arm64e.map";
+#else
+   #error unsupported architecture
+#endif
+   if (std::ifstream cacheMap{mapfile}) {
+      std::string line;
+      while (getline(cacheMap, line)) {
+         if (line.find(lib) != std::string::npos) {
+            lib.ReplaceAll("/usr/lib/lib","-l");
+            lib.ReplaceAll(".dylib","");
+            // skip these Big Sur libs as we cannot link with them
+            if (lib == "-loah" || lib == "-lRosetta")
+               lib = "";
+            return true;
+         }
+      }
+      cacheMap.close();
+      return false;
+   }
+   return false;
+}
+#endif // R__MACOSX
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void TCling::UpdateListOfLoadedSharedLibraries()
@@ -3213,6 +3252,9 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        // SDKs/MacOSX.sdk/usr/lib/libAudioToolboxUtility.tbd for architecture x86_64
        || (lenFilename > 4 && !strcmp(filename + lenFilename - 4, ".tbd")))
       return;
+   TString sFileName(filename);
+   R__UpdateLibFileForLinking(sFileName);
+   filename = sFileName.Data();
 #elif defined(__CYGWIN__)
    // Check that this is not a system library
    static const int bufsize = 260;
