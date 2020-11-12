@@ -32,8 +32,12 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<double>      fMax{this, "max", 1.};           ///<! axis max
    RAttrValue<double>      fZoomMin{this, "zoommin", 0.};   ///<! axis zoom min
    RAttrValue<double>      fZoomMax{this, "zoommax", 0.};   ///<! axis zoom max
-   RAttrValue<int>         fLog{this, "log", 0};            ///<! log scale, 1 - base10, 2 - base 2
+   RAttrValue<double>      fLog{this, "log", 0};            ///<! log scale, <1 off, 1- base10, 2 - base 2, 2.71 - exp, 3, 4, ...
    RAttrValue<bool>        fReverse{this, "reverse", false};  ///<! reverse scale
+
+   RAttrValue<bool>        fTimeDisplay{this, "time", false};             ///<! time display
+   RAttrValue<double>      fTimeOffset{this, "time_offset", 0};           ///<! time offset to display
+   RAttrValue<std::string> fTimeFormat{this, "time_format", ""};          ///<! time format
 
    RAttrLine               fAttrLine{this, "line_"};                      ///<! line attributes
    RAttrValue<std::string> fEndingStyle{this, "ending_style", ""};        ///<! axis ending style - none, arrow, circle
@@ -55,6 +59,7 @@ class RAttrAxis : public RAttrBase {
    R__ATTR_CLASS(RAttrAxis, "axis_", AddDefaults(fMin).AddDefaults(fMax)
                                     .AddDefaults(fZoomMin).AddDefaults(fZoomMax)
                                     .AddDefaults(fLog).AddDefaults(fReverse)
+                                    .AddDefaults(fTimeDisplay).AddDefaults(fTimeOffset).AddDefaults(fTimeFormat)
                                     .AddDefaults(fAttrLine).AddDefaults(fEndingStyle).AddDefaults(fEndingSize)
                                     .AddDefaults(fTicksSide).AddDefaults(fTicksSize).AddDefaults(fTicksColor)
                                     .AddDefaults(fLabelsAttr).AddDefaults(fLabelsOffset).AddDefaults(fLabelsCenter)
@@ -81,11 +86,26 @@ class RAttrAxis : public RAttrBase {
    RAttrAxis &SetZoomMinMax(double min, double max) { SetZoomMin(min); SetZoomMax(max); return *this; }
    void ClearZoomMinMax() { fZoomMin.Clear(); fZoomMax.Clear(); }
 
-   RAttrAxis &SetLog(int base = 10) { fLog = base; return *this; }
-   int GetLog() const { return fLog; }
+   RAttrAxis &SetLog(double base = 10) { fLog = (base < 1) ? 0 : base; return *this; }
+   double GetLog() const { return fLog; }
 
    RAttrAxis &SetReverse(bool on = true) { fReverse = on; return *this; }
    bool GetReverse() const { return fReverse; }
+
+   RAttrAxis &SetTimeDisplay(const std::string &fmt = "", double offset = -1)
+   {
+      fTimeDisplay = true;
+      if (!fmt.empty()) fTimeFormat = fmt;
+      if (offset >= 0) fTimeOffset = offset;
+      return *this;
+   }
+   bool GetTimeDisplay() const { return fTimeDisplay; }
+   void ClearTimeDisplay()
+   {
+      fTimeDisplay.Clear();
+      fTimeOffset.Clear();
+      fTimeFormat.Clear();
+   }
 
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
    RAttrAxis &SetAttrLine(const RAttrLine &line) { fAttrLine = line; return *this; }

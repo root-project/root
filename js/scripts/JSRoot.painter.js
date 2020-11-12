@@ -2895,6 +2895,8 @@ JSROOT.define(['d3'], (d3) => {
             align[1] = 'bottom-base';
          else if ((arg.align % 10) == 3)
             align[1] = 'top';
+      } else if (arg.align && (typeof arg.align == 'object') && arg.align.length == 2) {
+         align = arg.align;
       }
 
       if (arg.latex === undefined) arg.latex = 1; //  latex 0-text, 1-latex, 2-math
