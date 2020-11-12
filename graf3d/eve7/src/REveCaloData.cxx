@@ -118,9 +118,6 @@ cells within requested phi and eta range.
 REveCaloData::REveCaloData(const char* n, const char* t):
    REveElement(),
 
-   fEtaAxis(0),
-   fPhiAxis(0),
-
    fWrapTwoPi(kTRUE),
 
    fMaxValEt(0),
@@ -360,8 +357,6 @@ REveCaloDataVec::REveCaloDataVec(Int_t nslices):
 
 REveCaloDataVec::~REveCaloDataVec()
 {
-   if (fEtaAxis) delete fEtaAxis;
-   if (fPhiAxis) delete fPhiAxis;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -627,11 +622,8 @@ void  REveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
    }
    newY.push_back(binY.back()); // overflow
 
-   if (fEtaAxis) delete fEtaAxis;
-   if (fPhiAxis) delete fPhiAxis;
-
-   fEtaAxis = new TAxis(newX.size()-1, &newX[0]);
-   fPhiAxis = new TAxis(newY.size()-1, &newY[0]);
+   fEtaAxis.reset(new TAxis(newX.size()-1, &newX[0]));
+   fPhiAxis.reset(new TAxis(newY.size()-1, &newY[0]));
    fEtaAxis->SetNdivisions(510);
    fPhiAxis->SetNdivisions(510);
 }
@@ -676,9 +668,6 @@ void REveCaloDataHist::DataChanged()
 
    if (GetNSlices() < 1) return;
 
-   TH2* hist = GetHist(0);
-   fEtaAxis  = hist->GetXaxis();
-   fPhiAxis  = hist->GetYaxis();
    for (Int_t ieta = 1; ieta <= fEtaAxis->GetNbins(); ++ieta)
    {
       Double_t eta = fEtaAxis->GetBinCenter(ieta); // conversion E/Et
@@ -687,7 +676,7 @@ void REveCaloDataHist::DataChanged()
          Double_t value = 0;
          for (Int_t i = 0; i < GetNSlices(); ++i)
          {
-            hist = GetHist(i);
+            TH2F* hist = GetHist(i);
             Int_t bin = hist->GetBin(ieta, iphi);
             value += hist->GetBinContent(bin);
          }
@@ -809,6 +798,11 @@ void REveCaloDataHist::GetCellData(const REveCaloData::CellId_t &id,
 
 Int_t REveCaloDataHist::AddHistogram(TH2F* hist)
 {
+   if (!fEtaAxis) {
+      fEtaAxis.reset(hist->GetXaxis());
+      fPhiAxis.reset(hist->GetYaxis());
+   }
+
    fHStack->Add(hist);
    fSliceInfos.push_back(SliceInfo_t());
    fSliceInfos.back().fName  = hist->GetName();
