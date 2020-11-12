@@ -20,6 +20,13 @@ void multiply9x9(const uint64_t *in1, const uint64_t *in2, uint64_t *out)
 {
    uint64_t next = 0;
    unsigned nextCarry = 0;
+
+#if defined(__clang__) || defined(__INTEL_COMPILER) || defined(__CUDACC__)
+#pragma unroll
+#elif defined(__GNUC__) && __GNUC__ >= 8
+// This pragma was introduced in GCC version 8.
+#pragma GCC unroll 18
+#endif
    for (int i = 0; i < 18; i++) {
       uint64_t current = next;
       unsigned carry = nextCarry;
@@ -27,9 +34,15 @@ void multiply9x9(const uint64_t *in1, const uint64_t *in2, uint64_t *out)
       next = 0;
       nextCarry = 0;
 
-      for (int j = 0; j < 9 && j <= i; j++) {
+#if defined(__clang__) || defined(__INTEL_COMPILER) || defined(__CUDACC__)
+#pragma unroll
+#elif defined(__GNUC__) && __GNUC__ >= 8
+// This pragma was introduced in GCC version 8.
+#pragma GCC unroll 9
+#endif
+      for (int j = 0; j < 9; j++) {
          int k = i - j;
-         if (k >= 9)
+         if (k < 0 || k >= 9)
             continue;
 
          uint64_t upper1 = in1[j] >> 32;
