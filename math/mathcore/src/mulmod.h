@@ -45,11 +45,20 @@ void multiply9x9(const uint64_t *in1, const uint64_t *in2, uint64_t *out)
          if (k < 0 || k >= 9)
             continue;
 
-         uint64_t upper1 = in1[j] >> 32;
-         uint64_t lower1 = static_cast<uint32_t>(in1[j]);
+         uint64_t fac1 = in1[j];
+         uint64_t fac2 = in2[k];
+#if defined(__SIZEOF_INT128__) && !defined(ROOT_NO_INT128)
+         unsigned __int128 prod = fac1;
+         prod = prod * fac2;
 
-         uint64_t upper2 = in2[k] >> 32;
-         uint64_t lower2 = static_cast<uint32_t>(in2[k]);
+         uint64_t upper = prod >> 64;
+         uint64_t lower = static_cast<uint64_t>(prod);
+#else
+         uint64_t upper1 = fac1 >> 32;
+         uint64_t lower1 = static_cast<uint32_t>(fac1);
+
+         uint64_t upper2 = fac2 >> 32;
+         uint64_t lower2 = static_cast<uint32_t>(fac2);
 
          // Multiply 32-bit parts, each product has a maximum value of
          // (2 ** 32 - 1) ** 2 = 2 ** 64 - 2 * 2 ** 32 + 1.
@@ -98,6 +107,7 @@ void multiply9x9(const uint64_t *in1, const uint64_t *in2, uint64_t *out)
          //     (2 ** 64 - 1) ** 2 = 2 ** 128 - 2 * 2 ** 64 + 1
          // with the upper bits matching the 2 ** 64 - 2 of the first case.
          upper += middle_upper;
+#endif
 
          // Add to current, remember carry.
          current += lower;
