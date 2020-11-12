@@ -209,6 +209,8 @@ namespace ROOT {
       }
 
       FitData::FitData(const FitData &rhs)
+         : fWrapped(false), fMaxPoints(0), fNPoints(0), fDim(0),
+           fpTmpCoordVector(nullptr)
       {
          *this = rhs;
       }
