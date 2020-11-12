@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT core/iolite package
+# CMakeLists.txt file for building ROOT core/foundationiolite package
 ############################################################################
 
 if(WIN32)
@@ -21,18 +21,18 @@ if(uring)
 endif ()
 
 # Used for generation of Core dictionary
-set(Iolite_dict_headers
+set(Foundationiolite_dict_headers
   ${rawfile_local_headers}
   ROOT/RRawFile.hxx
   PARENT_SCOPE
 )
 
-set(ROOTIOLITE_SOURCES
+set(ROOTFOUNDATIONIOLITE_SOURCES
   src/RRawFile.cxx
   ${rawfile_local_sources}
 )
 
-ROOT_LINKER_LIBRARY(ROOTIOLite ${ROOTIOLITE_SOURCES} DEPENDENCIES ROOTFoundation)
+ROOT_LINKER_LIBRARY(ROOTFoundationIOLite ${ROOTFOUNDATIONIOLITE_SOURCES} DEPENDENCIES ROOTFoundation)
 
 ROOT_INSTALL_HEADERS()
 ROOT_ADD_TEST_SUBDIRECTORY(test)

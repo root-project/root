@@ -77,7 +77,7 @@ add_subdirectory(rint)
 add_subdirectory(textinput)
 add_subdirectory(thread)
 add_subdirectory(imt)
-add_subdirectory(iolite)
+add_subdirectory(foundationiolite)
 add_subdirectory(zip)
 add_subdirectory(lzma)
 add_subdirectory(lz4)
@@ -159,7 +159,7 @@ add_subdirectory(rootcling_stage1)
 ROOT_LINKER_LIBRARY(Core $<TARGET_OBJECTS:BaseTROOT> ${objectlibs}
   DEPENDENCIES
     ROOTFoundation
-    ROOTIOLite
+    ROOTFoundationIOLite
   BUILTINS
     LZMA
   )
@@ -241,7 +241,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
   ${Clib_dict_headers}
   ${Cont_dict_headers}
   ${Foundation_dict_headers}
-  ${Iolite_dict_headers}
+  ${Foundationiolite_dict_headers}
   ${Macosx_dict_headers}
   ${Unix_dict_headers}
   ${Winnt_dict_headers}
