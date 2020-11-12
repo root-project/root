@@ -325,12 +325,21 @@ RooSpan<const double> RooAbsReal::getValBatch(std::size_t begin, std::size_t max
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute batch of values for given input data, store result in `evalData`,
-/// and return a span pointing to it.
+/// Compute batch of values for input data stored in `evalData`.
 ///
-/// \param[in] evalData  Object holding spans of input data. Store our output here.
-/// \param[in] normSet   Pass this normSet on to objects that are serving values to
-/// the one where this function is called.
+/// This is a faster, multi-value version of getVal(). It calls evaluateSpan() to trigger computations, and
+/// finalises those (e.g. error checking or automatic normalisation) before returning a span with the results.
+/// This span will also be stored in `evalData`, so subsquent calls of getValues() will return immediately.
+///
+/// If `evalData` is empty, a single value will be returned, which is the result of evaluating the current value
+/// of each object that's serving values to us. If `evalData` contains a batch of values for one or more of the
+/// objects serving values to us, a batch of values for each entry stored in `evalData` is returned. To fill a
+/// RunContext with values from a dataset, use RooAbsData::getBatches().
+///
+/// \param[in] evalData  Object holding spans of input data. The results are also stored here.
+/// \param[in] normSet   Use these variables for normalisation (relevant for PDFs), and pass this normalisation
+/// on to object serving values to us.
+/// \return RooSpan pointing to the computation results. The memory this span points to is owned by `evalData`.
 RooSpan<const double> RooAbsReal::getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
   auto item = evalData.spans.find(this);
   if (item != evalData.spans.end()) {
@@ -340,11 +349,12 @@ RooSpan<const double> RooAbsReal::getValues(BatchHelpers::RunContext& evalData, 
   if (normSet && normSet != _lastNSet) {
     // TODO Implement better:
     // The proxies, i.e. child nodes in the computation graph, sometimes need to know
-    // what to normalise over. I hope that passing the normalisation set through all
-    // interfaces will do the trick, but cross-checks that the correct normalisation set
-    // is used should nevertheless be implemented.
+    // what to normalise over.
+    // Passing the normalisation as argument in all function calls is the proper way to do it.
+    // Some PDFs, however, might need to have the proxy normset set.
     const_cast<RooAbsReal*>(this)->setProxyNormSet(normSet);
-    // This member only seems to be in use in RooFormulaVar. Consider removing it:
+    // TODO: This member only seems to be in use in RooFormulaVar. Try removing it (check with
+    // user community):
     _lastNSet = (RooArgSet*) normSet;
   }
 
@@ -4980,13 +4990,27 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Evaluate function for a batch of data points. If not overridden by
-/// derived classes, this will call the slow, single-valued evaluate() in a loop.
-/// \param[in/out]  evalData Object holding data that should be used in computations.
-/// If data of a specific object is needed, it is looked up in `evalData.spans[&object]`.
-/// If such a span exists, no computation will be triggered.
-/// When the `this` object is done computing its values, it registers the results under `evalData.spans[this]`.
-/// \param[in]  normSet  Optional normalisation set for computations in terms this one depends on.
+/// Evaluate this object for a batch/span of data points.
+/// This is the backend used by getValues() to perform computations. A span pointing to the computation results
+/// will be stored in `evalData`, and also be returned to getValues(), which then finalises the computation.
+///
+/// \note Derived classes should override this function to reach maximal performance. If this function is not overridden, the slower,
+/// single-valued evaluate() will be called in a loop.
+///
+/// A computation proceeds as follows:
+/// - Request input data from all our servers using `getValues(evalData, normSet)`. Those will return
+///   - batches of size 1 if their value is constant over the entire dataset.
+///   - batches of the size of the dataset stored in `evalData` otherwise.
+///   If `evalData` already contains values for those objects, these will return data
+///   without recomputing those.
+/// - Create a new batch in `evalData` of the same size as those returned from the servers.
+/// - Use the input data to perform the computations, and store those in the batch.
+///
+/// \note Error checking and normalisation (of PDFs) will be performed in getValues().
+///
+/// \param[in/out] evalData Object holding data that should be used in computations.
+/// Computation results have to be stored here.
+/// \param[in]  normSet  Optional normalisation set passed down to the servers of this object.
 /// \return     Span pointing to the results. The memory is owned by `evalData`.
 RooSpan<double> RooAbsReal::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
   if (RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {

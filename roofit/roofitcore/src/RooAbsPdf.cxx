@@ -405,19 +405,18 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxS
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute batch of values for given input data, and normalise by integrating over
-/// the observables in `nset`. Store result in `evalData`, and return a span pointing to
+/// the observables in `normSet`. Store result in `evalData`, and return a span pointing to
 /// it.
+/// This uses evaluateSpan() to perform an (unnormalised) computation of data points. This computation
+/// is finalised by normalising the bare values, and by checking for computation errors.
+/// Derived classes should override evaluateSpan() to reach maximal performance.
 ///
-/// If `nset` is `nullptr`, unnormalised values
-/// are returned. All elements of `nset` must be lvalues.
-///
-/// \param[in/out]  evalData Object holding data that should be used in computations.
-/// Each array of data is identified by the pointer to the RooFit object that this data belongs to.
-/// The object that this function is called on will store its results here as well.
-/// \param[in] normSet   If not nullptr, normalise results by integrating over
+/// \param[in/out] evalData Object holding data that should be used in computations. Results are also stored here.
+/// \param[in] normSet      If not nullptr, normalise results by integrating over
 /// the variables in this set. The normalisation is only computed once, and applied
 /// to the full batch.
 /// \return RooSpan with probabilities. The memory of this span is owned by `evalData`.
+/// \see RooAbsReal::getValues().
 RooSpan<const double> RooAbsPdf::getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
   auto item = evalData.spans.find(this);
   if (item != evalData.spans.end()) {
