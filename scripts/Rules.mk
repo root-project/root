@@ -534,12 +534,15 @@ CXXFLAGS      += -m32 -g -pipe -Wall -fPIC -Woverloaded-virtual
 else
 CXXFLAGS      += -m32 -O -pipe -Wall -fPIC -Woverloaded-virtual
 endif
+ifeq ($(MACOSX_MAJOR),)
+  export MACOSX_MAJOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1))
+endif
 ifeq ($(MACOSX_MINOR),)
-  export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+  export MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
 endif
 UNDEFOPT      = dynamic_lookup
 LD           ?= c++
-LD           := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
+LD           := MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) $(LD)
 LDFLAGS       = -m32
 SOFLAGS       = -m32 -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
@@ -557,12 +560,15 @@ CXXFLAGS      += -m64 -g -pipe -Wall -fPIC -Woverloaded-virtual
 else
 CXXFLAGS      += -m64 -O -pipe -Wall -fPIC -Woverloaded-virtual
 endif
+ifeq ($(MACOSX_MAJOR),)
+  export MACOSX_MAJOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1))
+endif
 ifeq ($(MACOSX_MINOR),)
-  export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+  export MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
 endif
 UNDEFOPT      = dynamic_lookup
 LD           ?= c++
-LD           := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
+LD           := MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) $(LD)
 LDFLAGS       = -m64 -Wl,-rpath,@loader_path/. -Wl,-rpath,$(ROOTSYS)/lib
 SOFLAGS       = -m64 -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
@@ -580,12 +586,15 @@ CXXFLAGS      += -g -fPIC -wd191 -wd1476
 else
 CXXFLAGS      += -O -fPIC -wd191 -wd1476
 endif
+ifeq ($(MACOSX_MAJOR),)
+  export MACOSX_MAJOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1))
+endif
 ifeq ($(MACOSX_MINOR),)
-  export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+  export MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
 endif
 UNDEFOPT      = dynamic_lookup
 LD           ?= icpc
-LD           := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) $(LD)
+LD           := MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) $(LD)
 LDFLAGS       =
 SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
