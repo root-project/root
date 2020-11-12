@@ -26,6 +26,8 @@ THistRange::THistRange(const TH1 *h1, RangeType type)
 /// constructor of  TBInIterator taking as input an histogram pointer
 /// This constructors set iterator, the global bin,  to its first value (begin)
 TBinIterator::TBinIterator(const TH1 *h, ERangeType type)
+   : fNx(0), fNy(0), fNz(0),
+     fXmin(0), fXmax(0), fYmin(0), fYmax(0), fZmin(0), fZmax(0)
 {
    // deal with special cases (e.g. TH2Poly)
    if (h->IsA() == TH2Poly::Class() || h->IsA() == TProfile2Poly::Class()) {
