@@ -17,6 +17,7 @@
 #define ROOT7_RFile
 
 #include "ROOT/RDirectory.hxx"
+#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RStringView.hxx"
 
 #include "TClass.h"
