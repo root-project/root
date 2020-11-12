@@ -51,35 +51,60 @@ void multiply9x9(const uint64_t *in1, const uint64_t *in2, uint64_t *out)
          uint64_t upper2 = in2[k] >> 32;
          uint64_t lower2 = static_cast<uint32_t>(in2[k]);
 
-         // Multiply 32-bit parts.
+         // Multiply 32-bit parts, each product has a maximum value of
+         // (2 ** 32 - 1) ** 2 = 2 ** 64 - 2 * 2 ** 32 + 1.
          uint64_t upper = upper1 * upper2;
          uint64_t middle1 = upper1 * lower2;
          uint64_t middle2 = lower1 * upper2;
-         uint64_t middle = middle1 + middle2;
-         if (middle < middle1) {
-            // This can never overflow because the maximum value of upper is
-            // (2 ** 32 - 1) ** 2 = 2 ** 64 - 2 * 2 ** 32 + 1. When now adding
-            // another 2 ** 32, the result 2 ** 64 - 2 ** 32 + 1 is still smaller
-            // than the maximum 2 ** 64 - 1 that can be stored in a uint64_t.
-            upper += uint64_t(1) << 32;
-         }
          uint64_t lower = lower1 * lower2;
+
+         // When adding the two products, the maximum value for middle is
+         // 2 * 2 ** 64 - 4 * 2 ** 32 + 2, which exceeds a uint64_t.
+         uint64_t middle = middle1 + middle2;
+         // Handling the overflow by a multiplication with 0 or 1 is cheaper
+         // than branching with an if statement, which the compiler does not
+         // optimize to this equivalent code. Note that we could do entirely
+         // without this overflow handling when summing up the intermediate
+         // products differently as described in the following SO answer:
+         //    https://stackoverflow.com/a/51587262
+         // However, this approach takes at least the same amount of thinking
+         // why a) the code gives the same results without b) overflowing due
+         // to the mixture of 32 bit arithmetic. Moreover, my tests show that
+         // the scheme implemented here is actually slightly more performant.
+         int overflow = (middle < middle1);
+         // This addition can never overflow because the maximum value of upper
+         // is 2 ** 64 - 2 * 2 ** 32 + 1 (see above). When now adding another
+         // 2 ** 32, the result is 2 ** 64 - 2 ** 32 + 1 and still smaller than
+         // the maximum 2 ** 64 - 1 that can be stored in a uint64_t.
+         upper += overflow * (uint64_t(1) << 32);
 
          uint64_t middle_upper = middle >> 32;
          uint64_t middle_lower = middle << 32;
+
+         lower += middle_lower;
+         if (lower < middle_lower)
+            upper++;
+
+         // This still can't overflow since the maximum of middle_upper is
+         //  - 2 ** 32 - 4 if there was an overflow for middle above, bringing
+         //    the maximum value of upper to 2 ** 64 - 2.
+         //  - otherwise upper still has the initial maximum value given above
+         //    and the addition of a value smaller than 2 ** 32 brings it to
+         //    a maximum value of 2 ** 64 - 2 ** 32 + 2.
+         // (Both cases include the increment to handle the overflow in lower.)
+         //
+         // All the reasoning makes perfect sense given that the product of two
+         // 64 bit numbers is smaller than or equal to
+         //     (2 ** 64 - 1) ** 2 = 2 ** 128 - 2 * 2 ** 64 + 1
+         // with the upper bits matching the 2 ** 64 - 2 of the first case.
+         upper += middle_upper;
 
          // Add to current, remember carry.
          current += lower;
          if (current < lower)
             carry++;
-         current += middle_lower;
-         if (current < middle_lower)
-            carry++;
 
          // Add to next, remember nextCarry.
-         next += middle_upper;
-         if (next < middle_upper)
-            nextCarry++;
          next += upper;
          if (next < upper)
             nextCarry++;
