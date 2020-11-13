@@ -192,7 +192,7 @@ public:
 protected: \
 const RAttrMap &GetDefaults() const override \
 { \
-   static auto dflts = RAttrMap().dflt_values; \
+   static auto dflts = CollectDefaults(); \
    return dflts; \
 } \
 public: \
