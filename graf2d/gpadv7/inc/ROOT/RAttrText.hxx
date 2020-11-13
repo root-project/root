@@ -32,7 +32,7 @@ class RAttrText : public RAttrBase {
    RAttrValue<int>      fAlign{this, "align", 22};    ///<! text align
    RAttrValue<int>      fFont{this, "font", 41};      ///<! text font
 
-   R__ATTR_CLASS(RAttrText, "text_", AddDefaults(fColor).AddDefaults(fSize).AddDefaults(fAngle).AddDefaults(fAlign).AddDefaults(fFont));
+   R__ATTR_CLASS(RAttrText, "text_");
 
    ///The text size
    RAttrText &SetSize(double sz) { fSize = sz; return *this; }
