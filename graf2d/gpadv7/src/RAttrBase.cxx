@@ -12,6 +12,9 @@
 
 #include <utility>
 
+#include "TList.h"
+#include "TClass.h"
+#include "TDataMember.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Return default values for attributes, empty for base class
@@ -181,4 +184,36 @@ void ROOT::Experimental::RAttrBase::Clear()
 {
    for (const auto &entry : GetDefaults())
       ClearValue(entry.first);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/// Collect all attributes in derived class
+/// Works only if such class has dictionary.
+/// In special cases one has to provide implementation - see RAttrColor::CollectDefaults() example
+
+ROOT::Experimental::RAttrMap ROOT::Experimental::RAttrBase::CollectDefaults() const
+{
+   ROOT::Experimental::RAttrMap res;
+
+   const std::type_info &info = typeid(*this);
+   auto thisClass = TClass::GetClass(info);
+   auto baseClass = TClass::GetClass<ROOT::Experimental::RAttrBase>();
+   if (thisClass && baseClass) {
+
+      TIter iter(thisClass->GetListOfDataMembers());
+      TObject *member = nullptr;
+      while ((member = iter()) != nullptr) {
+         TDataMember *data_member = dynamic_cast<TDataMember *> (member);
+
+         if (data_member && data_member->GetClass() && data_member->GetClass()->InheritsFrom(baseClass) &&
+             (data_member->GetClass()->GetBaseClassOffset(baseClass) == 0)) {
+               res.AddDefaults(*((const RAttrBase *)((char*) this + data_member->GetOffset())));
+         }
+      }
+   } else {
+      R__ERROR_HERE("gpadv7") << "Missing dictionary for " << info.name() << " class, implement CollectDefaults() like in RAttrColor";
+   }
+
+   return res;
 }
