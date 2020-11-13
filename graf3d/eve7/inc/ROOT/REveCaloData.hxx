@@ -17,9 +17,9 @@
 #include "ROOT/REveSecondarySelectable.hxx"
 
 #include "TMath.h"
+#include "TAxis.h"
 
 class TH2F;
-class TAxis;
 class THStack;
 
 namespace ROOT {
@@ -160,8 +160,8 @@ private:
 protected:
    vSliceInfo_t fSliceInfos;
 
-   TAxis       *fEtaAxis{nullptr};
-   TAxis       *fPhiAxis{nullptr};
+   std::unique_ptr<TAxis>   fEtaAxis;
+   std::unique_ptr<TAxis>   fPhiAxis;
 
    Bool_t       fWrapTwoPi;
 
@@ -208,11 +208,11 @@ public:
    virtual Float_t GetMaxVal(Bool_t et) const { return et ? fMaxValEt : fMaxValE; }
    Bool_t  Empty() const { return fMaxValEt < 1e-5; }
 
-   virtual TAxis*  GetEtaBins()    const { return fEtaAxis; }
-   virtual void    SetEtaBins(TAxis* ax) { fEtaAxis=ax; }
+   virtual TAxis*  GetEtaBins()    const { return fEtaAxis.get(); }
+   virtual void    SetEtaBins(std::unique_ptr<TAxis> ax) { fEtaAxis = std::move(ax); }
 
-   virtual TAxis*  GetPhiBins()    const { return fPhiAxis; }
-   virtual void    SetPhiBins(TAxis* ax) { fPhiAxis=ax; }
+   virtual TAxis*  GetPhiBins()    const { return fPhiAxis.get(); }
+   virtual void    SetPhiBins(std::unique_ptr<TAxis> ax) { fPhiAxis= std::move(ax); }
 
    virtual Float_t GetEps()      const { return fEps; }
    virtual void    SetEps(Float_t eps) { fEps=eps; }
