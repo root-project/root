@@ -907,7 +907,7 @@ no longer there and GUIs can be programmed again from Python, using the `TPyDisp
 * [#6376](https://github.com/root-project/root/issues/6376) - vtable corruption in Python specialization of C++ classes
 * [#6356](https://github.com/root-project/root/issues/6356) - [JupyROOT][roottest] New `nbconvert` versions break notebook comparisons
 * [#6482](https://github.com/root-project/root/issues/6482) - `TClass::GetListOfFunctions()` fails to enumerate using decls.
-* [#6359](https://github.com/root-project/root/issues/6359) - python: interpreter/llvm/src/include/llvm/Support/Casting.h:106: static bool llvm::isa_impl_cl<To, const From*>::doit(const From*) [with To = clang::UsingDecl; From = clang::Decl]: Assertion `Val && "isa<> used on a null pointer"' failed.
+* [#6359](https://github.com/root-project/root/issues/6359) - python: interpreter/llvm/src/include/llvm/Support/Casting.h:106: `static bool llvm::isa_impl_cl<To, const From*>::doit(const From*)` [with To = `clang::UsingDecl`; From = `clang::Decl`]: Assertion 'Val && "isa<> used on a null pointer"' failed.
 * [#6578](https://github.com/root-project/root/issues/6578) - Using declaration of `TGMainFrame` constructor not taken into account
 * [#6666](https://github.com/root-project/root/issues/6666) - `TClass::GetListOfDataMembers` returns an empty list even-though the information is available.
 * [#6725](https://github.com/root-project/root/issues/6725) - rootpcm does not record `TEnum`'s underlying type
