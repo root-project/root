@@ -97,6 +97,7 @@ void ROOT::Experimental::RAttrBase::AssignDrawable(RDrawable *drawable, const st
    fDrawable = drawable;
    fOwnAttr.reset();
    fPrefix = prefix;
+   if (!IsValue() && !fPrefix.empty()) fPrefix.append("_"); // naming convention
    fParent = nullptr;
 }
 
@@ -108,6 +109,7 @@ void ROOT::Experimental::RAttrBase::AssignParent(RAttrBase *parent, const std::s
    fDrawable = nullptr;
    fOwnAttr.reset();
    fPrefix = prefix;
+   if (!IsValue() && !fPrefix.empty()) fPrefix.append("_"); // naming convention
    fParent = parent;
 }
 

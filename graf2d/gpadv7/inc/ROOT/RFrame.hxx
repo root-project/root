@@ -145,12 +145,12 @@ public:
 
 private:
 
-   RAttrMargins                     fMargins{this, "margin_"};        ///<!
-   RAttrLine                        fAttrBorder{this, "border_"};     ///<!
-   RAttrFill                        fAttrFill{this, "fill_"};         ///<!
-   RAttrAxis                        fAttrX{this, "x_"};               ///<!
-   RAttrAxis                        fAttrY{this, "y_"};               ///<!
-   RAttrAxis                        fAttrZ{this, "z_"};               ///<!
+   RAttrMargins                     fMargins{this, "margin"};         ///<!
+   RAttrLine                        fAttrBorder{this, "border"};      ///<!
+   RAttrFill                        fAttrFill{this, "fill"};          ///<!
+   RAttrAxis                        fAttrX{this, "x"};                ///<!
+   RAttrAxis                        fAttrY{this, "y"};                ///<!
+   RAttrAxis                        fAttrZ{this, "z"};                ///<!
    RAttrValue<bool>                 fGridX{this, "gridx", false};     ///<!
    RAttrValue<bool>                 fGridY{this, "gridy", false};     ///<!
    std::map<unsigned, RUserRanges>  fClientRanges;                    ///<! individual client ranges

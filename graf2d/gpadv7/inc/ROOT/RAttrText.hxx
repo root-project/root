@@ -26,13 +26,13 @@ namespace Experimental {
 
 class RAttrText : public RAttrBase {
 
-   RAttrColor           fColor{this, "color_"};       ///<! text color
+   RAttrColor           fColor{this, "color"};        ///<! text color
    RAttrValue<double>   fSize{this, "size", 12.};     ///<! text size
    RAttrValue<double>   fAngle{this, "angle", 0.};    ///<! text angle
    RAttrValue<int>      fAlign{this, "align", 22};    ///<! text align
    RAttrValue<int>      fFont{this, "font", 41};      ///<! text font
 
-   R__ATTR_CLASS(RAttrText, "text_");
+   R__ATTR_CLASS(RAttrText, "text");
 
    ///The text size
    RAttrText &SetSize(double sz) { fSize = sz; return *this; }

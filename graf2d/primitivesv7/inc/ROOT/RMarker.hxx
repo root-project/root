@@ -28,8 +28,8 @@ namespace Experimental {
 
 class RMarker : public RDrawable {
 
-   RPadPos fP;                                ///< position
-   RAttrMarker fMarkerAttr{this, "marker_"};  ///<! marker attributes
+   RPadPos fP;                               ///< position
+   RAttrMarker fMarkerAttr{this, "marker"};  ///<! marker attributes
 
 public:
 

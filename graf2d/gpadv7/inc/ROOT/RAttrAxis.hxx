@@ -39,24 +39,24 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<double>      fTimeOffset{this, "time_offset", 0};           ///<! time offset to display
    RAttrValue<std::string> fTimeFormat{this, "time_format", ""};          ///<! time format
 
-   RAttrLine               fAttrLine{this, "line_"};                      ///<! line attributes
+   RAttrLine               fAttrLine{this, "line"};                       ///<! line attributes
    RAttrValue<std::string> fEndingStyle{this, "ending_style", ""};        ///<! axis ending style - none, arrow, circle
    RAttrValue<RPadLength>  fEndingSize{this, "ending_size", 0.02_normal}; ///<! axis ending size
 
    RAttrValue<std::string> fTicksSide{this, "ticks_side", "normal"};      ///<! ticks position - normal, invert, both
    RAttrValue<RPadLength>  fTicksSize{this, "ticks_size", 0.02_normal};   ///<! ticks size
-   RAttrColor              fTicksColor{this, "ticks_color_"};             ///<! ticks color
+   RAttrColor              fTicksColor{this, "ticks_color"};              ///<! ticks color
 
-   RAttrText               fLabelsAttr{this, "labels_"};                  ///<! text attributes for labels
+   RAttrText               fLabelsAttr{this, "labels"};                   ///<! text attributes for labels
    RAttrValue<RPadLength>  fLabelsOffset{this, "labels_offset", {}};      ///<! axis labels offset - relative to predefined position
    RAttrValue<bool>        fLabelsCenter{this, "labels_center", false};   ///<! center labels
 
-   RAttrText               fTitleAttr{this, "title_"};                    ///<! axis title text attributes
+   RAttrText               fTitleAttr{this, "title"};                     ///<! axis title text attributes
    RAttrValue<std::string> fTitle{this, "title", ""};                     ///<! axis title
    RAttrValue<std::string> fTitlePos{this, "title_position", "right"};    ///<! axis title position - left, right, center
    RAttrValue<RPadLength>  fTitleOffset{this, "title_offset", {}};        ///<! axis title offset - relative to predefined position
 
-   R__ATTR_CLASS(RAttrAxis, "axis_");
+   R__ATTR_CLASS(RAttrAxis, "axis");
 
    // min range, graphics will not show value less then this
    RAttrAxis &SetMin(double min) { fMin = min; return *this; }

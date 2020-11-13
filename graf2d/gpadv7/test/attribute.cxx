@@ -7,13 +7,13 @@
 using namespace ROOT::Experimental;
 
 class CustomAttrs : public RAttrBase {
-   RAttrBox fAttrBox{this, "box_"};
-   RAttrText fAttrText{this, "text_"};
+   RAttrBox fAttrBox{this, "box"};
+   RAttrText fAttrText{this, "text"};
 
 protected:
    RAttrMap CollectDefaults() const override { return RAttrMap().AddDefaults(fAttrBox).AddDefaults(fAttrText); }
 
-   R__ATTR_CLASS(CustomAttrs, "custom_");
+   R__ATTR_CLASS(CustomAttrs, "custom");
 
    const RAttrBox &GetAttrBox() const { return fAttrBox; }
    CustomAttrs &SetAttrBox(const RAttrBox &box) { fAttrBox = box; return *this; }
