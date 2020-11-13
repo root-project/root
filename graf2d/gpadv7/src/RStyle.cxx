@@ -251,3 +251,14 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
 
    return true;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+/// Parse CSS code and returns std::shared_ptr<RStyle> when successful
+
+std::shared_ptr<ROOT::Experimental::RStyle> ROOT::Experimental::RStyle::Parse(const std::string &css_code)
+{
+   auto style = std::make_shared<RStyle>();
+   if (!style->ParseString(css_code)) return nullptr;
+   return style;
+}
