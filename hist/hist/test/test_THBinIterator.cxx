@@ -9,6 +9,8 @@
 #include "TRandom.h"
 #include "THistRange.h"
 #include "TStopwatch.h"
+#include "TKDTreeBinning.h"
+#include "TH2Poly.h"
 
 // global variables
 int printLevel = 0;
@@ -66,6 +68,7 @@ double testBinGlobalIter(TH1 *h)
 
    // look at case when one uses all in range bins
    bool useAllInBins = false;
+   bool useTHPoly = (h->IsA() == TH2Poly::Class());// || h->IsA() == TProfile2Poly::Class());
    if (!h->GetXaxis()->TestBit(TAxis::kAxisRange) && !h->GetYaxis()->TestBit(TAxis::kAxisRange) &&
        !h->GetZaxis()->TestBit(TAxis::kAxisRange))
       useAllInBins = true;
@@ -80,7 +83,11 @@ double testBinGlobalIter(TH1 *h)
    }
 
    double sum = 0;
-   if (!useAllInBins) {
+   if (useTHPoly) {
+      for (int i = 1; i <= n; ++i) {
+         sum += h->GetBinContent(i);
+      }
+   } else if (!useAllInBins) {
       int ix, iy, iz;
       for (int i = 0; i < n; ++i) {
          // use GetBinXYZ to get axis bin numbers
@@ -89,8 +96,7 @@ double testBinGlobalIter(TH1 *h)
             sum += h->GetBinContent(i);
          }
       }
-   }
-   else {
+   } else {
       // exclude only underflow/overflow
       for (int i = 0; i < n; ++i) {
          if (h->IsBinOverflow(i) || h->IsBinUnderflow(i))
@@ -115,9 +121,17 @@ double testTHBinIterator(TH1 * h) {
    THistRange r(h);
 
    double sum = 0;
-   for (auto it = r.begin(); it != r.end(); it++) {
-      int bin = *it;
-      sum += h->GetBinContent(bin);
+
+   if (printLevel > 1 && h->IsA() == TH2Poly::Class()) {
+      for (auto &bin : r) {
+         sum += h->GetBinContent(bin);
+         std::cout << "iterating on bin " << bin << " content " << h->GetBinContent(bin) << std::endl;
+      }
+   } else {
+      // standard iteration
+      for (auto &bin : r) {
+         sum += h->GetBinContent(bin);
+      }
    }
 
    if (printLevel) {
@@ -173,6 +187,42 @@ TH1 *createTH3()
    return h1;
 }
 
+// create a TH2Poly using teh TKDTree binning class
+TH1 * createTH2Poly() {
+   // generate multidim data
+   const int n = nEvents;
+   std::vector<double> data(2 * n);
+   unsigned int nbins = (fastMode) ? 1000 : 10000;
+
+   if (printLevel)
+      std::cout << "TH2Poly tests : create and fill TH2Poly histogram with " << nbins << " nbins" << std::endl;
+
+   for (int i = 0; i < n; ++i) {
+      double x = gRandom->Gaus(5, 2);
+      double y = gRandom->Gaus(1, 3);
+      data[i] = x;
+      data[n + i] = y;
+   }
+
+   TKDTreeBinning* bins = new TKDTreeBinning(n, 2, data, nbins);
+   R__ASSERT(bins->GetNBins() == nbins);
+
+
+   TH2Poly *h2pol = new TH2Poly("h2Poly", "KDTree binning", bins->GetDataMin(0), bins->GetDataMax(0),
+                                bins->GetDataMin(1), bins->GetDataMax(1));
+
+   const Double_t *binsMinEdges = bins->GetBinsMinEdges();
+   const Double_t *binsMaxEdges = bins->GetBinsMaxEdges();
+   for (UInt_t i = 0; i < nbins; ++i) {
+      UInt_t edgeDim = i * bins->GetDim();
+      h2pol->AddBin(binsMinEdges[edgeDim], binsMinEdges[edgeDim + 1], binsMaxEdges[edgeDim], binsMaxEdges[edgeDim + 1]);
+   }
+
+   for (UInt_t i = 1; i <= nbins; ++i)
+      h2pol->SetBinContent(i, bins->GetBinContent(i - 1));
+
+   return h2pol;
+}
 // test classes
 class THIterationTestBase : public ::testing::Test {
 protected:
@@ -266,6 +316,17 @@ protected:
       refValue = ((TH3*) h1)->Integral(xmin, xmax, ymin, ymax,zmin,zmax);
    }
 };
+// TH2Pol
+class TestTH2PolyFull : public THIterationTestBase {
+protected:
+   static void SetUpTestSuite()
+   {
+      h1 = createTH2Poly();
+      refValue = h1->Integral();
+      if (printLevel)
+         std::cout << "Ref TH2Poly integral is " << refValue << std::endl;
+   }
+};
 
 // test with full range
 
@@ -346,6 +407,15 @@ TEST_F(TestTH3DRange, GlobalIteration)
    EXPECT_EQ(testBinGlobalIter(h1), refValue);
 }
 TEST_F(TestTH3DRange, BinIterator)
+{
+   EXPECT_EQ(testTHBinIterator(h1), refValue);
+}
+// th2poly
+TEST_F(TestTH2PolyFull, GlobalIteration)
+{
+   EXPECT_EQ(testBinGlobalIter(h1), refValue);
+}
+TEST_F(TestTH2PolyFull, BinIterator)
 {
    EXPECT_EQ(testTHBinIterator(h1), refValue);
 }
