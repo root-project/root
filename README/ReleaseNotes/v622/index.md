@@ -872,30 +872,30 @@ no longer there and GUIs can be programmed again from Python, using the `TPyDisp
 
 ### Bugs and Issues fixed in this release
 
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-8173'>ROOT-8173</a>] - `RooStreamParser` not working for float number with negative exponent
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-8331'>ROOT-8331</a>] - Error in the member function `Multiply(const Double_t *vin, Double_t* vout, Double_t w)` in `TEveTrans` of Eve package
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-9563'>ROOT-9563</a>] - [TreeProcMT] Trees in subdirectories are not supported (and their usage lead to a crash)
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-9674'>ROOT-9674</a>] - [DF] Wrong branch type inference in some cases
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10152'>ROOT-10152</a>] - [DF] Cannot analyze friend trees in subdirectories with MT
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10786'>ROOT-10786</a>] - Cling not intepreting using directive
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10826'>ROOT-10826</a>] - Inheritance issue when creating GUI from Python
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10849'>ROOT-10849</a>] - Recursive `ASTReader` assertion Fedora32 C++17
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10862'>ROOT-10862</a>] - TMVA in ROOT 6.22/00 doesn't use the built-in GSL library correctly
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10886'>ROOT-10886</a>] - 6.22/00 Build failure with Clang 7.0.0 on SL7 with `-Druntime_cxxmodules:BOOL=ON`
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10896'>ROOT-10896</a>] - IMT `Snapshot` segfault when `TTree` switches over multiple files
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10935'>ROOT-10935</a>] - `RooDataSet::read()` no longer accepts `RooCategory` numbers
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10942'>ROOT-10942</a>] - [DF] Regression in recognition of nested branch names
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10993'>ROOT-10993</a>] - ROOT fails in loading `nlohmann/json`
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-11000'>ROOT-11000</a>] - `rootcling` fails for Gaudi classes
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-11001'>ROOT-11001</a>] - unable to create `TChain` on ROOT file
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-11010'>ROOT-11010</a>] - PyROOT cross-inheritance fails to call proper constructor
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-11013'>ROOT-11013</a>] - "Impossible code path" in `TGenCollectionProxy.cxx` when using `rootcling`
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-11015'>ROOT-11015</a>] - OpenGL rendering is incorrect for "pgon - pgon"
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-11025'>ROOT-11025</a>] - Issue with automatic C++ wrapper during inheritance (to replace `TPySelector`)
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-11027'>ROOT-11027</a>] - Lxplus ROOT installation not showing graphics from Python
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-11030'>ROOT-11030</a>] - pythonization segfault with derived `TTree` class in namespace
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10844'>ROOT-10844</a>] - Check GUI-related PyROOT tutorials
-[<a href='https://sft.its.cern.ch/jira/browse/ROOT-10872'>ROOT-10872</a>] - cppyy tries to generate copy constructors for non copyable classes
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-8173'>ROOT-8173</a>] - `RooStreamParser` not working for float number with negative exponent
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-8331'>ROOT-8331</a>] - Error in the member function `Multiply(const Double_t *vin, Double_t* vout, Double_t w)` in `TEveTrans` of Eve package
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9563'>ROOT-9563</a>] - [TreeProcMT] Trees in subdirectories are not supported (and their usage lead to a crash)
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9674'>ROOT-9674</a>] - [DF] Wrong branch type inference in some cases
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10152'>ROOT-10152</a>] - [DF] Cannot analyze friend trees in subdirectories with MT
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10786'>ROOT-10786</a>] - Cling not intepreting using directive
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10826'>ROOT-10826</a>] - Inheritance issue when creating GUI from Python
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10849'>ROOT-10849</a>] - Recursive `ASTReader` assertion Fedora32 C++17
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10862'>ROOT-10862</a>] - TMVA in ROOT 6.22/00 doesn't use the built-in GSL library correctly
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10886'>ROOT-10886</a>] - 6.22/00 Build failure with Clang 7.0.0 on SL7 with `-Druntime_cxxmodules:BOOL=ON`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10896'>ROOT-10896</a>] - IMT `Snapshot` segfault when `TTree` switches over multiple files
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10935'>ROOT-10935</a>] - `RooDataSet::read()` no longer accepts `RooCategory` numbers
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10942'>ROOT-10942</a>] - [DF] Regression in recognition of nested branch names
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10993'>ROOT-10993</a>] - ROOT fails in loading `nlohmann/json`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-11000'>ROOT-11000</a>] - `rootcling` fails for Gaudi classes
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-11001'>ROOT-11001</a>] - unable to create `TChain` on ROOT file
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-11010'>ROOT-11010</a>] - PyROOT cross-inheritance fails to call proper constructor
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-11013'>ROOT-11013</a>] - "Impossible code path" in `TGenCollectionProxy.cxx` when using `rootcling`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-11015'>ROOT-11015</a>] - OpenGL rendering is incorrect for "pgon - pgon"
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-11025'>ROOT-11025</a>] - Issue with automatic C++ wrapper during inheritance (to replace `TPySelector`)
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-11027'>ROOT-11027</a>] - Lxplus ROOT installation not showing graphics from Python
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-11030'>ROOT-11030</a>] - pythonization segfault with derived `TTree` class in namespace
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10844'>ROOT-10844</a>] - Check GUI-related PyROOT tutorials
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10872'>ROOT-10872</a>] - cppyy tries to generate copy constructors for non copyable classes
 
 * [#6529](https://github.com/root-project/root/issues/6529) - segfault in `RooWorkspace::import`
 * [#6408](https://github.com/root-project/root/issues/6408) - Creating `RooDataSet` causes SegFault
@@ -907,7 +907,7 @@ no longer there and GUIs can be programmed again from Python, using the `TPyDisp
 * [#6376](https://github.com/root-project/root/issues/6376) - vtable corruption in Python specialization of C++ classes
 * [#6356](https://github.com/root-project/root/issues/6356) - [JupyROOT][roottest] New `nbconvert` versions break notebook comparisons
 * [#6482](https://github.com/root-project/root/issues/6482) - `TClass::GetListOfFunctions()` fails to enumerate using decls.
-* [#6359](https://github.com/root-project/root/issues/6359) - python: `interpreter/llvm/src/include/llvm/Support/Casting.h:106: static bool llvm::isa_impl_cl<To, const From*>::doit(const From*) [with To = clang::UsingDecl; From = clang::Decl]: Assertion `Val && "isa<> used on a null pointer"' failed.`
+* [#6359](https://github.com/root-project/root/issues/6359) - python: interpreter/llvm/src/include/llvm/Support/Casting.h:106: static bool llvm::isa_impl_cl<To, const From*>::doit(const From*) [with To = clang::UsingDecl; From = clang::Decl]: Assertion `Val && "isa<> used on a null pointer"' failed.
 * [#6578](https://github.com/root-project/root/issues/6578) - Using declaration of `TGMainFrame` constructor not taken into account
 * [#6666](https://github.com/root-project/root/issues/6666) - `TClass::GetListOfDataMembers` returns an empty list even-though the information is available.
 * [#6725](https://github.com/root-project/root/issues/6725) - rootpcm does not record `TEnum`'s underlying type
