@@ -172,6 +172,8 @@ protected:
       return Eval<T>(name);
    }
 
+   virtual RAttrMap CollectDefaults() const;
+
 public:
    RAttrBase() = default;
 
@@ -179,6 +181,7 @@ public:
 
    friend bool operator==(const RAttrBase& lhs, const RAttrBase& rhs) { return lhs.IsSame(rhs) && rhs.IsSame(lhs); }
    friend bool operator!=(const RAttrBase& lhs, const RAttrBase& rhs) { return !lhs.IsSame(rhs) || !rhs.IsSame(lhs); }
+
 };
 
 
