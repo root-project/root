@@ -74,6 +74,12 @@ public:
 
    ~MnMigrad() {}
 
+   /// Copy constructor, copy shares the reference to the same FCNBase in MnApplication
+   MnMigrad(const MnMigrad&) = default;
+
+   // Copy assignment deleted, since MnApplication has unassignable reference to FCNBase
+   MnMigrad& operator=(const MnMigrad&) = delete;
+
    ModularFunctionMinimizer& Minimizer() {return fMinimizer;}
    const ModularFunctionMinimizer& Minimizer() const {return fMinimizer;}
 
