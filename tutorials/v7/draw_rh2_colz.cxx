@@ -52,6 +52,12 @@ void draw_rh2_colz()
 
    frame->SetGridX(false).SetGridY(false);
 
+   // draw ticks on both sides
+   frame->SetTicksX(2).SetTicksY(2);
+
+   // swap frame side where axes are drawn
+   // frame->SetSwapX(true).SetSwapY(true);
+
    frame->AttrX().SetZoomMinMax(2.,8.);
 
    frame->AttrY().SetZoomMinMax(2.,8.);
