@@ -3246,7 +3246,6 @@ static bool R__UpdateLibFileForLinking(TString &lib)
             return true;
          }
       }
-      cacheMap.close();
       return false;
    }
    return false;
