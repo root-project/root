@@ -56,14 +56,7 @@ class RAttrAxis : public RAttrBase {
    RAttrValue<std::string> fTitlePos{this, "title_position", "right"};    ///<! axis title position - left, right, center
    RAttrValue<RPadLength>  fTitleOffset{this, "title_offset", {}};        ///<! axis title offset - relative to predefined position
 
-   R__ATTR_CLASS(RAttrAxis, "axis_", AddDefaults(fMin).AddDefaults(fMax)
-                                    .AddDefaults(fZoomMin).AddDefaults(fZoomMax)
-                                    .AddDefaults(fLog).AddDefaults(fReverse)
-                                    .AddDefaults(fTimeDisplay).AddDefaults(fTimeOffset).AddDefaults(fTimeFormat)
-                                    .AddDefaults(fAttrLine).AddDefaults(fEndingStyle).AddDefaults(fEndingSize)
-                                    .AddDefaults(fTicksSide).AddDefaults(fTicksSize).AddDefaults(fTicksColor)
-                                    .AddDefaults(fLabelsAttr).AddDefaults(fLabelsOffset).AddDefaults(fLabelsCenter)
-                                    .AddDefaults(fTitleAttr).AddDefaults(fTitle).AddDefaults(fTitlePos).AddDefaults(fTitleOffset));
+   R__ATTR_CLASS(RAttrAxis, "axis_");
 
    // min range, graphics will not show value less then this
    RAttrAxis &SetMin(double min) { fMin = min; return *this; }

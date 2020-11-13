@@ -30,7 +30,7 @@ class RAttrLine : public RAttrBase {
    RAttrValue<double>  fWidth{this, "width", 1.};  ///<! line width
    RAttrValue<int>     fStyle{this, "style", 1};   ///<! line style
 
-   R__ATTR_CLASS(RAttrLine, "line_", AddDefaults(fColor).AddDefaults(fWidth).AddDefaults(fStyle));
+   R__ATTR_CLASS(RAttrLine, "line_");
 
    ///The width of the line.
    RAttrLine &SetWidth(double width) { fWidth = width; return *this; }
