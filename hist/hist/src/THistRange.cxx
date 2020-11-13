@@ -37,7 +37,7 @@ TBinIterator::TBinIterator(const TH1 *h, ERangeType type)
          // this will loop on all bins (one should exclude 0)
          fXmin = -9;
          fXmax = hpoly->GetNumberOfBins();
-      } else if (type != TBinIterator::kUnOfBins) {
+      } else if (type == TBinIterator::kUnOfBins) {
          // overflow bins in TH2Poly are from -9 to -1
          fXmin = -9;
          fXmax = -1;
