@@ -174,6 +174,8 @@ protected:
 
    virtual RAttrMap CollectDefaults() const;
 
+   virtual bool IsValue() const { return false; }
+
 public:
    RAttrBase() = default;
 

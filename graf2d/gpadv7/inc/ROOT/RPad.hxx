@@ -30,7 +30,7 @@ class RPad: public RPadBase {
    RPadPos fPos;                           ///< pad position
    RPadExtent fSize;                       ///< pad size
 
-   RAttrLine fAttrLine{this, "border_"};   ///<! border attributes
+   RAttrLine fAttrLine{this, "border"};    ///<! border attributes
 
 protected:
 

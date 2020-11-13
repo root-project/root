@@ -15,9 +15,9 @@
 using namespace ROOT::Experimental;
 
 class CustomDrawable : public RDrawable {
-   RAttrLine  fAttrLine{this, "line_"};    ///<! line attributes
-   RAttrBox   fAttrBox{this, "box_"};      ///<! box attributes
-   RAttrText  fAttrText{this, "text_"};    ///<! text attributes
+   RAttrLine  fAttrLine{this, "line"};    ///<! line attributes
+   RAttrBox   fAttrBox{this, "box"};      ///<! box attributes
+   RAttrText  fAttrText{this, "text"};    ///<! text attributes
 
 public:
    CustomDrawable() : RDrawable("custom") {}
