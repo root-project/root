@@ -21,6 +21,7 @@
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RPad.hxx"
+#include "ROOT/RStyle.hxx"
 #include "TRandom.h"
 
 // macro must be here while cling is not capable to load
@@ -61,6 +62,11 @@ void draw_subpads()
   subsubpads[0][0]->Draw(pHist1)->AttrLine().SetColor(RColor::kBlue);
   subsubpads[1][0]->Draw(pHist2)->AttrLine().SetColor(RColor::kGreen);
   subsubpads[0][1]->Draw(pHist3)->AttrLine().SetColor(RColor::kRed);
+
+  auto style = std::make_shared<RStyle>();
+  style->ParseString("frame { gridx: true; gridy: true; ticksx: 2; ticksy: 2; }");
+  canvas->UseStyle(style);
+  RDirectory::Heap().Add("style", style); // required to keep style alive
 
   canvas->SetSize(1200, 600);
   canvas->Show();
