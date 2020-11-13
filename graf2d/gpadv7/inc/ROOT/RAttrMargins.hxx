@@ -31,7 +31,7 @@ class RAttrMargins : public RAttrBase {
    RAttrValue<RPadLength>   fTop{this, "top", 0._normal};
    RAttrValue<RPadLength>   fBottom{this, "bottom", 0._normal};
 
-   R__ATTR_CLASS(RAttrMargins, "margin_");
+   R__ATTR_CLASS(RAttrMargins, "margin");
 
 public:
 

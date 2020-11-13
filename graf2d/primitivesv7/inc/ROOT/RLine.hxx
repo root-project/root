@@ -26,9 +26,9 @@ namespace Experimental {
 
 class RLine : public RDrawable {
 
-   RPadPos fP1;                            ///< line begin
-   RPadPos fP2;                            ///< line end
-   RAttrLine  fAttrLine{this, "line_"};    ///<! line attributes
+   RPadPos    fP1;                        ///< line begin
+   RPadPos    fP2;                        ///< line end
+   RAttrLine  fAttrLine{this, "line"};    ///<! line attributes
 
 public:
 

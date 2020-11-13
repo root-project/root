@@ -26,10 +26,10 @@ namespace Experimental {
 
 class RAttrFill : public RAttrBase {
 
-   RAttrColor       fColor{this, "color_"};    ///<! fill color
+   RAttrColor       fColor{this, "color"};     ///<! fill color
    RAttrValue<int>  fStyle{this, "style", 1};  ///<! fill style
 
-   R__ATTR_CLASS(RAttrFill, "fill_");
+   R__ATTR_CLASS(RAttrFill, "fill");
 
    ///The fill style
    RAttrFill &SetStyle(int style) { fStyle = style; return *this; }

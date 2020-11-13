@@ -28,9 +28,9 @@ namespace Experimental {
 
 class RText : public RDrawable {
 
-   std::string fText;                      ///< text to display
-   RPadPos fPos;                           ///< position
-   RAttrText  fAttrText{this, "text_"};    ///<! text attributes
+   std::string   fText;                     ///< text to display
+   RPadPos       fPos;                      ///< position
+   RAttrText     fAttrText{this, "text"};   ///<! text attributes
 
 public:
 

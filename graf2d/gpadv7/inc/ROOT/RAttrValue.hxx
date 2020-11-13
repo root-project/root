@@ -31,6 +31,8 @@ protected:
 
    const RAttrMap &GetDefaults() const override { return fDefaults; }
 
+   bool IsValue() const override { return true; }
+
 public:
 
    RAttrValue() = default;

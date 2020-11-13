@@ -34,7 +34,7 @@ class RAxisDrawable : public RDrawable {
    RPadPos fPos;                          ///< axis start point
    bool fVertical{false};                 ///< is vertical axis
    RPadLength fLength;                    ///< axis length
-   RAttrAxis fAttrAxis{this, "axis_"};    ///<! axis attributes
+   RAttrAxis fAttrAxis{this, "axis"};     ///<! axis attributes
 
 public:
 

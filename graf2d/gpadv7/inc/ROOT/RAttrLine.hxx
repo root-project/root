@@ -26,11 +26,11 @@ namespace Experimental {
 
 class RAttrLine : public RAttrBase {
 
-   RAttrColor          fColor{this, "color_"};     ///<! line color
+   RAttrColor          fColor{this, "color"};      ///<! line color
    RAttrValue<double>  fWidth{this, "width", 1.};  ///<! line width
    RAttrValue<int>     fStyle{this, "style", 1};   ///<! line style
 
-   R__ATTR_CLASS(RAttrLine, "line_");
+   R__ATTR_CLASS(RAttrLine, "line");
 
    ///The width of the line.
    RAttrLine &SetWidth(double width) { fWidth = width; return *this; }

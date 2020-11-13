@@ -32,7 +32,7 @@ welcome!
 
 class RAttrColor : public RAttrBase {
 
-   R__ATTR_CLASS(RAttrColor, "color_");
+   R__ATTR_CLASS(RAttrColor, "color");
 
 protected:
 
