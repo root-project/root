@@ -1202,7 +1202,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           text_profile = show_text && (this.options.TextKind == "E") && this.IsRProfile(),
           path_fill = null, path_err = null, path_marker = null, path_line = null,
           endx = "", endy = "", dend = 0, my, yerr1, yerr2, bincont, binerr, mx1, mx2, midx,
-          text_col, text_angle, text_size;
+          text_font;
 
       if (show_errors && !show_markers && (this.v7EvalAttr("marker_style",1) > 1))
          show_markers = true;
@@ -1229,19 +1229,17 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
 
       if (show_text) {
-         text_col = this.v7EvalColor("text_color", "black");
-         text_angle = -1*this.v7EvalAttr("text_angle", 0);
-         text_size = this.v7EvalAttr("text_size", 20);
+         text_font = this.v7EvalFont("text", { size: 20, color: "black", align: 22 });
 
-         if (!text_angle && !options.TextKind) {
+         if (!text_font.angle && !options.TextKind) {
              let space = width / (right - left + 1);
-             if (space < 3 * text_size) {
-                text_angle = 270;
-                text_size = Math.round(space*0.7);
+             if (space < 3 * text_font.size) {
+                text_font.setAngle(270);
+                text_font.setSize(Math.round(space*0.7));
              }
          }
 
-         this.StartTextDrawing(42, text_size, this.draw_g, text_size);
+         this.StartTextDrawing(text_font, 'font');
       }
 
       // if there are too many points, exclude many vertical drawings at the same X position
@@ -1279,10 +1277,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                if (cont!==0) {
                   let lbl = (cont === Math.round(cont)) ? cont.toString() : JSROOT.FFormat(cont, JSROOT.gStyle.fPaintTextFormat);
 
-                  if (text_angle)
-                     this.DrawText({ align: 12, x: midx, y: Math.round(my - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
+                  if (text_font.angle)
+                     this.DrawText({ align: 12, x: midx, y: Math.round(my - 2 - text_font.size/5), width: 0, height: 0, text: lbl, latex: 0 });
                   else
-                     this.DrawText({ align: 22, x: Math.round(mx1 + (mx2-mx1)*0.1), y: Math.round(my-2-text_size), width: Math.round((mx2-mx1)*0.8), height: text_size, text: lbl, color: text_col, latex: 0 });
+                     this.DrawText({ x: Math.round(mx1 + (mx2-mx1)*0.1), y: Math.round(my-2-text_font.size), width: Math.round((mx2-mx1)*0.8), height: text_font.size, text: lbl, latex: 0 });
                }
             }
 
@@ -1497,8 +1495,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    RH1Painter.prototype.ProcessTooltip = function(pnt) {
-      if ((pnt === null) || !this.draw_content || this.options.Mode3D) {
-         if (this.draw_g !== null)
+      if ((pnt === null) || !this.draw_content || this.options.Mode3D || !this.draw_g) {
+         if (this.draw_g)
             this.draw_g.select(".tooltip_bin").remove();
          return null;
       }
@@ -2683,12 +2681,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          }
 
       if (textbins.length > 0) {
-         let text_col = this.v7EvalColor("text_color", "black"),
-             text_angle = -1*this.v7EvalAttr("text_angle", 0),
-             text_size = this.v7EvalAttr("text_size", 12),
+         let textFont  = this.v7EvalFont("text", { size: 12, color: "black", align: 22 }),
              text_g = this.draw_g.append("svg:g").attr("class","th2poly_text");
 
-         this.StartTextDrawing(42, text_size, text_g, text_size);
+         this.StartTextDrawing(textFont, 'font', text_g);
 
          for (i = 0; i < textbins.length; ++ i) {
             bin = textbins[i];
@@ -2704,7 +2700,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                if (!lbl) lbl = bin.fNumber;
             }
 
-            this.DrawText({ align: 22, x: bin._midx, y: bin._midy, rotate: text_angle, text: lbl, color: text_col, latex: 0, draw_g: text_g });
+            this.DrawText({ x: bin._midx, y: bin._midy, text: lbl, latex: 0, draw_g: text_g });
          }
 
          this.FinishTextDrawing(text_g);
@@ -2719,9 +2715,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       if (handle===null) handle = this.PrepareDraw({ rounding: false });
 
-      let text_col = this.v7EvalColor("text_color", "black"),
-          text_angle = -1*this.v7EvalAttr("text_angle", 0),
-          text_size = this.v7EvalAttr("text_size", 20),
+      let textFont  = this.v7EvalFont("text", { size: 20, color: "black", align: 22 }),
           text_offset = 0,
           text_g = this.draw_g.append("svg:g").attr("class","th2_text"),
           di = handle.stepi, dj = handle.stepj,
@@ -2730,7 +2724,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       if (this.options.BarOffset) text_offset = this.options.BarOffset;
 
-      this.StartTextDrawing(42, text_size, text_g, text_size);
+      this.StartTextDrawing(textFont, 'font', text_g);
 
       for (i = handle.i1; i < handle.i2; i += di)
          for (j = handle.j1; j < handle.j2; j += dj) {
@@ -2746,7 +2740,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             lbl = (binz === Math.round(binz)) ? binz.toString() :
                       JSROOT.FFormat(binz, JSROOT.gStyle.fPaintTextFormat);
 
-            if (text_angle) {
+            if (textFont.angle) {
                posx = Math.round(handle.grx[i] + binw*0.5);
                posy = Math.round(handle.gry[j+dj] + binh*(0.5 + text_offset));
                sizex = 0;
@@ -2758,7 +2752,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                sizey = Math.round(binh*0.8);
             }
 
-            this.DrawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, rotate: text_angle, text: lbl, color: text_col, latex: 0, draw_g: text_g });
+            this.DrawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, text: lbl, latex: 0, draw_g: text_g });
          }
 
       this.FinishTextDrawing(text_g);
@@ -3819,10 +3813,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    RHistStatsPainter.prototype.DrawStatistic = function(lines) {
 
-      // let text_size  = this.v7EvalAttr("stats_text_size", 12),
-      let text_color = this.v7EvalColor("stats_text_color", "black"),
-          text_align = this.v7EvalAttr("stats_text_align", 22),
-          text_font  = this.v7EvalAttr("stats_text_font", 41),
+      let textFont = this.v7EvalFont("stats_text", { size: 12, color: "black", align: 22 }),
           first_stat = 0, num_cols = 0, maxlen = 0,
           width = this.pave_width,
           height = this.pave_height;
@@ -3850,10 +3841,11 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       else
          text_g.selectAll("*").remove();
 
-      this.StartTextDrawing(text_font, height/(nlines * 1.2), text_g);
+      textFont.setSize(height/(nlines * 1.2))
+      this.StartTextDrawing(textFont, 'font' , text_g);
 
       if (nlines == 1) {
-         this.DrawText({ align: text_align, width: width, height: height, text: lines[0], color: text_color, latex: 1, draw_g: text_g });
+         this.DrawText({ width: width, height: height, text: lines[0], latex: 1, draw_g: text_g });
       } else
       for (let j = 0; j < nlines; ++j) {
          let posy = j*stepy;
@@ -3862,7 +3854,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             let parts = lines[j].split("|");
             for (let n = 0; n < parts.length; ++n)
                this.DrawText({ align: "middle", x: width * n / num_cols, y: posy, latex: 0,
-                               width: width/num_cols, height: stepy, text: parts[n], color: text_color, draw_g: text_g });
+                               width: width/num_cols, height: stepy, text: parts[n], draw_g: text_g });
          } else if (lines[j].indexOf('=') < 0) {
             if (j==0) {
                has_head = true;
@@ -3870,14 +3862,14 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                   lines[j] = lines[j].substr(0,maxlen+2) + "...";
             }
             this.DrawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y: posy,
-                            width: width-2*margin_x, height: stepy, text: lines[j], color: text_color, draw_g: text_g });
+                            width: width-2*margin_x, height: stepy, text: lines[j], draw_g: text_g });
          } else {
             let parts = lines[j].split("="), args = [];
 
             for (let n = 0; n < 2; ++n) {
                let arg = {
                   align: (n == 0) ? "start" : "end", x: margin_x, y: posy,
-                  width: width-2*margin_x, height: stepy, text: parts[n], color: text_color, draw_g: text_g,
+                  width: width-2*margin_x, height: stepy, text: parts[n], draw_g: text_g,
                   _expected_width: width-2*margin_x, _args: args,
                   post_process: function(painter) {
                     if (this._args[0].ready && this._args[1].ready)

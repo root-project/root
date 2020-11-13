@@ -6,11 +6,11 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    "use strict";
 
    function drawText() {
-      let text         = this.GetObject(),
-          pp           = this.pad_painter(),
-          use_frame    = false,
-          p            = pp.GetCoordinate(text.fPos),
-          textFont     = this.v7EvalFont("text", { size: 12, color: "black", align: 22 });
+      let text      = this.GetObject(),
+          pp        = this.pad_painter(),
+          use_frame = false,
+          p         = pp.GetCoordinate(text.fPos),
+          textFont  = this.v7EvalFont("text", { size: 12, color: "black", align: 22 });
 
       this.CreateG(use_frame);
 
@@ -106,11 +106,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
    function drawLegendContent() {
       let legend     = this.GetObject(),
-          // text_size  = this.v7EvalAttr( "legend_text_size", 20),
-          text_angle = -1 * this.v7EvalAttr( "legend_text_angle", 0),
-          text_align = this.v7EvalAttr( "legend_text_align", 12),
-          text_color = this.v7EvalColor( "legend_text_color", "black"),
-          text_font  = this.v7EvalAttr( "legend_text_font", 41),
+          textFont  = this.v7EvalFont("legend_text", { size: 12, color: "black", align: 22 }),
           width      = this.pave_width,
           height     = this.pave_height,
           nlines     = legend.fEntries.length,
@@ -122,10 +118,11 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
       let stepy = height / nlines, posy = 0, margin_x = 0.02 * width;
 
-      this.StartTextDrawing(text_font, height/(nlines * 1.2));
+      textFont.setSize(height/(nlines * 1.2));
+      this.StartTextDrawing(textFont, 'font' );
 
       if (legend.fTitle) {
-         this.DrawText({ align: 22, rotate: text_angle, color: text_color, latex: 1,
+         this.DrawText({ align: 22, latex: 1,
                          width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: legend.fTitle });
          posy += stepy;
       }
@@ -133,8 +130,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
       for (let i=0; i<legend.fEntries.length; ++i) {
          let objp = null, entry = legend.fEntries[i];
 
-         this.DrawText({ align: text_align, rotate: text_angle, color: text_color, latex: 1,
-                         width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + width*0.25, y: posy, text: entry.fLabel });
+         this.DrawText({ latex: 1, width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + width*0.25, y: posy, text: entry.fLabel });
 
          if (entry.fDrawableId != "custom") {
             objp = pp.FindSnap(entry.fDrawableId, true);
@@ -189,27 +185,24 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    // =================================================================================
 
    function drawPaveTextContent() {
-      let pavetext   = this.GetObject(),
-          // text_size  = this.v7EvalAttr( "pavetext_text_size", 20),
-          text_angle = -1 * this.v7EvalAttr( "pavetext_text_angle", 0),
-          text_align = this.v7EvalAttr( "pavetext_text_align", 12),
-          text_color = this.v7EvalColor( "pavetext_text_color", "black"),
-          text_font  = this.v7EvalAttr( "pavetext_text_font", 41),
-          width      = this.pave_width,
-          height     = this.pave_height,
-          nlines     = pavetext.fText.length;
+      let pavetext  = this.GetObject(),
+          textFont  = this.v7EvalFont("pavetext_text", { size: 12, color: "black", align: 22 }),
+          width     = this.pave_width,
+          height    = this.pave_height,
+          nlines    = pavetext.fText.length;
 
       if (!nlines) return;
 
       let stepy = height / nlines, posy = 0, margin_x = 0.02 * width;
 
-      this.StartTextDrawing(text_font, height/(nlines * 1.2));
+      textFont.setSize(height/(nlines * 1.2))
+
+      this.StartTextDrawing(textFont, 'font');
 
       for (let i=0; i < pavetext.fText.length; ++i) {
          let line = pavetext.fText[i];
 
-         this.DrawText({ align: text_align, rotate: text_angle, color: text_color, latex: 1,
-                         width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: line });
+         this.DrawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: line });
          posy += stepy;
       }
 

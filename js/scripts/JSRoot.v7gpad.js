@@ -13,9 +13,23 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!obj) return dflt;
       if (this.cssprefix) name = this.cssprefix + name;
 
+      function type_check(res) {
+         if (dflt === undefined) return res;
+         let typ1 = typeof dflt;
+         let typ2 = typeof res;
+         if (typ1 == typ2) return res;
+         if (typ1 == 'boolean') {
+            if (typ2 == 'string') return (res != "") && (res != "0") && (res != "no") && (res != "off");
+            return !!res;
+         }
+         if ((typ1 == 'number') && (typ2 == 'string'))
+            return parseFloat(res);
+         return res;
+      }
+
       if (obj.fAttr && obj.fAttr.m) {
          let value = obj.fAttr.m[name];
-         if (value) return value.v; // found value direct in attributes
+         if (value) return type_check(value.v); // found value direct in attributes
       }
 
       if (this.rstyle && this.rstyle.fBlocks) {
@@ -29,7 +43,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             if (match && block.map && block.map.m) {
                let value = block.map.m[name];
-               if (value) return value.v;
+               if (value) return type_check(value.v);
             }
          }
       }
@@ -127,7 +141,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let text_size   = this.v7EvalAttr( name + "_size", dflts.size || 12),
           text_angle   = this.v7EvalAttr( name + "_angle", 0),
-          text_align   = this.v7EvalAttr( name + "_align", "none"),
+          text_align   = this.v7EvalAttr( name + "_align", dflts.align || "none"),
           text_color   = this.v7EvalColor( name + "_color", dflts.color || "none"),
           text_font    = this.v7EvalAttr( name + "_font", dflts.font || 42);
 
@@ -1074,6 +1088,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
+   /** @summary Add zomming rect to axis drawing */
+   RAxisPainter.prototype.AddZoomingRect = function(axis_g, side, lgaps) {
+      if (JSROOT.settings.Zooming && !this.disable_zooming && !JSROOT.BatchMode) {
+         let sz = Math.max(lgaps[side], 10);
+
+         let d = this.vertical ? "v" + this.gr_range + "h"+(-side*sz) + "v" + (-this.gr_range)
+                               : "h" + this.gr_range + "v"+(side*sz) + "h" + (-this.gr_range);
+         axis_g.append("svg:path")
+               .attr("d","M0,0" + d + "z")
+               .attr("class", "axis_zoom")
+               .style("opacity", "0")
+               .style("cursor", "crosshair");
+      }
+   }
+
    /** @summary Performs axis drawing
      * @returns {Promise} which resolved when drawing is completed */
    RAxisPainter.prototype.DrawAxis = function(layer, transform, side) {
@@ -1116,26 +1145,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.handle = this.CreateTicks(false, optionNoexp, optionNoopt, optionInt);
 
-     if (this.ticksSide == "invert") side = -side;
+      if (this.ticksSide == "invert") side = -side;
 
       // first draw ticks
       let tgaps = this.DrawTicks(axis_g, side, true);
+
+      this.optionUnlab = optionUnlab;
 
       // draw labels
       let labelsPromise = optionUnlab ? Promise.resolve(tgaps) : this.DrawLabels(axis_g, side, tgaps);
 
       return labelsPromise.then(lgaps => {
-         if (JSROOT.settings.Zooming && !this.disable_zooming && !JSROOT.BatchMode) {
-            let sz = Math.max(lgaps[side], 10);
-
-            let d = this.vertical ? "v" + this.gr_range + "h"+(-side*sz) + "v" + (-this.gr_range)
-                                  : "h" + this.gr_range + "v"+(side*sz) + "h" + (-this.gr_range);
-            axis_g.append("svg:path")
-                  .attr("d","M0,0" + d + "z")
-                  .attr("class", "axis_zoom")
-                  .style("opacity", "0")
-                  .style("cursor", "crosshair");
-         }
+         this.AddZoomingRect(axis_g, side, lgaps);
 
          let fTitle = this.v7EvalAttr("title", "");
          if (!fTitle) return true;
@@ -1178,7 +1199,28 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          return this.FinishTextPromise(title_g);
       });
+   }
 
+   /** @summary Draw axis again on opposite frame size */
+   RAxisPainter.prototype.DrawAxisAgain = function(layer, transform, side, only_ticks) {
+      let axis_g = layer.select("." + this.name + "_container2");
+      if (axis_g.empty())
+         axis_g = layer.append("svg:g").attr("class",this.name + "_container2");
+      else
+         axis_g.selectAll("*").remove();
+
+      axis_g.attr("transform", transform || null);
+
+      // draw ticks again
+      let tgaps = this.DrawTicks(axis_g, side, false);
+
+      // draw labels again
+      let promise = this.optionUnlab || only_ticks ? Promise.resolve(tgaps) : this.DrawLabels(axis_g, side, tgaps);
+
+      return promise.then(lgaps => {
+         this.AddZoomingRect(axis_g, side, lgaps);
+         return true;
+      });
    }
 
    RAxisPainter.prototype.Redraw = function() {
@@ -1532,9 +1574,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.CleanupAxes();
 
-      // this is former CreateXY function
-
       this.swap_xy = false;
+      let ticksx = this.v7EvalAttr("ticksx", 1),
+          ticksy = this.v7EvalAttr("ticksy", 1),
+          sidex = 1, sidey = 1;
+
+      // ticksx = 2; ticksy = 2;
+
+      if (this.v7EvalAttr("swapx", false)) sidex = -1;
+      if (this.v7EvalAttr("swapy", false)) sidey = -1;
 
       let w = this.frame_width(), h = this.frame_height();
 
@@ -1586,11 +1634,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (!disable_axis_draw) {
-         let promise1 = draw_horiz.DrawAxis(layer, "translate(0,"+h+")");
+         let promise1 = draw_horiz.DrawAxis(layer, (sidex > 0) ? `translate(0,${h})` : "", sidex);
 
-         let promise2 = draw_vertical.DrawAxis(layer, "translate(0,"+h+")");
+         let promise2 = draw_vertical.DrawAxis(layer, (sidey > 0) ? `translate(0,${h})` : `translate(${w},${h})`, sidey);
 
          return Promise.all([promise1, promise2]).then(() => {
+
+            let again = [];
+            if (ticksx > 1)
+               again.push(draw_horiz.DrawAxisAgain(layer, (sidex < 0) ? `translate(0,${h})` : "", -sidex, ticksx == 2));
+
+            if (ticksy > 1)
+               again.push(draw_vertical.DrawAxisAgain(layer, (sidey < 0) ? `translate(0,${h})` : `translate(${w},${h})`, -sidey, ticksy == 2));
+
+             return Promise.all(again);
+         }).then(() => {
              this.DrawGrids();
              this.axes_drawn = true;
              return true;
@@ -4121,11 +4179,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           title_margin = this.v7EvalLength("margin", ph, 0.02),
           title_width  = fw,
           title_height = this.v7EvalLength("height", ph, 0.05),
-          text_size    = this.v7EvalAttr("text_size", 20),
-          text_angle   = -1 * this.v7EvalAttr("text_angle", 0),
-          // text_align   = this.v7EvalAttr("text_align", 22),
-          text_color   = this.v7EvalColor("text_color", "black"),
-          text_font    = this.v7EvalAttr("text_font", 41);
+          textFont     = this.v7EvalFont("text", { size: 24, color: "black", align: 22 });
 
       this.CreateG(false);
 
@@ -4143,9 +4197,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                     .attr("width",title_width).attr("height",title_height);
       }
 
-      let arg = { align: 22, x: title_width/2, y: title_height/2, text: title.fText, rotate: text_angle, color: text_color, latex: 1 };
+      let arg = { x: title_width/2, y: title_height/2, text: title.fText, latex: 1 };
 
-      this.StartTextDrawing(text_font, text_size);
+      this.StartTextDrawing(textFont, 'font');
 
       this.DrawText(arg);
 
