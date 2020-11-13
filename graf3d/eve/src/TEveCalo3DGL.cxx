@@ -529,7 +529,7 @@ void TEveCalo3DGL::RenderEndCapCell(const TEveCaloData::CellGeom_t &cellData, Fl
 
    RenderBox(box);
 
-   offset = towerH;
+   offset += towerH;
 
 } // end RenderEndCapCell
 
