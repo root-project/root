@@ -133,7 +133,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooUniform.cxx
     src/RooVoigtian.cxx
     src/RooJohnson.cxx
-    src/RooFitComputeDispatch.cxx
+    src/Initialisation.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LINKDEF
