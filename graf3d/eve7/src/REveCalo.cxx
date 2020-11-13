@@ -473,7 +473,7 @@ void REveCalo3D::MakeEndCapCell(const REveCaloData::CellGeom_t &cellData, float 
    using namespace TMath;
    Float_t z1, r1In, r1Out, z2, r2In, r2Out;
 
-   z1    = (cellData.EtaMin()<0) ? fEndCapPosB : fEndCapPosF;
+   z1    = (cellData.EtaMin()<0) ? fEndCapPosB - offset : fEndCapPosF + offset;
    z2    = z1 + TMath::Sign(towerH, cellData.EtaMin());
 
    r1In  = z1*Tan(cellData.ThetaMin());
@@ -527,11 +527,7 @@ void REveCalo3D::MakeEndCapCell(const REveCaloData::CellGeom_t &cellData, float 
    pnts[1] = r2Out*sin1;
    pnts[2] = z2;
 
-
-   if (z1 > 0)
-      offset += towerH * Cos(cellData.ThetaMin());
-   else
-      offset -= towerH * Cos(cellData.ThetaMin());
+   offset += towerH;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -642,7 +638,7 @@ void REveCalo3D::BuildRenderData()
       printf(" REveCalo3D::BuildRenderData push box vertces -------------------------\n");
       for (int t = 0; t < 8; ++t)
       {
-         printf("(%f %f %f \n)", pnts[t*3],  pnts[t*3+1], pnts[t*3+2] );
+         printf("(%f %f %f)\n", pnts[t*3],  pnts[t*3+1], pnts[t*3+2] );
       }
       */
       fRenderData->PushV(pnts, 24);
