@@ -13,7 +13,7 @@ class CustomAttrs : public RAttrBase {
 protected:
    RAttrMap CollectDefaults() const override { return RAttrMap().AddDefaults(fAttrBox).AddDefaults(fAttrText); }
 
-   R__ATTR_CLASS(CustomAttrs, "custom_", AddDefaults(fAttrBox).AddDefaults(fAttrText));
+   R__ATTR_CLASS(CustomAttrs, "custom_");
 
    const RAttrBox &GetAttrBox() const { return fAttrBox; }
    CustomAttrs &SetAttrBox(const RAttrBox &box) { fAttrBox = box; return *this; }

@@ -29,7 +29,7 @@ class RAttrFill : public RAttrBase {
    RAttrColor       fColor{this, "color_"};    ///<! fill color
    RAttrValue<int>  fStyle{this, "style", 1};  ///<! fill style
 
-   R__ATTR_CLASS(RAttrFill, "fill_", AddDefaults(fColor).AddDefaults(fStyle));
+   R__ATTR_CLASS(RAttrFill, "fill_");
 
    ///The fill style
    RAttrFill &SetStyle(int style) { fStyle = style; return *this; }
