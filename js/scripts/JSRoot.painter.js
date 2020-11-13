@@ -1023,6 +1023,11 @@ JSROOT.define(['d3'], (d3) => {
          selection.attr("font-style", this.style);
    }
 
+   /** @summary Set font size (optional) */
+   FontHandler.prototype.setSize = function(size) {
+      this.size = Math.round(size);
+   }
+
    /** @summary Set text color (optional) */
    FontHandler.prototype.setColor = function(color) {
       this.color = color;
