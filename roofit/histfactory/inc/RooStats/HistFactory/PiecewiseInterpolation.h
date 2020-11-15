@@ -96,6 +96,7 @@ protected:
   std::vector<int> _interpCode;
 
   Double_t evaluate() const;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
   ClassDef(PiecewiseInterpolation,3) // Sum of RooAbsReal objects
 };

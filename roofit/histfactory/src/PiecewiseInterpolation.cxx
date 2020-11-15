@@ -33,9 +33,11 @@
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
 #include "RooTrace.h"
+#include "RunContext.h"
 
 #include <exception>
 #include <math.h>
+#include <algorithm>
 
 using namespace std;
 
@@ -307,6 +309,138 @@ Double_t PiecewiseInterpolation::evaluate() const
   }
   return sum;
 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Interpolate between input distributions for all values of the observable in `evalData`.
+/// \param[in/out] evalData Struct holding spans pointing to input data. The results of this function will be stored here.
+/// \param[in] normSet Arguments to normalise over.
+RooSpan<double> PiecewiseInterpolation::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  auto nominal = _nominal->getValues(evalData, normSet);
+  auto sum = evalData.makeBatch(this, nominal.size());
+  std::copy(nominal.begin(), nominal.end(), sum.begin());
+
+  for (unsigned int i=0; i < _paramSet.size(); ++i) {
+    const double param = static_cast<RooAbsReal*>(_paramSet.at(i))->getVal();
+    auto low   = static_cast<RooAbsReal*>(_lowSet.at(i) )->getValues(evalData, normSet);
+    auto high  = static_cast<RooAbsReal*>(_highSet.at(i))->getValues(evalData, normSet);
+    const int icode = _interpCode[i];
+
+    switch(icode) {
+    case 0: {
+      // piece-wise linear
+      for (unsigned int j=0; j < nominal.size(); ++j) {
+        if(param >0)
+          sum[j] += param * (high[j]    - nominal[j]);
+        else
+          sum[j] += param * (nominal[j] - low[j]    );
+      }
+      break;
+    }
+    case 1: {
+      // pice-wise log
+      for (unsigned int j=0; j < nominal.size(); ++j) {
+        if(param >=0)
+          sum[j] *= pow(high[j]/ nominal[j], +param);
+        else
+          sum[j] *= pow(low[j] / nominal[j], -param);
+      }
+      break;
+    }
+    case 2:
+      // parabolic with linear
+      for (unsigned int j=0; j < nominal.size(); ++j) {
+        const double a = 0.5*(high[j]+low[j])-nominal[j];
+        const double b = 0.5*(high[j]-low[j]);
+        const double c = 0;
+        if (param > 1.) {
+          sum[j] += (2*a+b)*(param -1)+high[j]-nominal[j];
+        } else if (param < -1.) {
+          sum[j] += -1*(2*a-b)*(param +1)+low[j]-nominal[j];
+        } else {
+          sum[j] +=  a*pow(param ,2) + b*param +c;
+        }
+      }
+      break;
+    case 3: {
+      //parabolic version of log-normal
+      for (unsigned int j=0; j < nominal.size(); ++j) {
+        const double a = 0.5*(high[j]+low[j])-nominal[j];
+        const double b = 0.5*(high[j]-low[j]);
+        const double c = 0;
+        if (param > 1.) {
+          sum[j] += (2*a+b)*(param -1)+high[j]-nominal[j];
+        } else if (param < -1.) {
+          sum[j] += -1*(2*a-b)*(param +1)+low[j]-nominal[j];
+        } else {
+          sum[j] +=  a*pow(param ,2) + b*param +c;
+        }
+      }
+      break;
+    }
+    case 4:
+      for (unsigned int j=0; j < nominal.size(); ++j) {
+        const double x  = param;
+        if (x > 1.) {
+          sum[j] += x * (high[j]    - nominal[j]);
+        } else if (x < -1.) {
+          sum[j] += x * (nominal[j] - low[j]);
+        } else {
+          const double eps_plus = high[j] - nominal[j];
+          const double eps_minus = nominal[j] - low[j];
+          const double S = 0.5 * (eps_plus + eps_minus);
+          const double A = 0.0625 * (eps_plus - eps_minus);
+
+          double val = nominal[j] + x * (S + x * A * ( 15. + x * x * (-10. + x * x * 3.  ) ) );
+
+          if (val < 0.) val = 0.;
+          sum[j] += val - nominal[j];
+        }
+      }
+      break;
+    case 5:
+      for (unsigned int j=0; j < nominal.size(); ++j) {
+        if (param > 1. || param < -1.) {
+          if(param>0)
+            sum[j] += param * (high[j]    - nominal[j]);
+          else
+            sum[j] += param * (nominal[j] - low[j]    );
+        } else if (nominal[j] != 0) {
+          const double eps_plus = high[j] - nominal[j];
+          const double eps_minus = nominal[j] - low[j];
+          const double S = (eps_plus + eps_minus)/2;
+          const double A = (eps_plus - eps_minus)/2;
+
+          //fcns+der are eq at bd
+          const double a = S;
+          const double b = 3*A/(2*1.);
+          //double c = 0;
+          const double d = -A/(2*1.*1.*1.);
+
+          double val = nominal[j] + a * param + b * pow(param, 2) + d * pow(param, 4);
+          if (val < 0.) val = 0.;
+
+          sum[j] += val - nominal[j];
+        }
+      }
+      break;
+    default:
+      coutE(InputArguments) << "PiecewiseInterpolation::evaluateSpan(): " << _paramSet[i].GetName()
+                       << " with unknown interpolation code" << icode << std::endl;
+      throw std::invalid_argument("PiecewiseInterpolation::evaluateSpan() got invalid interpolation code " + std::to_string(icode));
+      break;
+    }
+  }
+
+  if (_positiveDefinite) {
+    for (double& val : sum) {
+      if (val < 0.)
+        val = 0.;
+    }
+  }
+
+  return sum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
