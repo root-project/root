@@ -24,6 +24,9 @@
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RStringView.hxx>
+#ifdef R__ENABLE_DAOS
+# include <ROOT/RPageStorageDaos.hxx>
+#endif
 
 #include <Compression.h>
 #include <TError.h>
@@ -61,6 +64,13 @@ ROOT::Experimental::Detail::RPageSource::~RPageSource()
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSource::Create(
    std::string_view ntupleName, std::string_view location, const RNTupleReadOptions &options)
 {
+   if (location.find("daos://") == 0)
+#ifdef R__ENABLE_DAOS
+      return std::make_unique<RPageSourceDaos>(ntupleName, location, options);
+#else
+      throw std::runtime_error("This RNTuple build does not support DAOS.");
+#endif
+
    return std::make_unique<RPageSourceFile>(ntupleName, location, options);
 }
 
@@ -145,7 +155,17 @@ ROOT::Experimental::Detail::RPageSink::~RPageSink()
 std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detail::RPageSink::Create(
    std::string_view ntupleName, std::string_view location, const RNTupleWriteOptions &options)
 {
-   auto realSink = std::make_unique<RPageSinkFile>(ntupleName, location, options);
+   std::unique_ptr<ROOT::Experimental::Detail::RPageSink> realSink;
+   if (location.find("daos://") == 0) {
+#ifdef R__ENABLE_DAOS
+      realSink = std::make_unique<RPageSinkDaos>(ntupleName, location, options);
+#else
+      throw std::runtime_error("This RNTuple build does not support DAOS.");
+#endif
+   } else {
+      realSink = std::make_unique<RPageSinkFile>(ntupleName, location, options);
+   }
+
    if (options.GetUseBufferedWrite())
       return std::make_unique<RPageSinkBuf>(std::move(realSink));
    return realSink;

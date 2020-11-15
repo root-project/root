@@ -79,6 +79,8 @@ if(daos)
   set_property(SOURCE v7/src/RDaos.cxx v7/src/RPageStorageDaos.cxx
   	      APPEND PROPERTY COMPILE_OPTIONS -I${DAOS_INCLUDE_DIRS} -I${UUID_INCLUDE_DIR})
   target_link_libraries(ROOTNTuple PRIVATE ${DAOS_LIBRARIES} ${UUID_LIBRARY})
+
+  target_compile_definitions(ROOTNTuple PRIVATE R__ENABLE_DAOS)
 endif()
 
 if(MSVC)
