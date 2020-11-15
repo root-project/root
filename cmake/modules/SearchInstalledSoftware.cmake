@@ -1192,6 +1192,22 @@ if (uring)
   endif()
 endif()
 
+#---Check for DAOS----------------------------------------------------------------
+if (daos)
+  message(STATUS "Looking for DAOS")
+  if(fail-on-missing)
+    find_package(DAOS REQUIRED)
+    find_package(libuuid REQUIRED)
+  else()
+    find_package(DAOS)
+    find_package(libuuid)
+    if(NOT DAOS_FOUND OR NOT libuuid_FOUND)
+      message(STATUS "libdaos not found. Disabling DAOS support")
+      set(daos OFF CACHE BOOL "Disabled (libdaos not found)" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for TBB---------------------------------------------------------------------
 if(imt AND NOT builtin_tbb)
   message(STATUS "Looking for TBB")

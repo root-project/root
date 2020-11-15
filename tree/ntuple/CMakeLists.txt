@@ -72,6 +72,14 @@ DEPENDENCIES
   ROOTVecOps
 )
 
+if(daos)
+  target_sources(ROOTNTuple PRIVATE v7/src/RDaos.cxx)
+
+  set_property(SOURCE v7/src/RDaos.cxx
+  	      APPEND PROPERTY COMPILE_OPTIONS -I${DAOS_INCLUDE_DIRS} -I${UUID_INCLUDE_DIR})
+  target_link_libraries(ROOTNTuple PRIVATE ${DAOS_LIBRARIES} ${UUID_LIBRARY})
+endif()
+
 if(MSVC)
   target_compile_definitions(ROOTNTuple PRIVATE _USE_MATH_DEFINES)
 endif()
