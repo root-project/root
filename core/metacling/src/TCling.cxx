@@ -3240,9 +3240,6 @@ static bool R__UpdateLibFileForLinking(TString &lib)
          if (line.find(lib) != std::string::npos) {
             lib.ReplaceAll("/usr/lib/lib","-l");
             lib.ReplaceAll(".dylib","");
-            // skip these Big Sur libs as we cannot link with them
-            if (lib == "-loah" || lib == "-lRosetta")
-               lib = "";
             return true;
          }
       }
@@ -3372,8 +3369,10 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || strstr(filename, "/usr/lib/libOpenScriptingUtil")
        || strstr(filename, "/usr/lib/libextension")
        || strstr(filename, "/usr/lib/libAudioToolboxUtility")
+       || strstr(filename, "/usr/lib/liboah")
+       || strstr(filename, "/usr/lib/libRosetta")
        // "cannot link directly with dylib/framework, your binary is not an allowed client of
-       // /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/
+       // /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/
        // SDKs/MacOSX.sdk/usr/lib/libAudioToolboxUtility.tbd for architecture x86_64
        || (lenFilename > 4 && !strcmp(filename + lenFilename - 4, ".tbd")))
       return;
