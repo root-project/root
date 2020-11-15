@@ -73,9 +73,10 @@ DEPENDENCIES
 )
 
 if(daos)
-  target_sources(ROOTNTuple PRIVATE v7/src/RDaos.cxx)
+  set(ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageDaos.hxx)
+  target_sources(ROOTNTuple PRIVATE v7/src/RDaos.cxx v7/src/RPageStorageDaos.cxx)
 
-  set_property(SOURCE v7/src/RDaos.cxx
+  set_property(SOURCE v7/src/RDaos.cxx v7/src/RPageStorageDaos.cxx
   	      APPEND PROPERTY COMPILE_OPTIONS -I${DAOS_INCLUDE_DIRS} -I${UUID_INCLUDE_DIR})
   target_link_libraries(ROOTNTuple PRIVATE ${DAOS_LIBRARIES} ${UUID_LIBRARY})
 endif()
