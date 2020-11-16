@@ -77,16 +77,21 @@ void RFrame::GrowToDimensions(size_t nDimensions)
 ////////////////////////////////////////////////////////////////////////////
 /// Provide context menu items
 
-void RFrame::PopulateMenu(RMenuItems &items)
+void RFrame::PopulateMenu(RMenuItems & /* items */)
 {
-   auto is_x = items.GetSpecifier() == "x";
+   // do not use online context menu for frame - make it fully client side
+/*   auto is_x = items.GetSpecifier() == "x";
    auto is_y = items.GetSpecifier() == "y";
 
    if (is_x || is_y) {
       RAttrAxis &attr = is_x ? AttrX() : AttrY();
       std::string name = is_x ? "AttrX()" : "AttrY()";
-      items.AddChkMenuItem("Log scale", "Change log scale", attr.GetLog(), name + ".SetLog" + (attr.GetLog() ? "(false)" : "(true)"));
+      auto cl = TClass::GetClass<RAttrAxis>();
+      auto log = attr.GetLog();
+      items.AddChkMenuItem("Linear scale", "Set linear scale", !log, name + ".SetLog(0)", cl);
+      items.AddChkMenuItem("Log scale", "Logarithmic scale", !log, name + ".SetLog(10)", cl);
    }
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////
