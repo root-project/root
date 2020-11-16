@@ -155,6 +155,12 @@ TThreadExecutor::TThreadExecutor(UInt_t nThreads)
 void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step,
                                   const std::function<void(unsigned int i)> &f)
 {
+   if (GetPoolSize() > tbb::global_control::active_value(tbb::global_control::max_allowed_parallelism)) {
+      Warning("TThreadExecutor::ParallelFor",
+              "tbb::global_control is limiting the number of parallel workers."
+              " Proceeding with %zu threads this time",
+              tbb::global_control::active_value(tbb::global_control::max_allowed_parallelism));
+   }
    fTaskArenaW->Access().execute([&] {
       tbb::this_task_arena::isolate([&] {
          tbb::parallel_for(start, end, step, f);
@@ -171,6 +177,12 @@ void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned
 double TThreadExecutor::ParallelReduce(const std::vector<double> &objs,
                                        const std::function<double(double a, double b)> &redfunc)
 {
+   if (GetPoolSize() > tbb::global_control::active_value(tbb::global_control::max_allowed_parallelism)) {
+      Warning("TThreadExecutor::ParallelReduce",
+              "tbb::global_control is limiting the number of parallel workers."
+              " Proceeding with %zu threads this time",
+              tbb::global_control::active_value(tbb::global_control::max_allowed_parallelism));
+   }
    return fTaskArenaW->Access().execute([&] { return ROOT::Internal::ParallelReduceHelper<double>(objs, redfunc); });
 }
 
@@ -183,6 +195,12 @@ double TThreadExecutor::ParallelReduce(const std::vector<double> &objs,
 float TThreadExecutor::ParallelReduce(const std::vector<float> &objs,
                                       const std::function<float(float a, float b)> &redfunc)
 {
+   if (GetPoolSize() > tbb::global_control::active_value(tbb::global_control::max_allowed_parallelism)) {
+      Warning("TThreadExecutor::ParallelReduce",
+              "tbb::global_control is limiting the number of parallel workers."
+              " Proceeding with %zu threads this time",
+              tbb::global_control::active_value(tbb::global_control::max_allowed_parallelism));
+   }
    return fTaskArenaW->Access().execute([&] { return ROOT::Internal::ParallelReduceHelper<float>(objs, redfunc); });
 }
 
