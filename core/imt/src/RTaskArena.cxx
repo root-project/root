@@ -6,6 +6,7 @@
 #include <mutex>
 #include <thread>
 #include "tbb/task_arena.h"
+#include "tbb/global_control.h"
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -74,6 +75,10 @@ RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency) : fTBBArena(new tb
    if (maxConcurrency > bcCpus) {
       Warning("RTaskArenaWrapper", "CPU Bandwith Control Active. Proceeding with %d threads accordingly", bcCpus);
       maxConcurrency = bcCpus;
+   }
+   if (maxConcurrency > tbb::global_control::active_value(tbb::global_control::max_allowed_parallelism)) {
+      Warning("RTaskArenaWrapper", "tbb::global_control is active, limiting the number of parallel workers"
+                                   "from this task arena available for execution.");
    }
    fTBBArena->initialize(maxConcurrency);
    fNWorkers = maxConcurrency;
