@@ -1775,7 +1775,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                }
                if (lastclname != item.fClassName) {
                   lastclname = item.fClassName;
-                  _menu.add("sub:" + lastclname);
+                  let p = lastclname.lastIndexOf("::"),
+                      shortname = (p > 0) ? lastclname.substr(p+2) : lastclname;
+
+                  _menu.add("sub:" + shortname.replace("<","_").replace(">","_"));
                }
 
                if ((item.fChecked === undefined) || (item.fChecked < 0))
