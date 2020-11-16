@@ -20,6 +20,19 @@ if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
   )
 endif()
 
+# Wrap download, configure and build steps in a script to log output
+set(_clad_cmake_logging_settings
+  LOG_DOWNLOAD ON
+  LOG_CONFIGURE ON
+  LOG_BUILD ON
+  LOG_INSTALL ON
+)
+
+# Newer CMake can report the issue with Clad directly to stdout
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
+  list(APPEND _clad_cmake_logging_settings LOG_OUTPUT_ON_FAILURE ON)
+endif()
+
 if(MSVC)
   if (winrtdebug)
     set(_clad_build_type Debug)
@@ -49,10 +62,7 @@ if(MSVC)
     BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${_clad_build_type}
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config ${_clad_build_type} --target install
     # Wrap download, configure and build steps in a script to log output
-    LOG_DOWNLOAD ON
-    LOG_CONFIGURE ON
-    LOG_BUILD ON
-    LOG_INSTALL ON
+    ${_clad_cmake_logging_settings}
     # We need the target clangBasic to be built before building clad. However, we
     # support building prebuilt clang and adding clangBasic breaks this case.
     # Delegate the dependency resolution to the clingInterpreter target (which
@@ -89,10 +99,7 @@ else()
                COMMAND  ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/plugins/${CMAKE_INSTALL_PREFIX}/ ${clad_install_dir}/plugins
     BUILD_BYPRODUCTS ${CLAD_BYPRODUCTS}
     # Wrap download, configure and build steps in a script to log output
-    LOG_DOWNLOAD ON
-    LOG_CONFIGURE ON
-    LOG_BUILD ON
-    LOG_INSTALL ON
+    ${_clad_cmake_logging_settings}
     # We need the target clangBasic to be built before building clad. However, we
     # support building prebuilt clang and adding clangBasic breaks this case.
     # Delegate the dependency resolution to the clingInterpreter target (which
