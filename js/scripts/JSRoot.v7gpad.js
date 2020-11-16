@@ -51,6 +51,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return dflt;
    }
 
+   /** @summary Set attributes value */
    JSROOT.ObjectPainter.prototype.v7SetAttr = function(name, value) {
       let obj = this.GetObject();
       if (this.cssprefix) name = this.cssprefix + name;
@@ -140,10 +141,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (typeof dflts == "number") dflts = { size: dflts };
 
       let text_size   = this.v7EvalAttr( name + "_size", dflts.size || 12),
-          text_angle   = this.v7EvalAttr( name + "_angle", 0),
-          text_align   = this.v7EvalAttr( name + "_align", dflts.align || "none"),
-          text_color   = this.v7EvalColor( name + "_color", dflts.color || "none"),
-          text_font    = this.v7EvalAttr( name + "_font", dflts.font || 42);
+          text_angle  = this.v7EvalAttr( name + "_angle", 0),
+          text_align  = this.v7EvalAttr( name + "_align", dflts.align || "none"),
+          text_color  = this.v7EvalColor( name + "_color", dflts.color || "none"),
+          text_font   = this.v7EvalAttr( name + "_font", dflts.font || 42);
 
        if (typeof text_size == "string") text_size = parseFloat(text_size);
        if (isNaN(text_size) || (text_size <= 0)) text_size = 12;
@@ -210,19 +211,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          req.update = true;
       }
 
+      if (this.cssprefix) name = this.cssprefix + name;
       req.ids.push(this.snapid);
       req.names.push(name);
       let obj = null;
 
       if ((value !== null) && (value !== undefined)) {
-         if (!kind) {
-            if (typeof value == "string") kind = "string"; else
-            if (typeof value == "number") kind = "double";
-         }
+         if (!kind)
+            switch(typeof value) {
+               case "number": kind = "double"; break;
+               case "boolean": kind = "boolean"; break;
+            }
          obj = { _typename: "ROOT::Experimental::RAttrMap::" };
          switch(kind) {
             case "none": obj._typename += "NoValue_t"; break;
-            case "bool": obj._typename += "BoolValue_t"; obj.v = value ? true : false; break;
+            case "boolean": obj._typename += "BoolValue_t"; obj.v = value ? true : false; break;
             case "int": obj._typename += "IntValue_t"; obj.v = parseInt(value); break;
             case "double": obj._typename += "DoubleValue_t"; obj.v = parseFloat(value); break;
             default: obj._typename += "StringValue_t"; obj.v = (typeof value == "string") ? value : JSON.stringify(value); break;
@@ -233,7 +236,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return true;
    }
 
-   /** @summary Sends accumulated attribute changes to server */
+   /** @summary Sends accumulated attribute changes to server
+     * @private */
    JSROOT.ObjectPainter.prototype.v7SendAttrChanges = function(req, do_update) {
       let canp = this.canv_painter();
       if (canp && req && req._typename) {
@@ -262,9 +266,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Assign snapid to the painter
-   * @desc Overwrite default method
-   * @private */
-
+     * @desc Overwrite default method
+     * @private */
    JSROOT.ObjectPainter.prototype.AssignSnapId = function(id) {
       this.snapid = id;
       if (this.snapid && this._pending_request) {
@@ -341,6 +344,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.csstype = arg1.csstype; // for the moment only via frame one can set axis attributes
          this.cssprefix = cssprefix;
          this.rstyle = arg1.rstyle;
+         this.snapid = arg1.snapid;
       } else {
          this.csstype = "axis";
          this.cssprefix = "axis_";
@@ -962,7 +966,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Performs labels drawing
      * @returns {Promise} wwith gaps in both direction */
    RAxisPainter.prototype.DrawLabels = function(axis_g, side, gaps) {
-      let labelsFont = this.v7EvalFont("labels", { size: 25 }),
+      let labelsFont = this.v7EvalFont("labels", { size: 0.03 }),
           center_lbls = this.IsCenterLabels(),
           rotate_lbls = false,
           textscale = 1, maxtextlen = 0, lbls_tilt = false,
@@ -1256,6 +1260,33 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return this.DrawAxis(this.draw_g, "translate(" + pos.x + "," + pos.y +")");
    }
 
+   RAxisPainter.prototype.ChangeLog = function(arg) {
+      if ((this.kind == "labels") || (this.kind == 'time')) return;
+      if (arg === 'toggle') arg = this.log ? 0 : 10;
+
+      arg = parseFloat(arg);
+      if (isNaN(arg)) return;
+      let changes = {};
+      this.v7AttrChange(changes, "log", arg);
+      this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
+      this.v7SetAttr("log", arg);
+      this.RedrawPad();
+   }
+
+   RAxisPainter.prototype.FillFrameContextMenu = function(menu, kind) {
+      menu.add("header: " + kind.toUpperCase() + " axis");
+      menu.add("Unzoom", () => this.frame_painter().Unzoom(kind));
+      menu.add("sub:Log scale", () => this.ChangeLog('toggle'));
+      menu.addchk(!this.log, "Linear scale", 0, arg => this.ChangeLog(arg));
+      menu.addchk(this.log && (this.logbase==10), "log10 scale", 10, arg => this.ChangeLog(arg));
+      menu.addchk(this.log && (this.logbase==2), "log2 scale", 2, arg => this.ChangeLog(arg));
+      menu.addchk(this.log && Math.abs(this.logbase - Math.exp(1)) < 0.1, "ln scale", Math.exp(1), arg => this.ChangeLog(arg));
+
+      menu.add("endsub:");
+      return true;
+   }
+
+
    let drawRAxis = (divid, obj /*, opt*/) => {
 
       let painter = new RAxisPainter(obj);
@@ -1423,6 +1454,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Draw frame grids */
    RFramePainter.prototype.DrawGrids = function() {
       // grid can only be drawn by first painter
 
@@ -1445,7 +1477,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let grid = "";
          for (let n=0;n<this.x_handle.ticks.length;++n)
             if (this.swap_xy)
-               grid += "M0,"+this.x_handle.ticks[n]+"h"+w;
+               grid += "M0,"+(h+this.x_handle.ticks[n])+"h"+w;
             else
                grid += "M"+this.x_handle.ticks[n]+",0v"+h;
 
@@ -1464,7 +1496,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (this.swap_xy)
                grid += "M"+this.y_handle.ticks[n]+",0v"+h;
             else
-               grid += "M0,"+this.y_handle.ticks[n]+"h"+w;
+               grid += "M0,"+(h+this.y_handle.ticks[n])+"h"+w;
 
          if (grid.length > 0)
           layer.append("svg:path")
@@ -1660,20 +1692,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return Promise.resolve(true);
    }
 
+   /** @summary function called at the end of resize of frame
+     * @desc Used to update attributes on the server
+     * @private */
    RFramePainter.prototype.SizeChanged = function() {
-      // function called at the end of resize of frame
-      // One should apply changes to the pad
-
-    /*  let pad = this.root_pad();
-
-      if (pad) {
-         pad.fLeftMargin = this.fX1NDC;
-         pad.fRightMargin = 1 - this.fX2NDC;
-         pad.fBottomMargin = this.fY1NDC;
-         pad.fTopMargin = 1 - this.fY2NDC;
-         this.SetRootPadRange(pad);
-      }
-      */
 
       let changes = {};
       this.v7AttrChange(changes, "margin_left", this.fX1NDC);
@@ -2073,13 +2095,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // here should be all axes attributes in offline
    }
 
-   RFramePainter.prototype.FillContextMenu = function(menu, kind /*, obj*/) {
+   /** @summary Fill context menu */
+   RFramePainter.prototype.FillContextMenu = function(menu, kind, /* obj */) {
 
       // when fill and show context menu, remove all zooming
 
       if ((kind=="x") || (kind=="y")) {
-         menu.add("header: " + kind.toUpperCase() + " axis");
-         return true;
+         let handle = this[kind+"_handle"];
+
+         return handle ? handle.FillFrameContextMenu(menu, kind) : false;
       }
 
       let alone = menu.size()==0;
@@ -2173,15 +2197,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Toggle log scale on the specified axes */
    RFramePainter.prototype.ToggleLog = function(axis) {
       let handle = this[axis+"_handle"];
-      if (!handle || (handle.kind == "labels")) return;
-
-      if (this.v7CommMode() == JSROOT.v7.CommMode.kOffline) {
-         this.v7SetAttr(axis + "_log", !curr);
-         this.RedrawPad();
-      } else {
-         // should we use here attributes change?
-         this.WebCanvasExec("Attr" + axis.toUpperCase() + "().SetLog" + (curr ? "(false)" : "(true)"));
-      }
+      if (handle) handle.ChangeLog('toggle');
    }
 
    function drawFrame(divid, obj, opt) {
@@ -2743,8 +2759,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       JSROOT.require('interactive')
             .then(() => jsrp.createMenu(this, evnt))
-            .then(menu =>
-         {
+            .then(menu => {
             this.FillContextMenu(menu);
             this.FillObjectExecMenu(menu, "", () => menu.show());
          });
@@ -3147,10 +3162,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           }
        }
 
+       console.log('Start fill here', selkind)
+
        if (!selp || (typeof selp.FillContextMenu !== 'function')) return;
 
        jsrp.createMenu(selp, evnt).then(menu => {
-          if (selp.FillContextMenu(menu,selkind))
+          if (selp.FillContextMenu(menu, selkind))
              setTimeout(menu.show.bind(menu), 50);
        });
    }
@@ -4186,7 +4203,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (reason == 'drag') {
          title_width = parseInt(this.draw_g.attr("width"));
          title_height = parseInt(this.draw_g.attr("height"));
-
          let changes = {};
          this.v7AttrChange(changes, "margin", (fy - parseInt(this.draw_g.attr("y")) - title_height) / ph );
          this.v7AttrChange(changes, "height", title_height / ph);
