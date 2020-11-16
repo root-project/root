@@ -406,6 +406,9 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       SetName(fname);
       delete [] fname;
       fRealName = GetName();
+      if (!gSystem->IsAbsoluteFileName(fRealName)) {
+         gSystem->PrependPathName(gSystem->WorkingDirectory(),fRealName);
+      }
       fname = fRealName.Data();
    } else {
       Error("TFile", "error expanding path %s", fname1);
