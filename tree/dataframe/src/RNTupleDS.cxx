@@ -138,6 +138,7 @@ public:
       auto f = fField.get();
       for (unsigned i = 0; i < fSkeinIDs.size() - 1; ++i) {
          Detail::RFieldFuse::Connect(fSkeinIDs[i], source, *f);
+         // The skein IDs refer to collection fields, so we know that they have exactly one sub field
          f = f->GetSubFields()[0];
       }
       auto cardinalityField = dynamic_cast<RRDFCardinalityField *>(f);
