@@ -626,11 +626,17 @@ void RLoopManager::Jit()
    R__LOCKGUARD(gROOTMutex);
 
    const std::string code = std::move(GetCodeToJit());
-   if (code.empty())
+   if (code.empty()) {
+      R__LOG_INFO(RDFLogChannel()) << "Nothing to jit and execute.";
       return;
+   }
 
+   TStopwatch s;
+   s.Start();
    RDFInternal::InterpreterCalc(code, "RLoopManager::Run");
-   R__LOG_INFO(RDFLogChannel()) << "Just-in-time compilation phase completed.";
+   s.Stop();
+   R__LOG_INFO(RDFLogChannel()) << "Just-in-time compilation phase completed"
+                                << (s.RealTime() > 1e-3 ? " in " + std::to_string(s.RealTime()) + " seconds." : ".");
 }
 
 /// Trigger counting of number of children nodes for each node of the functional graph.
