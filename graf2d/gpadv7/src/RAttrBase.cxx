@@ -202,12 +202,7 @@ ROOT::Experimental::RAttrMap ROOT::Experimental::RAttrBase::CollectDefaults() co
    auto thisClass = TClass::GetClass(info);
    auto baseClass = TClass::GetClass<ROOT::Experimental::RAttrBase>();
    if (thisClass && baseClass) {
-
-      TIter iter(thisClass->GetListOfDataMembers());
-      TObject *member = nullptr;
-      while ((member = iter()) != nullptr) {
-         TDataMember *data_member = dynamic_cast<TDataMember *> (member);
-
+      for (auto data_member: TRangeDynCast<TDataMember>(thisClass->GetListOfDataMembers())) {
          if (data_member && data_member->GetClass() && data_member->GetClass()->InheritsFrom(baseClass) &&
              (data_member->GetClass()->GetBaseClassOffset(baseClass) == 0)) {
                res.AddDefaults(*((const RAttrBase *)((char*) this + data_member->GetOffset())));
