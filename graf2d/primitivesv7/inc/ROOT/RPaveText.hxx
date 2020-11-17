@@ -19,7 +19,8 @@ namespace Experimental {
 \brief A RPave with text content
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2020-06-19
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is
+welcome!
 */
 
 class RPaveText : public RPave {
@@ -27,7 +28,6 @@ class RPaveText : public RPave {
    std::vector<std::string> fText; ///< list of text entries
 
 public:
-
    RPaveText() : RPave("pavetext") {}
 
    void AddLine(const std::string &txt) { fText.emplace_back(txt); }
@@ -37,7 +37,6 @@ public:
    const std::string &GetLine(int n) const { return fText[n]; }
 
    void ClearLines() { fText.clear(); }
-
 };
 
 } // namespace Experimental
