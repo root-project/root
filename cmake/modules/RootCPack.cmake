@@ -132,7 +132,8 @@ endif()
 # We want to defer markdown to html conversion; CPACK_INSTALL_SCRIPTS allows this
 # but only takes a .cmake file as argument
 #
-set(CPACK_INSTALL_SCRIPTS ${CMAKE_SOURCE_DIR}/cmake/modules/CPackREADME.cmake)
+configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CPackREADME.cmake.in ${CMAKE_BINARY_DIR}/CPackREADME.cmake @ONLY)
+set(CPACK_INSTALL_SCRIPTS ${CMAKE_BINARY_DIR}/CPackREADME.cmake)
 
 #----------------------------------------------------------------------------------------------------
 # Finally, generate the CPack per-generator options file and include the
