@@ -30,6 +30,9 @@ class TTreeReader;
 
 /// \cond HIDDEN_SYMBOLS
 namespace ROOT {
+namespace Experimental {
+class RLogChannel;
+}
 
 namespace RDF {
 class RDataSource;
@@ -38,6 +41,8 @@ class RDataSource;
 namespace Detail {
 namespace RDF {
 using ColumnNames_t = std::vector<std::string>;
+
+ROOT::Experimental::RLogChannel &RDFLogChannel();
 
 // fwd decl for ColumnName2ColumnTypeName
 class RDefineBase;
@@ -51,6 +56,7 @@ struct RInferredType {
 
 namespace Internal {
 namespace RDF {
+
 using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;

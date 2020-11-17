@@ -12,6 +12,8 @@
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RLogger.hxx"
 #include "RtypesCore.h"
 #include "TBranch.h"
 #include "TBranchElement.h"
@@ -31,6 +33,12 @@
 
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
+
+ROOT::Experimental::RLogChannel &ROOT::Detail::RDF::RDFLogChannel()
+{
+   static ROOT::Experimental::RLogChannel c("ROOT.RDF");
+   return c;
+}
 
 namespace ROOT {
 namespace Internal {
