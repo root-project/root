@@ -3506,7 +3506,17 @@ Long_t TCling::Calc(const char* line, EErrorCode* error)
       *error = TInterpreter::kNoError;
    }
    cling::Value valRef;
-   cling::Interpreter::CompilationResult cr = fInterpreter->evaluate(line, valRef);
+   cling::Interpreter::CompilationResult cr = cling::Interpreter::kFailure;
+   try {
+      cr = fInterpreter->evaluate(line, valRef);
+   }
+   catch (cling::InterpreterException& ex)
+   {
+      Error("Calc", "%s.\n%s", ex.what(), "Evaluation of your expression was aborted.");
+      ex.diagnose();
+      cr = cling::Interpreter::kFailure;
+   }
+
    if (cr != cling::Interpreter::kSuccess) {
       // Failure in compilation.
       if (error) {
