@@ -94,7 +94,8 @@ protected:
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
    std::unique_ptr<RFieldBase> fField; ///< The field backing the RDF column
-   std::vector<DescriptorId_t> fSkeinIDs; ///< For inner collections, the field IDs of the outer collections
+   /// For inner collections, the field IDs of the outer collections, from outermost to innermost. Empty otherwise.
+   std::vector<DescriptorId_t> fSkeinIDs;
    RFieldValue fValue; ///< The memory location used to read from fField
    Long64_t fLastEntry; ///< Last entry number that was read
 
