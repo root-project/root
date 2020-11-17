@@ -853,6 +853,11 @@ TEST_P(RDFSimpleTests, NonExistingFileInChain)
    const auto errmsg = "file %s/doesnotexist.root does not exist";
    TString expecteddiag;
    expecteddiag.Form(errmsg, gSystem->pwd());
+   // in the single-thread case the error happens when TTreeReader is calling LoadTree the first time
+   // otherwise we notice the file does not exist beforehand, e.g. in TTreeProcessorMT
+   if (!ROOT::IsImplicitMTEnabled())
+      expecteddiag += "\nWarning in <TTreeReader::SetEntryBase()>: There was an issue opening the last file associated "
+                      "to the TChain being processed.";
 
    bool exceptionCaught = false;
    try {
