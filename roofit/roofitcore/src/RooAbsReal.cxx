@@ -5211,7 +5211,7 @@ void RooAbsReal::checkBatchComputation(const BatchHelpers::RunContext& evalData,
     FormatPdfTree formatter;
     formatter << "--> (Batch computation wrong:)\n";
     printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress, kInline);
-    formatter << std::setprecision(17)
+    formatter << "\n batch=" << batch.data() << " size=" << batch.size() << std::setprecision(17)
     << "\n batch[" << std::setw(7) << evtNo-1 << "]=     " << (evtNo > 0 && evtNo - 1 < batch.size() ? std::to_string(batch[evtNo-1]) : "---")
     << "\n batch[" << std::setw(7) << evtNo   << "]=     " << batchVal << " !!!"
     << "\n expected ('value'): " << value
