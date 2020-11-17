@@ -355,7 +355,7 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
             << "\n\t" << resultScalar << std::endl;
       }
 
-      if (alwaysPrint || fabs(carry - carryScalar)/carryScalar > 10.) {
+      if (alwaysPrint || fabs(carry - carryScalar)/carryScalar > 500.) {
         std::cerr << "RooNLLVar: carry is far off\n\t" << std::setprecision(15) << carry
             << "\n\t" << carryScalar << std::endl;
       }
@@ -500,11 +500,18 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     _dataClone->get(evtNo);
     assert(_dataClone->valid());
     try {
-      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet);
+      // Cross check results with strict tolerance and complain
+      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet, 1.E-13);
     } catch (std::exception& e) {
-      std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
+      std::cerr << __FILE__ << ":" << __LINE__ << " ERROR when checking batch computation for event " << evtNo << ":\n"
           << e.what() << std::endl;
-      assert(false);
+
+      // It becomes a real problem if it's very wrong. We fail in this case:
+      try {
+        BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet, 1.E-9);
+      } catch (std::exception& e2) {
+        assert(false);
+      }
     }
   }
 #else
@@ -515,7 +522,7 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
     try {
       BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, evtNo, _normSet);
     } catch (std::exception& e) {
-      std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
+      std::cerr << __FILE__ << ":" << __LINE__ << " ERROR when checking batch computation for event " << evtNo << ":\n"
           << e.what() << std::endl;
     }
   }
