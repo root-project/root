@@ -2630,8 +2630,9 @@ void TCling::AddIncludePath(const char *path)
    // gCling->AddIncludePath() does not! Work around that inconsistency:
    if (path[0] == '-' && path[1] == 'I')
       path += 2;
-
-   fInterpreter->AddIncludePath(path);
+   TString sPath(path);
+   gSystem->ExpandPathName(sPath);
+   fInterpreter->AddIncludePath(sPath);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
