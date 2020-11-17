@@ -312,6 +312,8 @@ std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string>
 
 void InterpreterDeclare(const std::string &code)
 {
+   R__LOG_DEBUG(10, RDFLogChannel()) << "Declaring the following code to cling:\n\n" << code << '\n';
+
    if (!gInterpreter->Declare(code.c_str())) {
       const auto msg =
          "\nRDataFrame: An error occurred during just-in-time compilation. The lines above might indicate the cause of "
@@ -322,6 +324,8 @@ void InterpreterDeclare(const std::string &code)
 
 Long64_t InterpreterCalc(const std::string &code, const std::string &context)
 {
+   R__LOG_DEBUG(10, RDFLogChannel()) << "Jitting and executing the following code:\n\n" << code << '\n';
+
    TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
    auto res = gInterpreter->Calc(code.c_str(), &errorCode);
    if (errorCode != TInterpreter::EErrorCode::kNoError) {
