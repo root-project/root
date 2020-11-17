@@ -173,7 +173,7 @@ public:
 RNTupleDS::~RNTupleDS() = default;
 
 
-void RNTupleDS::AddProjection(
+void RNTupleDS::AddField(
    const RNTupleDescriptor &desc, std::string_view colName, DescriptorId_t fieldId,
    std::vector<DescriptorId_t> skeinIDs)
 {
@@ -183,7 +183,7 @@ void RNTupleDS::AddProjection(
       skeinIDs.emplace_back(fieldId);
       // There should only be one sub field but it's easiest to access via the sub field range
       for (const auto& f : desc.GetFieldRange(fieldDesc.GetId())) {
-         AddProjection(desc, colName, f.GetId(), skeinIDs);
+         AddField(desc, colName, f.GetId(), skeinIDs);
       }
       // Note that at the end of the recursion, we handled the inner collections as well as the
       // collection as whole (e.g. we have RDF columns std::vector<jet.pt>, std::vector<float> jet.eta)
@@ -193,7 +193,7 @@ void RNTupleDS::AddProjection(
       // Inner fields of records are provided as individual RDF columns
       for (const auto& f : desc.GetFieldRange(fieldDesc.GetId())) {
          auto innerName = colName.empty() ? f.GetFieldName() : (std::string(colName) + "." + f.GetFieldName());
-         AddProjection(desc, innerName, f.GetId(), skeinIDs);
+         AddField(desc, innerName, f.GetId(), skeinIDs);
       }
    }
 
@@ -236,7 +236,7 @@ RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
    const auto &descriptor = pageSource->GetDescriptor();
    fSources.emplace_back(std::move(pageSource));
 
-   AddProjection(descriptor, "", descriptor.GetFieldZeroId(), std::vector<DescriptorId_t>());
+   AddField(descriptor, "", descriptor.GetFieldZeroId(), std::vector<DescriptorId_t>());
 }
 
 RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const std::type_info & /* ti */)

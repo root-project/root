@@ -55,17 +55,17 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    bool fHasSeenAllRanges = false;
 
    /// Provides the RDF column "colName" given the field identified by fieldID. For records and collections,
-   /// AddProjection recurses into the sub fields. The skeinIDs is the list of field IDs of the outer collections
+   /// AddField recurses into the sub fields. The skeinIDs is the list of field IDs of the outer collections
    /// of fieldId. For instance, if fieldId refers to an `std::vector<Jet>`, with
    /// struct Jet {
    ///    float pt;
    ///    float eta;
    /// };
    /// AddProject will recurse into Jet.pt and Jet.eta and provide the two inner fields as std::vector<float> each.
-   void AddProjection(const RNTupleDescriptor &desc,
-                      std::string_view colName,
-                      DescriptorId_t fieldId,
-                      std::vector<DescriptorId_t> skeinIDs);
+   void AddField(const RNTupleDescriptor &desc,
+                 std::string_view colName,
+                 DescriptorId_t fieldId,
+                 std::vector<DescriptorId_t> skeinIDs);
 
 public:
    explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
