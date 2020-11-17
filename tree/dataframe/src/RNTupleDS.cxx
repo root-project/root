@@ -34,7 +34,7 @@ namespace ROOT {
 namespace Experimental {
 namespace Detail {
 
-/// An artifical field that transforms an RNTuple column that contains the offset of collections into
+/// An artificial field that transforms an RNTuple column that contains the offset of collections into
 /// collection sizes. It is used to provide the "number of" RDF columns for collections, e.g.
 /// `#jets` for a collection named `jets`.
 class RRDFCardinalityField : public ROOT::Experimental::Detail::RFieldBase {
