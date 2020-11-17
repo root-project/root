@@ -147,15 +147,15 @@ public:
 };
 
 /// Provides a particular field of the RNTuple as RDF column
-class RNTupleProjectionColumnReader : public RNTupleColumnReader {
+class RNTupleNormalColumnReader : public RNTupleColumnReader {
 public:
-   RNTupleProjectionColumnReader(std::unique_ptr<RFieldBase> f, const std::vector<DescriptorId_t> &skeinIDs)
+   RNTupleNormalColumnReader(std::unique_ptr<RFieldBase> f, const std::vector<DescriptorId_t> &skeinIDs)
       : RNTupleColumnReader(std::move(f), skeinIDs)
    {
    }
 
    std::unique_ptr<RNTupleColumnReader> Clone() const final {
-      return std::make_unique<RNTupleProjectionColumnReader>(fField->Clone(fField->GetName()), fSkeinIDs);
+      return std::make_unique<RNTupleNormalColumnReader>(fField->Clone(fField->GetName()), fSkeinIDs);
    }
 
    void Connect(RPageSource &source) final {
@@ -226,7 +226,7 @@ void RNTupleDS::AddField(
    skeinIDs.emplace_back(fieldId);
    fColumnNames.emplace_back(colName);
    fColumnTypes.emplace_back(valueField->GetType());
-   auto valColReader = std::make_unique<Detail::RNTupleProjectionColumnReader>(std::move(valueField), skeinIDs);
+   auto valColReader = std::make_unique<Detail::RNTupleNormalColumnReader>(std::move(valueField), skeinIDs);
    fColumnReaderPrototypes.emplace_back(std::move(valColReader));
 }
 
