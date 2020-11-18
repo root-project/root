@@ -37,6 +37,10 @@ namespace Detail {
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
 /// collection sizes. It is used to provide the "number of" RDF columns for collections, e.g.
 /// `#jets` for a collection named `jets`.
+///
+/// This field owns the collection offset field but instead of exposing the collection offsets it exposes
+/// the collection sizes (offset(N+1) - offset(N)).  For the time being, we offer this functionality only in RDataFrame.
+/// TODO(jblomer): consider providing a general set of useful virtual fields as part of RNTuple.
 class RRDFCardinalityField : public ROOT::Experimental::Detail::RFieldBase {
 public:
    ROOT::Experimental::RField<ClusterSize_t> fOffsetField;
