@@ -10,10 +10,16 @@
 
 #include "gtest/gtest.h"
 
+#ifndef R__B64
+static const auto NUM_THREADS = 8u;
+#else
+static const auto NUM_THREADS = 0u;
+#endif
+
 #ifdef R__USE_IMT
 TEST(RDFConcurrency, NestedParallelismBetweenDefineCalls)
 {
-   ROOT::EnableImplicitMT();
+   ROOT::EnableImplicitMT(NUM_THREADS);
 
    // this Define will return unique values from 0 to nEntries - 1 (over all threads)
    const auto nEntries = 100000u;
@@ -109,7 +115,7 @@ TEST(RDFConcurrency, SimpleParallelRDFsEnableThreadSafety)
 
 TEST(RDFConcurrency, SimpleParallelRDFsEnableImplicitMT)
 {
-   ROOT::EnableImplicitMT();
+   ROOT::EnableImplicitMT(NUM_THREADS);
    SimpleParallelRDFs();
    ROOT::DisableImplicitMT();
 }
@@ -146,7 +152,7 @@ TEST(RDFConcurrency, SimpleParallelRDFLoopsEnableThreadSafety)
 
 TEST(RDFConcurrency, SimpleParallelRDFLoopsEnableImplicitMT)
 {
-   ROOT::EnableImplicitMT();
+   ROOT::EnableImplicitMT(NUM_THREADS);
    SimpleParallelRDFLoops();
    ROOT::DisableImplicitMT();
 }
@@ -187,7 +193,7 @@ TEST(RDFConcurrency, ParallelRDFSnapshotsEnableThreadSafety)
 
 TEST(RDFConcurrency, ParallelRDFSnapshotsEnableImplicitMT)
 {
-   ROOT::EnableImplicitMT();
+   ROOT::EnableImplicitMT(NUM_THREADS);
    ParallelRDFSnapshots();
    ROOT::DisableImplicitMT();
 }
@@ -222,7 +228,7 @@ TEST(RDFConcurrency, ParallelRDFCachesEnableThreadSafety)
 
 TEST(RDFConcurrency, ParallelRDFCachesEnableImplicitMT)
 {
-   ROOT::EnableImplicitMT();
+   ROOT::EnableImplicitMT(NUM_THREADS);
    ParallelRDFCaches();
    ROOT::DisableImplicitMT();
 }
