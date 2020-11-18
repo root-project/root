@@ -48,6 +48,31 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate(EColumnType type) {
    return std::make_unique<RColumnElementBase>();
 }
 
+std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(EColumnType type) {
+   switch (type) {
+   case EColumnType::kReal32:
+      return 32;
+   case EColumnType::kReal64:
+      return 64;
+   case EColumnType::kByte:
+      return 8;
+   case EColumnType::kInt32:
+      return 32;
+   case EColumnType::kInt64:
+      return 64;
+   case EColumnType::kBit:
+      return 1;
+   case EColumnType::kIndex:
+      return 32;
+   case EColumnType::kSwitch:
+      return 64;
+   default:
+      R__ASSERT(false);
+   }
+   // never here
+   return 0;
+}
+
 void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(
   void *dst, void *src, std::size_t count) const
 {

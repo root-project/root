@@ -70,6 +70,7 @@ public:
    virtual ~RColumnElementBase() = default;
 
    static std::unique_ptr<RColumnElementBase> Generate(EColumnType type);
+   static std::size_t GetBitsOnStorage(EColumnType type);
 
    /// Write one or multiple column elements into destination
    void WriteTo(void *destination, std::size_t count) const {
