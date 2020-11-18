@@ -2095,15 +2095,16 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          CopyAxis(histo.fYaxis, obj.fYaxis);
          CopyAxis(histo.fZaxis, obj.fZaxis);
 
-         if (this.snapid || !fp || !fp.zoom_changed_interactive) {
-            function CopyZoom(tgt,src) {
+         if (this.snapid) {
+            function CopyZoom(tgt,src,name) {
+               if (fp && fp.zoomChangedInteractive(name)) return;
                tgt.fFirst = src.fFirst;
                tgt.fLast = src.fLast;
                tgt.fBits = src.fBits;
             }
-            CopyZoom(histo.fXaxis, obj.fXaxis);
-            CopyZoom(histo.fYaxis, obj.fYaxis);
-            CopyZoom(histo.fZaxis, obj.fZaxis);
+            CopyZoom(histo.fXaxis, obj.fXaxis,"x");
+            CopyZoom(histo.fYaxis, obj.fYaxis,"y");
+            CopyZoom(histo.fZaxis, obj.fZaxis,"z");
          }
          histo.fSumw2 = obj.fSumw2;
 
@@ -2182,7 +2183,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             this.DecodeOptions(opt || histo.fOption);
       }
 
-      if (this.snapid || !fp || !fp.zoom_changed_interactive)
+      if (this.snapid || !fp || !fp.zoomChangedInteractive())
          this.CheckPadRange();
 
       this.ScanContent();
@@ -2751,9 +2752,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       menu.AddAttributesMenu(this);
 
-      if (this.histogram_updated && fp.zoom_changed_interactive)
+      if (this.histogram_updated && fp.zoomChangedInteractive())
          menu.add('Let update zoom', function() {
-            fp.zoom_changed_interactive = 0;
+            fp.zoomChangedInteractive('reset');
          });
 
       return true;
@@ -2770,7 +2771,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          case "ToggleZoom":
             if ((fp.zoom_xmin !== fp.zoom_xmax) || (fp.zoom_ymin !== fp.zoom_ymax) || (fp.zoom_zmin !== fp.zoom_zmax)) {
                fp.Unzoom();
-               fp.zoom_changed_interactive = 0;
+               fp.zoomChangedInteractive('reset');
                return true;
             }
             if (this.draw_content && (typeof this.AutoZoom === 'function')) {

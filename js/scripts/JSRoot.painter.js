@@ -981,32 +981,48 @@ JSROOT.define(['d3'], (d3) => {
     * @private
     */
 
-   function FontHandler(fontIndex, size) {
+   function FontHandler(fontIndex, size, scale, name, style, weight) {
+
       this.name = "Arial";
-      this.size = Math.round(size || 11);
-      this.weight = null;
       this.style = null;
+      this.weight = null;
 
-      let indx = Math.floor(fontIndex / 10),
-          fontName = jsrp.root_fonts[indx] || "";
-
-      while (fontName.length > 0) {
-         if (fontName[0] === 'b')
-            this.weight = "bold";
-         else if (fontName[0] === 'i')
-            this.style = "italic";
-         else if (fontName[0] === 'o')
-            this.style = "oblique";
-         else
-            break;
-         fontName = fontName.substr(1);
+      if (scale && (size < 1)) {
+         size *= scale;
+         this.scaled = true;
       }
 
-      if (fontName == 'Symbol')
-         this.weight = this.style = null;
+      this.size = Math.round(size || 11);
+      this.scale = scale;
 
-      this.name = fontName;
-      this.aver_width = jsrp.root_fonts_aver_width[indx] || 0.55;
+      if (fontIndex !== null) {
+
+         let indx = Math.floor(fontIndex / 10),
+             fontName = jsrp.root_fonts[indx] || "";
+
+         while (fontName.length > 0) {
+            if (fontName[0] === 'b')
+               this.weight = "bold";
+            else if (fontName[0] === 'i')
+               this.style = "italic";
+            else if (fontName[0] === 'o')
+               this.style = "oblique";
+            else
+               break;
+            fontName = fontName.substr(1);
+         }
+
+         if (fontName == 'Symbol')
+            this.weight = this.style = null;
+
+         this.name = fontName;
+         this.aver_width = jsrp.root_fonts_aver_width[indx] || 0.55;
+      } else {
+         this.name = name;
+         this.style = style || null;
+         this.weight = weight || null;
+         this.aver_width = 0.55;
+      }
 
       this.func = this.setFont.bind(this);
    }

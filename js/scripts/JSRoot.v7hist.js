@@ -13,7 +13,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.nbinsy = 0;
       this.accept_drops = true; // indicate that one can drop other objects like doing Draw("same")
       this.mode3d = false;
-      this.zoom_changed_interactive = 0;
 
       // initialize histogram methods
       this.GetHisto(true);
@@ -436,7 +435,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          case "ToggleZoom":
             if ((this.zoom_xmin !== this.zoom_xmax) || (this.zoom_ymin !== this.zoom_ymax) || (this.zoom_zmin !== this.zoom_zmax)) {
                this.Unzoom();
-               let fp = this.frame_painter(); if (fp) fp.zoom_changed_interactive = 0;
+               this.frame_painter().zoomChangedInteractive('reset');
                return true;
             }
             if (this.draw_content && (typeof this.AutoZoom === 'function')) {
@@ -561,23 +560,23 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             this.FillHistContextMenu(menu);
       }
 
+      let fp = this.frame_painter();
+
       if (this.options.Mode3D) {
          // menu for 3D drawings
 
          if (menu.size() > 0)
             menu.add("separator");
 
-         let main = this.main_painter() || this,
-             fp = this.frame_painter(),
-             axis_painter = fp;
+         let main = this.main_painter() || this;
 
          menu.addchk(main.IsTooltipAllowed(), 'Show tooltips', function() {
             main.SetTooltipAllowed("toggle");
          });
 
-         menu.addchk(axis_painter.enable_highlight, 'Highlight bins', function() {
-            axis_painter.enable_highlight = !axis_painter.enable_highlight;
-            if (!axis_painter.enable_highlight && main.BinHighlight3D && main.mode3d) main.BinHighlight3D(null);
+         menu.addchk(fp.enable_highlight, 'Highlight bins', function() {
+            fp.enable_highlight = !fp.enable_highlight;
+            if (!fp.enable_highlight && main.BinHighlight3D && main.mode3d) main.BinHighlight3D(null);
          });
 
          if (fp && fp.Render3D) {
@@ -613,9 +612,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       menu.AddAttributesMenu(this);
 
-      if (this.histogram_updated && this.zoom_changed_interactive)
+      if (this.histogram_updated && fp.zoomChangedInteractive())
          menu.add('Let update zoom', function() {
-            this.zoom_changed_interactive = 0;
+            fp.zoomChangedInteractive('reset');
          });
 
       return true;
