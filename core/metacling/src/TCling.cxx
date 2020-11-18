@@ -2632,7 +2632,7 @@ void TCling::AddIncludePath(const char *path)
       path += 2;
    TString sPath(path);
    gSystem->ExpandPathName(sPath);
-   fInterpreter->AddIncludePath(sPath);
+   fInterpreter->AddIncludePath(sPath.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
