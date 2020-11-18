@@ -24,12 +24,12 @@ TEST(RPageStorage, ReadSealedPages)
    // Create an ntuple at least 2 clusters, one with 1 entry and one with 100000 entries.
    // Hence the second cluster should have more than a single page per column.  We write uncompressed
    // pages so that we can meaningfully peek into the content of read sealed pages later on.
-   auto modelReferende = RNTupleModel::Create();
-   auto wrPt = modelReferende->MakeField<std::int32_t>("pt", 42);
+   auto model = RNTupleModel::Create();
+   auto wrPt = model->MakeField<std::int32_t>("pt", 42);
    {
       RNTupleWriteOptions options;
       options.SetCompression(0);
-      RNTupleWriter ntuple(std::move(modelReferende),
+      RNTupleWriter ntuple(std::move(model),
          std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
       ntuple.CommitCluster();
