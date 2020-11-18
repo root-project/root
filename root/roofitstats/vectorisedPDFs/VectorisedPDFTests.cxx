@@ -374,8 +374,10 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
 #endif
 
       } catch (std::exception& e) {
-        std::cerr << "ERROR when checking batch computation for event " << i << ":\n"
-            << e.what() << std::endl;
+        ADD_FAILURE() << " ERROR when checking batch computation for event " << i << ":\n"
+            << e.what() << "\n"
+            << "PDF is:"<< std::endl;
+        _pdf->Print("T");
       }
 #endif
     }
