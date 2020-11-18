@@ -43,6 +43,8 @@ TEST(RPageStorage, ReadSealedPages)
    source.Attach();
    const auto &descriptor = source.GetDescriptor();
    auto columnId = descriptor.FindColumnId(descriptor.FindFieldId("pt"), 0);
+
+   // Check first cluster consisting of a single entry
    RClusterIndex index(descriptor.FindClusterId(columnId, 0), 0);
    auto sealedPage = source.ReadSealedPage(columnId, index);
    ASSERT_EQ(1U, sealedPage.fNElements);
