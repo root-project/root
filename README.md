@@ -95,6 +95,5 @@ Setup and run ROOT
 
 ## Contribution Guidelines
 - [How to contribute](https://github.com/root-project/root/blob/master/CONTRIBUTING.md)
-- [Bug reporting guidelines](https://root.cern/guidelines-submitting-bug)
 - [Coding conventions](https://root.cern/coding-conventions)
 - [Meetings](https://root.cern/meetings)
