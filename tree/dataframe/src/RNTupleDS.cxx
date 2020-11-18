@@ -178,33 +178,69 @@ void RNTupleDS::AddField(
    const RNTupleDescriptor &desc, std::string_view colName, DescriptorId_t fieldId,
    std::vector<DescriptorId_t> skeinIDs)
 {
+   // As an example for the mapping of RNTuple fields to RDF columns, let's consider an RNTuple
+   // using the following types and with a top-level field named "event" of type Event:
+   //
+   // struct Event {
+   //    int id;
+   //    std::vector<Track> tracks;
+   // };
+   // struct Track {
+   //    std::vector<Hit> hits;
+   // };
+   // struct Hit {
+   //    float x;
+   //    float y;
+   // };
+   //
+   // AddField() will be called from the constructor with the RNTuple root field (ENTupleStructure::kRecord).
+   // From there, we recurse into the "event" sub field (also ENTupleStructure::kRecord) and further down the
+   // tree of sub fields and expose the following RDF columns:
+   // TODO(jblomer): Collections should be exposed as RVec<T> instead of std::vector<T>
+   //
+   // "event"                 [Event]
+   // "event.id"              [int]
+   // "event.tracks"          [std::vector<Track>]
+   // "#event.tracks"         [unsigned int]
+   // "event.tracks.hits"     [std::vector<std::vector<Hit>>]
+   // "#event.tracks.hits"    [std::vector<unsigned int>]
+   // "event.tracks.hits.x"   [std::vector<std::vector<float>>]
+   // "#event.tracks.hits.x"  [std::vector<unsigned int>]
+   // "event.tracks.hits.y"   [std::vector<std::vector<float>>]
+   // "#event.tracks.hits.y"  [std::vector<unsigned int>]
+
    const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
    if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
-      // Inner fields of collections are provided as projected collections of only that inner field
+      // Inner fields of collections are provided as projected collections of only that inner field,
+      // E.g. we provide a projected collection vector<vector<float>> for "event.tracks.hits.x" in the example
+      // above.
+
+      // We open a new collection scope with fieldID being the inner most collection. E.g. for "event.tracks.hits",
+      // skeinIDs would already contain the fieldID of "event.tracks"
       skeinIDs.emplace_back(fieldId);
       // There should only be one sub field but it's easiest to access via the sub field range
       for (const auto& f : desc.GetFieldRange(fieldDesc.GetId())) {
          AddField(desc, colName, f.GetId(), skeinIDs);
       }
-      // Note that at the end of the recursion, we handled the inner collections as well as the
-      // collection as whole (e.g. we have RDF columns std::vector<jet.pt>, std::vector<float> jet.eta)
-      // _and_ std::vector<Jet> jet. So we are done.
+      // Note that at the end of the recursion, we handled the inner sub collections as well as the
+      // collection as whole, so we are done.
       return;
    } else if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
-      // Inner fields of records are provided as individual RDF columns
+      // Inner fields of records are provided as individual RDF columns, e.g. "event.id"
       for (const auto& f : desc.GetFieldRange(fieldDesc.GetId())) {
          auto innerName = colName.empty() ? f.GetFieldName() : (std::string(colName) + "." + f.GetFieldName());
          AddField(desc, innerName, f.GetId(), skeinIDs);
       }
    }
 
-   // The class of fieldId might not be loaded in which case only the inner fields are made available
+   // The fieldID could be the root field or the class of fieldId might not be loaded.
+   // In these cases, only the inner fields are exposed as RDF columns.
    auto fieldOrException = Detail::RFieldBase::Create("", fieldDesc.GetTypeName());
    if (!fieldOrException)
       return;
    auto valueField = fieldOrException.Unwrap();
    std::unique_ptr<Detail::RFieldBase> cardinalityField;
-   // Collections get the additional "number of" RDF column (e.g. `#jets`)
+   // Collections get the additional "number of" RDF column (e.g. "#tracks")
    if (!skeinIDs.empty())
       cardinalityField = std::make_unique<Detail::RRDFCardinalityField>();
 
