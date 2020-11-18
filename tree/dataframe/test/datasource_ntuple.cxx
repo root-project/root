@@ -60,6 +60,16 @@ TEST_F(RNTupleDSTest, ColTypeNames)
 }
 
 
+TEST_F(RNTupleDSTest, CardinalityColumn)
+{
+   auto df = ROOT::Experimental::MakeNTupleDataFrame(fNtplName, fFileName);
+
+   // Check that the special column #<collection> works with jitting
+   auto max_njets = df.Define("njets", "@jets.size").Max("njets");
+   EXPECT_EQ(2, *max_njets);
+}
+
+
 void ReadTest(const std::string &name, const std::string &fname) {
    auto df = ROOT::Experimental::MakeNTupleDataFrame(name, fname);
 
