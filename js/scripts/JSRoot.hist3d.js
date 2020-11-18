@@ -13,7 +13,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       if (first_time)
          this.camera.position.set(-1.6*max3d, -3.5*max3d, 1.4*this.size_z3d);
 
-      if (pad && (first_time || !this.zoom_changed_interactive))
+      if (pad && (first_time || !this.zoomChangedInteractive()))
          if (!isNaN(pad.fTheta) && !isNaN(pad.fPhi) && ((pad.fTheta !== this.camera_Theta) || (pad.fPhi !== this.camera_Phi))) {
             max3d = 3*Math.max(this.size_xy3d, this.size_z3d);
             let phi = (-pad.fPhi-90)/180*Math.PI, theta = pad.fTheta/180*Math.PI;

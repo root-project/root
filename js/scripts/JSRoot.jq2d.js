@@ -200,6 +200,59 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          this.add("endsub:");
       }
 
+      /** @summary Add size selection menu entries */
+      SelectMenu(name, values, value, set_func) {
+         this.add("sub:" + name);
+         for (let n = 0; n < values.length; ++n)
+            this.addchk(values[n] == value, values[n], values[n], res => set_func(res));
+         this.add("endsub:");
+      }
+
+      /** @summary Add color selection menu entries  */
+      RColorMenu(name, value, set_func) {
+         // if (value === undefined) return;
+         let colors = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
+
+         this.add("sub:" + name, () => {
+            // todo - use jqury dialog here
+            let col = prompt("Enter color name - empty string will reset color", value);
+            set_func(col);
+         });
+         let col = null, fillcol = 'black', coltxt = 'default', bkgr = '';
+         for (let n = -1; n < colors.length; ++n) {
+            if (n >= 0) {
+               coltxt = col = colors[n];
+               bkgr = "background-color:" + col;
+               fillcol = (col == 'white') ? 'black' : 'white';
+            }
+            let svg = `<svg width='100' height='18' style='margin:0px;${bkgr}'><text x='4' y='12' style='font-size:12px' fill='${fillcol}'>${coltxt}</text></svg>`;
+            this.addchk(value == col, svg, coltxt, res => set_func(res == 'default' ? null : res));
+         }
+         this.add("endsub:");
+      }
+
+
+      /** @summary Add items to change RAttrText */
+      RAttrTextItems(fontHandler, opts, set_func) {
+         if (!opts) opts = {};
+         this.RColorMenu("color", fontHandler.color, sel => set_func({ name: "color_name", value: sel }));
+         if (fontHandler.scaled)
+            this.SizeMenu("size", 0.01, 0.10, 0.01, fontHandler.size /fontHandler.scale, sz => set_func({ name: "size", value: sz }));
+         else
+            this.SizeMenu("size", 6, 20, 2, fontHandler.size, sz => set_func({ name: "size", value: sz }));
+
+         this.SelectMenu("family", ["Arial", "Times New Roman", "Courier New", "Symbol"], fontHandler.name, res => set_func( {name: "font_family", value: res }));
+
+         this.SelectMenu("style", ["normal", "italic", "oblique"], fontHandler.style || "normal", res => set_func( {name: "font_style", value: res == "normal" ? null : res }));
+
+         this.SelectMenu("weight", ["normal", "lighter", "bold", "bolder"], fontHandler.weight || "normal", res => set_func( {name: "font_weight", value: res == "normal" ? null : res }));
+
+         if (!opts.noalign)
+            this.add("align");
+         if (!opts.noangle)
+            this.add("angle");
+      }
+
       /** @summary Fill context menu for text attributes
        * @private */
       AddTextAttributesMenu(painter, prefix) {
