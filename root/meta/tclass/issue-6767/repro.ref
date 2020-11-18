@@ -1,0 +1,11 @@
+
+Processing /Users/pcanal/root_working/roottest/root/meta/tclass/issue-6767/repro.C...
+Info in <GenCollectionProxy reproducer>: R__ASSERT(! (prop&kIsClass) && "Impossible code path") would have triggered
+Warning in <TClass::Init>: no dictionary for class CaloTowerTest is available
+Error in <TGenCollectionProxy>: Could not retrieve the TClass for pair<CaloTowerTest,short>
+Warning in <TClass::Init>: Collection proxy for multimap<CaloTowerTest,short> was not properly initialized!
+Error in <TGenCollectionProxy>: Could not retrieve the TClass for pair<CaloTowerTest,short>
+Error in <TGenCollectionProxy>: Could not retrieve the TClass for edm_test::FwdPtr<CaloTowerTest>
+Warning in <TClass::Init>: Collection proxy for vector<edm_test::FwdPtr<CaloTowerTest> > was not properly initialized!
+Error in <TGenCollectionProxy>: Could not retrieve the TClass for edm_test::FwdPtr<CaloTowerTest>
+(int) 0
