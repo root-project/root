@@ -24,6 +24,8 @@
 #include "TInterpreter.h"
 #include "DllImport.h"
 
+#include <stdexcept>
+
 namespace PyROOT {
 R__EXTERN PyObject *gRootModule;
 }
@@ -54,6 +56,13 @@ void PyROOT::Init()
 
    // Memory management
    gROOT->GetListOfCleanups()->Add(&GetMemoryRegulator());
+
+   // FIXME: Import cppyy to fix missing import in forked process
+   // FIXME: This is a hack!
+   auto res = PyImport_ImportModule("cppyy");
+   if (!res) {
+       throw std::runtime_error("Failed to import cppyy in a hack to fix importing ROOT in forked processes");
+   }
 
    // Bind ROOT globals that will be needed in ROOT.py
    AddToGlobalScope("gROOT", "TROOT.h", gROOT, Cppyy::GetScope(gROOT->IsA()->GetName()));
