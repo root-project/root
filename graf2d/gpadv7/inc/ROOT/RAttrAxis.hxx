@@ -28,46 +28,28 @@ namespace Experimental {
 
 class RAttrAxis : public RAttrBase {
 
-   RAttrValue<double>      fMin{this, "min", 0.};           ///<! axis min
-   RAttrValue<double>      fMax{this, "max", 1.};           ///<! axis max
-   RAttrValue<double>      fZoomMin{this, "zoommin", 0.};   ///<! axis zoom min
-   RAttrValue<double>      fZoomMax{this, "zoommax", 0.};   ///<! axis zoom max
-   RAttrValue<double>      fLog{this, "log", 0};            ///<! log scale, <1 off, 1- base10, 2 - base 2, 2.71 - exp, 3, 4, ...
-   RAttrValue<bool>        fReverse{this, "reverse", false};  ///<! reverse scale
-
-   RAttrValue<bool>        fTimeDisplay{this, "time", false};             ///<! time display
-   RAttrValue<double>      fTimeOffset{this, "time_offset", 0};           ///<! time offset to display
-   RAttrValue<std::string> fTimeFormat{this, "time_format", ""};          ///<! time format
-
-   RAttrLine               fAttrLine{this, "line"};                       ///<! line attributes
-   RAttrValue<std::string> fEndingStyle{this, "ending_style", ""};        ///<! axis ending style - none, arrow, circle
-   RAttrValue<RPadLength>  fEndingSize{this, "ending_size", 0.02_normal}; ///<! axis ending size
-
-   RAttrValue<std::string> fTicksSide{this, "ticks_side", "normal"};      ///<! ticks position - normal, invert, both
-   RAttrValue<RPadLength>  fTicksSize{this, "ticks_size", 0.02_normal};   ///<! ticks size
-   RAttrColor              fTicksColor{this, "ticks_color"};              ///<! ticks color
-
-   RAttrText               fLabelsAttr{this, "labels"};                   ///<! text attributes for labels
-   RAttrValue<RPadLength>  fLabelsOffset{this, "labels_offset", {}};      ///<! axis labels offset - relative to predefined position
-   RAttrValue<bool>        fLabelsCenter{this, "labels_center", false};   ///<! center labels
-
-   RAttrText               fTitleAttr{this, "title"};                     ///<! axis title text attributes
-   RAttrValue<std::string> fTitle{this, "title", ""};                     ///<! axis title
-   RAttrValue<std::string> fTitlePos{this, "title_position", "right"};    ///<! axis title position - left, right, center
-   RAttrValue<RPadLength>  fTitleOffset{this, "title_offset", {}};        ///<! axis title offset - relative to predefined position
+   RAttrValue<double> fZoomMin{this, "zoommin", 0.};                     ///<! axis zoom min
+   RAttrValue<double> fZoomMax{this, "zoommax", 0.};                     ///<! axis zoom max
+   RAttrValue<double> fLog{this, "log", 0};                              ///<! log scale, <1 off, 1 - base10, 2 - base 2, 2.71 - exp, 3, 4, ...
+   RAttrValue<bool> fReverse{this, "reverse", false};                    ///<! reverse scale
+   RAttrValue<bool> fTimeDisplay{this, "time", false};                   ///<! time display
+   RAttrValue<double> fTimeOffset{this, "time_offset", 0};               ///<! time offset to display
+   RAttrValue<std::string> fTimeFormat{this, "time_format", ""};         ///<! time format
+   RAttrLine fAttrLine{this, "line"};                                    ///<! line attributes
+   RAttrValue<std::string> fEndingStyle{this, "ending_style", ""};       ///<! axis ending style - none, arrow, circle
+   RAttrValue<RPadLength> fEndingSize{this, "ending_size", 0.02_normal}; ///<! axis ending size
+   RAttrValue<std::string> fTicksSide{this, "ticks_side", "normal"};     ///<! ticks position - normal, invert, both
+   RAttrValue<RPadLength> fTicksSize{this, "ticks_size", 0.02_normal};   ///<! ticks size
+   RAttrColor fTicksColor{this, "ticks_color"};                          ///<! ticks color
+   RAttrText fLabelsAttr{this, "labels"};                                ///<! text attributes for labels
+   RAttrValue<RPadLength> fLabelsOffset{this, "labels_offset", {}};      ///<! axis labels offset - relative
+   RAttrValue<bool> fLabelsCenter{this, "labels_center", false};         ///<! center labels
+   RAttrText fTitleAttr{this, "title"};                                  ///<! axis title text attributes
+   RAttrValue<std::string> fTitle{this, "title", ""};                    ///<! axis title
+   RAttrValue<std::string> fTitlePos{this, "title_position", "right"};   ///<! axis title position - left, right, center
+   RAttrValue<RPadLength> fTitleOffset{this, "title_offset", {}};        ///<! axis title offset - relative
 
    R__ATTR_CLASS(RAttrAxis, "axis");
-
-   // min range, graphics will not show value less then this
-   RAttrAxis &SetMin(double min) { fMin = min; return *this; }
-   RAttrAxis &SetMax(double max) { fMax = max; return *this; }
-   double GetMin() const { return fMin; }
-   double GetMax() const { return fMax; }
-   bool HasMin() const { return fMin.Has(); }
-   bool HasMax() const { return fMax.Has(); }
-
-   RAttrAxis &SetMinMax(double min, double max) { SetMin(min); SetMax(max); return *this; }
-   void ClearMinMax() { fMin.Clear(); fMax.Clear(); }
 
    RAttrAxis &SetZoomMin(double min) { fZoomMin = min; return *this; }
    RAttrAxis &SetZoomMax(double max) { fZoomMax = max; return *this; }
@@ -76,8 +58,8 @@ class RAttrAxis : public RAttrBase {
    bool HasZoomMin() const { return fZoomMin.Has(); }
    bool HasZoomMax() const { return fZoomMax.Has(); }
 
-   RAttrAxis &SetZoomMinMax(double min, double max) { SetZoomMin(min); SetZoomMax(max); return *this; }
-   void ClearZoomMinMax() { fZoomMin.Clear(); fZoomMax.Clear(); }
+   RAttrAxis &SetZoom(double min, double max) { SetZoomMin(min); SetZoomMax(max); return *this; }
+   void ClearZoom() { fZoomMin.Clear(); fZoomMax.Clear(); }
 
    RAttrAxis &SetLog(double base = 10) { fLog = (base < 1) ? 0 : base; return *this; }
    double GetLog() const { return fLog; }

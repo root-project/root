@@ -91,6 +91,7 @@
 #pragma link C++ class ROOT::Experimental::RAttrAxis+;
 #pragma link C++ class ROOT::Experimental::RAttrMargins+;
 
+#pragma link C++ class ROOT::Experimental::RAxisDrawableBase+;
 #pragma link C++ class ROOT::Experimental::RAxisDrawable+;
 #pragma link C++ class ROOT::Experimental::RAxisLabelsDrawable+;
 

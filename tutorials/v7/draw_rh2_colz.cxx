@@ -58,9 +58,9 @@ void draw_rh2_colz()
    // swap frame side where axes are drawn
    // frame->SetSwapX(true).SetSwapY(true);
 
-   frame->AttrX().SetZoomMinMax(2.,8.);
+   frame->AttrX().SetZoom(2.,8.);
 
-   frame->AttrY().SetZoomMinMax(2.,8.);
+   frame->AttrY().SetZoom(2.,8.);
 
    canvas->Draw<RFrameTitle>("2D histogram with color palette")->SetMargin(0.01_normal).SetHeight(0.09_normal);
 
