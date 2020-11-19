@@ -66,8 +66,8 @@ void draw_frame()
    frame1->AttrY().AttrLine().SetColor(RColor::kBlue);
 
    frame1->AttrX().SetLog(true);
-   frame1->AttrX().SetZoomMinMax(2.,80.);
-   frame1->AttrY().SetMinMax(2,8);
+   frame1->AttrX().SetZoom(2.,80.);
+   frame1->AttrY().SetZoom(2,8);
 
    subpads[0][0]->Draw<RFrameTitle>("Frame1 title")->SetMargin(0.01_normal).SetHeight(0.05_normal);
 

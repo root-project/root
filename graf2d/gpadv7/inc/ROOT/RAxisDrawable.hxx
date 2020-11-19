@@ -21,15 +21,15 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class RAxisDrawable
+/** \class RAxisDrawableBase
 \ingroup GrafROOT7
-\brief Axis drawing.
+\brief Axis base drawing - only attributes and position.
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2020-11-03
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RAxisDrawable : public RDrawable {
+class RAxisDrawableBase : public RDrawable {
 
    RPadPos fPos;                          ///< axis start point
    bool fVertical{false};                 ///< is vertical axis
@@ -38,26 +38,52 @@ class RAxisDrawable : public RDrawable {
 
 public:
 
-   RAxisDrawable() : RDrawable("axis") {}
+   RAxisDrawableBase() : RDrawable("axis") {}
 
-   RAxisDrawable(const RPadPos &pos, bool vertical, const RPadLength &len) : RAxisDrawable()
+   RAxisDrawableBase(const RPadPos &pos, bool vertical, const RPadLength &len) : RAxisDrawableBase()
    {
       SetPos(pos);
       SetVertical(vertical);
       SetLength(len);
    }
 
-   RAxisDrawable &SetPos(const RPadPos &pos) { fPos = pos; return *this; }
-   RAxisDrawable &SetVertical(bool vertical = true) { fVertical = vertical; return *this; }
-   RAxisDrawable &SetLength(const RPadLength &len) { fLength = len; return *this; }
+   RAxisDrawableBase &SetPos(const RPadPos &pos) { fPos = pos; return *this; }
+   RAxisDrawableBase &SetVertical(bool vertical = true) { fVertical = vertical; return *this; }
+   RAxisDrawableBase &SetLength(const RPadLength &len) { fLength = len; return *this; }
 
    bool IsVertical() const { return fVertical; }
    const RPadPos& GetPos() const { return fPos; }
    const RPadLength& GetLength() const { return fLength; }
 
    const RAttrAxis &GetAttrAxis() const { return fAttrAxis; }
-   RAxisDrawable &SetAttrAxis(const RAttrAxis &attr) { fAttrAxis = attr; return *this; }
+   RAxisDrawableBase &SetAttrAxis(const RAttrAxis &attr) { fAttrAxis = attr; return *this; }
    RAttrAxis &AttrAxis() { return fAttrAxis; }
+};
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/** \class RAxisDrawable
+\ingroup GrafROOT7
+\brief Plain axis drawing.
+\author Sergey Linev <S.Linev@gsi.de>
+\date 2020-11-03
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RAxisDrawable : public RAxisDrawableBase {
+
+   double fMin{0}, fMax{100};      ///< axis minimum and maximum
+
+public:
+
+   RAxisDrawable() = default;
+
+   RAxisDrawable(const RPadPos &pos, bool vertical, const RPadLength &len) : RAxisDrawableBase(pos, vertical, len) {}
+
+   RAxisDrawable &SetMinMax(double min, double max) { fMin = min; fMax = max; return *this; }
+   double GetMin() const { return fMin; }
+   double GetMax() const { return fMax; }
 };
 
 
@@ -65,29 +91,21 @@ public:
 
 /** \class RAxisLabelsDrawable
 \ingroup GrafROOT7
-\brief Axis drawing.
+\brief Labels axis drawing.
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2020-11-03
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RAxisLabelsDrawable : public RAxisDrawable {
+class RAxisLabelsDrawable : public RAxisDrawableBase {
 
    std::vector<std::string> fLabels;      ///< axis labels
 
 public:
 
-   RAxisLabelsDrawable() : RAxisDrawable() {}
+   RAxisLabelsDrawable() = default;
 
-   RAxisLabelsDrawable(const std::vector<std::string> &lbls) : RAxisLabelsDrawable() { SetLabels(lbls); }
-
-   RAxisLabelsDrawable(const RPadPos &pos, bool vertical, const RPadLength &len, const std::vector<std::string> &lbls = {}) : RAxisLabelsDrawable()
-   {
-      SetPos(pos);
-      SetVertical(vertical);
-      SetLength(len);
-      SetLabels(lbls);
-   }
+   RAxisLabelsDrawable(const RPadPos &pos, bool vertical, const RPadLength &len) : RAxisDrawableBase(pos, vertical, len) {}
 
    RAxisLabelsDrawable &SetLabels(const std::vector<std::string> &lbls) { fLabels = lbls; return *this; }
    const std::vector<std::string> &GetLabels() const { return fLabels; }
