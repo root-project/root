@@ -32,12 +32,6 @@ RFrame::RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords) : RFrame
 
 void RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ranges) const
 {
-   if (axis.HasMin())
-      ranges.AssignMin(ndim, axis.GetMin());
-
-   if (axis.HasMax())
-      ranges.AssignMax(ndim, axis.GetMax());
-
    if (axis.HasZoomMin())
       ranges.AssignMin(ndim, axis.GetZoomMin());
 
@@ -51,7 +45,7 @@ void RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ra
 void RFrame::AssignZoomRange(unsigned ndim, RAttrAxis &axis, const RUserRanges &ranges)
 {
    if (ranges.IsUnzoom(ndim)) {
-      axis.ClearZoomMinMax();
+      axis.ClearZoom();
    } else {
       if (ranges.HasMin(ndim))
          axis.SetZoomMin(ranges.GetMin(ndim));

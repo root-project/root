@@ -10,7 +10,6 @@
 #define ROOT7_RPaletteDrawable
 
 #include <ROOT/RDrawable.hxx>
-#include <ROOT/RAttrAxis.hxx>
 #include <ROOT/RAttrValue.hxx>
 #include <ROOT/RPadPos.hxx>
 #include <ROOT/RPalette.hxx>
@@ -33,7 +32,6 @@ namespace Experimental {
 class RPaletteDrawable final : public RDrawable {
 
    RPalette                fPalette;                              ///<  color palette to draw
-   RAttrAxis               fAttrAxis{this, "axis"};               ///<! axis attributes
    RAttrValue<bool>        fVisible{this, "visible", true};       ///<! visibility flag
    RAttrValue<RPadLength>  fMargin{this, "margin", 0.02_normal};  ///<! margin
    RAttrValue<RPadLength>  fSize{this, "size", 0.05_normal};      ///<! margin
@@ -58,10 +56,6 @@ public:
 
    RPaletteDrawable &SetSize(const RPadLength &sz) { fSize = sz; return *this; }
    RPadLength GetSize() const { return fSize; }
-
-   const RAttrAxis &GetAttrAxis() const { return fAttrAxis; }
-   RPaletteDrawable &SetAttrAxis(const RAttrAxis &attr) { fAttrAxis = attr; return *this; }
-   RAttrAxis &AttrAxis() { return fAttrAxis; }
 };
 
 //inline auto GetDrawable(const RPalette &palette)
