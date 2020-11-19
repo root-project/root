@@ -423,7 +423,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          let drag_move = d3.drag().subject(Object),
-            drag_resize = d3.drag().subject(Object);
+             drag_resize = d3.drag().subject(Object);
 
          drag_move
             .on("start", function(evnt) {
@@ -441,15 +441,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                   acc_y1: Number(pthis.draw_g.attr("y")),
                   pad_w: pthis.pad_width() - rect_width(),
                   pad_h: pthis.pad_height() - rect_height(),
-                  drag_tm: new Date()
+                  drag_tm: new Date(),
+                  path: "v" + rect_height() + "h" + rect_width() + "v" + (-rect_height()) + "z"
                };
 
-               drag_rect = d3.select(pthis.draw_g.node().parentNode).append("rect")
+               drag_rect = d3.select(pthis.draw_g.node().parentNode).append("path")
                   .classed("zoom", true)
                   .attr("x", handle.acc_x1)
                   .attr("y", handle.acc_y1)
                   .attr("width", rect_width())
                   .attr("height", rect_height())
+                  .attr("d", "M" + handle.acc_x1 + "," + handle.acc_y1 + handle.path)
                   .style("cursor", "move")
                   .style("pointer-events", "none") // let forward double click to underlying elements
                   .property('drag_handle', handle);
@@ -468,8 +470,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                if (!callback.no_change_y)
                   handle.acc_y1 += evnt.dy;
 
-               drag_rect.attr("x", Math.min(Math.max(handle.acc_x1, 0), handle.pad_w))
-                        .attr("y", Math.min(Math.max(handle.acc_y1, 0), handle.pad_h));
+               let x = Math.min(Math.max(handle.acc_x1, 0), handle.pad_w),
+                   y = Math.min(Math.max(handle.acc_y1, 0), handle.pad_h);
+
+               drag_rect.attr("x", x)
+                        .attr("y", y)
+                        .attr("d", "M" + x + "," + y + handle.path);
 
             }).on("end", function(evnt) {
                if (!drag_rect) return;
@@ -556,7 +562,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!callback.only_resize)
             pthis.draw_g.style("cursor", "move").call(drag_move);
 
-         MakeResizeElements(pthis.draw_g, rect_width(), rect_height(), drag_resize);
+         if (!callback.only_move)
+            MakeResizeElements(pthis.draw_g, rect_width(), rect_height(), drag_resize);
       },
 
       /** @summary Add move handlers for drawn element
@@ -1179,85 +1186,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          evnt.stopPropagation();
       },
 
-       /** Analyze zooming with mouse wheel */
-      AnalyzeMouseWheelEvent: function(event, item, dmin, ignore) {
-
-         item.min = item.max = undefined;
-         item.changed = false;
-         if (ignore && item.ignore) return;
-
-         let delta = 0, delta_left = 1, delta_right = 1;
-
-         if ('dleft' in item) { delta_left = item.dleft; delta = 1; }
-         if ('dright' in item) { delta_right = item.dright; delta = 1; }
-
-         if ('delta' in item) {
-            delta = item.delta;
-         } else if (event && event.wheelDelta !== undefined ) {
-            // WebKit / Opera / Explorer 9
-            delta = -event.wheelDelta;
-         } else if (event && event.deltaY !== undefined ) {
-            // Firefox
-            delta = event.deltaY;
-         } else if (event && event.detail !== undefined) {
-            delta = event.detail;
-         }
-
-         if (delta===0) return;
-         delta = (delta<0) ? -0.2 : 0.2;
-
-         delta_left *= delta
-         delta_right *= delta;
-
-         let lmin = item.min = this["scale_"+item.name+"min"],
-             lmax = item.max = this["scale_"+item.name+"max"],
-             gmin = this[item.name+"min"],
-             gmax = this[item.name+"max"];
-
-         if ((item.min === item.max) && (delta<0)) {
-            item.min = gmin;
-            item.max = gmax;
-         }
-
-         if (item.min >= item.max) return;
-
-         if (item.reverse) dmin = 1 - dmin;
-
-         if ((dmin>0) && (dmin<1)) {
-            if (this['log'+item.name]) {
-               let factor = (item.min>0) ? Math.log10(item.max/item.min) : 2;
-               if (factor>10) factor = 10; else if (factor<0.01) factor = 0.01;
-               item.min = item.min / Math.pow(10, factor*delta_left*dmin);
-               item.max = item.max * Math.pow(10, factor*delta_right*(1-dmin));
-            } else {
-               let rx_left = (item.max - item.min), rx_right = rx_left;
-               if (delta_left>0) rx_left = 1.001 * rx_left / (1-delta_left);
-               item.min += -delta_left*dmin*rx_left;
-
-               if (delta_right>0) rx_right = 1.001 * rx_right / (1-delta_right);
-
-               item.max -= -delta_right*(1-dmin)*rx_right;
-            }
-            if (item.min >= item.max)
-               item.min = item.max = undefined;
-            else if (delta_left !== delta_right) {
-               // extra check case when moving left or right
-               if (((item.min < gmin) && (lmin===gmin)) ||
-                   ((item.max > gmax) && (lmax==gmax)))
-                      item.min = item.max = undefined;
-            }
-
-         } else {
-            item.min = item.max = undefined;
-         }
-
-         item.changed = ((item.min !== undefined) && (item.max !== undefined));
+       /** @summary Analyze zooming with mouse wheel */
+      AnalyzeMouseWheelEvent: function(event, item, dmin, test_ignore) {
+         let handle = this[item.name + "_handle"];
+         if (handle) return handle.analyzeWheelEvent(event, dmin, item, test_ignore);
+         console.error('Fail to analyze zooming event for ', item.name);
       },
 
+       /** @summary return true if default Y zooming should be enabled
+         * @desc it is typically for 2-Dim histograms or
+         * when histogram not draw, defined by other painters */
       AllowDefaultYZooming: function() {
-         // return true if default Y zooming should be enabled
-         // it is typically for 2-Dim histograms or
-         // when histogram not draw, defined by other painters
 
          let pad_painter = this.pad_painter();
          if (pad_painter && pad_painter.painters)
