@@ -1,3 +1,4 @@
+#include <ROOT/RConfig.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RInterface.hxx>
 #include <ROOT/TThreadExecutor.hxx>
