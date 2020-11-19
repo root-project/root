@@ -76,6 +76,7 @@ public:
 // some useful typedef
 #include "Math/StdEngine.h"
 #include "Math/MixMaxEngine.h"
+#include "Math/RanluxppEngine.h"
 
 // not working wight now for this classes
 //#define  DEFINE_TEMPL_INSTANCE
@@ -86,6 +87,8 @@ extern template class TRandomGen<ROOT::Math::MixMaxEngine<256,2>>;
 extern template class TRandomGen<ROOT::Math::MixMaxEngine<256,4>>;
 extern template class TRandomGen<ROOT::Math::MixMaxEngine<17,0>>;
 extern template class TRandomGen<ROOT::Math::MixMaxEngine<17,1>>;
+
+extern template class TRandomGen<ROOT::Math::RanluxppEngine2048>;
 
 extern template class  TRandomGen<ROOT::Math::StdEngine<std::mt19937_64> >;
 extern template class  TRandomGen<ROOT::Math::StdEngine<std::ranlux48> >;
@@ -125,6 +128,9 @@ typedef TRandomGen<ROOT::Math::MixMaxEngine<17,0>> TRandomMixMax17;
   
  */
 typedef TRandomGen<ROOT::Math::MixMaxEngine<256,2>> TRandomMixMax256;
+
+typedef TRandomGen<ROOT::Math::RanluxppEngine2048> TRandomRanluxpp;
+
 /**
   @ingroup Random
   Generator based on a the Mersenne-Twister generator with 64 bits, 
