@@ -1744,7 +1744,7 @@ bool ROOT::TMetaUtils::ExtractAttrIntPropertyFromName(const clang::Decl& decl,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// FIXME: a function of ~300 lines!
+/// FIXME: a function of 450+ lines!
 
 void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
                                       const AnnotatedRecordDecl &cl,
@@ -2030,7 +2030,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
             methodTCP="Insert";
             break;
       }
-      // FIXME Workaround: for the moment we do not generate coll proxies with unique ptrs sincelast
+      // FIXME Workaround: for the moment we do not generate coll proxies with unique ptrs since
       // they imply copies and therefore do not compile.
       auto classNameForIO = TClassEdit::GetNameForIO(classname);
       finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO.c_str() << " >()));" << "\n";
@@ -2039,7 +2039,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    }
 
    //---------------------------------------------------------------------------
-   // Register Altenate spelling of the class name.
+   // Register Alternate spelling of the class name.
    /////////////////////////////////////////////////////////////////////////////
 
    if (cl.GetRequestedName()[0] && classname != cl.GetRequestedName()) {
