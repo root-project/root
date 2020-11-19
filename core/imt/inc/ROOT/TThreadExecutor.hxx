@@ -90,7 +90,7 @@ namespace ROOT {
 
       unsigned GetPoolSize() const;
 
-   protected:
+   private:
       // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
       //
       template<class F, class Cond = noReferenceCond<F>>
@@ -115,7 +115,6 @@ namespace ROOT {
       template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
       auto Map(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
 
-   private:
       // Functions that interface with the parallel library used as a backend
       void   ParallelFor(unsigned start, unsigned end, unsigned step, const std::function<void(unsigned int i)> &f);
       double ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc);

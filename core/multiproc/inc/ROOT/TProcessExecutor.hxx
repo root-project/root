@@ -72,7 +72,7 @@ public:
    /// \return The number of workers in the pool.
    unsigned GetPoolSize() const { return TMPClient::GetNWorkers(); }
 
-protected:
+private:
    // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
    //
    template<class F, class Cond = noReferenceCond<F>>
@@ -84,7 +84,6 @@ protected:
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    auto MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
 
-private:
    template<class T> void Collect(std::vector<T> &reslist);
    template<class T> void HandlePoolCode(MPCodeBufPair &msg, TSocket *sender, std::vector<T> &reslist);
 

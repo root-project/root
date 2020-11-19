@@ -156,7 +156,7 @@ public:
 
 unsigned GetPoolSize() const;
 
-protected:
+private:
    // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
    //
    template<class F, class Cond = noReferenceCond<F>>
@@ -181,7 +181,6 @@ protected:
    template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
 
-private:
    ROOT::Internal::ExecutionPolicy fExecPolicy;
 #ifdef R__USE_IMT
    std::unique_ptr<ROOT::TThreadExecutor> fThreadExecutor;
