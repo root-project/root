@@ -240,8 +240,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.FinishPave = func.bind(this);
    }
 
+   /** @summary Draw pave and content */
    TPavePainter.prototype.DrawPave = function(arg) {
-      // this draw only basic TPave
 
       this.UseTextColor = false;
 
@@ -374,12 +374,17 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           .call(this.fillatt.func)
           .call(this.lineatt.func);
 
-      if ('PaveDrawFunc' in this)
-         this.PaveDrawFunc(width, height, arg);
+
+      let promise;
+
+      if (typeof this.PaveDrawFunc == 'function')
+         promise = this.PaveDrawFunc(width, height, arg);
 
       if (JSROOT.BatchMode || (pt._typename=="TPave")) return;
 
-      JSROOT.require(['interactive']).then(inter => {
+      if (!promise || !promise.then) promise = Promise.resolve(true);
+
+      promise.then(() => JSROOT.require(['interactive'])).then(inter => {
 
          // here all kind of interactive settings
          rect.style("pointer-events", "visibleFill")
@@ -397,6 +402,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
          if (this.UseContextMenu && JSROOT.settings.ContextMenu)
              this.draw_g.on("contextmenu", this.PaveContextMenu.bind(this));
+
+         if (pt._typename == "TPaletteAxis") {
+            this.InteractivePaletteAxis(width, height);
+         }
       });
    }
 
@@ -903,21 +912,30 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.z_handle.max_tick_size = Math.round(s_width*0.7);
 
       this.FirstRun++;
-      this.z_handle.DrawAxis(this.draw_g, s_width, s_height, "translate(" + s_width + ", 0)").then(this.FinishPave);
 
-      if (can_move && ('getBoundingClientRect' in this.draw_g.node())) {
-         let rect = this.draw_g.node().getBoundingClientRect();
+      return this.z_handle.DrawAxis(this.draw_g, s_width, s_height, "translate(" + s_width + ", 0)").then(() => {
 
-         let shift = (pos_x + parseInt(rect.width)) - Math.round(0.995*width) + 3;
+         if (this.FinishPave) this.FinishPave();
 
-         if (shift > 0) {
-            this.draw_g.attr("x", pos_x - shift).attr("y", pos_y)
-                       .attr("transform", "translate(" + (pos_x-shift) + ", " + pos_y + ")");
-            palette.fX1NDC -= shift/width;
-            palette.fX2NDC -= shift/width;
+         if (can_move && ('getBoundingClientRect' in this.draw_g.node())) {
+            let rect = this.draw_g.node().getBoundingClientRect();
+
+            let shift = (pos_x + parseInt(rect.width)) - Math.round(0.995*width) + 3;
+
+            if (shift > 0) {
+               this.draw_g.attr("x", pos_x - shift).attr("y", pos_y)
+                          .attr("transform", "translate(" + (pos_x-shift) + ", " + pos_y + ")");
+               palette.fX1NDC -= shift/width;
+               palette.fX2NDC -= shift/width;
+            }
          }
-      }
 
+         return true;
+      });
+   }
+
+   /** @summary Add interactive methods for palette drawoing */
+   TPavePainter.prototype.InteractivePaletteAxis = function(s_width, s_height) {
       let doing_zoom = false, sel1 = 0, sel2 = 0, zoom_rect = null;
 
       let moveRectSel = evnt => {
@@ -974,11 +992,22 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }
 
       if (JSROOT.settings.Zooming)
-         this.draw_g.select(".axis_zoom")
+         this.draw_g.selectAll(".axis_zoom")
                     .on("mousedown", startRectSel)
                     .on("dblclick", () => this.frame_painter().Unzoom("z"));
+
+      if (JSROOT.settings.ZoomWheel)
+            this.draw_g.on("wheel", evnt => {
+               let pos = d3.pointer(evnt, this.draw_g.node()),
+                   coord = 1 - pos[1] / s_height;
+
+               let item = this.z_handle.analyzeWheelEvent(evnt, coord);
+               if (item.changed)
+                  this.frame_painter().Zoom("z", item.min, item.max);
+            });
    }
 
+   /** @summary Fill context menu for the TPave object */
    TPavePainter.prototype.FillContextMenu = function(menu) {
       let pave = this.GetObject();
 
@@ -1097,13 +1126,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       evnt.stopPropagation(); // disable main context menu
       evnt.preventDefault();  // disable browser context menu
 
-      JSROOT.require('interactive')
-            .then(() => jsrp.createMenu(this, evnt))
-            .then(menu =>
-         {
-            this.FillContextMenu(menu);
-            this.FillObjectExecMenu(menu, "title", () => menu.show());
-         });
+      jsrp.createMenu(this, evnt).then(menu => {
+         this.FillContextMenu(menu);
+         this.FillObjectExecMenu(menu, "title", () => menu.show());
+      });
    }
 
    TPavePainter.prototype.IsStats = function() {
@@ -1316,8 +1342,6 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          painter.UseContextMenu = true;
       }
 
-      // console.log('drawing ', pave._typename);
-
       switch (pave._typename) {
          case "TPaveLabel":
             painter.PaveDrawFunc = painter.DrawPaveLabel;
@@ -1342,8 +1366,6 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       painter.DrawPave(opt);
 
       painter.FinishPave(); // at least once finish pave must be called, it will invoke ready state
-
-      //console.log('Done drawing ', pave._typename);
 
       return painter;
    }
