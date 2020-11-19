@@ -197,9 +197,9 @@ private:
 
    /// \brief Helper class to get the correct return type from the Map function,
    /// necessary to infer the ResolveExecutorAndMap function type
-   template<class F, class T>
+   template<class F, class CONTAINER>
    struct MapRetType {
-      using type = typename std::result_of<F(typename T::value_type)>::type;
+      using type = typename std::result_of<F(typename CONTAINER::value_type)>::type;
    };
 
    template<class F>
