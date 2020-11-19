@@ -62,7 +62,7 @@ namespace ROOT {
       /// \return The number of workers in the pool, one.
       unsigned GetPoolSize() const { return 1u; }
 
-   protected:
+   private:
        // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
       //
       template<class F, class Cond = noReferenceCond<F>>
