@@ -29,12 +29,24 @@ string(REGEX REPLACE "^([0-9]+).*$" "\\1" CXX_MAJOR ${CMAKE_CXX_COMPILER_VERSION
 string(REGEX REPLACE "^([0-9]+)\\.([0-9]+).*$" "\\2" CXX_MINOR ${CMAKE_CXX_COMPILER_VERSION})
 
 #---Resource Files-----------------------------------------------------------------------------------
-configure_file(README.md README.md COPYONLY)
 configure_file(LICENSE LICENSE.txt COPYONLY)
 configure_file(LGPL2_1.txt LGPL2_1.txt COPYONLY)
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/LICENSE.txt")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.md")
+if (APPLE)
+  # Apple productbuild cannot handle .md files as CPACK_PACKAGE_DESCRIPTION_FILE;
+  # convert to HTML instead.
+  find_program(CONVERTER textutil)
+  if (NOT CONVERTER)
+    message(FATAL_ERROR "textutil executable not found")
+  endif()
+  execute_process(COMMAND ${CONVERTER} -convert html "${CMAKE_SOURCE_DIR}/README.md" -output "${CMAKE_BINARY_DIR}/README.html")
+  set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.html")
+  set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.html")
+else()
+  configure_file(README.md README.md COPYONLY)
+  set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.md")
+  set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.md")
+endif()
 
 #---Source package settings--------------------------------------------------------------------------
 set(CPACK_SOURCE_IGNORE_FILES
@@ -125,15 +137,6 @@ else()
   set(CPACK_GENERATOR "TGZ")
   set(CPACK_SOURCE_GENERATOR "TGZ;TBZ2")
 endif()
-
-#----------------------------------------------------------------------------------------------------
-# Execute pre packaging script
-#
-# We want to defer markdown to html conversion; CPACK_INSTALL_SCRIPTS allows this
-# but only takes a .cmake file as argument
-#
-configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CPackREADME.cmake.in ${CMAKE_BINARY_DIR}/CPackREADME.cmake @ONLY)
-set(CPACK_INSTALL_SCRIPTS ${CMAKE_BINARY_DIR}/CPackREADME.cmake)
 
 #----------------------------------------------------------------------------------------------------
 # Finally, generate the CPack per-generator options file and include the
