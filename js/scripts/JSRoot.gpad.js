@@ -946,6 +946,74 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return this.DrawAxis(this.draw_g, Math.abs(w), Math.abs(h), "translate(" + x1 + "," + y2 +")");
    }
 
+   /** @summary Method analyze mouse wheel event and returns item with suggested zooming range */
+   TAxisPainter.prototype.analyzeWheelEvent = function(evnt, dmin, item, test_ignore) {
+      if (!item) item = {};
+
+      let delta = 0, delta_left = 1, delta_right = 1;
+
+      if ('dleft' in item) { delta_left = item.dleft; delta = 1; }
+      if ('dright' in item) { delta_right = item.dright; delta = 1; }
+
+      if (item.delta) {
+         delta = item.delta;
+      } else if (evnt) {
+         delta = evnt.wheelDelta ? -evnt.wheelDelta : (evnt.deltaY || evnt.detail);
+      }
+
+      if (!delta || (test_ignore && item.ignore)) return;
+
+      delta = (delta < 0) ? -0.2 : 0.2;
+      delta_left *= delta
+      delta_right *= delta;
+
+      let lmin = item.min = this.scale_min,
+          lmax = item.max = this.scale_max,
+          gmin = this.full_min,
+          gmax = this.full_max;
+
+      if ((item.min === item.max) && (delta < 0)) {
+         item.min = gmin;
+         item.max = gmax;
+      }
+
+      if (item.min >= item.max) return;
+
+      if (item.reverse) dmin = 1 - dmin;
+
+      if ((dmin>0) && (dmin<1)) {
+         if (this.log) {
+            let factor = (item.min>0) ? Math.log10(item.max/item.min) : 2;
+            if (factor>10) factor = 10; else if (factor<0.01) factor = 0.01;
+            item.min = item.min / Math.pow(10, factor*delta_left*dmin);
+            item.max = item.max * Math.pow(10, factor*delta_right*(1-dmin));
+         } else {
+            let rx_left = (item.max - item.min), rx_right = rx_left;
+            if (delta_left>0) rx_left = 1.001 * rx_left / (1-delta_left);
+            item.min += -delta_left*dmin*rx_left;
+            if (delta_right>0) rx_right = 1.001 * rx_right / (1-delta_right);
+
+            item.max -= -delta_right*(1-dmin)*rx_right;
+         }
+         if (item.min >= item.max) {
+               item.min = item.max = undefined;
+          } else if (delta_left !== delta_right) {
+               // extra check case when moving left or right
+               if (((item.min < gmin) && (lmin===gmin)) ||
+                   ((item.max > gmax) && (lmax==gmax)))
+                      item.min = item.max = undefined;
+          }
+
+      } else {
+         item.min = item.max = undefined;
+      }
+
+      item.changed = ((item.min !== undefined) && (item.max !== undefined));
+
+      return item;
+   }
+
+
    let drawGaxis = (divid, obj /*, opt*/) => {
       let painter = new TAxisPainter(obj, false);
 

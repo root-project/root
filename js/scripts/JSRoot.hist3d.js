@@ -143,6 +143,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       let axis_painter = this, obj_painter = this.main_painter();
 
       this.control.ProcessMouseMove = function(intersects) {
+
          let tip = null, mesh = null, zoom_mesh = null;
 
          for (let i = 0; i < intersects.length; ++i) {

@@ -393,6 +393,11 @@
     fill-opacity: 0.1;
 }
 
+.jsroot path.zoom {
+    stroke: steelblue;
+    fill-opacity: 0.1;
+}
+
 .jsroot svg:not(:root) {
     overflow: hidden;
 }

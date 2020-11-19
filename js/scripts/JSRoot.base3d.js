@@ -524,21 +524,91 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
    }
 
 
-   /** @summary Create OrbitControl for painter */
+   /** @summary Create THREE.OrbitControl for painter */
    jsrp.CreateOrbitControl = function(painter, camera, scene, renderer, lookat) {
 
       if (JSROOT.settings.Zooming && JSROOT.settings.ZoomWheel)
          renderer.domElement.addEventListener( 'wheel', control_mousewheel);
 
       let enable_zoom = JSROOT.settings.Zooming && JSROOT.settings.ZoomMouse,
-          enable_select = typeof painter.ProcessMouseClick == "function";
+          enable_select = (typeof painter.ProcessMouseClick == "function"),
+          control = null;
 
-      if (enable_zoom || enable_select) {
-         renderer.domElement.addEventListener( 'mousedown', control_mousedown);
-         renderer.domElement.addEventListener( 'mouseup', control_mouseup);
+      function control_mousedown(evnt) {
+
+         // function used to hide some events from orbit control and redirect them to zooming rect
+         if (control.mouse_zoom_mesh) {
+            evnt.stopImmediatePropagation();
+            evnt.stopPropagation();
+            return;
+         }
+
+         // only left-button is considered
+         if ((evnt.button!==undefined) && (evnt.button !==0)) return;
+         if ((evnt.buttons!==undefined) && (evnt.buttons !== 1)) return;
+
+         if (control.enable_zoom) {
+            control.mouse_zoom_mesh = control.DetectZoomMesh(evnt);
+            if (control.mouse_zoom_mesh) {
+               // just block orbit control
+               evnt.stopImmediatePropagation();
+               evnt.stopPropagation();
+               return;
+            }
+         }
+
+         if (control.enable_select)
+            control.mouse_select_pnt = control.GetMousePos(evnt, {});
       }
 
-      let control = new THREE.OrbitControls(camera, renderer.domElement);
+      function control_mouseup(evnt) {
+
+         if (control.mouse_zoom_mesh && control.mouse_zoom_mesh.point2 && control.painter.Get3DZoomCoord) {
+
+            let kind = control.mouse_zoom_mesh.object.zoom,
+                pos1 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point, kind),
+                pos2 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point2, kind);
+
+            if (pos1>pos2) { let v = pos1; pos1 = pos2; pos2 = v; }
+
+            if ((kind==="z") && control.mouse_zoom_mesh.object.use_y_for_z) kind="y";
+
+            if ((kind==="z") && control.mouse_zoom_mesh.object.use_y_for_z) kind="y";
+
+            // try to zoom
+            if (pos1 < pos2)
+              if (control.painter.Zoom(kind, pos1, pos2))
+                 control.mouse_zoom_mesh = null;
+         }
+
+         // if selection was drawn, it should be removed and picture rendered again
+         if (control.enable_zoom)
+            control.RemoveZoomMesh();
+
+         // only left-button is considered
+         //if ((evnt.button!==undefined) && (evnt.button !==0)) return;
+         //if ((evnt.buttons!==undefined) && (evnt.buttons !== 1)) return;
+
+         if (control.enable_select && control.mouse_select_pnt) {
+
+            let pnt = control.GetMousePos(evnt, {});
+
+            let same_pnt = (pnt.x == control.mouse_select_pnt.x) && (pnt.y == control.mouse_select_pnt.y);
+            delete control.mouse_select_pnt;
+
+            if (same_pnt) {
+               let intersects = control.GetMouseIntersects(pnt);
+               control.painter.ProcessMouseClick(pnt, intersects, evnt);
+            }
+         }
+      }
+
+      if (enable_zoom || enable_select) {
+         renderer.domElement.addEventListener( 'pointerdown', control_mousedown);
+         renderer.domElement.addEventListener( 'pointerup', control_mouseup);
+      }
+
+      control = new THREE.OrbitControls(camera, renderer.domElement);
 
       control.enableDamping = false;
       control.dampingFactor = 1.0;
@@ -846,80 +916,9 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
             control.painter.AnalyzeMouseWheelEvent(evnt, item, position, false);
 
-            if ((kind==="z") && intersect.object.use_y_for_z) kind="y";
+            if ((kind==="z") && intersect.object.use_y_for_z) kind = "y";
 
             control.painter.Zoom(kind, item.min, item.max);
-         }
-      }
-
-      function control_mousedown(evnt) {
-
-         // function used to hide some events from orbit control and redirect them to zooming rect
-
-         if (control.mouse_zoom_mesh) {
-            evnt.stopImmediatePropagation();
-            evnt.stopPropagation();
-            return;
-         }
-
-         // only left-button is considered
-         if ((evnt.button!==undefined) && (evnt.button !==0)) return;
-         if ((evnt.buttons!==undefined) && (evnt.buttons !== 1)) return;
-
-         if (control.enable_zoom) {
-            control.mouse_zoom_mesh = control.DetectZoomMesh(evnt);
-            if (control.mouse_zoom_mesh) {
-               // just block orbit control
-               evnt.stopImmediatePropagation();
-               evnt.stopPropagation();
-               return;
-            }
-         }
-
-         if (control.enable_select) {
-            control.mouse_select_pnt = control.GetMousePos(evnt, {});
-         }
-      }
-
-      function control_mouseup(evnt) {
-
-         if (control.mouse_zoom_mesh && control.mouse_zoom_mesh.point2 && control.painter.Get3DZoomCoord) {
-
-            let kind = control.mouse_zoom_mesh.object.zoom,
-                pos1 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point, kind),
-                pos2 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point2, kind);
-
-            if (pos1>pos2) { let v = pos1; pos1 = pos2; pos2 = v; }
-
-            if ((kind==="z") && control.mouse_zoom_mesh.object.use_y_for_z) kind="y";
-
-            if ((kind==="z") && control.mouse_zoom_mesh.object.use_y_for_z) kind="y";
-
-            // try to zoom
-            if (pos1 < pos2)
-              if (control.painter.Zoom(kind, pos1, pos2))
-                 control.mouse_zoom_mesh = null;
-         }
-
-         // if selection was drawn, it should be removed and picture rendered again
-         if (control.enable_zoom)
-            control.RemoveZoomMesh();
-
-         // only left-button is considered
-         //if ((evnt.button!==undefined) && (evnt.button !==0)) return;
-         //if ((evnt.buttons!==undefined) && (evnt.buttons !== 1)) return;
-
-         if (control.enable_select && control.mouse_select_pnt) {
-
-            let pnt = control.GetMousePos(evnt, {});
-
-            let same_pnt = (pnt.x == control.mouse_select_pnt.x) && (pnt.y == control.mouse_select_pnt.y);
-            delete control.mouse_select_pnt;
-
-            if (same_pnt) {
-               let intersects = control.GetMouseIntersects(pnt);
-               control.painter.ProcessMouseClick(pnt, intersects, evnt);
-            }
          }
       }
 

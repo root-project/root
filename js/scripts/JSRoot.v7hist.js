@@ -495,7 +495,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return tip;
    }
 
-   /** Create contour levels for currently selected Z range
+   /** @summary Create contour levels for currently selected Z range
      * @private */
    RHistPainter.prototype.CreateContour = function(main, palette, args) {
       if (!main || !palette) return;
@@ -546,6 +546,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          pmain.Zoom(arg, res[0], res[1]);
    }
 
+   /** @summary Fill histogram context menu
+     * @private */
    RHistPainter.prototype.FillContextMenu = function(menu) {
 
       menu.add("header:v7histo::anyname");
@@ -699,7 +701,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.InteractiveRedraw("pad", "drawopt");
    }
 
-   /** Calculate histogram inidicies and axes values for each visible bin */
+   /** @summary Calculate histogram inidicies and axes values for each visible bin */
    RHistPainter.prototype.PrepareDraw = function(args) {
 
       if (!args) args = { rounding: true, extra: 0, middle: 0 };
