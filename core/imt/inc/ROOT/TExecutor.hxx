@@ -35,10 +35,9 @@
 //////////////////////////////////////////////////////////////////////////
 ///
 /// \class ROOT::Internal::TExecutor
-/// \brief This class defines an interface to execute the same task
+/// \brief This class implements the interface to execute the same task
 /// multiple times, sequentially or in parallel depending on the execution policy passed
 /// as a first parameter on construction, and possibly with different arguments every time.
-/// The classes implementing it mimic the behaviour of python's pool.Map method.
 ///
 /// ###ROOT::Internal::TExecutor::Map
 /// The two possible usages of the Map method are:\n
@@ -46,7 +45,7 @@
 /// * `Map(F func, T& args)`: func is executed on each element of the collection of arguments args
 ///
 /// For either signature, func is executed as many times as needed by a pool of
-/// nThreads threads; It defaults to the number of cores.\n
+/// n workers; where n tipically defaults to the number of cores.\n
 /// A collection containing the result of each execution is returned.\n
 /// **Note:** the user is responsible for the deletion of any object that might
 /// be created upon execution of func, returned objects included. ROOT::::Internal::TExecutor never
@@ -54,8 +53,8 @@
 ///
 /// \param func
 /// \parblock
-/// a lambda expression, an std::function, a loaded macro, a
-/// functor class or a function that takes zero arguments (for the first signature)
+/// a callable object, such as a lambda expression, an std::function, a
+/// functor object or a function that takes zero arguments (for the first signature)
 /// or one (for the second signature).
 /// \endparblock
 /// \param args
@@ -76,12 +75,12 @@
 /// This set of methods behaves exactly like Map, but takes an additional
 /// function as a third argument. This function is applied to the set of
 /// objects returned by the corresponding Map execution to "squash" them
-/// to a single object. This function should be independent of the size of
+/// into a single object. This function should be independent of the size of
 /// the vector returned by Map due to optimization of the number of chunks.
 ///
 /// #### Examples:
 /// ~~~{.cpp}
-/// root[] ROOT::Internal::TExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](std::vector<int> v) { return std::accumulate(v.begin(), v.end(), 0); })
+/// root[] ROOT::Internal::TExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](const std::vector<int> &v) { return std::accumulate(v.begin(), v.end(), 0); })
 /// root[] ROOT::Internal::TExecutor pool(ROOT::Internal::ExecutionPolicy::kMultiProcess); auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
 /// ~~~
 ///
@@ -100,13 +99,13 @@ public:
 
    /// \brief Class constructor. Sets the default execution policy and initializes the corresponding executor.
    /// Defaults to multithreaded execution policy if ROOT is compiled with IMT=ON and IsImplicitMTEnabled. Otherwise it defaults to a serial execution policy
-   /// \param nWorkers [optional] Number of parallel workers, only taken into account if the execution policy is kMultithread
+   /// \param nWorkers [optional] Number of parallel workers, only taken into account if the execution policy is kMultiThread
    explicit TExecutor(unsigned nWorkers = 0) :
       TExecutor(ROOT::IsImplicitMTEnabled() ? ROOT::Internal::ExecutionPolicy::kMultiThread : ROOT::Internal::ExecutionPolicy::kSequential, nWorkers) {}
 
    /// \brief Class constructor. Sets the execution policy and initializes the corresponding executor.
-   /// \param execPolicy Execution policy(kMultithread, kMultiprocess, kSerial) to process the data
-   /// \param nWorkers [optional] Number of parallel workers, only taken into account if the execution policy is kMultithread
+   /// \param execPolicy Execution policy(kMultiThread, kMultiprocess, kSerial) to process the data
+   /// \param nWorkers [optional] Number of parallel workers, only taken into account if the execution policy is kMultiThread
    explicit TExecutor(ROOT::Internal::ExecutionPolicy execPolicy, unsigned nWorkers = 0) : fExecPolicy(execPolicy) {
       fExecPolicy = execPolicy;
       switch(fExecPolicy) {
@@ -125,7 +124,7 @@ public:
 #endif
          default:
             throw std::invalid_argument(
-               "Invalid execution policy. Potential issues: * kMultithread policy not available when ROOT is compiled with IMT=OFF.\n * kMultiprocess policy not available in Windows");
+               "Invalid execution policy. Potential issues:\n* kMultiThread policy not available when ROOT is compiled with IMT=OFF.\n* kMultiprocess policy not available on Windows");
       }
    }
 
@@ -159,7 +158,7 @@ public:
    //
    using TExecutorCRTP<TExecutor>::Reduce;
 
-unsigned GetPoolSize() const;
+   unsigned GetPoolSize() const;
 
 private:
    // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
@@ -256,8 +255,8 @@ auto TExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typenam
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Execute func (with no arguments) nTimes, dividing the execution in nChunks and providing a result per chunk if
-/// the execution policy is multithreaded. Otherwise, it ignores the two last arguments and performs a normal Map operation.
+/// \brief Execute func (with no arguments) nTimes, dividing the execution in nChunks and providing a result per chunk <b>if
+/// the execution policy is multithreaded. Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
 ///
 /// \param func Function to be executed.
 /// \param nTimes Number of times function should be called.
@@ -293,8 +292,8 @@ auto TExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<typen
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Execute a function over a sequence of indexes, dividing the execution in nChunks and providing a result per chunk if
-/// the execution policy is multithreaded. Otherwise, it ignores the two last arguments and performs a normal Map operation.
+/// \brief Execute a function over a sequence of indexes, dividing the execution in nChunks and providing a result per chunk <b>if
+/// the execution policy is multithreaded. Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Sequence of indexes to execute `func` on.
@@ -312,8 +311,8 @@ auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunk
 
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Execute a function over the elements of a vector, dividing the execution in nChunks and providing a result per chunk if
-/// the execution policy is multithreaded. Otherwise, it ignores the two last arguments and performs a normal Map operation.
+/// \brief Execute a function over the elements of a vector, dividing the execution in nChunks and providing a result per chunk <b>if
+/// the execution policy is multithreaded. Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
 ///
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Vector of elements passed as an argument to `func`.
@@ -329,8 +328,8 @@ auto TExecutor::Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Execute a function over the elements of an immutable vector, dividing the execution in nChunks and providing a result per chunk if
-/// the execution policy is multithreaded. Otherwise, it ignores the two last arguments and performs a normal Map operation.
+/// \brief Execute a function over the elements of an immutable vector, dividing the execution in nChunks and providing a result per chunk <b>if
+/// the execution policy is multithreaded. Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
 ///
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Immutable vector of elements passed as an argument to `func`.
@@ -346,8 +345,8 @@ auto TExecutor::Map(F func, const std::vector<T> &args, R redfunc, unsigned nChu
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Execute a function over the elements of an initializer_list, dividing the execution in nChunks and providing a result per chunk if
-/// the execution policy is multithreaded. Otherwise, it ignores the two last arguments and performs a normal Map operation.
+/// \brief Execute a function over the elements of an initializer_list, dividing the execution in nChunks and providing a result per chunk <b>if
+/// the execution policy is multithreaded. Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
 ///
 /// \param func Function to be executed on the elements of the initializer_list passed as second parameter.
 /// \param args initializer_list for a vector to apply `func` on.
@@ -365,7 +364,7 @@ auto TExecutor::Map(F func, std::initializer_list<T> args, R redfunc, unsigned n
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function `nTimes` (Map) and accumulate the results into a single value (Reduce).
 /// Benefits from partial reduction into `nChunks` intermediate results if the execution policy is multithreaded.
-/// Otherwise, it ignores the two last arguments and performs a normal Map operation.
+/// Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed as second argument as a parameter.
 /// \param nTimes Number of times function should be called.
@@ -381,7 +380,7 @@ auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) 
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over a sequence of indexes (Map) and accumulate the results into a single value (Reduce).
 /// Benefits from partial reduction into `nChunks` intermediate results if the execution policy is multithreaded.
-/// Otherwise, it ignores the two last arguments and performs a normal Map operation.
+/// Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Sequence of indexes to execute `func` on.
@@ -397,7 +396,7 @@ auto TExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned 
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over the elements of an initializer_list (Map) and accumulate the results into a single value (Reduce).
 /// Benefits from partial reduction into `nChunks` intermediate results if the execution policy is multithreaded.
-/// Otherwise, it ignores the two last arguments and performs a normal Map operation.
+/// Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args initializer_list for a vector to apply `func` on.
@@ -413,7 +412,7 @@ auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsi
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over the elements of a vector (Map) and accumulate the results into a single value (Reduce).
 /// Benefits from partial reduction into `nChunks` intermediate results if the execution policy is multithreaded.
-/// Otherwise, it ignores the two last arguments and performs a normal Map operation.
+/// Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Vector of elements passed as an argument to `func`.
@@ -429,7 +428,7 @@ auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChu
 //////////////////////////////////////////////////////////////////////////
 /// \brief Execute a function over the elements of an immutable vector (Map) and accumulate the results into a single value (Reduce).
 /// Benefits from partial reduction into `nChunks` intermediate results if the execution policy is multithreaded.
-/// Otherwise, it ignores the two last arguments and performs a normal Map operation.
+/// Otherwise, it ignores the two last arguments</b> and performs a normal Map operation.
 ///
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Immutable vector, whose elements are passed as an argument to `func`.
