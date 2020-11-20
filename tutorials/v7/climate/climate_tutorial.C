@@ -242,7 +242,7 @@ void Analyze() {
 void tutorial() {
    ROOT::EnableImplicitMT();
    //if NOT zero (the file does NOT already exist), then Ingest
-   if (gSystem->AccessPathName(kNTupleFileName)){
+   if (gSystem->AccessPathName(kNTupleFileName) != 0) {
       Ingest();
    }
    Analyze();
