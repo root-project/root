@@ -59,7 +59,7 @@ void draw_axes()
    draw7->SetMinMax(1, 100).AttrAxis().SetLog(10).SetTitle("log10 scale").SetTitleCenter().TitleAttr().SetFont(12).SetColor(RColor::kGreen);
 
    auto draw8 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.7_normal), false, w2);
-   draw8->SetMinMax(0.125, 128.001).AttrAxis().SetLog(2).SetTitle("log2 scale").SetTitleCenter();
+   draw8->SetMinMax(0.125, 128).AttrAxis().SetLog(2).SetTitle("log2 scale").SetTitleCenter();
 
    auto draw9 = canvas->Draw<RAxisDrawable>(RPadPos(x2, 0.5_normal), false, w2);
    draw9->SetMinMax(1, 100).AttrAxis().SetLog(2.7182).SetTitle("ln scale").SetTitleCenter();
