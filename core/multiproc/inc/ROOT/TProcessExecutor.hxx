@@ -66,7 +66,7 @@ public:
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
 
    /// \deprecated Use GetPoolSize()
-   unsigned GetNWorkers() const _R__DEPRECATED_626("Using GetPoolSize to unify the Executor's interfaces") { return TMPClient::GetNWorkers(); }
+   unsigned GetNWorkers() const _R__DEPRECATED_626("Please use GetPoolSize instead") { return TMPClient::GetNWorkers(); }
 
    //////////////////////////////////////////////////////////////////////////
    /// \brief Return the number of pooled parallel workers.
