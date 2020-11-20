@@ -622,6 +622,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return true;
    }
 
+   /** @summary Update palette drawing */
    RHistPainter.prototype.UpdatePaletteDraw = function() {
       if (this.is_main_painter()) {
          let pp = this.FindPainterFor(undefined, undefined, "ROOT::Experimental::RPaletteDrawable");
@@ -629,6 +630,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Fill palette menu */
    RHistPainter.prototype.FillPaletteMenu = function(menu) {
 
       // TODO: rewrite for RPalette functionality
@@ -2230,6 +2232,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return true;
    }
 
+   /** @summary Draw histogram bins as color */
    RH2Painter.prototype.DrawBinsColor = function() {
       let histo = this.GetHisto(),
           handle = this.PrepareDraw(),
