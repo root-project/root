@@ -487,16 +487,22 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       // this.TestAxisVisibility = HPainter_TestAxisVisibility;
 
       this.x_handle = new JSROOT.v7.RAxisPainter(this, this.xaxis, "x_");
+      this.x_handle.SetDivId(this.divid, -1);
+      this.x_handle.snapid = this.snapid;
       this.x_handle.ConfigureAxis("xaxis", this.xmin, this.xmax, xmin, xmax, false, [grminx, grmaxx]);
       this.x_handle.AssignFrameMembers(this,"x");
 
       this.y_handle = new JSROOT.v7.RAxisPainter(this, this.yaxis, "y_");
+      this.y_handle.SetDivId(this.divid, -1);
+      this.y_handle.snapid = this.snapid;
       this.y_handle.ConfigureAxis("yaxis", this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy]);
       this.y_handle.AssignFrameMembers(this,"y");
 
       // this.SetRootPadRange(pad, true); // set some coordinates typical for 3D projections in ROOT
 
       this.z_handle = new JSROOT.v7.RAxisPainter(this, this.zaxis, "z_");
+      this.z_handle.SetDivId(this.divid, -1);
+      this.z_handle.snapid = this.snapid;
       this.z_handle.ConfigureAxis("zaxis", this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz]);
       this.z_handle.AssignFrameMembers(this,"z");
 

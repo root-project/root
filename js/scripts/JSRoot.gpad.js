@@ -23,45 +23,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
     */
 
    function TAxisPainter(axis, embedded) {
-      JSROOT.ObjectPainter.call(this, axis);
+      JSROOT.AxisBasePainter.call(this, axis);
 
       this.embedded = embedded; // indicate that painter embedded into the histo painter
-
-      this.name = "yaxis";
-      this.kind = "normal";
-      this.func = null;
-      this.order = 0; // scaling order for axis labels
-
-      this.full_min = 0;
-      this.full_max = 1;
-      this.scale_min = 0;
-      this.scale_max = 1;
-      this.ticks = []; // list of major ticks
       this.invert_side = false;
       this.lbls_both_sides = false; // draw labels on both sides
    }
 
-   TAxisPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
+   TAxisPainter.prototype = Object.create(JSROOT.AxisBasePainter.prototype);
 
-   TAxisPainter.prototype.Cleanup = function() {
-
-      this.ticks = [];
-      delete this.func;
-      delete this.format;
-      delete this.gr;
-
-      JSROOT.ObjectPainter.prototype.Cleanup.call(this);
-   }
-
-   TAxisPainter.prototype.ConvertDate = function(v) {
-      return new Date(this.timeoffset + v*1000);
-   }
-
-   /** @summary Convert graphical point back into axis value */
-   TAxisPainter.prototype.RevertPoint = function(pnt) {
-      let value = this.func.invert(pnt);
-      return (this.kind == "time") ?  (value - this.timeoffset) / 1000 : value;
-   }
+   /** @summary Use in GED to identify kind of axis */
+   TAxisPainter.prototype.GetAxisType = function() { return "TAxis"; }
 
    TAxisPainter.prototype.ConfigureAxis = function(name, min, max, smin, smax, vertical, range, opts) {
       this.name = name;
@@ -85,7 +57,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (this.kind == 'time') {
          this.func = d3.scaleTime().domain([this.ConvertDate(smin), this.ConvertDate(smax)]);
       } else if (this.log) {
-
+         this.logbase = this.log === 2 ? 2 : 10;
          if (smax <= 0) smax = 1;
 
          if ((smin <= 0) && axis && !opts.logcheckmin)
@@ -193,10 +165,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
-   TAxisPainter.prototype.formatTime = function(d, asticks) {
-       return asticks ? this.tfunc1(d) : this.tfunc2(d);
-   }
-
+   /** @summary Provide label for axis value */
    TAxisPainter.prototype.formatLabels = function(d) {
       let indx = parseFloat(d), a = this.GetObject();
       if (!this.regular_labels)
@@ -208,85 +177,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (tstr.fUniqueID === indx+1) return tstr.fString;
       }
       return null;
-   }
-
-   TAxisPainter.prototype.formatLog = function(d, asticks, fmt) {
-      let val = parseFloat(d), rnd = Math.round(val);
-      if (!asticks)
-         return ((rnd === val) && (Math.abs(rnd)<1e9)) ? rnd.toString() : JSROOT.FFormat(val, fmt || JSROOT.gStyle.fStatFormat);
-      if (val <= 0) return null;
-      let vlog = Math.log10(val), base = 10;
-      if (this.log == 2) { base = 2; vlog = vlog / Math.log10(2); }
-      if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog)) < 0.001)) {
-         if (!this.noexp && (asticks != 2))
-            return this.formatExp(base, Math.floor(vlog+0.01), val);
-
-         return (vlog < 0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
-      }
-      return null;
-   }
-
-   TAxisPainter.prototype.formatNormal = function(d, asticks, fmt) {
-      let val = parseFloat(d);
-      if (asticks && this.order) val = val / Math.pow(10, this.order);
-
-      if (val === Math.round(val))
-         return (Math.abs(val)<1e9) ? val.toFixed(0) : val.toExponential(4);
-
-      if (asticks) return (this.ndig>10) ? val.toExponential(this.ndig-11) : val.toFixed(this.ndig);
-
-      return JSROOT.FFormat(val, fmt || JSROOT.gStyle.fStatFormat);
-   }
-
-   /** @summary Assign often used members of frame painter
-     * @private */
-   TAxisPainter.prototype.AssignFrameMembers = function(fp, axis) {
-      fp["gr"+axis] = this.gr;                    // fp.grx
-      fp["log"+axis] = this.log;                  // fp.logx
-      fp["scale_"+axis+"min"] = this.scale_min;   // fp.scale_xmin
-      fp["scale_"+axis+"max"] = this.scale_max;   // fp.scale_xmax
-   }
-
-   TAxisPainter.prototype.formatExp = function(base, order, value) {
-      let res = "";
-      if (value) {
-         value = Math.round(value/Math.pow(base,order));
-         if ((value!=0) && (value!=1)) res = value.toString() + (JSROOT.settings.Latex ? "#times" : "x");
-      }
-      res += base.toString();
-      if (JSROOT.settings.Latex > JSROOT.constants.Latex.Symbols)
-         return res + "^{" + order + "}";
-      const superscript_symbols = {
-            '0': '\u2070', '1': '\xB9', '2': '\xB2', '3': '\xB3', '4': '\u2074', '5': '\u2075',
-            '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079', '-': '\u207B'
-         };
-      let str = order.toString();
-      for (let n = 0; n < str.length; ++n)
-         res += superscript_symbols[str[n]];
-      return res;
-   }
-
-
-   /** @summary Convert "raw" axis value into text */
-   TAxisPainter.prototype.AxisAsText = function(value, fmt) {
-      if (this.kind == 'time')
-         value = this.ConvertDate(value);
-      if (this.format)
-         return this.format(value, false, fmt);
-      return value.toPrecision(4);
-   }
-
-   TAxisPainter.prototype.ProduceTicks = function(ndiv, ndiv2) {
-      if (!this.noticksopt) {
-         let total = ndiv * (ndiv2 || 1);
-         return this.log ? jsrp.PoduceLogTicks(this.func, total) : this.func.ticks(total);
-      }
-
-      let dom = this.func.domain(), ticks = [];
-      if (ndiv2) ndiv = (ndiv-1) * ndiv2;
-      for (let n=0;n<=ndiv;++n)
-         ticks.push((dom[0]*(ndiv-n) + dom[1]*n)/ndiv);
-      return ticks;
    }
 
    /** @summary Creates array with minor/middle/major ticks */
@@ -314,7 +204,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       }
 
-      if ((this.nticks2 > 1) && (this.log != 2)) {
+      if ((this.nticks2 > 1) && (!this.log || (this.logbase === 10))) {
          handle.minor = handle.middle = this.ProduceTicks(handle.major.length, this.nticks2);
 
          let gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
@@ -945,74 +835,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       return this.DrawAxis(this.draw_g, Math.abs(w), Math.abs(h), "translate(" + x1 + "," + y2 +")");
    }
-
-   /** @summary Method analyze mouse wheel event and returns item with suggested zooming range */
-   TAxisPainter.prototype.analyzeWheelEvent = function(evnt, dmin, item, test_ignore) {
-      if (!item) item = {};
-
-      let delta = 0, delta_left = 1, delta_right = 1;
-
-      if ('dleft' in item) { delta_left = item.dleft; delta = 1; }
-      if ('dright' in item) { delta_right = item.dright; delta = 1; }
-
-      if (item.delta) {
-         delta = item.delta;
-      } else if (evnt) {
-         delta = evnt.wheelDelta ? -evnt.wheelDelta : (evnt.deltaY || evnt.detail);
-      }
-
-      if (!delta || (test_ignore && item.ignore)) return;
-
-      delta = (delta < 0) ? -0.2 : 0.2;
-      delta_left *= delta
-      delta_right *= delta;
-
-      let lmin = item.min = this.scale_min,
-          lmax = item.max = this.scale_max,
-          gmin = this.full_min,
-          gmax = this.full_max;
-
-      if ((item.min === item.max) && (delta < 0)) {
-         item.min = gmin;
-         item.max = gmax;
-      }
-
-      if (item.min >= item.max) return;
-
-      if (item.reverse) dmin = 1 - dmin;
-
-      if ((dmin>0) && (dmin<1)) {
-         if (this.log) {
-            let factor = (item.min>0) ? Math.log10(item.max/item.min) : 2;
-            if (factor>10) factor = 10; else if (factor<0.01) factor = 0.01;
-            item.min = item.min / Math.pow(10, factor*delta_left*dmin);
-            item.max = item.max * Math.pow(10, factor*delta_right*(1-dmin));
-         } else {
-            let rx_left = (item.max - item.min), rx_right = rx_left;
-            if (delta_left>0) rx_left = 1.001 * rx_left / (1-delta_left);
-            item.min += -delta_left*dmin*rx_left;
-            if (delta_right>0) rx_right = 1.001 * rx_right / (1-delta_right);
-
-            item.max -= -delta_right*(1-dmin)*rx_right;
-         }
-         if (item.min >= item.max) {
-               item.min = item.max = undefined;
-          } else if (delta_left !== delta_right) {
-               // extra check case when moving left or right
-               if (((item.min < gmin) && (lmin===gmin)) ||
-                   ((item.max > gmax) && (lmax==gmax)))
-                      item.min = item.max = undefined;
-          }
-
-      } else {
-         item.min = item.max = undefined;
-      }
-
-      item.changed = ((item.min !== undefined) && (item.max !== undefined));
-
-      return item;
-   }
-
 
    let drawGaxis = (divid, obj /*, opt*/) => {
       let painter = new TAxisPainter(obj, false);
