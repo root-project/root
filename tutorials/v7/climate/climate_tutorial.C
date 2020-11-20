@@ -239,7 +239,7 @@ void Analyze() {
    [](bool res) { std::cout << "Second Update done = " << (res ? "true" : "false") << std::endl; });
 }
 
-void tutorial() {
+void climate_tutorial() {
    ROOT::EnableImplicitMT();
    //if NOT zero (the file does NOT already exist), then Ingest
    if (gSystem->AccessPathName(kNTupleFileName) != 0) {
