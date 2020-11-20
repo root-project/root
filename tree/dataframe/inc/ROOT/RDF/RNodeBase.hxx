@@ -53,6 +53,7 @@ public:
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
    virtual void AddFilterName(std::vector<std::string> &filters) = 0;
+   // Helper function for SaveGraph
    virtual std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph() = 0;
 
    virtual void ResetChildrenCount()

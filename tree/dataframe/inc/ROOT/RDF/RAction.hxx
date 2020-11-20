@@ -136,9 +136,9 @@ public:
       auto prevNode = fPrevData.GetGraph();
       auto prevColumns = prevNode->GetDefinedColumns();
 
-      // Action nodes do not need to ask an helper to create the graph nodes. They are never common nodes between
-      // multiple branches
+      // Action nodes do not need to go through CreateFilterNode: they are never common nodes between multiple branches
       auto thisNode = std::make_shared<RDFGraphDrawing::GraphNode>(fHelper.GetActionName());
+
       auto evaluatedNode = thisNode;
       for (auto &column : GetDefines().GetColumns()) {
          /* Each column that this node has but the previous hadn't has been defined in between,
