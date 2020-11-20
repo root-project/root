@@ -24,8 +24,9 @@ static inline uint64_t add_carry(uint64_t a, uint64_t b, unsigned &carry)
 {
    unsigned overflow;
    uint64_t add = add_overflow(a, b, overflow);
-   if (overflow)
-      carry++;
+   // Do NOT branch on overflow to avoid jumping code, just add 0 if there was
+   // no overflow.
+   carry += overflow;
    return add;
 }
 
@@ -42,8 +43,9 @@ static inline uint64_t sub_carry(uint64_t a, uint64_t b, unsigned &carry)
 {
    unsigned overflow;
    uint64_t sub = sub_overflow(a, b, overflow);
-   if (overflow)
-      carry++;
+   // Do NOT branch on overflow to avoid jumping code, just add 0 if there was
+   // no overflow.
+   carry += overflow;
    return sub;
 }
 
