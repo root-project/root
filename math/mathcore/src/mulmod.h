@@ -11,6 +11,42 @@
 
 #include <cstdint>
 
+/// Compute `a + b` and set `overflow` accordingly.
+static inline uint64_t add_overflow(uint64_t a, uint64_t b, unsigned &overflow)
+{
+   uint64_t add = a + b;
+   overflow = (add < a);
+   return add;
+}
+
+/// Compute `a + b` and increment `carry` if there was an overflow
+static inline uint64_t add_carry(uint64_t a, uint64_t b, unsigned &carry)
+{
+   unsigned overflow;
+   uint64_t add = add_overflow(a, b, overflow);
+   if (overflow)
+      carry++;
+   return add;
+}
+
+/// Compute `a - b` and set `overflow` accordingly
+static inline uint64_t sub_overflow(uint64_t a, uint64_t b, unsigned &overflow)
+{
+   uint64_t sub = a - b;
+   overflow = (sub > a);
+   return sub;
+}
+
+/// Compute `a - b` and increment `carry` if there was an overflow
+static inline uint64_t sub_carry(uint64_t a, uint64_t b, unsigned &carry)
+{
+   unsigned overflow;
+   uint64_t sub = sub_overflow(a, b, overflow);
+   if (overflow)
+      carry++;
+   return sub;
+}
+
 /// Multiply two 576 bit numbers, stored as 9 numbers of 64 bits each
 ///
 /// \param[in] in1 first factor as 9 numbers of 64 bits each
@@ -69,7 +105,8 @@ void multiply9x9(const uint64_t *in1, const uint64_t *in2, uint64_t *out)
 
          // When adding the two products, the maximum value for middle is
          // 2 * 2 ** 64 - 4 * 2 ** 32 + 2, which exceeds a uint64_t.
-         uint64_t middle = middle1 + middle2;
+         unsigned overflow;
+         uint64_t middle = add_overflow(middle1, middle2, overflow);
          // Handling the overflow by a multiplication with 0 or 1 is cheaper
          // than branching with an if statement, which the compiler does not
          // optimize to this equivalent code. Note that we could do entirely
@@ -80,19 +117,18 @@ void multiply9x9(const uint64_t *in1, const uint64_t *in2, uint64_t *out)
          // why a) the code gives the same results without b) overflowing due
          // to the mixture of 32 bit arithmetic. Moreover, my tests show that
          // the scheme implemented here is actually slightly more performant.
-         int overflow = (middle < middle1);
+         uint64_t overflow_add = overflow * (uint64_t(1) << 32);
          // This addition can never overflow because the maximum value of upper
          // is 2 ** 64 - 2 * 2 ** 32 + 1 (see above). When now adding another
          // 2 ** 32, the result is 2 ** 64 - 2 ** 32 + 1 and still smaller than
          // the maximum 2 ** 64 - 1 that can be stored in a uint64_t.
-         upper += overflow * (uint64_t(1) << 32);
+         upper += overflow_add;
 
          uint64_t middle_upper = middle >> 32;
          uint64_t middle_lower = middle << 32;
 
-         lower += middle_lower;
-         if (lower < middle_lower)
-            upper++;
+         lower = add_overflow(lower, middle_lower, overflow);
+         upper += overflow;
 
          // This still can't overflow since the maximum of middle_upper is
          //  - 2 ** 32 - 4 if there was an overflow for middle above, bringing
@@ -110,19 +146,13 @@ void multiply9x9(const uint64_t *in1, const uint64_t *in2, uint64_t *out)
 #endif
 
          // Add to current, remember carry.
-         current += lower;
-         if (current < lower)
-            carry++;
+         current = add_carry(current, lower, carry);
 
          // Add to next, remember nextCarry.
-         next += upper;
-         if (next < upper)
-            nextCarry++;
+         next = add_carry(next, upper, nextCarry);
       }
 
-      next += carry;
-      if (next < carry)
-         nextCarry++;
+      next = add_carry(next, carry, nextCarry);
 
       out[i] = current;
    }
@@ -145,18 +175,10 @@ void mod_m(const uint64_t *mul, uint64_t *out)
    unsigned carry = 0;
    for (int i = 0; i < 9; i++) {
       uint64_t t0_i = mul[i];
-
-      uint64_t r_ic = t0_i - carry;
-      if (r_ic > t0_i) {
-         carry = 1;
-      } else {
-         carry = 0;
-      }
+      uint64_t r_i = sub_overflow(t0_i, carry, carry);
 
       uint64_t t1_i = mul[i + 9];
-      uint64_t r_i = r_ic - t1_i;
-      if (r_i > r_ic)
-         carry++;
+      r_i = sub_carry(r_i, t1_i, carry);
       r[i] = r_i;
    }
    int64_t c = -((int64_t)carry);
@@ -165,13 +187,7 @@ void mod_m(const uint64_t *mul, uint64_t *out)
    carry = 0;
    for (int i = 0; i < 9; i++) {
       uint64_t r_i = r[i];
-
-      uint64_t r_ic = r_i - carry;
-      if (r_ic > r_i) {
-         carry = 1;
-      } else {
-         carry = 0;
-      }
+      r_i = sub_overflow(r_i, carry, carry);
 
       uint64_t t2_bits = 0;
       if (i < 4) {
@@ -180,91 +196,57 @@ void mod_m(const uint64_t *mul, uint64_t *out)
             t2_bits += mul[i + 15] << 48;
          }
       }
-      r_i = r_ic - t2_bits;
-      if (r_i > r_ic)
-         carry++;
+      r_i = sub_carry(r_i, t2_bits, carry);
       r[i] = r_i;
    }
    c -= carry;
 
-   // r += (t3 + t2) * 2 ** 240; copy to output array.
+   // r += (t3 + t2) * 2 ** 240
    carry = 0;
-   out[0] = r[0];
-   out[1] = r[1];
-   out[2] = r[2];
    {
       uint64_t r_3 = r[3];
       // 16 upper bits
       uint64_t t2_bits = (mul[14] >> 16) << 48;
       uint64_t t3_bits = (mul[9] << 48);
 
-      r_3 += t2_bits;
-      if (r_3 < t2_bits)
-         carry++;
-      r_3 += t3_bits;
-      if (r_3 < t3_bits)
-         carry++;
+      r_3 = add_carry(r_3, t2_bits, carry);
+      r_3 = add_carry(r_3, t3_bits, carry);
 
-      out[3] = r_3;
+      r[3] = r_3;
    }
    for (int i = 0; i < 3; i++) {
       uint64_t r_i = r[i + 4];
-      r_i += carry;
-      if (r_i < carry) {
-         carry = 1;
-      } else {
-         carry = 0;
-      }
+      r_i = add_overflow(r_i, carry, carry);
 
       uint64_t t2_bits = (mul[14 + i] >> 32) + (mul[15 + i] << 32);
       uint64_t t3_bits = (mul[9 + i] >> 16) + (mul[10 + i] << 48);
 
-      r_i += t2_bits;
-      if (r_i < t2_bits)
-         carry++;
-      r_i += t3_bits;
-      if (r_i < t3_bits)
-         carry++;
+      r_i = add_carry(r_i, t2_bits, carry);
+      r_i = add_carry(r_i, t3_bits, carry);
 
-      out[i + 4] = r_i;
+      r[i + 4] = r_i;
    }
    {
       uint64_t r_7 = r[7];
-      r_7 += carry;
-      if (r_7 < carry) {
-         carry = 1;
-      } else {
-         carry = 0;
-      }
+      r_7 = add_overflow(r_7, carry, carry);
 
       uint64_t t2_bits = (mul[17] >> 32);
       uint64_t t3_bits = (mul[12] >> 16) + (mul[13] << 48);
 
-      r_7 += t2_bits;
-      if (r_7 < t2_bits)
-         carry++;
-      r_7 += t3_bits;
-      if (r_7 < t3_bits)
-         carry++;
+      r_7 = add_carry(r_7, t2_bits, carry);
+      r_7 = add_carry(r_7, t3_bits, carry);
 
-      out[7] = r_7;
+      r[7] = r_7;
    }
    {
       uint64_t r_8 = r[8];
-      r_8 += carry;
-      if (r_8 < carry) {
-         carry = 1;
-      } else {
-         carry = 0;
-      }
+      r_8 = add_overflow(r_8, carry, carry);
 
       uint64_t t3_bits = (mul[13] >> 16) + (mul[14] << 48);
 
-      r_8 += t3_bits;
-      if (r_8 < t3_bits)
-         carry++;
+      r_8 = add_carry(r_8, t3_bits, carry);
 
-      out[8] = r_8;
+      r[8] = r_8;
    }
    c += carry;
 
@@ -298,56 +280,30 @@ void mod_m(const uint64_t *mul, uint64_t *out)
 
    carry = 0;
    {
-      uint64_t r_0 = out[0];
+      uint64_t r_0 = r[0];
 
-      uint64_t out_0 = r_0 - c;
-      if (out_0 > r_0)
-         carry++;
+      uint64_t out_0 = sub_carry(r_0, c, carry);
       out[0] = out_0;
    }
    for (int i = 1; i < 3; i++) {
-      uint64_t r_i = out[i];
+      uint64_t r_i = r[i];
+      r_i = sub_overflow(r_i, carry, carry);
 
-      uint64_t r_ic = r_i - carry;
-      if (r_ic > r_i) {
-         carry = 1;
-      } else {
-         carry = 0;
-      }
-
-      uint64_t out_i = r_ic - t0;
-      if (out_i > r_ic)
-         carry++;
+      uint64_t out_i = sub_carry(r_i, t0, carry);
       out[i] = out_i;
    }
    {
-      uint64_t r_3 = out[3];
+      uint64_t r_3 = r[3];
+      r_3 = sub_overflow(r_3, carry, carry);
 
-      uint64_t r_3c = r_3 - carry;
-      if (r_3c > r_3) {
-         carry = 1;
-      } else {
-         carry = 0;
-      }
-
-      uint64_t out_3 = r_3c - t2;
-      if (out_3 > r_3c)
-         carry++;
+      uint64_t out_3 = sub_carry(r_3, t2, carry);
       out[3] = out_3;
    }
    for (int i = 4; i < 9; i++) {
-      uint64_t r_i = out[i];
+      uint64_t r_i = r[i];
+      r_i = sub_overflow(r_i, carry, carry);
 
-      uint64_t r_ic = r_i - carry;
-      if (r_ic > r_i) {
-         carry = 1;
-      } else {
-         carry = 0;
-      }
-
-      uint64_t out_i = r_ic - t1;
-      if (out_i > r_ic)
-         carry++;
+      uint64_t out_i = sub_carry(r_i, t1, carry);
       out[i] = out_i;
    }
 }
