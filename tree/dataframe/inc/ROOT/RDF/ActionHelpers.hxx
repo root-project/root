@@ -1161,10 +1161,10 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
       }
    }
    const bool isTClonesArray = inputBranch != nullptr && std::string(inputBranch->GetClassName()) == "TClonesArray";
-   const auto mustWriteStdVec = !inputBranch || isTClonesArray ||
-                                ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
+   const auto mustWriteRVec = !inputBranch || isTClonesArray ||
+                              ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
 
-   if (mustWriteStdVec) {
+   if (mustWriteRVec) {
       // Treat:
       // 2. RVec coming from a custom column or a source
       // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
@@ -1176,7 +1176,7 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
                  "be written out as a std::vector instead of a TClonesArray. Specify that the type of the branch is "
                  "TClonesArray as a Snapshot template parameter to write out a TClonesArray instead.", inName.c_str());
       }
-      outputTree.Branch(outName.c_str(), &(ab->fData));
+      outputTree.Branch(outName.c_str(), ab);
       return;
    }
 
