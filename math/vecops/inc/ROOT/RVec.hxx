@@ -44,35 +44,16 @@
 #include <utility>
 #include <tuple>
 
-// TODO remove when fData is removed (6.26)
-#include <map>
-#include <string>
-
 #ifdef R__HAS_VDT
 #include <vdt/vdtMath.h>
 #endif
 
-
-// TODO remove when fData is removed (6.26)
-class TTree;
-class TBranch;
 
 namespace ROOT {
 
 namespace VecOps {
 template<typename T>
 class RVec;
-}
-
-// TODO remove when fData is removed (6.26)
-namespace Internal {
-namespace RDF {
-class BoolArray;
-using BoolArrayMap = std::map<std::string, BoolArray>;
-template <typename T>
-void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &outputTree, const std::string &inName,
-                       const std::string &outName, TBranch *&branch, void *&branchAddress, ROOT::VecOps::RVec<T> *ab);
-}
 }
 
 namespace Detail {
@@ -292,12 +273,6 @@ hpt->Draw();
 // clang-format on
 template <typename T>
 class RVec {
-   // TODO remove this friendship in 6.26, when fData is removed
-   friend void ::ROOT::Internal::RDF::SetBranchesHelper<T>(ROOT::Internal::RDF::BoolArrayMap &boolArrays,
-                                                           TTree *inputTree, TTree &outputTree,
-                                                           const std::string &inName, const std::string &outName,
-                                                           TBranch *&branch, void *&branchAddress, RVec<T> *ab);
-
    // Here we check if T is a bool. This is done in order to decide what type
    // to use as a storage. If T is anything but bool, we use a vector<T, RAdoptAllocator<T>>.
    // If T is a bool, we opt for a plain vector<bool> otherwise we'll not be able
