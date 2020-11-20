@@ -379,7 +379,6 @@ public:
                                                            fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RBookedDefines newCols(fDefines);
-      newCols.AddName(name);
       newCols.AddColumn(jittedDefine, name);
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
@@ -2213,7 +2212,6 @@ private:
       auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
                                                          ColumnNames_t{}, fLoopManager->GetNSlots(), newCols,
                                                          fLoopManager->GetDSValuePtrs(), fDataSource);
-      newCols.AddName(entryColName);
       newCols.AddColumn(entryColumn, entryColName);
 
       // Slot number column
@@ -2225,7 +2223,6 @@ private:
       auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
                                                        fLoopManager->GetNSlots(), newCols,
                                                        fLoopManager->GetDSValuePtrs(), fDataSource);
-      newCols.AddName(slotColName);
       newCols.AddColumn(slotColumn, slotColName);
 
       fDefines = std::move(newCols);
@@ -2346,7 +2343,6 @@ private:
                                     fLoopManager->GetNSlots(), fDefines, fLoopManager->GetDSValuePtrs(), fDataSource);
 
       RDFInternal::RBookedDefines newCols(fDefines);
-      newCols.AddName(name);
       newCols.AddColumn(newColumn, name);
 
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, newCols, fDataSource);
