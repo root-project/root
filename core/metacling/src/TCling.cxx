@@ -139,6 +139,7 @@ clang/LLVM technology.
 #include <tuple>
 #include <typeinfo>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 #include <functional>
@@ -159,6 +160,13 @@ clang/LLVM technology.
 
 #ifdef R__UNIX
 #include <dlfcn.h>
+#endif
+
+#ifdef R__LINUX
+# ifndef _GNU_SOURCE
+#  define _GNU_SOURCE
+# endif
+# include <link.h> // dl_iterate_phdr()
 #endif
 
 #if defined(__CYGWIN__)
@@ -3250,6 +3258,32 @@ static bool R__UpdateLibFileForLinking(TString &lib)
 }
 #endif // R__MACOSX
 
+#ifdef R__LINUX
+
+////////////////////////////////////////////////////////////////////////////////
+/// Callback for dl_iterate_phdr(), see `man dl_iterate_phdr`.
+/// Collects opened libraries.
+
+static int callback_for_dl_iterate_phdr(struct dl_phdr_info *info, size_t size, void *data)
+{
+   // This function is called through UpdateListOfLoadedSharedLibraries() which is locked.
+   static std::unordered_set<decltype(info->dlpi_addr)> sKnownLoadedLibBaseAddrs;
+
+   auto newLibs = static_cast<std::vector<std::string>*>(data);
+   if (!sKnownLoadedLibBaseAddrs.count(info->dlpi_addr)) {
+      // Skip \0, "", and kernel pseudo-libs linux-vdso.so.1 or linux-gate.so.1
+      if (info->dlpi_name && info->dlpi_name[0]
+          && strncmp(info->dlpi_name, "linux-vdso.so", 13)
+          && strncmp(info->dlpi_name, "linux-gate.so", 13))
+         newLibs->emplace_back(info->dlpi_name);
+      sKnownLoadedLibBaseAddrs.insert(info->dlpi_addr);
+   }
+   // No matter what the doc says, return != 0 means "stop the iteration".
+   return 0;
+}
+
+#endif // R__LINUX
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3296,34 +3330,13 @@ void TCling::UpdateListOfLoadedSharedLibraries()
    }
    fPrevLoadedDynLibInfo = (void*)(size_t)imageIndex;
 #elif defined(R__LINUX)
-   struct PointerNo4 {
-      void* fSkip[3];
-      void* fPtr;
-   };
-   struct LinkMap {
-      void* fAddr;
-      const char* fName;
-      void* fLd;
-      LinkMap* fNext;
-      LinkMap* fPrev;
-   };
-   if (!fPrevLoadedDynLibInfo || fPrevLoadedDynLibInfo == (void*)(size_t)-1) {
-      PointerNo4* procLinkMap = (PointerNo4*)dlopen(0,  RTLD_LAZY | RTLD_GLOBAL);
-      // 4th pointer of 4th pointer is the linkmap.
-      // See http://syprog.blogspot.fr/2011/12/listing-loaded-shared-objects-in-linux.html
-      LinkMap* linkMap = (LinkMap*) ((PointerNo4*)procLinkMap->fPtr)->fPtr;
-      RegisterLoadedSharedLibrary(linkMap->fName);
-      fPrevLoadedDynLibInfo = linkMap;
-      // reduce use count of link map structure:
-      dlclose(procLinkMap);
-   }
+   // fPrevLoadedDynLibInfo is unused on Linux.
+   (void) fPrevLoadedDynLibInfo;
 
-   LinkMap* iDyLib = (LinkMap*)fPrevLoadedDynLibInfo;
-   while (iDyLib->fNext) {
-      iDyLib = iDyLib->fNext;
-      RegisterLoadedSharedLibrary(iDyLib->fName);
-   }
-   fPrevLoadedDynLibInfo = iDyLib;
+   std::vector<std::string> newLibs;
+   dl_iterate_phdr(callback_for_dl_iterate_phdr, &newLibs);
+   for (auto &&lib: newLibs)
+      RegisterLoadedSharedLibrary(lib.c_str());
 #else
    Error("TCling::UpdateListOfLoadedSharedLibraries",
          "Platform not supported!");
@@ -6915,6 +6928,7 @@ void TCling::TransactionRollback(const cling::Transaction &T) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void TCling::LibraryLoaded(const void* dyLibHandle, const char* canonicalName) {
+// R__LOCKGUARD_CLING(gInterpreterMutex);
 // UpdateListOfLoadedSharedLibraries();
 }
 
@@ -6930,6 +6944,7 @@ void TCling::LibraryUnloaded(const void* dyLibHandle, const char* canonicalName)
 
 const char* TCling::GetSharedLibs()
 {
+   R__LOCKGUARD_CLING(gInterpreterMutex);
    UpdateListOfLoadedSharedLibraries();
    return fSharedLibs;
 }
