@@ -46,7 +46,7 @@ class RBookedDefines {
 
 private:
    RDefineBasePtrMapPtr_t fDefines;
-   ColumnNamesPtr_t fDefinesNames;
+   ColumnNamesPtr_t fDefinesNames;  // also abused to keep track of aliases for each branch of the computation graph
 
 public:
    ////////////////////////////////////////////////////////////////////////////
@@ -89,11 +89,16 @@ public:
    bool HasName(std::string_view name) const;
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Internally it recreates the map with the new column, and swaps with the old one.
+   /// \brief Add a new booked column.
+   /// Internally it recreates the map with the new column, and swaps it with the old one.
    void AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column, std::string_view name);
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Internally it recreates the map with the new column name, and swaps with the old one.
+   /// \brief Add a new name to the list returned by `GetNames` without booking a new column.
+   ///
+   /// This is needed because we abuse fDefinesNames to also keep track of the aliases defined
+   /// in each branch of the computation graph.
+   /// Internally it recreates the vector with the new name, and swaps it with the old one.
    void AddName(std::string_view name);
 };
 
