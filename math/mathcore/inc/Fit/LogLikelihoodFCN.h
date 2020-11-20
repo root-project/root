@@ -13,13 +13,11 @@
 #ifndef ROOT_Fit_LogLikelihoodFCN
 #define ROOT_Fit_LogLikelihoodFCN
 
+#include "ExecutionPolicy.hxx"
 #include "Fit/BasicFCN.h"
-
-#include "Math/IParamFunction.h"
-
-#include "Fit/UnBinData.h"
-
 #include "Fit/FitUtil.h"
+#include "Fit/UnBinData.h"
+#include "Math/IParamFunction.h"
 
 #include <memory>
 #include <vector>

@@ -13,13 +13,11 @@
 #ifndef ROOT_Fit_PoissonLikelihoodFCN
 #define ROOT_Fit_PoissonLikelihoodFCN
 
+#include "ExecutionPolicy.hxx"
 #include "Fit/BasicFCN.h"
-
-#include "Math/IParamFunction.h"
-
 #include "Fit/BinData.h"
-
 #include "Fit/FitUtil.h"
+#include "Math/IParamFunction.h"
 
 #include <memory>
 #include <vector>

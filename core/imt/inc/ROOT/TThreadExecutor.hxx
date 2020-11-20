@@ -23,12 +23,17 @@
 #else
 
 #include "ROOT/TExecutorCRTP.hxx"
+#include "ROOT/TSeq.hxx"
 #include "RTaskArena.hxx"
 #include "TError.h"
-#include <functional>
-#include <memory>
-#include <numeric>
 
+#include <functional> //std::function
+#include <initializer_list>
+#include <memory>
+#include <numeric> //std::accumulate
+#include <type_traits> //std::enable_if, std::result_of
+#include <utility> //std::move
+#include <vector>
 
 namespace ROOT {
 

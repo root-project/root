@@ -17,13 +17,15 @@
 #include "MPSendRecv.h"
 #include "PoolUtils.h"
 #include "ROOT/RConfig.hxx" //R__DEPRECATED
+#include "ROOT/TExecutorCRTP.hxx"
+#include "ROOT/TSeq.hxx"
 #include "TError.h"
 #include "TFileCollection.h"
 #include "TFileInfo.h"
 #include "THashList.h"
 #include "TMPClient.h"
-#include "ROOT/TExecutorCRTP.hxx"
 #include "TMPWorkerExecutor.h"
+
 #include <algorithm> //std::generate
 #include <numeric> //std::iota
 #include <string>

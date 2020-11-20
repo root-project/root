@@ -11,11 +11,14 @@
 #ifndef ROOT_TSequentialExecutor
 #define ROOT_TSequentialExecutor
 
-#include "RConfigure.h"
-
-#include "ROOT/TExecutorCRTP.hxx"
 #include "ExecutionPolicy.hxx"
-#include <numeric>
+#include "ROOT/TExecutorCRTP.hxx"
+#include "ROOT/TSeq.hxx"
+
+#include <initializer_list>
+#include <numeric> //std::accumulate
+#include <type_traits> //std::enable_if, std::result_of
+#include <utility> //std::move
 #include <vector>
 
 namespace ROOT {
