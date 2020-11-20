@@ -14,6 +14,7 @@
 #include "ROOT/RConfig.hxx"
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TExecutorCRTP.hxx"
+#include "ROOT/TSeq.hxx"
 #include "ROOT/TSequentialExecutor.hxx"
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
@@ -23,9 +24,13 @@
 #endif
 #include "TROOT.h"
 #include "ExecutionPolicy.hxx"
+
+#include <initializer_list>
 #include <memory>
-#include <stdexcept>
 #include <thread>
+#include <type_traits> //std::enable_if, std::result_of
+#include <stdexcept> //std::invalid_argument
+#include <utility> //std::move
 
 //////////////////////////////////////////////////////////////////////////
 ///

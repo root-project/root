@@ -13,16 +13,13 @@
 #ifndef ROOT_Fit_Chi2FCN
 #define ROOT_Fit_Chi2FCN
 
+#include "ExecutionPolicy.hxx"
 #include "Fit/BasicFCN.h"
-
-#include "Math/IParamFunction.h"
-
+#include "Fit/BinData.h"
+#include "Fit/FitUtil.h"
 #include "Math/IFunction.h"
 #include "Math/IFunctionfwd.h"
-
-#include "Fit/BinData.h"
-
-#include "Fit/FitUtil.h"
+#include "Math/IParamFunction.h"
 
 #include <memory>
 #include <vector>
