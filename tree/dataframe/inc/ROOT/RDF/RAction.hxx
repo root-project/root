@@ -139,22 +139,28 @@ public:
       // Action nodes do not need to go through CreateFilterNode: they are never common nodes between multiple branches
       auto thisNode = std::make_shared<RDFGraphDrawing::GraphNode>(fHelper.GetActionName());
 
-      auto evaluatedNode = thisNode;
-      for (auto &column : GetDefines().GetColumns()) {
-         /* Each column that this node has but the previous hadn't has been defined in between,
-          * so it has to be built and appended. */
-         if (RDFInternal::IsInternalColumn(column.first))
-            continue;
-         if (std::find(prevColumns.begin(), prevColumns.end(), column.first) == prevColumns.end()) {
-            auto defineNode = RDFGraphDrawing::CreateDefineNode(column.first, column.second.get());
-            evaluatedNode->SetPrevNode(defineNode);
-            evaluatedNode = defineNode;
-         }
+      // Add the Defines that have been added between this node and the previous to the graph
+      auto upmostNode = thisNode;
+      const auto &defineNames = GetDefines().GetNames();
+      const auto &defineMap = GetDefines().GetColumns();
+      for (auto i = int(defineNames.size()) - 1; i >= 0; --i) {  // walk backwards through the names of defined columns
+         const auto colName = defineNames[i];
+         const bool isAlias = defineMap.find(colName) == defineMap.end();
+         if (isAlias || RDFInternal::IsInternalColumn(colName))
+            continue; // aliases appear in the list of defineNames but we don't support them yet
+         const bool isANewDefine = std::find(prevColumns.begin(), prevColumns.end(), colName) == prevColumns.end();
+         if (!isANewDefine)
+            break; // we walked back through all new defines, the rest is stuff that was already in the graph
+
+         // create a node for this new Define
+         auto defineNode = RDFGraphDrawing::CreateDefineNode(colName, defineMap.at(colName).get());
+         upmostNode->SetPrevNode(defineNode);
+         upmostNode = defineNode;
       }
 
       thisNode->AddDefinedColumns(GetDefines().GetNames());
       thisNode->SetAction(HasRun());
-      evaluatedNode->SetPrevNode(prevNode);
+      upmostNode->SetPrevNode(prevNode);
       return thisNode;
    }
 
