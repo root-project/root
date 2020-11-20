@@ -97,7 +97,7 @@ namespace ROOT {
    /// \param args Sequence of indexes to execute `func` on.
    template<class F, class INTEGER>
    void TSequentialExecutor::Foreach(F func, ROOT::TSeq<INTEGER> args) {
-         for(auto i : args) func(i);
+      for(auto i : args) func(i);
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -107,8 +107,8 @@ namespace ROOT {
    /// \param args initializer_list for a vector to apply `func` on.
    template<class F, class T>
    void TSequentialExecutor::Foreach(F func, std::initializer_list<T> args) {
-         std::vector<T> vargs(std::move(args));
-         Foreach(func, vargs);
+      std::vector<T> vargs(std::move(args));
+      Foreach(func, vargs);
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -118,8 +118,8 @@ namespace ROOT {
    /// \param args Vector of elements passed as an argument to `func`.
    template<class F, class T>
    void TSequentialExecutor::Foreach(F func, std::vector<T> &args) {
-         unsigned int nToProcess = args.size();
-         for(auto i: ROOT::TSeqI(nToProcess)) func(args[i]);
+      unsigned int nToProcess = args.size();
+      for(auto i: ROOT::TSeqI(nToProcess)) func(args[i]);
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -129,8 +129,8 @@ namespace ROOT {
    /// \param args Immutable vector of elements passed as an argument to `func`.
    template<class F, class T>
    void TSequentialExecutor::Foreach(F func, const std::vector<T> &args) {
-         unsigned int nToProcess = args.size();
-         for(auto i: ROOT::TSeqI(nToProcess)) func(args[i]);
+      unsigned int nToProcess = args.size();
+      for(auto i: ROOT::TSeqI(nToProcess)) func(args[i]);
    }
 
    //////////////////////////////////////////////////////////////////////////

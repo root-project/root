@@ -1,5 +1,5 @@
 // @(#)root/core/base:$Id$
-// Author: Xavier Valls March 2016
+// Author: Xavier Valls November 2020
 
 /*************************************************************************
  * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
@@ -21,7 +21,7 @@
 /// \class ROOT::TExecutorCRTP
 /// \brief This class defines an interface to execute the same task
 /// multiple times, possibly in parallel and with different arguments every
-/// time. The classes implementing it mimic the behaviour of python's pool.Map method.
+/// time.
 ///
 /// ###ROOT::TExecutorCRTP<subc>::Map
 /// The two possible usages of the Map method are:\n
@@ -31,7 +31,7 @@
 /// The Map function forwards the call to MapImpl, to be implemented by the child classes.
 ///
 /// For either signature, func is executed as many times as needed by a pool of
-/// n workers; It defaults to the number of cores.\n
+/// n workers, where n typically defaults to the number of available cores.\n
 /// A collection containing the result of each execution is returned.\n
 /// **Note:** the user is responsible for the deletion of any object that might
 /// be created upon execution of func, returned objects included. ROOT::TExecutorCRTP derived classes
@@ -39,8 +39,8 @@
 ///
 /// \param func
 /// \parblock
-/// a lambda expression, an std::function, a loaded macro, a
-/// functor class or a function that takes zero arguments (for the first signature)
+/// a callable object, such as a lambda expression, an std::function, a
+/// functor object or a function that takes zero arguments (for the first signature)
 /// or one (for the second signature).
 /// \endparblock
 /// \param args
@@ -55,19 +55,37 @@
 ///
 /// #### Return value:
 /// An std::vector. The elements in the container
-/// will be the objects returned by func.
+/// will be the objects returned by func. The ordering of the elements corresponds to the ordering of
+/// the arguments.
+///
+/// ### ROOT::TExecutorCRTP<subc>::Reduce
+/// These set of methods combine all elements from a std::vector into a single value.
+/// \param redfunc
+/// \parblock
+/// a callable object, such as a lambda expression, an std::function, a
+/// functor object or a function that takes an std::vector and combines all its elements into a single result.\n
+/// \endparblock
+/// \param [args]
+/// \parblock
+/// a standard vector\n
+/// \endparblock
 ///
 /// ### ROOT::TExecutorCRTP<subc>::MapReduce
 /// This set of methods behaves exactly like Map, but takes an additional
 /// function as a third argument. This function is applied to the set of
 /// objects returned by the corresponding Map execution to "squash" them
-/// to a single object. This function should be independent of the size of
+/// into a single object. This function should be independent of the size of
 /// the vector returned by Map due to optimization of the number of chunks.
 ///
 /// #### Examples:
 /// ~~~{.cpp}
-/// root[] ROOT::TProcessExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](std::vector<int> v) { return std::accumulate(v.begin(), v.end(), 0); })
+/// Generate 1 ten times and sum those tens
+/// root[] ROOT::TProcessExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](const std::vector<int> &v) { return std::accumulate(v.begin(), v.end(), 0); })
+/// root[] ROOT::TProcessExecutor pool; auto tenOnes = pool.Map([]() { return 1; }, 10); auto ten = Reduce([](const std::vector<int> &v) { return std::accumulate(v.begin(), v.end(), 0); }, tenOnes)
+///
+/// Create 10 histograms and merge them into one
 /// root[] ROOT::TThreadExecutor pool; auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
+///
 /// ~~~
 ///
 //////////////////////////////////////////////////////////////////////////
@@ -91,8 +109,7 @@ public:
    using noReferenceCond = typename std::enable_if<"Function can't return a reference" && !(std::is_reference<typename std::result_of<F(T...)>::type>::value)>::type;
 
    // Map
-   // These trailing return types allow for a compile time check of compatibility between function signatures and args,
-   // and a compile time check that the argument list implements a front() method (all STL sequence containers have it)
+   // These trailing return types allow for a compile time check of compatibility between function signatures and args
    template<class F, class Cond = noReferenceCond<F>>
    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
@@ -105,9 +122,8 @@ public:
    auto Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
 
    // MapReduce
-   // The trailing return types also check at compile time whether redfunc is compatible with func,
-   // other than checking that func is compatible with the type of arguments.
-   // a static_assert check in TExecutorCRTP<subc>::Reduce is used to check that redfunc is compatible with the type returned by func
+   // The trailing return types check at compile time that func is compatible with the type of the arguments.
+   // A static_assert check in TExecutorCRTP<subc>::Reduce is used to check that redfunc is compatible with the type returned by func
    template<class F, class R, class Cond = noReferenceCond<F>>
    auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
    template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
@@ -144,7 +160,6 @@ private:
    auto MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> = delete;
    /// Implementation of the Map method, left to the derived classes
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-   /// Implementation of the Map method, left to the derived classes
    auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> = delete;
    /// Implementation of the Map method, left to the derived classes
    template<class F, class T, class Cond = noReferenceCond<F, T>>
@@ -281,7 +296,6 @@ auto TExecutorCRTP<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> 
 ///
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Immutable vector of elements passed as an argument to `func`.
-/// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutorCRTP<subc>::MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
@@ -294,7 +308,6 @@ auto TExecutorCRTP<subc>::MapReduce(F func, const std::vector<T> &args, R redfun
 ///
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Vector of elements passed as an argument to `func`.
-/// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template<class subc> template<class F, class T, class Cond>
 T* TExecutorCRTP<subc>::MapReduce(F func, std::vector<T*> &args)
