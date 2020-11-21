@@ -573,8 +573,9 @@ void TStreamerInfo::Build(Bool_t isTransient)
                      element = new TStreamerObjectPointer(dmName, dmTitle, offset, dmFull);
                   } else {
                      element = new TStreamerObjectAnyPointer(dmName, dmTitle, offset, dmFull);
-                     if (!isTransient && !streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
-                        Error("Build", "%s: %s has no streamer or dictionary, data member %s will not be saved", GetName(), dmFull, dmName);
+                     if (!isTransient && !streamer && !clm->GetStreamer() && !clm->IsLoaded() && !clm->fIsSyntheticPair) {
+                        Error("Build", "%s: %s has no streamer or dictionary, data member %s will not be saved",
+                              GetName(), dmFull, dmName);
                      }
                   }
                }
@@ -584,8 +585,9 @@ void TStreamerInfo::Build(Bool_t isTransient)
                element = new TStreamerString(dmName, dmTitle, offset);
             } else {
                element = new TStreamerObjectAny(dmName, dmTitle, offset, dmFull);
-               if (!isTransient && !streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
-                  Warning("Build", "%s: %s has no streamer or dictionary, data member \"%s\" will not be saved", GetName(), dmFull, dmName);
+               if (!isTransient && !streamer && !clm->GetStreamer() && !clm->IsLoaded() && !clm->fIsSyntheticPair) {
+                  Warning("Build", "%s: %s has no streamer or dictionary, data member \"%s\" will not be saved",
+                          GetName(), dmFull, dmName);
                }
             }
          }
