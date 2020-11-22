@@ -290,7 +290,7 @@ public:
     return getParameters(&observables,stripDisconnected);
   }
   virtual RooArgSet* getParameters(const RooArgSet* depList, Bool_t stripDisconnected=kTRUE) const ;
-  /// Return the observables of this pdf given a set of observables
+  /// Given a set of possible observables, return the observables that this PDF depends on.
   RooArgSet* getObservables(const RooArgSet& set, Bool_t valueOnly=kTRUE) const {
     return getObservables(&set,valueOnly) ;
   }
