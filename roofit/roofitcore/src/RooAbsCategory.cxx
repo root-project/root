@@ -562,6 +562,24 @@ void RooAbsCategory::copyCache(const RooAbsArg *source, Bool_t /*valueOnly*/, Bo
    }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Overwrite the value stored in this object's cache.
+/// This can be used to fake a computation that resulted in `value`.
+/// \param[in] value Value to write. The argument is reinterpreted as a category state.
+/// If such a state does not exist, this will create undefined behaviour.
+/// \param[in] notifyClients If true, notify users of this object that its value changed.
+/// This is the default.
+void RooAbsCategory::setCachedValue(double value, bool notifyClients) {
+  _currentIndex = static_cast<value_type>(value);
+
+  if (notifyClients) {
+    setValueDirty();
+    _valueDirty = false;
+  }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return name and index of the `n`th defined state. When states are defined using
 /// defineType() or operator[], the order of insertion is tracked, to mimic the behaviour
