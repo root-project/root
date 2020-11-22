@@ -3221,7 +3221,6 @@ void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooAbsReal::attachToVStore(RooVectorDataStore& vstore)

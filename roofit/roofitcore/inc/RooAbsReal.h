@@ -295,7 +295,7 @@ public:
   virtual void printValue(std::ostream& os) const ;
   virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
-  static void setCacheCheck(Bool_t flag) ;
+  inline void setCachedValue(double value, bool notifyClients = true) final;
 
   // Evaluation error logging 
   class EvalError {
@@ -576,6 +576,22 @@ class BatchInterfaceAccessor {
       theReal.checkBatchComputation(evalData, evtNo, normSet, relAccuracy);
     }
 };
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Overwrite the value stored in this object's cache.
+/// This can be used to fake a computation that resulted in `value`.
+/// \param[in] value Value to write.
+/// \param[in] setValDirty If true, notify users of this object that its value changed.
+/// This is the default.
+void RooAbsReal::setCachedValue(double value, bool notifyClients) {
+  _value = value;
+
+  if (notifyClients) {
+    setValueDirty();
+    _valueDirty = false;
+  }
+}
 
 
 #endif
