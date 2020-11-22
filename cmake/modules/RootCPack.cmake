@@ -95,7 +95,7 @@ if(APPLE)
   execute_process(COMMAND sw_vers "-productVersion"
                   COMMAND cut -d . -f 1-2
                   OUTPUT_VARIABLE osvers OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(OS_NAME_VERSION macosx64-${osvers})
+  set(OS_NAME_VERSION macos-${osvers}-${CMAKE_SYSTEM_PROCESSOR})
 elseif(WIN32)
   set(OS_NAME_VERSION win32)
 else()
