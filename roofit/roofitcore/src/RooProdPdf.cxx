@@ -534,8 +534,13 @@ RooSpan<double> RooProdPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, 
 
       if (outputs.empty()) {
         outputs = evalData.makeBatch(this,  partialInt.size());
-        for (double& val : outputs) val = 1.;
+        std::fill(outputs.begin(), outputs.end(), 1.);
+      } else if (outputs.size() == 1 && partialInt.size() > 1) {
+        const double val = outputs[0];
+        outputs = evalData.makeBatch(this, partialInt.size());
+        std::fill(outputs.begin(), outputs.end(), val);
       }
+      assert(outputs.size() == partialInt.size());
 
       for (std::size_t j=0; j < outputs.size(); ++j) {
         outputs[j] *= partialInt[j];
