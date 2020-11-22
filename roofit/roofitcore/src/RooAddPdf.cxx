@@ -863,17 +863,15 @@ RooSpan<double> RooAddPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, c
   const RooArgSet* nset = normAndCache.first;
   CacheElem* cache = normAndCache.second;
 
-
   RooSpan<double> output;
 
   for (unsigned int pdfNo = 0; pdfNo < _pdfList.size(); ++pdfNo) {
     const auto& pdf = static_cast<RooAbsPdf&>(_pdfList[pdfNo]);
     auto pdfOutputs = pdf.getValues(evalData, nset);
-    if (output.empty()) {
+    if (output.empty() || (output.size() == 1 && pdfOutputs.size() > 1)) {
+      const double init = output.empty() ? 0. : output[0];
       output = evalData.makeBatch(this, pdfOutputs.size());
-      for (double& val : output) { //CHECK_VECTORISE
-        val = 0.;
-      }
+      std::fill(output.begin(), output.end(), init);
     }
     assert(output.size() == pdfOutputs.size());
 
