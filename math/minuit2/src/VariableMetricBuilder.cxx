@@ -80,7 +80,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    FunctionMinimum min(seed, fcn.Up() );
 
    if(edm < 0.) {
-      print.Warn("Initial matrix not pos.def.");
+      print.Error("Initial matrix not pos.def.");
 
       //assert(!seed.Error().IsPosDef());
       return min;
@@ -154,7 +154,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
             if (edm >= machineLimit)   {
                iterate = true;
 
-               print.Warn(
+               print.Info(
                  "Tolerance not sufficient, continue minimization; "
                  "Edm", edm, "Required", edmval);
             }
@@ -187,7 +187,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    else {
       // check if minimum has edm above max before
       if ( min.IsAboveMaxEdm() ) {
-         print.Warn("Edm has been re-computed after Hesse; Edm", edm, "is now within tolerance");
+         print.Info("Edm has been re-computed after Hesse; Edm", edm, "is now within tolerance");
       }
       min.Add( result.back()  );
    }
