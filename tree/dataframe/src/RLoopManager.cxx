@@ -696,7 +696,7 @@ std::vector<RNodeBase *> RLoopManager::GetGraphEdges() const
    return nodes;
 }
 
-std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions()
+std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions() const
 {
    std::vector<RDFInternal::RActionBase *> actions;
    actions.insert(actions.begin(), fBookedActions.begin(), fBookedActions.end());
