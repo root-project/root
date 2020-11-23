@@ -231,15 +231,15 @@ protected:
 
    // function actually running the test.
    // We define here the condition to say that the test is valid
-   bool RunFit(ROOT::Internal::ExecutionPolicy executionPolicy) {
+   bool RunFit(ROOT::ExecutionPolicy executionPolicy) {
       fExecutionPolicy = executionPolicy;
       if (printLevel>0) {
          std::cout << "**************************************\n";
-         if (fExecutionPolicy == ROOT::Internal::ExecutionPolicy::kSequential)
+         if (fExecutionPolicy == ROOT::ExecutionPolicy::kSequential)
             std::cout << "   RUN SEQUENTIAL \n";
-         else if (fExecutionPolicy == ROOT::Internal::ExecutionPolicy::kMultiThread)
+         else if (fExecutionPolicy == ROOT::ExecutionPolicy::kMultiThread)
             std::cout << "   RUN MULTI-THREAD \n";
-         else if (fExecutionPolicy == ROOT::Internal::ExecutionPolicy::kMultiProcess)
+         else if (fExecutionPolicy == ROOT::ExecutionPolicy::kMultiProcess)
             std::cout << "   RUN MULTI-PROCESS \n";
 
          std::cout << "**************************************\n";
@@ -254,7 +254,7 @@ protected:
    typename T::FittingDataType *fData;
    TH2D *fHistogram;
    ROOT::Fit::Fitter fFitter;
-   ROOT::Internal::ExecutionPolicy fExecutionPolicy = ROOT::Internal::ExecutionPolicy::kSequential; 
+   ROOT::ExecutionPolicy fExecutionPolicy = ROOT::ExecutionPolicy::kSequential;
    static const unsigned fNumPoints = 401;
 };
 
@@ -275,12 +275,12 @@ TYPED_TEST_SUITE_P(GradientFittingTest);
 // Test the fitting using the gradient is successful
 TYPED_TEST_P(GradientFittingTest, Sequential)
 {
-   EXPECT_TRUE(TestFixture::RunFit(ROOT::Internal::ExecutionPolicy::kSequential));
+   EXPECT_TRUE(TestFixture::RunFit(ROOT::ExecutionPolicy::kSequential));
 }
 
 TYPED_TEST_P(GradientFittingTest, Multithread)
 {
-   EXPECT_TRUE(TestFixture::RunFit(ROOT::Internal::ExecutionPolicy::kMultiThread));
+   EXPECT_TRUE(TestFixture::RunFit(ROOT::ExecutionPolicy::kMultiThread));
 }
 
 REGISTER_TYPED_TEST_SUITE_P(GradientFittingTest,Sequential,Multithread);
