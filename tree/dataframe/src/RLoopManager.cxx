@@ -688,6 +688,14 @@ std::vector<std::string> RLoopManager::GetFiltersNames()
    return filters;
 }
 
+std::vector<RNodeBase *> RLoopManager::GetGraphEdges() const
+{
+   std::vector<RNodeBase *> nodes;
+   nodes.insert(nodes.end(), fBookedFilters.begin(), fBookedFilters.end());
+   nodes.insert(nodes.end(), fBookedRanges.begin(), fBookedRanges.end());
+   return nodes;
+}
+
 std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions()
 {
    std::vector<RDFInternal::RActionBase *> actions;
