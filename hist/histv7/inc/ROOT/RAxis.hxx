@@ -25,7 +25,6 @@
 
 #include "ROOT/RAxisConfig.hxx"
 #include "ROOT/RStringView.hxx"
-#include "ROOT/RLogger.hxx"
 
 namespace ROOT {
 namespace Experimental {
