@@ -69,7 +69,10 @@ std::ostream &operator<<(std::ostream &os, const std::pair<double, double> &poin
    can replace with their own implementation.
 */
 
-// static logging class which manages global verbosity level
+struct PrefixStack;
+std::ostream& operator<<(std::ostream& os, const PrefixStack& ps);
+
+// logging class for messages of varying severity
 class MnPrint {
 public:
    // want this to be an enum class for strong typing...
@@ -96,6 +99,7 @@ public:
    };
 
    MnPrint(const char *prefix, int level = MnPrint::GlobalLevel());
+   ~MnPrint();
 
    // set global print level and return the previous one
    static int SetGlobalLevel(int level);
@@ -112,43 +116,42 @@ public:
    template <class... Ts>
    void Error(const Ts &... args)
    {
-      Log(eError, fPrefix, args...);
+      Log(eError, Prefix(), args...);
    }
 
    template <class... Ts>
    void Warn(const Ts &... args)
    {
-      Log(eWarn, fPrefix, args...);
+      Log(eWarn, Prefix(), args...);
    }
 
    template <class... Ts>
    void Info(const Ts &... args)
    {
-      Log(eInfo, fPrefix, args...);
+      Log(eInfo, Prefix(), args...);
    }
 
    template <class... Ts>
    void Debug(const Ts &... args)
    {
-      Log(eDebug, fPrefix, args...);
+      Log(eDebug, Prefix(), args...);
    }
 
    // low level logging
-   template <class... Ts>
-   void Log(Verbosity level, const char *prefix, const Ts &... args)
+   template <class T, class... Ts>
+   void Log(Verbosity level, const T& t, const Ts &... args)
    {
       if (Level() < static_cast<int>(level))
          return;
       std::ostringstream os;
-      assert(prefix); // prefix must be always set
-      os << prefix;
-      if (sizeof...(Ts))
-         os << ":";
+      os << t;
       StreamArgs(os, args...);
       Impl(level, os.str());
    }
 
 private:
+   static const PrefixStack& Prefix();
+
    // see MnPrintImpl.cxx
    static void Impl(Verbosity level, const std::string &s);
 
@@ -182,7 +185,6 @@ private:
       StreamArgs(os, ts...);
    }
 
-   const char *fPrefix;
    int fLevel;
 };
 

@@ -23,6 +23,7 @@
 
 #include <iomanip>
 #include <utility>
+#include <cstring>
 
 constexpr int PRECISION = 10;
 constexpr int WIDTH = PRECISION + 7;
@@ -30,7 +31,46 @@ constexpr int WIDTH = PRECISION + 7;
 namespace ROOT {
 namespace Minuit2 {
 
-int gPrintLevel = 0;
+using cstr_t = const char*;
+
+struct PrefixStack {
+  void Push(cstr_t prefix) {
+    if (fSize < fMaxSize)
+      fData[fSize] = prefix;
+    else {
+      fData[fMaxSize-1] = prefix;
+      fData[fMaxSize-2] = "...";
+    }
+    ++fSize;
+  }
+
+  void Pop() {
+    assert(fSize > 0);
+    --fSize;
+  }
+
+  cstr_t const * begin() const { return fData; }
+  cstr_t const * end() const { return fData + (fSize < fMaxSize ? fSize : fMaxSize); }
+
+  static constexpr unsigned fMaxSize = 10;
+  cstr_t fData[fMaxSize];
+  unsigned fSize = 0;
+};
+
+std::ostream& operator<<(std::ostream& os, const PrefixStack& ps) {
+  cstr_t prev = "";
+  for (const auto cs : ps) {
+    // skip repeated prefixes; repetition happens when class method calls another
+    // method of the same class and both set up a MnPrint instance
+    if (std::strcmp(cs, prev) != 0)
+      os << cs << ":";
+    prev = cs;
+  }
+  return os;
+}
+
+thread_local int gPrintLevel = 0;
+thread_local PrefixStack gPrefixStack;
 
 int MnPrint::SetGlobalLevel(int level)
 {
@@ -43,7 +83,13 @@ int MnPrint::GlobalLevel()
    return gPrintLevel;
 }
 
-MnPrint::MnPrint(const char *prefix, int level) : fPrefix{prefix}, fLevel{level} {}
+MnPrint::MnPrint(const char *prefix, int level) : fLevel{level} {
+  gPrefixStack.Push(prefix);
+}
+
+MnPrint::~MnPrint() {
+  gPrefixStack.Pop();
+}
 
 int MnPrint::SetLevel(int level)
 {
@@ -55,6 +101,8 @@ int MnPrint::Level() const
 {
    return fLevel;
 }
+
+const PrefixStack& MnPrint::Prefix() { return gPrefixStack; }
 
 MnPrint::Oneline::Oneline(double fcn, double edm, int ncalls, int iter)
    : fFcn(fcn), fEdm(edm), fNcalls(ncalls), fIter(iter)
