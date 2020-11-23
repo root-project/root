@@ -12,11 +12,12 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMenuItems.hxx>
 
-#include "TROOT.h"
-#include "TStyle.h"
+#include "TArrayI.h"
 #include "TColor.h"
 #include "TObjArray.h"
 #include "TObjString.h"
+#include "TROOT.h"
+#include "TStyle.h"
 
 #include <exception>
 #include <sstream>
