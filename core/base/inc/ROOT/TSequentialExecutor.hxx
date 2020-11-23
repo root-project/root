@@ -140,8 +140,10 @@ namespace ROOT {
    template<class F, class Cond>
    auto TSequentialExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
       using retType = decltype(func());
-      std::vector<retType> reslist(nTimes);
-      for(auto i: ROOT::TSeqI(nTimes)) reslist[i] = func();
+      std::vector<retType> reslist;
+      reslist.reserve(nTimes);
+      for(auto i: ROOT::TSeqI(nTimes))
+         reslist.emplace_back(func());
       return reslist;
    }
 
@@ -153,8 +155,10 @@ namespace ROOT {
    template<class F, class INTEGER, class Cond>
    auto TSequentialExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
       using retType = decltype(func(*args.begin()));
-      std::vector<retType> reslist(args.size());
-      for(auto i: args) reslist[i] = func(i);
+      std::vector<retType> reslist;
+      reslist.reserve(args.size());
+      for(auto i: args)
+         reslist.emplace_back(func(i));
       return reslist;
    }
 
@@ -168,8 +172,10 @@ namespace ROOT {
       // //check whether func is callable
       using retType = decltype(func(args.front()));
       unsigned int nToProcess = args.size();
-      std::vector<retType> reslist(nToProcess);
-      for(auto i: ROOT::TSeqI(nToProcess)) reslist[i] = func(args[i]);
+      std::vector<retType> reslist;
+      reslist.reserve(nToProcess);
+      for(auto i: ROOT::TSeqI(nToProcess))
+         reslist.emplace_back(func(args[i]));
       return reslist;
    }
 
@@ -183,8 +189,10 @@ namespace ROOT {
       // //check whether func is callable
       using retType = decltype(func(args.front()));
       unsigned int nToProcess = args.size();
-      std::vector<retType> reslist(nToProcess);
-      for(auto i: ROOT::TSeqI(nToProcess)) reslist[i] = func(args[i]);
+      std::vector<retType> reslist;
+      reslist.reserve(nToProcess);
+      for(auto i: ROOT::TSeqI(nToProcess))
+         reslist.emplace_back(func(args[i]));
       return reslist;
    }
 
