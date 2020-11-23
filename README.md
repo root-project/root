@@ -27,7 +27,7 @@ an open system that can be dynamically extended by linking external
 libraries. This makes ROOT a premier platform on which to build data
 acquisition, simulation and data analysis systems.
 
-[![License: LGPL v2.1+](https://img.shields.io/badge/License-LGPL%20v2.1+-blue.svg)](https://www.gnu.org/licenses/lgpl.html) [![Test coverage](https://root.cern/files/img/coverage-badge.svg)](https://epsft-jenkins.cern.ch/job/root-nightly-master-coverage/cobertura)
+[![License: LGPL v2.1+](https://img.shields.io/badge/License-LGPL%20v2.1+-blue.svg)](https://www.gnu.org/licenses/lgpl.html)
 
 ## Build Status
 | Branch | Nightly build status |
