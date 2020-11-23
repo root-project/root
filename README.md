@@ -29,13 +29,6 @@ acquisition, simulation and data analysis systems.
 
 [![License: LGPL v2.1+](https://img.shields.io/badge/License-LGPL%20v2.1+-blue.svg)](https://www.gnu.org/licenses/lgpl.html)
 
-## Build Status
-| Branch | Nightly build status |
-|--------|------------|
-| master | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-master)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-master/) |
-| v6-22-00-patches | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-v6-22-00-patches)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-v6-22-00-patches/) |
-| v6-20-00-patches | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-v6-20-00-patches)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-v6-20-00-patches/) |
-
 ## Cite
 
 When citing ROOT, please use both the reference reported below and the DOI specific to your ROOT version available [on Zenodo](https://zenodo.org/badge/latestdoi/10994345) [![DOI](https://zenodo.org/badge/10994345.svg)](https://zenodo.org/badge/latestdoi/10994345). For example, you can copy-paste and fill in the following citation:
