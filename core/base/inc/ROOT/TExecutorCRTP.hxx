@@ -151,7 +151,7 @@ public:
 
 private:
 
-   inline subc & Derived()
+   subc &Derived()
    {
      return *static_cast<subc*>(this);
    }
