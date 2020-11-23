@@ -179,7 +179,11 @@ public:
    /// For each booked filter, returns either the name or "Unnamed Filter"
    std::vector<std::string> GetFiltersNames();
 
-   /// For all the actions, either booked or run
+   /// Return all graph edges known to RLoopManager
+   /// This includes Filters and Ranges but not Defines.
+   std::vector<RNodeBase *> GetGraphEdges() const;
+
+   /// Return all actions, either booked or already run
    std::vector<RDFInternal::RActionBase *> GetAllActions();
 
    std::vector<RDFInternal::RActionBase *> GetBookedActions() { return fBookedActions; }
