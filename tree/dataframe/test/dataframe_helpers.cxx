@@ -281,6 +281,18 @@ TEST(RDFHelpers, SaveGraphToFile)
    gSystem->Unlink(outFileName);
 }
 
+// ROOT-9977
+TEST(RDFHelpers, SaveGraphNoActions)
+{
+   auto df = ROOT::RDataFrame(1);
+   auto df2 = df.Filter([] { return true; });
+   const auto res = ROOT::RDF::SaveGraph(df);
+   const std::string expected =
+      "digraph {\n\t2 [label=\"Filter\", style=\"filled\", fillcolor=\"#c4cfd4\", shape=\"diamond\"];\n\t0 "
+      "[label=\"1\", style=\"filled\", fillcolor=\"#e8f8fc\", shape=\"oval\"];\n\t0 -> 2;\n}";
+   EXPECT_EQ(res, expected);
+}
+
 TEST(RunGraphs, RunGraphs)
 {
 #ifdef R__USE_IMT
