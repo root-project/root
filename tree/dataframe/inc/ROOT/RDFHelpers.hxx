@@ -107,6 +107,11 @@ auto PassAsVec(F &&f) -> RDFInternal::PassAsVecHelper<std::make_index_sequence<N
 /// Create a graphviz representation of the dataframe computation graph, return it as a string.
 /// \param[in] node any node of the graph. Called on the head (first) node, it prints the entire graph. Otherwise, only the branch the node belongs to.
 ///
+/// The output can be displayed with a command akin to `dot -Tpng output.dot > output.png && open output.png`.
+///
+/// Note that "hanging" Defines, i.e. Defines without downstream nodes, will not be displayed by SaveGraph as they are
+/// effectively optimized away from the computation graph.
+///
 /// Note that SaveGraph is not thread-safe and must not be called concurrently from different threads.
 // clang-format on
 template <typename NodeType>
@@ -120,6 +125,11 @@ std::string SaveGraph(NodeType node)
 /// Create a graphviz representation of the dataframe computation graph, write it to the specified file.
 /// \param[in] node any node of the graph. Called on the head (first) node, it prints the entire graph. Otherwise, only the branch the node belongs to.
 /// \param[in] outputFile file where to save the representation.
+///
+/// The output can be displayed with a command akin to `dot -Tpng output.dot > output.png && open output.png`.
+///
+/// Note that "hanging" Defines, i.e. Defines without downstream nodes, will not be displayed by SaveGraph as they are
+/// effectively optimized away from the computation graph.
 ///
 /// Note that SaveGraph is not thread-safe and must not be called concurrently from different threads.
 // clang-format on
