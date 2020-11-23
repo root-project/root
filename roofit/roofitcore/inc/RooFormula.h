@@ -21,15 +21,15 @@
 #include "RooArgSet.h"
 #include "TFormula.h"
 #include "RooSpan.h"
-#include "BatchData.h"
 
 #include <memory>
 #include <vector>
 #include <string>
 
 namespace BatchHelpers {
-struct RunContext;
+  struct RunContext;
 }
+class RooAbsReal;
 
 class RooFormula : public TNamed, public RooPrintable {
 public:

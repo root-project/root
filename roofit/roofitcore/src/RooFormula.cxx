@@ -378,15 +378,16 @@ RooSpan<double> RooFormula::evaluateSpan(const RooAbsReal* dataOwner, BatchHelpe
 
   std::vector<BatchHelpers::BracketAdapterWithMask> valueAdapters;
   std::vector<RooSpan<const double>> inputSpans;
+  size_t nData=1;
   for (const auto arg : _origList) {
     auto realArg = static_cast<const RooAbsReal*>(arg);
     auto batch = realArg->getValues(inputData, nset);
     assert(!batch.empty());
+    nData = std::max(nData, batch.size());
     valueAdapters.emplace_back(batch[0], batch);
     inputSpans.push_back(std::move(batch));
   }
 
-  const auto nData = BatchHelpers::findSmallestBatch(inputSpans);
   auto output = inputData.makeBatch(dataOwner, nData);
   std::vector<double> pars(_origList.size());
 

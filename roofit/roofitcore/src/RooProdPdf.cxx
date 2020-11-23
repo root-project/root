@@ -500,50 +500,6 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
   }
 }
 
-RooSpan<double> RooProdPdf::evaluateBatch(std::size_t begin, std::size_t size) const {
-  int code;
-  auto cache = static_cast<CacheElem*>(_cacheMgr.getObj(_normSet, nullptr, &code));
-
-  // If cache doesn't have our configuration, recalculate here
-  if (!cache) {
-    code = getPartIntList(_normSet, nullptr);
-    cache = static_cast<CacheElem*>(_cacheMgr.getObj(_normSet, nullptr, &code));
-  }
-
-  if (cache->_isRearranged) {
-    if (dologD(Eval)) {
-      cxcoutD(Eval) << "RooProdPdf::calculate(" << GetName() << ") rearranged product calculation"
-                    << " calculate: num = " << cache->_rearrangedNum->GetName() << " = " << cache->_rearrangedNum->getVal() << endl ;
-      cxcoutD(Eval) << "calculate: den = " << cache->_rearrangedDen->GetName() << " = " << cache->_rearrangedDen->getVal() << endl ;
-    }
-
-    auto outputs = _batchData.makeWritableBatchUnInit(begin, size);
-    auto numerator = cache->_rearrangedNum->getValBatch(begin, size);
-    auto denominator = cache->_rearrangedDen->getValBatch(begin, size);
-
-    for (std::size_t i=0; i < outputs.size(); ++i) {
-      outputs[i] = numerator[i] / denominator[i];
-    }
-
-    return outputs;
-  } else {
-
-    auto outputs = _batchData.makeWritableBatchInit(begin, size, 1.);
-    assert(cache->_normList.size() == cache->_partList.size());
-    for (std::size_t i = 0; i < cache->_partList.size(); ++i) {
-      const auto& partInt = static_cast<const RooAbsReal&>(cache->_partList[i]);
-      const auto normSet = cache->_normList[i].get();
-
-      const auto partialInts = partInt.getValBatch(begin, size, normSet->getSize() > 0 ? normSet : nullptr);
-      for (std::size_t j=0; j < outputs.size(); ++j) {
-        outputs[j] *= partialInts[j];
-      }
-    }
-
-    return outputs;
-  }
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs using input data in `evalData`.

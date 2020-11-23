@@ -478,7 +478,6 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
 
   auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
 
-#ifdef ROOFIT_NEW_BATCH_INTERFACE
   // Create a RunContext that will own the memory where computation results are stored.
   // Holding on to this struct in between function calls will make sure that the memory
   // is only allocated once.
@@ -489,13 +488,9 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
   _dataClone->getBatches(*_evalData, firstEvent, lastEvent-firstEvent);
 
   auto results = pdfClone->getLogProbabilities(*_evalData, _normSet);
-#else
-  auto results = pdfClone->getLogValBatch(firstEvent, lastEvent-firstEvent, _normSet);
-#endif
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
 
-#ifdef ROOFIT_NEW_BATCH_INTERFACE
   for (std::size_t evtNo = firstEvent; evtNo < std::min(lastEvent, firstEvent + 10); ++evtNo) {
     _dataClone->get(evtNo);
     assert(_dataClone->valid());
@@ -514,19 +509,6 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
       }
     }
   }
-#else
-  for (std::size_t evtNo = firstEvent; evtNo < lastEvent; ++evtNo) {
-    _dataClone->get(evtNo);
-    assert(_dataClone->valid());
-    pdfClone->getValV(_normSet);
-    try {
-      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, evtNo, _normSet);
-    } catch (std::exception& e) {
-      std::cerr << __FILE__ << ":" << __LINE__ << " ERROR when checking batch computation for event " << evtNo << ":\n"
-          << e.what() << std::endl;
-    }
-  }
-#endif
 
 #endif
 

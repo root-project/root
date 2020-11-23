@@ -81,50 +81,7 @@ Double_t RooLognormal::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-namespace {
-//Author: Emmanouil Michalainas, CERN 10 September 2019
-
-template<class Tx, class Tm0, class Tk>
-void compute(	size_t batchSize,
-              double * __restrict output,
-              Tx X, Tm0 M0, Tk K)
-{
-  const double rootOf2pi = TMath::Sqrt(2 * M_PI);
-  for (size_t i=0; i<batchSize; i++) {
-    double lnxOverM0 = _rf_fast_log(X[i]/M0[i]);
-    double lnk = _rf_fast_log(K[i]);
-    if (lnk<0) lnk = -lnk;
-    double arg = lnxOverM0/lnk;
-    arg *= -0.5*arg;
-    output[i] = _rf_fast_exp(arg) / (X[i]*lnk*rootOf2pi);
-  }
-}
-};
-
-RooSpan<double> RooLognormal::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
-  
-  EvaluateInfo info = getInfo( {&x, &m0, &k}, begin, batchSize );
-  if (info.nBatches == 0) {
-    return {};
-  }
-
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  auto xData = x.getValBatch(begin, info.size);
-
-  if (info.nBatches==1 && !xData.empty()) {
-    compute(info.size, output.data(), xData.data(), BracketAdapter<double> (m0), BracketAdapter<double> (k));
-  }
-  else {
-    compute(info.size, output.data(), BracketAdapterWithMask (x,x.getValBatch(begin,info.size)), BracketAdapterWithMask (m0,m0.getValBatch(begin,info.size)), BracketAdapterWithMask (k,k.getValBatch(begin,info.size)));
-  }
-  return output;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
+/// Compute multiple values of Lognormal distribution.  
 RooSpan<double> RooLognormal::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
   return RooFitCompute::dispatch->computeLognormal(this, evalData, x->getValues(evalData, normSet), m0->getValues(evalData, normSet), k->getValues(evalData, normSet));
 }

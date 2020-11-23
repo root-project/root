@@ -255,18 +255,6 @@ public:
     return arg().hasRange(rangeName);
   }
 
-
-  /// Retrieve a batch of real or category data.
-  /// When retrieving real-valued data from e.g. a PDF, the normalisation set saved by this proxy will be passed
-  /// on the the proxied object.
-  /// \param[in] begin Begin of the range to be retrieved.
-  /// \param[in] batchSize Size of the range to be retrieved. Batch may be smaller if no more data available.
-  /// \return RooSpan<const double> for real-valued proxies, RooSpan<const int> for category proxies.
-  RooSpan<const typename T::value_type> getValBatch(std::size_t begin, std::size_t batchSize) const {
-    return retrieveBatchVal(begin, batchSize, arg());
-  }
-
-
   /// Return reference to object held in proxy.
   const T& arg() const { return static_cast<const T&>(*_arg); }
 
@@ -348,16 +336,6 @@ private:
   /// Retrieve value from a real-valued object.
   typename T::value_type retrieveValue(const RooAbsReal& real) const {
     return real.getVal(_nset);
-  }
-
-  /// Retrieve a batch of index states from a category.
-  RooSpan<const typename T::value_type> retrieveBatchVal(std::size_t begin, std::size_t batchSize, const RooAbsCategory& cat) const {
-    return cat.getValBatch(begin, batchSize);
-  }
-
-  /// Retrieve a batch of values from a real-valued object. The current normalisation set associated to the proxy will be passed on.
-  RooSpan<const typename T::value_type> retrieveBatchVal(std::size_t begin, std::size_t batchSize, const RooAbsReal& real) const {
-    return real.getValBatch(begin, batchSize, _nset);
   }
 
   ClassDef(RooTemplateProxy,1) // Proxy for a RooAbsReal object

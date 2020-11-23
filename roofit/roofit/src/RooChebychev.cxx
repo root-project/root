@@ -183,60 +183,7 @@ Double_t RooChebychev::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-namespace {
-//Author: Emmanouil Michalainas, CERN 12 AUGUST 2019  
-
-void compute(  size_t batchSize, double xmax, double xmin,
-               double * __restrict output,
-               const double * __restrict const xData,
-               const RooListProxy& _coefList)
-{
-  constexpr size_t block = 128;
-  const size_t nCoef = _coefList.size();
-  double prev[block][2], X[block];
-  
-  for (size_t i=0; i<batchSize; i+=block) {
-    size_t stop = (i+block >= batchSize) ? batchSize-i : block;
-    
-    // set a0-->prev[j][0] and a1-->prev[j][1]
-    // and x tranfsformed to range[-1..1]-->X[j]
-    for (size_t j=0; j<stop; j++) {
-      prev[j][0] = output[i+j] = 1.0;
-      prev[j][1] = X[j] = (xData[i+j] -0.5*(xmax + xmin)) / (0.5*(xmax - xmin));
-    }
-    
-    for (size_t k=0; k<nCoef; k++) {
-      const double coef = static_cast<const RooAbsReal &>(_coefList[k]).getVal();
-      for (size_t j=0; j<stop; j++) {
-        output[i+j] += prev[j][1]*coef;
-        
-        //compute next order
-        const double next = 2*X[j]*prev[j][1] -prev[j][0];
-        prev[j][0] = prev[j][1];
-        prev[j][1] = next;
-      }
-    }
-  }
-}
-};
-
-
-RooSpan<double> RooChebychev::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  auto xData = _x.getValBatch(begin, batchSize);
-  if (xData.empty()) {
-    return {};
-  }
-  
-  batchSize = xData.size();
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName() : nullptr);
-  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName() : nullptr);
-  compute(batchSize, xmax, xmin, output.data(), xData.data(), _coefList);
-  return output;
-}
-////////////////////////////////////////////////////////////////////////////////
-
+/// Compute multiple values of Chebychev.  
 RooSpan<double> RooChebychev::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
 
   RooSpan<const double> xData = _x->getValues(evalData, normSet);  

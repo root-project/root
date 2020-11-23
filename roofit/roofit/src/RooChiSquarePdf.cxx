@@ -65,65 +65,7 @@ Double_t RooChiSquarePdf::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-namespace {
-//Author: Emmanouil Michalainas, CERN 28 Aug 2019
-
-template<class T_x, class T_ndof>
-void compute(	size_t batchSize,
-              double * __restrict output,
-              T_x X, T_ndof N)
-{
-  if ( N.isBatch() ) {
-    for (size_t i=0; i<batchSize; i++) {
-      if (X[i] > 0) {
-        output[i] = 1/std::tgamma(N[i]/2.0);
-      }
-    }
-  }
-  else {
-    // N is just a scalar so bracket adapter ignores index.
-    const double gamma = 1/std::tgamma(N[2019]/2.0);
-    for (size_t i=0; i<batchSize; i++) {
-      output[i] = gamma;
-    }
-  }
-  
-  constexpr double ln2 = 0.693147180559945309417232121458;
-  const double lnx0 = std::log(X[0]);
-  for (size_t i=0; i<batchSize; i++) {
-    double lnx;
-    if ( X.isBatch() ) lnx = _rf_fast_log(X[i]);
-    else lnx = lnx0;
-    
-    double arg = (N[i]-2)*lnx -X[i] -N[i]*ln2;
-    output[i] *= _rf_fast_exp(0.5*arg);
-  }
-}
-};
-
-RooSpan<double> RooChiSquarePdf::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  
-  using namespace BatchHelpers;
-  EvaluateInfo info = getInfo( {&_x, &_ndof}, begin, batchSize );
-  if (info.nBatches == 0) {
-    return {};
-  }
-
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  auto _xData = _x.getValBatch(begin, batchSize);
-
-  if (info.nBatches==1 && !_xData.empty()) {
-    compute(info.size, output.data(), _xData, BracketAdapter<double>(_ndof));
-  }
-  else {
-    compute(info.size, output.data(), BracketAdapterWithMask(_x, _xData), BracketAdapterWithMask(_ndof, _ndof.getValBatch(begin, batchSize)));
-  }  
-  return output;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
+/// Compute multiple values of ChiSquare distribution.  
 RooSpan<double> RooChiSquarePdf::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
   return RooFitCompute::dispatch->computeChiSquare(this, evalData, _x->getValues(evalData, normSet), _ndof->getValues(evalData, normSet));
 }

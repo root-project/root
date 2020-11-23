@@ -45,7 +45,6 @@ private:
   mutable TNamed* _refRangeName ; 
 
   Double_t evaluate() const;
-  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
   RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
   
   Double_t evalAnaInt(const Double_t a, const Double_t b) const;

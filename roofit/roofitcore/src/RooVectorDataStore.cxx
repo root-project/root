@@ -1470,17 +1470,26 @@ BatchHelpers::RunContext RooVectorDataStore::getBatches(std::size_t first, std::
 RooSpan<const double> RooVectorDataStore::getWeightBatch(std::size_t first, std::size_t len) const
 {
   if (_extWgtArray) {
-    return RooSpan<const double>(_extWgtArray + first, _extWgtArray + len);
+    return RooSpan<const double>(_extWgtArray + first, _extWgtArray + first + len);
   }
-
 
   if (_wgtVar) {
-    return _wgtVar->getValBatch(first, len);
-  }
+    auto findWeightVar = [this](const RealVector* realVec) {
+      return realVec->_nativeReal == _wgtVar || realVec->_nativeReal->GetName() == _wgtVar->GetName();
+    };
 
+    auto storageIter = std::find_if(_realStoreList.begin(), _realStoreList.end(), findWeightVar);
+    if (storageIter != _realStoreList.end())
+      return (*storageIter)->getRange(first, first + len);
+
+    auto fstorageIter = std::find_if(_realfStoreList.begin(), _realfStoreList.end(), findWeightVar);
+    if (fstorageIter != _realfStoreList.end())
+      return (*fstorageIter)->getRange(first, first + len);
+
+    throw std::logic_error("RooVectorDataStore::getWeightBatch(): Could not retrieve data for _wgtVar.");
+  }
   return {};
 }
-
 
 
 RooVectorDataStore::CatVector* RooVectorDataStore::addCategory(RooAbsCategory* cat) {

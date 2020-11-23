@@ -88,10 +88,6 @@ public:
     return false;
   }
 
-  virtual RooSpan<const value_type> getValBatch(std::size_t /*begin*/, std::size_t /*batchSize*/) const override {
-    throw std::logic_error("Not implemented yet.");
-  }
-
   Bool_t isStateInRange(const char* rangeName, RooAbsCategory::value_type stateIndex) const ;
   Bool_t isStateInRange(const char* rangeName, const char* stateName) const ;
   /// Check if the currently defined category state is in the range with the given name.

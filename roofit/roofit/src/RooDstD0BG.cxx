@@ -81,56 +81,8 @@ Double_t RooDstD0BG::evaluate() const
   return (val > 0 ? val : 0) ;
 }
 
-namespace {
-//Author: Emmanouil Michalainas, CERN 9 SEPTEMBER 2019 
-
-template<class Tdm, class Tdm0, class TC, class TA, class TB>
-void compute(	size_t batchSize, double * __restrict output,
-              Tdm DM, Tdm0 DM0, TC C, TA A, TB B)
-{
-  for (size_t i=0; i<batchSize; i++) {
-    const double ratio = DM[i] / DM0[i];
-    const double arg1 = (DM0[i]-DM[i]) / C[i];
-    const double arg2 = A[i]*_rf_fast_log(ratio);
-    output[i] = (1 -_rf_fast_exp(arg1)) * _rf_fast_exp(arg2) +B[i]*(ratio-1);
-  }
-  
-  for (size_t i=0; i<batchSize; i++) {
-    if (output[i]<0) output[i] = 0;
-  }
-}
-};
-
-RooSpan<double> RooDstD0BG::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
-
-  EvaluateInfo info = getInfo( {&dm, &dm0, &C, &A, &B}, begin, batchSize );
-  if (info.nBatches == 0) {
-    return {};
-  }
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  auto dmData = dm.getValBatch(begin, info.size);
-
-  if (info.nBatches==1 && !dmData.empty()) {
-    compute(info.size, output.data(), dmData.data(),
-    BracketAdapter<double> (dm0),
-    BracketAdapter<double> (C),
-    BracketAdapter<double> (A),
-    BracketAdapter<double> (B));
-  }
-  else {
-    compute(info.size, output.data(),
-    BracketAdapterWithMask (dm,dm.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (dm0,dm0.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (C,C.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (A,A.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (B,B.getValBatch(begin,info.size)));
-  }
-  return output;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Compute multiple values of D*-D0 mass difference distribution.  
 RooSpan<double> RooDstD0BG::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
   return RooFitCompute::dispatch->computeDstD0BG(this, evalData, dm->getValues(evalData, normSet), dm0->getValues(evalData, normSet), C->getValues(evalData, normSet), A->getValues(evalData, normSet), B->getValues(evalData, normSet));
 }

@@ -66,58 +66,11 @@ Double_t RooGaussian::evaluate() const
 }
 
 
-namespace {
-
-///Actual computations for the batch evaluation of the Gaussian.
-///May vectorise over x, mean, sigma, depending on the types of the inputs.
-///\note The output and input spans are assumed to be non-overlapping. If they
-///overlap, results will likely be garbage.
-template<class Tx, class TMean, class TSig>
-void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
-  const auto n = output.size();
-
-  for (std::size_t i = 0; i < n; ++i) {
-    const double arg = x[i] - mean[i];
-    const double halfBySigmaSq = -0.5 / (sigma[i] * sigma[i]);
-
-    output[i] = _rf_fast_exp(arg*arg * halfBySigmaSq);
-  }
-}
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute \f$ \exp(-0.5 \cdot \frac{(x - \mu)^2}{\sigma^2} \f$ in batches.
-/// The local proxies {x, mean, sigma} will be searched for batch input data,
-/// and if found, the computation will be batched over their
-/// values. If batch data are not found for one of the proxies, the proxies value is assumed to
-/// be constant over the batch.
-/// \param[in] begin Index of the batch to be computed.
-/// \param[in] batchSize Size of each batch. The last batch may be smaller.
-/// \return A span with the computed values.
-
-RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  EvaluateInfo info = getInfo( {&x, &mean, &sigma}, begin, batchSize );
-  if (info.nBatches == 0) {
-    return {};
-  }
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  auto xData = x.getValBatch(begin, info.size);
-
-  if (info.nBatches==1 && !xData.empty()) {
-    compute(output, xData.data(), BracketAdapter<double>(mean), BracketAdapter<double>(sigma));
-  }
-  else {
-    compute(output, BracketAdapterWithMask(x,xData), BracketAdapterWithMask(mean,mean.getValBatch(begin,info.size)), BracketAdapterWithMask(sigma,sigma.getValBatch(begin,info.size)));
-  }
-  return output;
-}
-
-
+/// Compute multiple values of Gaussian distribution.  
 RooSpan<double> RooGaussian::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
   return RooFitCompute::dispatch->computeGaussian(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
