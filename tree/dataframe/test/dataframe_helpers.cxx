@@ -293,6 +293,24 @@ TEST(RDFHelpers, SaveGraphNoActions)
    EXPECT_EQ(res, expected);
 }
 
+TEST(RDFHelpers, SaveGraphSharedDefines)
+{
+   auto One = [] { return 1; };
+   ROOT::RDataFrame df(1);
+   auto df2 = df.Define("shared", One);
+   auto c1 = df2.Define("one", One).Count();
+   auto c2 = df2.Define("two", One).Count();
+   std::string graph = ROOT::RDF::SaveGraph(df);
+   const std::string expected =
+      "digraph {\n\t2 [label=\"Count\", style=\"filled\", fillcolor=\"#9cbbe5\", shape=\"box\"];\n\t3 "
+      "[label=\"Define\none\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n\t4 "
+      "[label=\"Define\nshared\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n\t0 [label=\"1\", "
+      "style=\"filled\", fillcolor=\"#e8f8fc\", shape=\"oval\"];\n\t6 [label=\"Count\", style=\"filled\", "
+      "fillcolor=\"#9cbbe5\", shape=\"box\"];\n\t7 [label=\"Define\ntwo\", style=\"filled\", fillcolor=\"#60aef3\", "
+      "shape=\"oval\"];\n\t3 -> 2;\n\t4 -> 3;\n\t0 -> 4;\n\t7 -> 6;\n\t4 -> 7;\n}";
+   EXPECT_EQ(graph, expected);
+}
+
 TEST(RunGraphs, RunGraphs)
 {
 #ifdef R__USE_IMT
