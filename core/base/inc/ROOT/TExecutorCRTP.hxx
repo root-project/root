@@ -98,9 +98,8 @@ template<class subc>
 class TExecutorCRTP {
 friend subc;
 public:
-   explicit TExecutorCRTP() = default;
-   explicit TExecutorCRTP(size_t /* nWorkers */ ){};
 
+   TExecutorCRTP() = default;
    TExecutorCRTP(const TExecutorCRTP &) = delete;
    TExecutorCRTP &operator=(const TExecutorCRTP &) = delete;
 
