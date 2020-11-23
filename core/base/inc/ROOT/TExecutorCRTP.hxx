@@ -13,6 +13,7 @@
 #define ROOT_TExecutorCRTP
 
 #include "ROOT/TSeq.hxx"
+#include "TError.h"
 #include "TList.h"
 #include <vector>
 
@@ -336,6 +337,12 @@ T* TExecutorCRTP<subc>::MapReduce(F func, const std::vector<T*> &args)
 template<class subc> template<class T>
 T* TExecutorCRTP<subc>::Reduce(const std::vector<T*> &mergeObjs)
 {
+   ROOT::MergeFunc_t merge = mergeObjs.front()->IsA()->GetMerge();
+   if(!merge) {
+      Error("TExecutorCRTP<subc>::Reduce", "could not find merge method for the TObject\n. Aborting operation.");
+      return nullptr;
+   }
+
    TList l;
    for(unsigned i =1; i<mergeObjs.size(); i++){
       l.Add(mergeObjs[i]);
