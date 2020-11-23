@@ -259,9 +259,7 @@ auto TExecutorCRTP<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typen
 template<class subc> template<class F, class INTEGER, class R, class Cond>
 auto TExecutorCRTP<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
 {
-   std::vector<INTEGER> vargs(args.size());
-   std::copy(args.begin(), args.end(), vargs.begin());
-   return Reduce(Map(func, vargs), redfunc);
+   return Reduce(Map(func, args), redfunc);
 }
 
 //////////////////////////////////////////////////////////////////////////
