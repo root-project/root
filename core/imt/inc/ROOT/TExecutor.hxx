@@ -132,7 +132,7 @@ public:
    TExecutor &operator=(const TExecutor &) = delete;
 
    /// Return the execution policy the executor is set to
-   ROOT::ExecutionPolicy Policy(){ return fExecPolicy; }
+   ROOT::ExecutionPolicy Policy() const { return fExecPolicy; }
 
    // Map
    //
