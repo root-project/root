@@ -72,7 +72,7 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
    double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
    MinimumState state(pa, err, dgrad, edm, fcn.NumOfCalls());
 
-   print.Info("Initial state:", state);
+   print.Info("Initial state:", MnPrint::Oneline(state));
 
    NegativeG2LineSearch ng2ls;
    if(ng2ls.HasNegativeG2(dgrad, prec)) {
