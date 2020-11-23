@@ -27,7 +27,7 @@ namespace ROOT {
       friend TExecutorCRTP;
    public:
       explicit TSequentialExecutor(){};
-      explicit TSequentialExecutor(ROOT::Internal::ExecutionPolicy, unsigned): TSequentialExecutor(){};
+      explicit TSequentialExecutor(ROOT::ExecutionPolicy, unsigned): TSequentialExecutor(){};
 
       TSequentialExecutor(const TSequentialExecutor &) = delete;
       TSequentialExecutor &operator=(const TSequentialExecutor &) = delete;

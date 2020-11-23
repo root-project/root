@@ -81,7 +81,7 @@
 /// #### Examples:
 /// ~~~{.cpp}
 /// root[] ROOT::Internal::TExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](const std::vector<int> &v) { return std::accumulate(v.begin(), v.end(), 0); })
-/// root[] ROOT::Internal::TExecutor pool(ROOT::Internal::ExecutionPolicy::kMultiProcess); auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
+/// root[] ROOT::Internal::TExecutor pool(ROOT::ExecutionPolicy::kMultiProcess); auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
 /// ~~~
 ///
 //////////////////////////////////////////////////////////////////////////
@@ -101,24 +101,24 @@ public:
    /// Defaults to multithreaded execution policy if ROOT is compiled with IMT=ON and IsImplicitMTEnabled. Otherwise it defaults to a serial execution policy
    /// \param nWorkers [optional] Number of parallel workers, only taken into account if the execution policy is kMultiThread
    explicit TExecutor(unsigned nWorkers = 0) :
-      TExecutor(ROOT::IsImplicitMTEnabled() ? ROOT::Internal::ExecutionPolicy::kMultiThread : ROOT::Internal::ExecutionPolicy::kSequential, nWorkers) {}
+      TExecutor(ROOT::IsImplicitMTEnabled() ? ROOT::ExecutionPolicy::kMultiThread : ROOT::ExecutionPolicy::kSequential, nWorkers) {}
 
    /// \brief Class constructor. Sets the execution policy and initializes the corresponding executor.
    /// \param execPolicy Execution policy(kMultiThread, kMultiprocess, kSerial) to process the data
    /// \param nWorkers [optional] Number of parallel workers, only taken into account if the execution policy is kMultiThread
-   explicit TExecutor(ROOT::Internal::ExecutionPolicy execPolicy, unsigned nWorkers = 0) : fExecPolicy(execPolicy) {
+   explicit TExecutor(ROOT::ExecutionPolicy execPolicy, unsigned nWorkers = 0) : fExecPolicy(execPolicy) {
       fExecPolicy = execPolicy;
       switch(fExecPolicy) {
-         case ROOT::Internal::ExecutionPolicy::kSequential:
+         case ROOT::ExecutionPolicy::kSequential:
             fSequentialExecutor = std::make_unique<ROOT::TSequentialExecutor>();
             break;
 #ifdef R__USE_IMT
-         case ROOT::Internal::ExecutionPolicy::kMultiThread:
+         case ROOT::ExecutionPolicy::kMultiThread:
             fThreadExecutor = std::make_unique<ROOT::TThreadExecutor>(nWorkers);
             break;
 #endif
 #ifndef R__WIN32
-         case ROOT::Internal::ExecutionPolicy::kMultiProcess:
+         case ROOT::ExecutionPolicy::kMultiProcess:
             fProcessExecutor = std::make_unique<ROOT::TProcessExecutor>(nWorkers);
             break;
 #endif
@@ -132,7 +132,7 @@ public:
    TExecutor &operator=(const TExecutor &) = delete;
 
    /// Return the execution policy the executor is set to
-   ROOT::Internal::ExecutionPolicy Policy(){ return fExecPolicy; }
+   ROOT::ExecutionPolicy Policy(){ return fExecPolicy; }
 
    // Map
    //
@@ -185,7 +185,7 @@ private:
    template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
 
-   ROOT::Internal::ExecutionPolicy fExecPolicy;
+   ROOT::ExecutionPolicy fExecPolicy;
 #ifdef R__USE_IMT
    std::unique_ptr<ROOT::TThreadExecutor> fThreadExecutor;
 #else
@@ -217,13 +217,13 @@ private:
    auto ResolveExecutorAndMap(F func, T args) -> std::vector<typename MapRetType<F, T>::type> {
       std::vector<typename MapRetType<F, T>::type> res;
       switch(fExecPolicy) {
-         case ROOT::Internal::ExecutionPolicy::kSequential:
+         case ROOT::ExecutionPolicy::kSequential:
             res = fSequentialExecutor->Map(func, args);
             break;
-         case ROOT::Internal::ExecutionPolicy::kMultiThread:
+         case ROOT::ExecutionPolicy::kMultiThread:
             res = fThreadExecutor->Map(func, args);
             break;
-         case ROOT::Internal::ExecutionPolicy::kMultiProcess:
+         case ROOT::ExecutionPolicy::kMultiProcess:
             res = fProcessExecutor->Map(func, args);
             break;
          default:
@@ -265,7 +265,7 @@ auto TExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typenam
 /// \return A vector with the results of the function calls.
 template<class F, class R, class Cond>
 auto TExecutor::Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type> {
-   if (fExecPolicy == ROOT::Internal::ExecutionPolicy::kMultiThread) {
+   if (fExecPolicy == ROOT::ExecutionPolicy::kMultiThread) {
       return fThreadExecutor->Map(func, nTimes, redfunc, nChunks);
    }
    return Map(func, nTimes);
@@ -302,7 +302,7 @@ auto TExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<typen
 /// \return A vector with the results of the function calls.
 template<class F, class INTEGER, class R, class Cond>
 auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
-   if (fExecPolicy == ROOT::Internal::ExecutionPolicy::kMultiThread) {
+   if (fExecPolicy == ROOT::ExecutionPolicy::kMultiThread) {
       return fThreadExecutor->Map(func, args, redfunc, nChunks);
    }
    return Map(func, args);
@@ -321,7 +321,7 @@ auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunk
 /// \return A vector with the results of the function calls.
 template<class F, class T, class R, class Cond>
 auto TExecutor::Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type> {
-   if (fExecPolicy == ROOT::Internal::ExecutionPolicy::kMultiThread) {
+   if (fExecPolicy == ROOT::ExecutionPolicy::kMultiThread) {
       return fThreadExecutor->Map(func, args, redfunc, nChunks);
    }
    return Map(func, args);
@@ -338,7 +338,7 @@ auto TExecutor::Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -
 /// \return A vector with the results of the function calls.
 template<class F, class T, class R, class Cond>
 auto TExecutor::Map(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type> {
-   if (fExecPolicy == ROOT::Internal::ExecutionPolicy::kMultiThread) {
+   if (fExecPolicy == ROOT::ExecutionPolicy::kMultiThread) {
       return fThreadExecutor->Map(func, args, redfunc, nChunks);
    }
    return Map(func, args);
@@ -450,13 +450,13 @@ unsigned TExecutor::GetPoolSize() const
 {
    unsigned poolSize{0u};
    switch(fExecPolicy){
-      case ROOT::Internal::ExecutionPolicy::kSequential:
+      case ROOT::ExecutionPolicy::kSequential:
          poolSize = fSequentialExecutor->GetPoolSize();
          break;
-      case ROOT::Internal::ExecutionPolicy::kMultiThread:
+      case ROOT::ExecutionPolicy::kMultiThread:
          poolSize = fThreadExecutor->GetPoolSize();
          break;
-      case ROOT::Internal::ExecutionPolicy::kMultiProcess:
+      case ROOT::ExecutionPolicy::kMultiProcess:
          poolSize = fProcessExecutor->GetPoolSize();
          break;
       default:
