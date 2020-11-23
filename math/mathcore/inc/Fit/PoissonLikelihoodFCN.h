@@ -58,7 +58,7 @@ public:
    /**
       Constructor from unbin data set and model function (pdf)
    */
-   PoissonLikelihoodFCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = true, const ::ROOT::Internal::ExecutionPolicy &executionPolicy = ::ROOT::Internal::ExecutionPolicy::kSequential ) :
+   PoissonLikelihoodFCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = true, const ::ROOT::ExecutionPolicy &executionPolicy = ::ROOT::ExecutionPolicy::kSequential ) :
       BaseFCN( data, func),
       fIsExtended(extended),
       fWeight(weight),
@@ -70,7 +70,7 @@ public:
    /**
       Constructor from unbin data set and model function (pdf) managed by the users
    */
-   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0, bool extended = true, const ::ROOT::Internal::ExecutionPolicy &executionPolicy = ::ROOT::Internal::ExecutionPolicy::kSequential ) :
+   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0, bool extended = true, const ::ROOT::ExecutionPolicy &executionPolicy = ::ROOT::ExecutionPolicy::kSequential ) :
       BaseFCN(std::shared_ptr<BinData>(const_cast<BinData*>(&data), DummyDeleter<BinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fIsExtended(extended),
       fWeight(weight),
@@ -181,7 +181,7 @@ private:
 
    mutable std::vector<double> fGrad; // for derivatives
 
-   ::ROOT::Internal::ExecutionPolicy fExecutionPolicy; // Execution policy
+   ::ROOT::ExecutionPolicy fExecutionPolicy; // Execution policy
 };
 
       // define useful typedef's
