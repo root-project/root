@@ -293,36 +293,6 @@ Double_t RooAbsReal::getValV(const RooArgSet* nset) const
   return ret ;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Return value of object for all data events in the batch.
-/// \param[in] begin First event in the batch.
-/// \param[in] maxSize Size of the batch to be computed. May come out smaller.
-/// \param[in] normSet Variables to normalise over.
-RooSpan<const double> RooAbsReal::getValBatch(std::size_t begin, std::size_t maxSize,
-    const RooArgSet* normSet) const {
-  // Some PDFs do preprocessing by overriding this:
-  getValV(normSet);
-
-  if (_allBatchesDirty || _operMode == ADirty) {
-    _batchData.markDirty();
-    _allBatchesDirty = false;
-  }
-
-  if (normSet && normSet != _lastNSet) {
-    const_cast<RooAbsReal*>(this)->setProxyNormSet(normSet);
-    _lastNSet = (RooArgSet*) normSet;
-  }
-
-  //TODO check and wait if computation is running?
-  if (_batchData.status(begin) < BatchHelpers::BatchData::kReady) {
-    auto ret = evaluateBatch(begin, maxSize);
-    maxSize = ret.size();
-    _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
-  }
-
-  return _batchData.getBatch(begin, maxSize);
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute batch of values for input data stored in `evalData`.
@@ -526,8 +496,6 @@ void RooAbsReal::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TSt
   if(!unit.IsNull()) unit.Prepend(' ');
   //os << indent << "  Value = " << getVal() << unit << endl;
   os << endl << indent << "  Plot label is \"" << getPlotLabel() << "\"" << "\n";
-
-  _batchData.print(os, indent.Data());
 }
 
 
@@ -3284,8 +3252,6 @@ void RooAbsReal::attachToVStore(RooVectorDataStore& vstore)
 {
   RooVectorDataStore::RealVector* rv = vstore.addReal(this) ;
   rv->setBuffer(this,&_value) ;
-
-  _batchData.attachForeignStorage(rv->data());
 }
 
 
@@ -4925,71 +4891,6 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Evaluate function for a batch of input data points. If not overridden by
-/// derived classes, this will call the slow, single-valued evaluate() in a loop.
-/// \param[in]  begin First event of batch.
-/// \param[in]  maxSize Maximum size of the desired batch. May come out smaller.
-/// \return     Span pointing to the results. The memory is held by the object, on which this
-/// function is called.
-RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize) const {
-  assert(_batchData.status(begin) != BatchHelpers::BatchData::kReadyAndConstant);
-
-  RooArgSet allLeafs;
-  leafNodeServerList(&allLeafs);
-
-  if (RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
-    coutI(FastEvaluations) << "The class " << IsA()->GetName() << " could benefit from implementing the faster batch evaluation interface."
-        << " If it is part of ROOT, consider requesting this on https://root.cern." << std::endl;
-  }
-
-  std::vector<std::tuple<RooRealVar*, RooSpan<const double>, double>> batchLeafs;
-  for (auto leaf : allLeafs) {
-    auto leafRRV = dynamic_cast<RooRealVar*>(leaf);
-    if (!leafRRV)
-      continue;
-
-    auto leafBatch = leafRRV->getValBatch(begin, maxSize);
-    if (leafBatch.empty())
-      continue;
-
-    maxSize = std::min(maxSize, leafBatch.size());
-    batchLeafs.emplace_back(leafRRV, leafBatch, leafRRV->_value);
-  }
-
-  if (batchLeafs.empty() || maxSize == 0)
-    return {};
-
-
-  auto output = _batchData.makeWritableBatchUnInit(begin, maxSize);
-  {
-    // Side track all caching that RooFit might think is necessary.
-    // When used with batch computations, we depend on computation
-    // graphs actually evaluating correctly, instead of having
-    // pre-calculated values side-loaded into nodes event-per-event.
-    RooHelpers::DisableCachingRAII disableCaching(inhibitDirty());
-
-    for (std::size_t i = 0; i < output.size(); ++i) {
-      for (auto& tup : batchLeafs) {
-        RooRealVar* leaf = std::get<0>(tup);
-        auto batch = std::get<1>(tup);
-
-        leaf->setVal(batch[i]);
-      }
-
-      output[i] = evaluate();
-    }
-  }
-
-  // Reset values
-  for (auto& tup : batchLeafs) {
-    std::get<0>(tup)->setVal(std::get<2>(tup));
-  }
-
-  return output;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Evaluate this object for a batch/span of data points.
 /// This is the backend used by getValues() to perform computations. A span pointing to the computation results
 /// will be stored in `evalData`, and also be returned to getValues(), which then finalises the computation.
@@ -5045,7 +4946,10 @@ RooSpan<double> RooAbsReal::evaluateSpan(BatchHelpers::RunContext& evalData, con
     }
   }
 
-  const auto dataSize = std::max<std::size_t>(1, BatchHelpers::findSmallestBatch(leafValues));
+  size_t dataSize=1;
+  for (auto& i:leafValues) {
+    dataSize=std::max(dataSize, i.size());
+  }
   auto outputData = evalData.makeBatch(this, dataSize);
 
   {
@@ -5113,66 +5017,6 @@ Double_t RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
   }
 
   return ret;
-}
-
-
-void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet, double relAccuracy) const {
-  for (const auto server : _serverList) {
-    try {
-      auto realServer = dynamic_cast<RooAbsReal*>(server);
-      if (realServer)
-        realServer->checkBatchComputation(evtNo, normSet, relAccuracy);
-    } catch (CachingError& error) {
-      throw CachingError(std::move(error),
-          FormatPdfTree() << *this);
-    }
-  }
-
-  if (!_allBatchesDirty && _batchData.status(evtNo) >= BatchHelpers::BatchData::kReady) {
-    RooSpan<const double> batch = _batchData.getBatch(evtNo, 1);
-    RooSpan<const double> enclosingBatch = _batchData.getBatch(evtNo-1, 3);
-    const double batchVal = batch[0];
-    const double relDiff = _value != 0. ? (_value - batchVal)/_value : _value - batchVal;
-
-    if (fabs(relDiff) > relAccuracy && fabs(_value) > 1.E-300) {
-      FormatPdfTree formatter;
-      formatter << "--> (Batch computation wrong here:)\n";
-      printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress, kInline);
-      formatter << std::setprecision(17)
-          << "\n _batch[" << std::setw(7) << evtNo-1 << "]=     " << (enclosingBatch.empty() ? 0 : enclosingBatch[0])
-          << "\n _batch[" << std::setw(7) << evtNo   << "]=     " << batchVal << " !!!"
-          << "\n expected ('_value'): " << _value
-          << "\n delta         " <<                     " =     " << _value - batchVal
-          << "\n rel delta     " <<                     " =     " << relDiff
-          << "\n _batch[" << std::setw(7) << evtNo+1 << "]=     " << (enclosingBatch.empty() ? 0 : enclosingBatch[2]);
-
-      formatter << "\n" << std::left << std::setw(24) << "evaluate(unnorm.)" << '=' << evaluate();
-
-      formatter << "\nServers: ";
-      for (const auto server : _serverList) {
-        formatter << "\n - ";
-        server->printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress | kValue, kInline);
-        formatter << std::setprecision(17);
-
-        auto serverAsReal = dynamic_cast<RooAbsReal*>(server);
-        if (serverAsReal) {
-          const BatchHelpers::BatchData& serverBatchData = serverAsReal->batchData();
-          RooSpan<const double> theBatch = serverBatchData.getBatch(evtNo-1, 3);
-          if (!theBatch.empty()) {
-            formatter << "\n   _batch[" << evtNo-1 << "]=" << theBatch[0]
-                                                                       << "\n   _batch[" << evtNo << "]=" << theBatch[1]
-                                                                                                                      << "\n   _batch[" << evtNo+1 << "]=" << theBatch[2];
-          }
-          else {
-            formatter << std::setprecision(17)
-                << "\n   getVal()=" << serverAsReal->getVal(normSet);
-          }
-        }
-      }
-
-      throw CachingError(formatter);
-    }
-  }
 }
 
 

@@ -23,7 +23,6 @@
 #include "RooArgList.h"
 #include "RooGlobalFunc.h"
 #include "RooSpan.h"
-#include "BatchData.h"
 #include <map>
 
 class RooArgList ;
@@ -108,7 +107,9 @@ public:
 
   virtual Double_t getValV(const RooArgSet* normalisationSet = nullptr) const ;
 
-  virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t maxSize, const RooArgSet* normSet = nullptr) const;
+  /// \deprecated getValBatch() has been removed in favour of the faster getValues(). If your code is affected
+  /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
+  virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t maxSize, const RooArgSet* normSet = nullptr) = delete;
   virtual RooSpan<const double> getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
 
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
@@ -404,29 +405,17 @@ protected:
 
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual Double_t evaluate() const = 0;
-  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t maxSize) const;
+  /// \deprecated evaluatedBatch() has been removed in favour of the faster evaluateSpan(). If your code is affected
+  /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
+  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t maxSize) = delete;
   virtual RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
 
   //---------- Interface to access batch data ---------------------------
   //
   friend class BatchHelpers::BatchInterfaceAccessor;
-  void clearBatchMemory() {
-    _batchData.clear();
-    for (auto arg : _serverList) {
-      //TODO get rid of this cast?
-      auto absReal = dynamic_cast<RooAbsReal*>(arg);
-      if (absReal)
-        absReal->clearBatchMemory();
-    }
-  }
-
+  
  private:
-  void checkBatchComputation(std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
   void checkBatchComputation(const BatchHelpers::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
-
-  const BatchHelpers::BatchData& batchData() const {
-    return _batchData;
-  }
 
   /// Debug version of getVal(), which is slow and does error checking.
   Double_t _DEBUG_getVal(const RooArgSet* normalisationSet) const;
@@ -449,7 +438,6 @@ protected:
   Double_t _plotMax ;       // Maximum of plot range
   Int_t    _plotBins ;      // Number of plot bins
   mutable Double_t _value ; // Cache for current value of object
-  mutable BatchHelpers::BatchData _batchData; //! Value storage for batches of events
   TString  _unit ;          // Unit for objects value
   TString  _label ;         // Plot label for objects value
   Bool_t   _forceNumInt ;   // Force numerical integration if flag set

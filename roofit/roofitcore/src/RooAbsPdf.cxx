@@ -126,11 +126,11 @@ the proxy holds a function, and will trigger an assert.
 ### Batched function evaluations (Advanced usage)
 
 To speed up computations with large numbers of data events in unbinned fits,
-it is beneficial to override `evaluateBatch()`. Like this, large batches of
+it is beneficial to override `evaluateSpan()`. Like this, large spans of
 computations can be done, without having to call `evaluate()` for each single data event.
-`evaluateBatch()` should execute the same computation as `evaluate()`, but it
+`evaluateSpan()` should execute the same computation as `evaluate()`, but it
 may choose an implementation that is capable of SIMD computations.
-If evaluateBatch is not implemented, the classic and slower `evaluate()` will be
+If evaluateSpan is not implemented, the classic and slower `evaluate()` will be
 called for each data event.
 */
 
@@ -332,74 +332,6 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
   }
 
   return _value ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Compute batch of values for given range, and normalise by integrating over
-/// the observables in `nset`. If `nset` is `nullptr`, unnormalized values
-/// are returned. All elements of `nset` must be lvalues.
-///
-/// \param[in] begin Begin of the batch.
-/// \param[in] maxSize Size of the requested range. May come out smaller.
-/// \param[in] normSet   If not nullptr, normalise results by integrating over
-/// the variables in this set. The normalisation is only computed once, and applied
-/// to the full batch.
-///
-RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxSize,
-    const RooArgSet* normSet) const
-{
-  // Some PDFs do preprocessing here, e.g. of the norm
-  getValV(normSet);
-
-  if (_allBatchesDirty || _operMode == ADirty) {
-    _batchData.markDirty();
-    _allBatchesDirty = false;
-  }
-
-  // Special handling of case without normalization set (used in numeric integration of pdfs)
-  if (!normSet) {
-    RooArgSet* tmp = _normSet ;
-    _normSet = nullptr;
-    auto outputs = evaluateBatch(begin, maxSize);
-    maxSize = outputs.size();
-    _normSet = tmp;
-
-    _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
-
-    return outputs;
-  }
-
-
-  // TODO wait if batch is computing?
-  if (_batchData.status(begin, normSet, BatchHelpers::BatchData::kgetVal) <= BatchHelpers::BatchData::kDirty
-      || _norm->isValueDirty()) {
-
-    auto outputs = evaluateBatch(begin, maxSize);
-    maxSize = outputs.size();
-
-    // Evaluate denominator
-    const double normVal = _norm->getVal();
-
-    if (normVal < 0.
-        || (normVal == 0. && std::any_of(outputs.begin(), outputs.end(), [](double val){return val != 0;}))) {
-      logEvalError(Form("p.d.f normalization integral is zero or negative."
-          "\n\tInt(%s) = %f", GetName(), normVal));
-    }
-
-    if (normVal != 1. && normVal > 0.) {
-      const double invNorm = 1./normVal;
-      for (double& val : outputs) { //CHECK_VECTORISE
-        val *= invNorm;
-      }
-    }
-
-    _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
-  }
-
-  const auto ret = _batchData.getBatch(begin, maxSize);
-
-  return ret;
 }
 
 
@@ -784,44 +716,7 @@ void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::s
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the log-likelihoods for all events in the requested batch.
-/// The arguments are passed over to getValBatch().
-/// \param[in] begin Start of the batch.
-/// \param[in] maxSize  Maximum size of the batch. Depending on data layout and memory, the batch
-/// may come back smaller.
-/// \return    Returns a batch of doubles that contains the log probabilities.
-RooSpan<const double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t maxSize,
-    const RooArgSet* normSet) const
-{
-  auto pdfValues = getValBatch(begin, maxSize, normSet);
-
-  if (checkInfNaNNeg(pdfValues)) {
-    logBatchComputationErrors(pdfValues, begin);
-  }
-
-  auto output = _batchData.makeWritableBatchUnInit(begin, pdfValues.size(),
-      normSet, BatchHelpers::BatchData::kgetLogVal);
-
-  for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
-    const double prob = pdfValues[i];
-
-    double theLog = _rf_fast_log(prob);
-
-    if (prob < 0) {
-      theLog = std::numeric_limits<double>::quiet_NaN();
-    } else if (prob == 0 || TMath::IsNaN(prob)) {
-      theLog = -std::numeric_limits<double>::infinity();
-    }
-
-    output[i] = theLog;
-  }
-
-  return output;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Compute the log-likelihoods for all events in the requested batch.
-/// The arguments are passed over to getValBatch().
+/// The arguments are passed over to getValues().
 /// \param[in] evalData Struct with data that should be used for evaluation.
 /// \param[in] normSet Optional normalisation set to be used during computations.
 /// \return    Returns a batch of doubles that contains the log probabilities.

@@ -66,46 +66,7 @@ Double_t RooBreitWigner::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-namespace {
-//Author: Emmanouil Michalainas, CERN 21 August 2019
-
-template<class Tx, class Tmean, class Twidth>
-void compute(	size_t batchSize,
-              double * __restrict output,
-              Tx X, Tmean M, Twidth W)
-{
-  for (size_t i=0; i<batchSize; i++) {
-    const double arg = X[i]-M[i];
-    output[i] = 1 / (arg*arg + 0.25*W[i]*W[i]);
-  }
-}
-};
-
-RooSpan<double> RooBreitWigner::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
-  EvaluateInfo info = getInfo( {&x, &mean, &width}, begin, batchSize );
-  if (info.nBatches == 0) {
-    return {};
-  }
-
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  auto xData = x.getValBatch(begin, info.size);
-  
-  if (info.nBatches==1 && !xData.empty()) {
-    compute(batchSize, output.data(), xData.data(), BracketAdapter<double> (mean), BracketAdapter<double> (width));
-  }
-  else {
-    compute(batchSize, output.data(), 
-    BracketAdapterWithMask (x,xData), 
-    BracketAdapterWithMask (mean,mean.getValBatch(begin,info.size)), 
-    BracketAdapterWithMask (width,width.getValBatch(begin,info.size)) );
-  }
-  return output;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
+/// Compute multiple values of BreitWigner distribution.  
 RooSpan<double> RooBreitWigner::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
   return RooFitCompute::dispatch->computeBreitWigner(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), width->getValues(evalData, normSet));
 }

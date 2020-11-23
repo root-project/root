@@ -64,67 +64,8 @@ Double_t RooPoisson::evaluate() const
   return TMath::Poisson(k,mean) ;
 }
 
-
-
-namespace {
-
-template<class Tx, class TMean>
-void compute(const size_t n, double* __restrict output, Tx x, TMean mean,
-    const bool protectNegative, const bool noRounding) {
-
-  for (size_t i = 0; i < n; ++i) { //CHECK_VECTORISE
-    const double x_i = noRounding ? x[i] : floor(x[i]);
-    // The std::lgamma yields different values than in the scalar implementation.
-    // Need to check which one is more accurate.
-//    output[i] = std::lgamma(x_i + 1.);
-    output[i] = TMath::LnGamma(x_i + 1.);
-  }
-
-
-  for (size_t i = 0; i < n; ++i) { //CHECK_VECTORISE
-    const double x_i = noRounding ? x[i] : floor(x[i]);
-    const double logMean = _rf_fast_log(mean[i]);
-    const double logPoisson = x_i * logMean - mean[i] - output[i];
-    output[i] = _rf_fast_exp(logPoisson);
-
-    // Cosmetics
-    if (x_i < 0.)
-      output[i] = 0.;
-    else if (x_i == 0.) {
-      output[i] = 1./_rf_fast_exp(mean[i]);
-    }
-    if (protectNegative && mean[i] < 0.)
-      output[i] = 1.E-3;
-  }
-}
-
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute Poisson values in batches.
-RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
-  
-  EvaluateInfo info = getInfo( {&x, &mean}, begin, batchSize );
-  if (info.nBatches == 0) {
-    return {};
-  }
-
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  auto xData = x.getValBatch(begin, info.size);
-
-  if (info.nBatches==1 && !xData.empty()) {
-    compute(info.size, output.data(), xData.data(), BracketAdapter<double> (mean), _protectNegative, _noRounding);
-  }
-  else { 
-    compute(info.size, output.data(), BracketAdapterWithMask (x,xData), BracketAdapterWithMask (mean,mean.getValBatch(begin,info.size)), _protectNegative, _noRounding);
-  }
-  return output;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
+/// Compute multiple values of the Poisson distribution.  
 RooSpan<double> RooPoisson::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
   return RooFitCompute::dispatch->computePoisson(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), _protectNegative, _noRounding);
 }
