@@ -96,7 +96,6 @@ namespace ROOT {
 
 template<class subc>
 class TExecutorCRTP {
-friend subc;
 public:
 
    TExecutorCRTP() = default;
