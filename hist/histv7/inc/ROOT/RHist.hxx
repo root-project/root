@@ -21,6 +21,7 @@
 #include "ROOT/RHistBinIter.hxx"
 #include "ROOT/RHistImpl.hxx"
 #include "ROOT/RHistData.hxx"
+#include "ROOT/RLogger.hxx"
 #include <initializer_list>
 #include <stdexcept>
 
@@ -235,7 +236,7 @@ struct RHistImplGen {
       case RAxisConfig::kEquidistant: return MakeNextAxis<RAxisConfig::kEquidistant>(title, axes, processedAxisArgs...);
       case RAxisConfig::kGrow: return MakeNextAxis<RAxisConfig::kGrow>(title, axes, processedAxisArgs...);
       case RAxisConfig::kIrregular: return MakeNextAxis<RAxisConfig::kIrregular>(title, axes, processedAxisArgs...);
-      default: R__ERROR_HERE("HIST") << "Unhandled axis kind";
+      default: R__LOG_ERROR(HistLog()) << "Unhandled axis kind";
       }
       return nullptr;
    }

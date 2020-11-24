@@ -21,6 +21,10 @@
 namespace ROOT {
 namespace Experimental {
 
+class RLogChannel;
+/// Log channel for Browser diagnostics.
+RLogChannel &BrowserLog();
+
 /** \class RBrowserData
 \ingroup rbrowser
 \brief Way to browse (hopefully) everything in ROOT

@@ -764,7 +764,7 @@ bool ROOT::Experimental::REveGeomDescription::CollectVisibles()
 
       // should not happen, but just in case
       if (shape_descr.nfaces <= 0) {
-         R__ERROR_HERE("webeve") << "No faces for the shape " << shape->GetName() << " class " << shape->ClassName();
+         R__LOG_ERROR(EveLog()) << "No faces for the shape " << shape->GetName() << " class " << shape->ClassName();
          continue;
       }
 
@@ -901,7 +901,7 @@ int ROOT::Experimental::REveGeomDescription::SearchVisibles(const std::string &f
 
       // should not happen, but just in case
       if (shape_descr.nfaces <= 0) {
-         R__ERROR_HERE("webeve") << "No faces for the shape " << shape->GetName() << " class " << shape->ClassName();
+         R__LOG_ERROR(EveLog()) << "No faces for the shape " << shape->GetName() << " class " << shape->ClassName();
          continue;
       }
 

@@ -165,9 +165,9 @@ ROOT::Experimental::RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &pa
 {
    std::vector<std::vector<std::shared_ptr<RPad>>> ret;
    if (!nHoriz)
-      R__ERROR_HERE("Gpad") << "Cannot divide into 0 horizontal sub-pads!";
+      R__LOG_ERROR(GPadLog()) << "Cannot divide into 0 horizontal sub-pads!";
    if (!nVert)
-      R__ERROR_HERE("Gpad") << "Cannot divide into 0 vertical sub-pads!";
+      R__LOG_ERROR(GPadLog()) << "Cannot divide into 0 vertical sub-pads!";
    if (!nHoriz || !nVert)
       return ret;
 
@@ -297,7 +297,7 @@ void ROOT::Experimental::RPadBase::SetAllAxisBounds(const std::vector<std::array
 
    frame->GrowToDimensions(vecBeginAndEnd.size());
    if (vecBeginAndEnd.size() != frame->GetNDimensions()) {
-      R__ERROR_HERE("Gpadv7")
+      R__LOG_ERROR(GPadLog())
          << "Array of axis bound has wrong size " <<  vecBeginAndEnd.size()
          << " versus numer of axes in frame " << frame->GetNDimensions();
       return;
@@ -316,7 +316,7 @@ void ROOT::Experimental::RPadBase::SetAllAxisBound(const std::vector<BoundKindAn
 
    frame->GrowToDimensions(vecBoundAndKind.size());
    if (vecBoundAndKind.size() != frame->GetNDimensions()) {
-      R__ERROR_HERE("Gpadv7")
+      R__LOG_ERROR(GPadLog())
          << "Array of axis bound has wrong size " << vecBoundAndKind.size()
          << " versus numer of axes in frame " << frame->GetNDimensions();
       return;

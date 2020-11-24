@@ -169,15 +169,15 @@ bool GuiHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
    switch (level) {
    case LOGSEVERITY_WARNING:
       if (fConsole > -1)
-         R__WARNING_HERE("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_WARNING("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    case LOGSEVERITY_ERROR:
       if (fConsole > -2)
-         R__ERROR_HERE("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_ERROR("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    default:
       if (fConsole > 0)
-         R__DEBUG_HERE("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_DEBUG("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    }
 
@@ -345,14 +345,14 @@ CefRefPtr<CefResourceHandler> GuiHandler::GetResourceHandler(
   int indx = std::stoi(addr.substr(prefix.length(), addr.find("/", prefix.length()) - prefix.length()));
 
   if ((indx < 0) || (indx >= (int) fServers.size()) || !fServers[indx]) {
-     R__ERROR_HERE("CEF") << "No THttpServer with index " << indx;
+     R__LOG_ERROR("CEF") << "No THttpServer with index " << indx;
      return nullptr;
   }
 
   THttpServer *serv = fServers[indx];
   if (serv->IsZombie()) {
      fServers[indx] = nullptr;
-     R__ERROR_HERE("CEF") << "THttpServer with index " << indx << " is zombie now";
+     R__LOG_ERROR("CEF") << "THttpServer with index " << indx << " is zombie now";
      return nullptr;
   }
 
@@ -394,7 +394,7 @@ CefRefPtr<CefResourceHandler> GuiHandler::GetResourceHandler(
      CefRefPtr< CefPostData > post_data = request->GetPostData();
 
      if (!post_data) {
-        R__ERROR_HERE("CEF") << "FATAL - NO POST DATA in CEF HANDLER!!!";
+        R__LOG_ERROR("CEF") << "FATAL - NO POST DATA in CEF HANDLER!!!";
         exit(1);
      } else {
         CefPostData::ElementVector elements;

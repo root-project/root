@@ -141,9 +141,9 @@ void RBrowser::ProcessSaveFile(const std::string &arg)
 {
    auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg);
    if (!arr || (arr->size()!=2)) {
-      R__ERROR_HERE("rbrowser") << "SaveFile failure, json array should have two items " << arg;
+      R__LOG_ERROR(BrowserLog()) << "SaveFile failure, json array should have two items " << arg;
    } else {
-      R__DEBUG_HERE("rbrowser") << "SaveFile " << arr->at(0) << "  content length " << arr->at(1).length();
+      R__LOG_DEBUG(0, BrowserLog()) << "SaveFile " << arr->at(0) << "  content length " << arr->at(1).length();
       std::ofstream f(arr->at(0));
       f << arr->at(1);
    }
@@ -162,7 +162,7 @@ long RBrowser::ProcessRunCommand(const std::string &file_path)
 
 std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions)
 {
-   R__DEBUG_HERE("rbrowser") << "DoubleClick " << item_path;
+   R__LOG_DEBUG(0, BrowserLog()) << "DoubleClick " << item_path;
 
    auto elem = fBrowsable.GetElement(item_path);
    if (!elem) return ""s;
@@ -239,7 +239,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
          }
    }
 
-   R__DEBUG_HERE("rbrowser") << "No active canvas to process dbl click";
+   R__LOG_DEBUG(0, BrowserLog()) << "No active canvas to process dbl click";
 
    return "";
 }
@@ -419,7 +419,7 @@ std::string RBrowser::GetCurrentWorkingDirectory()
 
 void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
 {
-   R__DEBUG_HERE("rbrowser") << "ProcessMsg  len " << arg.length() << " substr(30) " << arg.substr(0, 30);
+   R__LOG_DEBUG(0, BrowserLog()) << "ProcessMsg  len " << arg.length() << " substr(30) " << arg.substr(0, 30);
 
    if (arg == "QUIT_ROOT") {
 

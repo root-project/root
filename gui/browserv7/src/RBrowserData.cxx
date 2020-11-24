@@ -20,6 +20,12 @@
 using namespace ROOT::Experimental;
 using namespace std::string_literals;
 
+ROOT::Experimental::RLogChannel &ROOT::Experimental::BrowserLog() {
+   static RLogChannel sLog("ROOT.Browser");
+   return sLog;
+}
+
+
 /////////////////////////////////////////////////////////////////////
 /// set top element for browsing
 

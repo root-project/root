@@ -115,7 +115,7 @@ void ROOT::Experimental::RWebWindow::SetPanelName(const std::string &name)
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
       if (!fConn.empty()) {
-         R__ERROR_HERE("webgui") << "Cannot configure panel when connection exists";
+         R__LOG_ERROR(WebGUILog()) << "Cannot configure panel when connection exists";
          return;
       }
    }
@@ -470,7 +470,7 @@ void ROOT::Experimental::RWebWindow::CheckPendingConnections()
          std::chrono::duration<double> diff = stamp - e->fSendStamp;
 
          if (diff.count() > tmout) {
-            R__DEBUG_HERE("webgui") << "Halt process after " << diff.count() << " sec";
+            R__LOG_DEBUG(0, WebGUILog()) << "Halt process after " << diff.count() << " sec";
             selected.emplace_back(e);
             return true;
          }
@@ -543,7 +543,7 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
       auto conn = FindOrCreateConnection(arg.GetWSId(), true, arg.GetQuery());
 
       if (conn) {
-         R__ERROR_HERE("webgui") << "WSHandle with given websocket id " << arg.GetWSId() << " already exists";
+         R__LOG_ERROR(WebGUILog()) << "WSHandle with given websocket id " << arg.GetWSId() << " already exists";
          return false;
       }
 
@@ -562,14 +562,14 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
    }
 
    if (!arg.IsMethod("WS_DATA")) {
-      R__ERROR_HERE("webgui") << "only WS_DATA request expected!";
+      R__LOG_ERROR(WebGUILog()) << "only WS_DATA request expected!";
       return false;
    }
 
    auto conn = FindConnection(arg.GetWSId());
 
    if (!conn) {
-      R__ERROR_HERE("webgui") << "Get websocket data without valid connection - ignore!!!";
+      R__LOG_ERROR(WebGUILog()) << "Get websocket data without valid connection - ignore!!!";
       return false;
    }
 
@@ -584,26 +584,26 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
 
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
    if (!str_end || *str_end != ':') {
-      R__ERROR_HERE("webgui") << "missing number of acknowledged operations";
+      R__LOG_ERROR(WebGUILog()) << "missing number of acknowledged operations";
       return false;
    }
 
    unsigned long can_send = std::strtoul(str_end + 1, &str_end, 10);
    if (!str_end || *str_end != ':') {
-      R__ERROR_HERE("webgui") << "missing can_send counter";
+      R__LOG_ERROR(WebGUILog()) << "missing can_send counter";
       return false;
    }
 
    unsigned long nchannel = std::strtoul(str_end + 1, &str_end, 10);
    if (!str_end || *str_end != ':') {
-      R__ERROR_HERE("webgui") << "missing channel number";
+      R__LOG_ERROR(WebGUILog()) << "missing channel number";
       return false;
    }
 
    Long_t processed_len = (str_end + 1 - buf);
 
    if (processed_len > arg.GetPostDataLength()) {
-      R__ERROR_HERE("webgui") << "corrupted buffer";
+      R__LOG_ERROR(WebGUILog()) << "corrupted buffer";
       return false;
    }
 
@@ -647,7 +647,7 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
          }
 
          if (!key.empty() && !conn->fKey.empty() && (conn->fKey != key)) {
-            R__ERROR_HERE("webgui") << "Key mismatch after established connection " << key << " != " << conn->fKey;
+            R__LOG_ERROR(WebGUILog()) << "Key mismatch after established connection " << key << " != " << conn->fKey;
             RemoveConnection(conn->fWSId);
             return false;
          }
@@ -670,7 +670,7 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
       }
    } else if (fPanelName.length() && (conn->fReady < 10)) {
       if (cdata == "PANEL_READY") {
-         R__DEBUG_HERE("webgui") << "Get panel ready " << fPanelName;
+         R__LOG_DEBUG(0, WebGUILog()) << "Get panel ready " << fPanelName;
          ProvideQueueEntry(conn->fConnId, kind_Connect, ""s);
          conn->fReady = 10;
       } else {
@@ -715,17 +715,17 @@ std::string ROOT::Experimental::RWebWindow::_MakeSendHeader(std::shared_ptr<WebC
    std::string buf;
 
    if (!conn->fWSId || !fWSHandler) {
-      R__ERROR_HERE("webgui") << "try to send text data when connection not established";
+      R__LOG_ERROR(WebGUILog()) << "try to send text data when connection not established";
       return buf;
    }
 
    if (conn->fSendCredits <= 0) {
-      R__ERROR_HERE("webgui") << "No credits to send text data via connection";
+      R__LOG_ERROR(WebGUILog()) << "No credits to send text data via connection";
       return buf;
    }
 
    if (conn->fDoingSend) {
-      R__ERROR_HERE("webgui") << "Previous send operation not completed yet";
+      R__LOG_ERROR(WebGUILog()) << "Previous send operation not completed yet";
       return buf;
    }
 
@@ -852,7 +852,7 @@ std::string ROOT::Experimental::RWebWindow::GetAddr() const
 std::string ROOT::Experimental::RWebWindow::GetRelativeAddr(const std::shared_ptr<RWebWindow> &win) const
 {
    if (fMgr != win->fMgr) {
-      R__ERROR_HERE("WebDisplay") << "Same web window manager should be used";
+      R__LOG_ERROR(WebGUILog()) << "Same web window manager should be used";
       return "";
    }
 
@@ -1106,7 +1106,7 @@ void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::
          else
             conn->fQueue.emplace(chid, txt, std::move(data));  // move content
       } else {
-         R__ERROR_HERE("webgui") << "Maximum queue length achieved";
+         R__LOG_ERROR(WebGUILog()) << "Maximum queue length achieved";
       }
    }
 
@@ -1154,7 +1154,7 @@ void ROOT::Experimental::RWebWindow::AssignCallbackThreadId()
       fProcessMT = true;
    } else if (fMgr->IsUseHttpThread()) {
       // special thread is used by the manager, but main thread used for the canvas - not supported
-      R__ERROR_HERE("webgui") << "create web window from main thread when THttpServer created with special thread - not supported";
+      R__LOG_ERROR(WebGUILog()) << "create web window from main thread when THttpServer created with special thread - not supported";
    }
 }
 
@@ -1263,7 +1263,7 @@ int ROOT::Experimental::RWebWindow::WaitForTimed(WebWindowWaitFunc_t check, doub
 void ROOT::Experimental::RWebWindow::Run(double tm)
 {
    if (!fCallbacksThrdIdSet || (fCallbacksThrdId != std::this_thread::get_id())) {
-      R__WARNING_HERE("webgui") << "Change thread id where RWebWindow is executed";
+      R__LOG_WARNING(WebGUILog()) << "Change thread id where RWebWindow is executed";
       fCallbacksThrdIdSet = true;
       fCallbacksThrdId = std::this_thread::get_id();
    }

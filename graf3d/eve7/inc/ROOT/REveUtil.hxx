@@ -25,6 +25,10 @@ class TGeoManager;
 namespace ROOT {
 namespace Experimental {
 
+class RLogChannel;
+/// Log channel for Eve diagnostics.
+RLogChannel &EveLog();
+
 class REveElement;
 
 ////////////////////////////////////////////////////////////////////////////////

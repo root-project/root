@@ -25,6 +25,7 @@
 #include "ROOT/RAxis.hxx"
 #include "ROOT/RHistBinIter.hxx"
 #include "ROOT/RHistUtils.hxx"
+#include "ROOT/RLogger.hxx"
 
 class TRootIOCtor;
 
@@ -1052,7 +1053,7 @@ public:
    {
 #ifndef NDEBUG
       if (xN.size() != weightN.size()) {
-         R__ERROR_HERE("HIST") << "Not the same number of points and weights!";
+         R__LOG_ERROR(HistLog()) << "Not the same number of points and weights!";
          return;
       }
 #endif

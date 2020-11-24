@@ -8,6 +8,7 @@
 
 #include "ROOT/RPadLength.hxx"
 
+#include "ROOT/RAttrBase.hxx" // for GPadLog()
 #include "ROOT/RLogger.hxx"
 
 #include <string>
@@ -79,7 +80,7 @@ bool ROOT::Experimental::RPadLength::ParseString(const std::string &value)
       if ((val[pos] == '-') || (val[pos] == '+')) {
          if (operand) {
             Clear();
-            R__ERROR_HERE("gpadv7") << "Fail to parse RPadLength " << value;
+            R__LOG_ERROR(GPadLog()) << "Fail to parse RPadLength " << value;
             return false;
          }
          operand = (val[pos] == '-') ? -1 : 1;

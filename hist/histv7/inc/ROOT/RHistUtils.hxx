@@ -20,6 +20,11 @@
 
 namespace ROOT {
 namespace Experimental {
+
+class RLogChannel;
+/// Log channel for Hist diagnostics.
+RLogChannel &HistLog(); // implemented in RAxis.cxx
+
 namespace Hist {
 
 template <int DIMENSIONS>

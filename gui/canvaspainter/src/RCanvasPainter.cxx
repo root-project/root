@@ -44,6 +44,13 @@
 using namespace std::string_literals;
 using namespace ROOT::Experimental;
 
+namespace {
+RLogChannel &CanvasPainerLog() {
+   static RLogChannel sLog("ROOT.CanvasPainer");
+   return sLog;
+}
+}
+
 // ==========================================================================================================
 
 // new implementation of canvas painter, using RWebWindow
@@ -178,7 +185,7 @@ public:
       static void SetGlobalPainter()
       {
          if (GetGenerator()) {
-            R__ERROR_HERE("CanvasPainter") << "Generator is already set! Skipping second initialization.";
+            R__LOG_ERROR(CanvasPainerLog()) << "Generator is already set! Skipping second initialization.";
             return;
          }
          GetGenerator().reset(new GeneratorImpl());
@@ -423,7 +430,7 @@ void RCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
 
    int res = fWindow->WaitForTimed([this, cmd](double) {
       if (cmd->fState == WebCommand::sReady) {
-         R__DEBUG_HERE("CanvasPainter") << "Command " << cmd->fName << " done";
+         R__LOG_DEBUG(0, CanvasPainerLog()) << "Command " << cmd->fName << " done";
          return cmd->fResult ? 1 : -1;
       }
 
@@ -438,7 +445,7 @@ void RCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
    });
 
    if (res <= 0)
-      R__ERROR_HERE("CanvasPainter") << name << " fail with " << arg << " result = " << res;
+      R__LOG_ERROR(CanvasPainerLog()) << name << " fail with " << arg << " result = " << res;
 }
 
 
@@ -475,7 +482,7 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
       return true;
    };
 
-   // R__DEBUG_HERE("CanvasPainter") << "from client " << connid << " got data len:" << arg.length() << " val:" <<
+   // R__LOG_DEBUG(0, CanvasPainerLog()) << "from client " << connid << " got data len:" << arg.length() << " val:" <<
    // arg.substr(0,30);
 
    if (check_header("READY")) {
@@ -497,11 +504,11 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
       if (separ)
          id.append(sid, separ - sid);
       if (fCmds.empty()) {
-         R__ERROR_HERE("CanvasPainter") << "Get REPLY without command";
+         R__LOG_ERROR(CanvasPainerLog()) << "Get REPLY without command";
       } else if (fCmds.front()->fState != WebCommand::sRunning) {
-         R__ERROR_HERE("CanvasPainter") << "Front command is not running when get reply";
+         R__LOG_ERROR(CanvasPainerLog()) << "Front command is not running when get reply";
       } else if (fCmds.front()->fId != id) {
-         R__ERROR_HERE("CanvasPainter") << "Mismatch with front command and ID in REPLY";
+         R__LOG_ERROR(CanvasPainerLog()) << "Mismatch with front command and ID in REPLY";
       } else {
          FrontCommandReplied(separ + 1);
       }
@@ -541,10 +548,10 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
             fCanvas.Modified();
 
       } else {
-         R__ERROR_HERE("CanvasPainter") << "Fail to parse RDrawableRequest";
+         R__LOG_ERROR(CanvasPainerLog()) << "Fail to parse RDrawableRequest";
       }
    } else {
-      R__ERROR_HERE("CanvasPainter") << "Got not recognized message" << arg;
+      R__LOG_ERROR(CanvasPainerLog()) << "Got not recognized message" << arg;
    }
 
    CheckDataToSend();
@@ -632,19 +639,19 @@ bool RCanvasPainter::AddPanel(std::shared_ptr<RWebWindow> win)
       return false;
 
    if (!fWindow) {
-      R__ERROR_HERE("CanvasPainter") << "Canvas not yet shown in AddPanel";
+      R__LOG_ERROR(CanvasPainerLog()) << "Canvas not yet shown in AddPanel";
       return false;
    }
 
    if (!fWindow->IsShown()) {
-      R__ERROR_HERE("CanvasPainter") << "Canvas window was not shown to call AddPanel";
+      R__LOG_ERROR(CanvasPainerLog()) << "Canvas window was not shown to call AddPanel";
       return false;
    }
 
    std::string addr = fWindow->GetRelativeAddr(win);
 
    if (addr.length() == 0) {
-      R__ERROR_HERE("CanvasPainter") << "Cannot attach panel to canvas";
+      R__LOG_ERROR(CanvasPainerLog()) << "Cannot attach panel to canvas";
       return false;
    }
 
@@ -728,7 +735,7 @@ void RCanvasPainter::SaveCreatedFile(std::string &reply)
 {
    size_t pos = reply.find(":");
    if ((pos == std::string::npos) || (pos == 0)) {
-      R__ERROR_HERE("CanvasPainter") << "SaveCreatedFile does not found ':' separator";
+      R__LOG_ERROR(CanvasPainerLog()) << "SaveCreatedFile does not found ':' separator";
       return;
    }
 
@@ -750,7 +757,7 @@ void RCanvasPainter::SaveCreatedFile(std::string &reply)
    }
    ofs.close();
 
-   R__INFO_HERE("CanvasPainter") << " Save file from GUI " << fname << " len " << file_len;
+   R__LOG_INFO(CanvasPainerLog()) << " Save file from GUI " << fname << " len " << file_len;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -767,20 +774,20 @@ void RCanvasPainter::FrontCommandReplied(const std::string &reply)
 
    if ((cmd->fName == "SVG") || (cmd->fName == "PNG") || (cmd->fName == "JPEG")) {
       if (reply.length() == 0) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to produce image" << cmd->fArg;
+         R__LOG_ERROR(CanvasPainerLog()) << "Fail to produce image" << cmd->fArg;
       } else {
          TString content = TBase64::Decode(reply.c_str());
          std::ofstream ofs(cmd->fArg, std::ios::binary);
          ofs.write(content.Data(), content.Length());
          ofs.close();
-         R__INFO_HERE("CanvasPainter") << cmd->fName << " create file " << cmd->fArg << " length " << content.Length();
+         R__LOG_INFO(CanvasPainerLog()) << cmd->fName << " create file " << cmd->fArg << " length " << content.Length();
          result = true;
       }
    } else if (cmd->fName.find("ADDPANEL:") == 0) {
-      R__DEBUG_HERE("CanvasPainter") << "get reply for ADDPANEL " << reply;
+      R__LOG_DEBUG(0, CanvasPainerLog()) << "get reply for ADDPANEL " << reply;
       result = (reply == "true");
    } else {
-      R__ERROR_HERE("CanvasPainter") << "Unknown command " << cmd->fName;
+      R__LOG_ERROR(CanvasPainerLog()) << "Unknown command " << cmd->fName;
    }
 
    cmd->fResult = result;

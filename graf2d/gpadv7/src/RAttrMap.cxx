@@ -141,7 +141,7 @@ bool RAttrMap::Change(const std::string &name, Value_t *value)
 
    // error situation - conversion cannot be performed
    if(!value->CanConvertTo(entry->second->Kind())) {
-      R__ERROR_HERE("gpadv7") << "Wrong data type provided for attribute " << name;
+      R__LOG_ERROR(GPadLog()) << "Wrong data type provided for attribute " << name;
       return false;
    }
 

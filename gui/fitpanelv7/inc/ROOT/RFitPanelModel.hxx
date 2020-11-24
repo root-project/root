@@ -32,6 +32,10 @@ class TFitResult;
 namespace ROOT {
 namespace Experimental {
 
+class RLogChannel;
+/// Log channel for FitPanel diagnostics.
+RLogChannel &FitPanelLog();
+
 /** Data structure for the fit panel */
 
 struct RFitPanelModel {
