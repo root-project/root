@@ -12,16 +12,16 @@ time                          1.2
 itra                          2                   
 mycell                                            
 mycell.id                     3                   
-mycell.base[5]                test                
-myArr[3]                                          
-myArrFix[4]                                       
+mycell.base[5]                t                    ...
+myArr[3]                                           ...
+myArrFix[4]                                        ...
 index                         2                   
 *myArrVar                                         ![index]  WAITING on Vicktor's implementation [index]
 *objVarArr                                        ![index]  Not implemented yet ... will it ever?
 mynocell                                          
 mynocell.nodict               55                  
 mynocell.id                   7                   
-mynocell.base[5]              noRe                
+mynocell.base[5]              n                    ...
 *mycellnull                   ->0                 
 *mycellfix                                        
 *mycellvirt                                       
@@ -29,7 +29,7 @@ mynocell.base[5]              noRe
 myobj                                             
 myobj.obj                     101                 
 myobj.id                      8                   
-myobj.base[5]                 obj1                
+myobj.base[5]                 o                    ...
 myobj.fUniqueID               0                   object unique identifier
 myobj.fBits                   0x03000000          bit field status word
 myobj2                                            
@@ -37,7 +37,7 @@ myobj2.obj                    102
 myobj2.fUniqueID              0                   object unique identifier
 myobj2.fBits                  0x03000000          bit field status word
 myobj2.id                     9                   
-myobj2.base[5]                obj2                
+myobj2.base[5]                o                    ...
 *myobjp                                           
 *myobj2p                                          
 *myobjSt                                          ->
@@ -48,8 +48,8 @@ myobj2.base[5]                obj2
 *mytobj2St                                        ->
 *myobjdp                                          
 *myobj2dp                                         
-myobjarr[2]                                       
-myobjarr2[2]                                      
+myobjarr[2]                                        ...
+myobjarr2[2]                                       ...
 fUniqueID                     0                   object unique identifier
 fBits                         0x03000000          bit field status word
 base 	t e s t 
@@ -151,16 +151,16 @@ time                          1.2
 itra                          2                   
 mycell                                            
 mycell.id                     3                   
-mycell.base[5]                test                
-myArr[3]                                          
-myArrFix[4]                                       
+mycell.base[5]                t                    ...
+myArr[3]                                           ...
+myArrFix[4]                                        ...
 index                         2                   
 *myArrVar                     ->0                 ![index]  WAITING on Vicktor's implementation [index]
 *objVarArr                    ->0                 ![index]  Not implemented yet ... will it ever?
 mynocell                                          
 mynocell.nodict               0                   
 mynocell.id                   0                   
-mynocell.base[5]              none                
+mynocell.base[5]              n                    ...
 *mycellnull                   ->0                 
 *mycellfix                                        
 *mycellvirt                                       
@@ -168,7 +168,7 @@ mynocell.base[5]              none
 myobj                                             
 myobj.obj                     101                 
 myobj.id                      8                   
-myobj.base[5]                 obj1                
+myobj.base[5]                 o                    ...
 myobj.fUniqueID               0                   object unique identifier
 myobj.fBits                   0x03000000          bit field status word
 myobj2                                            
@@ -176,7 +176,7 @@ myobj2.obj                    102
 myobj2.fUniqueID              0                   object unique identifier
 myobj2.fBits                  0x03000000          bit field status word
 myobj2.id                     9                   
-myobj2.base[5]                obj2                
+myobj2.base[5]                o                    ...
 *myobjp                                           
 *myobj2p                                          
 *myobjSt                                          ->
@@ -187,8 +187,8 @@ myobj2.base[5]                obj2
 *mytobj2St                                        ->
 *myobjdp                                          
 *myobj2dp                                         
-myobjarr[2]                                       
-myobjarr2[2]                                      
+myobjarr[2]                                        ...
+myobjarr2[2]                                       ...
 fUniqueID                     0                   object unique identifier
 fBits                         0x03000000          bit field status word
 base 	t e s t 
@@ -282,16 +282,16 @@ time                          1.2
 itra                          2                   
 mycell                                            
 mycell.id                     3                   
-mycell.base[5]                test                
-myArr[3]                                          
-myArrFix[4]                                       
+mycell.base[5]                t                    ...
+myArr[3]                                           ...
+myArrFix[4]                                        ...
 index                         2                   
 *myArrVar                                         ![index]  WAITING on Vicktor's implementation [index]
 *objVarArr                                        ![index]  Not implemented yet ... will it ever?
 mynocell                                          
 mynocell.nodict               55                  
 mynocell.id                   7                   
-mynocell.base[5]              noRe                
+mynocell.base[5]              n                    ...
 *mycellnull                   ->0                 
 *mycellfix                                        
 *mycellvirt                                       
@@ -299,7 +299,7 @@ mynocell.base[5]              noRe
 myobj                                             
 myobj.obj                     101                 
 myobj.id                      8                   
-myobj.base[5]                 obj1                
+myobj.base[5]                 o                    ...
 myobj.fUniqueID               0                   object unique identifier
 myobj.fBits                   0x03000000          bit field status word
 myobj2                                            
@@ -307,7 +307,7 @@ myobj2.obj                    102
 myobj2.fUniqueID              0                   object unique identifier
 myobj2.fBits                  0x03000000          bit field status word
 myobj2.id                     9                   
-myobj2.base[5]                obj2                
+myobj2.base[5]                o                    ...
 *myobjp                                           
 *myobj2p                                          
 *myobjSt                                          ->
@@ -318,8 +318,8 @@ myobj2.base[5]                obj2
 *mytobj2St                                        ->
 *myobjdp                                          
 *myobj2dp                                         
-myobjarr[2]                                       
-myobjarr2[2]                                      
+myobjarr[2]                                        ...
+myobjarr2[2]                                       ...
 fUniqueID                     0                   object unique identifier
 fBits                         0x03000000          bit field status word
 base 	t e s t 
@@ -421,16 +421,16 @@ time                          1.2
 itra                          2                   
 mycell                                            
 mycell.id                     3                   
-mycell.base[5]                test                
-myArr[3]                                          
-myArrFix[4]                                       
+mycell.base[5]                t                    ...
+myArr[3]                                           ...
+myArrFix[4]                                        ...
 index                         2                   
 *myArrVar                     ->0                 ![index]  WAITING on Vicktor's implementation [index]
 *objVarArr                    ->0                 ![index]  Not implemented yet ... will it ever?
 mynocell                                          
 mynocell.nodict               0                   
 mynocell.id                   0                   
-mynocell.base[5]              none                
+mynocell.base[5]              n                    ...
 *mycellnull                   ->0                 
 *mycellfix                                        
 *mycellvirt                                       
@@ -438,7 +438,7 @@ mynocell.base[5]              none
 myobj                                             
 myobj.obj                     101                 
 myobj.id                      8                   
-myobj.base[5]                 obj1                
+myobj.base[5]                 o                    ...
 myobj.fUniqueID               0                   object unique identifier
 myobj.fBits                   0x03000000          bit field status word
 myobj2                                            
@@ -446,7 +446,7 @@ myobj2.obj                    102
 myobj2.fUniqueID              0                   object unique identifier
 myobj2.fBits                  0x03000000          bit field status word
 myobj2.id                     9                   
-myobj2.base[5]                obj2                
+myobj2.base[5]                o                    ...
 *myobjp                                           
 *myobj2p                                          
 *myobjSt                                          ->
@@ -457,8 +457,8 @@ myobj2.base[5]                obj2
 *mytobj2St                                        ->
 *myobjdp                                          
 *myobj2dp                                         
-myobjarr[2]                                       
-myobjarr2[2]                                      
+myobjarr[2]                                        ...
+myobjarr2[2]                                       ...
 fUniqueID                     0                   object unique identifier
 fBits                         0x03000000          bit field status word
 base 	t e s t 
