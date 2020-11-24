@@ -20,8 +20,14 @@
 
 #include <string>
 
+#include <ROOT/RLogger.hxx>
+
 namespace ROOT {
 namespace Experimental {
+
+class RLogChannel;
+/// Log channel for RNTuple diagnostics.
+RLogChannel &NTupleLog();
 
 struct RNTuple;
 

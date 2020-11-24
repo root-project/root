@@ -15,7 +15,7 @@
 
 #include <ROOT/RConfig.hxx> // for R__[un]likely
 #include <ROOT/RError.hxx>
-#include <ROOT/RLogger.hxx> // for R__WARNING_HERE
+#include <ROOT/RLogger.hxx> // for R__LOG_WARNING
 
 #include <exception>
 #include <string>
@@ -60,7 +60,7 @@ ROOT::Experimental::Internal::RResultBase::~RResultBase() noexcept(false)
       {
          throw RException(*fError);
       } else {
-         R__WARNING_HERE("RError") << "unhandled RResult exception during stack unwinding";
+         R__LOG_WARNING() << "unhandled RResult exception during stack unwinding";
       }
    }
 }

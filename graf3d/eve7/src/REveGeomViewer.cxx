@@ -11,6 +11,7 @@
 
 #include <ROOT/REveGeomViewer.hxx>
 
+#include <ROOT/REveUtil.hxx> // EveLog()
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RWebWindow.hxx>
 
@@ -115,7 +116,7 @@ std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std:
                else res = *stack;
       delete stack;
    } else {
-      R__ERROR_HERE("webeve") << "Fail convert " << json << " into vector<int>";
+      R__LOG_ERROR(EveLog()) << "Fail convert " << json << " into vector<int>";
    }
 
    return res;
@@ -131,7 +132,7 @@ void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
 
    auto &json = fDesc.GetDrawJson();
 
-   R__DEBUG_HERE("webeve") << "Produce geometry JSON len: " << json.length();
+   R__LOG_DEBUG(0, EveLog()) << "Produce geometry JSON len: " << json.length();
 
    fWebWindow->Send(connid, json);
 }

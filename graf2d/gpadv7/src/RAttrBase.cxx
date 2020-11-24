@@ -16,6 +16,11 @@
 #include "TClass.h"
 #include "TDataMember.h"
 
+ROOT::Experimental::RLogChannel &ROOT::Experimental::GPadLog() {
+   static RLogChannel sLog("ROOT.GPad");
+   return sLog;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Return default values for attributes, empty for base class
 
@@ -209,7 +214,7 @@ ROOT::Experimental::RAttrMap ROOT::Experimental::RAttrBase::CollectDefaults() co
          }
       }
    } else {
-      R__ERROR_HERE("gpadv7") << "Missing dictionary for " << info.name() << " class, implement CollectDefaults() like in RAttrColor";
+      R__LOG_ERROR(GPadLog()) << "Missing dictionary for " << info.name() << " class, implement CollectDefaults() like in RAttrColor";
    }
 
    return res;

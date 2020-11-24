@@ -30,17 +30,17 @@ void RootWebPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel lvl, co
    switch (lvl) {
    case InfoMessageLevel:
       if (fConsole > 0)
-         R__DEBUG_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
+         R__LOG_DEBUG("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
                                      message.toLatin1().constData());
       break;
    case WarningMessageLevel:
       if (fConsole > -1)
-         R__WARNING_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
+         R__LOG_WARNING("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
                                        message.toLatin1().constData());
       break;
    case ErrorMessageLevel:
       if (fConsole > -2)
-         R__ERROR_HERE("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
+         R__LOG_ERROR("Qt") << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
                                      message.toLatin1().constData());
       break;
    }

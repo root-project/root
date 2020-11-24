@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -16,72 +16,67 @@
 #ifndef ROOT7_RLogger
 #define ROOT7_RLogger
 
-#include <array>
+#include <atomic>
+#include <list>
 #include <memory>
+#include <mutex>
 #include <sstream>
-#include <vector>
-
-#include "ROOT/RStringView.hxx"
+#include <string>
+#include <utility>
 
 namespace ROOT {
 namespace Experimental {
 
+class RLogEntry;
+class RLogManager;
+
 /**
  Kinds of diagnostics.
  */
-enum class ELogLevel {
-   kDebug,   ///< Debug information; only useful for developers
-   kInfo,    ///< Informational messages; used for instance for tracing
+enum class ELogLevel : unsigned char {
+   kUnset,
+   kFatal,   ///< An error which causes further processing to be unreliable
+   kError,   ///< An error
    kWarning, ///< Warnings about likely unexpected behavior
-   kError,
-   kFatal
+   kInfo,    ///< Informational messages; used for instance for tracing
+   kDebug    ///< Debug information; only useful for developers; can have added verbosity up to 255-kDebug.
 };
+
+inline ELogLevel operator+(ELogLevel severity, int offset)
+{
+   return static_cast<ELogLevel>(static_cast<int>(severity) + offset);
+}
 
 /**
- A diagnostic, emitted by the RLogManager upon destruction of the RLogEntry.
- One can construct a RLogEntry through the utility preprocessor macros R__ERROR_HERE, R__WARNING_HERE etc
- like this:
-     R__INFO_HERE("CodeGroupForInstanceLibrary") << "All we know is " << 42;
- This will automatically capture the current class and function name, the file and line number.
+ Keep track of emitted errors and warnings.
  */
-
-class RLogEntry: public std::ostringstream {
-public:
-   std::string fGroup;
-   std::string fFile;
-   std::string fFuncName;
-   int fLine = 0;
-   ELogLevel fLevel;
+class RLogDiagCount {
+protected:
+   std::atomic<long long> fNumWarnings{0ll};    /// Number of warnings.
+   std::atomic<long long> fNumErrors{0ll};      /// Number of errors.
+   std::atomic<long long> fNumFatalErrors{0ll}; /// Number of fatal errors.
 
 public:
-   RLogEntry() = default;
-   RLogEntry(ELogLevel level, std::string_view group): fGroup(group), fLevel(level) {}
-   RLogEntry(ELogLevel level, std::string_view group, std::string_view filename, int line, std::string_view funcname)
-      : fGroup(group), fFile(filename), fFuncName(funcname), fLine(line), fLevel(level)
-   {}
+   /// Returns the current number of warnings.
+   long long GetNumWarnings() const { return fNumWarnings; }
 
-   RLogEntry &SetFile(const std::string &file)
-   {
-      fFile = file;
-      return *this;
-   }
-   RLogEntry &SetFunction(const std::string &func)
-   {
-      fFuncName = func;
-      return *this;
-   }
-   RLogEntry &SetLine(int line)
-   {
-      fLine = line;
-      return *this;
-   }
+   /// Returns the current number of errors.
+   long long GetNumErrors() const { return fNumErrors; }
 
-   bool IsWarning() const { return fLevel == kWarning; }
-   bool IsError() const { return fLevel == ELoglevel::kError; || fLevel == ELogLevel::kFatal; }
+   /// Returns the current number of fatal errors.
+   long long GetNumFatalErrors() const { return fNumFatalErrors; }
 
-   ~RLogEntry();
+   /// Increase warning or error count.
+   void Increment(ELogLevel severity)
+   {
+      switch (severity) {
+      case ELogLevel::kFatal: ++fNumFatalErrors; break;
+      case ELogLevel::kError: ++fNumErrors; break;
+      case ELogLevel::kWarning: ++fNumWarnings; break;
+      default:;
+      }
+   }
 };
-
 
 /**
  Abstract RLogHandler base class. ROOT logs everything from info to error
@@ -99,86 +94,228 @@ public:
    virtual bool Emit(const RLogEntry &entry) = 0;
 };
 
+/**
+ A log configuration for a channel, e.g. "RHist".
+ Each ROOT module has its own log, with potentially distinct verbosity.
+ */
+class RLogChannel : public RLogDiagCount {
+   /// Name as shown in diagnostics
+   std::string fName;
+
+   /// Verbosity of this channel. By default, use the global verbosity.
+   ELogLevel fVerbosity = ELogLevel::kUnset;
+
+public:
+   /// Construct an anonymous channel.
+   RLogChannel() = default;
+
+   /// Construct an anonymous channel with a default vebosity.
+   explicit RLogChannel(ELogLevel verbosity) : fVerbosity(verbosity) {}
+
+   /// Construct a log channel given its name, which is part of the diagnostics.
+   RLogChannel(const std::string &name) : fName(name) {}
+
+   ELogLevel SetVerbosity(ELogLevel verbosity)
+   {
+      std::swap(fVerbosity, verbosity);
+      return verbosity;
+   }
+   ELogLevel GetVerbosity() const { return fVerbosity; }
+   ELogLevel GetEffectiveVerbosity(const RLogManager &mgr) const;
+
+   const std::string &GetName() const { return fName; }
+};
 
 /**
- A RLogHandler that multiplexes diagnostics to different client `RLogHandler`s.
+ A RLogHandler that multiplexes diagnostics to different client `RLogHandler`s
+ and keeps track of the sum of `RLogDiagCount`s for all channels.
+
  `RLogHandler::Get()` returns the process's (static) log manager.
  */
 
-class RLogManager: public RLogHandler {
-private:
-   std::vector<std::unique_ptr<RLogHandler>> fHandlers;
-
-   long long fNumWarnings{0};
-   long long fNumErrors{0};
-
-   /// Initialize taking a RLogHandlerDefault.
-   RLogManager(std::unique_ptr<RLogHandler> &&lh) { fHandlers.emplace_back(std::move(lh)); }
+class RLogManager : public RLogChannel, public RLogHandler {
+   std::mutex fMutex;
+   std::list<std::unique_ptr<RLogHandler>> fHandlers;
 
 public:
+   /// Initialize taking a RLogHandler.
+   RLogManager(std::unique_ptr<RLogHandler> lh) : RLogChannel(ELogLevel::kWarning)
+   {
+      fHandlers.emplace_back(std::move(lh));
+   }
+
    static RLogManager &Get();
 
    /// Add a RLogHandler in the front - to be called before all others.
-   void PushFront(std::unique_ptr<RLogHandler> handler) { fHandlers.insert(fHandlers.begin(), std::move(handler)); }
+   void PushFront(std::unique_ptr<RLogHandler> handler) { fHandlers.emplace_front(std::move(handler)); }
 
    /// Add a RLogHandler in the back - to be called after all others.
    void PushBack(std::unique_ptr<RLogHandler> handler) { fHandlers.emplace_back(std::move(handler)); }
 
+   /// Remove and return the given log handler. Returns `nullptr` if not found.
+   std::unique_ptr<RLogHandler> Remove(RLogHandler *handler);
+
    // Emit a `RLogEntry` to the RLogHandlers.
    // Returns false if further emission of this Log should be suppressed.
-   bool Emit(const RLogEntry &entry) override
-   {
-      if (entry.IsWarning())
-         ++fNumWarnings;
-      else if (entry.IsError())
-         ++fNumErrors;
+   bool Emit(const RLogEntry &entry) override;
+};
 
-      for (auto &&handler: fHandlers)
-         if (!handler->Emit(entry))
-            return false;
-      return true;
+/**
+ A diagnostic location, part of an RLogEntry.
+ */
+struct RLogLocation {
+   std::string fFile;
+   std::string fFuncName;
+   int fLine; // C++11 forbids "= 0" for braced-init-list initialization.
+};
+
+/**
+ A diagnostic that can be emitted by the RLogManager.
+ One can construct a RLogEntry through RLogBuilder, including streaming into
+ the diagnostic message and automatic emission.
+ */
+
+class RLogEntry {
+public:
+   RLogLocation fLocation;
+   std::string fMessage;
+   RLogChannel *fChannel = nullptr;
+   ELogLevel fLevel = ELogLevel::kFatal;
+
+   RLogEntry(ELogLevel level, RLogChannel &channel) : fChannel(&channel), fLevel(level) {}
+   RLogEntry(ELogLevel level, RLogChannel &channel, const RLogLocation &loc)
+      : fLocation(loc), fChannel(&channel), fLevel(level)
+   {
    }
 
-   /// Returns the current number of warnings seen by this log manager.
-   long long GetNumWarnings() const { return fNumWarnings; }
+   bool IsDebug() const { return fLevel >= ELogLevel::kDebug; }
+   bool IsInfo() const { return fLevel == ELogLevel::kInfo; }
+   bool IsWarning() const { return fLevel == ELogLevel::kWarning; }
+   bool IsError() const { return fLevel == ELogLevel::kError; }
+   bool IsFatal() const { return fLevel == ELogLevel::kFatal; }
+};
 
-   /// Returns the current number of errors seen by this log manager.
-   long long GetNumErrors() const { return fNumErrors; }
+namespace Detail {
+/**
+ Builds a diagnostic entry, emitted by the static RLogManager upon destruction of this builder,
+ where - by definition - the RLogEntry has been completely built.
+
+ This builder can be used through the utility preprocessor macros R__LOG_ERROR,
+ R__LOG_WARNING etc like this:
+ ```c++
+     R__LOG_INFO(ROOT::Experimental::HistLog()) << "all we know is " << 42;
+     const int decreasedInfoLevel = 5;
+     R__LOG_XDEBUG(ROOT::Experimental::WebGUILog(), decreasedInfoLevel) << "nitty-gritty details";
+ ```
+ This will automatically capture the current class and function name, the file and line number.
+ */
+
+class RLogBuilder : public std::ostringstream {
+   /// The log entry to be built.
+   RLogEntry fEntry;
+
+public:
+   RLogBuilder(ELogLevel level, RLogChannel &channel) : fEntry(level, channel) {}
+   RLogBuilder(ELogLevel level, RLogChannel &channel, const std::string &filename, int line,
+               const std::string &funcname)
+      : fEntry(level, channel, {filename, funcname, line})
+   {
+   }
+
+   /// Emit the log entry through the static log manager.
+   ~RLogBuilder()
+   {
+      fEntry.fMessage = str();
+      RLogManager::Get().Emit(fEntry);
+   }
+};
+} // namespace Detail
+
+/**
+ Change the verbosity level (global or specific to the RLogChannel passed to the
+ constructor) for the lifetime of this object.
+ Example:
+ ```c++
+ RLogScopedVerbosity debugThis(gFooLog, ELogLevel::kDebug);
+ Foo::SomethingToDebug();
+ ```
+ */
+class RLogScopedVerbosity {
+   RLogChannel *fChannel;
+   ELogLevel fPrevLevel;
+
+public:
+   RLogScopedVerbosity(RLogChannel &channel, ELogLevel verbosity)
+      : fChannel(&channel), fPrevLevel(channel.SetVerbosity(verbosity))
+   {
+   }
+   explicit RLogScopedVerbosity(ELogLevel verbosity) : RLogScopedVerbosity(RLogManager::Get(), verbosity) {}
+   ~RLogScopedVerbosity() { fChannel->SetVerbosity(fPrevLevel); }
 };
 
 /**
  Object to count the number of warnings and errors emitted by a section of code,
  after construction of this type.
  */
-class RLogDiagCounter {
-private:
-   /// The number of the RLogManager's emitted warnings at construction time of *this.
-   long long fInitialWarnings{RLogManager::Get().GetNumWarnings()};
-   /// The number of the RLogManager's emitted errors at construction time.
-   long long fInitialErrors{RLogManager::Get().GetNumErrors()};
+class RLogScopedDiagCount {
+   RLogDiagCount *fCounter = nullptr;
+   /// The number of the RLogDiagCount's emitted warnings at construction time of *this.
+   long long fInitialWarnings = 0;
+   /// The number of the RLogDiagCount's emitted errors at construction time.
+   long long fInitialErrors = 0;
+   /// The number of the RLogDiagCount's emitted fatal errors at construction time.
+   long long fInitialFatalErrors = 0;
 
 public:
-   /// Get the number of warnings that the RLogManager has emitted since construction of *this.
-   long long GetAccumulatedWarnings() const { return RLogManager::Get().GetNumWarnings() - fInitialWarnings; }
+   /// Construct the scoped count given a counter (e.g. a channel or RLogManager).
+   /// The counter's lifetime must exceed the lifetime of this object!
+   explicit RLogScopedDiagCount(RLogDiagCount &cnt)
+      : fCounter(&cnt), fInitialWarnings(cnt.GetNumWarnings()), fInitialErrors(cnt.GetNumErrors()),
+        fInitialFatalErrors(cnt.GetNumFatalErrors())
+   {
+   }
 
-   /// Get the number of errors that the RLogManager has emitted since construction of *this.
-   long long GetAccumulatedErrors() const { return RLogManager::Get().GetNumErrors() - fInitialErrors; }
+   /// Construct the scoped count for any diagnostic, whatever its channel.
+   RLogScopedDiagCount() : RLogScopedDiagCount(RLogManager::Get()) {}
 
-   /// Whether the RLogManager has emitted a warnings since construction time of *this.
+   /// Get the number of warnings that the RLogDiagCount has emitted since construction of *this.
+   long long GetAccumulatedWarnings() const { return fCounter->GetNumWarnings() - fInitialWarnings; }
+
+   /// Get the number of errors that the RLogDiagCount has emitted since construction of *this.
+   long long GetAccumulatedErrors() const { return fCounter->GetNumErrors() - fInitialErrors; }
+
+   /// Get the number of errors that the RLogDiagCount has emitted since construction of *this.
+   long long GetAccumulatedFatalErrors() const { return fCounter->GetNumFatalErrors() - fInitialFatalErrors; }
+
+   /// Whether the RLogDiagCount has emitted a warnings since construction time of *this.
    bool HasWarningOccurred() const { return GetAccumulatedWarnings(); }
 
-   /// Whether the RLogManager has emitted an error since construction time of *this.
-   bool HasErrorOccurred() const { return GetAccumulatedErrors(); }
+   /// Whether the RLogDiagCount has emitted an error (fatal or not) since construction time of *this.
+   bool HasErrorOccurred() const { return GetAccumulatedErrors() + GetAccumulatedFatalErrors(); }
 
-   /// Whether the RLogManager has emitted an error or a warning since construction time of *this.
+   /// Whether the RLogDiagCount has emitted an error or a warning since construction time of *this.
    bool HasErrorOrWarningOccurred() const { return HasWarningOccurred() || HasErrorOccurred(); }
 };
 
-/// Emit the log entry through the static log manager.
-RLogEntry::~RLogEntry() {
-   RLogManager::Get().Emit(*this);
+namespace Internal {
+
+inline RLogChannel &GetChannelOrManager()
+{
+   return RLogManager::Get();
+}
+inline RLogChannel &GetChannelOrManager(RLogChannel &channel)
+{
+   return channel;
 }
 
+} // namespace Internal
+
+inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) const
+{
+   if (fVerbosity == ELogLevel::kUnset)
+      return mgr.GetVerbosity();
+   return fVerbosity;
+}
 
 } // namespace Experimental
 } // namespace ROOT
@@ -189,13 +326,43 @@ RLogEntry::~RLogEntry() {
 #define R__LOG_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #endif
 
-#define R__LOG_HERE(LEVEL, GROUP) \
-   ROOT::Experimental::RLogEntry(LEVEL, GROUP).SetFile(__FILE__).SetLine(__LINE__).SetFunction(R__LOG_PRETTY_FUNCTION)
+/*
+ Some implementation details:
 
-#define R__FATAL_HERE(GROUP) R__LOG_HERE(ROOT::Experimental::ELogLevel::kFatal, GROUP)
-#define R__ERROR_HERE(GROUP) R__LOG_HERE(ROOT::Experimental::ELogLevel::kError, GROUP)
-#define R__WARNING_HERE(GROUP) R__LOG_HERE(ROOT::Experimental::ELogLevel::kWarning, GROUP)
-#define R__INFO_HERE(GROUP) R__LOG_HERE(ROOT::Experimental::ELogLevel::kInfo, GROUP)
-#define R__DEBUG_HERE(GROUP) R__LOG_HERE(ROOT::Experimental::ELogLevel::kDebug, GROUP)
+ - The conditional `RLogBuilder` use prevents stream operators from being called if
+ verbosity is too low, i.e.:
+ ````
+ RLogScopedVerbosity silence(RLogLevel::kFatal);
+ R__LOG_DEBUG() << WillNotBeCalled();
+ ```
+ - To update counts of warnings / errors / fatal errors, those RLogEntries must
+ always be created, even if in the end their emission will be silenced. This
+ should be fine, performance-wise, as they should not happen frequently.
+ - Use `(condition) && RLogBuilder(...)` instead of `if (condition) RLogBuilder(...)`
+ to prevent "ambiguous else" in invocations such as `if (something) R__LOG_DEBUG()...`.
+ */
+#define R__LOG_TO_CHANNEL(SEVERITY, CHANNEL)                                                                        \
+   (SEVERITY < ROOT::Experimental::ELogLevel::kInfo ||                                                              \
+    ROOT::Experimental::Internal::GetChannelOrManager(CHANNEL).GetEffectiveVerbosity(                               \
+       ROOT::Experimental::RLogManager::Get()) >= SEVERITY) &&                                                      \
+      ROOT::Experimental::Detail::RLogBuilder(SEVERITY, ROOT::Experimental::Internal::GetChannelOrManager(CHANNEL), \
+                                              __FILE__, __LINE__, R__LOG_PRETTY_FUNCTION)
+
+/// \name LogMacros
+/// Macros to log diagnostics.
+/// ```c++
+///     R__LOG_INFO(ROOT::Experimental::HistLog()) << "all we know is " << 42;
+///
+///     RLogScopedVerbosity verbose(kDebug + 5);
+///     const int decreasedInfoLevel = 5;
+///     R__LOG_DEBUG(decreasedInfoLevel, ROOT::Experimental::WebGUILog()) << "nitty-gritty details";
+/// ```
+///\{
+#define R__LOG_FATAL(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kFatal, __VA_ARGS__)
+#define R__LOG_ERROR(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kError, __VA_ARGS__)
+#define R__LOG_WARNING(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kWarning, __VA_ARGS__)
+#define R__LOG_INFO(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kInfo, __VA_ARGS__)
+#define R__LOG_DEBUG(DEBUGLEVEL, ...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kDebug + DEBUGLEVEL, __VA_ARGS__)
+///\}
 
 #endif

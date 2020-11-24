@@ -93,7 +93,7 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
 RFileDialog::~RFileDialog()
 {
    InvokeCallBack(); // invoke callback if not yet performed
-   R__DEBUG_HERE("rbrowser") << "RFileDialog destructor";
+   R__LOG_DEBUG(0, BrowserLog()) << "RFileDialog destructor";
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -295,7 +295,7 @@ void RFileDialog::ProcessMsg(unsigned connid, const std::string &arg)
       auto path = TBufferJSON::FromJSON<Browsable::RElementPath_t>(arg.substr(10));
 
       if (!path) {
-         R__ERROR_HERE("rbrowser") << "Fail to decode JSON " << arg.substr(10);
+         R__LOG_ERROR(BrowserLog()) << "Fail to decode JSON " << arg.substr(10);
          return;
       }
 
@@ -414,7 +414,7 @@ std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
    auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(args.substr(11));
 
    if (!arr || (arr->size() < 3)) {
-      R__ERROR_HERE("rbrowser") << "Embedded FileDialog failure - argument should have at least three strings" << args.substr(11);
+      R__LOG_ERROR(BrowserLog()) << "Embedded FileDialog failure - argument should have at least three strings" << args.substr(11);
       return nullptr;
    }
 

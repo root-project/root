@@ -13,10 +13,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RMiniFile.hxx"
 #include "ROOT/RNTupleUtil.hxx"
 
+#include "ROOT/RLogger.hxx"
+#include "ROOT/RMiniFile.hxx"
+
 #include <iostream>
+
+ROOT::Experimental::RLogChannel &ROOT::Experimental::NTupleLog() {
+   static RLogChannel sLog("ROOT.NTuple");
+   return sLog;
+}
+
 
 namespace ROOT {
 namespace Experimental {

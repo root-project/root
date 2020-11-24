@@ -16,6 +16,10 @@
 namespace ROOT {
 namespace Experimental {
 
+class RLogChannel;
+/// Log channel for GPad diagnostics.
+RLogChannel &GPadLog();
+
 /** \class RAttrBase
 \ingroup GpadROOT7
 \author Sergey Linev <s.linev@gsi.de>

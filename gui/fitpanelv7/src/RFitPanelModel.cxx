@@ -16,10 +16,17 @@
 
 #include <ROOT/RFitPanelModel.hxx>
 
+#include <ROOT/RLogger.hxx>
+
 #include "TH1.h"
 #include "TPluginManager.h"
 #include "TFitResult.h"
 #include "TF1.h"
+
+ROOT::Experimental::RLogChannel &ROOT::Experimental::FitPanelLog() {
+   static RLogChannel sLog("ROOT.FitPanel");
+   return sLog;
+}
 
 
 enum EFitPanel {

@@ -832,7 +832,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
    }
    // this should not happen, just check
    if (!found) {
-      R__ERROR_HERE("webeve") << "Internal error - no connection with id " << connid << " found";
+      R__LOG_ERROR(EveLog()) << "Internal error - no connection with id " << connid << " found";
       return;
    }
 
@@ -850,7 +850,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
    } else {
       auto el = FindElementById(id);
       if (!el) {
-         R__ERROR_HERE("webeve") << "Element with id " << id << " not found";
+         R__LOG_ERROR(EveLog()) << "Element with id " << id << " not found";
          return;
       }
       std::string ctype = cj["class"];

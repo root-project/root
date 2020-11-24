@@ -44,7 +44,7 @@ void RDrawable::Execute(const std::string &exec)
 
    std::stringstream cmd;
    cmd << "((" << isA->GetName() << " *) " << std::hex << std::showbase << (size_t)this << ")->" << exec << ";";
-   R__DEBUG_HERE("drawable") << "RDrawable::Execute Obj " << this << " cmd " << exec;
+   R__LOG_DEBUG(0, GPadLog()) << "RDrawable::Execute Obj " << this << " cmd " << exec;
    gROOT->ProcessLine(cmd.str().c_str());
 }
 

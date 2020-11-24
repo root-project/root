@@ -77,7 +77,7 @@ void RProvider::RegisterFile(const std::string &extension, FileFunc_t func)
     auto &fmap = GetFileMap();
 
     if ((extension != "*") && (fmap.find(extension) != fmap.end()))
-       R__ERROR_HERE("Browserv7") << "Provider for file extension  " << extension << " already exists";
+       R__LOG_ERROR(BrowsableLog()) << "Provider for file extension  " << extension << " already exists";
 
     fmap.emplace(extension, StructFile{this,func});
 }
@@ -90,7 +90,7 @@ void RProvider::RegisterBrowse(const TClass *cl, BrowseFunc_t func)
     auto &bmap = GetBrowseMap();
 
     if (cl && (bmap.find(cl) != bmap.end()))
-       R__ERROR_HERE("Browserv7") << "Browse provider for class " << cl->GetName() << " already exists";
+       R__LOG_ERROR(BrowsableLog()) << "Browse provider for class " << cl->GetName() << " already exists";
 
     bmap.emplace(cl, StructBrowse{this,func});
 }
@@ -104,7 +104,7 @@ void RProvider::RegisterDraw6(const TClass *cl, Draw6Func_t func)
     auto &bmap = GetDraw6Map();
 
     if (cl && (bmap.find(cl) != bmap.end()))
-       R__ERROR_HERE("Browserv7") << "Draw v6 handler for class " << cl->GetName() << " already exists";
+       R__LOG_ERROR(BrowsableLog()) << "Draw v6 handler for class " << cl->GetName() << " already exists";
 
     bmap.emplace(cl, StructDraw6{this, func});
 }
@@ -117,7 +117,7 @@ void RProvider::RegisterDraw7(const TClass *cl, Draw7Func_t func)
     auto &bmap = GetDraw7Map();
 
     if (cl && (bmap.find(cl) != bmap.end()))
-       R__ERROR_HERE("Browserv7") << "Draw v7 handler for class " << cl->GetName() << " already exists";
+       R__LOG_ERROR(BrowsableLog()) << "Draw v7 handler for class " << cl->GetName() << " already exists";
 
     bmap.emplace(cl, StructDraw7{this, func});
 }
