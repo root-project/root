@@ -24,6 +24,8 @@
 #include <iomanip>
 #include <utility>
 #include <cstring>
+#include <vector>
+#include <algorithm>
 
 constexpr int PRECISION = 10;
 constexpr int WIDTH = PRECISION + 7;
@@ -31,13 +33,21 @@ constexpr int WIDTH = PRECISION + 7;
 namespace ROOT {
 namespace Minuit2 {
 
-using cstr_t = const char*;
+// we don't use a std::vector or std::array here, because we want a mix of the two;
+// a stack-allocated container with fixed capacity but dynamic size, i.e. the equivalent
+// of static_vector from the Boost Container library
+template <class T>
+class PrefixStack {
+public:
+  using const_pointer = const T*;
+  using const_reference = const T&;
 
-struct PrefixStack {
-  void Push(cstr_t prefix) {
+  void Push(T prefix) {
     if (fSize < fMaxSize)
       fData[fSize] = prefix;
     else {
+      // crop the stack when it becomes too deep as a last resort, but this should not
+      // happen, fMaxSize should be increased instead if this occurs
       fData[fMaxSize-1] = prefix;
       fData[fMaxSize-2] = "...";
     }
@@ -49,39 +59,31 @@ struct PrefixStack {
     --fSize;
   }
 
-  cstr_t const * begin() const { return fData; }
-  cstr_t const * end() const { return fData + (fSize < fMaxSize ? fSize : fMaxSize); }
+  const_pointer begin() const { return fData; }
+  const_pointer end() const { return fData + (fSize < fMaxSize ? fSize : fMaxSize); }
+  const_reference back() const { return *(end()-1); }
 
-  static constexpr unsigned fMaxSize = 10;
-  cstr_t fData[fMaxSize];
+private:
+  static constexpr unsigned fMaxSize = 10; // increase as needed
+  T fData[fMaxSize];
   unsigned fSize = 0;
 };
 
-std::ostream& operator<<(std::ostream& os, const PrefixStack& ps) {
-  cstr_t prev = "";
-  for (const auto cs : ps) {
-    // skip repeated prefixes; repetition happens when class method calls another
-    // method of the same class and both set up a MnPrint instance
-    if (std::strcmp(cs, prev) != 0)
-      os << cs << ":";
-    prev = cs;
-  }
-  return os;
-}
 
+// gShowPrefixStack determines how messages are printed, it acts on all threads;
+// race conditions when writing to this do not cause failures
+bool gShowPrefixStack = false;
+
+// writing to gPrefixFilter is not thread-safe, should be done only from main thread
+std::vector<std::string> gPrefixFilter;
+
+// gPrintLevel must be thread-local, because it may be manipulated by a thread to
+// temporarily turn logging on or off; Minuit2Minimizer does this, for example
 thread_local int gPrintLevel = 0;
-thread_local PrefixStack gPrefixStack;
 
-int MnPrint::SetGlobalLevel(int level)
-{
-   std::swap(level, gPrintLevel);
-   return level;
-}
+// gPrefixStack must be thread-local
+thread_local PrefixStack<const char*> gPrefixStack;
 
-int MnPrint::GlobalLevel()
-{
-   return gPrintLevel;
-}
 
 MnPrint::MnPrint(const char *prefix, int level) : fLevel{level} {
   gPrefixStack.Push(prefix);
@@ -91,10 +93,31 @@ MnPrint::~MnPrint() {
   gPrefixStack.Pop();
 }
 
+void MnPrint::ShowPrefixStack(bool yes) {
+  gShowPrefixStack = yes;
+}
+
+void MnPrint::AddFilter(const char* filter) {
+  gPrefixFilter.emplace_back(filter);
+}
+
+void MnPrint::ClearFilter() {
+  gPrefixFilter.clear();
+}
+
+int MnPrint::SetGlobalLevel(int level)
+{
+   return std::exchange(gPrintLevel, level);
+}
+
+int MnPrint::GlobalLevel()
+{
+   return gPrintLevel;
+}
+
 int MnPrint::SetLevel(int level)
 {
-   std::swap(level, fLevel);
-   return level;
+   return std::exchange(fLevel, level);
 }
 
 int MnPrint::Level() const
@@ -102,7 +125,54 @@ int MnPrint::Level() const
    return fLevel;
 }
 
-const PrefixStack& MnPrint::Prefix() { return gPrefixStack; }
+void StreamFullPrefix(std::ostringstream& os) {
+  const char* prev = "";
+  for (const auto cs : gPrefixStack) {
+    // skip repeated prefixes; repetition happens when class method calls another
+    // method of the same class and both set up a MnPrint instance
+    if (std::strcmp(cs, prev) != 0)
+      os << cs << ":";
+    prev = cs;
+  }
+}
+
+void MnPrint::StreamPrefix(std::ostringstream& os)
+{
+  if (gShowPrefixStack) {
+    // show full prefix stack, useful to set sharp filters and to see what calls what
+    StreamFullPrefix(os);
+  } else {
+    // show only the top of the prefix stack (the prefix of the innermost scope)
+    os << gPrefixStack.back();
+  }
+}
+
+bool MnPrint::Hidden() {
+  // Filtering is not implemented a very efficient way to keep it simple, but the
+  // implementation ensures that the performance drop is opt-in. Only when filters are
+  // used there is a performance loss.
+
+  // The intended use case of filtering is for debugging, when highest performance
+  // does not matter. Filtering is only every attempted if the message passes the
+  // threshold level.
+
+  // Filtering is very fast when the filter is empty.
+  if (gPrefixFilter.empty())
+    return false;
+
+  std::ostringstream os;
+  os << "^";
+  StreamFullPrefix(os);
+  std::string prefix = os.str();
+  // Filtering works like grep, the message is shown if any of the filter strings match.
+  // To only match the beginning of the prefix, use "^". For example "^MnHesse" only
+  // matches direct execution of MnHesse, but not MnHesse called by MnMigrad.
+  for (const auto& s : gPrefixFilter) {
+    if (prefix.find(s) != std::string::npos)
+      return false;
+  }
+  return true;
+}
 
 MnPrint::Oneline::Oneline(double fcn, double edm, int ncalls, int iter)
    : fFcn(fcn), fEdm(edm), fNcalls(ncalls), fIter(iter)

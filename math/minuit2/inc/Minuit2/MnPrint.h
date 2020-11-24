@@ -69,9 +69,6 @@ std::ostream &operator<<(std::ostream &os, const std::pair<double, double> &poin
    can replace with their own implementation.
 */
 
-struct PrefixStack;
-std::ostream& operator<<(std::ostream& os, const PrefixStack& ps);
-
 // logging class for messages of varying severity
 class MnPrint {
 public:
@@ -107,6 +104,12 @@ public:
    // return current global print level
    static int GlobalLevel();
 
+   // Whether to show the full prefix stack or only the end
+   static void ShowPrefixStack(bool yes);
+
+   static void AddFilter(const char* prefix);
+   static void ClearFilter();
+
    // set print level and return the previous one
    int SetLevel(int level);
 
@@ -116,41 +119,45 @@ public:
    template <class... Ts>
    void Error(const Ts &... args)
    {
-      Log(eError, Prefix(), args...);
+      Log(eError, args...);
    }
 
    template <class... Ts>
    void Warn(const Ts &... args)
    {
-      Log(eWarn, Prefix(), args...);
+      Log(eWarn, args...);
    }
 
    template <class... Ts>
    void Info(const Ts &... args)
    {
-      Log(eInfo, Prefix(), args...);
+      Log(eInfo, args...);
    }
 
    template <class... Ts>
    void Debug(const Ts &... args)
    {
-      Log(eDebug, Prefix(), args...);
+      Log(eDebug, args...);
    }
 
+private:
    // low level logging
-   template <class T, class... Ts>
-   void Log(Verbosity level, const T& t, const Ts &... args)
+   template <class... Ts>
+   void Log(Verbosity level, const Ts &... args)
    {
       if (Level() < static_cast<int>(level))
          return;
+      if (Hidden())
+         return;
+
       std::ostringstream os;
-      os << t;
+      StreamPrefix(os);
       StreamArgs(os, args...);
       Impl(level, os.str());
    }
 
-private:
-   static const PrefixStack& Prefix();
+   static void StreamPrefix(std::ostringstream& os);
+   static bool Hidden();
 
    // see MnPrintImpl.cxx
    static void Impl(Verbosity level, const std::string &s);
