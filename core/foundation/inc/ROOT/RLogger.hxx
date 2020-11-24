@@ -37,7 +37,51 @@ enum class ELogLevel {
    kFatal
 };
 
-class RLogEntry;
+/**
+ A diagnostic, emitted by the RLogManager upon destruction of the RLogEntry.
+ One can construct a RLogEntry through the utility preprocessor macros R__ERROR_HERE, R__WARNING_HERE etc
+ like this:
+     R__INFO_HERE("CodeGroupForInstanceLibrary") << "All we know is " << 42;
+ This will automatically capture the current class and function name, the file and line number.
+ */
+
+class RLogEntry: public std::ostringstream {
+public:
+   std::string fGroup;
+   std::string fFile;
+   std::string fFuncName;
+   int fLine = 0;
+   ELogLevel fLevel;
+
+public:
+   RLogEntry() = default;
+   RLogEntry(ELogLevel level, std::string_view group): fGroup(group), fLevel(level) {}
+   RLogEntry(ELogLevel level, std::string_view group, std::string_view filename, int line, std::string_view funcname)
+      : fGroup(group), fFile(filename), fFuncName(funcname), fLine(line), fLevel(level)
+   {}
+
+   RLogEntry &SetFile(const std::string &file)
+   {
+      fFile = file;
+      return *this;
+   }
+   RLogEntry &SetFunction(const std::string &func)
+   {
+      fFuncName = func;
+      return *this;
+   }
+   RLogEntry &SetLine(int line)
+   {
+      fLine = line;
+      return *this;
+   }
+
+   bool IsWarning() const { return fLevel == kWarning; }
+   bool IsError() const { return fLevel == ELoglevel::kError; || fLevel == ELogLevel::kFatal; }
+
+   ~RLogEntry();
+};
+
 
 /**
  Abstract RLogHandler base class. ROOT logs everything from info to error
@@ -84,6 +128,11 @@ public:
    // Returns false if further emission of this Log should be suppressed.
    bool Emit(const RLogEntry &entry) override
    {
+      if (entry.IsWarning())
+         ++fNumWarnings;
+      else if (entry.IsError())
+         ++fNumErrors;
+
       for (auto &&handler: fHandlers)
          if (!handler->Emit(entry))
             return false;
@@ -125,47 +174,11 @@ public:
    bool HasErrorOrWarningOccurred() const { return HasWarningOccurred() || HasErrorOccurred(); }
 };
 
-/**
- A diagnostic, emitted by the RLogManager upon destruction of the RLogEntry.
- One can construct a RLogEntry through the utility preprocessor macros R__ERROR_HERE, R__WARNING_HERE etc
- like this:
-     R__INFO_HERE("CodeGroupForInstanceLibrary") << "All we know is " << 42;
- This will automatically capture the current class and function name, the file and line number.
- */
+/// Emit the log entry through the static log manager.
+RLogEntry::~RLogEntry() {
+   RLogManager::Get().Emit(*this);
+}
 
-class RLogEntry: public std::ostringstream {
-public:
-   std::string fGroup;
-   std::string fFile;
-   std::string fFuncName;
-   int fLine = 0;
-   ELogLevel fLevel;
-
-public:
-   RLogEntry() = default;
-   RLogEntry(ELogLevel level, std::string_view group): fGroup(group), fLevel(level) {}
-   RLogEntry(ELogLevel level, std::string_view group, std::string_view filename, int line, std::string_view funcname)
-      : fGroup(group), fFile(filename), fFuncName(funcname), fLine(line), fLevel(level)
-   {}
-
-   RLogEntry &SetFile(const std::string &file)
-   {
-      fFile = file;
-      return *this;
-   }
-   RLogEntry &SetFunction(const std::string &func)
-   {
-      fFuncName = func;
-      return *this;
-   }
-   RLogEntry &SetLine(int line)
-   {
-      fLine = line;
-      return *this;
-   }
-
-   ~RLogEntry() { RLogManager::Get().Emit(*this); }
-};
 
 } // namespace Experimental
 } // namespace ROOT
