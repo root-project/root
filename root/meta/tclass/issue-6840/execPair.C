@@ -94,8 +94,13 @@ int execPair(const char *filename = "pair.root")
             cl->GetState(), cl->HasInterpreterInfo(), cl->GetName());
       return 5;
    }
-   if (cl->GetClassSize() != 32) {
-      Error("pair offset-size", "Test is ineffective, the calculated size for pair<short, short> is no longer conservative (%d instead of 16)", cl->GetClassSize());
+#ifdef R__B64
+   constexpr int ssExpectedSize = 32;
+#else
+   constexpr int ssExpectedSize = 16;
+#endif
+   if (cl->GetClassSize() != ssExpectedSize) {
+      Error("pair offset-size", "Test is ineffective, the calculated size for pair<short, short> is no longer conservative (%d instead of %d)", cl->GetClassSize(), ssExpectedSize);
       return 6;
    }
    auto info = cl->GetStreamerInfo();
@@ -119,8 +124,13 @@ int execPair(const char *filename = "pair.root")
       Error("pair offset-size", "Test is ineffective, found a dictionary for pair<short, SameAsShort>");
       return 12;
    }
-   if (cl->GetClassSize() != 24) {
-      Error("pair offset-size", "Test is ineffective, the calculated size for pair<short, SameAsShort> is no longer conservative (%d instead of 16)", cl->GetClassSize());
+#ifdef R__B64
+   constexpr int saExpectedSize = 24;
+#else
+   constexpr int saExpectedSize = 12;
+#endif
+   if (cl->GetClassSize() != saExpectedSize) {
+      Error("pair offset-size", "Test is ineffective, the calculated size for pair<short, SameAsShort> is no longer conservative (%d instead of %d)", cl->GetClassSize(), saExpectedSize);
       return 13;
    }
    info = cl->GetStreamerInfo();
