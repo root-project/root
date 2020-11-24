@@ -214,17 +214,17 @@ private:
    /// \brief Function called from Map to select and execute the correct Executor
    /// according to the set Execution Policy.
    template<class F, class T>
-   auto ResolveExecutorAndMap(F func, T args) -> std::vector<typename MapRetType<F, T>::type> {
-      std::vector<typename MapRetType<F, T>::type> res;
+   auto ResolveExecutorAndMap(F func, T&& args) -> std::vector<typename MapRetType<F, typename std::decay<T>::type>::type> {
+      std::vector<typename MapRetType<F, typename std::decay<T>::type>::type> res;
       switch(fExecPolicy) {
          case ROOT::ExecutionPolicy::kSequential:
-            res = fSequentialExecutor->Map(func, args);
+            res = fSequentialExecutor->Map(func, std::forward<T>(args));
             break;
          case ROOT::ExecutionPolicy::kMultiThread:
-            res = fThreadExecutor->Map(func, args);
+            res = fThreadExecutor->Map(func, std::forward<T>(args));
             break;
          case ROOT::ExecutionPolicy::kMultiProcess:
-            res = fProcessExecutor->Map(func, args);
+            res = fProcessExecutor->Map(func, std::forward<T>(args));
             break;
          default:
             break;
