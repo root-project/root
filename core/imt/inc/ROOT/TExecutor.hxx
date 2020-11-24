@@ -75,8 +75,13 @@
 /// This set of methods behaves exactly like Map, but takes an additional
 /// function as a third argument. This function is applied to the set of
 /// objects returned by the corresponding Map execution to "squash" them
-/// into a single object. This function should be independent of the size of
-/// the vector returned by Map due to optimization of the number of chunks.
+/// into a single object.
+///
+/// An integer can be passed as the fourth argument indicating the number of chunks we want to divide our work in.
+/// <b>(Note: Please be aware that chunking is only available when the policy is kMultiThread, ignoring this argument in other cases)</b>
+/// This may be useful to avoid the overhead introduced when running really short tasks. In this case, the reduction
+/// function should be independent of the size of the vector returned by Map due to optimization of the number of
+/// chunks.
 ///
 /// #### Examples:
 /// ~~~{.cpp}

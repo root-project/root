@@ -26,8 +26,8 @@
 /// in the input data.
 ///
 /// The two possible usages of the Map method are:\n
-/// * Map(F func, unsigned nTimes, [R redfunc, unsigned nChunks]): func is executed nTimes with no arguments
-/// * Map(F func, T& args, [R redfunc, unsigned nChunks]): func is executed on each element (or each chunk) of the collection of arguments args
+/// * Map(F func, unsigned nTimes): func is executed nTimes with no arguments
+/// * Map(F func, T& args): func is executed on each element of the collection of arguments args
 ///
 /// For either signature, func is executed as many times as needed by a pool of
 /// nThreads threads, where nThreads typically defaults to the number of cores.\n
@@ -72,6 +72,7 @@
 ///
 /// If this function is a binary operator, the "squashing" will be performed in parallel.
 /// This is exclusive to ROOT::TThreadExecutor and not any other ROOT::TExecutorCRTP-derived classes.\n
+///
 /// An integer can be passed as the fourth argument indicating the number of chunks we want to divide our work in.
 /// This may be useful to avoid the overhead introduced when running really short tasks.
 ///
