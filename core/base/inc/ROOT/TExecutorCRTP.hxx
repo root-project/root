@@ -24,7 +24,7 @@
 /// multiple times, possibly in parallel and with different arguments every
 /// time.
 ///
-/// ###ROOT::TExecutorCRTP<subc>::Map
+/// ###ROOT::TExecutorCRTP<SubC>::Map
 /// The two possible usages of the Map method are:\n
 /// * `Map(F func, unsigned nTimes)`: func is executed nTimes with no arguments
 /// * `Map(F func, T& args)`: func is executed on each element of the collection of arguments args
@@ -59,7 +59,7 @@
 /// will be the objects returned by func. The ordering of the elements corresponds to the ordering of
 /// the arguments.
 ///
-/// ### ROOT::TExecutorCRTP<subc>::Reduce
+/// ### ROOT::TExecutorCRTP<SubC>::Reduce
 /// These set of methods combine all elements from a std::vector into a single value.
 /// \param redfunc
 /// \parblock
@@ -71,7 +71,7 @@
 /// a standard vector\n
 /// \endparblock
 ///
-/// ### ROOT::TExecutorCRTP<subc>::MapReduce
+/// ### ROOT::TExecutorCRTP<SubC>::MapReduce
 /// This set of methods behaves exactly like Map, but takes an additional
 /// function as a third argument. This function is applied to the set of
 /// objects returned by the corresponding Map execution to "squash" them
@@ -94,7 +94,7 @@
 
 namespace ROOT {
 
-template<class subc>
+template<class SubC>
 class TExecutorCRTP {
 public:
 
@@ -122,7 +122,7 @@ public:
 
    // MapReduce
    // The trailing return types check at compile time that func is compatible with the type of the arguments.
-   // A static_assert check in TExecutorCRTP<subc>::Reduce is used to check that redfunc is compatible with the type returned by func
+   // A static_assert check in TExecutorCRTP<SubC>::Reduce is used to check that redfunc is compatible with the type returned by func
    template<class F, class R, class Cond = noReferenceCond<F>>
    auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
    template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
@@ -149,9 +149,9 @@ public:
 
 private:
 
-   subc &Derived()
+   SubC &Derived()
    {
-     return *static_cast<subc*>(this);
+     return *static_cast<SubC*>(this);
    }
 
    /// Implementation of the Map method, left to the derived classes
@@ -177,8 +177,8 @@ private:
 /// \return A vector with the results of the function calls.
 /// Functions that take arguments can be executed (with
 /// fixed arguments) by wrapping them in a lambda or with std::bind.
-template<class subc> template<class F, class Cond>
-auto TExecutorCRTP<subc>::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
+template<class SubC> template<class F, class Cond>
+auto TExecutorCRTP<SubC>::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
 {
    return Derived().MapImpl(func, nTimes);
 }
@@ -189,8 +189,8 @@ auto TExecutorCRTP<subc>::Map(F func, unsigned nTimes) -> std::vector<typename s
 /// \param func Function to be executed. Must take an element of the sequence passed assecond argument as a parameter.
 /// \param args Sequence of indexes to execute `func` on.
 /// \return A vector with the results of the function calls.
-template<class subc> template<class F, class INTEGER, class Cond>
-auto TExecutorCRTP<subc>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
+template<class SubC> template<class F, class INTEGER, class Cond>
+auto TExecutorCRTP<SubC>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
    return Derived().MapImpl(func, args);
 }
@@ -201,8 +201,8 @@ auto TExecutorCRTP<subc>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<t
 /// \param func Function to be executed on the elements of the initializer_list passed as second parameter.
 /// \param args initializer_list for a vector to apply `func` on.
 /// \return A vector with the results of the function calls.
-template<class subc> template<class F, class T, class Cond>
-auto TExecutorCRTP<subc>::Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>
+template<class SubC> template<class F, class T, class Cond>
+auto TExecutorCRTP<SubC>::Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    std::vector<T> vargs(std::move(args));
    const auto &reslist = Map(func, vargs);
@@ -215,8 +215,8 @@ auto TExecutorCRTP<subc>::Map(F func, std::initializer_list<T> args) -> std::vec
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Vector of elements passed as an argument to `func`.
 /// \return A vector with the results of the function calls.
-template<class subc> template<class F, class T, class Cond>
-auto TExecutorCRTP<subc>::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
+template<class SubC> template<class F, class T, class Cond>
+auto TExecutorCRTP<SubC>::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    return Derived().MapImpl(func, args);
 }
@@ -228,8 +228,8 @@ auto TExecutorCRTP<subc>::Map(F func, std::vector<T> &args) -> std::vector<typen
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Vector of elements passed as an argument to `func`.
 /// \return A vector with the results of the function calls.
-template<class subc> template<class F, class T, class Cond>
-auto TExecutorCRTP<subc>::Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
+template<class SubC> template<class F, class T, class Cond>
+auto TExecutorCRTP<SubC>::Map(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    return Derived().MapImpl(func, args);
 }
@@ -242,8 +242,8 @@ auto TExecutorCRTP<subc>::Map(F func, const std::vector<T> &args) -> std::vector
 /// \return A vector with the results of the function calls.
 /// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class subc> template<class F, class R, class Cond>
-auto TExecutorCRTP<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
+template<class SubC> template<class F, class R, class Cond>
+auto TExecutorCRTP<SubC>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
 {
    return Reduce(Map(func, nTimes), redfunc);
 }
@@ -255,8 +255,8 @@ auto TExecutorCRTP<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typen
 /// \param args Sequence of indexes to execute `func` on.
 /// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class subc> template<class F, class INTEGER, class R, class Cond>
-auto TExecutorCRTP<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
+template<class SubC> template<class F, class INTEGER, class R, class Cond>
+auto TExecutorCRTP<SubC>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
 {
    return Reduce(Map(func, args), redfunc);
 }
@@ -268,8 +268,8 @@ auto TExecutorCRTP<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc)
 /// \param args initializer_list for a vector to apply `func` on.
 /// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class subc> template<class F, class T, class R, class Cond>
-auto TExecutorCRTP<subc>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type
+template<class SubC> template<class F, class T, class R, class Cond>
+auto TExecutorCRTP<SubC>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type
 {
    std::vector<T> vargs(std::move(args));
    return Reduce(Map(func, vargs), redfunc);
@@ -282,8 +282,8 @@ auto TExecutorCRTP<subc>::MapReduce(F func, std::initializer_list<T> args, R red
 /// \param args Vector of elements passed as an argument to `func`.
 /// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class subc> template<class F, class T, class R, class Cond>
-auto TExecutorCRTP<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
+template<class SubC> template<class F, class T, class R, class Cond>
+auto TExecutorCRTP<SubC>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
 {
    return Reduce(Map(func, args), redfunc);
 }
@@ -294,8 +294,8 @@ auto TExecutorCRTP<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> 
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Immutable vector of elements passed as an argument to `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class subc> template<class F, class T, class R, class Cond>
-auto TExecutorCRTP<subc>::MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
+template<class SubC> template<class F, class T, class R, class Cond>
+auto TExecutorCRTP<SubC>::MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
 {
    return Reduce(Map(func, args), redfunc);
 }
@@ -306,8 +306,8 @@ auto TExecutorCRTP<subc>::MapReduce(F func, const std::vector<T> &args, R redfun
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Vector of elements passed as an argument to `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class subc> template<class F, class T, class Cond>
-T* TExecutorCRTP<subc>::MapReduce(F func, std::vector<T*> &args)
+template<class SubC> template<class F, class T, class Cond>
+T* TExecutorCRTP<SubC>::MapReduce(F func, std::vector<T*> &args)
 {
    return Reduce(Map(func, args));
 }
@@ -319,8 +319,8 @@ T* TExecutorCRTP<subc>::MapReduce(F func, std::vector<T*> &args)
 /// \param args Immutableector of elements passed as an argument to `func`.
 /// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
-template<class subc> template<class F, class T, class Cond>
-T* TExecutorCRTP<subc>::MapReduce(F func, const std::vector<T*> &args)
+template<class SubC> template<class F, class T, class Cond>
+T* TExecutorCRTP<SubC>::MapReduce(F func, const std::vector<T*> &args)
 {
    return Reduce(Map(func, args));
 }
@@ -330,12 +330,12 @@ T* TExecutorCRTP<subc>::MapReduce(F func, const std::vector<T*> &args)
 ///
 /// \param mergeObjs A vector of ROOT objects implementing the Merge method
 /// \return An object result of merging the vector elements into one.
-template<class subc> template<class T>
-T* TExecutorCRTP<subc>::Reduce(const std::vector<T*> &mergeObjs)
+template<class SubC> template<class T>
+T* TExecutorCRTP<SubC>::Reduce(const std::vector<T*> &mergeObjs)
 {
    ROOT::MergeFunc_t merge = mergeObjs.front()->IsA()->GetMerge();
    if(!merge) {
-      Error("TExecutorCRTP<subc>::Reduce", "could not find merge method for the TObject\n. Aborting operation.");
+      Error("TExecutorCRTP<SubC>::Reduce", "could not find merge method for the TObject\n. Aborting operation.");
       return nullptr;
    }
 
@@ -356,8 +356,8 @@ T* TExecutorCRTP<subc>::Reduce(const std::vector<T*> &mergeObjs)
 /// \param objs A vector of elements to combine.
 /// \param redfunc Reduction function to combine the elements of the vector `objs`
 /// \return A value result of combining the vector elements into a single object of the same type.
-template<class subc> template<class T, class R>
-auto TExecutorCRTP<subc>::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
+template<class SubC> template<class T, class R>
+auto TExecutorCRTP<SubC>::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
 {
    // check we can apply reduce to objs
    static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
