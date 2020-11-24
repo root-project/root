@@ -453,10 +453,9 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       SetBit(kDevNull);
    }
 
-   const char *fname;
-   if ((fname = gSystem->ExpandPathName(fname1))) {
-      SetName(fname);
-      delete [] fname;
+   TString fname(fname1);
+   if (!gSystem->ExpandPathName(fname)) {
+      SetName(fname.Data());
       fRealName = GetName();
       if (!gSystem->IsAbsoluteFileName(fRealName)) {
          gSystem->PrependPathName(gSystem->WorkingDirectory(),fRealName);
@@ -477,10 +476,10 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    }
 
    if (recreate) {
-      if (!gSystem->AccessPathName(fname, kFileExists)) {
-         if (gSystem->Unlink(fname) != 0) {
+      if (!gSystem->AccessPathName(fname.Data(), kFileExists)) {
+         if (gSystem->Unlink(fname.Data()) != 0) {
             SysError("TFile", "could not delete %s (errno: %d)",
-                     fname, gSystem->GetErrno());
+                     fname.Data(), gSystem->GetErrno());
             zombify();
             return;
          }
@@ -489,30 +488,30 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       create   = kTRUE;
       fOption  = "CREATE";
    }
-   if (create && !devnull && !gSystem->AccessPathName(fname, kFileExists)) {
-      Error("TFile", "file %s already exists", fname);
+   if (create && !devnull && !gSystem->AccessPathName(fname.Data(), kFileExists)) {
+      Error("TFile", "file %s already exists", fname.Data());
       zombify();
       return;
    }
    if (update) {
-      if (gSystem->AccessPathName(fname, kFileExists)) {
+      if (gSystem->AccessPathName(fname.Data(), kFileExists)) {
          update = kFALSE;
          create = kTRUE;
       }
-      if (update && gSystem->AccessPathName(fname, kWritePermission)) {
-         Error("TFile", "no write permission, could not open file %s", fname);
+      if (update && gSystem->AccessPathName(fname.Data(), kWritePermission)) {
+         Error("TFile", "no write permission, could not open file %s", fname.Data());
          zombify();
          return;
       }
    }
    if (read) {
-      if (gSystem->AccessPathName(fname, kFileExists)) {
-         Error("TFile", "file %s does not exist", fname);
+      if (gSystem->AccessPathName(fname.Data(), kFileExists)) {
+         Error("TFile", "file %s does not exist", fname.Data());
          zombify();
          return;
       }
-      if (gSystem->AccessPathName(fname, kReadPermission)) {
-         Error("TFile", "no read permission, could not open file %s", fname);
+      if (gSystem->AccessPathName(fname.Data(), kReadPermission)) {
+         Error("TFile", "no read permission, could not open file %s", fname.Data());
          zombify();
          return;
       }
@@ -521,24 +520,24 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    // Connect to file system stream
    if (create || update) {
 #ifndef WIN32
-      fD = TFile::SysOpen(fname, O_RDWR | O_CREAT, 0644);
+      fD = TFile::SysOpen(fname.Data(), O_RDWR | O_CREAT, 0644);
 #else
-      fD = TFile::SysOpen(fname, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
+      fD = TFile::SysOpen(fname.Data(), O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
-         SysError("TFile", "file %s can not be opened", fname);
+         SysError("TFile", "file %s can not be opened", fname.Data());
          zombify();
          return;
       }
       fWritable = kTRUE;
    } else {
 #ifndef WIN32
-      fD = TFile::SysOpen(fname, O_RDONLY, 0644);
+      fD = TFile::SysOpen(fname.Data(), O_RDONLY, 0644);
 #else
-      fD = TFile::SysOpen(fname, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
+      fD = TFile::SysOpen(fname.Data(), O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
-         SysError("TFile", "file %s can not be opened for reading", fname);
+         SysError("TFile", "file %s can not be opened for reading", fname.Data());
          zombify();
          return;
       }
@@ -547,8 +546,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    // calling virtual methods from constructor not a good idea, but it is how code was developed
    TFile::Init(create);                        // NOLINT: silence clang-tidy warnings
-
-   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4847,11 +4844,10 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
             Bool_t read = (opt.IsNull() ||
                           !opt.CompareTo("READ", TString::kIgnoreCase)) ? kTRUE : kFALSE;
             if (read) {
-               char *fn;
-               if ((fn = gSystem->ExpandPathName(TUrl(lfname).GetFile()))) {
+               TString fn = TUrl(lfname).GetFile();
+               if (!gSystem->ExpandPathName(fn)) {
                   if (gSystem->AccessPathName(fn, kReadPermission))
                      localFile = kFALSE;
-                  delete [] fn;
                }
             }
             // Return full local path if requested (and if the case)
