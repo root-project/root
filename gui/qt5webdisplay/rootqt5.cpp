@@ -97,7 +97,7 @@ protected:
          if (!qapp && !QApplication::instance()) {
 
             if (!gApplication) {
-               R__ERROR_HERE("Qt5") << "NOT FOUND gApplication to create QApplication";
+               R__LOG_ERROR("Qt5") << "NOT FOUND gApplication to create QApplication";
                return nullptr;
             }
 

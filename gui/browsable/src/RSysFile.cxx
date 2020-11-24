@@ -105,7 +105,7 @@ class RSysDirLevelIter : public RLevelIter {
          // produced file name may include \\? symbols, which are indicating long file name
          if ((dwRet > 0) && (dwRet < BUFSIZE))
            if ((path[0] == '\\') && (path[1] == '\\') && (path[2] == '?') && (path[3] == '\\')) {
-              R__DEBUG_HERE("Browserv7") << "Try to open directory " << (path+4) << " instead of " << fPath;
+              R__LOG_DEBUG(0, BrowsableLog()) << "Try to open directory " << (path+4) << " instead of " << fPath;
               fDir = gSystem->OpenDirectory(path + 4);
               if (fDir) fPath = path + 4;
            }
@@ -117,7 +117,7 @@ class RSysDirLevelIter : public RLevelIter {
 #endif
 
       if (!fDir) {
-         R__ERROR_HERE("Browserv7") << "Fail to open directory " << fPath;
+         R__LOG_ERROR(BrowsableLog()) << "Fail to open directory " << fPath;
          return false;
       }
 
@@ -168,9 +168,9 @@ class RSysDirLevelIter : public RLevelIter {
       if (pathinfores) {
 
          if (fCurrentStat.fIsLink) {
-            R__ERROR_HERE("Browserv7") << "Broken symlink of " << path;
+            R__LOG_ERROR(BrowsableLog()) << "Broken symlink of " << path;
          } else {
-            R__ERROR_HERE("Browserv7") << "Can't read file attributes of \"" <<  path << "\" err:" << gSystem->GetError();
+            R__LOG_ERROR(BrowsableLog()) << "Can't read file attributes of \"" <<  path << "\" err:" << gSystem->GetError();
          }
          return false;
       }
@@ -427,9 +427,9 @@ RSysFile::RSysFile(const std::string &filename) : fFileName(filename)
 {
    if (gSystem->GetPathInfo(fFileName.c_str(), fStat)) {
       if (fStat.fIsLink) {
-         R__ERROR_HERE("Browserv7") << "Broken symlink of " << fFileName;
+         R__LOG_ERROR(BrowsableLog()) << "Broken symlink of " << fFileName;
       } else {
-         R__ERROR_HERE("Browserv7") << "Can't read file attributes of \"" << fFileName
+         R__LOG_ERROR(BrowsableLog()) << "Can't read file attributes of \"" << fFileName
                                     << "\" err:" << gSystem->GetError();
       }
    }

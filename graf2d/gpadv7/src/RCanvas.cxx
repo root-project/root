@@ -277,7 +277,7 @@ void ROOT::Experimental::RCanvas::ResolveSharedPtrs()
       for (auto n2 = n+1; n2 < vect.size(); ++n2) {
          if (vect[n2]->GetIOPtr() == vect[n]->GetIOPtr()) {
             if (vect[n2]->HasShared())
-               R__ERROR_HERE("Gpadv7") << "FATAL Shared pointer for same IO ptr already exists";
+               R__LOG_ERROR(GPadLog()) << "FATAL Shared pointer for same IO ptr already exists";
             else
                vect[n2]->SetShared(shrd_ptr);
          }
@@ -301,7 +301,7 @@ std::unique_ptr<ROOT::Experimental::RDrawableReply> ROOT::Experimental::RChangeA
    if (!canv) return nullptr;
 
    if ((ids.size() != names.size()) || (ids.size() != values.size())) {
-      R__ERROR_HERE("Gpadv7") << "Mismatch of arrays size in RChangeAttrRequest";
+      R__LOG_ERROR(GPadLog()) << "Mismatch of arrays size in RChangeAttrRequest";
       return nullptr;
    }
 

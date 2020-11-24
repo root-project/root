@@ -14,10 +14,18 @@
  *************************************************************************/
 
 #include <ROOT/RWebDisplayArgs.hxx>
-#include <ROOT/RWebWindow.hxx>
+
 #include <ROOT/RConfig.hxx>
+#include <ROOT/RLogger.hxx>
+#include <ROOT/RWebWindow.hxx>
 
 #include "TROOT.h"
+
+ROOT::Experimental::RLogChannel &ROOT::Experimental::WebGUILog() {
+   static RLogChannel sLog("ROOT.WebGUI");
+   return sLog;
+}
+
 
 /** \class ROOT::Experimental::RWebDisplayArgs
  * \ingroup webdisplay

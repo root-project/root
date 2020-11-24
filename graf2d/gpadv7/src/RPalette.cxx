@@ -9,6 +9,7 @@
 #include "ROOT/RPalette.hxx"
 
 #include "ROOT/RLogger.hxx"
+#include "ROOT/RAttrBase.hxx" // for GPadLog()
 
 #include <algorithm>
 #include <cmath>
@@ -74,7 +75,7 @@ RColor RPalette::GetColor(double ordinal)
    auto diff2 = iColor2->fOrdinal - ordinal;
 
    if ((diff1 < -epsilon) || (diff2 < -epsilon)) {
-      R__ERROR_HERE("Gpad") << "Wrong palette settings";
+      R__LOG_ERROR(GPadLog()) << "Wrong palette settings";
       return fColors.back().fColor;
    }
 
@@ -105,7 +106,7 @@ RColor RPalette::GetColor(double ordinal)
          return res;
       }
 
-      R__ERROR_HERE("Gpad") << "Fail to interpolate color";
+      R__LOG_ERROR(GPadLog()) << "Fail to interpolate color";
    }
 
    return (diff2 < diff1) ? iColor2->fColor : iColor1->fColor;

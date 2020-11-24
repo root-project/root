@@ -159,7 +159,7 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
          else if (strstr(send_thrds, "no"))
             fUseSenderThreads = false;
          else
-            R__ERROR_HERE("WebDisplay") << "WebGui.SenderThrds has to be yes or no";
+            R__LOG_ERROR(WebGUILog()) << "WebGui.SenderThrds has to be yes or no";
       }
 
       if (IsUseHttpThread())
@@ -179,7 +179,7 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
          ui5dir.Form("%s/ui5", TROOT::GetDataDir().Data());
 
       if (gSystem->ExpandPathName(ui5dir)) {
-         R__ERROR_HERE("WebDisplay") << "Path to ROOT ui5 sources " << ui5dir << " not found, set ROOTUI5SYS correctly";
+         R__LOG_ERROR(WebGUILog()) << "Path to ROOT ui5 sources " << ui5dir << " not found, set ROOTUI5SYS correctly";
          ui5dir = ".";
       }
 
@@ -205,7 +205,7 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
    int ntry = 100;
 
    if (http_port < 0) {
-      R__ERROR_HERE("WebDisplay") << "Not allowed to create real HTTP server, check WebGui.HttpPort variable";
+      R__LOG_ERROR(WebGUILog()) << "Not allowed to create real HTTP server, check WebGui.HttpPort variable";
       return false;
    }
 
@@ -218,7 +218,7 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
    while (ntry-- >= 0) {
       if (!http_port) {
          if ((http_min <= 0) || (http_max <= http_min)) {
-            R__ERROR_HERE("WebDisplay") << "Wrong HTTP range configuration, check WebGui.HttpPortMin/Max variables";
+            R__LOG_ERROR(WebGUILog()) << "Wrong HTTP range configuration, check WebGui.HttpPortMin/Max variables";
             return false;
          }
 
@@ -270,14 +270,14 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindowsM
    std::lock_guard<std::recursive_mutex> grd(fMutex);
 
    if (!CreateServer()) {
-      R__ERROR_HERE("WebDisplay") << "Cannot create server when creating window";
+      R__LOG_ERROR(WebGUILog()) << "Cannot create server when creating window";
       return nullptr;
    }
 
    std::shared_ptr<ROOT::Experimental::RWebWindow> win = std::make_shared<ROOT::Experimental::RWebWindow>();
 
    if (!win) {
-      R__ERROR_HERE("WebDisplay") << "Fail to create RWebWindow instance";
+      R__LOG_ERROR(WebGUILog()) << "Fail to create RWebWindow instance";
       return nullptr;
    }
 
@@ -317,7 +317,7 @@ void ROOT::Experimental::RWebWindowsManager::Unregister(ROOT::Experimental::RWeb
 std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimental::RWebWindow &win, bool remote)
 {
    if (!fServer) {
-      R__ERROR_HERE("WebDisplay") << "Server instance not exists when requesting window URL";
+      R__LOG_ERROR(WebGUILog()) << "Server instance not exists when requesting window URL";
       return "";
    }
 
@@ -329,7 +329,7 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 
    if (remote) {
       if (!CreateServer(true)) {
-         R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server when requesting URL";
+         R__LOG_ERROR(WebGUILog()) << "Fail to start real HTTP server when requesting URL";
          return "";
       }
 
@@ -389,7 +389,7 @@ unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(RWebWindow &win, boo
    std::lock_guard<std::recursive_mutex> grd(fMutex);
 
    if (!fServer) {
-      R__ERROR_HERE("WebDisplay") << "Server instance not exists to show window";
+      R__LOG_ERROR(WebGUILog()) << "Server instance not exists to show window";
       return 0;
    }
 
@@ -400,14 +400,14 @@ unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(RWebWindow &win, boo
       key = std::to_string(gRandom->Integer(0x100000));
    } while ((--ntry > 0) && win.HasKey(key));
    if (ntry == 0) {
-      R__ERROR_HERE("WebDisplay") << "Fail to create unique key for the window";
+      R__LOG_ERROR(WebGUILog()) << "Fail to create unique key for the window";
       return 0;
    }
 
    RWebDisplayArgs args(user_args);
 
    if (batch_mode && !args.IsSupportHeadless()) {
-      R__ERROR_HERE("WebDisplay") << "Cannot use batch mode with " << args.GetBrowserName();
+      R__LOG_ERROR(WebGUILog()) << "Cannot use batch mode with " << args.GetBrowserName();
       return 0;
    }
 
@@ -421,7 +421,7 @@ unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(RWebWindow &win, boo
 
    std::string url = GetUrl(win, normal_http);
    if (url.empty()) {
-      R__ERROR_HERE("WebDisplay") << "Cannot create URL for the window";
+      R__LOG_ERROR(WebGUILog()) << "Cannot create URL for the window";
       return 0;
    }
 
@@ -436,7 +436,7 @@ unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(RWebWindow &win, boo
    auto handle = RWebDisplayHandle::Display(args);
 
    if (!handle) {
-      R__ERROR_HERE("WebDisplay") << "Cannot display window in " << args.GetBrowserName();
+      R__LOG_ERROR(WebGUILog()) << "Cannot display window in " << args.GetBrowserName();
       return 0;
    }
 

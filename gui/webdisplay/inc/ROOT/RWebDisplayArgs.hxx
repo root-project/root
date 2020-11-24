@@ -24,6 +24,10 @@ class THttpServer;
 namespace ROOT {
 namespace Experimental {
 
+class RLogChannel;
+/// Log channel for WebGUI diagnostics.
+RLogChannel &WebGUILog();
+
 class RWebWindow;
 
 class RWebDisplayArgs {

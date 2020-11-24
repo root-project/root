@@ -9,9 +9,15 @@
 #include <ROOT/Browsable/RElement.hxx>
 
 #include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/RLogger.hxx>
 
 using namespace ROOT::Experimental::Browsable;
 using namespace std::string_literals;
+
+ROOT::Experimental::RLogChannel &ROOT::Experimental::BrowsableLog() {
+   static RLogChannel sLog("ROOT.Browsable");
+   return sLog;
+}
 
 
 /////////////////////////////////////////////////////////////////////
