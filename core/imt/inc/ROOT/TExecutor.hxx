@@ -92,9 +92,6 @@ namespace ROOT{
 namespace Internal{
 class TExecutor: public TExecutorCRTP<TExecutor> {
    friend TExecutorCRTP;
-#ifdef R__USE_IMT
-   friend TThreadExecutor;
-#endif
 public:
 
    /// \brief Class constructor. Sets the default execution policy and initializes the corresponding executor.
