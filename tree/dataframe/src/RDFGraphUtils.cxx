@@ -59,20 +59,16 @@ std::string GraphCreatorHelper::RepresentGraph(ROOT::RDataFrame &rDataFrame)
 
 std::string GraphCreatorHelper::RepresentGraph(RLoopManager *loopManager)
 {
+   const auto actions = loopManager->GetAllActions();
+   const auto edges = loopManager->GetGraphEdges();
 
-   auto actions = loopManager->GetAllActions();
    std::vector<std::shared_ptr<GraphNode>> nodes;
-   for (auto action : actions) {
-      // Triggers the graph construction. When action->GetGraph() will return, the node will be linked to all the branch
-      nodes.emplace_back(action->GetGraph());
-   }
+   nodes.reserve(actions.size() + edges.size());
 
-   auto edges = loopManager->GetGraphEdges();
-   std::vector<std::shared_ptr<GraphNode>> leaves;
-   for (auto edge : edges) {
-      // Triggers the graph construction. When action->GetGraph() will return, the node will be linked to all the branch
+   for (auto *action : actions)
+      nodes.emplace_back(action->GetGraph());
+   for (auto *edge : edges)
       nodes.emplace_back(edge->GetGraph());
-   }
 
    return FromGraphActionsToDot(nodes);
 }
