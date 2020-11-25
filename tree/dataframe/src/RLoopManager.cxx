@@ -20,6 +20,7 @@
 #include "ROOT/TTreeProcessorMT.hxx"
 #endif
 
+#include <algorithm>
 #include <atomic>
 #include <exception>
 #include <functional>
@@ -690,17 +691,17 @@ std::vector<std::string> RLoopManager::GetFiltersNames()
 
 std::vector<RNodeBase *> RLoopManager::GetGraphEdges() const
 {
-   std::vector<RNodeBase *> nodes;
-   nodes.insert(nodes.end(), fBookedFilters.begin(), fBookedFilters.end());
-   nodes.insert(nodes.end(), fBookedRanges.begin(), fBookedRanges.end());
+   std::vector<RNodeBase *> nodes(fBookedFilters.size() + fBookedRanges.size());
+   auto it = std::copy(fBookedFilters.begin(), fBookedFilters.end(), nodes.begin());
+   std::copy(fBookedRanges.begin(), fBookedRanges.end(), it);
    return nodes;
 }
 
 std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions() const
 {
-   std::vector<RDFInternal::RActionBase *> actions;
-   actions.insert(actions.begin(), fBookedActions.begin(), fBookedActions.end());
-   actions.insert(actions.begin(), fRunActions.begin(), fRunActions.end());
+   std::vector<RDFInternal::RActionBase *> actions(fBookedActions.size() + fRunActions.size());
+   auto it = std::copy(fBookedActions.begin(), fBookedActions.end(), actions.begin());
+   std::copy(fRunActions.begin(), fRunActions.end(), it);
    return actions;
 }
 
