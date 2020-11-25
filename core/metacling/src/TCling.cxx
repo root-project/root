@@ -6084,6 +6084,7 @@ Int_t TCling::ShallowAutoLoadImpl(const char *cls)
 ////////////////////////////////////////////////////////////////////////////////
 // Iterate through the data member of the class (either through the TProtoClass
 // or through Cling) and trigger, recursively, the loading the necessary libraries.
+// \note `cls` is expected to be already normalized!
 Int_t TCling::DeepAutoLoadImpl(const char *cls)
 {
    Int_t status = ShallowAutoLoadImpl(cls);
@@ -6099,7 +6100,7 @@ Int_t TCling::DeepAutoLoadImpl(const char *cls)
       auto insertResult = gClassOnStack.insert(std::string(cls));
       if (insertResult.second) {
          // Now look through the TProtoClass to load the required library/dictionary
-         TProtoClass *proto = TClassTable::GetProto(cls);
+         TProtoClass *proto = TClassTable::GetProtoNorm(cls);
          if (proto) {
             for(auto element : proto->GetData()) {
                const char *subtypename = element->GetTypeName();
