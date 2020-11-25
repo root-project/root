@@ -8,30 +8,30 @@ int main() {
    // Build tests
    ROOT::Internal::TExecutor ex{};
    if (!ROOT::IsImplicitMTEnabled()) {
-      if(ex.Policy()!= ROOT::Internal::ExecutionPolicy::kSerial) {
+      if(ex.Policy()!= ROOT::ExecutionPolicy::kSequential) {
          return 0;
       }
    }
 #ifdef R__USE_IMT
    else {
-      if(ex.Policy()!= ROOT::Internal::ExecutionPolicy::kSerial) {
+      if(ex.Policy()!= ROOT::ExecutionPolicy::kSequential) {
          return 1;
       }
    }
 
-   ROOT::Internal::TExecutor ex1{ROOT::Internal::ExecutionPolicy::kMultithread};
-   if(ex1.Policy()!= ROOT::Internal::ExecutionPolicy::kMultithread) {
+   ROOT::Internal::TExecutor ex1{ROOT::ExecutionPolicy::kMultiThread};
+   if(ex1.Policy()!= ROOT::ExecutionPolicy::kMultiThread) {
          return 2;
    }
 #endif
 
-   ROOT::Internal::TExecutor ex2{ROOT::Internal::ExecutionPolicy::kMultiprocess};
-   if(ex2.Policy()!= ROOT::Internal::ExecutionPolicy::kMultiprocess) {
+   ROOT::Internal::TExecutor ex2{ROOT::ExecutionPolicy::kMultiProcess};
+   if(ex2.Policy()!= ROOT::ExecutionPolicy::kMultiProcess) {
          return 3;
    }
 
-   ROOT::Internal::TExecutor ex3{ROOT::Internal::ExecutionPolicy::kSerial};
-   if(ex3.Policy()!= ROOT::Internal::ExecutionPolicy::kSerial) {
+   ROOT::Internal::TExecutor ex3{ROOT::ExecutionPolicy::kSequential};
+   if(ex3.Policy()!= ROOT::ExecutionPolicy::kSequential) {
          return 4;
    }
 
