@@ -29,12 +29,23 @@ namespace RooFit {
 namespace TestStatistics {
 
 RooAbsL::RooAbsL(RooAbsPdf *inpdf, RooAbsData *indata, bool do_offset, double offset, double offset_carry,
-                 std::size_t N_events, std::size_t N_components)
+                 std::size_t N_events, std::size_t N_components, Extended extended)
    : pdf(static_cast<RooAbsPdf *>(inpdf->cloneTree())), data(static_cast<RooAbsData *>(indata->Clone())),
      _do_offset(do_offset), _offset(offset), _offset_carry(offset_carry), N_events(N_events), N_components(N_components)
 {
    //   std::unique_ptr<RooArgSet> obs {pdf->getObservables(*data)};
    //   data->attachBuffers(*obs);
+   // Process automatic extended option
+   if (extended == Extended::Auto) {
+      extended_ = ((pdf->extendMode() == RooAbsPdf::CanBeExtended || pdf->extendMode() == RooAbsPdf::MustBeExtended))
+                     ? true
+                     : false;
+      if (extended_) {
+         oocoutI((TObject *)nullptr, Minimization)
+            << "in RooAbsL ctor: p.d.f. provides expected number of events, including extended term in likelihood."
+            << std::endl;
+      }
+   }
 
    init_clones(*inpdf, *indata);
 }
@@ -42,7 +53,7 @@ RooAbsL::RooAbsL(RooAbsPdf *inpdf, RooAbsData *indata, bool do_offset, double of
 RooAbsL::RooAbsL(const RooAbsL &other)
    : pdf(static_cast<RooAbsPdf *>(other.pdf->cloneTree())), data(static_cast<RooAbsData *>(other.data->Clone())),
      _do_offset(other._do_offset), _offset(other._offset), _offset_carry(other._offset_carry), N_events(other.N_events),
-     N_components(other.N_components)
+     N_components(other.N_components), extended_(other.extended_)
 {
    init_clones(*other.pdf, *other.data);
 }

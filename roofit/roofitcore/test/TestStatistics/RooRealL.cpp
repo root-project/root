@@ -56,7 +56,7 @@ TEST_P(RooRealL, getVal)
 //   RooFit::MultiProcess::NLLVarTask mp_task_mode = std::get<1>(GetParam());
 
 //   RooFit::MultiProcess::NLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar *>(nll));
-   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0, false));
+   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0));
 
    auto mp_result = nll_new.getVal();
 
@@ -207,7 +207,7 @@ TEST_P(RooRealL, setVal)
    RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
    auto nll = pdf->createNLL(*data);
 
-   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0, false));
+   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0));
 
    // calculate first results
    nll->getVal();
@@ -254,7 +254,7 @@ TEST_P(RealLVsMPFE, getVal)
 
    auto mpfe_result = nll_mpfe->getVal();
 
-   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0, false));
+   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0));
 
    auto mp_result = nll_new.getVal();
 
@@ -288,7 +288,7 @@ TEST_P(RealLVsMPFE, minimize)
    mu->setVal(-2.9);
 
    auto nll_mpfe = pdf->createNLL(*data);
-   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0, false));
+   RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0));
 
    // save initial values for the start of all minimizations
    RooArgSet values = RooArgSet(*mu, *pdf);

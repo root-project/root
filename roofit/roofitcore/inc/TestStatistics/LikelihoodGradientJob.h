@@ -69,6 +69,10 @@ private:
    void set_ncycles(unsigned int ncycles) const;
    void set_error_level(double error_level) const;
 
+   void update_minuit_internal_parameter_values(const std::vector<double>& minuit_internal_x) override;
+
+   bool uses_minuit_internal_values() override;
+
    // Job overrides:
    void evaluate_task(std::size_t task) override;
    void update_real(std::size_t ix, double val, bool is_constant) override;
@@ -85,6 +89,7 @@ private:
    // members
    std::size_t N_tasks = 0;
    std::vector<std::size_t> completed_task_ids;
+   std::vector<double> minuit_internal_x_;
 };
 
 }

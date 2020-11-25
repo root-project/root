@@ -17,8 +17,11 @@
 namespace RooFit {
 namespace TestStatistics {
 
-LikelihoodGradientWrapper::LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, std::size_t N_dim, RooMinimizer *minimizer)
-   : likelihood(std::move(likelihood)), _minimizer(minimizer), calculation_is_clean(std::move(calculation_is_clean))/*, _minimizer_fcn(minimizer_fcn)*/
+LikelihoodGradientWrapper::LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood,
+                                                     std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
+                                                     std::size_t N_dim, RooMinimizer *minimizer)
+   : likelihood(std::move(likelihood)), _minimizer(minimizer),
+     calculation_is_clean(std::move(calculation_is_clean)) /*, _minimizer_fcn(minimizer_fcn)*/
 {
    // Note to future maintainers: take care when storing the minimizer_fcn pointer. The
    // RooAbsMinimizerFcn subclasses may get cloned inside MINUIT, which means the pointer
@@ -32,6 +35,9 @@ void LikelihoodGradientWrapper::synchronize_parameter_settings(
 {
    synchronize_parameter_settings(_minimizer->getMultiGenFcn(), parameter_settings);
 }
+
+void LikelihoodGradientWrapper::update_minuit_internal_parameter_values(const std::vector<double>& /*minuit_internal_x*/) {}
+void LikelihoodGradientWrapper::update_minuit_external_parameter_values(const std::vector<double>& /*minuit_external_x*/) {}
 
 } // namespace TestStatistics
 } // namespace RooFit

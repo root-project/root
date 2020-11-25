@@ -18,8 +18,11 @@
 namespace RooFit {
 namespace TestStatistics {
 
-LikelihoodWrapper::LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, RooMinimizer *minimizer)
-   : likelihood_(std::move(likelihood)), _minimizer(minimizer), calculation_is_clean_(std::move(calculation_is_clean)) /*, _minimizer_fcn(minimizer_fcn)*/
+LikelihoodWrapper::LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood,
+                                     std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
+                                     RooMinimizer *minimizer)
+   : likelihood_(std::move(likelihood)), _minimizer(minimizer),
+     calculation_is_clean_(std::move(calculation_is_clean)) /*, _minimizer_fcn(minimizer_fcn)*/
 {
    // Note to future maintainers: take care when storing the minimizer_fcn pointer. The
    // RooAbsMinimizerFcn subclasses may get cloned inside MINUIT, which means the pointer
@@ -54,9 +57,13 @@ bool LikelihoodWrapper::is_offsetting() const
 {
    return likelihood_->is_offsetting();
 }
-void LikelihoodWrapper::enable_offsetting(bool flag) {
+void LikelihoodWrapper::enable_offsetting(bool flag)
+{
    likelihood_->enable_offsetting(flag);
 }
+
+void LikelihoodWrapper::update_minuit_internal_parameter_values(const std::vector<double>& /*minuit_internal_x*/) {}
+void LikelihoodWrapper::update_minuit_external_parameter_values(const std::vector<double>& /*minuit_external_x*/) {}
 
 } // namespace TestStatistics
 } // namespace RooFit

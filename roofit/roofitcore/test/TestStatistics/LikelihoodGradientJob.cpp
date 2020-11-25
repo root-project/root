@@ -32,41 +32,6 @@
 #include "../test_lib.h" // generate_1D_gaussian_pdf_nll
 
 
-TEST(LikelihoodSerial, Gaussian1D)
-{
-   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-
-   // parameters
-   std::size_t seed = 23;
-
-   RooRandom::randomGenerator()->SetSeed(seed);
-
-   RooWorkspace w = RooWorkspace();
-
-   std::unique_ptr<RooAbsReal> nll;
-   std::unique_ptr<RooArgSet> values;
-   RooAbsPdf *pdf;
-   RooDataSet *data;
-   std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
-   // when c++17 support arrives, change to this:
-   //  auto [nll, pdf, data, values] = generate_1D_gaussian_pdf_nll(w, 10000);
-
-   // --------
-
-   auto nll0 = nll->getVal();
-
-   std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0, false);
-   auto clean_flags = std::make_shared<RooFit::TestStatistics::WrapperCalculationCleanFlags>();
-   RooFit::TestStatistics::LikelihoodSerial nll_ts(likelihood, clean_flags, nullptr);
-
-   nll_ts.evaluate();
-   auto nll1 = nll_ts.return_result();
-
-   std::cout << "nll0: " << nll0 << ", nll1: " << nll1 << std::endl;
-
-   EXPECT_EQ(nll0, nll1);
-}
-
 class LikelihoodGradientJob : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t>> {
 };
 
@@ -119,7 +84,7 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
    *values = *savedValues;
 
    RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
-   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0, false);
+   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0);
    std::unique_ptr<RooMinimizer> m1 =
       RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(
          likelihood);
@@ -186,7 +151,7 @@ TEST(LikelihoodGradientJobDEBUGGING, Gaussian1DMultiProcess)
    std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
 
    RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
-   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0, false);
+   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0);
    std::unique_ptr<RooMinimizer> m1 =
       RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(
          likelihood);
@@ -229,7 +194,7 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
    // --------
 
    RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
-   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0, false);
+   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0);
    std::unique_ptr<RooMinimizer> m1 =
       RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(
          likelihood);
@@ -325,7 +290,7 @@ TEST_P(LikelihoodGradientJob, GaussianND)
    // --------
 
    RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
-   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0, false);
+   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0);
    std::unique_ptr<RooMinimizer> m1 =
       RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(
          likelihood);

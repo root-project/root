@@ -43,6 +43,13 @@ public:
    virtual void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions &options);
    virtual void synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings);
    virtual void synchronize_parameter_settings(ROOT::Math::IMultiGenFunction* function, const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) = 0;
+   // Minuit passes in parameter values that may not conform to RooFit internal standards (like applying range clipping),
+   // but that the specific calculator does need. This function can be implemented to receive these Minuit-internal values:
+   virtual void update_minuit_internal_parameter_values(const std::vector<double>& minuit_internal_x);
+   virtual void update_minuit_external_parameter_values(const std::vector<double>& minuit_external_x);
+
+   // completely depends on the implementation, so pure virtual
+   virtual bool uses_minuit_internal_values() = 0;
 
 protected:
    std::shared_ptr<RooAbsL> likelihood;

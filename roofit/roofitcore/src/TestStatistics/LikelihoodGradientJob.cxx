@@ -34,13 +34,14 @@ LikelihoodGradientJob::LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood
 //   N_tasks = minimizer_fcn->get_nDim();
    N_tasks = N_dim;
    completed_task_ids.reserve(N_tasks);
+   minuit_internal_x_.reserve(N_dim);
    // TODO: make sure that the full gradients are sent back so that the
    // derivator will depart from correct state next step everywhere!
 }
 
 LikelihoodGradientJob::LikelihoodGradientJob(const LikelihoodGradientJob &other)
    : LikelihoodGradientWrapper(other), _grad(other._grad), _gradf(other._gradf), N_tasks(other.N_tasks),
-     completed_task_ids(other.completed_task_ids)
+     completed_task_ids(other.completed_task_ids), minuit_internal_x_(other.minuit_internal_x_)
 {
 }
 
@@ -110,6 +111,7 @@ void LikelihoodGradientJob::update_real(std::size_t ix, double val, bool /*is_co
 {
    if (get_manager()->process_manager().is_worker()) {
       // ix is defined in "flat" FunctionGradient space ix_dim * size + ix_component
+//      std::cout << "on worker, ix = " << ix << ", ix / _minimizer->getNPar() = " << ix / _minimizer->getNPar() << ", ix % _minimizer->getNPar() = " << ix % _minimizer->getNPar() << std::endl;
       switch (ix / _minimizer->getNPar()) {
       case 0: {
          _grad[ix % _minimizer->getNPar()].derivative = val;
@@ -124,7 +126,9 @@ void LikelihoodGradientJob::update_real(std::size_t ix, double val, bool /*is_co
          break;
       }
       case 3: {
-         _minimizer->set_function_parameter_value(ix % _minimizer->getNPar(), val);
+         std::size_t ix_component = ix % _minimizer->getNPar();
+         minuit_internal_x_[ix_component] = val;
+//         _minimizer->set_function_parameter_value(ix_component, val);  // if we want to update this, we should send over external values!
          break;
       }
       default:
@@ -141,9 +145,9 @@ void LikelihoodGradientJob::update_bool(std::size_t /*ix*/, bool /*value*/) {}
 
 void LikelihoodGradientJob::send_back_task_result_from_worker(std::size_t task)
 {
-   std::cout << "worker " << get_manager()->process_manager().worker_id() << " sends task result id=" << id
-             << " task=" << task << " grad=" << _grad[task].derivative << " g2=" << _grad[task].second_derivative
-             << " gstep=" << _grad[task].step_size << std::endl;
+//   std::cout << "worker " << get_manager()->process_manager().worker_id() << " sends task result id=" << id
+//             << " task=" << task << " grad=" << _grad[task].derivative << " g2=" << _grad[task].second_derivative
+//             << " gstep=" << _grad[task].step_size << std::endl;
    get_manager()->messenger().send_from_worker_to_queue(_grad[task].derivative, _grad[task].second_derivative, _grad[task].step_size);
 }
 
@@ -153,23 +157,23 @@ void LikelihoodGradientJob::receive_task_result_on_queue(std::size_t task, std::
    _grad[task].derivative = get_manager()->messenger().receive_from_worker_on_queue<double>(worker_id);
    _grad[task].second_derivative = get_manager()->messenger().receive_from_worker_on_queue<double>(worker_id);
    _grad[task].step_size = get_manager()->messenger().receive_from_worker_on_queue<double>(worker_id);
-   std::cout << "queue receives for job id " << id << " from worker " << worker_id << " task result task=" << task
-             << " grad=" << _grad[task].derivative << " g2=" << _grad[task].second_derivative << " gstep=" << _grad[task].step_size
-             << std::endl;
+//   std::cout << "queue receives for job id " << id << " from worker " << worker_id << " task result task=" << task
+//             << " grad=" << _grad[task].derivative << " g2=" << _grad[task].second_derivative << " gstep=" << _grad[task].step_size
+//             << std::endl;
 }
 
 void LikelihoodGradientJob::send_back_results_from_queue_to_master()
 {
    get_manager()->messenger().send_from_queue_to_master(completed_task_ids.size());
-   std::cout << "sending from queue to master " << completed_task_ids.size() << " results: ";
+//   std::cout << "sending from queue to master " << completed_task_ids.size() << " results: ";
    for (auto task : completed_task_ids) {
       get_manager()->messenger().send_from_queue_to_master(task, _grad[task].derivative, _grad[task].second_derivative,
                                                            _grad[task].step_size);
-      std::cout << "\t"
-                << "task=" << task << " grad=" << _grad[task].derivative << " g2=" << _grad[task].second_derivative
-                << " gstep=" << _grad[task].step_size;
+//      std::cout << "\t"
+//                << "task=" << task << " grad=" << _grad[task].derivative << " g2=" << _grad[task].second_derivative
+//                << " gstep=" << _grad[task].step_size;
    }
-   std::cout << std::endl;
+//   std::cout << std::endl;
 }
 
 void LikelihoodGradientJob::clear_results()
@@ -180,17 +184,17 @@ void LikelihoodGradientJob::clear_results()
 void LikelihoodGradientJob::receive_results_on_master()
 {
    std::size_t N_completed_tasks = get_manager()->messenger().receive_from_queue_on_master<std::size_t>();
-   std::cout << "receive " << N_completed_tasks << " completed tasks on master: ";
+//   std::cout << "receive " << N_completed_tasks << " completed tasks on master: ";
    for (unsigned int sync_ix = 0u; sync_ix < N_completed_tasks; ++sync_ix) {
       std::size_t task = get_manager()->messenger().receive_from_queue_on_master<std::size_t>();
       _grad[task].derivative = get_manager()->messenger().receive_from_queue_on_master<double>();
       _grad[task].second_derivative = get_manager()->messenger().receive_from_queue_on_master<double>();
       _grad[task].step_size = get_manager()->messenger().receive_from_queue_on_master<double>();
-      std::cout << "\t"
-                << "task=" << task << " grad=" << _grad[task].derivative << " g2=" << _grad[task].second_derivative
-                << " gstep=" << _grad[task].step_size;
+//      std::cout << "\t"
+//                << "task=" << task << " grad=" << _grad[task].derivative << " g2=" << _grad[task].second_derivative
+//                << " gstep=" << _grad[task].step_size;
    }
-   std::cout << std::endl;
+//   std::cout << std::endl;
 }
 
 // END SYNCHRONIZATION FROM WORKERS TO MASTER
@@ -201,9 +205,9 @@ void LikelihoodGradientJob::receive_results_on_master()
 void LikelihoodGradientJob::run_derivator(unsigned int i_component) const
 {
    // Calculate the derivative etc for these parameters
-   auto parameter_values = _minimizer->get_function_parameter_values();
+//   auto parameter_values = _minimizer->get_function_parameter_values();
    _grad[i_component] =
-      _gradf.partial_derivative(_minimizer->getMultiGenFcn(), parameter_values.data(),
+      _gradf.partial_derivative(_minimizer->getMultiGenFcn(), minuit_internal_x_.data(),
                                 _minimizer->fitter()->Config().ParamsSettings(), i_component, _grad[i_component]);
 }
 
@@ -227,11 +231,12 @@ void LikelihoodGradientJob::update_workers_state()
                                                            false);
    }
 
-   ix = 0;
-   auto parameter_values = _minimizer->get_function_parameter_values();
-   for (auto &parameter : parameter_values) {
-      get_manager()->messenger().send_from_master_to_queue(msg, id, ix + 3 * _minimizer->getNPar(), parameter, false);
-      ++ix;
+//   ix = 0;
+//   auto parameter_values = _minimizer->get_function_parameter_values();
+//   for (auto &parameter : parameter_values) {
+   for (ix = 0; ix < static_cast<std::size_t>(_minimizer->getNPar()); ++ix) {
+      get_manager()->messenger().send_from_master_to_queue(msg, id, ix + 3 * _minimizer->getNPar(), /*parameter*/ minuit_internal_x_[ix], false);
+//      ++ix;
    }
 }
 
@@ -244,10 +249,10 @@ void LikelihoodGradientJob::calculate_all()
    };
    decltype(get_time()) t1, t2;
 
-   std::cout << "BABBELBOX" << std::endl;
+//   std::cout << "BABBELBOX" << std::endl;
 
    if (get_manager()->process_manager().is_master()) {
-      std::cout << "HAAAAAA" << std::endl;
+//      std::cout << "HAAAAAA" << std::endl;
       // do Grad, G2 and Gstep here and then just return results from the
       // separate functions below
 
@@ -322,6 +327,16 @@ void LikelihoodGradientJob::fill_step_size(double *gstep)
          gstep[ix] = _grad[ix].step_size;
       }
    }
+}
+
+void LikelihoodGradientJob::update_minuit_internal_parameter_values(const std::vector<double>& minuit_internal_x)
+{
+   minuit_internal_x_ = minuit_internal_x;
+}
+
+bool LikelihoodGradientJob::uses_minuit_internal_values()
+{
+   return true;
 }
 
 } // namespace TestStatistics

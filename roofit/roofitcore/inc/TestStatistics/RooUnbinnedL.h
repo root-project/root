@@ -31,7 +31,7 @@ namespace TestStatistics {
 class RooUnbinnedL :
    public RooAbsL {
 public:
-   RooUnbinnedL(RooAbsPdf* pdf, RooAbsData* data, bool do_offset, double offset, double offset_carry, bool extended);
+   RooUnbinnedL(RooAbsPdf* pdf, RooAbsData* data, bool do_offset, double offset, double offset_carry, RooAbsL::Extended extended = RooAbsL::Extended::Auto);
    RooUnbinnedL(const RooUnbinnedL &other);
    void set_apply_weight_squared(bool flag);
 
@@ -40,7 +40,6 @@ private:
    double evaluate_partition(std::size_t events_begin, std::size_t events_end, std::size_t components_begin,
                              std::size_t components_end) override;
    double get_carry() const override;
-   bool _extended = false;
    bool apply_weight_squared = false;            // Apply weights squared?
    mutable bool _first = true;       //!
    double _offset_save_weight_squared = 0;      //!

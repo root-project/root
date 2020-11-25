@@ -32,9 +32,9 @@ namespace TestStatistics {
 
 double MinuitFcnGrad::DoEval(const double *x) const
 {
-   Bool_t parameters_changed = set_roofit_parameter_values(x);
+   Bool_t parameters_changed = sync_parameter_values_from_minuit_calls(x, false);
 
-   std::cout << "MinuitFcnGrad::DoEval @ PID" << getpid() << ": " DEBUG_STREAM(parameters_changed);
+//   std::cout << "MinuitFcnGrad::DoEval @ PID" << getpid() << ": " DEBUG_STREAM(parameters_changed);
 
    // Calculate the function for these parameters
    RooAbsReal::setHideOffset(kFALSE);
@@ -43,7 +43,7 @@ double MinuitFcnGrad::DoEval(const double *x) const
    calculation_is_clean->likelihood = true;
    RooAbsReal::setHideOffset(kTRUE);
 
-   std::cout DEBUG_STREAM(fvalue) << std::endl;
+//   std::cout DEBUG_STREAM(fvalue) << std::endl;
 
    if (!parameters_changed) {
       return fvalue;
@@ -107,43 +107,107 @@ double MinuitFcnGrad::DoEval(const double *x) const
    return fvalue;
 }
 
-/// Parameters here are the variables in the likelihood, i.e. the parameters
-/// of the PDF that can vary given the observables in the dataset that constrains
-/// it. This sets the RooFit RooAbsArg parameters, not values inside Minuit or
-/// the Likelihood(Gradient)Wrapper implementations.
-bool MinuitFcnGrad::set_roofit_parameter_values(const double *x) const
+/// Minuit calls (via FcnAdapters etc) DoEval or Gradient/G2ndDerivative/GStepSize with a set of parameters x.
+/// This function syncs these values to the proper places in RooFit.
+///
+/// The first twist, and reason this function is more complicated than one may imagine, is that Minuit internally uses a
+/// transformed parameter space to account for parameter boundaries. Whether we receive these Minuit "internal"
+/// parameter values or "regular"/untransformed RooFit parameter space values depends on the situation.
+/// - The values that arrive here via DoEval are always "normal" parameter values, since Minuit transforms these
+///   back into regular space before passing to DoEval (see MnUserFcn::operator() which wraps the Fcn(Gradient)Base
+///   in ModularFunctionMinimizer::Minimize and is used for direct function calls from that point on in the minimizer).
+///   These can thus always be safely synced with this function's RooFit parameters using SetPdfParamVal.
+/// - The values that arrive here via Gradient/G2ndDerivative/GStepSize will be in internal coordinates if that is
+///   what this class expects, and indeed this is the case for MinuitFcnGrad's current implementation. This is
+///   communicated to Minuit via MinuitFcnGrad::returnsInMinuit2ParameterSpace. Inside Minuit, that function determines
+///   whether this class's gradient calculator is wrapped inside a AnalyticalGradientCalculator, to which Minuit passes
+///   "external" parameter values, or as an ExternalInternalGradientCalculator, which gets "internal" parameter values.
+///   Long story short: when MinuitFcnGrad::returnsInMinuit2ParameterSpace() returns true, Minuit will pass "internal"
+///   values to Gradient/G2ndDerivative/GStepSize. These cannot be synced with this function's RooFit parameters using
+///   SetPdfParamVal, unless a manual transformation step is performed in advance. However, they do need to be passed
+///   on to the gradient calculator, since indeed we expect values there to be in "internal" space. However, this is
+///   calculator dependent. Note that in the current MinuitFcnGrad implementation we do not actually allow for
+///   calculators in "external" (i.e. regular RooFit parameter space) values, since
+///   MinuitFcnGrad::returnsInMinuit2ParameterSpace is hardcoded to true. This should in a future version be changed so
+///   that the calculator (the wrapper) is queried for this information.
+/// Because some gradient calculators may also use the regular RooFit parameters (e.g. for calculating the likelihood's
+/// value itself), this information is also passed on to the gradient wrapper. Vice versa, when updated "internal"
+/// parameters are passed to Gradient/G2ndDerivative/GStepSize, the likelihood may be affected as well. Even though a
+/// transformation from internal to "external" may be necessary before the values can be used, the likelihood can at
+/// least log that its parameter values are possibly no longer in sync with those of the gradient.
+///
+/// The second twist is that the Minuit external parameters may still be different from the ones used in RooFit. This
+/// happens when Minuit tries out values that lay outside the RooFit parameter's range(s). RooFit's setVal (called
+/// inside SetPdfParamVal) then clips the RooAbsArg's value to one of the range limits, instead of setting it to the
+/// value Minuit intended. When this happens, i.e. sync_parameter_values_from_minuit_calls is called with
+/// minuit_internal = false and the values do not match the previous values stored in minuit_internal_x_ *but* the
+/// values after SetPdfParamVal did not get set to the intended value, the minuit_internal_roofit_x_mismatch_ flag is
+/// set. This information can be used by calculators, if desired, for instance when a calculator does not want to make
+/// use of the range information in the RooAbsArg parameters.
+bool MinuitFcnGrad::sync_parameter_values_from_minuit_calls(const double *x, bool minuit_internal) const
 {
    bool a_parameter_has_been_updated = false;
+   if (minuit_internal) {
+      if (!returnsInMinuit2ParameterSpace()) {
+         throw std::logic_error("Updating Minuit-internal parameters only makes sense for (gradient) calculators that are defined in Minuit-internal parameter space.");
+      }
 
-   for (std::size_t ix = 0; ix < NDim(); ++ix) {
-      bool update_this_parameter = SetPdfParamVal(ix, x[ix]);
-      a_parameter_has_been_updated |= update_this_parameter;
+      for (std::size_t ix = 0; ix < NDim(); ++ix) {
+         bool parameter_changed = (x[ix] != minuit_internal_x_[ix]);
+         if (parameter_changed) {
+            minuit_internal_x_[ix] = x[ix];
+         }
+         a_parameter_has_been_updated |= parameter_changed;
+      }
+
+      if(a_parameter_has_been_updated) {
+         calculation_is_clean->set_all(false);
+         likelihood->update_minuit_internal_parameter_values(minuit_internal_x_);
+         gradient->update_minuit_internal_parameter_values(minuit_internal_x_);
+      }
+   } else {
+      bool a_parameter_is_mismatched = false;
+
+      for (std::size_t ix = 0; ix < NDim(); ++ix) {
+         // Note: the return value of SetPdfParamVal does not always mean that the parameter's value in the RooAbsReal changed since last
+         // time! If the value was out of range bin, setVal was still called, but the value was not updated.
+         SetPdfParamVal(ix, x[ix]);
+         minuit_external_x_[ix] = x[ix];
+         // The above is why we need minuit_external_x_. The minuit_external_x_ vector can also be passed to
+         // LikelihoodWrappers, if needed, but typically they will make use of the RooFit parameters directly. However,
+         // we log in the flag below whether they are different so that calculators can use this information.
+         bool parameter_changed = (x[ix] != minuit_external_x_[ix]);
+         a_parameter_has_been_updated |= parameter_changed;
+         a_parameter_is_mismatched |= (((RooRealVar *)_floatParamVec[ix])->getVal() != minuit_external_x_[ix]);
+      }
+
+      minuit_internal_roofit_x_mismatch_ = a_parameter_is_mismatched;
+
+      if(a_parameter_has_been_updated) {
+         calculation_is_clean->set_all(false);
+         likelihood->update_minuit_external_parameter_values(minuit_external_x_);
+         gradient->update_minuit_external_parameter_values(minuit_external_x_);
+      }
    }
-
-   if(a_parameter_has_been_updated) {
-      std::cout << "setting stuff back to false" << std::endl;
-      calculation_is_clean->set_all(false);
-   }
-
    return a_parameter_has_been_updated;
 }
 
+
 void MinuitFcnGrad::Gradient(const double *x, double *grad) const
 {
-   std::cout << "MinuitFcnGrad::Gradient x[0] = " << x[0] << std::endl;
-   set_roofit_parameter_values(x);
+   sync_parameter_values_from_minuit_calls(x, returnsInMinuit2ParameterSpace());
    gradient->fill_gradient(grad);
 }
 
 void MinuitFcnGrad::G2ndDerivative(const double *x, double *g2) const
 {
-   set_roofit_parameter_values(x);
+   sync_parameter_values_from_minuit_calls(x, returnsInMinuit2ParameterSpace());
    gradient->fill_second_derivative(g2);
 }
 
 void MinuitFcnGrad::GStepSize(const double *x, double *gstep) const
 {
-   set_roofit_parameter_values(x);
+   sync_parameter_values_from_minuit_calls(x, returnsInMinuit2ParameterSpace());
    gradient->fill_step_size(gstep);
 }
 
@@ -184,7 +248,7 @@ unsigned int MinuitFcnGrad::NDim() const
 
 bool MinuitFcnGrad::returnsInMinuit2ParameterSpace() const
 {
-   return true;
+   return gradient->uses_minuit_internal_values();
 }
 
 void MinuitFcnGrad::optimizeConstantTerms(bool constStatChange, bool constValChange)

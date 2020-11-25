@@ -103,7 +103,7 @@ private:
 
    void optimizeConstantTerms(bool constStatChange, bool constValChange) override;
 
-   bool set_roofit_parameter_values(const double *x) const;
+   bool sync_parameter_values_from_minuit_calls(const double *x, bool minuit_internal) const;
 
    // members
    std::shared_ptr<LikelihoodWrapper> likelihood;
@@ -111,6 +111,11 @@ private:
 
 public:
    mutable std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean;
+private:
+   mutable std::vector<double> minuit_internal_x_;
+   mutable std::vector<double> minuit_external_x_;
+public:
+   mutable bool minuit_internal_roofit_x_mismatch_ = false;
 };
 
 } // namespace TestStatistics
@@ -128,7 +133,8 @@ template <typename LikelihoodWrapperT, typename LikelihoodGradientWrapperT>
 MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
                              bool verbose, LikelihoodWrapperT * /* value unused */,
                              LikelihoodGradientWrapperT * /* value unused */)
-   : RooAbsMinimizerFcn(RooArgList(*_likelihood->getParameters()), context, verbose)
+   : RooAbsMinimizerFcn(RooArgList(*_likelihood->getParameters()), context, verbose), minuit_internal_x_(NDim(), 0),
+     minuit_external_x_(NDim(), 0)
 {
    auto parameters = _context->fitter()->Config().ParamsSettings();
    synchronize_parameter_settings(parameters, kTRUE, verbose);

@@ -73,14 +73,14 @@ void LikelihoodSerial::init_vars()
       *likelihood_->getParameters()); // TODO: make sure this is the right list of parameters, compare to original
                                      // implementation in RooRealMPFE.cxx
 
-   std::cout << "vars size: " << vars->getSize() << std::endl;
-   auto iter = vars->fwdIterator();
-   RooAbsArg* var;
-   int ix = 0;
-   while((var = iter.next())) {
-      printf("LikelihoodSerial::init_vars var %d = %s %p\n", ix, var->GetName(), var);
-      ++ix;
-   }
+//   std::cout << "vars size: " << vars->getSize() << std::endl;
+//   auto iter = vars->fwdIterator();
+//   RooAbsArg* var;
+//   int ix = 0;
+//   while((var = iter.next())) {
+//      printf("LikelihoodSerial::init_vars var %d = %s %p\n", ix, var->GetName(), var);
+//      ++ix;
+//   }
 
    RooArgList varList(*vars);
 

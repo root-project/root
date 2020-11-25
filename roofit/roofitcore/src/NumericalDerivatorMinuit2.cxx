@@ -112,23 +112,15 @@ void NumericalDerivatorMinuit2::setup_differentiate(const ROOT::Math::IBaseFunct
       vx_fVal_cache.resize(function->NDim());
    }
    t4 = get_time();
-
-//   std::cout << "setup_differentiate: ";
-
    std::copy(cx, cx + function->NDim(), vx.data());
    t5 = get_time();
-
-//   std::cout DEBUG_STREAM(function->NDim());
 
    // convert to Minuit external parameters
    for (unsigned i = 0; i < function->NDim(); i++) {
       vx_external[i] = Int2ext(parameters[i], vx[i]);
-//      std::cout DEBUG_STREAM(i) DEBUG_STREAM(vx[i]) DEBUG_STREAM(vx_external[i]);
    }
 
    t6 = get_time();
-
-//   std::cout DEBUG_STREAM((vx != vx_fVal_cache));
 
    if (vx != vx_fVal_cache) {
       //#ifndef NDEBUG
@@ -136,8 +128,7 @@ void NumericalDerivatorMinuit2::setup_differentiate(const ROOT::Math::IBaseFunct
       //#endif
       vx_fVal_cache = vx;
       fVal = (*function)(vx_external.data()); // value of function at given points
-//      std::cout DEBUG_STREAM(fVal);
-                                              //#ifndef NDEBUG
+      // #ifndef NDEBUG
       //      std::cout << "NumericalDerivatorMinuit2::setup_differentiate, fVal evaluations: " << fVal_eval_counter
       //      << std::endl;
       //#endif
@@ -147,7 +138,6 @@ void NumericalDerivatorMinuit2::setup_differentiate(const ROOT::Math::IBaseFunct
    dfmin = 8. * precision.Eps2() * (std::abs(fVal) + Up);
    vrysml = 8. * precision.Eps() * precision.Eps();
 
-//   std::cout DEBUG_STREAM(dfmin) DEBUG_STREAM(vrysml) << std::endl;
    t8 = get_time();
 
    //    if (RooFit::MultiProcess::TaskManager::is_instantiated()) {
@@ -180,7 +170,6 @@ MinuitDerivatorElement NumericalDerivatorMinuit2::fast_partial_derivative(const 
    double xtf = vx[ix];
    double epspri = precision.Eps2() + std::abs(deriv.derivative * precision.Eps2());
    double step_old = 0.;
-//   std::cout << "xtf = " << xtf << " epspri = " << epspri << " fNCycles = " << fNCycles << std::endl;
 
    for (unsigned int j = 0; j < fNCycles; ++j) {
       double optstp = std::sqrt(dfmin / (std::abs(deriv.second_derivative) + epspri));
@@ -207,15 +196,9 @@ MinuitDerivatorElement NumericalDerivatorMinuit2::fast_partial_derivative(const 
       vx_external[ix] = Int2ext(parameters[ix], vx[ix]);
       double fs1 = (*function)(vx_external.data());
 
-//      std::cout << "j = " << j << ", optstp = " << optstp << ", step = " << step << ", stpmax = " << stpmax << ", stpmin = " << stpmin
-//                << ", step_old = " << step_old << ", vx[ix] = " << vx[ix] << ", vx_external[ix] = " << vx_external[ix]
-//                << ", fs1 = " << fs1;
-
       vx[ix] = xtf - step;
       vx_external[ix] = Int2ext(parameters[ix], vx[ix]);
       double fs2 = (*function)(vx_external.data());
-
-//      std::cout << ", vx[ix] = " << vx[ix] << ", vx_external[ix] = " << vx_external[ix] << ", fs2 = " << fs2;
 
       vx[ix] = xtf;
       vx_external[ix] = Int2ext(parameters[ix], vx[ix]);
@@ -225,19 +208,10 @@ MinuitDerivatorElement NumericalDerivatorMinuit2::fast_partial_derivative(const 
 
       deriv.second_derivative = (fs1 + fs2 - 2. * fVal) / step / step;
 
-//      std::cout << ", vx[ix] = " << vx[ix] << ", vx_external[ix] = " << vx_external[ix] << ", fGrd_old = " << fGrd_old
-//                << ", deriv.derivative = " << deriv.derivative << ", deriv.second_derivative = " << deriv.second_derivative
-//                << std::endl;
-
       if (std::abs(fGrd_old - deriv.derivative) / (std::abs(deriv.derivative) + dfmin / step) < fGradTolerance) {
          break;
       }
-
-//      std::cout << "can we go another round" << std::endl;
    }
-//   std::cout << "ix " << ix << ": grad = " << deriv.derivative << " g2 = " << deriv.second_derivative << " gstep = " << deriv.step_size
-//             << std::endl;
-
    return deriv;
 }
 
@@ -266,12 +240,6 @@ NumericalDerivatorMinuit2::Differentiate(const ROOT::Math::IBaseFunctionMultiDim
    return gradient;
 }
 
-//ROOT::Minuit2::FunctionGradient
-//NumericalDerivatorMinuit2::operator()(const ROOT::Math::IBaseFunctionMultiDim *function, const double *x,
-//                                      const std::vector<ROOT::Fit::ParameterSettings> &parameters)
-//{
-//   return NumericalDerivatorMinuit2::Differentiate(function, x, parameters);
-//}
 
 double NumericalDerivatorMinuit2::Int2ext(const ROOT::Fit::ParameterSettings &parameter, double val) const
 {

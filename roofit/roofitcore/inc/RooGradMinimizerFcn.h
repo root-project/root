@@ -62,6 +62,7 @@ public:
 private:
    void run_derivator(unsigned int i_component) const;
 
+   void reset_has_been_calculated_flags() const;
    bool sync_parameter(double x, std::size_t ix) const;
    bool sync_parameters(const double *x) const;
 
@@ -91,6 +92,10 @@ private:
    RooAbsReal *_funct;
    mutable std::vector<bool> has_been_calculated;
    mutable bool none_have_been_calculated = false;
+
+public:
+   // for debugging, wraps ROOT::Math::IMultiGradFunction::Gradient, can be used for further inspection:
+   void Gradient(const double *x, double *grad) const override;
 };
 #endif
 #endif

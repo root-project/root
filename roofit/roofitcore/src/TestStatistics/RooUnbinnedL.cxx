@@ -38,13 +38,12 @@ namespace RooFit {
 namespace TestStatistics {
 
 RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, bool do_offset, double offset, double offset_carry,
-                           bool extended)
-   : RooAbsL(pdf, data, do_offset, offset, offset_carry, data->numEntries(), 1), _extended(extended)
+                           RooAbsL::Extended extended)
+   : RooAbsL(pdf, data, do_offset, offset, offset_carry, data->numEntries(), 1, extended)
 {}
 
 RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
-   : RooAbsL(other),
-     _extended(other._extended), apply_weight_squared(other.apply_weight_squared), _first(other._first),
+   : RooAbsL(other), apply_weight_squared(other.apply_weight_squared), _first(other._first),
      _offset_save_weight_squared(other._offset_save_weight_squared),
      _offset_carry_save_weight_squared(other._offset_carry_save_weight_squared), _evalCarry(other._evalCarry)
 {}
@@ -52,7 +51,7 @@ RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
 
 bool RooUnbinnedL::processEmptyDataSets() const
 {
-   return _extended;
+   return extended_;
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +119,7 @@ double RooUnbinnedL::evaluate_partition(std::size_t events_begin, std::size_t ev
    }
 
    // include the extended maximum likelihood term, if requested
-   if (_extended) {
+   if (extended_) {
       if (apply_weight_squared) {
 
          // Calculate sum of weights-squared here for extended term

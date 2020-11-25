@@ -163,26 +163,30 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
    return fvalue;
 }
 
+void RooGradMinimizerFcn::reset_has_been_calculated_flags() const
+{
+   for (auto it = has_been_calculated.begin(); it != has_been_calculated.end(); ++it) {
+      *it = false;
+   }
+   none_have_been_calculated = true;
+}
+
 bool RooGradMinimizerFcn::sync_parameter(double x, std::size_t ix) const
 {
-   bool sync_this_parameter = (_grad_params[ix] != x);
+   bool parameter_has_changed = (_grad_params[ix] != x);
 
-   if (sync_this_parameter) {
+   if (parameter_has_changed) {
       _grad_params[ix] = x;
       // Set the parameter values for this iteration
       // TODO: this is already done in DoEval as well; find efficient way to do only once
       SetPdfParamVal(ix, x);
 
-      // reset the has_been_calculated flags
       if (!none_have_been_calculated) {
-         for (auto it = has_been_calculated.begin(); it != has_been_calculated.end(); ++it) {
-            *it = false;
-         }
-         none_have_been_calculated = true;
+         reset_has_been_calculated_flags();
       }
    }
 
-   return sync_this_parameter;
+   return parameter_has_changed;
 }
 
 bool RooGradMinimizerFcn::sync_parameters(const double *x) const
@@ -190,24 +194,20 @@ bool RooGradMinimizerFcn::sync_parameters(const double *x) const
    bool has_been_synced = false;
 
    for (std::size_t ix = 0; ix < NDim(); ++ix) {
-      bool sync_this_parameter = (_grad_params[ix] != x[ix]);
+      bool parameter_has_changed = (_grad_params[ix] != x[ix]);
 
-      if (sync_this_parameter) {
+      if (parameter_has_changed) {
          _grad_params[ix] = x[ix];
          // Set the parameter values for this iteration
          // TODO: this is already done in DoEval as well; find efficient way to do only once
          SetPdfParamVal(ix, x[ix]);
       }
 
-      has_been_synced |= sync_this_parameter;
+      has_been_synced |= parameter_has_changed;
    }
 
    if (has_been_synced) {
-      // reset the has_been_calculated flags
-      for (auto it = has_been_calculated.begin(); it != has_been_calculated.end(); ++it) {
-         *it = false;
-      }
-      none_have_been_calculated = true;
+      reset_has_been_calculated_flags();
    }
 
    return has_been_synced;
@@ -359,6 +359,11 @@ void RooGradMinimizerFcn::setOptimizeConst(Int_t flag)
    }
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+}
+
+void RooGradMinimizerFcn::Gradient(const double *x, double *grad) const
+{
+   ROOT::Math::IMultiGradFunction::Gradient(x, grad);
 }
 
 #endif
