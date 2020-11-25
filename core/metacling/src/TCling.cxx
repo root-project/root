@@ -6085,61 +6085,62 @@ Int_t TCling::ShallowAutoLoadImpl(const char *cls)
 // Iterate through the data member of the class (either through the TProtoClass
 // or through Cling) and trigger, recursively, the loading the necessary libraries.
 // \note `cls` is expected to be already normalized!
-Int_t TCling::DeepAutoLoadImpl(const char *cls)
+// \returns 1 on success.
+Int_t TCling::DeepAutoLoadImpl(const char *cls, std::unordered_set<std::string> &visited,
+                               bool nameIsNormalized)
 {
-   Int_t status = ShallowAutoLoadImpl(cls);
-   if (status) {
+   // Try to insert; if insertion failed because the entry existed, DeepAutoLoadImpl()
+   // has previously (within the same call to `AutoLoad()`) tried to load this class
+   // and we are done, whether success or not, as it won't work better now than before,
+   // because there is no additional information now compared to before.
+   if (!visited.insert(std::string(cls)).second)
+      return 1;
 
-      // This routine should be called only from AutoLoad which has already
-      // taken the main ROOT lock so this should not have any race condition.
-      // If the lock is removed from AutoLoad, a spin lock should be introduced here.
-      // Note that it is actually alright if another thread is populating this
-      // set since we can then exclude both the infinite recursion (the main goal)
-      // and duplicate work.
-      static std::set<std::string> gClassOnStack;
-      auto insertResult = gClassOnStack.insert(std::string(cls));
-      if (insertResult.second) {
-         // Now look through the TProtoClass to load the required library/dictionary
-         TProtoClass *proto = TClassTable::GetProtoNorm(cls);
-         if (proto) {
-            for(auto element : proto->GetData()) {
-               const char *subtypename = element->GetTypeName();
-               if (!element->IsBasic() && !TClassTable::GetDictNorm(subtypename)) {
-                  // Failure to load a dictionary is not (quite) a failure load
-                  // the top-level library.  If we return false here, then
-                  // we would end up in a situation where the library and thus
-                  // the dictionary is loaded for "cls" but the TClass is
-                  // not created and/or marked as unavailable (in case where
-                  // AutoLoad is called from TClass::GetClass).
-                  (void) DeepAutoLoadImpl(subtypename);
-               }
-            }
-         } else {
-            auto classinfo = gInterpreter->ClassInfo_Factory(cls);
-            if (classinfo && gInterpreter->ClassInfo_IsValid(classinfo)
-                && !(gInterpreter->ClassInfo_Property(classinfo) & kIsEnum))
-            {
-               DataMemberInfo_t *memberinfo = gInterpreter->DataMemberInfo_Factory(classinfo, TDictionary::EMemberSelection::kNoUsingDecls);
-               while (gInterpreter->DataMemberInfo_Next(memberinfo)) {
-                  auto membertypename = TClassEdit::GetLong64_Name(gInterpreter->TypeName(gInterpreter->DataMemberInfo_TypeTrueName(memberinfo)));
-                  if (!(gInterpreter->DataMemberInfo_TypeProperty(memberinfo) & ::kIsFundamental)
-                      && !TClassTable::GetDictNorm(membertypename.c_str()))
-                  {
-                     // Failure to load a dictionary is not (quite) a failure load
-                     // the top-level library.   See detailed comment in the TProtoClass
-                     // branch (above).
-                     (void)DeepAutoLoadImpl(membertypename.c_str());
-                  }
-               }
-               gInterpreter->DataMemberInfo_Delete(memberinfo);
-            }
-            gInterpreter->ClassInfo_Delete(classinfo);
-         }
-         // Because they could have been failures, allow for another try later
-         gClassOnStack.erase(insertResult.first);
-      }
+   if (ShallowAutoLoadImpl(cls) == 0) {
+      // If ShallowAutoLoadImpl() has an error, we have an error.
+      return 0;
    }
-   return status;
+
+   // Now look through the TProtoClass to load the required library/dictionary
+   if (TProtoClass *proto = nameIsNormalized ? TClassTable::GetProtoNorm(cls) : TClassTable::GetProto(cls)) {
+      for (auto element : proto->GetData()) {
+         if (element->IsBasic())
+            continue;
+         const char *subtypename = element->GetTypeName();
+         if (!TClassTable::GetDictNorm(subtypename)) {
+            // Failure to load a dictionary is not (quite) a failure load
+            // the top-level library.  If we return false here, then
+            // we would end up in a situation where the library and thus
+            // the dictionary is loaded for "cls" but the TClass is
+            // not created and/or marked as unavailable (in case where
+            // AutoLoad is called from TClass::GetClass).
+            DeepAutoLoadImpl(subtypename, visited, true /*normalized*/);
+         }
+      }
+      return 1;
+   }
+
+   // We found no TProtoClass for cls.
+   auto classinfo = gInterpreter->ClassInfo_Factory(cls);
+   if (classinfo && gInterpreter->ClassInfo_IsValid(classinfo)
+         && !(gInterpreter->ClassInfo_Property(classinfo) & kIsEnum))
+   {
+      DataMemberInfo_t *memberinfo = gInterpreter->DataMemberInfo_Factory(classinfo, TDictionary::EMemberSelection::kNoUsingDecls);
+      while (gInterpreter->DataMemberInfo_Next(memberinfo)) {
+         if (gInterpreter->DataMemberInfo_TypeProperty(memberinfo) & ::kIsFundamental)
+            continue;
+         auto membertypename = TClassEdit::GetLong64_Name(gInterpreter->TypeName(gInterpreter->DataMemberInfo_TypeTrueName(memberinfo)));
+         if (!TClassTable::GetDictNorm(membertypename.c_str())) {
+            // Failure to load a dictionary is not (quite) a failure load
+            // the top-level library.   See detailed comment in the TProtoClass
+            // branch (above).
+            (void)DeepAutoLoadImpl(membertypename.c_str(), visited, true /*normalized*/);
+         }
+      }
+      gInterpreter->DataMemberInfo_Delete(memberinfo);
+   }
+   gInterpreter->ClassInfo_Delete(classinfo);
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6206,7 +6207,8 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
    // quality of the search (i.e. bad in case of library with no pcm and no rootmap
    // file).
    TInterpreter::SuspendAutoParsing autoParseRaii(this);
-   return DeepAutoLoadImpl(cls);
+   std::unordered_set<std::string> visited;
+   return DeepAutoLoadImpl(cls, visited, false /*normalized*/);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
