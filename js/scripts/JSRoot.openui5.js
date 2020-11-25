@@ -10,14 +10,9 @@ JSROOT.define(['jquery', 'jquery-ui'], () => {
    if (typeof sap == 'object')
       return sap;
 
-   let resolveFunc;
+   let resolveFunc, rootui5sys;
 
    JSROOT._.completeUI5Loading = function() {
-      // when running with THttpServer, automatically set "rootui5" folder
-      let rootui5sys = undefined;
-      if (JSROOT.source_dir.indexOf("jsrootsys") >= 0)
-         rootui5sys = JSROOT.source_dir.replace(/jsrootsys/g, "rootui5sys");
-
       sap.ui.loader.config({
          paths: {
             jsroot: JSROOT.source_dir,
@@ -70,24 +65,33 @@ JSROOT.define(['jquery', 'jquery-ui'], () => {
       document.getElementsByTagName("head")[0].appendChild(element);
    }
 
+   rootui5sys = JSROOT.source_dir.replace(/jsrootsys/g, "rootui5sys");
+   if (rootui5sys == JSROOT.source_dir) {
+      // if jsrootsys location not detected, try to guess it
+      if (window.location.port && (window.location.pathname.indexOf("/win") >= 0) && (!JSROOT.openui5src || JSROOT.openui5src == 'nojsroot' || JSROOT.openui5src == 'jsroot'))
+         rootui5sys = window.location.origin + window.location.pathname + "../rootui5sys/";
+      else
+         rootui5sys = undefined;
+   }
+
    let openui5_sources = [],
        openui5_dflt = "https://openui5.hana.ondemand.com/1.82.2/",
-       openui5_root = JSROOT.source_dir.replace(/jsrootsys/g, "rootui5sys/distribution");
+       openui5_root = "";
 
-   if (openui5_root == JSROOT.source_dir) openui5_root = "";
+   if (rootui5sys) openui5_root = rootui5sys + "distribution/";
 
    if (typeof JSROOT.openui5src == 'string') {
       switch (JSROOT.openui5src) {
          case "nodefault": openui5_dflt = ""; break;
          case "default": openui5_sources.push(openui5_dflt); openui5_dflt = ""; break;
-         case "nojsroot": openui5_root = ""; break;
+         case "nojsroot": /* openui5_root = ""; */ break;
          case "jsroot": openui5_sources.push(openui5_root); openui5_root = ""; break;
          default: openui5_sources.push(JSROOT.openui5src); break;
       }
    }
 
-   if (openui5_root && (openui5_sources.indexOf(openui5_root)<0)) openui5_sources.push(openui5_root);
-   if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt)<0)) openui5_sources.push(openui5_dflt);
+   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0)) openui5_sources.push(openui5_root);
+   if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0)) openui5_sources.push(openui5_dflt);
 
    // return Promise let loader wait before dependent source will be invoked
    return new Promise(resolve => {
