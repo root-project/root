@@ -109,7 +109,16 @@ public:
 
   /// \deprecated getValBatch() has been removed in favour of the faster getValues(). If your code is affected
   /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
-  virtual RooSpan<const double> getValBatch(std::size_t begin, std::size_t maxSize, const RooArgSet* normSet = nullptr) = delete;
+#ifndef R__MACOSX
+  virtual RooSpan<const double> getValBatch(std::size_t /*begin*/, std::size_t /*maxSize*/, const RooArgSet* /*normSet*/ = nullptr) = delete;
+#else
+  //AppleClang in MacOS10.14 has a linker bug and fails to link programs that create objects of classes containing virtual deleted methods.
+  //This can be safely deleted when MacOS10.14 is no longer supported by ROOT. See https://reviews.llvm.org/D37830
+  virtual RooSpan<const double> getValBatch(std::size_t /*begin*/, std::size_t /*maxSize*/, const RooArgSet* /*normSet*/ = nullptr) final {
+    throw std::logic_error("Deprecated getValBatch() has been removed in favour of the faster getValues(). If your code is affected by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.");
+  }
+#endif
+  /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
   virtual RooSpan<const double> getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
 
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
@@ -405,9 +414,19 @@ protected:
 
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual Double_t evaluate() const = 0;
+
   /// \deprecated evaluatedBatch() has been removed in favour of the faster evaluateSpan(). If your code is affected
   /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
-  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t maxSize) = delete;
+#ifndef R__MACOSX
+  virtual RooSpan<double> evaluateBatch(std::size_t /*begin*/, std::size_t /*maxSize*/) = delete;
+#else
+  //AppleClang in MacOS10.14 has a linker bug and fails to link programs that create objects of classes containing virtual deleted methods.
+  //This can be safely deleted when MacOS10.14 is no longer supported by ROOT. See https://reviews.llvm.org/D37830
+  virtual RooSpan<double> evaluateBatch(std::size_t /*begin*/, std::size_t /*maxSize*/) final {
+    throw std::logic_error("Deprecated evaluatedBatch() has been removed in favour of the faster evaluateSpan(). If your code is affected by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.");
+  }
+#endif
+
   virtual RooSpan<double> evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
 
   //---------- Interface to access batch data ---------------------------
