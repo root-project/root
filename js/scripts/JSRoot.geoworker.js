@@ -2,13 +2,21 @@ JSROOT = {}; // just place holder for JSROOT.GEO functions
 
 JSROOT.BIT = function(n) { return 1 << (n); }
 
-// TODO: implement simple JSROOT.require wrapper
+let jscsg;
+
+// emulate behavour, only required for csg and geobase
+JSROOT.define = function(args, factory) {
+   if (args.length == 1)
+      jscsg = factory(THREE);
+   else
+      factory(THREE, jscsg);
+}
 
 importScripts("three.min.js", "JSRoot.csg.js", "JSRoot.geobase.js");
 
-// if (console) console.log('geoworker started ' + THREE.REVISION);
+if (console) console.log('geoworker started ' + THREE.REVISION);
 
-var clones = null;
+let clones = null;
 
 onmessage = function(e) {
 

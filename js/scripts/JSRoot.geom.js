@@ -2773,7 +2773,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       let mesh = pnts.CreatePoints({ color: jsrp.getColor(hit.fMarkerColor) || "rgb(0,0,255)",
                                      style: hit.fMarkerStyle,
-                                     callback: function(delayed) { if (delayed) this.Render3D(100); }.bind(this) });
+                                     callback: delayed => { if (delayed) this.Render3D(100); }});
 
       mesh.renderOrder = 1000000; // to bring points to the front
       mesh.highlightScale = 2;
@@ -3214,7 +3214,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       let painter = this;
 
-      this._worker = new Worker(JSROOT.source_dir + "scripts/JSRootGeoWorker.js");
+      this._worker = new Worker(JSROOT.source_dir + "scripts/JSRoot.geoworker.js");
 
       this._worker.onmessage = function(e) {
 

@@ -1094,8 +1094,15 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
    // ==============================================================================
 
-   /** Special class to control highliht and selection of single points, used in geo painter
-    * @private */
+   /**
+    * @summary Special class to control highliht and selection of single points, used in geo painter
+    *
+    * @class
+    * @memberof JSROOT
+    * @param {object} mesh - draw object
+    * @private
+    */
+
    function PointsControl(mesh) {
       InteractiveControl.call(this);
       this.mesh = mesh;
@@ -1103,6 +1110,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
    PointsControl.prototype = Object.create(InteractiveControl.prototype);
 
+   /** @summary cleanup object */
    PointsControl.prototype.cleanup = function() {
       if (!this.mesh) return;
       delete this.mesh.is_selected;
@@ -1110,14 +1118,15 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       delete this.mesh;
    }
 
+   /** @summary extract intersect index */
    PointsControl.prototype.extractIndex = function(intersect) {
       return intersect && intersect.index!==undefined ? intersect.index : undefined;
    }
 
+   /** @summary set selection */
    PointsControl.prototype.setSelected = function(col, indx) {
       let m = this.mesh;
       if ((m.select_col == col) && (m.select_indx == indx)) {
-         console.log("Reset selection");
          col = null; indx = undefined;
       }
       m.select_col = col;
@@ -1126,6 +1135,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       return true;
    }
 
+   /** @summary set highlight */
    PointsControl.prototype.setHighlight = function(col, indx) {
       let m = this.mesh;
       m.h_index = indx;
@@ -1136,6 +1146,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       return true;
    }
 
+   /** @summary create special object */
    PointsControl.prototype.createSpecial = function(color, index) {
       let m = this.mesh;
       if (!color) {
@@ -1162,6 +1173,18 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       if (index !== undefined) m.js_special.geometry.setDrawRange(index, 1);
    }
 
+   // ==============================================================================
+
+   /**
+    * @summary Class for creation of 3D points
+    *
+    * @class
+    * @memberof JSROOT
+    * @param {number} size - number of points
+    * @param {booleand} [iswebgl=true] - if WebGL is used
+    * @param {number} [scale=1] - scale factor
+    * @private
+    */
 
    function PointsCreator(size, iswebgl, scale) {
       this.webgl = (iswebgl === undefined) ? true : iswebgl;
@@ -1173,6 +1196,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       this.indx = 0;
    }
 
+   /** @summary Add point */
    PointsCreator.prototype.AddPoint = function(x,y,z) {
       this.pos[this.indx]   = x;
       this.pos[this.indx+1] = y;
@@ -1180,11 +1204,12 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       this.indx+=3;
    }
 
-   /** If callback function assigned, created mesh always will be returned as callback */
+   /** @summary If callback function assigned, created mesh always will be returned as callback */
    PointsCreator.prototype.AssignCallback = function(callback) {
       this.callback = callback;
    }
 
+   /** @summary Complete creation */
    PointsCreator.prototype.Complete = function(arg) {
 
       let material;
@@ -1211,6 +1236,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       return pnts;
    }
 
+   /** @summary Create points */
    PointsCreator.prototype.CreatePoints = function(args) {
 
       if (typeof args !== 'object') args = { color: args };
