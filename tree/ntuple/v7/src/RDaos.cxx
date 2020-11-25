@@ -66,10 +66,14 @@ int ROOT::Experimental::Detail::RDaosContainer::DaosEventQueue::Poll() {
 
 
 ROOT::Experimental::Detail::RDaosContainer::RDaosContainer(std::shared_ptr<RDaosPool> pool,
-                                                           std::string_view containerUuid)
+                                                           std::string_view containerUuid, bool create)
   : fPool(pool)
 {
    uuid_parse(containerUuid.data(), fContainerUuid);
+   if (create) {
+      if (int err = daos_cont_create(fPool->fPoolHandle, fContainerUuid, nullptr, nullptr))
+         throw std::runtime_error("daos_cont_create: error: " + std::string(d_errstr(err)));
+   }
    if (int err = daos_cont_open(fPool->fPoolHandle, fContainerUuid, DAOS_COO_RW,
          &fContainerHandle, &fContainerInfo, nullptr))
       throw std::runtime_error("daos_cont_open: error: " + std::string(d_errstr(err)));
