@@ -192,7 +192,7 @@ private:
    }
 
 public:
-   RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerUuid);
+   RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerUuid, bool create = false);
    ~RDaosContainer();
 
    /** \brief Read data from an object in this container to the given buffer. */

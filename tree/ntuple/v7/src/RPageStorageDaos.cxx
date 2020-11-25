@@ -91,7 +91,7 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CreateImpl(const RNTupleModel & 
 {
    auto args = ParseDaosPoolURI(fLocator);
    fDaosPool = std::make_shared<RDaosPool>(args.fPoolUuid, args.fSvcReplicas);
-   fDaosContainer = std::make_unique<RDaosContainer>(fDaosPool, args.fContainerUuid);
+   fDaosContainer = std::make_unique<RDaosContainer>(fDaosPool, args.fContainerUuid, /*create =*/ true);
 
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto szHeader = descriptor.SerializeHeader(nullptr);
