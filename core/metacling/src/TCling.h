@@ -176,7 +176,7 @@ private: // Data Members
 
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
 
-   static Int_t DeepAutoLoadImpl(const char *cls);
+   static Int_t DeepAutoLoadImpl(const char *cls, std::unordered_set<std::string> &visited, bool nameIsNormalized);
    static Int_t ShallowAutoLoadImpl(const char *cls);
 
    Bool_t fHeaderParsingOnDemand;
