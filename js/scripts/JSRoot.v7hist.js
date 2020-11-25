@@ -2503,8 +2503,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           levels = palette.GetContour(),
           func = main.GetProjectionFunc();
 
-      let BuildPath = (xp,yp,iminus,iplus) => {
-         let cmd = "", last, pnt;
+      let BuildPath = (xp,yp,iminus,iplus,do_close) => {
+         let cmd = "", last, pnt, fisrt, isany;
          for (let i = iminus; i <= iplus; ++i) {
             if (func) {
                pnt = func(xp[i], yp[i]);
@@ -2513,17 +2513,26 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             } else {
                pnt = { x: Math.round(xp[i]), y: Math.round(yp[i]) };
             }
-            if (!cmd) cmd = "M" + pnt.x + "," + pnt.y;
-            else if ((pnt.x != last.x) && (pnt.y != last.y)) cmd +=  "l" + (pnt.x - last.x) + "," + (pnt.y - last.y);
-            else if (pnt.x != last.x) cmd +=  "h" + (pnt.x - last.x);
-            else if (pnt.y != last.y) cmd +=  "v" + (pnt.y - last.y);
+            if (!cmd) {
+               cmd = "M" + pnt.x + "," + pnt.y; first = pnt;
+            } else if ((i == iplus) && first && (pnt.x == first.x) && (pnt.y == first.y)) {
+               if (!isany) return ""; // all same points
+               cmd += "z"; do_close = false;
+            } else if ((pnt.x != last.x) && (pnt.y != last.y)) {
+               cmd +=  "l" + (pnt.x - last.x) + "," + (pnt.y - last.y); isany = true;
+            } else if (pnt.x != last.x) {
+               cmd +=  "h" + (pnt.x - last.x); isany = true;
+            } else if (pnt.y != last.y) {
+               cmd +=  "v" + (pnt.y - last.y); isany = true;
+            }
             last = pnt;
          }
+         if (do_close) cmd += "z";
          return cmd;
       }
 
       if (this.options.Contour===14) {
-         let dd = "M0,0h"+frame_w+"v"+frame_h+"h-"+frame_w;
+         let dd = "M0,0h"+frame_w+"v"+frame_h+"h-"+frame_w+"z";
          if (this.options.Proj) {
             let dj = handle.stepj, sz = parseInt((handle.j2 - handle.j1)/dj),
                 xd = new Float32Array(sz*2), yd = new Float32Array(sz*2);
@@ -2533,12 +2542,12 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                xd[i+sz] = handle.origx[handle.i2];
                yd[i+sz] = (handle.origy[handle.j2]*(i*dj+0.5) + handle.origy[handle.j1]*(sz-0.5-i*dj))/sz;
             }
-            dd = BuildPath(xd,yd,0,2*sz-1);
+            dd = BuildPath(xd,yd,0,2*sz-1,true);
          }
 
          this.draw_g
              .append("svg:path")
-             .attr("d", dd + "z")
+             .attr("d", dd)
              .style('stroke','none')
              .style("fill", palette.getColor(0));
       }
@@ -2556,10 +2565,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                case 14: break;
             }
 
+            let dd = BuildPath(xp, yp, iminus, iplus, fillcolor != 'none');
+            if (!dd) return;
+
             let elem = this.draw_g
                           .append("svg:path")
                           .attr("class","th2_contour")
-                          .attr("d", BuildPath(xp,yp,iminus,iplus) + (fillcolor == 'none' ? "" : "z"))
+                          .attr("d", dd)
                           .style("fill", fillcolor);
 
             if (lineatt)

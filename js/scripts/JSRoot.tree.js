@@ -2074,15 +2074,13 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          handle.process_arrays = false;
       }
 
-      function ReadBaskets(bitems, baskets_call_back) {
-         // read basket with tree data, selecting different files
-
-         let places = [], filename = "";
+      /** read basket with tree data, selecting different files */
+      function ReadBaskets(bitems) {
 
          function ExtractPlaces() {
             // extract places to read and define file name
 
-            places = []; filename = "";
+            let places = [], filename = "";
 
             for (let n = 0; n < bitems.length; ++n) {
                if (bitems[n].done) continue;
@@ -2091,15 +2089,15 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
                if (places.length === 0)
                   filename = branch.fFileName;
-               else
-                  if (filename !== branch.fFileName) continue;
+               else if (filename !== branch.fFileName)
+                  continue;
 
                bitems[n].selected = true; // mark which item was selected for reading
 
                places.push(branch.fBasketSeek[bitems[n].basket], branch.fBasketBytes[bitems[n].basket]);
             }
 
-            return places.length > 0;
+            return places.length > 0 ? { places: places, filename: filename } : null;
          }
 
          function ReadProgress(value) {
@@ -2119,62 +2117,81 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
             handle.selector.ShowProgress(portion);
          }
 
-         function ProcessBlobs(blobs) {
+         function ProcessBlobs(blobs, places) {
             if (!blobs || ((places.length > 2) && (blobs.length * 2 !== places.length)))
-               return JSROOT.callBack(baskets_call_back, null);
+               return Promise.resolve(null);
 
-            let n = 0;
+            if (places.length == 2) blobs = [ blobs ];
 
-            for (let k = 0; k < bitems.length; ++k) {
-               if (!bitems[k].selected) continue;
+            function DoProcessing(k) {
 
-               bitems[k].selected = false;
-               bitems[k].done = true;
+               for (; k < bitems.length; ++k) {
+                  if (!bitems[k].selected) continue;
 
-               let blob = (places.length > 2) ? blobs[n++] : blobs,
-                  buf = new JSROOT.TBuffer(blob, 0, handle.file),
-                  basket = buf.ClassStreamer({}, "TBasket");
+                  bitems[k].selected = false;
+                  bitems[k].done = true;
 
-               if (basket.fNbytes !== bitems[k].branch.fBasketBytes[bitems[k].basket])
-                  console.error('mismatch in read basket sizes', bitems[k].branch.fBasketBytes[bitems[k].basket]);
+                  let blob = blobs.shift(),
+                     buf = new JSROOT.TBuffer(blob, 0, handle.file),
+                     basket = buf.ClassStreamer({}, "TBasket");
 
-               // items[k].obj = basket; // keep basket object itself if necessary
+                  if (basket.fNbytes !== bitems[k].branch.fBasketBytes[bitems[k].basket])
+                     console.error('mismatch in read basket sizes', bitems[k].branch.fBasketBytes[bitems[k].basket]);
 
-               bitems[k].bskt_obj = basket; // only number of entries in the basket are relevant for the moment
+                  // items[k].obj = basket; // keep basket object itself if necessary
 
-               if (basket.fKeylen + basket.fObjlen === basket.fNbytes) {
-                  // use data from original blob
-                  buf.raw_shift = 0;
-               } else {
-                  // unpack data and create new blob
-                  let objblob = jsrio.R__unzip(blob, basket.fObjlen, false, buf.o);
+                  bitems[k].bskt_obj = basket; // only number of entries in the basket are relevant for the moment
 
-                  if (objblob) {
-                     buf = new JSROOT.TBuffer(objblob, 0, handle.file);
-                     buf.raw_shift = basket.fKeylen;
-                     buf.fTagOffset = basket.fKeylen;
-                  } else {
-                     throw new Error('FAIL TO UNPACK');
+                  if (basket.fKeylen + basket.fObjlen === basket.fNbytes) {
+                     // use data from original blob
+                     buf.raw_shift = 0;
+
+                     bitems[k].raw = buf; // here already unpacked buffer
+
+                    if (bitems[k].branch.fEntryOffsetLen > 0)
+                        buf.ReadBasketEntryOffset(basket, buf.raw_shift);
+
+                    continue;
                   }
+
+                  // unpack data and create new blob
+                  return jsrio.R__unzip(blob, basket.fObjlen, false, buf.o).then(objblob => {
+
+                     if (objblob) {
+                        buf = new JSROOT.TBuffer(objblob, 0, handle.file);
+                        buf.raw_shift = basket.fKeylen;
+                        buf.fTagOffset = basket.fKeylen;
+                     } else {
+                        throw new Error('FAIL TO UNPACK');
+                     }
+
+                     bitems[k].raw = buf; // here already unpacked buffer
+
+                     if (bitems[k].branch.fEntryOffsetLen > 0)
+                        buf.ReadBasketEntryOffset(basket, buf.raw_shift);
+
+                     return DoProcessing(k+1);  // continue processing
+                  });
                }
 
-               bitems[k].raw = buf; // here already unpacked buffer
+               let req = ExtractPlaces();
 
-               if (bitems[k].branch.fEntryOffsetLen > 0)
-                  buf.ReadBasketEntryOffset(basket, buf.raw_shift);
-            }
+               if (req)
+                  return handle.file.ReadBuffer(req.places, req.filename, ReadProgress).then(blobs => ProcessBlobs(blobs)).catch(() => { return null; });
 
-            if (ExtractPlaces())
-               handle.file.ReadBuffer(places, filename, ReadProgress).then(ProcessBlobs).catch(() => ProcessBlobs(null));
-            else
-               JSROOT.callBack(baskets_call_back, bitems);
+               return Promise.resolve(bitems);
+             }
+
+             return DoProcessing(0);
          }
 
+         let req = ExtractPlaces();
+
          // extract places where to read
-         if (ExtractPlaces())
-            handle.file.ReadBuffer(places, filename, ReadProgress).then(ProcessBlobs).catch(() => ProcessBlobs(null));
-         else
-            JSROOT.callBack(baskets_call_back, null);
+         if (req)
+            return handle.file.ReadBuffer(req.places, req.filename, ReadProgress).then(blobs => ProcessBlobs(blobs, req.places)).catch(() => { return null; });
+
+         return Promise.resolve(null);
       }
 
       function ReadNextBaskets() {
@@ -2267,7 +2284,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
          handle.progress_showtm = new Date().getTime();
 
-         if (totalsz > 0) return ReadBaskets(bitems, ProcessBaskets);
+         if (totalsz > 0) return ReadBaskets(bitems).then(ProcessBaskets);
 
          if (is_direct) return ProcessBaskets([]); // directly process baskets
 
@@ -2852,8 +2869,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          if (create_player === 1) { last_intermediate = intermediate; return; }
 
          // redirect drawing to the player
-         player_create = 1;
-         args.player_intermediate = res.progress;
+         create_player = 1;
+         // args.player_intermediate = res.progress;
          JSROOT.require("jq2d").then(() => {
             JSROOT.CreateTreePlayer(painter);
             painter.ConfigureTree(tree);

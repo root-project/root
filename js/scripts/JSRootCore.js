@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year */
-   JSROOT.version_date = "20/11/2020";
+   JSROOT.version_date = "25/11/2020";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date} */
@@ -179,6 +179,7 @@
          'jqueryui-mousewheel'  : { src: 'jquery.mousewheel', onlymin: true, extract: "$", dep: 'jquery-ui' },
          'jqueryui-touch-punch' : { src: 'touch-punch', onlymin: true, extract: "$", dep: 'jquery-ui' },
          'rawinflate'           : { src: 'rawinflate', libs: true },
+         'zstd-codec'           : { src: '../../zstd/zstd-codec.min', extract: "ZstdCodec", node: "zstd-codec" },
          'mathjax'              : { src: 'https://cdn.jsdelivr.net/npm/mathjax@3.1.2/es5/tex-svg', extract: "MathJax", node: "mathjax" },
          'dat.gui'              : { src: 'dat.gui', libs: true, extract: "dat" },
          'three'                : { src: 'three', libs: true, extract: "THREE", node: "three" },
@@ -1291,7 +1292,7 @@
 
       if (typeof url != 'string') {
          let scripts = url, loadNext = () => {
-            if (!scripts.length) return Promise.resolve();
+            if (!scripts.length) return Promise.resolve(true);
             return JSROOT.loadScript(scripts.shift()).then(loadNext, loadNext);
          }
          return loadNext();
@@ -1314,21 +1315,22 @@
       function match_url(src) {
          if (src == url) return true;
          let indx = src.indexOf(url);
-         return (indx > 0) && (indx + url.length == src.length);
+         return (indx > 0) && (indx + url.length == src.length) && (src[indx-1] == "/");
       }
 
       if (isstyle) {
          let styles = document.getElementsByTagName('link');
          for (let n = 0; n < styles.length; ++n) {
             if (!styles[n].href || (styles[n].type !== 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
-            if (match_url(styles[n].href)) return Promise.resolve();
+            if (match_url(styles[n].href))
+               return Promise.resolve();
          }
 
       } else {
          let scripts = document.getElementsByTagName('script');
-         for (let n = 0; n < scripts.length; ++n) {
-            if (match_url(scripts[n].src)) return Promise.resolve();
-         }
+         for (let n = 0; n < scripts.length; ++n)
+            if (match_url(scripts[n].src))
+               return Promise.resolve();
       }
 
       if (isstyle) {
@@ -1345,7 +1347,6 @@
       return new Promise((resolve, reject) => {
          element.onload = () => resolve(true);
          element.onerror = () => reject(Error(`Fail to load ${url}`));
-
          document.getElementsByTagName("head")[0].appendChild(element);
       });
    }

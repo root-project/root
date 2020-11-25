@@ -191,49 +191,96 @@ JSROOT.define(['rawinflate'], () => {
           getChar = o => String.fromCharCode(arr.getUint8(o)),
           getCode = o => arr.getUint8(o);
 
-      while (fullres < tgtsize) {
+      return new Promise((resolveFunc, rejectFunc) => {
 
-         let fmt = "unknown", off = 0, CHKSUM = 0;
+         function NextPortion() {
 
-         if (curr + HDRSIZE >= totallen) {
-            if (!noalert) console.error("Error R__unzip: header size exceeds buffer size");
-            return null;
+            while (fullres < tgtsize) {
+
+               let fmt = "unknown", off = 0, CHKSUM = 0;
+
+               if (curr + HDRSIZE >= totallen) {
+                  if (!noalert) console.error("Error R__unzip: header size exceeds buffer size");
+                  resolveFunc(null);
+               }
+
+               if (getChar(curr) == 'Z' && getChar(curr + 1) == 'L' && getCode(curr + 2) == 8) { fmt = "new"; off = 2; } else
+               if (getChar(curr) == 'C' && getChar(curr + 1) == 'S' && getCode(curr + 2) == 8) { fmt = "old"; off = 0; } else
+               if (getChar(curr) == 'X' && getChar(curr + 1) == 'Z' && getCode(curr + 2) == 0) fmt = "LZMA"; else
+               if (getChar(curr) == 'Z' && getChar(curr + 1) == 'S' && getCode(curr + 2) == 1) fmt = "ZSTD"; else
+               if (getChar(curr) == 'L' && getChar(curr + 1) == '4') { fmt = "LZ4"; off = 0; CHKSUM = 8; }
+
+               /*   C H E C K   H E A D E R   */
+               if ((fmt !== "new") && (fmt !== "old") && (fmt !== "LZ4") && (fmt !== "ZSTD")) {
+                  if (!noalert) console.error(`R__unzip: ${fmt} format is not supported!`);
+                  return resolveFunc(null);
+               }
+
+               const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16));
+
+               let uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
+
+               if (fmt === "ZSTD") {
+
+                  function HandleZsdt(ZstdCodec) {
+
+                     ZstdCodec.run(zstd => {
+                        const simple = new zstd.Simple();
+                        // streaming = new zstd.Streaming();
+
+                        const data2 = simple.decompress(uint8arr);
+                        // console.log(`tgtsize ${tgtsize} zstd size ${data2.length} offset ${data2.byteOffset} rawlen ${data2.buffer.byteLength}`);
+
+                        const reslen = data2.length;
+
+                        if (data2.byteOffset !== 0)
+                           return rejectFunc(Error("ZSTD result with byteOffset != 0"));
+
+                        // shortcut when exactly required data unpacked
+                        //if ((tgtsize == reslen) && data2.buffer)
+                        //   resolveFunc(new DataView(data2.buffer));
+
+                        // need to copy data while zstd does not provide simple way of doing it
+                        if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+                        let tgt8arr = new Uint8Array(tgtbuf, fullres);
+
+                        for(let i=0;i<reslen;++i)
+                           tgt8arr[i] = data2[i];
+
+                        fullres += reslen;
+                        curr += srcsize;
+
+                        NextPortion();
+                     });
+                  }
+
+                  if (JSROOT.nodejs)
+                     return HandleZsdt(require('zstd-codec').ZstdCodec);
+                  else
+                     return JSROOT.require('zstd-codec').then(HandleZsdt);
+               }
+
+               //  place for unpacking
+               if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+
+               let tgt8arr = new Uint8Array(tgtbuf, fullres);
+
+               const reslen = (fmt === "LZ4") ? JSROOT.LZ4.uncompress(uint8arr, tgt8arr) : JSROOT.ZIP.inflate(uint8arr, tgt8arr);
+               if (reslen <= 0) break;
+
+               fullres += reslen;
+               curr += srcsize;
+            }
+
+            if (fullres !== tgtsize) {
+               if (!noalert) console.error(`R__unzip: fail to unzip data expects ${tgtsize}, got ${fullres}`);
+               return resolveFunc(null);
+            }
+
+            resolveFunc(new DataView(tgtbuf));
          }
-
-         if (getChar(curr) == 'Z' && getChar(curr + 1) == 'L' && getCode(curr + 2) == 8) { fmt = "new"; off = 2; } else
-         if (getChar(curr) == 'C' && getChar(curr + 1) == 'S' && getCode(curr + 2) == 8) { fmt = "old"; off = 0; } else
-         if (getChar(curr) == 'X' && getChar(curr + 1) == 'Z') fmt = "LZMA"; else
-         if (getChar(curr) == 'Z' && getChar(curr + 1) == 'S' && getCode(curr + 2) == 1) fmt = "ZSTD"; else
-         if (getChar(curr) == 'L' && getChar(curr + 1) == '4') { fmt = "LZ4"; off = 0; CHKSUM = 8; }
-
-         /*   C H E C K   H E A D E R   */
-         if ((fmt !== "new") && (fmt !== "old") && (fmt !== "LZ4")) {
-            if (!noalert) console.error(`R__unzip: ${fmt} format is not supported!`);
-            return null;
-         }
-
-         const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16));
-
-         let uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
-
-         //  place for unpacking
-         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
-
-         let tgt8arr = new Uint8Array(tgtbuf, fullres);
-
-         const reslen = (fmt === "LZ4") ? JSROOT.LZ4.uncompress(uint8arr, tgt8arr) : JSROOT.ZIP.inflate(uint8arr, tgt8arr);
-         if (reslen <= 0) break;
-
-         fullres += reslen;
-         curr += srcsize;
-      }
-
-      if (fullres !== tgtsize) {
-         if (!noalert) console.error(`R__unzip: fail to unzip data expects ${tgtsize} , got ${fullres}`);
-         return null;
-      }
-
-      return new DataView(tgtbuf);
+         NextPortion();
+      });
    }
 
    // =================================================================================
@@ -1124,19 +1171,19 @@ JSROOT.define(['rawinflate'], () => {
 
       return this.ReadBuffer([key.fSeekKey + key.fKeylen, key.fNbytes - key.fKeylen]).then(blob1 => {
 
-         let buf;
-
          if (key.fObjlen <= key.fNbytes - key.fKeylen) {
-            buf = new TBuffer(blob1, 0, this);
-         } else {
-            let objbuf = jsrio.R__unzip(blob1, key.fObjlen);
-            if (!objbuf) return Promise.reject(Error("Fail to UNZIP buffer"));
-            buf = new TBuffer(objbuf, 0, this);
+            let buf = new TBuffer(blob1, 0, this);
+            buf.fTagOffset = key.fKeylen;
+            return buf;
          }
 
-         buf.fTagOffset = key.fKeylen;
+         return jsrio.R__unzip(blob1, key.fObjlen).then(objbuf => {
+            if (!objbuf) return Promise.reject(Error("Fail to UNZIP buffer"));
+            let buf = new TBuffer(objbuf, 0, this);
+            buf.fTagOffset = key.fKeylen;
+            return buf;
 
-         return buf;
+         });
       });
    }
 
@@ -1603,8 +1650,9 @@ JSROOT.define(['rawinflate'], () => {
       return obj;
    }
 
-
-   jsrio.GetPairStreamer = function(si, typname, file) {
+   /** @summary Function creates streamer for std::pair object
+     * @private */
+   function GetPairStreamer(si, typname, file) {
       if (!si) {
          if (typname.indexOf("pair") !== 0) return null;
 
@@ -1637,7 +1685,7 @@ JSROOT.define(['rawinflate'], () => {
       if (!streamer) return null;
 
       if (streamer.length !== 2) {
-         console.error('Streamer for pair class contains ', streamer.length, 'elements');
+         console.error(`Streamer for pair class contains ${streamer.length} elements`);
          return null;
       }
 
@@ -1652,9 +1700,56 @@ JSROOT.define(['rawinflate'], () => {
       return streamer;
    }
 
-   jsrio.CreateMember = function(element, file) {
-      // create member entry for streamer element, which is used for reading of such data
+   /** @summary Function used in streamer to read std::map object
+     * @private */
+   function ReadMapElement(buf) {
+      let streamer = this.streamer;
 
+      if (this.member_wise) {
+         // when member-wise streaming is used, version is written
+         const ver = this.stl_version;
+
+         if (this.si) {
+            let si = buf.fFile.FindStreamerInfo(this.pairtype, ver.val, ver.checksum);
+
+            if (this.si !== si) {
+
+               streamer = GetPairStreamer(si, this.pairtype, buf.fFile);
+               if (!streamer || streamer.length !== 2) {
+                  console.log('Fail to produce streamer for ', this.pairtype);
+                  return null;
+               }
+            }
+         }
+      }
+
+      const n = buf.ntoi4();
+      let i, res = new Array(n);
+      if (this.member_wise && (buf.remain() >= 6)) {
+         if (buf.ntoi2() == jsrio.kStreamedMemberWise)
+            buf.shift(4);
+         else
+            buf.shift(-2); // rewind
+      }
+
+      for (i = 0; i < n; ++i) {
+         res[i] = { _typename: this.pairtype };
+         streamer[0].func(buf, res[i]);
+         if (!this.member_wise) streamer[1].func(buf, res[i]);
+      }
+
+      // due-to member-wise streaming second element read after first is completed
+      if (this.member_wise)
+         for (i = 0; i < n; ++i)
+            streamer[1].func(buf, res[i]);
+
+      return res;
+   }
+
+   /** @summary create member entry for streamer element
+     * @desc used for reading of data
+     * @private */
+   jsrio.CreateMember = function(element, file) {
       let member = {
          name: element.fName, type: element.fType,
          fArrayLength: element.fArrayLength,
@@ -2072,14 +2167,14 @@ JSROOT.define(['rawinflate'], () => {
                      // most probably it is the only one which should be used
                      member.si = file.FindStreamerInfo(member.pairtype);
 
-                     member.streamer = jsrio.GetPairStreamer(member.si, member.pairtype, file);
+                     member.streamer = GetPairStreamer(member.si, member.pairtype, file);
 
                      if (!member.streamer || (member.streamer.length !== 2)) {
                         console.error(`Fail to build streamer for pair ${member.pairtype}`);
                         delete member.streamer;
                      }
 
-                     if (member.streamer) member.readelem = jsrio.ReadMapElement;
+                     if (member.streamer) member.readelem = ReadMapElement;
                   } else
                      if (stl === jsrio.kSTLbitset) {
                         member.readelem = function(buf/*, obj*/) {
@@ -2952,50 +3047,6 @@ JSROOT.define(['rawinflate'], () => {
       else if (this.isptr) { while (i < n) res[i++] = buf.ReadObjectAny(); }
       else if (this.submember) { while (i < n) res[i++] = this.submember.readelem(buf); }
       else { while (i < n) res[i++] = buf.ClassStreamer({}, this.conttype); }
-
-      return res;
-   }
-
-   jsrio.ReadMapElement = function(buf) {
-      let streamer = this.streamer;
-
-      if (this.member_wise) {
-         // when member-wise streaming is used, version is written
-         const ver = this.stl_version;
-
-         if (this.si) {
-            let si = buf.fFile.FindStreamerInfo(this.pairtype, ver.val, ver.checksum);
-
-            if (this.si !== si) {
-
-               streamer = jsrio.GetPairStreamer(si, this.pairtype, buf.fFile);
-               if (!streamer || streamer.length !== 2) {
-                  console.log('Fail to produce streamer for ', this.pairtype);
-                  return null;
-               }
-            }
-         }
-      }
-
-      const n = buf.ntoi4();
-      let i, res = new Array(n);
-      if (this.member_wise) {
-         if (buf.ntoi2() == jsrio.kStreamedMemberWise)
-            buf.shift(4);
-         else
-            buf.shift(-2); // rewind
-      }
-
-      for (i = 0; i < n; ++i) {
-         res[i] = { _typename: this.pairtype };
-         streamer[0].func(buf, res[i]);
-         if (!this.member_wise) streamer[1].func(buf, res[i]);
-      }
-
-      // due-to member-wise streaming second element read after first is completed
-      if (this.member_wise)
-         for (i = 0; i < n; ++i)
-            streamer[1].func(buf, res[i]);
 
       return res;
    }
