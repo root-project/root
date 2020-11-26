@@ -210,8 +210,12 @@ TEST_P(RooRealL, setVal)
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0));
 
    // calculate first results
-   nll->getVal();
-   nll_new.getVal();
+   auto nominal_result1 = nll->getVal();
+   auto mp_result1 = nll_new.getVal();
+
+   std::cout << "nominal_result1 = " << nominal_result1 << ", mp_result1 = " << mp_result1 << std::endl;
+
+   EXPECT_EQ(Hex(nominal_result1), Hex(mp_result1));
 
    w.var("mu")->setVal(2);
 
@@ -219,7 +223,9 @@ TEST_P(RooRealL, setVal)
    auto nominal_result2 = nll->getVal();
    auto mp_result2 = nll_new.getVal();
 
-   EXPECT_DOUBLE_EQ(Hex(nominal_result2), Hex(mp_result2));
+   std::cout << "nominal_result2 = " << nominal_result2 << ", mp_result2 = " << mp_result2 << std::endl;
+
+   EXPECT_EQ(Hex(nominal_result2), Hex(mp_result2));
    if (HasFailure()) {
       std::cout << "failed test had seed = " << std::get<0>(GetParam()) << std::endl;
    }

@@ -19,7 +19,7 @@ ClassImp(RooFit::TestStatistics::RooRealL);
 namespace RooFit {
 namespace TestStatistics {
 
-// TODO: initialize RooListProxy _vars
+// TODO: initialize arg_proxy_ and arg_vars_proxy_
 
 RooRealL::RooRealL(const char *name, const char *title, std::shared_ptr<RooAbsL> likelihood)
    : RooAbsReal(name, title), likelihood(std::move(likelihood))

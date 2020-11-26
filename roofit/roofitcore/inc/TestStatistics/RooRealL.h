@@ -43,7 +43,8 @@ private:
    mutable double eval_carry = 0;
 
    // TODO: we need to track the clean/dirty state in this wrapper. See the old RooRealMPFE implementation for how that can be done automatically using the RooListProxy.
-   RooListProxy _vars;    // Variables
+   RooArgProxy arg_proxy_;
+   RooListProxy arg_vars_proxy_;    // Variables
 
    ClassDefOverride(RooRealL, 0);
 };
