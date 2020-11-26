@@ -36,8 +36,9 @@ using namespace ROOT::Detail::RDF;
 namespace GraphDrawing {
 std::shared_ptr<GraphNode> CreateFilterNode(const RFilterBase *filterPtr);
 
-std::shared_ptr<GraphNode>
-CreateDefineNode(const std::string &columnName, const RDFDetail::RDefineBase *columnPtr);
+std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
+                                             const RDFInternal::RBookedDefines &defines,
+                                             const std::vector<std::string> &prevNodeDefines);
 } // ns GraphDrawing
 
 } // ns RDF
@@ -177,27 +178,10 @@ public:
          return thisNode;
       }
 
-      // Add the Defines that have been added between this node and the previous to the graph
-      auto upmostNode = thisNode;
-      const auto &defineNames = fDefines.GetNames();
-      const auto &defineMap = fDefines.GetColumns();
-      for (auto i = int(defineNames.size()) - 1; i >= 0; --i) {  // walk backwards through the names of defined columns
-         const auto colName = defineNames[i];
-         const bool isAlias = defineMap.find(colName) == defineMap.end();
-         if (isAlias || RDFInternal::IsInternalColumn(colName))
-            continue; // aliases appear in the list of defineNames but we don't support them yet
-         const bool isANewDefine = std::find(prevColumns.begin(), prevColumns.end(), colName) == prevColumns.end();
-         if (!isANewDefine)
-            break; // we walked back through all new defines, the rest is stuff that was already in the graph
-
-         // create a node for this new Define
-         auto defineNode = RDFGraphDrawing::CreateDefineNode(colName, defineMap.at(colName).get());
-         upmostNode->SetPrevNode(defineNode);
-         upmostNode = defineNode;
-      }
+      auto upmostNode = AddDefinesToGraph(thisNode, fDefines, prevColumns);
 
       // Keep track of the columns defined up to this point.
-      thisNode->AddDefinedColumns(defineNames);
+      thisNode->AddDefinedColumns(fDefines.GetNames());
 
       upmostNode->SetPrevNode(prevNode);
       return thisNode;
