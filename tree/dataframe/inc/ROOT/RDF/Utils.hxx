@@ -11,12 +11,11 @@
 #ifndef ROOT_RDFUTILS
 #define ROOT_RDFUTILS
 
-#include "ROOT/RDataSource.hxx" // ColumnName2ColumnTypeName
-#include "ROOT/TypeTraits.hxx"
+#include "ROOT/RSpan.hxx"
+#include "ROOT/RStringView.hxx"
 #include "ROOT/RVec.hxx"
-#include "ROOT/RSnapshotOptions.hxx"
-#include "ROOT/RSpan.hxx" // for IsDataContainer
-#include "TH1.h"
+#include "ROOT/TypeTraits.hxx"
+#include "Rtypes.h"
 
 #include <array>
 #include <deque>
@@ -24,13 +23,17 @@
 #include <memory>
 #include <string>
 #include <type_traits> // std::decay
+#include <vector>
 
 class TTree;
 class TTreeReader;
 
 /// \cond HIDDEN_SYMBOLS
-
 namespace ROOT {
+
+namespace RDF {
+class RDataSource;
+}
 
 namespace Detail {
 namespace RDF {
