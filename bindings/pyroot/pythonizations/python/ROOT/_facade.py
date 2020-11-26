@@ -5,7 +5,7 @@ from functools import partial
 
 import libcppyy as cppyy_backend
 from cppyy import gbl as gbl_namespace
-from cppyy import cppdef, include, load_library
+from cppyy import cppdef, include
 from libROOTPythonizations import gROOT, CreateBufferFromAddress
 
 from ._application import PyROOTApplication
@@ -291,8 +291,6 @@ class ROOTFacade(types.ModuleType):
     @property
     def TPyDispatcher(self):
         include('ROOT/TPyDispatcher.h')
-        major, minor = sys.version_info[0:2]
-        load_library('libROOTPythonizations{}_{}'.format(major, minor))
         tpd = gbl_namespace.TPyDispatcher
         type(self).TPyDispatcher = tpd
         return tpd
