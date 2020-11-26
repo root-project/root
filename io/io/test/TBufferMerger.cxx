@@ -84,12 +84,6 @@ TEST(TBufferMerger, SequentialTreeFill)
       auto myfile = merger.GetFile();
       auto mytree = new TTree("mytree", "mytree");
 
-      // The resetting of the kCleanup bit below is necessary to avoid leaving
-      // the management of this object to ROOT, which leads to a race condition
-      // that may cause a crash once all threads are finished and the final
-      // merge is happening
-      mytree->ResetBit(kMustCleanup);
-
       Fill(mytree, 0, nevents);
       myfile->Write();
    }
@@ -111,12 +105,6 @@ TEST(TBufferMerger, ParallelTreeFill)
          threads.emplace_back([=, &merger]() {
             auto myfile = merger.GetFile();
             auto mytree = new TTree("mytree", "mytree");
-
-            // The resetting of the kCleanup bit below is necessary to avoid leaving
-            // the management of this object to ROOT, which leads to a race condition
-            // that may cause a crash once all threads are finished and the final
-            // merge is happening
-            mytree->ResetBit(kMustCleanup);
 
             Fill(mytree, i * nevents, nevents);
             myfile->Write();
@@ -148,12 +136,6 @@ TEST(TBufferMerger, AutoSave)
          threads.emplace_back([=, &merger]() {
             auto myfile = merger.GetFile();
             auto mytree = new TTree("mytree", "mytree");
-
-            // The resetting of the kCleanup bit below is necessary to avoid leaving
-            // the management of this object to ROOT, which leads to a race condition
-            // that may cause a crash once all threads are finished and the final
-            // merge is happening
-            mytree->ResetBit(kMustCleanup);
 
             Fill(mytree, i * events_per_thread, events_per_thread);
             myfile->Write();
