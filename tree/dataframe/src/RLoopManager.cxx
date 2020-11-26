@@ -1,4 +1,5 @@
 #include "RConfigure.h" // R__USE_IMT
+#include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RActionBase.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"

@@ -11,7 +11,8 @@
 #ifndef ROOT_RDFDISPLAYER
 #define ROOT_RDFDISPLAYER
 
-#include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RDF/Utils.hxx"  // IsDataContainer, InterpreterCalc
+#include "ROOT/RVec.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "TClassEdit.h"
 
