@@ -61,7 +61,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    ///    float pt;
    ///    float eta;
    /// };
-   /// AddProject will recurse into Jet.pt and Jet.eta and provide the two inner fields as std::vector<float> each.
+   /// AddField will recurse into Jet.pt and Jet.eta and provide the two inner fields as std::vector<float> each.
    void AddField(const RNTupleDescriptor &desc,
                  std::string_view colName,
                  DescriptorId_t fieldId,
