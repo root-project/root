@@ -3871,8 +3871,10 @@ static void KeepNParams(clang::QualType& normalizedType,
    const clang::ClassTemplateDecl* ctdWithDefaultArgs = ctd;
    for (const RedeclarableTemplateDecl* rd: ctdWithDefaultArgs->redecls()) {
       clang::TemplateParameterList* tpl = rd->getTemplateParameters();
-      if (tpl->getMinRequiredArguments () < tpl->size())
+      if (tpl->getMinRequiredArguments () < tpl->size()) {
          ctdWithDefaultArgs = llvm::dyn_cast<clang::ClassTemplateDecl>(rd);
+         break;
+      }
    }
 
    if (!ctdWithDefaultArgs) {
