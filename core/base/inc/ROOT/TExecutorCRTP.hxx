@@ -15,6 +15,10 @@
 #include "ROOT/TSeq.hxx"
 #include "TError.h"
 #include "TList.h"
+
+#include <initializer_list>
+#include <type_traits> //std::enable_if, std::result_of
+#include <utility> //std::move
 #include <vector>
 
 //////////////////////////////////////////////////////////////////////////
