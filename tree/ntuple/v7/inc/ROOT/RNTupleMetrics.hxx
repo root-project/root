@@ -25,6 +25,8 @@
 #include <chrono>
 #include <cstdint>
 #include <ctime> // for CPU time measurement with clock()
+#include <functional>
+#include <limits>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -34,6 +36,8 @@
 namespace ROOT {
 namespace Experimental {
 namespace Detail {
+
+class RNTupleMetrics;
 
 // clang-format off
 /**
@@ -157,6 +161,44 @@ public:
 
 // clang-format off
 /**
+\class ROOT::Experimental::Detail::RNTupleCalcPerf
+\ingroup NTuple
+\brief A metric element that computes its floating point value from other counters.
+*/
+// clang-format on
+class RNTupleCalcPerf : public RNTuplePerfCounter {
+public:
+   using MetricFunc_t = std::function<std::pair<bool, double>(const RNTupleMetrics &)>;
+
+private:
+   RNTupleMetrics &fMetrics;
+   const MetricFunc_t fFunc;
+
+public:
+   RNTupleCalcPerf(const std::string &name, const std::string &unit, const std::string &desc,
+                   RNTupleMetrics &metrics, MetricFunc_t &&func)
+      : RNTuplePerfCounter(name, unit, desc), fMetrics(metrics), fFunc(std::move(func))
+   {
+   }
+
+   double GetValue() const {
+      auto ret = fFunc(fMetrics);
+      if (ret.first)
+         return ret.second;
+      return std::numeric_limits<double>::quiet_NaN();
+   }
+
+   std::int64_t GetValueAsInt() const override {
+      return static_cast<std::int64_t>(GetValue());
+   }
+
+   std::string GetValueAsString() const override {
+      return std::to_string(GetValue());
+   }
+};
+
+// clang-format off
+/**
 \class ROOT::Experimental::Detail::RNTupleTickCounter
 \ingroup NTuple
 \brief An either thread-safe or non thread safe counter for CPU ticks
@@ -261,11 +303,11 @@ public:
    ~RNTupleMetrics() = default;
 
    // TODO(jblomer): return a reference
-   template <typename CounterPtrT>
-   CounterPtrT MakeCounter(const std::string &name, const std::string &unit, const std::string &desc)
+   template <typename CounterPtrT, class... Args>
+   CounterPtrT MakeCounter(const std::string &name, Args&&... args)
    {
       R__ASSERT(!Contains(name));
-      auto counter = std::make_unique<std::remove_pointer_t<CounterPtrT>>(name, unit, desc);
+      auto counter = std::make_unique<std::remove_pointer_t<CounterPtrT>>(name, std::forward<Args>(args)...);
       auto ptrCounter = counter.get();
       fCounters.emplace_back(std::move(counter));
       return ptrCounter;
