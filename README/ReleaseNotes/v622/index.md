@@ -860,7 +860,9 @@ Published on August 17, 2020
 
 ## Release 6.22/04
 
-Published on a lucky Friday, November 13, 2020
+Published on an unlucky Friday, November 13, 2020, this release had a fatal issue
+in the I/O subsystem, which is why it was never announced.
+Please use 6.22/06 instead!
 
 ### PyROOT
 
@@ -916,6 +918,21 @@ no longer there and GUIs can be programmed again from Python, using the `TPyDisp
 * [#6465](https://github.com/root-project/root/issues/6465) - ROOT signed-char convertion issue on AARCH64
 * [#6443](https://github.com/root-project/root/issues/6443) - Spurrious auto-parsing (as seen with CMS file and libraries)
 * [#6509](https://github.com/root-project/root/issues/6509) - [ROOT I/O] `Warning: writing 1 byte into a region of size 0`
+
+## Release 6.22/06
+
+Published on Friday, November 27, 2020.
+
+### Bugs and Issues fixed in this release
+
+* [#6840](https://github.com/root-project/root/issues/6840) - `TClass` for `pair` sometimes have the wrong offset/size
+* [#6540](https://github.com/root-project/root/issues/6540) - Crash message should point to github
+* [#6838](https://github.com/root-project/root/issues/6838) - `build/unix/compiledata.sh` assumes macOS will always have major version 10
+* [#6563](https://github.com/root-project/root/issues/6563) - Test failures on MacOS with Xcode 12
+* [#6839](https://github.com/root-project/root/issues/6839) - Compilation fails on macosx 11.0 with arm processor
+* [#6797](https://github.com/root-project/root/issues/6797) - `TCling::UpdateListOfLoadedSharedLibraries()` Linux thread safety
+* [#6331](https://github.com/root-project/root/issues/6331) - Fedora 32 test failures
+* [#6856](https://github.com/root-project/root/issues/6856) - error when creating a python class inheriting from a ROOT class,  6.22/02
 
 
 ## HEAD of the v6-22-00-patches branch
