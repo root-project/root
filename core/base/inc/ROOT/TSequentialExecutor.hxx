@@ -142,8 +142,11 @@ namespace ROOT {
       using retType = decltype(func());
       std::vector<retType> reslist;
       reslist.reserve(nTimes);
-      for(auto i: ROOT::TSeqI(nTimes))
+      unsigned i{0u};
+      while(i<nTimes){
          reslist.emplace_back(func());
+         i++;
+      }
       return reslist;
    }
 
