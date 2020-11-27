@@ -220,7 +220,77 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
       *fMetrics.MakeCounter<RNTuplePlainCounter*> ("timeWallUnzip", "ns", "wall clock time spent decompressing"),
       *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuRead", "ns", "CPU time spent reading"),
       *fMetrics.MakeCounter<RNTupleTickCounter<RNTuplePlainCounter>*> ("timeCpuUnzip", "ns",
-                                                                       "CPU time spent decompressing")
+                                                                       "CPU time spent decompressing"),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("bwRead", "MB/s", "bandwidth compressed bytes read per second",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szReadPayload = metrics.GetCounter("RPageSourceFile.szReadPayload")) {
+               if (const auto szReadOverhead = metrics.GetCounter("RPageSourceFile.szReadOverhead")) {
+                  if (const auto timeWallRead = metrics.GetCounter("RPageSourceFile.timeWallRead")) {
+                     if (auto walltime = timeWallRead->GetValueAsInt()) {
+                        double payload = szReadPayload->GetValueAsInt();
+                        double overhead = szReadOverhead->GetValueAsInt();
+                        // unit: bytes / nanosecond = GB/s
+                        return {true, (1000. * (payload + overhead) / walltime)};
+                     }
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("bwReadUnzip", "MB/s", "bandwidth uncompressed bytes read per second",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szUnzip = metrics.GetCounter("RPageSourceFile.szUnzip")) {
+               if (const auto timeWallRead = metrics.GetCounter("RPageSourceFile.timeWallRead")) {
+                  if (auto walltime = timeWallRead->GetValueAsInt()) {
+                     double unzip = szUnzip->GetValueAsInt();
+                     // unit: bytes / nanosecond = GB/s
+                     return {true, 1000. * unzip / walltime};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("bwUnzip", "MB/s", "decompression bandwidth of compressed bytes per second",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szUnzip = metrics.GetCounter("RPageSourceFile.szUnzip")) {
+               if (const auto timeWallUnzip = metrics.GetCounter("RPageSourceFile.timeWallUnzip")) {
+                  if (auto walltime = timeWallUnzip->GetValueAsInt()) {
+                     double unzip = szUnzip->GetValueAsInt();
+                     // unit: bytes / nanosecond = GB/s
+                     return {true, 1000. * unzip / walltime};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("rtReadEfficiency", "", "ratio of payload over all bytes read",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szReadPayload = metrics.GetCounter("RPageSourceFile.szReadPayload")) {
+               if (const auto szReadOverhead = metrics.GetCounter("RPageSourceFile.szReadOverhead")) {
+                  if (auto payload = szReadPayload->GetValueAsInt()) {
+                     // r/(r+o) = 1/((r+o)/r) = 1/(1 + o/r)
+                     return {true, 1./(1. + (1. * szReadOverhead->GetValueAsInt()) / payload)};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("rtCompression", "", "ratio of compressed bytes / uncompressed bytes",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szReadPayload = metrics.GetCounter("RPageSourceFile.szReadPayload")) {
+               if (const auto szUnzip = metrics.GetCounter("RPageSourceFile.szUnzip")) {
+                  if (auto unzip = szUnzip->GetValueAsInt()) {
+                     return {true, (1. * szReadPayload->GetValueAsInt()) / unzip};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      )
    });
 }
 
