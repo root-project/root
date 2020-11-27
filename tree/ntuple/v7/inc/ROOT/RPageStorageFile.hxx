@@ -26,6 +26,7 @@
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <utility>
 
 class TFile;
 
@@ -134,6 +135,11 @@ private:
       RNTuplePlainCounter  &fTimeWallUnzip;
       RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuRead;
       RNTupleTickCounter<RNTuplePlainCounter>  &fTimeCpuUnzip;
+      RNTupleCalcFloatPerf &fBandwidthReadUncompressed;
+      RNTupleCalcFloatPerf &fBandwidthReadCompressed;
+      RNTupleCalcFloatPerf &fBandwidthUnzip;
+      RNTupleCalcFloatPerf &fFractionReadOverhead;
+      RNTupleCalcFloatPerf &fCompressionRatio;
    };
    std::unique_ptr<RCounters> fCounters;
    /// Wraps the I/O counters and is observed by the RNTupleReader metrics

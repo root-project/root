@@ -25,6 +25,7 @@
 #include <chrono>
 #include <cstdint>
 #include <ctime> // for CPU time measurement with clock()
+#include <functional>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -34,6 +35,8 @@
 namespace ROOT {
 namespace Experimental {
 namespace Detail {
+
+class RNTupleMetrics;
 
 // clang-format off
 /**
@@ -157,6 +160,74 @@ public:
 
 // clang-format off
 /**
+\class ROOT::Experimental::Detail::RNTupleCalcFloatPerf
+\ingroup NTuple
+\brief A metric element that computes its floating point value from other counters.
+*/
+// clang-format on
+class RNTupleCalcIntPerf : public RNTuplePerfCounter {
+public:
+  using MetricFunc_t = std::function<std::pair<bool, std::int64_t>(const RNTupleMetrics &)>;
+private:
+  const MetricFunc_t fFunc;
+  std::int64_t fVal;
+
+public:
+   RNTupleCalcIntPerf(const std::string &name, const std::string &unit, const std::string &desc,
+			 MetricFunc_t &&func)
+	: RNTuplePerfCounter(name, unit, desc), fFunc(std::move(func)) { }
+
+   std::int64_t GetValueAsInt() const override { return fVal; }
+   std::string GetValueAsString() const override {
+      return std::to_string(fVal);
+   }
+
+   std::pair<bool, std::int64_t> Evaluate(const RNTupleMetrics &metrics) {
+      auto ret = fFunc(metrics);
+      if (ret.first)
+         fVal = ret.second;
+      return ret;
+   }
+};
+
+
+// clang-format off
+/**
+\class ROOT::Experimental::Detail::RNTupleCalcFloatPerf
+\ingroup NTuple
+\brief A metric element that computes its floating point value from other counters.
+*/
+// clang-format on
+class RNTupleCalcFloatPerf : public RNTuplePerfCounter {
+public:
+  using MetricFunc_t = std::function<std::pair<bool, double>(const RNTupleMetrics &)>;
+private:
+  const MetricFunc_t fFunc;
+  double fVal;
+
+public:
+   RNTupleCalcFloatPerf(const std::string &name, const std::string &unit, const std::string &desc,
+			 MetricFunc_t &&func)
+	: RNTuplePerfCounter(name, unit, desc), fFunc(std::move(func)) { }
+
+   std::int64_t GetValueAsInt() const override {
+      return fVal;
+   }
+   std::string GetValueAsString() const override {
+      return std::to_string(fVal);
+   }
+
+   std::pair<bool, double> Evaluate(const RNTupleMetrics &metrics) {
+      auto ret = fFunc(metrics);
+      if (ret.first)
+         fVal = ret.second;
+      return ret;
+   }
+};
+
+
+// clang-format off
+/**
 \class ROOT::Experimental::Detail::RNTupleTickCounter
 \ingroup NTuple
 \brief An either thread-safe or non thread safe counter for CPU ticks
@@ -261,11 +332,11 @@ public:
    ~RNTupleMetrics() = default;
 
    // TODO(jblomer): return a reference
-   template <typename CounterPtrT>
-   CounterPtrT MakeCounter(const std::string &name, const std::string &unit, const std::string &desc)
+   template <typename CounterPtrT, class... Args>
+   CounterPtrT MakeCounter(const std::string &name, Args&&... args)
    {
       R__ASSERT(!Contains(name));
-      auto counter = std::make_unique<std::remove_pointer_t<CounterPtrT>>(name, unit, desc);
+      auto counter = std::make_unique<std::remove_pointer_t<CounterPtrT>>(name, std::forward<Args>(args)...);
       auto ptrCounter = counter.get();
       fCounters.emplace_back(std::move(counter));
       return ptrCounter;

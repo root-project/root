@@ -67,6 +67,13 @@ void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, con
    }
 
    for (const auto &c : fCounters) {
+      if (auto calcF = dynamic_cast<RNTupleCalcFloatPerf*>(c.get())) {
+         if (!calcF->Evaluate(*this).first)
+            continue;
+      } else if (auto calcI = dynamic_cast<RNTupleCalcIntPerf*>(c.get())) {
+         if (!calcI->Evaluate(*this).first)
+            continue;
+      }
       output << prefix << fName << kNamespaceSeperator << c->ToString() << std::endl;
    }
    for (const auto c : fObservedMetrics) {
