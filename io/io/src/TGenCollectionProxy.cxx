@@ -147,7 +147,6 @@ public:
    {
       // Return the address of the value at index 'idx'
 
-      // However we can 'take' the address of the content of std::vector<bool>.
       if ( fEnv && fEnv->fObject ) {
          switch( idx ) {
             case 0:
