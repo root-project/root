@@ -102,7 +102,7 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters& p
      Numerical2PGradientCalculator gc(MnUserFcn(fFcn,fTransformation), fTransformation, MnStrategy(1));
      FunctionGradient g2 = gc(par);
 
-     print.Debug("Fumili Gradient", v, "\nMinuit Gradient", g2.Vec());
+     os << "Fumili Gradient" << v << "\nMinuit Gradient" << g2.Vec();
    });
 
    // store calculated Hessian

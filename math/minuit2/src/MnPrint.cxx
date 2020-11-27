@@ -107,7 +107,9 @@ void MnPrint::ClearFilter() {
 
 int MnPrint::SetGlobalLevel(int level)
 {
-   return std::exchange(gPrintLevel, level);
+  // should use std::exchange or boost::exchange
+  std::swap(gPrintLevel, level);
+  return level;
 }
 
 int MnPrint::GlobalLevel()
@@ -117,7 +119,9 @@ int MnPrint::GlobalLevel()
 
 int MnPrint::SetLevel(int level)
 {
-   return std::exchange(fLevel, level);
+  // should use std::exchange or boost::exchange
+  std::swap(fLevel, level);
+  return level;
 }
 
 int MnPrint::Level() const
