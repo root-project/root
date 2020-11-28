@@ -29,7 +29,7 @@ The following people have contributed to this new version:
  Lorenzo Moneta, CERN/SFT,\
  Alja Mrak-Tadel, UCSD/CMS,\
  Axel Naumann, CERN/SFT,\
- Vincenzo Eduardo Padulano, Bicocca/SFT,\
+ Vincenzo Eduardo Padulano, CERN/SFT and UPV,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Andrea Sciandra, SCIPP-UCSC/Atlas, \
@@ -76,6 +76,7 @@ See the discussion at [ROOT-11014](https://sft.its.cern.ch/jira/browse/ROOT-1101
 - CSV files can now be opened and processed from HTTP(S) locations
 - Certain RDF-related types in the ROOT::Detail and ROOT::Internal namespaces have been renamed, most notably `RCustomColumn` is now `RDefine`. This does not impact code that only makes use of entities in the public ROOT namespace, and should not impact downstream code unless it was patching or reusing internal RDataFrame types.
 - Just-in-time compilation of string expressions passed to `Filter` and `Define` now generates functions that take fundamental types by const value (rather than by non-const reference as before). This will break code that was assigning to column values in string expressions: this is an intended side effect as we want to prevent non-expert users from performing assignments (=) rather than comparisons (==). Expert users can resort to compiled callables if they absolutely have to assign to column values (not recommended). See [ROOT-11009](https://sft.its.cern.ch/jira/browse/ROOT-11009) for further discussion.
+- RDataFrame action results are now automatically mergeable thanks to the new interface provided by `ROOT::Detail::RDF::RMergeableValue` and derived, introduced in [#5552](https://github.com/root-project/root/pull/5552). A feature originally requested with [ROOT-9869](https://sft.its.cern.ch/jira/browse/ROOT-9869), it helps streamline RDataFrame workflow in a distributed environment. Currently only a subset of RDataFrame actions have their corresponding mergeable class, but in the future it will be possible to extend it to any action through the creation of a new `RMergeableValue` derived class.
 
 ## Histogram Libraries
 
