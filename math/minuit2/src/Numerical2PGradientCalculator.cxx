@@ -19,10 +19,6 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#include <iomanip>
-#ifdef DEBUG
-#define DEBUG_MP
-#endif
 #endif
 
 #include <cmath>
@@ -99,14 +95,13 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    MnAlgebraicVector g2 = Gradient.G2();
    MnAlgebraicVector gstep = Gradient.Gstep();
 
-#ifndef _OPENMP
-   MPIProcess mpiproc(n,0);
-#endif
-
    print.Debug("Calculating gradient around value",
      fcnmin, "at point", par.Vec());
 
 #ifndef _OPENMP
+
+   MPIProcess mpiproc(n,0);
+
    // for serial execution this can be outside the loop
    MnAlgebraicVector x = par.Vec();
 
@@ -127,13 +122,8 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 
 #endif
 
-#ifdef DEBUG_MP
-      int ith = omp_get_thread_num();
-      //std::cout << "Thread number " << ith << "  " << i << std::endl;
-#endif
-
 #ifdef _OPENMP
-       // create in loop since each thread will use its own copy
+      // create in loop since each thread will use its own copy
       MnAlgebraicVector x = par.Vec();
 #endif
 
@@ -177,12 +167,14 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
          grd(i) = 0.5*(fs1 - fs2)/step;
          g2(i) = (fs1 + fs2 - 2.*fcnmin)/step/step;
 
+#ifndef _OPENMP
          print.Debug([&](std::ostream& os) {
-           const int pr = os.precision(13);
-           os << "cycle " << j << " x " << x(i) << " step " << step << " f1 "
-              << fs1 << " f2 " << fs2 << " grd " << grd(i) << " g2 " << g2(i);
-           os.precision(pr);
+             const int pr = os.precision(13);
+             os << "cycle " << j << " x " << x(i) << " step " << step << " f1 "
+                << fs1 << " f2 " << fs2 << " grd " << grd(i) << " g2 " << g2(i);
+             os.precision(pr);
          });
+#endif
 
          if(std::fabs(grdb4-grd(i))/(std::fabs(grd(i))+dfmin/step) < GradTolerance())  {
             //    std::cout<<"j= "<<j<<std::endl;
@@ -193,28 +185,9 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
          }
       }
 
-
-#ifdef DEBUG_MP
-#pragma omp critical
-      {
-         print.Debug([](std::ostream& os) {
-           const int pr = os.precision(15);
-           os << "Gradient for thread " << ith << "  " << i << "  "
-              << grd(i) << "  " << g2(i);
-         });
-      }
-#endif
-
       //     vgrd(i) = grd;
       //     vgrd2(i) = g2;
       //     vgstp(i) = gstep;
-
-      print.Debug([&](std::ostream& os) {
-        const int pr = os.precision(13);
-        const int iext = Trafo().ExtOfInt(i);
-        os << "Parameter " << Trafo().Name(iext) << " Gradient " << grd(i) << " g2 " << g2(i) << " step " << gstep(i);
-        os.precision(pr);
-      });
    }
 
 #ifndef _OPENMP
@@ -223,7 +196,16 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    mpiproc.SyncVector(gstep);
 #endif
 
-   print.Debug("Calculated gradient", grd);
+   // print after parallel processing to avoid synchronization issues
+   print.Debug([&](std::ostream& os) {
+      const int pr = os.precision(13);
+
+      for(int i = 0; i < int(n); i++) {
+        const int iext = Trafo().ExtOfInt(i);
+        os << "Parameter " << Trafo().Name(iext) << " Gradient " << grd(i) << " g2 " << g2(i) << " step " << gstep(i);
+      }
+      os.precision(pr);
+   });
 
    return FunctionGradient(grd, g2, gstep);
 }
