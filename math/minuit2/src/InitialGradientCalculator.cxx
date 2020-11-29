@@ -35,7 +35,7 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters& 
 
    MnPrint print("InitialGradientCalculator");
 
-   print.Debug("Calculating initital gradient at point", par.Vec());
+   print.Debug("Calculating initial gradient at point", par.Vec());
 
    MnAlgebraicVector gr(n), gr2(n), gst(n);
 
