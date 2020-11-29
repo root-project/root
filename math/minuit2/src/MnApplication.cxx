@@ -39,48 +39,38 @@ FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler) {
    //   assert(npar > 0);
    if(maxfcn == 0) maxfcn = 200 + 100*npar + 5*npar*npar;
 
-   const FCNBase * fcn = &(Fcnbase());
-   if (fUseGrad) {
-      // case of Gradient FCN implemented via the FCNGradientBase interface
-      const FCNGradientBase * gfcn = dynamic_cast<const FCNGradientBase *>(fcn);
-      assert (gfcn != 0);
-      // case of gradient
-      FunctionMinimum min = Minimizer().Minimize( *gfcn, fState, fStrategy, maxfcn, toler);
-      fNumCall += min.NFcn();
-      fState = min.UserState();
-      return min;
-   }
-   else {
-      // no gradient
-      FunctionMinimum min = Minimizer().Minimize( *fcn, fState, fStrategy, maxfcn, toler);
-      fNumCall += min.NFcn();
-      fState = min.UserState();
+   const FCNBase& fcn = Fcnbase();
+   assert(!fUseGrad || dynamic_cast<const FCNGradientBase*>(&fcn) != nullptr);
 
-//       std::cout << "Initial MIGRAD state is " << MnUserParameterState( min.States()[0], min.Up(), min.Seed().Trafo() ) << std::endl;
-      const std::vector<ROOT::Minuit2::MinimumState>& iterationStates =  min.States();
-      print.Debug("State resulting from Migrad after",
-        iterationStates.size(), "iterations:", fState);
+   FunctionMinimum min =
+      fUseGrad ?
+      Minimizer().Minimize( static_cast<const FCNGradientBase&>(fcn), fState, fStrategy, maxfcn, toler) :
+      Minimizer().Minimize( fcn, fState, fStrategy, maxfcn, toler);
+   fNumCall += min.NFcn();
+   fState = min.UserState();
 
-      print.Debug([&](std::ostream& os) {
-        for (unsigned int i = 0; i <  iterationStates.size(); ++i) {
-           //std::cout << iterationStates[i] << std::endl;
-           const ROOT::Minuit2::MinimumState & st =  iterationStates[i];
-           os << "\n----------> Iteration " << i << '\n';
-           int pr = os.precision(18);
-           os << "            FVAL = " << st.Fval()
-              << " Edm = " << st.Edm() << " Nfcn = " << st.NFcn() << '\n';
-           os.precision(pr);
-           os << "            Error matrix change = " << st.Error().Dcovar()
-              << '\n';
-           os << "            Internal parameters : ";
-           for (int j = 0; j < st.size() ; ++j)
-              os << " p" << j << " = " << st.Vec()(j);
-        }
-      });
+   const std::vector<ROOT::Minuit2::MinimumState>& iterationStates =  min.States();
+   print.Debug("State resulting from Migrad after",
+      iterationStates.size(), "iterations:", fState);
 
-      return min;
-   }
+   print.Debug([&](std::ostream& os) {
+      for (unsigned int i = 0; i <  iterationStates.size(); ++i) {
+         //std::cout << iterationStates[i] << std::endl;
+         const ROOT::Minuit2::MinimumState & st =  iterationStates[i];
+         os << "\n----------> Iteration " << i << '\n';
+         int pr = os.precision(18);
+         os << "            FVAL = " << st.Fval()
+            << " Edm = " << st.Edm() << " Nfcn = " << st.NFcn() << '\n';
+         os.precision(pr);
+         os << "            Error matrix change = " << st.Error().Dcovar()
+            << '\n';
+         os << "            Internal parameters : ";
+         for (int j = 0; j < st.size() ; ++j)
+            os << " p" << j << " = " << st.Vec()(j);
+      }
+   });
 
+   return min;
 }
 
 // facade: forward interface of MnUserParameters and MnUserTransformation
