@@ -201,7 +201,7 @@ void TMessageHandler::Print(Option_t *) const
 {
    printf("\n ****** Message Handler: %s has a total of %d messages\n",GetName(),GetTotalMessageCount());
    if (fSize <= 0) return;
-   Int_t id, uid;
+   Long_t id, uid;
    const TClass *cl;
    TIter next(gROOT->GetListOfClasses());
    for (Int_t i = 0; i < fSize; i++) {
