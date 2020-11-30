@@ -17,7 +17,7 @@
 #include "Rtypes.h"  // ClassDef, ClassImp
 #include <memory>  // shared_ptr
 #include <RooAbsReal.h>
-#include "RooListProxy.h"
+#include "RooSetProxy.h"
 
 namespace RooFit {
 namespace TestStatistics {
@@ -38,13 +38,9 @@ public:
 
    double get_carry() const;
 private:
-   std::shared_ptr<RooAbsL> likelihood;
-
+   std::shared_ptr<RooAbsL> likelihood_;
    mutable double eval_carry = 0;
-
-   // TODO: we need to track the clean/dirty state in this wrapper. See the old RooRealMPFE implementation for how that can be done automatically using the RooListProxy.
-   RooArgProxy arg_proxy_;
-   RooListProxy arg_vars_proxy_;    // Variables
+   RooSetProxy vars_proxy_;    // sets up client-server connections
 
    ClassDefOverride(RooRealL, 0);
 };

@@ -19,14 +19,18 @@ ClassImp(RooFit::TestStatistics::RooRealL);
 namespace RooFit {
 namespace TestStatistics {
 
-// TODO: initialize arg_proxy_ and arg_vars_proxy_
-
 RooRealL::RooRealL(const char *name, const char *title, std::shared_ptr<RooAbsL> likelihood)
-   : RooAbsReal(name, title), likelihood(std::move(likelihood))
+   : RooAbsReal(name, title), likelihood_(std::move(likelihood)),
+     vars_proxy_("varsProxy", "proxy set of parameters", this)
 {
+   vars_proxy_.add(*likelihood_->getParameters());
 }
 
-RooRealL::RooRealL(const RooRealL &other, const char *name) : RooAbsReal(other, name), likelihood(other.likelihood) {}
+RooRealL::RooRealL(const RooRealL &other, const char *name)
+   : RooAbsReal(other, name), likelihood_(other.likelihood_), vars_proxy_("varsProxy", "proxy set of parameters", this)
+{
+   vars_proxy_.add(*likelihood_->getParameters());
+}
 
 double RooRealL::globalNormalization() const
 {
@@ -42,13 +46,13 @@ double RooRealL::get_carry() const
 Double_t RooRealL::evaluate() const
 {
    // Evaluate as straight FUNC
-   std::size_t last_event = likelihood->get_N_events(), last_component = likelihood->get_N_components();
+   std::size_t last_event = likelihood_->get_N_events(), last_component = likelihood_->get_N_components();
 
-   Double_t ret = likelihood->evaluate_partition(0, last_event, 0, last_component);
+   Double_t ret = likelihood_->evaluate_partition(0, last_event, 0, last_component);
 
    const Double_t norm = globalNormalization();
    ret /= norm;
-   eval_carry = likelihood->get_carry() / norm;
+   eval_carry = likelihood_->get_carry() / norm;
 
    return ret;
 }
