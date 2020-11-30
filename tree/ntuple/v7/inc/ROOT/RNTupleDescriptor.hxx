@@ -131,6 +131,8 @@ public:
    RColumnDescriptor &operator =(RColumnDescriptor &&other) = default;
 
    bool operator==(const RColumnDescriptor &other) const;
+   /// Get a copy of the descriptor
+   RColumnDescriptor Clone() const;
 
    DescriptorId_t GetId() const { return fColumnId; }
    RNTupleVersion GetVersion() const { return fVersion; }
