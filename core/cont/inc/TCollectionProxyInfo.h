@@ -694,16 +694,9 @@ namespace Detail {
             new (dest_arena) iterator(*source);
             return dest_arena;
          }
-         static void* next(void *iter_loc, const void *end_loc) {
-            const iterator *end = (const iterator *)(end_loc);
-            iterator *iter = (iterator *)(iter_loc);
-            if (*iter != *end) {
-               ++(*iter);
-               //if (*iter != *end) {
-               //   return IteratorValue<Cont_t, Cont_t::value_type>::get(*iter);
-               //}
-            }
-            return 0;
+         static void* next(void *, const void *) {
+            R__ASSERT(false && "Intentionally not implemented, should use VectorLooper or similar for vector<bool>.");
+            return {};
          }
          static void destruct1(void *iter_ptr) {
             iterator *start = (iterator *)(iter_ptr);
