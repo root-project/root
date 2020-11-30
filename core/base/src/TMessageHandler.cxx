@@ -226,7 +226,7 @@ void TMessageHandler::Print(Option_t *) const
          printf("  Class: %-20s ERRORs         has %d counts\n",cl->GetName(),fCnts[i]);
          continue;
       }
-      printf("  Class: %-20s MessID = %5d has %d counts\n",cl->GetName(),id,fCnts[i]);
+      printf("  Class: %-20s MessID = %5ld has %d counts\n",cl->GetName(),id,fCnts[i]);
    }
 }
 
