@@ -13,8 +13,10 @@ bool RBookedDefines::HasName(std::string_view name) const
 void RBookedDefines::AddColumn(const std::shared_ptr<RDFDetail::RDefineBase> &column, std::string_view name)
 {
    auto newCols = std::make_shared<RDefineBasePtrMap_t>(GetColumns());
-   (*newCols)[std::string(name)] = column;
+   const std::string colName(name);
+   (*newCols)[colName] = column;
    fDefines = newCols;
+   AddName(colName);
 }
 
 void RBookedDefines::AddName(std::string_view name)

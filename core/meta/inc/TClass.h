@@ -84,6 +84,7 @@ friend void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 friend class ROOT::TGenericClassInfo;
 friend class TProtoClass;
 friend class ROOT::Internal::TCheckHashRecursiveRemoveConsistency;
+friend class TStreamerInfo;
 
 public:
    // TClass status bits
@@ -222,7 +223,13 @@ private:
    ClassConvStreamerFunc_t fConvStreamerFunc;   //Wrapper around this class custom conversion Streamer member function.
    Int_t               fSizeof;         //Sizeof the class.
 
-           Int_t      fCanSplit;          //!Indicates whether this class can be split or not.
+   // Bit field
+   Int_t fCanSplit : 3;          //!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
+
+   /// Indicates whether this class represents a pair and was not created from a dictionary nor interpreter info but has
+   /// compiler compatible offset and size (and all the info is in the StreamerInfo per se)
+   Bool_t fIsSyntheticPair : 1;  //!
+
    mutable std::atomic<Long_t> fProperty; //!Property See TClass::Property() for details
    mutable Long_t     fClassProperty;     //!C++ Property of the class (is abstract, has virtual table, etc.)
 
@@ -309,6 +316,8 @@ private:
    // if no entries have been made.)
    static THashTable* fgClassTypedefHash;
 
+   TVirtualStreamerInfo     *GetStreamerInfoImpl(Int_t version, Bool_t silent) const;
+
 private:
    TClass(const TClass& tc) = delete;
    TClass& operator=(const TClass&) = delete;
@@ -348,7 +357,7 @@ public:
    void               AdoptSchemaRules( ROOT::Detail::TSchemaRuleSet *rules );
    virtual void       Browse(TBrowser *b);
    void               BuildRealData(void *pointer=0, Bool_t isTransient = kFALSE);
-   void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
+   void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl, Bool_t isTransient = kFALSE);
    void               CalculateStreamerOffset() const;
    Bool_t             CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient = kFALSE) const;
    Bool_t             CanSplit() const;
@@ -360,12 +369,12 @@ public:
    void               Dump() const { TDictionary::Dump(); }
    void               Dump(const void *obj, Bool_t noAddr = kFALSE) const;
    char              *EscapeChars(const char *text) const;
-   TVirtualStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
+   TVirtualStreamerInfo     *FindStreamerInfo(UInt_t checksum, Bool_t isTransient = kFALSE) const;
    TVirtualStreamerInfo     *GetConversionStreamerInfo( const char* onfile_classname, Int_t version ) const;
    TVirtualStreamerInfo     *FindConversionStreamerInfo( const char* onfile_classname, UInt_t checksum ) const;
    TVirtualStreamerInfo     *GetConversionStreamerInfo( const TClass* onfile_cl, Int_t version ) const;
    TVirtualStreamerInfo     *FindConversionStreamerInfo( const TClass* onfile_cl, UInt_t checksum ) const;
-   Bool_t             HasDataMemberInfo() const { return fHasRootPcmInfo || HasInterpreterInfo(); }
+   Bool_t             HasDataMemberInfo() const { return fIsSyntheticPair || fHasRootPcmInfo || HasInterpreterInfo(); }
    Bool_t             HasDefaultConstructor(Bool_t testio = kFALSE) const;
    Bool_t             HasInterpreterInfoInMemory() const { return 0 != fClassInfo; }
    Bool_t             HasInterpreterInfo() const { return fCanLoadClassInfo || fClassInfo; }
@@ -451,7 +460,7 @@ public:
    ClassStreamerFunc_t GetStreamerFunc() const;
    ClassConvStreamerFunc_t GetConvStreamerFunc() const;
    const TObjArray          *GetStreamerInfos() const { return fStreamerInfo; }
-   TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
+   TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0, Bool_t isTransient = kFALSE) const;
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
    TVirtualStreamerInfo     *FindStreamerInfoAbstractEmulated(UInt_t checksum) const;
    const std::type_info     *GetTypeInfo() const { return fTypeInfo; };
@@ -477,6 +486,7 @@ public:
    Bool_t             IsLoaded() const;
    Bool_t             IsForeign() const;
    Bool_t             IsStartingWithTObject() const;
+   Bool_t             IsSyntheticPair() const { return fIsSyntheticPair; }
    Bool_t             IsVersioned() const { return !( GetClassVersion()<=1 && IsForeign() ); }
    Bool_t             IsTObject() const;
    static TClass     *LoadClass(const char *requestedname, Bool_t silent);
@@ -533,7 +543,8 @@ public:
    static void           RemoveClass(TClass *cl);
    static void           RemoveClassDeclId(TDictionary::DeclId_t id);
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
-   static TClass        *GetClass(const std::type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
+   static TClass        *GetClass(const char *name, Bool_t load, Bool_t silent, size_t hint_pair_offset, size_t hint_pair_size);
+   static TClass        *GetClass(const std::type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE, size_t hint_pair_offset = 0, size_t hint_pair_size = 0);
    static TClass        *GetClass(ClassInfo_t *info, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    template<typename T>
    static TClass        *GetClass(Bool_t load = kTRUE, Bool_t silent = kFALSE);
@@ -579,9 +590,25 @@ TClass *GetClassHelper(Bool_t, Bool_t, std::true_type)
 }
 
 template <typename T>
+struct TClassGetClassHelper {
+   static TClass *GetClass(Bool_t load, Bool_t silent) {
+      return TClass::GetClass(typeid(T), load, silent);
+   }
+};
+
+template <typename F, typename S>
+struct TClassGetClassHelper<std::pair<F, S> > {
+   static TClass *GetClass(Bool_t load, Bool_t silent) {
+      std::pair<F, S> *p = nullptr;
+      size_t hint_offset = ((char*)&(p->second)) - (char*)p;
+      return TClass::GetClass(typeid(std::pair<F, S>), load, silent, hint_offset, sizeof(std::pair<F,S>));
+   }
+};
+
+template <typename T>
 TClass *GetClassHelper(Bool_t load, Bool_t silent, std::false_type)
 {
-   return TClass::GetClass(typeid(T), load, silent);
+   return TClassGetClassHelper<T>::GetClass(load, silent);
 }
 
 } // namespace Internal

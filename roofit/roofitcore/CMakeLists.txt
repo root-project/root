@@ -53,6 +53,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooArgList.h
     RooArgProxy.h
     RooArgSet.h
+    InitUtils.h
     RooBinIntegrator.h
     RooBinnedGenContext.h
     RooBinningCategory.h
@@ -222,7 +223,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooXYChi2Var.h
     RooHelpers.h
     RooSpan.h
-    BatchData.h
     BatchHelpers.h
     RooVDTHeaders.h
     RooWrapperPdf.h
@@ -276,7 +276,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooArgList.cxx
     src/RooArgProxy.cxx
     src/RooArgSet.cxx
-    src/Initialisation.cxx
+    src/InitUtils.cxx
     src/RooBinIntegrator.cxx
     src/RooBinnedGenContext.cxx
     src/RooBinningCategory.cxx
@@ -438,8 +438,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooWorkspace.cxx
     src/RooXYChi2Var.cxx
     src/RooHelpers.cxx
-    src/BatchData.cxx
-    src/BatchHelpers.cxx
     src/RooWrapperPdf.cxx
     src/RunContext.cxx
     src/RooBinSamplingPdf.cxx
@@ -474,12 +472,16 @@ foreach(incl ${fitcore_incl})
    target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${incl}>)
 endforeach()
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 5 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6)
-  # gcc 5 has a bug in that it fails to put its internal -lgcc into the right place when linking.
-  # We need it to check cpu flags in src/Initialisation.cxx
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # gcc has a bug in that it fails to put its internal -lgcc into the right place when linking.
+  # We need it to check cpu flags in src/InitUtils.cxx
   # Here, we add an explicit link instruction according to the workaround posted here:
   # https://bugs.launchpad.net/ubuntu/+source/gcc-5/+bug/1568899
   target_link_libraries(RooFitCore PRIVATE -lgcc_s -lgcc)
+endif()
+
+if(roofit-arch-libs)
+  target_compile_options(RooFitCore PUBLIC -DR__RF_ARCHITECTURE_SPECIFIC_LIBS)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

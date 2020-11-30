@@ -84,11 +84,11 @@ ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile()
 void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & /* model */)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   auto szHeader = descriptor.SerializeHeader(nullptr);
-   auto buffer = std::unique_ptr<unsigned char[]>(new unsigned char[szHeader]);
+   auto szHeader = descriptor.GetHeaderSize();
+   auto buffer = std::make_unique<unsigned char[]>(szHeader);
    descriptor.SerializeHeader(buffer.get());
 
-   auto zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[szHeader]);
+   auto zipBuffer = std::make_unique<unsigned char[]>(szHeader);
    auto szZipHeader = fCompressor(buffer.get(), szHeader, fOptions.GetCompression(),
       [&zipBuffer](const void *b, size_t n, size_t o){ memcpy(zipBuffer.get() + o, b, n); } );
    fWriter->WriteNTupleHeader(zipBuffer.get(), szZipHeader, szHeader);
@@ -149,11 +149,11 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitClusterImpl(ROOT::Experimental:
 void ROOT::Experimental::Detail::RPageSinkFile::CommitDatasetImpl()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   auto szFooter = descriptor.SerializeFooter(nullptr);
-   auto buffer = std::unique_ptr<unsigned char []>(new unsigned char[szFooter]);
+   auto szFooter = descriptor.GetFooterSize();
+   auto buffer = std::make_unique<unsigned char []>(szFooter);
    descriptor.SerializeFooter(buffer.get());
 
-   auto zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[szFooter]);
+   auto zipBuffer = std::make_unique<unsigned char []>(szFooter);
    auto szZipFooter = fCompressor(buffer.get(), szFooter, fOptions.GetCompression(),
       [&zipBuffer](const void *b, size_t n, size_t o){ memcpy(zipBuffer.get() + o, b, n); } );
    fWriter->WriteNTupleFooter(zipBuffer.get(), szZipFooter, szFooter);
@@ -245,14 +245,14 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    RNTupleDescriptorBuilder descBuilder;
    auto ntpl = fReader.GetNTuple(fNTupleName).Unwrap();
 
-   auto buffer = std::unique_ptr<unsigned char[]>(new unsigned char[ntpl.fLenHeader]);
-   auto zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[ntpl.fNBytesHeader]);
+   auto buffer = std::make_unique<unsigned char[]>(ntpl.fLenHeader);
+   auto zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesHeader);
    fReader.ReadBuffer(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fSeekHeader);
    fDecompressor(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fLenHeader, buffer.get());
    descBuilder.SetFromHeader(buffer.get());
 
-   buffer = std::unique_ptr<unsigned char[]>(new unsigned char[ntpl.fLenFooter]);
-   zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[ntpl.fNBytesFooter]);
+   buffer = std::make_unique<unsigned char[]>(ntpl.fLenFooter);
+   zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesFooter);
    fReader.ReadBuffer(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fSeekFooter);
    fDecompressor(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fLenFooter, buffer.get());
    descBuilder.AddClustersFromFooter(buffer.get());

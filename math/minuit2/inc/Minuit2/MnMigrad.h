@@ -72,9 +72,13 @@ public:
    /// construct from FCNGradientBase + MnUserParameterState + MnStrategy
    MnMigrad(const FCNGradientBase& fcn, const MnUserParameterState& par, const MnStrategy& str) : MnApplication(fcn, MnUserParameterState(par), str), fMinimizer(VariableMetricMinimizer()) {}
 
-   MnMigrad(const MnMigrad& migr) : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer) {}
-
    ~MnMigrad() {}
+
+   /// Copy constructor, copy shares the reference to the same FCNBase in MnApplication
+   MnMigrad(const MnMigrad&) = default;
+
+   // Copy assignment deleted, since MnApplication has unassignable reference to FCNBase
+   MnMigrad& operator=(const MnMigrad&) = delete;
 
    ModularFunctionMinimizer& Minimizer() {return fMinimizer;}
    const ModularFunctionMinimizer& Minimizer() const {return fMinimizer;}
@@ -83,10 +87,6 @@ private:
 
    VariableMetricMinimizer fMinimizer;
 
-private:
-
-   //forbidden assignment of migrad (const FCNBase& = )
-   MnMigrad& operator=(const MnMigrad&) {return *this;}
 };
 
   }  // namespace Minuit2

@@ -184,7 +184,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             gapy = 10,  // y coordinate, taking into account all gaps
             gapminx = -1111, gapmaxx = -1111,
             minhinty = -frame_shift.y,
-            maxhinty = this.pad_height("") - frame_rect.y - frame_shift.y;
+            maxhinty = this.canv_painter().pad_height() - frame_rect.y - frame_shift.y;
 
          function FindPosInGap(y) {
             for (let n = 0; (n < hints.length) && (y < maxhinty); ++n) {
@@ -423,7 +423,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          let drag_move = d3.drag().subject(Object),
-            drag_resize = d3.drag().subject(Object);
+             drag_resize = d3.drag().subject(Object);
 
          drag_move
             .on("start", function(evnt) {
@@ -441,15 +441,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                   acc_y1: Number(pthis.draw_g.attr("y")),
                   pad_w: pthis.pad_width() - rect_width(),
                   pad_h: pthis.pad_height() - rect_height(),
-                  drag_tm: new Date()
+                  drag_tm: new Date(),
+                  path: "v" + rect_height() + "h" + rect_width() + "v" + (-rect_height()) + "z"
                };
 
-               drag_rect = d3.select(pthis.draw_g.node().parentNode).append("rect")
+               drag_rect = d3.select(pthis.draw_g.node().parentNode).append("path")
                   .classed("zoom", true)
                   .attr("x", handle.acc_x1)
                   .attr("y", handle.acc_y1)
                   .attr("width", rect_width())
                   .attr("height", rect_height())
+                  .attr("d", "M" + handle.acc_x1 + "," + handle.acc_y1 + handle.path)
                   .style("cursor", "move")
                   .style("pointer-events", "none") // let forward double click to underlying elements
                   .property('drag_handle', handle);
@@ -468,8 +470,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                if (!callback.no_change_y)
                   handle.acc_y1 += evnt.dy;
 
-               drag_rect.attr("x", Math.min(Math.max(handle.acc_x1, 0), handle.pad_w))
-                  .attr("y", Math.min(Math.max(handle.acc_y1, 0), handle.pad_h));
+               let x = Math.min(Math.max(handle.acc_x1, 0), handle.pad_w),
+                   y = Math.min(Math.max(handle.acc_y1, 0), handle.pad_h);
+
+               drag_rect.attr("x", x)
+                        .attr("y", y)
+                        .attr("d", "M" + x + "," + y + handle.path);
 
             }).on("end", function(evnt) {
                if (!drag_rect) return;
@@ -484,7 +490,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                      let rrr = resize_se.node().getBoundingClientRect();
                      pthis.ShowContextMenu('main', { clientX: rrr.left, clientY: rrr.top });
                   } else if (callback.canselect && (spent <= 600)) {
-                     pthis.canv_painter().SelectObjectPainter(pthis);
+                     let pp = pthis.pad_painter();
+                     if (pp) pp.SelectObjectPainter(pthis);
                   }
                }
             });
@@ -555,7 +562,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!callback.only_resize)
             pthis.draw_g.style("cursor", "move").call(drag_move);
 
-         MakeResizeElements(pthis.draw_g, rect_width(), rect_height(), drag_resize);
+         if (!callback.only_move)
+            MakeResizeElements(pthis.draw_g, rect_width(), rect_height(), drag_resize);
       },
 
       /** @summary Add move handlers for drawn element
@@ -595,8 +603,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                evnt.sourceEvent.stopPropagation();
                if (this.moveEnd)
                   this.moveEnd(not_changed);
-               let cp = this.canv_painter();
-               if (cp) cp.SelectObjectPainter(this);
+               let pp = this.pad_painter();
+               if (pp) pp.SelectObjectPainter(this);
             }.bind(painter));
 
          painter.draw_g
@@ -762,7 +770,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (this.mode3d && (key.indexOf("Ctrl")!==0)) return false;
             this.AnalyzeMouseWheelEvent(null, zoom, 0.5);
             this.Zoom(zoom.name, zoom.min, zoom.max);
-            if (zoom.changed) this.zoom_changed_interactive = 2;
+            if (zoom.changed) this.zoomChangedInteractive(zoom.name, true);
             evnt.stopPropagation();
             evnt.preventDefault();
          } else {
@@ -777,8 +785,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return true; // just process any key press
       },
 
-      /** Function called when frame is clicked and object selection can be performed
-        * such event can be used to select */
+      /** @summary Function called when frame is clicked and object selection can be performed
+        * @desc such event can be used to select */
       ProcessFrameClick: function(pnt, dblckick) {
 
          let pp = this.pad_painter();
@@ -818,28 +826,27 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          evnt.preventDefault();
 
-         let frame = this.svg_frame();
-
-         let pos = d3.pointer(evnt, frame.node());
+         let frame = this.svg_frame(),
+             pos = d3.pointer(evnt, frame.node());
 
          this.clearInteractiveElements();
-         this.zoom_origin = pos;
 
          let w = this.frame_width(), h = this.frame_height();
 
-         this.zoom_curr = [ Math.max(0, Math.min(w, this.zoom_origin[0])),
-                            Math.max(0, Math.min(h, this.zoom_origin[1])) ];
+         this.zoom_lastpos = pos;
+         this.zoom_curr = [ Math.max(0, Math.min(w, pos[0])),
+                            Math.max(0, Math.min(h, pos[1])) ];
 
-         if ((this.zoom_origin[0] < 0) || (this.zoom_origin[0] > w)) {
+         this.zoom_origin = [0,0];
+
+         if ((pos[0] < 0) || (pos[0] > w)) {
             this.zoom_kind = 3; // only y
-            this.zoom_origin[0] = 0;
             this.zoom_origin[1] = this.zoom_curr[1];
             this.zoom_curr[0] = w;
             this.zoom_curr[1] += 1;
-         } else if ((this.zoom_origin[1] < 0) || (this.zoom_origin[1] > h)) {
+         } else if ((pos[1] < 0) || (pos[1] > h)) {
             this.zoom_kind = 2; // only x
             this.zoom_origin[0] = this.zoom_curr[0];
-            this.zoom_origin[1] = 0;
             this.zoom_curr[0] += 1;
             this.zoom_curr[1] = h;
          } else {
@@ -848,8 +855,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.zoom_origin[1] = this.zoom_curr[1];
          }
 
-         frame.on("mousemove.zoomRect", this.moveRectSel.bind(this))
-              .on("mouseup.zoomRect", this.endRectSel.bind(this), true);
+         d3.select(window).on("mousemove.zoomRect", this.moveRectSel.bind(this))
+                          .on("mouseup.zoomRect", this.endRectSel.bind(this), true);
 
          this.zoom_rect = null;
 
@@ -857,6 +864,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.SwitchTooltip(false);
 
          evnt.stopPropagation();
+
+         if (this.zoom_kind != 1)
+            setTimeout(() => this.startLabelsMove(), 500);
+      },
+
+      startLabelsMove: function() {
+         if (this.zoom_rect) return;
+
+         let handle = this.zoom_kind == 2 ? this.x_handle : this.y_handle;
+
+         if (!handle || (typeof handle.processLabelsMove != 'function') || !this.zoom_lastpos) return;
+
+         if (handle.processLabelsMove('start', this.zoom_lastpos)) {
+            this.zoom_labels = handle;
+         }
       },
 
       moveRectSel: function(evnt) {
@@ -864,7 +886,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if ((this.zoom_kind == 0) || (this.zoom_kind > 100)) return;
 
          evnt.preventDefault();
-         let m = d3.pointer(evnt);
+         let m = d3.pointer(evnt, this.svg_frame().node());
+
+         if (this.zoom_labels)
+            return this.zoom_labels.processLabelsMove('move', m);
+
+         this.zoom_lastpos[0] = m[0];
+         this.zoom_lastpos[1] = m[1];
 
          m[0] = Math.max(0, Math.min(this.frame_width(), m[0]));
          m[1] = Math.max(0, Math.min(this.frame_height(), m[1]));
@@ -875,16 +903,22 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             case 3: this.zoom_curr[1] = m[1]; break;
          }
 
-         if (this.zoom_rect===null)
+         let x = Math.min(this.zoom_origin[0], this.zoom_curr[0]),
+             y = Math.min(this.zoom_origin[1], this.zoom_curr[1]),
+             w = Math.abs(this.zoom_curr[0] - this.zoom_origin[0]),
+             h = Math.abs(this.zoom_curr[1] - this.zoom_origin[1]);
+
+         if (!this.zoom_rect) {
+            // ignore small changes, can be switching to labels move
+            if ((this.zoom_kind != 1) && ((w < 2) || (h < 2))) return;
+
             this.zoom_rect = this.svg_frame()
                                  .append("rect")
                                  .attr("class", "zoom")
                                  .attr("pointer-events","none");
+         }
 
-         this.zoom_rect.attr("x", Math.min(this.zoom_origin[0], this.zoom_curr[0]))
-                       .attr("y", Math.min(this.zoom_origin[1], this.zoom_curr[1]))
-                       .attr("width", Math.abs(this.zoom_curr[0] - this.zoom_origin[0]))
-                       .attr("height", Math.abs(this.zoom_curr[1] - this.zoom_origin[1]));
+         this.zoom_rect.attr("x", x).attr("y", y).attr("width", w).attr("height", h);
       },
 
       endRectSel: function(evnt) {
@@ -892,60 +926,68 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          evnt.preventDefault();
 
-         this.svg_frame().on("mousemove.zoomRect", null)
-                         .on("mouseup.zoomRect", null);
+         d3.select(window).on("mousemove.zoomRect", null)
+                          .on("mouseup.zoomRect", null);
 
-         let m = d3.pointer(evnt), changed = [true, true];
-         m[0] = Math.max(0, Math.min(this.frame_width(), m[0]));
-         m[1] = Math.max(0, Math.min(this.frame_height(), m[1]));
+         let m = d3.pointer(evnt, this.svg_frame().node()), kind = this.zoom_kind;
 
-         switch (this.zoom_kind) {
-            case 1: this.zoom_curr[0] = m[0]; this.zoom_curr[1] = m[1]; break;
-            case 2: this.zoom_curr[0] = m[0]; changed[1] = false; break; // only X
-            case 3: this.zoom_curr[1] = m[1]; changed[0] = false; break; // only Y
-         }
-
-         let xmin, xmax, ymin, ymax, isany = false,
-             idx = this.swap_xy ? 1 : 0, idy = 1 - idx;
-
-         if (changed[idx] && (Math.abs(this.zoom_curr[idx] - this.zoom_origin[idx]) > 10)) {
-            xmin = Math.min(this.RevertX(this.zoom_origin[idx]), this.RevertX(this.zoom_curr[idx]));
-            xmax = Math.max(this.RevertX(this.zoom_origin[idx]), this.RevertX(this.zoom_curr[idx]));
-            isany = true;
-         }
-
-         if (changed[idy] && (Math.abs(this.zoom_curr[idy] - this.zoom_origin[idy]) > 10)) {
-            ymin = Math.min(this.RevertY(this.zoom_origin[idy]), this.RevertY(this.zoom_curr[idy]));
-            ymax = Math.max(this.RevertY(this.zoom_origin[idy]), this.RevertY(this.zoom_curr[idy]));
-            isany = true;
-         }
-
-         let kind = this.zoom_kind, pnt = (kind===1) ? { x: this.zoom_origin[0], y: this.zoom_origin[1] } : null;
-
-         this.clearInteractiveElements();
-
-         if (isany) {
-            this.zoom_changed_interactive = 2;
-            this.Zoom(xmin, xmax, ymin, ymax);
+         if (this.zoom_labels) {
+            this.zoom_labels.processLabelsMove('stop', m);
          } else {
-            switch (kind) {
-               case 1:
-                  this.ProcessFrameClick(pnt);
-                  break;
-               case 2: {
-                  let pp = this.pad_painter();
-                  if (pp) pp.SelectObjectPainter(this.x_handle);
-                  break;
-               }
-               case 3: {
-                  let pp = this.pad_painter();
-                  if (pp) pp.SelectObjectPainter(this.y_handle);
-                  break;
-               }
+            let changed = [true, true];
+            m[0] = Math.max(0, Math.min(this.frame_width(), m[0]));
+            m[1] = Math.max(0, Math.min(this.frame_height(), m[1]));
+
+            switch (this.zoom_kind) {
+               case 1: this.zoom_curr[0] = m[0]; this.zoom_curr[1] = m[1]; break;
+               case 2: this.zoom_curr[0] = m[0]; changed[1] = false; break; // only X
+               case 3: this.zoom_curr[1] = m[1]; changed[0] = false; break; // only Y
+            }
+
+            let xmin, xmax, ymin, ymax, isany = false,
+                idx = this.swap_xy ? 1 : 0, idy = 1 - idx;
+
+            if (changed[idx] && (Math.abs(this.zoom_curr[idx] - this.zoom_origin[idx]) > 10)) {
+               xmin = Math.min(this.RevertAxis("x", this.zoom_origin[idx]), this.RevertAxis("x", this.zoom_curr[idx]));
+               xmax = Math.max(this.RevertAxis("x", this.zoom_origin[idx]), this.RevertAxis("x", this.zoom_curr[idx]));
+               isany = true;
+            }
+
+            if (changed[idy] && (Math.abs(this.zoom_curr[idy] - this.zoom_origin[idy]) > 10)) {
+               ymin = Math.min(this.RevertAxis("y", this.zoom_origin[idy]), this.RevertAxis("y", this.zoom_curr[idy]));
+               ymax = Math.max(this.RevertAxis("y", this.zoom_origin[idy]), this.RevertAxis("y", this.zoom_curr[idy]));
+               isany = true;
+            }
+
+            if (isany) {
+               this.zoomChangedInteractive("x", true);
+               this.zoomChangedInteractive("y", true);
+               this.Zoom(xmin, xmax, ymin, ymax);
+               kind = 0;
             }
          }
 
-         this.zoom_kind = 0;
+         let pnt =  (kind===1) ? { x: this.zoom_origin[0], y: this.zoom_origin[1] } : null;
+
+         this.clearInteractiveElements();
+
+         // if no zooming was done, select active object instead
+         switch (kind) {
+            case 1:
+               this.ProcessFrameClick(pnt);
+               break;
+            case 2: {
+               let pp = this.pad_painter();
+               if (pp) pp.SelectObjectPainter(this, null, "xaxis");
+               break;
+            }
+            case 3: {
+               let pp = this.pad_painter();
+               if (pp) pp.SelectObjectPainter(this, null, "yaxis");
+               break;
+            }
+         }
+
       },
 
       mouseDoubleClick: function(evnt) {
@@ -1121,14 +1163,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (this.zoom_kind === 103) changed[0] = false;
 
          if (changed[xid] && (Math.abs(this.zoom_curr[xid] - this.zoom_origin[xid]) > 10)) {
-            xmin = Math.min(this.RevertX(this.zoom_origin[xid]), this.RevertX(this.zoom_curr[xid]));
-            xmax = Math.max(this.RevertX(this.zoom_origin[xid]), this.RevertX(this.zoom_curr[xid]));
+            xmin = Math.min(this.RevertAxis("x", this.zoom_origin[xid]), this.RevertAxis("x", this.zoom_curr[xid]));
+            xmax = Math.max(this.RevertAxis("x", this.zoom_origin[xid]), this.RevertAxis("x", this.zoom_curr[xid]));
             isany = true;
          }
 
          if (changed[yid] && (Math.abs(this.zoom_curr[yid] - this.zoom_origin[yid]) > 10)) {
-            ymin = Math.min(this.RevertY(this.zoom_origin[yid]), this.RevertY(this.zoom_curr[yid]));
-            ymax = Math.max(this.RevertY(this.zoom_origin[yid]), this.RevertY(this.zoom_curr[yid]));
+            ymin = Math.min(this.RevertAxis("y", this.zoom_origin[yid]), this.RevertAxis("y", this.zoom_curr[yid]));
+            ymax = Math.max(this.RevertAxis("y", this.zoom_origin[yid]), this.RevertAxis("y", this.zoom_curr[yid]));
             isany = true;
          }
 
@@ -1136,92 +1178,25 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.last_touch = new Date(0);
 
          if (isany) {
-            this.zoom_changed_interactive = 2;
+            this.zoomChangedInteractive('x', true);
+            this.zoomChangedInteractive('y', true);
             this.Zoom(xmin, xmax, ymin, ymax);
          }
 
          evnt.stopPropagation();
       },
 
-       /** Analyze zooming with mouse wheel */
-      AnalyzeMouseWheelEvent: function(event, item, dmin, ignore) {
-
-         item.min = item.max = undefined;
-         item.changed = false;
-         if (ignore && item.ignore) return;
-
-         let delta = 0, delta_left = 1, delta_right = 1;
-
-         if ('dleft' in item) { delta_left = item.dleft; delta = 1; }
-         if ('dright' in item) { delta_right = item.dright; delta = 1; }
-
-         if ('delta' in item) {
-            delta = item.delta;
-         } else if (event && event.wheelDelta !== undefined ) {
-            // WebKit / Opera / Explorer 9
-            delta = -event.wheelDelta;
-         } else if (event && event.deltaY !== undefined ) {
-            // Firefox
-            delta = event.deltaY;
-         } else if (event && event.detail !== undefined) {
-            delta = event.detail;
-         }
-
-         if (delta===0) return;
-         delta = (delta<0) ? -0.2 : 0.2;
-
-         delta_left *= delta
-         delta_right *= delta;
-
-         let lmin = item.min = this["scale_"+item.name+"min"],
-             lmax = item.max = this["scale_"+item.name+"max"],
-             gmin = this[item.name+"min"],
-             gmax = this[item.name+"max"];
-
-         if ((item.min === item.max) && (delta<0)) {
-            item.min = gmin;
-            item.max = gmax;
-         }
-
-         if (item.min >= item.max) return;
-
-         if (item.reverse) dmin = 1 - dmin;
-
-         if ((dmin>0) && (dmin<1)) {
-            if (this['log'+item.name]) {
-               let factor = (item.min>0) ? Math.log10(item.max/item.min) : 2;
-               if (factor>10) factor = 10; else if (factor<0.01) factor = 0.01;
-               item.min = item.min / Math.pow(10, factor*delta_left*dmin);
-               item.max = item.max * Math.pow(10, factor*delta_right*(1-dmin));
-            } else {
-               let rx_left = (item.max - item.min), rx_right = rx_left;
-               if (delta_left>0) rx_left = 1.001 * rx_left / (1-delta_left);
-               item.min += -delta_left*dmin*rx_left;
-
-               if (delta_right>0) rx_right = 1.001 * rx_right / (1-delta_right);
-
-               item.max -= -delta_right*(1-dmin)*rx_right;
-            }
-            if (item.min >= item.max)
-               item.min = item.max = undefined;
-            else if (delta_left !== delta_right) {
-               // extra check case when moving left or right
-               if (((item.min < gmin) && (lmin===gmin)) ||
-                   ((item.max > gmax) && (lmax==gmax)))
-                      item.min = item.max = undefined;
-            }
-
-         } else {
-            item.min = item.max = undefined;
-         }
-
-         item.changed = ((item.min !== undefined) && (item.max !== undefined));
+       /** @summary Analyze zooming with mouse wheel */
+      AnalyzeMouseWheelEvent: function(event, item, dmin, test_ignore) {
+         let handle = this[item.name + "_handle"];
+         if (handle) return handle.analyzeWheelEvent(event, dmin, item, test_ignore);
+         console.error('Fail to analyze zooming event for ', item.name);
       },
 
+       /** @summary return true if default Y zooming should be enabled
+         * @desc it is typically for 2-Dim histograms or
+         * when histogram not draw, defined by other painters */
       AllowDefaultYZooming: function() {
-         // return true if default Y zooming should be enabled
-         // it is typically for 2-Dim histograms or
-         // when histogram not draw, defined by other painters
 
          let pad_painter = this.pad_painter();
          if (pad_painter && pad_painter.painters)
@@ -1251,7 +1226,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.Zoom(itemx.min, itemx.max, itemy.min, itemy.max);
 
-         if (itemx.changed || itemy.changed) this.zoom_changed_interactive = 2;
+         if (itemx.changed) this.zoomChangedInteractive('x', true);
+         if (itemy.changed) this.zoomChangedInteractive('y', true);
       },
 
       ShowContextMenu: function(kind, evnt, obj) {
@@ -1380,8 +1356,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       clearInteractiveElements: function() {
          jsrp.closeMenu();
-         if (this.zoom_rect) { this.zoom_rect.remove(); this.zoom_rect = null; }
          this.zoom_kind = 0;
+         if (this.zoom_rect) { this.zoom_rect.remove(); delete this.zoom_rect; }
+         delete this.zoom_curr;
+         delete this.zoom_origin;
+         delete this.zoom_lastpos;
+         delete this.zoom_labels;
+
 
          // enable tooltip in frame painter
          this.SwitchTooltip(true);
@@ -1389,6 +1370,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       /** Assign frame interactive methods */
       assign: function(painter) {
+         JSROOT.extend(painter, this);
+
+         /*
          painter.BasicInteractive = this.BasicInteractive;
          painter.AddInteractive = this.AddInteractive;
          painter.AddKeysHandler = this.AddKeysHandler;
@@ -1408,6 +1392,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          painter.startTouchMenu = this.startTouchMenu;
          painter.endTouchMenu = this.endTouchMenu;
          painter.clearInteractiveElements = this.clearInteractiveElements;
+         */
       }
 
    } // FrameInterative
@@ -1494,7 +1479,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       ToggleButtonsVisibility: function(action) {
-         let group = this.svg_layer("btns_layer", this.this_pad_name),
+         let group = this.svg_layer("btns_layer"),
              btn = group.select("[name='Toggle']");
 
          if (btn.empty()) return;
@@ -1529,7 +1514,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       FindButton: function(keyname) {
-         let group = this.svg_layer("btns_layer", this.this_pad_name), found_func = "";
+         let group = this.svg_layer("btns_layer"), found_func = "";
          if (!group.empty())
             group.selectAll("svg").each(function() {
                if (d3.select(this).attr("key") === keyname)
@@ -1540,7 +1525,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       RemoveButtons: function() {
-         let group = this.svg_layer("btns_layer", this.this_pad_name);
+         let group = this.svg_layer("btns_layer");
          if (!group.empty()) {
             group.selectAll("*").remove();
             group.property("nextx", null);
@@ -1548,7 +1533,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       ShowButtons: function() {
-         let group = this.svg_layer("btns_layer", this.this_pad_name);
+         let group = this.svg_layer("btns_layer");
          if (group.empty()) return;
 
          // clean all previous buttons
@@ -1600,7 +1585,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          group.property("nextx", x);
 
-         this.AlignBtns(group, this.pad_width(this.this_pad_name), this.pad_height(this.this_pad_name));
+         this.AlignBtns(group, this.pad_width(), this.pad_height());
 
          if (group.property('vertical'))
             ctrl.attr("y", x);
@@ -1720,7 +1705,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let canvp = this.canv_painter();
 
       if (!this.snapid || !canvp || canvp._readonly || !canvp._websocket)
-         return JSROOT.CallBack(call_back);
+         return JSROOT.callBack(call_back);
 
       function DoExecMenu(arg) {
          let execp = this.exec_painter || this,
@@ -1774,7 +1759,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                }
                if (lastclname != item.fClassName) {
                   lastclname = item.fClassName;
-                  _menu.add("sub:" + lastclname);
+                  let p = lastclname.lastIndexOf("::"),
+                      shortname = (p > 0) ? lastclname.substr(p+2) : lastclname;
+
+                  _menu.add("sub:" + shortname.replace("<","_").replace(">","_"));
                }
 
                if ((item.fChecked === undefined) || (item.fChecked < 0))
@@ -1786,7 +1774,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (lastclname) _menu.add("endsub:");
          }
 
-         JSROOT.CallBack(_call_back);
+         JSROOT.callBack(_call_back);
       }
 
       let reqid = this.snapid;

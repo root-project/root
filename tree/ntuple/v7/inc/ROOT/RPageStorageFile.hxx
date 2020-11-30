@@ -80,6 +80,10 @@ public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options,
                  std::unique_ptr<TFile> &file);
    RPageSinkFile(std::string_view ntupleName, TFile &file, const RNTupleWriteOptions &options);
+   RPageSinkFile(const RPageSinkFile&) = delete;
+   RPageSinkFile& operator=(const RPageSinkFile&) = delete;
+   RPageSinkFile(RPageSinkFile&&) = default;
+   RPageSinkFile& operator=(RPageSinkFile&&) = default;
    virtual ~RPageSinkFile();
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
@@ -162,6 +166,11 @@ public:
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    /// The meta-data (header and footer) is reread and parsed by the clone.
    std::unique_ptr<RPageSource> Clone() const final;
+
+   RPageSourceFile(const RPageSourceFile&) = delete;
+   RPageSourceFile& operator=(const RPageSourceFile&) = delete;
+   RPageSourceFile(RPageSourceFile&&) = default;
+   RPageSourceFile& operator=(RPageSourceFile&&) = default;
    virtual ~RPageSourceFile();
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;

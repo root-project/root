@@ -1147,10 +1147,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             viewName: "rootui5.canv.view.Canvas",
             viewData: { canvas_painter: painter },
             height: "100%"
-         }).then(function(oView) {
-            oTabContainerItem.addContent(oView);
-            // JSROOT.CallBack(call_back, true);
-         });
+         }).then(oView => oTabContainerItem.addContent(oView));
       },
 
    });

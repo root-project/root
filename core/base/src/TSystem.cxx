@@ -1839,6 +1839,7 @@ static bool R__MatchFilename(const char *left, const char *right)
 #endif
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Load a shared library. Returns 0 on successful loading, 1 in
 /// case lib was already loaded, -1 in case lib does not exist
@@ -2134,9 +2135,7 @@ const char *TSystem::GetLinkedLibraries()
 ///  - S: shared libraries loaded at the start of the executable, because
 ///       they were specified on the link line.
 ///  - D: shared libraries dynamically loaded after the start of the program.
-/// For MacOS only:
-///  - L: list the .dylib rather than the .so (this is intended for linking)
-///       This options is not the default
+///  - L: this option is ignored, and available for backward compatibility.
 
 const char *TSystem::GetLibraries(const char *regexp, const char *options,
                                   Bool_t isRegexp)
@@ -2283,39 +2282,6 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    }
    fListLibs = maclibs;
 }
-#endif
-
-#if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5)
-   if (so2dylib) {
-      TString libs2 = fListLibs;
-      TString maclibs;
-
-      static TRegexp separator("[^ \\t\\s]+");
-      static TRegexp user_so("\\.so$");
-
-      Ssiz_t start, index, end;
-      start = index = end = 0;
-
-      while ((start < libs2.Length()) && (index != kNPOS)) {
-         index = libs2.Index(separator, &end, start);
-         if (index >= 0) {
-            // Change .so into .dylib and remove the
-            // path info if it is not accessible
-            TString s = libs2(index, end);
-            if (s.Index(user_so) != kNPOS) {
-               s.ReplaceAll(".so",".dylib");
-               if ( GetPathInfo( s, 0, (Long_t*)0, 0, 0 ) != 0 ) {
-                  s.Replace( 0, s.Last('/')+1, 0, 0);
-                  s.Replace( 0, s.Last('\\')+1, 0, 0);
-               }
-            }
-            if (!maclibs.IsNull()) maclibs.Append(" ");
-            maclibs.Append(s);
-         }
-         start += end+1;
-      }
-      fListLibs = maclibs;
-   }
 #endif
 
    return fListLibs.Data();
@@ -3694,7 +3660,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    Bool_t collectingSingleLibraryNameTokens = kFALSE;
    for (auto tokenObj : *linkLibrariesNoQuotes.Tokenize(" ")) {
       singleLibrary = ((TObjString*)tokenObj)->GetString();
-      if (!AccessPathName(singleLibrary) || singleLibrary[0]=='-') {
+      if (singleLibrary[0]=='-' || !AccessPathName(singleLibrary)) {
          if (collectingSingleLibraryNameTokens) {
             librariesWithQuotes.Chop();
             librariesWithQuotes += "\" \"" + singleLibrary + "\"";

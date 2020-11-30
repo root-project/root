@@ -35,12 +35,12 @@ namespace ROOT {
 namespace Experimental {
 
 class RHistDrawableBase : public RDrawable {
-   RAttrValue<std::string>  fKind{this, "kind", ""};      ///<! hist draw kind
-   RAttrValue<int>          fSub{this, "sub", -1};        ///<! hist draw sub kind
-   RAttrLine                fAttrLine{this, "line_"};     ///<! hist line attributes
-   RAttrFill                fAttrFill{this, "fill_"};     ///<! hist fill attributes
-   RAttrText                fAttrText{this, "text_"};     ///<! hist text attributes
-   RAttrMarker              fMarkerAttr{this, "marker_"}; ///<! hist marker attributes
+   RAttrValue<std::string>  fKind{this, "kind", ""};        ///<! hist draw kind
+   RAttrValue<int>          fSub{this, "sub", -1};          ///<! hist draw sub kind
+   RAttrLine                fAttrLine{this, "line"};        ///<! hist line attributes
+   RAttrFill                fAttrFill{this, "fill"};        ///<! hist fill attributes
+   RAttrText                fAttrText{this, "text"};        ///<! hist text attributes
+   RAttrMarker              fMarkerAttr{this, "marker"};    ///<! hist marker attributes
    RAttrValue<bool>         fOptimize{this, "optimize", false}; ///<! optimize drawing
 
 protected:

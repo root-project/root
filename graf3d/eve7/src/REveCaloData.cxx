@@ -118,9 +118,6 @@ cells within requested phi and eta range.
 REveCaloData::REveCaloData(const char* n, const char* t):
    REveElement(),
 
-   fEtaAxis(0),
-   fPhiAxis(0),
-
    fWrapTwoPi(kTRUE),
 
    fMaxValEt(0),
@@ -134,22 +131,25 @@ REveCaloData::REveCaloData(const char* n, const char* t):
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process newly selected cells with given select-record.
-/// Secondary-select status is set.
-/// CellSelectionChanged() is called if needed.
 
 void REveCaloData::ProcessSelection(vCellId_t& sel_cells, UInt_t selectionId, Bool_t multiple)
 {
-   REveSelection* selection = (REveSelection*) ROOT::Experimental::gEve->FindElementById(selectionId);
-
-   std::set<int> secondary_idcs;
-   for (vCellId_i i = sel_cells.begin(); i != sel_cells.end(); ++i)
+   if (fSelector)
    {
-      int id = (i->fSlice << 24) + i->fTower;
-      // printf("set set unique ID (%d, %d) -> [%d]\n",i->fSlice,  i->fTower, id);
-      secondary_idcs.insert(id);
+      fSelector->ProcessSelection(sel_cells, selectionId, multiple);
    }
+   else
+   {
+      REveSelection* selection = dynamic_cast<REveSelection*> (ROOT::Experimental::gEve->FindElementById(selectionId));
 
-   selection->NewElementPicked(GetElementId(), multiple, true, secondary_idcs);
+      std::set<int> secondary_idcs;
+      for (vCellId_i i = sel_cells.begin(); i != sel_cells.end(); ++i)
+      {
+         int id = (i->fSlice << 24) + i->fTower;
+         secondary_idcs.insert(id);
+      }
+      selection->NewElementPicked(GetElementId(), multiple, true, secondary_idcs);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,16 +279,22 @@ void  REveCaloData::FillExtraSelectionData(nlohmann::json& j, const std::set<int
 {
    vCellId_t cells;
 
-   for (auto &id : secondary_idcs ) {
-
-      int s = (id >> 24);
-      int t = id & 0xffffff;
-      REveCaloData::CellId_t cell(t, s, 1.0f);
-      cells.push_back(cell);
+   if (fSelector)
+   {
+      fSelector->GetCellsFromSecondaryIndices(secondary_idcs, cells);
    }
+   else
+   {
+      for (auto &id : secondary_idcs ) {
 
-    for (auto &c : fNieces)
-         ((REveCaloViz*)c)->WriteCoreJsonSelection(j, cells);
+         int s = (id >> 24);
+         int t = id & 0xffffff;
+         REveCaloData::CellId_t cell(t, s, 1.0f);
+         cells.push_back(cell);
+      }
+   }
+   for (auto &c : fNieces)
+      ((REveCaloViz*)c)->WriteCoreJsonSelection(j, cells);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -360,8 +366,6 @@ REveCaloDataVec::REveCaloDataVec(Int_t nslices):
 
 REveCaloDataVec::~REveCaloDataVec()
 {
-   if (fEtaAxis) delete fEtaAxis;
-   if (fPhiAxis) delete fPhiAxis;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -626,12 +630,8 @@ void  REveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
 
    }
    newY.push_back(binY.back()); // overflow
-
-   if (fEtaAxis) delete fEtaAxis;
-   if (fPhiAxis) delete fPhiAxis;
-
-   fEtaAxis = new TAxis(newX.size()-1, &newX[0]);
-   fPhiAxis = new TAxis(newY.size()-1, &newY[0]);
+   fEtaAxis = std::make_unique<TAxis>(newX.size()-1, &newX[0]);
+   fEtaAxis = std::make_unique<TAxis>(newY.size()-1, &newY[0]);
    fEtaAxis->SetNdivisions(510);
    fPhiAxis->SetNdivisions(510);
 }
@@ -677,8 +677,6 @@ void REveCaloDataHist::DataChanged()
    if (GetNSlices() < 1) return;
 
    TH2* hist = GetHist(0);
-   fEtaAxis  = hist->GetXaxis();
-   fPhiAxis  = hist->GetYaxis();
    for (Int_t ieta = 1; ieta <= fEtaAxis->GetNbins(); ++ieta)
    {
       Double_t eta = fEtaAxis->GetBinCenter(ieta); // conversion E/Et
@@ -809,6 +807,10 @@ void REveCaloDataHist::GetCellData(const REveCaloData::CellId_t &id,
 
 Int_t REveCaloDataHist::AddHistogram(TH2F* hist)
 {
+   if (!fEtaAxis) {
+      fEtaAxis.reset(new TAxis(*hist->GetXaxis()));
+      fPhiAxis.reset(new TAxis(*hist->GetYaxis()));
+   }
    fHStack->Add(hist);
    fSliceInfos.push_back(SliceInfo_t());
    fSliceInfos.back().fName  = hist->GetName();

@@ -23,75 +23,86 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
     */
 
    function TAxisPainter(axis, embedded) {
-      JSROOT.ObjectPainter.call(this, axis);
+      JSROOT.AxisBasePainter.call(this, axis);
 
       this.embedded = embedded; // indicate that painter embedded into the histo painter
-
-      this.name = "yaxis";
-      this.kind = "normal";
-      this.func = null;
-      this.order = 0; // scaling order for axis labels
-
-      this.full_min = 0;
-      this.full_max = 1;
-      this.scale_min = 0;
-      this.scale_max = 1;
-      this.ticks = []; // list of major ticks
       this.invert_side = false;
       this.lbls_both_sides = false; // draw labels on both sides
    }
 
-   TAxisPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
+   TAxisPainter.prototype = Object.create(JSROOT.AxisBasePainter.prototype);
 
-   TAxisPainter.prototype.Cleanup = function() {
+   /** @summary Use in GED to identify kind of axis */
+   TAxisPainter.prototype.GetAxisType = function() { return "TAxis"; }
 
-      this.ticks = [];
-      this.func = null;
-      delete this.format;
-
-      JSROOT.ObjectPainter.prototype.Cleanup.call(this);
-   }
-
-   TAxisPainter.prototype.SetAxisConfig = function(name, kind, func, min, max, smin, smax) {
+   TAxisPainter.prototype.ConfigureAxis = function(name, min, max, smin, smax, vertical, range, opts) {
       this.name = name;
-      this.kind = kind;
-      this.func = func;
-
       this.full_min = min;
       this.full_max = max;
+      this.kind = "normal";
+      this.vertical = vertical;
+      this.log = opts.log || 0;
+      this.reverse = opts.reverse || false;
+      this.swap_side = opts.swap_side || false;
+
+      let axis = this.GetObject();
+
+      if (opts.time_scale || axis.fTimeDisplay) {
+         this.kind = 'time';
+         this.timeoffset = jsrp.getTimeOffset(axis);
+      } else {
+         this.kind = !axis.fLabels ? 'normal' : 'labels';
+      }
+
+      if (this.kind == 'time') {
+         this.func = d3.scaleTime().domain([this.ConvertDate(smin), this.ConvertDate(smax)]);
+      } else if (this.log) {
+         this.logbase = this.log === 2 ? 2 : 10;
+         if (smax <= 0) smax = 1;
+
+         if ((smin <= 0) && axis && !opts.logcheckmin)
+            for (let i = 0; i < axis.fNbins; ++i) {
+               smin = Math.max(smin, axis.GetBinLowEdge(i+1));
+               if (smin > 0) break;
+            }
+
+         if ((smin <= 0) && opts.log_min_nz)
+            smin = opts.log_min_nz;
+
+         if ((smin <= 0) || (smin >= smax))
+            smin = smax * (opts.logminfactor || 1e-4);
+
+         this.func = d3.scaleLog().base((this.log == 2) ? 2 : 10).domain([smin,smax]);
+      } else {
+         this.func = d3.scaleLinear().domain([smin,smax]);
+      }
+
+      if (this.vertical ^ this.reverse) {
+         let d = range[0]; range[0] = range[1]; range[1] = d;
+      }
+
+      this.func.range(range);
+
       this.scale_min = smin;
       this.scale_max = smax;
-   }
 
-   TAxisPainter.prototype.format10Exp = function(order, value) {
-      let res = "";
-      if (value) {
-         value = Math.round(value/Math.pow(10,order));
-         if ((value!=0) && (value!=1)) res = value.toString() + (JSROOT.settings.Latex ? "#times" : "x");
-      }
-      res += "10";
-      if (JSROOT.settings.Latex > JSROOT.constants.Latex.Symbols)
-         return res + "^{" + order + "}";
-      const superscript_symbols = {
-            '0': '\u2070', '1': '\xB9', '2': '\xB2', '3': '\xB3', '4': '\u2074', '5': '\u2075',
-            '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079', '-': '\u207B'
-         };
-      let str = order.toString();
-      for (let n = 0; n < str.length; ++n)
-         res += superscript_symbols[str[n]];
-      return res;
-   }
+      if (this.kind == 'time')
+         this.gr = val => this.func(this.ConvertDate(val));
+      else if (this.log)
+         this.gr = val => (val < this.scale_min) ? (this.vertical ? this.func.range()[0]+5 : -5) : this.func(val);
+      else
+         this.gr = this.func;
 
-   TAxisPainter.prototype.CreateFormatFuncs = function() {
 
-      let axis = this.GetObject(),
-          is_gaxis = (axis && axis._typename === 'TGaxis');
+      let is_gaxis = (axis && axis._typename === 'TGaxis');
 
       delete this.format;// remove formatting func
 
       let ndiv = 508;
-      if (is_gaxis) ndiv = axis.fNdiv; else
-      if (axis) ndiv = Math.max(axis.fNdivisions, 4);
+      if (is_gaxis)
+         ndiv = axis.fNdiv;
+       else if (axis)
+          ndiv = Math.max(axis.fNdivisions, 4);
 
       this.nticks = ndiv % 100;
       this.nticks2 = (ndiv % 10000 - this.nticks) / 100;
@@ -116,11 +127,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (tf2!==tf1)
             this.tfunc2 = d3.timeFormat(tf2);
 
-         this.format = function(d, asticks) {
-            return asticks ? this.tfunc1(d) : this.tfunc2(d);
-         }
+         this.format = this.formatTime;
 
-      } else if (this.kind == 'log') {
+      } else if (this.log) {
          if (this.nticks2 > 1) {
             this.nticks *= this.nticks2; // all log ticks (major or minor) created centrally
             this.nticks2 = 1;
@@ -129,21 +138,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if ((this.scale_max < 300) && (this.scale_min > 0.3)) this.noexp = true;
          this.moreloglabels = axis ? axis.TestBit(JSROOT.EAxisBits.kMoreLogLabels) : false;
 
-         this.format = function(d, asticks, notickexp_fmt) {
-            let val = parseFloat(d), rnd = Math.round(val);
-            if (!asticks)
-               return ((rnd === val) && (Math.abs(rnd)<1e9)) ? rnd.toString() : JSROOT.FFormat(val, notickexp_fmt || JSROOT.gStyle.fStatFormat);
+         this.format = this.formatLog;
 
-            if (val <= 0) return null;
-            let vlog = Math.log10(val);
-            if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog))<0.001)) {
-               if (!this.noexp && !notickexp_fmt)
-                  return this.format10Exp(Math.floor(vlog+0.01), val);
-
-               return (vlog<0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
-            }
-            return null;
-         }
       } else if (this.kind == 'labels') {
          this.nticks = 50; // for text output allow max 50 names
          let scale_range = this.scale_max - this.scale_min;
@@ -161,57 +157,30 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.nticks2 = 1;
 
-         this.axis = axis;
-
-         this.format = function(d) {
-            let indx = parseFloat(d);
-            if (!this.regular_labels)
-               indx = (indx - this.axis.fXmin)/(this.axis.fXmax - this.axis.fXmin) * this.axis.fNbins;
-            indx = Math.floor(indx);
-            if ((indx<0) || (indx>=this.axis.fNbins)) return null;
-            for (let i = 0; i < this.axis.fLabels.arr.length; ++i) {
-               let tstr = this.axis.fLabels.arr[i];
-               if (tstr.fUniqueID === indx+1) return tstr.fString;
-            }
-            return null;
-         }
+         this.format = this.formatLabels;
       } else {
-
          this.order = 0;
          this.ndig = 0;
-
-         this.format = function(d, asticks, fmt) {
-            let val = parseFloat(d);
-            if (asticks && this.order) val = val / Math.pow(10, this.order);
-
-            if (val === Math.round(val))
-               return (Math.abs(val)<1e9) ? val.toFixed(0) : val.toExponential(4);
-
-            if (asticks) return (this.ndig>10) ? val.toExponential(this.ndig-11) : val.toFixed(this.ndig);
-
-            return JSROOT.FFormat(val, fmt || JSROOT.gStyle.fStatFormat);
-         }
+         this.format = this.formatNormal;
       }
    }
 
-   TAxisPainter.prototype.ProduceTicks = function(ndiv, ndiv2) {
-      if (!this.noticksopt) {
-         let arr = this.func.ticks(ndiv * (ndiv2 || 1));
-         // FIXME: workaround - prvent creation too much log ticks when min >= 1, but this should be checked differently
-         if ((this.kind == "log") && (arr.length > 30) && this.scale_min > 0.8)
-             arr = this.func.ticks(10);
-         return arr;
+   /** @summary Provide label for axis value */
+   TAxisPainter.prototype.formatLabels = function(d) {
+      let indx = parseFloat(d), a = this.GetObject();
+      if (!this.regular_labels)
+         indx = (indx - a.fXmin)/(a.fXmax - a.fXmin) * a.fNbins;
+      indx = Math.floor(indx);
+      if ((indx < 0) || (indx >= a.fNbins)) return null;
+      for (let i = 0; i < a.fLabels.arr.length; ++i) {
+         let tstr = a.fLabels.arr[i];
+         if (tstr.fUniqueID === indx+1) return tstr.fString;
       }
-
-      if (ndiv2) ndiv = (ndiv-1) * ndiv2;
-      let dom = this.func.domain(), ticks = [];
-      for (let n=0;n<=ndiv;++n)
-         ticks.push((dom[0]*(ndiv-n) + dom[1]*n)/ndiv);
-      return ticks;
+      return null;
    }
 
+   /** @summary Creates array with minor/middle/major ticks */
    TAxisPainter.prototype.CreateTicks = function(only_major_as_array, optionNoexp, optionNoopt, optionInt) {
-      // function used to create array with minor/middle/major ticks
 
       if (optionNoopt && this.nticks && (this.kind == "normal")) this.noticksopt = true;
 
@@ -228,13 +197,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if ((this.kind == 'labels') && !this.regular_labels) {
          handle.lbl_pos = [];
-         for (let n=0;n<this.axis.fNbins;++n) {
-            let x = this.axis.fXmin + n / this.axis.fNbins * (this.axis.fXmax - this.axis.fXmin);
+         let axis = this.GetObject();
+         for (let n = 0; n < axis.fNbins; ++n) {
+            let x = axis.fXmin + n / axis.fNbins * (axis.fXmax - axis.fXmin);
             if ((x >= this.scale_min) && (x < this.scale_max)) handle.lbl_pos.push(x);
          }
       }
 
-      if (this.nticks2 > 1) {
+      if ((this.nticks2 > 1) && (!this.log || (this.logbase === 10))) {
          handle.minor = handle.middle = this.ProduceTicks(handle.major.length, this.nticks2);
 
          let gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
@@ -242,8 +212,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // avoid black filling by middle-size
          if ((handle.middle.length <= handle.major.length) || (handle.middle.length > gr_range/3.5)) {
             handle.minor = handle.middle = handle.major;
-         } else
-         if ((this.nticks3 > 1) && (this.kind !== 'log'))  {
+         } else if ((this.nticks3 > 1) && !this.log)  {
             handle.minor = this.ProduceTicks(handle.middle.length, this.nticks3);
             if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7)) handle.minor = handle.middle;
          }
@@ -287,7 +256,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // at the moment when drawing labels, we can try to find most optimal text representation for them
 
-      if ((this.kind == "normal") && (handle.major.length > 0)) {
+      if ((this.kind == "normal") && !this.log && (handle.major.length > 0)) {
 
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
@@ -314,9 +283,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.order = order;
             this.ndig = 0;
             let lbls = [], indx = 0, totallen = 0;
-            while (indx<handle.major.length) {
+            while (indx < handle.major.length) {
                let lbl = this.format(handle.major[indx], true);
-               if (lbls.indexOf(lbl)<0) {
+               if (lbls.indexOf(lbl) < 0) {
                   lbls.push(lbl);
                   totallen += lbl.length;
                   indx++;
@@ -352,16 +321,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    TAxisPainter.prototype.IsCenterLabels = function() {
       if (this.kind === 'labels') return true;
-      if (this.kind === 'log') return false;
+      if (this.log) return false;
       let axis = this.GetObject();
       return axis && axis.TestBit(JSROOT.EAxisBits.kCenterLabels);
    }
 
-   TAxisPainter.prototype.AddTitleDrag = function(title_g, vertical, offset_k, reverse, axis_length) {
-      if (!JSROOT.settings.MoveResize) return;
+   /** @summary Add interactive elements to draw axes title */
+   TAxisPainter.prototype.addTitleDrag = function(title_g, vertical, offset_k, reverse, axis_length) {
+      if (!JSROOT.settings.MoveResize || JSROOT.BatchMode) return;
 
       let drag_rect = null,
-          acc_x, acc_y, new_x, new_y, sign_0, alt_pos,
+          acc_x, acc_y, new_x, new_y, sign_0, alt_pos, curr_indx,
           drag_move = d3.drag().subject(Object);
 
       drag_move
@@ -371,17 +341,36 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             evnt.sourceEvent.stopPropagation();
 
             let box = title_g.node().getBBox(), // check that elements visible, request precise value
-                axis = this.GetObject();
+                axis = this.GetObject(),
+                title_length = vertical ? box.height : box.width,
+                opposite = axis.TestBit(JSROOT.EAxisBits.kOppositeTitle);
 
             new_x = acc_x = title_g.property('shift_x');
             new_y = acc_y = title_g.property('shift_y');
 
-            sign_0 = vertical ? (acc_x>0) : (acc_y>0); // sign should remain
+            sign_0 = vertical ? (acc_x > 0) : (acc_y > 0); // sign should remain
+
+            alt_pos = vertical ? [axis_length, axis_length/2, 0] : [0, axis_length/2, axis_length]; // possible positions
+            let off = vertical ? -title_length/2 : title_length/2;
+            if (this.title_align == "middle") {
+               alt_pos[0] +=  off;
+               alt_pos[2] -=  off;
+            } else if (this.title_align == "begin") {
+               alt_pos[1] -= off;
+               alt_pos[2] -= 2*off;
+            } else { // end
+               alt_pos[0] += 2*off;
+               alt_pos[1] += off;
+            }
 
             if (axis.TestBit(JSROOT.EAxisBits.kCenterTitle))
-               alt_pos = (reverse === vertical) ? axis_length : 0;
+               curr_indx = 1;
+            else if (reverse ^ opposite)
+               curr_indx = 0;
             else
-               alt_pos = Math.round(axis_length/2);
+               curr_indx = 2;
+
+            alt_pos[curr_indx] = vertical ? acc_y : acc_x;
 
             drag_rect = title_g.append("rect")
                  .classed("zoom", true)
@@ -401,18 +390,22 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                acc_y += evnt.dy;
 
                let set_x = title_g.property('shift_x'),
-                   set_y = title_g.property('shift_y');
+                   set_y = title_g.property('shift_y'),
+                   p = vertical ? acc_y : acc_x, besti = 0;
+
+               for (let i=1; i<3; ++i)
+                  if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti])) besti = i;
 
                if (vertical) {
                   set_x = acc_x;
-                  if (Math.abs(acc_y - set_y) > Math.abs(acc_y - alt_pos)) set_y = alt_pos;
+                  set_y = alt_pos[besti];
                } else {
                   set_y = acc_y;
-                  if (Math.abs(acc_x - set_x) > Math.abs(acc_x - alt_pos)) set_x = alt_pos;
+                  set_x = alt_pos[besti];
                }
 
-               if (sign_0 === (vertical ? (set_x>0) : (set_y>0))) {
-                  new_x = set_x; new_y = set_y;
+               if (sign_0 === (vertical ? (set_x > 0) : (set_y > 0))) {
+                  new_x = set_x; new_y = set_y; curr_indx = besti;
                   title_g.attr('transform', 'translate(' + new_x + ',' + new_y +  ')');
                }
 
@@ -425,10 +418,23 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                title_g.property('shift_x', new_x)
                       .property('shift_y', new_y);
 
-               let axis = this.GetObject();
+               let axis = this.GetObject(), abits = JSROOT.EAxisBits;
+
+               function set_bit(bit, on) {
+                  if (axis.TestBit(bit) != on) axis.InvertBit(bit);
+               }
 
                axis.fTitleOffset = (vertical ? new_x : new_y) / offset_k;
-               if ((vertical ? new_y : new_x) === alt_pos) axis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
+               if (curr_indx == 1) {
+                  set_bit(abits.kCenterTitle, true);
+                  set_bit(abits.kOppositeTitle, false);
+               } else if (curr_indx == 0) {
+                  set_bit(abits.kCenterTitle, false);
+                  set_bit(abits.kOppositeTitle, true);
+               } else {
+                  set_bit(abits.kCenterTitle, false);
+                  set_bit(abits.kOppositeTitle, false);
+               }
 
                drag_rect.remove();
                drag_rect = null;
@@ -437,8 +443,182 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       title_g.style("cursor", "move").call(drag_move);
    }
 
-   TAxisPainter.prototype.DrawAxis = function(vertical, layer, w, h, transform, reverse, second_shift, disable_axis_drawing, max_text_width) {
-      // function draws  TAxis or TGaxis object
+
+   /** @summary Draw axis ticks */
+   TAxisPainter.prototype.DrawTicks = function(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, real_draw) {
+      let res = "", res2 = "", lastpos = 0, lasth = 0;
+      this.ticks = [];
+
+      while (handle.next(true)) {
+
+         let h1 = Math.round(tickSize/4), h2 = 0;
+
+         if (handle.kind < 3)
+            h1 = Math.round(tickSize/2);
+
+         if (handle.kind == 1) {
+            // if not showing labels, not show large tick
+            // FIXME: for labels last tick is smaller,
+            if (/*(this.kind == "labels") || */ (this.format(handle.tick,true) !== null)) h1 = tickSize;
+            this.ticks.push(handle.grpos); // keep graphical positions of major ticks
+         }
+
+         if (ticksPlusMinus > 0) h2 = -h1; else
+         if (side < 0) { h2 = -h1; h1 = 0; } else { h2 = 0; }
+
+         if (res.length == 0) {
+            res = this.vertical ? ("M"+h1+","+handle.grpos) : ("M"+handle.grpos+","+(-h1));
+            res2 = this.vertical ? ("M"+(secondShift-h1)+","+handle.grpos) : ("M"+handle.grpos+","+(secondShift+h1));
+         } else {
+            res += this.vertical ? ("m"+(h1-lasth)+","+(handle.grpos-lastpos)) : ("m"+(handle.grpos-lastpos)+","+(lasth-h1));
+            res2 += this.vertical ? ("m"+(lasth-h1)+","+(handle.grpos-lastpos)) : ("m"+(handle.grpos-lastpos)+","+(h1-lasth));
+         }
+
+         res += this.vertical ? ("h"+ (h2-h1)) : ("v"+ (h1-h2));
+         res2 += this.vertical ? ("h"+ (h1-h2)) : ("v"+ (h2-h1));
+
+         lastpos = handle.grpos;
+         lasth = h2;
+      }
+
+      if ((res.length > 0) && real_draw)
+         axis_g.append("svg:path").attr("d", res).call(this.lineatt.func);
+
+      if ((secondShift!==0) && (res2.length>0) && real_draw)
+         axis_g.append("svg:path").attr("d", res2).call(this.lineatt.func);
+   }
+
+   /** @summary Draw axis labels */
+   TAxisPainter.prototype.drawLabels = function(axis_g, axis, w, h, handle, side, labelSize, labeloffset, tickSize, ticksPlusMinus, max_text_width) {
+      let label_color = this.get_color(axis.fLabelColor),
+          center_lbls = this.IsCenterLabels(),
+          rotate_lbls = axis.TestBit(JSROOT.EAxisBits.kLabelsVert),
+          textscale = 1, maxtextlen = 0, labelfont = null,
+          label_g = [ axis_g.append("svg:g").attr("class","axis_labels") ],
+          lbl_pos = handle.lbl_pos || handle.major,
+          firstResolve, numDraw = 0, lbl_tilt = false;
+
+      if (this.lbls_both_sides)
+         label_g.push(axis_g.append("svg:g").attr("class","axis_labels").attr("transform", this.vertical ? "translate(" + w + ",0)" : "translate(0," + (-h) + ")"));
+
+      // function called when text is drawn to analyze width, required to correctly scale all labels
+      function process_drawtext_ready(painter) {
+         let textwidth = this.result_width;
+
+         if (textwidth && ((!painter.vertical && !rotate_lbls) || (painter.vertical && rotate_lbls)) && !painter.log) {
+            let maxwidth = this.gap_before*0.45 + this.gap_after*0.45;
+            if (!this.gap_before) maxwidth = 0.9*this.gap_after; else
+            if (!this.gap_after) maxwidth = 0.9*this.gap_before;
+            textscale = Math.min(textscale, maxwidth / textwidth);
+         } else if (painter.vertical && max_text_width && this.normal_side && (max_text_width - labeloffset > 20) && (textwidth > max_text_width - labeloffset)) {
+            textscale = Math.min(textscale, (max_text_width - labeloffset) / textwidth);
+         }
+         if ((--numDraw == 0) && firstResolve)
+            firstResolve(true);
+      }
+
+      for (let lcnt = 0; lcnt < label_g.length; ++lcnt) {
+
+         if (lcnt > 0) side = -side;
+
+         let lastpos = 0, fix_coord = this.vertical ? -labeloffset*side : (labeloffset+2)*side + ticksPlusMinus*tickSize;
+
+         labelfont = new JSROOT.FontHandler(axis.fLabelFont, labelSize);
+
+         this.StartTextDrawing(labelfont, 'font', label_g[lcnt]);
+
+         for (let nmajor=0;nmajor<lbl_pos.length;++nmajor) {
+
+            let lbl = this.format(lbl_pos[nmajor], true);
+            if (lbl === null) continue;
+
+            let arg = { text: lbl, color: label_color, latex: 1, draw_g: label_g[lcnt], normal_side: (lcnt == 0) };
+
+            let pos = Math.round(this.func(lbl_pos[nmajor]));
+
+            arg.gap_before = (nmajor>0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0;
+
+            arg.gap_after = (nmajor<lbl_pos.length-1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor+1])-pos)) : 0;
+
+            if (center_lbls) {
+               let gap = arg.gap_after || arg.gap_before;
+               pos = Math.round(pos - (this.vertical ? 0.5*gap : -0.5*gap));
+               if ((pos < -5) || (pos > (this.vertical ? h : w) + 5)) continue;
+            }
+
+            maxtextlen = Math.max(maxtextlen, lbl.length);
+
+            if (this.vertical) {
+               arg.x = fix_coord;
+               arg.y = pos;
+               arg.align = rotate_lbls ? ((side<0) ? 23 : 20) : ((side<0) ? 12 : 32);
+            } else {
+               arg.x = pos;
+               arg.y = fix_coord;
+               arg.align = rotate_lbls ? ((side<0) ? 12 : 32) : ((side<0) ? 20 : 23);
+            }
+
+            if (rotate_lbls) arg.rotate = 270;
+
+            numDraw++;
+            arg.post_process = process_drawtext_ready;
+
+            this.DrawText(arg);
+
+            if (lastpos && (pos!=lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
+               let axis_step = Math.abs(pos-lastpos);
+               textscale = Math.min(textscale, 0.9*axis_step/labelSize);
+            }
+
+            lastpos = pos;
+         }
+
+         if (this.order)
+            this.DrawText({ color: label_color,
+                            x: this.vertical ? side*5 : w+5,
+                            y: this.has_obstacle ? fix_coord : (this.vertical ? -3 : -3*side),
+                            align: this.vertical ? ((side < 0) ? 30 : 10) : ( (this.has_obstacle ^ (side < 0)) ? 13 : 10 ),
+                            latex: 1,
+                            text: '#times' + this.formatExp(10, this.order),
+                            draw_g: label_g[lcnt]
+            });
+      }
+
+      return new Promise(resolve => {
+         if (numDraw === 0)
+            resolve(true);
+         else
+            firstResolve = resolve;
+      }).then(() => {
+         lbl_tilt = ((textscale > 0.01) && (textscale < 0.7) && !this.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1));
+         if (lbl_tilt) textscale *= 3;
+
+         if ((textscale > 0.01) && (textscale < 1))
+            for (let cnt = 0; cnt < label_g.length; ++cnt)
+               this.TextScaleFactor(1/textscale, label_g[cnt]);
+
+         let arr = [];
+         for (let lcnt = 0; lcnt < label_g.length; ++lcnt)
+            arr.push(this.FinishTextPromise(label_g[lcnt]));
+
+         return Promise.all(arr);
+      }).then(() => {
+
+         if (lbl_tilt)
+            label_g[0].selectAll("text").each(function() {
+               let txt = d3.select(this), tr = txt.attr("transform");
+               txt.attr("transform", tr + " rotate(25)").style("text-anchor", "start");
+            });
+
+         if (labelfont) labelSize = labelfont.size; // use real font size
+
+         return labelSize;
+      });
+
+   }
+
+   /** @summary function draws  TAxis or TGaxis object  */
+   TAxisPainter.prototype.DrawAxis = function(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width) {
 
       let axis = this.GetObject(), chOpt = "",
           is_gaxis = (axis && axis._typename === 'TGaxis'),
@@ -446,24 +626,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           scaling_size = 100, draw_lines = true,
           pad_w = this.pad_width() || 10,
           pad_h = this.pad_height() || 10,
-          resolveFunc, totalTextCallbacks = 0, totalDone = false,
-          promise = new Promise(resolve => { resolveFunc = resolve; });
-
-      let checkTextCallBack = (is_callback) => {
-          if (is_callback) totalTextCallbacks--; else totalDone = true;
-          if (!totalTextCallbacks && totalDone && resolveFunc) {
-            resolveFunc(true);
-            resolveFunc = null;
-         }
-      };
-
-      this.vertical = vertical;
-
-      let myXor = (a,b) => ( a && !b ) || (!a && b);
+          vertical = this.vertical,
+          swap_side = this.swap_side || false;
 
       // shift for second ticks set (if any)
-      if (!second_shift) second_shift = 0; else
-      if (this.invert_side) second_shift = -second_shift;
+      if (!secondShift) secondShift = 0; else
+      if (this.invert_side) secondShift = -secondShift;
 
       if (is_gaxis) {
          this.createAttLine({ attr: axis });
@@ -473,7 +641,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          scaling_size = (vertical ? 1.7*h : 0.6*w);
       } else {
          this.createAttLine({ color: axis.fAxisColor, width: 1, style: 1 });
-         chOpt = myXor(vertical, this.invert_side) ? "-S" : "+S";
+         chOpt = (vertical ^ this.invert_side) ? "-S" : "+S";
          tickSize = axis.fTickLength;
          scaling_size = (vertical ? pad_w : pad_h);
       }
@@ -492,13 +660,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!disable_axis_drawing && draw_lines)
          axis_g.append("svg:line")
                .attr("x1",0).attr("y1",0)
-               .attr("x2",vertical ? 0 : w)
+               .attr("x2", vertical ? 0 : w)
                .attr("y2", vertical ? h : 0)
                .call(this.lineatt.func);
 
       axis_g.attr("transform", transform || null);
 
-      let side = 1, ticks_plusminus = 0,
+      let side = 1, ticksPlusMinus = 0,
           text_scaling_size = Math.min(pad_w, pad_h),
           optionPlus = (chOpt.indexOf("+")>=0),
           optionMinus = (chOpt.indexOf("-")>=0),
@@ -514,285 +682,127 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (is_gaxis && axis.TestBit(JSROOT.EAxisBits.kTickPlus)) optionPlus = true;
       if (is_gaxis && axis.TestBit(JSROOT.EAxisBits.kTickMinus)) optionMinus = true;
 
-      if (optionPlus && optionMinus) { side = 1; ticks_plusminus = 1; } else
-      if (optionMinus) { side = myXor(reverse,vertical) ? 1 : -1; } else
-      if (optionPlus) { side = myXor(reverse,vertical) ? -1 : 1; }
+      if (optionPlus && optionMinus) { side = 1; ticksPlusMinus = 1; } else
+      if (optionMinus) { side = (swap_side ^ vertical) ? 1 : -1; } else
+      if (optionPlus) { side = (swap_side ^ vertical) ? -1 : 1; }
 
       tickSize = Math.round((optionSize ? tickSize : 0.03) * scaling_size);
-
       if (this.max_tick_size && (tickSize > this.max_tick_size)) tickSize = this.max_tick_size;
-
-      this.CreateFormatFuncs();
-
-      let res = "", res2 = "", lastpos = 0, lasth = 0;
 
       // first draw ticks
 
-      this.ticks = [];
-
       let handle = this.CreateTicks(false, optionNoexp, optionNoopt, optionInt);
 
-      while (handle.next(true)) {
+      this.DrawTicks(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing);
 
-         let h1 = Math.round(tickSize/4), h2 = 0;
+      let labelSize0 = Math.round( (axis.fLabelSize < 1) ? axis.fLabelSize * text_scaling_size : axis.fLabelSize),
+          labeloffset = Math.round(Math.abs(axis.fLabelOffset)*text_scaling_size);
 
-         if (handle.kind < 3)
-            h1 = Math.round(tickSize/2);
+      if ((labelSize0 <= 0) || (Math.abs(axis.fLabelOffset) > 1.1)) optionUnlab = true; // disable labels when size not specified
 
-         if (handle.kind == 1) {
-            // if not showing labels, not show large tick
-            if (!('format' in this) || (this.format(handle.tick,true)!==null)) h1 = tickSize;
-            this.ticks.push(handle.grpos); // keep graphical positions of major ticks
-         }
-
-         if (ticks_plusminus > 0) h2 = -h1; else
-         if (side < 0) { h2 = -h1; h1 = 0; } else { h2 = 0; }
-
-         if (res.length == 0) {
-            res = vertical ? ("M"+h1+","+handle.grpos) : ("M"+handle.grpos+","+(-h1));
-            res2 = vertical ? ("M"+(second_shift-h1)+","+handle.grpos) : ("M"+handle.grpos+","+(second_shift+h1));
-         } else {
-            res += vertical ? ("m"+(h1-lasth)+","+(handle.grpos-lastpos)) : ("m"+(handle.grpos-lastpos)+","+(lasth-h1));
-            res2 += vertical ? ("m"+(lasth-h1)+","+(handle.grpos-lastpos)) : ("m"+(handle.grpos-lastpos)+","+(h1-lasth));
-         }
-
-         res += vertical ? ("h"+ (h2-h1)) : ("v"+ (h1-h2));
-         res2 += vertical ? ("h"+ (h1-h2)) : ("v"+ (h2-h1));
-
-         lastpos = handle.grpos;
-         lasth = h2;
-      }
-
-      if ((res.length > 0) && !disable_axis_drawing && draw_lines)
-         axis_g.append("svg:path").attr("d", res).call(this.lineatt.func);
-
-      if ((second_shift!==0) && (res2.length>0) && !disable_axis_drawing  && draw_lines)
-         axis_g.append("svg:path").attr("d", res2).call(this.lineatt.func);
-
-      let labelsize = Math.round( (axis.fLabelSize < 1) ? axis.fLabelSize * text_scaling_size : axis.fLabelSize);
-      if ((labelsize <= 0) || (Math.abs(axis.fLabelOffset) > 1.1)) optionUnlab = true; // disable labels when size not specified
+      let labelsPromise, title_shift_x = 0, title_shift_y = 0, title_g = null, axis_rect = null, title_fontsize = 0;
 
       // draw labels (sometime on both sides)
-      if (!disable_axis_drawing && !optionUnlab) {
+      if (!disable_axis_drawing && !optionUnlab)
+         labelsPromise = this.drawLabels(axis_g, axis, w, h, handle, side, labelSize0, labeloffset, tickSize, ticksPlusMinus, max_text_width);
+      else
+         labelsPromise = Promise.resolve(labelSize0);
 
-         let label_color = this.get_color(axis.fLabelColor),
-             labeloffset = Math.round(Math.abs(axis.fLabelOffset)*text_scaling_size),
-             center_lbls = this.IsCenterLabels(),
-             rotate_lbls = axis.TestBit(JSROOT.EAxisBits.kLabelsVert),
-             textscale = 1, maxtextlen = 0, lbls_tilt = false, labelfont = null,
-             label_g = [ axis_g.append("svg:g").attr("class","axis_labels") ],
-             lbl_pos = handle.lbl_pos || handle.major,
-             total_draw_cnt = 0, all_done = 0;
+      return labelsPromise.then(labelSize => {
 
-         if (this.lbls_both_sides)
-            label_g.push(axis_g.append("svg:g").attr("class","axis_labels").attr("transform", vertical ? "translate(" + w + ",0)" : "translate(0," + (-h) + ")"));
+         if (JSROOT.settings.Zooming && !this.disable_zooming && !JSROOT.BatchMode) {
+            let r = axis_g.append("svg:rect")
+                          .attr("class", "axis_zoom")
+                          .style("opacity", "0")
+                          .style("cursor", "crosshair");
 
-         // function called when text is drawn to analyze width, required to correctly scale all labels
-         function process_drawtext_ready(painter) {
-            let textwidth = this.result_width;
-
-            if (textwidth && ((!vertical && !rotate_lbls) || (vertical && rotate_lbls)) && (painter.kind != 'log')) {
-               let maxwidth = this.gap_before*0.45 + this.gap_after*0.45;
-               if (!this.gap_before) maxwidth = 0.9*this.gap_after; else
-               if (!this.gap_after) maxwidth = 0.9*this.gap_before;
-               textscale = Math.min(textscale, maxwidth / textwidth);
-            } else if (vertical && max_text_width && this.normal_side && (max_text_width - labeloffset > 20) && (textwidth > max_text_width - labeloffset)) {
-               textscale = Math.min(textscale, (max_text_width - labeloffset) / textwidth);
-            }
-
-            total_draw_cnt--;
-            if ((all_done != 1) || (total_draw_cnt > 0)) return;
-
-            all_done = 2; // mark that function is finished
-
-            if ((textscale > 0.01) && (textscale < 0.7) && !vertical && !rotate_lbls && (maxtextlen > 5) && !painter.lbls_both_sides) {
-               lbls_tilt = true;
-               textscale *= 3;
-            }
-
-            for (let cnt = 0; cnt < this.lgs.length; ++cnt) {
-               if ((textscale > 0.01) && (textscale < 1))
-                  painter.TextScaleFactor(1/textscale, this.lgs[cnt]);
-            }
+            if (vertical)
+               r.attr("x", (side>0) ? (-2*labelSize - 3) : 3)
+                .attr("y", 0)
+                .attr("width", 2*labelSize + 3)
+                .attr("height", h)
+            else
+               r.attr("x", 0).attr("y", (side>0) ? 0 : -labelSize - 3)
+                .attr("width", w).attr("height", labelSize + 3);
          }
 
-         for (let lcnt = 0; lcnt < label_g.length; ++lcnt) {
+         this.position = 0;
 
-            if (lcnt > 0) side = -side;
+         if (!disable_axis_drawing && ('getBoundingClientRect' in axis_g.node())) {
+            let rect1 = axis_g.node().getBoundingClientRect(),
+                rect2 = this.svg_pad().node().getBoundingClientRect();
 
-            let lastpos = 0,
-                fix_coord = vertical ? -labeloffset*side : (labeloffset+2)*side + ticks_plusminus*tickSize;
-
-            labelfont = new JSROOT.FontHandler(axis.fLabelFont, labelsize);
-
-            this.StartTextDrawing(labelfont, 'font', label_g[lcnt]);
-
-            for (let nmajor=0;nmajor<lbl_pos.length;++nmajor) {
-
-               let lbl = this.format(lbl_pos[nmajor], true);
-               if (lbl === null) continue;
-
-               let arg = { text: lbl, color: label_color, latex: 1, draw_g: label_g[lcnt], normal_side: (lcnt == 0), lgs: label_g };
-
-               let pos = Math.round(this.func(lbl_pos[nmajor]));
-
-               arg.gap_before = (nmajor>0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0;
-
-               arg.gap_after = (nmajor<lbl_pos.length-1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor+1])-pos)) : 0;
-
-               if (center_lbls) {
-                  let gap = arg.gap_after || arg.gap_before;
-                  pos = Math.round(pos - (vertical ? 0.5*gap : -0.5*gap));
-                  if ((pos < -5) || (pos > (vertical ? h : w) + 5)) continue;
-               }
-
-               maxtextlen = Math.max(maxtextlen, lbl.length);
-
-               if (vertical) {
-                  arg.x = fix_coord;
-                  arg.y = pos;
-                  arg.align = rotate_lbls ? ((side<0) ? 23 : 20) : ((side<0) ? 12 : 32);
-               } else {
-                  arg.x = pos;
-                  arg.y = fix_coord;
-                  arg.align = rotate_lbls ? ((side<0) ? 12 : 32) : ((side<0) ? 20 : 23);
-               }
-
-               if (rotate_lbls) arg.rotate = 270;
-
-               arg.post_process = process_drawtext_ready;
-
-               total_draw_cnt++;
-               this.DrawText(arg);
-
-               if (lastpos && (pos!=lastpos) && ((vertical && !rotate_lbls) || (!vertical && rotate_lbls))) {
-                  let axis_step = Math.abs(pos-lastpos);
-                  textscale = Math.min(textscale, 0.9*axis_step/labelsize);
-               }
-
-               lastpos = pos;
-            }
-
-            if (this.order)
-               this.DrawText({ color: label_color,
-                               x: vertical ? side*5 : w+5,
-                               y: this.has_obstacle ? fix_coord : (vertical ? -3 : -3*side),
-                               align: vertical ? ((side<0) ? 30 : 10) : ( myXor(this.has_obstacle, (side<0)) ? 13 : 10 ),
-                               latex: 1,
-                               text: '#times' + this.format10Exp(this.order),
-                               draw_g: label_g[lcnt]
-               });
+            this.position = rect1.left - rect2.left; // use to control left position of Y scale
          }
 
-         all_done = 1;
+         if (!axis.fTitle || disable_axis_drawing) return true;
 
-         totalTextCallbacks += label_g.length;
-         for (let lcnt = 0; lcnt < label_g.length; ++lcnt)
-            this.FinishTextDrawing(label_g[lcnt], () => {
-               if (lbls_tilt)
-                  label_g[lcnt].selectAll("text").each(function() {
-                     let txt = d3.select(this), tr = txt.attr("transform");
-                     txt.attr("transform", tr + " rotate(25)").style("text-anchor", "start");
-                  });
+         title_g = axis_g.append("svg:g").attr("class", "axis_title");
+         title_fontsize = (axis.fTitleSize >= 1) ? axis.fTitleSize : Math.round(axis.fTitleSize * text_scaling_size);
 
-               checkTextCallBack(true);
-            });
-
-         if (label_g.length > 1) side = -side;
-
-         if (labelfont) labelsize = labelfont.size; // use real font size
-      }
-
-      if (JSROOT.settings.Zooming && !this.disable_zooming && !JSROOT.BatchMode) {
-         let r = axis_g.append("svg:rect")
-                       .attr("class", "axis_zoom")
-                       .style("opacity", "0")
-                       .style("cursor", "crosshair");
-
-         if (vertical)
-            r.attr("x", (side>0) ? (-2*labelsize - 3) : 3)
-             .attr("y", 0)
-             .attr("width", 2*labelsize + 3)
-             .attr("height", h)
-         else
-            r.attr("x", 0).attr("y", (side>0) ? 0 : -labelsize - 3)
-             .attr("width", w).attr("height", labelsize + 3);
-      }
-
-      if ((axis.fTitle.length > 0) && !disable_axis_drawing) {
-         let title_g = axis_g.append("svg:g").attr("class", "axis_title"),
-             title_fontsize = (axis.fTitleSize >= 1) ? axis.fTitleSize : Math.round(axis.fTitleSize * text_scaling_size),
-             title_offest_k = 1.6*(axis.fTitleSize<1 ? axis.fTitleSize : axis.fTitleSize/(this.pad_height("") || 10)),
+         let title_offest_k = 1.6*(axis.fTitleSize<1 ? axis.fTitleSize : axis.fTitleSize/(this.canv_painter().pad_height() || 10)),
              center = axis.TestBit(JSROOT.EAxisBits.kCenterTitle),
+             opposite = axis.TestBit(JSROOT.EAxisBits.kOppositeTitle),
              rotate = axis.TestBit(JSROOT.EAxisBits.kRotateTitle) ? -1 : 1,
-             title_color = this.get_color(is_gaxis ? axis.fTextColor : axis.fTitleColor),
-             shift_x = 0, shift_y = 0;
+             title_color = this.get_color(is_gaxis ? axis.fTextColor : axis.fTitleColor);
 
          this.StartTextDrawing(axis.fTitleFont, title_fontsize, title_g);
 
-         let myxor = ((rotate<0) && !reverse) || ((rotate>=0) && reverse);
+         let xor_reverse = swap_side ^ opposite, myxor = (rotate < 0) ^ xor_reverse;
+
+         this.title_align = center ? "middle" : (myxor ? "begin" : "end");
 
          if (vertical) {
             title_offest_k *= -side*pad_w;
 
-            shift_x = Math.round(title_offest_k*axis.fTitleOffset);
+            title_shift_x = Math.round(title_offest_k*axis.fTitleOffset);
 
             if ((this.name == "zaxis") && is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
                // special handling for color palette labels - draw them always on right side
                let rect = axis_g.node().getBoundingClientRect();
-               if (shift_x < rect.width - tickSize) shift_x = Math.round(rect.width - tickSize);
+               if (title_shift_x < rect.width - tickSize) title_shift_x = Math.round(rect.width - tickSize);
             }
 
-            shift_y = Math.round(center ? h/2 : (reverse ? h : 0));
+            title_shift_y = Math.round(center ? h/2 : (xor_reverse ? h : 0));
 
-            this.DrawText({ align: (center ? "middle" : (myxor ? "begin" : "end" )) + ";middle",
+            this.DrawText({ align: this.title_align+";middle",
                             rotate: (rotate<0) ? 90 : 270,
                             text: axis.fTitle, color: title_color, draw_g: title_g });
          } else {
             title_offest_k *= side*pad_h;
 
-            shift_x = Math.round(center ? w/2 : (reverse ? 0 : w));
-            shift_y = Math.round(title_offest_k*axis.fTitleOffset);
-            this.DrawText({ align: (center ? 'middle' : (myxor ? 'begin' : 'end')) + ";middle",
+            title_shift_x = Math.round(center ? w/2 : (xor_reverse ? 0 : w));
+            title_shift_y = Math.round(title_offest_k*axis.fTitleOffset);
+            this.DrawText({ align: this.title_align+";middle",
                             rotate: (rotate<0) ? 180 : 0,
                             text: axis.fTitle, color: title_color, draw_g: title_g });
          }
 
-         let axis_rect = null;
          if (vertical && (axis.fTitleOffset == 0) && ('getBoundingClientRect' in axis_g.node()))
             axis_rect = axis_g.node().getBoundingClientRect();
 
-         totalTextCallbacks++;
-         this.FinishTextDrawing(title_g, () => {
-            if (axis_rect) {
-               let title_rect = title_g.node().getBoundingClientRect();
-               shift_x = (side>0) ? Math.round(axis_rect.left - title_rect.right - title_fontsize*0.3) :
-                                    Math.round(axis_rect.right - title_rect.left + title_fontsize*0.3);
-            }
+         this.addTitleDrag(title_g, vertical, title_offest_k, swap_side, vertical ? h : w);
 
-            title_g.attr('transform', 'translate(' + shift_x + ',' + shift_y +  ')')
-                   .property('shift_x', shift_x)
-                   .property('shift_y', shift_y);
+         return this.FinishTextPromise(title_g);
 
-            checkTextCallBack(true);
-         });
+      }).then(() => {
 
+         if (!title_g) return true;
 
-         this.AddTitleDrag(title_g, vertical, title_offest_k, reverse, vertical ? h : w);
-      }
+         if (axis_rect) {
+            let title_rect = title_g.node().getBoundingClientRect();
+            title_shift_x = (side > 0) ? Math.round(axis_rect.left - title_rect.right - title_fontsize*0.3) :
+                                         Math.round(axis_rect.right - title_rect.left + title_fontsize*0.3);
+         }
 
-      this.position = 0;
+         title_g.attr('transform', 'translate(' + title_shift_x + ',' + title_shift_y + ')')
+                .property('shift_x', title_shift_x)
+                .property('shift_y', title_shift_y);
 
-      if (!disable_axis_drawing && ('getBoundingClientRect' in axis_g.node())) {
-         let rect1 = axis_g.node().getBoundingClientRect(),
-             rect2 = this.svg_pad().node().getBoundingClientRect();
+         return true;
 
-         this.position = rect1.left - rect2.left; // use to control left position of Y scale
-      }
+      });
 
-      checkTextCallBack(false);
-
-      return promise;
    }
 
    TAxisPainter.prototype.Redraw = function() {
@@ -804,49 +814,26 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           y2 = this.AxisToSvg("y", gaxis.fY2),
           w = x2 - x1, h = y1 - y2,
           vertical = Math.abs(w) < Math.abs(h),
-          func = null, reverse = false, kind = "normal",
-          min = gaxis.fWmin, max = gaxis.fWmax,
-          domain_min = min, domain_max = max;
+          sz = vertical ? h : w,
+          reverse = false,
+          min = gaxis.fWmin, max = gaxis.fWmax;
 
-      if (gaxis.fChopt.indexOf("t")>=0) {
-         func = d3.scaleTime();
-         kind = "time";
-         this.toffset = jsrp.getTimeOffset(gaxis);
-         domain_min = new Date(this.toffset + min*1000);
-         domain_max = new Date(this.toffset + max*1000);
-      } else if (gaxis.fChopt.indexOf("G")>=0) {
-         func = d3.scaleLog();
-         kind = "log";
-      } else {
-         func = d3.scaleLinear();
-         kind = "normal";
+      if (sz < 0) {
+         reverse = true;
+         sz = -sz;
+         if (vertical) y2 = y1; else x1 = x2;
       }
 
-      func.domain([domain_min, domain_max]);
-
-      if (vertical) {
-         if (h > 0) {
-            func.range([h,0]);
-         } else {
-            let d = y1; y1 = y2; y2 = d;
-            h = -h; reverse = true;
-            func.range([0,h]);
-         }
-      } else {
-         if (w > 0) {
-            func.range([0,w]);
-         } else {
-            let d = x1; x1 = x2; x2 = d;
-            w = -w; reverse = true;
-            func.range([w,0]);
-         }
-      }
-
-      this.SetAxisConfig(vertical ? "yaxis" : "xaxis", kind, func, min, max, min, max);
+      this.ConfigureAxis(vertical ? "yaxis" : "xaxis", min, max, min, max, vertical, [0, sz], {
+         time_scale: gaxis.fChopt.indexOf("t") >= 0,
+         log: (gaxis.fChopt.indexOf("G") >= 0) ? 1 : 0,
+         reverse: reverse,
+         swap_side: reverse
+      });
 
       this.CreateG();
 
-      return this.DrawAxis(vertical, this.draw_g, w, h, "translate(" + x1 + "," + y2 +")", reverse);
+      return this.DrawAxis(this.draw_g, Math.abs(w), Math.abs(h), "translate(" + x1 + "," + y2 +")");
    }
 
    let drawGaxis = (divid, obj /*, opt*/) => {
@@ -907,8 +894,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.zoom_kind = 0;
       this.mode3d = false;
       this.shrink_frame_left = 0.;
-      this.x_kind = 'normal'; // 'normal', 'log', 'time', 'labels'
-      this.y_kind = 'normal'; // 'normal', 'log', 'time', 'labels'
       this.xmin = this.xmax = 0; // no scale specified, wait for objects drawing
       this.ymin = this.ymax = 0; // no scale specified, wait for objects drawing
       this.ranges_set = false;
@@ -921,6 +906,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Returns frame painter - object itself */
    TFramePainter.prototype.frame_painter = function() { return this; }
+
+   /** @summary Returns frame or sub-objects, used in GED editor */
+   TFramePainter.prototype.GetObject = function(place) {
+      if (place === "xaxis") return this.xaxis;
+      if (place === "yaxis") return this.yaxis;
+      return JSROOT.ObjectPainter.prototype.GetObject.call(this);
+   }
 
    /** @summary Set active flag for frame - can block some events
     * @private */
@@ -957,7 +949,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
-   /** @summary Rcalculate frame ranges using specified projection */
+   /** @summary Rcalculate frame ranges using specified projection functions */
    TFramePainter.prototype.RecalculateRange = function(Proj) {
       this.projection = Proj || 0;
 
@@ -1083,11 +1075,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Create x,y objects which maps user coordinates into pixels
      * @desc While only first painter really need such object, all others just reuse it
      * following functions are introduced
-     *     this.GetBin[X/Y]  return bin coordinate
-     *     this.Convert[X/Y]  converts root value in JS date when date scale is used
-     *     this.[x,y]  these are d3.scale objects
+     *    this.GetBin[X/Y]  return bin coordinate
+     *    this.[x,y]  these are d3.scale objects
      *    this.gr[x,y]  converts root scale into graphical value
-     *    this.Revert[X/Y]  converts graphical coordinates to user coordinates
      * @private */
    TFramePainter.prototype.CreateXY = function(opts) {
 
@@ -1099,7 +1089,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.reverse_x = opts.reverse_x || false;
       this.reverse_y = opts.reverse_y || false;
 
-      this.logx = this.logy = false;
+      this.logx = this.logy = 0;
 
       let w = this.frame_width(), h = this.frame_height(), pad = this.root_pad();
 
@@ -1114,7 +1104,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (log_scale && (this.scale_ymax > 0))
             this.scale_ymax = Math.exp(Math.log(this.scale_ymax)*1.1);
          else
-            this.scale_ymax += (this.scale_ymax - this.scale_ymin) * 0.1;
+            this.scale_ymax += (this.scale_ymax - this.scale_ymin)*0.1;
       }
 
       if (opts.check_pad_range) {
@@ -1138,7 +1128,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       }
 
-      if ((this.zoom_ymin == this.zoom_ymax) && (opts.zoom_ymin != opts.zoom_ymax) && !this.zoom_changed_interactive) {
+      if ((this.zoom_ymin == this.zoom_ymax) && (opts.zoom_ymin != opts.zoom_ymax) && !this.zoomChangedInteractive("y")) {
          this.zoom_ymin = opts.zoom_ymin;
          this.zoom_ymax = opts.zoom_ymax;
       }
@@ -1156,104 +1146,30 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // projection should be assigned
       this.RecalculateRange(opts.Proj);
 
-      if (this.xaxis.fTimeDisplay) {
-         this.x_kind = 'time';
-         this.timeoffsetx = jsrp.getTimeOffset(this.xaxis);
-         this.ConvertX = function(x) { return new Date(this.timeoffsetx + x*1000); };
-         this.RevertX = function(grx) { return (this.x.invert(grx) - this.timeoffsetx) / 1000; };
-      } else {
-         this.x_kind = !this.xaxis.fLabels ? 'normal' : 'labels';
-         this.ConvertX = function(x) { return x; };
-         this.RevertX = function(grx) { return this.x.invert(grx); };
-      }
+      this.x_handle = new TAxisPainter(this.xaxis, true);
+      this.x_handle.SetDivId(this.divid, -1);
+      this.x_handle.pad_name = this.pad_name;
 
-      if (this.x_kind == 'time') {
-         this.x = d3.scaleTime();
-      } else if (this.swap_xy ? pad.fLogy : pad.fLogx) {
-         this.logx = true;
+      this.x_handle.ConfigureAxis("xaxis", this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0,h] : [0,w],
+                                      { reverse: this.reverse_x,
+                                        log: this.swap_xy ? pad.fLogy : pad.fLogx,
+                                        logcheckmin: this.swap_xy,
+                                        logminfactor: 0.0001 });
 
-         if (this.scale_xmax <= 0) this.scale_xmax = 0;
+      this.x_handle.AssignFrameMembers(this,"x");
 
-         if ((this.scale_xmin <= 0) && this.xaxis && !this.swap_xy)
-            for (let i=0;i<this.xaxis.fNbins;++i) {
-               this.scale_xmin = Math.max(this.scale_xmin, this.xaxis.GetBinLowEdge(i+1));
-               if (this.scale_xmin>0) break;
-            }
+      this.y_handle = new TAxisPainter(this.yaxis, true);
+      this.y_handle.SetDivId(this.divid, -1);
+      this.y_handle.pad_name = this.pad_name;
 
-         if ((this.scale_xmin <= 0) || (this.scale_xmin >= this.scale_xmax))
-            this.scale_xmin = this.scale_xmax * 0.0001;
+      this.y_handle.ConfigureAxis("yaxis", this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0,w] : [0,h],
+                                      { reverse: this.reverse_y,
+                                        log: this.swap_xy ? pad.fLogx : pad.fLogy,
+                                        logcheckmin: (opts.ndim < 2) || this.swap_xy,
+                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.ymax) ? 0.3 * opts.ymin_nz : 0,
+                                        logminfactor: 3e-4 });
 
-         this.x = d3.scaleLog();
-      } else {
-         this.x = d3.scaleLinear();
-      }
-
-      let gr_range_x = this.reverse_x ? [ w, 0 ] : [ 0, w ],
-          gr_range_y = this.reverse_y ? [ 0, h ] : [ h, 0 ];
-
-      this.x.domain([this.ConvertX(this.scale_xmin), this.ConvertX(this.scale_xmax)])
-            .range(this.swap_xy ? gr_range_y : gr_range_x);
-
-      if (this.x_kind == 'time') {
-         // we emulate scale functionality
-         this.grx = function(val) { return this.x(this.ConvertX(val)); }
-      } else if (this.logx) {
-         this.grx = function(val) { return (val < this.scale_xmin) ? (this.swap_xy ? this.x.range()[0]+5 : -5) : this.x(val); }
-      } else {
-         this.grx = this.x;
-      }
-
-      if (this.yaxis.fTimeDisplay) {
-         this.y_kind = 'time';
-         this.timeoffsety = jsrp.getTimeOffset(this.yaxis);
-         this.ConvertY = function(y) { return new Date(this.timeoffsety + y*1000); };
-         this.RevertY = function(gry) { return (this.y.invert(gry) - this.timeoffsety) / 1000; };
-      } else {
-         this.y_kind = !this.yaxis.fLabels ? 'normal' : 'labels';
-         this.ConvertY = function(y) { return y; };
-         this.RevertY = function(gry) { return this.y.invert(gry); };
-      }
-
-      if (this.swap_xy ? pad.fLogx : pad.fLogy) {
-         this.logy = true;
-         if (this.scale_ymax <= 0)
-            this.scale_ymax = 1;
-         else
-         if ((this.zoom_ymin === this.zoom_ymax) && (opts.ndim==1) && this.draw_content)
-            this.scale_ymax*=1.8;
-
-         // this is for 2/3 dim histograms - find first non-negative bin
-         if ((this.scale_ymin <= 0) && this.yaxis && (opts.ndim>1) && !this.swap_xy)
-            for (let i=0;i<this.yaxis.fNbins;++i) {
-               this.scale_ymin = Math.max(this.scale_ymin, this.yaxis.GetBinLowEdge(i+1));
-               if (this.scale_ymin>0) break;
-            }
-
-         if ((this.scale_ymin <= 0) && (opts.ymin_nz) && (opts.ymin_nz < 1e-2*this.ymax))
-            this.scale_ymin = 0.3 * opts.ymin_nz;
-
-         if ((this.scale_ymin <= 0) || (this.scale_ymin >= this.scale_ymax))
-            this.scale_ymin = 3e-4 * this.scale_ymax;
-
-         this.y = d3.scaleLog();
-      } else if (this.y_kind == 'time') {
-         this.y = d3.scaleTime();
-      } else {
-         this.y = d3.scaleLinear()
-      }
-
-      this.y.domain([ this.ConvertY(this.scale_ymin), this.ConvertY(this.scale_ymax) ])
-            .range(this.swap_xy ? gr_range_x : gr_range_y);
-
-      if (this.y_kind == 'time') {
-         // we emulate scale functionality
-         this.gry = function(val) { return this.y(this.ConvertY(val)); }
-      } else if (this.logy) {
-         // make protection for log
-         this.gry = function(val) { return (val < this.scale_ymin) ? (this.swap_xy ? -5 : this.y.range()[0]+5) : this.y(val); }
-      } else {
-         this.gry = this.y;
-      }
+      this.y_handle.AssignFrameMembers(this,"y");
 
       this.SetRootPadRange(pad);
    }
@@ -1268,10 +1184,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          pad.fUxmin = pad.fUymin = -0.9;
          pad.fUxmax = pad.fUymax = 0.9;
       } else {
-         pad.fLogx = (this.swap_xy ? this.logy : this.logx) ? 1 : 0;
+         pad.fLogx = this.swap_xy ? this.logy : this.logx;
          pad.fUxmin = pad.fLogx ? Math.log10(this.scale_xmin) : this.scale_xmin;
          pad.fUxmax = pad.fLogx ? Math.log10(this.scale_xmax) : this.scale_xmax;
-         pad.fLogy = (this.swap_xy ? this.logx : this.logy) ? 1 : 0;
+         pad.fLogy = this.swap_xy ? this.logx : this.logy;
          pad.fUymin = pad.fLogy ? Math.log10(this.scale_ymin) : this.scale_ymin;
          pad.fUymax = pad.fLogy ? Math.log10(this.scale_ymax) : this.scale_ymax;
       }
@@ -1349,21 +1265,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Converts "raw" axis value into text */
    TFramePainter.prototype.AxisAsText = function(axis, value) {
-      if (axis == "x") {
-         if (this.x_kind == 'time')
-            value = this.ConvertX(value);
-         if (this.x_handle && ('format' in this.x_handle))
-            return this.x_handle.format(value, false, JSROOT.settings.XValuesFormat);
-      } else if (axis == "y") {
-         if (this.y_kind == 'time')
-            value = this.ConvertY(value);
-         if (this.y_handle && ('format' in this.y_handle))
-            return this.y_handle.format(value, false, false, JSROOT.settings.YValuesFormat);
-      } else {
-         if (this.z_handle && ('format' in this.z_handle))
-            return this.z_handle.format(value, false, false, JSROOT.settings.ZValuesFormat);
-      }
+      let handle = this[axis+"_handle"];
+
+      if (handle)
+         return handle.AxisAsText(value, JSROOT.settings[axis.toUpperCase() + "ValuesFormat"]);
 
       return value.toPrecision(4);
    }
@@ -1371,9 +1278,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary draw axes, return Promise which ready when drawing is completed  */
    TFramePainter.prototype.DrawAxes = function(shrink_forbidden, disable_axis_draw, AxisPos, has_x_obstacle) {
 
-      this.CleanupAxes();
+      this.CleanAxesDrawings();
 
-      if ((this.xmin==this.xmax) || (this.ymin==this.ymax)) return Promise.resolve(false);
+      if ((this.xmin==this.xmax) || (this.ymin==this.ymax))
+         return Promise.resolve(false);
 
       if (AxisPos === undefined) AxisPos = 0;
 
@@ -1382,24 +1290,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           h = this.frame_height(),
           pad = this.root_pad();
 
-      this.x_handle = new TAxisPainter(this.xaxis, true);
-      this.x_handle.SetDivId(this.divid, -1);
-      this.x_handle.pad_name = this.pad_name;
-
-      this.x_handle.SetAxisConfig("xaxis",
-                                  (this.logx && (this.x_kind !== "time")) ? "log" : this.x_kind,
-                                  this.x, this.xmin, this.xmax, this.scale_xmin, this.scale_xmax);
       this.x_handle.invert_side = (AxisPos >= 10);
       this.x_handle.lbls_both_sides = !this.x_handle.invert_side && (pad.fTickx > 1); // labels on both sides
       this.x_handle.has_obstacle = has_x_obstacle;
 
-      this.y_handle = new TAxisPainter(this.yaxis, true);
-      this.y_handle.SetDivId(this.divid, -1);
-      this.y_handle.pad_name = this.pad_name;
-
-      this.y_handle.SetAxisConfig("yaxis",
-                                  (this.logy && this.y_kind !== "time") ? "log" : this.y_kind,
-                                  this.y, this.ymin, this.ymax, this.scale_ymin, this.scale_ymax);
       this.y_handle.invert_side = ((AxisPos % 10) === 1);
       this.y_handle.lbls_both_sides = !this.y_handle.invert_side && (pad.fTicky > 1); // labels on both sides
 
@@ -1412,13 +1306,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (!disable_axis_draw) {
-         let promise1 = draw_horiz.DrawAxis(false, layer, w, h,
+         let promise1 = draw_horiz.DrawAxis(layer, w, h,
                                             draw_horiz.invert_side ? undefined : "translate(0," + h + ")",
-                                            false, pad.fTickx ? -h : 0, disable_axis_draw);
+                                            pad.fTickx ? -h : 0, disable_axis_draw);
 
-         let promise2 = draw_vertical.DrawAxis(true, layer, w, h,
+         let promise2 = draw_vertical.DrawAxis(layer, w, h,
                                                draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
-                                               false, pad.fTicky ? w : 0, disable_axis_draw,
+                                               pad.fTicky ? w : 0, disable_axis_draw,
                                                draw_vertical.invert_side ? 0 : this.frame_x());
 
          return Promise.all([promise1, promise2]).then(() => {
@@ -1452,6 +1346,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return Promise.resolve(true);
    }
 
+   /** @summary Update frame attributes
+     * @private */
    TFramePainter.prototype.UpdateAttributes = function(force) {
       let pad = this.root_pad(),
           tframe = this.GetObject();
@@ -1470,10 +1366,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (this.fillatt === undefined) {
-         if (tframe) this.createAttFill({ attr: tframe });
-         else if (pad && pad.fFrameFillColor) this.createAttFill({ pattern: pad.fFrameFillStyle, color: pad.fFrameFillColor });
-         else if (pad) this.createAttFill({ attr: pad });
-         else this.createAttFill({ pattern: 1001, color: 0 });
+         if (tframe)
+            this.createAttFill({ attr: tframe });
+         else if (pad && pad.fFrameFillColor)
+            this.createAttFill({ pattern: pad.fFrameFillStyle, color: pad.fFrameFillColor });
+         else if (pad)
+            this.createAttFill({ attr: pad });
+         else
+            this.createAttFill({ pattern: 1001, color: 0 });
 
          // force white color for the canvas frame
          if (!tframe && this.fillatt.empty() && this.pad_painter() && this.pad_painter().iscan)
@@ -1487,7 +1387,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Function called at the end of resize of frame
-     * One should apply changes to the pad
+     * @desc One should apply changes to the pad
      * @private */
    TFramePainter.prototype.SizeChanged = function() {
 
@@ -1506,15 +1406,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
     /** @summary Remove all kinds of X/Y function for axes transformation */
    TFramePainter.prototype.CleanXY = function() {
-      delete this.x; delete this.grx;
-      delete this.ConvertX; delete this.RevertX;
-      delete this.y; delete this.gry;
-      delete this.ConvertY; delete this.RevertY;
-      delete this.z; delete this.grz;
-   }
+      delete this.grx;
+      delete this.gry;
+      delete this.grz;
 
-   TFramePainter.prototype.CleanupAxes = function() {
-      // remove all axes drawings
       if (this.x_handle) {
          this.x_handle.Cleanup();
          delete this.x_handle;
@@ -1529,6 +1424,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.z_handle.Cleanup();
          delete this.z_handle;
       }
+   }
+
+   TFramePainter.prototype.CleanAxesDrawings = function() {
+      // remove all axes drawings
+      if (this.x_handle) this.x_handle.RemoveDrawG();
+      if (this.y_handle) this.y_handle.RemoveDrawG();
+      if (this.z_handle) this.z_handle.RemoveDrawG();
+
       if (this.draw_g) {
          this.draw_g.select(".grid_layer").selectAll("*").remove();
          this.draw_g.select(".axis_layer").selectAll("*").remove();
@@ -1543,7 +1446,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (typeof this.Create3DScene === 'function')
          this.Create3DScene(-1);
 
-      this.CleanupAxes();
+      this.CleanAxesDrawings();
       this.CleanXY();
 
       this.ranges_set = false;
@@ -1597,7 +1500,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    TFramePainter.prototype.Redraw = function(/* reason */) {
-
       let pp = this.pad_painter();
       if (pp) pp.frame_painter_ref = this; // keep direct reference to the frame painter
 
@@ -1686,22 +1588,34 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
-   TFramePainter.prototype.ToggleLog = function(axis) {
+   /** @summary Change log state of specified axis
+     * @param {number} value - 0 (linear), 1 (log) or 2 (log2) */
+   TFramePainter.prototype.ChangeLog = function(axis, value) {
       let pad = this.root_pad();
       if (!pad) return;
 
+      let name = "fLog" + axis;
+
       // do not allow log scale for labels
-      if (!pad["fLog" + axis]) {
-         let kind = this[axis+"_kind"];
-         if (this.swap_xy && axis==="x") kind = this.y_kind; else
-         if (this.swap_xy && axis==="y") kind = this.x_kind;
-         if (kind === "labels") return;
+      if (!pad[name]) {
+         if (this.swap_xy && axis==="x") axis = "y"; else
+         if (this.swap_xy && axis==="y") axis = "x";
+         let handle = this[axis + "_handle"];
+         if (handle && (handle.kind === "labels")) return;
       }
 
+      if ((value == "toggle") || (value === undefined))
+         value = pad[name] ? 0 : 1;
+
       // directly change attribute in the pad
-      pad["fLog" + axis] = pad["fLog" + axis] ? 0 : 1;
+      pad[name] = value;
 
       this.InteractiveRedraw("pad", "log"+axis);
+   }
+
+   /** @summary Toggle log state on the specified axis */
+   TFramePainter.prototype.ToggleLog = function(axis) {
+      this.ChangeLog(axis, "toggle");
    }
 
    /** @summary Fill context menu for the frame
@@ -1714,11 +1628,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let faxis = obj || this[kind+'axis'];
          menu.add("header: " + kind.toUpperCase() + " axis");
          menu.add("Unzoom", this.Unzoom.bind(this, kind));
-         menu.addchk(pad["fLog" + kind], "SetLog"+kind, this.ToggleLog.bind(this, kind) );
+         menu.add("sub:SetLog "+kind);
+         menu.addchk(pad["fLog" + kind] == 0, "linear", "0", arg => this.ChangeLog(kind, parseInt(arg)));
+         menu.addchk(pad["fLog" + kind] == 1, "log", "1", arg => this.ChangeLog(kind, parseInt(arg)));
+         menu.addchk(pad["fLog" + kind] == 2, "log2", "2", arg => this.ChangeLog(kind, parseInt(arg)));
+         menu.add("endsub:");
          menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kMoreLogLabels), "More log",
-               function() { faxis.InvertBit(JSROOT.EAxisBits.kMoreLogLabels); this.RedrawPad(); });
+               () => { faxis.InvertBit(JSROOT.EAxisBits.kMoreLogLabels); this.RedrawPad(); });
          menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kNoExponent), "No exponent",
-               function() { faxis.InvertBit(JSROOT.EAxisBits.kNoExponent); this.RedrawPad(); });
+               () => { faxis.InvertBit(JSROOT.EAxisBits.kNoExponent); this.RedrawPad(); });
 
          if ((kind === "z") && main && main.options && main.options.Zscale)
             if (typeof main.FillPaletteMenu == 'function') main.FillPaletteMenu(menu);
@@ -1892,27 +1810,57 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Checks if specified axes zoom */
    TFramePainter.prototype.IsAxisZoomed = function(axis) { return this['zoom_'+axis+'min'] !== this['zoom_'+axis+'max']; }
 
+
+   /** @summary Unzoom speicied axes */
    TFramePainter.prototype.Unzoom = function(dox, doy, doz) {
       if (typeof dox === 'undefined') { dox = true; doy = true; doz = true; } else
       if (typeof dox === 'string') { doz = dox.indexOf("z")>=0; doy = dox.indexOf("y")>=0; dox = dox.indexOf("x")>=0; }
-
-      let last = this.zoom_changed_interactive;
-
-      if (dox || doy || doz) this.zoom_changed_interactive = 1;
 
       let changed = this.Zoom(dox ? 0 : undefined, dox ? 0 : undefined,
                               doy ? 0 : undefined, doy ? 0 : undefined,
                               doz ? 0 : undefined, doz ? 0 : undefined);
 
-      // if unzooming has no effect, decrease counter
-      if ((dox || doy || doz) && !changed)
-         this.zoom_changed_interactive = (!isNaN(last) && (last>0)) ? last - 1 : 0;
+      if (changed && dox) this.zoomChangedInteractive("x", "unzoom");
+      if (changed && doy) this.zoomChangedInteractive("y", "unzoom");
+      if (changed && doz) this.zoomChangedInteractive("z", "unzoom");
 
       return changed;
    }
 
+   /** @summary Mark/check if zoom for specific axis was changed interactively
+     * @private */
+   TFramePainter.prototype.zoomChangedInteractive = function(axis, value) {
+      if (axis == 'reset') {
+         this.zoom_changed_x = this.zoom_changed_y = this.zoom_changed_z = undefined;
+         return;
+      }
+      if (!axis || axis == 'any')
+         return this.zoom_changed_x || this.zoom_changed_y  || this.zoom_changed_z;
+
+      if ((axis !== 'x') && (axis !== 'y') && (axis !== 'z')) return;
+
+      let fld = "zoom_changed_" + axis;
+      if (value === undefined) return this[fld];
+
+      if (value === 'unzoom') {
+         // special handling of unzoom
+         if (this[fld])
+            delete this[fld];
+         else
+            this[fld] = true;
+         return;
+      }
+
+      if (value) this[fld] = true;
+   }
+
+   /** @summary Convert graphical coordinate into axis value */
+   TFramePainter.prototype.RevertAxis = function(axis, pnt) {
+      let handle = this[axis+"_handle"];
+      return handle ? handle.RevertPoint(pnt) : 0;
+   }
+
    /** @summary Show axis status message
-   *
    * @desc method called normally when mouse enter main object element
    * @private */
    TFramePainter.prototype.ShowAxisStatus = function(axis_name, evnt) {
@@ -1927,7 +1875,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (taxis) { hint_name = taxis.fName; hint_title = taxis.fTitle || ("TAxis object for " + axis_name); }
       if (this.swap_xy) id = 1-id;
 
-      let axis_value = (axis_name=="x") ? this.RevertX(m[id]) : this.RevertY(m[id]);
+      let axis_value = this.RevertAxis(axis_name, m[id]);
 
       status_func(hint_name, hint_title, axis_name + " : " + this.AxisAsText(axis_name, axis_value), m[0]+","+m[1]);
    }
@@ -1990,13 +1938,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    TPadPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
-   /** @summary cleanup only pad itself, all child elements will be collected and cleanup separately  */
+   /** @summary Returns SVG element for the specified pad (or itself)
+    * @private */
+   TPadPainter.prototype.svg_pad = function(pad_name) {
+      if (pad_name === undefined)
+         pad_name = this.this_pad_name;
+      return JSROOT.ObjectPainter.prototype.svg_pad.call(this, pad_name);
+   }
+
+   /** @summary cleanup only pad itself, all child elements will be collected and cleanup separately */
    TPadPainter.prototype.Cleanup = function() {
 
-      for (let k=0;k<this.painters.length;++k)
+      for (let k = 0; k < this.painters.length; ++k)
          this.painters[k].Cleanup();
 
-      let svg_p = this.svg_pad(this.this_pad_name);
+      let svg_p = this.svg_pad();
       if (!svg_p.empty()) {
          svg_p.property('pad_painter', null);
          svg_p.property('mainpainter', null);
@@ -2009,12 +1965,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.painters = [];
       this.pad = null;
-      this.this_pad_name = "";
+      this.this_pad_name = undefined;
       this.has_canvas = false;
 
       jsrp.SelectActivePad({ pp: this, active: false });
 
       JSROOT.ObjectPainter.prototype.Cleanup.call(this);
+   }
+
+   /** @summary Returns frame painter inside the pad
+     * @private */
+   TPadPainter.prototype.frame_painter = function() {
+      return this.frame_painter_ref;
    }
 
    /** @summary Cleanup primitives from pad - selector lets define which painters to remove */
@@ -2066,36 +2028,38 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
-   /// Retrive different event when object selected or pad is redrawn
+   /** @summary register for pad events receiver
+     * @desc in pad painter, while pad may be drawn without canvas
+     * @private */
    TPadPainter.prototype.RegisterForPadEvents = function(receiver) {
       this.pad_events_receiver = receiver;
    }
 
-   /// method redirect call to pad events receiver, in some cases
-   TPadPainter.prototype.SelectObjectPainter = function(_painter, pos) {
-      let istoppad = (this.iscan || !this.has_canvas),
-          canp = istoppad ? this : this.canv_painter(),
-          p_p = (_painter instanceof TPadPainter) ? _painter : _painter.pad_painter();
+   /** @summary Generate pad events, normally handled by GED
+    * @desc in pad painter, while pad may be drawn without canvas
+     * @private */
+   TPadPainter.prototype.PadEvent = function(_what, _padpainter, _painter, _position, _place) {
 
-      if (pos && !istoppad)
-         this.CalcAbsolutePosition(this.svg_pad(this.this_pad_name), pos);
+      if ((_what == "select") && (typeof this.SelectActivePad == 'function'))
+         this.SelectActivePad(_padpainter, _painter, _position);
 
-      jsrp.SelectActivePad({ pp: p_p, active: true });
-
-      if (typeof canp.SelectActivePad == "function")
-         canp.SelectActivePad(p_p, _painter, pos);
-
-      if (canp.pad_events_receiver)
-         canp.pad_events_receiver({ what: "select", padpainter: p_p, painter: _painter, position: pos });
+      if (this.pad_events_receiver)
+         this.pad_events_receiver({ what: _what, padpainter:  _padpainter, painter: _painter, position: _position, place: _place });
    }
 
-   /// method redirect call to pad events receiver
-   TPadPainter.prototype.InteractiveObjectRedraw = function(_painter) {
-      let canp = (this.iscan || !this.has_canvas) ? this : this.canv_painter(),
-          pp = _painter instanceof TPadPainter ? _painter : _painter.pad_painter();
+   /** @summary method redirect call to pad events receiver */
+   TPadPainter.prototype.SelectObjectPainter = function(_painter, pos, _place) {
+      let istoppad = (this.iscan || !this.has_canvas),
+          canp = istoppad ? this : this.canv_painter();
 
-      if (canp && canp.pad_events_receiver)
-         canp.pad_events_receiver({ what: "redraw", padpainter: pp, painter: _painter });
+      if (_painter === undefined) _painter = this;
+
+      if (pos && !istoppad)
+         this.CalcAbsolutePosition(this.svg_pad(), pos);
+
+      jsrp.SelectActivePad({ pp: this, active: true });
+
+      if (canp) canp.PadEvent("select", this, _painter, pos, _place);
    }
 
    /** @summary Called by framework when pad is supposed to be active and get focus
@@ -2117,7 +2081,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!svg_rect)
          svg_rect = this.iscan ? this.svg_canvas().select(".canvas_fillrect") :
-                       this.svg_pad(this.this_pad_name).select(".root_pad_border");
+                                 this.svg_pad().select(".root_pad_border");
 
       let lineatt = this.is_active_pad ? new JSROOT.TAttLineHandler({ style: 1, width: 1, color: "red" }) : this.lineatt;
 
@@ -2172,7 +2136,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!JSROOT.BatchMode)
             frect.style("pointer-events", "visibleFill")
                  .on("dblclick", this.EnlargePad.bind(this))
-                 .on("click", this.SelectObjectPainter.bind(this, this, null))
+                 .on("click", () => this.SelectObjectPainter())
                  .on("mouseenter", this.ShowObjectStatus.bind(this));
 
          svg.append("svg:g").attr("class","primitives_layer");
@@ -2195,6 +2159,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (this._fixed_size) {
             render_to.style("overflow","auto");
             rect = { width: this.pad.fCw, height: this.pad.fCh };
+            if (!rect.width || !rect.height)
+               rect = this.get_visible_rect(render_to);
          } else {
             rect = this.check_main_resize(2, new_size, factor);
          }
@@ -2285,8 +2251,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.ShowButtons();
    }
 
+   /** @summary Create main SVG element for pad
+     * @returns true when pad is displayed and all its items should be redrawn */
    TPadPainter.prototype.CreatePadSvg = function(only_resize) {
-      // returns true when pad is displayed and all its items should be redrawn
 
       if (!this.has_canvas) {
          this.CreateCanvasSvg(only_resize ? 2 : 0);
@@ -2307,10 +2274,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (pad_enlarged === this.pad) { w = width; h = height; x = y = 0; }
 
       if (only_resize) {
-         svg_pad = this.svg_pad(this.this_pad_name);
+         svg_pad = this.svg_pad();
          svg_rect = svg_pad.select(".root_pad_border");
          if (!JSROOT.BatchMode)
-            btns = this.svg_layer("btns_layer", this.this_pad_name);
+            btns = this.svg_layer("btns_layer");
       } else {
          svg_pad = svg_can.select(".primitives_layer")
              .append("svg:svg") // here was g before, svg used to blend all drawin outside
@@ -2333,7 +2300,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!JSROOT.BatchMode)
             svg_rect.attr("pointer-events", "visibleFill") // get events also for not visible rect
                     .on("dblclick", this.EnlargePad.bind(this))
-                    .on("click", this.SelectObjectPainter.bind(this, this, null))
+                    .on("click", () => this.SelectObjectPainter())
                     .on("mouseenter", this.ShowObjectStatus.bind(this));
       }
 
@@ -2363,10 +2330,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this._fast_drawing = JSROOT.settings.SmallPad && ((w < JSROOT.settings.SmallPad.width) || (h < JSROOT.settings.SmallPad.height));
 
-      if (svg_pad.property('can3d') === 1)
-         // special case of 3D canvas overlay
-          this.select_main()
-              .select(".draw3d_" + this.this_pad_name)
+       // special case of 3D canvas overlay
+      if (svg_pad.property('can3d') === JSROOT.constants.Embed3D.Overlay)
+          this.select_main().select(".draw3d_" + this.this_pad_name)
               .style('display', pad_visible ? '' : 'none');
 
       if (this.AlignBtns && btns)
@@ -2461,7 +2427,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return null;
    }
 
-   /** Return true if any objects beside sub-pads exists in the pad */
+   /** @summary Return true if any objects beside sub-pads exists in the pad */
    TPadPainter.prototype.HasObjectsToDraw = function() {
 
       if (!this.pad || !this.pad.fPrimitives) return false;
@@ -2472,9 +2438,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return false;
    }
 
-   TPadPainter.prototype.DrawPrimitives = function(indx, callback, ppainter) {
+   /** @summary Draw pad primitives
+       @return {Promise} when drawing completed */
+   TPadPainter.prototype.DrawPrimitives = function(indx) {
 
-      if (indx===0) {
+      if (!indx) {
+         indx = 0;
          // flag used to prevent immediate pad redraw during normal drawing sequence
          this._doing_pad_draw = true;
 
@@ -2485,9 +2454,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this._num_primitives = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.arr.length : 0;
       }
 
-      if (ppainter && (typeof ppainter == 'object'))
-         ppainter._primitive = true; // mark painter as belonging to primitives
-
       if (indx >= this._num_primitives) {
          delete this._doing_pad_draw;
          if (this._start_tm) {
@@ -2497,13 +2463,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             delete this._lasttm_tm;
          }
 
-         return JSROOT.CallBack(callback);
+         return Promise.resolve();
       }
 
       // use of Promise should avoid large call-stack depth when many primitives are drawn
-      let handle_func = this.DrawPrimitives.bind(this, indx+1, callback);
+      return JSROOT.draw(this.divid, this.pad.fPrimitives.arr[indx], this.pad.fPrimitives.opt[indx]).then(ppainter=> {
+         if (ppainter && (typeof ppainter == 'object'))
+            ppainter._primitive = true; // mark painter as belonging to primitives
 
-      JSROOT.draw(this.divid, this.pad.fPrimitives.arr[indx], this.pad.fPrimitives.opt[indx]).then(handle_func);
+         return this.DrawPrimitives(indx+1);
+
+      });
    }
 
    TPadPainter.prototype.GetTooltips = function(pnt) {
@@ -2581,7 +2551,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (evnt.stopPropagation) { // this is normal event processing and not emulated jsroot event
 
          // for debug purposes keep original context menu for small region in top-left corner
-         let pos = d3.pointer(evnt, this.svg_pad(this.this_pad_name).node());
+         let pos = d3.pointer(evnt, this.svg_pad().node());
 
          if (pos && (pos.length==2) && (pos[0]>0) && (pos[0]<10) && (pos[1]>0) && pos[1]<10) return;
 
@@ -2601,6 +2571,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          });
    }
 
+   /** @summary redraw pad */
    TPadPainter.prototype.Redraw = function(reason) {
 
       // prevent redrawing
@@ -2620,23 +2591,28 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let sub = this.painters[i];
          if (showsubitems || sub.this_pad_name) sub.Redraw(reason);
       }
+
+      if (jsrp.GetActivePad() === this) {
+         let canp = this.canv_painter();
+         if (canp) canp.PadEvent("padredraw", this );
+      }
    }
 
    TPadPainter.prototype.NumDrawnSubpads = function() {
-      if (this.painters === undefined) return 0;
+      if (!this.painters) return 0;
 
       let num = 0;
 
-      for (let i = 0; i < this.painters.length; ++i) {
-         let obj = this.painters[i].GetObject();
-         if (obj && (obj._typename === "TPad")) num++;
-      }
+      for (let i = 0; i < this.painters.length; ++i)
+         if (this.painters[i] instanceof TPadPainter)
+            num++;
 
       return num;
    }
 
    TPadPainter.prototype.RedrawByResize = function() {
-      if (this.access_3d_kind() === 1) return true;
+      let elem = this.svg_pad();
+      if (!elem.empty() && elem.property('can3d') === JSROOT.constants.Embed3D.Overlay) return true;
 
       for (let i = 0; i < this.painters.length; ++i)
          if (typeof this.painters[i].RedrawByResize === 'function')
@@ -2724,147 +2700,146 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return isany;
    }
 
-   /** Function called when drawing next snapshot from the list
-     * it is also used as callback for drawing of previous snap */
-   TPadPainter.prototype.DrawNextSnap = function(lst, indx, call_back, objpainter) {
+   /** @summary Add object painter to list of primitives */
+   TPadPainter.prototype.AddObjectPainter = function(objpainter, lst, indx) {
+      if (objpainter && lst && lst[indx] && (objpainter.snapid === undefined)) {
+         // keep snap id in painter, will be used for the
+         let pi = this.painters.indexOf(objpainter);
+         if (pi<0) this.painters.push(objpainter);
+         objpainter.snapid = lst[indx].fObjectID;
+         if (objpainter.$primary && (pi > 0) && this.painters[pi-1].$secondary) {
+            this.painters[pi-1].snapid = objpainter.snapid + "#hist";
+            console.log('ASSIGN SECONDARY HIST ID', this.painters[pi-1].snapid);
+         }
+      }
+   }
 
-      if (indx === -1) {
+   /** @summary Function called when drawing next snapshot from the list
+     * it is also used as callback for drawing of previous snap */
+   TPadPainter.prototype.DrawNextSnap = function(lst, indx) {
+
+      if (indx === undefined) {
+         indx = -1;
          // flag used to prevent immediate pad redraw during first draw
          this._doing_pad_draw = true;
          this._snaps_map = {}; // to control how much snaps are drawn
          this._num_primitives = lst ? lst.length : 0;
       }
 
-      while (true) {
 
-         if (objpainter && lst && lst[indx] && (objpainter.snapid === undefined)) {
-            // keep snap id in painter, will be used for the
-            let pi = this.painters.indexOf(objpainter);
-            if (pi<0) this.painters.push(objpainter);
-            objpainter.snapid = lst[indx].fObjectID;
-            if (objpainter.$primary && (pi > 0) && this.painters[pi-1].$secondary) {
-               this.painters[pi-1].snapid = objpainter.snapid + "#hist";
-               console.log('ASSIGN SECONDARY HIST ID', this.painters[pi-1].snapid);
-            }
-         }
+      ++indx; // change to the next snap
 
-         objpainter = null;
-
-         ++indx; // change to the next snap
-
-         if (!lst || (indx >= lst.length)) {
-            delete this._doing_pad_draw;
-            delete this._snaps_map;
-            return JSROOT.CallBack(call_back, this);
-         }
-
-         let snap = lst[indx],
-             snapid = snap.fObjectID,
-             cnt = this._snaps_map[snapid];
-
-         if (cnt) cnt++; else cnt = 1;
-         this._snaps_map[snapid] = cnt; // check how many objects with same snapid drawn, use them again
-
-         // first appropriate painter for the object
-         // if same object drawn twice, two painters will exists
-         for (let k=0; k<this.painters.length; ++k) {
-            if (this.painters[k].snapid === snapid)
-               if (--cnt === 0) { objpainter = this.painters[k]; break; }
-         }
-
-         // function which should be called when drawing of next item finished
-         let draw_callback = this.DrawNextSnap.bind(this, lst, indx, call_back);
-
-         if (objpainter) {
-
-            if (snap.fKind === webSnapIds.kObject) { // object itself
-               if (objpainter.UpdateObject(snap.fSnapshot, snap.fOption)) objpainter.Redraw();
-               continue; // call next
-            }
-
-            if (snap.fKind === webSnapIds.kSVG) { // update SVG
-               if (objpainter.UpdateObject(snap.fSnapshot)) objpainter.Redraw();
-               continue; // call next
-            }
-
-            if (snap.fKind === webSnapIds.kSubPad) { // subpad
-               return objpainter.RedrawPadSnap(snap, draw_callback);
-            }
-
-            continue; // call next
-         }
-
-         // gStyle object
-         if (snap.fKind === webSnapIds.kStyle) {
-            JSROOT.extend(JSROOT.gStyle, snap.fSnapshot);
-            continue;
-         }
-
-         // list of colors
-         if (snap.fKind === webSnapIds.kColors) {
-
-            let ListOfColors = [], arr = snap.fSnapshot.fOper.split(";");
-            for (let n=0;n<arr.length;++n) {
-               let name = arr[n], p = name.indexOf(":");
-               if (p>0) {
-                  ListOfColors[parseInt(name.substr(0,p))] = "rgb(" + name.substr(p+1) + ")";
-               } else {
-                  p = name.indexOf("=");
-                  ListOfColors[parseInt(name.substr(0,p))] = "rgba(" + name.substr(p+1) + ")";
-               }
-            }
-
-            // set global list of colors
-            if (!this.options || this.options.GlobalColors)
-               jsrp.adoptRootColors(ListOfColors);
-
-            // copy existing colors and extend with new values
-            if (this.options && this.options.LocalColors)
-               this.root_colors = jsrp.extendRootColors(null, ListOfColors);
-
-            // set palette
-            if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
-               let palette = [];
-               for (let n=0;n<snap.fSnapshot.fBuf.length;++n)
-                  palette[n] = ListOfColors[Math.round(snap.fSnapshot.fBuf[n])];
-
-               this.custom_palette = new JSROOT.ColorPalette(palette);
-            }
-
-            continue;
-         }
-
-         if (snap.fKind === webSnapIds.kSubPad) { // subpad
-
-            let subpad = snap.fSnapshot;
-
-            subpad.fPrimitives = null; // clear primitives, they just because of I/O
-
-            let padpainter = new TPadPainter(subpad, false);
-            padpainter.DecodeOptions(snap.fOption);
-            padpainter.SetDivId(this.divid); // pad painter will be registered in the canvas painters list
-            padpainter.snapid = snap.fObjectID;
-
-            padpainter.CreatePadSvg();
-
-            if (padpainter.MatchObjectType("TPad") && snap.fPrimitives.length > 0)
-               padpainter.AddPadButtons();
-
-            // we select current pad, where all drawing is performed
-            let prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
-            padpainter.DrawNextSnap(snap.fPrimitives, -1, function() {
-               padpainter.CurrentPadName(prev_name);
-               draw_callback(padpainter);
-            });
-            return;
-         }
-
-         // here the case of normal drawing, will be handled in promisecan be improved
-         if ((snap.fKind === webSnapIds.kObject) || (snap.fKind === webSnapIds.kSVG))
-            return JSROOT.draw(this.divid, snap.fSnapshot, snap.fOption).then(draw_callback);
+      if (!lst || (indx >= lst.length)) {
+         delete this._doing_pad_draw;
+         delete this._snaps_map;
+         return Promise.resolve(this);
       }
+
+      let snap = lst[indx],
+          snapid = snap.fObjectID,
+          cnt = this._snaps_map[snapid],
+          objpainter = null;
+
+      if (cnt) cnt++; else cnt = 1;
+      this._snaps_map[snapid] = cnt; // check how many objects with same snapid drawn, use them again
+
+      // first appropriate painter for the object
+      // if same object drawn twice, two painters will exists
+      for (let k=0; k<this.painters.length; ++k) {
+         if (this.painters[k].snapid === snapid)
+            if (--cnt === 0) { objpainter = this.painters[k]; break; }
+      }
+
+      if (objpainter) {
+
+         if (snap.fKind === webSnapIds.kSubPad) // subpad
+            return objpainter.RedrawPadSnap(snap).then(() => this.DrawNextSnap(lst, indx));
+
+         if (snap.fKind === webSnapIds.kObject) { // object itself
+            if (objpainter.UpdateObject(snap.fSnapshot, snap.fOption)) objpainter.Redraw();
+         } else if (snap.fKind === webSnapIds.kSVG) { // update SVG
+            if (objpainter.UpdateObject(snap.fSnapshot)) objpainter.Redraw();
+         }
+
+         return this.DrawNextSnap(lst, indx); // call next
+      }
+
+      // gStyle object
+      if (snap.fKind === webSnapIds.kStyle) {
+         JSROOT.extend(JSROOT.gStyle, snap.fSnapshot);
+         return this.DrawNextSnap(lst, indx); // call next
+      }
+
+      // list of colors
+      if (snap.fKind === webSnapIds.kColors) {
+
+         let ListOfColors = [], arr = snap.fSnapshot.fOper.split(";");
+         for (let n = 0; n < arr.length; ++n) {
+            let name = arr[n], p = name.indexOf(":");
+            if (p > 0) {
+               ListOfColors[parseInt(name.substr(0,p))] = "rgb(" + name.substr(p+1) + ")";
+            } else {
+               p = name.indexOf("=");
+               ListOfColors[parseInt(name.substr(0,p))] = "rgba(" + name.substr(p+1) + ")";
+            }
+         }
+
+         // set global list of colors
+         if (!this.options || this.options.GlobalColors)
+            jsrp.adoptRootColors(ListOfColors);
+
+         // copy existing colors and extend with new values
+         if (this.options && this.options.LocalColors)
+            this.root_colors = jsrp.extendRootColors(null, ListOfColors);
+
+         // set palette
+         if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
+            let palette = [];
+            for (let n=0;n<snap.fSnapshot.fBuf.length;++n)
+               palette[n] = ListOfColors[Math.round(snap.fSnapshot.fBuf[n])];
+
+            this.custom_palette = new JSROOT.ColorPalette(palette);
+         }
+
+         return this.DrawNextSnap(lst, indx); // call next
+      }
+
+      if (snap.fKind === webSnapIds.kSubPad) { // subpad
+
+         let subpad = snap.fSnapshot;
+
+         subpad.fPrimitives = null; // clear primitives, they just because of I/O
+
+         let padpainter = new TPadPainter(subpad, false);
+         padpainter.DecodeOptions(snap.fOption);
+         padpainter.SetDivId(this.divid); // pad painter will be registered in the canvas painters list
+         padpainter.snapid = snap.fObjectID;
+
+         padpainter.CreatePadSvg();
+
+         if (padpainter.MatchObjectType("TPad") && snap.fPrimitives.length > 0)
+            padpainter.AddPadButtons();
+
+         // we select current pad, where all drawing is performed
+         let prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
+         return padpainter.DrawNextSnap(snap.fPrimitives).then(() => {
+            padpainter.CurrentPadName(prev_name);
+            return this.DrawNextSnap(lst, indx); // call next
+         });
+      }
+
+      // here the case of normal drawing, will be handled in promise
+      if ((snap.fKind === webSnapIds.kObject) || (snap.fKind === webSnapIds.kSVG))
+         return JSROOT.draw(this.divid, snap.fSnapshot, snap.fOption).then(objpainter => {
+            this.AddObjectPainter(objpainter, lst, indx);
+            return this.DrawNextSnap(lst, indx);
+         });
+
+      return this.DrawNextSnap(lst, indx);
    }
 
+
+   /** @summary Return painter with specified id */
    TPadPainter.prototype.FindSnap = function(snapid) {
 
       if (this.snapid === snapid) return this;
@@ -2874,8 +2849,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       for (let k=0;k<this.painters.length;++k) {
          let sub = this.painters[k];
 
-         if (typeof sub.FindSnap === 'function') sub = sub.FindSnap(snapid);
-         else if (sub.snapid !== snapid) sub = null;
+         if (typeof sub.FindSnap === 'function')
+            sub = sub.FindSnap(snapid);
+         else if (sub.snapid !== snapid)
+            sub = null;
 
          if (sub) return sub;
       }
@@ -2883,11 +2860,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return null;
    }
 
-   TPadPainter.prototype.RedrawPadSnap = function(snap, call_back) {
-      // for the canvas snapshot contains list of objects
-      // as first entry, graphical properties of canvas itself is provided
-      // in ROOT6 it also includes primitives, but we ignore them
-
+   /** @summary Redraw pad snap
+     * @desc Online version of drawing pad primitives
+     * for the canvas snapshot contains list of objects
+     * as first entry, graphical properties of canvas itself is provided
+     * in ROOT6 it also includes primitives, but we ignore them
+     * @returns {Promise} with pad painter when drawing completed */
+   TPadPainter.prototype.RedrawPadSnap = function(snap) {
       if (!snap || !snap.fPrimitives) return;
 
       this.is_active_pad = !!snap.fActive; // enforce boolean flag
@@ -2932,21 +2911,20 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (snap.fScripts && (typeof snap.fScripts == "string")) {
             let arg = "";
 
-            if (snap.fScripts.indexOf("load:") == 0) arg = snap.fScripts; else
-            if (snap.fScripts.indexOf("assert:") == 0) arg = snap.fScripts.substr(7);
-            if (arg) {
-               JSROOT.require(arg).then(this.DrawNextSnap.bind(this, snap.fPrimitives, -1, call_back));
-            } else {
-               console.log('Calling eval ' + snap.fScripts.length);
-               eval(snap.fScripts);
-               console.log('Calling eval done');
-               this.DrawNextSnap(snap.fPrimitives, -1, call_back);
-            }
-         } else {
-            this.DrawNextSnap(snap.fPrimitives, -1, call_back);
+            if (snap.fScripts.indexOf("load:") == 0)
+               arg = snap.fScripts;
+            else if (snap.fScripts.indexOf("assert:") == 0)
+               arg = snap.fScripts.substr(7);
+
+            if (arg)
+               return JSROOT.require(arg).then(() => this.DrawNextSnap(snap.fPrimitives));
+
+            console.log('Calling eval ' + snap.fScripts.length);
+            eval(snap.fScripts);
+            console.log('Calling eval done');
          }
 
-         return;
+         return this.DrawNextSnap(snap.fPrimitives);
       }
 
       this.UpdateObject(first); // update only object attributes
@@ -3011,7 +2989,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (!isanyfound) {
-         let svg_p = this.svg_pad(this.this_pad_name),
+         let svg_p = this.svg_pad(),
              fp = this.frame_painter();
          if (svg_p && !svg_p.empty())
             svg_p.property('mainpainter', null);
@@ -3029,26 +3007,31 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let prev_name = this.CurrentPadName(this.this_pad_name);
 
-      this.DrawNextSnap(snap.fPrimitives, -1, () => {
+      return this.DrawNextSnap(snap.fPrimitives).then(() => {
          this.CurrentPadName(prev_name);
-         JSROOT.CallBack(call_back, this);
+         if (jsrp.GetActivePad() === this) {
+            let canp = this.canv_painter();
+            if (canp) canp.PadEvent("padredraw", this);
+         }
+         return this;
       });
    }
 
-   TPadPainter.prototype.CreateImage = function(format, call_back) {
-      if (format=="pdf") {
-         // use https://github.com/MrRio/jsPDF in the future here
-         JSROOT.CallBack(call_back, btoa("dummy PDF file"));
-      } else if ((format=="png") || (format=="jpeg") || (format=="svg")) {
-         this.ProduceImage(true, format, function(res) {
-            if ((format=="svg") || !res)
-               return JSROOT.CallBack(call_back, res);
+   /** @summary Create image for the pad
+     * @returns {Promise} with image data, coded with btoa() function */
+   TPadPainter.prototype.CreateImage = function(format) {
+      // use https://github.com/MrRio/jsPDF in the future here
+      if (format=="pdf")
+         return Promise.resolve(btoa("dummy PDF file"));
+
+      if ((format=="png") || (format=="jpeg") || (format=="svg"))
+         return this.ProduceImage(true, format).then(res => {
+            if (!res || (format=="svg")) return res;
             let separ = res.indexOf("base64,");
-            JSROOT.CallBack(call_back, (separ>0) ? res.substr(separ+7) : "");
+            return (separ>0) ? res.substr(separ+7) : "";
          });
-      } else {
-         JSROOT.CallBack(call_back, "");
-      }
+
+      return Promise.resolve("");
    }
 
    /** Collects pad information for TWebCanvas, need to update different states */
@@ -3093,13 +3076,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (is_top) return JSROOT.toJSON(arg);
    }
 
+   /** @summary returns actual ranges in the pad, which can be applied to the server
+     * @private */
    TPadPainter.prototype.GetPadRanges = function(r) {
-      // function returns actual ranges in the pad, which can be applied to the server
 
       if (!r) return false;
 
-      let main = this.frame_painter_ref,
-          p = this.svg_pad(this.this_pad_name);
+      let main = this.frame_painter(),
+          p = this.svg_pad();
 
       r.ranges = main && main.ranges_set ? true : false; // indicate that ranges are assigned
 
@@ -3125,10 +3109,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!r.ranges || p.empty()) return true;
 
       // calculate user range for full pad
-      let same = (x) => { return x; },
-          exp10 = (x) => { return Math.pow(10, x); },
-          func = main.logx ? Math.log10 : same,
-          func2 = main.logx ? exp10 : same,
+      let same = x => x,
+          direct_funcs = [same, Math.log10, x => Math.log10(x)/Math.log10(2) ],
+          revert_funcs = [same, x => Math.pow(10, x), x => Math.pow(2, x)],
+          func = direct_funcs[main.logx],
+          func2 = revert_funcs[main.logx],
           k = (func(main.scale_xmax) - func(main.scale_xmin))/p.property("draw_width"),
           x1 = func(main.scale_xmin) - k*p.property("draw_x"),
           x2 = x1 + k*p.property("draw_width");
@@ -3141,8 +3126,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       r.ux1 = match( func2(x1), r.ux1, r.px2-r.px1);
       r.ux2 = match( func2(x2), r.ux2, r.px2-r.px1);
 
-      func = main.logy ? Math.log10 : same;
-      func2 = main.logy ? exp10 : same;
+      func = direct_funcs[main.logy];
+      func2 = revert_funcs[main.logy];
 
       k = (func(main.scale_ymax) - func(main.scale_ymin))/p.property("draw_height");
       let y2 = func(main.scale_ymax) + k*p.property("draw_y"),
@@ -3155,7 +3140,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    TPadPainter.prototype.ItemContextMenu = function(name) {
-       let rrr = this.svg_pad(this.this_pad_name).node().getBoundingClientRect();
+       let rrr = this.svg_pad().node().getBoundingClientRect();
        let evnt = { clientX: rrr.left+10, clientY: rrr.top + 10 };
 
        // use timeout to avoid conflict with mouse click and automatic menu close
@@ -3168,11 +3153,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           case "xaxis":
           case "yaxis":
           case "zaxis":
-             selp = this.frame_painter_ref;
+             selp = this.frame_painter();
              selkind = name[0];
              break;
           case "frame":
-             selp = this.frame_painter_ref;
+             selp = this.frame_painter();
              break;
           default: {
              let indx = parseInt(name);
@@ -3194,7 +3179,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (filename.length === 0) filename = this.iscan ? "canvas" : "pad";
          filename += "." + kind;
       }
-      this.ProduceImage(full_canvas, kind, function(imgdata) {
+      this.ProduceImage(full_canvas, kind).then(imgdata => {
          let a = document.createElement('a');
          a.download = filename;
          a.href = (kind != "svg") ? imgdata : "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(imgdata);
@@ -3204,28 +3189,28 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
-   TPadPainter.prototype.ProduceImage = function(full_canvas, file_format, call_back) {
+   /** @summary Prodce image for the pad
+     * @returns {Promise} with created image */
+   TPadPainter.prototype.ProduceImage = function(full_canvas, file_format) {
 
       let use_frame = (full_canvas === "frame");
 
-      let elem = use_frame ? this.svg_frame() : (full_canvas ? this.svg_canvas() : this.svg_pad(this.this_pad_name));
+      let elem = use_frame ? this.svg_frame() : (full_canvas ? this.svg_canvas() : this.svg_pad());
 
-      if (elem.empty()) return JSROOT.CallBack(call_back);
+      if (elem.empty()) return Promise.resolve("");
 
       let painter = (full_canvas && !use_frame) ? this.canv_painter() : this;
 
       let items = []; // keep list of replaced elements, which should be moved back at the end
 
-//      document.body.style.cursor = 'wait';
-
       if (!use_frame) // do not make transformations for the frame
       painter.ForEachPainterInPad(pp => {
 
-         let item = { prnt: pp.svg_pad(pp.this_pad_name) };
+         let item = { prnt: pp.svg_pad() };
          items.push(item);
 
          // remove buttons from each subpad
-         let btns = pp.svg_layer("btns_layer", pp.this_pad_name);
+         let btns = pp.svg_layer("btns_layer");
          item.btns_node = btns.node();
          if (item.btns_node) {
             item.btns_prnt = item.btns_node.parentNode;
@@ -3233,21 +3218,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             btns.remove();
          }
 
-         let main = pp.frame_painter_ref;
+         let main = pp.frame_painter();
          if (!main || (typeof main.Render3D !== 'function')) return;
 
          let can3d = main.access_3d_kind();
 
-         if ((can3d !== 1) && (can3d !== 2)) return;
+         if ((can3d !== JSROOT.constants.Embed3D.Overlay) && (can3d !== JSROOT.constants.Embed3D.Embed)) return;
 
-         let sz2 = main.size_for_3d(2); // get size and position of DOM element as it will be embed
+         let sz2 = main.size_for_3d(JSROOT.constants.Embed3D.Embed); // get size and position of DOM element as it will be embed
 
          let canvas = main.renderer.domElement;
          main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
          let dataUrl = canvas.toDataURL("image/png");
 
          // remove 3D drawings
-         if (can3d == 2) {
+         if (can3d === JSROOT.constants.Embed3D.Embed) {
             item.foreign = item.prnt.select("." + sz2.clname);
             item.foreign.remove();
          }
@@ -3258,9 +3243,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             item.frame_next = item.frame_node.nextSibling;
             svg_frame.remove();
          }
-
-         //var origin = main.apply_3d_size(sz3d, true);
-         //origin.remove();
 
          // add svg image
          item.img = item.prnt.insert("image",".primitives_layer")     // create image object
@@ -3281,7 +3263,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return decodeURIComponent(data);
       }
 
-      function reconstruct(res) {
+      function reconstruct() {
          for (let k=0;k<items.length;++k) {
             let item = items[k];
 
@@ -3299,8 +3281,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (item.btns_node) // reinsert buttons
                item.btns_prnt.insertBefore(item.btns_node, item.btns_next);
          }
-
-         JSROOT.CallBack(call_back, res);
       }
 
       let width = elem.property('draw_width'), height = elem.property('draw_height');
@@ -3310,28 +3290,40 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                  elem.node().innerHTML +
                  '</svg>';
 
-      if (file_format == "svg")
-         return reconstruct(svg); // return SVG file as is
+      if (jsrp.ProcessSVGWorkarounds)
+         svg = jsrp.ProcessSVGWorkarounds(svg);
+
+      svg = jsrp.CompressSVG(svg);
+
+      if (file_format == "svg") {
+         reconstruct();
+         return Promise.resolve(svg); // return SVG file as is
+      }
 
       let doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
 
       let image = new Image();
-      image.onload = function() {
-         let canvas = document.createElement('canvas');
-         canvas.width = image.width;
-         canvas.height = image.height;
-         let context = canvas.getContext('2d');
-         context.drawImage(image, 0, 0);
 
-         reconstruct(canvas.toDataURL('image/' + file_format));
-      }
+      return new Promise(resolveFunc => {
+         image.onload = function() {
+            let canvas = document.createElement('canvas');
+            canvas.width = image.width;
+            canvas.height = image.height;
+            let context = canvas.getContext('2d');
+            context.drawImage(image, 0, 0);
 
-      image.onerror = function(arg) {
-         console.log('IMAGE ERROR', arg);
-         reconstruct(null);
-      }
+            reconstruct();
+            resolveFunc(canvas.toDataURL('image/' + file_format));
+         }
 
-      image.src = 'data:image/svg+xml;base64,' + window.btoa(reEncode(doctype + svg));
+         image.onerror = function(arg) {
+            console.log('IMAGE ERROR', arg);
+            reconstruct();
+            resolveFunc(null);
+         }
+
+         image.src = 'data:image/svg+xml;base64,' + window.btoa(reEncode(doctype + svg));
+      });
    }
 
    TPadPainter.prototype.PadButtonClick = function(funcname, evnt) {
@@ -3456,7 +3448,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    TPadPainter.prototype.DrawingReady = function(res_painter) {
 
-      let main = this.frame_painter_ref;
+      let main = this.frame_painter();
 
       if (main && main.mode3d && typeof main.Render3D == 'function') main.Render3D(-2222);
 
@@ -3483,9 +3475,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (d.check("CP",true)) this.options.CreatePalette = d.partAsInt(0,0);
 
       if (d.check('WHITE')) pad.fFillColor = 0;
+      if (d.check('LOG2X')) { pad.fLogx = 2; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
       if (d.check('LOGX')) { pad.fLogx = 1; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
+      if (d.check('LOG2Y')) { pad.fLogy = 2; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
       if (d.check('LOGY')) { pad.fLogy = 1; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
+      if (d.check('LOG2Z')) pad.fLogz = 2;
       if (d.check('LOGZ')) pad.fLogz = 1;
+      if (d.check('LOG2')) pad.fLogx = pad.fLogy = pad.fLogz = 2;
       if (d.check('LOG')) pad.fLogx = pad.fLogy = pad.fLogz = 1;
       if (d.check('GRIDX')) pad.fGridx = 1;
       if (d.check('GRIDY')) pad.fGridy = 1;
@@ -3493,6 +3489,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (d.check('TICKX')) pad.fTickx = 1;
       if (d.check('TICKY')) pad.fTicky = 1;
       if (d.check('TICK')) pad.fTickx = pad.fTicky = 1;
+      if (d.check('OTX')) pad.$OTX = true;
+      if (d.check('OTY')) pad.$OTY = true;
+      if (d.check('CTX')) pad.$CTX = true;
+      if (d.check('CTY')) pad.$CTY = true;
+      if (d.check('RX')) pad.$RX = true;
+      if (d.check('RY')) pad.$RY = true;
 
       this.OptionsStore(opt);
    }
@@ -3520,14 +3522,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       jsrp.SelectActivePad({ pp: painter, active: true });
 
       // flag used to prevent immediate pad redraw during first draw
-      painter.DrawPrimitives(0, () => {
+      return painter.DrawPrimitives().then(() => {
          painter.ShowButtons();
          // we restore previous pad name
          painter.CurrentPadName(prev_name);
-         painter.DrawingReady();
+         return painter;
       });
-
-      return painter;
    }
 
    // ==========================================================================================
@@ -3645,19 +3645,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let canv = JSROOT.Create("TCanvas"),
              pad = this.root_pad(),
-             main = this.frame_painter_ref, drawopt;
+             main = this.frame_painter(), drawopt;
 
          if (kind == "X") {
             canv.fLeftMargin = pad.fLeftMargin;
             canv.fRightMargin = pad.fRightMargin;
-            canv.fLogx = main.logx ? 1 : 0;
+            canv.fLogx = main.logx;
             canv.fUxmin = main.logx ? Math.log10(main.scale_xmin) : main.scale_xmin;
             canv.fUxmax = main.logx ? Math.log10(main.scale_xmax) : main.scale_xmax;
             drawopt = "fixframe";
          } else {
             canv.fBottomMargin = pad.fBottomMargin;
             canv.fTopMargin = pad.fTopMargin;
-            canv.fLogx = main.logy ? 1 : 0;
+            canv.fLogx = main.logy;
             canv.fUxmin = main.logy ? Math.log10(main.scale_ymin) : main.scale_ymin;
             canv.fUxmax = main.logy ? Math.log10(main.scale_ymax) : main.scale_ymax;
             drawopt = "rotate";
@@ -3665,12 +3665,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          canv.fPrimitives.Add(hist, "hist");
 
-         if (this.DrawInUI5ProjectionArea) {
-            // copy frame attributes
-            this.DrawInUI5ProjectionArea(canv, drawopt, painter => { this.proj_painter = painter; })
-         } else {
-            this.DrawInSidePanel(canv, drawopt, painter => { this.proj_painter = painter; })
-         }
+         let promise = this.DrawInUI5ProjectionArea
+                       ? this.DrawInUI5ProjectionArea(canv, drawopt)
+                       : this.DrawInsidePanel(canv, drawopt);
+
+         promise.then(painter => { this.proj_painter = painter; })
       } else {
          let hp = this.proj_painter.main_painter();
          if (hp) hp.UpdateObject(hist, "hist");
@@ -3678,10 +3677,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
-   TCanvasPainter.prototype.DrawInSidePanel = function(canv, opt, call_back) {
+   TCanvasPainter.prototype.DrawInsidePanel = function(canv, opt) {
       let side = this.select_main('origin').select(".side_panel");
-      if (side.empty()) return JSROOT.CallBack(call_back, null);
-      JSROOT.draw(side.node(), canv, opt).then(call_back, call_back);
+      if (side.empty()) return Promise.resolve(null);
+      return JSROOT.draw(side.node(), canv, opt);
    }
 
    TCanvasPainter.prototype.ShowMessage = function(msg) {
@@ -3689,12 +3688,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       JSROOT.progress(msg, 7000);
    }
 
-   /// function called when canvas menu item Save is called
+   /** @summary Function called when canvas menu item Save is called */
    TCanvasPainter.prototype.SaveCanvasAsFile = function(fname) {
       let pnt = fname.indexOf(".");
-      this.CreateImage(fname.substr(pnt+1), res => {
-         this.SendWebsocket("SAVE:" + fname + ":" + res);
-      })
+      this.CreateImage(fname.substr(pnt+1))
+          .then(res => this.SendWebsocket("SAVE:" + fname + ":" + res));
    }
 
    TCanvasPainter.prototype.SendSaveCommand = function(fname) {
@@ -3765,6 +3763,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       JSROOT.CloseCurrentWindow();
    }
 
+   /** @summary Handle websocket messages */
    TCanvasPainter.prototype.OnWebsocketMsg = function(handle, msg) {
       console.log("GET MSG len:" + msg.length + " " + msg.substr(0,60));
 
@@ -3776,8 +3775,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let snap = JSROOT.parse(msg.substr(6));
 
-         this.RedrawPadSnap(snap, () => {
-            this.CompeteCanvasSnapDrawing();
+         this.RedrawPadSnap(snap).then(() => {
+            this.CompleteCanvasSnapDrawing();
             let ranges = this.GetWebPadOptions(); // all data, including subpads
             if (ranges) ranges = ":" + ranges;
             handle.Send("READY6:" + snap.fVersion + ranges); // send ready message back when drawing completed
@@ -3796,9 +3795,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              cmd = msg.substr(p1+1),
              reply = "REPLY:" + cmdid + ":";
          if ((cmd == "SVG") || (cmd == "PNG") || (cmd == "JPEG")) {
-            this.CreateImage(cmd.toLowerCase(), function(res) {
-               handle.Send(reply + res);
-            });
+            this.CreateImage(cmd.toLowerCase())
+                .then(res => handle.Send(reply + res));
          } else {
             console.log('Unrecognized command ' + cmd);
             handle.Send(reply);
@@ -3815,10 +3813,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let obj_painter = this.FindSnap(msg.substr(5));
          console.log('GET EDIT ' + msg.substr(5) +  ' found ' + !!obj_painter);
          if (obj_painter)
-            this.ShowSection("Editor", true, () => {
-               if (this.pad_events_receiver)
-                  this.pad_events_receiver({ what: "select", padpainter: this, painter: obj_painter });
-            });
+            this.ShowSection("Editor", true)
+                .then(() => this.PadEvent("select", obj_painter.pad_painter(), obj_painter));
 
       } else {
          console.log("unrecognized msg " + msg);
@@ -3872,34 +3868,29 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.ProcessChanges("sbits", this);
    }
 
-   /** Function used to activate GED */
-   TCanvasPainter.prototype.ActivateGed = function(objpainter, kind, mode, callback) {
+   /** @summary Function used to activate GED
+     * @returns {Promise} when GED is there */
+   TCanvasPainter.prototype.ActivateGed = function(objpainter, kind, mode) {
       if (this.testUI5() || !this.brlayout)
-         return JSROOT.CallBack(callback);
+         return Promise.resolve(false);
 
       if (this.brlayout.HasContent()) {
-         if ((mode === "toggle") || (mode === false))
+         if ((mode === "toggle") || (mode === false)) {
             this.RemoveGed();
-         else
-            this.SelectObjectPainter(objpainter);
+         } else {
+            let pp = objpainter ? objpainter.pad_painter() : null;
+            if (pp) pp.SelectObjectPainter(objpainter);
+         }
 
-         JSROOT.CallBack(callback, true);
+         return Promise.resolve(true);
       }
 
       if (mode === false)
-         return JSROOT.CallBack(callback);
-
-      // keep all callbacks until initialization is performed
-      if (this._ged_callbacks !== undefined) {
-         this._ged_callbacks.push(callback);
-         return;
-      }
-
-      this._ged_callbacks = [ callback ];
+         return Promise.resolve(false);
 
       let btns = this.brlayout.CreateBrowserBtns();
 
-      JSROOT.require(['interactive']).then(inter => {
+      JSROOT.require('interactive').then(inter => {
 
          inter.ToolbarIcons.CreateSVG(btns, inter.ToolbarIcons.diamand, 15, "toggle fix-pos mode")
                             .style("margin","3px").on("click", () => this.brlayout.Toggle('fix'));
@@ -3916,59 +3907,61 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.brlayout.SetBrowserTitle("GED");
       this.brlayout.ToggleBrowserKind(kind || "float");
 
-      JSROOT.require('openui5').then(() => {
+      return new Promise(resolveFunc => {
 
-         d3.select("#ged_placeholder").text("");
+         JSROOT.require('openui5').then(() => {
 
-         sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/core/mvc/XMLView"],
-                       function(JSONModel,XMLView) {
+            d3.select("#ged_placeholder").text("");
 
-            let oModel = new JSONModel({ handle: null });
+            sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/core/mvc/XMLView"], (JSONModel,XMLView) => {
 
-            XMLView.create({
-               viewName : "rootui5.canv.view.Ged"
-            }).then(function(oGed) {
+               let oModel = new JSONModel({ handle: null });
 
-               oGed.setModel(oModel);
+               XMLView.create({
+                  viewName: "rootui5.canv.view.Ged"
+               }).then(oGed => {
 
-               oGed.placeAt("ged_placeholder");
+                  oGed.setModel(oModel);
 
-               this.ged_view = oGed;
+                  oGed.placeAt("ged_placeholder");
 
-               // TODO: should be moved into Ged controller - it must be able to detect canvas painter itself
-               this.RegisterForPadEvents(oGed.getController().padEventsReceiver.bind(oGed.getController()));
+                  this.ged_view = oGed;
 
-               this.SelectObjectPainter(objpainter);
+                  // TODO: should be moved into Ged controller - it must be able to detect canvas painter itself
+                  this.RegisterForPadEvents(oGed.getController().padEventsReceiver.bind(oGed.getController()));
 
-               this.ProcessChanges("sbits", this);
+                  let pp = objpainter ? objpainter.pad_painter() : null;
+                  if (pp) pp.SelectObjectPainter(objpainter);
 
-               // finally invoke all callbacks
-               let arr = this._ged_callbacks;
-               delete this._ged_callbacks;
-               arr.forEach(func => func(true));
+                  this.ProcessChanges("sbits", this);
+
+                  resolveFunc(true);
+               });
             });
          });
       });
    }
 
-   TCanvasPainter.prototype.ShowSection = function(that, on, callback) {
+
+   TCanvasPainter.prototype.ShowSection = function(that, on) {
       if (this.testUI5())
-         return JSROOT.CallBack(callback);
+         return Promise.resolve(false);
 
       console.log('Show section ' + that + ' flag = ' + on);
 
       switch(that) {
          case "Menu": break;
          case "StatusBar": this.ActivateStatusBar(on); break;
-         case "Editor": this.ActivateGed(this, null, !!on, callback); callback = null; break;
+         case "Editor": return this.ActivateGed(this, null, !!on);
          case "ToolBar": break;
          case "ToolTips": this.SetTooltipAllowed(on); break;
 
       }
-      JSROOT.CallBack(callback, true);
+      return Promise.resolve(true);
    }
 
-   TCanvasPainter.prototype.CompeteCanvasSnapDrawing = function() {
+   /** @summary Handle websocket messages */
+   TCanvasPainter.prototype.CompleteCanvasSnapDrawing = function() {
       if (!this.pad) return;
 
       if (document) document.title = this.pad.fTitle;
@@ -3982,8 +3975,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.ShowSection("ToolTips", this.pad.TestBit(TCanvasStatusBits.kShowToolTips));
    }
 
-   /** Method informs that something was changed in the canvas
-     * used to update information on the server (when used with web6gui)
+   /** @summary Method informs that something was changed in the canvas
+     * @desc used to update information on the server (when used with web6gui)
      * @private */
    TCanvasPainter.prototype.ProcessChanges = function(kind, painter, subelem) {
       // check if we could send at least one message more - for some meaningful actions
@@ -4026,9 +4019,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          console.log("Sending " + msg.length + "  " + msg.substr(0,40));
          this._websocket.Send(msg);
       }
-
    }
 
+   /** @summary Select active pad on the canvas */
    TCanvasPainter.prototype.SelectActivePad = function(pad_painter, obj_painter, click_pos) {
       if ((this.snapid === undefined) || !pad_painter) return; // only interactive canvas
 
@@ -4067,7 +4060,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return bits;
    }
 
-   /// produce JSON for TCanvas, which can be used to display canvas once again
+   /**  @summary produce JSON for TCanvas, which can be used to display canvas once again */
    TCanvasPainter.prototype.ProduceJSON = function() {
 
       let canv = this.GetObject(),
@@ -4139,8 +4132,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // select global reference - required for keys handling
       jsrp.SelectActivePad({ pp: painter, active: true });
 
-      painter.DrawPrimitives(0, () => { painter.ShowButtons(); painter.DrawingReady(); });
-      return painter;
+      return painter.DrawPrimitives().then(() => {
+         painter.ShowButtons();
+         return painter;
+      });
    }
 
    let drawPadSnapshot = (divid, snap /*, opt*/) => {
@@ -4150,14 +4145,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let painter = new TCanvasPainter(can);
       painter.normal_canvas = false;
-
       painter.SetDivId(divid, -1); // just assign id
-
       painter.AddPadButtons();
 
-      painter.RedrawPadSnap(snap, () => { painter.ShowButtons(); painter.DrawingReady(); });
-
-      return painter;
+      return painter.RedrawPadSnap(snap).then(() => { painter.ShowButtons(); return painter; });
    }
 
    JSROOT.TAxisPainter = TAxisPainter;

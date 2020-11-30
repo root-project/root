@@ -27,14 +27,7 @@ an open system that can be dynamically extended by linking external
 libraries. This makes ROOT a premier platform on which to build data
 acquisition, simulation and data analysis systems.
 
-[![License: LGPL v2.1+](https://img.shields.io/badge/License-LGPL%20v2.1+-blue.svg)](https://www.gnu.org/licenses/lgpl.html) [![Test coverage](https://root.cern/files/img/coverage-badge.svg)](https://epsft-jenkins.cern.ch/job/root-nightly-master-coverage/cobertura)
-
-## Build Status
-| Branch | Nightly build status |
-|--------|------------|
-| master | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-master)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-master/) |
-| v6-22-00-patches | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-v6-22-00-patches)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-v6-22-00-patches/) |
-| v6-20-00-patches | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-v6-20-00-patches)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-v6-20-00-patches/) |
+[![License: LGPL v2.1+](https://img.shields.io/badge/License-LGPL%20v2.1+-blue.svg)](https://www.gnu.org/licenses/lgpl.html)
 
 ## Cite
 
@@ -95,6 +88,5 @@ Setup and run ROOT
 
 ## Contribution Guidelines
 - [How to contribute](https://github.com/root-project/root/blob/master/CONTRIBUTING.md)
-- [Bug reporting guidelines](https://root.cern/guidelines-submitting-bug)
 - [Coding conventions](https://root.cern/coding-conventions)
 - [Meetings](https://root.cern/meetings)

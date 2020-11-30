@@ -885,7 +885,7 @@ std::string ROOT::Experimental::RWebWindow::GetClientVersion() const
 
 /////////////////////////////////////////////////////////////////////////
 /// Set arbitrary JSON code, which is accessible via conn.GetUserArgs() method
-/// This JSON code injected into main HTML document into JSROOT.ConnectWebWindow()
+/// This JSON code injected into main HTML document into JSROOT.connectWebWindow()
 /// Must be called before RWebWindow::Show() method is called
 
 void ROOT::Experimental::RWebWindow::SetUserArgs(const std::string &args)

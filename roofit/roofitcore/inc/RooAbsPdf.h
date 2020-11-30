@@ -202,8 +202,6 @@ public:
   virtual Double_t getValV(const RooArgSet* set=0) const ;
   virtual Double_t getLogVal(const RooArgSet* set=0) const ;
 
-  RooSpan<const double> getValBatch(std::size_t begin, std::size_t batchSize,
-      const RooArgSet* normSet = nullptr) const final;
   RooSpan<const double> getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const;
   RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
       const RooArgSet* normSet = nullptr) const;

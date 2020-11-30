@@ -32,10 +32,12 @@ welcome!
 
 class RAttrColor : public RAttrBase {
 
-   R__ATTR_CLASS(RAttrColor, "color_",
-                 AddString("rgb", "").AddString("a", "").AddString("name", "").AddBool("auto", false));
+   R__ATTR_CLASS(RAttrColor, "color");
 
 protected:
+
+   /** Provide possible attributes names and values */
+   RAttrMap CollectDefaults() const override { return RAttrMap().AddString("rgb", "").AddString("a", "").AddString("name", "").AddBool("auto", false); }
 
    /** Set color as plain SVG name like "white" or "lightblue". Clears RGB component before */
    void SetName(const std::string &_name) { SetValue("name", _name); }

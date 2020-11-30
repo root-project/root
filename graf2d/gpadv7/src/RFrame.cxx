@@ -32,12 +32,6 @@ RFrame::RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords) : RFrame
 
 void RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ranges) const
 {
-   if (axis.HasMin())
-      ranges.AssignMin(ndim, axis.GetMin());
-
-   if (axis.HasMax())
-      ranges.AssignMax(ndim, axis.GetMax());
-
    if (axis.HasZoomMin())
       ranges.AssignMin(ndim, axis.GetZoomMin());
 
@@ -51,7 +45,7 @@ void RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ra
 void RFrame::AssignZoomRange(unsigned ndim, RAttrAxis &axis, const RUserRanges &ranges)
 {
    if (ranges.IsUnzoom(ndim)) {
-      axis.ClearZoomMinMax();
+      axis.ClearZoom();
    } else {
       if (ranges.HasMin(ndim))
          axis.SetZoomMin(ranges.GetMin(ndim));
@@ -77,16 +71,21 @@ void RFrame::GrowToDimensions(size_t nDimensions)
 ////////////////////////////////////////////////////////////////////////////
 /// Provide context menu items
 
-void RFrame::PopulateMenu(RMenuItems &items)
+void RFrame::PopulateMenu(RMenuItems & /* items */)
 {
-   auto is_x = items.GetSpecifier() == "x";
+   // do not use online context menu for frame - make it fully client side
+/*   auto is_x = items.GetSpecifier() == "x";
    auto is_y = items.GetSpecifier() == "y";
 
    if (is_x || is_y) {
       RAttrAxis &attr = is_x ? AttrX() : AttrY();
       std::string name = is_x ? "AttrX()" : "AttrY()";
-      items.AddChkMenuItem("Log scale", "Change log scale", attr.GetLog(), name + ".SetLog" + (attr.GetLog() ? "(false)" : "(true)"));
+      auto cl = TClass::GetClass<RAttrAxis>();
+      auto log = attr.GetLog();
+      items.AddChkMenuItem("Linear scale", "Set linear scale", !log, name + ".SetLog(0)", cl);
+      items.AddChkMenuItem("Log scale", "Logarithmic scale", !log, name + ".SetLog(10)", cl);
    }
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////

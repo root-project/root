@@ -9,7 +9,7 @@
 #include "TLeafProvider.hxx"
 
 #include <ROOT/RCanvas.hxx>
-#include <ROOT/RObjectDrawable.hxx>
+#include <ROOT/TObjectDrawable.hxx>
 
 /** Provider for drawing of ROOT7 classes */
 
@@ -33,7 +33,7 @@ public:
          std::shared_ptr<TH1> shared;
          shared.reset(hist);
 
-         subpad->Draw<ROOT::Experimental::RObjectDrawable>(shared, opt);
+         subpad->Draw<ROOT::Experimental::TObjectDrawable>(shared, opt);
 
          return true;
       });

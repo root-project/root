@@ -60,6 +60,21 @@ Double_t RooUniform::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+///Compute multiple values of the uniform distribution (effectively return a span with ones)
+RooSpan<double> RooUniform::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* /*normSet*/) const
+{
+  size_t nEvents = 1;
+  for (auto elm : x) {
+    nEvents *= static_cast<const RooAbsReal*>(elm)->getValues(evalData).size();
+  }
+  RooSpan<double> values = evalData.makeBatch(this, nEvents);
+  for (size_t i=0; i<nEvents; i++) {
+    values[i] = 1.0;
+  }
+  return values;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Advertise analytical integral
 
 Int_t RooUniform::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const

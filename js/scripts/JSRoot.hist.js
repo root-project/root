@@ -240,8 +240,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.FinishPave = func.bind(this);
    }
 
+   /** @summary Draw pave and content */
    TPavePainter.prototype.DrawPave = function(arg) {
-      // this draw only basic TPave
 
       this.UseTextColor = false;
 
@@ -374,12 +374,17 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           .call(this.fillatt.func)
           .call(this.lineatt.func);
 
-      if ('PaveDrawFunc' in this)
-         this.PaveDrawFunc(width, height, arg);
+
+      let promise;
+
+      if (typeof this.PaveDrawFunc == 'function')
+         promise = this.PaveDrawFunc(width, height, arg);
 
       if (JSROOT.BatchMode || (pt._typename=="TPave")) return;
 
-      JSROOT.require(['interactive']).then(inter => {
+      if (!promise || !promise.then) promise = Promise.resolve(true);
+
+      promise.then(() => JSROOT.require(['interactive'])).then(inter => {
 
          // here all kind of interactive settings
          rect.style("pointer-events", "visibleFill")
@@ -397,6 +402,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
          if (this.UseContextMenu && JSROOT.settings.ContextMenu)
              this.draw_g.on("contextmenu", this.PaveContextMenu.bind(this));
+
+         if (pt._typename == "TPaletteAxis") {
+            this.InteractivePaletteAxis(width, height);
+         }
       });
    }
 
@@ -861,17 +870,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          zmin = main.hmin; zmax = main.hmax;
       }
 
-      let z = null, z_kind = "normal";
-
-      if (this.root_pad().fLogz) {
-         z = d3.scaleLog();
-         z_kind = "log";
-      } else {
-         z = d3.scaleLinear();
-      }
-      z.domain([zmin, zmax]).range([s_height,0]);
-
       this.draw_g.selectAll("rect").style("fill", 'white');
+
+      this.z_handle.ConfigureAxis("zaxis", zmin, zmax, zmin, zmax, true, [0,s_height], { log: this.root_pad().fLogz });
 
       if (!contour || !draw_palette || postpone_draw)
          // we need such rect to correctly calculate size
@@ -883,7 +884,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                     .style("fill", 'white');
       else
          for (let i=0;i<levels.length-1;++i) {
-            let z0 = z(levels[i]), z1 = z(levels[i+1]),
+            let z0 = this.z_handle.gr(levels[i]),
+                z1 = this.z_handle.gr(levels[i+1]),
                 col = contour.getPaletteColor(draw_palette, (levels[i]+levels[i+1])/2),
                 r = this.draw_g.append("svg:rect")
                        .attr("x", 0)
@@ -907,37 +909,45 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
 
 
-      this.z_handle.SetAxisConfig("zaxis", z_kind, z, zmin, zmax, zmin, zmax);
-
       this.z_handle.max_tick_size = Math.round(s_width*0.7);
 
       this.FirstRun++;
-      this.z_handle.DrawAxis(true, this.draw_g, s_width, s_height, "translate(" + s_width + ", 0)").then(this.FinishPave);
 
-      if (can_move && ('getBoundingClientRect' in this.draw_g.node())) {
-         let rect = this.draw_g.node().getBoundingClientRect();
+      return this.z_handle.DrawAxis(this.draw_g, s_width, s_height, "translate(" + s_width + ", 0)").then(() => {
 
-         let shift = (pos_x + parseInt(rect.width)) - Math.round(0.995*width) + 3;
+         if (this.FinishPave) this.FinishPave();
 
-         if (shift > 0) {
-            this.draw_g.attr("x", pos_x - shift).attr("y", pos_y)
-                       .attr("transform", "translate(" + (pos_x-shift) + ", " + pos_y + ")");
-            palette.fX1NDC -= shift/width;
-            palette.fX2NDC -= shift/width;
+         if (can_move && ('getBoundingClientRect' in this.draw_g.node())) {
+            let rect = this.draw_g.node().getBoundingClientRect();
+
+            let shift = (pos_x + parseInt(rect.width)) - Math.round(0.995*width) + 3;
+
+            if (shift > 0) {
+               this.draw_g.attr("x", pos_x - shift).attr("y", pos_y)
+                          .attr("transform", "translate(" + (pos_x-shift) + ", " + pos_y + ")");
+               palette.fX1NDC -= shift/width;
+               palette.fX2NDC -= shift/width;
+            }
          }
-      }
 
+         return true;
+      });
+   }
+
+   /** @summary Add interactive methods for palette drawoing */
+   TPavePainter.prototype.InteractivePaletteAxis = function(s_width, s_height) {
       let doing_zoom = false, sel1 = 0, sel2 = 0, zoom_rect = null;
 
-      function moveRectSel(evnt) {
+      let moveRectSel = evnt => {
 
          if (!doing_zoom) return;
+         evnt.preventDefault();
 
-         let m = d3.pointer(evnt);
+         let m = d3.pointer(evnt, this.draw_g.node());
 
-         if (m[1] < sel1) sel1 = m[1]; else sel2 = m[1];
+         sel2 = Math.min(Math.max(m[1], 0), s_height);
 
-         zoom_rect.attr("y", sel1)
+         zoom_rect.attr("y", Math.min(sel1, sel2))
                   .attr("height", Math.abs(sel2-sel1));
       }
 
@@ -945,16 +955,15 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if (!doing_zoom) return;
 
          evnt.preventDefault();
-         this.draw_g.on("mousemove.colzoomRect", null)
-                    .on("mouseup.colzoomRect", null);
+         d3.select(window).on("mousemove.colzoomRect", null)
+                          .on("mouseup.colzoomRect", null);
          zoom_rect.remove();
          zoom_rect = null;
          doing_zoom = false;
 
-         let zmin = Math.min(z.invert(sel1), z.invert(sel2)),
-             zmax = Math.max(z.invert(sel1), z.invert(sel2));
+         let z = this.z_handle.gr, z1 = z.invert(sel1), z2 = z.invert(sel2);
 
-         this.frame_painter().Zoom("z", zmin, zmax);
+         this.frame_painter().Zoom("z", Math.min(z1, z2), Math.max(z1, z2));
       }
 
       let startRectSel = evnt => {
@@ -963,8 +972,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          doing_zoom = true;
 
          evnt.preventDefault();
+         evnt.stopPropagation();
 
-         let origin = d3.pointer(evnt);
+         let origin = d3.pointer(evnt, this.draw_g.node());
 
          sel1 = sel2 = origin[1];
 
@@ -975,20 +985,29 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                 .attr("x", "0")
                 .attr("width", s_width)
                 .attr("y", sel1)
-                .attr("height", 5);
+                .attr("height", 1);
 
-         this.draw_g.on("mousemove.colzoomRect", moveRectSel)
-                    .on("mouseup.colzoomRect", endRectSel, true);
-
-         evnt.stopPropagation();
+         d3.select(window).on("mousemove.colzoomRect", moveRectSel)
+                          .on("mouseup.colzoomRect", endRectSel, true);
       }
 
       if (JSROOT.settings.Zooming)
-         this.draw_g.select(".axis_zoom")
+         this.draw_g.selectAll(".axis_zoom")
                     .on("mousedown", startRectSel)
-                    .on("dblclick", () => { this.frame_painter().Unzoom("z"); });
+                    .on("dblclick", () => this.frame_painter().Unzoom("z"));
+
+      if (JSROOT.settings.ZoomWheel)
+            this.draw_g.on("wheel", evnt => {
+               let pos = d3.pointer(evnt, this.draw_g.node()),
+                   coord = 1 - pos[1] / s_height;
+
+               let item = this.z_handle.analyzeWheelEvent(evnt, coord);
+               if (item.changed)
+                  this.frame_painter().Zoom("z", item.min, item.max);
+            });
    }
 
+   /** @summary Fill context menu for the TPave object */
    TPavePainter.prototype.FillContextMenu = function(menu) {
       let pave = this.GetObject();
 
@@ -1107,13 +1126,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       evnt.stopPropagation(); // disable main context menu
       evnt.preventDefault();  // disable browser context menu
 
-      JSROOT.require('interactive')
-            .then(() => jsrp.createMenu(this, evnt))
-            .then(menu =>
-         {
-            this.FillContextMenu(menu);
-            this.FillObjectExecMenu(menu, "title", () => menu.show());
-         });
+      jsrp.createMenu(this, evnt).then(menu => {
+         this.FillContextMenu(menu);
+         this.FillObjectExecMenu(menu, "title", () => menu.show());
+      });
    }
 
    TPavePainter.prototype.IsStats = function() {
@@ -1326,8 +1342,6 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          painter.UseContextMenu = true;
       }
 
-      // console.log('drawing ', pave._typename);
-
       switch (pave._typename) {
          case "TPaveLabel":
             painter.PaveDrawFunc = painter.DrawPaveLabel;
@@ -1352,8 +1366,6 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       painter.DrawPave(opt);
 
       painter.FinishPave(); // at least once finish pave must be called, it will invoke ready state
-
-      //console.log('Done drawing ', pave._typename);
 
       return painter;
    }
@@ -1436,12 +1448,15 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
               System: jsrp.Coord.kCARTESIAN,
               AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
               HighRes: 0, Zero: true, Palette: 0, BaseLine: false,
-              Optimize: JSROOT.settings.OptimizeDraw, Mode3D: false,
+              Optimize: JSROOT.settings.OptimizeDraw,
+              Mode3D: false,
+              Render3D: JSROOT.constants.Render3D.Default,
               FrontBox: true, BackBox: true,
               _pmc: false, _plc: false, _pfc: false, need_fillcol: false,
               minimum: -1111, maximum: -1111, ymin: 0, ymax: 0 });
    }
 
+   /** @summary Decode histogram draw options */
    THistDrawOptions.prototype.Decode = function(opt, hdim, histo, pad, painter) {
       this.orginal = opt; // will be overwritten by OptionsStore call
 
@@ -1641,8 +1656,20 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (d.check('F')) { this.Fill = true; this.need_fillcol = true; }
 
       if (d.check('A')) this.Axis = -1;
-      if ((this.Axis || this.Color) && d.check("RX")) this.RevX = true;
-      if ((this.Axis || this.Color) && d.check("RY")) this.RevY = true;
+
+      if (d.check("RX") || (pad && pad.$RX)) this.RevX = true;
+      if (d.check("RY") || (pad && pad.$RY)) this.RevY = true;
+      let check_axis_bit = (opt, axis, bit) => {
+         let flag = d.check(opt);
+         if (pad && pad['$'+opt]) { flag = true; pad['$'+opt] = undefined; }
+         if (flag && histo)
+             if (!histo[axis].TestBit(bit))
+                histo[axis].InvertBit(bit);
+      }
+      check_axis_bit("OTX", "fXaxis", JSROOT.EAxisBits.kOppositeTitle);
+      check_axis_bit("OTY", "fYaxis", JSROOT.EAxisBits.kOppositeTitle);
+      check_axis_bit("CTX", "fXaxis", JSROOT.EAxisBits.kCenterTitle);
+      check_axis_bit("CTY", "fYaxis", JSROOT.EAxisBits.kCenterTitle);
 
       if (d.check('B1')) { this.BarStyle = 1; this.BaseLine = 0; this.Hist = false; this.need_fillcol = true; }
       if (d.check('B')) { this.BarStyle = 1; this.Hist = false; this.need_fillcol = true; }
@@ -1965,7 +1992,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }
    }
 
-   /// copy draw options to all other histograms in the pad
+   /** @summary copy draw options to all other histograms in the pad
+     * @private */
    THistPainter.prototype.CopyOptionsToOthers = function() {
       this.ForEachPainter(painter => {
          if ((painter !== this) && (typeof painter.CopyOptionsFrom == 'function'))
@@ -1973,17 +2001,16 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }, "objects");
    }
 
+   /** @summary Scan histogram content
+     * @abstract */
    THistPainter.prototype.ScanContent = function(/*when_axis_changed*/) {
       // function will be called once new histogram or
       // new histogram content is assigned
       // one should find min,max,nbins, maxcontent values
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
-
-      alert("HistPainter.prototype.ScanContent not implemented");
    }
 
    THistPainter.prototype.CheckPadRange = function(use_pad) {
-
       // actual work will be done when frame will draw axes
       if (this.is_main_painter())
          this.check_pad_range = use_pad ? "pad_range" : true;
@@ -2090,15 +2117,16 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          CopyAxis(histo.fYaxis, obj.fYaxis);
          CopyAxis(histo.fZaxis, obj.fZaxis);
 
-         if (this.snapid || !fp || !fp.zoom_changed_interactive) {
-            function CopyZoom(tgt,src) {
+         if (this.snapid) {
+            function CopyZoom(tgt,src,name) {
+               if (fp && fp.zoomChangedInteractive(name)) return;
                tgt.fFirst = src.fFirst;
                tgt.fLast = src.fLast;
                tgt.fBits = src.fBits;
             }
-            CopyZoom(histo.fXaxis, obj.fXaxis);
-            CopyZoom(histo.fYaxis, obj.fYaxis);
-            CopyZoom(histo.fZaxis, obj.fZaxis);
+            CopyZoom(histo.fXaxis, obj.fXaxis,"x");
+            CopyZoom(histo.fYaxis, obj.fYaxis,"y");
+            CopyZoom(histo.fZaxis, obj.fZaxis,"z");
          }
          histo.fSumw2 = obj.fSumw2;
 
@@ -2177,7 +2205,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             this.DecodeOptions(opt || histo.fOption);
       }
 
-      if (this.snapid || !fp || !fp.zoom_changed_interactive)
+      if (this.snapid || !fp || !fp.zoomChangedInteractive())
          this.CheckPadRange();
 
       this.ScanContent();
@@ -2187,12 +2215,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return true;
    }
 
-   THistPainter.prototype.CreateAxisFuncs = function(with_y_axis, with_z_axis) {
-      // here functions are defined to convert index to axis value and back
-      // introduced to support non-equidistant bins
-
-      let histo = this.GetHisto();
-
+   /** @summary Extract axes bins and ranges
+     * @desc here functions are defined to convert index to axis value and back
+     * was introduced to support non-equidistant bins
+     * @private */
+   THistPainter.prototype.ExtractAxesProperties = function(ndim) {
       function AssignFuncs(axis) {
          if (axis.fXbins.length >= axis.fNbins) {
             axis.regular = false;
@@ -2217,6 +2244,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
       }
 
+      this.nbinsx = this.nbinsy = this.nbinsz = 0;
+
+      let histo = this.GetHisto();
+
+      this.nbinsx = histo.fXaxis.fNbins;
       this.xmin = histo.fXaxis.fXmin;
       this.xmax = histo.fXaxis.fXmax;
       AssignFuncs(histo.fXaxis);
@@ -2224,25 +2256,29 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.ymin = histo.fYaxis.fXmin;
       this.ymax = histo.fYaxis.fXmax;
 
-      if (!with_y_axis || (this.nbinsy==0)) return;
+      if (ndim > 1) {
+         this.nbinsy = histo.fYaxis.fNbins;
+         AssignFuncs(histo.fYaxis);
+      }
 
-      AssignFuncs(histo.fYaxis);
-
-      if (!with_z_axis || (this.nbinsz==0)) return;
-
-      AssignFuncs(histo.fZaxis);
+      if (ndim > 2) {
+         this.nbinsz = histo.fZaxis.fNbins;
+         this.zmin = histo.fZaxis.fXmin;
+         this.zmax = histo.fZaxis.fXmax;
+         AssignFuncs(histo.fZaxis);
+       }
    }
 
-   /** @summary Create x,y objects which maps user coordinates into pixels
-    *  @desc Now moved into TFramePainter */
-   THistPainter.prototype.CreateXY = function() {
-      if (!this.is_main_painter()) return;
+    /** @summary Draw axes for histogram
+      * @desc axes can be drawn only for main histogram */
+   THistPainter.prototype.DrawAxes = function() {
+      if (!this.is_main_painter())
+         return Promise.resolve(false);
 
-      let histo = this.GetHisto(),
-          fp = this.frame_painter();
+      let fp = this.frame_painter();
+      if (!fp) return Promise.resolve(false);
 
-      if (!fp)
-         return console.warn("histogram drawn without frame - not supported");
+      let histo = this.GetHisto();
 
       // artifically add y range to display axes
       if (this.ymin === this.ymax) this.ymax += 1;
@@ -2260,19 +2296,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                     Proj: this.options.Proj,
                     extra_y_space: this.options.Text && (this.options.BarStyle > 0) });
       delete this.check_pad_range;
-   }
 
-   THistPainter.prototype.DrawBins = function() {
-      alert("HistPainter.DrawBins not implemented");
-   }
-
-   THistPainter.prototype.DrawAxes = function() {
-      // axes can be drawn only for main histogram
-      if (!this.is_main_painter() || this.options.Same)
-         return Promise.resolve(false);
-
-      let fp = this.frame_painter();
-      if (!fp) return Promise.resolve(false);
+      if (this.options.Same) return Promise.resolve(false);
 
       return fp.DrawAxes(false, this.options.Axis < 0, this.options.AxisPos, this.options.Zscale);
    }
@@ -2526,6 +2551,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return stats;
    }
 
+   /** @summary Add function to histogram list of functions */
    THistPainter.prototype.AddFunction = function(obj, asfirst) {
       let histo = this.GetObject();
       if (!histo || !obj) return;
@@ -2539,15 +2565,14 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          histo.fFunctions.Add(obj);
    }
 
-   /** @summary Method draws next function from the functions list */
-   THistPainter.prototype.DrawNextFunction = function(indx, callback, painter) {
-
-      if (painter && (typeof painter == "object"))
-         painter.child_painter_id = this.hist_painter_id;
+   /** @summary Method draws next function from the functions list
+     * @returns {Promise} fulfilled when drawing is ready */
+   THistPainter.prototype.DrawNextFunction = function(indx) {
 
       let histo = this.GetHisto();
       if (!this.options.Func || !histo.fFunctions ||
-          (indx >= histo.fFunctions.arr.length)) return JSROOT.CallBack(callback);
+          (indx >= histo.fFunctions.arr.length))
+             return Promise.resolve(true);
 
       let func = histo.fFunctions.arr[indx],
           opt = histo.fFunctions.opt[indx],
@@ -2566,10 +2591,14 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
       }
 
-      if (do_draw)
-         JSROOT.draw(this.divid, func, opt).then(this.DrawNextFunction.bind(this, indx+1, callback));
-      else
-         this.DrawNextFunction(indx+1, callback);
+      if (!do_draw)
+         return this.DrawNextFunction(indx+1);
+
+      return JSROOT.draw(this.divid, func, opt).then(painter => {
+         if (painter && (typeof painter == "object"))
+            painter.child_painter_id = this.hist_painter_id;
+         return this.DrawNextFunction(indx+1);
+      });
    }
 
    /** @summary Unzoom user range if any */
@@ -2745,9 +2774,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       menu.AddAttributesMenu(this);
 
-      if (this.histogram_updated && fp.zoom_changed_interactive)
+      if (this.histogram_updated && fp.zoomChangedInteractive())
          menu.add('Let update zoom', function() {
-            fp.zoom_changed_interactive = 0;
+            fp.zoomChangedInteractive('reset');
          });
 
       return true;
@@ -2764,7 +2793,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          case "ToggleZoom":
             if ((fp.zoom_xmin !== fp.zoom_xmax) || (fp.zoom_ymin !== fp.zoom_ymax) || (fp.zoom_zmin !== fp.zoom_zmax)) {
                fp.Unzoom();
-               fp.zoom_changed_interactive = 0;
+               fp.zoomChangedInteractive('reset');
                return true;
             }
             if (this.draw_content && (typeof this.AutoZoom === 'function')) {
@@ -3053,6 +3082,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.InteractiveRedraw("pad","drawopt");
    }
 
+   /** @summary Prepare handle for color draw
+     * @private */
    THistPainter.prototype.PrepareColorDraw = function(args) {
 
       if (!args) args = { rounding: true, extra: 0, middle: 0 };
@@ -3175,6 +3206,23 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
+   /** @summary Get tip text for axis bin */
+   THistPainter.prototype.GetAxisBinTip = function(name, axis, bin) {
+      let pmain = this.frame_painter(),
+          handle = pmain[name+"_handle"],
+          x1 = axis.GetBinLowEdge(bin+1);
+
+      if (handle.kind === 'labels')
+         return pmain.AxisAsText(name, x1);
+
+      let x2 = axis.GetBinLowEdge(bin+2);
+
+      if (handle.kind === 'time')
+         return pmain.AxisAsText(name, (x1+x2)/2);
+
+      return "[" + pmain.AxisAsText(name, x1) + ", " + pmain.AxisAsText(name, x2) + ")";
+   }
+
    // ========================================================================
 
    /**
@@ -3209,7 +3257,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
    /** @summary Scan content of 1-D histogram
     * @desc Detect min/max values for x and y axis
-    * @param when_axis_changed - true when only zooming was changed, some checks may be skipped */
+    * @param {boolean} when_axis_changed - true when zooming was changed, some checks may be skipped */
    TH1Painter.prototype.ScanContent = function(when_axis_changed) {
 
       if (when_axis_changed && !this.nbinsx) when_axis_changed = false;
@@ -3218,11 +3266,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       let histo = this.GetHisto();
 
-      if (!when_axis_changed) {
-         this.nbinsx = histo.fXaxis.fNbins;
-         this.nbinsy = 0;
-         this.CreateAxisFuncs(false);
-      }
+      if (!when_axis_changed)
+         this.ExtractAxesProperties(1);
 
       let left = this.GetSelectIndex("x", "left"),
           right = this.GetSelectIndex("x", "right");
@@ -3596,9 +3641,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                  .call(this.fillatt.func);
    }
 
-   TH1Painter.prototype.DrawBins = function() {
-      // new method, create svg:path expression ourself directly from histogram
-      // all points will be used, compress expression when too large
+   /** @summary Draw TH1 bins in SVG element */
+   TH1Painter.prototype.Draw1DBins = function() {
 
       this.CheckHistDrawAttributes();
 
@@ -3911,19 +3955,15 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           x1 = histo.fXaxis.GetBinLowEdge(bin+1),
           x2 = histo.fXaxis.GetBinLowEdge(bin+2),
           cont = histo.getBinContent(bin+1),
-          xlbl = "", xnormal = false;
+          xlbl = this.GetAxisBinTip("x", histo.fXaxis, bin);
 
       if (name.length>0) tips.push(name);
-
-      if (pmain.x_kind === 'labels') xlbl = pmain.AxisAsText("x", x1); else
-      if (pmain.x_kind === 'time') xlbl = pmain.AxisAsText("x", (x1+x2)/2); else
-       { xnormal = true; xlbl = "[" + pmain.AxisAsText("x", x1) + ", " + pmain.AxisAsText("x", x2) + ")"; }
 
       if (this.options.Error || this.options.Mark) {
          tips.push("x = " + xlbl);
          tips.push("y = " + pmain.AxisAsText("y", cont));
          if (this.options.Error) {
-            if (xnormal) tips.push("error x = " + ((x2 - x1) / 2).toPrecision(4));
+            if (xlbl[0] == "[") tips.push("error x = " + ((x2 - x1) / 2).toPrecision(4));
             tips.push("error y = " + histo.getBinError(bin + 1).toPrecision(4));
          }
       } else {
@@ -4241,20 +4281,19 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return this[funcname](reason);
    }
 
-   /** @returns Promise */
+   /** @summary Performs 2D drawing of histogram
+     * @returns {Promise} when ready */
    TH1Painter.prototype.Draw2D = function(/* reason */) {
       this.Clear3DScene();
       this.mode3d = false;
 
       this.ScanContent(true);
 
-      this.CreateXY();
-
       if (typeof this.DrawColorPalette === 'function')
          this.DrawColorPalette(false);
 
       return this.DrawAxes().then(() => {
-         this.DrawBins();
+         this.Draw1DBins();
          return this.DrawTitle();
       }).then(() => {
          this.UpdateStatWebCanvas();
@@ -4286,15 +4325,15 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       painter.CreateStat(); // only when required
 
-      painter.CallDrawFunc().then(() => {
-         painter.DrawNextFunction(0, () => {
-            if (!painter.options.Mode3D && painter.options.AutoZoom) painter.AutoZoom();
-            painter.FillToolbar();
-            painter.DrawingReady();
-         });
-      });
-
-      return painter;
+      return painter.CallDrawFunc()
+            .then(() => painter.DrawNextFunction(0))
+            .then(() => {
+               if (!painter.options.Mode3D && painter.options.AutoZoom)
+                  painter.AutoZoom();
+               painter.FillToolbar();
+               painter.DrawingReady();
+               return painter;
+            });
    }
 
    // ========================================================================
@@ -4349,8 +4388,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.is_projection = ""; // disable projection redraw until callback
       this.projection_width = width;
 
-      let canp = this.canv_painter();
-      if (canp) canp.ToggleProjection(new_proj).then(() => this.RedrawProjection("toggling", new_proj));
+      this.canv_painter().ToggleProjection(new_proj).then(() => this.RedrawProjection("toggling", new_proj));
    }
 
    TH2Painter.prototype.RedrawProjection = function(ii1, ii2, jj1, jj2) {
@@ -4554,12 +4592,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       let i, j, histo = this.GetObject();
 
-      this.nbinsx = histo.fXaxis.fNbins;
-      this.nbinsy = histo.fYaxis.fNbins;
-
-      // used in CreateXY method
-
-      this.CreateAxisFuncs(true);
+      this.ExtractAxesProperties(2);
 
       if (this.IsTH2Poly()) {
          this.gminposbin = null;
@@ -4844,6 +4877,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return handle;
    }
 
+   /** @summary Build contour lines */
    TH2Painter.prototype.BuildContour = function(handle, levels, palette, contour_func) {
       let histo = this.GetObject(),
           kMAXCONTOUR = 2004,
@@ -5059,6 +5093,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Draw histogram bins as contour */
    TH2Painter.prototype.DrawBinsContour = function() {
       let handle = this.PrepareColorDraw({ rounding: false, extra: 100, original: this.options.Proj != 0 }),
           frame_w = this.frame_width(),
@@ -5068,8 +5103,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           main = this.frame_painter(),
           func = main.GetProjectionFunc();
 
-      let BuildPath = (xp,yp,iminus,iplus) => {
-         let cmd = "", last, pnt;
+      function BuildPath(xp,yp,iminus,iplus,do_close) {
+         let cmd = "", last, pnt, first, isany, matched;
          for (let i = iminus; i <= iplus; ++i) {
             if (func) {
                pnt = func(xp[i], yp[i]);
@@ -5078,17 +5113,100 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             } else {
                pnt = { x: Math.round(xp[i]), y: Math.round(yp[i]) };
             }
-            if (!cmd) cmd = "M" + pnt.x + "," + pnt.y;
-            else if ((pnt.x != last.x) && (pnt.y != last.y)) cmd +=  "l" + (pnt.x - last.x) + "," + (pnt.y - last.y);
-            else if (pnt.x != last.x) cmd +=  "h" + (pnt.x - last.x);
-            else if (pnt.y != last.y) cmd +=  "v" + (pnt.y - last.y);
+            if (!cmd) {
+               cmd = "M" + pnt.x + "," + pnt.y; first = pnt;
+            } else if ((i == iplus) && first && (pnt.x == first.x) && (pnt.y == first.y)) {
+               if (!isany) return ""; // all same points
+               cmd += "z"; do_close = false; matched = true;
+            } else if ((pnt.x != last.x) && (pnt.y != last.y)) {
+               cmd +=  "l" + (pnt.x - last.x) + "," + (pnt.y - last.y); isany = true;
+            } else if (pnt.x != last.x) {
+               cmd +=  "h" + (pnt.x - last.x); isany = true;
+            } else if (pnt.y != last.y) {
+               cmd +=  "v" + (pnt.y - last.y); isany = true;
+            }
             last = pnt;
          }
+
+         if (do_close && !matched && !func)
+            return "<failed>";
+         if (do_close) cmd += "z";
          return cmd;
       }
 
-      if (this.options.Contour===14) {
-         let dd = "M0,0h"+frame_w+"v"+frame_h+"h-"+frame_w;
+      function get_segm_intersection(segm1, segm2) {
+          let s02_x, s02_y, s10_x, s10_y, s32_x, s32_y, s_numer, t_numer, denom, t;
+          s10_x = segm1.x2 - segm1.x1;
+          s10_y = segm1.y2 - segm1.y1;
+          s32_x = segm2.x2 - segm2.x1;
+          s32_y = segm2.y2 - segm2.y1;
+
+          denom = s10_x * s32_y - s32_x * s10_y;
+          if (denom == 0)
+              return 0; // Collinear
+          let denomPositive = denom > 0;
+
+          s02_x = segm1.x1 - segm2.x1;
+          s02_y = segm1.y1 - segm2.y1;
+          s_numer = s10_x * s02_y - s10_y * s02_x;
+          if ((s_numer < 0) == denomPositive)
+              return null; // No collision
+
+          t_numer = s32_x * s02_y - s32_y * s02_x;
+          if ((t_numer < 0) == denomPositive)
+              return null; // No collision
+
+          if (((s_numer > denom) == denomPositive) || ((t_numer > denom) == denomPositive))
+              return null; // No collision
+          // Collision detected
+          t = t_numer / denom;
+          return { x: Math.round(segm1.x1 + (t * s10_x)), y: Math.round(segm1.y1 + (t * s10_y)) };
+      }
+
+      // try to build path which fills area to outside borders
+      function BuildPathOutside(xp,yp,iminus,iplus,side) {
+
+         let points = [{ x:0, y:0 }, {x:frame_w, y:0}, {x:frame_w, y:frame_h}, {x:0, y:frame_h} ];
+
+         function get_intersect(i,di) {
+            let segm = { x1: xp[i], y1: yp[i], x2: 2*xp[i] - xp[i+di], y2: 2*yp[i] - yp[i+di] };
+            for (let i=0;i<4;++i) {
+               let res = get_segm_intersection(segm, { x1: points[i].x, y1: points[i].y, x2: points[(i+1)%4].x, y2: points[(i+1)%4].y});
+               if (res) {
+
+                  res.indx = i + 0.5;
+                  return res;
+               }
+            }
+            return null;
+         }
+
+         let pnt1, pnt2;
+         iminus--;
+         while ((iminus < iplus - 1) && !pnt1)
+            pnt1 = get_intersect(++iminus, 1);
+         iplus++;
+         while ((iminus < iplus - 1) && pnt1 && !pnt2)
+            pnt2 = get_intersect(--iplus, -1);
+         if (!pnt1 || !pnt2) return "";
+
+         let dd = BuildPath(xp,yp,iminus,iplus);
+         // TODO: now side is always same direction, could be that side should be checked more precise
+         let indx = pnt2.indx, step = side*0.5;
+
+         dd += "L" + pnt2.x + "," + pnt2.y;
+
+         while (Math.abs(indx - pnt1.indx) > 0.1) {
+            indx = Math.round(indx + step) % 4;
+            dd += "L" + points[indx].x + "," + points[indx].y;
+            indx += step;
+         }
+
+         return dd + "L" + pnt1.x + "," + pnt1.y + "z";
+      }
+
+      if (this.options.Contour === 14) {
+         let dd = "M0,0h"+frame_w+"v"+frame_h+"h-"+frame_w+"z";
          if (this.options.Proj) {
             let sz = handle.j2 - handle.j1, xd = new Float32Array(sz*2), yd = new Float32Array(sz*2);
             for (let i=0;i<sz;++i) {
@@ -5097,32 +5215,37 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                xd[i+sz] = handle.origx[handle.i2];
                yd[i+sz] = (handle.origy[handle.j2]*(i+0.5) + handle.origy[handle.j1]*(sz-0.5-i))/sz;
             }
-            dd = BuildPath(xd,yd,0,2*sz-1);
+            dd = BuildPath(xd,yd,0,2*sz-1, true);
          }
 
          this.draw_g
              .append("svg:path")
-             .attr("d", dd + "z")
+             .attr("d", dd)
              .style('stroke','none')
              .style("fill", palette.calcColor(0, levels.length));
       }
 
-      this.BuildContour(handle, levels, palette, (colindx,xp,yp,iminus,iplus) => {
+      this.BuildContour(handle, levels, palette, (colindx,xp,yp,iminus,iplus,ipoly) => {
          let icol = palette.getColor(colindx),
              fillcolor = icol, lineatt;
 
          switch (this.options.Contour) {
             case 1: break;
             case 11: fillcolor = 'none'; lineatt = new JSROOT.TAttLineHandler({ color: icol } ); break;
-            case 12: fillcolor = 'none'; lineatt = new JSROOT.TAttLineHandler({ color: 1, style: (colindx%5 + 1), width: 1 }); break;
+            case 12: fillcolor = 'none'; lineatt = new JSROOT.TAttLineHandler({ color: 1, style: (ipoly%5 + 1), width: 1 }); break;
             case 13: fillcolor = 'none'; lineatt = this.lineatt; break;
             case 14: break;
          }
 
+         let dd = BuildPath(xp, yp, iminus, iplus, fillcolor != 'none');
+         if (dd == "<failed>")
+            dd = BuildPathOutside(xp, yp, iminus, iplus, 1);
+         if (!dd) return;
+
          let elem = this.draw_g
                        .append("svg:path")
                        .attr("class","th2_contour")
-                       .attr("d", BuildPath(xp,yp,iminus,iplus) + (fillcolor == 'none' ? "" : "z"))
+                       .attr("d", dd)
                        .style("fill", fillcolor);
 
          if (lineatt)
@@ -5274,7 +5397,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             this.DrawText({ align: 22, x: bin._midx, y: bin._midy, rotate: text_angle, text: lbl, color: text_col, latex: 0, draw_g: text_g });
          }
 
-         this.FinishTextDrawing(text_g, null);
+         this.FinishTextDrawing(text_g);
       }
 
       return { poly: true };
@@ -5340,7 +5463,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             this.DrawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, rotate: text_angle, text: lbl, color: text_col, latex: use_latex, draw_g: text_g });
          }
 
-      this.FinishTextDrawing(text_g, null);
+      this.FinishTextDrawing(text_g);
 
       handle.hide_only_zeros = true; // text drawing suppress only zeros
 
@@ -5554,7 +5677,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          for (j = 0; j < this.nbinsy; ++j) {
             integral += histo.getBinContent(i+1,j+1);
          }
-         pnt = { bin:i, meany:0, m25y:0, p25y:0, median:0, iqr:0, whiskerp:0, whiskerm:0};
+         pnt = { bin:i, meany:0, m25y:0, p25y:0, median:0, iqr:0, whiskerp:0, whiskerm:0 };
          //estimate quantiles... simple function... not so nice as GetQuantiles
          for (j = 0; j < this.nbinsy; ++j) {
             cont = histo.getBinContent(i+1,j+1);
@@ -5777,7 +5900,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return handle;
    }
 
-   TH2Painter.prototype.DrawBins = function() {
+   /** @summary Draw TH2 bins in 2D mode */
+   TH2Painter.prototype.Draw2DBins = function() {
 
       if (!this.draw_content)
          return this.RemoveDrawG();
@@ -5814,7 +5938,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.tt_handle = handle;
    }
 
-   /** Return text information about histogram bin */
+   /** @summary Return text information about histogram bin */
    TH2Painter.prototype.GetBinTips = function (i, j) {
       let lines = [], pmain = this.frame_painter(),
           histo = this.GetHisto(),
@@ -5822,15 +5946,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       lines.push(this.GetTipName());
 
-      if (pmain.x_kind == 'labels')
-         lines.push("x = " + pmain.AxisAsText("x", histo.fXaxis.GetBinLowEdge(i+1)));
-      else
-         lines.push("x = [" + pmain.AxisAsText("x", histo.fXaxis.GetBinLowEdge(i+1)) + ", " + pmain.AxisAsText("x", histo.fXaxis.GetBinLowEdge(i+2)) + ")");
-
-      if (pmain.y_kind == 'labels')
-         lines.push("y = " + pmain.AxisAsText("y", histo.fYaxis.GetBinLowEdge(j+1)));
-      else
-         lines.push("y = [" + pmain.AxisAsText("y", histo.fYaxis.GetBinLowEdge(j+1)) + ", " + pmain.AxisAsText("y", histo.fYaxis.GetBinLowEdge(j+2)) + ")");
+      lines.push("x = " + this.GetAxisBinTip("x", histo.fXaxis, i));
+      lines.push("y = " + this.GetAxisBinTip("y", histo.fYaxis, j));
 
       lines.push("bin = " + i + ", " + j);
 
@@ -6160,9 +6277,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
+   /** @summary Check if it makes sense to zoom inside specified axis range */
    TH2Painter.prototype.CanZoomIn = function(axis,min,max) {
 
-      // check if it makes sense to zoom inside specified axis range
       if (axis=="z") return true;
 
       let obj = this.GetHisto();
@@ -6171,20 +6288,19 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return !obj || (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
-   /** @returns {Promise} */
+   /** @summary Make 2D drawing for histogram
+     * @returns {Promise} */
    TH2Painter.prototype.Draw2D = function(/* reason */) {
 
       this.Clear3DScene();
       this.mode3d = false;
-
-      this.CreateXY();
 
       // draw new palette, resize frame if required
       let pp = this.DrawColorPalette(this.options.Zscale && (this.options.Color || this.options.Contour), true);
 
       return this.DrawAxes().then(() => {
 
-         this.DrawBins();
+         this.Draw2DBins();
 
          // redraw palette till the end when contours are available
          if (pp) pp.DrawPave();
@@ -6244,17 +6360,16 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       painter.CreateStat(); // only when required
 
-      painter.CallDrawFunc().then(() => {
-         painter.DrawNextFunction(0, ()=> {
-            if (!painter.Mode3D && painter.options.AutoZoom) painter.AutoZoom();
+      return painter.CallDrawFunc()
+                    .then(() => painter.DrawNextFunction(0))
+                    .then(()=> {
+         if (!painter.Mode3D && painter.options.AutoZoom) painter.AutoZoom();
             painter.FillToolbar();
-            if (painter.options.Project && !painter.mode3d)
-               painter.ToggleProjection(painter.options.Project);
-            painter.DrawingReady();
-         });
+         if (painter.options.Project && !painter.mode3d)
+              painter.ToggleProjection(painter.options.Project);
+          painter.DrawingReady();
+          return painter;
       });
-
-      return painter;
    }
 
    // =================================================================================

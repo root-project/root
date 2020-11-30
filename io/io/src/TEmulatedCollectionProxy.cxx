@@ -40,8 +40,6 @@ the class TEmulatedMapProxy.
 // a dictionary (See end of file for implementation
 //
 
-TStreamerInfo *R__GenerateTClassForPair(const std::string &f, const std::string &s);
-
 TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProxy& copy)
    : TGenCollectionProxy(copy)
 {
@@ -115,7 +113,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
    if (fClass) return this;
 
 
-   TClass *cl = TClass::GetClass(fName.c_str());
+   TClass *cl = TClass::GetClass(fName.c_str(), kTRUE, silent);
    fEnv = 0;
    fKey = 0;
    if ( cl )  {
@@ -183,9 +181,9 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                   GenerateTemporaryTEnum keyEnum(fKey->fCase, inside[1]);
                   GenerateTemporaryTEnum valueEnum(fVal->fCase, inside[2]);
 
-                  if (0==TClass::GetClass(nam.c_str())) {
+                  if (0==TClass::GetClass(nam.c_str(), kTRUE, silent)) {
                      // We need to emulate the pair
-                     R__GenerateTClassForPair(inside[1],inside[2]);
+                     TVirtualStreamerInfo::Factory()->GenerateInfoForPair(inside[1],inside[2], silent, 0, 0);
                   }
                }
                fValue = new Value(nam,silent);
@@ -643,9 +641,4 @@ void TEmulatedCollectionProxy::Streamer(TBuffer &b)
          WriteItems(nElements, b);
       }
    }
-}
-
-TStreamerInfo *R__GenerateTClassForPair(const std::string &fname, const std::string &sname)
-{
-   return (TStreamerInfo*)TVirtualStreamerInfo::Factory()->GenerateInfoForPair(fname, sname);
 }

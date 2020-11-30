@@ -144,16 +144,19 @@ public:
    };
 
 private:
-
-   RAttrMargins                     fMargins{this, "margin_"};        ///<!
-   RAttrLine                        fAttrBorder{this, "border_"};     ///<!
-   RAttrFill                        fAttrFill{this, "fill_"};         ///<!
-   RAttrAxis                        fAttrX{this, "x_"};               ///<!
-   RAttrAxis                        fAttrY{this, "y_"};               ///<!
-   RAttrAxis                        fAttrZ{this, "z_"};               ///<!
-   RAttrValue<bool>                 fGridX{this, "gridx", false};     ///<!
-   RAttrValue<bool>                 fGridY{this, "gridy", false};     ///<!
-   std::map<unsigned, RUserRanges>  fClientRanges;                    ///<! individual client ranges
+   RAttrMargins fMargins{this, "margin"};         ///<! frame margins relative to pad
+   RAttrLine fAttrBorder{this, "border"};         ///<! line attributes for border
+   RAttrFill fAttrFill{this, "fill"};             ///<! fill attributes for the frame
+   RAttrAxis fAttrX{this, "x"};                   ///<! drawing attributes for X axis
+   RAttrAxis fAttrY{this, "y"};                   ///<! drawing attributes for Y axis
+   RAttrAxis fAttrZ{this, "z"};                   ///<! drawing attributes for Z axis
+   RAttrValue<bool> fGridX{this, "gridx", false}; ///<! show grid for X axis
+   RAttrValue<bool> fGridY{this, "gridy", false}; ///<! show grid for Y axis
+   RAttrValue<bool> fSwapX{this, "swapx", false}; ///<! swap position of X axis
+   RAttrValue<bool> fSwapY{this, "swapy", false}; ///<! swap position of Y axis
+   RAttrValue<int> fTicksX{this, "ticksx", 1};    ///<! X ticks drawing:
+   RAttrValue<int> fTicksY{this, "ticksy", 1};    ///<! Y ticks drawing
+   std::map<unsigned, RUserRanges> fClientRanges; ///<! individual client ranges
 
    /// Mapping of user coordinates to normal coordinates, one entry per dimension.
    std::vector<std::unique_ptr<RPadUserAxisBase>> fUserCoord;
@@ -225,6 +228,20 @@ public:
 
    RFrame &SetGridY(bool on = true) { fGridY = on; return *this; }
    bool GetGridY() const { return fGridY; }
+
+   RFrame &SetSwapX(bool on = true) { fSwapX = on; return *this; }
+   bool GetSwapX() const { return fSwapX; }
+
+   RFrame &SetSwapY(bool on = true) { fSwapY = on; return *this; }
+   bool GetSwapY() const { return fSwapY; }
+
+   /** Configure X ticks drawing 0 - off, 1 - as configured for axis, 2 - both sides, 3 - labels on both side */
+   RFrame &SetTicksX(int v = 1) { fTicksX = v; return *this; }
+   int GetTicksX() const { return fTicksX; }
+
+   /** Configure Y ticks drawing 0 - off, 1 - as configured for axis, 2 - both sides, 3 - labels on both side */
+   RFrame &SetTicksY(int v = 1) { fTicksY = v; return *this; }
+   int GetTicksY() const { return fTicksY; }
 
    void GetClientRanges(unsigned connid, RUserRanges &ranges);
 

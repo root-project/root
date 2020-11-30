@@ -66,7 +66,7 @@ TEST(Primitives, RText)
 
    auto text = canv.Draw<RText>(RPadPos(0.5_normal, 0.5_normal), "Hello World");
 
-   text->AttrText().SetColor(RColor::kBlack).SetSize(12.5).SetAngle(90.).SetAlign(13).SetFont(42);
+   text->AttrText().SetColor(RColor::kBlack).SetSize(12.5).SetAngle(90.).SetAlign(13).SetFontFamily("Arial");
 
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
@@ -75,7 +75,7 @@ TEST(Primitives, RText)
    EXPECT_DOUBLE_EQ(text->GetAttrText().GetSize(), 12.5);
    EXPECT_DOUBLE_EQ(text->GetAttrText().GetAngle(), 90.);
    EXPECT_EQ(text->GetAttrText().GetAlign(), 13);
-   EXPECT_EQ(text->GetAttrText().GetFont(), 42);
+   EXPECT_EQ(text->GetAttrText().GetFontFamily(), "Arial");
 }
 
 
@@ -133,7 +133,7 @@ TEST(Primitives, RPaveText)
 
    auto text = canv.Draw<RPaveText>();
 
-   text->AttrText().SetColor(RColor::kBlack).SetSize(12).SetAlign(13).SetFont(42);
+   text->AttrText().SetColor(RColor::kBlack).SetSize(12).SetAlign(13).SetFontFamily("Times New Roman");
    text->AttrBorder().SetColor(RColor::kRed).SetWidth(3);
    text->AttrFill().SetColor(RColor::kBlue).SetStyle(3003);
 
@@ -151,7 +151,7 @@ TEST(Primitives, RPaveText)
    EXPECT_EQ(text->GetAttrText().GetColor(), RColor::kBlack);
    EXPECT_DOUBLE_EQ(text->GetAttrText().GetSize(), 12);
    EXPECT_EQ(text->GetAttrText().GetAlign(), 13);
-   EXPECT_EQ(text->GetAttrText().GetFont(), 42);
+   EXPECT_EQ(text->GetAttrText().GetFontFamily(), "Times New Roman");
 
    EXPECT_EQ(text->GetAttrBorder().GetColor(), RColor::kRed);
    EXPECT_EQ(text->GetAttrBorder().GetWidth(), 3);

@@ -318,23 +318,6 @@ JSROOT.define(['d3'], (d3) => {
       return jsrp.root_colors.length-1;
    }
 
-
-   /** @ummary Define rendering kind which will be used for rendering of 3D elements
-    *
-    * @param {value} [render3d] - preconfigured value, will be used if applicable
-    * @returns {value} - rendering kind, see JSROOT.constants.Render3D
-    * @private
-    */
-   jsrp.GetRender3DKind = function(render3d) {
-      if (!render3d) render3d = JSROOT.BatchMode ? JSROOT.settings.Render3DBatch : JSROOT.settings.Render3D;
-      let rc = JSROOT.constants.Render3D;
-
-      if (render3d == rc.Default) render3d = JSROOT.BatchMode ? rc.WebGLImage : rc.WebGL;
-      if (JSROOT.BatchMode && (render3d == rc.WebGL)) render3d = rc.WebGLImage;
-
-      return render3d;
-   }
-
    // =====================================================================
 
    /** Color palette handle  */
@@ -401,7 +384,8 @@ JSROOT.define(['d3'], (d3) => {
       if ((typeof args == 'object') && (typeof args.fMarkerStyle == 'number')) args = { attr: args };
 
       if (args.attr) {
-         if (args.color === undefined) args.color = jsrp.getColor(args.attr.fMarkerColor);
+         if (args.color === undefined)
+            args.color = args.painter ? args.painter.get_color(args.attr.fMarkerColor) : jsrp.getColor(args.attr.fMarkerColor);
          if (!args.style || (args.style < 0)) args.style = args.attr.fMarkerStyle;
          if (!args.size) args.size = args.attr.fMarkerSize;
       }
@@ -601,13 +585,13 @@ JSROOT.define(['d3'], (d3) => {
     */
    TAttLineHandler.prototype.SetArgs = function(args) {
       if (args.attr) {
-         args.color = args.color0 || jsrp.getColor(args.attr.fLineColor);
+         args.color = args.color0 || (args.painter ? args.painter.get_color(args.attr.fLineColor) : jsrp.getColor(args.attr.fLineColor));
          if (args.width === undefined) args.width = args.attr.fLineWidth;
          args.style = args.attr.fLineStyle;
       } else if (typeof args.color == 'string') {
          if ((args.color !== 'none') && !args.width) args.width = 1;
       } else if (typeof args.color == 'number') {
-         args.color = jsrp.getColor(args.color);
+         args.color = args.painter ? args.painter.get_color(args.color) : jsrp.getColor(args.color);
       }
 
       if (args.width === undefined)
@@ -724,7 +708,7 @@ JSROOT.define(['d3'], (d3) => {
          if ((args.pattern === undefined) && (args.attr.fFillStyle !== undefined)) args.pattern = args.attr.fFillStyle;
          if ((args.color === undefined) && (args.attr.fFillColor !== undefined)) args.color = args.attr.fFillColor;
       }
-      this.Change(args.color, args.pattern, args.svg, args.color_as_svg);
+      this.Change(args.color, args.pattern, args.svg, args.color_as_svg, args.painter);
    }
 
    /** @summary Apply fill style to selection */
@@ -777,7 +761,7 @@ JSROOT.define(['d3'], (d3) => {
       if (typeof this.pattern == 'string') this.pattern = parseInt(this.pattern);
       if (isNaN(this.pattern)) this.pattern = 0;
 
-      this.Change(this.color, this.pattern, painter ? painter.svg_canvas() : null, true);
+      this.Change(this.color, this.pattern, painter ? painter.svg_canvas() : null, true, painter);
    }
 
    /** @summary Method to change fill attributes.
@@ -785,9 +769,10 @@ JSROOT.define(['d3'], (d3) => {
     * @param {number} color - color index
     * @param {number} pattern - pattern index
     * @param {selection} svg - top canvas element for pattern storages
-    * @param {string} [color_as_svg = undefined] - color as HTML string index
+    * @param {string} [color_as_svg] - when color is string, interpret as normal SVG color
+    * @param {object} [painter] - when specified, used to extract color by index
     */
-   TAttFillHandler.prototype.Change = function(color, pattern, svg, color_as_svg) {
+   TAttFillHandler.prototype.Change = function(color, pattern, svg, color_as_svg, painter) {
       delete this.pattern_url;
       this.changed = true;
 
@@ -823,7 +808,7 @@ JSROOT.define(['d3'], (d3) => {
          this.color = color;
          indx = 10000 + JSROOT._.id_counter++; // use fictional unique index far away from existing color indexes
       } else {
-         this.color = jsrp.getColor(indx);
+         this.color = painter ? painter.get_color(indx) : jsrp.getColor(indx);
       }
 
       if (typeof this.color != 'string') this.color = "none";
@@ -996,27 +981,48 @@ JSROOT.define(['d3'], (d3) => {
     * @private
     */
 
-   function FontHandler(fontIndex, size) {
+   function FontHandler(fontIndex, size, scale, name, style, weight) {
+
       this.name = "Arial";
-      this.size = Math.round(size || 11);
-      this.weight = null;
       this.style = null;
+      this.weight = null;
 
-      let indx = Math.floor(fontIndex / 10),
-          fontName = jsrp.root_fonts[indx] || "";
-
-      while (fontName.length > 0) {
-         if (fontName[0] === 'b') this.weight = "bold"; else
-            if (fontName[0] === 'i') this.style = "italic"; else
-               if (fontName[0] === 'o') this.style = "oblique"; else break;
-         fontName = fontName.substr(1);
+      if (scale && (size < 1)) {
+         size *= scale;
+         this.scaled = true;
       }
 
-      if (fontName == 'Symbol')
-         this.weight = this.style = null;
+      this.size = Math.round(size || 11);
+      this.scale = scale;
 
-      this.name = fontName;
-      this.aver_width = jsrp.root_fonts_aver_width[indx] || 0.55;
+      if (fontIndex !== null) {
+
+         let indx = Math.floor(fontIndex / 10),
+             fontName = jsrp.root_fonts[indx] || "";
+
+         while (fontName.length > 0) {
+            if (fontName[0] === 'b')
+               this.weight = "bold";
+            else if (fontName[0] === 'i')
+               this.style = "italic";
+            else if (fontName[0] === 'o')
+               this.style = "oblique";
+            else
+               break;
+            fontName = fontName.substr(1);
+         }
+
+         if (fontName == 'Symbol')
+            this.weight = this.style = null;
+
+         this.name = fontName;
+         this.aver_width = jsrp.root_fonts_aver_width[indx] || 0.55;
+      } else {
+         this.name = name;
+         this.style = style || null;
+         this.weight = weight || null;
+         this.aver_width = 0.55;
+      }
 
       this.func = this.setFont.bind(this);
    }
@@ -1031,6 +1037,37 @@ JSROOT.define(['d3'], (d3) => {
          selection.attr("font-weight", this.weight);
       if (this.style)
          selection.attr("font-style", this.style);
+   }
+
+   /** @summary Set font size (optional) */
+   FontHandler.prototype.setSize = function(size) {
+      this.size = Math.round(size);
+   }
+
+   /** @summary Set text color (optional) */
+   FontHandler.prototype.setColor = function(color) {
+      this.color = color;
+   }
+
+   /** @summary Set text align (optional) */
+   FontHandler.prototype.setAlign = function(align) {
+      this.align = align;
+   }
+
+   /** @summary Set text angle (optional) */
+   FontHandler.prototype.setAngle = function(angle) {
+      this.angle = angle;
+   }
+
+   /** @summary Allign angle to step raster, add optional offset */
+   FontHandler.prototype.roundAngle = function(step, offset) {
+      this.angle = parseInt(this.angle || 0);
+      if (isNaN(this.angle)) this.angle = 0;
+      this.angle = Math.round(this.angle/step) * step + (offset || 0);
+      if (this.angle < 0)
+         this.angle += 360;
+      else if (this.angle >= 360)
+         this.angle -= 360;
    }
 
    /** @summary Clears all font-related attributes */
@@ -1323,7 +1360,7 @@ JSROOT.define(['d3'], (d3) => {
          delete this._reject_callbacks_;
 
          while (callbacks.length)
-            JSROOT.CallBack(callbacks.shift(), res_painter);
+            JSROOT.callBack(callbacks.shift(), res_painter);
       }
       return this;
    }
@@ -1337,7 +1374,7 @@ JSROOT.define(['d3'], (d3) => {
    BasePainter.prototype.WhenReady = function(resolveFunc, rejectFunc) {
       if (typeof resolveFunc !== 'function') return;
       if ('_ready_called_' in this)
-         return JSROOT.CallBack(resolveFunc, this);
+         return JSROOT.callBack(resolveFunc, this);
       if (!this._ready_callbacks_)
          this._ready_callbacks_ = [resolveFunc];
       else
@@ -1641,10 +1678,8 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Assign painter to specified element
-    *
     * @desc base painter does not creates canvas or frames
     * it registered in the first child element
-    *
     * @param {string|object} divid - element ID or DOM Element */
    BasePainter.prototype.SetDivId = function(divid) {
       if (divid !== undefined) {
@@ -1656,7 +1691,6 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Set item name, associated with the painter
-    *
     * @desc Used by {@link JSROOT.HiearchyPainter}
     * @private */
    BasePainter.prototype.SetItemName = function(name, opt, hpainter) {
@@ -1714,13 +1748,11 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.AssignObject = function(obj) { this.draw_object = ((obj !== undefined) && (typeof obj == 'object')) ? obj : null; }
 
    /** @summary Assign snapid to the painter
-   *
-   * @desc Identifier used to communicate with server side and identifies object on the server
-   * @private */
+    * @desc Identifier used to communicate with server side and identifies object on the server
+    * @private */
    ObjectPainter.prototype.AssignSnapId = function(id) { this.snapid = id; }
 
    /** @summary Generic method to cleanup painter.
-    *
     * @desc Remove object drawing and in case of main painter - also main HTML components */
    ObjectPainter.prototype.Cleanup = function() {
 
@@ -1762,10 +1794,8 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.GetClassName = function() { return (this.draw_object ? this.draw_object._typename : "") || ""; }
 
    /** @summary Checks if drawn object matches with provided typename
-    *
     * @param {string} arg - typename
-    * @param {string} arg._typename - if arg is object, use its typename
-    */
+    * @param {string} arg._typename - if arg is object, use its typename */
    ObjectPainter.prototype.MatchObjectType = function(arg) {
       if (!arg || !this.draw_object) return false;
       if (typeof arg === 'string') return (this.draw_object._typename === arg);
@@ -1773,8 +1803,7 @@ JSROOT.define(['d3'], (d3) => {
       return this.draw_object._typename.match(arg);
    }
 
-   /** @summary Changes item name.
-    *
+   /** @summary Change item name
     * @desc When available, used for svg:title proprty
     * @private */
    ObjectPainter.prototype.SetItemName = function(name, opt, hpainter) {
@@ -1908,7 +1937,8 @@ JSROOT.define(['d3'], (d3) => {
 
       let cp = this.canv_painter();
       if (!cp) return null;
-      if (cp.custom_palette && !palettedid) return cp.custom_palette;
+      if (cp.custom_palette && !palettedid)
+         return cp.custom_palette;
 
       if (force && jsrp.GetColorPalette)
          cp.custom_palette = jsrp.GetColorPalette(palettedid);
@@ -1925,7 +1955,6 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated.
-    *
     * @desc Redirects to {@link JSROOT.TPadPainter.CheckCanvasResize}
     * @private */
    ObjectPainter.prototype.CheckResize = function(arg) {
@@ -1994,7 +2023,8 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary This is SVG element, correspondent to current pad
     * @private */
    ObjectPainter.prototype.svg_pad = function(pad_name) {
-      if (pad_name === undefined) pad_name = this.pad_name;
+      if (pad_name === undefined)
+         pad_name = this.pad_name;
 
       let c = this.svg_canvas();
       if (!pad_name || c.empty()) return c;
@@ -2013,8 +2043,8 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Method selects immediate layer under canvas/pad main element
     * @private */
-   ObjectPainter.prototype.svg_layer = function(name, pad_name) {
-      let svg = this.svg_pad(pad_name);
+   ObjectPainter.prototype.svg_layer = function(name) {
+      let svg = this.svg_pad();
       if (svg.empty()) return svg;
 
       if (name.indexOf("prim#") == 0) {
@@ -2023,7 +2053,7 @@ JSROOT.define(['d3'], (d3) => {
       }
 
       let node = svg.node().firstChild;
-      while (node !== null) {
+      while (node) {
          let elem = d3.select(node);
          if (elem.classed(name)) return elem;
          node = node.nextSibling;
@@ -2033,7 +2063,7 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Method returns current pad name
-    * @param {string} [new_name = undefined] - when specified, new current pad name will be configured
+    * @param {string} [new_name] - when specified, new current pad name will be configured
     * @private */
    ObjectPainter.prototype.CurrentPadName = function(new_name) {
       let svg = this.svg_canvas();
@@ -2092,19 +2122,13 @@ JSROOT.define(['d3'], (d3) => {
    *  @param {number} coord - graphics coordiante.
    *  @param {boolean} ndc - kind of return value
    *  @returns {number} value of requested coordiantes
-   *  @private
-   */
+   *  @private */
    ObjectPainter.prototype.SvgToAxis = function(axis, coord, ndc) {
-      let use_frame = this.draw_g && this.draw_g.property('in_frame'),
-         main = use_frame ? this.frame_painter() : null;
+      let use_frame = this.draw_g && this.draw_g.property('in_frame');
 
-      if (use_frame) main = this.frame_painter();
-
-      if (use_frame && main) {
-         return (axis == "y") ? main.RevertY(coord - (use_frame ? 0 : main.frame_y()))
-            : main.RevertX(coord - (use_frame ? 0 : main.frame_x()));
-      } else if (use_frame) {
-         return 0; // in principal error, while frame calculation requested
+      if (use_frame) {
+         let main = this.frame_painter();
+         return main ? main.RevertAxis(axis, coord) : 0;
       }
 
       let value = (axis == "y") ? (1 - coord / this.pad_height()) : coord / this.pad_width();
@@ -2124,11 +2148,9 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Return functor, which can convert x and y coordinates into pixels, used for drawing
-    *
-    * Produce functor can convert x and y value by calling func.x(x) and func.y(y)
-    *  @param {boolean} isndc - if NDC coordinates will be used
-    *  @private
-    */
+    * @desc Produce functor can convert x and y value by calling func.x(x) and func.y(y)
+    * @param {boolean} isndc - if NDC coordinates will be used
+    * @private */
    ObjectPainter.prototype.AxisToSvgFunc = function(isndc) {
       let func = { isndc: isndc }, use_frame = this.draw_g && this.draw_g.property('in_frame');
       if (use_frame) func.main = this.frame_painter();
@@ -2161,17 +2183,14 @@ JSROOT.define(['d3'], (d3) => {
       return func;
    }
 
-   /** @summary Returns svg element for the frame.
-    *
-    * @param {string} [pad_name = undefined] - optional pad name, otherwise where object painter is drawn
+   /** @summary Returns svg element for the frame in current pad.
     * @private */
-   ObjectPainter.prototype.svg_frame = function(pad_name) { return this.svg_layer("primitives_layer", pad_name).select(".root_frame"); }
+   ObjectPainter.prototype.svg_frame = function() { return this.svg_layer("primitives_layer").select(".root_frame"); }
 
    /** @summary Returns pad width.
-    * @param {string} [pad_name] - optional pad name, otherwise where object painter is drawn
     * @private  */
-   ObjectPainter.prototype.pad_width = function(pad_name) {
-      let res = this.svg_pad(pad_name);
+   ObjectPainter.prototype.pad_width = function() {
+      let res = this.svg_pad();
       res = res.empty() ? 0 : res.property("draw_width");
       return isNaN(res) ? 0 : res;
    }
@@ -2179,17 +2198,18 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Returns pad height
     * @param {string} [pad_name] - optional pad name, otherwise where object painter is drawn
     * @private */
-   ObjectPainter.prototype.pad_height = function(pad_name) {
-      let res = this.svg_pad(pad_name);
+   ObjectPainter.prototype.pad_height = function() {
+      let res = this.svg_pad();
       res = res.empty() ? 0 : res.property("draw_height");
       return isNaN(res) ? 0 : res;
    }
 
    /** @summary Returns frame painter in current pad
+    * @desc Pad has direct reference on frame if any
     * @private */
    ObjectPainter.prototype.frame_painter = function() {
       let pp = this.pad_painter();
-      return pp ? pp.frame_painter_ref : null;
+      return pp ? pp.frame_painter() : null;
    }
 
    /** @summary Returns property of the frame painter
@@ -2211,256 +2231,13 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Returns frame height */
    ObjectPainter.prototype.frame_height = function() { return this.frame_property("_frame_height"); }
 
-   /** @summary Returns embed mode for 3D drawings (three.js) inside SVG.
-    *  @desc see {@link JSROOT.constants.Embed3D} for supported values
-    *  @private */
-   ObjectPainter.prototype.embed_3d = function(render3d) {
-      render3d = jsrp.GetRender3DKind(render3d);
-
-      // all non-webgl elements can be embedded into SVG as is
-      if (render3d !== JSROOT.constants.Render3D.WebGL)
-         return JSROOT.constants.Embed3D.EmbedSVG;
-
-      if (JSROOT.settings.Embed3D != JSROOT.constants.Embed3D.Default)
-         return JSROOT.settings.Embed3D;
-
-      if (JSROOT.browser.isFirefox)
-         return JSROOT.constants.Embed3D.Embed;
-
-      return JSROOT.constants.Embed3D.Overlay;
-   }
-
-   /** @summary Access current 3d mode
-    * @param {string} [new_value] - when specified, set new 3d mode
-    * @returns current value
-    * @private*/
-   ObjectPainter.prototype.access_3d_kind = function(new_value) {
-      let svg = this.svg_pad(this.this_pad_name);
-      if (svg.empty()) return -1;
-
-      // returns kind of currently created 3d canvas
-      let kind = svg.property('can3d');
-      if (new_value !== undefined) svg.property('can3d', new_value);
-      return ((kind === null) || (kind === undefined)) ? -1 : kind;
-   }
-
-   /** @summary Returns size which availble for 3D drawing.
-    * @desc One uses frame sizes for the 3D drawing - like TH2/TH3 objects
-    * @private */
-   ObjectPainter.prototype.size_for_3d = function(can3d, render3d) {
-
-      if (can3d === undefined) can3d = this.embed_3d(render3d);
-
-      let pad = this.svg_pad(this.this_pad_name),
-         clname = "draw3d_" + (this.this_pad_name || this.pad_name || 'canvas');
-
-      if (pad.empty()) {
-         // this is a case when object drawn without canvas
-
-         let rect = this.get_visible_rect(this.select_main());
-
-         if ((rect.height < 10) && (rect.width > 10)) {
-            rect.height = Math.round(0.66 * rect.width);
-            this.select_main().style('height', rect.height + "px");
-         }
-         rect.x = 0; rect.y = 0; rect.clname = clname; rect.can3d = -1;
-         return rect;
-      }
-
-      let elem = pad, fp = this.frame_painter();
-      if (can3d === 0) elem = this.svg_canvas();
-
-      let size = { x: 0, y: 0, width: 100, height: 100, clname: clname, can3d: can3d };
-
-      if (fp && !fp.mode3d) {
-         elem = this.svg_frame();
-         size.x = elem.property("draw_x");
-         size.y = elem.property("draw_y");
-      }
-
-      size.width = elem.property("draw_width");
-      size.height = elem.property("draw_height");
-
-      if ((!fp || fp.mode3d) && (can3d > 0)) {
-         size.x = Math.round(size.x + size.width * JSROOT.gStyle.fPadLeftMargin);
-         size.y = Math.round(size.y + size.height * JSROOT.gStyle.fPadTopMargin);
-         size.width = Math.round(size.width * (1 - JSROOT.gStyle.fPadLeftMargin - JSROOT.gStyle.fPadRightMargin));
-         size.height = Math.round(size.height * (1 - JSROOT.gStyle.fPadTopMargin - JSROOT.gStyle.fPadBottomMargin));
-      }
-
-      let pw = this.pad_width(this.this_pad_name), x2 = pw - size.x - size.width,
-         ph = this.pad_height(this.this_pad_name), y2 = ph - size.y - size.height;
-
-      if ((x2 >= 0) && (y2 >= 0)) {
-         // while 3D canvas uses area also for the axis labels, extend area relative to normal frame
-         size.x = Math.round(size.x * 0.3);
-         size.y = Math.round(size.y * 0.9);
-         size.width = pw - size.x - Math.round(x2 * 0.3);
-         size.height = ph - size.y - Math.round(y2 * 0.5);
-      }
-
-      if (can3d === 1)
-         this.CalcAbsolutePosition(this.svg_pad(this.this_pad_name), size);
-
-      return size;
-   }
-
-   /** @summary Clear all 3D drawings
-    * @returns can3d value - how webgl canvas was placed
-    * @private */
-   ObjectPainter.prototype.clear_3d_canvas = function() {
-      let can3d = this.access_3d_kind(null);
-      if (can3d < 0) {
-         // remove first child from main element - if it is canvas
-         let main = this.select_main().node();
-         if (main && main.firstChild && main.firstChild.$jsroot) {
-            delete main.firstChild.painter;
-            main.removeChild(main.firstChild);
-         }
-         return can3d;
-      }
-
-      let size = this.size_for_3d(can3d);
-
-      if (size.can3d === 0) {
-         d3.select(this.svg_canvas().node().nextSibling).remove(); // remove html5 canvas
-         this.svg_canvas().style('display', null); // show SVG canvas
-      } else {
-         if (this.svg_pad(this.this_pad_name).empty()) return;
-
-         this.apply_3d_size(size).remove();
-
-         this.svg_frame().style('display', null);  // clear display property
-      }
-      return can3d;
-   }
-
-   /** @summary Add 3D canvas
-    * @private */
-   ObjectPainter.prototype.add_3d_canvas = function(size, canv, webgl) {
-
-      if (!canv || (size.can3d < -1)) return;
-
-      if (size.can3d === -1) {
-         // case when 3D object drawn without canvas
-
-         let main = this.select_main().node();
-         if (main !== null) {
-            main.appendChild(canv);
-            canv.painter = this;
-            canv.$jsroot = true; // mark canvas as added by jsroot
-         }
-
-         return;
-      }
-
-      if ((size.can3d > 0) && !webgl)
-         size.can3d = JSROOT.constants.Embed3D.EmbedSVG;
-
-      this.access_3d_kind(size.can3d);
-
-      if (size.can3d === 0) {
-         this.svg_canvas().style('display', 'none'); // hide SVG canvas
-
-         this.svg_canvas().node().parentNode.appendChild(canv); // add directly
-      } else {
-         if (this.svg_pad(this.this_pad_name).empty()) return;
-
-         // first hide normal frame
-         this.svg_frame().style('display', 'none');
-
-         let elem = this.apply_3d_size(size);
-
-         elem.attr('title', '').node().appendChild(canv);
-      }
-   }
-
-   /** @summary Apply size to 3D elements
-    * @private */
-   ObjectPainter.prototype.apply_3d_size = function(size, onlyget) {
-
-      if (size.can3d < 0) return d3.select(null);
-
-      let elem;
-
-      if (size.can3d > 1) {
-
-         elem = this.svg_layer(size.clname);
-
-         // elem = layer.select("." + size.clname);
-         if (onlyget) return elem;
-
-         let svg = this.svg_pad();
-
-         if (size.can3d === JSROOT.constants.Embed3D.EmbedSVG) {
-            // this is SVG mode or image mode - just create group to hold element
-
-            if (elem.empty())
-               elem = svg.insert("g", ".primitives_layer").attr("class", size.clname);
-
-            elem.attr("transform", "translate(" + size.x + "," + size.y + ")");
-
-         } else {
-
-            if (elem.empty())
-               elem = svg.insert("foreignObject", ".primitives_layer").attr("class", size.clname);
-
-            elem.attr('x', size.x)
-               .attr('y', size.y)
-               .attr('width', size.width)
-               .attr('height', size.height)
-               .attr('viewBox', "0 0 " + size.width + " " + size.height)
-               .attr('preserveAspectRatio', 'xMidYMid');
-         }
-
-      } else {
-         let prnt = this.svg_canvas().node().parentNode;
-
-         elem = d3.select(prnt).select("." + size.clname);
-         if (onlyget) return elem;
-
-         // force redraw by resize
-         this.svg_canvas().property('redraw_by_resize', true);
-
-         if (elem.empty())
-            elem = d3.select(prnt).append('div').attr("class", size.clname + " jsroot_noselect");
-
-         // our position inside canvas, but to set 'absolute' position we should use
-         // canvas element offset relative to first parent with non-static position
-         // now try to use getBoundingClientRect - it should be more precise
-
-         let pos0 = prnt.getBoundingClientRect();
-
-         while (prnt) {
-            if (prnt === document) { prnt = null; break; }
-            try {
-               if (getComputedStyle(prnt).position !== 'static') break;
-            } catch (err) {
-               break;
-            }
-            prnt = prnt.parentNode;
-         }
-
-         let pos1 = prnt ? prnt.getBoundingClientRect() : { top: 0, left: 0 };
-
-         let offx = Math.round(pos0.left - pos1.left),
-            offy = Math.round(pos0.top - pos1.top);
-
-         elem.style('position', 'absolute').style('left', (size.x + offx) + 'px').style('top', (size.y + offy) + 'px').style('width', size.width + 'px').style('height', size.height + 'px');
-      }
-
-      return elem;
-   }
-
    /** @summary Returns main object painter on the pad.
-    *
     * @desc Normally this is first histogram drawn on the pad, which also draws all axes
-    * @param {boolean} [not_store = undefined] - if true, prevent temporary store of main painter reference
-    * @param {string} [pad_name = undefined] - when specified, returns main painter from specified pad */
-   ObjectPainter.prototype.main_painter = function(not_store, pad_name) {
+    * @param {boolean} [not_store] - if true, prevent temporary store of main painter reference */
+   ObjectPainter.prototype.main_painter = function(not_store) {
       let res = this.main;
       if (!res) {
-         let svg_p = this.svg_pad(pad_name);
+         let svg_p = this.svg_pad();
          if (svg_p.empty()) {
             res = this.AccessTopPainter();
          } else {
@@ -2490,10 +2267,9 @@ JSROOT.define(['d3'], (d3) => {
     *   -   5  major objects like TGeoVolume (do not require canvas)
     *
     * @param {string|object} divid - id of div element or directly DOMElement
-    * @param {number} [kind = 0] - kind of object drawn with painter
-    * @param {string} [pad_name = undefined] - when specified, subpad name used for object drawin
-    * @private
-    */
+    * @param {number} [kind] - kind of object drawn with painter
+    * @param {string} [pad_name] - when specified, subpad name used for object drawing
+    * @private */
    ObjectPainter.prototype.SetDivId = function(divid, kind, pad_name) {
 
       if (divid !== undefined) {
@@ -2538,13 +2314,15 @@ JSROOT.define(['d3'], (d3) => {
       if (kind < 0) return true;
 
       // create TFrame element if not exists
-      if (this.svg_frame().select(".main_layer").empty() && ((kind == 1) || (kind == 3) || (kind == 4))) {
-         if (typeof jsrp.drawFrame == 'function')
-            jsrp.drawFrame(divid, null, (kind == 4) ? "3d" : "");
-         if ((kind != 4) && this.svg_frame().empty()) return alert("Fail to draw dummy TFrame");
-      }
+      if ((kind == 1) || (kind == 3) || (kind == 4))
+         if (this.svg_frame().select(".main_layer").empty()) {
+            if (typeof jsrp.drawFrame == 'function')
+               jsrp.drawFrame(divid, null, (kind == 4) ? "3d" : "");
+            if ((kind != 4) && this.svg_frame().empty())
+               return alert("Fail to draw dummy TFrame");
+         }
 
-      let svg_p = this.svg_pad();
+      let svg_p = this.svg_pad(this.pad_name); // important - padrent pad element accessed here
       if (svg_p.empty()) return true;
 
       let pp = svg_p.property('pad_painter');
@@ -2582,18 +2360,20 @@ JSROOT.define(['d3'], (d3) => {
     * See {@link JSROOT.TAttMarkerHandler} for more info.
     * Instance assigned as this.markeratt data member, recognized by GED editor
     * @param {object} args - either TAttMarker or see arguments of {@link JSROOT.TAttMarkerHandler}
-    * @returns created handler
-    */
+    * @returns created handler */
    ObjectPainter.prototype.createAttMarker = function(args) {
       if (!args || (typeof args !== 'object')) args = { std: true }; else
          if (args.fMarkerColor !== undefined && args.fMarkerStyle !== undefined && args.fMarkerSize !== undefined) args = { attr: args, std: false };
 
       if (args.std === undefined) args.std = true;
+      if (args.painter === undefined) args.painter = this;
 
       let handler = args.std ? this.markeratt : null;
 
-      if (!handler) handler = new TAttMarkerHandler(args);
-      else if (!handler.changed || args.force) handler.SetArgs(args);
+      if (!handler)
+         handler = new TAttMarkerHandler(args);
+      else if (!handler.changed || args.force)
+         handler.SetArgs(args);
 
       if (args.std) this.markeratt = handler;
 
@@ -2607,18 +2387,22 @@ JSROOT.define(['d3'], (d3) => {
    * @desc Can be used to produce lines in painter.
    * See {@link JSROOT.TAttLineHandler} for more info.
    * Instance assigned as this.lineatt data member, recognized by GED editor
-   * @param {object} args - either TAttLine or see constructor arguments of {@link JSROOT.TAttLineHandler}
-   */
+   * @param {object} args - either TAttLine or see constructor arguments of {@link JSROOT.TAttLineHandler} */
    ObjectPainter.prototype.createAttLine = function(args) {
-      if (!args || (typeof args !== 'object')) args = { std: true }; else
-         if (args.fLineColor !== undefined && args.fLineStyle !== undefined && args.fLineWidth !== undefined) args = { attr: args, std: false };
+      if (!args || (typeof args !== 'object'))
+         args = { std: true };
+      else if (args.fLineColor !== undefined && args.fLineStyle !== undefined && args.fLineWidth !== undefined)
+         args = { attr: args, std: false };
 
       if (args.std === undefined) args.std = true;
+      if (args.painter === undefined) args.painter = this;
 
       let handler = args.std ? this.lineatt : null;
 
-      if (!handler) handler = new TAttLineHandler(args);
-      else if (!handler.changed || args.force) handler.SetArgs(args);
+      if (!handler)
+         handler = new TAttLineHandler(args);
+      else if (!handler.changed || args.force)
+         handler.SetArgs(args);
 
       if (args.std) this.lineatt = handler;
 
@@ -2651,9 +2435,12 @@ JSROOT.define(['d3'], (d3) => {
       let handler = args.std ? this.fillatt : null;
 
       if (!args.svg) args.svg = this.svg_canvas();
+      if (args.painter === undefined) args.painter = this;
 
-      if (!handler) handler = new TAttFillHandler(args);
-      else if (!handler.changed || args.force) handler.SetArgs(args);
+      if (!handler)
+         handler = new TAttFillHandler(args);
+      else if (!handler.changed || args.force)
+         handler.SetArgs(args);
 
       if (args.std) this.fillatt = handler;
 
@@ -2690,7 +2477,7 @@ JSROOT.define(['d3'], (d3) => {
       if (arg == "pad") {
          this.RedrawPad(reason);
       } else if (arg == "axes") {
-         let main = this.main_painter(true, this.this_pad_name); // works for pad and any object drawn in the pad
+         let main = this.main_painter(true); // works for pad and any object drawn in the pad
          if (main && (typeof main.DrawAxes == 'function'))
             main.DrawAxes();
          else
@@ -2700,12 +2487,12 @@ JSROOT.define(['d3'], (d3) => {
       }
 
       // inform GED that something changes
-      let pp = this.pad_painter();
-      if (pp && (typeof pp.InteractiveObjectRedraw == 'function'))
-         pp.InteractiveObjectRedraw(this);
+      let pp = this.pad_painter(), canp = this.canv_painter();
+
+      if (canp && (typeof canp.PadEvent == 'function'))
+         canp.PadEvent("redraw", pp, this, null, subelem);
 
       // inform server that drawopt changes
-      let canp = this.canv_painter();
       if (canp && (typeof canp.ProcessChanges == 'function'))
          canp.ProcessChanges(info, this, subelem);
    }
@@ -2790,6 +2577,35 @@ JSROOT.define(['d3'], (d3) => {
 
       return menu.size() > 0;
    }
+
+   /** @summary Produce exec string for WebCanas to set color value
+    * @desc Color can be id or string, but should belong to list of known colors
+    * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
+    * @private */
+   ObjectPainter.prototype.GetColorExec = function(col, method) {
+      let id = -1, arr = jsrp.root_colors;
+      if (typeof col == "string") {
+         if (!col || (col == "none")) id = 0; else
+            for (let k = 1; k < arr.length; ++k)
+               if (arr[k] == col) { id = k; break; }
+         if ((id < 0) && (col.indexOf("rgb") == 0)) id = 9999;
+      } else if (!isNaN(col) && arr[col]) {
+         id = col;
+         col = arr[id];
+      }
+
+      if (id < 0) return "";
+
+      if (id >= 50) {
+         // for higher color numbers ensure that such color exists
+         let c = d3.color(col);
+         id = "TColor::GetColor(" + c.r + "," + c.g + "," + c.b + ")";
+      }
+
+      return "exec:" + method + "(" + id + ")";
+   }
+
+
 
    /** @summary returns function used to display object status
     * @private */
@@ -2913,7 +2729,7 @@ JSROOT.define(['d3'], (d3) => {
     * are there good solution?
     * @private */
    ObjectPainter.prototype.GetBoundarySizes = function(elem) {
-      if (elem === null) { console.warn('empty node in GetBoundarySizes'); return { width: 0, height: 0 }; }
+      if (!elem) { console.warn('empty node in GetBoundarySizes'); return { width: 0, height: 0 }; }
       let box = elem.getBoundingClientRect(); // works always, but returns sometimes results in ex values, which is difficult to use
       if (parseFloat(box.width) > 0) box = elem.getBBox(); // check that elements visible, request precise value
       let res = { width: parseInt(box.width), height: parseInt(box.height) };
@@ -2923,7 +2739,18 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Finish text drawing
-    * @desc Should be called to complete all text drawing operations */
+    * @returns {Promise} when done
+    * @private */
+   ObjectPainter.prototype.FinishTextPromise = function(draw_g) {
+      return new Promise(resolveFunc => {
+          this.FinishTextDrawing(draw_g, resolveFunc);
+      });
+   }
+
+   /** @summary Finish text drawing
+    * @desc Should be called to complete all text drawing operations
+    * @param {function} call_ready - callback function
+    * @private */
    ObjectPainter.prototype.FinishTextDrawing = function(draw_g, call_ready, checking_mathjax) {
       if (!draw_g) draw_g = this.draw_g;
 
@@ -2936,13 +2763,14 @@ JSROOT.define(['d3'], (d3) => {
       let all_args = draw_g.property('all_args'), missing = 0;
       if (!all_args) {
          console.log('Text drawing is finished - why?????');
-         return 0;
+         all_args = [];
       }
 
       all_args.forEach(arg => { if (!arg.ready) missing++; });
 
       if (missing > 0) {
-         if (call_ready) draw_g.node().text_callback = call_ready;
+         if (typeof call_ready == 'function')
+            draw_g.node().text_callback = call_ready;
          return 0;
       }
 
@@ -3037,7 +2865,7 @@ JSROOT.define(['d3'], (d3) => {
       draw_g.node().text_callback = null;
 
       // if specified, call ready function
-      JSROOT.CallBack(call_ready);
+      JSROOT.callBack(call_ready);
       return 0;
    }
 
@@ -3061,20 +2889,37 @@ JSROOT.define(['d3'], (d3) => {
 
       if (!arg.text) arg.text = "";
 
+      arg.draw_g = arg.draw_g || this.draw_g;
+
+      let font = arg.draw_g.property('text_font');
+      arg.font = font; // use in latex conversion
+
+      if (font) {
+         if (font.color && !arg.color) arg.color = font.color;
+         if (font.align && !arg.align) arg.align = font.align;
+         if (font.angle && !arg.rotate) arg.rotate = font.angle;
+      }
+
       let align = ['start', 'middle'];
 
       if (typeof arg.align == 'string') {
          align = arg.align.split(";");
          if (align.length == 1) align.push('middle');
       } else if (typeof arg.align == 'number') {
-         if ((arg.align / 10) >= 3) align[0] = 'end'; else
-            if ((arg.align / 10) >= 2) align[0] = 'middle';
-         if ((arg.align % 10) == 0) align[1] = 'bottom'; else
-            if ((arg.align % 10) == 1) align[1] = 'bottom-base'; else
-               if ((arg.align % 10) == 3) align[1] = 'top';
+         if ((arg.align / 10) >= 3)
+            align[0] = 'end';
+         else if ((arg.align / 10) >= 2)
+            align[0] = 'middle';
+         if ((arg.align % 10) == 0)
+            align[1] = 'bottom';
+         else if ((arg.align % 10) == 1)
+            align[1] = 'bottom-base';
+         else if ((arg.align % 10) == 3)
+            align[1] = 'top';
+      } else if (arg.align && (typeof arg.align == 'object') && arg.align.length == 2) {
+         align = arg.align;
       }
 
-      arg.draw_g = arg.draw_g || this.draw_g;
       if (arg.latex === undefined) arg.latex = 1; //  latex 0-text, 1-latex, 2-math
       arg.align = align;
       arg.x = arg.x || 0;
@@ -3100,15 +2945,11 @@ JSROOT.define(['d3'], (d3) => {
       arg.draw_g.property('all_args').push(arg);
       arg.ready = false; // indicates if drawing is ready for post-processing
 
-      let font = arg.draw_g.property('text_font'),
-          use_mathjax = (arg.latex == 2);
+      let use_mathjax = (arg.latex == 2);
 
       if (arg.latex === 1)
          use_mathjax = (JSROOT.settings.Latex == JSROOT.constants.Latex.AlwaysMathJax) ||
                        ((JSROOT.settings.Latex == JSROOT.constants.Latex.MathJax) && arg.text.match(/[#{\\]/g));
-
-      arg.font = font; // use in latex conversion
-
 
       if (!use_mathjax || arg.nomathjax) {
 
@@ -3168,6 +3009,7 @@ JSROOT.define(['d3'], (d3) => {
       if (arg.scale) this.TextScaleFactor(1. * arg.box.height / arg.height, arg.draw_g);
 
       arg.result_width = arg.box.width;
+      arg.result_height = arg.box.height;
 
       // in some cases
       if (typeof arg.post_process == 'function')
@@ -3178,12 +3020,266 @@ JSROOT.define(['d3'], (d3) => {
 
    // ===========================================================
 
+
+   /**
+     * @summary Base painter for axis objects in v6/v7
+     *
+     * @class
+     * @memberof JSROOT
+     * @param {object} obj - axis object if any
+     * @private
+     */
+
+   function AxisBasePainter(obj) {
+      ObjectPainter.call(this, obj);
+
+      this.name = "yaxis";
+      this.kind = "normal";
+      this.func = null;
+      this.order = 0; // scaling order for axis labels
+
+      this.full_min = 0;
+      this.full_max = 1;
+      this.scale_min = 0;
+      this.scale_max = 1;
+      this.ticks = []; // list of major ticks
+   }
+
+   AxisBasePainter.prototype = Object.create(ObjectPainter.prototype);
+
+   AxisBasePainter.prototype.Cleanup = function() {
+      this.ticks = [];
+      delete this.format;
+      delete this.func;
+      delete this.tfunc1;
+      delete this.tfunc2;
+      delete this.gr;
+
+      // cleanup of v7 members
+      delete this.axis;
+      delete this.axis_g;
+
+      ObjectPainter.prototype.Cleanup.call(this);
+   }
+
+   /** @summary Assign often used members of frame painter
+     * @private */
+   AxisBasePainter.prototype.AssignFrameMembers = function(fp, axis) {
+      fp["gr"+axis] = this.gr;                    // fp.grx
+      fp["log"+axis] = this.log;                  // fp.logx
+      fp["scale_"+axis+"min"] = this.scale_min;   // fp.scale_xmin
+      fp["scale_"+axis+"max"] = this.scale_max;   // fp.scale_xmax
+   }
+
+   /** @summary Convert axis value into the Date object */
+   AxisBasePainter.prototype.ConvertDate = function(v) {
+      return new Date(this.timeoffset + v*1000);
+   }
+
+   /** @summary Convert graphical point back into axis value */
+   AxisBasePainter.prototype.RevertPoint = function(pnt) {
+      let value = this.func.invert(pnt);
+      return (this.kind == "time") ?  (value - this.timeoffset) / 1000 : value;
+   }
+
+   /** @summary Provide label for time axis */
+   AxisBasePainter.prototype.formatTime = function(d, asticks) {
+      return asticks ? this.tfunc1(d) : this.tfunc2(d);
+   }
+
+   /** @summary Provide label for log axis */
+   AxisBasePainter.prototype.formatLog = function(d, asticks, fmt) {
+      let val = parseFloat(d), rnd = Math.round(val);
+      if (!asticks)
+         return ((rnd === val) && (Math.abs(rnd)<1e9)) ? rnd.toString() : JSROOT.FFormat(val, fmt || JSROOT.gStyle.fStatFormat);
+      if (val <= 0) return null;
+      let vlog = Math.log10(val), base = this.logbase;
+      if (base !== 10) vlog = vlog / Math.log10(base);
+      if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog))<0.001)) {
+         if (!this.noexp && (asticks != 2))
+            return this.formatExp(base, Math.floor(vlog+0.01), val);
+
+         return (vlog<0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
+      }
+      return null;
+   }
+
+   /** @summary Provide label for normal axis */
+   AxisBasePainter.prototype.formatNormal = function(d, asticks, fmt) {
+      let val = parseFloat(d);
+      if (asticks && this.order) val = val / Math.pow(10, this.order);
+
+      if (val === Math.round(val))
+         return (Math.abs(val)<1e9) ? val.toFixed(0) : val.toExponential(4);
+
+      if (asticks) return (this.ndig>10) ? val.toExponential(this.ndig-11) : val.toFixed(this.ndig);
+
+      return JSROOT.FFormat(val, fmt || JSROOT.gStyle.fStatFormat);
+   }
+
+   /** @summary Provide label for exponential form */
+   AxisBasePainter.prototype.formatExp = function(base, order, value) {
+      let res = "";
+      if (value) {
+         value = Math.round(value/Math.pow(base,order));
+         if ((value!=0) && (value!=1)) res = value.toString() + (JSROOT.settings.Latex ? "#times" : "x");
+      }
+      if (Math.abs(base-Math.exp(1)) < 0.001)
+         res += "e";
+      else
+         res += base.toString();
+      if (JSROOT.settings.Latex > JSROOT.constants.Latex.Symbols)
+         return res + "^{" + order + "}";
+      const superscript_symbols = {
+            '0': '\u2070', '1': '\xB9', '2': '\xB2', '3': '\xB3', '4': '\u2074', '5': '\u2075',
+            '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079', '-': '\u207B'
+         };
+      let str = order.toString();
+      for (let n = 0; n < str.length; ++n)
+         res += superscript_symbols[str[n]];
+      return res;
+   }
+
+   /** @summary Convert "raw" axis value into text */
+   AxisBasePainter.prototype.AxisAsText = function(value, fmt) {
+      if (this.kind == 'time')
+         value = this.ConvertDate(value);
+      if (this.format)
+         return this.format(value, false, fmt);
+      return value.toPrecision(4);
+   }
+
+   /** @summary Produce ticks for d3.scaleLog
+     * @desc Fixing following problem, described [here]{@link https://stackoverflow.com/questions/64649793} */
+   AxisBasePainter.prototype.PoduceLogTicks = function(func, number) {
+      function linearArray(arr) {
+         let sum1 = 0, sum2 = 0;
+         for (let k=1;k<arr.length;++k) {
+            let diff = (arr[k] - arr[k-1]);
+            sum1 += diff;
+            sum2 += diff*diff;
+         }
+         let mean = sum1/(arr.length-1);
+         let dev = sum2/(arr.length-1) - mean*mean;
+
+         if (dev <= 0) return true;
+         if (Math.abs(mean) < 1e-100) return false;
+         return Math.sqrt(dev)/mean < 1e-6;
+      }
+
+      let arr = func.ticks(number);
+
+      while ((number > 4) && linearArray(arr)) {
+         number = Math.round(number*0.8);
+         arr = func.ticks(number);
+      }
+
+      // if still linear array, try to sort out "bad" ticks
+      if ((number < 5) && linearArray(arr) && this.logbase && (this.logbase != 10)) {
+         let arr2 = [];
+         arr.forEach(val => {
+            let pow = Math.log10(val) / Math.log10(this.logbase);
+            if (Math.abs(Math.round(pow) - pow) < 0.01) arr2.push(val);
+         });
+         if (arr2.length > 0) arr = arr2;
+      }
+
+      return arr;
+   }
+
+   /** @summary Produce axis ticks */
+   AxisBasePainter.prototype.ProduceTicks = function(ndiv, ndiv2) {
+      if (!this.noticksopt) {
+         let total = ndiv * (ndiv2 || 1);
+         return this.log ? this.PoduceLogTicks(this.func, total) : this.func.ticks(total);
+      }
+
+      let dom = this.func.domain(), ticks = [];
+      if (ndiv2) ndiv = (ndiv-1) * ndiv2;
+      for (let n=0;n<=ndiv;++n)
+         ticks.push((dom[0]*(ndiv-n) + dom[1]*n)/ndiv);
+      return ticks;
+   }
+
+   /** @summary Method analyze mouse wheel event and returns item with suggested zooming range */
+   AxisBasePainter.prototype.analyzeWheelEvent = function(evnt, dmin, item, test_ignore) {
+      if (!item) item = {};
+
+      let delta = 0, delta_left = 1, delta_right = 1;
+
+      if ('dleft' in item) { delta_left = item.dleft; delta = 1; }
+      if ('dright' in item) { delta_right = item.dright; delta = 1; }
+
+      if (item.delta) {
+         delta = item.delta;
+      } else if (evnt) {
+         delta = evnt.wheelDelta ? -evnt.wheelDelta : (evnt.deltaY || evnt.detail);
+      }
+
+      if (!delta || (test_ignore && item.ignore)) return;
+
+      delta = (delta < 0) ? -0.2 : 0.2;
+      delta_left *= delta
+      delta_right *= delta;
+
+      let lmin = item.min = this.scale_min,
+          lmax = item.max = this.scale_max,
+          gmin = this.full_min,
+          gmax = this.full_max;
+
+      if ((item.min === item.max) && (delta < 0)) {
+         item.min = gmin;
+         item.max = gmax;
+      }
+
+      if (item.min >= item.max) return;
+
+      if (item.reverse) dmin = 1 - dmin;
+
+      if ((dmin > 0) && (dmin < 1)) {
+         if (this.log) {
+            let factor = (item.min>0) ? Math.log10(item.max/item.min) : 2;
+            if (factor>10) factor = 10; else if (factor<0.01) factor = 0.01;
+            item.min = item.min / Math.pow(10, factor*delta_left*dmin);
+            item.max = item.max * Math.pow(10, factor*delta_right*(1-dmin));
+         } else {
+            let rx_left = (item.max - item.min), rx_right = rx_left;
+            if (delta_left>0) rx_left = 1.001 * rx_left / (1-delta_left);
+            item.min += -delta_left*dmin*rx_left;
+            if (delta_right>0) rx_right = 1.001 * rx_right / (1-delta_right);
+            item.max -= -delta_right*(1-dmin)*rx_right;
+         }
+         if (item.min >= item.max) {
+            item.min = item.max = undefined;
+         } else if (delta_left !== delta_right) {
+            // extra check case when moving left or right
+            if (((item.min < gmin) && (lmin === gmin)) ||
+                ((item.max > gmax) && (lmax === gmax)))
+                   item.min = item.max = undefined;
+         } else {
+            if (item.min < gmin) item.min = gmin;
+            if (item.max > gmax) item.max = gmax;
+         }
+      } else {
+         item.min = item.max = undefined;
+      }
+
+      item.changed = ((item.min !== undefined) && (item.max !== undefined));
+
+      return item;
+   }
+
+
+   // ===========================================================
+
+
+
    /** @summary Set active pad painter
     *
-    * @desc Should be used to handle key press events, which are global in the web browser
+    * @desc Normally be used to handle key press events, which are global in the web browser
     * @param {object} args - functions arguments
     * @param {object} args.pp - pad painter
-    * @param {boolean} [args.active = false] - is pad activated or not
+    * @param {boolean} [args.active] - is pad activated or not
     * @private */
    jsrp.SelectActivePad = function(args) {
       if (args.active) {
@@ -3210,6 +3306,7 @@ JSROOT.define(['d3'], (d3) => {
    // =====================================================================
 
    JSROOT.EAxisBits = {
+      kDecimals: JSROOT.BIT(7),
       kTickPlus: JSROOT.BIT(9),
       kTickMinus: JSROOT.BIT(10),
       kAxisRange: JSROOT.BIT(11),
@@ -3224,7 +3321,7 @@ JSROOT.define(['d3'], (d3) => {
       kLabelsUp: JSROOT.BIT(21),
       kIsInteger: JSROOT.BIT(22),
       kMoreLogLabels: JSROOT.BIT(23),
-      kDecimals: JSROOT.BIT(11)
+      kOppositeTitle: JSROOT.BIT(32) // atrificial bit, not possible to set in ROOT
    };
 
    // ================= painter of raw text ========================================
@@ -3798,6 +3895,28 @@ JSROOT.define(['d3'], (d3) => {
       return canp ? canp.ProduceJSON() : "";
    }
 
+   /** @summary Compress SVG code, produced from JSROOT drawing
+     * @desc removes extra info or empty elements
+     * @private */
+   jsrp.CompressSVG = function(svg) {
+
+      svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g, "url(#$1)")        // decode all URL
+               .replace(/ class=\"\w*\"/g, "")                                // remove all classes
+               .replace(/ pad=\"\w*\"/g, "")                                  // remove all pad ids
+               .replace(/ title=\"\"/g, "")                                   // remove all empty titles
+               .replace(/<g objname=\"\w*\" objtype=\"\w*\"/g, "<g")          // remove object ids
+               .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g, "")  // remove all empty groups with transform
+               .replace(/<g><\/g>/g, "");                                     // remove all empty groups
+
+      // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
+      svg = svg.replace(/<svg x=\"0\" y=\"0\" overflow=\"hidden\" width=\"\d+\" height=\"\d+\" viewBox=\"0 0 \d+ \d+\"><\/svg>/g, "")
+
+      if (svg.indexOf("xlink:href") < 0)
+         svg = svg.replace(/ xmlns:xlink=\"http:\/\/www.w3.org\/1999\/xlink\"/g, "");
+
+      return svg;
+   }
+
    /** @summary Create SVG image for provided object.
     *
     * @desc Function especially useful in Node.js environment to generate images for
@@ -3824,33 +3943,25 @@ JSROOT.define(['d3'], (d3) => {
 
          main.style("width", args.width + "px").style("height", args.height + "px");
 
-         JSROOT.svg_workaround = undefined;
+         JSROOT._.svg_3ds = undefined;
 
          return JSROOT.draw(main.node(), args.object, args.option || "").then(() => {
 
-            let has_workarounds = jsrp.ProcessSVGWorkarounds && JSROOT.svg_workaround;
+            let has_workarounds = JSROOT._.svg_3ds && jsrp.ProcessSVGWorkarounds;
 
-            main.select('svg').attr("xmlns", "http://www.w3.org/2000/svg")
-               .attr("xmlns:xlink", "http://www.w3.org/1999/xlink")
-               .attr("width", args.width)
-               .attr("height", args.height)
-               .attr("style", null).attr("class", null).attr("x", null).attr("y", null);
+            main.select('svg')
+                .attr("xmlns", "http://www.w3.org/2000/svg")
+                .attr("xmlns:xlink", "http://www.w3.org/1999/xlink")
+                .attr("width", args.width)
+                .attr("height", args.height)
+                .attr("style", null).attr("class", null).attr("x", null).attr("y", null);
 
             let svg = main.html();
 
             if (has_workarounds)
                svg = jsrp.ProcessSVGWorkarounds(svg);
 
-            svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g, "url(#$1)")  // decode all URL
-               .replace(/ class=\"\w*\"/g, "")                                // remove all classes
-               .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g, "")  // remove all empty groups with transform
-               .replace(/<g><\/g>/g, "");                                     // remove all empty groups
-
-            // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
-            svg = svg.replace(/<svg x=\"0\" y=\"0\" overflow=\"hidden\" width=\"\d+\" height=\"\d+\" viewBox=\"0 0 \d+ \d+\"><\/svg>/g, "")
-
-            if (svg.indexOf("xlink:href") < 0)
-               svg = svg.replace(/ xmlns:xlink=\"http:\/\/www.w3.org\/1999\/xlink\"/g, "");
+            svg = jsrp.CompressSVG(svg);
 
             main.remove();
 
@@ -4055,6 +4166,7 @@ JSROOT.define(['d3'], (d3) => {
    JSROOT.FontHandler = FontHandler;
    JSROOT.BasePainter = BasePainter;
    JSROOT.ObjectPainter = ObjectPainter;
+   JSROOT.AxisBasePainter = AxisBasePainter;
 
    // Only for backward compatibility with v5, will be removed in later JSROOT versions
    JSROOT.TBasePainter = BasePainter;

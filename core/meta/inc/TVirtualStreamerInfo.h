@@ -126,7 +126,7 @@ public:
    TVirtualStreamerInfo();
    TVirtualStreamerInfo(TClass * /*cl*/);
    virtual            ~TVirtualStreamerInfo();
-   virtual void        Build() = 0;
+   virtual void        Build(Bool_t isTransient = kFALSE) = 0;
    virtual void        BuildCheck(TFile *file = 0, Bool_t load = kTRUE) = 0;
    virtual void        BuildEmulated(TFile *file) = 0;
    virtual void        BuildOld() = 0;
@@ -185,8 +185,8 @@ public:
    // provokes the creation of the corresponding TClass.  This relies on the dictionary for
    // std::pair<const int, int> to already exist (or the interpreter information being available)
    // as it is used as a template.
-   virtual TVirtualStreamerInfo *GenerateInfoForPair(const std::string &pairclassname) = 0;
-   virtual TVirtualStreamerInfo *GenerateInfoForPair(const std::string &firstname, const std::string &secondname) = 0;
+   virtual TVirtualStreamerInfo *GenerateInfoForPair(const std::string &pairclassname, bool silent, size_t hint_pair_offset, size_t hint_pair_size) = 0;
+   virtual TVirtualStreamerInfo *GenerateInfoForPair(const std::string &firstname, const std::string &secondname, bool silent, size_t hint_pair_offset, size_t hint_pair_size) = 0;
 
    virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name, Bool_t silent) = 0;
    virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name, Bool_t silent) = 0;

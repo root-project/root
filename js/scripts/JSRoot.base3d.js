@@ -5,15 +5,270 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
    "use strict";
 
-   /** Creates renderer for the 3D drawings
-    *
+   /** @ummary Define rendering kind which will be used for rendering of 3D elements
+    * @memberOf JSROOT.Painter
+    * @param {value} [render3d] - preconfigured value, will be used if applicable
+    * @returns {value} - rendering kind, see JSROOT.constants.Render3D
+    * @private */
+   jsrp.GetRender3DKind = function(render3d) {
+      if (!render3d) render3d = JSROOT.BatchMode ? JSROOT.settings.Render3DBatch : JSROOT.settings.Render3D;
+      let rc = JSROOT.constants.Render3D;
+
+      if (render3d == rc.Default) render3d = JSROOT.BatchMode ? rc.WebGLImage : rc.WebGL;
+      if (JSROOT.BatchMode && (render3d == rc.WebGL)) render3d = rc.WebGLImage;
+
+      return render3d;
+   }
+
+   let Handling3DDrawings = {};
+
+   /** @summary Access current 3d mode
+    * @param {string} [new_value] - when specified, set new 3d mode
+    * @returns current value
+    * @private*/
+   Handling3DDrawings.access_3d_kind = function(new_value) {
+      let svg = this.svg_pad();
+      if (svg.empty()) return -1;
+
+      // returns kind of currently created 3d canvas
+      let kind = svg.property('can3d');
+      if (new_value !== undefined) svg.property('can3d', new_value);
+      return ((kind === null) || (kind === undefined)) ? -1 : kind;
+   }
+
+   /** @summary Returns size which availble for 3D drawing.
+    * @desc One uses frame sizes for the 3D drawing - like TH2/TH3 objects
+    * @private */
+   Handling3DDrawings.size_for_3d = function(can3d, render3d) {
+
+      if (can3d === undefined) {
+         // analyze which render/embed mode can be used
+         can3d = jsrp.GetRender3DKind();
+         // all non-webgl elements can be embedded into SVG as is
+         if (can3d !== JSROOT.constants.Render3D.WebGL)
+            can3d = JSROOT.constants.Embed3D.EmbedSVG;
+         else if (JSROOT.settings.Embed3D != JSROOT.constants.Embed3D.Default)
+            can3d = JSROOT.settings.Embed3D;
+         else if (JSROOT.browser.isFirefox)
+            can3d = JSROOT.constants.Embed3D.Embed;
+         else
+            can3d = JSROOT.constants.Embed3D.Overlay;
+      }
+
+      let pad = this.svg_pad(),
+         clname = "draw3d_" + (this.pad_name || 'canvas');
+
+      if (pad.empty()) {
+         // this is a case when object drawn without canvas
+
+         let rect = this.get_visible_rect(this.select_main());
+
+         if ((rect.height < 10) && (rect.width > 10)) {
+            rect.height = Math.round(0.66 * rect.width);
+            this.select_main().style('height', rect.height + "px");
+         }
+         rect.x = 0; rect.y = 0; rect.clname = clname; rect.can3d = -1;
+         return rect;
+      }
+
+      let elem = pad, fp = this.frame_painter();
+      if (can3d === 0) elem = this.svg_canvas();
+
+      let size = { x: 0, y: 0, width: 100, height: 100, clname: clname, can3d: can3d };
+
+      if (fp && !fp.mode3d) {
+         elem = this.svg_frame();
+         size.x = elem.property("draw_x");
+         size.y = elem.property("draw_y");
+      }
+
+      size.width = elem.property("draw_width");
+      size.height = elem.property("draw_height");
+
+      if ((!fp || fp.mode3d) && (can3d > 0)) {
+         size.x = Math.round(size.x + size.width * JSROOT.gStyle.fPadLeftMargin);
+         size.y = Math.round(size.y + size.height * JSROOT.gStyle.fPadTopMargin);
+         size.width = Math.round(size.width * (1 - JSROOT.gStyle.fPadLeftMargin - JSROOT.gStyle.fPadRightMargin));
+         size.height = Math.round(size.height * (1 - JSROOT.gStyle.fPadTopMargin - JSROOT.gStyle.fPadBottomMargin));
+      }
+
+      let pw = this.pad_width(), x2 = pw - size.x - size.width,
+         ph = this.pad_height(), y2 = ph - size.y - size.height;
+
+      if ((x2 >= 0) && (y2 >= 0)) {
+         // while 3D canvas uses area also for the axis labels, extend area relative to normal frame
+         size.x = Math.round(size.x * 0.3);
+         size.y = Math.round(size.y * 0.9);
+         size.width = pw - size.x - Math.round(x2 * 0.3);
+         size.height = ph - size.y - Math.round(y2 * 0.5);
+      }
+
+      if (can3d === 1)
+         this.CalcAbsolutePosition(this.svg_pad(), size);
+
+      return size;
+   }
+
+   /** @summary Clear all 3D drawings
+    * @returns can3d value - how webgl canvas was placed
+    * @private */
+   Handling3DDrawings.clear_3d_canvas = function() {
+      let can3d = this.access_3d_kind(null);
+      if (can3d < 0) {
+         // remove first child from main element - if it is canvas
+         let main = this.select_main().node();
+         if (main && main.firstChild && main.firstChild.$jsroot) {
+            delete main.firstChild.painter;
+            main.removeChild(main.firstChild);
+         }
+         return can3d;
+      }
+
+      let size = this.size_for_3d(can3d);
+
+      if (size.can3d === 0) {
+         d3.select(this.svg_canvas().node().nextSibling).remove(); // remove html5 canvas
+         this.svg_canvas().style('display', null); // show SVG canvas
+      } else {
+         if (this.svg_pad().empty()) return;
+
+         this.apply_3d_size(size).remove();
+
+         this.svg_frame().style('display', null);  // clear display property
+      }
+      return can3d;
+   }
+
+   /** @summary Add 3D canvas
+    * @private */
+   Handling3DDrawings.add_3d_canvas = function(size, canv, webgl) {
+
+      if (!canv || (size.can3d < -1)) return;
+
+      if (size.can3d === -1) {
+         // case when 3D object drawn without canvas
+
+         let main = this.select_main().node();
+         if (main !== null) {
+            main.appendChild(canv);
+            canv.painter = this;
+            canv.$jsroot = true; // mark canvas as added by jsroot
+         }
+
+         return;
+      }
+
+      if ((size.can3d > 0) && !webgl)
+         size.can3d = JSROOT.constants.Embed3D.EmbedSVG;
+
+      this.access_3d_kind(size.can3d);
+
+      if (size.can3d === 0) {
+         this.svg_canvas().style('display', 'none'); // hide SVG canvas
+
+         this.svg_canvas().node().parentNode.appendChild(canv); // add directly
+      } else {
+         if (this.svg_pad().empty()) return;
+
+         // first hide normal frame
+         this.svg_frame().style('display', 'none');
+
+         let elem = this.apply_3d_size(size);
+
+         elem.attr('title', '').node().appendChild(canv);
+      }
+   }
+
+   /** @summary Apply size to 3D elements
+    * @private */
+   Handling3DDrawings.apply_3d_size = function(size, onlyget) {
+
+      if (size.can3d < 0) return d3.select(null);
+
+      let elem;
+
+      if (size.can3d > 1) {
+
+         elem = this.svg_layer(size.clname);
+
+         // elem = layer.select("." + size.clname);
+         if (onlyget) return elem;
+
+         let svg = this.svg_pad();
+
+         if (size.can3d === JSROOT.constants.Embed3D.EmbedSVG) {
+            // this is SVG mode or image mode - just create group to hold element
+
+            if (elem.empty())
+               elem = svg.insert("g", ".primitives_layer").attr("class", size.clname);
+
+            elem.attr("transform", "translate(" + size.x + "," + size.y + ")");
+
+         } else {
+
+            if (elem.empty())
+               elem = svg.insert("foreignObject", ".primitives_layer").attr("class", size.clname);
+
+            elem.attr('x', size.x)
+               .attr('y', size.y)
+               .attr('width', size.width)
+               .attr('height', size.height)
+               .attr('viewBox', "0 0 " + size.width + " " + size.height)
+               .attr('preserveAspectRatio', 'xMidYMid');
+         }
+
+      } else {
+         let prnt = this.svg_canvas().node().parentNode;
+
+         elem = d3.select(prnt).select("." + size.clname);
+         if (onlyget) return elem;
+
+         // force redraw by resize
+         this.svg_canvas().property('redraw_by_resize', true);
+
+         if (elem.empty())
+            elem = d3.select(prnt).append('div').attr("class", size.clname + " jsroot_noselect");
+
+         // our position inside canvas, but to set 'absolute' position we should use
+         // canvas element offset relative to first parent with non-static position
+         // now try to use getBoundingClientRect - it should be more precise
+
+         let pos0 = prnt.getBoundingClientRect();
+
+         while (prnt) {
+            if (prnt === document) { prnt = null; break; }
+            try {
+               if (getComputedStyle(prnt).position !== 'static') break;
+            } catch (err) {
+               break;
+            }
+            prnt = prnt.parentNode;
+         }
+
+         let pos1 = prnt ? prnt.getBoundingClientRect() : { top: 0, left: 0 };
+
+         let offx = Math.round(pos0.left - pos1.left),
+             offy = Math.round(pos0.top - pos1.top);
+
+         elem.style('position', 'absolute').style('left', (size.x + offx) + 'px').style('top', (size.y + offy) + 'px').style('width', size.width + 'px').style('height', size.height + 'px');
+      }
+
+      return elem;
+   }
+
+   /** @summary Assigns method to handle 3D drawings inside SVG
+    * @private */
+   jsrp.Assign3DHandler = function(painter) {
+      JSROOT.extend(painter, Handling3DDrawings);
+   }
+
+   /** @summary Creates renderer for the 3D drawings
+    * @memberOf JSROOT.Painter
     * @param {value} width - rendering width
     * @param {value} height - rendering height
-    * @param {value} render3d - render type, see JSROOT.constants.Render3D
+    * @param {value} render3d - render type, see {@link JSROOT.constants.Render3D}
     * @param {object} args - different arguments for creating 3D renderer
-    * @private
-    */
-
+    * @private */
    jsrp.Create3DRenderer = function(width, height, render3d, args) {
 
       let rc = JSROOT.constants.Render3D;
@@ -21,11 +276,6 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       render3d = jsrp.GetRender3DKind(render3d);
 
       if (!args) args = { antialias: true, alpha: true };
-
-      // solves problem with toDataUrl in headless mode of chrome
-      // found https://stackoverflow.com/questions/48011613
-      if (JSROOT.BatchMode && JSROOT.browser.isChromeHeadless && (kind == rc.WebGLImage))
-         args.premultipliedAlpha = false;
 
       let need_workaround = false, renderer,
           doc = JSROOT.get_document();
@@ -64,19 +314,16 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
          need_workaround = true;
       } else {
+         // rendering with WebGL directly into svg image
          renderer = new THREE.WebGLRenderer(args);
-         if (JSROOT.BatchMode) {
-            need_workaround = true;
-         } else {
-            renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
-            d3.select(renderer.jsroot_dom).attr("width", width).attr("height", height);
-         }
+         renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
+         d3.select(renderer.jsroot_dom).attr("width", width).attr("height", height);
       }
 
       if (need_workaround) {
-         if (!JSROOT.svg_workaround) JSROOT.svg_workaround = [];
-         renderer.workaround_id = JSROOT.svg_workaround.length;
-         JSROOT.svg_workaround[renderer.workaround_id] = "<svg></svg>"; // dummy, provided in AfterRender3D
+         if (!JSROOT._.svg_3ds) JSROOT._.svg_3ds = [];
+         renderer.workaround_id = JSROOT._.svg_3ds.length;
+         JSROOT._.svg_3ds[renderer.workaround_id] = "<svg></svg>"; // dummy, provided in AfterRender3D
 
          // replace DOM element in renderer
          renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -113,7 +360,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       if (renderer.jsroot_render3d == rc.SVG) {
          // case of SVGRenderer
          if (JSROOT.BatchMode) {
-            JSROOT.svg_workaround[renderer.workaround_id] = renderer.makeOuterHTML();
+            JSROOT._.svg_3ds[renderer.workaround_id] = renderer.makeOuterHTML();
          } else {
             let parent = renderer.jsroot_dom.parentNode;
             if (parent) {
@@ -143,14 +390,9 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          imageData.data.set( pixels );
          context.putImageData( imageData, 0, 0 );
 
-         let dataUrl = canvas.toDataURL("image/png");
-         let svg = '<image width="' + canvas.width + '" height="' + canvas.height + '" xlink:href="' + dataUrl + '"></image>';
-         JSROOT.svg_workaround[renderer.workaround_id] = svg;
-      } else if (JSROOT.BatchMode) {
-         // this is conversion of WebGL context into svg image
-         let dataUrl = renderer.domElement.toDataURL("image/png");
-         let svg = '<image width="' + canvas.width + '" height="' + canvas.height + '" xlink:href="' + dataUrl + '"></image>';
-         JSROOT.svg_workaround[renderer.workaround_id] = svg;
+         let dataUrl = canvas.toDataURL("image/png"),
+             svg = '<image width="' + canvas.width + '" height="' + canvas.height + '" xlink:href="' + dataUrl + '"></image>';
+         JSROOT._.svg_3ds[renderer.workaround_id] = svg;
       } else {
          let dataUrl = renderer.domElement.toDataURL("image/png");
          d3.select(renderer.jsroot_dom).attr("xlink:href", dataUrl);
@@ -158,10 +400,10 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
    }
 
    jsrp.ProcessSVGWorkarounds = function(svg) {
-      if (!JSROOT.svg_workaround) return svg;
-      for (let k = 0;  k < JSROOT.svg_workaround.length; ++k)
-         svg = svg.replace('<path jsroot_svg_workaround="' + k + '"></path>', JSROOT.svg_workaround[k]);
-      JSROOT.svg_workaround = undefined;
+      if (!JSROOT._.svg_3ds) return svg;
+      for (let k = 0;  k < JSROOT._.svg_3ds.length; ++k)
+         svg = svg.replace('<path jsroot_svg_workaround="' + k + '"></path>', JSROOT._.svg_3ds[k]);
+      JSROOT._.svg_3ds = undefined;
       return svg;
    }
 
@@ -282,21 +524,91 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
    }
 
 
-   /** @summary Create OrbitControl for painter */
+   /** @summary Create THREE.OrbitControl for painter */
    jsrp.CreateOrbitControl = function(painter, camera, scene, renderer, lookat) {
 
       if (JSROOT.settings.Zooming && JSROOT.settings.ZoomWheel)
          renderer.domElement.addEventListener( 'wheel', control_mousewheel);
 
       let enable_zoom = JSROOT.settings.Zooming && JSROOT.settings.ZoomMouse,
-          enable_select = typeof painter.ProcessMouseClick == "function";
+          enable_select = (typeof painter.ProcessMouseClick == "function"),
+          control = null;
 
-      if (enable_zoom || enable_select) {
-         renderer.domElement.addEventListener( 'mousedown', control_mousedown);
-         renderer.domElement.addEventListener( 'mouseup', control_mouseup);
+      function control_mousedown(evnt) {
+
+         // function used to hide some events from orbit control and redirect them to zooming rect
+         if (control.mouse_zoom_mesh) {
+            evnt.stopImmediatePropagation();
+            evnt.stopPropagation();
+            return;
+         }
+
+         // only left-button is considered
+         if ((evnt.button!==undefined) && (evnt.button !==0)) return;
+         if ((evnt.buttons!==undefined) && (evnt.buttons !== 1)) return;
+
+         if (control.enable_zoom) {
+            control.mouse_zoom_mesh = control.DetectZoomMesh(evnt);
+            if (control.mouse_zoom_mesh) {
+               // just block orbit control
+               evnt.stopImmediatePropagation();
+               evnt.stopPropagation();
+               return;
+            }
+         }
+
+         if (control.enable_select)
+            control.mouse_select_pnt = control.GetMousePos(evnt, {});
       }
 
-      let control = new THREE.OrbitControls(camera, renderer.domElement);
+      function control_mouseup(evnt) {
+
+         if (control.mouse_zoom_mesh && control.mouse_zoom_mesh.point2 && control.painter.Get3DZoomCoord) {
+
+            let kind = control.mouse_zoom_mesh.object.zoom,
+                pos1 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point, kind),
+                pos2 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point2, kind);
+
+            if (pos1>pos2) { let v = pos1; pos1 = pos2; pos2 = v; }
+
+            if ((kind==="z") && control.mouse_zoom_mesh.object.use_y_for_z) kind="y";
+
+            if ((kind==="z") && control.mouse_zoom_mesh.object.use_y_for_z) kind="y";
+
+            // try to zoom
+            if (pos1 < pos2)
+              if (control.painter.Zoom(kind, pos1, pos2))
+                 control.mouse_zoom_mesh = null;
+         }
+
+         // if selection was drawn, it should be removed and picture rendered again
+         if (control.enable_zoom)
+            control.RemoveZoomMesh();
+
+         // only left-button is considered
+         //if ((evnt.button!==undefined) && (evnt.button !==0)) return;
+         //if ((evnt.buttons!==undefined) && (evnt.buttons !== 1)) return;
+
+         if (control.enable_select && control.mouse_select_pnt) {
+
+            let pnt = control.GetMousePos(evnt, {});
+
+            let same_pnt = (pnt.x == control.mouse_select_pnt.x) && (pnt.y == control.mouse_select_pnt.y);
+            delete control.mouse_select_pnt;
+
+            if (same_pnt) {
+               let intersects = control.GetMouseIntersects(pnt);
+               control.painter.ProcessMouseClick(pnt, intersects, evnt);
+            }
+         }
+      }
+
+      if (enable_zoom || enable_select) {
+         renderer.domElement.addEventListener( 'pointerdown', control_mousedown);
+         renderer.domElement.addEventListener( 'pointerup', control_mouseup);
+      }
+
+      control = new THREE.OrbitControls(camera, renderer.domElement);
 
       control.enableDamping = false;
       control.dampingFactor = 1.0;
@@ -421,7 +733,6 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
       control.ChangeEvent = function() {
          this.mouse_ctxt.on = false; // disable context menu if any changes where done by orbit control
-         this.painter.zoom_changed_interactive = 1;
          this.painter.Render3D(0);
          this.control_changed = true;
       }
@@ -605,80 +916,9 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
             control.painter.AnalyzeMouseWheelEvent(evnt, item, position, false);
 
-            if ((kind==="z") && intersect.object.use_y_for_z) kind="y";
+            if ((kind==="z") && intersect.object.use_y_for_z) kind = "y";
 
             control.painter.Zoom(kind, item.min, item.max);
-         }
-      }
-
-      function control_mousedown(evnt) {
-
-         // function used to hide some events from orbit control and redirect them to zooming rect
-
-         if (control.mouse_zoom_mesh) {
-            evnt.stopImmediatePropagation();
-            evnt.stopPropagation();
-            return;
-         }
-
-         // only left-button is considered
-         if ((evnt.button!==undefined) && (evnt.button !==0)) return;
-         if ((evnt.buttons!==undefined) && (evnt.buttons !== 1)) return;
-
-         if (control.enable_zoom) {
-            control.mouse_zoom_mesh = control.DetectZoomMesh(evnt);
-            if (control.mouse_zoom_mesh) {
-               // just block orbit control
-               evnt.stopImmediatePropagation();
-               evnt.stopPropagation();
-               return;
-            }
-         }
-
-         if (control.enable_select) {
-            control.mouse_select_pnt = control.GetMousePos(evnt, {});
-         }
-      }
-
-      function control_mouseup(evnt) {
-
-         if (control.mouse_zoom_mesh && control.mouse_zoom_mesh.point2 && control.painter.Get3DZoomCoord) {
-
-            let kind = control.mouse_zoom_mesh.object.zoom,
-                pos1 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point, kind),
-                pos2 = control.painter.Get3DZoomCoord(control.mouse_zoom_mesh.point2, kind);
-
-            if (pos1>pos2) { let v = pos1; pos1 = pos2; pos2 = v; }
-
-            if ((kind==="z") && control.mouse_zoom_mesh.object.use_y_for_z) kind="y";
-
-            if ((kind==="z") && control.mouse_zoom_mesh.object.use_y_for_z) kind="y";
-
-            // try to zoom
-            if (pos1 < pos2)
-              if (control.painter.Zoom(kind, pos1, pos2))
-                 control.mouse_zoom_mesh = null;
-         }
-
-         // if selection was drawn, it should be removed and picture rendered again
-         if (control.enable_zoom)
-            control.RemoveZoomMesh();
-
-         // only left-button is considered
-         //if ((evnt.button!==undefined) && (evnt.button !==0)) return;
-         //if ((evnt.buttons!==undefined) && (evnt.buttons !== 1)) return;
-
-         if (control.enable_select && control.mouse_select_pnt) {
-
-            let pnt = control.GetMousePos(evnt, {});
-
-            let same_pnt = (pnt.x == control.mouse_select_pnt.x) && (pnt.y == control.mouse_select_pnt.y);
-            delete control.mouse_select_pnt;
-
-            if (same_pnt) {
-               let intersects = control.GetMouseIntersects(pnt);
-               control.painter.ProcessMouseClick(pnt, intersects, evnt);
-            }
          }
       }
 
@@ -854,8 +1094,15 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
    // ==============================================================================
 
-   /** Special class to control highliht and selection of single points, used in geo painter
-    * @private */
+   /**
+    * @summary Special class to control highliht and selection of single points, used in geo painter
+    *
+    * @class
+    * @memberof JSROOT
+    * @param {object} mesh - draw object
+    * @private
+    */
+
    function PointsControl(mesh) {
       InteractiveControl.call(this);
       this.mesh = mesh;
@@ -863,6 +1110,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
    PointsControl.prototype = Object.create(InteractiveControl.prototype);
 
+   /** @summary cleanup object */
    PointsControl.prototype.cleanup = function() {
       if (!this.mesh) return;
       delete this.mesh.is_selected;
@@ -870,14 +1118,15 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       delete this.mesh;
    }
 
+   /** @summary extract intersect index */
    PointsControl.prototype.extractIndex = function(intersect) {
       return intersect && intersect.index!==undefined ? intersect.index : undefined;
    }
 
+   /** @summary set selection */
    PointsControl.prototype.setSelected = function(col, indx) {
       let m = this.mesh;
       if ((m.select_col == col) && (m.select_indx == indx)) {
-         console.log("Reset selection");
          col = null; indx = undefined;
       }
       m.select_col = col;
@@ -886,6 +1135,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       return true;
    }
 
+   /** @summary set highlight */
    PointsControl.prototype.setHighlight = function(col, indx) {
       let m = this.mesh;
       m.h_index = indx;
@@ -896,6 +1146,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       return true;
    }
 
+   /** @summary create special object */
    PointsControl.prototype.createSpecial = function(color, index) {
       let m = this.mesh;
       if (!color) {
@@ -922,6 +1173,18 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       if (index !== undefined) m.js_special.geometry.setDrawRange(index, 1);
    }
 
+   // ==============================================================================
+
+   /**
+    * @summary Class for creation of 3D points
+    *
+    * @class
+    * @memberof JSROOT
+    * @param {number} size - number of points
+    * @param {booleand} [iswebgl=true] - if WebGL is used
+    * @param {number} [scale=1] - scale factor
+    * @private
+    */
 
    function PointsCreator(size, iswebgl, scale) {
       this.webgl = (iswebgl === undefined) ? true : iswebgl;
@@ -933,6 +1196,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       this.indx = 0;
    }
 
+   /** @summary Add point */
    PointsCreator.prototype.AddPoint = function(x,y,z) {
       this.pos[this.indx]   = x;
       this.pos[this.indx+1] = y;
@@ -940,11 +1204,12 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       this.indx+=3;
    }
 
-   /** If callback function assigned, created mesh always will be returned as callback */
+   /** @summary If callback function assigned, created mesh always will be returned as callback */
    PointsCreator.prototype.AssignCallback = function(callback) {
       this.callback = callback;
    }
 
+   /** @summary Complete creation */
    PointsCreator.prototype.Complete = function(arg) {
 
       let material;
@@ -966,11 +1231,12 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       let cb = this.callback;
       delete this.callback;
 
-      if (cb) JSROOT.CallBack(cb, pnts);
+      if (cb) JSROOT.callBack(cb, pnts);
 
       return pnts;
    }
 
+   /** @summary Create points */
    PointsCreator.prototype.CreatePoints = function(args) {
 
       if (typeof args !== 'object') args = { color: args };
@@ -1075,4 +1341,3 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
    return THREE;
 
 });
-

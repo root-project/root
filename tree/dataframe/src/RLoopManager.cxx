@@ -13,12 +13,14 @@
 #include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
 #include "TTreeReader.h"
+#include "TTree.h" // For MaxTreeSizeRAII. Revert when #6640 will be solved.
 
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
 #endif
 
+#include <algorithm>
 #include <atomic>
 #include <exception>
 #include <functional>
@@ -29,6 +31,7 @@
 #include <unordered_map>
 #include <vector>
 #include <set>
+#include <limits> // For MaxTreeSizeRAII. Revert when #6640 will be solved.
 
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
@@ -202,6 +205,25 @@ static void ThrowIfNSlotsChanged(unsigned int nSlots)
       throw std::runtime_error(msg);
    }
 }
+
+/**
+\struct MaxTreeSizeRAII
+\brief Scope-bound change of `TTree::fgMaxTreeSize`.
+
+This RAII object stores the current value result of `TTree::GetMaxTreeSize`,
+changes it to maximum at construction time and restores it back at destruction
+time. Needed for issue #6523 and should be reverted when #6640 will be solved.
+*/
+struct MaxTreeSizeRAII {
+   Long64_t fOldMaxTreeSize;
+
+   MaxTreeSizeRAII() : fOldMaxTreeSize(TTree::GetMaxTreeSize())
+   {
+      TTree::SetMaxTreeSize(std::numeric_limits<Long64_t>::max());
+   }
+
+   ~MaxTreeSizeRAII() { TTree::SetMaxTreeSize(fOldMaxTreeSize); }
+};
 
 } // anonymous namespace
 
@@ -560,6 +582,9 @@ void RLoopManager::EvalChildrenCounts()
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
 void RLoopManager::Run()
 {
+   // Change value of TTree::GetMaxTreeSize only for this scope. Revert when #6640 will be solved.
+   MaxTreeSizeRAII ctxtmts;
+
    ThrowIfNSlotsChanged(GetNSlots());
 
    Jit();
@@ -664,11 +689,19 @@ std::vector<std::string> RLoopManager::GetFiltersNames()
    return filters;
 }
 
-std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions()
+std::vector<RNodeBase *> RLoopManager::GetGraphEdges() const
 {
-   std::vector<RDFInternal::RActionBase *> actions;
-   actions.insert(actions.begin(), fBookedActions.begin(), fBookedActions.end());
-   actions.insert(actions.begin(), fRunActions.begin(), fRunActions.end());
+   std::vector<RNodeBase *> nodes(fBookedFilters.size() + fBookedRanges.size());
+   auto it = std::copy(fBookedFilters.begin(), fBookedFilters.end(), nodes.begin());
+   std::copy(fBookedRanges.begin(), fBookedRanges.end(), it);
+   return nodes;
+}
+
+std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions() const
+{
+   std::vector<RDFInternal::RActionBase *> actions(fBookedActions.size() + fRunActions.size());
+   auto it = std::copy(fBookedActions.begin(), fBookedActions.end(), actions.begin());
+   std::copy(fRunActions.begin(), fRunActions.end(), it);
    return actions;
 }
 

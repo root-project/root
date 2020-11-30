@@ -432,7 +432,7 @@ JSROOT.define([], () => {
 
          if (pthis.state != 0) return;
 
-         if (!first_time) console.log("try connect window again" + (new Date()).getTime());
+         if (!first_time) console.log("try connect window again " + new Date().toString());
 
          if (pthis._websocket) pthis._websocket.close();
          delete pthis._websocket;
@@ -574,13 +574,13 @@ JSROOT.define([], () => {
     * @param {string} [arg.openui5libs] - list of openui5 libraries loaded, default is "sap.m, sap.ui.layout, sap.ui.unified"
     * @param {string} [arg.socket_kind] - kind of connection longpoll|websocket, detected automatically from URL
     * @param {object} arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
-    * @param {string} arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned as arg.first_msg
+    * @param {string} arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned in handle.first_msg
     * @param {string} [arg.prereq2] - second part of prerequcities, which is loaded parallel to connecting with WebWindow
-    * @param {function} arg.callback - function which is called with WebWindowHandle or when establish connection and get first portion of data
     * @returns {Promise} ready-to-use WebWindowHandle instance
     */
 
    JSROOT.connectWebWindow = function(arg) {
+
       if (typeof arg == 'function') arg = { callback: arg }; else
          if (!arg || (typeof arg != 'object')) arg = {};
 
@@ -649,10 +649,9 @@ JSROOT.define([], () => {
                OnWebsocketOpened: () => { }, // dummy function when websocket connected
 
                OnWebsocketMsg: (handle, msg) => {
-                  // console.log('Get message ' + msg + ' handle ' + !!handle);
                   if (msg.indexOf(arg.first_recv) != 0)
                      return handle.Close();
-                  arg.first_msg = msg.substr(arg.first_recv.length);
+                  handle.first_msg = msg.substr(arg.first_recv.length);
 
                   if (!arg.prereq2) resolveFunc(handle);
                },
@@ -671,17 +670,12 @@ JSROOT.define([], () => {
          if (arg.prereq2) {
             JSROOT.require(arg.prereq2).then(() => {
                delete arg.prereq2; // indicate that func is loaded
-               if (!arg.first_recv || arg.first_msg) resolveFunc(handle);
+               if (!arg.first_recv || handle.first_msg) resolveFunc(handle);
             });
          } else if (!arg.first_recv) {
             resolveFunc(handle);
          }
       });
-
-      // if callback specified, old API is used, callback getting handler and arg again
-      // TODO: remove it once all RWebWindow implementations in ROOT adjusted
-      if (arg.callback)
-         return promise.then(h => arg.callback(h, arg));
 
       return promise;
    }

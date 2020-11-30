@@ -6,19 +6,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RObjectDrawable
-#define ROOT7_RObjectDrawable
+#ifndef ROOT7_TObjectDrawable
+#define ROOT7_TObjectDrawable
 
 #include <ROOT/RDrawable.hxx>
 
 class TObject;
+class TColor;
 
 namespace ROOT {
 namespace Experimental {
 
 class RPadBase;
 
-/** \class RObjectDrawable
+/** \class TObjectDrawable
 \ingroup GpadROOT7
 \brief Provides v7 drawing facilities for TObject types (TGraph etc).
 \author Sergey Linev
@@ -26,11 +27,21 @@ class RPadBase;
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RObjectDrawable final : public RDrawable {
+class TObjectDrawable final : public RDrawable {
+private:
 
-   Internal::RIOShared<TObject> fObj; ///< The object to be painted
+   enum {
+      kNone = 0,     ///< empty container
+      kObject = 1,   ///< plain object
+   };
 
-   std::string fOpts;  ///< drawing options
+   int fKind{kNone};                   ///< object kind
+   Internal::RIOShared<TObject> fObj;  ///< The object to be painted
+   std::string fOpts;                  ///< drawing options
+
+   const char *GetColorCode(TColor *col);
+
+   std::unique_ptr<TObject> CreateSpecials(int kind);
 
 protected:
 
@@ -43,12 +54,20 @@ protected:
    void Execute(const std::string &) final;
 
 public:
-   RObjectDrawable() : RDrawable("tobject") {}
+   // special kinds, see TWebSnapshot enums
+   enum EKind {
+      kColors = 4,   ///< list of ROOT colors
+      kStyle = 5,    ///< instance of TStyle object
+      kPalette = 6   ///< list of colors from palette
+   };
 
-   virtual ~RObjectDrawable();
+   TObjectDrawable() : RDrawable("tobject") {}
 
-   RObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : RDrawable("tobject"), fObj(obj), fOpts(opt) {}
+   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt = "") : RDrawable("tobject"), fKind(kObject), fObj(obj), fOpts(opt) {}
 
+   TObjectDrawable(EKind kind, bool persistent = false);
+
+   virtual ~TObjectDrawable() = default;
 };
 
 } // namespace Experimental

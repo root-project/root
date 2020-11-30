@@ -15,9 +15,9 @@
 using namespace ROOT::Experimental;
 
 class CustomDrawable : public RDrawable {
-   RAttrLine  fAttrLine{this, "line_"};    ///<! line attributes
-   RAttrBox   fAttrBox{this, "box_"};      ///<! box attributes
-   RAttrText  fAttrText{this, "text_"};    ///<! text attributes
+   RAttrLine  fAttrLine{this, "line"};    ///<! line attributes
+   RAttrBox   fAttrBox{this, "box"};      ///<! box attributes
+   RAttrText  fAttrText{this, "text"};    ///<! text attributes
 
 public:
    CustomDrawable() : RDrawable("custom") {}
@@ -62,11 +62,9 @@ TEST(RStyleTest, CreateStyle)
 
 TEST(RStyleTest, CreateCss)
 {
-   auto style = std::make_shared<RStyle>();
+   auto style = RStyle::Parse("custom { line_width: 2; } #customid { box_fill_style: 5; } .custom_class { text_size: 3; }");
 
-   auto res = style->ParseString("custom { line_width: 2; } #customid { box_fill_style: 5; } .custom_class { text_size: 3; }");
-
-   ASSERT_EQ(res, true);
+   ASSERT_NE(style, nullptr);
 
    CustomDrawable drawable;
    drawable.SetId("customid");

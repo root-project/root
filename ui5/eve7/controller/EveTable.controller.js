@@ -497,15 +497,17 @@ sap.ui.define([
       },
 
       sceneElementChange: function (el) {
-         if (el._typename == "ROOT::Experimental::REveTableViewInfo") {
+         this.refreshTable = true;
+         if (el._typename == "ROOT::Experimental::REveTableViewInfo" ) {
             this.bindTableColumns = true;
          }
       },
 
       endChanges: function (oEvent) {
-         if (this.bindTableColumns) {
+         if (this.refreshTable) {
             this.locateEveTable();
             this.buildTableBody();
+            this.refreshTable = false;
          }
       },
 

@@ -100,12 +100,12 @@
 
    /** @summary JSROOT version id
      * @desc For the JSROOT release the string in format "major.minor.patch" like "6.0.0"
-     *       For the ROOT release is string is "ROOT major.minor.patch" like "ROOT 6.24.00" */
+     *       For the ROOT release string is "ROOT major.minor.patch" like "ROOT 6.24.00" */
    JSROOT.version_id = "pre6";
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year */
-   JSROOT.version_date = "26/10/2020";
+   JSROOT.version_date = "25/11/2020";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date} */
@@ -179,6 +179,7 @@
          'jqueryui-mousewheel'  : { src: 'jquery.mousewheel', onlymin: true, extract: "$", dep: 'jquery-ui' },
          'jqueryui-touch-punch' : { src: 'touch-punch', onlymin: true, extract: "$", dep: 'jquery-ui' },
          'rawinflate'           : { src: 'rawinflate', libs: true },
+         'zstd-codec'           : { src: '../../zstd/zstd-codec.min', extract: "ZstdCodec", node: "zstd-codec" },
          'mathjax'              : { src: 'https://cdn.jsdelivr.net/npm/mathjax@3.1.2/es5/tex-svg', extract: "MathJax", node: "mathjax" },
          'dat.gui'              : { src: 'dat.gui', libs: true, extract: "dat" },
          'three'                : { src: 'three', libs: true, extract: "THREE", node: "three" },
@@ -739,7 +740,7 @@
    /** @summary Define JSROOT module
      * @desc Should be only used for JSROOT modules
      * @param {Array|string} req - requirements, see {@link JSROOT.require} for more details
-     * @param {Function} factoryFunc - called when requirements are fulfilled
+     * @param {Function} factoryFunc - called when requirements are fulfilled, with requested modules
      * @private */
    JSROOT.define = function(req, factoryFunc) {
       jsroot_require(req, factoryFunc);
@@ -747,9 +748,9 @@
 
    /** @summary Generate mask for given bit
     * @param {number} n bit number
-    * @returns {Number} produced make
+    * @returns {Number} produced mask
     * @private */
-   JSROOT.BIT = function(n) { return 1 << (n); }
+   JSROOT.BIT = function(n) { return 1 << n; }
 
    /**
     * @summary Seed simple random generator
@@ -1133,17 +1134,13 @@
       return (typeof elem == 'function') ? elem : null;
    }
 
-   /**
-    * @summary Generic method to invoke callback function.
-    *
+   /** @summary Generic method to invoke callback function.
     * @param {object|function|string} func either normal function or container like
     * { obj: object_pointer, func: name of method to call } or just function name, which can be found with {@link JSROOT.findFunction}
     * @param arg1 first optional argument of callback
-    * @param arg2 second optional argument of callback
-    *
-    * @private
-    */
-   JSROOT.CallBack = function(func, arg1, arg2) {
+    * @param arg2 second optional argument of callback */
+
+   JSROOT.callBack = function(func, arg1, arg2) {
 
       if (typeof func == 'string') func = JSROOT.findFunction(func);
 
@@ -1295,7 +1292,7 @@
 
       if (typeof url != 'string') {
          let scripts = url, loadNext = () => {
-            if (!scripts.length) return Promise.resolve();
+            if (!scripts.length) return Promise.resolve(true);
             return JSROOT.loadScript(scripts.shift()).then(loadNext, loadNext);
          }
          return loadNext();
@@ -1318,21 +1315,22 @@
       function match_url(src) {
          if (src == url) return true;
          let indx = src.indexOf(url);
-         return (indx > 0) && (indx + url.length == src.length);
+         return (indx > 0) && (indx + url.length == src.length) && (src[indx-1] == "/");
       }
 
       if (isstyle) {
          let styles = document.getElementsByTagName('link');
          for (let n = 0; n < styles.length; ++n) {
             if (!styles[n].href || (styles[n].type !== 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
-            if (match_url(styles[n].href)) return Promise.resolve();
+            if (match_url(styles[n].href))
+               return Promise.resolve();
          }
 
       } else {
          let scripts = document.getElementsByTagName('script');
-         for (let n = 0; n < scripts.length; ++n) {
-            if (match_url(scripts[n].src)) return Promise.resolve();
-         }
+         for (let n = 0; n < scripts.length; ++n)
+            if (match_url(scripts[n].src))
+               return Promise.resolve();
       }
 
       if (isstyle) {
@@ -1349,7 +1347,6 @@
       return new Promise((resolve, reject) => {
          element.onload = () => resolve(true);
          element.onerror = () => reject(Error(`Fail to load ${url}`));
-
          document.getElementsByTagName("head")[0].appendChild(element);
       });
    }
@@ -1415,7 +1412,7 @@
       return JSROOT.require(requirements)
                    .then(() => JSROOT.require(user_scripts))
                    .then(() => { if (_.debug_output) { _.debug_output.innerHTML = ""; delete _.debug_output; } })
-                   .then(() => JSROOT.CallBack(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'JSROOT.BuildSimpleGUI'));
+                   .then(() => JSROOT.callBack(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'JSROOT.BuildSimpleGUI'));
    }
 
    /** @summary Create some ROOT classes
@@ -1545,7 +1542,7 @@
             break;
          case 'TH2':
             JSROOT.Create("TH1", obj);
-            JSROOT.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy: 0});
+            JSROOT.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy: 0 });
             break;
          case 'TH2I':
          case 'TH2F':
@@ -1683,7 +1680,7 @@
             JSROOT.Create("TObject", obj);
             JSROOT.Create("TAttLine", obj);
             JSROOT.Create("TAttMarker", obj);
-            JSROOT.extend(obj, { fGeoAtt:0, fNpoints: 0, fPoints: [] });
+            JSROOT.extend(obj, { fGeoAtt: 0, fNpoints: 0, fPoints: [] });
             break;
       }
 
@@ -2168,16 +2165,14 @@
       if (arg.openui5src) JSROOT.openui5src = arg.openui5src;
       if (arg.openui5libs) JSROOT.openui5libs = arg.openui5libs;
       if (arg.openui5theme) JSROOT.openui5theme = arg.openui5theme;
+      if (!arg.ignoreUrl) {
+         let url = JSROOT.decodeUrl();
+         if (url.has('nogl')) JSROOT.settings.Render3D = JSROOT.constants.Render3D.SVG;
+         if (url.has('libs')) JSROOT._.use_full_libs = true;
+      }
 
       let prereq = "webwindow;";
-      // FIXME: remove for JSROOT v7 once ROOT code is adjusted
-      if (arg && arg.prereq)
-         if (arg.prereq == "openui5")
-            prereq += "painter;openui5"; // because of eve7 app, should be fixed there
-         else
-            prereq += arg.prereq.replace(/;v6;v7/g, ";gpad;v7gpad").replace(/2d;v7;/g, "v7gpad;").replace(/2d;v6;/g, "gpad;");
-
-      console.log('Loading', prereq)
+      if (arg && arg.prereq) prereq += arg.prereq;
 
       return JSROOT.require(prereq).then(() => {
          if (arg && arg.prereq_logdiv && document) {
@@ -2240,31 +2235,54 @@
       if (prereq || onload)
          window_on_load().then(() => JSROOT.require(prereq))
                          .then(() => JSROOT.loadScript(user))
-                         .then(() => JSROOT.CallBack(onload));
+                         .then(() => JSROOT.callBack(onload));
 
       return this;
    }
 
-   // FIXME: for backward compatibility, will be removed in v6.2
+   /// FIXME: for backward compatibility, will be removed in v6.2
+
+   let _warned = {};
+   function warnOnce(msg) {
+      if (!_warned[msg]) {
+         console.warn(msg);
+         _warned[msg] = true;
+      }
+   }
+
    JSROOT.GetUrlOption = function(opt, url, dflt) {
+      warnOnce('Using obsolete JSROOT.GetUrlOption, change to JSROOT.decodeUrl');
       return JSROOT.decodeUrl(url).get(opt, dflt === undefined ? null : dflt);
    }
 
    JSROOT.AssertPrerequisites = function(req, callback) {
-      console.log('JSROOT.AssertPrerequisites', req);
+      warnOnce('Using obsolete JSROOT.AssertPrerequisites, change to JSROOT.require');
       req = req.replace(/2d;v7;/g, "v7gpad;").replace(/2d;v6;/g, "gpad;").replace(/more2d;/g, 'more;').replace(/2d;/g, 'gpad;').replace(/;v6;v7/g, ";gpad;v7gpad");
       JSROOT.require(req).then(callback);
    }
 
    JSROOT.OpenFile = function(filename, callback) {
+      warnOnce('Using obsolete JSROOT.OpenFile function, change to JSROOT.openFile');
       let res = JSROOT.openFile(filename);
       return !callback ? res : res.then(callback);
    }
 
-   JSROOT.JSONR_unref = JSROOT.parse;
-   JSROOT.MakeSVG = JSROOT.makeSVG;
-   JSROOT.ConnectWebWindow = JSROOT.connectWebWindow;
+   JSROOT.JSONR_unref = function(arg) {
+      warnOnce('Using obsolete JSROOT.JSONR_unref function, change to JSROOT.parse');
+      return JSROOT.parse(arg);
+   }
 
+   JSROOT.MakeSVG = function(args) {
+      warnOnce('Using obsolete JSROOT.MakeSVG function, change to JSROOT.makeSVG');
+      return JSROOT.makeSVG(args);
+   }
+
+   JSROOT.CallBack = function(func, arg1, arg2) {
+      warnOnce('Using obsolete JSROOT.CallBack function, change to JSROOT.callBack');
+      return JSROOT.callBack(func, arg1, arg2);
+   }
+
+   /// end of backward compatibility block
 
    JSROOT._ = _;
    JSROOT.browser = browser;
@@ -2273,4 +2291,3 @@
    return JSROOT;
 
 }));
-

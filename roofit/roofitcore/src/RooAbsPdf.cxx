@@ -126,11 +126,11 @@ the proxy holds a function, and will trigger an assert.
 ### Batched function evaluations (Advanced usage)
 
 To speed up computations with large numbers of data events in unbinned fits,
-it is beneficial to override `evaluateBatch()`. Like this, large batches of
+it is beneficial to override `evaluateSpan()`. Like this, large spans of
 computations can be done, without having to call `evaluate()` for each single data event.
-`evaluateBatch()` should execute the same computation as `evaluate()`, but it
+`evaluateSpan()` should execute the same computation as `evaluate()`, but it
 may choose an implementation that is capable of SIMD computations.
-If evaluateBatch is not implemented, the classic and slower `evaluate()` will be
+If evaluateSpan is not implemented, the classic and slower `evaluate()` will be
 called for each data event.
 */
 
@@ -336,88 +336,19 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute batch of values for given range, and normalise by integrating over
-/// the observables in `nset`. If `nset` is `nullptr`, unnormalized values
-/// are returned. All elements of `nset` must be lvalues.
-///
-/// \param[in] begin Begin of the batch.
-/// \param[in] maxSize Size of the requested range. May come out smaller.
-/// \param[in] normSet   If not nullptr, normalise results by integrating over
-/// the variables in this set. The normalisation is only computed once, and applied
-/// to the full batch.
-///
-RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxSize,
-    const RooArgSet* normSet) const
-{
-  // Some PDFs do preprocessing here, e.g. of the norm
-  getValV(normSet);
-
-  if (_allBatchesDirty || _operMode == ADirty) {
-    _batchData.markDirty();
-    _allBatchesDirty = false;
-  }
-
-  // Special handling of case without normalization set (used in numeric integration of pdfs)
-  if (!normSet) {
-    RooArgSet* tmp = _normSet ;
-    _normSet = nullptr;
-    auto outputs = evaluateBatch(begin, maxSize);
-    maxSize = outputs.size();
-    _normSet = tmp;
-
-    _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
-
-    return outputs;
-  }
-
-
-  // TODO wait if batch is computing?
-  if (_batchData.status(begin, normSet, BatchHelpers::BatchData::kgetVal) <= BatchHelpers::BatchData::kDirty
-      || _norm->isValueDirty()) {
-
-    auto outputs = evaluateBatch(begin, maxSize);
-    maxSize = outputs.size();
-
-    // Evaluate denominator
-    const double normVal = _norm->getVal();
-
-    if (normVal < 0.
-        || (normVal == 0. && std::any_of(outputs.begin(), outputs.end(), [](double val){return val != 0;}))) {
-      logEvalError(Form("p.d.f normalization integral is zero or negative."
-          "\n\tInt(%s) = %f", GetName(), normVal));
-    }
-
-    if (normVal != 1. && normVal > 0.) {
-      const double invNorm = 1./normVal;
-      for (double& val : outputs) { //CHECK_VECTORISE
-        val *= invNorm;
-      }
-    }
-
-    _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
-  }
-
-  const auto ret = _batchData.getBatch(begin, maxSize);
-
-  return ret;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Compute batch of values for given input data, and normalise by integrating over
-/// the observables in `nset`. Store result in `evalData`, and return a span pointing to
+/// the observables in `normSet`. Store result in `evalData`, and return a span pointing to
 /// it.
+/// This uses evaluateSpan() to perform an (unnormalised) computation of data points. This computation
+/// is finalised by normalising the bare values, and by checking for computation errors.
+/// Derived classes should override evaluateSpan() to reach maximal performance.
 ///
-/// If `nset` is `nullptr`, unnormalised values
-/// are returned. All elements of `nset` must be lvalues.
-///
-/// \param[in/out]  evalData Object holding data that should be used in computations.
-/// Each array of data is identified by the pointer to the RooFit object that this data belongs to.
-/// The object that this function is called on will store its results here as well.
-/// \param[in] normSet   If not nullptr, normalise results by integrating over
+/// \param[in/out] evalData Object holding data that should be used in computations. Results are also stored here.
+/// \param[in] normSet      If not nullptr, normalise results by integrating over
 /// the variables in this set. The normalisation is only computed once, and applied
 /// to the full batch.
 /// \return RooSpan with probabilities. The memory of this span is owned by `evalData`.
+/// \see RooAbsReal::getValues().
 RooSpan<const double> RooAbsPdf::getValues(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
   auto item = evalData.spans.find(this);
   if (item != evalData.spans.end()) {
@@ -785,44 +716,7 @@ void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::s
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the log-likelihoods for all events in the requested batch.
-/// The arguments are passed over to getValBatch().
-/// \param[in] begin Start of the batch.
-/// \param[in] maxSize  Maximum size of the batch. Depending on data layout and memory, the batch
-/// may come back smaller.
-/// \return    Returns a batch of doubles that contains the log probabilities.
-RooSpan<const double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t maxSize,
-    const RooArgSet* normSet) const
-{
-  auto pdfValues = getValBatch(begin, maxSize, normSet);
-
-  if (checkInfNaNNeg(pdfValues)) {
-    logBatchComputationErrors(pdfValues, begin);
-  }
-
-  auto output = _batchData.makeWritableBatchUnInit(begin, pdfValues.size(),
-      normSet, BatchHelpers::BatchData::kgetLogVal);
-
-  for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
-    const double prob = pdfValues[i];
-
-    double theLog = _rf_fast_log(prob);
-
-    if (prob < 0) {
-      theLog = std::numeric_limits<double>::quiet_NaN();
-    } else if (prob == 0 || TMath::IsNaN(prob)) {
-      theLog = -std::numeric_limits<double>::infinity();
-    }
-
-    output[i] = theLog;
-  }
-
-  return output;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Compute the log-likelihoods for all events in the requested batch.
-/// The arguments are passed over to getValBatch().
+/// The arguments are passed over to getValues().
 /// \param[in] evalData Struct with data that should be used for evaluation.
 /// \param[in] normSet Optional normalisation set to be used during computations.
 /// \return    Returns a batch of doubles that contains the log probabilities.
@@ -2679,14 +2573,22 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet& whatVars, const RooCmdAr
 /// \param[in] expectedData If set to true (false by default), the returned histogram returns the 'expected'
 /// data sample, i.e. no statistical fluctuations are present.
 /// \param[in] extended For each bin, generate Poisson(x, mu) events, where `mu` is chosen such that *on average*,
-/// one would obtain `nEvents` events. This means that the true number of events will fluctuate, but this process is much faster.
+/// one would obtain `nEvents` events. This means that the true number of events will fluctuate around the desired value,
+/// but the generation happens a lot faster.
 /// Especially if the PDF is sharply peaked, the multinomial event generation necessary to generate *exactly* `nEvents` events can
 /// be very slow.
 ///
-/// Any variables of this PDF that are not in whatVars will use their
-/// current values and be treated as fixed parameters. Returns zero
-/// in case of an error. The caller takes ownership of the returned
-/// dataset.
+/// The binning used for generation of events is the currently set binning for the variables.
+/// It can e.g. be changed using
+/// ```
+/// x.setBins(15);
+/// x.setRange(-5., 5.);
+/// pdf.generateBinned(RooArgSet(x), 1000);
+/// ```
+///
+/// Any variables of this PDF that are not in `whatVars` will use their
+/// current values and be treated as fixed parameters.
+/// \return RooDataHist* owned by the caller. Returns `nullptr` in case of an error.
 RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEvents, Bool_t expectedData, Bool_t extended) const
 {
   // Create empty RooDataHist

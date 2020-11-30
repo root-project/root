@@ -355,7 +355,7 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
             << "\n\t" << resultScalar << std::endl;
       }
 
-      if (alwaysPrint || fabs(carry - carryScalar)/carryScalar > 10.) {
+      if (alwaysPrint || fabs(carry - carryScalar)/carryScalar > 500.) {
         std::cerr << "RooNLLVar: carry is far off\n\t" << std::setprecision(15) << carry
             << "\n\t" << carryScalar << std::endl;
       }
@@ -478,7 +478,6 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
 
   auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
 
-#ifdef ROOFIT_NEW_BATCH_INTERFACE
   // Create a RunContext that will own the memory where computation results are stored.
   // Holding on to this struct in between function calls will make sure that the memory
   // is only allocated once.
@@ -489,37 +488,27 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
   _dataClone->getBatches(*_evalData, firstEvent, lastEvent-firstEvent);
 
   auto results = pdfClone->getLogProbabilities(*_evalData, _normSet);
-#else
-  auto results = pdfClone->getLogValBatch(firstEvent, lastEvent-firstEvent, _normSet);
-#endif
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
 
-#ifdef ROOFIT_NEW_BATCH_INTERFACE
   for (std::size_t evtNo = firstEvent; evtNo < std::min(lastEvent, firstEvent + 10); ++evtNo) {
     _dataClone->get(evtNo);
     assert(_dataClone->valid());
     try {
-      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet);
+      // Cross check results with strict tolerance and complain
+      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet, 1.E-13);
     } catch (std::exception& e) {
-      std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
+      std::cerr << __FILE__ << ":" << __LINE__ << " ERROR when checking batch computation for event " << evtNo << ":\n"
           << e.what() << std::endl;
-      assert(false);
+
+      // It becomes a real problem if it's very wrong. We fail in this case:
+      try {
+        BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, *_evalData, evtNo-firstEvent, _normSet, 1.E-9);
+      } catch (std::exception& e2) {
+        assert(false);
+      }
     }
   }
-#else
-  for (std::size_t evtNo = firstEvent; evtNo < lastEvent; ++evtNo) {
-    _dataClone->get(evtNo);
-    assert(_dataClone->valid());
-    pdfClone->getValV(_normSet);
-    try {
-      BatchHelpers::BatchInterfaceAccessor::checkBatchComputation(*pdfClone, evtNo, _normSet);
-    } catch (std::exception& e) {
-      std::cerr << "ERROR when checking batch computation for event " << evtNo << ":\n"
-          << e.what() << std::endl;
-    }
-  }
-#endif
 
 #endif
 

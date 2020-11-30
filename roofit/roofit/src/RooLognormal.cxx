@@ -26,23 +26,16 @@ The parameterization here is physics driven and differs from the ROOT::Math::log
 **/
 
 #include "RooLognormal.h"
-#include "RooFit.h"
-#include "RooAbsReal.h"
-#include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooMath.h"
 #include "RooVDTHeaders.h"
 #include "RooHelpers.h"
 #include "BatchHelpers.h"
+#include "RooFitComputeInterface.h"
 
-#include "TMath.h"
 #include "TClass.h"
-#include <Math/SpecFuncMathCore.h>
-#include <Math/PdfFuncMathCore.h>
-#include <Math/ProbFuncMathCore.h>
 
-#include <cmath>
-using namespace std;
+#include <Math/PdfFuncMathCore.h>
 
 ClassImp(RooLognormal);
 
@@ -90,66 +83,10 @@ Double_t RooLognormal::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-namespace {
-//Author: Emmanouil Michalainas, CERN 10 September 2019
-
-template<class Tx, class Tm0, class Tk>
-void compute(	size_t batchSize,
-              double * __restrict output,
-              Tx X, Tm0 M0, Tk K)
-{
-  const double rootOf2pi = std::sqrt(2 * M_PI);
-  for (size_t i=0; i<batchSize; i++) {
-    double lnxOverM0 = _rf_fast_log(X[i]/M0[i]);
-    double lnk = _rf_fast_log(K[i]);
-    if (lnk<0) lnk = -lnk;
-    double arg = lnxOverM0/lnk;
-    arg *= -0.5*arg;
-    output[i] = _rf_fast_exp(arg) / (X[i]*lnk*rootOf2pi);
-  }
+/// Compute multiple values of Lognormal distribution.  
+RooSpan<double> RooLognormal::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  return RooFitCompute::dispatch->computeLognormal(this, evalData, x->getValues(evalData, normSet), m0->getValues(evalData, normSet), k->getValues(evalData, normSet));
 }
-};
-
-RooSpan<double> RooLognormal::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
-  auto xData = x.getValBatch(begin, batchSize);
-  auto m0Data = m0.getValBatch(begin, batchSize);
-  auto kData = k.getValBatch(begin, batchSize);
-  const bool batchX = !xData.empty();
-  const bool batchM0 = !m0Data.empty();
-  const bool batchK = !kData.empty();
-
-  if (!batchX && !batchM0 && !batchK) {
-    return {};
-  }
-  batchSize = findSmallestBatch({ xData, m0Data, kData });
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-
-  if (batchX && !batchM0 && !batchK ) {
-    compute(batchSize, output.data(), xData, BracketAdapter<double>(m0), BracketAdapter<double>(k));
-  }
-  else if (!batchX && batchM0 && !batchK ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), m0Data, BracketAdapter<double>(k));
-  }
-  else if (batchX && batchM0 && !batchK ) {
-    compute(batchSize, output.data(), xData, m0Data, BracketAdapter<double>(k));
-  }
-  else if (!batchX && !batchM0 && batchK ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), BracketAdapter<double>(m0), kData);
-  }
-  else if (batchX && !batchM0 && batchK ) {
-    compute(batchSize, output.data(), xData, BracketAdapter<double>(m0), kData);
-  }
-  else if (!batchX && batchM0 && batchK ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), m0Data, kData);
-  }
-  else if (batchX && batchM0 && batchK ) {
-    compute(batchSize, output.data(), xData, m0Data, kData);
-  }
-  return output;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
