@@ -225,28 +225,17 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
    TPavePainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
-   TPavePainter.prototype.AssignFinishPave = function() {
-      function func() {
-         // console.log('Calling FinishPave', this.FirstRun);
-         // function used to signal drawing ready, required when text drawing postponed due to mathjax
-         if (this.FirstRun <= 0) return;
-         this.FirstRun--;
-         if (this.FirstRun===0) {
-            delete this.FinishPave; // no need for that callback
-            this.DrawingReady();
-         }
-      }
-      this.FirstRun = 1; // counter required to correctly complete drawing
-      this.FinishPave = func.bind(this);
-   }
-
    /** @summary Draw pave and content */
    TPavePainter.prototype.DrawPave = function(arg) {
 
       this.UseTextColor = false;
 
-      if (!this.Enabled)
-         return this.RemoveDrawG();
+      let promise = Promise.resolve(this);
+
+      if (!this.Enabled) {
+         this.RemoveDrawG();
+         return promise;
+      }
 
       let pt = this.GetObject(), opt = pt.fOption.toUpperCase();
 
@@ -337,9 +326,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          let text_g = this.draw_g.append("svg:g")
                                  .attr("transform", "translate(" + Math.round(width/4) + "," + Math.round(height/4) + ")");
 
-         this.DrawPaveText(w2, h2, arg, text_g);
-
-         return;
+         return this.DrawPaveText(w2, h2, arg, text_g);
       }
 
       // add shadow decoration before main rect
@@ -374,17 +361,13 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           .call(this.fillatt.func)
           .call(this.lineatt.func);
 
-
-      let promise;
-
       if (typeof this.PaveDrawFunc == 'function')
          promise = this.PaveDrawFunc(width, height, arg);
 
-      if (JSROOT.BatchMode || (pt._typename=="TPave")) return;
+      if (JSROOT.BatchMode || (pt._typename=="TPave"))
+         return promise;
 
-      if (!promise || !promise.then) promise = Promise.resolve(true);
-
-      promise.then(() => JSROOT.require(['interactive'])).then(inter => {
+      return promise.then(() => JSROOT.require(['interactive'])).then(inter => {
 
          // here all kind of interactive settings
          rect.style("pointer-events", "visibleFill")
@@ -403,9 +386,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if (this.UseContextMenu && JSROOT.settings.ContextMenu)
              this.draw_g.on("contextmenu", this.PaveContextMenu.bind(this));
 
-         if (pt._typename == "TPaletteAxis") {
+         if (pt._typename == "TPaletteAxis")
             this.InteractivePaletteAxis(width, height);
-         }
+
+         return this;
       });
    }
 
@@ -425,19 +409,20 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
+   /** @summary draw TPaveLabel object */
    TPavePainter.prototype.DrawPaveLabel = function(_width, _height) {
       this.UseTextColor = true;
 
       let pave = this.GetObject();
 
-      this.StartTextDrawing(pave.fTextFont, _height/1.2);
+      this.startTextDrawing(pave.fTextFont, _height/1.2);
 
-      this.DrawText({ align: pave.fTextAlign, width: _width, height: _height, text: pave.fLabel, color: this.get_color(pave.fTextColor) });
+      this.drawText({ align: pave.fTextAlign, width: _width, height: _height, text: pave.fLabel, color: this.get_color(pave.fTextColor) });
 
-      this.FirstRun++;
-      this.FinishTextDrawing(null, this.FinishPave);
+      return this.finishTextDrawing();
    }
 
+   /** @summary draw TPaveStats object */
    TPavePainter.prototype.DrawPaveStats = function(width, height) {
 
       if (this.IsStats()) this.FillStatistic();
@@ -469,12 +454,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
       let stepy = height / nlines, has_head = false, margin_x = pt.fMargin * width;
 
-      this.StartTextDrawing(pt.fTextFont, height/(nlines * 1.2));
+      this.startTextDrawing(pt.fTextFont, height/(nlines * 1.2));
 
       this.UseTextColor = true;
 
       if (nlines == 1) {
-         this.DrawText({ align: pt.fTextAlign, width: width, height: height, text: lines[0], color: tcolor, latex: 1 });
+         this.drawText({ align: pt.fTextAlign, width: width, height: height, text: lines[0], color: tcolor, latex: 1 });
       } else
       for (let j = 0; j < nlines; ++j) {
          let posy = j*stepy;
@@ -483,7 +468,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if (first_stat && (j >= first_stat)) {
             let parts = lines[j].split("|");
             for (let n = 0; n < parts.length; ++n)
-               this.DrawText({ align: "middle", x: width * n / num_cols, y: posy, latex: 0,
+               this.drawText({ align: "middle", x: width * n / num_cols, y: posy, latex: 0,
                                width: width/num_cols, height: stepy, text: parts[n], color: tcolor });
          } else if (lines[j].indexOf('=') < 0) {
             if (j==0) {
@@ -491,7 +476,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                if (lines[j].length > maxlen + 5)
                   lines[j] = lines[j].substr(0,maxlen+2) + "...";
             }
-            this.DrawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y: posy,
+            this.drawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y: posy,
                             width: width-2*margin_x, height: stepy, text: lines[j], color: tcolor });
          } else {
             let parts = lines[j].split("="), args = [];
@@ -510,7 +495,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             }
 
             for (let n = 0; n < 2; ++n)
-               this.DrawText(args[n]);
+               this.drawText(args[n]);
          }
       }
 
@@ -528,12 +513,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (lpath) this.draw_g.append("svg:path").attr("d",lpath).call(this.lineatt.func);
 
-      this.FirstRun++;
-      this.FinishTextDrawing(undefined, this.FinishPave);
-
       this.draw_g.classed("most_upper_primitives", true); // this primitive will remain on top of list
+
+      return this.finishTextDrawing();
    }
 
+   /** @summary draw TPaveText object */
    TPavePainter.prototype.DrawPaveText = function(width, height, dummy_arg, text_g) {
 
       let pt = this.GetObject(),
@@ -542,7 +527,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           can_height = this.pad_height(),
           pp = this.pad_painter(),
           individual_positioning = false,
-          draw_header = (pt.fLabel.length>0);
+          draw_header = (pt.fLabel.length > 0),
+          promises = [];
 
       if (!text_g) text_g = this.draw_g;
 
@@ -581,13 +567,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
                   let sub_g = text_g.append("svg:g");
 
-                  this.StartTextDrawing(pt.fTextFont, (entry.fTextSize || pt.fTextSize) * can_height, sub_g);
+                  this.startTextDrawing(pt.fTextFont, (entry.fTextSize || pt.fTextSize) * can_height, sub_g);
 
-                  this.DrawText({ align: entry.fTextAlign || pt.fTextAlign, x: lx, y: ly, text: entry.fTitle, color: jcolor,
+                  this.drawText({ align: entry.fTextAlign || pt.fTextAlign, x: lx, y: ly, text: entry.fTitle, color: jcolor,
                                   latex: (entry._typename == "TText") ? 0 : 1,  draw_g: sub_g, fast: fast_draw });
 
-                  this.FirstRun++;
-                  this.FinishTextDrawing(sub_g, this.FinishPave);
+                  promises.push(this.finishTextDrawing(sub_g));
                } else {
                   lines.push(entry); // make as before
                }
@@ -632,7 +617,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             if (max_font_size < 3) max_font_size = 3;
          }
 
-         this.StartTextDrawing(pt.fTextFont, height/(nlines * 1.2), text_g, max_font_size);
+         this.startTextDrawing(pt.fTextFont, height/(nlines * 1.2), text_g, max_font_size);
 
          for (let j = 0; j < nlines; ++j) {
             let arg = null, lj = lines[j];
@@ -651,10 +636,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             arg.text = lj.fTitle;
             arg.fast = fast_draw;
             if (!arg.color) { this.UseTextColor = true; arg.color = tcolor; }
-            this.DrawText(arg);
+            this.drawText(arg);
          }
-         this.FirstRun++;
-         this.FinishTextDrawing(text_g, this.FinishPave);
+         promises.push(this.finishTextDrawing(text_g));
       }
 
       if (draw_header) {
@@ -669,15 +653,16 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                .call(this.fillatt.func)
                .call(this.lineatt.func);
 
-         this.StartTextDrawing(pt.fTextFont, h/1.5, lbl_g);
+         this.startTextDrawing(pt.fTextFont, h/1.5, lbl_g);
 
-         this.DrawText({ align: 22, x: x, y: y, width: w, height: h, text: pt.fLabel, color: tcolor, draw_g: lbl_g });
+         this.drawText({ align: 22, x: x, y: y, width: w, height: h, text: pt.fLabel, color: tcolor, draw_g: lbl_g });
 
-         this.FirstRun++;
-         this.FinishTextDrawing(lbl_g, this.FinishPave);
+         promises.push(this.finishTextDrawing(lbl_g));
 
          this.UseTextColor = true;
       }
+
+      return Promise.all(promises).then(() => { return this; });
    }
 
    /** @summary Method used to convert value to string according specified format
@@ -734,7 +719,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (legend.fTextSize && (ph*legend.fTextSize > 2) && (ph*legend.fTextSize < font_size))
          font_size = max_font_size = Math.round(ph*legend.fTextSize);
 
-      this.StartTextDrawing(legend.fTextFont, font_size, this.draw_g, max_font_size);
+      this.startTextDrawing(legend.fTextFont, font_size, this.draw_g, max_font_size);
 
       for (let ii = 0; ii < nlines; ++ii) {
          let leg = legend.fPrimitives.arr[ii];
@@ -831,14 +816,14 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                        else if (!any_opt) pos_x = x0 + padding_x;
 
          if (leg.fLabel)
-            this.DrawText({ align: "start", x: pos_x, y: pos_y, width: x0+column_width-pos_x-padding_x, height: step_y, text: leg.fLabel, color: tcolor });
+            this.drawText({ align: "start", x: pos_x, y: pos_y, width: x0+column_width-pos_x-padding_x, height: step_y, text: leg.fLabel, color: tcolor });
       }
 
       // rescale after all entries are shown
-      this.FirstRun++;
-      this.FinishTextDrawing(this.draw_g, this.FinishPave);
+      return this.finishTextDrawing();
    }
 
+   /** @summary draw color palette with axis */
    TPavePainter.prototype.DrawPaletteAxis = function(s_width, s_height, arg) {
 
       let palette = this.GetObject(),
@@ -853,10 +838,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           framep = this.frame_painter(),
           zmin = 0, zmax = 100,
           contour = main.fContour,
-          levels = contour ? contour.GetLevels() : null,
+          levels = contour ? contour.getLevels() : null,
           draw_palette = main.fPalette;
 
-      if (nbr1<=0) nbr1 = 8;
+      if (nbr1 <= 0) nbr1 = 8;
       axis.fTickSize = 0.6 * s_width / width; // adjust axis ticks size
 
       if (contour && framep) {
@@ -911,11 +896,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       this.z_handle.max_tick_size = Math.round(s_width*0.7);
 
-      this.FirstRun++;
-
       return this.z_handle.DrawAxis(this.draw_g, s_width, s_height, "translate(" + s_width + ", 0)").then(() => {
-
-         if (this.FinishPave) this.FinishPave();
 
          if (can_move && ('getBoundingClientRect' in this.draw_g.node())) {
             let rect = this.draw_g.node().getBoundingClientRect();
@@ -930,7 +911,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             }
          }
 
-         return true;
+         return this;
       });
    }
 
@@ -1128,8 +1109,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       jsrp.createMenu(this, evnt).then(menu => {
          this.FillContextMenu(menu);
-         this.FillObjectExecMenu(menu, "title", () => menu.show());
-      });
+         return this.fillObjectExecMenu(menu, "title");
+       }).then(menu => menu.show());
    }
 
    TPavePainter.prototype.IsStats = function() {
@@ -1302,8 +1283,6 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       let painter = new JSROOT.TPavePainter(pave);
 
-      painter.AssignFinishPave(); // create handler which controls drawing
-
       painter.SetDivId(divid, 2, onpad);
 
       if ((pave.fName === "title") && (pave._typename === "TPaveText")) {
@@ -1363,18 +1342,15 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             break;
       }
 
-      painter.DrawPave(opt);
-
-      painter.FinishPave(); // at least once finish pave must be called, it will invoke ready state
-
-      return painter;
+      return painter.DrawPave(opt);
    }
 
    /** @summary Produce and draw TLegend object for the specified divid
-    * @desc Should be called when all other objects are painted
-    * Invoked when item "$legend" specified in JSROOT URL string
-    * @memberof JSROOT
-    * @private */
+     * @desc Should be called when all other objects are painted
+     * Invoked when item "$legend" specified in JSROOT URL string
+     * @returns {Object} Legend painter
+     * @memberof JSROOT.Painter
+     * @private */
    let produceLegend = (divid, opt) => {
       let main_painter = JSROOT.get_main_painter(divid);
       if (!main_painter) return;
@@ -1783,7 +1759,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.exact_min_indx = 0;
    }
 
-   HistContour.prototype.GetLevels = function() { return this.arr; }
+   HistContour.prototype.getLevels = function() { return this.arr; }
 
    HistContour.prototype.CreateNormal = function(nlevels, log_scale, zminpositive) {
       if (log_scale) {
@@ -1933,12 +1909,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
    THistPainter.prototype.Clear3DScene = function() {
       let fp = this.frame_painter();
-      if (fp && typeof fp.Create3DScene === 'function')
-         fp.Create3DScene(-1);
+      if (fp && typeof fp.create3DScene === 'function')
+         fp.create3DScene(-1);
       this.mode3d = false;
    }
 
-   /** Cleanup histogram painter */
+   /** @summary Cleanup histogram painter */
    THistPainter.prototype.Cleanup = function() {
 
       // clear all 3D buffers
@@ -1995,7 +1971,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    /** @summary copy draw options to all other histograms in the pad
      * @private */
    THistPainter.prototype.CopyOptionsToOthers = function() {
-      this.ForEachPainter(painter => {
+      this.forEachPainter(painter => {
          if ((painter !== this) && (typeof painter.CopyOptionsFrom == 'function'))
             painter.CopyOptionsFrom(this);
       }, "objects");
@@ -2145,7 +2121,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
             // find painters associated with histogram
             if (pp)
-               pp.ForEachPainterInPad(objp => {
+               pp.forEachPainterInPad(objp => {
                   if (objp.child_painter_id === pid)
                      painters.push(objp);
                }, "objects");
@@ -2304,13 +2280,17 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
    THistPainter.prototype.ToggleTitle = function(arg) {
       let histo = this.GetHisto();
-      if (!this.is_main_painter() || !histo) return false;
-      if (arg==='only-check') return !histo.TestBit(TH1StatusBits.kNoTitle);
+      if (!this.is_main_painter() || !histo)
+         return false;
+      if (arg==='only-check')
+         return !histo.TestBit(TH1StatusBits.kNoTitle);
       histo.InvertBit(TH1StatusBits.kNoTitle);
-      this.DrawTitle();
+      this.drawHistTitle();
    }
 
-   THistPainter.prototype.DrawTitle = function() {
+   /** @summary Draw histogram title
+     * @returns {Promise} with painter */
+   THistPainter.prototype.drawHistTitle = function() {
 
       // case when histogram drawn over other histogram (same option)
       if (!this.is_main_painter() || this.options.Same)
@@ -2344,14 +2324,13 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          pt.fBorderSize = st.fTitleBorderSize;
 
          pt.AddText(histo.fTitle);
-         tpainter = jsrp.drawPave(this.divid, pt, "postitle");
-         if (tpainter) {
-            tpainter.$secondary = true;
-            return tpainter.Promise();
-         }
+         return drawPave(this.divid, pt, "postitle").then(tpainter => {
+            if (tpainter) tpainter.$secondary = true;
+            return this;
+         });
       }
 
-      return Promise.resolve(true);
+      return Promise.resolve(this);
    }
 
    THistPainter.prototype.processTitleChange = function(arg) {
@@ -2482,7 +2461,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    }
 
    THistPainter.prototype.IgnoreStatsFill = function() {
-      return !this.GetObject() || (!this.draw_content && !this.create_stats) || (this.options.Axis>0);
+      return !this.GetObject() || (!this.draw_content && !this.create_stats) || (this.options.Axis > 0);
    }
 
    /** @summary Create stat box for histogram if required */
@@ -2914,7 +2893,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    }
 
    THistPainter.prototype.GetContourLevels = function() {
-      return this.GetContour().GetLevels();
+      return this.GetContour().getLevels();
    }
 
    THistPainter.prototype.GetPalette = function(force) {
@@ -2956,10 +2935,13 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       menu.add("endsub:");
    }
 
-   THistPainter.prototype.DrawColorPalette = function(enabled, postpone_draw, can_move) {
+   /** @summary draw color palette
+     * @return {Promise} when done */
+   THistPainter.prototype.drawColorPalette = function(enabled, postpone_draw, can_move) {
       // only when create new palette, one could change frame size
 
-      if (!this.is_main_painter()) return null;
+      if (!this.is_main_painter())
+         return Promise.resolve(null);
 
       let pal = this.FindFunction('TPaletteAxis'),
           pal_painter = this.FindPainterFor(pal);
@@ -2981,12 +2963,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             pal_painter.RemoveDrawG(); // completely remove drawing without need to redraw complete pad
          }
 
-         return null;
+         return Promise.resolve(null);
       }
 
       if (!pal) {
 
-         if (this.options.PadPalette) return null;
+         if (this.options.PadPalette) return Promise.resolve(null);
 
          pal = JSROOT.Create('TPave');
 
@@ -3020,47 +3002,52 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (postpone_draw) arg+=";postpone";
       if (can_move && !this.do_redraw_palette) arg+=";can_move";
 
+      let promise;
+
       if (!pal_painter) {
          // when histogram drawn on sub pad, let draw new axis object on the same pad
          let prev = this.CurrentPadName(this.pad_name);
-         // CAUTION!!! This is very special place where return value of JSROOT.draw is allowed
-         // while palette drawing is in same script. Normally callback should be used
-         pal_painter = drawPave(this.divid, pal, arg);
-         this.CurrentPadName(prev);
+         promise = drawPave(this.divid, pal, arg).then(pp => {
+            this.CurrentPadName(prev);
+            return pp;
+         });
       } else {
          pal_painter.Enabled = true;
-         pal_painter.DrawPave(arg);
+         promise = pal_painter.DrawPave(arg);
       }
 
-      // mark painter as secondary - not in list of TCanvas primitives
-      pal_painter.$secondary = true;
+      return promise.then(pp => {
+         // mark painter as secondary - not in list of TCanvas primitives
+         pp.$secondary = true;
 
-      // make dummy redraw, palette will be updated only from histogram painter
-      pal_painter.Redraw = function() {};
+         // make dummy redraw, palette will be updated only from histogram painter
+         pp.Redraw = function() {};
 
-      // special code to adjust frame position to actual position of palette
-      if (can_move && frame_painter && (pal.fX1NDC-0.005 < frame_painter.fX2NDC) && !this.do_redraw_palette) {
+         // special code to adjust frame position to actual position of palette
+         if (can_move && frame_painter && (pal.fX1NDC - 0.005 < frame_painter.fX2NDC) && !this.do_redraw_palette) {
 
-         this.do_redraw_palette = true;
+            this.do_redraw_palette = true;
 
-         frame_painter.fX2NDC = pal.fX1NDC - 0.01;
-         frame_painter.Redraw();
-         // here we should redraw main object
-         if (!postpone_draw) this.Redraw();
+            frame_painter.fX2NDC = pal.fX1NDC - 0.01;
+            frame_painter.Redraw();
+            // here we should redraw main object
+            if (!postpone_draw) this.Redraw();
 
-         delete this.do_redraw_palette;
-      }
+            delete this.do_redraw_palette;
+         }
 
-      return pal_painter;
+         return pp;
+      });
    }
 
+   /** @summary Toggle color z palette drawing */
    THistPainter.prototype.ToggleColz = function() {
       let can_toggle = this.options.Mode3D ? (this.options.Lego === 12 || this.options.Lego === 14 || this.options.Surf === 11 || this.options.Surf === 12) :
                        this.options.Color || this.options.Contour;
 
       if (can_toggle) {
          this.options.Zscale = !this.options.Zscale;
-         this.DrawColorPalette(this.options.Zscale, false, true);
+         this.drawColorPalette(this.options.Zscale, false, true);
       }
    }
 
@@ -3534,9 +3521,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if ((histo.fMarkerSize!==1) && text_angle)
             text_size = 0.02*height*histo.fMarkerSize;
 
-         this.StartTextDrawing(42, text_size, this.draw_g, text_size);
+         this.startTextDrawing(42, text_size, this.draw_g, text_size);
       }
-
 
       for (i = left; i < right; ++i) {
          x1 = xaxis.GetBinLowEdge(i+1);
@@ -3576,11 +3562,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             let lbl = (y === Math.round(y)) ? y.toString() : JSROOT.FFormat(y, JSROOT.gStyle.fPaintTextFormat);
 
             if (pmain.swap_xy)
-               this.DrawText({ align: 12, x: Math.round(gry1 + text_size/2), y: Math.round(grx1+0.1), height: Math.round(w*0.8), text: lbl, color: text_col, latex: 0 });
+               this.drawText({ align: 12, x: Math.round(gry1 + text_size/2), y: Math.round(grx1+0.1), height: Math.round(w*0.8), text: lbl, color: text_col, latex: 0 });
             else if (text_angle)
-               this.DrawText({ align: 12, x: grx1+w/2, y: Math.round(gry1 - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
+               this.drawText({ align: 12, x: grx1+w/2, y: Math.round(gry1 - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
             else
-               this.DrawText({ align: 22, x: Math.round(grx1 + w*0.1), y: Math.round(gry1-2-text_size), width: Math.round(w*0.8), height: text_size, text: lbl, color: text_col, latex: 0 });
+               this.drawText({ align: 22, x: Math.round(grx1 + w*0.1), y: Math.round(gry1-2-text_size), width: Math.round(w*0.8), height: text_size, text: lbl, color: text_col, latex: 0 });
          }
       }
 
@@ -3602,7 +3588,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                .style("fill", d3.rgb(this.fillatt.color).darker(0.5).toString());
 
       if (show_text)
-         this.FinishTextDrawing(this.draw_g);
+         this.finishTextDrawing();
    }
 
    TH1Painter.prototype.DrawFilledErrors = function() {
@@ -3726,7 +3712,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
              }
          }
 
-         this.StartTextDrawing(42, text_size, this.draw_g, text_size);
+         this.startTextDrawing(42, text_size, this.draw_g, text_size);
       }
 
       // if there are too many points, exclude many vertical drawings at the same X position
@@ -3777,9 +3763,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                   let lbl = (cont === Math.round(cont)) ? cont.toString() : JSROOT.FFormat(cont, JSROOT.gStyle.fPaintTextFormat);
 
                   if (text_angle)
-                     this.DrawText({ align: 12, x: midx, y: Math.round(my - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
+                     this.drawText({ align: 12, x: midx, y: Math.round(my - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
                   else
-                     this.DrawText({ align: 22, x: Math.round(mx1 + (mx2-mx1)*0.1), y: Math.round(my-2-text_size), width: Math.round((mx2-mx1)*0.8), height: text_size, text: lbl, color: text_col, latex: 0 });
+                     this.drawText({ align: 22, x: Math.round(mx1 + (mx2-mx1)*0.1), y: Math.round(my-2-text_size), width: Math.round((mx2-mx1)*0.8), height: text_size, text: lbl, color: text_col, latex: 0 });
                }
             }
 
@@ -3943,7 +3929,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       }
 
       if (show_text)
-         this.FinishTextDrawing(this.draw_g);
+         this.finishTextDrawing();
 
    }
 
@@ -4257,7 +4243,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          this.frame_painter().Zoom(histo.fXaxis.GetBinLowEdge(left+1), histo.fXaxis.GetBinLowEdge(right+1));
    }
 
-   TH1Painter.prototype.CanZoomIn = function(axis,min,max) {
+   /** @summary Checks if it makes sense to zoom inside specified axis range */
+   TH1Painter.prototype.canZoomInside = function(axis,min,max) {
       let histo = this.GetHisto();
 
       if ((axis=="x") && histo && (histo.fXaxis.FindBin(max,0.5) - histo.fXaxis.FindBin(min,0) > 1)) return true;
@@ -4289,12 +4276,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       this.ScanContent(true);
 
-      if (typeof this.DrawColorPalette === 'function')
-         this.DrawColorPalette(false);
+      if (typeof this.drawColorPalette === 'function')
+         this.drawColorPalette(false);
 
       return this.DrawAxes().then(() => {
          this.Draw1DBins();
-         return this.DrawTitle();
+         return this.drawHistTitle();
       }).then(() => {
          this.UpdateStatWebCanvas();
          return this.AddInteractive();
@@ -4531,8 +4518,6 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.CopyOptionsToOthers();
 
       this.RedrawPad();
-
-      // this.DrawColorPalette(this.options.Color && this.options.Zscale);
    }
 
    TH2Painter.prototype.AutoZoom = function() {
@@ -5378,7 +5363,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if ((histo.fMarkerSize!==1) && text_angle)
              text_size = Math.round(0.02*h*histo.fMarkerSize);
 
-         this.StartTextDrawing(42, text_size, text_g, text_size);
+         this.startTextDrawing(42, text_size, text_g, text_size);
 
          for (i = 0; i < textbins.length; ++ i) {
             bin = textbins[i];
@@ -5394,10 +5379,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                if (!lbl) lbl = bin.fNumber;
             }
 
-            this.DrawText({ align: 22, x: bin._midx, y: bin._midy, rotate: text_angle, text: lbl, color: text_col, latex: 0, draw_g: text_g });
+            this.drawText({ align: 22, x: bin._midx, y: bin._midy, rotate: text_angle, text: lbl, color: text_col, latex: 0, draw_g: text_g });
          }
 
-         this.FinishTextDrawing(text_g);
+         this.finishTextDrawing(text_g);
       }
 
       return { poly: true };
@@ -5422,7 +5407,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (histo.fBarOffset!==0) text_offset = histo.fBarOffset*1e-3;
 
-      this.StartTextDrawing(42, text_size, text_g, text_size);
+      this.startTextDrawing(42, text_size, text_g, text_size);
 
       for (i = handle.i1; i < handle.i2; ++i)
          for (j = handle.j1; j < handle.j2; ++j) {
@@ -5460,10 +5445,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                sizey = Math.round(binh*0.8);
             }
 
-            this.DrawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, rotate: text_angle, text: lbl, color: text_col, latex: use_latex, draw_g: text_g });
+            this.drawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, rotate: text_angle, text: lbl, color: text_col, latex: use_latex, draw_g: text_g });
          }
 
-      this.FinishTextDrawing(text_g);
+      this.finishTextDrawing(text_g);
 
       handle.hide_only_zeros = true; // text drawing suppress only zeros
 
@@ -6277,8 +6262,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return res;
    }
 
-   /** @summary Check if it makes sense to zoom inside specified axis range */
-   TH2Painter.prototype.CanZoomIn = function(axis,min,max) {
+   /** @summary Checks if it makes sense to zoom inside specified axis range */
+   TH2Painter.prototype.canZoomInside = function(axis,min,max) {
 
       if (axis=="z") return true;
 
@@ -6295,17 +6280,19 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.Clear3DScene();
       this.mode3d = false;
 
+      let need_palette = this.options.Zscale && (this.options.Color || this.options.Contour);
       // draw new palette, resize frame if required
-      let pp = this.DrawColorPalette(this.options.Zscale && (this.options.Color || this.options.Contour), true);
+      return this.drawColorPalette(need_palette, true).then(pp => {
 
-      return this.DrawAxes().then(() => {
+         return this.DrawAxes().then(() => {
 
-         this.Draw2DBins();
+            this.Draw2DBins();
 
-         // redraw palette till the end when contours are available
-         if (pp) pp.DrawPave();
-
-         return this.DrawTitle();
+            // redraw palette till the end when contours are available
+            return pp ? pp.DrawPave() : true;
+         });
+      }).then(() => {
+         return this.drawHistTitle();
       }).then(() => {
 
          this.UpdateStatWebCanvas();
@@ -6345,8 +6332,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       painter.DecodeOptions(opt);
 
       if (painter.IsTH2Poly()) {
-         if (painter.options.Mode3D) painter.options.Lego = 12; // lego always 12
-         else if (!painter.options.Color) painter.options.Color = true; // default is color
+         if (painter.options.Mode3D)
+            painter.options.Lego = 12; // lego always 12
+         else if (!painter.options.Color)
+            painter.options.Color = true; // default is color
       }
 
       painter._show_empty_bins = false;
@@ -6457,24 +6446,26 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       let hist = createTF2Histogram(func, d.check('NOSAVE'));
 
-      if (d.empty()) opt = "cont3"; else
-      if (d.opt === "SAME") opt = "cont2 same";
-      else opt = d.opt;
+      if (d.empty())
+         opt = "cont3";
+      else if (d.opt === "SAME")
+         opt = "cont2 same";
+      else
+         opt = d.opt;
 
-      let hpainter = drawHistogram2D(divid, hist, opt);
+      return drawHistogram2D(divid, hist, opt).then(hpainter => {
 
-      hpainter.tf2_typename = func._typename;
-      hpainter.tf2_nosave = d.check('NOSAVE');
+         hpainter.tf2_typename = func._typename;
+         hpainter.tf2_nosave = d.check('NOSAVE');
 
-      hpainter.UpdateObject = function(obj /*, opt*/) {
-         if (!obj || (this.tf2_typename != obj._typename)) return false;
+         hpainter.UpdateObject = function(obj /*, opt*/) {
+            if (!obj || (this.tf2_typename != obj._typename)) return false;
+            createTF2Histogram(obj, this.tf2_nosave, this.GetHisto());
+            return true;
+         }
 
-         createTF2Histogram(obj, this.tf2_nosave, this.GetHisto());
-
-         return true;
-      }
-
-      return hpainter;
+         return hpainter;
+      });
    }
 
    // ====================================================================
