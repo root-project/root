@@ -171,11 +171,11 @@ MakeClusters(const std::vector<std::string> &treeNames, const std::vector<std::s
       entriesPerFile.emplace_back(entries);
    }
 
-   // Here we "fuse" together clusters if the number of clusters is to big with respect to
-   // the number of slots, otherwise we can incurr in an overhead which is so big to make
-   // the parallelisation detrimental for performance.
-   // For example, this is the case when following a merging of many small files a file
-   // contains a tree with many entries and with clusters of just a few entries.
+   // Here we "fuse" together clusters if the number of clusters is too big with respect to
+   // the number of slots, otherwise we can incurr in an overhead which is big enough
+   // to make parallelisation detrimental to performance.
+   // For example, this is the case when, following a merging of many small files, a file
+   // contains a tree with many entries and with clusters of just a few entries each.
    // The criterion according to which we fuse clusters together is to have at most
    // TTreeProcessorMT::GetMaxTasksPerFilePerWorker() clusters per file per slot.
    // For example: given 2 files and 16 workers, at most
