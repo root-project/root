@@ -42,8 +42,8 @@ protected:
    {
       auto version = fWindow.GetClientVersion();
       if (!version.empty()) {
-         std::string search = "jsrootsys/scripts/JSRootCore."s;
-         std::string replace = version + "/jsrootsys/scripts/JSRootCore."s;
+         std::string search = "jsrootsys/scripts/JSRoot.core."s;
+         std::string replace = version + "/jsrootsys/scripts/JSRoot.core."s;
          // replace link to JSROOT main script to emulate new version
          arg->ReplaceAllinContent(search, replace, true);
          arg->AddNoCacheHeader();

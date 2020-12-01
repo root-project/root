@@ -26,7 +26,7 @@ sap.ui.define([
             pthis.RCore = module;
 
             pthis.creator = new EveElements(controller);
-            pthis.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
+            pthis.creator.useIndexAsIs = JSROOT.decodeUrl().has('useindx');
 
             pthis.createRCoreRenderer();
             pthis.controller.createScenes();
