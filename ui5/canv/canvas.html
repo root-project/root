@@ -3,7 +3,7 @@
    <head>
       <meta charset="UTF-8">
       <title>ROOT7 RCanvas</title>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRoot.core.js"></script>
    </head>
 
    <style>
@@ -72,7 +72,7 @@
 
             painter.UseWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
 
-            if (!batch_mode) JSROOT.RegisterForResize(painter);
+            if (!batch_mode) JSROOT.registerForResize(painter);
          }
       });
 

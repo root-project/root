@@ -37,7 +37,7 @@ sap.ui.define([
          //super.init(controller);
 
          this.creator = new EveElements(controller);
-         this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
+         this.creator.useIndexAsIs = JSROOT.decodeUrl().has('useindx');
 
          if(!GlViewerThree.g_global_init_done)
          {
