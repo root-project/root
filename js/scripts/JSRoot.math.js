@@ -1,13 +1,17 @@
-/** @file JSRoot.math.js
-  * Special mathematical functions */
+// Special mathematical functions
 
 JSROOT.define([], () =>  {
 
    "use strict";
 
+   /** @namespace
+     * @summary Collection of Math-related methods
+     * @alias JSROOT.Math
+     * @desc Shows available functions for TFormula */
    let mth = {};
 
-   /** @memberof JSROOT.Math */
+   /** @summary lgam function
+     * @private */
    mth.lgam = function( x ) {
       let p, q, u, w, z, i, sgngam = 1;
       const kMAXLGM = 2.556348e305,
@@ -106,12 +110,10 @@ JSROOT.define([], () =>  {
       return q;
    }
 
-   /**
-    * calculates a value of a polynomial of the form:
-    * a[0]x^N+a[1]x^(N-1) + ... + a[N]
-    *
-    * @memberof JSROOT.Math
-    */
+   /** @summary Polynomialeval function
+     * @desc calculates a value of a polynomial of the form:
+     * a[0]x^N+a[1]x^(N-1) + ... + a[N]
+     * @private */
    mth.Polynomialeval = function(x, a, N) {
       if (N==0) return a[0];
 
@@ -121,12 +123,10 @@ JSROOT.define([], () =>  {
       return pom;
    }
 
-   /**
-    * calculates a value of a polynomial of the form:
-    * x^N+a[0]x^(N-1) + ... + a[N-1]
-    *
-    * @memberof JSROOT.Math
-    */
+   /** @summary Polynomial1eval function
+     * @desc calculates a value of a polynomial of the form:
+     * x^N+a[0]x^(N-1) + ... + a[N-1]
+     * @private */
    mth.Polynomial1eval = function(x, a, N) {
       if (N==0) return a[0];
 
@@ -136,7 +136,8 @@ JSROOT.define([], () =>  {
       return pom;
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary ndtri function
+     * @private */
    mth.ndtri = function( y0 ) {
       if ( y0 <= 0.0 )
          return Number.NEGATIVE_INFINITY;
@@ -224,11 +225,14 @@ JSROOT.define([], () =>  {
       return x;
    }
 
+   /** @summary normal_quantile function
+     * @private */
    mth.normal_quantile = function(z, sigma) {
       return  sigma * mth.ndtri(z);
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary igam function
+     * @private */
    mth.igam = function(a,x) {
       const kMACHEP = 1.11022302462515654042363166809e-16,
             kMAXLOG = 709.782712893383973096206318587;
@@ -261,7 +265,8 @@ JSROOT.define([], () =>  {
       return ans * ax/a;
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary igamc function
+     * @private */
    mth.igamc = function(a,x) {
       const kMACHEP = 1.11022302462515654042363166809e-16,
             kMAXLOG = 709.782712893383973096206318587,
@@ -325,7 +330,8 @@ JSROOT.define([], () =>  {
       return ans * ax;
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary igami function
+     * @private */
    mth.igami = function(a, y0) {
       // check the domain
       if (a <= 0) {
@@ -434,20 +440,23 @@ JSROOT.define([], () =>  {
       return x;
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary gamma_quantile_c function
+     * @private */
    mth.gamma_quantile_c = function(z, alpha, theta) {
       return theta * mth.igami( alpha, z);
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary gamma_quantile function
+     * @private */
    mth.gamma_quantile = function(z, alpha, theta) {
       return theta * mth.igami( alpha, 1.- z);
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary landau_pdf function
+     * @desc LANDAU pdf : algorithm from CERNLIB G110 denlan
+     *  same algorithm is used in GSL
+     * @private */
    mth.landau_pdf = function(x, xi, x0) {
-      // LANDAU pdf : algorithm from CERNLIB G110 denlan
-      // same algorithm is used in GSL
       if (x0===undefined) x0 = 0;
       if (xi <= 0) return 0;
       const v = (x - x0)/xi;
@@ -503,7 +512,8 @@ JSROOT.define([], () =>  {
       return denlan/xi;
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary Landau function
+     * @private */
    mth.Landau = function(x, mpv, sigma, norm) {
       if (sigma <= 0) return 0;
       const den = mth.landau_pdf((x - mpv) / sigma, 1, 0);
@@ -511,42 +521,40 @@ JSROOT.define([], () =>  {
       return den/sigma;
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary inc_gamma_c
+     * @private */
    mth.inc_gamma_c = function(a,x) {
       return mth.igamc(a,x);
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary inc_gamma
+     * @private */
    mth.inc_gamma = function(a,x) {
       return mth.igam(a,x);
    }
 
+   /** @summary lgamma
+     * @private */
    mth.lgamma = function(z) {
       return mth.lgam(z);
    }
 
-   /** @memberof JSROOT.Math */
-   mth.inc_gamma = function(a,x) {
-      return mth.igam(a,x);
-   }
-
-   mth.lgamma = function(z) {
-      return mth.lgam(z);
-   }
-
-   /** @memberof JSROOT.Math */
+   /** @summary chisquared_cdf_c
+     * @private */
    mth.chisquared_cdf_c = function(x,r,x0) {
       if (x0===undefined) x0 = 0;
       return mth.inc_gamma_c ( 0.5 * r , 0.5*(x-x0) );
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary chisquared_cdf
+     * @private */
    mth.chisquared_cdf = function(x,r,x0) {
       if (x0===undefined) x0 = 0;
       return mth.inc_gamma ( 0.5 * r , 0.5*(x-x0) );
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary chisquared_pdf
+     * @private */
    mth.chisquared_pdf = function(x,r,x0) {
       if (x0===undefined) x0 = 0;
       if ((x-x0) < 0) return 0.0;
@@ -557,7 +565,8 @@ JSROOT.define([], () =>  {
       return Math.exp ((r/2 - 1) * Math.log((x-x0)/2) - (x-x0)/2 - mth.lgamma(r/2))/2;
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary Prob function
+     * @private */
    mth.Prob = function(chi2, ndf) {
       if (ndf <= 0) return 0; // Set CL to zero in case ndf<=0
 
@@ -569,54 +578,55 @@ JSROOT.define([], () =>  {
       return mth.chisquared_cdf_c(chi2,ndf,0);
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary Gaus function
+     * @private */
    mth.Gaus = function(x, mean, sigma) {
       return Math.exp(-0.5 * Math.pow((x-mean) / sigma, 2));
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary BreitWigner function
+     * @private */
    mth.BreitWigner = function(x, mean, gamma) {
       return gamma/((x-mean)*(x-mean) + gamma*gamma/4) / 2 / Math.PI;
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary gaus function for TFormula */
    mth.gaus = function(f, x, i) {
-      // function used when gaus(0) used in the TFormula
       return f.GetParValue(i+0) * Math.exp(-0.5 * Math.pow((x-f.GetParValue(i+1)) / f.GetParValue(i+2), 2));
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary gausn function for TFormula */
    mth.gausn = function(f, x, i) {
       return mth.gaus(f, x, i)/(Math.sqrt(2 * Math.PI) * f.GetParValue(i+2));
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary gausxy function for TFormula */
    mth.gausxy = function(f, x, y, i) {
-      // function used when xygaus(0) used in the TFormula
-
       return f.GetParValue(i+0) * Math.exp(-0.5 * Math.pow((x-f.GetParValue(i+1)) / f.GetParValue(i+2), 2))
                                 * Math.exp(-0.5 * Math.pow((y-f.GetParValue(i+3)) / f.GetParValue(i+4), 2));
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary expo function for TFormula */
    mth.expo = function(f, x, i) {
       return Math.exp(f.GetParValue(i+0) + f.GetParValue(i+1) * x);
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary landau function for TFormula */
    mth.landau = function(f, x, i) {
       return mth.Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), false);
    }
 
-   /** @memberof JSROOT.Math */
+   /** @summary landaun function for TFormula */
    mth.landaun = function(f, x, i) {
       return mth.Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), true);
    }
 
    // =========================================================================
 
+   /** @summary Appends more methods
+     * @desc different methods which are typically used in TTree::Draw
+     * @private */
    JSROOT.getMoreMethods = function(m, typename /*, obj*/) {
-      // different methods which are typically used in TTree::Draw
 
       if (typename.indexOf("ROOT::Math::LorentzVector")===0) {
          m.Px = m.X = function() { return this.fCoordinates.Px(); }

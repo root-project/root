@@ -16,21 +16,23 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
    /** @summary Create all necessary components for 3D drawings
      * @private */
-   JSROOT.v7.RFramePainter.prototype.Create3DScene = function(arg, render3d) {
+   JSROOT.v7.RFramePainter.prototype.create3DScene = function(render3d) {
 
-      if ((arg !== undefined) && (arg < 0)) {
+      if (render3d === -1) {
 
          if (!this.mode3d) return;
 
-         if (!this.clear_3d_canvas)
-            return console.error('Strange, why mode3d is configured!!!!', this.mode3d);
+         if (!this.clear_3d_canvas) {
+            console.error('Strange, why mode3d is configured!!!!', this.mode3d);
+            return;
+         }
 
          //if (typeof this.TestAxisVisibility === 'function')
          this.TestAxisVisibility(null, this.toplevel);
 
          this.clear_3d_canvas();
 
-         jsrp.DisposeThreejsObject(this.scene);
+         jsrp.disposeThreejsObject(this.scene);
          if (this.control) this.control.Cleanup();
 
          if (this.renderer) {
@@ -62,7 +64,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       if ('toplevel' in this) {
          // it is indication that all 3D object created, just replace it with empty
          this.scene.remove(this.toplevel);
-         jsrp.DisposeThreejsObject(this.toplevel);
+         jsrp.disposeThreejsObject(this.toplevel);
          delete this.tooltip_mesh;
          delete this.toplevel;
          if (this.control) this.control.HideTooltip();
@@ -80,7 +82,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       jsrp.Assign3DHandler(this);
 
-      render3d = jsrp.GetRender3DKind(render3d);
+      render3d = jsrp.getRender3DKind(render3d);
       let sz = this.size_for_3d(undefined, render3d);
 
       this.size_z3d = 100;
@@ -109,7 +111,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       this.SetCameraPosition(true);
 
-      this.renderer = jsrp.Create3DRenderer(this.scene_width, this.scene_height, render3d);
+      this.renderer = jsrp.createRender3D(this.scene_width, this.scene_height, render3d);
 
       this.webgl = (render3d === JSROOT.constants.Render3D.WebGL);
       this.add_3d_canvas(sz, this.renderer.jsroot_dom, this.webgl);
@@ -119,7 +121,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       if (JSROOT.BatchMode || !this.webgl) return;
 
-      this.control = jsrp.CreateOrbitControl(this, this.camera, this.scene, this.renderer, this.lookat);
+      this.control = jsrp.createOrbitControl(this, this.camera, this.scene, this.renderer, this.lookat);
 
       let axis_painter = this, obj_painter = this.main_painter();
 
@@ -223,46 +225,43 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
 
-      if ((tmout <= 0) || !this.webgl || JSROOT.BatchMode) {
-         if ('render_tmout' in this) {
-            clearTimeout(this.render_tmout);
-         } else {
-            if (tmout === -2222) return; // special case to check if rendering timeout was active
-         }
+      if ((tmout > 0) && this.webgl && JSROOT.BatchMode) {
+          if (this.render_tmout === undefined)
+             this.render_tmout = setTimeout(() => this.Render3D(0), tmout);
+          return;
+       }
 
-         if (!this.renderer) return;
-
-         jsrp.BeforeRender3D(this.renderer);
-
-         let tm1 = new Date();
-
-         if (!this.opt3d) this.opt3d = { FrontBox: true, BackBox: true };
-
-         //if (typeof this.TestAxisVisibility === 'function')
-         this.TestAxisVisibility(this.camera, this.toplevel, this.opt3d.FrontBox, this.opt3d.BackBox);
-
-         // do rendering, most consuming time
-         this.renderer.render(this.scene, this.camera);
-
-         jsrp.AfterRender3D(this.renderer);
-
-         let tm2 = new Date();
-
-         delete this.render_tmout;
-
-         if (this.first_render_tm === 0) {
-            this.first_render_tm = tm2.getTime() - tm1.getTime();
-            this.enable_highlight = (this.first_render_tm < 1200) && this.IsTooltipAllowed();
-            console.log('three.js r' + THREE.REVISION + ', first render tm = ' + this.first_render_tm);
-         }
-
-         return;
+      if (this.render_tmout !== undefined) {
+         clearTimeout(this.render_tmout);
+      } else {
+         if (tmout === -2222) return; // special case to check if rendering timeout was active
       }
 
-      // no need to shoot rendering once again
-      if ('render_tmout' in this) return;
+      if (!this.renderer) return;
 
-      this.render_tmout = setTimeout(this.Render3D.bind(this,0), tmout);
+      jsrp.beforeRender3D(this.renderer);
+
+      let tm1 = new Date();
+
+      if (!this.opt3d) this.opt3d = { FrontBox: true, BackBox: true };
+
+      //if (typeof this.TestAxisVisibility === 'function')
+      this.TestAxisVisibility(this.camera, this.toplevel, this.opt3d.FrontBox, this.opt3d.BackBox);
+
+      // do rendering, most consuming time
+      this.renderer.render(this.scene, this.camera);
+
+      jsrp.afterRender3D(this.renderer);
+
+      let tm2 = new Date();
+
+      delete this.render_tmout;
+
+      if (this.first_render_tm === 0) {
+         this.first_render_tm = tm2.getTime() - tm1.getTime();
+         this.enable_highlight = (this.first_render_tm < 1200) && this.IsTooltipAllowed();
+         console.log('three.js r' + THREE.REVISION + ', first render tm = ' + this.first_render_tm);
+      }
    }
 
    JSROOT.v7.RFramePainter.prototype.Resize3D = function() {
@@ -287,7 +286,6 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       this.renderer.setSize( this.scene_width, this.scene_height );
       if (this.renderer.setJSROOTSize)
          this.renderer.setJSROOTSize(this.scene_width, this.scene_height);
-
 
       return true;
    }
@@ -643,7 +641,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             if (!pnt1 || !pnt2) {
                if (tgtmesh) {
                   this.remove(tgtmesh)
-                  jsrp.DisposeThreejsObject(tgtmesh);
+                  jsrp.disposeThreejsObject(tgtmesh);
                }
                return tgtmesh;
             }
@@ -1418,7 +1416,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       this.ScanContent(true); // may be required for axis drawings
 
       if (is_main) {
-         main.Create3DScene(undefined, this.options.Render3D);
+         main.create3DScene(this.options.Render3D);
          main.SetAxesRanges(this.GetAxis("x"), this.xmin, this.xmax, null, this.ymin, this.ymax, null, 0, 0);
          main.Set3DOptions(this.options);
          main.DrawXYZ(main.toplevel, { use_y_for_z: true, zmult: 1.1, zoom: JSROOT.settings.Zooming, ndim: 1 });
@@ -1467,7 +1465,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       this.DeleteAtt();
 
       if (is_main) {
-         main.Create3DScene(undefined, this.options.Render3D);
+         main.create3DScene(this.options.Render3D);
          main.SetAxesRanges(this.GetAxis("x"), this.xmin, this.xmax, this.GetAxis("y"), this.ymin, this.ymax, null, this.zmin, this.zmax);
          main.Set3DOptions(this.options);
          main.DrawXYZ(main.toplevel, { zmult: zmult, zoom: JSROOT.settings.Zooming, ndim: 2 });
@@ -1512,7 +1510,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
    // ==============================================================================
 
-   function v7Create3DLineMaterial(painter, prefix) {
+   function create3DLineMaterialv7(painter, prefix) {
       if (!painter) return null;
       if (!prefix) prefix = "line_"
 
@@ -1561,7 +1559,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          }
       )
 
-      let lines = jsrp.createLineSegments(pnts, v7Create3DLineMaterial(this));
+      let lines = jsrp.createLineSegments(pnts, create3DLineMaterialv7(this));
       main.toplevel.add(lines);
    }
 
@@ -2464,9 +2462,9 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       return lines;
    }
 
+   /** @summary Try to draw 3D histogram as scatter plot
+     * @desc if too many points, box will be displayed */
    JSROOT.v7.RH3Painter.prototype.Draw3DScatter = function(handle) {
-      // try to draw 3D histogram as scatter plot
-      // if too many points, box will be displayed
 
       let histo = this.GetHisto(),
           main = this.frame_painter(),
@@ -2886,7 +2884,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          return;
       }
 
-      main.Create3DScene(undefined, this.options.Render3D);
+      main.create3DScene(this.options.Render3D);
       main.SetAxesRanges(this.GetAxis("x"), this.xmin, this.xmax, this.GetAxis("y"), this.ymin, this.ymax, this.GetAxis("z"), this.zmin, this.zmax);
       main.Set3DOptions(this.options);
       main.DrawXYZ(main.toplevel, { zoom: JSROOT.settings.Zooming, ndim: 3 });
@@ -2913,8 +2911,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       pp.ShowButtons();
    }
 
-   JSROOT.v7.RH3Painter.prototype.CanZoomIn = function(axis,min,max) {
-      // check if it makes sense to zoom inside specified axis range
+   /** @summary Checks if it makes sense to zoom inside specified axis range */
+   JSROOT.v7.RH3Painter.prototype.canZoomInside = function(axis,min,max) {
       let obj = this.GetHisto();
       if (obj) obj = obj["f"+axis.toUpperCase()+"axis"];
       return !obj || (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);

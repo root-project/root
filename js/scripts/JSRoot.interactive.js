@@ -141,7 +141,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let frame_shift = { x: 0, y: 0 }, trans = frame_rect.transform || "";
          if (!pp.iscan) {
-            pp.CalcAbsolutePosition(this.svg_pad(), frame_shift);
+            frame_shift = jsrp.getAbsPosInCanvas(this.svg_pad(), frame_shift);
             trans = "translate(" + frame_shift.x + "," + frame_shift.y + ") " + trans;
          }
 
@@ -745,7 +745,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          let pp = this.pad_painter();
-         if (jsrp.GetActivePad() !== pp) return;
+         if (jsrp.getActivePad() !== pp) return;
 
          if (evnt.shiftKey) key = "Shift " + key;
          if (evnt.altKey) key = "Alt " + key;
@@ -1300,7 +1300,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                domenu = fp.FillContextMenu(menu);
 
             if (domenu)
-               exec_painter.FillObjectExecMenu(menu, kind, function() {
+               exec_painter.fillObjectExecMenu(menu, kind).then(menu => {
                    // suppress any running zooming
                    menu.painter.SwitchTooltip(false);
                    menu.show(null, menu.painter.SwitchTooltip.bind(menu.painter, true));
@@ -1603,209 +1603,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       }
    } // PadButtonsHandler
-
-   /** @summary Configure user-defined tooltip callback
-    *
-    * @desc Hook for the users to get tooltip information when mouse cursor moves over frame area
-    * call_back function will be called every time when new data is selected
-    * when mouse leave frame area, call_back(null) will be called
-    */
-
-   JSROOT.ObjectPainter.prototype.ConfigureUserTooltipCallback = function(call_back, user_timeout) {
-
-      if (!call_back || (typeof call_back !== 'function')) {
-         delete this.UserTooltipCallback;
-         delete this.UserTooltipTimeout;
-         return;
-      }
-
-      if (user_timeout === undefined) user_timeout = 500;
-
-      this.UserTooltipCallback = call_back;
-      this.UserTooltipTimeout = user_timeout;
-   }
-
-   /** @summary Configure user-defined context menu for the object
-   *
-   * @desc fillmenu_func will be called when context menu is actiavted
-   * Arguments fillmenu_func are (menu,kind,call_back)
-   * First is JSROOT menu object, second is object subelement like axis "x" or "y"
-   * Third is call_back which must be called when menu items are filled */
-   JSROOT.ObjectPainter.prototype.ConfigureUserContextMenu = function(fillmenu_func) {
-
-      if (!fillmenu_func || (typeof fillmenu_func !== 'function'))
-         delete this.UserContextMenuFunc;
-      else
-         this.UserContextMenuFunc = fillmenu_func;
-   }
-
-   /** @summary Configure user-defined click handler
-   *
-   * @desc Function will be called every time when frame click was perfromed
-   * As argument, tooltip object with selected bins will be provided
-   * If handler function returns true, default handling of click will be disabled */
-   JSROOT.ObjectPainter.prototype.ConfigureUserClickHandler = function(handler) {
-      let fp = this.frame_painter();
-      if (fp && typeof fp.ConfigureUserClickHandler == 'function')
-         fp.ConfigureUserClickHandler(handler);
-   }
-
-   /** @summary Configure user-defined dblclick handler
-   *
-   * @desc Function will be called every time when double click was called
-   * As argument, tooltip object with selected bins will be provided
-   * If handler function returns true, default handling of dblclick (unzoom) will be disabled */
-   JSROOT.ObjectPainter.prototype.ConfigureUserDblclickHandler = function(handler) {
-      let fp = this.frame_painter();
-      if (fp && typeof fp.ConfigureUserDblclickHandler == 'function')
-         fp.ConfigureUserDblclickHandler(handler);
-   }
-
-   /** @summary Check if user-defined tooltip callback is configured
-    * @returns {boolean}
-    * @private */
-   JSROOT.ObjectPainter.prototype.IsUserTooltipCallback = function() {
-      return typeof this.UserTooltipCallback == 'function';
-   }
-
-   /** @summary Provide tooltips data to user-defained function
-    * @param {object} data - tooltip data
-    * @private */
-   JSROOT.ObjectPainter.prototype.ProvideUserTooltip = function(data) {
-
-      if (!this.IsUserTooltipCallback()) return;
-
-      if (this.UserTooltipTimeout <= 0)
-         return this.UserTooltipCallback(data);
-
-      if (typeof this.UserTooltipTHandle != 'undefined') {
-         clearTimeout(this.UserTooltipTHandle);
-         delete this.UserTooltipTHandle;
-      }
-
-      if (!data)
-         return this.UserTooltipCallback(data);
-
-      let d = data;
-
-     // only after timeout user function will be called
-      this.UserTooltipTHandle = setTimeout(() => {
-         delete this.UserTooltipTHandle;
-         if (this.UserTooltipCallback) this.UserTooltipCallback(d);
-      }, this.UserTooltipTimeout);
-   }
-
-   /** @summary Fill object menu in web canvas
-    * @private */
-   JSROOT.ObjectPainter.prototype.FillObjectExecMenu = function(menu, kind, call_back) {
-
-      if (this.UserContextMenuFunc)
-         return this.UserContextMenuFunc(menu, kind, call_back);
-
-      let canvp = this.canv_painter();
-
-      if (!this.snapid || !canvp || canvp._readonly || !canvp._websocket)
-         return JSROOT.callBack(call_back);
-
-      function DoExecMenu(arg) {
-         let execp = this.exec_painter || this,
-            cp = execp.canv_painter(),
-            item = execp.args_menu_items[parseInt(arg)];
-
-         if (!item || !item.fName) return;
-
-         // this is special entry, produced by TWebMenuItem, which recognizes editor entries itself
-         if (item.fExec == "Show:Editor") {
-            if (cp && (typeof cp.ActivateGed == 'function'))
-               cp.ActivateGed(execp);
-            return;
-         }
-
-         if (cp && (typeof cp.executeObjectMethod == 'function'))
-            if (cp.executeObjectMethod(execp, item, execp.args_menu_id)) return;
-
-         if (execp.ExecuteMenuCommand(item)) return;
-
-         if (execp.args_menu_id)
-            execp.WebCanvasExec(item.fExec, execp.args_menu_id);
-      }
-
-      function DoFillMenu(_menu, _reqid, _call_back, reply) {
-
-         // avoid multiple call of the callback after timeout
-         if (this._got_menu) return;
-         this._got_menu = true;
-
-         if (reply && (_reqid !== reply.fId))
-            console.error('missmatch between request ' + _reqid + ' and reply ' + reply.fId + ' identifiers');
-
-         let items = reply ? reply.fItems : null;
-
-         if (items && items.length) {
-            if (_menu.size() > 0)
-               _menu.add("separator");
-
-            this.args_menu_items = items;
-            this.args_menu_id = reply.fId;
-
-            let lastclname;
-
-            for (let n = 0; n < items.length; ++n) {
-               let item = items[n];
-
-               if (item.fClassName && lastclname && (lastclname != item.fClassName)) {
-                  _menu.add("endsub:");
-                  lastclname = "";
-               }
-               if (lastclname != item.fClassName) {
-                  lastclname = item.fClassName;
-                  let p = lastclname.lastIndexOf("::"),
-                      shortname = (p > 0) ? lastclname.substr(p+2) : lastclname;
-
-                  _menu.add("sub:" + shortname.replace("<","_").replace(">","_"));
-               }
-
-               if ((item.fChecked === undefined) || (item.fChecked < 0))
-                  _menu.add(item.fName, n, DoExecMenu);
-               else
-                  _menu.addchk(item.fChecked, item.fName, n, DoExecMenu);
-            }
-
-            if (lastclname) _menu.add("endsub:");
-         }
-
-         JSROOT.callBack(_call_back);
-      }
-
-      let reqid = this.snapid;
-      if (kind) reqid += "#" + kind; // use # to separate object id from member specifier like 'x' or 'z'
-
-      let menu_callback = DoFillMenu.bind(this, menu, reqid, call_back);
-
-      this._got_menu = false;
-
-      // if menu painter differs from this, remember it for further usage
-      if (menu.painter)
-         menu.painter.exec_painter = (menu.painter !== this) ? this : undefined;
-
-      canvp.SubmitMenuRequest(this, kind, reqid, menu_callback);
-
-      // set timeout to avoid menu hanging
-      setTimeout(menu_callback, 2000);
-   }
-
-  /** @summary Switch tooltip mode in frame painter
-    * @private */
-   JSROOT.ObjectPainter.prototype.SwitchTooltip = function(on) {
-      let fp = this.frame_painter();
-      if (fp && fp.SetTooltipEnabled) {
-         fp.SetTooltipEnabled(on);
-         fp.ProcessTooltipEvent(null);
-      }
-      // this is 3D control object
-      if (this.control && (typeof this.control.SwitchTooltip == 'function'))
-         this.control.SwitchTooltip(on);
-   }
 
    return {
       TooltipHandler: TooltipHandler,

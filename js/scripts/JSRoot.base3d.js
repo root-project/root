@@ -10,7 +10,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
     * @param {value} [render3d] - preconfigured value, will be used if applicable
     * @returns {value} - rendering kind, see JSROOT.constants.Render3D
     * @private */
-   jsrp.GetRender3DKind = function(render3d) {
+   jsrp.getRender3DKind = function(render3d) {
       if (!render3d) render3d = JSROOT.BatchMode ? JSROOT.settings.Render3DBatch : JSROOT.settings.Render3D;
       let rc = JSROOT.constants.Render3D;
 
@@ -43,7 +43,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
       if (can3d === undefined) {
          // analyze which render/embed mode can be used
-         can3d = jsrp.GetRender3DKind();
+         can3d = jsrp.getRender3DKind();
          // all non-webgl elements can be embedded into SVG as is
          if (can3d !== JSROOT.constants.Render3D.WebGL)
             can3d = JSROOT.constants.Embed3D.EmbedSVG;
@@ -61,7 +61,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       if (pad.empty()) {
          // this is a case when object drawn without canvas
 
-         let rect = this.get_visible_rect(this.select_main());
+         let rect = jsrp.getElementRect(this.select_main());
 
          if ((rect.height < 10) && (rect.width > 10)) {
             rect.height = Math.round(0.66 * rect.width);
@@ -104,7 +104,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       }
 
       if (can3d === 1)
-         this.CalcAbsolutePosition(this.svg_pad(), size);
+         size = jsrp.getAbsPosInCanvas(this.svg_pad(), size);
 
       return size;
    }
@@ -269,11 +269,11 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
     * @param {value} render3d - render type, see {@link JSROOT.constants.Render3D}
     * @param {object} args - different arguments for creating 3D renderer
     * @private */
-   jsrp.Create3DRenderer = function(width, height, render3d, args) {
+   jsrp.createRender3D = function(width, height, render3d, args) {
 
       let rc = JSROOT.constants.Render3D;
 
-      render3d = jsrp.GetRender3DKind(render3d);
+      render3d = jsrp.getRender3DKind(render3d);
 
       if (!args) args = { antialias: true, alpha: true };
 
@@ -306,11 +306,20 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
          args.context = gl;
 
+         // in node.js too many similar warnings makes it difficult to debug
+         let warn = console.warn;
+         console.warn = function(msg) {
+            if (msg && msg.indexOf("OES_texture_half_float") < 0 && msg.indexOf("EXT_texture_filter_anisotropic") < 0 &&
+                       msg.indexOf("WEBGL_depth_texture") < 0 && msg.indexOf("OES_vertex_array_object") < 0)
+              console.log("NEW: " + msg);
+         }
          renderer = new THREE.WebGLRenderer(args);
 
          renderer.jsroot_output = new THREE.WebGLRenderTarget(width, height);
 
          renderer.setRenderTarget(renderer.jsroot_output);
+
+         console.warn = warn;
 
          need_workaround = true;
       } else {
@@ -323,7 +332,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       if (need_workaround) {
          if (!JSROOT._.svg_3ds) JSROOT._.svg_3ds = [];
          renderer.workaround_id = JSROOT._.svg_3ds.length;
-         JSROOT._.svg_3ds[renderer.workaround_id] = "<svg></svg>"; // dummy, provided in AfterRender3D
+         JSROOT._.svg_3ds[renderer.workaround_id] = "<svg></svg>"; // dummy, provided in afterRender3D
 
          // replace DOM element in renderer
          renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -337,22 +346,27 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       renderer.setSize(width, height);
       renderer.jsroot_render3d = render3d;
 
-      renderer.setJSROOTSize = jsrp.Set3DSize;
+      // apply size to dom element
+      renderer.setJSROOTSize = function(width, height) {
+         if ((this.jsroot_render3d === JSROOT.constants.Render3D.WebGLImage) && !JSROOT.BatchMode && !JSROOT.nodejs)
+            return d3.select(this.jsroot_dom).attr("width", width).attr("height", height);
+      }
 
       return renderer;
    }
 
-   jsrp.Set3DSize = function(width, height) {
-      if ((this.jsroot_render3d === JSROOT.constants.Render3D.WebGLImage) && !JSROOT.BatchMode && !JSROOT.nodejs)
-        return d3.select(this.jsroot_dom).attr("width", width).attr("height", height);
-   }
-
-   jsrp.BeforeRender3D = function(renderer) {
+   /** @summary Cleanup previous renderings before doing next one
+     * @desc used together with SVG
+     * @private */
+   jsrp.beforeRender3D = function(renderer) {
       // cleanup previous rendering, from SVG renderer
       if (renderer.clearHTML) renderer.clearHTML();
    }
 
-   jsrp.AfterRender3D = function(renderer) {
+   /** @summary Post-process result of rendering
+     * @desc used together with SVG or node.js image rendering
+     * @private */
+   jsrp.afterRender3D = function(renderer) {
 
       let rc = JSROOT.constants.Render3D;
       if (renderer.jsroot_render3d == rc.WebGL) return;
@@ -399,11 +413,15 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       }
    }
 
-   jsrp.ProcessSVGWorkarounds = function(svg) {
+   /** @summary Special way to insert WebGL drawing into produced SVG batch code
+     * @desc Used only in batch mode for SVG images generation
+     * @private */
+   jsrp.processSvgWorkarounds = function(svg, keep_workarounds) {
       if (!JSROOT._.svg_3ds) return svg;
       for (let k = 0;  k < JSROOT._.svg_3ds.length; ++k)
          svg = svg.replace('<path jsroot_svg_workaround="' + k + '"></path>', JSROOT._.svg_3ds[k]);
-      JSROOT._.svg_3ds = undefined;
+      if (!keep_workarounds)
+         JSROOT._.svg_3ds = undefined;
       return svg;
    }
 
@@ -524,8 +542,9 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
    }
 
 
-   /** @summary Create THREE.OrbitControl for painter */
-   jsrp.CreateOrbitControl = function(painter, camera, scene, renderer, lookat) {
+   /** @summary Create THREE.OrbitControl for painter
+     * @private */
+   jsrp.createOrbitControl = function(painter, camera, scene, renderer, lookat) {
 
       if (JSROOT.settings.Zooming && JSROOT.settings.ZoomWheel)
          renderer.domElement.addEventListener( 'wheel', control_mousewheel);
@@ -711,10 +730,10 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       }
 
       control.DetectZoomMesh = function(evnt) {
-         let mouse = this.GetMousePos(evnt, {});
-         let intersects = this.GetMouseIntersects(mouse);
+         let mouse = this.GetMousePos(evnt, {}),
+             intersects = this.GetMouseIntersects(mouse);
          if (intersects)
-            for (let n=0;n<intersects.length;++n)
+            for (let n = 0; n < intersects.length; ++n)
                if (intersects[n].object.zoom)
                   return intersects[n];
 
@@ -765,8 +784,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          this.GetMousePos(evnt, this.mouse_ctxt);
          if (this.control_active)
             this.mouse_ctxt.on = true;
-         else
-         if (this.block_ctxt)
+         else if (this.block_ctxt)
             this.block_ctxt = false;
          else
             this.ContextMenu(this.mouse_ctxt, this.GetMouseIntersects(this.mouse_ctxt));
@@ -778,7 +796,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
       control.SwitchTooltip = function(on) {
          this.block_mousemove = !on;
-         if (on===false) {
+         if (on === false) {
             this.tooltip.hide();
             this.RemoveZoomMesh();
          }
@@ -791,6 +809,8 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       }
 
       control.MainProcessMouseMove = function(evnt) {
+         if (!this.painter) return; // protect when cleanup
+
          if (this.control_active && evnt.buttons && (evnt.buttons & 2))
             this.block_ctxt = true; // if right button in control was active, block next context menu
 
@@ -834,10 +854,10 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
             this.tmout_handle = setTimeout(this.DelayedProcessMouseMove.bind(this), this.mouse_tmout);
       }
 
-
       control.DelayedProcessMouseMove = function() {
          // remove handle - allow to trigger new timeout
          delete this.tmout_handle;
+         if (!this.painter) return; // protect when cleanup
 
          let mouse = this.tmout_mouse,
              intersects = this.GetMouseIntersects(mouse),
@@ -871,9 +891,11 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          }
 
          document.body.style.cursor = this.cursor_changed ? 'pointer' : 'auto';
-      };
+      }
 
       control.MainProcessMouseLeave = function() {
+         if (!this.painter) return; // protect when cleanup
+
          // do not enter main event at all
          if (this.tmout_handle) {
             clearTimeout(this.tmout_handle);
@@ -886,12 +908,17 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
             document.body.style.cursor = 'auto';
             this.cursor_changed = false;
          }
-      };
+      }
+
+      function render3DFired(painter) {
+         if (!painter || painter.renderer === undefined) return false;
+         return painter.render_tmout !== undefined; // when timeout configured, object is prepared for rendering
+      }
 
       function control_mousewheel(evnt) {
          // try to handle zoom extra
 
-         if (jsrp.IsRender3DFired(control.painter) || control.mouse_zoom_mesh) {
+         if (render3DFired(control.painter) || control.mouse_zoom_mesh) {
             evnt.preventDefault();
             evnt.stopPropagation();
             evnt.stopImmediatePropagation();
@@ -965,16 +992,15 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       return control;
    }
 
-   /** Method cleanup three.js object as much as possible.
-    * Simplify JS engine to remove it from memory
-    * @private */
-
-   jsrp.DisposeThreejsObject = function(obj, only_childs) {
+   /** @summary Method cleanup three.js object as much as possible.
+     * @desc Simplify JS engine to remove it from memory
+     * @private */
+   jsrp.disposeThreejsObject = function(obj, only_childs) {
       if (!obj) return;
 
       if (obj.children) {
          for (let i = 0; i < obj.children.length; i++)
-            jsrp.DisposeThreejsObject(obj.children[i]);
+            jsrp.disposeThreejsObject(obj.children[i]);
       }
 
       if (only_childs) {
@@ -1007,9 +1033,11 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       obj = undefined;
    }
 
+
+   /** @summary Create THREE.LineSegments mesh (or only geometry)
+     * @desc If required, calculates lineDistance attribute for dashed geometries
+     * @private */
    jsrp.createLineSegments = function(arr, material, index, only_geometry) {
-      // prepare geometry for THREE.LineSegments
-      // If required, calculate lineDistance attribute for dashed geometries
 
       let geom = new THREE.BufferGeometry();
 
@@ -1048,6 +1076,8 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       return only_geometry ? geom : new THREE.LineSegments(geom, material);
    }
 
+   /** @summary Help structures for calculating Box mesh
+     * @private */
    jsrp.Box3D = {
        Vertices: [ new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 0),
                    new THREE.Vector3(1, 0, 1), new THREE.Vector3(1, 0, 0),
@@ -1055,7 +1085,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
                    new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 1) ],
        Indexes: [ 0,2,1, 2,3,1, 4,6,5, 6,7,5, 4,5,1, 5,0,1, 7,6,2, 6,3,2, 5,7,0, 7,2,0, 1,3,4, 3,6,4 ],
        Normals: [ 1,0,0, -1,0,0, 0,1,0, 0,-1,0, 0,0,1, 0,0,-1 ],
-       Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5]  // segments addresses Vertices
+       Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5],  // segments addresses Vertices
    };
 
    // these segments address vertices from the mesh, we can use positions from box mesh
@@ -1071,12 +1101,6 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       }
       return arr;
    })();
-
-   jsrp.IsRender3DFired = function(painter) {
-      if (!painter || painter.renderer === undefined) return false;
-
-      return painter.render_tmout !== undefined; // when timeout configured, object is prepared for rendering
-   }
 
    // ==============================================================================
 
@@ -1152,7 +1176,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       if (!color) {
          if (m.js_special) {
             m.remove(m.js_special);
-            jsrp.DisposeThreejsObject(m.js_special);
+            jsrp.disposeThreejsObject(m.js_special);
             delete m.js_special;
          }
          return;
@@ -1231,7 +1255,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       let cb = this.callback;
       delete this.callback;
 
-      if (cb) JSROOT.callBack(cb, pnts);
+      if (typeof cb == 'function') cb(pnts);
 
       return pnts;
    }
@@ -1239,8 +1263,10 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
    /** @summary Create points */
    PointsCreator.prototype.CreatePoints = function(args) {
 
-      if (typeof args !== 'object') args = { color: args };
-      if (!args.color) args.color = 'black';
+      if (typeof args !== 'object')
+         args = { color: args };
+      if (!args.color)
+         args.color = 'black';
 
       this.k = 1;
       this.color = args.color;
@@ -1276,9 +1302,22 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          return this.Complete();
    }
 
+   /** @summary Create points and return Promise*/
+   PointsCreator.prototype.createPointsPromise = function(args) {
+      return new Promise(resolveFunc => {
+          this.AssignCallback(resolveFunc);
+          this.CreatePoints(args);
+      });
+   }
+
+
    // ==============================================================================
 
-   function Create3DLineMaterial(painter, obj) {
+   /** @summary Create material for 3D line
+     * @desc Takes into account dashed properties
+     * @private
+     * @memberof JSROOT.Painter */
+   function create3DLineMaterial(painter, obj) {
       if (!painter || !obj) return null;
 
       let lcolor = painter.get_color(obj.fLineColor),
@@ -1298,6 +1337,10 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
    // ============================================================================================================
 
+   /** @summary Drae TPolyLine3D object
+     * @desc Takes into account dashed properties
+     * @private
+     * @memberof JSROOT.Painter */
    function drawPolyLine3D() {
       let line = this.GetObject(),
           main = this.frame_painter();
@@ -1321,7 +1364,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          pnts.push(main.grx(fP[n-3]), main.gry(fP[n-2]), main.grz(fP[n-1]),
                    main.grx(fP[n]), main.gry(fP[n+1]), main.grz(fP[n+2]));
 
-      let lines = jsrp.createLineSegments(pnts, Create3DLineMaterial(this, line));
+      let lines = jsrp.createLineSegments(pnts, create3DLineMaterial(this, line));
 
       main.toplevel.add(lines);
    }
@@ -1334,8 +1377,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
    jsrp.PointsControl = PointsControl;
 
    jsrp.drawPolyLine3D = drawPolyLine3D;
-
-   jsrp.Create3DLineMaterial = Create3DLineMaterial;
+   jsrp.create3DLineMaterial = create3DLineMaterial;
 
    if (JSROOT.nodejs) module.exports = THREE;
    return THREE;

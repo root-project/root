@@ -295,9 +295,9 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @ummary Set global list of colors.
-    * @desc Either TObjArray of TColor instances or just plain array with rgb() code.
-    * List of colors typically stored together with TCanvas primitives
-    * @private */
+     * @desc Either TObjArray of TColor instances or just plain array with rgb() code.
+     * List of colors typically stored together with TCanvas primitives
+     * @private */
    jsrp.adoptRootColors = function(objarr) {
       jsrp.extendRootColors(jsrp.root_colors, objarr);
    }
@@ -308,6 +308,7 @@ JSROOT.define(['d3'], (d3) => {
    jsrp.getColor = function(indx) {
       return jsrp.root_colors[indx];
    }
+
    /** @summary Add new color
      * @param {string} rgb - color name or just string with rgb value
      * @returns {number} index of new color */
@@ -320,25 +321,31 @@ JSROOT.define(['d3'], (d3) => {
 
    // =====================================================================
 
-   /** Color palette handle  */
+   /**
+    * @summary Color palette handle
+    *
+    * @class
+    * @memberof JSROOT
+    * @private
+    */
 
    function ColorPalette(arr) {
       this.palette = arr;
    }
 
-      /** @summary Returns color index which correspond to contour index of provided length */
+   /** @summary Returns color index which correspond to contour index of provided length */
    ColorPalette.prototype.calcColorIndex = function(i, len) {
       let plen = this.palette.length, theColor = Math.floor((i + 0.99) * plen / (len - 1));
       return (theColor > plen - 1) ? plen - 1 : theColor;
     }
 
-      /** @summary Returns color with provided index */
+   /** @summary Returns color with provided index */
    ColorPalette.prototype.getColor = function(indx) { return this.palette[indx]; }
 
-      /** @summary Returns number of colors in the palette */
+   /** @summary Returns number of colors in the palette */
    ColorPalette.prototype.getLength = function() { return this.palette.length; }
 
-      /** @summary Calculate color for given i and len */
+   /** @summary Calculate color for given i and len */
    ColorPalette.prototype.calcColor = function(i, len) { return this.getColor(this.calcColorIndex(i, len)); }
 
    // =============================================================================
@@ -373,13 +380,11 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Set marker attributes.
-    *
-    * @param {object} args - arguments can be
-    * @param {object} args.attr - instance of TAttrMarker (or derived class) or
-    * @param {string} args.color - color in HTML form like grb(1,4,5) or 'green'
-    * @param {number} args.style - marker style
-    * @param {number} args.size - marker size
-    */
+     * @param {object} args - arguments can be
+     * @param {object} args.attr - instance of TAttrMarker (or derived class) or
+     * @param {string} args.color - color in HTML form like grb(1,4,5) or 'green'
+     * @param {number} args.style - marker style
+     * @param {number} args.size - marker size */
    TAttMarkerHandler.prototype.SetArgs = function(args) {
       if ((typeof args == 'object') && (typeof args.fMarkerStyle == 'number')) args = { attr: args };
 
@@ -398,13 +403,10 @@ JSROOT.define(['d3'], (d3) => {
    TAttMarkerHandler.prototype.reset_pos = function() { this.lastx = this.lasty = null; }
 
    /** @summary Create marker path for given position.
-    *
-    * @desc When drawing many elementary points, created path may depend from previously produced markers.
-    *
-    * @param {number} x - first coordinate
-    * @param {number} y - second coordinate
-    * @returns {string} path string
-    */
+     * @desc When drawing many elementary points, created path may depend from previously produced markers.
+     * @param {number} x - first coordinate
+     * @param {number} y - second coordinate
+     * @returns {string} path string */
    TAttMarkerHandler.prototype.create = function(x, y) {
       if (!this.optimized)
          return "M" + (x + this.x0).toFixed(this.ndig) + "," + (y + this.y0).toFixed(this.ndig) + this.marker;
@@ -423,11 +425,9 @@ JSROOT.define(['d3'], (d3) => {
    TAttMarkerHandler.prototype.MarkerLength = function() { return this.marker ? this.marker.length : 10; }
 
    /** @summary Change marker attributes.
-    *
     *  @param {string} color - marker color
     *  @param {number} style - marker style
-    *  @param {number} size - marker size
-    */
+    *  @param {number} size - marker size */
    TAttMarkerHandler.prototype.Change = function(color, style, size) {
       this.changed = true;
 
@@ -524,8 +524,10 @@ JSROOT.define(['d3'], (d3) => {
       return true;
    }
 
+   /** @summary get stroke color */
    TAttMarkerHandler.prototype.getStrokeColor = function() { return this.stroke ? this.color : "none"; }
 
+   /** @summary get fill color */
    TAttMarkerHandler.prototype.getFillColor = function() { return this.fill ? this.color : "none"; }
 
    /** @summary Apply marker styles to created element */
@@ -541,12 +543,10 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Create sample with marker in given SVG element
-    *
     * @param {selection} svg - SVG element
     * @param {number} width - width of sample SVG
     * @param {number} height - height of sample SVG
-    * @private
-    */
+    * @private */
    TAttMarkerHandler.prototype.CreateSample = function(svg, width, height) {
       this.reset_pos();
 
@@ -574,15 +574,12 @@ JSROOT.define(['d3'], (d3) => {
       this.SetArgs(args);
    }
 
-   /**
-    * @summary Set line attributes.
-    *
-    * @param {object} args - specify attributes by different ways
-    * @param {object} args.attr - TAttLine object with appropriate data members or
-    * @param {string} args.color - color in html like rgb(10,0,0) or "red"
-    * @param {number} args.style - line style number
-    * @param {number} args.width - line width
-    */
+   /** @summary Set line attributes.
+     * @param {object} args - specify attributes by different ways
+     * @param {object} args.attr - TAttLine object with appropriate data members or
+     * @param {string} args.color - color in html like rgb(10,0,0) or "red"
+     * @param {number} args.style - line style number
+     * @param {number} args.width - line width */
    TAttLineHandler.prototype.SetArgs = function(args) {
       if (args.attr) {
          args.color = args.color0 || (args.painter ? args.painter.get_color(args.attr.fLineColor) : jsrp.getColor(args.attr.fLineColor));
@@ -616,10 +613,7 @@ JSROOT.define(['d3'], (d3) => {
          this.color = 'lightgrey';
    }
 
-   /**
-    * @summary Change exclusion attributes.
-    * @private
-    */
+   /** @summary Change exclusion attributes */
    TAttLineHandler.prototype.ChangeExcl = function(side, width) {
       if (width !== undefined) this.excl_width = width;
       if (side !== undefined) {
@@ -629,15 +623,11 @@ JSROOT.define(['d3'], (d3) => {
       this.changed = true;
    }
 
-   /** @returns true if line attribute is empty and will not be applied. */
+   /** @summary returns true if line attribute is empty and will not be applied. */
    TAttLineHandler.prototype.empty = function() { return this.color == 'none'; }
 
-   /**
-    * @summary Applies line attribute to selection.
-    *
-    * @param {object} selection - d3.js selection
-    */
-
+   /** @summary Applies line attribute to selection.
+     * @param {object} selection - d3.js selection */
    TAttLineHandler.prototype.Apply = function(selection) {
       this.used = true;
       if (this.empty())
@@ -650,10 +640,7 @@ JSROOT.define(['d3'], (d3) => {
             .style('stroke-dasharray', jsrp.root_line_styles[this.style] || null);
    }
 
-   /**
-    * @summary Change line attributes
-    * @private
-    */
+   /** @summary Change line attributes */
    TAttLineHandler.prototype.Change = function(color, width, style) {
       if (color !== undefined) this.color = color;
       if (width !== undefined) this.width = width;
@@ -661,10 +648,7 @@ JSROOT.define(['d3'], (d3) => {
       this.changed = true;
    }
 
-   /**
-    * @summary Create sample element inside primitive SVG - used in context menu
-    * @private
-    */
+   /**@summary Create sample element inside primitive SVG - used in context menu */
    TAttLineHandler.prototype.CreateSample = function(svg, width, height) {
       svg.append("path")
          .attr("d", "M0," + height / 2 + "h" + width)
@@ -672,7 +656,6 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    // =======================================================================
-
 
    /**
      * @summary Handle for fill attributes
@@ -728,7 +711,6 @@ JSROOT.define(['d3'], (d3) => {
    TAttFillHandler.prototype.fillcolor = function() { return this.pattern_url || this.color; }
 
    /** @summary Returns fill color without pattern url.
-    *
     * @desc If empty, alternative color will be provided
     * @param {string} [altern] - alternative color which returned when fill color not exists
     * @private */
@@ -741,7 +723,7 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Set solid fill color as fill pattern
-    * @param {string} col - solid color */
+     * @param {string} col - solid color */
    TAttFillHandler.prototype.SetSolidColor = function(col) {
       delete this.pattern_url;
       this.color = col;
@@ -749,14 +731,14 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Check if solid fill is used, also color can be checked
-    * @param {string} [solid_color = undefined] - when specified, checks if fill color matches */
+     * @param {string} [solid_color = undefined] - when specified, checks if fill color matches */
    TAttFillHandler.prototype.isSolid = function(solid_color) {
       if (this.pattern !== 1001) return false;
       return !solid_color || solid_color == this.color;
    }
 
    /** @summary Method used when color or pattern were changed with OpenUi5 widgets
-    * @private */
+     * @private */
    TAttFillHandler.prototype.verifyDirectChange = function(painter) {
       if (typeof this.pattern == 'string') this.pattern = parseInt(this.pattern);
       if (isNaN(this.pattern)) this.pattern = 0;
@@ -765,13 +747,11 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Method to change fill attributes.
-    *
-    * @param {number} color - color index
-    * @param {number} pattern - pattern index
-    * @param {selection} svg - top canvas element for pattern storages
-    * @param {string} [color_as_svg] - when color is string, interpret as normal SVG color
-    * @param {object} [painter] - when specified, used to extract color by index
-    */
+     * @param {number} color - color index
+     * @param {number} pattern - pattern index
+     * @param {selection} svg - top canvas element for pattern storages
+     * @param {string} [color_as_svg] - when color is string, interpret as normal SVG color
+     * @param {object} [painter] - when specified, used to extract color by index */
    TAttFillHandler.prototype.Change = function(color, pattern, svg, color_as_svg, painter) {
       delete this.pattern_url;
       this.changed = true;
@@ -1158,11 +1138,10 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Function used to provide svg:path for the smoothed curves.
-    *
-    * @desc reuse code from d3.js. Used in TH1, TF1 and TGraph painters
-    * kind should contain "bezier" or "line".
-    * If first symbol "L", then it used to continue drawing
-    * @private */
+     * @desc reuse code from d3.js. Used in TH1, TF1 and TGraph painters
+     * kind should contain "bezier" or "line".
+     * If first symbol "L", then it used to continue drawing
+     * @private */
    jsrp.BuildSvgPath = function(kind, bins, height, ndig) {
 
       let smooth = kind.indexOf("bezier") >= 0;
@@ -1295,6 +1274,46 @@ JSROOT.define(['d3'], (d3) => {
       return res;
    }
 
+   /** @summary Returns visible rect of element
+     * @desc Excluding padding area, provides special handling in node.js
+     * @private */
+   jsrp.getElementRect = function(elem, fullsize) {
+      if (JSROOT.nodejs)
+         return { width: parseInt(elem.attr("width")), height: parseInt(elem.attr("height")) };
+
+      function styleValue(name) {
+         let value = elem.style(name);
+         if (!value || (typeof value !== 'string')) return 0;
+         value = parseFloat(value.replace("px", ""));
+         return isNaN(value) ? 0 : Math.round(value);
+      }
+
+      let rect = elem.node().getBoundingClientRect(),
+          res = { width: Math.round(rect.width), height: Math.round(rect.height) };
+
+      if (!fullsize) {
+         // this is size exclude padding area
+         res.width -= styleValue('padding-left') + styleValue('padding-right');
+         res.height -= styleValue('padding-top') + styleValue('padding-bottom');
+      }
+
+      return res;
+   }
+
+   /** @summary Calculate absolute position of provided element in canvas
+     * @private */
+   jsrp.getAbsPosInCanvas = function(sel, pos) {
+      while (!sel.empty() && !sel.classed('root_canvas') && pos) {
+         let cl = sel.attr("class");
+         if (cl && ((cl.indexOf("root_frame") >= 0) || (cl.indexOf("__root_pad_") >= 0))) {
+            pos.x += sel.property("draw_x") || 0;
+            pos.y += sel.property("draw_y") || 0;
+         }
+         sel = d3.select(sel.node().parentNode);
+      }
+      return pos;
+   }
+
    // ========================================================================================
 
    /**
@@ -1310,20 +1329,19 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Access painter reference, stored in first child element.
-    *
+    *  @desc
     *    - on === true - set *this* as painter
     *    - on === false - delete painter reference
     *    - on === undefined - return painter
-    *
-    * @param {boolean} on - that to perfrom
-    * @private
-    */
-   BasePainter.prototype.AccessTopPainter = function(on) {
+    * @param {boolean} on - that to perfrom */
+   BasePainter.prototype.accessTopPainter = function(on) {
       let main = this.select_main().node(),
          chld = main ? main.firstChild : null;
       if (!chld) return null;
-      if (on === true) chld.painter = this; else
-         if (on === false) delete chld.painter;
+      if (on === true)
+         chld.painter = this;
+      else if (on === false)
+         delete chld.painter;
       return chld.painter;
    }
 
@@ -1333,12 +1351,13 @@ JSROOT.define(['d3'], (d3) => {
       let origin = this.select_main('origin');
       if (!origin.empty() && !keep_origin) origin.html("");
       if (this._changed_layout)
-         this.set_layout_kind('simple');
-      this.AccessTopPainter(false);
+         this.setLayoutKind('simple');
+      this.accessTopPainter(false);
       this.divid = null;
       delete this._selected_main;
 
-      if (this._hpainter && typeof this._hpainter.ClearPainter === 'function') this._hpainter.ClearPainter(this);
+      if (this._hpainter && typeof this._hpainter.removePainter === 'function')
+         this._hpainter.removePainter(this);
 
       delete this._changed_layout;
       delete this._hitemname;
@@ -1348,29 +1367,28 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Function should be called by the painter when first drawing is completed
     * @private */
-   BasePainter.prototype.DrawingReady = function(res_painter, res_value) {
-      let res = (res_value === undefined) ? true : !!res_value;
-      this._ready_called_ = res;
+   BasePainter.prototype.DrawingReady = function(res_value) {
+      this._ready_called_ = (res_value === undefined) ? true : !!res_value;
       if (this._ready_callbacks_ !== undefined) {
-         let callbacks = (res ? this._ready_callbacks_ : this._reject_callbacks_) || [];
-         if (!this._return_res_painter) res_painter = this;
+         let callbacks = (this._ready_called_ ? this._ready_callbacks_ : this._reject_callbacks_) || [];
 
-         delete this._return_res_painter;
          delete this._ready_callbacks_;
          delete this._reject_callbacks_;
 
-         while (callbacks.length)
-            JSROOT.callBack(callbacks.shift(), res_painter);
+         while (callbacks.length > 0) {
+            let func = callbacks.shift();
+            func(this);
+         }
       }
       return this;
    }
 
-   /** @summary Function should be called when first drawing fails
-    * @private */
-   BasePainter.prototype.DrawingFail = function(res_painter) { return this.DrawingReady(res_painter, false); }
+   /** @summary Function should be called when first drawing fails */
+   BasePainter.prototype.DrawingFail = function() {
+      return this.DrawingReady(false);
+   }
 
-   /** @summary Call back will be called when painter ready with the drawing
-    * @private */
+   /** @summary Call back will be called when painter ready with the drawing */
    BasePainter.prototype.WhenReady = function(resolveFunc, rejectFunc) {
       if (typeof resolveFunc !== 'function') return;
       if ('_ready_called_' in this)
@@ -1379,7 +1397,7 @@ JSROOT.define(['d3'], (d3) => {
          this._ready_callbacks_ = [resolveFunc];
       else
          this._ready_callbacks_.push(resolveFunc);
-      if (rejectFunc) {
+      if (typeof rejectFunc == 'function') {
          if (!this._reject_callbacks_)
             this._reject_callbacks_ = [rejectFunc];
          else
@@ -1387,8 +1405,7 @@ JSROOT.define(['d3'], (d3) => {
       }
    }
 
-   /** @summary Create Promise object which will be completed when drawing is ready
-    * @private */
+   /** @summary Create Promise object which will be completed when drawing is ready  */
    BasePainter.prototype.Promise = function(is_ready) {
       if (is_ready)
          this.DrawingReady(this);
@@ -1401,39 +1418,35 @@ JSROOT.define(['d3'], (d3) => {
       });
    }
 
-   /** @summary Reset ready state - painter should again call DrawingReady to signal readyness
-   * @private */
+   /** @summary Reset ready state - painter should again call DrawingReady to signal readyness */
    BasePainter.prototype.ResetReady = function() {
       delete this._ready_called_;
       delete this._ready_callbacks_;
    }
 
    /** @summary Returns drawn object
-    * @abstract */
+     * @abstract */
    BasePainter.prototype.GetObject = function() {}
 
    /** @summary Returns true if type match with drawn object type
-    * @param {string} typename - type name to check with
-    * @returns {boolean} true if draw objects matches with provided type name
-    * @abstract
-    * @private */
+     * @param {string} typename - type name to check with
+     * @returns {boolean} true if draw objects matches with provided type name
+     * @abstract */
    BasePainter.prototype.MatchObjectType = function(/* typename */) {}
 
    /** @summary Called to update drawn object content
-    * @returns {boolean} true if update was performed
-    * @abstract
-    * @private */
+     * @returns {boolean} true if update was performed
+     * @abstract */
    BasePainter.prototype.UpdateObject = function(/* obj */) {}
 
    /** @summary Redraw all objects in current pad
-    * @param {string} reason - why redraw performed, can be "zoom" or empty ]
-    * @abstract
-    * @private */
+     * @param {string} reason - why redraw performed, can be "zoom" or empty ]
+     * @abstract */
    BasePainter.prototype.RedrawPad = function(/* reason */) {}
 
    /** @summary Updates object and readraw it
-    * @param {object} obj - new version of object, values will be updated in original object
-    * @returns {boolean} true if object updated and redrawn */
+     * @param {object} obj - new version of object, values will be updated in original object
+     * @returns {boolean} true if object updated and redrawn */
    BasePainter.prototype.RedrawObject = function(obj) {
       if (!this.UpdateObject(obj)) return false;
       let current = document.body.style.cursor;
@@ -1444,15 +1457,14 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated
-    * @returns {boolean} true if resize was detected
-    * @abstract
-    * @private */
-   BasePainter.prototype.CheckResize = function(/* arg */) {}
+     * @returns {boolean} true if resize was detected
+     * @abstract */
+   BasePainter.prototype.checkResize = function(/* arg */) {}
 
    /** @summary access to main HTML element used for drawing - typically <div> element
      * @desc if main element was layouted, returns main element inside layout
-    * @param {string} is_direct - if 'origin' specified, returns original element even if actual drawing moved to some other place
-    * @returns {object} d3.select for main element for drawing, defined with this.divid. */
+     * @param {string} is_direct - if 'origin' specified, returns original element even if actual drawing moved to some other place
+     * @returns {object} d3.select for main element for drawing, defined with this.divid. */
    BasePainter.prototype.select_main = function(is_direct) {
 
       if (!this.divid) return d3.select(null);
@@ -1484,32 +1496,16 @@ JSROOT.define(['d3'], (d3) => {
       return res;
    }
 
-   /** @summary Returns string with value of main element id attribute
-   * @desc if main element does not have id, it will be generated */
-   BasePainter.prototype.get_main_id = function() {
-      let elem = this.select_main();
-      if (elem.empty()) return "";
-      let id = elem.attr("id");
-      if (!id) {
-         id = "jsroot_element_" + JSROOT._.id_counter++;
-         elem.attr("id", id);
-      }
-      return id;
-   }
-
-   /** @summary Returns layout kind
-    * @private */
-   BasePainter.prototype.get_layout_kind = function() {
+   /** @summary Returns layout kind */
+   BasePainter.prototype.getLayoutKind = function() {
       let origin = this.select_main('origin'),
          layout = origin.empty() ? "" : origin.property('layout');
 
       return layout || 'simple';
    }
 
-   /** @summary Set layout kind
-    * @private */
-   BasePainter.prototype.set_layout_kind = function(kind, main_selector) {
-      // change layout settings
+   /** @summary Set layout kind */
+   BasePainter.prototype.setLayoutKind = function(kind, main_selector) {
       let origin = this.select_main('origin');
       if (!origin.empty()) {
          if (!kind) kind = 'simple';
@@ -1520,15 +1516,11 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Function checks if geometry of main div was changed.
-    *
-    * @desc returns size of area when main div is drawn
-    * take into account enlarge state
-    *
-    * @private
-    */
-   BasePainter.prototype.check_main_resize = function(check_level, new_size, height_factor) {
+     * @desc take into account enlarge state
+     * @returns size of area when main div is drawn */
+   BasePainter.prototype.testMainResize = function(check_level, new_size, height_factor) {
 
-      let enlarge = this.enlarge_main('state'),
+      let enlarge = this.enlargeMain('state'),
          main_origin = this.select_main('origin'),
          main = this.select_main(),
          lmt = 5; // minimal size
@@ -1539,7 +1531,7 @@ JSROOT.define(['d3'], (d3) => {
                .style('height', new_size.height + "px");
       }
 
-      let rect_origin = this.get_visible_rect(main_origin, true),
+      let rect_origin = jsrp.getElementRect(main_origin, true),
          can_resize = main_origin.attr('can_resize'),
          do_resize = false;
 
@@ -1560,7 +1552,7 @@ JSROOT.define(['d3'], (d3) => {
          }
       }
 
-      let rect = this.get_visible_rect(main),
+      let rect = jsrp.getElementRect(main),
          old_h = main.property('draw_height'), old_w = main.property('draw_width');
 
       rect.changed = false;
@@ -1577,20 +1569,14 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Try enlarge main drawing element to full HTML page.
-    *
-    * @desc Possible values for parameter:
-    *
-    *    - true - try to enlarge
-    *    - false - cancel enlarge state
-    *    - 'toggle' - toggle enlarge state
-    *    - 'state' - return current state
-    *    - 'verify' - check if element can be enlarged
-    *
-    * if action not specified, just return possibility to enlarge main div
-    *
-    * @private
-    */
-   BasePainter.prototype.enlarge_main = function(action, skip_warning) {
+     * @desc Possible values for parameter:
+     *    - true - try to enlarge
+     *    - false - cancel enlarge state
+     *    - 'toggle' - toggle enlarge state
+     *    - 'state' - return current state
+     *    - 'verify' - check if element can be enlarged
+     * if action not specified, just return possibility to enlarge main div */
+   BasePainter.prototype.enlargeMain = function(action, skip_warning) {
 
       let main = this.select_main(true),
          origin = this.select_main('origin');
@@ -1616,8 +1602,8 @@ JSROOT.define(['d3'], (d3) => {
             .append("div")
             .attr("id", "jsroot_enlarge_div");
 
-         let rect1 = this.get_visible_rect(main),
-            rect2 = this.get_visible_rect(enlarge);
+         let rect1 = jsrp.getElementRect(main),
+             rect2 = jsrp.getElementRect(enlarge);
 
          // if new enlarge area not big enough, do not do it
          if ((rect2.width <= rect1.width) || (rect2.height <= rect1.height))
@@ -1648,46 +1634,17 @@ JSROOT.define(['d3'], (d3) => {
       return false;
    }
 
-   /** @summary Return CSS value in given HTML element
-    * @private */
-   BasePainter.prototype.GetStyleValue = function(elem, name) {
-      if (!elem || elem.empty()) return 0;
-      let value = elem.style(name);
-      if (!value || (typeof value !== 'string')) return 0;
-      value = parseFloat(value.replace("px", ""));
-      return isNaN(value) ? 0 : Math.round(value);
-   }
-
-   /** @summary Returns rect with width/height which correspond to the visible area of drawing region of element.
-    * @private */
-   BasePainter.prototype.get_visible_rect = function(elem, fullsize) {
-
-      if (JSROOT.nodejs)
-         return { width: parseInt(elem.attr("width")), height: parseInt(elem.attr("height")) };
-
-      let rect = elem.node().getBoundingClientRect(),
-         res = { width: Math.round(rect.width), height: Math.round(rect.height) };
-
-      if (!fullsize) {
-         // this is size exclude padding area
-         res.width -= this.GetStyleValue(elem, 'padding-left') + this.GetStyleValue(elem, 'padding-right');
-         res.height -= this.GetStyleValue(elem, 'padding-top') - this.GetStyleValue(elem, 'padding-bottom');
-      }
-
-      return res;
-   }
-
    /** @summary Assign painter to specified element
-    * @desc base painter does not creates canvas or frames
-    * it registered in the first child element
-    * @param {string|object} divid - element ID or DOM Element */
+     * @desc base painter does not creates canvas or frames
+     * it registered in the first child element
+     * @param {string|object} divid - element ID or DOM Element */
    BasePainter.prototype.SetDivId = function(divid) {
       if (divid !== undefined) {
          this.divid = divid;
          delete this._selected_main;
       }
 
-      this.AccessTopPainter(true);
+      this.accessTopPainter(true);
    }
 
    /** @summary Set item name, associated with the painter
@@ -1708,16 +1665,6 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Returns assigned item draw option
     * @private */
    BasePainter.prototype.GetItemDrawOpt = function() { return ('_hdrawopt' in this) ? this._hdrawopt : ""; }
-
-   /** @summary Check if it makes sense to zoom inside specified axis range
-    * @param {string} axis - name of axis like 'x', 'y', 'z'
-    * @param {number} left - left axis range
-    * @param {number} right - right axis range
-    * @returns true is zooming makes sense
-    * @abstract
-    * @private
-    */
-   BasePainter.prototype.CanZoomIn = function(/* axis, left, right */) {}
 
    // ==============================================================================
 
@@ -1957,7 +1904,7 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Checks if draw elements were resized and drawing should be updated.
     * @desc Redirects to {@link JSROOT.TPadPainter.CheckCanvasResize}
     * @private */
-   ObjectPainter.prototype.CheckResize = function(arg) {
+   ObjectPainter.prototype.checkResize = function(arg) {
       let p = this.canv_painter();
       if (!p) return false;
 
@@ -2239,7 +2186,7 @@ JSROOT.define(['d3'], (d3) => {
       if (!res) {
          let svg_p = this.svg_pad();
          if (svg_p.empty()) {
-            res = this.AccessTopPainter();
+            res = this.accessTopPainter();
          } else {
             res = svg_p.property('mainpainter');
          }
@@ -2253,10 +2200,8 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.is_main_painter = function() { return this === this.main_painter(); }
 
    /** @summary Assigns id of top element (normally div where drawing is done).
-    *
     * @desc In some situations canvas may not exists - for instance object drawn as html, not as svg.
     * In such case the only painter will be assigned to the first element
-    *
     * Following values of kind parameter are allowed:
     *   -  -1  only assign id, this painter not add to painters list
     *   -   0  normal painter (default)
@@ -2265,11 +2210,10 @@ JSROOT.define(['d3'], (d3) => {
     *   -   3  if canvas and (or) frame missing, create them, but not set as main object
     *   -   4  major objects like TH3 (required canvas and frame in 3d mode)
     *   -   5  major objects like TGeoVolume (do not require canvas)
-    *
+    *   -   6  major objects like TGraphPolagram (requires canvas but not TFrame)
     * @param {string|object} divid - id of div element or directly DOMElement
     * @param {number} [kind] - kind of object drawn with painter
-    * @param {string} [pad_name] - when specified, subpad name used for object drawing
-    * @private */
+    * @param {string} [pad_name] - when specified, subpad name used for object drawing */
    ObjectPainter.prototype.SetDivId = function(divid, kind, pad_name) {
 
       if (divid !== undefined) {
@@ -2302,7 +2246,7 @@ JSROOT.define(['d3'], (d3) => {
 
       if (svg_c.empty()) {
          if ((kind < 0) || (kind === 5) || this.iscan) return true;
-         this.AccessTopPainter(true);
+         this.accessTopPainter(true);
          return true;
       }
 
@@ -2333,25 +2277,11 @@ JSROOT.define(['d3'], (d3) => {
             this.rstyle = pp.next_rstyle;
       }
 
-      if (((kind === 1) || (kind === 4) || (kind === 5)) && !svg_p.property('mainpainter'))
+      if (((kind === 1) || (kind === 4) || (kind === 5) || (kind === 6)) && !svg_p.property('mainpainter'))
          // when this is first main painter in the pad
          svg_p.property('mainpainter', this);
 
       return true;
-   }
-
-   /** @summary Calculate absolute position of provided selection.
-    * @private */
-   ObjectPainter.prototype.CalcAbsolutePosition = function(sel, pos) {
-      while (!sel.empty() && !sel.classed('root_canvas') && pos) {
-         let cl = sel.attr("class");
-         if (cl && ((cl.indexOf("root_frame") >= 0) || (cl.indexOf("__root_pad_") >= 0))) {
-            pos.x += sel.property("draw_x") || 0;
-            pos.y += sel.property("draw_y") || 0;
-         }
-         sel = d3.select(sel.node().parentNode);
-      }
-      return pos;
    }
 
    /** @summary Creates marker attributes object
@@ -2450,12 +2380,11 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary call function for each painter in the pad
+     * @desc Iterate over all known painters
     * @private */
-   ObjectPainter.prototype.ForEachPainter = function(userfunc, kind) {
-      // Iterate over all known painters
-
+   ObjectPainter.prototype.forEachPainter = function(userfunc, kind) {
       // special case of the painter set as pointer of first child of main element
-      let painter = this.AccessTopPainter();
+      let painter = this.accessTopPainter();
       if (painter) {
          if (kind !== "pads") userfunc(painter);
          return;
@@ -2463,7 +2392,7 @@ JSROOT.define(['d3'], (d3) => {
 
       // iterate over all painters from pad list
       let pp = this.pad_painter();
-      if (pp) pp.ForEachPainterInPad(userfunc, kind);
+      if (pp) pp.forEachPainterInPad(userfunc, kind);
    }
 
    /** @summary indicate that redraw was invoked via interactive action (like context menu or zooming)
@@ -2541,7 +2470,7 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Show object in inspector */
    ObjectPainter.prototype.ShowInspector = function(obj) {
       let main = this.select_main(),
-         rect = this.get_visible_rect(main),
+         rect = jsrp.getElementRect(main),
          w = Math.round(rect.width * 0.05) + "px",
          h = Math.round(rect.height * 0.05) + "px",
          id = "root_inspector_" + JSROOT._.id_counter++;
@@ -2617,7 +2546,7 @@ JSROOT.define(['d3'], (d3) => {
 
       if (pp && (typeof pp.ShowCanvasStatus === 'function')) res = pp.ShowCanvasStatus.bind(pp);
 
-      if (res && (this.enlarge_main('state') === 'on')) res = null;
+      if (res && (this.enlargeMain('state') === 'on')) res = null;
 
       return res;
    }
@@ -2694,8 +2623,8 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Start text drawing
      * @desc required before any text can be drawn
-     * @private */
-   ObjectPainter.prototype.StartTextDrawing = function(font_face, font_size, draw_g, max_font_size) {
+     * @protected */
+   ObjectPainter.prototype.startTextDrawing = function(font_face, font_size, draw_g, max_font_size) {
 
       if (!draw_g) draw_g = this.draw_g;
 
@@ -2739,26 +2668,24 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Finish text drawing
-    * @returns {Promise} when done
-    * @private */
-   ObjectPainter.prototype.FinishTextPromise = function(draw_g) {
+     * @desc Should be called to complete all text drawing operations
+     * @param {function} [draw_g] - <g> element for text drawing, this.draw_g used when not specified
+     * @returns {Promise} when text drawing completed
+     * @protected */
+   ObjectPainter.prototype.finishTextDrawing = function(draw_g, skip_promise) {
+      if (!draw_g) draw_g = this.draw_g;
+      draw_g.property('draw_text_completed', true); // mark that text drawing is completed
+      if (skip_promise)
+         return this._checkAllTextDrawing(draw_g);
+
       return new Promise(resolveFunc => {
-          this.FinishTextDrawing(draw_g, resolveFunc);
+           this._checkAllTextDrawing(draw_g, resolveFunc);
       });
    }
 
-   /** @summary Finish text drawing
-    * @desc Should be called to complete all text drawing operations
-    * @param {function} call_ready - callback function
+   /** @summary Analyze if all text draw operations completed
     * @private */
-   ObjectPainter.prototype.FinishTextDrawing = function(draw_g, call_ready, checking_mathjax) {
-      if (!draw_g) draw_g = this.draw_g;
-
-      if (checking_mathjax) {
-         if (!draw_g.property('draw_text_completed')) return;
-      } else {
-         draw_g.property('draw_text_completed', true); // mark that text drawing is completed
-      }
+   ObjectPainter.prototype._checkAllTextDrawing = function(draw_g, resolveFunc) {
 
       let all_args = draw_g.property('all_args'), missing = 0;
       if (!all_args) {
@@ -2769,8 +2696,8 @@ JSROOT.define(['d3'], (d3) => {
       all_args.forEach(arg => { if (!arg.ready) missing++; });
 
       if (missing > 0) {
-         if (typeof call_ready == 'function')
-            draw_g.node().text_callback = call_ready;
+         if (typeof resolveFunc == 'function')
+            draw_g.node().textResolveFunc = resolveFunc;
          return 0;
       }
 
@@ -2861,16 +2788,15 @@ JSROOT.define(['d3'], (d3) => {
       if (!any_text)
          font.clearFont(draw_g);
 
-      if (!call_ready) call_ready = draw_g.node().text_callback;
-      draw_g.node().text_callback = null;
+      if (!resolveFunc) resolveFunc = draw_g.node().textResolveFunc;
+      draw_g.node().textResolveFunc = null;
 
       // if specified, call ready function
-      JSROOT.callBack(call_ready);
+      if (resolveFunc) resolveFunc(this); // IMPORTANT - return painter, may use in draw methods
       return 0;
    }
 
    /** @summary Draw text
-    *
     *  @param {object} arg - different text draw options
     *  @param {string} arg.text - text to draw
     *  @param {number} [arg.align = 12] - int value like 12 or 31
@@ -2884,8 +2810,8 @@ JSROOT.define(['d3'], (d3) => {
     *  @param {number} [arg.rotate] - rotaion angle
     *  @param {number} [arg.font_size] - fixed font size
     *  @param {object} [arg.draw_g] - element where to place text, if not specified central draw_g container is used
-    */
-   ObjectPainter.prototype.DrawText = function(arg) {
+    * @protected */
+   ObjectPainter.prototype.drawText = function(arg) {
 
       if (!arg.text) arg.text = "";
 
@@ -2972,7 +2898,9 @@ JSROOT.define(['d3'], (d3) => {
                   ltx.produceLatex(this, arg.txt_node, arg);
                arg.ready = true;
                this.postprocessText(arg.txt_node, arg);
-               this.FinishTextDrawing(arg.draw_g, null, true); // check if all other elements are completed
+
+               if (arg.draw_g.property('draw_text_completed'))
+                  this._checkAllTextDrawing(arg.draw_g); // check if all other elements are completed
             });
             return 0;
          }
@@ -2989,7 +2917,11 @@ JSROOT.define(['d3'], (d3) => {
 
       JSROOT.require(['latex'])
             .then(ltx => ltx.produceMathjax(this, arg.mj_node, arg))
-            .then(() => { arg.ready = true; this.FinishTextDrawing(arg.draw_g, null, true); });
+            .then(() => {
+               arg.ready = true;
+               if (arg.draw_g.property('draw_text_completed'))
+                  this._checkAllTextDrawing(arg.draw_g);
+            });
 
       return 0;
    }
@@ -3016,6 +2948,202 @@ JSROOT.define(['d3'], (d3) => {
          arg.post_process(this);
 
       return arg.box.width;
+   }
+
+   /** @summary Configure user-defined context menu for the object
+     * @desc fillmenu_func will be called when context menu is actiavted
+     * Arguments fillmenu_func are (menu,kind)
+     * First is JSROOT menu object, second is object subelement like axis "x" or "y"
+     * Function should return promise with menu when items are filled */
+   ObjectPainter.prototype.configureUserContextMenu = function(fillmenu_func) {
+
+      if (!fillmenu_func || (typeof fillmenu_func !== 'function'))
+         delete this._userContextMenuFunc;
+      else
+         this._userContextMenuFunc = fillmenu_func;
+   }
+
+   /** @summary Fill object menu in web canvas
+     * @private */
+   ObjectPainter.prototype.fillObjectExecMenu = function(menu, kind) {
+
+      if (this._userContextMenuFunc)
+         return this._userContextMenuFunc(menu, kind);
+
+      let canvp = this.canv_painter();
+
+      if (!this.snapid || !canvp || canvp._readonly || !canvp._websocket)
+         return Promise.resolve(menu);
+
+      function DoExecMenu(arg) {
+         let execp = this.exec_painter || this,
+            cp = execp.canv_painter(),
+            item = execp.args_menu_items[parseInt(arg)];
+
+         if (!item || !item.fName) return;
+
+         // this is special entry, produced by TWebMenuItem, which recognizes editor entries itself
+         if (item.fExec == "Show:Editor") {
+            if (cp && (typeof cp.ActivateGed == 'function'))
+               cp.ActivateGed(execp);
+            return;
+         }
+
+         if (cp && (typeof cp.executeObjectMethod == 'function'))
+            if (cp.executeObjectMethod(execp, item, execp.args_menu_id)) return;
+
+         if (execp.ExecuteMenuCommand(item)) return;
+
+         if (execp.args_menu_id)
+            execp.WebCanvasExec(item.fExec, execp.args_menu_id);
+      }
+
+      let DoFillMenu = (_menu, _reqid, _resolveFunc, reply) => {
+
+         // avoid multiple call of the callback after timeout
+         if (this._got_menu) return;
+         this._got_menu = true;
+
+         if (reply && (_reqid !== reply.fId))
+            console.error('missmatch between request ' + _reqid + ' and reply ' + reply.fId + ' identifiers');
+
+         let items = reply ? reply.fItems : null;
+
+         if (items && items.length) {
+            if (_menu.size() > 0)
+               _menu.add("separator");
+
+            this.args_menu_items = items;
+            this.args_menu_id = reply.fId;
+
+            let lastclname;
+
+            for (let n = 0; n < items.length; ++n) {
+               let item = items[n];
+
+               if (item.fClassName && lastclname && (lastclname != item.fClassName)) {
+                  _menu.add("endsub:");
+                  lastclname = "";
+               }
+               if (lastclname != item.fClassName) {
+                  lastclname = item.fClassName;
+                  let p = lastclname.lastIndexOf("::"),
+                      shortname = (p > 0) ? lastclname.substr(p+2) : lastclname;
+
+                  _menu.add("sub:" + shortname.replace("<","_").replace(">","_"));
+               }
+
+               if ((item.fChecked === undefined) || (item.fChecked < 0))
+                  _menu.add(item.fName, n, DoExecMenu);
+               else
+                  _menu.addchk(item.fChecked, item.fName, n, DoExecMenu);
+            }
+
+            if (lastclname) _menu.add("endsub:");
+         }
+
+         _resolveFunc(_menu);
+      }
+
+      let reqid = this.snapid;
+      if (kind) reqid += "#" + kind; // use # to separate object id from member specifier like 'x' or 'z'
+
+      this._got_menu = false;
+
+      // if menu painter differs from this, remember it for further usage
+      if (menu.painter)
+         menu.painter.exec_painter = (menu.painter !== this) ? this : undefined;
+
+      return new Promise(resolveFunc => {
+
+         // set timeout to avoid menu hanging
+         setTimeout(() => DoFillMenu(menu, reqid, resolveFunc), 2000);
+
+         canvp.submitMenuRequest(this, kind, reqid).then(lst => DoFillMenu(menu, reqid, resolveFunc, lst));
+      });
+   }
+
+
+   /** @summary Configure user-defined tooltip callback
+     * @desc Hook for the users to get tooltip information when mouse cursor moves over frame area
+     * call_back function will be called every time when new data is selected
+     * when mouse leave frame area, call_back(null) will be called */
+   ObjectPainter.prototype.configureUserTooltipCallback = function(call_back, user_timeout) {
+      if (!call_back || (typeof call_back !== 'function')) {
+         delete this.UserTooltipCallback;
+         delete this.UserTooltipTimeout;
+      } else {
+         this.UserTooltipCallback = call_back;
+         this.UserTooltipTimeout = (user_timeout === undefined) ? 500 : user_timeout;
+      }
+   }
+
+    /** @summary Configure user-defined click handler
+     * @desc Function will be called every time when frame click was perfromed
+     * As argument, tooltip object with selected bins will be provided
+     * If handler function returns true, default handling of click will be disabled */
+   ObjectPainter.prototype.configureUserClickHandler = function(handler) {
+      let fp = this.frame_painter();
+      if (fp && fp.configureUserClickHandler)
+         fp.configureUserClickHandler(handler);
+   }
+
+   /** @summary Configure user-defined dblclick handler
+     * @desc Function will be called every time when double click was called
+     * As argument, tooltip object with selected bins will be provided
+     * If handler function returns true, default handling of dblclick (unzoom) will be disabled */
+   ObjectPainter.prototype.configureUserDblclickHandler = function(handler) {
+      let fp = this.frame_painter();
+      if (fp && fp.configureUserDblclickHandler)
+         fp.configureUserDblclickHandler(handler);
+   }
+
+
+   /** @summary Check if user-defined tooltip callback is configured
+    * @returns {boolean}
+    * @private */
+   ObjectPainter.prototype.IsUserTooltipCallback = function() {
+      return typeof this.UserTooltipCallback == 'function';
+   }
+
+   /** @summary Provide tooltips data to user-defained function
+    * @param {object} data - tooltip data
+    * @private */
+   ObjectPainter.prototype.ProvideUserTooltip = function(data) {
+
+      if (!this.IsUserTooltipCallback()) return;
+
+      if (this.UserTooltipTimeout <= 0)
+         return this.UserTooltipCallback(data);
+
+      if (typeof this.UserTooltipTHandle != 'undefined') {
+         clearTimeout(this.UserTooltipTHandle);
+         delete this.UserTooltipTHandle;
+      }
+
+      if (!data)
+         return this.UserTooltipCallback(data);
+
+      let d = data;
+
+     // only after timeout user function will be called
+      this.UserTooltipTHandle = setTimeout(() => {
+         delete this.UserTooltipTHandle;
+         if (this.UserTooltipCallback) this.UserTooltipCallback(d);
+      }, this.UserTooltipTimeout);
+   }
+
+  /** @summary Switch tooltip mode in frame painter
+    * @private */
+   ObjectPainter.prototype.SwitchTooltip = function(on) {
+      let fp = this.frame_painter();
+      if (fp && fp.SetTooltipEnabled) {
+         fp.SetTooltipEnabled(on);
+         fp.ProcessTooltipEvent(null);
+      }
+      // this is 3D control object
+      if (this.control && (typeof this.control.SwitchTooltip == 'function'))
+         this.control.SwitchTooltip(on);
    }
 
    // ===========================================================
@@ -3269,19 +3397,15 @@ JSROOT.define(['d3'], (d3) => {
       return item;
    }
 
-
    // ===========================================================
 
-
-
    /** @summary Set active pad painter
-    *
-    * @desc Normally be used to handle key press events, which are global in the web browser
-    * @param {object} args - functions arguments
-    * @param {object} args.pp - pad painter
-    * @param {boolean} [args.active] - is pad activated or not
-    * @private */
-   jsrp.SelectActivePad = function(args) {
+     * @desc Normally be used to handle key press events, which are global in the web browser
+     * @param {object} args - functions arguments
+     * @param {object} args.pp - pad painter
+     * @param {boolean} [args.active] - is pad activated or not
+     * @private */
+   jsrp.selectActivePad = function(args) {
       if (args.active) {
          if (this.$active_pp && (typeof this.$active_pp.SetActive == 'function'))
             this.$active_pp.SetActive(false);
@@ -3296,33 +3420,11 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Returns current active pad
-    * @desc Should be used only for keyboard handling
-    * @private */
-
-   jsrp.GetActivePad = function() {
+     * @desc Should be used only for keyboard handling
+     * @private */
+   jsrp.getActivePad = function() {
       return this.$active_pp;
    }
-
-   // =====================================================================
-
-   JSROOT.EAxisBits = {
-      kDecimals: JSROOT.BIT(7),
-      kTickPlus: JSROOT.BIT(9),
-      kTickMinus: JSROOT.BIT(10),
-      kAxisRange: JSROOT.BIT(11),
-      kCenterTitle: JSROOT.BIT(12),
-      kCenterLabels: JSROOT.BIT(14),
-      kRotateTitle: JSROOT.BIT(15),
-      kPalette: JSROOT.BIT(16),
-      kNoExponent: JSROOT.BIT(17),
-      kLabelsHori: JSROOT.BIT(18),
-      kLabelsVert: JSROOT.BIT(19),
-      kLabelsDown: JSROOT.BIT(20),
-      kLabelsUp: JSROOT.BIT(21),
-      kIsInteger: JSROOT.BIT(22),
-      kMoreLogLabels: JSROOT.BIT(23),
-      kOppositeTitle: JSROOT.BIT(32) // atrificial bit, not possible to set in ROOT
-   };
 
    // ================= painter of raw text ========================================
 
@@ -3371,16 +3473,15 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Register handle to react on window resize
-    *
     * @desc function used to react on browser window resize event
     * While many resize events could come in short time,
     * resize will be handled with delay after last resize event
-    * handle can be function or object with CheckResize function
+    * handle can be function or object with checkResize function
     * one could specify delay after which resize event will be handled
     * @private */
-   JSROOT.RegisterForResize = function(handle, delay) {
+   JSROOT.registerForResize = function(handle, delay) {
 
-      if (!handle) return;
+      if (!handle || JSROOT.BatchMode) return;
 
       let myInterval = null, myDelay = delay ? delay : 300;
 
@@ -3391,13 +3492,13 @@ JSROOT.define(['d3'], (d3) => {
 
          document.body.style.cursor = 'wait';
          if (typeof handle == 'function') handle(); else
-            if ((typeof handle == 'object') && (typeof handle.CheckResize == 'function')) handle.CheckResize(); else
+            if ((typeof handle == 'object') && (typeof handle.checkResize == 'function')) handle.checkResize(); else
                if (typeof handle == 'string') {
                   let node = d3.select('#' + handle);
                   if (!node.empty()) {
                      let mdi = node.property('mdi');
                      if (mdi) {
-                        mdi.CheckMDIResize();
+                        mdi.checkMDIResize();
                      } else {
                         JSROOT.resize(node.node());
                      }
@@ -3484,7 +3585,7 @@ JSROOT.define(['d3'], (d3) => {
       { name: "TAxis3D", prereq: "hist3d", func: ".drawAxis3D" },
       { name: "TMarker", icon: 'img_graph', prereq: "more", func: ".drawMarker", direct: true },
       { name: "TPolyMarker", icon: 'img_graph', prereq: "more", func: ".drawPolyMarker", direct: true },
-      { name: "TASImage", icon: 'img_mgraph', prereq: "more", func: ".drawASImage" },
+      { name: "TASImage", icon: 'img_mgraph', prereq: "more", func: ".drawASImage", opt: ";z" },
       { name: "TJSImage", icon: 'img_mgraph', prereq: "more", func: ".drawJSImage", opt: ";scale;center" },
       { name: "TGeoVolume", icon: 'img_histo3d', prereq: "geom", func: ".drawGeoObject", expand: "JSROOT.GEO.expandObject", opt: ";more;all;count;projx;projz;wire;dflt", ctrl: "dflt" },
       { name: "TEveGeoShapeExtract", icon: 'img_histo3d', prereq: "geom", func: ".drawGeoObject", expand: "JSROOT.GEO.expandObject", opt: ";more;all;count;projx;projz;wire;dflt", ctrl: "dflt" },
@@ -3494,15 +3595,15 @@ JSROOT.define(['d3'], (d3) => {
       { name: /^TGeo/, icon: 'img_histo3d', prereq: "geom", func: ".drawGeoObject", opt: ";more;all;axis;compa;count;projx;projz;wire;dflt", ctrl: "dflt" },
       // these are not draw functions, but provide extra info about correspondent classes
       { name: "kind:Command", icon: "img_execute", execute: true },
-      { name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true, prereq: "hierarchy", expand: ".FolderHierarchy" },
-      { name: "TTask", icon: "img_task", prereq: "hierarchy", expand: ".TaskHierarchy", for_derived: true },
+      { name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true, prereq: "hierarchy", expand: ".folderHierarchy" },
+      { name: "TTask", icon: "img_task", prereq: "hierarchy", expand: ".taskHierarchy", for_derived: true },
       { name: "TTree", icon: "img_tree", prereq: "tree", expand: 'JSROOT.TreeHierarchy', func: 'JSROOT.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" },
       { name: "TNtuple", icon: "img_tree", prereq: "tree", expand: 'JSROOT.TreeHierarchy', func: 'JSROOT.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" },
       { name: "TNtupleD", icon: "img_tree", prereq: "tree", expand: 'JSROOT.TreeHierarchy', func: 'JSROOT.drawTree', dflt: "expand", opt: "player;testio", shift: "inspect" },
       { name: "TBranchFunc", icon: "img_leaf_method", prereq: "tree", func: 'JSROOT.drawTree', opt: ";dump", noinspect: true },
       { name: /^TBranch/, icon: "img_branch", prereq: "tree", func: 'JSROOT.drawTree', dflt: "expand", opt: ";dump", ctrl: "dump", shift: "inspect", ignore_online: true },
       { name: /^TLeaf/, icon: "img_leaf", prereq: "tree", noexpand: true, func: 'JSROOT.drawTree', opt: ";dump", ctrl: "dump", ignore_online: true },
-      { name: "TList", icon: "img_list", prereq: "hierarchy", func: ".drawList", expand: ".ListHierarchy", dflt: "expand" },
+      { name: "TList", icon: "img_list", prereq: "hierarchy", func: ".drawList", expand: ".listHierarchy", dflt: "expand" },
       { name: "THashList", sameas: "TList" },
       { name: "TObjArray", sameas: "TList" },
       { name: "TClonesArray", sameas: "TList" },
@@ -3694,6 +3795,7 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Implementation of JSROOT.draw
      * @private */
    function jsroot_draw(divid, obj, opt) {
+
       if (!obj || (typeof obj !== 'object'))
          return Promise.reject(Error('not an object in JSROOT.draw'));
 
@@ -3721,8 +3823,8 @@ JSROOT.define(['d3'], (d3) => {
       if (!handle.func) {
          if (opt && (opt.indexOf("same") >= 0)) {
             let main_painter = JSROOT.get_main_painter(divid);
-            if (main_painter && (typeof main_painter.PerformDrop === 'function'))
-               return main_painter.PerformDrop(obj, "", null, opt);
+            if (main_painter && (typeof main_painter.performDrop === 'function'))
+               return main_painter.performDrop(obj, "", null, opt);
          }
 
          return Promise.reject(Error('Function not specified'));
@@ -3754,7 +3856,7 @@ JSROOT.define(['d3'], (d3) => {
                painter.csstype = handle.csstype;
                painter.SetDivId(divid, 2);
                painter.Redraw = handle.func;
-               let promise = painter.Redraw();
+               promise = painter.Redraw();
                if (!isPromise(promise)) {
                   painter.DrawingReady();
                   promise = undefined;
@@ -3819,7 +3921,7 @@ JSROOT.define(['d3'], (d3) => {
     *
     * @example
     * JSROOT.openFile("https://root.cern/js/files/hsimple.root")
-    *       .then(file => file.ReadObject("hpxpy;1"))
+    *       .then(file => file.readObject("hpxpy;1"))
     *       .then(obj => JSROOT.draw("drawing", obj, "colz;logx;gridx;gridy"));
     *
     */
@@ -3898,7 +4000,7 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Compress SVG code, produced from JSROOT drawing
      * @desc removes extra info or empty elements
      * @private */
-   jsrp.CompressSVG = function(svg) {
+   jsrp.compressSVG = function(svg) {
 
       svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g, "url(#$1)")        // decode all URL
                .replace(/ class=\"\w*\"/g, "")                                // remove all classes
@@ -3947,7 +4049,7 @@ JSROOT.define(['d3'], (d3) => {
 
          return JSROOT.draw(main.node(), args.object, args.option || "").then(() => {
 
-            let has_workarounds = JSROOT._.svg_3ds && jsrp.ProcessSVGWorkarounds;
+            let has_workarounds = JSROOT._.svg_3ds && jsrp.processSvgWorkarounds;
 
             main.select('svg')
                 .attr("xmlns", "http://www.w3.org/2000/svg")
@@ -3959,9 +4061,9 @@ JSROOT.define(['d3'], (d3) => {
             let svg = main.html();
 
             if (has_workarounds)
-               svg = jsrp.ProcessSVGWorkarounds(svg);
+               svg = jsrp.processSvgWorkarounds(svg);
 
-            svg = jsrp.CompressSVG(svg);
+            svg = jsrp.compressSVG(svg);
 
             main.remove();
 
@@ -4002,9 +4104,9 @@ JSROOT.define(['d3'], (d3) => {
          if (typeof arg !== 'object') arg = null;
       let done = false, dummy = new ObjectPainter();
       dummy.SetDivId(divid, -1);
-      dummy.ForEachPainter(painter => {
-         if (!done && (typeof painter.CheckResize == 'function'))
-            done = painter.CheckResize(arg);
+      dummy.forEachPainter(painter => {
+         if (!done && (typeof painter.checkResize == 'function'))
+            done = painter.checkResize(arg);
       });
       return done;
    }
@@ -4026,7 +4128,7 @@ JSROOT.define(['d3'], (d3) => {
    JSROOT.cleanup = function(divid) {
       let dummy = new ObjectPainter(), lst = [];
       dummy.SetDivId(divid, -1);
-      dummy.ForEachPainter(painter => {
+      dummy.forEachPainter(painter => {
          if (lst.indexOf(painter) < 0) lst.push(painter);
       });
       for (let n = 0; n < lst.length; ++n) lst[n].Cleanup();

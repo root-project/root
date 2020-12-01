@@ -11,7 +11,7 @@
       jsroot._.amd = true; // inidcation that require will be used for loading of functionality
 
       for (let src in jsroot._.sources)
-         if (src != 'JSRootCore')
+         if (src != 'JSRoot.core')
             paths[src] = jsroot._.get_module_src(jsroot._.sources[src]);
 
       if (norjs) {
@@ -41,8 +41,8 @@
 
       define( jsroot );
 
-      if (norjs || !require.specified("JSRootCore"))
-         define('JSRootCore', [], jsroot);
+      if (norjs || !require.specified("JSRoot.core"))
+         define('JSRoot.core', [], jsroot);
 
       if (norjs || !require.specified("jsroot"))
          define('jsroot', [], jsroot);
@@ -63,8 +63,8 @@
 
    } else {
 
-      if (typeof JSROOT != 'undefined')
-         throw new Error("JSROOT is already defined", "JSRootCore.js");
+      if ((typeof JSROOT != 'undefined') && !JSROOT._workaround)
+         throw new Error("JSROOT is already defined", "JSRoot.core.js");
 
       let jsroot = {};
 
@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year */
-   JSROOT.version_date = "25/11/2020";
+   JSROOT.version_date = "1/12/2020";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date} */
@@ -154,11 +154,11 @@
    if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
       let script = document.currentScript;
       if (script && (typeof script.src == "string")) {
-         const pos = script.src.indexOf("scripts/JSRootCore.");
+         const pos = script.src.indexOf("scripts/JSRoot.core.");
          if (pos >= 0) {
             source_fullpath = script.src;
             JSROOT.source_dir = source_fullpath.substr(0, pos);
-            _.source_min = source_fullpath.indexOf("scripts/JSRootCore.min.js") >= 0;
+            _.source_min = source_fullpath.indexOf("scripts/JSRoot.core.min.js") >= 0;
             console.log(`Set JSROOT.source_dir to ${JSROOT.source_dir}, ${JSROOT.version}`);
          }
       }
@@ -183,11 +183,10 @@
          'mathjax'              : { src: 'https://cdn.jsdelivr.net/npm/mathjax@3.1.2/es5/tex-svg', extract: "MathJax", node: "mathjax" },
          'dat.gui'              : { src: 'dat.gui', libs: true, extract: "dat" },
          'three'                : { src: 'three', libs: true, extract: "THREE", node: "three" },
-         'threejs_jsroot'       : { src: 'three.extra', libs: true },
-         'JSRootCore'           : { src: 'JSRootCore' }
+         'threejs_jsroot'       : { src: 'three.extra', libs: true }
     };
 
-    ['base3d','csg','geobase','geom','geoworker','gpad','hierarchy','hist','hist3d','interactive','io','jq2d','latex',
+    ['core', 'base3d','csg','geobase','geom','geoworker','gpad','hierarchy','hist','hist3d','interactive','io','jq2d','latex',
       'math','more','openui5','painter','tree','v7gpad','v7hist','v7hist3d','v7more','webwindow']
          .forEach(item => _.sources[item] = { src: "JSRoot." + item });
 
@@ -196,7 +195,7 @@
          return _.amd ? entry.src : entry.src + ".js";
 
       if (_.sap)
-         return "jsroot/scripts/" + entry.src + ((_.source_min || entry.libs) ? ".min" : "");
+         return "jsroot/scripts/" + entry.src + ((_.source_min || entry.libs || entry.onlymin) ? ".min" : "");
 
       let dir = (entry.libs && _.use_full_libs && !_.source_min) ? JSROOT.source_dir + "libs/" : JSROOT.source_dir + "scripts/",
           ext = (_.source_min || (entry.libs && !_.use_full_libs) || entry.onlymin) ? ".min" : "";
@@ -356,7 +355,7 @@
    /** @namespace
      * @memberof JSROOT
      * @summary Insiance of TStyle object like in ROOT
-     * @desc Includes default draw styles, can be changed after loading of JSRootCore.js
+     * @desc Includes default draw styles, can be changed after loading of JSRoot.core.js
      * or can be load from the file providing style=itemname in the URL
      * See [TStyle docu]{@link https://root.cern/doc/master/classTStyle.html} "Private attributes" section for more detailed info about each value */
    let gStyle = {
@@ -990,15 +989,13 @@
       return arr;
    }
 
-   /**
-    * @summary Method converts JavaScript object into ROOT-like JSON
-    *
-    * @desc Produced JSON can be used in JSROOT.parse() again
-    * When performed properly, JSON can be used in [TBufferJSON::fromJSON()]{@link https://root.cern/doc/master/classTBufferJSON.html#a2ecf0daacdad801e60b8093a404c897d} method to read data back with C++
-    * @param {object} obj - JavaScript object to convert
-    * @returns {string} produced JSON code
-    */
-   JSROOT.toJSON = function(obj) {
+   /** @summary Method converts JavaScript object into ROOT-like JSON
+     * @desc Produced JSON can be used in JSROOT.parse() again
+     * When performed properly, JSON can be used in [TBufferJSON::fromJSON()]{@link https://root.cern/doc/master/classTBufferJSON.html#a2ecf0daacdad801e60b8093a404c897d} method to read data back with C++
+     * @param {object} obj - JavaScript object to convert
+     * @param {number} [spacing] - optional line spacing in JSON
+     * @returns {string} produced JSON code */
+   JSROOT.toJSON = function(obj, spacing) {
       if (!obj || typeof obj !== 'object') return "";
 
       let map = []; // map of stored objects
@@ -1044,7 +1041,7 @@
 
       let tgt = copy_value(obj);
 
-      return JSON.stringify(tgt);
+      return JSON.stringify(tgt, null, spacing);
    }
 
    /**
@@ -1308,7 +1305,13 @@
       let element, isstyle = url.indexOf(".css") > 0;
 
       if (JSROOT.nodejs) {
-         let res = isstyle ? null : require(url);
+         let res = null;
+         if (!isstyle) {
+            if ((url.indexOf("http:") == 0) || (url.indexOf("https:") == 0))
+               return JSROOT.httpRequest(url,"text").then(txt => eval(txt));
+            res = require(url);
+         }
+
          return Promise.resolve(res);
       }
 
@@ -1371,9 +1374,10 @@
       return JSROOT.require("painter").then(() => JSROOT.makeSVG(args));
    }
 
-   /** @summary Method to build JSROOT GUI with browser
-    * @private */
-   JSROOT.BuildSimpleGUI = function(user_scripts) {
+   /** @summary Method to build main JSROOT GUI
+     * @returns {Promise} when ready
+     * @private */
+   JSROOT.buildGUI = function(user_scripts) {
       let d = JSROOT.decodeUrl(),
           debugout,
           nobrowser = d.has('nobrowser'),
@@ -1412,7 +1416,7 @@
       return JSROOT.require(requirements)
                    .then(() => JSROOT.require(user_scripts))
                    .then(() => { if (_.debug_output) { _.debug_output.innerHTML = ""; delete _.debug_output; } })
-                   .then(() => JSROOT.callBack(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'JSROOT.BuildSimpleGUI'));
+                   .then(() => { return nobrowser ? JSROOT.buildNobrowserGUI() : JSROOT.buildGUI(); });
    }
 
    /** @summary Create some ROOT classes
@@ -2185,21 +2189,12 @@
       });
    }
 
-   /** @summary Initialize JSROOT.
-    * @desc Called when main JSRootCore.js script is loaded. Process URL parameters, supplied with JSRootCore.js script
-    * @private */
+   /** @summary Initialize JSROOT
+     * @desc Called when main JSRoot.core.js script is loaded.
+     * @private */
    _.init = function() {
 
       if (!source_fullpath) return this;
-
-      function window_on_load() {
-         if (document.attachEvent ? document.readyState === 'complete' : document.readyState !== 'loading')
-            return Promise.resolve(true);
-
-         return new Promise(resolve => {
-            window.onload = resolve;
-         });
-      }
 
       let d = JSROOT.decodeUrl(source_fullpath);
 
@@ -2208,81 +2203,16 @@
          JSROOT.wrong_http_response_handling = true; // server may send wrong content length by partial requests, use other method to control this
       if (d.has('nosap')) _.sap = undefined; // let ignore sap loader even with openui5 loaded
 
-      // in case of require.js one have to use timeout to decople loading
-      if (_.amd)
-         return window_on_load().then(() => setTimeout(() => JSROOT.BuildSimpleGUI('check_existing_elements'), 50));
-
-      if (d.has('gui'))
-         return window_on_load().then(() => JSROOT.BuildSimpleGUI());
-
-      let prereq = "", user = d.get('load'), onload = d.get('onload');
-      if (d.has('io')) prereq += "io;";
-      if (d.has('tree')) prereq += "tree;";
-      if (d.has('2d')) prereq += "gpad;";
-      if (d.has('v7')) prereq += "v7gpad;";
-      if (d.has('hist')) prereq += "hist;";
-      if (d.has('hierarchy')) prereq += "hierarchy;";
-      if (d.has('jq2d')) prereq += "jq2d;";
-      if (d.has('more2d')) prereq += "more;";
-      if (d.has('geom')) prereq += "geom;";
-      if (d.has('3d')) prereq += "base3d;";
-      if (d.has('math')) prereq += "math;";
-      if (d.has('mathjax')) prereq += "mathjax;";
-      if (d.has('openui5')) prereq += "openui5;";
-
-      if (user) { prereq += "io;gpad;"; user = user.split(";"); }
-
-      if (prereq || onload)
-         window_on_load().then(() => JSROOT.require(prereq))
-                         .then(() => JSROOT.loadScript(user))
-                         .then(() => JSROOT.callBack(onload));
-
       return this;
    }
 
-   /// FIXME: for backward compatibility, will be removed in v6.2
-
    let _warned = {};
-   function warnOnce(msg) {
+   JSROOT.warnOnce = function(msg) {
       if (!_warned[msg]) {
          console.warn(msg);
          _warned[msg] = true;
       }
    }
-
-   JSROOT.GetUrlOption = function(opt, url, dflt) {
-      warnOnce('Using obsolete JSROOT.GetUrlOption, change to JSROOT.decodeUrl');
-      return JSROOT.decodeUrl(url).get(opt, dflt === undefined ? null : dflt);
-   }
-
-   JSROOT.AssertPrerequisites = function(req, callback) {
-      warnOnce('Using obsolete JSROOT.AssertPrerequisites, change to JSROOT.require');
-      req = req.replace(/2d;v7;/g, "v7gpad;").replace(/2d;v6;/g, "gpad;").replace(/more2d;/g, 'more;').replace(/2d;/g, 'gpad;').replace(/;v6;v7/g, ";gpad;v7gpad");
-      JSROOT.require(req).then(callback);
-   }
-
-   JSROOT.OpenFile = function(filename, callback) {
-      warnOnce('Using obsolete JSROOT.OpenFile function, change to JSROOT.openFile');
-      let res = JSROOT.openFile(filename);
-      return !callback ? res : res.then(callback);
-   }
-
-   JSROOT.JSONR_unref = function(arg) {
-      warnOnce('Using obsolete JSROOT.JSONR_unref function, change to JSROOT.parse');
-      return JSROOT.parse(arg);
-   }
-
-   JSROOT.MakeSVG = function(args) {
-      warnOnce('Using obsolete JSROOT.MakeSVG function, change to JSROOT.makeSVG');
-      return JSROOT.makeSVG(args);
-   }
-
-   JSROOT.CallBack = function(func, arg1, arg2) {
-      warnOnce('Using obsolete JSROOT.CallBack function, change to JSROOT.callBack');
-      return JSROOT.callBack(func, arg1, arg2);
-   }
-
-   /// end of backward compatibility block
 
    JSROOT._ = _;
    JSROOT.browser = browser;

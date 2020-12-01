@@ -4,19 +4,20 @@
    <head>
       <meta charset="UTF-8">
       <title>Draw of single element</title>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js?gui"></script>
-
-      <script type='text/javascript'>
-         function GetCachedHierarchy() { return "$$$h.json$$$"; }
-         function GetCachedObject() { return "$$$root.json$$$"; }
-      </script>
-
+      <script type="text/javascript" src="jsrootsys/scripts/JSRoot.core.js"></script>
    </head>
 
    <body>
       <div id="drawGUI">
          loading scripts...
       </div>
+
+      <script type='text/javascript'>
+         function GetCachedHierarchy() { return "$$$h.json$$$"; }
+         function GetCachedObject() { return "$$$root.json$$$"; }
+
+         JSROOT.buildGUI();
+      </script>
    </body>
 
 </html>
