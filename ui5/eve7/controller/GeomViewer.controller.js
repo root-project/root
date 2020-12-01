@@ -91,7 +91,7 @@ sap.ui.define(['sap/ui/core/Component',
          this.cfg_model = new JSONModel(this.cfg);
          this.getView().setModel(this.cfg_model);
 
-         var nobrowser = this.websocket.GetUserArgs('nobrowser') || (JSROOT.GetUrlOption('nobrowser') !== null);
+         var nobrowser = this.websocket.GetUserArgs('nobrowser') || JSROOT.decodeUrl().has('nobrowser');
 
          if (nobrowser) {
             // remove main area - plain geometry drawing
@@ -135,7 +135,7 @@ sap.ui.define(['sap/ui/core/Component',
             geo = _geo;
             sap.ui.define(['rootui5/eve7/lib/EveElements'], EveElements => {
                this.creator = new EveElements();
-               this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
+               this.creator.useIndexAsIs = JSROOT.decodeUrl().has('useindx');
                this.checkSendRequest();
             });
          });

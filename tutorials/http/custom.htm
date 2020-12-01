@@ -5,7 +5,7 @@
 
    <title>Custom HTML page for THttpServer</title>
 
-   <script src="/jsrootsys/scripts/JSRootCore.js" type="text/javascript"></script>
+   <script src="/jsrootsys/scripts/JSRoot.core.js" type="text/javascript"></script>
 
    <!-- if necessary, one can load any other scripts from THttpServer or any other source  -->
    <!-- <script src="/jsrootsys/scripts/jquery.min.js" type="text/javascript"></script> -->
@@ -50,29 +50,28 @@
             <a href="default.htm" title="Normal JSROOT UI webpage">Default UI</a>
          </td>
        </tr>
-</tbody>
+     </tbody>
   </table>
 
   <script type='text/javascript'>
 
       document.getElementById('btn_hpx').onclick = function() {
-         JSROOT.NewHttpRequest("hpx/root.json", 'object', function(obj) {
-            JSROOT.redraw("draw_hpx", obj);
-         }).send();
+         JSROOT.httpRequest("hpx/root.json", 'object')
+               .then(obj => JSROOT.redraw("draw_hpx", obj));
       }
 
       document.getElementById('btn_hpxpy').onclick = function() {
-         JSROOT.NewHttpRequest("hpxpy/root.json", 'object', function(obj) {
-            JSROOT.redraw("draw_hpxpy", obj, "col");
-         }).send();
+         JSROOT.httpRequest("hpxpy/root.json", 'object')
+               .then(obj => JSROOT.redraw("draw_hpxpy", obj, "col"));
       }
 
       // here both objects requested with signle multi.json request
       document.getElementById('btn_both').onclick = function() {
-         JSROOT.NewHttpRequest("multi.json?number=2", 'multi', function(arr) {
-            JSROOT.redraw("draw_hpx", arr[0]);
-            JSROOT.redraw("draw_hpxpy", arr[1], "col");
-         }).send("hpx/root.json\nhpxpy/root.json\n");
+         JSROOT.httpRequest("multi.json?number=2", "multi", "hpx/root.json\nhpxpy/root.json\n")
+               .then(arr => {
+                   JSROOT.redraw("draw_hpx", arr[0]);
+                   JSROOT.redraw("draw_hpxpy", arr[1], "col");
+                });
       }
 
       document.getElementById('btn_clear').onclick = function() {

@@ -52,7 +52,7 @@ sap.ui.define([
                   .then(obj => this.drawObject(obj, model.opt));
          } else if (model.filename) {
             JSROOT.openFile(model.filename)
-                  .then(file => file.ReadObject(model.itemname))
+                  .then(file => file.readObject(model.itemname))
                   .then(obj => this.drawObject(obj, model.opt));
          }
       },
@@ -105,7 +105,7 @@ sap.ui.define([
       onResizeTimeout: function() {
          delete this.resize_tmout;
          if (this.object_painter)
-            this.object_painter.CheckResize();
+            this.object_painter.checkResize();
       },
 
       onInit: function() {
