@@ -97,7 +97,7 @@ function requirejs_success(base_url) {{
 }}
 
 function display_{jsDivId}() {{
-    require(['scripts/JSRootCore'],
+    require(['scripts/JSRoot.core'],
         function(Core) {{
             var obj = Core.JSONR_unref({jsonContent});
             Core.key_handling = false;
