@@ -510,9 +510,14 @@ bool TClassEdit::TSplitType::IsTemplate()
 
 ROOT::ESTLType TClassEdit::STLKind(std::string_view type)
 {
+   if (type.length() == 0)
+      return ROOT::kNotSTL;
    size_t offset = 0;
    if (type.compare(0,6,"const ")==0) { offset += 6; }
    offset += StdLen(type.substr(offset));
+   const auto len = type.length() - offset;
+   if (len == 0)
+      return ROOT::kNotSTL;
 
    //container names
    static const char *stls[] =
@@ -535,7 +540,6 @@ ROOT::ESTLType TClassEdit::STLKind(std::string_view type)
       };
 
    // kind of stl container
-   const auto len = type.length() - offset;
    // find the correct ESTLType, skipping std::any (because I/O for it is not implemented yet?)
    for (int k = 1; stls[k]; ++k) {
       if (len == stllen[k]) {
