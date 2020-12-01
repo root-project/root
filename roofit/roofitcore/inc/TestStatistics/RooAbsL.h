@@ -36,7 +36,7 @@ public:
    RooAbsL(RooAbsPdf *pdf, RooAbsData *data, bool do_offset, double offset, double offset_carry, std::size_t N_events,
            std::size_t N_components, Extended extended = Extended::Auto);
    RooAbsL(const RooAbsL& other);
-   ~RooAbsL();
+   virtual ~RooAbsL();
 
    void init_clones(RooAbsPdf& inpdf, RooAbsData& indata);
 
