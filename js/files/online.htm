@@ -5,16 +5,20 @@
       <meta charset="UTF-8">
       <title>Online server</title>
       <link rel="shortcut icon" href="jsrootsys/img/RootIcon.ico"/>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js?gui"></script>
-      <script type="text/javascript">
-         function GetCachedHierarchy() { return "$$$h.json$$$"; }
-      </script>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRoot.core.js"></script>
    </head>
 
    <body>
       <div id="onlineGUI">
          loading scripts...
       </div>
+
+      <script type="text/javascript">
+         function GetCachedHierarchy() { return "$$$h.json$$$"; }
+
+         JSROOT.buildGUI();
+      </script>
+
    </body>
 
 </html>

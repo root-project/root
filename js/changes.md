@@ -2,6 +2,9 @@
 
 ## Changes in v6
 
+0. Rename JSRootCore.js -> JSRoot.core.js, eliminate all URL parameters.
+   Loading of extra functionality should be done with JSROOT methods like
+   JSROOT.require, JSROOT.loadScript, ...
 1. Skip IE support
 2. Upgrade d3.js to v6.1.1, due to significant changes in API skip support of older versions
 3. Make heavy use of Promise class
@@ -19,14 +22,16 @@
     either with plain scripts loading or via node.js require(). Introducing clean dependencies in JSROOT code.
     Deprecates old JSROOT.AssertPrerequisites function
 11. All latex/mathjax related methods moved to special JSRoot.latex.js script, only loaded when required
-12. Do not use classes - they are not performant enough compare to Object.prototype
+12. Do not use classes - performance is not good enough compared to Object.prototype
 13. Improve TH2 col drawings for large number of bins - up to factor 5 faster
 14. Rename JSROOT scripts to follow common naming convention
 15. Support openui5 sap.ui.require loader if openui5 loaded before JSRootCore.js script
 16. Update jquery to 3.5.1, openui5 to 1.82.2
-17. Add support of log2 scale for axes drawing, can be extended for arbitrary log base
+17. Add support of log2 scale for axes drawing, v7 can have arbitrary log base
 18. Allow to move axis title to opposite position
 19. Fix zooming in color palette
+20. Add support of ZSTD compression
+
 
 
 ## Changes in 5.9.0

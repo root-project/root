@@ -539,7 +539,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          d3.select("#"+this.gui_div+"_drawing").style('left','0px'); // reset size
          main.select(".jsroot_h_separator").style('left','0px');
          d3.select("#"+this.gui_div+"_status").style('left','0px'); // reset left
-         pthis.CheckResize();
+         pthis.checkResize();
       }
 
       this.browser_kind = kind;
@@ -590,14 +590,14 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
            helper : function() { return $(this).clone().css('background-color','grey'); },
            drag: function(event,ui) {
               pthis.SetButtonsPosition();
-              pthis.AdjustSeparator(ui.position.left, null);
+              pthis.adjustSeparators(ui.position.left, null);
            },
            stop: function(/* event,ui */) {
-              pthis.CheckResize();
+              pthis.checkResize();
            }
         });
 
-        this.AdjustSeparator(250, null, true, true);
+        this.adjustSeparators(250, null, true, true);
      }
 
       this.SetButtonsPosition();
@@ -693,7 +693,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       if (!vsepar.empty()) {
          vsepar.transition().style('left', tgt_separ).duration(_duration);
-         drawing.transition().style('left', tgt_drawing).duration(_duration).on("end", this.CheckResize.bind(this));
+         drawing.transition().style('left', tgt_drawing).duration(_duration).on("end", this.checkResize.bind(this));
       }
 
       if (this.status_layout && (this.browser_kind == 'fix')) {
@@ -702,7 +702,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       }
    }
 
-   /// used together with browser buttons
+   /** @summary Toggle browser kind
+     * @desc used together with browser buttons */
    BrowserLayout.prototype.Toggle = function(browser_kind) {
       if (this.browser_visible!=='changing') {
          if (browser_kind === this.browser_kind) this.ToggleBrowserVisisbility();
@@ -710,11 +711,12 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       }
    }
 
+   /** @summary Delete content */
    BrowserLayout.prototype.DeleteContent = function() {
       let main = d3.select("#" + this.gui_div + " .jsroot_browser");
       if (main.empty()) return;
 
-      this.CreateStatusLine("delete");
+      this.createStatusLine(0, "delete");
       let vsepar = main.select(".jsroot_v_separator");
       if (!vsepar.empty())
          $(vsepar.node()).draggable('destroy');
@@ -725,24 +727,27 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       delete this.browser_visible;
       delete this.browser_kind;
 
-      this.CheckResize();
+      this.checkResize();
    }
 
-   /// method creates status line
-   BrowserLayout.prototype.CreateStatusLine = function(height, mode) {
+   /** @summary Creates status line */
+   BrowserLayout.prototype.createStatusLine = function(height, mode) {
+
       let main = d3.select("#"+this.gui_div+" .jsroot_browser");
-      if (main.empty()) return '';
+      if (main.empty())
+         return Promise.resolve('');
 
       let id = this.gui_div + "_status",
           line = d3.select("#"+id),
           is_visible = !line.empty();
 
       if (mode==="toggle") { mode = !is_visible; } else
-      if (height==="delete") { mode = false; height = 0; delete this.status_layout; } else
+      if (mode==="delete") { mode = false; height = 0; delete this.status_layout; } else
       if (mode===undefined) { mode = true; this.status_layout = "app"; }
 
       if (is_visible) {
-         if ((mode === true) || (this.status_layout==="app")) return id;
+         if (mode === true)
+            return Promise.resolve(id);
 
          let hsepar = main.select(".jsroot_h_separator");
 
@@ -751,18 +756,20 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          hsepar.remove();
          line.remove();
 
-         delete this.status_layout;
+         if (this.status_layout !== "app")
+            delete this.status_layout;
 
          if (this.status_handler && (jsrp.ShowStatus === this.status_handler)) {
             delete jsrp.ShowStatus;
             delete this.status_handler;
          }
 
-         this.AdjustSeparator(null, 0, true);
-         return "";
+         this.adjustSeparators(null, 0, true);
+         return Promise.resolve("");
       }
 
-      if (mode === false) return "";
+      if (mode === false)
+         return Promise.resolve("");
 
       let left_pos = d3.select("#" + this.gui_div + "_drawing").style('left');
 
@@ -781,34 +788,36 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          axis: "y" , cursor: "ns-resize", containment: "parent",
          helper: function() { return $(this).clone().css('background-color','grey'); },
          drag: function(event,ui) {
-            pthis.AdjustSeparator(null, -ui.position.top);
+            pthis.adjustSeparators(null, -ui.position.top);
          },
          stop: function(/*event,ui*/) {
-            pthis.CheckResize();
+            pthis.checkResize();
          }
       });
 
       if (!height || (typeof height === 'string')) height = this.last_hsepar_height || 20;
 
-      this.AdjustSeparator(null, height, true);
+      this.adjustSeparators(null, height, true);
 
-      if (this.status_layout == "app") return id;
+      if (this.status_layout == "app")
+         return Promise.resolve(id);
 
       this.status_layout = new JSROOT.GridDisplay(id, 'horizx4_1213');
 
       let frame_titles = ['object name','object title','mouse coordinates','object info'];
       for (let k=0;k<4;++k)
-         d3.select(this.status_layout.GetFrame(k)).attr('title', frame_titles[k]).style('overflow','hidden')
+         d3.select(this.status_layout.getGridFrame(k)).attr('title', frame_titles[k]).style('overflow','hidden')
            .append("label").attr("class","jsroot_status_label");
 
       this.status_handler = this.ShowStatus.bind(this);
 
       jsrp.ShowStatus = this.status_handler;
 
-      return id;
+      return Promise.resolve(id);
    }
 
-   BrowserLayout.prototype.AdjustSeparator = function(vsepar, hsepar, redraw, first_time) {
+   /** @summary Adjust separator positions */
+   BrowserLayout.prototype.adjustSeparators = function(vsepar, hsepar, redraw, first_time) {
 
       if (!this.gui_div) return;
 
@@ -828,8 +837,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          let elem = main.select(".jsroot_h_separator"), hlimit = 0;
 
          if (!elem.empty()) {
-            if (hsepar<0) hsepar += ($(main.node()).outerHeight(true) - w);
-            if (hsepar<5) hsepar = 5;
+            if (hsepar < 0) hsepar += ($(main.node()).outerHeight(true) - w);
+            if (hsepar < 5) hsepar = 5;
             this.last_hsepar_height = hsepar;
             elem.style('bottom', hsepar+'px').style('height', w+'px');
             d3.select("#" + this.gui_div + "_status").style('height', hsepar+'px');
@@ -841,7 +850,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       if (vsepar!==null) {
          vsepar = parseInt(vsepar);
-         if (vsepar<50) vsepar = 50;
+         if (vsepar < 50) vsepar = 50;
          main.select(".jsroot_browser_area").style('width',(vsepar-5)+'px');
          d3.select("#" + this.gui_div + "_drawing").style('left',(vsepar+w)+'px');
          main.select(".jsroot_h_separator").style('left', (vsepar+w)+'px');
@@ -849,24 +858,24 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          main.select(".jsroot_v_separator").style('left',vsepar+'px').style('width',w+"px");
       }
 
-      if (redraw) this.CheckResize();
+      if (redraw) this.checkResize();
    }
 
    BrowserLayout.prototype.ShowStatus = function(name, title, info, coordinates) {
       if (!this.status_layout) return;
 
-      $(this.status_layout.GetFrame(0)).children('label').text(name || "");
-      $(this.status_layout.GetFrame(1)).children('label').text(title || "");
-      $(this.status_layout.GetFrame(2)).children('label').text(coordinates || "");
-      $(this.status_layout.GetFrame(3)).children('label').text(info || "");
+      $(this.status_layout.getGridFrame(0)).children('label').text(name || "");
+      $(this.status_layout.getGridFrame(1)).children('label').text(title || "");
+      $(this.status_layout.getGridFrame(2)).children('label').text(coordinates || "");
+      $(this.status_layout.getGridFrame(3)).children('label').text(info || "");
 
       if (!this.status_layout.first_check) {
          this.status_layout.first_check = true;
          let maxh = 0;
          for (let n=0;n<4;++n)
-            maxh = Math.max(maxh, $(this.status_layout.GetFrame(n)).children('label').outerHeight());
+            maxh = Math.max(maxh, $(this.status_layout.getGridFrame(n)).children('label').outerHeight());
          if ((maxh>5) && ((maxh>this.last_hsepar_height) || (maxh<this.last_hsepar_height+5)))
-            this.AdjustSeparator(null, maxh, true);
+            this.adjustSeparators(null, maxh, true);
       }
    }
 
@@ -874,6 +883,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
    let HierarchyPainter = JSROOT.HierarchyPainter;
 
+   /** @summary returns true if item is last in parent childs list
+     * @private */
    HierarchyPainter.prototype.isLastSibling = function(hitem) {
       if (!hitem || !hitem._parent || !hitem._parent._childs) return false;
       let chlds = hitem._parent._childs, indx = chlds.indexOf(hitem);
@@ -883,8 +894,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       return true;
    }
 
+   /** @summary Create item html code
+     * @private */
    HierarchyPainter.prototype.addItemHtml = function(hitem, d3prnt, arg) {
-
       if (!hitem || ('_hidden' in hitem)) return true;
 
       let isroot = (hitem === this.h),
@@ -1003,7 +1015,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       if ('disp_kind' in h) {
          if (JSROOT.settings.DragAndDrop && can_click)
-           this.enable_dragging(d3a.node(), itemname);
+           this.enableDrag(d3a.node(), itemname);
          if (JSROOT.settings.ContextMenu && can_menu)
             d3a.on('contextmenu', function(evnt) { h.tree_contextmenu(evnt, this); });
 
@@ -1049,40 +1061,52 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       return true;
    }
 
+   /** @summary Toggle open state of the item
+     * @desc Used with "open all" / "close all" buttons in normal GUI
+     * @param {boolean} isopen - if items should be expand or closed
+     * @returns {boolean} tru when any item was changed */
    HierarchyPainter.prototype.toggleOpenState = function(isopen, h) {
-      let hitem = h ? h : this.h;
+      let hitem = h || this.h;
 
-      if (!('_childs' in hitem)) {
-         if (!isopen || this.with_icons || (!hitem._expand && (hitem._more !== true))) return false;
-         this.expand(this.itemFullName(hitem));
-         if (hitem._childs) hitem._isopen = true;
-         return true;
+      if (hitem._childs === undefined) {
+         if (!isopen) return false;
+
+         if (this.with_icons) {
+            // in normal hierarchy check precisely if item can be expand
+            if (!hitem._more && !hitem._expand && !this.canExpandItem(hitem)) return false;
+         }
+
+         this.expandItem(this.itemFullName(hitem));
+         if (hitem._childs !== undefined) hitem._isopen = true;
+         return hitem._isopen;
       }
 
-      if ((hitem != this.h) && isopen && !hitem._isopen) {
+      if ((hitem !== this.h) && isopen && !hitem._isopen) {
          // when there are childs and they are not see, simply show them
          hitem._isopen = true;
          return true;
       }
 
       let change_child = false;
-      for (let i=0; i < hitem._childs.length; ++i)
-         if (this.toggleOpenState(isopen, hitem._childs[i])) change_child = true;
+      for (let i = 0; i < hitem._childs.length; ++i)
+         if (this.toggleOpenState(isopen, hitem._childs[i]))
+            change_child = true;
 
-      if ((hitem != this.h) && !isopen && hitem._isopen && !change_child) {
+      if ((hitem !== this.h) && !isopen && hitem._isopen && !change_child) {
          // if none of the childs can be closed, than just close that item
          delete hitem._isopen;
          return true;
        }
 
-      if (!h) this.RefreshHtml();
-
+      if (!h) this.refreshHtml();
       return false;
    }
 
-   HierarchyPainter.prototype.RefreshHtml = function(callback) {
+   /** @summary Refresh HTML code of hierarchy painter
+     * @returns {Promise} when done */
+   HierarchyPainter.prototype.refreshHtml = function() {
 
-      if (!this.divid) return JSROOT.callBack(callback);
+      if (!this.divid) return Promise.resolve();
 
       let d3elem = this.select_main();
 
@@ -1092,14 +1116,14 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             .style('flex-direction','column');
 
       let h = this, factcmds = [], status_item = null;
-      this.ForEach(function(item) {
+      this.forEachItem(item => {
          delete item._d3cont; // remove html container
          if (('_fastcmd' in item) && (item._kind == 'Command')) factcmds.push(item);
          if (('_status' in item) && !status_item) status_item = item;
       });
 
       if (!this.h || d3elem.empty())
-         return JSROOT.callBack(callback);
+         return Promise.resolve();
 
       if (factcmds.length) {
          let fastbtns = d3elem.append("div").attr("class","jsroot");
@@ -1109,7 +1133,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
                        .attr("class",'fast_command')
                        .attr("item", this.itemFullName(factcmds[n]))
                        .attr("title", factcmds[n]._title)
-                       .on("click", function() { h.ExecuteCommand(d3.select(this).attr("item"), this); } );
+                       .on("click", function() { h.executeCommand(d3.select(this).attr("item"), this); } );
 
             if ('_icon' in factcmds[n])
                btn.append('img').attr("src", factcmds[n]._icon);
@@ -1118,27 +1142,27 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       let d3btns = d3elem.append("p").attr("class", "jsroot").style("margin-bottom","3px").style("margin-top",0);
       d3btns.append("a").attr("class", "h_button").text("open all")
-            .attr("title","open all items in the browser").on("click", h.toggleOpenState.bind(h,true));
+            .attr("title","open all items in the browser").on("click", () => this.toggleOpenState(true));
       d3btns.append("text").text(" | ");
       d3btns.append("a").attr("class", "h_button").text("close all")
-            .attr("title","close all items in the browser").on("click", h.toggleOpenState.bind(h,false));
+            .attr("title","close all items in the browser").on("click", () => this.toggleOpenState(false));
 
-      if (typeof h.removeInspector == 'function') {
+      if (typeof this.removeInspector == 'function') {
          d3btns.append("text").text(" | ");
          d3btns.append("a").attr("class", "h_button").text("remove")
-               .attr("title","remove inspector").on("click", h.removeInspector.bind(h));
+               .attr("title","remove inspector").on("click", () => this.removeInspector());
       }
 
       if ('_online' in this.h) {
          d3btns.append("text").text(" | ");
          d3btns.append("a").attr("class", "h_button").text("reload")
-               .attr("title","reload object list from the server").on("click", h.reload.bind(h));
+               .attr("title","reload object list from the server").on("click", () => this.reload());
       }
 
       if ('disp_kind' in this) {
          d3btns.append("text").text(" | ");
          d3btns.append("a").attr("class", "h_button").text("clear")
-               .attr("title","clear all drawn objects").on("click", h.clear.bind(h,false));
+               .attr("title","clear all drawn objects").on("click", () => this.clearHierarchy(false));
       }
 
       let maindiv =
@@ -1156,14 +1180,18 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       if (status_item && !this.status_disabled && !JSROOT.decodeUrl().has('nostatus')) {
          let func = JSROOT.findFunction(status_item._status);
-         let hdiv = (typeof func == 'function') ? this.CreateStatusLine() : null;
-         if (hdiv) func(hdiv, this.itemFullName(status_item));
+         if (typeof func == 'function')
+            return this.createStatusLine().then(sdiv => {
+               if (sdiv) func(sdiv, this.itemFullName(status_item));
+            });
       }
 
-      JSROOT.callBack(callback);
+      return Promise.resolve();
    }
 
-   HierarchyPainter.prototype.UpdateTreeNode = function(hitem, d3cont) {
+   /** @summary Update item node
+     * @private */
+   HierarchyPainter.prototype.updateTreeNode = function(hitem, d3cont) {
       if ((d3cont===undefined) || d3cont.empty())  {
          d3cont = d3.select(hitem._d3cont ? hitem._d3cont : null);
          let name = this.itemFullName(hitem);
@@ -1179,7 +1207,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       if (this.brlayout) this.brlayout.AdjustBrowserSize(true);
    }
 
-   HierarchyPainter.prototype.UpdateBackground = function(hitem, scroll_into_view) {
+   /** @summary Update item background
+     * @private */
+   HierarchyPainter.prototype.updateBackground = function(hitem, scroll_into_view) {
 
       if (!hitem || !hitem._d3cont) return;
 
@@ -1195,13 +1225,14 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          d3a.node().scrollIntoView(false);
    }
 
-   /** @summary Handler for click event of item in the hierarchy */
+   /** @summary Handler for click event of item in the hierarchy
+     * @private */
    HierarchyPainter.prototype.tree_click = function(evnt, node, place) {
       if (!node) return;
 
       let d3cont = d3.select(node.parentNode.parentNode),
           itemname = d3cont.attr('item'),
-          hitem = itemname ? this.Find(itemname) : null;
+          hitem = itemname ? this.findItem(itemname) : null;
       if (!hitem) return;
 
       if (hitem._break_point) {
@@ -1243,7 +1274,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          if (typeof hitem._icon_click == 'function') func = hitem._icon_click; else
          if (handle && typeof handle.icon_click == 'function') func = handle.icon_click;
          if (func && func(hitem,this))
-            this.UpdateTreeNode(hitem, d3cont);
+            this.updateTreeNode(hitem, d3cont);
          return;
       }
 
@@ -1253,7 +1284,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       // special case - one should expand item
       if (((place == "plusminus") && !('_childs' in hitem) && hitem._more) ||
           ((place == "item") && (dflt === "expand"))) {
-         return this.expand(itemname, null, d3cont);
+         return this.expandItem(itemname, d3cont);
       }
 
       if (place == "item") {
@@ -1265,7 +1296,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             return window.open(itemname + "/");
 
          if (handle && handle.execute)
-            return this.ExecuteCommand(itemname, node.parentNode);
+            return this.executeCommand(itemname, node.parentNode);
 
          if (handle && handle.ignore_online && this.isOnlineItem(hitem)) return;
 
@@ -1301,7 +1332,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             return this.display(itemname, drawopt);
 
          if (can_expand || dflt_expand)
-            return this.expand(itemname, null, d3cont);
+            return this.expandItem(itemname, d3cont);
 
          // cannot draw, but can inspect ROOT objects
          if ((typeof hitem._kind === "string") && (hitem._kind.indexOf("ROOT.")===0) && sett.inspect && (can_draw!==false))
@@ -1315,13 +1346,15 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       else
          hitem._isopen = true;
 
-      this.UpdateTreeNode(hitem, d3cont);
+      this.updateTreeNode(hitem, d3cont);
    }
 
+   /** @summary Handler for mouse-over event
+     * @private */
    HierarchyPainter.prototype.tree_mouseover = function(on, elem) {
       let itemname = d3.select(elem.parentNode.parentNode).attr('item');
 
-      let hitem = this.Find(itemname);
+      let hitem = this.findItem(itemname);
       if (!hitem) return;
 
       let painter, prnt = hitem;
@@ -1334,12 +1367,12 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          painter.MouseOverHierarchy(on, itemname, hitem);
    }
 
+   /** @summary alternative context menu, used in the object inspector
+     * @private */
    HierarchyPainter.prototype.direct_contextmenu = function(evnt, elem) {
-      // this is alternative context menu, used in the object inspector
-
       evnt.preventDefault();
       let itemname = d3.select(elem.parentNode.parentNode).attr('item');
-      let hitem = this.Find(itemname);
+      let hitem = this.findItem(itemname);
       if (!hitem) return;
 
       if (typeof this.fill_context !== 'function') return;
@@ -1353,6 +1386,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       });
    }
 
+   /** @summary Handle context menu in the hieararchy
+     * @private */
    HierarchyPainter.prototype.tree_contextmenu = function(evnt, elem) {
       // this is handling of context menu request for the normal objects browser
 
@@ -1360,11 +1395,11 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       let itemname = d3.select(elem.parentNode.parentNode).attr('item');
 
-      let hitem = this.Find(itemname);
+      let hitem = this.findItem(itemname);
       if (!hitem) return;
 
-      let onlineprop = this.GetOnlineProp(itemname),
-          fileprop = this.GetFileProp(itemname);
+      let onlineprop = this.getOnlineProp(itemname),
+          fileprop = this.getFileProp(itemname);
 
       function qualifyURL(url) {
          function escapeHTML(s) {
@@ -1381,13 +1416,13 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             let files = [], addr = "", cnt = 0,
                 separ = () => (cnt++ > 0) ? "&" : "?";
 
-            this.ForEachRootFile(item => files.push(item._file.fFullURL));
+            this.forEachRootFile(item => files.push(item._file.fFullURL));
 
-            if (!this.GetTopOnlineItem())
+            if (!this.getTopOnlineItem())
                addr = JSROOT.source_dir + "index.htm";
 
-            if (this.IsMonitoring())
-               addr += separ() + "monitoring=" + this.MonitoringInterval();
+            if (this.isMonitoring())
+               addr += separ() + "monitoring=" + this.getMonitoringInterval();
 
             if (files.length==1)
                addr += separ() + "file=" + files[0];
@@ -1401,7 +1436,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             let items = [];
 
             if (this.disp)
-               this.disp.ForEachPainter(p => {
+               this.disp.forEachPainter(p => {
                   if (p.GetItemName())
                      items.push(p.GetItemName());
                });
@@ -1415,7 +1450,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             menu.add("Direct link", () => window.open(addr));
             menu.add("Only items", () => window.open(addr + "&nobrowser"));
          } else if (onlineprop) {
-            this.FillOnlineMenu(menu, onlineprop, itemname);
+            this.fillOnlineMenu(menu, onlineprop, itemname);
          } else {
             let sett = JSROOT.getDrawSettings(hitem._kind, 'nosame');
 
@@ -1445,10 +1480,10 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             }
 
             if (sett.expand && !('_childs' in hitem) && (hitem._more || !('_more' in hitem)))
-               menu.add("Expand", () => this.expand(itemname));
+               menu.add("Expand", () => this.expandItem(itemname));
 
             if (hitem._kind === "ROOT.TStyle")
-               menu.add("Apply", () => this.ApplyStyle(itemname));
+               menu.add("Apply", () => this.applyStyle(itemname));
          }
 
          if (typeof hitem._menu == 'function')
@@ -1467,18 +1502,19 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
    }
 
    /** @summary Creates configured JSROOT.MDIDisplay object
-   * @param callback - called when mdi object created */
-   HierarchyPainter.prototype.CreateDisplay = function(callback) {
+     * @return {Promise} with created mdi object */
+   HierarchyPainter.prototype.createDisplay = function() {
 
       if ('disp' in this) {
-         if (this.disp.NumDraw() > 0) return JSROOT.callBack(callback, this.disp);
-         this.disp.Reset();
+         if (this.disp.numDraw() > 0)
+            return Promise.resolve(this.disp);
+         this.disp.cleanup();
          delete this.disp;
       }
 
       // check that we can found frame where drawing should be done
       if (!document.getElementById(this.disp_frameid))
-         return JSROOT.callBack(callback, null);
+         return Promise.resolve(null);
 
       if (this.disp_kind == "tabs")
          this.disp = new TabsDisplay(this.disp_frameid);
@@ -1490,16 +1526,20 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          this.disp = new JSROOT.GridDisplay(this.disp_frameid, this.disp_kind);
 
       if (this.disp)
-         this.disp.CleanupFrame = this.CleanupFrame.bind(this);
+         this.disp.cleanupFrame = this.cleanupFrame.bind(this);
 
-      JSROOT.callBack(callback, this.disp);
+      return Promise.resolve(this.disp);
    }
 
-   HierarchyPainter.prototype.enable_dragging = function(element /*, itemname*/) {
+   /** @summary Enable drag on the element
+     * @private  */
+   HierarchyPainter.prototype.enableDrag = function(element /*, itemname*/) {
       $(element).draggable({ revert: "invalid", appendTo: "body", helper: "clone" });
    }
 
-   HierarchyPainter.prototype.enable_dropping = function(frame, itemname) {
+   /** @summary Enable drop on the element
+     * @private  */
+   HierarchyPainter.prototype.enableDrop = function(frame, itemname) {
       let h = this;
       $(frame).droppable({
          hoverClass : "ui-state-active",
@@ -1507,28 +1547,30 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             let dropname = ui.parent().parent().attr('item');
             if ((dropname == itemname) || !dropname) return false;
 
-            let ditem = h.Find(dropname);
+            let ditem = h.findItem(dropname);
             if (!ditem || (!('_kind' in ditem))) return false;
 
             return ditem._kind.indexOf("ROOT.")==0;
          },
          drop: function(event, ui) {
             let dropname = ui.draggable.parent().parent().attr('item');
-            if (!dropname) return false;
-            return h.dropitem(dropname, $(this).attr("id"));
+            if (dropname) h.dropItem(dropname, $(this).attr("id"));
          }
       });
    }
 
-   HierarchyPainter.prototype.CreateBrowser = function(browser_kind, update_html, call_back) {
+   /** @summary Create browser elements */
+   HierarchyPainter.prototype.createBrowser = function(browser_kind, update_html) {
 
-      if (!this.gui_div || this.exclude_browser || !this.brlayout) return false;
+      if (!this.gui_div || this.exclude_browser || !this.brlayout)
+         return Promise.resolve(false);
 
       let main = d3.select("#" + this.gui_div + " .jsroot_browser"),
           jmain = $(main.node());
 
       // one requires top-level container
-      if (main.empty()) return false;
+      if (main.empty())
+         return Promise.resolve(false);
 
       if ((browser_kind==="float") && this.float_browser_disabled) browser_kind = "fix";
 
@@ -1538,9 +1580,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
          if (update_html) this.brlayout.Toggle(browser_kind);
 
-         JSROOT.callBack(call_back);
-
-         return true;
+         return Promise.resolve(true);
       }
 
       let guiCode = "<p class='jsroot_browser_version'><a href='https://root.cern/js/'>JSROOT</a> version <span style='color:green'><b>" + JSROOT.version + "</b></span></p>";
@@ -1598,9 +1638,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             if (!filename) return;
 
             if ((filename.toLowerCase().lastIndexOf(".json") == filename.length-5))
-               this.OpenJsonFile(filename);
+               this.openJsonFile(filename);
             else
-               this.OpenRootFile(filename);
+               this.openRootFile(filename);
          }
 
          jmain.find(".gui_selectFileName").val("")
@@ -1610,7 +1650,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
          jmain.find(".gui_ReadFileBtn").button().click(() => this.ReadSelectedFile());
 
-         jmain.find(".gui_ResetUIBtn").button().click(() => this.clear(true));
+         jmain.find(".gui_ResetUIBtn").button().click(() => this.clearHierarchy(true));
 
          jmain.find(".gui_urlToLoad").keyup(e => {
             if (e.keyCode == 13) this.ReadSelectedFile();
@@ -1622,15 +1662,17 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             for (let n=0;n<files.length;++n) {
                let f = files[n];
                main.select(".gui_urlToLoad").property('value', f.name);
-               this.OpenRootFile(f, localfile_read_callback);
+               this.openRootFile(f).then(localfile_read_callback);
             }
 
             localfile_read_callback = null;
          });
 
-         this.SelectLocalFile = function(read_callback) {
-            localfile_read_callback = read_callback;
-            $("#" + this.gui_div + " .jsroot_browser").find(".gui_localFile").click();
+         this.selectLocalFile = function() {
+            return new Promise(resolveFunc => {
+               localfile_read_callback = resolveFunc;
+               $("#" + this.gui_div + " .jsroot_browser").find(".gui_localFile").click();
+            });
          }
       }
 
@@ -1648,25 +1690,24 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
          let painter = this;
          jlayout.change(function() {
-            painter.SetDisplay($(this).val() || 'collapsible', painter.gui_div + "_drawing");
+            painter.setDisplay($(this).val() || 'collapsible', painter.gui_div + "_drawing");
          });
       }
 
       this.SetDivId(this.gui_div + '_browser_hierarchy');
 
       if (update_html) {
-         this.RefreshHtml();
-         this.InitializeBrowser();
+         this.refreshHtml();
+         this.initializeBrowser();
       }
 
       this.brlayout.ToggleBrowserKind(browser_kind || "fix");
 
-      JSROOT.callBack(call_back);
-
-      return true;
+      return Promise.resolve(true);
    }
 
-   HierarchyPainter.prototype.InitializeBrowser = function() {
+   /** @summary Initialize browser elements */
+   HierarchyPainter.prototype.initializeBrowser = function() {
 
       let main = d3.select("#" + this.gui_div + " .jsroot_browser");
       if (main.empty() || !this.brlayout) return;
@@ -1681,14 +1722,14 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          for (let i in selects.options) {
             let s = selects.options[i].text;
             if (typeof s !== 'string') continue;
-            if ((s == this.GetLayout()) || (s.replace(/ /g,"") == this.GetLayout())) {
+            if ((s == this.getLayout()) || (s.replace(/ /g,"") == this.getLayout())) {
                selects.selectedIndex = i; found = true;
                break;
             }
          }
          if (!found) {
             let opt = document.createElement('option');
-            opt.innerHTML = opt.value = this.GetLayout();
+            opt.innerHTML = opt.value = this.getLayout();
             selects.appendChild(opt);
             selects.selectedIndex = selects.options.length-1;
          }
@@ -1699,32 +1740,31 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             this.brlayout.SetBrowserTitle(this.h._toptitle);
          let painter = this;
          jmain.find(".gui_monitoring")
-           .prop('checked', this.IsMonitoring())
+           .prop('checked', this.isMonitoring())
            .click(function() {
-               painter.EnableMonitoring(this.checked);
-               painter.updateAll(!this.checked);
+               painter.enableMonitoring(this.checked);
+               painter.updateItems();
             });
       } else if (!this.no_select) {
          let fname = "";
-         this.ForEachRootFile(item => { if (!fname) fname = item._fullurl; });
+         this.forEachRootFile(item => { if (!fname) fname = item._fullurl; });
          jmain.find(".gui_urlToLoad").val(fname);
       }
    }
 
-   HierarchyPainter.prototype.EnableMonitoring = function(on) {
-      this.SetMonitoring(undefined, on);
+   /** @summary Enable monitoring mode */
+   HierarchyPainter.prototype.enableMonitoring = function(on) {
+      this.setMonitoring(undefined, on);
 
       let chkbox = d3.select("#" + this.gui_div + " .jsroot_browser .gui_monitoring");
       if (!chkbox.empty() && (chkbox.property('checked') !== on))
          chkbox.property('checked', on);
    }
 
-   HierarchyPainter.prototype.CreateStatusLine = function(height, mode) {
-      if (this.status_disabled || !this.gui_div || !this.brlayout) return '';
-      return this.brlayout.CreateStatusLine(height, mode);
-   }
-
-   JSROOT.BuildSimpleGUI = function() {
+   /** @summary Build main JSROOT GUI
+     * @returns {Promise} when completed
+     * @private  */
+   JSROOT.buildGUI = function() {
       let myDiv = d3.select('#simpleGUI'), online = false;
 
       if (myDiv.empty()) {
@@ -1737,7 +1777,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          JSROOT.settings.IgnoreUrlOptions = true;
 
       if (JSROOT.decodeUrl().has("nobrowser") || (myDiv.attr("nobrowser") && myDiv.attr("nobrowser")!=="false"))
-         return JSROOT.BuildNobrowserGUI();
+         return JSROOT.buildNobrowserGUI();
 
       jsrp.readStyleFromURL();
 
@@ -1745,11 +1785,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       hpainter.is_online = online;
 
-      return new Promise(resolveFunc => {
-         hpainter.StartGUI(myDiv, () => {
-            hpainter.InitializeBrowser();
-            resolveFunc(hpainter);
-         });
+      return hpainter.startGUI(myDiv).then(() => {
+         hpainter.initializeBrowser();
+         return hpainter;
       });
    }
 
@@ -1761,7 +1799,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          this.cnt = 0; // use to count newly created frames
       }
 
-      ForEachFrame(userfunc,  only_visible) {
+      forEachFrame(userfunc,  only_visible) {
          let topid = this.frameid + '_collapsible';
 
          if (!document.getElementById(topid)) return;
@@ -1777,19 +1815,17 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          });
       }
 
-      GetActiveFrame() {
-         let found = super.GetActiveFrame();
+      getActiveFrame() {
+         let found = super.getActiveFrame();
          if (found && !$(found).is(":hidden")) return found;
 
          found = null;
-         this.ForEachFrame(function(frame) {
-            if (!found) found = frame;
-         }, true);
+         this.forEachFrame(frame => { if (!found) found = frame; }, true);
 
          return found;
       }
 
-      ActivateFrame(frame) {
+      activateFrame(frame) {
          if ($(frame).is(":hidden")) {
             $(frame).prev().toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
                     .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end()
@@ -1800,9 +1836,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          this.active_frame_title = d3.select(frame).attr('frame_title');
       }
 
-      CreateFrame(title) {
+      createFrame(title) {
 
-         this.BeforeCreateFrame(title);
+         this.beforeCreateFrame(title);
 
          let topid = this.frameid + '_collapsible';
 
@@ -1839,7 +1875,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          $('#' + uid).find(" .jsroot_collaps_closebtn")
               .button({ icons: { primary: "ui-icon-close" }, text: false })
               .click(function(){
-                 mdi.CleanupFrame($(this).parent().next().attr('id'));
+                 mdi.cleanupFrame($(this).parent().next().attr('id'));
                  $(this).parent().next().remove(); // remove drawing
                  $(this).parent().remove();  // remove header
               });
@@ -1866,7 +1902,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          this.cnt = 0;
       }
 
-      ForEachFrame(userfunc, only_visible) {
+      forEachFrame(userfunc, only_visible) {
          let topid = this.frameid + '_tabs';
 
          if (!document.getElementById(topid)) return;
@@ -1883,15 +1919,15 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          });
       }
 
-      GetActiveFrame() {
+      getActiveFrame() {
          let found = null;
-         this.ForEachFrame(frame => { if (!found) found = frame; }, true);
+         this.forEachFrame(frame => { if (!found) found = frame; }, true);
          return found;
       }
 
-      ActivateFrame(frame) {
+      activateFrame(frame) {
          let cnt = 0, id = -1;
-         this.ForEachFrame(fr => {
+         this.forEachFrame(fr => {
             if ($(fr).attr('id') == $(frame).attr('id')) id = cnt;
             cnt++;
          });
@@ -1900,9 +1936,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          this.active_frame_title = d3.select(frame).attr('frame_title');
       }
 
-      CreateFrame(title) {
+      createFrame(title) {
 
-         this.BeforeCreateFrame(title);
+         this.beforeCreateFrame(title);
 
          let mdi = this,
              topid = this.frameid + '_tabs',
@@ -1926,7 +1962,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
             tabs.delegate("span.ui-icon-close", "click", function() {
                let panelId = $(this).closest("li").remove().attr("aria-controls");
-               mdi.CleanupFrame(panelId);
+               mdi.cleanupFrame(panelId);
                $("#" + panelId).remove();
                tabs.tabs("refresh");
                if ($('#' + topid + '> .tabs_draw').length == 0)
@@ -1947,9 +1983,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          return $('#' + hid).get(0);
       }
 
-      CheckMDIResize(frame_id, size) {
+      checkMDIResize(frame_id, size) {
          $("#" + this.frameid + '_tabs').tabs("refresh");
-         super.CheckMDIResize(frame_id, size);
+         super.checkMDIResize(frame_id, size);
       }
 
    } // class TabsDisplay
@@ -1963,7 +1999,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          this.cnt = 0; // use to count newly created frames
       }
 
-      ForEachFrame(userfunc,  only_visible) {
+      forEachFrame(userfunc,  only_visible) {
          let topid = this.frameid + '_flex';
 
          if (!document.getElementById(topid)) return;
@@ -1977,23 +2013,19 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          });
       }
 
-      GetActiveFrame() {
-         let found = super.GetActiveFrame();
+      getActiveFrame() {
+         let found = super.getActiveFrame();
          if (found && !$(found).is(":hidden")) return found;
 
          found = null;
-         this.ForEachFrame(frame => { if (!found) found = frame; }, true);
+         this.forEachFrame(frame => { if (!found) found = frame; }, true);
 
          return found;
       }
 
-      ActivateFrame(frame) {
-         this.active_frame_title = d3.select(frame).attr('frame_title');
-      }
+      createFrame(title) {
 
-      CreateFrame(title) {
-
-         this.BeforeCreateFrame(title);
+         this.beforeCreateFrame(title);
 
          let topid = this.frameid + '_flex';
 
@@ -2034,7 +2066,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             div = div.find(".flex_draw").get(0);
             let dummy = new JSROOT.ObjectPainter();
             dummy.SetDivId(div, -1);
-            jsrp.SelectActivePad({ pp: dummy.canv_painter(), active: true });
+            jsrp.selectActivePad({ pp: dummy.canv_painter(), active: true });
 
             JSROOT.resize(div);
          }
@@ -2137,7 +2169,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
               .button({ icons: { primary: "ui-icon-close" }, text: false })
               .click(function() {
                  let main = $(this).parent().parent();
-                 mdi.CleanupFrame(main.find(".flex_draw").get(0));
+                 mdi.cleanupFrame(main.find(".flex_draw").get(0));
                  main.remove();
                  PopupWindow('first'); // set active as first window
               })
@@ -2172,7 +2204,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
    // ================== new grid with flexible boundaries ========
 
-   JSROOT.GridDisplay.prototype.CreateSeparator = function(handle, main, group) {
+   JSROOT.GridDisplay.prototype.createSeparator = function(handle, main, group) {
       let separ = $(main.append("div").node());
 
       separ.toggleClass('jsroot_separator', true)
@@ -2265,9 +2297,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       });
    }
 
-   // ========== performs tree drawing on server ==================
-
-   JSROOT.CreateTreePlayer = function(player) {
+   /** @summary Create painter to perform tree drawing on server side
+     * @private */
+   JSROOT.createTreePlayer = function(player) {
 
       player.draw_first = true;
 
@@ -2279,7 +2311,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          this.dflt_expr = dflt_expr;
       }
 
-      player.ConfigureTree = function(tree) {
+      player.configureTree = function(tree) {
          this.local_tree = tree;
       }
 
@@ -2307,13 +2339,16 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       }
 
       player.Show = function(divid, args) {
-         this.drawid = divid + "_draw";
+
+         this.SetDivId(divid, -1); // just to get access to main element
+
+         let main = $(this.select_main().node());
+
+         this.drawid = "jsroot_tree_player_" + JSROOT._.id_counter++ + "_draw";
 
          this.keyup = this.KeyUp.bind(this);
 
          let show_extra = args && (args.parse_cut || args.numentries || args.firstentry);
-
-         let main = $("#" + divid);
 
          main.html("<div class='treedraw_buttons' style='padding-left:0.5em'>" +
                "<button class='treedraw_exe' title='Execute draw expression'>Draw</button>" +
@@ -2344,7 +2379,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             });
          }
 
-         this.CheckResize();
+         this.checkResize();
       }
 
       player.PerformLocalDraw = function() {
@@ -2430,7 +2465,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          }
       }
 
-      player.CheckResize = function(/*arg*/) {
+      player.checkResize = function(/*arg*/) {
          let main = $(this.select_main().node());
 
          $("#" + this.drawid).width(main.width());
@@ -2446,12 +2481,12 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       return player;
    }
 
-   /** function used with THttpServer to assign player for the TTree object
+   /** @summary function used with THttpServer to assign player for the TTree object
      * @private */
    JSROOT.drawTreePlayer = function(hpainter, itemname, askey, asleaf) {
 
-      let item = hpainter.Find(itemname),
-          top = hpainter.GetTopOnlineItem(item),
+      let item = hpainter.findItem(itemname),
+          top = hpainter.getTopOnlineItem(item),
           draw_expr = "", leaf_cnt = 0;
       if (!item || !top) return null;
 
@@ -2462,15 +2497,15 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          itemname = hpainter.itemFullName(item);
       }
 
-      let url = hpainter.GetOnlineItemUrl(itemname);
+      let url = hpainter.getOnlineItemUrl(itemname);
       if (!url) return null;
 
       let root_version = top._root_version ? parseInt(top._root_version) : 396545; // by default use version number 6-13-01
 
-      let mdi = hpainter.GetDisplay();
+      let mdi = hpainter.getDisplay();
       if (!mdi) return null;
 
-      let frame = mdi.FindFrame(itemname, true);
+      let frame = mdi.findFrame(itemname, true);
       if (!frame) return null;
 
       let divid = d3.select(frame).attr('id'),
@@ -2485,7 +2520,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             }
          }
 
-      JSROOT.CreateTreePlayer(player);
+      JSROOT.createTreePlayer(player);
       player.ConfigureOnline(itemname, url, askey, root_version, draw_expr);
       player.Show(divid);
 

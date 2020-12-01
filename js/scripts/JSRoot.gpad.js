@@ -10,6 +10,25 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    // =======================================================================
 
+   JSROOT.EAxisBits = {
+      kDecimals: JSROOT.BIT(7),
+      kTickPlus: JSROOT.BIT(9),
+      kTickMinus: JSROOT.BIT(10),
+      kAxisRange: JSROOT.BIT(11),
+      kCenterTitle: JSROOT.BIT(12),
+      kCenterLabels: JSROOT.BIT(14),
+      kRotateTitle: JSROOT.BIT(15),
+      kPalette: JSROOT.BIT(16),
+      kNoExponent: JSROOT.BIT(17),
+      kLabelsHori: JSROOT.BIT(18),
+      kLabelsVert: JSROOT.BIT(19),
+      kLabelsDown: JSROOT.BIT(20),
+      kLabelsUp: JSROOT.BIT(21),
+      kIsInteger: JSROOT.BIT(22),
+      kMoreLogLabels: JSROOT.BIT(23),
+      kOppositeTitle: JSROOT.BIT(32) // atrificial bit, not possible to set in ROOT
+   };
+
 
    /**
     * @summary Painter for TAxis/TGaxis objects.
@@ -525,7 +544,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          labelfont = new JSROOT.FontHandler(axis.fLabelFont, labelSize);
 
-         this.StartTextDrawing(labelfont, 'font', label_g[lcnt]);
+         this.startTextDrawing(labelfont, 'font', label_g[lcnt]);
 
          for (let nmajor=0;nmajor<lbl_pos.length;++nmajor) {
 
@@ -563,7 +582,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             numDraw++;
             arg.post_process = process_drawtext_ready;
 
-            this.DrawText(arg);
+            this.drawText(arg);
 
             if (lastpos && (pos!=lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
                let axis_step = Math.abs(pos-lastpos);
@@ -574,7 +593,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          if (this.order)
-            this.DrawText({ color: label_color,
+            this.drawText({ color: label_color,
                             x: this.vertical ? side*5 : w+5,
                             y: this.has_obstacle ? fix_coord : (this.vertical ? -3 : -3*side),
                             align: this.vertical ? ((side < 0) ? 30 : 10) : ( (this.has_obstacle ^ (side < 0)) ? 13 : 10 ),
@@ -599,7 +618,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let arr = [];
          for (let lcnt = 0; lcnt < label_g.length; ++lcnt)
-            arr.push(this.FinishTextPromise(label_g[lcnt]));
+            arr.push(this.finishTextDrawing(label_g[lcnt]));
 
          return Promise.all(arr);
       }).then(() => {
@@ -728,11 +747,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.position = 0;
 
-         if (!disable_axis_drawing && ('getBoundingClientRect' in axis_g.node())) {
-            let rect1 = axis_g.node().getBoundingClientRect(),
-                rect2 = this.svg_pad().node().getBoundingClientRect();
+         if (!disable_axis_drawing) {
+            let node1 = axis_g.node(), node2 = this.svg_pad().node();
+            if (node1 && node2 && node1.getBoundingClientRect && node2.getBoundingClientRect) {
+               let rect1 = node1.getBoundingClientRect(),
+                   rect2 = node2.getBoundingClientRect();
 
-            this.position = rect1.left - rect2.left; // use to control left position of Y scale
+               this.position = rect1.left - rect2.left; // use to control left position of Y scale
+            }
+            if (node1 && !node2)
+              console.warn("Why PAD element missing here???");
          }
 
          if (!axis.fTitle || disable_axis_drawing) return true;
@@ -746,7 +770,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              rotate = axis.TestBit(JSROOT.EAxisBits.kRotateTitle) ? -1 : 1,
              title_color = this.get_color(is_gaxis ? axis.fTextColor : axis.fTitleColor);
 
-         this.StartTextDrawing(axis.fTitleFont, title_fontsize, title_g);
+         this.startTextDrawing(axis.fTitleFont, title_fontsize, title_g);
 
          let xor_reverse = swap_side ^ opposite, myxor = (rotate < 0) ^ xor_reverse;
 
@@ -765,7 +789,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             title_shift_y = Math.round(center ? h/2 : (xor_reverse ? h : 0));
 
-            this.DrawText({ align: this.title_align+";middle",
+            this.drawText({ align: this.title_align+";middle",
                             rotate: (rotate<0) ? 90 : 270,
                             text: axis.fTitle, color: title_color, draw_g: title_g });
          } else {
@@ -773,7 +797,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             title_shift_x = Math.round(center ? w/2 : (xor_reverse ? 0 : w));
             title_shift_y = Math.round(title_offest_k*axis.fTitleOffset);
-            this.DrawText({ align: this.title_align+";middle",
+            this.drawText({ align: this.title_align+";middle",
                             rotate: (rotate<0) ? 180 : 0,
                             text: axis.fTitle, color: title_color, draw_g: title_g });
          }
@@ -783,7 +807,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.addTitleDrag(title_g, vertical, title_offest_k, swap_side, vertical ? h : w);
 
-         return this.FinishTextPromise(title_g);
+         return this.finishTextDrawing(title_g);
 
       }).then(() => {
 
@@ -1443,8 +1467,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    TFramePainter.prototype.CleanFrameDrawings = function() {
 
       // cleanup all 3D drawings if any
-      if (typeof this.Create3DScene === 'function')
-         this.Create3DScene(-1);
+      if (typeof this.create3DScene === 'function')
+         this.create3DScene(-1);
 
       this.CleanAxesDrawings();
       this.CleanXY();
@@ -1499,6 +1523,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       JSROOT.ObjectPainter.prototype.Cleanup.call(this);
    }
 
+   /** @summary Redraw frame */
    TFramePainter.prototype.Redraw = function(/* reason */) {
       let pp = this.pad_painter();
       if (pp) pp.frame_painter_ref = this; // keep direct reference to the frame painter
@@ -1701,11 +1726,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
-   TFramePainter.prototype.ConfigureUserClickHandler = function(handler) {
+   /** @summary Configure user-defined click handler
+     * @desc Function will be called every time when frame click was perfromed
+     * As argument, tooltip object with selected bins will be provided
+     * If handler function returns true, default handling of click will be disabled */
+   TFramePainter.prototype.configureUserClickHandler = function(handler) {
       this._click_handler = handler && (typeof handler == 'function') ? handler : null;
    }
 
-   TFramePainter.prototype.ConfigureUserDblclickHandler = function(handler) {
+   /** @summary Configure user-defined dblclick handler
+     * @desc Function will be called every time when double click was called
+     * As argument, tooltip object with selected bins will be provided
+     * If handler function returns true, default handling of dblclick (unzoom) will be disabled */
+   TFramePainter.prototype.configureUserDblclickHandler = function(handler) {
       this._dblclick_handler = handler && (typeof handler == 'function') ? handler : null;
    }
 
@@ -1754,20 +1787,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // first process zooming (if any)
       if (zoom_x || zoom_y || zoom_z)
-         this.ForEachPainter(obj => {
-            if (zoom_x && obj.CanZoomIn("x", xmin, xmax)) {
+         this.forEachPainter(obj => {
+            if (typeof obj.canZoomInside != 'function') return;
+            if (zoom_x && obj.canZoomInside("x", xmin, xmax)) {
                this.zoom_xmin = xmin;
                this.zoom_xmax = xmax;
                changed = true;
                zoom_x = false;
             }
-            if (zoom_y && obj.CanZoomIn("y", ymin, ymax)) {
+            if (zoom_y && obj.canZoomInside("y", ymin, ymax)) {
                this.zoom_ymin = ymin;
                this.zoom_ymax = ymax;
                changed = true;
                zoom_y = false;
             }
-            if (zoom_z && obj.CanZoomIn("z", zmin, zmax)) {
+            if (zoom_z && obj.canZoomInside("z", zmin, zmax)) {
                this.zoom_zmin = zmin;
                this.zoom_zmax = zmax;
                changed = true;
@@ -1968,7 +2002,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.this_pad_name = undefined;
       this.has_canvas = false;
 
-      jsrp.SelectActivePad({ pp: this, active: false });
+      jsrp.selectActivePad({ pp: this, active: false });
 
       JSROOT.ObjectPainter.prototype.Cleanup.call(this);
    }
@@ -2017,13 +2051,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @param {function} userfunc - function to call
      * @param {string} kind - "all" for all objects (default), "pads" only pads and subpads, "objects" only for object in current pad
      * @private */
-   TPadPainter.prototype.ForEachPainterInPad = function(userfunc, kind) {
+   TPadPainter.prototype.forEachPainterInPad = function(userfunc, kind) {
       if (!kind) kind = "all";
       if (kind!="objects") userfunc(this);
       for (let k = 0; k < this.painters.length; ++k) {
          let sub = this.painters[k];
-         if (typeof sub.ForEachPainterInPad === 'function') {
-            if (kind!="objects") sub.ForEachPainterInPad(userfunc, kind);
+         if (typeof sub.forEachPainterInPad === 'function') {
+            if (kind!="objects") sub.forEachPainterInPad(userfunc, kind);
          } else if (kind != "pads") userfunc(sub);
       }
    }
@@ -2040,8 +2074,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    TPadPainter.prototype.PadEvent = function(_what, _padpainter, _painter, _position, _place) {
 
-      if ((_what == "select") && (typeof this.SelectActivePad == 'function'))
-         this.SelectActivePad(_padpainter, _painter, _position);
+      if ((_what == "select") && (typeof this.selectActivePad == 'function'))
+         this.selectActivePad(_padpainter, _painter, _position);
 
       if (this.pad_events_receiver)
          this.pad_events_receiver({ what: _what, padpainter:  _padpainter, painter: _painter, position: _position, place: _place });
@@ -2055,9 +2089,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (_painter === undefined) _painter = this;
 
       if (pos && !istoppad)
-         this.CalcAbsolutePosition(this.svg_pad(), pos);
+         pos = jsrp.getAbsPosInCanvas(this.svg_pad(), pos);
 
-      jsrp.SelectActivePad({ pp: this, active: true });
+      jsrp.selectActivePad({ pp: this, active: true });
 
       if (canp) canp.PadEvent("select", this, _painter, pos, _place);
    }
@@ -2104,7 +2138,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          factor = svg.property('height_factor');
 
-         rect = this.check_main_resize(check_resize, null, factor);
+         rect = this.testMainResize(check_resize, null, factor);
 
          if (!rect.changed) return false;
 
@@ -2160,9 +2194,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             render_to.style("overflow","auto");
             rect = { width: this.pad.fCw, height: this.pad.fCh };
             if (!rect.width || !rect.height)
-               rect = this.get_visible_rect(render_to);
+               rect = jsrp.getElementRect(render_to);
          } else {
-            rect = this.check_main_resize(2, new_size, factor);
+            rect = this.testMainResize(2, new_size, factor);
          }
       }
 
@@ -2219,6 +2253,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return true;
    }
 
+   /** @summary Enlarge pad draw element when possible */
    TPadPainter.prototype.EnlargePad = function(evnt) {
 
       if (evnt) {
@@ -2231,13 +2266,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (this.iscan || !this.has_canvas || (!pad_enlarged && !this.HasObjectsToDraw() && !this.painters)) {
          if (this._fixed_size) return; // canvas cannot be enlarged in such mode
-         if (!this.enlarge_main('toggle')) return;
-         if (this.enlarge_main('state')=='off') svg_can.property("pad_enlarged", null);
+         if (!this.enlargeMain('toggle')) return;
+         if (this.enlargeMain('state')=='off') svg_can.property("pad_enlarged", null);
       } else if (!pad_enlarged) {
-         this.enlarge_main(true, true);
+         this.enlargeMain(true, true);
          svg_can.property("pad_enlarged", this.pad);
       } else if (pad_enlarged === this.pad) {
-         this.enlarge_main(false);
+         this.enlargeMain(false);
          svg_can.property("pad_enlarged", null);
       } else {
          console.error('missmatch with pad double click events');
@@ -2245,7 +2280,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let was_fast = this._fast_drawing;
 
-      this.CheckResize({ force: true });
+      this.checkResize(true);
 
       if (this._fast_drawing != was_fast)
          this.ShowButtons();
@@ -2534,8 +2569,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (this.ActivateStatusBar)
          menu.addchk(this.HasEventStatus(), "Event status", this.ActivateStatusBar.bind(this, 'toggle'));
 
-      if (this.enlarge_main() || (this.has_canvas && this.HasObjectsToDraw()))
-         menu.addchk((this.enlarge_main('state')=='on'), "Enlarge " + (this.iscan ? "canvas" : "pad"), this.EnlargePad.bind(this, null));
+      if (this.enlargeMain() || (this.has_canvas && this.HasObjectsToDraw()))
+         menu.addchk((this.enlargeMain('state')=='on'), "Enlarge " + (this.iscan ? "canvas" : "pad"), this.EnlargePad.bind(this, null));
 
       let fname = this.this_pad_name;
       if (fname.length===0) fname = this.iscan ? "canvas" : "pad";
@@ -2553,7 +2588,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // for debug purposes keep original context menu for small region in top-left corner
          let pos = d3.pointer(evnt, this.svg_pad().node());
 
-         if (pos && (pos.length==2) && (pos[0]>0) && (pos[0]<10) && (pos[1]>0) && pos[1]<10) return;
+         if (pos && (pos.length==2) && (pos[0] >= 0) && (pos[0] < 10) && (pos[1] >= 0) && (pos[1] < 10)) return;
 
          evnt.stopPropagation(); // disable main context menu
          evnt.preventDefault();  // disable browser context menu
@@ -2562,13 +2597,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (fp) fp.SetLastEventPos();
       }
 
-      JSROOT.require('interactive')
-            .then(() => jsrp.createMenu(this, evnt))
-            .then(menu =>
-         {
-            this.FillContextMenu(menu);
-            this.FillObjectExecMenu(menu, "", () => menu.show());
-         });
+      jsrp.createMenu(this, evnt).then(menu => {
+         this.FillContextMenu(menu);
+         return this.fillObjectExecMenu(menu, "");
+      }).then(menu => menu.show());
    }
 
    /** @summary redraw pad */
@@ -2592,7 +2624,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (showsubitems || sub.this_pad_name) sub.Redraw(reason);
       }
 
-      if (jsrp.GetActivePad() === this) {
+      if (jsrp.getActivePad() === this) {
          let canp = this.canv_painter();
          if (canp) canp.PadEvent("padredraw", this );
       }
@@ -2899,7 +2931,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                this.brlayout.Create(mainid, true);
                // this.brlayout.ToggleBrowserKind("float");
                this.SetDivId(this.brlayout.drawing_divid(), -1);  // assign id for drawing
-               JSROOT.RegisterForResize(this.brlayout);
+               JSROOT.registerForResize(this.brlayout);
             }
          }
 
@@ -3009,7 +3041,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       return this.DrawNextSnap(snap.fPrimitives).then(() => {
          this.CurrentPadName(prev_name);
-         if (jsrp.GetActivePad() === this) {
+         if (jsrp.getActivePad() === this) {
             let canp = this.canv_painter();
             if (canp) canp.PadEvent("padredraw", this);
          }
@@ -3204,7 +3236,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let items = []; // keep list of replaced elements, which should be moved back at the end
 
       if (!use_frame) // do not make transformations for the frame
-      painter.ForEachPainterInPad(pp => {
+      painter.forEachPainterInPad(pp => {
 
          let item = { prnt: pp.svg_pad() };
          items.push(item);
@@ -3290,10 +3322,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                  elem.node().innerHTML +
                  '</svg>';
 
-      if (jsrp.ProcessSVGWorkarounds)
-         svg = jsrp.ProcessSVGWorkarounds(svg);
+      if (jsrp.processSvgWorkarounds)
+         svg = jsrp.processSvgWorkarounds(svg);
 
-      svg = jsrp.CompressSVG(svg);
+      svg = jsrp.compressSVG(svg);
 
       if (file_format == "svg") {
          reconstruct();
@@ -3437,7 +3469,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let add_enlarge = !this.iscan && this.has_canvas && this.HasObjectsToDraw()
 
-      if (add_enlarge || this.enlarge_main('verify'))
+      if (add_enlarge || this.enlargeMain('verify'))
          this.AddButton("circle", "Enlarge canvas", "EnlargePad");
 
       if (is_online && this.brlayout) {
@@ -3519,7 +3551,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let prev_name = painter.has_canvas ? painter.CurrentPadName(painter.this_pad_name) : undefined;
 
       // set active pad
-      jsrp.SelectActivePad({ pp: painter, active: true });
+      jsrp.selectActivePad({ pp: painter, active: true });
 
       // flag used to prevent immediate pad redraw during first draw
       return painter.DrawPrimitives().then(() => {
@@ -3563,7 +3595,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Changes layout
      * @returns {Promise} indicating when finished */
    TCanvasPainter.prototype.ChangeLayout = function(layout_kind) {
-      let current = this.get_layout_kind();
+      let current = this.getLayoutKind();
       if (current == layout_kind)
          return Promise.resolve(true);
 
@@ -3576,14 +3608,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!sidebar.empty()) JSROOT.cleanup(sidebar.node());
 
-      this.set_layout_kind("simple"); // restore defaults
+      this.setLayoutKind("simple"); // restore defaults
       origin.html(""); // cleanup origin
 
       if (layout_kind == 'simple') {
          main = origin;
          for (let k=0;k<lst.length;++k)
             main.node().appendChild(lst[k]);
-         this.set_layout_kind(layout_kind);
+         this.setLayoutKind(layout_kind);
          JSROOT.resize(main.node());
          return Promise.resolve(true);
       }
@@ -3593,11 +3625,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let grid = new JSROOT.GridDisplay(origin.node(), layout_kind);
 
          if (layout_kind.indexOf("vert")==0) {
-            main = d3.select(grid.GetFrame(0));
-            sidebar = d3.select(grid.GetFrame(1));
+            main = d3.select(grid.getGridFrame(0));
+            sidebar = d3.select(grid.getGridFrame(1));
          } else {
-            main = d3.select(grid.GetFrame(1));
-            sidebar = d3.select(grid.GetFrame(0));
+            main = d3.select(grid.getGridFrame(1));
+            sidebar = d3.select(grid.getGridFrame(0));
          }
 
          main.classed("central_panel", true).style('position','relative');
@@ -3607,7 +3639,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          for (let k=0;k<lst.length;++k)
             main.node().appendChild(lst[k]);
 
-         this.set_layout_kind(layout_kind, ".central_panel");
+         this.setLayoutKind(layout_kind, ".central_panel");
 
          // remove reference to MDIDisplay, solves resize problem
          origin.property('mdi', null);
@@ -3699,11 +3731,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.SendWebsocket("PRODUCE:" + fname);
    }
 
-   TCanvasPainter.prototype.SubmitMenuRequest = function(painter, kind, reqid, call_back) {
-      // only single request can be handled
-      this._getmenu_callback = call_back;
-
-      this.SendWebsocket('GETMENU:' + reqid); // request menu items for given painter
+   TCanvasPainter.prototype.submitMenuRequest = function(painter, kind, reqid) {
+      // only single request can be handled, no limit better in RCanvas
+      return new Promise(resolveFunc => {
+         this._getmenu_callback = resolveFunc;
+         this.SendWebsocket('GETMENU:' + reqid); // request menu items for given painter
+      });
    }
 
    TCanvasPainter.prototype.SubmitExec = function(painter, exec, snapid) {
@@ -3835,13 +3868,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    TCanvasPainter.prototype.HasEventStatus = function() {
       if (this.testUI5()) return false;
-      return this.brlayout ? this.brlayout.HasStatus() : false;
+      return this.brlayout ? this.brlayout.hasStatus() : false;
    }
 
    TCanvasPainter.prototype.ActivateStatusBar = function(state) {
       if (this.testUI5()) return;
       if (this.brlayout)
-         this.brlayout.CreateStatusLine(23, state);
+         this.brlayout.createStatusLine(23, state);
       this.ProcessChanges("sbits", this);
    }
 
@@ -3888,7 +3921,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (mode === false)
          return Promise.resolve(false);
 
-      let btns = this.brlayout.CreateBrowserBtns();
+      let btns = this.brlayout.createBrowserBtns();
 
       JSROOT.require('interactive').then(inter => {
 
@@ -3942,7 +3975,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
-
+   /** @summary Show section of canvas  like menu or editor */
    TCanvasPainter.prototype.ShowSection = function(that, on) {
       if (this.testUI5())
          return Promise.resolve(false);
@@ -4022,7 +4055,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Select active pad on the canvas */
-   TCanvasPainter.prototype.SelectActivePad = function(pad_painter, obj_painter, click_pos) {
+   TCanvasPainter.prototype.selectActivePad = function(pad_painter, obj_painter, click_pos) {
       if ((this.snapid === undefined) || !pad_painter) return; // only interactive canvas
 
       let arg = null, ischanged = false;
@@ -4032,7 +4065,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!pad_painter.is_active_pad) {
          ischanged = true;
-         this.ForEachPainterInPad(pp => pp.DrawActiveBorder(null, pp === pad_painter), "pads");
+         this.forEachPainterInPad(pp => pp.DrawActiveBorder(null, pp === pad_painter), "pads");
       }
 
       if (obj_painter && (obj_painter.snapid!==undefined) && arg) {
@@ -4071,7 +4104,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!this.normal_canvas) {
 
          // fill list of primitives from painters
-         this.ForEachPainterInPad(p => {
+         this.forEachPainterInPad(p => {
             if (p.$secondary) return; // ignore all secoandry painters
 
             let subobj = p.GetObject();
@@ -4130,7 +4163,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          drawFrame(divid, null);
 
       // select global reference - required for keys handling
-      jsrp.SelectActivePad({ pp: painter, active: true });
+      jsrp.selectActivePad({ pp: painter, active: true });
 
       return painter.DrawPrimitives().then(() => {
          painter.ShowButtons();
