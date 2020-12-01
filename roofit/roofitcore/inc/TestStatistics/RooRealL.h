@@ -37,6 +37,8 @@ public:
    double globalNormalization() const;
 
    double get_carry() const;
+
+   Double_t defaultErrorLevel() const override;
 private:
    std::shared_ptr<RooAbsL> likelihood_;
    mutable double eval_carry = 0;

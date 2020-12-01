@@ -62,5 +62,9 @@ TObject *RooRealL::clone(const char *newname) const
    return new RooRealL(*this, newname);
 }
 
+Double_t RooRealL::defaultErrorLevel() const
+{
+   return 0.5;
+}
 } // namespace TestStatistics
 } // namespace RooFit
