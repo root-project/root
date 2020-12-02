@@ -23,6 +23,7 @@
 
 #include <cmath>
 #include <cassert>
+#include <iomanip>
 
 #include "Minuit2/MPIProcess.h"
 
@@ -198,13 +199,15 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 
    // print after parallel processing to avoid synchronization issues
    print.Debug([&](std::ostream& os) {
-      const int pr = os.precision(13);
-
-      for(int i = 0; i < int(n); i++) {
-        const int iext = Trafo().ExtOfInt(i);
-        os << "Parameter " << Trafo().Name(iext) << " Gradient " << grd(i) << " g2 " << g2(i) << " step " << gstep(i);
-      }
-      os.precision(pr);
+       const int pr = os.precision(13);
+       os << std::endl;
+       os << std::setw(14) << "Parameter" << std::setw(14) << "Gradient" << std::setw(14) << "g2 "
+          << std::setw(14) << "step" << std::endl;
+       for (int i = 0; i < int(n); i++) {
+          const int iext = Trafo().ExtOfInt(i);
+          os << std::setw(14) << Trafo().Name(iext) << " " << grd(i) << " " << g2(i) << " " << gstep(i) << std::endl;
+       }
+       os.precision(pr);
    });
 
    return FunctionGradient(grd, g2, gstep);
