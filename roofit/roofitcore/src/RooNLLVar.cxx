@@ -350,7 +350,7 @@ Double_t RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEv
 
       constexpr bool alwaysPrint = false;
 
-      if (alwaysPrint || fabs(result - resultScalar)/resultScalar > 1.E-15) {
+      if (alwaysPrint || fabs(result - resultScalar)/resultScalar > 5.E-15) {
         std::cerr << "RooNLLVar: result is off\n\t" << std::setprecision(15) << result
             << "\n\t" << resultScalar << std::endl;
       }
