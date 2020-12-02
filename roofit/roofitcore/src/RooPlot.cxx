@@ -1129,10 +1129,10 @@ Double_t RooPlot::chiSquare(const char* curvename, const char* histname, int nFi
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a RooHist containing the residuals of histogram 'histname' with respect
-/// to curve 'curvename'. If normalize is true the residuals are divided by the error
-/// on the histogram, effectively returning a pull histogram
-
+/// Return a RooHist (derives from TGraphAsymErrors) containing the residuals of histogram 'histname' with respect
+/// to curve 'curvename'. If normalize is true, the residuals are divided by the error
+/// of the histogram, effectively returning a pull histogram.
+/// The plotting range of the graph is adapted to the plotting range of the current plot.
 RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool normalize, bool useAverage) const
 {
   // Find curve object
@@ -1149,7 +1149,10 @@ RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool no
     return 0 ;
   }
 
-  return hist->makeResidHist(*curve,normalize,useAverage) ;
+  auto residhist = hist->makeResidHist(*curve,normalize,useAverage);
+  residhist->GetHistogram()->GetXaxis()->SetRangeUser(_hist->GetXaxis()->GetXmin(), _hist->GetXaxis()->GetXmax());
+
+  return residhist;
 }
 
 
