@@ -198,7 +198,7 @@ MakeClusters(const std::vector<std::string> &treeNames, const std::vector<std::s
       // Otherwise, we have to merge clusters, distributing the reminder evenly
       // onto the first clusters
       auto nReminderClusters = clustersInThisFileSize % maxTasksPerFile;
-      const auto clustersInThisFile = *clustersPerFileIt;
+      const auto &clustersInThisFile = *clustersPerFileIt;
       for (auto i = 0ULL; i < clustersInThisFileSize; ++i) {
          const auto start = clustersInThisFile[i].start;
          // We lump together at least nFolds clusters, therefore
