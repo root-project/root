@@ -157,6 +157,8 @@ private:
    }
 
    static void StreamPrefix(std::ostringstream& os);
+
+   // returns true if filters are installed and message is not selected by any filter 
    static bool Hidden();
 
    // see MnPrintImpl.cxx
