@@ -237,6 +237,7 @@ std::list<double>* RooBinSamplingPdf::plotSamplingHint(RooAbsRealLValue& obs, Do
 
   auto binCentres = new std::list<double>;
   const auto& binning = obs.getBinning();
+  binCentres->push_back(xlo);
 
   for (unsigned int bin=0; bin < static_cast<unsigned int>(binning.numBins()); ++bin) {
     const double centre = binning.binCenter(bin);
@@ -244,6 +245,7 @@ std::list<double>* RooBinSamplingPdf::plotSamplingHint(RooAbsRealLValue& obs, Do
     if (xlo <= centre && centre < xhi)
       binCentres->push_back(centre);
   }
+  binCentres->push_back(xhi);
 
   return binCentres;
 }
