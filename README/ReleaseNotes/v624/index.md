@@ -135,6 +135,14 @@ For details, see the RooFit tutorial [rf612_recoverFromInvalidParameters.C](http
 
 ## JavaScript ROOT
 
+### Major JSROOT update to version 6
+- update all used libraries `d3.js`, `three.js`, `MathJax.js`, openui5
+- change to Promise based interface for all async methods, remove call-back arguments
+- change scripts names, core scripts name now `JSRoot.core.js`
+- unify function/methods naming conventions, many changes in method names
+- provide central code loader via `JSROOT.require`, supporting 4 different loading engines
+- many nice features and many bug fixes; see JSROOT v6 release notes
+
 
 ## Tutorials
 
