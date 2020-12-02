@@ -85,7 +85,7 @@
       }
 
       painter.Draw(lst);
-      return painter.DrawingReady();
+      return Promise.resolve(painter);
    }
 
    // register draw function to JSROOT
