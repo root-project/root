@@ -868,7 +868,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Draw axis ticks
      * @returns {Promise} with gaps on left and right side
      * @private */
-   RAxisPainter.prototype.DrawTicks = function(axis_g, side, main_draw) {
+   RAxisPainter.prototype.drawTicks = function(axis_g, side, main_draw) {
       if (main_draw) this.ticks = [];
 
       this.handle.reset();
@@ -930,7 +930,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           textscale = 1, maxtextlen = 0, lbls_tilt = false,
           label_g = axis_g.append("svg:g").attr("class","axis_labels").property('side', side),
           lbl_pos = this.handle.lbl_pos || this.handle.major,
-          max_lbl_width = 0, max_lbl_height = 0, drawCnt = 0, resolveFunc;
+          max_lbl_width = 0, max_lbl_height = 0;
 
       // function called when text is drawn to analyze width, required to correctly scale all labels
       function process_drawtext_ready(painter) {
@@ -947,8 +947,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             textscale = Math.min(textscale, maxwidth / textwidth);
          }
 
-         drawCnt--;
-         if ((drawCnt === 0) && resolveFunc) resolveFunc(true);
+         if ((textscale > 0.01) && (textscale < 0.8) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (side > 0))
+            lbls_tilt = true;
+
+         let scale = textscale * (lbls_tilt ? 3 : 1);
+         if ((scale > 0.01) && (scale < 1))
+            painter.TextScaleFactor(1/scale, label_g);
       }
 
       this.labelsFont = this.v7EvalFont("labels", { size: 0.03 });
@@ -1002,7 +1006,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          arg.post_process = process_drawtext_ready;
 
-         drawCnt++;
          this.drawText(arg);
 
          if (lastpos && (pos!=lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
@@ -1022,23 +1025,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                          draw_g: label_g
          });
 
-      return new Promise(resolve => {
-         if (drawCnt == 0)
-            resolve(true);
-         else
-            resolveFunc = resolve;
-      }).then(() => {
-         if ((textscale > 0.01) && (textscale < 0.8) && !this.vertical && !rotate_lbls && (maxtextlen > 5) && (side>0)) {
-
-            lbls_tilt = true;
-            textscale *= 3;
-         }
-
-         if ((textscale > 0.01) && (textscale < 1))
-            this.TextScaleFactor(1/textscale, label_g);
-
-         return this.finishTextDrawing(label_g);
-      }).then(() => {
+      return this.finishTextDrawing(label_g).then(() => {
 
         if (lbls_tilt)
            label_g.selectAll("text").each(function () {
@@ -1179,7 +1166,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.handle = this.CreateTicks(false, optionNoexp, optionNoopt, optionInt);
 
       // first draw ticks
-      let tgaps = this.DrawTicks(axis_g, side, true);
+      let tgaps = this.drawTicks(axis_g, side, true);
 
       this.optionUnlab = optionUnlab;
 
@@ -1216,7 +1203,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.DrawMainLine(this.axis_g);
 
       // first draw ticks
-      let tgaps = this.DrawTicks(this.axis_g, side, false);
+      let tgaps = this.drawTicks(this.axis_g, side, false);
 
       let labelsPromise = this.optionUnlab ? Promise.resolve(tgaps) : this.drawLabels(this.axis_g, side, tgaps);
 
@@ -1244,7 +1231,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (this.ticksSide == "invert") side = -side;
 
       // draw ticks again
-      let tgaps = this.DrawTicks(axis_g, side, false);
+      let tgaps = this.drawTicks(axis_g, side, false);
 
       // draw labels again
       let promise = this.optionUnlab || only_ticks ? Promise.resolve(tgaps) : this.drawLabels(axis_g, side, tgaps);
@@ -1395,7 +1382,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       menu.add("endsub:");
 
-      if (!this.optionUnlab) {
+      if (!this.optionUnlab && this.labelsFont) {
          menu.add("sub:Labels");
          menu.SizeMenu("offset", -0.05, 0.05, 0.01, this.labelsOffset/this.scaling_size, offset => {
             this.ChangeAxisAttr(1, "labels_offset", offset);

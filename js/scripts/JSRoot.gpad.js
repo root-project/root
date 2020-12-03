@@ -464,7 +464,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
 
    /** @summary Draw axis ticks */
-   TAxisPainter.prototype.DrawTicks = function(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, real_draw) {
+   TAxisPainter.prototype.drawTicks = function(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, real_draw) {
       let res = "", res2 = "", lastpos = 0, lasth = 0;
       this.ticks = [];
 
@@ -512,10 +512,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let label_color = this.get_color(axis.fLabelColor),
           center_lbls = this.IsCenterLabels(),
           rotate_lbls = axis.TestBit(JSROOT.EAxisBits.kLabelsVert),
-          textscale = 1, maxtextlen = 0, labelfont = null,
+          textscale = 1, maxtextlen = 0, applied_scale = 0,
           label_g = [ axis_g.append("svg:g").attr("class","axis_labels") ],
-          lbl_pos = handle.lbl_pos || handle.major,
-          firstResolve, numDraw = 0, lbl_tilt = false;
+          lbl_pos = handle.lbl_pos || handle.major, lbl_tilt = false;
 
       if (this.lbls_both_sides)
          label_g.push(axis_g.append("svg:g").attr("class","axis_labels").attr("transform", this.vertical ? "translate(" + w + ",0)" : "translate(0," + (-h) + ")"));
@@ -532,9 +531,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          } else if (painter.vertical && max_text_width && this.normal_side && (max_text_width - labeloffset > 20) && (textwidth > max_text_width - labeloffset)) {
             textscale = Math.min(textscale, (max_text_width - labeloffset) / textwidth);
          }
-         if ((--numDraw == 0) && firstResolve)
-            firstResolve(true);
+
+         if ((textscale > 0.01) && (textscale < 0.7) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1))
+            lbl_tilt = true;
+
+         let scale = textscale * (lbl_tilt ? 3 : 1);
+
+         if ((scale > 0.01) && (scale < 1)) {
+            applied_scale = 1/scale;
+            painter.TextScaleFactor(applied_scale, label_g[0]);
+         }
       }
+
+      let labelfont = new JSROOT.FontHandler(axis.fLabelFont, labelSize);
 
       for (let lcnt = 0; lcnt < label_g.length; ++lcnt) {
 
@@ -542,11 +551,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let lastpos = 0, fix_coord = this.vertical ? -labeloffset*side : (labeloffset+2)*side + ticksPlusMinus*tickSize;
 
-         labelfont = new JSROOT.FontHandler(axis.fLabelFont, labelSize);
-
          this.startTextDrawing(labelfont, 'font', label_g[lcnt]);
 
-         for (let nmajor=0;nmajor<lbl_pos.length;++nmajor) {
+         for (let nmajor = 0; nmajor < lbl_pos.length; ++nmajor) {
 
             let lbl = this.format(lbl_pos[nmajor], true);
             if (lbl === null) continue;
@@ -579,8 +586,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             if (rotate_lbls) arg.rotate = 270;
 
-            numDraw++;
-            arg.post_process = process_drawtext_ready;
+            // only for major text drawing scale factor need to be checked
+            if (lcnt == 0) arg.post_process = process_drawtext_ready;
 
             this.drawText(arg);
 
@@ -603,26 +610,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             });
       }
 
-      return new Promise(resolve => {
-         if (numDraw === 0)
-            resolve(true);
-         else
-            firstResolve = resolve;
+      // first complete major labels drawing
+      return this.finishTextDrawing(label_g[0]).then(() => {
+         if (label_g.length > 1) {
+            // now complete drawing of second half with scaling if necessary
+            if (applied_scale)
+               this.TextScaleFactor(applied_scale, label_g[1]);
+            return this.finishTextDrawing(label_g[1]);
+          }
+          return true;
       }).then(() => {
-         lbl_tilt = ((textscale > 0.01) && (textscale < 0.7) && !this.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1));
-         if (lbl_tilt) textscale *= 3;
-
-         if ((textscale > 0.01) && (textscale < 1))
-            for (let cnt = 0; cnt < label_g.length; ++cnt)
-               this.TextScaleFactor(1/textscale, label_g[cnt]);
-
-         let arr = [];
-         for (let lcnt = 0; lcnt < label_g.length; ++lcnt)
-            arr.push(this.finishTextDrawing(label_g[lcnt]));
-
-         return Promise.all(arr);
-      }).then(() => {
-
          if (lbl_tilt)
             label_g[0].selectAll("text").each(function() {
                let txt = d3.select(this), tr = txt.attr("transform");
@@ -633,11 +630,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          return labelSize;
       });
-
    }
 
-   /** @summary function draws  TAxis or TGaxis object  */
-   TAxisPainter.prototype.DrawAxis = function(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width) {
+   /** @summary function draws  TAxis or TGaxis object
+     * @returns Promise*/
+   TAxisPainter.prototype.DrawAxis = function(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width, calculate_position) {
 
       let axis = this.GetObject(), chOpt = "",
           is_gaxis = (axis && axis._typename === 'TGaxis'),
@@ -712,7 +709,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let handle = this.CreateTicks(false, optionNoexp, optionNoopt, optionInt);
 
-      this.DrawTicks(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing);
+      this.drawTicks(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing);
 
       let labelSize0 = Math.round( (axis.fLabelSize < 1) ? axis.fLabelSize * text_scaling_size : axis.fLabelSize),
           labeloffset = Math.round(Math.abs(axis.fLabelOffset)*text_scaling_size);
@@ -728,7 +725,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          labelsPromise = Promise.resolve(labelSize0);
 
       return labelsPromise.then(labelSize => {
-
          if (JSROOT.settings.Zooming && !this.disable_zooming && !JSROOT.BatchMode) {
             let r = axis_g.append("svg:rect")
                           .attr("class", "axis_zoom")
@@ -747,7 +743,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.position = 0;
 
-         if (!disable_axis_drawing) {
+         if (calculate_position) {
             let node1 = axis_g.node(), node2 = this.svg_pad().node();
             if (node1 && node2 && node1.getBoundingClientRect && node2.getBoundingClientRect) {
                let rect1 = node1.getBoundingClientRect(),
@@ -756,7 +752,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                this.position = rect1.left - rect2.left; // use to control left position of Y scale
             }
             if (node1 && !node2)
-              console.warn("Why PAD element missing here???");
+               console.warn("Why PAD element missing when search for position");
          }
 
          if (!axis.fTitle || disable_axis_drawing) return true;
@@ -1330,19 +1326,24 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (!disable_axis_draw) {
+
+         let can_adjust_frame = !shrink_forbidden && JSROOT.settings.CanAdjustFrame;
+
          let promise1 = draw_horiz.DrawAxis(layer, w, h,
                                             draw_horiz.invert_side ? undefined : "translate(0," + h + ")",
-                                            pad.fTickx ? -h : 0, disable_axis_draw);
+                                            pad.fTickx ? -h : 0, disable_axis_draw,
+                                            undefined, false);
 
          let promise2 = draw_vertical.DrawAxis(layer, w, h,
                                                draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
                                                pad.fTicky ? w : 0, disable_axis_draw,
-                                               draw_vertical.invert_side ? 0 : this.frame_x());
+                                               draw_vertical.invert_side ? 0 : this.frame_x(), can_adjust_frame);
 
          return Promise.all([promise1, promise2]).then(() => {
+
             this.DrawGrids();
 
-            if (!shrink_forbidden && JSROOT.settings.CanAdjustFrame) {
+            if (can_adjust_frame) {
 
                let shrink = 0., ypos = draw_vertical.position;
 
@@ -2376,7 +2377,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return pad_visible;
    }
 
-   TPadPainter.prototype.CheckSpecial = function(obj) {
+   /** @summary Check if it is special object, which should be handled separately
+     * @desc It can be TStyle or list of colors or palette object
+     * @returns {boolean} tru if any */
+   TPadPainter.prototype.checkSpecial = function(obj) {
 
       if (!obj) return false;
 
@@ -2424,11 +2428,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return false;
    }
 
-   TPadPainter.prototype.CheckSpecialsInPrimitives = function(can) {
+   /** @summary Check if special objects appears in primitives
+     * @desc it could be list of colors or palette */
+   TPadPainter.prototype.checkSpecialsInPrimitives = function(can) {
       let lst = can ? can.fPrimitives : null;
       if (!lst) return;
       for (let i = 0; i < lst.arr.length; ++i) {
-         if (this.CheckSpecial(lst.arr[i])) {
+         if (this.checkSpecial(lst.arr[i])) {
             lst.arr.splice(i,1);
             lst.opt.splice(i,1);
             i--;
@@ -2712,7 +2718,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.pad.fPhi = obj.fPhi;
       this.pad.fTheta = obj.fTheta;
 
-      if (this.iscan) this.CheckSpecialsInPrimitives(obj);
+      if (this.iscan) this.checkSpecialsInPrimitives(obj);
 
       let fp = this.frame_painter();
       if (fp) fp.UpdateAttributes(!fp.modified_NDC);
@@ -4123,14 +4129,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return res;
    }
 
-   /** Check if TGeo objects in the canvas - draw them directly */
-   TCanvasPainter.prototype.DirectGeoDraw = function() {
+   /** @summary Check if TGeo objects in the canvas - draw them directly */
+   TCanvasPainter.prototype.directGeoDraw = function() {
       let lst = this.pad ? this.pad.fPrimitives : null;
-      if (!lst || (lst.arr.length != 1)) return;
-
-      let obj = lst.arr[0];
-      if (obj && obj._typename && (obj._typename.indexOf("TGeo")==0))
-         return JSROOT.draw(this.divid, obj, lst.opt[0]); // return promise
+      if (lst && (lst.arr.length == 1))
+         if (lst.arr[0] && lst.arr[0]._typename && (lst.arr[0]._typename.indexOf("TGeo")==0))
+            return JSROOT.draw(this.divid, lst.arr[0], lst.opt[0]); // return promise
    }
 
    let drawCanvas = (divid, can, opt) => {
@@ -4139,6 +4143,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let painter = new TCanvasPainter(can);
       painter.SetDivId(divid, -1); // just assign id
+      painter.checkSpecialsInPrimitives(can);
 
       if (!nocanvas && can.fCw && can.fCh && !JSROOT.BatchMode) {
          let rect0 = painter.select_main().node().getBoundingClientRect();
@@ -4148,12 +4153,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       }
 
-      let direct = painter.DirectGeoDraw();
+      let direct = painter.directGeoDraw();
       if (direct) return direct;
 
       painter.DecodeOptions(opt);
       painter.normal_canvas = !nocanvas;
-      painter.CheckSpecialsInPrimitives(can);
       painter.CreateCanvasSvg(0);
       painter.SetDivId(divid);  // now add to painters list
 
