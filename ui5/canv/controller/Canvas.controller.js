@@ -65,7 +65,7 @@ sap.ui.define([
          }
 
          if (method.fName == "Inspect") {
-            painter.ShowInspector();
+            painter.showInspector();
             return true;
          }
 
