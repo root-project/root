@@ -1451,9 +1451,9 @@ JSROOT.define(['d3'], (d3) => {
       if (!this.UpdateObject(obj)) return false;
       let current = document.body.style.cursor;
       document.body.style.cursor = 'wait';
-      this.RedrawPad();
+      let res = this.RedrawPad();
       document.body.style.cursor = current;
-      return true;
+      return res || true;
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated
@@ -2438,7 +2438,7 @@ JSROOT.define(['d3'], (d3) => {
 
       if (method.fName == "Inspect") {
          // primitve inspector, keep it here
-         this.ShowInspector();
+         this.showInspector();
          return true;
       }
 
@@ -2467,8 +2467,8 @@ JSROOT.define(['d3'], (d3) => {
       delete this.markeratt;
    }
 
-   /** @summary Show object in inspector */
-   ObjectPainter.prototype.ShowInspector = function(obj) {
+   /** @summary Show object in inspector for provided object */
+   ObjectPainter.prototype.showInspector = function(obj) {
       let main = this.select_main(),
          rect = jsrp.getElementRect(main),
          w = Math.round(rect.width * 0.05) + "px",
@@ -2502,7 +2502,7 @@ JSROOT.define(['d3'], (d3) => {
       menu.AddAttributesMenu(this);
 
       if (menu.size() > 0)
-         menu.add('Inspect', this.ShowInspector);
+         menu.add('Inspect', this.showInspector);
 
       return menu.size() > 0;
    }

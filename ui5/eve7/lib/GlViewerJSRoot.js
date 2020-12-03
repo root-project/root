@@ -80,14 +80,12 @@ sap.ui.define([
             this._effectComposer.addPass( this.fxaa_pass );
          }
 
-         // assign callback function - when needed
-         this.geo_painter.WhenReady(this.onGeoPainterReady.bind(this));
-
          this.geo_painter.setMouseTmout(this.controller.htimeout);
 
          this.geo_painter.AssignObject(null);
 
-         this.geo_painter.prepareObjectDraw(null); // and now start everything
+         this.geo_painter.prepareObjectDraw(null) // and now start everything
+             .then(() => this.onGeoPainterReady(this.geo_painter));
       },
 
       onGeoPainterReady: function(painter)

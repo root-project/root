@@ -1739,7 +1739,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       menu.addDrawMenu("Draw with", sett.opts, function(arg) {
          if (arg==='inspect')
-            return this.ShowInspector();
+            return this.showInspector();
 
          this.DecodeOptions(arg); // obsolete, should be implemented differently
 
@@ -1788,7 +1788,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return false;
    }
 
-   RH1Painter.prototype.CallDrawFunc = function(reason) {
+   RH1Painter.prototype.callDrawFunc = function(reason) {
       let main = this.frame_painter();
 
       if (main && (main.mode3d !== this.options.Mode3D) && !this.is_main_painter())
@@ -1820,7 +1820,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    RH1Painter.prototype.Redraw = function(reason) {
-      this.CallDrawFunc(reason);
+      this.callDrawFunc(reason);
    }
 
    let drawHist1 = (divid, histo, opt) => {
@@ -1859,7 +1859,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       painter.ScanContent();
 
-      painter.CallDrawFunc().then(() => {
+      painter.callDrawFunc().then(() => {
          // if (!painter.options.Mode3D && painter.options.AutoZoom) painter.AutoZoom();
          // painter.FillToolbar();
          painter.DrawingReady();
@@ -1956,7 +1956,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       menu.addDrawMenu("Draw with", sett.opts, function(arg) {
          if (arg==='inspect')
-            return this.ShowInspector();
+            return this.showInspector();
          this.DecodeOptions(arg);
          this.InteractiveRedraw("pad", "drawopt");
       });
@@ -2503,7 +2503,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           func = main.GetProjectionFunc();
 
       let BuildPath = (xp,yp,iminus,iplus,do_close) => {
-         let cmd = "", last, pnt, fisrt, isany;
+         let cmd = "", last, pnt, first, isany;
          for (let i = iminus; i <= iplus; ++i) {
             if (func) {
                pnt = func(xp[i], yp[i]);
@@ -3587,7 +3587,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return JSROOT.require('v7hist3d').then(() => this.Draw3D(reason));
    }
 
-   RH2Painter.prototype.CallDrawFunc = function(reason) {
+   RH2Painter.prototype.callDrawFunc = function(reason) {
       let main = this.frame_painter();
 
       if (main && (main.mode3d !== this.options.Mode3D) && !this.is_main_painter())
@@ -3599,7 +3599,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    RH2Painter.prototype.Redraw = function(reason) {
-      this.CallDrawFunc(reason);
+      this.callDrawFunc(reason);
    }
 
    let drawHist2 = (divid, obj, opt) => {
@@ -3649,7 +3649,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       // painter.CreateStat(); // only when required
 
-      painter.CallDrawFunc().then(() => {
+      painter.callDrawFunc().then(() => {
          //if (!this.options.Mode3D && this.options.AutoZoom) this.AutoZoom();
          // this.FillToolbar();
          //if (this.options.Project && !this.mode3d)

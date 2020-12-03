@@ -31,7 +31,7 @@
 18. Allow to move axis title to opposite position
 19. Fix zooming in color palette
 20. Add support of ZSTD compression
-
+21. Implement monitoring of object inspector
 
 
 ## Changes in 5.9.0
