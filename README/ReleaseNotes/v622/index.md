@@ -923,6 +923,13 @@ no longer there and GUIs can be programmed again from Python, using the `TPyDisp
 
 Published on Friday, November 27, 2020.
 
+## macOS Big Sur support
+
+This version supports macOS 11.0 (aka "Big Sur"), which required several adjustments on ROOT's side.
+Starting with this version, ROOT also supports Apple's ARM-architecture M1 processor ("Apple Silicon").
+Note that `tbb` does not officially support Apple's M1 chip.
+ROOT will implement a workaround for this in an upcoming release.
+
 ### Bugs and Issues fixed in this release
 
 * [#6840](https://github.com/root-project/root/issues/6840) - `TClass` for `pair` sometimes have the wrong offset/size
