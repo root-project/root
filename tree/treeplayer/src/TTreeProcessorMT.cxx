@@ -192,7 +192,7 @@ MakeClusters(const std::vector<std::string> &treeNames, const std::vector<std::s
       // If the number of clusters is less than maxTasksPerFile
       // we take the clusters as they are
       if (nFolds == 0) {
-         *eventRangesPerFileIt = *clustersPerFileIt;
+         *eventRangesPerFileIt = std::move(*clustersPerFileIt);
          continue;
       }
       // Otherwise, we have to merge clusters, distributing the reminder evenly
