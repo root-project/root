@@ -102,7 +102,7 @@ function script_success() {{
 }}
 
 function display_{jsDivId}(Core) {{
-   var obj = Core.JSONR_unref({jsonContent});
+   var obj = Core.parse({jsonContent});
    Core.key_handling = false;
    Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
 }}
