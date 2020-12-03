@@ -2959,7 +2959,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
       menu.addDrawMenu("Draw with", sett.opts, function(arg) {
          if (arg==='inspect')
-            return this.ShowInspector();
+            return this.showInspector();
 
          this.DecodeOptions(arg);
 

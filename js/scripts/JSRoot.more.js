@@ -1829,6 +1829,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return false;
    }
 
+   /** @summary Update TGraph object */
    TGraphPainter.prototype.UpdateObject = function(obj, opt) {
       if (!this.MatchObjectType(obj)) return false;
 
@@ -1856,14 +1857,13 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return true;
    }
 
-   /** @summary Checks if it makes sense to zoom inside specified axis range */
+   /** @summary Checks if it makes sense to zoom inside specified axis range
+     * @desc allow to zoom TGraph only when at least one point in the range */
    TGraphPainter.prototype.canZoomInside = function(axis,min,max) {
-      // allow to zoom TGraph only when at least one point in the range
-
       let gr = this.GetObject();
-      if ((gr===null) || (axis!=="x")) return false;
+      if (!gr || (axis !== "x")) return false;
 
-      for (let n=0; n < gr.fNpoints; ++n)
+      for (let n = 0; n < gr.fNpoints; ++n)
          if ((min < gr.fX[n]) && (gr.fX[n] < max)) return true;
 
       return false;
@@ -1997,17 +1997,24 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (!painter.main_painter() && painter.options.HOptions) {
          let histo = painter.CreateHistogram();
-         promise = JSROOT.draw(divid, histo, painter.options.HOptions);
+         promise = JSROOT.draw(divid, histo, painter.options.HOptions).then(hist_painter => {
+            if (hist_painter) {
+               painter.axes_draw = true;
+               painter.my_debug = 777;
+               if (!painter._own_histogram) painter.$primary = true;
+               hist_painter.$secondary = true;
+            }
+         });
       }
 
       return promise.then(() => {
          painter.SetDivId(divid);
          painter.DrawGraph();
+         // wait until interactive elements assigned
          if (painter.TestEditable() && !JSROOT.BatchMode)
-            JSROOT.require(['interactive'])
-                  .then(inter => inter.DragMoveHandler.AddMove(painter));
-         return painter.drawNextFunction(0);
-      });
+            return JSROOT.require(['interactive'])
+                         .then(inter => inter.DragMoveHandler.AddMove(painter));
+      }).then(() => painter.drawNextFunction(0));
    }
 
    // ==============================================================

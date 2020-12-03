@@ -1106,7 +1106,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
      * @returns {Promise} when done */
    HierarchyPainter.prototype.refreshHtml = function() {
 
-      if (!this.divid) return Promise.resolve();
+      if (!this.divid)
+         return Promise.resolve(this);
 
       let d3elem = this.select_main();
 
@@ -1123,7 +1124,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       });
 
       if (!this.h || d3elem.empty())
-         return Promise.resolve();
+         return Promise.resolve(this);
 
       if (factcmds.length) {
          let fastbtns = d3elem.append("div").attr("class","jsroot");
@@ -1186,7 +1187,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             });
       }
 
-      return Promise.resolve();
+      return Promise.resolve(this);
    }
 
    /** @summary Update item node
@@ -1375,15 +1376,14 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       let hitem = this.findItem(itemname);
       if (!hitem) return;
 
-      if (typeof this.fill_context !== 'function') return;
-
-      jsrp.createMenu(this, evnt).then(menu => {
-         this.fill_context(menu, hitem);
-         if (menu.size() > 0) {
-            menu.tree_node = elem.parentNode;
-            menu.show();
-         }
-      });
+      if (typeof this.fill_context == 'function')
+         jsrp.createMenu(this, evnt).then(menu => {
+            this.fill_context(menu, hitem);
+            if (menu.size() > 0) {
+               menu.tree_node = elem.parentNode;
+               menu.show();
+            }
+         });
    }
 
    /** @summary Handle context menu in the hieararchy
