@@ -33,7 +33,7 @@ public:
    };
 
    RooAbsL() = default;
-   RooAbsL(RooAbsPdf *pdf, RooAbsData *data, bool do_offset, double offset, double offset_carry, std::size_t N_events,
+   RooAbsL(RooAbsPdf *pdf, RooAbsData *data, std::size_t N_events,
            std::size_t N_components, Extended extended = Extended::Auto);
    RooAbsL(const RooAbsL& other);
    virtual ~RooAbsL();
@@ -42,14 +42,14 @@ public:
 
    virtual double evaluate_partition(std::size_t events_begin, std::size_t events_end, std::size_t components_begin,
                                      std::size_t components_end) = 0;
-   virtual double get_carry() const = 0;
+   double get_carry() const;
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
    RooArgSet *getParameters();
    void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt);
 
-   virtual std::string GetName() const;
-   virtual std::string GetTitle() const;
+   std::string GetName() const;
+   std::string GetTitle() const;
 
    // necessary in RooMinimizer (via LikelihoodWrapper)
    virtual double defaultErrorLevel() const;
@@ -63,10 +63,14 @@ public:
    std::size_t get_N_events() const;
    std::size_t get_N_components() const;
 
+   bool is_extended() const;
+
+   void set_sim_count(std::size_t value);
+
 protected:
    virtual void optimize_pdf();
-   std::unique_ptr<RooAbsPdf> pdf;
-   std::unique_ptr<RooAbsData> data;
+   std::unique_ptr<RooAbsPdf> pdf_;
+   std::unique_ptr<RooAbsData> data_;
    RooArgSet *_normSet;      // Pointer to set with observables used for normalization
    bool _do_offset = false;
    double _offset = 0;
@@ -76,6 +80,10 @@ protected:
    std::size_t N_components = 1;
 
    bool extended_ = false;
+
+   std::size_t sim_count_ = 1;  // Total number of component p.d.f.s in RooSimultaneous (if any)
+
+   mutable double eval_carry_ = 0;   //! carry of Kahan sum in evaluatePartition
 };
 
 } // namespace TestStatistics

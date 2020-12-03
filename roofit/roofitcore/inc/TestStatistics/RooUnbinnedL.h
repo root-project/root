@@ -31,20 +31,19 @@ namespace TestStatistics {
 class RooUnbinnedL :
    public RooAbsL {
 public:
-   RooUnbinnedL(RooAbsPdf* pdf, RooAbsData* data, bool do_offset, double offset, double offset_carry, RooAbsL::Extended extended = RooAbsL::Extended::Auto);
+   RooUnbinnedL(RooAbsPdf* pdf, RooAbsData* data, RooAbsL::Extended extended = RooAbsL::Extended::Auto);
    RooUnbinnedL(const RooUnbinnedL &other);
    void set_apply_weight_squared(bool flag);
 
-private:
-   bool processEmptyDataSets() const;
    double evaluate_partition(std::size_t events_begin, std::size_t events_end, std::size_t components_begin,
                              std::size_t components_end) override;
-   double get_carry() const override;
+
+private:
+   bool processEmptyDataSets() const;
    bool apply_weight_squared = false;            // Apply weights squared?
    mutable bool _first = true;       //!
    double _offset_save_weight_squared = 0;      //!
    double _offset_carry_save_weight_squared = 0; //!
-   mutable double _evalCarry = 0;   //! carry of Kahan sum in evaluatePartition
 };
 
 } // namespace TestStatistics

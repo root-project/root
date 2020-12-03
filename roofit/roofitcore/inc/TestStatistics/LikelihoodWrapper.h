@@ -34,8 +34,8 @@ struct WrapperCalculationCleanFlags;
 enum class LikelihoodType {
    unbinned,
    binned,
-   constraint,
-   multi
+//   constraint,
+   simultaneous
 };
 
 class LikelihoodWrapper {

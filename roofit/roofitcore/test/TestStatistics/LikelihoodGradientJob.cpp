@@ -84,7 +84,7 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
    *values = *savedValues;
 
    RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
-   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0);
+   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    std::unique_ptr<RooMinimizer> m1 =
       RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(
          likelihood);
@@ -151,7 +151,7 @@ TEST(LikelihoodGradientJobDEBUGGING, Gaussian1DMultiProcess)
    std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
 
    RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
-   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0);
+   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    std::unique_ptr<RooMinimizer> m1 =
       RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(
          likelihood);
@@ -194,7 +194,7 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
    // --------
 
    RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
-   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0);
+   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    std::unique_ptr<RooMinimizer> m1 =
       RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(
          likelihood);
@@ -290,7 +290,7 @@ TEST_P(LikelihoodGradientJob, GaussianND)
    // --------
 
    RooFit::MultiProcess::JobManager::default_N_workers = NWorkers;
-   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data, false, 0, 0);
+   auto likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    std::unique_ptr<RooMinimizer> m1 =
       RooMinimizer::create<RooFit::TestStatistics::LikelihoodSerial, RooFit::TestStatistics::LikelihoodGradientJob>(
          likelihood);

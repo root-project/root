@@ -41,8 +41,8 @@ In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
 namespace RooFit {
 namespace TestStatistics {
 
-RooBinnedL::RooBinnedL(RooAbsPdf* pdf, RooAbsData* data, bool do_offset, double offset, double offset_carry) :
-   RooAbsL(pdf, data, do_offset, offset, offset_carry, 1, data->numEntries())
+RooBinnedL::RooBinnedL(RooAbsPdf* pdf, RooAbsData* data) :
+   RooAbsL(pdf, data, data->numEntries(), 1)
 {
    // pdf must be a RooRealSumPdf representing a yield vector for a binned likelihood calculation
    if (!dynamic_cast<RooRealSumPdf *>(pdf)) {
@@ -80,8 +80,8 @@ RooBinnedL::RooBinnedL(RooAbsPdf* pdf, RooAbsData* data, bool do_offset, double 
 ///// and the zero event is processed the extended term is added to the return
 ///// likelihood.
 //
-double RooBinnedL::evaluate_partition(std::size_t /*events_begin*/, std::size_t /*events_end*/, std::size_t components_begin,
-                                      std::size_t components_end)
+double RooBinnedL::evaluate_partition(std::size_t bins_begin, std::size_t bins_end, std::size_t /*components_begin*/,
+                                      std::size_t /*components_end*/)
 {
    // Throughout the calculation, we use Kahan's algorithm for summing to
    // prevent loss of precision - this is a factor four more expensive than
@@ -94,22 +94,22 @@ double RooBinnedL::evaluate_partition(std::size_t /*events_begin*/, std::size_t 
 
 //   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?kFALSE:kTRUE));
    // TODO: check when we might need _projDeps (it seems to be mostly empty); ties in with TODO below
-   data->store()->recalculateCache(nullptr, components_begin, components_end, 1, kFALSE);
+   data_->store()->recalculateCache(nullptr, bins_begin, bins_end, 1, kFALSE);
 
    Double_t sumWeight(0), sumWeightCarry(0);
 
-   for (std::size_t i = components_begin; i < components_end; ++i) {
+   for (std::size_t i = bins_begin; i < bins_end; ++i) {
 
-      data->get(i);
+      data_->get(i);
 
-      if (!data->valid())
+      if (!data_->valid())
          continue;
 
-      Double_t eventWeight = data->weight();
+      Double_t eventWeight = data_->weight();
 
       // Calculate log(Poisson(N|mu) for this bin
       Double_t N = eventWeight;
-      Double_t mu = pdf->getVal() * _binw[i];
+      Double_t mu = pdf_->getVal() * _binw[i];
       // cout << "RooNLLVar::binnedL(" << GetName() << ") N=" << N << " mu = " << mu << endl ;
 
       if (mu <= 0 && N > 0) {
@@ -144,16 +144,14 @@ double RooBinnedL::evaluate_partition(std::size_t /*events_begin*/, std::size_t 
    }
 
 
-
-   // TODO: check if this can indeed be left out for (un)binned likelihoods
-//   // If part of simultaneous PDF normalize probability over
-//   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
-//   if (_simCount > 1) {
-//      Double_t y = sumWeight * log(1.0 * _simCount) - carry;
-//      Double_t t = result + y;
-//      carry = (t - result) - y;
-//      result = t;
-//   }
+   // If part of simultaneous PDF normalize probability over
+   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
+   if (sim_count_ > 1) {
+      Double_t y = sumWeight * log(1.0 * sim_count_) - carry;
+      Double_t t = result + y;
+      carry = (t - result) - y;
+      result = t;
+   }
 
    // timer.Stop() ;
    // cout << "RooNLLVar::evalPart(" << GetName() << ") SET=" << _setNum << " first=" << firstEvent << ", last=" <<
@@ -162,7 +160,7 @@ double RooBinnedL::evaluate_partition(std::size_t /*events_begin*/, std::size_t 
    // At the end of the first full calculation, wire the caches
    if (_first) {
       _first = false;
-      pdf->wireAllCaches();
+      pdf_->wireAllCaches();
    }
 
    // Check if value offset flag is set.
@@ -171,8 +169,8 @@ double RooBinnedL::evaluate_partition(std::size_t /*events_begin*/, std::size_t 
       // If no offset is stored enable this feature now
       if (_offset == 0 && result != 0) {
          oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
-            << "RooBinnedL::evaluate_partition(" << GetName() << ") first = " << components_begin
-            << " last = " << components_end << " Likelihood offset now set to " << result << std::endl;
+            << "RooBinnedL::evaluate_partition(" << GetName() << ") first = " << bins_begin
+            << " last = " << bins_end << " Likelihood offset now set to " << result << std::endl;
          _offset = result;
          _offset_carry = carry;
       }
@@ -184,14 +182,10 @@ double RooBinnedL::evaluate_partition(std::size_t /*events_begin*/, std::size_t 
       result = t;
    }
 
-   _evalCarry = carry;
+   eval_carry_ = carry;
    return result;
 }
 
-double RooBinnedL::get_carry() const
-{
-   return _evalCarry;
-}
 
 } // namespace TestStatistics
 } // namespace RooFit

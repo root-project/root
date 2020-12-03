@@ -21,7 +21,7 @@
 #include <TestStatistics/RooUnbinnedL.h>
 #include <TestStatistics/RooBinnedL.h>
 #include <TestStatistics/RooConstraintL.h>
-#include <TestStatistics/RooMultiL.h>
+#include <TestStatistics/RooSimultaneousL.h>
 
 #include "RooRealVar.h"
 #include <ROOT/RMakeUnique.hxx>
@@ -39,10 +39,10 @@ LikelihoodJob::LikelihoodJob(std::shared_ptr<RooAbsL> likelihood, std::shared_pt
       likelihood_type = LikelihoodType::unbinned;
    } else if (dynamic_cast<RooBinnedL*>(likelihood_.get()) != nullptr) {
       likelihood_type = LikelihoodType::binned;
-   } else if (dynamic_cast<RooMultiL*>(likelihood_.get()) != nullptr) {
-      likelihood_type = LikelihoodType::multi;
-   } else if (dynamic_cast<RooConstraintL*>(likelihood_.get()) != nullptr) {
-      likelihood_type = LikelihoodType::constraint;
+   } else if (dynamic_cast<RooSimultaneousL*>(likelihood_.get()) != nullptr) {
+      likelihood_type = LikelihoodType::simultaneous;
+//   } else if (dynamic_cast<RooConstraintL*>(likelihood_.get()) != nullptr) {
+//      likelihood_type = LikelihoodType::constraint;
    } else {
       throw std::logic_error("in LikelihoodJob constructor: likelihood is not of a valid subclass!");
    }
@@ -217,12 +217,9 @@ void LikelihoodJob::evaluate_task(std::size_t task) {
    std::size_t last  = N_events * (task + 1) / get_manager()->process_manager().N_workers();
 
    switch (likelihood_type) {
-   case LikelihoodType::unbinned: {
-      result = likelihood_->evaluate_partition(first, last, 0, 0);
-      break;
-   }
+   case LikelihoodType::unbinned:
    case LikelihoodType::binned: {
-      result = likelihood_->evaluate_partition(0, 0, first, last);
+      result = likelihood_->evaluate_partition(first, last, 0, 0);
       break;
    }
    default: {

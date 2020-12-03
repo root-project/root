@@ -19,7 +19,7 @@ namespace TestStatistics {
 
 LikelihoodGradientWrapper::LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood,
                                                      std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
-                                                     std::size_t N_dim, RooMinimizer *minimizer)
+                                                     std::size_t /*N_dim*/, RooMinimizer *minimizer)
    : likelihood(std::move(likelihood)), _minimizer(minimizer),
      calculation_is_clean(std::move(calculation_is_clean)) /*, _minimizer_fcn(minimizer_fcn)*/
 {

@@ -37,15 +37,15 @@ In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
 namespace RooFit {
 namespace TestStatistics {
 
-RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, bool do_offset, double offset, double offset_carry,
+RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data,
                            RooAbsL::Extended extended)
-   : RooAbsL(pdf, data, do_offset, offset, offset_carry, data->numEntries(), 1, extended)
+   : RooAbsL(pdf, data, data->numEntries(), 1, extended)
 {}
 
 RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
    : RooAbsL(other), apply_weight_squared(other.apply_weight_squared), _first(other._first),
      _offset_save_weight_squared(other._offset_save_weight_squared),
-     _offset_carry_save_weight_squared(other._offset_carry_save_weight_squared), _evalCarry(other._evalCarry)
+     _offset_carry_save_weight_squared(other._offset_carry_save_weight_squared)
 {}
 
 
@@ -86,25 +86,25 @@ double RooUnbinnedL::evaluate_partition(std::size_t events_begin, std::size_t ev
 
    //   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?kFALSE:kTRUE));
    // TODO: check when we might need _projDeps (it seems to be mostly empty); ties in with TODO below
-   data->store()->recalculateCache(nullptr, events_begin, events_end, 1, kTRUE);
+   data_->store()->recalculateCache(nullptr, events_begin, events_end, 1, kTRUE);
 
    Double_t sumWeight(0), sumWeightCarry(0);
 
    for (std::size_t i = events_begin; i < events_end; ++i) {
-      data->get(i);
-      if (!data->valid()) {
+      data_->get(i);
+      if (!data_->valid()) {
          continue;
       }
 
-      Double_t eventWeight = data->weight();
+      Double_t eventWeight = data_->weight();
       if (0. == eventWeight * eventWeight) {
          continue;
       }
       if (apply_weight_squared) {
-         eventWeight = data->weightSquared();
+         eventWeight = data_->weightSquared();
       }
 
-      Double_t term = -eventWeight * pdf->getLogVal(_normSet);
+      Double_t term = -eventWeight * pdf_->getLogVal(_normSet);
       // TODO: _normSet should be modified if _projDeps is non-null, connected to TODO above
 
       Double_t y = eventWeight - sumWeightCarry;
@@ -124,15 +124,15 @@ double RooUnbinnedL::evaluate_partition(std::size_t events_begin, std::size_t ev
 
          // Calculate sum of weights-squared here for extended term
          Double_t sumW2(0), sumW2carry(0);
-         for (std::size_t i = 0; i < data->numEntries(); i++) {
-            data->get(i);
-            Double_t y = data->weightSquared() - sumW2carry;
+         for (std::size_t i = 0; i < data_->numEntries(); i++) {
+            data_->get(i);
+            Double_t y = data_->weightSquared() - sumW2carry;
             Double_t t = sumW2 + y;
             sumW2carry = (t - sumW2) - y;
             sumW2 = t;
          }
 
-         Double_t expected = pdf->expectedEvents(data->get());
+         Double_t expected = pdf_->expectedEvents(data_->get());
 
          // Adjust calculation of extended term with W^2 weighting: adjust poisson such that
          // estimate of Nexpected stays at the same value, but has a different variance, rescale
@@ -149,7 +149,7 @@ double RooUnbinnedL::evaluate_partition(std::size_t events_begin, std::size_t ev
          //  sum[w^2] / sum[w] * expected - sum[w^2] * log (expectedW)
          //  and since the weights are constants in the likelihood we can use log(expected) instead of log(expectedW)
 
-         Double_t expectedW2 = expected * sumW2 / data->sumEntries();
+         Double_t expectedW2 = expected * sumW2 / data_->sumEntries();
          Double_t extra = expectedW2 - sumW2 * log(expected);
 
          // Double_t y = pdf->extendedTerm(sumW2, data->get()) - carry;
@@ -160,22 +160,21 @@ double RooUnbinnedL::evaluate_partition(std::size_t events_begin, std::size_t ev
          carry = (t - result) - y;
          result = t;
       } else {
-         Double_t y = pdf->extendedTerm(data->sumEntries(), data->get()) - carry;
+         Double_t y = pdf_->extendedTerm(data_->sumEntries(), data_->get()) - carry;
          Double_t t = result + y;
          carry = (t - result) - y;
          result = t;
       }
    }
 
-   // TODO: check if this can indeed be left out for (un)binned likelihoods
-   //   // If part of simultaneous PDF normalize probability over
-   //   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
-   //   if (_simCount > 1) {
-   //      Double_t y = sumWeight * log(1.0 * _simCount) - carry;
-   //      Double_t t = result + y;
-   //      carry = (t - result) - y;
-   //      result = t;
-   //   }
+   // If part of simultaneous PDF normalize probability over
+   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
+   if (sim_count_ > 1) {
+      Double_t y = sumWeight * log(1.0 * sim_count_) - carry;
+      Double_t t = result + y;
+      carry = (t - result) - y;
+      result = t;
+   }
 
    // timer.Stop() ;
    // cout << "RooNLLVar::evalPart(" << GetName() << ") SET=" << _setNum << " first=" << firstEvent << ", last=" <<
@@ -184,7 +183,7 @@ double RooUnbinnedL::evaluate_partition(std::size_t events_begin, std::size_t ev
    // At the end of the first full calculation, wire the caches
    if (_first) {
       _first = false;
-      pdf->wireAllCaches();
+      pdf_->wireAllCaches();
    }
 
    // Check if value offset flag is set.
@@ -206,13 +205,8 @@ double RooUnbinnedL::evaluate_partition(std::size_t events_begin, std::size_t ev
       result = t;
    }
 
-   _evalCarry = carry;
+   eval_carry_ = carry;
    return result;
-}
-
-double RooUnbinnedL::get_carry() const
-{
-   return _evalCarry;
 }
 
 } // namespace TestStatistics

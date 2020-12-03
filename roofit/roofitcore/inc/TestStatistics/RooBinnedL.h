@@ -33,14 +33,12 @@ namespace TestStatistics {
 class RooBinnedL :
    public RooAbsL {
 public:
-   RooBinnedL(RooAbsPdf* pdf, RooAbsData* data, bool do_offset, double offset, double offset_carry);
-private:
+   RooBinnedL(RooAbsPdf* pdf, RooAbsData* data);
    double evaluate_partition(std::size_t events_begin, std::size_t events_end, std::size_t components_begin,
                              std::size_t components_end) override;
+private:
    mutable bool _first = true;       //!
    mutable std::vector<double> _binw; //!
-   double get_carry() const override;
-   mutable double _evalCarry = 0;   //! carry of Kahan sum in evaluatePartitio
 };
 
 } // namespace TestStatistics

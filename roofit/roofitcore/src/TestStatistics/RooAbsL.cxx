@@ -28,16 +28,16 @@
 namespace RooFit {
 namespace TestStatistics {
 
-RooAbsL::RooAbsL(RooAbsPdf *inpdf, RooAbsData *indata, bool do_offset, double offset, double offset_carry,
+RooAbsL::RooAbsL(RooAbsPdf *inpdf, RooAbsData *indata,
                  std::size_t N_events, std::size_t N_components, Extended extended)
-   : pdf(static_cast<RooAbsPdf *>(inpdf->cloneTree())), data(static_cast<RooAbsData *>(indata->Clone())),
-     _do_offset(do_offset), _offset(offset), _offset_carry(offset_carry), N_events(N_events), N_components(N_components)
+   : pdf_(static_cast<RooAbsPdf *>(inpdf->cloneTree())), data_(static_cast<RooAbsData *>(indata->Clone())),
+     N_events(N_events), N_components(N_components)
 {
    //   std::unique_ptr<RooArgSet> obs {pdf->getObservables(*data)};
    //   data->attachBuffers(*obs);
    // Process automatic extended option
    if (extended == Extended::Auto) {
-      extended_ = ((pdf->extendMode() == RooAbsPdf::CanBeExtended || pdf->extendMode() == RooAbsPdf::MustBeExtended))
+      extended_ = ((pdf_->extendMode() == RooAbsPdf::CanBeExtended || pdf_->extendMode() == RooAbsPdf::MustBeExtended))
                      ? true
                      : false;
       if (extended_) {
@@ -51,11 +51,11 @@ RooAbsL::RooAbsL(RooAbsPdf *inpdf, RooAbsData *indata, bool do_offset, double of
 }
 
 RooAbsL::RooAbsL(const RooAbsL &other)
-   : pdf(static_cast<RooAbsPdf *>(other.pdf->cloneTree())), data(static_cast<RooAbsData *>(other.data->Clone())),
+   : pdf_(static_cast<RooAbsPdf *>(other.pdf_->cloneTree())), data_(static_cast<RooAbsData *>(other.data_->Clone())),
      _do_offset(other._do_offset), _offset(other._offset), _offset_carry(other._offset_carry), N_events(other.N_events),
-     N_components(other.N_components), extended_(other.extended_)
+     N_components(other.N_components), extended_(other.extended_), sim_count_(other.sim_count_), eval_carry_(other.eval_carry_)
 {
-   init_clones(*other.pdf, *other.data);
+   init_clones(*other.pdf_, *other.data_);
 }
 
 RooAbsL::~RooAbsL()
@@ -76,15 +76,15 @@ void RooAbsL::init_clones(RooAbsPdf &inpdf, RooAbsData &indata)
    //   pdf = static_cast<RooAbsPdf *>(inpdf->cloneTree());
 
    // Attach FUNC to data set
-   auto _funcObsSet = pdf->getObservables(indata);
+   auto _funcObsSet = pdf_->getObservables(indata);
 
-   if (pdf->getAttribute("BinnedLikelihood")) {
-      pdf->setAttribute("BinnedLikelihoodActive");
+   if (pdf_->getAttribute("BinnedLikelihood")) {
+      pdf_->setAttribute("BinnedLikelihoodActive");
    }
 
    // Reattach FUNC to original parameters
    std::unique_ptr<RooArgSet> origParams{inpdf.getParameters(indata)};
-   pdf->recursiveRedirectServers(*origParams);
+   pdf_->recursiveRedirectServers(*origParams);
 
    // Mark all projected dependents as such
    //   if (projDeps.getSize()>0) {
@@ -93,7 +93,7 @@ void RooAbsL::init_clones(RooAbsPdf &inpdf, RooAbsData &indata)
    //      delete projDataDeps ;
    //   }
 
-   // TODO: do we need this here? Or in RooMultiL?
+   // TODO: do we need this here? Or in RooSimultaneousL?
    //   // If PDF is a RooProdPdf (with possible constraint terms)
    //   // analyze pdf for actual parameters (i.e those in unconnected constraint terms should be
    //   // ignored as here so that the test statistic will not be recalculated if those
@@ -269,7 +269,7 @@ void RooAbsL::init_clones(RooAbsPdf &inpdf, RooAbsData &indata)
 
    // This is deferred from part 2 - but must happen after part 3 - otherwise invalid bins cannot be properly marked in
    // cacheValidEntries
-   data->attachBuffers(*_funcObsSet);
+   data_->attachBuffers(*_funcObsSet);
    // TODO: we pass event count to the ctor in the subclasses currently, because it's split into components and events
    // now
    //   setEventCount(data->numEntries());
@@ -331,16 +331,16 @@ void RooAbsL::init_clones(RooAbsPdf &inpdf, RooAbsData &indata)
 
    // optimization steps (copied from ROATS::optimizeCaching)
 
-   pdf->getVal(_normSet);
+   pdf_->getVal(_normSet);
    // Set value caching mode for all nodes that depend on any of the observables to ADirty
-   pdf->optimizeCacheMode(*_funcObsSet);
+   pdf_->optimizeCacheMode(*_funcObsSet);
    // Disable propagation of dirty state flags for observables
-   data->setDirtyProp(kFALSE);
+   data_->setDirtyProp(kFALSE);
 }
 
 RooArgSet *RooAbsL::getParameters()
 {
-   return pdf->getParameters(*data);
+   return pdf_->getParameters(*data_);
 }
 
 void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/)
@@ -351,14 +351,14 @@ void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode /*opcode*/, bool
 std::string RooAbsL::GetName() const
 {
    std::string output("likelihood of pdf ");
-   output.append(pdf->GetName());
+   output.append(pdf_->GetName());
    return output;
 }
 
 std::string RooAbsL::GetTitle() const
 {
    std::string output("likelihood of pdf ");
-   output.append(pdf->GetTitle());
+   output.append(pdf_->GetTitle());
    return output;
 }
 
@@ -368,7 +368,7 @@ double RooAbsL::defaultErrorLevel() const
 }
 std::size_t RooAbsL::numDataEntries() const
 {
-   return static_cast<std::size_t>(data->numEntries());
+   return static_cast<std::size_t>(data_->numEntries());
 }
 
 bool RooAbsL::is_offsetting() const
@@ -399,6 +399,22 @@ std::size_t RooAbsL::get_N_components() const
 {
    return N_components;
 }
+
+double RooAbsL::get_carry() const
+{
+   return eval_carry_;
+}
+
+bool RooAbsL::is_extended() const
+{
+   return extended_;
+}
+
+void RooAbsL::set_sim_count(std::size_t value)
+{
+   sim_count_ = value;
+}
+
 
 } // namespace TestStatistics
 } // namespace RooFit

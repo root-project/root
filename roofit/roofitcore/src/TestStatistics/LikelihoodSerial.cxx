@@ -22,7 +22,7 @@
 #include <TestStatistics/RooUnbinnedL.h>
 #include <TestStatistics/RooBinnedL.h>
 #include <TestStatistics/RooConstraintL.h>
-#include <TestStatistics/RooMultiL.h>
+#include <TestStatistics/RooSimultaneousL.h>
 
 #include "RooRealVar.h"
 #include <ROOT/RMakeUnique.hxx>
@@ -40,10 +40,10 @@ LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::sha
       likelihood_type = LikelihoodType::unbinned;
    } else if (dynamic_cast<RooBinnedL *>(likelihood_.get()) != nullptr) {
       likelihood_type = LikelihoodType::binned;
-   } else if (dynamic_cast<RooMultiL *>(likelihood_.get()) != nullptr) {
-      likelihood_type = LikelihoodType::multi;
-   } else if (dynamic_cast<RooConstraintL *>(likelihood_.get()) != nullptr) {
-      likelihood_type = LikelihoodType::constraint;
+   } else if (dynamic_cast<RooSimultaneousL *>(likelihood_.get()) != nullptr) {
+      likelihood_type = LikelihoodType::simultaneous;
+//   } else if (dynamic_cast<RooConstraintL *>(likelihood_.get()) != nullptr) {
+//      likelihood_type = LikelihoodType::constraint;
    } else {
       throw std::logic_error("in LikelihoodSerial constructor: _likelihood is not of a valid subclass!");
    }
@@ -93,21 +93,29 @@ void LikelihoodSerial::evaluate() {
    std::size_t N_events = likelihood_->numDataEntries();
 
    switch (likelihood_type) {
-   case LikelihoodType::unbinned: {
+   case LikelihoodType::unbinned:
+   case LikelihoodType::binned: {
       result = likelihood_->evaluate_partition(0, N_events, 0, 0);
+      carry = likelihood_->get_carry();
       break;
    }
-   case LikelihoodType::binned: {
-      result = likelihood_->evaluate_partition(0, 0, 0, N_events);
+   case LikelihoodType::simultaneous: {
+      result = likelihood_->evaluate_partition(0, N_events, 0, likelihood_->get_N_components());
+      carry = likelihood_->get_carry();
+      // TODO: this normalization part below came from RooOptTestStatistic::evaluate, probably this just means you need to do the normalization on master only when doing parallel calculation. Make sure of this! In any case, it is currently not relevant, because the norm term is 1 by default and is only overridden for the RooDataWeightAverage class.
+//      // Only apply global normalization if SimMaster doesn't have MP master
+//      if (numSets() == 1) {
+//         const Double_t norm = globalNormalization();
+//         result /= norm;
+//         carry /= norm;
+//      }
       break;
    }
    default: {
-      throw std::logic_error("in LikelihoodSerial::evaluate_task: likelihood types other than binned and unbinned not yet implemented!");
+      throw std::logic_error("in LikelihoodSerial::evaluate_task: likelihood types other than binned, unbinned and simultaneous not yet implemented!");
       break;
    }
    }
-   carry = likelihood_->get_carry();
-
 }
 
 double LikelihoodSerial::return_result() const

@@ -260,7 +260,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         TestStatistics/RooAbsL.h
         TestStatistics/RooBinnedL.h
         TestStatistics/RooConstraintL.h
-        TestStatistics/RooMultiL.h
+        TestStatistics/RooSimultaneousL.h
         TestStatistics/RooRealL.h
         TestStatistics/RooUnbinnedL.h
         TestStatistics/kahan_sum.h
@@ -502,7 +502,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/TestStatistics/RooAbsL.cxx
         src/TestStatistics/RooBinnedL.cxx
         src/TestStatistics/RooConstraintL.cxx
-        src/TestStatistics/RooMultiL.cxx
+        src/TestStatistics/RooSimultaneousL.cxx
         src/TestStatistics/RooRealL.cxx
         src/TestStatistics/RooUnbinnedL.cxx
         src/RooAbsMinimizerFcn.cxx
