@@ -636,8 +636,8 @@ void TParallelCoordEditor::DoEntriesToDraw()
    if (fAvoidSignal) return;
 
    Long64_t nentries,firstentry;
-   firstentry = (Long64_t)fEntriesToDraw->GetMinPosition();
-   nentries = (Long64_t)(fEntriesToDraw->GetMaxPosition() - fEntriesToDraw->GetMinPosition() + 1);
+   firstentry = (Long64_t)fEntriesToDraw->GetMinPositionD();
+   nentries = (Long64_t)(fEntriesToDraw->GetMaxPositionD() - fEntriesToDraw->GetMinPositionD() + 1);
 
    fParallel->SetCurrentFirst(firstentry);
    fParallel->SetCurrentN(nentries);
@@ -652,7 +652,7 @@ void TParallelCoordEditor::DoFirstEntry()
    if (fAvoidSignal) return;
 
    fParallel->SetCurrentFirst((Long64_t)fFirstEntry->GetNumber());
-   fEntriesToDraw->SetPosition((Long64_t)fFirstEntry->GetNumber(),(Long64_t)fFirstEntry->GetNumber()+fParallel->GetCurrentN());
+   fEntriesToDraw->SetPositionD((Long64_t)fFirstEntry->GetNumber(),(Long64_t)fFirstEntry->GetNumber()+fParallel->GetCurrentN());
    Update();
 }
 
@@ -806,8 +806,8 @@ void TParallelCoordEditor::DoLiveEntriesToDraw()
    if (fAvoidSignal) return;
 
    Long64_t nentries,firstentry;
-   firstentry = (Long64_t)fEntriesToDraw->GetMinPosition();
-   nentries = (Long64_t)(fEntriesToDraw->GetMaxPosition() - fEntriesToDraw->GetMinPosition() + 1);
+   firstentry = (Long64_t)fEntriesToDraw->GetMinPositionD();
+   nentries = (Long64_t)(fEntriesToDraw->GetMaxPositionD() - fEntriesToDraw->GetMinPositionD() + 1);
 
    fFirstEntry->SetNumber(firstentry);
    fNentries->SetNumber(nentries);
@@ -841,7 +841,7 @@ void TParallelCoordEditor::DoNentries()
    if (fAvoidSignal) return;
 
    fParallel->SetCurrentN((Long64_t)fNentries->GetNumber());
-   fEntriesToDraw->SetPosition(fParallel->GetCurrentFirst(),fParallel->GetCurrentFirst()+fParallel->GetCurrentN());
+   fEntriesToDraw->SetPositionD(fParallel->GetCurrentFirst(),fParallel->GetCurrentFirst()+fParallel->GetCurrentN());
    Update();
 }
 
@@ -985,8 +985,8 @@ void TParallelCoordEditor::SetModel(TObject* obj)
    CleanUpSelections();
    CleanUpVariables();
 
-   if (fInit) fEntriesToDraw->SetRange(0,fParallel->GetNentries());
-   fEntriesToDraw->SetPosition(fParallel->GetCurrentFirst(), fParallel->GetCurrentFirst()+fParallel->GetCurrentN());
+   if (fInit) fEntriesToDraw->SetRangeD(0,fParallel->GetNentries());
+   fEntriesToDraw->SetPositionD(fParallel->GetCurrentFirst(), fParallel->GetCurrentFirst()+fParallel->GetCurrentN());
 
    fFirstEntry->SetNumber(fParallel->GetCurrentFirst());
    fNentries->SetNumber(fParallel->GetCurrentN());
