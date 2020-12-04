@@ -24,7 +24,7 @@ fi
 # Print IMT messages from the application
 cat ${TESTNAME}.out | grep -e " \[IMT\]"
 
-grep -v -e "Info in" ${TESTNAME}.err | cat > /dev/stderr
+grep -v -e "Info in"  -e 'HEAD http' -e 'GET http' -e 'Host:' -e 'User-Agent:' -e 'Range: ' -e '^\s*$' ${TESTNAME}.err | cat > /dev/stderr
 
 # Print number of tasks executed
 NUMTASKS=`cat ${TESTNAME}.err | grep -e "\[IMT\] Running task" | wc -l`
