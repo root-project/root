@@ -54,7 +54,7 @@ protected:
    ///\}
 
    /// Default construct a RAxisBase (for use by derived classes for I/O)
-   RAxisBase() noexcept = default;
+   RAxisBase() noexcept(noexcept(std::string())) = default;
 
    /// Virtual destructor needed in this inheritance-based design
    virtual ~RAxisBase();
