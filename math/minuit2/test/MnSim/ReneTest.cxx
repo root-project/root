@@ -19,6 +19,7 @@
 #include "Minuit2/FCNBase.h"
 #include "Minuit2/MnScan.h"
 #include "Minuit2/MnPlot.h"
+#include <iostream>
 
 using namespace ROOT::Minuit2;
 
@@ -52,7 +53,10 @@ public:
 //       double nexp2 = 0.5*p0*p1/M_PI;
 //       double nexp3 = std::max(1.e-10, (xi-p2)*(xi-p2) + 0.25*p1*p1);
 //       double nexp = nexp1 + nexp2/nexp3;
-      double nexp = a*xi*xi + b*xi + c + (0.5*p0*p1/M_PI)/std::max(1.e-10, (xi-p2)*(xi-p2) + 0.25*p1*p1);
+
+      constexpr double two_pi = 2 * 3.14159265358979323846; // M_PI is not standard
+
+      double nexp = a*xi*xi + b*xi + c + (p0*p1/two_pi)/std::max(1.e-10, (xi-p2)*(xi-p2) + 0.25*p1*p1);
       fval += (ni-nexp)*(ni-nexp)/ei;
     }
     return fval;
@@ -216,4 +220,3 @@ int main() {
 
   return 0;
 }
-

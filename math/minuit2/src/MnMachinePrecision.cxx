@@ -24,18 +24,18 @@ MnMachinePrecision::MnMachinePrecision() {
    // std::numeric_limitys::epsilon w.r.t DLAMCH epsilon
    
    fEpsMac = 4. * std::numeric_limits<double>::epsilon();
-   fEpsMa2 = 2.*sqrt(fEpsMac);
+   fEpsMa2 = 2.*std::sqrt(fEpsMac);
 }
 void MnMachinePrecision::ComputePrecision() {
    fEpsMac = 4.0E-7;
-   fEpsMa2 = 2.*sqrt(fEpsMac);
+   fEpsMa2 = 2.*std::sqrt(fEpsMac);
 
    //determine machine precision using
    // code similar to DLAMCH LAPACK Fortran function
    /*
        char e[] = {"e"};
        fEpsMac = 8.*dlamch_(e);
-       fEpsMa2 = 2.*sqrt(fEpsMac);
+       fEpsMa2 = 2.*std::sqrt(fEpsMac);
    */
 
    MnTiny mytiny;
@@ -51,7 +51,7 @@ void MnMachinePrecision::ComputePrecision() {
       epsbak = mytiny(epsp1);
       if(epsbak < epstry) {
          fEpsMac = 8.*epstry;
-         fEpsMa2 = 2.*sqrt(fEpsMac);
+         fEpsMa2 = 2.*std::sqrt(fEpsMac);
          break;
       }
    }

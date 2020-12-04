@@ -80,12 +80,12 @@ int main() {
   double rms2 = x2/norm - mean*mean;
 
   std::cout<<"initial mean: "<<mean<<std::endl;
-  std::cout<<"initial sigma: "<<sqrt(rms2)<<std::endl;
+  std::cout<<"initial sigma: "<<std::sqrt(rms2)<<std::endl;
   std::cout<<"initial area: "<<area<<std::endl;
 
   MnUserParameters upar;
   upar.Add("mean", mean, 0.1);
-  upar.Add("sigma", sqrt(rms2), 0.1);
+  upar.Add("sigma", std::sqrt(rms2), 0.1);
   upar.Add("area", area, 0.1);
 
   MnMigrad migrad(fFCN, upar);

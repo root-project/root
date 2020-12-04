@@ -12,14 +12,12 @@
 
 #include <vector>
 #include <cmath>
-#include <float.h>
+#include <limits>
 
 namespace ROOT {
 
    namespace Minuit2 {
 
-
-//#include <iostream>
 
 std::vector<double> FumiliStandardMaximumLikelihoodFCN::Elements(const std::vector<double>& par) const {
 
@@ -68,9 +66,9 @@ int FumiliStandardMaximumLikelihoodFCN::GetNumberOfMeasurements() const {
 void  FumiliStandardMaximumLikelihoodFCN::EvaluateAll( const std::vector<double> & par) {
    // Evaluate in one loop likelihood value, gradient and hessian
 
-   static double minDouble = 8.0*DBL_MIN;
-   static double minDouble2 = std::sqrt(8.0*DBL_MIN);
-   static double maxDouble2 = 1.0/minDouble2;
+   const double minDouble = 8.0*std::numeric_limits<double>::min();
+   const double minDouble2 = std::sqrt(minDouble);
+   const double maxDouble2 = 1.0/minDouble2;
    // loop on the measurements
 
    int nmeas = GetNumberOfMeasurements();

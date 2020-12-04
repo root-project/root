@@ -12,7 +12,7 @@
    -lf2c -lm   (in that order)
 */
 
-#include <string.h>
+#include <cstring>
 
 namespace ROOT {
 
@@ -58,7 +58,7 @@ bool mnlsame(const char* ca, const char* cb) {
 
    /*     Test if the characters are equal */
 
-   int comp = strcmp(ca, cb);
+   int comp = std::strcmp(ca, cb);
    if(comp == 0) ret_val = true;
 
    return ret_val;

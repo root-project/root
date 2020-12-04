@@ -12,7 +12,7 @@
 #include "Minuit2/MnMatrix.h"
 
 #include <algorithm>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <sstream>
 
@@ -109,7 +109,7 @@ double MnUserTransformation::Int2ext(unsigned int i, double val) const {
 double MnUserTransformation::Int2extError(unsigned int i, double val, double err) const {
    // return external error from internal error for parameter i
 
-   //err = sigma Value == sqrt(cov(i,i))
+   //err = sigma Value == std::sqrt(cov(i,i))
    double dx = err;
 
    if(fParameters[fExtOfInt[i]].HasLimits()) {
@@ -123,9 +123,9 @@ double MnUserTransformation::Int2extError(unsigned int i, double val, double err
          //       double du2 = al + 0.5*(sin(val - dx) + 1.)*ba - ui;
          //       if(dx > 1.) du1 = ba;
          if(dx > 1.) du1 = fParameters[fExtOfInt[i]].UpperLimit() - fParameters[fExtOfInt[i]].LowerLimit();
-         dx = 0.5*(fabs(du1) + fabs(du2));
+         dx = 0.5*(std::fabs(du1) + std::fabs(du2));
       } else {
-         dx = 0.5*(fabs(du1) + fabs(du2));
+         dx = 0.5*(std::fabs(du1) + std::fabs(du2));
       }
    }
 
@@ -141,18 +141,18 @@ MnUserCovariance MnUserTransformation::Int2extCovariance(const MnAlgebraicVector
    for(unsigned int i = 0; i < vec.size(); i++) {
       double dxdi = 1.;
       if(fParameters[fExtOfInt[i]].HasLimits()) {
-         //       dxdi = 0.5*fabs((fParameters[fExtOfInt[i]].Upper() - fParameters[fExtOfInt[i]].Lower())*cos(vec(i)));
+         //       dxdi = 0.5*std::fabs((fParameters[fExtOfInt[i]].Upper() - fParameters[fExtOfInt[i]].Lower())*cos(vec(i)));
          dxdi = DInt2Ext(i, vec(i));
       }
       for(unsigned int j = i; j < vec.size(); j++) {
          double dxdj = 1.;
          if(fParameters[fExtOfInt[j]].HasLimits()) {
-            //   dxdj = 0.5*fabs((fParameters[fExtOfInt[j]].Upper() - fParameters[fExtOfInt[j]].Lower())*cos(vec(j)));
+            //   dxdj = 0.5*std::fabs((fParameters[fExtOfInt[j]].Upper() - fParameters[fExtOfInt[j]].Lower())*cos(vec(j)));
             dxdj = DInt2Ext(j, vec(j));
          }
          result(i,j) = dxdi*cov(i,j)*dxdj;
       }
-      //     double diag = Int2extError(i, vec(i), sqrt(cov(i,i)));
+      //     double diag = Int2extError(i, vec(i), std::sqrt(cov(i,i)));
       //     result(i,i) = diag*diag;
    }
 
@@ -181,7 +181,7 @@ double MnUserTransformation::DInt2Ext(unsigned int i, double val) const {
    double dd = 1.;
    if(fParameters[fExtOfInt[i]].HasLimits()) {
       if(fParameters[fExtOfInt[i]].HasUpperLimit() && fParameters[fExtOfInt[i]].HasLowerLimit())
-         //       dd = 0.5*fabs((fParameters[fExtOfInt[i]].Upper() - fParameters[fExtOfInt[i]].Lower())*cos(vec(i)));
+         //       dd = 0.5*std::fabs((fParameters[fExtOfInt[i]].Upper() - fParameters[fExtOfInt[i]].Lower())*cos(vec(i)));
          dd = fDoubleLimTrafo.DInt2Ext(val, fParameters[fExtOfInt[i]].UpperLimit(), fParameters[fExtOfInt[i]].LowerLimit());
       else if(fParameters[fExtOfInt[i]].HasUpperLimit() && !fParameters[fExtOfInt[i]].HasLowerLimit())
          dd = fUpperLimTrafo.DInt2Ext(val, fParameters[fExtOfInt[i]].UpperLimit());
@@ -198,7 +198,7 @@ double MnUserTransformation::DInt2Ext(unsigned int i, double val) const {
 
     if(fParameters[fExtOfInt[i]].HasLimits()) {
        if(fParameters[fExtOfInt[i]].HasUpperLimit() && fParameters[fExtOfInt[i]].HasLowerLimit())
-          //       dd = 0.5*fabs((fParameters[fExtOfInt[i]].Upper() - fParameters[fExtOfInt[i]].Lower())*cos(vec(i)));
+          //       dd = 0.5*std::fabs((fParameters[fExtOfInt[i]].Upper() - fParameters[fExtOfInt[i]].Lower())*cos(vec(i)));
           dd = fDoubleLimTrafo.dExt2Int(val, fParameters[fExtOfInt[i]].UpperLimit(), fParameters[fExtOfInt[i]].LowerLimit());
        else if(fParameters[fExtOfInt[i]].HasUpperLimit() && !fParameters[fExtOfInt[i]].HasLowerLimit())
           dd = fUpperLimTrafo.dExt2Int(val, fParameters[fExtOfInt[i]].UpperLimit());

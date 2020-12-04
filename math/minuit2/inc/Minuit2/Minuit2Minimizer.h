@@ -239,12 +239,12 @@ public:
       get the minos error for parameter i, return false if Minos failed
       A minimizaiton must be performed befre, return false if no minimization has been done
       In case of Minos failed the status error is updated as following
-      status += 10 * minosStatus. 
+      status += 10 * minosStatus.
       The Minos status of last Minos run can also be retrieved by calling MinosStatus()
    */
    virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp, int = 0);
 
-   /** 
+   /**
       MINOS status code of last Minos run
        `status & 1 > 0`  : invalid lower error
        `status & 2 > 0`  : invalid upper error

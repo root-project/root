@@ -23,7 +23,7 @@ namespace ROOT {
 
 double SqrtLowParameterTransformation::Int2ext(double value, double lower) const {
    /// internal to external transformation
-   double val = lower - 1. + sqrt( value*value + 1.);
+   double val = lower - 1. + std::sqrt( value*value + 1.);
    return val;
 }
 
@@ -35,13 +35,13 @@ double SqrtLowParameterTransformation::Ext2int(double value, double lower, const
    if (yy2 < 1. )
       return 0;
    else
-      return sqrt( yy2 -1);
+      return std::sqrt( yy2 -1);
 }
 
 
 double SqrtLowParameterTransformation::DInt2Ext(double value, double) const {
    // derivative of internal to external transofrmation   :  d (Int2Ext) / d Int
-   double val = value/( sqrt( value*value + 1.) );
+   double val = value/( std::sqrt( value*value + 1.) );
    return val;
 }
 

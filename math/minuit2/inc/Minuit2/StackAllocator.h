@@ -21,9 +21,6 @@
 #define _MN_NO_THREAD_SAVE_
 #endif
 
-//#include <iostream>
-
-
 
 #include <cstdlib>
 #include <new>

@@ -53,18 +53,6 @@ public:
       if (fTracer) (*fTracer)(iter, state);
    }
 
-protected:
-   // use an internal structure to control local vs global print level
-   // when the structure is created the global printlevel will be synhronized to the given value
-   // and when it is deleted it will be reset to the original value
-   struct BuilderPrintLevelConf {
-      BuilderPrintLevelConf(int printLevel);
-
-      ~BuilderPrintLevelConf();
-
-      int fPrevGlobLevel = 0; // cache previous global print level
-   };
-
 private:
 
    int fPrintLevel;

@@ -12,7 +12,7 @@
         -lf2c -lm   (in that order)
 */
 
-#include <math.h>
+#include <cmath>
 
 namespace ROOT {
 
@@ -77,7 +77,7 @@ L25:
 L30:
          ++l;
 
-      gl = sqrt(h__);
+      gl = std::sqrt(h__);
 
       if (f >= (double)0.) {
          gl = -gl;
@@ -177,8 +177,8 @@ L110:
    i__1 = n;
    for (l = 1; l <= i__1; ++l) {
       j = 0;
-      h__ = precis * ((r__1 = work[l], fabs(r__1)) + (r__2 = work[n + l],
-                                                      fabs(r__2)));
+      h__ = precis * ((r__1 = work[l], std::fabs(r__1)) + (r__2 = work[n + l],
+                                                      std::fabs(r__2)));
 
       if (b < h__) {
          b = h__;
@@ -188,7 +188,7 @@ L110:
       for (m1 = l; m1 <= i__2; ++m1) {
          m = m1;
 
-         if ((r__1 = work[n + m], fabs(r__1)) <= b) {
+         if ((r__1 = work[n + m], std::fabs(r__1)) <= b) {
             goto L150;
          }
 
@@ -206,7 +206,7 @@ L160:
 
       ++j;
       pt = (work[l + 1] - work[l]) / (work[n + l] * (double)2.);
-      r__ = sqrt(pt * pt + (double)1.);
+      r__ = std::sqrt(pt * pt + (double)1.);
       pr = pt + r__;
 
       if (pt < (double)0.) {
@@ -231,19 +231,19 @@ L160:
          gl = c__ * work[n + i__];
          h__ = c__ * pt;
 
-         if (fabs(pt) >= (r__1 = work[n + i__], fabs(r__1))) {
+         if (std::fabs(pt) >= (r__1 = work[n + i__], std::fabs(r__1))) {
             goto L180;
          }
 
          c__ = pt / work[n + i__];
-         r__ = sqrt(c__ * c__ + (double)1.);
+         r__ = std::sqrt(c__ * c__ + (double)1.);
          work[n + j] = s * work[n + i__] * r__;
          s = (double)1. / r__;
          c__ /= r__;
          goto L190;
 L180:
             c__ = work[n + i__] / pt;
-         r__ = sqrt(c__ * c__ + (double)1.);
+         r__ = std::sqrt(c__ * c__ + (double)1.);
          work[n + j] = s * pt * r__;
          s = c__ / r__;
          c__ = (double)1. / r__;
@@ -260,7 +260,7 @@ L190:
       work[n + l] = s * pt;
       work[l] = c__ * pt;
 
-      if ((r__1 = work[n + l], fabs(r__1)) > b) {
+      if ((r__1 = work[n + l], std::fabs(r__1)) > b) {
          goto L160;
       }
 

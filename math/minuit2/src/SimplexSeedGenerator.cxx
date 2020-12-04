@@ -36,7 +36,7 @@ MinimumSeed SimplexSeedGenerator::operator()(const MnFcn& fcn, const GradientCal
    MnAlgebraicSymMatrix mat(n);
    double dcovar = 1.;
    for(unsigned int i = 0; i < n; i++)
-      mat(i,i) = (fabs(dgrad.G2()(i)) > prec.Eps2() ? 1./dgrad.G2()(i) : 1.);
+      mat(i,i) = (std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1./dgrad.G2()(i) : 1.);
    MinimumError err(mat, dcovar);
    double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
    MinimumState state(pa, err, dgrad, edm, fcn.NumOfCalls());

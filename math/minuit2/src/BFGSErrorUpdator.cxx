@@ -11,21 +11,14 @@
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/LaSum.h"
 #include "Minuit2/LaProd.h"
+#include "Minuit2/MnPrint.h"
 
 #include <vector>
-
-//#define DEBUG
-
-#if defined(DEBUG) || defined(WARNINGMSG)
-#include "Minuit2/MnPrint.h"
-#endif
 
 
 namespace ROOT {
 
    namespace Minuit2 {
-
-
 
 
 double inner_product(const LAVector&, const LAVector&);
@@ -70,8 +63,8 @@ LASquareMatrix OuterProduct(const LAVector& v1, const LAVector& v2) {
    }
    return a;
 }
-// compute product of symmetric matrix with square matrix 
-      
+// compute product of symmetric matrix with square matrix
+
 LASquareMatrix MatrixProduct(const LASymMatrix& m1, const LASquareMatrix& m2) {
    unsigned int n = m1.Nrow();
    assert(n == m2.Nrow() );
@@ -100,32 +93,26 @@ MinimumError BFGSErrorUpdator::Update(const MinimumState& s0,
    const MnAlgebraicSymMatrix& v0 = s0.Error().InvHessian();
    MnAlgebraicVector dx = p1.Vec() - s0.Vec();
    MnAlgebraicVector dg = g1.Vec() - s0.Gradient().Vec();
- 
+
    double delgam = inner_product(dx, dg);   // this is s^T y  using wikipedia conventions
    double gvg = similarity(dg, v0);   // this is y^T B^-1 y
 
 
-#ifdef DEBUG
-   std::cout << "dx = " << dx << std::endl;
-   std::cout << "dg = " << dg << std::endl;
-   std::cout<<"delgam= "<<delgam<<" gvg= "<<gvg<<std::endl;
-#endif
+   MnPrint print("BFGSErrorUpdator");
+   print.Debug("dx", dx, "dg", dg, "delgam", delgam, "gvg", gvg);
 
    if (delgam == 0 ) {
-#ifdef WARNINGMSG
-      MN_INFO_MSG("BFGSErrorUpdator: delgam = 0 : cannot update - return same matrix ");
-#endif
+      print.Warn("delgam = 0 : cannot update - return same matrix");
       return s0.Error();
    }
-#ifdef WARNINGMSG
-   if (delgam < 0)  MN_INFO_MSG("BFGSErrorUpdator: delgam < 0 : first derivatives increasing along search line");
-#endif
+
+   if (delgam < 0) {
+     print.Warn("delgam < 0 : first derivatives increasing along search line");
+   }
 
    if (gvg <= 0 ) {
       // since v0 is pos def this gvg can be only = 0 if  dg = 0 - should never be here
-#ifdef WARNINGMSG
-      MN_INFO_MSG("BFGSErrorUpdator: gvg <= 0  ");
-#endif
+      print.Warn("gvg <= 0");
       //return s0.Error();
    }
 
@@ -137,26 +124,24 @@ MinimumError BFGSErrorUpdator::Update(const MinimumState& s0,
    LASquareMatrix a = OuterProduct(dg,dx);
    LASquareMatrix b = MatrixProduct(v0, a);
 
-   unsigned int n = v0.Nrow(); 
+   unsigned int n = v0.Nrow();
    MnAlgebraicSymMatrix v2( n );
-   for (unsigned int i = 0; i < n; ++i)  { 
+   for (unsigned int i = 0; i < n; ++i)  {
       for (unsigned int j = i; j < n; ++j)  {
          v2(i,j) = (b(i,j) + b(j,i))/(delgam);
       }
    }
 
    MnAlgebraicSymMatrix vUpd = ( delgam + gvg) * Outer_product(dx) / (delgam * delgam);
-   vUpd -= v2; 
-   
+   vUpd -= v2;
+
 
    double sum_upd = sum_of_elements(vUpd);
    vUpd += v0;
 
    double dcov = 0.5*(s0.Error().Dcovar() + sum_upd/sum_of_elements(vUpd));
 
-#ifdef DEBUG
-   std::cout << "BFGSErrorUpdator - dcov is " << dcov << std::endl;
-#endif
+   print.Debug("dcov", dcov);
 
    return MinimumError(vUpd, dcov);
 }

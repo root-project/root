@@ -12,7 +12,7 @@
       -lf2c -lm   (in that order)
 */
 
-#include <math.h>
+#include <cmath>
 
 namespace ROOT {
 
@@ -55,7 +55,7 @@ double mndasum(unsigned int n, const double* dx, int incx) {
    i__1 = nincx;
    i__2 = incx;
    for (i__ = 1; i__2 < 0 ? i__ >= i__1 : i__ <= i__1; i__ += i__2) {
-      dtemp += (d__1 = dx[i__], fabs(d__1));
+      dtemp += (d__1 = dx[i__], std::fabs(d__1));
       /* L10: */
    }
    ret_val = dtemp;
@@ -73,7 +73,7 @@ L20:
    }
    i__2 = m;
    for (i__ = 1; i__ <= i__2; ++i__) {
-      dtemp += (d__1 = dx[i__], fabs(d__1));
+      dtemp += (d__1 = dx[i__], std::fabs(d__1));
       /* L30: */
    }
    if (n < 6) {
@@ -83,10 +83,10 @@ L40:
       mp1 = m + 1;
    i__2 = n;
    for (i__ = mp1; i__ <= i__2; i__ += 6) {
-      dtemp = dtemp + (d__1 = dx[i__], fabs(d__1)) + (d__2 = dx[i__ + 1],
-                                                      fabs(d__2)) + (d__3 = dx[i__ + 2], fabs(d__3)) +
-      (d__4 = dx[i__ + 3], fabs(d__4)) +
-      (d__5 = dx[i__ + 4], fabs(d__5)) + (d__6 = dx[i__ + 5], fabs(d__6));
+      dtemp = dtemp + (d__1 = dx[i__], std::fabs(d__1)) + (d__2 = dx[i__ + 1],
+                                                      std::fabs(d__2)) + (d__3 = dx[i__ + 2], std::fabs(d__3)) +
+      (d__4 = dx[i__ + 3], std::fabs(d__4)) +
+      (d__5 = dx[i__ + 4], std::fabs(d__5)) + (d__6 = dx[i__ + 5], std::fabs(d__6));
       /* L50: */
    }
 L60:

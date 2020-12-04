@@ -36,7 +36,8 @@ const int default_ndata = 1000;
 
 double GaussPdf(double x, double x0, double sigma) {
    double tmp = (x-x0)/sigma;
-   return (1.0/(std::sqrt(2 * M_PI) * std::fabs(sigma))) * std::exp(-tmp*tmp/2);
+   constexpr double two_pi = 2 * 3.14159265358979323846; // M_PI is not standard
+   return (1.0/(std::sqrt(two_pi) * std::fabs(sigma))) * std::exp(-tmp*tmp/2);
 }
 
 double LogMultiGaussPdf(const std::vector<double> & x, const std::vector<double> & p) {

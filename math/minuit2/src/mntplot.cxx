@@ -12,9 +12,9 @@
    -lf2c -lm   (in that order)
 */
 
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
 
 namespace ROOT {
 

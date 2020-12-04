@@ -13,6 +13,7 @@
 #include "Minuit2/MinimumSeed.h"
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/MnFcn.h"
+#include <cmath>
 
 namespace ROOT {
 
@@ -35,7 +36,7 @@ FunctionMinimum ScanBuilder::Minimum(const MnFcn& mfcn, const GradientCalculator
          amin = scan.Fval();
          x(i) = seed.Trafo().Ext2int(ext, scan.Parameters().Value(ext));
       }
-      dirin(i) = sqrt(2.*mfcn.Up()*seed.Error().InvHessian()(i,i));
+      dirin(i) = std::sqrt(2.*mfcn.Up()*seed.Error().InvHessian()(i,i));
    }
 
    MinimumParameters mp(x, dirin, amin);

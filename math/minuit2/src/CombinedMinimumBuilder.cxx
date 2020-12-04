@@ -10,10 +10,7 @@
 #include "Minuit2/CombinedMinimumBuilder.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnStrategy.h"
-
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
-#endif
 
 
 namespace ROOT {
@@ -25,28 +22,26 @@ FunctionMinimum CombinedMinimumBuilder::Minimum(const MnFcn& fcn, const Gradient
    // find minimum using combined method
    // (Migrad then if fails try Simplex and then Migrad again)
 
+   MnPrint print("CombinedMinimumBuilder");
+
    FunctionMinimum min = fVMMinimizer.Builder().Minimum(fcn, gc, seed, strategy, maxfcn, edmval);
 
    if(!min.IsValid()) {
-#ifdef WARNINGMSG
-      MN_INFO_MSG("CombinedMinimumBuilder: migrad method fails, will try with simplex method first.");
-#endif
+      print.Warn("Migrad method fails, will try with simplex method first");
+
       MnStrategy str(2);
       FunctionMinimum min1 = fSimplexMinimizer.Builder().Minimum(fcn, gc, seed, str, maxfcn, edmval);
       if(!min1.IsValid()) {
-#ifdef WARNINGMSG
-         MN_INFO_MSG("CombinedMinimumBuilder: both migrad and simplex method fail.");
-#endif
+         print.Warn("Both Migrad and Simplex methods failed");
+
          return min1;
       }
       MinimumSeed seed1 = fVMMinimizer.SeedGenerator()(fcn, gc, min1.UserState(), str);
 
       FunctionMinimum min2 = fVMMinimizer.Builder().Minimum(fcn, gc, seed1, str, maxfcn, edmval);
       if(!min2.IsValid()) {
-#ifdef WARNINGMSG
-         MN_INFO_MSG("CombinedMinimumBuilder: both migrad and method fails also at 2nd attempt.");
-         MN_INFO_MSG("CombinedMinimumBuilder: return simplex Minimum.");
-#endif
+
+         print.Warn("Both migrad and method failed also at 2nd attempt; return simplex Minimum");
          return min1;
       }
 

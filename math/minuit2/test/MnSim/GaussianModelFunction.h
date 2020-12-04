@@ -11,7 +11,6 @@
 #define MN_GaussianModelFunction_H_
 
 #define _USE_MATH_DEFINES
-#include <math.h>
 
 
 #include "Minuit2/ParametricFunction.h"
@@ -20,6 +19,7 @@
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnUserParameterState.h"
 
+#include <cmath>
 #include <vector>
 #include <cassert>
 
@@ -121,7 +121,10 @@ public:
     // commented out for speed-up (even though that is the object-oriented
     // way to do things)
     //std::vector<double> par = GetParameters();
-    return x[2]*exp(-0.5*(par[0]-x[0])*(par[0]-x[0])/(x[1]*x[1]))/(sqrt(2.*M_PI)*fabs(x[1]));
+
+    constexpr double two_pi = 2 * 3.14159265358979323846; // M_PI is not standard
+
+    return x[2]*std::exp(-0.5*(par[0]-x[0])*(par[0]-x[0])/(x[1]*x[1]))/(std::sqrt(two_pi)*std::fabs(x[1]));
   }
 
 
@@ -146,9 +149,11 @@ public:
 
   double operator()(const std::vector<double>& x, const std::vector<double>& param) const {
 
+    constexpr double two_pi = 2 * 3.14159265358979323846; // M_PI is not standard
+
     assert(param.size() == 1);
     assert(x.size() == 3);
-    return x[2]*exp(-0.5*(param[0]-x[0])*(param[0]-x[0])/(x[1]*x[1]))/(sqrt(2.*M_PI)*fabs(x[1]));
+    return x[2]*std::exp(-0.5*(param[0]-x[0])*(param[0]-x[0])/(x[1]*x[1]))/(std::sqrt(two_pi)*std::fabs(x[1]));
   }
 
 
@@ -171,8 +176,10 @@ public:
     assert(param.size() == 1);
     std::vector<double> grad(x.size());
 
+    constexpr double two_pi = 2 * 3.14159265358979323846; // M_PI is not standard
+
     double y = (param[0]-x[0])/x[1];
-    double gaus = exp(-0.5*y*y )/(sqrt(2.*M_PI)*fabs(x[1]));
+    double gaus = std::exp(-0.5*y*y )/(std::sqrt(two_pi)*std::fabs(x[1]));
 
 
     grad[0] = y/(x[1])*gaus*x[2];

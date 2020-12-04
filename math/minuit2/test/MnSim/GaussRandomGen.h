@@ -10,7 +10,6 @@
 #ifndef MN_GaussRandomGen_H_
 #define MN_GaussRandomGen_H_
 
-#define _USE_MATH_DEFINES
 #include <cmath>
 #include <cstdlib>
 
@@ -38,8 +37,10 @@ public:
     double r1 = std::rand()/double(RAND_MAX);
     double r2 = std::rand()/double(RAND_MAX);
 
+    constexpr double two_pi = 2 * 3.14159265358979323846; // M_PI is not standard
+
     //two possibilities to generate a random gauss variable (m=0,s=1)
-    double s = sqrt(-2.*log(1.-r1))*cos(2.*M_PI*r2);
+    double s = std::sqrt(-2.*std::log(1.-r1))*std::cos(two_pi*r2);
 //     double s = sqrt(-2.*log(1.-r1))*sin(2.*M_PI*r2);
 
     //scale to desired gauss

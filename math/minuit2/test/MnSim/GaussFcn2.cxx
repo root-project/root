@@ -10,8 +10,7 @@
 #include "GaussFcn2.h"
 #include "GaussFunction.h"
 
-#include <iostream>
-#include <assert.h>
+#include <cassert>
 
 namespace ROOT {
 
@@ -54,11 +53,11 @@ void GaussFcn2::Init() {
   double rms2 = x2/norm - mean*mean;
 
 //   std::cout<<"FCN initial mean: "<<mean<<std::endl;
-//   std::cout<<"FCN initial sigma: "<<sqrt(rms2)<<std::endl;
+//   std::cout<<"FCN initial sigma: "<<std::sqrt(rms2)<<std::endl;
 
   std::vector<double> par;
-  par.push_back(mean); par.push_back(sqrt(rms2)); par.push_back(c);
-  par.push_back(mean); par.push_back(sqrt(rms2)); par.push_back(c);
+  par.push_back(mean); par.push_back(std::sqrt(rms2)); par.push_back(c);
+  par.push_back(mean); par.push_back(std::sqrt(rms2)); par.push_back(c);
 
   fMin = (*this)(par);
 //   std::cout<<"GaussFcnHistoData2 initial chi2: "<<fMin<<std::endl;

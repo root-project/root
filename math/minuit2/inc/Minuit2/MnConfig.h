@@ -15,7 +15,7 @@
 #endif
 
 #if defined(__sun) && !defined(linux)
-#include <stdlib.h>
+#include <cstdlib>
 #endif
 
 #endif

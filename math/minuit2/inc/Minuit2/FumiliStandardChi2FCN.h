@@ -13,7 +13,7 @@
 
 #include "Minuit2/FumiliChi2FCN.h"
 #include "Minuit2/ParametricFunction.h"
-#include <assert.h>
+#include <cassert>
 #include <vector>
 #include <cmath>
 

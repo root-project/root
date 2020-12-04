@@ -10,7 +10,7 @@
 #ifndef ROOT_Minuit2_MnParabola
 #define ROOT_Minuit2_MnParabola
 
-#include <math.h>
+#include <cmath>
 
 namespace ROOT {
 
@@ -80,9 +80,9 @@ public:
 
   // ok, at first glance it does not look like the formula for the quadratic
   // equation, but it is!  ;-)
-  double X_pos(double y) const {return (sqrt(y/fA + Min()*Min() - fC/fA) + Min());}
+  double X_pos(double y) const {return (std::sqrt(y/fA + Min()*Min() - fC/fA) + Min());}
   // maybe it is worth to check the performance improvement with the below formula??
-  //   double X_pos(double y) const {return (sqrt(y/fA + fB*fB/(4.*fA*fA) - fC/fA)  - fB/(2.*fA));}
+  //   double X_pos(double y) const {return (std::sqrt(y/fA + fB*fB/(4.*fA*fA) - fC/fA)  - fB/(2.*fA));}
 
 
 
@@ -102,7 +102,7 @@ public:
 
   */
 
-  double X_neg(double y) const {return (-sqrt(y/fA + Min()*Min() - fC/fA) + Min());}
+  double X_neg(double y) const {return (-std::sqrt(y/fA + Min()*Min() - fC/fA) + Min());}
 
 
   /**

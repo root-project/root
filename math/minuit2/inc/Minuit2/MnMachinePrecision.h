@@ -10,7 +10,7 @@
 #ifndef ROOT_Minuit2_MnMachinePrecision
 #define ROOT_Minuit2_MnMachinePrecision
 
-#include <math.h>
+#include <cmath>
 
 namespace ROOT {
 
@@ -46,12 +46,12 @@ public:
   /// override Minuit's own determination
   void SetPrecision(double prec) {
     fEpsMac = prec;
-    fEpsMa2 = 2.*sqrt(fEpsMac);
+    fEpsMa2 = 2.*std::sqrt(fEpsMac);
   }
 
    /// compute Machine precision directly instead
    /// of using default values from std::numeric_limits
-   void ComputePrecision(); 
+   void ComputePrecision();
 
 private:
 
