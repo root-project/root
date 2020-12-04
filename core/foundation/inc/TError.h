@@ -30,16 +30,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#include <ROOT/RConfig.hxx> // for R__DEPRECATED
 #include <DllImport.h> // for R__EXTERN
 #include "RtypesCore.h"
 
 #include <cstdarg>
 #include <functional>
 
-
-class TVirtualMutex;
-R__EXTERN TVirtualMutex *gErrorMutex R__DEPRECATED(6,26, "ROOT stopped exporting gErrorMutex.");
 
 const Int_t kUnset    =  -1;
 const Int_t kPrint    =   0;
