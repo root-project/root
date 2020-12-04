@@ -13,12 +13,7 @@
 #include "Minuit2/MnFunctionCross.h"
 #include "Minuit2/MnCross.h"
 #include "Minuit2/MinosError.h"
-
-//#define DEBUG
-
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
-#endif
 
 
 namespace ROOT {
@@ -31,12 +26,12 @@ MnMinos::MnMinos(const FCNBase& fcn, const FunctionMinimum& min, unsigned int st
    fMinimum(min),
    fStrategy(MnStrategy(stra))
 {
+   MnPrint print("MnMinos");
+
    // construct from FCN + Minimum
    // check if Error definition  has been changed, in case re-update errors
    if (fcn.Up() != min.Up() ) {
-#ifdef WARNINGMSG
-      MN_INFO_MSG("MnMinos UP value has changed, need to update FunctionMinimum class");
-#endif
+      print.Warn("MnMinos: UP value has changed, need to update FunctionMinimum class");
    }
 }
 
@@ -45,12 +40,12 @@ MnMinos::MnMinos(const FCNBase& fcn, const FunctionMinimum& min,  const MnStrate
    fMinimum(min),
    fStrategy(stra)
 {
+   MnPrint print("MnMinos");
+
    // construct from FCN + Minimum
    // check if Error definition  has been changed, in case re-update errors
    if (fcn.Up() != min.Up() ) {
-#ifdef WARNINGMSG
-      MN_INFO_MSG("MnMinos UP value has changed, need to update FunctionMinimum class");
-#endif
+      print.Warn("UP value has changed, need to update FunctionMinimum class");
    }
 }
 
@@ -84,18 +79,17 @@ double MnMinos::Upper(unsigned int par, unsigned int maxcalls, double toler) con
 MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls, double toler) const {
    // do full minos error anlysis (lower + upper) for parameter par
 
+   MnPrint print("MnMinos");
+
    MnCross up = Upval(par, maxcalls,toler);
-#ifdef DEBUG
-   std::cout << "Function calls to find upper error " << up.NFcn() << std::endl;
-#endif
+
+   print.Debug("Function calls to find upper error", up.NFcn());
 
    MnCross lo = Loval(par, maxcalls,toler);
 
-#ifdef DEBUG
-   std::cout << "Function calls to find lower error " << lo.NFcn() << std::endl;
-#endif
+   print.Debug("Function calls to find lower error", lo.NFcn());
 
-   std::cout << "return Minos error " << lo.Value() << "  , " << up.Value() << std::endl;
+   print.Debug("return Minos error", lo.Value(), ",", up.Value());
 
    return MinosError(par, fMinimum.UserState().Value(par), lo, up);
 }
@@ -109,15 +103,11 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
 
    assert(direction == 1 || direction == -1);
 
-   int printLevel = MnPrint::Level();
-   if (printLevel > 2) {
-      if (direction == 1)
-         std::cout << "--------- MnMinos -------\nDetermination of upper Minos error for parameter "
-                   << par << std::endl;
-      else
-         std::cout << "--------- MnMinos -------\nDetermination of lower Minos error for parameter "
-                   << par << std::endl;
-   }
+   MnPrint print("MnMinos");
+
+   print.Info(
+      "Determination of", direction == 1 ? "upper" : "lower",
+      "Minos error for parameter", par);
 
    assert(fMinimum.IsValid());
    assert(!fMinimum.UserState().Parameter(par).IsFixed());
@@ -152,7 +142,7 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
    // get internal parameters
    const MnAlgebraicVector & xt = fMinimum.Parameters().Vec();
    //LM:  change to use err**2 (m(i,i) instead of err as in F77 version
-   double xunit = sqrt(up/m(ind,ind));
+   double xunit = std::sqrt(up/m(ind,ind));
    // LM (29/04/08) bug: change should be done in internal variables
    // set the initial value for the other parmaeters that we are going to fit in MnCross
    for(unsigned int i = 0; i < m.Nrow(); i++) {
@@ -173,53 +163,42 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
          unew = std::max(unew, upar.Parameter(ext).LowerLimit());
       }
 
-#ifdef DEBUG
-      std::cout << "Parameter " << ext << " is set from " << upar.Value(ext) << " to " <<  unew << std::endl;
-#endif
+      print.Debug("Parameter", ext, "is set from", upar.Value(ext), "to", unew);
+
       upar.SetValue(ext, unew);
    }
 
    upar.Fix(par);
    upar.SetValue(par, val);
 
-#ifdef DEBUG
-   std::cout << "Parameter " << par << " is fixed and set from " << fMinimum.UserState().Value(par) << " to " << val
-   << " delta = " << err << std::endl;
-#endif
-
+   print.Debug("Parameter", par, "is fixed and set from",
+      fMinimum.UserState().Value(par), "to", val, "delta =", err);
 
    MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);
    MnCross aopt = cross(para, xmid, xdir, toler, maxcalls);
 
+   print.Debug("aopt value found from MnFunctionCross =", aopt.Value());
 
-#ifdef DEBUG
-   std::cout<<"----- MnMinos: aopt value found from MnFunctionCross = "<<aopt.Value()<<std::endl << std::endl;
-#endif
-
-#ifdef WARNINGMSG
    const char * par_name = upar.Name(par);
    if(aopt.AtMaxFcn())
-      MN_INFO_VAL2("MnMinos maximum number of function calls exceeded for Parameter ",par_name);
+      print.Warn("maximum number of function calls exceeded for Parameter", par_name);
    if(aopt.NewMinimum())
-      MN_INFO_VAL2("MnMinos new Minimum found while looking for Parameter ",par_name);
+      print.Warn("new Minimum found while looking for Parameter", par_name);
    if (direction ==1) {
       if(aopt.AtLimit())
-         MN_INFO_VAL2("MnMinos: parameter is at Upper limit.",par_name);
+         print.Warn("parameter", par_name, "is at Upper limit");
       if(!aopt.IsValid())
-         MN_INFO_VAL2("MnMinos: could not find Upper Value for Parameter ",par_name);
+         print.Warn("could not find Upper Value for Parameter", par_name);
    }
    else {
       if(aopt.AtLimit())
-         MN_INFO_VAL2("MnMinos: parameter is at Lower limit.",par_name);
+         print.Warn("parameter", par_name, "is at Lower limit");
       if(!aopt.IsValid())
-         MN_INFO_VAL2("MnMinos: could not find Lower Value for Parameter ",par_name);
+         print.Warn("could not find Lower Value for Parameter",par_name);
    }
-#endif
 
-   if (printLevel > 2) {
-      std::string scanType = (direction == 1) ? "up" : "low";
-      std::cout << " ------ end Minos scan for " << scanType << " interval for parameter " << upar.Name(par) << std::endl;
-   }
+   print.Info("end of Minos scan for", direction == 1 ? "up" : "low",
+      "interval for parameter", upar.Name(par));
 
    return aopt;
 }

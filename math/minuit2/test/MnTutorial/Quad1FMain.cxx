@@ -13,6 +13,7 @@
 #include "Minuit2/VariableMetricMinimizer.h"
 #include "Minuit2/MnMigrad.h"
 #include "Minuit2/MnMinos.h"
+#include <iostream>
 
 using namespace ROOT::Minuit2;
 

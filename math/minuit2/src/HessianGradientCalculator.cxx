@@ -15,16 +15,12 @@
 #include "Minuit2/MinimumParameters.h"
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MnStrategy.h"
-
-#include <math.h>
-
-//#define DEBUG
-
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
-#endif
-
 #include "Minuit2/MPIProcess.h"
+
+#include <cmath>
+#include <cassert>
+
 
 namespace ROOT {
 
@@ -70,6 +66,8 @@ std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaG
    // calculate gradient for Hessian
    assert(par.IsValid());
 
+   MnPrint print("HessianGradientCalculator");
+
    MnAlgebraicVector x = par.Vec();
    MnAlgebraicVector grd = Gradient.Grad();
    const MnAlgebraicVector& g2 = Gradient.G2();
@@ -113,7 +111,7 @@ std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaG
 
          grdold = grd(i);
          grdnew = (fs1-fs2)/(2.*d);
-         dgmin = Precision().Eps()*(fabs(fs1) + fabs(fs2))/d;
+         dgmin = Precision().Eps()*(std::fabs(fs1) + std::fabs(fs2))/d;
          //if(fabs(grdnew) < Precision().Eps()) break;
          if (grdnew == 0) break;
          double change = fabs((grdold-grdnew)/grdnew);
@@ -129,11 +127,10 @@ std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaG
          d *= 0.2;
       }
 
-      dgrd(i) = std::max(dgmin, fabs(grdold-grdnew));
+      dgrd(i) = std::max(dgmin, std::fabs(grdold-grdnew));
 
-#ifdef DEBUG
-      std::cout << "HGC Param : " << i << "\t new g1 = " << grd(i) << " gstep = " << d << " dgrd = " << dgrd(i) << std::endl;
-#endif
+      print.Debug("HGC Param :", i, "\t new g1 =", grd(i), "gstep =", d,
+        "dgrd =", dgrd(i));
 
    }
 

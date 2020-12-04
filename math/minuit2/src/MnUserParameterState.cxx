@@ -10,7 +10,6 @@
 #include "Minuit2/MnUserParameterState.h"
 #include "Minuit2/MnCovarianceSqueeze.h"
 #include "Minuit2/MinimumState.h"
-
 #include "Minuit2/MnPrint.h"
 
 
@@ -50,7 +49,7 @@ MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const
    std::vector<double> err; err.reserve(par.size());
    for(unsigned int i = 0; i < par.size(); i++) {
       assert(fCovariance(i,i) > 0.);
-      err.push_back(sqrt(fCovariance(i,i)));
+      err.push_back(std::sqrt(fCovariance(i,i)));
    }
    fParameters = MnUserParameters(par, err);
    assert(fCovariance.Nrow() == VariableParameters());
@@ -64,7 +63,7 @@ MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const
    std::vector<double> err; err.reserve(par.size());
    for(unsigned int i = 0; i < par.size(); i++) {
       assert(fCovariance(i,i) > 0.);
-      err.push_back(sqrt(fCovariance(i,i)));
+      err.push_back(std::sqrt(fCovariance(i,i)));
    }
    fParameters = MnUserParameters(par, err);
    assert(fCovariance.Nrow() == VariableParameters());
@@ -101,7 +100,7 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
    // construct from internal parameters (after minimization)
    //
    //std::cout << "build a MnUSerParameterState after minimization.." << std::endl;
-   
+
    for(std::vector<MinuitParameter>::const_iterator ipar = trafo.Parameters().begin(); ipar != trafo.Parameters().end(); ++ipar) {
       if((*ipar).IsConst()) {
          Add((*ipar).GetName(), (*ipar).Value());
@@ -118,7 +117,7 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
          Fix((*ipar).GetName());
       } else if((*ipar).HasLimits()) {
          unsigned int i = trafo.IntOfExt((*ipar).Number());
-         double err = st.Error().IsValid() ? sqrt(2.*up*st.Error().InvHessian()(i,i)) : st.Parameters().Dirin()(i);
+         double err = st.Error().IsValid() ? std::sqrt(2.*up*st.Error().InvHessian()(i,i)) : st.Parameters().Dirin()(i);
          Add((*ipar).GetName(), trafo.Int2ext(i, st.Vec()(i)), trafo.Int2extError(i, st.Vec()(i), err));
          if((*ipar).HasLowerLimit() && (*ipar).HasUpperLimit())
             SetLimits((*ipar).GetName(), (*ipar).LowerLimit(), (*ipar).UpperLimit());
@@ -128,7 +127,7 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
             SetUpperLimit((*ipar).GetName(), (*ipar).UpperLimit());
       } else {
          unsigned int i = trafo.IntOfExt((*ipar).Number());
-         double err = st.Error().IsValid() ? sqrt(2.*up*st.Error().InvHessian()(i,i)) : st.Parameters().Dirin()(i);
+         double err = st.Error().IsValid() ? std::sqrt(2.*up*st.Error().InvHessian()(i,i)) : st.Parameters().Dirin()(i);
          Add((*ipar).GetName(), st.Vec()(i), err);
       }
    }
@@ -160,13 +159,14 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
 MnUserCovariance MnUserParameterState::Hessian() const {
    // invert covariance matrix and return Hessian
    // need to copy in a MnSymMatrix
+   MnPrint print("MnUserParameterState::Hessian");
+
    MnAlgebraicSymMatrix mat(fCovariance.Nrow() );
    std::copy(fCovariance.Data().begin(), fCovariance.Data().end(), mat.Data() );
    int ifail = Invert(mat);
    if(ifail != 0) {
-#ifdef WARNINGMSG
-      MN_INFO_MSG("MnUserParameterState:Hessian inversion fails- return diagonal matrix.");
-#endif
+      print.Warn("Inversion failed; return diagonal matrix");
+
       MnUserCovariance tmp(fCovariance.Nrow());
       for(unsigned int i = 0; i < fCovariance.Nrow(); i++) {
          tmp(i,i) = 1./fCovariance(i,i);
@@ -202,6 +202,8 @@ const MinuitParameter& MnUserParameterState::Parameter(unsigned int i) const {
 }
 
 void MnUserParameterState::Add(const std::string & name, double val, double err) {
+   MnPrint print("MnUserParameterState::Add");
+
    //add free Parameter
    if ( fParameters.Add(name, val, err) ) {
       fIntParameters.push_back(val);
@@ -214,8 +216,7 @@ void MnUserParameterState::Add(const std::string & name, double val, double err)
       int i = Index(name);
       SetValue(i,val);
       if (Parameter(i).IsConst() ) {
-         std::string msg = "Cannot modify status of constant parameter " + name;
-         MN_INFO_MSG2("MnUserParameterState::Add",msg.c_str());
+         print.Warn("Cannot modify status of constant parameter", name);
          return;
       }
       SetError(i,err);
@@ -226,6 +227,8 @@ void MnUserParameterState::Add(const std::string & name, double val, double err)
 }
 
 void MnUserParameterState::Add(const std::string & name, double val, double err, double low, double up) {
+   MnPrint print("MnUserParameterState::Add");
+
    //add limited Parameter
    if ( fParameters.Add(name, val, err, low, up) ) {
       fCovarianceValid = false;
@@ -237,8 +240,7 @@ void MnUserParameterState::Add(const std::string & name, double val, double err,
       int i = Index(name);
       SetValue(i,val);
       if (Parameter(i).IsConst() ) {
-         std::string msg = "Cannot modify status of constant parameter " + name;
-         MN_INFO_MSG2("MnUserParameterState::Add",msg.c_str());
+         print.Warn("Cannot modify status of constant parameter", name);
          return;
       }
       SetError(i,err);

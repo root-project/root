@@ -11,13 +11,7 @@
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/LaSum.h"
 #include "Minuit2/LaProd.h"
-
-//#define DEBUG
-
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
-#endif
-
 
 
 namespace ROOT {
@@ -37,6 +31,8 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
    // in case of delgam > gvg (PHI > 1) use rank one formula
    // see  par 4.10 pag 30
 
+   MnPrint print("DavidonErrorUpdator");
+
    const MnAlgebraicSymMatrix& v0 = s0.Error().InvHessian();
    MnAlgebraicVector dx = p1.Vec() - s0.Vec();
    MnAlgebraicVector dg = g1.Vec() - s0.Gradient().Vec();
@@ -44,28 +40,20 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
    double delgam = inner_product(dx, dg);
    double gvg = similarity(dg, v0);
 
-
-#ifdef DEBUG
-   std::cout << "dx = " << dx << std::endl;
-   std::cout << "dg = " << dg << std::endl;
-   std::cout<<"delgam= "<<delgam<<" gvg= "<<gvg<<std::endl;
-#endif
+   print.Debug("\ndx", dx, "\ndg", dg, "\ndelgam", delgam, "gvg", gvg);
 
    if (delgam == 0 ) {
-#ifdef WARNINGMSG
-      MN_INFO_MSG("DavidonErrorUpdator: delgam = 0 : cannot update - return same matrix ");
-#endif
+      print.Warn("delgam = 0 : cannot update - return same matrix");
       return s0.Error();
    }
-#ifdef WARNINGMSG
-   if (delgam < 0)  MN_INFO_MSG("DavidonErrorUpdator: delgam < 0 : first derivatives increasing along search line");
-#endif
+
+   if (delgam < 0) {
+      print.Warn("delgam < 0 : first derivatives increasing along search line");
+   }
 
    if (gvg <= 0 ) {
       // since v0 is pos def this gvg can be only = 0 if  dg = 0 - should never be here
-#ifdef WARNINGMSG
-      MN_INFO_MSG("DavidonErrorUpdator: gvg <= 0 : cannot update - return same matrix ");
-#endif
+      print.Warn("gvg <= 0 : cannot update - return same matrix");
       return s0.Error();
    }
 

@@ -14,18 +14,15 @@
 #include "Minuit2/ABSum.h"
 #include "Minuit2/VectorOuterProduct.h"
 #include "Minuit2/MatrixInverse.h"
+#include "Minuit2/StackAllocator.h"
 
 #include <cassert>
 #include <memory>
+#include <cstring> // for memcopy
 
 
-// #include <iostream>
-
-#include "Minuit2/StackAllocator.h"
 //extern StackAllocator StackAllocatorHolder::Get();
 
-// for memcopy
-#include <string.h>
 
 namespace ROOT {
 
@@ -60,7 +57,7 @@ public:
 
   LASymMatrix(unsigned int n) : fSize(n*(n+1)/2), fNRow(n), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*n*(n+1)/2)) {
 //     assert(fSize>0);
-    memset(fData, 0, fSize*sizeof(double));
+    std::memset(fData, 0, fSize*sizeof(double));
 //     std::cout<<"LASymMatrix(unsigned int n), n= "<<n<<std::endl;
   }
 
@@ -75,7 +72,7 @@ public:
   LASymMatrix(const LASymMatrix& v) :
     fSize(v.size()), fNRow(v.Nrow()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*v.size())) {
 //     std::cout<<"LASymMatrix(const LASymMatrix& v)"<<std::endl;
-    memcpy(fData, v.Data(), fSize*sizeof(double));
+    std::memcpy(fData, v.Data(), fSize*sizeof(double));
   }
 
   LASymMatrix& operator=(const LASymMatrix& v) {
@@ -83,7 +80,7 @@ public:
 //     std::cout<<"fSize= "<<fSize<<std::endl;
 //     std::cout<<"v.size()= "<<v.size()<<std::endl;
     assert(fSize == v.size());
-    memcpy(fData, v.Data(), fSize*sizeof(double));
+    std::memcpy(fData, v.Data(), fSize*sizeof(double));
     return *this;
   }
 
@@ -92,7 +89,7 @@ public:
     fSize(v.Obj().size()), fNRow(v.Obj().Nrow()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*v.Obj().size())) {
 //     std::cout<<"LASymMatrix(const ABObj<sym, LASymMatrix, T>& v)"<<std::endl;
     //std::cout<<"allocate "<<fSize<<std::endl;
-    memcpy(fData, v.Obj().Data(), fSize*sizeof(double));
+    std::memcpy(fData, v.Obj().Data(), fSize*sizeof(double));
     Mndscal(fSize, double(v.f()), fData, 1);
     //std::cout<<"fData= "<<fData[0]<<" "<<fData[1]<<std::endl;
   }
@@ -128,7 +125,7 @@ public:
 
   template<class T>
   LASymMatrix(const ABObj<sym, MatrixInverse<sym, ABObj<sym, LASymMatrix, T>, T>, T>& inv) : fSize(inv.Obj().Obj().Obj().size()), fNRow(inv.Obj().Obj().Obj().Nrow()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*inv.Obj().Obj().Obj().size())) {
-    memcpy(fData, inv.Obj().Obj().Obj().Data(), fSize*sizeof(double));
+    std::memcpy(fData, inv.Obj().Obj().Obj().Data(), fSize*sizeof(double));
     Mndscal(fSize, double(inv.Obj().Obj().f()), fData, 1);
     Invert(*this);
     Mndscal(fSize, double(inv.f()), fData, 1);
@@ -259,7 +256,7 @@ public:
       assert(fSize == v.Obj().size());
     }
     //std::cout<<"fData= "<<fData[0]<<" "<<fData[1]<<std::endl;
-    memcpy(fData, v.Obj().Data(), fSize*sizeof(double));
+    std::memcpy(fData, v.Obj().Data(), fSize*sizeof(double));
     (*this) *= v.f();
     return *this;
   }
@@ -274,7 +271,7 @@ public:
       LASymMatrix tmp(something.Obj());
       tmp *= something.f();
       assert(fSize == tmp.size());
-      memcpy(fData, tmp.Data(), fSize*sizeof(double));
+      std::memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
     //std::cout<<"template<class A, class T> LASymMatrix& operator=(const ABObj<sym, ABObj<sym, A, T>, T>& something)"<<std::endl;
     return *this;
@@ -293,7 +290,7 @@ public:
       tmp += sum.Obj().B();
       tmp *= sum.f();
       assert(fSize == tmp.size());
-      memcpy(fData, tmp.Data(), fSize*sizeof(double));
+      std::memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
     return *this;
   }
@@ -313,7 +310,7 @@ public:
       tmp += sum.Obj().A();
       tmp *= sum.f();
       assert(fSize == tmp.size());
-      memcpy(fData, tmp.Data(), fSize*sizeof(double));
+      std::memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
     //std::cout<<"leaving LASymMatrix& operator=(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix..."<<std::endl;
     return *this;
@@ -325,7 +322,7 @@ public:
       fSize = inv.Obj().Obj().Obj().size();
       fNRow = inv.Obj().Obj().Obj().Nrow();
       fData = (double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*fSize);
-      memcpy(fData, inv.Obj().Obj().Obj().Data(), fSize*sizeof(double));
+      std::memcpy(fData, inv.Obj().Obj().Obj().Data(), fSize*sizeof(double));
       (*this) *= inv.Obj().Obj().f();
       Invert(*this);
       (*this) *= inv.f();
@@ -334,7 +331,7 @@ public:
       Invert(tmp);
       tmp *= double(inv.f());
       assert(fSize == tmp.size());
-      memcpy(fData, tmp.Data(), fSize*sizeof(double));
+      std::memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
     return *this;
   }

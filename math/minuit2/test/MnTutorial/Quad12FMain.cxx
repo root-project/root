@@ -12,6 +12,8 @@
 #include "Minuit2/MnMigrad.h"
 #include "Minuit2/MnUserParameters.h"
 #include "Minuit2/MnPrint.h"
+#include <iostream>
+
 // #include "TimingUtilities/PentiumTimer.h"
 
 // StackAllocator gStackAllocator;

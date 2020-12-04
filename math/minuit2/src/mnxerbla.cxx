@@ -13,7 +13,7 @@
 */
 
 #include "Minuit2/MnConfig.h"
-#include <iostream>
+#include "Minuit2/MnPrint.h"
 
 namespace ROOT {
 
@@ -60,7 +60,8 @@ int mnxerbla(const char* srname, int info) {
 
 /*     .. Executable Statements .. */
 
-   std::cout<<" ** On entry to "<<srname<<" Parameter number "<<info<<" had an illegal Value"<<std::endl;
+   MnPrint print("mnxerbla");
+   print.Warn("On entry to", srname, "Parameter number", info, "had an illegal Value");
 
    /*     End of XERBLA */
 

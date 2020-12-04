@@ -32,7 +32,7 @@ GaussDataGen::GaussDataGen(unsigned int n) {
   // simulate data
   fSimMean = rand_mean();
   fSimVar = rand_var();
-  double sim_sig = sqrt(fSimVar);
+  double sim_sig = std::sqrt(fSimVar);
   double sim_const = 1.;
   GaussFunction gauss_sim(fSimMean, sim_sig, sim_const);
 

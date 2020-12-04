@@ -18,8 +18,6 @@ namespace ROOT {
    namespace Minuit2 {
 
 
-//#include <iostream>
-
 std::vector<double> FumiliStandardChi2FCN::Elements(const std::vector<double>& par) const {
    // Calculate the f(i) contribution to the Chi2. Chi2 = Sum[f(i)**2]
 

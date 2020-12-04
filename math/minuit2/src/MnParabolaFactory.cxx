@@ -16,8 +16,6 @@ namespace ROOT {
    namespace Minuit2 {
 
 
-// #include <iostream>
-
 MnParabola MnParabolaFactory::operator()(const MnParabolaPoint& p1,
                                          const MnParabolaPoint& p2,
                                          const MnParabolaPoint& p3) const {

@@ -18,11 +18,9 @@
 #include "Minuit2/MinimumError.h"
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/LaSum.h"
-#include <limits>
-
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
-#endif
+
+#include <limits>
 
 
 namespace ROOT {
@@ -61,6 +59,7 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState& s0,
    FumiliGradientCalculator * fgc = dynamic_cast< FumiliGradientCalculator *>( const_cast<GradientCalculator *>(&gc) );
    assert(fgc != 0);
 
+   MnPrint print("FumiliErrorUpdator");
 
    // get Hessian from Gradient calculator
 
@@ -73,7 +72,7 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState& s0,
    for (int j = 0; j < nvar; j++) {
       h(j,j) *= (1. + lambda);
       // if h(j,j) is zero what to do ?
-      if ( fabs( h(j,j) ) < eps ) { // should use DBL_MIN
+      if ( std::fabs( h(j,j) ) < eps ) { // should use DBL_MIN
                                        // put a cut off to avoid zero on diagonals
          if ( lambda > 1)
             h(j,j) = lambda*eps;
@@ -86,9 +85,8 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState& s0,
 
    int ifail = Invert(h);
    if(ifail != 0) {
-#ifdef WARNINGMSG
-      MN_INFO_MSG("FumiliErrorUpdator inversion fails; return diagonal matrix.");
-#endif
+      print.Warn("inversion fails; return diagonal matrix");
+
       for(unsigned int i = 0; i < h.Nrow(); i++) {
          h(i,i) = 1./h(i,i);
       }

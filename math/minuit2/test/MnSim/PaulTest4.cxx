@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <cassert>
 
 #ifdef USE_SEALBASE
 #include "SealBase/Filename.h"
@@ -34,7 +35,7 @@ public:
   ~PowerLawFunc() {}
 
   double operator()(double x) const {
-    return p1()*exp(log(x)*p0());
+    return p1()*std::exp(std::log(x)*p0());
   }
 
   double p0() const {return fP0;}
@@ -95,7 +96,7 @@ public:
     for(unsigned int n = 0; n < fMeasurements.size(); n++) {
       double k = fMeasurements[n];
       double mu = pl(fPositions[n]);
-      logsum += (k*log(mu) - mu);
+      logsum += (k*std::log(mu) - mu);
     }
 
     return -logsum;

@@ -16,22 +16,10 @@ namespace ROOT {
    namespace Minuit2 {
 
       MinimumBuilder::MinimumBuilder() :
-         fPrintLevel(MnPrint::Level()),
+         fPrintLevel(MnPrint::GlobalLevel()),
          fStorageLevel(1),
          fTracer(0)
       {}
-
-      MinimumBuilder::BuilderPrintLevelConf::BuilderPrintLevelConf(int printLevel)
-      {
-         // set global printlevel to be same as local
-         //std::cout << "set global print level to " << printLevel << std::endl;
-         fPrevGlobLevel = MnPrint::SetLevel(printLevel);
-      }
-      MinimumBuilder::BuilderPrintLevelConf::~BuilderPrintLevelConf()
-      {
-         //std::cout << "reset global print level to " << fPrevGlobLevel << std::endl;
-         MnPrint::SetLevel(fPrevGlobLevel);
-      }
 
    }  // namespace Minuit2
 

@@ -18,16 +18,7 @@
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/VariableMetricEDMEstimator.h"
 #include "Minuit2/FunctionMinimum.h"
-
-//#define DEBUG
-
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
-#endif
-#if defined(DEBUG) && !defined(WARNINGMSG)
-#define WARNINGMSG
-#endif
-
 #include "Minuit2/MPIProcess.h"
 
 namespace ROOT {
@@ -88,11 +79,12 @@ void MnHesse::operator()(const FCNBase& fcn, FunctionMinimum& min, unsigned int 
 MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, const MnUserTransformation& trafo, unsigned int maxcalls) const {
    // internal interface from MinimumState and MnUserTransformation
    // Function who does the real Hessian calculations
+   MnPrint print("MnHesse");
 
    const MnMachinePrecision& prec = trafo.Precision();
    // make sure starting at the right place
    double amin = mfcn(st.Vec());
-   double aimsag = sqrt(prec.Eps2())*(fabs(amin)+mfcn.Up());
+   double aimsag = std::sqrt(prec.Eps2())*(std::fabs(amin)+mfcn.Up());
 
    // diagonal Elements first
 
@@ -119,28 +111,23 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
 
    MnAlgebraicVector x = st.Parameters().Vec();
 
-#ifdef DEBUG
-   std::cout << "\nMnHesse " << std::endl;
-   std::cout << " x " << x << std::endl;
-   std::cout << " amin " << amin << "  " << st.Fval() << std::endl;
-   std::cout << " grd " << grd << std::endl;
-   std::cout << " gst " << gst << std::endl;
-   std::cout << " g2  " << g2 << std::endl;
-   std::cout << " Gradient is analytical  " << st.Gradient().IsAnalytical() << std::endl;
-#endif
-
+   print.Debug("Gradient is",
+     st.Gradient().IsAnalytical() ? "analytical" : "numerical",
+     "\n  point:", x,
+     "\n  fcn  :", amin,
+     "\n  grad :", grd,
+     "\n  step :", gst,
+     "\n  g2   :", g2
+   );
 
    for(unsigned int i = 0; i < n; i++) {
 
       double xtf = x(i);
-      double dmin = 8.*prec.Eps2()*(fabs(xtf) + prec.Eps2());
-      double d = fabs(gst(i));
+      double dmin = 8.*prec.Eps2()*(std::fabs(xtf) + prec.Eps2());
+      double d = std::fabs(gst(i));
       if(d < dmin) d = dmin;
 
-#ifdef DEBUG
-      std::cout << "\nDerivative parameter  " << i << " d = " << d << " dmin = " << dmin << std::endl;
-#endif
-
+      print.Debug("Derivative parameter", i, "d =", d, "dmin =", dmin);
 
       for(unsigned int icyc = 0; icyc < Ncycles(); icyc++) {
          double sag = 0.;
@@ -154,10 +141,10 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
             x(i) = xtf;
             sag = 0.5*(fs1+fs2-2.*amin);
 
-#ifdef DEBUG
-            std::cout << "cycle " << icyc << " mul " << multpy << "\t sag = " << sag << " d = " << d << std::endl;
-#endif
-            //  Now as F77 Minuit - check taht sag is not zero
+            print.Debug("cycle", icyc, "mul", multpy,
+              "\tsag =", sag, "d =", d);
+
+            //  Now as F77 Minuit - check that sag is not zero
             if (sag != 0) goto L30; // break
             if(trafo.Parameter(i).HasLimits()) {
                if(d > 0.5) goto L26;
@@ -169,16 +156,10 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
          }
 
 L26:
-#ifdef WARNINGMSG
-
          // get parameter name for i
          // (need separate scope for avoiding compl error when declaring name)
-         {
-            const char * name = trafo.Name( trafo.ExtOfInt(i));
-            MN_INFO_VAL2("MnHesse: 2nd derivative zero for Parameter ", name);
-            MN_INFO_MSG("MnHesse fails and will return diagonal matrix ");
-         }
-#endif
+         print.Warn("2nd derivative zero for parameter",
+           trafo.Name( trafo.ExtOfInt(i)),"; MnHesse fails and will return diagonal matrix");
 
          for(unsigned int j = 0; j < n; j++) {
             double tmp = g2(j) < prec.Eps2() ? 1. : 1./g2(j);
@@ -188,37 +169,32 @@ L26:
          return MinimumState(st.Parameters(), MinimumError(vhmat, MinimumError::MnHesseFailed()), st.Gradient(), st.Edm(), mfcn.NumOfCalls());
 
 L30:
-            double g2bfor = g2(i);
+         double g2bfor = g2(i);
          g2(i) = 2.*sag/(d*d);
          grd(i) = (fs1-fs2)/(2.*d);
          gst(i) = d;
          dirin(i) = d;
          yy(i) = fs1;
          double dlast = d;
-         d = sqrt(2.*aimsag/fabs(g2(i)));
+         d = std::sqrt(2.*aimsag/std::fabs(g2(i)));
          if(trafo.Parameter(i).HasLimits()) d = std::min(0.5, d);
          if(d < dmin) d = dmin;
 
-#ifdef DEBUG
-         std::cout << "\t g1 = " << grd(i) << " g2 = " << g2(i) << " step = " << gst(i) << " d = " << d
-                   << " diffd = " <<  fabs(d-dlast)/d << " diffg2 = " << fabs(g2(i)-g2bfor)/g2(i) << std::endl;
-#endif
-
+         print.Debug("g1 =", grd(i), "g2 =", g2(i), "step =", gst(i),
+                "d =", d, "diffd =", std::fabs(d-dlast)/d, "diffg2 =",
+                std::fabs(g2(i)-g2bfor)/g2(i));
 
          // see if converged
-         if(fabs((d-dlast)/d) < Tolerstp()) break;
-         if(fabs((g2(i)-g2bfor)/g2(i)) < TolerG2()) break;
+         if(std::fabs((d-dlast)/d) < Tolerstp()) break;
+         if(std::fabs((g2(i)-g2bfor)/g2(i)) < TolerG2()) break;
          d = std::min(d, 10.*dlast);
          d = std::max(d, 0.1*dlast);
       }
       vhmat(i,i) = g2(i);
       if(mfcn.NumOfCalls()  > maxcalls) {
 
-#ifdef WARNINGMSG
          //std::cout<<"maxcalls " << maxcalls << " " << mfcn.NumOfCalls() << "  " <<   st.NFcn() << std::endl;
-         MN_INFO_MSG("MnHesse: maximum number of allowed function calls exhausted.");
-         MN_INFO_MSG("MnHesse fails and will return diagonal matrix ");
-#endif
+         print.Warn("Maximum number of allowed function calls exhausted; will return diagonal matrix");
 
          for(unsigned int j = 0; j < n; j++) {
             double tmp = g2(j) < prec.Eps2() ? 1. : 1./g2(j);
@@ -230,9 +206,7 @@ L30:
 
    }
 
-#ifdef DEBUG
-   std::cout << "\n Second derivatives " << g2 << std::endl;
-#endif
+   print.Debug("Second derivatives", g2);
 
    if(fStrategy.Strategy() > 0) {
       // refine first derivative
@@ -245,7 +219,7 @@ L30:
 
    //off-diagonal Elements
    // initial starting values
-   if (n > 0) { 
+   if (n > 0) {
       MPIProcess mpiprocOffDiagonal(n*(n-1)/2,0);
       unsigned int startParIndexOffDiagonal = mpiprocOffDiagonal.StartElementIndex();
       unsigned int endParIndexOffDiagonal = mpiprocOffDiagonal.EndElementIndex();
@@ -282,30 +256,18 @@ L30:
 
    //verify if matrix pos-def (still 2nd derivative)
 
-#ifdef DEBUG
-   std::cout << "Original error matrix " << vhmat << std::endl;
-#endif
+   print.Debug("Original error matrix", vhmat);
 
    MinimumError tmpErr = MnPosDef()(MinimumError(vhmat,1.), prec);
-
-#ifdef DEBUG
-   std::cout << "Original error matrix " << vhmat << std::endl;
-#endif
-
    vhmat = tmpErr.InvHessian();
 
-#ifdef DEBUG
-   std::cout << "PosDef error matrix " << vhmat << std::endl;
-#endif
+   print.Debug("PosDef error matrix", vhmat);
 
 
    int ifail = Invert(vhmat);
    if(ifail != 0) {
 
-#ifdef WARNINGMSG
-      MN_INFO_MSG("MnHesse: matrix inversion fails!");
-      MN_INFO_MSG("MnHesse fails and will return diagonal matrix.");
-#endif
+      print.Warn("Matrix inversion fails; will return diagonal matrix");
 
       MnAlgebraicSymMatrix tmpsym(vhmat.Nrow());
       for(unsigned int j = 0; j < n; j++) {
@@ -323,9 +285,6 @@ L30:
    if(tmpErr.IsMadePosDef()) {
       MinimumError err(vhmat, MinimumError::MnMadePosDef() );
       double edm = estim.Estimate(gr, err);
-#ifdef WARNINGMSG
-      MN_INFO_MSG("MnHesse: matrix was forced pos. def. ");
-#endif
       return MinimumState(st.Parameters(), err, gr, edm, mfcn.NumOfCalls());
    }
 
@@ -333,15 +292,12 @@ L30:
    MinimumError err(vhmat, 0.);
    double edm = estim.Estimate(gr, err);
 
-#ifdef DEBUG
-   std::cout << "\nHesse is ACCURATE. New state from MnHesse " << std::endl;
-   std::cout << "Gradient " << grd << std::endl;
-   std::cout << "Second Deriv " << g2 << std::endl;
-   std::cout << "Gradient step " << gst << std::endl;
-   std::cout << "Error  " << vhmat  << std::endl;
-   std::cout << "edm  " << edm  << std::endl;
-#endif
-
+   print.Debug("Hessian is ACCURATE. New state:",
+    "\n  First derivative:", grd,
+    "\n  Second derivative:", g2,
+    "\n  Gradient step:", gst,
+    "\n  Covariance matrix:", vhmat,
+    "\n  Edm:", edm);
 
    return MinimumState(st.Parameters(), err, gr, edm, mfcn.NumOfCalls());
 }
@@ -352,9 +308,9 @@ L30:
     const MnMachinePrecision& prec = trafo.Precision();
     // make sure starting at the right place
     double amin = mfcn(st.Vec());
-    //   if(fabs(amin - st.Fval()) > prec.Eps2()) std::cout<<"function Value differs from amin  by "<<amin - st.Fval()<<std::endl;
+    //   if(std::fabs(amin - st.Fval()) > prec.Eps2()) std::cout<<"function Value differs from amin  by "<<amin - st.Fval()<<std::endl;
 
-    double aimsag = sqrt(prec.Eps2())*(fabs(amin)+mfcn.Up());
+    double aimsag = std::sqrt(prec.Eps2())*(std::fabs(amin)+mfcn.Up());
 
     // diagonal Elements first
 
@@ -370,8 +326,8 @@ L30:
     for(unsigned int i = 0; i < n; i++) {
 
        double xtf = x(i);
-       double dmin = 8.*prec.Eps2()*fabs(xtf);
-       double d = fabs(gst(i));
+       double dmin = 8.*prec.Eps2()*std::fabs(xtf);
+       double d = std::fabs(gst(i));
        if(d < dmin) d = dmin;
        for(int icyc = 0; icyc < Ncycles(); icyc++) {
           double sag = 0.;
@@ -413,13 +369,13 @@ L30:
           dirin(i) = d;
           yy(i) = fs1;
           double dlast = d;
-          d = sqrt(2.*aimsag/fabs(g2(i)));
+          d = std::sqrt(2.*aimsag/std::fabs(g2(i)));
           if(trafo.Parameter(i).HasLimits()) d = std::min(0.5, d);
           if(d < dmin) d = dmin;
 
           // see if converged
-          if(fabs((d-dlast)/d) < Tolerstp()) break;
-          if(fabs((g2(i)-g2bfor)/g2(i)) < TolerG2()) break;
+          if(std::fabs((d-dlast)/d) < Tolerstp()) break;
+          if(std::fabs((g2(i)-g2bfor)/g2(i)) < TolerG2()) break;
           d = std::min(d, 10.*dlast);
           d = std::max(d, 0.1*dlast);
        }

@@ -10,10 +10,7 @@
 #include "Minuit2/MnCovarianceSqueeze.h"
 #include "Minuit2/MnUserCovariance.h"
 #include "Minuit2/MinimumError.h"
-
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
-#endif
 
 
 namespace ROOT {
@@ -28,6 +25,8 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
    assert(cov.Nrow() > 0);
    assert(n < cov.Nrow());
 
+   MnPrint print("MnCovarianceSqueeze");
+
    MnAlgebraicSymMatrix hess(cov.Nrow());
    for(unsigned int i = 0; i < cov.Nrow(); i++) {
       for(unsigned int j = i; j < cov.Nrow(); j++) {
@@ -38,9 +37,7 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
    int ifail = Invert(hess);
 
    if(ifail != 0) {
-#ifdef WARNINGMSG
-      MN_INFO_MSG("MnUserCovariance inversion failed; return diagonal matrix;");
-#endif
+      print.Warn("inversion failed; return diagonal matrix;");
       MnUserCovariance result(cov.Nrow() - 1);
       for(unsigned int i = 0, j =0; i < cov.Nrow(); i++) {
          if(i == n) continue;
@@ -54,9 +51,7 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
 
    ifail = Invert(squeezed);
    if(ifail != 0) {
-#ifdef WARNINGMSG
-      MN_INFO_MSG("MnUserCovariance back-inversion failed; return diagonal matrix;");
-#endif
+      print.Warn("back-inversion failed; return diagonal matrix;");
       MnUserCovariance result(squeezed.Nrow());
       for(unsigned int i = 0; i < squeezed.Nrow(); i++) {
          result(i,i) = 1./squeezed(i,i);
@@ -68,6 +63,9 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
 }
 
 MinimumError MnCovarianceSqueeze::operator()(const MinimumError& err, unsigned int n) const {
+
+   MnPrint print("MnCovarianceSqueeze");
+
    // squueze the minimum error class
    // Remove index-row on the Hessian matrix and the get the new correct error matrix
    // (inverse of new Hessian)
@@ -75,9 +73,8 @@ MinimumError MnCovarianceSqueeze::operator()(const MinimumError& err, unsigned i
    MnAlgebraicSymMatrix squeezed = (*this)(hess, n);
    int ifail = Invert(squeezed);
    if(ifail != 0) {
-#ifdef WARNINGMSG
-      MN_INFO_MSG("MnCovarianceSqueeze: MinimumError inversion fails; return diagonal matrix.");
-#endif
+      print.Warn("MinimumError inversion fails; return diagonal matrix.");
+
       MnAlgebraicSymMatrix tmp(squeezed.Nrow());
       for(unsigned int i = 0; i < squeezed.Nrow(); i++) {
          tmp(i,i) = 1./squeezed(i,i);

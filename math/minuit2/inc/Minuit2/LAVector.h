@@ -16,7 +16,6 @@
 
 #include <cassert>
 #include <memory>
-// #include <iostream>
 
 #include "Minuit2/StackAllocator.h"
 
@@ -44,7 +43,7 @@ public:
 
   LAVector(unsigned int n) : fSize(n), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*n)) {
 //     assert(fSize>0);
-    memset(fData, 0, size()*sizeof(double));
+    std::memset(fData, 0, size()*sizeof(double));
 //     std::cout<<"LAVector(unsigned int n), n= "<<n<<std::endl;
   }
 
@@ -59,7 +58,7 @@ public:
   LAVector(const LAVector& v) :
     fSize(v.size()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*v.size())) {
 //     std::cout<<"LAVector(const LAVector& v)"<<std::endl;
-    memcpy(fData, v.Data(), fSize*sizeof(double));
+    std::memcpy(fData, v.Data(), fSize*sizeof(double));
   }
 
   LAVector& operator=(const LAVector& v) {
@@ -67,7 +66,7 @@ public:
 //     std::cout<<"fSize= "<<fSize<<std::endl;
 //     std::cout<<"v.size()= "<<v.size()<<std::endl;
     assert(fSize == v.size());
-    memcpy(fData, v.Data(), fSize*sizeof(double));
+    std::memcpy(fData, v.Data(), fSize*sizeof(double));
     return *this;
   }
 
@@ -76,7 +75,7 @@ public:
     fSize(v.Obj().size()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*v.Obj().size())) {
 //     std::cout<<"LAVector(const ABObj<LAVector, T>& v)"<<std::endl;
 //     std::cout<<"allocate "<<fSize<<std::endl;
-    memcpy(fData, v.Obj().Data(), fSize*sizeof(T));
+    std::memcpy(fData, v.Obj().Data(), fSize*sizeof(T));
     (*this) *= T(v.f());
 //     std::cout<<"fData= "<<fData[0]<<" "<<fData[1]<<std::endl;
   }
@@ -213,7 +212,7 @@ public:
     } else {
       assert(fSize == v.Obj().size());
     }
-    memcpy(fData, v.Obj().Data(), fSize*sizeof(double));
+    std::memcpy(fData, v.Obj().Data(), fSize*sizeof(double));
     (*this) *= T(v.f());
     return *this;
   }
@@ -226,7 +225,7 @@ public:
     } else {
       LAVector tmp(something.Obj());
       assert(fSize == tmp.size());
-      memcpy(fData, tmp.Data(), fSize*sizeof(double));
+      std::memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
     (*this) *= something.f();
     return *this;
@@ -241,7 +240,7 @@ public:
       LAVector tmp(sum.Obj().A());
       tmp += sum.Obj().B();
       assert(fSize == tmp.size());
-      memcpy(fData, tmp.Data(), fSize*sizeof(double));
+      std::memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
     (*this) *= sum.f();
     return *this;
@@ -256,7 +255,7 @@ public:
       LAVector tmp(sum.Obj().A());
       tmp += sum.Obj().B();
       assert(fSize == tmp.size());
-      memcpy(fData, tmp.Data(), fSize*sizeof(double));
+      std::memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
   (*this) *= sum.f();
     return *this;
@@ -288,7 +287,7 @@ public:
       LAVector tmp(prod.Obj().B());
       tmp += prod.Obj().A();
       assert(fSize == tmp.size());
-      memcpy(fData, tmp.Data(), fSize*sizeof(double));
+      std::memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
     (*this) *= prod.f();
     return *this;
