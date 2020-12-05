@@ -13,6 +13,7 @@
 #include "Minuit2/BasicFunctionMinimum.h"
 
 #include <vector>
+#include <memory>
 
 #ifdef G__DICTIONARY
 typedef ROOT::Minuit2::MinimumState MinimumState;
@@ -32,54 +33,36 @@ namespace Minuit2 {
 class FunctionMinimum {
 
 public:
-   class MnReachedCallLimit {
-   };
-   class MnAboveMaxEdm {
-   };
+   using MnAboveMaxEdm = BasicFunctionMinimum::MnAboveMaxEdm;
+   using MnReachedCallLimit = BasicFunctionMinimum::MnReachedCallLimit;
 
 public:
    /// constructor from only MinimumSeed. Minimum is only from seed result not full minimization
-   FunctionMinimum(const MinimumSeed &seed, double up)
-      : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, up)))
-   {
-   }
+   FunctionMinimum(const MinimumSeed &seed, double up) : fData(std::make_shared<BasicFunctionMinimum>(seed, up)) {}
 
    /// constructor at the end of a successfull minimization from seed and vector of states
    FunctionMinimum(const MinimumSeed &seed, const std::vector<MinimumState> &states, double up)
-      : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, states, up)))
+      : fData(std::make_shared<BasicFunctionMinimum>(seed, states, up))
    {
    }
 
    /// constructor at the end of a failed minimization due to exceeding function call limit
    FunctionMinimum(const MinimumSeed &seed, const std::vector<MinimumState> &states, double up, MnReachedCallLimit)
-      : fData(MnRefCountedPointer<BasicFunctionMinimum>(
-           new BasicFunctionMinimum(seed, states, up, BasicFunctionMinimum::MnReachedCallLimit())))
+      : fData(std::make_shared<BasicFunctionMinimum>(seed, states, up, MnReachedCallLimit{}))
    {
    }
 
    /// constructor at the end of a failed minimization due to edm above maximum value
    FunctionMinimum(const MinimumSeed &seed, const std::vector<MinimumState> &states, double up, MnAboveMaxEdm)
-      : fData(MnRefCountedPointer<BasicFunctionMinimum>(
-           new BasicFunctionMinimum(seed, states, up, BasicFunctionMinimum::MnAboveMaxEdm())))
+      : fData(std::make_shared<BasicFunctionMinimum>(seed, states, up, MnAboveMaxEdm{}))
    {
    }
-
-   /// copy constructo
-   FunctionMinimum(const FunctionMinimum &min) : fData(min.fData) {}
-
-   FunctionMinimum &operator=(const FunctionMinimum &min)
-   {
-      fData = min.fData;
-      return *this;
-   }
-
-   ~FunctionMinimum() {}
 
    // add new state
    void Add(const MinimumState &state) { fData->Add(state); }
 
    // add new state
-   void Add(const MinimumState &state, MnAboveMaxEdm) { fData->Add(state, BasicFunctionMinimum::MnAboveMaxEdm()); }
+   void Add(const MinimumState &state, MnAboveMaxEdm) { fData->Add(state, MnAboveMaxEdm{}); }
 
    const MinimumSeed &Seed() const { return fData->Seed(); }
    const std::vector<ROOT::Minuit2::MinimumState> &States() const { return fData->States(); }
@@ -113,7 +96,7 @@ public:
    void SetErrorDef(double up) { return fData->SetErrorDef(up); }
 
 private:
-   MnRefCountedPointer<BasicFunctionMinimum> fData;
+   std::shared_ptr<BasicFunctionMinimum> fData;
 };
 
 } // namespace Minuit2
