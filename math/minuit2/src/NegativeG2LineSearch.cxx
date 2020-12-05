@@ -23,8 +23,8 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumState &st, const GradientCalculator &gc,
-                                              const MnMachinePrecision &prec) const
+MinimumState NegativeG2LineSearch::
+operator()(const MnFcn &fcn, const MinimumState &st, const GradientCalculator &gc, const MnMachinePrecision &prec) const
 {
 
    //   when the second derivatives are negative perform a  line search  along Parameter which gives

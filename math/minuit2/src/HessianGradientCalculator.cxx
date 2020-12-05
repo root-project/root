@@ -34,8 +34,8 @@ FunctionGradient HessianGradientCalculator::operator()(const MinimumParameters &
    return (*this)(par, gra);
 }
 
-FunctionGradient
-HessianGradientCalculator::operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
+FunctionGradient HessianGradientCalculator::
+operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 {
    // interface of the base class. Use DeltaGradient for op.
    std::pair<FunctionGradient, MnAlgebraicVector> mypair = DeltaGradient(par, Gradient);

@@ -15,8 +15,8 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-MnParabola
-MnParabolaFactory::operator()(const MnParabolaPoint &p1, const MnParabolaPoint &p2, const MnParabolaPoint &p3) const
+MnParabola MnParabolaFactory::
+operator()(const MnParabolaPoint &p1, const MnParabolaPoint &p2, const MnParabolaPoint &p3) const
 {
    // construct the parabola from 3 points p1,p2,p3
    double x1 = p1.X();

@@ -38,8 +38,8 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameterState &st,
-                                        const MnStrategy &stra) const
+MinimumSeed MnSeedGenerator::
+operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameterState &st, const MnStrategy &stra) const
 {
 
    MnPrint print("MnSeedGenerator");

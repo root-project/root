@@ -60,8 +60,8 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const std::vector<dou
    return (*this)(minpars);
 }
 
-FunctionGradient
-Numerical2PGradientCalculator::operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
+FunctionGradient Numerical2PGradientCalculator::
+operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 {
    // calculate numerical gradient from MinimumParameters object
    // the algorithm takes correctly care when the gradient is approximatly zero

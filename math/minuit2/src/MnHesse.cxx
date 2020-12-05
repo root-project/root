@@ -39,8 +39,8 @@ MnUserParameterState MnHesse::operator()(const FCNBase &fcn, const std::vector<d
    return (*this)(fcn, MnUserParameterState(par, cov, nrow), maxcalls);
 }
 
-MnUserParameterState MnHesse::operator()(const FCNBase &fcn, const std::vector<double> &par,
-                                         const MnUserCovariance &cov, unsigned int maxcalls) const
+MnUserParameterState MnHesse::
+operator()(const FCNBase &fcn, const std::vector<double> &par, const MnUserCovariance &cov, unsigned int maxcalls) const
 {
    // interface from vector of params and covariance
    return (*this)(fcn, MnUserParameterState(par, cov), maxcalls);
@@ -52,15 +52,15 @@ MnUserParameterState MnHesse::operator()(const FCNBase &fcn, const MnUserParamet
    return (*this)(fcn, MnUserParameterState(par), maxcalls);
 }
 
-MnUserParameterState MnHesse::operator()(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov,
-                                         unsigned int maxcalls) const
+MnUserParameterState MnHesse::
+operator()(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov, unsigned int maxcalls) const
 {
    // interface from MnUserParameters and MnUserCovariance
    return (*this)(fcn, MnUserParameterState(par, cov), maxcalls);
 }
 
-MnUserParameterState
-MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsigned int maxcalls) const
+MnUserParameterState MnHesse::
+operator()(const FCNBase &fcn, const MnUserParameterState &state, unsigned int maxcalls) const
 {
    // interface from MnUserParameterState
    // create a new Minimum state and use that interface
@@ -90,8 +90,8 @@ void MnHesse::operator()(const FCNBase &fcn, FunctionMinimum &min, unsigned int 
    min.Add(st);
 }
 
-MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation &trafo,
-                                 unsigned int maxcalls) const
+MinimumState MnHesse::
+operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation &trafo, unsigned int maxcalls) const
 {
    // internal interface from MinimumState and MnUserTransformation
    // Function who does the real Hessian calculations

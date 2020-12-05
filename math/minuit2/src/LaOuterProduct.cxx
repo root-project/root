@@ -30,8 +30,8 @@ LASymMatrix::LASymMatrix(const ABObj<sym, VectorOuterProduct<ABObj<vec, LAVector
    Outer_prod(*this, out.Obj().Obj().Obj(), out.f() * out.Obj().Obj().f() * out.Obj().Obj().f());
 }
 
-LASymMatrix &
-LASymMatrix::operator=(const ABObj<sym, VectorOuterProduct<ABObj<vec, LAVector, double>, double>, double> &out)
+LASymMatrix &LASymMatrix::
+operator=(const ABObj<sym, VectorOuterProduct<ABObj<vec, LAVector, double>, double>, double> &out)
 {
    // assignment operator from expression based on outer product of symmetric matrices
    //   std::cout<<"LASymMatrix& LASymMatrix::operator=(const ABObj<sym, VectorOuterProduct<ABObj<vec, LAVector,

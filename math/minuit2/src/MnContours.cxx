@@ -22,8 +22,8 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-std::vector<std::pair<double, double>>
-MnContours::operator()(unsigned int px, unsigned int py, unsigned int npoints) const
+std::vector<std::pair<double, double>> MnContours::
+operator()(unsigned int px, unsigned int py, unsigned int npoints) const
 {
    // get contour as a pair of (x,y) points passing the parameter index (px, py)  and the number of requested points
    // (>=4)
