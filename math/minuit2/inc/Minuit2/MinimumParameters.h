@@ -10,8 +10,9 @@
 #ifndef ROOT_Minuit2_MinimumParameters
 #define ROOT_Minuit2_MinimumParameters
 
-#include "Minuit2/MnRefCountedPointer.h"
 #include "Minuit2/BasicMinimumParameters.h"
+
+#include <memory>
 
 namespace ROOT {
 
@@ -20,31 +21,18 @@ namespace Minuit2 {
 class MinimumParameters {
 
 public:
-   MinimumParameters(unsigned int n, double fval = 0)
-      : fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(n, fval)))
-   {
-   }
+   MinimumParameters(unsigned int n, double fval = 0) : fData(std::make_shared<BasicMinimumParameters>(n, fval)) {}
 
    /** takes the Parameter vector */
    MinimumParameters(const MnAlgebraicVector &avec, double fval)
-      : fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(avec, fval)))
+      : fData(std::make_shared<BasicMinimumParameters>(avec, fval))
    {
    }
 
    /** takes the Parameter vector plus step size x1 - x0 = dirin */
    MinimumParameters(const MnAlgebraicVector &avec, const MnAlgebraicVector &dirin, double fval)
-      : fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(avec, dirin, fval)))
+      : fData(std::make_shared<BasicMinimumParameters>(avec, dirin, fval))
    {
-   }
-
-   ~MinimumParameters() {}
-
-   MinimumParameters(const MinimumParameters &par) : fData(par.fData) {}
-
-   MinimumParameters &operator=(const MinimumParameters &par)
-   {
-      fData = par.fData;
-      return *this;
    }
 
    const MnAlgebraicVector &Vec() const { return fData->Vec(); }
@@ -54,7 +42,7 @@ public:
    bool HasStepSize() const { return fData->HasStepSize(); }
 
 private:
-   MnRefCountedPointer<BasicMinimumParameters> fData;
+   std::shared_ptr<BasicMinimumParameters> fData;
 };
 
 } // namespace Minuit2

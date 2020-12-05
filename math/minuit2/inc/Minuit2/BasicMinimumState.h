@@ -44,24 +44,6 @@ public:
    {
    }
 
-   ~BasicMinimumState() {}
-
-   BasicMinimumState(const BasicMinimumState &state)
-      : fParameters(state.fParameters), fError(state.fError), fGradient(state.fGradient), fEDM(state.fEDM),
-        fNFcn(state.fNFcn)
-   {
-   }
-
-   BasicMinimumState &operator=(const BasicMinimumState &state)
-   {
-      fParameters = state.fParameters;
-      fError = state.fError;
-      fGradient = state.fGradient;
-      fEDM = state.fEDM;
-      fNFcn = state.fNFcn;
-      return *this;
-   }
-
    void *operator new(size_t nbytes) { return StackAllocatorHolder::Get().Allocate(nbytes); }
 
    void operator delete(void *p, size_t /*nbytes */) { StackAllocatorHolder::Get().Deallocate(p); }

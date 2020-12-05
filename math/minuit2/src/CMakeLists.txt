@@ -86,8 +86,6 @@ set(MINUIT2_HEADERS
     MnPlot.h
     MnPosDef.h
     MnPrint.h
-    MnRefCountedPointer.h
-    MnReferenceCounter.h
     MnScan.h
     MnSeedGenerator.h
     MnSimplex.h
