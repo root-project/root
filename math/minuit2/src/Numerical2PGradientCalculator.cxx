@@ -29,10 +29,10 @@
 
 namespace ROOT {
 
-   namespace Minuit2 {
+namespace Minuit2 {
 
-
-FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParameters& par) const {
+FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParameters &par) const
+{
    // calculate gradient using Initial gradient calculator and from MinimumParameters object
 
    InitialGradientCalculator gc(fFcn, fTransformation, fStrategy);
@@ -41,9 +41,9 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    return (*this)(par, gra);
 }
 
-
 // comment it, because it was added
-FunctionGradient Numerical2PGradientCalculator::operator()(const std::vector<double>& params) const {
+FunctionGradient Numerical2PGradientCalculator::operator()(const std::vector<double> &params) const
+{
    // calculate gradient from an std;:vector of paramteters
 
    int npar = params.size();
@@ -58,12 +58,11 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const std::vector<dou
    MinimumParameters minpars = MinimumParameters(par, fval);
 
    return (*this)(minpars);
-
 }
 
-
-
-FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParameters& par, const FunctionGradient& Gradient) const {
+FunctionGradient
+Numerical2PGradientCalculator::operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
+{
    // calculate numerical gradient from MinimumParameters object
    // the algorithm takes correctly care when the gradient is approximatly zero
 
@@ -82,8 +81,8 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 
    print.Debug("Assumed precision eps", eps, "eps2", eps2);
 
-   double dfmin = 8.*eps2*(std::fabs(fcnmin)+Fcn().Up());
-   double vrysml = 8.*eps*eps;
+   double dfmin = 8. * eps2 * (std::fabs(fcnmin) + Fcn().Up());
+   double vrysml = 8. * eps * eps;
    //   double vrysml = std::max(1.e-4, eps2);
    //    std::cout<<"dfmin= "<<dfmin<<std::endl;
    //    std::cout<<"vrysml= "<<vrysml<<std::endl;
@@ -96,12 +95,11 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    MnAlgebraicVector g2 = Gradient.G2();
    MnAlgebraicVector gstep = Gradient.Gstep();
 
-   print.Debug("Calculating gradient around value",
-     fcnmin, "at point", par.Vec());
+   print.Debug("Calculating gradient around value", fcnmin, "at point", par.Vec());
 
 #ifndef _OPENMP
 
-   MPIProcess mpiproc(n,0);
+   MPIProcess mpiproc(n, 0);
 
    // for serial execution this can be outside the loop
    MnAlgebraicVector x = par.Vec();
@@ -109,17 +107,17 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    unsigned int startElementIndex = mpiproc.StartElementIndex();
    unsigned int endElementIndex = mpiproc.EndElementIndex();
 
-   for(unsigned int i = startElementIndex; i < endElementIndex; i++) {
+   for (unsigned int i = startElementIndex; i < endElementIndex; i++) {
 
 #else
 
- // parallelize this loop using OpenMP
+   // parallelize this loop using OpenMP
 //#define N_PARALLEL_PAR 5
 #pragma omp parallel
 #pragma omp for
-//#pragma omp for schedule (static, N_PARALLEL_PAR)
+   //#pragma omp for schedule (static, N_PARALLEL_PAR)
 
-   for(int i = 0; i < int(n); i++) {
+   for (int i = 0; i < int(n); i++) {
 
 #endif
 
@@ -129,23 +127,26 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 #endif
 
       double xtf = x(i);
-      double epspri = eps2 + std::fabs(grd(i)*eps2);
+      double epspri = eps2 + std::fabs(grd(i) * eps2);
       double stepb4 = 0.;
-      for(unsigned int j = 0; j < ncycle; j++)  {
-         double optstp = std::sqrt(dfmin/(std::fabs(g2(i))+epspri));
-         double step = std::max(optstp, std::fabs(0.1*gstep(i)));
+      for (unsigned int j = 0; j < ncycle; j++) {
+         double optstp = std::sqrt(dfmin / (std::fabs(g2(i)) + epspri));
+         double step = std::max(optstp, std::fabs(0.1 * gstep(i)));
          //       std::cout<<"step: "<<step;
-         if(Trafo().Parameter(Trafo().ExtOfInt(i)).HasLimits()) {
-            if(step > 0.5) step = 0.5;
+         if (Trafo().Parameter(Trafo().ExtOfInt(i)).HasLimits()) {
+            if (step > 0.5)
+               step = 0.5;
          }
-         double stpmax = 10.*std::fabs(gstep(i));
-         if(step > stpmax) step = stpmax;
+         double stpmax = 10. * std::fabs(gstep(i));
+         if (step > stpmax)
+            step = stpmax;
          //       std::cout<<" "<<step;
-         double stpmin = std::max(vrysml, 8.*std::fabs(eps2*x(i)));
-         if(step < stpmin) step = stpmin;
+         double stpmin = std::max(vrysml, 8. * std::fabs(eps2 * x(i)));
+         if (step < stpmin)
+            step = stpmin;
          //       std::cout<<" "<<step<<std::endl;
          //       std::cout<<"step: "<<step<<std::endl;
-         if(std::fabs((step-stepb4)/step) < StepTolerance()) {
+         if (std::fabs((step - stepb4) / step) < StepTolerance()) {
             //    std::cout<<"(step-stepb4)/step"<<std::endl;
             //    std::cout<<"j= "<<j<<std::endl;
             //    std::cout<<"step= "<<step<<std::endl;
@@ -165,8 +166,8 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
          x(i) = xtf;
 
          double grdb4 = grd(i);
-         grd(i) = 0.5*(fs1 - fs2)/step;
-         g2(i) = (fs1 + fs2 - 2.*fcnmin)/step/step;
+         grd(i) = 0.5 * (fs1 - fs2) / step;
+         g2(i) = (fs1 + fs2 - 2. * fcnmin) / step / step;
 
 #ifdef _OPENMP
 #pragma omp critical
@@ -192,7 +193,7 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
             });
          }
 
-         if(std::fabs(grdb4-grd(i))/(std::fabs(grd(i))+dfmin/step) < GradTolerance())  {
+         if (std::fabs(grdb4 - grd(i)) / (std::fabs(grd(i)) + dfmin / step) < GradTolerance()) {
             //    std::cout<<"j= "<<j<<std::endl;
             //    std::cout<<"step= "<<step<<std::endl;
             //    std::cout<<"fs1, fs2: "<<fs1<<" "<<fs2<<std::endl;
@@ -213,42 +214,45 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 #endif
 
    // print after parallel processing to avoid synchronization issues
-   print.Debug([&](std::ostream& os) {
-       const int pr = os.precision(13);
-       os << std::endl;
-       os << std::setw(14) << "Parameter" << std::setw(14) << "Gradient" << std::setw(14) << "g2 "
-          << std::setw(14) << "step" << std::endl;
-       for (int i = 0; i < int(n); i++) {
-          const int iext = Trafo().ExtOfInt(i);
-          os << std::setw(14) << Trafo().Name(iext) << " " << grd(i) << " " << g2(i) << " " << gstep(i) << std::endl;
-       }
-       os.precision(pr);
+   print.Debug([&](std::ostream &os) {
+      const int pr = os.precision(13);
+      os << std::endl;
+      os << std::setw(14) << "Parameter" << std::setw(14) << "Gradient" << std::setw(14) << "g2 " << std::setw(14)
+         << "step" << std::endl;
+      for (int i = 0; i < int(n); i++) {
+         const int iext = Trafo().ExtOfInt(i);
+         os << std::setw(14) << Trafo().Name(iext) << " " << grd(i) << " " << g2(i) << " " << gstep(i) << std::endl;
+      }
+      os.precision(pr);
    });
 
    return FunctionGradient(grd, g2, gstep);
 }
 
-const MnMachinePrecision& Numerical2PGradientCalculator::Precision() const {
+const MnMachinePrecision &Numerical2PGradientCalculator::Precision() const
+{
    // return global precision (set in transformation)
    return fTransformation.Precision();
 }
 
-unsigned int Numerical2PGradientCalculator::Ncycle() const {
+unsigned int Numerical2PGradientCalculator::Ncycle() const
+{
    // return number of cycles for gradient calculation (set in strategy object)
    return Strategy().GradientNCycles();
 }
 
-double Numerical2PGradientCalculator::StepTolerance() const {
+double Numerical2PGradientCalculator::StepTolerance() const
+{
    // return gradient step tolerance (set in strategy object)
    return Strategy().GradientStepTolerance();
 }
 
-double Numerical2PGradientCalculator::GradTolerance() const {
+double Numerical2PGradientCalculator::GradTolerance() const
+{
    // return gradient tolerance (set in strategy object)
    return Strategy().GradientTolerance();
 }
 
+} // namespace Minuit2
 
-   }  // namespace Minuit2
-
-}  // namespace ROOT
+} // namespace ROOT

@@ -107,7 +107,7 @@ public:
    // Whether to show the full prefix stack or only the end
    static void ShowPrefixStack(bool yes);
 
-   static void AddFilter(const char* prefix);
+   static void AddFilter(const char *prefix);
    static void ClearFilter();
 
    // set print level and return the previous one
@@ -156,9 +156,9 @@ private:
       Impl(level, os.str());
    }
 
-   static void StreamPrefix(std::ostringstream& os);
+   static void StreamPrefix(std::ostringstream &os);
 
-   // returns true if filters are installed and message is not selected by any filter 
+   // returns true if filters are installed and message is not selected by any filter
    static bool Hidden();
 
    // see MnPrintImpl.cxx

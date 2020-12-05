@@ -21,16 +21,16 @@
 
 namespace ROOT {
 
-   namespace Minuit2 {
+namespace Minuit2 {
 
-
-FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters& par) const {
+FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &par) const
+{
 
    // Calculate gradient for Fumili using the gradient and Hessian provided by the FCN Fumili function
    // applying the external to int trasformation.
 
    int nvar = par.Vec().size();
-   std::vector<double> extParam = fTransformation(  par.Vec() );
+   std::vector<double> extParam = fTransformation(par.Vec());
    //   std::vector<double> deriv;
    //   deriv.reserve( nvar );
    //   for (int i = 0; i < nvar; ++i) {
@@ -42,25 +42,21 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters& p
    //   }
 
    // eval Gradient
-   FumiliFCNBase & fcn = const_cast<FumiliFCNBase &>(fFcn);
+   FumiliFCNBase &fcn = const_cast<FumiliFCNBase &>(fFcn);
 
    fcn.EvaluateAll(extParam);
-
 
    MnAlgebraicVector v(nvar);
    MnAlgebraicSymMatrix h(nvar);
 
-
-   const std::vector<double> & fcn_gradient = fFcn.Gradient();
-   assert( fcn_gradient.size() == extParam.size() );
-
+   const std::vector<double> &fcn_gradient = fFcn.Gradient();
+   assert(fcn_gradient.size() == extParam.size());
 
    //   for (int i = 0; i < nvar; ++i) {
    //     unsigned int iext = fTransformation.ExtOfInt(i);
    //     double ideriv = 1.0;
    //     if ( fTransformation.Parameter(iext).HasLimits())
    //       ideriv =  fTransformation.DInt2Ext( i, par.Vec()(i) ) ;
-
 
    //     //     v(i) = fcn_gradient[iext]*deriv;
    //     v(i) = ideriv*fcn_gradient[iext];
@@ -76,7 +72,6 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters& p
    //     }
    //   }
 
-
    // cache deriv and Index values .
    // in large Parameter limit then need to re-optimize and see if better not caching
 
@@ -85,24 +80,24 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters& p
    for (int i = 0; i < nvar; ++i) {
       extIndex[i] = fTransformation.ExtOfInt(i);
       deriv[i] = 1;
-      if ( fTransformation.Parameter(extIndex[i]).HasLimits())
-         deriv[i] =  fTransformation.DInt2Ext( i, par.Vec()(i) ) ;
+      if (fTransformation.Parameter(extIndex[i]).HasLimits())
+         deriv[i] = fTransformation.DInt2Ext(i, par.Vec()(i));
 
-      v(i) = fcn_gradient[extIndex[i]]*deriv[i];
+      v(i) = fcn_gradient[extIndex[i]] * deriv[i];
 
       for (int j = 0; j <= i; ++j) {
-         h(i,j) = deriv[i]*deriv[j]*fFcn.Hessian(extIndex[i],extIndex[j]);
+         h(i, j) = deriv[i] * deriv[j] * fFcn.Hessian(extIndex[i], extIndex[j]);
       }
    }
 
    MnPrint print("FumiliGradientCalculator");
-   print.Debug([&](std::ostream& os) {
-     // compare Fumili with Minuit gradient
+   print.Debug([&](std::ostream &os) {
+      // compare Fumili with Minuit gradient
 
-     Numerical2PGradientCalculator gc(MnUserFcn(fFcn,fTransformation), fTransformation, MnStrategy(1));
-     FunctionGradient g2 = gc(par);
+      Numerical2PGradientCalculator gc(MnUserFcn(fFcn, fTransformation), fTransformation, MnStrategy(1));
+      FunctionGradient g2 = gc(par);
 
-     os << "Fumili Gradient" << v << "\nMinuit Gradient" << g2.Vec();
+      os << "Fumili Gradient" << v << "\nMinuit Gradient" << g2.Vec();
    });
 
    // store calculated Hessian
@@ -110,15 +105,13 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters& p
    return FunctionGradient(v);
 }
 
-FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters& par,
-                                                      const FunctionGradient&) const
+FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &par, const FunctionGradient &) const
 
 {
    // Needed for interface of base class.
    return this->operator()(par);
-
 }
 
-   }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT

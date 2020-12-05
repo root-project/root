@@ -10,7 +10,7 @@
 #ifndef ROOT_Minuit2_MnMatrix
 #define ROOT_Minuit2_MnMatrix
 
-//add MnConfig file to define before everything compiler
+// add MnConfig file to define before everything compiler
 // dependent macros
 
 #include "Minuit2/MnConfig.h"
@@ -22,14 +22,13 @@
 
 namespace ROOT {
 
-   namespace Minuit2 {
-
+namespace Minuit2 {
 
 typedef LASymMatrix MnAlgebraicSymMatrix;
 typedef LAVector MnAlgebraicVector;
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
-#endif  // ROOT_Minuit2_MnMatrix
+#endif // ROOT_Minuit2_MnMatrix
