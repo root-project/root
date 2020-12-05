@@ -10,8 +10,9 @@
 #ifndef ROOT_Minuit2_FunctionGradient
 #define ROOT_Minuit2_FunctionGradient
 
-#include "Minuit2/MnRefCountedPointer.h"
 #include "Minuit2/BasicFunctionGradient.h"
+
+#include <memory>
 
 namespace ROOT {
 
@@ -21,30 +22,20 @@ class FunctionGradient {
 
 private:
 public:
-   explicit FunctionGradient(unsigned int n)
-      : fData(MnRefCountedPointer<BasicFunctionGradient>(new BasicFunctionGradient(n)))
-   {
-   }
+   explicit FunctionGradient(unsigned int n) : fData(std::make_shared<BasicFunctionGradient>(n)) {}
 
-   explicit FunctionGradient(const MnAlgebraicVector &grd)
-      : fData(MnRefCountedPointer<BasicFunctionGradient>(new BasicFunctionGradient(grd)))
-   {
-   }
+   // HD: this deep-copies, inconsistent to assignment?
+   explicit FunctionGradient(const MnAlgebraicVector &grd) : fData(std::make_shared<BasicFunctionGradient>(grd)) {}
 
    FunctionGradient(const MnAlgebraicVector &grd, const MnAlgebraicVector &g2, const MnAlgebraicVector &gstep)
-      : fData(MnRefCountedPointer<BasicFunctionGradient>(new BasicFunctionGradient(grd, g2, gstep)))
+      : fData(std::make_shared<BasicFunctionGradient>(grd, g2, gstep))
    {
    }
-
-   ~FunctionGradient() {}
 
    FunctionGradient(const FunctionGradient &grad) : fData(grad.fData) {}
 
-   FunctionGradient &operator=(const FunctionGradient &grad)
-   {
-      fData = grad.fData;
-      return *this;
-   }
+   // HD: assignment shares the pointer
+   FunctionGradient &operator=(const FunctionGradient &grad) = default;
 
    const MnAlgebraicVector &Grad() const { return fData->Grad(); }
    const MnAlgebraicVector &Vec() const { return fData->Vec(); }
@@ -55,7 +46,7 @@ public:
    const MnAlgebraicVector &Gstep() const { return fData->Gstep(); }
 
 private:
-   MnRefCountedPointer<BasicFunctionGradient> fData;
+   std::shared_ptr<BasicFunctionGradient> fData;
 };
 
 } // namespace Minuit2

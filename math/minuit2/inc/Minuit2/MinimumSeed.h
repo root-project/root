@@ -10,8 +10,9 @@
 #ifndef ROOT_Minuit2_MinimumSeed
 #define ROOT_Minuit2_MinimumSeed
 
-#include "Minuit2/MnRefCountedPointer.h"
 #include "Minuit2/BasicMinimumSeed.h"
+
+#include <memory>
 
 namespace ROOT {
 
@@ -31,18 +32,8 @@ class MinimumSeed {
 
 public:
    MinimumSeed(const MinimumState &st, const MnUserTransformation &trafo)
-      : fData(MnRefCountedPointer<BasicMinimumSeed>(new BasicMinimumSeed(st, trafo)))
+      : fData(std::make_shared<BasicMinimumSeed>(st, trafo))
    {
-   }
-
-   ~MinimumSeed() {}
-
-   MinimumSeed(const MinimumSeed &seed) : fData(seed.fData) {}
-
-   MinimumSeed &operator=(const MinimumSeed &seed)
-   {
-      fData = seed.fData;
-      return *this;
    }
 
    const MinimumState &State() const { return fData->State(); }
@@ -57,7 +48,7 @@ public:
    bool IsValid() const { return fData->IsValid(); }
 
 private:
-   MnRefCountedPointer<BasicMinimumSeed> fData;
+   std::shared_ptr<BasicMinimumSeed> fData;
 };
 
 } // namespace Minuit2

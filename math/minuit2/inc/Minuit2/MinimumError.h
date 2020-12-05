@@ -10,8 +10,9 @@
 #ifndef ROOT_Minuit2_MinimumError
 #define ROOT_Minuit2_MinimumError
 
-#include "Minuit2/MnRefCountedPointer.h"
 #include "Minuit2/BasicMinimumError.h"
+
+#include <memory>
 
 namespace ROOT {
 
@@ -25,51 +26,34 @@ namespace Minuit2 {
 class MinimumError {
 
 public:
-   class MnNotPosDef {
-   };
-   class MnMadePosDef {
-   };
-   class MnHesseFailed {
-   };
-   class MnInvertFailed {
-   };
+   using MnHesseFailed = BasicMinimumError::MnHesseFailed;
+   using MnInvertFailed = BasicMinimumError::MnInvertFailed;
+   using MnMadePosDef = BasicMinimumError::MnMadePosDef;
+   using MnNotPosDef = BasicMinimumError::MnNotPosDef;
 
 public:
-   MinimumError(unsigned int n) : fData(MnRefCountedPointer<BasicMinimumError>(new BasicMinimumError(n))) {}
+   MinimumError(unsigned int n) : fData(std::make_shared<BasicMinimumError>(n)) {}
 
-   MinimumError(const MnAlgebraicSymMatrix &mat, double dcov)
-      : fData(MnRefCountedPointer<BasicMinimumError>(new BasicMinimumError(mat, dcov)))
-   {
-   }
+   MinimumError(const MnAlgebraicSymMatrix &mat, double dcov) : fData(std::make_shared<BasicMinimumError>(mat, dcov)) {}
 
    MinimumError(const MnAlgebraicSymMatrix &mat, MnHesseFailed)
-      : fData(MnRefCountedPointer<BasicMinimumError>(new BasicMinimumError(mat, BasicMinimumError::MnHesseFailed())))
+      : fData(std::make_shared<BasicMinimumError>(mat, MnHesseFailed{}))
    {
    }
 
    MinimumError(const MnAlgebraicSymMatrix &mat, MnMadePosDef)
-      : fData(MnRefCountedPointer<BasicMinimumError>(new BasicMinimumError(mat, BasicMinimumError::MnMadePosDef())))
+      : fData(std::make_shared<BasicMinimumError>(mat, MnMadePosDef{}))
    {
    }
 
    MinimumError(const MnAlgebraicSymMatrix &mat, MnInvertFailed)
-      : fData(MnRefCountedPointer<BasicMinimumError>(new BasicMinimumError(mat, BasicMinimumError::MnInvertFailed())))
+      : fData(std::make_shared<BasicMinimumError>(mat, MnInvertFailed{}))
    {
    }
 
    MinimumError(const MnAlgebraicSymMatrix &mat, MnNotPosDef)
-      : fData(MnRefCountedPointer<BasicMinimumError>(new BasicMinimumError(mat, BasicMinimumError::MnNotPosDef())))
+      : fData(std::make_shared<BasicMinimumError>(mat, MnNotPosDef{}))
    {
-   }
-
-   ~MinimumError() {}
-
-   MinimumError(const MinimumError &e) : fData(e.fData) {}
-
-   MinimumError &operator=(const MinimumError &err)
-   {
-      fData = err.fData;
-      return *this;
    }
 
    MnAlgebraicSymMatrix Matrix() const { return fData->Matrix(); }
@@ -88,7 +72,7 @@ public:
    bool IsAvailable() const { return fData->IsAvailable(); }
 
 private:
-   MnRefCountedPointer<BasicMinimumError> fData;
+   std::shared_ptr<BasicMinimumError> fData;
 };
 
 } // namespace Minuit2

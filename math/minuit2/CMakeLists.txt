@@ -97,8 +97,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/MnPlot.h
       Minuit2/MnPosDef.h
       Minuit2/MnPrint.h
-      Minuit2/MnRefCountedPointer.h
-      Minuit2/MnReferenceCounter.h
       Minuit2/MnScan.h
       Minuit2/MnSeedGenerator.h
       Minuit2/MnSimplex.h
