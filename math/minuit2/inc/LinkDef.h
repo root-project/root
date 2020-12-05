@@ -48,7 +48,7 @@
 #pragma link C++ class ROOT::Minuit2::MnMachinePrecision;
 #pragma link C++ class ROOT::Minuit2::MnTraceObject;
 
-#pragma link C++ class std::vector < ROOT::Minuit2::MinuitParameter>;
+#pragma link C++ class std::vector<ROOT::Minuit2::MinuitParameter>;
 
 #pragma link C++ class TMinuit2TraceObject;
 
