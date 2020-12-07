@@ -167,7 +167,7 @@ sap.ui.define([
 
             if (painter.options.update_browser) {
                if (painter.options.highlight && tooltip) names = [ tooltip ];
-               painter.ActivateInBrowser(names);
+               painter.activateInBrowser(names);
             }
 
             if (!resolve || !resolve.obj) return tooltip;
@@ -203,7 +203,7 @@ sap.ui.define([
 
          var browseHandler = this.controller.invokeBrowseOf.bind(this.controller);
 
-         JSROOT.Painter.createMenu(this.geo_painter, function(menu) {
+         JSROOT.Painter.createMenu(this.geo_painter, evnt).then(menu => {
             var numitems = 0, cnt = 0;
             if (intersects)
                for (var n=0;n<intersects.length;++n)

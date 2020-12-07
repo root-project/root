@@ -318,7 +318,7 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_painter.AddHighlightHandler(this);
          }
 
-         this.geo_painter.ActivateInBrowser = this.activateInTreeTable.bind(this);
+         this.geo_painter.activateInBrowser = this.activateInTreeTable.bind(this);
 
          this.geo_painter.assignClones(this.geo_clones);
       },
