@@ -20,23 +20,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    RHistPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
-   // function ensure that frame is drawn on the canvas
-   RHistPainter.prototype.PrepareFrame = function(divid, mode3d) {
-      this.SetDivId(divid, -1);
-
-      if (!this.frame_painter())
-         JSROOT.v7.drawFrame(divid, null, mode3d ? "3d" : "");
-
-      return this.SetDivId(divid, mode3d ? 4 : 1);
-   }
-
    RHistPainter.prototype.GetHImpl = function(obj) {
       if (obj && obj.fHistImpl)
          return obj.fHistImpl.fIO;
       return null;
    }
 
-   /** Returns true if RHistDisplayItem is used */
+   /** @summary Returns true if RHistDisplayItem is used */
    RHistPainter.prototype.IsDisplayItem = function() {
       let obj = this.GetObject();
       return obj && obj.fAxes ? true : false;
@@ -201,19 +191,19 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
    }
 
-   RHistPainter.prototype.DrawAxes = function() {
+   RHistPainter.prototype.drawFrameAxes = function() {
       // return true when axes was drawn
       let main = this.frame_painter();
       if (!main) return Promise.resolve(false);
 
-      if (this.is_main_painter() && this.draw_content) {
-         main.CleanupAxes();
-         main.xmin = main.xmax = 0;
-         main.ymin = main.ymax = 0;
-         main.zmin = main.zmax = 0;
-         main.SetAxesRanges(this.GetAxis("x"), this.xmin, this.xmax, this.GetAxis("y"), this.ymin, this.ymax, this.GetAxis("z"), this.zmin, this.zmax);
-      }
+      if (!this.is_main_painter() || !this.draw_content)
+        return Promise.resolve(true);
 
+      main.CleanupAxes();
+      main.xmin = main.xmax = 0;
+      main.ymin = main.ymax = 0;
+      main.zmin = main.zmax = 0;
+      main.SetAxesRanges(this.GetAxis("x"), this.xmin, this.xmax, this.GetAxis("y"), this.ymin, this.ymax, this.GetAxis("z"), this.zmin, this.zmax);
       return main.DrawAxes();
    }
 
@@ -323,15 +313,15 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.zmax = axis.max;
    }
 
+   /** @summary Add interactive features, only main painter does it */
    RHistPainter.prototype.AddInteractive = function() {
       // only first painter in list allowed to add interactive functionality to the frame
 
-      if (this.is_main_painter()) {
-         let fp = this.frame_painter();
-         if (fp) return fp.AddInteractive();
-      }
+      if (JSROOT.BatchMode || !this.is_main_painter())
+         return true;
 
-      return Promise.resolve(false);
+      let fp = this.frame_painter();
+      return fp ? fp.AddInteractive() : false;
    }
 
    RHistPainter.prototype.ProcessItemReply = function(reply, req) {
@@ -1803,15 +1793,15 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.Clear3DScene();
       this.mode3d = false;
 
-      return this.DrawAxes()
-                 .then(res => res ? this.DrawingBins(reason) : false)
+      return this.drawFrameAxes()
+                 .then(res1 => res1 ? this.DrawingBins(reason) : false)
                  .then(res2 => {
                      if (!res2) return false;
                      // called when bins received from server, must be reentrant
                      this.Draw1DBins();
                      this.UpdateStatWebCanvas();
                      return this.AddInteractive();
-                     });
+                 }).then(res3 => res3 ? this : null);
    }
 
    RH1Painter.prototype.Draw3D = function(reason) {
@@ -1827,45 +1817,42 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       // create painter and add it to canvas
       let painter = new RH1Painter(histo);
 
-      if (!painter.PrepareFrame(divid)) return null;
+      return jsrp.ensureRCanvas(painter, divid).then(() => {
 
-      painter.options = { Hist: false, Bar: false, BarStyle: 0,
-                          Error: false, ErrorKind: -1, errorX: JSROOT.gStyle.fErrorX,
-                          Zero: false, Mark: false,
-                          Line: false, Fill: false, Lego: 0, Surf: 0,
-                          Text: false, TextAngle: 0, TextKind: "", AutoColor: 0,
-                          BarOffset: 0., BarWidth: 1., BaseLine: false, Mode3D: false };
+         painter.setAsMainPainter();
 
-      let d = new JSROOT.DrawOptions(opt);
-      if (d.check('R3D_', true))
-         painter.options.Render3D = JSROOT.constants.Render3D.fromString(d.part.toLowerCase());
+         painter.options = { Hist: false, Bar: false, BarStyle: 0,
+                             Error: false, ErrorKind: -1, errorX: JSROOT.gStyle.fErrorX,
+                             Zero: false, Mark: false,
+                             Line: false, Fill: false, Lego: 0, Surf: 0,
+                             Text: false, TextAngle: 0, TextKind: "", AutoColor: 0,
+                             BarOffset: 0., BarWidth: 1., BaseLine: false, Mode3D: false };
 
-      let kind = painter.v7EvalAttr("kind", "hist"),
-          sub = painter.v7EvalAttr("sub", 0),
-          o = painter.options;
+         let d = new JSROOT.DrawOptions(opt);
+         if (d.check('R3D_', true))
+            painter.options.Render3D = JSROOT.constants.Render3D.fromString(d.part.toLowerCase());
 
-      o.Text = painter.v7EvalAttr("text", false);
-      o.BarOffset = painter.v7EvalAttr("bar_offset", 0.);
-      o.BarWidth = painter.v7EvalAttr("bar_width", 1.);
+         let kind = painter.v7EvalAttr("kind", "hist"),
+             sub = painter.v7EvalAttr("sub", 0),
+             o = painter.options;
 
-      switch(kind) {
-         case "bar": o.Bar = true; o.BarStyle = sub; break;
-         case "err": o.Error = true; o.ErrorKind = sub; break;
-         case "p": o.Mark = true; break;
-         case "l": o.Line = true; break;
-         case "lego": o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;
-         default: o.Hist = true;
-      }
+         o.Text = painter.v7EvalAttr("text", false);
+         o.BarOffset = painter.v7EvalAttr("bar_offset", 0.);
+         o.BarWidth = painter.v7EvalAttr("bar_width", 1.);
 
-      painter.ScanContent();
+         switch(kind) {
+            case "bar": o.Bar = true; o.BarStyle = sub; break;
+            case "err": o.Error = true; o.ErrorKind = sub; break;
+            case "p": o.Mark = true; break;
+            case "l": o.Line = true; break;
+            case "lego": o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;
+            default: o.Hist = true;
+         }
 
-      painter.callDrawFunc().then(() => {
-         // if (!painter.options.Mode3D && painter.options.AutoZoom) painter.AutoZoom();
-         // painter.FillToolbar();
-         painter.DrawingReady();
+         painter.ScanContent();
+
+         return painter.callDrawFunc();
       });
-
-      return painter;
    }
 
    // ==================== painter for TH2 histograms ==============================
@@ -3567,11 +3554,10 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    }
 
    RH2Painter.prototype.Draw2D = function(reason) {
-
       this.mode3d = false;
       this.Clear3DScene();
 
-      return this.DrawAxes()
+      return this.drawFrameAxes()
                  .then(res => res ? this.DrawingBins(reason) : false)
                  .then(res2 => {
                     // called when bins received from server, must be reentrant
@@ -3579,7 +3565,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                     this.Draw2DBins();
                     this.UpdateStatWebCanvas();
                     return this.AddInteractive();
-                 });
+                 }).then(res3 => res3 ? this : null);;
    }
 
    RH2Painter.prototype.Draw3D = function(reason) {
@@ -3606,103 +3592,51 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       // create painter and add it to canvas
       let painter = new RH2Painter(obj);
 
-      if (!painter.PrepareFrame(divid)) return null;
+      return jsrp.ensureRCanvas(painter, divid).then(() => {
 
-      painter.options = { Hist: false, Error: false, Zero: false, Mark: false,
-                          Line: false, Fill: false, Lego: 0, Surf: 0,
-                          Text: true, TextAngle: 0, TextKind: "",
-                          BaseLine: false, Mode3D: false, AutoColor: 0,
-                          Color: false, Scat: false, ScatCoef: 1, Candle: "", Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0,
-                          BarOffset: 0., BarWidth: 1., minimum: -1111, maximum: -1111 };
+         painter.setAsMainPainter();
 
-      let kind = painter.v7EvalAttr("kind", ""),
-          sub = painter.v7EvalAttr("sub", 0),
-          o = painter.options;
+         painter.options = { Hist: false, Error: false, Zero: false, Mark: false,
+                             Line: false, Fill: false, Lego: 0, Surf: 0,
+                             Text: true, TextAngle: 0, TextKind: "",
+                             BaseLine: false, Mode3D: false, AutoColor: 0,
+                             Color: false, Scat: false, ScatCoef: 1, Candle: "", Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0,
+                             BarOffset: 0., BarWidth: 1., minimum: -1111, maximum: -1111 };
 
-      o.Text = painter.v7EvalAttr("text", false);
+         let kind = painter.v7EvalAttr("kind", ""),
+             sub = painter.v7EvalAttr("sub", 0),
+             o = painter.options;
 
-      switch(kind) {
-         case "lego": o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;
-         case "surf": o.Surf = sub > 0 ? 10+sub : 1; o.Mode3D = true; break;
-         case "box": o.Box = true; o.BoxStyle = 10 + sub; break;
-         case "err": o.Error = true; o.Mode3D = true; break;
-         case "cont": o.Contour = sub > 0 ? 10+sub : 1; break;
-         case "arr": o.Arrow = true; break;
-         case "scat": o.Scat = true; break;
-         case "col": o.Color = true; break;
-         default: if (!o.Text) o.Color = true;
-      }
+         o.Text = painter.v7EvalAttr("text", false);
 
-      // here we deciding how histogram will look like and how will be shown
-      // painter.DecodeOptions(opt);
+         switch(kind) {
+            case "lego": o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;
+            case "surf": o.Surf = sub > 0 ? 10+sub : 1; o.Mode3D = true; break;
+            case "box": o.Box = true; o.BoxStyle = 10 + sub; break;
+            case "err": o.Error = true; o.Mode3D = true; break;
+            case "cont": o.Contour = sub > 0 ? 10+sub : 1; break;
+            case "arr": o.Arrow = true; break;
+            case "scat": o.Scat = true; break;
+            case "col": o.Color = true; break;
+            default: if (!o.Text) o.Color = true;
+         }
 
-      if (painter.IsTH2Poly()) {
-         if (o.Mode3D) o.Lego = 12;
-                  else o.Color = true;
-      }
+         // here we deciding how histogram will look like and how will be shown
+         // painter.DecodeOptions(opt);
 
-      painter._show_empty_bins = false;
+         if (painter.IsTH2Poly()) {
+            if (o.Mode3D) o.Lego = 12;
+                     else o.Color = true;
+         }
 
-      painter._can_move_colz = true;
+         painter._show_empty_bins = false;
 
-      painter.ScanContent();
+         painter._can_move_colz = true;
 
-      // painter.CreateStat(); // only when required
-
-      painter.callDrawFunc().then(() => {
-         //if (!this.options.Mode3D && this.options.AutoZoom) this.AutoZoom();
-         // this.FillToolbar();
-         //if (this.options.Project && !this.mode3d)
-         //   this.ToggleProjection(this.options.Project);
-         painter.DrawingReady();
-      });
-
-      return painter;
-   }
-
-   // =================================================================================
-
-
-   // place basic declaration here to be able use it with RHistDisplayItem
-   function RH3Painter(histo) {
-      JSROOT.v7.RHistPainter.call(this, histo);
-
-      this.mode3d = true;
-   }
-
-   RH3Painter.prototype = Object.create(RHistPainter.prototype);
-
-   RH3Painter.prototype.Dimension = function() {
-      return 3;
-   }
-
-   let drawHist3 = (divid, histo /*, opt*/) => {
-      // create painter and add it to canvas
-      let painter = new RH3Painter(histo);
-
-      painter.PrepareFrame(divid, true); // create if necessary frame in 3d mode
-
-      painter.options = { Box: 0, Scatter: false, Sphere: 0, Color: false, minimum: -1111, maximum: -1111 };
-
-      let kind = painter.v7EvalAttr("kind", ""),
-          sub = painter.v7EvalAttr("sub", 0),
-          o = painter.options;
-
-      switch(kind) {
-         case "box": o.Box = 10 + sub; break;
-         case "sphere": o.Sphere = 10 + sub; break;
-         case "col": o.Color = true; break;
-         case "scat": o.Scatter = true;  break;
-         default: o.Box = 10;
-      }
-
-      JSROOT.require('v7hist3d').then(() => {
          painter.ScanContent();
-         painter.Redraw();
-         painter.DrawingReady();
-      });
 
-      return painter;
+         return painter.callDrawFunc();
+      });
    }
 
    // =================================================================================
@@ -3718,7 +3652,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          return drawHist2(divid, obj, opt);
 
       if (obj.fAxes.length == 3)
-         return drawHist3(divid, obj, opt);
+         return JSROOT.require("v7hist3d").then(() => JSROOT.v7.drawHist3(divid, obj, opt));
 
       return null;
    }
@@ -3926,19 +3860,15 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
    function drawHistStats(divid, stats, opt) {
       let painter = new RHistStatsPainter(stats, opt);
 
-      painter.SetDivId(divid);
-
-      return painter.DrawPave();
+      return jsrp.ensureRCanvas(painter, divid, false).then(() => painter.DrawPave());
    }
 
    JSROOT.v7.RHistPainter = RHistPainter;
    JSROOT.v7.RH1Painter = RH1Painter;
    JSROOT.v7.RH2Painter = RH2Painter;
-   JSROOT.v7.RH3Painter = RH3Painter;
 
    JSROOT.v7.drawHist1 = drawHist1;
    JSROOT.v7.drawHist2 = drawHist2;
-   JSROOT.v7.drawHist3 = drawHist3;
 
    JSROOT.v7.drawHistDisplayItem = drawHistDisplayItem;
    JSROOT.v7.drawHistStats = drawHistStats;

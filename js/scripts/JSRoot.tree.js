@@ -2882,7 +2882,6 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          // redirect drawing to the player
          create_player = 1;
 
-         console.log('start drawing player itermediate', intermediate, divid);
          return JSROOT.require("jq2d").then(() => {
             JSROOT.createTreePlayer(painter);
             painter.configureTree(tree);

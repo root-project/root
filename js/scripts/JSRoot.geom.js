@@ -206,11 +206,12 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             evnt.preventDefault();
             evnt.stopPropagation();
 
-            if (!jsrp.closeMenu())
-               jsrp.createMenu(this, evnt).then(menu => {
-                  menu.painter.FillContextMenu(menu);
-                  menu.show();
-               });
+            if (jsrp.closeMenu && jsrp.closeMenu()) return;
+
+            jsrp.createMenu(this, evnt).then(menu => {
+                menu.painter.FillContextMenu(menu);
+                menu.show();
+            });
          }
       });
 
@@ -547,13 +548,15 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       return res;
    }
 
-   TGeoPainter.prototype.ActivateInBrowser = function(names, force) {
+   /** @summary Activate specified items in the browser */
+   TGeoPainter.prototype.activateInBrowser = function(names, force) {
       // if (this.GetItemName() === null) return;
 
       if (typeof names == 'string') names = [ names ];
 
       if (this._hpainter) {
          // show browser if it not visible
+
          this._hpainter.activateItems(names, force);
 
          // if highlight in the browser disabled, suppress in few seconds
@@ -620,42 +623,33 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    TGeoPainter.prototype.FillContextMenu = function(menu) {
       menu.add("header: Draw options");
 
-      menu.addchk(this.ctrl.update_browser, "Browser update", function() {
+      menu.addchk(this.ctrl.update_browser, "Browser update", () => {
          this.ctrl.update_browser = !this.ctrl.update_browser;
-         if (!this.ctrl.update_browser) this.ActivateInBrowser([]);
+         if (!this.ctrl.update_browser) this.activateInBrowser([]);
       });
-      menu.addchk(this.ctrl.show_controls, "Show Controls", function() {
-         this.showControlOptions('toggle');
-      });
-      menu.addchk(this.ctrl._axis, "Show axes", function() {
-         this.setAxesDraw('toggle');
-      });
-      if (this.geo_manager)
-         menu.addchk(this.ctrl.showtop, "Show top volume", function() {
-            this.setShowTop(!this.ctrl.showtop);
-         });
+      menu.addchk(this.ctrl.show_controls, "Show Controls", () => this.showControlOptions('toggle'));
 
-      menu.addchk(this.ctrl.wireframe, "Wire frame", function() {
-         this.toggleWireFrame();
-      });
-      menu.addchk(this.ctrl.highlight, "Highlight volumes", function() {
+      menu.addchk(this.ctrl._axis, "Show axes", () => this.setAxesDraw('toggle'));
+
+      if (this.geo_manager)
+         menu.addchk(this.ctrl.showtop, "Show top volume", () => this.setShowTop(!this.ctrl.showtop));
+
+      menu.addchk(this.ctrl.wireframe, "Wire frame", () => this.toggleWireFrame());
+
+      menu.addchk(this.ctrl.highlight, "Highlight volumes", () => {
          this.ctrl.highlight = !this.ctrl.highlight;
       });
-      menu.addchk(this.ctrl.highlight_scene, "Highlight scene", function() {
+      menu.addchk(this.ctrl.highlight_scene, "Highlight scene", () => {
          this.ctrl.highlight_scene = !this.ctrl.highlight_scene;
       });
-      menu.add("Reset camera position", function() {
-         this.focusCamera();
-      });
+      menu.add("Reset camera position", () => this.focusCamera());
+
       if (!this._geom_viewer)
-         menu.add("Get camera position", function() {
-            alert("Position (as url): &opt=" + this.produceCameraUrl());
-         });
+         menu.add("Get camera position", () => alert("Position (as url): &opt=" + this.produceCameraUrl()));
+
       if (!this.ctrl.project)
-         menu.addchk(this.ctrl.rotate, "Autorotate", function() {
-            this.setAutoRotate(!this.ctrl.rotate);
-         });
-      menu.addchk(this.ctrl.select_in_view, "Select in view", function() {
+         menu.addchk(this.ctrl.rotate, "Autorotate", () => this.setAutoRotate(!this.ctrl.rotate));
+      menu.addchk(this.ctrl.select_in_view, "Select in view", () => {
          this.ctrl.select_in_view = !this.ctrl.select_in_view;
          if (this.ctrl.select_in_view) this.startDrawGeometry();
       });
@@ -1013,9 +1007,9 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                } else
                   continue;
 
-               menu.add((many ? "sub:" : "header:") + hdr, itemname, function(arg) { this.ActivateInBrowser([arg], true); });
+               menu.add((many ? "sub:" : "header:") + hdr, itemname, arg => this.activateInBrowser([arg], true));
 
-               menu.add("Browse", itemname, function(arg) { this.ActivateInBrowser([arg], true); });
+               menu.add("Browse", itemname, arg => this.activateInBrowser([arg], true));
 
                if (this._hpainter)
                   menu.add("Inspect", itemname, function(arg) { this._hpainter.display(arg, "inspect"); });
@@ -1342,7 +1336,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          if (painter.ctrl.update_browser) {
             if (painter.ctrl.highlight && tooltip) names = [ tooltip ];
-            painter.ActivateInBrowser(names);
+            painter.activateInBrowser(names);
          }
 
          if (!resolve || !resolve.obj) return tooltip;
@@ -3185,7 +3179,6 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
      * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
      * superimposed with each other. If tmeout<=0, rendering performed immediately
      * Several special values are used:
-     *   -2222 - rendering performed only if there were previous calls, which causes timeout activation
      *   -1    - force recheck of rendering order based on camera position */
    TGeoPainter.prototype.Render3D = function(tmout, measure) {
 
@@ -3205,8 +3198,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       if (this.render_tmout) {
          clearTimeout(this.render_tmout);
-      } else {
-         if (tmout === -2222) return; // special case to check if rendering timeout was active
+         delete this.render_tmout;
       }
 
       jsrp.beforeRender3D(this._renderer);
@@ -3226,8 +3218,6 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       let tm2 = new Date();
 
       this.last_render_tm = tm2.getTime();
-
-      delete this.render_tmout;
 
       if ((this.first_render_tm === 0) && measure) {
          this.first_render_tm = tm2.getTime() - tm1.getTime();
@@ -4048,7 +4038,9 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       // if (obj && obj._typename=='TGeoManager' && (obj.fNsegments > 3))
       //   geo.GradPerSegm = 360/obj.fNsegments;
 
-      painter.SetDivId(divid, 5);
+      painter.SetDivId(divid, -1);
+      painter.setAsMainPainter();
+      painter.addToPadPrimitives(); // will add to pad primitives if any
 
       painter.options = painter.decodeOptions(opt); // indicator of initialization
 

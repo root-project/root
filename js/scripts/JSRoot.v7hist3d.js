@@ -49,7 +49,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          delete this.pointLight;
          delete this.renderer;
          delete this.control;
-         if ('render_tmout' in this) {
+         if (this.render_tmout) {
             clearTimeout(this.render_tmout);
             delete this.render_tmout;
          }
@@ -199,10 +199,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
      * @desc tmout specified delay, after which actual rendering will be invoked
      * Timeout used to avoid multiple rendering of the picture when several 3D drawings
      * superimposed with each other.
-     * If tmeout<=0, rendering performed immediately
-     * Several special values are used:
-     *  -1111 - immediate rendering with SVG renderer
-     *  -2222 - rendering performed only if there were previous calls, which causes timeout activation
+     * If tmeout <= 0, rendering performed immediately
+     * If (tmout == -1111), immediate rendering with SVG renderer is performed
      * @private */
    JSROOT.v7.RFramePainter.prototype.Render3D = function(tmout) {
 
@@ -226,15 +224,14 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
 
       if ((tmout > 0) && this.webgl && JSROOT.BatchMode) {
-          if (this.render_tmout === undefined)
+          if (!this.render_tmout)
              this.render_tmout = setTimeout(() => this.Render3D(0), tmout);
           return;
        }
 
-      if (this.render_tmout !== undefined) {
+      if (this.render_tmout) {
          clearTimeout(this.render_tmout);
-      } else {
-         if (tmout === -2222) return; // special case to check if rendering timeout was active
+         delete this.render_tmout;
       }
 
       if (!this.renderer) return;
@@ -254,8 +251,6 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       jsrp.afterRender3D(this.renderer);
 
       let tm2 = new Date();
-
-      delete this.render_tmout;
 
       if (this.first_render_tm === 0) {
          this.first_render_tm = tm2.getTime() - tm1.getTime();
@@ -1357,47 +1352,9 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       main.toplevel.add(line);
    }
 
-   // ===================================================================================
-
-   jsrp.drawAxis3D = function(divid, axis /*, opt */) {
-
-      let painter = new JSROOT.ObjectPainter(axis);
-
-      if (!('_main' in axis))
-         painter.SetDivId(divid);
-
-      painter.Draw3DAxis = function() {
-         let main = this.frame_painter();
-
-         if (!main || !main._toplevel)
-            return console.warn('no geo object found for 3D axis drawing');
-
-         let box = new THREE.Box3().setFromObject(main._toplevel);
-
-         this.xmin = box.min.x; this.xmax = box.max.x;
-         this.ymin = box.min.y; this.ymax = box.max.y;
-         this.zmin = box.min.z; this.zmax = box.max.z;
-
-         // use min/max values directly as graphical coordinates
-         this.size_xy3d = this.size_z3d = 0;
-
-         this.DrawXYZ = JSROOT.v7.RFramePainter.prototype.DrawXYZ; // just reuse axis drawing from frame painter
-
-         this.DrawXYZ(main._toplevel);
-
-         main.adjustCameraPosition();
-
-         main.Render3D();
-      }
-
-      painter.Draw3DAxis();
-
-      return painter.DrawingReady();
-   }
-
    // ==========================================================================================
 
-   /** @summary Draw 1-D histogram in 3D
+   /** @summary Draw 1-D histogram in 3D mode
      * @private */
    JSROOT.v7.RH1Painter.prototype.Draw3D = function(reason) {
 
@@ -1408,7 +1365,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       if (reason == "resize")  {
          if (is_main && main.Resize3D()) main.Render3D();
-         return Promise.resolve(true);
+         return Promise.resolve(this);
       }
 
       this.DeleteAtt();
@@ -1423,7 +1380,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       }
 
       if (!main.mode3d)
-         return Promise.resolve(true);
+         return Promise.resolve(this);
 
       return this.DrawingBins(reason).then(() => {
          // called when bins received from server, must be reentrant
@@ -1434,7 +1391,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          main.Render3D();
          this.UpdateStatWebCanvas();
          main.AddKeysHandler();
-         return true;
+         return this;
       });
 
    }
@@ -1451,7 +1408,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       if (reason == "resize") {
          if (is_main && main.Resize3D()) main.Render3D();
 
-         return Promise.resolve(true);
+         return Promise.resolve(this);
       }
 
       let zmult = 1.1;
@@ -1472,7 +1429,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       }
 
       if (!main.mode3d)
-         return Promise.resolve(true);
+         return Promise.resolve(this);
 
       return this.DrawingBins(reason).then(() => {
          // called when bins received from server, must be reentrant
@@ -1482,7 +1439,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          main.Render3D();
          this.UpdateStatWebCanvas();
          main.AddKeysHandler();
-         return true;
+         return this;
       });
    }
 
@@ -2284,7 +2241,20 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
    // ==============================================================================
 
-   JSROOT.v7.RH3Painter.prototype.ScanContent = function(when_axis_changed) {
+
+   function RH3Painter(histo) {
+      JSROOT.v7.RHistPainter.call(this, histo);
+
+      this.mode3d = true;
+   }
+
+   RH3Painter.prototype = Object.create(JSROOT.v7.RHistPainter.prototype);
+
+   RH3Painter.prototype.Dimension = function() {
+      return 3;
+   }
+
+   RH3Painter.prototype.ScanContent = function(when_axis_changed) {
 
       // no need to rescan histogram while result does not depend from axis selection
       if (when_axis_changed && this.nbinsx && this.nbinsy && this.nbinsz) return;
@@ -2316,7 +2286,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       this.draw_content = this.gmaxbin > 0;
    }
 
-   JSROOT.v7.RH3Painter.prototype.CountStat = function() {
+   RH3Painter.prototype.CountStat = function() {
       let histo = this.GetHisto(),
           xaxis = this.GetAxis("x"),
           yaxis = this.GetAxis("y"),
@@ -2390,7 +2360,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       return res;
    }
 
-   JSROOT.v7.RH3Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
+   RH3Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
 
       // no need to refill statistic if histogram is dummy
       if (this.IgnoreStatsFill()) return false;
@@ -2435,7 +2405,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       return true;
    }
 
-   JSROOT.v7.RH3Painter.prototype.GetBinTips = function (ix, iy, iz) {
+   RH3Painter.prototype.GetBinTips = function (ix, iy, iz) {
       let lines = [], pmain = this.frame_painter(), histo = this.GetHisto(),
           xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y"), zaxis = this.GetAxis("z"),
           dx = 1, dy = 1, dz = 1;
@@ -2464,7 +2434,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
    /** @summary Try to draw 3D histogram as scatter plot
      * @desc if too many points, box will be displayed */
-   JSROOT.v7.RH3Painter.prototype.Draw3DScatter = function(handle) {
+   RH3Painter.prototype.Draw3DScatter = function(handle) {
 
       let histo = this.GetHisto(),
           main = this.frame_painter(),
@@ -2556,7 +2526,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       return true;
    }
 
-   JSROOT.v7.RH3Painter.prototype.Draw3DBins = function() {
+   RH3Painter.prototype.Draw3DBins = function() {
 
       if (!this.draw_content) return;
 
@@ -2875,7 +2845,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          this.UpdatePaletteDraw();
    }
 
-   JSROOT.v7.RH3Painter.prototype.Redraw = function(reason) {
+   RH3Painter.prototype.Redraw = function(reason) {
 
       let main = this.frame_painter(); // who makes axis and 3D drawing
 
@@ -2901,7 +2871,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       });
    }
 
-   JSROOT.v7.RH3Painter.prototype.FillToolbar = function() {
+   RH3Painter.prototype.FillToolbar = function() {
       let pp = this.pad_painter();
       if (!pp) return;
 
@@ -2912,13 +2882,13 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
-   JSROOT.v7.RH3Painter.prototype.canZoomInside = function(axis,min,max) {
+   RH3Painter.prototype.canZoomInside = function(axis,min,max) {
       let obj = this.GetHisto();
       if (obj) obj = obj["f"+axis.toUpperCase()+"axis"];
       return !obj || (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
-   JSROOT.v7.RH3Painter.prototype.AutoZoom = function() {
+   RH3Painter.prototype.AutoZoom = function() {
       let i1 = this.GetSelectIndex("x", "left"),
           i2 = this.GetSelectIndex("x", "right"),
           j1 = this.GetSelectIndex("y", "left"),
@@ -2979,7 +2949,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       if (isany) this.frame_painter().Zoom(xmin, xmax, ymin, ymax, zmin, zmax);
    }
 
-   JSROOT.v7.RH3Painter.prototype.FillHistContextMenu = function(menu) {
+   RH3Painter.prototype.FillHistContextMenu = function(menu) {
 
       let sett = JSROOT.getDrawSettings("ROOT." + this.GetObject()._typename, 'nosame');
 
@@ -2992,6 +2962,38 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          this.InteractiveRedraw(true, "drawopt");
       });
    }
+
+   let drawHist3 = (divid, histo /*, opt*/) => {
+      // create painter and add it to canvas
+      let painter = new RH3Painter(histo);
+
+      return jsrp.ensureRCanvas(painter, divid, "3d").then(() => {
+
+         painter.setAsMainPainter();
+
+         painter.options = { Box: 0, Scatter: false, Sphere: 0, Color: false, minimum: -1111, maximum: -1111 };
+
+         let kind = painter.v7EvalAttr("kind", ""),
+             sub = painter.v7EvalAttr("sub", 0),
+             o = painter.options;
+
+         switch(kind) {
+            case "box": o.Box = 10 + sub; break;
+            case "sphere": o.Sphere = 10 + sub; break;
+            case "col": o.Color = true; break;
+            case "scat": o.Scatter = true;  break;
+            default: o.Box = 10;
+         }
+
+         painter.ScanContent();
+         painter.Redraw();
+         return painter;
+      });
+   }
+
+   JSROOT.v7.RH3Painter = RH3Painter;
+
+   JSROOT.v7.drawHist3 = drawHist3;
 
    return JSROOT;
 });

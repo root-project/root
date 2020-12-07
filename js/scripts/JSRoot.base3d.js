@@ -1345,7 +1345,8 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       let line = this.GetObject(),
           main = this.frame_painter();
 
-      if (!main || !main.mode3d || !main.toplevel || !line) return;
+      if (!main || !main.mode3d || !main.toplevel || !line)
+         return null;
 
       let fN, fP, pnts = [];
 
@@ -1367,6 +1368,8 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       let lines = jsrp.createLineSegments(pnts, create3DLineMaterial(this, line));
 
       main.toplevel.add(lines);
+
+      return true;
    }
 
    // ==============================================================================================

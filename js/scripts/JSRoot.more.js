@@ -749,34 +749,21 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return true;
    }
 
-   TF1Painter.prototype.PerformDraw = function() {
-      if (this.main_painter() === null) {
-         let histo = this.CreateDummyHisto();
-         return JSROOT.draw(this.divid, histo, "AXIS").then(() => {
-            this.SetDivId(this.divid);
-            this.Redraw();
-            return this.DrawingReady();
-         });
-      }
-
-      this.SetDivId(this.divid);
-      this.Redraw();
-      return Promise.resolve(this.DrawingReady());
-   }
-
    function drawFunction(divid, tf1, opt) {
-
       let painter = new TF1Painter(tf1);
-
       painter.SetDivId(divid, -1);
       let d = new JSROOT.DrawOptions(opt);
       painter.nosave = d.check('NOSAVE');
 
-      if (JSROOT.Math !== undefined)
-         return painter.PerformDraw();
-
-      return JSROOT.require("math").then(() => painter.PerformDraw());
-   }
+      return JSROOT.require("math").then(() => {
+         if (!painter.main_painter())
+            return JSROOT.draw(divid, painter.CreateDummyHisto(), "AXIS");
+      }).then(() => {
+         painter.addToPadPrimitives();
+         painter.Redraw();
+         return painter;
+      });
+    }
 
    // =======================================================================
 
@@ -1984,13 +1971,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    function drawGraph(divid, graph, opt) {
 
       let painter = new TGraphPainter(graph);
-
-      painter.SetDivId(divid, -1); // just to get access to existing elements
-
+      painter.SetDivId(divid, -1);
       painter.DecodeOptions(opt);
-
       painter.CreateBins();
-
       painter.CreateStat();
 
       let promise = Promise.resolve();
@@ -2008,7 +1991,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
 
       return promise.then(() => {
-         painter.SetDivId(divid);
+         painter.addToPadPrimitives();
          painter.DrawGraph();
          // wait until interactive elements assigned
          if (painter.TestEditable() && !JSROOT.BatchMode)
@@ -2309,20 +2292,19 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    }
 
    function drawGraphPolargram(divid, polargram /*, opt*/) {
-      let painter = new TGraphPolargramPainter(polargram);
-      painter.SetDivId(divid, -1); // just to get access to existing elements
 
-      let main = painter.main_painter();
-
+      let main = JSROOT.getMainPainter(divid);
       if (main) {
          if (main.GetObject() === polargram) return main;
-          console.error('Cannot superimpose TGraphPolargram with any other drawings');
-          return null;
+         return Promise.reject(Error("Cannot superimpose TGraphPolargram with any other drawings"));
       }
 
-      painter.SetDivId(divid, 6); // main object without need of frame
-      painter.Redraw();
-      return painter.DrawingReady();
+      let painter = new TGraphPolargramPainter(polargram);
+      return jsrp.ensureTCanvas(painter, divid, false).then(() => {
+         painter.setAsMainPainter();
+         painter.Redraw();
+         return painter;
+      });
    }
 
    // ==============================================================
@@ -2344,7 +2326,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TGraphPolarPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
    TGraphPolarPainter.prototype.Redraw = function() {
-      this.DrawGraphPolar();
+      this.drawGraphPolar();
    }
 
    TGraphPolarPainter.prototype.DecodeOptions = function(opt) {
@@ -2364,7 +2346,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       this.OptionsStore(opt);
    }
 
-   TGraphPolarPainter.prototype.DrawGraphPolar = function() {
+   TGraphPolarPainter.prototype.drawGraphPolar = function() {
       let graph = this.GetObject(),
           main = this.main_painter();
 
@@ -2534,31 +2516,30 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       return hint;
    }
 
-   TGraphPolarPainter.prototype.PerformDrawing = function(divid) {
-      this.SetDivId(divid);
-      this.DrawGraphPolar();
-      this.DrawingReady();
-      return this; // will be value resolved by Promise and getting painter
-   }
-
    function drawGraphPolar(divid, graph, opt) {
       let painter = new TGraphPolarPainter(graph);
       painter.DecodeOptions(opt);
-      painter.SetDivId(divid, -1); // just to get access to existing elements
+      painter.SetDivId(divid, -1);
 
       let main = painter.main_painter();
-      if (main) {
-         if (!main.$polargram) {
-            console.error('Cannot superimpose TGraphPolar with plain histograms');
-            return null;
-         }
-         painter.PerformDrawing(divid);
-         return painter;
+      if (main && !main.$polargram) {
+         console.error('Cannot superimpose TGraphPolar with plain histograms');
+         return null;
       }
 
-      if (!graph.fPolargram) graph.fPolargram = painter.CreatePolargram();
+      let ppromise = Promise.resolve(main);
 
-      return JSROOT.draw(divid, graph.fPolargram, "").then(() => painter.PerformDrawing(divid));
+      if (!main) {
+         if (!graph.fPolargram)
+            graph.fPolargram = painter.CreatePolargram();
+         ppromise = JSROOT.draw(divid, graph.fPolargram, "");
+      }
+
+      return ppromise.then(() => {
+         painter.addToPadPrimitives();
+         painter.drawGraphPolar();
+         return painter;
+      })
    }
 
    // ==============================================================
@@ -2858,7 +2839,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
 
       return promise.then(() => {
-         painter.SetDivId(this.divid);
+         painter.addToPadPrimitives();
          painter.Redraw();
          return painter;
       });
@@ -2873,7 +2854,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    TGraphTimePainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
    TGraphTimePainter.prototype.Redraw = function() {
-      if (this.step === undefined) this.StartDrawing(false);
+      if (this.step === undefined) this.startDrawing();
    }
 
    TGraphTimePainter.prototype.DecodeOptions = function(opt) {
@@ -2914,15 +2895,10 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       });
    }
 
-   TGraphTimePainter.prototype.ContineDrawing = function() {
+   TGraphTimePainter.prototype.continueDrawing = function() {
       if (!this.options) return;
 
       let gr = this.GetObject();
-
-      if (!this.ready_called) {
-         this.ready_called = true;
-         this.DrawingReady(); // do it already here, animation will continue in background
-      }
 
       if (this.options.first) {
          // draw only single frame, cancel all others
@@ -2945,14 +2921,14 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          pp.CleanPrimitives(p => (p.$grtimeid === this.selfid));
 
          // draw ptrimitives again
-         this.DrawPrimitives().then(() => this.ContineDrawing());
+         this.DrawPrimitives().then(() => this.continueDrawing());
       } else if (this.running_timeout) {
          clearTimeout(this.running_timeout);
          delete this.running_timeout;
 
          this.wait_animation_frame = true;
          // use animation frame to disable update in inactive form
-         requestAnimationFrame(() => this.ContineDrawing());
+         requestAnimationFrame(() => this.continueDrawing());
       } else {
 
          let sleeptime = gr.fSleepTime;
@@ -2968,23 +2944,26 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
             }
          }
 
-         this.running_timeout = setTimeout(() => this.ContineDrawing(), sleeptime);
+         this.running_timeout = setTimeout(() => this.continueDrawing(), sleeptime);
       }
    }
 
    /** @ummary Start drawing of graph time */
-   TGraphTimePainter.prototype.StartDrawing = function(once_again) {
-      if (once_again!==false) this.SetDivId(this.divid);
-
+   TGraphTimePainter.prototype.startDrawing = function() {
       this.step = 0;
 
       return this.DrawPrimitives().then(() => {
-         this.ContineDrawing();
+         this.continueDrawing();
          return this; // used in drawGraphTime promise
       });
    }
 
    let drawGraphTime = (divid, gr, opt) => {
+
+      if (!gr.fFrame) {
+         console.error('Frame histogram not exists');
+         return null;
+      }
 
       let painter = new TGraphTimePainter(gr);
       painter.SetDivId(divid,-1);
@@ -2994,18 +2973,16 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          return null;
       }
 
-      if (!gr.fFrame) {
-         console.error('Frame histogram not exists');
-         return null;
-      }
-
       painter.DecodeOptions(opt);
 
       if (!gr.fFrame.fTitle && gr.fTitle) gr.fFrame.fTitle = gr.fTitle;
 
       painter.selfid = "grtime" + JSROOT._.id_counter++; // use to identify primitives which should be clean
 
-      return JSROOT.draw(divid, gr.fFrame, "AXIS").then(() => painter.StartDrawing());
+      return JSROOT.draw(divid, gr.fFrame, "AXIS").then(() => {
+         painter.addToPadPrimitives();
+         return painter.startDrawing();
+      });
    }
 
    // =============================================================
@@ -3098,6 +3075,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       if (!eff || !eff.fTotalHistogram || (eff.fTotalHistogram._typename.indexOf("TH1")!=0)) return null;
 
       let painter = new TEfficiencyPainter(eff);
+      painter.SetDivId(divid, -1);
       painter.options = opt;
 
       let gr = painter.CreateGraph();
@@ -3105,8 +3083,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       return JSROOT.draw(divid, gr, opt)
                    .then(() => {
-                       painter.SetDivId(divid);
-                       painter.DrawingReady();
+                       painter.addToPadPrimitives();
                        return painter;
                     });
    }
@@ -3329,8 +3306,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    jsrp.drawMultiGraph = function(divid, mgraph, opt) {
 
       let painter = new TMultiGraphPainter(mgraph);
-
-      painter.SetDivId(divid, -1); // it may be no element to set divid
+      painter.SetDivId(divid, -1);
 
       let d = new JSROOT.DrawOptions(opt);
       d.check("3D"); d.check("FB"); // no 3D supported, FB not clear
@@ -3347,7 +3323,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          });
 
       return promise.then(() => {
-         painter.SetDivId(divid);
+         painter.addToPadPrimitives();
          return painter.drawNextGraph(0, d.remain());
       })
    }
@@ -3513,11 +3489,12 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          check_attributes();
       }
 
-      painter.SetDivId(divid);
+      painter.SetDivId(divid, -1);
+      painter.addToPadPrimitives();
 
       painter.Redraw();
 
-      return painter.DrawingReady();
+      return Promise.resolve(painter);
    }
 
 
@@ -3736,8 +3713,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          return this.drawColorPalette(this.options.Zscale, true).then(() => {
             fp.SetAxesRanges(JSROOT.Create("TAxis"), 0, 1, JSROOT.Create("TAxis"), 0, 1, null, 0, 0);
             fp.CreateXY({ ndim: 2,
-                          check_pad_range: false,
-                          create_canvas: false });
+                          check_pad_range: false });
             fp.AddInteractive();
             return this;
          });
@@ -3799,7 +3775,10 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       }
 
       if (!pal_painter) {
-         return JSROOT.draw(this.divid, this.draw_palette, "onpad:" + this.pad_name).then(pp => {
+         let prev_name = this.CurrentPadName(this.pad_name);
+
+         return JSROOT.draw(this.divid, this.draw_palette).then(pp => {
+            this.CurrentPadName(prev_name);
             // mark painter as secondary - not in list of TCanvas primitives
             pp.$secondary = true;
 
@@ -3857,19 +3836,19 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    function drawASImage(divid, obj, opt) {
       let painter = new TASImagePainter(obj, opt);
       painter.decodeOptions(opt);
-      painter.SetDivId(divid, 1);
-
-      return painter.drawImage().then(() => {
-         painter.FillToolbar();
-         return painter;
-      });
+      return jsrp.ensureTCanvas(painter, divid)
+                 .then(() => painter.drawImage())
+                 .then(() => {
+                     painter.FillToolbar();
+                     return painter;
+                 });
    }
 
    // ===================================================================================
 
    jsrp.drawJSImage = function(divid, obj, opt) {
       let painter = new JSROOT.BasePainter();
-      painter.SetDivId(divid, -1);
+      painter.SetDivId(divid); // base painter
 
       let main = painter.select_main();
 
@@ -3883,9 +3862,9 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          img.attr("style", "margin: 0; position: absolute;  top: 50%; left: 50%; transform: translate(-50%, -50%);");
       }
 
-      painter.SetDivId(divid);
+      painter.setTopPainter();
 
-      return painter.DrawingReady();
+      return Promise.resolve(painter);
    }
 
 
