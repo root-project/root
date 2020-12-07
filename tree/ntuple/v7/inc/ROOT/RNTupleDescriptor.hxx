@@ -309,6 +309,57 @@ private:
 public:
    // clang-format off
    /**
+   \class ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorRange
+   \ingroup NTuple
+   \brief Used to loop over a field's associated columns
+   */
+   // clang-format on
+   class RColumnDescriptorRange {
+   private:
+      /// The associated NTuple for this range.
+      const RNTupleDescriptor &fNTuple;
+      /// The descriptor ids of the columns ordered by index id
+      std::vector<DescriptorId_t> fColumns = {};
+   public:
+      class RIterator {
+      private:
+         /// The enclosing range's NTuple.
+         const RNTupleDescriptor &fNTuple;
+         /// The enclosing range's descriptor id list.
+         const std::vector<DescriptorId_t> &fColumns;
+         std::size_t fIndex = 0;
+      public:
+         using iterator_category = std::forward_iterator_tag;
+         using iterator = RIterator;
+         using value_type = RFieldDescriptor;
+         using difference_type = std::ptrdiff_t;
+         using pointer = RColumnDescriptor *;
+         using reference = const RColumnDescriptor &;
+
+         RIterator(const RNTupleDescriptor &ntuple, const std::vector<DescriptorId_t> &columns, std::size_t index)
+            : fNTuple(ntuple), fColumns(columns), fIndex(index) {}
+         iterator operator++() { ++fIndex; return *this; }
+         reference operator*() { return fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
+         bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
+         bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      };
+
+      RColumnDescriptorRange(const RNTupleDescriptor &ntuple, const RFieldDescriptor &field)
+         : fNTuple(ntuple)
+      {
+         for (unsigned int i = 0; true; ++i) {
+            auto columnId = ntuple.FindColumnId(field.GetId(), i);
+            if (columnId == kInvalidDescriptorId)
+               break;
+            fColumns.emplace_back(columnId);
+         }
+      }
+      RIterator begin() { return RIterator(fNTuple, fColumns, 0); }
+      RIterator end() { return RIterator(fNTuple, fColumns, fColumns.size()); }
+   };
+
+   // clang-format off
+   /**
    \class ROOT::Experimental::RNTupleDescriptor::RFieldDescriptorRange
    \ingroup NTuple
    \brief Used to loop over a field's child fields
@@ -432,6 +483,15 @@ public:
       const std::function<bool(DescriptorId_t, DescriptorId_t)>& comparator) const
    {
       return GetFieldRange(GetFieldZeroId(), comparator);
+   }
+
+   RColumnDescriptorRange GetColumnRange(const RFieldDescriptor &fieldDesc) const
+   {
+      return RColumnDescriptorRange(*this, fieldDesc);
+   }
+   RColumnDescriptorRange GetColumnRange(DescriptorId_t fieldId) const
+   {
+      return RColumnDescriptorRange(*this, GetFieldDescriptor(fieldId));
    }
 
    std::string GetName() const { return fName; }
