@@ -40,14 +40,13 @@ sap.ui.define(['sap/ui/core/Control',
          if (this.geom_painter) {
             // this should be moved to GeomPainter itself !!!
 
-            this.geom_painter.SetDivId(this.getDomRef());
+            this.geom_painter.setCanvDom(this.getDomRef()); // work with and without canvas
 
             var size = this.geom_painter.size_for_3d();
 
             this.geom_painter.add_3d_canvas(size, this.geom_painter._renderer.domElement);
 
-            // set top painter only when first child exists
-            this.geom_painter.accessTopPainter(true);
+            // set as main canvas painter or just top painter
             this.geom_painter.setAsMainPainter();
 
             this.geom_painter.Render3D();

@@ -51,7 +51,7 @@
    function DrawMsgList(divid, lst, opt) {
 
       var painter = new JSROOT.BasePainter();
-      painter.SetDivId(divid);
+      painter.setDom(divid); // base painter
 
       painter.Draw = function(lst) {
          if (!lst) return;
@@ -65,7 +65,7 @@
                         .style('max-height','100%')
                         .style('overflow','auto');
             // (re) set painter to first child element
-            this.SetDivId(this.divid);
+            this.setTopPainter();
          }
 
          var old = main.selectAll("pre");
