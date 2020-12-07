@@ -99,7 +99,6 @@ JSROOT.define(['d3'], (d3) => {
          0.587, 0.514, 0.896, 0.587, 0.55]
    };
 
-   // create menu, implemented in jquery part
    jsrp.createMenu = function(painter, evt) {
       document.body.style.cursor = 'wait';
       let show_evnt;
@@ -107,17 +106,10 @@ JSROOT.define(['d3'], (d3) => {
       if (evt && (typeof evt == "object"))
          if ((evt.clientX !== undefined) && (evt.clientY !== undefined))
             show_evnt = { clientX: evt.clientX, clientY: evt.clientY };
-      return JSROOT.require(['jq2d']).then(() => {
+      return JSROOT.require(['menu']).then(() => {
          document.body.style.cursor = 'auto';
          return jsrp.createMenu(painter, show_evnt);
       });
-   }
-
-   // create menu, implemented in jquery part
-   jsrp.closeMenu = function(menuname) {
-      let x = document.getElementById(menuname || 'root_ctx_menu');
-      if (x) { x.parentNode.removeChild(x); return true; }
-      return false;
    }
 
    /** @summary Read style and settings from URL
@@ -1345,6 +1337,12 @@ JSROOT.define(['d3'], (d3) => {
       return chld.painter;
    }
 
+   /** @summary Set painter, stored in first child element
+     * @desc Can only be done when first draing ic completed */
+   BasePainter.prototype.setTopPainter = function() {
+      this.accessTopPainter(true);
+   }
+
    /** @summary Generic method to cleanup painter */
    BasePainter.prototype.Cleanup = function(keep_origin) {
 
@@ -1363,65 +1361,6 @@ JSROOT.define(['d3'], (d3) => {
       delete this._hitemname;
       delete this._hdrawopt;
       delete this._hpainter;
-   }
-
-   /** @summary Function should be called by the painter when first drawing is completed
-    * @private */
-   BasePainter.prototype.DrawingReady = function(res_value) {
-      this._ready_called_ = (res_value === undefined) ? true : !!res_value;
-      if (this._ready_callbacks_ !== undefined) {
-         let callbacks = (this._ready_called_ ? this._ready_callbacks_ : this._reject_callbacks_) || [];
-
-         delete this._ready_callbacks_;
-         delete this._reject_callbacks_;
-
-         while (callbacks.length > 0) {
-            let func = callbacks.shift();
-            func(this);
-         }
-      }
-      return this;
-   }
-
-   /** @summary Function should be called when first drawing fails */
-   BasePainter.prototype.DrawingFail = function() {
-      return this.DrawingReady(false);
-   }
-
-   /** @summary Call back will be called when painter ready with the drawing */
-   BasePainter.prototype.WhenReady = function(resolveFunc, rejectFunc) {
-      if (typeof resolveFunc !== 'function') return;
-      if ('_ready_called_' in this)
-         return JSROOT.callBack(resolveFunc, this);
-      if (!this._ready_callbacks_)
-         this._ready_callbacks_ = [resolveFunc];
-      else
-         this._ready_callbacks_.push(resolveFunc);
-      if (typeof rejectFunc == 'function') {
-         if (!this._reject_callbacks_)
-            this._reject_callbacks_ = [rejectFunc];
-         else
-            this._reject_callbacks_.push(rejectFunc);
-      }
-   }
-
-   /** @summary Create Promise object which will be completed when drawing is ready  */
-   BasePainter.prototype.Promise = function(is_ready) {
-      if (is_ready)
-         this.DrawingReady(this);
-
-      if (this._ready_called_)
-         return Promise.resolve(this); // painting is done, we could return promise
-
-      return new Promise((resolve, reject) => {
-         this.WhenReady(resolve, reject);
-      });
-   }
-
-   /** @summary Reset ready state - painter should again call DrawingReady to signal readyness */
-   BasePainter.prototype.ResetReady = function() {
-      delete this._ready_called_;
-      delete this._ready_callbacks_;
    }
 
    /** @summary Returns drawn object
@@ -2199,74 +2138,65 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Returns true if this is main painter */
    ObjectPainter.prototype.is_main_painter = function() { return this === this.main_painter(); }
 
+   /** @summary Assign this as main painter on the pad
+     * @desc Main painter typically responsible for axes drawing */
+   ObjectPainter.prototype.setAsMainPainter = function(force) {
+      let svg_p = this.svg_pad();
+      if (!svg_p.empty() && (!svg_p.property('mainpainter') || force))
+         svg_p.property('mainpainter', this);
+   }
+
+   /** @summary Add painter to pad list of painters */
+   ObjectPainter.prototype.addToPadPrimitives = function() {
+      let svg_p = this.svg_pad(this.pad_name); // important - parent pad element accessed here
+      if (svg_p.empty()) return false;
+
+      let pp = svg_p.property('pad_painter');
+      if (!pp || (pp === this)) return false;
+
+      if (pp.painters.indexOf(this) < 0)
+         pp.painters.push(this);
+      if (!this.rstyle && pp.next_rstyle)
+         this.rstyle = pp.next_rstyle;
+
+      return true;
+   }
+
    /** @summary Assigns id of top element (normally div where drawing is done).
-    * @desc In some situations canvas may not exists - for instance object drawn as html, not as svg.
-    * In such case the only painter will be assigned to the first element
-    * Following values of kind parameter are allowed:
-    *   -  -1  only assign id, this painter not add to painters list
-    *   -   0  normal painter (default)
-    *   -   1  major objects like TH1/TH2 (required canvas with frame)
-    *   -   2  if canvas missing, create it, but not set as main object
-    *   -   3  if canvas and (or) frame missing, create them, but not set as main object
-    *   -   4  major objects like TH3 (required canvas and frame in 3d mode)
-    *   -   5  major objects like TGeoVolume (do not require canvas)
-    *   -   6  major objects like TGraphPolagram (requires canvas but not TFrame)
-    * @param {string|object} divid - id of div element or directly DOMElement
-    * @param {number} [kind] - kind of object drawn with painter
-    * @param {string} [pad_name] - when specified, subpad name used for object drawing */
-   ObjectPainter.prototype.SetDivId = function(divid, kind, pad_name) {
+     * @desc In some situations canvas may not exists - for instance object drawn as html, not as svg.
+     * In such case the only painter will be assigned to the first element
+     * Following values of kind parameter are allowed:
+     *   -  -1  only assign id, this painter not add to painters list
+     *   -   0  normal painter (default)
+     * @param {string|object} divid - id of div element or directly DOMElement
+     * @param {number} [kind] - kind of object drawn with painter */
+   ObjectPainter.prototype.SetDivId = function(divid, kind) {
 
       if (divid !== undefined) {
          this.divid = divid;
          delete this._selected_main;
       }
 
-      if (!kind || isNaN(kind)) kind = 0;
-
       // check if element really exists
-      if ((kind >= 0) && this.select_main(true).empty()) {
-         if (typeof divid == 'string') console.error('not found HTML element with id: ' + divid);
-         else console.error('specified HTML element can not be selected with d3.select()');
+      if ((kind != -1) && this.select_main(true).empty()) {
+         if (typeof divid == 'string')
+            console.error('not found HTML element' + (typeof divid == 'string' ? ' with id ' + divid : ""));
          return false;
       }
 
-      this.create_canvas = false;
-
       // SVG element where canvas is drawn
       let svg_c = this.svg_canvas();
-
-      if (svg_c.empty() && (kind > 0) && (kind !== 5)) {
-         if (typeof jsrp.drawCanvas == 'function')
-             jsrp.drawCanvas(divid, null, ((kind == 2) || (kind == 4)) ? "noframe" : "");
-         else
-             return alert("Fail to draw TCanvas - please contact JSROOT developers");
-         svg_c = this.svg_canvas();
-         this.create_canvas = true;
-      }
-
       if (svg_c.empty()) {
-         if ((kind < 0) || (kind === 5) || this.iscan) return true;
-         this.accessTopPainter(true);
+         if (kind != -1) this.accessTopPainter(true);
          return true;
       }
 
       // SVG element where current pad is drawn (can be canvas itself)
-      this.pad_name = pad_name;
-      if (this.pad_name === undefined)
-         this.pad_name = this.CurrentPadName();
+      this.pad_name = this.CurrentPadName();
 
-      if (kind < 0) return true;
+      if (kind == -1) return true;
 
-      // create TFrame element if not exists
-      if ((kind == 1) || (kind == 3) || (kind == 4))
-         if (this.svg_frame().select(".main_layer").empty()) {
-            if (typeof jsrp.drawFrame == 'function')
-               jsrp.drawFrame(divid, null, (kind == 4) ? "3d" : "");
-            if ((kind != 4) && this.svg_frame().empty())
-               return alert("Fail to draw dummy TFrame");
-         }
-
-      let svg_p = this.svg_pad(this.pad_name); // important - padrent pad element accessed here
+      let svg_p = this.svg_pad(this.pad_name); // important - parent pad element accessed here
       if (svg_p.empty()) return true;
 
       let pp = svg_p.property('pad_painter');
@@ -2276,10 +2206,6 @@ JSROOT.define(['d3'], (d3) => {
          if (!this.rstyle && pp.next_rstyle)
             this.rstyle = pp.next_rstyle;
       }
-
-      if (((kind === 1) || (kind === 4) || (kind === 5) || (kind === 6)) && !svg_p.property('mainpainter'))
-         // when this is first main painter in the pad
-         svg_p.property('mainpainter', this);
 
       return true;
    }
@@ -3433,8 +3359,8 @@ JSROOT.define(['d3'], (d3) => {
    jsrp.drawRawText = function(divid, txt /*, opt*/) {
 
       let painter = new BasePainter();
-      painter.txt = txt;
       painter.SetDivId(divid);
+      painter.txt = txt;
 
       painter.RedrawObject = function(obj) {
          this.txt = obj;
@@ -3460,16 +3386,16 @@ JSROOT.define(['d3'], (d3) => {
             main = frame.append("div").style('max-width', '100%').style('max-height', '100%').style('overflow', 'auto');
          main.html(txt);
 
-         // (re) set painter to first child element
-         this.SetDivId(this.divid);
+         // (re) set painter to first child element, base painter not requires canvas
+         this.setTopPainter();
 
          if (mathjax)
-            return JSROOT.require('latex').then(ltx => ltx.typesetMathjax(frame.node()));
+            return JSROOT.require('latex').then(ltx => { ltx.typesetMathjax(frame.node()); return this; });
+
+         return Promise.resolve(this);
       }
 
-      let promise = painter.Draw();
-
-      return promise ? promise.then(() => painter) : painter.Promise(true);
+      return painter.Draw();
    }
 
    /** @summary Register handle to react on window resize
@@ -3539,8 +3465,8 @@ JSROOT.define(['d3'], (d3) => {
       { name: "TProfile2D", sameas: "TH2" },
       { name: /^TH3/, icon: 'img_histo3d', prereq: "hist3d", func: ".drawHistogram3D", opt: ";SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL" },
       { name: "THStack", icon: "img_histo1d", prereq: "hist", func: ".drawHStack", expand_item: "fHists", opt: "NOSTACK;HIST;E;PFC;PLC" },
-      { name: "TPolyMarker3D", icon: 'img_histo3d', prereq: "hist3d", func: ".drawPolyMarker3D" },
-      { name: "TPolyLine3D", icon: 'img_graph', prereq: "3d", func: ".drawPolyLine3D", direct: true },
+      { name: "TPolyMarker3D", icon: 'img_histo3d', prereq: "hist3d", func: ".drawPolyMarker3D", direct: true, frame: "3d" },
+      { name: "TPolyLine3D", icon: 'img_graph', prereq: "base3d", func: ".drawPolyLine3D", direct: true },
       { name: "TGraphStruct" },
       { name: "TGraphNode" },
       { name: "TGraphEdge" },
@@ -3615,7 +3541,7 @@ JSROOT.define(['d3'], (d3) => {
       { name: "Session", icon: "img_globe" },
       { name: "kind:TopFolder", icon: "img_base" },
       { name: "kind:Folder", icon: "img_folder", icon2: "img_folderopen", noinspect: true },
-      { name: "ROOT::Experimental::RCanvas", icon: "img_canvas", prereq: "v7gpad", func: "JSROOT.v7.drawCanvas", opt: "", expand_item: "fPrimitives" },
+      { name: "ROOT::Experimental::RCanvas", icon: "img_canvas", prereq: "v7gpad", func: "JSROOT.v7.drawRCanvas", opt: "", expand_item: "fPrimitives" },
       { name: "ROOT::Experimental::RCanvasDisplayItem", icon: "img_canvas", prereq: "v7gpad", func: "JSROOT.v7.drawPadSnapshot", opt: "", expand_item: "fPrimitives" }
    ], cache: {} };
 
@@ -3802,17 +3728,19 @@ JSROOT.define(['d3'], (d3) => {
       if (opt == 'inspect')
          return JSROOT.require("hierarchy").then(() => jsrp.drawInspector(divid, obj));
 
-      let handle;
-      if ('_typename' in obj)
+      let handle, type_info;
+      if ('_typename' in obj) {
+         type_info = "type " + obj._typename;
          handle = JSROOT.getDrawHandle("ROOT." + obj._typename, opt);
-      else if ('_kind' in obj)
+      } else if ('_kind' in obj) {
+         type_info = "kind " + obj._kind;
          handle = JSROOT.getDrawHandle(obj._kind, opt);
-      else
+      } else
          return JSROOT.require("hierarchy").then(() => jsrp.drawInspector(divid, obj));
 
       // this is case of unsupported class, close it normally
       if (!handle)
-         return Promise.reject(Error(`Object of ${obj.kind ? obj.kind : obj._typename} cannot be shown with JSROOT.draw`));
+         return Promise.reject(Error(`Object of ${type_info} cannot be shown with JSROOT.draw`));
 
       if (handle.dummy)
          return Promise.resolve(null);
@@ -3820,129 +3748,110 @@ JSROOT.define(['d3'], (d3) => {
       if (handle.draw_field && obj[handle.draw_field])
          return JSROOT.draw(divid, obj[handle.draw_field], opt);
 
-      if (!handle.func) {
+      if (!handle.func && !handle.direct) {
          if (opt && (opt.indexOf("same") >= 0)) {
-            let main_painter = JSROOT.get_main_painter(divid);
+            let main_painter = JSROOT.getMainPainter(divid);
             if (main_painter && (typeof main_painter.performDrop === 'function'))
                return main_painter.performDrop(obj, "", null, opt);
          }
 
-         return Promise.reject(Error('Function not specified'));
+         return Promise.reject(Error(`Function not specified to draw object ${type_info}`));
       }
 
-      return new Promise(function(resolveFunc, rejectFunc) {
+      function isPromise(obj) {
+         return obj && (typeof obj == 'object') && (typeof obj.then == 'function');
+      }
 
-         function isPromise(obj) {
-            return obj && (typeof obj == 'object') && (typeof obj.then == 'function');
-         }
-
-         function completeDraw(painter) {
-            if (isPromise(painter)) {
-               painter.then(resolveFunc, rejectFunc);
-            } else if (painter && (typeof painter == 'object') && (typeof painter.WhenReady == 'function'))
-               painter.WhenReady(resolveFunc, rejectFunc);
-            else if (painter)
-               resolveFunc(painter);
-            else
-               rejectFunc(Error("fail to draw"));
-         }
-
-         let painter = null;
-
-         function performDraw() {
-            let promise;
-            if (handle.direct) {
-               painter = new ObjectPainter(obj, opt);
-               painter.csstype = handle.csstype;
-               painter.SetDivId(divid, 2);
+      function performDraw() {
+         let promise;
+         if (handle.direct == "v7") {
+            let painter = new ObjectPainter(obj, opt);
+            painter.csstype = handle.csstype;
+            promise = jsrp.ensureRCanvas(painter, divid, handle.frame || false).then(() => {
                painter.Redraw = handle.func;
-               promise = painter.Redraw();
-               if (!isPromise(promise)) {
-                  painter.DrawingReady();
-                  promise = undefined;
-               }
-            } else {
-               painter = handle.func(divid, obj, opt);
+               painter.Redraw();
+               return painter;
+            })
+         } else if (handle.direct) {
+            let painter = new ObjectPainter(obj, opt);
+            promise = jsrp.ensureTCanvas(painter, divid, handle.frame || false).then(() => {
+               painter.Redraw = handle.func;
+               painter.Redraw();
+               return painter;
+            });
+         } else {
+            promise = handle.func(divid, obj, opt);
 
-               if (!isPromise(painter) && painter && !painter.options)
-                  painter.options = { original: opt || "" };
-            }
-
-            completeDraw(promise || painter);
+            if (!isPromise(promise)) promise = Promise.resolve(promise);
          }
 
-         if (typeof handle.func == 'function')
-            return performDraw();
+         return promise.then(p => {
+            if (!p)
+               return Promise.reject(Error(`Fail to draw object ${type_info}`));
 
-         let funcname = handle.func;
-         if (!funcname || (typeof funcname != "string"))
-            return completeDraw(null);
+            if ((typeof p == 'object') && !p.options)
+               p.options = { original: opt || "" }; // keep original draw options
 
-         // try to find function without prerequisites
-         let func = JSROOT.findFunction(funcname);
-         if (func) {
-            handle.func = func; // remember function once it is found
-            return performDraw();
-         }
-
-        let prereq = handle.prereq || "";
-        if (handle.script && (typeof handle.script == 'string'))
-           prereq += ";" + handle.script;
-
-         if (!prereq)
-            return completeDraw(null);
-
-         JSROOT.require(prereq).then(() => {
-            let func = JSROOT.findFunction(funcname);
-            if (!func) {
-               alert('Fail to find function ' + funcname + ' after loading ' + prereq);
-               return completeDraw(null);
-            }
-
-            handle.func = func; // remember function once it found
-
-            performDraw();
+             return p;
          });
-      }); // Promise
+      }
+
+      if (typeof handle.func == 'function')
+         return performDraw();
+
+      let funcname = handle.func;
+      if (typeof funcname != "string")
+         return Promise.reject(Error(`Draw function not specified to draw ${type_info}`));
+
+      let prereq = handle.prereq || "";
+      if (handle.direct == "v7")
+         prereq += ";v7gpad";
+      else if (handle.direct)
+         prereq += ";gpad";
+      let script = handle.script || "";
+      if (script) script = script.split(";");
+
+      if (!prereq && !script)
+         return Promise.reject(Error(`Prerequicities to load ${funcname} are not specified`));
+
+      return JSROOT.require(prereq).then(() => JSROOT.loadScript(script)).then(() => {
+         let func = JSROOT.findFunction(funcname);
+         if (!func)
+            return Promise.reject(Error(`Fail to find function ${funcname} after loading ${prereq}`));
+
+         handle.func = func; // remember function once it found
+
+         return performDraw();
+      });
    }
 
-   /**
-    * @summary Draw object in specified HTML element with given draw options.
-    *
-    * @param {string|object} divid - id of div element to draw or directly DOMElement
-    * @param {object} obj - object to draw, object type should be registered before in JSROOT
-    * @param {string} opt - draw options separated by space, comma or semicolon
-    * @param {function} [callback] - function called when drawing is completed, first argument is object painter instance
-    * @returns {Promise} with painter object only if callback parameter is not specified
-    *
-    * @desc
-    * An extensive list of support draw options can be found on [JSROOT examples page]{@link https://root.cern/js/latest/examples.htm}
-    * Parameter ```callback``` kept only for backward compatibility and will be removed in JSROOT v6.2
-    *
-    * @example
-    * JSROOT.openFile("https://root.cern/js/files/hsimple.root")
-    *       .then(file => file.readObject("hpxpy;1"))
-    *       .then(obj => JSROOT.draw("drawing", obj, "colz;logx;gridx;gridy"));
-    *
-    */
-
+   /** @summary Draw object in specified HTML element with given draw options.
+     * @param {string|object} divid - id of div element to draw or directly DOMElement
+     * @param {object} obj - object to draw, object type should be registered before in JSROOT
+     * @param {string} opt - draw options separated by space, comma or semicolon
+     * @param {function} [callback] - function called when drawing is completed, first argument is object painter instance
+     * @returns {Promise} with painter object only if callback parameter is not specified
+     * @desc An extensive list of support draw options can be found on [JSROOT examples page]{@link https://root.cern/js/latest/examples.htm}
+     * Parameter ```callback``` kept only for backward compatibility and will be removed in JSROOT v6.2
+     * @example
+     * JSROOT.openFile("https://root.cern/js/files/hsimple.root")
+     *       .then(file => file.readObject("hpxpy;1"))
+     *       .then(obj => JSROOT.draw("drawing", obj, "colz;logx;gridx;gridy")); */
    JSROOT.draw = function(divid, obj, opt, callback) {
       let res = jsroot_draw(divid, obj, opt);
       if (!callback || (typeof callback != 'function')) return res;
       res.then(callback).catch(() => callback(null));
    }
 
-   /**
-    * @summary Redraw object in specified HTML element with given draw options.
-    *
-    * @desc If drawing was not drawn before, it will be performed with {@link JSROOT.draw}.
-    * If drawing was already done, that content will be updated
-    * @param {string|object} divid - id of div element to draw or directly DOMElement
-    * @param {object} obj - object to draw, object type should be registered before in JSROOT
-    * @param {string} opt - draw options
-    * @param {function} [callback] - function called when drawing is completed, first argument will be object painter instance
-    * @returns {Promise} with painter used only when callback parameter is not specified
-    */
+   /** @summary Redraw object in specified HTML element with given draw options.
+     * @param {string|object} divid - id of div element to draw or directly DOMElement
+     * @param {object} obj - object to draw, object type should be registered before in JSROOT
+     * @param {string} opt - draw options
+     * @param {function} [callback] - function called when drawing is completed, first argument will be object painter instance
+     * @returns {Promise} with painter used only when callback parameter is not specified
+     * @desc If drawing was not done before, it will be performed with {@link JSROOT.draw}.
+     * Otherwise drawing content will be updated
+     * Parameter ```callback``` kept only for backward compatibility and will be removed in JSROOT v6.2 */
    JSROOT.redraw = function(divid, obj, opt, callback) {
 
       if (!obj || (typeof obj !== 'object'))
@@ -3985,14 +3894,12 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Save object, drawn in specified element, as JSON.
-    *
-    * @desc Normally it is TCanvas object with list of primitives
-    * @param {string|object} divid - id of top div element or directly DOMElement
-    * @returns {string} produced JSON string */
+     * @desc Normally it is TCanvas object with list of primitives
+     * @param {string|object} divid - id of top div element or directly DOMElement
+     * @returns {string} produced JSON string */
    JSROOT.drawingJSON = function(divid) {
       let p = new ObjectPainter;
       p.SetDivId(divid, -1);
-
       let canp = p.canv_painter();
       return canp ? canp.ProduceJSON() : "";
    }
@@ -4085,20 +3992,16 @@ JSROOT.define(['d3'], (d3) => {
       return build(JSROOT._.nodejs_window.d3.select('body').append('div'));
    }
 
-   /**
-    * @summary Check resize of drawn element
-    *
-    * @desc As first argument divid one should use same argument as for the drawing
-    * As second argument, one could specify "true" value to force redrawing of
-    * the element even after minimal resize of the element
-    * Or one just supply object with exact sizes like { width:300, height:200, force:true };
-    * @param {string|object} divid - id or DOM element
-    * @param {boolean|object} arg - options on how to resize
-    *
-    * @example
-    * JSROOT.resize("drawing", { width: 500, height: 200 } );
-    * JSROOT.resize(document.querySelector("#drawing"), true);
-    */
+   /** @summary Check resize of drawn element
+     * @param {string|object} divid - id or DOM element
+     * @param {boolean|object} arg - options on how to resize
+     * @desc As first argument divid one should use same argument as for the drawing
+     * As second argument, one could specify "true" value to force redrawing of
+     * the element even after minimal resize of the element
+     * Or one just supply object with exact sizes like { width:300, height:200, force:true };
+     * @example
+     * JSROOT.resize("drawing", { width: 500, height: 200 } );
+     * JSROOT.resize(document.querySelector("#drawing"), true); */
    JSROOT.resize = function(divid, arg) {
       if (arg === true) arg = { force: true }; else
          if (typeof arg !== 'object') arg = null;
@@ -4114,7 +4017,7 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Returns main painter object for specified HTML element - typically histogram painter
      * @param {string|object} divid - id or DOM element
      * @private */
-   JSROOT.get_main_painter = function(divid) {
+   JSROOT.getMainPainter = function(divid) {
       let dummy = new JSROOT.ObjectPainter();
       dummy.SetDivId(divid, -1);
       return dummy.main_painter(true);

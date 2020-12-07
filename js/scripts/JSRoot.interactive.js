@@ -429,7 +429,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             .on("start", function(evnt) {
                if (detectRightButton(evnt.sourceEvent)) return;
 
-               jsrp.closeMenu(); // close menu
+               if (jsrp.closeMenu) jsrp.closeMenu(); // close menu
 
                pthis.SwitchTooltip(false); // disable tooltip
 
@@ -1355,7 +1355,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       clearInteractiveElements: function() {
-         jsrp.closeMenu();
+         if (jsrp.closeMenu) jsrp.closeMenu();
          this.zoom_kind = 0;
          if (this.zoom_rect) { this.zoom_rect.remove(); delete this.zoom_rect; }
          delete this.zoom_curr;

@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year */
-   JSROOT.version_date = "3/12/2020";
+   JSROOT.version_date = "7/12/2020";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date} */
@@ -186,7 +186,7 @@
          'threejs_jsroot'       : { src: 'three.extra', libs: true }
     };
 
-    ['core', 'base3d','csg','geobase','geom','geoworker','gpad','hierarchy','hist','hist3d','interactive','io','jq2d','latex',
+    ['core', 'base3d','csg','geobase','geom','geoworker','gpad','hierarchy','hist','hist3d','interactive','io','menu','jq2d','latex',
       'math','more','openui5','painter','tree','v7gpad','v7hist','v7hist3d','v7more','webwindow']
          .forEach(item => _.sources[item] = { src: "JSRoot." + item });
 
@@ -1375,48 +1375,45 @@
    }
 
    /** @summary Method to build main JSROOT GUI
+     * @param {string|object} gui_element - where gui should be started, element id or just HTML element
+     * @param {string} [gui_kind = "gui"] - kind of the gui: "gui", "online", "draw"
      * @returns {Promise} when ready
      * @private */
-   JSROOT.buildGUI = function(user_scripts) {
+   JSROOT.buildGUI = function(gui_element, gui_kind) {
       let d = JSROOT.decodeUrl(),
-          debugout,
           nobrowser = d.has('nobrowser'),
-          requirements = "gpad;hierarchy;",
-          simplegui = document.getElementById('simpleGUI');
+          requirements = ["hierarchy"];
+
+      if (typeof gui_element == 'string')
+         gui_element = document.getElementById(gui_element);
+
+      if (!gui_element) {
+         console.log('Fail to find element for GUI drawing');
+         return Promise.resolve(false);
+      }
 
       if (d.has('libs')) _.use_full_libs = true;
 
-      if (simplegui) {
-         debugout = 'simpleGUI';
-         if (d.has('file') || d.has('files')) requirements += "io;";
-         if (simplegui.getAttribute('nobrowser') && (simplegui.getAttribute('nobrowser')!="false")) nobrowser = true;
-      } else if (document.getElementById('onlineGUI')) {
-         debugout = 'onlineGUI';
-      } else if (document.getElementById('drawGUI')) {
-         debugout = 'drawGUI';
+      if (gui_kind == "nobrowser") {
+          gui_kind = "gui"; nobrowser = true;
+      } else if (gui_kind == "draw") {
          nobrowser = true;
-      } else {
-         requirements += "io;";
+      } else if (gui_kind != "online") {
+         gui_kind = "gui";
       }
 
-      if (user_scripts == 'check_existing_elements') {
-         user_scripts = null;
-         if (!debugout) return;
-      }
+      if (!nobrowser) requirements.push("jq2d");
 
-      if (!nobrowser) requirements += 'jq2d;';
+      let user_scripts = d.get("autoload") || d.get("load");
 
-      if (!user_scripts) user_scripts = d.get("autoload") || d.get("load");
+      if (user_scripts) requirements.push("painter");
 
-      if (user_scripts) requirements += "io;gpad;";
-
-      if (debugout)
-         _.debug_output = document.getElementById(debugout);
+      _.debug_output = gui_element;
 
       return JSROOT.require(requirements)
                    .then(() => JSROOT.require(user_scripts))
-                   .then(() => { if (_.debug_output) { _.debug_output.innerHTML = ""; delete _.debug_output; } })
-                   .then(() => { return nobrowser ? JSROOT.buildNobrowserGUI() : JSROOT.buildGUI(); });
+                   .then(() => { gui_element.innerHTML = ""; delete _.debug_output; })
+                   .then(() => { return nobrowser ? JSROOT.buildNobrowserGUI(gui_element, gui_kind) : JSROOT.buildGUI(gui_element, gui_kind); });
    }
 
    /** @summary Create some ROOT classes

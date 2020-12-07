@@ -67,15 +67,12 @@ if ((typeof document === "undefined") || (typeof window === "undefined")) {
          return JSROOT.callBack(func, arg1, arg2);
       }
 
-      function window_on_load() {
+      function window_on_load(tmout, func) {
          if (document.attachEvent ? document.readyState === 'complete' : document.readyState !== 'loading')
-            return Promise.resolve(true);
+            return tmout ? setTimeout(func, 10) : func();
 
-         return new Promise(resolve => {
-            window.onload = resolve;
-         });
+         window.onload = tmout ? () => setTimeout(func, 10) : func;
       }
-
 
       _redirects.forEach(args => {
          let name = args.shift();
@@ -96,12 +93,20 @@ if ((typeof document === "undefined") || (typeof window === "undefined")) {
          JSROOT.wrong_http_response_handling = true; // server may send wrong content length by partial requests, use other method to control this
       if (d.has('nosap')) JSROOT._.sap = undefined; // let ignore sap loader even with openui5 loaded
 
-      // in case of require.js one have to use timeout to decople loading
-      if (JSROOT._.amd && d.has('gui'))
-         return window_on_load().then(() => setTimeout(() => JSROOT.buildGUI('check_existing_elements'), 50));
-
-      if (d.has('gui'))
-         return window_on_load().then(() => JSROOT.buildGUI());
+      if (d.has('gui') || JSROOT._.amd) {
+         return window_on_load(JSROOT._.amd, () => {
+            let gui_elem, gui_kind;
+            function testDiv(id, kind) {
+               if (gui_elem) return;
+               let elem = document.getElementById(id);
+               if (elem) { gui_elem = elem; gui_kind = kind; }
+            }
+            testDiv('simpleGUI', 'gui');
+            testDiv('drawGUI', 'draw');
+            testDiv('onlineGUI', 'online');
+            if (gui_elem) JSROOT.buildGUI(gui_elem, gui_kind);
+         })
+      }
 
       let prereq = "", user = d.get('load'), onload = d.get('onload');
       if (d.has('io')) prereq += "io;";
@@ -121,10 +126,9 @@ if ((typeof document === "undefined") || (typeof window === "undefined")) {
       if (user) { prereq += "io;gpad;"; user = user.split(";"); }
 
       if (prereq || onload || user)
-         window_on_load().then(() => JSROOT.require(prereq))
-                         .then(() => JSROOT.loadScript(user))
-                         .then(() => JSROOT.callBack(onload));
-
+         window_on_load(false, () => JSROOT.require(prereq)
+                               .then(() => JSROOT.loadScript(user))
+                               .then(() => JSROOT.callBack(onload)));
    });
 
    let tmpJSROOT = { _workaround: true };

@@ -670,7 +670,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.main().select(".jsroot_browser").select(".jsroot_browser_btns").remove();
    }
 
-   BrowserLayout.prototype.SetBrowserContent = function(guiCode) {
+   BrowserLayout.prototype.setBrowserContent = function(guiCode) {
       let main = d3.select("#" + this.gui_div + " .jsroot_browser");
       if (main.empty()) return;
 
@@ -1313,7 +1313,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (!res.obj) return null;
 
-         let main_painter = JSROOT.get_main_painter(divid);
+         let main_painter = JSROOT.getMainPainter(divid);
 
          if (main_painter && (typeof main_painter.performDrop === 'function'))
             return main_painter.performDrop(res.obj, itemname, res.item, opt).then(p => drop_complete(p));
@@ -1565,7 +1565,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (typeof items == 'string') items = [ items ];
 
-      let active = [],  // array of elements to activate
+      let active = [], // array of elements to activate
           update = []; // array of elements to update
       this.forEachItem(item => { if (item._background) { active.push(item); delete item._background; } });
 
@@ -1633,7 +1633,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (force && this.brlayout) {
          if (!this.brlayout.browser_kind)
-           return this.createBrowser('float', true).then(find_next);
+           return this.createBrowser('float', true).then(() => find_next());
          if (!this.brlayout.browser_visible)
             this.brlayout.ToggleBrowserVisisbility();
       }
@@ -1954,7 +1954,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (!itemname && item && ('_cached_draw_object' in this) && (req.length == 0)) {
-         // special handling for drawGUI when cashed
+         // special handling for online draw when cashed
          let obj = this._cached_draw_object;
          delete this._cached_draw_object;
          return Promise.resolve(obj);
@@ -2424,7 +2424,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (title) document.title = title;
 
       let load = GetOption("load");
-      if (load) prereq += ";io;gpad;";
 
       if (expanditems.length==0 && (GetOption("expand")==="")) expanditems.push("");
 
@@ -2608,7 +2607,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.h = createStreamerInfoContent(obj)
       else
          this.h = createInspectorContent(obj);
-      return this.refreshHtml().then(() => { this.SetDivId(this.divid); });
+      return this.refreshHtml().then(() => { this.setTopPainter(); });
    }
 
    // ======================================================================================
@@ -2625,16 +2624,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Build gui without visisble hierarchy browser
      * @desc avoid loading of jquery part
      * @private */
-   JSROOT.buildNobrowserGUI = function() {
-      let myDiv = d3.select('#simpleGUI'),
-          online = false, drawing = false;
+   JSROOT.buildNobrowserGUI = function(gui_element, gui_kind) {
 
-      if (myDiv.empty()) {
+      let myDiv = (typeof gui_element == 'string') ? d3.select('#' + gui_element) : d3.select(gui_element);
+      if (myDiv.empty()) return alert('no div for simple nobrowser gui found');
+
+      let online = false, drawing = false;
+      if (gui_kind == 'online')
          online = true;
-         myDiv = d3.select('#onlineGUI');
-         if (myDiv.empty()) { myDiv = d3.select('#drawGUI'); drawing = true; }
-         if (myDiv.empty()) return alert('no div for simple nobrowser gui found');
-      }
+      else if (gui_kind == 'draw')
+         online = drawing = true;
 
       if (myDiv.attr("ignoreurl") === "true")
          JSROOT.settings.IgnoreUrlOptions = true;
@@ -2687,7 +2686,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // painter.select_main().style('overflow','auto');
 
       return painter.refreshHtml().then(() => {
-         painter.SetDivId(divid);
+         painter.setTopPainter();
          return painter;
       });
    }
@@ -2736,7 +2735,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       painter.h = createInspectorContent(obj);
 
       return painter.refreshHtml().then(() => {
-         painter.SetDivId(divid);
+         painter.setTopPainter();
          return painter;
       });
    }
@@ -2756,7 +2755,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          super();
          this.frameid = frameid;
          if (frameid != "$batch$") {
-            this.SetDivId(frameid);
+            this.SetDivId(frameid); // base painter
             this.select_main().property('mdi', this);
          }
          this.cleanupFrame = JSROOT.cleanup; // use standard cleanup function by default

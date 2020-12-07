@@ -198,17 +198,18 @@ JSROOT.define([], () => {
     * @desc Should be created with {@link JSROOT.connectWebWindow} function
     */
 
-   function WebWindowHandle(socket_kind) {
+   function WebWindowHandle(socket_kind, credits) {
       this.kind = socket_kind;
       this.state = 0;
-      this.cansend = 10;
-      this.ackn = 10;
+      this.credits = credits || 10;
+      this.cansend = this.credits;
+      this.ackn = this.credits;
    }
 
    /** @summary Returns arguments specified in the RWebWindow::SetUserArgs() method
-    * @desc Can be any valid JSON expression. Undefined by default.
-    * @param {string} [field] - if specified and user args is object, returns correspondent object member
-    * @returns user arguments object */
+     * @desc Can be any valid JSON expression. Undefined by default.
+     * @param {string} [field] - if specified and user args is object, returns correspondent object member
+     * @returns user arguments object */
    WebWindowHandle.prototype.GetUserArgs = function(field) {
       if (field && (typeof field == 'string')) {
          return (this.user_args && (typeof this.user_args == 'object')) ? this.user_args[field] : undefined;
@@ -218,10 +219,10 @@ JSROOT.define([], () => {
    }
 
    /** @summary Set callbacks receiver.
-    * @param {object} obj - object wiith receiver functions
-    * @param {function} obj.OnWebsocketMsg - called when new data receieved from RWebWindow
-    * @param {function} obj.OnWebsocketOpened - called when connection established
-    * @param {function} obj.OnWebsocketClosed - called when connection closed */
+     * @param {object} obj - object wiith receiver functions
+     * @param {function} obj.OnWebsocketMsg - called when new data receieved from RWebWindow
+     * @param {function} obj.OnWebsocketOpened - called when connection established
+     * @param {function} obj.OnWebsocketClosed - called when connection closed */
    WebWindowHandle.prototype.SetReceiver = function(obj) {
       this.receiver = obj;
    }
@@ -332,6 +333,11 @@ JSROOT.define([], () => {
       return (this.cansend >= (numsend || 1));
    }
 
+   /** @summary Returns number of possible send operations relative to number of credits*/
+   WebWindowHandle.prototype.getRelCanSend = function() {
+      return !this.credits ? 1 : this.cansend / this.credits;
+   }
+
    /** @summary Send text message via the connection.
      * @param {string} msg - text message to send */
    WebWindowHandle.prototype.Send = function(msg, chid) {
@@ -388,7 +394,7 @@ JSROOT.define([], () => {
       if (this.master)
          return master.CreateChannel();
 
-      let channel = new WebWindowHandle("channel");
+      let channel = new WebWindowHandle("channel", this.credits);
       channel.wait_first_recv = true; // first received message via the channel is confirmation of established connection
 
       if (!this.channels) {
@@ -414,7 +420,7 @@ JSROOT.define([], () => {
    WebWindowHandle.prototype.CreateRelative = function(relative) {
       if (!relative || !this.kind || !this.href) return null;
 
-      let handle = new WebWindowHandle(this.kind);
+      let handle = new WebWindowHandle(this.kind, this.credits);
       console.log('Try to connect ', this.href + relative);
       handle.Connect(this.href + relative);
       return handle;
@@ -573,6 +579,7 @@ JSROOT.define([], () => {
     * @param {string} [arg.openui5src] - source of openui5, either URL like "https://openui5.hana.ondemand.com" or "jsroot" which provides its own reduced openui5 package
     * @param {string} [arg.openui5libs] - list of openui5 libraries loaded, default is "sap.m, sap.ui.layout, sap.ui.unified"
     * @param {string} [arg.socket_kind] - kind of connection longpoll|websocket, detected automatically from URL
+    * @param {number} [arg.credits = 10] - number of packets which can be send to server without acknowledge
     * @param {object} arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
     * @param {string} arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned in handle.first_msg
     * @param {string} [arg.prereq2] - second part of prerequcities, which is loaded parallel to connecting with WebWindow
@@ -634,7 +641,7 @@ JSROOT.define([], () => {
       // arg.socket_kind = "longpoll";
 
       let promise = new Promise((resolveFunc) => {
-         let handle = new WebWindowHandle(arg.socket_kind);
+         let handle = new WebWindowHandle(arg.socket_kind, arg.credits);
          handle.user_args = arg.user_args;
 
          if (window) {

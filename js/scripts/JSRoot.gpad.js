@@ -858,12 +858,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    let drawGaxis = (divid, obj /*, opt*/) => {
       let painter = new TAxisPainter(obj, false);
-
-      painter.SetDivId(divid);
-
       painter.disable_zooming = true;
 
-      return painter.Redraw().then(() => painter);
+      return jsrp.ensureTCanvas(painter, divid, false)
+             .then(() => painter.Redraw()).then(() => painter);
    }
 
    // ===============================================
@@ -1939,10 +1937,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    let drawFrame = (divid, obj, opt) => {
       let p = new TFramePainter(obj);
-      if (opt == "3d") p.mode3d = true;
-      p.SetDivId(divid, 2);
-      p.Redraw();
-      return p.DrawingReady();
+      return jsrp.ensureTCanvas(p, divid, false).then(() => {
+         if (opt == "3d") p.mode3d = true;
+         p.Redraw();
+         return p;
+      })
    }
 
    // ===========================================================================
@@ -2850,7 +2849,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let padpainter = new TPadPainter(subpad, false);
          padpainter.DecodeOptions(snap.fOption);
-         padpainter.SetDivId(this.divid); // pad painter will be registered in the canvas painters list
+         padpainter.SetDivId(this.divid, -1); // pad painter will be registered in the canvas painters list
+         padpainter.addToPadPrimitives();
          padpainter.snapid = snap.fObjectID;
 
          padpainter.CreatePadSvg();
@@ -2935,14 +2935,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (mainid && (typeof mainid == "string")) {
                this.brlayout = new JSROOT.BrowserLayout(mainid, null, this);
                this.brlayout.Create(mainid, true);
-               // this.brlayout.ToggleBrowserKind("float");
+               // this.brlayout.toggleBrowserKind("float");
                this.SetDivId(this.brlayout.drawing_divid(), -1);  // assign id for drawing
                JSROOT.registerForResize(this.brlayout);
             }
          }
 
          this.CreateCanvasSvg(0);
-         this.SetDivId(this.divid);  // now add to painters list
+         this.SetDivId(this.divid, -1);  // now add to painters list
+         this.addToPadPrimitives();
          if (!this.batch_mode)
             this.AddPadButtons(true);
 
@@ -3072,7 +3073,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return Promise.resolve("");
    }
 
-   /** Collects pad information for TWebCanvas, need to update different states */
+   /** @summary Collects pad information for TWebCanvas, need to update different states */
    TPadPainter.prototype.GetWebPadOptions = function(arg) {
       let is_top = (arg === undefined), elem = null, scan_subpads = true;
       // no any options need to be collected in readonly mode
@@ -3379,7 +3380,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             evnt.stopPropagation();
          }
 
-         if (jsrp.closeMenu()) return;
+         if (jsrp.closeMenu && jsrp.closeMenu()) return;
 
          jsrp.createMenu(this, evnt).then(menu => {
             menu.add("header:Menus");
@@ -3484,15 +3485,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
    }
 
-   TPadPainter.prototype.DrawingReady = function(res_painter) {
-
-      let main = this.frame_painter();
-
-      if (main && main.mode3d && typeof main.Render3D == 'function') main.Render3D(-2222);
-
-      JSROOT.ObjectPainter.prototype.DrawingReady.call(this, res_painter);
-   }
-
    TPadPainter.prototype.DecodeOptions = function(opt) {
       let pad = this.GetObject();
       if (!pad) return;
@@ -3541,11 +3533,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let painter = new TPadPainter(pad, false);
       painter.DecodeOptions(opt);
 
-      painter.SetDivId(divid); // pad painter will be registered in the canvas painters list
+      painter.SetDivId(divid, -1);
 
       if (painter.svg_canvas().empty()) {
+         // one can draw pad without canvas
          painter.has_canvas = false;
          painter.this_pad_name = "";
+      } else {
+         // pad painter will be registered in the canvas painters list
+         painter.addToPadPrimitives();
       }
 
       painter.CreatePadSvg();
@@ -3942,9 +3938,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
 
       // be aware, that jsroot_browser_hierarchy required for flexible layout that element use full browser area
-      this.brlayout.SetBrowserContent("<div class='jsroot_browser_hierarchy' id='ged_placeholder'>Loading GED ...</div>");
-      this.brlayout.SetBrowserTitle("GED");
-      this.brlayout.ToggleBrowserKind(kind || "float");
+      this.brlayout.setBrowserContent("<div class='jsroot_browser_hierarchy' id='ged_placeholder'>Loading GED ...</div>");
+      this.brlayout.setBrowserTitle("GED");
+      this.brlayout.toggleBrowserKind(kind || "float");
 
       return new Promise(resolveFunc => {
 
@@ -4159,7 +4155,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       painter.DecodeOptions(opt);
       painter.normal_canvas = !nocanvas;
       painter.CreateCanvasSvg(0);
-      painter.SetDivId(divid);  // now add to painters list
+      painter.SetDivId(divid);  // now add to painters list ??????????
 
       painter.AddPadButtons();
 
@@ -4171,6 +4167,34 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       return painter.DrawPrimitives().then(() => {
          painter.ShowButtons();
+         return painter;
+      });
+   }
+
+  /** @summary Ensure TCanvas and TFrame for the painter object
+    * @param {Object} painter  - painter object to process
+    * @param {Object|string} divid - HTML element or element id
+    * @param {string|boolean} frame_kind  - false for no frame or "3d" for special 3D mode
+    * @desc Assign divid, creates TCanvas if necessary, add to list of pad painters and */
+   let ensureTCanvas = function(painter, divid, frame_kind) {
+      if (!painter) return Promise.reject('Painter not provided in ensureTCanvas');
+
+      // assign divid and pad name as required
+      painter.SetDivId(divid, -1);
+
+      // simple check - if canvas there, can use painter
+      let svg_c = painter.svg_canvas();
+      let noframe = (frame_kind === false) || (frame_kind == "3d") ? "noframe" : "";
+
+      let promise = !svg_c.empty() ? Promise.resolve(true) : drawCanvas(divid, null, noframe);
+
+      return promise.then(() => {
+         if (frame_kind === false) return;
+
+         if (painter.svg_frame().select(".main_layer").empty() && !painter.frame_painter())
+            return drawFrame(divid, null, (typeof frame_kind === "string") ? frame_kind : "");
+      }).then(() => {
+         painter.addToPadPrimitives();
          return painter;
       });
    }
@@ -4197,6 +4221,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    jsrp.drawFrame = drawFrame;
    jsrp.drawPad = drawPad;
    jsrp.drawCanvas = drawCanvas;
+   jsrp.ensureTCanvas = ensureTCanvas;
    jsrp.drawPadSnapshot = drawPadSnapshot;
 
    return JSROOT;
