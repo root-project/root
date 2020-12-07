@@ -60,12 +60,29 @@ sap.ui.define([], function() {
    }
 
    EveManager.prototype.OnWebsocketClosed = function() {
-      for (var i = 0; i < this.controllers.length; ++i) {
-         if (typeof this.controllers[i].onDisconnect !== "undefined") {
-            this.controllers[i].onDisconnect();
-         }
-      }
+      this.controllers.forEach(ctrl => {
+         if (typeof ctrl.onDisconnect === "function")
+             ctrl.onDisconnect();
+      });
    }
+
+   /** Checks if number of credits on the connection below threshold */
+   EveManager.prototype.CheckSendThreshold = function() {
+      if (!this.handle) return false;
+      let value = this.handle.getRelCanSend();
+      let below = (value <= 0.2);
+      if (this.credits_below_threshold === undefined)
+         this.credits_below_threshold = false;
+      if (this.credits_below_threshold === below)
+         return below;
+
+      this.credits_below_threshold = below;
+      this.controllers.forEach(ctrl => {
+         if (typeof ctrl.onSendThresholdChanged === "function")
+             ctrl.onSendThresholdChanged(below, value);
+      });
+   }
+
 
    EveManager.prototype.OnWebsocketOpened = function() {
       // console.log("opened!!!");
