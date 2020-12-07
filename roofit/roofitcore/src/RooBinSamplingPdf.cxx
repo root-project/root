@@ -252,11 +252,11 @@ std::list<double>* RooBinSamplingPdf::plotSamplingHint(RooAbsRealLValue& obs, Do
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return reference to the integrator that's used to sample the bins.
-/// This can be used to alter the integration method or sampling accuracy.
+/// Return reference to a unique_ptr holding the integrator that's used to sample the bins.
+/// This can be used to change options such as sampling accuracy or to entirely exchange the integrator.
 /// \see ROOT::Math::IntegratorOneDim::SetOptions to alter integration options.
 /// \note When integration options are altered, these changes are not saved to files.
-ROOT::Math::IntegratorOneDim& RooBinSamplingPdf::integrator() const {
+std::unique_ptr<ROOT::Math::IntegratorOneDim>& RooBinSamplingPdf::integrator() const {
   if (!_integrator) {
     _integrator.reset(new ROOT::Math::IntegratorOneDim(*this,
         ROOT::Math::IntegrationOneDim::kADAPTIVE, // GSL Integrator. Will really get it only if MathMore enabled.
@@ -266,7 +266,7 @@ ROOT::Math::IntegratorOneDim& RooBinSamplingPdf::integrator() const {
         ));
   }
 
-  return *_integrator;
+  return _integrator;
 }
 
 
@@ -284,6 +284,6 @@ double RooBinSamplingPdf::integrate(const RooArgSet* normSet, double low, double
   // Need to set this because operator() only takes one argument.
   _normSetForIntegrator = normSet;
 
-  return integrator().Integral(low, high);
+  return integrator()->Integral(low, high);
 }
 
