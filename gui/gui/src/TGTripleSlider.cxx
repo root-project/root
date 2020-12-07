@@ -204,7 +204,7 @@ Bool_t TGTripleVSlider::HandleMotion(Event_t *event)
    was = now;
 
    int     diff;
-   Float_t oldMin, oldMax;
+   Double_t oldMin, oldMax;
 
    diff    = event->fY - fPressPoint;
    oldMin  = fSmin;
@@ -224,7 +224,7 @@ Bool_t TGTripleVSlider::HandleMotion(Event_t *event)
       if (fSmax < fSmin) fSmax = fSmin;
    } else if (fMove == 3) {
       // change of min and of max value
-      Float_t logicalDiff;
+      Double_t logicalDiff;
       logicalDiff = diff * (fVmax - fVmin) / (fHeight-16);
       if (fPressSmax + logicalDiff > fVmax)
          logicalDiff = fVmax - fPressSmax;
@@ -309,7 +309,7 @@ void TGTripleVSlider::SetPointerPos(Int_t z, Int_t opt)
       }
    }
    if (lcheck)
-      fSCz = fVmin + ((Float_t)(fCz-8) * (fVmax - fVmin) / (Float_t)(fHeight-16));
+      fSCz = fVmin + ((Double_t)(fCz-8) * (fVmax - fVmin) / (Double_t)(fHeight-16));
    if(fSCz < fVmin) fSCz = fVmin;
    if(fSCz > fVmax) fSCz = fVmax;
    if (fConstrained) {
@@ -333,7 +333,7 @@ void TGTripleVSlider::SetPointerPos(Int_t z, Int_t opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set pointer position in scaled (real) value
 
-void TGTripleVSlider::SetPointerPosition(Float_t pos)
+void TGTripleVSlider::SetPointerPosition(Double_t pos)
 {
    if (fReversedScale) {
       fSCz = fVmin + fVmax - pos;
@@ -341,7 +341,7 @@ void TGTripleVSlider::SetPointerPosition(Float_t pos)
    else {
       fSCz = pos;
    }
-   Float_t absPos = (fSCz - fVmin) * (fHeight-16) / (fVmax - fVmin);
+   Double_t absPos = (fSCz - fVmin) * (fHeight-16) / (fVmax - fVmin);
    SetPointerPos((int)(absPos+5.0), 0);
 }
 
@@ -477,7 +477,7 @@ Bool_t TGTripleHSlider::HandleMotion(Event_t *event)
    was = now;
 
    int     diff;
-   Float_t oldMin, oldMax;
+   Double_t oldMin, oldMax;
 
    diff    = event->fX - fPressPoint;
    oldMin  = fSmin;
@@ -497,7 +497,7 @@ Bool_t TGTripleHSlider::HandleMotion(Event_t *event)
       if (fSmax < fSmin) fSmax = fSmin;
    } else if (fMove == 3) {
       // change of min and of max value
-      Float_t logicalDiff;
+      Double_t logicalDiff;
       logicalDiff = diff * (fVmax - fVmin) / (fWidth-16);
       if (fPressSmax + logicalDiff > fVmax)
          logicalDiff = fVmax - fPressSmax;
@@ -582,7 +582,7 @@ void TGTripleHSlider::SetPointerPos(Int_t z, Int_t opt)
       }
    }
    if (lcheck)
-      fSCz = fVmin + ((Float_t)(fCz-8) * (fVmax - fVmin) / (Float_t)(fWidth-16));
+      fSCz = fVmin + ((Double_t)(fCz-8) * (fVmax - fVmin) / (Double_t)(fWidth-16));
    if(fSCz < fVmin) fSCz = fVmin;
    if(fSCz > fVmax) fSCz = fVmax;
    if (fConstrained) {
@@ -606,7 +606,7 @@ void TGTripleHSlider::SetPointerPos(Int_t z, Int_t opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set pointer position in scaled (real) value
 
-void TGTripleHSlider::SetPointerPosition(Float_t pos)
+void TGTripleHSlider::SetPointerPosition(Double_t pos)
 {
    if (fReversedScale) {
       fSCz = fVmin + fVmax - pos;
@@ -614,7 +614,7 @@ void TGTripleHSlider::SetPointerPosition(Float_t pos)
    else {
       fSCz = pos;
    }
-   Float_t absPos = (fSCz - fVmin) * (fWidth-16) / (fVmax - fVmin);
+   Double_t absPos = (fSCz - fVmin) * (fWidth-16) / (fVmax - fVmin);
    SetPointerPos((int)(absPos+5.0), 0);
 }
 
