@@ -3297,7 +3297,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    /// The StreamerInfo should exist at this point.
 
    else {
-      R__LOCKGUARD(gInterpreterMutex);
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
       auto infos = cl->GetStreamerInfos();
       auto ninfos = infos->GetSize();
       if (version < -1 || version >= ninfos) {
@@ -3313,31 +3313,40 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
          // one for the current version, otherwise let's complain ...
          // We could also get here if there old class version was '1' and the new class version is higher than 1
          // AND the checksum is the same.
-         if ( version == cl->GetClassVersion() || version == 1 ) {
-            const_cast<TClass*>(cl)->BuildRealData(pointer);
-            // This creation is alright since we just checked within the
-            // current 'locked' section.
-            sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
-            const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
-            if (gDebug > 0) Info("ReadClassBuffer", "Creating StreamerInfo for class: %s, version: %d", cl->GetName(), version);
-            sinfo->Build();
-         } else if (version==0) {
-            // When the object was written the class was version zero, so
-            // there is no StreamerInfo to be found.
-            // Check that the buffer position corresponds to the byte count.
-            CheckByteCount(start, count, cl);
-            return 0;
-         } else {
-            Error("ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
-                  version, cl->GetName(), Length() );
-            CheckByteCount(start, count, cl);
-            return 0;
+         R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+         // check if another thread took care of this already
+         sinfo = (TStreamerInfo*)cl->GetStreamerInfos()->At(version);
+         if (sinfo == nullptr) {
+            if ( version == cl->GetClassVersion() || version == 1 ) {
+               const_cast<TClass*>(cl)->BuildRealData(pointer);
+               // This creation is alright since we just checked within the
+               // current 'locked' section.
+               sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
+               const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
+               if (gDebug > 0) Info("ReadClassBuffer", "Creating StreamerInfo for class: %s, version: %d", cl->GetName(), version);
+               sinfo->Build();
+            } else if (version==0) {
+               // When the object was written the class was version zero, so
+               // there is no StreamerInfo to be found.
+               // Check that the buffer position corresponds to the byte count.
+               CheckByteCount(start, count, cl);
+               return 0;
+            } else {
+               Error("ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+                     version, cl->GetName(), Length() );
+               CheckByteCount(start, count, cl);
+               return 0;
+            }
          }
       } else if (!sinfo->IsCompiled()) {  // Note this read is protected by the above lock.
          // Streamer info has not been compiled, but exists.
          // Therefore it was read in from a file and we have to do schema evolution.
-         const_cast<TClass*>(cl)->BuildRealData(pointer);
-         sinfo->BuildOld();
+         R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+         // check if another thread took care of this already
+         if (!sinfo->IsCompiled()) {
+            const_cast<TClass*>(cl)->BuildRealData(pointer);
+            sinfo->BuildOld();
+         }
       }
    }
 
