@@ -138,11 +138,8 @@ ROOT::Experimental::RClusterDescriptor::RLocator
 ROOT::Experimental::Detail::RPageSinkFile::CommitSealedPageImpl(
    DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage)
 {
-   const auto bitsOnStorage = Detail::RColumnElementBase::Generate(
-      fDescriptorBuilder.GetDescriptor()
-      .GetColumnDescriptor(columnId)
-      .GetModel()
-      .GetType()).GetBitsOnStorage();
+   const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
+      fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(columnId).GetModel().GetType());
 
    const auto bytesPacked = (bitsOnStorage * sealedPage.fNElements + 7) / 8;
    const auto offsetData = fWriter->WriteBlob(sealedPage.fBuffer.get(), sealedPage.fSize, bytesPacked);
