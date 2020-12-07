@@ -1770,15 +1770,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.RecalculateRange(0);
 
       this.x_handle = new RAxisPainter(this, this.xaxis, "x_");
-      this.x_handle.SetDivId(this.divid, -1);
+      this.x_handle.setCanvDom(this.divid, this.pad_name);
       this.x_handle.snapid = this.snapid;
 
       this.y_handle = new RAxisPainter(this, this.yaxis, "y_");
-      this.y_handle.SetDivId(this.divid, -1);
+      this.y_handle.setCanvDom(this.divid, this.pad_name);
       this.y_handle.snapid = this.snapid;
 
       this.z_handle = new RAxisPainter(this, this.zaxis, "z_");
-      this.z_handle.SetDivId(this.divid, -1);
+      this.z_handle.setCanvDom(this.divid, this.pad_name);
       this.z_handle.snapid = this.snapid;
 
       this.x_handle.ConfigureAxis("xaxis", this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, false, [0,w], w, { reverse: false });
@@ -2545,6 +2545,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              .property('current_pad', "") // this is custom property
              .property('redraw_by_resize', false); // could be enabled to force redraw by each resize
 
+         this.setTopPainter(); //assign canvas as top painter of that element
+
          svg.append("svg:title").text("ROOT canvas");
          let frect = svg.append("svg:rect").attr("class","canvas_fillrect")
                                .attr("x",0).attr("y",0);
@@ -3101,9 +3103,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let padpainter = new RPadPainter(subpad, false);
          padpainter.DecodeOptions("");
-         padpainter.SetDivId(this.divid); // pad painter will be registered in parent painters list
+         padpainter.setCanvDom(this.divid, this.this_pad_name); // pad painter will be registered in parent painters list
          padpainter.AssignSnapId(snap.fObjectID);
          padpainter.rstyle = snap.fStyle;
+         padpainter.addToPadPrimitives();
 
          padpainter.CreatePadSvg();
 
@@ -3119,7 +3122,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          });
       }
 
-      // will be used in SetDivId to assign style to painter
+      // will be used in addToPadPrimitives to assign style to sub-painters
       this.next_rstyle = lst[indx].fStyle || this.rstyle;
 
       if (snap._typename === "ROOT::Experimental::TObjectDisplayItem") {
@@ -3223,7 +3226,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              this._fixed_size = true;
 
          this.CreateCanvasSvg(0);
-         this.SetDivId(this.divid);  // now add to painters list
          this.AddPadButtons(true);
 
          return this.DrawNextSnap(snap.fPrimitives);
@@ -3682,12 +3684,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    let drawPad = (divid, pad, opt) => {
       let painter = new RPadPainter(pad, false);
       painter.DecodeOptions(opt);
-
-      painter.SetDivId(divid); // pad painter will be registered in the canvas painters list
+      painter.setCanvDom(divid);
 
       if (painter.svg_canvas().empty()) {
          painter.has_canvas = false;
          painter.this_pad_name = "";
+         painter.setTopPainter();
+      } else {
+         painter.addToPadPrimitives();
       }
 
       painter.CreatePadSvg();
@@ -4155,10 +4159,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let painter = new RCanvasPainter(can);
       painter.normal_canvas = !nocanvas;
-
-      painter.SetDivId(divid, -1); // just assign id
+      painter.setCanvDom(divid); // just assign id
       painter.CreateCanvasSvg(0);
-      painter.SetDivId(divid);  // now add to painters list
 
       jsrp.selectActivePad({ pp: painter, active: false });
 
@@ -4173,7 +4175,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let painter = new RCanvasPainter(null);
       painter.normal_canvas = false;
       painter.batch_mode = true;
-      painter.SetDivId(divid, -1); // just assign id
+      painter.setCanvDom(divid);
       return painter.RedrawPadSnap(snap).then(() => {
          painter.ShowButtons();
          return painter;
@@ -4189,7 +4191,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (!painter) return Promise.reject('Painter not provided in ensureRCanvas');
 
       // assign divid and pad name as required
-      painter.SetDivId(divid, -1);
+      painter.setCanvDom(divid);
 
       // simple check - if canvas there, can use painter
       let svg_c = painter.svg_canvas();
