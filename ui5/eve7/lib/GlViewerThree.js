@@ -202,7 +202,6 @@ sap.ui.define([
                   // Was needed for "on press with timeout"
                   // glc.controls.resetMouseDown(event);
 
-                  JSROOT.Painter.createMenu(glc, glc.showContextMenu.bind(glc, event2));
                }
             }
 

@@ -40,7 +40,7 @@ sap.ui.define(['sap/ui/core/Control',
          if (this.geom_painter) {
             // this should be moved to GeomPainter itself !!!
 
-            this.geom_painter.SetDivId(this.getDomRef(), 5);
+            this.geom_painter.SetDivId(this.getDomRef());
 
             var size = this.geom_painter.size_for_3d();
 
@@ -48,6 +48,7 @@ sap.ui.define(['sap/ui/core/Control',
 
             // set top painter only when first child exists
             this.geom_painter.accessTopPainter(true);
+            this.geom_painter.setAsMainPainter();
 
             this.geom_painter.Render3D();
          }
