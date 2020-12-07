@@ -84,7 +84,7 @@ sap.ui.define([
             }
 
             if (this.canvas_painter)
-               this.canvas_painter.SetDivId(dom.lastChild, -1);
+               this.canvas_painter.setCanvDom(dom.lastChild, "");
 
             if (this.canvas_painter && this.canvas_painter._window_handle) {
                this.canvas_painter.UseWebsocket(this.canvas_painter._window_handle, this.canvas_painter._window_handle_href);
