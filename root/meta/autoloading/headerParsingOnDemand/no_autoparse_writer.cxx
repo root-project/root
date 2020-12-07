@@ -1,7 +1,8 @@
 #include "no_autoparse.h"
 
-#include "TInterpreter.h"
+#include "TBranch.h"
 #include "TError.h"
+#include "TInterpreter.h"
 
 void writer(const char *filename /* = "autoparse_test.root" */ )
 {
