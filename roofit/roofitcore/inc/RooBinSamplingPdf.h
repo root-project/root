@@ -92,7 +92,7 @@ public:
   std::list<double>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override;
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override;
 
-  ROOT::Math::IntegratorOneDim& integrator() const;
+  std::unique_ptr<ROOT::Math::IntegratorOneDim>& integrator() const;
 
 
 protected:
