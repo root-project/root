@@ -34,6 +34,12 @@ sap.ui.define(['sap/ui/core/Component',
          t.setHtmlText("<strong style=\"color: red;\">Client Disconnected !</strong>");
       },
 
+      /** called when relative number of possible send operation below or over the threshold  */
+      onSendThresholdChanged: function(below, value) {
+         var t = this.byId("centerTitle");
+         t.$().css('color', below ? 'yellow' : '')
+      },
+
 
       UpdateCommandsButtons: function(cmds) {
          if (!cmds || this.commands) return;

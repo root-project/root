@@ -316,6 +316,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       if (this.mgr.MatchSelection(this.mgr.global_highlight_id, obj3d.eve_el, indx))
          return true;
 
+      // when send queue below threshold, ignre highlight
+      if (this.mgr.CheckSendThreshold())
+         return true;
+
       let is_multi  = false;
       let is_secsel = indx !== undefined;
 
@@ -335,6 +339,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       // QQQQ This will have to change for multi client support.
       // Highlight will always be multi and we will have to track
       // which highlight is due to our connection.
+
+      // when send queue below threshold, ignre highlight
+      if (this.mgr.CheckSendThreshold())
+         return true;
 
       let is_multi  = false;
       let is_secsel = false;
