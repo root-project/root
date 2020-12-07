@@ -3066,7 +3066,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          this.add_3d_canvas(size, dom, this._webgl);
 
          // set top painter only when first child exists
-         this.accessTopPainter(true);
+         this.setAsMainPainter();
       }
 
       this.CreateToolbar();
@@ -3749,7 +3749,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          if (this._webgl && this.ctrl.show_controls && !JSROOT.BatchMode) this.showControlOptions(true);
       }
 
-      // call it every time, in reality invoked only first time
+      this.setAsMainPainter();
+
       if (typeof this._resolveFunc == 'function') {
          this._resolveFunc(this);
          delete this._resolveFunc;
@@ -4038,9 +4039,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       // if (obj && obj._typename=='TGeoManager' && (obj.fNsegments > 3))
       //   geo.GradPerSegm = 360/obj.fNsegments;
 
-      painter.SetDivId(divid, -1);
-      painter.setAsMainPainter();
-      painter.addToPadPrimitives(); // will add to pad primitives if any
+      painter.setCanvDom(divid);
+      // painter.addToPadPrimitives(); // will add to pad primitives if any
 
       painter.options = painter.decodeOptions(opt); // indicator of initialization
 
