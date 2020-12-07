@@ -63,7 +63,7 @@ d = ROOT.RDataFrame(treeName, fileName)
 
 # Operating on branches which are collection of objects
 # Here we deal with the simplest of the cuts: we decide to accept the event
-# only if the number of tracks is greater than 5.
+# only if the number of tracks is greater than 8.
 n_cut = 'tracks.size() > 8'
 nentries = d.Filter(n_cut).Count();
 
