@@ -2917,7 +2917,7 @@ void TTreeViewer::DoRefresh()
    fTree->Refresh();
    Double_t min = fSlider->GetMinPositionD();
    Double_t max = (Double_t)fTree->GetEntries()-1;
-   fSlider->SetRangeD(min,max);
-   fSlider->SetPositionD(min,max);
+   fSlider->SetRange(min,max);
+   fSlider->SetPosition(min,max);
    ExecuteDraw();
 }
