@@ -144,8 +144,93 @@ struct RecurseCounts {
    void ResetIsWriter(local_t & /* local */) { fWriterThread = std::thread::id(); }
 
    size_t &GetLocalReadersCount(local_t &local) { return fReadersCount[local]; }
+};
 
+struct RecurseCountsShared {
+   using Hint_t = TVirtualRWMutex::Hint_t;
+   using ReaderColl_t = std::unordered_map<std::thread::id, size_t>;
+   size_t fWriteRecurse; ///<! Number of re-entry in the lock by the same thread.
 
+   std::thread::id fWriterThread; ///<! Holder of the write lock
+   ReaderColl_t fReadersCount;    ///<! Set of reader thread ids
+
+   using local_t = std::thread::id;
+
+   local_t GetLocal() const { return std::this_thread::get_id(); }
+
+   Hint_t *IncrementReadCount(local_t &local) {
+      auto &count = fReadersCount[local];
+      ++(count);
+      return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
+   }
+
+   template <typename MutexT>
+   Hint_t *IncrementReadCount(local_t &local, MutexT &mutex)
+   {
+      mutex.lock_shared();
+      auto countit = fReadersCount.find(local);
+      if (countit == fReadersCount.end()) {
+         mutex.unlock_shared();
+         mutex.lock();
+         auto &count = fReadersCount[local];
+         mutex.unlock();
+         ++(count);
+         return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
+      }
+
+      auto &count = countit->second;
+      mutex.unlock_shared();
+      ++(count);
+      return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
+   }
+
+   Hint_t *DecrementReadCount(local_t &local) {
+      auto &count = fReadersCount[local];
+      --count;
+      return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
+   }
+
+   template <typename MutexT>
+   Hint_t *DecrementReadCount(local_t &local, MutexT &mutex)
+   {
+      mutex.lock_shared();
+      auto countit = fReadersCount.find(local);
+      if (countit == fReadersCount.end()) {
+         mutex.unlock_shared();
+         mutex.lock();
+         auto &count = fReadersCount[local];
+         mutex.unlock();
+         --(count);
+         return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
+      }
+
+      auto &count = countit->second;
+      mutex.unlock_shared();
+      --(count);
+      return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
+   }
+
+   void ResetReadCount(local_t &local, int newvalue) {
+      fReadersCount[local] = newvalue;
+   }
+
+   bool IsCurrentWriter(local_t &local) const { return fWriterThread == local; }
+   bool IsNotCurrentWriter(local_t &local) const { return fWriterThread != local; }
+
+   void SetIsWriter(local_t &local)
+   {
+      // if (fWriteRecurse == std::numeric_limits<decltype(fWriteRecurse)>::max()) {
+      //    ::Fatal("TRWSpinLock::WriteLock", "Too many recursions in TRWSpinLock!");
+      // }
+      ++fWriteRecurse;
+      fWriterThread = local;
+   }
+
+   void DecrementWriteCount() { --fWriteRecurse; }
+
+   void ResetIsWriter(local_t & /* local */) { fWriterThread = std::thread::id(); }
+
+   size_t &GetLocalReadersCount(local_t &local) { return fReadersCount[local]; }
 };
 } // Internal
 

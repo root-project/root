@@ -36,6 +36,9 @@ thus preventing starvation.
 #include "TMutex.h"
 #include "TError.h"
 #include <assert.h>
+#if __cplusplus >= 201402L
+#include <shared_mutex>
+#endif
 
 using namespace ROOT;
 
@@ -413,4 +416,11 @@ template class TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCounts>;
 template class TReentrantRWLock<ROOT::TSpinMutex, ROOT::Internal::UniqueLockRecurseCount>;
 template class TReentrantRWLock<TMutex, ROOT::Internal::UniqueLockRecurseCount>;
 template class TReentrantRWLock<std::mutex, ROOT::Internal::UniqueLockRecurseCount>;
+
+#if __cplusplus >= 201402L
+template class TReentrantRWLock<std::shared_timed_mutex, ROOT::Internal::RecurseCountsShared>;
+#endif
+#if __cplusplus >= 201703L
+template class TReentrantRWLock<std::shared_mutex, ROOT::Internal::RecurseCountsShared>;
+#endif
 }

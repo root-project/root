@@ -21,6 +21,9 @@
 #include "TRWMutexImp.h"
 #include "ROOT/TSpinMutex.hxx"
 #include "TMutex.h"
+#if __cplusplus >= 201402L
+#include <shared_mutex>
+#endif
 
 namespace ROOT {
 
@@ -113,5 +116,11 @@ template class TRWMutexImp<ROOT::TSpinMutex>;
 template class TRWMutexImp<std::mutex>;
 template class TRWMutexImp<TMutex, ROOT::Internal::UniqueLockRecurseCount>;
 template class TRWMutexImp<ROOT::TSpinMutex, ROOT::Internal::UniqueLockRecurseCount>;
+#if __cplusplus >= 201402L
+template class TRWMutexImp<std::shared_timed_mutex, ROOT::Internal::RecurseCountsShared>;
+#endif
+#if __cplusplus >= 201703L
+template class TRWMutexImp<std::shared_mutex, ROOT::Internal::RecurseCountsShared>;
+#endif
 
 } // End of namespace ROOT

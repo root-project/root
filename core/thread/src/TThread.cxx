@@ -40,6 +40,9 @@
 #include "TThreadSlots.h"
 #include "TRWMutexImp.h"
 #include "snprintf.h"
+#if __cplusplus >= 201402L
+#include <shared_mutex>
+#endif
 
 TThreadImp     *TThread::fgThreadImp = nullptr;
 Long_t          TThread::fgMainId = 0;
@@ -352,7 +355,13 @@ void TThread::Init()
      if (!ROOT::gCoreMutex) {
         // To avoid dead locks, caused by shared library opening and/or static initialization
         // taking the same lock as 'tls_get_addr_tail', we can not use UniqueLockRecurseCount.
+#if __cplusplus >= 201703L
+        ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::shared_mutex, ROOT::Internal::RecurseCountsShared>();
+#elif __cplusplus >= 201402L
+        ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::shared_timed_mutex, ROOT::Internal::RecurseCountsShared>();
+#else
         ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::mutex, ROOT::Internal::RecurseCounts>();
+#endif
      }
      gInterpreterMutex = ROOT::gCoreMutex;
      gROOTMutex = gInterpreterMutex;
