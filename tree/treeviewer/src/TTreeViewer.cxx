@@ -1142,11 +1142,11 @@ void TTreeViewer::BuildInterface()
    // map the tree if it was supplied in the constructor
 
    if (!fTree) {
-      fSlider->SetRangeD(0,1000000);
-      fSlider->SetPositionD(0,1000000);
+      fSlider->SetRange(0LL,1000000LL);
+      fSlider->SetPosition(0LL,1000000LL);
    } else {
-      fSlider->SetRangeD(0,fTree->GetEntries()-1);
-      fSlider->SetPositionD(0,fTree->GetEntries()-1);
+      fSlider->SetRange(0LL,fTree->GetEntries()-1);
+      fSlider->SetPosition(0LL,fTree->GetEntries()-1);
    }
    PrintEntries();
    fProgressBar->SetPosition(0);
@@ -1452,7 +1452,7 @@ void TTreeViewer::ExecuteDraw()
    // get entries to be processed
    Long64_t nentries = (Long64_t)(fSlider->GetMaxPositionD() -
                             fSlider->GetMinPositionD() + 1);
-   Long64_t firstentry =(Long64_t) fSlider->GetMinPositionD();
+   Long64_t firstentry = fSlider->GetMinPositionL();
 //printf("firstentry=%lld, nentries=%lld\n",firstentry,nentries);
    // check if Scan is checked and if there is something in the box
    if (fScanMode) {
@@ -1619,7 +1619,7 @@ void TTreeViewer::ExecuteSpider()
    // get entries to be processed
    Long64_t nentries = (Long64_t)(fSlider->GetMaxPositionD() -
                             fSlider->GetMinPositionD() + 1);
-   Long64_t firstentry = (Long64_t) fSlider->GetMinPositionD();
+   Long64_t firstentry = fSlider->GetMinPositionL();
 
    // create the spider plot
 
@@ -1777,7 +1777,7 @@ Bool_t TTreeViewer::HandleTimer(TTimer *timer)
    if (fCounting) {
       Double_t first = fSlider->GetMinPositionD();
       Double_t last  = fSlider->GetMaxPositionD();
-      Double_t current = (Float_t)fTree->GetReadEntry();
+      Double_t current = (Double_t)fTree->GetReadEntry();
       Double_t percent = (current-first+1)/(last-first+1);
       fProgressBar->SetPosition(100.*percent);
       fProgressBar->ShowPosition();
@@ -2702,7 +2702,7 @@ void TTreeViewer::PrintEntries()
    if (!fTree) return;
    char * msg = new char[100];
    snprintf(msg,100, "First entry : %lld Last entry : %lld",
-           (Long64_t)fSlider->GetMinPositionD(), (Long64_t)fSlider->GetMaxPositionD());
+           fSlider->GetMinPositionL(), fSlider->GetMaxPositionL());
    Message(msg);
    delete[] msg;
 }
@@ -2836,8 +2836,8 @@ Bool_t TTreeViewer::SwitchTree(Int_t index)
    }
 
    fTree = tree;
-   fSlider->SetRangeD(0,fTree->GetEntries()-1);
-   fSlider->SetPositionD(0,fTree->GetEntries()-1);
+   fSlider->SetRange(0LL,fTree->GetEntries()-1);
+   fSlider->SetPosition(0LL,fTree->GetEntries()-1);
    command = "Current Tree : ";
    command += fTree->GetName();
    fLbl2->SetText(new TGString(command.c_str()));

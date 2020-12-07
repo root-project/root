@@ -333,15 +333,7 @@ void TGTripleVSlider::SetPointerPos(Int_t z, Int_t opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set pointer position in scaled (real) value
 
-void TGTripleVSlider::SetPointerPosition(Float_t pos)
-{
-   SetPointerPositionD((Double_t) pos);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set pointer position in scaled (real) value - double precision
-
-void TGTripleVSlider::SetPointerPositionD(Double_t pos)
+void TGTripleVSlider::SetPointerPosition(Double_t pos)
 {
    if (fReversedScale) {
       fSCz = fVmin + fVmax - pos;
@@ -614,15 +606,7 @@ void TGTripleHSlider::SetPointerPos(Int_t z, Int_t opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set pointer position in scaled (real) value
 
-void TGTripleHSlider::SetPointerPosition(Float_t pos)
-{
-   SetPointerPositionD((Double_t) pos);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set pointer position in scaled (real) value - double precision
-
-void TGTripleHSlider::SetPointerPositionD(Double_t pos)
+void TGTripleHSlider::SetPointerPosition(Double_t pos)
 {
    if (fReversedScale) {
       fSCz = fVmin + fVmax - pos;

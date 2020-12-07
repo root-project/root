@@ -114,11 +114,23 @@ public:
 
    virtual void  SetScale(Int_t scale) { fScale = scale; }
    virtual void  SetRange(Float_t min, Float_t max) {
-      SetRangeD((Double_t) min, (Double_t) max);
+      SetRange((Double_t) min, (Double_t) max);
+   }
+   virtual void  SetRange(Long64_t min, Long64_t max) {
+      SetRange((Double_t) min, (Double_t) max);
+   }
+   virtual void  SetRange(Int_t min, Int_t max) {
+      SetRange((Double_t) min, (Double_t) max);
    }
 
    virtual void SetPosition(Float_t min, Float_t max) {
-      SetPositionD((Double_t) min, (Double_t) max);
+      SetPosition((Double_t) min, (Double_t) max);
+   }
+   virtual void SetPosition(Long64_t min, Long64_t max) {
+      SetPosition((Double_t) min, (Double_t) max);
+   }
+   virtual void SetPosition(Int_t min, Int_t max) {
+      SetPosition((Double_t) min, (Double_t) max);
    }
 
    virtual Float_t GetMinPosition() const {
@@ -127,6 +139,13 @@ public:
    virtual Float_t GetMaxPosition() const {
       return (Float_t) GetMaxPositionD();
    }
+   virtual Long64_t GetMinPositionL() const {
+      return (Long64_t)GetMinPositionD();
+   }
+   virtual Long64_t GetMaxPositionL() const {
+      return (Long64_t)GetMaxPositionD();
+   }
+
    virtual void GetPosition(Float_t &min, Float_t &max) const {
       if (fReversedScale) { min = (Float_t)(fVmin+fVmax-fSmax); max = (Float_t)(fVmin+fVmax-fSmin); }
       else { min = (Float_t)fSmin; max = (Float_t)fSmax; }
@@ -135,15 +154,23 @@ public:
       if (fReversedScale) { *min = (Float_t)(fVmin+fVmax-fSmax); *max = (Float_t)(fVmin+fVmax-fSmin); }
       else { *min = (Float_t)fSmin; *max = (Float_t)fSmax; }
    }
+   virtual void GetPosition(Long64_t &min, Long64_t &max) const {
+      if (fReversedScale) { min = (Long64_t)(fVmin+fVmax-fSmax); max = (Long64_t)(fVmin+fVmax-fSmin); }
+      else { min = (Long64_t)fSmin; max = (Long64_t)fSmax; }
+   }
+   virtual void GetPosition(Long64_t *min, Long64_t *max) const {
+      if (fReversedScale) { *min = (Long64_t)(fVmin+fVmax-fSmax); *max = (Long64_t)(fVmin+fVmax-fSmin); }
+      else { *min = (Long64_t)fSmin; *max = (Long64_t)fSmax; }
+   }
 
    // double precision methods
 
-   virtual void  SetRangeD(Double_t min, Double_t max) {
+   virtual void  SetRange(Double_t min, Double_t max) {
       fVmin = min; fVmax = max;
       FixBounds(fVmin, fVmax);
    }
 
-   virtual void SetPositionD(Double_t min, Double_t max) {
+   virtual void SetPosition(Double_t min, Double_t max) {
       if (fReversedScale) { fSmin = fVmin+fVmax-max; fSmax = fVmin+fVmax-min; }
       else { fSmin = min; fSmax = max; }
       fClient->NeedRedraw(this);
@@ -157,11 +184,11 @@ public:
       if (fReversedScale) return fVmin+fVmax-fSmin;
       else return fSmax;
    }
-   virtual void GetPositionD(Double_t &min, Double_t &max) const {
+   virtual void GetPosition(Double_t &min, Double_t &max) const {
       if (fReversedScale) { min = fVmin+fVmax-fSmax; max = fVmin+fVmax-fSmin; }
       else { min = fSmin; max = fSmax; }
    }
-   virtual void GetPositionD(Double_t *min, Double_t *max) const {
+   virtual void GetPosition(Double_t *min, Double_t *max) const {
       if (fReversedScale) { *min = fVmin+fVmax-fSmax; *max = fVmin+fVmax-fSmin; }
       else { *min = fSmin; *max = fSmax; }
    }

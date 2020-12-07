@@ -85,6 +85,9 @@ public:
    virtual Float_t   GetPointerPosition() const {
       return (Float_t) GetPointerPositionD();
    }
+   virtual Long64_t  GetPointerPositionL() const {
+      return (Long64_t) GetPointerPositionD();
+   }
    virtual Double_t  GetPointerPositionD() const {
       if (fReversedScale) return fVmin + fVmax - fSCz;
       else return fSCz;
@@ -93,8 +96,13 @@ public:
    virtual Bool_t    HandleConfigureNotify(Event_t* event);
    virtual Bool_t    HandleMotion(Event_t *event);
    virtual void      SetConstrained(Bool_t on = kTRUE);
-   virtual void      SetPointerPosition(Float_t pos);
-   virtual void      SetPointerPositionD(Double_t pos);
+   virtual void      SetPointerPosition(Double_t pos);
+   virtual void      SetPointerPosition(Float_t pos) {
+      SetPointerPosition((Double_t) pos);
+   }
+   virtual void      SetPointerPosition(Long64_t pos) {
+      SetPointerPosition((Double_t) pos);
+   }
    virtual void      SetRelative(Bool_t rel = kTRUE) { fRelative = rel; }
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
 
@@ -134,12 +142,20 @@ public:
       if (fReversedScale) return fVmin + fVmax - fSCz;
       else return fSCz;
    }
+   virtual Long64_t  GetPointerPositionL() const {
+      return (Long64_t) GetPointerPositionD();
+   }
    virtual Bool_t    HandleButton(Event_t *event);
    virtual Bool_t    HandleConfigureNotify(Event_t* event);
    virtual Bool_t    HandleMotion(Event_t *event);
    virtual void      SetConstrained(Bool_t on = kTRUE);
-   virtual void      SetPointerPosition(Float_t pos);
-   virtual void      SetPointerPositionD(Double_t pos);
+   virtual void      SetPointerPosition(Double_t pos);
+   virtual void      SetPointerPosition(Float_t pos) {
+      SetPointerPosition((Double_t) pos);
+   }
+   virtual void      SetPointerPosition(Long64_t pos) {
+      SetPointerPosition((Double_t) pos);
+   }
    virtual void      SetRelative(Bool_t rel = kTRUE) { fRelative = rel; }
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
 
