@@ -13,6 +13,9 @@
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#if __cplusplus >= 201402L
+#include <shared_mutex>
+#endif
 
 using namespace ROOT;
 
@@ -254,6 +257,12 @@ auto gRWMutexStd = new TRWMutexImp<std::mutex>();
 auto gReentrantRWMutex = new ROOT::TReentrantRWLock<TMutex>();
 auto gReentrantRWMutexSM = new ROOT::TReentrantRWLock<ROOT::TSpinMutex>();
 auto gReentrantRWMutexStd = new ROOT::TReentrantRWLock<std::mutex>();
+#if __cplusplus >= 201402L
+auto gReentrantRWMutexStd14 = new ROOT::TReentrantRWLock<std::shared_timed_mutex, ROOT::Internal::RecurseCountsShared>();
+#endif
+#if __cplusplus >= 201703L
+auto gReentrantRWMutexStd17 = new ROOT::TReentrantRWLock<std::shared_mutex, ROOT::Internal::RecurseCountsShared>();
+#endif
 auto gSpinMutex = new ROOT::TSpinMutex();
 
 // Intentionally ignore the Fatal error due to the shread thread-local storage.
@@ -328,6 +337,30 @@ TEST(RWLock, WriteStdDirectUnLock)
    testWriteUnLock(gReentrantRWMutexStd, gRepetition, gWriteHint);
 }
 
+#if __cplusplus >= 201402L
+TEST(RWLock, WriteStdD14irectLock)
+{
+   gWriteHint = testWriteLock(gReentrantRWMutexStd14, gRepetition);
+}
+
+TEST(RWLock, WriteStd14DirectUnLock)
+{
+   testWriteUnLock(gReentrantRWMutexStd14, gRepetition, gWriteHint);
+}
+#endif
+
+#if __cplusplus >= 201703L
+TEST(RWLock, WriteStd17DirectLock)
+{
+   gWriteHint = testWriteLock(gReentrantRWMutexStd17, gRepetition);
+}
+
+TEST(RWLock, WriteStd17DirectUnLock)
+{
+   testWriteUnLock(gReentrantRWMutexStd17, gRepetition, gWriteHint);
+}
+#endif
+
 TEST(RWLock, WriteSpinDirectLock)
 {
    gWriteHint = testWriteLock(gReentrantRWMutexSM, gRepetition);
@@ -357,6 +390,30 @@ TEST(RWLock, ReadUnLockStdDirect)
 {
    testReadUnLock(gReentrantRWMutexStd, gRepetition, gReadHint);
 }
+
+#if __cplusplus >= 201402L
+TEST(RWLock, ReadLockStd14Direct)
+{
+   gReadHint = testReadLock(gReentrantRWMutexStd14, gRepetition);
+}
+
+TEST(RWLock, ReadUnLockStd14Direct)
+{
+   testReadUnLock(gReentrantRWMutexStd14, gRepetition, gReadHint);
+}
+#endif
+
+#if __cplusplus >= 201703L
+TEST(RWLock, ReadLockStd17Direct)
+{
+   gReadHint = testReadLock(gReentrantRWMutexStd17, gRepetition);
+}
+
+TEST(RWLock, ReadUnLockStd17Direct)
+{
+   testReadUnLock(gReentrantRWMutexStd17, gRepetition, gReadHint);
+}
+#endif
 
 TEST(RWLock, ReadLockSpinDirect)
 {
@@ -443,6 +500,20 @@ TEST(RWLock, ReentrantStd)
    Reentrant(*gReentrantRWMutexStd);
 }
 
+#if __cplusplus >= 201402L
+TEST(RWLock, ReentrantStd14)
+{
+   Reentrant(*gReentrantRWMutexStd14);
+}
+#endif
+
+#if __cplusplus >= 201703L
+TEST(RWLock, ReentrantStd17)
+{
+   Reentrant(*gReentrantRWMutexStd17);
+}
+#endif
+
 TEST(RWLock, ReentrantSpin)
 {
    Reentrant(*gReentrantRWMutexSM);
@@ -467,6 +538,20 @@ TEST(RWLock, ResetRestoreStd)
 {
    ResetRestore(*gReentrantRWMutexStd);
 }
+
+#if __cplusplus >= 201402L
+TEST(RWLock, ResetRestoreStd14)
+{
+   ResetRestore(*gReentrantRWMutexStd14);
+}
+#endif
+
+#if __cplusplus >= 201703L
+TEST(RWLock, ResetRestoreStd17)
+{
+   ResetRestore(*gReentrantRWMutexStd17);
+}
+#endif
 
 TEST(RWLock, ResetRestoreSpin)
 {
