@@ -252,7 +252,7 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
             return {false, -1.};
          }
       ),
-      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("bwUnzip", "MB/s", "decompression bandwidth of compressed bytes per second",
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("bwUnzip", "MB/s", "decompression bandwidth of uncompressed bytes per second",
          fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
             if (const auto szUnzip = metrics.GetCounter("RPageSourceFile.szUnzip")) {
                if (const auto timeWallUnzip = metrics.GetCounter("RPageSourceFile.timeWallUnzip")) {
