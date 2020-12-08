@@ -683,7 +683,7 @@ TCollection *TCollection::GetCurrentCollection()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set this collection to be the globally accesible collection.
+/// Set this collection to be the globally accessible collection.
 
 void TCollection::SetCurrentCollection()
 {
@@ -740,7 +740,7 @@ void TCollection::GarbageCollect(TObject *obj)
 /// Set whether this collection is the owner (enable==true)
 /// of its content.  If it is the owner of its contents,
 /// these objects will be deleted whenever the collection itself
-/// is delete.   The objects might also be deleted or destructed when Clear
+/// is deleted. The objects might also be deleted or destructed when Clear
 /// is called (depending on the collection).
 
 void TCollection::SetOwner(Bool_t enable)
