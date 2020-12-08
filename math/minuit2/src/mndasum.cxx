@@ -16,10 +16,10 @@
 
 namespace ROOT {
 
-   namespace Minuit2 {
+namespace Minuit2 {
 
-
-double mndasum(unsigned int n, const double* dx, int incx) {
+double mndasum(unsigned int n, const double *dx, int incx)
+{
    /* System generated locals */
    int i__1, i__2;
    double ret_val, d__1, d__2, d__3, d__4, d__5, d__6;
@@ -29,12 +29,10 @@ double mndasum(unsigned int n, const double* dx, int incx) {
    double dtemp;
    int nincx, mp1;
 
-
    /*     takes the sum of the absolute values. */
    /*     jack dongarra, linpack, 3/11/78. */
    /*     modified 3/93 to return if incx .le. 0. */
    /*     modified 12/3/93, array(1) declarations changed to array(*) */
-
 
    /* Parameter adjustments */
    --dx;
@@ -63,11 +61,10 @@ double mndasum(unsigned int n, const double* dx, int incx) {
 
    /*        code for increment equal to 1 */
 
-
    /*        clean-up loop */
 
 L20:
-      m = n % 6;
+   m = n % 6;
    if (m == 0) {
       goto L40;
    }
@@ -80,21 +77,19 @@ L20:
       goto L60;
    }
 L40:
-      mp1 = m + 1;
+   mp1 = m + 1;
    i__2 = n;
    for (i__ = mp1; i__ <= i__2; i__ += 6) {
-      dtemp = dtemp + (d__1 = dx[i__], std::fabs(d__1)) + (d__2 = dx[i__ + 1],
-                                                      std::fabs(d__2)) + (d__3 = dx[i__ + 2], std::fabs(d__3)) +
-      (d__4 = dx[i__ + 3], std::fabs(d__4)) +
-      (d__5 = dx[i__ + 4], std::fabs(d__5)) + (d__6 = dx[i__ + 5], std::fabs(d__6));
+      dtemp = dtemp + (d__1 = dx[i__], std::fabs(d__1)) + (d__2 = dx[i__ + 1], std::fabs(d__2)) +
+              (d__3 = dx[i__ + 2], std::fabs(d__3)) + (d__4 = dx[i__ + 3], std::fabs(d__4)) +
+              (d__5 = dx[i__ + 4], std::fabs(d__5)) + (d__6 = dx[i__ + 5], std::fabs(d__6));
       /* L50: */
    }
 L60:
-      ret_val = dtemp;
+   ret_val = dtemp;
    return ret_val;
 } /* dasum_ */
 
+} // namespace Minuit2
 
-   }  // namespace Minuit2
-
-}  // namespace ROOT
+} // namespace ROOT

@@ -11,7 +11,7 @@
 #define ROOT_Minuit2_MnConfig
 
 #ifdef _MSC_VER
-# pragma warning(disable:4244)  // conversion from __w64 to int
+#pragma warning(disable : 4244) // conversion from __w64 to int
 #endif
 
 #if defined(__sun) && !defined(linux)

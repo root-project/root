@@ -18,14 +18,13 @@ class TF1;
 
 namespace FitterUtil {
 
-  /**
-     Evaluate integral of model function around the bin
-     To use when fitting with integral option
-  */
-   double EvalIntegral(TF1 * func, const std::vector<double> & x1, const std::vector<double> & x2, const std::vector<double> & par);
+/**
+   Evaluate integral of model function around the bin
+   To use when fitting with integral option
+*/
+double
+EvalIntegral(TF1 *func, const std::vector<double> &x1, const std::vector<double> &x2, const std::vector<double> &par);
 
-
-}
-
+} // namespace FitterUtil
 
 #endif

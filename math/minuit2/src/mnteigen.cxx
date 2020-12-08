@@ -16,11 +16,10 @@
 
 namespace ROOT {
 
-   namespace Minuit2 {
+namespace Minuit2 {
 
-
-int mneigen(double* a, unsigned int ndima, unsigned int n, unsigned int mits,
-            double* work, double precis) {
+int mneigen(double *a, unsigned int ndima, unsigned int n, unsigned int mits, double *work, double precis)
+{
    // compute matrix eignevalues (transaltion from mneig.F of Minuit)
 
    /* System generated locals */
@@ -33,7 +32,6 @@ int mneigen(double* a, unsigned int ndima, unsigned int n, unsigned int mits,
    double r__, s;
    unsigned int i0, i1, j1, m1, n1;
    double hh, gl, pr, pt;
-
 
    /*          PRECIS is the machine precision EPSMAC */
    /* Parameter adjustments */
@@ -62,9 +60,9 @@ int mneigen(double* a, unsigned int ndima, unsigned int n, unsigned int mits,
          r__1 = a[i__ + k * a_dim1];
          gl += r__1 * r__1;
       }
-L25:
-         /* Computing 2nd power */
-         r__1 = f;
+   L25:
+      /* Computing 2nd power */
+      r__1 = f;
       h__ = gl + r__1 * r__1;
 
       if (gl > (double)1e-35) {
@@ -74,8 +72,8 @@ L25:
       work[i__] = (double)0.;
       work[n + i__] = f;
       goto L65;
-L30:
-         ++l;
+   L30:
+      ++l;
 
       gl = std::sqrt(h__);
 
@@ -105,8 +103,8 @@ L30:
          for (k = j1; k <= i__3; ++k) {
             gl += a[k + j * a_dim1] * a[i__ + k * a_dim1];
          }
-L47:
-            work[n + j] = gl / h__;
+      L47:
+         work[n + j] = gl / h__;
          f += gl * a[j + i__ * a_dim1];
       }
       hh = f / (h__ + h__);
@@ -117,13 +115,12 @@ L47:
          work[n + j] = gl;
          i__3 = j;
          for (k = 1; k <= i__3; ++k) {
-            a[j + k * a_dim1] = a[j + k * a_dim1] - f * work[n + k] - gl
-            * a[i__ + k * a_dim1];
+            a[j + k * a_dim1] = a[j + k * a_dim1] - f * work[n + k] - gl * a[i__ + k * a_dim1];
          }
       }
       work[i__] = h__;
-L65:
-         --i__;
+   L65:
+      --i__;
    }
    work[1] = (double)0.;
    work[n + 1] = (double)0.;
@@ -147,8 +144,8 @@ L65:
             a[k + j * a_dim1] -= gl * a[k + i__ * a_dim1];
          }
       }
-L100:
-         work[i__] = a[i__ + i__ * a_dim1];
+   L100:
+      work[i__] = a[i__ + i__ * a_dim1];
       a[i__ + i__ * a_dim1] = (double)1.;
 
       if (l == 0) {
@@ -160,10 +157,8 @@ L100:
          a[i__ + j * a_dim1] = (double)0.;
          a[j + i__ * a_dim1] = (double)0.;
       }
-L110:
-         ;
+   L110:;
    }
-
 
    n1 = n - 1;
    i__1 = n;
@@ -177,8 +172,7 @@ L110:
    i__1 = n;
    for (l = 1; l <= i__1; ++l) {
       j = 0;
-      h__ = precis * ((r__1 = work[l], std::fabs(r__1)) + (r__2 = work[n + l],
-                                                      std::fabs(r__2)));
+      h__ = precis * ((r__1 = work[l], std::fabs(r__1)) + (r__2 = work[n + l], std::fabs(r__2)));
 
       if (b < h__) {
          b = h__;
@@ -191,18 +185,17 @@ L110:
          if ((r__1 = work[n + m], std::fabs(r__1)) <= b) {
             goto L150;
          }
-
       }
 
-L150:
-         if (m == l) {
-            goto L205;
-         }
+   L150:
+      if (m == l) {
+         goto L205;
+      }
 
-L160:
-         if (j == mits) {
-            return ifault;
-         }
+   L160:
+      if (j == mits) {
+         return ifault;
+      }
 
       ++j;
       pt = (work[l + 1] - work[l]) / (work[n + l] * (double)2.);
@@ -241,14 +234,14 @@ L160:
          s = (double)1. / r__;
          c__ /= r__;
          goto L190;
-L180:
-            c__ = work[n + i__] / pt;
+      L180:
+         c__ = work[n + i__] / pt;
          r__ = std::sqrt(c__ * c__ + (double)1.);
          work[n + j] = s * pt * r__;
          s = c__ / r__;
          c__ = (double)1. / r__;
-L190:
-            pt = c__ * work[i__] - s * gl;
+      L190:
+         pt = c__ * work[i__] - s * gl;
          work[j] = h__ + s * (c__ * gl + s * work[i__]);
          i__3 = n;
          for (k = 1; k <= i__3; ++k) {
@@ -264,8 +257,8 @@ L190:
          goto L160;
       }
 
-L205:
-         work[l] += f;
+   L205:
+      work[l] += f;
    }
    i__1 = n1;
    for (i__ = 1; i__ <= i__1; ++i__) {
@@ -281,8 +274,7 @@ L205:
 
          k = j;
          pt = work[j];
-L220:
-            ;
+      L220:;
       }
 
       if (k == i__) {
@@ -297,15 +289,13 @@ L220:
          a[j + i__ * a_dim1] = a[j + k * a_dim1];
          a[j + k * a_dim1] = pt;
       }
-L240:
-         ;
+   L240:;
    }
    ifault = 0;
 
    return ifault;
 } /* mneig_ */
 
+} // namespace Minuit2
 
-   }  // namespace Minuit2
-
-}  // namespace ROOT
+} // namespace ROOT

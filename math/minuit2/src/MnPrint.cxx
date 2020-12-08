@@ -39,36 +39,37 @@ namespace Minuit2 {
 template <class T>
 class PrefixStack {
 public:
-  using const_pointer = const T*;
-  using const_reference = const T&;
+   using const_pointer = const T *;
+   using const_reference = const T &;
 
-  void Push(T prefix) {
-    if (fSize < fMaxSize)
-      fData[fSize] = prefix;
-    else {
-      // crop the stack when it becomes too deep as a last resort, but this should not
-      // happen, fMaxSize should be increased instead if this occurs
-      fData[fMaxSize-1] = prefix;
-      fData[fMaxSize-2] = "...";
-    }
-    ++fSize;
-  }
+   void Push(T prefix)
+   {
+      if (fSize < fMaxSize)
+         fData[fSize] = prefix;
+      else {
+         // crop the stack when it becomes too deep as a last resort, but this should not
+         // happen, fMaxSize should be increased instead if this occurs
+         fData[fMaxSize - 1] = prefix;
+         fData[fMaxSize - 2] = "...";
+      }
+      ++fSize;
+   }
 
-  void Pop() {
-    assert(fSize > 0);
-    --fSize;
-  }
+   void Pop()
+   {
+      assert(fSize > 0);
+      --fSize;
+   }
 
-  const_pointer begin() const { return fData; }
-  const_pointer end() const { return fData + (fSize < fMaxSize ? fSize : fMaxSize); }
-  const_reference back() const { return *(end()-1); }
+   const_pointer begin() const { return fData; }
+   const_pointer end() const { return fData + (fSize < fMaxSize ? fSize : fMaxSize); }
+   const_reference back() const { return *(end() - 1); }
 
 private:
-  static constexpr unsigned fMaxSize = 10; // increase as needed
-  T fData[fMaxSize];
-  unsigned fSize = 0;
+   static constexpr unsigned fMaxSize = 10; // increase as needed
+   T fData[fMaxSize];
+   unsigned fSize = 0;
 };
-
 
 // gShowPrefixStack determines how messages are printed, it acts on all threads;
 // race conditions when writing to this do not cause failures
@@ -82,34 +83,38 @@ std::vector<std::string> gPrefixFilter;
 thread_local int gPrintLevel = 0;
 
 // gPrefixStack must be thread-local
-thread_local PrefixStack<const char*> gPrefixStack;
+thread_local PrefixStack<const char *> gPrefixStack;
 
-
-MnPrint::MnPrint(const char *prefix, int level) : fLevel{level} {
-  gPrefixStack.Push(prefix);
+MnPrint::MnPrint(const char *prefix, int level) : fLevel{level}
+{
+   gPrefixStack.Push(prefix);
 }
 
-MnPrint::~MnPrint() {
-  gPrefixStack.Pop();
+MnPrint::~MnPrint()
+{
+   gPrefixStack.Pop();
 }
 
-void MnPrint::ShowPrefixStack(bool yes) {
-  gShowPrefixStack = yes;
+void MnPrint::ShowPrefixStack(bool yes)
+{
+   gShowPrefixStack = yes;
 }
 
-void MnPrint::AddFilter(const char* filter) {
-  gPrefixFilter.emplace_back(filter);
+void MnPrint::AddFilter(const char *filter)
+{
+   gPrefixFilter.emplace_back(filter);
 }
 
-void MnPrint::ClearFilter() {
-  gPrefixFilter.clear();
+void MnPrint::ClearFilter()
+{
+   gPrefixFilter.clear();
 }
 
 int MnPrint::SetGlobalLevel(int level)
 {
-  // should use std::exchange or boost::exchange
-  std::swap(gPrintLevel, level);
-  return level;
+   // should use std::exchange or boost::exchange
+   std::swap(gPrintLevel, level);
+   return level;
 }
 
 int MnPrint::GlobalLevel()
@@ -119,9 +124,9 @@ int MnPrint::GlobalLevel()
 
 int MnPrint::SetLevel(int level)
 {
-  // should use std::exchange or boost::exchange
-  std::swap(fLevel, level);
-  return level;
+   // should use std::exchange or boost::exchange
+   std::swap(fLevel, level);
+   return level;
 }
 
 int MnPrint::Level() const
@@ -129,53 +134,55 @@ int MnPrint::Level() const
    return fLevel;
 }
 
-void StreamFullPrefix(std::ostringstream& os) {
-  const char* prev = "";
-  for (const auto cs : gPrefixStack) {
-    // skip repeated prefixes; repetition happens when class method calls another
-    // method of the same class and both set up a MnPrint instance
-    if (std::strcmp(cs, prev) != 0)
-      os << cs << ":";
-    prev = cs;
-  }
-}
-
-void MnPrint::StreamPrefix(std::ostringstream& os)
+void StreamFullPrefix(std::ostringstream &os)
 {
-  if (gShowPrefixStack) {
-    // show full prefix stack, useful to set sharp filters and to see what calls what
-    StreamFullPrefix(os);
-  } else {
-    // show only the top of the prefix stack (the prefix of the innermost scope)
-    os << gPrefixStack.back();
-  }
+   const char *prev = "";
+   for (const auto cs : gPrefixStack) {
+      // skip repeated prefixes; repetition happens when class method calls another
+      // method of the same class and both set up a MnPrint instance
+      if (std::strcmp(cs, prev) != 0)
+         os << cs << ":";
+      prev = cs;
+   }
 }
 
-bool MnPrint::Hidden() {
-  // Filtering is not implemented a very efficient way to keep it simple, but the
-  // implementation ensures that the performance drop is opt-in. Only when filters are
-  // used there is a performance loss.
+void MnPrint::StreamPrefix(std::ostringstream &os)
+{
+   if (gShowPrefixStack) {
+      // show full prefix stack, useful to set sharp filters and to see what calls what
+      StreamFullPrefix(os);
+   } else {
+      // show only the top of the prefix stack (the prefix of the innermost scope)
+      os << gPrefixStack.back();
+   }
+}
 
-  // The intended use case of filtering is for debugging, when highest performance
-  // does not matter. Filtering is only every attempted if the message passes the
-  // threshold level.
+bool MnPrint::Hidden()
+{
+   // Filtering is not implemented a very efficient way to keep it simple, but the
+   // implementation ensures that the performance drop is opt-in. Only when filters are
+   // used there is a performance loss.
 
-  // Filtering is very fast when the filter is empty.
-  if (gPrefixFilter.empty())
-    return false;
+   // The intended use case of filtering is for debugging, when highest performance
+   // does not matter. Filtering is only every attempted if the message passes the
+   // threshold level.
 
-  std::ostringstream os;
-  os << "^";
-  StreamFullPrefix(os);
-  std::string prefix = os.str();
-  // Filtering works like grep, the message is shown if any of the filter strings match.
-  // To only match the beginning of the prefix, use "^". For example "^MnHesse" only
-  // matches direct execution of MnHesse, but not MnHesse called by MnMigrad.
-  for (const auto& s : gPrefixFilter) {
-    if (prefix.find(s) != std::string::npos)
+   // Filtering is very fast when the filter is empty.
+   if (gPrefixFilter.empty())
       return false;
-  }
-  return true;
+
+   std::ostringstream os;
+   os << "^";
+   StreamFullPrefix(os);
+   std::string prefix = os.str();
+   // Filtering works like grep, the message is shown if any of the filter strings match.
+   // To only match the beginning of the prefix, use "^". For example "^MnHesse" only
+   // matches direct execution of MnHesse, but not MnHesse called by MnMigrad.
+   for (const auto &s : gPrefixFilter) {
+      if (prefix.find(s) != std::string::npos)
+         return false;
+   }
+   return true;
 }
 
 MnPrint::Oneline::Oneline(double fcn, double edm, int ncalls, int iter)
@@ -196,8 +203,8 @@ std::ostream &operator<<(std::ostream &os, const MnPrint::Oneline &x)
    if (x.fIter >= 0)
       os << std::setw(4) << x.fIter << " - ";
    const int pr = os.precision(PRECISION);
-   os << "FCN = " << std::setw(WIDTH) << x.fFcn << " Edm = " << std::setw(WIDTH) << x.fEdm << " NCalls = " << std::setw(6)
-      << x.fNcalls;
+   os << "FCN = " << std::setw(WIDTH) << x.fFcn << " Edm = " << std::setw(WIDTH) << x.fEdm
+      << " NCalls = " << std::setw(6) << x.fNcalls;
    os.precision(pr);
    return os;
 }
@@ -254,14 +261,14 @@ std::ostream &operator<<(std::ostream &os, const MnUserParameters &par)
       os.width(WIDTH);
       os << p.Value() << " | " << std::setw(12);
       if (p.Error() > 0) {
-        os << p.Error();
-        if (p.HasLimits()) {
-           if (std::fabs(p.Value() - p.LowerLimit()) < eps2) {
-              os << " (at lower limit)";
-           } else if (std::fabs(p.Value() - p.UpperLimit()) < eps2) {
-              os << " (at upper limit)";
-           }
-        }
+         os << p.Error();
+         if (p.HasLimits()) {
+            if (std::fabs(p.Value() - p.LowerLimit()) < eps2) {
+               os << " (at lower limit)";
+            } else if (std::fabs(p.Value() - p.UpperLimit()) < eps2) {
+               os << " (at upper limit)";
+            }
+         }
       }
    }
    os.precision(pr);
@@ -297,7 +304,7 @@ std::ostream &operator<<(std::ostream &os, const MnGlobalCorrelationCoeff &coeff
 {
    // print the global correlation coefficient
    const int pr = os.precision(6);
-   for (auto&& x : coeff.GlobalCC()) {
+   for (auto &&x : coeff.GlobalCC()) {
       os << '\n';
       os.width(6 + 7);
       os << x;

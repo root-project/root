@@ -15,49 +15,51 @@
 
 namespace ROOT {
 
-   namespace Minuit2 {
-
+namespace Minuit2 {
 
 class FunctionGradient {
 
 private:
-
 public:
+   explicit FunctionGradient(unsigned int n)
+      : fData(MnRefCountedPointer<BasicFunctionGradient>(new BasicFunctionGradient(n)))
+   {
+   }
 
-  explicit FunctionGradient(unsigned int n) :
-   fData(MnRefCountedPointer<BasicFunctionGradient>(new BasicFunctionGradient(n)))  {}
+   explicit FunctionGradient(const MnAlgebraicVector &grd)
+      : fData(MnRefCountedPointer<BasicFunctionGradient>(new BasicFunctionGradient(grd)))
+   {
+   }
 
-  explicit FunctionGradient(const MnAlgebraicVector& grd) :
-   fData(MnRefCountedPointer<BasicFunctionGradient>(new BasicFunctionGradient(grd))) {}
+   FunctionGradient(const MnAlgebraicVector &grd, const MnAlgebraicVector &g2, const MnAlgebraicVector &gstep)
+      : fData(MnRefCountedPointer<BasicFunctionGradient>(new BasicFunctionGradient(grd, g2, gstep)))
+   {
+   }
 
-  FunctionGradient(const MnAlgebraicVector& grd, const MnAlgebraicVector& g2,
-                   const MnAlgebraicVector& gstep) :
-   fData(MnRefCountedPointer<BasicFunctionGradient>(new BasicFunctionGradient(grd, g2, gstep))) {}
+   ~FunctionGradient() {}
 
-  ~FunctionGradient() {}
+   FunctionGradient(const FunctionGradient &grad) : fData(grad.fData) {}
 
-  FunctionGradient(const FunctionGradient& grad) : fData(grad.fData) {}
+   FunctionGradient &operator=(const FunctionGradient &grad)
+   {
+      fData = grad.fData;
+      return *this;
+   }
 
-  FunctionGradient& operator=(const FunctionGradient& grad) {
-    fData = grad.fData;
-    return *this;
-  }
+   const MnAlgebraicVector &Grad() const { return fData->Grad(); }
+   const MnAlgebraicVector &Vec() const { return fData->Vec(); }
+   bool IsValid() const { return fData->IsValid(); }
 
-  const MnAlgebraicVector& Grad() const {return fData->Grad();}
-  const MnAlgebraicVector& Vec() const {return fData->Vec();}
-  bool IsValid() const {return fData->IsValid();}
-
-  bool IsAnalytical() const {return fData->IsAnalytical();}
-  const MnAlgebraicVector& G2() const {return fData->G2();}
-  const MnAlgebraicVector& Gstep() const {return fData->Gstep();}
+   bool IsAnalytical() const { return fData->IsAnalytical(); }
+   const MnAlgebraicVector &G2() const { return fData->G2(); }
+   const MnAlgebraicVector &Gstep() const { return fData->Gstep(); }
 
 private:
-
-  MnRefCountedPointer<BasicFunctionGradient> fData;
+   MnRefCountedPointer<BasicFunctionGradient> fData;
 };
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
-#endif  // ROOT_Minuit2_FunctionGradient
+#endif // ROOT_Minuit2_FunctionGradient

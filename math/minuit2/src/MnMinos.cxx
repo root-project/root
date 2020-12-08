@@ -15,77 +15,74 @@
 #include "Minuit2/MinosError.h"
 #include "Minuit2/MnPrint.h"
 
-
 namespace ROOT {
 
-   namespace Minuit2 {
+namespace Minuit2 {
 
-
-MnMinos::MnMinos(const FCNBase& fcn, const FunctionMinimum& min, unsigned int stra ) :
-   fFCN(fcn),
-   fMinimum(min),
-   fStrategy(MnStrategy(stra))
+MnMinos::MnMinos(const FCNBase &fcn, const FunctionMinimum &min, unsigned int stra)
+   : fFCN(fcn), fMinimum(min), fStrategy(MnStrategy(stra))
 {
    MnPrint print("MnMinos");
 
    // construct from FCN + Minimum
    // check if Error definition  has been changed, in case re-update errors
-   if (fcn.Up() != min.Up() ) {
+   if (fcn.Up() != min.Up()) {
       print.Warn("MnMinos: UP value has changed, need to update FunctionMinimum class");
    }
 }
 
-MnMinos::MnMinos(const FCNBase& fcn, const FunctionMinimum& min,  const MnStrategy& stra) :
-   fFCN(fcn),
-   fMinimum(min),
-   fStrategy(stra)
+MnMinos::MnMinos(const FCNBase &fcn, const FunctionMinimum &min, const MnStrategy &stra)
+   : fFCN(fcn), fMinimum(min), fStrategy(stra)
 {
    MnPrint print("MnMinos");
 
    // construct from FCN + Minimum
    // check if Error definition  has been changed, in case re-update errors
-   if (fcn.Up() != min.Up() ) {
+   if (fcn.Up() != min.Up()) {
       print.Warn("UP value has changed, need to update FunctionMinimum class");
    }
 }
 
-
-std::pair<double,double> MnMinos::operator()(unsigned int par, unsigned int maxcalls, double toler) const {
+std::pair<double, double> MnMinos::operator()(unsigned int par, unsigned int maxcalls, double toler) const
+{
    // do Minos analysis given the parameter index returning a pair for (lower,upper) errors
-   MinosError mnerr = Minos(par, maxcalls,toler);
+   MinosError mnerr = Minos(par, maxcalls, toler);
    return mnerr();
 }
 
-double MnMinos::Lower(unsigned int par, unsigned int maxcalls, double toler) const {
+double MnMinos::Lower(unsigned int par, unsigned int maxcalls, double toler) const
+{
    // get lower error for parameter par
 
-   MnCross aopt = Loval(par, maxcalls,toler);
+   MnCross aopt = Loval(par, maxcalls, toler);
 
    MinosError mnerr(par, fMinimum.UserState().Value(par), aopt, MnCross());
 
    return mnerr.Lower();
 }
 
-double MnMinos::Upper(unsigned int par, unsigned int maxcalls, double toler) const {
+double MnMinos::Upper(unsigned int par, unsigned int maxcalls, double toler) const
+{
    // upper error for parameter par
 
-   MnCross aopt = Upval(par, maxcalls,toler);
+   MnCross aopt = Upval(par, maxcalls, toler);
 
    MinosError mnerr(par, fMinimum.UserState().Value(par), MnCross(), aopt);
 
    return mnerr.Upper();
 }
 
-MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls, double toler) const {
+MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls, double toler) const
+{
    // do full minos error anlysis (lower + upper) for parameter par
 
    MnPrint print("MnMinos");
 
-   MnCross up = Upval(par, maxcalls,toler);
+   MnCross up = Upval(par, maxcalls, toler);
 
    print.Debug("Function calls to find upper error", up.NFcn());
 
-   MnCross lo = Loval(par, maxcalls,toler);
+   MnCross lo = Loval(par, maxcalls, toler);
 
    print.Debug("Function calls to find lower error", lo.NFcn());
 
@@ -94,8 +91,8 @@ MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls, double toler)
    return MinosError(par, fMinimum.UserState().Value(par), lo, up);
 }
 
-
-MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int maxcalls, double toler) const {
+MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int maxcalls, double toler) const
+{
    // get crossing value in the parameter direction :
    // direction = + 1 upper value
    // direction = -1 lower value
@@ -105,24 +102,22 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
 
    MnPrint print("MnMinos");
 
-   print.Info(
-      "Determination of", direction == 1 ? "upper" : "lower",
-      "Minos error for parameter", par);
+   print.Info("Determination of", direction == 1 ? "upper" : "lower", "Minos error for parameter", par);
 
    assert(fMinimum.IsValid());
    assert(!fMinimum.UserState().Parameter(par).IsFixed());
    assert(!fMinimum.UserState().Parameter(par).IsConst());
 
-   if(maxcalls == 0) {
+   if (maxcalls == 0) {
       unsigned int nvar = fMinimum.UserState().VariableParameters();
-      maxcalls = 2*(nvar+1)*(200 + 100*nvar + 5*nvar*nvar);
+      maxcalls = 2 * (nvar + 1) * (200 + 100 * nvar + 5 * nvar * nvar);
    }
 
    std::vector<unsigned int> para(1, par);
 
    MnUserParameterState upar = fMinimum.UserState();
    double err = direction * upar.Error(par);
-   double val = upar.Value(par) +  err;
+   double val = upar.Value(par) + err;
    // check if we do not cross limits
    if (direction == 1 && upar.Parameter(par).HasUpperLimit()) {
       val = std::min(val, upar.Parameter(par).UpperLimit());
@@ -131,7 +126,7 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
       val = std::max(val, upar.Parameter(par).LowerLimit());
    }
    // recompute err in case it was truncated for the limit
-   err = val-upar.Value(par);
+   err = val - upar.Value(par);
    std::vector<double> xmid(1, val);
    std::vector<double> xdir(1, err);
 
@@ -140,15 +135,16 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
    // get error matrix (methods return a copy)
    MnAlgebraicSymMatrix m = fMinimum.Error().Matrix();
    // get internal parameters
-   const MnAlgebraicVector & xt = fMinimum.Parameters().Vec();
-   //LM:  change to use err**2 (m(i,i) instead of err as in F77 version
-   double xunit = std::sqrt(up/m(ind,ind));
+   const MnAlgebraicVector &xt = fMinimum.Parameters().Vec();
+   // LM:  change to use err**2 (m(i,i) instead of err as in F77 version
+   double xunit = std::sqrt(up / m(ind, ind));
    // LM (29/04/08) bug: change should be done in internal variables
    // set the initial value for the other parmaeters that we are going to fit in MnCross
-   for(unsigned int i = 0; i < m.Nrow(); i++) {
-      if(i == ind) continue;
-      double xdev = xunit*m(ind,i);
-      double xnew = xt(i) + direction *  xdev;
+   for (unsigned int i = 0; i < m.Nrow(); i++) {
+      if (i == ind)
+         continue;
+      double xdev = xunit * m(ind, i);
+      double xnew = xt(i) + direction * xdev;
 
       // transform to external values
       unsigned int ext = upar.ExtOfInt(i);
@@ -171,49 +167,47 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
    upar.Fix(par);
    upar.SetValue(par, val);
 
-   print.Debug("Parameter", par, "is fixed and set from",
-      fMinimum.UserState().Value(par), "to", val, "delta =", err);
+   print.Debug("Parameter", par, "is fixed and set from", fMinimum.UserState().Value(par), "to", val, "delta =", err);
 
    MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);
    MnCross aopt = cross(para, xmid, xdir, toler, maxcalls);
 
    print.Debug("aopt value found from MnFunctionCross =", aopt.Value());
 
-   const char * par_name = upar.Name(par);
-   if(aopt.AtMaxFcn())
+   const char *par_name = upar.Name(par);
+   if (aopt.AtMaxFcn())
       print.Warn("maximum number of function calls exceeded for Parameter", par_name);
-   if(aopt.NewMinimum())
+   if (aopt.NewMinimum())
       print.Warn("new Minimum found while looking for Parameter", par_name);
-   if (direction ==1) {
-      if(aopt.AtLimit())
+   if (direction == 1) {
+      if (aopt.AtLimit())
          print.Warn("parameter", par_name, "is at Upper limit");
-      if(!aopt.IsValid())
+      if (!aopt.IsValid())
          print.Warn("could not find Upper Value for Parameter", par_name);
-   }
-   else {
-      if(aopt.AtLimit())
+   } else {
+      if (aopt.AtLimit())
          print.Warn("parameter", par_name, "is at Lower limit");
-      if(!aopt.IsValid())
-         print.Warn("could not find Lower Value for Parameter",par_name);
+      if (!aopt.IsValid())
+         print.Warn("could not find Lower Value for Parameter", par_name);
    }
 
-   print.Info("end of Minos scan for", direction == 1 ? "up" : "low",
-      "interval for parameter", upar.Name(par));
+   print.Info("end of Minos scan for", direction == 1 ? "up" : "low", "interval for parameter", upar.Name(par));
 
    return aopt;
 }
 
-MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls, double toler) const {
+MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls, double toler) const
+{
    // return crossing in the lower parameter direction
-   return FindCrossValue(1,par,maxcalls,toler);
+   return FindCrossValue(1, par, maxcalls, toler);
 }
 
-MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls, double toler) const {
+MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls, double toler) const
+{
    // return crossing in the lower parameter direction
-   return FindCrossValue(-1,par,maxcalls,toler);
+   return FindCrossValue(-1, par, maxcalls, toler);
 }
 
+} // namespace Minuit2
 
-   }  // namespace Minuit2
-
-}  // namespace ROOT
+} // namespace ROOT
