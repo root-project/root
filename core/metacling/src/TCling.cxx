@@ -1593,7 +1593,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    }
 
    // Enable ClinG's DefinitionShadower for ROOT.
-   fInterpreter->allowRedefinition();
+   fInterpreter->getRuntimeOptions().AllowRedefinition = 1;
 
    // Attach cling callbacks last; they might need TROOT::fInterpreter
    // and should thus not be triggered during the equivalent of

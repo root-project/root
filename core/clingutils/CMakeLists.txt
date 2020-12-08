@@ -134,6 +134,7 @@ foreach(file ${custom_modulemaps}
         Interpreter/Exception.h
         Interpreter/RuntimePrintValue.h
         Interpreter/RuntimeUniverse.h
+        Interpreter/RuntimeOptions.h
         Interpreter/Value.h)
   get_filename_component(path ${file} PATH)
   set(dest_file ${file})
