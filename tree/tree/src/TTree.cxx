@@ -3828,7 +3828,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///   arguments. For example:
 ///   ~~~ {.cpp}
 ///       TMath::BreitWigner(fPx,3,2)
-///       event.GetHistogram().GetXaxis().GetXmax()
+///       event.GetHistogram()->GetXaxis()->GetXmax()
 ///   ~~~
 ///   Note: You can only pass expression that depend on the TTree's data
 ///   to static functions and you can only call non-static member function
