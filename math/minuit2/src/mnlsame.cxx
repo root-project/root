@@ -16,16 +16,15 @@
 
 namespace ROOT {
 
-   namespace Minuit2 {
+namespace Minuit2 {
 
-
-bool mnlsame(const char* ca, const char* cb) {
+bool mnlsame(const char *ca, const char *cb)
+{
    /* System generated locals */
    bool ret_val = false;
 
    /* Local variables */
    //     integer inta, intb, zcode;
-
 
    /*  -- LAPACK auxiliary routine (version 2.0) -- */
    /*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd., */
@@ -59,12 +58,12 @@ bool mnlsame(const char* ca, const char* cb) {
    /*     Test if the characters are equal */
 
    int comp = std::strcmp(ca, cb);
-   if(comp == 0) ret_val = true;
+   if (comp == 0)
+      ret_val = true;
 
    return ret_val;
 } /* lsame_ */
 
+} // namespace Minuit2
 
-   }  // namespace Minuit2
-
-}  // namespace ROOT
+} // namespace ROOT
