@@ -696,6 +696,7 @@ void TSocket::SendProcessIDs(const TMessage &mess)
          //if not add it to the fUUIDs list
          if (!fUUIDs) {
             fUUIDs = new TList();
+            fUUIDs->SetOwner(kTRUE);
          } else {
             if (fUUIDs->FindObject(pid->GetTitle()))
                continue;
