@@ -8904,7 +8904,7 @@ Double_t TH1::GetBinErrorUp(Int_t bin) const
 //L.M. These following getters are useless and should be probably deprecated
 ////////////////////////////////////////////////////////////////////////////////
 /// Return bin center for 1D histogram.
-/// Better to use h1.GetXaxis().GetBinCenter(bin)
+/// Better to use h1.GetXaxis()->GetBinCenter(bin)
 
 Double_t TH1::GetBinCenter(Int_t bin) const
 {
@@ -8915,7 +8915,7 @@ Double_t TH1::GetBinCenter(Int_t bin) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return bin lower edge for 1D histogram.
-/// Better to use h1.GetXaxis().GetBinLowEdge(bin)
+/// Better to use h1.GetXaxis()->GetBinLowEdge(bin)
 
 Double_t TH1::GetBinLowEdge(Int_t bin) const
 {
@@ -8926,7 +8926,7 @@ Double_t TH1::GetBinLowEdge(Int_t bin) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return bin width for 1D histogram.
-/// Better to use h1.GetXaxis().GetBinWidth(bin)
+/// Better to use h1.GetXaxis()->GetBinWidth(bin)
 
 Double_t TH1::GetBinWidth(Int_t bin) const
 {
@@ -8937,7 +8937,7 @@ Double_t TH1::GetBinWidth(Int_t bin) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill array with center of bins for 1D histogram
-/// Better to use h1.GetXaxis().GetCenter(center)
+/// Better to use h1.GetXaxis()->GetCenter(center)
 
 void TH1::GetCenter(Double_t *center) const
 {
@@ -8950,7 +8950,7 @@ void TH1::GetCenter(Double_t *center) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill array with low edge of bins for 1D histogram
-/// Better to use h1.GetXaxis().GetLowEdge(edge)
+/// Better to use h1.GetXaxis()->GetLowEdge(edge)
 
 void TH1::GetLowEdge(Double_t *edge) const
 {
