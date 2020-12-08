@@ -213,20 +213,18 @@ namespace Math {
    {
       // Gaussian Multivariate distribution
       gsl_vector *mu = gsl_vector_alloc(dim);
-      for (int i = 0; i < 3; ++i) {
-         gsl_vector_set(mu, i, pars[i]);
-      }
+      gsl_vector *genpars_vec = gsl_vector_alloc(dim);
       gsl_matrix *L = gsl_matrix_alloc(dim, dim);
       for (int i = 0; i < dim; ++i) {
+         gsl_vector_set(mu, i, pars[i]);
          for (int j = 0; j < dim; ++j) {
             gsl_matrix_set(L, i, j, covmat[i * dim + j]);
          }
       }
       gsl_linalg_cholesky_decomp(L);
-      gsl_vector *result = gsl_vector_alloc(dim);
-      gsl_ran_multivariate_gaussian(fRng->Rng(), mu, L, result);
+      gsl_ran_multivariate_gaussian(fRng->Rng(), mu, L, genpars_vec);
       for (int i = 0; i < dim; ++i) {
-         genpars[i] = gsl_vector_get(result, i);
+         genpars[i] = gsl_vector_get(genpars_vec, i);
       }
    }
 
