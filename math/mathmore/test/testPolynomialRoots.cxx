@@ -102,7 +102,7 @@ protected:
 };
 
 // test x^4 - 16 = 0
-TEST_F(QuarticPolynomial, FindRootsDirect_DegPol1)
+TEST_F(QuarticPolynomial, FindRoots_DegPol1)
 {
    coeff = {1, 0, 0, 0, -16};
 
@@ -116,7 +116,7 @@ TEST_F(QuarticPolynomial, FindRootsDirect_DegPol1)
 }
 
 // test (x+1)^4 = 0
-TEST_F(QuarticPolynomial, FindRootsDirect_DegPol2)
+TEST_F(QuarticPolynomial, FindRoots_DegPol2)
 {
    coeff = {1, 4, 6, 4, 1};
 
@@ -134,7 +134,7 @@ TEST_F(QuarticPolynomial, FindRootsDirect_DegPol2)
 
 // test x4 + 5x^2 + 4 = 0
 //4 imaginary roots (x-i)(x+i)(x-2i)(x+2i)=0
-TEST_F(QuarticPolynomial, FindRootsDirect_4ImagRoots)
+TEST_F(QuarticPolynomial, FindRoots_4ImagRoots)
 {
    coeff = {1, 0, 5, 0, 4};
 
@@ -150,7 +150,7 @@ TEST_F(QuarticPolynomial, FindRootsDirect_4ImagRoots)
 
 //
 // four full complex roots, (x-1-i)(x-1+i)(x-1-2i)(x-1+2i)=0")
-TEST_F(QuarticPolynomial, FindRootsDirect_4CompRoots)
+TEST_F(QuarticPolynomial, FindRoots_4CompRoots)
 {
    coeff = {1.0, -4.0, 11.0, -14.0, 10.0};
 
@@ -164,7 +164,7 @@ TEST_F(QuarticPolynomial, FindRootsDirect_4CompRoots)
 }
 
 // four real roots (x+1)(x+2)(x+3)(x+4)=0
-TEST_F(QuarticPolynomial, FindRootsDirect_4RealRoots)
+TEST_F(QuarticPolynomial, FindRoots_4RealRoots)
 {
 
    coeff = {1.0, 10.0, 35.0, 50.0, 24.0};
@@ -181,7 +181,7 @@ TEST_F(QuarticPolynomial, FindRootsDirect_4RealRoots)
 // test   x^4-8x^3+12x^2+16x+4=0
 // 4 real roots where 2 are degeenrates
 
-TEST_F(QuarticPolynomial, FindRootsDirect_4RealDegRoots)
+TEST_F(QuarticPolynomial, FindRoots_4RealDegRoots)
 {
 
    coeff = {1.0, -8.0, 12.0, 16.0, 4.0};
@@ -198,7 +198,7 @@ TEST_F(QuarticPolynomial, FindRootsDirect_4RealDegRoots)
 
 // test 5x^4 + 4x^3 + 3x^2 + 2x + 1
 
-TEST_F(QuarticPolynomial, FindRootsDirect_54321)
+TEST_F(QuarticPolynomial, FindRoots_54321)
 {
    coeff = {5, 4, 3, 2, 1};
 
@@ -208,10 +208,10 @@ TEST_F(QuarticPolynomial, FindRootsDirect_54321)
                      complex<double>(+0.13783227490298988, +0.6781543891053364)};
 
    runTest(kAnalytical);
-   runTest(kNumerical);
+   runTest(kNumerical, 1.E-13);
 }
 // special case reported in issue #6900 by S. Binet
-TEST_F(QuarticPolynomial, FindRootsNumeric_4RealDegRootsR0)
+TEST_F(QuarticPolynomial, FindRoots_4RealDegRootsR0)
 {
    coeff = {2.2206846808021337, 7.643281053997895, 8.831759446092846, 3.880673545129404, 0.5724551380144077};
 
