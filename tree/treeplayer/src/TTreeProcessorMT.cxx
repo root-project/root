@@ -129,7 +129,7 @@ using ClustersAndEntries = std::pair<std::vector<std::vector<EntryCluster>>, std
 ////////////////////////////////////////////////////////////////////////
 /// Return a vector of cluster boundaries for the given tree and files.
 static ClustersAndEntries
-MakeClusters(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames)
+MakeClusters(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames, const unsigned int maxTasksPerFile)
 {
    // Note that as a side-effect of opening all files that are going to be used in the
    // analysis once, all necessary streamers will be loaded into memory.
@@ -182,7 +182,6 @@ MakeClusters(const std::vector<std::string> &treeNames, const std::vector<std::s
    // 16 * 2 * TTreeProcessorMT::GetMaxTasksPerFilePerWorker() clusters will be created, at most
    // 16 * TTreeProcessorMT::GetMaxTasksPerFilePerWorker() per file.
 
-   const auto maxTasksPerFile = TTreeProcessorMT::GetMaxTasksPerFilePerWorker() * ROOT::GetThreadPoolSize();
    std::vector<std::vector<EntryCluster>> eventRangesPerFile(clustersPerFile.size());
    auto clustersPerFileIt = clustersPerFile.begin();
    auto eventRangesPerFileIt = eventRangesPerFile.begin();
@@ -285,6 +284,8 @@ static std::vector<std::string> GetTreeFullPaths(const TTree &tree)
 namespace ROOT {
 
 unsigned int TTreeProcessorMT::fgMaxTasksPerFilePerWorker = 24U;
+
+unsigned int TTreeProcessorMT::fgTasksPerWorkerHint = 24U;
 
 namespace Internal {
 
@@ -571,6 +572,9 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    const std::vector<Internal::NameAlias> &friendNames = fFriendInfo.fFriendNames;
    const std::vector<std::vector<std::string>> &friendFileNames = fFriendInfo.fFriendFileNames;
 
+   // compute number of tasks per file
+   const unsigned int maxTasksPerFile = std::ceil(float(GetTasksPerWorkerHint()*fPool.GetPoolSize())/float(fFileNames.size()));
+   
    // If an entry list or friend trees are present, we need to generate clusters with global entry numbers,
    // so we do it here for all files.
    // Otherwise we can do it later, concurrently for each file, and clusters will contain local entry numbers.
@@ -581,7 +585,7 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    const bool shouldRetrieveAllClusters = hasFriends || hasEntryList;
    ClustersAndEntries clusterAndEntries{};
    if (shouldRetrieveAllClusters) {
-      clusterAndEntries = MakeClusters(fTreeNames, fFileNames);
+      clusterAndEntries = MakeClusters(fTreeNames, fFileNames, maxTasksPerFile);
       if (hasEntryList)
          clusterAndEntries.first = ConvertToElistClusters(std::move(clusterAndEntries.first), fEntryList, fTreeNames,
                                                           fFileNames, clusterAndEntries.second);
@@ -603,7 +607,7 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
       const auto &theseTrees = shouldRetrieveAllClusters ? fTreeNames : std::vector<std::string>({fTreeNames[fileIdx]});
       // Evaluate clusters (with local entry numbers) and number of entries for this file, if needed
       const auto theseClustersAndEntries =
-         shouldRetrieveAllClusters ? ClustersAndEntries{} : MakeClusters(theseTrees, theseFiles);
+         shouldRetrieveAllClusters ? ClustersAndEntries{} : MakeClusters(theseTrees, theseFiles, maxTasksPerFile);
 
       // All clusters for the file to process, either with global or local entry numbers
       const auto &thisFileClusters = shouldRetrieveAllClusters ? clusters[fileIdx] : theseClustersAndEntries.first[0];
@@ -635,6 +639,11 @@ unsigned int TTreeProcessorMT::GetMaxTasksPerFilePerWorker()
    return fgMaxTasksPerFilePerWorker;
 }
 
+unsigned int TTreeProcessorMT::GetTasksPerWorkerHint()
+{
+   return fgTasksPerWorkerHint;
+}
+
 ////////////////////////////////////////////////////////////////////////
 /// \brief Sets the maximum number of tasks created per file, per worker.
 /// \param[in] maxTasksPerFile Name of the file containing the tree to process.
@@ -645,4 +654,9 @@ unsigned int TTreeProcessorMT::GetMaxTasksPerFilePerWorker()
 void TTreeProcessorMT::SetMaxTasksPerFilePerWorker(unsigned int maxTasksPerFile)
 {
    fgMaxTasksPerFilePerWorker = maxTasksPerFile;
+}
+
+void TTreeProcessorMT::SetTasksPerWorkerHint(unsigned int tasksPerWorkerHint)
+{
+   fgTasksPerWorkerHint = tasksPerWorkerHint;
 }
