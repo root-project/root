@@ -82,7 +82,7 @@ sap.ui.define([
 
          this.geo_painter.setMouseTmout(this.controller.htimeout);
 
-         this.geo_painter.AssignObject(null);
+         this.geo_painter.assignObject(null);
 
          this.geo_painter.prepareObjectDraw(null) // and now start everything
              .then(() => this.onGeoPainterReady(this.geo_painter));
@@ -137,7 +137,7 @@ sap.ui.define([
                if (info===null) continue;
 
                if (info.indexOf("<prnt>")==0)
-                  info = painter.GetItemName() + info.substr(6);
+                  info = painter.getItemName() + info.substr(6);
 
                names.push(info);
 
