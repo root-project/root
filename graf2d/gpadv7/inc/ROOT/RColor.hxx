@@ -13,6 +13,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <DllImport.h>
 
 namespace ROOT {
 namespace Experimental {
@@ -212,25 +213,25 @@ public:
       fName.clear();
    }
 
-   static constexpr RGB_t kBlack{{0, 0, 0}};
-   static constexpr RGB_t kGreen{{0, 0x80, 0}};
-   static constexpr RGB_t kLime{{0, 0xFF, 0}};
-   static constexpr RGB_t kAqua{{0, 0xFF, 0xFF}};
-   static constexpr RGB_t kPurple{{0x80, 0, 0x80}};
-   static constexpr RGB_t kGrey{{0x80, 0x80, 0x80}};
-   static constexpr RGB_t kFuchsia{{0xFF, 0, 0xFF}};
-   static constexpr RGB_t kNavy{{0, 0, 0x80}};
-   static constexpr RGB_t kBlue{{0, 0, 0xff}};
-   static constexpr RGB_t kTeal{{0, 0x80, 0x80}};
-   static constexpr RGB_t kOlive{{0x80, 0x80, 0}};
-   static constexpr RGB_t kSilver{{0xc0, 0xc0, 0xc0}};
-   static constexpr RGB_t kMaroon{{0x80, 0, 0}};
-   static constexpr RGB_t kRed{{0xff, 0, 0}};
-   static constexpr RGB_t kYellow{{0xff, 0xff, 0}};
-   static constexpr RGB_t kWhite{{0xff, 0xff, 0xff}};
-   static constexpr float kTransparent{0.};
-   static constexpr float kSemiTransparent{0.5};
-   static constexpr float kOpaque{1.};
+   R__DLLEXPORT static constexpr RGB_t kBlack{{0, 0, 0}};
+   R__DLLEXPORT static constexpr RGB_t kGreen{{0, 0x80, 0}};
+   R__DLLEXPORT static constexpr RGB_t kLime{{0, 0xFF, 0}};
+   R__DLLEXPORT static constexpr RGB_t kAqua{{0, 0xFF, 0xFF}};
+   R__DLLEXPORT static constexpr RGB_t kPurple{{0x80, 0, 0x80}};
+   R__DLLEXPORT static constexpr RGB_t kGrey{{0x80, 0x80, 0x80}};
+   R__DLLEXPORT static constexpr RGB_t kFuchsia{{0xFF, 0, 0xFF}};
+   R__DLLEXPORT static constexpr RGB_t kNavy{{0, 0, 0x80}};
+   R__DLLEXPORT static constexpr RGB_t kBlue{{0, 0, 0xff}};
+   R__DLLEXPORT static constexpr RGB_t kTeal{{0, 0x80, 0x80}};
+   R__DLLEXPORT static constexpr RGB_t kOlive{{0x80, 0x80, 0}};
+   R__DLLEXPORT static constexpr RGB_t kSilver{{0xc0, 0xc0, 0xc0}};
+   R__DLLEXPORT static constexpr RGB_t kMaroon{{0x80, 0, 0}};
+   R__DLLEXPORT static constexpr RGB_t kRed{{0xff, 0, 0}};
+   R__DLLEXPORT static constexpr RGB_t kYellow{{0xff, 0xff, 0}};
+   R__DLLEXPORT static constexpr RGB_t kWhite{{0xff, 0xff, 0xff}};
+   R__DLLEXPORT static constexpr float kTransparent{0.};
+   R__DLLEXPORT static constexpr float kSemiTransparent{0.5};
+   R__DLLEXPORT static constexpr float kOpaque{1.};
 
    friend bool operator==(const RColor &lhs, const RColor &rhs)
    {
