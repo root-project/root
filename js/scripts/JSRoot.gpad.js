@@ -64,7 +64,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.reverse = opts.reverse || false;
       this.swap_side = opts.swap_side || false;
 
-      let axis = this.GetObject();
+      let axis = this.getObject();
 
       if (opts.time_scale || axis.fTimeDisplay) {
          this.kind = 'time';
@@ -186,7 +186,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Provide label for axis value */
    TAxisPainter.prototype.formatLabels = function(d) {
-      let indx = parseFloat(d), a = this.GetObject();
+      let indx = parseFloat(d), a = this.getObject();
       if (!this.regular_labels)
          indx = (indx - a.fXmin)/(a.fXmax - a.fXmin) * a.fNbins;
       indx = Math.floor(indx);
@@ -216,7 +216,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if ((this.kind == 'labels') && !this.regular_labels) {
          handle.lbl_pos = [];
-         let axis = this.GetObject();
+         let axis = this.getObject();
          for (let n = 0; n < axis.fNbins; ++n) {
             let x = axis.fXmin + n / axis.fNbins * (axis.fXmax - axis.fXmin);
             if ((x >= this.scale_min) && (x < this.scale_max)) handle.lbl_pos.push(x);
@@ -341,7 +341,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    TAxisPainter.prototype.IsCenterLabels = function() {
       if (this.kind === 'labels') return true;
       if (this.log) return false;
-      let axis = this.GetObject();
+      let axis = this.getObject();
       return axis && axis.TestBit(JSROOT.EAxisBits.kCenterLabels);
    }
 
@@ -360,7 +360,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             evnt.sourceEvent.stopPropagation();
 
             let box = title_g.node().getBBox(), // check that elements visible, request precise value
-                axis = this.GetObject(),
+                axis = this.getObject(),
                 title_length = vertical ? box.height : box.width,
                 opposite = axis.TestBit(JSROOT.EAxisBits.kOppositeTitle);
 
@@ -437,7 +437,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                title_g.property('shift_x', new_x)
                       .property('shift_y', new_y);
 
-               let axis = this.GetObject(), abits = JSROOT.EAxisBits;
+               let axis = this.getObject(), abits = JSROOT.EAxisBits;
 
                function set_bit(bit, on) {
                   if (axis.TestBit(bit) != on) axis.InvertBit(bit);
@@ -636,7 +636,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @returns Promise*/
    TAxisPainter.prototype.DrawAxis = function(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width, calculate_position) {
 
-      let axis = this.GetObject(), chOpt = "",
+      let axis = this.getObject(), chOpt = "",
           is_gaxis = (axis && axis._typename === 'TGaxis'),
           axis_g = layer, tickSize = 0.03,
           scaling_size = 100, draw_lines = true,
@@ -827,7 +827,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    TAxisPainter.prototype.Redraw = function() {
 
-      let gaxis = this.GetObject(),
+      let gaxis = this.getObject(),
           x1 = this.AxisToSvg("x", gaxis.fX1),
           y1 = this.AxisToSvg("y", gaxis.fY1),
           x2 = this.AxisToSvg("x", gaxis.fX2),
@@ -926,10 +926,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    TFramePainter.prototype.frame_painter = function() { return this; }
 
    /** @summary Returns frame or sub-objects, used in GED editor */
-   TFramePainter.prototype.GetObject = function(place) {
+   TFramePainter.prototype.getObject = function(place) {
       if (place === "xaxis") return this.xaxis;
       if (place === "yaxis") return this.yaxis;
-      return JSROOT.ObjectPainter.prototype.GetObject.call(this);
+      return JSROOT.ObjectPainter.prototype.getObject.call(this);
    }
 
    /** @summary Set active flag for frame - can block some events
@@ -1371,7 +1371,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    TFramePainter.prototype.UpdateAttributes = function(force) {
       let pad = this.root_pad(),
-          tframe = this.GetObject();
+          tframe = this.getObject();
 
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
          if (!pad || (pad.fLeftMargin===undefined)) {
@@ -1432,17 +1432,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       delete this.grz;
 
       if (this.x_handle) {
-         this.x_handle.Cleanup();
+         this.x_handle.cleanup();
          delete this.x_handle;
       }
 
       if (this.y_handle) {
-         this.y_handle.Cleanup();
+         this.y_handle.cleanup();
          delete this.y_handle;
       }
 
       if (this.z_handle) {
-         this.z_handle.Cleanup();
+         this.z_handle.cleanup();
          delete this.z_handle;
       }
    }
@@ -1512,12 +1512,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Cleanup frame */
-   TFramePainter.prototype.Cleanup = function() {
+   TFramePainter.prototype.cleanup = function() {
       this.CleanFrameDrawings();
       delete this._click_handler;
       delete this._dblclick_handler;
 
-      JSROOT.ObjectPainter.prototype.Cleanup.call(this);
+      JSROOT.ObjectPainter.prototype.cleanup.call(this);
    }
 
    /** @summary Redraw frame */
@@ -1656,9 +1656,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.addchk(pad["fLog" + kind] == 2, "log2", "2", arg => this.ChangeLog(kind, parseInt(arg)));
          menu.add("endsub:");
          menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kMoreLogLabels), "More log",
-               () => { faxis.InvertBit(JSROOT.EAxisBits.kMoreLogLabels); this.RedrawPad(); });
+               () => { faxis.InvertBit(JSROOT.EAxisBits.kMoreLogLabels); this.redrawPad(); });
          menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kNoExponent), "No exponent",
-               () => { faxis.InvertBit(JSROOT.EAxisBits.kNoExponent); this.RedrawPad(); });
+               () => { faxis.InvertBit(JSROOT.EAxisBits.kNoExponent); this.redrawPad(); });
 
          if ((kind === "z") && main && main.options && main.options.Zscale)
             if (typeof main.FillPaletteMenu == 'function') main.FillPaletteMenu(menu);
@@ -1979,10 +1979,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary cleanup only pad itself, all child elements will be collected and cleanup separately */
-   TPadPainter.prototype.Cleanup = function() {
+   TPadPainter.prototype.cleanup = function() {
 
       for (let k = 0; k < this.painters.length; ++k)
-         this.painters[k].Cleanup();
+         this.painters[k].cleanup();
 
       let svg_p = this.svg_pad();
       if (!svg_p.empty()) {
@@ -2002,7 +2002,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       jsrp.selectActivePad({ pp: this, active: false });
 
-      JSROOT.ObjectPainter.prototype.Cleanup.call(this);
+      JSROOT.ObjectPainter.prototype.cleanup.call(this);
    }
 
    /** @summary Returns frame painter inside the pad
@@ -2017,7 +2017,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       for (let k = this.painters.length-1; k >= 0; --k)
          if (selector(this.painters[k])) {
-            this.painters[k].Cleanup();
+            this.painters[k].cleanup();
             this.painters.splice(k, 1);
          }
    }
@@ -2145,7 +2145,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       } else {
 
-         let render_to = this.select_main();
+         let render_to = this.selectDom();
 
          if (render_to.style('position')=='static')
             render_to.style('position','relative');
@@ -2367,7 +2367,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
        // special case of 3D canvas overlay
       if (svg_pad.property('can3d') === JSROOT.constants.Embed3D.Overlay)
-          this.select_main().select(".draw3d_" + this.this_pad_name)
+          this.selectDom().select(".draw3d_" + this.this_pad_name)
               .style('display', pad_visible ? '' : 'none');
 
       if (this.AlignBtns && btns)
@@ -2679,7 +2679,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return changed;
    }
 
-   TPadPainter.prototype.UpdateObject = function(obj) {
+   TPadPainter.prototype.updateObject = function(obj) {
       if (!obj) return false;
 
       this.pad.fBits = obj.fBits;
@@ -2729,7 +2729,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          while (p < this.painters.length) {
             let pp = this.painters[p++];
             if (!pp._primitive) continue;
-            if (pp.UpdateObject(obj.fPrimitives.arr[n])) isany = true;
+            if (pp.updateObject(obj.fPrimitives.arr[n])) isany = true;
             break;
          }
       }
@@ -2752,7 +2752,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Function called when drawing next snapshot from the list
-     * it is also used as callback for drawing of previous snap */
+     * @returns {Promise} for drawing of the snap */
    TPadPainter.prototype.DrawNextSnap = function(lst, indx) {
 
       if (indx === undefined) {
@@ -2793,9 +2793,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             return objpainter.RedrawPadSnap(snap).then(() => this.DrawNextSnap(lst, indx));
 
          if (snap.fKind === webSnapIds.kObject) { // object itself
-            if (objpainter.UpdateObject(snap.fSnapshot, snap.fOption)) objpainter.Redraw();
+            if (objpainter.updateObject(snap.fSnapshot, snap.fOption)) objpainter.Redraw();
          } else if (snap.fKind === webSnapIds.kSVG) { // update SVG
-            if (objpainter.UpdateObject(snap.fSnapshot)) objpainter.Redraw();
+            if (objpainter.updateObject(snap.fSnapshot)) objpainter.Redraw();
          }
 
          return this.DrawNextSnap(lst, indx); // call next
@@ -2855,13 +2855,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          padpainter.CreatePadSvg();
 
-         if (padpainter.MatchObjectType("TPad") && snap.fPrimitives.length > 0)
+         if (padpainter.matchObjectType("TPad") && snap.fPrimitives.length > 0)
             padpainter.AddPadButtons();
 
          // we select current pad, where all drawing is performed
-         let prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
+         let prev_name = padpainter.currentPadName(padpainter.this_pad_name);
          return padpainter.DrawNextSnap(snap.fPrimitives).then(() => {
-            padpainter.CurrentPadName(prev_name);
+            padpainter.currentPadName(prev_name);
             return this.DrawNextSnap(lst, indx); // call next
          });
       }
@@ -2965,7 +2965,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return this.DrawNextSnap(snap.fPrimitives);
       }
 
-      this.UpdateObject(first); // update only object attributes
+      this.updateObject(first); // update only object attributes
 
       // apply all changes in the object (pad or canvas)
       if (this.iscan) {
@@ -2982,8 +2982,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let painter, primitive;
          for (let k=0;k<painters.length;++k) {
             if (painters[k].snapid === undefined) continue;
-            if (!painters[k].MatchObjectType(class_name)) continue;
-            if (obj_name && (!painters[k].GetObject() || (painters[k].GetObject().fName !== obj_name))) continue;
+            if (!painters[k].matchObjectType(class_name)) continue;
+            if (obj_name && (!painters[k].getObject() || (painters[k].getObject().fName !== obj_name))) continue;
             painter = painters[k];
             break;
          }
@@ -3014,10 +3014,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
 
          if (sub) {
-            console.log('Remove painter' + k + ' from ' + this.painters.length + ' ' + sub.GetObject()._typename);
+            console.log('Remove painter' + k + ' from ' + this.painters.length + ' ' + sub.getObject()._typename);
             // remove painter which does not found in the list of snaps
             this.painters.splice(k--,1);
-            sub.Cleanup(); // cleanup such painter
+            sub.cleanup(); // cleanup such painter
             isanyremove = true;
          }
       }
@@ -3033,7 +3033,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             svg_p.property('mainpainter', null);
          for (let k=0;k<this.painters.length;++k)
             if (fp !== this.painters[k])
-               this.painters[k].Cleanup();
+               this.painters[k].cleanup();
          this.painters = [];
          if (fp) {
             this.painters.push(fp);
@@ -3043,10 +3043,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.AddPadButtons(true);
       }
 
-      let prev_name = this.CurrentPadName(this.this_pad_name);
+      let prev_name = this.currentPadName(this.this_pad_name);
 
       return this.DrawNextSnap(snap.fPrimitives).then(() => {
-         this.CurrentPadName(prev_name);
+         this.currentPadName(prev_name);
          if (jsrp.getActivePad() === this) {
             let canp = this.canv_painter();
             if (canp) canp.PadEvent("padredraw", this);
@@ -3104,7 +3104,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (typeof sub.GetWebPadOptions == "function") {
             if (scan_subpads) sub.GetWebPadOptions(arg);
          } else if (sub.snapid) {
-            let opt = { _typename: "TWebObjectOptions", snapid: sub.snapid.toString(), opt: sub.OptionsAsString(), fcust: "", fopt: [] };
+            let opt = { _typename: "TWebObjectOptions", snapid: sub.snapid.toString(), opt: sub.getDrawOpt(), fcust: "", fopt: [] };
             if (typeof sub.FillWebObjectOptions == "function")
                opt = sub.FillWebObjectOptions(opt);
             elem.primitives.push(opt);
@@ -3406,7 +3406,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                let shown = [];
                for (let n=0;n<this.painters.length;++n) {
                   let pp = this.painters[n];
-                  let obj = pp ? pp.GetObject() : null;
+                  let obj = pp ? pp.getObject() : null;
                   if (!obj || (shown.indexOf(obj)>=0)) continue;
 
                   let name = ('_typename' in obj) ? (obj._typename + "::") : "";
@@ -3485,7 +3485,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    TPadPainter.prototype.DecodeOptions = function(opt) {
-      let pad = this.GetObject();
+      let pad = this.getObject();
       if (!pad) return;
 
       let d = new JSROOT.DrawOptions(opt);
@@ -3525,7 +3525,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (d.check('RX')) pad.$RX = true;
       if (d.check('RY')) pad.$RY = true;
 
-      this.OptionsStore(opt);
+      this.storeDrawOpt(opt);
    }
 
    let drawPad = (divid, pad, opt) => {
@@ -3546,11 +3546,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       painter.CreatePadSvg();
 
-      if (painter.MatchObjectType("TPad") && (!painter.has_canvas || painter.HasObjectsToDraw()))
+      if (painter.matchObjectType("TPad") && (!painter.has_canvas || painter.HasObjectsToDraw()))
          painter.AddPadButtons();
 
       // we select current pad, where all drawing is performed
-      let prev_name = painter.has_canvas ? painter.CurrentPadName(painter.this_pad_name) : undefined;
+      let prev_name = painter.has_canvas ? painter.currentPadName(painter.this_pad_name) : undefined;
 
       // set active pad
       jsrp.selectActivePad({ pp: painter, active: true });
@@ -3559,7 +3559,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return painter.DrawPrimitives().then(() => {
          painter.ShowButtons();
          // we restore previous pad name
-         painter.CurrentPadName(prev_name);
+         painter.currentPadName(prev_name);
          return painter;
       });
    }
@@ -3601,9 +3601,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (current == layout_kind)
          return Promise.resolve(true);
 
-      let origin = this.select_main('origin'),
+      let origin = this.selectDom('origin'),
           sidebar = origin.select('.side_panel'),
-          main = this.select_main(), lst = [];
+          main = this.selectDom(), lst = [];
 
       while (main.node().firstChild)
          lst.push(main.node().removeChild(main.node().firstChild));
@@ -3706,13 +3706,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          promise.then(painter => { this.proj_painter = painter; })
       } else {
          let hp = this.proj_painter.main_painter();
-         if (hp) hp.UpdateObject(hist, "hist");
-         this.proj_painter.RedrawPad();
+         if (hp) hp.updateObject(hist, "hist");
+         this.proj_painter.redrawPad();
       }
    }
 
    TCanvasPainter.prototype.DrawInsidePanel = function(canv, opt) {
-      let side = this.select_main('origin').select(".side_panel");
+      let side = this.selectDom('origin').select(".side_panel");
       if (side.empty()) return Promise.resolve(null);
       return JSROOT.draw(side.node(), canv, opt);
    }
@@ -3766,7 +3766,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    TCanvasPainter.prototype.CloseWebsocket = function(force) {
       if (this._websocket) {
          this._websocket.Close(force);
-         this._websocket.Cleanup();
+         this._websocket.cleanup();
          delete this._websocket;
       }
    }
@@ -4098,7 +4098,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /**  @summary produce JSON for TCanvas, which can be used to display canvas once again */
    TCanvasPainter.prototype.ProduceJSON = function() {
 
-      let canv = this.GetObject(),
+      let canv = this.getObject(),
           fill0 = (canv.fFillStyle == 0);
 
       if (fill0) canv.fFillStyle = 1001;
@@ -4109,9 +4109,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.forEachPainterInPad(p => {
             if (p.$secondary) return; // ignore all secoandry painters
 
-            let subobj = p.GetObject();
+            let subobj = p.getObject();
             if (subobj && subobj._typename)
-               canv.fPrimitives.Add(subobj, p.OptionsAsString());
+               canv.fPrimitives.Add(subobj, p.getDrawOpt());
          }, "objects");
       }
 
@@ -4142,9 +4142,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       painter.checkSpecialsInPrimitives(can);
 
       if (!nocanvas && can.fCw && can.fCh && !JSROOT.BatchMode) {
-         let rect0 = painter.select_main().node().getBoundingClientRect();
+         let rect0 = painter.selectDom().node().getBoundingClientRect();
          if (!rect0.height && (rect0.width > 0.1*can.fCw)) {
-            painter.select_main().style("width", can.fCw+"px").style("height", can.fCh+"px");
+            painter.selectDom().style("width", can.fCw+"px").style("height", can.fCh+"px");
             painter._fixed_size = true;
          }
       }

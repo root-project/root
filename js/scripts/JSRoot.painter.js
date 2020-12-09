@@ -1134,7 +1134,7 @@ JSROOT.define(['d3'], (d3) => {
      * kind should contain "bezier" or "line".
      * If first symbol "L", then it used to continue drawing
      * @private */
-   jsrp.BuildSvgPath = function(kind, bins, height, ndig) {
+   jsrp.buildSvgPath = function(kind, bins, height, ndig) {
 
       let smooth = kind.indexOf("bezier") >= 0;
 
@@ -1314,97 +1314,33 @@ JSROOT.define(['d3'], (d3) => {
     * @class
     * @memberof JSROOT
     * @private
+    * @param {object|string} [dom] - dom element or id of dom element
     */
 
-   function BasePainter() {
-      this.divid = null; // either id of element (preferable) or element itself
+   function BasePainter(divid) {
+      this.divid = null; // either id of DOM element or element itself
+      if (divid) this.setDom(divid);
    }
 
-   /** @summary Access painter reference, stored in first child element.
-    *  @desc
-    *    - on === true - set *this* as painter
-    *    - on === false - delete painter reference
-    *    - on === undefined - return painter
-    * @param {boolean} on - that to perfrom */
-   BasePainter.prototype.accessTopPainter = function(on) {
-      let main = this.select_main().node(),
-         chld = main ? main.firstChild : null;
-      if (!chld) return null;
-      if (on === true) {
-         chld.painter = this;
-      } else if (on === false)
-         delete chld.painter;
-      return chld.painter;
+   /** @summary Assign painter to specified DOM element
+     * @param {string|object} elem - element ID or DOM Element */
+   BasePainter.prototype.setDom = function(elem) {
+      if (elem !== undefined) {
+         this.divid = elem;
+         delete this._selected_main;
+      }
    }
 
-   /** @summary Set painter, stored in first child element
-     * @desc Can only be done when first draing ic completed */
-   BasePainter.prototype.setTopPainter = function() {
-      return this.accessTopPainter(true);
+   /** @summary Returns assigned dom element */
+   BasePainter.prototype.getDom = function() {
+      return this.divid;
    }
 
-   /** @summary Generic method to cleanup painter */
-   BasePainter.prototype.Cleanup = function(keep_origin) {
-
-      let origin = this.select_main('origin');
-      if (!origin.empty() && !keep_origin) origin.html("");
-      if (this._changed_layout)
-         this.setLayoutKind('simple');
-      this.accessTopPainter(false);
-      this.divid = null;
-      delete this._selected_main;
-
-      if (this._hpainter && typeof this._hpainter.removePainter === 'function')
-         this._hpainter.removePainter(this);
-
-      delete this._changed_layout;
-      delete this._hitemname;
-      delete this._hdrawopt;
-      delete this._hpainter;
-   }
-
-   /** @summary Returns drawn object
-     * @abstract */
-   BasePainter.prototype.GetObject = function() {}
-
-   /** @summary Returns true if type match with drawn object type
-     * @param {string} typename - type name to check with
-     * @returns {boolean} true if draw objects matches with provided type name
-     * @abstract */
-   BasePainter.prototype.MatchObjectType = function(/* typename */) {}
-
-   /** @summary Called to update drawn object content
-     * @returns {boolean} true if update was performed
-     * @abstract */
-   BasePainter.prototype.UpdateObject = function(/* obj */) {}
-
-   /** @summary Redraw all objects in current pad
-     * @param {string} reason - why redraw performed, can be "zoom" or empty ]
-     * @abstract */
-   BasePainter.prototype.RedrawPad = function(/* reason */) {}
-
-   /** @summary Updates object and readraw it
-     * @param {object} obj - new version of object, values will be updated in original object
-     * @returns {boolean} true if object updated and redrawn */
-   BasePainter.prototype.RedrawObject = function(obj) {
-      if (!this.UpdateObject(obj)) return false;
-      let current = document.body.style.cursor;
-      document.body.style.cursor = 'wait';
-      let res = this.RedrawPad();
-      document.body.style.cursor = current;
-      return res || true;
-   }
-
-   /** @summary Checks if draw elements were resized and drawing should be updated
-     * @returns {boolean} true if resize was detected
-     * @abstract */
-   BasePainter.prototype.checkResize = function(/* arg */) {}
-
-   /** @summary access to main HTML element used for drawing - typically <div> element
+   /** @summary selects main HTML element used for drawing - typically <div> element
      * @desc if main element was layouted, returns main element inside layout
      * @param {string} is_direct - if 'origin' specified, returns original element even if actual drawing moved to some other place
-     * @returns {object} d3.select for main element for drawing, defined with this.divid. */
-   BasePainter.prototype.select_main = function(is_direct) {
+     * @returns {object} d3.select object for main element for drawing */
+   BasePainter.prototype.selectDom = function(is_direct) {
 
       if (!this.divid) return d3.select(null);
 
@@ -1435,9 +1371,61 @@ JSROOT.define(['d3'], (d3) => {
       return res;
    }
 
+   function _accessTopPainter(painter, on) {
+      let main = painter.selectDom().node(),
+          chld = main ? main.firstChild : null;
+      if (!chld) return null;
+      if (on === true) {
+         chld.painter = painter;
+      } else if (on === false)
+         delete chld.painter;
+      return chld.painter;
+   }
+
+   /** @summary Set painter, stored in first child element
+     * @desc Can only be done when first draing ic completed */
+   BasePainter.prototype.setTopPainter = function() {
+      _accessTopPainter(this, true);
+   }
+
+   /** @summary Return top painter set for the selected dom element */
+   BasePainter.prototype.getTopPainter = function() {
+      return _accessTopPainter(this);
+   }
+
+   /** @summary Clear reference on top painter */
+   BasePainter.prototype.clearTopPainter = function() {
+      _accessTopPainter(this, false);
+   }
+
+   /** @summary Generic method to cleanup painter */
+   BasePainter.prototype.cleanup = function(keep_origin) {
+      this.clearTopPainter();
+      let origin = this.selectDom('origin');
+      if (!origin.empty() && !keep_origin) origin.html("");
+      if (this._changed_layout)
+         this.setLayoutKind('simple');
+      this.divid = null;
+      delete this._selected_main;
+
+      if (this._hpainter && typeof this._hpainter.removePainter === 'function')
+         this._hpainter.removePainter(this);
+
+      delete this._changed_layout;
+      delete this._hitemname;
+      delete this._hdrawopt;
+      delete this._hpainter;
+   }
+
+   /** @summary Checks if draw elements were resized and drawing should be updated
+     * @returns {boolean} true if resize was detected
+     * @abstract */
+   BasePainter.prototype.checkResize = function(/* arg */) {}
+
+
    /** @summary Returns layout kind */
    BasePainter.prototype.getLayoutKind = function() {
-      let origin = this.select_main('origin'),
+      let origin = this.selectDom('origin'),
          layout = origin.empty() ? "" : origin.property('layout');
 
       return layout || 'simple';
@@ -1445,7 +1433,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Set layout kind */
    BasePainter.prototype.setLayoutKind = function(kind, main_selector) {
-      let origin = this.select_main('origin');
+      let origin = this.selectDom('origin');
       if (!origin.empty()) {
          if (!kind) kind = 'simple';
          origin.property('layout', kind);
@@ -1460,8 +1448,8 @@ JSROOT.define(['d3'], (d3) => {
    BasePainter.prototype.testMainResize = function(check_level, new_size, height_factor) {
 
       let enlarge = this.enlargeMain('state'),
-         main_origin = this.select_main('origin'),
-         main = this.select_main(),
+         main_origin = this.selectDom('origin'),
+         main = this.selectDom(),
          lmt = 5; // minimal size
 
       if (enlarge !== 'on') {
@@ -1517,8 +1505,8 @@ JSROOT.define(['d3'], (d3) => {
      * if action not specified, just return possibility to enlarge main div */
    BasePainter.prototype.enlargeMain = function(action, skip_warning) {
 
-      let main = this.select_main(true),
-         origin = this.select_main('origin');
+      let main = this.selectDom(true),
+         origin = this.selectDom('origin');
 
       if (main.empty() || !JSROOT.settings.CanEnlarge || (origin.property('can_enlarge') === false)) return false;
 
@@ -1573,35 +1561,27 @@ JSROOT.define(['d3'], (d3) => {
       return false;
    }
 
-   /** @summary Assign painter to specified element
-     * @desc base painter does not creates canvas or frames
-     * it registered in the first child element
-     * @param {string|object} elem - element ID or DOM Element */
-   BasePainter.prototype.setDom = function(elem) {
-      if (elem !== undefined) {
-         this.divid = elem;
-         delete this._selected_main;
-      }
-   }
-
    /** @summary Set item name, associated with the painter
-    * @desc Used by {@link JSROOT.HiearchyPainter}
-    * @private */
-   BasePainter.prototype.SetItemName = function(name, opt, hpainter) {
-      if (typeof name === 'string') this._hitemname = name;
-      else delete this._hitemname;
+     * @desc Used by {@link JSROOT.HiearchyPainter}
+     * @protected */
+   BasePainter.prototype.setItemName = function(name, opt, hpainter) {
+      if (typeof name === 'string')
+         this._hitemname = name;
+      else
+         delete this._hitemname;
       // only upate draw option, never delete. null specified when update drawing
       if (typeof opt === 'string') this._hdrawopt = opt;
 
       this._hpainter = hpainter;
    }
 
-   /** @summary Returns assigned item name */
-   BasePainter.prototype.GetItemName = function() { return ('_hitemname' in this) ? this._hitemname : null; }
+   /** @summary Returns assigned item name
+     * @desc Used with {@link JSROOT.HiearchyPainter} to identify drawn item name */
+   BasePainter.prototype.getItemName = function() { return ('_hitemname' in this) ? this._hitemname : null; }
 
    /** @summary Returns assigned item draw option
-    * @private */
-   BasePainter.prototype.GetItemDrawOpt = function() { return ('_hdrawopt' in this) ? this._hdrawopt : ""; }
+     * @desc Used with {@link JSROOT.HiearchyPainter} to identify drawn item option */
+   BasePainter.prototype.getItemDrawOpt = function() { return this._hdrawopt || ""; }
 
    // ==============================================================================
 
@@ -1622,23 +1602,28 @@ JSROOT.define(['d3'], (d3) => {
       this.draw_g = null; // container for all drawn objects
       this.pad_name = ""; // name of pad where object is drawn
       this.main = null;  // main painter, received from pad
+      this.assignObject(obj);
       if (typeof opt == "string") this.options = { original: opt };
-      this.AssignObject(obj);
    }
 
    ObjectPainter.prototype = Object.create(BasePainter.prototype);
 
    /** @summary Assign object to the painter */
-   ObjectPainter.prototype.AssignObject = function(obj) { this.draw_object = ((obj !== undefined) && (typeof obj == 'object')) ? obj : null; }
+   ObjectPainter.prototype.assignObject = function(obj) {
+      if (obj && (typeof obj == 'object'))
+         this.draw_object = obj;
+      else
+         delete this.draw_object;
+   }
 
    /** @summary Assign snapid to the painter
     * @desc Identifier used to communicate with server side and identifies object on the server
     * @private */
-   ObjectPainter.prototype.AssignSnapId = function(id) { this.snapid = id; }
+   ObjectPainter.prototype.assignSnapId = function(id) { this.snapid = id; }
 
    /** @summary Generic method to cleanup painter.
-    * @desc Remove object drawing and in case of main painter - also main HTML components */
-   ObjectPainter.prototype.Cleanup = function() {
+     * @desc Remove object drawing and in case of main painter - also main HTML components */
+   ObjectPainter.prototype.cleanup = function() {
 
       this.RemoveDrawG();
 
@@ -1668,19 +1653,22 @@ JSROOT.define(['d3'], (d3) => {
       delete this.rstyle;
       delete this.csstype;
 
-      BasePainter.prototype.Cleanup.call(this, keep_origin);
+      BasePainter.prototype.cleanup.call(this, keep_origin);
    }
 
    /** @summary Returns drawn object */
-   ObjectPainter.prototype.GetObject = function() { return this.draw_object; }
+   ObjectPainter.prototype.getObject = function() { return this.draw_object; }
 
    /** @summary Returns drawn object class name */
-   ObjectPainter.prototype.GetClassName = function() { return (this.draw_object ? this.draw_object._typename : "") || ""; }
+   ObjectPainter.prototype.getClassName = function() {
+      let obj = this.getObject();
+      return obj ? obj._typename || "" : "";
+   }
 
    /** @summary Checks if drawn object matches with provided typename
     * @param {string} arg - typename
     * @param {string} arg._typename - if arg is object, use its typename */
-   ObjectPainter.prototype.MatchObjectType = function(arg) {
+   ObjectPainter.prototype.matchObjectType = function(arg) {
       if (!arg || !this.draw_object) return false;
       if (typeof arg === 'string') return (this.draw_object._typename === arg);
       if (arg._typename) return (this.draw_object._typename === arg._typename);
@@ -1690,17 +1678,17 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Change item name
     * @desc When available, used for svg:title proprty
     * @private */
-   ObjectPainter.prototype.SetItemName = function(name, opt, hpainter) {
-      BasePainter.prototype.SetItemName.call(this,name, opt, hpainter);
+   ObjectPainter.prototype.setItemName = function(name, opt, hpainter) {
+      BasePainter.prototype.setItemName.call(this,name, opt, hpainter);
       if (this.no_default_title || (name == "")) return;
       let can = this.svg_canvas();
       if (!can.empty()) can.select("title").text(name);
-                   else this.select_main().attr("title", name);
+                   else this.selectDom().attr("title", name);
    }
 
-   /** @summary Store actual options together with original string
+   /** @summary Store actual this.options together with original string
     * @private */
-   ObjectPainter.prototype.OptionsStore = function(original) {
+   ObjectPainter.prototype.storeDrawOpt = function(original) {
       if (!this.options) return;
       if (!original) original = "";
       let pp = original.indexOf(";;");
@@ -1709,38 +1697,50 @@ JSROOT.define(['d3'], (d3) => {
       this.options_store = JSROOT.extend({}, this.options);
    }
 
-   /** @summary Checks if any draw options were changed
-    * @private */
-   ObjectPainter.prototype.OptionesChanged = function() {
-      if (!this.options) return false;
-      if (!this.options_store) return true;
-
-      for (let k in this.options)
-         if (this.options[k] !== this.options_store[k]) return true;
-
-      return false;
-   }
-
    /** @summary Return actual draw options as string
+     * @desc if options are not modified - returns original string which was specified for object draw
     * @private */
-   ObjectPainter.prototype.OptionsAsString = function() {
+   ObjectPainter.prototype.getDrawOpt = function() {
       if (!this.options) return "";
+      let changed = false;
+      if (!this.options_store) {
+         changed  = true;
+      } else {
+         for (let k in this.options)
+            if (this.options[k] !== this.options_store[k])
+               changed = true;
+      }
 
-      if (!this.OptionesChanged())
-         return this.options.original || "";
-
-      if (typeof this.options.asString == "function")
+      if (changed && typeof this.options.asString == "function")
          return this.options.asString();
 
       return this.options.original || ""; // nothing better, return original draw option
    }
 
+   /** @summary Central place to update objects drawing
+     * @param {object} obj - new version of object, values will be updated in original object
+     * @param {string} [opt] - when specified, new draw options
+     * @returns {boolean|Promise} for object redraw
+     * @desc Two actions typically done by redraw - update object content via {@link ObjectPainter.prototype.updateObject} and
+      * then redraw correspondent pad via {@link ObjectPainter.prototype.redrawPad}. If possible one should redefine
+      * only updateObject function and keep this function unchanged. But for some special painters this function it is the
+      * only way to control how object can be update while requested from the server */
+   ObjectPainter.prototype.redrawObject = function(obj, opt) {
+      if (!this.updateObject(obj,opt)) return false;
+      let current = document.body.style.cursor;
+      document.body.style.cursor = 'wait';
+      let res = this.redrawPad();
+      document.body.style.cursor = current;
+      return res || true;
+   }
+
    /** @summary Generic method to update object content.
-    * @desc Just copy all members from source object
-    * @param {object} obj - object with new data */
-   ObjectPainter.prototype.UpdateObject = function(obj) {
-      if (!this.MatchObjectType(obj)) return false;
-      JSROOT.extend(this.GetObject(), obj);
+     * @desc Default implementation just copies first-level members to current object
+     * @param {object} obj - object with new data
+     * @param {string} [opt] - option which will be used for redrawing */
+   ObjectPainter.prototype.updateObject = function(obj /*, opt */) {
+      if (!this.matchObjectType(obj)) return false;
+      JSROOT.extend(this.getObject(), obj);
       return true;
    }
 
@@ -1748,7 +1748,7 @@ JSROOT.define(['d3'], (d3) => {
     * @desc Such string can be used as tooltip. If result string larger than 20 symbols, it will be cutted.
     * @private */
    ObjectPainter.prototype.GetTipName = function(append) {
-      let res = this.GetItemName(), obj = this.GetObject();
+      let res = this.getItemName(), obj = this.getObject();
       if (!res) res = obj && obj.fName ? obj.fName : "";
       if (res.lenght > 20) res = res.substr(0, 17) + "...";
       if (res && append) res += append;
@@ -1902,7 +1902,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary This is main graphical SVG element, where all drawings are performed
     * @private */
-   ObjectPainter.prototype.svg_canvas = function() { return this.select_main().select(".root_canvas"); }
+   ObjectPainter.prototype.svg_canvas = function() { return this.selectDom().select(".root_canvas"); }
 
    /** @summary This is SVG element, correspondent to current pad
     * @private */
@@ -1947,9 +1947,10 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Method returns current pad name
+    * @desc When parameter new_name specified, it will be set as new current pad for the canvas
     * @param {string} [new_name] - when specified, new current pad name will be configured
     * @private */
-   ObjectPainter.prototype.CurrentPadName = function(new_name) {
+   ObjectPainter.prototype.currentPadName = function(new_name) {
       let svg = this.svg_canvas();
       if (svg.empty()) return "";
       let curr = svg.property('current_pad');
@@ -2123,7 +2124,7 @@ JSROOT.define(['d3'], (d3) => {
       if (!res) {
          let svg_p = this.svg_pad();
          if (svg_p.empty()) {
-            res = this.accessTopPainter();
+            res = this.getTopPainter();
          } else {
             res = svg_p.property('mainpainter');
          }
@@ -2156,6 +2157,7 @@ JSROOT.define(['d3'], (d3) => {
 
       if (pp.painters.indexOf(this) < 0)
          pp.painters.push(this);
+
       if (!this.rstyle && pp.next_rstyle)
          this.rstyle = pp.next_rstyle;
 
@@ -2170,7 +2172,7 @@ JSROOT.define(['d3'], (d3) => {
       this.setDom(elem);
 
       // remember current pad name - where finally object will be draw
-      this.pad_name = (typeof pad_name == 'string') ? pad_name : this.CurrentPadName();
+      this.pad_name = (typeof pad_name == 'string') ? pad_name : this.currentPadName();
 
       return true;
    }
@@ -2275,16 +2277,14 @@ JSROOT.define(['d3'], (d3) => {
      * @desc Iterate over all known painters
     * @private */
    ObjectPainter.prototype.forEachPainter = function(userfunc, kind) {
-      // special case of the painter set as pointer of first child of main element
-      let painter = this.accessTopPainter();
-      if (painter) {
-         if (kind !== "pads") userfunc(painter);
-         return;
-      }
-
       // iterate over all painters from pad list
       let pp = this.pad_painter();
-      if (pp) pp.forEachPainterInPad(userfunc, kind);
+      if (pp) {
+         pp.forEachPainterInPad(userfunc, kind);
+      } else {
+         let painter = this.getTopPainter();
+         if (painter && (kind !== "pads")) userfunc(painter);
+      }
    }
 
    /** @summary indicate that redraw was invoked via interactive action (like context menu or zooming)
@@ -2296,13 +2296,13 @@ JSROOT.define(['d3'], (d3) => {
       if ((typeof info == "string") && (info.indexOf("exec:") != 0)) reason = info;
 
       if (arg == "pad") {
-         this.RedrawPad(reason);
+         this.redrawPad(reason);
       } else if (arg == "axes") {
          let main = this.main_painter(true); // works for pad and any object drawn in the pad
          if (main && (typeof main.DrawAxes == 'function'))
             main.DrawAxes();
          else
-            this.RedrawPad(reason);
+            this.redrawPad(reason);
       } else if (arg !== false) {
          this.Redraw(reason);
       }
@@ -2319,7 +2319,7 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Redraw all objects in correspondent pad */
-   ObjectPainter.prototype.RedrawPad = function(reason) {
+   ObjectPainter.prototype.redrawPad = function(reason) {
       let pad_painter = this.pad_painter();
       if (pad_painter) pad_painter.Redraw(reason);
    }
@@ -2361,7 +2361,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Show object in inspector for provided object */
    ObjectPainter.prototype.showInspector = function(obj) {
-      let main = this.select_main(),
+      let main = this.selectDom(),
          rect = jsrp.getElementRect(main),
          w = Math.round(rect.width * 0.05) + "px",
          h = Math.round(rect.height * 0.05) + "px",
@@ -2377,7 +2377,7 @@ JSROOT.define(['d3'], (d3) => {
          .style('right', w);
 
       if (!obj || (typeof obj !== 'object') || !obj._typename)
-         obj = this.GetObject();
+         obj = this.getObject();
 
       JSROOT.draw(id, obj, 'inspect');
    }
@@ -2386,8 +2386,8 @@ JSROOT.define(['d3'], (d3) => {
     * @private */
    ObjectPainter.prototype.FillContextMenu = function(menu) {
       let title = this.GetTipName();
-      if (this.GetObject() && ('_typename' in this.GetObject()))
-         title = this.GetObject()._typename + "::" + title;
+      if (this.getObject() && ('_typename' in this.getObject()))
+         title = this.getObject()._typename + "::" + title;
 
       menu.add("header:" + title);
 
@@ -2448,10 +2448,10 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.ShowObjectStatus = function() {
       // method called normally when mouse enter main object element
 
-      let obj = this.GetObject(),
+      let obj = this.getObject(),
          status_func = this.GetShowStatusFunc();
 
-      if (obj && status_func) status_func(this.GetItemName() || obj.fName, obj.fTitle || obj._typename, obj._typename);
+      if (obj && status_func) status_func(this.getItemName() || obj.fName, obj.fTitle || obj._typename, obj._typename);
    }
 
 
@@ -2478,12 +2478,12 @@ JSROOT.define(['d3'], (d3) => {
     * @private */
    ObjectPainter.prototype.FindPainterFor = function(selobj, selname, seltype) {
 
-      let painter = this.pad_painter();
-      let painters = painter ? painter.painters : null;
+      let pp = this.pad_painter();
+      let painters = pp ? pp.painters : null;
       if (!painters) return null;
 
       for (let n = 0; n < painters.length; ++n) {
-         let pobj = painters[n].GetObject();
+         let pobj = painters[n].getObject();
          if (!pobj) continue;
 
          if (selobj && (pobj === selobj)) return painters[n];
@@ -2504,7 +2504,7 @@ JSROOT.define(['d3'], (d3) => {
          if (k >= 0) pp.painters.splice(k, 1);
       }
 
-      this.Cleanup();
+      this.cleanup();
    }
 
    /** @summary Redraw object
@@ -3067,7 +3067,7 @@ JSROOT.define(['d3'], (d3) => {
 
    AxisBasePainter.prototype = Object.create(ObjectPainter.prototype);
 
-   AxisBasePainter.prototype.Cleanup = function() {
+   AxisBasePainter.prototype.cleanup = function() {
       this.ticks = [];
       delete this.format;
       delete this.func;
@@ -3079,7 +3079,7 @@ JSROOT.define(['d3'], (d3) => {
       delete this.axis;
       delete this.axis_g;
 
-      ObjectPainter.prototype.Cleanup.call(this);
+      ObjectPainter.prototype.cleanup.call(this);
    }
 
    /** @summary Assign often used members of frame painter
@@ -3321,14 +3321,13 @@ JSROOT.define(['d3'], (d3) => {
    // ================= painter of raw text ========================================
 
    /** @summary Generic text drawing
-    * @private */
+     * @private */
    jsrp.drawRawText = function(divid, txt /*, opt*/) {
 
-      let painter = new BasePainter();
-      painter.setDom(divid); // base painter
+      let painter = new BasePainter(divid);
       painter.txt = txt;
 
-      painter.RedrawObject = function(obj) {
+      painter.redrawObject = function(obj) {
          this.txt = obj;
          this.Draw();
          return true;
@@ -3346,7 +3345,7 @@ JSROOT.define(['d3'], (d3) => {
                txt += "<pre style='margin:0'>" + arr[i] + "</pre>";
          }
 
-         let frame = this.select_main(),
+         let frame = this.selectDom(),
             main = frame.select("div");
          if (main.empty())
             main = frame.append("div").style('max-width', '100%').style('max-height', '100%').style('overflow', 'auto');
@@ -3365,15 +3364,15 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Register handle to react on window resize
-    * @desc function used to react on browser window resize event
-    * While many resize events could come in short time,
-    * resize will be handled with delay after last resize event
-    * handle can be function or object with checkResize function
-    * one could specify delay after which resize event will be handled
-    * @private */
+     * @desc function used to react on browser window resize event
+     * While many resize events could come in short time,
+     * resize will be handled with delay after last resize event
+     * handle can be function or object with checkResize function
+     * one could specify delay after which resize event will be handled
+     * @private */
    JSROOT.registerForResize = function(handle, delay) {
 
-      if (!handle || JSROOT.BatchMode) return;
+      if (!handle || JSROOT.BatchMode || (typeof window == 'undefined')) return;
 
       let myInterval = null, myDelay = delay ? delay : 300;
 
@@ -3383,19 +3382,22 @@ JSROOT.define(['d3'], (d3) => {
          myInterval = null;
 
          document.body.style.cursor = 'wait';
-         if (typeof handle == 'function') handle(); else
-            if ((typeof handle == 'object') && (typeof handle.checkResize == 'function')) handle.checkResize(); else
-               if (typeof handle == 'string') {
-                  let node = d3.select('#' + handle);
-                  if (!node.empty()) {
-                     let mdi = node.property('mdi');
-                     if (mdi) {
-                        mdi.checkMDIResize();
-                     } else {
-                        JSROOT.resize(node.node());
-                     }
-                  }
+         if (typeof handle == 'function')
+            handle();
+         else if (handle && (typeof handle == 'object') && (typeof handle.checkResize == 'function')) {
+            handle.checkResize();
+         } else {
+            let dummy = new BasePainter(handle);
+            let node = dummy.selectDom();
+            if (!node.empty()) {
+               let mdi = node.property('mdi');
+               if (mdi && typeof mdi.checkMDIResize == 'function') {
+                  mdi.checkMDIResize();
+               } else {
+                  JSROOT.resize(node.node());
                }
+            }
+         }
          document.body.style.cursor = 'auto';
       }
 
@@ -3513,16 +3515,16 @@ JSROOT.define(['d3'], (d3) => {
 
 
    /** @summary Register draw function for the class
-    * @desc List of supported draw options could be provided, separated  with ';'
-    * @param {object} args - arguments
-    * @param {string|regexp} args.name - class name or regexp pattern
-    * @param {string} [args.prereq] - prerequicities to load before search for the draw function
-    * @param {string} args.func - name of draw function for the class or just a function
-    * @param {boolean} [args.direct=false] - if true, function is just Redraw() method of ObjectPainter
-    * @param {string} [args.opt] - list of supported draw options (separated with semicolon) like "col;scat;"
-    * @param {string} [args.icon] - icon name shown for the class in hierarchy browser
-    * @param {string} [args.draw_field] - draw only data member from object, like fHistogram
-    * @private */
+     * @desc List of supported draw options could be provided, separated  with ';'
+     * @param {object} args - arguments
+     * @param {string|regexp} args.name - class name or regexp pattern
+     * @param {string} [args.prereq] - prerequicities to load before search for the draw function
+     * @param {string} args.func - draw function name or just a function
+     * @param {boolean} [args.direct] - if true, function is just Redraw() method of ObjectPainter
+     * @param {string} [args.opt] - list of supported draw options (separated with semicolon) like "col;scat;"
+     * @param {string} [args.icon] - icon name shown for the class in hierarchy browser
+     * @param {string} [args.draw_field] - draw only data member from object, like fHistogram
+     * @private */
    JSROOT.addDrawFunc = function(args) {
       drawFuncs.lst.push(args);
       return args;
@@ -3672,7 +3674,7 @@ JSROOT.define(['d3'], (d3) => {
       return res;
    }
 
-   /** Returns array with supported draw options for the specified kind
+   /** @summary Returns array with supported draw options for the specified kind
     * @private */
    JSROOT.getDrawOptions = function(kind /*, selector*/) {
       return JSROOT.getDrawSettings(kind).opts;
@@ -3799,7 +3801,7 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string|object} divid - id of div element to draw or directly DOMElement
      * @param {object} obj - object to draw, object type should be registered before in JSROOT
      * @param {string} opt - draw options separated by space, comma or semicolon
-     * @param {function} [callback] - function called when drawing is completed, first argument is object painter instance
+     * @param {function} [callback] - deprecated, function called when drawing is completed, first argument is object painter instance
      * @returns {Promise} with painter object only if callback parameter is not specified
      * @desc An extensive list of support draw options can be found on [JSROOT examples page]{@link https://root.cern/js/latest/examples.htm}
      * Parameter ```callback``` kept only for backward compatibility and will be removed in JSROOT v6.2
@@ -3817,7 +3819,7 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string|object} divid - id of div element to draw or directly DOMElement
      * @param {object} obj - object to draw, object type should be registered before in JSROOT
      * @param {string} opt - draw options
-     * @param {function} [callback] - function called when drawing is completed, first argument will be object painter instance
+     * @param {function} [callback] - function called when redrawing is completed, first argument will be object painter instance
      * @returns {Promise} with painter used only when callback parameter is not specified
      * @desc If drawing was not done before, it will be performed with {@link JSROOT.draw}.
      * Otherwise drawing content will be updated
@@ -3829,33 +3831,42 @@ JSROOT.define(['d3'], (d3) => {
 
       let dummy = new ObjectPainter();
       dummy.setCanvDom(divid, "");
-      let can_painter = dummy.canv_painter(), handle;
+      let can_painter = dummy.canv_painter(), handle, res_painter = null, redraw_res;
       if (obj._typename)
          handle = JSROOT.getDrawHandle("ROOT." + obj._typename);
       if (handle && handle.draw_field && obj[handle.draw_field])
          obj = obj[handle.draw_field];
 
       if (can_painter) {
-         let res_painter = null;
-         if (obj._typename === "TCanvas") {
-            can_painter.RedrawObject(obj);
-            res_painter = can_painter;
+         if (can_painter.matchObjectType(obj._typename)) {
+            redraw_res = can_painter.redrawObject(obj, opt);
+            if (redraw_res) res_painter = can_painter;
          } else {
             for (let i = 0; i < can_painter.painters.length; ++i) {
                let painter = can_painter.painters[i];
-               if (painter.MatchObjectType(obj._typename))
-                  if (painter.UpdateObject(obj, opt)) {
-                     can_painter.RedrawPad();
+               if (painter.matchObjectType(obj._typename)) {
+                  redraw_res = painter.redrawObject(obj, opt);
+                  if (redraw_res) {
                      res_painter = painter;
                      break;
                   }
+               }
             }
          }
+      } else {
+         let top = dummy.getTopPainter();
+         // base painter do not have this method, if it there use it
+         // it can be object painter here or can be specially introduce method to handling redraw!
+         if (top && typeof top.redrawObject == 'function') {
+            redraw_res = top.redrawObject(obj, opt);
+            if (redraw_res) res_painter = top;
+         }
+      }
 
-         if (res_painter)
-            return callback ? callback(res_painter) : Promise.resolve(res_painter);
-
-         console.warn(`Cannot find painter to update object of type ${obj._typename}`);
+      if (res_painter) {
+         if (!redraw_res || (typeof redraw_res != 'object') || !redraw_res.then)
+            redraw_res = Promise.resolve(true);
+         return redraw_res.then(() => { if (callback) callback(res_painter); return res_painter; });
       }
 
       JSROOT.cleanup(divid);
@@ -4001,11 +4012,9 @@ JSROOT.define(['d3'], (d3) => {
    JSROOT.cleanup = function(divid) {
       let dummy = new ObjectPainter(), lst = [];
       dummy.setCanvDom(divid, "");
-      dummy.forEachPainter(painter => {
-         if (lst.indexOf(painter) < 0) lst.push(painter);
-      });
-      for (let n = 0; n < lst.length; ++n) lst[n].Cleanup();
-      dummy.select_main().html("");
+      dummy.forEachPainter(p => { if (lst.indexOf(p) < 0) lst.push(p); });
+      lst.forEach(p => p.cleanup());
+      dummy.selectDom().html("");
       return lst;
    }
 
@@ -4142,12 +4151,6 @@ JSROOT.define(['d3'], (d3) => {
    JSROOT.BasePainter = BasePainter;
    JSROOT.ObjectPainter = ObjectPainter;
    JSROOT.AxisBasePainter = AxisBasePainter;
-
-   // Only for backward compatibility with v5, will be removed in later JSROOT versions
-   JSROOT.TBasePainter = BasePainter;
-   JSROOT.TObjectPainter = ObjectPainter;
-   JSROOT.StoreJSON = JSROOT.drawingJSON;
-   // end of compatibility mode
 
    JSROOT.Painter = jsrp;
    if (JSROOT.nodejs) module.exports = jsrp;
