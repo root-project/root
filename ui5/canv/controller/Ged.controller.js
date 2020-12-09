@@ -84,7 +84,7 @@ sap.ui.define([
          let exec = "", item = pars.path.substr(1), obj;
 
          if (data._painter) {
-            obj = data._painter.snapid ? data._painter.GetObject() : null;
+            obj = data._painter.snapid ? data._painter.getObject() : null;
 
             if (typeof data._painter.AttributeChange === 'function')
                data._painter.AttributeChange(data._kind, item, pars.value);
@@ -124,7 +124,7 @@ sap.ui.define([
       },
 
       setAxisModel : function(model) {
-         let obj =  this.currentPainter.GetObject(this.currentPlace),
+         let obj =  this.currentPainter.getObject(this.currentPlace),
              painter = this.getAxisHandle();
 
          let data = {
@@ -148,7 +148,7 @@ sap.ui.define([
              exec = "",
              painter = this.currentPainter,
              kind = this.currentPlace,
-             axis = painter.GetObject(kind);
+             axis = painter.getObject(kind);
 
          // while axis painter is temporary object, we should not try change it attributes
 
@@ -289,7 +289,7 @@ sap.ui.define([
          this.currentPainter = painter;
          this.currentPlace = place;
 
-         let obj = painter.GetObject(place), selectedClass = "";
+         let obj = painter.getObject(place), selectedClass = "";
 
          if (place == "xaxis" && painter.x_handle) {
             painter = painter.x_handle;

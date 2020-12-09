@@ -9,7 +9,7 @@ sap.ui.define([
       onBeforeRendering: function() {
          console.log("Cleanup Panel", this.getView().getId());
          if (this.object_painter) {
-            this.object_painter.Cleanup();
+            this.object_painter.cleanup();
             delete this.object_painter;
          }
          this.rendering_perfromed = false;
@@ -131,7 +131,7 @@ sap.ui.define([
          console.log("Exit from JSROOT Panel", this.getView().getId());
 
          if (this.object_painter) {
-            this.object_painter.Cleanup();
+            this.object_painter.cleanup();
             delete this.object_painter;
          }
       }

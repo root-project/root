@@ -16,7 +16,7 @@ sap.ui.define(['sap/ui/core/Control',
          // remove Canvas and painter from DOM
          if (this.geom_painter) {
             this.geom_painter.clear_3d_canvas();
-            this.geom_painter.accessTopPainter(false);
+            this.geom_painter.clearTopPainter();
          }
       },
 
@@ -62,7 +62,7 @@ sap.ui.define(['sap/ui/core/Control',
                this.geom_painter._clones_owner = false;
             }
 
-            this.geom_painter.Cleanup();
+            this.geom_painter.cleanup();
             delete this.geom_painter;
             delete this.geom_skip_cleanup;
          }
