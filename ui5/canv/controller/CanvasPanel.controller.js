@@ -102,7 +102,7 @@ sap.ui.define([
 
       onExit: function() {
          if (this.canvas_painter) {
-            this.canvas_painter.Cleanup();
+            this.canvas_painter.cleanup();
             delete this.canvas_painter;
          }
       }
