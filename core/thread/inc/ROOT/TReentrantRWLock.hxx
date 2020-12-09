@@ -21,6 +21,9 @@
 #include <condition_variable>
 #include <thread>
 #include <unordered_map>
+#if __cplusplus >= 201402L
+#include <shared_mutex>
+#endif
 
 namespace ROOT {
 namespace Internal {
@@ -146,6 +149,7 @@ struct RecurseCounts {
    size_t &GetLocalReadersCount(local_t &local) { return fReadersCount[local]; }
 };
 
+#if __cplusplus >= 201402L
 struct RecurseCountsShared {
    using Hint_t = TVirtualRWMutex::Hint_t;
    using ReaderColl_t = std::unordered_map<std::thread::id, size_t>;
@@ -167,19 +171,19 @@ struct RecurseCountsShared {
    template <typename MutexT>
    Hint_t *IncrementReadCount(local_t &local, MutexT &mutex)
    {
-      mutex.lock_shared();
+      std::shared_lock<MutexT> shared(mutex);
       auto countit = fReadersCount.find(local);
       if (countit == fReadersCount.end()) {
-         mutex.unlock_shared();
-         mutex.lock();
+         shared.unlock();
+         std::unique_lock<MutexT> unique(mutex);
          auto &count = fReadersCount[local];
-         mutex.unlock();
+         unique.unlock();
          ++(count);
          return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
       }
 
       auto &count = countit->second;
-      mutex.unlock_shared();
+      shared.unlock();
       ++(count);
       return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
    }
@@ -193,19 +197,19 @@ struct RecurseCountsShared {
    template <typename MutexT>
    Hint_t *DecrementReadCount(local_t &local, MutexT &mutex)
    {
-      mutex.lock_shared();
+      std::shared_lock<MutexT> shared(mutex);
       auto countit = fReadersCount.find(local);
       if (countit == fReadersCount.end()) {
-         mutex.unlock_shared();
-         mutex.lock();
+         shared.unlock();
+         std::unique_lock<MutexT> unique(mutex);
          auto &count = fReadersCount[local];
-         mutex.unlock();
+         unique.unlock();
          --(count);
          return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
       }
 
       auto &count = countit->second;
-      mutex.unlock_shared();
+      shared.unlock();
       --(count);
       return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
    }
@@ -232,6 +236,7 @@ struct RecurseCountsShared {
 
    size_t &GetLocalReadersCount(local_t &local) { return fReadersCount[local]; }
 };
+#endif
 } // Internal
 
 template <typename MutexT = ROOT::TSpinMutex, typename RecurseCountsT = Internal::RecurseCounts>
