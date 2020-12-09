@@ -69,14 +69,20 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
    // at exit of this function the BuilderPrintLevelConf object is destructed and automatically the
    // previous level will be restored
 
-   if (seed.Parameters().Vec().size() == 0) {
-      return FunctionMinimum(seed, fcn.Up());
-   }
-
    //   double edm = Estimator().Estimate(seed.Gradient(), seed.Error());
    double edm = seed.State().Edm();
 
    FunctionMinimum min(seed, fcn.Up());
+
+   if (seed.Parameters().Vec().size() == 0) {
+      print.Error("No free parameters.");
+      return min;
+   }
+
+   if (!seed.IsValid()) {
+     print.Error("Minimum seed invalid.");
+     return min;
+   }
 
    if (edm < 0.) {
       print.Error("Initial matrix not pos.def.");
