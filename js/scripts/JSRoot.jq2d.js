@@ -616,7 +616,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       if (!this.divid)
          return Promise.resolve(this);
 
-      let d3elem = this.select_main();
+      let d3elem = this.selectDom();
 
       d3elem.html("")
             .style('overflow','hidden') // clear html - most simple way
@@ -706,9 +706,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          d3cont = d3.select(hitem._d3cont ? hitem._d3cont : null);
          let name = this.itemFullName(hitem);
          if (d3cont.empty())
-            d3cont = this.select_main().select("[item='" + name + "']");
+            d3cont = this.selectDom().select("[item='" + name + "']");
          if (d3cont.empty() && ('_cycle' in hitem))
-            d3cont = this.select_main().select("[item='" + name + ";" + hitem._cycle + "']");
+            d3cont = this.selectDom().select("[item='" + name + ";" + hitem._cycle + "']");
          if (d3cont.empty()) return;
       }
 
@@ -946,8 +946,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
             if (this.disp)
                this.disp.forEachPainter(p => {
-                  if (p.GetItemName())
-                     items.push(p.GetItemName());
+                  if (p.getItemName())
+                     items.push(p.getItemName());
                });
 
             if (items.length == 1) {
@@ -1811,7 +1811,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       player.draw_first = true;
 
       player.ConfigureOnline = function(itemname, url, askey, root_version, dflt_expr) {
-         this.SetItemName(itemname, "", this);
+         this.setItemName(itemname, "", this);
          this.url = url;
          this.root_version = root_version;
          this.askey = askey;
@@ -1827,7 +1827,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       }
 
       player.ShowExtraButtons = function(args) {
-         let main = $(this.select_main().node());
+         let main = $(this.selectDom().node());
 
           main.find(".treedraw_buttons")
              .append(" Cut: <input class='treedraw_cut ui-corner-all ui-widget' style='width:8em;margin-left:5px' title='cut expression'></input>"+
@@ -1845,11 +1845,9 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
           main.find(".treedraw_clear").button().click(() => JSROOT.cleanup(this.drawid));
       }
 
-      player.Show = function(divid, args) {
+      player.Show = function(args) {
 
-         this.setDom(divid); // base painter
-
-         let main = $(this.select_main().node());
+         let main = $(this.selectDom().node());
 
          this.drawid = "jsroot_tree_player_" + JSROOT._.id_counter++ + "_draw";
 
@@ -1873,7 +1871,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
          if (this.local_tree)
             main.find('.treedraw_buttons').attr('title', "Tree draw player for: " + this.local_tree.fName);
-         main.find('.treedraw_exe').button().click(function() { p.PerformDraw(); });
+         main.find('.treedraw_exe').button().click(() => p.PerformDraw());
          main.find('.treedraw_varexp')
               .val(args && args.parse_expr ? args.parse_expr : (this.dflt_expr || "px:py"))
               .keyup(this.keyup);
@@ -1893,7 +1891,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       player.PerformLocalDraw = function() {
          if (!this.local_tree) return;
 
-         let frame = $(this.select_main().node()),
+         let frame = $(this.selectDom().node()),
              args = { expr: frame.find('.treedraw_varexp').val() };
 
          if (frame.find('.treedraw_more').length==0) {
@@ -1924,7 +1922,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
          if (this.local_tree) return this.PerformLocalDraw();
 
-         let frame = $(this.select_main().node()),
+         let frame = $(this.selectDom().node()),
              url = this.url + '/exe.json.gz?compact=3&method=Draw',
              expr = frame.find('.treedraw_varexp').val(),
              hname = "h_tree_draw", option = "",
@@ -1974,7 +1972,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       }
 
       player.checkResize = function(/*arg*/) {
-         let main = $(this.select_main().node());
+         let main = $(this.selectDom().node());
 
          $("#" + this.drawid).width(main.width());
          let h = main.height(),
@@ -2017,7 +2015,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
       if (!frame) return null;
 
       let divid = d3.select(frame).attr('id'),
-          player = new JSROOT.BasePainter();
+          player = new JSROOT.BasePainter(divid);
 
       if (item._childs && !asleaf)
          for (let n=0;n<item._childs.length;++n) {
@@ -2030,7 +2028,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       JSROOT.createTreePlayer(player);
       player.ConfigureOnline(itemname, url, askey, root_version, draw_expr);
-      player.Show(divid);
+      player.Show();
 
       return player;
    }

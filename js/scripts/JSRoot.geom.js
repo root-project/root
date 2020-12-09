@@ -53,7 +53,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                      .attr("class", !bright ? 'geo_toolbar_btn' : "geo_toolbar_btn_bright");
    }
 
-   Toolbar.prototype.Cleanup = function() {
+   Toolbar.prototype.cleanup = function() {
       if (this.element) {
          this.element.remove();
          delete this.element;
@@ -160,7 +160,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          {name: 'Normal', value: THREE.SSAOPass.OUTPUT.Normal}
       ];
 
-      this.Cleanup(true);
+      this.cleanup(true);
    }
 
    TGeoPainter.prototype = Object.create( JSROOT.ObjectPainter.prototype );
@@ -217,7 +217,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       let bkgr = new THREE.Color(this.ctrl.background);
 
-      this._toolbar = new Toolbar(this.select_main(), (bkgr.r + bkgr.g + bkgr.b) < 1);
+      this._toolbar = new Toolbar(this.selectDom(), (bkgr.r + bkgr.g + bkgr.b) < 1);
 
       this._toolbar.addButtons(buttonList);
    }
@@ -366,7 +366,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
    /** @summary Returns main geometry object */
    TGeoPainter.prototype.GetGeometry = function() {
-      return this.GetObject();
+      return this.getObject();
    }
 
    TGeoPainter.prototype.ModifyVisisbility = function(name, sign) {
@@ -550,7 +550,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
    /** @summary Activate specified items in the browser */
    TGeoPainter.prototype.activateInBrowser = function(names, force) {
-      // if (this.GetItemName() === null) return;
+      // if (this.getItemName() === null) return;
 
       if (typeof names == 'string') names = [ names ];
 
@@ -812,7 +812,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       this._datgui = new dat.GUI({ autoPlace: false, width: Math.min(650, this._renderer.domElement.width / 2) });
 
-      let main = this.select_main();
+      let main = this.selectDom();
       if (main.style('position')=='static') main.style('position','relative');
 
       d3.select(this._datgui.domElement)
@@ -992,14 +992,14 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                if (obj.geo_name) {
                   itemname = obj.geo_name;
                   if (itemname.indexOf("<prnt>") == 0)
-                     itemname = (this.GetItemName() || "top") + itemname.substr(6);
+                     itemname = (this.getItemName() || "top") + itemname.substr(6);
                   name = itemname.substr(itemname.lastIndexOf("/")+1);
                   if (!name) name = itemname;
                   hdr = name;
                } else if (obj.stack) {
                   name = this._clones.ResolveStack(obj.stack).name;
                   itemname = this.GetStackFullName(obj.stack);
-                  hdr = this.GetItemName();
+                  hdr = this.getItemName();
                   if (name.indexOf("Nodes/") === 0) hdr = name.substr(6); else
                   if (name.length > 0) hdr = name; else
                   if (!hdr) hdr = "header";
@@ -1158,7 +1158,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    }
 
    TGeoPainter.prototype.GetStackFullName = function(stack) {
-      let mainitemname = this.GetItemName(),
+      let mainitemname = this.getItemName(),
           sub = this.ResolveStack(stack);
       if (!sub || !sub.name) return mainitemname;
       return mainitemname ? (mainitemname + "/" + sub.name) : sub.name;
@@ -1316,7 +1316,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             if (!info) continue;
 
             if (info.indexOf("<prnt>")==0)
-               info = painter.GetItemName() + info.substr(6);
+               info = painter.getItemName() + info.substr(6);
 
             names.push(info);
 
@@ -1957,7 +1957,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       if (this._fit_main_area && this._webgl) {
          this._renderer.domElement.style.width = "100%";
          this._renderer.domElement.style.height = "100%";
-         let main = this.select_main();
+         let main = this.selectDom();
          if (main.style('position')=='static') main.style('position','relative');
       }
 
@@ -2463,7 +2463,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       res.push("Time to scan: " + makeTime(tm2-tm1), "", "Check timing for matrix calculations ...");
 
-      let elem = this.select_main().style('overflow', 'auto');
+      let elem = this.selectDom().style('overflow', 'auto');
 
       if (JSROOT.BatchMode)
          elem.property("_json_object_", res);
@@ -3554,7 +3554,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    /** @summary Specify showtop draw options, relevant only for TGeoManager */
    TGeoPainter.prototype.setShowTop = function(on) {
       this.ctrl.showtop = on ? true : false;
-      this.RedrawObject('same');
+      this.redrawObject('same');
    }
 
    /** @summary Should be called when configuration of particular axis is changed */
@@ -3792,17 +3792,17 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    }
 
    /** @summary Cleanup geometry painter */
-   TGeoPainter.prototype.Cleanup = function(first_time) {
+   TGeoPainter.prototype.cleanup = function(first_time) {
 
       if (!first_time) {
 
          this.removeSSAO();
 
-         this.accessTopPainter(false); // remove as pointer
+         this.clearTopPainter(); // remove as pointer
 
          let can3d = this.clear_3d_canvas(); // remove 3d canvas from main HTML element
 
-         if (this._toolbar) this._toolbar.Cleanup(); // remove toolbar
+         if (this._toolbar) this._toolbar.cleanup(); // remove toolbar
 
          this.helpText();
 
@@ -3814,7 +3814,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             this._tcontrols.dispose();
 
          if (this._controls)
-            this._controls.Cleanup();
+            this._controls.cleanup();
 
          if (this._context_menu)
             this._renderer.domElement.removeEventListener( 'contextmenu', this._context_menu, false );
@@ -3845,14 +3845,14 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          delete this.geo_manager;
          delete this._highlight_handlers;
 
-         JSROOT.ObjectPainter.prototype.Cleanup.call(this);
+         JSROOT.ObjectPainter.prototype.cleanup.call(this);
 
          delete this.ctrl;
          delete this.options;
 
          this.did_cleanup = true;
 
-         if (can3d < 0) this.select_main().html("");
+         if (can3d < 0) this.selectDom().html("");
       }
 
       if (this._slave_painters)
@@ -3882,7 +3882,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       delete this._selected_mesh;
 
       if (this._clones && this._clones_owner)
-         this._clones.Cleanup(this._draw_nodes, this._build_shapes);
+         this._clones.cleanup(this._draw_nodes, this._build_shapes);
       delete this._clones;
       delete this._clones_owner;
       delete this._draw_nodes;
@@ -3980,26 +3980,27 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       this.Render3D();
    }
 
-   TGeoPainter.prototype.UpdateObject = function(obj) {
+   /** @summary Update object in geo painter */
+   TGeoPainter.prototype.updateObject = function(obj) {
       if (obj === "same") return true;
       if (!obj || !obj._typename) return false;
-      if (obj === this.GetObject()) return true;
+      if (obj === this.getObject()) return true;
 
       if (this.geo_manager && (obj._typename == "TGeoManager")) {
          this.geo_manager = obj;
-         this.AssignObject({ _typename:"TGeoNode", fVolume: obj.fMasterVolume, fName: obj.fMasterVolume.fName, $geoh: obj.fMasterVolume.$geoh, _proxy: true });
+         this.assignObject({ _typename:"TGeoNode", fVolume: obj.fMasterVolume, fName: obj.fMasterVolume.fName, $geoh: obj.fMasterVolume.$geoh, _proxy: true });
          return true;
       }
 
-      if (!this.MatchObjectType(obj._typename)) return false;
+      if (!this.matchObjectType(obj._typename)) return false;
 
-      this.AssignObject(obj);
+      this.assignObject(obj);
       return true;
    }
 
    TGeoPainter.prototype.ClearDrawings = function() {
       if (this._clones && this._clones_owner)
-         this._clones.Cleanup(this._draw_nodes, this._build_shapes);
+         this._clones.cleanup(this._draw_nodes, this._build_shapes);
       delete this._clones;
       delete this._clones_owner;
       delete this._draw_nodes;
@@ -4015,8 +4016,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    }
 
    /** @summary Redraw TGeo object */
-   TGeoPainter.prototype.RedrawObject = function(obj) {
-      if (!this.UpdateObject(obj))
+   TGeoPainter.prototype.redrawObject = function(obj) {
+      if (!this.updateObject(obj))
          return false;
 
       this.ClearDrawings();

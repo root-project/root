@@ -228,7 +228,7 @@ JSROOT.define([], () => {
    }
 
    /** @summary Cleanup and close connection. */
-   WebWindowHandle.prototype.Cleanup = function() {
+   WebWindowHandle.prototype.cleanup = function() {
       delete this.receiver;
       this.Close(true);
    }

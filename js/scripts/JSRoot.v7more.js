@@ -6,7 +6,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    "use strict";
 
    function drawText() {
-      let text      = this.GetObject(),
+      let text      = this.getObject(),
           pp        = this.pad_painter(),
           use_frame = false,
           p         = pp.GetCoordinate(text.fPos),
@@ -26,7 +26,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
    function drawLine() {
 
-       let line         = this.GetObject(),
+       let line         = this.getObject(),
            pp           = this.pad_painter(),
            p1           = pp.GetCoordinate(line.fP1),
            p2           = pp.GetCoordinate(line.fP2),
@@ -52,7 +52,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
    function drawBox() {
 
-       let box          = this.GetObject(),
+       let box          = this.getObject(),
            pp           = this.pad_painter(),
            p1           = pp.GetCoordinate(box.fP1),
            p2           = pp.GetCoordinate(box.fP2),
@@ -85,7 +85,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    // =================================================================================
 
    function drawMarker() {
-       let marker       = this.GetObject(),
+       let marker       = this.getObject(),
            pp           = this.pad_painter(),
            p            = pp.GetCoordinate(marker.fP),
            marker_size  = this.v7EvalAttr( "marker_size", 1),
@@ -105,7 +105,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    // =================================================================================
 
    function drawLegendContent() {
-      let legend     = this.GetObject(),
+      let legend     = this.getObject(),
           textFont  = this.v7EvalFont("legend_text", { size: 12, color: "black", align: 22 }),
           width      = this.pave_width,
           height     = this.pave_height,
@@ -181,7 +181,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    // =================================================================================
 
    function drawPaveTextContent() {
-      let pavetext  = this.GetObject(),
+      let pavetext  = this.getObject(),
           textFont  = this.v7EvalFont("pavetext_text", { size: 12, color: "black", align: 22 }),
           width     = this.pave_width,
           height    = this.pave_height,
