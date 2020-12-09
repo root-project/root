@@ -40,17 +40,10 @@ void ROOT::Experimental::RFieldMerger::MakeReference(const RFieldHandle &referen
    fColumnLinks[referenceHandle.fid] = std::vector<DescriptorId_t>();
 
    // Register columns connected to the field
-   unsigned int columnIdx = 0;
-   while (true) {
-      auto columnId = referenceHandle.desc.FindColumnId(referenceHandle.fid, columnIdx);
-      if (columnId == kInvalidDescriptorId)
-         break;
-
-      fColumnIdMaps[0].Insert(columnId, columnId);
-      fColumnLinks[referenceHandle.fid].emplace_back(columnId);
-
-      columnIdx++;
-   };
+   for (const auto &c : referenceHandle.desc.GetColumnRange(referenceHandle.fid)) {
+      fColumnIdMaps[0].Insert(c.GetId(), c.GetId());
+      fColumnLinks[referenceHandle.fid].emplace_back(c.GetId());
+   }
 
    // Recurse into the sub fields
    for (const auto &f : referenceHandle.desc.GetFieldRange(referenceHandle.fid)) {
