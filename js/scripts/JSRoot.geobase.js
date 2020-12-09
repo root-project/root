@@ -2252,7 +2252,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
    /** @summary function to cleanup as much as possible structures
      * @desc Provided parameters drawnodes and drawshapes are arrays created during building of geometry */
-   ClonedNodes.prototype.Cleanup = function(drawnodes, drawshapes) {
+   ClonedNodes.prototype.cleanup = function(drawnodes, drawshapes) {
 
       if (drawnodes) {
          for (let n=0;n<drawnodes.length;++n) {

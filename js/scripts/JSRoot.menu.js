@@ -258,7 +258,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
       AddTextAttributesMenu(painter, prefix) {
          // for the moment, text attributes accessed directly from objects
 
-         let obj = painter.GetObject();
+         let obj = painter.getObject();
          if (!obj || !('fTextColor' in obj)) return;
 
          this.add("sub:" + (prefix ? prefix : "Text"));
@@ -272,14 +272,14 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
             this.addchk(align[n] == obj.fTextAlign,
                align[n], align[n],
                // align[n].toString() + "_h:" + hnames[Math.floor(align[n]/10) - 1] + "_v:" + vnames[align[n]%10-1], align[n],
-               function(arg) { this.GetObject().fTextAlign = parseInt(arg); this.InteractiveRedraw(true, "exec:SetTextAlign(" + arg + ")"); }.bind(painter));
+               function(arg) { this.getObject().fTextAlign = parseInt(arg); this.InteractiveRedraw(true, "exec:SetTextAlign(" + arg + ")"); }.bind(painter));
          }
          this.add("endsub:");
 
          this.add("sub:font");
          for (let n = 1; n < 16; ++n) {
             this.addchk(n == Math.floor(obj.fTextFont / 10), n, n,
-               function(arg) { this.GetObject().fTextFont = parseInt(arg) * 10 + 2; this.InteractiveRedraw(true, "exec:SetTextFont(" + this.GetObject().fTextFont + ")"); }.bind(painter));
+               function(arg) { this.getObject().fTextFont = parseInt(arg) * 10 + 2; this.InteractiveRedraw(true, "exec:SetTextFont(" + this.getObject().fTextFont + ")"); }.bind(painter));
          }
          this.add("endsub:");
 
@@ -408,7 +408,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kCenterTitle), "Center",
                arg => { faxis.InvertBit(JSROOT.EAxisBits.kCenterTitle); painter.InteractiveRedraw("pad", `exec:CenterTitle(${arg})`, kind); });
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kOppositeTitle), "Opposite",
-                () => { faxis.InvertBit(JSROOT.EAxisBits.kOppositeTitle); painter.RedrawPad(); });
+                () => { faxis.InvertBit(JSROOT.EAxisBits.kOppositeTitle); painter.redrawPad(); });
          this.addchk(faxis.TestBit(JSROOT.EAxisBits.kRotateTitle), "Rotate",
                arg => { faxis.InvertBit(JSROOT.EAxisBits.kRotateTitle); painter.InteractiveRedraw("pad", `exec:RotateTitle(${arg})`, kind); });
          this.AddColorMenu("Color", faxis.fTitleColor,

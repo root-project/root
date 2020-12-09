@@ -52,7 +52,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          this.clear_3d_canvas();
 
          jsrp.disposeThreejsObject(this.scene);
-         if (this.control) this.control.Cleanup();
+         if (this.control) this.control.cleanup();
 
          if (this.renderer) {
             if (this.renderer.dispose) this.renderer.dispose();
@@ -399,8 +399,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       if (changed && tip.$painter && (typeof tip.$painter.RedrawProjection == 'function'))
          tip.$painter.RedrawProjection(tip.ix-1, tip.ix, tip.iy-1, tip.iy);
 
-      if (changed && mainp && mainp.GetObject())
-         mainp.ProvideUserTooltip({ obj: mainp.GetObject(),  name: mainp.GetObject().fName,
+      if (changed && mainp && mainp.getObject())
+         mainp.ProvideUserTooltip({ obj: mainp.getObject(),  name: mainp.getObject().fName,
                                     bin: tip.bin, cont: tip.value,
                                     binx: tip.ix, biny: tip.iy, binz: tip.iz,
                                     grx: (tip.x1+tip.x2)/2, gry: (tip.y1+tip.y2)/2, grz: (tip.z1+tip.z2)/2 });
@@ -2031,15 +2031,15 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
        }
 
        // create lines
-       let lcolor = this.get_color(this.GetObject().fLineColor),
-           material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: this.GetObject().fLineWidth }),
+       let lcolor = this.get_color(this.getObject().fLineColor),
+           material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: this.getObject().fLineWidth }),
            line = jsrp.createLineSegments(lpos, material);
 
        line.painter = this;
        line.intersect_index = binindx;
        line.zmin = zmin;
        line.zmax = zmax;
-       line.tip_color = (this.GetObject().fLineColor===3) ? 0xFF0000 : 0x00FF00;
+       line.tip_color = (this.getObject().fLineColor===3) ? 0xFF0000 : 0x00FF00;
 
        line.tooltip = function(intersect) {
           if (isNaN(intersect.index)) {
@@ -2240,7 +2240,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          mesh.tooltip = function(/*intersects*/) {
 
             let p = this.painter, main = p.frame_painter(),
-                bin = p.GetObject().fBins.arr[this.bins_index];
+                bin = p.getObject().fBins.arr[this.bins_index];
 
             let tip = {
               use_itself: true, // indicate that use mesh itself for highlighting
@@ -2287,7 +2287,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       // no need to rescan histogram while result does not depend from axis selection
       if (when_axis_changed && this.nbinsx && this.nbinsy && this.nbinsz) return;
 
-      let histo = this.GetObject();
+      let histo = this.getObject();
 
       this.ExtractAxesProperties(3);
 
@@ -2443,7 +2443,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
      * @desc if too many points, box will be displayed */
    TH3Painter.prototype.Draw3DScatter = function() {
 
-      let histo = this.GetObject(),
+      let histo = this.getObject(),
           main = this.frame_painter(),
           i1 = this.GetSelectIndex("x", "left", 0.5),
           i2 = this.GetSelectIndex("x", "right", 0),
@@ -2542,7 +2542,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       if (!this.options.Box && !this.options.GLBox && !this.options.GLColor && !this.options.Lego)
          if (this.Draw3DScatter()) return;
 
-      let rootcolor = this.GetObject().fFillColor,
+      let rootcolor = this.getObject().fFillColor,
           fillcolor = this.get_color(rootcolor),
           main = this.frame_painter(),
           buffer_size = 0, use_lambert = false,
@@ -2832,7 +2832,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          main.toplevel.add(combined_bins);
 
          if (helper_kind[nseq] > 0) {
-            let lcolor = this.get_color(this.GetObject().fLineColor),
+            let lcolor = this.get_color(this.getObject().fLineColor),
                 helper_material = new THREE.LineBasicMaterial( { color: lcolor } ),
                 lines = null;
 
@@ -2897,7 +2897,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
           j2 = this.GetSelectIndex("y", "right"),
           k1 = this.GetSelectIndex("z", "left"),
           k2 = this.GetSelectIndex("z", "right"),
-          i,j,k, histo = this.GetObject();
+          i,j,k, histo = this.getObject();
 
       if ((i1 === i2) || (j1 === j2) || (k1 === k2)) return;
 
@@ -2953,7 +2953,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
    TH3Painter.prototype.FillHistContextMenu = function(menu) {
 
-      let sett = JSROOT.getDrawSettings("ROOT." + this.GetObject()._typename, 'nosame');
+      let sett = JSROOT.getDrawSettings("ROOT." + this.getObject()._typename, 'nosame');
 
       menu.addDrawMenu("Draw with", sett.opts, function(arg) {
          if (arg==='inspect')
@@ -3011,18 +3011,18 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
       res.Color = d.check("COL");
       res.Line = d.check("LINE");
-      res.Error = d.check("ERR") && this.MatchObjectType("TGraph2DErrors");
+      res.Error = d.check("ERR") && this.matchObjectType("TGraph2DErrors");
       res.Circles = d.check("P0");
       res.Markers = d.check("P");
 
       if (!res.Markers && !res.Error && !res.Circles && !res.Line) res.Markers = true;
       if (!res.Markers) res.Color = false;
 
-      this.OptionsStore(opt);
+      this.storeDrawOpt(opt);
    }
 
    TGraph2DPainter.prototype.CreateHistogram = function() {
-      let gr = this.GetObject(),
+      let gr = this.getObject(),
           xmin = gr.fX[0], xmax = xmin,
           ymin = gr.fY[0], ymax = ymin,
           zmin = gr.fZ[0], zmax = zmin;
@@ -3059,7 +3059,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       if ((uzmin<0) && (zmin>=0)) uzmin = zmin*0.98;
       if ((uzmax>0) && (zmax<=0)) uzmax = 0;
 
-      let graph = this.GetObject();
+      let graph = this.getObject();
 
       if (graph.fMinimum != -1111) uzmin = graph.fMinimum;
       if (graph.fMaximum != -1111) uzmax = graph.fMaximum;
@@ -3128,7 +3128,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
 
       let main = this.main_painter(),
           fp = this.frame_painter(),
-          graph = this.GetObject(),
+          graph = this.getObject(),
           step = 1;
 
       if (!graph || !main || !fp || !fp.mode3d)
@@ -3250,8 +3250,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          }
 
          if (line && (iline>3) && (line.length == iline)) {
-            let lcolor = this.get_color(this.GetObject().fLineColor),
-                material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: this.GetObject().fLineWidth }),
+            let lcolor = this.get_color(this.getObject().fLineColor),
+                material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: this.getObject().fLineWidth }),
                 linemesh = jsrp.createLineSegments(line, material);
             fp.toplevel.add(linemesh);
 
@@ -3268,8 +3268,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
          }
 
          if (err) {
-            let lcolor = this.get_color(this.GetObject().fLineColor),
-                material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: this.GetObject().fLineWidth }),
+            let lcolor = this.get_color(this.getObject().fLineColor),
+                material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: this.getObject().fLineWidth }),
                 errmesh = jsrp.createLineSegments(err, material);
             fp.toplevel.add(errmesh);
 
@@ -3347,7 +3347,7 @@ JSROOT.define(['d3', 'painter', 'base3d', 'hist'], (d3, jsrp, THREE) => {
       if (!fp || !fp.mode3d)
          return Promise.reject(Error("Fail to draw poly markers without 3D mode"));
 
-      let step = 1, sizelimit = 50000, numselect = 0, poly = this.GetObject();
+      let step = 1, sizelimit = 50000, numselect = 0, poly = this.getObject();
 
       for (let i = 0; i < poly.fP.length; i += 3) {
          if ((poly.fP[i] < fp.scale_xmin) || (poly.fP[i] > fp.scale_xmax) ||

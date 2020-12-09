@@ -33,7 +33,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          this.clear_3d_canvas();
 
          jsrp.disposeThreejsObject(this.scene);
-         if (this.control) this.control.Cleanup();
+         if (this.control) this.control.cleanup();
 
          if (this.renderer) {
             if (this.renderer.dispose) this.renderer.dispose();
@@ -369,8 +369,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       if (changed && tip.$painter && (typeof tip.$painter.RedrawProjection == 'function'))
          tip.$painter.RedrawProjection(tip.ix-1, tip.ix, tip.iy-1, tip.iy);
 
-      if (changed && mainp && mainp.GetObject())
-         mainp.ProvideUserTooltip({ obj: mainp.GetObject(),  name: mainp.GetObject().fName,
+      if (changed && mainp && mainp.getObject())
+         mainp.ProvideUserTooltip({ obj: mainp.getObject(),  name: mainp.getObject().fName,
                                     bin: tip.bin, cont: tip.value,
                                     binx: tip.ix, biny: tip.iy, binz: tip.iz,
                                     grx: (tip.x1+tip.x2)/2, gry: (tip.y1+tip.y2)/2, grz: (tip.z1+tip.z2)/2 });
@@ -2218,7 +2218,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          mesh.tooltip = function(/*intersects*/) {
 
             let p = this.painter, main = p.frame_painter(),
-                bin = p.GetObject().fBins.arr[this.bins_index];
+                bin = p.getObject().fBins.arr[this.bins_index];
 
             let tip = {
               use_itself: true, // indicate that use mesh itself for highlighting
@@ -2951,7 +2951,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
    RH3Painter.prototype.FillHistContextMenu = function(menu) {
 
-      let sett = JSROOT.getDrawSettings("ROOT." + this.GetObject()._typename, 'nosame');
+      let sett = JSROOT.getDrawSettings("ROOT." + this.getObject()._typename, 'nosame');
 
       menu.addDrawMenu("Draw with", sett.opts, function(arg) {
          if (arg==='inspect')
