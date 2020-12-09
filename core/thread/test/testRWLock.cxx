@@ -719,6 +719,35 @@ TEST(RWLock, VeryLargeconcurrentReadsAndWritesSpin)
    concurrentReadsAndWrites(gRWMutexSpin,10,200,gRepetition / 100000);
 }
 
+TEST(RWLock, VeryLargeconcurrentReads)
+{
+   concurrentReadsAndWrites(gRWMutex, 0, 200, gRepetition / 10000);
+}
+
+TEST(RWLock, VeryLargeconcurrentReadsStd)
+{
+   concurrentReadsAndWrites(gRWMutexStd, 0, 200, gRepetition / 10000);
+}
+
+#if __cplusplus >= 201402L
+TEST(RWLock, VeryLargeconcurrentReadsStd14)
+{
+   concurrentReadsAndWrites(gRWMutexStd14, 0, 200, gRepetition / 10000);
+}
+#endif
+
+#if __cplusplus >= 201703L
+TEST(RWLock, VeryLargeconcurrentReadsStd17)
+{
+   concurrentReadsAndWrites(gRWMutexStd17, 0, 200, gRepetition / 10000);
+}
+#endif
+
+TEST(RWLock, VeryLargeconcurrentReadsSpin)
+{
+   concurrentReadsAndWrites(gRWMutexSpin,0,200,gRepetition / 100000);
+}
+
 TEST(RWLock, concurrentReadsAndWritesTL)
 {
    concurrentReadsAndWrites(gRWMutexTL, 1, 2, gRepetition / 10000);
@@ -732,4 +761,9 @@ TEST(RWLock, LargeconcurrentReadsAndWritesTL)
 TEST(RWLock, VeryLargeconcurrentReadsAndWritesTL)
 {
    concurrentReadsAndWrites(gRWMutexTL, 10, 200, gRepetition / 10000);
+}
+
+TEST(RWLock, VeryLargeconcurrentReadsTL)
+{
+   concurrentReadsAndWrites(gRWMutexTL, 0, 200, gRepetition / 10000);
 }
