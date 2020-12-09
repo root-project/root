@@ -264,9 +264,6 @@ if(root7)
                  v7/fitpanel.cxx
                  v7/fitpanel6.cxx
       )
-  if(MSVC AND NOT win_broken_tests)
-    list(APPEND root7_veto v7/box.cxx v7/draw*.cxx )
-  endif()
   if(NOT davix)
     list(APPEND root7_veto v7/ntuple/ntpl003_lhcbOpenData.C)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)

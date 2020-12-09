@@ -29,5 +29,12 @@
 # define R__EXTERN extern
 #endif
 
+#ifndef R__DLLEXPORT
+# ifdef _MSC_VER
+#  define R__DLLEXPORT __declspec(dllexport)
+# else
+#  define R__DLLEXPORT __attribute__ ((visibility ("default")))
+# endif
+#endif
 
 #endif
