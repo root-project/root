@@ -143,6 +143,11 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
 
          AddResult(result, st);
 
+         if (!st.IsValid()) {
+           print.Warn("Invalid Hessian - exit the minimization");
+           break;
+         }
+
          // check new edm
          edm = st.Edm();
 
