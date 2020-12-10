@@ -199,7 +199,7 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
 
       // run some python code provided by user for method initializations
       FILE* fp;
-      fp = _Py_fopen(fUserCodeName, "r");
+      fp = fopen(fUserCodeName, "r");
       PyRun_SimpleFile(fp, fUserCodeName);
       fclose(fp);
    }
