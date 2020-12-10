@@ -107,14 +107,14 @@ void MakeImagesTree(int n, int nh, int nw)
    f.Close();
 }
 
-void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
+void TMVA_CNN_Classification(std::vector<bool> opt = {0, 0, 0, 0, 1})
 {
 
    bool useTMVACNN = (opt.size() > 0) ? opt[0] : false;
    bool useKerasCNN = (opt.size() > 1) ? opt[1] : false;
    bool useTMVADNN = (opt.size() > 2) ? opt[2] : false;
    bool useTMVABDT = (opt.size() > 3) ? opt[3] : false;
-
+   bool usePyTorchCNN = (opt.size() > 4) ? opt[4] : false;
 #ifndef R__HAS_TMVACPU
 #ifndef R__HAS_TMVAGPU
    Warning("TMVA_CNN_Classification",
@@ -202,7 +202,6 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    int imgSize = 16 * 16;
    TString inputFileName = "images_data_16x16.root";
-   // TString inputFileName = "/home/moneta/data/sample_images_32x32.gsoc.root";
 
    bool fileExist = !gSystem->AccessPathName(inputFileName);
 

@@ -48,7 +48,7 @@ def fit(model, train_loader, val_loader, num_epochs, batch_size, optimizer, crit
             trainer.zero_grad()
             X, y = X.to(device), y.to(device)
             output = model(X)
-            target = torch.max(y, 1)[1]
+            target = y
             train_loss = criterion(output, target)
             train_loss.backward()
             trainer.step()
@@ -69,7 +69,7 @@ def fit(model, train_loader, val_loader, num_epochs, batch_size, optimizer, crit
             for i, (X, y) in enumerate(val_loader):
                 X, y = X.to(device), y.to(device)
                 output = model(X)
-                target = torch.max(y, 1)[1]
+                target = y
                 val_loss = criterion(output, target)
                 running_val_loss += val_loss.item()
 
