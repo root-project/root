@@ -198,9 +198,10 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
       Log() << kINFO << " Executing user initialization code from  " << fUserCodeName << Endl;
 
       // run some python code provided by user for method initializations
-      TString cmd = "exec(open('" + fUserCodeName + "').read())";
-      TString errmsg = "Error executing the provided user code";
-      PyRunString(cmd, errmsg);
+      FILE* fp;
+      fp = _Py_fopen(fUserCodeName, "r");
+      PyRun_SimpleFile(fp, fUserCodeName);
+      fclose(fp);
    }
 
    PyRunString("print('custom objects for loading model : ',load_model_custom_objects)");
