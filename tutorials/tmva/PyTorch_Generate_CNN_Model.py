@@ -90,20 +90,25 @@ def fit(model, train_loader, val_loader, num_epochs, batch_size, optimizer, crit
 
 def predict(model, test_X, batch_size=100):
     # Set to eval mode
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
+
     model.eval()
-   
+
+
     test_dataset = torch.utils.data.TensorDataset(torch.Tensor(test_X))
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     predictions = []
     with torch.no_grad():
         for i, data in enumerate(test_loader):
-            X = data[0]
+            X = data[0].to(device)
             outputs = model(X)
             predictions.append(outputs)
         preds = torch.cat(predictions)
-   
-    return preds.numpy()
+
+    return preds.cpu().numpy()
 
 
 load_model_custom_objects = {"optimizer": optimizer, "criterion": criterion, "train_func": fit, "predict_func": predict}
