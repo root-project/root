@@ -243,7 +243,7 @@ sap.ui.define([
             }
 
             // show menu
-            menu.show(evnt);
+            menu.show();
          });
       },
 

@@ -83,8 +83,10 @@ sap.ui.define([
                dom.appendChild(d);
             }
 
-            if (this.canvas_painter)
-               this.canvas_painter.setCanvDom(dom.lastChild, "");
+            if (this.canvas_painter) {
+               this.canvas_painter.setDom(dom.lastChild);
+               this.canvas_painter.setPadName("");
+            }
 
             if (this.canvas_painter && this.canvas_painter._window_handle) {
                this.canvas_painter.UseWebsocket(this.canvas_painter._window_handle, this.canvas_painter._window_handle_href);
@@ -93,7 +95,7 @@ sap.ui.define([
          }
 
          if (this.canvas_painter && check_resize)
-            this.canvas_painter.CheckCanvasResize();
+            this.canvas_painter.checkCanvasResize();
       },
 
       onInit: function() {

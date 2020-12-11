@@ -44,7 +44,7 @@
          prereq_logdiv: "CanvasDiv",
          // openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
       }).then(handle => {
-         let painter = new JSROOT.TCanvasPainter(null);
+         let painter = new JSROOT.TCanvasPainter(null, null);
 
          painter.online_canvas = true;
          painter.use_openui = is_ui5;
@@ -75,7 +75,7 @@
 
          } else {
 
-            painter.setCanvDom("CanvasDiv", ""); // just assign id, nothing else happens
+            painter.setDom("CanvasDiv"); // just assign id, nothing else happens
 
             painter.UseWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
          }
