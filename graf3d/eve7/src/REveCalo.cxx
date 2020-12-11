@@ -603,6 +603,8 @@ void REveCalo3D::MakeBarrelCell(const REveCaloData::CellGeom_t &cellData, float 
 void REveCalo3D::BuildRenderData()
 {
    AssertCellIdCache();
+   if (fCellList.empty())
+   return;
 
    REveCaloData::CellData_t cellData;
    Float_t towerH = 0;
@@ -1174,8 +1176,21 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId
 
 void REveCalo2D::BuildRenderData()
 {
-   fRenderData = std::make_unique<REveRenderData>("makeCalo2D");
    AssertCellIdCache();
+   bool isEmpty = fData->Empty();
+
+   for (vBinCells_i it = fCellLists.begin(); it != fCellLists.end(); ++it)
+   {
+      if ((*it) && (*it)->empty())
+      {
+         isEmpty = false;
+         break;
+      }
+   }
+   if (isEmpty) return;
+
+   fRenderData = std::make_unique<REveRenderData>("makeCalo2D");
+
    if (IsRPhi())
       BuildRenderDataRPhi();
    else
