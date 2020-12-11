@@ -56,7 +56,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       }
 
       let pad = this.svg_pad(),
-         clname = "draw3d_" + (this.pad_name || 'canvas');
+          clname = "draw3d_" + (this.getPadName() || 'canvas');
 
       if (pad.empty()) {
          // this is a case when object drawn without canvas
@@ -794,7 +794,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          // do nothing, function called when context menu want to be activated
       }
 
-      control.SwitchTooltip = function(on) {
+      control.setTooltipEnabled = function(on) {
          this.block_mousemove = !on;
          if (on === false) {
             this.tooltip.hide();
@@ -878,7 +878,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          }
 
          this.cursor_changed = false;
-         if (tip && this.painter && this.painter.IsTooltipAllowed()) {
+         if (tip && this.painter && this.painter.isTooltipAllowed()) {
             this.tooltip.check_parent(this.painter.selectDom().node());
 
             this.tooltip.show(tip, mouse);
@@ -1216,7 +1216,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
       this.pos = new Float32Array(size*3);
       this.geom = new THREE.BufferGeometry();
-      this.geom.setAttribute( 'position', new THREE.BufferAttribute( this.pos, 3 ) );
+      this.geom.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
       this.indx = 0;
    }
 
@@ -1228,38 +1228,6 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       this.indx+=3;
    }
 
-   /** @summary If callback function assigned, created mesh always will be returned as callback */
-   PointsCreator.prototype.AssignCallback = function(callback) {
-      this.callback = callback;
-   }
-
-   /** @summary Complete creation */
-   PointsCreator.prototype.Complete = function(arg) {
-
-      let material;
-
-      if (this.texture) {
-         if ((arg == 'loaded') && this.texture.onUpdate) this.texture.onUpdate( this.texture );
-         if (this._did_create) return;
-         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale, map: this.texture, transparent: true } );
-      } else {
-         if (this._did_create) return;
-         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale * this.k, color: this.color } );
-      }
-
-      this._did_create = true;
-
-      let pnts = new THREE.Points(this.geom, material);
-      pnts.nvertex = 1;
-
-      let cb = this.callback;
-      delete this.callback;
-
-      if (typeof cb == 'function') cb(pnts);
-
-      return pnts;
-   }
-
    /** @summary Create points */
    PointsCreator.prototype.CreatePoints = function(args) {
 
@@ -1268,46 +1236,45 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       if (!args.color)
          args.color = 'black';
 
-      this.k = 1;
-      this.color = args.color;
-
-      this._did_create = false;
+      let k = 1;
 
       // special dots
-      if (args.style === 1) this.k = 0.3; else
-      if (args.style === 6) this.k = 0.5; else
-      if (args.style === 7) this.k = 0.7;
+      if (!args.style) k = 1.1; else
+      if (args.style === 1) k = 0.3; else
+      if (args.style === 2) args.style = 3; else // just avoid plot of "+" sign, issue #205
+      if (args.style === 6) k = 0.5; else
+      if (args.style === 7) k = 0.7;
 
-      // this is plain creation of points, no texture loading
-      if (!args.style || (this.k !== 1) || JSROOT.BatchMode)
-         return this.Complete();
+      let material;
 
-      let doc = JSROOT.get_document();
+      if (!args.style || (k !== 1) || JSROOT.nodejs) {
+         // this is plain creation of points, no texture loading, which does not work in node.js
+         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale * k, color: args.color } );
 
-      let handler = new JSROOT.TAttMarkerHandler({ style: args.style, color: args.color, size: 8 });
+      } else {
 
-      let plainSVG = '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">' +
-                     '<path d="' + handler.create(32,32) + '" stroke="' + handler.getStrokeColor() + '" fill="' + handler.getFillColor() + '"/></svg>';
+         let handler = new JSROOT.TAttMarkerHandler({ style: args.style, color: args.color, size: 8 });
 
-      this.texture = new THREE.Texture();
-      this.texture.needsUpdate = true;
-      this.texture.format = THREE.RGBAFormat;
-      this.texture.image = doc.createElement('img');
+         let plainSVG = '<svg width="70" height="70" xmlns="http://www.w3.org/2000/svg">' +
+                        '<path d="' + handler.create(35,35) + '" stroke="' + handler.getStrokeColor() + '" stroke-width="4" fill="' + handler.getFillColor() + '"/>' +
+                        '</svg>';
 
-      this.texture.image.onload = this.Complete.bind(this,'loaded')
+         // let need_replace = JSROOT.nodejs && !globalThis.document;
+         // if (need_replace) globalThis.document = JSROOT.get_document();
 
-      this.texture.image.src = 'data:image/svg+xml;utf8,' + plainSVG;
+         console.log('plain svg', plainSVG);
 
-      if (!this.callback)
-         return this.Complete();
-   }
+         let texture = new THREE.TextureLoader().load( 'data:image/svg+xml;utf8,' + plainSVG);
 
-   /** @summary Create points and return Promise*/
-   PointsCreator.prototype.createPointsPromise = function(args) {
-      return new Promise(resolveFunc => {
-          this.AssignCallback(resolveFunc);
-          this.CreatePoints(args);
-      });
+         // if (need_replace) globalThis.document = undefined;
+
+         material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale, map: texture, transparent: true } );
+      }
+
+      let pnts = new THREE.Points(this.geom, material);
+      pnts.nvertex = 1;
+
+      return pnts;
    }
 
 
@@ -1320,7 +1287,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
    function create3DLineMaterial(painter, obj) {
       if (!painter || !obj) return null;
 
-      let lcolor = painter.get_color(obj.fLineColor),
+      let lcolor = painter.getColor(obj.fLineColor),
           material = null,
           style = obj.fLineStyle ? jsrp.root_line_styles[obj.fLineStyle] : "",
           dash = style ? style.split(",") : [];

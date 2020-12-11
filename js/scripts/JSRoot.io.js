@@ -1767,7 +1767,7 @@ JSROOT.define(['rawinflate'], () => {
                p1 = p - 1;
                return res.trim();
             }
-            si = { _typename: 'TStreamerInfo', fVersion: 1, fName: typname, fElements: JSROOT.Create("TList") };
+            si = { _typename: 'TStreamerInfo', fVersion: 1, fName: typname, fElements: JSROOT.create("TList") };
             si.fElements.Add(jsrio.CreateStreamerElement("first", GetNextName(), file));
             si.fElements.Add(jsrio.CreateStreamerElement("second", GetNextName(), file));
          }
@@ -2839,7 +2839,7 @@ JSROOT.define(['rawinflate'], () => {
          const v = buf.last_read_version;
          buf.classStreamer(obj, "TObject");
          let size = buf.ntoi4();
-         obj.arr = JSROOT.Create("TList");
+         obj.arr = JSROOT.create("TList");
          while (size--)
             obj.arr.Add(buf.readObjectAny());
          if (v > 1) obj._name = buf.readTString();

@@ -436,16 +436,17 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
       remove() {
          if (this.element!==null) {
             this.element.remove();
-            if (this.close_callback) this.close_callback();
+            if (this.resolveFunc) {
+               this.resolveFunc();
+               delete this.resolveFunc;
+            }
             document.body.removeEventListener('click', this.remove_bind);
          }
          this.element = null;
       }
 
-      show(event, close_callback) {
+      show(event) {
          this.remove();
-
-         if (typeof close_callback == 'function') this.close_callback = close_callback;
 
          if (!event && this.show_evnt) event = this.show_evnt;
 
@@ -458,7 +459,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
          this.element = $('.jsroot_ctxmenu');
 
-         let pthis = this;
+         let menu = this;
 
          this.element
             .attr('id', this.menuname)
@@ -471,11 +472,11 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
                select: function( event, ui ) {
                   let arg = ui.item.attr('arg'),
                       cnt = ui.item.attr('cnt'),
-                      func = cnt ? pthis.funcs[cnt] : null;
-                  pthis.remove();
+                      func = cnt ? menu.funcs[cnt] : null;
+                  menu.remove();
                   if (typeof func == 'function') {
-                     if (pthis.painter)
-                        func.bind(pthis.painter)(arg); // if 'painter' field set, returned as this to callback
+                     if (menu.painter)
+                        func.bind(menu.painter)(arg); // if 'painter' field set, returned as this to callback
                      else
                         func(arg);
                   }
@@ -489,6 +490,10 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
          if (newx!==null) this.element.css('left', (newx>0 ? newx : 0) + window.pageXOffset);
          if (newy!==null) this.element.css('top', (newy>0 ? newy : 0) + window.pageYOffset);
+
+         return new Promise(resolve => {
+            this.resolveFunc = resolve;
+         });
       }
 
    } // class JQueryMenu
@@ -511,7 +516,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'jquery-ui'], (d3, $, jsrp) => {
 
    /** @summary Close previousely created and shown JSROOT menu
      * @memberof JSROOT.Painter */
-   let closeMenu = function(menuname) {
+   let closeMenu = menuname => {
       let x = document.getElementById(menuname || 'root_ctx_menu');
       if (x) { x.parentNode.removeChild(x); return true; }
       return false;

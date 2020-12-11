@@ -105,7 +105,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year */
-   JSROOT.version_date = "9/12/2020";
+   JSROOT.version_date = "11/12/2020";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date} */
@@ -140,7 +140,9 @@
 
    //openuicfg // DO NOT DELETE, used to configure openui5 usage like JSROOT.openui5src = "nojsroot";
 
-   /** internal data */
+   /** @summary internal data
+     * @memberof JSROOT
+     * @private */
    let _ = {
       modules: {},            ///< list of modules
       source_min: false,      ///< is minified sources are used
@@ -359,21 +361,29 @@
      * or can be load from the file providing style=itemname in the URL
      * See [TStyle docu]{@link https://root.cern/doc/master/classTStyle.html} "Private attributes" section for more detailed info about each value */
    let gStyle = {
+      /** @summary Default log x scale */
       fOptLogx: 0,
+      /** @summary Default log y scale */
       fOptLogy: 0,
+      /** @summary Default log z scale */
       fOptLogz: 0,
       fOptDate: 0,
       fOptFile: 0,
+      /** @summary Draw histogram title */
       fOptTitle: 1,
       fPadBottomMargin: 0.1,
       fPadTopMargin: 0.1,
       fPadLeftMargin: 0.1,
       fPadRightMargin: 0.1,
+      /** @summary TPad.fGridx default value */
       fPadGridX: false,
+      /** @summary TPad.fGridy default value */
       fPadGridY: false,
       fPadTickX: 0,
       fPadTickY: 0,
+      /** @summary Default color of stat box */
       fStatColor: 0,
+      /** @summary Default color of text in stat box */
       fStatTextColor: 1,
       fStatBorderSize: 1,
       fStatFont: 42,
@@ -712,7 +722,6 @@
    }
 
    /** @summary Central method to load JSROOT functionality
-     *
      * @desc
      * Following components can be specified
      *    - 'io'     TFile functionality
@@ -751,10 +760,9 @@
     * @private */
    JSROOT.BIT = function(n) { return 1 << n; }
 
-   /**
-    * @summary Seed simple random generator
-    * @param {number} i seed value
-    * @private */
+   /** @summary Seed simple random generator
+     * @param {number} i seed value
+     * @private */
    JSROOT.seed = function(i) {
       i = Math.abs(i);
       if (i > 1e8) i = Math.abs(1e8 * Math.sin(i)); else
@@ -763,12 +771,10 @@
       this.m_z = 987654321;
    }
 
-   /**
-    * @summary Simple random generator
-    * @desc Works like Math.random(), but with configurable seed - see {@link JSROOT.seed}
-    * @returns {number} random value between 0 (inclusive) and 1.0 (exclusive)
-    * @private
-    */
+   /** @summary Simple random generator
+     * @desc Works like Math.random(), but with configurable seed - see {@link JSROOT.seed}
+     * @returns {number} random value between 0 (inclusive) and 1.0 (exclusive)
+     * @private */
    JSROOT.random = function() {
       if (this.m_z===undefined) return Math.random();
       this.m_z = (36969 * (this.m_z & 65535) + (this.m_z >> 16)) & 0xffffffff;
@@ -973,13 +979,10 @@
       return tgt;
    }
 
-   /**
-    * @summary Parse multi.json request results
-    * @desc Method should be used to parse JSON code, produced by multi.json request of THttpServer
-    *
-    * @param {string} json string to parse
-    * @return {Array|null} returns array of parsed elements
-    */
+   /** @summary Parse multi.json request results
+     * @desc Method should be used to parse JSON code, produced by multi.json request of THttpServer
+     * @param {string} json string to parse
+     * @return {Array|null} returns array of parsed elements */
    JSROOT.parse_multi = function(json) {
       if (!json) return null;
       let arr = JSON.parse(json);
@@ -1044,20 +1047,16 @@
       return JSON.stringify(tgt, null, spacing);
    }
 
-   /**
-    * @summary decodes URL options after '?' mark
-    *
-    * @desc Following options supported ?opt1&opt2=3
-    *
-    * @param {string} [url] URL string with options, document.URL will be used when not specified
-    * @returns {Object} with ```.has(opt)``` and ```.get(opt,dflt)``` methods
-    * @example
-    * let d = JSROOT.decodeUrl("any?opt1&op2=3");
-    * console.log(`Has opt1 ${d.has("opt1")}`);     // true
-    * console.log(`Get opt1 ${d.get("opt1")}`);     // ""
-    * console.log(`Get opt2 ${d.get("opt2")}`);     // "3"
-    * console.log(`Get opt3 ${d.get("opt3","-")}`); // "-"
-    */
+   /** @summary decodes URL options after '?' mark
+     * @desc Following options supported ?opt1&opt2=3
+     * @param {string} [url] URL string with options, document.URL will be used when not specified
+     * @returns {Object} with ```.has(opt)``` and ```.get(opt,dflt)``` methods
+     * @example
+     * let d = JSROOT.decodeUrl("any?opt1&op2=3");
+     * console.log(`Has opt1 ${d.has("opt1")}`);     // true
+     * console.log(`Get opt1 ${d.get("opt1")}`);     // ""
+     * console.log(`Get opt2 ${d.get("opt2")}`);     // "3"
+     * console.log(`Get opt3 ${d.get("opt3","-")}`); // "-" */
    JSROOT.decodeUrl = function(url) {
       let res = {
          opts: {},
@@ -1129,29 +1128,6 @@
          elem = elem[names[n]];
 
       return (typeof elem == 'function') ? elem : null;
-   }
-
-   /** @summary Generic method to invoke callback function.
-    * @param {object|function|string} func either normal function or container like
-    * { obj: object_pointer, func: name of method to call } or just function name, which can be found with {@link JSROOT.findFunction}
-    * @param arg1 first optional argument of callback
-    * @param arg2 second optional argument of callback */
-
-   JSROOT.callBack = function(func, arg1, arg2) {
-
-      if (typeof func == 'string') func = JSROOT.findFunction(func);
-
-      if (!func) return;
-
-      if (typeof func == 'function') return func(arg1,arg2);
-
-      if (typeof func != 'object') return;
-
-      if (('obj' in func) && ('func' in func) &&
-         (typeof func.obj == 'object') && (typeof func.func == 'string') &&
-         (typeof func.obj[func.func] == 'function')) {
-             return func.obj[func.func](arg1, arg2);
-      }
    }
 
    /** @summary Old request method, kept only for internal use
@@ -1248,41 +1224,34 @@
       return xhr;
    }
 
-   /**
-    * @summary Submit asynchronoues http request
-    * @desc Following requests kind can be specified:
-    *    - "bin" - abstract binary data, result as string
-    *    - "buf" - abstract binary data, result as ArrayBuffer (default)
-    *    - "text" - returns req.responseText
-    *    - "object" - returns JSROOT.parse(req.responseText)
-    *    - "multi" - returns correctly parsed multi.json request
-    *    - "xml" - returns req.responseXML
-    *    - "head" - returns request itself, uses "HEAD" request method
-    *    - "post" - creates post request, submits req.send(post_data)
-    * @param {string} url - URL for the request
-    * @param {string} kind - kind of requested data
-    * @param {string} [post_data] - data submitted with post kind of request
-    * @returns {Promise} Promise for requested data, result type depends from the kind
-    * @example
-    * JSROOT.httpRequest("https://root.cern/js/files/thstack.json.gz", "object")
-    *       .then(obj => console.log(`Get object of type ${obj._typename}`))
-    *       .catch(err => console.error(err.message));
-    */
-
+   /** @summary Submit asynchronoues http request
+     * @desc Following requests kind can be specified:
+     *    - "bin" - abstract binary data, result as string
+     *    - "buf" - abstract binary data, result as ArrayBuffer (default)
+     *    - "text" - returns req.responseText
+     *    - "object" - returns JSROOT.parse(req.responseText)
+     *    - "multi" - returns correctly parsed multi.json request
+     *    - "xml" - returns req.responseXML
+     *    - "head" - returns request itself, uses "HEAD" request method
+     *    - "post" - creates post request, submits req.send(post_data)
+     * @param {string} url - URL for the request
+     * @param {string} kind - kind of requested data
+     * @param {string} [post_data] - data submitted with post kind of request
+     * @returns {Promise} Promise for requested data, result type depends from the kind
+     * @example
+     * JSROOT.httpRequest("https://root.cern/js/files/thstack.json.gz", "object")
+     *       .then(obj => console.log(`Get object of type ${obj._typename}`))
+     *       .catch(err => console.error(err.message)); */
    JSROOT.httpRequest = function(url, kind, post_data) {
       return new Promise(function(accept, reject) {
          JSROOT.NewHttpRequest(url, kind, accept, reject).send(post_data || null);
       });
    }
 
-   /**
-    * @summary Load script or CSS file into the browser
-    *
-    * @desc Normal JSROOT functionality should be loaded via {@link JSROOT.require} method
-    * @param {String} url - script or css file URL (or array, in this case they all loaded secuentially)
-    * @returns {Promise}
-    * @private
-    */
+   /** @summary Load script or CSS file into the browser
+     * @desc Normal JSROOT functionality should be loaded via {@link JSROOT.require} method
+     * @param {String} url - script or css file URL (or array, in this case they all loaded secuentially)
+     * @returns {Promise} */
    JSROOT.loadScript = function(url) {
       if (!url)
          return Promise.resolve(true);
@@ -1417,14 +1386,13 @@
    }
 
    /** @summary Create some ROOT classes
-    *
-    * @param {string} typename - ROOT class name
-    * @example
-    * let obj = JSROOT.Create("TNamed");
-    * obj.fName = "name";
-    * obj.fTitle = "title";
-    */
-   JSROOT.Create = function(typename, target) {
+     * @desc Supported classes: "TObject", "TNamed", "TList", "TAxis", "TLine", "TText", "TLatex", "TPad", "TCanvas"
+     * @param {string} typename - ROOT class name
+     * @example
+     * let obj = JSROOT.create("TNamed");
+     * obj.fName = "name";
+     * obj.fTitle = "title"; */
+   let create = (typename, target) => {
       let obj = target || {};
 
       switch (typename) {
@@ -1444,8 +1412,8 @@
                                  fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont : 42 });
             break;
          case 'TAxis':
-            JSROOT.Create("TNamed", obj);
-            JSROOT.Create("TAttAxis", obj);
+            create("TNamed", obj);
+            create("TAttAxis", obj);
             JSROOT.extend(obj, { fNbins: 1, fXmin: 0, fXmax: 1, fXbins : [], fFirst: 0, fLast: 0,
                                  fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null, fModLabs: null });
             break;
@@ -1459,18 +1427,18 @@
             JSROOT.extend(obj, { fMarkerColor: 1, fMarkerStyle: 1, fMarkerSize: 1. });
             break;
          case 'TLine':
-            JSROOT.Create("TObject", obj);
-            JSROOT.Create("TAttLine", obj);
+            create("TObject", obj);
+            create("TAttLine", obj);
             JSROOT.extend(obj, { fX1: 0, fX2: 1, fY1: 0, fY2: 1 });
             break;
          case 'TBox':
-            JSROOT.Create("TObject", obj);
-            JSROOT.Create("TAttLine", obj);
-            JSROOT.Create("TAttFill", obj);
+            create("TObject", obj);
+            create("TAttLine", obj);
+            create("TAttFill", obj);
             JSROOT.extend(obj, { fX1: 0, fX2: 1, fY1: 0, fY2: 1 });
             break;
          case 'TPave':
-            JSROOT.Create("TBox", obj);
+            create("TBox", obj);
             JSROOT.extend(obj, { fX1NDC : 0., fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
                                  fBorderSize: 0, fInit: 1, fShadowColor: 1,
                                  fCornerRadius: 0, fOption: "blNDC", fName: "title" });
@@ -1479,58 +1447,58 @@
             JSROOT.extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42});
             break;
          case 'TPaveText':
-            JSROOT.Create("TPave", obj);
-            JSROOT.Create("TAttText", obj);
-            JSROOT.extend(obj, { fLabel: "", fLongest: 27, fMargin: 0.05, fLines: JSROOT.Create("TList") });
+            create("TPave", obj);
+            create("TAttText", obj);
+            JSROOT.extend(obj, { fLabel: "", fLongest: 27, fMargin: 0.05, fLines: create("TList") });
             break;
          case 'TPaveStats':
-            JSROOT.Create("TPaveText", obj);
+            create("TPaveText", obj);
             JSROOT.extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
             break;
          case 'TLegend':
-            JSROOT.Create("TPave", obj);
-            JSROOT.Create("TAttText", obj);
-            JSROOT.extend(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: JSROOT.Create("TList") });
+            create("TPave", obj);
+            create("TAttText", obj);
+            JSROOT.extend(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create("TList") });
             break;
          case 'TLegendEntry':
-            JSROOT.Create("TObject", obj);
-            JSROOT.Create("TAttText", obj);
-            JSROOT.Create("TAttLine", obj);
-            JSROOT.Create("TAttFill", obj);
-            JSROOT.Create("TAttMarker", obj);
+            create("TObject", obj);
+            create("TAttText", obj);
+            create("TAttLine", obj);
+            create("TAttFill", obj);
+            create("TAttMarker", obj);
             JSROOT.extend(obj, { fLabel: "", fObject: null, fOption: "" });
             break;
          case 'TText':
-            JSROOT.Create("TNamed", obj);
-            JSROOT.Create("TAttText", obj);
+            create("TNamed", obj);
+            create("TAttText", obj);
             JSROOT.extend(obj, { fLimitFactorSize: 3, fOriginSize: 0.04 });
             break;
          case 'TLatex':
-            JSROOT.Create("TText", obj);
-            JSROOT.Create("TAttLine", obj);
+            create("TText", obj);
+            create("TAttLine", obj);
             JSROOT.extend(obj, { fX: 0, fY: 0 });
             break;
          case 'TObjString':
-            JSROOT.Create("TObject", obj);
+            create("TObject", obj);
             JSROOT.extend(obj, { fString: "" });
             break;
          case 'TH1':
-            JSROOT.Create("TNamed", obj);
-            JSROOT.Create("TAttLine", obj);
-            JSROOT.Create("TAttFill", obj);
-            JSROOT.Create("TAttMarker", obj);
+            create("TNamed", obj);
+            create("TAttLine", obj);
+            create("TAttFill", obj);
+            create("TAttMarker", obj);
 
             JSROOT.extend(obj, {
                fBits: 8,
                fNcells: 0,
-               fXaxis: JSROOT.Create("TAxis"),
-               fYaxis: JSROOT.Create("TAxis"),
-               fZaxis: JSROOT.Create("TAxis"),
+               fXaxis: create("TAxis"),
+               fYaxis: create("TAxis"),
+               fZaxis: create("TAxis"),
                fBarOffset: 0, fBarWidth: 1000, fEntries: 0.,
                fTsumw: 0., fTsumw2: 0., fTsumwx: 0., fTsumwx2: 0.,
                fMaximum: -1111., fMinimum: -1111, fNormFactor: 0., fContour: [],
                fSumw2: [], fOption: "",
-               fFunctions: JSROOT.Create("TList"),
+               fFunctions: create("TList"),
                fBufferSize: 0, fBuffer: [], fBinStatErrOpt: 0, fStatOverflows: 2 });
             break;
          case 'TH1I':
@@ -1538,11 +1506,11 @@
          case 'TH1D':
          case 'TH1S':
          case 'TH1C':
-            JSROOT.Create("TH1", obj);
+            create("TH1", obj);
             obj.fArray = [];
             break;
          case 'TH2':
-            JSROOT.Create("TH1", obj);
+            create("TH1", obj);
             JSROOT.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy: 0 });
             break;
          case 'TH2I':
@@ -1550,11 +1518,11 @@
          case 'TH2D':
          case 'TH2S':
          case 'TH2C':
-            JSROOT.Create("TH2", obj);
+            create("TH2", obj);
             obj.fArray = [];
             break;
          case 'TH3':
-            JSROOT.Create("TH1", obj);
+            create("TH1", obj);
             JSROOT.extend(obj, { fTsumwy: 0.,  fTsumwy2: 0, fTsumwz: 0.,  fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
             break;
          case 'TH3I':
@@ -1562,48 +1530,48 @@
          case 'TH3D':
          case 'TH3S':
          case 'TH3C':
-            JSROOT.Create("TH3", obj);
+            create("TH3", obj);
             obj.fArray = [];
             break;
          case 'THStack':
-            JSROOT.Create("TNamed", obj);
-            JSROOT.extend(obj, { fHists: JSROOT.Create("TList"), fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
+            create("TNamed", obj);
+            JSROOT.extend(obj, { fHists: create("TList"), fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
             break;
          case 'TGraph':
-            JSROOT.Create("TNamed", obj);
-            JSROOT.Create("TAttLine", obj);
-            JSROOT.Create("TAttFill", obj);
-            JSROOT.Create("TAttMarker", obj);
-            JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fHistogram: null,
+            create("TNamed", obj);
+            create("TAttLine", obj);
+            create("TAttFill", obj);
+            create("TAttMarker", obj);
+            JSROOT.extend(obj, { fFunctions: create("TList"), fHistogram: null,
                                  fMaxSize: 0, fMaximum: -1111, fMinimum: -1111, fNpoints: 0, fX: [], fY: [] });
             break;
          case 'TGraphAsymmErrors':
-            JSROOT.Create("TGraph", obj);
+            create("TGraph", obj);
             JSROOT.extend(obj, { fEXlow: [], fEXhigh: [], fEYlow: [], fEYhigh: []});
             break;
          case 'TMultiGraph':
-            JSROOT.Create("TNamed", obj);
-            JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fGraphs: JSROOT.Create("TList"),
+            create("TNamed", obj);
+            JSROOT.extend(obj, { fFunctions: create("TList"), fGraphs: create("TList"),
                                  fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
             break;
          case 'TGraphPolargram':
-            JSROOT.Create("TNamed", obj);
-            JSROOT.Create("TAttText", obj);
-            JSROOT.Create("TAttLine", obj);
+            create("TNamed", obj);
+            create("TAttText", obj);
+            create("TAttLine", obj);
             JSROOT.extend(obj, { fRadian: true, fDegree: false, fGrad: false, fPolarLabelColor: 1, fRadialLabelColor: 1,
                                  fAxisAngle: 0, fPolarOffset: 0.04, fPolarTextSize: 0.04, fRadialOffset: 0.025, fRadialTextSize: 0.035,
                                  fRwrmin: 0, fRwrmax: 1, fRwtmin: 0, fRwtmax: 2*Math.PI, fTickpolarSize: 0.02,
                                  fPolarLabelFont: 62, fRadialLabelFont: 62, fCutRadial: 0, fNdivRad: 508, fNdivPol: 508 });
             break;
          case 'TPolyLine':
-            JSROOT.Create("TObject", obj);
-            JSROOT.Create("TAttLine", obj);
-            JSROOT.Create("TAttFill", obj);
+            create("TObject", obj);
+            create("TAttLine", obj);
+            create("TAttFill", obj);
             JSROOT.extend(obj, { fLastPoint: -1, fN: 0, fOption: "", fX: null, fY: null });
             break;
          case 'TGaxis':
-            JSROOT.Create("TLine", obj);
-            JSROOT.Create("TAttText", obj);
+            create("TLine", obj);
+            create("TAttText", obj);
             JSROOT.extend(obj, { fChopt: "", fFunctionName: "", fGridLength: 0,
                                  fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035,
                                  fName: "", fNdiv: 12, fTickSize: 0.02, fTimeFormat: "",
@@ -1625,10 +1593,10 @@
                                  fFrameBorderMode: gStyle.fFrameBorderMode });
             break;
          case 'TPad':
-            JSROOT.Create("TObject", obj);
-            JSROOT.Create("TAttLine", obj);
-            JSROOT.Create("TAttFill", obj);
-            JSROOT.Create("TAttPad", obj);
+            create("TObject", obj);
+            create("TAttLine", obj);
+            create("TAttFill", obj);
+            create("TAttPad", obj);
             JSROOT.extend(obj, { fX1: 0, fY1: 0, fX2: 1, fY2: 1, fXtoAbsPixelk: 1, fXtoPixelk: 1,
                                  fXtoPixel: 1, fYtoAbsPixelk: 1, fYtoPixelk: 1, fYtoPixel: 1,
                                  fUtoAbsPixelk: 1, fUtoPixelk: 1, fUtoPixel: 1, fVtoAbsPixelk: 1,
@@ -1645,7 +1613,7 @@
                                  fGridx: gStyle.fPadGridX,
                                  fGridy: gStyle.fPadGridY,
                                  fAbsCoord: false, fEditable: true, fFixedAspectRatio: false,
-                                 fPrimitives: JSROOT.Create("TList"), fExecs: null,
+                                 fPrimitives: create("TList"), fExecs: null,
                                  fName: "pad", fTitle: "canvas" });
 
             break;
@@ -1654,51 +1622,50 @@
                                  fXdate: 0.2, fYdate: 0.3, fAdate: 1 });
             break;
          case 'TCanvas':
-            JSROOT.Create("TPad", obj);
+            create("TPad", obj);
             JSROOT.extend(obj, { fNumPaletteColor: 0, fNextPaletteColor: 0, fDISPLAY: "$DISPLAY",
                                  fDoubleBuffer: 0, fRetained: true, fXsizeUser: 0,
                                  fYsizeUser: 0, fXsizeReal: 20, fYsizeReal: 10,
                                  fWindowTopX: 0, fWindowTopY: 0, fWindowWidth: 0, fWindowHeight: 0,
-                                 fCw: 500, fCh: 300, fCatt: JSROOT.Create("TAttCanvas"),
+                                 fCw: 500, fCh: 300, fCatt: create("TAttCanvas"),
                                  kMoveOpaque: true, kResizeOpaque: true, fHighLightColor: 5,
                                  fBatch: true, kShowEventStatus: false, kAutoExec: true, kMenuBar: true });
             break;
          case 'TGeoVolume':
-            JSROOT.Create("TNamed", obj);
-            JSROOT.Create("TAttLine", obj);
-            JSROOT.Create("TAttFill", obj);
+            create("TNamed", obj);
+            create("TAttLine", obj);
+            create("TAttFill", obj);
             JSROOT.extend(obj, { fGeoAtt:0, fFinder: null, fMedium: null, fNodes: null, fNtotal: 0, fNumber: 0, fRefCount: 0, fShape: null, fVoxels: null });
             break;
          case 'TGeoNode':
-            JSROOT.Create("TNamed", obj);
+            create("TNamed", obj);
             JSROOT.extend(obj, { fGeoAtt:0, fMother: null, fNovlp: 0, fNumber: 0, fOverlaps: null, fVolume: null });
             break;
          case 'TGeoNodeMatrix':
-            JSROOT.Create("TGeoNode", obj);
+            create("TGeoNode", obj);
             JSROOT.extend(obj, { fMatrix: null });
             break;
          case 'TGeoTrack':
-            JSROOT.Create("TObject", obj);
-            JSROOT.Create("TAttLine", obj);
-            JSROOT.Create("TAttMarker", obj);
+            create("TObject", obj);
+            create("TAttLine", obj);
+            create("TAttMarker", obj);
             JSROOT.extend(obj, { fGeoAtt: 0, fNpoints: 0, fPoints: [] });
             break;
       }
 
       obj._typename = typename;
-      this.addMethods(obj, typename);
+      JSROOT.addMethods(obj, typename);
       return obj;
    }
 
    /** @summary Create histogram object of specified type
-    * @param {string} typename - histogram typename like TH1I or TH2F
-    * @param {number} nbinsx - number of bins on X-axis
-    * @param {number} [nbinsy] - number of bins on Y-axis (for 2D/3D histograms)
-    * @param {number} [nbinsz] - number of bins on Z-axis (for 3D histograms)
-    * @returns {Object} created histogram object
-    */
-   JSROOT.CreateHistogram = function(typename, nbinsx, nbinsy, nbinsz) {
-      let histo = JSROOT.Create(typename);
+     * @param {string} typename - histogram typename like 'TH1I' or 'TH2F'
+     * @param {number} nbinsx - number of bins on X-axis
+     * @param {number} [nbinsy] - number of bins on Y-axis (for 2D/3D histograms)
+     * @param {number} [nbinsz] - number of bins on Z-axis (for 3D histograms)
+     * @returns {Object} created histogram object */
+   JSROOT.createHistogram = function(typename, nbinsx, nbinsy, nbinsz) {
+      let histo = create(typename);
       if (!histo.fXaxis || !histo.fYaxis || !histo.fZaxis) return null;
       histo.fName = "hist"; histo.fTitle = "title";
       if (nbinsx) JSROOT.extend(histo.fXaxis, { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
@@ -1725,10 +1692,10 @@
    }
 
    /** @summary Creates TPolyLine object
-    * @param {number} npoints - number of points
-    * @param {boolean} [use_int32] - use Int32Array type for points, default is Float32Array */
-   JSROOT.CreateTPolyLine = function(npoints, use_int32) {
-      let poly = JSROOT.Create("TPolyLine");
+     * @param {number} npoints - number of points
+     * @param {boolean} [use_int32] - use Int32Array type for points, default is Float32Array */
+   JSROOT.createTPolyLine = function(npoints, use_int32) {
+      let poly = create("TPolyLine");
       if (npoints) {
          poly.fN = npoints;
          if (use_int32) {
@@ -1744,11 +1711,11 @@
    }
 
    /** @summary Creates TGraph object
-    * @param {number} npoints - number of points in TGraph
-    * @param {array} [xpts] - array with X coordinates
-    * @param {array} [ypts] - array with Y coordinates */
-   JSROOT.CreateTGraph = function(npoints, xpts, ypts) {
-      let graph = JSROOT.extend(JSROOT.Create("TGraph"), { fBits: 0x408, fName: "graph", fTitle: "title" });
+     * @param {number} npoints - number of points in TGraph
+     * @param {array} [xpts] - array with X coordinates
+     * @param {array} [ypts] - array with Y coordinates */
+   JSROOT.createTGraph = function(npoints, xpts, ypts) {
+      let graph = JSROOT.extend(create("TGraph"), { fBits: 0x408, fName: "graph", fTitle: "title" });
 
       if (npoints>0) {
          graph.fMaxSize = graph.fNpoints = npoints;
@@ -1756,7 +1723,7 @@
          const usex = (typeof xpts == 'object') && (xpts.length === npoints);
          const usey = (typeof ypts == 'object') && (ypts.length === npoints);
 
-         for (let i=0;i<npoints;++i) {
+         for (let i = 0; i < npoints; ++i) {
             graph.fX.push(usex ? xpts[i] : i/npoints);
             graph.fY.push(usey ? ypts[i] : i/npoints);
          }
@@ -1766,29 +1733,29 @@
    }
 
    /** @summary Creates THStack object
-    * @desc As arguments one could specify any number of histograms objects
-    * @example
-    * let nbinsx = 20;
-    * let h1 = JSROOT.CreateHistogram("TH1F", nbinsx);
-    * let h2 = JSROOT.CreateHistogram("TH1F", nbinsx);
-    * let h3 = JSROOT.CreateHistogram("TH1F", nbinsx);
-    * let stack = JSROOT.CreateTHStack(h1, h2, h3); */
-   JSROOT.CreateTHStack = function() {
-      let stack = JSROOT.Create("THStack");
+     * @desc As arguments one could specify any number of histograms objects
+     * @example
+     * let nbinsx = 20;
+     * let h1 = JSROOT.createHistogram("TH1F", nbinsx);
+     * let h2 = JSROOT.createHistogram("TH1F", nbinsx);
+     * let h3 = JSROOT.createHistogram("TH1F", nbinsx);
+     * let stack = JSROOT.createTHStack(h1, h2, h3); */
+   JSROOT.createTHStack = function() {
+      let stack = create("THStack");
       for(let i=0; i<arguments.length; ++i)
          stack.fHists.Add(arguments[i], "");
       return stack;
    }
 
    /** @summary Creates TMultiGraph object
-    * @desc As arguments one could specify any number of TGraph objects
-    * @example
-    * let gr1 = JSROOT.CreateTGraph(100);
-    * let gr2 = JSROOT.CreateTGraph(100);
-    * let gr3 = JSROOT.CreateTGraph(100);
-    * let mgr = JSROOT.CreateTMultiGraph(gr1, gr2, gr3); */
-   JSROOT.CreateTMultiGraph = function() {
-      let mgraph = JSROOT.Create("TMultiGraph");
+     * @desc As arguments one could specify any number of TGraph objects
+     * @example
+     * let gr1 = JSROOT.createTGraph(100);
+     * let gr2 = JSROOT.createTGraph(100);
+     * let gr3 = JSROOT.createTGraph(100);
+     * let mgr = JSROOT.createTMultiGraph(gr1, gr2, gr3); */
+   JSROOT.createTMultiGraph = function() {
+      let mgraph = create("TMultiGraph");
       for(let i=0; i<arguments.length; ++i)
           mgraph.fGraphs.Add(arguments[i], "");
       return mgraph;
@@ -1836,7 +1803,7 @@
 
       if ((typename === "TPaveText") || (typename === "TPaveStats")) {
          m.AddText = function(txt) {
-            let line = JSROOT.Create("TLatex");
+            let line = create("TLatex");
             line.fTitle = txt;
             this.fLines.Add(line);
          }
@@ -2124,8 +2091,8 @@
    }
 
    /** @summary Add methods for specified type.
-    * @desc Will be automatically applied when decoding JSON string
-    * @private */
+     * @desc Will be automatically applied when decoding JSON string
+     * @private */
    JSROOT.registerMethods = function(typename, m) {
       methodsCache[typename] = m;
    }
@@ -2146,10 +2113,10 @@
    }
 
    /** @summary Adds specific methods to the object.
-    * @desc JSROOT implements some basic methods for different ROOT classes.
-    * @param {object} obj - object where methods are assigned
-    * @param {string} [typename] - optional typename, if not specified, obj._typename will be used
-    * @private */
+     * @desc JSROOT implements some basic methods for different ROOT classes.
+     * @param {object} obj - object where methods are assigned
+     * @param {string} [typename] - optional typename, if not specified, obj._typename will be used
+     * @private */
    JSROOT.addMethods = function(obj, typename) {
       this.extend(obj, this.getMethods(typename || obj._typename, obj));
    }
@@ -2214,6 +2181,7 @@
    JSROOT._ = _;
    JSROOT.browser = browser;
    JSROOT.gStyle = gStyle;
+   JSROOT.create = create;
 
    return JSROOT;
 

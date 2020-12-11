@@ -41,8 +41,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
     * @private
     */
 
-   function TAxisPainter(axis, embedded) {
-      JSROOT.AxisBasePainter.call(this, axis);
+   function TAxisPainter(divid, axis, embedded) {
+      JSROOT.AxisBasePainter.call(this, divid, axis);
 
       this.embedded = embedded; // indicate that painter embedded into the histo painter
       this.invert_side = false;
@@ -509,7 +509,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Draw axis labels */
    TAxisPainter.prototype.drawLabels = function(axis_g, axis, w, h, handle, side, labelSize, labeloffset, tickSize, ticksPlusMinus, max_text_width) {
-      let label_color = this.get_color(axis.fLabelColor),
+      let label_color = this.getColor(axis.fLabelColor),
           center_lbls = this.IsCenterLabels(),
           rotate_lbls = axis.TestBit(JSROOT.EAxisBits.kLabelsVert),
           textscale = 1, maxtextlen = 0, applied_scale = 0,
@@ -539,7 +539,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if ((scale > 0.01) && (scale < 1)) {
             applied_scale = 1/scale;
-            painter.TextScaleFactor(applied_scale, label_g[0]);
+            painter.scaleTextDrawing(applied_scale, label_g[0]);
          }
       }
 
@@ -615,7 +615,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (label_g.length > 1) {
             // now complete drawing of second half with scaling if necessary
             if (applied_scale)
-               this.TextScaleFactor(applied_scale, label_g[1]);
+               this.scaleTextDrawing(applied_scale, label_g[1]);
             return this.finishTextDrawing(label_g[1]);
           }
           return true;
@@ -764,7 +764,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              center = axis.TestBit(JSROOT.EAxisBits.kCenterTitle),
              opposite = axis.TestBit(JSROOT.EAxisBits.kOppositeTitle),
              rotate = axis.TestBit(JSROOT.EAxisBits.kRotateTitle) ? -1 : 1,
-             title_color = this.get_color(is_gaxis ? axis.fTextColor : axis.fTitleColor);
+             title_color = this.getColor(is_gaxis ? axis.fTextColor : axis.fTitleColor);
 
          this.startTextDrawing(axis.fTitleFont, title_fontsize, title_g);
 
@@ -828,10 +828,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    TAxisPainter.prototype.Redraw = function() {
 
       let gaxis = this.getObject(),
-          x1 = this.AxisToSvg("x", gaxis.fX1),
-          y1 = this.AxisToSvg("y", gaxis.fY1),
-          x2 = this.AxisToSvg("x", gaxis.fX2),
-          y2 = this.AxisToSvg("y", gaxis.fY2),
+          x1 = this.axisToSvg("x", gaxis.fX1),
+          y1 = this.axisToSvg("y", gaxis.fY1),
+          x2 = this.axisToSvg("x", gaxis.fX2),
+          y2 = this.axisToSvg("y", gaxis.fY2),
           w = x2 - x1, h = y1 - y2,
           vertical = Math.abs(w) < Math.abs(h),
           sz = vertical ? h : w,
@@ -851,16 +851,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          swap_side: reverse
       });
 
-      this.CreateG();
+      this.createG();
 
       return this.DrawAxis(this.draw_g, Math.abs(w), Math.abs(h), "translate(" + x1 + "," + y2 +")");
    }
 
    let drawGaxis = (divid, obj /*, opt*/) => {
-      let painter = new TAxisPainter(obj, false);
+      let painter = new TAxisPainter(divid, obj, false);
       painter.disable_zooming = true;
 
-      return jsrp.ensureTCanvas(painter, divid, false)
+      return jsrp.ensureTCanvas(painter, false)
              .then(() => painter.Redraw()).then(() => painter);
    }
 
@@ -902,13 +902,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
     *
     * @class
     * @memberof JSROOT
-    * @extends ObjectPainter
+    * @extends JSROOT.ObjectPainter
+    * @param {object|string} dom - DOM element for drawing or element id
     * @param {object} tframe - TFrame object
     * @private
     */
 
-   function TFramePainter(tframe) {
-      JSROOT.ObjectPainter.call(this, (tframe && tframe.$dummy) ? null : tframe);
+   function TFramePainter(divid, tframe) {
+      JSROOT.ObjectPainter.call(this, divid, (tframe && tframe.$dummy) ? null : tframe);
       this.zoom_kind = 0;
       this.mode3d = false;
       this.shrink_frame_left = 0.;
@@ -936,12 +937,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
     * @private */
    TFramePainter.prototype.SetActive = function(/* on */) {
       // do nothing here - key handler is handled differently
-   }
-
-   TFramePainter.prototype.GetTipName = function(append) {
-      let res = JSROOT.ObjectPainter.prototype.GetTipName.call(this) || "TFrame";
-      if (append) res+=append;
-      return res;
    }
 
    TFramePainter.prototype.Shrink = function(shrink_left, shrink_right) {
@@ -1164,8 +1159,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // projection should be assigned
       this.RecalculateRange(opts.Proj);
 
-      this.x_handle = new TAxisPainter(this.xaxis, true);
-      this.x_handle.setCanvDom(this.divid, this.pad_name);
+      this.x_handle = new TAxisPainter(this.getDom(), this.xaxis, true);
+      this.x_handle.setPadName(this.getPadName());
 
       this.x_handle.ConfigureAxis("xaxis", this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0,h] : [0,w],
                                       { reverse: this.reverse_x,
@@ -1175,8 +1170,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.x_handle.AssignFrameMembers(this,"x");
 
-      this.y_handle = new TAxisPainter(this.yaxis, true);
-      this.y_handle.setCanvDom(this.divid, this.pad_name);
+      this.y_handle = new TAxisPainter(this.getDom(), this.yaxis, true);
+      this.y_handle.setPadName(this.getPadName());
 
       this.y_handle.ConfigureAxis("yaxis", this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0,w] : [0,h],
                                       { reverse: this.reverse_y,
@@ -1248,7 +1243,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                gridx += "M"+this.x_handle.ticks[n]+",0v"+h;
 
          let colid = (JSROOT.gStyle.fGridColor > 0) ? JSROOT.gStyle.fGridColor : (this.GetAxis("x") ? this.GetAxis("x").fAxisColor : 1),
-             grid_color = this.get_color(colid) || "black";
+             grid_color = this.getColor(colid) || "black";
 
          if (gridx.length > 0)
            layer.append("svg:path")
@@ -1269,7 +1264,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                gridy += "M0,"+this.y_handle.ticks[n]+"h"+w;
 
          let colid = (JSROOT.gStyle.fGridColor > 0) ? JSROOT.gStyle.fGridColor : (this.GetAxis("y") ? this.GetAxis("y").fAxisColor : 1),
-             grid_color = this.get_color(colid) || "black";
+             grid_color = this.getColor(colid) || "black";
 
          if (gridy.length > 0)
            layer.append("svg:path")
@@ -1449,9 +1444,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    TFramePainter.prototype.CleanAxesDrawings = function() {
       // remove all axes drawings
-      if (this.x_handle) this.x_handle.RemoveDrawG();
-      if (this.y_handle) this.y_handle.RemoveDrawG();
-      if (this.z_handle) this.z_handle.RemoveDrawG();
+      if (this.x_handle) this.x_handle.removeG();
+      if (this.y_handle) this.y_handle.removeG();
+      if (this.z_handle) this.z_handle.removeG();
 
       if (this.draw_g) {
          this.draw_g.select(".grid_layer").selectAll("*").remove();
@@ -1503,7 +1498,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.draw_g.remove();
       }
 
-      this.draw_g = null;
+      delete this.draw_g; // frame <g> element managet by the pad
 
       if (this.keys_handler) {
          window.removeEventListener('keydown', this.keys_handler, false);
@@ -1644,7 +1639,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @desc It could be appended to the histogram menus */
    TFramePainter.prototype.FillContextMenu = function(menu, kind, obj) {
 
-      let main = this.main_painter(), pad = this.root_pad();
+      let main = this.getMainPainter(), pad = this.root_pad();
 
       if ((kind=="x") || (kind=="y") || (kind=="z")) {
          let faxis = obj || this[kind+'axis'];
@@ -1692,8 +1687,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.add("separator");
       }
 
-      menu.addchk(this.IsTooltipAllowed(), "Show tooltips", function() {
-         this.SetTooltipAllowed("toggle");
+      menu.addchk(this.isTooltipAllowed(), "Show tooltips", function() {
+         this.setTooltipAllowed("toggle");
       });
       menu.AddAttributesMenu(this, alone ? "" : "Frame ");
       menu.add("separator");
@@ -1934,8 +1929,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    let drawFrame = (divid, obj, opt) => {
-      let p = new TFramePainter(obj);
-      return jsrp.ensureTCanvas(p, divid, false).then(() => {
+      let p = new TFramePainter(divid, obj);
+      return jsrp.ensureTCanvas(p, false).then(() => {
          if (opt == "3d") p.mode3d = true;
          p.Redraw();
          return p;
@@ -1949,13 +1944,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      *
      * @class
      * @memberof JSROOT
+     * @extends JSROOT.ObjectPainter
+     * @param {object|string} dom - DOM element for drawing or element id
      * @param {object} pad - TPad object to draw
      * @param {boolean} iscan - if TCanvas object
      * @private
      */
 
-   function TPadPainter(pad, iscan) {
-      JSROOT.ObjectPainter.call(this, pad);
+   function TPadPainter(divid, pad, iscan) {
+      JSROOT.ObjectPainter.call(this, divid, pad);
       this.pad = pad;
       this.iscan = iscan; // indicate if working with canvas
       this.this_pad_name = "";
@@ -2022,27 +2019,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
    }
 
-   /** @summary Generates automatic color for some objects painters */
-   TPadPainter.prototype.CreateAutoColor = function() {
-      let pad = this.root_pad(),
-          numprimitives = pad && pad.fPrimitves ? pad.fPrimitves.arr.length : 5;
+  /** @summary returns custom palette associated with pad or top canvas
+    * @private */
+   TPadPainter.prototype.getCustomPalette = function() {
+      if (this.custom_palette)
+         return this.custom_palette;
 
-      let pal = this.get_palette(true);
-
-      let indx = this._auto_color || 0;
-      this._auto_color = indx+1;
-
-      if (pal) {
-         if (numprimitives<2) numprimitives = 2;
-         if (indx >= numprimitives) indx = numprimitives - 1;
-         let palindx = Math.round(indx * (pal.getLength()-3) / (numprimitives-1));
-         let colvalue = pal.getColor(palindx);
-         let colindx = this.add_color(colvalue);
-         return colindx;
-      }
-
-      this._auto_color = this._auto_color % 8;
-      return indx+2;
+      let cp = this.canv_painter();
+      return cp ? cp.custom_palette : null;
    }
 
    /** @summary Call function for each painter in pad
@@ -2122,7 +2106,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       svg_rect.call(lineatt.func);
    }
 
-   TPadPainter.prototype.CreateCanvasSvg = function(check_resize, new_size) {
+   /** @summary Create SVG element for canvas */
+   TPadPainter.prototype.createCanvasSvg = function(check_resize, new_size) {
 
       let factor = null, svg = null, lmt = 5, rect = null, btns;
 
@@ -2228,8 +2213,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
            .style("bottom", 0);
       }
 
-      // console.log('CANVAS SVG width = ' + rect.width + " height = " + rect.height);
-
       svg.attr("viewBox", "0 0 " + rect.width + " " + rect.height)
          .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
          .property('height_factor', factor)
@@ -2288,10 +2271,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    /** @summary Create main SVG element for pad
      * @returns true when pad is displayed and all its items should be redrawn */
-   TPadPainter.prototype.CreatePadSvg = function(only_resize) {
+   TPadPainter.prototype.createPadSvg = function(only_resize) {
 
       if (!this.has_canvas) {
-         this.CreateCanvasSvg(only_resize ? 2 : 0);
+         this.createCanvasSvg(only_resize ? 2 : 0);
          return true;
       }
 
@@ -2507,7 +2490,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       // use of Promise should avoid large call-stack depth when many primitives are drawn
-      return JSROOT.draw(this.divid, this.pad.fPrimitives.arr[indx], this.pad.fPrimitives.opt[indx]).then(ppainter=> {
+      return JSROOT.draw(this.getDom(), this.pad.fPrimitives.arr[indx], this.pad.fPrimitives.opt[indx]).then(ppainter=> {
          if (ppainter && (typeof ppainter == 'object'))
             ppainter._primitive = true; // mark painter as belonging to primitives
 
@@ -2544,7 +2527,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       else
          menu.add("header: Canvas");
 
-      menu.addchk(this.IsTooltipAllowed(), "Show tooltips", this.SetTooltipAllowed.bind(this, "toggle"));
+      menu.addchk(this.isTooltipAllowed(), "Show tooltips", this.setTooltipAllowed.bind(this, "toggle"));
 
       if (!this._websocket) {
 
@@ -2618,9 +2601,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let showsubitems = true;
 
       if (this.iscan) {
-         this.CreateCanvasSvg(2);
+         this.createCanvasSvg(2);
       } else {
-         showsubitems = this.CreatePadSvg(true);
+         showsubitems = this.createPadSvg(true);
       }
 
       // even sub-pad is not visible, we should redraw sub-sub-pads to hide them as well
@@ -2658,7 +2641,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return false;
    }
 
-   TPadPainter.prototype.CheckCanvasResize = function(size, force) {
+
+   /** @summary Check resize of canvas  */
+   TPadPainter.prototype.checkCanvasResize = function(size, force) {
 
       if (!this.iscan && this.has_canvas) return false;
 
@@ -2668,7 +2653,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (!force) force = this.RedrawByResize();
 
-      let changed = this.CreateCanvasSvg(force ? 2 : 1, size);
+      let changed = this.createCanvasSvg(force ? 2 : 1, size);
 
       // if canvas changed, redraw all its subitems.
       // If redrawing was forced for canvas, same applied for sub-elements
@@ -2679,6 +2664,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return changed;
    }
 
+   /** @summary Update TPad object */
    TPadPainter.prototype.updateObject = function(obj) {
       if (!obj) return false;
 
@@ -2847,28 +2833,28 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          subpad.fPrimitives = null; // clear primitives, they just because of I/O
 
-         let padpainter = new TPadPainter(subpad, false);
+         let padpainter = new TPadPainter(this.getDom(), subpad, false);
          padpainter.DecodeOptions(snap.fOption);
-         padpainter.setCanvDom(this.divid, this.this_pad_name); // pad painter will be registered in the canvas painters list
+         padpainter.setPadName(this.this_pad_name); // pad painter will be registered in the canvas painters list
          padpainter.addToPadPrimitives();
          padpainter.snapid = snap.fObjectID;
 
-         padpainter.CreatePadSvg();
+         padpainter.createPadSvg();
 
          if (padpainter.matchObjectType("TPad") && snap.fPrimitives.length > 0)
             padpainter.AddPadButtons();
 
          // we select current pad, where all drawing is performed
-         let prev_name = padpainter.currentPadName(padpainter.this_pad_name);
+         let prev_name = padpainter.selectCurrentPad(padpainter.this_pad_name);
          return padpainter.DrawNextSnap(snap.fPrimitives).then(() => {
-            padpainter.currentPadName(prev_name);
+            padpainter.selectCurrentPad(prev_name);
             return this.DrawNextSnap(lst, indx); // call next
          });
       }
 
       // here the case of normal drawing, will be handled in promise
       if ((snap.fKind === webSnapIds.kObject) || (snap.fKind === webSnapIds.kSVG))
-         return JSROOT.draw(this.divid, snap.fSnapshot, snap.fOption).then(objpainter => {
+         return JSROOT.draw(this.getDom(), snap.fSnapshot, snap.fOption).then(objpainter => {
             this.AddObjectPainter(objpainter, lst, indx);
             return this.DrawNextSnap(lst, indx);
          });
@@ -2929,9 +2915,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!first.fCw || !first.fCh) this._fixed_size = false;
 
          if (JSROOT.BrowserLayout && !this.batch_mode && !this.use_openui && !this.brlayout) {
-            let mainid = this.divid;
-            if (mainid && (typeof mainid == 'object'))
-               mainid = d3.select(mainid).attr("id");
+            let mainid = this.selectDom().attr("id");
             if (mainid && (typeof mainid == "string")) {
                this.brlayout = new JSROOT.BrowserLayout(mainid, null, this);
                this.brlayout.Create(mainid, true);
@@ -2941,7 +2925,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             }
          }
 
-         this.CreateCanvasSvg(0);
+         this.createCanvasSvg(0);
 
          if (!this.batch_mode)
             this.AddPadButtons(true);
@@ -2969,9 +2953,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       // apply all changes in the object (pad or canvas)
       if (this.iscan) {
-         this.CreateCanvasSvg(2);
+         this.createCanvasSvg(2);
       } else {
-         this.CreatePadSvg(true);
+         this.createPadSvg(true);
       }
 
       let isanyfound = false, isanyremove = false;
@@ -3043,10 +3027,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.AddPadButtons(true);
       }
 
-      let prev_name = this.currentPadName(this.this_pad_name);
+      let prev_name = this.selectCurrentPad(this.this_pad_name);
 
       return this.DrawNextSnap(snap.fPrimitives).then(() => {
-         this.currentPadName(prev_name);
+         this.selectCurrentPad(prev_name);
          if (jsrp.getActivePad() === this) {
             let canp = this.canv_painter();
             if (canp) canp.PadEvent("padredraw", this);
@@ -3207,7 +3191,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
        jsrp.createMenu(selp, evnt).then(menu => {
           if (selp.FillContextMenu(menu, selkind))
-             setTimeout(menu.show.bind(menu), 50);
+             setTimeout(() => menu.show(), 50);
        });
    }
 
@@ -3392,7 +3376,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (this.frame_painter())
                menu.add("Frame", "frame", this.ItemContextMenu);
 
-            let main = this.main_painter();
+            let main = this.getMainPainter();
 
             if (main) {
                menu.add("X axis", "xaxis", this.ItemContextMenu);
@@ -3529,10 +3513,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    let drawPad = (divid, pad, opt) => {
-      let painter = new TPadPainter(pad, false);
+      let painter = new TPadPainter(divid, pad, false);
       painter.DecodeOptions(opt);
-
-      painter.setCanvDom(divid);
 
       if (painter.svg_canvas().empty()) {
          // one can draw pad without canvas
@@ -3541,16 +3523,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          painter.setTopPainter();
       } else {
          // pad painter will be registered in the canvas painters list
-         painter.addToPadPrimitives();
+         painter.addToPadPrimitives(painter.pad_name);
       }
 
-      painter.CreatePadSvg();
+      painter.createPadSvg();
 
       if (painter.matchObjectType("TPad") && (!painter.has_canvas || painter.HasObjectsToDraw()))
          painter.AddPadButtons();
 
       // we select current pad, where all drawing is performed
-      let prev_name = painter.has_canvas ? painter.currentPadName(painter.this_pad_name) : undefined;
+      let prev_name = painter.has_canvas ? painter.selectCurrentPad(painter.this_pad_name) : undefined;
 
       // set active pad
       jsrp.selectActivePad({ pp: painter, active: true });
@@ -3559,7 +3541,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return painter.DrawPrimitives().then(() => {
          painter.ShowButtons();
          // we restore previous pad name
-         painter.currentPadName(prev_name);
+         painter.selectCurrentPad(prev_name);
          return painter;
       });
    }
@@ -3586,17 +3568,44 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private
      */
 
-   function TCanvasPainter(canvas) {
-      TPadPainter.call(this, canvas, true);
+   function TCanvasPainter(divid, canvas) {
+      TPadPainter.call(this, divid, canvas, true);
       this._websocket = null;
       this.tooltip_allowed = JSROOT.settings.Tooltip;
    }
 
    TCanvasPainter.prototype = Object.create(TPadPainter.prototype);
 
+   /** @summary Cleanup canvas painter */
+   TCanvasPainter.prototype.cleanup = function() {
+     if (this._changed_layout)
+        this.setLayoutKind('simple');
+     delete this._changed_layout;
+     TPadPainter.prototype.cleanup.call(this);
+   }
+
+   /** @summary Returns layout kind */
+   TCanvasPainter.prototype.getLayoutKind = function() {
+      let origin = this.selectDom('origin'),
+         layout = origin.empty() ? "" : origin.property('layout');
+
+      return layout || 'simple';
+   }
+
+   /** @summary Set canvas layout kind */
+   TCanvasPainter.prototype.setLayoutKind = function(kind, main_selector) {
+      let origin = this.selectDom('origin');
+      if (!origin.empty()) {
+         if (!kind) kind = 'simple';
+         origin.property('layout', kind);
+         origin.property('layout_selector', (kind != 'simple') && main_selector ? main_selector : null);
+         this._changed_layout = (kind !== 'simple'); // use in cleanup
+      }
+   }
+
    /** @summary Changes layout
      * @returns {Promise} indicating when finished */
-   TCanvasPainter.prototype.ChangeLayout = function(layout_kind) {
+   TCanvasPainter.prototype.changeLayout = function(layout_kind) {
       let current = this.getLayoutKind();
       if (current == layout_kind)
          return Promise.resolve(true);
@@ -3668,7 +3677,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (kind == "X") layout = 'vert2_31'; else
       if (kind == "Y") layout = 'horiz2_13';
 
-      return this.ChangeLayout(layout);
+      return this.changeLayout(layout);
    }
 
    TCanvasPainter.prototype.DrawProjection = function(kind,hist) {
@@ -3677,7 +3686,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (this.proj_painter === 1) {
 
-         let canv = JSROOT.Create("TCanvas"),
+         let canv = JSROOT.create("TCanvas"),
              pad = this.root_pad(),
              main = this.frame_painter(), drawopt;
 
@@ -3705,7 +3714,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          promise.then(painter => { this.proj_painter = painter; })
       } else {
-         let hp = this.proj_painter.main_painter();
+         let hp = this.proj_painter.getMainPainter();
          if (hp) hp.updateObject(hist, "hist");
          this.proj_painter.redrawPad();
       }
@@ -3989,7 +3998,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          case "StatusBar": this.ActivateStatusBar(on); break;
          case "Editor": return this.ActivateGed(this, null, !!on);
          case "ToolBar": break;
-         case "ToolTips": this.SetTooltipAllowed(on); break;
+         case "ToolTips": this.setTooltipAllowed(on); break;
 
       }
       return Promise.resolve(true);
@@ -4090,7 +4099,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let bits = 0;
       if (this.HasEventStatus()) bits |= TCanvasStatusBits.kShowEventStatus;
       if (this.HasGed()) bits |= TCanvasStatusBits.kShowEditor;
-      if (this.IsTooltipAllowed()) bits |= TCanvasStatusBits.kShowToolTips;
+      if (this.isTooltipAllowed()) bits |= TCanvasStatusBits.kShowToolTips;
       if (this.use_openui) bits |= TCanvasStatusBits.kMenuBar;
       return bits;
    }
@@ -4130,15 +4139,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let lst = this.pad ? this.pad.fPrimitives : null;
       if (lst && (lst.arr.length == 1))
          if (lst.arr[0] && lst.arr[0]._typename && (lst.arr[0]._typename.indexOf("TGeo")==0))
-            return JSROOT.draw(this.divid, lst.arr[0], lst.opt[0]); // return promise
+            return JSROOT.draw(this.getDom(), lst.arr[0], lst.opt[0]); // return promise
    }
 
    let drawCanvas = (divid, can, opt) => {
       let nocanvas = !can;
-      if (nocanvas) can = JSROOT.Create("TCanvas");
+      if (nocanvas) can = JSROOT.create("TCanvas");
 
-      let painter = new TCanvasPainter(can);
-      painter.setCanvDom(divid);
+      let painter = new TCanvasPainter(divid, can);
       painter.checkSpecialsInPrimitives(can);
 
       if (!nocanvas && can.fCw && can.fCh && !JSROOT.BatchMode) {
@@ -4154,7 +4162,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       painter.DecodeOptions(opt);
       painter.normal_canvas = !nocanvas;
-      painter.CreateCanvasSvg(0);
+      painter.createCanvasSvg(0);
 
       painter.AddPadButtons();
 
@@ -4172,25 +4180,22 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
   /** @summary Ensure TCanvas and TFrame for the painter object
     * @param {Object} painter  - painter object to process
-    * @param {Object|string} divid - HTML element or element id
     * @param {string|boolean} frame_kind  - false for no frame or "3d" for special 3D mode
     * @desc Assign divid, creates TCanvas if necessary, add to list of pad painters and */
-   let ensureTCanvas = function(painter, divid, frame_kind) {
+   let ensureTCanvas = function(painter, frame_kind) {
       if (!painter) return Promise.reject('Painter not provided in ensureTCanvas');
-
-      painter.setCanvDom(divid);
 
       // simple check - if canvas there, can use painter
       let svg_c = painter.svg_canvas();
       let noframe = (frame_kind === false) || (frame_kind == "3d") ? "noframe" : "";
 
-      let promise = !svg_c.empty() ? Promise.resolve(true) : drawCanvas(divid, null, noframe);
+      let promise = !svg_c.empty() ? Promise.resolve(true) : drawCanvas(painter.getDom(), null, noframe);
 
       return promise.then(() => {
          if (frame_kind === false) return;
 
          if (painter.svg_frame().select(".main_layer").empty() && !painter.frame_painter())
-            return drawFrame(divid, null, (typeof frame_kind === "string") ? frame_kind : "");
+            return drawFrame(painter.getDom(), null, (typeof frame_kind === "string") ? frame_kind : "");
       }).then(() => {
          painter.addToPadPrimitives();
          return painter;
@@ -4200,11 +4205,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    let drawPadSnapshot = (divid, snap /*, opt*/) => {
       // just for debugging without running web canvas
 
-      let can = JSROOT.Create("TCanvas");
+      let can = JSROOT.create("TCanvas");
 
-      let painter = new TCanvasPainter(can);
+      let painter = new TCanvasPainter(divid, can);
       painter.normal_canvas = false;
-      painter.setCanvDom(divid);
       painter.AddPadButtons();
 
       return painter.RedrawPadSnap(snap).then(() => { painter.ShowButtons(); return painter; });

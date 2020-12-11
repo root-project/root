@@ -3662,7 +3662,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          obj = geo.buildCompositeVolume(shape);
 
       if (!obj && shape)
-         obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
+         obj = JSROOT.extend(JSROOT.create("TEveGeoShapeExtract"),
                    { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
 
       if (!obj) return null;
