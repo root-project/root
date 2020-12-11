@@ -16,12 +16,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       /** @returns true if tooltip is shown, use to prevent some other action */
       IsTooltipShown: function() {
-         if (!this.tooltip_enabled || !this.IsTooltipAllowed()) return false;
+         if (!this.tooltip_enabled || !this.isTooltipAllowed()) return false;
          let hintsg = this.hints_layer().select(".objects_hints");
-         return hintsg.empty() ? false : hintsg.property("hints_pad") == this.pad_name;
+         return hintsg.empty() ? false : hintsg.property("hints_pad") == this.getPadName();
       },
 
-      SetTooltipEnabled: function(enabled) {
+      setTooltipEnabled: function(enabled) {
          if (enabled !== undefined) this.tooltip_enabled = enabled;
       },
 
@@ -49,7 +49,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             pp = this.pad_painter(),
             font = new JSROOT.FontHandler(160, textheight),
             status_func = this.GetShowStatusFunc(),
-            disable_tootlips = !this.IsTooltipAllowed() || !this.tooltip_enabled;
+            disable_tootlips = !this.isTooltipAllowed() || !this.tooltip_enabled;
 
          if ((pnt === undefined) || (disable_tootlips && !status_func)) pnt = null;
          if (pnt && disable_tootlips) pnt.disabled = true; // indicate that highlighting is not required
@@ -65,7 +65,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (!hint) continue;
 
             if (hint.painter && (hint.user_info !== undefined))
-               hint.painter.ProvideUserTooltip(hint.user_info);
+               hint.painter.provideUserTooltip(hint.user_info);
 
             if (!hint.lines || (hint.lines.length === 0)) {
                hints[n] = null; continue;
@@ -148,7 +148,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // copy transform attributes from frame itself
          hintsg.attr("transform", trans)
             .property("last_point", pnt)
-            .property("hints_pad", this.pad_name);
+            .property("hints_pad", this.getPadName());
 
          let viewmode = hintsg.property('viewmode') || "",
             actualw = 0, posx = pnt.x + frame_rect.hint_delta_x;
@@ -264,7 +264,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                      .call(font.func)
                      .text(hint.lines[l]);
 
-                  let box = this.GetBoundarySizes(txt.node());
+                  let box = jsrp.getElementRect(txt, 'bbox');
 
                   actualw = Math.max(actualw, box.width);
                }
@@ -322,11 +322,25 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          painter.tooltip_enabled = true;
          painter.hints_layer = this.hints_layer;
          painter.IsTooltipShown = this.IsTooltipShown;
-         painter.SetTooltipEnabled = this.SetTooltipEnabled;
+         painter.setTooltipEnabled = this.setTooltipEnabled;
          painter.ProcessTooltipEvent = this.ProcessTooltipEvent;
       }
 
    } // TooltipHandler
+
+   let setPainterTooltipEnabled = (painter,on) => {
+      if (!painter) return;
+
+      let fp = painter.frame_painter();
+      if (fp && typeof fp.setTooltipEnabled == 'function') {
+         fp.setTooltipEnabled(on);
+         fp.ProcessTooltipEvent(null);
+      }
+      // this is 3D control object
+      if (this.control && (typeof this.control.setTooltipEnabled == 'function'))
+         this.control.setTooltipEnabled(on);
+   }
+
 
    let DragMoveHandler = {
        /** @summary Add drag for interactive rectangular elements for painter */
@@ -399,7 +413,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             drag_rect.remove();
             drag_rect = null;
 
-            pthis.SwitchTooltip(true);
+            setPainterTooltipEnabled(pthis, true);
 
             MakeResizeElements(pthis.draw_g, newwidth, newheight);
 
@@ -431,7 +445,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
                if (jsrp.closeMenu) jsrp.closeMenu(); // close menu
 
-               pthis.SwitchTooltip(false); // disable tooltip
+               setPainterTooltipEnabled(pthis, false); // disable tooltip
 
                evnt.sourceEvent.preventDefault();
                evnt.sourceEvent.stopPropagation();
@@ -503,7 +517,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                evnt.sourceEvent.stopPropagation();
                evnt.sourceEvent.preventDefault();
 
-               pthis.SwitchTooltip(false); // disable tooltip
+               setPainterTooltipEnabled(pthis, false); // disable tooltip
 
                let handle = {
                   acc_x1: Number(pthis.draw_g.attr("x")),
@@ -664,7 +678,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          let hintsg = this.hints_layer().select(".objects_hints");
          // if tooltips were visible before, try to reconstruct them after short timeout
-         if (!hintsg.empty() && this.IsTooltipAllowed() && (hintsg.property("hints_pad") == this.pad_name))
+         if (!hintsg.empty() && this.isTooltipAllowed() && (hintsg.property("hints_pad") == this.getPadName()))
             setTimeout(this.ProcessTooltipEvent.bind(this, hintsg.property('last_point'), null), 10);
       },
 
@@ -799,7 +813,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let hints = pp.GetTooltips(pnt), exact = null;
          for (let k=0; (k<hints.length) && !exact; ++k)
             if (hints[k] && hints[k].exact) exact = hints[k];
-         //if (exact) console.log('Click exact', pnt, exact.painter.GetTipName());
+         //if (exact) console.log('Click exact', pnt, exact.painter.getObjectHint());
          //      else console.log('Click frame', pnt);
 
          let res;
@@ -861,7 +875,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.zoom_rect = null;
 
          // disable tooltips in frame painter
-         this.SwitchTooltip(false);
+         setPainterTooltipEnabled(this, false);
 
          evnt.stopPropagation();
 
@@ -1079,7 +1093,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.zoom_kind = 101; // x and y
          }
 
-         this.SwitchTooltip(false);
+         setPainterTooltipEnabled(this, false);
 
          this.zoom_rect = this.svg_frame().append("rect")
                .attr("class", "zoom")
@@ -1122,7 +1136,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if ((this.zoom_origin[0] - this.zoom_curr[0] > 10)
               || (this.zoom_origin[1] - this.zoom_curr[1] > 10))
-            this.SwitchTooltip(false);
+            setPainterTooltipEnabled(this, false);
 
          evnt.stopPropagation();
       },
@@ -1278,7 +1292,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
                fp.SetLastEventPos(pnt);
             } else if (!this.v7_frame && ((kind=="x") || (kind=="y") || (kind=="z"))) {
-               exec_painter = this.main_painter(); // histogram painter delivers items for axis menu
+               exec_painter = this.getMainPainter(); // histogram painter delivers items for axis menu
             }
          } else if (kind == 'painter' && obj) {
             // this is used in 3D context menu to show special painter
@@ -1302,8 +1316,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (domenu)
                exec_painter.fillObjectExecMenu(menu, kind).then(menu => {
                    // suppress any running zooming
-                   menu.painter.SwitchTooltip(false);
-                   menu.show(null, menu.painter.SwitchTooltip.bind(menu.painter, true));
+                   setPainterTooltipEnabled(menu.painter, false);
+                   menu.show().then(() => setPainterTooltipEnabled(menu.painter, true));
                });
          });
       },
@@ -1365,7 +1379,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
 
          // enable tooltip in frame painter
-         this.SwitchTooltip(true);
+         setPainterTooltipEnabled(this, true);
       },
 
       /** Assign frame interactive methods */

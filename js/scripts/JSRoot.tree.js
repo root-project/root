@@ -819,9 +819,9 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
    TDrawSelector.prototype.GetBitsBins = function(nbits, res) {
       res.nbins = res.max = nbits;
-      res.fLabels = JSROOT.Create("THashList");
+      res.fLabels = JSROOT.create("THashList");
       for (let k = 0; k < nbits; ++k) {
-         let s = JSROOT.Create("TObjString");
+         let s = JSROOT.create("TObjString");
          s.fString = k.toString();
          s.fUniqueID = k + 1;
          res.fLabels.Add(s);
@@ -872,9 +872,9 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          res.lbls.sort();
          res.max = res.nbins = res.lbls.length;
 
-         res.fLabels = JSROOT.Create("THashList");
+         res.fLabels = JSROOT.create("THashList");
          for (let k = 0; k < res.lbls.length; ++k) {
-            let s = JSROOT.Create("TObjString");
+            let s = JSROOT.create("TObjString");
             s.fString = res.lbls[k];
             s.fUniqueID = k + 1;
             if (s.fString === "") s.fString = "<empty>";
@@ -931,7 +931,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
       return res;
    }
 
-   TDrawSelector.prototype.CreateHistogram = function() {
+   TDrawSelector.prototype.createHistogram = function() {
       if (this.hist || !this.vars[0].buf) return;
 
       if (this.dump_values) {
@@ -945,9 +945,9 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
          if (this.ndim == 1) {
             // A 1-dimensional graph will just have the x axis as an index
-            this.hist = JSROOT.CreateTGraph(N, Array.from(Array(N).keys()), this.vars[0].buf);
+            this.hist = JSROOT.createTGraph(N, Array.from(Array(N).keys()), this.vars[0].buf);
          } else if (this.ndim == 2) {
-            this.hist = JSROOT.CreateTGraph(N, this.vars[0].buf, this.vars[1].buf);
+            this.hist = JSROOT.createTGraph(N, this.vars[0].buf, this.vars[1].buf);
             delete this.vars[1].buf;
          }
 
@@ -963,9 +963,9 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          this.z = this.GetMinMaxBins(2, 50);
 
          switch (this.ndim) {
-            case 1: this.hist = JSROOT.CreateHistogram("TH1" + this.htype, this.x.nbins); break;
-            case 2: this.hist = JSROOT.CreateHistogram("TH2" + this.htype, this.x.nbins, this.y.nbins); break;
-            case 3: this.hist = JSROOT.CreateHistogram("TH3" + this.htype, this.x.nbins, this.y.nbins, this.z.nbins); break;
+            case 1: this.hist = JSROOT.createHistogram("TH1" + this.htype, this.x.nbins); break;
+            case 2: this.hist = JSROOT.createHistogram("TH2" + this.htype, this.x.nbins, this.y.nbins); break;
+            case 3: this.hist = JSROOT.createHistogram("TH3" + this.htype, this.x.nbins, this.y.nbins, this.z.nbins); break;
          }
 
          this.hist.fXaxis.fTitle = this.x.title;
@@ -1132,7 +1132,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          if (var2) var2.kind = "number";
          this.cut.buf = null; // do not create buffer for cuts
          if (!this.graph && (var0.buf.length >= this.arr_limit)) {
-            this.CreateHistogram();
+            this.createHistogram();
             this.arr_limit = 0;
          }
       } else {
@@ -1215,7 +1215,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
                break;
          }
          if (!this.graph && var0.buf.length >= this.arr_limit) {
-            this.CreateHistogram();
+            this.createHistogram();
             this.arr_limit = 0;
          }
       } else if (this.hist) {
@@ -1249,7 +1249,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
    }
 
    TDrawSelector.prototype.Terminate = function(res) {
-      if (res && !this.hist) this.CreateHistogram();
+      if (res && !this.hist) this.createHistogram();
 
       this.ShowProgress();
 
@@ -2811,10 +2811,8 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          return null;
       }
 
-      let painter = new JSROOT.ObjectPainter(obj),
+      let painter = new JSROOT.ObjectPainter(divid, obj),
           tree = obj, args = opt;
-
-      painter.setCanvDom(divid);
 
       if (obj._typename == "TBranchFunc") {
          // fictional object, created only in browser
