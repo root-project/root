@@ -12,7 +12,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
           p         = pp.GetCoordinate(text.fPos),
           textFont  = this.v7EvalFont("text", { size: 12, color: "black", align: 22 });
 
-      this.CreateG(use_frame);
+      this.createG(use_frame);
 
       this.startTextDrawing(textFont, 'font');
 
@@ -34,7 +34,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
            line_style   = this.v7EvalAttr("line_style", 1),
            line_color   = this.v7EvalColor("line_color", "black");
 
-       this.CreateG();
+       this.createG();
 
        this.draw_g
            .append("svg:line")
@@ -64,7 +64,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
            round_width  = this.v7EvalAttr( "box_round_width", 0), // not yet exists
            round_height = this.v7EvalAttr( "box_round_height", 0); // not yet exists
 
-    this.CreateG();
+    this.createG();
 
     if (fill_style == 0) fill_color = "none";
 
@@ -94,7 +94,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
            att          = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size }),
            path         = att.create(p.x, p.y);
 
-       this.CreateG();
+       this.createG();
 
        if (path)
           this.draw_g.append("svg:path")
@@ -135,7 +135,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
          if (entry.fDrawableId != "custom") {
             objp = pp.FindSnap(entry.fDrawableId, true);
          } else if (entry.fDrawable.fIO) {
-            objp = new JSROOT.ObjectPainter(entry.fDrawable.fIO);
+            objp = new JSROOT.ObjectPainter(this.getDom(), entry.fDrawable.fIO);
             if (entry.fLine) objp.createv7AttLine();
             if (entry.fFill) objp.createv7AttFill();
             if (entry.fMarker) objp.createv7AttMarker();
@@ -171,11 +171,11 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    }
 
    function drawLegend(divid, legend, opt) {
-      let painter = new JSROOT.v7.RPavePainter(legend, opt, "legend");
+      let painter = new JSROOT.v7.RPavePainter(divid, legend, opt, "legend");
 
       painter.DrawContent = drawLegendContent;
 
-     return jsrp.ensureRCanvas(painter, divid, false).then(() => painter.DrawPave());
+     return jsrp.ensureRCanvas(painter, false).then(() => painter.DrawPave());
    }
 
    // =================================================================================
@@ -206,11 +206,11 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    }
 
    function drawPaveText(divid, pave, opt) {
-      let painter = new JSROOT.v7.RPavePainter(pave, opt, "pavetext");
+      let painter = new JSROOT.v7.RPavePainter(divid, pave, opt, "pavetext");
 
       painter.DrawContent = drawPaveTextContent;
 
-      return jsrp.ensureRCanvas(painter, divid, false).then(() => painter.DrawPave());
+      return jsrp.ensureRCanvas(painter, false).then(() => painter.DrawPave());
    }
 
 

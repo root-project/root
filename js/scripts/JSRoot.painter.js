@@ -382,7 +382,7 @@ JSROOT.define(['d3'], (d3) => {
 
       if (args.attr) {
          if (args.color === undefined)
-            args.color = args.painter ? args.painter.get_color(args.attr.fMarkerColor) : jsrp.getColor(args.attr.fMarkerColor);
+            args.color = args.painter ? args.painter.getColor(args.attr.fMarkerColor) : jsrp.getColor(args.attr.fMarkerColor);
          if (!args.style || (args.style < 0)) args.style = args.attr.fMarkerStyle;
          if (!args.size) args.size = args.attr.fMarkerSize;
       }
@@ -574,13 +574,13 @@ JSROOT.define(['d3'], (d3) => {
      * @param {number} args.width - line width */
    TAttLineHandler.prototype.SetArgs = function(args) {
       if (args.attr) {
-         args.color = args.color0 || (args.painter ? args.painter.get_color(args.attr.fLineColor) : jsrp.getColor(args.attr.fLineColor));
+         args.color = args.color0 || (args.painter ? args.painter.getColor(args.attr.fLineColor) : jsrp.getColor(args.attr.fLineColor));
          if (args.width === undefined) args.width = args.attr.fLineWidth;
          args.style = args.attr.fLineStyle;
       } else if (typeof args.color == 'string') {
          if ((args.color !== 'none') && !args.width) args.width = 1;
       } else if (typeof args.color == 'number') {
-         args.color = args.painter ? args.painter.get_color(args.color) : jsrp.getColor(args.color);
+         args.color = args.painter ? args.painter.getColor(args.color) : jsrp.getColor(args.color);
       }
 
       if (args.width === undefined)
@@ -780,7 +780,7 @@ JSROOT.define(['d3'], (d3) => {
          this.color = color;
          indx = 10000 + JSROOT._.id_counter++; // use fictional unique index far away from existing color indexes
       } else {
-         this.color = painter ? painter.get_color(indx) : jsrp.getColor(indx);
+         this.color = painter ? painter.getColor(indx) : jsrp.getColor(indx);
       }
 
       if (typeof this.color != 'string') this.color = "none";
@@ -1267,11 +1267,16 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Returns visible rect of element
-     * @desc Excluding padding area, provides special handling in node.js
+     * @param {object} elem - d3.select object with element
+     * @param {string} [kind] - which size method is used
+     * @desc kind = 'bbox' use getBBox, works only with SVG
+     * kind = 'full' - full size of element, using getBoundingClientRect function
+     * kind = 'nopadding' - excludes padding area
+     * With node.js can use "width" and "height" attributes when provided in element
      * @private */
-   jsrp.getElementRect = function(elem, fullsize) {
-      if (JSROOT.nodejs)
-         return { width: parseInt(elem.attr("width")), height: parseInt(elem.attr("height")) };
+   jsrp.getElementRect = (elem, sizearg) => {
+      if (JSROOT.nodejs && (sizearg != 'bbox'))
+         return { x: 0, y: 0, width: parseInt(elem.attr("width")), height: parseInt(elem.attr("height")) };
 
       function styleValue(name) {
          let value = elem.style(name);
@@ -1280,10 +1285,20 @@ JSROOT.define(['d3'], (d3) => {
          return isNaN(value) ? 0 : Math.round(value);
       }
 
-      let rect = elem.node().getBoundingClientRect(),
-          res = { width: Math.round(rect.width), height: Math.round(rect.height) };
+      let rect = elem.node().getBoundingClientRect();
+      if ((sizearg == 'bbox') && (parseFloat(rect.width) > 0))
+         rect = elem.node().getBBox();
 
-      if (!fullsize) {
+      let res = { x: 0, y: 0, width: parseInt(rect.width), height: parseInt(rect.height) };
+      if (rect.left !== undefined) {
+         res.x = parseInt(rect.left);
+         res.y = parseInt(rect.top);
+      } else if (rect.x !== undefined) {
+         res.x = parseInt(rect.x);
+         res.y = parseInt(rect.y);
+      }
+
+      if ((sizearg === undefined) || (sizearg == 'nopadding')) {
          // this is size exclude padding area
          res.width -= styleValue('padding-left') + styleValue('padding-right');
          res.height -= styleValue('padding-top') + styleValue('padding-bottom');
@@ -1294,7 +1309,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Calculate absolute position of provided element in canvas
      * @private */
-   jsrp.getAbsPosInCanvas = function(sel, pos) {
+   jsrp.getAbsPosInCanvas = (sel, pos) => {
       while (!sel.empty() && !sel.classed('root_canvas') && pos) {
          let cl = sel.attr("class");
          if (cl && ((cl.indexOf("root_frame") >= 0) || (cl.indexOf("__root_pad_") >= 0))) {
@@ -1338,7 +1353,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary selects main HTML element used for drawing - typically <div> element
      * @desc if main element was layouted, returns main element inside layout
-     * @param {string} is_direct - if 'origin' specified, returns original element even if actual drawing moved to some other place
+     * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place
      * @returns {object} d3.select object for main element for drawing */
    BasePainter.prototype.selectDom = function(is_direct) {
 
@@ -1403,15 +1418,12 @@ JSROOT.define(['d3'], (d3) => {
       this.clearTopPainter();
       let origin = this.selectDom('origin');
       if (!origin.empty() && !keep_origin) origin.html("");
-      if (this._changed_layout)
-         this.setLayoutKind('simple');
       this.divid = null;
       delete this._selected_main;
 
       if (this._hpainter && typeof this._hpainter.removePainter === 'function')
          this._hpainter.removePainter(this);
 
-      delete this._changed_layout;
       delete this._hitemname;
       delete this._hdrawopt;
       delete this._hpainter;
@@ -1422,29 +1434,10 @@ JSROOT.define(['d3'], (d3) => {
      * @abstract */
    BasePainter.prototype.checkResize = function(/* arg */) {}
 
-
-   /** @summary Returns layout kind */
-   BasePainter.prototype.getLayoutKind = function() {
-      let origin = this.selectDom('origin'),
-         layout = origin.empty() ? "" : origin.property('layout');
-
-      return layout || 'simple';
-   }
-
-   /** @summary Set layout kind */
-   BasePainter.prototype.setLayoutKind = function(kind, main_selector) {
-      let origin = this.selectDom('origin');
-      if (!origin.empty()) {
-         if (!kind) kind = 'simple';
-         origin.property('layout', kind);
-         origin.property('layout_selector', (kind != 'simple') && main_selector ? main_selector : null);
-         this._changed_layout = (kind !== 'simple'); // use in cleanup
-      }
-   }
-
    /** @summary Function checks if geometry of main div was changed.
-     * @desc take into account enlarge state
-     * @returns size of area when main div is drawn */
+     * @desc take into account enlarge state, used only in PadPainter class
+     * @returns size of area when main div is drawn
+     * @private */
    BasePainter.prototype.testMainResize = function(check_level, new_size, height_factor) {
 
       let enlarge = this.enlargeMain('state'),
@@ -1496,6 +1489,7 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Try enlarge main drawing element to full HTML page.
+     * @param {string|boolean} action  - defines that should be done
      * @desc Possible values for parameter:
      *    - true - try to enlarge
      *    - false - cancel enlarge state
@@ -1592,18 +1586,21 @@ JSROOT.define(['d3'], (d3) => {
     * @class
     * @memberof JSROOT
     * @extends ObjectPainter
+    * @param {object|string} dom - identifier of dom element
     * @param {object} obj - object to draw
     * @param {string} [opt] - object draw options
     * @private
     */
 
-   function ObjectPainter(obj, opt) {
-      BasePainter.call(this);
-      this.draw_g = null; // container for all drawn objects
-      this.pad_name = ""; // name of pad where object is drawn
-      this.main = null;  // main painter, received from pad
-      this.assignObject(obj);
-      if (typeof opt == "string") this.options = { original: opt };
+   function ObjectPainter(divid, obj, opt) {
+      BasePainter.call(this, divid);
+      // this.draw_g = undefined; // container for all drawn objects
+      // this._main_painter = undefined;  // main painter in the correspondent pad
+      if (obj !== undefined) {
+         this.pad_name = divid ? this.selectCurrentPad() : ""; // name of pad where object is drawn
+         this.assignObject(obj);
+         if (typeof opt == "string") this.options = { original: opt };
+      }
    }
 
    ObjectPainter.prototype = Object.create(BasePainter.prototype);
@@ -1616,6 +1613,18 @@ JSROOT.define(['d3'], (d3) => {
          delete this.draw_object;
    }
 
+   /** @summary Assigns pad name where element will be drawn
+     * @desc Should happend before first draw of element is performed, only for special use case
+     * @param {string} [pad_name] - on which subpad element should be draw, if not specified - use current */
+   ObjectPainter.prototype.setPadName = function(pad_name) {
+      this.pad_name = (typeof pad_name == 'string') ? pad_name : this.selectCurrentPad();
+   }
+
+   /** @summary Returns pad name where object is drawn */
+   ObjectPainter.prototype.getPadName = function() {
+      return this.pad_name || "";
+   }
+
    /** @summary Assign snapid to the painter
     * @desc Identifier used to communicate with server side and identifies object on the server
     * @private */
@@ -1625,18 +1634,18 @@ JSROOT.define(['d3'], (d3) => {
      * @desc Remove object drawing and in case of main painter - also main HTML components */
    ObjectPainter.prototype.cleanup = function() {
 
-      this.RemoveDrawG();
+      this.removeG();
 
       let keep_origin = true;
 
-      if (this.is_main_painter()) {
+      if (this.isMainPainter()) {
          let pp = this.pad_painter();
          if (!pp || pp.normal_canvas === false) keep_origin = false;
       }
 
       // cleanup all existing references
-      this.pad_name = "";
-      this.main = null;
+      delete this.pad_name;
+      delete this._main_painter;
       this.draw_object = null;
       delete this.snapid;
 
@@ -1661,13 +1670,13 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Returns drawn object class name */
    ObjectPainter.prototype.getClassName = function() {
-      let obj = this.getObject();
-      return obj ? obj._typename || "" : "";
+      let obj = this.getObject(),
+          clname = obj ? obj._typename : "";
+      return clname || "";
    }
 
    /** @summary Checks if drawn object matches with provided typename
-    * @param {string} arg - typename
-    * @param {string} arg._typename - if arg is object, use its typename */
+    * @param {string|object} arg - typename (or object with _typename member) */
    ObjectPainter.prototype.matchObjectType = function(arg) {
       if (!arg || !this.draw_object) return false;
       if (typeof arg === 'string') return (this.draw_object._typename === arg);
@@ -1676,8 +1685,8 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Change item name
-    * @desc When available, used for svg:title proprty
-    * @private */
+     * @desc When available, used for svg:title proprty
+     * @private */
    ObjectPainter.prototype.setItemName = function(name, opt, hpainter) {
       BasePainter.prototype.setItemName.call(this,name, opt, hpainter);
       if (this.no_default_title || (name == "")) return;
@@ -1744,34 +1753,23 @@ JSROOT.define(['d3'], (d3) => {
       return true;
    }
 
-   /** @summary Returns string which either item or object name.
-    * @desc Such string can be used as tooltip. If result string larger than 20 symbols, it will be cutted.
-    * @private */
-   ObjectPainter.prototype.GetTipName = function(append) {
+   /** @summary Returns string which object hint
+     * @desc It is either item name or object name or class name.
+     * Such string can be used as tooltip.
+     * If result string larger than 20 symbols, it will be cutted. */
+   ObjectPainter.prototype.getObjectHint = function() {
       let res = this.getItemName(), obj = this.getObject();
       if (!res) res = obj && obj.fName ? obj.fName : "";
+      if (!res) res = this.getClassName();
       if (res.lenght > 20) res = res.substr(0, 17) + "...";
-      if (res && append) res += append;
       return res;
    }
 
-   /** @summary returns pad painter for specified pad
-    * @private */
-   ObjectPainter.prototype.pad_painter = function(pad_name) {
-      let elem = this.svg_pad(typeof pad_name == "string" ? pad_name : undefined);
-      return elem.empty() ? null : elem.property('pad_painter');
-   }
-
-   /** @summary returns canvas painter
-    * @private */
-   ObjectPainter.prototype.canv_painter = function() {
-      let elem = this.svg_canvas();
-      return elem.empty() ? null : elem.property('pad_painter');
-   }
-
    /** @summary returns color from current list of colors
-    * @private */
-   ObjectPainter.prototype.get_color = function(indx) {
+     * @desc First checks canvas painter and then just access global list of colors
+     * @param {number} indx - color index
+     * @returns {string} with SVG color name or rgb() */
+   ObjectPainter.prototype.getColor = function(indx) {
       let jsarr = this.root_colors;
 
       if (!jsarr) {
@@ -1784,7 +1782,7 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary add color to list of colors
     * @private */
-   ObjectPainter.prototype.add_color = function(color) {
+   ObjectPainter.prototype.addColor = function(color) {
       let jsarr = this.root_colors;
       if (!jsarr) {
          let pp = this.canv_painter();
@@ -1796,76 +1794,49 @@ JSROOT.define(['d3'], (d3) => {
       return jsarr.length - 1;
    }
 
-   /** @summary returns tooltip allowed flag. Check canvas painter
-    * @private */
-   ObjectPainter.prototype.IsTooltipAllowed = function() {
+   /** @summary returns tooltip allowed flag.
+     * @desc If available, checks in canvas painter
+     * @private */
+   ObjectPainter.prototype.isTooltipAllowed = function() {
       let src = this.canv_painter() || this;
       return src.tooltip_allowed ? true : false;
    }
 
-   /** @summary returns tooltip allowed flag
-    * @private */
-   ObjectPainter.prototype.SetTooltipAllowed = function(on) {
+   /** @summary change tooltip allowed flag
+     * @param {boolean|string} [on = true] set tooltip allowed state or 'toggle'
+     * @private */
+   ObjectPainter.prototype.setTooltipAllowed = function(on) {
+      if (on === undefined) on = true;
       let src = this.canv_painter() || this;
       src.tooltip_allowed = (on == "toggle") ? !src.tooltip_allowed : on;
    }
 
-   /** @summary returns custom palette for the object. If forced, will be created
-    * @private */
-   ObjectPainter.prototype.get_palette = function(force, palettedid) {
-      if (!palettedid) {
-         let pp = this.pad_painter();
-         if (!pp) return null;
-         if (pp.custom_palette) return pp.custom_palette;
-      }
-
-      let cp = this.canv_painter();
-      if (!cp) return null;
-      if (cp.custom_palette && !palettedid)
-         return cp.custom_palette;
-
-      if (force && jsrp.GetColorPalette)
-         cp.custom_palette = jsrp.GetColorPalette(palettedid);
-
-      return cp.custom_palette;
-   }
-
-   /** @summary Method called when interactively changes attribute in given class
-    * @abstract
-    * @private */
-   ObjectPainter.prototype.AttributeChange = function(/* class_name, member_name, new_value */) {
-      // only for objects in web canvas make sense to handle attributes changes from GED
-      // console.log("Changed attribute class = " + class_name + " member = " + member_name + " value = " + new_value);
-   }
-
    /** @summary Checks if draw elements were resized and drawing should be updated.
-    * @desc Redirects to {@link JSROOT.TPadPainter.CheckCanvasResize}
+    * @desc Redirects to {@link JSROOT.TPadPainter.checkCanvasResize}
     * @private */
    ObjectPainter.prototype.checkResize = function(arg) {
       let p = this.canv_painter();
       if (!p) return false;
 
       // only canvas should be checked
-      p.CheckCanvasResize(arg);
+      p.checkCanvasResize(arg);
       return true;
    }
 
    /** @summary removes <g> element with object drawing
-    * @desc generic method to delete all graphical elements, associated with painter */
-   ObjectPainter.prototype.RemoveDrawG = function() {
+     * @desc generic method to delete all graphical elements, associated with the painter */
+   ObjectPainter.prototype.removeG = function() {
       if (this.draw_g) {
          this.draw_g.remove();
-         this.draw_g = null;
+         delete this.draw_g;
       }
    }
 
    /** @summary (re)creates svg:g element for object drawings
-    *
-    * @desc either one attach svg:g to pad list of primitives (default)
-    * or svg:g element created in specified frame layer (default main_layer)
-    * @param {string} [frame_layer=undefined] - when specified, <g> element will be created inside frame layer, otherwise in pad primitives list
-    */
-   ObjectPainter.prototype.CreateG = function(frame_layer) {
+     * @desc either one attach svg:g to pad list of primitives (default)
+     * or svg:g element created in specified frame layer (default main_layer)
+     * @param {string} [frame_layer] - when specified, <g> element will be created inside frame layer, otherwise on the pad  */
+   ObjectPainter.prototype.createG = function(frame_layer) {
       if (this.draw_g) {
          // one should keep svg:g element on its place
          // d3.selectAll(this.draw_g.node().childNodes).remove();
@@ -1946,11 +1917,11 @@ JSROOT.define(['d3'], (d3) => {
       return d3.select(null);
    }
 
-   /** @summary Method returns current pad name
-    * @desc When parameter new_name specified, it will be set as new current pad for the canvas
-    * @param {string} [new_name] - when specified, new current pad name will be configured
-    * @private */
-   ObjectPainter.prototype.currentPadName = function(new_name) {
+   /** @summary Method selects current pad name
+     * @param {string} [new_name] - when specified, new current pad name will be configured
+     * @returns {string} previous selected pad or actual pad when new_name not specified
+     * @private */
+   ObjectPainter.prototype.selectCurrentPad = function(new_name) {
       let svg = this.svg_canvas();
       if (svg.empty()) return "";
       let curr = svg.property('current_pad');
@@ -1958,57 +1929,106 @@ JSROOT.define(['d3'], (d3) => {
       return curr;
    }
 
+   /** @summary returns pad painter for specified pad */
+   ObjectPainter.prototype.pad_painter = function(pad_name) {
+      let elem = this.svg_pad(typeof pad_name == "string" ? pad_name : undefined);
+      return elem.empty() ? null : elem.property('pad_painter');
+   }
+
+   /** @summary returns canvas painter */
+   ObjectPainter.prototype.canv_painter = function() {
+      let elem = this.svg_canvas();
+      return elem.empty() ? null : elem.property('pad_painter');
+   }
+
    /** @summary Returns ROOT TPad object
     * @private */
    ObjectPainter.prototype.root_pad = function() {
-      let pad_painter = this.pad_painter();
-      return pad_painter ? pad_painter.pad : null;
+      let pp = this.pad_painter();
+      return pp ? pp.pad : null;
    }
 
-   /** @summary Converts x or y coordinate into SVG pad coordinates.
-    *
+   /** @summary Returns pad width */
+   ObjectPainter.prototype.pad_width = function() {
+      let res = this.svg_pad();
+      res = res.empty() ? 0 : res.property("draw_width");
+      return isNaN(res) ? 0 : res;
+   }
+
+   /** @summary Returns pad height */
+   ObjectPainter.prototype.pad_height = function() {
+      let res = this.svg_pad();
+      res = res.empty() ? 0 : res.property("draw_height");
+      return isNaN(res) ? 0 : res;
+   }
+
+
+   /** @summary Return functor, which can convert x and y coordinates into pixels, used for drawing
+     * @desc X and Y coordinates can be converted by calling func.x(x) and func.y(y)
+     * @param {boolean} isndc - if NDC coordinates will be used
+     * @param {boolean} [noround] - if set, return coordinates will not be rounded
+     * @private */
+   ObjectPainter.prototype.getAxisToSvgFunc = function(isndc, nornd) {
+      let func = { isndc: isndc, nornd: nornd },
+          use_frame = this.draw_g && this.draw_g.property('in_frame');
+      if (use_frame) func.main = this.frame_painter();
+      if (func.main && func.main.grx && func.main.gry) {
+         if (nornd) {
+            func.x = function(x) { return this.main.grx(x); }
+            func.y = function(y) { return this.main.gry(y); }
+         } else {
+            func.x = function(x) { return Math.round(this.main.grx(x)); }
+            func.y = function(y) { return Math.round(this.main.gry(y)); }
+         }
+      } else if (!use_frame) {
+         if (!isndc) func.pad = this.root_pad(); // need for NDC conversion
+         func.padw = this.pad_width();
+         func.x = function(value) {
+            if (this.pad) {
+               if (this.pad.fLogx)
+                  value = (value > 0) ? Math.log10(value) : this.pad.fUxmin;
+               value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
+            }
+            value *= this.padw;
+            return this.nornd ? value : Math.round(value);
+         }
+         func.padh = this.pad_height();
+         func.y = function(value) {
+            if (this.pad) {
+               if (this.pad.fLogy)
+                  value = (value > 0) ? Math.log10(value) : this.pad.fUymin;
+               value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
+            }
+            value = (1 - value) * this.padh;
+            return this.nornd ? value : Math.round(value);
+         }
+      } else {
+         console.error('Problem to create functor for', this.getClassName());
+         func.x = () => 0;
+         func.y = () => 0;
+
+      }
+      return func;
+   }
+
+   /** @summary Converts x or y coordinate into SVG coordinates.
     *  @param {string} axis - name like "x" or "y"
     *  @param {number} value - axis value to convert.
     *  @param {boolean} ndc - is value in NDC coordinates
-    *  @param {boolean} noround - skip rounding
-    *  @returns {number} value of requested coordiantes, rounded if kind.noround not specified
-    *  @private */
-   ObjectPainter.prototype.AxisToSvg = function(axis, value, ndc, noround) {
-      let use_frame = this.draw_g && this.draw_g.property('in_frame'),
-         main = use_frame ? this.frame_painter() : null;
-
-      if (use_frame && main && main["gr" + axis]) {
-         value = (axis == "y") ? main.gry(value) + (use_frame ? 0 : main.frame_y())
-            : main.grx(value) + (use_frame ? 0 : main.frame_x());
-      } else if (use_frame) {
-         value = 0; // in principal error, while frame calculation requested
-      } else {
-         let pad = ndc ? null : this.root_pad();
-         if (pad) {
-            if (axis == "y") {
-               if (pad.fLogy)
-                  value = (value > 0) ? Math.log10(value) : pad.fUymin;
-               value = (value - pad.fY1) / (pad.fY2 - pad.fY1);
-            } else {
-               if (pad.fLogx)
-                  value = (value > 0) ? Math.log10(value) : pad.fUxmin;
-               value = (value - pad.fX1) / (pad.fX2 - pad.fX1);
-            }
-         }
-         value = (axis == "y") ? (1 - value) * this.pad_height() : value * this.pad_width();
-      }
-
-      return noround ? value : Math.round(value);
+    *  @param {boolean} [noround] - skip rounding
+    *  @returns {number} value of requested coordiantes */
+   ObjectPainter.prototype.axisToSvg = function(axis, value, ndc, noround) {
+      let func = this.getAxisToSvgFunc(ndc, noround);
+      return func[axis](value);
    }
 
    /** @summary Converts pad SVG x or y coordinates into axis values.
-   *
-   *  @param {string} axis - name like "x" or "y"
-   *  @param {number} coord - graphics coordiante.
-   *  @param {boolean} ndc - kind of return value
-   *  @returns {number} value of requested coordiantes
-   *  @private */
-   ObjectPainter.prototype.SvgToAxis = function(axis, coord, ndc) {
+     * @desc Reverse transformation for {@link ObjectPainter.axisToSvg}
+     * @param {string} axis - name like "x" or "y"
+     * @param {number} coord - graphics coordiante.
+     * @param {boolean} ndc - kind of return value
+     * @returns {number} value of requested coordiantes */
+   ObjectPainter.prototype.svgToAxis = function(axis, coord, ndc) {
       let use_frame = this.draw_g && this.draw_g.property('in_frame');
 
       if (use_frame) {
@@ -2032,66 +2052,12 @@ JSROOT.define(['d3'], (d3) => {
       return value;
    }
 
-   /** @summary Return functor, which can convert x and y coordinates into pixels, used for drawing
-    * @desc Produce functor can convert x and y value by calling func.x(x) and func.y(y)
-    * @param {boolean} isndc - if NDC coordinates will be used
-    * @private */
-   ObjectPainter.prototype.AxisToSvgFunc = function(isndc) {
-      let func = { isndc: isndc }, use_frame = this.draw_g && this.draw_g.property('in_frame');
-      if (use_frame) func.main = this.frame_painter();
-      if (func.main && !isndc && func.main.grx && func.main.gry) {
-         func.offx = func.main.frame_x();
-         func.offy = func.main.frame_y();
-         func.x = function(x) { return Math.round(this.main.grx(x) + this.offx); }
-         func.y = function(y) { return Math.round(this.main.gry(y) + this.offy); }
-      } else {
-         if (!isndc) func.pad = this.root_pad(); // need for NDC conversion
-         func.padh = this.pad_height();
-         func.padw = this.pad_width();
-         func.x = function(value) {
-            if (this.pad) {
-               if (this.pad.fLogx)
-                  value = (value > 0) ? Math.log10(value) : this.pad.fUxmin;
-               value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
-            }
-            return Math.round(value * this.padw);
-         }
-         func.y = function(value) {
-            if (this.pad) {
-               if (this.pad.fLogy)
-                  value = (value > 0) ? Math.log10(value) : this.pad.fUymin;
-               value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
-            }
-            return Math.round((1 - value) * this.padh);
-         }
-      }
-      return func;
-   }
-
-   /** @summary Returns svg element for the frame in current pad.
-    * @private */
+   /** @summary Returns svg element for the frame in current pad */
    ObjectPainter.prototype.svg_frame = function() { return this.svg_layer("primitives_layer").select(".root_frame"); }
 
-   /** @summary Returns pad width.
-    * @private  */
-   ObjectPainter.prototype.pad_width = function() {
-      let res = this.svg_pad();
-      res = res.empty() ? 0 : res.property("draw_width");
-      return isNaN(res) ? 0 : res;
-   }
-
-   /** @summary Returns pad height
-    * @param {string} [pad_name] - optional pad name, otherwise where object painter is drawn
-    * @private */
-   ObjectPainter.prototype.pad_height = function() {
-      let res = this.svg_pad();
-      res = res.empty() ? 0 : res.property("draw_height");
-      return isNaN(res) ? 0 : res;
-   }
-
    /** @summary Returns frame painter in current pad
-    * @desc Pad has direct reference on frame if any
-    * @private */
+     * @desc Pad has direct reference on frame if any
+     * @private */
    ObjectPainter.prototype.frame_painter = function() {
       let pp = this.pad_painter();
       return pp ? pp.frame_painter() : null;
@@ -2099,28 +2065,29 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Returns property of the frame painter
     * @private */
-   ObjectPainter.prototype.frame_property = function(name) {
-      let pp = this.frame_painter();
-      return pp && pp[name] ? pp[name] : 0;
+   function _frame_property(painter, name) {
+      let fp = painter.frame_painter();
+      return fp && fp[name] ? fp[name] : 0;
    }
 
-   /** @summary Returns frame X coordinate relative to current pad */
-   ObjectPainter.prototype.frame_x = function() { return this.frame_property("_frame_x"); }
+   /** @summary Returns frame X coordinate relative to pad */
+   ObjectPainter.prototype.frame_x = function() { return _frame_property(this, "_frame_x"); }
 
-   /** @summary Returns frame Y coordinate relative to current pad */
-   ObjectPainter.prototype.frame_y = function() { return this.frame_property("_frame_y"); }
+   /** @summary Returns frame Y coordinate relative to pad */
+   ObjectPainter.prototype.frame_y = function() { return _frame_property(this, "_frame_y"); }
 
    /** @summary Returns frame width */
-   ObjectPainter.prototype.frame_width = function() { return this.frame_property("_frame_width"); }
+   ObjectPainter.prototype.frame_width = function() { return _frame_property(this, "_frame_width"); }
 
    /** @summary Returns frame height */
-   ObjectPainter.prototype.frame_height = function() { return this.frame_property("_frame_height"); }
+   ObjectPainter.prototype.frame_height = function() { return _frame_property(this, "_frame_height"); }
 
    /** @summary Returns main object painter on the pad.
-    * @desc Normally this is first histogram drawn on the pad, which also draws all axes
-    * @param {boolean} [not_store] - if true, prevent temporary store of main painter reference */
-   ObjectPainter.prototype.main_painter = function(not_store) {
-      let res = this.main;
+     * @desc Typically it is first histogram drawn on the pad and which draws frame axes
+     * But it also can be special usecase as TASImage or TGraphPolargram
+     * @param {boolean} [not_store] - if true, prevent temporary store of main painter reference */
+   ObjectPainter.prototype.getMainPainter = function(not_store) {
+      let res = this._main_painter;
       if (!res) {
          let svg_p = this.svg_pad();
          if (svg_p.empty()) {
@@ -2129,16 +2096,17 @@ JSROOT.define(['d3'], (d3) => {
             res = svg_p.property('mainpainter');
          }
          if (!res) res = null;
-         if (!not_store) this.main = res;
+         if (!not_store) this._main_painter = res;
       }
       return res;
    }
 
    /** @summary Returns true if this is main painter */
-   ObjectPainter.prototype.is_main_painter = function() { return this === this.main_painter(); }
+   ObjectPainter.prototype.isMainPainter = function() { return this === this.getMainPainter(); }
 
    /** @summary Assign this as main painter on the pad
-     * @desc Main painter typically responsible for axes drawing */
+     * @desc Main painter typically responsible for axes drawing
+     * Should not be used by pad/canvas painters, but rather by objects which are drawing axis */
    ObjectPainter.prototype.setAsMainPainter = function(force) {
       let svg_p = this.svg_pad();
       if (svg_p.empty())
@@ -2147,12 +2115,11 @@ JSROOT.define(['d3'], (d3) => {
          svg_p.property('mainpainter', this);
    }
 
-   /** @summary Add painter to pad list of painters */
-   ObjectPainter.prototype.addToPadPrimitives = function() {
-      let svg_p = this.svg_pad(this.pad_name); // important - parent pad element accessed here
-      if (svg_p.empty()) return false;
+   /** @summary Add painter to pad list of painters
+     * @param {string} [pad_name] - optional pad name where painter should be add */
+   ObjectPainter.prototype.addToPadPrimitives = function(pad_name) {
+      let pp = this.pad_painter(pad_name); // important - pad_name must be here, otherwise PadPainter class confuses itself
 
-      let pp = svg_p.property('pad_painter');
       if (!pp || (pp === this)) return false;
 
       if (pp.painters.indexOf(this) < 0)
@@ -2164,27 +2131,12 @@ JSROOT.define(['d3'], (d3) => {
       return true;
    }
 
-   /** @summary Assigns DOM element where canvas is drawn
-     * @param {string|object} elem - either element id or directly DOMElement
-     * @param {string} [pad_name] - on which subpad element should be draw, if not specified - used current */
-   ObjectPainter.prototype.setCanvDom = function(elem, pad_name) {
-
-      this.setDom(elem);
-
-      // remember current pad name - where finally object will be draw
-      this.pad_name = (typeof pad_name == 'string') ? pad_name : this.currentPadName();
-
-      return true;
-   }
-
-
    /** @summary Creates marker attributes object
-    *
-    * @desc Can be used to produce markers in painter.
-    * See {@link JSROOT.TAttMarkerHandler} for more info.
-    * Instance assigned as this.markeratt data member, recognized by GED editor
-    * @param {object} args - either TAttMarker or see arguments of {@link JSROOT.TAttMarkerHandler}
-    * @returns created handler */
+     * @desc Can be used to produce markers in painter.
+     * See {@link JSROOT.TAttMarkerHandler} for more info.
+     * Instance assigned as this.markeratt data member, recognized by GED editor
+     * @param {object} args - either TAttMarker or see arguments of {@link JSROOT.TAttMarkerHandler}
+     * @returns {object} created handler */
    ObjectPainter.prototype.createAttMarker = function(args) {
       if (!args || (typeof args !== 'object')) args = { std: true }; else
          if (args.fMarkerColor !== undefined && args.fMarkerStyle !== undefined && args.fMarkerSize !== undefined) args = { attr: args, std: false };
@@ -2207,11 +2159,10 @@ JSROOT.define(['d3'], (d3) => {
 
 
    /** @summary Creates line attributes object.
-   *
-   * @desc Can be used to produce lines in painter.
-   * See {@link JSROOT.TAttLineHandler} for more info.
-   * Instance assigned as this.lineatt data member, recognized by GED editor
-   * @param {object} args - either TAttLine or see constructor arguments of {@link JSROOT.TAttLineHandler} */
+     * @desc Can be used to produce lines in painter.
+     * See {@link JSROOT.TAttLineHandler} for more info.
+     * Instance assigned as this.lineatt data member, recognized by GED editor
+     * @param {object} args - either TAttLine or see constructor arguments of {@link JSROOT.TAttLineHandler} */
    ObjectPainter.prototype.createAttLine = function(args) {
       if (!args || (typeof args !== 'object'))
          args = { std: true };
@@ -2235,21 +2186,18 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Creates fill attributes object.
-    *
-    * @desc Method dedicated to create fill attributes, bound to canvas SVG
-    * otherwise newly created patters will not be usable in the canvas
-    * See {@link JSROOT.TAttFillHandler} for more info.
-    * Instance assigned as this.fillatt data member, recognized by GED editor
-
-    * @param {object} args - for special cases one can specify TAttFill as args or number of parameters
-    * @param {boolean} [args.std = true] - this is standard fill attribute for object and should be used as this.fillatt
-    * @param {object} [args.attr = null] - object, derived from TAttFill
-    * @param {number} [args.pattern = undefined] - integer index of fill pattern
-    * @param {number} [args.color = undefined] - integer index of fill color
-    * @param {string} [args.color_as_svg = undefined] - color will be specified as SVG string, not as index from color palette
-    * @param {number} [args.kind = undefined] - some special kind which is handled differently from normal patterns
-    * @returns created handle
-   */
+     * @desc Method dedicated to create fill attributes, bound to canvas SVG
+     * otherwise newly created patters will not be usable in the canvas
+     * See {@link JSROOT.TAttFillHandler} for more info.
+     * Instance assigned as this.fillatt data member, recognized by GED editors
+     * @param {object} args - for special cases one can specify TAttFill as args or number of parameters
+     * @param {boolean} [args.std = true] - this is standard fill attribute for object and should be used as this.fillatt
+     * @param {object} [args.attr = null] - object, derived from TAttFill
+     * @param {number} [args.pattern = undefined] - integer index of fill pattern
+     * @param {number} [args.color = undefined] - integer index of fill color
+     * @param {string} [args.color_as_svg = undefined] - color will be specified as SVG string, not as index from color palette
+     * @param {number} [args.kind = undefined] - some special kind which is handled differently from normal patterns
+     * @returns created handle */
    ObjectPainter.prototype.createAttFill = function(args) {
       if (!args || (typeof args !== 'object')) args = { std: true }; else
          if (args._typename && args.fFillColor !== undefined && args.fFillStyle !== undefined) args = { attr: args, std: false };
@@ -2298,7 +2246,7 @@ JSROOT.define(['d3'], (d3) => {
       if (arg == "pad") {
          this.redrawPad(reason);
       } else if (arg == "axes") {
-         let main = this.main_painter(true); // works for pad and any object drawn in the pad
+         let main = this.getMainPainter(true); // works for pad and any object drawn in the pad
          if (main && (typeof main.DrawAxes == 'function'))
             main.DrawAxes();
          else
@@ -2320,8 +2268,8 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Redraw all objects in correspondent pad */
    ObjectPainter.prototype.redrawPad = function(reason) {
-      let pad_painter = this.pad_painter();
-      if (pad_painter) pad_painter.Redraw(reason);
+      let pp = this.pad_painter();
+      if (pp) pp.Redraw(reason);
    }
 
    /** @summary execute selected menu command, either locally or remotely
@@ -2385,7 +2333,7 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Fill context menu for the object
     * @private */
    ObjectPainter.prototype.FillContextMenu = function(menu) {
-      let title = this.GetTipName();
+      let title = this.getObjectHint();
       if (this.getObject() && ('_typename' in this.getObject()))
          title = this.getObject()._typename + "::" + title;
 
@@ -2538,25 +2486,15 @@ JSROOT.define(['d3'], (d3) => {
          draw_g.property("_font_too_small", (max_font_size && (max_font_size < 5)) || (font.size < 4));
    }
 
-   /** @summary function used to remember maximal text scaling factor
-    * @private */
-   ObjectPainter.prototype.TextScaleFactor = function(value, draw_g) {
+   /** @summary Apply scaling factor to all drawn text in the <g> element
+     * @desc Can be applied at any time - even in the pstprocess callbacks of text draw
+     * @param {number} factor - scaling factor
+     * @param {object} [draw_g] - drawing element for the text
+     * @protected */
+   ObjectPainter.prototype.scaleTextDrawing = function(factor, draw_g) {
       if (!draw_g) draw_g = this.draw_g;
-      if (value && (value > draw_g.property('text_factor'))) draw_g.property('text_factor', value);
-   }
-
-   /** @summary getBBox does not work in mozilla when object is not displayed or not visible :(
-    * getBoundingClientRect() returns wrong sizes for MathJax
-    * are there good solution?
-    * @private */
-   ObjectPainter.prototype.GetBoundarySizes = function(elem) {
-      if (!elem) { console.warn('empty node in GetBoundarySizes'); return { width: 0, height: 0 }; }
-      let box = elem.getBoundingClientRect(); // works always, but returns sometimes results in ex values, which is difficult to use
-      if (parseFloat(box.width) > 0) box = elem.getBBox(); // check that elements visible, request precise value
-      let res = { width: parseInt(box.width), height: parseInt(box.height) };
-      if ('left' in box) { res.x = parseInt(box.left); res.y = parseInt(box.right); } else
-         if ('x' in box) { res.x = parseInt(box.x); res.y = parseInt(box.y); }
-      return res;
+      if (factor && (factor > draw_g.property('text_factor')))
+         draw_g.property('text_factor', factor);
    }
 
    /** @summary Finish text drawing
@@ -2564,14 +2502,12 @@ JSROOT.define(['d3'], (d3) => {
      * @param {function} [draw_g] - <g> element for text drawing, this.draw_g used when not specified
      * @returns {Promise} when text drawing completed
      * @protected */
-   ObjectPainter.prototype.finishTextDrawing = function(draw_g, skip_promise) {
+   ObjectPainter.prototype.finishTextDrawing = function(draw_g) {
       if (!draw_g) draw_g = this.draw_g;
       draw_g.property('draw_text_completed', true); // mark that text drawing is completed
-      if (skip_promise)
-         return this._checkAllTextDrawing(draw_g);
 
       return new Promise(resolveFunc => {
-           this._checkAllTextDrawing(draw_g, resolveFunc);
+         this._checkAllTextDrawing(draw_g, resolveFunc);
       });
    }
 
@@ -2633,7 +2569,7 @@ JSROOT.define(['d3'], (d3) => {
             if (arg.scale && (f > 0)) { arg.box.width = arg.box.width / f; arg.box.height = arg.box.height / f; }
          } else if (!arg.plain && !arg.fast) {
             // exact box dimension only required when complex text was build
-            arg.box = this.GetBoundarySizes(txt.node());
+            arg.box = jsrp.getElementRect(txt, 'bbox');
          }
 
          // if (arg.text.length>20) console.log(arg.box, arg.align, arg.x, arg.y, 'plain', arg.plain, 'inside', arg.width, arg.height);
@@ -2823,14 +2759,14 @@ JSROOT.define(['d3'], (d3) => {
    ObjectPainter.prototype.postprocessText = function(txt_node, arg) {
       // complete rectangle with very rougth size estimations
 
-      arg.box = !JSROOT.nodejs && !JSROOT.settings.ApproxTextSize && !arg.fast ? this.GetBoundarySizes(txt_node.node()) :
+      arg.box = !JSROOT.nodejs && !JSROOT.settings.ApproxTextSize && !arg.fast ? jsrp.getElementRect(txt_node, 'bbox') :
                (arg.text_rect || { height: arg.font_size * 1.2, width: arg.font.approxTextWidth(arg.text) });
 
       txt_node.attr('visibility', 'hidden'); // hide elements until text drawing is finished
 
       if (arg.box.width > arg.draw_g.property('max_text_width')) arg.draw_g.property('max_text_width', arg.box.width);
-      if (arg.scale) this.TextScaleFactor(1.05 * arg.box.width / arg.width, arg.draw_g);
-      if (arg.scale) this.TextScaleFactor(1. * arg.box.height / arg.height, arg.draw_g);
+      if (arg.scale) this.scaleTextDrawing(1.05 * arg.box.width / arg.width, arg.draw_g);
+      if (arg.scale) this.scaleTextDrawing(1. * arg.box.height / arg.height, arg.draw_g);
 
       arg.result_width = arg.box.width;
       arg.result_height = arg.box.height;
@@ -2956,24 +2892,27 @@ JSROOT.define(['d3'], (d3) => {
    }
 
 
-   /** @summary Configure user-defined tooltip callback
+   /** @summary Configure user-defined tooltip handler
      * @desc Hook for the users to get tooltip information when mouse cursor moves over frame area
-     * call_back function will be called every time when new data is selected
-     * when mouse leave frame area, call_back(null) will be called */
-   ObjectPainter.prototype.configureUserTooltipCallback = function(call_back, user_timeout) {
-      if (!call_back || (typeof call_back !== 'function')) {
-         delete this.UserTooltipCallback;
-         delete this.UserTooltipTimeout;
+     * Hanlder function will be called every time when new data is selected
+     * when mouse leave frame area, handler(null) will be called
+     * @param {function} handler - function called when tooltip is produced
+     * @param {number} [tmout = 100] - delay in ms before tooltip delivered */
+   ObjectPainter.prototype.configureUserTooltipHandler = function(handler, tmout) {
+      if (!handler || (typeof handler !== 'function')) {
+         delete this._user_tooltip_handler;
+         delete this._user_tooltip_timeout;
       } else {
-         this.UserTooltipCallback = call_back;
-         this.UserTooltipTimeout = (user_timeout === undefined) ? 500 : user_timeout;
+         this._user_tooltip_handler = handler;
+         this._user_tooltip_timeout = tmout || 100;
       }
    }
 
     /** @summary Configure user-defined click handler
      * @desc Function will be called every time when frame click was perfromed
      * As argument, tooltip object with selected bins will be provided
-     * If handler function returns true, default handling of click will be disabled */
+     * If handler function returns true, default handling of click will be disabled
+     * @param {function} handler - function called when mouse click is done */
    ObjectPainter.prototype.configureUserClickHandler = function(handler) {
       let fp = this.frame_painter();
       if (fp && fp.configureUserClickHandler)
@@ -2983,7 +2922,8 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Configure user-defined dblclick handler
      * @desc Function will be called every time when double click was called
      * As argument, tooltip object with selected bins will be provided
-     * If handler function returns true, default handling of dblclick (unzoom) will be disabled */
+     * If handler function returns true, default handling of dblclick (unzoom) will be disabled
+     * @param {function} handler - function called when mouse double click is done */
    ObjectPainter.prototype.configureUserDblclickHandler = function(handler) {
       let fp = this.frame_painter();
       if (fp && fp.configureUserDblclickHandler)
@@ -2991,51 +2931,38 @@ JSROOT.define(['d3'], (d3) => {
    }
 
 
-   /** @summary Check if user-defined tooltip callback is configured
+   /** @summary Check if user-defined tooltip function is configured
     * @returns {boolean}
     * @private */
-   ObjectPainter.prototype.IsUserTooltipCallback = function() {
-      return typeof this.UserTooltipCallback == 'function';
+   ObjectPainter.prototype.hasUserTooltip = function() {
+      return typeof this._user_tooltip_handler == 'function';
    }
 
-   /** @summary Provide tooltips data to user-defained function
-    * @param {object} data - tooltip data
-    * @private */
-   ObjectPainter.prototype.ProvideUserTooltip = function(data) {
+   /** @summary Provide tooltips data to user-defined function
+     * @param {object} data - tooltip data
+     * @private */
+   ObjectPainter.prototype.provideUserTooltip = function(data) {
 
-      if (!this.IsUserTooltipCallback()) return;
+      if (!this.hasUserTooltip()) return;
 
-      if (this.UserTooltipTimeout <= 0)
-         return this.UserTooltipCallback(data);
+      if (this._user_tooltip_timeout <= 0)
+         return this._user_tooltip_handler(data);
 
-      if (typeof this.UserTooltipTHandle != 'undefined') {
-         clearTimeout(this.UserTooltipTHandle);
-         delete this.UserTooltipTHandle;
+      if (this._user_tooltip_handle) {
+         clearTimeout(this._user_tooltip_handle);
+         delete this._user_tooltip_handle;
       }
 
       if (!data)
-         return this.UserTooltipCallback(data);
+         return this._user_tooltip_handler(data);
 
       let d = data;
 
-     // only after timeout user function will be called
-      this.UserTooltipTHandle = setTimeout(() => {
-         delete this.UserTooltipTHandle;
-         if (this.UserTooltipCallback) this.UserTooltipCallback(d);
-      }, this.UserTooltipTimeout);
-   }
-
-  /** @summary Switch tooltip mode in frame painter
-    * @private */
-   ObjectPainter.prototype.SwitchTooltip = function(on) {
-      let fp = this.frame_painter();
-      if (fp && fp.SetTooltipEnabled) {
-         fp.SetTooltipEnabled(on);
-         fp.ProcessTooltipEvent(null);
-      }
-      // this is 3D control object
-      if (this.control && (typeof this.control.SwitchTooltip == 'function'))
-         this.control.SwitchTooltip(on);
+      // only after timeout user function will be called
+      this._user_tooltip_handle = setTimeout(() => {
+         delete this._user_tooltip_handle;
+         if (this._user_tooltip_handler) this._user_tooltip_handler(d);
+      }, this._user_tooltip_timeout);
    }
 
    // ===========================================================
@@ -3046,12 +2973,13 @@ JSROOT.define(['d3'], (d3) => {
      *
      * @class
      * @memberof JSROOT
+    * @param {object|string} dom - DOM element for drawing or element id
      * @param {object} obj - axis object if any
      * @private
      */
 
-   function AxisBasePainter(obj) {
-      ObjectPainter.call(this, obj);
+   function AxisBasePainter(divid, obj) {
+      ObjectPainter.call(this, divid, obj);
 
       this.name = "yaxis";
       this.kind = "normal";
@@ -3737,16 +3665,16 @@ JSROOT.define(['d3'], (d3) => {
       function performDraw() {
          let promise;
          if (handle.direct == "v7") {
-            let painter = new ObjectPainter(obj, opt);
+            let painter = new ObjectPainter(divid, obj, opt);
             painter.csstype = handle.csstype;
-            promise = jsrp.ensureRCanvas(painter, divid, handle.frame || false).then(() => {
+            promise = jsrp.ensureRCanvas(painter, handle.frame || false).then(() => {
                painter.Redraw = handle.func;
                painter.Redraw();
                return painter;
             })
          } else if (handle.direct) {
-            let painter = new ObjectPainter(obj, opt);
-            promise = jsrp.ensureTCanvas(painter, divid, handle.frame || false).then(() => {
+            let painter = new ObjectPainter(divid, obj, opt);
+            promise = jsrp.ensureTCanvas(painter, handle.frame || false).then(() => {
                painter.Redraw = handle.func;
                painter.Redraw();
                return painter;
@@ -3829,8 +3757,7 @@ JSROOT.define(['d3'], (d3) => {
       if (!obj || (typeof obj !== 'object'))
          return callback ? callback(null) : Promise.reject(Error('not an object in JSROOT.redraw'));
 
-      let dummy = new ObjectPainter();
-      dummy.setCanvDom(divid, "");
+      let dummy = new ObjectPainter(divid);
       let can_painter = dummy.canv_painter(), handle, res_painter = null, redraw_res;
       if (obj._typename)
          handle = JSROOT.getDrawHandle("ROOT." + obj._typename);
@@ -3879,8 +3806,7 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string|object} divid - id of top div element or directly DOMElement
      * @returns {string} produced JSON string */
    JSROOT.drawingJSON = function(divid) {
-      let dummy = new ObjectPainter;
-      dummy.setCanvDom(divid, "");
+      let dummy = new ObjectPainter(divid);
       let canp = dummy.canv_painter();
       return canp ? canp.ProduceJSON() : "";
    }
@@ -3986,8 +3912,7 @@ JSROOT.define(['d3'], (d3) => {
    JSROOT.resize = function(divid, arg) {
       if (arg === true) arg = { force: true }; else
          if (typeof arg !== 'object') arg = null;
-      let done = false, dummy = new ObjectPainter();
-      dummy.setCanvDom(divid, "");
+      let done = false, dummy = new ObjectPainter(divid);
       dummy.forEachPainter(painter => {
          if (!done && (typeof painter.checkResize == 'function'))
             done = painter.checkResize(arg);
@@ -3999,9 +3924,8 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string|object} divid - id or DOM element
      * @private */
    JSROOT.getMainPainter = function(divid) {
-      let dummy = new JSROOT.ObjectPainter();
-      dummy.setCanvDom(divid, "");
-      return dummy.main_painter(true);
+      let dummy = new JSROOT.ObjectPainter(divid);
+      return dummy.getMainPainter(true);
    }
 
    /** @summary Safely remove all JSROOT objects from specified element
@@ -4010,8 +3934,7 @@ JSROOT.define(['d3'], (d3) => {
      * JSROOT.cleanup("drawing");
      * JSROOT.cleanup(document.querySelector("#drawing")); */
    JSROOT.cleanup = function(divid) {
-      let dummy = new ObjectPainter(), lst = [];
-      dummy.setCanvDom(divid, "");
+      let dummy = new ObjectPainter(divid), lst = [];
       dummy.forEachPainter(p => { if (lst.indexOf(p) < 0) lst.push(p); });
       lst.forEach(p => p.cleanup());
       dummy.selectDom().html("");

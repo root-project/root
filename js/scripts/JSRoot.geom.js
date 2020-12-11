@@ -110,10 +110,13 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
     *
     * @class
     * @memberof JSROOT
+    * @summary Painter for TF1 object.
+    * @param {object|string} dom - DOM element for drawing or element id
+    * @param {object} obj - Tsupported TGeo object
     * @private
     */
 
-   function TGeoPainter(obj) {
+   function TGeoPainter(divid, obj) {
 
       if (obj && (obj._typename === "TGeoManager")) {
          this.geo_manager = obj;
@@ -123,7 +126,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       if (obj && (obj._typename.indexOf('TGeoVolume') === 0))
          obj = { _typename:"TGeoNode", fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
 
-      JSROOT.ObjectPainter.call(this, obj);
+      JSROOT.ObjectPainter.call(this, divid, obj);
 
       this.no_default_title = true; // do not set title to main DIV
       this.mode3d = true; // indication of 3D mode
@@ -163,7 +166,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       this.cleanup(true);
    }
 
-   TGeoPainter.prototype = Object.create( JSROOT.ObjectPainter.prototype );
+   TGeoPainter.prototype = Object.create(JSROOT.ObjectPainter.prototype);
 
    /** @summary Create toolbar */
    TGeoPainter.prototype.CreateToolbar = function() {
@@ -1290,7 +1293,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       let painter = this;
 
-      this.SetTooltipAllowed(JSROOT.settings.Tooltip);
+      this.setTooltipAllowed(JSROOT.settings.Tooltip);
 
       this._controls = jsrp.createOrbitControl(this, this._camera, this._scene, this._renderer, this._lookat);
 
@@ -2491,7 +2494,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
      * @desc opt parameter can include function name like opt$func_name
      * Such function should be possible to find via {@link JSROOT.findFunction}
      * Function has to return Promise with objects to draw on geometry
-     * By default function with name "extract_geo_tracks" is checked */
+     * By default function with name "extract_geo_tracks" is checked
+     * @return {Promise} handling of drop operation */
    TGeoPainter.prototype.performDrop = function(obj, itemname, hitem, opt) {
 
       if (obj && (obj.$kind==='TTree')) {
@@ -2518,13 +2522,12 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          });
       }
 
-      return this.drawExtras(obj, itemname).then(res => {
-         if (res) {
-            if (hitem) hitem._painter = this; // set for the browser item back pointer
-            this.Render3D(100);
-         }
-         return this;
-      });
+      if (this.drawExtras(obj, itemname)) {
+         if (hitem) hitem._painter = this; // set for the browser item back pointer
+         this.Render3D(100);
+      }
+
+      return Promise.resolve(this);
    }
 
    /** @summary function called when mouse is going over the item in the browser */
@@ -2553,7 +2556,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
     * Check if object already exists to prevent duplication */
    TGeoPainter.prototype.addExtra = function(obj, itemname) {
       if (this._extraObjects === undefined)
-         this._extraObjects = JSROOT.Create("TList");
+         this._extraObjects = JSROOT.create("TList");
 
       if (this._extraObjects.arr.indexOf(obj)>=0) return false;
 
@@ -2605,62 +2608,48 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
      * @returns {Promise} when ready */
    TGeoPainter.prototype.drawExtras = function(obj, itemname, add_objects) {
       if (!obj || !obj._typename)
-         return Promise.resolve(false);
+         return false;
 
       // if object was hidden via menu, do not redraw it with next draw call
       if (!add_objects && obj.$hidden_via_menu)
-         return Promise.resolve(false);
+         return false;
 
-      let promise, do_render = false;
+      let is_any = false, do_render = false;
       if (add_objects === undefined) {
          add_objects = true;
          do_render = true;
       }
 
       if ((obj._typename === "TList") || (obj._typename === "TObjArray")) {
-         if (!obj.arr) return Promise.resolve(false);
-         let promises = [];
+         if (!obj.arr) return false;
          for (let n=0;n<obj.arr.length;++n) {
             let sobj = obj.arr[n], sname = obj.opt ? obj.opt[n] : "";
             if (!sname) sname = (itemname || "<prnt>") + "/[" + n + "]";
-            promises.push(this.drawExtras(sobj, sname, add_objects));
+            if (this.drawExtras(sobj, sname, add_objects)) is_any = true;
          }
-         promise = Promise.all(promises).then(arr => {
-            let res = false;
-            arr.forEach(elem => { if (elem) res = true; });
-            return res;
-         })
       } else if (obj._typename === 'THREE.Mesh') {
          // adding mesh as is
          this.addToExtrasContainer(obj);
-         promise = Promise.resolve(true);
+         is_any = true;
       } else if (obj._typename === 'TGeoTrack') {
-         if (add_objects && !this.addExtra(obj, itemname)) return Promise.resolve(false);
-         promise = this.drawGeoTrack(obj, itemname);
+         if (add_objects && !this.addExtra(obj, itemname)) return false;
+         is_any = this.drawGeoTrack(obj, itemname);
       } else if ((obj._typename === 'TEveTrack') || (obj._typename === 'ROOT::Experimental::TEveTrack')) {
-         if (add_objects && !this.addExtra(obj, itemname)) return Promise.resolve(false);
-         promise = this.drawEveTrack(obj, itemname);
+         if (add_objects && !this.addExtra(obj, itemname)) return false;
+         is_any = this.drawEveTrack(obj, itemname);
       } else if ((obj._typename === 'TEvePointSet') || (obj._typename === "ROOT::Experimental::TEvePointSet") || (obj._typename === "TPolyMarker3D")) {
-         if (add_objects && !this.addExtra(obj, itemname)) return Promise.resolve(false);
-         promise = this.drawHit(obj, itemname);
+         if (add_objects && !this.addExtra(obj, itemname)) return false;
+         is_any = this.drawHit(obj, itemname);
       } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::REveGeoShapeExtract")) {
-         if (add_objects && !this.addExtra(obj, itemname)) return Promise.resolve(false);
-         promise = this.drawExtraShape(obj, itemname);
+         if (add_objects && !this.addExtra(obj, itemname)) return false;
+         is_any = this.drawExtraShape(obj, itemname);
       }
 
-      if ((typeof promise != 'object') || !promise.then)
-         promise = Promise.resolve(promise);
-
-      if (do_render)
-         promise = promise.then(res => {
-            if (res) {
-               this.updateClipping(true);
-               this.Render3D(100);
-            }
-            return res;
-         });
-
-      return promise;
+      if (do_render && is_any) {
+         this.updateClipping(true);
+         this.Render3D(100);
+      }
+      return is_any;
    }
 
    /** @summary returns container for extra objects */
@@ -2791,13 +2780,16 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
    /** @summary Drawing different hits types like TPolyMarker3d */
    TGeoPainter.prototype.drawHit = function(hit, itemname) {
-      if (!hit || !hit.fN || (hit.fN < 0))
-         return Promise.resolve(false);
+      if (!hit || !hit.fN || (hit.fN < 0)) return false;
 
       // make hit size scaling factor of overall geometry size
       // otherwise it is not possible to correctly see hits at all
       let hit_size = hit.fMarkerSize * this.getOverallSize() * 0.005;
-      if (hit_size <= 0) hit_size = 1;
+      if (hit_size <= 0.2) hit_size = 0.2;
+
+      let hit_style = hit.fMarkerStyle;
+      // FIXME: marker style 2 does not work why?
+      if ((hit_style == 4) || (hit_style == 2)) { hit_style = 7; hit_size *= 1.5; } // style 4 is very bad for hits representation
 
       let size = hit.fN,
           projv = this.ctrl.projectPos,
@@ -2811,15 +2803,14 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                        projy ? projv : hit.fP[i*3+1],
                        projz ? projv : hit.fP[i*3+2]);
 
-      return pnts.createPointsPromise({ color: jsrp.getColor(hit.fMarkerColor) || "rgb(0,0,255)",
-                                 style: hit.fMarkerStyle }).then(mesh => {
-         mesh.renderOrder = 1000000; // to bring points to the front
-         mesh.highlightScale = 2;
-         mesh.geo_name = itemname;
-         mesh.geo_object = hit;
-         this.addToExtrasContainer(mesh);
-         return true; // indicate that rendering should be done
-      });
+      let mesh = pnts.CreatePoints({ color: jsrp.getColor(hit.fMarkerColor) || "rgb(0,0,255)", style: hit_style });
+      mesh.renderOrder = 1000000; // to bring points to the front
+      mesh.highlightScale = 2;
+      mesh.geo_name = itemname;
+      mesh.geo_object = hit;
+      this.addToExtrasContainer(mesh);
+
+      return true; // indicate that rendering should be done
    }
 
    TGeoPainter.prototype.drawExtraShape = function(obj, itemname) {
@@ -3913,12 +3904,11 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
    /** @summary Check if HTML element was resized and drawing need to be adjusted */
    TGeoPainter.prototype.checkResize = function(arg) {
-      let pad_painter = this.canv_painter();
+      let cp = this.canv_painter();
 
       // firefox is the only browser which correctly supports resize of embedded canvas,
       // for others we should force canvas redrawing at every step
-      if (pad_painter)
-         if (!pad_painter.CheckCanvasResize(arg)) return false;
+      if (cp && !cp.checkCanvasResize(arg)) return false;
 
       let sz = this.size_for_3d();
 
@@ -4034,13 +4024,12 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       geo.GradPerSegm = JSROOT.settings.GeoGradPerSegm;
       geo.CompressComp = JSROOT.settings.GeoCompressComp;
 
-      let painter = new TGeoPainter(obj);
+      let painter = new TGeoPainter(divid, obj);
 
       // one could use TGeoManager setting, but for some example JSROOT does not build composites
       // if (obj && obj._typename=='TGeoManager' && (obj.fNsegments > 3))
       //   geo.GradPerSegm = 360/obj.fNsegments;
 
-      painter.setCanvDom(divid);
       // painter.addToPadPrimitives(); // will add to pad primitives if any
 
       painter.options = painter.decodeOptions(opt); // indicator of initialization
@@ -4089,7 +4078,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       }
 
       if (!obj && shape)
-         obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
+         obj = JSROOT.extend(JSROOT.create("TEveGeoShapeExtract"),
                    { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
 
       if (!obj) return null;
@@ -4127,7 +4116,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          side = "";
       }
 
-      let vol = JSROOT.Create("TGeoVolume");
+      let vol = JSROOT.create("TGeoVolume");
       geo.SetBit(vol, geo.BITS.kVisThis, true);
       geo.SetBit(vol, geo.BITS.kVisDaughters, true);
 
@@ -4142,21 +4131,21 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       vol.$geoh = true; // workaround, let know browser that we are in volumes hierarchy
       vol.fName = "";
 
-      let node1 = JSROOT.Create("TGeoNodeMatrix");
+      let node1 = JSROOT.create("TGeoNodeMatrix");
       geo.SetBit(node1, geo.BITS.kVisThis, true);
       geo.SetBit(node1, geo.BITS.kVisDaughters, true);
       node1.fName = "Left";
       node1.fMatrix = comp.fNode.fLeftMat;
       node1.fVolume = geo.buildCompositeVolume(comp.fNode.fLeft, maxlvl-1, side + "Left");
 
-      let node2 = JSROOT.Create("TGeoNodeMatrix");
+      let node2 = JSROOT.create("TGeoNodeMatrix");
       geo.SetBit(node2, geo.BITS.kVisThis, true);
       geo.SetBit(node2, geo.BITS.kVisDaughters, true);
       node2.fName = "Right";
       node2.fMatrix = comp.fNode.fRightMat;
       node2.fVolume = geo.buildCompositeVolume(comp.fNode.fRight, maxlvl-1, side + "Right");
 
-      vol.fNodes = JSROOT.Create("TList");
+      vol.fNodes = JSROOT.create("TList");
       vol.fNodes.Add(node1);
       vol.fNodes.Add(node2);
 
@@ -4169,25 +4158,25 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
     * @private */
    geo.buildOverlapVolume = function(overlap) {
 
-      let vol = JSROOT.Create("TGeoVolume");
+      let vol = JSROOT.create("TGeoVolume");
 
       geo.SetBit(vol, geo.BITS.kVisDaughters, true);
       vol.$geoh = true; // workaround, let know browser that we are in volumes hierarchy
       vol.fName = "";
 
-      let node1 = JSROOT.Create("TGeoNodeMatrix");
+      let node1 = JSROOT.create("TGeoNodeMatrix");
       node1.fName = overlap.fVolume1.fName || "Overlap1";
       node1.fMatrix = overlap.fMatrix1;
       node1.fVolume = overlap.fVolume1;
       // node1.fVolume.fLineColor = 2; // color assigned with _splitColors
 
-      let node2 = JSROOT.Create("TGeoNodeMatrix");
+      let node2 = JSROOT.create("TGeoNodeMatrix");
       node2.fName = overlap.fVolume2.fName || "Overlap2";
       node2.fMatrix = overlap.fMatrix2;
       node2.fVolume = overlap.fVolume2;
       // node2.fVolume.fLineColor = 3;  // color assigned with _splitColors
 
-      vol.fNodes = JSROOT.Create("TList");
+      vol.fNodes = JSROOT.create("TList");
       vol.fNodes.Add(node1);
       vol.fNodes.Add(node2);
 

@@ -25,7 +25,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
               let item = this.lst.arr[this.indx],
                   opt = (this.lst.opt && this.lst.opt[this.indx]) ? this.lst.opt[this.indx] : this.opt;
               if (!item) continue;
-              return JSROOT.draw(this.divid, item, opt).then(p => {
+              return JSROOT.draw(this.getDom(), item, opt).then(p => {
                  if (p && !this.painter) this.painter = p;
                  return this.draw_next(); // reenter loop
               });
@@ -1050,7 +1050,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Refresh HTML for hierachy painter
      * @returns {Promise} when completed */
    HierarchyPainter.prototype.refreshHtml = function() {
-      if (!this.divid || JSROOT.BatchMode)
+      if (!this.getDom() || JSROOT.BatchMode)
          return Promise.resolve(this);
       return JSROOT.require('jq2d').then(() => this.refreshHtml());
    }
@@ -1506,7 +1506,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          function DropNextItem(indx, painter) {
             if (painter && dropitems[indx] && (dropitems[indx].length > 0))
-               return h.dropItem(dropitems[indx].shift(), painter.divid, dropopts[indx].shift()).then(() => DropNextItem(indx, painter));
+               return h.dropItem(dropitems[indx].shift(), painter.getDom(), dropopts[indx].shift()).then(() => DropNextItem(indx, painter));
 
             dropitems[indx] = null; // mark that all drop items are processed
             items[indx] = null; // mark item as ready
@@ -2735,15 +2735,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (sett.opts)
             menu.addDrawMenu("nosub:Draw", sett.opts, function(arg) {
                if (!hitem || !hitem._obj) return;
-               let obj = hitem._obj, divid = this.divid;
+               let obj = hitem._obj, dom = this.selectDom();
                if (this.removeInspector) {
-                  divid = this.selectDom().node().parentNode;
+                  dom = dom.node().parentNode;
                   this.removeInspector();
                   if (arg == "inspect")
                      return this.showInspector(obj);
                }
-               JSROOT.cleanup(divid);
-               JSROOT.draw(divid, obj, arg);
+               JSROOT.cleanup(dom);
+               JSROOT.draw(dom, obj, arg);
             });
       }
 
@@ -2789,8 +2789,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
         * @param {boolean} only_visible let select only visible frames */
       forEachPainter(userfunc, only_visible) {
          this.forEachFrame(frame => {
-            let dummy = new JSROOT.ObjectPainter();
-            dummy.setCanvDom(frame, "");
+            let dummy = new JSROOT.ObjectPainter(frame);
             dummy.forEachPainter(painter => userfunc(painter, frame));
          }, only_visible);
       }

@@ -1,7 +1,7 @@
 /// @file JSRoot.latex.js
 /// Latex / MathJax processing
 
-JSROOT.define(['d3'], (d3) => {
+JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    "use strict";
 
@@ -210,7 +210,7 @@ JSROOT.define(['d3'], (d3) => {
          // initial dy = -0.1 is to move complete from very bottom line like with normal text drawing
          curr = { lvl: 0, x: 0, y: 0, dx: 0, dy: -0.1, fsize: arg.font_size, parent: null };
          label = arg.text;
-         arg.mainnode = node.node();
+         arg.mainnode = node;
       }
 
       function extend_pos(pos, value) {
@@ -276,22 +276,21 @@ JSROOT.define(['d3'], (d3) => {
 
          let important = [], prnt = element.node();
 
-         // if (element.node().getBBox && !JSROOT.browser.isFirefox) return element.node().getBBox();
-
-         while (prnt && (prnt != arg.mainnode)) {
+         while (prnt && (prnt != arg.mainnode.node())) {
             important.push(prnt);
             prnt = prnt.parentNode;
          }
 
          element.selectAll('tspan').each(function() { important.push(this) });
 
-         let tspans = d3.select(arg.mainnode).selectAll('tspan');
+         let tspans = arg.mainnode.selectAll('tspan');
 
          // this is just workaround to know that many elements are created and in Chrome we need to redo them once again
          if (tspans.size() > 3) arg.large_latex = true;
 
          tspans.each(function() { if (important.indexOf(this) < 0) d3.select(this).attr('display', 'none'); });
-         let box = painter.GetBoundarySizes(arg.mainnode);
+
+         let box = jsrp.getElementRect(arg.mainnode, 'bbox');
 
          tspans.each(function() { if (important.indexOf(this) < 0) d3.select(this).attr('display', null); });
 
@@ -451,8 +450,8 @@ JSROOT.define(['d3'], (d3) => {
          } else
             switch (found.name) {
                case "#color[":
-                  if (painter.get_color(foundarg))
-                     subnode.attr('fill', painter.get_color(foundarg));
+                  if (painter.getColor(foundarg))
+                     subnode.attr('fill', painter.getColor(foundarg));
                   break;
                case "#kern[": // horizontal shift
                   nextdx += foundarg;
@@ -974,7 +973,7 @@ JSROOT.define(['d3'], (d3) => {
             if (p <= 0) break;
             let colindx = parseInt(str.substr(0, p));
             if (isNaN(colindx)) break;
-            let col = painter.get_color(colindx), cnt = 1;
+            let col = painter.getColor(colindx), cnt = 1;
             str = str.substr(p + 2);
             p = -1;
             while (cnt && (++p < str.length)) {
@@ -1027,14 +1026,14 @@ JSROOT.define(['d3'], (d3) => {
       svg.attr("width", width).attr('height', height).attr("style", null);
 
       if (!JSROOT.nodejs) {
-         let box = painter.GetBoundarySizes(mj_node.node());
+         let box = jsrp.getElementRect(mj_node, 'bbox');
          width = 1.05 * box.width; height = 1.05 * box.height;
       }
 
       arg.valign = valign;
 
       if (arg.scale)
-         painter.TextScaleFactor(Math.max(width / arg.width, height / arg.height), arg.draw_g);
+         painter.scaleTextDrawing(Math.max(width / arg.width, height / arg.height), arg.draw_g);
    }
 
    function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_factor) {
@@ -1048,7 +1047,7 @@ JSROOT.define(['d3'], (d3) => {
             svg.attr("width", Math.round(mw)).attr("height", Math.round(mh));
          }
       } else {
-         let box = painter.GetBoundarySizes(mj_node.node()); // sizes before rotation
+         let box = jsrp.getElementRect(mj_node, 'bbox'); // sizes before rotation
          mw = box.width || mw || 100;
          mh = box.height || mh || 10;
       }

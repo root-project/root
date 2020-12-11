@@ -63,9 +63,23 @@ if ((typeof document === "undefined") || (typeof window === "undefined")) {
       }
 
       JSROOT.CallBack = function(func, arg1, arg2) {
-         JSROOT.warnOnce('Using obsolete JSROOT.CallBack function, change to JSROOT.callBack');
-         return JSROOT.callBack(func, arg1, arg2);
+         JSROOT.warnOnce('Using obsolete JSROOT.CallBack function');
+
+         if (typeof func == 'string') func = JSROOT.findFunction(func);
+
+         if (!func) return;
+
+         if (typeof func == 'function') return func(arg1,arg2);
+
+         if (typeof func != 'object') return;
+
+         if (('obj' in func) && ('func' in func) &&
+            (typeof func.obj == 'object') && (typeof func.func == 'string') &&
+            (typeof func.obj[func.func] == 'function')) {
+                return func.obj[func.func](arg1, arg2);
+         }
       }
+
 
       function window_on_load(tmout, func) {
          if (document.attachEvent ? document.readyState === 'complete' : document.readyState !== 'loading')
@@ -128,7 +142,7 @@ if ((typeof document === "undefined") || (typeof window === "undefined")) {
       if (prereq || onload || user)
          window_on_load(false, () => JSROOT.require(prereq)
                                .then(() => JSROOT.loadScript(user))
-                               .then(() => JSROOT.callBack(onload)));
+                               .then(() => JSROOT.CallBack(onload)));
    });
 
    let tmpJSROOT = { _workaround: true };

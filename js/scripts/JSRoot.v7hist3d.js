@@ -123,7 +123,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       this.control = jsrp.createOrbitControl(this, this.camera, this.scene, this.renderer, this.lookat);
 
-      let axis_painter = this, obj_painter = this.main_painter();
+      let axis_painter = this, obj_painter = this.getMainPainter();
 
       this.control.ProcessMouseMove = function(intersects) {
          let tip = null, mesh = null, zoom_mesh = null;
@@ -254,7 +254,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       if (this.first_render_tm === 0) {
          this.first_render_tm = tm2.getTime() - tm1.getTime();
-         this.enable_highlight = (this.first_render_tm < 1200) && this.IsTooltipAllowed();
+         this.enable_highlight = (this.first_render_tm < 1200) && this.isTooltipAllowed();
          console.log('three.js r' + THREE.REVISION + ', first render tm = ' + this.first_render_tm);
       }
    }
@@ -289,9 +289,9 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       let changed = false, tooltip_mesh = null, changed_self = true,
           want_remove = !tip || (tip.x1===undefined) || !this.enable_highlight,
-          mainp = this.main_painter();
+          mainp = this.getMainPainter();
 
-      if (mainp && (!mainp.ProvideUserTooltip || !mainp.IsUserTooltipCallback())) mainp = null;
+      if (mainp && (!mainp.provideUserTooltip || !mainp.hasUserTooltip())) mainp = null;
 
       if (this.tooltip_selfmesh) {
          changed_self = (this.tooltip_selfmesh !== selfmesh)
@@ -309,7 +309,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       if (want_remove) {
          if (changed) this.Render3D();
-         if (changed && mainp) mainp.ProvideUserTooltip(null);
+         if (changed && mainp) mainp.provideUserTooltip(null);
          return;
       }
 
@@ -370,7 +370,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          tip.$painter.RedrawProjection(tip.ix-1, tip.ix, tip.iy-1, tip.iy);
 
       if (changed && mainp && mainp.getObject())
-         mainp.ProvideUserTooltip({ obj: mainp.getObject(),  name: mainp.getObject().fName,
+         mainp.provideUserTooltip({ obj: mainp.getObject(),  name: mainp.getObject().fName,
                                     bin: tip.bin, cont: tip.value,
                                     binx: tip.ix, biny: tip.iy, binz: tip.iz,
                                     grx: (tip.x1+tip.x2)/2, gry: (tip.y1+tip.y2)/2, grz: (tip.z1+tip.z2)/2 });
@@ -479,22 +479,22 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
       // this.TestAxisVisibility = HPainter_TestAxisVisibility;
 
-      this.x_handle = new JSROOT.v7.RAxisPainter(this, this.xaxis, "x_");
-      this.x_handle.setCanvDom(this.divid, this.pad_name);
+      this.x_handle = new JSROOT.v7.RAxisPainter(this.getDom(), this, this.xaxis, "x_");
+      this.x_handle.setPadName(this.getPadName());
       this.x_handle.snapid = this.snapid;
       this.x_handle.ConfigureAxis("xaxis", this.xmin, this.xmax, xmin, xmax, false, [grminx, grmaxx]);
       this.x_handle.AssignFrameMembers(this,"x");
 
-      this.y_handle = new JSROOT.v7.RAxisPainter(this, this.yaxis, "y_");
-      this.y_handle.setCanvDom(this.divid, this.pad_name);
+      this.y_handle = new JSROOT.v7.RAxisPainter(this.getDom(), this, this.yaxis, "y_");
+      this.y_handle.setPadName(this.getPadName());
       this.y_handle.snapid = this.snapid;
       this.y_handle.ConfigureAxis("yaxis", this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy]);
       this.y_handle.AssignFrameMembers(this,"y");
 
       // this.SetRootPadRange(pad, true); // set some coordinates typical for 3D projections in ROOT
 
-      this.z_handle = new JSROOT.v7.RAxisPainter(this, this.zaxis, "z_");
-      this.z_handle.setCanvDom(this.divid, this.pad_name);
+      this.z_handle = new JSROOT.v7.RAxisPainter(this.getDom(), this, this.zaxis, "z_");
+      this.z_handle.setPadName(this.getPadName());
       this.z_handle.snapid = this.snapid;
       this.z_handle.ConfigureAxis("zaxis", this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz]);
       this.z_handle.AssignFrameMembers(this,"z");
@@ -1053,7 +1053,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       if ((this.options.Lego === 12) || (this.options.Lego === 14)) {
          // drawing colors levels, axis can not exceed palette
 
-         palette = main.GetPalette();
+         palette = main.getHistPalette();
          this.CreateContour(main, palette, { full_z_range: true });
          levels = palette.GetContour();
          axis_zmin = levels[0];
@@ -1175,7 +1175,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          geometry.setAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
          // geometry.computeVertexNormals();
 
-         let rootcolor = 3, fcolor = this.get_color(rootcolor);
+         let rootcolor = 3, fcolor = this.getColor(rootcolor);
 
          if (palette) {
             fcolor = palette.getColor(nlevel); // calcColor in v6
@@ -1361,7 +1361,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       this.mode3d = true;
 
       let main = this.frame_painter(), // who makes axis drawing
-          is_main = this.is_main_painter(); // is main histogram
+          is_main = this.isMainPainter(); // is main histogram
 
       if (reason == "resize")  {
          if (is_main && main.Resize3D()) main.Render3D();
@@ -1403,7 +1403,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       this.mode3d = true;
 
       let main = this.frame_painter(), // who makes axis drawing
-          is_main = this.is_main_painter(); // is main histogram
+          is_main = this.isMainPainter(); // is main histogram
 
       if (reason == "resize") {
          if (is_main && main.Resize3D()) main.Render3D();
@@ -1492,7 +1492,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       // for contour plots one requires handle with full range
       let main = this.frame_painter(),
           handle = this.PrepareDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 }),
-          palette = main.GetPalette(),
+          palette = main.getHistPalette(),
           layerz = 2*main.size_z3d, pnts = [];
 
       this.CreateContour(main, palette, { full_z_range: true });
@@ -1559,7 +1559,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
       }
 
       if (need_palette > 0) {
-         palette = main.GetPalette();
+         palette = main.getHistPalette();
          if (need_palette == 2)
             this.CreateContour(main, palette, { full_z_range: true });
          ilevels = palette.GetContour();
@@ -1826,8 +1826,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
             if (palette) {
                fcolor = palette.getColor(lvl-1);
             } else {
-               fcolor = fFillColor > 1 ? this.get_color(fFillColor) : 'white';
-               if ((this.options.Surf === 14) && (fFillColor<2)) fcolor = this.get_color(48);
+               fcolor = fFillColor > 1 ? this.getColor(fFillColor) : 'white';
+               if ((this.options.Surf === 14) && (fFillColor<2)) fcolor = this.getColor(48);
             }
 
             if (this.options.Surf === 14)
@@ -1847,7 +1847,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          if (nsegments*6 !== lindx)
             console.error('SURF lines mismmatch nsegm', nsegments, ' lindx', lindx, 'difference', nsegments*6 - lindx);
 
-         let lcolor = this.get_color(7),
+         let lcolor = this.getColor(7),
              material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: this.v7EvalAttr("line_width", 1) }),
              line = jsrp.createLineSegments(lpos, material);
          line.painter = this;
@@ -1879,7 +1879,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
          // get levels
          let levels = this.GetContour(), // init contour
-             palette = this.GetPalette(),
+             palette = this.getHistPalette(),
              lastcolindx = -1, layerz = 2*main.size_z3d;
 
          this.BuildContour(handle, levels, palette,
@@ -2051,7 +2051,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
    JSROOT.v7.RH2Painter.prototype.DrawPolyLego = function() {
       let histo = this.GetHisto(),
-          palette = this.GetPalette(),
+          palette = this.getHistPalette(),
           pmain = this.frame_painter(),
           axis_zmin = pmain.z_handle.gr.domain()[0],
           axis_zmax = pmain.z_handle.gr.domain()[1],
@@ -2242,8 +2242,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
    // ==============================================================================
 
 
-   function RH3Painter(histo) {
-      JSROOT.v7.RHistPainter.call(this, histo);
+   function RH3Painter(divid, histo) {
+      JSROOT.v7.RHistPainter.call(this, divid, histo);
 
       this.mode3d = true;
    }
@@ -2416,7 +2416,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
          dz = histo.stepz || 1;
       }
 
-      lines.push(this.GetTipName());
+      lines.push(this.getObjectHint());
 
       lines.push("x = " + this.GetAxisBinTip("x", ix, dx) + "  xbin=" + ix);
       lines.push("y = " + this.GetAxisBinTip("y", iy, dy) + "  ybin=" + iy);
@@ -2619,7 +2619,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
           palette = null;
 
       if (use_colors) {
-         palette = main.GetPalette();
+         palette = main.getHistPalette();
          this.CreateContour(main, palette);
       }
 
@@ -2965,9 +2965,9 @@ JSROOT.define(['d3', 'base3d', 'painter', 'v7hist'], (d3, THREE, jsrp) => {
 
    let drawHist3 = (divid, histo /*, opt*/) => {
       // create painter and add it to canvas
-      let painter = new RH3Painter(histo);
+      let painter = new RH3Painter(divid, histo);
 
-      return jsrp.ensureRCanvas(painter, divid, "3d").then(() => {
+      return jsrp.ensureRCanvas(painter, "3d").then(() => {
 
          painter.setAsMainPainter();
 
