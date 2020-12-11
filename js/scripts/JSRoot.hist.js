@@ -683,7 +683,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          case "last": fmt = this.lastformat; break;
       }
 
-      let res = JSROOT.FFormat(value, fmt || "6.4g", true);
+      let res = jsrp.floatToString(value, fmt || "6.4g", true);
 
       this.lastformat = res[1];
 
@@ -2977,7 +2977,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    }
 
    /** @summary draw color palette
-     * @return {Promise} when done */
+     * @returns {Promise} when done */
    THistPainter.prototype.drawColorPalette = function(enabled, postpone_draw, can_move) {
       // only when create new palette, one could change frame size
 
@@ -3600,7 +3600,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
 
          if (show_text && y) {
-            let lbl = (y === Math.round(y)) ? y.toString() : JSROOT.FFormat(y, JSROOT.gStyle.fPaintTextFormat);
+            let lbl = (y === Math.round(y)) ? y.toString() : jsrp.floatToString(y, JSROOT.gStyle.fPaintTextFormat);
 
             if (pmain.swap_xy)
                this.drawText({ align: 12, x: Math.round(gry1 + text_size/2), y: Math.round(grx1+0.1), height: Math.round(w*0.8), text: lbl, color: text_col, latex: 0 });
@@ -3801,7 +3801,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                let cont = text_profile ? histo.fBinEntries[bin+1] : bincont;
 
                if (cont!==0) {
-                  let lbl = (cont === Math.round(cont)) ? cont.toString() : JSROOT.FFormat(cont, JSROOT.gStyle.fPaintTextFormat);
+                  let lbl = (cont === Math.round(cont)) ? cont.toString() : jsrp.floatToString(cont, JSROOT.gStyle.fPaintTextFormat);
 
                   if (text_angle)
                      this.drawText({ align: 12, x: midx, y: Math.round(my - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
@@ -4000,7 +4000,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if (cont === Math.round(cont))
             tips.push("entries = " + cont);
          else
-            tips.push("entries = " + JSROOT.FFormat(cont, JSROOT.gStyle.fStatFormat));
+            tips.push("entries = " + jsrp.floatToString(cont, JSROOT.gStyle.fStatFormat));
       }
 
       return tips;
@@ -4243,7 +4243,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       menu.add("Auto zoom-in", this.AutoZoom);
 
-      let sett = JSROOT.getDrawSettings("ROOT." + this.getObject()._typename, 'nosame');
+      let sett = jsrp.getDrawSettings("ROOT." + this.getObject()._typename, 'nosame');
 
       menu.addDrawMenu("Draw with", sett.opts, function(arg) {
          if (arg==='inspect')
@@ -4505,7 +4505,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          menu.add("Auto zoom-in", this.AutoZoom);
       }
 
-      let sett = JSROOT.getDrawSettings("ROOT." + this.getObject()._typename, 'nosame');
+      let sett = jsrp.getDrawSettings("ROOT." + this.getObject()._typename, 'nosame');
 
       menu.addDrawMenu("Draw with", sett.opts, function(arg) {
          if (arg==='inspect')
@@ -5415,7 +5415,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
             if (!this.options.TextKind) {
                lbl = (Math.round(bin.fContent) === bin.fContent) ? bin.fContent.toString() :
-                          JSROOT.FFormat(bin.fContent, JSROOT.gStyle.fPaintTextFormat);
+                          jsrp.floatToString(bin.fContent, JSROOT.gStyle.fPaintTextFormat);
             } else {
                if (bin.fPoly) lbl = bin.fPoly.fName;
                if (lbl === "Graph") lbl = "";
@@ -5464,12 +5464,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                binz = histo.getBinEntries(i+1, j+1);
 
             lbl = (binz === Math.round(binz)) ? binz.toString() :
-                      JSROOT.FFormat(binz, JSROOT.gStyle.fPaintTextFormat);
+                      jsrp.floatToString(binz, JSROOT.gStyle.fPaintTextFormat);
 
             if (show_err) {
                errz = histo.getBinError(histo.getBin(i+1,j+1));
                lble = (errz === Math.round(errz)) ? errz.toString() :
-                            JSROOT.FFormat(errz, JSROOT.gStyle.fPaintTextFormat);
+                            jsrp.floatToString(errz, JSROOT.gStyle.fPaintTextFormat);
                if (this.options.TextLine)
                   lbl += '\xB1' + lble;
                else
@@ -5981,11 +5981,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (histo.$baseh) binz -= histo.$baseh.getBinContent(i+1,j+1);
 
-      lines.push("entries = " + ((binz === Math.round(binz)) ? binz : JSROOT.FFormat(binz, JSROOT.gStyle.fStatFormat)));
+      lines.push("entries = " + ((binz === Math.round(binz)) ? binz : jsrp.floatToString(binz, JSROOT.gStyle.fStatFormat)));
 
       if ((this.options.TextKind == "E") || this.matchObjectType('TProfile2D')) {
          let errz = histo.getBinError(histo.getBin(i+1,j+1));
-         lines.push("error = " + ((errz === Math.round(errz)) ? errz.toString() : JSROOT.FFormat(errz, JSROOT.gStyle.fPaintTextFormat)));
+         lines.push("error = " + ((errz === Math.round(errz)) ? errz.toString() : jsrp.floatToString(errz, JSROOT.gStyle.fPaintTextFormat)));
       }
 
       return lines;
@@ -5998,9 +5998,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       lines.push("x = " + main.AxisAsText("x", histo.fXaxis.GetBinLowEdge(p.bin+1)));
 
-      lines.push('mean y = ' + JSROOT.FFormat(p.meany, JSROOT.gStyle.fStatFormat))
-      lines.push('m25 = ' + JSROOT.FFormat(p.m25y, JSROOT.gStyle.fStatFormat))
-      lines.push('p25 = ' + JSROOT.FFormat(p.p25y, JSROOT.gStyle.fStatFormat))
+      lines.push('mean y = ' + jsrp.floatToString(p.meany, JSROOT.gStyle.fStatFormat))
+      lines.push('m25 = ' + jsrp.floatToString(p.m25y, JSROOT.gStyle.fStatFormat))
+      lines.push('p25 = ' + jsrp.floatToString(p.p25y, JSROOT.gStyle.fStatFormat))
 
       return lines;
    }
@@ -6045,7 +6045,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       if (bin.fContent === Math.round(bin.fContent))
          lines.push("content = " + bin.fContent);
       else
-         lines.push("content = " + JSROOT.FFormat(bin.fContent, JSROOT.gStyle.fStatFormat));
+         lines.push("content = " + jsrp.floatToString(bin.fContent, JSROOT.gStyle.fStatFormat));
       return lines;
    }
 

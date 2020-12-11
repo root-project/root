@@ -663,7 +663,7 @@ JSROOT.define([], () => {
                   if (!arg.prereq2) resolveFunc(handle);
                },
 
-               OnWebsocketClosed: () => { JSROOT.CloseCurrentWindow(); } // // when connection closed, close panel as well
+               OnWebsocketClosed: () => jsrp.closeCurrentWindow() // // when connection closed, close panel as well
             };
          }
 
