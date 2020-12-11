@@ -257,18 +257,18 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
    }
 
    /** @summary Assigns method to handle 3D drawings inside SVG
-    * @private */
-   jsrp.Assign3DHandler = function(painter) {
+     * @private */
+   jsrp.assign3DHandler = function(painter) {
       JSROOT.extend(painter, Handling3DDrawings);
    }
 
    /** @summary Creates renderer for the 3D drawings
-    * @memberOf JSROOT.Painter
-    * @param {value} width - rendering width
-    * @param {value} height - rendering height
-    * @param {value} render3d - render type, see {@link JSROOT.constants.Render3D}
-    * @param {object} args - different arguments for creating 3D renderer
-    * @private */
+     * @memberOf JSROOT.Painter
+     * @param {value} width - rendering width
+     * @param {value} height - rendering height
+     * @param {value} render3d - render type, see {@link JSROOT.constants.Render3D}
+     * @param {object} args - different arguments for creating 3D renderer
+     * @private */
    jsrp.createRender3D = function(width, height, render3d, args) {
 
       let rc = JSROOT.constants.Render3D;
@@ -278,7 +278,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       if (!args) args = { antialias: true, alpha: true };
 
       let need_workaround = false, renderer,
-          doc = JSROOT.get_document();
+          doc = JSROOT._.get_document();
 
       if (render3d == rc.WebGL) {
          // interactive WebGL Rendering
@@ -425,120 +425,132 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       return svg;
    }
 
-   jsrp.TooltipFor3D = function(prnt, canvas) {
+
+   /**
+    * @summary Tooltip handler for 3D drawings
+    *
+    * @class
+    * @memberof JSROOT.Painter
+    * @param {object} dom - DOM element
+    * @param {object} canvas - canvas for 3D rendering
+    * @private
+    */
+
+   function TooltipFor3D(prnt, canvas) {
       this.tt = null;
       this.cont = null;
       this.lastlbl = '';
       this.parent = prnt ? prnt : document.body;
       this.canvas = canvas; // we need canvas to recalculate mouse events
       this.abspos = !prnt;
+   }
 
-      this.check_parent = function(prnt) {
-         if (prnt && (this.parent !== prnt)) {
-            this.hide();
-            this.parent = prnt;
+   /** @summary check parent */
+   TooltipFor3D.prototype.checkParent = function(prnt) {
+      if (prnt && (this.parent !== prnt)) {
+         this.hide();
+         this.parent = prnt;
+      }
+   }
+
+   /** @summary extract position from event
+     * @desc can be used to process it later when event is gone */
+   TooltipFor3D.prototype.extract_pos = function(e) {
+      if (typeof e == 'object' && (e.u !== undefined) && (e.l !== undefined)) return e;
+      let res = { u: 0, l: 0 };
+      if (this.abspos) {
+         res.l = e.pageX;
+         res.u = e.pageY;
+      } else {
+         res.l = e.offsetX;
+         res.u = e.offsetY;
+      }
+
+      return res;
+   }
+
+   /** @summary Method used to define position of next tooltip
+     * @desc event is delivered from canvas,
+     * but position should be calculated relative to the element where tooltip is placed */
+   TooltipFor3D.prototype.pos = function(e) {
+
+      if (!this.tt) return;
+
+      let pos = this.extract_pos(e);
+      if (!this.abspos) {
+         let rect1 = this.parent.getBoundingClientRect(),
+             rect2 = this.canvas.getBoundingClientRect();
+
+         if ((rect1.left !== undefined) && (rect2.left!== undefined)) pos.l += (rect2.left-rect1.left);
+
+         if ((rect1.top !== undefined) && (rect2.top!== undefined)) pos.u += rect2.top-rect1.top;
+
+         if (pos.l + this.tt.offsetWidth + 3 >= this.parent.offsetWidth)
+            pos.l = this.parent.offsetWidth - this.tt.offsetWidth - 3;
+
+         if (pos.u + this.tt.offsetHeight + 15 >= this.parent.offsetHeight)
+            pos.u = this.parent.offsetHeight - this.tt.offsetHeight - 15;
+
+         // one should find parent with non-static position,
+         // all absolute coordinates calculated relative to such node
+         let abs_parent = this.parent;
+         while (abs_parent) {
+            let style = getComputedStyle(abs_parent);
+            if (!style || (style.position !== 'static')) break;
+            if (!abs_parent.parentNode || (abs_parent.parentNode.nodeType != 1)) break;
+            abs_parent = abs_parent.parentNode;
+         }
+
+         if (abs_parent && (abs_parent !== this.parent)) {
+            let rect0 = abs_parent.getBoundingClientRect();
+            pos.l += (rect1.left - rect0.left);
+            pos.u += (rect1.top - rect0.top);
          }
       }
 
-      // extract position from event - can be used to process it later when event is gone
-      this.extract_pos = function(e) {
-         if (typeof e == 'object' && (e.u !== undefined) && (e.l !== undefined)) return e;
-         let res = { u: 0, l: 0 };
-         if (this.abspos) {
-            res.l = e.pageX;
-            res.u = e.pageY;
+      this.tt.style.top = (pos.u + 15) + 'px';
+      this.tt.style.left = (pos.l + 3) + 'px';
+   }
+
+   /** @summary Show tooltip */
+   TooltipFor3D.prototype.show = function(v /*, mouse_pos, status_func*/) {
+      if (!v || (v==="")) return this.hide();
+
+      if (v && (typeof v =='object') && (v.lines || v.line)) {
+         if (v.only_status) return this.hide();
+
+         if (v.line) {
+            v = v.line;
          } else {
-            res.l = e.offsetX;
-            res.u = e.offsetY;
+            let res = v.lines[0];
+            for (let n=1;n<v.lines.length;++n) res+= "<br/>" + v.lines[n];
+            v = res;
          }
-
-         return res;
       }
 
-      // method used to define position of next tooltip
-      // event is delivered from canvas,
-      // but position should be calculated relative to the element where tooltip is placed
-
-      this.pos = function(e) {
-
-         if (!this.tt) return;
-
-         let pos = this.extract_pos(e);
-         if (!this.abspos) {
-            let rect1 = this.parent.getBoundingClientRect(),
-                rect2 = this.canvas.getBoundingClientRect();
-
-            if ((rect1.left !== undefined) && (rect2.left!== undefined)) pos.l += (rect2.left-rect1.left);
-
-            if ((rect1.top !== undefined) && (rect2.top!== undefined)) pos.u += rect2.top-rect1.top;
-
-            if (pos.l + this.tt.offsetWidth + 3 >= this.parent.offsetWidth)
-               pos.l = this.parent.offsetWidth - this.tt.offsetWidth - 3;
-
-            if (pos.u + this.tt.offsetHeight + 15 >= this.parent.offsetHeight)
-               pos.u = this.parent.offsetHeight - this.tt.offsetHeight - 15;
-
-            // one should find parent with non-static position,
-            // all absolute coordinates calculated relative to such node
-            let abs_parent = this.parent;
-            while (abs_parent) {
-               let style = getComputedStyle(abs_parent);
-               if (!style || (style.position !== 'static')) break;
-               if (!abs_parent.parentNode || (abs_parent.parentNode.nodeType != 1)) break;
-               abs_parent = abs_parent.parentNode;
-            }
-
-            if (abs_parent && (abs_parent !== this.parent)) {
-               let rect0 = abs_parent.getBoundingClientRect();
-               pos.l += (rect1.left - rect0.left);
-               pos.u += (rect1.top - rect0.top);
-            }
-         }
-
-         this.tt.style.top = (pos.u + 15) + 'px';
-         this.tt.style.left = (pos.l + 3) + 'px';
-      };
-
-      this.show = function(v /*, mouse_pos, status_func*/) {
-         if (!v || (v==="")) return this.hide();
-
-         if (v && (typeof v =='object') && (v.lines || v.line)) {
-            if (v.only_status) return this.hide();
-
-            if (v.line) {
-               v = v.line;
-            } else {
-               let res = v.lines[0];
-               for (let n=1;n<v.lines.length;++n) res+= "<br/>" + v.lines[n];
-               v = res;
-            }
-         }
-
-         if (this.tt === null) {
-            this.tt = document.createElement('div');
-            this.tt.setAttribute('class', 'jsroot_tt3d_main');
-            this.cont = document.createElement('div');
-            this.cont.setAttribute('class', 'jsroot_tt3d_cont');
-            this.tt.appendChild(this.cont);
-            this.parent.appendChild(this.tt);
-         }
-
-         if (this.lastlbl !== v) {
-            this.cont.innerHTML = v;
-            this.lastlbl = v;
-            this.tt.style.width = 'auto'; // let it be automatically resizing...
-         }
-      };
-
-      this.hide = function() {
-         if (this.tt !== null)
-            this.parent.removeChild(this.tt);
-
-         this.tt = null;
-         this.lastlbl = "";
+      if (this.tt === null) {
+         this.tt = document.createElement('div');
+         this.tt.setAttribute('class', 'jsroot_tt3d_main');
+         this.cont = document.createElement('div');
+         this.cont.setAttribute('class', 'jsroot_tt3d_cont');
+         this.tt.appendChild(this.cont);
+         this.parent.appendChild(this.tt);
       }
 
-      return this;
+      if (this.lastlbl !== v) {
+         this.cont.innerHTML = v;
+         this.lastlbl = v;
+         this.tt.style.width = 'auto'; // let it be automatically resizing...
+      }
+   }
+
+   /** @summary Hide tooltip */
+   TooltipFor3D.prototype.hide = function() {
+      if (this.tt !== null)
+         this.parent.removeChild(this.tt);
+
+      this.tt = null;
+      this.lastlbl = "";
    }
 
 
@@ -640,7 +652,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          control.update();
       }
 
-      control.tooltip = new jsrp.TooltipFor3D(painter.selectDom().node(), renderer.domElement);
+      control.tooltip = new TooltipFor3D(painter.selectDom().node(), renderer.domElement);
 
       control.painter = painter;
       control.camera = camera;
@@ -879,7 +891,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
          this.cursor_changed = false;
          if (tip && this.painter && this.painter.isTooltipAllowed()) {
-            this.tooltip.check_parent(this.painter.selectDom().node());
+            this.tooltip.checkParent(this.painter.selectDom().node());
 
             this.tooltip.show(tip, mouse);
             this.tooltip.pos(this.tmout_ttpos);
@@ -1260,7 +1272,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
                         '</svg>';
 
          // let need_replace = JSROOT.nodejs && !globalThis.document;
-         // if (need_replace) globalThis.document = JSROOT.get_document();
+         // if (need_replace) globalThis.document = JSROOT._.get_document();
 
          console.log('plain svg', plainSVG);
 

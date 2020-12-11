@@ -408,7 +408,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       let isroot = (hitem === this.h),
           has_childs = ('_childs' in hitem),
-          handle = JSROOT.getDrawHandle(hitem._kind),
+          handle = jsrp.getDrawHandle(hitem._kind),
           img1 = "", img2 = "", can_click = false, break_list = false,
           d3cont, itemname = this.itemFullName(hitem);
 
@@ -776,7 +776,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       if (!place || (place=="")) place = "item";
 
-      let sett = JSROOT.getDrawSettings(hitem._kind), handle = sett.handle;
+      let sett = jsrp.getDrawSettings(hitem._kind), handle = sett.handle;
 
       if (place == "icon") {
          let func = null;
@@ -960,7 +960,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
          } else if (onlineprop) {
             this.fillOnlineMenu(menu, onlineprop, itemname);
          } else {
-            let sett = JSROOT.getDrawSettings(hitem._kind, 'nosame');
+            let sett = jsrp.getDrawSettings(hitem._kind, 'nosame');
 
             // allow to draw item even if draw function is not defined
             if (hitem._can_draw) {
@@ -1010,7 +1010,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
    }
 
    /** @summary Creates configured JSROOT.MDIDisplay object
-     * @return {Promise} with created mdi object */
+     * @returns {Promise} with created mdi object */
    HierarchyPainter.prototype.createDisplay = function() {
 
       if ('disp' in this) {

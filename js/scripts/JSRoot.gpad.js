@@ -1671,19 +1671,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          menu.add("separator");
 
       if (this.zoom_xmin !== this.zoom_xmax)
-         menu.add("Unzoom X", this.Unzoom.bind(this,"x"));
+         menu.add("Unzoom X", () => this.Unzoom("x"));
       if (this.zoom_ymin !== this.zoom_ymax)
-         menu.add("Unzoom Y", this.Unzoom.bind(this,"y"));
+         menu.add("Unzoom Y", () => this.Unzoom("y"));
       if (this.zoom_zmin !== this.zoom_zmax)
-         menu.add("Unzoom Z", this.Unzoom.bind(this,"z"));
-      menu.add("Unzoom all", this.Unzoom.bind(this,"xyz"));
+         menu.add("Unzoom Z", () => this.Unzoom("z"));
+      menu.add("Unzoom all", () => this.Unzoom("xyz"));
 
       if (pad) {
-         menu.addchk(pad.fLogx, "SetLogx", this.ToggleLog.bind(this,"x"));
-         menu.addchk(pad.fLogy, "SetLogy", this.ToggleLog.bind(this,"y"));
+         menu.addchk(pad.fLogx, "SetLogx", () => this.ToggleLog("x"));
+         menu.addchk(pad.fLogy, "SetLogy", () => this.ToggleLog("y"));
 
          if (main && (typeof main.Dimension === 'function') && (main.Dimension() > 1))
-            menu.addchk(pad.fLogz, "SetLogz", this.ToggleLog.bind(this,"z"));
+            menu.addchk(pad.fLogz, "SetLogz", () => this.ToggleLog("z"));
          menu.add("separator");
       }
 
@@ -2462,7 +2462,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Draw pad primitives
-       @return {Promise} when drawing completed */
+     * @returns {Promise} when drawing completed */
    TPadPainter.prototype.DrawPrimitives = function(indx) {
 
       if (!indx) {
@@ -3663,7 +3663,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Toggle projection
-     * @return {Promise} indicating when ready */
+     * @returns {Promise} indicating when ready */
    TCanvasPainter.prototype.ToggleProjection = function(kind) {
       delete this.proj_painter;
 
@@ -3804,7 +3804,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    TCanvasPainter.prototype.OnWebsocketClosed = function(/*handle*/) {
-      JSROOT.CloseCurrentWindow();
+      jsrp.closeCurrentWindow();
    }
 
    /** @summary Handle websocket messages */
