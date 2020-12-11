@@ -40,7 +40,8 @@ sap.ui.define(['sap/ui/core/Control',
          if (this.geom_painter) {
             // this should be moved to GeomPainter itself !!!
 
-            this.geom_painter.setCanvDom(this.getDomRef()); // work with and without canvas
+            // work with and without canvas
+            this.geom_painter.setDom(this.getDomRef());
 
             var size = this.geom_painter.size_for_3d();
 

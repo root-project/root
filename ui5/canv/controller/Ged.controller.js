@@ -85,9 +85,6 @@ sap.ui.define([
 
          if (data._painter) {
             obj = data._painter.snapid ? data._painter.getObject() : null;
-
-            if (typeof data._painter.AttributeChange === 'function')
-               data._painter.AttributeChange(data._kind, item, pars.value);
          }
 
          if (obj) {
@@ -131,10 +128,10 @@ sap.ui.define([
              specialRefresh: 'setAxisModel',
              axis: obj,
              axiscolor: painter.lineatt.color,
-             color_label: this.currentPadPainter.get_color(obj.fLabelColor),
+             color_label: this.currentPadPainter.getColor(obj.fLabelColor),
              center_label: obj.TestBit(JSROOT.EAxisBits.kCenterLabels),
              vert_label: obj.TestBit(JSROOT.EAxisBits.kLabelsVert),
-             color_title: this.currentPadPainter.get_color(obj.fTitleColor),
+             color_title: this.currentPadPainter.getColor(obj.fTitleColor),
              center_title: obj.TestBit(JSROOT.EAxisBits.kCenterTitle),
              rotate_title: obj.TestBit(JSROOT.EAxisBits.kRotateTitle),
          };
@@ -163,11 +160,11 @@ sap.ui.define([
                exec = `exec:SetTitle("${pars.value}")`;
                break;
             case "axiscolor":
-               axis.fAxisColor = this.currentPadPainter.add_color(pars.value);
+               axis.fAxisColor = this.currentPadPainter.addColor(pars.value);
                exec = painter.GetColorExec(pars.value, "SetAxisColor");
                break;
             case "color_label":
-               axis.fLabelColor = this.currentPadPainter.add_color(pars.value);
+               axis.fLabelColor = this.currentPadPainter.addColor(pars.value);
                exec = painter.GetColorExec(pars.value, "SetLabelColor");
                break;
             case "center_label":
@@ -185,7 +182,7 @@ sap.ui.define([
                exec = `exec:SetLabelOffset(${pars.value})`;
                break;
             case "color_title":
-               axis.fLabelColor = this.currentPadPainter.add_color(pars.value);
+               axis.fLabelColor = this.currentPadPainter.addColor(pars.value);
                exec = painter.GetColorExec(pars.value, "SetTitleColor");
                break;
             case "center_title":
@@ -208,14 +205,12 @@ sap.ui.define([
          }
 
          // TAxis belongs to main painter like TH1, therefore submit commands there
-         let main = this.currentPainter.main_painter(true);
+         let main = this.currentPainter.getMainPainter(true);
 
          if (main && main.snapid) {
             console.log('Invoke interactive redraw ', main.snapid, kind)
             main.InteractiveRedraw("pad", exec, kind);
          } else {
-            console.log('pad', this.currentPadPainter.this_pad_name, this.currentPadPainter.pad_name, 'iscan', this.currentPadPainter.iscan)
-            console.log('Do have main = ', main ? main.smapid : "---")
             this.currentPadPainter.Redraw();
          }
       },
@@ -301,7 +296,7 @@ sap.ui.define([
             painter = painter.z_handle;
             selectedClass = painter.GetAxisType();
          } else {
-            selectedClass = obj ? obj._typename : painter.GetTipName();
+            selectedClass = obj ? obj._typename : painter.getObjectHint();
          }
 
          this.getView().getModel().setProperty("/SelectedClass", selectedClass);
