@@ -6,13 +6,7 @@
 ///
 /// \author  Sergey Linev
 
-(function(){
-
-   if (typeof JSROOT != "object") {
-      var e1 = new Error("httptextlog.js requires JSROOT to be already loaded");
-      e1.source = "httptextlog.js";
-      throw e1;
-   }
+JSROOT.require("painter").then(jsrp => {
 
    function MakeMsgListRequest(hitem, item) {
       // this function produces url for http request
@@ -88,6 +82,13 @@
    }
 
    // register draw function to JSROOT
-   JSROOT.addDrawFunc({name:"TMsgList", icon:"img_text", make_request:MakeMsgListRequest, after_request:AfterMsgListRequest, func:DrawMsgList, opt:"list"});
+   jsrp.addDrawFunc({
+      name: "TMsgList",
+      icon: "img_text",
+      make_request: MakeMsgListRequest,
+      after_request: AfterMsgListRequest,
+      func: DrawMsgList,
+      opt:"list"
+   });
 
-})();
+})
