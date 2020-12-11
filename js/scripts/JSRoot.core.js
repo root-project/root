@@ -438,16 +438,16 @@
    };
 
    /** @summary Method returns current document in use
-      * @private */
-   JSROOT.get_document = function() {
-       if (JSROOT.nodejs)
-          return _.nodejs_document;
-       if (typeof document !== 'undefined')
-          return document;
-       if (typeof window == 'object')
-          return window.document;
-       return udefined;
-    }
+     * @private */
+   _.get_document = function() {
+      if (JSROOT.nodejs)
+         return _.nodejs_document;
+      if (typeof document !== 'undefined')
+         return document;
+      if (typeof window == 'object')
+         return window.document;
+      return udefined;
+   }
 
    function jsroot_require(need, factoryFunc) {
 
@@ -784,8 +784,32 @@
       return result + 0.5;
    }
 
+   /** @summary Just copies (not clone) all fields from source to the target object
+     * @desc Simple replacement of jQuery.extend method
+     * @memberof JSROOT
+     * @private */
+   let extend = (tgt, src) => {
+      if ((src === null) || (typeof src !== 'object')) return tgt;
+      if ((tgt === null) || (typeof tgt !== 'object')) tgt = {};
+
+      for (let k in src)
+         tgt[k] = src[k];
+
+      return tgt;
+   }
+
+   /** @summary Adds specific methods to the object.
+     * @desc JSROOT implements some basic methods for different ROOT classes.
+     * @param {object} obj - object where methods are assigned
+     * @param {string} [typename] - optional typename, if not specified, obj._typename will be used
+     * @memberof JSROOT
+     * @private */
+   let addMethods = (obj, typename) => {
+      extend(obj, JSROOT.getMethods(typename || obj._typename, obj));
+   }
+
    /** @summary Should be used to parse JSON string produced with TBufferJSON class
-    * @desc Replace all references inside object like { "$ref": "1" }
+     * @desc Replace all references inside object like { "$ref": "1" }
     * @param {object|string} json  object where references will be replaced
     * @returns {object} parsed object */
    JSROOT.parse = function(json) {
@@ -898,7 +922,7 @@
          map.push(value);
 
          // add methods to all objects, where _typename is specified
-         if (value._typename) JSROOT.addMethods(value);
+         if (value._typename) addMethods(value);
 
          for (let k = 0; k < len; ++k) {
             const i = ks[k],
@@ -910,19 +934,6 @@
       unref_value(obj);
 
       return obj;
-   }
-
-   /** @summary Just copies (not clone) all fields from source to the target object
-    * @desc This is simple replacement of jQuery.extend method
-    * @private */
-   JSROOT.extend = function(tgt, src) {
-      if ((src === null) || (typeof src !== 'object')) return tgt;
-      if ((tgt === null) || (typeof tgt !== 'object')) tgt = {};
-
-      for (let k in src)
-         tgt[k] = src[k];
-
-      return tgt;
    }
 
    /** @summary Make deep clone of the object, including all sub-objects
@@ -979,11 +990,11 @@
       return tgt;
    }
 
-   /** @summary Parse multi.json request results
+   /** @summary Parse response from multi.json request
      * @desc Method should be used to parse JSON code, produced by multi.json request of THttpServer
      * @param {string} json string to parse
-     * @return {Array|null} returns array of parsed elements */
-   JSROOT.parse_multi = function(json) {
+     * @returns {Array} array of parsed elements */
+   JSROOT.parseMulti = function(json) {
       if (!json) return null;
       let arr = JSON.parse(json);
       if (arr && arr.length)
@@ -1191,7 +1202,7 @@
             case "posttext":
             case "text": return this.http_callback(this.responseText);
             case "object": return this.http_callback(JSROOT.parse(this.responseText));
-            case "multi": return this.http_callback(JSROOT.parse_multi(this.responseText));
+            case "multi": return this.http_callback(JSROOT.parseMulti(this.responseText));
             case "head": return this.http_callback(this);
          }
 
@@ -1324,23 +1335,26 @@
    }
 
    // Open ROOT file, defined in JSRoot.io.js
-   JSROOT.openFile = function(filename, callback) {
-      return JSROOT.require("io").then(() => JSROOT.openFile(filename, callback));
+   JSROOT.openFile = (filename, callback) => {
+      return jsroot_require("io").then(() => JSROOT.openFile(filename, callback));
    }
 
    // Draw object, defined in JSRoot.painter.js
-   JSROOT.draw = function(divid, obj, opt) {
-      return JSROOT.require("painter").then(() => JSROOT.draw(divid, obj, opt));
+   JSROOT.draw = (divid, obj, opt) => {
+      return jsroot_require("painter").then(() => JSROOT.draw(divid, obj, opt));
    }
 
    // Redaraw object, defined in JSRoot.painter.js
-   JSROOT.redraw = function(divid, obj, opt) {
-      return JSROOT.require("painter").then(() => JSROOT.redraw(divid, obj, opt));
+   JSROOT.redraw = (divid, obj, opt) => {
+      return jsroot_require("painter").then(() => JSROOT.redraw(divid, obj, opt));
    }
 
+   // Dummy, when painter is not yet loaded, should happens nothing
+   JSROOT.cleanup = () => { return; }
+
    // Create SVG, defined in JSRoot.painter.js
-   JSROOT.makeSVG = function(args) {
-      return JSROOT.require("painter").then(() => JSROOT.makeSVG(args));
+   JSROOT.makeSVG = args => {
+      return jsroot_require("painter").then(() => JSROOT.makeSVG(args));
    }
 
    /** @summary Method to build main JSROOT GUI
@@ -1348,7 +1362,7 @@
      * @param {string} [gui_kind = "gui"] - kind of the gui: "gui", "online", "draw"
      * @returns {Promise} when ready
      * @private */
-   JSROOT.buildGUI = function(gui_element, gui_kind) {
+   JSROOT.buildGUI = (gui_element, gui_kind) => {
       let d = JSROOT.decodeUrl(),
           nobrowser = d.has('nobrowser'),
           requirements = ["hierarchy"];
@@ -1379,15 +1393,17 @@
 
       _.debug_output = gui_element;
 
-      return JSROOT.require(requirements)
-                   .then(() => JSROOT.require(user_scripts))
-                   .then(() => { gui_element.innerHTML = ""; delete _.debug_output; })
-                   .then(() => { return nobrowser ? JSROOT.buildNobrowserGUI(gui_element, gui_kind) : JSROOT.buildGUI(gui_element, gui_kind); });
+      return jsroot_require(requirements).then(() => JSROOT.loadScript(user_scripts)).then(() => {
+         gui_element.innerHTML = "";
+         delete _.debug_output;
+         return nobrowser ? JSROOT.buildNobrowserGUI(gui_element, gui_kind) : JSROOT.buildGUI(gui_element, gui_kind);
+      });
    }
 
    /** @summary Create some ROOT classes
      * @desc Supported classes: "TObject", "TNamed", "TList", "TAxis", "TLine", "TText", "TLatex", "TPad", "TCanvas"
      * @param {string} typename - ROOT class name
+     * @memberof JSROOT
      * @example
      * let obj = JSROOT.create("TNamed");
      * obj.fName = "name";
@@ -1397,68 +1413,68 @@
 
       switch (typename) {
          case 'TObject':
-             JSROOT.extend(obj, { fUniqueID: 0, fBits: 0 });
+             extend(obj, { fUniqueID: 0, fBits: 0 });
              break;
          case 'TNamed':
-            JSROOT.extend(obj, { fUniqueID: 0, fBits: 0, fName: "", fTitle: "" });
+            extend(obj, { fUniqueID: 0, fBits: 0, fName: "", fTitle: "" });
             break;
          case 'TList':
          case 'THashList':
-            JSROOT.extend(obj, { name: typename, arr : [], opt : [] });
+            extend(obj, { name: typename, arr : [], opt : [] });
             break;
          case 'TAttAxis':
-            JSROOT.extend(obj, { fNdivisions: 510, fAxisColor: 1,
+            extend(obj, { fNdivisions: 510, fAxisColor: 1,
                                  fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035, fTickLength: 0.03,
                                  fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont : 42 });
             break;
          case 'TAxis':
             create("TNamed", obj);
             create("TAttAxis", obj);
-            JSROOT.extend(obj, { fNbins: 1, fXmin: 0, fXmax: 1, fXbins : [], fFirst: 0, fLast: 0,
+            extend(obj, { fNbins: 1, fXmin: 0, fXmax: 1, fXbins : [], fFirst: 0, fLast: 0,
                                  fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null, fModLabs: null });
             break;
          case 'TAttLine':
-            JSROOT.extend(obj, { fLineColor: 1, fLineStyle: 1, fLineWidth: 1 });
+            extend(obj, { fLineColor: 1, fLineStyle: 1, fLineWidth: 1 });
             break;
          case 'TAttFill':
-            JSROOT.extend(obj, { fFillColor: 0, fFillStyle: 0 } );
+            extend(obj, { fFillColor: 0, fFillStyle: 0 } );
             break;
          case 'TAttMarker':
-            JSROOT.extend(obj, { fMarkerColor: 1, fMarkerStyle: 1, fMarkerSize: 1. });
+            extend(obj, { fMarkerColor: 1, fMarkerStyle: 1, fMarkerSize: 1. });
             break;
          case 'TLine':
             create("TObject", obj);
             create("TAttLine", obj);
-            JSROOT.extend(obj, { fX1: 0, fX2: 1, fY1: 0, fY2: 1 });
+            extend(obj, { fX1: 0, fX2: 1, fY1: 0, fY2: 1 });
             break;
          case 'TBox':
             create("TObject", obj);
             create("TAttLine", obj);
             create("TAttFill", obj);
-            JSROOT.extend(obj, { fX1: 0, fX2: 1, fY1: 0, fY2: 1 });
+            extend(obj, { fX1: 0, fX2: 1, fY1: 0, fY2: 1 });
             break;
          case 'TPave':
             create("TBox", obj);
-            JSROOT.extend(obj, { fX1NDC : 0., fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
+            extend(obj, { fX1NDC : 0., fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
                                  fBorderSize: 0, fInit: 1, fShadowColor: 1,
                                  fCornerRadius: 0, fOption: "blNDC", fName: "title" });
             break;
          case 'TAttText':
-            JSROOT.extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42});
+            extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42});
             break;
          case 'TPaveText':
             create("TPave", obj);
             create("TAttText", obj);
-            JSROOT.extend(obj, { fLabel: "", fLongest: 27, fMargin: 0.05, fLines: create("TList") });
+            extend(obj, { fLabel: "", fLongest: 27, fMargin: 0.05, fLines: create("TList") });
             break;
          case 'TPaveStats':
             create("TPaveText", obj);
-            JSROOT.extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
+            extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
             break;
          case 'TLegend':
             create("TPave", obj);
             create("TAttText", obj);
-            JSROOT.extend(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create("TList") });
+            extend(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create("TList") });
             break;
          case 'TLegendEntry':
             create("TObject", obj);
@@ -1466,21 +1482,21 @@
             create("TAttLine", obj);
             create("TAttFill", obj);
             create("TAttMarker", obj);
-            JSROOT.extend(obj, { fLabel: "", fObject: null, fOption: "" });
+            extend(obj, { fLabel: "", fObject: null, fOption: "" });
             break;
          case 'TText':
             create("TNamed", obj);
             create("TAttText", obj);
-            JSROOT.extend(obj, { fLimitFactorSize: 3, fOriginSize: 0.04 });
+            extend(obj, { fLimitFactorSize: 3, fOriginSize: 0.04 });
             break;
          case 'TLatex':
             create("TText", obj);
             create("TAttLine", obj);
-            JSROOT.extend(obj, { fX: 0, fY: 0 });
+            extend(obj, { fX: 0, fY: 0 });
             break;
          case 'TObjString':
             create("TObject", obj);
-            JSROOT.extend(obj, { fString: "" });
+            extend(obj, { fString: "" });
             break;
          case 'TH1':
             create("TNamed", obj);
@@ -1488,7 +1504,7 @@
             create("TAttFill", obj);
             create("TAttMarker", obj);
 
-            JSROOT.extend(obj, {
+            extend(obj, {
                fBits: 8,
                fNcells: 0,
                fXaxis: create("TAxis"),
@@ -1511,7 +1527,7 @@
             break;
          case 'TH2':
             create("TH1", obj);
-            JSROOT.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy: 0 });
+            extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy: 0 });
             break;
          case 'TH2I':
          case 'TH2F':
@@ -1523,7 +1539,7 @@
             break;
          case 'TH3':
             create("TH1", obj);
-            JSROOT.extend(obj, { fTsumwy: 0.,  fTsumwy2: 0, fTsumwz: 0.,  fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
+            extend(obj, { fTsumwy: 0.,  fTsumwy2: 0, fTsumwz: 0.,  fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
             break;
          case 'TH3I':
          case 'TH3F':
@@ -1535,30 +1551,30 @@
             break;
          case 'THStack':
             create("TNamed", obj);
-            JSROOT.extend(obj, { fHists: create("TList"), fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
+            extend(obj, { fHists: create("TList"), fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
             break;
          case 'TGraph':
             create("TNamed", obj);
             create("TAttLine", obj);
             create("TAttFill", obj);
             create("TAttMarker", obj);
-            JSROOT.extend(obj, { fFunctions: create("TList"), fHistogram: null,
+            extend(obj, { fFunctions: create("TList"), fHistogram: null,
                                  fMaxSize: 0, fMaximum: -1111, fMinimum: -1111, fNpoints: 0, fX: [], fY: [] });
             break;
          case 'TGraphAsymmErrors':
             create("TGraph", obj);
-            JSROOT.extend(obj, { fEXlow: [], fEXhigh: [], fEYlow: [], fEYhigh: []});
+            extend(obj, { fEXlow: [], fEXhigh: [], fEYlow: [], fEYhigh: []});
             break;
          case 'TMultiGraph':
             create("TNamed", obj);
-            JSROOT.extend(obj, { fFunctions: create("TList"), fGraphs: create("TList"),
+            extend(obj, { fFunctions: create("TList"), fGraphs: create("TList"),
                                  fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
             break;
          case 'TGraphPolargram':
             create("TNamed", obj);
             create("TAttText", obj);
             create("TAttLine", obj);
-            JSROOT.extend(obj, { fRadian: true, fDegree: false, fGrad: false, fPolarLabelColor: 1, fRadialLabelColor: 1,
+            extend(obj, { fRadian: true, fDegree: false, fGrad: false, fPolarLabelColor: 1, fRadialLabelColor: 1,
                                  fAxisAngle: 0, fPolarOffset: 0.04, fPolarTextSize: 0.04, fRadialOffset: 0.025, fRadialTextSize: 0.035,
                                  fRwrmin: 0, fRwrmax: 1, fRwtmin: 0, fRwtmax: 2*Math.PI, fTickpolarSize: 0.02,
                                  fPolarLabelFont: 62, fRadialLabelFont: 62, fCutRadial: 0, fNdivRad: 508, fNdivPol: 508 });
@@ -1567,19 +1583,19 @@
             create("TObject", obj);
             create("TAttLine", obj);
             create("TAttFill", obj);
-            JSROOT.extend(obj, { fLastPoint: -1, fN: 0, fOption: "", fX: null, fY: null });
+            extend(obj, { fLastPoint: -1, fN: 0, fOption: "", fX: null, fY: null });
             break;
          case 'TGaxis':
             create("TLine", obj);
             create("TAttText", obj);
-            JSROOT.extend(obj, { fChopt: "", fFunctionName: "", fGridLength: 0,
+            extend(obj, { fChopt: "", fFunctionName: "", fGridLength: 0,
                                  fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035,
                                  fName: "", fNdiv: 12, fTickSize: 0.02, fTimeFormat: "",
                                  fTitle: "", fTitleOffset: 1, fTitleSize: 0.035,
                                  fWmax: 100, fWmin: 0 });
             break;
          case 'TAttPad':
-            JSROOT.extend(obj, { fLeftMargin: gStyle.fPadLeftMargin,
+            extend(obj, { fLeftMargin: gStyle.fPadLeftMargin,
                                  fRightMargin: gStyle.fPadRightMargin,
                                  fBottomMargin: gStyle.fPadBottomMargin,
                                  fTopMargin: gStyle.fPadTopMargin,
@@ -1597,7 +1613,7 @@
             create("TAttLine", obj);
             create("TAttFill", obj);
             create("TAttPad", obj);
-            JSROOT.extend(obj, { fX1: 0, fY1: 0, fX2: 1, fY2: 1, fXtoAbsPixelk: 1, fXtoPixelk: 1,
+            extend(obj, { fX1: 0, fY1: 0, fX2: 1, fY2: 1, fXtoAbsPixelk: 1, fXtoPixelk: 1,
                                  fXtoPixel: 1, fYtoAbsPixelk: 1, fYtoPixelk: 1, fYtoPixel: 1,
                                  fUtoAbsPixelk: 1, fUtoPixelk: 1, fUtoPixel: 1, fVtoAbsPixelk: 1,
                                  fVtoPixelk: 1, fVtoPixel: 1, fAbsPixeltoXk: 1, fPixeltoXk: 1,
@@ -1618,12 +1634,12 @@
 
             break;
          case 'TAttCanvas':
-            JSROOT.extend(obj, { fXBetween: 2, fYBetween: 2, fTitleFromTop: 1.2,
+            extend(obj, { fXBetween: 2, fYBetween: 2, fTitleFromTop: 1.2,
                                  fXdate: 0.2, fYdate: 0.3, fAdate: 1 });
             break;
          case 'TCanvas':
             create("TPad", obj);
-            JSROOT.extend(obj, { fNumPaletteColor: 0, fNextPaletteColor: 0, fDISPLAY: "$DISPLAY",
+            extend(obj, { fNumPaletteColor: 0, fNextPaletteColor: 0, fDISPLAY: "$DISPLAY",
                                  fDoubleBuffer: 0, fRetained: true, fXsizeUser: 0,
                                  fYsizeUser: 0, fXsizeReal: 20, fYsizeReal: 10,
                                  fWindowTopX: 0, fWindowTopY: 0, fWindowWidth: 0, fWindowHeight: 0,
@@ -1635,26 +1651,26 @@
             create("TNamed", obj);
             create("TAttLine", obj);
             create("TAttFill", obj);
-            JSROOT.extend(obj, { fGeoAtt:0, fFinder: null, fMedium: null, fNodes: null, fNtotal: 0, fNumber: 0, fRefCount: 0, fShape: null, fVoxels: null });
+            extend(obj, { fGeoAtt:0, fFinder: null, fMedium: null, fNodes: null, fNtotal: 0, fNumber: 0, fRefCount: 0, fShape: null, fVoxels: null });
             break;
          case 'TGeoNode':
             create("TNamed", obj);
-            JSROOT.extend(obj, { fGeoAtt:0, fMother: null, fNovlp: 0, fNumber: 0, fOverlaps: null, fVolume: null });
+            extend(obj, { fGeoAtt:0, fMother: null, fNovlp: 0, fNumber: 0, fOverlaps: null, fVolume: null });
             break;
          case 'TGeoNodeMatrix':
             create("TGeoNode", obj);
-            JSROOT.extend(obj, { fMatrix: null });
+            extend(obj, { fMatrix: null });
             break;
          case 'TGeoTrack':
             create("TObject", obj);
             create("TAttLine", obj);
             create("TAttMarker", obj);
-            JSROOT.extend(obj, { fGeoAtt: 0, fNpoints: 0, fPoints: [] });
+            extend(obj, { fGeoAtt: 0, fNpoints: 0, fPoints: [] });
             break;
       }
 
       obj._typename = typename;
-      JSROOT.addMethods(obj, typename);
+      addMethods(obj, typename);
       return obj;
    }
 
@@ -1664,13 +1680,13 @@
      * @param {number} [nbinsy] - number of bins on Y-axis (for 2D/3D histograms)
      * @param {number} [nbinsz] - number of bins on Z-axis (for 3D histograms)
      * @returns {Object} created histogram object */
-   JSROOT.createHistogram = function(typename, nbinsx, nbinsy, nbinsz) {
+   JSROOT.createHistogram = (typename, nbinsx, nbinsy, nbinsz) => {
       let histo = create(typename);
       if (!histo.fXaxis || !histo.fYaxis || !histo.fZaxis) return null;
       histo.fName = "hist"; histo.fTitle = "title";
-      if (nbinsx) JSROOT.extend(histo.fXaxis, { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
-      if (nbinsy) JSROOT.extend(histo.fYaxis, { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
-      if (nbinsz) JSROOT.extend(histo.fZaxis, { fNbins: nbinsz, fXmin: 0, fXmax: nbinsz });
+      if (nbinsx) extend(histo.fXaxis, { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
+      if (nbinsy) extend(histo.fYaxis, { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
+      if (nbinsz) extend(histo.fZaxis, { fNbins: nbinsz, fXmin: 0, fXmax: nbinsz });
       switch (parseInt(typename[2])) {
          case 1: if (nbinsx) histo.fNcells = nbinsx+2; break;
          case 2: if (nbinsx && nbinsy) histo.fNcells = (nbinsx+2) * (nbinsy+2); break;
@@ -1694,7 +1710,7 @@
    /** @summary Creates TPolyLine object
      * @param {number} npoints - number of points
      * @param {boolean} [use_int32] - use Int32Array type for points, default is Float32Array */
-   JSROOT.createTPolyLine = function(npoints, use_int32) {
+   JSROOT.createTPolyLine = (npoints, use_int32) => {
       let poly = create("TPolyLine");
       if (npoints) {
          poly.fN = npoints;
@@ -1706,7 +1722,6 @@
             poly.fY = new Float32Array(npoints);
          }
       }
-
       return poly;
    }
 
@@ -1714,8 +1729,8 @@
      * @param {number} npoints - number of points in TGraph
      * @param {array} [xpts] - array with X coordinates
      * @param {array} [ypts] - array with Y coordinates */
-   JSROOT.createTGraph = function(npoints, xpts, ypts) {
-      let graph = JSROOT.extend(create("TGraph"), { fBits: 0x408, fName: "graph", fTitle: "title" });
+   JSROOT.createTGraph = (npoints, xpts, ypts) => {
+      let graph = extend(create("TGraph"), { fBits: 0x408, fName: "graph", fTitle: "title" });
 
       if (npoints>0) {
          graph.fMaxSize = graph.fNpoints = npoints;
@@ -1764,7 +1779,7 @@
    let methodsCache = {}; // variable used to keep methods for known classes
 
    /** @summary Returns methods for given typename
-    * @private */
+     * @private */
    JSROOT.getMethods = function(typename, obj) {
 
       let m = methodsCache[typename],
@@ -2112,17 +2127,8 @@
              (typename === 'TObjArray') || (typename === 'TClonesArray');
    }
 
-   /** @summary Adds specific methods to the object.
-     * @desc JSROOT implements some basic methods for different ROOT classes.
-     * @param {object} obj - object where methods are assigned
-     * @param {string} [typename] - optional typename, if not specified, obj._typename will be used
-     * @private */
-   JSROOT.addMethods = function(obj, typename) {
-      this.extend(obj, this.getMethods(typename || obj._typename, obj));
-   }
-
    // Dummy function, will be redefined when JSRoot.painter is loaded
-   JSROOT.progress = function(msg /*, tmout */) {
+   JSROOT.progress = (msg /*, tmout */) => {
       if ((msg !== undefined) && (typeof msg=="string")) console.log(msg);
    }
 
@@ -2142,7 +2148,7 @@
       let prereq = "webwindow;";
       if (arg && arg.prereq) prereq += arg.prereq;
 
-      return JSROOT.require(prereq).then(() => {
+      return jsroot_require(prereq).then(() => {
          if (arg && arg.prereq_logdiv && document) {
             let elem = document.getElementById(arg.prereq_logdiv);
             if (elem) elem.innerHTML = '';
@@ -2182,6 +2188,8 @@
    JSROOT.browser = browser;
    JSROOT.gStyle = gStyle;
    JSROOT.create = create;
+   JSROOT.extend = extend;
+   JSROOT.addMethods = addMethods;
 
    return JSROOT;
 

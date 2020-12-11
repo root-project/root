@@ -1406,11 +1406,11 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
    let TTreeMethods = {};
 
    /** @summary Process selector
-    * @param {object} selector - instance of {@link JSROOT.TSelector} class
-    * @param {object} [args] - different arguments
-    * @param {number} [args.firstentry] - first entry to process, 0 when not specified
-    * @param {number} [args.numentries] - number of entries to process, all when not specified
-    * @return {Promise} with TSelector instance */
+     * @param {object} selector - instance of {@link JSROOT.TSelector} class
+     * @param {object} [args] - different arguments
+     * @param {number} [args.firstentry] - first entry to process, 0 when not specified
+     * @param {number} [args.numentries] - number of entries to process, all when not specified
+     * @returns {Promise} with TSelector instance */
    TTreeMethods.Process = function(selector, args) {
       // function similar to the TTree::Process
 

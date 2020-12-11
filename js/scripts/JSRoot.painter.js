@@ -3039,7 +3039,7 @@ JSROOT.define(['d3'], (d3) => {
    AxisBasePainter.prototype.formatLog = function(d, asticks, fmt) {
       let val = parseFloat(d), rnd = Math.round(val);
       if (!asticks)
-         return ((rnd === val) && (Math.abs(rnd)<1e9)) ? rnd.toString() : JSROOT.FFormat(val, fmt || JSROOT.gStyle.fStatFormat);
+         return ((rnd === val) && (Math.abs(rnd)<1e9)) ? rnd.toString() : jsrp.floatToString(val, fmt || JSROOT.gStyle.fStatFormat);
       if (val <= 0) return null;
       let vlog = Math.log10(val), base = this.logbase;
       if (base !== 10) vlog = vlog / Math.log10(base);
@@ -3062,7 +3062,7 @@ JSROOT.define(['d3'], (d3) => {
 
       if (asticks) return (this.ndig>10) ? val.toExponential(this.ndig-11) : val.toFixed(this.ndig);
 
-      return JSROOT.FFormat(val, fmt || JSROOT.gStyle.fStatFormat);
+      return jsrp.floatToString(val, fmt || JSROOT.gStyle.fStatFormat);
    }
 
    /** @summary Provide label for exponential form */
@@ -3453,7 +3453,7 @@ JSROOT.define(['d3'], (d3) => {
      * @param {string} [args.icon] - icon name shown for the class in hierarchy browser
      * @param {string} [args.draw_field] - draw only data member from object, like fHistogram
      * @private */
-   JSROOT.addDrawFunc = function(args) {
+   jsrp.addDrawFunc = function(args) {
       drawFuncs.lst.push(args);
       return args;
    }
@@ -3463,8 +3463,9 @@ JSROOT.define(['d3'], (d3) => {
      * kind string like "Command" or "Text"
      * selector can be used to search for draw handle with specified option (string)
      * or just sequence id
+     * @memberof JSROOT.Painter
      * @private */
-   JSROOT.getDrawHandle = function(kind, selector) {
+   function getDrawHandle(kind, selector) {
 
       if (typeof kind != 'string') return null;
       if (selector === "") selector = null;
@@ -3484,7 +3485,7 @@ JSROOT.define(['d3'], (d3) => {
          }
 
          if (h.sameas !== undefined)
-            return JSROOT.getDrawHandle("ROOT." + h.sameas, selector);
+            return getDrawHandle("ROOT." + h.sameas, selector);
 
          if ((selector === null) || (selector === undefined)) {
             // store found handle in cache, can reuse later
@@ -3514,7 +3515,7 @@ JSROOT.define(['d3'], (d3) => {
    /** @summary Scan streamer infos for derived classes
     * @desc Assign draw functions for such derived classes
     * @private */
-   JSROOT.addStreamerInfos = function(lst) {
+   jsrp.addStreamerInfos = function(lst) {
       if (!lst) return;
 
       function CheckBaseClasses(si, lvl) {
@@ -3526,7 +3527,7 @@ JSROOT.define(['d3'], (d3) => {
             let element = si.fElements.arr[j];
             if (element.fTypeName !== 'BASE') continue;
 
-            let handle = JSROOT.getDrawHandle("ROOT." + element.fName);
+            let handle = getDrawHandle("ROOT." + element.fName);
             if (handle && !handle.for_derived) handle = null;
 
             // now try find that base class of base in the list
@@ -3544,7 +3545,7 @@ JSROOT.define(['d3'], (d3) => {
 
       for (let n = 0; n < lst.arr.length; ++n) {
          let si = lst.arr[n];
-         if (JSROOT.getDrawHandle("ROOT." + si.fName) !== null) continue;
+         if (getDrawHandle("ROOT." + si.fName) !== null) continue;
 
          let handle = CheckBaseClasses(si, 0);
 
@@ -3558,15 +3559,16 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Provide draw settings for specified class or kind
-    * @private */
-   JSROOT.getDrawSettings = function(kind, selector) {
+     * @memberof JSROOT.Painter
+     * @private */
+   function getDrawSettings(kind, selector) {
       let res = { opts: null, inspect: false, expand: false, draw: false, handle: null };
       if (typeof kind != 'string') return res;
       let isany = false, noinspect = false, canexpand = false;
       if (typeof selector !== 'string') selector = "";
 
       for (let cnt = 0; cnt < 1000; ++cnt) {
-         let h = JSROOT.getDrawHandle(kind, cnt);
+         let h = getDrawHandle(kind, cnt);
          if (!h) break;
          if (!res.handle) res.handle = h;
          if (h.noinspect) noinspect = true;
@@ -3604,14 +3606,14 @@ JSROOT.define(['d3'], (d3) => {
 
    /** @summary Returns array with supported draw options for the specified kind
     * @private */
-   JSROOT.getDrawOptions = function(kind /*, selector*/) {
-      return JSROOT.getDrawSettings(kind).opts;
+   jsrp.getDrawOptions = function(kind /*, selector*/) {
+      return getDrawSettings(kind).opts;
    }
 
    /** @summary Returns true if provided object class can be drawn
     * @private */
-   JSROOT.canDraw = function(classname) {
-      return JSROOT.getDrawSettings("ROOT." + classname).opts !== null;
+   jsrp.canDraw = function(classname) {
+      return getDrawSettings("ROOT." + classname).opts !== null;
    }
 
    /** @summary Implementation of JSROOT.draw
@@ -3627,10 +3629,10 @@ JSROOT.define(['d3'], (d3) => {
       let handle, type_info;
       if ('_typename' in obj) {
          type_info = "type " + obj._typename;
-         handle = JSROOT.getDrawHandle("ROOT." + obj._typename, opt);
+         handle = getDrawHandle("ROOT." + obj._typename, opt);
       } else if ('_kind' in obj) {
          type_info = "kind " + obj._kind;
-         handle = JSROOT.getDrawHandle(obj._kind, opt);
+         handle = getDrawHandle(obj._kind, opt);
       } else
          return JSROOT.require("hierarchy").then(() => jsrp.drawInspector(divid, obj));
 
@@ -3760,7 +3762,7 @@ JSROOT.define(['d3'], (d3) => {
       let dummy = new ObjectPainter(divid);
       let can_painter = dummy.canv_painter(), handle, res_painter = null, redraw_res;
       if (obj._typename)
-         handle = JSROOT.getDrawHandle("ROOT." + obj._typename);
+         handle = getDrawHandle("ROOT." + obj._typename);
       if (handle && handle.draw_field && obj[handle.draw_field])
          obj = obj[handle.draw_field];
 
@@ -3834,10 +3836,8 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Create SVG image for provided object.
-    *
     * @desc Function especially useful in Node.js environment to generate images for
     * supported ROOT classes
-    *
     * @param {object} args - contains different settings
     * @param {object} args.object - object for the drawing
     * @param {string} [args.option] - draw options
@@ -3847,9 +3847,7 @@ JSROOT.define(['d3'], (d3) => {
    JSROOT.makeSVG = function(args) {
 
       if (!args) args = {};
-
       if (!args.object) return Promise.reject(Error("No object specified to generate SVG"));
-
       if (!args.width) args.width = 1200;
       if (!args.height) args.height = 800;
 
@@ -3975,18 +3973,16 @@ JSROOT.define(['d3'], (d3) => {
 
       if (!isNaN(tmout) && (tmout > 0)) {
          box.property("with_timeout", true);
-         setTimeout(JSROOT.progress.bind(JSROOT, '', -1), tmout);
+         setTimeout(() => JSROOT.progress('', -1), tmout);
       }
    }
 
    /** @summary Converts numeric value to string according to specified format.
-    *
-    * @param {number} value - value to convert
-    * @param {strting} [fmt="6.4g"] - format can be like 5.4g or 4.2e or 6.4f
-    * @param {boolean} [ret_fmt=false] - when true returns array with actual format
-    * @returns {string|Array} - converted value or array with value and actual format
-    * @private */
-   JSROOT.FFormat = function(value, fmt, ret_fmt) {
+     * @param {number} value - value to convert
+     * @param {string} [fmt="6.4g"] - format can be like 5.4g or 4.2e or 6.4f
+     * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ["0.1","6.4f"]
+     * @returns {string|Array} - converted value or array with value and actual format */
+   jsrp.floatToString = function(value, fmt, ret_fmt) {
       if (!fmt) fmt = "6.4g";
 
       fmt = fmt.trim();
@@ -4005,8 +4001,8 @@ JSROOT.define(['d3'], (d3) => {
       if ((last=='f') || (last=='F')) { isexp = false; } else
       if (last=='W') { isexp = false; significance = true; } else
       if ((last=='g') || (last=='G')) {
-         let se = JSROOT.FFormat(value, fmt+'Q', true),
-             sg = JSROOT.FFormat(value, fmt+'W', true);
+         let se = jsrp.floatToString(value, fmt+'Q', true),
+             sg = jsrp.floatToString(value, fmt+'W', true);
 
          if (se[0].length < sg[0].length) sg = se;
          return ret_fmt ? sg : sg[0];
@@ -4051,11 +4047,10 @@ JSROOT.define(['d3'], (d3) => {
    }
 
    /** @summary Tries to close current browser tab
-     *
      * @desc Many browsers do not allow simple window.close() call,
      * therefore try several workarounds
      * @private */
-   JSROOT.CloseCurrentWindow = function() {
+   jsrp.closeCurrentWindow = function() {
       if (!window) return;
       window.close();
       window.open('', '_self').close();
@@ -4064,6 +4059,9 @@ JSROOT.define(['d3'], (d3) => {
    jsrp.createRootColors();
 
    if (JSROOT.nodejs) jsrp.readStyleFromURL("?interactive=0&tooltip=0&nomenu&noprogress&notouch&toolbar=0&webgl=0");
+
+   jsrp.getDrawHandle = getDrawHandle;
+   jsrp.getDrawSettings = getDrawSettings;
 
    JSROOT.DrawOptions = DrawOptions;
    JSROOT.ColorPalette = ColorPalette;

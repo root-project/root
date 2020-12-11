@@ -2705,12 +2705,12 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       res.lines.push("y = " + main.AxisAsText("y", yy));
       if (knot !== null) {
          res.lines.push("knot = " + indx);
-         res.lines.push("B = " + JSROOT.FFormat(knot.fB, JSROOT.gStyle.fStatFormat));
-         res.lines.push("C = " + JSROOT.FFormat(knot.fC, JSROOT.gStyle.fStatFormat));
-         res.lines.push("D = " + JSROOT.FFormat(knot.fD, JSROOT.gStyle.fStatFormat));
+         res.lines.push("B = " + jsrp.floatToString(knot.fB, JSROOT.gStyle.fStatFormat));
+         res.lines.push("C = " + jsrp.floatToString(knot.fC, JSROOT.gStyle.fStatFormat));
+         res.lines.push("D = " + jsrp.floatToString(knot.fD, JSROOT.gStyle.fStatFormat));
          if ((knot.fE!==undefined) && (knot.fF!==undefined)) {
-            res.lines.push("E = " + JSROOT.FFormat(knot.fE, JSROOT.gStyle.fStatFormat));
-            res.lines.push("F = " + JSROOT.FFormat(knot.fF, JSROOT.gStyle.fStatFormat));
+            res.lines.push("E = " + jsrp.floatToString(knot.fE, JSROOT.gStyle.fStatFormat));
+            res.lines.push("F = " + jsrp.floatToString(knot.fF, JSROOT.gStyle.fStatFormat));
          }
       }
 
@@ -3281,7 +3281,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    }
 
    /** @summary draw speical histogram for axis
-     * @return {Promise} when ready */
+     * @returns {Promise} when ready */
    TMultiGraphPainter.prototype.drawAxis = function() {
 
       let mgraph = this.getObject(),

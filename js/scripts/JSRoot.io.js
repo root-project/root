@@ -179,7 +179,7 @@ JSROOT.define(['rawinflate'], () => {
 
    /** @summary Add custom streamer
      * @private */
-   JSROOT.addUserStreamer = function(type, user_streamer) {
+   jsrio.addUserStreamer = function(type, user_streamer) {
       jsrio.CustomStreamers[type] = user_streamer;
    }
 
@@ -1332,8 +1332,8 @@ JSROOT.define(['rawinflate'], () => {
 
       this.fStreamerInfos = lst;
 
-      if (typeof JSROOT.addStreamerInfos === 'function')
-         JSROOT.addStreamerInfos(lst);
+      if (JSROOT.Painter && typeof JSROOT.Painter.addStreamerInfos === 'function')
+         JSROOT.Painter.addStreamerInfos(lst);
 
       for (let k = 0; k < lst.arr.length; ++k) {
          let si = lst.arr[k];

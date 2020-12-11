@@ -1996,7 +1996,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       if (this._fit_main_area && !this._webgl) {
          // create top-most SVG for geomtery drawings
-         let doc = JSROOT.get_document();
+         let doc = JSROOT._.get_document();
          let svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
          d3.select(svg).attr("width",w).attr("height",h);
          svg.appendChild(this._renderer.jsroot_dom);
@@ -2089,7 +2089,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       let dataUrl = this._renderer.domElement.toDataURL("image/png");
       if (filename==="asis") return dataUrl;
       dataUrl.replace("image/png", "image/octet-stream");
-      let doc = JSROOT.get_document();
+      let doc = JSROOT._.get_document();
       let link = doc.createElement('a');
       if (typeof link.download === 'string') {
          doc.body.appendChild(link); //Firefox requires the link to be in the body
@@ -2495,7 +2495,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
      * Such function should be possible to find via {@link JSROOT.findFunction}
      * Function has to return Promise with objects to draw on geometry
      * By default function with name "extract_geo_tracks" is checked
-     * @return {Promise} handling of drop operation */
+     * @returns {Promise} handling of drop operation */
    TGeoPainter.prototype.performDrop = function(obj, itemname, hitem, opt) {
 
       if (obj && (obj.$kind==='TTree')) {
@@ -3046,7 +3046,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          // activate worker
          if (this.ctrl.use_worker > 0) this.startWorker();
 
-         jsrp.Assign3DHandler(this);
+         jsrp.assign3DHandler(this);
 
          let size = this.size_for_3d(this._webgl ? undefined : 3);
 
@@ -4579,9 +4579,9 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       return true;
    }
 
-   JSROOT.addDrawFunc({ name: "TGeoVolumeAssembly", icon: 'img_geoassembly', func: drawGeoObject, expand: geo.expandObject, opt: ";more;all;count" });
-   JSROOT.addDrawFunc({ name: "TEvePointSet", icon_get: geo.getBrowserIcon, icon_click: geo.browserIconClick });
-   JSROOT.addDrawFunc({ name: "TEveTrack", icon_get: geo.getBrowserIcon, icon_click: geo.browserIconClick });
+   jsrp.addDrawFunc({ name: "TGeoVolumeAssembly", icon: 'img_geoassembly', func: drawGeoObject, expand: geo.expandObject, opt: ";more;all;count" });
+   jsrp.addDrawFunc({ name: "TEvePointSet", icon_get: geo.getBrowserIcon, icon_click: geo.browserIconClick });
+   jsrp.addDrawFunc({ name: "TEveTrack", icon_get: geo.getBrowserIcon, icon_click: geo.browserIconClick });
 
    JSROOT.TGeoPainter = TGeoPainter;
 
