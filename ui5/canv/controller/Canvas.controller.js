@@ -499,7 +499,7 @@ sap.ui.define([
          this.getView().getModel().setProperty("/TooltipIcon", new_state ? "sap-icon://accept" : "");
 
          let p = this.getCanvasPainter(true);
-         if (p) p.SetTooltipAllowed(new_state);
+         if (p) p.setTooltipAllowed(new_state);
       },
 
       setShowMenu: function(new_state) {
