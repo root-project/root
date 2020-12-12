@@ -118,12 +118,12 @@ public:
       QWebEngineUrlRequestJob *req = fRequest.req();
 
       if (!req) {
-         R__LOG_ERROR("Qt5") << "Qt5 request already processed path " << GetPathName() << " file " << GetFileName();
+         R__LOG_ERROR(QtWebDisplayLog()) << "Qt5 request already processed path " << GetPathName() << " file " << GetFileName();
          return;
       }
 
       if (Is404()) {
-         R__LOG_ERROR("Qt5") << "Qt5 request FAIL path " << GetPathName() << " file " << GetFileName();
+         R__LOG_ERROR(QtWebDisplayLog()) << "Qt5 request FAIL path " << GetPathName() << " file " << GetFileName();
 
          req->fail(QWebEngineUrlRequestJob::UrlNotFound);
          // abort request
@@ -173,7 +173,7 @@ void RootUrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
    QUrl url = request->requestUrl();
 
    if (!fServer) {
-      R__LOG_ERROR("webgui") << "Server not specified when request is started";
+      R__LOG_ERROR(QtWebDisplayLog()) << "Server not specified when request is started";
       request->fail(QWebEngineUrlRequestJob::UrlNotFound);
       return;
    }
