@@ -49,6 +49,7 @@ ROOTGLIBS    := $(shell $(RC) --glibs)
 ROOTCLING    := rootcling
 
 ifeq ($(PLATFORM),macosx)
+ROOTLIBDIR   := $(shell $(RC) --libdir)
 MACOSX_MAJOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1))
 MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
 ifeq ($(MACOSX_DEPLOYMENT_TARGET),)
@@ -313,7 +314,7 @@ ifeq ($(ARCH),macosx64)
 CXX           = g++
 CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
 LD            = g++
-LDFLAGS       = $(OPT2) -mmacosx-version-min=$(MACOSXTARGET)
+LDFLAGS       = $(OPT2) -mmacosx-version-min=$(MACOSXTARGET) -Wl,-rpath,$(ROOTLIBDIR)
 EXPLLINKLIBS  = $(ROOTGLIBS)
 DllSuf        = so
 SOFLAGS       = -dynamiclib -single_module -install_name $(CURDIR)/
@@ -324,7 +325,7 @@ ifeq ($(ARCH),macosxarm64)
 CXX           = g++
 CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
 LD            = g++
-LDFLAGS       = $(OPT2) -mmacosx-version-min=$(MACOSXTARGET)
+LDFLAGS       = $(OPT2) -mmacosx-version-min=$(MACOSXTARGET)  -Wl,-rpath,$(ROOTLIBDIR)
 EXPLLINKLIBS  = $(ROOTGLIBS)
 DllSuf        = so
 SOFLAGS       = -dynamiclib -single_module -install_name $(CURDIR)/
