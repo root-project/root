@@ -333,7 +333,7 @@ inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) cons
  verbosity is too low, i.e.:
  ````
  RLogScopedVerbosity silence(RLogLevel::kFatal);
- R__LOG_DEBUG() << WillNotBeCalled();
+ R__LOG_DEBUG(7) << WillNotBeCalled();
  ```
  - To update counts of warnings / errors / fatal errors, those RLogEntries must
  always be created, even if in the end their emission will be silenced. This
