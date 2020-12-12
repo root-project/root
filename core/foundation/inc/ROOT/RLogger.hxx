@@ -342,7 +342,7 @@ inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) cons
  to prevent "ambiguous else" in invocations such as `if (something) R__LOG_DEBUG()...`.
  */
 #define R__LOG_TO_CHANNEL(SEVERITY, CHANNEL)                                                                        \
-   (SEVERITY < ROOT::Experimental::ELogLevel::kInfo ||                                                              \
+   (SEVERITY < ROOT::Experimental::ELogLevel::kInfo + 0 ||                                                          \
     ROOT::Experimental::Internal::GetChannelOrManager(CHANNEL).GetEffectiveVerbosity(                               \
        ROOT::Experimental::RLogManager::Get()) >= SEVERITY) &&                                                      \
       ROOT::Experimental::Detail::RLogBuilder(SEVERITY, ROOT::Experimental::Internal::GetChannelOrManager(CHANNEL), \
