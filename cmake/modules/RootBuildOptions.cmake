@@ -449,7 +449,7 @@ endif()
 if(macos_native)
   if(APPLE)
     set(CMAKE_IGNORE_PATH)
-    foreach(_prefix /sw /opt/local /usr/local) # Fink installs in /sw, and MacPort in /opt/local and Brew in /usr/local
+    foreach(_prefix /sw /opt/local /usr/local /opt/homebrew) # Fink installs in /sw, and MacPort in /opt/local and Brew in /usr/local (x86-64) and /opt/homebrew (arm64)
       list(APPEND CMAKE_IGNORE_PATH ${_prefix}/bin ${_prefix}/include ${_prefix}/lib)
     endforeach()
     if(CMAKE_VERSION VERSION_GREATER 3.15)
