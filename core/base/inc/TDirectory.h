@@ -24,6 +24,7 @@
 #include "TNamed.h"
 #include "TClass.h"
 #include "TUUID.h"
+#include <atomic>
 
 #ifdef R__LESS_INCLUDES
 class TList;
@@ -36,6 +37,10 @@ class TList;
 class TBrowser;
 class TKey;
 class TFile;
+namespace ROOT {
+namespace Internal {
+   struct TDirectoryAtomicAdapter;
+}}
 
 class TDirectory : public TNamed {
 public:
@@ -69,14 +74,14 @@ public:
          else
             CdNull();
       }
-      TContext() : fDirectory(TDirectory::CurrentDirectory())
+      TContext() : fDirectory(TDirectory::CurrentDirectory().load())
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
          if (fDirectory)
             (*fDirectory).RegisterContext(this);
       }
-      TContext(TDirectory *newCurrent) : fDirectory(TDirectory::CurrentDirectory())
+      TContext(TDirectory *newCurrent) : fDirectory(TDirectory::CurrentDirectory().load())
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
@@ -98,6 +103,8 @@ protected:
    mutable TString  fPathBuffer;        //! Buffer for GetPath() function
    TContext        *fContext{nullptr};  //! Pointer to a list of TContext object pointing to this TDirectory
 
+   std::vector<std::atomic<TDirectory*>*> fGDirectories; //! thread local gDirectory pointing to this object.
+
    std::atomic<size_t> fContextPeg;     //!Counter delaying the TDirectory destructor from finishing.
    mutable std::atomic_flag fSpinLock;  //! MSVC doesn't support = ATOMIC_FLAG_INIT;
 
@@ -110,9 +117,11 @@ protected:
            void   FillFullPath(TString& buf) const;
            void   RegisterContext(TContext *ctxt);
            void   UnregisterContext(TContext *ctxt);
+           void   RegisterGDirectory(std::atomic<TDirectory*>*);
            void   BuildDirectory(TFile* motherFile, TDirectory* motherDir);
 
    friend class TContext;
+   friend struct ROOT::Internal::TDirectoryAtomicAdapter;
 
 protected:
    TDirectory(const TDirectory &directory) = delete;  //Directories cannot be copied
@@ -133,7 +142,7 @@ public:
            void        Clear(Option_t *option="") override;
    virtual TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE);
    virtual void        Close(Option_t *option="");
-   static TDirectory *&CurrentDirectory();  // Return the current directory for this thread.
+   static std::atomic<TDirectory*> &CurrentDirectory();  // Return the current directory for this thread.
            void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
    virtual Bool_t      cd(const char *path = nullptr);
    virtual void        DeleteAll(Option_t *option="");
@@ -233,7 +242,36 @@ public:
 };
 
 #ifndef __CINT__
-#define gDirectory (TDirectory::CurrentDirectory())
+namespace ROOT {
+namespace Internal {
+   struct TDirectoryAtomicAdapter {
+      std::atomic<TDirectory*> &fValue;
+      TDirectoryAtomicAdapter(std::atomic<TDirectory*> &value) : fValue(value) {}
+
+      template <typename T>
+      explicit operator T*() {
+         return (T*)fValue.load();
+      }
+
+      operator TDirectory*() {
+         return fValue.load();
+      }
+
+      operator bool() { return fValue.load() != nullptr; }
+
+      TDirectory *operator=(TDirectory *newvalue) {
+         if (newvalue) {
+            newvalue->RegisterGDirectory(&fValue);
+         }
+         fValue = newvalue;
+         return newvalue;
+      }
+
+      TDirectory *operator->() { return fValue.load(); }
+   };
+} // Internal
+} // ROOT
+#define gDirectory (ROOT::Internal::TDirectoryAtomicAdapter(TDirectory::CurrentDirectory()))
 
 #elif defined(__MAKECINT__)
 // To properly handle the use of gDirectory in header files (in static declarations)
