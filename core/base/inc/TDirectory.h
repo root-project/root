@@ -249,15 +249,31 @@ namespace Internal {
       TDirectoryAtomicAdapter(std::atomic<TDirectory*> &value) : fValue(value) {}
 
       template <typename T>
-      explicit operator T*() {
+      explicit operator T*() const {
          return (T*)fValue.load();
       }
 
-      operator TDirectory*() {
+      operator TDirectory*() const {
          return fValue.load();
       }
 
-      operator bool() { return fValue.load() != nullptr; }
+      operator bool() const { return fValue.load() != nullptr; }
+
+      bool operator==(const TDirectory *other) const {
+         return fValue.load() == other;
+      }
+
+      bool operator!=(const TDirectory *other) const {
+         return fValue.load() != other;
+      }
+
+      bool operator==(TDirectory *other) const {
+         return fValue.load() == other;
+      }
+
+      bool operator!=(TDirectory *other) const {
+         return fValue.load() != other;
+      }
 
       TDirectory *operator=(TDirectory *newvalue) {
          if (newvalue) {
@@ -267,7 +283,7 @@ namespace Internal {
          return newvalue;
       }
 
-      TDirectory *operator->() { return fValue.load(); }
+      TDirectory *operator->() const { return fValue.load(); }
    };
 } // Internal
 } // ROOT
