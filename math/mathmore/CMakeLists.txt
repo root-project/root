@@ -84,7 +84,18 @@ SOURCES
     GSL
 )
 
+target_link_libraries(MathMore PRIVATE ${GSL_LIBRARY})
 target_include_directories(MathMore SYSTEM PRIVATE ${GSL_INCLUDE_DIR})
-target_link_libraries(MathMore PRIVATE ${GSL_LIBRARIES})
+find_package(BLAS QUIET)
+if (BLAS_FOUND)
+  if (TARGET BLAS::BLAS)
+    set(MATHMORE_BLAS BLAS::BLAS)
+  else()
+    set(MATHMORE_BLAS ${BLAS_LIBRARIES})
+  endif()
+else()
+  set(MATHMORE_BLAS ${GSL_CBLAS_LIBRARY})
+endif()
+target_link_libraries(MathMore PRIVATE ${MATHMORE_BLAS})
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

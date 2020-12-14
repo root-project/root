@@ -50,7 +50,7 @@ add_definitions(-DHAVE_ROOTLIBS)
 #---Build and add all the defined test in the list---------------
 foreach(file ${TestMathMoreSource})
   get_filename_component(testname ${file} NAME_WE)
-  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${GSL_LIBRARIES} ${Libraries})
+  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${GSL_LIBRARY} ${MATHMORE_BLAS} ${Libraries})
   ROOT_ADD_TEST(mathmore-${testname} COMMAND ${testname} LABELS ${${testname}_LABELS})
 endforeach()
 
