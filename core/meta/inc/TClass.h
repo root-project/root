@@ -132,6 +132,10 @@ public:
                         // in ROOT Meta w/o interpreter information
    };
 
+   // "Typed" pointer that recalls how TClass::New allocated the object.
+   // It is returned by TClass:NewObject and should be passed to TClass::DeleteArray or TClass::Destructor
+   // to delete the object.
+   // It is also used in TVirtualCollectionProxy for the same reasons.
    class ObjectPtr
    {
       void *fPtr = nullptr;
@@ -586,8 +590,7 @@ public:
    void               Store(TBuffer &b) const;
 
    // Pseudo-method apply to the 'obj'. In particular those are used to
-   // implement TObject like methods for non-TObject classes
-
+   // implement TObject like methods for non-TObject classes.
    Int_t              Browse(void *obj, TBrowser *b) const;
    void               DeleteArray(void *ary, Bool_t dtorOnly = kFALSE);
    void               DeleteArray(ObjectPtr ary, Bool_t dtorOnly = kFALSE);
