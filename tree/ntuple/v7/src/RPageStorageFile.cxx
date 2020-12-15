@@ -591,6 +591,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
 
 void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(RCluster *cluster)
 {
+   RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
    fTaskScheduler->Reset();
 
    const auto clusterId = cluster->GetId();
@@ -624,7 +625,6 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(RCluster *clu
 
                auto pageBufferPacked = new unsigned char[bytesPacked];
                if (onDiskPage->GetSize() != bytesPacked) {
-                  RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
                   fDecompressor(onDiskPage->GetAddress(), onDiskPage->GetSize(), bytesPacked, pageBufferPacked);
                   fCounters->fSzUnzip.Add(bytesPacked);
                } else {
