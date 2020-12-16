@@ -24,11 +24,13 @@
 #include <algorithm>
 #include <chrono>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <ostream>
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace ROOT {
 namespace Experimental {
@@ -261,6 +263,7 @@ public:
    RLocator GetLocator() const { return fLocator; }
    const RColumnRange &GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
    const RPageRange &GetPageRange(DescriptorId_t columnId) const { return fPageRanges.at(columnId); }
+   std::unordered_set<DescriptorId_t> GetColumnIds() const;
 };
 
 
@@ -424,6 +427,47 @@ public:
       }
    };
 
+   // clang-format off
+   /**
+   \class ROOT::Experimental::RNTupleDescriptor::RClusterDescriptorRange
+   \ingroup NTuple
+   \brief Used to loop over all the clusters of an ntuple (in unspecified order)
+   */
+   // clang-format on
+   class RClusterDescriptorRange {
+   private:
+      /// The associated NTuple for this range.
+      const RNTupleDescriptor &fNTuple;
+   public:
+      class RIterator {
+      private:
+         /// The enclosing range's NTuple.
+         const RNTupleDescriptor &fNTuple;
+         std::size_t fIndex = 0;
+      public:
+         using iterator_category = std::forward_iterator_tag;
+         using iterator = RIterator;
+         using value_type = RClusterDescriptor;
+         using difference_type = std::ptrdiff_t;
+         using pointer = RClusterDescriptor *;
+         using reference = const RClusterDescriptor &;
+
+         RIterator(const RNTupleDescriptor &ntuple, std::size_t index) : fNTuple(ntuple), fIndex(index) {}
+         iterator operator++() { ++fIndex; return *this; }
+         reference operator*() {
+            auto it = fNTuple.fClusterDescriptors.begin();
+            std::advance(it, fIndex);
+            return it->second;
+         }
+         bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
+         bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      };
+
+      RClusterDescriptorRange(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) { }
+      RIterator begin() { return RIterator(fNTuple, 0); }
+      RIterator end() { return RIterator(fNTuple, fNTuple.GetNClusters()); }
+   };
+
    /// In order to handle changes to the serialization routine in future ntuple versions
    static constexpr std::uint16_t kFrameVersionCurrent = 0;
    static constexpr std::uint16_t kFrameVersionMin = 0;
@@ -502,6 +546,11 @@ public:
       return RColumnDescriptorRange(*this, GetFieldDescriptor(fieldId));
    }
 
+   RClusterDescriptorRange GetClusterRange() const
+   {
+      return RClusterDescriptorRange(*this);
+   }
+
    std::string GetName() const { return fName; }
    std::string GetDescription() const { return fDescription; }
    std::string GetAuthor() const { return fAuthor; }
@@ -522,6 +571,7 @@ public:
 
    /// Returns the logical parent of all top-level NTuple data fields.
    DescriptorId_t GetFieldZeroId() const;
+   const RFieldDescriptor &GetFieldZero() const { return GetFieldDescriptor(GetFieldZeroId()); }
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
    /// Searches for a top-level field
    DescriptorId_t FindFieldId(std::string_view fieldName) const;

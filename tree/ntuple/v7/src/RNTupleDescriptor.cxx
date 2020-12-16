@@ -385,7 +385,8 @@ std::uint32_t SerializeClusterSummary(const ROOT::Experimental::RClusterDescript
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &other) const {
+bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
+{
    return fFieldId == other.fFieldId &&
           fFieldVersion == other.fFieldVersion &&
           fTypeVersion == other.fTypeVersion &&
@@ -399,7 +400,8 @@ bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &ot
 }
 
 ROOT::Experimental::RFieldDescriptor
-ROOT::Experimental::RFieldDescriptor::Clone() const {
+ROOT::Experimental::RFieldDescriptor::Clone() const
+{
    RFieldDescriptor clone;
    clone.fFieldId = fFieldId;
    clone.fFieldVersion = fFieldVersion;
@@ -442,7 +444,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const {
+bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
+{
    return fColumnId == other.fColumnId &&
           fVersion == other.fVersion &&
           fModel == other.fModel &&
@@ -454,7 +457,8 @@ bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor &other) const {
+bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor &other) const
+{
    return fClusterId == other.fClusterId &&
           fVersion == other.fVersion &&
           fFirstEntryIndex == other.fFirstEntryIndex &&
@@ -465,10 +469,20 @@ bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor
 }
 
 
+std::unordered_set<ROOT::Experimental::DescriptorId_t> ROOT::Experimental::RClusterDescriptor::GetColumnIds() const
+{
+   std::unordered_set<DescriptorId_t> result;
+   for (const auto &x : fColumnRanges)
+      result.emplace(x.first);
+   return result;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const {
+bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const
+{
    return fName == other.fName &&
           fDescription == other.fDescription &&
           fAuthor == other.fAuthor &&

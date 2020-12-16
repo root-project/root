@@ -9,24 +9,33 @@ TEST(RPageStorageFriends, Basic)
    auto fieldPt = model1->MakeField<float>("pt", 42.0);
 
    auto model2 = RNTupleModel::Create();
-   auto fieldEta = model1->MakeField<float>("eta", 24.0);
+   auto fieldEta = model2->MakeField<float>("eta", 24.0);
 
    {
-      RPageSinkFile sink("ntpl", fileGuard1.GetPath(), RNTupleWriteOptions());
+      RPageSinkFile sink("ntpl1", fileGuard1.GetPath(), RNTupleWriteOptions());
       sink.Create(*model1.get());
       sink.CommitDataset();
       model1 = nullptr;
    }
    {
-      RPageSinkFile sink("ntpl", fileGuard2.GetPath(), RNTupleWriteOptions());
+      RPageSinkFile sink("ntpl2", fileGuard2.GetPath(), RNTupleWriteOptions());
       sink.Create(*model2.get());
       sink.CommitDataset();
       model2 = nullptr;
    }
 
    std::vector<std::unique_ptr<RPageSource>> realSources;
-   realSources.emplace_back(std::make_unique<RPageSourceFile>("ntpl", fileGuard1.GetPath(), RNTupleReadOptions()));
-   realSources.emplace_back(std::make_unique<RPageSourceFile>("ntpl", fileGuard2.GetPath(), RNTupleReadOptions()));
+   realSources.emplace_back(std::make_unique<RPageSourceFile>("ntpl1", fileGuard1.GetPath(), RNTupleReadOptions()));
+   realSources.emplace_back(std::make_unique<RPageSourceFile>("ntpl2", fileGuard2.GetPath(), RNTupleReadOptions()));
    RPageSourceFriends friendSource("myNTuple", realSources);
    friendSource.Attach();
+}
+
+
+TEST(RPageStorageFriends, FailOnNtupleNameClash) {
+
+}
+
+TEST(RPageStorageFriends, FailOnEntryCountMismatch) {
+
 }
