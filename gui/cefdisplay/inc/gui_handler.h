@@ -21,6 +21,15 @@
 #include <list>
 #include <vector>
 
+namespace ROOT {
+namespace Experimental {
+class RLogChannel;
+}
+}
+
+ROOT::Experimental::RLogChannel &CefWebDisplayLog();
+
+
 class THttpServer;
 
 class GuiHandler : public CefClient,

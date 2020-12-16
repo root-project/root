@@ -43,6 +43,13 @@
 #include <ROOT/RLogger.hxx>
 
 
+ROOT::Experimental::RLogChannel &CefWebDisplayLog()
+{
+   static ROOT::Experimental::RLogChannel sChannel("ROOT.CefWebDisplay");
+   return sChannel;
+}
+
+
 GuiHandler::GuiHandler(bool use_views) : fUseViews(use_views), is_closing_(false)
 {
    fConsole = gEnv->GetValue("WebGui.Console", (int)0);
@@ -169,15 +176,15 @@ bool GuiHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
    switch (level) {
    case LOGSEVERITY_WARNING:
       if (fConsole > -1)
-         R__LOG_WARNING("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_WARNING(CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    case LOGSEVERITY_ERROR:
       if (fConsole > -2)
-         R__LOG_ERROR("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_ERROR(CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    default:
       if (fConsole > 0)
-         R__LOG_DEBUG("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_DEBUG(0, CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    }
 
@@ -345,14 +352,14 @@ CefRefPtr<CefResourceHandler> GuiHandler::GetResourceHandler(
   int indx = std::stoi(addr.substr(prefix.length(), addr.find("/", prefix.length()) - prefix.length()));
 
   if ((indx < 0) || (indx >= (int) fServers.size()) || !fServers[indx]) {
-     R__LOG_ERROR("CEF") << "No THttpServer with index " << indx;
+     R__LOG_ERROR(CefWebDisplayLog()) << "No THttpServer with index " << indx;
      return nullptr;
   }
 
   THttpServer *serv = fServers[indx];
   if (serv->IsZombie()) {
      fServers[indx] = nullptr;
-     R__LOG_ERROR("CEF") << "THttpServer with index " << indx << " is zombie now";
+     R__LOG_ERROR(CefWebDisplayLog()) << "THttpServer with index " << indx << " is zombie now";
      return nullptr;
   }
 
@@ -394,7 +401,7 @@ CefRefPtr<CefResourceHandler> GuiHandler::GetResourceHandler(
      CefRefPtr< CefPostData > post_data = request->GetPostData();
 
      if (!post_data) {
-        R__LOG_ERROR("CEF") << "FATAL - NO POST DATA in CEF HANDLER!!!";
+        R__LOG_ERROR(CefWebDisplayLog()) << "FATAL - NO POST DATA in CEF HANDLER!!!";
         exit(1);
      } else {
         CefPostData::ElementVector elements;
