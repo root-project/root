@@ -1179,7 +1179,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          drawopt = drawopt.substr(0, p);
       }
 
-      function complete(respainter) {
+      function complete(respainter, err) {
+         if (err) console.log('When display ', itemname, err);
+         
          if (updating && item) delete item._doing_update;
          if (!updating) JSROOT.progress();
          if (respainter && (typeof respainter === 'object') && (typeof respainter.setItemName === 'function')) {
@@ -1230,7 +1232,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             if (divid.length > 0) {
                let func = updating ? JSROOT.redraw : JSROOT.draw;
-               return func(divid, obj, drawopt).then(p => complete(p)).catch(() => complete(null));
+               return func(divid, obj, drawopt).then(p => complete(p)).catch(err => complete(null, err));
             }
 
             mdi.forEachPainter((p, frame) => {
@@ -1262,7 +1264,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                if (JSROOT.settings.DragAndDrop)
                   h.enableDrop(frame, display_itemname);
                return complete(p);
-            }).catch(() => complete(null));
+            }).catch(err => complete(null, err));
 
          });
       });
@@ -2516,7 +2518,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                       return itemsarr ? this.refreshHtml() : this; // this is final return
                    });
 
-         return promise.then(openAllFiles, openAllFiles);
+         return promise.then(openAllFiles);
       }
 
       let h0 = null;
