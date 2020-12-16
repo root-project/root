@@ -209,6 +209,11 @@ public:
 
    void GradientPar(const Double_t *x, Double_t *result);
 
+   // query if TFormula provides gradient computation using AD (CLAD)
+   bool HasGeneratedGradient() const {
+      return fGradMethod != nullptr;
+   }
+
    // template <class T>
    // T Eval(T x, T y = 0, T z = 0, T t = 0) const;
    template <class T>

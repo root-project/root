@@ -2448,6 +2448,10 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the gradient wrt parameters
+/// If the TF1 object is based on a formula expression (TFormula)
+/// and TFormula::GenerateGradientPar() has been successfully called
+/// automatic differentiation using CLAD is used instead of the default
+/// numerical differentiation
 ///
 /// \param x  point, were the gradient is computed
 /// \param grad  used to return the computed gradient, assumed to be of at least fNpar size
@@ -2462,7 +2466,10 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
 
 void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
 {
-   GradientParTempl<Double_t>(x, grad, eps);
+   if (fFormula && fFormula->HasGeneratedGradient())
+      fFormula->GradientPar(x,grad);
+   else
+      GradientParTempl<Double_t>(x, grad, eps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
