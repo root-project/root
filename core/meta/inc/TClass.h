@@ -143,7 +143,7 @@ public:
       TVirtualStreamerInfo *fAllocator = nullptr;
 
    public:
-      ObjectPtr(void *ptr, TVirtualStreamerInfo *allocator = nullptr) : fPtr(ptr), fAllocator(allocator) {}
+      ObjectPtr(void *ptr = nullptr, TVirtualStreamerInfo *allocator = nullptr) : fPtr(ptr), fAllocator(allocator) {}
 
       void *GetPtr() const { return fPtr; }
 
