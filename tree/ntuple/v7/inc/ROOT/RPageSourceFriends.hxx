@@ -23,6 +23,7 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 namespace ROOT {
 namespace Experimental {
@@ -37,14 +38,23 @@ namespace Detail {
 // clang-format on
 class RPageSourceFriends : public RPageSource {
 private:
+   struct ROriginColumn {
+      std::size_t fSourceIdx = 0;
+      DescriptorId_t fColumnId = kInvalidDescriptorId;
+   };
+
    RNTupleMetrics fMetrics;
    std::vector<std::unique_ptr<RPageSource>> fSources;
+   std::unordered_map<DescriptorId_t, ROriginColumn> fVirtual2OriginColumn;
 
    RNTupleDescriptorBuilder fBuilder;
-   DescriptorId_t fNextId = 1;
+   DescriptorId_t fNextId = 1;  ///< 0 is reserved for the friend zero field
 
-   void AddVirtualField(const RNTupleDescriptor &originDesc, const RFieldDescriptor &originChild,
-                        DescriptorId_t virtualParent);
+   void AddVirtualField(const RNTupleDescriptor &originDesc,
+                        std::size_t originIdx,
+                        const RFieldDescriptor &originField,
+                        DescriptorId_t virtualParent,
+                        const std::string &virtualName);
 
 protected:
    RNTupleDescriptor AttachImpl() final;
