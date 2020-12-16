@@ -37,7 +37,7 @@ void RootWebPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel lvl, co
    switch (lvl) {
    case InfoMessageLevel:
       if (fConsole > 0)
-         R__LOG_DEBUG(QtWebDisplayLog()) << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
+         R__LOG_DEBUG(0, QtWebDisplayLog()) << Form("%s:%d: %s", src.toLatin1().constData(), lineNumber,
                                      message.toLatin1().constData());
       break;
    case WarningMessageLevel:
