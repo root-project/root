@@ -267,7 +267,7 @@ sap.ui.define([
       cleanupIfGed: function() {
          let ged = this.getLeftController("Ged"),
              p = this.getCanvasPainter();
-         if (p) p.RegisterForPadEvents(null);
+         if (p) p.registerForPadEvents(null);
          if (ged) ged.cleanupGed();
          if (p && p.ProcessChanges) p.ProcessChanges("sbits", p);
       },
@@ -370,8 +370,8 @@ sap.ui.define([
 
             if (panel_name === "Ged") {
                let ged = oView.getController();
-               if (canvp && ged && (typeof canvp.RegisterForPadEvents == "function")) {
-                  canvp.RegisterForPadEvents(ged.padEventsReceiver.bind(ged));
+               if (canvp && ged && (typeof canvp.registerForPadEvents == "function")) {
+                  canvp.registerForPadEvents(ged.padEventsReceiver.bind(ged));
                   canvp.SelectObjectPainter(canvp);
                }
             }
